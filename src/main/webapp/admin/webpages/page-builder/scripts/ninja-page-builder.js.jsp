@@ -47,7 +47,7 @@
             var me = this;
             window.webjethtmlboxDialogCommand = function(editor) {
                 //console.log("webjethtmlboxDialogCommand called, editor=", editor);
-                me.show_library_tab(null);
+                me.show_library_tab(null, editor);
             }
 
             //inject section if there is no section in HTML
@@ -67,6 +67,971 @@
             this.create_fixed_empty_placeholder();
             // <%--// this.create_library();--%>
             this.bind_events();
+            this.create_workbench();
+        },
+
+        /** Creates editor chrome outside the document that is serialized for publishing. */
+        create_workbench: function() {
+            var me = this, prefix = me.options.prefix;
+            me.ui = {
+                selected: null, hovered: null, resizeActive: null, quiet: false, guideMode: 'selected', frame: null, inserting: false, insertPoints: [],
+                treeDirty: false, treeRevealSelection: false, expanded: new WeakSet(), treeNodes: new Map(), bookmarks: null,
+                labels: {
+                    structure: "<iwcm:text key='pagebuilder.ui.structure'/>",
+                    search: "<iwcm:text key='pagebuilder.ui.search'/>",
+                    empty: "<iwcm:text key='pagebuilder.ui.empty'/>",
+                    select: "<iwcm:text key='pagebuilder.ui.select'/>",
+                    section: "<iwcm:text key='pagebuilder.ui.section'/>",
+                    container: "<iwcm:text key='pagebuilder.ui.container'/>",
+                    row: "<iwcm:text key='pagebuilder.ui.row'/>",
+                    column: "<iwcm:text key='pagebuilder.ui.column'/>",
+                    item: "<iwcm:text key='pagebuilder.ui.item'/>",
+                    text: "<iwcm:text key='pagebuilder.ui.text'/>",
+                    hidden: "<iwcm:text key='pagebuilder.ui.hidden'/>",
+                    guides: {
+                        selected: "<iwcm:text key='pagebuilder.ui.guides.selected'/>",
+                        hidden: "<iwcm:text key='pagebuilder.ui.guides.hidden'/>",
+                        all: "<iwcm:text key='pagebuilder.ui.guides.all'/>"
+                    },
+                    more: "<iwcm:text key='pagebuilder.ui.more'/>",
+                    duplicate: "<iwcm:text key='pagebuilder.ui.duplicate'/>",
+                    previous: "<iwcm:text key='pagebuilder.ui.previous'/>",
+                    next: "<iwcm:text key='pagebuilder.ui.next'/>",
+                    before: "<iwcm:text key='pagebuilder.ui.before'/>",
+                    after: "<iwcm:text key='pagebuilder.ui.after'/>",
+                    close: "<iwcm:text key='button.close'/>",
+                    insert: "<iwcm:text key='pagebuilder.toolbar.add_block'/>",
+                    insertTypes: {
+                        section: "<iwcm:text key='pagebuilder.library.insert.section'/>",
+                        container: "<iwcm:text key='pagebuilder.library.insert.container'/>",
+                        column: "<iwcm:text key='pagebuilder.library.insert.column'/>"
+                    },
+                    insertHint: "<iwcm:text key='pagebuilder.ui.insert.hint'/>",
+                    insertEnd: "<iwcm:text key='pagebuilder.ui.insert.end'/>",
+                    moveHint: "<iwcm:text key='pagebuilder.ui.move.hint'/>",
+                    duplicateHint: "<iwcm:text key='pagebuilder.ui.duplicate.hint'/>",
+                    resizeHint: "<iwcm:text key='pagebuilder.ui.resize.hint'/>",
+                    resizeMobile: "<iwcm:text key='pagebuilder.ui.resize.mobile'/>",
+                    resizeTablet: "<iwcm:text key='pagebuilder.ui.resize.tablet'/>",
+                    resizeDesktop: "<iwcm:text key='pagebuilder.ui.resize.desktop'/>",
+                    resizeCustom: "<iwcm:text key='pagebuilder.ui.resize.custom'/>",
+                    insertStart: "<iwcm:text key='pagebuilder.ui.insert.start'/>",
+                    insertAfter: "<iwcm:text key='pagebuilder.ui.insert.after'/>",
+                    insertBefore: "<iwcm:text key='pagebuilder.ui.insert.before'/>"
+                }
+            };
+            var ui = me.ui;
+            ui.bar = $('<div>', { 'class': prefix+'-workbench', role: 'toolbar', 'aria-label': "<iwcm:text key='pagebuilder.toolbar.title'/>" });
+            ui.bar.append(me.workbench_button('structure', ui.labels.structure, 'structure').attr('aria-expanded', 'false'));
+            ui.path = $('<nav>', { 'class': prefix+'-workbench-path', 'aria-label': ui.labels.structure }).appendTo(ui.bar);
+            ui.actions = $('<div>', { 'class': prefix+'-workbench-actions' }).appendTo(ui.bar);
+            ui.bar.append(me.workbench_button('guides', ui.labels.guides.selected, 'eye'));
+            ui.menu = $('<div>', { 'class': prefix+'-workbench-menu', hidden: true }).appendTo(ui.bar);
+            ui.insertHint = $('<div>', { 'class': prefix+'-mode-hint '+prefix+'-insert-hint', hidden: true }).append(
+                $('<span>').text(ui.labels.insertHint), me.workbench_button('end-insert', ui.labels.insertEnd, 'close')
+            ).appendTo(ui.bar);
+            ui.resizeHint = $('<div>', { 'class': prefix+'-mode-hint '+prefix+'-resize-hint', hidden: true }).append(
+                $('<span>', { role: 'status' }).text(ui.labels.resizeHint+' ').append($('<strong>')),
+                me.workbench_button('end-resize', ui.labels.insertEnd, 'close')
+            ).appendTo(ui.bar);
+            ui.moveHint = $('<div>', { 'class': prefix+'-mode-hint '+prefix+'-move-hint', hidden: true }).append(
+                $('<span>', { role: 'status' }), me.workbench_button('end-move', ui.labels.insertEnd, 'close')
+            ).appendTo(ui.bar);
+            ui.insertLayer = $('<div>', { 'class': prefix+'-insert-layer', hidden: true, 'aria-label': ui.labels.insert }).appendTo(document.body);
+            ui.layer = $('<div>', { 'class': prefix+'-outline-layer', 'aria-hidden': 'true' }).appendTo(document.body);
+            ui.outline = $('<div>', { 'class': prefix+'-outline', hidden: true }).appendTo(ui.layer);
+            ui.outlines = ui.outline;
+            ui.hoverOutlines = $();
+            ui.drawer = $('<div>', { 'class': prefix+'-structure', hidden: true, role: 'region', 'aria-label': ui.labels.structure }).appendTo(document.body);
+            $('<div>', { 'class': prefix+'-structure-heading' }).append($('<strong>').text(ui.labels.structure), me.workbench_button('close-structure', ui.labels.close, 'close')).appendTo(ui.drawer);
+            ui.search = $('<input>', { type: 'search', placeholder: ui.labels.search, 'aria-label': ui.labels.search }).appendTo(ui.drawer);
+            ui.tree = $('<ul>', { role: 'tree', 'aria-label': ui.labels.structure }).appendTo(ui.drawer);
+            ui.noResults = $('<p>', { hidden: true }).text(ui.labels.empty).appendTo(ui.drawer);
+            ui.toolbarHost = $('#inlineEditorToolbarTop');
+            ui.toolbarContent = $('#wjInlineCkEditorToolbarOffsetElement');
+            ui.placeholder = $('#inlineEditorToolbarTopPlaceHolder');
+            ui.oldHostStyle = ui.toolbarHost.attr('style');
+            ui.oldPlaceholderStyle = ui.placeholder.attr('style');
+            if (ui.toolbarHost.length) {
+                ui.toolbarHost.append(ui.bar);
+            } else {
+                ui.bar.addClass(prefix+'-workbench-standalone').appendTo(document.body);
+            }
+            me.$wrapper.addClass(prefix+'-has-workbench');
+
+            ui.bar.add(ui.drawer).on('mousedown', function() {
+                var editor = typeof getCkEditorInstance === 'function' ? getCkEditorInstance() : null;
+                if (editor && editor.focusManager.hasFocus && editor.getSelection()) {
+                    ui.bookmarks = { editor: editor, marks: editor.getSelection().createBookmarks2(true) };
+                }
+            }).on('click', 'button[data-pb-action]', function() {
+                me.workbench_action(this.getAttribute('data-pb-action'), this);
+            });
+            ui.search.on('input', function() { ui.treeDirty = true; me.schedule_workbench(); });
+            ui.tree.on('click', '[role=treeitem]', function(e) {
+                e.stopPropagation();
+                if (me.workbench_busy()) return;
+                if ($(e.target).closest('[data-pb-expand]').length) {
+                    me.toggle_workbench_branch(this);
+                } else {
+                    me.toggle_workbench_branch(this, true);
+                    me.select_workbench_element($(this).data('element'), true);
+                    this.focus({ preventScroll: true });
+                    if (window.innerWidth < 768) me.toggle_workbench_structure(false);
+                }
+            }).on('keydown', function(e) { me.workbench_tree_key(e); });
+            ui.bar.on('keydown', function(e) {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+                var buttons = ui.bar.find('button:visible:not(:disabled)'), index = buttons.index(e.target);
+                if (index < 0) return;
+                e.preventDefault();
+                if (e.key === 'Home') index = 0;
+                else if (e.key === 'End') index = buttons.length - 1;
+                else index = (index + (e.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length;
+                buttons[index].focus();
+            });
+            me.$wrapper.on('click.workbench focusin.workbench', function(e) {
+                if (ui.restoringFocus || me.workbench_busy() || $(e.target).closest('aside, '+me.tagc.modal+', '+me.tagc.library+', '+me.tagc.notify).length) return;
+                var element = me.workbench_target(e.target);
+                if (element) {
+                    if (ui.inserting) me.set_workbench_insertion(false, element);
+                    me.select_workbench_element(element);
+                }
+            }).on('pointermove.workbench', function(e) {
+                ui.quiet = false;
+                if (me.$wrapper.hasClass(me.state.is_moving_child)) {
+                    var target = me.workbench_target(e.target);
+                    // The existing controller visibility already encodes valid drop destinations.
+                    ui.hovered = target && $(target).children(me.tagc.append+', '+me.tagc.prepend).is(':visible') ? target : null;
+                } else ui.hovered = e.originalEvent.pointerType === 'touch' ? null : me.workbench_target(e.target);
+                ui.resizeActive = me.workbench_resize_column(ui.hovered) || me.workbench_resize_column($(document.activeElement).closest(me.tagc.size_changer));
+                me.schedule_workbench();
+            }).on('pointerleave.workbench', function() {
+                ui.hovered = null;
+                ui.resizeActive = me.workbench_resize_column($(document.activeElement).closest(me.tagc.size_changer));
+                me.schedule_workbench();
+            }).on('input.workbench', function() {
+                ui.quiet = true;
+                ui.hovered = null;
+                me.schedule_workbench();
+            }).on('focusin.workbench focusout.workbench', me.tagc.size_changer, function(e) {
+                var control = $(e.type === 'focusin' ? e.target : e.relatedTarget).closest(me.tagc.size_changer);
+                ui.resizeActive = me.workbench_resize_column(control.length ? control : ui.hovered);
+                me.schedule_workbench();
+            });
+            ui.layoutHandler = function() { me.schedule_workbench(); };
+            window.addEventListener('scroll', ui.layoutHandler, true);
+            window.addEventListener('resize', ui.layoutHandler);
+            me.$wrapper[0].addEventListener('load', ui.layoutHandler, true);
+            ui.resizeObserver = new ResizeObserver(ui.layoutHandler);
+            ui.resizeObserver.observe(me.$wrapper[0]);
+            if (ui.toolbarContent.length) ui.resizeObserver.observe(ui.toolbarContent[0]);
+            ui.resizeObserver.observe(ui.bar[0]);
+            // Page scripts may mutate content continuously; only refresh outline geometry here.
+            ui.observer = new MutationObserver(ui.layoutHandler);
+            ui.observer.observe(me.$wrapper[0], { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
+            ui.escapeHandler = function(e) {
+                if (e.key !== 'Escape' || e.defaultPrevented || !me.$wrapper.is(':visible')) return;
+                if ($(e.target).closest('.cke_dialog, .cke_panel').length) return;
+                var handled = true;
+                if (ui.path.hasClass('is-expanded')) {
+                    ui.path.removeClass('is-expanded').find('[data-pb-action=ancestors]').attr('aria-expanded', 'false').trigger('focus');
+                } else if (!ui.menu.prop('hidden')) {
+                    ui.menu.prop('hidden', true);
+                    ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false').trigger('focus');
+                } else if (me.$wrapper.hasClass(me.state.is_modal_open)) {
+                    me.close_modal();
+                } else if (me.$wrapper.hasClass(me.state.is_library_active)) {
+                    me.hide_library();
+                } else if (me.workbench_busy()) {
+                    me.disable_after_esc_pressed(true);
+                    me.restore_workbench_focus();
+                } else if (ui.inserting) {
+                    me.close_workbench_insertion();
+                    if (!ui.insertClosing) ui.bar.find('[data-pb-action=insert]').trigger('focus');
+                } else if (!ui.drawer.prop('hidden')) {
+                    me.toggle_workbench_structure(false);
+                    ui.bar.find('[data-pb-action=structure]').trigger('focus');
+                } else if (ui.selected) {
+                    me.select_workbench_element(null);
+                } else handled = false;
+                if (handled) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    ui.escapeConsumed = true;
+                }
+            };
+            ui.escapeUpHandler = function(e) {
+                if (e.key === 'Escape' && ui.escapeConsumed) {
+                    ui.escapeConsumed = false;
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                }
+            };
+            document.addEventListener('keydown', ui.escapeHandler, true);
+            document.addEventListener('keyup', ui.escapeUpHandler, true);
+            ui.outsideHandler = function(e) {
+                if (!ui.bar[0].contains(e.target)) {
+                    ui.menu.prop('hidden', true);
+                    ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false');
+                }
+            };
+            document.addEventListener('pointerdown', ui.outsideHandler);
+            var guideMode;
+            try { guideMode = window.localStorage.getItem('webjet.pagebuilder.guides'); }
+            catch (e) { /* Storage may be unavailable in embedded or restricted browsers. */ }
+            me.set_workbench_guides(guideMode, false);
+            me.refresh_workbench_selection();
+            me.schedule_workbench();
+        },
+
+        /** Builds a named button with an original Tabler Icons outline SVG. */
+        workbench_button: function(action, label, icon) {
+            // Original SVGs from @tabler/icons 3.44.0 (https://tabler.io/icons).
+            // MIT license and copyright: https://github.com/tabler/tabler-icons/blob/main/LICENSE. Only size and accessibility attributes are adapted.
+            var icons = {
+                // ti-sitemap
+                'structure': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-sitemap" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M3 17a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -2" /> <path d="M15 17a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -2" /> <path d="M9 5a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v2a2 2 0 0 1 -2 2h-2a2 2 0 0 1 -2 -2l0 -2" /> <path d="M6 15v-1a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v1" /> <path d="M12 9l0 3" /> </svg>',
+                // ti-pencil
+                'style': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-pencil" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" /> <path d="M13.5 6.5l4 4" /> </svg>',
+                // ti-arrows-horizontal
+                'resize': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-horizontal" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M7 8l-4 4l4 4" /> <path d="M17 8l4 4l-4 4" /> <path d="M3 12l18 0" /> </svg>',
+                // ti-copy
+                'duplicate': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-copy" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /> <path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /> </svg>',
+                // ti-arrows-move
+                'move': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-move" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M18 9l3 3l-3 3" /> <path d="M15 12h6" /> <path d="M6 9l-3 3l3 3" /> <path d="M3 12h6" /> <path d="M9 18l3 3l3 -3" /> <path d="M12 15v6" /> <path d="M15 6l-3 -3l-3 3" /> <path d="M12 3v6" /> </svg>',
+                // ti-chevron-up
+                'previous': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-up" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M6 15l6 -6l6 6" /> </svg>',
+                // ti-chevron-down
+                'next': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-chevron-down" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M6 9l6 6l6 -6" /> </svg>',
+                // ti-plus
+                'plus': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-plus" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M12 5l0 14" /> <path d="M5 12l14 0" /> </svg>',
+                // ti-x
+                'close': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-x" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M18 6l-12 12" /> <path d="M6 6l12 12" /> </svg>',
+                // ti-eye
+                'eye': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-eye" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" /> <path d="M21 12c-2.4 4 -5.4 6 -9 6c-3.6 0 -6.6 -2 -9 -6c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6" /> </svg>',
+                // ti-eye-off
+                'eye-off': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-eye-off" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M10.585 10.587a2 2 0 0 0 2.829 2.828" /> <path d="M16.681 16.673a8.717 8.717 0 0 1 -4.681 1.327c-3.6 0 -6.6 -2 -9 -6c1.272 -2.12 2.712 -3.678 4.32 -4.674m2.86 -1.146a9.055 9.055 0 0 1 1.82 -.18c3.6 0 6.6 2 9 6c-.666 1.11 -1.379 2.067 -2.138 2.87" /> <path d="M3 3l18 18" /> </svg>',
+                // ti-stack-2
+                'layers': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-stack-2" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M12 4l-8 4l8 4l8 -4l-8 -4" /> <path d="M4 12l8 4l8 -4" /> <path d="M4 16l8 4l8 -4" /> </svg>',
+                // ti-dots
+                'more': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-dots" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M4 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /> <path d="M11 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /> <path d="M18 12a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /> </svg>',
+                // ti-star
+                'favorite': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-star" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M12 17.75l-6.172 3.245l1.179 -6.873l-5 -4.867l6.9 -1l3.086 -6.253l3.086 6.253l6.9 1l-5 4.867l1.179 6.873l-6.158 -3.245" /> </svg>',
+                // ti-trash
+                'remove': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-trash" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M4 7l16 0" /> <path d="M10 11l0 6" /> <path d="M14 11l0 6" /> <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12" /> <path d="M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3" /> </svg>'
+            };
+            return $('<button>', { type: 'button', 'class': this.options.prefix+'-tooltip', 'data-pb-action': action, 'aria-label': label, 'data-title': label })
+                .append(icons[icon])
+                .append($('<span>').text(label));
+        },
+
+        workbench_busy: function() {
+            return [this.state.is_moving_child, this.state.is_modal_open, this.state.is_library_active, this.state.is_resize_columns]
+                .some(state => this.$wrapper.hasClass(state) || this.$wrapper.find('.'+state).length > 0);
+        },
+
+        /** Resolves only elements recognized by the existing grid/editor initialization. */
+        workbench_target: function(target) {
+            if ($(target).closest(this.tagc.empty_placeholder_wrapper+', '+this.tagc.modal+', '+this.tagc.library+', '+this.tagc.notify).length) return null;
+            var node = $(target).closest(this.tagc._grid_element+', [data-ckeditor-instance]')[0];
+            if (node && $(node).is('[data-ckeditor-instance]') && !$(node).hasClass(this.tag._grid_element)) {
+                node = $(node).closest(this.tagc.column)[0] || node;
+            }
+            return node && this.$wrapper[0].contains(node) ? node : null;
+        },
+
+        /** Resolves the nearest resizable column without highlighting enclosing columns. */
+        workbench_resize_column: function(target) {
+            var column = $(target).closest(this.tagc.column);
+            return column.closest('.'+this.state.is_resize_columns).length && this.$wrapper[0].contains(column[0]) ? column[0] : null;
+        },
+
+        workbench_type: function(element) {
+            var node = $(element);
+            if (node.hasClass(this.tag.duplicable)) return node.hasClass(this.tag.row) ? 'row' : 'item';
+            for (var type of ['column', 'row', 'container', 'section']) {
+                if (node.hasClass(this.tag[type])) return type;
+            }
+            return 'text';
+        },
+
+        /** Returns a short content-derived name without adding metadata to the authored HTML. */
+        workbench_name: function(element) {
+            var node = $(element), heading = node.find('h1,h2,h3,h4,h5,h6').first();
+            var text = heading.text();
+            if (!text) {
+                var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT), part;
+                while ((part = walker.nextNode()) && text.length < 80) {
+                    if (!$(part.parentElement).closest('aside, script, style, '+this.tagc.modal+', '+this.tagc.library).length) text += ' '+part.textContent;
+                }
+            }
+            text = text.replace(/\s+/g, ' ').trim();
+            return text ? text.slice(0, 60) : this.ui.labels[this.workbench_type(element)]+' '+(node.prevAll(this.tagc._grid_element).length + 1);
+        },
+
+        select_workbench_element: function(element, scroll) {
+            if (!this.ui) return;
+            var ui = this.ui;
+            if (ui.selected !== element) ui.treeRevealSelection = true;
+            if (ui.selected && ui.selected !== element) ui.resizeObserver.unobserve(ui.selected);
+            ui.selected = element;
+            ui.hovered = null;
+            ui.quiet = false;
+            ui.menu.prop('hidden', true);
+            ui.path.removeClass('is-expanded');
+            if (element) {
+                ui.resizeObserver.observe(element);
+                $(element).parentsUntil(this.$wrapper).each(function() { ui.expanded.add(this); });
+                if (scroll && $(element).is(':visible')) {
+                    var rect = element.getBoundingClientRect(), top = ui.bar[0].getBoundingClientRect().bottom;
+                    window.scrollBy({ top: rect.top - top - 20, behavior: 'instant' });
+                }
+            }
+            this.refresh_workbench_selection();
+            this.schedule_workbench();
+        },
+
+        /** Mirrors the existing local controller capabilities into the shared toolbar. */
+        refresh_workbench_selection: function() {
+            if (!this.ui) return;
+            var me = this, ui = me.ui, node = $(ui.selected);
+            var focusedAction = ui.bar[0].contains(document.activeElement) ? document.activeElement.getAttribute('data-pb-action') : null;
+            ui.path.empty();
+            ui.actions.empty();
+            ui.menu.empty().prop('hidden', true);
+            ui.actions.append(me.workbench_button('insert', ui.labels.insert, 'plus').attr('aria-pressed', String(ui.inserting)));
+            if (!ui.selected) {
+                $('<span>').text(ui.labels.select).appendTo(ui.path);
+                return;
+            }
+            var ancestors = node.parentsUntil(me.$wrapper, me.tagc._grid_element).get().reverse().concat(ui.selected);
+            ui.path.append(me.workbench_button('ancestors', ui.labels.structure, 'structure').attr('aria-expanded', 'false'));
+            ancestors.forEach(function(element, index) {
+                var type = me.workbench_type(element);
+                var button = $('<button>', { type: 'button', 'data-type': type, title: me.workbench_name(element) })
+                    .text(ui.labels[type]).on('click', function() { if (!me.workbench_busy()) me.select_workbench_element(element, true); });
+                if (index === ancestors.length - 1) button.attr('aria-current', 'location');
+                ui.path.append(button);
+            });
+            var toolbar = node.children(me.tagc.toolbar);
+            var actions = [
+                ['style', 'style'], ['resize', 'resize'], ['duplicate-adjacent', 'duplicate'],
+                ['before', 'plus'], ['after', 'plus'], ['previous', 'previous'], ['next', 'next'],
+                ['move', 'move'], ['duplicate', 'duplicate'], ['add_to_favorites', 'favorite'], ['remove', 'remove']
+            ];
+            actions.forEach(function(entry) {
+                var action = entry[0], source = action;
+                if (['duplicate-adjacent', 'before', 'after'].includes(action)) source = 'duplicate';
+                if (['previous', 'next'].includes(action)) source = 'move';
+                var original = toolbar.find(me.tagc['toolbar_button_'+source]);
+                if (!original.length || (['before', 'after'].includes(action) && node.hasClass(me.tag.duplicable))) return;
+                var label = action === 'duplicate-adjacent' ? ui.labels.duplicate :
+                    ['before', 'after', 'previous', 'next'].includes(action) ? ui.labels[action] : original.attr('data-title');
+                var button = me.workbench_button(action, label, entry[1]);
+                if (['previous', 'next'].includes(action)) button.prop('disabled', !me.workbench_sibling(action));
+                if (action === 'resize') {
+                    var resizing = node.closest('.'+me.state.is_resize_columns).length > 0;
+                    button.attr('aria-pressed', String(resizing))
+                        .find('span').text(me.get_actual_column_size(node)+' / '+me.options.max_col_size);
+                }
+                (['resize', 'duplicate-adjacent'].includes(action) ? ui.actions : ui.menu).append(button);
+            });
+            if (ui.menu.children().length) ui.actions.append(me.workbench_button('more', ui.labels.more, 'more').attr('aria-expanded', 'false'));
+            if (focusedAction) {
+                var focusTarget = ui.bar.find('[data-pb-action="'+focusedAction+'"]:visible');
+                (focusTarget.length ? focusTarget : ui.actions.find('[data-pb-action=more]')).first().trigger('focus');
+            }
+        },
+
+        workbench_sibling: function(direction) {
+            var me = this, node = $(me.ui.selected), type = me.workbench_type(node);
+            var siblings = node.parent().children(me.tagc._grid_element).filter(function() {
+                return me.workbench_type(this) === type && (!node.hasClass(me.tag.duplicable) ||
+                    ($(this).hasClass(me.tag.duplicable) && this.tagName === node[0].tagName));
+            });
+            var index = siblings.index(node) + (direction === 'previous' ? -1 : 1);
+            return index >= 0 && index < siblings.length ? siblings[index] : null;
+        },
+
+        /** Applies the outline preference without changing content, selection or toolbar actions. */
+        set_workbench_guides: function(mode, remember) {
+            var ui = this.ui;
+            if (!['selected', 'hidden', 'all'].includes(mode)) mode = 'selected';
+            ui.guideMode = mode;
+            this.$wrapper.toggleClass(this.options.prefix+'-hide-guides', mode === 'hidden');
+            var label = ui.labels.guides[mode], icon = {selected: 'eye', hidden: 'eye-off', all: 'layers'}[mode];
+            var button = ui.bar.find('[data-pb-action=guides]');
+            button.attr({'data-pb-guides': mode, 'aria-label': label, 'data-title': label}).find('span').text(label);
+            button.children('svg').replaceWith(this.workbench_button('guides', label, icon).children('svg'));
+            if (remember) {
+                try { window.localStorage.setItem('webjet.pagebuilder.guides', mode); }
+                catch (e) { /* Keep the preference for this editor session when storage is blocked. */ }
+            }
+            this.schedule_workbench();
+        },
+
+        /** Routes quick actions through the original move/copy and cleanup lifecycle. */
+        workbench_action: function(action, invoker) {
+            var me = this, ui = me.ui, node = $(ui.selected);
+            ui.quiet = false;
+            if (action === 'end-move') {
+                me.cancel_move_grid_element();
+                me.restore_workbench_focus();
+                return;
+            }
+            if (action === 'end-resize' || (action === 'resize' && me.$wrapper.find('.'+me.state.is_resize_columns).length)) {
+                me.cancel_resize_columns();
+                me.restore_workbench_focus();
+                return;
+            }
+            if (action === 'insert' || action === 'end-insert') {
+                if (me.workbench_busy()) return;
+                if (action === 'insert' && !ui.inserting) {
+                    me.set_workbench_insertion(true);
+                    ui.insertHint.find('[data-pb-action=end-insert]')[0].focus({ preventScroll: true });
+                } else {
+                    me.close_workbench_insertion();
+                    if (!ui.insertClosing) ui.bar.find('[data-pb-action=insert]').trigger('focus');
+                }
+                return;
+            }
+            if (ui.inserting) return;
+            if (action === 'ancestors') {
+                ui.path.toggleClass('is-expanded');
+                $(invoker).attr('aria-expanded', String(ui.path.hasClass('is-expanded')));
+                return;
+            }
+            if (action === 'structure' || action === 'close-structure') {
+                me.toggle_workbench_structure(action === 'structure' && ui.drawer.prop('hidden'));
+                if (action === 'close-structure') ui.bar.find('[data-pb-action=structure]').trigger('focus');
+                return;
+            }
+            if (action === 'guides') {
+                me.set_workbench_guides({selected: 'hidden', hidden: 'all', all: 'selected'}[ui.guideMode], true);
+                return;
+            }
+            if (action === 'more') {
+                var open = ui.menu.prop('hidden');
+                ui.menu.prop('hidden', !open);
+                $(invoker).attr('aria-expanded', String(open));
+                if (open) ui.menu.find('button:enabled').first().trigger('focus');
+                return;
+            }
+            if (me.workbench_busy()) return;
+            ui.returnAction = action;
+            me.toggle_workbench_structure(false);
+            ui.menu.prop('hidden', true);
+            ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false');
+            if (['before', 'after'].includes(action)) {
+                node.children(action === 'before' ? me.tagc.prepend : me.tagc.append).trigger('click');
+            } else if (['duplicate-adjacent', 'previous', 'next'].includes(action)) {
+                var target = action === 'duplicate-adjacent' ? node[0] : me.workbench_sibling(action);
+                if (!target) return;
+                var button = node.children(me.tagc.toolbar).find(me.tagc['toolbar_button_'+(action === 'duplicate-adjacent' ? 'duplicate' : 'move')]);
+                button.trigger('click');
+                me.move_grid_element_here($(target).children(action === 'previous' ? me.tagc.prepend : me.tagc.append).first());
+            } else {
+                node.children(me.tagc.toolbar).find(me.tagc['toolbar_button_'+action]).trigger('click');
+            }
+            me.refresh_workbench_selection();
+            me.schedule_workbench();
+        },
+
+        restore_workbench_focus: function() {
+            if (!this.ui) return;
+            var ui = this.ui, bookmark = ui.bookmarks;
+            ui.restoringFocus = true;
+            if (bookmark && bookmark.editor.status === 'ready' && bookmark.editor.element.$.isConnected) {
+                bookmark.editor.focus();
+                bookmark.editor.getSelection().selectBookmarks(bookmark.marks);
+            }
+            ui.restoringFocus = false;
+            ui.bookmarks = null;
+            this.refresh_workbench_selection();
+            var button = ui.bar.find('[data-pb-action="'+ui.returnAction+'"]:visible');
+            (button.length ? button : ui.bar.find('[data-pb-action=more]')).first().trigger('focus');
+        },
+
+        /** Opens a temporary insertion mode without changing authored column widths or saved outline preferences. */
+        set_workbench_insertion: function(open, anchor) {
+            var me = this, ui = me.ui;
+            if (!anchor) {
+                var viewportTop = ui.bar[0].getBoundingClientRect().bottom;
+                anchor = me.$wrapper.find(me.tagc.column+':visible').get().find(element => element.getBoundingClientRect().bottom > viewportTop) || ui.selected;
+            }
+            var top = anchor ? anchor.getBoundingClientRect().top : 0;
+            var scroll = { x: window.scrollX, y: window.scrollY };
+            me.clear_workbench_insertion();
+            ui.inserting = open;
+            ui.bar.toggleClass('is-inserting', open);
+            if (open) {
+                ui.path.removeClass('is-expanded').find('[data-pb-action=ancestors]').attr('aria-expanded', 'false');
+                ui.menu.prop('hidden', true);
+                ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false');
+            }
+            document.documentElement.classList.toggle('pb-insertion-open', open);
+            me.$wrapper.toggleClass(me.options.prefix+'-is-inserting', open);
+            ui.insertHint.prop('hidden', !open);
+            ui.insertLayer.prop('hidden', !open);
+            me.toggle_workbench_structure(false);
+            me.refresh_workbench_selection();
+            if (open) {
+                me.build_workbench_insertion();
+                me.animate_workbench_insertion(anchor, top, scroll);
+            }
+            me.schedule_workbench();
+            if (!open && anchor && anchor.isConnected) window.scrollBy({ top: anchor.getBoundingClientRect().top - top, behavior: 'instant' });
+        },
+
+        clear_workbench_insertion: function() {
+            (this.ui.insertAnimations || []).forEach(animation => animation.cancel());
+            this.ui.insertAnimations = [];
+            this.ui.insertClosing = false;
+            this.$wrapper.find('aside.'+this.options.prefix+'-insert-space').remove();
+            this.ui.insertLayer.empty();
+            this.ui.insertPoints = [];
+        },
+
+        /** Reverses the visible expansion before removing insertion helpers on user cancellation. */
+        close_workbench_insertion: function() {
+            var me = this, ui = me.ui;
+            if (!ui.inserting || ui.insertClosing) return;
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                me.set_workbench_insertion(false);
+                return;
+            }
+            ui.insertClosing = true;
+            var viewportTop = ui.bar[0].getBoundingClientRect().bottom;
+            var anchor = me.$wrapper.find(me.tagc.column+':visible').get().find(element => element.getBoundingClientRect().bottom > viewportTop);
+            var top = anchor ? anchor.getBoundingClientRect().top : 0;
+            var spaces = me.$wrapper.find('aside.'+me.options.prefix+'-insert-space').get();
+            var elements = spaces;
+            var heights = elements.map(element => element.getBoundingClientRect().height);
+            var above = spaces.map(element => element.getBoundingClientRect().bottom < viewportTop);
+            var opacity = getComputedStyle(ui.insertLayer[0]).opacity;
+            (ui.insertAnimations || []).forEach(animation => animation.cancel());
+            var animations = elements.map(function(element, index) {
+                return element.animate([{ height: heights[index]+'px' }, { height: '0px' }], { duration: 220, easing: 'ease-in', fill: 'forwards' });
+            });
+            above.forEach(function(offscreen, index) { if (offscreen) animations[index].finish(); });
+            if (window.scrollY > 1 && anchor) window.scrollBy({ top: anchor.getBoundingClientRect().top-top, behavior: 'instant' });
+            animations.push(ui.insertLayer[0].animate([{ opacity: opacity }, { opacity: 0 }], { duration: 140, fill: 'forwards' }));
+            ui.insertAnimations = animations;
+            ui.insertLayer.find('button').prop('disabled', true);
+            me.schedule_workbench();
+            Promise.all(animations.map(animation => animation.finished)).then(function() {
+                if (me.ui === ui && ui.insertAnimations === animations) {
+                    me.set_workbench_insertion(false);
+                    ui.bar.find('[data-pb-action=insert]')[0].focus({ preventScroll: true });
+                }
+            }).catch(function() { /* A content click or editor teardown cancels the pending collapse. */ });
+        },
+
+        /** Expands visible gaps in place; only gaps above the viewport need scroll compensation. */
+        animate_workbench_insertion: function(anchor, top, scroll) {
+            var me = this, ui = me.ui;
+            var spaces = me.$wrapper.find('aside.'+me.options.prefix+'-insert-space').get();
+            var elements = spaces;
+            var heights = elements.map(element => element.getBoundingClientRect().height);
+            ui.insertAnimations = elements.map(function(element, index) {
+                var animation = element.animate([{ height: '0px' }, { height: heights[index]+'px' }], { duration: 220, easing: 'ease-out' });
+                animation.pause();
+                return animation;
+            });
+            var viewportTop = ui.bar[0].getBoundingClientRect().bottom;
+            // Measure with collapsed gaps before expanding any offscreen gaps.
+            var above = spaces.map(element => element.getBoundingClientRect().bottom < viewportTop);
+            above.forEach(function(offscreen, index) { if (offscreen) ui.insertAnimations[index].finish(); });
+            var offset = scroll.y > 1 && anchor && anchor.isConnected ? anchor.getBoundingClientRect().top - top : 0;
+            window.scrollTo({ left: scroll.x, top: scroll.y + offset, behavior: 'instant' });
+            ui.insertAnimations.push(ui.insertLayer[0].animate([{ opacity: 0 }, { opacity: 1 }], { duration: 140, delay: 80, fill: 'backwards' }));
+            var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            ui.insertAnimations.forEach(function(animation) {
+                if (reducedMotion) animation.finish();
+                else if (animation.playState !== 'finished') animation.play();
+            });
+        },
+
+        /** Makes one destination per sibling boundary, backed by the existing library insertion controller. */
+        build_workbench_insertion: function() {
+            var me = this, ui = me.ui, prefix = me.options.prefix, groups = [];
+            function group(parent, type) {
+                if (groups.some(item => item.parent === parent && item.type === type)) return;
+                groups.push({ parent: parent, type: type });
+            }
+            group(me.$wrapper[0], 'section');
+            me.$wrapper.find(me.tagc.section+', '+me.tagc.container+', '+me.tagc.column+', '+me.tagc.row).filter(':visible').each(function() {
+                if ($(this).closest('[data-ckeditor-instance]').length || $(this).hasClass(me.tag.duplicable)) return;
+                var type = me.workbench_type(this);
+                if (type === 'container' || type === 'column') group(this.parentElement, type);
+                if (type === 'section' && !$(this).find(me.tagc.container).length) group(this, 'container');
+                if (type === 'row' && !$(this).children(me.tagc.column).length) group(this, 'column');
+            });
+            groups.forEach(function(item) {
+                var nodes = $(item.parent).children(me.tagc[item.type]).filter(':visible').get();
+                var points = [];
+                for (var i = 0; i <= nodes.length; i++) {
+                    var next = nodes[i], previous = nodes[i-1];
+                    var source = next ? $(next).children(me.tagc.prepend) : previous ? $(previous).children(me.tagc.append) :
+                        $(item.parent).children(me.tagc.empty_placeholder).find(me.tagc.empty_placeholder_button);
+                    if (!nodes.length && item.type === 'section') source = me.$wrapper.find(me.tagc.empty_placeholder_wrapper+' '+me.tagc.empty_placeholder_button);
+                    if (!source.length) continue;
+                    var position = next ? ui.labels.insertBefore+' “'+me.workbench_name(next)+'”' :
+                        previous ? ui.labels.insertAfter+' “'+me.workbench_name(previous)+'”' : ui.labels.insertStart;
+                    var label = ui.labels.insertTypes[item.type]+' '+position.charAt(0).toLocaleLowerCase()+position.slice(1);
+                    var point = { type: item.type, parent: item.parent, next: next, previous: previous, source: source.first(), label: label, position: position };
+                    point.element = $('<div>', { 'class': prefix+'-insert-point', 'data-type': item.type }).appendTo(ui.insertLayer);
+                    point.button = me.workbench_button('insert-here', label, 'plus').appendTo(point.element);
+                    point.button.children('span').text(ui.labels[item.type]);
+                    point.button.on('click', function(point) { return function() { me.open_workbench_insertion(point); }; }(point));
+                    point.button.on('focus', function(point) { return function() {
+                        var rect = point.button[0].getBoundingClientRect(), top = ui.bar[0].getBoundingClientRect().bottom;
+                        if (rect.top < top || rect.bottom > window.innerHeight) {
+                            window.scrollBy(0, rect.top - top - 60);
+                            me.position_workbench_insertion(top);
+                        }
+                    }; }(point));
+                    points.push(point);
+                    ui.insertPoints.push(point);
+                    if (item.type !== 'column' || !nodes.length) me.create_workbench_insert_space(point);
+                }
+                if (item.type === 'column' && nodes.length) me.prepare_workbench_column_points(points, nodes);
+            });
+            // Keep keyboard order aligned with the authored document, including nested destinations.
+            ui.insertPoints.sort(function(a, b) {
+                var first = (a.space || a.source)[0], second = (b.space || b.source)[0];
+                return first === second ? 0 : first.compareDocumentPosition(second) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+            }).forEach(point => ui.insertLayer.append(point.element));
+            ui.insertWidth = window.innerWidth;
+        },
+
+        create_workbench_insert_space: function(point) {
+            var space = $('<aside>', { 'class': this.options.prefix+'-insert-space', 'aria-hidden': 'true', contenteditable: 'false' });
+            if (point.next) space.insertBefore(point.next);
+            else if (point.previous) space.insertAfter(point.previous);
+            else space.prependTo(point.parent);
+            point.space = space;
+            point.element.addClass('is-horizontal');
+            return space;
+        },
+
+        /** Places wrapped boundaries between visual rows while keeping side destinations alongside their columns. */
+        prepare_workbench_column_points: function(points, nodes) {
+            var me = this, rows = [];
+            nodes.forEach(function(node) {
+                var rect = node.getBoundingClientRect(), row = rows[rows.length-1];
+                if (!row || rect.top >= row.bottom - 1) rows.push(row = { nodes: [], bottom: rect.bottom });
+                row.nodes.push(node);
+                row.bottom = Math.max(row.bottom, rect.bottom);
+            });
+            points.forEach(function(point) {
+                var row = rows.find(row => row.nodes.includes(point.next || point.previous));
+                if ((point.next && point.previous && !row.nodes.includes(point.previous)) ||
+                    (window.innerWidth < 768 && rows.length === nodes.length && (!point.next || !point.previous))) {
+                    me.create_workbench_insert_space(point);
+                }
+            });
+        },
+
+        position_workbench_insertion: function(top) {
+            var me = this, ui = me.ui;
+            ui.insertLayer.css('top', top).prop('hidden', !ui.inserting || me.workbench_busy() || document.body.classList.contains('is-view-mode'));
+            if (!ui.inserting) return;
+            if (ui.insertWidth !== window.innerWidth && !me.workbench_busy() && !ui.insertClosing) {
+                me.clear_workbench_insertion();
+                me.build_workbench_insertion();
+            }
+            ui.insertPoints.forEach(function(point) {
+                var anchor = point.next || point.previous || point.parent;
+                point.element.prop('hidden', !anchor.isConnected || !$(anchor).is(':visible'));
+                if (!anchor.isConnected) return;
+                if (point.space) {
+                    var rect = point.space[0].getBoundingClientRect();
+                    point.element.css({ left: Math.max(8, rect.left), top: rect.top-top, width: Math.min(window.innerWidth-8, rect.right)-Math.max(8, rect.left), height: rect.height });
+                } else {
+                    var rect = anchor.getBoundingClientRect();
+                    var x = point.next ? rect.left : rect.right;
+                    if (point.next && point.previous) x = (point.previous.getBoundingClientRect().right+rect.left)/2;
+                    var radius = window.matchMedia('(pointer: coarse)').matches ? 22 : 16;
+                    if (!point.previous) x -= radius - parseFloat(getComputedStyle(anchor).paddingLeft)/2;
+                    if (!point.next) x += radius - parseFloat(getComputedStyle(anchor).paddingRight)/2;
+                    point.element.css({ left: Math.max(radius, Math.min(window.innerWidth-radius, x)), top: rect.top+rect.height/2-top, height: rect.height });
+                }
+                var buttonRect = point.button[0].getBoundingClientRect();
+                var tooltipHalfWidth = Math.min(160, (window.innerWidth-32)/2);
+                var center = (buttonRect.left+buttonRect.right)/2;
+                point.button.attr('data-tooltip-align', center < tooltipHalfWidth+16 ? 'left' : center > window.innerWidth-tooltipHalfWidth-16 ? 'right' : null);
+                point.button.attr('data-tooltip-above', buttonRect.bottom > window.innerHeight-100 ? '' : null);
+            });
+        },
+
+        open_workbench_insertion: function(point) {
+            var ui = this.ui;
+            if (!ui.inserting || ui.insertClosing || this.workbench_busy() || !point.source[0].isConnected) return;
+            ui.insertPending = point;
+            ui.insertScroll = { x: window.scrollX, y: window.scrollY };
+            this.show_library_tab(point.source);
+            this.schedule_workbench();
+        },
+
+        toggle_workbench_structure: function(open) {
+            var ui = this.ui;
+            ui.drawer.prop('hidden', !open);
+            ui.bar.find('[data-pb-action=structure]').attr('aria-expanded', String(open));
+            if (open) {
+                ui.treeDirty = true;
+                ui.treeRevealSelection = true;
+                this.schedule_workbench();
+                ui.search.trigger('focus');
+            }
+        },
+
+        /** Builds the structure on opening or searching, preserving expansion and manual scrolling. */
+        render_workbench_tree: function() {
+            var me = this, ui = me.ui, query = ui.search.val().trim().toLocaleLowerCase();
+            var focused = $(document.activeElement).data('element');
+            var tree = ui.tree[0], scrollTop = tree.scrollTop;
+            ui.tree.empty();
+            ui.treeNodes.clear();
+            var elements = me.$wrapper.find(me.tagc._grid_element+', [data-ckeditor-instance]').filter(function() {
+                return me.workbench_target(this) === this;
+            }).get();
+            var allowed = new Set(elements);
+            var visible = new Set();
+            elements.forEach(function(element) {
+                if (!query || (ui.labels[me.workbench_type(element)]+' '+me.workbench_name(element)).toLocaleLowerCase().includes(query)) {
+                    visible.add(element);
+                    $(element).parentsUntil(me.$wrapper).each(function() { if (allowed.has(this)) visible.add(this); });
+                }
+            });
+            elements.forEach(function(element) {
+                if (!visible.has(element)) return;
+                var type = me.workbench_type(element), parent = $(element).parents().get().find(ancestor => ui.treeNodes.has(ancestor));
+                var list = parent ? ui.treeNodes.get(parent).children('[role=group]') : ui.tree;
+                if (parent && !list.length) {
+                    var parentItem = ui.treeNodes.get(parent), expanded = query.length > 0 || ui.expanded.has(parent);
+                    parentItem.attr('aria-expanded', String(expanded));
+                    parentItem.find('[data-pb-expand]').first().prop('hidden', false);
+                    list = $('<ul>', { role: 'group', hidden: !expanded }).appendTo(parentItem);
+                }
+                var item = $('<li>', { role: 'treeitem', tabindex: -1, 'aria-selected': String(element === ui.selected), 'data-type': type }).data('element', element);
+                var row = $('<div>').appendTo(item);
+                $('<button>', { type: 'button', tabindex: -1, 'data-pb-expand': '', hidden: true, 'aria-label': ui.labels[type] }).text('›').appendTo(row);
+                $('<span>', { 'class': me.options.prefix+'-structure-dot', 'aria-hidden': 'true' }).appendTo(row);
+                $('<span>').append($('<small>').text(ui.labels[type]), $('<span>').text(me.workbench_name(element))).appendTo(row);
+                if (!$(element).is(':visible')) $('<span>', { 'class': me.options.prefix+'-structure-hidden', title: ui.labels.hidden }).text(ui.labels.hidden).appendTo(row);
+                list.append(item);
+                ui.treeNodes.set(element, item);
+            });
+            ui.noResults.prop('hidden', visible.size > 0);
+            var active = ui.treeNodes.get(focused) || ui.treeNodes.get(ui.selected) || ui.tree.children().first();
+            if (active && !active.is(':visible')) active = ui.tree.find('[role=treeitem]:visible').first();
+            if (active && active.length) {
+                active.attr('tabindex', 0);
+                if (focused) active[0].focus({ preventScroll: true });
+            }
+            // Emptying the tree temporarily removes its scroll range, so restore it after rebuilding.
+            tree.scrollTop = scrollTop;
+            ui.treeDirty = false;
+        },
+
+        /** Updates the selected row in place without rebuilding the structure snapshot. */
+        refresh_workbench_tree_selection: function() {
+            var me = this, ui = me.ui, tree = ui.tree[0];
+            ui.tree.find('[aria-selected=true]').attr('aria-selected', 'false');
+            var selected = ui.treeNodes.get(ui.selected);
+            if (selected) {
+                selected.attr('aria-selected', 'true');
+                selected.parentsUntil(ui.tree, '[role=treeitem]').each(function() { me.toggle_workbench_branch(this, true); });
+            }
+            var active = tree.contains(document.activeElement) ? $(document.activeElement).closest('[role=treeitem]') : selected;
+            ui.tree.find('[tabindex=0]').attr('tabindex', -1);
+            (active && active.length ? active : ui.tree.find('[role=treeitem]:visible').first()).attr('tabindex', 0);
+            if (selected && selected.is(':visible')) {
+                var bounds = tree.getBoundingClientRect(), row = selected.children('div')[0].getBoundingClientRect();
+                if (row.top < bounds.top) tree.scrollTop += row.top - bounds.top;
+                else if (row.bottom > bounds.bottom) tree.scrollTop += row.bottom - bounds.bottom;
+            }
+            ui.treeRevealSelection = false;
+        },
+
+        toggle_workbench_branch: function(item, expand) {
+            var node = $(item), element = node.data('element');
+            if (!node.is('[aria-expanded]')) return;
+            if (expand === undefined) expand = node.attr('aria-expanded') !== 'true';
+            node.attr('aria-expanded', String(expand)).children('[role=group]').prop('hidden', !expand);
+            if (expand) this.ui.expanded.add(element);
+            else this.ui.expanded.delete(element);
+        },
+
+        workbench_tree_key: function(e) {
+            var item = $(e.target).closest('[role=treeitem]'), nodes = this.ui.tree.find('[role=treeitem]:visible');
+            if (!item.length) return;
+            var index = nodes.index(item), next;
+            if (e.key === 'ArrowDown') next = nodes[Math.min(index + 1, nodes.length - 1)];
+            else if (e.key === 'ArrowUp') next = nodes[Math.max(index - 1, 0)];
+            else if (e.key === 'Home') next = nodes[0];
+            else if (e.key === 'End') next = nodes[nodes.length - 1];
+            else if (e.key === 'ArrowRight') {
+                if (item.attr('aria-expanded') === 'true') next = item.children('[role=group]').children()[0];
+                else this.toggle_workbench_branch(item, true);
+            } else if (e.key === 'ArrowLeft') {
+                if (item.attr('aria-expanded') === 'true') this.toggle_workbench_branch(item, false);
+                else next = item.parent().closest('[role=treeitem]')[0];
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                this.toggle_workbench_branch(item, true);
+                this.select_workbench_element(item.data('element'), true);
+            } else return;
+            e.preventDefault();
+            e.stopPropagation();
+            if (next) {
+                nodes.attr('tabindex', -1);
+                $(next).attr('tabindex', 0).trigger('focus');
+            }
+        },
+
+        /** Positions selection and hover outlines with identical geometry, suppressing shared ancestors on hover. */
+        render_workbench_outlines: function(outlines, elements, top, hover, selectedElements, resizing) {
+            var me = this, bounds;
+            while (outlines.length < elements.length) {
+                outlines = outlines.add($('<div>', { 'class': me.options.prefix+'-outline'+(hover ? ' is-hover' : ''), hidden: true }).appendTo(me.ui.layer));
+            }
+            outlines.each(function(index) {
+                var target = elements[index], outline = $(this);
+                outline.prop('hidden', !target || (hover && selectedElements.includes(target)))
+                    .toggleClass('is-quiet', !hover && !!target && me.ui.quiet && !resizing)
+                    .toggleClass('is-ancestor', hover && index > 0)
+                    .toggleClass('is-resize-active', !!target && !!resizing && target === me.ui.resizeActive);
+                if (!target) return;
+                var rect = target.getBoundingClientRect(), type = me.workbench_type(target);
+                // Resizable columns are peers, not a chain of enclosing ancestors.
+                if (resizing) { bounds = null; type = 'column'; }
+                if (type === 'row' && $(target).hasClass(me.tag.duplicable)) type = 'item';
+                // Keep every ancestor outside its child, even when their actual edges coincide.
+                bounds = {
+                    left: Math.min(rect.left, bounds ? bounds.left : rect.left) - 4,
+                    top: Math.min(rect.top, bounds ? bounds.top : rect.top) - 4,
+                    right: Math.max(rect.right, bounds ? bounds.right : rect.right) + 4,
+                    bottom: Math.max(rect.bottom, bounds ? bounds.bottom : rect.bottom) + 4
+                };
+                outline.attr('data-type', type).css({ left: bounds.left, top: bounds.top - top, width: bounds.right - bounds.left, height: bounds.bottom - bounds.top });
+            });
+            return outlines;
+        },
+
+        /** Coalesces geometry reads; selection chrome never participates in the page grid. */
+        schedule_workbench: function() {
+            var me = this, ui = me.ui;
+            if (!ui || ui.frame !== null) return;
+            ui.frame = window.requestAnimationFrame(function() {
+                ui.frame = null;
+                if (ui.selected && !me.$wrapper[0].contains(ui.selected)) me.select_workbench_element(null);
+                var resizeColumns = me.$wrapper.find('.'+me.state.is_resize_columns).find(me.tagc.column).filter(':visible');
+                var resizing = resizeColumns.length > 0, columnPrefix = me.get_actual_screen_size();
+                if (!resizeColumns.is(ui.resizeActive)) ui.resizeActive = null;
+                resizeColumns.each(function() {
+                    var control = $(this).children(me.tagc.size_changer);
+                    control.toggleClass('is-resize-active', this === ui.resizeActive)
+                        .toggleClass('is-narrow', control[0].getBoundingClientRect().width < parseFloat(control[0].style.width));
+                });
+                if (resizing) {
+                    if (ui.columnPrefix !== columnPrefix) resizeColumns.each(function() { me.update_column_size_label($(this)); });
+                    var suffix = me.get_column_size_suffix(), device = ui.labels.resizeCustom;
+                    if (typeof window.pbScreenSizePrefix !== 'function') {
+                        device = columnPrefix === me.column.valid_prefixes[0] ? ui.labels.resizeMobile : columnPrefix === me.column.valid_prefixes[2] ? ui.labels.resizeTablet : ui.labels.resizeDesktop;
+                    }
+                    var description = (suffix ? suffix+' — ' : '')+device;
+                    if (ui.resizeHint.find('strong').text() !== description) ui.resizeHint.find('strong').text(description);
+                }
+                ui.columnPrefix = columnPrefix;
+                // Include the mode hint in toolbar and outline geometry in this same frame.
+                var resizeStarted = resizing && !ui.bar.hasClass('is-resizing');
+                ui.bar.toggleClass('is-resizing', resizing);
+                ui.resizeHint.prop('hidden', !resizing);
+                if (resizeStarted) {
+                    ui.path.removeClass('is-expanded').find('[data-pb-action=ancestors]').attr('aria-expanded', 'false');
+                    ui.menu.prop('hidden', true);
+                    ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false');
+                    ui.resizeHint.find('[data-pb-action=end-resize]')[0].focus({ preventScroll: true });
+                }
+                var moving = me.$wrapper.hasClass(me.state.is_moving_child);
+                var moveStarted = moving && !ui.bar.hasClass('is-moving');
+                ui.bar.toggleClass('is-moving', moving);
+                ui.moveHint.prop('hidden', !moving);
+                if (moveStarted) {
+                    ui.moveHint.find('[role=status]').text(me.duplicate ? ui.labels.duplicateHint : ui.labels.moveHint);
+                    ui.moveHint.find('[data-pb-action=end-move]')[0].focus({ preventScroll: true });
+                }
+                var contentBottom = ui.toolbarContent.length ? ui.toolbarContent[0].getBoundingClientRect().bottom : 0;
+                if (ui.toolbarHost.length) {
+                    var hostTop = ui.toolbarHost[0].getBoundingClientRect().top;
+                    ui.bar.css('top', Math.max(0, contentBottom - hostTop));
+                    var height = Math.max(0, contentBottom - hostTop) + ui.bar[0].getBoundingClientRect().height;
+                    if (ui.hostHeight !== height) {
+                        ui.hostHeight = height;
+                        ui.toolbarHost[0].style.setProperty('height', height+'px', 'important');
+                        ui.placeholder.each(function() { this.style.setProperty('height', height+'px', 'important'); this.style.setProperty('margin-bottom', '0px'); });
+                    }
+                }
+                var top = Math.max(0, ui.bar[0].getBoundingClientRect().bottom);
+                ui.layer.css('top', top);
+                ui.drawer.css('top', top + 8);
+                var element = moving ? ui.hovered : ui.selected;
+                var obstructed = me.$wrapper.hasClass(me.state.is_modal_open) || me.$wrapper.hasClass(me.state.is_library_active);
+                ui.layer.toggleClass('is-resizing', resizing);
+                var showGuides = (resizing || ui.guideMode !== 'hidden') && !ui.inserting && !obstructed && !document.body.classList.contains('is-view-mode');
+                var visible = showGuides && element && element.isConnected && $(element).is(':visible');
+                var elements = visible ? [element] : [];
+                if (visible && ui.guideMode === 'all') elements = elements.concat($(element).parentsUntil(me.$wrapper, me.tagc._grid_element).get());
+                if (resizing) elements = showGuides ? resizeColumns.get() : [];
+                ui.outlines = me.render_workbench_outlines(ui.outlines, elements, top, false, [], resizing);
+                var hovered = ui.hovered;
+                var hoverElements = showGuides && !resizing && !moving && !ui.quiet && hovered && me.$wrapper[0].contains(hovered) && $(hovered).is(':visible') ? [hovered] : [];
+                if (hoverElements.length && ui.guideMode === 'all') hoverElements = hoverElements.concat($(hovered).parentsUntil(me.$wrapper, me.tagc._grid_element).get());
+                ui.hoverOutlines = me.render_workbench_outlines(ui.hoverOutlines, hoverElements, top, true, elements);
+                if (ui.treeDirty && !ui.drawer.prop('hidden')) me.render_workbench_tree();
+                if (ui.treeRevealSelection && !ui.drawer.prop('hidden')) me.refresh_workbench_tree_selection();
+                var busy = me.workbench_busy();
+                me.position_workbench_insertion(top);
+                ui.path.find('button').prop('disabled', busy || ui.inserting);
+                if (busy) me.toggle_workbench_structure(false);
+                ui.actions.find('button').each(function() {
+                    var action = this.getAttribute('data-pb-action');
+                    this.disabled = (busy && !(resizing && action === 'resize')) || (ui.inserting && action !== 'insert') || (['previous', 'next'].includes(action) && !me.workbench_sibling(action));
+                });
+                ui.bar.find('[data-pb-action=structure], [data-pb-action=guides]').prop('disabled', busy || ui.inserting);
+                ui.bar.find('[data-pb-action=end-insert]').prop('disabled', busy);
+                ui.bar.find('[data-pb-action=resize]').attr('aria-pressed', String(resizing)).find('span').text(ui.selected ? me.get_actual_column_size($(ui.selected))+' / '+me.options.max_col_size : '');
+                var width = window.innerWidth, size = width < 768 ? 'phone' : width < 1200 ? 'tablet' : 'desktop';
+                $('.exit-inline-editor a[href*="pbSetWindowSize"]').each(function() {
+                    $(this).attr('aria-pressed', String(this.getAttribute('href').includes("'"+size+"'")));
+                });
+                if ((ui.insertAnimations || []).some(animation => animation.playState === 'running')) me.schedule_workbench();
+            });
+        },
+
+        destroy_workbench: function() {
+            var ui = this.ui;
+            if (!ui) return;
+            if (ui.frame !== null) window.cancelAnimationFrame(ui.frame);
+            ui.resizeObserver.disconnect();
+            ui.observer.disconnect();
+            this.clear_workbench_insertion();
+            document.documentElement.classList.remove('pb-insertion-open');
+            window.removeEventListener('scroll', ui.layoutHandler, true);
+            window.removeEventListener('resize', ui.layoutHandler);
+            document.removeEventListener('keydown', ui.escapeHandler, true);
+            document.removeEventListener('keyup', ui.escapeUpHandler, true);
+            document.removeEventListener('pointerdown', ui.outsideHandler);
+            this.$wrapper[0].removeEventListener('load', ui.layoutHandler, true);
+            this.$wrapper.off('.workbench').removeClass(this.options.prefix+'-has-workbench '+this.options.prefix+'-hide-guides '+this.options.prefix+'-is-inserting');
+            ui.bar.add(ui.drawer).add(ui.layer).add(ui.insertLayer).remove();
+            if (ui.oldHostStyle === undefined) ui.toolbarHost.removeAttr('style');
+            else ui.toolbarHost.attr('style', ui.oldHostStyle);
+            if (ui.oldPlaceholderStyle === undefined) ui.placeholder.removeAttr('style');
+            else ui.placeholder.attr('style', ui.oldPlaceholderStyle);
+            this.ui = null;
         },
 
         /*==================================================================
@@ -167,6 +1132,7 @@
         /*=================================================================*/
 
         destroy: function() {
+            this.destroy_workbench();
             this.unbind_events();
             this.remove_elements();
             this.remove_attributes();
@@ -242,6 +1208,7 @@
                 modal:                          prefix+'modal',
                 modal_header:                   prefix+'modal__header',
                 modal_header_button_show:       prefix+'modal__header__button-show',
+                modal_header_button_close:      prefix+'modal__header__button-close',
                 modal_content:                  prefix+'modal__content',
                 modal_footer:                   prefix+'modal__footer',
                 modal_footer_button_close:      prefix+'modal__footer__button-close',
@@ -285,8 +1252,6 @@
                 library_header:                 prefix+'library__header',
                 library_header_title:           prefix+'library__header__title',
                 library_content_container:      prefix+'library__content',
-                library_footer:                 prefix+'library__footer',
-                library_footer_button:          prefix+'library__footer__button',
 
                 library_favorites:              prefix+'library__favorites'
             };
@@ -1201,10 +2166,14 @@
 
         create_column_size_changer: function (el) {
             if($(el).children(this.tagc.size_changer).length < 1) {
-                var content  = this.build_button(this.tag.size_changer_down);
+                var label = "<iwcm:text key='pagebuilder.toolbar.resize'/>";
+                var content  = this.build_button(this.tag.size_changer_down, null, label+' −1');
                 content += this.build_button(this.tag.size_changer_number,this.get_actual_column_size(el));
-                content += this.build_button(this.tag.size_changer_up);
+                content += this.build_button(this.tag.size_changer_up, null, label+' +1');
                 $(el).append(this.build_aside(this.tag.size_changer,content));
+                $(el).children(this.tagc.size_changer).attr({'role': 'group', 'aria-label': label}).find('button').each(function() {
+                    $(this).attr('aria-label', $(this).attr('data-title'));
+                });
             }
         },
 
@@ -1280,7 +2249,7 @@
             if (class_name.indexOf("size-changer__number") !== -1) {
                 tagName = "span";
             }
-            return '<'+tagName+' class="'+class_name+'"'+title+'>'+content+'</'+tagName+'>';
+            return '<'+tagName+(tagName === 'button' ? ' type="button"' : '')+' class="'+class_name+'"'+title+'>'+content+'</'+tagName+'>';
         },
 
         build_aside: function (class_name, content = null, tooltip = null) {
@@ -1402,6 +2371,12 @@
                 .removeClass(this.get_actual_screen_size() + actual_size)
                 .addClass(this.get_actual_screen_size() + new_size);
 
+            this.update_column_size_label(column);
+            this.schedule_workbench();
+        },
+
+        /** Returns the breakpoint marker shared by column controls and the resize hint. */
+        get_column_size_suffix: function() {
             var screenSizeText = this.get_actual_screen_size();
             try {
                 //remove valid_prefixes[0] from screenSizeText
@@ -1421,11 +2396,21 @@
             if (screenSizeText.length > 4) {
                 screenSizeText = screenSizeText.slice(-4);
             }
-            if (screenSizeText !== "") {
-                screenSizeText = " [" + screenSizeText + "]";
-            }
+            return screenSizeText.toUpperCase();
+        },
 
-            $(column).find(this.tagc.size_changer_number).html(new_size+screenSizeText.toUpperCase());
+        /** Fits the width control to its label without changing the column's grid classes. */
+        update_column_size_label: function(column) {
+            var control = $(column).children(this.tagc.size_changer);
+            var label = control.find(this.tagc.size_changer_number)
+                .text(this.get_actual_column_size(column)+' / '+this.options.max_col_size)
+                .append($('<small>').text(this.get_column_size_suffix()));
+            // Measure the unwrapped label before restoring the responsive layout.
+            control.removeClass('is-narrow');
+            label.css({flex: 'none', width: 'max-content'});
+            var width = Math.ceil(label[0].getBoundingClientRect().width) + 48;
+            label.css({flex: '', width: ''});
+            control.css('width', width).toggleClass('is-narrow', control[0].getBoundingClientRect().width < width);
         },
 
         listen_for_shift_key: function(e) {
@@ -1455,16 +2440,15 @@
         allow_resize_columns: function (el) {
             var container = $(el).closest(this.tagc.container);
             $(container).addClass(this.state.is_resize_columns);
-            this.update_notify_content("<iwcm:text key='pagebuilder.column.resize'/>",'');
-
-            //aktualizuj cisla
-            //console.log("element:", $(container).find(this.tagc.size_changer).find(this.tagc.size_changer_number));
+            if (!this.ui) this.update_notify_content("<iwcm:text key='pagebuilder.column.resize'/>",'');
             var me = this;
-            $(container).find(this.tagc.size_changer).find(this.tagc.size_changer_number).each(function(index) {
-                //console.log("update size, this=", this);
-                me.change_column_size($(this), 0);
-                //sizeEl.html(this.get_actual_column_size(el));
-            })
+            $(container).find(this.tagc.column).each(function() {
+                // Reserve space inside the column, including short headings and narrow columns.
+                $(this).children(me.tagc.size_changer).prependTo(this);
+                me.update_column_size_label($(this));
+            });
+            me.refresh_workbench_selection();
+            me.schedule_workbench();
         },
 
         /*==================================================================
@@ -1472,8 +2456,19 @@
         /*=================================================================*/
 
         cancel_resize_columns: function () {
+            var me = this;
+            me.$wrapper.find('.'+me.state.is_resize_columns).find(me.tagc.column).each(function() {
+                $(this).children(me.tagc.size_changer).removeClass('is-resize-active').appendTo(this);
+            });
             $(this.tagc._grid_element).removeClass(this.state.is_resize_columns);
+            if (me.ui) {
+                me.ui.resizeActive = null;
+                me.ui.bar.removeClass('is-resizing');
+                me.ui.resizeHint.prop('hidden', true);
+            }
             this.set_toolbar_invisible();
+            this.refresh_workbench_selection();
+            this.schedule_workbench();
         },
 
         /*==================================================================
@@ -1512,11 +2507,46 @@
             $(parent).addClass(this.state.has_toolbar_active);
             $(parents).addClass(this.state.has_child_toolbar_active);
             $(this.$wrapper).addClass(this.state.has_child_toolbar_active);
+            if (this.ui) this.select_workbench_element($(parent)[0]);
         },
 
         /*==================================================================
         /*====================|> REMOVE GRID ELEMENT
         /*=================================================================*/
+
+        /** Finds a surviving editable region, preferring its containing editor or the next field. */
+        get_surviving_ckeditor_element: function(el) {
+            var node = $(el)[0], selector = '[data-ckeditor-instance]';
+            var containing = $(node).parent().closest(selector);
+            if (containing.length) return containing;
+            var editors = this.$wrapper.find(selector).filter(':visible').filter(function() {
+                return !node.contains(this);
+            });
+            var next = editors.filter(function() { return node.compareDocumentPosition(this) & Node.DOCUMENT_POSITION_FOLLOWING; }).first();
+            return next.length ? next : editors.last();
+        },
+
+        /** Restores the shared toolbar without changing the structural selection or scrolling the canvas. */
+        focus_ckeditor_element: function(el) {
+            if (typeof CKEDITOR === 'undefined') return;
+            var me = this, node = $(el).closest('[data-ckeditor-instance]');
+            if (!node.length) node = $(el).find('[data-ckeditor-instance]').filter(':visible').first();
+            var editor = CKEDITOR.instances[node.attr('data-ckeditor-instance')];
+            if (!editor || !editor.element || editor.element.$ !== node[0]) return;
+            var ui = me.ui, selected = ui && ui.selected;
+            var focus = function() {
+                if (editor.status !== 'ready' || !me.$wrapper[0].contains(node[0]) ||
+                    (ui && (me.ui !== ui || ui.selected !== selected))) return;
+                var x = window.scrollX, y = window.scrollY;
+                if (ui) ui.restoringFocus = true;
+                editor.focus();
+                if (ui) ui.restoringFocus = false;
+                window.scrollTo(x, y);
+                me.schedule_workbench();
+            };
+            if (editor.status === 'ready') focus();
+            else editor.once('instanceReady', focus);
+        },
 
         destroy_ckeditor_instances: function (el) {
             if (typeof CKEDITOR === "undefined" || typeof CKEDITOR.instances === "undefined") {
@@ -1545,6 +2575,8 @@
             var style_id = grid_element.attr(this.user_style.attr_name);
             if( $(this.$wrapper).find(this.tagc._grid_element+'[data-pb-user-style-id='+style_id+']').length < 2 ) $('style[style-id="'+style_id+'"]').remove();
 
+            // Focus a surviving editor before destroying the one that owns the visible shared toolbar.
+            this.focus_ckeditor_element(this.get_surviving_ckeditor_element(grid_element));
             this.destroy_ckeditor_instances(grid_element);
             $(grid_element).off().unbind().remove();
 
@@ -1552,6 +2584,7 @@
             this.create_empty_placeholder($(parent));
 
             this.options.onElementRemoved(grid_element, parent);
+            if (this.ui) this.select_workbench_element($(parent).is(this.tagc._grid_element) ? $(parent)[0] : null);
 
             let pbElement = $(this.element);
             if (pbElement.find("section").length==0) {
@@ -1593,10 +2626,8 @@
 
             if(this.duplicate) {
                 $(this.$wrapper).addClass(this.state.is_duplicating);
-                this.update_notify_content("<iwcm:text key='pagebuilder.notify_content.duplicate'/>",'');
-            } else {
-                this.update_notify_content("<iwcm:text key='pagebuilder.notify_content.move'/>",'');
             }
+            if (!this.ui) this.update_notify_content(this.duplicate ? "<iwcm:text key='pagebuilder.notify_content.duplicate'/>" : "<iwcm:text key='pagebuilder.notify_content.move'/>", '');
 
             if(is_duplicable) {
                 $(this.$wrapper).addClass(this.state.is_moving_type(this.tag.duplicable));
@@ -1645,6 +2676,7 @@
             cloned_editors.removeClass("editableElement cke_editable cke_editable_inline cke_contents_ltr cke_show_borders");
 
             if(!this.duplicate) {
+                this.focus_ckeditor_element(this.get_surviving_ckeditor_element(moving));
                 this.destroy_ckeditor_instances(moving);
                 $(moving).unbind().off().remove();
             }
@@ -1680,8 +2712,7 @@
             }
             this.cancel_move_grid_element();
             this.hide_notify();
-
-
+            this.focus_ckeditor_element(clone);
         },
 
         duplicate_user_style_element: function () {
@@ -1716,6 +2747,11 @@
         cancel_move_grid_element: function () {
             this.removeClassStartingWith($(this.$wrapper),this.state.is_moving);
             $(this.$wrapper).removeClass(this.state.is_duplicating);
+            if (this.ui) {
+                this.ui.bar.removeClass('is-moving');
+                this.ui.moveHint.prop('hidden', true);
+                this.schedule_workbench();
+            }
 
             $(this.$wrapper).find(this.tagc._grid_element)
                 .removeClass(this.state.is_special_helper)
@@ -1895,7 +2931,11 @@
         /*=================================================================*/
 
         insert_content_into_ckeditor_at_cursor: function(html) {
-            var oEditor = window.getCkEditorInstance();
+            var oEditor = this.library_editor_bookmark ? this.library_editor_bookmark.editor : window.getCkEditorInstance();
+            if (this.library_editor_bookmark) {
+                oEditor.focus();
+                oEditor.getSelection().selectBookmarks(this.library_editor_bookmark.marks);
+            }
             if (html.indexOf("<span") == 0) {
                 oEditor.insertHtml(html)
             } else if (html.indexOf("!INCLUDE")!=-1) {
@@ -1943,119 +2983,117 @@
         },
 
         create_library: function () {
+            var me = this, prefix = me.options.prefix;
+            var library = '<div class="'+me.tag.library+'" role="dialog" aria-labelledby="'+prefix+'-library-title" contenteditable="false">';
+            library += '<div class="'+me.tag.library_header+'"><div class="'+prefix+'-library__header-row"><i class="library-drag-handle ti ti-grip-vertical" aria-hidden="true"></i>';
+            library += '<div class="'+me.tag.library_header_title+'" id="'+prefix+'-library-title"><iwcm:text key="pagebuilder.create_library.insert"/></div>';
+            library += '<button type="button" class="'+prefix+'-library__close" aria-label="<iwcm:text key="pagebuilder.library.close"/>" title="<iwcm:text key="pagebuilder.library.close"/> · Esc" aria-keyshortcuts="Escape"><i class="ti ti-x" aria-hidden="true"></i></button></div>';
+            library += '<div class="'+prefix+'-insert-context"></div>'+me.create_library_tab_menu()+'</div>';
+            library += '<div class="'+me.tag.library_content_container+'">'+me.create_library_tab_content()+'</div></div>';
 
-            var me = this;
-
-            var library  = '<div class="'+this.tag.library+'">';
-            library += '<div class="'+this.tag.library_header+'"><div class="'+this.tag.library_header_title+'"><iwcm:text key="pagebuilder.create_library.insert"/></div>'+this.create_library_tab_menu()+'</div>';
-            library += '<div class="'+this.tag.library_content_container+'">'+this.create_library_tab_content()+'</div>';
-            library += '<div class="'+this.tag.library_footer+'">'+ this.build_button(this.tag.library_footer_button, '<iwcm:text key="pagebuilder.escape"/>') + '</div>';
-            library += '</div>';
-
-            $(library).appendTo(this.$wrapper);
-
-            $(this.tagc.library).draggable({
-                handle: '.'+me.options.prefix+'-library__header__title',
-                drag: function( event, ui ) {
-
-                    var window_width = $(window).outerWidth(),
-                        window_height = $(window).outerHeight(),
-                        modal_width = $(me.tagc.modal).outerWidth(),
-                        modal_height = $(me.tagc.modal).outerHeight(),
-                        offset = 10,
-                        min_left = offset,
-                        max_left = window_width - modal_width - offset,
-                        min_top = offset,
-                        max_top = window_height - modal_height - offset;
-
-                    if(ui.position.left < min_left)   { ui.position.left = min_left; }
-                    if(ui.position.left > max_left)   { ui.position.left = max_left; }
-                    if(ui.position.top < min_top)     { ui.position.top = min_top; }
-                    if(ui.position.top > max_top)     { ui.position.top = max_top; }
-                }
+            $(library).appendTo(me.$wrapper).draggable({
+                handle: '.'+prefix+'-library__header-row',
+                drag: function(event, ui) { me.keep_library_in_viewport(ui.position); }
             });
-
+            me.library_resize_handler = function() {
+                if (me.$wrapper.hasClass(me.state.is_library_active)) me.keep_library_in_viewport();
+            };
+            $(window).on('resize', me.library_resize_handler);
+            me.$wrapper.on('click', '.'+prefix+'-library__close', function() { me.hide_library(); });
         },
 
-        // <%--// Updatuje kniznicu favorite blokov--%>
-        update_library_content: function(){
-            $(this.tagc.library_favorites).html(this.create_library_content_template('favorite'));
+        /** Keeps the complete floating panel reachable after dragging or resizing the viewport. */
+        keep_library_in_viewport: function(position) {
+            var library = this.$wrapper.find(this.tagc.library), rect = library[0].getBoundingClientRect();
+            var target = position || { left: rect.left, top: rect.top }, margin = 8;
+            target.left = Math.max(margin, Math.min(target.left, window.innerWidth-rect.width-margin));
+            target.top = Math.max(margin, Math.min(target.top, window.innerHeight-rect.height-margin));
+            if (!position) library.css(target);
         },
 
-        // <%--// otvara taby basic/library/favorite--%>
-        show_library_tab: function (el) {
-            //console.log("show_library_tab, el=", el);
-
-            this.clicked_button = $(el);
-
-            var me = this,
-                parent = me.get_parent_grid_element(me.clicked_button);
-                isEmptyPlaceholderButton = this.clicked_button.hasClass(me.tag.empty_placeholder_button);
-
-            $(me.tagc.library).removeClass(me.tag.library_column);
-            $(me.tagc.library).removeClass(me.tag.library_container);
-            $(me.tagc.library).removeClass(me.tag.library_section);
-            $(me.tagc.library).removeClass(me.tag.library_content);
-
-            $(me.tagc.library + ' .library-tab-link').removeClass('active');
-            $(me.tagc.library + ' .library-tab-link:nth-child(2)').addClass('active');
-
-            $(me.tagc.library + ' .library-tab-item').removeClass('active');
-            $(me.tagc.library + ' .library-tab-item:nth-child(2)').addClass('active');
-
-            //console.log("show_library_tab, parent=", $(parent), "css=", $(parent).attr("class"), "el=", this.clicked_button, "isEmptyPlaceholderButton=", isEmptyPlaceholderButton);
-
-            if($(parent).hasClass(me.tag.column)) {
-                $(me.tagc.library).addClass(me.tag.library_column);
+        update_library_content: function() {
+            var favorites = this.$wrapper.find(this.tagc.library_favorites);
+            var restoreFocus = favorites[0].contains(document.activeElement);
+            favorites.html(this.create_library_content_template('favorite'));
+            favorites.find('.library-template-block').prop('hidden', true).filter('.library-template-block--'+this.library_type).prop('hidden', false);
+            if (restoreFocus) {
+                var target = favorites.find('button:visible').first();
+                if (!target.length) target = this.$wrapper.find('.library-tab-link[data-library-type="favorite"]');
+                target.trigger('focus');
             }
+        },
 
-            if($(parent).hasClass(me.tag.row)) {
-                $(me.tagc.library).addClass(me.tag.library_column);
-            }
-
-            if($(parent).hasClass(me.tag.container)) {
-                $(me.tagc.library).addClass(me.tag.library_container);
-            }
-
+        show_library_tab: function(el, editor) {
+            var me = this;
+            me.library_return_focus = el == null ? document.activeElement : $(el)[0];
+            me.library_editor_bookmark = null;
             if (el == null) {
-                $(me.tagc.library).addClass(me.tag.library_content);
-                //hide favourites tab - there is no way to add content to favourites from CKEditor
-                $(me.tagc.library + ' .library-tab-link[data-library-type="favorite"]').hide();
-            } else {
-                $(me.tagc.library + ' .library-tab-link[data-library-type="favorite"]').show();
+                editor = editor || (typeof getCkEditorInstance === 'function' ? getCkEditorInstance() : null);
+                if (editor && editor.getSelection()) me.library_editor_bookmark = { editor: editor, marks: editor.getSelection().createBookmarks2(true) };
             }
+            me.clicked_button = $(el);
+            var parent = me.get_parent_grid_element(me.clicked_button);
+            var empty = me.clicked_button.hasClass(me.tag.empty_placeholder_button);
+            var type = 'section';
+            if (el == null) type = 'content';
+            else if ($(parent).hasClass(me.tag.column) || $(parent).hasClass(me.tag.row)) type = 'column';
+            else if ($(parent).hasClass(me.tag.container)) type = 'container';
+            else if (empty && ($(parent).hasClass(me.tag.section) || $(parent).hasClass(me.tag.wrapper)) && $(me.element).find('section').length) type = 'container';
+            me.library_type = type;
 
-            if ($(parent).hasClass(me.tag.empty_placeholder_wrapper)) {
-                //fixed empty placeholder - show section library
-                $(me.tagc.library).addClass(me.tag.library_section);
-            } else if($(parent).hasClass(me.tag.section) || $(parent).hasClass(me.tag.wrapper) ) {
-                if (isEmptyPlaceholderButton && $(me.element).find("section").length>0) $(me.tagc.library).addClass(me.tag.library_container);
-                else $(me.tagc.library).addClass(me.tag.library_section);
+            var library = me.$wrapper.find(me.tagc.library);
+            library.removeClass([me.tag.library_column, me.tag.library_container, me.tag.library_section, me.tag.library_content].join(' ')).addClass(me.tag['library_'+type]);
+            library.find('.library-template-block').prop('hidden', true).filter('.library-template-block--'+type).prop('hidden', false);
+            library.find('.library-tab-link[data-library-type="favorite"]').prop('hidden', type === 'content');
+            var titles = {
+                section: "<iwcm:text key='pagebuilder.library.insert.section'/>",
+                container: "<iwcm:text key='pagebuilder.library.insert.container'/>",
+                column: "<iwcm:text key='pagebuilder.library.insert.column'/>",
+                content: "<iwcm:text key='pagebuilder.library.insert.content'/>"
+            };
+            library.find(me.tagc.library_header_title).text(titles[type]);
+            var ui = me.ui, point = ui && ui.insertPending, context = '';
+            if (point) context = point.position;
+            else if (type === 'content') context = "<iwcm:text key='pagebuilder.library.at_cursor'/>";
+            else if (ui) {
+                if (empty) {
+                    var lastSection = $(me.element).children('section').last();
+                    context = $(parent).hasClass(me.tag.empty_placeholder_wrapper) && lastSection.length ? ui.labels.insertAfter+' “'+me.workbench_name(lastSection[0])+'”' : ui.labels.insertStart;
+                }
+                else context = (me.clicked_button.hasClass(me.tag.prepend) ? ui.labels.insertBefore : ui.labels.insertAfter)+' “'+me.workbench_name($(parent)[0])+'”';
             }
+            library.find('.'+me.options.prefix+'-insert-context').text(context).prop('hidden', !context);
+            me.select_library_tab('02');
+            me.show_library();
+        },
 
-            this.show_library();
+        select_library_tab: function(id) {
+            var library = this.$wrapper.find(this.tagc.library);
+            library.find('.library-tab-link').removeClass('active').attr({ 'aria-selected': 'false', tabindex: '-1' })
+                .filter('[data-tab-id="'+id+'"]').addClass('active').attr({ 'aria-selected': 'true', tabindex: '0' });
+            library.find('.library-tab-item').removeClass('active').prop('hidden', true)
+                .filter('[data-tab-id="'+id+'"]').addClass('active').prop('hidden', false);
         },
 
         create_library_tab_menu: function() {
-
-            var me = this;
-
-            var tab = '<div class="library-tab-menu">';
-            tab += '<span class="library-tab-link active" data-library-type="basic" data-tab-id="01"><iwcm:text key="pagebuilder.library.tab.main"/></span>';
-            tab += '<span class="library-tab-link" data-library-type="library" data-tab-id="02"><iwcm:text key="pagebuilder.library.tab.library"/></span>';
-            tab += '<span class="library-tab-link" data-library-type="favorite" data-tab-id="03"><iwcm:text key="pagebuilder.library.tab.favorites"/></span>';
-            tab += '</div>';
-
-            me.$wrapper.on('click', '.library-tab-link', function() {
-                var id = $(this).attr('data-tab-id');
-                if(!$(this).hasClass('active')) {
-                    $('.library-tab-link').not($(this)).removeClass('active');
-                    $(this).addClass('active');
-                    $('.library-tab-item').removeClass('active');
-                    $('.library-tab-item[data-tab-id="'+id+'"]').addClass('active');
-                }
+            var me = this, prefix = me.options.prefix;
+            var tab = '<div class="library-tab-menu" role="tablist" aria-label="<iwcm:text key="pagebuilder.create_library.insert"/>">';
+            var labels = ["<iwcm:text key='pagebuilder.library.tab.main'/>", "<iwcm:text key='pagebuilder.library.tab.library'/>", "<iwcm:text key='pagebuilder.library.tab.favorites'/>"];
+            ['basic', 'library', 'favorite'].forEach(function(type, index) {
+                var id = '0'+(index+1), active = type === 'library';
+                tab += '<button type="button" class="library-tab-link'+(active ? ' active' : '')+'" role="tab" aria-selected="'+active+'" tabindex="'+(active ? '0' : '-1')+'" id="'+prefix+'-library-tab-'+id+'" aria-controls="'+prefix+'-library-panel-'+id+'" data-library-type="'+type+'" data-tab-id="'+id+'">'+labels[index]+'</button>';
             });
-
+            tab += '</div>';
+            me.$wrapper.on('click', '.library-tab-link', function() { me.select_library_tab($(this).attr('data-tab-id')); });
+            me.$wrapper.on('keydown', '.library-tab-link', function(e) {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+                e.preventDefault();
+                var tabs = $(this).parent().find('.library-tab-link').filter(':visible'), index = tabs.index(this);
+                if (e.key === 'Home') index = 0;
+                else if (e.key === 'End') index = tabs.length-1;
+                else index = (index+(e.key === 'ArrowRight' ? 1 : -1)+tabs.length)%tabs.length;
+                tabs.eq(index).trigger('click').trigger('focus');
+            });
             return tab;
         },
 
@@ -2066,29 +3104,29 @@
                 content_03 = me.create_library_content_template('favorite');
 
             var tab = '<div class="library-tab-content">';
-            tab += '<div class="library-tab-item library-tab-item--basic" data-tab-id="01">'+content_01+'</div>';
-            tab += '<div class="library-tab-item library-tab-item--library active" data-tab-id="02">'+content_02+'</div>';
-            tab += '<div class="library-tab-item library-tab-item--favorite '+me.tag.library_favorites+'" data-tab-id="03">'+content_03+'</div>';
+            tab += '<div class="library-tab-item library-tab-item--basic" data-tab-id="01" role="tabpanel" id="'+me.options.prefix+'-library-panel-01" aria-labelledby="'+me.options.prefix+'-library-tab-01" hidden>'+content_01+'</div>';
+            tab += '<div class="library-tab-item library-tab-item--library active" data-tab-id="02" role="tabpanel" id="'+me.options.prefix+'-library-panel-02" aria-labelledby="'+me.options.prefix+'-library-tab-02">'+content_02+'</div>';
+            tab += '<div class="library-tab-item library-tab-item--favorite '+me.tag.library_favorites+'" data-tab-id="03" role="tabpanel" id="'+me.options.prefix+'-library-panel-03" aria-labelledby="'+me.options.prefix+'-library-tab-03" hidden>'+content_03+'</div>';
             tab += '</div>';
 
-            me.$wrapper.on('click', '.library-tab-item-button__toggler', function() {
-                if($(this).hasClass("active")) {
-                    $(this).removeClass("active");
-                } else {
-                    $(this).addClass("active");
+            me.$wrapper.on('click', '.library-group-toggle', function() {
+                var group = $(this).closest('.library-tab-item-button__toggler');
+                me.set_library_group(group.closest('.library-template-block'), group.hasClass('active') ? $() : group);
+                if (group.hasClass('active')) {
+                    var results = group.closest('.library-results')[0], viewport = results.getBoundingClientRect(), header = this.getBoundingClientRect();
+                    if (header.top < viewport.top) results.scrollTop += header.top-viewport.top;
+                    else if (header.bottom > viewport.bottom) results.scrollTop += header.bottom-viewport.bottom;
                 }
             });
 
             me.$wrapper.on('click', '.library-tab-item-button', function(e) {
-                if($(e.target).hasClass('library-tab-item-delete-favorite')){
-                    return;
-                }
+                e.stopPropagation();
 
                 var id = $(this).attr('data-library-item-id'),
                     parent = me.get_parent_grid_element(me.clicked_button),
                     insert_content = '',
                     empty = $(me.clicked_button).hasClass(me.tag.empty_placeholder_button),
-                    template_type = $('.library-tab-link.active').attr('data-library-type');
+                    template_type = me.$wrapper.find(me.tagc.library+' .library-tab-link.active').attr('data-library-type');
 
                 if($(this).hasClass('has-group')){
                     $(me.tagc.library).addClass('show-group');
@@ -2313,26 +3351,22 @@
                     me.options.onGridChanged();
                 }
 
-                me.hide_library();
+                me.hide_library(insert_content || true);
 
                 //console.log("kliknutie na pridaj v zakladne, esc simulate");
                 me.disable_after_esc_pressed(true);
             });
 
-            me.$wrapper.on('click','.library-tab-item-delete-favorite',function(){
+            me.$wrapper.on('click','.library-tab-item-delete-favorite',function(e){
+                e.stopPropagation();
                 if(!confirm("<iwcm:text key='pagebuilder.library.remove_from_favorites'/>")){
                     return;
                 }
 
                 var dis = this,
                     id = $(dis).parent().attr('data-library-item-id'),
-                    parent = me.get_parent_grid_element(me.clicked_button),
-                    template_type = $('.library-tab-link.active').attr('data-library-type'),  // <%--// asi bude vzdy favorites, ale preistotu necham takto--%>
-                    type = '';
-
-                if($(parent).hasClass(me.tag.column)) type = 'column';
-                if($(parent).hasClass(me.tag.container)) type = 'container';
-                if($(parent).hasClass(me.tag.section)) type = 'section';
+                    template_type = 'favorite',
+                    type = me.library_type;
 
                 var columns = me.get_json_object_by_attribute(me.template[template_type], 'textKey', type);
                 var groups = me.get_json_object_by_attribute(columns.groups, 'id', id);
@@ -2362,37 +3396,30 @@
 
             });
 
-            me.$wrapper.on('click', '.library-tag-item', function() {
-                var radio = $(this);
-                // Store the previous state before the click
-                var wasChecked = radio.data('was-checked') || false;
-
-                // If it was already checked, uncheck it
-                if (wasChecked) {
-                    radio.prop("checked", false);
-                    radio.data('was-checked', false);
-                } else {
-                    // Uncheck all other radios in the same group first
-                    $('input[name="' + radio.attr('name') + '"]').not(radio).data('was-checked', false);
-                    radio.prop("checked", true);
-                    radio.data('was-checked', true);
-                }
-
+            me.$wrapper.on('click', '.library-tag-item-btn', function() {
+                var button = $(this), buttons = button.closest('.library-tags-block').find('.library-tag-item-btn');
+                if (button.attr('aria-pressed') === 'true' && button.attr('data-library-tag')) button = buttons.filter('[data-library-tag=""]');
+                buttons.attr('aria-pressed', 'false');
+                button.attr('aria-pressed', 'true');
+                me.filter_library();
+            });
+            me.$wrapper.on('input', '.library-filter-input', function() { me.filter_library(); });
+            me.$wrapper.on('click', '.library-clear-filters', function() {
+                var block = $(this).closest('.library-template-block');
+                block.find('.library-filter-input').val('').trigger('focus');
+                block.find('.library-tag-item-btn').attr('aria-pressed', 'false').filter('[data-library-tag=""]').attr('aria-pressed', 'true');
                 me.filter_library();
             });
 
-            me.$wrapper.on('keyup', '.library-filter-input', function() {
-                me.filter_library();
-            });
-
-            me.$wrapper.on('click', '.library-full-width-item', function() {
+            me.$wrapper.on('click', '.library-full-width-item', function(e) {
+                e.stopPropagation();
 
                 var id = $(this).attr('data-library-item-id'),
                     count = $(this).attr('data-library-count-id'),
                     group_id = $(this).attr('data-library-group-id'),
                     parent = me.get_parent_grid_element(me.clicked_button),
                     insert_content = '',
-                    template_type = $('.library-tab-link.active').attr('data-library-type');
+                    template_type = me.$wrapper.find(me.tagc.library+' .library-tab-link.active').attr('data-library-type');
 
                 var parentTag = null;
                 if ($(parent).hasClass(me.tag.column)) parentTag = "column";
@@ -2524,7 +3551,7 @@
                 me.changedElement = $(insert_content);
                 me.options.onGridChanged();
 
-                me.hide_library();
+                me.hide_library(insert_content || true);
 
                 //console.log("kliknutie na pridaj v library, esc simulate");
                 me.disable_after_esc_pressed(true);
@@ -2533,87 +3560,46 @@
             return tab;
         },
 
+        /** Opens one category, keeping its visual and accessible states in sync. */
+        set_library_group: function(templateBlock, activeGroup) {
+            templateBlock.find('.library-tab-item-button__toggler').each(function() {
+                var group = $(this), active = activeGroup.length && this === activeGroup[0];
+                group.toggleClass('active', Boolean(active));
+                group.children('.library-group-toggle').attr('aria-expanded', String(Boolean(active)));
+                group.children('.library-full-width-item__wrapper').prop('hidden', !active);
+            });
+        },
+
         filter_library: function() {
-            var me = this;
-
-            //detect which type of tab is active
-            var type = "";
-            if ($(me.tagc.library).hasClass(me.tag.library_column)) type = "column";
-            else if ($(me.tagc.library).hasClass(me.tag.library_container)) type = "container";
-            else if ($(me.tagc.library).hasClass(me.tag.library_section)) type = "section";
-            else if ($(me.tagc.library).hasClass(me.tag.library_content)) type = "content";
-
-            var $templateBlock = $(this.$wrapper).find('.library-tab-item.active .library-template-block--'+type);
-
-            //find selected radio in .library-tags-block
-            var $selectedTagButton = $templateBlock.find('.library-tag-item:checked');
-            var $tabItem = $(this.$wrapper).find(".library-tab-item--library");
-            //get tag value
-            var tag = $selectedTagButton.attr('data-library-tag');
-            if (typeof tag === 'undefined' || tag === null) tag = "";
-            var searchText = $templateBlock.find('.library-filter-input').val();
-
-            if (tag != '' || searchText != '') {
-                //filter by tag
-                tag = tag.trim();
-
-                $tabItem.addClass('tag-filter-active');
-
-                $tabItem.find('.library-tab-item-button__toggler').removeClass('active');
-                $tabItem.find('.library-tab-item-button__toggler').removeClass('filtered-active');
-
-                $tabItem.find('.library-template-block--'+type+' .library-full-width-item').each(function() {
-                    var itemTag = $(this).attr('data-library-tags');
-                    if (typeof itemTag === 'undefined' || itemTag === null) itemTag = "";
-                    var itemText = $(this).text();
-                    if (tag != "") {
-                        var tags = itemTag.split(",");
-                        if (itemTag === "") {
-                            $(this).removeClass('filtered-active');
-                            return;
-                        }
-                        for (var i = 0; i < tags.length; i++) {
-                            if (tags[i].trim() == tag) {
-                                if (searchText != "") {
-                                    //further filter by search text
-                                    if (itemText.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
-                                        $(this).addClass('active');
-                                        return;
-                                    } else {
-                                        $(this).removeClass('active');
-                                    }
-                                } else {
-                                    $(this).addClass('active');
-                                    return;
-                                }
-                            } else {
-                                $(this).removeClass('active');
-                            }
-                        }
-                    } else {
-                        //filter by search text
-                        if (searchText != "") {
-                            if (itemText.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
-                                $(this).addClass('active');
-                                return;
-                            } else {
-                                $(this).removeClass('active');
-                            }
-                        }
-                    }
+            var me = this, templateBlock = me.$wrapper.find('.library-tab-item--library .library-template-block--'+me.library_type);
+            if (!templateBlock.length) return;
+            var tag = templateBlock.find('.library-tag-item-btn[aria-pressed="true"]').attr('data-library-tag') || '';
+            var search = (templateBlock.find('.library-filter-input').val() || '').trim().toLocaleLowerCase();
+            var filtering = Boolean(tag || search), activeGroup = templateBlock.find('.library-tab-item-button__toggler.active');
+            var resultCount = 0;
+            templateBlock.toggleClass('tag-filter-active', filtering);
+            templateBlock.find('.library-tab-item-button__toggler').each(function() {
+                var group = $(this), count = 0;
+                group.find('.library-full-width-item').each(function() {
+                    var card = $(this), tags = JSON.parse(card.attr('data-library-tags'));
+                    var matches = (!tag || tags.includes(tag)) && (!search || card.attr('data-library-label').toLocaleLowerCase().includes(search));
+                    card.prop('hidden', !matches).toggleClass('active', filtering && matches);
+                    if (matches) count++;
                 });
-
-                var activeItems = $tabItem.find('.library-full-width-item.active');
-                activeItems.each(function() {
-                    var $this = $(this);
-                    $this.parents('.library-tab-item-button__toggler').addClass('filtered-active');
-                    if (activeItems.length <= me.options.filter_auto_open_items) $this.parents('.library-tab-item-button__toggler').addClass('active');
-                });
-            } else {
-                $tabItem.removeClass('tag-filter-active');
-                $tabItem.find('.library-full-width-item').removeClass('active');
-                $tabItem.find('.library-tab-item-button__toggler').removeClass('active');
-            }
+                resultCount += count;
+                group.prop('hidden', count === 0).toggleClass('filtered-active', filtering && count > 0);
+                group.children('.library-group-toggle').find('.library-count').text(count);
+            });
+            templateBlock.find('.library-results > .library-tab-item-button').each(function() {
+                var item = $(this), matches = !tag && (!search || item.attr('data-library-label').toLocaleLowerCase().includes(search));
+                item.prop('hidden', !matches);
+                if (matches) resultCount++;
+            });
+            if (filtering) {
+                if (!activeGroup.length || activeGroup.prop('hidden')) activeGroup = templateBlock.find('.library-tab-item-button__toggler').filter(function() { return !this.hidden; }).first();
+            } else activeGroup = $();
+            me.set_library_group(templateBlock, activeGroup);
+            templateBlock.find('.library-empty').prop('hidden', resultCount > 0);
         },
 
         /**
@@ -2649,109 +3635,108 @@
             }
         },
 
-        /**
-         * vytvori contenty jednotlivych tabov kniznice blokov.
-         * @param type
-         * @returns {string}
-         */
+        /** Builds picker cards while preserving the original template and block identifiers. */
         create_library_content_template: function(type) {
-            var content = '';
-
-            var libraryMainGroups = ['section', 'container', 'column', 'content'];
-            var template = this.template;
-            var that = this;
-
-            libraryMainGroups.forEach(function (group, index) {
-                var tags = [];
-                content += '<div class="library-template-block library-template-block--'+group+'">';
-
-                var contentInner = "";
-                $.each(that.get_json_object_by_attribute(template[type],'textKey',group).groups, function( index, obj ) {
-                    var has_group = '';
-                    if( obj.blocks != null ){
-                        has_group = 'has-group';
-
-                        var libraryButtonClass = "";
-
-                        if(type == "library") {
-                            libraryButtonClass = "__toggler";
-                        }
-
-                        contentInner += '<div class="library-tab-item-button'+libraryButtonClass+'" data-library-item-id="'+obj.id+'">'+obj.textKey;
-                            contentInner += '<div class="library-full-width-item__wrapper">';
-                                $.each(obj.blocks, function(indexBlock, block)
-                                {
-                                    var tagsText = "";
-                                    if (block.tags != null && block.tags.length > 0) {
-                                        $.each(block.tags, function(i, tag){
-                                            tagsText += tag;
-                                            if (i < block.tags.length - 1) tagsText += ",";
-
-                                            //merge block.tags into global tags array
-                                            if($.inArray(tag, tags) === -1){
-                                                tags.push(tag);
-                                            }
-                                        });
-                                        tagsText = tagsText.replace(/"/g, '&quot;');
-                                    }
-
-                                    // <%--console.log("Block:", index, " ", block);--%>
-                                    var isEmptyClass = "";
-                                    if (block.imagePath == null || block.imagePath == "" || block.imagePath == "/components/grideditor/data/default.png") {
-                                        isEmptyClass = " library-full-width-item--no-image";
-                                    }
-                                    contentInner += '<div class="library-full-width-item'+isEmptyClass+'" data-library-group-id="'+index+'" data-library-count-id="'+indexBlock+'" data-library-item-id="'+block.id+'" data-library-tags="'+tagsText+'"><i>'+block.textKey+'</i><img src="'+block.imagePath+'" alt=""/></div>';
-                                });
-                            contentInner += '</div>';
-                        contentInner += '</div>';
-                    }
-                    else
-                    {
-                        var deleteTool = '';
-                        if(type=='favorite') deleteTool = '<aside class="library-tab-item-delete-favorite"></aside>';
-                        contentInner += '<span class="library-tab-item-button" data-library-item-id="'+obj.id+'">'+obj.textKey+deleteTool+'</span>';
+            var me = this, content = '';
+            function escape(value) {
+                return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            }
+            ['section', 'container', 'column', 'content'].forEach(function(group) {
+                var tags = new Map(), total = 0, cards = '';
+                var groups = me.get_json_object_by_attribute(me.template[type], 'textKey', group).groups || [];
+                $.each(groups, function(groupIndex, obj) {
+                    if (obj.blocks != null) {
+                        var panelId = me.options.prefix+'-library-group-'+type+'-'+group+'-'+groupIndex;
+                        cards += '<div class="library-tab-item-button__toggler" data-library-item-id="'+escape(obj.id)+'">';
+                        cards += '<button type="button" class="library-group-toggle" aria-expanded="false" aria-controls="'+panelId+'"><i class="library-chevron ti ti-chevron-down" aria-hidden="true"></i><span class="library-group-label">'+escape(obj.textKey)+'</span><span class="library-count">'+obj.blocks.length+'</span></button>';
+                        cards += '<div class="library-full-width-item__wrapper" id="'+panelId+'" hidden>';
+                        $.each(obj.blocks, function(blockIndex, block) {
+                            var blockTags = Array.from(new Set((block.tags || []).map(function(tag) { return tag.trim(); }).filter(Boolean)));
+                            blockTags.forEach(function(tag) { tags.set(tag, (tags.get(tag) || 0)+1); });
+                            total++;
+                            var noImage = !block.imagePath || block.imagePath === '/components/grideditor/data/default.png';
+                            cards += '<button type="button" class="library-full-width-item'+(noImage ? ' library-full-width-item--no-image' : '')+'" data-library-group-id="'+groupIndex+'" data-library-count-id="'+blockIndex+'" data-library-item-id="'+escape(block.id)+'" data-library-label="'+escape(block.textKey)+'" data-library-tags="'+escape(JSON.stringify(blockTags))+'">';
+                            if (!noImage) cards += '<img src="'+escape(block.imagePath)+'" alt="" loading="lazy">';
+                            cards += '<span class="library-card-caption"><span>'+escape(block.textKey)+'</span><i class="ti ti-plus" aria-hidden="true"></i></span></button>';
+                        });
+                        cards += '</div></div>';
+                    } else {
+                        var label = type === 'basic' ? obj.textKey : escape(obj.textKey);
+                        if (type === 'library') total++;
+                        if (type === 'favorite') cards += '<div class="library-favorite-item" data-library-item-id="'+escape(obj.id)+'">';
+                        cards += '<button type="button" class="library-tab-item-button" data-library-item-id="'+escape(obj.id)+'" data-library-label="'+escape(obj.textKey)+'">'+label+'</button>';
+                        if (type === 'favorite') cards += '<button type="button" class="library-tab-item-delete-favorite" aria-label="<iwcm:text key="pagebuilder.library.delete_favorite"/>: '+escape(obj.textKey)+'"><i class="ti ti-trash" aria-hidden="true"></i></button></div>';
                     }
                 });
-
-                if ("library" === type) {
-                    //insert filter input field
-                    var filterContent = '<div class="library-filter-block">' +
-                        '   <input type="text" class="library-filter-input" placeholder="<iwcm:text key="user.admin.search"/>">' +
-                        '</div>';
-                    content += filterContent;
-
-                    //insert tags as button on top of library
-                    if(tags.length > 0){
-                        var tagsContent = '<div class="library-tags-block">';
-                        $.each(tags, function(i, tag){
-                            var tagButton = '<input type="radio" class="library-tag-item" name="library-tag-item-' + group + '" id="library-tag-item-' + group + i + '" autocomplete="off" data-library-tag="' + tag + '">' +
-                            '<label class="library-tag-item-btn" for="library-tag-item-' + group + i + '">' + tag + '</label>';
-                            tagsContent += tagButton;
-                        });
-                        tagsContent += '</div>';
-                        content += tagsContent;
-                    }
+                content += '<div class="library-template-block library-template-block--'+group+'">';
+                if (type === 'library') {
+                    content += '<div class="library-filters"><div class="library-filter-block"><i class="ti ti-search" aria-hidden="true"></i><input type="search" class="library-filter-input" aria-label="<iwcm:text key="pagebuilder.library.search"/>" placeholder="<iwcm:text key="pagebuilder.library.search"/>"></div>';
+                    content += '<div class="library-tags-block"><button type="button" class="library-tag-item-btn" data-library-tag="" aria-pressed="true"><span><iwcm:text key="pagebuilder.library.all"/></span><span class="library-count">'+total+'</span></button>';
+                    tags.forEach(function(count, tag) {
+                        content += '<button type="button" class="library-tag-item-btn" data-library-tag="'+escape(tag)+'" aria-pressed="false"><span>'+escape(tag)+'</span><span class="library-count">'+count+'</span></button>';
+                    });
+                    content += '</div></div>';
                 }
-
-                content += contentInner;
-
-                content += '</div>';
+                content += '<div class="library-results">'+cards;
+                if (type === 'library' || !groups.length) {
+                    content += '<div class="library-empty" role="status"'+(groups.length ? ' hidden' : '')+'><p><iwcm:text key="pagebuilder.library.empty"/></p>';
+                    if (type === 'library') content += '<button type="button" class="library-clear-filters"><iwcm:text key="pagebuilder.library.clear_filters"/></button>';
+                    content += '</div>';
+                }
+                content += '</div></div>';
             });
-
             return content;
         },
 
         show_library: function () {
             var me = this;
-            $(me.$wrapper).addClass(me.state.is_library_active);
+            me.$wrapper.addClass(me.state.is_library_active);
             me.set_toolbar_invisible();
-            setTimeout(function(){
-                $(me.$wrapper).find('.library-tab-item.active .library-filter-input').focus();
+            me.keep_library_in_viewport();
+            setTimeout(function() {
+                if (!me.$wrapper.hasClass(me.state.is_library_active)) return;
                 me.filter_library();
-            },100);
+                var input = me.$wrapper.find('.library-tab-item.active .library-filter-input:visible').first();
+                if (input.length) input[0].focus({ preventScroll: true });
+            }, 100);
         },
-        hide_library: function () {
-            $(this.$wrapper).removeClass(this.state.is_library_active);
+
+        hide_library: function(inserted) {
+            if (!this.$wrapper.hasClass(this.state.is_library_active)) return;
+            this.$wrapper.removeClass(this.state.is_library_active);
+            var ui = this.ui, bookmark = this.library_editor_bookmark, returnFocus = this.library_return_focus;
+            this.library_editor_bookmark = null;
+            this.library_return_focus = null;
+            if (ui && ui.inserting && ui.insertPending) {
+                var point = ui.insertPending;
+                ui.insertPending = null;
+                if (inserted && $(inserted)[0] && $(inserted)[0].isConnected) {
+                    ui.bookmarks = null;
+                    this.set_workbench_insertion(false);
+                    this.select_workbench_element($(inserted)[0], true);
+                    this.focus_ckeditor_element($(inserted)[0]);
+                } else {
+                    window.scrollTo(ui.insertScroll.x, ui.insertScroll.y);
+                    this.position_workbench_insertion(ui.bar[0].getBoundingClientRect().bottom);
+                    var destination = ui.insertPoints.find(item => item.source[0] === point.source[0]);
+                    (destination ? destination.button : ui.bar.find('[data-pb-action=insert]'))[0].focus({ preventScroll: true });
+                }
+            } else if (!inserted) {
+                if (bookmark && bookmark.editor.status === 'ready') {
+                    var x = window.scrollX, y = window.scrollY;
+                    if (ui) ui.restoringFocus = true;
+                    try {
+                        bookmark.editor.focus();
+                        bookmark.editor.getSelection().selectBookmarks(bookmark.marks);
+                    } finally {
+                        if (ui) ui.restoringFocus = false;
+                        window.scrollTo(x, y);
+                    }
+                } else {
+                    var target = returnFocus && returnFocus.isConnected && $(returnFocus).is(':visible') ? returnFocus : this.clicked_button[0];
+                    if (target && target.isConnected) target.focus({ preventScroll: true });
+                }
+            } else if ($(inserted)[0] && $(inserted)[0].isConnected) this.focus_ckeditor_element($(inserted)[0]);
         },
 
         /**
@@ -2806,6 +3791,8 @@
         disable_after_esc_pressed: function (forceEsc) {
             //console.log("forceEsc=", forceEsc);
             if(this.esc_key_down || (typeof forceEsc != "undefined" && forceEsc==true)) {
+                if (this.$wrapper.find('.'+this.state.is_resize_columns).length) this.cancel_resize_columns();
+                if (this.$wrapper.hasClass(this.state.is_moving_child)) this.cancel_move_grid_element();
 
                 if($(this.$wrapper).hasClass(this.state.has_child_toolbar_active) && !$(this.$wrapper).hasClass(this.state.is_notify_active)){
                     this.set_toolbar_invisible();
@@ -2816,7 +3803,7 @@
                 }
 
                 if($(this.$wrapper).hasClass(this.state.is_library_active)){
-                    $(this.tagc.library_footer_button).click().trigger('click');
+                    this.hide_library();
                 }
             }
         },
@@ -2951,13 +3938,18 @@
             z_index += '<div class="'+me.tag.modal_zindex+'"></div>';
             content += me.build_input_group(z_index,'12');
 
-            var header = '<span class="header-title"></span>'+ me.build_button(me.tag.modal_header_button_show, '') + me.build_tab_menu();
+            var header = '<div class="'+me.options.prefix+'-modal__header-row"><i class="modal-drag-handle ti ti-grip-vertical" aria-hidden="true"></i>';
+            header += '<span class="header-title" id="'+me.options.prefix+'-style-title"></span>';
+            header += '<button type="button" class="'+me.tag.modal_header_button_show+'" aria-label="<iwcm:text key="pagebuilder.modal.locate"/>" title="<iwcm:text key="pagebuilder.modal.locate"/>"><i class="ti ti-focus-2" aria-hidden="true"></i></button>';
+            header += '<button type="button" class="'+me.tag.modal_header_button_close+'" aria-label="<iwcm:text key="pagebuilder.modal.btn.close"/>"><i class="ti ti-x" aria-hidden="true"></i></button></div>';
+            header += '<div class="'+me.options.prefix+'-modal__context"></div>';
+            content = me.build_style_accordion(content);
 
-            var footer = me.build_button(me.tag.modal_footer_button_close, '<iwcm:text key="pagebuilder.modal.btn.close"/>');
-            footer += me.build_button(me.tag.modal_footer_button_reset, '<iwcm:text key="pagebuilder.modal.btn.reset"/>');
+            var footer = me.build_button(me.tag.modal_footer_button_reset, '<iwcm:text key="pagebuilder.modal.btn.reset"/>');
+            footer += me.build_button(me.tag.modal_footer_button_close, '<iwcm:text key="pagebuilder.modal.btn.close"/>');
             footer += me.build_button(me.tag.modal_footer_button_save, '<iwcm:text key="pagebuilder.modal.btn.save"/>');
 
-            var modal = '<div class="'+me.tag.modal+'">';
+            var modal = '<div class="'+me.tag.modal+'" role="dialog" aria-labelledby="'+me.options.prefix+'-style-title" tabindex="-1" contenteditable="false">';
             modal += '<div class="'+me.tag.modal_header+'">'+header+'</div>';
             modal += '<div class="'+me.tag.modal_content+'"><form name="'+me.options.prefix+'-form">'+content+'</form></div>';
             modal += '<div class="'+me.tag.modal_footer+'">'+footer+'</div>';
@@ -2966,6 +3958,15 @@
             $(modal).appendTo(me.$wrapper);
 
             me.make_modal_draggable();
+            me.$wrapper.on('click', '.'+me.options.prefix+'-style-accordion__toggle', function() {
+                var button = $(this), open = button.attr('aria-expanded') !== 'true';
+                button.attr('aria-expanded', String(open));
+                button.next().prop('hidden', !open);
+            });
+            me.$wrapper.on('click', me.tagc.modal_header_button_close, function() { me.close_modal(); });
+            me.$wrapper.on('click', me.tagc.modal+' .'+me.options.prefix+'-input-group-addon', function() {
+                openImageDialogWindow(me.options.prefix+'-form', $(this).attr('data-image-property'), '');
+            });
 
             me.set_spinner('margin-top', -500, 500);
             me.set_spinner('margin-bottom', -500, 500);
@@ -3092,26 +4093,23 @@
 
         make_modal_draggable: function() {
             var me = this;
-            $(this.tagc.modal).draggable({
-                handle: '.header-title',
-                drag: function( event, ui ) {
-
-                    var window_width = $(window).outerWidth(),
-                        window_height = $(window).outerHeight(),
-                        modal_width = $(me.tagc.modal).outerWidth(),
-                        modal_height = $(me.tagc.modal).outerHeight(),
-                        offset = 10,
-                        min_left = offset,
-                        max_left = window_width - modal_width - offset,
-                        min_top = offset,
-                        max_top = window_height - modal_height - offset;
-
-                    if(ui.position.left < min_left)   { ui.position.left = min_left; }
-                    if(ui.position.left > max_left)   { ui.position.left = max_left; }
-                    if(ui.position.top < min_top)     { ui.position.top = min_top; }
-                    if(ui.position.top > max_top)     { ui.position.top = max_top; }
-                }
+            me.$wrapper.find(me.tagc.modal).draggable({
+                handle: '.'+me.options.prefix+'-modal__header-row',
+                drag: function(event, ui) { me.keep_modal_in_viewport(ui.position); }
             });
+            me.modal_resize_handler = function() {
+                if (me.$wrapper.hasClass(me.state.is_modal_open)) me.keep_modal_in_viewport();
+            };
+            $(window).on('resize', me.modal_resize_handler);
+        },
+
+        /** Keeps the complete style panel reachable without scrolling the document. */
+        keep_modal_in_viewport: function(position) {
+            var modal = this.$wrapper.find(this.tagc.modal), rect = modal[0].getBoundingClientRect();
+            var target = position || { left: rect.left, top: rect.top }, margin = 8;
+            target.left = Math.max(margin, Math.min(target.left, window.innerWidth-rect.width-margin));
+            target.top = Math.max(margin, Math.min(target.top, window.innerHeight-rect.height-margin));
+            if (!position) modal.css(target);
         },
 
         build_input_group: function(buttons, id) {
@@ -3128,7 +4126,8 @@
             var klass = (options!=undefined && 'class' in options)? options.class:'';
             var disabled = "";
             if (typeof options != "undefined" && true===options.disabled) disabled = ' disabled="disabled"';
-            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="number"'+disabled+' class="'+this.tag.style_input+' ui-spinner-input" name="'+prop+'" value="0" /></div>';
+            var id = this.options.prefix+'-style-field-'+prop;
+            return '<div class="'+this.tag.style_input_wrapper+' '+klass+'"><label class="'+this.tag.style_label+'" for="'+id+'">'+label+'</label><input type="number"'+disabled+' id="'+id+'" class="'+this.tag.style_input+' ui-spinner-input" name="'+prop+'" value="0" /></div>';
         },
 
         build_four_inputs_in_row: function(label,sets){
@@ -3139,9 +4138,9 @@
             ret += '<div class="'+me.tag.style_input_group_headline+'">'+label+'</div>';
             ret += '<div class="'+me.tag.style_input_group_four_in_row+' all">';
             ret +='<div class="'+me.tag.style_input_group_four_in_row_tools+'">';
-            ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_all+'" name="connection-all" checked="true" />';
-            ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_first_second+'" name="connection-first-second" checked="true" disabled="true"/>';
-            ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_third_fourth+'" name="connection-third-fourth" checked="true" disabled="true"/>';
+            ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_all+'" name="connection-all" aria-label="<iwcm:text key="pagebuilder.modal.link.all"/>" title="<iwcm:text key="pagebuilder.modal.link.all"/>" checked="true" />';
+            ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_first_second+'" name="connection-first-second" aria-label="<iwcm:text key="pagebuilder.modal.link.first_second"/>" title="<iwcm:text key="pagebuilder.modal.link.first_second"/>" checked="true" disabled="true"/>';
+            ret +='<input type="checkbox" class="'+me.tag.style_input_group_four_in_row_checkbox+' '+me.tag.style_input_group_four_in_row_checkbox_third_fourth+'" name="connection-third-fourth" aria-label="<iwcm:text key="pagebuilder.modal.link.third_fourth"/>" title="<iwcm:text key="pagebuilder.modal.link.third_fourth"/>" checked="true" disabled="true"/>';
             ret += '</div>';
             $.each(sets,function(i,v){
                 var disabled = true;
@@ -3154,24 +4153,22 @@
         },
 
         build_input: function (prop,label) {
-            return '<div class="'+this.tag.style_input_wrapper+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="text" class="'+this.tag.style_input+'" name="'+prop+'" value="" /></div>';
+            var id = this.options.prefix+'-style-field-'+prop;
+            return '<div class="'+this.tag.style_input_wrapper+'"><label class="'+this.tag.style_label+'" for="'+id+'">'+label+'</label><input type="text" id="'+id+'" class="'+this.tag.style_input+'" name="'+prop+'" value="" /></div>';
         },
 
-        build_input_elfinder: function (prop,label) {
-            var htmlCode =
-                '<div class="'+this.tag.style_input_wrapper+'">'+
-                    '<div class="'+this.tag.style_label+'">'+label+'</div>'+
-                    '<div class="input-group">'+
-                        '<input type="text" class="'+this.tag.style_input+'" name="'+prop+'" value="" style="width:80%" />'+
-                        '<span class="'+this.options.prefix+'-input-group-addon" style="background-image:url(\'/admin/webpages/page-builder/images/photo.png\')" onclick="openImageDialogWindow(\''+this.options.prefix+'-form\', \''+prop+'\', \'\')"></span>'+
-                    '</div>'+
-                '</div>';
-
-            return htmlCode;
+        build_input_elfinder: function(prop, label) {
+            var id = this.options.prefix+'-style-field-'+prop;
+            return '<div class="'+this.tag.style_input_wrapper+'"><label class="'+this.tag.style_label+'" for="'+id+'">'+label+'</label>'+
+                '<div class="input-group"><input type="text" id="'+id+'" class="'+this.tag.style_input+'" name="'+prop+'" value="">'+
+                '<button type="button" class="'+this.options.prefix+'-input-group-addon" data-image-property="'+prop+'" aria-label="<iwcm:text key="pagebuilder.modal.image.choose"/>"><i class="ti ti-photo" aria-hidden="true"></i></button></div></div>';
         },
 
-        build_checkbox: function (prop,label) {
-            return '<div class="'+this.tag.style_input_wrapper+'"><div class="'+this.tag.style_label+'">'+label+'</div><input type="checkbox" class="'+this.tag.style_input+'" name="'+prop+'" value="true" /></div>';
+        build_checkbox: function(prop, label) {
+            var id = this.options.prefix+'-style-field-'+prop;
+            var icons = { 'visibility-sm': 'device-mobile', 'visibility-md': 'device-tablet', 'visibility-xl': 'device-desktop' };
+            var icon = icons[prop] ? '<i class="ti ti-'+icons[prop]+'" aria-hidden="true"></i>' : '';
+            return '<div class="'+this.tag.style_input_wrapper+'"><label class="'+this.tag.style_label+'" for="'+id+'">'+icon+'<span>'+label+'</span></label><input type="checkbox" id="'+id+'" class="'+this.tag.style_input+'" name="'+prop+'" value="true"></div>';
         },
 
         build_style_connections: function () {
@@ -3185,10 +4182,11 @@
         build_radio: function (values,prop,label) {
             var me = this,
                 id,
-                html = '<div class="'+me.tag.style_input_wrapper+'"><div class="'+me.tag.style_label+'">'+label+'</div><div class="radio-group">';
+                labelId = me.options.prefix+'-style-label-'+prop,
+                html = '<div class="'+me.tag.style_input_wrapper+'"><div class="'+me.tag.style_label+'" id="'+labelId+'">'+label+'</div><div class="radio-group" role="group" aria-labelledby="'+labelId+'">';
 
             $.each(values, function( key, value ) {
-                id = prop + '-' + key;
+                id = me.options.prefix+'-style-field-'+prop+'-'+key;
                 html += '<input type="radio" class="'+me.tag.style_input+'" name="'+prop+'" value="'+key+'" id="'+id+'"><label for="'+id+'">'+value+'</label>';
             });
 
@@ -3199,7 +4197,7 @@
 
         /**
          * Returns default tab menu configuration for the style modal.
-         * Can be customized by defining window.pbBuildTabMenu = function(config) { return config; }
+         * Can be customized by defining window.pbBuildTabMenu = function(me, config) { return config; }
          * @returns {Object} Tab menu configuration
          */
         getTabMenuConfig: function() {
@@ -3235,89 +4233,41 @@
             };
         },
 
-        build_tab_menu: function() {
-
-            // Get default configuration
-            var config = this.getTabMenuConfig();
-
-            // Allow customization via window.pbBuildTabMenu callback
-            if (typeof window.pbBuildTabMenu === 'function') {
-                config = window.pbBuildTabMenu(this, config);
-            }
-
-            // Build tab menu HTML from configuration
-            var tab = '<div class="tab-menu">';
-            var tabContent = '<div class="tab-content">';
-            var isFirst = true;
-
-            for (var i = 0; i < config.tabs.length; i++) {
-                var tabConfig = config.tabs[i];
-
-                // Skip hidden tabs
-                if (tabConfig.visible === false) {
-                    continue;
-                }
-
-                // Build tab link
-                var activeClass = isFirst ? ' active' : '';
-                tab += '<span class="tab-link' + activeClass + '" data-tab-id="' + tabConfig.id + '">' + tabConfig.name + '</span>';
-
-                // Build tab content with item buttons
-                var itemButtons = '';
-                for (var j = 0; j < tabConfig.items.length; j++) {
-                    var item = tabConfig.items[j];
-                    // Skip hidden items
-                    if (item.visible === false) {
-                        continue;
-                    }
-                    itemButtons += '<span class="tab-item-button" data-input-group-id="' + item.id + '">' + item.name + '</span>';
-                }
-
-                tabContent += '<div class="tab-item' + activeClass + '" data-tab-id="' + tabConfig.id + '">' + itemButtons + '</div>';
-                isFirst = false;
-            }
-
-            tab += '</div>';
-            tabContent += '</div>';
-            tab += tabContent;
-
-            var me = this;
-
-            me.$wrapper.on('click', '.tab-menu .tab-link', function() {
-
-                var id = $(this).attr('data-tab-id');
-                if($(this).hasClass('active')) {
-                } else {
-
-                    $('.tab-item .tab-item-button').removeClass('active');
-                    $(me.tagc.style_input_group).removeClass('active');
-
-                    $('.tab-menu .tab-link').not($(this)).removeClass('active');
-                    $(this).addClass('active');
-                    $('.tab-content .tab-item').removeClass('active');
-                    $('.tab-content .tab-item[data-tab-id="'+id+'"]').addClass('active');
-
-                    //select first menu tab
-                    $('.tab-content .tab-item[data-tab-id="'+id+'"] .tab-item-button').first().trigger('click');
-                }
+        /** Renders legacy tab configuration as independent accordions without discarding hidden style fields. */
+        build_style_accordion: function(content) {
+            var me = this, prefix = me.options.prefix, config = me.getTabMenuConfig();
+            var baseline = config.tabs.flatMap(function(tab) { return tab.items.map(function(item) { return String(item.id); }); });
+            if (typeof window.pbBuildTabMenu === 'function') config = window.pbBuildTabMenu(me, config);
+            var source = $('<div>').append(content), output = $('<div>');
+            var groups = source.children(me.tagc.style_input_group).filter(function() {
+                return $(this).text().trim() || $(this).find('input, select, textarea, button').length;
             });
-
-            me.$wrapper.on('click', '.tab-item .tab-item-button', function() {
-                var id = $(this).attr('data-input-group-id');
-
-                if($(this).hasClass('active')) {
-                    $('.tab-item .tab-item-button').removeClass('active');
-                    $(me.tagc.style_input_group).removeClass('active');
-                    $(this).removeClass('active');
-                } else {
-                    $('.tab-item .tab-item-button').removeClass('active');
-                    $(me.tagc.style_input_group).removeClass('active');
-                    $(this).addClass('active');
-                    $(me.tagc.style_input_group+'[data-input-group-id="'+id+'"]').addClass('active');
-                }
+            var items = config.tabs.filter(function(tab) { return tab.visible !== false; }).flatMap(function(tab) {
+                return tab.items.filter(function(item) {
+                    return item.visible !== false && groups.filter(function() { return $(this).attr('data-input-group-id') === String(item.id); }).length;
+                });
             });
-
-            return tab;
+            var ids = items.map(function(item) { return String(item.id); });
+            var originalOrder = baseline.filter(function(id) { return ids.includes(id); });
+            var returnedOrder = ids.filter(function(id) { return baseline.includes(id); });
+            if (originalOrder.join(',') === returnedOrder.join(',')) {
+                var order = ['10', '01', '08', '03', '02', '07', '05', '04', '06', '11', '12'];
+                items.sort(function(a, b) {
+                    var first = order.indexOf(String(a.id)), second = order.indexOf(String(b.id));
+                    return (first < 0 ? order.length : first)-(second < 0 ? order.length : second);
+                });
+            }
+            items.forEach(function(item, index) {
+                var panelId = prefix+'-style-panel-'+index, headingId = prefix+'-style-heading-'+index;
+                var accordion = $('<div>', { 'class': prefix+'-style-accordion', 'data-input-group-id': item.id }).appendTo(output);
+                var button = $('<button>', { type: 'button', 'class': prefix+'-style-accordion__toggle', id: headingId, 'aria-expanded': 'false', 'aria-controls': panelId }).appendTo(accordion);
+                $('<i>', { 'class': 'ti ti-chevron-down', 'aria-hidden': 'true' }).appendTo(button);
+                $('<span>').text(item.name).appendTo(button);
+                var body = $('<div>', { 'class': prefix+'-style-accordion__content', id: panelId, hidden: true, 'aria-labelledby': headingId }).appendTo(accordion);
+                groups.filter(function() { return $(this).attr('data-input-group-id') === String(item.id); }).appendTo(body);
+            });
+            $('<div>', { 'class': prefix+'-style-hidden-groups', hidden: true }).append(source.children()).appendTo(output);
+            return output.html();
         },
 
         set_box_shadow: function(prop) {
@@ -3384,6 +4334,21 @@
             if (this.options.color_picker === false) {
                 input.parent().addClass("no-color-picker");
             }
+            var swatches = input.parent().find('.minicolors-swatches li');
+            swatches.each(function() {
+                var swatch = $(this), name = swatch.attr('title') || swatch.data('swatch-color');
+                swatch.attr({ role: 'button', tabindex: '0', 'aria-label': "<iwcm:text key='pagebuilder.modal.color'/> "+name });
+            }).on('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    $(this).trigger('click');
+                }
+            });
+            function updateSwatches() {
+                swatches.each(function() { $(this).attr('aria-pressed', String($(this).hasClass('selected'))); });
+            }
+            input.on('change', updateSwatches);
+            updateSwatches();
 
             //initial value
             input.attr("data-changed", "false");
@@ -3393,51 +4358,67 @@
         /*====================|> OPEN MODAL
         /*=================================================================*/
 
-        open_modal: function (el) {
-
-            var me = this,
-                grid_element = me.get_parent_grid_element(el);
-
+        open_modal: function(el) {
+            var me = this, grid_element = me.get_parent_grid_element(el);
+            var active = document.activeElement;
+            me.modal_return_focus = $(active).closest('.'+me.options.prefix+'-workbench').length ? active : $(el)[0];
             me.user_style.current_element = $(grid_element);
-            $(me.user_style.current_element).addClass(me.state.is_styling);
-            me.set_current_element_style_id();
+            me.user_style.current_element.addClass(me.state.is_styling);
             me.set_modal_title();
             me.set_modal_actual_style(true);
             me.set_style_connections();
             me.set_modal_zindex(el);
             me.set_toolbar_invisible();
+            me.$wrapper.addClass(me.state.is_modal_open);
+            me.keep_modal_in_viewport();
             me.set_modal_default_state();
-
-            $(me.$wrapper).addClass(me.state.is_modal_open);
         },
 
-        set_modal_title: function () {
-            var me = this;
-
-            if($(me.user_style.current_element).hasClass(me.tag.section)) {
-                $(me.$wrapper).addClass(me.state.is_styling_section);
-                $('div.'+me.options.prefix + '-modal .header-title').html('<iwcm:text key="pagebuilder.modal.title.section"/>');
-            }
-
-            else if($(me.user_style.current_element).hasClass(me.tag.container)) {
-                $(me.$wrapper).addClass(me.state.is_styling_container);
-                $('div.'+me.options.prefix + '-modal .header-title').html('<iwcm:text key="pagebuilder.modal.title.container"/>');
-            }
-
-            else if($(me.user_style.current_element).hasClass(me.tag.column)) {
-                $(me.$wrapper).addClass(me.state.is_styling_column);
-                $('div.'+me.options.prefix + '-modal .header-title').html('<iwcm:text key="pagebuilder.modal.title.column"/>');
-            }
-
-            else {
-
-            }
+        set_modal_title: function() {
+            var me = this, type = 'element';
+            ['section', 'container', 'column'].forEach(function(candidate) {
+                if (me.user_style.current_element.hasClass(me.tag[candidate])) type = candidate;
+            });
+            if (type !== 'element') me.$wrapper.addClass(me.state['is_styling_'+type]);
+            var titles = {
+                section: "<iwcm:text key='pagebuilder.modal.style.section'/>",
+                container: "<iwcm:text key='pagebuilder.modal.style.container'/>",
+                column: "<iwcm:text key='pagebuilder.modal.style.column'/>",
+                element: "<iwcm:text key='pagebuilder.modal.style.element'/>"
+            };
+            var modal = me.$wrapper.find(me.tagc.modal);
+            modal.find('.header-title').text(titles[type]);
+            var context = me.ui ? me.workbench_name(me.user_style.current_element[0]) : me.user_style.current_element.attr('title') || '';
+            modal.find('.'+me.options.prefix+'-modal__context').text(context).prop('hidden', !context);
         },
 
-        set_modal_default_state: function(){
-            $('div.'+this.options.prefix + '-modal .tab-menu .tab-link').first().click();
-            if ($('div.'+this.options.prefix + '-modal .tab-item .tab-item-button').first().hasClass('active')==false) {
-                $('div.'+this.options.prefix + '-modal .tab-item .tab-item-button').first().click();
+        set_modal_default_state: function() {
+            var modal = this.$wrapper.find(this.tagc.modal), prefix = this.options.prefix;
+            var accordions = modal.find('.'+prefix+'-style-accordion');
+            accordions.children('button').attr('aria-expanded', 'false');
+            accordions.children('.'+prefix+'-style-accordion__content').prop('hidden', true);
+            var first = accordions.filter('[data-input-group-id="10"]').first();
+            if (!first.length) first = accordions.first();
+            first.children('button').attr('aria-expanded', 'true');
+            first.children('.'+prefix+'-style-accordion__content').prop('hidden', false);
+            var scroller = modal.find(this.tagc.modal_content)[0];
+            scroller.scrollTop = 0;
+            var input = first.find('[name="selector-id"]:enabled').first();
+            if (!input.length) input = first.find('input:not([type="hidden"]):enabled:visible, button:enabled:visible, select:enabled:visible, textarea:enabled:visible').first();
+            if (!input.length) input = first.children('button');
+            if (!input.length) input = modal.find(this.tagc.modal_header_button_close);
+            if (first.length) scroller.scrollTop += first[0].getBoundingClientRect().top-scroller.getBoundingClientRect().top;
+            input[0].focus({ preventScroll: true });
+        },
+
+        restore_modal_focus: function() {
+            var target = this.modal_return_focus;
+            this.modal_return_focus = null;
+            if (this.ui && (!target || !target.isConnected || !$(target).is(':visible') || $(target).closest('.'+this.options.prefix+'-workbench').length)) {
+                this.restore_workbench_focus();
+            } else if (target && target.isConnected) {
+                if (!$(target).is(':visible')) this.set_toolbar_visible(target);
+                target.focus({ preventScroll: true });
             }
         },
 
@@ -3478,6 +4459,7 @@
         close_modal: function () {
             this.clear_after_close_modal();
             this.set_old_style();
+            this.restore_modal_focus();
         },
 
         /*==================================================================
@@ -3486,6 +4468,7 @@
 
         save_modal: function () {
             this.clear_after_close_modal();
+            this.restore_modal_focus();
         },
 
         /*==================================================================
@@ -3900,6 +4883,7 @@
             $('.style-connections-list').html('');
 
             if(typeof style_id === 'undefined') {
+                $('.style-connections-list').html('<iwcm:text key="pagebuilder.connections.none"/>');
                 return;
             }
 
@@ -3909,7 +4893,7 @@
                     return;
                 }
 
-                link = $('<div class="'+me.tag.connection_reference+'">');
+                link = $('<button type="button" class="'+me.tag.connection_reference+'">');
                 link.data('connection-reference', $(el));
                 link.html(counter+'. prepojenie');
 
@@ -3955,6 +4939,7 @@
                 $(parent).addClass(me.state.has_same_style);
                 $(parent).addClass(me.state.is_style_connected);
 
+                me.set_current_element_style_id();
                 var style_id = me.get_current_element_style_id();
 
                 $(me.user_style.current_element).removeClass(me.state.is_style_connected);
@@ -4026,6 +5011,7 @@
 
             me.$wrapper.on('click', me.tagc.modal_footer_button_reset, function() {
                 me.reset_modal($(this));
+                me.restore_modal_focus();
             });
 
             me.$wrapper.on('click', me.tagc.modal_footer_button_save, function() {
@@ -4052,10 +5038,6 @@
                 me.cancel_move_grid_element();
                 me.cancel_resize_columns();
                 me.hide_notify();
-            });
-
-            me.$wrapper.on('click', me.tagc.library_footer_button, function() {
-                me.hide_library();
             });
 
             me.$wrapper.on('click', me.tagc._plus_button, function(e) {
@@ -4119,6 +5101,8 @@
         unbind_events: function() {
 
             var me = this;
+            if (me.library_resize_handler) $(window).off('resize', me.library_resize_handler);
+            if (me.modal_resize_handler) $(window).off('resize', me.modal_resize_handler);
             if (me.duplicable_toolbar_mouseup_handler) {
                 me.$wrapper[0].removeEventListener('mouseup', me.duplicable_toolbar_mouseup_handler, true);
                 me.duplicable_toolbar_mouseup_handler = null;
@@ -4169,6 +5153,8 @@
             $wrapper.find(me.tagc.notify).remove();
             $wrapper.find(me.tagc.modal).remove();
             $wrapper.find(me.tagc.library).remove();
+            $wrapper.find('.'+me.options.prefix+'-workbench, .'+me.options.prefix+'-outline-layer, .'+me.options.prefix+'-structure').remove();
+            $wrapper.find('aside.'+me.options.prefix+'-insert-space').remove();
 
             if (typeof clone !== 'undefined') {
                 return $wrapper;
@@ -4218,6 +5204,7 @@
                 .removeClass(me.state.is_duplicable_target);
 
             $(wrapper).removeClass(me.tag.wrapper);
+            $(wrapper).removeClass(me.options.prefix+'-has-workbench '+me.options.prefix+'-hide-guides '+me.options.prefix+'-is-inserting');
 
             if (typeof clone !== 'undefined') {
                 return $(wrapper);
@@ -4233,7 +5220,6 @@
             return {
                 prefix: 'pb',
                 max_col_size: 12,
-                filter_auto_open_items: 10,
                 template_group_id: 0,
                 grid: '',
                 onNewElementAdded: function () {

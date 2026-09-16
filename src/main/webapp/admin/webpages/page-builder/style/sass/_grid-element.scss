@@ -20,7 +20,7 @@
     }
 }
 
-.#{$prefix}-wrapper.#{$prefix}-has-child-toolbar-active {
+.#{$prefix}-wrapper.#{$prefix}-has-child-toolbar-active:not(.#{$prefix}-has-workbench) {
     .#{$prefix}-section:not(.#{$prefix}-has-child-toolbar-active):not(.#{$prefix}-has-toolbar-active) {
         opacity: 0.8;
         .#{$prefix}-dimmer {
