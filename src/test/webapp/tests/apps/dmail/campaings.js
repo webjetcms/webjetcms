@@ -319,6 +319,7 @@ Scenario('BUG pocty prijemcov', ({I, DT, DTE}) => {
     I.click( locate(".jstree-anchor").withText('Testovaci newsletter') );
 
     //Set subject
+    I.wait(1); //wait to subject change handler in index.html
     I.fillField("#DTE_Field_subject", prijemcoviaEntityName);
 
     editGroups(I, DT, ['Newsletter'], []);
@@ -887,7 +888,9 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
 
     I.clickCss('#datatableFieldDTE_Field_recipientsTab_wrapper button.btn.btn-sm.btn-outline-secondary.buttons-refresh');
     DT.waitForLoader('#datatableFieldDTE_Field_recipientsTab_processing');
+    I.wait(1);
     I.click( locate("#pills-dt-campaingsDataTable-receivers").find("button.buttons-select-all") );
+    I.wait(1);
     I.click( locate("#pills-dt-campaingsDataTable-receivers").find("button.buttons-remove") );
     DTE.waitForEditor("campaingsDataTable");
     I.click("Zmazať", "div.DTE_Action_Remove");

@@ -48,6 +48,7 @@ Scenario('Eshop - create new invoice', async ({I, TempMail}) => {
 
     I.say("Go to basket");
     await I.clickIfVisible('.cookies-bar-wrapper .btn-akcept');
+    I.wait(1);
     I.clickCss("body > div.ly-page-wrapper > header > div.container > nav > div.menu-holder > div > a");
     I.waitForElement(".md-basket-dropdown.open", 10);
     I.clickCss("#orderButton > a");

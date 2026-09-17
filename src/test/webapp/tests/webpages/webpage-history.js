@@ -317,6 +317,7 @@ Scenario('not-publicable history row when saving with same future publish date',
      I.say('Save again with same publish date - old version should become not-publicable');
      I.click("Test casoveho publikovania", "#datatableInit_wrapper");
      DTE.waitForEditor();
+     DTE.waitForCkeditor();
      await I.clickIfVisible(".toast-close-button");
 
      await DTE.fillCkeditor("<p>autotest second version future publish</p>");
@@ -331,6 +332,7 @@ Scenario('not-publicable history row when saving with same future publish date',
      I.say('Open editor and check history tab for not-publicable row');
      I.click("Test casoveho publikovania", "#datatableInit_wrapper");
      DTE.waitForEditor();
+     DTE.waitForCkeditor();
      await I.clickIfVisible(".toast-close-button");
 
      I.clickCss("#pills-dt-datatableInit-history-tab");
