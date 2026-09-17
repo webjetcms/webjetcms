@@ -149,15 +149,61 @@ Lokálne modely vykonávajú požiadavky priamo na serveri WebJET CMS bez odosie
 - **Lokálny prekladový model** - používa model `facebook/m2m100_418M` na preklad čistého textu. Nepodporuje HTML kód, `INCLUDE` príkazy, štruktúrovaný vstup ani doplňujúci vstup používateľa.
 - **Lokálny embeddingový model** - používa model `intfloat/multilingual-e5-base` na [sémantické indexovanie a vyhľadávanie](../../apps/semantic-search/README.md). Model generuje vektory s `768` dimenziami.
 
-Modelové balíky vo formáte ZIP musia byť vopred pripravené a schválené pre WebJET CMS. Na ich vytvorenie sú v projekte pripravené samostatné skripty. Z koreňového priečinka projektu spustite skript pre požadovaný model:
+Modelové balíky vo formáte ZIP musia byť vopred pripravené a schválené pre WebJET CMS. Najskôr je potrebné vo vašom `build.gradle` súbore pridať závislosť a task na vytvorenie súborov:
 
-```shell
-./src/main/webapp/WEB-INF/webjet-ai/local/prepare-local-text-model.sh
-./src/main/webapp/WEB-INF/webjet-ai/local/prepare-local-translation-model.sh
-./src/main/webapp/WEB-INF/webjet-ai/local/prepare-local-embedding-model.sh
+```gradle
+dependencies {
+	....
+	implementation "com.webjetcms:webjet-ai-local:2.0.1"
+}
+
+def localAiModelsDirectory = file('src/main/webapp/WEB-INF/local-ai-models')
+def localAiModelTasks = [
+    prepareLocalAiTextModel: [
+        model: 'utter-project/EuroLLM-1.7B-Instruct',
+        variant: 'q4-k-m',
+        output: 'eurollm-1.7b-instruct-q4-k-m.zip'
+    ],
+    prepareLocalAiTranslationModel: [
+        model: 'facebook/m2m100_418M',
+        variant: 'int8',
+        output: 'm2m100-418m-int8.zip'
+    ],
+    prepareLocalAiEmbeddingModel: [
+        model: 'intfloat/multilingual-e5-base',
+        variant: 'fp32',
+        output: 'multilingual-e5-base-fp32.zip'
+    ]
+]
+
+localAiModelTasks.each { taskName, modelDefinition ->
+    tasks.register(taskName, JavaExec) {
+        group = 'webjet-ai'
+        description = "Prepares ${modelDefinition.model} for local WebJET AI use."
+        classpath = configurations.runtimeClasspath
+        mainClass = 'com.webjetcms.ai.local.tool.LocalModelTool'
+        args 'prepare',
+            '--model', modelDefinition.model,
+            '--output', new File(localAiModelsDirectory, modelDefinition.output).absolutePath
+        if (modelDefinition.variant != null) {
+            args '--variant', modelDefinition.variant
+        }
+        if (providers.gradleProperty('overwriteLocalAiModel').getOrElse('false').toBoolean()) {
+            args '--overwrite'
+        }
+    }
+}
 ```
 
-Skript cez Gradle spustí nástroj `webjet-ai` vo verzii nastavenej v `build.gradle`. Nástroj následne stiahne pevne určené súbory modelu, overí ich veľkosť a kontrolný súčet a vytvorí ZIP v priečinku `src/main/webapp/WEB-INF/local-ai-models`. Existujúci ZIP neprepíše; ak ho chcete vedome nahradiť, spustite príslušný skript s parametrom `--overwrite`. Každé vytvorenie alebo prepísanie modelového balíka vyžaduje pripojenie na internet. Ak Gradle načítava artefakt `webjet-ai` z GitHub Packages, musia byť nastavené premenné `GPR_USER` a `GPR_API_KEY` rovnako ako pri zostavení projektu.
+Následne z koreňového priečinka projektu spustite generovanie modelov:
+
+```shell
+gradlew prepareLocalAiEmbeddingModel
+gradlew prepareLocalAiTranslationModel
+gradlew prepareLocalAiTextModel
+```
+
+Nástroj stiahne pevne určené súbory modelu, overí ich veľkosť a kontrolný súčet a vytvorí ZIP v priečinku `src/main/webapp/WEB-INF/local-ai-models`. Existujúci ZIP neprepíše, ak ho chcete vedome nahradiť, spustite príslušný skript s parametrom `-PoverwriteLocalAiModel=true`. Každé vytvorenie alebo prepísanie modelového balíka vyžaduje pripojenie na internet.
 
 Cestu k vytvorenému balíku nastavte v príslušnej konfiguračnej premennej:
 
