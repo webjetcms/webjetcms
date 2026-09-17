@@ -59,6 +59,7 @@ public class FormHtmlHandler {
 
     private static final String FORM_START_KEY = "components.mustistep.form.start";
     private static final String FORM_END_KEY = "components.mustistep.form.end";
+    private static final String FORM_LOADER_KEY = "components.mustistep.form.loader";
 
     private final FormStepsRepository formStepsRepository;
     private final FormItemsRepository formItemsRepository;
@@ -353,6 +354,24 @@ public class FormHtmlHandler {
     }
 
     /**
+     * Adds the localized loader before the closing form tag for page rendering only.
+     *
+     * @param formEndHtml rendered form end
+     * @param isEmailRender {@code true} when rendering form content for an email
+     * @param prop localized text provider
+     */
+    static void appendFormLoader(StringBuilder formEndHtml, boolean isEmailRender, Prop prop) {
+        if(isEmailRender == false) {
+            String loaderHtml = prop.getText(FORM_LOADER_KEY);
+            if(Tools.isNotEmpty(loaderHtml)) {
+                int closingFormTagIndex = formEndHtml.lastIndexOf("</form>");
+                if(closingFormTagIndex >= 0) formEndHtml.insert(closingFormTagIndex, loaderHtml);
+                else formEndHtml.append(loaderHtml);
+            }
+        }
+    }
+
+    /**
      * Creates the closing HTML of the form with a specific submit button text.
      *
      * @param submitButtonString text for the submit button
@@ -367,6 +386,7 @@ public class FormHtmlHandler {
         Tools.replace(formEndHtml, "${submitButtonText}", submitButtonString);
 
         if(isEmailRender == false) Tools.replace(formEndHtml, "{tech-info}", "");
+        appendFormLoader(formEndHtml, isEmailRender, prop);
 
         return formEndHtml;
     }
