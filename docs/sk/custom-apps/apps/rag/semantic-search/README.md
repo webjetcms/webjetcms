@@ -119,7 +119,7 @@ Fronta `rag_index_queue` ukladá iba typ entity, ID a akciu. Poskytovateľ a mod
 
 Vstavaný lokálny poskytovateľ používa model `intfloat/multilingual-e5-base` s `768` dimenziami. Postup nastavenia:
 
-1. Uložte schválený modelový ZIP balík na server a nastavte jeho cestu do `ai_localEmbeddingModelBundlePath`. Použite absolútnu cestu na serveri alebo cestu začínajúcu `/WEB-INF/` voči koreňu nasadenej aplikácie.
+1. Z koreňového priečinka projektu spustite skript [`prepare-local-embedding-model.sh`](../../../../../../src/main/webapp/WEB-INF/webjet-ai/local/prepare-local-embedding-model.sh). Vytvorí schválený ZIP balík a uloží ho ako `src/main/webapp/WEB-INF/local-ai-models/multilingual-e5-base-fp32.zip`. Do `ai_localEmbeddingModelBundlePath` nastavte cestu `/WEB-INF/local-ai-models/multilingual-e5-base-fp32.zip`.
 2. Nastavte globálnu premennú `ragEmbeddingDimensions` na `768`. Táto zmena odstráni existujúce vektory.
 3. Reštartujte aplikačný server.
 4. V asistentoch `RAG-EMB-INDEX` a `RAG-EMB-SEARCH` vyberte poskytovateľa **Lokálny embeddingový model** a model `intfloat/multilingual-e5-base`.

@@ -149,15 +149,25 @@ Lokálne modely vykonávajú požiadavky priamo na serveri WebJET CMS bez odosie
 - **Lokálny prekladový model** - používa model `facebook/m2m100_418M` na preklad čistého textu. Nepodporuje HTML kód, `INCLUDE` príkazy, štruktúrovaný vstup ani doplňujúci vstup používateľa.
 - **Lokálny embeddingový model** - používa model `intfloat/multilingual-e5-base` na [sémantické indexovanie a vyhľadávanie](../../apps/semantic-search/README.md). Model generuje vektory s `768` dimenziami.
 
-Modelové balíky vo formáte ZIP musia byť vopred pripravené a schválené pre WebJET CMS. Cesty k nim nastavte v konfiguračných premenných:
+Modelové balíky vo formáte ZIP musia byť vopred pripravené a schválené pre WebJET CMS. Na ich vytvorenie sú v projekte pripravené samostatné skripty. Z koreňového priečinka projektu spustite skript pre požadovaný model:
 
-| Premenná | Model |
-| --- | --- |
-| `ai_localTextModelBundlePath` | `utter-project/EuroLLM-1.7B-Instruct` |
-| `ai_localTranslateModelBundlePath` | `facebook/m2m100_418M` |
-| `ai_localEmbeddingModelBundlePath` | `intfloat/multilingual-e5-base` |
+```shell
+./src/main/webapp/WEB-INF/webjet-ai/local/prepare-local-text-model.sh
+./src/main/webapp/WEB-INF/webjet-ai/local/prepare-local-translation-model.sh
+./src/main/webapp/WEB-INF/webjet-ai/local/prepare-local-embedding-model.sh
+```
 
-Cesta môže byť absolútna cesta na serveri alebo cesta začínajúca `/WEB-INF/`, napríklad `/WEB-INF/local-ai-models/eurollm-1.7b-instruct-q4-k-m.zip`. Cesty začínajúce `/WEB-INF/` sa vyhodnotia voči koreňovému adresáru nasadenej aplikácie na serveri.
+Skript cez Gradle spustí nástroj `webjet-ai` vo verzii nastavenej v `build.gradle`. Nástroj následne stiahne pevne určené súbory modelu, overí ich veľkosť a kontrolný súčet a vytvorí ZIP v priečinku `src/main/webapp/WEB-INF/local-ai-models`. Existujúci ZIP neprepíše; ak ho chcete vedome nahradiť, spustite príslušný skript s parametrom `--overwrite`. Každé vytvorenie alebo prepísanie modelového balíka vyžaduje pripojenie na internet. Ak Gradle načítava artefakt `webjet-ai` z GitHub Packages, musia byť nastavené premenné `GPR_USER` a `GPR_API_KEY` rovnako ako pri zostavení projektu.
+
+Cestu k vytvorenému balíku nastavte v príslušnej konfiguračnej premennej:
+
+| Premenná | Model | Cesta vytvorená skriptom |
+| --- | --- | --- |
+| `ai_localTextModelBundlePath` | `utter-project/EuroLLM-1.7B-Instruct` | `/WEB-INF/local-ai-models/eurollm-1.7b-instruct-q4-k-m.zip` |
+| `ai_localTranslateModelBundlePath` | `facebook/m2m100_418M` | `/WEB-INF/local-ai-models/m2m100-418m-int8.zip` |
+| `ai_localEmbeddingModelBundlePath` | `intfloat/multilingual-e5-base` | `/WEB-INF/local-ai-models/multilingual-e5-base-fp32.zip` |
+
+Cesta môže byť absolútna cesta na serveri alebo cesta začínajúca `/WEB-INF/`. Cesty začínajúce `/WEB-INF/` sa vyhodnotia voči koreňovému adresáru nasadenej aplikácie na serveri.
 
 Cesty sú globálne pre celú inštaláciu, súbor musí byť čitateľný procesom aplikačného servera a po ich zmene je potrebný reštart. Model sa otvorí až pri prvom použití. Poskytovateľ sa v editore označí ako nenakonfigurovaný, kým príslušná cesta nie je nastavená.
 

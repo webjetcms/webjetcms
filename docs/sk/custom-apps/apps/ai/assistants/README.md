@@ -264,7 +264,7 @@ Artefakt `com.webjetcms:webjet-ai-local` rozširuje základnú knižnicu o loká
 
 Každý adaptér používa samostatnú globálnu cestu k modelovému ZIP balíku. [ConfiguredLocalProvider](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/local/ConfiguredLocalProvider.java) načíta cestu bez doménového kontextu, poskytovateľa otvorí lenivo pri prvom volaní a jednu inštanciu bezpečne opakovane používa až do ukončenia aplikácie. Zmena cesty preto vyžaduje reštart.
 
-Cesta môže byť absolútna cesta na serveri alebo cesta začínajúca `/WEB-INF/`, ktorú adaptér prevedie cez `Tools.getRealPath()` na fyzickú cestu v nasadenej aplikácii. Napríklad `/WEB-INF/local-ai-models/eurollm-1.7b-instruct-q4-k-m.zip` a `/WEB-INF/local-ai-models/m2m100-418m-int8.zip`.
+Cesta môže byť absolútna cesta na serveri alebo cesta začínajúca `/WEB-INF/`, ktorú adaptér prevedie cez `Tools.getRealPath()` na fyzickú cestu v nasadenej aplikácii. Skripty opísané v dokumentácii [AI asistenti](../../../../redactor/ai/settings/README.md) vytvoria schválené balíky v priečinku `/WEB-INF/local-ai-models/`, napríklad `/WEB-INF/local-ai-models/eurollm-1.7b-instruct-q4-k-m.zip` a `/WEB-INF/local-ai-models/m2m100-418m-int8.zip`.
 
 Lokálny preklad nepoužíva bežný prompt. [LibrarySupportLogic](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/LibrarySupportLogic.java) preň vytvorí požiadavku s `TranslationOptions` a odmietne HTML, `INCLUDE` príkazy, štruktúrovaný vstup, používateľský prompt aj makrá vstupu v inštrukciách. Inštrukcie musia obsahovať JSON s `sourceLanguage` a `targetLanguage`; voliteľná hodnota `maximumOutputTokens` je najviac `200`. Lokálne generovanie textu odmietne rozbalenie promptov, v ktorom ochrana deteguje pokus o `prompt injection`.
 

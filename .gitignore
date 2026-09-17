@@ -92,5 +92,5 @@ src/main/webapp/admin/v9/src/js/plugins/Editor-*.zip
 # Test agents
 .agents/skills/i-*
 
-# Test local model
+# Local model bundles
 **/WEB-INF/local-ai-models
