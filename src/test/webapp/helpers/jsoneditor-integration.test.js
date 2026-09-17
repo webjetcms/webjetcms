@@ -3,11 +3,9 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
-const {createRequire} = require("node:module");
 const {JSDOM} = require("jsdom");
 
 const adminDirectory = path.resolve(__dirname, "../../../main/webapp/admin/v9");
-const adminRequire = createRequire(path.join(adminDirectory, "package.json"));
 const utilities = import("../../../main/webapp/admin/v9/npm_packages/webjetdatatables/jsoneditor-utils.mjs");
 
 /**
@@ -28,9 +26,9 @@ function loadBrowserModule(context, relativePath) {
 async function createFixture(t, {entityDecode, required = false} = {}) {
     const dom = new JSDOM("<!doctype html><html><body></body></html>");
     const window = dom.window;
-    const $ = adminRequire("jquery")(window);
-    adminRequire("datatables.net")(window, $);
-    adminRequire("datatables.net-editor")(window, $);
+    const $ = require("jquery")(window);
+    require("datatables.net")(window, $);
+    require("datatables.net-editor")(window, $);
     const editor = new $.fn.dataTable.Editor({fields: [{name: "fieldA", entityDecode}]});
     editor.TABLE = {DATA: {id: "jsoneditorTest"}};
     const field = editor.field("fieldA");
@@ -65,7 +63,7 @@ async function createFixture(t, {entityDecode, required = false} = {}) {
 test("DataTable renders JSON containing an incomplete HTML tag as literal text", async t => {
     const dom = new JSDOM("<!doctype html><html><body><div id='result'></div></body></html>");
     const window = dom.window;
-    const $ = adminRequire("jquery")(window);
+    const $ = require("jquery")(window);
     const context = vm.createContext({
         $,
         WJ: {

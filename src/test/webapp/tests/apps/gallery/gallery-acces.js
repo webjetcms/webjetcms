@@ -311,10 +311,10 @@ Scenario("Delete folders 1", async ({ I }) => {
 Scenario('Duplikovanie suboru v galerii - drag&drop', async ({ I }) => {
      // skontroluj ci mam prava na vsetky priecinky v galerii
      I.say('Skontroluj ci mam prava na vsetky priecinky v galerii');
+     I.amOnPage('/admin/v9/');
      await allowAllFolders(I);
 
      I.amOnPage('/admin/v9/apps/gallery/');
-     I.refreshPage();
 
      // vytvor hlavny priecinok + podpriecinky autotest_subfolder1 a autotest_subfolder2
      I.say('Vytvaram hlavny priecinok + podpriecinky do priecinka galeria');

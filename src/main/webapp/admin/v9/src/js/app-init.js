@@ -841,7 +841,9 @@ function initClosure() {
                             "click": "window.location.href=$('.js-logout-toggler').attr('href')"
                         }
                     ]);
-                    WJ.closeIframeModal();
+                    setTimeout(function() {
+                        WJ.closeIframeModal();
+                    }, 300);
                 });
                 iframeWindow.addEventListener("WJ.DTE.open", function(event) {
                     iframeWindow.$("#modalIframeLoader").css("display", "none");

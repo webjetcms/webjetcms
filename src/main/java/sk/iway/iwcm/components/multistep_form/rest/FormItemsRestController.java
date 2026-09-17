@@ -148,8 +148,12 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         if(MultistepFormsService.getChartStatInfo(request) != null) return;
 
         //
-        if(Tools.isEmpty(entity.getFormName()) || entity.getStepId() == null || entity.getStepId() < 1)
-            throw new IllegalStateException(getProp().getText("datatable.error.unknown"));
+        if(Tools.isEmpty(entity.getFormName()))
+            throw new IllegalStateException(getProp().getText("datatable.error.unknown") + " - formName is empty");
+        if(entity.getStepId() == null)
+            throw new IllegalStateException(getProp().getText("datatable.error.unknown") + " - stepId is null");
+        if(entity.getStepId() < 1)
+            throw new IllegalStateException(getProp().getText("datatable.error.unknown") + " - stepId < 1");
 
         //
         boolean isRowView = Tools.isTrue(formSettingsRepository.isRowView(entity.getFormName(), CloudToolsForCore.getDomainId()) );
