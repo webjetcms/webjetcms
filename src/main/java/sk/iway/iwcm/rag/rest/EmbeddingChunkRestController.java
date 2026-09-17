@@ -46,7 +46,9 @@ import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 import sk.iway.iwcm.utils.Pair;
 
 /**
@@ -80,6 +82,7 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
 
         if (vectorStore.isAvailable() == false) {
             // If vector store is not available (not allowed or available)
+            addNotify(new NotifyBean(getProp().getText("settings.embedding-chunks.title"), getProp().getText("components.ai_assistants.provider.not_configured"), NotifyType.ERROR));
             return new DatatablePageImpl<>( new ArrayList<>() );
         } else if (vectorStore.isAvailableAndInitialized() == false) {
             // Vector store is available but not initialized, we can try to initialize it

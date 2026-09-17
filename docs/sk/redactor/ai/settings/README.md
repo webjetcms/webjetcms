@@ -143,7 +143,9 @@ Vygenerovaný API kľúč nastavte do konfiguračnej premennej `ai_openRouterAut
 
 ### Lokálne modely
 
-Lokálne modely vykonávajú požiadavky priamo na serveri WebJET CMS bez odosielania spracúvanej hodnoty do externej AI služby. Dostupné sú tri samostatné typy poskytovateľov:
+Lokálne modely vykonávajú požiadavky priamo na aplikačnom serveri WebJET CMS. Kvalita modelov samozrejme nedosahuje kvality veľkých komerčných modelov, ale sú spustené lokálne na vašom serveri, dáta neopúšťajú vaše prostredie. Samozrejme ale, ich prevádzka zvyšuje požiadavky na výpočtový výkon a pamäť servera. Praktické nasadenie je potrebné overiť a vykonať aj záťažové testy.
+
+Dostupné sú tri samostatné typy poskytovateľov:
 
 - **Lokálny model na generovanie textu** - používa model `utter-project/EuroLLM-1.7B-Instruct` a podporuje iba generovanie textu. Streamovanie odpovede nie je podporované a požiadavky sa neukladajú.
 - **Lokálny prekladový model** - používa model `facebook/m2m100_418M` na preklad čistého textu. Nepodporuje HTML kód, `INCLUDE` príkazy, štruktúrovaný vstup ani doplňujúci vstup používateľa.
@@ -209,13 +211,26 @@ Cestu k vytvorenému balíku nastavte v príslušnej konfiguračnej premennej:
 
 | Premenná | Model | Cesta vytvorená skriptom |
 | --- | --- | --- |
-| `ai_localTextModelBundlePath` | `utter-project/EuroLLM-1.7B-Instruct` | `/WEB-INF/local-ai-models/eurollm-1.7b-instruct-q4-k-m.zip` |
-| `ai_localTranslateModelBundlePath` | `facebook/m2m100_418M` | `/WEB-INF/local-ai-models/m2m100-418m-int8.zip` |
 | `ai_localEmbeddingModelBundlePath` | `intfloat/multilingual-e5-base` | `/WEB-INF/local-ai-models/multilingual-e5-base-fp32.zip` |
+| `ai_localTranslateModelBundlePath` | `facebook/m2m100_418M` | `/WEB-INF/local-ai-models/m2m100-418m-int8.zip` |
+| `ai_localTextModelBundlePath` | `utter-project/EuroLLM-1.7B-Instruct` | `/WEB-INF/local-ai-models/eurollm-1.7b-instruct-q4-k-m.zip` |
 
 Cesta môže byť absolútna cesta na serveri alebo cesta začínajúca `/WEB-INF/`. Cesty začínajúce `/WEB-INF/` sa vyhodnotia voči koreňovému adresáru nasadenej aplikácie na serveri.
 
 Cesty sú globálne pre celú inštaláciu, súbor musí byť čitateľný procesom aplikačného servera a po ich zmene je potrebný reštart. Model sa otvorí až pri prvom použití. Poskytovateľ sa v editore označí ako nenakonfigurovaný, kým príslušná cesta nie je nastavená.
+
+Nastavte ešte konfiguračné premenné:
+
+- `ragEmbeddingDimensions` na hodnotu 768
+- `ragSemanticSearchEnabled` na hodnotu true ak používate sémantické vyhľadávanie
+- `searchType` na hodnotu `semantic`
+- `ragAnswerAllowed` na hodnotu true ak máte aktivovaný aj `ai_localTextModelBundlePath`
+
+Viac informácií nájdete v [dokumentácii k vyhľadávaniu](../../apps/search/README.md).
+
+!>**Upozornenie:**: pri zmene `ragEmbeddingDimensions` sa zmaže tabuľka `rag_embedding_chunks` s existujúcimi záznamami sémantického indexu, pretože podľa dimenzie je nastavená dátová štruktúra.
+
+Pre embedding v sekcii AI nástroje upravte asistenta `RAG-EMB-INDEX` a `RAG-EMB-SEARCH` - obom nastavte v karte Poskytovateľ hodnotu Poskytovateľ na Lokálny embeddingový model a hodnotu Model na `intfloat/multilingual-e5-base`. Asistentovi `RAG-SEARCH` nastavte Lokálny model na generovanie textu a model `utter-project/EuroLLM-1.7B-Instruct`. Ak takýto asistenti neexistujú, systém ich vytvorí pri prvom použití sémantického indexovania, alebo vyhľadávania, potom po vytvorení poskytovateľa a modely nastavte.
 
 Pre lokálny preklad musí pole **Inštrukcie** obsahovať zdrojový a cieľový jazyk vo formáte JSON, prípadne s prefixom `Translator:`:
 
@@ -226,6 +241,8 @@ Translator: {"sourceLanguage":"sk","targetLanguage":"en","maximumOutputTokens":2
 Jazyky musia byť určené explicitne; hodnota `autodetect` nie je podporovaná. Hodnota `userLng` použije aktuálny jazyk používateľa a kód `cz` sa automaticky zmení na `cs`. Voliteľná hodnota `maximumOutputTokens` musí byť kladné celé číslo, najviac `200`.
 
 !>**Upozornenie:** Modelové súbory môžu mať stovky megabajtov až niekoľko gigabajtov. Pred aktiváciou overte dostatok diskového priestoru a operačnej pamäte a použite iba balík z dôveryhodného zdroja.
+
+Nezabudnite nastaviť aj [úlohu na pozadí](../../apps/semantic-search/README.md), ktorá vykonáva indexovanie.
 
 ### Prehliadač
 
