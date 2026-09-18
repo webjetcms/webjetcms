@@ -89,12 +89,12 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 ### Sémantické vyhledávání
 
 - Přidána podpora [sémantického vyhledávání](redactor/apps/semantic-search/README.md) postaveného na technologii vektorové databáze `pgvector` a `OpenAI embeddings`. Umožňuje návštěvníkům najít relevantní stránky na základě **významu otázky**, nejen shody klíčových slov (#211).
-
 - Doplněný hybridní režim sémantického vyhledávání a volitelná RAG odpověď z indexovaného obsahu. Aplikace **Vyhledávání** má nová nastavení pro typ vyhledávání, hybridní chování, výběr AI asistenta a limity kontextu odpovědi (#58521).
 
 ![](redactor/apps/semantic-search/rag-result.png)
 
 - Embedding indexování a vyhledávání používá poskytovatele a model nastavený v systémovém AI asistentovi. Indexy různých poskytovatelů a modelů mohou existovat současně; stránka **Sémantický index** zobrazuje aktuální nastavení a při opětovném indexování zachová ostatní kombinace. Jádro embedding požadavků, odpovědí a komunikace s poskytovateli bylo vyčleněno do knihovny `webjet-ai` ; WebJET CMS nadále zajišťuje výběr asistenta, indexování a uložení vektorů (#58694).
+- AI asistenti a sémantické vyhledávání - přidána podpora [lokálních modelů](redactor/ai/settings/README.md#lokální-modely) pro generování textu, překlad a tvorbu embeddingů přímo na serveru bez odesílání obsahu externí AI službě (#58561).
 
 ### Aplikace
 

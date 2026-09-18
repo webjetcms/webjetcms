@@ -113,7 +113,7 @@ Akciu spustíte tlačidlom <button class="btn btn-primary"><i class="ti ti-check
 
 Ak pri indexovaní stránky nastane chyba, systém uloží záznam so stavom **ERROR** a skrátenou chybovou správou. Chyba sa zapisuje aj do administrátorského logu v kategórii **Vyhľadávanie** (`SEARCH`). Ak zlyhá spracovanie položky ešte na úrovni fronty, položka zostane vo fronte a systém sa ju pokúsi spracovať pri ďalšom behu cron úlohy.
 
-!>**Upozornenie:** Konfiguračná premenná `ragEmbeddingDimensions` je globálna pre celú inštaláciu. Jej zmena vymaže celý sémantický index pre všetkých poskytovateľov a modely, pretože databázový stĺpec `vector(N)` má spoločnú dimenziu. Po zmene je potrebné znova zaindexovať celý obsah. Lokálny model `intfloat/multilingual-e5-base` vyžaduje hodnotu `768`.
+!>**Upozornenie:** Konfiguračná premenná `ragEmbeddingDimensions` je globálna pre celú inštaláciu. Jej zmena vymaže celý sémantický index pre všetkých poskytovateľov a modely, pretože databázový stĺpec `vector(N)` má spoločnú dimenziu. Po zmene je potrebné znova indexovať celý obsah. Lokálny model `intfloat/multilingual-e5-base` vyžaduje hodnotu `768`.
 
 ## Detaily implementácie
 

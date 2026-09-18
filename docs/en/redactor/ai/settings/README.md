@@ -95,7 +95,7 @@ This tab provides advanced configuration options for the Assistant, allowing you
 
 ## Providers
 
-A provider is an external service or platform that provides AI tools, models, and functionality used to process requests in a CMS. In order to use a provider, it must first be properly implemented and configured in the system (for example, by providing an API key). Individual providers may vary in capabilities, price, quality of results, or specialization in specific types of tasks. Choosing the right provider depends on your needs and requirements for a specific AI functionality.
+The provider provides AI tools, models, and functionalities used to process requests in the CMS. This can be an external service configured, for example, with an API key, or a local model running directly on the server. Individual providers may differ in capabilities, price, quality of results, or specialization in specific types of tasks. Choosing the right provider depends on your needs and requirements for a specific AI functionality.
 
 ### OpenAI
 
@@ -141,6 +141,109 @@ Set the generated API key to the configuration variable `ai_openRouterAuthKey`.
 
 ![](openrouter.png)
 
+### Local models
+
+Local models execute requests directly on the WebJET CMS application server. The quality of the models, of course, does not reach the quality of large commercial models, but they are run locally on your server, the data does not leave your environment. Of course, their operation increases the requirements for computing power and server memory. Practical deployment needs to be verified and load tests performed.
+
+There are three separate types of providers available:
+
+- **Local text generation model** - uses the `utter-project/EuroLLM-1.7B-Instruct` model and only supports text generation. Response streaming is not supported and requests are not cached.
+- **Local translation model** - uses the `facebook/m2m100_418M` model for plain text translation. It does not support HTML code, `INCLUDE` commands, structured input, or additional user input.
+- **Local Embedding Model** - uses the `intfloat/multilingual-e5-base` model for [semantic indexing and search](../../apps/semantic-search/README.md). The model generates vectors with `768` dimensions.
+
+Model packages in ZIP format must be prepared and approved in advance for WebJET CMS. First, you need to add a dependency and a task to create the files in your `build.gradle` file (set the `com.webjetcms:webjet-ai-local` version to match the version in WebJET CMS):
+
+```gradle
+dependencies {
+	....
+	implementation "com.webjetcms:webjet-ai-local:2.0.3"
+}
+
+def localAiModelsDirectory = file('src/main/webapp/WEB-INF/local-ai-models')
+def localAiModelTasks = [
+    prepareLocalAiTextModel: [
+        model: 'utter-project/EuroLLM-1.7B-Instruct',
+        variant: 'q4-k-m',
+        output: 'eurollm-1.7b-instruct-q4-k-m.zip'
+    ],
+    prepareLocalAiTranslationModel: [
+        model: 'facebook/m2m100_418M',
+        variant: 'int8',
+        output: 'm2m100-418m-int8.zip'
+    ],
+    prepareLocalAiEmbeddingModel: [
+        model: 'intfloat/multilingual-e5-base',
+        variant: 'fp32',
+        output: 'multilingual-e5-base-fp32.zip'
+    ]
+]
+
+localAiModelTasks.each { taskName, modelDefinition ->
+    tasks.register(taskName, JavaExec) {
+        group = 'webjet-ai'
+        description = "Prepares ${modelDefinition.model} for local WebJET AI use."
+        classpath = configurations.runtimeClasspath
+        mainClass = 'com.webjetcms.ai.local.tool.LocalModelTool'
+        args 'prepare',
+            '--model', modelDefinition.model,
+            '--output', new File(localAiModelsDirectory, modelDefinition.output).absolutePath
+        if (modelDefinition.variant != null) {
+            args '--variant', modelDefinition.variant
+        }
+        if (providers.gradleProperty('overwriteLocalAiModel').getOrElse('false').toBoolean()) {
+            args '--overwrite'
+        }
+    }
+}
+```
+
+Then, from the root folder of the project, start model generation:
+
+```shell
+gradlew prepareLocalAiEmbeddingModel
+gradlew prepareLocalAiTranslationModel
+gradlew prepareLocalAiTextModel
+```
+
+The tool will download the fixed model files, verify their size and checksum, and create a ZIP in the `src/main/webapp/WEB-INF/local-ai-models` folder. It will not overwrite the existing ZIP, if you want to consciously replace it, run the appropriate script with the `-PoverwriteLocalAiModel=true` parameter. Each creation or overwriting of a model package requires an internet connection.
+
+Set the path to the created package in the appropriate configuration variable:
+
+| Variable | Model | Path created by script |
+| --- | --- | --- |
+| `ai_localEmbeddingModelBundlePath` | `intfloat/multilingual-e5-base` | `/WEB-INF/local-ai-models/multilingual-e5-base-fp32.zip` |
+| `ai_localTranslateModelBundlePath` | `facebook/m2m100_418M` | `/WEB-INF/local-ai-models/m2m100-418m-int8.zip` |
+| `ai_localTextModelBundlePath` | `utter-project/EuroLLM-1.7B-Instruct` | `/WEB-INF/local-ai-models/eurollm-1.7b-instruct-q4-km.zip` |
+
+The path can be an absolute path on the server or a path starting with `/WEB-INF/`. Paths starting with `/WEB-INF/` are evaluated against the root directory of the deployed application on the server.
+
+The paths are global for the entire installation, the file must be readable by the application server process, and a restart is required after changing them. The model will only open on first use. The provider will be marked as unconfigured in the editor until the appropriate path is set.
+
+Set the configuration variables:
+
+- `ragEmbeddingDimensions` to the value 768
+- `ragSemanticSearchEnabled` to true if you are using semantic search
+- `searchType` to the value `semantic`
+- `ragAnswerAllowed` to true if you also have `ai_localTextModelBundlePath` activated. Please note that this is a small language model, so RAG answers may not be displayed at all, or may not be completely correct/complete, compared to commercial models.
+
+For more information, see the [search documentation](../../apps/search/README.md).
+
+!>**Warning:**: when changing `ragEmbeddingDimensions`, the table `rag_embedding_chunks` with existing semantic index records will be deleted, because the data structure is set according to the dimension.
+
+For embedding in the AI ​​tools section, edit the `RAG-EMB-INDEX` and `RAG-EMB-SEARCH` assistants - in both of them, set the Provider value to Local embedding model and the Model value to `intfloat/multilingual-e5-base` in the Provider tab. For the `RAG-SEARCH` assistant, set the Local text generation model and the model to `utter-project/EuroLLM-1.7B-Instruct`. If such assistants do not exist, the system will create them the first time you use semantic indexing or search, then set the provider and models after creating them.
+
+For local translation, the **Instructions** field must contain the source and target languages ​​in JSON format, optionally with the prefix `Translator:`:
+
+```text
+Translator: {"sourceLanguage":"sk","targetLanguage":"en","maximumOutputTokens":200}
+```
+
+Languages ​​must be specified explicitly; the value `autodetect` is not supported. The value `userLng` will use the current user language and the code `cz` will automatically change to `cs`. The optional value `maximumOutputTokens` must be a positive integer, at most `200`.
+
+!>**Warning:** Model files can be hundreds of megabytes to several gigabytes in size. Please verify sufficient disk space and RAM before activating and only use a package from a trusted source.
+
+Don't forget to also set up a [background task](../../apps/semantic-search/README.md) that performs indexing.
+
 ### Browser
 
 AI in the browser is currently a [working standard](https://developer.chrome.com/docs/ai/get-started) created by Google. It is currently supported in Google Chrome using a secure (HTTPS) connection. Once the API is standardized, it is expected to be available in other browsers. You can disable AI in the browser by setting the configuration variable `ai_browserAiEnabled` to `false`, at which point the options will no longer be displayed.
@@ -162,7 +265,7 @@ Some APIs do not yet support working in all languages, so automatic translation 
 
 ## Connection
 
-Calling AI services requires an internet connection. Make sure your server has access to external services and that a firewall or other security measures are not blocking requests to the provider's API. The following domain names are used:
+Calling external AI services requires an internet connection. Make sure your server has access to the external services and that a firewall or other security measures are not blocking requests to the provider's API. Local models do not require an internet connection for processing. The following domain names are used for external providers:
 
 - OpenAI: `api.openai.com`
 - Gemini: `generativelanguage.googleapis.com`
