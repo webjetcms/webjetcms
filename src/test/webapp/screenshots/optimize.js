@@ -8,14 +8,15 @@ const JPEG_SIGNATURE = Buffer.from([255, 216, 255]);
 const DEFAULT_QUALITY = 90;
 const DEFAULT_MAX_WIDTH = 760;
 
-/** Find JPEG-named screenshots without following symbolic links. */
-async function* findScreenshots(directory) {
+/** Find JPEG-named images without following symbolic links. */
+async function* findImages(directory, screenshotsOnly) {
+    const pattern = screenshotsOnly ? /^screenshot.*\.jpe?g$/i : /\.jpe?g$/i;
     const entries = await fs.readdir(directory, { withFileTypes: true });
     entries.sort((a, b) => a.name.localeCompare(b.name));
     for (const entry of entries) {
         const filename = path.join(directory, entry.name);
-        if (entry.isDirectory()) yield* findScreenshots(filename);
-        else if (entry.isFile() && /^screenshot.*\.jpe?g$/i.test(entry.name)) yield filename;
+        if (entry.isDirectory()) yield* findImages(filename, screenshotsOnly);
+        else if (entry.isFile() && pattern.test(entry.name)) yield filename;
     }
 }
 
@@ -50,7 +51,8 @@ async function optimizeFile(filename, { quality, maxWidth, dryRun }) {
     }
 
     image.autoOrient();
-    if (resized) image.resize({ width: maxWidth, withoutEnlargement: true });
+    // Avoid rounding the scaled height down when JPEG decoding also shrinks the image.
+    if (resized) image.resize({ width: maxWidth, withoutEnlargement: true, fastShrinkOnLoad: false });
     const { data: output, info } = await image.jpeg({
         quality,
         chromaSubsampling: '4:4:4',
@@ -81,12 +83,12 @@ function formatBytes(bytes) {
 }
 
 /**
- * Optimize screenshots under the supplied roots and report individual failures.
+ * Optimize JPEG-named images under the supplied roots and report individual failures.
  * @param {string[]} roots Directories to scan recursively.
- * @param {object} [options] JPEG quality, maximum width, dry-run mode and output callback.
+ * @param {object} [options] JPEG quality, maximum width, screenshot filter, dry-run mode and output callback.
  * @returns {Promise<object>} Counts and byte totals for converted files.
  */
-async function optimizeScreenshots(roots, { quality = DEFAULT_QUALITY, maxWidth = DEFAULT_MAX_WIDTH, dryRun = false, log = console.log } = {}) {
+async function optimizeScreenshots(roots, { quality = DEFAULT_QUALITY, maxWidth = DEFAULT_MAX_WIDTH, screenshotsOnly = true, dryRun = false, log = console.log } = {}) {
     if (!Number.isInteger(quality) || quality < 1 || quality > 100) {
         throw new Error('Quality must be an integer from 1 to 100.');
     }
@@ -98,7 +100,8 @@ async function optimizeScreenshots(roots, { quality = DEFAULT_QUALITY, maxWidth 
     log(`${dryRun ? 'Dry run' : 'Optimization'}: JPEG quality ${quality}, maximum width ${maxWidth} px, 4:4:4 chroma.`);
     for (const root of roots) {
         try {
-            for await (const filename of findScreenshots(root)) {
+            log(`Scanning ${root}: ${screenshotsOnly ? 'screenshot*.jpg/jpeg' : 'all .jpg/.jpeg files'}.`);
+            for await (const filename of findImages(root, screenshotsOnly)) {
                 const label = path.join(path.basename(root), path.relative(root, filename));
                 try {
                     const result = await optimizeFile(filename, { quality, maxWidth, dryRun });
@@ -148,6 +151,9 @@ function parseArguments(args) {
                 throw new Error('--max-width requires a positive integer.');
             }
             options.maxWidth = Number(value);
+        } else if (arg && !arg.startsWith('-')) {
+            if (options.directory !== undefined) throw new Error('Only one directory can be supplied.');
+            options.directory = arg;
         } else {
             throw new Error(`Unknown argument: ${arg}`);
         }
@@ -158,15 +164,18 @@ function parseArguments(args) {
 async function main() {
     const options = parseArguments(process.argv.slice(2));
     if (options.help) {
-        console.log('Usage: npm run scr:optimize -- [--dry-run] [--quality 1-100] [--max-width pixels]');
+        console.log('Usage: npm run scr:optimize -- [directory] [--dry-run] [--quality 1-100] [--max-width pixels]');
         console.log(`Defaults: quality ${DEFAULT_QUALITY}, maximum width ${DEFAULT_MAX_WIDTH} px.`);
+        console.log('With a directory: scan all .jpg/.jpeg files recursively; relative paths use the current working directory.');
+        console.log('Without a directory: scan only screenshot*.jpg/jpeg under webapp/components and webapp/apps.');
         return;
     }
     const webapp = path.resolve(__dirname, '../../../main/webapp');
-    const summary = await optimizeScreenshots([
+    const roots = options.directory !== undefined ? [path.resolve(options.directory)] : [
         path.join(webapp, 'components'),
         path.join(webapp, 'apps')
-    ], options);
+    ];
+    const summary = await optimizeScreenshots(roots, { ...options, screenshotsOnly: options.directory === undefined });
     if (summary.errors > 0) process.exitCode = 1;
 }
 

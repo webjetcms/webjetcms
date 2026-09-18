@@ -172,6 +172,17 @@ test('keeps transparent and animated PNG files unchanged', async t => {
     assert.deepEqual(await fs.readFile(path.join(root, 'screenshot-animated.jpg')), ANIMATED_PNG);
 });
 
+test('preserves the rounded aspect ratio when strongly reducing an odd-sized JPEG', async t => {
+    const root = await directory(t);
+    const filename = path.join(root, 'screenshot-odd-height.jpg');
+    await sharp(await pngFixture(3, 1200, 277)).jpeg({ quality: 100 }).toFile(filename);
+    const summary = await optimizeScreenshots([root], { maxWidth: 310, log: () => {} });
+    assert.equal(summary.resized, 1);
+    const metadata = await sharp(filename).metadata();
+    assert.equal(metadata.width, 310);
+    assert.equal(metadata.height, 72);
+});
+
 test('keeps PNG when a JPEG would be larger, including after resizing', async t => {
     const root = await directory(t);
     const originals = new Map();
@@ -204,9 +215,61 @@ test('reports a damaged PNG and continues converting later files', async t => {
     assert.deepEqual((await fs.readdir(root)).sort(), ['screenshot-1-broken.jpg', 'screenshot-2-valid.jpg']);
 });
 
+test('directory CLI processes arbitrary JPEG names recursively and confines changes to that directory', async t => {
+    const root = await directory(t);
+    const previews = path.join(root, 'preview images');
+    const nested = path.join(previews, 'nested');
+    await fs.mkdir(nested, { recursive: true });
+    const png = await pngFixture(3, 620, 400);
+    const jpeg = await sharp(png).jpeg({ quality: 100 }).toBuffer();
+    const converted = new Map([
+        [path.join(previews, 'pricing_01.jpg'), jpeg],
+        [path.join(nested, 'image_content_01.JPEG'), png]
+    ]);
+    const untouched = new Map([
+        [path.join(previews, 'default.png'), png],
+        [path.join(previews, 'pricing_01.html'), Buffer.from('<p>Block content</p>')],
+        [path.join(root, 'screenshot-outside.jpg'), png],
+        [path.join(root, 'outside.jpg'), jpeg]
+    ]);
+    for (const [filename, content] of [...converted, ...untouched]) await fs.writeFile(filename, content);
+    await fs.symlink(path.join(root, 'outside.jpg'), path.join(previews, 'linked.jpg'));
+    const script = path.join(__dirname, 'optimize.js');
+    const run = (...args) => spawnSync(process.execPath, [script, ...args], { cwd: root, encoding: 'utf8' });
+    const predicted = run('preview images', '--max-width', '310', '--dry-run');
+    assert.equal(predicted.status, 0, predicted.stderr);
+    assert.match(predicted.stdout, /Would convert: 2 \(resized: 2\)/);
+    for (const [filename, content] of [...converted, ...untouched]) assert.deepEqual(await fs.readFile(filename), content);
+    const actual = run('--max-width', '310', previews);
+    assert.equal(actual.status, 0, actual.stderr);
+    assert.match(actual.stdout, /Converted: 2 \(resized: 2\)/);
+    assert.equal(actual.stdout.split('\n').find(line => line.startsWith('Converted files:')), predicted.stdout.split('\n').find(line => line.startsWith('Converted files:')));
+    for (const filename of converted.keys()) {
+        const metadata = await sharp(filename).metadata();
+        assert.equal(metadata.format, 'jpeg');
+        assert.equal(metadata.width, 310);
+        assert.equal(metadata.height, 200);
+        untouched.set(filename, await fs.readFile(filename));
+    }
+    const second = run(previews, '--max-width', '310');
+    assert.equal(second.status, 0, second.stderr);
+    assert.match(second.stdout, /Converted: 0 \(resized: 0\); skipped: 2; errors: 0/);
+    for (const [filename, content] of untouched) assert.deepEqual(await fs.readFile(filename), content);
+    assert.equal(await fs.readlink(path.join(previews, 'linked.jpg')), path.join(root, 'outside.jpg'));
+    const missing = run(path.join(root, 'missing'), '--max-width', '310');
+    assert.equal(missing.status, 1);
+    assert.match(missing.stdout, /ERROR scanning/);
+    const file = run(path.join(previews, 'pricing_01.jpg'));
+    assert.equal(file.status, 1);
+    assert.match(file.stdout, /ERROR scanning/);
+});
+
 test('validates quality, maximum width and command-line arguments before modifying files', async () => {
     assert.deepEqual(parseArguments([]), { quality: 90, maxWidth: 760, dryRun: false });
     assert.deepEqual(parseArguments(['--dry-run', '--quality', '85', '--max-width', '900']), { quality: 85, maxWidth: 900, dryRun: true });
+    assert.deepEqual(parseArguments(['previews', '--max-width', '310']), { directory: 'previews', quality: 90, maxWidth: 310, dryRun: false });
+    assert.throws(() => parseArguments(['previews', 'another-directory']), /Only one directory/);
+    assert.throws(() => parseArguments(['']), /Unknown argument/);
     for (const value of ['0', '101', '85.5', 'NaN', '', '-1']) {
         assert.throws(() => parseArguments(['--quality', value]), /integer from 1 to 100/);
     }

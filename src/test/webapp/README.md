@@ -24,7 +24,7 @@ npx codeceptjs run --steps -p pauseOnFail --grep "@current"
 npx codeceptjs run --override '{ "tests": "./screenshots/generator/**/*.js"}' --steps
 ```
 
-## Optimize AppStore screenshots
+## Optimize AppStore screenshots and image previews
 
 After generating screenshots for all required languages, run the standalone optimizer from this directory:
 
@@ -36,9 +36,24 @@ npm run scr:optimize -- --max-width 900
 npm run scr:optimize -- --dry-run --max-width 900 --quality 85
 ```
 
-The script recursively scans `src/main/webapp/components` and `src/main/webapp/apps` for
-`screenshot*.jpg` and `screenshot*.jpeg` (case-insensitive). Paths are resolved relative to
-the script, so it can also be called directly from another working directory.
+Without a directory argument, the script recursively scans `src/main/webapp/components` and
+`src/main/webapp/apps` for `screenshot*.jpg` and `screenshot*.jpeg` (case-insensitive).
+These default paths are resolved relative to the script, so it can also be called directly
+from another working directory.
+
+To optimize another set of previews, supply one directory as a positional argument. This
+scans **all `.jpg` and `.jpeg` files** inside that directory and its subdirectories, regardless
+of their names. An explicit directory replaces the default scan roots. Absolute paths are
+accepted; relative paths are resolved from the current working directory. For example,
+from `src/test/webapp`, optimize the GridEditor previews to a maximum width of 310 pixels:
+
+```sh
+npm run scr:optimize -- ../../main/webapp/components/grideditor/data --max-width 332 --dry-run
+npm run scr:optimize -- ../../main/webapp/components/grideditor/data --max-width 332
+```
+
+Quote directory paths containing spaces. Symbolic links are not followed during recursion.
+HTML block definitions and other non-JPEG filenames are excluded.
 
 CodeceptJS screenshot helpers can write PNG content even when the filename ends in `.jpg`.
 The optimizer detects the PNG signature and converts these mismatched files to real JPEG.
