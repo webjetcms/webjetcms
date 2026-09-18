@@ -6,12 +6,11 @@ Before(({ login }) => {
 
 Scenario('novinky', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/news/admin/");
-    DT.waitForLoader();
+    DT.waitForLoader("newsDataTable");
 
-    I.clickCss("#groupSelect_wrapper > div > button");
-    I.waitForElement(".dropdown-menu.show .dropdown-menu.inner.show");
-    I.click( locate("a.dropdown-item > span").withText("/English/News") );
-    DT.waitForLoader();
+    I.waitForElement("#SomStromcek .jstree-anchor");
+    I.clickCss('#SomStromcek a[title="/English/News"]');
+    DT.waitForLoader("newsDataTable");
 
     Document.screenshot("/redactor/apps/news/admin-dt.png");
 

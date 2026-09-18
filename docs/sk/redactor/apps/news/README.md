@@ -6,14 +6,20 @@ Aplikácia Novinky, vloží do stránky zoznam web stránok v zadanom priečinku
 
 ## Zoznam noviniek
 
-Zoznam noviniek v administrácii je podobný zoznamu web stránok, ale neobsahuje stromovú štruktúru. Nachádza sa v menu Príspevky/Novinky. V hornej časti je možné vybrať priečinok pre zobrazenie v tabuľke.
+Zoznam noviniek v administrácii sa nachádza v menu Príspevky/Novinky. Vľavo sa zobrazuje strom priečinkov, vpravo tabuľka noviniek z vybraného priečinka. Priečinky môžete rozbaliť a vyberať aj ich podpriečinky. Strom slúži na výber priečinka; samotné priečinky sa spravujú v časti Web stránky.
 
 ![](admin-dt.png)
 
-Hodnoty vo výberovom poli sekcie v hlavičke sa generujú:
+Priečinky s novinkami sa určujú:
 
 - automaticky - ak je konf. premenná `newsAdminGroupIds` nastavená na prázdnu hodnotu získa sa zoznam ID priečinkov s novinkami vyhľadávaním výrazu `!INCLUDE(/components/news/` v telách stránok a dohľadaním nastaveného ID priečinka `groupIds`.
 - podľa konf. premennej `newsAdminGroupIds`, kde je možné zadať čiarkou oddelený zoznam ID priečinkov, napr. `17,23*,72`, pričom ak ID priečinka končí na znak `*` načítajú sa pri výbere aj novinky (web stránky) z pod priečinkov.
+
+Strom zobrazuje aj ich spoločné nadradené priečinky, napríklad `Aplikácie → Blog → blogger`. Nadradené priečinky, ktoré nie sú súčasťou nastaveného zoznamu noviniek ani jeho podpriečinkov, majú ikonu viacerých priečinkov a slúžia iba na rozbaľovanie vetiev. Ich výber nemení zoznam noviniek a nemožno v nich takto vytvoriť novinku. Ostatné priečinky mimo nastaveného rozsahu sa nezobrazujú.
+
+Nad stromom môžete vyhľadávať priečinky podľa názvu vrátane zatiaľ nerozbalených podpriečinkov. Tlačidlo obnovenia načíta aktuálnu štruktúru. Zobrazujú sa iba dostupné priečinky aktuálnej domény podľa práv používateľa.
+
+Pri výbere priečinka s nastavením `*` zostáva zachovaný zoznam noviniek vrátane podpriečinkov. Výber konkrétneho podpriečinka zobrazí iba jeho novinky, pokiaľ tiež nemá výslovne nastavené `*`. Nová novinka sa vytvára vo vybranom priečinku. Výber sa zachováva v odkaze na stránku, napríklad `/apps/news/admin/#23*`. Ak nie je dostupný žiadny priečinok, zobrazí sa prázdny zoznam a vytváranie noviniek je vypnuté.
 
 Kliknutím na názov novinky sa otvorí editor zhodný s [editorom stránok](../../webpages/editor/README.md).
 
@@ -84,7 +90,7 @@ V karte filter môžete definovať pokročilé možnosti zobrazenia noviniek pod
 
 ### Novinky
 
-V karte novinky sa zobrazí zoznam noviniek, ktoré sa načítajú podľa zvolených adresárov z karty Parametre aplikácie. Vidíte tak zoznam noviniek a môžete jednoducho existujúce novinky upravovať (upraviť nadpis, fotografiu, prípadne text novinky). Rovnako môžete vytvoriť novú novinku.
+V karte novinky sa zobrazí strom priečinkov a zoznam noviniek. Koreňové priečinky sa načítajú podľa zvolených adresárov z karty Parametre aplikácie; v strome môžete vyberať aj ich podpriečinky. Vidíte tak zoznam noviniek a môžete jednoducho existujúce novinky upravovať (upraviť nadpis, fotografiu, prípadne text novinky). Rovnako môžete vytvoriť novú novinku.
 
 ![](editor-dialog-newslist.png)
 

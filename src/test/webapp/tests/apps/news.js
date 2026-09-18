@@ -172,11 +172,12 @@ function checkFilter(I, position, docField, operator, value) {
     if(value != null) { I.seeInField( locate("#filtersTable > tbody > tr:nth-child(" + position + ")").find("td.valueTd > input"),  value); }
 }
 
-Scenario('zoznam noviniek', ({ I, DT, DTE }) => {
+Scenario('zoznam noviniek', async ({ I, DT, DTE }) => {
 
     I.amOnPage("/apps/news/admin/");
-    I.clickCss('button[data-id="groupIdFilterSelect"]')
-    I.click(locate('div.dropdown-menu.show .dropdown-item').withText("/English/News"));
+    I.waitForElement('#SomStromcek .jstree-anchor');
+    I.clickCss('#SomStromcek a[title="/English/News"]');
+    DT.waitForLoader("newsDataTable");
 
     I.see("McGregor sales force");
     I.see("News");
@@ -184,8 +185,7 @@ Scenario('zoznam noviniek', ({ I, DT, DTE }) => {
 
     //
     var pageName = "Trhy sú naďalej vydesené";
-    I.clickCss('button[data-id="groupIdFilterSelect"]')
-    I.click(locate('div.dropdown-menu.show .dropdown-item').withText("/Jet portal 4/Zo sveta financií"));
+    I.clickCss('#SomStromcek a[title="/Jet portal 4/Zo sveta financií"]');
     DT.waitForLoader();
     I.dontSee("McGregor sales force");
     I.see(pageName);
@@ -206,6 +206,15 @@ Scenario('zoznam noviniek', ({ I, DT, DTE }) => {
     I.say("Check permissions");
     I.amOnPage("/apps/news/admin/?removePerm=cmp_news");
     I.see("Na túto aplikáciu/funkciu nemáte prístupové práva");
+    const treeStatus = await I.executeScript(async () => {
+        const response = await fetch("/admin/rest/news/news-list/tree", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id: "0" })
+        });
+        return response.status;
+    });
+    I.assertEqual(treeStatus, 403, "The tree endpoint requires the News permission");
 });
 
 Scenario('logoff', ({ I }) => {
@@ -265,46 +274,148 @@ Scenario('set groupIds parameter in webpage', ({ I, DT, DTE }) => {
     DT.waitForLoader("newsDataTable");
     I.see("Zo sveta financií");
     I.dontSee("Produktová stránka - B verzia");
-    I.see("/Jet portal 4/Zo sveta financií", "#groupIdFilterSelect option");
-    I.dontSee("/Newsletter", "#groupIdFilterSelect option");
-    I.see("/Jet portal 4/Produktová stránka", "#groupIdFilterSelect option");
+    I.seeElement('#SomStromcek a[title="/Jet portal 4/Zo sveta financií"]');
+    I.dontSeeElement('#SomStromcek a[title="/Newsletter"]');
+    I.seeElement('#SomStromcek a[title="/Jet portal 4/Produktová stránka"]');
 
     I.switchTo();
 });
 
-Scenario('Test of permissions and filtering select by permissions', async ({ I, DT }) => {
+Scenario('News tree permissions and empty state', async ({ I, DT }) => {
     I.amOnPage("/apps/news/admin/");
-    DT.waitForLoader();
+    DT.waitForLoader("newsDataTable");
+    I.seeElement('#SomStromcek a[title="/Aplikácie/Blog/blogger"]');
+    I.seeElement('#SomStromcek a[title="/English/News"]');
 
-    I.say("Check that user see folder to select");
-    I.clickCss('button[data-id="groupIdFilterSelect"]')
-    I.seeElement( locate("div.dropdown-menu").find( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/blogger") ) );
-    I.seeElement( locate("div.dropdown-menu").find( locate("a.dropdown-item > span").withText("/English/News") ) );
-
-    //
-    I.say('Check filtering by permissions');
     I.relogin("tester2");
     I.amOnPage("/apps/news/admin/");
-    DT.waitForLoader();
+    DT.waitForLoader("newsDataTable");
+    I.seeElement('#SomStromcek a[title="/Aplikácie/Blog/blogger"]');
+    I.dontSeeElement('#SomStromcek a[title="/English/News"]');
+    I.fillField("#tree-folder-search-input", "News");
+    I.clickCss("#tree-folder-search-button");
+    I.waitForInvisible("#SomStromcek .jstree-loading");
+    I.dontSeeElement('#SomStromcek a[title="/English/News"]');
 
-    I.say("Check that user see folder to select");
-    I.clickCss('button[data-id="groupIdFilterSelect"]');
-    I.seeElement( locate("div.dropdown-menu").find( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/blogger") ) );
-    I.dontSeeElement( locate("div.dropdown-menu").find( locate("a.dropdown-item > span").withText("/English/News") ) );
-
-    //
-    I.say("Check no perms");
     I.relogin("jtester");
     I.amOnPage("/apps/news/admin/");
+    I.waitForVisible("#news-folders-empty");
+    DT.waitForLoader("newsDataTable");
+    I.dontSeeElement("#SomStromcek .jstree-anchor");
+    I.dontSeeElement("#newsDataTable_wrapper .buttons-create:not(.disabled)");
+    const count = await I.executeScript(() => newsDataTable.page.info().recordsTotal);
+    I.assertEqual(count, 0, "An unavailable News folder must not load unrelated articles");
+});
 
-    I.say("Check that permission error is showed");
-    I.waitForElement("#toast-container-webjet");
-    I.see("Prístup na adresár zamietnutý", "#toast-container-webjet > .toast-error > .toast-message");
+Scenario('News tree shared parents', async ({ I, DT }) => {
+    const include = "!INCLUDE(/components/news/news-velocity.jsp, groupIds=24+25)!";
+    await I.amOnPageAsync("/apps/news/admin/?include=" + encodeURI(include).replace(/\+/g, "%2B") + "#1");
+    I.waitForElement('#SomStromcek [id="24_anchor"].jstree-clicked');
+    I.seeElement('#SomStromcek [id="1_anchor"].jstree-disabled .ti-folders');
+    I.see("Jet portal 4", '#SomStromcek [id="1_anchor"]');
+    DT.waitForLoader("newsDataTable");
 
-    I.say("Check that user DONT have groups to select");
-    I.clickCss('button[data-id="groupIdFilterSelect"]')
-    const numberOfGroups = await I.grabNumberOfVisibleElements( locate("div.dropdown-menu").find( locate("a.dropdown-item > span") ) );
-    I.assertEqual(0, numberOfGroups, "ERROR - User should not see any group to select");
+    const hierarchy = await I.executeScript(() => {
+        const tree = $("#SomStromcek").jstree(true);
+        return {
+            children: tree.get_node("1").children.sort(),
+            parent: tree.get_node("24").parent,
+            parentFilter: tree.get_node("1").original.groupIdList || null,
+            articleFilter: new URL(newsDataTable.getAjaxUrl(), location.origin).searchParams.get("groupIdList")
+        };
+    });
+    I.assertDeepEqual(hierarchy.children, ["24", "25"], "A navigation parent exposes only the scoped News branches");
+    I.assertEqual(hierarchy.parent, "1", "News folders share their actual parent");
+    I.assertEqual(hierarchy.parentFilter, null, "A navigation parent has no article filter");
+    I.assertEqual(hierarchy.articleFilter, "24", "A parent hash falls back to a selectable News folder");
+
+    I.clickCss('#SomStromcek [id="1"] > .jstree-ocl');
+    I.waitForInvisible('#SomStromcek [id="24_anchor"]');
+    I.clickCss('#SomStromcek [id="1"] > .jstree-ocl');
+    I.waitForVisible('#SomStromcek [id="24_anchor"].jstree-clicked');
+    I.clickCss('#SomStromcek [id="25_anchor"]');
+    DT.waitForLoader("newsDataTable");
+    I.assertEqual(await I.executeScript(() => new URL(newsDataTable.getAjaxUrl(), location.origin).searchParams.get("groupIdList")), "25", "A News folder remains selectable below a navigation parent");
+});
+
+Scenario('News tree navigation, search, recursion and creation defaults', async ({ I, DT, DTE }) => {
+    const include = "!INCLUDE(/components/news/news-velocity.jsp, groupIds=1, alsoSubGroups=true)!";
+    const url = "/apps/news/admin/?include=" + encodeURI(include).replace(/\+/g, "%2B");
+    await I.amOnPageAsync(url + "#24");
+    I.waitForElement('#SomStromcek [id="24_anchor"].jstree-clicked');
+    DT.waitForLoader("newsDataTable");
+    I.dontSeeElement("#groupIdFilterSelect");
+    I.dontSeeElement(".tree-col .buttons-create");
+    I.assertEqual(await I.executeScript(() => new URL(newsDataTable.getAjaxUrl(), location.origin).searchParams.get("groupIdList")), "24", "A child uses its own folder filter");
+
+    I.clickCss("#newsDataTable_wrapper .buttons-create");
+    DTE.waitForEditor("newsDataTable");
+    I.clickCss("#pills-dt-newsDataTable-basic-tab");
+    I.seeInField("#editorAppDTE_Field_editorFields-groupDetails input", "/Jet portal 4/Zo sveta financií");
+    DTE.cancel();
+
+    I.fillField("#tree-folder-search-input", "Produktová");
+    I.pressKey("Enter");
+    I.waitForVisible('#SomStromcek [id="25_anchor"]');
+    I.clickCss('#SomStromcek [id="25_anchor"]');
+    DT.waitForLoader("newsDataTable");
+    I.clickCss("#tree-folder-search-clear-button");
+    I.waitForVisible('#SomStromcek [id="25_anchor"].jstree-clicked');
+    I.clickCss(".tree-col .buttons-refresh");
+    I.waitForVisible('#SomStromcek [id="25_anchor"].jstree-clicked');
+    I.assertEqual(await I.executeScript(() => new URL(newsDataTable.getAjaxUrl(), location.origin).searchParams.get("groupIdList")), "25", "Search and refresh preserve selection");
+
+    await I.amOnPageAsync(url + "#1*");
+    I.waitForElement('#SomStromcek [id="1_anchor"].jstree-clicked');
+    DT.waitForLoader("newsDataTable");
+    I.assertEqual(await I.executeScript(() => new URL(newsDataTable.getAjaxUrl(), location.origin).searchParams.get("groupIdList")), "1*", "A configured root preserves recursive filtering");
+    await I.amOnPageAsync(url + "#999999999");
+    I.waitForElement('#SomStromcek [id="1_anchor"].jstree-clicked');
+    DT.waitForLoader("newsDataTable");
+    I.assertEqual(await I.executeScript(() => location.hash), "#1*", "An invalid hash selects the first permitted root");
+
+    const emptyInclude = "!INCLUDE(/components/news/news-velocity.jsp, groupIds=999999999)!";
+    await I.amOnPageAsync("/apps/news/admin/?include=" + encodeURI(emptyInclude));
+    I.waitForVisible("#news-folders-empty");
+    I.waitForElement("#newsDataTable_wrapper .buttons-create.disabled");
+    DT.waitForLoader("newsDataTable");
+    I.assertEqual(await I.executeScript(() => newsDataTable.page.info().recordsTotal), 0, "An empty configuration cannot show unrelated articles");
+});
+
+Scenario('News tree responsive layout and keyboard navigation', async ({ I, DT }) => {
+    const include = "!INCLUDE(/components/news/news-velocity.jsp, groupIds=1)!";
+    await I.amOnPageAsync("/apps/news/admin/?include=" + encodeURI(include));
+    I.waitForElement('#SomStromcek [id="1_anchor"].jstree-clicked');
+    DT.waitForLoader("newsDataTable");
+    I.clickCss('#SomStromcek [id="1_anchor"]');
+    I.pressKey("ArrowRight");
+    I.waitForElement('#SomStromcek [id="24_anchor"]');
+    I.pressKey("ArrowDown");
+    I.pressKey("Enter");
+    const keyboardSelection = await I.executeScript(() => ({
+        focused: document.activeElement.id,
+        selected: document.querySelector("#SomStromcek .jstree-clicked").id,
+        outline: getComputedStyle(document.activeElement).outlineStyle
+    }));
+    I.assertEqual(keyboardSelection.focused, keyboardSelection.selected, "Enter selects the keyboard-focused folder");
+    I.assertNotEqual(keyboardSelection.selected, "1_anchor", "Arrow keys move to a child folder");
+    I.assertNotEqual(keyboardSelection.outline, "none", "Keyboard focus remains visible");
+    DT.waitForLoader("newsDataTable");
+
+    for (const width of [1280, 1100, 640]) {
+        I.resizeWindow(width, 800);
+        // Let the shared admin shell finish its debounced resize and sidebar transition.
+        I.wait(0.5);
+        const layout = await I.executeScript(() => {
+            const tree = document.querySelector(".tree-col").getBoundingClientRect();
+            const table = document.querySelector(".datatable-col").getBoundingClientRect();
+            return { treeRight: tree.right, treeBottom: tree.bottom, tableLeft: table.left, tableTop: table.top };
+        });
+        if (width >= 768) I.assertAbove(layout.tableLeft, layout.treeRight - 2, "The article table sits beside the tree");
+        else I.assertAbove(layout.tableTop, layout.treeBottom - 2, "The article table stacks below the tree");
+        I.saveScreenshot("autotest-news-tree-" + width + ".png");
+    }
+    I.wjSetDefaultWindowSize();
 });
 
 Scenario("logout", ({ I }) => {

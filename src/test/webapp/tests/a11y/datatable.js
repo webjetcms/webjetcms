@@ -81,8 +81,10 @@ Scenario("p28: select", async ({ I, DTE, a11y }) => {
     await a11y.check();
 });
 
-Scenario("p28: select-top-filter", async ({ I, DTE, a11y }) => {
+Scenario("News folder tree", async ({ I, DT, a11y }) => {
     I.amOnPage("/apps/news/admin/");
+    I.waitForElement("#SomStromcek .jstree-anchor");
+    DT.waitForLoader("newsDataTable");
     await a11y.check();
 });
 
