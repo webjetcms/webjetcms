@@ -4,7 +4,9 @@ const { randomUUID } = require('node:crypto');
 const sharp = require('sharp');
 
 const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+const JPEG_SIGNATURE = Buffer.from([255, 216, 255]);
 const DEFAULT_QUALITY = 90;
+const DEFAULT_MAX_WIDTH = 760;
 
 /** Find JPEG-named screenshots without following symbolic links. */
 async function* findScreenshots(directory) {
@@ -27,25 +29,33 @@ function isAnimatedPng(input) {
     return false;
 }
 
-/** Convert a PNG stored as JPEG only when the result saves space. */
-async function optimizeFile(filename, { quality, dryRun }) {
+/** Convert PNG content or resize an oversized JPEG only when the result saves space. */
+async function optimizeFile(filename, { quality, maxWidth, dryRun }) {
     const input = await fs.readFile(filename);
-    if (!input.subarray(0, 8).equals(PNG_SIGNATURE)) {
-        return { status: 'skipped', reason: 'not PNG content' };
+    const isPng = input.subarray(0, 8).equals(PNG_SIGNATURE);
+    if (!isPng && !input.subarray(0, 3).equals(JPEG_SIGNATURE)) {
+        return { status: 'skipped', reason: 'not PNG or JPEG content' };
     }
-    if (isAnimatedPng(input)) return { status: 'skipped', reason: 'animated PNG' };
+    if (isPng && isAnimatedPng(input)) return { status: 'skipped', reason: 'animated PNG' };
 
     const image = sharp(input);
     const metadata = await image.metadata();
+    const { width, height } = metadata.autoOrient;
+    const resized = width > maxWidth;
+    if (!isPng && !resized) {
+        return { status: 'skipped', reason: 'JPEG already within maximum width' };
+    }
     if (metadata.hasAlpha && !(await image.stats()).isOpaque) {
         return { status: 'skipped', reason: 'transparent pixels' };
     }
 
-    const output = await image.jpeg({
+    image.autoOrient();
+    if (resized) image.resize({ width: maxWidth, withoutEnlargement: true });
+    const { data: output, info } = await image.jpeg({
         quality,
         chromaSubsampling: '4:4:4',
         mozjpeg: true
-    }).toBuffer();
+    }).toBuffer({ resolveWithObject: true });
     if (output.length >= input.length) {
         return { status: 'skipped', reason: 'JPEG would not be smaller' };
     }
@@ -60,7 +70,10 @@ async function optimizeFile(filename, { quality, dryRun }) {
             await fs.rm(temporary, { force: true });
         }
     }
-    return { status: 'converted', before: input.length, after: output.length };
+    return {
+        status: 'converted', before: input.length, after: output.length, resized,
+        dimensions: `${width}x${height} -> ${info.width}x${info.height} px`
+    };
 }
 
 function formatBytes(bytes) {
@@ -70,27 +83,31 @@ function formatBytes(bytes) {
 /**
  * Optimize screenshots under the supplied roots and report individual failures.
  * @param {string[]} roots Directories to scan recursively.
- * @param {object} [options] JPEG quality, dry-run mode and output callback.
+ * @param {object} [options] JPEG quality, maximum width, dry-run mode and output callback.
  * @returns {Promise<object>} Counts and byte totals for converted files.
  */
-async function optimizeScreenshots(roots, { quality = DEFAULT_QUALITY, dryRun = false, log = console.log } = {}) {
+async function optimizeScreenshots(roots, { quality = DEFAULT_QUALITY, maxWidth = DEFAULT_MAX_WIDTH, dryRun = false, log = console.log } = {}) {
     if (!Number.isInteger(quality) || quality < 1 || quality > 100) {
         throw new Error('Quality must be an integer from 1 to 100.');
     }
+    if (!Number.isSafeInteger(maxWidth) || maxWidth < 1) {
+        throw new Error('Maximum width must be a positive integer.');
+    }
 
-    const summary = { converted: 0, skipped: 0, errors: 0, before: 0, after: 0 };
-    log(`${dryRun ? 'Dry run' : 'Optimization'}: JPEG quality ${quality}, original dimensions, 4:4:4 chroma.`);
+    const summary = { converted: 0, resized: 0, skipped: 0, errors: 0, before: 0, after: 0 };
+    log(`${dryRun ? 'Dry run' : 'Optimization'}: JPEG quality ${quality}, maximum width ${maxWidth} px, 4:4:4 chroma.`);
     for (const root of roots) {
         try {
             for await (const filename of findScreenshots(root)) {
                 const label = path.join(path.basename(root), path.relative(root, filename));
                 try {
-                    const result = await optimizeFile(filename, { quality, dryRun });
+                    const result = await optimizeFile(filename, { quality, maxWidth, dryRun });
                     summary[result.status]++;
                     if (result.status === 'converted') {
                         summary.before += result.before;
                         summary.after += result.after;
-                        log(`${dryRun ? 'WOULD CONVERT' : 'CONVERTED'} ${label}: ${formatBytes(result.before)} -> ${formatBytes(result.after)}`);
+                        if (result.resized) summary.resized++;
+                        log(`${dryRun ? 'WOULD CONVERT' : 'CONVERTED'} ${label}: ${formatBytes(result.before)} -> ${formatBytes(result.after)}; ${result.dimensions}`);
                     } else {
                         log(`SKIPPED ${label}: ${result.reason}`);
                     }
@@ -107,14 +124,14 @@ async function optimizeScreenshots(roots, { quality = DEFAULT_QUALITY, dryRun = 
 
     const saved = summary.before - summary.after;
     const percent = summary.before === 0 ? 0 : saved / summary.before * 100;
-    log(`${dryRun ? 'Would convert' : 'Converted'}: ${summary.converted}; skipped: ${summary.skipped}; errors: ${summary.errors}.`);
+    log(`${dryRun ? 'Would convert' : 'Converted'}: ${summary.converted} (resized: ${summary.resized}); skipped: ${summary.skipped}; errors: ${summary.errors}.`);
     log(`Converted files: ${formatBytes(summary.before)} -> ${formatBytes(summary.after)}. Saved: ${formatBytes(saved)} (${percent.toFixed(1)}%).`);
     return summary;
 }
 
 /** Parse the standalone command without starting screenshot generation. */
 function parseArguments(args) {
-    const options = { quality: DEFAULT_QUALITY, dryRun: false };
+    const options = { quality: DEFAULT_QUALITY, maxWidth: DEFAULT_MAX_WIDTH, dryRun: false };
     for (let index = 0; index < args.length; index++) {
         const arg = args[index];
         if (arg === '--dry-run') options.dryRun = true;
@@ -125,6 +142,12 @@ function parseArguments(args) {
                 throw new Error('--quality requires an integer from 1 to 100.');
             }
             options.quality = Number(value);
+        } else if (arg === '--max-width') {
+            const value = args[++index];
+            if (!/^\d+$/.test(value || '') || !Number.isSafeInteger(Number(value)) || Number(value) < 1) {
+                throw new Error('--max-width requires a positive integer.');
+            }
+            options.maxWidth = Number(value);
         } else {
             throw new Error(`Unknown argument: ${arg}`);
         }
@@ -135,7 +158,8 @@ function parseArguments(args) {
 async function main() {
     const options = parseArguments(process.argv.slice(2));
     if (options.help) {
-        console.log('Usage: npm run scr:optimize -- [--dry-run] [--quality 1-100]');
+        console.log('Usage: npm run scr:optimize -- [--dry-run] [--quality 1-100] [--max-width pixels]');
+        console.log(`Defaults: quality ${DEFAULT_QUALITY}, maximum width ${DEFAULT_MAX_WIDTH} px.`);
         return;
     }
     const webapp = path.resolve(__dirname, '../../../main/webapp');
