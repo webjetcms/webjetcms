@@ -8,10 +8,8 @@ import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.eclipse.persistence.config.TargetDatabase;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.data.repository.config.BootstrapMode;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter;
@@ -30,14 +28,14 @@ import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
  * JPA configuration for RAG entities.
  * Uses an explicitly configured {@code rag_jpa} datasource or the primary datasource.
  * The vector backend and JPA dialect are detected from JDBC metadata.
+ * Registered only by {@link PgvectorSpringConfig} in its isolated persistence context;
+ * deliberately has no component stereotype to avoid discovery by the main application.
  */
-@Configuration("rag:JpaDBConfig")
 @EnableTransactionManagement
 @EnableJpaRepositories(
     entityManagerFactoryRef = "ragEntityManager",
     transactionManagerRef = "ragTransactionManager",
-    basePackages = { "sk.iway.iwcm.rag.pgvector" },
-    bootstrapMode = BootstrapMode.LAZY
+    basePackages = { "sk.iway.iwcm.rag.pgvector" }
 )
 public class PgvectorJpaConfig {
 
@@ -45,7 +43,6 @@ public class PgvectorJpaConfig {
      * Create the JPA transaction manager for RAG entities.
      */
     @Bean("ragTransactionManager")
-    @Lazy
     public PlatformTransactionManager transactionManager(
         @Qualifier("ragEntityManager") EntityManagerFactory entityManagerFactory
     ) {
@@ -59,21 +56,16 @@ public class PgvectorJpaConfig {
      * Uses the RAG datasource selected by {@link VectorStoreDataSourceResolver}.
      */
     @Bean("ragEntityManager")
-    @Lazy
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         Logger.println(PgvectorJpaConfig.class, "loading RAG RagJpaConfig");
 
         Resolution resolution = VectorStoreDataSourceResolver.resolve();
-        String dsName = resolution.dataSourceName();
-        if (dsName == null) dsName = VectorStoreDataSourceResolver.PRIMARY_DATASOURCE_NAME;
-
-        if (resolution.isSupported()) {
-            Logger.println(PgvectorJpaConfig.class,
-                "Using RAG datasource " + dsName + " with backend " + resolution.backend());
-        } else {
-            Logger.warn(PgvectorJpaConfig.class,
-                "RAG vector store is unavailable: " + resolution.reason());
+        if (resolution.isSupported() == false) {
+            throw new DataAccessResourceFailureException("RAG vector store is unavailable: " + resolution.reason());
         }
+        String dsName = resolution.dataSourceName();
+        Logger.println(PgvectorJpaConfig.class,
+            "Using RAG datasource " + dsName + " with backend " + resolution.backend());
 
         LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
         emf.setPersistenceProvider(new WebJETPersistenceProvider());

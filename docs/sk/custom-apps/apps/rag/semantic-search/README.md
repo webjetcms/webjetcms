@@ -52,6 +52,8 @@ Pri pridaní nového serverového poskytovateľa sa preto embedding komunikácia
 
 WebJET CMS zistí vektorový backend z JDBC metadát. Ak je nastavený datasource `rag_jpa`, použije sa vždy. Inak sa použije primárny datasource `iwcm`. Nedostupný alebo nepodporovaný explicitný `rag_jpa` sa nenahradí fallbackom na `iwcm`; sémantické vyhľadávanie zostane nedostupné a dôvod sa zapíše do logu. Samostatné MySQL, MariaDB staršia ako 11.8 a ostatné typy databáz nemožno použiť ako vektorové úložisko.
 
+RAG perzistencia sa inicializuje až pri prvom použití, oddelene od hlavnej perzistencie CMS. Nedostupná databáza `rag_jpa` neblokuje štart CMS, ak je primárna databáza dostupná. Po neúspešnej inicializácii sa ďalšia požiadavka pokúsi o pripojenie znova; po obnovení dostupnosti databázy nie je potrebný reštart CMS.
+
 ### PostgreSQL ako primárna databáza
 
 Vývojový profil PostgreSQL definuje samostatný datasource `rag_jpa`, ktorý smeruje do rovnakej databázy ako primárny datasource `iwcm`.

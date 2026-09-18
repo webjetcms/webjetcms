@@ -20,8 +20,11 @@ import org.eclipse.persistence.queries.ReadAllQuery;
 import org.eclipse.persistence.queries.ReportQuery;
 import org.eclipse.persistence.queries.ReportQueryResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.jpa.repository.JpaContext;
 import org.springframework.stereotype.Component;
@@ -34,6 +37,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.DataSource;
 import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.rag.pgvector.EmbeddingChunkEntity;
 import sk.iway.iwcm.utils.Pair;
 
 /**
@@ -52,6 +56,11 @@ public class JpaTools
 {
 	@Autowired
     private JpaContext jpaContext;
+
+    @Autowired
+    @Lazy
+    @Qualifier("ragPersistenceContext")
+    private ApplicationContext ragPersistenceContext;
 
 	/**
 	 * Vrati EntityManager pre zadany nazov DB spojenia (v povodnom JPA to je persistenceUnit)
@@ -606,6 +615,9 @@ public class JpaTools
      * @return
      */
     private JpaEntityManager getSpringEntityManagerImpl(Class<?> clazz) {
+        if (EmbeddingChunkEntity.class.isAssignableFrom(clazz)) {
+            return (JpaEntityManager) ragPersistenceContext.getBean(JpaContext.class).getEntityManagerByManagedType(clazz);
+        }
         return (JpaEntityManager) jpaContext.getEntityManagerByManagedType(clazz);
     }
 

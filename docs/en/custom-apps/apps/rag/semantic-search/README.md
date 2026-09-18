@@ -52,6 +52,8 @@ Therefore, when adding a new server provider, embedding communication is not imp
 
 WebJET CMS detects the vector backend from JDBC metadata. If datasource `rag_jpa` is configured, it is authoritative. Otherwise, the primary `iwcm` datasource is used. An unavailable or unsupported explicit `rag_jpa` does not fall back to `iwcm`; semantic search remains unavailable and the reason is written to the log. Plain MySQL, MariaDB older than 11.8, and other database types cannot be used as vector storage.
 
+RAG persistence initializes on first use, separately from the main CMS persistence. An offline `rag_jpa` database does not prevent CMS startup when the primary database is available. Failed RAG initialization is retried on a later request; restarting CMS is not required after the database becomes available.
+
 ### PostgreSQL as primary database
 
 The PostgreSQL development profile defines a separate `rag_jpa` datasource pointing to the same database as the primary `iwcm` datasource.
