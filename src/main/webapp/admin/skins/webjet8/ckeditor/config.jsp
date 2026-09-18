@@ -63,6 +63,8 @@ CKEDITOR.editorConfig = function( config )
 	config.disableNativeSpellChecker = false;
 	config.editorAutomaticWordClean = <%=Constants.getBoolean("editorAutomaticWordClean")%>
 	config.clipboard_handleImages = false;
+	config.thumbServletAllowedSizeMode = <%=JsonTools.objectToJSON(Constants.getString("thumbServletAllowedSizeMode"))%>;
+	config.thumbServletAllowedSizes = <%=JsonTools.objectToJSON(Constants.getString("thumbServletAllowedSizes"))%>;
 
 	config.stylesSet = [
 		{ name: 'Paragraph',		element: 'p' },

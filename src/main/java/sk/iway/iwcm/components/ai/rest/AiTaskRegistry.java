@@ -128,7 +128,11 @@ public class AiTaskRegistry implements DisposableBean {
         if(timestamp == null || timestamp < 1L) throw new IllegalStateException("Invalid param timestamp");
 
         Identity currentUser = UsersDB.getCurrentUser(request);
+        int userId = 0;
+        if(currentUser != null) {
+            userId = currentUser.getUserId();
+        }
 
-        return PREFIX + currentUser.getUserId() + "_" + assistantId + "_" + timestamp;
+        return PREFIX + userId + "_" + assistantId + "_" + timestamp;
     }
 }

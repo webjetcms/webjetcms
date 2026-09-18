@@ -108,10 +108,6 @@ public class BrowsersRestController extends DatatableRestControllerV2<BrowsersDT
             String key = "";
             if(keyValueName.equals("browser")) {
                 key = column.getColumn1(); // get browser
-                int space = key.lastIndexOf(" ");
-                //Logger.debug(getClass(), "key="+key);
-                //odstran verziu prehliadaca
-                if (space > 4) key = key.substring(0, space).trim();
             }
             else if(keyValueName.equals("platform"))
                 key = column.getColumn2(); //get platform

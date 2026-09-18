@@ -38,13 +38,17 @@ Image generation is server-side-loaded, so it is protected by SPAM protection. T
 - `spamProtectionTimeout-ThumbServlet` - ​​time between HTTP requests, set to `-2` to disable, as there may be multiple images on the page that are generated at once.
 - `spamProtectionHourlyLimit-ThumbServlet` - ​​maximum number of generated images from one IP address per hour, set to `300` by default.
 - `cloudCloneAllowedIps` - ​​comma-separated list of IP address beginnings for which the restriction will not be applied, empty by default (not used).
-- `thumbServletAllowedSizes` - ​​list of allowed file sizes for image generation. It is generated in the format `{width}x{height}ip{ip}{noip}c{color}q{quality}`, for example `730x401ip5ncff00ffq90`. Parameters that are not specified are not used, for example `430x405` or `730x404ip5`. We recommend using the `learn` mode for initial setup and then setting the `check` mode.
+- `thumbServletAllowedSizes` - ​​list of allowed file sizes for image generation. It is generated in the format `{width}x{height}ip{ip}{noip}c{color}q{quality}`, for example `730x401ip5ncff00ffq90`. Parameters that are not specified are not used, for example `430x405` or `730x404ip5`. We recommend using the `learn` mode for initial setup and then setting the `check` mode. If you use `ip=1/ip=2` without the `h/w` parameter, use the same value for the permission, for example for `/thumb/images/image.jpg?ip=1&w=610` set `610x610ip1`.
 - `thumbServletAllowedSizeMode` - ​​Sets the allowed dimensions mode for image generation. Possible values:
   - `deny` - ​​disables generation of new images if no administrator is logged in (existing images will be displayed as they are already generated on disk)
   - `allow` - ​​allows all dimensions, or does not check the list of allowed options
   - `learn` - ​​adds a value to the list `thumbServletAllowedSizes` (if it is not already there) - learning mode of existing values
   - `check` - ​​allows only specified values, if an administrator is logged in, automatically adds a new dimension to the list
   - `strict` - ​​allows generating an image only for the specified values ​​(checks the list of allowed values)
+
+In `strict` mode, the **Thumbnail** tab in the image properties displays a single selection of allowed dimensions instead of separate fields. The options are read from the `thumbServletAllowedSizes` configuration variable (separated by a comma or newline) and are ordered numerically by width and then height. For example, `159x159ip1` is displayed as `159 x 159 (1 - Fixná šírka)`, the value without `ip` as the maximum dimensions. When specifying color, disabling POI, or quality, this information is also displayed.
+
+When confirmed, the selected combination is also saved in the image URL with the CSS class `fixedSize`. If it contains quality, the class has an additional suffix `-q90` (for example `fixedSize-730-401-5-ff00ff-true-q90`). When reopened, the corresponding enabled option is selected. The empty option uses the image in its original size: it removes the prefix `/thumb/`, the thumbnail parameters, and the class `fixedSize`, just like in other modes. If the original size is not enabled, you can select an enabled size or leave the option empty to use the original image. In other modes, the separate fields remain available.
 
 First set the `learn` mode to learn existing values ​​and then set the `check` mode in which the values ​​are checked, but if the administrator is logged in, the new value is automatically added to the list of allowed values. WebJET automatically sets the `learn` mode during an update and then after at least a month and another restart it switches to the `check` mode.
 

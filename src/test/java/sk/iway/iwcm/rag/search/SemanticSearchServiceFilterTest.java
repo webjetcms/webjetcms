@@ -13,6 +13,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import com.webjetcms.ai.EmbeddingInputType;
+
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
@@ -45,14 +47,14 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
 
             when(vectorStore.isAvailableAndInitialized()).thenReturn(true);
             when(statService.getSearchAssistant()).thenReturn(assistant);
-            when(embeddingService.embedWithUsage(List.of("query"), assistant, request))
+            when(embeddingService.embedWithUsage(List.of("query"), assistant, request, EmbeddingInputType.QUERY))
                 .thenReturn(new EmbeddingBatchResult(List.of(new float[] {1f, 2f}), 3));
 
             SemanticSearchService service = new SemanticSearchService(embeddingService, vectorStore, statService, mock(RagService.class));
 
             service.search("query", 1, "sk", 10, RagEntityType.DOCUMENT, request);
 
-            verify(embeddingService).embedWithUsage(List.of("query"), assistant, request);
+            verify(embeddingService).embedWithUsage(List.of("query"), assistant, request, EmbeddingInputType.QUERY);
             verify(vectorStore).search(
                 any(float[].class),
                 eq("gemini"),
