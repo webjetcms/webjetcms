@@ -1116,11 +1116,12 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
     DTE.waitForEditor("formsDataTable");
 
     DTE.fillField("formName", specialFormName);
-    DTE.save();
+    DTE.save("formsDataTable", true);
 
     I.amOnPage("/apps/form/admin/form-steps/?formName=" + specialFormName);
     I.waitForVisible("#formStepsDataTable_wrapper");
     I.waitForElement( locate("table#formStepsDataTable > tbody > tr.selected > td").withText("Krok 1") );
+    I.wait(1);
 
     createAndFillFormItem(I, DT, DTE, 'Meno', true, "Vase meno", "!LOGGED_USER_FIRSTNAME!", "Vase prve meno", null, { trimValue: true, checkGeneratedId: true });
     createAndFillFormItem(I, DT, DTE, 'Skupina zaškrtávacích polí', false, null, "labelA:valueA|labelB:valueB|labelC:valueC|labelD:valueD", null, null);

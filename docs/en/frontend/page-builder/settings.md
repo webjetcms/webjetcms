@@ -19,7 +19,6 @@ To run Page Builder correctly, set:
 
 Other config variables that can be edited:
 
-- `pagebuilderFilterAutoOpenItems` - ​​number of items that will automatically open when filtering in the block list, default 10.
 - `pagebuilderLibraryImageWidth` - ​​width of preview images in the block library, default 310.
 - `inlineEditingDisabledUrls` - ​​list of URLs for which the inline editor will not be available
 - `pageBuilderPrefix` - ​​prefix used for Page Builder CSS classes (pb by default), can only be changed if you also change the prefixes in Page Builder CSS classes
@@ -90,6 +89,20 @@ The following code is created after the Page Builder initialization:
 </div>
 ```
 
+## Control in the editor
+
+By default, Page Builder displays a single frame of the selected block and a common toolbar below CKEditor. The frame is drawn on a separate layer outside the page content, with a distance from its edge. It does not add `padding`, `margin`, or `border` to the blocks, so it does not change their width and text wrapping. The layer does not capture clicks into the content and does not clip it `overflow: hidden` of the parent block.
+
+The eye icon button toggles between three modes: selected block frame (default), no frames, and frames of the entire hierarchy of the active block (layer icon). Ancestor outlines are offset outwards so that they do not overlap even with matching block edges. The selection is stored in `localStorage` under the key `webjet.pagebuilder.guides` (`selected`, `hidden`, `all`). If storage is unavailable, the toggle works for the currently open editor. The toggle does not change the toolbar or block selection.
+
+The **Structure** tree uses elements recognized by existing initialization and derives names from the content. It does not add identifiers or other metadata to blocks. Individual `pb-editable` elements can be selected, but it does not add column-specific operations to them. Hidden elements can be found in the tree without changing their visibility.
+
+**Add Block** mode in the common bar shows positions between sections, containers, and columns. Buttons remain on a separate layer outside the content; only inactive `aside.pb-insert-space` elements are temporarily inserted into the structure to make room. They are not part of CKEditor fields and `getClearNode` will remove them even when saving while in active mode. Column widths are not changed. Paste uses the original controls and library, and restores CKEditor focus after pasting. The mode is not remembered in storage and does not change the frame preference.
+
+While inserting and adjusting column widths, the path and tools in the toolbar are replaced by a blue helper with a **Exit · Esc** button. Exiting restores the regular toolbar. Device switching remains available while adjusting the width.
+
+Original HTML, CSS classes, custom selectors, and `pbCustomOptions` /`pbCustomSettings` functions remain valid. Top bar actions use existing Page Builder operations, including restrictions on moving duplicated elements. Original `getClearNode` and `clearEditorAttributes` functions are used when preparing a preview and saving.
+
 ## Styling elements
 
 ### `SECTION` (blue color)
@@ -104,7 +117,7 @@ Styling using a class, with prefix: ```pb-style-section-```
 
 By setting the CSS class ```pb-not-section```, the element **will not be considered a section* element.
 
-### `CONTAINER` (red color)
+### `CONTAINER` (pink color)
 
 Initialization when using CSS class: ```container``` or ```pb-custom-container```. By setting CSS class ```pb-not-container```, the element **will not be considered a container** even if it has CSS class ```container```.
 
