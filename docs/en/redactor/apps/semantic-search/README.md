@@ -21,7 +21,7 @@ To run a semantic search, you need:
 - Set the search type to `semantic` or `hybrid`. You can do this globally via the `searchType` configuration variable, or directly in the **Search** application.
 - In hybrid mode, verify that the configuration variable `ragHybridSearchEnabled` is set to the value `true`.
 - Verify that the configuration variable `luceneAsDefaultSearch` is set to the value `false`. If it is set to `true`, Lucene will be used instead of semantic search because it has a higher priority.
-- Set the API key of the chosen provider in the same way as for AI assistants.
+- Configure the chosen provider: set an API key for the external service in the same way as for AI assistants, or configure a [local embedding model](../../ai/settings/README.md#local-models), which does not require an API key or sending content to an external AI service.
 - Run indexing via the administrator interface to create vectors and populate the vector database.
 - Set up an automated task `sk.iway.iwcm.rag.service.RagIndexCronTask` that processes the indexing queue.
 
@@ -82,6 +82,8 @@ RAG response uses only content retrieved from the semantic index. If the answer 
 ## Semantic index
 
 To use semantic search, you must have indexed content using semantic indexing, which is available in the admin interface. The provider and model are set in the system AI assistants `RAG-EMB-INDEX` and `RAG-EMB-SEARCH` ; for the index to be used, both search assistant values ​​must exactly match the created index. When you open the **Semantic Index** page, the current indexing configuration is displayed in an informational message. Indexes from different providers and models can coexist. For more information, see [Semantic Index](./embedding-chunks.md).
+
+When using the **Local Embedding Model** provider, set the path to `ai_localEmbeddingModelBundlePath`, change the global value of `ragEmbeddingDimensions` to `768`, and select the same local model in both system assistants. Changing the dimension will clear the existing semantic index, so rerun the full index afterwards.
 
 ## Implementation and setup details
 

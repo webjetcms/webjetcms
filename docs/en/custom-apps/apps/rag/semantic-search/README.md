@@ -31,7 +31,7 @@ When a visitor enters a search query:
 
 1. [SearchAction](../../../../../src/main/java/sk/iway/iwcm/doc/SearchAction.java) determines the search type from the application parameter `searchType`. If the value is `auto` or empty, it uses the global configuration variable `searchType`.
 2. For values ​​of `semantic` or `hybrid`, [SemanticSearchAction](../../../../../../src/main/java/sk/iway/iwcm/doc/SemanticSearchAction.java) is used.
-3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) generates a query embedding according to the `RAG-EMB-SEARCH` assistant and searches the selected vector store for the closest chunks with the same provider and model.
+3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) generates a query embedding according to the `RAG-EMB-SEARCH` assistant with the input type `QUERY` and searches for the closest chunks with the same provider and model in the pgvector database. The type `DOCUMENT` is used for indexing; the provider can thus apply different prefixes required by the model for both types.
 4. Results will be limited by domain, language, entity type, and by folders selected in the **Search** application.
 5. If hybrid mode is enabled, fulltext is also run over `rag_embedding_chunks.chunk_text` and the results are merged via `RRF` (Reciprocal Rank Fusion).
 6. The resulting chunks are aggregated into documents and the documents are displayed in the same way as in a standard search.
@@ -47,12 +47,9 @@ Therefore, when adding a new server provider, embedding communication is not imp
 
 ## Requirements
 
-- One supported vector database: **PostgreSQL** with the **pgvector** extension (image: `pgvector/pgvector:pg18-trixie` or later), or **MariaDB 11.8 or later** with built-in Vector support.
-- **API key of the selected provider** - the same setting is used as for AI assistants, e.g. `ai_openAiAuthKey` for OpenAI or the corresponding key for Gemini.
-
-WebJET CMS detects the vector backend from JDBC metadata. If datasource `rag_jpa` is configured, it is authoritative. Otherwise, the primary `iwcm` datasource is used. An unavailable or unsupported explicit `rag_jpa` does not fall back to `iwcm`; semantic search remains unavailable and the reason is written to the log. Plain MySQL, MariaDB older than 11.8, and other database types cannot be used as vector storage.
-
-RAG persistence initializes on first use, separately from the main CMS persistence. An offline `rag_jpa` database does not prevent CMS startup when the primary database is available. Failed RAG initialization is retried on a later request; restarting CMS is not required after the database becomes available.
+- **PostgreSQL** with the **pgvector** extension (image: `pgvector/pgvector:pg18-trixie` or later).
+- **Configuration of the selected provider** - the same API key is used for the external service as for AI assistants, e.g. `ai_openAiAuthKey` for OpenAI. The local embedding model requires a path to the model package instead of a key.
+- Semantic search only works over PostgreSQL/pgvector storage. If the primary database of WebJET CMS is not PostgreSQL, set up a separate PostgreSQL database via datasource `rag_jpa`.
 
 ### PostgreSQL as primary database
 
@@ -99,9 +96,10 @@ Activation and settings are done in [Configuration](../../../../admin/setup/conf
 
 | Variable | Default value | Description |
 | --- | --- | --- |
-| `ragEmbeddingProvider` | `openai` | Provider used only when automatically creating a missing embedding assistant. Built-in values ​​are `openai`, `gemini`, `openrouter` ; the identifier of a properly registered custom provider can also be used. |
+| `ragEmbeddingProvider` | `openai` | Provider used only when automatically creating a missing embedding assistant. Built-in external values ​​are `openai`, `gemini`, `openrouter` ; select the local model directly in the system assistants. The identifier of a properly registered custom provider can also be used. |
 | `ragEmbeddingModel` | `text-embedding-3-small` | Model used only when automatically creating a missing embedding assistant. |
-| `ragEmbeddingDimensions` | `1536` | Number of vector dimensions. It must match the model and database table; MariaDB accepts values from `1` to `16383`. |
+| `ragEmbeddingDimensions` | `1536` | Global number of vector dimensions for the entire installation. Must match the model and database table used. |
+| `ai_localEmbeddingModelBundlePath` | empty value | Path to the global approved ZIP package of the local model `intfloat/multilingual-e5-base`: absolute path on the server or a path starting with `/WEB-INF/` relative to the root of the deployed application. A restart is required after changing. |
 | `ragEmbeddingChunkSize` | `1000` | Maximum size of one piece of text in characters. |
 | `ragEmbeddingChunkOverlap` | `200` | The number of characters by which adjacent chunks overlap. |
 
@@ -123,6 +121,18 @@ Queue `rag_index_queue` only stores the entity type, ID, and action. The provide
 !>**Warning:** Changing `ragEmbeddingDimensions` will delete all data from `rag_embedding_chunks` for all providers and models, change the vector type for the selected database, and recreate the HNSW index. Then run a full content index. Changing the model itself will not delete the other combinations, but you must index the new combination. Switching the vector datasource or database type does not migrate existing vectors; run a full index after the switch.
 
 !>**Shared dimension:** All domains share one vector schema and must use the same global `ragEmbeddingDimensions` value. A conflicting domain override disables semantic search and indexing for that domain; the **Semantic index** screen displays an error. Automatic MariaDB initialization preserves existing data when dimensions do not match. To change the shared dimension, save the global setting in **Configuration** — this deletes embeddings for every domain — and then fully reindex all domains.
+
+### Local embedding model
+
+The built-in local provider uses the `intfloat/multilingual-e5-base` model with `768` dimensions. To set it up:
+
+1. From the root of the project, run the script [`prepare-local-embedding-model.sh`](../../../../../src/main/webapp/WEB-INF/webjet-ai/local/prepare-local-embedding-model.sh). It will create an approved ZIP package and save it as `src/main/webapp/WEB-INF/local-ai-models/multilingual-e5-base-fp32.zip`. In `ai_localEmbeddingModelBundlePath`, set the path to `/WEB-INF/local-ai-models/multilingual-e5-base-fp32.zip`.
+2. Set the global variable `ragEmbeddingDimensions` to `768`. This change will remove the existing vectors.
+3. Restart the application server.
+4. In the `RAG-EMB-INDEX` and `RAG-EMB-SEARCH` assistants, select the **Local Embedding Model** provider and the `intfloat/multilingual-e5-base` model.
+5. Run a full content index.
+
+The model package defines different prefixes for query and document. [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) therefore passes the type `DOCUMENT` when indexing and the type `QUERY` when searching; the local provider automatically completes the correct prefix. The package path and dimension are global and must not change by domain.
 
 ### Vector search
 
@@ -270,6 +280,8 @@ The system automatically places a page in the indexing queue when it:
 
 Manual indexing in the administration only works with pages that are enabled for search.
 
+Manual indexing and index removal checks the user's rights to the selected folder and the affiliation with the current domain. If an indexed page is deleted or moved to another domain between being queued and being processed, the service removes obsolete embeddings from the original domain.
+
 ## Automated tasks
 
 The queue is processed by an automated task [sk.iway.iwcm.rag.service.RagIndexCronTask](../../../../../src/main/java/sk/iway/iwcm/rag/service/RagIndexCronTask.java). The recommended setting is to run every 5 minutes.
@@ -327,6 +339,7 @@ The default model `text-embedding-3-small` is multilingual and handles Slovak/Cz
 | OpenAI `text-embedding-3-small` | `text-embedding-3-small` | `1536` | Good | Default model - cheap and fast. |
 | OpenAI `text-embedding-3-large` | `text-embedding-3-large` | `3072` | High | The most accurate OpenAI multilingual model, more expensive than `small`. |
 | OpenAI `text-embedding-3-large` abbreviated | `text-embedding-3-large` | `1024` or `1536` | High | Thanks to MRL, the vector can be shortened without significant loss of quality. |
+| Local `intfloat/multilingual-e5-base` | `intfloat/multilingual-e5-base` | `768` | Good | Runs locally without sending content to an external service; requires an approved model package. |
 
 !>**Warning:** All vectors in the selected vector store must use the configured dimension. Different providers and models can coexist, but must generate the same number of dimensions. Changing the dimension removes all existing vectors and requires a full content index.
 

@@ -165,9 +165,18 @@ Data([{ finalized: false }, { finalized: true }]).Scenario('analysis separates r
     I.saveScreenshot(`stat-browser-retained-analysis-${current.finalized}.png`);
 });
 
+Data(['modUpdate', 'users.edit_admins']).Scenario('allows access with either migration permission', ({ I, current }) => {
+    I.amOnPage(`/admin/v9/settings/stat-browser-migration/?removePerm=${current}`);
+    I.waitForElement('#migrationAnalyze', 10);
+    I.logout();
+});
+
 Scenario('checks permissions', ({ I }) => {
-    I.amOnPage('/admin/v9/settings/stat-browser-migration/?removePerm=modUpdate');
+    I.amOnPage('/admin/v9/settings/stat-browser-migration/?removePerm=modUpdate,users.edit_admins');
+    I.waitUrlEquals('/admin/403.jsp', 10);
     I.see('Na túto aplikáciu/funkciu nemáte prístupové práva');
+    I.dontSeeElement('#migrationAnalyze');
+    I.logout();
 });
 
 Scenario('shows error merge progress before completing the table', ({ I }) => {

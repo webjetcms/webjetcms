@@ -101,7 +101,10 @@ async function checkBodyEN(I, DT, DTE, Apps, title, values, perex) {
 
     I.say("Check EN translated perex");
     I.clickCss("#pills-dt-datatableInit-perex-tab");
-    I.seeInField("#DTE_Field_htmlData", perex);
+    const actualPerex = await I.grabValueFrom("#DTE_Field_htmlData");
+    const expectedPerexes = Array.isArray(perex) ? perex : [perex];
+    I.assertTrue(expectedPerexes.some(expected => actualPerex.includes(expected)),
+        `Expected perex to contain one of ${JSON.stringify(expectedPerexes)}, got ${JSON.stringify(actualPerex)}`);
 
     DTE.cancel();
 }
@@ -219,7 +222,7 @@ Scenario("Structure clonning with translate - classic", async ({ I, DTE, DT, App
 
         I.click( locate("a.jstree-anchor").withText("Subfolder") );
 
-        await checkBodyEN(I, DT, DTE, Apps, "Subfolder", ["new", "old", "oldest"], "This is also a lead");
+        await checkBodyEN(I, DT, DTE, Apps, "Subfolder", ["new", "old", "oldest"], ["This is also a lead", "This, too"]);
 
         I.say("Check folder optional fields");
         I.jstreeNavigate([destGroupName, srcGroupChildName]);

@@ -2,6 +2,8 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const acorn = require("acorn");
+const { resolveAudioPlan } = require("./audio_plan.js");
+const { isPathInside, resolveVideoScenarioPath, readPlanMetadata } = require("./video_plan_source.js");
 
 const WEBAPP_ROOT = path.resolve(__dirname, "..");
 const CODECEPT_BIN = require.resolve("codeceptjs/bin/codecept.js");
@@ -16,14 +18,6 @@ const CODECEPT_HOOK_NAMES = new Set([
   "BeforeStep",
   "BeforeSuite"
 ]);
-
-function isPathInside(parentPath, candidatePath) {
-  const relativePath = path.relative(parentPath, candidatePath);
-  return relativePath !== "" &&
-    relativePath !== ".." &&
-    !relativePath.startsWith(`..${path.sep}`) &&
-    !path.isAbsolute(relativePath);
-}
 
 function getStringLiteral(node) {
   return node?.type === "Literal" && typeof node.value === "string" ? node.value : null;
@@ -52,17 +46,17 @@ function unwrapDefinitionExpression(expression, definitionName) {
   return null;
 }
 
-function isAudioTag(modifier) {
-  return modifier.name === "tag" && getStringLiteral(modifier.arguments[0]) === AUDIO_TAG;
+function isAudioTag(modifier, tag = AUDIO_TAG) {
+  return modifier.name === "tag" && getStringLiteral(modifier.arguments[0]) === tag;
 }
 
-function matchesAudioGrep(value) {
-  return typeof value === "string" && new RegExp(AUDIO_GREP).test(value);
+function matchesAudioGrep(value, grep = AUDIO_GREP) {
+  return typeof value === "string" && new RegExp(grep).test(value);
 }
 
-function tagMatchesAudioGrep(modifier) {
+function tagMatchesAudioGrep(modifier, grep = AUDIO_GREP) {
   const tag = modifier.name === "tag" ? getStringLiteral(modifier.arguments[0]) : null;
-  return matchesAudioGrep(tag);
+  return matchesAudioGrep(tag, grep);
 }
 
 function containsEagerCall(node) {
@@ -84,7 +78,7 @@ function validateGenerateAudioOptions(node, fail) {
     fail("I.generateAudio options must be an object literal.");
   }
 
-  const allowedNames = new Set(["modelId", "voiceId"]);
+  const allowedNames = new Set(["modelId", "voiceId", "language"]);
   const configuredNames = new Set();
   for (const property of node.properties) {
     const propertyName = property.key?.type === "Identifier"
@@ -92,7 +86,7 @@ function validateGenerateAudioOptions(node, fail) {
       : getStringLiteral(property.key);
     if (property.type !== "Property" || property.kind !== "init" || property.computed ||
       property.method || !allowedNames.has(propertyName)) {
-      fail("I.generateAudio options may contain only modelId and voiceId string literals.");
+      fail("I.generateAudio options may contain only modelId, voiceId and language string literals.");
     }
     if (configuredNames.has(propertyName)) {
       fail(`I.generateAudio option ${propertyName} must not be repeated.`);
@@ -104,9 +98,15 @@ function validateGenerateAudioOptions(node, fail) {
   }
 }
 
-function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
+/** Shares the AST preflight between audio and head without evaluating scenario code. */
+function validateGenerationScenarioSource(source, sourcePath = "<audio scenario>", mode = "audio") {
+  const head = mode === "head";
+  const AUDIO_SCENARIO_TITLE = head ? "ElevenLabs Head" : "ElevenLabs";
+  const AUDIO_TAG = head ? "@head" : "@audio";
+  const AUDIO_GREP = head ? "(^|\\s)@head(\\s|$)" : "(^|\\s)@audio(\\s|$)";
+  const method = head ? "generateHead" : "generateAudio";
   const fail = (message) => {
-    throw new Error(`Invalid audio scenario ${sourcePath}: ${message}`);
+    throw new Error(`Invalid ${mode} scenario ${sourcePath}: ${head ? message.replaceAll("generateAudio", "generateHead").replaceAll("audio scenario", "head scenario") : message}`);
   };
 
   let syntaxTree;
@@ -172,7 +172,7 @@ function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
   if (dynamicFeatureTag != null) {
     fail("Feature tags must be static string literals in audio scenario files.");
   }
-  if (matchesAudioGrep(featureTitle) || features[0].modifiers.some(tagMatchesAudioGrep)) {
+  if (matchesAudioGrep(featureTitle, AUDIO_GREP) || features[0].modifiers.some(modifier => tagMatchesAudioGrep(modifier, AUDIO_GREP))) {
     fail(`${AUDIO_TAG} must not appear in the Feature title or tags.`);
   }
   for (const scenario of scenarios) {
@@ -180,7 +180,7 @@ function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
     if (scenarioTitle == null) {
       fail("Every Scenario must have a static title.");
     }
-    if (matchesAudioGrep(scenarioTitle)) {
+    if (matchesAudioGrep(scenarioTitle, AUDIO_GREP)) {
       fail(`${AUDIO_TAG} must not appear in a Scenario title.`);
     }
     const dynamicTag = scenario.modifiers.find(
@@ -195,7 +195,7 @@ function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
     (scenario) => getStringLiteral(scenario.call.arguments[0]) === AUDIO_SCENARIO_TITLE
   );
   const taggedScenarios = scenarios.filter(
-    (scenario) => scenario.modifiers.some(tagMatchesAudioGrep)
+    (scenario) => scenario.modifiers.some(modifier => tagMatchesAudioGrep(modifier, AUDIO_GREP))
   );
 
   if (namedScenarios.length !== 1) {
@@ -209,7 +209,7 @@ function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
   if (audioScenario !== taggedScenarios[0]) {
     fail(`Scenario("${AUDIO_SCENARIO_TITLE}") must be the scenario tagged ${AUDIO_TAG}.`);
   }
-  if (audioScenario.modifiers.length !== 1 || !isAudioTag(audioScenario.modifiers[0]) ||
+  if (audioScenario.modifiers.length !== 1 || !isAudioTag(audioScenario.modifiers[0], AUDIO_TAG) ||
     audioScenario.modifiers[0].arguments.length !== 1) {
     fail(`Scenario("${AUDIO_SCENARIO_TITLE}") must have only the ${AUDIO_TAG} tag.`);
   }
@@ -238,50 +238,61 @@ function validateAudioScenarioSource(source, sourcePath = "<audio scenario>") {
   const isGenerateAudioCall = generateAudioCall?.type === "CallExpression" &&
     callee?.type === "MemberExpression" && !callee.computed &&
     callee.object?.type === "Identifier" && callee.object.name === "I" &&
-    callee.property?.type === "Identifier" && callee.property.name === "generateAudio";
+    callee.property?.type === "Identifier" && callee.property.name === method;
   if (!isGenerateAudioCall || generateAudioCall.arguments.length < 1 ||
     generateAudioCall.arguments.length > 2) {
     fail(`Scenario("${AUDIO_SCENARIO_TITLE}") must contain only one I.generateAudio call.`);
   }
 
-  const narration = generateAudioCall.arguments[0];
+  if (generateAudioCall.arguments.length === 2) {
+    if (head) {
+      require("./head_settings.js").validateHeadOptions(readPlanMetadata(generateAudioCall.arguments[1]));
+    } else validateGenerateAudioOptions(generateAudioCall.arguments[1], fail);
+  }
+  let narration = generateAudioCall.arguments[0];
+  if (narration?.type === "Identifier") {
+    const declaration = syntaxTree.body
+      .filter(statement => statement.type === "VariableDeclaration" && statement.kind === "const" &&
+        statement.start < audioScenario.call.start)
+      .flatMap(statement => statement.declarations)
+      .find(item => item.id.type === "Identifier" && item.id.name === narration.name);
+    if (!declaration) fail("I.generateAudio plan must reference a preceding const plan object.");
+    narration = declaration.init;
+  }
+  if (narration?.type === "ObjectExpression") {
+    try {
+      const plan = readPlanMetadata(narration);
+      const options = generateAudioCall.arguments[1] ? readPlanMetadata(generateAudioCall.arguments[1]) : {};
+      if (head) {
+        require("./head_settings.js").getHeadShots(plan, options, sourcePath);
+      } else resolveAudioPlan(plan, options);
+    } catch (error) {
+      fail(`I.generateAudio plan must contain static shot data with optional inline callbacks: ${error.message}`);
+    }
+    return;
+  }
+  if (head) fail("I.generateHead requires a static video plan object.");
   const narrationText = narration?.quasis?.[0]?.value?.cooked;
   if (narration?.type !== "TemplateLiteral" || narration.expressions.length !== 0 ||
     narration.quasis.length !== 1 || typeof narrationText !== "string" ||
     narrationText.trim() === "") {
     fail("I.generateAudio narration must be a non-empty template literal without interpolation.");
   }
-  if (generateAudioCall.arguments.length === 2) {
-    validateGenerateAudioOptions(generateAudioCall.arguments[1], fail);
+  try {
+    resolveAudioPlan(narrationText, generateAudioCall.arguments[1] ? readPlanMetadata(generateAudioCall.arguments[1]) : {});
+  } catch (error) {
+    fail(error.message);
   }
 }
 
+function validateAudioScenarioSource(source, sourcePath) {
+  return validateGenerationScenarioSource(source, sourcePath);
+}
+
 function resolveAudioScenario(argument, options = {}) {
-  const webappRoot = options.webappRoot || WEBAPP_ROOT;
   const fsImpl = options.fsImpl || fs;
-  const videoDirectory = fsImpl.realpathSync(path.join(webappRoot, "video"));
-
-  if (typeof argument !== "string" || path.extname(argument) !== ".js") {
-    throw new Error("The audio scenario must be a .js file.");
-  }
-
-  let scenarioPath;
-  try {
-    scenarioPath = fsImpl.realpathSync(path.resolve(webappRoot, argument));
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      throw new Error(`Audio scenario does not exist: ${argument}`);
-    }
-    throw error;
-  }
-
-  if (!isPathInside(videoDirectory, scenarioPath)) {
-    throw new Error("The audio scenario must be located inside the video directory.");
-  }
-  if (!fsImpl.statSync(scenarioPath).isFile()) {
-    throw new Error("The audio scenario must be a file.");
-  }
-  validateAudioScenarioSource(fsImpl.readFileSync(scenarioPath, "utf8"), scenarioPath);
+  const scenarioPath = resolveVideoScenarioPath(argument, options);
+  (options.validateSource || validateAudioScenarioSource)(fsImpl.readFileSync(scenarioPath, "utf8"), scenarioPath);
   return scenarioPath;
 }
 
@@ -336,5 +347,6 @@ module.exports = {
   isPathInside,
   resolveAudioScenario,
   runAudio,
-  validateAudioScenarioSource
+  validateAudioScenarioSource,
+  validateGenerationScenarioSource
 };
