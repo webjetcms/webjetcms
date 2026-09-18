@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.apache.commons.beanutils.BeanUtils;
 import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.system.annotations.IsEntity;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
@@ -31,6 +32,7 @@ import java.util.StringTokenizer;
  *@created      $Date: 2004/03/15 21:34:42 $
  *@modified     $Date: 2004/03/15 21:34:42 $
  */
+@IsEntity
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GroupDetails implements Cloneable, DocGroupInterface
 {
