@@ -50,6 +50,11 @@ from `src/test/webapp`, optimize the GridEditor previews to a maximum width of 3
 ```sh
 npm run scr:optimize -- ../../main/webapp/components/grideditor/data --max-width 332 --dry-run
 npm run scr:optimize -- ../../main/webapp/components/grideditor/data --max-width 332
+npm run scr:optimize -- ../../main/webapp/components/htmlbox/objects/Columns --max-width 332
+npm run scr:optimize -- ../../main/webapp/components/htmlbox/objects/Contact --max-width 332
+npm run scr:optimize -- ../../main/webapp/components/htmlbox/objects/Content --max-width 332
+npm run scr:optimize -- ../../main/webapp/components/htmlbox/objects/Download --max-width 332
+npm run scr:optimize -- ../../main/webapp/components/htmlbox/objects/Header --max-width 332
 ```
 
 Quote directory paths containing spaces. Symbolic links are not followed during recursion.
