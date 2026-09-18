@@ -15,7 +15,7 @@ Explanation of the pictograms used:
 ## 2026
 
 - [x] Semantic search - use AI to improve search with `RAG` (#211).
-- [ ] AI - possibility to use small local models running directly on the CPU, at least for Semantic Search (#58561).
+- [x] AI - possibility to use small local models running directly on the CPU, at least for Semantic Search (#58561).
 - [x] `Headless` CMS - prepare REST interfaces for using WebJET CMS in `headless` mode (#58597) (#258).
 - [ ] Migration to `Spring Boot` project (#58569).
 - [x] Testing - add accessibility testing using the [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) extension (#58389).
@@ -58,6 +58,9 @@ Explanation of the pictograms used:
 - [x] +Administration - remove dependency on `Vue.js` and replace internal components with native web components (#58722).
 - [ ] +Modify the loading of the admin section so that only the inside of the page is replaced via a REST service call, not a complete reload of the HTML code.
 - [ ] +Improve the administration homepage - dynamic blocks, the ability to customize what is displayed, useful information and blocks.
+- [ ] +Filter in the news application does not allow entering DOC ID of multiple pages if they wanted to select multiple pages according to the filter “DOC_ID equals”
+The filter only takes the first value. So add the `IN` option to allow multiple values ​​(#JT-2139).
+- [ ] +AI - adjust the creation of `chunk` so that there are no nonsense words at the beginning/end, trim from the first space to the last space.
 
 ## 2025
 

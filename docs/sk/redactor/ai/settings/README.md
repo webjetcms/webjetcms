@@ -95,7 +95,7 @@ Na tejto karte nájdete rozšírené možnosti konfigurácie asistenta, ktoré u
 
 ## Poskytovatelia
 
-Poskytovateľ je externá služba alebo platforma, ktorá zabezpečuje AI nástroje, modely a funkcionality využívané pri spracovaní požiadaviek v CMS. Aby bolo možné poskytovateľa používať, musí byť najskôr správne implementovaný a nakonfigurovaný v systéme (napríklad zadaním API kľúča). Jednotliví poskytovatelia sa môžu líšiť v možnostiach, cene, kvalite výsledkov alebo špecializácii na konkrétne typy úloh. Výber vhodného poskytovateľa závisí od vašich potrieb a požiadaviek na konkrétnu AI funkcionalitu.
+Poskytovateľ zabezpečuje AI nástroje, modely a funkcionality využívané pri spracovaní požiadaviek v CMS. Môže ísť o externú službu nakonfigurovanú napríklad API kľúčom alebo o lokálny model spustený priamo na serveri. Jednotliví poskytovatelia sa môžu líšiť v možnostiach, cene, kvalite výsledkov alebo špecializácii na konkrétne typy úloh. Výber vhodného poskytovateľa závisí od vašich potrieb a požiadaviek na konkrétnu AI funkcionalitu.
 
 ### OpenAI
 
@@ -141,6 +141,111 @@ Vygenerovaný API kľúč nastavte do konfiguračnej premennej `ai_openRouterAut
 
 ![](openrouter.png)
 
+### Lokálne modely
+
+Lokálne modely vykonávajú požiadavky priamo na aplikačnom serveri WebJET CMS. Kvalita modelov samozrejme nedosahuje kvality veľkých komerčných modelov, ale sú spustené lokálne na vašom serveri, dáta neopúšťajú vaše prostredie. Samozrejme ale, ich prevádzka zvyšuje požiadavky na výpočtový výkon a pamäť servera. Praktické nasadenie je potrebné overiť a vykonať aj záťažové testy.
+
+!>**Upozornenie:**: aktuálne je podporovaný beh modelov na architektúrach `Linux x86_64` alebo `macOS ARM64`.
+
+Dostupné sú tri samostatné typy poskytovateľov:
+
+- **Lokálny model na generovanie textu** - používa model `utter-project/EuroLLM-1.7B-Instruct` a podporuje iba generovanie textu. Streamovanie odpovede nie je podporované a požiadavky sa neukladajú.
+- **Lokálny prekladový model** - používa model `facebook/m2m100_418M` na preklad čistého textu. Nepodporuje HTML kód, `INCLUDE` príkazy, štruktúrovaný vstup ani doplňujúci vstup používateľa.
+- **Lokálny embeddingový model** - používa model `intfloat/multilingual-e5-base` na [sémantické indexovanie a vyhľadávanie](../../apps/semantic-search/README.md). Model generuje vektory s `768` dimenziami.
+
+Modelové balíky vo formáte ZIP musia byť vopred pripravené a schválené pre WebJET CMS. Najskôr je potrebné vo vašom `build.gradle` súbore pridať závislosť a task na vytvorenie súborov (verziu `com.webjetcms:webjet-ai-local` nastavte zhodnú s verziou vo WebJET CMS):
+
+```gradle
+dependencies {
+	....
+	implementation "com.webjetcms:webjet-ai-local:2.0.4"
+}
+
+def localAiModelsDirectory = file('src/main/webapp/WEB-INF/local-ai-models')
+def localAiModelTasks = [
+    prepareLocalAiTextModel: [
+        model: 'utter-project/EuroLLM-1.7B-Instruct',
+        variant: 'q4-k-m',
+        output: 'eurollm-1.7b-instruct-q4-k-m.zip'
+    ],
+    prepareLocalAiTranslationModel: [
+        model: 'facebook/m2m100_418M',
+        variant: 'int8',
+        output: 'm2m100-418m-int8.zip'
+    ],
+    prepareLocalAiEmbeddingModel: [
+        model: 'intfloat/multilingual-e5-base',
+        variant: 'fp32',
+        output: 'multilingual-e5-base-fp32.zip'
+    ]
+]
+
+localAiModelTasks.each { taskName, modelDefinition ->
+    tasks.register(taskName, JavaExec) {
+        group = 'webjet-ai'
+        description = "Prepares ${modelDefinition.model} for local WebJET AI use."
+        classpath = configurations.runtimeClasspath
+        mainClass = 'com.webjetcms.ai.local.tool.LocalModelTool'
+        args 'prepare',
+            '--model', modelDefinition.model,
+            '--output', new File(localAiModelsDirectory, modelDefinition.output).absolutePath
+        if (modelDefinition.variant != null) {
+            args '--variant', modelDefinition.variant
+        }
+        if (providers.gradleProperty('overwriteLocalAiModel').getOrElse('false').toBoolean()) {
+            args '--overwrite'
+        }
+    }
+}
+```
+
+Následne z koreňového priečinka projektu spustite generovanie modelov:
+
+```shell
+gradlew prepareLocalAiEmbeddingModel
+gradlew prepareLocalAiTranslationModel
+gradlew prepareLocalAiTextModel
+```
+
+Nástroj stiahne pevne určené súbory modelu, overí ich veľkosť a kontrolný súčet a vytvorí ZIP v priečinku `src/main/webapp/WEB-INF/local-ai-models`. Existujúci ZIP neprepíše, ak ho chcete vedome nahradiť, spustite príslušný skript s parametrom `-PoverwriteLocalAiModel=true`. Každé vytvorenie alebo prepísanie modelového balíka vyžaduje pripojenie na internet.
+
+Cestu k vytvorenému balíku nastavte v príslušnej konfiguračnej premennej:
+
+| Premenná | Model | Cesta vytvorená skriptom |
+| --- | --- | --- |
+| `ai_localEmbeddingModelBundlePath` | `intfloat/multilingual-e5-base` | `/WEB-INF/local-ai-models/multilingual-e5-base-fp32.zip` |
+| `ai_localTranslateModelBundlePath` | `facebook/m2m100_418M` | `/WEB-INF/local-ai-models/m2m100-418m-int8.zip` |
+| `ai_localTextModelBundlePath` | `utter-project/EuroLLM-1.7B-Instruct` | `/WEB-INF/local-ai-models/eurollm-1.7b-instruct-q4-k-m.zip` |
+
+Cesta môže byť absolútna cesta na serveri alebo cesta začínajúca `/WEB-INF/`. Cesty začínajúce `/WEB-INF/` sa vyhodnotia voči koreňovému adresáru nasadenej aplikácie na serveri.
+
+Cesty sú globálne pre celú inštaláciu, súbor musí byť čitateľný procesom aplikačného servera a po ich zmene je potrebný reštart. Model sa otvorí až pri prvom použití. Poskytovateľ sa v editore označí ako nenakonfigurovaný, kým príslušná cesta nie je nastavená.
+
+Nastavte ešte konfiguračné premenné:
+
+- `ragEmbeddingDimensions` na hodnotu 768
+- `ragSemanticSearchEnabled` na hodnotu true - aktivuje sémantické vyhľadávanie
+- `searchType` na hodnotu `semantic` pre podporu sémantického vyhľadávania
+- `ragAnswerAllowed` na hodnotu true ak chcete nad vyhľadávaním zobraziť aj sekciu "Prehľad od AI" a máte aktivovaný aj `ai_localTextModelBundlePath`. Upozorňujeme, že sa jedná o pomerne malý jazykový model, takže RAG odpovede oproti komerčným modelom nemusia byť vôbec zobrazené, alebo nie sú úplne správne / kompletné. Zároveň generovanie prehľadu od AI výrazne zaťažuje výkon servera a odpoveď trvá výrazne dlhšie oproti jednoduchému sémantickému hľadaniu.
+
+Viac informácií nájdete v [dokumentácii k vyhľadávaniu](../../apps/search/README.md).
+
+!>**Upozornenie:**: pri zmene `ragEmbeddingDimensions` sa zmaže tabuľka `rag_embedding_chunks` s existujúcimi záznamami sémantického indexu, pretože podľa dimenzie je nastavená dátová štruktúra.
+
+Pre embedding v sekcii AI nástroje upravte asistenta `RAG-EMB-INDEX` a `RAG-EMB-SEARCH` - obom nastavte v karte Poskytovateľ hodnotu Poskytovateľ na Lokálny embeddingový model a hodnotu Model na `intfloat/multilingual-e5-base`. Asistentovi `RAG-SEARCH` nastavte Lokálny model na generovanie textu a model `utter-project/EuroLLM-1.7B-Instruct`. Ak takýto asistenti neexistujú, systém ich vytvorí pri prvom použití sémantického indexovania, alebo vyhľadávania, potom po vytvorení poskytovateľa a modely nastavte.
+
+Pre lokálny preklad musí pole **Inštrukcie** obsahovať zdrojový a cieľový jazyk vo formáte JSON, prípadne s prefixom `Translator:`:
+
+```text
+Translator: {"sourceLanguage":"sk","targetLanguage":"en","maximumOutputTokens":200}
+```
+
+Jazyky musia byť určené explicitne; hodnota `autodetect` nie je podporovaná. Hodnota `userLng` použije aktuálny jazyk používateľa a kód `cz` sa automaticky zmení na `cs`. Voliteľná hodnota `maximumOutputTokens` musí byť kladné celé číslo, najviac `200`.
+
+!>**Upozornenie:** Modelové súbory môžu mať stovky megabajtov až niekoľko gigabajtov. Pred aktiváciou overte dostatok diskového priestoru a operačnej pamäte a použite iba balík z dôveryhodného zdroja.
+
+Nezabudnite nastaviť aj [úlohu na pozadí](../../apps/semantic-search/README.md), ktorá vykonáva indexovanie.
+
 ### Prehliadač
 
 AI priamo v prehliadači je aktuálne [pripravovaný štandard](https://developer.chrome.com/docs/ai/get-started) vytvorený spoločnosťou Google. Aktuálne je podporovaný v prehliadači Google Chrome za použitia zabezpečeného (HTTPS) spojenia. Po štandardizácii API sa predpokladá, že bude dostupný aj v iných prehliadačoch. Dostupnosť AI v prehliadači môžete vypnúť nastavením konfiguračnej premennej `ai_browserAiEnabled` na hodnotu `false`, kedy sa možnosti prestanú zobrazovať.
@@ -162,7 +267,7 @@ Niektoré API zatiaľ nepodporujú prácu vo všetkých jazykoch, preto môže p
 
 ## Pripojenie
 
-Volanie AI služieb vyžaduje pripojenie na internet. Uistite sa, že váš server má prístup k vonkajším službám a že firewall alebo iné bezpečnostné opatrenia neblokujú požiadavky na API daného poskytovateľa. Použité sú nasledovné doménové mená:
+Volanie externých AI služieb vyžaduje pripojenie na internet. Uistite sa, že váš server má prístup k vonkajším službám a že firewall alebo iné bezpečnostné opatrenia neblokujú požiadavky na API daného poskytovateľa. Lokálne modely internetové pripojenie pri spracovaní nevyžadujú. Pre externých poskytovateľov sa používajú nasledovné doménové mená:
 
 - OpenAI: `api.openai.com`
 - Gemini: `generativelanguage.googleapis.com`

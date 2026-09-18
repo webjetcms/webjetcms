@@ -91,6 +91,8 @@ Klepněte na tlačítko <button class="btn btn-sm btn-success" type="button"><sp
 
 Dialog zobrazí přehled stránek zvolené složky - celkový počet, počet již indexovaných a počet ve frontě. Za indexované se považují pouze stránky, které mají index pro aktuálního poskytovatele a model asistenta `RAG-EMB-INDEX`. Index vytvořený jiným poskytovatelem nebo modelem se proto v tomto počtu nezohlední.
 
+Manuální akci lze provést pouze nad složkami aktuální domény, pro které má uživatel právo na úpravu. Při výběru kořenové složky musí mít právo na všechny kořenové složky domény.
+
 Složka i volba **Zobrazit iz podsložek** se převezmou z aktivního filtru. Po potvrzení se do fronty zařadí všechny vyhledatelné stránky ze zvoleného rozsahu. Pokud se text chunku nezměnil, systém se pokusí použít existující embedding se stejným poskytovatelem a modelem podle jeho hash hodnoty. Opětovné indexování nahradí pouze index aktuální kombinace poskytovatele a modelu; ostatní indexy stejné stránky zůstanou zachovány.
 
 Akci spustíte tlačítkem <button class="btn btn-primary"><i class="ti ti-check"></i><span>Spustit akci</span></button> .
@@ -111,7 +113,7 @@ Akci spustíte tlačítkem <button class="btn btn-primary"><i class="ti ti-check
 
 Pokud při indexování stránky nastane chyba, systém uloží záznam se stavem **ERROR** a zkrácenou chybovou zprávou. Chyba se zapisuje i do administrátorského logu v kategorii **Vyhledávání** (`SEARCH`). Pokud selže zpracování položky ještě na úrovni fronty, položka zůstane ve frontě a systém se ji pokusí zpracovat při dalším běhu cron úlohy.
 
-!>**Upozornění:** Změna konfigurační proměnné `ragEmbeddingDimensions` vymaže celý sémantický index pro všechny poskytovatele a modely, protože databázový sloupec `vector(N)` má společnou dimenzi. Po změně je třeba znovu zaindexovat celý obsah.
+!>**Upozornění:** Konfigurační proměnná `ragEmbeddingDimensions` je globální pro celou instalaci. Její změna vymaže celý sémantický index pro všechny poskytovatele a modely, protože databázový sloupec `vector(N)` má společnou dimenzi. Po změně je třeba znovu indexovat celý obsah. Místní model `intfloat/multilingual-e5-base` vyžaduje hodnotu `768`.
 
 ## Detaily implementace
 
