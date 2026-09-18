@@ -22,7 +22,7 @@ function mockMap(I, options = {}) {
         await page.route("**/admin/rest/stat/heat-map/**", async route => {
             const url = new URL(route.request().url());
             if (url.pathname.endsWith("/widths")) {
-                await route.fulfill({json: options.empty ? [] : [{width: 390, clicks: 8}, {width: 1280, clicks: 32}]});
+                await route.fulfill({json: options.empty ? [] : [{width: 1280, clicks: 32}, {width: 390, clicks: 8}]});
             } else if (url.pathname.endsWith("/metadata")) {
                 await route.fulfill({json: {
                     title: "autotest click map preview", url: "/autotest-click-map.html",

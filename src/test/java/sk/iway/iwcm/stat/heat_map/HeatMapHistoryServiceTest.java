@@ -224,6 +224,17 @@ class HeatMapHistoryServiceTest {
         }
     }
 
+    /** An ambiguous revision at the same publication time takes precedence only when its history ID is newer. */
+    @Test
+    void resolvesAmbiguousPublicationTimeTiesByHistoryId() {
+        DocHistory ambiguous = published(2, 100);
+        ambiguous.setApprovedBy(null);
+
+        assertNull(HeatMapHistoryService.selectHistory(List.of(ambiguous, published(1, 100)), DOC_ID, 0, 300));
+        assertEquals(3, HeatMapHistoryService.selectHistory(List.of(ambiguous, published(3, 100)), DOC_ID, 0, 300)
+                .history().getHistoryId());
+    }
+
     /** Shared historical content is loaded without cache and retains the authorized slave page's identity. */
     @Test
     void loadsVerifiedMasterHistoryThroughDocDbForSlavePreview() {

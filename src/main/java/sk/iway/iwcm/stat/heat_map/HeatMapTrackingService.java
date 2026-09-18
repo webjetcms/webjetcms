@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Pattern;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,7 +27,6 @@ public final class HeatMapTrackingService {
     public static final int MAX_PENDING_EVENTS = 16;
     public static final int MAX_COOKIE_BYTES = 2048;
     public static final long MAX_AGE_SECONDS = 86400;
-    private static final Pattern EVENT_ID = Pattern.compile("[a-f0-9]{32}");
     private static final String RECEIVED_ATTRIBUTE = HeatMapTrackingService.class.getName() + ".received";
 
     private HeatMapTrackingService() { }
@@ -71,7 +69,6 @@ public final class HeatMapTrackingService {
     public static HeatMapEvent parseCookie(String name, String value, long nowSeconds) {
         if (name == null || !name.startsWith(COOKIE_PREFIX) || value == null || value.length() > 128) return null;
         String eventId = name.substring(COOKIE_PREFIX.length());
-        if (!EVENT_ID.matcher(eventId).matches()) return null;
         String[] values = value.split("\\.", -1);
         if (values.length != 6 || !"v1".equals(values[0])) return null;
         try {
@@ -83,10 +80,9 @@ public final class HeatMapTrackingService {
             long time = Long.parseLong(values[3]);
             int x = Integer.parseInt(values[4]);
             int y = Integer.parseInt(values[5]);
-            if (docId < 1 || width < 1 || width > 16384 || x > 1_000_000 || y > 1_000_000
-                    || time < nowSeconds - MAX_AGE_SECONDS || time > nowSeconds + 300) return null;
+            if (time < nowSeconds - MAX_AGE_SECONDS || time > nowSeconds + 300) return null;
             return new HeatMapEvent(eventId, docId, width, time, x, y);
-        } catch (NumberFormatException ex) {
+        } catch (IllegalArgumentException ex) {
             return null;
         }
     }
@@ -97,14 +93,15 @@ public final class HeatMapTrackingService {
         String path = request.getRequestURI();
         if (path.startsWith("/admin/") || path.matches("/apps/[^/]+/admin(?:/.*)?")
                 || request.getParameter("historyid") != null || HeatMapPreviewRequest.isPreviewReferrer(request)) return;
-        boolean hasEvents = false;
+        long now = System.currentTimeMillis() / 1000;
+        record Pending(Cookie cookie, HeatMapEvent event) { }
+        List<Pending> pending = new ArrayList<>();
         for (Cookie cookie : request.getCookies()) {
             if (cookie.getName().startsWith(COOKIE_PREFIX)) {
-                hasEvents = true;
-                break;
+                pending.add(new Pending(cookie, parseCookie(cookie.getName(), cookie.getValue(), now)));
             }
         }
-        if (!hasEvents) return;
+        if (pending.isEmpty()) return;
         request.setAttribute(RECEIVED_ATTRIBUTE, Boolean.TRUE);
         boolean allowed = Tools.canSetCookie("statisticke", request.getCookies())
                 && !"none".equals(Constants.getString("statMode")) && Constants.getBoolean("statEnableClickTracking")
@@ -113,13 +110,6 @@ public final class HeatMapTrackingService {
         String declineValue = Constants.getString("disableCookiesCookieValue");
         if (Tools.isNotEmpty(declineName) && Tools.isNotEmpty(declineValue)
                 && declineValue.equals(Tools.getCookieValue(request.getCookies(), declineName, ""))) allowed = false;
-        long now = System.currentTimeMillis() / 1000;
-        record Pending(Cookie cookie, HeatMapEvent event) { }
-        List<Pending> pending = new ArrayList<>();
-        for (Cookie cookie : request.getCookies()) {
-            if (!cookie.getName().startsWith(COOKIE_PREFIX)) continue;
-            pending.add(new Pending(cookie, parseCookie(cookie.getName(), cookie.getValue(), now)));
-        }
         // Concurrent tabs can briefly exceed the client limit. Retain their newest events on receipt too.
         Collections.reverse(pending);
         pending.sort(Comparator.comparingLong((Pending item) -> item.event() == null

@@ -31,11 +31,15 @@ class HeatMapTrackingServiceTest {
         for (String value : new String[] { "v2.123.390." + NOW + ".42.2500", "v1.0.390." + NOW + ".42.2500",
                 "v1.123.0." + NOW + ".42.2500", "v1.123.16385." + NOW + ".42.2500",
                 "v1.123.390." + NOW + ".-1.2500", "v1.123.390." + NOW + ".1.1000001",
+                "v1.2147483648.390." + NOW + ".1.1", "v1.123.390." + NOW + ".2147483648.1",
                 "v1.123.390." + (NOW - 86401) + ".1.1", "v1.123.390." + (NOW + 301) + ".1.1",
                 "v1.123.390." + NOW + ".1.1.extra", "x".repeat(129) }) {
             assertNull(HeatMapTrackingService.parseCookie(NAME, value, NOW), value);
         }
         assertNull(HeatMapTrackingService.parseCookie(NAME.toUpperCase(), "v1.123.390." + NOW + ".1.1", NOW));
+        assertNull(HeatMapTrackingService.parseCookie(HeatMapTrackingService.COOKIE_PREFIX + "invalid-id", "v1.123.390." + NOW + ".1.1", NOW));
+        assertNull(HeatMapTrackingService.parseCookie(null, "v1.123.390." + NOW + ".1.1", NOW));
+        assertNull(HeatMapTrackingService.parseCookie(NAME, null, NOW));
     }
 
     /** Automatic processing cannot insert a second copy after a legacy JSP has emitted the tracker. */

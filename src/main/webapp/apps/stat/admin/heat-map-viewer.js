@@ -47,7 +47,6 @@ export class HeatMapViewer {
         }
         try {
             const widths = await this.getJson("/widths");
-            widths.sort((left, right) => right.clicks - left.clicks || left.width - right.width);
             for (const item of widths) {
                 const option = document.createElement("option");
                 option.value = item.width;

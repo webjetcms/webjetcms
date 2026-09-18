@@ -135,18 +135,17 @@ public class HeatMapHistoryService {
 
     /** Selects by effective publication time, without relying on the mutable actual flag. */
     static HistoryMatch selectHistory(List<DocHistory> history, int docId, long from, long cutoff) {
+        Comparator<DocHistory> publicationOrder = Comparator.comparingLong(HeatMapHistoryService::effectiveFrom)
+                .thenComparingInt(DocHistory::getHistoryId);
         List<DocHistory> eligible = history.stream()
                 .filter(item -> item.getDocId() == docId && isPublished(item) && effectiveFrom(item) <= cutoff)
-                .sorted(Comparator.comparingLong(HeatMapHistoryService::effectiveFrom)
-                        .thenComparingInt(DocHistory::getHistoryId))
                 .toList();
-        if (eligible.isEmpty()) return null;
+        DocHistory selected = eligible.stream().max(publicationOrder).orElse(null);
+        if (selected == null) return null;
 
-        DocHistory selected = eligible.get(eligible.size() - 1);
         boolean ambiguousNewerHistory = history.stream().anyMatch(item -> item.getDocId() == docId
                 && isAcceptedChange(item) && !isPublished(item) && effectiveFrom(item) <= cutoff
-                && (effectiveFrom(item) > effectiveFrom(selected)
-                        || (effectiveFrom(item) == effectiveFrom(selected) && item.getHistoryId() > selected.getHistoryId())));
+                && publicationOrder.compare(item, selected) > 0);
         if (ambiguousNewerHistory) return null;
 
         long versionCount = eligible.stream().mapToLong(HeatMapHistoryService::effectiveFrom)

@@ -123,8 +123,8 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
             @RequestParam(value = "dateRange", required = false) String dateRange, @RequestParam("width") int width,
             @RequestParam("tileX") int tileX, @RequestParam("tileY") int tileY) throws IOException {
         checkWidth(width);
-        if (tileX < 0 || tileY < 0 || tileX > 1_000_000 / HeatMapStorage.TILE_SIZE
-                || tileY > 1_000_000 / HeatMapStorage.TILE_SIZE) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        if (tileX < 0 || tileY < 0 || tileX > HeatMapStorage.MAX_COORDINATE / HeatMapStorage.TILE_SIZE
+                || tileY > HeatMapStorage.MAX_COORDINATE / HeatMapStorage.TILE_SIZE) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         access.requireDocument(getRequest(), docId);
         LocalDate[] range = localRange(dateRange);
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.IMAGE_PNG)
@@ -138,7 +138,7 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
     }
 
     private void checkWidth(int width) {
-        if (width < 1 || width > 16384) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        if (width < 1 || width > HeatMapStorage.MAX_VIEWPORT_WIDTH) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
     }
 
     @Override

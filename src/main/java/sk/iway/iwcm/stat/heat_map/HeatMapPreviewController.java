@@ -47,9 +47,6 @@ public class HeatMapPreviewController {
 
         TemplateDetails template = TemplatesDB.getInstance().getTemplate(document.getTempId());
         if (template != null) document.setTempName(template.getTempName());
-        document.setPublishStart(document.getPublishStart());
-        document.setPublishEnd(document.getPublishEnd());
-        document.setEventDate(document.getEventDate());
 
         String domain = access.currentDomain(request);
         HeatMapPreviewRequest previewRequest = new HeatMapPreviewRequest(request, docId);

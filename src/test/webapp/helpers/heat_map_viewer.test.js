@@ -29,7 +29,7 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
         if (url.pathname.endsWith("heat-map.css")) return route.fulfill({contentType: "text/css", body: fs.readFileSync(path.join(adminPath, "heat-map.css"), "utf8")});
         if (url.pathname.endsWith("/widths")) {
             if (mode === "widths-error") return route.fulfill({status: 403, body: "Forbidden"});
-            return route.fulfill({json: mode === "empty" ? [] : [{width: 390, clicks: 8}, {width: 1280, clicks: 32}]});
+            return route.fulfill({json: mode === "empty" ? [] : [{width: 1280, clicks: 32}, {width: 390, clicks: 8}]});
         }
         if (url.pathname.endsWith("/metadata")) {
             if (mode === "metadata-error") return route.fulfill({status: 500, body: "Unavailable"});

@@ -17,12 +17,13 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -165,8 +166,8 @@ public final class HeatMapStorage {
         }
     }
 
-    private static List<YearMonth> partitions(Connection connection, LocalDate from, LocalDate to) throws SQLException {
-        Map<YearMonth, Boolean> found = new TreeMap<>();
+    private static SortedSet<YearMonth> partitions(Connection connection, LocalDate from, LocalDate to) throws SQLException {
+        SortedSet<YearMonth> found = new TreeSet<>();
         String schema = null;
         try {
             schema = connection.getSchema();
@@ -180,10 +181,10 @@ public final class HeatMapStorage {
                 Matcher matcher = PARTITION.matcher(tables.getString("TABLE_NAME").toLowerCase(Locale.ROOT));
                 if (!matcher.matches()) continue;
                 YearMonth month = YearMonth.of(Integer.parseInt(matcher.group(1)), Integer.parseInt(matcher.group(2)));
-                if (!month.isBefore(YearMonth.from(from)) && !month.isAfter(YearMonth.from(to))) found.put(month, Boolean.TRUE);
+                if (!month.isBefore(YearMonth.from(from)) && !month.isAfter(YearMonth.from(to))) found.add(month);
             }
         }
-        return new ArrayList<>(found.keySet());
+        return found;
     }
 
     static boolean isMissingTable(SQLException exception) {

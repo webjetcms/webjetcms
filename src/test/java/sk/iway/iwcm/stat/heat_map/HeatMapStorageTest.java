@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -91,7 +93,8 @@ class HeatMapStorageTest extends BaseWebjetTest {
 
     @Test
     void yearBoundaryAddsWidthsFromExistingPartitionsOnly() throws Exception {
-        Connection connection = connectionWithTables("stat_clicks_2025_12", "stat_clicks_2026_1", "stat_views_2026_1", "stat_clicks_2026_2");
+        Connection connection = connectionWithTables("stat_clicks_2026_1", "stat_clicks_2025_12", "stat_clicks_2026_1",
+                "stat_views_2026_1", "stat_clicks_2026_2");
         PreparedStatement december = statementWithCount(390, 3);
         PreparedStatement january = statementWithCount(390, 5);
         when(connection.prepareStatement(anyString())).thenAnswer(invocation ->
@@ -105,6 +108,10 @@ class HeatMapStorageTest extends BaseWebjetTest {
             verify(january).setInt(3, 1);
             verify(december).setInt(4, 123);
             verify(january).setInt(4, 123);
+            var ordered = inOrder(december, january);
+            ordered.verify(december).executeQuery();
+            ordered.verify(january).executeQuery();
+            verify(connection, times(2)).prepareStatement(anyString());
         }
     }
 

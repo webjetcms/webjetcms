@@ -1,5 +1,6 @@
 package sk.iway.iwcm.stat;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -13,6 +14,7 @@ import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +27,25 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Verifies idempotent event inserts without changing legacy buffer behavior. */
 class StatWriteBufferHeatMapTest extends BaseWebjetTest {
+    /** Buffer keys combine equal statements while retaining partition, error-policy and update differences. */
+    @Test
+    void bufferKeysPreserveStatementGroupingAndExecutionPolicy() {
+        String insert = "INSERT INTO stat_clicks_2026_9 (event_id) VALUES (?)";
+        Map<UpdateInsertSqlPair, String> groups = new HashMap<>();
+        groups.put(new UpdateInsertSqlPair(null, insert), "legacy");
+        groups.put(new UpdateInsertSqlPair("UPDATE stat_clicks_2026_9 SET x=?", insert), "update-insert");
+        groups.put(new UpdateInsertSqlPair(insert, "_2026_9", true), "idempotent");
+        groups.put(new UpdateInsertSqlPair(insert, "_2026_8", true), "other partition");
+        groups.put(new UpdateInsertSqlPair(insert, "_2026_9", false), "strict");
+
+        assertEquals(5, groups.size());
+        assertEquals("legacy", groups.get(new UpdateInsertSqlPair(null, insert)));
+        assertEquals("update-insert", groups.get(new UpdateInsertSqlPair("UPDATE stat_clicks_2026_9 SET x=?", insert)));
+        assertEquals("idempotent", groups.get(new UpdateInsertSqlPair(insert, "_2026_9", true)));
+        assertEquals("other partition", groups.get(new UpdateInsertSqlPair(insert, "_2026_8", true)));
+        assertEquals("strict", groups.get(new UpdateInsertSqlPair(insert, "_2026_9", false)));
+    }
+
     @Test
     void duplicateClickDoesNotPreventTheFollowingClickFromBeingWritten() throws Exception {
         int originalType = Constants.DB_TYPE;
