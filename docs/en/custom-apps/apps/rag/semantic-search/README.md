@@ -1,6 +1,6 @@
 # Semantic Search (RAG)
 
-Semantic search allows visitors to find relevant pages based on the **meaning of the query**, not just keyword matching. It uses the vector database [pgvector](https://github.com/pgvector/pgvector) and embedding vectors generated through providers supported by the `webjet-ai` library.
+Semantic search allows visitors to find relevant pages based on the **meaning of the query**, not just keyword matching. It stores embedding vectors in PostgreSQL with [pgvector](https://github.com/pgvector/pgvector) or in the built-in [MariaDB Vector](https://mariadb.com/docs/server/reference/sql-structure/vectors/vector-overview) storage. The vectors are generated through providers supported by the `webjet-ai` library.
 
 Above the same index, it is also possible to use:
 
@@ -21,7 +21,7 @@ Indexing process:
 2. **Dividing into parts** - the text is split using [SlidingWindowChunker](../../../../../src/main/java/sk/iway/iwcm/rag/indexing/SlidingWindowChunker.java). The configuration variables `ragEmbeddingChunkSize` and `ragEmbeddingChunkOverlap` are used.
 3. **Reuse of embeddings** - a hash is calculated for each chunk. If the chunk text has not changed and an embedding with the same provider, model, and correct dimension exists, the existing vector is used.
 4. **Generating embeddings** - new or changed chunks are processed by [EmbeddingService](../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) according to the provider and model set in the indexing assistant `RAG-EMB-INDEX`.
-5. **Saving to database** - chunk metadata is stored via the JPA repository [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkRepository.java), the `vector(N)` column itself is updated with native SQL via [PgVectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/PgVectorStore.java).
+5. **Saving to database** - chunk metadata is stored via the JPA repository [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkRepository.java). The selected implementation of [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java) stores the vectors with database-specific native SQL.
 
 Chunking prefers natural text boundaries: paragraph, line, sentence, space, and then hard splitting by limit. For decimal numbers, a period is not considered the end of a sentence.
 
@@ -41,7 +41,7 @@ When a visitor enters a search query:
 
 The core embedding logic has been separated from WebJET CMS into a separate, framework-independent library [webjet-ai](https://github.com/webjetcms/webjet-ai). The library contains provider-independent types `EmbeddingRequest`, `EmbeddingOptions`, `EmbeddingResponse` and `EmbeddingVector`, calls `AiClient.embed` and implementations for communicating with individual providers. The original CMS interface `EmbeddingProvider` and implementation `OpenAiEmbeddingProvider` have been removed.
 
-The CMS left a thin adapter [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java), which will convert the system AI assistant and domain settings to the library request, pass the provider configuration, and check the number and dimension of the returned vectors. Content extraction, chunking, vector reuse by hash value, token recording, queue processing, and storage in `pgvector` remain in the management of WebJET CMS.
+The CMS left a thin adapter [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java), which will convert the system AI assistant and domain settings to the library request, pass the provider configuration, and check the number and dimension of the returned vectors. Content extraction, chunking, vector reuse by hash value, token recording, queue processing, and vector storage remain in the management of WebJET CMS.
 
 Therefore, when adding a new server provider, embedding communication is not implemented in the RAG module of the CMS. The provider must support the `AiProvider.embed` method in the `webjet-ai` library and be registered in the CMS according to the procedure in the [Adding a provider] section (../../ai/assistants/README.md).
 
@@ -53,13 +53,19 @@ Therefore, when adding a new server provider, embedding communication is not imp
 
 ### PostgreSQL as primary database
 
-If WebJET CMS runs directly on PostgreSQL, the vector database will be used automatically without further configuration.
+The PostgreSQL development profile defines a separate `rag_jpa` datasource pointing to the same database as the primary `iwcm` datasource.
 
-The datasource must be set as in [poolman-docker-pgsql.xml](../../../../../src/main/resources/poolman-docker-pgsql.xml). If you are using multiple schemas, the JDBC parameter `currentSchema` must contain both the schema with RAG tables and the schema with WebJET CMS features, for example `currentSchema=public,webjet_cms`.
+The `rag_jpa` datasource must be set as in [poolman-docker-pgsql.xml](../../../../../../src/main/resources/poolman-docker-pgsql.xml). If you are using multiple schemas, the JDBC parameter `currentSchema` must contain both the schema with RAG tables and the schema with WebJET CMS features, for example `currentSchema=public,webjet_cms`.
 
-### Standalone vector database
+### MariaDB as primary database
 
-If the primary database is not PostgreSQL, create a Docker container with pgvector.
+MariaDB 11.8 or later uses the built-in `VECTOR` type without an extension. Like the PostgreSQL profile, [poolman-docker-mariadb.xml](../../../../../../src/main/resources/poolman-docker-mariadb.xml) defines a separate `rag_jpa` datasource pointing to the same database as `iwcm`. Keep this second connection in both profiles so its driver, URL, and credentials can be changed independently to use another MariaDB or PostgreSQL vector database.
+
+MariaDB supports `cosine` and `l2` distance metrics. The `inner_product` metric is only supported by PostgreSQL/pgvector; selecting it on MariaDB disables vector storage without changing the existing index or data.
+
+### Separate vector database
+
+If the primary database is unsupported, configure a separate supported PostgreSQL or MariaDB database as datasource `rag_jpa`. The explicitly configured datasource is also useful when vector storage should be separated from an otherwise supported primary database.
 
 For local development, the file [.devcontainer/db/docker-compose-rag-pgsql.yml](../../../../../../.devcontainer/db/docker-compose-rag-pgsql.yml) is prepared:
 
@@ -69,7 +75,6 @@ docker compose -f .devcontainer/db/docker-compose-rag-pgsql.yml up -d
 
 Examples of datasource configurations:
 
-- [poolman-docker-mariadb.xml](../../../../../../src/main/resources/poolman-docker-mariadb.xml)
 - [poolman-docker-mssql.xml](../../../../../../src/main/resources/poolman-docker-mssql.xml)
 - [poolman-docker-oracle.xml](../../../../../../src/main/resources/poolman-docker-oracle.xml)
 
@@ -81,7 +86,7 @@ Activation and settings are done in [Configuration](../../../../admin/setup/conf
 
 | Variable | Default value | Description |
 | --- | --- | --- |
-| `ragSemanticSearchEnabled` | `false` | Enables semantic search over the pgvector vector database. |
+| `ragSemanticSearchEnabled` | `false` | Enables semantic search over PostgreSQL/pgvector or MariaDB Vector storage. |
 | `searchType` | `db` | Global search type: `db`, `lucene`, `semantic`, `hybrid`. |
 | `luceneAsDefaultSearch` | `false` | If `true`, Lucene has higher priority than `searchType`. |
 
@@ -113,7 +118,9 @@ Queue `rag_index_queue` only stores the entity type, ID, and action. The provide
 
 !>**Note:** The older names `ragChunkSize` and `ragChunkOverlap` are no longer used.
 
-!>**Warning:** Changing `ragEmbeddingDimensions` will delete all data from `rag_embedding_chunks` for all providers and models, change the column type `embedding` to the new `vector(N)`, and recreate the HNSW index. Then run a full content index. Changing the model itself will not delete the other combinations, but you must index the new combination.
+!>**Warning:** Changing `ragEmbeddingDimensions` will delete all data from `rag_embedding_chunks` for all providers and models, change the vector type for the selected database, and recreate the HNSW index. Then run a full content index. Changing the model itself will not delete the other combinations, but you must index the new combination. Switching the vector datasource or database type does not migrate existing vectors; run a full index after the switch.
+
+!>**Shared dimension:** All domains share one vector schema and must use the same global `ragEmbeddingDimensions` value. A conflicting domain override disables semantic search and indexing for that domain; the **Semantic index** screen displays an error. Automatic MariaDB initialization preserves existing data when dimensions do not match. To change the shared dimension, save the global setting in **Configuration** — this deletes embeddings for every domain — and then fully reindex all domains.
 
 ### Local embedding model
 
@@ -131,8 +138,8 @@ The model package defines different prefixes for query and document. [EmbeddingS
 
 | Variable | Default value | Description |
 | --- | --- | --- |
-| `ragSearchEfSearch` | `40` | The `HNSW` parameter of the `ef_search` index. A higher value improves recall, but may slow down the search. |
-| `ragSearchDistanceMetric` | `cosine` | Distance metrics: `cosine`, `inner_product`, `l2`. Change requires reindex of `HNSW` index. |
+| `ragSearchEfSearch` | `40` | The HNSW `ef_search` parameter. A higher value improves recall, but may slow down the search. MariaDB accepts values from `1` to `10000`; an invalid value leaves its database default unchanged. |
+| `ragSearchDistanceMetric` | `cosine` | Distance metrics: `cosine`, `inner_product`, `l2`. MariaDB supports only `cosine` and `l2`; `inner_product` is PostgreSQL-only. A change recreates the vector index. |
 | `ragSemanticSearchMinSimilarity` | `0.2` | Minimum similarity value for results. Used in conjunction with the adaptive threshold based on the best result. |
 | `ragSemanticSearchMinResults` | `3` | The minimum number of results that will be returned even with a stricter similarity threshold. |
 
@@ -151,7 +158,7 @@ Hybrid search combines vector results and full-text results above `rag_embedding
 | `ragHybridFtsWeight` | `0.3` | Full-text order weight in RRF merge. |
 | `ragHybridRrfK` | `60` | The `k` parameter for Reciprocal Rank Fusion. |
 | `ragHybridChunkFetchMultiplier` | `3` | Multiplier of the number of chunks loaded versus the requested number of results. |
-| `ragHybridFtsUseIlikeFallback` | `true` | If PostgreSQL FTS returns an empty result, it will use a fallback via `ILIKE`. |
+| `ragHybridFtsUseIlikeFallback` | `true` | If database fulltext returns an empty result, it uses a database-specific `ILIKE` or `LIKE` fallback. |
 
 In the local application settings, the value `searchType=semantic` means pure vector search without hybrid branch. The value `searchType=hybrid` will use hybrid if globally enabled.
 
@@ -283,7 +290,7 @@ The cron job is safe from concurrent execution. When running, a flag is set in t
 
 ## Database schema
 
-The system creates two tables:
+The system always creates `rag_index_queue` and `rag_embedding_chunks`. On MariaDB it also creates the companion table `rag_embedding_vectors`.
 
 ### `rag_index_queue`
 
@@ -291,20 +298,24 @@ Queue for asynchronous indexing. Implemented by class [IndexQueueEntity](../../.
 
 ### `rag_embedding_chunks`
 
-Stored embedding vectors and chunk metadata. Implemented by class [EmbeddingChunkEntity](../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkEntity.java).
+Stored chunk metadata and, on PostgreSQL, embedding vectors. Implemented by class [EmbeddingChunkEntity](../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkEntity.java).
 
 Important columns:
 
 - `entity_type`, `entity_id`, `chunk_index` - identification of the source entity and chunk order.
 - `chunk_text` - ​​text used for embedding and fulltext.
 - `content_hash` - ​​hash of chunk text for embedding reuse.
-- `embedding` - ​​native pgvector type `vector(N)`.
+- `embedding` - PostgreSQL-only pgvector column of type `vector(N)`.
 - `embedding_provider`, `embedding_model`, `dimensions` - provider, model and embedding dimension.
 - `language`, `domain_id` - language and domain.
 - `group_id`, `root_group_l1`, `root_group_l2`, `root_group_l3` - optimized document filtering by folders.
 - `status`, `error_message` - processing status.
 
-!>**Warning:** Column `embedding` is not mapped via JPA. All vector operations are performed via native SQL queries in the [PgVectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/PgVectorStore.java) class.
+### `rag_embedding_vectors`
+
+MariaDB-only companion table containing a required `embedding VECTOR(N) NOT NULL` value for each successfully indexed chunk. Its `chunk_id` is a primary and foreign key to `rag_embedding_chunks.id` with cascading deletion. This separation allows failed metadata rows to remain without a vector while satisfying the MariaDB vector-index requirement.
+
+!>**Warning:** Vector columns are not mapped via JPA. All vector operations are performed through database-specific native SQL implementations of [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java).
 
 The schema migration will add the missing columns `group_id`, `root_group_l1..3`, and `embedding_provider`. The folder values ​​will be backfilled for existing valid website records. An empty `embedding_provider` will be set to the current value `ragEmbeddingProvider`, and the chunk uniqueness will be extended to include the provider and model combination. Since the older record did not contain a provider, the added value may not correspond to the provider that actually created the vector. Therefore, run a full index after the update; this will also restore records that could not be back-mapped to the page.
 
@@ -330,7 +341,7 @@ The default model `text-embedding-3-small` is multilingual and handles Slovak/Cz
 | OpenAI `text-embedding-3-large` abbreviated | `text-embedding-3-large` | `1024` or `1536` | High | Thanks to MRL, the vector can be shortened without significant loss of quality. |
 | Local `intfloat/multilingual-e5-base` | `intfloat/multilingual-e5-base` | `768` | Good | Runs locally without sending content to an external service; requires an approved model package. |
 
-!>**Warning:** All vectors in table `rag_embedding_chunks` must have a dimension that matches the definition of column `embedding`. Different providers and models can coexist, but must generate the configured number of dimensions. Changing the dimension will remove all existing vectors and requires a full indexing of the content.
+!>**Warning:** All vectors in the selected vector store must use the configured dimension. Different providers and models can coexist, but must generate the same number of dimensions. Changing the dimension removes all existing vectors and requires a full content index.
 
 ### What is Matryoshka (MRL)
 

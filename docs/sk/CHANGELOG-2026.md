@@ -88,6 +88,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Sémantické vyhľadávanie
 
+- Nedostupná samostatná RAG databáza už neblokuje štart CMS. RAG perzistencia sa inicializuje až pri prvom použití a po neúspešnom pripojení umožňuje ďalší pokus bez reštartu CMS (#58774).
+
 - Pridaná podpora [sémantického vyhľadávania](redactor/apps/semantic-search/README.md) postaveného na technológii vektorovej databázy `pgvector` a `OpenAI embeddings`. Umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov (#211).
 - Doplnený hybridný režim sémantického vyhľadávania a voliteľná RAG odpoveď z indexovaného obsahu. Aplikácia **Vyhľadávanie** má nové nastavenia pre typ vyhľadávania, hybridné správanie, výber AI asistenta a limity kontextu odpovede (#58521).
 

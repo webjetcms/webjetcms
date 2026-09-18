@@ -8,6 +8,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.structuremirroring.SaveListener;
 import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
+import sk.iway.iwcm.rag.vectorstore.VectorStore;
 import sk.iway.iwcm.system.ConfDetails;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
@@ -16,11 +17,21 @@ import sk.iway.iwcm.system.spring.events.WebjetEventType;
 @Component
 public class DimensionChangeListener {
 
-    private final PgVectorStore vectorStore;
+    private final VectorStore vectorStore;
 
     @Autowired
-    public DimensionChangeListener(PgVectorStore vectorStore) {
+    public DimensionChangeListener(VectorStore vectorStore) {
         this.vectorStore = vectorStore;
+    }
+
+    /**
+     * Compatibility constructor for extensions compiled against the PostgreSQL-only API.
+     *
+     * @param vectorStore PostgreSQL vector store
+     */
+    @Deprecated(forRemoval = false)
+    public DimensionChangeListener(PgVectorStore vectorStore) {
+        this((VectorStore) vectorStore);
     }
 
     @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.system.ConfDetails'")
@@ -42,10 +53,10 @@ public class DimensionChangeListener {
             } else if ("ragSearchDistanceMetric".equals(conf.getName())) {
                 Logger.debug(DimensionChangeListener.class, "conf name=" + conf.getName() + " value=" + conf.getValue());
 
-                if (vectorStore.recreateHnswIndex()) {
-                    Logger.info(DimensionChangeListener.class, "HNSW index recreated successfully after distance metric change.");
+                if (vectorStore.recreateIndex()) {
+                    Logger.info(DimensionChangeListener.class, "Vector index recreated successfully after distance metric change.");
                 } else {
-                    Logger.error(DimensionChangeListener.class, "Failed to recreate HNSW index after distance metric change.");
+                    Logger.error(DimensionChangeListener.class, "Failed to recreate vector index after distance metric change.");
                 }
             }
         } catch (Exception ex) {

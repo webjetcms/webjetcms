@@ -1,6 +1,6 @@
 # Sémantické vyhľadávanie (RAG)
 
-Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov. Využíva vektorovú databázu [pgvector](https://github.com/pgvector/pgvector) a vektory generované prostredníctvom nastaveného AI poskytovateľa.
+Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov. Vektory ukladá do PostgreSQL s [pgvector](https://github.com/pgvector/pgvector) alebo do vstavaného vektorového úložiska MariaDB 11.8 a novšej. Vektory generuje nastavený AI poskytovateľ.
 
 Voliteľne môže nad rovnakým indexom zobraziť aj **RAG odpoveď** - krátku odpoveď vygenerovanú AI iba z nájdeného obsahu webu. Odpoveď sa zobrazí nad klasickým zoznamom výsledkov vyhľadávania.
 
@@ -24,6 +24,8 @@ Na spustenie sémantického vyhľadávania je potrebné:
 - Nakonfigurovať zvoleného poskytovateľa: pre externú službu nastaviť API kľúč rovnakým spôsobom ako pre AI asistentov alebo nakonfigurovať [lokálny embeddingový model](../../ai/settings/README.md#lokálne-modely), ktorý nevyžaduje API kľúč ani odosielanie obsahu externej AI službe.
 - Spustiť indexovanie cez administrátorské rozhranie na vytvorenie vektorov a naplnenie vektorovej databázy.
 - Nastaviť automatizovanú úlohu `sk.iway.iwcm.rag.service.RagIndexCronTask`, ktorá spracúva frontu indexovania.
+
+Vektorová databáza sa zvolí automaticky. Ak je nastavený samostatný datasource `rag_jpa`, má prednosť; inak sa použije primárny datasource `iwcm`. MariaDB nepotrebuje rozšírenie, podporuje však iba metriky vzdialenosti `cosine` a `l2`. Databázové požiadavky sú uvedené v [technickej dokumentácii](../../../custom-apps/apps/rag/semantic-search/README.md).
 
 !>**Upozornenie:** Po nasadení zmien odporúčame spustiť opätovné indexovanie stránok. Index teraz ukladá aj informácie o priečinku stránky (`group_id`, `root_group_l1`, `root_group_l2`, `root_group_l3`), ktoré sa používajú pri filtrovaní výsledkov podľa priečinkov zvolených v aplikácii **Vyhľadávanie**.
 
@@ -62,7 +64,7 @@ Umožňuje nastaviť, kedy sa má k vektorovému vyhľadávaniu pridať fulltext
 - **Prahová podobnosť pre fallback** - hranica pre režim `fallback_on_low_vector`.
 - **Váhy vektorovej a fulltextovej vetvy** - určujú výsledné poradie pri kombinovaní cez RRF.
 - **Koeficient načítania blokov** - koľko textových častí sa načíta pred agregáciou na dokumenty.
-- **Použiť `ILIKE` fallback pre fulltext** - použije jednoduché textové hľadanie, ak PostgreSQL fulltext nič nenájde.
+- **Použiť `ILIKE` fallback pre fulltext** - použije `ILIKE` v PostgreSQL alebo `LIKE` bez rozlišovania veľkosti písmen v MariaDB, ak databázový fulltext nič nenájde.
 
 ### Karta RAG nastavenia
 

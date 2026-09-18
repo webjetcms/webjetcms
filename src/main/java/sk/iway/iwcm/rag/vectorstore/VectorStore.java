@@ -7,9 +7,8 @@ import sk.iway.iwcm.rag.service.RagEntityType;
 
 /**
  * Abstraction for vector storage and similarity search.
- * Handles ONLY the embedding (vector) column via native SQL.
+ * Handles ONLY native vector storage and search operations.
  * Entity CRUD operations are handled by EmbeddingChunkRepository (JPA).
- * Primary implementation uses PgVector (PostgreSQL + pgvector extension).
  */
 public interface VectorStore {
 
@@ -69,10 +68,18 @@ public interface VectorStore {
      */
     boolean isAvailableAndInitialized();
 
-    /**
-     * Initialize the pgvector extension and create the table if needed.
-     */
+    /** Initialize the database-specific vector schema if needed. */
     boolean initializeSchema();
+
+    /**
+     * Recreate the database-specific vector index using the configured metric.
+     * Implementations without a native index-management capability may keep the default.
+     *
+     * @return true when the index was recreated successfully
+     */
+    default boolean recreateIndex() {
+        return false;
+    }
 
     /**
      * Delete all stored embeddings and resize the vector column.

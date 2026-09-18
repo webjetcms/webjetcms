@@ -2,10 +2,13 @@ package sk.iway.iwcm.rag.pgvector;
 
 import java.util.Properties;
 
+import jakarta.persistence.EntityManagerFactory;
+
 import org.eclipse.persistence.config.PersistenceUnitProperties;
 import org.eclipse.persistence.config.TargetDatabase;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
@@ -13,19 +16,21 @@ import org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
-import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.rag.vectorstore.VectorStoreBackend;
+import sk.iway.iwcm.rag.vectorstore.VectorStoreDataSourceResolver;
+import sk.iway.iwcm.rag.vectorstore.VectorStoreDataSourceResolver.Resolution;
 import sk.iway.iwcm.system.jpa.WebJETJavaSECMPInitializer;
 import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 
 /**
- * JPA configuration for RAG pgvector entities.
- * Uses either the primary DB (if it's PostgreSQL) or a secondary 'rag_jpa' datasource.
- * If no pgvector-capable DB is available, this config is effectively unused.
+ * JPA configuration for RAG entities.
+ * Uses an explicitly configured {@code rag_jpa} datasource or the primary datasource.
+ * The vector backend and JPA dialect are detected from JDBC metadata.
+ * Registered only by {@link PgvectorSpringConfig} in its isolated persistence context;
+ * deliberately has no component stereotype to avoid discovery by the main application.
  */
-@Configuration("rag:JpaDBConfig")
 @EnableTransactionManagement
 @EnableJpaRepositories(
     entityManagerFactoryRef = "ragEntityManager",
@@ -34,31 +39,33 @@ import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 )
 public class PgvectorJpaConfig {
 
-    private static final String RAG_DATASOURCE_NAME = "rag_jpa";
-
     /**
      * Create the JPA transaction manager for RAG entities.
      */
     @Bean("ragTransactionManager")
-    public PlatformTransactionManager transactionManager() {
+    public PlatformTransactionManager transactionManager(
+        @Qualifier("ragEntityManager") EntityManagerFactory entityManagerFactory
+    ) {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
+        transactionManager.setEntityManagerFactory(entityManagerFactory);
         return transactionManager;
     }
 
     /**
      * Create the JPA EntityManagerFactory for RAG entities.
-     * Uses the RAG datasource if available, otherwise falls back to the default 'iwcm' datasource.
+     * Uses the RAG datasource selected by {@link VectorStoreDataSourceResolver}.
      */
     @Bean("ragEntityManager")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         Logger.println(PgvectorJpaConfig.class, "loading RAG RagJpaConfig");
 
-        String dsName = getRagDataSourceName();
-        if (Tools.isEmpty(dsName)) {
-            Logger.println(PgvectorJpaConfig.class, "RAG datasource not available, using iwcm as fallback");
-            dsName = "iwcm";
+        Resolution resolution = VectorStoreDataSourceResolver.resolve();
+        if (resolution.isSupported() == false) {
+            throw new DataAccessResourceFailureException("RAG vector store is unavailable: " + resolution.reason());
         }
+        String dsName = resolution.dataSourceName();
+        Logger.println(PgvectorJpaConfig.class,
+            "Using RAG datasource " + dsName + " with backend " + resolution.backend());
 
         LocalContainerEntityManagerFactoryBean emf = new LocalContainerEntityManagerFactoryBean();
         emf.setPersistenceProvider(new WebJETPersistenceProvider());
@@ -69,7 +76,7 @@ public class PgvectorJpaConfig {
 
         Properties properties = new Properties();
         properties.setProperty("eclipselink.weaving", "false");
-        properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.PostgreSQL);
+        properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, getTargetDatabase(resolution));
         WebJETJavaSECMPInitializer.setDefaultProperties(properties);
         emf.setJpaProperties(properties);
 
@@ -77,25 +84,34 @@ public class PgvectorJpaConfig {
     }
 
     /**
-     * Returns the datasource name for RAG pgvector operations.
-        * If a secondary 'rag_jpa' datasource exists, use it.
-        * Otherwise, if primary DB is PostgreSQL, use 'iwcm', because it can run pgvector extension.
-     * Otherwise return null (RAG not available).
+     * Returns the datasource name for supported RAG vector operations.
+     *
+     * @return datasource name, or {@code null} when the selected datasource is unsupported
      */
     public static String getRagDataSourceName() {
-        if (DBPool.getInstance().getDataSource(RAG_DATASOURCE_NAME) != null) {
-            return RAG_DATASOURCE_NAME;
-        }
-        if (Constants.DB_TYPE == Constants.DB_PGSQL) {
-            return "iwcm";
-        }
-        return null;
+        return VectorStoreDataSourceResolver.getRagDataSourceName();
     }
 
     /**
-     * Check if RAG vector store is available (pgvector-capable DB configured).
+     * Check if a supported and enabled RAG vector store is available.
      */
     public static boolean isRagAvailable() {
-        return getRagDataSourceName() != null && Constants.getBoolean("ragSemanticSearchEnabled");
+        return VectorStoreDataSourceResolver.isRagAvailable();
+    }
+
+    private static String getTargetDatabase(Resolution resolution) {
+        if (resolution.backend() == VectorStoreBackend.POSTGRESQL) return TargetDatabase.PostgreSQL;
+        if (resolution.backend() == VectorStoreBackend.MARIADB) return TargetDatabase.MySQL;
+
+        String productName = resolution.databaseProductName();
+        if (productName != null) {
+            String normalized = productName.toLowerCase(java.util.Locale.ROOT);
+            if (normalized.contains("postgresql")) return TargetDatabase.PostgreSQL;
+            if (normalized.contains("mysql") || normalized.contains("mariadb")) return TargetDatabase.MySQL;
+            if (normalized.contains("oracle")) return TargetDatabase.Oracle;
+            if (normalized.contains("microsoft") || normalized.contains("sql server")) return TargetDatabase.SQLServer;
+        }
+
+        return TargetDatabase.Auto;
     }
 }
