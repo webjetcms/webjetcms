@@ -923,6 +923,13 @@ public class MultistepFormsService {
 
         /* validate required / captcha / XSS (for names and values) */
         List<FormItemEntity> stepItems = getStepItemsForValidation(stepId);
+        // Omitted current-step fields are empty, clear values from a previous submission.
+        for (FormItemEntity stepItem : stepItems) {
+            String fieldId = stepItem.getItemFormId();
+            if (received.has(fieldId) == false) {
+                received.put(fieldId, "");
+            }
+        }
         validateFields(formName, stepItems, received, spamProtectionEnabled, request, errors);
 
         /* Separate validate file fields */
