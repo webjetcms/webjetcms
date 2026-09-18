@@ -26,9 +26,9 @@ ant update-version
 ant -Dcompress=true createUpdateZip
 ant -Dcompress=true createUpdateZipJar
 ant rsyncToLicenseServer
-ant deployGithub
+ant -Dcompress=true deployGithub
 
-#MavenCentral: just run ant deployMavenCentral
+#MavenCentral: just run ant -Dcompress=true deployMavenCentral
 #then deploy it manually on https://central.sonatype.com/publishing/deployments
 
 cd ..

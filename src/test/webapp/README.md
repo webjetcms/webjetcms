@@ -23,3 +23,42 @@ npx codeceptjs run --steps -p pauseOnFail --grep "@current"
 #spustenie screenshotera pre manual
 npx codeceptjs run --override '{ "tests": "./screenshots/generator/**/*.js"}' --steps
 ```
+
+## Optimize AppStore screenshots
+
+After generating screenshots for all required languages, run the standalone optimizer from this directory:
+
+```sh
+npm run scr:optimize -- --dry-run
+npm run scr:optimize
+npm run scr:optimize -- --quality 85
+```
+
+The script recursively scans `src/main/webapp/components` and `src/main/webapp/apps` for
+`screenshot*.jpg` and `screenshot*.jpeg` (case-insensitive). Paths are resolved relative to
+the script, so it can also be called directly from another working directory.
+
+CodeceptJS screenshot helpers can write PNG content even when the filename ends in `.jpg`.
+The optimizer detects the PNG signature and converts only these mismatched files to real JPEG.
+It keeps their filenames and dimensions, using quality 90, 4:4:4 chroma and mozjpeg by default.
+`--quality` accepts an integer from 1 to 100. PNG metadata is not copied to the JPEG output.
+
+Existing JPEG files, actual `.png` files and other names/formats are left unchanged.
+Animated PNGs, images with transparent pixels and conversions that would not reduce the file
+size are skipped. An opaque alpha channel does not prevent conversion. The original file is
+replaced via a temporary file only after encoding succeeds; conversion errors leave it intact.
+
+`--dry-run` performs the encoding and reports the expected savings without writing anything.
+The output lists converted/skipped files, errors and total savings in decimal MB. A run with
+errors returns a nonzero exit code after processing the remaining files. Repeated runs do not
+recompress JPEGs. To try another quality on an already converted image, first regenerate it
+or restore its original PNG content. Run optimization after screenshot generation has finished.
+
+The optimizer is independent of screenshot generation and the Ant build. It requires the
+project Node version and the development dependencies installed with npm.
+
+Run its local tests without starting WebJET or a browser:
+
+```sh
+node --test screenshots/optimize.test.js
+```
