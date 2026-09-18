@@ -44,7 +44,8 @@ import sk.iway.iwcm.rag.jpa.IndexQueueEntity;
 import sk.iway.iwcm.rag.jpa.IndexQueueRepository;
 import sk.iway.iwcm.rag.pgvector.EmbeddingChunkEntity;
 import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
-import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
+import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
+import sk.iway.iwcm.rag.vectorstore.VectorStore;
 
 class SemanticIndexServiceTest {
 
@@ -269,6 +270,7 @@ class SemanticIndexServiceTest {
         assertEquals(2, storedChunks.get(0).getDomainId());
         assertEquals("provider-2", storedChunks.get(0).getEmbeddingProvider());
         assertEquals("model-2", storedChunks.get(0).getEmbeddingModel());
+        assertEquals(EmbeddingChunkStatus.PENDING, storedChunks.get(0).getStatus());
 
         @SuppressWarnings({"rawtypes", "unchecked"})
         ArgumentCaptor<List<float[]>> embeddingsCaptor = ArgumentCaptor.forClass((Class) List.class);
@@ -291,7 +293,7 @@ class SemanticIndexServiceTest {
         private final DocDetailsContentExtractor contentExtractor = mock(DocDetailsContentExtractor.class);
         private final SlidingWindowChunker chunker = mock(SlidingWindowChunker.class);
         private final EmbeddingService embeddingService = mock(EmbeddingService.class);
-        private final PgVectorStore vectorStore = mock(PgVectorStore.class);
+        private final VectorStore vectorStore = mock(VectorStore.class);
         private final IndexQueueRepository queueRepository = mock(IndexQueueRepository.class);
         private final RagEmbeddingStatService ragEmbeddingStatService = mock(RagEmbeddingStatService.class);
         private final EmbeddingChunkRepository embeddingChunkRepository = mock(EmbeddingChunkRepository.class);

@@ -122,7 +122,7 @@ public class EmbeddingService {
         }
     }
 
-    /** Returns the dimension required by the configured pgvector column. */
+    /** Returns the dimension required by the configured vector store. */
     public int getDimensions() {
         return Constants.getInt("ragEmbeddingDimensions");
     }

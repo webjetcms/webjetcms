@@ -32,7 +32,7 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 /**
  * Service for semantic search over document embeddings.
- * Embeds the query, searches pgvector, and returns results aggregated by document.
+ * Embeds the query, searches the configured vector store, and returns results aggregated by document.
  */
 @Service
 public class SemanticSearchService {

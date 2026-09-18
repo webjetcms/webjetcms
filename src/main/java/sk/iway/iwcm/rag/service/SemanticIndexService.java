@@ -35,6 +35,7 @@ import sk.iway.iwcm.rag.pgvector.EmbeddingChunkEntity;
 import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
 import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
+import sk.iway.iwcm.rag.vectorstore.VectorStore;
 import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
 /**
@@ -47,7 +48,7 @@ public class SemanticIndexService {
     private final DocDetailsContentExtractor contentExtractor;
     private final SlidingWindowChunker chunker;
     private final EmbeddingService embeddingService;
-    private final PgVectorStore vectorStore;
+    private final VectorStore vectorStore;
     private final RagEmbeddingStatService ragEmbeddingStatService;
     private final EmbeddingChunkRepository embeddingChunkRepository;
 
@@ -59,7 +60,7 @@ public class SemanticIndexService {
     public SemanticIndexService(DocDetailsContentExtractor contentExtractor,
                                 SlidingWindowChunker chunker,
                                 EmbeddingService embeddingService,
-                                PgVectorStore vectorStore,
+                                VectorStore vectorStore,
                                 IndexQueueRepository queueRepository,
                                 RagEmbeddingStatService ragEmbeddingStatService,
                                 EmbeddingChunkRepository embeddingChunkRepository) {
@@ -71,6 +72,21 @@ public class SemanticIndexService {
         this.queueRepository = queueRepository;
         this.ragEmbeddingStatService = ragEmbeddingStatService;
         this.embeddingChunkRepository = embeddingChunkRepository;
+    }
+
+    /**
+     * Compatibility constructor for extensions compiled against the PostgreSQL-only API.
+     */
+    @Deprecated(forRemoval = false)
+    public SemanticIndexService(DocDetailsContentExtractor contentExtractor,
+                                SlidingWindowChunker chunker,
+                                EmbeddingService embeddingService,
+                                PgVectorStore vectorStore,
+                                IndexQueueRepository queueRepository,
+                                RagEmbeddingStatService ragEmbeddingStatService,
+                                EmbeddingChunkRepository embeddingChunkRepository) {
+        this(contentExtractor, chunker, embeddingService, (VectorStore) vectorStore, queueRepository,
+            ragEmbeddingStatService, embeddingChunkRepository);
     }
 
     /**
@@ -339,7 +355,7 @@ public class SemanticIndexService {
                 chunk.setLanguage(language);
                 chunk.setDomainId(domainId);
                 chunk.setGroupId(doc.getGroupId());
-                chunk.setStatus(EmbeddingChunkStatus.COMPLETED);
+                chunk.setStatus(EmbeddingChunkStatus.PENDING);
                 chunk.setCreateDate(now);
 
                 //Set root groups

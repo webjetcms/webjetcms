@@ -71,7 +71,9 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
 import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
-import sk.iway.iwcm.rag.pgvector.PgvectorJpaConfig;
+import sk.iway.iwcm.rag.vectorstore.VectorStoreBackend;
+import sk.iway.iwcm.rag.vectorstore.VectorStoreDataSourceResolver;
+import sk.iway.iwcm.rag.vectorstore.VectorStoreDataSourceResolver.Resolution;
 import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.stripes.SyncDirAction;
 import sk.iway.iwcm.sync.WarningListener;
@@ -2866,8 +2868,9 @@ public class UpdateDatabase
 		String note = "25.06.2026 [sivan] pridanie stlpcov root_group_l1, root_group_l2, root_group_l3, group_id do tabulky rag_embedding_chunks a ich vyplnennie.";
 		if (isAllreadyUpdated(note)) return;
 
-		String databaseName = PgvectorJpaConfig.getRagDataSourceName();
-		if (Tools.isEmpty(databaseName)) return;
+		Resolution resolution = VectorStoreDataSourceResolver.resolve();
+		if (resolution.isSupported() == false) return;
+		String databaseName = resolution.dataSourceName();
 
 		String tableName = "rag_embedding_chunks";
 		String[] requiredColumns = {"root_group_l1", "root_group_l2", "root_group_l3", "group_id"};
@@ -2928,8 +2931,9 @@ public class UpdateDatabase
 		String note = "24.08.2026 [sivan] add embedding_provider column to rag_embedding_chunks.";
 		if (isAllreadyUpdated(note)) return;
 
-		String databaseName = PgvectorJpaConfig.getRagDataSourceName();
-		if (Tools.isEmpty(databaseName)) return;
+		Resolution resolution = VectorStoreDataSourceResolver.resolve();
+		if (resolution.isSupported() == false) return;
+		String databaseName = resolution.dataSourceName();
 
 		String tableName = "rag_embedding_chunks";
 		String defaultProvider = Constants.getString("ragEmbeddingProvider");
@@ -2953,9 +2957,22 @@ public class UpdateDatabase
 			}
 
 			try (Statement statement = connection.createStatement()) {
-				statement.execute("ALTER TABLE " + tableName + " ALTER COLUMN embedding_provider SET NOT NULL");
-				statement.execute("ALTER TABLE " + tableName + " DROP CONSTRAINT IF EXISTS uq_rag_chunk");
-				statement.execute("ALTER TABLE " + tableName + " ADD CONSTRAINT uq_rag_chunk UNIQUE (entity_type, entity_id, chunk_index, embedding_provider, embedding_model)");
+				if (resolution.backend() == VectorStoreBackend.MARIADB) {
+					statement.execute("ALTER TABLE " + tableName + " MODIFY COLUMN embedding_provider VARCHAR(100) NOT NULL");
+					MariaIndexDefinition uniqueIndex = getMariaIndexDefinition(connection, tableName, "uq_rag_chunk");
+					List<String> expectedColumns = List.of(
+						"entity_type", "entity_id", "chunk_index", "embedding_provider", "embedding_model"
+					);
+					if (uniqueIndex.unique() == false || expectedColumns.equals(uniqueIndex.columns()) == false) {
+						statement.execute("ALTER TABLE " + tableName + " DROP INDEX IF EXISTS uq_rag_chunk, " +
+							"ADD CONSTRAINT uq_rag_chunk UNIQUE " +
+							"(entity_type, entity_id, chunk_index, embedding_provider, embedding_model)");
+					}
+				} else {
+					statement.execute("ALTER TABLE " + tableName + " ALTER COLUMN embedding_provider SET NOT NULL");
+					statement.execute("ALTER TABLE " + tableName + " DROP CONSTRAINT IF EXISTS uq_rag_chunk");
+					statement.execute("ALTER TABLE " + tableName + " ADD CONSTRAINT uq_rag_chunk UNIQUE (entity_type, entity_id, chunk_index, embedding_provider, embedding_model)");
+				}
 			}
 		} catch (Exception e) {
 			Logger.error(UpdateDatabase.class, "Error adding RAG embedding provider column: " + e.getMessage());
@@ -2963,5 +2980,37 @@ public class UpdateDatabase
 		}
 
 		saveSuccessUpdate(note);
+	}
+
+	private static MariaIndexDefinition getMariaIndexDefinition(
+		Connection connection,
+		String tableName,
+		String indexName
+	) throws SQLException {
+		boolean exists = false;
+		boolean unique = true;
+		List<String> columns = new ArrayList<>();
+		try (PreparedStatement statement = connection.prepareStatement("""
+			SELECT non_unique, column_name
+			FROM information_schema.statistics
+			WHERE table_schema = DATABASE()
+			  AND table_name = ?
+			  AND index_name = ?
+			ORDER BY seq_in_index
+			""")) {
+			statement.setString(1, tableName);
+			statement.setString(2, indexName);
+			try (ResultSet resultSet = statement.executeQuery()) {
+				while (resultSet.next()) {
+					exists = true;
+					unique &= resultSet.getInt("non_unique") == 0;
+					columns.add(resultSet.getString("column_name"));
+				}
+			}
+		}
+		return new MariaIndexDefinition(exists && unique, columns);
+	}
+
+	private record MariaIndexDefinition(boolean unique, List<String> columns) {
 	}
 }

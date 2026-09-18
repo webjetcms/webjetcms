@@ -41,6 +41,7 @@ import sk.iway.iwcm.rag.service.IndexQueueService;
 import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
 import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
+import sk.iway.iwcm.rag.vectorstore.VectorStore;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -62,15 +63,24 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     private final IndexQueueService indexQueueService;
     private final RagEmbeddingStatService ragEmbeddingStatService;
 
-    private final PgVectorStore vectorStore;
+    private final VectorStore vectorStore;
 
     @Autowired
-    public EmbeddingChunkRestController(EmbeddingChunkRepository chunkRepository, IndexQueueService indexQueueService, PgVectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService) {
+    public EmbeddingChunkRestController(EmbeddingChunkRepository chunkRepository, IndexQueueService indexQueueService, VectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService) {
         super(chunkRepository);
         this.chunkRepository = chunkRepository;
         this.indexQueueService = indexQueueService;
         this.vectorStore = vectorStore;
         this.ragEmbeddingStatService = ragEmbeddingStatService;
+    }
+
+    /**
+     * Compatibility constructor for extensions compiled against the PostgreSQL-only API.
+     */
+    @Deprecated(forRemoval = false)
+    public EmbeddingChunkRestController(EmbeddingChunkRepository chunkRepository, IndexQueueService indexQueueService,
+                                        PgVectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService) {
+        this(chunkRepository, indexQueueService, (VectorStore) vectorStore, ragEmbeddingStatService);
     }
 
     @Override

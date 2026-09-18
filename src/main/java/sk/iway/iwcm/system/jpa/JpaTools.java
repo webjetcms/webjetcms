@@ -496,12 +496,15 @@ public class JpaTools
 	}
 
 	/**
-	 * Urci, ci dane meno datasource je urcene pre JPA, je to len iwcm, alebo nazov obsahujuci jpa (je to takto kvoli rychlosti startu WJ a optimalizacii pamate)
+	 * Urci, ci dane meno datasource je urcene pre legacy JPA bootstrap. Je to iwcm
+	 * alebo nazov obsahujuci jpa, okrem rag_jpa, ktory ma samostatnu Spring konfiguraciu.
 	 * @param name
 	 * @return
 	 */
 	public static boolean isJPADatasource(String name)
 	{
+		// RAG has a dedicated Spring EntityManager configuration.
+		if ("rag_jpa".equals(name)) return false;
 		if ("iwcm".equals(name) || name.indexOf("jpa")!=-1) return true;
 		return false;
 	}
