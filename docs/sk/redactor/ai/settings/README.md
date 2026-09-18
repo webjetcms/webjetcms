@@ -151,12 +151,12 @@ Dostupné sú tri samostatné typy poskytovateľov:
 - **Lokálny prekladový model** - používa model `facebook/m2m100_418M` na preklad čistého textu. Nepodporuje HTML kód, `INCLUDE` príkazy, štruktúrovaný vstup ani doplňujúci vstup používateľa.
 - **Lokálny embeddingový model** - používa model `intfloat/multilingual-e5-base` na [sémantické indexovanie a vyhľadávanie](../../apps/semantic-search/README.md). Model generuje vektory s `768` dimenziami.
 
-Modelové balíky vo formáte ZIP musia byť vopred pripravené a schválené pre WebJET CMS. Najskôr je potrebné vo vašom `build.gradle` súbore pridať závislosť a task na vytvorenie súborov:
+Modelové balíky vo formáte ZIP musia byť vopred pripravené a schválené pre WebJET CMS. Najskôr je potrebné vo vašom `build.gradle` súbore pridať závislosť a task na vytvorenie súborov (verziu `com.webjetcms:webjet-ai-local` nastavte zhodnú s verziou vo WebJET CMS):
 
 ```gradle
 dependencies {
 	....
-	implementation "com.webjetcms:webjet-ai-local:2.0.1"
+	implementation "com.webjetcms:webjet-ai-local:2.0.3"
 }
 
 def localAiModelsDirectory = file('src/main/webapp/WEB-INF/local-ai-models')
@@ -224,7 +224,7 @@ Nastavte ešte konfiguračné premenné:
 - `ragEmbeddingDimensions` na hodnotu 768
 - `ragSemanticSearchEnabled` na hodnotu true ak používate sémantické vyhľadávanie
 - `searchType` na hodnotu `semantic`
-- `ragAnswerAllowed` na hodnotu true ak máte aktivovaný aj `ai_localTextModelBundlePath`
+- `ragAnswerAllowed` na hodnotu true ak máte aktivovaný aj `ai_localTextModelBundlePath`. Upozorňujeme, že sa jedná o malý jazykový model, takže RAG odpovede oproti komerčným modelom nemusia byť vôbec zobrazené, alebo nie sú úplne správne / kompletné.
 
 Viac informácií nájdete v [dokumentácii k vyhľadávaniu](../../apps/search/README.md).
 

@@ -58,6 +58,9 @@ Vysvetlenie použitých piktogramov:
 - [x] +Administrácia - odstrániť závislosť od `Vue.js` a nahradiť interné komponenty natívnymi web komponentmi (#58722).
 - [ ] +Upraviť načítanie admin časti tak, aby sa vymenilo cez volanie REST služby len vnútro stránky, nie kompletný reload HTML kódu.
 - [ ] +Vylepšiť úvodnú stránku administrácie - dynamické bloky, možnosť vlastného nastavenia čo sa zobrazí, užitočné informácie a bloky.
+- [ ] +Filter v aplikácii novinky neumožňuje zadať DOC ID viacerých stránok keby chceli podľa filtra “DOC_ID rovná sa” zvoliť viacero stránok
+filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadania viacerých hodnôt (#JT-2139).
+- [ ] +AI - upraviť vytváranie `chunk` tak, aby na začiatku/konci neboli nezmyselné slová, orezať od prvej medzery po poslednú medzeru.
 
 ## 2025
 
@@ -118,8 +121,6 @@ Vysvetlenie použitých piktogramov:
 - [x] +Novinky - presunúť pole `contextClasses` z aplikácie novinky do šablóny noviniek. Pole nastaviť ako `hidden` aby zostalo funkčné (niekde môže byť nastavené), ak je prázdne použiť hodnotu zo šablóny. Musia teda fungovať obe možnosti, možno spojiť obe hodnoty do jedného zoznamu (#58245).
 - [ ] +Vnorené datatabuľky - nastaviť počet záznamov v režime `auto` podľa veľkosti oblasti vnorenej datatabuľky.
 - [ ] +Funkcia odoslať email neskôr používa `sendMailSaveEmailPath`, ktoré nevie uložiť súbor podľa aktuálnej domény, zamyslieť sa nad riešením. Možno je to tak kvôli tomu, že sa emaily posielajú na pozadí kde doména nemusí byť známa.
-- [ ] +Filter v aplikácii novinky neumožňuje zadať DOC ID viacerých stránok keby chceli podľa filtra “DOC_ID rovná sa” zvoliť viacero stránok
-filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadania viacerých hodnôt (#JT-2139).
 
 ## 2024
 

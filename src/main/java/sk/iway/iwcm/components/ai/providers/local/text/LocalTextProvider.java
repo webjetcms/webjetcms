@@ -1,5 +1,6 @@
 package sk.iway.iwcm.components.ai.providers.local.text;
 
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
 import com.webjetcms.ai.AiInputHandling;
@@ -7,9 +8,11 @@ import com.webjetcms.ai.AiOperation;
 import com.webjetcms.ai.provider.local.LocalGenerationModelProvider;
 
 import sk.iway.iwcm.components.ai.providers.local.ConfiguredLocalProvider;
+import sk.iway.iwcm.components.ai.providers.local.LocalAiAvailableCondition;
 
 /** Lazily opens the configured local EuroLLM-1.7B-Instruct text model. */
 @Component
+@Conditional(LocalAiAvailableCondition.class)
 public final class LocalTextProvider extends ConfiguredLocalProvider {
 
     public static final String BUNDLE_PATH_CONSTANT = "ai_localTextModelBundlePath";

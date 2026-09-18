@@ -58,7 +58,7 @@ ext {
     allureVersion = "2.32.0";
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
-    webjetAiVersion = '2.0.1';
+    webjetAiVersion = '2.0.3';
 }
 
 lombok {
@@ -149,6 +149,24 @@ sourceSets {
 
 
 configurations {
+    // Local AI is available for CMS development, but is not published to clients.
+    localAi {
+        canBeConsumed = false
+        canBeResolved = false
+    }
+    compileOnly.extendsFrom(localAi)
+    runtimeClasspath.extendsFrom(localAi)
+    testImplementation.extendsFrom(localAi)
+
+    // Use only published dependencies when packaging client distributions.
+    distributionRuntimeClasspath {
+        canBeConsumed = false
+        extendsFrom implementation, runtimeOnly
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+        }
+    }
+
     all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
     all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
     all*.exclude group: 'commons-logging', module: 'commons-logging'
@@ -173,7 +191,8 @@ configurations {
 
 dependencies {
 
-    implementation "com.webjetcms:webjet-ai-local:${webjetAiVersion}"
+    implementation "com.webjetcms:webjet-ai:${webjetAiVersion}"
+    localAi "com.webjetcms:webjet-ai-local:${webjetAiVersion}"
 
     //based on https://github.com/mapstruct/mapstruct-examples/blob/main/mapstruct-lombok/build.gradle
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"
@@ -361,6 +380,10 @@ dependencies {
     // Source: https://mvnrepository.com/artifact/tools.jackson.core/jackson-core
     implementation("tools.jackson.core:jackson-core:3.1.2")
 
+}
+
+war {
+    classpath = sourceSets.main.output + configurations.distributionRuntimeClasspath - configurations.providedRuntime
 }
 
 def localAiModelsDirectory = file('src/main/webapp/WEB-INF/local-ai-models')
@@ -726,7 +749,7 @@ task writePom() {
         Node xml = new XmlParser().parse("build/publications/maven/pom-default.xml")
         //verziu je mozne zadat v gradle ako 5.3.+, do POM to potrebujeme resolvnut na konkretnu verziu 5.3.22
         Map resolvedVersionMap = new HashMap()
-        Set<ResolvedArtifact> resolvedArtifacts = configurations.runtimeClasspath.getResolvedConfiguration().getResolvedArtifacts()
+        Set<ResolvedArtifact> resolvedArtifacts = configurations.distributionRuntimeClasspath.getResolvedConfiguration().getResolvedArtifacts()
         //resolvedArtifacts.addAll(configurations.testImplementation.getResolvedConfiguration().getResolvedArtifacts())
         resolvedArtifacts.each {
             def group = it.getModuleVersion().getId().getGroup();

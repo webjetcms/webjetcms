@@ -1,13 +1,16 @@
 package sk.iway.iwcm.components.ai.providers.local.embedding;
 
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
 import com.webjetcms.ai.provider.local.LocalEmbeddingModelProvider;
 
 import sk.iway.iwcm.components.ai.providers.local.ConfiguredLocalProvider;
+import sk.iway.iwcm.components.ai.providers.local.LocalAiAvailableCondition;
 
 /** Lazily opens the globally configured local embedding model bundle. */
 @Component
+@Conditional(LocalAiAvailableCondition.class)
 public final class LocalEmbeddingProvider extends ConfiguredLocalProvider {
 
     public static final String BUNDLE_PATH_CONSTANT = "ai_localEmbeddingModelBundlePath";

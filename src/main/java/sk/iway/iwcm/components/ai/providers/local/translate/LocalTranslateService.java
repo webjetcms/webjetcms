@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -19,6 +20,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
 import sk.iway.iwcm.components.ai.providers.LibrarySupportLogic;
 import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
+import sk.iway.iwcm.components.ai.providers.local.LocalAiAvailableCondition;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 
@@ -26,6 +28,7 @@ import sk.iway.iwcm.system.datatable.DatatablePageImpl;
  * Adapts the local M2M100 provider to CMS assistants and enforces explicitly configured plain-text translation.
  */
 @Service
+@Conditional(LocalAiAvailableCondition.class)
 public class LocalTranslateService extends LibrarySupportLogic implements AiAssitantsInterface {
 
     public static final String DEFAULT_MODEL = LocalTranslateProvider.MODEL_ID;
