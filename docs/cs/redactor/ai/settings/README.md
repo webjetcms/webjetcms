@@ -145,6 +145,8 @@ Vygenerovaný API klíč nastavte do konfigurační proměnné `ai_openRouterAut
 
 Lokální modely provádějí požadavky přímo na aplikačním serveru WebJET CMS. Kvalita modelů samozřejmě nedosahuje kvality velkých komerčních modelů, ale jsou spuštěny lokálně na vašem serveru, data neopouštějí vaše prostředí. Samozřejmě ale jejich provoz zvyšuje požadavky na výpočetní výkon a paměť serveru. Praktické nasazení je třeba ověřit a provést i zátěžové testy.
 
+!>**Upozornění:**: aktuálně je podporován běh modelů na architekturách `Linux x86_64` nebo `macOS ARM64`.
+
 Dostupné jsou tři samostatné typy poskytovatelů:
 
 - **Lokální model pro generování textu** - používá model `utter-project/EuroLLM-1.7B-Instruct` a podporuje pouze generování textu. Streamování odpovědi není podporováno a požadavky se neukládají.
@@ -156,7 +158,7 @@ Modelové balíky ve formátu ZIP musí být předem připraveny a schváleny pr
 ```gradle
 dependencies {
 	....
-	implementation "com.webjetcms:webjet-ai-local:2.0.3"
+	implementation "com.webjetcms:webjet-ai-local:2.0.4"
 }
 
 def localAiModelsDirectory = file('src/main/webapp/WEB-INF/local-ai-models')
@@ -222,9 +224,9 @@ Cesty jsou globální pro celou instalaci, soubor musí být čitelný procesem 
 Nastavte ještě konfigurační proměnné:
 
 - `ragEmbeddingDimensions` na hodnotu 768
-- `ragSemanticSearchEnabled` na hodnotu true pokud používáte sémantické vyhledávání
-- `searchType` na hodnotu `semantic`
-- `ragAnswerAllowed` na hodnotu true pokud máte aktivován i `ai_localTextModelBundlePath`. Upozorňujeme, že se jedná o malý jazykový model, takže RAG odpovědi oproti komerčním modelům nemusí být vůbec zobrazeny, nebo nejsou zcela správné/kompletní.
+- `ragSemanticSearchEnabled` na hodnotu true - aktivuje sémantické vyhledávání
+- `searchType` na hodnotu `semantic` pro podporu sémantického vyhledávání
+- `ragAnswerAllowed` na hodnotu true pokud chcete nad vyhledáváním zobrazit i sekci "Přehled od AI" a máte aktivován i `ai_localTextModelBundlePath`. Upozorňujeme, že se jedná o poměrně malý jazykový model, takže RAG odpovědi oproti komerčním modelům nemusí být vůbec zobrazeny, nebo nejsou zcela správné/kompletní. Zároveň generování přehledu od AI výrazně zatěžuje výkon serveru a odpověď trvá výrazně déle oproti jednoduchému sémantickému hledání.
 
 Více informací naleznete v [dokumentaci k vyhledávání](../../apps/search/README.md).
 

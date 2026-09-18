@@ -158,7 +158,7 @@ Modelové balíky vo formáte ZIP musia byť vopred pripravené a schválené pr
 ```gradle
 dependencies {
 	....
-	implementation "com.webjetcms:webjet-ai-local:2.0.3"
+	implementation "com.webjetcms:webjet-ai-local:2.0.4"
 }
 
 def localAiModelsDirectory = file('src/main/webapp/WEB-INF/local-ai-models')
@@ -224,9 +224,9 @@ Cesty sú globálne pre celú inštaláciu, súbor musí byť čitateľný proce
 Nastavte ešte konfiguračné premenné:
 
 - `ragEmbeddingDimensions` na hodnotu 768
-- `ragSemanticSearchEnabled` na hodnotu true ak používate sémantické vyhľadávanie
-- `searchType` na hodnotu `semantic`
-- `ragAnswerAllowed` na hodnotu true ak máte aktivovaný aj `ai_localTextModelBundlePath`. Upozorňujeme, že sa jedná o malý jazykový model, takže RAG odpovede oproti komerčným modelom nemusia byť vôbec zobrazené, alebo nie sú úplne správne / kompletné.
+- `ragSemanticSearchEnabled` na hodnotu true - aktivuje sémantické vyhľadávanie
+- `searchType` na hodnotu `semantic` pre podporu sémantického vyhľadávania
+- `ragAnswerAllowed` na hodnotu true ak chcete nad vyhľadávaním zobraziť aj sekciu "Prehľad od AI" a máte aktivovaný aj `ai_localTextModelBundlePath`. Upozorňujeme, že sa jedná o pomerne malý jazykový model, takže RAG odpovede oproti komerčným modelom nemusia byť vôbec zobrazené, alebo nie sú úplne správne / kompletné. Zároveň generovanie prehľadu od AI výrazne zaťažuje výkon servera a odpoveď trvá výrazne dlhšie oproti jednoduchému sémantickému hľadaniu.
 
 Viac informácií nájdete v [dokumentácii k vyhľadávaniu](../../apps/search/README.md).
 

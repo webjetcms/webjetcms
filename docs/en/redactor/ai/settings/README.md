@@ -145,6 +145,8 @@ Set the generated API key to the configuration variable `ai_openRouterAuthKey`.
 
 Local models execute requests directly on the WebJET CMS application server. The quality of the models, of course, does not reach the quality of large commercial models, but they are run locally on your server, the data does not leave your environment. Of course, their operation increases the requirements for computing power and server memory. Practical deployment needs to be verified and load tests performed.
 
+!>**Note:**: Running models on `Linux x86_64` or `macOS ARM64` architectures is currently supported.
+
 There are three separate types of providers available:
 
 - **Local text generation model** - uses the `utter-project/EuroLLM-1.7B-Instruct` model and only supports text generation. Response streaming is not supported and requests are not cached.
@@ -156,7 +158,7 @@ Model packages in ZIP format must be prepared and approved in advance for WebJET
 ```gradle
 dependencies {
 	....
-	implementation "com.webjetcms:webjet-ai-local:2.0.3"
+	implementation "com.webjetcms:webjet-ai-local:2.0.4"
 }
 
 def localAiModelsDirectory = file('src/main/webapp/WEB-INF/local-ai-models')
@@ -222,9 +224,9 @@ The paths are global for the entire installation, the file must be readable by t
 Set the configuration variables:
 
 - `ragEmbeddingDimensions` to the value 768
-- `ragSemanticSearchEnabled` to true if you are using semantic search
-- `searchType` to the value `semantic`
-- `ragAnswerAllowed` to true if you also have `ai_localTextModelBundlePath` activated. Please note that this is a small language model, so RAG answers may not be displayed at all, or may not be completely correct/complete, compared to commercial models.
+- `ragSemanticSearchEnabled` to true - activates semantic search
+- `searchType` to the value `semantic` to support semantic search
+- `ragAnswerAllowed` to true if you want to display the "Overview from AI" section above the search and you also have `ai_localTextModelBundlePath` activated. Please note that this is a relatively small language model, so RAG answers may not be displayed at all, or may not be completely correct / complete, compared to commercial models. At the same time, generating an overview from AI significantly burdens the server's performance and the response takes significantly longer than a simple semantic search.
 
 For more information, see the [search documentation](../../apps/search/README.md).
 
