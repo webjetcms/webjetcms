@@ -145,6 +145,8 @@ Vygenerovaný API kľúč nastavte do konfiguračnej premennej `ai_openRouterAut
 
 Lokálne modely vykonávajú požiadavky priamo na aplikačnom serveri WebJET CMS. Kvalita modelov samozrejme nedosahuje kvality veľkých komerčných modelov, ale sú spustené lokálne na vašom serveri, dáta neopúšťajú vaše prostredie. Samozrejme ale, ich prevádzka zvyšuje požiadavky na výpočtový výkon a pamäť servera. Praktické nasadenie je potrebné overiť a vykonať aj záťažové testy.
 
+!>**Upozornenie:**: aktuálne je podporovaný beh modelov na architektúrach `Linux x86_64` alebo `macOS ARM64`.
+
 Dostupné sú tri samostatné typy poskytovateľov:
 
 - **Lokálny model na generovanie textu** - používa model `utter-project/EuroLLM-1.7B-Instruct` a podporuje iba generovanie textu. Streamovanie odpovede nie je podporované a požiadavky sa neukladajú.

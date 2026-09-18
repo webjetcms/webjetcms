@@ -80,9 +80,11 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     @Override
     public Page<EmbeddingChunkEntity> getAllItems(Pageable pageable) {
 
+        RagEntityType ragEntityType = RagEntityType.fromString( getRequest().getParameter("entityType") );
+
         if (vectorStore.isAvailable() == false) {
             // If vector store is not available (not allowed or available)
-            addNotify(new NotifyBean(getProp().getText("settings.embedding-chunks.title"), getProp().getText("components.ai_assistants.provider.not_configured"), NotifyType.ERROR));
+            if (ragEntityType == null) addNotify(new NotifyBean(getProp().getText("settings.embedding-chunks.title"), getProp().getText("components.ai_assistants.provider.not_configured"), NotifyType.ERROR));
             return new DatatablePageImpl<>( new ArrayList<>() );
         } else if (vectorStore.isAvailableAndInitialized() == false) {
             // Vector store is available but not initialized, we can try to initialize it
@@ -93,7 +95,6 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         }
 
         // Check if entityType is set and valid
-        RagEntityType ragEntityType = RagEntityType.fromString( getRequest().getParameter("entityType") );
         if(ragEntityType == null) return new DatatablePageImpl<>( new ArrayList<>() );
 
         Page<EmbeddingChunkEntity> page = new DatatablePageImpl<>(super.getAllItemsIncludeSpecSearch(new EmbeddingChunkEntity(), pageable));
