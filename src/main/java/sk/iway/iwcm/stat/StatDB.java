@@ -547,6 +547,9 @@ public class StatDB extends DB
 	 */
 	public static void add(HttpSession session, HttpServletRequest request, HttpServletResponse response, int docId)
 	{
+		if (sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.isPreview(request)
+                || StatisticsMode.forDocument(docId) == StatisticsMode.OFF) return;
+
 		//nezalogujeme pri odoslani emailu
 		String dmail = request.getHeader("dmail");
 		if (dmail != null || "none".equals(Constants.getString("statMode")))

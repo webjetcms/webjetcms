@@ -1,0 +1,29 @@
+.pg-heatmap-heading, .pg-heatmap-controls {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+.pg-heatmap-page { flex: 1; min-width: 180px; overflow-wrap: anywhere; }
+.pg-heatmap-controls { align-items: end; }
+.pg-heatmap-controls label { display: block; margin-bottom: 5px; font-size: 14px; }
+.pg-heatmap-controls .form-switch { align-self: center; margin-top: 20px; }
+.pg-heatmap-controls .form-switch label { margin-bottom: 0; }
+.pg-heatmap-opacity { width: 180px; }
+.pg-heatmap-opacity output { margin-left: 5px; color: var(--wj-gray-text); }
+.pg-heatmap-viewport {
+    overflow: auto;
+    max-width: 100%;
+    padding: 15px;
+    background: var(--wj-nice-gray);
+    border: 1px solid var(--wj-nice-gray-100, #DDDFE6);
+    border-radius: 6px;
+}
+.pg-heatmap-stage-size { position: relative; margin: 0 auto; }
+.pg-heatmap-stage { position: relative; transform-origin: top left; background: white; }
+.pg-heatmap-frame { display: block; border: 0; height: 800px; }
+.pg-heatmap-overlay { position: absolute; top: 0; left: 0; overflow: hidden; pointer-events: none; opacity: .65; }
+.pg-heatmap-tiles { position: absolute; top: 0; left: 0; }
+.pg-heatmap-tiles img { position: absolute; max-width: none; }
+.pg-heatmap-controls :focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }

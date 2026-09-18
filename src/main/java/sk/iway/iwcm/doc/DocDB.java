@@ -2690,6 +2690,10 @@ public class DocDB extends DB
 	{
 		if (request == null) return serverName;
 
+        if (Boolean.TRUE.equals(request.getAttribute("heatMapPreview"))
+                && request.getAttribute("heatMapPreviewDomain") instanceof String previewDomain
+                && Tools.isNotEmpty(previewDomain)) return previewDomain;
+
 		String sessionDomain = (String)request.getSession().getAttribute("preview.editorDomainName");
 
 		if (Tools.isNotEmpty(sessionDomain))

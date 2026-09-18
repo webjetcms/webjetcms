@@ -1,0 +1,79 @@
+<link rel="stylesheet" href="/apps/stat/admin/heat-map.css">
+<script data-th-inline="javascript">
+    const heatMapTexts = {
+        loading: /*[[#{components.stat.heatmap.loading}]]*/ "Loading…",
+        empty: /*[[#{components.stat.heatmap.empty}]]*/ "No clicks in this period.",
+        error: /*[[#{components.stat.heatmap.error}]]*/ "The click map could not be loaded.",
+        previewError: /*[[#{components.stat.heatmap.previewError}]]*/ "The page preview is unavailable.",
+        tileError: /*[[#{components.stat.heatmap.tileError}]]*/ "Some map tiles could not be loaded. Reload the preview.",
+        clicks: /*[[#{components.stat.heatmap.clicks}]]*/ "Clicks",
+        historical: /*[[#{components.stat.heatmap.historical}]]*/ "Content version from",
+        current: /*[[#{components.stat.heatmap.current}]]*/ "Current content",
+        fallback: /*[[#{components.stat.heatmap.fallback}]]*/ "A historical version could not be identified. Current content is shown.",
+        multiple: /*[[#{components.stat.heatmap.multiple}]]*/ "The content changed during this period. Clicks from multiple versions are combined.",
+        unavailable: /*[[#{components.stat.heatmap.unavailable}]]*/ "No page content is available for this preview."
+    };
+</script>
+<script type="module">
+    import { HeatMapViewer } from "/apps/stat/admin/heat-map-viewer.js";
+    window.domReady.add(function () {
+        WJ.breadcrumb({id: "heatMapDetails", tabs: [
+            {url: "/apps/stat/admin/heat-map/", title: "[[#{stat_menu.heat_map}]]", active: true}
+        ]});
+        const viewer = new HeatMapViewer(document.getElementById("heatMapViewer"), heatMapTexts);
+        viewer.init();
+    });
+</script>
+
+<section id="heatMapViewer" class="pg-heatmap" aria-busy="true">
+    <div class="pg-heatmap-heading">
+        <a id="heatMapBack" class="btn btn-sm btn-outline-secondary" href="/apps/stat/admin/heat-map/">
+            <i class="ti ti-arrow-left" aria-hidden="true"></i> <span data-th-text="#{components.stat.heatmap.back}"></span>
+        </a>
+        <div class="pg-heatmap-page">
+            <h2 id="heatMapTitle" class="h5 mb-1" data-th-text="#{stat_menu.heat_map}"></h2>
+            <span id="heatMapUrl" class="text-muted"></span>
+        </div>
+        <span id="heatMapPeriod" class="text-muted"></span>
+    </div>
+    <div class="pg-heatmap-controls">
+        <div>
+            <label for="heatMapWidth" data-th-text="#{components.stat.heatmap.width}"></label>
+            <select id="heatMapWidth" class="form-select form-select-sm" disabled></select>
+        </div>
+        <div>
+            <label for="heatMapScale" data-th-text="#{components.stat.heatmap.scale}"></label>
+            <select id="heatMapScale" class="form-select form-select-sm">
+                <option value="fit" data-th-text="#{components.stat.heatmap.fit}"></option>
+                <option value="1">100 %</option>
+                <option value="0.75">75 %</option>
+                <option value="0.5">50 %</option>
+            </select>
+        </div>
+        <div class="pg-heatmap-opacity">
+            <label for="heatMapOpacity"><span data-th-text="#{components.stat.heatmap.opacity}"></span> <output id="heatMapOpacityValue" for="heatMapOpacity">65 %</output></label>
+            <input id="heatMapOpacity" class="form-range" type="range" min="0" max="100" step="5" value="65">
+        </div>
+        <div class="form-check form-switch">
+            <input id="heatMapVisible" class="form-check-input" type="checkbox" checked>
+            <label for="heatMapVisible" class="form-check-label" data-th-text="#{components.stat.heatmap.show}"></label>
+        </div>
+        <button id="heatMapReload" class="btn btn-sm btn-outline-secondary" type="button" disabled>
+            <i class="ti ti-refresh" aria-hidden="true"></i> <span data-th-text="#{components.stat.heatmap.reload}"></span>
+        </button>
+    </div>
+    <p id="heatMapVersion" class="mb-2"></p>
+    <div id="heatMapNotice" class="alert alert-warning d-none" role="status"></div>
+    <p class="text-muted" data-th-text="#{components.stat.heatmap.previewHelp}"></p>
+    <div id="heatMapStatus" class="alert alert-info" role="status" aria-live="polite" data-th-text="#{components.stat.heatmap.loading}"></div>
+    <div id="heatMapViewport" class="pg-heatmap-viewport d-none">
+        <div id="heatMapStageSize" class="pg-heatmap-stage-size">
+            <div id="heatMapStage" class="pg-heatmap-stage">
+                <iframe id="heatMapFrame" class="pg-heatmap-frame" data-th-title="#{components.stat.heatmap.previewTitle}" referrerpolicy="same-origin"></iframe>
+                <div id="heatMapOverlay" class="pg-heatmap-overlay" aria-hidden="true">
+                    <div id="heatMapTiles" class="pg-heatmap-tiles"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
