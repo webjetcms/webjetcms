@@ -120,7 +120,7 @@ Scenario('testovanie app - Video', async ({ I, Apps, Document, DTE }) => {
     I.seeElement(".videoBox.videoBox1");
 });
 
-Scenario("YouTube share URL preserves playback start time", async ({ I, Apps, DTE }) => {
+Scenario("YouTube share URL preserves playback start time @current", async ({ I, Apps, DTE }) => {
     const videoUrl = "https://youtu.be/q8xs3qDq-G4?si=6uc7EwqSIvciV14s&t=115";
 
     Apps.insertApp('Video', '#components-video-title', null, false);
@@ -159,6 +159,7 @@ Scenario("YouTube share URL preserves playback start time", async ({ I, Apps, DT
 
     I.switchToPreviousTab();
     I.closeOtherTabs();
+    I.switchTo();
     DTE.cancel();
 });
 
