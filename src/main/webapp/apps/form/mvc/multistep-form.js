@@ -53,6 +53,7 @@ export class MultistepForm {
         this.domIdPrefix = '';
 
         this._hasShownStep = false;
+        this._isNavigating = false;
 
         // Centralized map: element -> array of conditions (parsed once from data-visibility-condition attributes)
         this.visibilityConditions = new Map();
@@ -68,7 +69,25 @@ export class MultistepForm {
     /**
      * Start the flow by loading the configured form and step.
      */
-    start() { this.loadStep(this.formName, this.stepId); }
+    start() { this._runNavigation(() => this.loadStep(this.formName, this.stepId)); }
+
+    /**
+     * Run one navigation or submission at a time, including any subsequent step load.
+     * @param {() => Promise<void>} action - Navigation or submission to perform.
+     * @returns {Promise<void>} Resolves when finished, or immediately if another action is running.
+     */
+    async _runNavigation(action) {
+        if (this._isNavigating) return;
+        this._isNavigating = true;
+        const buttons = this.wrapper.querySelectorAll('button[type="submit"]:enabled, input[type="submit"]:enabled, [data-multistep-back-step]:enabled');
+        buttons.forEach(button => { button.disabled = true; });
+        try {
+            await action();
+        } finally {
+            buttons.forEach(button => { button.disabled = false; });
+            this._isNavigating = false;
+        }
+    }
 
     /**
      * Render the application shell (alerts + content holder) and mount it.
@@ -165,13 +184,16 @@ export class MultistepForm {
                 this._restoreStepValues(form, savedValues, savedFiles);
                 Object.assign(this.submittedValues, savedValues);
 
-                form.addEventListener('submit', async (event) => { await this.doValidationAndSave(event); });
+                form.addEventListener('submit', async (event) => {
+                    event.preventDefault();
+                    await this._runNavigation(() => this.doValidationAndSave(event));
+                });
 
                 const backButton = form.querySelector('[data-multistep-back-step]');
                 if (backButton) {
                     backButton.addEventListener('click', async () => {
                         const previousStepId = backButton.dataset.multistepBackStep;
-                        if (previousStepId) await this.loadStep(formName, previousStepId, true);
+                        if (previousStepId) await this._runNavigation(() => this.loadStep(formName, previousStepId, true));
                     });
                 }
             }

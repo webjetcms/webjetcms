@@ -1,5 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const assert = require('node:assert/strict');
 
 Feature('apps.forms.multistep-forms-navigation');
 
@@ -119,4 +120,118 @@ Scenario('Remove step submission after a terminal verification error', async ({ 
     I.click('Submit');
     I.waitForText('Verification attempts exhausted');
     I.dontSeeElement('form');
+});
+
+/** Hold fetch calls until explicitly resumed, so concurrent actions can be tested without timed delays. */
+async function pauseRequests(page) {
+    await page.evaluate(() => {
+        const fetch = window.fetch.bind(window);
+        window.autotestRequests = [];
+        window.fetch = (url, options) => new Promise(resolve => {
+            window.autotestRequests.push({ url, resume: () => resolve(fetch(url, options)) });
+        });
+    });
+}
+
+Scenario('Ignore repeated Back and submission while a previous step is loading', async ({ I }) => {
+    await openForm(I);
+    I.click('Next');
+    I.waitForVisible('[data-multistep-back-step]');
+    await I.usePlaywrightTo('hold the Back response while more navigation is attempted', async ({ page }) => {
+        await page.locator('#f1-details').fill('autotest details');
+        await pauseRequests(page);
+        await page.locator('[data-multistep-back-step]').dblclick();
+        await page.locator('#f1-details').press('Enter');
+        await page.locator('form').dispatchEvent('submit');
+        await page.locator('[data-multistep-back-step]').dispatchEvent('click');
+        assert.equal(await page.evaluate(() => window.autotestRequests.length), 1);
+        assert.equal(await page.locator('[data-multistep-back-step]').isDisabled(), true);
+        assert.equal(await page.locator('button[type="submit"]').isDisabled(), true);
+        assert.equal(await page.locator('#f1-details').isEnabled(), true);
+        await page.evaluate(() => window.autotestRequests[0].resume());
+        await page.locator('#f1-subscribe').waitFor({ state: 'visible' });
+        await page.locator('#f1-subscribe').check();
+        assert.equal(await page.locator('#f1-subscribe').isChecked(), true);
+        assert.equal(await page.locator('button[type="submit"]').isEnabled(), true);
+    });
+});
+
+Scenario('Keep navigation blocked through CAPTCHA, submission and the next step request', async ({ I }) => {
+    await openForm(I);
+    I.click('Next');
+    I.waitForVisible('[data-multistep-back-step]');
+    await I.usePlaywrightTo('delay each phase of submission', async ({ page }) => {
+        await page.locator('#f1-details').fill('autotest details');
+        await page.route('**/rest/multistep-form/save-form?*', route => route.fulfill({ json: { 'form-name': formName, 'step-id': 1 } }));
+        await pauseRequests(page);
+        await page.evaluate(() => {
+            document.querySelector('form').insertAdjacentHTML('beforeend', '<input type="hidden" name="g-recaptcha-response" data-type="V3">');
+            window.grecaptcha = {};
+            window.wjFormSubmit = (form, resolve) => { window.autotestResolveCaptcha = resolve; };
+        });
+        await page.locator('button[type="submit"]').dblclick();
+        await page.locator('form').dispatchEvent('submit');
+        await page.locator('[data-multistep-back-step]').dispatchEvent('click');
+        assert.equal(await page.locator('[data-multistep-back-step]').isDisabled(), true);
+        assert.equal(await page.locator('button[type="submit"]').isDisabled(), true);
+        assert.equal(await page.evaluate(() => window.autotestRequests.length), 0);
+
+        await page.evaluate(() => window.autotestResolveCaptcha());
+        await page.waitForFunction(() => window.autotestRequests.length === 1);
+        await page.locator('form').dispatchEvent('submit');
+        await page.locator('[data-multistep-back-step]').dispatchEvent('click');
+        assert.equal(await page.evaluate(() => window.autotestRequests.length), 1);
+        await page.evaluate(() => window.autotestRequests[0].resume());
+        await page.waitForFunction(() => window.autotestRequests.length === 2);
+        await page.locator('form').dispatchEvent('submit');
+        await page.locator('[data-multistep-back-step]').dispatchEvent('click');
+        assert.equal(await page.evaluate(() => window.autotestRequests.length), 2);
+        await page.evaluate(() => window.autotestRequests[1].resume());
+        await page.locator('#f1-subscribe').waitFor({ state: 'visible' });
+        assert.equal(await page.locator('button[type="submit"]').isEnabled(), true);
+    });
+});
+
+for (const action of ['Back', 'Submit']) {
+    Scenario(`Allow navigation after a failed ${action} request`, async ({ I }) => {
+        await openForm(I);
+        I.click('Next');
+        I.waitForVisible('[data-multistep-back-step]');
+        await I.usePlaywrightTo('fail one request and retry navigation', async ({ page }) => {
+            await page.locator('#f1-details').fill('autotest details');
+            await page.locator('form').evaluate(form => form.insertAdjacentHTML('beforeend', '<button type="submit" disabled>Disabled autotest action</button>'));
+            const endpoint = action === 'Back' ? 'get-step' : 'save-form';
+            await page.route(`**/rest/multistep-form/${endpoint}?*`, route => route.fulfill({ status: 500, json: { err_msg: 'autotest temporary error' } }), { times: 1 });
+            await page.getByRole('button', { name: action, exact: true }).click();
+            await page.getByText('autotest temporary error').waitFor({ state: 'visible' });
+            assert.equal(await page.getByRole('button', { name: 'Back', exact: true }).isEnabled(), true);
+            assert.equal(await page.getByRole('button', { name: 'Submit', exact: true }).isEnabled(), true);
+            assert.equal(await page.getByRole('button', { name: 'Disabled autotest action' }).isDisabled(), true);
+            await page.getByRole('button', { name: 'Back', exact: true }).click();
+            await page.locator('#f1-subscribe').waitFor({ state: 'visible' });
+        });
+    });
+}
+
+Scenario('Allow another form to navigate while the first form is loading', async ({ I }) => {
+    await openForm(I);
+    await I.usePlaywrightTo('navigate two independent instances', async ({ page }) => {
+        await pauseRequests(page);
+        await page.getByRole('button', { name: 'Next' }).click();
+        await page.evaluate(async ({ formName, modulePath }) => {
+            document.body.insertAdjacentHTML('beforeend', '<div id="multistep-form-wrapper-autotest-second"></div>');
+            const { MultistepForm } = await import(modulePath);
+            new MultistepForm({ formName, stepId: '1', csrf: 'autotest-second', language: 'en' }).start();
+        }, { formName, modulePath });
+        await page.evaluate(() => window.autotestRequests[1].resume());
+        const second = page.locator('#multistep-form-wrapper-autotest-second');
+        await second.locator('#f1-subscribe').waitFor({ state: 'visible' });
+        await second.getByRole('button', { name: 'Next' }).click();
+        assert.equal(await page.evaluate(() => window.autotestRequests.length), 3);
+        await page.evaluate(() => window.autotestRequests[2].resume());
+        await page.waitForFunction(() => window.autotestRequests.length === 4);
+        await page.evaluate(() => window.autotestRequests[3].resume());
+        await second.locator('[data-multistep-back-step]').waitFor({ state: 'visible' });
+        assert.equal(await page.locator('#multistep-form-wrapper-autotest button[type="submit"]').isDisabled(), true);
+    });
 });
