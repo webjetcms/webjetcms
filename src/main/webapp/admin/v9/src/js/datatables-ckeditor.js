@@ -453,13 +453,26 @@ export class DatatablesCkEditor {
 					};
 					removeMaximizedFromIframes($dialogElement);
 
-					//remove stored original sizes from iframes
+					//restore iframe sizes before removing the stored values
 					$dialogElement.find("iframe").each(function() {
-						$(this).removeData("originalWidth originalHeight originalParentWidth");
+						var $iframe = $(this);
+						var originalWidth = $iframe.data("originalWidth");
+						var originalHeight = $iframe.data("originalHeight");
+						var originalParentWidth = $iframe.data("originalParentWidth");
+						if (originalWidth !== undefined && originalHeight !== undefined) {
+							$iframe.css({"width": originalWidth + "px", "height": originalHeight + "px"});
+							if (originalParentWidth !== undefined) {
+								$iframe.parent("div").css("width", originalParentWidth);
+							}
+						}
+						$iframe.removeData("originalWidth originalHeight originalParentWidth");
 					});
 
 					//clear stored dialog size and reset drag state
 					if (dialog._) {
+						if (dialog._.originalWidth !== undefined && dialog._.originalHeight !== undefined) {
+							dialog.resize(dialog._.originalWidth, dialog._.originalHeight);
+						}
 						delete dialog._.originalWidth;
 						delete dialog._.originalHeight;
 						dialog._.moved = false;

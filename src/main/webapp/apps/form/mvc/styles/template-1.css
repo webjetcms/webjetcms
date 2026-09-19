@@ -1,0 +1,304 @@
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form {
+    --mf-accent: #079fc5;
+    --mf-accent-dark: #067f9e;
+    --mf-ink: #243746;
+    --mf-muted: #647482;
+    --mf-border: #d8e1e7;
+    --mf-surface: #f5f9fb;
+
+    position: relative;
+    overflow: hidden;
+    max-width: 1120px;
+    margin: 0 auto 3rem;
+    padding: clamp(1.25rem, 3vw, 2.5rem);
+    color: var(--mf-ink);
+    background: #fff;
+    border: 1px solid var(--mf-border);
+    border-radius: 18px;
+    box-shadow: 0 18px 50px rgba(36, 55, 70, 0.1);
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto;
+    height: 5px;
+    background: linear-gradient(90deg, var(--mf-accent), #61c8ad);
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-step {
+    margin-top: 0 !important;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .step-header {
+    margin: 0 0 1.75rem;
+    padding: 0 0 1rem;
+    border-bottom: 1px solid var(--mf-border);
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .step-header p {
+    margin: 0;
+    color: var(--mf-ink);
+    font-size: clamp(1.25rem, 2vw, 1.65rem);
+    font-weight: 700;
+    line-height: 1.3;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .row {
+    --bs-gutter-x: 1.25rem;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .col {
+    min-width: 0;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group {
+    margin-bottom: 1.25rem !important;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form label {
+    display: inline-block;
+    margin-bottom: 0.45rem;
+    color: var(--mf-ink);
+    font-size: 0.94rem;
+    font-weight: 600;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-control,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-select,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form select {
+    min-height: 46px;
+    padding: 0.7rem 0.85rem;
+    color: var(--mf-ink);
+    background-color: var(--mf-surface);
+    border: 1px solid var(--mf-border);
+    border-radius: 9px;
+    box-shadow: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form textarea.form-control {
+    min-height: 120px;
+    resize: vertical;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-control:hover,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-select:hover,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form select:hover {
+    border-color: #adc0cb;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-control:focus,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-select:focus,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form select:focus {
+    background-color: #fff;
+    border-color: var(--mf-accent);
+    box-shadow: 0 0 0 3px rgba(7, 159, 197, 0.14);
+    outline: none;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-control::placeholder {
+    color: #8997a1;
+    opacity: 1;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .requirement-mark,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .text-danger {
+    color: #c83f55 !important;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .popover-link {
+    margin-left: 0.25rem;
+    color: var(--mf-accent);
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-check {
+    margin-bottom: 0.65rem;
+    padding: 0.7rem 0.85rem 0.7rem 2.35rem;
+    background: var(--mf-surface);
+    border: 1px solid var(--mf-border);
+    border-radius: 9px;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-check-input {
+    margin-top: 0.2rem;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-check-input:checked {
+    background-color: var(--mf-accent);
+    border-color: var(--mf-accent);
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .ql-toolbar,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .ql-container,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .cleditorMain {
+    border-color: var(--mf-border) !important;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .ql-toolbar {
+    background: var(--mf-surface);
+    border-radius: 9px 9px 0 0;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .ql-container {
+    min-height: 140px;
+    border-radius: 0 0 9px 9px;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .cleditorMain {
+    overflow: hidden;
+    height: 200px !important;
+    border-radius: 9px;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .cleditorToolbar {
+    background-color: var(--mf-surface);
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .cleditorMain iframe,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .cleditorMain textarea {
+    height: 166px !important;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group:has(> label[for*="information-label-layout-and-verification-examples"]) {
+    margin-bottom: 1.5rem !important;
+    padding: 1rem 1.15rem;
+    color: var(--mf-muted);
+    background: linear-gradient(90deg, rgba(7, 159, 197, 0.1), rgba(97, 200, 173, 0.08));
+    border-left: 4px solid var(--mf-accent);
+    border-radius: 0 9px 9px 0;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group:has(> label[for*="information-label-layout-and-verification-examples"]) > label {
+    margin: 0;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group-captcha {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 1rem;
+    align-items: end;
+    margin-bottom: 0 !important;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group-captcha > label,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group-captcha > input {
+    margin-bottom: 0 !important;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group:has(input.verify-code-single) .form-control {
+    width: 100%;
+    max-width: none;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group:has(input[name*="preferred-contact-channel"]),
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group:has(input[name*="topics-of-interest"]) {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group:has(input[name*="preferred-contact-channel"]) > label,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group:has(input[name*="preferred-contact-channel"]) > .help-block,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group:has(input[name*="topics-of-interest"]) > label,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group:has(input[name*="topics-of-interest"]) > .help-block {
+    grid-column: 1 / -1;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group:has(input[name*="preferred-contact-channel"]) .form-check,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group:has(input[name*="topics-of-interest"]) .form-check {
+    margin-bottom: 0;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .drop-zone-box.dropzone {
+    min-height: 150px;
+    background: var(--mf-surface);
+    border-color: #adc0cb !important;
+    border-radius: 12px;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .wjdropzone-single-file {
+    min-height: 0;
+    padding: 0.8rem;
+    background: var(--mf-surface);
+    border: 1px solid var(--mf-border);
+    border-radius: 9px;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .help-block,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .cs-error {
+    margin-top: 0.35rem;
+    color: #c83f55;
+    font-size: 0.86rem;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form button.btn {
+    min-height: 44px;
+    padding: 0.65rem 1.15rem;
+    border-radius: 9px;
+    font-weight: 600;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form button.btn-primary {
+    background: var(--mf-accent);
+    border-color: var(--mf-accent);
+    box-shadow: 0 7px 16px rgba(7, 159, 197, 0.2);
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form button.btn-primary:hover,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form button.btn-primary:focus {
+    background: var(--mf-accent-dark);
+    border-color: var(--mf-accent-dark);
+    transform: translateY(-1px);
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form button.btn-outline-primary,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form button[data-multistep-back-step] {
+    color: var(--mf-accent-dark);
+    background: #fff;
+    border-color: var(--mf-accent);
+    box-shadow: none;
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form button.btn-outline-primary:hover,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form button[data-multistep-back-step]:hover,
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form button[data-multistep-back-step]:focus {
+    color: #fff;
+    background: var(--mf-accent);
+}
+
+[data-multistep-css-template="/apps/form/mvc/styles/template-1.css"]:has(.multistep-form) > .alert {
+    max-width: 1120px;
+    margin-right: auto;
+    margin-left: auto;
+    border: 0;
+    border-radius: 12px;
+}
+
+@media (max-width: 767.98px) {
+    [data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form {
+        margin-bottom: 2rem;
+        padding: 1.25rem;
+        border-radius: 13px;
+    }
+
+    [data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .row {
+        display: block;
+    }
+
+    [data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .col {
+        width: 100%;
+    }
+
+    [data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group-captcha,
+    [data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group:has(input[name*="preferred-contact-channel"]),
+    [data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form .form-group:has(input[name*="topics-of-interest"]) {
+        grid-template-columns: 1fr;
+    }
+
+    [data-multistep-css-template="/apps/form/mvc/styles/template-1.css"] .multistep-form button.btn {
+        width: 100%;
+        margin: 0.3rem 0 0 !important;
+    }
+}
