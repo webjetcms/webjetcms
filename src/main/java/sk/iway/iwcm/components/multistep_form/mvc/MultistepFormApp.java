@@ -70,7 +70,7 @@ public class MultistepFormApp extends WebjetComponentAbstract {
 
     private static final String VIEW_PATH = "/apps/form/mvc/multistep-form"; //NOSONAR
     private static final String ERROR_PATH = "/apps/form/mvc/error"; //NOSONAR
-    private static final String CSS_TEMPLATES_PATH = "/apps/form/mvc/styles/";
+    private static final String CSS_TEMPLATES_PATH = "/apps/form/mvc/styles/"; //NOSONAR
 
     /* Its importtant, that we use "-" and not "_" */
     public static final String DOC_ID = "-docid";
@@ -167,8 +167,8 @@ public class MultistepFormApp extends WebjetComponentAbstract {
         List<String> multistepFormNames = formStepsRepository.getMultistepFormNames(CloudToolsForCore.getDomainId());
 
         List<OptionDto> formNameOption = new ArrayList<>();
-        for(String formName : multistepFormNames) {
-            formNameOption.add( new OptionDto(formName, formName, "") );
+        for(String name : multistepFormNames) {
+            formNameOption.add( new OptionDto(name, name, "") );
         }
 
         Prop prop = Prop.getInstance(request);

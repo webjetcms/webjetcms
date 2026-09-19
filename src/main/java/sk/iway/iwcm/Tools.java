@@ -24,7 +24,6 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.form.FormDB;
-import sk.iway.iwcm.helpers.RequestHelper;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
@@ -3308,7 +3307,7 @@ public class Tools
 		return new StringBuilder( replaceRegex(source.toString(), regexPattern, newStr, isCaseInsensitive) );
 	}
 
-	/*
+	/**
 	 * Safely set session attribute, if session is invalid, it will not throw IllegalStateException
 	 * @param session
 	 * @param name

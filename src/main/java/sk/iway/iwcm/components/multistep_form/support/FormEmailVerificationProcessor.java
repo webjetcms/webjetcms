@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -43,6 +44,7 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
     private static final String VERIFY_CODE_INPUT_CLASS = "verify-code-single";
     private static final String FORM_SIMPLE_INPUT_KEY_PREFIX = "components.formsimple.input.";
     private static final Integer MAX_VERIFY_ATTEMPTS = 3;
+    private static final Pattern FIELD_INDEX_SUFFIX_PATTERN = Pattern.compile("-\\d+$");
 
     /**
      * Intercepts form processing to trigger email verification after the first step.
@@ -109,14 +111,14 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
      */
     private void verifyEmailInterceptor(String formName, JSONObject currentReceived, HttpServletRequest request) throws SaveFormException {
         //Try get email from current json
-        List<String> emailFieldsNames = Arrays.stream( Constants.getArray(FormMailService.EMAIL_FIELD_KEY) ).map(s -> s.toLowerCase()).toList();
+        List<String> emailFieldsNames = Arrays.stream( Constants.getArray(FormMailService.EMAIL_FIELD_KEY) ).map(String::toLowerCase).toList();
 
         String email = null;
         for(String key : currentReceived.keySet()) {
             String originalKey = null;
-            originalKey = new String(key);
+            originalKey = key;
             //remove key postfix
-            key = key.replaceFirst("-\\d+$", "");
+            key = FIELD_INDEX_SUFFIX_PATTERN.matcher(key).replaceFirst("");
             if(emailFieldsNames.contains(key.toLowerCase())) {
                 email = currentReceived.getString(originalKey);
                 if(Tools.isEmail(email)) break;
@@ -129,11 +131,12 @@ public class FormEmailVerificationProcessor implements FormProcessorInterface {
             Enumeration<String> e = request.getSession().getAttributeNames();
             while(e.hasMoreElements()) {
                 String originalKey = e.nextElement();
-                String key = new String(originalKey);
-                // Remove prefix
-                key = key.replaceFirst(prefix, "");
+                String key = originalKey;
+                if(key.startsWith(prefix)) {
+                    key = key.substring(prefix.length());
+                }
                 // Remove key postfix
-                key = key.replaceFirst("-\\d+$", "");
+                key = FIELD_INDEX_SUFFIX_PATTERN.matcher(key).replaceFirst("");
                 if(emailFieldsNames.contains(key.toLowerCase())) {
                     email = (String) request.getSession().getAttribute(originalKey);
                     if(Tools.isEmail(email)) break;

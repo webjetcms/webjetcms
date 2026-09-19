@@ -19,7 +19,6 @@ import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Adminlog;
@@ -33,11 +32,9 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.SearchTools;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
-import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.multistep_form.rest.SaveFormService.FormFiles;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
@@ -60,13 +57,6 @@ public class FormMailService {
 	public static final String NAME_FIELD_KEY = "multistepform_nameFields";
 	public static final String EMAIL_FIELD_KEY = "multistepform_emailFields";
 
-	private final FormSettingsRepository formSettingsRepository;
-
-	@Autowired
-	public FormMailService(FormSettingsRepository formSettingsRepository) {
-		this.formSettingsRepository = formSettingsRepository;
-	}
-
 	/**
 	 * Extracts values from the given form for fields whose names match the configured list
 	 * defined by the provided {@code constant} key.
@@ -81,20 +71,20 @@ public class FormMailService {
         if(form.getData() == null) return foundValues;
 
         List<String> fieldsNames = Arrays.stream( Constants.getArray(constant) )
-                                    .map(s -> s.toLowerCase())
+                                    .map(String::toLowerCase)
                                     .toList();
 
         for(String combo : Tools.getTokens(form.getData(), "|")) {
-            String comboArr[] = Tools.getTokens(combo, "~");
+            String[] comboArr = Tools.getTokens(combo, "~");
             if(comboArr.length != 2) continue;
 
 			//
-			comboArr[0] = comboArr[0].replaceFirst("-\\d+$", "");
+			comboArr[0] = comboArr[0].replaceFirst("-\\d+$", ""); //NOSONAR
 
             // Match a field name that starts with one of the configured names
             // (e.g. configured "email" matches field "emailova-adresa")
             String fieldName = comboArr[0].toLowerCase();
-            if(fieldsNames.stream().anyMatch(name -> fieldName.startsWith(name)))
+            if(fieldsNames.stream().anyMatch(fieldName::startsWith))
                 foundValues.add(comboArr[1]);
         }
 
@@ -109,6 +99,7 @@ public class FormMailService {
 	 * either sends immediately or schedules delayed delivery.</p>
 	 *
 	 * @param form       form entity with metadata and serialized field data
+	 * @param formSettings form settings entity containing configuration for email sending
 	 * @param recipients comma‑separated list of recipient emails
 	 * @param subject    email subject
 	 * @param formFiles  uploaded files container to optionally attach
@@ -119,23 +110,19 @@ public class FormMailService {
 	 * @throws SaveFormException when the submission is rejected for email reasons or the message cannot
 	 *         be sent or queued
 	 */
-    public void sendMail(FormsEntity form, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
-		FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(form.getFormName(), CloudToolsForCore.getDomainId());
-		sendMail(form, formSettings, recipients, subject, formFiles, attachFiles, cssData, htmlData, request);
-	}
-
-	void sendMail(FormsEntity form, FormSettingsEntity formSettings, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
+	@SuppressWarnings("java:S3776")
+	public void sendMail(FormsEntity form, FormSettingsEntity formSettings, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
 		Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
 		boolean formDataEncrypted = Tools.isNotEmpty(formSettings.getEncryptKey());
 
         String meno = null;
         List<String> namesList = getFieldsValues(form, NAME_FIELD_KEY);
-        if(namesList.size() > 0) meno = namesList.stream().map(name -> DB.internationalToEnglish(name)).collect(Collectors.joining(" "));
+        if(namesList.size() > 0) meno = namesList.stream().map(DB::internationalToEnglish).collect(Collectors.joining(" "));
 
         String email = null;
         List<String> emailsList = getFieldsValues(form, EMAIL_FIELD_KEY);
 		//remove invalid emails
-		emailsList = emailsList.stream().filter(e -> Tools.isEmail(e)).collect(Collectors.toList());
+		emailsList = emailsList.stream().filter(Tools::isEmail).toList();
         if(emailsList.size() > 0) email = emailsList.get(0);
 
 		//for multistep-form-stats.js
@@ -147,7 +134,7 @@ public class FormMailService {
 		String emailEncoding = SetCharacterEncodingFilter.getEncoding();
 		String formMailEncoding = Constants.getString("formMailEncoding");
 		if (Tools.isNotEmpty(formMailEncoding)) emailEncoding = formMailEncoding;
-        if(Tools.isTrue(formSettings.getFormMailEncoding())) emailEncoding = "ASCII";
+		if(Tools.isTrue(formSettings.getFormMailEncoding())) emailEncoding = "ASCII";
 
 		String host = Constants.getString("smtpServer");
 		boolean forceTextPlain = Tools.isTrue(formSettings.getForceTextPlain());
@@ -183,7 +170,7 @@ public class FormMailService {
 				}
 			}
 
-			if (meno == null || meno.trim().length() < 1) meno = email;
+			if (Tools.isEmpty(meno)) meno = email;
 
 			String effectiveSenderName = meno;
 			String effectiveSenderEmail = FormMailAction.getFirstEmail(email);
@@ -381,7 +368,7 @@ public class FormMailService {
 		sb.append("\n\n form parameters: \n");
 		Map<String, String> formData = MultistepFormsService.getFormDataAsMap(form);
 		formData.forEach((key, value) -> {
-			if (value != null) value = value.replaceAll("\\n", "\\n    ");
+			if (value != null) value = value.replace("\\n", "\\n    ");
 			sb.append("  ").append(key).append(": ").append(value).append("\n");
 		});
 

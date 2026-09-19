@@ -710,14 +710,14 @@ public class FormHtmlHandler {
 
             Element selectedOption = null;
             for (Element option : select.select("option")) {
-                if (fieldValue.equals(option.val())) {
+                if (fieldValue != null && fieldValue.equals(option.val())) {
                     selectedOption = option;
                     break;
                 }
             }
 
             if (selectedOption != null) readonlyValue.text(selectedOption.text());
-            else readonlyValue.html(fieldValue);
+            else readonlyValue.html(fieldValue == null ? "" : fieldValue);
 
             select.before(readonlyValue);
             select.remove();

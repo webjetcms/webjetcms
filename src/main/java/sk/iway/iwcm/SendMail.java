@@ -307,7 +307,7 @@ public class SendMail
 				}
 			}
 
-			if (senderEmail.length() > 0)
+			if (Tools.isNotEmpty(senderEmail))
 			{
 				mes.setFrom(new InternetAddress(senderEmail, senderName));
 			}

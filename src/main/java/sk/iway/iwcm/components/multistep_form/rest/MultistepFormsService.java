@@ -1202,7 +1202,12 @@ public class MultistepFormsService {
 
             // Check if field is required (static flag or dynamic requirement conditions) - IF requiredByFields is set (is not null) use it as higher priority indicator
             Boolean requiredByFields = formConditionsHandler.isFieldRequiredByCondition(stepItem, received);
-            boolean isRequired = requiredByFields == null ? Tools.isTrue(stepItem.getRequired()) : Tools.isTrue(requiredByFields);
+            boolean isRequired;
+            if (requiredByFields == null) {
+                isRequired = Tools.isTrue(stepItem.getRequired());
+            } else {
+                isRequired = Tools.isTrue(requiredByFields);
+            }
             if(isRequired) {
                 String[] values = asArray(itemFormId, received);
 
@@ -1243,7 +1248,7 @@ public class MultistepFormsService {
                     if(className.indexOf("email") != -1)
                         regExpErr = Tools.replace(prop.getText("converter.email.invalidEmail"), "{1}", value);
                     else if(className.indexOf("minLen") != -1)
-                        regExpErr = Tools.replace(Tools.replace(prop.getText("validation.minlength.valueTooShort"), "{2}", className.replaceFirst("minLen", "")), "{0}", fieldName);
+                        regExpErr = Tools.replace(Tools.replace(prop.getText("validation.minlength.valueTooShort"), "{2}", FormMailAction.getMinLen(className)), "{0}", fieldName);
                     else if(className.indexOf("number") != -1)
                         regExpErr = Tools.replace(Tools.replace(prop.getText("converter.number.invalidNumber"), "{1}", value), "{0}", fieldName);
                     else

@@ -20,7 +20,6 @@ import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
-import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.multistep_form.rest.SaveFormService.FormFiles;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
@@ -34,7 +33,7 @@ class FormMailServiceDeliveryTest {
 
 	@Test
 	void reportsFailedEmlWriteAsFormFailure() throws Exception {
-		FormMailService service = new FormMailService(mock(FormSettingsRepository.class));
+		FormMailService service = new FormMailService();
 		FormSettingsEntity settings = new FormSettingsEntity();
 		FormsEntity form = new FormsEntity();
 		form.setId(42L);
