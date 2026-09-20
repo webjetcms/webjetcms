@@ -84,7 +84,8 @@
         }
     }
 
-    .#{$prefix}-section > & {
+    .#{$prefix}-section > &,
+    .#{$prefix}-application > & {
         z-index: $highlighter-index;
         background-color: $color-section;
         &::after {
@@ -117,7 +118,9 @@
 .#{$prefix}-container.som-hover-append:hover > .#{$prefix}-highlighter__bottom,
 .#{$prefix}-container.som-hover-prepend:hover > .#{$prefix}-highlighter__top,
 .#{$prefix}-section.som-hover-append:hover > .#{$prefix}-highlighter__bottom,
-.#{$prefix}-section.som-hover-prepend:hover > .#{$prefix}-highlighter__top {
+.#{$prefix}-section.som-hover-prepend:hover > .#{$prefix}-highlighter__top,
+.#{$prefix}-application.som-hover-append:hover > .#{$prefix}-highlighter__bottom,
+.#{$prefix}-application.som-hover-prepend:hover > .#{$prefix}-highlighter__top {
     z-index: $highlighter-index + 50;
     &::after {
         visibility: visible;
@@ -131,7 +134,8 @@
 }
 
 .#{$prefix}-container.som-hover-append:hover > .#{$prefix}-highlighter__bottom,
-.#{$prefix}-section.som-hover-append:hover > .#{$prefix}-highlighter__bottom {
+.#{$prefix}-section.som-hover-append:hover > .#{$prefix}-highlighter__bottom,
+.#{$prefix}-application.som-hover-append:hover > .#{$prefix}-highlighter__bottom {
     &::after {
         animation: eye_catcher_horizontal_bottom 1s ease-in-out infinite;
     }

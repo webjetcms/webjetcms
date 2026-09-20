@@ -133,7 +133,8 @@
     }
 }
 
-.#{$prefix}-section {
+.#{$prefix}-section,
+.#{$prefix}-application {
     > .#{$prefix}-toolbar {
         left: 0;
         background: linear-gradient(to top, $color-section, $color-section-g);
