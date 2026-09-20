@@ -28,7 +28,7 @@ Karta **Položky formuláru** je rozdelená na tri stĺpce:
 
 - **Kroky formuláru** - tabuľka obsahujúca zoznam krokov formuláru.
 - **Položky formuláru** - tabuľka obsahujúca zoznam položiek (jednotlivé formulárové polia) formuláru patriacich do práve vybraného kroku.
-- **Náhľad formuláru** - zobrazenie náhľadu práve zvoleného kroku formuláru.
+- **Náhľad formuláru** - zobrazenie náhľadu práve zvoleného kroku formuláru s možnosťou [výberu CSS šablóny](#výber-css-šablóny-v-náhľade).
 
 ![](real-form.png)
 
@@ -38,7 +38,15 @@ Prvý stĺpec zobrazuje zoznam krokov formuláru. V tomto zozname môžeme prid�
 
 ![](form-step-editor.png)
 
-Môžete vyplniť **Úvodný text**, ktorý sa zobrazí na začiatku kroku. V texte môžete použiť [značky prihláseného používateľa](#značky-prihláseného-používateľa) a [značky hodnôt položiek](#značky-hodnôt-položiek) z už vyplnených krokov. V karte **Pokročilé** môžete zmeniť text tlačidla na prechod na ďalší krok (alebo odoslanie formulára, ak ide o posledný krok). V karte **Kód skriptu** môžete vložiť vlastný HTML/JavaScript kód, ktorý sa vloží a vykoná pri zobrazení kroku.
+Môžete vyplniť **Úvodný text**, ktorý sa zobrazí na začiatku kroku. V texte môžete použiť [značky prihláseného používateľa](#značky-prihláseného-používateľa) a [značky hodnôt položiek](#značky-hodnôt-položiek) z už vyplnených krokov. V karte **Pokročilé** môžete zmeniť text tlačidla na prechod na ďalší krok (alebo odoslanie formulára, ak ide o posledný krok) aj text tlačidla na návrat na predchádzajúci krok. V karte **Kód skriptu** môžete vložiť vlastný HTML/JavaScript kód, ktorý sa vloží a vykoná pri zobrazení kroku.
+
+### Návrat na predchádzajúci krok
+
+Od druhého kroku sa zobrazuje tlačidlo **Prejsť na predchádzajúci krok**. Návštevník sa ním môže vrátiť k už vyplneným údajom a opraviť ich. Text tlačidla nastavíte v editore daného kroku v karte **Pokročilé**, v poli **Predchádzajúci krok**, napríklad na **Späť**. Ak pole necháte prázdne, použije sa predvolený text.
+
+Pri návrate sa obnovia hodnoty uložené pri poslednom úspešnom prechode z daného kroku dopredu, vrátane výberov v zaškrtávacích políčkach a dostupných nahraných súborov. Pri obrázkoch sa obnoví aj náhľad. Po úprave údajov a opätovnom prechode dopredu sa podmienky zobrazenia a povinnosti ďalších polí vyhodnotia podľa aktualizovaných hodnôt.
+
+!>**Upozornenie:** Tlačidlo na návrat neukladá ani nevaliduje práve otvorený krok. Zmeny, ktoré návštevník urobí pred kliknutím na **Späť**, sa nezachovajú, ak ich predtým neuložil úspešným prechodom dopredu. To platí aj pre novo nahrané súbory v tomto kroku.
 
 ### Duplikovanie
 
@@ -230,6 +238,14 @@ Tretí stĺpec sekcie **Obsah formuláru** je náhľad formuláru. Tento náhľa
 
 Na konci každého kroku sa automatický vygeneruje tlačidlo, ktorého text sa mení podľa toho, či je krok posledný alebo nie. Ak nie je posledný, tlačidlo bude mať text **Prejsť na ďalší krok**, inak **Odoslať formulár**. Text tlačidla môžete zmeniť v nastavení kroku, napríklad na **Pokračovať** alebo **Registrovať sa**.
 
+Od druhého kroku sa zobrazuje aj tlačidlo na [návrat na predchádzajúci krok](#návrat-na-predchádzajúci-krok).
+
+### Výber CSS šablóny v náhľade
+
+V záhlaví náhľadu je výberové pole **CSS šablóna**, pomocou ktorého môžete ihneď vyskúšať pripravené vzhľady formulára. Zoznam obsahuje všetky dostupné CSS šablóny a možnosť **Bez šablóny**, ktorá zobrazí základný vzhľad.
+
+Vybraná šablóna sa použije iba v administračnom náhľade a neuloží sa do nastavení formulára. Vzhľad formulára na webovej stránke nastavíte osobitne v poli **CSS šablóna** pri [vložení aplikácie Formulár](#css-šablóny). Každá vložená inštancia formulára môže mať zvolenú inú šablónu.
+
 ![](real-form.png)
 
 !>**Upozornenie:** Náhľad formuláru je orientačný a môže sa kompozične aj graficky líšiť od skutočného zobrazenia na stránke. V editore sa zobrazujú všetky položky bez ohľadu na nastavené podmienky, aby ste vedeli formulár lepšie navrhnúť a skontrolovať. Na reálnej stránke sa však formulár mení dynamicky podľa podmienok zobrazenia (niektoré polia sa môžu skryť alebo zobraziť podľa hodnôt iných polí) a zároveň podľa použitej šablóny a štýlov stránky, do ktorej je formulár vložený.
@@ -242,9 +258,15 @@ Vytvorený formulár môžete vložiť do web stránky pomocou aplikácie Formul
 
 Na jednu stránku môžete vložiť aj viac inštancií rovnakého viackrokového formulára. Každá inštancia pracuje nezávisle a vygenerované HTML identifikátory polí dostanú vlastný prefix, napríklad `f1-` a `f2-`, aby sa navzájom neovplyvňovali.
 
+### CSS šablóny
+
+Pri vkladaní alebo úprave aplikácie **Formulár** na stránke môžete v poli **CSS šablóna** vybrať pripravený vzhľad formulára. Voľba **Bez šablóny** ponechá základné zobrazenie podľa štýlov stránky. Každá vložená inštancia môže používať inú pripravenú šablónu bez toho, aby ovplyvnila ostatné formuláre na stránke, vrátane formulárov s voľbou **Bez šablóny**.
+
+Rovnaký výber je dostupný v [náhľade formulára v administrácii](#výber-css-šablóny-v-náhľade). Tam slúži iba na vyskúšanie vzhľadu a nemení nastavenie aplikácie vloženej na stránke. Po výbere vhodného vzhľadu preto nastavte šablónu aj v príslušnej aplikácii na stránke.
+
 ### JavaScript udalosť po zobrazení kroku
 
-Po vložení HTML kódu kroku do stránky a inicializácii jeho podmienok formulár odošle na objekte `window` natívnu udalosť `CustomEvent` s názvom `WJ.multistepForm.stepShown`. Udalosť sa odošle pre prvý krok aj po každom prechode na ďalší krok. Nie je potrebné načítať administračný súbor `webjet.js` ani knižnicu `jQuery`.
+Po vložení HTML kódu kroku do stránky a inicializácii jeho podmienok formulár odošle na objekte `window` natívnu udalosť `CustomEvent` s názvom `WJ.multistepForm.stepShown`. Udalosť sa odošle pre prvý krok, po prechode na ďalší krok aj pri návrate na predchádzajúci krok. Nie je potrebné načítať administračný súbor `webjet.js` ani knižnicu `jQuery`.
 
 ```javascript
 window.addEventListener("WJ.multistepForm.stepShown", (event) => {
