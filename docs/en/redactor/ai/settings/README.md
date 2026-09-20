@@ -143,9 +143,9 @@ Set the generated API key to the configuration variable `ai_openRouterAuthKey`.
 
 ### Local models
 
-Local models execute requests directly on the WebJET CMS application server. The quality of the models, of course, does not reach the quality of large commercial models, but they are run locally on your server, the data does not leave your environment. Of course, their operation increases the requirements for computing power and server memory. Practical deployment needs to be verified and load tests performed.
+Local models execute requests directly on the WebJET CMS application server. The quality of the models, of course, does not reach the quality of large commercial models, but they are run locally on your server, the data does not leave your environment. No special graphics card is required, these models are run on standard processors. Of course, their operation increases the requirements for computing power and server memory. Practical deployment needs to be verified and load tests performed.
 
-!>**Note:**: Running models on `Linux x86_64` or `macOS ARM64` architectures is currently supported.
+!>**Note:**: Running models on `Linux x86_64`, `Windows x64` or `macOS ARM64` architectures is currently supported.
 
 There are three separate types of providers available:
 

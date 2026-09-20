@@ -44,6 +44,10 @@ Môžete vyplniť **Úvodný text**, ktorý sa zobrazí na začiatku kroku. V te
 
 Od druhého kroku sa zobrazuje tlačidlo **Prejsť na predchádzajúci krok**. Návštevník sa ním môže vrátiť k už vyplneným údajom a opraviť ich. Text tlačidla nastavíte v editore daného kroku v karte **Pokročilé**, v poli **Predchádzajúci krok**, napríklad na **Späť**. Ak pole necháte prázdne, použije sa predvolený text.
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Pri návrate sa obnovia hodnoty uložené pri poslednom úspešnom prechode z daného kroku dopredu, vrátane výberov v zaškrtávacích políčkach a dostupných nahraných súborov. Pri obrázkoch sa obnoví aj náhľad. Po úprave údajov a opätovnom prechode dopredu sa podmienky zobrazenia a povinnosti ďalších polí vyhodnotia podľa aktualizovaných hodnôt.
 
 !>**Upozornenie:** Tlačidlo na návrat neukladá ani nevaliduje práve otvorený krok. Zmeny, ktoré návštevník urobí pred kliknutím na **Späť**, sa nezachovajú, ak ich predtým neuložil úspešným prechodom dopredu. To platí aj pre novo nahrané súbory v tomto kroku.

@@ -67,6 +67,14 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Formuláře
 
+- [Formuláře](redactor/apps/form/README.md#možné-konfigurační-proměnné) - klasické i vícekrokové formuláře respektují `sendMailSaveEmail` a ukládají emaily jako soubory `.eml` do `sendMailSaveEmailPath` místo SMTP odeslání. Pokud se zápis nezdaří, formulář oznámí chybu.
+- Vícekrokové formuláře - přidán [návrat na předchozí krok](redactor/apps/multistep-form/README.md#návrat-na-předchozí-krok) s obnovením uložených hodnot a souborů a [výběr CSS šablony](redactor/apps/multistep-form/README.md#css administraci (#58742).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Vícekrokové formuláře - opraveno vyhodnocování podmínek po odškrtnutí políčka při návratu na předchozí krok. Skryté nebo již nepovinné pole nezablokuje pokračování kvůli původně uložené hodnotě (#58742).
 - [Statistiky vícekrokových formulářů](redactor/apps/multistep-form/stat.md) byly rozšířeny o datový filtr a pokročilé metriky zobrazení/pokusů/jazyků etc. (#58509).
 
 ![](redactor/apps/multistep-form/stat-section-advanced.png)
@@ -94,7 +102,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 ![](redactor/apps/semantic-search/rag-result.png)
 
 - Embedding indexování a vyhledávání používá poskytovatele a model nastavený v systémovém AI asistentovi. Indexy různých poskytovatelů a modelů mohou existovat současně; stránka **Sémantický index** zobrazuje aktuální nastavení a při opětovném indexování zachová ostatní kombinace. Jádro embedding požadavků, odpovědí a komunikace s poskytovateli bylo vyčleněno do knihovny `webjet-ai` ; WebJET CMS nadále zajišťuje výběr asistenta, indexování a uložení vektorů (#58694).
-- AI asistenti a sémantické vyhledávání - přidána podpora [lokálních modelů](redactor/ai/settings/README.md#lokální-modely) pro generování textu, překlad a tvorbu embeddingů přímo na serveru bez odesílání obsahu externí AI službě (#58561).
+- AI asistenti a **sémantické vyhledávání** - přidána podpora [lokálních modelů](redactor/ai/settings/README.md#lokální-modely) pro generování textu, překlad a tvorbu embeddingů přímo na serveru bez odesílání obsahu externí AI službě. Tyto modely lze **spustit na běžném hardwaru** (CPU), **nevyžadují speciální grafické karty** (#58561).
 
 ### Aplikace
 
@@ -537,6 +545,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Bezpečnost - zpřísněná validace názvů databázových sloupců při dynamickém uspořádání a filtrování. **Upozornění:** veřejné API již v parametrech uspořádání nepodporují vlastní SQL výrazy, používají se pouze bezpečné názvy sloupců nebo dostupné pojmenované konstanty (#294).
 - Bezpečnost - [zabezpečený koncový bod `row-reorder`](developer/datatables/README.md#pořadí-uspořádání-řádků) datových tabulek. Povoleno je měnit pouze numerické pole označené `DataTableColumnType.ROW_REORDER`, přičemž se kontrolují oprávnění pro každý záznam i dodatečný rozsah celé dávky pomocí `checkRowReorderScope`. U formulářů se ověřuje příslušnost k formuláři a kroku i přístup uživatele; neplatný požadavek se neuloží (#295).
 - CKEditor - doplněna možnost [konfigurovat pravidla čištění obsahu](frontend/setup/ckeditor.md#čištění-html-kódu-při-vložení-z-wordexcel) při vložení z Word/Excel. **Upozornění:** výchozí čištění nově odstraňuje i atribut `nowrap` z buněk `TD` a CSS třídy s atributy `align` a `valign` z buněk `TH` (#300).
+- Distribuce - zmenšená celková velikost Maven artefaktů na přibližně 65 MB zapnutím komprese, optimalizací náhledů aplikací a bloků Page Builder/GridEditor/HTMLBox a odstraněním nepoužívaných souborů administrace. Přidán skript [`npm run scr:optimize`](../../src/test/webapp/README.md#optimize-appstore-screenshots-and-image-previews) pro optimalizaci náhledových obrázků (#58790).
 
 ## 2026.0.28
 

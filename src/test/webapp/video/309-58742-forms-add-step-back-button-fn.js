@@ -182,6 +182,26 @@ Scenario("Shot plan", ({ I }) => {
     I.say(formatShotPlan(videoPlan));
 });
 
+Scenario("YouTube thumbnail", async ({ I, DT, DTE, Document, login }) => {
+    login("admin");
+
+    await I.amOnPage("/apps/form/admin/form-steps/?formName=Registracia-na-online-kurz");
+    await DT.waitForLoader("formStepsDataTable");
+    await I.waitForVisible(".stepPreview #f1-meno-1", 20);
+    await I.waitForElement("#previewCssTemplate option[value='/apps/form/mvc/styles/template-3.css']", 10);
+
+    await I.click(locate("#formStepsDataTable tbody td").withText("Krok 2"));
+    await I.waitForVisible(".stepPreview [data-multistep-back-step]", 10);
+    await I.clickCss("#formStepsDataTable_wrapper button.buttons-edit");
+    await DTE.waitForEditor("formStepsDataTable");
+
+    await I.videoClick("#pills-dt-formStepsDataTable-advanced-tab");
+    await I.waitForVisible("#DTE_Field_backStepBtnLabel", 10);
+    await I.videoClick("#DTE_Field_backStepBtnLabel");
+
+    await I.videoTitle("Viackrokové formuláre\n- krok späť\n- dizajnové štýly", 70, "glow");
+}).tag("@title");
+
 Scenario("309-58742-forms-add-step-back-button-fn", async ({ I, DT, DTE, Document, Apps, login }) => {
     const { recordVideoPlan } = require("../helpers/feature_video_plan.js");
     const firstName = "#f1-meno-1";

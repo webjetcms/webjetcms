@@ -106,7 +106,15 @@ Keep these scenarios in order:
    `I.generateHead(videoPlan)` once in a synchronous callback and tag only `@head`.
 3. `Shot plan`: format the same object with `formatShotPlan(videoPlan)` from
    `helpers/feature_video_plan.js` and print it with `I.say`; leave it untagged.
-4. The named main walkthrough: tag `@video`. Add `@current` here only if needed.
+4. `YouTube thumbnail`: always create a standalone async scenario tagged only
+   `@title`, run by `npm run video:title video/<scenario-name>.js`. Prepare a
+   representative feature screen, wait for it to be ready, then call
+   `await I.videoTitle("<localized headline>", 50, "glow")`. Choose the headline
+   and size for the feature; the second argument is an optional fixed font size
+   in CSS pixels, and the third selects `glow`, `clean` or `bold`. Keep its login,
+   preparation and cleanup independent of the main walkthrough. See the
+   production reference's **YouTube Thumbnail** section for sizing and outputs.
+5. The named main walkthrough: tag `@video`. Add `@current` here only if needed.
 
 For a quick readable overview, run `npm run video:plan video/<scenario-name>.js`
 from `src/test/webapp`. It statically reads the top-level `const videoPlan` and
@@ -271,8 +279,10 @@ Run proportionate checks:
    Verify the three-second lead-in and two-second tail holds for automatic shots and their absence
    for manual/head entries. Verify that audio validation and generation do not
    execute inline callbacks.
-2. Dry-run the audio-only, head-only and complete video configurations; none may call
+2. Dry-run the audio-only, head-only, thumbnail and complete video configurations; none may call
    ElevenLabs. Check legacy scenarios remain compatible when changing helpers.
+   Use `npm run video:title -- video/<scenario-name>.js --dry-run` to verify that
+   the required `@title` scenario is selected.
    Run `npm run video:plan video/<scenario-name>.js` to inspect narration and timing.
 3. Run `npm run audio video/<scenario-name>.js` only on explicit request with
    an available API key. Object plans produce `<scenario-name>-<language>-1.mp3`,
