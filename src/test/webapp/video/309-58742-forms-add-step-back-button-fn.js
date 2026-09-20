@@ -24,7 +24,13 @@ const videoPlan = {
             title: "Return to previously saved details",
             "text-sk": "Pozrime sa na registráciu na online kurz. Od druhého kroku je dostupné tlačidlo na návrat. Po kliknutí sa vrátite na prvý krok, ktorý obsahuje vami vyplnené údaje.",
             notes: "Start on the second step with fictional contact details already saved in the session. Return to the first step and frame the restored values. Never submit the final step.",
-            shot: async ({ I, back, firstName, surname, email }) => {
+            shot: async ({ I, back, next, newsletter, firstName, surname, email }) => {
+                await I.wait(1);
+                await I.videoClick(next);
+                await I.waitForVisible(back, 10);
+                await I.waitForVisible(newsletter, 10);
+                await I.dontSeeCheckboxIsChecked(newsletter);
+                await I.wait(2);
                 await I.videoClick(back);
                 await I.waitForVisible(firstName, 10);
                 await I.seeInField(firstName, "Jana");
@@ -39,7 +45,7 @@ const videoPlan = {
             type: "auto",
             durationSeconds: 11,
             title: "Save a correction by continuing forward",
-            "text-sk": "Pri chybe nemusíte teda začínať odznova, opravíte napríklad priezvisko a pokračuje ďalej vo vypĺňaní formuláru.",
+            "text-sk": "Pri chybe nemusíte teda začínať odznova, opravíte napríklad priezvisko a pokračujete ďalej vo vypĺňaní formuláru.",
             prepare: async ({ I, back, firstName }) => {
                 await I.clickCss(back);
                 await I.waitForVisible(firstName, 10);
@@ -58,7 +64,7 @@ const videoPlan = {
             type: "auto",
             durationSeconds: 10,
             title: "Explain which changes Back does not save",
-            "text-sk": "Ak by ste už mali niečo v druhom kroku vyplnené a vrátite sa nazad, tak tieto zmeny nebudú uložené. Zmeny v prvom kroku môžu totiž ovplyvniť druhý krok, napríklad zobrazené možnosi alebo povinné polia.",
+            "text-sk": "Ak by ste už mali niečo v druhom kroku vyplnené a vrátite sa nazad, tak tieto zmeny nebudú uložené. Zmeny v prvom kroku môžu ovplyvniť druhý krok, napríklad zobrazené možnosti alebo povinné polia.",
             notes: "Check the newsletter option, return without submitting this step, then advance from the first step. Show that the newsletter option is unchecked again.",
             shot: async ({ I, newsletter, back, firstName, next }) => {
                 await I.dontSeeCheckboxIsChecked(newsletter);
@@ -76,15 +82,14 @@ const videoPlan = {
             type: "auto",
             durationSeconds: 11,
             title: "Customize the previous-step button label",
-            "text-sk": "Nastavenie je jednoduché, v admionistrácii v editore druhého kroku otvorte kartu Pokročilé. Pole Predchádzajúci krok určuje text tlačidla na návrat. Zadajte Späť na údaje, aby bolo jasné, kam tlačidlo vedie.",
+            "text-sk": "Nastavenie je jednoduché, v administrácii v editore druhého kroku otvorte kartu Pokročilé. Pole Predchádzajúci krok určuje text tlačidla na návrat. Zadajte Späť na údaje, aby bolo jasné, kam tlačidlo vedie.",
             notes: "Edit the second step of the existing screenshot fixture. Demonstrate the label field, then discard the change in cleanup.",
-            prepare: async ({ I, DTE }) => {
+            shot: async ({ I, DTE, typeText }) => {
                 await I.click(locate("#formStepsDataTable tbody td").withText("Krok 2"));
                 await I.waitForVisible(".stepPreview [data-multistep-back-step]", 10);
                 await I.clickCss("#formStepsDataTable_wrapper button.buttons-edit");
                 await DTE.waitForEditor("formStepsDataTable");
-            },
-            shot: async ({ I, typeText }) => {
+
                 await I.videoClick("#pills-dt-formStepsDataTable-advanced-tab");
                 await I.waitForVisible("#DTE_Field_backStepBtnLabel", 10);
                 await I.videoClick("#DTE_Field_backStepBtnLabel");
@@ -92,6 +97,7 @@ const videoPlan = {
                 await typeText("Späť na údaje");
                 await I.seeInField("#DTE_Field_backStepBtnLabel", "Späť na údaje");
                 await I.wait(3);
+                await DTE.save("formStepsDataTable");
             }
         },
         {
@@ -118,18 +124,32 @@ const videoPlan = {
             type: "auto",
             durationSeconds: 11,
             title: "Select a style for a particular page instance",
-            "text-sk": "Teraz sme v aplikácii Formulár vloženej na stránke. Otvoríme výber CSS šablóny a zvolíme prvý vzhľad. Vybraná šablóna sa zobrazí v nastavení tejto aplikácie.",
+            "text-sk": "Teraz sme v aplikácii Formulár vloženej na stránke. Otvoríme výber CSS šablóny a zvolíme vzhľad. Vybraná šablóna sa použije pri zobrazení formuláru. Môžete mať tak jeden formulár v rôznych dizajnoch podľa potrieb, napríklad zobrazenie vo web stránke, alebo v dialógovom okne.",
             notes: "Open the existing form component on page 156109. Select a style without confirming the app dialog or saving the page; cleanup discards it.",
-            prepare: async ({ I }) => {
+            shot: async ({ I, Apps }) => {
+                await Apps.openAppEditor(156109);
                 await I.waitForElement("#DTE_Field_cssTemplate option[value='/apps/form/mvc/styles/template-1.css']", 20);
-            },
-            shot: async ({ I }) => {
                 await I.videoClick(".DTE_Field_Name_cssTemplate button.dropdown-toggle");
-                const option = locate("div.dropdown-menu.show a.dropdown-item").withText("template-1.css");
+                const option = locate("div.dropdown-menu.show a.dropdown-item").withText("template-3.css");
                 await I.waitForVisible(option, 10);
                 await I.videoClick(option);
-                await I.seeInField("#DTE_Field_cssTemplate", "/apps/form/mvc/styles/template-1.css");
-                await I.wait(4);
+                await I.seeInField("#DTE_Field_cssTemplate", "/apps/form/mvc/styles/template-3.css");
+                await I.wait(1);
+                await Apps.confirm();
+                await I.wait(1);
+                await I.videoClick("#datatableInit_modal button.btn-preview");
+                await I.usePlaywrightTo("wait for the preview tab", async ({ page }) => {
+                    await page.waitForFunction(() => window.previewWindow != null && !window.previewWindow.closed);
+                });
+                await I.switchToNextTab();
+                const previewUrl = await I.grabCurrentUrl();
+                await I.wait(1);
+                await I.closeCurrentTab();
+                // Playwright records each tab separately; retain this view in the main recording.
+                await I.amOnPage(previewUrl);
+                await I.wait(1);
+                await I.videoScroll();
+                await I.wait(5);
             }
         },
         {
@@ -152,7 +172,9 @@ const videoPlan = {
 };
 
 Scenario("ElevenLabs", ({ I }) => {
-    I.generateAudio(videoPlan);
+    I.generateAudio(videoPlan, {
+        modelId: "eleven_multilingual_v2"
+    });
 }).tag("@audio");
 
 Scenario("Shot plan", ({ I }) => {
@@ -183,7 +205,6 @@ Scenario("309-58742-forms-add-step-back-button-fn", async ({ I, DT, DTE, Documen
             await I.switchTo();
             if (shot.id === "documentation") return;
             if (shot.id === "page-style") {
-                await Apps.openAppEditor(156109);
                 return;
             }
             if (shot.id === "button-label" || shot.id === "preview-styles") {
@@ -203,21 +224,14 @@ Scenario("309-58742-forms-add-step-back-button-fn", async ({ I, DT, DTE, Documen
             await I.fillField(surname, "Novakova");
             await I.fillField(email, "jana@example.com");
             await I.fillField("#f1-telefon-1", "");
-            if (shot.id === "intro") return;
+            if (shot.id === "intro" || shot.id === "return-to-details") return;
             await I.clickCss(next);
             await I.waitForVisible(back, 10);
             await I.waitForVisible(newsletter, 10);
             await I.dontSeeCheckboxIsChecked(newsletter);
         },
         cleanup: async shot => {
-            if (shot.id === "button-label") {
-                await DTE.cancel("formStepsDataTable");
-            } else if (shot.id === "page-style") {
-                await I.switchTo();
-                await I.clickCss("td.cke_dialog_footer .cke_dialog_ui_button_cancel");
-                await I.waitForInvisible(".cke_dialog_ui_iframe", 10);
-                await DTE.cancel();
-            }
+
         }
     });
 }).tag("@video");
