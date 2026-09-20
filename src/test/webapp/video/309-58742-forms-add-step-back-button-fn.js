@@ -6,9 +6,9 @@ const videoPlan = {
         {
             id: "intro",
             type: "auto",
-            durationSeconds: 8,
+            durationSeconds: 10,
             title: "Correct an answer without starting again",
-            "text-sk": "Preklep vo formulári nemusí znamenať začínať odznova. Vo WebJET CMS sa návštevník jednoducho vráti k predchádzajúcemu kroku a opraví svoje údaje.",
+            "text-sk": "Preklep vo formulári nemusí znamenať začínať odznova. Do viac krokových formulárov sme doplnili funkciu návratu na predchádzajúci krok.",
             notes: "Show the real registration page with fictional contact details filled in. Focus the surname and hold the form during the opening narration; the following shots demonstrate navigation and correction.",
             shot: async ({ I, surname, email }) => {
                 await I.videoClick(surname);
@@ -20,9 +20,9 @@ const videoPlan = {
         {
             id: "return-to-details",
             type: "auto",
-            durationSeconds: 12,
+            durationSeconds: 11,
             title: "Return to previously saved details",
-            "text-sk": "Pozrime sa na registráciu na online kurz. Od druhého kroku je dostupné tlačidlo na návrat. Po kliknutí sa obnovia údaje uložené pri poslednom úspešnom pokračovaní dopredu.",
+            "text-sk": "Pozrime sa na registráciu na online kurz. Od druhého kroku je dostupné tlačidlo na návrat. Po kliknutí sa vrátite na prvý krok, ktorý obsahuje vami vyplnené údaje.",
             notes: "Start on the second step with fictional contact details already saved in the session. Return to the first step and frame the restored values. Never submit the final step.",
             shot: async ({ I, back, firstName, surname, email }) => {
                 await I.videoClick(back);
@@ -39,7 +39,7 @@ const videoPlan = {
             type: "auto",
             durationSeconds: 11,
             title: "Save a correction by continuing forward",
-            "text-sk": "Návštevník tak nemusí znovu vypĺňať celý formulár. Opraví napríklad priezvisko a pokračuje ďalej. Pri ďalšom návrate už vidí opravenú hodnotu, ktorú uložil prechodom dopredu.",
+            "text-sk": "Pri chybe nemusíte teda začínať odznova, opravíte napríklad priezvisko a pokračuje ďalej vo vypĺňaní formuláru.",
             prepare: async ({ I, back, firstName }) => {
                 await I.clickCss(back);
                 await I.waitForVisible(firstName, 10);
@@ -50,17 +50,15 @@ const videoPlan = {
                 await typeText("Nováková");
                 await I.videoClick(next);
                 await I.waitForVisible(back, 10);
-                await I.videoClick(back);
-                await I.waitForVisible(surname, 10);
-                await I.seeInField(surname, "Nováková");
+                await I.wait(4);
             }
         },
         {
             id: "unsaved-current-step",
             type: "auto",
-            durationSeconds: 12,
+            durationSeconds: 10,
             title: "Explain which changes Back does not save",
-            "text-sk": "Pozor však na práve otvorený krok. Tlačidlo Späť jeho rozpracované zmeny neukladá ani nekontroluje. Ak tu návštevník zmení výber a hneď sa vráti, táto zmena sa nezachová.",
+            "text-sk": "Ak by ste už mali niečo v druhom kroku vyplnené a vrátite sa nazad, tak tieto zmeny nebudú uložené. Zmeny v prvom kroku môžu totiž ovplyvniť druhý krok, napríklad zobrazené možnosi alebo povinné polia.",
             notes: "Check the newsletter option, return without submitting this step, then advance from the first step. Show that the newsletter option is unchecked again.",
             shot: async ({ I, newsletter, back, firstName, next }) => {
                 await I.dontSeeCheckboxIsChecked(newsletter);
@@ -78,7 +76,7 @@ const videoPlan = {
             type: "auto",
             durationSeconds: 11,
             title: "Customize the previous-step button label",
-            "text-sk": "Text tlačidla si prispôsobíte v editore kroku. Na karte Pokročilé vyplníte pole Predchádzajúci krok, napríklad Späť na údaje. Prázdne pole ponechá predvolený text tlačidla.",
+            "text-sk": "Nastavenie je jednoduché, v admionistrácii v editore druhého kroku otvorte kartu Pokročilé. Pole Predchádzajúci krok určuje text tlačidla na návrat. Zadajte Späť na údaje, aby bolo jasné, kam tlačidlo vedie.",
             notes: "Edit the second step of the existing screenshot fixture. Demonstrate the label field, then discard the change in cleanup.",
             prepare: async ({ I, DTE }) => {
                 await I.click(locate("#formStepsDataTable tbody td").withText("Krok 2"));
@@ -101,7 +99,7 @@ const videoPlan = {
             type: "auto",
             durationSeconds: 11,
             title: "Compare form styles in the preview",
-            "text-sk": "Novinkou sú aj pripravené vzhľady formulára. V administračnom náhľade prepnete CSS šablónu a hneď porovnáte výsledok. Toto skúšanie nemení vzhľad formulára, ktorý už máte na stránke.",
+            "text-sk": "Pridali sme aj možnosť prispôsobiť štýl formulára. Pri jeho zmene okamžite vidíte náhľad výsledku.",
             shot: async ({ I }) => {
                 for (const template of ["template-1.css", "template-2.css", "template-3.css"]) {
                     await I.videoClick("#previewCssTemplate");
@@ -109,6 +107,8 @@ const videoPlan = {
                     await I.pressKey("Escape");
                     await I.waitForElement(`.stepPreview[data-multistep-css-template='/apps/form/mvc/styles/${template}'] #formStepPreviewCssTemplate`, 10);
                     await I.waitForFunction(() => document.querySelector("#formStepPreviewCssTemplate")?.sheet != null, [], 10);
+                    // Larger template headings can push the fields below the preview viewport.
+                    await I.scrollTo(".stepPreview #f1-meno-1");
                     await I.wait(2);
                 }
             }
@@ -118,7 +118,7 @@ const videoPlan = {
             type: "auto",
             durationSeconds: 11,
             title: "Select a style for a particular page instance",
-            "text-sk": "Vybraný vzhľad nastavíte samostatne v aplikácii Formulár vloženej na stránke. Každá vložená inštancia môže mať vlastnú šablónu. Rovnaký formulár tak viete vizuálne prispôsobiť rôznym stránkam.",
+            "text-sk": "Teraz sme v aplikácii Formulár vloženej na stránke. Otvoríme výber CSS šablóny a zvolíme prvý vzhľad. Vybraná šablóna sa zobrazí v nastavení tejto aplikácie.",
             notes: "Open the existing form component on page 156109. Select a style without confirming the app dialog or saving the page; cleanup discards it.",
             prepare: async ({ I }) => {
                 await I.waitForElement("#DTE_Field_cssTemplate option[value='/apps/form/mvc/styles/template-1.css']", 20);
@@ -135,12 +135,17 @@ const videoPlan = {
         {
             id: "documentation",
             type: "auto",
-            durationSeconds: 9,
+            durationSeconds: 10,
             title: "Read the multistep form documentation",
-            "text-sk": "Uľahčite návštevníkom opravy a vyberte formuláru vhodný vzhľad. Podrobný postup nájdete v dokumentácii WebJET CMS. Odkaz na návod je v popise videa.",
-            notes: "Public article URL verified. Publish the branch documentation before releasing the film; the public article does not yet describe Back or CSS templates. Trim the scroll to the narration length.",
+            "text-sk": "Ďalšie možnosti viackrokových formulárov nájdete v dokumentácii WebJET CMS. Otvorená časť Položky formuláru vysvetľuje prácu s krokmi a poľami. Odkaz nájdete v popise videa.",
+            notes: "Hold the article heading and introduction during the documentation invitation. Include this public URL in the video description. The current article does not yet document Back or CSS templates, so do not promise those instructions.",
+            prepare: async ({ I }) => {
+                await I.amOnPage("https://docs.webjetcms.sk/latest/sk/redactor/apps/multistep-form/");
+                await I.waitForVisible("article h1", 20);
+            },
             shot: async ({ I }) => {
-                await I.videoDocumentation("https://docs.webjetcms.sk/latest/sk/redactor/apps/multistep-form/");
+                await I.see("Položky formuláru", "article h1");
+                await I.wait(8);
             }
         }
     ]

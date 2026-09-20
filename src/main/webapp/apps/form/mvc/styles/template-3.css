@@ -72,7 +72,6 @@
 [data-multistep-css-template="/apps/form/mvc/styles/template-3.css"] .multistep-form .step-header h3 {
     position: relative;
     z-index: 1;
-    max-width: 78%;
     margin: 0;
     color: #fff;
     font-size: clamp(1.55rem, 3vw, 2.2rem);
