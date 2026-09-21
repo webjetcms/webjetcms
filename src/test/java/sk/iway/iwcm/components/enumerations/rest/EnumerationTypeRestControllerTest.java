@@ -13,6 +13,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
@@ -21,7 +22,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
@@ -36,7 +37,7 @@ import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeRepository;
 
 /**
- * Tests deleted-type safeguards, data restoration, and synchronization and duplication of string field settings.
+ * Tests deleted-type safeguards, data deletion and restoration, and synchronization and duplication of string field settings.
  */
 class EnumerationTypeRestControllerTest {
 
@@ -62,22 +63,29 @@ class EnumerationTypeRestControllerTest {
         verifyNoInteractions(dataRepository);
     }
 
-    /** Restores data when reactivating a deleted type, but leaves data unchanged on ordinary edits. */
+    /** Propagates deletion and restoration to data records, but leaves data unchanged on ordinary edits. */
     @ParameterizedTest
-    @ValueSource(booleans = {false, true})
-    void editRestoresDataOnlyWhenDeletedTypeBecomesActive(boolean wasHidden) {
+    @CsvSource({
+        "false, true, 1",
+        "true, false, 1",
+        "false, false, 0",
+        "true, true, 0"
+    })
+    void editUpdatesDataOnlyWhenTypeDeletionStateChanges(boolean wasHidden, boolean hidden, int expectedUpdates) {
         EnumerationTypeRepository repository = mock(EnumerationTypeRepository.class);
         EnumerationDataRepository dataRepository = mock(EnumerationDataRepository.class);
         EnumerationTypeRestController controller = spy(new EnumerationTypeRestController(repository, dataRepository, mock(CustomFieldsRepository.class)));
         EnumerationTypeBean type = new EnumerationTypeBean();
         type.setId(ENUMERATION_TYPE_ID);
+        type.setHidden(hidden);
         doReturn(type).when(controller).getOne(ENUMERATION_TYPE_ID);
         when(repository.getHiddenByEnumTypeId((int) ENUMERATION_TYPE_ID)).thenReturn(wasHidden);
         when(repository.save(type)).thenReturn(type);
 
         controller.editItem(type, ENUMERATION_TYPE_ID);
 
-        verify(dataRepository, times(wasHidden ? 1 : 0)).deleteAllEnumDataByEnumTypeId((int) ENUMERATION_TYPE_ID, false);
+        verify(dataRepository, times(expectedUpdates)).deleteAllEnumDataByEnumTypeId((int) ENUMERATION_TYPE_ID, hidden);
+        verifyNoMoreInteractions(dataRepository);
     }
 
     /**

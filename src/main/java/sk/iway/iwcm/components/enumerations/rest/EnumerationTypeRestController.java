@@ -198,13 +198,13 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
         processToEntity(entity, ProcessItemAction.EDIT);
     }
 
-    /** Restores the type's data only when a deleted type is successfully saved as active. */
+    /** Applies deletion or restoration to the type's data only when its saved deletion state changes. */
     @Override
     public EnumerationTypeBean editItem(EnumerationTypeBean entity, long id) {
         boolean wasHidden = jpaToBoolean(enumerationTypeRepository.getHiddenByEnumTypeId((int) id));
         EnumerationTypeBean saved = super.editItem(entity, id);
-        if (wasHidden && !saved.isHidden()) {
-            enumerationDataRepository.deleteAllEnumDataByEnumTypeId(saved.getEnumerationTypeId(), false);
+        if (wasHidden != saved.isHidden()) {
+            enumerationDataRepository.deleteAllEnumDataByEnumTypeId(saved.getEnumerationTypeId(), saved.isHidden());
         }
         return saved;
     }
