@@ -261,7 +261,7 @@ Scenario('Test webpage logic', ({I, DT, DTE}) => {
     DT.waitForLoader();
 
     I.say("Test, that we can add webpage without selected folder");
-    I.clickCss("button.buttons-create");
+    I.clickCss("#bloggerArticlesDataTable_wrapper button.buttons-create");
     DTE.waitForEditor("bloggerArticlesDataTable");
     I.clickCss("#pills-dt-bloggerArticlesDataTable-basic-tab");
     I.seeInField("#editorAppDTE_Field_editorFields-groupDetails input.form-control", "/Aplikácie/Blog/bloggerPerm/Nezaradené");
@@ -273,7 +273,7 @@ Scenario('Test webpage logic', ({I, DT, DTE}) => {
     DT.waitForLoader("bloggerArticlesDataTable");
 
     I.say("Now create new page");
-    I.clickCss("button.buttons-create");
+    I.clickCss("#bloggerArticlesDataTable_wrapper button.buttons-create");
     DTE.waitForEditor("bloggerArticlesDataTable");
     I.clickCss("#pills-dt-bloggerArticlesDataTable-basic-tab");
     I.fillField("#DTE_Field_title", newPageName);
