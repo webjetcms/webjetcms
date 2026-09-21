@@ -81,7 +81,7 @@ public class ScopedGroupsTreeService {
      * Returns roots, lazy children, or search matches with their scoped ancestors.
      * The initial response opens the selected folder's path and includes its siblings.
      */
-    public List<ScopedGroupsTreeItem> getItems(int parentId, int selectedId, String searchValue, String searchType) {
+    public List<GroupsJsTreeItem> getItems(int parentId, int selectedId, String searchValue, String searchType) {
         Set<Integer> included = new LinkedHashSet<>();
         Set<Integer> opened = new HashSet<>();
         boolean searching = Tools.isNotEmpty(searchValue);
@@ -110,12 +110,13 @@ public class ScopedGroupsTreeService {
             included.addAll(children.getOrDefault(parentId, List.of()));
         }
 
-        List<ScopedGroupsTreeItem> items = new ArrayList<>();
+        List<GroupsJsTreeItem> items = new ArrayList<>();
         for (GroupDetails group : GroupsTreeService.sortGroupsBasedOnUserSettings(user, new ArrayList<>(groups.values()))) {
             int id = group.getGroupId();
             if (!included.contains(id)) continue;
             boolean navigationOnly = navigationParents.contains(id);
-            ScopedGroupsTreeItem item = new ScopedGroupsTreeItem(group, user, navigationOnly ? null : filters.getOrDefault(id, String.valueOf(id)), checkGroupsPerms);
+            GroupsJsTreeItem item = new GroupsJsTreeItem(group, user, false, checkGroupsPerms);
+            item.setGroupIdList(navigationOnly ? null : filters.getOrDefault(id, String.valueOf(id)));
             int parent = parentId(group);
             item.setParent(parent == 0 ? "#" : String.valueOf(parent));
             if (navigationOnly) item.setIcon("ti ti-folders");

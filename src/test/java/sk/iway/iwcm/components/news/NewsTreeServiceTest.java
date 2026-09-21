@@ -20,7 +20,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.doc.ScopedGroupsTreeItem;
+import sk.iway.iwcm.doc.GroupsJsTreeItem;
 import sk.iway.iwcm.doc.ScopedGroupsTreeService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
@@ -67,9 +67,9 @@ class NewsTreeServiceTest {
 
     @Test
     void deduplicatesOverlappingRootsAndRetainsExplicitChildRecursion() {
-        List<ScopedGroupsTreeItem> items = tree("10", "11*", "10*").getItems(0, 11, null, "contains");
+        List<GroupsJsTreeItem> items = tree("10", "11*", "10*").getItems(0, 11, null, "contains");
         assertEquals(ids(items).size(), new HashSet<>(ids(items)).size());
-        ScopedGroupsTreeItem child = items.stream().filter(item -> item.getId().equals("11")).findFirst().orElseThrow();
+        GroupsJsTreeItem child = items.stream().filter(item -> item.getId().equals("11")).findFirst().orElseThrow();
         assertEquals("10", child.getParent());
         assertEquals("11*", child.getGroupIdList());
         assertEquals("10*", items.get(0).getGroupIdList());
@@ -92,7 +92,7 @@ class NewsTreeServiceTest {
         editable.clear();
         editable.add(12);
         viewable.addAll(Set.of(10, 11));
-        List<ScopedGroupsTreeItem> items = tree("10").getItems(0, -1, null, "contains");
+        List<GroupsJsTreeItem> items = tree("10").getItems(0, -1, null, "contains");
         assertEquals(Set.of("10", "11", "12"), new HashSet<>(ids(items)));
         assertTrue(items.get(0).getState().isDisabled());
         assertEquals("12", items.stream().filter(item -> item.getState().isSelected()).findFirst().orElseThrow().getId());
@@ -102,8 +102,8 @@ class NewsTreeServiceTest {
         return new ScopedGroupsTreeService(java.util.Arrays.stream(values).map(value -> new LabelValue(value, value)).toList(), user, "news.example");
     }
 
-    private static List<String> ids(List<ScopedGroupsTreeItem> items) {
-        return items.stream().map(ScopedGroupsTreeItem::getId).toList();
+    private static List<String> ids(List<GroupsJsTreeItem> items) {
+        return items.stream().map(GroupsJsTreeItem::getId).toList();
     }
 
     private void addFolder(int id, int parentId, String name) {
