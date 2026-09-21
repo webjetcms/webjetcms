@@ -143,9 +143,9 @@ Vygenerovaný API klíč nastavte do konfigurační proměnné `ai_openRouterAut
 
 ### Lokální modely
 
-Lokální modely provádějí požadavky přímo na aplikačním serveru WebJET CMS. Kvalita modelů samozřejmě nedosahuje kvality velkých komerčních modelů, ale jsou spuštěny lokálně na vašem serveru, data neopouštějí vaše prostředí. Samozřejmě ale jejich provoz zvyšuje požadavky na výpočetní výkon a paměť serveru. Praktické nasazení je třeba ověřit a provést i zátěžové testy.
+Lokální modely provádějí požadavky přímo na aplikačním serveru WebJET CMS. Kvalita modelů samozřejmě nedosahuje kvality velkých komerčních modelů, ale jsou spuštěny lokálně na vašem serveru, data neopouštějí vaše prostředí. Není potřebná speciální grafická karta, tyto modely jsou spouštěny na standardních procesorech. Samozřejmě ale jejich provoz zvyšuje požadavky na výpočetní výkon a paměť serveru. Praktické nasazení je třeba ověřit a provést i zátěžové testy.
 
-!>**Upozornění:**: aktuálně je podporován běh modelů na architekturách `Linux x86_64` nebo `macOS ARM64`.
+!>**Upozornění:**: aktuálně je podporován běh modelů na architekturách `Linux x86_64`, `Windows x64` nebo `macOS ARM64`.
 
 Dostupné jsou tři samostatné typy poskytovatelů:
 

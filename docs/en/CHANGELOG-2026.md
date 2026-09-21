@@ -67,6 +67,14 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- [Forms](redactor/apps/form/README.md#possible-configuration-variables) - both classic and multi-step forms respect `sendMailSaveEmail` and save emails as `.eml` files to `sendMailSaveEmailPath` instead of SMTP sending. If the write fails, the form reports an error.
+- Multi-step forms - added [return to previous step](redactor/apps/multistep-form/README.md#return-to-previous-step) with restoring saved values ​​and files and [CSS template selection](redactor/apps/multistep-form/README.md#css-templates) for each inserted instance and preview in the administration (#58742).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Multi-step forms - fixed evaluating conditions after unchecking a box when returning to the previous step. A hidden or no longer required field will not block continuation due to the originally saved value (#58742).
 - [Multistep form statistics](redactor/apps/multistep-form/stat.md) has been extended with a date filter and advanced metrics for views/attempts/languages ​​etc. (#58509).
 
 ![](redactor/apps/multistep-form/stat-section-advanced.png)
@@ -94,7 +102,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](redactor/apps/semantic-search/rag-result.png)
 
 - Embedding indexing and search uses the provider and model set in the system AI assistant. Indexes of different providers and models can coexist; the **Semantic Index** page displays the current setting and preserves other combinations when re-indexing. The core of embedding requests, responses, and provider communication has been separated into the `webjet-ai` library; WebJET CMS continues to handle assistant selection, indexing, and vector storage (#58694).
-- AI assistants and semantic search - added support for [local models](redactor/ai/settings/README.md#local-models) for text generation, translation, and embedding directly on the server without sending content to an external AI service (#58561).
+- AI assistants and **semantic search** - added support for [local models](redactor/ai/settings/README.md#local-models) for text generation, translation and embedding directly on the server without sending content to an external AI service. These models can **run on regular hardware** (CPU), **do not require special graphics cards** (#58561).
 
 ### Applications
 
@@ -537,6 +545,7 @@ Redesigned application properties settings in the editor from the old code in `J
 - Security - tightened validation of database column names when performing dynamic sorting and filtering. **Warning:** Public APIs no longer support custom SQL expressions in sort parameters, only safe column names or available named constants are used (#294).
 - Security - [secured endpoint `row-reorder`](developer/datatables/README.md#row-order) of data tables. Only the numeric field marked `DataTableColumnType.ROW_REORDER` is allowed to be changed, while permissions are checked for each record and additionally for the entire batch using `checkRowReorderScope`. For forms, form and step membership and user access are verified; an invalid request is not saved (#295).
 - CKEditor - added option [configure content cleaning rules](frontend/setup/ckeditor.md#cleaning-html-code-when-pasting-from-wordexcel) when pasting from Word/Excel. **Warning:** default cleaning now also removes the `nowrap` attribute from `TD` cells and CSS classes with `align` and `valign` attributes from `TH` cells (#300).
+- Distribution - reduced the total size of Maven artifacts to about 65 MB by enabling compression, optimizing app previews and Page Builder/GridEditor/HTMLBox blocks, and removing unused administration files. Added script [`npm run scr:optimize`](../../src/test/webapp/README.md#optimize-appstore-screenshots-and-image-previews) to optimize preview images (#58790).
 
 ## 2026.0.28
 

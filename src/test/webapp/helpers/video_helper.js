@@ -367,14 +367,19 @@ class VideoHelper extends Helper {
   }
 
   /**
-   * Shows a two-second editing slate, or saves a thumbnail when a style is supplied or title mode is enabled.
+   * Shows a two-second editing slate, or saves a thumbnail when a size/style is supplied or title mode is enabled.
    * @param {string|object} title Legacy title or a resolved shot; manual/head shots show warnings with full notes or narration
+   * @param {number|string} [fontSize] Fixed font size in CSS pixels on the 1280 x 720 layout; omit for automatic fitting, or pass a legacy style
    * @param {string} [style] Thumbnail style: glow (default in title mode), clean or bold
    * @returns {Promise<void|string>} Thumbnail path, or nothing after the editing slate is removed
    */
-  async videoTitle(title, style) {
-    if (typeof title === "string" && (style !== undefined || this.config.titleMode === true)) {
-      return this._saveVideoTitle(title, style);
+  async videoTitle(title, fontSize, style) {
+    if (typeof fontSize === "string" && style === undefined) {
+      style = fontSize;
+      fontSize = undefined;
+    }
+    if (typeof title === "string" && (fontSize !== undefined || style !== undefined || this.config.titleMode === true)) {
+      return this._saveVideoTitle(title, fontSize, style);
     }
     const manual = typeof title === "object" && title.type === "manual";
     const head = typeof title === "object" && title.type === "head";
@@ -445,10 +450,10 @@ class VideoHelper extends Helper {
   }
 
   /** Captures the prepared scene and atomically replaces only this scenario's selected thumbnail style. */
-  async _saveVideoTitle(title, style) {
+  async _saveVideoTitle(title, fontSize, style) {
     const text = process.env.VIDEO_TITLE_TEXT?.trim() || title;
     style = process.env.VIDEO_TITLE_STYLE?.trim() || style || "glow";
-    validateVideoTitle(text, style);
+    validateVideoTitle(text, style, fontSize);
     if (!this.videoTest?.file) throw new Error("Video thumbnails must run inside a scenario with a source file.");
     const name = path.basename(this.videoTest.file, path.extname(this.videoTest.file));
     const directory = this.config.featureVideoDirectory || FEATURE_VIDEO_DIRECTORY;
@@ -470,7 +475,7 @@ class VideoHelper extends Helper {
     }
     const screenshot = await page.screenshot({ type: "png", animations: "disabled",
       style: "#wj-video-cursor-host, #wj-video-title-host { visibility: hidden !important; }" });
-    const jpeg = await renderVideoTitle(page.context().browser(), screenshot, text, style);
+    const jpeg = await renderVideoTitle(page.context().browser(), screenshot, text, style, fontSize);
     await fs.mkdir(path.dirname(output), { recursive: true });
     try {
       await fs.writeFile(temporary, jpeg, { flag: "wx" });
