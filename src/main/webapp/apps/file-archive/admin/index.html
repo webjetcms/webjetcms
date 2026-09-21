@@ -379,6 +379,28 @@
         };
 
         var buttonCounter = 4;
+        fileArchiveDataTable.button().add(buttonCounter++, {
+            text: '<i class="ti ti-eye" aria-hidden="true"></i>',
+            action: function (e, dt, node) {
+                let selectedRows = dt.rows({ selected: true }).data();
+                for (let i = 0; i < selectedRows.length; i++) {
+                    let row = selectedRows[i];
+                    let fileUrl = row.filePath + row.fileName;
+                    if (fileUrl.indexOf("/") !== 0) fileUrl = "/" + fileUrl;
+                    window.open(fileUrl, "_blank", "noopener");
+                }
+            },
+            init: function (dt, node, config) {
+                $.fn.dataTable.Buttons.showIfRowSelected(this, dt);
+            },
+            className: 'btn btn-outline-secondary buttons-history-preview',
+            attr: {
+                'title': /*[[#{components.map.lookup}]]*/ '',
+                'aria-label': /*[[#{components.map.lookup}]]*/ '',
+                'data-toggle': 'tooltip'
+            }
+        });
+
         if(WJ.hasPermission("cmp_fileArchiv_edit_del_rollback") == true) {
             //Add rollback button - if user have permission
             fileArchiveDataTable.button().add(buttonCounter++, {
@@ -1005,4 +1027,8 @@
 
     tr.waitingForUpload td { color: #E00028 !important; }
     tr.waitingForUpload a { color: #E00028 !important; }
+
+    .DTE_Body_Content .DTE_Form_Info {
+        margin: 16px;
+    }
 </style>
