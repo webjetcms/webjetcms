@@ -3,6 +3,7 @@ Feature('apps.file-archive.multiupload');
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const assert = require("node:assert/strict");
 const SL = require("./SL.js");
 
 const ARCHIVE_FOLDER = "/files/archiv/multiupload/";
@@ -22,6 +23,7 @@ let ckeditorFile;
 let duplicateActionFiles;
 let duplicateMetadataFiles;
 let rejectedDestinationFile;
+let categoryRoutingCleanup;
 
 Before(({ I, login }) => {
     login('admin');
@@ -86,6 +88,21 @@ Before(({ I, login }) => {
             duplicate: createUploadFile("archive_file_test_second.pdf", uploadPrefix + "-destination-rejection.pdf", "destination-rejection-repeat")
         };
     }
+});
+
+After(async ({ I, DT, Document }) => {
+    if (categoryRoutingCleanup == null) return;
+    const cleanup = categoryRoutingCleanup;
+    categoryRoutingCleanup = null;
+
+    Document.setConfigValue("fileArchivUseCategoryAsLink", cleanup.originalValue);
+    await deleteArchiveRowsByPrefix(I, DT, cleanup.prefix);
+    await deleteArchiveRowsByPrefix(I, DT, cleanup.prefix, cleanup.folder);
+    await SL.removeFileByElfinder(".elfinder-cwd-filename[title='" + cleanup.category + "']");
+});
+
+AfterSuite(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 
 Scenario('Set basic and advanced metadata for all files in a bulk upload', ({ I, DT, DTE }) => {
@@ -276,6 +293,89 @@ Scenario('Preserve untouched metadata when resolving duplicate bulk uploads', ({
         DTE.cancel("fileArchiveDataTable");
     }
 });
+
+for (const operation of ["overwrite", "keepboth"]) {
+    Scenario(`Resolve ${operation} conflict in the category destination @singlethread`, async ({ I, DT, DTE, Document }) => {
+        const prefix = SL.randomName("category-" + operation).toLowerCase();
+        const category = prefix + "-folder";
+        const folder = "/files/archiv/" + category + "/";
+        const initial = createUploadFile("archive_file_test.pdf", prefix + ".pdf", "category-initial");
+        const replacement = createUploadFile("archive_file_test_second.pdf", prefix + ".pdf", "category-replacement");
+        const validFrom = I.formatDateTime(new Date(2020, 0, 2, 12, 0).getTime());
+        const note = prefix + " updated metadata";
+
+        I.amOnPage("/admin/v9/settings/configuration/");
+        DT.waitForLoader("configurationDatatable");
+        const originalValue = await I.executeScript(() => new Promise((resolve, reject) => {
+            window.$.get("/admin/rest/settings/configuration/autocomplete/detail", { name: "fileArchivUseCategoryAsLink" })
+                .done(config => resolve(config.displayValue ?? config.value))
+                .fail(() => reject(new Error("Cannot read category routing configuration")));
+        }));
+        categoryRoutingCleanup = { originalValue, prefix, category, folder };
+        Document.setConfigValue("fileArchivUseCategoryAsLink", "true");
+
+        I.amOnPage(SL.fileArchive);
+        DT.waitForLoader("fileArchiveDataTable");
+        selectMultiuploadFolder(I, DT);
+        uploadFilesToDropzone(I, [initial], "success", null, { category, uploadRedundantFile: true });
+
+        SL.openFileArchive(folder + initial.fileName);
+        DT.filterContains("virtualFileName", initial.virtualName);
+        const originalRows = await I.executeScript(() => window.fileArchiveDataTable.rows().data().toArray());
+        I.assertLengthOf(originalRows, 1, "The category folder must contain one original document");
+
+        I.amOnPage(SL.fileArchive);
+        DT.waitForLoader("fileArchiveDataTable");
+        selectMultiuploadFolder(I, DT);
+        uploadFilesToDropzone(I, [replacement], "exist", null, {
+            category, validFrom, note, uploadRedundantFile: true
+        });
+        clickDuplicateUploadAction(I, replacement, "btn-toast-" + operation);
+        DT.waitForLoader("fileArchiveDataTable");
+        DT.filterContains("virtualFileName", initial.virtualName);
+        I.assertEqual(await DT.getRecordCount("fileArchiveDataTable"), 0, "The selected folder must remain empty");
+
+        SL.openFileArchive(folder + initial.fileName);
+        DT.filterContains("virtualFileName", initial.virtualName);
+        const updatedRows = await I.executeScript(() => window.fileArchiveDataTable.rows().data().toArray());
+        I.assertLengthOf(updatedRows, 1, "Conflict resolution must not create another main document");
+        I.assertEqual(updatedRows[0].id, originalRows[0].id, "The original document must be updated");
+        I.assertEqual(updatedRows[0].filePath, folder.substring(1));
+        I.assertEqual(updatedRows[0].fileName, initial.fileName);
+
+        I.click(initial.virtualName);
+        DTE.waitForEditor("fileArchiveDataTable");
+        I.seeInField("#DTE_Field_validFrom", validFrom);
+        I.click("#pills-dt-fileArchiveDataTable-advanced-tab");
+        I.seeInField("#DTE_Field_category", category);
+        I.seeInField("#DTE_Field_note", note);
+        I.click("#pills-dt-fileArchiveDataTable-listOfVersions-tab");
+        const historyTable = "datatableFieldDTE_Field_editorFields-listOfVersions";
+        I.waitForVisible("#" + historyTable + "_wrapper", 10);
+        DT.waitForLoader(historyTable);
+        const history = await I.executeScript(id => window.$("#" + id).DataTable().rows().data().toArray(), historyTable);
+        I.assertLengthOf(history, operation === "keepboth" ? 1 : 0, "Only a new version must preserve the original in history");
+        if (operation === "keepboth") {
+            I.assertEqual(history[0].referenceId, originalRows[0].id);
+            I.assertEqual(history[0].filePath, folder.substring(1));
+        }
+        DTE.cancel("fileArchiveDataTable");
+
+        I.usePlaywrightTo("verify the uploaded and historical file contents", async ({ page }) => {
+            const currentFile = await page.request.get(new URL(folder + initial.fileName, page.url()).href);
+            assert.equal(currentFile.status(), 200);
+            assert.deepEqual(await currentFile.body(), fs.readFileSync(replacement.filePath));
+            if (operation === "keepboth") {
+                const oldFile = await page.request.get(new URL(folder + history[0].fileName, page.url()).href);
+                assert.equal(oldFile.status(), 200);
+                assert.deepEqual(await oldFile.body(), fs.readFileSync(initial.filePath));
+            }
+        });
+        I.amOnPage(ELFINDER_MULTUPLOAD);
+        I.waitForElement(".elfinder-cwd", 10);
+        I.dontSeeElement(".elfinder-cwd-filename[title^='" + prefix + "']");
+    });
+}
 
 Scenario('Reject changing the physical destination for a new version', async ({ I, DT }) => {
     const category = uploadPrefix + "-different-category";

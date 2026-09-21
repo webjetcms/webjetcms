@@ -153,7 +153,7 @@ public abstract class FileArchivSupportMethodsService {
 	 *
 	 * @return normalized directory path, or {@code null} when it is outside the archive root
 	 */
-	protected String resolveFileDestinationDirPath() {
+	public String resolveFileDestinationDirPath() {
 		return validateFileDirPath(getPreferredDirPath());
 	}
 

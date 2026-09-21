@@ -256,6 +256,8 @@ Ako aj pri mazaní vzorov, tieto naplánované verzie sa dajú vymazať **IBA** 
 
 Súbory môžete do aktuálne zvoleného priečinka nahrať aj priamo zo zoznamu dokumentov. Presuňte jeden alebo viac súborov z počítača nad stránku manažéra dokumentov. Nahrávanie používa aktuálne označený priečinok v stromovej štruktúre a povolené prípony súborov z konfiguračnej premennej `fileArchivAllowExt`.
 
+Ak je `fileArchivUseCategoryAsLink` nastavené na `true` a pri hromadnom nahrávaní zadáte kategóriu, cieľový priečinok sa odvodí z tejto kategórie. V tomto priečinku sa kontrolujú aj súbory s rovnakým menom a vykonajú sa zvolené akcie **Nahradiť** alebo **Nová verzia**.
+
 Pred spustením nahrávania sa zobrazí editor rovnaký ako pri vytváraní dokumentu, pričom obsahuje iba polia určené pre hromadné nastavenie. Na karte **Základné** môžete voliteľne nastaviť rovnakú **Platnosť od** a **Platnosť do** pre všetky vybrané súbory. Zapnutím možnosti **Nahrať dokument neskôr** nastavíte aj budúci termín nahratia a e-mailové adresy pre notifikáciu.
 
 ![](drag-drop-upload-settings-dialog.png)
