@@ -495,26 +495,24 @@ function adminUploadInit(options) {
 
     adminUpload.overwrite = function (key, destinationFolder, fileName, uploadType, callback, requestParams) {
         var url = '/admin/upload/overwrite';
-        var params = {
+        var params = Object.assign({}, requestParams || {}, {
             fileKey: key,
             destinationFolder: destinationFolder,
             fileName: fileName,
             uploadType: uploadType,
-        };
-        Object.assign(params, requestParams || {});
+        });
 
         callRestService(url, params, callback);
     };
 
     adminUpload.keepboth = function (key, destinationFolder, fileName, uploadType, callback, requestParams) {
         var url = '/admin/upload/keepboth';
-        var params = {
+        var params = Object.assign({}, requestParams || {}, {
             fileKey: key,
             destinationFolder: destinationFolder,
             fileName: fileName,
             uploadType: uploadType,
-        };
-        Object.assign(params, requestParams || {});
+        });
 
         callRestService(url, params, callback);
     };

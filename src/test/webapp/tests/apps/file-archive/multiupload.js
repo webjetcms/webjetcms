@@ -9,7 +9,6 @@ const SL = require("./SL.js");
 const ARCHIVE_FOLDER = "/files/archiv/multiupload/";
 const ARCHIVE_LATER_FOLDER = "/files/archiv/files/archiv_insert_later/files/archiv/multiupload/";
 const ARCHIVE_FOLDER_NAME = "multiupload";
-const DROPZONE_INPUT = "input.dz-hidden-input.dz-hidden-input-dt-upload";
 const ELFINDER_MULTUPLOAD = "/admin/v9/files/index/#elf_iwcm_2_L2ZpbGVzL2FyY2hpdi9tdWx0aXVwbG9hZA_E_E";
 const DOCS_DIR = path.join(__dirname, "docs");
 
@@ -181,7 +180,8 @@ Scenario('Set all scheduled upload parameters for every file in a bulk upload', 
         validTo: validTo,
         saveLater: true,
         dateUploadLater: dateUploadLater,
-        emails: emails
+        emails: emails,
+        uploadRedundantFile: true
     });
 
     SL.openFileArchive(ARCHIVE_LATER_FOLDER + "scheduled.pdf");
@@ -272,7 +272,8 @@ Scenario('Preserve untouched metadata when resolving duplicate bulk uploads', ({
     uploadFilesToDropzone(I, duplicateMetadataFiles.map(file => file.initial), "success", null, {
         showFile: false,
         indexFile: false,
-        priority: priority
+        priority: priority,
+        uploadRedundantFile: true
     });
     DT.waitForLoader("fileArchiveDataTable");
 
@@ -521,12 +522,15 @@ function selectMultiuploadFolder(I, DT) {
  * @param {{validFrom?: string, validTo?: string, saveLater?: boolean, dateUploadLater?: string, emails?: string, product?: string, category?: string, productCode?: string, showFile?: boolean, indexFile?: boolean, priority?: string, referenceToMain?: string, note?: string, uploadRedundantFile?: boolean}|null} [bulkOptions=null] - optional metadata applied before upload
  */
 function uploadFilesToDropzone(I, files, expectedStatus = "success", frameSelector = null, bulkOptions = null) {
-    I.waitForElement(DROPZONE_INPUT, 20);
+    I.waitForElement("#dt-upload", 20);
     I.usePlaywrightTo("upload files to file archive dropzone", async ({ page }) => {
-        const input = frameSelector == null
-            ? page.locator(DROPZONE_INPUT)
-            : page.frameLocator(frameSelector).locator(DROPZONE_INPUT);
-        await input.setInputFiles(files.map(file => file.filePath));
+        const dropzone = frameSelector == null
+            ? page.locator("#dt-upload")
+            : page.frameLocator(frameSelector).locator("#dt-upload");
+        // Dropzone recreates its input after each selection, replacing the custom CSS class.
+        const input = await dropzone.evaluateHandle(element => element.dropzone.hiddenFileInput);
+        await input.asElement().setInputFiles(files.map(file => file.filePath));
+        await input.dispose();
     });
 
     I.waitForVisible("#fileArchiveDataTable_modal", 20);
@@ -560,6 +564,7 @@ function uploadFilesToDropzone(I, files, expectedStatus = "success", frameSelect
             }
         }
     }
+    I.click("#fileArchiveDataTable_modal .DTE_Header_Content");
     I.click("#fileArchiveDataTable_modal .DTE_Form_Buttons button.btn-primary");
     I.waitForInvisible("#fileArchiveDataTable_modal", 10);
 
@@ -628,13 +633,13 @@ function setBulkUploadCheckbox(I, selector, checked) {
  */
 function clickDuplicateUploadAction(I, file, buttonClass, expectedStatus = "success") {
     I.usePlaywrightTo("resolve duplicate upload action", async ({ page }) => {
-        const toast = page.locator("#toast-container-upload div.toast", { hasText: file.fileName }).last();
+        const toast = page.locator("#toast-container-upload div.toast", { hasText: file.fileName }).first();
         await toast.waitFor({ state: "visible", timeout: 20000 });
         await toast.locator("." + buttonClass).click();
         await page.waitForFunction(({ fileName, expectedStatus }) => {
             const toasts = Array.from(document.querySelectorAll("#toast-container-upload div.toast"))
                 .filter(toast => toast.textContent.includes(fileName));
-            const latestToast = toasts[toasts.length - 1];
+            const latestToast = toasts[0];
             return latestToast != null && latestToast.getAttribute("data-upload-status") === expectedStatus;
         }, { fileName: file.fileName, expectedStatus: expectedStatus }, { timeout: 60000 });
     });

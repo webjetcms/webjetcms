@@ -108,7 +108,7 @@ public class FileArchiveUploadService {
         editorFields.setDir(destinationFolder);
         editorFields.setFile(fileKey);
         entity.setEditorFields(editorFields);
-        String optionsError = bulkUploadOptions.applyTo(entity);
+        String optionsError = bulkUploadOptions.bindTo(entity);
         if (Tools.isNotEmpty(optionsError)) {
             putError(output, prop, optionsError);
             AdminUploadServlet.deleteTempFile(fileKey);
@@ -216,7 +216,7 @@ public class FileArchiveUploadService {
         editorFields.setFile(fileKey);
         editorFields.setUploadType(uploadType);
         entity.setEditorFields(editorFields);
-        String optionsError = bulkUploadOptions.applyTo(entity);
+        String optionsError = bulkUploadOptions.bindTo(entity);
         if (Tools.isNotEmpty(optionsError)) {
             AdminUploadServlet.deleteTempFile(fileKey);
             putError(output, prop, optionsError);

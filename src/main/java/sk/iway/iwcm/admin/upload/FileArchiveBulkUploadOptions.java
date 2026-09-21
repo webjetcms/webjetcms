@@ -1,105 +1,80 @@
 package sk.iway.iwcm.admin.upload;
 
+import java.beans.PropertyEditorSupport;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.MutablePropertyValues;
+import org.springframework.validation.DataBinder;
 
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.file_archiv.FileArchivatorBean;
+import sk.iway.iwcm.components.file_archiv.FileArchivatorEditorFields;
 
 /**
- * Holds validated bulk-edit metadata for a single file archive upload.
- * Instances can apply optional validity, publication, indexing, and delayed-upload
- * settings to an archive entity without changing unspecified values.
+ * Retains only supplied bulk-upload fields across upload chunks and binds them directly to the archive entity.
+ * The same allowlist controls request binding and the fields displayed in the bulk-upload dialog.
  */
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-final class FileArchiveBulkUploadOptions implements Serializable {
+public final class FileArchiveBulkUploadOptions implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    static final String PARAM_SAVE_LATER = "fileArchiveSaveLater";
-    static final String PARAM_DATE_UPLOAD_LATER = "fileArchiveDateUploadLater";
-    static final String PARAM_EMAILS = "fileArchiveEmails";
+    static final String PARAM_SAVE_LATER = "editorFields.saveLater";
+    static final String PARAM_DATE_UPLOAD_LATER = "editorFields.dateUploadLater";
+    static final String PARAM_EMAILS = "editorFields.emails";
     static final String ERROR_SAVE_LATER_REPLACE = "components.file_archiv.bulk_upload.error.save_later_replace";
     static final String ERROR_INVALID_ADVANCED_OPTIONS = "components.file_archiv.bulk_upload.error.invalid_advanced_options";
-
     static final String ERROR_INVALID_UPLOAD_DATE = "components.file_archiv.upload.upload_date_wrong";
-    static final int MAX_EMAILS_LENGTH = 1100;
-    static final int MAX_TEXT_LENGTH = 255;
-    static final int MAX_NOTE_LENGTH = 1100;
-    private static final long MAX_DATE = 253402300799999L;
 
-    private final Date validFrom;
-    private final Date validTo;
-    private final boolean saveLater;
-    private final Date dateUploadLater;
-    private final String emails;
-    private final String product;
-    private final String category;
-    private final String productCode;
-    private final Boolean showFile;
-    private final Boolean indexFile;
-    private final Integer priority;
-    private final String referenceToMain;
-    private final String note;
-    private final Boolean uploadRedundantFile;
+    private static final List<String> ALLOWED_FIELDS = List.of(
+        "validFrom", "validTo", PARAM_SAVE_LATER, PARAM_DATE_UPLOAD_LATER, PARAM_EMAILS,
+        "product", "category", "productCode", "showFile", "indexFile", "priority", "referenceToMain", "note",
+        "editorFields.uploadRedundantFile"
+    );
+
+    private final Map<String, String> values;
     private final String errorKey;
 
+    private FileArchiveBulkUploadOptions(Map<String, String> values) {
+        this.values = Map.copyOf(values);
+        errorKey = bindTo(new FileArchivatorBean());
+    }
+
+    public static List<String> getAllowedFields() {
+        return ALLOWED_FIELDS;
+    }
+
     static FileArchiveBulkUploadOptions none() {
-        return new FileArchiveBulkUploadOptions(null, null, false, null, null, null, null, null,
-            null, null, null, null, null, null, null);
+        return new FileArchiveBulkUploadOptions(Map.of());
     }
 
     /**
-     * Parses and validates bulk metadata from an upload request.
-     * Missing parameters retain the original upload behavior.
+     * Collects supplied entity properties and validates their types before accepting upload chunks.
+     * Legacy prefixed parameters remain supported for upload dialogs opened before an application update.
      *
-     * @param request upload request
-     * @return validated options, including an error key for invalid input
+     * @param request upload or conflict-resolution request
+     * @return optional field values and any validation error
      */
     static FileArchiveBulkUploadOptions fromRequest(HttpServletRequest request) {
-        Date validationTime = new Date();
-        try {
-            Date validFrom = parseDate(request.getParameter("fileArchiveValidFrom"), "components.file_archiv.bulk_upload.error.invalid_valid_from");
-            Date validTo = parseDate(request.getParameter("fileArchiveValidTo"), "components.file_archiv.bulk_upload.error.invalid_valid_to");
-            String saveLaterValue = request.getParameter(PARAM_SAVE_LATER);
-            boolean saveLater = "true".equals(saveLaterValue);
-            if (Tools.isNotEmpty(saveLaterValue) && saveLater == false && "false".equals(saveLaterValue) == false) {
-                return error("components.file_archiv.bulk_upload.error.invalid_save_later");
+        Map<String, String> values = new LinkedHashMap<>();
+        for (String field : ALLOWED_FIELDS) {
+            String value = request.getParameter(field);
+            if (value == null) {
+                String name = field.substring(field.lastIndexOf('.') + 1);
+                value = request.getParameter("fileArchive" + Character.toUpperCase(name.charAt(0)) + name.substring(1));
             }
-            Date dateUploadLater = null;
-            String emails = null;
-            if (saveLater) {
-                dateUploadLater = parseDate(request.getParameter(PARAM_DATE_UPLOAD_LATER), ERROR_INVALID_UPLOAD_DATE);
-                if (dateUploadLater == null || dateUploadLater.after(validationTime) == false) {
-                    return error(ERROR_INVALID_UPLOAD_DATE);
-                }
-                emails = request.getParameter(PARAM_EMAILS);
-                if (areEmailsValid(emails) == false) return error("components.file_archiv.upload.emails_wrong");
-            }
-
-            String product = parseText(request.getParameter("fileArchiveProduct"), MAX_TEXT_LENGTH);
-            String category = parseText(request.getParameter("fileArchiveCategory"), MAX_TEXT_LENGTH);
-            String productCode = parseText(request.getParameter("fileArchiveProductCode"), MAX_TEXT_LENGTH);
-            String referenceToMain = parseText(request.getParameter("fileArchiveReferenceToMain"), MAX_TEXT_LENGTH);
-            String note = parseText(request.getParameter("fileArchiveNote"), MAX_NOTE_LENGTH);
-            Boolean showFile = parseOptionalBoolean(trimToNull(request.getParameter("fileArchiveShowFile")));
-            Boolean indexFile = parseOptionalBoolean(trimToNull(request.getParameter("fileArchiveIndexFile")));
-            Boolean uploadRedundantFile = parseOptionalBoolean(trimToNull(request.getParameter("fileArchiveUploadRedundantFile")));
-            String priorityValue = trimToNull(request.getParameter("fileArchivePriority"));
-            Integer priority = priorityValue == null ? null : Integer.valueOf(priorityValue);
-
-            return new FileArchiveBulkUploadOptions(validFrom, validTo, saveLater, dateUploadLater, emails,
-                product, category, productCode, showFile, indexFile, priority, referenceToMain, note,
-                uploadRedundantFile, null);
-        } catch (NumberFormatException ex) {
-            return error(ERROR_INVALID_ADVANCED_OPTIONS);
-        } catch (IllegalArgumentException ex) {
-            return error(ex.getMessage());
+            if (value != null && value.isBlank() == false) values.put(field, value.trim());
         }
+        if ("true".equals(values.get(PARAM_SAVE_LATER)) == false) {
+            values.remove(PARAM_DATE_UPLOAD_LATER);
+            values.remove(PARAM_EMAILS);
+        }
+        return new FileArchiveBulkUploadOptions(values);
     }
 
     String getErrorKey() {
@@ -107,93 +82,77 @@ final class FileArchiveBulkUploadOptions implements Serializable {
     }
 
     boolean isSaveLater() {
-        return saveLater;
+        return "true".equals(values.get(PARAM_SAVE_LATER));
     }
 
     /**
-     * Applies all supplied bulk metadata to an archive entity.
-     * Existing values are retained for options that were omitted from the request.
+     * Binds supplied properties without copying entity defaults over existing metadata.
+     * Validates the resulting validity interval and delayed-upload settings.
      *
-     * @param entity archive entity receiving the metadata
-     * @return an error key when the requested validity interval is invalid; otherwise {@code null}
+     * @param entity new or existing archive entity receiving the supplied values
+     * @return a localized error key, or {@code null} when the metadata is valid
      */
-    String applyTo(FileArchivatorBean entity) {
-        if (validFrom != null || validTo != null) {
-            Date effectiveValidFrom = validFrom != null ? validFrom : entity.getValidFrom();
-            Date effectiveValidTo = validTo != null ? validTo : entity.getValidTo();
-            if (effectiveValidFrom != null && effectiveValidTo != null
-                && effectiveValidFrom.after(effectiveValidTo)) {
-                return "components.file_archiv.bulk_upload.error.invalid_validity_interval";
+    String bindTo(FileArchivatorBean entity) {
+        if (values.isEmpty()) return null;
+        if (entity.getEditorFields() == null) entity.setEditorFields(new FileArchivatorEditorFields());
+        DataBinder binder = new DataBinder(entity);
+        registerEditor(binder, Date.class, value -> {
+            long timestamp = Long.parseLong(value);
+            if (timestamp < 0 || timestamp > 253402300799999L) throw new IllegalArgumentException("Invalid upload timestamp");
+            return new Date(timestamp);
+        });
+        registerEditor(binder, Boolean.class, value -> {
+            if ("true".equals(value)) return Boolean.TRUE;
+            if ("false".equals(value)) return Boolean.FALSE;
+            throw new IllegalArgumentException("Invalid upload boolean");
+        });
+        registerEditor(binder, Integer.class, Integer::valueOf);
+        binder.bind(new MutablePropertyValues(values));
+        if (binder.getBindingResult().hasErrors()) {
+            return switch (binder.getBindingResult().getFieldError().getField()) {
+                case "validFrom" -> "components.file_archiv.bulk_upload.error.invalid_valid_from";
+                case "validTo" -> "components.file_archiv.bulk_upload.error.invalid_valid_to";
+                case PARAM_SAVE_LATER -> "components.file_archiv.bulk_upload.error.invalid_save_later";
+                case PARAM_DATE_UPLOAD_LATER -> ERROR_INVALID_UPLOAD_DATE;
+                default -> ERROR_INVALID_ADVANCED_OPTIONS;
+            };
+        }
+        for (Map.Entry<String, String> entry : values.entrySet()) {
+            int maxLength = "note".equals(entry.getKey()) || PARAM_EMAILS.equals(entry.getKey()) ? 1100 : 255;
+            if (entry.getValue().length() > maxLength) {
+                return PARAM_EMAILS.equals(entry.getKey()) ? "components.file_archiv.upload.emails_wrong" : ERROR_INVALID_ADVANCED_OPTIONS;
             }
         }
-
-        if (validFrom != null) {
-            entity.setValidFrom(new Date(validFrom.getTime()));
+        if ((values.containsKey("validFrom") || values.containsKey("validTo"))
+            && entity.getValidFrom() != null && entity.getValidTo() != null
+            && entity.getValidFrom().after(entity.getValidTo())) {
+            return "components.file_archiv.bulk_upload.error.invalid_validity_interval";
         }
-        if (validTo != null) {
-            entity.setValidTo(new Date(validTo.getTime()));
+        if (isSaveLater()) {
+            Date uploadDate = entity.getEditorFields().getDateUploadLater();
+            if (uploadDate == null || uploadDate.after(new Date()) == false) return ERROR_INVALID_UPLOAD_DATE;
+            String emails = entity.getEditorFields().getEmails();
+            if (Tools.isEmpty(emails)) return "components.file_archiv.upload.emails_wrong";
+            for (String email : emails.split(",", -1)) {
+                if (Tools.isEmail(email.trim()) == false) return "components.file_archiv.upload.emails_wrong";
+            }
         }
-        if (saveLater) {
-            entity.getEditorFields().setSaveLater(true);
-            entity.getEditorFields().setDateUploadLater(new Date(dateUploadLater.getTime()));
-            entity.getEditorFields().setEmails(emails);
-        }
-        if (product != null) entity.setProduct(product);
-        if (category != null) entity.setCategory(category);
-        if (productCode != null) entity.setProductCode(productCode);
-        if (showFile != null) entity.setShowFile(showFile);
-        if (indexFile != null) entity.setIndexFile(indexFile);
-        if (priority != null) entity.setPriority(priority);
-        if (referenceToMain != null) entity.setReferenceToMain(referenceToMain);
-        if (note != null) entity.setNote(note);
-        if (uploadRedundantFile != null) entity.getEditorFields().setUploadRedundantFile(uploadRedundantFile);
         return null;
     }
 
-    private static FileArchiveBulkUploadOptions error(String errorKey) {
-        return new FileArchiveBulkUploadOptions(null, null, false, null, null, null, null, null,
-            null, null, null, null, null, null, errorKey);
-    }
-
-    private static Date parseDate(String value, String errorKey) {
-        if (Tools.isEmpty(value)) return null;
-        try {
-            long timestamp = Long.parseLong(value);
-            if (timestamp < 0 || timestamp > MAX_DATE) throw new IllegalArgumentException(errorKey);
-            return new Date(timestamp);
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException(errorKey, ex);
-        }
-    }
-
-    private static boolean areEmailsValid(String emails) {
-        if (Tools.isEmpty(emails) || emails.length() > MAX_EMAILS_LENGTH) return false;
-
-        String[] emailTokens = emails.split(",", -1);
-        for (String email : emailTokens) {
-            if (Tools.isEmail(email.trim()) == false) return false;
-        }
-        return true;
-    }
-
-    private static Boolean parseOptionalBoolean(String value) {
-        if (value == null) return null;
-        if ("true".equals(value)) return Boolean.TRUE;
-        if ("false".equals(value)) return Boolean.FALSE;
-        throw new IllegalArgumentException(ERROR_INVALID_ADVANCED_OPTIONS);
-    }
-
-    private static String trimToNull(String value) {
-        if (value == null) return null;
-        String trimmed = value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
-    }
-
-    private static String parseText(String value, int maximumLength) {
-        String trimmed = trimToNull(value);
-        if (trimmed != null && trimmed.length() > maximumLength) {
-            throw new IllegalArgumentException(ERROR_INVALID_ADVANCED_OPTIONS);
-        }
-        return trimmed;
+    /**
+     * Registers strict conversion by property type, without Spring's lenient fallback editors.
+     *
+     * @param binder entity binder
+     * @param type property type
+     * @param parser conversion of a supplied string to the property type
+     */
+    private static void registerEditor(DataBinder binder, Class<?> type, Function<String, ?> parser) {
+        binder.registerCustomEditor(type, new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) {
+                setValue(parser.apply(text));
+            }
+        });
     }
 }

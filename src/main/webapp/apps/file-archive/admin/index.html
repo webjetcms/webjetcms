@@ -469,12 +469,7 @@
         var bulkUploadEditorActive = false;
         var bulkUploadCollectionTimer = null;
         var bulkUploadFieldsChanged = {};
-        var bulkUploadAllowedFields = [
-            "validFrom", "validTo", "editorFields.saveLater", "editorFields.dateUploadLater", "editorFields.emails",
-            "product", "category", "productCode", "showFile", "indexFile", "priority", "referenceToMain", "note",
-            "editorFields.uploadRedundantFile"
-        ];
-        var bulkUploadBooleanFields = ["showFile", "indexFile", "editorFields.uploadRedundantFile"];
+        var bulkUploadAllowedFields = /*[[${fileArchiveBulkUploadFields}]]*/ [];
 
         function processNextBulkUploadFile() {
             if (fileArchiveAdminUpload.getUploadingFiles().length > 0) return;
@@ -568,39 +563,27 @@
             bulkUploadFieldsChanged = {};
         }
 
-        function getBulkUploadBoolean(fieldName) {
+        function getBulkUploadValue(fieldName) {
             var value = fileArchiveDataTable.EDITOR.field(fieldName).val();
-            if (Array.isArray(value)) value = value[0];
-            return value === true || value === "true";
+            if (Array.isArray(value)) value = value[0] ?? false;
+            return typeof value === "string" ? value.trim() : value;
         }
 
         function confirmBulkUpload() {
             var requestParams = {
                 destinationFolder: fileArchiveAdminUpload.getDestinationFolder()
             };
+            var saveLater = String(getBulkUploadValue("editorFields.saveLater")) === "true";
 
             bulkUploadAllowedFields.forEach(function(fieldName) {
-                if (bulkUploadFieldsChanged[fieldName] !== true) return;
-
-                var value;
-                if (bulkUploadBooleanFields.includes(fieldName)) {
-                    value = getBulkUploadBoolean(fieldName);
-                } else {
-                    if (fieldName.startsWith("editorFields.")) return;
-                    value = fileArchiveDataTable.EDITOR.field(fieldName).val();
-                    if (fieldName !== "validFrom" && fieldName !== "validTo") value = String(value || "").trim();
-                    if (value == null || String(value).trim() === "") return;
+                if (fieldName === "editorFields.dateUploadLater" || fieldName === "editorFields.emails") {
+                    if (saveLater === false) return;
+                } else if (bulkUploadFieldsChanged[fieldName] !== true) {
+                    return;
                 }
-                var parameter = fieldName.replace("editorFields.", "");
-                requestParams["fileArchive" + parameter[0].toUpperCase() + parameter.slice(1)] = value;
+                var value = getBulkUploadValue(fieldName);
+                if (value != null && value !== "") requestParams[fieldName] = value;
             });
-
-            if (bulkUploadFieldsChanged["editorFields.saveLater"] === true
-                && getBulkUploadBoolean("editorFields.saveLater")) {
-                requestParams.fileArchiveSaveLater = true;
-                requestParams.fileArchiveDateUploadLater = fileArchiveDataTable.EDITOR.field("editorFields.dateUploadLater").val();
-                requestParams.fileArchiveEmails = String(fileArchiveDataTable.EDITOR.field("editorFields.emails").val() || "").trim();
-            }
 
             pendingBulkUploadFiles.forEach(function(file) {
                 file.wjAdminUploadRequestParams = Object.assign({}, requestParams);

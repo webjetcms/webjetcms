@@ -171,11 +171,11 @@ class FileArchiveBulkUploadDestinationTest {
 
     private JSONObject upload(String category, boolean saveLater) {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        if (category != null) request.addParameter("fileArchiveCategory", category);
+        if (category != null) request.addParameter("category", category);
         if (saveLater) {
-            request.addParameter("fileArchiveSaveLater", "true");
-            request.addParameter("fileArchiveDateUploadLater", Long.toString(System.currentTimeMillis() + 3_600_000L));
-            request.addParameter("fileArchiveEmails", "editor@example.com");
+            request.addParameter("editorFields.saveLater", "true");
+            request.addParameter("editorFields.dateUploadLater", Long.toString(System.currentTimeMillis() + 3_600_000L));
+            request.addParameter("editorFields.emails", "editor@example.com");
         }
         JSONObject output = new JSONObject().put("success", true).put("exists", false).put("destinationFolder", SELECTED_FOLDER);
         FileArchiveUploadService.saveNewArchiveFile(user, prop, SELECTED_FOLDER, FILE_NAME, FILE_NAME, FILE_KEY,
