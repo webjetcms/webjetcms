@@ -170,7 +170,7 @@ public class BlogRestController extends WebpagesDatatable {
             all.setId("-1");
             all.setParent("#");
             all.setText(getProp().getText("components.blog.all_groups"));
-            all.setIcon("ti ti-list");
+            all.setIcon("ti ti-select-all");
             all.setChildren(false);
             all.setState(new JsTreeItemState());
             all.getState().setSelected(!selected);
