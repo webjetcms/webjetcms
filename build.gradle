@@ -386,6 +386,13 @@ war {
     classpath = sourceSets.main.output + configurations.distributionRuntimeClasspath - configurations.providedRuntime
 }
 
+// Only the Ant finalwar target uses the development runtime, including local AI.
+tasks.register('prepareFinalWarRuntimeLibs', Sync) {
+    description = 'Prepares runtime libraries, including local AI, for the Ant finalwar target.'
+    from configurations.runtimeClasspath - configurations.providedRuntime
+    into providers.gradleProperty('finalWarLibDirectory').orElse('build/updatezip/finalwar/WEB-INF/lib')
+}
+
 def localAiModelsDirectory = file('src/main/webapp/WEB-INF/local-ai-models')
 def localAiModelTasks = [
     prepareLocalAiTextModel: [

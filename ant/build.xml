@@ -288,6 +288,12 @@
         <delete dir="${finalwar}"/>
         <unzip src="${wardir}${projectname}.war" dest="${finalwar}"/>
 
+        <!-- Resolve the complete runtime together to avoid duplicate dependency versions. -->
+        <exec executable="./gradlew" failonerror="true">
+            <arg value="prepareFinalWarRuntimeLibs"/>
+            <arg value="-PfinalWarLibDirectory=${finalwar}/WEB-INF/lib"/>
+        </exec>
+
         <delete includeemptydirs="true">
             <fileset dir="${finalwar}/WEB-INF/classes">
                 <exclude name="*.xml"/>
