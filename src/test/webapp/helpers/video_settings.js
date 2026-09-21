@@ -34,4 +34,13 @@ function getVideoSettings(environment = process.env) {
   };
 }
 
-module.exports = { getVideoSettings };
+/** Returns the selected recording shot ID, or an empty string for the full plan. */
+function getVideoShot(environment = process.env) {
+  const shotId = environment.VIDEO_SHOT?.trim() || "";
+  if (shotId !== "" && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(shotId)) {
+    throw new Error("VIDEO_SHOT must be a lowercase hyphenated shot ID such as outro or text-editing.");
+  }
+  return shotId;
+}
+
+module.exports = { getVideoSettings, getVideoShot };

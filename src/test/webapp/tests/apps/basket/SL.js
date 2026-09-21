@@ -129,9 +129,9 @@ module.exports = {
 
         I.say("Check payment returned message");
         if(shouldBeSuccess == true) {
-            I.waitForText("Platba prebehla úspešne.", 20);
+            I.waitForText("Platba prebehla úspešne", 20);
         } else {
-            I.waitForText("Platba sa nepodarila!", 20);
+            I.waitForText("Platba sa nepodarila", 20);
         }
     },
 

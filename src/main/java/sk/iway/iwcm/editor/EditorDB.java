@@ -44,7 +44,6 @@ import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
-import sk.iway.iwcm.doc.XmlExport;
 import sk.iway.iwcm.editor.service.GroupsService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;

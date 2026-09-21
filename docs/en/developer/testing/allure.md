@@ -22,6 +22,12 @@ The report generation process is more complicated due to history maintenance. Th
 
 The entire process is in the script ```npx-allure.sh```, which downloads the latest results from the documentation server before running the test and saves them to the documentation server after the test is performed.
 
+The script sequentially runs Java tests (`./gradlew test`) and CodeceptJS, which includes both E2E and [JavaScript helper tests](README.md#testy-javascript-fungíí-a-komponentov). If any group fails, it continues with the next tests and generates a report, but returns a non-zero return code at the end so that the pipeline does not show success. Running `./gradlew test` helper tests separately does not run them.
+
+The results of the helper tests can be found directly in Allure in the `helpers.node-tests` suite. The `tests/helpers/node-tests.js` file automatically creates one CodeceptJS script for each `helpers/*.test.js` file. The script runs the file via Node.js and includes its complete output as a text attachment, even if the result is successful. Failure of any test marks the corresponding script as failed; the attachment shows the name of the specific test and the details of the error. Helper tests are not run separately a second time in the script.
+
+Even for E2E testing in Firefox, helper tests that require the browser, Chromium itself, are used. To run only this suite locally, use `npm run all -- tests/helpers/node-tests.js` from the `src/test/webapp` folder.
+
 The script is used with the parameters:
 
 - ```CODECEPT_BROWSER``` - ​​name of the browser used - ```chromium``` or ```firefox``` (default ```chromium```)

@@ -236,6 +236,12 @@ Pole na kartě Miniatura se dynamicky zobrazují/skrývají podle vybraného re�
 - Režim `5`: Zobrazí se obě rozměrná pole bez pole pro barvu.
 - Pole **Vypnout bod zájmu** se zobrazí pro všechny režimy kromě prázdné hodnoty. To nastavuje, zda se při generování aplikuje i nastavený bod zájmu, nebo se použije celý obrázek.
 
+**Striktní režim**
+
+V režimu [přesně definovaných rozměrů](../../../frontend/thumb-servlet/README.md#omezení) je zobrazeno výběrové pole možností, ze kterých lze rozměr zvolit, nelze nastavit libovolnou hodnotu:
+
+![](image_dialog-thumb-strict.png)
+
 ### Video soubory
 
 Přes dialogové okno pro vložení obrázku můžete vkládat i video soubory. Buď přímo z vašeho serveru výběrem video souboru, nebo do pole URL adresa zadáte odkaz na web stránku `YouTube/Facebook/TikTok`.

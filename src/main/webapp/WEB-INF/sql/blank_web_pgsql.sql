@@ -4293,6 +4293,7 @@ INSERT INTO "webjet_cms"."_db_" ("id", "create_date", "note") VALUES (535, '2024
 INSERT INTO "webjet_cms"."_db_" ("id", "create_date", "note") VALUES (536, '2024-02-14', 'NEW MODULE: prop.show_all_texts');
 INSERT INTO "webjet_cms"."_db_" ("id", "create_date", "note") VALUES (537, '2024-02-14', 'NEW MODULE: cmp_response-header');
 INSERT INTO "webjet_cms"."_db_" ("id", "create_date", "note") VALUES (538, '2024-02-14', 'NEW MODULE: replaceAll');
+INSERT INTO "webjet_cms"."_db_" ("id", "create_date", "note") VALUES (539, '2026-09-14', '08.09.2026 [lbalat] browser identifier migration including stat_error');
 
 
 
@@ -5183,7 +5184,7 @@ SELECT pg_catalog.setval('"webjet_cms"."_conf_prepared__id_seq"', 3, true);
 
 
 
-SELECT pg_catalog.setval('"webjet_cms"."_db__id_seq"', 538, true);
+SELECT pg_catalog.setval('"webjet_cms"."_db__id_seq"', 539, true);
 
 
 
@@ -5958,6 +5959,8 @@ ALTER TABLE ONLY "webjet_cms"."restaurant_menu_meals"
 
 ALTER TABLE ONLY "webjet_cms"."seo_bots"
     ADD CONSTRAINT "idx_81760_primary" PRIMARY KEY ("seo_bots_id");
+
+CREATE UNIQUE INDEX "ix_seo_bots_name" ON "webjet_cms"."seo_bots" ("name");
 
 
 

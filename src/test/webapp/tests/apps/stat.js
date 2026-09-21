@@ -77,7 +77,7 @@ Scenario("browser", ({ I, DT }) => {
 
     DT.checkExtfilterDates("01.05.2022", "31.05.2022");
 
-    DT.checkTableRow("browserDataTable", 2, ["2", "Chrome 101.0", "macOS", "7", "0,33"]);
+    DT.checkTableRow("browserDataTable", 2, ["2", "Chrome", "macOS", "7", "0,33"]);
 });
 
 Scenario("search-engines", async ({ I, DT, Document }) => {

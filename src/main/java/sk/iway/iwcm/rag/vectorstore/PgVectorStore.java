@@ -20,6 +20,7 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.pgvector.PgvectorJpaConfig;
 import sk.iway.iwcm.rag.service.RagEntityType;
+import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
 /**
  * PgVector implementation of VectorStore.
@@ -466,7 +467,8 @@ public class PgVectorStore implements VectorStore {
             return false;
         }
 
-        try {
+        // Shared schema settings must not depend on the domain that triggers initialization.
+        try (DomainRequestBeanScope ignored = DomainRequestBeanScope.open(null)) {
             SimpleQuery sq = new SimpleQuery(dsName);
             sq.execute(CREATE_EXTENSION_SQL);
             // Important note: the table creation must be done with the correct dimension count, otherwise the embedding insertions will fail with "vector has wrong number of dimensions" error
