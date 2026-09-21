@@ -144,6 +144,9 @@ function adminUploadInit(options) {
         },
 
         init: function () {
+            console.log("datatables-upload.init");
+
+
             // Set aria-label on the generated dz-button
             var dzButton = this.element.querySelector('.dz-button');
             if (dzButton) {
@@ -160,6 +163,7 @@ function adminUploadInit(options) {
             // If Dropzone changes how it manages this property, this may break.
             var identifierSource = (this.element && this.element.id) ? this.element.id : (uploadType + '-' + destinationFolder);
             var hiddenInputClass = String(identifierSource).replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
+            console.log("hiddenInputClass=", hiddenInputClass);
             if (hiddenInputClass) {
                 hiddenInputClass = 'dz-hidden-input-' + hiddenInputClass;
                 var applyHiddenInputClass = function (input) {
@@ -495,24 +499,26 @@ function adminUploadInit(options) {
 
     adminUpload.overwrite = function (key, destinationFolder, fileName, uploadType, callback, requestParams) {
         var url = '/admin/upload/overwrite';
-        var params = Object.assign({}, requestParams || {}, {
+        var params = {
             fileKey: key,
             destinationFolder: destinationFolder,
             fileName: fileName,
             uploadType: uploadType,
-        });
+        };
+        Object.assign(params, requestParams || {});
 
         callRestService(url, params, callback);
     };
 
     adminUpload.keepboth = function (key, destinationFolder, fileName, uploadType, callback, requestParams) {
         var url = '/admin/upload/keepboth';
-        var params = Object.assign({}, requestParams || {}, {
+        var params = {
             fileKey: key,
             destinationFolder: destinationFolder,
             fileName: fileName,
             uploadType: uploadType,
-        });
+        };
+        Object.assign(params, requestParams || {});
 
         callRestService(url, params, callback);
     };

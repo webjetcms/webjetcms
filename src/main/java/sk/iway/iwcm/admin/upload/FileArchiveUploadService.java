@@ -95,53 +95,36 @@ public class FileArchiveUploadService {
                                    String originalName, String fileKey, FileArchiveBulkUploadOptions bulkUploadOptions,
                                    JSONObject output) {
         FileArchiveRepository repository = Tools.getSpringBean("fileArchiveRepository", FileArchiveRepository.class);
-        FileArchivatorBean entity = new FileArchivatorBean();
-        entity.setDateInsert(new Date());
-        entity.setFilePath(destinationFolder);
-        entity.setShowFile(true);
-        String name = FileTools.getFileNameWithoutExtension(originalName);
-        //replace -_ and other symbols with space
-        name = name.replaceAll("[-_]+", " ");
-        entity.setVirtualFileName(name);
+        Long existingFileId = FileArchiveService.getId(destinationFolder, fileName, repository);
 
-        FileArchivatorEditorFields editorFields = new FileArchivatorEditorFields();
-        editorFields.setDir(destinationFolder);
-        editorFields.setFile(fileKey);
-        entity.setEditorFields(editorFields);
-        String optionsError = bulkUploadOptions.bindTo(entity);
-        if (Tools.isNotEmpty(optionsError)) {
-            putError(output, prop, optionsError);
-            AdminUploadServlet.deleteTempFile(fileKey);
-            return;
-        }
-
-        FileArchiveService fileArchiveService = new FileArchiveService(user, prop, entity, repository);
-        String archiveFolder = fileArchiveService.resolveFileDestinationDirPath();
-        if (archiveFolder == null) {
-            putError(output, prop, fileArchiveService.getErrorList().get(0), fileArchiveService.getErrorParams());
-            AdminUploadServlet.deleteTempFile(fileKey);
-            return;
-        }
-        if (FileBrowserTools.hasForbiddenSymbol(archiveFolder) || user.isFolderWritable(archiveFolder) == false) {
-            putError(output, prop, "admin.upload_iframe.wrong_upload_dir");
-            AdminUploadServlet.deleteTempFile(fileKey);
-            return;
-        }
-
-        output.put("destinationFolder", archiveFolder);
-        Long existingFileId = FileArchiveService.getId(archiveFolder, fileName, repository);
-        if (existingFileId > 0 || FileTools.isFile(archiveFolder + fileName)) {
+        if (existingFileId > 0 || FileTools.isFile(destinationFolder + fileName)) {
             output.put("exists", true);
-            return;
-        }
+        } else {
+            FileArchivatorBean entity = new FileArchivatorBean();
+            entity.setDateInsert(new Date());
+            entity.setFilePath(destinationFolder);
+            entity.setShowFile(true);
+            String name = FileTools.getFileNameWithoutExtension(originalName);
+            //replace -_ and other symbols with space
+            name = name.replaceAll("[-_]+", " ");
+            entity.setVirtualFileName(name);
 
-        if (validateAndSaveArchiveEntity(user, prop, entity, repository, output)) {
-            output.put("name", entity.getFileName());
-            output.put("destinationFolder", entity.getFilePath());
-            output.put("virtualPath", entity.getVirtualPath());
-            output.put("exists", false);
+            FileArchivatorEditorFields editorFields = new FileArchivatorEditorFields();
+            editorFields.setDir(destinationFolder);
+            editorFields.setFile(fileKey);
+            entity.setEditorFields(editorFields);
+            String optionsError = bulkUploadOptions.bindTo(entity);
+            if (Tools.isNotEmpty(optionsError)) {
+                putError(output, prop, optionsError);
+            } else if (validateAndSaveArchiveEntity(user, prop, entity, repository, output)) {
+                output.put("name", entity.getFileName());
+                output.put("destinationFolder", entity.getFilePath());
+                output.put("virtualPath", entity.getVirtualPath());
+                output.put("exists", false);
+            }
+
+            AdminUploadServlet.deleteTempFile(fileKey);
         }
-        AdminUploadServlet.deleteTempFile(fileKey);
     }
 
     /**
