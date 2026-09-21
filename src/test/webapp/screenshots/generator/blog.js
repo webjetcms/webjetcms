@@ -35,7 +35,6 @@ Scenario('Blog articles', ({ I, DTE, Document, DT }) => {
     DTE.waitForEditor("blogSectionTable");
     I.fillField("#blogSectionTable_modal #DTE_Field_groupName", "NewSubFolder-autotest");
     Document.screenshotElement("#blogSectionTable_modal .modal-content", "/redactor/apps/blog/adding_folder_info.png");
-    Document.screenshotElement("#blogSectionTable_modal .DTE_Footer button.btn-primary", "/redactor/apps/blog/adding_folder_info_button.png");
     DTE.save("blogSectionTable", true);
 
     I.waitForElement("#toast-container-webjet > .toast-success");
@@ -55,7 +54,7 @@ Scenario('Blog articles', ({ I, DTE, Document, DT }) => {
     DTE.waitForEditor("groups-datatable");
     I.clickCss("div.DTE_Action_Remove div.DTE_Footer div.DTE_Form_Buttons button.btn-primary");
     DTE.waitForLoader();
-    I.dontSeeElement(locate("a.jstree-anchor").withText("NewSubFolder-autotest"));
+    I.waitForInvisible(locate("#SomStromcek a.jstree-anchor").withText("NewSubFolder-autotest"));
 
     I.logout();
     I.amOnPage("/apps/blog/blogger/webjet-cms/");

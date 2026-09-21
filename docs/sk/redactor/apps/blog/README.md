@@ -62,9 +62,7 @@ Po zvolení priečinka a stlačení tlačidla <button class="btn btn-sm btn-succ
 
 ![](adding_folder_info.png)
 
-Proces spustíte potvrdením akcie tlačidlom ![](adding_folder_info_button.png ":no-zoom").
-
-Prázdny názov, názov obsahujúci iba medzery alebo názov už existujúcej sekcie v tom istom priečinku sa nedá uložiť. Chyba sa zobrazí priamo pri poli a dialóg zostane otvorený, aby ste mohli názov opraviť. Tlačidlom **Zrušiť** dialóg zatvoríte bez vytvorenia sekcie.
+Prázdny názov, názov obsahujúci iba medzery alebo názov už existujúcej sekcie v tom istom priečinku sa nedá uložiť. Chyba sa zobrazí priamo pri poli a dialóg zostane otvorený, aby ste mohli názov opraviť.
 
 ![](adding_folder_error.png)
 
