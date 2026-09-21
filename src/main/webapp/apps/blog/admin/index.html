@@ -146,7 +146,12 @@
                             data-th-aria-label="#{components.blog.add_folder.title}">
                             <span><i class="ti ti-plus" aria-hidden="true"></i></span>
                         </button>
-                        <button class="btn btn-sm btn-outline-secondary buttons-refresh" type="button"
+                        <button class="btn btn-sm btn-outline-secondary buttons-jstree-settings buttons-right" type="button"
+                            data-toggle="tooltip" data-th-title="#{datatables.button.settings.js}"
+                            data-th-aria-label="#{datatables.button.settings.js}">
+                            <span><i class="ti ti-adjustments-horizontal" aria-hidden="true"></i></span>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary buttons-refresh buttons-right" type="button"
                             data-toggle="tooltip" data-th-title="#{datatables.button.reload.js}"
                             data-th-aria-label="#{datatables.button.reload.js}">
                             <span><i class="ti ti-refresh" aria-hidden="true"></i></span>
@@ -155,7 +160,7 @@
                 </div>
             </div>
         </div>
-        <div id="SomStromcek" class="hide-while-loading" data-rest-url="/admin/rest/blog"
+        <div id="SomStromcek" class="hide-while-loading" data-settings-key="jstreeSettings_blog" data-rest-url="/admin/rest/blog"
             data-rest-param-name="id" data-single-select="true" data-search-restore-state="false"></div>
     </div>
     <div class="col-md-8 datatable-col">
@@ -164,3 +169,5 @@
     </div>
 </div>
 <table id="blogSectionTable" class="datatableInit table"></table>
+
+<div data-th-include="admin/v9/views/partials/tree-width-settings.html" data-th-remove="tag"></div>

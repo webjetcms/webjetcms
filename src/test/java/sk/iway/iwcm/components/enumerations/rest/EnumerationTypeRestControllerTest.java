@@ -4,21 +4,29 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
@@ -28,12 +36,49 @@ import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeRepository;
 
 /**
- * Tests synchronization and duplication of enumeration string field settings.
+ * Tests deleted-type safeguards, data restoration, and synchronization and duplication of string field settings.
  */
 class EnumerationTypeRestControllerTest {
 
     private static final int COMMON_DOMAIN_ID = 7;
     private static final long ENUMERATION_TYPE_ID = 42L;
+
+    /** Rejects operations on deleted types even when the request claims the type is active. */
+    @Test
+    void deletedTypesCannotBeDuplicatedOrDeleted() {
+        EnumerationTypeRepository repository = mock(EnumerationTypeRepository.class);
+        EnumerationDataRepository dataRepository = mock(EnumerationDataRepository.class);
+        EnumerationTypeRestController controller = spy(new EnumerationTypeRestController(repository, dataRepository, mock(CustomFieldsRepository.class)));
+        doThrow(new IllegalStateException()).when(controller).throwError("config.not_permitted_action_err");
+        EnumerationTypeBean deleted = new EnumerationTypeBean();
+        deleted.setHidden(true);
+        when(repository.findById(ENUMERATION_TYPE_ID)).thenReturn(Optional.of(deleted));
+        EnumerationTypeBean submitted = new EnumerationTypeBean();
+        submitted.setId(ENUMERATION_TYPE_ID);
+
+        assertThrows(IllegalStateException.class, () -> controller.beforeDuplicate(submitted, ENUMERATION_TYPE_ID));
+        assertThrows(IllegalStateException.class, () -> controller.deleteItem(submitted, ENUMERATION_TYPE_ID));
+        verify(repository, never()).deleteEnumTypeById((int) ENUMERATION_TYPE_ID, true);
+        verifyNoInteractions(dataRepository);
+    }
+
+    /** Restores data when reactivating a deleted type, but leaves data unchanged on ordinary edits. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void editRestoresDataOnlyWhenDeletedTypeBecomesActive(boolean wasHidden) {
+        EnumerationTypeRepository repository = mock(EnumerationTypeRepository.class);
+        EnumerationDataRepository dataRepository = mock(EnumerationDataRepository.class);
+        EnumerationTypeRestController controller = spy(new EnumerationTypeRestController(repository, dataRepository, mock(CustomFieldsRepository.class)));
+        EnumerationTypeBean type = new EnumerationTypeBean();
+        type.setId(ENUMERATION_TYPE_ID);
+        doReturn(type).when(controller).getOne(ENUMERATION_TYPE_ID);
+        when(repository.getHiddenByEnumTypeId((int) ENUMERATION_TYPE_ID)).thenReturn(wasHidden);
+        when(repository.save(type)).thenReturn(type);
+
+        controller.editItem(type, ENUMERATION_TYPE_ID);
+
+        verify(dataRepository, times(wasHidden ? 1 : 0)).deleteAllEnumDataByEnumTypeId((int) ENUMERATION_TYPE_ID, false);
+    }
 
     /**
      * Verifies that common enumeration field settings are loaded from the configured common domain.
@@ -57,12 +102,16 @@ class EnumerationTypeRestControllerTest {
             COMMON_DOMAIN_ID
         )).thenReturn(Collections.emptyList());
 
-        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
+        Cache enumerationCache = mock(Cache.class);
+        try (MockedStatic<Cache> cache = mockStatic(Cache.class);
+                MockedStatic<Constants> constants = mockStatic(Constants.class);
                 MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class)) {
+            cache.when(Cache::getInstance).thenReturn(enumerationCache);
             constants.when(() -> Constants.getInt("domainIdCommon")).thenReturn(COMMON_DOMAIN_ID);
 
             controller.afterSave(saved, saved);
 
+            verify(enumerationCache).removeObjectStartsWithName("enumeration.");
             verify(customFieldsRepository).findAllByClassNameAndEntityId(
                 EnumerationDataBean.class.getName(),
                 ENUMERATION_TYPE_ID,

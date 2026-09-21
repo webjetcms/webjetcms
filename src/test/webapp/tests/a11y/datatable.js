@@ -76,7 +76,10 @@ Scenario("p27: input with buttons-top-filter", async ({ I, a11y }) => {
 });
 
 Scenario("p28: select", async ({ I, DTE, a11y }) => {
-    I.amOnPage("/apps/enumeration/admin/enumeration-type/?id=2");
+    I.amOnPage("/apps/enumeration/admin/#2");
+    I.waitForElement("#SomStromcek a[data-type-id='2'].jstree-clicked", 10);
+    I.waitForEnabled(".tree-col .buttons-edit", 10);
+    I.clickCss(".tree-col .buttons-edit");
     DTE.waitForEditor("enumerationTypeDataTable");
     await a11y.check();
 });

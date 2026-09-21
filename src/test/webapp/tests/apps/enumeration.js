@@ -37,22 +37,43 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('Enum type zakladne testy @baseTest', async ({I, DataTables}) => {
-    I.amOnPage("/apps/enumeration/admin/enumeration-type/");
-    await DataTables.baseTest({
-        dataTable: 'enumerationTypeDataTable',
-        perms: 'cmp_enumerations',
-        createSteps: function(I, options) {
-        },
-        editSteps: function(I, options) {
-        },
-        editSearchSteps: function(I, options) {
-        },
-        beforeDeleteSteps: function(I, options) {
-            //I.wait(20);
-        },
-        skipSwitchDomain: true
-    });
+Scenario('Enumeration type tree CRUD', async ({I, DT, DTE}) => {
+    I.amOnPage("/apps/enumeration/admin/");
+    const name = "autotest-enumeration-tree-" + randomNumber;
+    createEnumType(I, DTE, name, "Value", "Number", "Enabled");
+    I.waitForElement(typeNode(name) + ".jstree-clicked", 10);
+    I.seeElement(".tree-col .btn-import-dialog");
+    I.seeElement(".tree-col .btn-export-dialog");
+    for (const [panel, table] of [[".tree-col", "enumerationTypeDataTable"], ["#enumerationDataDataTable_wrapper", "enumerationDataDataTable"]]) {
+        I.clickCss(panel + " .btn-export-dialog");
+        DTE.waitForModal("datatableExportModal");
+        I.assertEqual(await I.executeScript(() => window.datatableExportModal.tableId), table);
+        I.seeElement("#pills-export-advanced-tab");
+        I.clickCss("#datatableExportModal [data-bs-dismiss=modal]");
+        I.waitForInvisible("#datatableExportModal", 10);
+        I.clickCss(panel + " .btn-import-dialog");
+        DTE.waitForModal("datatableImportModal");
+        I.assertEqual(await I.executeScript(() => window.datatableImportModal.tableId), table);
+        I.clickCss("#datatableImportModal [data-bs-dismiss=modal]");
+        I.waitForInvisible("#datatableImportModal", 10);
+    }
+    const typeId = await I.executeScript(() => $("#SomStromcek").jstree(true).get_selected(true)[0].a_attr["data-type-id"]);
+    I.clickCss("#enumerationDataDataTable_wrapper .buttons-create");
+    DTE.waitForEditor("enumerationDataDataTable");
+    I.assertEqual(await I.executeScript(() => String(enumerationDataDataTable.EDITOR.field("typeId").val())), typeId);
+    DTE.cancel("enumerationDataDataTable");
+
+    openEnumType(I, DT, DTE, name);
+    I.fillField("#DTE_Field_typeName", name + "-edited");
+    DTE.save("enumerationTypeDataTable");
+    I.waitForElement(typeNode(name + "-edited") + ".jstree-clicked", 10);
+    I.clickCss(".tree-col .btn-duplicate");
+    DTE.waitForEditor("enumerationTypeDataTable");
+    I.fillField("#DTE_Field_typeName", name + "-copy");
+    DTE.save("enumerationTypeDataTable");
+    I.waitForElement(typeNode(name + "-copy") + ".jstree-clicked", 10);
+    deleteEnumType(I, DTE, name + "-copy");
+    deleteEnumType(I, DTE, name + "-edited");
 });
 
 Scenario('Okresne mesta zakladne testy @baseTest', async ({I, DT, DataTables}) => {
@@ -63,6 +84,7 @@ Scenario('Okresne mesta zakladne testy @baseTest', async ({I, DT, DataTables}) =
 
     await DataTables.baseTest({
         dataTable: 'enumerationDataDataTable',
+        container: '#enumerationDataDataTable_wrapper',
         perms: 'cmp_enumerations',
         testingData: {
             "fieldA": fieldA
@@ -91,32 +113,24 @@ Scenario('logout', ({I}) => {
     I.logout();
 });
 
-Scenario('test datatables paging', ({I, DT}) => {
-    //types
-    I.amOnPage("/apps/enumeration/admin/enumeration-type/");
-    DT.waitForLoader();
-    I.see("2", ".dt-footer-row ul.pagination li button");
-    I.see("Okresne Mestá", "#enumerationTypeDataTable tbody tr td");
-
-    I.click({css: "ul.pagination li:nth-child(3) button"});
-    DT.waitForLoader();
-    I.dontSee("Okresne Mestá", "#enumerationTypeDataTable tbody tr td");
-
+Scenario('Enumeration entry paging', async ({I, DT}) => {
     //data
     I.amOnPage("/apps/enumeration/admin/#2");
-    I.see("5", ".dt-footer-row ul.pagination li button");
+    I.see("5", "#enumerationDataDataTable_wrapper .dt-footer-row ul.pagination li button");
     I.see("Bánovce nad Bebravou", "#enumerationDataDataTable tbody tr td");
     I.dontSee("Poprad", "#enumerationDataDataTable tbody tr td");
 
-    I.click({css: "ul.pagination li:nth-child(6) button"});
+    I.click("5", "#enumerationDataDataTable_wrapper ul.pagination");
     DT.waitForLoader();
     I.dontSee("Bánovce nad Bebravou", "#enumerationDataDataTable tbody tr td");
-    I.see("Senec", "#enumerationDataDataTable tbody tr td");
-    I.see("Senica", "#enumerationDataDataTable tbody tr td");
+    I.assertEqual(await I.executeScript(() => enumerationDataDataTable.page.info().page), 4);
+    I.click("1", "#enumerationDataDataTable_wrapper ul.pagination");
+    DT.waitForLoader("enumerationDataDataTable");
+    I.see("Bánovce nad Bebravou", "#enumerationDataDataTable tbody");
 });
 
-Scenario('Enum type and data tests', ({I, DTE, DT}) => {
-    I.amOnPage("/apps/enumeration/admin/enumeration-type/");
+Scenario('Enum type and data tests', async ({I, DTE, DT}) => {
+    I.amOnPage("/apps/enumeration/admin/");
     enumTypeNameA = "EnumerationAutoTestA_" + randomNumber;
     enumTypeNameB = "EnumerationAutoTestB_" + randomNumber;
 
@@ -134,7 +148,7 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
     I.amOnPage("/apps/enumeration/admin/");
     filterEnumDataByType(I, DTE, enumTypeNameA);
 
-    I.clickCss("button.buttons-create");
+    I.clickCss("#enumerationDataDataTable_wrapper button.buttons-create");
     DTE.waitForEditor('enumerationDataDataTable');
     I.dontSee("Prepojenie na číselník");
     I.dontSee("Rodič");
@@ -142,7 +156,7 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
     I.say("*** Phase 2 ***");
 
     I.say("Do some checks");
-    I.amOnPage("/apps/enumeration/admin/enumeration-type/");
+    I.amOnPage("/apps/enumeration/admin/");
 
         I.say("Check - Toggle logic");
         openEnumType(I, DT, DTE, enumTypeNameA);
@@ -154,6 +168,44 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
             I.clickCss("#DTE_Field_allowChildEnumerationType_0");
         DTE.save();
 
+        const sharedParent = "EnumerationSharedParent-autotest-" + randomNumber;
+        createEnumType(I, DTE, sharedParent, "Value", "Number", "Enabled");
+        openEnumType(I, DT, DTE, sharedParent);
+        selectEnumTypeLink(I, enumTypeNameB);
+        DTE.save();
+        filterEnumDataByType(I, DTE, enumTypeNameB);
+        const child = await I.executeScript(({name, parentName}) => {
+            const tree = $("#SomStromcek").jstree(true);
+            const nodes = tree.get_json("#", {flat: true}).filter(node => node.a_attr.title === name);
+            const selected = nodes.find(node => tree.get_node(node.parent).a_attr.title === parentName);
+            return {count: nodes.length, id: selected.id, typeId: selected.a_attr["data-type-id"]};
+        }, {name: enumTypeNameB, parentName: sharedParent});
+        I.assertEqual(child.count, 2, "A shared child appears under both parents in search results");
+        const childNode = '#SomStromcek a[id="' + child.id + '_anchor"]';
+        I.clickCss(childNode);
+        I.seeInCurrentUrl("#" + child.typeId);
+        I.clickCss("#tree-folder-search-clear-button");
+        I.waitForElement(childNode + ".jstree-clicked", 10);
+        I.clickCss(".tree-col .buttons-refresh");
+        I.waitForElement(childNode + ".jstree-clicked", 10);
+        I.waitForEnabled(".tree-col .buttons-edit", 10);
+        I.clickCss(".tree-col .buttons-edit");
+        DTE.waitForEditor("enumerationTypeDataTable");
+        I.seeInField("#DTE_Field_typeName", enumTypeNameB);
+        DTE.cancel("enumerationTypeDataTable");
+        I.clickCss("#enumerationDataDataTable_wrapper .buttons-create");
+        DTE.waitForEditor("enumerationDataDataTable");
+        I.assertEqual(await I.executeScript(() => String(enumerationDataDataTable.EDITOR.field("typeId").val())), child.typeId);
+        DTE.cancel("enumerationDataDataTable");
+        I.amOnPage("/apps/enumeration/admin/#" + child.typeId);
+        I.waitForVisible(typeNode(enumTypeNameB) + ".jstree-clicked", 10);
+        deleteEnumType(I, DTE, sharedParent);
+        filterEnumDataByType(I, DTE, enumTypeNameB);
+        I.assertEqual(await I.executeScript(() => {
+            const tree = $("#SomStromcek").jstree(true);
+            return tree.get_node(tree.get_selected(true)[0].parent).a_attr.title;
+        }), enumTypeNameA, "Deleting one parent keeps the child under its remaining parent");
+
         openEnumType(I, DT, DTE, enumTypeNameB);
         selectEnumTypeLink(I, enumTypeNameA);
         DTE.save();
@@ -161,8 +213,7 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
         DTE.cancel();
 
             //Toggle parent option for enumData
-            I.click(enumTypeNameB);
-            DTE.waitForEditor('enumerationTypeDataTable');
+            openEnumType(I, DT, DTE, enumTypeNameB);
             I.clickCss("#DTE_Field_allowParentEnumerationData_0");
             DTE.save();
 
@@ -184,10 +235,10 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
         //Checkbox does not working for now
 
         //Check child enum type was saved
-        I.clickCss("td.dt-select-td.sorting_1");
-        I.clickCss("button.buttons-edit");
+        I.clickCss("#enumerationDataDataTable td.dt-select-td.sorting_1");
+        I.clickCss("#enumerationDataDataTable_wrapper button.buttons-edit");
         DTE.waitForEditor('enumerationDataDataTable');
-        I.see(enumTypeNameB);
+        I.seeInField("#DTE_Field_editorFields-childEnumTypeName", enumTypeNameB);
         DTE.cancel();
 
         I.say("Phase 4");
@@ -209,8 +260,8 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
 
         //Delete parent enumeration data
         I.say("Delete parent enumeration data");
-        I.clickCss("td.dt-select-td.sorting_1");
-        I.clickCss("button.buttons-remove");
+        I.clickCss("#enumerationDataDataTable td.dt-select-td.sorting_1");
+        I.clickCss("#enumerationDataDataTable_wrapper button.buttons-remove");
         DTE.waitForEditor('enumerationDataDataTable');
         I.click("Zmazať", "div.DTE_Action_Remove");
         DT.waitForLoader('enumerationDataDataTable');
@@ -218,38 +269,46 @@ Scenario('Enum type and data tests', ({I, DTE, DT}) => {
 
         //Check deleted parent
         I.say("Check deleted parent");
-        I.clickCss("td.dt-select-td.sorting_1");
-        I.clickCss("button.buttons-edit");
+        I.clickCss("#enumerationDataDataTable td.dt-select-td.sorting_1");
+        I.clickCss("#enumerationDataDataTable_wrapper button.buttons-edit");
         DTE.waitForEditor('enumerationDataDataTable');
         I.seeInField("#DTE_Field_editorFields-parentEnumDataName", "(!deleted)_" + stringTestValue + "1");
         DTE.cancel();
 
     I.say("Phase 5");
 
-    I.amOnPage("/apps/enumeration/admin/enumeration-type/");
+    I.amOnPage("/apps/enumeration/admin/");
 
-    //Filter enumTypeNameB
-    DT.filterContains("typeName", enumTypeNameB);
+    deleteEnumType(I, DTE, enumTypeNameB);
+    openEnumType(I, DT, DTE, enumTypeNameA);
+    I.see("(!deleted)_" + enumTypeNameB, ".DTE_Field_Name_editorFields\\.childEnumTypeId");
+    I.seeElementInDOM('#DTE_Field_editorFields-childEnumTypeId option[value="' + child.typeId + '"][disabled]');
+    DTE.save("enumerationTypeDataTable");
+    openEnumType(I, DT, DTE, enumTypeNameA);
+    I.assertEqual(await I.executeScript(() => String(enumerationTypeDataTable.EDITOR.field("editorFields.childEnumTypeId").val())), child.typeId,
+        "Saving the surviving parent preserves its link to the deleted child");
+    DTE.cancel("enumerationTypeDataTable");
+    I.assertEqual(await I.executeScript(async typeId => {
+        const response = await fetch("/admin/rest/enumeration/enumeration-data/all?enumerationTypeId=" + typeId, {headers: {"X-CSRF-Token": window.csrfToken}});
+        return (await response.json()).content.length;
+    }, child.typeId), 0, "Deleting a type also hides its data records");
 
-    I.clickCss("td.dt-select-td.sorting_1");
-    I.clickCss("button.buttons-remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
-
-    //Filter enumTypeNameA
-    DT.filterContains("typeName", enumTypeNameA);
-
-    //Delete enumTypeNameA
-    I.clickCss("td.dt-select-td.sorting_1");
-    I.clickCss("button.buttons-remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    const survivingChild = "EnumerationSurvivor-autotest-" + randomNumber;
+    createEnumType(I, DTE, survivingChild, "Value", "Number", "Enabled");
+    openEnumType(I, DT, DTE, enumTypeNameA);
+    selectEnumTypeLink(I, survivingChild);
+    DTE.save("enumerationTypeDataTable");
+    deleteEnumType(I, DTE, enumTypeNameA);
+    filterEnumDataByType(I, DTE, survivingChild);
+    I.assertEqual(await I.executeScript(() => $("#SomStromcek").jstree(true).get_selected(true)[0].parent), "#",
+        "Deleting the last parent moves its surviving child to the root");
+    deleteEnumType(I, DTE, survivingChild);
 });
 
 Scenario('Enumeration string field type setup', async ({I, DTE, DT}) => {
-    I.amOnPage("/apps/enumeration/admin/enumeration-type/");
+    I.amOnPage("/apps/enumeration/admin/");
 
-    I.clickCss("button.buttons-create");
+    I.clickCss(".tree-col button.buttons-create");
     DTE.waitForEditor('enumerationTypeDataTable');
     I.dontSeeElement("#pills-dt-enumerationTypeDataTable-stringFieldTypes-tab");
     I.fillField("#DTE_Field_typeName", stringFieldTypeEnumName);
@@ -310,7 +369,7 @@ Scenario('Enumeration configured string field behavior', ({I, DTE, DT}) => {
     I.amOnPage("/apps/enumeration/admin/");
     filterEnumDataByType(I, DTE, stringFieldTypeEnumName);
 
-    I.clickCss("button.buttons-create");
+    I.clickCss("#enumerationDataDataTable_wrapper button.buttons-create");
     DTE.waitForEditor('enumerationDataDataTable');
     I.seeElement("#DTE_Field_fieldA");
     I.dontSeeElement("#DTE_Field_fieldB");
@@ -325,7 +384,7 @@ Scenario('Enumeration configured string field behavior', ({I, DTE, DT}) => {
 });
 
 Scenario('Enumeration string field name synchronization', async ({I, DTE, DT}) => {
-    I.amOnPage("/apps/enumeration/admin/enumeration-type/");
+    I.amOnPage("/apps/enumeration/admin/");
     openEnumType(I, DT, DTE, stringFieldTypeEnumName);
 
     I.clickCss("#pills-dt-enumerationTypeDataTable-strings-tab");
@@ -384,7 +443,7 @@ Scenario('Enumeration string field name synchronization', async ({I, DTE, DT}) =
 });
 
 Scenario('Enumeration string field type cleanup', async ({I, DTE, DT}) => {
-    I.amOnPage("/apps/enumeration/admin/enumeration-type/");
+    I.amOnPage("/apps/enumeration/admin/");
     DT.waitForLoader("enumerationTypeDataTable");
     openEnumType(I, DT, DTE, stringFieldTypeEnumName);
     I.clickCss("#pills-dt-enumerationTypeDataTable-stringFieldTypes-tab");
@@ -400,9 +459,7 @@ Scenario('Enumeration string field type cleanup', async ({I, DTE, DT}) => {
     I.see("Nenašli sa žiadne vyhovujúce záznamy", stringFieldsWrapper);
     DTE.cancel("enumerationTypeDataTable", true);
 
-    DT.filterEquals("typeName", stringFieldTypeEnumName);
-    await deleteAllIfPresent(I, DT, "enumerationTypeDataTable");
-    I.see("Nenašli sa žiadne vyhovujúce záznamy");
+    deleteEnumType(I, DTE, stringFieldTypeEnumName);
 });
 
 Scenario('Test special import logic', ({I, DTE, DT}) => {
@@ -428,7 +485,7 @@ Scenario('Test special import logic', ({I, DTE, DT}) => {
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
 
     I.say("Import data from SOURCE to DEST enum type as UPDATE");
-    I.click("button.btn-import-dialog");
+    I.click("#enumerationDataDataTable_wrapper button.btn-import-dialog");
     DTE.waitForModal("datatableImportModal");
     I.checkOption("#dt-settings-import3");
 
@@ -454,10 +511,10 @@ Scenario('Test special import logic', ({I, DTE, DT}) => {
 Scenario('Delete enum data', async ({I}) => {
     I.amOnPage("/apps/enumeration/admin/#3076");
 
-    let rows = await I.getTotalRows();
+    let rows = await I.executeScript(() => enumerationDataDataTable.page.info().recordsDisplay);
     if(rows > 0) {
-        I.clickCss("button.dt-filter-id");
-        I.clickCss("button.buttons-remove");
+        I.clickCss("#enumerationDataDataTable_wrapper button.dt-filter-id");
+        I.clickCss("#enumerationDataDataTable_wrapper button.buttons-remove");
         I.waitForElement("div.DTE_Action_Remove");
         I.click("Zmazať", "div.DTE_Action_Remove");
         I.see("Nenašli sa žiadne vyhovujúce záznamy");
@@ -465,7 +522,7 @@ Scenario('Delete enum data', async ({I}) => {
 });
 
 function createEnumData(I, DTE, variant, childEnumType, parentEnumData, bonusStrChar) {
-    I.clickCss("button.buttons-create");
+    I.clickCss("#enumerationDataDataTable_wrapper button.buttons-create");
     DTE.waitForEditor('enumerationDataDataTable');
 
     //Must see fields
@@ -510,7 +567,7 @@ function selectEnumTypeLink(I, value) {
 }
 
 function createEnumType(I, DTE, typeName, stringName, numberName, booleanName) {
-    I.clickCss("button.buttons-create");
+    I.clickCss(".tree-col button.buttons-create");
     DTE.waitForEditor('enumerationTypeDataTable');
     DTE.save();
 
@@ -533,14 +590,14 @@ function createEnumType(I, DTE, typeName, stringName, numberName, booleanName) {
 }
 
 function checkEnumType(I, DT, typeName, shouldSee) {
-    DT.filterContains("typeName", typeName);
-    if(shouldSee === true) I.see(typeName);
-    else I.dontSee(typeName);
+    if (shouldSee) I.waitForElement(typeNode(typeName), 10);
+    else I.dontSeeElement(typeNode(typeName));
 }
 
 function openEnumType(I, DT, DTE, typeName) {
-    DT.filterContains("typeName", typeName);
-    I.click(typeName);
+    filterEnumDataByType(I, DTE, typeName);
+    I.waitForEnabled(".tree-col .buttons-edit", 10);
+    I.clickCss(".tree-col .buttons-edit");
     DTE.waitForEditor('enumerationTypeDataTable');
 }
 
@@ -565,11 +622,28 @@ function checkToggleLogic(I) {
     I.dontSeeCheckboxIsChecked("#DTE_Field_allowParentEnumerationData_0");
 }
 
+function typeNode(name) {
+    return '#SomStromcek a[title="' + name + '"]';
+}
+
 function filterEnumDataByType(I, DTE, typeName) {
-    I.clickCss(".buttons-select");
-    I.fillField("body > div.bs-container.dropdown.bootstrap-select.form-select > div > div.bs-searchbox > input", typeName);
-    I.clickCss("a[role=option] > span");
-    DTE.waitForLoader();
+    I.waitForVisible("#tree-folder-search-input", 10);
+    I.fillField("#tree-folder-search-input", typeName);
+    I.clickCss("#tree-folder-search-button");
+    I.waitForVisible(typeNode(typeName), 10);
+    I.clickCss(typeNode(typeName));
+    I.waitForElement(typeNode(typeName) + ".jstree-clicked", 10);
+    DTE.waitForLoader("enumerationDataDataTable");
+}
+
+function deleteEnumType(I, DTE, name) {
+    filterEnumDataByType(I, DTE, name);
+    I.waitForEnabled(".tree-col .buttons-remove", 10);
+    I.clickCss(".tree-col .buttons-remove");
+    DTE.waitForEditor("enumerationTypeDataTable");
+    I.click("Zmazať", "#enumerationTypeDataTable_modal div.DTE_Action_Remove");
+    I.waitForInvisible("#enumerationTypeDataTable_modal", 10);
+    I.waitForInvisible(typeNode(name), 10);
 }
 
 function fillEnumerationStringFieldOptions(I, options) {
@@ -584,14 +658,4 @@ function fillEnumerationStringFieldOptions(I, options) {
         I.fillField(rowSelector + " input.options-value-1", option.label);
         I.fillField(rowSelector + " input.options-value-2", option.value);
     });
-}
-
-async function deleteAllIfPresent(I, DT, tableId) {
-    const rowCount = await I.executeScript((id) => {
-        return window.$("#" + id).DataTable().page.info().recordsDisplay;
-    }, tableId);
-
-    if(rowCount > 0) {
-        DT.deleteAll(tableId);
-    }
 }

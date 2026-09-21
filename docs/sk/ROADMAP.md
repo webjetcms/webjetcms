@@ -50,7 +50,7 @@ Vysvetlenie použitých piktogramov:
 - [x] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach (#58641).
 - [x] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu (#58645).
 - [x] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený (#58718).
-- [ ] +Číselník - presunúť výber typu číselníka do ľavého panela podobne ako v galérii/webových stránkach.
+- [x] +Číselník - presunúť výber a správu typov číselníkov do stromu v ľavom paneli, s vyhľadávaním a zachovaním editora nastavení (#58786).
 - [x] +Blog - presunúť výber priečinka do stromu vľavo, s vyhľadávaním a zachovaním výberu Všetky sekcie aj pridávania sekcií (#58786).
 - [x] +Novinky - presunúť výber priečinka do stromu vľavo podobne ako v galérii/webových stránkach, s výberom podpriečinkov a vyhľadávaním (#58786).
 - [x] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu (#58714).

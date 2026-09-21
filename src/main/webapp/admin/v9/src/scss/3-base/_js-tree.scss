@@ -31,7 +31,8 @@
 }
 
 .jstree .is-internal > a, .jstree .is-internal > a i, .jstree .is-internal > a span.jstree-text-icon,
-.jstree .is-not-public > a, .jstree .is-not-public > a i, .jstree .is-not-public > a span.jstree-text-icon{
+.jstree .is-not-public > a, .jstree .is-not-public > a i, .jstree .is-not-public > a span.jstree-text-icon,
+.jstree a[data-hidden="true"], .jstree a[data-hidden="true"] i {
     color: $danger;
 }
 

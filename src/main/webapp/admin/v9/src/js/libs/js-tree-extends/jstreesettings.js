@@ -16,7 +16,7 @@ export class JstreeSettings {
         //console.log("JstreeSettings constructor, options=", options);
         this.options = options;
         this.STORAGE_KEY = options.storageKey ? options.storageKey : "jstreeSettings_web-pages-list";
-        window.jstreeCustomizeData = this.jstreeCustomizeData;
+        if (!options.widthOnly) window.jstreeCustomizeData = this.jstreeCustomizeData;
     }
 
     bindEvents() {
@@ -51,12 +51,23 @@ export class JstreeSettings {
             $("#jstree-settings-treeSortOrderAsc").prop("checked", self.isTreeSortOrderAsc());
 
             $("#jstree-settings-showrealname").prop("checked", self.isShowRealName());
+            $("#jstree-settings-showhidden").prop("checked", self.getSettings().showHidden === true);
             self.settingsModal.show();
         });
 
         $("#jstree-settings-submit").on("click", function() {
             //console.log("SAVE JSTREE SETTINGS");
             let settings = self.getSettings();
+            if (self.options.widthOnly) {
+                settings.treeWidth = parseInt($("#jstree-settings-treeWidth").val());
+                if ($("#jstree-settings-showhidden").length) settings.showHidden = $("#jstree-settings-showhidden").is(":checked");
+                self.saveSettings(settings);
+                self.settingsModal.hide();
+                self.setTreeColWidth(settings.treeWidth);
+                window.dispatchEvent(new Event("resize"));
+                somStromcek.trigger("settings_changed.jstree", [settings]);
+                return;
+            }
             settings.showId = $("#jstree-settings-showid").is(":checked");
             settings.showPriority = $("#jstree-settings-showorder").is(":checked");
             settings.showPages = $("#jstree-settings-showpages").is(":checked");

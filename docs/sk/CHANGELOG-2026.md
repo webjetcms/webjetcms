@@ -98,6 +98,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Aplikácie
 
+- Novinky, Blog a Číselníky - tlačidlom **Nastavenia** nad stromom možno upraviť pomer šírky stromu a tabuľky. Pomer sa ukladá pre používateľa samostatne pre každú aplikáciu (#58786).
+- Číselníky - výber a správa typov sa presunuli do stromu v ľavom paneli. Prepojené typy sa zobrazujú pod svojimi rodičmi, vrátane zdieľaných potomkov; vyhľadávanie zachová nadradené vetvy. Vybraný typ zobrazuje svoje dáta vpravo; vytváranie, úprava, duplikovanie, mazanie a import/export typov sú dostupné nad stromom. Samostatná karta Typy číselníkov bola odstránená. Nastavenie stromu **Zobraziť vymazané typy** sprístupní vymazané typy na úpravu; vypnutím voľby **Vymazaný** v editore možno obnoviť typ aj všetky jeho dátové záznamy. Nastavenia prepojení majú zrozumiteľnejšie názvy a vysvetľujúce popisy, ktoré odlišujú prepojenia typov od prepojení dátových záznamov (#58786).
 - Blog - výber sekcie presunutý do stromu v ľavom paneli s vyhľadávaním, obnovením a spoločnými nadradenými priečinkami. Zachované zobrazenie **Všetky sekcie** a práva blogerov. Sekcie sa pridávajú zeleným tlačidlom **+** cez štandardný dialóg s kontrolou povinného a jedinečného názvu; nová sekcia sa automaticky objaví v strome. Viac v [dokumentácii Blogu](redactor/apps/blog/README.md) (#58786).
 - Novinky - výber priečinka presunutý do stromu v ľavom paneli. Spoločné nadradené priečinky sa zobrazujú v hierarchii; ak slúžia iba na navigáciu, majú odlišnú ikonu a nemožno ich vybrať ako priečinok noviniek. Pridané rozbaľovanie podpriečinkov a vyhľadávanie podľa názvu so zachovaním práv, domén a nastavenia zahrnutia podpriečinkov. Strom je dostupný aj v karte Novinky v editore aplikácie (#58786).
 

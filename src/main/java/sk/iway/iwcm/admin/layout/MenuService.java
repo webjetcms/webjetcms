@@ -207,7 +207,7 @@ public class MenuService {
             { "/components/qa/admin_list.jsp", "/apps/qa/admin/"},
             { "/components/export/admin_list.jsp", "/apps/export-dat/admin/"},
             { "/components/enumerations/admin_enum_list.jsp", "/apps/enumeration/admin/"},
-            { "/components/enumerations/admin_enum_type_list.jsp", "/apps/enumeration/admin/enumeration-type/"},
+            { "/components/enumerations/admin_enum_type_list.jsp", "/apps/enumeration/admin/"},
             { "/components/banner/banner_stat.jsp", "/apps/banner/admin/banner-stat/"},
             { "/components/proxy/admin_list.jsp", "/apps/proxy/admin/"},
             { "/components/news/admin_news_list.jsp", "/apps/news/admin/"},

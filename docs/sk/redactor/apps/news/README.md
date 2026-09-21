@@ -19,6 +19,8 @@ Strom zobrazuje aj ich spoločné nadradené priečinky, napríklad `Aplikácie 
 
 Nad stromom môžete vyhľadávať priečinky podľa názvu vrátane zatiaľ nerozbalených podpriečinkov. Tlačidlo obnovenia načíta aktuálnu štruktúru. Zobrazujú sa iba dostupné priečinky aktuálnej domény podľa práv používateľa.
 
+Tlačidlom **Nastavenia** nad stromom môžete zmeniť pomer šírky stromu a tabuľky. Nastavenie sa uloží pre prihláseného používateľa samostatne pre túto aplikáciu.
+
 Pri výbere priečinka s nastavením `*` zostáva zachovaný zoznam noviniek vrátane podpriečinkov. Výber konkrétneho podpriečinka zobrazí iba jeho novinky, pokiaľ tiež nemá výslovne nastavené `*`. Nová novinka sa vytvára vo vybranom priečinku. Výber sa zachováva v odkaze na stránku, napríklad `/apps/news/admin/#23*`. Ak nie je dostupný žiadny priečinok, zobrazí sa prázdny zoznam a vytváranie noviniek je vypnuté.
 
 Kliknutím na názov novinky sa otvorí editor zhodný s [editorom stránok](../../webpages/editor/README.md).

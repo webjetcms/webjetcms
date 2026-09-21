@@ -138,6 +138,9 @@ window.WebjetJsTree = WebjetJsTree;
 window.jsTreeDocumentOpener = new JsTreeDocumentOpener();
 window.jsTreeFolderOpener = new JsTreeFolderOpener();
 
+import { JstreeSettings } from './libs/js-tree-extends/jstreesettings';
+window.JstreeSettings = JstreeSettings;
+
 import * as JSZip from 'jszip';
 window.JSZip = JSZip;
 
