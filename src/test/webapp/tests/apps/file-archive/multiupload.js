@@ -106,11 +106,9 @@ Scenario('Set basic and advanced metadata for all files in a bulk upload @curren
     DT.waitForLoader("fileArchiveDataTable");
     selectMultiuploadFolder(I, DT);
 
-    pause();
     await uploadFilesToDropzone(I, [advancedMainFile]);
     DT.waitForLoader("fileArchiveDataTable");
 
-    pause();
     await uploadFilesToDropzone(I, bulkActionFiles, "success", null, {
         validFrom: publicationDateTime,
         validTo: expirationDateTime,
@@ -166,7 +164,8 @@ Scenario('Set all scheduled upload parameters for every file in a bulk upload', 
         validTo: validTo,
         saveLater: true,
         dateUploadLater: dateUploadLater,
-        emails: emails
+        emails: emails,
+        uploadRedundantFile: true
     });
 
     SL.openFileArchive(ARCHIVE_LATER_FOLDER + "scheduled.pdf");
@@ -257,7 +256,8 @@ Scenario('Preserve untouched metadata when resolving duplicate bulk uploads', as
     await uploadFilesToDropzone(I, duplicateMetadataFiles.map(file => file.initial), "success", null, {
         showFile: false,
         indexFile: false,
-        priority: priority
+        priority: priority,
+        uploadRedundantFile: true
     });
     DT.waitForLoader("fileArchiveDataTable");
 
@@ -431,11 +431,10 @@ async function uploadFilesToDropzone(I, files, expectedStatus = "success", frame
             ? page.locator(DROPZONE_INPUT)
             : page.frameLocator(frameSelector).locator(DROPZONE_INPUT);
 
-        console.log("input before=", input, "className=", input.className);
-
         await input.setInputFiles(files.map(file => file.filePath));
 
-        console.log("input after=", input, "className=", input.className);
+        // Dropzone replaces the input after selection; the new input must retain its identifying class.
+        await input.waitFor({ state: "attached", timeout: 20000 });
     });
 
     I.waitForVisible("#fileArchiveDataTable_modal", 20);

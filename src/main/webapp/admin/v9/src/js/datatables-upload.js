@@ -158,7 +158,8 @@ function adminUploadInit(options) {
             // input.dz-hidden-input elements on the same page can be distinguished.
             // The class is derived from the dropzone element id (or upload type/destination folder
             // as a fallback), never a random value. Dropzone recreates the hidden input after every
-            // file selection, so we hook the property setter to re-apply the class each time.
+            // file selection and overwrites className after assigning hiddenFileInput, so we
+            // restore the class on subsequent property reads during input setup.
             // NOTE: This overrides Dropzone's internal hiddenFileInput property with a getter/setter.
             // If Dropzone changes how it manages this property, this may break.
             var identifierSource = (this.element && this.element.id) ? this.element.id : (uploadType + '-' + destinationFolder);
@@ -167,7 +168,7 @@ function adminUploadInit(options) {
             if (hiddenInputClass) {
                 hiddenInputClass = 'dz-hidden-input-' + hiddenInputClass;
                 var applyHiddenInputClass = function (input) {
-                    if (input && input.classList) {
+                    if (input && input.classList && !input.classList.contains(hiddenInputClass)) {
                         input.classList.add(hiddenInputClass);
                     }
                 };
@@ -176,11 +177,11 @@ function adminUploadInit(options) {
                 Object.defineProperty(this, 'hiddenFileInput', {
                     configurable: true,
                     get: function () {
+                        applyHiddenInputClass(currentHiddenFileInput);
                         return currentHiddenFileInput;
                     },
                     set: function (input) {
                         currentHiddenFileInput = input;
-                        applyHiddenInputClass(input);
                     }
                 });
             }
