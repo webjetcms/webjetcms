@@ -1,61 +1,61 @@
 Feature('apps.blog');
 
-var sectionSelector = "#groupSelect_wrapper button.dropdown-toggle";
+const section = path => '#SomStromcek a[title="' + path + '"]';
 
 Scenario('Blog articles', ({ I, DTE, Document, DT }) => {
     I.relogin("bloggerPerm");
     I.amOnPage("/apps/blog/admin/");
 
+    I.waitForElement('#SomStromcek [id="-1_anchor"].jstree-clicked');
+    DT.waitForLoader("bloggerArticlesDataTable");
     Document.screenshot("/redactor/apps/blog/blogger-blog.png");
-    Document.screenshotElement("#groupSelect_wrapper", "/redactor/apps/blog/groupFilter_defaultValue.png");
+    Document.screenshotElement(".tree-col", "/redactor/apps/blog/groupFilter_defaultValue.png");
 
-    Document.screenshotElement("button.buttons-create", "/redactor/apps/blog/add_article.png");
-    Document.screenshotElement("button.buttons-add-folder", "/redactor/apps/blog/add_folder.png");
-
-    I.clickCss(sectionSelector);
-    Document.screenshotElement("#groupSelect_wrapper > div > .dropdown-menu.show", "/redactor/apps/blog/groupFilter_allValues.png");
+    I.clickCss(section("/Aplikácie/Blog/bloggerPerm"));
+    I.pressKey("ArrowRight");
+    I.waitForElement(section("/Aplikácie/Blog/bloggerPerm/Nezaradené"));
+    I.clickCss('#SomStromcek [id="-1_anchor"]');
+    Document.screenshotElement(".tree-col", "/redactor/apps/blog/groupFilter_allValues.png");
 
     I.clickCss("button.buttons-add-folder");
     I.waitForElement("#toast-container-webjet > .toast-warning");
     I.moveCursorTo("#toast-container-webjet > .toast-warning");
     Document.screenshotElement("#toast-container-webjet > .toast-warning", "/redactor/apps/blog/adding_folder_warning.png");
 
-    I.clickCss(sectionSelector);
-    I.click( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/bloggerPerm") );
+    I.toastrClose();
+    I.clickCss(section("/Aplikácie/Blog/bloggerPerm"));
     I.clickCss("button.buttons-add-folder");
-    I.waitForElement("#toast-container-webjet > .toast-info");
-    I.clickCss("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
-    I.waitForElement("#toast-container-webjet > .toast-error");
-    I.moveCursorTo("#toast-container-webjet > .toast-error");
-    Document.screenshotElement("#toast-container-webjet > .toast-error", "/redactor/apps/blog/adding_folder_error.png");
+    DTE.waitForEditor("blogSectionTable");
+    DTE.save("blogSectionTable");
+    I.waitForElement("#blogSectionTable_modal .DTE_Field_Name_groupName.is-invalid");
+    Document.screenshotElement("#blogSectionTable_modal .modal-content", "/redactor/apps/blog/adding_folder_error.png");
+    DTE.cancel("blogSectionTable");
 
     I.clickCss("button.buttons-add-folder");
-    I.waitForElement("#toast-container-webjet > .toast-info");
-    I.fillField("#toast-container-webjet > div > div.toast-message > div.toastr-input > input", "NewSubFolder");
-    I.moveCursorTo("#toast-container-webjet > .toast-info");
-    Document.screenshotElement("#toast-container-webjet > .toast-info", "/redactor/apps/blog/adding_folder_info.png");
-    Document.screenshotElement("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary", "/redactor/apps/blog/adding_folder_info_button.png");
-    I.clickCss("#toast-container-webjet > div > div.toast-message > div.toastr-buttons > button.btn.btn-primary");
+    DTE.waitForEditor("blogSectionTable");
+    I.fillField("#blogSectionTable_modal #DTE_Field_groupName", "NewSubFolder-autotest");
+    Document.screenshotElement("#blogSectionTable_modal .modal-content", "/redactor/apps/blog/adding_folder_info.png");
+    Document.screenshotElement("#blogSectionTable_modal .DTE_Footer button.btn-primary", "/redactor/apps/blog/adding_folder_info_button.png");
+    DTE.save("blogSectionTable", true);
 
     I.waitForElement("#toast-container-webjet > .toast-success");
     I.moveCursorTo("#toast-container-webjet > .toast-success");
     Document.screenshotElement("#toast-container-webjet > .toast-success", "/redactor/apps/blog/adding_folder_success.png");
 
-    I.clickCss(sectionSelector);
-    I.click( locate("a.dropdown-item > span").withText("/Aplikácie/Blog/bloggerPerm/NewSubFolder") );
-    I.wait(1);
-    I.clickCss(sectionSelector);
-    Document.screenshotElement("#groupSelect_wrapper > div > .dropdown-menu.show", "/redactor/apps/blog/groupFilter_allValues_withNew.png");
+    I.waitForElement(section("/Aplikácie/Blog/bloggerPerm/NewSubFolder-autotest"));
+    I.clickCss(section("/Aplikácie/Blog/bloggerPerm/NewSubFolder-autotest"));
+    DT.waitForLoader("bloggerArticlesDataTable");
+    Document.screenshotElement(".tree-col", "/redactor/apps/blog/groupFilter_allValues_withNew.png");
 
     I.say("remove added folder");
     I.relogin("tester");
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=63847");
-    I.jstreeClick("NewSubFolder");
+    I.jstreeClick("NewSubFolder-autotest");
     I.click(DT.btn.tree_delete_button);
     DTE.waitForEditor("groups-datatable");
     I.clickCss("div.DTE_Action_Remove div.DTE_Footer div.DTE_Form_Buttons button.btn-primary");
     DTE.waitForLoader();
-    I.dontSeeElement(locate("a.jstree-anchor").withText("NewSubFolder"));
+    I.dontSeeElement(locate("a.jstree-anchor").withText("NewSubFolder-autotest"));
 
     I.logout();
     I.amOnPage("/apps/blog/blogger/webjet-cms/");

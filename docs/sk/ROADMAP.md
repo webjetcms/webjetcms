@@ -50,7 +50,8 @@ Vysvetlenie použitých piktogramov:
 - [x] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach (#58641).
 - [x] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu (#58645).
 - [x] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený (#58718).
-- [ ] +Číselník, Blog - upraviť tak, aby výber typu číselníka alebo priečinka bol vľavo podobne ako v galérii/webových stránkach. Nemusia byť potom karty ale všetko naraz zobrazené.
+- [ ] +Číselník - presunúť výber typu číselníka do ľavého panela podobne ako v galérii/webových stránkach.
+- [x] +Blog - presunúť výber priečinka do stromu vľavo, s vyhľadávaním a zachovaním výberu Všetky sekcie aj pridávania sekcií (#58786).
 - [x] +Novinky - presunúť výber priečinka do stromu vľavo podobne ako v galérii/webových stránkach, s výberom podpriečinkov a vyhľadávaním (#58786).
 - [x] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu (#58714).
 - [x] +Konfigurácia - doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy - len nastaviť do Constants objektu), pridať tam zaškrtávacie pole "Nastaviť dočasne" s info ikonou že hodnota sa nastaví len dočasne a pri reštarte sa obnoví hodnota ako je v databáze. (#291)

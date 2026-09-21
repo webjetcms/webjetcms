@@ -98,6 +98,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Aplikácie
 
+- Blog - výber sekcie presunutý do stromu v ľavom paneli s vyhľadávaním, obnovením a spoločnými nadradenými priečinkami. Zachované zobrazenie **Všetky sekcie** a práva blogerov. Sekcie sa pridávajú zeleným tlačidlom **+** cez štandardný dialóg s kontrolou povinného a jedinečného názvu; nová sekcia sa automaticky objaví v strome. Viac v [dokumentácii Blogu](redactor/apps/blog/README.md) (#58786).
 - Novinky - výber priečinka presunutý do stromu v ľavom paneli. Spoločné nadradené priečinky sa zobrazujú v hierarchii; ak slúžia iba na navigáciu, majú odlišnú ikonu a nemožno ich vybrať ako priečinok noviniek. Pridané rozbaľovanie podpriečinkov a vyhľadávanie podľa názvu so zachovaním práv, domén a nastavenia zahrnutia podpriečinkov. Strom je dostupný aj v karte Novinky v editore aplikácie (#58786).
 
 - Číselníky - pre pomenované reťazcové polia je možné v novej karte [Typy reťazcových polí](redactor/apps/enumeration/README.md#karta-typy-reťazcových-polí) nastaviť typ poľa, možnosti výberu, povinnosť, pomocný text a obmedzenia dĺžky rovnako ako pri voliteľných poliach. Ponuka a názvy konfigurácií vychádzajú z poslednej uloženej verzie typu číselníka. Nepomenované polia zostávajú skryté, nevyhodnocujú sa ako povinné a polia bez špecifickej konfigurácie sa zobrazia ako bežný text. Staršie vlastné Excel šablóny a integrácie REST API je potrebné upraviť z atribútov `string1` až `string12` na `fieldA` až `fieldL` (#58641).

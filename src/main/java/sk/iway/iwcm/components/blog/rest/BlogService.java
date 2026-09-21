@@ -16,10 +16,12 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.ScopedGroupsTreeService;
 import sk.iway.iwcm.editor.rest.GetAllItemsDocOptions;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.json.LabelValueInteger;
+import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.jpa.JpaTools;
 
 public class BlogService {
@@ -67,17 +69,27 @@ public class BlogService {
 	}
 
 	public static void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<DocDetails> root, CriteriaBuilder builder, Identity user) {
-		//Orig logic
-        WebpagesService.addSpecSearch(params, predicates, root, builder, user);
-
-		//remove groupId predicate
+		// Replace the generic page filter with the permitted Blog sections.
 		JpaTools.removePredicateWithName("groupId", predicates);
 
 		//Plus our groupId logic
 		List<Integer> bloggersGroupIds = getBloggerDataList(user, Tools.getIntValue(params.get("groupId"), -1));
-		if(bloggersGroupIds != null)
-			predicates.add(root.get("groupId").in(bloggersGroupIds));
+		predicates.add(root.get("groupId").in(bloggersGroupIds == null ? List.of(-1) : bloggersGroupIds));
 	}
+
+    /** Builds the folder tree within the current blogger's or blogger administrator's scope. */
+    public static ScopedGroupsTreeService getFolderTree(Identity user, String domain) {
+        boolean admin = BloggerService.isUserBloggerAdmin(user);
+        List<Integer> roots = new ArrayList<>();
+        if (admin) roots = BloggerService.getAllBloggersRootGroupIds();
+        else if (BloggerService.isUserBlogger(user)) {
+            int[] editableGroups = Tools.getTokensInt(user.getEditableGroups(), ",");
+            if (editableGroups.length > 0) roots.add(editableGroups[0]);
+        }
+        List<LabelValue> folders = roots.stream()
+                .map(id -> new LabelValue(String.valueOf(id), String.valueOf(id))).toList();
+        return new ScopedGroupsTreeService(folders, user, domain, !admin);
+    }
 
 	public static List<LabelValueInteger> getActualBloggerGroups(Identity currentUser) {
         List<LabelValueInteger> groupsMap = new ArrayList<>();

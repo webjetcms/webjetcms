@@ -1,91 +1,128 @@
 <script data-th-inline="javascript">
-    let url = "/admin/rest/blog";
     var webpageColumns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.doc.DocDetails')})]*/ '';
+    var sectionColumns = /*[(${layout.getDataTableColumns('sk.iway.iwcm.components.blog.jpa.BlogSectionBean')})]*/ '';
 </script>
 <script type="text/javascript">
     var bloggerArticlesDataTable;
 
-    window.domReady.add(function () {
-        //Add filter to tab
-        $("#pills-dateRange-tab").html("");
+    window.getJstreeUrl = function() {
+        let url = $("#SomStromcek").data("rest-url");
+        const hash = window.location.hash.substring(1);
+        if (/^(?:-1|\d+)$/.test(hash)) url = WJ.urlUpdateParam(url, "selectedId", parseInt(hash, 10));
+        return url;
+    };
 
-        //Prepare columns
+    window.domReady.add(function () {
+        const treeElement = $("#SomStromcek");
+        let selectedFolder = null;
+        let tablePromise = null;
+        let currentFilter = null;
+
+        $("#pills-dateRange-tab").html("");
         window.WJ.DataTable.mergeColumns(webpageColumns, { name: "fullPath", visible: true });
-        //rename title column
         window.WJ.DataTable.mergeColumns(webpageColumns, { name: "title", title: WJ.translate("components.blog.filter.name.js") });
 
-        window.importWebPagesDatatable().then(module => {
-
-            let wpdInstance = new module.WebPagesDatatable({
-                url: url,
-                columns: webpageColumns,
-                id: "bloggerArticlesDataTable",
-                newPageTitleKey: "components.blog.articles.new_article.js",
-            });
-            bloggerArticlesDataTable = wpdInstance.createDatatable();
-
-            //Add new button with logic -> add folder
-            bloggerArticlesDataTable.button().add(1, {
-                text: '<i class="ti ti-folder-plus"></i>',
-                action: function (e, dt, node) {
-                    addFolderFn();
-                },
-                className: 'btn btn-outline-secondary buttons-divider buttons-add-folder',
-                attr: {
-                    title : "[[#{components.blog.add_folder.title}]]",
-                    'data-toggle': 'tooltip'
-                }
-            });
-
-            $(".dt-buttons").prepend('<div class="btn btn-sm buttons-select" id="groupSelect_wrapper"><label>[[#{editor.div_properties.section}]]</label><select class="form-select" id="groupSelect"><option value="-1">[[#{components.blog.all_groups}]]</option></select></div>');
-
-            //Init select
-            ChartTools.setSelect("/admin/rest/blog/blogger-groups", $('#groupSelect').val(), "groupSelect");
-
-            $("#groupSelect").on("change", function() {
-                updateTable();
-            });
-        });
-
-        function updateTable() {
-            //set table filter params
-            bloggerArticlesDataTable.setAjaxUrl(WJ.urlUpdateParam( bloggerArticlesDataTable.getAjaxUrl() , "groupId", $('#groupSelect').val()));
-            //reload tables values
-            bloggerArticlesDataTable.ajax.reload();
+        function getTableUrl() {
+            let url = bloggerArticlesDataTable ? bloggerArticlesDataTable.getAjaxUrl() : "/admin/rest/blog";
+            return WJ.urlUpdateParam(url, "groupId", selectedFolder ? selectedFolder.id : "0");
         }
 
-        //After addFolder action is executed, reload select with folders
-        window.addEventListener('WJ.DT.executeAction', function (e) {
-            //Sub group added successfully - reload select
-            ChartTools.setSelect("/admin/rest/blog/blogger-groups", $('#groupSelect').val(), "groupSelect");
-        });
+        /** Synchronizes the article list and creation defaults with the selected Blog section. */
+        function selectFolder(node) {
+            selectedFolder = node ? node.original : null;
+            window.selectedNode = selectedFolder && selectedFolder.id !== "-1" ? selectedFolder : null;
+            $("#blog-folders-empty").toggleClass("d-none", selectedFolder != null);
+            $(".tree-col .buttons-add-folder").prop("disabled", selectedFolder == null);
+            if (selectedFolder && (!window.location.hash || /^#(?:-1|\d+)$/.test(window.location.hash))) {
+                window.history.replaceState(null, "", "#" + selectedFolder.id);
+            }
 
-        /**
-         * Add folder action
-         */
-        async function addFolderFn() {
-            if($('#groupSelect').val() == -1) {
-                WJ.notifyWarning("[[#{components.blog.add_folder.title}]]", "[[#{components.blog.add_folder.warning}]]", 15000);
-            } else {
-                WJ.prompt({
-                    title: "[[#{components.blog.add_folder.title}]]",
-                    message: "[[#{components.blog.add_folder.msg}]] " + $('#groupSelect').find(":selected").text(),
-                    success: function(value) {
-                        let customData = {
-                            groupId: $('#groupSelect').val(),
-                            newGroupName: value
-                        }
-                        bloggerArticlesDataTable.executeAction("addBloggerGroup", true, null, null, JSON.stringify(customData));
-                    },
-                    cancel: function() {}
+            if (tablePromise == null) {
+                tablePromise = window.importWebPagesDatatable().then(module => {
+                    const instance = new module.WebPagesDatatable({
+                        url: getTableUrl(),
+                        columns: webpageColumns,
+                        id: "bloggerArticlesDataTable",
+                        newPageTitleKey: "components.blog.articles.new_article.js"
+                    });
+                    currentFilter = selectedFolder ? selectedFolder.id : "0";
+                    bloggerArticlesDataTable = instance.createDatatable();
+                    // Include the empty-state message in the header measured by automatic table sizing.
+                    $("#blog-folders-empty").prependTo("#bloggerArticlesDataTable_wrapper .dt-header-row");
+                    bloggerArticlesDataTable.on("draw.dt", function() {
+                        bloggerArticlesDataTable.button(".buttons-create").enable(selectedFolder != null);
+                    });
                 });
             }
+            tablePromise.then(() => {
+                const filter = selectedFolder ? selectedFolder.id : "0";
+                if (currentFilter !== filter) {
+                    currentFilter = filter;
+                    bloggerArticlesDataTable.setAjaxUrl(getTableUrl());
+                    bloggerArticlesDataTable.ajax.reload();
+                }
+                bloggerArticlesDataTable.button(".buttons-create").enable(selectedFolder != null);
+            });
         }
+
+        treeElement.on("select_node.jstree", function(e, data) {
+            if (!data.node.state.disabled) selectFolder(data.node);
+        });
+
+        treeElement.on("ready.jstree refresh.jstree", function() {
+            // Searching must not replace the article list when its folder is outside the results.
+            if ($("#tree-folder-search-input").val()) return;
+            const tree = treeElement.jstree(true);
+            const selected = tree.get_selected(true).find(node => !node.state.disabled);
+            if (selected) selectFolder(selected);
+            else {
+                const first = tree.get_json("#", { flat: true }).find(node => !node.state.disabled);
+                if (first) tree.select_node(first.id);
+                else selectFolder(null);
+            }
+        });
+
+        const sectionTable = WJ.DataTable({
+            id: "blogSectionTable",
+            url: "/admin/rest/blog/sections",
+            columns: sectionColumns,
+            serverSide: false,
+            hideTable: true,
+            hideButtons: "create,edit,duplicate,remove,import,export,celledit",
+            initialData: dtWJ.getEmptyData(true),
+            idAutoOpener: false,
+            initHashFilter: false
+        });
+        sectionTable.EDITOR.on("initCreate", function() {
+            sectionTable.EDITOR.field("parentGroupId").set(selectedFolder.id);
+            sectionTable.EDITOR.field("parentPath").set(selectedFolder.groupDetails.fullPath);
+        });
+        sectionTable.EDITOR.on("open", function() {
+            $("#blogSectionTable_modal .modal-title").text("[[#{components.blog.add_folder.title}]]");
+            $("#blogSectionTable_modal").one("hidden.bs.modal", function() {
+                $(".tree-col .buttons-add-folder")[0].focus({ preventScroll: true });
+            });
+        });
+        sectionTable.EDITOR.on("submitSuccess", function() {
+            treeElement.jstree(true).refresh();
+        });
+
+        $(".tree-col .buttons-add-folder").on("click", function() {
+            if (!selectedFolder || selectedFolder.id === "-1") {
+                WJ.notifyWarning("[[#{components.blog.add_folder.title}]]", "[[#{components.blog.add_folder.warning}]]", 15000);
+                return;
+            }
+            sectionTable.wjCreate();
+        });
+
+        window.addEventListener("hashchange", function() {
+            if (/^#(?:-1|\d+)$/.test(window.location.hash)) treeElement.jstree(true).refresh(false, true);
+        });
     });
 </script>
 
 <style>
-    /*During crate/edit action user cant see groupTree, it's set via extFilter*/
+    /*Folder copy settings are hidden; the selected section supplies the destination.*/
     .DTE_Action_Create {
         #panel-body-dt-bloggerArticlesDataTable-basic > div.DTE_Field.form-group.row.DTE_Field_Type_json.DTE_Field_Name_editorFields\.groupCopyDetails.dt-style-json.dt-tree-group-array { display: none; }
     }
@@ -96,9 +133,34 @@
     #pills-dt-bloggerArticlesDataTable-template-tab {
         display: none;
     }
-    #groupSelect {
-        max-width: 250px;
-    }
 </style>
 
-<table id="bloggerArticlesDataTable" class="datatableInit table"></table>
+<div class="row">
+    <div class="col-md-4 tree-col">
+        <div class="dt-header-row clearfix">
+            <div class="row">
+                <div class="col-auto">
+                    <div class="dt-buttons">
+                        <button class="btn btn-sm btn-success buttons-add-folder" type="button" disabled
+                            data-toggle="tooltip" data-th-title="#{components.blog.add_folder.title}"
+                            data-th-aria-label="#{components.blog.add_folder.title}">
+                            <span><i class="ti ti-plus" aria-hidden="true"></i></span>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary buttons-refresh" type="button"
+                            data-toggle="tooltip" data-th-title="#{datatables.button.reload.js}"
+                            data-th-aria-label="#{datatables.button.reload.js}">
+                            <span><i class="ti ti-refresh" aria-hidden="true"></i></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="SomStromcek" class="hide-while-loading" data-rest-url="/admin/rest/blog"
+            data-rest-param-name="id" data-single-select="true" data-search-restore-state="false"></div>
+    </div>
+    <div class="col-md-8 datatable-col">
+        <div id="blog-folders-empty" class="alert alert-info d-none" role="status" data-th-text="#{components.blog.noFolders}"></div>
+        <table id="bloggerArticlesDataTable" class="datatableInit table"></table>
+    </div>
+</div>
+<table id="blogSectionTable" class="datatableInit table"></table>

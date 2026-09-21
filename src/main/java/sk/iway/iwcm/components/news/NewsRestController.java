@@ -31,6 +31,7 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.ScopedGroupsTreeService;
 import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.rest.WebpagesDatatable;
@@ -104,7 +105,7 @@ public class NewsRestController extends WebpagesDatatable {
             @RequestParam(defaultValue = "contains") String treeSearchType,
             HttpServletRequest request) {
         List<LabelValue> folders = convertIdsToNamePair("constant:newsAdminGroupIds", include, request);
-        NewsTreeService tree = new NewsTreeService(folders, getUser(), DocDB.getDomain(request));
+        ScopedGroupsTreeService tree = new ScopedGroupsTreeService(folders, getUser(), DocDB.getDomain(request));
         return Map.of("result", true, "items", tree.getItems(item.getIdInt(), selectedId, treeSearchValue, treeSearchType));
     }
 

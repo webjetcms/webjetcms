@@ -20,6 +20,8 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.ScopedGroupsTreeItem;
+import sk.iway.iwcm.doc.ScopedGroupsTreeService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
@@ -65,9 +67,9 @@ class NewsTreeServiceTest {
 
     @Test
     void deduplicatesOverlappingRootsAndRetainsExplicitChildRecursion() {
-        List<NewsTreeItem> items = tree("10", "11*", "10*").getItems(0, 11, null, "contains");
+        List<ScopedGroupsTreeItem> items = tree("10", "11*", "10*").getItems(0, 11, null, "contains");
         assertEquals(ids(items).size(), new HashSet<>(ids(items)).size());
-        NewsTreeItem child = items.stream().filter(item -> item.getId().equals("11")).findFirst().orElseThrow();
+        ScopedGroupsTreeItem child = items.stream().filter(item -> item.getId().equals("11")).findFirst().orElseThrow();
         assertEquals("10", child.getParent());
         assertEquals("11*", child.getGroupIdList());
         assertEquals("10*", items.get(0).getGroupIdList());
@@ -78,7 +80,7 @@ class NewsTreeServiceTest {
         folders.get(11).setHiddenInAdmin(true);
         folders.get(20).setDomainName("other.example");
         when(user.isDisabledItem("editor_show_hidden_folders")).thenReturn(true);
-        NewsTreeService tree = tree("10", "20");
+        ScopedGroupsTreeService tree = tree("10", "20");
         assertEquals(List.of("10"), ids(tree.getItems(0, -1, null, "contains")));
         assertEquals(List.of("13"), ids(tree.getItems(10, -1, null, "contains")));
         assertTrue(tree.getItems(0, -1, "Press", "contains").isEmpty());
@@ -90,18 +92,18 @@ class NewsTreeServiceTest {
         editable.clear();
         editable.add(12);
         viewable.addAll(Set.of(10, 11));
-        List<NewsTreeItem> items = tree("10").getItems(0, -1, null, "contains");
+        List<ScopedGroupsTreeItem> items = tree("10").getItems(0, -1, null, "contains");
         assertEquals(Set.of("10", "11", "12"), new HashSet<>(ids(items)));
         assertTrue(items.get(0).getState().isDisabled());
         assertEquals("12", items.stream().filter(item -> item.getState().isSelected()).findFirst().orElseThrow().getId());
     }
 
-    private NewsTreeService tree(String... values) {
-        return new NewsTreeService(java.util.Arrays.stream(values).map(value -> new LabelValue(value, value)).toList(), user, "news.example");
+    private ScopedGroupsTreeService tree(String... values) {
+        return new ScopedGroupsTreeService(java.util.Arrays.stream(values).map(value -> new LabelValue(value, value)).toList(), user, "news.example");
     }
 
-    private static List<String> ids(List<NewsTreeItem> items) {
-        return items.stream().map(NewsTreeItem::getId).toList();
+    private static List<String> ids(List<ScopedGroupsTreeItem> items) {
+        return items.stream().map(ScopedGroupsTreeItem::getId).toList();
     }
 
     private void addFolder(int id, int parentId, String name) {

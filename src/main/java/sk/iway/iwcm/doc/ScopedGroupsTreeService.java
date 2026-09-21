@@ -1,4 +1,4 @@
-package sk.iway.iwcm.components.news;
+package sk.iway.iwcm.doc;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -14,14 +14,12 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.doc.GroupDetails;
-import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
-/** Builds a scoped News tree with navigation-only ancestors above its configured folders. */
-public class NewsTreeService {
+/** Builds a scoped application folder tree with navigation-only ancestors above its configured folders. */
+public class ScopedGroupsTreeService {
     private final Identity user;
+    private final boolean checkGroupsPerms;
     private final Map<Integer, GroupDetails> groups = new LinkedHashMap<>();
     private final Map<Integer, String> filters = new LinkedHashMap<>();
     private final Map<Integer, List<Integer>> children = new LinkedHashMap<>();
@@ -32,9 +30,15 @@ public class NewsTreeService {
      * Resolves configured roots and their visible descendants from the cached folder structure.
      * Viewable ancestors remain expandable but cannot select an article list.
      */
-    public NewsTreeService(List<LabelValue> folders, Identity user, String domain) {
+    public ScopedGroupsTreeService(List<LabelValue> folders, Identity user, String domain) {
+        this(folders, user, domain, true);
+    }
+
+    /** Allows applications with their own administrative folder scope to supply trusted roots. */
+    public ScopedGroupsTreeService(List<LabelValue> folders, Identity user, String domain, boolean checkGroupsPerms) {
         this.user = user;
-        if (user == null || (Tools.isEmpty(user.getEditableGroups(true)) && Tools.isNotEmpty(user.getEditablePages()))) return;
+        this.checkGroupsPerms = checkGroupsPerms;
+        if (user == null || (checkGroupsPerms && Tools.isEmpty(user.getEditableGroups(true)) && Tools.isNotEmpty(user.getEditablePages()))) return;
 
         GroupsDB groupsDB = GroupsDB.getInstance();
         for (LabelValue folder : folders) {
@@ -52,7 +56,7 @@ public class NewsTreeService {
             if (!isVisible(group, domain)) continue;
 
             groups.put(id, group);
-            if (GroupsDB.isGroupEditable(user, id)) selectable.add(id);
+            if (!checkGroupsPerms || GroupsDB.isGroupEditable(user, id)) selectable.add(id);
             for (GroupDetails child : GroupsTreeService.sortGroupsBasedOnUserSettings(user, groupsDB.getGroups(id))) {
                 pending.addLast(child.getGroupId());
             }
@@ -77,7 +81,7 @@ public class NewsTreeService {
      * Returns roots, lazy children, or search matches with their scoped ancestors.
      * The initial response opens the selected folder's path and includes its siblings.
      */
-    public List<NewsTreeItem> getItems(int parentId, int selectedId, String searchValue, String searchType) {
+    public List<ScopedGroupsTreeItem> getItems(int parentId, int selectedId, String searchValue, String searchType) {
         Set<Integer> included = new LinkedHashSet<>();
         Set<Integer> opened = new HashSet<>();
         boolean searching = Tools.isNotEmpty(searchValue);
@@ -106,12 +110,12 @@ public class NewsTreeService {
             included.addAll(children.getOrDefault(parentId, List.of()));
         }
 
-        List<NewsTreeItem> items = new ArrayList<>();
+        List<ScopedGroupsTreeItem> items = new ArrayList<>();
         for (GroupDetails group : GroupsTreeService.sortGroupsBasedOnUserSettings(user, new ArrayList<>(groups.values()))) {
             int id = group.getGroupId();
             if (!included.contains(id)) continue;
             boolean navigationOnly = navigationParents.contains(id);
-            NewsTreeItem item = new NewsTreeItem(group, user, navigationOnly ? null : filters.getOrDefault(id, String.valueOf(id)));
+            ScopedGroupsTreeItem item = new ScopedGroupsTreeItem(group, user, navigationOnly ? null : filters.getOrDefault(id, String.valueOf(id)), checkGroupsPerms);
             int parent = parentId(group);
             item.setParent(parent == 0 ? "#" : String.valueOf(parent));
             if (navigationOnly) item.setIcon("ti ti-folders");
@@ -126,11 +130,16 @@ public class NewsTreeService {
         return items;
     }
 
+    /** Checks whether a folder can be selected within this user's application scope. */
+    public boolean isSelectable(int groupId) {
+        return selectable.contains(groupId);
+    }
+
     private boolean isVisible(GroupDetails group, String domain) {
         if (group == null) return false;
         if (Constants.getBoolean("multiDomainEnabled") && !domain.equals(group.getDomainName())) return false;
         if (group.isHiddenInAdmin() && user.isDisabledItem("editor_show_hidden_folders")) return false;
-        return GroupsDB.isGroupEditable(user, group.getGroupId()) || GroupsDB.isGroupViewable(user, group.getGroupId());
+        return !checkGroupsPerms || GroupsDB.isGroupEditable(user, group.getGroupId()) || GroupsDB.isGroupViewable(user, group.getGroupId());
     }
 
     private int parentId(GroupDetails group) {
