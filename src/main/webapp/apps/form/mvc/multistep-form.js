@@ -54,6 +54,7 @@ export class MultistepForm {
 
         this._hasShownStep = false;
         this._isNavigating = false;
+        this._fieldValidationRequests = new Map();
 
         // Centralized map: element -> array of conditions (parsed once from data-visibility-condition attributes)
         this.visibilityConditions = new Map();
@@ -79,6 +80,7 @@ export class MultistepForm {
     async _runNavigation(action) {
         if (this._isNavigating) return;
         this._isNavigating = true;
+        this._cancelFieldValidation();
         const buttons = this.wrapper.querySelectorAll('button[type="submit"]:enabled, input[type="submit"]:enabled, [data-multistep-back-step]:enabled');
         buttons.forEach(button => { button.disabled = true; });
         try {
@@ -142,6 +144,7 @@ export class MultistepForm {
             console.warn('Missing formName or stepId; skipping load.');
             return;
         }
+        this._cancelFieldValidation();
         const url = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(formName)}&step-id=${encodeURIComponent(stepId)}&language=${encodeURIComponent(this.language || '')}`;
         try {
             const r = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json', "X-CSRF-Token": this.csrf } });
@@ -211,6 +214,7 @@ export class MultistepForm {
             this.formName = formName;
             this.stepId = stepId;
             this._hasShownStep = true;
+            if (form && json.validateOnBlur === true) this._initFieldValidation(form);
             if (holder) this._dispatchStepShown(holder, form, isInitialStep);
 
             if (scrollToForm && form) this._focusStep(form);
@@ -235,6 +239,7 @@ export class MultistepForm {
      * @param {HTMLElement} holder - Container of the step being removed.
      */
     _disposeStep(holder) {
+        this._cancelFieldValidation();
         formTooltip.dispose(holder);
         holder.querySelectorAll('.wjdropzone').forEach(element => {
             const dropzone = element.dropzone;
@@ -427,6 +432,97 @@ export class MultistepForm {
     }
 
     /**
+     * Enable blur validation for text inputs and plain textareas in the current step.
+     * @param {HTMLFormElement} form - Currently rendered step form.
+     */
+    _initFieldValidation(form) {
+        const cancelFieldValidation = event => {
+            const fieldId = this._toLogicalFieldId(event.target.id || event.target.name);
+            this._fieldValidationRequests.get(fieldId)?.abort();
+            this._fieldValidationRequests.delete(fieldId);
+        };
+        form.addEventListener('input', cancelFieldValidation);
+        form.addEventListener('change', cancelFieldValidation);
+        form.addEventListener('focusout', event => {
+            const input = event.target;
+            if (!input.matches('input, textarea') || input.matches(':disabled') || input.readOnly) return;
+            if (!['text', 'search', 'email', 'url', 'tel', 'password', 'number', 'date', 'datetime-local', 'month', 'week', 'time', 'textarea'].includes(input.type)) return;
+            if (input.matches('.formsimple-wysiwyg, .captcha, [name="wjcaptcha"], [name="g-recaptcha-response"]')) return;
+            if (input.closest('.wjdropzone, .form-group-captcha, .g-recaptcha, .cleditorMain')) return;
+            if (input.getClientRects().length === 0 || this._isFieldHidden(input.closest('.form-group') || input.parentElement)) return;
+            this._validateFieldOnBlur(form, input);
+        });
+    }
+
+    /** Cancel requests whose values or step context are no longer current. */
+    _cancelFieldValidation() {
+        this._fieldValidationRequests.forEach(controller => controller.abort());
+        this._fieldValidationRequests.clear();
+    }
+
+    /**
+     * Validate one field without changing saved values, focus, or navigation.
+     * @param {HTMLFormElement} form - Form containing the field.
+     * @param {HTMLInputElement|HTMLTextAreaElement} input - Control that lost focus.
+     * @returns {Promise<void>} Resolves after displaying a current response or ignoring a stale one.
+     */
+    async _validateFieldOnBlur(form, input) {
+        if (this._isNavigating) return;
+        const fieldId = this._toLogicalFieldId(input.id || input.name);
+        if (!fieldId) return;
+
+        this._fieldValidationRequests.get(fieldId)?.abort();
+        const controller = new AbortController();
+        this._fieldValidationRequests.set(fieldId, controller);
+        const value = input.value;
+        const url = new URL('/rest/multistep-form/validate-field', window.location.origin);
+        url.searchParams.set('form-name', this.formName);
+        url.searchParams.set('step-id', this.stepId);
+        url.searchParams.set('field-id', fieldId);
+        url.searchParams.set('language', this.language || '');
+
+        try {
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': this.csrf
+                },
+                body: JSON.stringify({ [fieldId]: value }),
+                signal: controller.signal
+            });
+            const result = await response.json();
+            if (controller.signal.aborted || this._isNavigating || !this.wrapper.contains(form)) return;
+            if (value !== input.value || !form.contains(input)) return;
+            if (response.ok && result.fieldErrors) {
+                this._showFieldError(fieldId, result.fieldErrors[fieldId] || '');
+            } else if (response.status === 400 && result.err_msg) {
+                this._showFieldError(fieldId, result.err_msg);
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') console.warn('Failed to validate form field:', error);
+        } finally {
+            if (this._fieldValidationRequests.get(fieldId) === controller) this._fieldValidationRequests.delete(fieldId);
+        }
+    }
+
+    /**
+     * Render or clear errors for one field using the existing error-list markup.
+     * @param {string} fieldId - Logical field identifier.
+     * @param {string} errorMessage - Localized messages separated by newlines, or empty to clear.
+     */
+    _showFieldError(fieldId, errorMessage) {
+        const containers = this.wrapper.getElementsByClassName('cs-error-' + this._toDomFieldId(fieldId));
+        for (const container of containers) {
+            container.innerHTML = errorMessage
+                ? `<ul class="mf-error-list">${String(errorMessage).split('\n').map(message => `<li>${message}</li>`).join('')}</ul>`
+                : '';
+        }
+    }
+
+    /**
      * Validate and submit the current step form via AJAX.
      * Collects all input/select/textarea values and posts JSON to the server.
      * @param {SubmitEvent} event - The submit event from the step form.
@@ -434,6 +530,7 @@ export class MultistepForm {
      */
     async doValidationAndSave(event) {
         event.preventDefault();
+        this._cancelFieldValidation();
         const form = event.currentTarget;
 
         // Generate reCaptcha V3 token if the captcha widget is present
@@ -1044,15 +1141,7 @@ export class MultistepForm {
         const fieldErrors = response.fieldErrors || {};
         if (fieldErrors && Object.keys(fieldErrors).length > 0) {
             for (const [fieldName, errorMsg] of Object.entries(fieldErrors)) {
-                if (window.$) {
-                    const errDiv = $(this.wrapper).find('div.cs-error-' + this._toDomFieldId(fieldName));
-                    const errorMsgArr = String(errorMsg).split('\n');
-                    errDiv.html('');
-                    let html = "<ul class='mf-error-list'>";
-                    for (const msg of errorMsgArr) html += `<li>${msg}</li>`;
-                    html += '</ul>';
-                    errDiv.html(html);
-                }
+                this._showFieldError(fieldName, errorMsg);
             }
             return;
         }

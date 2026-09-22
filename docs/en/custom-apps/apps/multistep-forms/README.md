@@ -1,5 +1,17 @@
 # Forms
 
+## Validation when leaving a field
+
+Set the configuration value `multistepform_validateOnBlur` to `true` to validate text-like inputs and plain textareas when they lose focus. The default is `false`. The setting is returned as `validateOnBlur` by `/rest/multistep-form/get-step` and applies when a step is loaded.
+
+Validation uses the field's static required setting, trimming, XSS, and regular-expression rules, including localized custom error messages. Conditional visibility and requirement rules are evaluated only when the step is submitted. Errors appear beside the affected field and clear when it becomes valid. Selects, checkboxes, radio buttons, file uploads/Dropzone, CAPTCHA, rich-text editors, hidden fields, buttons, and disabled or readonly controls do not trigger blur validation.
+
+The frontend calls `POST /rest/multistep-form/validate-field` with query parameters `form-name`, `step-id`, `field-id`, and `language`, the `X-CSRF-Token` header, and only the selected field's value as a JSON object, for example `{"email":"visitor@example.com"}`. `field-id` is the logical field identifier without the form-instance DOM prefix (`email` in this example). No values from other fields or previous steps are needed for this check.
+
+The endpoint returns HTTP 200 with `{"fieldErrors":{}}` when valid or `{"fieldErrors":{"fieldId":"message"}}` when invalid. Invalid requests return HTTP 400 with localized `err_msg`; a disabled feature returns HTTP 404. This check does not save values, advance steps, invoke form processors, validate CAPTCHA/uploads, or update statistics. Full validation still runs when the step is submitted.
+
+## Custom form processing
+
 In some cases, it is necessary to perform more complex operations or form validations. For this purpose, in multi-step forms, it is possible to set a Java class in the Form Processor field. This is a special class that is used to process form steps and allows:
 
 - step validation

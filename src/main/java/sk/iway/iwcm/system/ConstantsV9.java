@@ -252,6 +252,7 @@ public class ConstantsV9 {
 		Constants.setString("multistepform_emailFields", "email,e-mail", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_attachmentDefaultName", "prilohy.html", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_subjectDefaultValue", "components.form.default_subject", Constants.MOD_FORMMAIL, "");
+		Constants.setBoolean("multistepform_validateOnBlur", false, Constants.MOD_FORMMAIL, "Validate multistep form text inputs and plain textareas on the server when they lose focus.");
 
 		Constants.setBoolean("password_passKeyEnabled", true, Constants.MOD_PASSWORD, "Povoli prihlasovanie pomocou PassKey/WebAuthN technológie. Tá zabezpečuje prihlasovanie pomocou biometrických údajov alebo bezpečnostných kľúčov. Vyžaduje HTTPS komunikáciu.");
 		Constants.setString("password_passKeyRpId", "", Constants.MOD_PASSWORD, "Relying Party ID pre PassKey/WebAuthN. Obvykle sa jedná o doménu bez subdomén (napr. example.com). Ak nie je nastavená, použije sa základná doména z URL adresy.");

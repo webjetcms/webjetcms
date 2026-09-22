@@ -887,6 +887,59 @@ public class MultistepFormsService {
     }
 
     /**
+     * Validates one field without saving values or invoking step processors and statistics.
+     * Conditional visibility and requirement rules are evaluated only during step submission.
+     *
+     * @param formName logical form name
+     * @param stepId current step identifier
+     * @param fieldId logical identifier of the field to validate
+     * @param request request containing the field value and the form session
+     * @return localized errors for the requested field, or an empty map when valid
+     * @throws SaveFormException when CSRF, cookie, or XSS checks fail
+     * @throws IOException when reading the request body fails
+     */
+    public final Map<String, String> validateField(String formName, Long stepId, String fieldId, HttpServletRequest request) throws SaveFormException, IOException {
+        if (getValidStepEntity(formName, stepId, request) == null) throw new IllegalStateException("Invalid form or step for field validation.");
+        beforeStepSaveCheck(false, request);
+
+        FormItemEntity field = formItemsRepository.findFirstByStepIdAndItemFormIdAndDomainIdOrderBySortPriorityAsc(stepId, fieldId, CloudToolsForCore.getDomainId())
+            .orElseThrow(() -> new IllegalArgumentException("Field does not belong to the requested step."));
+
+            if (isFileUploadField(field.getFieldType()) || "captcha".equalsIgnoreCase(field.getFieldType()) || "wysiwyg".equalsIgnoreCase(field.getFieldType())) {
+            throw new IllegalArgumentException("Field type does not support blur validation.");
+        }
+
+        String value = readFormValues(formName, request).getString(fieldId);
+        JSONObject received = new JSONObject().put(fieldId, value);
+
+        Map<String, String> errors = new HashMap<>();
+        validateFields(formName, List.of(field), received, false, false, request, errors);
+        if (errors.containsKey(fieldId) && Tools.isNotEmpty(field.getCustomError())) {
+            errors.put(fieldId, Prop.getInstance(PageLng.getUserLng(request)).getText(field.getCustomError()));
+        }
+        return errors;
+    }
+
+    /**
+     * Reads submitted JSON using the same separator and form-instance normalization for validation and saving.
+     *
+     * @param formName logical form name
+     * @param request request containing the JSON body and form-instance counter
+     * @return submitted values keyed by logical field identifier
+     * @throws IOException when reading the request body fails
+     */
+    private JSONObject readFormValues(String formName, HttpServletRequest request) throws IOException {
+        int formCounter = getFormCounter(formName, request);
+        if (formCounter < 1) throw new IllegalStateException("Invalid formCounter for form processing");
+
+        String body = request.getReader().lines().collect(Collectors.joining());
+        if (Tools.isEmpty(body)) throw new IllegalStateException("Empty request body.");
+        // These characters are reserved as separators in saved form data.
+        body = body.replace("|", "").replace("~", "");
+        return removeFormCounter(new JSONObject(body), formCounter);
+    }
+
+    /**
      * Validate and persist a single step of a multistep form into session, and optionally
      * finalize the form submission. Performs CSRF/CAPTCHA/file validations and invokes
      * custom processors. When the last step is completed, triggers final save into DB.
@@ -902,14 +955,7 @@ public class MultistepFormsService {
         FormStepEntity validStepEntity = getValidStepEntity(formName, stepId, request);
         if(validStepEntity == null) throw new IllegalStateException("Provided formName: " + formName + " AND stepId: " + stepId + " are INVALID for current domain id: " + CloudToolsForCore.getDomainId());
 
-        int formCounter = getFormCounter(formName, request);
-        if(formCounter < 1) throw new IllegalStateException("Invalid formCounter for form processing");
-
-        String body = request.getReader().lines().collect(Collectors.joining());
-        if (Tools.isEmpty(body)) throw new IllegalStateException("Empty request body.");
-        // !!! characters | and ~ are PROHIBITTED in form data - they are used as separators in form
-        body = body.replace("|", "").replace("~", "");
-        JSONObject received = removeFormCounter(new JSONObject(body), formCounter);
+        JSONObject received = readFormValues(formName, request);
 
         Map<String, String> errors = new HashMap<>();
 
@@ -930,7 +976,7 @@ public class MultistepFormsService {
                 received.put(fieldId, "");
             }
         }
-        validateFields(formName, stepItems, received, spamProtectionEnabled, request, errors);
+        validateFields(formName, stepItems, received, spamProtectionEnabled, true, request, errors);
 
         /* Separate validate file fields */
         validateFileFields(formName, formSettings, stepItems, received, errors, request);
@@ -1141,25 +1187,25 @@ public class MultistepFormsService {
      *
      * @param formName              logical form name
      * @param stepItems             field definitions belonging to the current step
-     * @param received              submitted step payload
+     * @param received              submitted field values
      * @param spamProtectionEnabled whether CAPTCHA validation is active
+     * @param evaluateConditions    whether visibility and conditional requirement rules are evaluated
      * @param request               HTTP request with localization/session context
      * @param errors                mutable map collecting field validation errors
      * @throws SaveFormException when anti-spam XSS checks fail
      */
-    private void validateFields(String formName, List<FormItemEntity> stepItems, JSONObject received, boolean spamProtectionEnabled, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    private void validateFields(String formName, List<FormItemEntity> stepItems, JSONObject received, boolean spamProtectionEnabled, boolean evaluateConditions, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
         Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
         List<RegExpEntity> allRegExps = FormDB.getInstance().getAllRegularExpressionAsEntity();
 
-        FormConditionsHandler formConditionsHandler = new FormConditionsHandler(formName, request);
+        FormConditionsHandler formConditionsHandler = evaluateConditions ? new FormConditionsHandler(formName, request) : null;
 
         for(FormItemEntity stepItem : stepItems) {
             // multiupload fields are validated in method validateFileFields()
             if(stepItem.getFieldType().startsWith(MULTIUPLOAD_PREFIX)) continue;
 
             // Skip validation for fields hidden by visibility conditions
-            Boolean isHiddenByCondition = formConditionsHandler.isFieldHiddenByCondition(stepItem, received);
-            if (Tools.isTrue(isHiddenByCondition)) continue;
+            if (formConditionsHandler != null && Tools.isTrue(formConditionsHandler.isFieldHiddenByCondition(stepItem, received))) continue;
 
             String itemFormId = stepItem.getItemFormId();
             String fieldName = getFieldName(stepItem, prop);
@@ -1201,7 +1247,7 @@ public class MultistepFormsService {
             }
 
             // Check if field is required (static flag or dynamic requirement conditions) - IF requiredByFields is set (is not null) use it as higher priority indicator
-            Boolean requiredByFields = formConditionsHandler.isFieldRequiredByCondition(stepItem, received);
+            Boolean requiredByFields = formConditionsHandler == null ? null : formConditionsHandler.isFieldRequiredByCondition(stepItem, received);
             boolean isRequired;
             if (requiredByFields == null) {
                 isRequired = Tools.isTrue(stepItem.getRequired());
