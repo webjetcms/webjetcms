@@ -48,7 +48,7 @@
         svg { flex: 0 0 18px; pointer-events: none; fill: none; width: 18px; height: 18px; stroke: currentColor; stroke-width: 1.5; }
     }
 
-    [data-type=section] { --pb-ui-color: #{$color-section}; }
+    [data-type=section], [data-type=application] { --pb-ui-color: #{$color-section}; }
     [data-type=container] { --pb-ui-color: #{$color-container}; }
     [data-type=column], [data-type=text] { --pb-ui-color: #{$color-column}; }
     [data-type=item] { --pb-ui-color: #{$color-duplicable}; }
@@ -276,7 +276,7 @@ html.pb-insertion-open { overflow-anchor: none; }
     border-radius: 3px;
     pointer-events: none;
     &[hidden] { display: none !important; }
-    &[data-type=section] { border-color: $color-section; }
+    &[data-type=section], &[data-type=application] { border-color: $color-section; }
     &[data-type=container] { border-color: $color-container; }
     &[data-type=column], &[data-type=text] { border-color: $color-column; }
     &[data-type=item] { border-color: $color-duplicable; }

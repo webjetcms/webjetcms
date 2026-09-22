@@ -80,7 +80,8 @@
     }
 }
 
-.#{$prefix}-section > .#{$prefix}-plus-button {
+.#{$prefix}-section > .#{$prefix}-plus-button,
+.#{$prefix}-application > .#{$prefix}-plus-button {
     background: linear-gradient(to bottom, $color-section, $color-section-g);
     &.#{$prefix}-append {
         background: linear-gradient(to top, $color-section, $color-section-g);

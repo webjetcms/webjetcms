@@ -42,6 +42,29 @@ V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov 
     - contactus.html
 ```
 
+## Samostatné aplikácie a vlastný HTML kód
+
+Aplikáciu `!INCLUDE(...)!` môžete vložiť aj mimo stĺpca, napríklad priamo medzi dve sekcie alebo do vlastného elementu vo vnútri sekcie. Page Builder pre ňu vytvorí náhľad a samostatné ovládanie. Aplikáciu môžete vybrať aj v paneli **Štruktúra**, upraviť jej nastavenia, presunúť, duplikovať alebo zmazať. Presun a duplikovanie na zvolené miesto sú obmedzené na elementy s rovnakým priamym rodičom.
+
+Vlastný HTML kód bez okolitej sekcie a mriežky vložíte cez základný blok **Vloženie HTML kódu** pri pridávaní sekcie. Blok používa existujúcu aplikáciu na vkladanie HTML, v ktorej zadáte napríklad:
+
+```html
+<div id="app" data-plugin-type="roaming" data-plugin-customer="b2c"></div>
+<div id="app2">Custom application content</div>
+```
+
+Do obsahu stránky sa uloží iba direktíva tejto aplikácie. Pri zobrazení stránky sa na jej mieste vyrenderuje zadaný HTML kód, takže oba `div` elementy môžu byť priamymi súrodencami sekcií. Nepribudne okolo nich `section`, `container`, `row` ani `column-content`. Rovnakým spôsobom je možné vytvoriť aj stránku obsahujúcu iba samostatné aplikácie.
+
+Aj súbor bloku v adresári `section/<category>/` môže obsahovať iba direktívu aplikácie, napríklad:
+
+```html
+!INCLUDE(/components/app-htmlembed/embed.jsp, html=)!
+```
+
+V tomto prípade kategória `section` určuje miesto vloženia v knižnici, nepridáva však HTML značku `<section>`. Obsah vloženého bloku potom nastavíte cez bežný dialóg aplikácie.
+
+Technicky sa počas editácie pridajú dočasné elementy s triedou `pb-temp-wrapper`; vnútorný element má aj triedu `pb-editable` a zabezpečuje inicializáciu CKEditora. Pri získaní obsahu na uloženie alebo prepnutie editora sa tieto elementy odstránia. Pôvodný rodič aplikácie, jeho atribúty aj okolitý text zostanú zachované. Aplikácie v existujúcich editovateľných stĺpcoch alebo elementoch `pb-editable` používajú svoj pôvodný editor. Triedy dočasných elementov preto nepridávajte do zdrojových blokov ručne.
+
 ## Názov a značky bloku
 
 Ak chcete mať pekný názov bloku v zozname blokov, môžete vytvoriť súbor `pagebuilder.properties` v kódovaní `utf-8` v príslušnom pod adresári skupiny blokov (napr. v `section/Contact/pagebuilder.properties`). V ňom môžete definovať názov skupiny blokov, ikonu a značky (tagy) pre vyhľadávanie:

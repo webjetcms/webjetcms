@@ -2275,10 +2275,12 @@ export class DatatablesCkEditor {
 				{
 					//console.log("getData, e=", e);
 					var data = e.editor.getData(true);
-					data = data.replace(/<article>/gi, '');
-					data = data.replace(/<\/article>/gi, '');
-					data = data.replace(/&lt;article&gt;/gi, '');
-					data = data.replace(/&lt;\/article&gt;/gi, '');
+					if (e.editor.mode !== "source") {
+						data = data.replace(/<article>/gi, '');
+						data = data.replace(/<\/article>/gi, '');
+						data = data.replace(/&lt;article&gt;/gi, '');
+						data = data.replace(/&lt;\/article&gt;/gi, '');
+					}
 					e.data.dataValue = data;
 					//console.log("Vysledne GET data=", data);
 				},
@@ -2292,9 +2294,11 @@ export class DatatablesCkEditor {
 					}
 					var data = e.data.dataValue;
 					if (data == null) data = "";
-					data = data.replace(/(!INCLUDE\((.*?)\)!)/gi, '<article>$1</article>');
-					data = data.replace(/<article><article>/gi, '<article>');
-					data = data.replace(/<\/article><\/article>/gi, '</article>');
+					if (e.editor.mode !== "source") {
+						data = data.replace(/(!INCLUDE\((.*?)\)!)/gi, '<article>$1</article>');
+						data = data.replace(/<article><article>/gi, '<article>');
+						data = data.replace(/<\/article><\/article>/gi, '</article>');
+					}
 					e.data.dataValue = data;
 					//console.log("Vysledne data=", data);
 				},
@@ -2542,34 +2546,31 @@ export class DatatablesCkEditor {
 		//if we are appending content we must wait for final version, otherwise we would append content multiple times
 		if ("append" === mode && final===false) return;
 
-		if (html.indexOf("<section")==-1)
-        {
-            //console.log("HTML kod neobsahuje ziadnu section, pridavam, html=", html);
-            if ("<p>&nbsp;</p>"==html) html = "<p>Text</p>";
-            html = "<section><div class=\"container\"><div class=\"row\"><div class=\"col-md-12\">"+html+"</div></div></div></section>";
-        }
-
 		//let options = self.EDITOR.field(aiCol.to).s.opts;
 		let fieldId = this.options.fieldid;
 		let pbIframe = $("#"+fieldId+"-pageBuilderIframe")[0].contentWindow;
 		pbIframe.$("[data-wjapp='pageBuilder']").each(function(index) {
 			if ("doc_data" != $(this).data("wjappfield")) return;
 
-			const $container = $(this);
+			const $container = pbIframe.$(this);
+			const pageBuilder = $container.data('plugin_ninjaPageBuilder');
+			const $content = pbIframe.$('<div>').html(html);
+			if (!$content.find('section').length && pageBuilder.get_application_text_nodes($content).length === 0) {
+				if ("<p>&nbsp;</p>" === html) $content.html("<p>Text</p>");
+				$content.wrapInner('<section><div class="container"><div class="row"><div class="col-md-12"></div></div></div></section>');
+			}
 
 			if ("replace" === mode || "edit" === mode) {
-				//remove all section elements, in edit mode we expect to send all data and return whole new HTML code
-				$container.children('section').remove();
-				//remove all custom styles
-				$container.children('style').remove();
+				pageBuilder.disable_after_esc_pressed(true);
+				if (pageBuilder.ui && pageBuilder.ui.inserting) pageBuilder.set_workbench_insertion(false);
+				pageBuilder.select_workbench_element(null);
+				pageBuilder.destroy_ckeditor_instances($container);
 			}
-			const $lastSection = $container.children('section').last();
-			if ($lastSection.length > 0) {
-				$lastSection.after(html);
-			} else {
-				// if there are no sections yet, just prepend to container
-				$container.prepend(html);
-			}
+			const $chrome = $container.children([
+				pageBuilder.tagc.modal, pageBuilder.tagc.library, pageBuilder.tagc.notify, pageBuilder.tagc.empty_placeholder_wrapper
+			].join(', ')).detach();
+			if ("replace" === mode || "edit" === mode) $container.empty();
+			$container.append($content.contents()).append($chrome);
 			//scroll window to bottom
 			pbIframe.scrollTo(0, pbIframe.document.body.scrollHeight+200);
 		});
@@ -2703,15 +2704,17 @@ export class DatatablesCkEditor {
 			if (setData != null) data = setData;
 			else if (data == null) data = this.ckEditorInstance.getData();
 			var ck = this.ckEditorInstance;
-			if (data != null && "pageBuilder"===oldEditingMode) {
-				ck.setMode('wysiwyg');
+			const setSourceData = () => {
 				ck.setData(data);
-			}
-			setTimeout(()=>{
-				//this fix problems with codemirror line gutter
-				if (ck.mode!=="source") ck.setMode('source');
-				ck.setData(data);
-			}, 500);
+				setTimeout(() => {
+					// Refresh the gutter after the source editor becomes visible.
+					if (ck.mode !== "source" || !ck.container) return;
+					const codeMirror = ck.container.$.querySelector('.CodeMirror');
+					if (codeMirror && codeMirror.CodeMirror) codeMirror.CodeMirror.refresh();
+				}, 500);
+			};
+			if (ck.mode === "source") setSourceData();
+			else ck.setMode('source', setSourceData);
 
 			//nastav select na korektnu hodnotu
 			editorTypeSelector.find("select").selectpicker("val", "html");

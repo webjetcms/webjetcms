@@ -47,6 +47,7 @@
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
 - Page Builder - elementy označené CSS triedou [`pb-duplicable`](frontend/page-builder/settings.md#duplikovateľný-element-oranžová-farba) je možné v rámci rovnakého rodiča presúvať, duplikovať a zmazať. Vlastné alebo viaceré selektory je možné nastaviť cez `pbCustomSettings` (#58750).
+- Page Builder - pridaná podpora [samostatných aplikácií a vlastného HTML kódu](frontend/page-builder/blocks.md#samostatné-aplikácie-a-vlastný-html-kód) mimo stĺpcov, napríklad medzi sekciami. Aplikácie majú náhľad, nastavenia a ovládanie presunu, duplikovania a zmazania. Základný blok **Vloženie HTML kódu** umožňuje vložiť HTML bez pridania sekcie alebo mriežky; dočasné elementy editora sa do stránky neukladajú (#osk711).
 - Page Builder - upravené [ovládanie editora](redactor/webpages/pagebuilder.md). Pridaná pevná horná lišta s cestou k vybranému bloku, panel **Štruktúra**, rýchle akcie a režim vkladania sekcií, kontajnerov a stĺpcov priamo do stránky. Rámiky je možné skryť alebo zobraziť pre celú hierarchiu bloku. Knižnica blokov má kompaktné okno s náhľadmi, kategóriami a kombinovaným vyhľadávaním so štítkami. Nastavenie štýlu používa rozbaľovacie skupiny vlastností a označuje práve upravovaný blok (#308).
 
 ![](redactor/webpages/pagebuilder-structure.png)
