@@ -17,6 +17,8 @@ class WebjetInitializationActions {
 
     boolean initializeAfterSpring() {
         InitServlet.setSpringInitialized();
+        // Keep RuntimeException and Error handlers separate. AspectJ types a woven multi-catch
+        // handler as Throwable, which is incompatible with AspectException's Exception advice.
         try {
             InitServlet.initAfterSpring();
             boolean initialized = InitServlet.isWebjetInitialized();
@@ -24,7 +26,10 @@ class WebjetInitializationActions {
                 InitServlet.cleanupAfterFailedSpringInitialization();
             }
             return initialized;
-        } catch (RuntimeException | Error ex) {
+        } catch (RuntimeException ex) { //NOSONAR - separate handlers are required for valid AspectJ bytecode
+            InitServlet.cleanupAfterFailedSpringInitialization();
+            throw ex;
+        } catch (Error ex) { //NOSONAR - separate handlers are required for valid AspectJ bytecode
             InitServlet.cleanupAfterFailedSpringInitialization();
             throw ex;
         }

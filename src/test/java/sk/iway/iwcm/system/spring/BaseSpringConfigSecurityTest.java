@@ -115,14 +115,20 @@ class BaseSpringConfigSecurityTest {
     private AnnotationConfigWebApplicationContext createContext() {
         AnnotationConfigWebApplicationContext applicationContext = new AnnotationConfigWebApplicationContext();
         String originalInstallName = Constants.getInstallName();
+        boolean originalPassKeyEnabled = Constants.getBoolean("password_passKeyEnabled");
+        String originalAllowedAuths = Constants.getString("springSecurityAllowedAuths");
         try {
             Constants.setInstallName(TEST_INSTALL_NAME);
+            Constants.setBoolean("password_passKeyEnabled", false);
+            Constants.setString("springSecurityAllowedAuths", "");
             applicationContext.setServletContext(new MockServletContext());
             applicationContext.register(TestConfiguration.class);
             applicationContext.refresh();
             return applicationContext;
         } finally {
             Constants.setInstallName(originalInstallName);
+            Constants.setBoolean("password_passKeyEnabled", originalPassKeyEnabled);
+            Constants.setString("springSecurityAllowedAuths", originalAllowedAuths);
         }
     }
 

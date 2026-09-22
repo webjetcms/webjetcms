@@ -24,6 +24,7 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
+import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.apache.coyote.http11.Http11NioProtocol;
 import org.apache.tomcat.util.descriptor.web.SecurityCollection;
 import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
@@ -89,6 +90,8 @@ class WebjetEmbeddedTomcatConfigurationTest {
 
     @Test
     void embeddedTomcatRedirectsPlainHttpBeforeInvokingTheServlet() throws Exception {
+        // PD4ML installs a JVM-global URL factory; this test does not need Tomcat's war: URL handler.
+        TomcatURLStreamHandlerFactory.disable();
         TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory(9443);
         factory.setBaseDirectory(tomcatBase.toFile());
         MockEnvironment environment = new MockEnvironment()

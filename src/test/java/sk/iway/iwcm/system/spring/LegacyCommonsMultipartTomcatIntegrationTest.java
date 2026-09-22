@@ -15,6 +15,7 @@ import java.time.Duration;
 import java.util.EnumSet;
 
 import org.apache.commons.fileupload2.core.FileUploadException;
+import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory;
@@ -44,6 +45,8 @@ class LegacyCommonsMultipartTomcatIntegrationTest {
     @Test
     void embeddedRegistrationLeavesMultipartBodyAvailableForLegacyCommonsParser() throws Exception {
         String boundary = "webjet-legacy-multipart-test-boundary";
+        // PD4ML installs a JVM-global URL factory; this test does not need Tomcat's war: URL handler.
+        TomcatURLStreamHandlerFactory.disable();
         TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory(0);
         factory.setBaseDirectory(tomcatBase.toFile());
         ServletContext previousServletContext = Constants.getServletContext();
