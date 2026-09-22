@@ -55,6 +55,7 @@ export class MultistepForm {
         this._hasShownStep = false;
         this._isNavigating = false;
         this._fieldValidationRequests = new Map();
+        this._invalidFields = new Set();
 
         // Centralized map: element -> array of conditions (parsed once from data-visibility-condition attributes)
         this.visibilityConditions = new Map();
@@ -185,6 +186,7 @@ export class MultistepForm {
             const form = this.wrapper.querySelector('.multistepStepContent > form');
             if (form) {
                 this._restoreStepValues(form, savedValues, savedFiles);
+                this._initFieldErrors(form);
                 Object.assign(this.submittedValues, savedValues);
 
                 form.addEventListener('submit', async (event) => {
@@ -509,12 +511,35 @@ export class MultistepForm {
     }
 
     /**
-     * Render or clear errors for one field using the existing error-list markup.
+     * Prepare empty live regions before asynchronous validation can update them.
+     * @param {HTMLFormElement} form - Currently rendered step form.
+     */
+    _initFieldErrors(form) {
+        form.querySelectorAll('.cs-error').forEach((container, index) => {
+            if (!container.id) container.id = `${this.wrapper.id}-error-${index}`;
+            container.setAttribute('aria-live', 'polite');
+            container.setAttribute('aria-atomic', 'true');
+        });
+    }
+
+    /**
+     * Render or clear field errors and update the associated controls' accessible state.
      * @param {string} fieldId - Logical field identifier.
      * @param {string} errorMessage - Localized messages separated by newlines, or empty to clear.
      */
     _showFieldError(fieldId, errorMessage) {
         const containers = this.wrapper.getElementsByClassName('cs-error-' + this._toDomFieldId(fieldId));
+        const errorId = containers[0]?.id;
+        this._getFieldElements(fieldId).forEach(input => {
+            if (errorId) {
+                const descriptions = new Set((input.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+                descriptions.add(errorId);
+                input.setAttribute('aria-describedby', [...descriptions].join(' '));
+            }
+            input.setAttribute('aria-invalid', errorMessage ? 'true' : 'false');
+            if (errorMessage) this._invalidFields.add(input);
+            else this._invalidFields.delete(input);
+        });
         for (const container of containers) {
             container.innerHTML = errorMessage
                 ? `<ul class="mf-error-list">${String(errorMessage).split('\n').map(message => `<li>${message}</li>`).join('')}</ul>`
@@ -654,9 +679,9 @@ export class MultistepForm {
      * Hide and clear any field/global error messages in the UI.
      */
     hideErrors() {
-        if (window.$) {
-            $(this.wrapper).find('div.cs-error').text('');
-        }
+        this.wrapper.querySelectorAll('div.cs-error').forEach(container => { container.textContent = ''; });
+        this._invalidFields.forEach(input => { input.setAttribute('aria-invalid', 'false'); });
+        this._invalidFields.clear();
         const danger = this.wrapper.querySelector('div.alert.alert-danger');
         if (danger) {
             const ul = danger.querySelector('ul');
