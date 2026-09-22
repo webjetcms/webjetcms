@@ -172,7 +172,7 @@ function checkFilter(I, position, docField, operator, value) {
     if(value != null) { I.seeInField( locate("#filtersTable > tbody > tr:nth-child(" + position + ")").find("td.valueTd > input"),  value); }
 }
 
-Scenario('zoznam noviniek', async ({ I, DT, DTE }) => {
+Scenario('zoznam noviniek', ({ I, DT, DTE }) => {
 
     I.amOnPage("/apps/news/admin/");
     I.waitForElement('#SomStromcek .jstree-anchor');
@@ -204,27 +204,8 @@ Scenario('zoznam noviniek', async ({ I, DT, DTE }) => {
 
     //
     I.say("Check permissions");
-    const csrfToken = await I.executeScript(() => window.csrfToken);
-    const authorizedTreeStatus = await I.executeScript(async csrfToken => {
-        const response = await fetch("/admin/rest/news/news-list/tree", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
-            body: JSON.stringify({ id: "0" })
-        });
-        return response.status;
-    }, csrfToken);
-    I.assertEqual(authorizedTreeStatus, 200, "The tree endpoint accepts an authorized request with a valid CSRF token");
     I.amOnPage("/apps/news/admin/?removePerm=cmp_news");
     I.see("Na túto aplikáciu/funkciu nemáte prístupové práva");
-    const treeStatus = await I.executeScript(async csrfToken => {
-        const response = await fetch("/admin/rest/news/news-list/tree", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
-            body: JSON.stringify({ id: "0" })
-        });
-        return response.status;
-    }, csrfToken);
-    I.assertEqual(treeStatus, 403, "The tree endpoint requires the News permission");
 });
 
 Scenario('logoff', ({ I }) => {

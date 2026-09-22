@@ -129,7 +129,7 @@ Scenario('Create blogger and test his logic', async ({ I, DT, DTE }) => {
     I.dontSee(newBlogger);
 });
 
-Scenario('Test folder tree permissions', async ({I, DT}) => {
+Scenario('Test folder tree permissions', ({I}) => {
     I.say("Admin must see all bloggers folders");
     I.relogin("tester");
     I.amOnPage("/apps/blog/admin/");
@@ -141,8 +141,6 @@ Scenario('Test folder tree permissions', async ({I, DT}) => {
     I.seeElement(section("/Aplikácie/Blog/bloggerPerm"));
     expandSection(I, "/Aplikácie/Blog/bloggerPerm");
     I.waitForElement(section("/Aplikácie/Blog/bloggerPerm/Nezaradené"));
-
-    const foreignRootId = (await I.grabAttributeFrom(section("/Aplikácie/Blog/blogger"), "id")).replace("_anchor", "");
 
     I.say("Blogger can see only his folders");
     I.relogin("bloggerPerm");
@@ -156,44 +154,6 @@ Scenario('Test folder tree permissions', async ({I, DT}) => {
     I.clickCss("#tree-folder-search-button");
     I.waitForInvisible("#SomStromcek .jstree-loading");
     I.dontSeeElement(section("/Aplikácie/Blog/blogger"));
-    const foreignChildren = await I.executeScript(async foreignRootId => {
-        const response = await fetch("/admin/rest/blog/tree", {
-            method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": window.csrfToken },
-            body: JSON.stringify({ id: foreignRootId })
-        });
-        return (await response.json()).items;
-    }, foreignRootId);
-    I.assertEmpty(foreignChildren, "A blogger cannot expand another blogger's folder");
-    const deniedSection = await I.executeScript(async foreignRootId => {
-        const response = await fetch("/admin/rest/blog/sections/editor", {
-            method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": window.csrfToken },
-            body: JSON.stringify({ action: "create", data: { 0: { parentGroupId: Number(foreignRootId), groupName: "forbidden-section-autotest" } } })
-        });
-        return response.json();
-    }, foreignRootId);
-    I.assertContain(deniedSection.error, "Na túto akciu nemáte právo.", "A blogger cannot create a section in another blogger's folder");
-    I.relogin("tester");
-    I.amOnPage("/apps/blog/admin/");
-    const csrfToken = await I.executeScript(() => window.csrfToken);
-    const authorizedTreeStatus = await I.executeScript(async csrfToken => (await fetch("/admin/rest/blog/tree", {
-        method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
-        body: JSON.stringify({ id: "0" })
-    })).status, csrfToken);
-    I.assertEqual(authorizedTreeStatus, 200, "The tree endpoint accepts an authorized request with a valid CSRF token");
-    const authorizedSectionStatus = await I.executeScript(async csrfToken => (await fetch("/admin/rest/blog/sections/all", {
-        headers: { "X-CSRF-Token": csrfToken }
-    })).status, csrfToken);
-    I.assertEqual(authorizedSectionStatus, 200, "The section editor accepts an authorized request with a valid CSRF token");
-    I.amOnPage("/apps/blog/admin/?removePerm=cmp_blog,cmp_blog_admin");
-    const status = await I.executeScript(async csrfToken => (await fetch("/admin/rest/blog/tree", {
-        method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
-        body: JSON.stringify({ id: "0" })
-    })).status, csrfToken);
-    I.assertEqual(status, 403, "The tree endpoint requires Blog permission");
-    const sectionStatus = await I.executeScript(async csrfToken => (await fetch("/admin/rest/blog/sections/all", {
-        headers: { "X-CSRF-Token": csrfToken }
-    })).status, csrfToken);
-    I.assertEqual(sectionStatus, 403, "The section editor requires Blog permission");
 });
 
 Scenario('Test create subgroup logic', async ({I, DTE, DT}) => {

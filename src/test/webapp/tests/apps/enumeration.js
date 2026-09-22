@@ -76,6 +76,56 @@ Scenario('Enumeration type tree CRUD', async ({I, DT, DTE}) => {
     deleteEnumType(I, DTE, name + "-edited");
 });
 
+Scenario('Deleted enumeration type visibility and recovery', async ({I, DT, DTE}) => {
+    I.amOnPage("/apps/enumeration/admin/");
+    DT.waitForLoader();
+    const name = "autotest-enumeration-recovery-" + randomNumber;
+
+    I.clickCss(".tree-col .buttons-jstree-settings");
+    DTE.waitForModal("jstreeSettingsModal");
+    I.uncheckOption("#jstree-settings-showhidden");
+    I.clickCss("#jstree-settings-submit");
+    DTE.waitForModalClose("jstreeSettingsModal");
+    DT.waitForLoader("enumerationTypeDataTable");
+
+    createEnumType(I, DTE, name, "Value", "Number", "Enabled");
+    I.waitForElement(typeNode(name) + ".jstree-clicked", 10);
+    const typeId = await I.grabAttributeFrom(typeNode(name), "data-type-id");
+    deleteEnumType(I, DTE, name);
+    I.dontSeeElement(typeNode(name));
+
+    I.clickCss(".tree-col .buttons-jstree-settings");
+    DTE.waitForModal("jstreeSettingsModal");
+    I.checkOption("#jstree-settings-showhidden");
+    I.clickCss("#jstree-settings-submit");
+    DTE.waitForModalClose("jstreeSettingsModal");
+    I.waitForElement(typeNode(name) + '[data-hidden="true"]', 10);
+    filterEnumDataByType(I, DTE, name);
+    I.seeElement(".tree-col .buttons-remove:disabled");
+    I.seeElement(".tree-col .btn-duplicate:disabled");
+
+    openEnumType(I, DT, DTE, name);
+    I.seeCheckboxIsChecked("#DTE_Field_hidden_0");
+    I.uncheckOption("#DTE_Field_hidden_0");
+    DTE.save("enumerationTypeDataTable");
+    I.waitForElement(typeNode(name) + '[data-hidden="false"].jstree-clicked', 10);
+
+    I.clickCss(".tree-col .buttons-jstree-settings");
+    DTE.waitForModal("jstreeSettingsModal");
+    I.uncheckOption("#jstree-settings-showhidden");
+    I.clickCss("#jstree-settings-submit");
+    DTE.waitForModalClose("jstreeSettingsModal");
+    I.amOnPage("/apps/enumeration/admin/#" + typeId);
+    I.waitForElement(typeNode(name) + '[data-hidden="false"].jstree-clicked', 10);
+    I.waitForEnabled(".tree-col .buttons-remove", 10);
+    I.waitForEnabled(".tree-col .btn-duplicate", 10);
+    openEnumType(I, DT, DTE, name);
+    I.dontSeeCheckboxIsChecked("#DTE_Field_hidden_0");
+    DTE.cancel("enumerationTypeDataTable");
+
+    deleteEnumType(I, DTE, name);
+});
+
 Scenario('Okresne mesta zakladne testy @baseTest', async ({I, DT, DataTables}) => {
     I.amOnPage("/apps/enumeration/admin/");
     DT.waitForLoader();
