@@ -119,7 +119,6 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 ![](redactor/apps/language-redirect/editor-basic.png)
 
 - Rezervace - aplikace **Rezervace času** a **Rezervace dní** mají sjednocený vizuální styl podle kalendáře `Vanilla Calendar`, upravené kontrastní barvy buněk podle `WCAG`, oddělené vizuální CSS styly do samostatných souborů a **Rezervace času** zobrazuje v hodinových buňkách skutečnou cenu dle ceníku.
-
 - Rezervace - přidána nová aplikace [Moje rezervace](redactor/apps/reservation/my-reservations-app/README.md), která přihlášenému uživateli zobrazí přehled jeho rezervací, stavem rezervace a možností smazání povolených budoucích rezervací (#58565).
 
 ![](redactor/apps/reservation/my-reservations-app/app-page.png)
@@ -131,6 +130,10 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Manažer dokumentů - přidána možnost nahrát více souborů najednou přes `drag&drop` (#58593).
 
 ![](redactor/files/file-archive/drag-drop-upload-dialog.png)
+
+- Manažer dokumentů - při [hromadném nahrávání souborů](redactor/files/file-archive/README.md#hromadné-nahrávání-souborů) lze na kartách **Základní** a **Pokročilé** nastavit společnou platnost, naplánovat pozdější nahrání s e-mailovou notifikací8 a4 zadat rozšíření.
+
+![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
 ### Galerie
 
