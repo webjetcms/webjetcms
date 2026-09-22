@@ -1,6 +1,5 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const assert = require('node:assert/strict');
 
 Feature('apps.forms.multistep-forms-navigation');
 
@@ -156,7 +155,7 @@ Scenario('Skip draft saving for Next and final Submit', async ({ I }) => {
         await page.locator('#f1-details').fill('autotest normal submission');
         await page.getByRole('button', { name: 'Submit', exact: true }).click();
         await page.getByText('Saved autotest form').waitFor({ state: 'visible' });
-        assert.equal(draftRequests, 0);
+        I.assertEqual(draftRequests, 0);
     });
 });
 
@@ -192,17 +191,17 @@ Scenario('Ignore repeated Back and submission while a previous step is loading',
         await page.locator('#f1-details').press('Enter');
         await page.locator('form').dispatchEvent('submit');
         await page.locator('[data-multistep-back-step]').dispatchEvent('click');
-        assert.equal(await page.evaluate(() => window.autotestRequests.length), 1);
-        assert.equal(await page.locator('[data-multistep-back-step]').isDisabled(), true);
-        assert.equal(await page.locator('button[type="submit"]').isDisabled(), true);
-        assert.equal(await page.locator('#f1-details').isEnabled(), true);
+        I.assertEqual(await page.evaluate(() => window.autotestRequests.length), 1);
+        I.assertTrue(await page.locator('[data-multistep-back-step]').isDisabled());
+        I.assertTrue(await page.locator('button[type="submit"]').isDisabled());
+        I.assertTrue(await page.locator('#f1-details').isEnabled());
         await page.evaluate(() => window.autotestRequests[0].resume());
         await page.waitForFunction(() => window.autotestRequests.length === 2);
         await page.evaluate(() => window.autotestRequests[1].resume());
         await page.locator('#f1-subscribe').waitFor({ state: 'visible' });
         await page.locator('#f1-subscribe').check();
-        assert.equal(await page.locator('#f1-subscribe').isChecked(), true);
-        assert.equal(await page.locator('button[type="submit"]').isEnabled(), true);
+        I.assertTrue(await page.locator('#f1-subscribe').isChecked());
+        I.assertTrue(await page.locator('button[type="submit"]').isEnabled());
     });
 });
 
@@ -222,23 +221,23 @@ Scenario('Keep navigation blocked through CAPTCHA, submission and the next step 
         await page.locator('button[type="submit"]').dblclick();
         await page.locator('form').dispatchEvent('submit');
         await page.locator('[data-multistep-back-step]').dispatchEvent('click');
-        assert.equal(await page.locator('[data-multistep-back-step]').isDisabled(), true);
-        assert.equal(await page.locator('button[type="submit"]').isDisabled(), true);
-        assert.equal(await page.evaluate(() => window.autotestRequests.length), 0);
+        I.assertTrue(await page.locator('[data-multistep-back-step]').isDisabled());
+        I.assertTrue(await page.locator('button[type="submit"]').isDisabled());
+        I.assertEqual(await page.evaluate(() => window.autotestRequests.length), 0);
 
         await page.evaluate(() => window.autotestResolveCaptcha());
         await page.waitForFunction(() => window.autotestRequests.length === 1);
         await page.locator('form').dispatchEvent('submit');
         await page.locator('[data-multistep-back-step]').dispatchEvent('click');
-        assert.equal(await page.evaluate(() => window.autotestRequests.length), 1);
+        I.assertEqual(await page.evaluate(() => window.autotestRequests.length), 1);
         await page.evaluate(() => window.autotestRequests[0].resume());
         await page.waitForFunction(() => window.autotestRequests.length === 2);
         await page.locator('form').dispatchEvent('submit');
         await page.locator('[data-multistep-back-step]').dispatchEvent('click');
-        assert.equal(await page.evaluate(() => window.autotestRequests.length), 2);
+        I.assertEqual(await page.evaluate(() => window.autotestRequests.length), 2);
         await page.evaluate(() => window.autotestRequests[1].resume());
         await page.locator('#f1-subscribe').waitFor({ state: 'visible' });
-        assert.equal(await page.locator('button[type="submit"]').isEnabled(), true);
+        I.assertTrue(await page.locator('button[type="submit"]').isEnabled());
     });
 });
 
@@ -253,9 +252,9 @@ for (const [action, endpoint] of [['Back', 'get-step'], ['Submit', 'save-form'],
             await page.route(`**/rest/multistep-form/${endpoint}?*`, route => route.fulfill({ status: 500, json: { err_msg: 'autotest temporary error' } }), { times: 1 });
             await page.getByRole('button', { name: action, exact: true }).click();
             await page.getByText('autotest temporary error').waitFor({ state: 'visible' });
-            assert.equal(await page.getByRole('button', { name: 'Back', exact: true }).isEnabled(), true);
-            assert.equal(await page.getByRole('button', { name: 'Submit', exact: true }).isEnabled(), true);
-            assert.equal(await page.getByRole('button', { name: 'Disabled autotest action' }).isDisabled(), true);
+            I.assertTrue(await page.getByRole('button', { name: 'Back', exact: true }).isEnabled());
+            I.assertTrue(await page.getByRole('button', { name: 'Submit', exact: true }).isEnabled());
+            I.assertTrue(await page.getByRole('button', { name: 'Disabled autotest action' }).isDisabled());
             await page.getByRole('button', { name: 'Back', exact: true }).click();
             await page.locator('#f1-subscribe').waitFor({ state: 'visible' });
         });
@@ -276,12 +275,12 @@ Scenario('Allow another form to navigate while the first form is loading', async
         const second = page.locator('#multistep-form-wrapper-autotest-second');
         await second.locator('#f1-subscribe').waitFor({ state: 'visible' });
         await second.getByRole('button', { name: 'Next' }).click();
-        assert.equal(await page.evaluate(() => window.autotestRequests.length), 3);
+        I.assertEqual(await page.evaluate(() => window.autotestRequests.length), 3);
         await page.evaluate(() => window.autotestRequests[2].resume());
         await page.waitForFunction(() => window.autotestRequests.length === 4);
         await page.evaluate(() => window.autotestRequests[3].resume());
         await second.locator('[data-multistep-back-step]').waitFor({ state: 'visible' });
-        assert.equal(await page.locator('#multistep-form-wrapper-autotest button[type="submit"]').isDisabled(), true);
+        I.assertTrue(await page.locator('#multistep-form-wrapper-autotest button[type="submit"]').isDisabled());
     });
 });
 
@@ -329,7 +328,7 @@ for (const changeSecondStep of [false, true]) {
         I.click('Submit');
         await I.waitForText('Email is invalid');
         const hiddenSubmission = submissions.filter(item => item.stepId === '2').at(-1);
-        assert.equal(Object.hasOwn(hiddenSubmission.values, 'details'), false);
+        I.assertFalse(Object.hasOwn(hiddenSubmission.values, 'details'));
 
         I.click('Back');
         I.waitForVisible('#f1-clear');
@@ -350,7 +349,7 @@ for (const changeSecondStep of [false, true]) {
         I.fillField('#f1-email', 'autotest@example.com');
         I.click('Submit');
         await I.waitForText('Saved autotest form');
-        assert.equal(submissions.filter(item => item.stepId === '2').at(-1).values.details, 'autotest remembered details');
+        I.assertEqual(submissions.filter(item => item.stepId === '2').at(-1).values.details, 'autotest remembered details');
     });
 }
 
@@ -363,12 +362,12 @@ Scenario('Keep input and allow retry after a draft network failure', async ({ I 
         await page.route('**/rest/multistep-form/save-draft?*', route => route.abort(), { times: 1 });
         await page.getByRole('button', { name: 'Back', exact: true }).click();
         await page.locator('.alert-danger').waitFor({ state: 'visible' });
-        assert.equal(await page.locator('#f1-details').inputValue(), 'autotest network retry');
-        assert.equal(await page.getByRole('button', { name: 'Back', exact: true }).isEnabled(), true);
+        I.assertEqual(await page.locator('#f1-details').inputValue(), 'autotest network retry');
+        I.assertTrue(await page.getByRole('button', { name: 'Back', exact: true }).isEnabled());
         await page.getByRole('button', { name: 'Back', exact: true }).click();
         await page.locator('#f1-subscribe').waitFor({ state: 'visible' });
         await page.getByRole('button', { name: 'Next', exact: true }).click();
         await page.locator('#f1-details').waitFor({ state: 'visible' });
-        assert.equal(await page.locator('#f1-details').inputValue(), 'autotest network retry');
+        I.assertEqual(await page.locator('#f1-details').inputValue(), 'autotest network retry');
     });
 });

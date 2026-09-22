@@ -14,7 +14,6 @@ var numberOfDateToResults = "559";
 var formName = "Elektornicky-formular";
 var randomNumber;
 var randomNumber2;
-const assert = require('assert');
 
 Before(({ I, login }) => {
     login('admin');
@@ -38,7 +37,7 @@ Scenario('zoznam formularov', async ({ I, DT }) => {
     const url = await I.grabCurrentUrl();
     const formNameFromUrl = url.split('/?formName=').pop();
     I.amOnPage(`/apps/form/admin/detail/?formName=${formName}`);
-    assert.equal(formName, formNameFromUrl);
+    I.assertEqual(formName, formNameFromUrl);
     within("#pills-form-details", () => {
         I.waitForElement(locate('a').withText('Brexit'), 10);
         I.click('//li[1]')
