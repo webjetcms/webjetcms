@@ -35,6 +35,7 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.OperatorType;
 import sk.iway.iwcm.components.multistep_form.mvc.MultistepFormApp;
+import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
 import sk.iway.iwcm.form.FormDB;
 import sk.iway.iwcm.i18n.Prop;
 
@@ -45,7 +46,8 @@ class MultistepFormStepValidationTest {
 
     /**
      * Uses cleared current-step values for visibility and requirement conditions while retaining
-     * submitted values and session-backed conditions from previous steps.
+     * submitted values and session-backed conditions from previous steps. Drafts retain hidden
+     * or invalid answers, while confirmed visible values are normalized.
      */
     @ParameterizedTest
     @CsvSource({
@@ -84,7 +86,9 @@ class MultistepFormStepValidationTest {
         List<FormItemEntity> fields = new ArrayList<>();
         fields.add(field(10L, "company", "text", true));
         if (checkboxInCurrentStep) fields.add(field(11L, "invoice", "checkbox", false));
-        fields.add(field(12L, "note", "text", false));
+        FormItemEntity note = field(12L, "note", "text", false);
+        note.setTrimValue(true);
+        fields.add(note);
         when(items.findAllForValidation("contact-form", 1)).thenReturn(fields);
         Prop prop = mock(Prop.class);
         when(prop.getText("checkform.title.required")).thenReturn("Required field");
@@ -97,9 +101,9 @@ class MultistepFormStepValidationTest {
         request.addHeader("X-CSRF-Token", "test-token");
         request.setParameter("language", "en");
         request.setCookies(new Cookie("JSESSIONID", "test-session"));
-        JSONObject payload = new JSONObject().put("f1-note", "Updated note");
+        JSONObject payload = new JSONObject().put("f1-note", "  Updated note  ");
         if (checkboxSubmitted) payload.put("f1-invoice", "yes");
-        request.setContent(payload.toString().getBytes(StandardCharsets.UTF_8));
+        if (shouldProceed && conditionType == ConditionType.VISIBILITY) payload.put("f1-company", "Hidden answer");
 
         try (
             MockedStatic<Constants> constants = mockStatic(Constants.class);
@@ -107,6 +111,7 @@ class MultistepFormStepValidationTest {
             MockedStatic<Prop> props = mockStatic(Prop.class);
             MockedStatic<FormDB> formDatabases = mockStatic(FormDB.class);
             MockedStatic<Cache> caches = mockStatic(Cache.class);
+            MockedStatic<XhrFileUploadServlet> uploads = mockStatic(XhrFileUploadServlet.class);
             MockedStatic<Tools> tools = mockStatic(Tools.class, invocation -> {
                 if ("getSpringBean".equals(invocation.getMethod().getName())) {
                     return "formItemsConditionsRepository".equals(invocation.getArgument(0)) ? conditions : items;
@@ -128,8 +133,13 @@ class MultistepFormStepValidationTest {
             request.getSession().setAttribute(sessionKey + "_company", "Previous company");
             request.getSession().setAttribute(sessionKey + "_note", "Previous note");
 
+            JSONObject draft = new JSONObject().put("company", "Draft company").put("invoice", "yes").put("note", "  Draft note  ");
+            request.setContent(draft.toString().getBytes(StandardCharsets.UTF_8));
+            service.saveStepDraft("contact-form", 2L, request);
+            request.setContent(payload.toString().getBytes(StandardCharsets.UTF_8));
             JSONObject response = new JSONObject();
             service.saveFormStep("contact-form", 2L, request, response);
+            draft = service.getDraftStepData("contact-form", 2L, request).first;
 
             if (shouldProceed) {
                 assertFalse(response.has("fieldErrors"));
@@ -137,11 +147,16 @@ class MultistepFormStepValidationTest {
                 assertEquals("", request.getSession().getAttribute(sessionKey + "_invoice"));
                 assertEquals("", request.getSession().getAttribute(sessionKey + "_company"));
                 assertEquals("Updated note", request.getSession().getAttribute(sessionKey + "_note"));
+                assertEquals("Updated note", draft.getString("note"));
+                assertEquals(conditionType == ConditionType.VISIBILITY ? "Draft company" : "", draft.getString("company"));
+                assertTrue(draft.getJSONArray("invoice").isEmpty());
             } else {
                 assertTrue(response.getJSONObject("fieldErrors").has("company"));
                 assertFalse(response.has("step-id"));
                 assertEquals("yes", request.getSession().getAttribute(sessionKey + "_invoice"));
                 assertEquals("Previous company", request.getSession().getAttribute(sessionKey + "_company"));
+                assertEquals("Draft company", draft.getString("company"));
+                assertEquals("  Draft note  ", draft.getString("note"));
             }
         }
     }

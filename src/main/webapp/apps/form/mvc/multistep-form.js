@@ -165,6 +165,8 @@ export class MultistepForm {
             const requirementConditions = json.requirementConditions || {};
             const savedValues = json.savedValues || {};
             const savedFiles = json.savedFiles || {};
+            const draftValues = json.draftValues || {};
+            const draftFiles = json.draftFiles || {};
 
             // hide previous errors
             this.hideErrors();
@@ -185,7 +187,7 @@ export class MultistepForm {
             // attach submit
             const form = this.wrapper.querySelector('.multistepStepContent > form');
             if (form) {
-                this._restoreStepValues(form, savedValues, savedFiles);
+                this._restoreStepValues(form, { ...savedValues, ...draftValues }, { ...savedFiles, ...draftFiles });
                 this._initFieldErrors(form);
                 Object.assign(this.submittedValues, savedValues);
 
@@ -198,7 +200,9 @@ export class MultistepForm {
                 if (backButton) {
                     backButton.addEventListener('click', async () => {
                         const previousStepId = backButton.dataset.multistepBackStep;
-                        if (previousStepId) await this._runNavigation(() => this.loadStep(formName, previousStepId, true));
+                        if (previousStepId) await this._runNavigation(async () => {
+                            if (await this._saveStepDraft(form)) await this.loadStep(formName, previousStepId, true);
+                        });
                     });
                 }
             }
@@ -233,6 +237,7 @@ export class MultistepForm {
             }, 100);
         } catch (err) {
             console.warn('Failed to load step:', err);
+            await this.showGlobalErr({});
         }
     }
 
@@ -278,7 +283,7 @@ export class MultistepForm {
     }
 
     /**
-     * Restore values saved by an earlier successful submission of this step.
+     * Restore confirmed or draft values for this step, including explicit empty selections.
      * @param {HTMLFormElement} form - Currently rendered step form.
      * @param {Object<string,string|string[]>} savedValues - Scalar values or selected options keyed by logical field ID.
      * @param {Object<string,Object>} savedFiles - Dropzone metadata keyed by logical field ID.
@@ -301,7 +306,9 @@ export class MultistepForm {
             }
 
             const value = rawValue == null ? '' : String(rawValue);
-            matchingControls.forEach(control => { control.value = value; });
+            matchingControls.forEach(control => {
+                if (control.type !== 'file') control.value = value;
+            });
         });
 
         Object.entries(savedFiles).forEach(([fieldId, fileMetadata]) => {
@@ -548,30 +555,21 @@ export class MultistepForm {
     }
 
     /**
-     * Validate and submit the current step form via AJAX.
-     * Collects all input/select/textarea values and posts JSON to the server.
-     * @param {SubmitEvent} event - The submit event from the step form.
-     * @returns {Promise<void>} Resolves after handling response actions.
+     * Collect step values, synchronizing rich text and retaining empty draft selections.
+     * @param {HTMLFormElement} form - Current step form.
+     * @param {boolean} [includeHidden=false] - Include hidden fields for draft preservation.
+     * @returns {{result: Object, stepFieldIds: Set<string>}} Values and all current-step identifiers.
      */
-    async doValidationAndSave(event) {
-        event.preventDefault();
-        this._cancelFieldValidation();
-        const form = event.currentTarget;
-
-        // Generate reCaptcha V3 token if the captcha widget is present
-        const recaptchaInput = form.querySelector('input[name="g-recaptcha-response"][data-type="V3"]');
-        if (recaptchaInput && window.grecaptcha && typeof window.wjFormSubmit === 'function') {
-            await new Promise((resolve) => {
-                window.wjFormSubmit(form, resolve, recaptchaInput);
-            });
-        }
-
-        const url = new URL(form.getAttribute('action'), window.location.origin);
-        url.searchParams.set('language', this.language || '');
-
+    _collectStepValues(form, includeHidden = false) {
+        form.querySelectorAll('textarea.formsimple-wysiwyg').forEach(area => {
+            const editor = window.$ ? $(area).data('cleditor') : null;
+            if (editor && !editor.sourceMode()) editor.updateTextArea();
+        });
         const result = {};
         const stepFieldIds = new Set();
         form.querySelectorAll('input, textarea, select').forEach(el => {
+            if (el.type === 'file' || el.classList.contains('uploadedObjectsInfo')) return;
+            if (includeHidden && (el.matches('.captcha, [name="wjcaptcha"], [name="wjcaptcha1"], [name="g-recaptcha-response"]') || el.closest('.form-group-captcha, .g-recaptcha'))) return;
 
             // Checkbox/radio options of a group share one name but have unique ids
             // (id="${id}-${value}"), so collect them by name to keep grouped values
@@ -584,8 +582,9 @@ export class MultistepForm {
             const key = this._toLogicalFieldId(domKey);
             stepFieldIds.add(key);
             // Skip fields hidden by visibility conditions
-            if (this._isFieldHidden(el.closest('.form-group') || el.parentElement)) return;
+            if (!includeHidden && this._isFieldHidden(el.closest('.form-group') || el.parentElement)) return;
             if (el.type === 'checkbox' || el.type === 'radio') {
+                if (includeHidden && !Object.hasOwn(result, key)) result[key] = [];
                 if (!el.checked) return;
             }
             const value = el.value;
@@ -599,6 +598,61 @@ export class MultistepForm {
                 result[key] = value;
             }
         });
+        return { result, stepFieldIds };
+    }
+
+    /**
+     * Save all current values before navigating back, without triggering field validation or CAPTCHA.
+     * @param {HTMLFormElement} form - Current step form.
+     * @returns {Promise<boolean>} Whether the draft was saved and navigation may continue.
+     */
+    async _saveStepDraft(form) {
+        const url = new URL('/rest/multistep-form/save-draft', window.location.origin);
+        url.searchParams.set('form-name', this.formName);
+        url.searchParams.set('step-id', this.stepId);
+        url.searchParams.set('language', this.language || '');
+        try {
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': this.csrf
+                },
+                body: JSON.stringify(this._collectStepValues(form, true).result)
+            });
+            const result = await response.json();
+            if (response.ok && result.success === true) return true;
+            await this.showGlobalErr(result);
+        } catch (error) {
+            console.warn('Failed to save step draft:', error);
+            await this.showGlobalErr({});
+        }
+        return false;
+    }
+
+    /**
+     * Validates and submits visible values using the existing form action.
+     * @param {SubmitEvent} event - The submit event from the step form.
+     * @returns {Promise<void>} Resolves after handling submission and any subsequent navigation.
+     */
+    async doValidationAndSave(event) {
+        event.preventDefault();
+        this._cancelFieldValidation();
+        const form = event.currentTarget;
+
+        // Generate reCaptcha V3 token only for an actual submission.
+        const recaptchaInput = form.querySelector('input[name="g-recaptcha-response"][data-type="V3"]');
+        if (recaptchaInput && window.grecaptcha && typeof window.wjFormSubmit === 'function') {
+            await new Promise((resolve) => {
+                window.wjFormSubmit(form, resolve, recaptchaInput);
+            });
+        }
+
+        const url = new URL(form.getAttribute('action'), window.location.origin);
+        url.searchParams.set('language', this.language || '');
+        const { result, stepFieldIds } = this._collectStepValues(form);
 
         try {
             const resp = await fetch(url.toString(), {
@@ -640,6 +694,7 @@ export class MultistepForm {
             }
         } catch (err) {
             console.error('Network/JS error submitting form', err);
+            await this.showGlobalErr({});
         }
     }
 
