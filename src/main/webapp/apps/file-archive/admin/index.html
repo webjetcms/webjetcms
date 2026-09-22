@@ -548,7 +548,7 @@
                 .text((/*[[#{components.file_archiv.bulk_upload.title}]]*/ "") + " (" + pendingBulkUploadFiles.length + ")");
             $("#fileArchiveDataTable_modal .DTE_Form_Buttons button.btn-primary").last()
                 .html('<i class="ti ti-upload"></i> ' + (/*[[#{button.upload}]]*/ ""));
-            editor.message((/*[[#{components.file_archiv.bulk_upload.description}]]*/ "") + " " + (/*[[#{components.file_archiv.bulk_upload.files_count}]]*/ "") + " " + pendingBulkUploadFiles.length);
+            editor.message("<span class='m-3 d-block'>"+(/*[[#{components.file_archiv.bulk_upload.description}]]*/ "") + " " + (/*[[#{components.file_archiv.bulk_upload.files_count}]]*/ "") + " " + pendingBulkUploadFiles.length + "</span>");
             $("#pills-dt-fileArchiveDataTable-basic-tab").trigger("click");
         }
 
@@ -686,7 +686,7 @@
                     if(result != undefined && result != null) {
                         for(let i = 0; i < result.length; i++) {
                             let version = JSON.parse(result[i]);
-                            let label = version.path + "  (poradie : " + (Number(version.order) + 1) + ")";
+                            let label = version.path + "  (" + (/*[[#{components.file_archiv.order}]]*/ "") + " : " + (Number(version.order) + 1) + ")";
                             select.add(new Option(label, version.id));
                             if(i == 0) firstId = version.id;
                         }
@@ -1010,8 +1010,4 @@
 
     tr.waitingForUpload td { color: #E00028 !important; }
     tr.waitingForUpload a { color: #E00028 !important; }
-
-    .DTE_Body_Content .DTE_Form_Info {
-        margin: 16px;
-    }
 </style>

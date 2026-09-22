@@ -121,7 +121,7 @@ Scenario('Edit and actions screens', ({ I, DT, DTE, Document, i18n }) => {
     Document.screenshotElement("div.dropdown-menu.show", "/redactor/files/file-archive/action_move_behind_options.png");
     I.click(locate(".DTE_Field_Name_editorFields\\.saveAfterSelect").find("button"));
 
-    I.selectOption('select#DTE_Field_editorFields-uploadType', i18n.get("Upload a new version"));
+    I.selectOption('select#DTE_Field_editorFields-uploadType', i18n.get("Upload new version"));
     I.resizeWindow(1280, 500);
     I.scrollTo(".DTE_Field_Name_editorFields\\.saveLater");
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/files/file-archive/action_new_version.png");
