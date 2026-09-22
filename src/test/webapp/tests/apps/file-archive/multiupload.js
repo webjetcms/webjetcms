@@ -1,8 +1,11 @@
-Feature('apps.file-archive.multiupload');
+// Keep configuration changes and the shared fixture cleanup in the same serial suite.
+Feature('apps.file-archive.multiupload').tag('@singlethread');
 
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
+const assert = require("node:assert/strict");
+const { recorder } = require("codeceptjs");
 const SL = require("./SL.js");
 
 const ARCHIVE_FOLDER = "/files/archiv/multiupload/";
@@ -27,7 +30,8 @@ Before(({ I, login }) => {
     login('admin');
 
     if (typeof uploadPrefix == "undefined") {
-        uploadPrefix = SL.randomName("multiupload");
+        const randomText = I.getRandomText();
+        uploadPrefix = "autotest-multiupload-" + randomText;
         tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "wj-file-archive-multiupload-"));
         standaloneFiles = [
             createUploadFile("archive_file_test_fourth.pdf", uploadPrefix + "-standalone-a.pdf"),
@@ -35,9 +39,8 @@ Before(({ I, login }) => {
         ];
         advancedMainFile = createUploadFile(
             "archive_file_test.pdf",
-            SL.randomName("multiupload-main").replace(/\s+/g, "-") + ".pdf"
+            "autotest-multiupload-main-" + randomText + ".pdf"
         );
-        fs.appendFileSync(advancedMainFile.filePath, "\n% " + uploadPrefix + " advanced metadata test\n");
         bulkActionFiles = [
             createUploadFile("archive_file_test.pdf", uploadPrefix + "-publication-date-a.pdf"),
             createUploadFile("archive_file_test_second.pdf", uploadPrefix + "-publication-date-b.pdf")
@@ -53,20 +56,19 @@ Before(({ I, login }) => {
                 buttonClass: "btn-toast-skip",
                 initial: createUploadFile("archive_file_test.pdf", uploadPrefix + "-duplicate-skip.pdf", "duplicate-initial"),
                 duplicate: createUploadFile("archive_file_test_second.pdf", uploadPrefix + "-duplicate-skip.pdf", "duplicate-repeat"),
-                expectedMainContent: "archive_file_test.png"
+                expectedMainFile: "initial"
             },
             {
                 buttonClass: "btn-toast-overwrite",
                 initial: createUploadFile("archive_file_test.pdf", uploadPrefix + "-duplicate-overwrite.pdf", "duplicate-initial"),
                 duplicate: createUploadFile("archive_file_test_second.pdf", uploadPrefix + "-duplicate-overwrite.pdf", "duplicate-repeat"),
-                expectedMainContent: "archive_file_test_second.png"
+                expectedMainFile: "duplicate"
             },
             {
                 buttonClass: "btn-toast-keepboth",
                 initial: createUploadFile("archive_file_test.pdf", uploadPrefix + "-duplicate-keepboth.pdf", "duplicate-initial"),
                 duplicate: createUploadFile("archive_file_test_third.pdf", uploadPrefix + "-duplicate-keepboth.pdf", "duplicate-repeat"),
-                expectedMainContent: "archive_file_test_third.png",
-                expectedHistoryContent: "archive_file_test.png"
+                expectedMainFile: "duplicate"
             }
         ];
         duplicateMetadataFiles = [
@@ -237,13 +239,13 @@ Scenario('Resolve duplicate multiupload files with all action buttons @screensho
 
     for (const file of duplicateActionFiles) {
         I.amOnPage(ELFINDER_MULTUPLOAD);
-        await SL.checkFileContent(file.initial.fileName, file.expectedMainContent);
+        await checkUploadedFileContent(I, file.initial.fileName, file[file.expectedMainFile]);
     }
 
     I.amOnPage(ELFINDER_MULTUPLOAD);
     I.dontSeeElement(".elfinder-cwd-filename[title='" + SL.getVersionName(duplicateActionFiles[0].initial.fileName, 1) + "']");
     I.dontSeeElement(".elfinder-cwd-filename[title='" + SL.getVersionName(duplicateActionFiles[1].initial.fileName, 1) + "']");
-    await SL.checkFileContent(SL.getVersionName(duplicateActionFiles[2].initial.fileName, 1), duplicateActionFiles[2].expectedHistoryContent);
+    await checkUploadedFileContent(I, SL.getVersionName(duplicateActionFiles[2].initial.fileName, 1), duplicateActionFiles[2].initial);
 });
 
 Scenario('Preserve untouched metadata when resolving duplicate bulk uploads', async ({ I, DT, DTE }) => {
@@ -279,25 +281,47 @@ Scenario('Preserve untouched metadata when resolving duplicate bulk uploads', as
     }
 });
 
-Scenario('Reject changing the physical destination for a new version', async ({ I, DT }) => {
+Scenario('Reject changing the physical destination for a new version', async ({ I, DT, DTE }) => {
     const category = uploadPrefix + "-different-category";
+    const originalConfiguration = {};
+    let testError;
+    let restoreError;
 
-    I.amOnPage(SL.fileArchive);
-    DT.waitForLoader("fileArchiveDataTable");
-    selectMultiuploadFolder(I, DT);
+    try {
+        await setTemporaryCategoryDestination(I, DT, DTE, "true", originalConfiguration);
 
-    await uploadFilesToDropzone(I, [rejectedDestinationFile.initial]);
-    DT.waitForLoader("fileArchiveDataTable");
-    await uploadFilesToDropzone(I, [rejectedDestinationFile.duplicate], "exist", null, { category: category });
-    clickDuplicateUploadAction(I, rejectedDestinationFile.duplicate, "btn-toast-keepboth", "error");
+        I.amOnPage(SL.fileArchive);
+        DT.waitForLoader("fileArchiveDataTable");
+        selectMultiuploadFolder(I, DT);
 
-    I.see(
-        "Pri nahradení dokumentu alebo nahratí novej verzie nie je možné zmeniť cieľový adresár ani kategóriu určujúcu adresár.",
-        "#toast-container-upload .toast[data-upload-status='error'] .toast-error-message"
-    );
+        await uploadFilesToDropzone(I, [rejectedDestinationFile.initial]);
+        DT.waitForLoader("fileArchiveDataTable");
+        await uploadFilesToDropzone(I, [rejectedDestinationFile.duplicate], "exist", null, { category: category });
+        clickDuplicateUploadAction(I, rejectedDestinationFile.duplicate, "btn-toast-keepboth", "error");
 
-    I.amOnPage(ELFINDER_MULTUPLOAD);
-    await SL.checkFileContent(rejectedDestinationFile.initial.fileName, "archive_file_test.png");
+        I.see(
+            "Pri nahradení dokumentu alebo nahratí novej verzie nie je možné zmeniť cieľový adresár ani kategóriu určujúcu adresár.",
+            "#toast-container-upload .toast[data-upload-status='error'] .toast-error-message"
+        );
+
+        I.amOnPage(ELFINDER_MULTUPLOAD);
+        await checkUploadedFileContent(I, rejectedDestinationFile.initial.fileName, rejectedDestinationFile.initial);
+    } catch (error) {
+        testError = error;
+    } finally {
+        await recorder.catchWithoutStop(error => { if (!testError) testError = error; });
+        if (Object.prototype.hasOwnProperty.call(originalConfiguration, "value")) {
+            try {
+                await setTemporaryCategoryDestination(I, DT, DTE, originalConfiguration.value);
+            } catch (error) {
+                restoreError = error;
+                await recorder.catchWithoutStop(() => {});
+            }
+        }
+    }
+    if (testError && restoreError) throw new AggregateError([testError, restoreError], "Destination rejection test and configuration restore failed");
+    if (testError) throw testError;
+    if (restoreError) throw restoreError;
 });
 
 Scenario('Upload and select file archive link in CKEditor', async ({ I, DT, DTE, Document }) => {
@@ -368,7 +392,7 @@ Scenario('Add folder btn visibility test', ({ I, DT }) => {
 });
 
 /**
- * Creates a temporary copy of a test document for upload.
+ * Creates a temporary PDF with unique content to avoid unintended hash-based duplicate detection.
  * @param {string} sourceName - name of the source file in the docs directory
  * @param {string} targetName - desired name for the copy in the temp directory
  * @param {string|null} variant - optional temp subdirectory for same-name replacement fixtures
@@ -380,12 +404,51 @@ function createUploadFile(sourceName, targetName, variant = null) {
     fs.mkdirSync(targetDir, { recursive: true });
     const targetPath = path.join(targetDir, targetName);
     fs.copyFileSync(sourcePath, targetPath);
+    // A trailing PDF comment changes the hash without changing the rendered document.
+    fs.appendFileSync(targetPath, "\n% " + path.basename(tmpDir) + "/" + (variant || "") + "/" + targetName + "\n");
 
     return {
         fileName: targetName,
         filePath: targetPath,
         virtualName: targetName.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ")
     };
+}
+
+/**
+ * Temporarily changes whether the archive category determines the destination directory.
+ * @param {CodeceptJS.I} I - CodeceptJS actor
+ * @param {object} DT - DataTable helper
+ * @param {object} DTE - DataTable editor helper
+ * @param {string} value - configuration value to apply
+ * @param {{value?: string}} [originalConfiguration] - receives the effective value before changing it
+ */
+async function setTemporaryCategoryDestination(I, DT, DTE, value, originalConfiguration) {
+    const name = "fileArchivUseCategoryAsLink";
+    I.amOnPage("/admin/v9/settings/configuration/");
+    const allNode = "#SomStromcek li[data-configuration-view='all'] > a.jstree-anchor";
+    I.waitForElement(allNode, 20);
+    I.clickCss(allNode);
+    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "all", 20);
+    DT.waitForLoader();
+    DT.filterEquals("name", name);
+    I.waitForText(name, 10, "#configurationDatatable");
+
+    const currentValue = await I.executeScript(() => {
+        const rows = configurationDatatable.rows({ search: "applied" }).data().toArray();
+        if (rows.length !== 1) throw new Error("Expected one category destination configuration row");
+        return rows[0].displayValue ?? rows[0].value;
+    });
+    if (originalConfiguration) originalConfiguration.value = currentValue;
+
+    I.click(name, "#configurationDatatable");
+    DTE.waitForEditor("configurationDatatable");
+    DTE.fillField("value", value);
+    DTE.clickSwitch("temporary_0");
+    DTE.save();
+    await I.waitForFunction(([expected]) => {
+        const rows = configurationDatatable.rows({ search: "applied" }).data().toArray();
+        return rows.length === 1 && (rows[0].displayValue ?? rows[0].value) === expected;
+    }, [value], 15);
 }
 
 /**
@@ -414,6 +477,23 @@ function selectMultiuploadFolder(I, DT) {
 }
 
 /**
+ * Verifies that an archive file contains exactly the expected uploaded PDF bytes.
+ * @param {CodeceptJS.I} I - CodeceptJS actor
+ * @param {string} fileName - physical file name, including a version suffix when applicable
+ * @param {{filePath: string}} expectedFile - expected temporary upload fixture
+ */
+async function checkUploadedFileContent(I, fileName, expectedFile) {
+    I.waitForElement(".elfinder-cwd-filename[title='" + fileName + "']", 10);
+    await I.usePlaywrightTo("verify uploaded PDF content", async ({ page }) => {
+        const url = new URL(ARCHIVE_FOLDER + encodeURIComponent(fileName), page.url()).href;
+        const response = await page.request.get(url);
+        assert.equal(response.status(), 200, "The uploaded PDF must be accessible.");
+        const actualContent = await response.body();
+        assert.ok(actualContent.equals(fs.readFileSync(expectedFile.filePath)), "Unexpected PDF content for " + fileName);
+    });
+}
+
+/**
  * Uploads files to the file archive dropzone using Playwright's setInputFiles API.
  * Waits for each file's toast notification to reach the expected status.
  * @param {CodeceptJS.I} I - CodeceptJS actor
@@ -437,7 +517,7 @@ async function uploadFilesToDropzone(I, files, expectedStatus = "success", frame
         await input.waitFor({ state: "attached", timeout: 20000 });
     });
 
-    I.waitForVisible("#fileArchiveDataTable_modal", 20);
+    I.waitForVisible("#fileArchiveDataTable_modal.DTED.show[data-dte-focus-state='ready']", 20);
     I.waitForVisible("#pills-dt-fileArchiveDataTable-basic-tab.active", 20);
     if (bulkOptions != null) {
         if (bulkOptions.validFrom) setBulkUploadFieldValue(I, "#DTE_Field_validFrom", bulkOptions.validFrom);
@@ -468,6 +548,8 @@ async function uploadFilesToDropzone(I, files, expectedStatus = "success", frame
             }
         }
     }
+    // Dismiss the date picker opened by the editor's automatic focus before confirming the upload.
+    I.click("#fileArchiveDataTable_modal .DTE_Header_Content h5.modal-title");
     I.click("#fileArchiveDataTable_modal .DTE_Form_Buttons button.btn-primary");
     I.waitForInvisible("#fileArchiveDataTable_modal", 10);
 
@@ -536,13 +618,13 @@ function setBulkUploadCheckbox(I, selector, checked) {
  */
 function clickDuplicateUploadAction(I, file, buttonClass, expectedStatus = "success") {
     I.usePlaywrightTo("resolve duplicate upload action", async ({ page }) => {
-        const toast = page.locator("#toast-container-upload div.toast", { hasText: file.fileName }).last();
+        const toast = page.locator("#toast-container-upload div.toast", { hasText: file.fileName }).first();
         await toast.waitFor({ state: "visible", timeout: 20000 });
         await toast.locator("." + buttonClass).click();
         await page.waitForFunction(({ fileName, expectedStatus }) => {
             const toasts = Array.from(document.querySelectorAll("#toast-container-upload div.toast"))
                 .filter(toast => toast.textContent.includes(fileName));
-            const latestToast = toasts[toasts.length - 1];
+            const latestToast = toasts[0];
             return latestToast != null && latestToast.getAttribute("data-upload-status") === expectedStatus;
         }, { fileName: file.fileName, expectedStatus: expectedStatus }, { timeout: 60000 });
     });
@@ -560,7 +642,7 @@ async function deleteArchiveRowsByPrefix(I, DT, prefix, archiveFolder = ARCHIVE_
     SL.openFileArchive(archiveFolder + "cleanup.pdf");
     DT.filterContains("virtualFileName", prefix.replace(/[-_]+/g, " "));
 
-    const recordCount = await DT.getRecordCount("fileArchiveDataTable");
+    const recordCount = await I.executeScript(() => fileArchiveDataTable.page.info().recordsDisplay);
     if (recordCount > 0) {
         DT.deleteAll("fileArchiveDataTable");
         DT.waitForLoader("fileArchiveDataTable");
