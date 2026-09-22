@@ -35,13 +35,11 @@ import org.springframework.boot.webmvc.autoconfigure.DispatcherServletAutoConfig
 import org.springframework.boot.webmvc.autoconfigure.DispatcherServletRegistrationBean;
 import org.springframework.context.annotation.AnnotatedBeanDefinitionReader;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Conditional;
 import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.context.support.GenericWebApplicationContext;
 
 import sk.iway.iwcm.Constants;
-import sk.iway.iwcm.setup.SetupModeCondition;
 
 class WebjetBootstrapApplicationContextInitializerTest {
 
@@ -227,10 +225,6 @@ class WebjetBootstrapApplicationContextInitializerTest {
                 WebjetBootstrapState.BEAN_NAME, WebjetBootstrapState.class
             );
             assertFalse(bootstrapState.isCoreInitializationAttempted());
-            assertSame(springConfiguration, applicationContext.getBean(
-                WebjetBootstrapSpringConfiguration.BEAN_NAME,
-                WebjetBootstrapSpringConfiguration.class
-            ));
 
             verify(modeDetector).detect(applicationContext.getEnvironment());
             verifyNoInteractions(initializationActions);
@@ -427,19 +421,11 @@ class WebjetBootstrapApplicationContextInitializerTest {
             assertEquals(springConfiguration.springAddPackages(), applicationContext.getEnvironment()
                 .getProperty(WebjetBootstrapSpringConfiguration.ADD_PACKAGES_PROPERTY));
             assertEquals(springConfiguration.defaultEncoding(), applicationContext.getEnvironment()
-                .getProperty(WebjetBootstrapSpringConfiguration.DEFAULT_ENCODING_PROPERTY));
-            assertEquals(springConfiguration.maximumFileSizeBytes(), applicationContext.getEnvironment()
-                .getProperty(WebjetBootstrapSpringConfiguration.MAXIMUM_FILE_SIZE_PROPERTY, Long.class));
-            assertEquals(springConfiguration.maximumRequestSizeBytes(), applicationContext.getEnvironment()
-                .getProperty(WebjetBootstrapSpringConfiguration.MAXIMUM_REQUEST_SIZE_PROPERTY, Long.class));
-            assertEquals(springConfiguration.defaultEncoding(), applicationContext.getEnvironment()
                 .getProperty("spring.servlet.encoding.charset"));
             assertEquals(springConfiguration.maximumFileSizeBytes() + "B", applicationContext.getEnvironment()
                 .getProperty("spring.servlet.multipart.max-file-size"));
             assertEquals(springConfiguration.maximumRequestSizeBytes() + "B", applicationContext.getEnvironment()
                 .getProperty("spring.servlet.multipart.max-request-size"));
-            assertEquals(springConfiguration, applicationContext.getBeanFactory()
-                .getSingleton(WebjetBootstrapSpringConfiguration.BEAN_NAME));
             assertEquals(expectedMode == WebjetBootstrapMode.SETUP
                     ? setupAutoConfigurationExclusions()
                     : CUSTOM_AUTO_CONFIGURATION_EXCLUSION,
@@ -453,8 +439,7 @@ class WebjetBootstrapApplicationContextInitializerTest {
 
             new AnnotatedBeanDefinitionReader(applicationContext).register(
                 SetupModeProbeConfiguration.class,
-                ProductionModeProbeConfiguration.class,
-                LegacySetupModeProbeConfiguration.class
+                ProductionModeProbeConfiguration.class
             );
             applicationContext.refresh();
 
@@ -462,8 +447,6 @@ class WebjetBootstrapApplicationContextInitializerTest {
                 applicationContext.containsBean("setupModeProbe"));
             assertEquals(expectedMode == WebjetBootstrapMode.PRODUCTION,
                 applicationContext.containsBean("productionModeProbe"));
-            assertEquals(expectedMode == WebjetBootstrapMode.SETUP,
-                applicationContext.containsBean("legacySetupModeProbe"));
 
             if (expectedMode == WebjetBootstrapMode.SETUP) {
                 verifyNoInteractions(modeDetector);
@@ -528,16 +511,6 @@ class WebjetBootstrapApplicationContextInitializerTest {
         @Bean
         String productionModeProbe() {
             return WebjetBootstrapMode.PRODUCTION_VALUE;
-        }
-    }
-
-    @SuppressWarnings("deprecation")
-    @Conditional(SetupModeCondition.class)
-    static class LegacySetupModeProbeConfiguration {
-
-        @Bean
-        String legacySetupModeProbe() {
-            return WebjetBootstrapMode.SETUP_VALUE;
         }
     }
 

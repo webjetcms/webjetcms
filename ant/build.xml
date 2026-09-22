@@ -88,7 +88,7 @@
             <arg value="--info"/>
         </exec>
         <exec executable="./gradlew" failonerror="true">
-            <arg value="prepareAntWar"/>
+            <arg value="war"/>
         </exec>
         <exec executable="./gradlew" failonerror="true">
             <arg value="javadoc"/>

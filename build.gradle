@@ -66,8 +66,6 @@ ext {
     // Tomcat temporarily needs a higher security floor than the version managed by Boot 4.1.1.
     tomcatMinimumVersion = "11.0.25";
     log4jToSlf4jMinimumVersion = "2.26.1";
-    //do not forget to download https://mvnrepository.com/artifact/org.aspectj/aspectjtools
-    //jar to ant/aspectj and update version in ant/compile.xml file
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
     webjetAiVersion = '1.2.0';
@@ -226,16 +224,6 @@ configurations {
     //javax.xml.stream:stax-api:1.0-2 -> stax:stax-api:1.0.1
     //all*.exclude group: 'javax.xml.stream', module: 'stax-api'
 
-    grettyRunnerTomcat10 {
-        // gretty pouziva staru verziu commons-io, ktora koliduje s nasou
-        // https://mvnrepository.com/artifact/commons-io/commons-io
-        exclude group: 'commons-io', module: 'commons-io'
-    }
-
-    grettyRunnerTomcat11 {
-
-    }
-
  }
 
 dependencies {
@@ -391,7 +379,7 @@ dependencies {
     implementation 'org.slf4j:jcl-over-slf4j'
     implementation 'org.slf4j:log4j-over-slf4j'
     implementation 'org.apache.logging.log4j:log4j-to-slf4j'
-    // AspectJ is one shared pin for the runtime, Java agent and Ant compiler tooling.
+    // AspectJ is not managed by the Spring Boot BOM.
     //implementation("com.google.code.findbugs:jsr305:3.0.2")
     implementation("org.aspectj:aspectjrt:${aspectJVersion}")
 
@@ -518,15 +506,6 @@ tasks.named('war') {
     }
 }
 
-tasks.register('prepareAntWar', Sync) {
-    group = 'build'
-    description = 'Builds the plain WAR and prepares provided dependencies for the legacy Ant compiler'
-    dependsOn tasks.named('war')
-    duplicatesStrategy = DuplicatesStrategy.FAIL
-    from configurations.providedRuntime
-    into layout.buildDirectory.dir('ant-provided-runtime')
-}
-
 task npmwatch(type:Exec) {
     workingDir 'src/main/webapp/admin/v9/'
     project.ext."npmExe" = Os.isFamily(Os.FAMILY_WINDOWS) ? "npm.cmd" : "npm"
@@ -605,8 +584,6 @@ bootRun {
     // These preserve the exact runtime behavior from the gretty/Tomcat setup
     def webjetDbname = System.env.webjetDbname ?: '/poolman-local.xml'
     jvmArgs = [
-        // AspectJ weaver agent (same as used in test task)
-        //"-javaagent:${configurations.agent.singleFile}",
         // Recommended system properties for Tomcat (from old gretty config)
         '-Dsun.net.client.defaultConnectTimeout=300000',
         '-Dsun.net.client.defaultReadTimeout=300000',
@@ -984,16 +961,11 @@ task writePom() {
             boolean removeLegacyDependency = "test".equals(scopeValue) ||
                 "8.9-SNAPSHOT-wj9".equals(version) ||
                 (groupId.startsWith("sk.iway") && "pd4ml".equals(artifactName) == false) ||
-                "stripes".equals(artifactName)
+                "stripes".equals(artifactName) ||
+                ("com.github.hazendaz".equals(groupId) && "displaytag".equals(artifactName))
             if (removeLegacyDependency) {
                 println "----> removing: "+artifactName
                 i.remove()
-            }
-
-            //remove displaytag, it is integrated with our changes in libs jar
-            if ("com.github.hazendaz".equals(groupId) && "displaytag".equals(artifactName)) {
-                println "----> removing: "+artifactName
-                i.remove();
             }
         }
 
@@ -1029,7 +1001,8 @@ tasks.register('verifyGeneratedPom') {
             'sk.iway:wjcron4j',
             'sk.iway:wjjcaptcha',
             'sk.iway:wjdaisydiff',
-            'net.sourceforge.stripes:stripes'
+            'net.sourceforge.stripes:stripes',
+            'com.github.hazendaz:displaytag'
         ] as Set
 
         List<String> versionedSpringManagedDependencies = []
@@ -1084,26 +1057,6 @@ tasks.register('verifyGeneratedPom') {
                 )
             }
         }
-        Set<String> agentAspectJVersions = configurations.agent.incoming.resolutionResult.allComponents.findAll { component ->
-            def identifier = component.id
-            identifier instanceof org.gradle.api.artifacts.component.ModuleComponentIdentifier &&
-                identifier.group == 'org.aspectj' && identifier.module == 'aspectjweaver'
-        }.collect { component ->
-            component.id.version
-        } as Set<String>
-        if (agentAspectJVersions != ([aspectJVersion] as Set<String>)) {
-            throw new GradleException(
-                "The AspectJ Java agent must resolve to ${aspectJVersion}, found ${agentAspectJVersions.sort()}"
-            )
-        }
-        File aspectJToolsJar = file("ant/aspectj/aspectjtools-${aspectJVersion}.jar")
-        if (aspectJToolsJar.isFile() == false ||
-            file('ant/compile.xml').getText('UTF-8').contains("aspectjtools-${aspectJVersion}.jar") == false) {
-            throw new GradleException(
-                "Ant AspectJ compiler must use ant/aspectj/aspectjtools-${aspectJVersion}.jar"
-            )
-        }
-
         def childText = { Node node, String childName ->
             NodeList children = node.get(childName)
             children.isEmpty() ? '' : children.first().text().trim()

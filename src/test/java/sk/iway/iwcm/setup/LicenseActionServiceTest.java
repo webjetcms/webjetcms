@@ -68,12 +68,15 @@ class LicenseActionServiceTest {
     }
 
     @Test
-    void wrongPasswordAndCorrectNonAdminPasswordHaveSameResponse() {
+    void authenticationFailuresHaveSameResponse() {
         AuthFailure wrongPassword = authenticate(false, true);
         AuthFailure correctNonAdminPassword = authenticate(true, false);
+        AuthFailure unauthorizedAdmin = authenticate(true, true, false);
 
         assertEquals(wrongPassword.view(), correctNonAdminPassword.view());
         assertEquals(wrongPassword.message(), correctNonAdminPassword.message());
+        assertEquals(wrongPassword.view(), unauthorizedAdmin.view());
+        assertEquals(wrongPassword.message(), unauthorizedAdmin.message());
         assertEquals(BAD_CREDENTIALS, wrongPassword.message());
     }
 
@@ -156,6 +159,10 @@ class LicenseActionServiceTest {
     }
 
     private AuthFailure authenticate(boolean passwordCorrect, boolean admin) {
+        return authenticate(passwordCorrect, admin, true);
+    }
+
+    private AuthFailure authenticate(boolean passwordCorrect, boolean admin, boolean authorized) {
         MockHttpServletRequest request = new MockHttpServletRequest();
         LicenseFormBean form = licenseForm();
         ExtendedModelMap model = new ExtendedModelMap();
@@ -163,7 +170,7 @@ class LicenseActionServiceTest {
         UserDetails user = mock(UserDetails.class);
         when(prop.getText("approveAction.err.badPass")).thenReturn(BAD_CREDENTIALS);
         when(user.getUserId()).thenReturn(USER_ID);
-        when(user.isAuthorized()).thenReturn(true);
+        when(user.isAuthorized()).thenReturn(authorized);
         when(user.isAdmin()).thenReturn(admin);
 
         try (MockedStatic<Prop> properties = mockStatic(Prop.class);

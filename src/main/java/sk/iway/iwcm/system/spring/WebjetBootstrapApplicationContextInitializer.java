@@ -91,9 +91,6 @@ class WebjetBootstrapApplicationContextInitializer
                 getBootstrapProperties(environment, state, springConfiguration))
         );
         applicationContext.getBeanFactory().registerSingleton(WebjetBootstrapState.BEAN_NAME, state);
-        applicationContext.getBeanFactory().registerSingleton(
-            WebjetBootstrapSpringConfiguration.BEAN_NAME, springConfiguration
-        );
 
         Logger.info(WebjetBootstrapApplicationContextInitializer.class,
             "WebJET bootstrap mode: " + state.getMode().getPropertyValue());

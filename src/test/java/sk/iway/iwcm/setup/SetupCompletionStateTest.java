@@ -56,6 +56,7 @@ class SetupCompletionStateTest {
 
         assertTrue(SetupCompletionState.tryStart(request, new MockHttpServletResponse()));
         SetupCompletionState.markCompleted(request);
+        SetupCompletionState.resetAfterFailure(request);
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         assertFalse(SetupCompletionState.tryStart(request, response));

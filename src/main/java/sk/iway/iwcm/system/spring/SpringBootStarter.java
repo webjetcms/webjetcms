@@ -6,6 +6,7 @@ import java.util.function.Function;
 
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.MultipartConfigElement;
+import jakarta.servlet.Servlet;
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRegistration;
@@ -324,10 +325,7 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<sk.iway.iwcm.doc.ShowDoc> showDocServletRegistration() {
-            ServletRegistrationBean<sk.iway.iwcm.doc.ShowDoc> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.doc.ShowDoc(), "/showdoc.do");
-            registration.setName("ShowDoc");
-            return registration;
+            return servletRegistration("ShowDoc", new sk.iway.iwcm.doc.ShowDoc(), "/showdoc.do");
         }
 
         /**
@@ -335,10 +333,7 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<sk.iway.iwcm.editor.PreviewServlet> previewServletRegistration() {
-            ServletRegistrationBean<sk.iway.iwcm.editor.PreviewServlet> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.editor.PreviewServlet(), "/preview.do");
-            registration.setName("previewServlet");
-            return registration;
+            return servletRegistration("previewServlet", new sk.iway.iwcm.editor.PreviewServlet(), "/preview.do");
         }
 
         /**
@@ -346,10 +341,8 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<sk.iway.iwcm.form.FormMailActionServlet> formMailServletRegistration() {
-            ServletRegistrationBean<sk.iway.iwcm.form.FormMailActionServlet> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.form.FormMailActionServlet(), "/formmail.do");
-            registration.setName("FormMailAction");
-            return registration;
+            return servletRegistration("FormMailAction", new sk.iway.iwcm.form.FormMailActionServlet(),
+                "/formmail.do");
         }
 
         /**
@@ -357,10 +350,8 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<sk.iway.iwcm.components.offline.OfflineAction> offlineServletRegistration() {
-            ServletRegistrationBean<sk.iway.iwcm.components.offline.OfflineAction> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.components.offline.OfflineAction(), "/admin/offline.do");
-            registration.setName("offlineServlet");
-            return registration;
+            return servletRegistration("offlineServlet", new sk.iway.iwcm.components.offline.OfflineAction(),
+                "/admin/offline.do");
         }
 
         /**
@@ -368,10 +359,7 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<sk.iway.iwcm.doc.DeleteServlet> deleteServletRegistration() {
-            ServletRegistrationBean<sk.iway.iwcm.doc.DeleteServlet> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.doc.DeleteServlet(), "/admin/docdel.do");
-            registration.setName("DelDoc");
-            return registration;
+            return servletRegistration("DelDoc", new sk.iway.iwcm.doc.DeleteServlet(), "/admin/docdel.do");
         }
 
         /**
@@ -379,10 +367,8 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<sk.iway.iwcm.LogoffServlet> logoffServletRegistration() {
-            ServletRegistrationBean<sk.iway.iwcm.LogoffServlet> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.LogoffServlet(), "/logoff.do", "/admin/logoff.do");
-            registration.setName("LogOff");
-            return registration;
+            return servletRegistration("LogOff", new sk.iway.iwcm.LogoffServlet(),
+                "/logoff.do", "/admin/logoff.do");
         }
 
         /**
@@ -394,10 +380,8 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<sk.iway.iwcm.filebrowser.MultipleFileUploadAction> multipleFileUploadServletRegistration() {
-            ServletRegistrationBean<sk.iway.iwcm.filebrowser.MultipleFileUploadAction> registration = new ServletRegistrationBean<>(
+            return servletRegistration("MultipleFileUploadAction",
                 new sk.iway.iwcm.filebrowser.MultipleFileUploadAction(), "/admin/multiplefileupload.do");
-            registration.setName("MultipleFileUploadAction");
-            return registration;
         }
 
         /**
@@ -405,10 +389,8 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<sk.iway.iwcm.editor.ThumbServlet> thumbServletRegistration() {
-            ServletRegistrationBean<sk.iway.iwcm.editor.ThumbServlet> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.editor.ThumbServlet(), "/admin/thumb/*", "/thumb/*", "/tumbn/*");
-            registration.setName("thumbServlet");
-            return registration;
+            return servletRegistration("thumbServlet", new sk.iway.iwcm.editor.ThumbServlet(),
+                "/admin/thumb/*", "/thumb/*", "/tumbn/*");
         }
 
         /**
@@ -416,10 +398,8 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<sk.iway.iwcm.system.captcha.CaptchaServlet> captchaServletRegistration() {
-            ServletRegistrationBean<sk.iway.iwcm.system.captcha.CaptchaServlet> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.system.captcha.CaptchaServlet(), "/captcha.jpg");
-            registration.setName("captchaServlet");
-            return registration;
+            return servletRegistration("captchaServlet", new sk.iway.iwcm.system.captcha.CaptchaServlet(),
+                "/captcha.jpg");
         }
 
         /**
@@ -427,10 +407,8 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<sk.iway.iwcm.system.elfinder.ElfinderServlet> elfinderServletRegistration() {
-            ServletRegistrationBean<sk.iway.iwcm.system.elfinder.ElfinderServlet> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.system.elfinder.ElfinderServlet(), "/admin/elfinder-connector/");
-            registration.setName("elfinderServlet");
-            return registration;
+            return servletRegistration("elfinderServlet", new sk.iway.iwcm.system.elfinder.ElfinderServlet(),
+                "/admin/elfinder-connector/");
         }
 
         /**
@@ -438,10 +416,8 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<sk.iway.iwcm.components.pdf.PdfServlet> pdfServletRegistration() {
-            ServletRegistrationBean<sk.iway.iwcm.components.pdf.PdfServlet> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.components.pdf.PdfServlet(), "/to.pdf/*", "/topdf/*");
-            registration.setName("pdfServlet");
-            return registration;
+            return servletRegistration("pdfServlet", new sk.iway.iwcm.components.pdf.PdfServlet(),
+                "/to.pdf/*", "/topdf/*");
         }
 
         /**
@@ -451,9 +427,9 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         @ConditionalOnBooleanProperty(name = "spring.servlet.multipart.enabled", matchIfMissing = true)
         public ServletRegistrationBean<sk.iway.iwcm.components.upload.XhrFileUploadServlet> xhrFileUploadServletRegistration(
                 MultipartConfigElement multipartConfigElement) {
-            ServletRegistrationBean<sk.iway.iwcm.components.upload.XhrFileUploadServlet> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.components.upload.XhrFileUploadServlet(), "/XhrFileUpload");
-            registration.setName("XhrFileUpload");
+            ServletRegistrationBean<sk.iway.iwcm.components.upload.XhrFileUploadServlet> registration =
+                servletRegistration("XhrFileUpload",
+                    new sk.iway.iwcm.components.upload.XhrFileUploadServlet(), "/XhrFileUpload");
             registration.setMultipartConfig(multipartConfigElement);
             return registration;
         }
@@ -465,9 +441,9 @@ public class SpringBootStarter extends SpringBootServletInitializer {
         @ConditionalOnBooleanProperty(name = "spring.servlet.multipart.enabled", matchIfMissing = true)
         public ServletRegistrationBean<sk.iway.iwcm.admin.upload.AdminUploadServlet> adminUploadServletRegistration(
                 MultipartConfigElement multipartConfigElement) {
-            ServletRegistrationBean<sk.iway.iwcm.admin.upload.AdminUploadServlet> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.admin.upload.AdminUploadServlet(), "/admin/upload/chunk");
-            registration.setName("AdminUpload");
+            ServletRegistrationBean<sk.iway.iwcm.admin.upload.AdminUploadServlet> registration =
+                servletRegistration("AdminUpload", new sk.iway.iwcm.admin.upload.AdminUploadServlet(),
+                    "/admin/upload/chunk");
             registration.setMultipartConfig(multipartConfigElement);
             return registration;
         }
@@ -477,10 +453,8 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<sk.iway.iwcm.sync.export.ExportSyncServlet> exportSyncServletRegistration() {
-            ServletRegistrationBean<sk.iway.iwcm.sync.export.ExportSyncServlet> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.sync.export.ExportSyncServlet(), "/export.sync");
-            registration.setName("exportSyncServlet");
-            return registration;
+            return servletRegistration("exportSyncServlet", new sk.iway.iwcm.sync.export.ExportSyncServlet(),
+                "/export.sync");
         }
 
         /**
@@ -489,10 +463,8 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<sk.iway.iwcm.doc.GetProtectedFileServlet> getProtectedFileServletRegistration() {
-            ServletRegistrationBean<sk.iway.iwcm.doc.GetProtectedFileServlet> registration = new ServletRegistrationBean<>(
-                new sk.iway.iwcm.doc.GetProtectedFileServlet(), "/files/protected/*");
-            registration.setName("GetProtectedFile");
-            return registration;
+            return servletRegistration("GetProtectedFile", new sk.iway.iwcm.doc.GetProtectedFileServlet(),
+                "/files/protected/*");
         }
 
         /**
@@ -501,10 +473,17 @@ public class SpringBootStarter extends SpringBootServletInitializer {
          */
         @Bean
         public ServletRegistrationBean<net.sourceforge.stripes.controller.DispatcherServlet> stripesDispatcherRegistration() {
-            ServletRegistrationBean<net.sourceforge.stripes.controller.DispatcherServlet> registration = new ServletRegistrationBean<>(
-                new net.sourceforge.stripes.controller.DispatcherServlet(), "*.action");
-            registration.setName("StripesDispatcher");
+            ServletRegistrationBean<net.sourceforge.stripes.controller.DispatcherServlet> registration =
+                servletRegistration("StripesDispatcher",
+                    new net.sourceforge.stripes.controller.DispatcherServlet(), "*.action");
             registration.setLoadOnStartup(1);
+            return registration;
+        }
+
+        private static <T extends Servlet> ServletRegistrationBean<T> servletRegistration(
+                String name, T servlet, String... urlMappings) {
+            ServletRegistrationBean<T> registration = new ServletRegistrationBean<>(servlet, urlMappings);
+            registration.setName(name);
             return registration;
         }
     }

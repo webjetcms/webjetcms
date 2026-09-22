@@ -13,6 +13,7 @@ import org.springframework.web.context.support.StaticWebApplicationContext;
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.view.AbstractUrlBasedView;
 import org.springframework.web.servlet.view.JstlView;
+import org.thymeleaf.spring6.view.ThymeleafViewResolver;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.test.BaseWebjetTest;
@@ -20,10 +21,12 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 class WebjetViewResolverTest extends BaseWebjetTest {
 
     @Test
-    void explicitJspViewUsesExactlyOneSuffix() throws Exception {
+    void jspViewUsesExactlyOneSuffix() throws Exception {
         try (StaticWebApplicationContext context = createApplicationContext()) {
             WebjetViewResolver resolver = createResolver(context);
 
+            assertEquals("/404.jsp", resolveUrl(resolver, "/404"));
+            assertEquals("/404.jsp", resolveUrl(resolver, "/404.html"));
             assertEquals("/404.jsp", resolveUrl(resolver, "/404.jsp"));
             assertEquals("/403.jsp", resolveUrl(resolver, "forward:/403.jsp"));
         }
@@ -59,8 +62,10 @@ class WebjetViewResolverTest extends BaseWebjetTest {
         jspResolver.setOrder(1);
         jspResolver.setApplicationContext(context);
 
+        ThymeleafViewResolver thymeleafResolver = new ThymeleafViewResolver();
+
         WebjetViewResolver resolver = new WebjetViewResolver();
-        resolver.setViewResolvers(new ArrayList<>(List.of(jspResolver)));
+        resolver.setViewResolvers(new ArrayList<>(List.of(thymeleafResolver, jspResolver)));
         resolver.setApplicationContext(context);
         return resolver;
     }

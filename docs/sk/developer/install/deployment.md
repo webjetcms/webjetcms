@@ -35,7 +35,7 @@ odtiaľ sa prenesie aj do `build.properties` pre zobrazenie verzie v administrá
 
 Spring Boot Gradle plugin vytvára [executable a plain archív](https://docs.spring.io/spring-boot/gradle-plugin/packaging.html#packaging-executable-and-plain-archives). Úloha `bootWar` vytvorí `build/libs/webjetcms.war`, ktorý je spustiteľný cez `java -jar` a zároveň nasaditeľný do externého Tomcatu. Embedded runtime je v ňom uložený v `WEB-INF/lib-provided`, takže ho externý kontajner nenačíta. Štandardná Gradle úloha `war` dostane od Spring Boot pluginu classifier `plain` a vytvorí `build/libs/webjetcms-plain.war`. Legacy Ant úlohy `expandwar` a `finalwar` zámerne rozbaľujú `webjetcms-plain.war`, pretože zodpovedá pôvodnému štandardnému WAR bez Spring Boot loadera a adresára `WEB-INF/lib-provided`.
 
-Maven/JAR publikácia a plain WAR sú určené pre zákaznícke projekty nasadené do externého Tomcatu. Embedded Tomcat slúži iba pre lokálny `bootRun` a executable WAR. Ant úloha `setup` preto volá Gradle úlohu `prepareAntWar`, ktorá vytvorí plain WAR a osobitne pripraví BOM-resolvené `providedRuntime` knižnice iba pre legacy `javac` a AspectJ classpath. Tieto knižnice sa nepridávajú do výsledného legacy archívu ani do runtime závislostí Maven konzumenta.
+Maven/JAR publikácia a plain WAR sú určené pre zákaznícke projekty nasadené do externého Tomcat. Embedded Tomcat slúži iba pre lokálny `bootRun` a executable WAR. Ant úloha `setup` preto volá štandardnú Gradle úlohu `war`, ktorá vytvorí plain WAR.
 
 Pri priamom spustení Ant úlohy je potrebné najskôr aktivovať verziu Node.js definovanú v koreňovom súbore `.nvmrc` príkazmi `nvm install` a `nvm use`. Skript `ant/deploy.sh` tieto príkazy vykoná automaticky.
 
@@ -70,7 +70,7 @@ Pri pridávaní alebo aktualizovaní závislostí platia tieto pravidlá:
 
 - pri artefakte spravovanom Spring Boot BOM sa verzia neuvádza; verzia Spring Boot sa nesmie použiť ako verzia Spring Security alebo inej samostatne verzovanej knižnice,
 - pri artefakte, ktorý BOM nespravuje, sa uvádza explicitná verzia,
-- výnimkou je spoločný pin pre nástroje mimo grafu závislostí; aktuálne `aspectJVersion` musí zarovnať AspectJ runtime, Java agent a Ant kompilátor a úloha `verifyGeneratedPom` ich zhodu kontroluje,
+- výnimkou je AspectJ, ktorý Spring Boot BOM nespravuje; `aspectJVersion` zjednocuje verziu runtime knižnice a weavera a úloha `verifyGeneratedPom` ich zhodu kontroluje,
 - používa sa `platform`, nie `enforcedPlatform`; bežná platforma poskytuje odporúčania a umožňuje Gradlu vyhodnotiť ostatné verzie a obmedzenia v grafe, ktoré môžu vybrať inú kompatibilnú verziu,
 - bezpečnostná výnimka musí byť úzko zamerané obmedzenie s uvedeným dôvodom; kombinácia rozsahu `require` a minimálnej verzie `prefer` vytvorí bezpečnostnú spodnú hranicu, ale dovolí budúcemu Boot BOM vybrať novšiu povolenú verziu,
 - nepoužíva sa globálny `force`, `strictly` alebo `resolutionStrategy.useVersion`, ktorý by mohol budúcu opravenú verziu znížiť,

@@ -20,13 +20,9 @@ record WebjetBootstrapSpringConfiguration(String installName, String logInstallN
         String springAddPackages, String defaultEncoding, long maximumFileSizeBytes,
         long maximumRequestSizeBytes) {
 
-    static final String BEAN_NAME = "webjetBootstrapSpringConfiguration";
     static final String INSTALL_NAME_PROPERTY = "webjet.bootstrap.spring.install-name";
     static final String LOG_INSTALL_NAME_PROPERTY = "webjet.bootstrap.spring.log-install-name";
     static final String ADD_PACKAGES_PROPERTY = "webjet.bootstrap.spring.add-packages";
-    static final String DEFAULT_ENCODING_PROPERTY = "webjet.bootstrap.servlet.default-encoding";
-    static final String MAXIMUM_FILE_SIZE_PROPERTY = "webjet.bootstrap.servlet.maximum-file-size-bytes";
-    static final String MAXIMUM_REQUEST_SIZE_PROPERTY = "webjet.bootstrap.servlet.maximum-request-size-bytes";
 
     private static final String INSTALL_NAME = "installName";
     private static final String LOG_INSTALL_NAME = "logInstallName";
@@ -103,12 +99,7 @@ record WebjetBootstrapSpringConfiguration(String installName, String logInstallN
         return new WebjetBootstrapSpringConfiguration(
             environment.getProperty(INSTALL_NAME_PROPERTY),
             environment.getProperty(LOG_INSTALL_NAME_PROPERTY),
-            environment.getProperty(ADD_PACKAGES_PROPERTY),
-            environment.getProperty(DEFAULT_ENCODING_PROPERTY, DEFAULT_ENCODING_VALUE),
-            environment.getProperty(MAXIMUM_FILE_SIZE_PROPERTY, Long.class,
-                DEFAULT_MAXIMUM_POST_SIZE_BYTES),
-            environment.getProperty(MAXIMUM_REQUEST_SIZE_PROPERTY, Long.class,
-                DEFAULT_MAXIMUM_POST_SIZE_BYTES)
+            environment.getProperty(ADD_PACKAGES_PROPERTY)
         );
     }
 
@@ -116,9 +107,6 @@ record WebjetBootstrapSpringConfiguration(String installName, String logInstallN
         properties.put(INSTALL_NAME_PROPERTY, installName);
         properties.put(LOG_INSTALL_NAME_PROPERTY, logInstallName);
         properties.put(ADD_PACKAGES_PROPERTY, springAddPackages);
-        properties.put(DEFAULT_ENCODING_PROPERTY, defaultEncoding);
-        properties.put(MAXIMUM_FILE_SIZE_PROPERTY, maximumFileSizeBytes);
-        properties.put(MAXIMUM_REQUEST_SIZE_PROPERTY, maximumRequestSizeBytes);
         properties.put(SPRING_DEFAULT_ENCODING_PROPERTY, defaultEncoding);
         properties.put(SPRING_MAXIMUM_FILE_SIZE_PROPERTY, maximumFileSizeBytes + "B");
         properties.put(SPRING_MAXIMUM_REQUEST_SIZE_PROPERTY, maximumRequestSizeBytes + "B");
