@@ -1,8 +1,6 @@
 package sk.iway.iwcm.components.multistep_form.rest;
 
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
@@ -16,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -28,6 +27,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import sk.iway.Html2Text;
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
@@ -53,8 +53,6 @@ import sk.iway.iwcm.components.multistep_form.support.FormProcessorInterface;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.components.upload.XhrFileUploadService;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
-import sk.iway.iwcm.database.ComplexQuery;
-import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -67,6 +65,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.ChartType;
 import sk.iway.iwcm.system.captcha.Captcha;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.datatable.RowReorderDto;
 import sk.iway.iwcm.system.datatable.RowReorderDto.RowReorderValue;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
@@ -90,6 +89,8 @@ public class MultistepFormsService {
 
     private static final String ALL_FILES_SIZE_SESSION_KEY_SUFFIX = "_allFilesSizeInKB";
     private static final String SELECTED_VALUES_SESSION_KEY_SUFFIX = "-selectedValues-";
+    private static final String VALIDATION_FIELDS_CACHE_PREFIX = "multistep_form.validationFields.";
+    private static final int VALIDATION_FIELDS_CACHE_MINUTES = 60;
 
     private static final String ITEM_KEY_LABEL_PREFIX = "components.formsimple.label.";
     private static final String ITEM_KEY_HIDE_FIELDS_PREFIX = "components.formsimple.hide.";
@@ -483,7 +484,7 @@ public class MultistepFormsService {
         String sessionPrefix = getSessionKey(formName, request) + "_";
         XhrFileUploadService uploadService = XhrFileUploadServlet.getService();
 
-        for(FormItemEntity stepItem : getStepItemsForValidation(stepId)) {
+        for(FormItemEntity stepItem : getStepItemsForValidation(formName, stepId)) {
             if("captcha".equals(stepItem.getFieldType())) continue;
 
             String itemFormId = stepItem.getItemFormId();
@@ -873,7 +874,7 @@ public class MultistepFormsService {
 
         //Get form items in order
         StringBuilder patternData = new StringBuilder();
-        for(FormItemEntity stepItem : getFormItemsForValidation(formName)) {
+        for(FormItemEntity stepItem : prepareFormItems(formItemsRepository.findAllForValidation(formName, CloudToolsForCore.getDomainId()))) {
             if(stepItem.getFieldType().startsWith("captcha")) continue; // captcha is not saved in DB
 
             if(patternData.isEmpty()) patternData.append(stepItem.getItemFormId());
@@ -897,15 +898,20 @@ public class MultistepFormsService {
      * @return localized errors for the requested field, or an empty map when valid
      * @throws SaveFormException when CSRF, cookie, or XSS checks fail
      * @throws IOException when reading the request body fails
+     * @throws IllegalStateException when the form or step is not permitted, the form counter is invalid,
+     *         or the request body is empty
+     * @throws IllegalArgumentException when the field is not in the step or is an upload, CAPTCHA, or WYSIWYG field
      */
     public final Map<String, String> validateField(String formName, Long stepId, String fieldId, HttpServletRequest request) throws SaveFormException, IOException {
         if (getValidStepEntity(formName, stepId, request) == null) throw new IllegalStateException("Invalid form or step for field validation.");
         beforeStepSaveCheck(false, request);
 
-        FormItemEntity field = formItemsRepository.findFirstByStepIdAndItemFormIdAndDomainIdOrderBySortPriorityAsc(stepId, fieldId, CloudToolsForCore.getDomainId())
+        FormItemEntity field = getStepItemsForValidation(formName, stepId).stream()
+            .filter(item -> fieldId.equals(item.getItemFormId()))
+            .findFirst()
             .orElseThrow(() -> new IllegalArgumentException("Field does not belong to the requested step."));
 
-            if (isFileUploadField(field.getFieldType()) || "captcha".equalsIgnoreCase(field.getFieldType()) || "wysiwyg".equalsIgnoreCase(field.getFieldType())) {
+        if (isFileUploadField(field.getFieldType()) || "captcha".equalsIgnoreCase(field.getFieldType()) || "wysiwyg".equalsIgnoreCase(field.getFieldType())) {
             throw new IllegalArgumentException("Field type does not support blur validation.");
         }
 
@@ -921,12 +927,14 @@ public class MultistepFormsService {
     }
 
     /**
-     * Reads submitted JSON using the same separator and form-instance normalization for validation and saving.
+     * Reads submitted JSON, removes reserved {@code |} and {@code ~} separators,
+     * and normalizes form-instance prefixes for validation and saving.
      *
      * @param formName logical form name
      * @param request request containing the JSON body and form-instance counter
      * @return submitted values keyed by logical field identifier
      * @throws IOException when reading the request body fails
+     * @throws IllegalStateException when the form counter is invalid or the request body is empty
      */
     private JSONObject readFormValues(String formName, HttpServletRequest request) throws IOException {
         int formCounter = getFormCounter(formName, request);
@@ -943,6 +951,8 @@ public class MultistepFormsService {
      * Validate and persist a single step of a multistep form into session, and optionally
      * finalize the form submission. Performs CSRF/CAPTCHA/file validations and invokes
      * custom processors. When the last step is completed, triggers final save into DB.
+     * Omitted current-step values are cleared before condition evaluation. Field validation
+     * errors are returned through {@code response} without saving the submitted step.
      *
      * @param formName logical form name
      * @param stepId   current step identifier
@@ -968,7 +978,7 @@ public class MultistepFormsService {
         beforeStepSaveCheck(spamProtectionEnabled, request);
 
         /* validate required / captcha / XSS (for names and values) */
-        List<FormItemEntity> stepItems = getStepItemsForValidation(stepId);
+        List<FormItemEntity> stepItems = getStepItemsForValidation(formName, stepId);
         // Omitted current-step fields are empty, clear values from a previous submission.
         for (FormItemEntity stepItem : stepItems) {
             String fieldId = stepItem.getItemFormId();
@@ -1148,6 +1158,8 @@ public class MultistepFormsService {
 
     /**
      * Store validated step values into HTTP session using stable field keys.
+     * Checkbox and radio choices also retain their exact values in a separate array
+     * so values containing commas can be restored alongside the legacy joined string.
      *
      * @param formName logical form name
      * @param stepId   current step id
@@ -1159,7 +1171,7 @@ public class MultistepFormsService {
         String prefix = sessionKey + "_";
         Prop prop = Prop.getInstance(request);
 
-        for(FormItemEntity stepItem : getStepItemsForValidation(stepId)) {
+        for(FormItemEntity stepItem : getStepItemsForValidation(formName, stepId)) {
             String[] values = asArray(stepItem.getItemFormId(), received);
             String stringValue = Tools.join(values, ",");
             if("captcha".equals(stepItem.getFieldType())) {
@@ -1184,10 +1196,12 @@ public class MultistepFormsService {
     /**
      * Validates step fields against required, CAPTCHA, XSS, and regular-expression rules.
      * Multi-upload fields are handled separately by {@link #validateFileFields}.
+     * Eligible text values are trimmed in the submitted payload. When condition evaluation
+     * is disabled, only the static required flag is used and visibility rules are ignored.
      *
      * @param formName              logical form name
      * @param stepItems             field definitions belonging to the current step
-     * @param received              submitted field values
+     * @param received              mutable submitted field values, updated when trimming is enabled
      * @param spamProtectionEnabled whether CAPTCHA validation is active
      * @param evaluateConditions    whether visibility and conditional requirement rules are evaluated
      * @param request               HTTP request with localization/session context
@@ -1568,72 +1582,121 @@ public class MultistepFormsService {
     }
 
     /**
-     * Fetch minimal field definitions of a single step required by validation pipeline.
-     *
-     * @param stepId step identifier
-     * @return list of simplified form item entities for the step
-     */
-    private List<FormItemEntity> getStepItemsForValidation(Long stepId) {
-        String sql = "SELECT id, item_form_id, label, field_type, regex_validation, required, custom_error, trim_value FROM form_items WHERE step_id = ? AND domain_id = ?";
-
-        List<FormItemEntity> values = new ArrayList<>();
-        new ComplexQuery().setSql(sql).setParams(stepId, CloudToolsForCore.getDomainId()).list(new Mapper<FormItemEntity>() {
-			@Override
-			public FormItemEntity map(ResultSet rs) throws SQLException {
-                values.add( resultSetToEntity(rs) );
-                return null;
-			}
-		});
-
-        return values;
-    }
-
-    /**
-     * Fetch distinct minimal form item definitions required for validation for the form.
+     * Reads the cached validation fields belonging to a single step.
      *
      * @param formName logical form name
-     * @return simplified form items containing the fields required by validation
+     * @param stepId step identifier
+     * @return independent simplified item copies in display order, including individual radio options
+     */
+    private List<FormItemEntity> getStepItemsForValidation(String formName, Long stepId) {
+        return getValidationFields(formName).stream()
+            .filter(item -> stepId.equals(item.getStepId()))
+            .toList();
+    }
+
+    /**
+     * Returns independent validation-field copies for the form in the current domain.
+     * Consecutive radio options sharing a logical identifier are collapsed for form-wide processing.
+     *
+     * @param formName logical form name
+     * @return simplified items in step and item display order, or an empty list for an empty form name
      */
     public static List<FormItemEntity> getFormItemsForValidation(String formName) {
-        String sql = "SELECT f.id, item_form_id, label, field_type, regex_validation, required, custom_error, trim_value FROM form_items f, form_steps s WHERE f.form_name = ? AND f.domain_id = ? AND f.step_id=s.id ORDER BY s.sort_priority ASC, f.sort_priority ASC";
+        return prepareFormItems(getValidationFields(formName));
+    }
 
+    /**
+     * Collapses radio options whose logical identifier matches the previously retained item.
+     * Preserves the input order and retains every non-radio item.
+     *
+     * @param fields ordered form items, including individual radio options
+     * @return new list containing the retained item references
+     */
+    private static List<FormItemEntity> prepareFormItems(List<FormItemEntity> fields) {
         List<FormItemEntity> values = new ArrayList<>();
-        new ComplexQuery().setSql(sql).setParams(formName, CloudToolsForCore.getDomainId()).list(new Mapper<FormItemEntity>() {
-			@Override
-			public FormItemEntity map(ResultSet rs) throws SQLException {
-                FormItemEntity stepItem = resultSetToEntity(rs);
-
-                // Radio's act like separe items but if they have same itemFormId AND are one after another they are GROUP (so as only one note in DB)
-                String previous = values.size() > 0 ? values.get( values.size() - 1).getItemFormId() : "";
-                if("radio".equals(stepItem.getFieldType()) &&  previous.equals(stepItem.getItemFormId())) return null;
-
-                values.add(stepItem);
-
-                return null;
-			}
-		});
-
+        for (FormItemEntity field : fields) {
+            // Consecutive radio options with the same field ID produce one saved value.
+            String previous = values.isEmpty() ? "" : values.get(values.size() - 1).getItemFormId();
+            if ("radio".equals(field.getFieldType()) && previous.equals(field.getItemFormId())) continue;
+            values.add(field);
+        }
         return values;
     }
 
     /**
-     * Map SQL result row into simplified form item entity.
+     * Caches a form's validation definitions for one hour per domain and returns independent copies.
+     * Uses the same monitor as eviction so a concurrent load cannot restore stale fields
+     * after local or cluster invalidation. Only fully loaded, detached definitions enter the cache.
      *
-     * @param rs SQL result set positioned on current row
-     * @return mapped form item entity
-     * @throws SQLException when reading row data fails
+     * @param formName logical form name
+     * @return independent validation-field copies in display order, including individual radio options,
+     *         or an empty list for an empty form name
+     * @throws IllegalStateException when uncached fields cannot be loaded because the repository bean is unavailable
      */
-    private static FormItemEntity resultSetToEntity(ResultSet rs) throws SQLException{
-        FormItemEntity fe = new FormItemEntity();
-        fe.setId( rs.getLong("id") );
-        fe.setItemFormId( rs.getString("item_form_id") );
-        fe.setLabel( rs.getString("label") );
-        fe.setFieldType( rs.getString("field_type") );
-        fe.setRegexValidation( rs.getString("regex_validation") );
-        fe.setRequired( rs.getBoolean("required") );
-        fe.setCustomError( rs.getString("custom_error") );
-        fe.setTrimValue( rs.getBoolean("trim_value") );
-        return fe;
+    private static synchronized List<FormItemEntity> getValidationFields(String formName) {
+        if (Tools.isEmpty(formName)) return List.of();
+        Integer domainId = CloudToolsForCore.getDomainId();
+        String cacheKey = getValidationFieldsCacheKey(formName, domainId);
+        Cache cache = Cache.getInstance();
+        @SuppressWarnings("unchecked")
+        List<FormItemEntity> fields = (List<FormItemEntity>) cache.getObject(cacheKey);
+        if (fields == null) {
+            FormItemsRepository repository = Tools.getSpringBean("formItemsRepository", FormItemsRepository.class);
+            if (repository == null) throw new IllegalStateException("FormItemsRepository is not available.");
+            fields = repository.findAllForValidation(formName, domainId).stream()
+                .map(MultistepFormsService::copyValidationField)
+                .toList();
+            cache.setObjectSeconds(cacheKey, fields, VALIDATION_FIELDS_CACHE_MINUTES * 60, false);
+        }
+        return fields.stream().map(MultistepFormsService::copyValidationField).collect(Collectors.toList());
+    }
+
+    private static String getValidationFieldsCacheKey(String formName, Integer domainId) {
+        // Keep cache keys a fixed length even for long form names.
+        return VALIDATION_FIELDS_CACHE_PREFIX + domainId + "." + DigestUtils.sha256Hex(formName);
+    }
+
+    /**
+     * Evicts a form's validation definitions locally and requests domain-wide eviction on the cluster.
+     * Called by the entity listener after committing changes to steps or items.
+     *
+     * @param formName logical form name
+     * @param domainId domain owning the form
+     */
+    public static synchronized void clearValidationFieldsCache(String formName, Integer domainId) {
+        if (Tools.isEmpty(formName) || domainId == null) return;
+        Cache.getInstance().removeObject(getValidationFieldsCacheKey(formName, domainId), false);
+        ClusterDB.addRefresh(MultistepFormsService.class, domainId.longValue());
+    }
+
+    /**
+     * Handles cluster refresh requests using the same monitor as validation-field loading.
+     *
+     * @param domainId domain whose validation definitions should be evicted locally
+     */
+    public static synchronized void refresh(long domainId) {
+        Cache.getInstance().removeObjectStartsWithName(VALIDATION_FIELDS_CACHE_PREFIX + domainId + ".", false);
+    }
+
+    /**
+     * Copies the identifiers and field settings needed for validation and saved-value restoration.
+     * Omits unrelated editor state so cached definitions and returned copies can be used independently.
+     *
+     * @param source form item supplying validation settings
+     * @return detached item containing only the properties used by validation and restoration
+     */
+    private static FormItemEntity copyValidationField(FormItemEntity source) {
+        FormItemEntity copy = new FormItemEntity();
+        copy.setId(source.getId());
+        copy.setStepId(source.getStepId());
+        copy.setItemFormId(source.getItemFormId());
+        copy.setLabel(source.getLabel());
+        copy.setFieldType(source.getFieldType());
+        copy.setRegexValidation(source.getRegexValidation());
+        copy.setRequired(source.getRequired());
+        copy.setCustomError(source.getCustomError());
+        copy.setTrimValue(source.getTrimValue());
+        return copy;
     }
 
     /**

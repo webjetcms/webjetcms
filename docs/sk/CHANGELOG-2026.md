@@ -67,6 +67,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
+- Viackrokové formuláre - chyby validácie pri opustení poľa sa oznamujú čítačkám obrazovky a sú prepojené s príslušným poľom. Stav neplatného poľa sa pri odstránení chyby obnoví bez presunu fokusu (#58794).
 - [Formuláre](redactor/apps/form/README.md#možné-konfiguračné-premenné) - klasické aj viackrokové formuláre rešpektujú `sendMailSaveEmail` a ukladajú emaily ako súbory `.eml` do `sendMailSaveEmailPath` namiesto SMTP odoslania. Ak sa zápis nepodarí, formulár oznámi chybu.
 - Viackrokové formuláre - pridaný [návrat na predchádzajúci krok](redactor/apps/multistep-form/README.md#návrat-na-predchádzajúci-krok) s obnovením uložených hodnôt a súborov a [výber CSS šablóny](redactor/apps/multistep-form/README.md#css-šablóny) pre každú vloženú inštanciu a náhľad v administrácii (#58742).
 

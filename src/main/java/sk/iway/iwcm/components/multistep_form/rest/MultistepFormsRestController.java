@@ -122,7 +122,8 @@ public class MultistepFormsRestController {
      * @param stepId requested step identifier
      * @param language language used to render localized form content
      * @param request request containing the form session
-     * @return JSON containing step HTML, conditions, and saved values, or an error response
+     * @return JSON containing step HTML, the DOM identifier prefix, blur-validation setting,
+     *         conditions, saved values, and upload metadata, or an error response
      */
     @GetMapping(value="/get-step", params={"form-name", "step-id", "language"})
     public ResponseEntity<String> getFormStepHtml(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, @RequestParam("language") String language, HttpServletRequest request) { //NOSONAR language is consumed implicitly by PageLng.getUserLng(request)

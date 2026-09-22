@@ -33,7 +33,7 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 @Table(name = "form_steps")
 @Getter
 @Setter
-@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
+@EntityListeners({sk.iway.iwcm.system.adminlog.AuditEntityListener.class, FormValidationFieldsListener.class})
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_MULTISTEP_FORM)
 public class FormStepEntity {
 
