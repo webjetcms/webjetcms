@@ -61,8 +61,10 @@
             idAutoOpener: false,
             initHashFilter: false
         });
-        enumerationTypeDataTable.buttons(".buttons-create, .buttons-edit, .btn-duplicate, .buttons-remove, .btn-import-dialog, .btn-export-dialog")
+        enumerationTypeDataTable.buttons(".buttons-create, .buttons-edit, .btn-duplicate, .buttons-remove")
             .nodes().prependTo(".tree-col .dt-buttons");
+        enumerationTypeDataTable.buttons(".btn-import-dialog, .btn-export-dialog")
+            .nodes().appendTo(".tree-col .dt-buttons");
 
         function selectTypeRow() {
             enumerationTypeDataTable.rows().deselect();
