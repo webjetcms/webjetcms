@@ -331,8 +331,21 @@ html.pg-iframe {
     color: $dark-60;
 }
 .elfinder-perms::before { content: $ti-icon-lock-filled; }
-.elfinder-read-only::before { content: $ti-icon-pencil-off; }
-.elfinder-read-only { width: 16px; height: 16px; font-family: 'tabler-icons-filled'; }
+
+//.elfinder-read-only::before { content: $ti-icon-pencil-off; }
+//.elfinder-read-only { width: 16px; height: 16px; font-family: 'tabler-icons-filled'; }
+
+.elfinder-navbar-dir.elfinder-ro:not(.elfinder-navbar-root) {
+    .elfinder-navbar-icon::before { content: $ti-icon-folder-x; }
+}
+.elfinder-cwd-file.elfinder-ro {
+    .elfinder-cwd-icon-directory::before { content: $ti-icon-folder-x !important; }
+}
+.elfinder-navbar-wrapper-root:has(#nav-iwcm_archiv_volume_L2ZpbGVzL2FyY2hpdg_E_E) {
+    .elfinder-navbar-dir.elfinder-ro:not(.elfinder-navbar-root) {
+        .elfinder-navbar-icon::before { content: $ti-icon-book-2 !important; }
+    }
+}
 
 .elfinder-cwd-view-icons .elfinder-perms,
 .elfinder-cwd-view-icons .elfinder-read-only {
