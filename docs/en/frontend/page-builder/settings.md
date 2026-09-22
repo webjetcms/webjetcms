@@ -19,7 +19,6 @@ To run Page Builder correctly, set:
 
 Other config variables that can be edited:
 
-- `pagebuilderFilterAutoOpenItems` - ​​number of items that will automatically open when filtering in the block list, default 10.
 - `pagebuilderLibraryImageWidth` - ​​width of preview images in the block library, default 310.
 - `inlineEditingDisabledUrls` - ​​list of URLs for which the inline editor will not be available
 - `pageBuilderPrefix` - ​​prefix used for Page Builder CSS classes (pb by default), can only be changed if you also change the prefixes in Page Builder CSS classes
@@ -90,6 +89,20 @@ The following code is created after the Page Builder initialization:
 </div>
 ```
 
+## Control in the editor
+
+By default, Page Builder displays a single frame of the selected block and a common toolbar below CKEditor. The frame is drawn on a separate layer outside the page content, with a distance from its edge. It does not add `padding`, `margin`, or `border` to the blocks, so it does not change their width and text wrapping. The layer does not capture clicks into the content and does not clip it `overflow: hidden` of the parent block.
+
+The eye icon button toggles between three modes: selected block frame (default), no frames, and frames of the entire hierarchy of the active block (layer icon). Ancestor outlines are offset outwards so that they do not overlap even with matching block edges. The selection is stored in `localStorage` under the key `webjet.pagebuilder.guides` (`selected`, `hidden`, `all`). If storage is unavailable, the toggle works for the currently open editor. The toggle does not change the toolbar or block selection.
+
+The **Structure** tree uses elements recognized by existing initialization and derives names from the content. It does not add identifiers or other metadata to blocks. Individual `pb-editable` elements can be selected, but it does not add column-specific operations to them. Hidden elements can be found in the tree without changing their visibility.
+
+**Add Block** mode in the common bar shows positions between sections, containers, and columns. Buttons remain on a separate layer outside the content; only inactive `aside.pb-insert-space` elements are temporarily inserted into the structure to make room. They are not part of CKEditor fields and `getClearNode` will remove them even when saving while in active mode. Column widths are not changed. Paste uses the original controls and library, and restores CKEditor focus after pasting. The mode is not remembered in storage and does not change the frame preference.
+
+While inserting and adjusting column widths, the path and tools in the toolbar are replaced by a blue helper with a **Exit · Esc** button. Exiting restores the regular toolbar. Device switching remains available while adjusting the width.
+
+Original HTML, CSS classes, custom selectors, and `pbCustomOptions` /`pbCustomSettings` functions remain valid. Top bar actions use existing Page Builder operations, including restrictions on moving duplicated elements. Original `getClearNode` and `clearEditorAttributes` functions are used when preparing a preview and saving.
+
 ## Styling elements
 
 ### `SECTION` (blue color)
@@ -104,7 +117,7 @@ Styling using a class, with prefix: ```pb-style-section-```
 
 By setting the CSS class ```pb-not-section```, the element **will not be considered a section* element.
 
-### `CONTAINER` (red color)
+### `CONTAINER` (pink color)
 
 Initialization when using CSS class: ```container``` or ```pb-custom-container```. By setting CSS class ```pb-not-container```, the element **will not be considered a container** even if it has CSS class ```container```.
 
@@ -116,7 +129,7 @@ Styling using a class, with prefix: ```pb-style-container-```
 
 ### `ROW`
 
-```<div class="row">``` sa momentálne nedá editovať pomocou Page Builder, je použitý z dôvodu bootstrap kompatibility.
+```<div class="row">``` sa štandardne nedá editovať ani štýlovať pomocou Page Builder a používa sa z dôvodu Bootstrap kompatibility. Ak riadok explicitne označíte CSS triedou `pb-duplicable` (`<div class="row pb-duplicable">`), Page Builder preň zobrazí oranžový rámik a nástroje na presun, duplikovanie a zmazanie. Stĺpce a ich obsah vo vnútri riadku zostanú editovateľné štandardným spôsobom.
 
 ### `COLUMN` (zelená farba)
 
@@ -131,6 +144,46 @@ Ak má column CSS triedu ```pb-not-editable``` tak sa **nebude považovať za co
 ```
 
 By setting the CSS class ```pb-not-column```, the element **will not be considered columns* even if it has the CSS class ```col-```.
+
+### Duplicate element (orange color)
+
+To allow a repeating element inside `COLUMN` or the entire `ROW` to be moved, duplicated, and deleted, mark it with the CSS class `pb-duplicable`. A typical example is list items:
+
+```html
+<ul class="cards">
+    <li class="pb-duplicable">Prvá karta</li>
+    <li class="pb-duplicable">Druhá karta</li>
+</ul>
+```
+
+You can mark up the entire Bootstrap line in the same way:
+
+```html
+<div class="container">
+    <div class="row pb-duplicable">
+        <div class="col-12"><p>Prvý riadok</p></div>
+    </div>
+    <div class="row pb-duplicable">
+        <div class="col-12"><p>Druhý riadok</p></div>
+    </div>
+</div>
+```
+
+Page Builder displays an orange frame on the selected element and a toolbar with actions for moving, duplicating, and deleting. An element can only be moved or duplicated before or after a target element that is also marked as duplicatable, has the same HTML tag, the same type (`ROW` or regular element), and the same immediate parent. For example, individual `LI` elements can be changed within a single `UL` list, not between two lists. `ROW` can only be changed between marked sibling `DIV.row` elements in the same container; moving between containers is not supported. To move, there must be at least two marked rows in the container, but a single marked row can be duplicated. Duplication `ROW` includes the entire row, including its columns and content.
+
+The default selector is based on the configuration variable `pageBuilderPrefix` and has the value `.pb-duplicable`. If you need to use existing CSS classes or multiple selectors, set them in the [`pbCustomSettings`](blocks.md#support-javascript-code) function:
+
+```javascript
+window.pbCustomSettings = function (me) {
+    me.grid.duplicable = ".pb-duplicable, .feature-item, ul.cards > li";
+};
+```
+
+With a custom selector, the `pb-duplicable` class is not added to the saved HTML; the original classes used by the selector remain.
+
+When moving or duplicating the entire `ROW` Page Builder automatically reinitializes CKEditor in nested editable blocks.
+
+!>**Warning:** elements inside `pb-not-editable` are not marked. If duplicatable elements are nested within each other, Page Builder only handles the outer element. The feature is intended for container HTML elements, not empty elements like `IMG`. Attributes including `id` are preserved when duplicating; their unique values ​​are not automatically generated.
 
 ## Editing exceptions
 
@@ -181,6 +234,7 @@ window.addEventListener("WJ.PageBuilder.gridChanged", function(e) {
 The following events are currently supported:
 
 - ```WJ.PageBuilder.loaded``` - ​​after loading the page in the editor
+- ```WJ.PageBuilder.instanceReady``` - ​​after initializing a CKEditor instance in an editable block; after moving or duplicating `ROW` it can be called repeatedly
 - ```WJ.PageBuilder.gridChanged``` - ​​change in ```gride```
 - ```WJ.PageBuilder.styleChange``` - ​​change in block properties (styling)
 - ```WJ.PageBuilder.newElementAdded``` - ​​new element added

@@ -130,7 +130,7 @@ public class GridEditorController {
     {
         if (templateGroupId != null && templateGroupId.intValue()>0)
         {
-            TemplatesGroupBean tgroup = TemplatesGroupDB.getInstance().getById((long)templateGroupId.intValue());
+            TemplatesGroupBean tgroup = TemplatesGroupDB.getInstance().getByIdCached((long)templateGroupId.intValue());
             if (tgroup != null && Tools.isNotEmpty(tgroup.getDirectory()))
             {
                 //skus pohladat v dist adresari
@@ -168,7 +168,7 @@ public class GridEditorController {
 
         if (templateGroupId != null && templateGroupId.intValue()>0)
         {
-            TemplatesGroupBean tgroup = TemplatesGroupDB.getInstance().getById((long)templateGroupId.intValue());
+            TemplatesGroupBean tgroup = TemplatesGroupDB.getInstance().getByIdCached((long)templateGroupId.intValue());
             if (tgroup != null && Tools.isNotEmpty(tgroup.getDirectory()))
             {
                 String templateFavDirPath = WriteTagToolsForCore.getCustomPath("/files/protected/pagebuilder/"+tgroup.getDirectory()+"/"+login+"/", request);

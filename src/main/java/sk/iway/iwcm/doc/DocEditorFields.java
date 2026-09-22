@@ -259,19 +259,16 @@ public class DocEditorFields extends BaseEditorFields {
             if (tempId > 0)
             {
                 //nastavenie prefixu klucov podla skupiny sablon
+                setRequestBeanTextPrefixes(tempId);
+
                 TemplateDetails temp = TemplatesDB.getInstance().getTemplate(tempId);
                 if (temp != null && temp.getTemplatesGroupId()!=null && temp.getTemplatesGroupId().longValue() > 0) {
-                    TemplatesGroupBean tgb = TemplatesGroupDB.getInstance().getById(temp.getTemplatesGroupId());
-                    if (tgb != null && Tools.isNotEmpty(tgb.getKeyPrefix())) {
-                        RequestBean.addTextKeyPrefix(tgb.getKeyPrefix(), false);
-                    }
+                    TemplatesGroupBean tgb = TemplatesGroupDB.getInstance().getByIdCached(temp.getTemplatesGroupId());
                     if (tgb != null && group != null) {
                         //nastav typ editora
                         setEditingMode(doc, temp, tgb, group, docDB);
                     }
                 }
-
-                RequestBean.addTextKeyPrefix("temp-"+tempId, false);
             }
 
             setFieldsDefinition( getFields(doc, "editor", 'T') );
@@ -355,6 +352,25 @@ public class DocEditorFields extends BaseEditorFields {
                 //nepodarilo sa najst stranku pre editaciu
                 editingMode = "";
             }
+        }
+    }
+
+    /**
+     * Nastavi prefixy klucov pre RequestBean podla sablony a skupiny sablon
+     * @param tempId
+     */
+    public static void setRequestBeanTextPrefixes(int tempId) {
+        if (tempId > 0) {
+            //nastavenie prefixu klucov podla skupiny sablon
+            TemplateDetails temp = TemplatesDB.getInstance().getTemplate(tempId);
+            if (temp != null && temp.getTemplatesGroupId()!=null && temp.getTemplatesGroupId().longValue() > 0) {
+                TemplatesGroupBean tgb = TemplatesGroupDB.getInstance().getByIdCached(temp.getTemplatesGroupId());
+                if (tgb != null && Tools.isNotEmpty(tgb.getKeyPrefix())) {
+                    RequestBean.addTextKeyPrefix(tgb.getKeyPrefix(), false);
+                }
+            }
+
+            RequestBean.addTextKeyPrefix("temp-"+tempId, false);
         }
     }
 

@@ -15,13 +15,13 @@ Vysvetlenie použitých piktogramov:
 ## 2026
 
 - [x] Sémantické vyhľadávanie - využiť AI na zlepšenie vyhľadávania pomocou `RAG` (#211).
-- [ ] AI - možnosť použiť malé lokálne modely bežiace priamo na CPU, minimálne pre Sémantické vyhľadávanie (#58561).
+- [x] AI - možnosť použiť malé lokálne modely bežiace priamo na CPU, minimálne pre Sémantické vyhľadávanie (#58561).
 - [x] `Headless` CMS - pripraviť REST rozhrania pre použitie WebJET CMS v `headless` móde (#58597) (#258).
 - [x] Migrácia na `Spring Boot` projekt (#58569).
 - [x] Testovanie - pridať testovanie prístupnosti pomocou rozšírenia [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) (#58389).
 - [ ] Práva - pridať možnosť nastaviť práva len na čítanie a prípadne nastaviť len povolené ID na editáciu.
 - [x] Formuláre - pridať možnosť nastaviť celkovú veľkosť príloh pre formulár, teraz sa dá nastaviť jedine per súbor (#58517).
-- [ ] Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze.
+- [x] Štatistika - upraviť zápis do `seo_bots` cez `StatWriteBuffer` pre menej konfliktov pri vysokom zaťažení a cluster databáze (#303).
 - [x] Skripty - pridať možnosť nastaviť, či sa má skript vkladať aj v editore stránok, alebo nie (#58349).
 - [x] Formuláre - pridať skupinu výberový a zaškrtávacích polí `radio/checkbox` napojenú na číselník, podobne ako máme pre `select` pole (#58517).
 - [ ] Zmazať pridružené súbory k web stránke keď ju zmažem - spýtať sa ale vopred používateľa, či súbory chce zmazať. Kontrolovať, či sa nepoužívajú niekde inde.
@@ -58,6 +58,9 @@ Vysvetlenie použitých piktogramov:
 - [x] +Administrácia - odstrániť závislosť od `Vue.js` a nahradiť interné komponenty natívnymi web komponentmi (#58722).
 - [ ] +Upraviť načítanie admin časti tak, aby sa vymenilo cez volanie REST služby len vnútro stránky, nie kompletný reload HTML kódu.
 - [ ] +Vylepšiť úvodnú stránku administrácie - dynamické bloky, možnosť vlastného nastavenia čo sa zobrazí, užitočné informácie a bloky.
+- [ ] +Filter v aplikácii novinky neumožňuje zadať DOC ID viacerých stránok keby chceli podľa filtra “DOC_ID rovná sa” zvoliť viacero stránok
+filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadania viacerých hodnôt (#JT-2139).
+- [ ] +AI - upraviť vytváranie `chunk` tak, aby na začiatku/konci neboli nezmyselné slová, orezať od prvej medzery po poslednú medzeru.
 
 ## 2025
 

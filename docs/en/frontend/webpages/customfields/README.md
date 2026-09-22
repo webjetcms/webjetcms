@@ -112,6 +112,8 @@ The selected values ​​are stored in an array separated by the `|` character.
 
 For the option to enter a Boolean/binary value, enter the option `boolean` in `.type`.
 
+![](webpages-boolean.png)
+
 ### Number
 
 For the option to enter a numeric value, enter the option `number` in `.type`.
@@ -229,6 +231,101 @@ The field type `uuid` allows you to generate a unique identifier. If the field h
 The field type `color` allows you to select a color, including setting the transparency.
 
 ![](webpages-color.png)
+
+### JSON Editor
+
+The field type `jsoneditor` is used for direct input and editing of JSON objects. Set the field type in [custom fields settings](custom-fields-settings.md) to **JSON Editor**, or use the translation key:
+
+```properties
+editor.field_g.type=jsoneditor
+```
+
+![](webpages-jsoneditor.png)
+
+The editor displays line numbers and a panel with a **Format JSON** button and an available AI assistant. When the text area is focused, it displays the current row and column of the cursor to the right. The formatting indents the text by two spaces and preserves values, including large numbers, escape sequences, and comments. The comment after the value remains on the same line.
+
+When saving, the characters `<` and `>` are replaced with the semantically identical JSON Unicode escape sequences `\u003C` and `\u003E`. When reopened, the editor displays them in this canonical form. To restore the original value, you can use the call `JsonEditorValidator.unescape(String value)` on the frontend, but be careful with `XSS injection`.
+
+The value must be a valid object with root `{...}`. Nested objects and arrays are allowed, a single array `[]`, `null`, a number or string at the root are rejected. Apostrophes, unquoted property names including dashes, and comments `//` or `/* ... */` are also supported. Example:
+
+```js
+{
+  'user': {
+    'id': '{444555678}', // User identifier
+    'missionsAvailable': 2
+  }
+}
+```
+
+The notation `{2}` is not a valid value: use `2` for a number, `'{2}'` for a text placeholder. An empty value is controlled by the **Required field** setting; spaces alone are considered empty.
+
+Validation occurs when leaving the field and before saving. An error is displayed next to the field and prevents the page from being saved. The check also occurs on the server, including REST and import. The syntax and root object are validated, not specific attributes according to JSON Schema.
+
+The `jsoneditor` type is a separate type for text editing. The existing types `json_doc` and `json_group` are used for page or folder selection. Details are in the [programmer documentation](../../../developer/datatables-editor/customfields.md#editor-json).
+
+#### Database capacity
+
+!>**Optional fields are 255 characters in the standard database schema.** Setting the type to `jsoneditor` will not automatically increase this capacity. For larger JSON objects, it is necessary to expand the corresponding column in the database, for web pages **in both `documents` and `documents_history`** tables, to be able to store the page history. When calculating capacity, consider that the canonical `\u003C` and `\u003E` are each six characters long.
+
+The following examples extend the G field (`field_g`) to a large text type. The data remains text; do not use the `JSON` /`JSONB` database type, as the editor also supports apostrophes and comments.
+
+The modification is performed by the database administrator on a specific installation. Before performing it, create a backup and verify the change on a test database. The examples are based on standard columns that allow `NULL`. When modifying the schema, preserve its encoding, collation, default values, and constraints; also check any indexes and dependencies on the column.
+
+**MySQL / MariaDB**
+
+Use the `LONGTEXT` type. The `MODIFY COLUMN` notation is supported in both [MySQL](https://dev.mysql.com/doc/refman/8.4/en/alter-table.html) and [MariaDB](https://mariadb.com/docs/server/reference/sql-statements/data-definition/alter/alter-table).
+
+```sql
+ALTER TABLE documents MODIFY COLUMN field_g LONGTEXT NULL;
+ALTER TABLE documents_history MODIFY COLUMN field_g LONGTEXT NULL;
+```
+
+If the original column has its own `CHARACTER SET` or `COLLATE` different from the table, add them to the new column definition as well.
+
+**Microsoft SQL Server**
+
+Use the Unicode text type `NVARCHAR(MAX)` and the [ALTER COLUMN](https://learn.microsoft.com/en-us/sql/t-sql/statements/alter-table-transact-sql) command.
+
+```sql
+ALTER TABLE documents ALTER COLUMN field_g NVARCHAR(MAX) NULL;
+ALTER TABLE documents_history ALTER COLUMN field_g NVARCHAR(MAX) NULL;
+```
+
+**PostgreSQL**
+
+Use the type `TEXT` and the [ALTER COLUMN ... TYPE](https://www.postgresql.org/docs/16/sql-altertable.html) command.
+
+```sql
+ALTER TABLE documents ALTER COLUMN field_g TYPE TEXT;
+ALTER TABLE documents_history ALTER COLUMN field_g TYPE TEXT;
+```
+
+**Oracle**
+
+The standard column is of type `NVARCHAR2(255)`. For large Unicode text, use `NCLOB`. Direct conversion of an existing text column to a LOB using `MODIFY` is not supported, you must add a new column, transfer the data, and replace the original column.
+
+Stop writes to both tables during the entire conversion. DDL statements in Oracle implicitly commit transactions, so this procedure cannot be rolled back with a single `ROLLBACK`.
+
+```sql
+ALTER TABLE documents ADD (field_g_json_tmp NCLOB);
+ALTER TABLE documents_history ADD (field_g_json_tmp NCLOB);
+
+UPDATE documents SET field_g_json_tmp = TO_NCLOB(field_g);
+UPDATE documents_history SET field_g_json_tmp = TO_NCLOB(field_g);
+COMMIT;
+```
+
+After verifying the transferred data in both tables, replace the original columns:
+
+```sql
+ALTER TABLE documents DROP COLUMN field_g;
+ALTER TABLE documents RENAME COLUMN field_g_json_tmp TO field_g;
+
+ALTER TABLE documents_history DROP COLUMN field_g;
+ALTER TABLE documents_history RENAME COLUMN field_g_json_tmp TO field_g;
+```
+
+If a column in the customer schema has its own constraints, indexes, or comments, the database administrator must take these into account when replacing and restore them if possible. After the extension, verify the save, reopen, and history of the page with a value longer than 255 characters.
 
 ## Link to template
 

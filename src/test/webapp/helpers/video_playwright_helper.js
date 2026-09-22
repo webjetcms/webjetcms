@@ -3,7 +3,8 @@ const path = require("path");
 const { randomBytes } = require("crypto");
 const { threadId } = require("worker_threads");
 const { FEATURE_VIDEO_DIRECTORY } = require("./feature_video_paths.js");
-const { getVideoSettings } = require("./video_settings.js");
+const { getVideoSettings, getVideoShot } = require("./video_settings.js");
+const { installShotTiming, trimVideoSetup } = require("./video_shot_trim.js");
 
 const PLAYWRIGHT_CORE_ROOT = path.dirname(require.resolve("playwright-core/package.json"));
 const PLAYWRIGHT_VIDEO_OPTIONS = {
@@ -55,6 +56,11 @@ function replacePlaywrightVideoOption(args, option, values, codecIndex) {
 
 function installVideoProfile() {
   if (process.env.CODECEPT_VIDEO !== "true") return;
+
+  if (getVideoShot()) {
+    const { VideoRecorder } = require(path.join(PLAYWRIGHT_CORE_ROOT, "lib/server/chromium/videoRecorder.js"));
+    installShotTiming(VideoRecorder);
+  }
 
   const { Chromium } = require(path.join(PLAYWRIGHT_CORE_ROOT, "lib/server/chromium/chromium.js"));
   if (Chromium.prototype[CHROMIUM_PROFILE_PATCH] !== true) {
@@ -120,7 +126,8 @@ function sanitizeScenarioName(test) {
 }
 
 function getVideoArtifactName(test, passed) {
-  const scenarioName = sanitizeScenarioName(test);
+  const shotId = getVideoShot();
+  const scenarioName = sanitizeScenarioName(test) + (shotId ? `-${shotId}` : "");
   return passed ? `${scenarioName}.webm` : `${scenarioName}.failed.webm`;
 }
 
@@ -178,13 +185,15 @@ async function finalizeVideoArtifact(video, targetPath, options = {}) {
   const fsImpl = options.fsImpl || fs;
 
   await fsImpl.mkdir(path.dirname(targetPath), { recursive: true });
-  const sourcePath = await video.path();
+  let sourcePath = await video.path();
+  if (options.slate != null) sourcePath = await trimVideoSetup(sourcePath, options.slate);
   await fsImpl.rename(sourcePath, targetPath);
 }
 
 class VideoPlaywrightHelper extends Playwright {
 
   async _before(test) {
+    this.videoShotSlate = null;
     if (this.options.recordVideo != null) {
       const runId = `${process.pid}-${threadId}-${randomBytes(6).toString("hex")}`;
       this.videoRawDirectory = getVideoRawDirectory(test, runId);
@@ -253,12 +262,12 @@ class VideoPlaywrightHelper extends Playwright {
 
     let finalized = false;
     try {
-      await finalizeVideoArtifact(video, targetPath);
+      await finalizeVideoArtifact(video, targetPath, { slate: this.videoShotSlate });
       finalized = true;
       if (test.artifacts == null) test.artifacts = {};
       test.artifacts.video = targetPath;
       await video.delete().catch(() => {});
-      await removeLegacyScenarioVideos(videoDirectory, scenarioName, targetPath);
+      if (!getVideoShot()) await removeLegacyScenarioVideos(videoDirectory, scenarioName, targetPath);
     } catch (error) {
       process.exitCode = 1;
       const artifactStatus = finalized

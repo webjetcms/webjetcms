@@ -15,13 +15,13 @@ Vysvětlení použitých piktogramů:
 ## 2026
 
 - [x] Sémantické vyhledávání - využít AI ke zlepšení vyhledávání pomocí `RAG` (#211).
-- [ ] AI - možnost použít malé lokální modely běžící přímo na CPU, minimálně pro Sémantické vyhledávání (#58561).
+- [x] AI - možnost použít malé lokální modely běžící přímo na CPU, minimálně pro Sémantické vyhledávání (#58561).
 - [x] `Headless` CMS - připravit REST rozhraní pro použití WebJET CMS v `headless` módu (#58597) (#258).
 - [ ] Migrace na `Spring Boot` projekt (#58569).
 - [x] Testování - přidat testování přístupnosti pomocí rozšíření [codeceptjs-a11y-helper](https://github.com/kobenguyent/codeceptjs-a11y-helper) (#58389).
 - [ ] Práva - přidat možnost nastavit práva jen na čtení a případně nastavit pouze povolené ID pro editaci.
 - [x] Formuláře - přidat možnost nastavit celkovou velikost příloh pro formulář, nyní lze nastavit jedině per soubor (#58517).
-- [ ] Statistika - upravit zápis do `seo_bots` přes `StatWriteBuffer` pro méně konfliktů při vysokém zatížení a cluster databázi.
+- [x] Statistika - upravit zápis do `seo_bots` přes `StatWriteBuffer` pro méně konfliktů při vysokém zatížení a cluster databázi (#303).
 - [x] Skripty - přidat možnost nastavit, zda se má skript vkládat iv editoru stránek, nebo ne (#58349).
 - [x] Formuláře - přidat skupinu výběrových a zaškrtávacích polí `radio/checkbox` napojenou na číselník, podobně jako máme pro `select` pole (#58517).
 - [ ] Smazat přidružené soubory k web stránce když ji smažu - zeptat se ale předem uživatele, zda soubory chce smazat. Kontrolovat, zda se nepoužívají někde jinde.
@@ -58,6 +58,9 @@ Vysvětlení použitých piktogramů:
 - [x] +Administrace - odstranit závislost na `Vue.js` a nahradit interní komponenty nativními webovými komponenty (#58722).
 - [ ] +Upravit načítání admin části tak, aby se vyměnilo přes volání REST služby pouze vnitřek stránky, nikoli kompletní reload HTML kódu.
 - [ ] +Vylepšit úvodní stránku administrace - dynamické bloky, možnost vlastního nastavení co se zobrazí, užitečné informace a bloky.
+- [ ] +Filtr v aplikaci novinky neumožňuje zadat DOC ID více stránek kdyby chtěli podle filtru “DOC_ID rovná se” zvolit více stránek
+filtr bere pouze první hodnotu. Dodělat tedy možnost `IN` pro možnost zadání více hodnot (#JT-2139).
+- [ ] +AI - upravit vytváření `chunk` tak, aby na začátku/konci nebyla nesmyslná slova, oříznout od první mezery po poslední mezeru.
 
 ## 2025
 

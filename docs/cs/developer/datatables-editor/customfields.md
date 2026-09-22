@@ -2,9 +2,9 @@
 
 Přes volitelná pole lze web stránce a adresáři nastavovat volitelné atributy (hodnoty, texty) dle potřeby zákazníka. Hodnoty je následně možné přenést a použít v šabloně stránky, viz [dokumentace pro Frontend programátora](../../frontend/webpages/customfields/README.md).
 
-# Backend
+## Backend
 
-Nastavení volitelných polí jsou závislá na použité šabloně, skupině šablon nebo domény (jelikož jsou řízena nastavením překladových klíčů). Možnosti je tedy z backend-u třeba odesílat pro každou editovanou web stránku samostatně. Přenos nastavení je genericky implementován [BaseEditorFields.getFields](../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java):
+Nastavení volitelných polí jsou závislá na použité šabloně, skupině šablon nebo domény (jelikož jsou řízena nastavením překladových klíčů). Možnosti je tedy z backend-u třeba odesílat pro každou editovanou web stránku samostatně. Přenos nastavení je genericky implementován [BaseEditorFields.getFields](../../../../src/main/java/sk/iway/iwcm/system/datatable/BaseEditorFields.java):
 
 ```java
 @JsonIgnore
@@ -67,7 +67,7 @@ public class QuestionsAnswersRestController extends DatatableRestControllerV2<Qu
 }
 ```
 
-Příklad v [DocEditorFields](../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) kde je více operací a proto metoda ```fromDocDetails``` je implementována samostatně v ```editorFields``` objektu a volána z ```DocRestController.processFromEntity```.
+Příklad v [DocEditorFields](../../../../src/main/java/sk/iway/iwcm/doc/DocEditorFields.java) kde je více operací a proto metoda ```fromDocDetails``` je implementována samostatně v ```editorFields``` objektu a volána z @@CODE_2
 
 ```java
 
@@ -130,6 +130,7 @@ Nastavení specifická pro typ pole se ukládají do sloupce `custom_fields.valu
 Používané formáty:
 
 - `text` / `text-120` / `text-120, warningLength-80`
+- `jsoneditor` (přímá editace JSON objektu)
 - `label1:value1|label2:value2` (`select`)
 - `multiple:label1:value1|label2:value2` (`multiselect`)
 - `autocomplete:Možnosť 1|Možnosť 2`
@@ -139,19 +140,89 @@ Používané formáty:
 
 Transformaci mezi editor poli a interní hodnotou zajišťují metody `CustomFieldsService.toEntity` a `CustomFieldsService.fromEntity`.
 
+## JSON Editor
+
+Typ `jsoneditor` umožňuje přímo zadávat JSON objekt. V [nastavení volitelných polí](../../frontend/webpages/customfields/custom-fields-settings.md) vyberte typ **Editor JSON** nebo použijte překladové klíče:
+
+```properties
+editor.field_a=JSON data
+editor.field_a.type=jsoneditor
+```
+
+![](../../frontend/webpages/customfields/webpages-jsoneditor.png)
+
+Pro jinou entitu použijte její prefix překladových klíčů. Na serveru typ reprezentuje hodnotu `FieldType.JSONEDITOR`, v `editorFields.fieldsDefinition` se odesílá `type: "jsoneditor"`. Typy `JSON`, `json_doc` a `json_group`, které se používají pro výběr existujících záznamů, mají i nadále původní význam.
+
+### Zadávání a formátování
+
+Editor používá textovou oblast s čísly řádků, písmem s pevnou šířkou znaků a horizontálním posuvníkem. Číslování se posouvá spolu s textem. Klávesy `Tab` a `Shift+Tab` zachovávají běžný přesun mezi formulářovými prvky.
+
+Nad textovou oblastí je panel s tlačítkem **Formátovat JSON** bez rámečku a dostupným AI asistentem vlevo a aktuální pozicí kurzoru vpravo, například **Řádek 10, sloupec 12**. Pozice se zobrazuje jen během fokusu textové oblasti a při jeho ztrátě se skryje. Aktualizuje se při psaní, kliknutí a pohybu klávesnicí; při označení textu zobrazuje aktivní konec výběru. Řádky i sloupce se počítají od 1.
+
+Tlačítko **Formátovat JSON** nejprve ověří vstup a poté jej odsadí dvěma mezerami. Mění pouze bílé znaky mimo řetězce a komentáře; zachovává uvozovky/apostrofy, číselné zápisy, pořadí vlastností i escape sekvence. Komentáře za hodnotou zůstávají na stejném řádku; samostatné komentáře zůstávají na vlastním řádku. Nepoužívá zpětnou serializaci parsovaných hodnot, která by mohla zaokrouhlit velké číselné identifikátory. Otevření editoru text automaticky neformátuje.
+
+Příklad platné hodnoty:
+
+```json
+{
+  "productId": 9007199254740993,
+  "variants": [
+    {"code": "blue", "available": true}
+  ]
+}
+```
+
+### Validace a uložení
+
+- Kromě standardního JSON je podporován rozšířený zápis: jednoduché uvozovky (apostrofy), názvy vlastností bez uvozovek a komentáře `//` i `/* … */`. Název bez uvozovek začíná písmenem, `_` nebo `- Kromě standardního JSON je podporován rozšířený zápis: jednoduché uvozovky (apostrofy), názvy vlastností bez uvozovek a komentáře ` //` i `/* … */`. Název bez uvozovek začíná písmenem, `_` nebo , dále může obsahovat i číslice a pomlčky, například `data-toggle`. Pomlčka bez uvozovek je rozšířením tohoto editoru, nikoli standardní syntaxí JavaScriptu.
+- Povolen je právě jeden JSON objekt ve složených závorkách `{}`. Vnořené objekty a pole jsou povoleny; samotné pole `[]`, řetězec, číslo, `true`, `false` a `null` na kořeni se odmítnou.
+- Kontroluje se celý vstup. Koncová čárka, chybějící závorky nebo druhý objekt za prvním jsou neplatné. Funkce, volání JavaScriptu, `undefined`, `NaN` a `Infinity` nejsou povoleny. Parser kód nikdy nespouští.
+- Komentář `//` pokračuje až po konec řádku. Uzavírací závorky objektu proto musí být na dalším řádku; v jednořádkovém zápisu použijte komentář `/* … */`.
+- Prázdný vstup včetně samotných mezer je povolen, pokud je vypnuto **Povinné pole**. Při zapnuté povinnosti se musí zadat objekt; prázdný objekt `{}` je platná hodnota.
+- V prohlížeči se vstup kontroluje při opuštění pole i před uložením. Chyba se zobrazí u pole a při pokusu o uložení se otevře jeho karta. Pokud parser poskytne polohu syntaktické chyby, hlášení obsahuje řádek a sloupec.
+- Server provádí stejnou kontrolu nezávisle na JavaScriptu v `DatatableRestControllerV2.validateEditorForCustomFields()` při ukládání přes DataTables Editor a při importu. Konfiguraci typu a povinnosti načte ze serveru podle entity a kontextu volitelných polí; definice pole odeslaná klientem nemůže validaci vypnout. Při částečném importu kontroluje pouze importovaná JSON pole.
+- Po úspěšné validaci se znaky `<` a `>` před uložením zapíší jako JSON Unicode escape sekvence `\u003C` a `\u003E`. K vrácení původní hodnoty můžete na frontendu použít volání `JsonEditorValidator.unescape(String value)`, pozor ale na `XSS injection`.
+
+Validace kontroluje syntaxi a kořenový objekt. Neověřuje přítomnost ani význam konkrétních atributů podle JSON Schema.
+
+Příklad podporovaného rozšířeného zápisu:
+
+```text
+{
+  title: 'test',
+  data-toggle: 'tooltip',
+  'event': 'action.questionDropdown.FAQ',
+  'action': {
+    'questionDropdown': {
+      'content': '{Sú volania v Go paušáloch naozaj neobmedzené?}' // text otázky
+    }
+  }
+}
+```
+
+Rozšířený zápis se kromě kanonizace znaků `<` a `>` ukládá v původní podobě včetně apostrofů a komentářů. Není automaticky převeden na striktní JSON pro `JSON.parse` ; aplikace, která hodnotu zpracovává, musí podporovat použitou syntaxi.
+
+Pro vlastní REST služby odvozené od `DatatableRestControllerV2` se překladové klíče pro validaci odvodí z `@DataTableColumn.title` na atributech `fieldA` až `fieldZ`. Kontext konfigurace v tabulce `custom_fields`, například vazbu na rodičovskou entitu, určuje existující hook `getCustomFieldsSearchDto(T entity)`. Hook vychází ze serverových dat a vyhodnocuje se pro konkrétní ukládaný záznam.
+
+### Kapacita databáze
+
+Hodnota zůstává textem v příslušném databázovém sloupci `field_a` až `field_t`. Typ `jsoneditor` nemění databázový typ ani automaticky nerozšiřuje sloupce.
+
+Základní schéma pro volitelná pole webových stránek používá délku 255 znaků. Před nasazením pro JSON o velikosti několika KB ověřte skutečnou kapacitu konkrétního sloupce a případně ji rozšiřte **v tabulce `documents` i `documents_history`**. Příklady SQL pro podporované databáze jsou v části [Kapacita databáze](../../frontend/webpages/customfields/README.md#kapacita-databáze). Jedná se o samostatnou úpravu zákaznické instalace. Syntakticky platný JSON musí zároveň splňovat omezení délky uložených údajů; každé kanonizované `<` nebo `>` zabere místo jednoho znaku šest znaků.
+
 ## Frontend
 
-Integrace do editoru datatabulky je implementována v souboru [custom-fields.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/custom-fields.js). Pro každé pole z JSON objektu ```editorFields.fieldsDefinition``` se získá nastavení a nově se v DOM stromu vytvoří formulářová pole.
+Integrace do editoru datatabulky je implementována v souboru [custom-fields.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/custom-fields.js). Pro každé pole z JSON objektu ```editorFields.fieldsDefinition``` se získá nastavení a nově se v DOM stromu vytvoří formulářová pole.
 
 Klíčové je připojení formulářového pole ke stávajícímu editoru, to je zabezpečeno voláním:
 
 ```javascript
-EDITOR.field("field"+keyUpper).s.opts._input = inputBox.find('input, select');
+EDITOR.field("field"+keyUpper).s.opts._input = inputBox.find('input, select, textarea');
 ```
 
 které z nového ```inputBox``` objektu získá formulářové pole a to nastaví editoru. Je použito interní API volání ```.s.opts._input```, což je nebezpečné z pohledu změn v API v datatables editoru, ale jiné řešení jsme nenašli.
 
-Vyvolání funkce je provedeno v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) při otevření okna.
+Vyvolání funkce je provedeno v [index.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js) při otevření okna.
 
 ```javascript
 import * as CustomFields from './custom-fields';
@@ -162,7 +233,7 @@ EDITOR.on('open', function (e, mode, action) {
 });
 ```
 
-V případě použití ```multiple select``` tento ukládá hodnotu pole jako ```Array```. Konverze na String oddělený ```|``` před odesláním formuláře je zajištěna pomocí metody ```prepareCustomFieldsDataBeforeSend```, která se jmenuje v [index.js](../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
+V případě použití ```multiple select``` tento ukládá hodnotu pole jako ```Array```. Konverze na String oddělený ```|``` před odesláním formuláře je zabezpečena pomocí metody ```prepareCustomFieldsDataBeforeSend```, která se jmenuje v [index.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js)
 
 ```javascript
 EDITOR.on('preSubmit', function (e, data, action) {
@@ -197,4 +268,4 @@ Nastavením `customFieldsUpdateColumnsPreserveVisibility` na hodnotu `true` se p
 
 Zpracování je v ```index.js``` ve funkci ```updateOptionsFromJson```. Pokud je zapnuta možnost ```DATA.customFieldsUpdateColumns===true``` a JSON objekt obsahuje v prvním záznamu obsahuje ```editorFields?.fieldsDefinition``` tak se změní názvy sloupců v hlavičce a také v ```DATA``` objektu. Sloupce s názvem ```null``` se schovají (to zabezpečuje konfigurace ```colVis``` ve funkci ```columns``` kde se sloupce s názvem ```null``` vynechají). Následně se vyvolá ```$("#"+DATA.id).trigger("column-reorder.dt");```, aby se aktualizovaly názvy sloupců v nastavení zobrazení sloupců (```colvis```).
 
-V definici ```buttons.colvis``` je upraveno čtení ```columnText``` tak, aby sebralo vždy aktuální hodnotu z ```DATA``` definice a ```columns``` funkci, která definuje jaké sloupce se v nastavení zobrazí, se vrátí ```true/false``` podle toho, zda má sloupec název @@CODE_5. Takto se vždy v nastavení zobrazení sloupců zobrazí aktuální názvy sloupců a schovají se ty, které nemají definovaný název (napoužívají se).
+V definici ```buttons.colvis``` je upraveno čtení ```columnText``` tak, aby sebralo vždy aktuální hodnotu z ```DATA``` definice a ```columns``` funkci, která definuje jaké sloupce se v nastavení zobrazí, se vrátí ```true/false``` podle toho, zda má sloupec název @@CODE_5. Takto se vždy v nastavení zobrazení sloupců zobrazí aktuální názvy sloupců a schovají se ty, které nemají definovaný název (nepoužívají se).

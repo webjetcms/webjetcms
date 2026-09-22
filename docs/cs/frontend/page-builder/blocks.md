@@ -5,7 +5,7 @@ Součástí Page Builder je i vkládání připravených bloků. Jejich seznam s
 V kořenovém adresáři pro bloky můžete mít následující pod adresáře:
 
 - ```section``` - ​​pro bloky sekcí (modré označení v Page Builder)
-- ```container``` - ​​pro kontejnery (červené označení v Page Builder)
+- ```container``` - ​​pro kontejnery (růžové označení v Page Builder)
 - ```column``` - ​​pro sloupce (zelené označení v Page Builder)
 - ```content``` - ​​pro vkládané různé texty, tlačítka a podobně. Vkládají se pomocí ikony Bloky a žluté čáry, která se zobrazuje mezi bloky.
 
@@ -190,7 +190,7 @@ Samotné karty nejsou tedy editovatelné, generují se automaticky. Editovateln�
 
 Atributy ID jednotlivých karet jsou generovány automaticky podle názvu karty. Pokud potřebujete použít specifický název je možné v HTML kódu nastavit hodnotu `data-title` na `.tab-pane` elementu.
 
-Všimněte si použití CSS třídy ```pb-not-container``` na hlavním kontejner elementu. To zajistí, že tento element nebude označen jako kontejner a za kontejnery budou považovány až jednotlivé karty. Každá karta používá CSS třídu ```pb-custom-container```, což zajistí zobrazení červeného rámu/nástrojové lišty kontejneru.
+Všimněte si použití CSS třídy ```pb-not-container``` na hlavním kontejner elementu. To zajistí, že tento element nebude označen jako kontejner a za kontejnery budou považovány až jednotlivé karty. Každá karta používá CSS třídu ```pb-custom-container```, což zajistí označení kontejneru růžovým rámečkem a zpřístupnění jeho nástrojů ve společné liště.
 
 Při zvolení možnosti přesunutí tabu (v nástrojové liště kontejneru) se automaticky zobrazí všechny karty, aby bylo možné snadno označit kartu, kde se má přesunout. To je zajištěno CSS stylem Page Builder.
 
@@ -600,6 +600,8 @@ window.pbBuildTabMenu = function(me, tabMenu) {
 
 };
 ```
+
+Okno **Styl** zobrazuje vlastnosti v samostatně rozbalovacích skupinách. Funkce `pbBuildTabMenu` dostává původní konfiguraci `tabs` a `items`: `visible: false` skryje skupinu nebo všechny skupiny dané karty, `name` změní nadpis skupiny a vlastní pořadí položek se zachová. Pokud pořadí nezměníte, použije se nové výchozí pořadí začínající identifikací. Prázdné skupiny, například animace bez ovládacích prvků, se nezobrazují. Při otevření se rozbalí skupina `10` (Identifikace), případně první dostupná skupina.
 
 ## Vlastní funkce pro čištění HTML kódu
 

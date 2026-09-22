@@ -789,6 +789,7 @@ public class Modules
 		sub.setShowInLeftMenu(true);
 		sub.setGroup("config");
 		sub.setMenuIcon("refresh");
+		//sub.addSubmenu("stat.browser-migration.title", "/admin/v9/settings/stat-browser-migration/");
 		loadModule(sub);
 
 		// Embedding-chunks

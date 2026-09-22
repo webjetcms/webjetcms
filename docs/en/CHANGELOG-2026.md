@@ -6,6 +6,7 @@
 
 ### Groundbreaking changes
 
+- Statistics - browsers are saved without version numbers after updating, which change very often these days. After deploying this version, it is necessary to start the migration of historical statistics to URL `/admin/v9/settings/stat-browser-migration/`, without completing it, historical data will remain divided by browser version number (#303).
 - The dependency on the [Vue.js](https://vuejs.org) library has been removed from the administration. We recommend checking the compatibility of your own applications before updating. The size of JavaScript files has been reduced by approximately 170kB, which also has an impact on the speed of administration initialization. More in the [programmer section](#programmer).
 - AspectJ - support for `load-time weavingu` (`aspectjweaver` and `META-INF/aop-ajc.xml`) has been removed from the distribution; built-in aspects are processed at compile time, more in [programmer section](#programmer section). When using in a MultiWeb installation, you can remove the `-javaagent:/www/tomcat/.../aspectjweaver.jar` setting from `JAVA_OPTS` in the application server (#290).
 - Export content for Flash - the historical feature of generating XML files `/flash_xml/{docId}.xml` when publishing a page has been removed. The configuration variable `exportFlash` is no longer supported and defining it in `SpringConfig` will not restore the feature (#293).
@@ -32,7 +33,7 @@
 
 ![](frontend/templates/templates-edit-advanced.png)
 
-- Added **Thumbnail** tab in the image insertion dialog for setting parameters for [generating thumbnail images](redactor/webpages/working-in-editor/README.md#thumbnail-tab) `thumbnail` (#58317).
+- Added **Thumbnail** tab in the image insertion dialog for setting parameters for [generating thumbnail images](redactor/webpages/working-in-editor/README.md#thumbnail-tab) `thumbnail`. Free size setting mode is supported, as well as [precisely defined size](frontend/thumb-servlet/README.md#constraints) mode by selecting from the options (#58317,#58758).
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
@@ -40,11 +41,15 @@
 
 ![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
 
-- Document Manager files in the `/files/archiv` folder are only available for viewing and selection in the link and image insertion dialogs. Uploading, renaming, deleting and other editing can only be done via the [Document Manager](redactor/files/file-archive/README.md).
-
+- Document Manager files in the `/files/archiv` folder are only available for viewing and selection in the link and image insertion dialogs. Uploading, renaming, deleting, and other editing can only be done via the [Document Manager](redactor/files/file-archive/README.md) (#298,#313).
 - [Photobank](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - when downloading an image from the photobank, it is possible to set the file name. The name is automatically pre-filled and cleaned, the extension is determined by the source image and the existing file is not overwritten. Also added support for selecting the image type and category and the ability to search for video files (#58645).
 
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
+
+- Page Builder - elements marked with the CSS class [`pb-duplicable`](frontend/page-builder/settings.md#duplicate-element-orange-color) can be moved, duplicated, and deleted within the same parent. Custom or multiple selectors can be set via `pbCustomSettings` (#58750).
+- Page Builder - modified [editor control](redactor/webpages/pagebuilder.md). Added fixed top bar with path to selected block, **Structure** panel, quick actions and mode for inserting sections, containers and columns directly into the page. Frames can be hidden or shown for the entire block hierarchy. Block library has a compact window with previews, categories and combined search with tags. Style settings use drop-down property groups and indicate the currently edited block (#308).
+
+![](redactor/webpages/pagebuilder-structure.png)
 
 ### Headless mode
 
@@ -62,6 +67,14 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- [Forms](redactor/apps/form/README.md#possible-configuration-variables) - both classic and multi-step forms respect `sendMailSaveEmail` and save emails as `.eml` files to `sendMailSaveEmailPath` instead of SMTP sending. If the write fails, the form reports an error.
+- Multi-step forms - added [return to previous step](redactor/apps/multistep-form/README.md#return-to-previous-step) with restoring saved values ​​and files and [CSS template selection](redactor/apps/multistep-form/README.md#css-templates) for each inserted instance and preview in the administration (#58742).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Multi-step forms - fixed evaluating conditions after unchecking a box when returning to the previous step. A hidden or no longer required field will not block continuation due to the originally saved value (#58742).
 - [Multistep form statistics](redactor/apps/multistep-form/stat.md) has been extended with a date filter and advanced metrics for views/attempts/languages ​​etc. (#58509).
 
 ![](redactor/apps/multistep-form/stat-section-advanced.png)
@@ -84,12 +97,12 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ### Semantic search
 
 - Added support for [semantic search](redactor/apps/semantic-search/README.md) built on the `pgvector` and `OpenAI embeddings` vector database technology. It allows visitors to find relevant pages based on **the meaning of the query**, not just keyword matching (#211).
-
 - Added hybrid semantic search mode and optional RAG response from indexed content. The **Search** app has new settings for search type, hybrid behavior, AI assistant selection, and response context limits (#58521).
 
 ![](redactor/apps/semantic-search/rag-result.png)
 
 - Embedding indexing and search uses the provider and model set in the system AI assistant. Indexes of different providers and models can coexist; the **Semantic Index** page displays the current setting and preserves other combinations when re-indexing. The core of embedding requests, responses, and provider communication has been separated into the `webjet-ai` library; WebJET CMS continues to handle assistant selection, indexing, and vector storage (#58694).
+- AI assistants and **semantic search** - added support for [local models](redactor/ai/settings/README.md#local-models) for text generation, translation and embedding directly on the server without sending content to an external AI service. These models can **run on regular hardware** (CPU), **do not require special graphics cards** (#58561).
 
 ### Applications
 
@@ -133,6 +146,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Added option to set optional field as required (#58413).
 - Added new optional field types [radio check box and radio check box](frontend/webpages/customfields/custom-fields-settings.md#difference-between-selectmultiselect-and-radiocheckbox) with support for both static options and codebook linking. The `multiselect` type now also supports [codebook linking](frontend/webpages/customfields/custom-fields-settings.md#option-source). The original `enumeration` type has been replaced by an option source switch for types `select`, `multiselect`, `radio` and `checkbox` where options are loaded from a linked codebook for all these field types (#58637).
+- Added [JSON Editor](developer/datatables-editor/customfields.md#json-editor) type (`jsoneditor`) for direct input of JSON object with line numbers and formatting button (#311).
+
+![](frontend/webpages/customfields/webpages-jsoneditor.png)
 
 ### Accessibility
 
@@ -172,6 +188,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Multiweb - added option to rename an existing domain + redirection after renaming (#58317-15).
 - Multiweb - modified [display of template groups](install/multiweb/README.md) according to available templates and alias of current domain (#58317-17).
 - Statistics - the set date/from-to range is saved in the browser and is remembered even after logging out/restarting the browser (#58065).
+- Statistics - browsers are saved without a frequently changing version number. A manually triggered batch migration has been added in the WebJET Update section, which will merge historical records without a website outage. On the `/admin/v9/settings/stat-browser-migration/` page, click Analyze and then start the migration. After a successful migration, click Finalize. Finalization verifies the use of identifiers before deletion, including operating systems and their versions, preserves the values ​​used, and displays the progress of the scan by table. The list of `User-Agent` browsers has been updated for better detection (#303).
+
+![](sysadmin/update/stat-browser-migration.png)
+
 - Multi-step forms - added moving (`scroll`) to the beginning of the form after moving to the next step (#osk573).
 
 ### Bug fixes
@@ -181,6 +201,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
 - Websites - fixed loading of `ckeditor_button_sizes` value for button type `A` (#OSK674).
 - SQL Monitoring - fixed lifecycle management of `PreparedStatement` measurements. The record is also deleted when closed before starting the measurement and individual `PreparedStatement` objects are distinguished by identity without JDBC calls `hashCode()` and `equals()`. Concurrent access uses `ConcurrentHashMap` and atomic state without a global `synchronized` block, so threads do not wait for a shared lock and measurements do not merge even when identity hashes collide.
+
+### Performance
+
+- Optimized loading of template groups when displaying a page and searching for optional fields. The group is cached and reused without having to read it from the database (#311).
 
 ### Safety
 
@@ -512,6 +536,7 @@ Redesigned application properties settings in the editor from the old code in `J
 - Multiweb - fixed the ability to delete or edit a domain redirect that contains the `http/s` prefix (#58317-15).
 - Gallery - in the application editor, only JSP files from the `/components/{INSTALL_NAME}/gallery` and `/components/gallery` folders are displayed among the visual styles, without duplicate items (#58317-16).
 - Inserting HTML code - in the application preview in the website editor, for content consisting only of `script` elements, the source code is displayed instead of empty content (#OSK625).
+- Video - fixed handling of YouTube links with additional URL parameters including video start time (`t` or `start`). Parameters are now correctly linked to player settings without duplicate `?` character (#OSK714).
 - Security - tightened verification of the link to recover a forgotten password. The verification record is checked for the selected user account even with the custom sending method, respects the time validity and after use is invalidated for all accounts included in the request (#292).
 - Security - tightened authorization verification when working with records in administration (#295).
 - Security - tightened control of folder rights when uploading a file to the administration and overwriting it if the file exists.
@@ -520,6 +545,7 @@ Redesigned application properties settings in the editor from the old code in `J
 - Security - tightened validation of database column names when performing dynamic sorting and filtering. **Warning:** Public APIs no longer support custom SQL expressions in sort parameters, only safe column names or available named constants are used (#294).
 - Security - [secured endpoint `row-reorder`](developer/datatables/README.md#row-order) of data tables. Only the numeric field marked `DataTableColumnType.ROW_REORDER` is allowed to be changed, while permissions are checked for each record and additionally for the entire batch using `checkRowReorderScope`. For forms, form and step membership and user access are verified; an invalid request is not saved (#295).
 - CKEditor - added option [configure content cleaning rules](frontend/setup/ckeditor.md#cleaning-html-code-when-pasting-from-wordexcel) when pasting from Word/Excel. **Warning:** default cleaning now also removes the `nowrap` attribute from `TD` cells and CSS classes with `align` and `valign` attributes from `TH` cells (#300).
+- Distribution - reduced the total size of Maven artifacts to about 65 MB by enabling compression, optimizing app previews and Page Builder/GridEditor/HTMLBox blocks, and removing unused administration files. Added script [`npm run scr:optimize`](../../src/test/webapp/README.md#optimize-appstore-screenshots-and-image-previews) to optimize preview images (#58790).
 
 ## 2026.0.28
 

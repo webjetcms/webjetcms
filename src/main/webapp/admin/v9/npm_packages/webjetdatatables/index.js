@@ -1542,6 +1542,8 @@ export const dataTableInit = options => {
             // upravi multiple volne polia
             prepareCustomFieldsDataBeforeSend(data, me);
 
+            if (action !== "remove" && !CustomFields.validateJsonEditors(me)) return false;
+
             /*if (action !== 'remove') {
 
                 $.each($(e.target.dom.wrapper).find("[data-dt-validation]"), function (k, v) {

@@ -126,7 +126,7 @@ public class BaseEditorFields {
 
                     label = prop.getText(labelKey);
                     typeKey = labelKey + ".type";
-                    type = propType.getText(typeKey);
+                    type = CustomFieldsService.getConfiguredFieldType(null, labelKey, propType);
                     String tooltipKey = labelKey + ".tooltip";
                     String translatedTooltip = prop.getText(tooltipKey);
                     if (tooltipKey.equals(translatedTooltip) == false) tooltip = translatedTooltip;
@@ -134,7 +134,7 @@ public class BaseEditorFields {
                     field.setRequired(false);
                 } else {
                     label = prop.getText( cfe.getLabel() );
-                    type = cfe.getValue();
+                    type = CustomFieldsService.getConfiguredFieldType(cfe, null, propType);
                     if (Tools.isNotEmpty(cfe.getTooltip())) tooltip = prop.getText(cfe.getTooltip());
                     // typeKey = dont know
                     field.setRequired( Tools.isTrue(cfe.getRequired()) );

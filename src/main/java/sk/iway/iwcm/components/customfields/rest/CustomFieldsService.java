@@ -46,7 +46,7 @@ public class CustomFieldsService {
 
     private static final String FIELD_TYPE_KEY_PREFIX = "settings.custom-fields.type.";
     private static final List<String> FIELD_TYPES = List.of(
-        "text", "textarea", "select", "multiselect", "radio", "checkbox", "boolean", "number", "date", "none",
+        "text", "textarea", "jsoneditor", "select", "multiselect", "radio", "checkbox", "boolean", "number", "date", "none",
         "autocomplete", "image", "link", "json_group", "json_doc", "dir", "docsIn", "uuid", "color"
     );
 
@@ -86,6 +86,18 @@ public class CustomFieldsService {
                 CustomFieldsEntity::getCharacterAlphabet,
                 customField -> customField
             ));
+    }
+
+    /**
+     * Resolves the configured type using the same database precedence as field generation.
+     * @param customField effective database configuration, or null for a translation-defined field
+     * @param labelKey translation key of the field label
+     * @param typeProp translations in the default language
+     * @return configured field type
+     */
+    public static String getConfiguredFieldType(CustomFieldsEntity customField, String labelKey, Prop typeProp) {
+        if (customField != null) return customField.getValue();
+        return Tools.isEmpty(labelKey) ? "" : typeProp.getText(labelKey + ".type");
     }
 
     /**

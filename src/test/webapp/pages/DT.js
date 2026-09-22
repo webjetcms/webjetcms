@@ -266,6 +266,14 @@ module.exports = {
         I.waitForInvisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=menu]");
     },
 
+    setPageLength(rows, tableId="datatableInit") {
+        var container = "#"+tableId+"_wrapper";
+        I.clickCss(container+" button.buttons-settings");
+        I.clickCss(container+" button.buttons-page-length");
+        I.waitForVisible("div.dt-button-collection ul[role=menu] div.dt-button-collection ul[role=presentation]");
+        I.click(locate(container+" button.btn.button-page-length").withText(""+rows));
+        I.clickCss(container+" button.btn.btn-primary.dt-close-modal");
+    },
 
     /**
      * Check cell value in selected row and column, index starts at 1

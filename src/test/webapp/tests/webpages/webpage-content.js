@@ -1,5 +1,46 @@
 Feature('webpages.webpage-content');
 
+const { event } = require('codeceptjs');
+const tracedScenario = 'Nastavenie editorAutoFillPublishStart @singlethread';
+
+// Execution events run when queued steps actually start and finish, including steps in Before.
+event.dispatcher.on(event.test.before, (test) => {
+     if (test?.file !== __filename || test.title !== tracedScenario) return;
+
+     const steps = new Map();
+     let stepNumber = 0;
+     const log = (message) => console.log(`[editorAutoFillPublishStart] ${new Date().toISOString()} ${message}`);
+     const onBodyStarted = () => log('BODY START');
+     const onStepStarted = (step) => {
+          const entry = {
+               number: ++stepNumber,
+               startedAt: Date.now(),
+               description: step.toCode()
+          };
+          steps.set(step, entry);
+          log(`START #${entry.number} ${entry.description} ${step.line()}`);
+     };
+     const onStepFinished = (step) => {
+          const entry = steps.get(step);
+          if (!entry) return;
+
+          const status = step.status === 'failed' ? 'FAILED' : 'DONE';
+          log(`${status} #${entry.number} ${Date.now() - entry.startedAt}ms ${entry.description}`);
+          steps.delete(step);
+     };
+
+     log('SCENARIO START (including Before hook)');
+     event.dispatcher.on(event.test.started, onBodyStarted);
+     event.dispatcher.on(event.step.started, onStepStarted);
+     event.dispatcher.on(event.step.finished, onStepFinished);
+     event.dispatcher.once(event.test.after, () => {
+          event.dispatcher.removeListener(event.test.started, onBodyStarted);
+          event.dispatcher.removeListener(event.step.started, onStepStarted);
+          event.dispatcher.removeListener(event.step.finished, onStepFinished);
+          log('SCENARIO AFTER');
+     });
+});
+
 var folder_name, randomNumber;
 
 Before(({ I, login }) => {
@@ -549,7 +590,8 @@ Scenario('Zmena linky btn', async ({ I, DT, DTE }) => {
 
 });
 
-Scenario('Nastavenie editorAutoFillPublishStart @singlethread', ({ I, DT, DTE, Document }) => {
+Scenario(tracedScenario, ({ I, DT, DTE, Document }) => {
+     I.relogin("admin");
      var date = I.formatDate((new Date()).getTime());
 
      //
@@ -559,6 +601,7 @@ Scenario('Nastavenie editorAutoFillPublishStart @singlethread', ({ I, DT, DTE, D
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=40273");
      DT.waitForLoader();
      DTE.waitForEditor();
+     DTE.waitForCkeditor();
      I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.dontSeeInField("#DTE_Field_publishStartDate", date);
 
@@ -566,9 +609,12 @@ Scenario('Nastavenie editorAutoFillPublishStart @singlethread', ({ I, DT, DTE, D
 
      I.click(DT.btn.add_button);
      DTE.waitForEditor();
+     DTE.waitForCkeditor();
      I.waitForElement("#pills-dt-datatableInit-perex-tab", 10);
      I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.dontSeeInField("#DTE_Field_publishStartDate", date);
+
+     DTE.cancel();
 
      //
      I.say("Zapinam nastavenie editorAutoFillPublishStart");
@@ -577,6 +623,7 @@ Scenario('Nastavenie editorAutoFillPublishStart @singlethread', ({ I, DT, DTE, D
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=40273");
      DT.waitForLoader();
      DTE.waitForEditor();
+     DTE.waitForCkeditor();
      I.waitForElement("#pills-dt-datatableInit-perex-tab", 10);
      I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.seeInField("#DTE_Field_publishStartDate", date);
@@ -585,9 +632,12 @@ Scenario('Nastavenie editorAutoFillPublishStart @singlethread', ({ I, DT, DTE, D
 
      I.click(DT.btn.add_button);
      DTE.waitForEditor();
+     DTE.waitForCkeditor();
      I.waitForElement("#pills-dt-datatableInit-perex-tab", 10);
      I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.seeInField("#DTE_Field_publishStartDate", date);
+
+     DTE.cancel();
 });
 
 async function testLink(link, fixedLink, I, DT, DTE) {

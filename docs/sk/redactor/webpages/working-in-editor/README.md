@@ -236,6 +236,12 @@ Polia na karte Miniatúra sa dynamicky zobrazujú/skrývajú podľa vybraného r
 - Režim `5`: Zobrazia sa obe rozmerné polia bez poľa pre farbu.
 - Pole **Vypnúť bod záujmu** sa zobrazí pre všetky režimy okrem prázdnej hodnoty. To nastavuje, či sa pri generovaní aplikuje aj nastavený bod záujmu, alebo sa použije celý obrázok.
 
+**Striktný režim**
+
+V režime [presne definovaných rozmerov](../../../frontend/thumb-servlet/README.md#obmedzenia) je zobrazené výberové pole možností, z ktorých sa rozmer dá zvoliť, nie je možné nastaviť ľubovoľnú hodnotu:
+
+![](image_dialog-thumb-strict.png)
+
 ### Video súbory
 
 Cez dialógové okno pre vloženie obrázku môžete vkladať aj video súbory. Buď priamo z vášho servera výberom video súboru, alebo do poľa URL adresa zadáte odkaz na web stránku `YouTube/Facebook/TikTok`.

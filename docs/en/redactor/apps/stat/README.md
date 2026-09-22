@@ -56,7 +56,7 @@ Displays traffic by country. The country is determined by the HTTP header ```acc
 
 > What browsers do visitors use? What browsers and operating systems does the site need to be optimized for?
 
-List of browsers in use and their versions. The graph shows the most used browsers with version, time display, and a complete table.
+List of browsers in use without version number. The graph shows the most used browser families, a time view, and a complete table. Omitting the frequently changing version number makes the results clearer and reduces the number of auxiliary statistics records.
 
 The value **Unknown** or **???** is displayed for unknown browsers and for browsers where the visitor has not consented to the collection of statistical cookies.
 

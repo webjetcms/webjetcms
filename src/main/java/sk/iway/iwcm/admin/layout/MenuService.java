@@ -52,6 +52,11 @@ public class MenuService {
     //mapovanie starej a novej URL
     static final Map<String, String> menuLinkReplaces;
 
+    //Permissions for pages that do not have a menu entry.
+    private static final Map<String, String> pagePermissions = Map.of(
+        "/admin/v9/settings/stat-browser-migration/", "modUpdate|users.edit_admins"
+    );
+
     static {
         groupsMap = new HashMap<>();
         iconsMap = new HashMap<>();
@@ -783,6 +788,10 @@ public class MenuService {
         if (normalized.startsWith("/")==false) normalized = "/"+normalized;
         normalized = Tools.replace(normalized, "//", "/");
         normalized = Tools.replace(normalized, "/dist/views/", "/");
+
+        String pageUrl = normalized.endsWith("/") ? normalized : normalized + "/";
+        String perms = pagePermissions.get(pageUrl.toLowerCase(Locale.ROOT));
+        if (perms != null) return perms;
 
         List<ModuleInfo> allModules = Modules.getInstance().getModules();
         for (ModuleInfo m : allModules) {

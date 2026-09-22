@@ -142,6 +142,7 @@ public class TemplateGroupsService {
         }
 
         if (TemplatesGroupDB.getInstance().save(templateGroupBean)) {
+            TemplatesGroupDB.getInstance().clearCache();
             String prefix = TEMP_GROUP_PREFIX + templateGroupBean.getId() + ".project";
             IwayProperties iwayProperties = mapIwayProperties(templateGroupBean);
             // defaultne vytvaram novu skupinu pre vychodzi jazyk
@@ -162,6 +163,7 @@ public class TemplateGroupsService {
         }
 
         if (templateGroupBean.save()) {
+            TemplatesGroupDB.getInstance().clearCache();
             String prefix = TEMP_GROUP_PREFIX + templateGroupBean.getId() + ".project";
             IwayProperties iwayProperties = mapIwayProperties(templateGroupBean);
             PropDB.save(null, iwayProperties, lng, prefix, null, false);
@@ -175,6 +177,7 @@ public class TemplateGroupsService {
     boolean deleteTemplateGroupBean(long id) {
         String prefixForDelete = TEMP_GROUP_PREFIX + id + ".project";
         if (TemplatesGroupDB.delete(id)) {
+            TemplatesGroupDB.getInstance().clearCache();
             new SimpleQuery().execute("DELETE FROM " + ConfDB.PROPERTIES_TABLE_NAME + " WHERE prop_key IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     prefixForDelete + ".name",
                     prefixForDelete + ".author",

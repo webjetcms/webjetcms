@@ -68,7 +68,7 @@ ext {
     log4jToSlf4jMinimumVersion = "2.26.1";
     aspectJVersion = '1.9.25.1';
     eclipselinkVersion = '5.0.0-B13';
-    webjetAiVersion = '1.2.0';
+    webjetAiVersion = '2.0.4';
 }
 
 def embeddedTomcatModules = [
@@ -214,6 +214,24 @@ sourceSets {
 
 
 configurations {
+    // Local AI is available for CMS development, but is not published to clients.
+    localAi {
+        canBeConsumed = false
+        canBeResolved = false
+    }
+    compileOnly.extendsFrom(localAi)
+    runtimeClasspath.extendsFrom(localAi)
+    testImplementation.extendsFrom(localAi)
+
+    // Use only published dependencies when packaging client distributions.
+    distributionRuntimeClasspath {
+        canBeConsumed = false
+        extendsFrom implementation, runtimeOnly
+        attributes {
+            attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+        }
+    }
+
     all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
     all*.exclude group: 'org.slf4j', module: 'jcl104-over-slf4j' //je nahradene novsim jcl-over-slf4j
     all*.exclude group: 'commons-logging', module: 'commons-logging'
@@ -283,6 +301,7 @@ dependencies {
 
     //WebJET AI
     implementation "com.webjetcms:webjet-ai:${webjetAiVersion}"
+    localAi "com.webjetcms:webjet-ai-local:${webjetAiVersion}"
 
     //based on https://github.com/mapstruct/mapstruct-examples/blob/main/mapstruct-lombok/build.gradle
     implementation "org.mapstruct:mapstruct:${mapstructVersion}"
@@ -440,6 +459,54 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.velocity/velocity-engine-core
     implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
 
+}
+
+war {
+    classpath = sourceSets.main.output + configurations.distributionRuntimeClasspath - configurations.providedRuntime
+}
+
+// Only the Ant finalwar target uses the development runtime, including local AI.
+tasks.register('prepareFinalWarRuntimeLibs', Sync) {
+    description = 'Prepares runtime libraries, including local AI, for the Ant finalwar target.'
+    from configurations.runtimeClasspath - configurations.providedRuntime
+    into providers.gradleProperty('finalWarLibDirectory').orElse('build/updatezip/finalwar/WEB-INF/lib')
+}
+
+def localAiModelsDirectory = file('src/main/webapp/WEB-INF/local-ai-models')
+def localAiModelTasks = [
+    prepareLocalAiTextModel: [
+        model: 'utter-project/EuroLLM-1.7B-Instruct',
+        variant: 'q4-k-m',
+        output: 'eurollm-1.7b-instruct-q4-k-m.zip'
+    ],
+    prepareLocalAiTranslationModel: [
+        model: 'facebook/m2m100_418M',
+        variant: 'int8',
+        output: 'm2m100-418m-int8.zip'
+    ],
+    prepareLocalAiEmbeddingModel: [
+        model: 'intfloat/multilingual-e5-base',
+        variant: 'fp32',
+        output: 'multilingual-e5-base-fp32.zip'
+    ]
+]
+
+localAiModelTasks.each { taskName, modelDefinition ->
+    tasks.register(taskName, JavaExec) {
+        group = 'webjet-ai'
+        description = "Prepares ${modelDefinition.model} for local WebJET AI use."
+        classpath = configurations.runtimeClasspath
+        mainClass = 'com.webjetcms.ai.local.tool.LocalModelTool'
+        args 'prepare',
+            '--model', modelDefinition.model,
+            '--output', new File(localAiModelsDirectory, modelDefinition.output).absolutePath
+        if (modelDefinition.variant != null) {
+            args '--variant', modelDefinition.variant
+        }
+        if (providers.gradleProperty('overwriteLocalAiModel').getOrElse('false').toBoolean()) {
+            args '--overwrite'
+        }
+    }
 }
 
 test {

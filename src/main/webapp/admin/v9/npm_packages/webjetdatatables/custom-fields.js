@@ -3,6 +3,8 @@ import WJ from '../../src/js/webjet';
 
 import * as fieldTypeQuill from './field-type-quill';
 import {initColorPickerAccessibility} from './color-picker-accessibility';
+import {initJsonEditor, resetJsonEditors} from './jsoneditor';
+export {validateJsonEditors} from './jsoneditor';
 
 function getEmptyStringFieldValue() {
     return "";
@@ -104,6 +106,7 @@ function generateUUID() {
 }
 
 export function update(EDITOR, action) {
+    resetJsonEditors(EDITOR);
 
     function fixNullData(data, click) {
         //console.log("fixNullData, data=", data, "click=", click);
@@ -150,13 +153,14 @@ export function update(EDITOR, action) {
     //pomen mena poli
     var textTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="{maxlength}" data-warningLength="{warninglength}" {disabled} class="form-control" type="text">';
     var textAreaTemplate = '<textarea id="DTE_Field_{customPrefix}{identifier}" {disabled} class="form-control wrap">{value}</textarea>';
+    var jsonEditorTemplate = '<textarea id="DTE_Field_{customPrefix}{identifier}" {disabled} class="form-control field-type-jsoneditor" spellcheck="false" autocomplete="off"></textarea>';
     var autocompleteTemplate = '<div class="input-group"> <span class="input-group-text"><i class="ti ti-search"></i></span> <input type="text" class="form-control autocomplete" name="field{identifier}" value="{value}" id="DTE_Field_field{identifier}"/> </div>';
     var selectTemplate = '<select id="DTE_Field_field{identifier}" class="form-control form-select">{options}</select>';
     var choiceTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" class="custom-field-choice-value" type="hidden"><div class="custom-field-choice-options">{options}</div>';
     var labelTemplate = '<div class="input-group"> <span class="input-group-text noborders field-type-label">{value}</span> <input value="{value}" id="DTE_Field_{customPrefix}{identifier}" class="form-control" type="hidden"></div>';
     var numberTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="number" value="{value}" {disabled} class="form-control">';
-    var booleanTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
-    var booleanTextTemplate = '<div><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">{label_value}</label></div></div>';
+    var booleanTemplate = '<div class="DTE_Field_Type_boolean"><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">Áno</label></div></div>';
+    var booleanTextTemplate = '<div class="DTE_Field_Type_boolean DTE_Field_Type_booleantext"><div class="custom-control form-switch"><input id="DTE_Field_{customPrefix}{identifier}" type="checkbox" {disabled} class="form-check-input"><label for="DTE_Field_{customPrefix}{identifier}" class="form-check-label">{label_value}</label></div></div>';
     var dateTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" type="text" autocomplete="off" class="form-control">';
     var uuidTemplate = '<input id="DTE_Field_{customPrefix}{identifier}" maxlength="255" value="{value}" class="form-control field-type-uuid custom-field-ai-disabled" type="text">';
     var colorTemplate = `
@@ -196,11 +200,11 @@ export function update(EDITOR, action) {
             //nebolo poslane v datach, ziskajme priamo z JSONu
             value = json[customPrefix+identifier];
         }
-        if(value == null || value == "null") {
+        if(value == null || (value == "null" && v.type !== "jsoneditor")) {
             value = getEmptyStringFieldValue();
         }
         let valueUnescaped = value;
-        if(v.type !== "number" && v.type !== "boolean" && v.type !== "boolean_text" && v.type !== "date" && v.type !== "none")
+        if(v.type !== "number" && v.type !== "boolean" && v.type !== "boolean_text" && v.type !== "date" && v.type !== "none" && v.type !== "jsoneditor")
             value = value.replace(/"/gi, "&quot;");
 
         if("uuid" === v.type) {
@@ -247,6 +251,8 @@ export function update(EDITOR, action) {
 
         if (v.type == 'textarea') {
             template = textAreaTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
+        } else if (v.type == 'jsoneditor') {
+            template = jsonEditorTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
         } else if(v.type == 'number') {
             template = numberTemplate.replace(new RegExp('{customPrefix}', 'g'), customPrefix).replace(new RegExp('{identifier}', 'g'), identifier).replace(new RegExp('{value}', 'g'), getFieldValue(value, action, v.type)).replace(new RegExp('{disabled}', 'g'), disableField(v.disabled));
         } else if(v.type == 'boolean') {
@@ -386,6 +392,7 @@ export function update(EDITOR, action) {
         }
 
         inputBox.html(template);
+        if (v.type === "jsoneditor") inputBox.find('textarea').val(valueUnescaped);
 
         const textInput = inputBox.find("input[data-warninglength]").first();
         if(textInput.length > 0) {
@@ -413,7 +420,7 @@ export function update(EDITOR, action) {
         } else {
             field.canReturnSubmit = field.canReturnSubmitOriginal;
         }
-        if ("textarea" == v.type) {
+        if ("textarea" == v.type || "jsoneditor" == v.type) {
             field.canReturnSubmit = function() {
                 return false;
             }
@@ -520,7 +527,9 @@ export function update(EDITOR, action) {
             EDITOR.field(customPrefix + identifier).s.opts._input = inputBox.find('input, select, textarea');
         }
 
-        if (v.type == 'select') {
+        if (v.type == 'jsoneditor') {
+            initJsonEditor(EDITOR, customPrefix + identifier, inputBox.find('textarea')[0], v.required === true);
+        } else if (v.type == 'select') {
             const select = inputBox.find('select');
             const hasSelectedOption = select.find("option:selected").length > 0;
             select.selectpicker(EDITOR.DT_SELECTPICKER_OPTS_EDITOR);

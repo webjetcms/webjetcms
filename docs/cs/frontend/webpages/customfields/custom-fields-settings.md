@@ -28,6 +28,7 @@ V poli **Typ pole** jsou dostupné typy:
 | --- | --- | --- |
 | `text` | Textové pole | Jednohodnotové |
 | `textarea` | Textová oblast (více řádků) | Jednohodnotové |
+| `jsoneditor` | Editor JSON objektu s čísly řádků, formátováním a validací | Jednohodnotové |
 | `select` | Výběrové pole (dropdown) | Jednohodnotové |
 | `multiselect` | Výběrové pole s možností výběru více hodnot | Vícehodnotové (hodnoty oddělené `\|`) |
 | `radio` | Seznam rádio tlačítek | Jednohodnotové |
@@ -62,6 +63,8 @@ Při změně typu pole se v editoru dynamicky zobrazí doplňková pole, která 
 ### Chování povinného pole podle typu
 
 Pokud je u typů `select`, `docsIn`, `json_group`, `json_doc` vypnuto **Povinné pole**, editor automaticky nabídne i prázdnou hodnotu. U typů `radio` a `checkbox` vypnuté povinné pole znamená, že uživatel nemusí vybrat žádnou možnost.
+
+U typu `jsoneditor` se prázdný vstup řídí nastavením **Povinné pole** a vyplněná hodnota musí obsahovat jeden objekt ve složených závorkách `{}`. Chyba zablokuje uložení v editoru i na serveru. Podporovanou syntaxi, formátování a kapacitu databázových sloupců popisuje dokumentace [Editor JSON](../../../developer/datatables-editor/customfields.md#json-editor).
 
 ### Zdroj možností
 
