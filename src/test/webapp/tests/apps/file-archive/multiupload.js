@@ -4,8 +4,6 @@ Feature('apps.file-archive.multiupload').tag('@singlethread');
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
-const assert = require("node:assert/strict");
-const { recorder } = require("codeceptjs");
 const SL = require("./SL.js");
 
 const ARCHIVE_FOLDER = "/files/archiv/multiupload/";
@@ -281,47 +279,31 @@ Scenario('Preserve untouched metadata when resolving duplicate bulk uploads', as
     }
 });
 
-Scenario('Reject changing the physical destination for a new version', async ({ I, DT, DTE }) => {
+Scenario('Reject changing the physical destination for a new version', async ({ I, DT, Document }) => {
     const category = uploadPrefix + "-different-category";
-    const originalConfiguration = {};
-    let testError;
-    let restoreError;
 
-    try {
-        await setTemporaryCategoryDestination(I, DT, DTE, "true", originalConfiguration);
+    Document.setConfigValue("fileArchivUseCategoryAsLink", "true", true);
 
-        I.amOnPage(SL.fileArchive);
-        DT.waitForLoader("fileArchiveDataTable");
-        selectMultiuploadFolder(I, DT);
+    I.amOnPage(SL.fileArchive);
+    DT.waitForLoader("fileArchiveDataTable");
+    selectMultiuploadFolder(I, DT);
 
-        await uploadFilesToDropzone(I, [rejectedDestinationFile.initial]);
-        DT.waitForLoader("fileArchiveDataTable");
-        await uploadFilesToDropzone(I, [rejectedDestinationFile.duplicate], "exist", null, { category: category });
-        clickDuplicateUploadAction(I, rejectedDestinationFile.duplicate, "btn-toast-keepboth", "error");
+    await uploadFilesToDropzone(I, [rejectedDestinationFile.initial]);
+    DT.waitForLoader("fileArchiveDataTable");
+    await uploadFilesToDropzone(I, [rejectedDestinationFile.duplicate], "exist", null, { category: category });
+    clickDuplicateUploadAction(I, rejectedDestinationFile.duplicate, "btn-toast-keepboth", "error");
 
-        I.see(
-            "Pri nahradení dokumentu alebo nahratí novej verzie nie je možné zmeniť cieľový adresár ani kategóriu určujúcu adresár.",
-            "#toast-container-upload .toast[data-upload-status='error'] .toast-error-message"
-        );
+    I.see(
+        "Pri nahradení dokumentu alebo nahratí novej verzie nie je možné zmeniť cieľový adresár ani kategóriu určujúcu adresár.",
+        "#toast-container-upload .toast[data-upload-status='error'] .toast-error-message"
+    );
 
-        I.amOnPage(ELFINDER_MULTUPLOAD);
-        await checkUploadedFileContent(I, rejectedDestinationFile.initial.fileName, rejectedDestinationFile.initial);
-    } catch (error) {
-        testError = error;
-    } finally {
-        await recorder.catchWithoutStop(error => { if (!testError) testError = error; });
-        if (Object.prototype.hasOwnProperty.call(originalConfiguration, "value")) {
-            try {
-                await setTemporaryCategoryDestination(I, DT, DTE, originalConfiguration.value);
-            } catch (error) {
-                restoreError = error;
-                await recorder.catchWithoutStop(() => {});
-            }
-        }
-    }
-    if (testError && restoreError) throw new AggregateError([testError, restoreError], "Destination rejection test and configuration restore failed");
-    if (testError) throw testError;
-    if (restoreError) throw restoreError;
+    I.amOnPage(ELFINDER_MULTUPLOAD);
+    await checkUploadedFileContent(I, rejectedDestinationFile.initial.fileName, rejectedDestinationFile.initial);
+});
+
+Scenario('Cleanup file archive configuration', ({ Document }) => {
+    Document.setConfigValue("fileArchivUseCategoryAsLink", "false", true);
 });
 
 Scenario('Upload and select file archive link in CKEditor', async ({ I, DT, DTE, Document }) => {
@@ -415,43 +397,6 @@ function createUploadFile(sourceName, targetName, variant = null) {
 }
 
 /**
- * Temporarily changes whether the archive category determines the destination directory.
- * @param {CodeceptJS.I} I - CodeceptJS actor
- * @param {object} DT - DataTable helper
- * @param {object} DTE - DataTable editor helper
- * @param {string} value - configuration value to apply
- * @param {{value?: string}} [originalConfiguration] - receives the effective value before changing it
- */
-async function setTemporaryCategoryDestination(I, DT, DTE, value, originalConfiguration) {
-    const name = "fileArchivUseCategoryAsLink";
-    I.amOnPage("/admin/v9/settings/configuration/");
-    const allNode = "#SomStromcek li[data-configuration-view='all'] > a.jstree-anchor";
-    I.waitForElement(allNode, 20);
-    I.clickCss(allNode);
-    I.waitForFunction(() => new URL(configurationDatatable.getAjaxUrl(), location.origin).searchParams.get("view") === "all", 20);
-    DT.waitForLoader();
-    DT.filterEquals("name", name);
-    I.waitForText(name, 10, "#configurationDatatable");
-
-    const currentValue = await I.executeScript(() => {
-        const rows = configurationDatatable.rows({ search: "applied" }).data().toArray();
-        if (rows.length !== 1) throw new Error("Expected one category destination configuration row");
-        return rows[0].displayValue ?? rows[0].value;
-    });
-    if (originalConfiguration) originalConfiguration.value = currentValue;
-
-    I.click(name, "#configurationDatatable");
-    DTE.waitForEditor("configurationDatatable");
-    DTE.fillField("value", value);
-    DTE.clickSwitch("temporary_0");
-    DTE.save();
-    await I.waitForFunction(([expected]) => {
-        const rows = configurationDatatable.rows({ search: "applied" }).data().toArray();
-        return rows.length === 1 && (rows[0].displayValue ?? rows[0].value) === expected;
-    }, [value], 15);
-}
-
-/**
  * Programmatically selects the "multiupload" folder in the file archive jsTree
  * by opening its parent node and selecting it.
  * @param {CodeceptJS.I} I - CodeceptJS actor
@@ -484,13 +429,13 @@ function selectMultiuploadFolder(I, DT) {
  */
 async function checkUploadedFileContent(I, fileName, expectedFile) {
     I.waitForElement(".elfinder-cwd-filename[title='" + fileName + "']", 10);
-    await I.usePlaywrightTo("verify uploaded PDF content", async ({ page }) => {
+    const { status, content } = await I.usePlaywrightTo("read uploaded PDF content", async ({ page }) => {
         const url = new URL(ARCHIVE_FOLDER + encodeURIComponent(fileName), page.url()).href;
         const response = await page.request.get(url);
-        assert.equal(response.status(), 200, "The uploaded PDF must be accessible.");
-        const actualContent = await response.body();
-        assert.ok(actualContent.equals(fs.readFileSync(expectedFile.filePath)), "Unexpected PDF content for " + fileName);
+        return { status: response.status(), content: await response.body() };
     });
+    await I.assertEqual(status, 200, "The uploaded PDF must be accessible.");
+    await I.assertTrue(content.equals(fs.readFileSync(expectedFile.filePath)), "Unexpected PDF content for " + fileName);
 }
 
 /**
@@ -642,7 +587,7 @@ async function deleteArchiveRowsByPrefix(I, DT, prefix, archiveFolder = ARCHIVE_
     SL.openFileArchive(archiveFolder + "cleanup.pdf");
     DT.filterContains("virtualFileName", prefix.replace(/[-_]+/g, " "));
 
-    const recordCount = await I.executeScript(() => fileArchiveDataTable.page.info().recordsDisplay);
+    const recordCount = await DT.getRecordCount("fileArchiveDataTable");
     if (recordCount > 0) {
         DT.deleteAll("fileArchiveDataTable");
         DT.waitForLoader("fileArchiveDataTable");
