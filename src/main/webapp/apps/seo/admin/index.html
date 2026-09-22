@@ -23,6 +23,9 @@
         window.location.href="/apps/seo/admin/bots-details/?botId=" + botId + "&rootDir=" + $('#rootDir').val() + "&dayDate=" + ChartTools.getDateRange(null);
     }
 
+    var order = [];
+    order.push([2, 'desc']);
+
     window.domReady.add(function () {
         WJ.showLoader();
 
@@ -36,6 +39,7 @@
             columns: columns,
             id: "botsDataTable",
             idAutoOpener: false,
+            order: order,
             defaultSearch: ChartTools.getSearchCriteria(),
             autoHeight: false,
             onPreXhr: function(TABLE, e, settings, data) {

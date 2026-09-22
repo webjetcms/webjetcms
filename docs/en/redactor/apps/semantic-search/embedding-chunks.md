@@ -91,6 +91,8 @@ Click the button <button class="btn btn-sm btn-success" type="button"><span><i c
 
 The dialog will display an overview of the pages in the selected folder - total number, number already indexed, and number in queue. Only pages that have an index for the current provider and assistant model `RAG-EMB-INDEX` are considered indexed. An index created by another provider or model is therefore not taken into account in this count.
 
+Manual actions can only be performed on folders in the current domain for which the user has edit rights. When selecting a root folder, the user must have rights to all root folders in the domain.
+
 The folder and the **Show also from subfolders** option are taken from the active filter. After confirmation, all searchable pages from the selected range are queued. If the chunk text has not changed, the system will try to use an existing embedding with the same provider and model according to its hash value. Reindexing will only replace the index for the current provider and model combination; other indexes for the same page will be preserved.
 
 You start the action with the button <button class="btn btn-primary"><i class="ti ti-check"></i><span>Start the action</span></button> .
@@ -111,7 +113,7 @@ You start the action with the button <button class="btn btn-primary"><i class="t
 
 If an error occurs while indexing a page, the system saves a record with the status **ERROR** and a short error message. The error is also written to the administrator log in the **Search** category (`SEARCH`). If processing of an item fails at the queue level, the item remains in the queue and the system attempts to process it the next time the cron job runs.
 
-!>**Warning:** Changing the configuration variable `ragEmbeddingDimensions` will delete the entire semantic index for all providers and models because the database column `vector(N)` has a common dimension. After the change, all content must be re-indexed.
+!>**Warning:** The configuration variable `ragEmbeddingDimensions` is global to the entire installation. Changing it will delete the entire semantic index for all providers and models, because the database column `vector(N)` has a common dimension. After changing it, all content must be re-indexed. The local model `intfloat/multilingual-e5-base` requires the value `768`.
 
 ## Implementation details
 

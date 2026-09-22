@@ -254,6 +254,20 @@ public Map<String, ImageOptionDefinition> imageOptions(
 
 `LibrarySupportLogic` will automatically display only the supported fields **Number of images**, **Size**, **Quality**, and **Aspect ratio** from the metadata and send only their supported values ​​in the request. For the portable dimension, use the key `size`, the provider key `resolution` is also supported. For aspect ratio, the keys `aspectRatio` and `aspect_ratio` are recognized. An empty map means that the CMS will not display additional fields for the given model and operation. Metadata must not require an API key or a network call.
 
+## Built-in local models
+
+The `com.webjetcms:webjet-ai-local` artifact extends the base library with local model providers. WebJET CMS registers three adapters:
+
+- [LocalTextService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/local/text/LocalTextService.java) for `utter-project/EuroLLM-1.7B-Instruct`,
+- [LocalTranslateService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/local/translate/LocalTranslateService.java) for `facebook/m2m100_418M`,
+- [LocalEmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/local/embedding/LocalEmbeddingService.java) for `intfloat/multilingual-e5-base`.
+
+Each adapter uses a separate global path to the model ZIP package. [ConfiguredLocalProvider](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/local/ConfiguredLocalProvider.java) loads the path without domain context, opens the provider lazily on the first call, and safely reuses one instance until the application exits. Therefore, changing the path requires a restart.
+
+The path can be an absolute path on the server or a path starting with `/WEB-INF/`, which the adapter translates via `Tools.getRealPath()` to a physical path in the deployed application. The scripts described in the [AI assistants](../../../../redactor/ai/settings/README.md) documentation will create approved packages in the `/WEB-INF/local-ai-models/` folder, for example `/WEB-INF/local-ai-models/eurollm-1.7b-instruct-q4-k-m.zip` and `/WEB-INF/local-ai-models/m2m100-418m-int8.zip`.
+
+Local translation does not use a regular prompt. [LibrarySupportLogic](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/LibrarySupportLogic.java) creates a request for it with `TranslationOptions` and rejects HTML, `INCLUDE` commands, structured input, user prompts, and input macros in instructions. Instructions must contain JSON with `sourceLanguage` and `targetLanguage` ; the optional value of `maximumOutputTokens` is at most `200`. Local text generation rejects prompt expansion where the protection detects an attempt to `prompt injection`.
+
 ## Exception `AiInterface` browser only
 
 [BrowserService](../../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/browser/BrowserService.java) implements [AiInterface](../../../../../src/main/java/sk/iway/iwcm/components/ai/providers/AiInterface.java) directly because Chrome Built-in AI runs in the browser and does not use server-side communication with the provider. This is the only way to implement it directly. New server-side providers must use `AiProvider` and `LibrarySupportLogic`.
@@ -266,7 +280,7 @@ For concurrent local development of the CMS and a neighboring repository `webjet
 ./gradlew --include-build ../webjet-ai compileJava test
 ```
 
-Use the same `--include-build ../webjet-ai` option for each local build and test task that is to use unreleased library changes. Otherwise, the `com.webjetcms:webjet-ai` version specified by the `webjetAiVersion` variable in `build.gradle` will be used.
+Use the same `--include-build ../webjet-ai` option for each local build and test task that is to use unreleased library changes. Otherwise, the `com.webjetcms:webjet-ai-local` version specified by the `webjetAiVersion` variable in `build.gradle` will be used.
 
 ## `AiAssistantsService`
 

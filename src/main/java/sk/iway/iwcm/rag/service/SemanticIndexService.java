@@ -13,6 +13,8 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.webjetcms.ai.EmbeddingInputType;
+
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
@@ -145,10 +147,13 @@ public class SemanticIndexService {
     }
 
     /**
-     * Route a queue item to the appropriate handler based on entity type and action.
-     * The queue domain is authoritative because a deleted entity may no longer be available
-     * for resolving its domain.
+     * Routes a queue item to the handler for its entity type and action.
+     *
+     * The queue item's domain is authoritative for indexing and deletion.
+     *
      * @param item queue item to process
+     * @param readyDomains domains whose vector-store readiness was already verified in this run
+     * @throws IllegalArgumentException if the queue item, entity type, or action is invalid
      */
     private void processEntity(IndexQueueEntity item, Set<Integer> readyDomains) {
         if (item == null || item.getDomainId() == null || item.getDomainId() < 1) {
@@ -177,12 +182,28 @@ public class SemanticIndexService {
     }
 
     /**
-     * Index a document from a DocDetails object.
+     * Indexes the document identified by a queue item within its authoritative domain.
+     *
+     * Stale embeddings are removed when the document no longer exists or belongs to another domain. The vector store
+     * is prepared before document content is indexed.
+     *
+     * @param docId document ID to index
+     * @param queueDomainId authoritative domain ID stored in the queue item
+     * @param readyDomains domains whose vector-store readiness was already verified in this run
+     * @throws IllegalStateException if the document domain cannot be resolved or indexing cannot proceed
      */
     private void indexDocument(int docId, int queueDomainId, Set<Integer> readyDomains) {
         DocDetails doc = DocDB.getInstance().getDoc(docId);
         if (doc == null) {
-            Logger.debug(SemanticIndexService.class, "Document " + docId + " not found, skipping indexing");
+            embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(
+                DocDetailsContentExtractor.ENTITY_TYPE,
+                (long) docId,
+                queueDomainId
+            );
+            Logger.debug(
+                SemanticIndexService.class,
+                "Document " + docId + " not found, removed stale embeddings from domain " + queueDomainId
+            );
             return;
         }
 
@@ -199,10 +220,17 @@ public class SemanticIndexService {
                 documentDomainId = 1;
             }
             if (documentDomainId != queueDomainId) {
-                throw new IllegalStateException(
-                    "RAG queue/document domain mismatch for doc " + docId +
-                    ": queueDomainId=" + queueDomainId + ", documentDomainId=" + documentDomainId
+                embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(
+                    DocDetailsContentExtractor.ENTITY_TYPE,
+                    (long) docId,
+                    queueDomainId
                 );
+                Logger.debug(
+                    SemanticIndexService.class,
+                    "RAG queue/document domain mismatch for doc " + docId +
+                    ": removed stale domain " + queueDomainId + ", current domain is " + documentDomainId
+                );
+                return;
             }
 
             ensureVectorStoreReady(queueDomainId, readyDomains);
@@ -210,6 +238,13 @@ public class SemanticIndexService {
         }
     }
 
+    /**
+     * Verifies vector-store availability and initializes the shared schema when necessary.
+     *
+     * @param domainId domain currently being processed
+     * @param readyDomains domains already verified during this queue run
+     * @throws IllegalStateException if the vector store is unavailable or schema initialization fails
+     */
     private void ensureVectorStoreReady(int domainId, Set<Integer> readyDomains) {
         if (readyDomains.contains(domainId)) return;
         if (vectorStore.isAvailable() == false) {
@@ -227,12 +262,24 @@ public class SemanticIndexService {
         readyDomains.add(domainId);
     }
 
+    /**
+     * Rebuilds a document's chunks for the current provider and model.
+     *
+     * Content is extracted and chunked, unchanged embeddings are reused by content hash, changed chunks are embedded,
+     * and chunk rows and vectors are replaced. If indexing fails before chunk rows are stored, a document-level error
+     * marker is persisted before the failure is rethrown.
+     *
+     * @param doc document to index
+     * @param domainName domain used to resolve provider configuration
+     * @param domainId domain ID stored with generated chunks and statistics
+     * @throws IllegalStateException if extraction, embedding, persistence, or vector update fails
+     */
     private void indexDocument(DocDetails doc, String domainName, int domainId) {
         String entityType = DocDetailsContentExtractor.ENTITY_TYPE.name();
         long entityId = doc.getDocId();
         String provider = normalizeProviderId(Constants.getString("ragEmbeddingProvider"));
         String model = Constants.getString("ragEmbeddingModel");
-        int dimensions = Constants.getInt("ragEmbeddingDimensions");
+        int dimensions = embeddingService.getDimensions();
         boolean chunkRowsSaved = false;
 
         try {
@@ -298,7 +345,8 @@ public class SemanticIndexService {
                 EmbeddingBatchResult embeddingResult = embeddingService.embedWithUsage(
                     chunksToEmbedTexts,
                     embeddingAssistant,
-                    domainName
+                    domainName,
+                    EmbeddingInputType.DOCUMENT
                 );
 
                 List<float[]> newEmbeddings = embeddingResult.getEmbeddings();
@@ -406,7 +454,13 @@ public class SemanticIndexService {
     }
 
     /**
-     * Compute SHA-256 hash of text for deduplication.
+     * Computes a hash used to identify reusable chunk content.
+     *
+     * SHA-256 is preferred; if the algorithm is unavailable, the hexadecimal Java string hash is returned as a
+     * fallback.
+     *
+     * @param text text to hash
+     * @return hexadecimal content hash
      */
     private static String sha256(String text) {
         try {

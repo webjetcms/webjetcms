@@ -30,6 +30,18 @@
         },
         {
             "type": "java",
+            "name": "Debug MultiWeb",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartMultiWeb",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "webjetcms"
+        },
+        {
+            "type": "java",
             "name": "Debug Docker MariaDB",
             "request": "attach",
             "hostName": "localhost",

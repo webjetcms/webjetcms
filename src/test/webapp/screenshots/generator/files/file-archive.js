@@ -1,5 +1,9 @@
 Feature('files.file-archive');
 
+const path = require("path");
+
+const DROPZONE_INPUT = "input.dz-hidden-input.dz-hidden-input-dt-upload";
+
 Before(({ I, login }) => {
     login('admin');
 
@@ -59,6 +63,28 @@ Scenario('Base screens', ({ I, DT, DTE, Document, i18n }) => {
     Document.screenshotElement("div.toast-container div.toast", "/redactor/files/file-archive/file-duplicity-notif.png");
 });
 
+Scenario('Drag and drop bulk upload dialog', ({ I, DT, Document }) => {
+    const uploadFiles = [
+        path.resolve(__dirname, "../../../tests/apps/file-archive/docs/archive_file_test.pdf"),
+        path.resolve(__dirname, "../../../tests/apps/file-archive/docs/archive_file_test_second.pdf")
+    ];
+
+    I.amOnPage('/apps/file-archive/admin/');
+    I.resizeWindow(1400, 850);
+    DT.waitForLoader('fileArchiveDataTable');
+    I.waitForElement(DROPZONE_INPUT, 20);
+    I.usePlaywrightTo("select files for bulk upload", async ({ page }) => {
+        await page.locator(DROPZONE_INPUT).setInputFiles(uploadFiles);
+    });
+
+    I.waitForVisible("#fileArchiveDataTable_modal", 20);
+    I.waitForVisible("#pills-dt-fileArchiveDataTable-basic-tab.active", 20);
+    I.waitForElement("#fileArchiveDataTable_modal:focus", 10);
+    I.dontSeeElement(".flatpickr-calendar.open");
+    I.clickCss("#pills-dt-fileArchiveDataTable-advanced-tab");
+    Document.screenshot("/redactor/files/file-archive/drag-drop-upload-settings-dialog.png", 1280, 930);
+});
+
 Scenario('Edit and actions screens', ({ I, DT, DTE, Document, i18n }) => {
     const mainBase = "ScreenshotFile_C";
 
@@ -93,7 +119,7 @@ Scenario('Edit and actions screens', ({ I, DT, DTE, Document, i18n }) => {
     Document.screenshotElement("div.dropdown-menu.show", "/redactor/files/file-archive/action_move_behind_options.png");
     I.click(locate(".DTE_Field_Name_editorFields\\.saveAfterSelect").find("button"));
 
-    I.selectOption('select#DTE_Field_editorFields-uploadType', i18n.get("Upload a new version"));
+    I.selectOption('select#DTE_Field_editorFields-uploadType', i18n.get("Upload new version"));
     I.resizeWindow(1280, 500);
     I.scrollTo(".DTE_Field_Name_editorFields\\.saveLater");
     Document.screenshotElement(".DTE.modal-content.DTE_Action_Edit", "/redactor/files/file-archive/action_new_version.png");

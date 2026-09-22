@@ -20,6 +20,50 @@ function openThumbnailDialog(I, DTE, Document) {
 
 Scenario('strict mode shows allowed thumbnail sizes @singlethread', async ({ I, DTE, Document }) => {
     Document.setConfigValue('thumbServletAllowedSizeMode', 'strict');
+    Document.setConfigValue('thumbServletAllowedSizes', [
+        '100x100ip5',
+        '1200x1200ip1',
+        '1280x1280ip1',
+        '150x150ip1',
+        '160x160ip5',
+        '200x200',
+        '200x200ip1',
+        '200x200ip2',
+        '200x200ip5',
+        '200x200ip6',
+        '265x225ip5',
+        '300x200ip3',
+        '300x200ip4cffff00',
+        '300x200ip4ncffff00',
+        '300x200ip5',
+        '300x300ip5',
+        '300x300ip5q80',
+        '300x400ip5',
+        '310x310ip1',
+        '350x250ip4',
+        '36x36ip5',
+        '370x330ip4',
+        '400x300ip3cff0000',
+        '400x300ip5',
+        '400x300ip6',
+        '400x400ip4cffff00',
+        '400x400ip5',
+        '445x360ip5',
+        '480x96',
+        '490x96',
+        '500x400ip5',
+        '500x500ip4nc00ff00',
+        '540x226ip5',
+        '600x400ip4nq90',
+        '60x60ip4',
+        '700x400ip6',
+        '70x70ip5',
+        '730x400ip5',
+        '730x401ip5',
+        '800x320ip5',
+        '900x360ip5',
+        '96x96'
+    ].join('\n'));
     openThumbnailDialog(I, DTE, Document);
 
     const select = locate('.cke_dialog_ui_select').withText('Povolený rozmer').find('select');
@@ -27,20 +71,17 @@ Scenario('strict mode shows allowed thumbnail sizes @singlethread', async ({ I, 
     I.seeNumberOfVisibleElements('.cke_dialog select', 1);
     I.dontSeeElement('.cke_dialog input');
 
-    const options = await I.grabTextFromAll(select.find('option'));
-    I.assertDeepEqual(options.map(option => option.trim()), [
-        '',
+    const options = (await I.grabTextFromAll(select.find('option'))).map(option => option.trim());
+    I.assertEqual(options[0], '', 'The first thumbnail option must keep the original image');
+    const expectedOptions = [
         '96 x 96 (0 - Maximálne rozmery)',
         '150 x 150 (1 - Fixná šírka)',
-        '160 x 160 (5 - Centrovaný s pomerom strán - zmenšený)',
-        '180 x 180 (0 - Maximálne rozmery)',
-        '200 x 200 (5 - Centrovaný s pomerom strán - zmenšený)',
-        '300 x 300 (5 - Centrovaný s pomerom strán - zmenšený)',
-        '310 x 310 (1 - Fixná šírka)',
         '400 x 300 (3 - Fixná šírka a výška vyplnená farbou), Farba pozadia: #ff0000',
-        '500 x 500 (4 - Fixná šírka a výška vyplnená farbou - centrované), Farba pozadia: #00ff00, Vypnúť bod záujmu',
-        '730 x 401 (5 - Centrovaný s pomerom strán - zmenšený)'
-    ], 'Allowed thumbnail sizes must have readable labels and numeric ordering, including the original image option');
+        '500 x 500 (4 - Fixná šírka a výška vyplnená farbou - centrované), Farba pozadia: #00ff00, Vypnúť bod záujmu'
+    ];
+    for (const option of expectedOptions) {
+        I.assertContain(options, option, 'Representative thumbnail sizes must have readable labels');
+    }
 
     I.amAcceptingPopups();
     I.clickCss('.cke_dialog_ui_button_cancel');

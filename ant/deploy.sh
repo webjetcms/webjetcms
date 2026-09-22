@@ -7,6 +7,7 @@
 set -e
 
 echo "WARNING: CHECK VERSION IN build.xml"
+echo "Also try to update uap-core regexes with: ant updateUaParserRegexes"
 echo "RUN AS ./deploy.sh 2>&1 | tee deploy.log to save log"
 date
 ant waitForConfirm
@@ -26,9 +27,9 @@ ant update-version
 ant -Dcompress=true createUpdateZip
 ant -Dcompress=true createUpdateZipJar
 ant rsyncToLicenseServer
-ant deployGithub
+ant -Dcompress=true deployGithub
 
-#MavenCentral: just run ant deployMavenCentral
+#MavenCentral: just run ant -Dcompress=true deployMavenCentral
 #then deploy it manually on https://central.sonatype.com/publishing/deployments
 
 cd ..
