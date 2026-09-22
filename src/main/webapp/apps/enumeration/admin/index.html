@@ -1,13 +1,11 @@
+<div data-th-include="apps/enumeration/admin/partials/enumeration-type.html" data-th-remove="tag"></div>
+
 <script data-th-inline="javascript">
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.enumerations.model.EnumerationDataBean")})]*/ '';
-    let typeColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean")})]*/ '';
 </script>
 <script type="text/javascript">
     var enumerationDataDataTable = null;
-    var enumerationTypeDataTable;
     var selectedTypeNode = null;
-    var isAllSet = false;
-    var lastIgnoredId = null;
 
     window.getJstreeUrl = function() {
         let url = $("#SomStromcek").data("rest-url");
@@ -18,15 +16,6 @@
         if (selectedTypeNode && selectedTypeNode.a_attr["data-type-id"] === hash) url = WJ.urlUpdateParam(url, "selectedNodeId", selectedTypeNode.id);
         return url;
     };
-
-    var typeTabs = [
-            { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true},
-            { id: 'strings', title: '[[#{enum_type.strings}]]'},
-            { id: 'numbers', title: '[[#{enum_type.numbers}]]'},
-            { id: 'booleans', title: '[[#{enum_type.booleans}]]'},
-            { id: 'dates', title: '[[#{enum_type.dates}]]'},
-            { id: 'stringFieldTypes', title: '[[#{enum_type.string_field_types}]]', hideOnCreate: true},
-        ];
 
     window.disableDeletedEnum = function(ul, item) {
         var deletedPrefix = WJ.translate("enum_type.deleted_type_mark.js");
@@ -47,20 +36,6 @@
         const dataUrl = "/admin/rest/enumeration/enumeration-data";
         let selectedTypeId = "0";
 
-        enumerationTypeDataTable = WJ.DataTable({
-            url: WJ.urlUpdateParam("/admin/rest/enumeration/enumeration-type", "showHidden", window.jstreeSettings.getSettings().showHidden === true),
-            serverSide: true,
-            paging: false,
-            hideTable: true,
-            columns: typeColumns,
-            tabs: typeTabs,
-            id: "enumerationTypeDataTable",
-            customFieldsUpdateColumns: true,
-            fetchOnCreate: true,
-            fetchOnEdit: true,
-            idAutoOpener: false,
-            initHashFilter: false
-        });
         enumerationTypeDataTable.buttons(".buttons-create, .buttons-edit, .btn-duplicate, .buttons-remove")
             .nodes().prependTo(".tree-col .dt-buttons");
         enumerationTypeDataTable.buttons(".btn-import-dialog, .btn-export-dialog")
@@ -160,143 +135,6 @@
             treeElement.jstree(true).refresh(false, true);
         });
 
-        window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
-            if(event.detail.conf.id !== "DTE_Field_editorFields.stringFieldTypes") return;
-
-            const innerTable = event.detail.conf.datatable;
-
-            innerTable.EDITOR.on("open", function(e, mode, action) {
-                const editor = innerTable.EDITOR;
-                const openedAlphabet = action === "edit" ? String(editor.field("alphabet").val() || "") : "";
-                ["className", "entityId", "label", "bonusClassName", "bonusEntityId"].forEach(function(fieldName) {
-                    if(editor.fields().includes(fieldName)) editor.field(fieldName).hide();
-                });
-
-                if(action === "edit") {
-                    const alphabet = openedAlphabet;
-                    const alphabetOptions = innerTable.DATA.jsonOptions.alphabet;
-                    let selectedOption = Array.isArray(alphabetOptions)
-                        ? alphabetOptions.find(function(option) {
-                            return String(option.value) === alphabet;
-                        })
-                        : null;
-
-                    if(!selectedOption && alphabet.length === 1) {
-                        const fieldIndex = alphabet.charCodeAt(0) - 64;
-                        const fieldName = "string" + fieldIndex + "Name";
-                        if(fieldIndex >= 1 && fieldIndex <= 12 && enumerationTypeDataTable.EDITOR.fields().includes(fieldName)) {
-                            const outerField = enumerationTypeDataTable.EDITOR.field(fieldName);
-                            const baseLabel = String(outerField.s.opts.label || "").replace(/<[^>]+>/g, "").trim();
-                            selectedOption = {label: baseLabel, value: alphabet};
-                            editor.field("alphabet").update([selectedOption].concat(alphabetOptions || []));
-                            editor.field("alphabet").val(alphabet);
-                        }
-                    }
-
-                    if(selectedOption) {
-                        setTimeout(function() {
-                            const titleElement = document.querySelector("#datatableFieldDTE_Field_editorFields-stringFieldTypes_modal > div > div > div.DTE_Header.modal-header > div > span > div.row > div:nth-child(1) > h5");
-                            if(titleElement) {
-                                titleElement.textContent = WJ.translate("button.edit") + ": " + selectedOption.label;
-                            }
-                        }, 120);
-                    }
-                }
-
-                const specificFieldsVisibility = innerTable.DATA.jsonOptions.specificFieldsVisibility;
-                const typeSelect = document.getElementById("DTE_Field_type");
-                if(!typeSelect || !specificFieldsVisibility) return;
-
-                const updateFieldVisibility = function(selectedType) {
-                    const visibilityConfig = specificFieldsVisibility.find(function(item) {
-                        return item.label === selectedType;
-                    });
-                    const showFields = visibilityConfig && visibilityConfig.value
-                        ? new Set(visibilityConfig.value.split(",").map(function(field) { return field.trim(); }).filter(Boolean))
-                        : new Set();
-
-                    if(["select", "multiselect", "radio", "checkbox"].includes(selectedType)) {
-                        const source = editor.field("optionsSource").val();
-                        const selectedSource = Array.isArray(source) ? source[0] : source;
-                        showFields.add(selectedSource === "enumeration" ? "enumeration" : "selectOptions");
-                    }
-
-                    editor.fields().forEach(function(fieldName) {
-                        const field = editor.field(fieldName);
-                        const classNames = field.s.opts.className || "";
-                        if(classNames.includes("specific-field")) {
-                            showFields.has(fieldName) ? field.show() : field.hide();
-                        }
-                    });
-                };
-
-                typeSelect.onchange = function() {
-                    updateFieldVisibility(this.value);
-                };
-
-                document.querySelectorAll("#datatableFieldDTE_Field_editorFields-stringFieldTypes_modal .DTE_Field_Name_optionsSource input[type='radio']").forEach(function(input) {
-                    input.onchange = function() {
-                        updateFieldVisibility(typeSelect.value);
-                    };
-                });
-
-                updateFieldVisibility(typeSelect.value);
-            });
-        });
-
-        enumerationTypeDataTable.EDITOR.on('open', function (e, mode, action) {
-            if(!isAllSet) {
-                $("#DTE_Field_allowChildEnumerationType_0").on("click", function(e) { handleCheckbox("allowChildEnumerationType") });
-                $("#DTE_Field_allowParentEnumerationData_0").on("click", function(e) { handleCheckbox("allowParentEnumerationData") });
-                isAllSet = true;
-            }
-
-            if(action === 'create')
-                setChildEnumTypeSelect(null);
-
-            if(action === 'edit') {
-                var selectedEnumId = e.currentTarget.currentJson['enumerationTypeId'];
-                setChildEnumTypeSelect(selectedEnumId);
-            }
-        });
-
-        function handleCheckbox(clickEvent) {
-            if(clickEvent === null || clickEvent === undefined) return;
-
-            //The allowChildEnumerationType and allowParentEnumerationData checkboxs CANT be true at same time
-            if(clickEvent === "allowChildEnumerationType") {
-                if($("#DTE_Field_allowChildEnumerationType_0").is(':checked'))
-                    if($("#DTE_Field_allowParentEnumerationData_0").is(':checked'))
-                        $("#DTE_Field_allowParentEnumerationData_0").prop('checked', false);
-
-            } else if(clickEvent === "allowParentEnumerationData") {
-                if($("#DTE_Field_allowParentEnumerationData_0").is(':checked'))
-                    if($("#DTE_Field_allowChildEnumerationType_0").is(':checked'))
-                        $("#DTE_Field_allowChildEnumerationType_0").prop('checked', false);
-            }
-        }
-
-        function setChildEnumTypeSelect(idToIgnore) {
-            //Find deleted options and disabled it
-            //EnumTypes are just soft deleted in DB because of reference logic
-            $("#DTE_Field_editorFields-childEnumTypeId option").each(function() {
-                var deletedPrefix = WJ.translate("enum_type.deleted_type_mark.js");
-                if(deletedPrefix !== undefined && deletedPrefix !== null && deletedPrefix !== "")
-                    if($(this).text().startsWith('(!deleted)_'))
-                        $('#DTE_Field_editorFields-childEnumTypeId option[value="' + $(this).val() + '"]').prop('disabled', true);
-            });
-
-            //Enable last disabled select option
-            if(lastIgnoredId !== null)
-                $('#DTE_Field_editorFields-childEnumTypeId option[value="' + lastIgnoredId + '"]').prop('disabled', false);
-
-            //Disable select option
-            $('#DTE_Field_editorFields-childEnumTypeId option[value="' + idToIgnore + '"]').prop('disabled', true);
-            //Refresh select
-            $("#DTE_Field_editorFields-childEnumTypeId").selectpicker('refresh');
-            //Save last disabled option, so next time this option can be enabled
-            lastIgnoredId = idToIgnore;
-        }
     });
 </script>
 
@@ -329,6 +167,5 @@
         <table id="enumerationDataDataTable" class="datatableInit table"></table>
     </div>
 </div>
-<table id="enumerationTypeDataTable" class="datatableInit table"></table>
 
 <div data-th-include="admin/v9/views/partials/tree-width-settings.html" data-th-with="showDeletedTypes=true" data-th-remove="tag"></div>
