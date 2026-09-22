@@ -200,7 +200,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Viackrokové formuláre - doplnené presunutie (`scroll`) na začiatok formuláru po prechode na ďalší krok (#osk573).
 - Prieskumník - pri aktualizácii súboru je výber obmedzený na jeden súbor a hlásenie upozorní na nesprávny typ (#58766).
-- Prieskumník - informáciách o priečinku sa už nepočíta nepresná rekurzívna veľkosť (#58766).
+- Prieskumník - v informáciách o priečinku sa už nezobrazuje nepresná rekurzívna veľkosť (#58766).
 
 ### Oprava chýb
 

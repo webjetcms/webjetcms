@@ -107,7 +107,7 @@ Ak chcete vytvoriť odkaz na dokument/súbor označte si text, ktorý má byť o
 
 !> Súbory a priečinky [Manažéra dokumentov](../../files/file-archive/README.md) uložené v `/files/archiv` sú v stromovej štruktúre dialógov **Odkaz** a **Obrázok** dostupné iba na zobrazenie a výber. Nie je ich možné nahrávať, premenovať, mazať ani inak upravovať. Na správu týchto súborov a priečinkov použite kartu **Manažér dokumentov**.
 
-V dialógu **Odkaz** ich označuje ikona `read-only`:
+V dialógu **Odkaz** ich označuje ikona <i class="ti ti-folder-x"></i> iba na čítanie:
 
 ![](link_dialog-read-only-archive.png)
 
