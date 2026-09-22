@@ -34,7 +34,7 @@ public final class FileArchiveBulkUploadOptions implements Serializable {
     private static final List<String> ALLOWED_FIELDS = List.of(
         "validFrom", "validTo", PARAM_SAVE_LATER, PARAM_DATE_UPLOAD_LATER, PARAM_EMAILS,
         "product", "category", "productCode", "showFile", "indexFile", "priority", "referenceToMain", "note",
-        "editorFields.uploadRedundantFile"
+        "editorFields.uploadRedundantFile", "fieldA", "fieldB", "fieldC", "fieldD", "fieldE"
     );
 
     private final Map<String, String> values;
@@ -107,6 +107,7 @@ public final class FileArchiveBulkUploadOptions implements Serializable {
             throw new IllegalArgumentException("Invalid upload boolean");
         });
         registerEditor(binder, Integer.class, Integer::valueOf);
+        registerEditor(binder, Long.class, Long::valueOf);
         binder.bind(new MutablePropertyValues(values));
         if (binder.getBindingResult().hasErrors()) {
             return switch (binder.getBindingResult().getFieldError().getField()) {

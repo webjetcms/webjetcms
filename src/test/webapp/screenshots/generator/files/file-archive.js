@@ -81,10 +81,8 @@ Scenario('Drag and drop bulk upload dialog', ({ I, DT, Document }) => {
     I.waitForVisible("#pills-dt-fileArchiveDataTable-basic-tab.active", 20);
     I.waitForElement("#fileArchiveDataTable_modal:focus", 10);
     I.dontSeeElement(".flatpickr-calendar.open");
-    Document.screenshotElement(
-        "#fileArchiveDataTable_modal .modal-content",
-        "/redactor/files/file-archive/drag-drop-upload-settings-dialog.png"
-    );
+    I.clickCss("#pills-dt-fileArchiveDataTable-advanced-tab");
+    Document.screenshot("/redactor/files/file-archive/drag-drop-upload-settings-dialog.png", 1280, 930);
 });
 
 Scenario('Edit and actions screens', ({ I, DT, DTE, Document, i18n }) => {
