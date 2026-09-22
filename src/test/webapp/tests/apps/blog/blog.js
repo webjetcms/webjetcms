@@ -173,13 +173,26 @@ Scenario('Test folder tree permissions', async ({I, DT}) => {
     }, foreignRootId);
     I.assertContain(deniedSection.error, "Na túto akciu nemáte právo.", "A blogger cannot create a section in another blogger's folder");
     I.relogin("tester");
-    I.amOnPage("/apps/blog/admin/?removePerm=cmp_blog,cmp_blog_admin");
-    const status = await I.executeScript(async () => (await fetch("/admin/rest/blog/tree", {
-        method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": window.csrfToken },
+    I.amOnPage("/apps/blog/admin/");
+    const csrfToken = await I.executeScript(() => window.csrfToken);
+    const authorizedTreeStatus = await I.executeScript(async csrfToken => (await fetch("/admin/rest/blog/tree", {
+        method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
         body: JSON.stringify({ id: "0" })
-    })).status);
+    })).status, csrfToken);
+    I.assertEqual(authorizedTreeStatus, 200, "The tree endpoint accepts an authorized request with a valid CSRF token");
+    const authorizedSectionStatus = await I.executeScript(async csrfToken => (await fetch("/admin/rest/blog/sections/all", {
+        headers: { "X-CSRF-Token": csrfToken }
+    })).status, csrfToken);
+    I.assertEqual(authorizedSectionStatus, 200, "The section editor accepts an authorized request with a valid CSRF token");
+    I.amOnPage("/apps/blog/admin/?removePerm=cmp_blog,cmp_blog_admin");
+    const status = await I.executeScript(async csrfToken => (await fetch("/admin/rest/blog/tree", {
+        method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+        body: JSON.stringify({ id: "0" })
+    })).status, csrfToken);
     I.assertEqual(status, 403, "The tree endpoint requires Blog permission");
-    const sectionStatus = await I.executeScript(async () => (await fetch("/admin/rest/blog/sections/all")).status);
+    const sectionStatus = await I.executeScript(async csrfToken => (await fetch("/admin/rest/blog/sections/all", {
+        headers: { "X-CSRF-Token": csrfToken }
+    })).status, csrfToken);
     I.assertEqual(sectionStatus, 403, "The section editor requires Blog permission");
 });
 

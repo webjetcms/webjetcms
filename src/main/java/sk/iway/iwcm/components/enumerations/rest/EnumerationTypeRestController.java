@@ -144,7 +144,7 @@ public class EnumerationTypeRestController extends DatatableRestControllerV2<Enu
             item.setId("#".equals(parent) ? String.valueOf(type.getId()) : parent + "-" + type.getId());
             item.setParent(parent);
             item.setText(type.getTypeName());
-            item.setIcon(type.isHidden() ? "ti ti-trash" : "ti ti-list");
+            item.setIcon(type.isHidden() ? "ti ti-trash" : "ti ti-table-column");
             item.setChildren(false);
             item.setAAttr(Map.of("title", type.getTypeName(), "data-type-id", String.valueOf(type.getId()),
                     "data-hidden", String.valueOf(type.isHidden())));

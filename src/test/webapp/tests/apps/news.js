@@ -204,16 +204,26 @@ Scenario('zoznam noviniek', async ({ I, DT, DTE }) => {
 
     //
     I.say("Check permissions");
-    I.amOnPage("/apps/news/admin/?removePerm=cmp_news");
-    I.see("Na túto aplikáciu/funkciu nemáte prístupové práva");
-    const treeStatus = await I.executeScript(async () => {
+    const csrfToken = await I.executeScript(() => window.csrfToken);
+    const authorizedTreeStatus = await I.executeScript(async csrfToken => {
         const response = await fetch("/admin/rest/news/news-list/tree", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
             body: JSON.stringify({ id: "0" })
         });
         return response.status;
-    });
+    }, csrfToken);
+    I.assertEqual(authorizedTreeStatus, 200, "The tree endpoint accepts an authorized request with a valid CSRF token");
+    I.amOnPage("/apps/news/admin/?removePerm=cmp_news");
+    I.see("Na túto aplikáciu/funkciu nemáte prístupové práva");
+    const treeStatus = await I.executeScript(async csrfToken => {
+        const response = await fetch("/admin/rest/news/news-list/tree", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+            body: JSON.stringify({ id: "0" })
+        });
+        return response.status;
+    }, csrfToken);
     I.assertEqual(treeStatus, 403, "The tree endpoint requires the News permission");
 });
 
