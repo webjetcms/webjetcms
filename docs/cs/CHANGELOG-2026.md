@@ -41,7 +41,10 @@
 
 ![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
 
-- Soubory Manažera dokumentů ve složce `/files/archiv` jsou v dialozích vkládání odkazu a obrázku dostupné pouze pro zobrazení a výběr. Nahrávání, přejmenování, mazání a ostatní úpravy lze provést pouze přes [Manažer dokumentů](redactor/files/file-archive/README.md) (#298,#313).
+- Soubory Manažera dokumentů ve složce `/files/archiv` jsou v dialozích vkládání odkazu a obrázku dostupné pouze pro zobrazení a výběr. Nahrávání, přejmenování, mazání a ostatní úpravy lze provést pouze přes [Manažer dokumentů](redactor/files/file-archive/README.md) (#298,#313,#317).
+
+![](redactor/webpages/working-in-editor/link_dialog-read-only-archive.png)
+
 - [Fotobanka](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - při stahování obrázku z fotobanky lze nastavit název souboru. Název se automaticky předvyplní a očistí, přípona se určí podle zdrojového obrázku a stávající soubor se nepřepíše. Přidána také podpora výběru typu a kategorie obrázku a možnost hledat video soubory (#58645).
 
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
@@ -52,6 +55,8 @@
 <div class="video-container">
     <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+- Page Builder - zlepšená detekce změn v HTML kódu stránky, aby se nezobrazilo hlášení "V editoru pravděpodobně máte neuložený text" i když jste reálně žádný text ve stránce nezměnili (#317).
 
 ### Headless režim
 
@@ -198,6 +203,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 ![](sysadmin/update/stat-browser-migration.png)
 
 - Vícekrokové formuláře - doplněné přesunutí (`scroll`) na začátek formuláře po přechodu na další krok (#osk573).
+- Průzkumník - při aktualizaci souboru je výběr omezen na jeden soubor a hlášení upozorní na nesprávný typ (#317).
+- Průzkumník - v informacích o složce se již nezobrazuje nepřesná rekurzivní velikost (#317).
 
 ### Oprava chyb
 
@@ -215,6 +222,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 - Přidána podpora generování `nonce` pro [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
 - AI asistenti - přidána ochrana před `prompt injection` útoky s oddělením systémových instrukcí od uživatelského obsahu a detekcí kódovaných vstupů (#58549).
+- HTML sanitizace - `AllowSafeHtmlAttributeConverter` zachovává na všech dosud povolených HTML elementech atributy `role`, `aria-*`, `data-*`, `id`, `title`, `lang`, `dir` (`ltr`, `rtl` (`-1`, `0`). Umožňuje tak používat atributy přístupnosti a vlastní datové atributy (#317).
 
 ### Dokumentace
 
