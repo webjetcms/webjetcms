@@ -52,6 +52,86 @@ Scenario('file usage', async ({I, DT}) => {
     getFileUsage(I, DT, "#datatableFieldDTE_Field_docDetailsList_processing");
 })
 
+Scenario('folder info omits recursive size while file info keeps size', async ({ I }) => {
+    I.amOnPage('/admin/elFinder/#elf_iwcm_2_L2ltYWdlcy9iYW5uZXJ5');
+    I.waitForElement('#iwcm_2_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pd2F5ZGF5LnBuZw_E_E', 10);
+
+    const sizeRequests = await I.executeScript(() => {
+        const finder = $('#finder').elfinder('instance');
+        const originalGetSize = finder.getSize;
+        let calls = 0;
+        finder.getSize = function() {
+            calls++;
+            return originalGetSize.apply(this, arguments);
+        };
+        finder.getCommand('info').exec(['iwcm_2_L2ltYWdlcy9iYW5uZXJ5']);
+        finder.getSize = originalGetSize;
+        return calls;
+    });
+    I.waitForElement('.elfinder-dialog-info .elfinder-info-tb', 10);
+    I.dontSee('Veľkosť', '.elfinder-dialog-info .elfinder-info-tb');
+    I.assertEqual(sizeRequests, 0, 'Folder info must not calculate recursive size');
+
+    I.clickCss('.elfinder-dialog-info .ui-dialog-titlebar-close');
+    I.executeScript(() => $('#finder').elfinder('instance').getCommand('info').exec([
+        'iwcm_2_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pd2F5ZGF5LnBuZw_E_E'
+    ]));
+    I.waitForText('Veľkosť', 10, '.elfinder-dialog-info .elfinder-info-tb');
+});
+
+Scenario('file update accepts one file and does not show progress for validation errors', async ({ I }) => {
+    I.amOnPage('/admin/elFinder/#elf_iwcm_2_L2ltYWdlcy9iYW5uZXJ5');
+    I.waitForElement('#iwcm_2_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pd2F5ZGF5LnBuZw_E_E', 10);
+    I.rightClick('#iwcm_2_L2ltYWdlcy9iYW5uZXJ5L2Jhbm5lci1pd2F5ZGF5LnBuZw_E_E');
+    I.waitForVisible('.elfinder-contextmenu', 10);
+    I.clickCss('.elfinder-contextmenu-item .elfinder-button-icon-wjfileupdate');
+    I.waitForElement('.elfinder-upload-dialog-wrapper input[type=file]', 10);
+    I.dontSeeElement('.elfinder-upload-dialog-wrapper .elfinder-upload-dirselect');
+
+    const acceptsMultipleFiles = await I.executeScript(() =>
+        document.querySelector('.elfinder-upload-dialog-wrapper input[type=file]').hasAttribute('multiple'));
+    I.assertFalse(acceptsMultipleFiles, 'The update file picker must accept only one file');
+
+    I.executeScript(() =>
+        document.querySelector('.elfinder-upload-dialog-wrapper input[type=file]').dispatchEvent(new Event('change', { bubbles: true })));
+    I.dontSeeElement('.elfinder-notify-customErrorDialog');
+
+    I.attachFile('.elfinder-upload-dialog-wrapper input[type=file]', 'tests/apps/file-archive/docs/archive_replace.pdf');
+    I.waitForElement('.elfinder-notify-customErrorDialog', 10);
+    const error = await I.executeScript(() => {
+        const finder = $('#finder').elfinder('instance');
+        const message = document.querySelector('.elfinder-notify-customErrorDialog .elfinder-notify-msg').textContent;
+        return { message, expected: finder.i18n('wjfileupdate-typeMismatch') + 'image/png' };
+    });
+    I.assertEqual(error.message, error.expected, 'A wrong file type must show the type mismatch error');
+    I.dontSeeElement('.elfinder-notify-customErrorDialog .elfinder-notify-progressbar');
+});
+
+Scenario('link dialog marks archive volume paths read-only', async ({ I, DTE }) => {
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=16');
+    DTE.waitForEditor();
+    I.clickCss('#trEditor');
+    I.clickCss('.cke_button_icon.cke_button__link_icon');
+    I.waitForText('Informácie o odkaze', 10);
+    I.switchTo('#wjLinkIframe');
+    I.waitForElement('#finder .elfinder-navbar', 20);
+
+    const markers = await I.executeScript(() => {
+        const readOnlyMarker = $('#finder').elfinder('instance').options.readOnlyMarker;
+        const file = { read: 1, write: 0, notfound: false };
+        return {
+            archiveRoot: readOnlyMarker({ ...file, virtualPath: '//files/archiv' }),
+            archiveChild: readOnlyMarker({ ...file, virtualPath: '//files//archiv/category' }),
+            otherFolder: readOnlyMarker({ ...file, virtualPath: '//files/archiv-other' }),
+            writableFile: readOnlyMarker({ ...file, virtualPath: '//files/archiv/file.pdf', write: 1 })
+        };
+    });
+    I.assertTrue(markers.archiveRoot, 'The archive volume root must show the read-only marker');
+    I.assertTrue(markers.archiveChild, 'Archive subfolders must show the read-only marker');
+    I.assertFalse(markers.otherFolder, 'Folders outside the archive must keep their usual marker');
+    I.assertFalse(markers.writableFile, 'Writable files must not show the read-only marker');
+});
+
 Scenario('search files', ({I}) => {
 
     //all media/images/apps/
