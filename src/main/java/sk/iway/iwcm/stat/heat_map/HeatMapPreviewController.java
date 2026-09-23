@@ -24,15 +24,13 @@ import sk.iway.iwcm.doc.TemplatesDB;
 public class HeatMapPreviewController {
 
     private final HeatMapHistoryService historyService;
-    private final HeatMapAccess access;
 
-    public HeatMapPreviewController(HeatMapHistoryService historyService, HeatMapAccess access) {
+    public HeatMapPreviewController(HeatMapHistoryService historyService) {
         this.historyService = historyService;
-        this.access = access;
     }
 
     /**
-     * Prepares an authenticated preview without using or replacing editor session state.
+     * Prepares an authenticated preview without replacing editor content in the session.
      * The history ID is always selected on the server from the requested date range.
      */
     @GetMapping(HeatMapPreviewRequest.PREVIEW_PATH)
@@ -48,10 +46,8 @@ public class HeatMapPreviewController {
         TemplateDetails template = TemplatesDB.getInstance().getTemplate(document.getTempId());
         if (template != null) document.setTempName(template.getTempName());
 
-        String domain = access.currentDomain(request);
         HeatMapPreviewRequest previewRequest = new HeatMapPreviewRequest(request, docId);
         request.setAttribute("heatMapPreview", Boolean.TRUE);
-        request.setAttribute("heatMapPreviewDomain", domain);
         request.setAttribute("isPreview", Boolean.TRUE);
         request.setAttribute("NO_WJTOOLBAR", Boolean.TRUE);
         request.setAttribute("xssTestDisabled", "true");
@@ -70,7 +66,6 @@ public class HeatMapPreviewController {
             requestBean.setDocId(docId);
             requestBean.setGroupId(document.getGroupId());
             requestBean.setUrl(document.getVirtualPath());
-            requestBean.setDomain(domain);
             requestBean.setParameters(previewRequest.getParameterMap());
             requestBean.setQueryString(previewRequest.getQueryString());
             requestBean.setRequest(previewRequest);

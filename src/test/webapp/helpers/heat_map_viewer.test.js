@@ -125,5 +125,8 @@ test("returning from a preview restores open and empty date ranges without saved
         });
         assert.equal(configuration.defaultSearch[".dt-filter-from-dayDate"], expectedFrom);
         assert.equal(configuration.defaultSearch[".dt-filter-to-dayDate"], expectedTo);
+        assert.equal(configuration.order.length, 1);
+        assert.equal(configuration.order[0][0], 1);
+        assert.equal(configuration.order[0][1], "desc");
     }
 });

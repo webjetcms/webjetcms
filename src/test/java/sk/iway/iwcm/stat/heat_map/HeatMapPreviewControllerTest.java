@@ -31,12 +31,11 @@ import sk.iway.iwcm.stat.heat_map.HeatMapHistoryService.PreviewSelection;
 /** Verifies preview isolation from the page editor and untrusted history parameters. */
 class HeatMapPreviewControllerTest {
 
-    /** Preview content and domain come from validated services while editor session content survives. */
+    /** Preview content comes from the history service while the existing domain and editor session survive. */
     @Test
     void preparesOnlyRequestScopedPreviewState() throws Exception {
         HeatMapHistoryService history = mock(HeatMapHistoryService.class);
-        HeatMapAccess access = mock(HeatMapAccess.class);
-        HeatMapPreviewController controller = new HeatMapPreviewController(history, access);
+        HeatMapPreviewController controller = new HeatMapPreviewController(history);
         RequestDispatcher dispatcher = mock(RequestDispatcher.class);
         MockHttpServletRequest request = new MockHttpServletRequest() {
             @Override
@@ -49,7 +48,7 @@ class HeatMapPreviewControllerTest {
         MockHttpSession session = new MockHttpSession();
         Object editorDraft = new Object();
         session.setAttribute("ShowdocAction.showDocData", editorDraft);
-        session.setAttribute("previewDomain", "editor.example");
+        session.setAttribute("preview.editorDomainName", "public.example");
         request.setSession(session);
         request.addParameter("historyid", "999");
         request.addParameter("domain", "untrusted.example");
@@ -62,8 +61,8 @@ class HeatMapPreviewControllerTest {
         when(document.getGroupId()).thenReturn(5);
         when(history.resolve(request, 123, "period")).thenReturn(
                 new PreviewSelection(7, 100L, "history", false, false, document));
-        when(access.currentDomain(request)).thenReturn("public.example");
         RequestBean requestBean = new RequestBean();
+        requestBean.setDomain("public.example");
 
         try (MockedStatic<TemplatesDB> templates = mockStatic(TemplatesDB.class);
                 MockedStatic<SetCharacterEncodingFilter> context = mockStatic(SetCharacterEncodingFilter.class)) {
@@ -85,7 +84,6 @@ class HeatMapPreviewControllerTest {
         assertEquals(Boolean.TRUE, request.getAttribute("heatMapPreview"));
         assertEquals(Boolean.TRUE, request.getAttribute("isPreview"));
         assertEquals(Boolean.TRUE, request.getAttribute("NO_WJTOOLBAR"));
-        assertEquals("public.example", request.getAttribute("heatMapPreviewDomain"));
         assertEquals("/historical-page.html", request.getAttribute("path_filter_orig_path"));
         assertEquals("/historical-page.html", request.getAttribute("heatMapPreviewBasePath"));
         assertEquals("123", request.getAttribute("docid"));
@@ -96,7 +94,7 @@ class HeatMapPreviewControllerTest {
         assertSame(preview, requestBean.getRequest());
         assertEquals("no-store", response.getHeader("Cache-Control"));
         assertSame(editorDraft, session.getAttribute("ShowdocAction.showDocData"));
-        assertEquals("editor.example", session.getAttribute("previewDomain"));
+        assertEquals("public.example", session.getAttribute("preview.editorDomainName"));
         assertNull(session.getAttribute("NO_WJTOOLBAR"));
         verify(history).resolve(request, 123, "period");
     }
@@ -105,14 +103,13 @@ class HeatMapPreviewControllerTest {
     @Test
     void refusesUnavailablePreviewWithoutCreatingSession() {
         HeatMapHistoryService history = mock(HeatMapHistoryService.class);
-        HeatMapAccess access = mock(HeatMapAccess.class);
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
         when(history.resolve(request, 123, "period")).thenReturn(
                 new PreviewSelection(7, 100L, "unavailable", false, false, null));
 
         ResponseStatusException error = assertThrows(ResponseStatusException.class,
-                () -> new HeatMapPreviewController(history, access).preview(123, "period", request, response));
+                () -> new HeatMapPreviewController(history).preview(123, "period", request, response));
 
         assertEquals(HttpStatus.NOT_FOUND, error.getStatusCode());
         assertEquals("no-store", response.getHeader("Cache-Control"));

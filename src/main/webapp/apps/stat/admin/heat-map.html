@@ -31,13 +31,15 @@
                 };
             }
         });
+        const order = [];
+        order.push([heatMapColumns.findIndex(column => column.data === "clicks"), "desc"]);
         heatMapDataTable = WJ.DataTable({
             url: "/admin/rest/stat/heat-map",
             serverSide: false,
             columns: heatMapColumns,
             id: "heatMapDataTable",
             idAutoOpener: false,
-            order: [[heatMapColumns.findIndex(column => column.data === "clicks"), "desc"]],
+            order: order,
             defaultSearch: defaultSearch,
             hideButtons: "create,edit,duplicate,remove,import,celledit",
             onPreXhr: function (TABLE, event, settings, data) {

@@ -46,17 +46,17 @@ class HeatMapPreviewRequestTest {
         assertEquals("999", original.getParameter("docid"));
     }
 
-    /** A preview's trusted domain overrides another tab's editor domain without changing its session. */
+    /** A preview uses the standard domain selected in the administration session. */
     @Test
-    void resolvesDomainFromThePreviewRequestWithoutChangingEditorSession() {
-        MockHttpServletRequest request = new MockHttpServletRequest();
+    void resolvesDomainFromTheAdministrationSession() {
+        MockHttpServletRequest original = new MockHttpServletRequest();
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("preview.editorDomainName", "editor.example");
-        request.setSession(session);
+        original.setSession(session);
+        HeatMapPreviewRequest request = new HeatMapPreviewRequest(original, 123);
         request.setAttribute("heatMapPreview", Boolean.TRUE);
-        request.setAttribute("heatMapPreviewDomain", "public.example");
 
-        assertEquals("public.example", DocDB.getDomain("admin.example", request));
+        assertEquals("editor.example", DocDB.getDomain("admin.example", request));
         assertEquals("editor.example", session.getAttribute("preview.editorDomainName"));
     }
 
