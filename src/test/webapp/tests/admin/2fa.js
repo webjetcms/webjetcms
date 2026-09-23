@@ -55,6 +55,7 @@ function dataURLtoFile(dataurl) {
  * @returns
  */
 function doRequest(qrCodeImageData) {
+  let timeout;
   return new Promise(function (resolve, reject) {
     const file = dataURLtoFile(qrCodeImageData);
     const options = {
@@ -68,6 +69,7 @@ function doRequest(qrCodeImageData) {
     };
     const req = http.request(options, (res) => {
       let responseData = '';
+      res.on('error', reject);
       res.on('data', (chunk) => {
         responseData += chunk;
       });
@@ -76,17 +78,16 @@ function doRequest(qrCodeImageData) {
         resolve(responseData);
       });
     });
+    timeout = setTimeout(() => {
+      req.destroy(new Error('QR code decoding request timed out after 30 seconds'));
+    }, 30000);
+    req.on('error', reject);
     req.write(
       `--boundary\r\nContent-Disposition: form-data; name="file"; filename="frame.png"\r\nContent-Type: image/png\r\n\r\n`
     );
     req.write(file);
     req.end(`\r\n--boundary--`);
-    req.on('error', (error) => {
-      console.log("Request error:");
-      console.error(error);
-      resolve(error);
-    });
-  });
+  }).finally(() => clearTimeout(timeout));
 }
 
 Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{

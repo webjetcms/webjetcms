@@ -319,6 +319,7 @@ Scenario('BUG pocty prijemcov', ({I, DT, DTE}) => {
     I.click( locate(".jstree-anchor").withText('Testovaci newsletter') );
 
     //Set subject
+    I.wait(1); //wait to subject change handler in index.html
     I.fillField("#DTE_Field_subject", prijemcoviaEntityName);
 
     editGroups(I, DT, ['Newsletter'], []);
@@ -887,7 +888,9 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
 
     I.clickCss('#datatableFieldDTE_Field_recipientsTab_wrapper button.btn.btn-sm.btn-outline-secondary.buttons-refresh');
     DT.waitForLoader('#datatableFieldDTE_Field_recipientsTab_processing');
+    I.wait(1);
     I.click( locate("#pills-dt-campaingsDataTable-receivers").find("button.buttons-select-all") );
+    I.wait(1);
     I.click( locate("#pills-dt-campaingsDataTable-receivers").find("button.buttons-remove") );
     DTE.waitForEditor("campaingsDataTable");
     I.click("Zmazať", "div.DTE_Action_Remove");
@@ -1006,7 +1009,7 @@ Scenario('BUG - remove users from unselected groups while campain is not save ye
 
     I.say("Add default recipient");
     I.clickCss(recipientsWrapper + " > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success");
-    I.waitForElement(recipientsModal);
+    I.waitForElement(recipientsModal + "[data-dte-focus-state='ready']", 20);
     I.fillField("#DTE_Field_recipientName", "test");
     I.fillField("#DTE_Field_recipientEmail", "testdefault@balat.sk");
     I.clickCss(recipientsModal + " > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-primary");

@@ -74,6 +74,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 <script>
     var templateGroupId = ${ninja.temp.group.templatesGroupBean.templatesGroupId};
     var ckEditorInstance = null;
+    var pageBuilderReady = false;
     function getCkEditorInstance()
     {
         return ckEditorInstance;
@@ -81,6 +82,8 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
     function initializePageBuilder() {
         let pageDiv = $("#wjInline-docdata");
+        // Keep initial user input out of the snapshot while inline editors normalize their HTML.
+        document.body.inert = true;
 
         $("body").addClass("is-edit-mode");
 
@@ -88,7 +91,6 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         pageDiv.ninjaPageBuilder({
             max_col_size: <%=Constants.getInt("bootstrapColumns", 12)%>,
             prefix: "<%=pbPrefix%>",
-            filter_auto_open_items: <%=Constants.getInt("pagebuilderFilterAutoOpenItems")%>,
             //toto sa berie z inline_script.jsp kde sa hodnota inicializuje
             template_group_id: templateGroupId,
             <%
@@ -112,7 +114,11 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
             },
         });
 
-        initPageBuilderEditors(pageDiv);
+        initPageBuilderEditors(pageDiv).then(() => {
+            pageBuilderReady = true;
+            window.parent.WJ.dispatchEvent("WJ.PageBuilder.ready", {document: document});
+            document.body.inert = false;
+        });
     }
 
     function initPageBuilderEditors(pageDiv)
@@ -120,6 +126,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
         <%--var editableElements = pageDiv.find("* [class*='npb-column__content']");--%>
         //console.log("initPageBuilderEditors, pageDiv=", pageDiv);
         var editableElements = pageDiv.find("*[class*='<%=pbPrefix%>-editable'], *[class*='<%=pbPrefix%>-content']");
+        const readyPromises = [];
         editableElements.each(function()
         {
             //console.log("Has class editableElement: "+$(this).hasClass("editableElement"), this);
@@ -156,6 +163,8 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
             //console.log("DatatablesCkEditor=", DatatablesCkEditor, "window=", window);
 
             var wjeditor = null;
+            let resolveReady;
+            readyPromises.push(new Promise(resolve => { resolveReady = resolve; }));
             const options = {
                 datatable: null,
                 fieldid: $that.attr("id"),
@@ -179,6 +188,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
                         wjeditor.setStyleComboList(window.editorStyles);
                         //setStylesDef(window.editorStyles, instance);
                     //}, 100);
+                    resolveReady();
                 }
             };
             wjeditor = new DatatablesCkEditor(options);
@@ -197,6 +207,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
                 WJ.fireEvent("WJ.PageBuilder.instanceReady", {ckinstance: ckEditorInstanceInitialized});
             });*/
         });
+        return Promise.all(readyPromises);
     }
 
     function getSaveData()

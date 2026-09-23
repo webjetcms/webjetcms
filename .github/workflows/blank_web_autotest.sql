@@ -3264,7 +3264,8 @@ CREATE TABLE `seo_bots` (
   `name` varchar(255) DEFAULT NULL,
   `last_visit` datetime DEFAULT NULL,
   `visit_count` int(11) DEFAULT NULL,
-  PRIMARY KEY (`seo_bots_id`)
+  PRIMARY KEY (`seo_bots_id`),
+  UNIQUE KEY `ix_seo_bots_name` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 

@@ -60,8 +60,9 @@ INSERT INTO webjet_db VALUES(38, to_date('01.05.2004', 'DD.MM.YYYY'), 'id a stav
 INSERT INTO webjet_db VALUES(39, to_date('02.05.2004', 'DD.MM.YYYY'), 'konfiguracia custom modulov');
 INSERT INTO webjet_db VALUES(40, to_date('03.05.2004', 'DD.MM.YYYY'), 'modul posielania SMS sprav');
 INSERT INTO webjet_db VALUES(41, to_date('09.05.2004', 'DD.MM.YYYY'), 'vyzadovanie schvalovania registracie, doc_id pre zasielany email');
+INSERT INTO webjet_db VALUES(42, to_date('14.09.2026', 'DD.MM.YYYY'), '08.09.2026 [lbalat] browser identifier migration including stat_error');
 
-CREATE SEQUENCE S_webjet_db START WITH 42;
+CREATE SEQUENCE S_webjet_db START WITH 43;
 
 CREATE TRIGGER T_webjet_db BEFORE INSERT ON webjet_db
 FOR EACH ROW

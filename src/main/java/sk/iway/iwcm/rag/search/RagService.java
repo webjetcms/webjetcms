@@ -117,7 +117,7 @@ public class RagService {
 
             return ragAnswer;
         } catch (Exception e) {
-            Logger.error(RagService.class, "Error getting AI response for RAG question. assistantId=" + assistant.getId() + ", error=" + e.getMessage());
+            Logger.error(RagService.class, "Error getting AI response for RAG question. assistantId=" + assistant.getId() + ", error=" + e.getMessage(), e);
         }
 
         return null;

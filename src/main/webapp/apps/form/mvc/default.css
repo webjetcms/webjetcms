@@ -23,6 +23,17 @@
     display: none;
 }
 
+.multistep-form-app .row > .col.mf-field-column-hidden {
+    display: none;
+}
+
+.multistep-form-app .step-header .step-description {
+    margin-top: 0.65rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
 .multistep-form-app .mf-error-list {
     margin: 0px;
     padding-left: 20px;
@@ -32,6 +43,12 @@ form.multistep-form .wj-form-tooltip-trigger:focus-visible {
     border-radius: 2px;
     outline: 2px solid currentColor;
     outline-offset: 2px;
+}
+
+.multistep-form-app .multistep-form:focus-visible,
+.multistep-form-app .multistep-form :is(button, input, select, textarea, a, .step-header):focus-visible {
+    outline: 3px solid #111 !important;
+    outline-offset: 2px !important;
 }
 
 .tooltip.wj-form-tooltip-hoverable {
@@ -76,4 +93,15 @@ form.multistep-form .wj-form-tooltip-trigger:focus-visible {
     text-decoration: none;
     color: black;
     cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .multistep-form-app *,
+    .multistep-form-app *::before,
+    .multistep-form-app *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
 }

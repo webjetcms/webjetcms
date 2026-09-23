@@ -1,11 +1,24 @@
 export function typeWysiwyg() {
 
-    var DIRTY_CHECK_DELAY_MS = 5000;
     var FOCUS_READY_TIMEOUT_MS = 10000;
     var FOCUS_RETRY_DELAY_MS = 50;
 
     function getThisField(conf) { //NOSONAR
         return conf.EDITOR.field(conf.data);
+    }
+
+    /** Captures normalized HTML only for the current, fully initialized editor session. */
+    function captureDirtySnapshot(conf, request) {
+        if (!conf.editorOpen || conf.dirtyResetRequest !== request || conf.dirtyDataOriginal !== undefined) return;
+        if (conf.wjeditor == null) return;
+
+        if (conf.wjeditor.editingMode === 'pageBuilder') {
+            const iframe = $("#"+conf._id+"-pageBuilderIframe");
+            if (iframe[0]?.contentWindow?.pageBuilderReady !== true ||
+                iframe[0].contentDocument === iframe.data('pageBuilderPreviousDocument')) return;
+        }
+
+        conf.dirtyDataOriginal = getThisField(conf).get(conf);
     }
 
     /**
@@ -108,6 +121,8 @@ export function typeWysiwyg() {
                     return;
                 }
 
+                conf.editorOpen = true;
+
                 //console.log("data field: ", EDITOR.field( 'data' ).val());
                 if (conf.wjeditor==null) {
                     window.createDatatablesCkEditor().then(module => {
@@ -164,11 +179,24 @@ export function typeWysiwyg() {
                     //nastav otvorene docid do inputu
                     if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != "undefined") window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
                 }
+                getThisField(conf).resetDirty(conf);
+            });
+
+            window.addEventListener('WJ.PageBuilder.ready', function(event) {
+                if (conf.wjeditor?.editingMode !== 'pageBuilder') return;
+                const iframe = document.getElementById(id+"-pageBuilderIframe");
+                if (event.detail.document !== iframe?.contentDocument) return;
+                captureDirtySnapshot(conf, conf.dirtyResetRequest);
             });
 
             EDITOR.on( 'close', function ( e, type ) {
                 //console.log("EDITOR.onClose");
-                $("#"+id+"-pageBuilderIframe").attr("src", "about:blank");
+                conf.editorOpen = false;
+                conf.dirtyResetRequest = null;
+                conf.dirtyDataOriginal = undefined;
+                const iframe = $("#"+id+"-pageBuilderIframe");
+                iframe.data('pageBuilderPreviousDocument', iframe[0]?.contentDocument);
+                iframe.attr("src", "about:blank");
             });
 
             if (typeof window.switchEditorType == "undefined") {
@@ -285,9 +313,7 @@ export function typeWysiwyg() {
         isDirty: function ( conf ) {
             try
             {
-                var now = Date.now();
-                var timeDiff = now - conf.editorLastResetDirty;
-                if (typeof conf.editorLastResetDirty === "undefined" || conf.editorLastResetDirty == null || (timeDiff < DIRTY_CHECK_DELAY_MS))
+                if (conf.dirtyDataOriginal === undefined)
                 {
                     return false;
                 }
@@ -302,12 +328,13 @@ export function typeWysiwyg() {
         },
 
         resetDirty: function ( conf ) {
-            conf.editorLastResetDirty = Date.now();
-            //get current data to compare
-            setTimeout(() => {
-                conf.dirtyDataOriginal = getThisField(conf).get(conf);
-                //console.log("resetDirty called, dirtyDataOriginal=", conf.dirtyDataOriginal);
-            }, DIRTY_CHECK_DELAY_MS);
+            const request = {};
+            conf.dirtyResetRequest = request;
+            conf.dirtyDataOriginal = undefined;
+            // Read the readiness chain after the synchronous DTE open handlers have queued their writes.
+            Promise.resolve().then(() => conf.wjeditorReadyPromise).then(() => {
+                captureDirtySnapshot(conf, request);
+            }).catch(error => console.error("Error capturing editor dirty snapshot:", error));
         },
 
         /**

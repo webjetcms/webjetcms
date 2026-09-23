@@ -5,7 +5,7 @@
 
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
-    
+
     const campaingId = urlParams.get('campaingId');
     const emails = urlParams.get('emails');
     const permisions = urlParams.get('permisions');
@@ -14,12 +14,19 @@
         url: url,
         type: 'GET',
         success: function (data) {
-            let permissions = JSON.parse(data);
-            addEmails(permissions.emails, emails);
-            addPerms(permissions.perms, permisions);
+            try {
+                let permissions = JSON.parse(data);
+                addEmails(permissions.emails, emails);
+                addPerms(permissions.perms, permisions);
+            } catch (e) {
+                console.log(e);
+                console.log(data);
+                WJ.notifyError(WJ.translate("datatables.error.title.js"), e);
+            }
         },
         error: function (error) {
             console.log(error);
+            WJ.notifyError(WJ.translate("datatables.error.title.js"), error);
         }
     });
 
@@ -115,10 +122,10 @@
     </div>
 
     <div id="perms" class="DTE_Field form-group row DTE_Field_Type_checkbox">
-        <span data-dte-e="label" data-th-text="#{user.permissions.label}">
+        <span data-dte-e="label" class="col-sm-4 col-form-label" data-th-text="#{user.permissions.label}">
             <div data-dte-e="msg-label" class="DTE_Label_Info"></div>
         </span>
-        <div>
+        <div data-dte-e="input" class="col-sm-7">
             <div data-dte-e="input-control" class="DTE_Field_InputControl" style="display: block;">
                 <div></div>
             </div>

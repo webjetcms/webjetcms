@@ -75,7 +75,7 @@ node --test helpers/jsoneditor.test.js
 node --test --test-name-pattern="rejects every non-object root" helpers/jsoneditor.test.js
 ```
 
-Použijte Node.js 22 a nainstalujte npm závislosti v `src/test/webapp` i v `src/main/webapp/admin/v9` podle postupu výše. Tyto testy nepotřebují spuštěný aplikační server ani databázi. Některé otevírají lokální komponenty v Chromium přes Playwright, proto musí být nainstalován i tento prohlížeč (`npx playwright install chromium` ze složky `src/test/webapp` ; na Linuxu lze nainstalovat systémové závislosti pomocí `npx playwright install --with-deps chromium`).
+Použijte Node.js 22 a nainstalujte npm závislosti v `src/test/webapp`. Testy JSON editoru používají vlastní závislosti jQuery a DataTables, takže nepotřebují `node_modules` v `src/main/webapp/admin/v9`. Před instalací musí být dostupný licencovaný archiv `src/main/webapp/admin/v9/src/js/plugins/Editor-2.5.2.zip`, stejný jako při sestavení administrace; instalační skript z něj připraví DataTables Editor i pro testy. V CI archiv zkopírujte před spuštěním `npm ci` v `src/test/webapp`. Tyto testy nepotřebují spuštěný aplikační server ani databázi. Některé otevírají lokální komponenty v Chromium přes Playwright, proto musí být nainstalován i tento prohlížeč (`npx playwright install chromium` ze složky `src/test/webapp` ; na Linuxu lze nainstalovat systémové závislosti pomocí `npx playwright install --with-deps chromium`).
 
 Výpis obsahuje názvy úspěšných a neúspěšných testů, při chybě i očekávanou a skutečnou hodnotu nebo popis chyby. Úspěšné spuštění končí návratovým kódem `0`, selhání nenulovým kódem. Nové testy ukládejte přímo do `helpers` s příponou `.test.js`, aby je společný příkaz automaticky zahrnul.
 

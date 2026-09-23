@@ -65,21 +65,21 @@
 				return "transition_fade";
 			}
 
-			function updateGifFromSelect() {
+			function updateTransitionPreviewFromSelect() {
 				var selectedValue = $("#DTE_Field_transitions_all").val();
 				//console.log("Selected transition style: ", selectedValue);
-				var newGif = "";
+				var newPreview = "";
 				if (Array.isArray(selectedValue)) {
 					selectedValue.forEach(function(value) {
-						newGif += "<img id='DTE_Field_transitionStyleGif_" + value + "' alt='" + value.toUpperCase() + "' src='/components/slider/transitions/" + value + ".gif' style='width:100%; margin-bottom: 8px;' class='tooltipContent'>";
+						newPreview += "<img id='DTE_Field_transitionStyleGif_" + value + "' alt='" + value.toUpperCase() + "' src='/components/slider/transitions/" + value + ".webp' style='width:100%; margin-bottom: 8px;' class='tooltipContent'>";
 					});
 				}
 
-				$("#DTE_Field_transitionStyleGif").html(newGif);
+				$("#DTE_Field_transitionStyleGif").html(newPreview);
 			}
 			// Set change event
-			$("#DTE_Field_transitions_all").on("change", updateGifFromSelect);
-			updateGifFromSelect();
+			$("#DTE_Field_transitions_all").on("change", updateTransitionPreviewFromSelect);
+			updateTransitionPreviewFromSelect();
 		});
 	}
 </script>

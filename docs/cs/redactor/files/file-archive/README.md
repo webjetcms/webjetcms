@@ -135,9 +135,11 @@ Karta základní nabízí možnost fyzicky **přejmenovat dokument** (tedy reál
 
 ### Akce - Nahrát novou verzi
 
-Tato akce vytvoří novou aktuální verzi dokumentu. Z právě aktuální verze (kterou lze nahradit) se stane historická verze dokumentu. Stačí nahrát nový dokument, jelikož cílový adresář je před-vyplněný (ale může být změněn). K možnosti **Nahrát dokument později** se dostaneme až v následující části.
+Tato akce vytvoří novou aktuální verzi dokumentu. Z právě aktuální verze (kterou lze nahradit) se stane historická verze dokumentu. Stačí nahrát nový dokument, přičemž cílový adresář musí zůstat stejný jako adresář aktuálního dokumentu. K možnosti **Nahrát dokument později** se dostaneme až v následující části.
 
 !>**Upozornění:** povoleno je nahrát pouze dokument se stejným typem, jako právě nahrazovaný aktuální dokument.
+
+!>**Upozornění:** při nahrání nové verze nebo nahrazení dokumentu nelze změnit jeho cílový adresář. Pokud je nastavena konfigurační proměnná `fileArchivUseCategoryAsLink` na `true`, nelze změnit ani kategorii na hodnotu, která by dokument přesunula do jiného adresáře.
 
 Třeba si uvědomit, že nahrávaný dokument bude po uložení automaticky fyzicky přejmenován podle názvu aktuálně nahrazovaného dokumentu. Chcete-li aby se dokument volal jinak, musíte použít možnost **Fyzicky přejmenovat dokument** a zadat nové jméno.
 
@@ -174,6 +176,8 @@ Všechny čekající verze daného dokumentu jsou dostupné přímo v jeho kart�
 Tato akce dělá přesně to, co název napovídá. Nenahraje novou verzi dokumentu, ale vymění právě aktuální hlavní dokument za jiný, čili se vymění soubor reprezentující dokument. Dokument může mít jiný název, ale automaticky se zachová název původního dokumentu.
 
 Tato akce funguje i pro dokumenty typu **Vzor** i pro dokumenty, které čekají na nahrání. Tak víte například. vyměnit dokument, který se má nahrát v budoucnosti bez potřeby vymazání původního dokumentu a vytváření nového záznamu.
+
+Cílový adresář nahrazovaného dokumentu musí zůstat nezměněn. Stejné omezení platí i pro kategorii, pokud kategorie podle konfigurace určuje fyzický adresář dokumentu.
 
 !>**Upozornění:** povoleno je nahrát pouze dokument se stejným typem, jako právě nahrazovaný aktuální dokument.
 
@@ -252,6 +256,14 @@ Jako i při mazání vzorů, tyto naplánované verze lze vymazat **IBA** pomoc�
 
 Soubory můžete do aktuálně zvolené složky nahrát i přímo ze seznamu dokumentů. Přesuňte jeden nebo více souborů z počítače nad stránku manažera dokumentů. Nahrávání používá aktuálně označenou složku ve stromové struktuře a povolené přípony souborů z konfigurační proměnné `fileArchivAllowExt`.
 
+Pokud je `fileArchivUseCategoryAsLink` nastaveno na `true` a při hromadném nahrávání zadáte kategorii, cílová složka se odvodí z této kategorie. V této složce se kontrolují i ​​soubory se stejným jménem a provedou se zvolené akce **Nahradit** nebo **Nová verze**.
+
+Před spuštěním nahrávání se zobrazí editor stejný jako při vytváření dokumentu, přičemž obsahuje pouze pole určená pro hromadná nastavení. Na kartě **Základní** můžete volitelně nastavit stejnou **Platnost od** a **Platnost do** pro všechny vybrané soubory. Zapnutím možnosti **Nahrát dokument později** nastavíte i budoucí termín nahrání a e-mailové adresy pro notifikaci.
+
+![](drag-drop-upload-settings-dialog.png)
+
+Karta **Pokročilé** umožňuje pro všechny nahrávané soubory nastavit produkt, kategorii, kód produktu, zobrazování, indexování, prioritu, referenci na hlavní dokument, poznámku a povolení uložit dokument s již existujícím obsahem. Prázdná textová pole a neupravené přepínače ponechají výchozí nebo stávající hodnoty. Tlačítkem **Zrušit** zrušíte celé čekající nahrávání.
+
 Během nahrávání se zobrazí panel s průběhem pro jednotlivé soubory i celkovým průběhem. Po úspěšném nahrání se pro každý soubor vytvoří samostatný hlavní dokument, jeho název se předvyplní ze jména souboru bez přípony a tabulka se automaticky obnoví.
 
 ![](drag-drop-upload-dialog.png)
@@ -263,6 +275,8 @@ Pokud již ve zvolené složce existuje soubor se stejným reálným jménem, �
 - **Nová verze** - nový soubor se uloží jako aktuální verze dokumentu a původní soubor se přesune mezi historické verze.
 
 Ve spodní části panelu můžete stejnou volbu použít najednou pro všechny soubory čekající na rozhodnutí.
+
+Nastavená data platnosti se použijí i při možnostech **Nahradit** a **Nová verze**. U těchto možností se odmítne změna kategorie, která by stávající dokument přesunula do jiného fyzického adresáře. Naplánované nahrání duplicitního souboru je podporováno u možnosti **Nová verze**, nikoli při okamžitém nahrazení. U možnosti **Přeskočit** se stávající dokument nezmění.
 
 ![](drag-drop-upload-duplicity-dialog.png)
 
