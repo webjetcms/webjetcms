@@ -2,13 +2,13 @@
 
 ## Validation when leaving a field
 
-Set the configuration value `multistepform_validateOnBlur` to `true` to validate text-like inputs and plain textareas when they lose focus. The default is `false`. The setting is returned as `validateOnBlur` by `/rest/multistep-form/get-step` and applies when a step is loaded.
+Setting `multistepform_validateOnBlur=true` enables checks of text fields when they lose focus. It is disabled by default. The checks apply the static required setting, trim spaces, and validate allowed values; errors appear beside the field. This check does not save data or call the custom form processor. Full validation, including conditional rules, runs when the step is submitted.
 
-Validation uses the field's static required setting, trimming, XSS, and regular-expression rules, including localized custom error messages. Conditional visibility and requirement rules are evaluated only when the step is submitted. Errors appear beside the affected field and clear when it becomes valid. Selects, checkboxes, radio buttons, file uploads/Dropzone, CAPTCHA, rich-text editors, hidden fields, buttons, and disabled or readonly controls do not trigger blur validation.
+## Unfinished data when going back
 
-The frontend calls `POST /rest/multistep-form/validate-field` with query parameters `form-name`, `step-id`, `field-id`, and `language`, the `X-CSRF-Token` header, and only the selected field's value as a JSON object, for example `{"email":"visitor@example.com"}`. Both `field-id` and the JSON key are logical field identifiers without the form-instance DOM prefix (`email` in this example). A logical identifier that itself starts with `f1-`, such as `f1-team-1`, must be sent unchanged. The `/rest/multistep-form/save-draft` endpoint also accepts logical JSON keys. No values from other fields or previous steps are needed for the single-field validation check.
+The **Back** button temporarily saves the current step's values in the HTTP session, separately from confirmed answers. Incomplete values, hidden fields, cleared selections, and completed uploads are preserved. This does not require successful validation and also works when validation on leaving a field is disabled.
 
-The endpoint returns HTTP 200 with `{"fieldErrors":{}}` when valid or `{"fieldErrors":{"fieldId":"message"}}` when invalid. Invalid requests return HTTP 400 with localized `err_msg`; a disabled feature returns HTTP 404. This check does not save values, advance steps, invoke form processors, validate CAPTCHA/uploads, or update statistics. Full validation still runs when the step is submitted.
+When the step is reopened, unfinished values take precedence over older confirmed answers. Moving forward validates and confirms the values of visible fields. If temporary saving fails, the current step remains open. Unfinished data is removed when the form is completed, the attempt is permanently ended, or the session expires; it is not restored after refreshing the page.
 
 ## Custom form processing
 
