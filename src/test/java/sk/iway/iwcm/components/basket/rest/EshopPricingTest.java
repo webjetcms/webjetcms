@@ -22,6 +22,8 @@ import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -33,6 +35,7 @@ import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
+import sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsController;
 import sk.iway.iwcm.components.basket.delivery_methods.rest.DeliveryMethodsService;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
@@ -40,6 +43,7 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService;
+import sk.iway.iwcm.components.basket.support.MethodDto;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
 
@@ -131,6 +135,26 @@ class EshopPricingTest {
         cloudMock.close();
         originalSettings.forEach(Constants::setString);
         Constants.setInstallName(originalInstallName);
+    }
+
+    /** Delivery AJAX responses settle fees before client-side addition and preserve disabled-mode pricing. */
+    @ParameterizedTest
+    @CsvSource({ "true,0,2.00", "true,0.0,1.80", "true,0.00,1.85", "true,0.0000,1.85", "false,0,1.85" })
+    void returnsSettledDeliveryFee(boolean enabled, String format, BigDecimal expected) {
+        config("basketRoundPrices", Boolean.toString(enabled));
+        config("currencyFormat", format);
+        delivery.setPrice(new BigDecimal("1.50"));
+        delivery.setVat(23);
+        when(deliveries.getAllDeliveryMethods(request, prop, "sk"))
+            .thenReturn(List.of(new MethodDto("1", "Delivery", delivery.getPriceVat())));
+
+        try (MockedStatic<EshopService> eshop = mockStatic(EshopService.class)) {
+            eshop.when(EshopService::getInstance).thenReturn(service);
+            eshop.when(() -> EshopService.getDisplayCurrency(request)).thenReturn("eur");
+
+            List<MethodDto> methods = new DeliveryMethodsController().getDeliveryMethodsDtos("sk", request);
+            assertEquals(expected, methods.get(0).getPriceVat());
+        }
     }
 
     /** Checkout refreshes prices, includes fees and saves amounts that can be rebuilt from existing fields. */
