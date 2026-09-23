@@ -42,6 +42,7 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
+import sk.iway.iwcm.components.basket.jpa.InvoiceStatus;
 import sk.iway.iwcm.components.basket.payment_methods.rest.PaymentMethodsService;
 import sk.iway.iwcm.components.basket.support.MethodDto;
 import sk.iway.iwcm.doc.DocDetails;
@@ -157,7 +158,7 @@ class EshopPricingTest {
         }
     }
 
-    /** Checkout refreshes prices, includes fees and saves amounts that can be rebuilt from existing fields. */
+    /** Checkout preserves custom fields, calculates prices and ignores submitted totals and identifiers. */
     @Test
     void savesCurrentPricesAndFees() {
         config("currencyFormat", "0.0000");
@@ -169,6 +170,11 @@ class EshopPricingTest {
         paymentNet = new BigDecimal("2.675");
         request.setParameter("priceToPayVat", "0.01");
         request.setParameter("currency", "usd");
+        request.setParameter("id", "999");
+        request.setParameter("statusId", "999");
+        for (char field = 'A'; field <= 'F'; field++) {
+            request.setParameter("field" + field, "Value " + field);
+        }
         List<BasketInvoiceItemEntity> stored = new ArrayList<>();
         when(items.saveAll(any())).thenAnswer(call -> {
             ((Iterable<BasketInvoiceItemEntity>) call.getArgument(0)).forEach(stored::add);
@@ -176,6 +182,7 @@ class EshopPricingTest {
         });
         when(invoices.save(any())).thenAnswer(call -> {
             BasketInvoiceEntity invoice = call.getArgument(0);
+            assertNull(invoice.getId(), "The submitted identifier must not reach persistence");
             invoice.setId(501L);
             return invoice;
         });
@@ -188,6 +195,13 @@ class EshopPricingTest {
             assertEquals(new BigDecimal("11.15"), invoice.getTotalPriceVat());
             assertEquals(new BigDecimal("10.05"), invoice.getTotalPrice());
             assertEquals("eur", invoice.getCurrency());
+            assertEquals(InvoiceStatus.INVOICE_STATUS_NEW.getValue(), invoice.getStatusId());
+            assertEquals("Value A", invoice.getFieldA());
+            assertEquals("Value B", invoice.getFieldB());
+            assertEquals("Value C", invoice.getFieldC());
+            assertEquals("Value D", invoice.getFieldD());
+            assertEquals("Value E", invoice.getFieldE());
+            assertEquals("Value F", invoice.getFieldF());
             assertEquals(4, stored.size());
             assertTrue(stored.stream().allMatch(row -> row.getInvoiceId() == 501));
             for (BasketInvoiceItemEntity row : stored) {

@@ -339,7 +339,8 @@ public class EshopService {
 			BeanWrapperImpl wrapper = new BeanWrapperImpl(invoice);
 			Map<String, String[]> fields = new HashMap<>(request.getParameterMap());
 			if (BasketRoundingService.isEnabled()) fields.keySet().removeIf(key ->
-				!key.startsWith("contact") && !key.startsWith("delivery") && !"userNote".equals(key) && !"paymentMethod".equals(key));
+				!key.startsWith("contact") && !key.startsWith("delivery") && !"userNote".equals(key) && !"paymentMethod".equals(key)
+				&& !key.startsWith("field"));
 			wrapper.setPropertyValues(new MutablePropertyValues(fields), true, true);
 			invoice.setPriceToPayVat(null);
 
