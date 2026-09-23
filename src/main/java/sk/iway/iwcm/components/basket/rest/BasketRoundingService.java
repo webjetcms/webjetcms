@@ -54,6 +54,25 @@ public final class BasketRoundingService {
         return isEnabled() ? roundGross(gross) : gross;
     }
 
+    /** Applies an integer VAT rate without rounding the gross price. */
+    public static BigDecimal unroundedPriceWithVat(BigDecimal netPrice, int vatRate) {
+        return netPrice.multiply(BigDecimal.valueOf(100L + vatRate)).movePointLeft(2);
+    }
+
+    /** Keeps payment fees unrounded before currency conversion, preserving legacy item pricing when disabled. */
+    public static BigDecimal paymentFeePriceWithVat(BasketInvoiceItemEntity item) {
+        return isEnabled() ? unroundedPriceWithVat(item.getItemPrice(), item.getItemVat()) : item.getItemPriceVat();
+    }
+
+    /** Keeps delivery fees unrounded before currency conversion, preserving legacy two-decimal pricing when disabled. */
+    public static BigDecimal deliveryPriceWithVat(BigDecimal netPrice, Integer vatRate) {
+        if (netPrice == null) return BigDecimal.ZERO;
+        if (vatRate == null || vatRate < 1) return netPrice;
+
+        BigDecimal gross = unroundedPriceWithVat(netPrice, vatRate);
+        return isEnabled() ? gross : gross.setScale(2, RoundingMode.HALF_UP);
+    }
+
     /** Settles a line in EUR or CZK after multiplying its rounded unit price by quantity. */
     public static BigDecimal roundLineGross(BigDecimal grossUnit, int quantity) {
         return grossUnit.multiply(BigDecimal.valueOf(quantity)).setScale(2, RoundingMode.HALF_UP);
@@ -65,8 +84,7 @@ public final class BasketRoundingService {
     }
 
     public static void recalculateLinePrice(BasketInvoiceItemEntity item, int scale) {
-        item.setRoundedUnitPriceVat(item.getItemPrice().multiply(HUNDRED.add(BigDecimal.valueOf(item.getItemVat())))
-            .movePointLeft(2).setScale(scale, RoundingMode.HALF_UP));
+        item.setRoundedUnitPriceVat(unroundedPriceWithVat(item.getItemPrice(), item.getItemVat()).setScale(scale, RoundingMode.HALF_UP));
         item.setLineVatAmount(null);
     }
 

@@ -366,10 +366,8 @@ public class BasketStatsService {
         if (fee.getItemPrice() == null || fee.getItemQty() == null) return BigDecimal.ZERO;
 
         int vat = fee.getItemVat() == null ? 0 : fee.getItemVat();
-        BigDecimal vatMultiplier = BigDecimal.ONE.add(BigDecimal.valueOf(vat).movePointLeft(2));
-        BigDecimal feePrice = fee.getItemPrice()
-            .multiply(BigDecimal.valueOf(fee.getItemQty()))
-            .multiply(vatMultiplier);
+        BigDecimal feePrice = BasketRoundingService.unroundedPriceWithVat(
+            fee.getItemPrice().multiply(BigDecimal.valueOf(fee.getItemQty())), vat);
         return convertPrice(feePrice, fee.getCurrency(), currency);
     }
 

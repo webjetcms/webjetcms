@@ -14,22 +14,55 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 
 /** Covers selling-unit rounding, small prices and reconciled VAT for a mixed basket. */
 class BasketRoundingServiceTest {
 
     private String originalFormat;
+    private String originalRounding;
 
     @BeforeEach
     void setUp() {
         originalFormat = Constants.getString("currencyFormat");
+        originalRounding = Constants.getString("basketRoundPrices");
         Constants.setString("currencyFormat", "0.00");
     }
 
     @AfterEach
     void tearDown() {
         Constants.setString("currencyFormat", originalFormat);
+        Constants.setString("basketRoundPrices", originalRounding);
+    }
+
+    /** Payment fees retain full precision before conversion and honor legacy stored prices when rounding is disabled. */
+    @ParameterizedTest
+    @CsvSource({ "true,,1.96062", "false,,1.96062", "true,1.96,1.96062", "false,1.96,1.96" })
+    void preservesPaymentFeePricing(boolean enabled, BigDecimal rounded, BigDecimal expected) {
+        Constants.setString("basketRoundPrices", Boolean.toString(enabled));
+        BasketInvoiceItemEntity item = item("1.594", 23, 1, 1);
+        item.setRoundedUnitPriceVat(rounded);
+
+        assertEquals(expected, BasketRoundingService.paymentFeePriceWithVat(item));
+    }
+
+    /** Delivery prices retain legacy rounding and missing-value handling while keeping enabled fees precise. */
+    @ParameterizedTest
+    @CsvSource({
+        "true,1.594,23,1.96062", "false,1.594,23,1.96",
+        "true,,23,0", "false,,23,0",
+        "true,1.594,,1.594", "false,1.594,,1.594",
+        "true,1.594,0,1.594", "false,1.594,0,1.594",
+        "true,1.594,-1,1.594", "false,1.594,-1,1.594"
+    })
+    void preservesDeliveryFeePricing(boolean enabled, BigDecimal net, Integer rate, BigDecimal expected) {
+        Constants.setString("basketRoundPrices", Boolean.toString(enabled));
+        DeliveryMethodEntity delivery = new DeliveryMethodEntity();
+        delivery.setPrice(net);
+        delivery.setVat(rate);
+
+        assertEquals(expected, delivery.getPriceVat());
     }
 
     /** Half-cent ties round upwards before quantity is multiplied, without changing the source price. */
