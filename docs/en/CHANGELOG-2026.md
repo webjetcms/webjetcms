@@ -69,6 +69,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Multi-step forms - unfinished values and completed uploads are preserved when [returning to the previous step](redactor/apps/multistep-form/README.md#return-to-previous-step) (#58794).
+- Multi-step forms - added [validation when leaving a field](redactor/apps/multistep-form/README.md#validation-when-leaving-a-field), enabled using the `multistepform_validateOnBlur` configuration variable (#58794).
 - [Forms](redactor/apps/form/README.md#possible-configuration-variables) - both classic and multi-step forms respect `sendMailSaveEmail` and save emails as `.eml` files to `sendMailSaveEmailPath` instead of SMTP sending. If the write fails, the form reports an error.
 - Multi-step forms - added [return to previous step](redactor/apps/multistep-form/README.md#return-to-previous-step) with restoring saved values ​​and files and [CSS template selection](redactor/apps/multistep-form/README.md#css-templates) for each inserted instance and preview in the administration (#58742).
 
@@ -201,6 +203,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Multi-step forms - fixed validation of fields with chained visibility conditions (#58794).
 - Forms - fixed archiving of forms (#305).
 - Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
@@ -209,6 +212,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Performance
 
+- Multi-step forms - faster repeated field checks while filling in the form (#58794).
 - Optimized loading of template groups when displaying a page and searching for optional fields. The group is cached and reused without having to read it from the database (#311).
 
 ### Safety

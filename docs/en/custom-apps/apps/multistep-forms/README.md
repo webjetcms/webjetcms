@@ -1,5 +1,17 @@
 # Forms
 
+## Validation when leaving a field
+
+Setting `multistepform_validateOnBlur=true` enables checks of text fields when they lose focus. It is disabled by default. The checks apply the static required setting, trim spaces, and validate allowed values; errors appear beside the field. This check does not save data or call the custom form processor. Full validation, including conditional rules, runs when the step is submitted.
+
+## Unfinished data when going back
+
+The **Back** button temporarily saves the current step's values in the HTTP session, separately from confirmed answers. Incomplete values, hidden fields, cleared selections, and completed uploads are preserved. This does not require successful validation and also works when validation on leaving a field is disabled.
+
+When the step is reopened, unfinished values take precedence over older confirmed answers. Moving forward validates and confirms the values of visible fields. If temporary saving fails, the current step remains open. Unfinished data is removed when the form is completed, the attempt is permanently ended, or the session expires; it is not restored after refreshing the page.
+
+## Custom form processing
+
 In some cases, it is necessary to perform more complex operations or form validations. For this purpose, in multi-step forms, it is possible to set a Java class in the Form Processor field. This is a special class that is used to process form steps and allows:
 
 - step validation

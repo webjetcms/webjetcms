@@ -48,9 +48,11 @@ Od druhého kroku sa zobrazuje tlačidlo **Prejsť na predchádzajúci krok**. N
     <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-Pri návrate sa obnovia hodnoty uložené pri poslednom úspešnom prechode z daného kroku dopredu, vrátane výberov v zaškrtávacích políčkach a dostupných nahraných súborov. Pri obrázkoch sa obnoví aj náhľad. Po úprave údajov a opätovnom prechode dopredu sa podmienky zobrazenia a povinnosti ďalších polí vyhodnotia podľa aktualizovaných hodnôt.
+Tlačidlo **Späť** zachová rozpracované údaje aj bez vyplnenia všetkých povinných polí. Keď sa do kroku vrátite, obnovia sa texty, výbery aj dokončené nahrávania. Zachová sa tiež vymazanie hodnoty alebo zrušenie výberu. Overenie CAPTCHA je potrebné zopakovať. Ak sa údaje nepodarí uchovať, zostanete v aktuálnom kroku a môžete návrat skúsiť znova.
 
-!>**Upozornenie:** Tlačidlo na návrat neukladá ani nevaliduje práve otvorený krok. Zmeny, ktoré návštevník urobí pred kliknutím na **Späť**, sa nezachovajú, ak ich predtým neuložil úspešným prechodom dopredu. To platí aj pre novo nahrané súbory v tomto kroku.
+Pri pokračovaní dopredu sa údaje skontrolujú. Hodnoty skrytých polí sa uchovajú pre prípad ich opätovného zobrazenia, ale pri odoslaní daného kroku sa nepoužijú.
+
+!>**Upozornenie:** Používajte tlačidlo **Späť** vo formulári. Zachovanie údajov je dočasné a neslúži na pokračovanie po obnovení alebo zatvorení stránky.
 
 ### Duplikovanie
 
@@ -100,6 +102,12 @@ Ak chcete definovať vlastné položky formulárov, alebo chcete zmeniť existuj
 !>**Upozornenie:** vo viackrokovom formulári nefungujú vlastné typy položiek, ktoré priamo vykreslia natívny element `<input type="file">`. Súbor je možné nahrať iba pomocou komponentu `Dropzone`.
 
 !>**Upozornenie:** pri úprave položky formuláru neodporúčame meniť typ položky, ale radšej nahradiť pôvodnú položku novou.
+
+### Validácia pri opustení poľa
+
+Voliteľná kontrola upozorní na chybu v textovom poli hneď po jeho opustení, napríklad klávesom `Tab`. Chybová správa sa zobrazí pri poli a oznámi čítačke obrazovky. Po oprave a opätovnej kontrole zmizne. Funkcia je predvolene vypnutá.
+
+Kontrola sa riadi nastaveniami **Povinné pole**, **Orezať medzery** a **Povolená hodnota**. Podmienky povinnosti sa zohľadnia až pri odoslaní kroku, keď sa skontrolujú všetky údaje. Samotné opustenie poľa údaje neukladá.
 
 ### Automatické dopĺňanie
 
@@ -312,3 +320,4 @@ Dostupné konfiguračné premenné pre viackrokové formuláre:
 - `multistepform_emailFields` - zoznam začiatkov identifikátorov polí, ktoré budú považované za polia pre emailovú adresu. Napríklad hodnota `email` zodpovedá aj položke `emailova-adresa-1`. Na potvrdenie prijatia formulára sa použijú všetky nájdené platné emailové adresy.
 - `multistepform_attachmentDefaultName` - prednastavený názov prílohy v emailoch, ktorý sa použije ak sa nepodarí získať skutočný názov súboru prílohy.
 - `multistepform_subjectDefaultValue` - prednastavený prekladový kľúč pre predmet emailu, ktorý sa použije ak nie je zadaný predmet v nastaveniach/atribútoch formuláru.
+- `multistepform_validateOnBlur` - zapne [validáciu textových polí pri ich opustení](#validácia-pri-opustení-poľa). Predvolená hodnota je `false`; nastavenie sa uplatní pri načítaní kroku.

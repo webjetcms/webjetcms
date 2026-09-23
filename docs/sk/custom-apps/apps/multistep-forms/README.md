@@ -1,5 +1,17 @@
 # Formuláre
 
+## Validácia pri opustení poľa
+
+Nastavenie `multistepform_validateOnBlur=true` zapne kontrolu textových polí pri strate fokusu. Predvolene je vypnuté. Kontroluje sa statická povinnosť, orezanie medzier a povolené hodnoty; chyba sa zobrazí pri poli. Kontrola neukladá údaje ani nevolá vlastného spracovateľa. Úplná validácia vrátane podmienok prebehne pri odoslaní kroku.
+
+## Rozpracované údaje pri návrate
+
+Tlačidlo **Späť** dočasne uloží hodnoty aktuálneho kroku do HTTP session, oddelene od potvrdených odpovedí. Zachovajú sa aj neúplné hodnoty, skryté polia, zrušené výbery a dokončené nahrávania. Toto uloženie nevyžaduje úspešnú validáciu a funguje aj pri vypnutej kontrole pri opustení poľa.
+
+Pri návrate do kroku majú rozpracované hodnoty prednosť pred staršími potvrdenými odpoveďami. Prechod dopredu skontroluje a potvrdí hodnoty viditeľných polí. Ak dočasné uloženie zlyhá, aktuálny krok zostane otvorený. Rozpracované údaje sa odstránia po dokončení formulára, definitívnom ukončení pokusu alebo zániku session; po obnovení stránky sa neobnovia.
+
+## Vlastné spracovanie formulára
+
 V niektorých prípadoch je potrebné vykonať zložitejšie operácie, alebo validácie formulárov. Pre tento účel je vo viackrokových formulároch možné nastaviť Java triedu v poli Spracovateľ formulárov. Ide o špeciálnu triedu, ktorá slúži na spracovanie krokov formuláru a umožňuje:
 
 - validáciu kroku

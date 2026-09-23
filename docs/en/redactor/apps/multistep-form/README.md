@@ -48,9 +48,11 @@ From the second step onwards, the **Go to previous step** button is displayed. T
     <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-When you return, the values ​​saved from the last successful forward step are restored, including checkbox selections and available uploaded files. For images, the preview is also restored. After editing the data and moving forward again, the display conditions and obligations of other fields are evaluated according to the updated values.
+The **Back** button preserves unfinished data even if some required fields are empty. When you return to the step, text, selections, and completed uploads are restored. Cleared values and deselected options are also remembered. CAPTCHA verification must be repeated. If the data cannot be preserved, you remain in the current step and can try going back again.
 
-!>**Warning:** The back button does not save or validate the currently open step. Changes made by the visitor before clicking **Back** will not be retained unless they have previously saved them by successfully moving forward. This also applies to newly uploaded files in this step.
+The data is checked when you move forward. Hidden field values are kept in case the fields become visible again, but are not used when submitting that step.
+
+!>**Warning:** Use the **Back** button within the form. Data is kept temporarily and cannot be restored after refreshing or closing the page.
 
 ### Duplication
 
@@ -100,6 +102,12 @@ If you want to define your own form items, or want to change existing ones, or c
 !>**Warning:** Custom item types that directly render the native `<input type="file">` element do not work in a multi-step form. The file can only be uploaded using the `Dropzone` component.
 
 !>**Warning:** When editing a form item, we do not recommend changing the item type, but rather replacing the original item with a new one.
+
+### Validation when leaving a field
+
+An optional check flags an error in a text field as soon as you leave it, for example by pressing `Tab`. The error message appears beside the field and is announced by screen readers. It disappears once the value is corrected and checked again. This feature is disabled by default.
+
+The check follows the **Required field**, **Trim spaces**, and **Allowed value** settings. Conditional requirements are evaluated only when the step is submitted and all data is checked. Leaving a field does not save its value.
 
 ### Automatic replenishment
 
@@ -312,3 +320,4 @@ Available configuration variables for multi-step forms:
 - `multistepform_emailFields` - ​​list of starting field identifiers that will be considered as email address fields. For example, the value `email` also matches the entry `emailova-adresa-1`. All found valid email addresses will be used to confirm receipt of the form.
 - `multistepform_attachmentDefaultName` - ​​default attachment name in emails, which will be used if the actual attachment file name cannot be obtained.
 - `multistepform_subjectDefaultValue` - ​​default translation key for the email subject, which will be used if no subject is specified in the form settings/attributes.
+- `multistepform_validateOnBlur` - enables [validation of text fields when leaving them](#validation-when-leaving-a-field). The default is `false`; the setting takes effect when a step is loaded.

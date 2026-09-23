@@ -310,6 +310,26 @@ Scenario('Insert multistep into page and test it', async ({ I, DTE, Document, Ap
     I.attachFile('input[accept=".gif,.png,.jpg,.jpeg,.svg"]', 'tests/apps/penguin.jpg');
     I.waitForText("Odstrániť súbor", 5, "a.dz-remove");
 
+    I.say("Preserve an unfinished upload, select value and rich text through Back");
+    const draftUploadKey = await I.grabValueFrom("input[name='f1-pridajte-obrazky-1']");
+    I.selectOption("#f1-select-pole-1", "C");
+    await I.usePlaywrightTo('edit the unfinished rich text field', async ({ page }) => {
+        await page.frameLocator('.multistep-form .cleditorMain iframe').locator('body').fill('autotest unfinished rich text');
+    });
+    I.clickCss("[data-multistep-back-step]");
+    I.waitForVisible("#f1-emailova-adresa-1");
+    I.clickCss("button[type='submit']");
+    I.waitForVisible("#f1-pridajte-obrazky-1-dropzone");
+    I.waitForElement("div.cleditorToolbar", 20);
+    I.waitForText("penguin.jpg", 10, ".dz-preview");
+    I.seeInField("input[name='f1-pridajte-obrazky-1']", draftUploadKey);
+    I.seeInField("#f1-select-pole-1", "C");
+    await I.usePlaywrightTo('verify restored rich text and preserve the expected final submission', async ({ page }) => {
+        const body = page.frameLocator('.multistep-form .cleditorMain iframe').locator('body');
+        await body.filter({ hasText: 'autotest unfinished rich text' }).waitFor();
+        await body.fill('happy wysiwyg placeholder');
+    });
+
     // Try second same image - save should be blocked with error
     I.attachFile('input[accept=".gif,.png,.jpg,.jpeg,.svg"]', 'tests/apps/penguin.jpg');
     I.waitForElement(locate("a.dz-remove").at(2), 10);
