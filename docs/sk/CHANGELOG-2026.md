@@ -218,6 +218,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
 - AI asistenti - pridaná ochrana pred `prompt injection` útokmi s oddelením systémových inštrukcií od používateľského obsahu a detekciou kódovaných vstupov (#58549).
+- HTML sanitizácia - `AllowSafeHtmlAttributeConverter` zachováva na všetkých doteraz povolených HTML elementoch atribúty `role`, `aria-*`, `data-*`, `id`, `title`, `lang`, `dir` (`ltr`, `rtl`, `auto`) a `tabindex` (`-1`, `0`). Umožňuje tak používať atribúty prístupnosti a vlastné dátové atribúty (#317).
 
 ### Dokumentácia
 
