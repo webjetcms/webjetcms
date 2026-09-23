@@ -49,7 +49,9 @@
 - Page Builder - elementy označené CSS třídou [`pb-duplicable`](frontend/page-builder/settings.md#duplikovatelný-element-oranžová-barva) lze v rámci stejného rodiče přesouvat, duplikovat a smazat. Vlastní nebo více selektorů lze nastavit přes `pbCustomSettings` (#58750).
 - Page Builder - upraveno [ovládání editoru](redactor/webpages/pagebuilder.md). Přidána pevná horní lišta s cestou k vybranému bloku, panel **Struktura**, rychlé akce a režim vkládání sekcí, kontejnerů a sloupců přímo do stránky. Rámečky lze skrýt nebo zobrazit pro celou hierarchii bloku. Knihovna bloků má kompaktní okno s náhledy, kategoriemi a kombinovaným vyhledáváním se štítky. Nastavení stylu používá rozbalovací skupiny vlastností a označuje právě upravovaný blok (#308).
 
-![](redactor/webpages/pagebuilder-structure.png)
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ### Headless režim
 
