@@ -589,7 +589,7 @@ public class MultistepFormsService {
     public final void saveStepDraft(String formName, Long stepId, HttpServletRequest request) throws SaveFormException, IOException {
         if(getValidStepEntity(formName, stepId, request) == null) throw new IllegalStateException("Invalid form or step for draft saving.");
         beforeStepSaveCheck(false, request);
-        JSONObject received = readFormValues(formName, request, false);
+        JSONObject received = readLogicalFormValues(formName, request, false);
         JSONObject draft = new JSONObject();
         for(FormItemEntity item : getStepItemsForValidation(formName, stepId)) {
             if("captcha".equals(item.getFieldType())) continue;
@@ -1016,7 +1016,7 @@ public class MultistepFormsService {
             throw new IllegalArgumentException("Field type does not support blur validation.");
         }
 
-        String value = readFormValues(formName, request).getString(fieldId);
+        String value = readLogicalFormValues(formName, request, true).getString(fieldId);
         JSONObject received = new JSONObject().put(fieldId, value);
 
         Map<String, String> errors = new HashMap<>();
@@ -1038,11 +1038,22 @@ public class MultistepFormsService {
      * @throws IllegalStateException when the form counter is invalid or the request body is empty
      */
     private JSONObject readFormValues(String formName, HttpServletRequest request) throws IOException {
-        return readFormValues(formName, request, true);
+        JSONObject received = readLogicalFormValues(formName, request, true);
+        return removeFormCounter(received, getFormCounter(formName, request));
     }
 
-    /** Drafts retain separator characters until the step is actually submitted. */
-    private JSONObject readFormValues(String formName, HttpServletRequest request, boolean stripSeparators) throws IOException {
+    /**
+     * Reads logical JSON field keys without removing a prefix that may be part of the identifier.
+     * Drafts retain separator characters until the step is actually submitted.
+     *
+     * @param formName logical form name
+     * @param request request containing the JSON body and form-instance counter
+     * @param stripSeparators whether to remove reserved characters used by saved form data
+     * @return submitted values with their logical field identifiers unchanged
+     * @throws IOException when reading the request body fails
+     * @throws IllegalStateException when the form counter is invalid or the request body is empty
+     */
+    private JSONObject readLogicalFormValues(String formName, HttpServletRequest request, boolean stripSeparators) throws IOException {
         int formCounter = getFormCounter(formName, request);
         if (formCounter < 1) throw new IllegalStateException("Invalid formCounter for form processing");
 
@@ -1050,7 +1061,7 @@ public class MultistepFormsService {
         if (Tools.isEmpty(body)) throw new IllegalStateException("Empty request body.");
         // These characters are reserved as separators in saved form data.
         if(stripSeparators) body = body.replace("|", "").replace("~", "");
-        return removeFormCounter(new JSONObject(body), formCounter);
+        return new JSONObject(body);
     }
 
     /**

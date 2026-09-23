@@ -119,7 +119,7 @@ class MultistepFormDraftTest {
     void filtersAndSanitizesDraftValues() throws Exception {
         request.getSession().setAttribute(sessionKey + "_note", "Confirmed note");
         setValues(new JSONObject()
-            .put("f1-note", "  untrimmed | ~  ")
+            .put("note", "  untrimmed | ~  ")
             .put("details", "<p>Draft text</p><script>alert(1)</script>")
             .put("email", "belongs to another step").put("captcha", "must not be retained"));
         service.saveStepDraft(formName, 2L, request);
@@ -131,6 +131,23 @@ class MultistepFormDraftTest {
         assertEquals("Confirmed note", request.getSession().getAttribute(sessionKey + "_note"));
         verifyNoInteractions(settings, save);
         databases.verifyNoInteractions();
+    }
+
+    /** Keeps logical IDs distinct when an ID starts with the current form instance prefix. */
+    @Test
+    void preservesPrefixLookingLogicalIds() throws Exception {
+        when(items.findAllForValidation(formName, 1)).thenReturn(List.of(
+            field(2, "team-1", "text"), field(2, "f1-team-1", "text")
+        ));
+        JSONObject values = new JSONObject()
+            .put("team-1", "Ordinary team")
+            .put("f1-team-1", "Formula 1 team");
+        setValues(values);
+
+        service.saveStepDraft(formName, 2L, request);
+
+        JSONObject draft = service.getDraftStepData(formName, 2L, request).first;
+        assertEquals(values.toMap(), draft.toMap());
     }
 
     /** Reading and clearing drafts is scoped to the form instance and domain. */

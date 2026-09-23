@@ -12,7 +12,7 @@ before(async () => { browser = await chromium.launch({ headless: true }); });
 after(async () => { await browser?.close(); });
 
 /** Creates real form controllers with isolated HTTP fixtures and no jQuery dependency. */
-async function createPage(t) {
+async function createPage(t, additionalFields = () => "") {
     const page = await browser.newPage();
     t.after(() => page.close());
     await page.route("**/*", async route => {
@@ -38,6 +38,7 @@ async function createPage(t) {
                         <textarea id="${prefix}message" name="${prefix}message"></textarea>
                         <div class="cs-error cs-error-${prefix}message"></div>
                     </div>
+                    ${additionalFields(prefix)}
                     <input id="${prefix}external" aria-label="Externally validated field" aria-invalid="true">
                 </form>`
             } });
@@ -84,6 +85,43 @@ test("blur errors have a live region, preserve help text and clear invalid state
     assert.equal(await error.textContent(), "");
     assert.equal(await email.getAttribute("aria-describedby"), `f1-help ${errorId}`);
     assert.equal(await page.evaluate(() => document.activeElement.id), "f1-message");
+});
+
+test("blur validation keeps prefix-like logical field IDs separate from ordinary IDs", async t => {
+    const page = await createPage(t, prefix => `
+        <div class="form-group">
+            <label for="${prefix}team-1">Team</label>
+            <input id="${prefix}team-1" name="${prefix}team-1">
+            <div class="cs-error cs-error-${prefix}team-1"></div>
+        </div>
+        <div class="form-group">
+            <label for="${prefix}f1-team-1">F1 team</label>
+            <input id="${prefix}f1-team-1" name="${prefix}f1-team-1">
+            <div class="cs-error cs-error-${prefix}f1-team-1"></div>
+        </div>`);
+    const firstWrapper = page.locator("#multistep-form-wrapper-first");
+    const ordinary = firstWrapper.locator("#f1-team-1");
+    const prefixed = firstWrapper.locator("#f1-f1-team-1");
+    const requests = [];
+    await page.route("**/validate-field?*", route => {
+        const request = route.request();
+        const fieldId = new URL(request.url()).searchParams.get("field-id");
+        const values = request.postDataJSON();
+        requests.push({ fieldId, values });
+        return route.fulfill({ json: { fieldErrors: { [fieldId]: "F1 team is invalid." } } });
+    });
+
+    await prefixed.fill("invalid");
+    const response = page.waitForResponse("**/validate-field?*");
+    await prefixed.press("Tab");
+    await response;
+    await page.waitForFunction(() => firstForm._fieldValidationRequests.size === 0);
+
+    assert.deepEqual(requests, [{ fieldId: "f1-team-1", values: { "f1-team-1": "invalid" } }]);
+    assert.equal(await ordinary.getAttribute("aria-invalid"), null, "A prefix-like logical ID must not target an ordinary field");
+    assert.equal(await firstWrapper.locator(".cs-error-f1-team-1").textContent(), "");
+    assert.equal(await prefixed.getAttribute("aria-invalid"), "true");
+    assert.equal(await firstWrapper.locator(".cs-error-f1-f1-team-1").textContent(), "F1 team is invalid.");
 });
 
 test("submission errors reset independently across form instances and after a step reload", async t => {

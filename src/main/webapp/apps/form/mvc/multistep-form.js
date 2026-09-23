@@ -751,7 +751,7 @@ export class MultistepForm {
      * @returns {string} Instance-specific DOM identifier.
      */
     _toDomFieldId(logicalId) {
-        if (!logicalId || !this.domIdPrefix || logicalId.startsWith(this.domIdPrefix)) return logicalId;
+        if (!logicalId || !this.domIdPrefix) return logicalId;
         return this.domIdPrefix + logicalId;
     }
 
