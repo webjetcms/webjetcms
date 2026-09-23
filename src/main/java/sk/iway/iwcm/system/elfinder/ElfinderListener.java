@@ -129,6 +129,7 @@ public class ElfinderListener {
         model.addAttribute("uploadIcon",  "wjIconBig-uploadImage");
         model.addAttribute("elfinderMetadataEnabled", Constants.getBoolean("elfinderMetadataEnabled"));
         model.addAttribute("elfinderMetadataAutopopup", Constants.getBoolean("elfinderMetadataAutopopup"));
+        model.addAttribute("archivPath", FileArchivatorKit.getArchivPath());
 
         //
         model.addAttribute("currentTimeMillis", new Date().getTime());

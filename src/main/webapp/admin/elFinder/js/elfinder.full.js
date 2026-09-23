@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.65 (2026-08-31)
+ * Version 2.1.65 (2026-09-14)
  * http://elfinder.org
  * 
  * Copyright 2009-2026, Studio 42
@@ -13265,6 +13265,7 @@ elFinder.prototype.resources = {
 	},
 	tpl : {
 		perms      : '<span class="elfinder-perms"></span>',
+		readonly   : '<span class="elfinder-read-only"></span>',
 		lock       : '<span class="elfinder-lock"></span>',
 		symlink    : '<span class="elfinder-symlink"></span>',
 		navicon    : '<span class="elfinder-nav-icon"></span>',
@@ -14325,7 +14326,7 @@ if (typeof elFinder === 'function' && elFinder.prototype.i18) {
 			'cmdwjmetadata' : 'Permissions',
 			'cmdwjfileupdate'  : 'Update file',
 			'wjfileupdate-onlyOneFileErr': 'Only one file can be selected when updating a file',
-			'wjfileupdate-typeMismatch': 'The type of the selected file must be the same as the type of the file to be updated, namely: ',
+			'wjfileupdate-typeMismatch': 'Wrong file type. Select a file of type ',
 			'wjsearch-title' : 'Search'
 		}
 	};
@@ -15402,6 +15403,7 @@ $.fn.elfindercwd = function(fm, options) {
 			},
 			
 			permsTpl = fm.res('tpl', 'perms'),
+			readOnlyTpl = fm.res('tpl', 'readonly'),
 			
 			lockTpl = fm.res('tpl', 'lock'),
 			
@@ -15467,7 +15469,7 @@ $.fn.elfindercwd = function(fm, options) {
 					return f.perm? fm.formatFileMode(f.perm, 'both') : '';
 				},
 				marker : function(f) {
-					return (f.alias || f.mime == 'symlink-broken' ? symlinkTpl : '')+(!f.read || !f.write ? permsTpl : '')+(f.locked ? lockTpl : '');
+					return (f.alias || f.mime == 'symlink-broken' ? symlinkTpl : '')+(!f.read || !f.write ? (fm.options.readOnlyMarker && fm.options.readOnlyMarker(f) ? readOnlyTpl : permsTpl) : '')+(f.locked ? lockTpl : '');
 				},
 				tooltip : function(f) {
 					var title = fm.formatDate(f) + (f.size > 0 ? ' ('+fm.formatSize(f.size)+')' : ''),
@@ -19621,6 +19623,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 			dropover  = fm.res(c, 'adroppable'),
 			tpl       = fm.res('tpl', 'placedir'),
 			ptpl      = fm.res('tpl', 'perms'),
+			rtpl      = fm.res('tpl', 'readonly'),
 			spinner   = $(fm.res('tpl', 'navspinner')),
 			suffix    = opts.suffix? opts.suffix : '',
 			key       = 'places' + suffix,
@@ -19741,7 +19744,7 @@ $.fn.elfinderplaces = function(fm, opts) {
 				return $(tpl.replace(/\{id\}/, hash2id(dir? dir.hash : hash))
 						.replace(/\{name\}/, fm.escape(dir? dir.i18 || dir.name : hash))
 						.replace(/\{cssclass\}/, dir? (fm.perms2class(dir) + (dir.notfound? ' elfinder-na' : '') + (dir.csscls? ' '+dir.csscls : '')) : '')
-						.replace(/\{permissions\}/, (dir && (!dir.read || !dir.write || dir.notfound))? ptpl : '')
+						.replace(/\{permissions\}/, dir && (!dir.read || !dir.write || dir.notfound) ? (fm.options.readOnlyMarker && fm.options.readOnlyMarker(dir) ? rtpl : ptpl) : '')
 						.replace(/\{title\}/, dir? (' title="' + fm.escape(fm.path(dir.hash, true) || dir.i18 || dir.name) + '"') : '')
 						.replace(/\{symlink\}/, '')
 						.replace(/\{style\}/, (dir && dir.icon)? fm.getIconStyle(dir) : ''));
@@ -21272,6 +21275,7 @@ $.fn.elfindertree = function(fm, opts) {
 			 * @type String
 			 */
 			ptpl = fm.res('tpl', 'perms'),
+			rtpl = fm.res('tpl', 'readonly'),
 			
 			/**
 			 * Lock marker html template
@@ -21329,7 +21333,7 @@ $.fn.elfindertree = function(fm, opts) {
 						return '';
 					}
 				},
-				permissions : function(dir) { return !dir.read || !dir.write ? ptpl : ''; },
+				permissions : function(dir) { return !dir.read || !dir.write ? (fm.options.readOnlyMarker && fm.options.readOnlyMarker(dir) ? rtpl : ptpl) : ''; },
 				symlink     : function(dir) { return dir.alias ? stpl : ''; },
 				style       : function(dir) { return dir.icon ? fm.getIconStyle(dir) : ''; }
 			},
@@ -26669,7 +26673,7 @@ elFinder.prototype.commands.hide = function() {
 			hashClass = 'elfinder-font-mono elfinder-info-hash',
 			getHashAlgorisms = [],
 			ndialog  = fm.ui.notify,
-			size, tmb, file, title, dcnt, rdcnt, path, hideItems, hashProg;
+			size, tmb, file, title, dcnt, rdcnt, path, hideItems, calculateFolderSize, hashProg;
 
 		if (ndialog.is(':hidden') && ndialog.children('.elfinder-notify').length) {
 			ndialog.elfinderdialog('open').height('auto');
@@ -26685,6 +26689,8 @@ elFinder.prototype.commands.hide = function() {
 		}
 		
 		hideItems = fm.storage('infohides') || fm.arrayFlip(o.hideItems, true);
+		// Some connectors cannot provide accurate recursive folder sizes.
+		calculateFolderSize = o.calculateFolderSize === true && !hideItems.size;
 
 		if (cnt === 1) {
 			file = files[0];
@@ -26698,16 +26704,17 @@ elFinder.prototype.commands.hide = function() {
 
 			tmb = fm.tmb(file);
 			
-			if (!file.read) {
-				size = msg.unknown;
-			} else if (file.mime != 'directory' || file.alias) {
-				size = fm.formatSize(file.size);
-			} else {
-				size = tpl.spinner.replace('{text}', msg.calc).replace('{name}', 'size');
-				count.push(file.hash);
+			if (file.mime !== 'directory' || calculateFolderSize) {
+				if (!file.read) {
+					size = msg.unknown;
+				} else if (file.mime != 'directory' || file.alias) {
+					size = fm.formatSize(file.size);
+				} else {
+					size = tpl.spinner.replace('{text}', msg.calc).replace('{name}', 'size');
+					count.push(file.hash);
+				}
+				!hideItems.size && content.push(row.replace(l, msg.size).replace(v, size));
 			}
-			
-			!hideItems.size && content.push(row.replace(l, msg.size).replace(v, size));
 			!hideItems.aleasfor && file.alias && content.push(row.replace(l, msg.aliasfor).replace(v, file.alias));
 			if (!hideItems.path) {
 				if (path = fm.path(file.hash, true)) {
@@ -26850,9 +26857,11 @@ elFinder.prototype.commands.hide = function() {
 				rdcnt = $.grep(files, function(f) { return f.mime === 'directory' && (! f.phash || f.isroot)? true : false ; }).length;
 				dcnt -= rdcnt;
 				content.push(row.replace(l, msg.kind).replace(v, (rdcnt === cnt || dcnt === cnt)? msg[rdcnt? 'roots' : 'folders'] : $.map({roots: rdcnt, folders: dcnt, files: cnt - rdcnt - dcnt}, function(c, t) { return c? msg[t]+' '+c : null; }).join(', ')));
-				!hideItems.size && content.push(row.replace(l, msg.size).replace(v, tpl.spinner.replace('{text}', msg.calc).replace('{name}', 'size')));
-				count = $.map(files, function(f) { return f.hash; });
-				
+				if (calculateFolderSize) {
+					content.push(row.replace(l, msg.size).replace(v, tpl.spinner.replace('{text}', msg.calc).replace('{name}', 'size')));
+					count = $.map(files, function(f) { return f.hash; });
+				}
+
 			}
 		}
 		
@@ -26914,7 +26923,7 @@ elFinder.prototype.commands.hide = function() {
 				replSpinner(msg.unknown, 'size');
 			});
 		}
-		
+
 		// call custom actions
 		if (customActions.length) {
 			$.each(customActions, function(i, action) {
@@ -35721,7 +35730,7 @@ elFinder.prototype.commands.upload = function() {
 		};
 		
 		dialog = $('<div class="elfinder-upload-dialog-wrapper"></div>')
-			.append(inputButton('multiple', 'selectForUpload'));
+			.append(inputButton(isFileToUpdateSet(fileToUpdate) ? '' : 'multiple', 'selectForUpload'));
 
 		if(isFileToUpdateSet(fileToUpdate) != true) {
 			if (! fm.UA.Mobile && (function(input) {
@@ -35730,7 +35739,7 @@ elFinder.prototype.commands.upload = function() {
 			}
 		}
 		
-		if (targetDir.dirs) {
+		if (!isFileToUpdateSet(fileToUpdate) && targetDir.dirs) {
 			
 			if (targetDir.hash === cwdHash || fm.navHash2Elm(targetDir.hash).hasClass('elfinder-subtree-loaded')) {
 				getSelector().appendTo(dialog);
@@ -35861,6 +35870,9 @@ function isInputValid(fm, input, fileToUpdate) {
 	if(isFileToUpdateSet(fileToUpdate) == true) {
 		//Soo its update - must be only 1 file and type must match
 		var fileList = input[0].files;
+		if(fileList.length === 0) {
+			return false;
+		}
 		if(fileList.length != 1) {
 			isInputValid = false;
 			errMsg = fm.i18n('wjfileupdate-onlyOneFileErr');
@@ -35877,6 +35889,7 @@ function isInputValid(fm, input, fileToUpdate) {
 			id : "customErrorDialog",
 			cnt : 0.5,
 			hideCnt: true,
+			progress: 0,
 			msg : errMsg,
 			cancel: function() {}
 		});
