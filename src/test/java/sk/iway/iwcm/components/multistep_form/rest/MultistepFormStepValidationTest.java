@@ -89,6 +89,15 @@ class MultistepFormStepValidationTest {
         FormItemEntity note = field(12L, "note", "text", false);
         note.setTrimValue(true);
         fields.add(note);
+        if (conditionType == ConditionType.VISIBILITY && shouldProceed) {
+            // Clearing company must not make its hidden dependent field required during validation.
+            fields.add(field(13L, "companyReason", "text", true));
+            FormItemsConditionEntity dependent = new FormItemsConditionEntity();
+            dependent.setItemFormId("company");
+            dependent.setOperator(OperatorType.EMPTY);
+            when(conditions.findAllByFormItemIdAndConditionTypeAndDomainIdOrderBySortPriorityAsc(13L, ConditionType.VISIBILITY, 1))
+                .thenReturn(List.of(dependent));
+        }
         when(items.findAllForValidation("contact-form", 1)).thenReturn(fields);
         Prop prop = mock(Prop.class);
         when(prop.getText("checkform.title.required")).thenReturn("Required field");

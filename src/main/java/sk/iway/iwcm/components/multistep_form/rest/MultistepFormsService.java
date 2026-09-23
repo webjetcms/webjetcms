@@ -1115,8 +1115,9 @@ public class MultistepFormsService {
             .filter(Entry::getValue)
             .map(Entry::getKey)
             .collect(Collectors.toSet());
-        hiddenFields.forEach(fieldId -> received.put(fieldId, ""));
         validateFields(formName, stepItems, received, spamProtectionEnabled, true, request, errors);
+        // Clear hidden answers after validation so cleanup cannot change dependent field conditions.
+        hiddenFields.forEach(fieldId -> received.put(fieldId, ""));
 
         /* Separate validate file fields */
         validateFileFields(formName, formSettings, stepItems, received, errors, request);
