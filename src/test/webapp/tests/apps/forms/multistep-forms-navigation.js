@@ -2,7 +2,16 @@ const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
 
-Feature('apps.forms.multistep-forms-navigation');
+// Isolate request interception from stale workers and dispose routes after every scenario.
+Feature('apps.forms.multistep-forms-navigation', { timeout: 180 })
+    .config('Playwright', { restart: 'context' });
+
+AfterSuite(({ I }) => {
+    I.limitTime(30).usePlaywrightTo('release the closed context before restoring session mode', async helper => {
+        // CodeceptJS 3 retains the closed context, which session mode would otherwise reuse.
+        helper.browserContext = null;
+    });
+});
 
 const formName = 'autotest-navigation';
 const fixturePath = '/apps/multistep-formular/autotest-navigation.html';
@@ -14,7 +23,7 @@ const webRoot = path.resolve(__dirname, '../../../../../main/webapp');
  * Runs the production browser module against controlled step responses without saving test submissions.
  */
 async function openForm(I, terminalError = false) {
-    await I.usePlaywrightTo('prepare multistep navigation responses', async ({ page }) => {
+    await I.limitTime(30).usePlaywrightTo('prepare multistep navigation responses', async ({ page }) => {
         const saved = {};
         const asArray = value => value == null ? [] : (Array.isArray(value) ? value : [value]);
         const firstStep = `<form action="/rest/multistep-form/save-form?step-id=1">
@@ -137,7 +146,7 @@ Scenario('Ignore repeated Back and submission while a previous step is loading',
     await openForm(I);
     I.click('Next');
     I.waitForVisible('[data-multistep-back-step]');
-    await I.usePlaywrightTo('hold the Back response while more navigation is attempted', async ({ page }) => {
+    await I.limitTime(30).usePlaywrightTo('hold the Back response while more navigation is attempted', async ({ page }) => {
         await page.locator('#f1-details').fill('autotest details');
         await pauseRequests(page);
         await page.locator('[data-multistep-back-step]').dblclick();
@@ -160,7 +169,7 @@ Scenario('Keep navigation blocked through CAPTCHA, submission and the next step 
     await openForm(I);
     I.click('Next');
     I.waitForVisible('[data-multistep-back-step]');
-    await I.usePlaywrightTo('delay each phase of submission', async ({ page }) => {
+    await I.limitTime(30).usePlaywrightTo('delay each phase of submission', async ({ page }) => {
         await page.locator('#f1-details').fill('autotest details');
         await page.route('**/rest/multistep-form/save-form?*', route => route.fulfill({ json: { 'form-name': formName, 'step-id': 1 } }));
         await pauseRequests(page);
@@ -197,7 +206,7 @@ for (const action of ['Back', 'Submit']) {
         await openForm(I);
         I.click('Next');
         I.waitForVisible('[data-multistep-back-step]');
-        await I.usePlaywrightTo('fail one request and retry navigation', async ({ page }) => {
+        await I.limitTime(30).usePlaywrightTo('fail one request and retry navigation', async ({ page }) => {
             await page.locator('#f1-details').fill('autotest details');
             await page.locator('form').evaluate(form => form.insertAdjacentHTML('beforeend', '<button type="submit" disabled>Disabled autotest action</button>'));
             const endpoint = action === 'Back' ? 'get-step' : 'save-form';
@@ -215,7 +224,7 @@ for (const action of ['Back', 'Submit']) {
 
 Scenario('Allow another form to navigate while the first form is loading', async ({ I }) => {
     await openForm(I);
-    await I.usePlaywrightTo('navigate two independent instances', async ({ page }) => {
+    await I.limitTime(30).usePlaywrightTo('navigate two independent instances', async ({ page }) => {
         await pauseRequests(page);
         await page.getByRole('button', { name: 'Next' }).click();
         await page.evaluate(async ({ formName, modulePath }) => {
