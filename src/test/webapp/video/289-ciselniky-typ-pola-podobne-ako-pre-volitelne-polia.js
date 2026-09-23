@@ -3,14 +3,13 @@ Feature("video.289-58641-ciselniky-typ-pola-podobne-ako-pre-volitelne-polia");
 const enumerationTypeName = "CustomFieldsScreenshots";
 const enumerationTypeTableId = "enumerationTypeDataTable";
 const enumerationTypeTable = `#${enumerationTypeTableId}`;
-const enumerationTypeWrapper = `${enumerationTypeTable}_wrapper`;
+const enumerationTypeNode = `#SomStromcek a[title="${enumerationTypeName}"]`;
 const stringFieldsTableId = "datatableFieldDTE_Field_editorFields-stringFieldTypes";
 const stringFieldsTable = `#${stringFieldsTableId}`;
 const stringFieldsWrapper = `${stringFieldsTable}_wrapper`;
 const stringFieldsModal = `${stringFieldsTable}_modal`;
 const enumerationDataTableId = "enumerationDataDataTable";
 const enumerationDataWrapper = `#${enumerationDataTableId}_wrapper`;
-const enumerationTypePicker = `${enumerationDataWrapper} .dt-buttons div.bootstrap-select button.dropdown-toggle`;
 const enumerationDataCreateButton = `${enumerationDataWrapper} .dt-buttons button.buttons-create`;
 
 // Move whole shot objects to reorder narration, slates and browser actions.
@@ -33,9 +32,8 @@ const videoPlan = {
             "title": "Find the existing enumeration type",
             "text-sk": "Takéto polia často vedú k nejednotným hodnotám a zbytočným chybám. WebJET CMS preto prináša nastavenie typov reťazcových polí podobne, ako ho poznáte z voliteľných polí.",
             "notes": "Filter the documentation fixture without changing saved configuration.",
-            shot: async ({ I, DT }) => {
-                DT.filterContains("typeName", enumerationTypeName);
-                await I.waitForText(enumerationTypeName, 10, `${enumerationTypeTable} tbody`);
+            shot: async ({ I, chooseType }) => {
+                await chooseType(false);
                 await I.wait(5);
             }
         },
@@ -171,24 +169,22 @@ Scenario("Shot plan", ({ I }) => {
 Scenario("289-ciselniky-typ-pola-podobne-ako-pre-volitelne-polia", async ({ I, DT, DTE, login }) => {
     const { recordVideoPlan } = require("../helpers/feature_video_plan.js");
     const openType = async () => {
-        DT.filterContains("typeName", enumerationTypeName);
-        await I.waitForText(enumerationTypeName, 10, `${enumerationTypeTable} tbody`);
-        await I.click(locate(`${enumerationTypeTable} tbody td`).withText(enumerationTypeName));
+        await chooseType(false);
+        await I.waitForEnabled(".tree-col .buttons-edit", 10);
+        await I.clickCss(".tree-col .buttons-edit");
         DTE.waitForEditor(enumerationTypeTableId);
     };
     const chooseType = async animated => {
         const click = async locator => animated ? I.videoClick(locator) : I.click(locator);
-        await click(enumerationTypePicker);
-        const enumerationSelect = "body > div.bs-container.dropdown.bootstrap-select.form-select";
-        const enumerationSearch = `${enumerationSelect} div.bs-searchbox > input`;
+        const enumerationSearch = "#tree-folder-search-input";
         await I.waitForVisible(enumerationSearch, 10);
         await click(enumerationSearch);
         await I.fillField(enumerationSearch, enumerationTypeName);
-        const option = locate(`${enumerationSelect} a[role='option'] > span`).withText(enumerationTypeName);
-        await I.waitForVisible(option, 10);
-        await click(option);
+        await click("#tree-folder-search-button");
+        await I.waitForVisible(enumerationTypeNode, 10);
+        await click(enumerationTypeNode);
+        await I.waitForElement(`${enumerationTypeNode}.jstree-clicked`, 10);
         DT.waitForLoader(enumerationDataTableId);
-        await I.waitForText(enumerationTypeName, 10, enumerationTypePicker);
         await I.waitForVisible(enumerationDataCreateButton, 10);
         if (animated) await I.wait(6);
     };
@@ -198,11 +194,10 @@ Scenario("289-ciselniky-typ-pola-podobne-ako-pre-volitelne-polia", async ({ I, D
         setup: async () => { login("admin"); },
         prepare: async shot => {
             if (shot.id === "documentation") return;
-            const dataView = ["choose-type", "data-form"].includes(shot.id);
-            await I.amOnPage(dataView ? "/apps/enumeration/admin/" : "/apps/enumeration/admin/enumeration-type/");
-            await I.waitForVisible(`${dataView ? enumerationDataWrapper : enumerationTypeWrapper} table`, 20);
-            DT.waitForLoader(dataView ? enumerationDataTableId : enumerationTypeTableId);
-            if (dataView) await I.waitForVisible(enumerationTypePicker, 10);
+            await I.amOnPage("/apps/enumeration/admin/");
+            await I.waitForVisible(`${enumerationDataWrapper} table`, 20);
+            DT.waitForLoader(enumerationDataTableId);
+            await I.waitForVisible("#tree-folder-search-input", 10);
         },
         cleanup: async shot => {
             if (shot.id === "city-options") {

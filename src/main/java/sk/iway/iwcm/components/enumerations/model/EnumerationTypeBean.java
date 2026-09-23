@@ -294,6 +294,11 @@ public class EnumerationTypeBean extends ActiveRecordRepository implements Seria
     private String date4Name;
 
     @Column(name = "hidden")
+    @DataTableColumn(
+        inputType = DataTableColumnType.CHECKBOX,
+        title = "components.enumerations.hidden",
+        tab = "basic"
+    )
     private boolean hidden;
 
     @ManyToOne(fetch = FetchType.LAZY)

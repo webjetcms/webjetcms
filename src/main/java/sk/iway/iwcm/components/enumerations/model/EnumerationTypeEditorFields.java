@@ -18,7 +18,7 @@ public class EnumerationTypeEditorFields implements Serializable {
 
     @DataTableColumn(
         inputType = DataTableColumnType.SELECT,
-        title="components.enumerations.child_enumeration_type_name",
+        title="components.enumerations.child_enumeration_type",
         sortAfter = "typeName",
         filter = false,
         tab="basic"

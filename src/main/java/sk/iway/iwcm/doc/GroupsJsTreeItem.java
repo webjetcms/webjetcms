@@ -2,6 +2,8 @@ package sk.iway.iwcm.doc;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.Getter;
+import lombok.Setter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.jstree.JsTreeItemState;
@@ -13,6 +15,11 @@ public class GroupsJsTreeItem extends JsTreeItem {
     @JsonProperty("groupDetails")
     private GroupDetails group;
     //private UserDetails user;
+
+    /** Optional article filter, such as "23*", kept separate from the numeric node ID. */
+    @Getter
+    @Setter
+    private String groupIdList;
 
     public GroupsJsTreeItem(GroupDetails group, UserDetails user, boolean showPages) {
         this(group, user, showPages, true);

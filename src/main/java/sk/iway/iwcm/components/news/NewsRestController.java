@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.news;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,12 +24,14 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.ScopedGroupsTreeService;
 import sk.iway.iwcm.doc.attributes.jpa.DocAtrDefRepository;
 import sk.iway.iwcm.editor.facade.EditorFacade;
 import sk.iway.iwcm.editor.rest.WebpagesDatatable;
@@ -57,6 +61,8 @@ public class NewsRestController extends WebpagesDatatable {
     @Override
     public Page<DocDetails> getAllItems(Pageable pageable) {
 
+        if ("-1".equals(getRequest().getParameter("groupIdList"))) return Page.empty(pageable);
+
         GetAllItemsDocOptions options = getDefaultOptions(pageable, false);
 
         int groupId = Tools.getIntValue(getRequest().getParameter("groupId"), Constants.getInt("rootGroupId"));
@@ -75,6 +81,9 @@ public class NewsRestController extends WebpagesDatatable {
 
     @Override
     public DocDetails getOneItem(long id) {
+        if (id < 1 && "-1".equals(getRequest().getParameter("groupIdList"))) {
+            throwError("components.jstree.access_denied__group");
+        }
         int groupId = Tools.getIntValue(getRequest().getParameter("groupId"), Constants.getInt("rootGroupId"));
         int historyId = Tools.getIntValue(getRequest().getParameter("historyId"), -1);
 
@@ -85,6 +94,19 @@ public class NewsRestController extends WebpagesDatatable {
         addNotify(notifyList);
 
         return docToReturn;
+    }
+
+    /** Returns the permitted News roots, their children, or scoped folder search results. */
+    @PostMapping(value = "/tree")
+    public Map<String, Object> tree(@RequestBody JsTreeMoveItem item,
+            @RequestParam(required = false) String include,
+            @RequestParam(defaultValue = "-1") int selectedId,
+            @RequestParam(required = false) String treeSearchValue,
+            @RequestParam(defaultValue = "contains") String treeSearchType,
+            HttpServletRequest request) {
+        List<LabelValue> folders = convertIdsToNamePair("constant:newsAdminGroupIds", include, request);
+        ScopedGroupsTreeService tree = new ScopedGroupsTreeService(folders, getUser(), DocDB.getDomain(request));
+        return Map.of("result", true, "items", tree.getItems(item.getIdInt(), selectedId, treeSearchValue, treeSearchType));
     }
 
     @PostMapping(value = "/convertIdsToNamePair")

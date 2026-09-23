@@ -20,21 +20,27 @@ Poznáme teda dva typy používateľov:
 
 ## Filtrovanie podľa priečinka
 
-Stránka obsahuje v ľavom hornom rohu externý filter na sekcie (pod-priečinky), ktorý umožňuje filtrovanie zobrazených článkov iba pre zvolenú sekciu blogu (priečinok). Prednastavená hodnota **Všetky sekcie**, zobrazí všetky články zo všetkých sekcií (pod-priečinkov).
+V ľavom paneli sa zobrazuje strom priečinkov, v pravom paneli zoznam článkov. Predvolená položka **Všetky sekcie** zobrazí články zo všetkých dostupných sekcií blogu. Výber konkrétneho priečinka zobrazí iba jeho články.
 
-Samotný výber sekcií je zoradený ako stromová štruktúra, kde hlbšie vnorené sekcie sú nižšie. Používateľ vidí celú cestu k sekcii, a hlavný priečinok má rovnaký názov ako jeho **prihlasovacie meno (login)**, čo v príklade na obrázku je `bloggerPerm`.
+Priečinky môžete rozbaľovať, vyhľadávať podľa názvu a obnoviť tlačidlom nad stromom. Spoločné nadradené priečinky, napríklad **Aplikácie** a **Blog**, zachovávajú hierarchiu. Ak slúžia iba na navigáciu, majú odlišnú ikonu a nemožno ich vybrať ako sekciu. Celá cesta sa zobrazí po prejdení myšou nad názov priečinka.
+
+Tlačidlom **Nastavenia** nad stromom môžete zmeniť pomer šírky stromu a tabuľky. Nastavenie sa uloží pre prihláseného používateľa samostatne pre túto aplikáciu.
+
+Bloger vidí svoje priečinky, administrátor blogerov priečinky blogerov v aktuálnej doméne. Strom rešpektuje aj oprávnenie zobrazovať skryté priečinky. Výber sekcie zostáva zachovaný pri vyhľadávaní, obnovení stromu a opätovnom otvorení adresy s ID priečinka za znakom `#`. Na úzkej obrazovke sa zoznam článkov zobrazí pod stromom.
+
+Ak nie sú dostupné žiadne priečinky, zobrazí sa informačná správa a pridávanie článkov aj sekcií je vypnuté.
 
 ![](groupFilter_allValues.png)
 
 ## Pridanie článku
 
-Nový článok vytvoríte pomocou tlačidla ![](add_article.png ":no-zoom"). Práca s článkami je podobná ako práca s [bežnými web stránkami](../../webpages/README.md).
+Nový článok vytvoríte pomocou tlačidla <button class="btn btn-sm btn-success" type="button"><span><i class="ti ti-plus"></i></span></button>. Práca s článkami je podobná ako práca s [bežnými web stránkami](../../webpages/README.md).
 
 ![](editor-text.png)
 
-Pri novom článku je zaradenie v stromovej štruktúre prednastavené podľa hodnoty v externom filtri sekcií (napr. /Aplikácie/Blog/bloggerPerm).
+Pri novom článku je zaradenie v stromovej štruktúre prednastavené podľa priečinka zvoleného v strome (napr. /Aplikácie/Blog/bloggerPerm).
 
-!>**Upozornenie:** ak sa pokúsite vytvoriť nový článok bez zvolenia sekcie v externom filtri (pri jeho hodnote **Všetky sekcie**) nastaví sa sekcia Nezaradené, alebo prvý priečinok na ktorý ma bloger práva. Sekciu môžete zmeniť v editore v karte Základné nastavením hodnoty Nadradený priečinok.
+!>**Upozornenie:** ak sa pokúsite vytvoriť nový článok pri zvolenej položke **Všetky sekcie** nastaví sa sekcia Nezaradené, alebo prvý priečinok na ktorý ma bloger práva. Sekciu môžete zmeniť v editore v karte Základné nastavením hodnoty Nadradený priečinok.
 
 V zozname článkov sa zobrazí nadpis článku. Ak chcete v zozname zobraziť aj krátky úvod zadajte ho v editore článku v karte Perex do poľa Anotácia. Odporúčame zadať aj ilustračný obrázok do poľa Obrázok v karte Perex.
 
@@ -46,19 +52,17 @@ Na web stránke sa článok zobrazí podľa definovanej dizajnovej šablóny, na
 
 ## Pridanie sekcie
 
-Novú sekciu vytvoríte pomocou tlačidla ![](add_folder.png ":no-zoom").
+Novú sekciu vytvoríte pomocou tlačidla nad stromom <button class="btn btn-sm btn-success" type="button"><span><i class="ti ti-plus"></i></span></button>.
 
-Ak sa pokúsite vytvoriť novú sekciu bez zvolenia cieľového priečinka v externom filtri, budete vyzvaný k jeho zvoleniu.
+Ak sa pokúsite vytvoriť novú sekciu bez zvolenia cieľového priečinka v strome, budete vyzvaný k jeho zvoleniu.
 
 ![](adding_folder_warning.png)
 
-Po zvolení priečinka a stlačení tlačidla ![](add_folder.png ":no-zoom") bude vyzvaný z zadaniu názvu novej sekcie (pod-priečinka).
+Po zvolení priečinka a stlačení tlačidla <button class="btn btn-sm btn-success" type="button"><span><i class="ti ti-plus"></i></span></button> sa otvorí dialóg **Pridanie sekcie**. Zobrazuje zvolený nadradený priečinok a povinné pole **Názov priečinku**.
 
 ![](adding_folder_info.png)
 
-Proces spustíte potvrdením akcie tlačidlom ![](adding_folder_info_button.png ":no-zoom").
-
-Ak nebude zadaný názov pre novú sekciu, alebo nastane nejaká chyba, proces vytvorenia sekcie sa preruší a budete informovaný skrz notifikáciu.
+Prázdny názov, názov obsahujúci iba medzery alebo názov už existujúcej sekcie v tom istom priečinku sa nedá uložiť. Chyba sa zobrazí priamo pri poli a dialóg zostane otvorený, aby ste mohli názov opraviť.
 
 ![](adding_folder_error.png)
 
@@ -66,6 +70,6 @@ Ak sa sekcia úspešne vytvorí, budete informovaný notifikáciou.
 
 ![](adding_folder_success.png)
 
-Okamžite po úspešnom vytvorení sekcie sa jeho hodnota automatický doplní do externého filtra.
+Po úspešnom vytvorení sekcie sa strom automaticky obnoví. Novú sekciu nájdete pod zvoleným nadradeným priečinkom.
 
 ![](groupFilter_allValues_withNew.png)
