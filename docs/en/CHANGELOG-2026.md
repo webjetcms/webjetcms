@@ -49,7 +49,9 @@
 - Page Builder - elements marked with the CSS class [`pb-duplicable`](frontend/page-builder/settings.md#duplicate-element-orange-color) can be moved, duplicated, and deleted within the same parent. Custom or multiple selectors can be set via `pbCustomSettings` (#58750).
 - Page Builder - modified [editor control](redactor/webpages/pagebuilder.md). Added fixed top bar with path to selected block, **Structure** panel, quick actions and mode for inserting sections, containers and columns directly into the page. Frames can be hidden or shown for the entire block hierarchy. Block library has a compact window with previews, categories and combined search with tags. Style settings use drop-down property groups and indicate the currently edited block (#308).
 
-![](redactor/webpages/pagebuilder-structure.png)
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ### Headless mode
 
@@ -121,7 +123,6 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](redactor/apps/language-redirect/editor-basic.png)
 
 - Reservations - the **Time Reservation** and **Day Reservation** applications have a unified visual style according to the `Vanilla Calendar` calendar, adjusted contrasting cell colors according to `WCAG`, separated visual CSS styles into separate files, and **Time Reservation** displays the actual price in the hourly cells according to the price list of the reservation object (#58565).
-
 - Reservations - a new application [My Reservations] (redactor/apps/reservation/my-reservations-app/README.md) has been added, which will show the logged-in user an overview of their reservations, reservation status, and the option to delete allowed future reservations (#58565).
 
 ![](editor/apps/reservation/my-reservations-app/app-page.png)
@@ -133,6 +134,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Document Manager - added ability to upload multiple files at once via `drag&drop` (#58593).
 
 ![](redactor/files/file-archive/drag-drop-upload-dialog.png)
+
+- Document Manager - when [bulk uploading files](redactor/files/file-archive/README.md#bulk-uploading-files) it is possible to set a common validity on the **Basic** and **Advanced** tabs, schedule a later upload with email notification, and enter extended document metadata (#58754).
+
+![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
 ### Gallery
 

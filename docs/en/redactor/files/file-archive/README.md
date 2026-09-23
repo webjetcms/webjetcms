@@ -135,9 +135,11 @@ The Basic tab offers the option to physically **rename the document** (i.e. the 
 
 ### Action - Upload new version
 
-This action will create a new current version of the document. The current version (which we are going to replace) will become the historical version of the document. You just need to upload a new document, as the destination directory is pre-populated (but can be changed). We will get to the **Upload document later** option in the next section.
+This action will create a new current version of the document. The current version (which we are going to replace) will become the historical version of the document. Simply upload the new document, and the destination directory must remain the same as the current document's directory. We will get to the **Upload document later** option in the next section.
 
 !>**Warning:** You are only allowed to upload a document of the same type as the current document being replaced.
+
+!>**Warning:** When uploading a new version or replacing a document, it is not possible to change its destination directory. If the configuration variable `fileArchivUseCategoryAsLink` is set to `true`, it is also not possible to change the category to a value that would move the document to a different directory.
 
 Please note that the uploaded document will be automatically physically renamed to the name of the document being replaced after saving. If you want the document to be called differently, you must use the **Physically rename document** option and enter a new name.
 
@@ -174,6 +176,8 @@ All pending versions of a given document are available directly in its **Pending
 This action does exactly what the name suggests. It does not upload a new version of the document, but replaces the current main document with another one, i.e. the file representing the document is replaced. The document can have a different name, but the original document name is automatically preserved.
 
 This action works for **Template** documents as well as documents that are waiting to be uploaded. This way, you can, for example, replace a document that is to be uploaded in the future without having to delete the original document and create a new record.
+
+The target directory of the replaced document must remain unchanged. The same restriction applies to the category if the category is configured to specify the physical directory of the document.
 
 !>**Warning:** You are only allowed to upload a document of the same type as the current document being replaced.
 
@@ -252,6 +256,14 @@ As with deleting patterns, these scheduled versions can be deleted **ONLY** usin
 
 You can also upload files to the currently selected folder directly from the document list. Drag one or more files from your computer onto the document manager page. The upload uses the currently selected folder in the tree structure and the allowed file extensions from the configuration variable `fileArchivAllowExt`.
 
+If `fileArchivUseCategoryAsLink` is set to `true` and you specify a category when bulk uploading, the target folder is derived from that category. Files with the same name in that folder are also checked and the selected **Replace** or **New Version** actions are performed.
+
+Before starting the upload, the same editor as when creating a document is displayed, containing only fields intended for bulk settings. On the **Basic** tab, you can optionally set the same **Valid from** and **Valid to** for all selected files. By enabling the **Upload document later** option, you can also set a future upload date and email addresses for notification.
+
+![](drag-drop-upload-settings-dialog.png)
+
+The **Advanced** tab allows you to set the product, category, product code, display, indexing, priority, master document reference, note, and permission to save a document with existing content for all uploaded files. Empty text fields and unedited radio buttons will leave the default or existing values. The **Cancel** button will cancel the entire pending upload.
+
 During the upload, a progress bar will be displayed for each file and the overall progress. After a successful upload, a separate master document will be created for each file, its name will be pre-filled from the file name without the extension, and the table will be automatically refreshed.
 
 ![](drag-drop-upload-dialog.png)
@@ -263,6 +275,8 @@ If a file with the same real name already exists in the selected folder, recordi
 - **New version** - the new file will be saved as the current version of the document and the original file will be moved to historical versions.
 
 At the bottom of the panel, you can use the same option for all files awaiting a decision at once.
+
+The set validity dates are also used for the **Replace** and **New Version** options. These options reject a category change that would move an existing document to a different physical directory. Scheduled upload of a duplicate file is supported for the **New Version** option, not for immediate replacement. The **Skip** option does not change the existing document.
 
 ![](drag-drop-upload-duplicity-dialog.png)
 

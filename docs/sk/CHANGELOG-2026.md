@@ -49,7 +49,9 @@
 - Page Builder - elementy označené CSS triedou [`pb-duplicable`](frontend/page-builder/settings.md#duplikovateľný-element-oranžová-farba) je možné v rámci rovnakého rodiča presúvať, duplikovať a zmazať. Vlastné alebo viaceré selektory je možné nastaviť cez `pbCustomSettings` (#58750).
 - Page Builder - upravené [ovládanie editora](redactor/webpages/pagebuilder.md). Pridaná pevná horná lišta s cestou k vybranému bloku, panel **Štruktúra**, rýchle akcie a režim vkladania sekcií, kontajnerov a stĺpcov priamo do stránky. Rámiky je možné skryť alebo zobraziť pre celú hierarchiu bloku. Knižnica blokov má kompaktné okno s náhľadmi, kategóriami a kombinovaným vyhľadávaním so štítkami. Nastavenie štýlu používa rozbaľovacie skupiny vlastností a označuje práve upravovaný blok (#308).
 
-![](redactor/webpages/pagebuilder-structure.png)
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ### Headless režim
 
@@ -121,7 +123,6 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 ![](redactor/apps/language-redirect/editor-basic.png)
 
 - Rezervácie - aplikácie **Rezervácia času** a **Rezervácia dní** majú zjednotený vizuálny štýl podľa kalendára `Vanilla Calendar`, upravené kontrastné farby buniek podľa `WCAG`, oddelené vizuálne CSS štýly do samostatných súborov a **Rezervácia času** zobrazuje v hodinových bunkách skutočnú cenu podľa cenníka rezervačného objektu (#58565).
-
 - Rezervácie - pridaná nová aplikácia [Moje rezervácie](redactor/apps/reservation/my-reservations-app/README.md), ktorá prihlásenému používateľovi zobrazí prehľad jeho rezervácií, stavom rezervácie a možnosťou zmazania povolených budúcich rezervácií (#58565).
 
 ![](redactor/apps/reservation/my-reservations-app/app-page.png)
@@ -133,6 +134,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Manažér dokumentov - pridaná možnosť nahrať viac súborov naraz cez `drag&drop` (#58593).
 
 ![](redactor/files/file-archive/drag-drop-upload-dialog.png)
+
+- Manažér dokumentov - pri [hromadnom nahrávaní súborov](redactor/files/file-archive/README.md#hromadné-nahrávanie-súborov) je možné na kartách **Základné** a **Pokročilé** nastaviť spoločnú platnosť, naplánovať neskoršie nahratie s e-mailovou notifikáciou a zadať rozšírené metadáta dokumentov (#58754).
+
+![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
 ### Galéria
 
