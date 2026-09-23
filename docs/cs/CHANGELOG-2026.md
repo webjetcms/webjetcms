@@ -67,6 +67,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Formuláře
 
+- Vícekrokové formuláře - při [návratu na předchozí krok](redactor/apps/multistep-form/README.md#návrat-na-předchozí-krok) se zachovají rozpracované hodnoty i dokončená nahrávání (#58794).
+- Vícekrokové formuláře - přidána [validace při opuštění pole](redactor/apps/multistep-form/README.md#validace-při-opuštění-pole), kterou zapnete konfigurační proměnnou `multistepform_validateOnBlur` (#58794).
 - [Formuláře](redactor/apps/form/README.md#možné-konfigurační-proměnné) - klasické i vícekrokové formuláře respektují `sendMailSaveEmail` a ukládají emaily jako soubory `.eml` do `sendMailSaveEmailPath` místo SMTP odeslání. Pokud se zápis nezdaří, formulář oznámí chybu.
 - Vícekrokové formuláře - přidán [návrat na předchozí krok](redactor/apps/multistep-form/README.md#návrat-na-předchozí-krok) s obnovením uložených hodnot a souborů a [výběr CSS šablony](redactor/apps/multistep-form/README.md#css administraci (#58742).
 
@@ -196,6 +198,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Vícekrokové formuláře - opravena validace polí se zřetězenými podmínkami viditelnosti (#58794).
 - Formuláře - opraveno archivování formulářů (#305).
 - Průzkumník - upravené porovnávání souborů s diakritikou při kontrole existence souboru při jeho přepsání - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Webové stránky - opraveno přidávání prázdného `P` elementu na konec stránky (#58317-13).
@@ -204,6 +207,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Výkon
 
+- Vícekrokové formuláře - zrychlené opakované kontroly polí během vyplňování (#58794).
 - Optimalizované načítání skupiny šablon při zobrazení stránky a hledání volitelných polí. Skupina je uložena do cache a znovu použita bez potřeby jejího čtení z databáze (#311).
 
 ### Bezpečnost

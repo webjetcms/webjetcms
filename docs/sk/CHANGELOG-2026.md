@@ -67,7 +67,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
-- Viackrokové formuláre - chyby validácie pri opustení poľa sa oznamujú čítačkám obrazovky a sú prepojené s príslušným poľom. Stav neplatného poľa sa pri odstránení chyby obnoví bez presunu fokusu (#58794).
+- Viackrokové formuláre - pri [návrate na predchádzajúci krok](redactor/apps/multistep-form/README.md#návrat-na-predchádzajúci-krok) sa zachovajú rozpracované hodnoty aj dokončené nahrávania (#58794).
+- Viackrokové formuláre - pridaná [validácia pri opustení poľa](redactor/apps/multistep-form/README.md#validácia-pri-opustení-poľa), ktorú zapnete konfiguračnou premennou `multistepform_validateOnBlur`(#58794).
 - [Formuláre](redactor/apps/form/README.md#možné-konfiguračné-premenné) - klasické aj viackrokové formuláre rešpektujú `sendMailSaveEmail` a ukladajú emaily ako súbory `.eml` do `sendMailSaveEmailPath` namiesto SMTP odoslania. Ak sa zápis nepodarí, formulár oznámi chybu.
 - Viackrokové formuláre - pridaný [návrat na predchádzajúci krok](redactor/apps/multistep-form/README.md#návrat-na-predchádzajúci-krok) s obnovením uložených hodnôt a súborov a [výber CSS šablóny](redactor/apps/multistep-form/README.md#css-šablóny) pre každú vloženú inštanciu a náhľad v administrácii (#58742).
 
@@ -197,6 +198,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Viackrokové formuláre - opravená validácia polí s reťazenými podmienkami viditeľnosti (#58794).
 - Formuláre - opravené archivovanie formulárov (#305).
 - Prieskumník - upravené porovnávanie súborov s diakritikou pri kontrole existencie súboru pri jeho prepísaní - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Webové stránky - opravené pridávanie prázdneho `P` elementu na koniec stránky (#58317-13).
@@ -205,6 +207,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Výkon
 
+- Viackrokové formuláre - zrýchlené opakované kontroly polí počas vypĺňania (#58794).
 - Optimalizované načítanie skupiny šablón pri zobrazení stránky a hľadaní voliteľných polí. Skupina je uložená do cache a znova použitá bez potreby jej čítania z databázy (#311).
 
 ### Bezpečnosť
