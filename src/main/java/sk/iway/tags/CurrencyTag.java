@@ -14,7 +14,7 @@ import org.displaytag.tags.TableTagParameters;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.basket.rest.BasketPricingService;
+import sk.iway.iwcm.components.basket.rest.BasketRoundingService;
 
 /**
  *  Will format body of tag (number) to currency value
@@ -63,7 +63,7 @@ public class CurrencyTag extends BodyTagSupport
    @Override
 	public int doAfterBody() throws JspTagException
    {
-      boolean decimalPrices = BasketPricingService.isEnabled();
+      boolean decimalPrices = BasketRoundingService.isEnabled();
 
    	DecimalFormat formater;
 	   if (decimalPrices)
@@ -156,7 +156,7 @@ public class CurrencyTag extends BodyTagSupport
     */
    public static String formatNumber(double number)
    {
-      return BasketPricingService.isEnabled() ? formatNumber(BigDecimal.valueOf(number)) : ((DecimalFormat) nf.clone()).format(number);
+      return BasketRoundingService.isEnabled() ? formatNumber(BigDecimal.valueOf(number)) : ((DecimalFormat) nf.clone()).format(number);
    }
 
    /**
@@ -166,7 +166,7 @@ public class CurrencyTag extends BodyTagSupport
     */
    public static String formatNumber(BigDecimal number)
    {
-      return formatNumber(number, BasketPricingService.isEnabled());
+      return formatNumber(number, BasketRoundingService.isEnabled());
    }
 
    /**
@@ -183,7 +183,7 @@ public class CurrencyTag extends BodyTagSupport
    private static DecimalFormat formatter(boolean roundedPrices)
    {
       if (!roundedPrices) return (DecimalFormat) nf.clone();
-      DecimalFormat formatter = BasketPricingService.createPriceFormat();
+      DecimalFormat formatter = BasketRoundingService.createPriceFormat();
       formatter.setDecimalFormatSymbols(symbols);
       formatter.setMinimumFractionDigits(Math.max(2, formatter.getMinimumFractionDigits()));
       formatter.setGroupingSize(3);

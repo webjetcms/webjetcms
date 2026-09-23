@@ -1,8 +1,8 @@
 # Elektronický obchod
 
-Voliteľné [zaokrúhľovanie cien](rounding.md) počíta košík zo zobrazených cien za kus s DPH, aby skryté desatinné miesta nemenili celkovú cenu.
-
 Cez aplikáciu E-shop môžete vytvoriť a spravovať jednoduchý elektronický obchod. V rámci aplikácie definujete jednotlivé produkty a ich atribúty (napr. veľkosť, farba), spôsoby doručenia, či platby. Aplikácia evidujete zoznam prijatých objednávok, umožňuje nastavovať ich stav s možnosťou notifikácie zmien v objednávke na zákazníkov email.
+
+Voliteľné [zaokrúhľovanie](rounding.md) zabezpečí, aby sa cena v košíku počítala zo zobrazenej ceny za kus s DPH. Napríklad cena **1,594 €** sa zaokrúhli na **1,59 €** a zákazník za tri kusy zaplatí **4,77 €**.
 
 ## Nastavenia aplikácie
 

@@ -171,7 +171,7 @@ class EshopPricingTest {
                 row.setRoundedUnitPriceVat(null);
                 row.setLineVatAmount(null);
             }
-            BasketPricingService.allocateVat(stored);
+            BasketRoundingService.allocateVat(stored);
             assertEquals(new BigDecimal("11.15"), EshopService.getTotalLocalPriceVat(stored, request));
             assertEquals(new BigDecimal("10.05"), EshopService.getTotalLocalPrice(stored, request));
             verify(manager).commit(any());

@@ -251,7 +251,7 @@ public abstract class BasePaymentMethod {
             BasketInvoiceItemEntity tmp = new BasketInvoiceItemEntity();
             getPaymentMethodCost(tmp, paymentMethod);
 
-            BigDecimal gross = sk.iway.iwcm.components.basket.rest.BasketPricingService.isEnabled()
+            BigDecimal gross = sk.iway.iwcm.components.basket.rest.BasketRoundingService.isEnabled()
                 ? tmp.getItemPrice().multiply(BigDecimal.valueOf(100L + tmp.getItemVat())).movePointLeft(2) : tmp.getItemPriceVat();
             paymentMethods.add(new MethodDto(paymentMethod.getPaymentMethodName(), SupportService.getCustomerTitle(gross, request, prop, annotation), gross));
         }

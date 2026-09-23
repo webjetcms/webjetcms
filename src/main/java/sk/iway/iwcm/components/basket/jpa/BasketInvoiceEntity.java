@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.components.basket.rest.BasketPricingService;
+import sk.iway.iwcm.components.basket.rest.BasketRoundingService;
 import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -403,7 +403,7 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	public List<BasketInvoiceItemEntity> getBasketItems() {
 		BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
 		List<BasketInvoiceItemEntity> items = biir.findAllByBrowserIdAndDomainId(browserId, domainId);
-		if (BasketPricingService.isEnabled()) BasketPricingService.allocateVat(items);
+		if (BasketRoundingService.isEnabled()) BasketRoundingService.allocateVat(items);
 		return items;
 	}
 

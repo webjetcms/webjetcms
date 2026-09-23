@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
-import sk.iway.iwcm.components.basket.rest.BasketPricingService;
+import sk.iway.iwcm.components.basket.rest.BasketRoundingService;
 import sk.iway.iwcm.components.basket.rest.EshopService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -159,7 +159,7 @@ public class BasketInvoiceItemEntity {
 	 * @return
 	 */
 	public BigDecimal getItemPriceVat() {
-		return hasRoundedPrice() ? roundedUnitPriceVat : BasketPricingService.sellingPriceWithVat(getItemPrice(), BigDecimal.valueOf(getItemVat()));
+		return hasRoundedPrice() ? roundedUnitPriceVat : BasketRoundingService.sellingPriceWithVat(getItemPrice(), BigDecimal.valueOf(getItemVat()));
 	}
 
 	public boolean itemAlreadyPurchased() {
@@ -172,8 +172,8 @@ public class BasketInvoiceItemEntity {
 	 */
 	public BigDecimal getItemPriceVatQty() {
 		BigDecimal grossUnit = getItemPriceVat();
-		return hasRoundedPrice() || BasketPricingService.isEnabled()
-			? BasketPricingService.roundLineGross(grossUnit, getItemQty()) : grossUnit.multiply(BigDecimal.valueOf(getItemQty()));
+		return hasRoundedPrice() || BasketRoundingService.isEnabled()
+			? BasketRoundingService.roundLineGross(grossUnit, getItemQty()) : grossUnit.multiply(BigDecimal.valueOf(getItemQty()));
 	}
 
 	public String getTitle() {
@@ -228,16 +228,16 @@ public class BasketInvoiceItemEntity {
 
 	public BigDecimal getItemLocalPriceVatQty(HttpServletRequest request, String currency) {
 		BigDecimal grossUnit = getLocalPriceVat(request, currency);
-		return hasRoundedPrice() || BasketPricingService.isEnabled()
-			? BasketPricingService.roundLineGross(grossUnit, getItemQty()) : grossUnit.multiply(BigDecimal.valueOf(getItemQty()));
+		return hasRoundedPrice() || BasketRoundingService.isEnabled()
+			? BasketRoundingService.roundLineGross(grossUnit, getItemQty()) : grossUnit.multiply(BigDecimal.valueOf(getItemQty()));
 	}
 
 	public BigDecimal getLocalPriceVat(HttpServletRequest request, String currency) {
-		return hasRoundedPrice() ? roundedUnitPriceVat : BasketPricingService.sellingPriceWithVat(getLocalPrice(request, currency), BigDecimal.valueOf(getItemVat()));
+		return hasRoundedPrice() ? roundedUnitPriceVat : BasketRoundingService.sellingPriceWithVat(getLocalPrice(request, currency), BigDecimal.valueOf(getItemVat()));
 	}
 
 	public BigDecimal getLocalPriceVat(HttpServletRequest request) {
-		return hasRoundedPrice() ? roundedUnitPriceVat : BasketPricingService.sellingPriceWithVat(getLocalPrice(request), BigDecimal.valueOf(getItemVat()));
+		return hasRoundedPrice() ? roundedUnitPriceVat : BasketRoundingService.sellingPriceWithVat(getLocalPrice(request), BigDecimal.valueOf(getItemVat()));
 	}
 
 	public BigDecimal getItemLocalPriceVatQty(HttpServletRequest request) {

@@ -27,7 +27,7 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.common.GalleryToolsForCore;
 import sk.iway.iwcm.components.basket.rest.EshopService;
-import sk.iway.iwcm.components.basket.rest.BasketPricingService;
+import sk.iway.iwcm.components.basket.rest.BasketRoundingService;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
@@ -926,7 +926,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 */
 	public BigDecimal getLocalPriceVat(HttpServletRequest request)
 	{
-		return BasketPricingService.sellingPriceWithVat(getLocalPrice(request), getVat());
+		return BasketRoundingService.sellingPriceWithVat(getLocalPrice(request), getVat());
 	}
 
 	/**
@@ -937,7 +937,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	 */
 	public BigDecimal getLocalPriceVat(HttpServletRequest request, String currency)
 	{
-		return BasketPricingService.sellingPriceWithVat(getLocalPrice(request, currency), getVat());
+		return BasketRoundingService.sellingPriceWithVat(getLocalPrice(request, currency), getVat());
 	}
 
 	@JsonIgnore
@@ -960,13 +960,13 @@ public class DocBasic implements DocGroupInterface, Serializable
 	@JsonIgnore
 	public BigDecimal getPriceVat()
 	{
-		return BasketPricingService.sellingPriceWithVat(getPrice(), getVat());
+		return BasketRoundingService.sellingPriceWithVat(getPrice(), getVat());
 	}
 
 	@JsonIgnore
 	public BigDecimal getPriceVat(HttpServletRequest request)
 	{
-		return BasketPricingService.sellingPriceWithVat(getPrice(request), getVat());
+		return BasketRoundingService.sellingPriceWithVat(getPrice(request), getVat());
 	}
 
 	@JsonIgnore

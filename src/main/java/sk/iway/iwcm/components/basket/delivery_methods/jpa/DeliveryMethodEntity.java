@@ -137,7 +137,7 @@ public class DeliveryMethodEntity extends SupportMethodEntity {
         if(price == null) return BigDecimal.ZERO;
         if(vat == null || vat < 1) return price;
 
-        if (sk.iway.iwcm.components.basket.rest.BasketPricingService.isEnabled())
+        if (sk.iway.iwcm.components.basket.rest.BasketRoundingService.isEnabled())
             return price.multiply(BigDecimal.valueOf(100L + vat)).movePointLeft(2);
         BigDecimal bdVat = new BigDecimal(vat);
         return price
