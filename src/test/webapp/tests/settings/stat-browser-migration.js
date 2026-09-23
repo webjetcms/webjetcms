@@ -1,16 +1,21 @@
-Feature('settings.stat-browser-migration');
+// Isolate request interception from stale workers and dispose routes after every scenario.
+Feature('settings.stat-browser-migration', { timeout: 180 })
+    .config('Playwright', { restart: 'context' });
+
+AfterSuite(({ I }) => {
+    I.limitTime(30).usePlaywrightTo('release the closed context before restoring session mode', async helper => {
+        // CodeceptJS 3 retains the closed context, which session mode would otherwise reuse.
+        helper.browserContext = null;
+    });
+});
 
 Before(({ I, login }) => {
     login('admin');
-    I.usePlaywrightTo('clear migration response mocks', async ({ page }) => {
-        await page.unroute('**/admin/rest/settings/stat-browser-migration/status');
-        await page.unroute('**/admin/rest/settings/stat-browser-migration');
-    });
     I.amOnPage('/admin/v9/settings/stat-browser-migration/');
 });
 
 Scenario('shows migration preview without changing data @screenshot', ({ I, Document }) => {
-    I.usePlaywrightTo('mock migration in progress', async ({ page }) => {
+    I.limitTime(30).usePlaywrightTo('mock migration in progress', async ({ page }) => {
         await page.route('**/admin/rest/settings/stat-browser-migration/status', async (route) => {
             await route.fulfill({
                 status: 200,
@@ -78,7 +83,7 @@ Scenario('shows reference scan progress and retained identifiers', ({ I }) => {
         done: false,
         table: 'stat_views_2024_2'
     };
-    I.usePlaywrightTo('mock the reference scan', async ({ page }) => {
+    I.limitTime(30).usePlaywrightTo('mock the reference scan', async ({ page }) => {
         await page.route('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
             status: 200,
             contentType: 'application/json',
@@ -94,7 +99,7 @@ Scenario('shows reference scan progress and retained identifiers', ({ I }) => {
     I.verifyDisabled('#migrationFinalize');
     I.saveScreenshot('stat-browser-reference-progress.png');
 
-    I.usePlaywrightTo('complete the mocked finalization', async () => {
+    I.limitTime(30).usePlaywrightTo('complete the mocked finalization', async () => {
         Object.assign(state, {
             running: false,
             finalizing: false,
@@ -112,7 +117,7 @@ Scenario('shows reference scan progress and retained identifiers', ({ I }) => {
 });
 
 Data([{ seoBotsIndexReady: false }, { seoBotsIndexReady: true }]).Scenario('finalization with empty mappings follows index readiness', ({ I, current }) => {
-    I.usePlaywrightTo('mock empty mappings and index readiness', async ({ page }) => {
+    I.limitTime(30).usePlaywrightTo('mock empty mappings and index readiness', async ({ page }) => {
         await page.route('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
             status: 200,
             contentType: 'application/json',
@@ -133,7 +138,7 @@ Data([{ seoBotsIndexReady: false }, { seoBotsIndexReady: true }]).Scenario('fina
 });
 
 Data([{ finalized: false }, { finalized: true }]).Scenario('analysis separates retained OS values from completed browser migration', ({ I, current }) => {
-    I.usePlaywrightTo('mock completed migration with retained OS values', async ({ page }) => {
+    I.limitTime(30).usePlaywrightTo('mock completed migration with retained OS values', async ({ page }) => {
         await page.route('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
             status: 200,
             contentType: 'application/json',
@@ -189,7 +194,7 @@ Scenario('shows error merge progress before completing the table', ({ I }) => {
         mergingStatErrors: true,
         table: 'stat_error_2024_2'
     };
-    I.usePlaywrightTo('mock error counter merging', async ({ page }) => {
+    I.limitTime(30).usePlaywrightTo('mock error counter merging', async ({ page }) => {
         await page.route('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
             status: 200,
             contentType: 'application/json',
@@ -204,7 +209,7 @@ Scenario('shows error merge progress before completing the table', ({ I }) => {
     I.dontSeeElement('#migrationProgress[aria-valuenow]');
     I.verifyDisabled('#migrationStart');
 
-    I.usePlaywrightTo('complete the mocked merge', async () => {
+    I.limitTime(30).usePlaywrightTo('complete the mocked merge', async () => {
         Object.assign(state, { mergingStatErrors: false, tableIndex: 2, cursor: 0, tableMaxId: 0 });
     });
     I.waitForText('67%', 10, '#migrationOverallProgress');
