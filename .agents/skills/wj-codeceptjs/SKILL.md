@@ -78,6 +78,8 @@ src/test/webapp/
 
 7. **Always run tests with local URL**: Use `CODECEPT_URL='http://iwcm.interway.sk'` so tests run against local development version. Do not use `*:prod` scripts for branch verification. For the exact commands, see **Running Tests**.
 
+8. **Prefer standard CodeceptJS commands**: Avoid direct `I.usePlaywrightTo` calls when standard commands can perform the operation. Prefer `I.mockRoute()` / `I.stopMockingRoute()` for request interception, `I.executeScript()` for browser-side JavaScript, `I.waitForFunction()` for conditions, and existing action and assertion commands. Use `I.usePlaywrightTo` only for a justified operation that cannot be implemented directly with the available CodeceptJS commands. Check the configured helpers and installed version first, keep the callback limited to the unsupported operation, and explain the reason in a short English comment.
+
 ## Authentication
 
 Use the pre-configured `login` injection in `Before` blocks:
@@ -268,7 +270,7 @@ For routine test cleanup, use separate scenarios rather than importing CodeceptJ
 
 Prefer the configured `I.assertXXX` methods, such as `I.assertEqual`, `I.assertTrue`, and `I.assertDeepEqual`, over importing `assert`, `node:assert/strict`, or `chai` into E2E scenarios. These assertions are already available through `codeceptjs-chai` and appear as normal test steps. Use a separate assertion library only when an existing assertion helper cannot express the required check.
 
-When using `I.usePlaywrightTo`, return the data from its callback and perform `I.assertXXX` checks after the awaited call. Do not call or await `I.*` steps inside that callback: they enter the CodeceptJS queue that is already waiting for the callback and can block execution.
+When a justified exception requires `I.usePlaywrightTo`, return the data from its callback and perform `I.assertXXX` checks after the awaited call. Do not call or await `I.*` steps inside that callback: they enter the CodeceptJS queue that is already waiting for the callback and can block execution.
 
 ```javascript
 const { status, content } = await I.usePlaywrightTo("read uploaded file", async ({ page }) => {

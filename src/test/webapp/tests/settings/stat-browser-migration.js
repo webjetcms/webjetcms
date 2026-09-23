@@ -15,48 +15,42 @@ Before(({ I, login }) => {
 });
 
 Scenario('shows migration preview without changing data @screenshot', ({ I, Document }) => {
-    I.limitTime(30).usePlaywrightTo('mock migration in progress', async ({ page }) => {
-        await page.route('**/admin/rest/settings/stat-browser-migration/status', async (route) => {
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    tableIndex: 73,
-                    totalTables: 175,
-                    cursor: 6400,
-                    tableMaxId: 10000,
-                    scanned: 524830,
-                    updated: 118742,
-                    tableUpdated: 1840,
-                    tableDurationMillis: 12345,
-                    running: true,
-                    stopRequested: false,
-                    paused: false,
-                    done: false,
-                    table: 'stat_error_2024_2',
-                    error: null
-                })
-            });
-        });
+    I.mockRoute('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+            tableIndex: 73,
+            totalTables: 175,
+            cursor: 6400,
+            tableMaxId: 10000,
+            scanned: 524830,
+            updated: 118742,
+            tableUpdated: 1840,
+            tableDurationMillis: 12345,
+            running: true,
+            stopRequested: false,
+            paused: false,
+            done: false,
+            table: 'stat_error_2024_2',
+            error: null
+        })
+    }));
 
-        await page.route('**/admin/rest/settings/stat-browser-migration', async (route) => {
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    seoBots: [
-                        { sourceId: 11, targetId: 1, source: 'Googlebot 2.1', target: 'Googlebot' },
-                        { sourceId: 12, targetId: 2, source: 'Bingbot 2.0', target: 'Bingbot' }
-                    ],
-                    browserKeys: [
-                        { sourceId: 101, targetId: 10, source: 'Chrome 127.0', target: 'Chrome' },
-                        { sourceId: 102, targetId: 20, source: 'Mobile Safari 17.4', target: 'Mobile Safari' }
-                    ],
-                    tables: Array.from({ length: 175 }, (_, index) => `stat_table_${index + 1}`)
-                })
-            });
-        });
-    });
+    I.mockRoute('**/admin/rest/settings/stat-browser-migration', route => route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+            seoBots: [
+                { sourceId: 11, targetId: 1, source: 'Googlebot 2.1', target: 'Googlebot' },
+                { sourceId: 12, targetId: 2, source: 'Bingbot 2.0', target: 'Bingbot' }
+            ],
+            browserKeys: [
+                { sourceId: 101, targetId: 10, source: 'Chrome 127.0', target: 'Chrome' },
+                { sourceId: 102, targetId: 20, source: 'Mobile Safari 17.4', target: 'Mobile Safari' }
+            ],
+            tables: Array.from({ length: 175 }, (_, index) => `stat_table_${index + 1}`)
+        })
+    }));
     I.refreshPage();
     I.waitForText('stat_error_2024_2', 10, '#migrationTable');
     I.waitForText('64%', 10, '#migrationProgress');
@@ -72,7 +66,7 @@ Scenario('shows migration preview without changing data @screenshot', ({ I, Docu
     Document.screenshot("/sysadmin/update/stat-browser-migration.png");
 });
 
-Scenario('shows reference scan progress and retained identifiers', ({ I }) => {
+Scenario('shows reference scan progress and retained identifiers', async ({ I }) => {
     const state = {
         tableIndex: 1,
         totalTables: 3,
@@ -83,52 +77,46 @@ Scenario('shows reference scan progress and retained identifiers', ({ I }) => {
         done: false,
         table: 'stat_views_2024_2'
     };
-    I.limitTime(30).usePlaywrightTo('mock the reference scan', async ({ page }) => {
-        await page.route('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify(state)
-        }));
-    });
-    I.amOnPage('/admin/v9/settings/stat-browser-migration/?userlngr=true');
-    I.waitForText('stat_views_2024_2', 10, '#migrationTable');
-    I.waitForText('33%', 10, '#migrationOverallProgress');
-    I.see('Kontrola používaných identifikátorov', '#migrationProgress');
-    I.seeElement('#migrationProgress.progress-bar-striped.progress-bar-animated');
-    I.dontSeeElement('#migrationProgress[aria-valuenow]');
-    I.verifyDisabled('#migrationFinalize');
-    I.saveScreenshot('stat-browser-reference-progress.png');
+    await I.mockRoute('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(state)
+    }));
+    await I.amOnPage('/admin/v9/settings/stat-browser-migration/?userlngr=true');
+    await I.waitForText('stat_views_2024_2', 10, '#migrationTable');
+    await I.waitForText('33%', 10, '#migrationOverallProgress');
+    await I.see('Kontrola používaných identifikátorov', '#migrationProgress');
+    await I.seeElement('#migrationProgress.progress-bar-striped.progress-bar-animated');
+    await I.dontSeeElement('#migrationProgress[aria-valuenow]');
+    await I.verifyDisabled('#migrationFinalize');
+    await I.saveScreenshot('stat-browser-reference-progress.png');
 
-    I.limitTime(30).usePlaywrightTo('complete the mocked finalization', async () => {
-        Object.assign(state, {
-            running: false,
-            finalizing: false,
-            finalized: true,
-            done: true,
-            table: 'done',
-            deletedStatKeys: 1,
-            retainedStatKeys: 5
-        });
+    Object.assign(state, {
+        running: false,
+        finalizing: false,
+        finalized: true,
+        done: true,
+        table: 'done',
+        deletedStatKeys: 1,
+        retainedStatKeys: 5
     });
-    I.waitForText('100%', 10, '#migrationOverallProgress');
-    I.seeElement('#migrationProgress[aria-valuenow="100"]:not(.progress-bar-animated)');
-    I.see('1', '#migrationDeletedKeys');
-    I.see('5', '#migrationRetainedKeys');
+    await I.waitForText('100%', 10, '#migrationOverallProgress');
+    await I.seeElement('#migrationProgress[aria-valuenow="100"]:not(.progress-bar-animated)');
+    await I.see('1', '#migrationDeletedKeys');
+    await I.see('5', '#migrationRetainedKeys');
 });
 
 Data([{ seoBotsIndexReady: false }, { seoBotsIndexReady: true }]).Scenario('finalization with empty mappings follows index readiness', ({ I, current }) => {
-    I.limitTime(30).usePlaywrightTo('mock empty mappings and index readiness', async ({ page }) => {
-        await page.route('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({ running: false, done: true })
-        }));
-        await page.route('**/admin/rest/settings/stat-browser-migration', route => route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({ seoBots: [], browserKeys: [], tables: [], seoBotsIndexReady: current.seoBotsIndexReady })
-        }));
-    });
+    I.mockRoute('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ running: false, done: true })
+    }));
+    I.mockRoute('**/admin/rest/settings/stat-browser-migration', route => route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ seoBots: [], browserKeys: [], tables: [], seoBotsIndexReady: current.seoBotsIndexReady })
+    }));
     I.refreshPage();
     I.waitForElement('#migrationStart:disabled', 10);
     I.click('#migrationAnalyze');
@@ -138,22 +126,20 @@ Data([{ seoBotsIndexReady: false }, { seoBotsIndexReady: true }]).Scenario('fina
 });
 
 Data([{ finalized: false }, { finalized: true }]).Scenario('analysis separates retained OS values from completed browser migration', ({ I, current }) => {
-    I.limitTime(30).usePlaywrightTo('mock completed migration with retained OS values', async ({ page }) => {
-        await page.route('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({ running: false, done: true, finalized: current.finalized, deletedStatKeys: 991, retainedStatKeys: 6 })
-        }));
-        await page.route('**/admin/rest/settings/stat-browser-migration', route => route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify({
-                seoBots: [], browserKeys: [], tables: ['stat_views_2021_7'], seoBotsIndexReady: true,
-                retainedKeys: ['', 'Safari 4.0', 'Chrome 110.0', 'Chrome 33', 'Edge Mobile 118', 'Chrome 137']
-                    .map(source => ({ source }))
-            })
-        }));
-    });
+    I.mockRoute('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ running: false, done: true, finalized: current.finalized, deletedStatKeys: 991, retainedStatKeys: 6 })
+    }));
+    I.mockRoute('**/admin/rest/settings/stat-browser-migration', route => route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+            seoBots: [], browserKeys: [], tables: ['stat_views_2021_7'], seoBotsIndexReady: true,
+            retainedKeys: ['', 'Safari 4.0', 'Chrome 110.0', 'Chrome 33', 'Edge Mobile 118', 'Chrome 137']
+                .map(source => ({ source }))
+        })
+    }));
     I.amOnPage('/admin/v9/settings/stat-browser-migration/?userlngr=true');
     I.waitForElement('#migrationStart:disabled', 10);
     I.click('#migrationAnalyze');
@@ -184,7 +170,7 @@ Scenario('checks permissions', ({ I }) => {
     I.logout();
 });
 
-Scenario('shows error merge progress before completing the table', ({ I }) => {
+Scenario('shows error merge progress before completing the table', async ({ I }) => {
     const state = {
         tableIndex: 1,
         totalTables: 3,
@@ -194,26 +180,22 @@ Scenario('shows error merge progress before completing the table', ({ I }) => {
         mergingStatErrors: true,
         table: 'stat_error_2024_2'
     };
-    I.limitTime(30).usePlaywrightTo('mock error counter merging', async ({ page }) => {
-        await page.route('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
-            status: 200,
-            contentType: 'application/json',
-            body: JSON.stringify(state)
-        }));
-    });
-    I.amOnPage('/admin/v9/settings/stat-browser-migration/?userlngr=true');
-    I.waitForText('Zlučovanie záznamov chýb', 10, '#migrationProgress');
-    I.see('stat_error_2024_2', '#migrationTable');
-    I.see('33%', '#migrationOverallProgress');
-    I.seeElement('#migrationProgress.progress-bar-striped.progress-bar-animated');
-    I.dontSeeElement('#migrationProgress[aria-valuenow]');
-    I.verifyDisabled('#migrationStart');
+    await I.mockRoute('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(state)
+    }));
+    await I.amOnPage('/admin/v9/settings/stat-browser-migration/?userlngr=true');
+    await I.waitForText('Zlučovanie záznamov chýb', 10, '#migrationProgress');
+    await I.see('stat_error_2024_2', '#migrationTable');
+    await I.see('33%', '#migrationOverallProgress');
+    await I.seeElement('#migrationProgress.progress-bar-striped.progress-bar-animated');
+    await I.dontSeeElement('#migrationProgress[aria-valuenow]');
+    await I.verifyDisabled('#migrationStart');
 
-    I.limitTime(30).usePlaywrightTo('complete the mocked merge', async () => {
-        Object.assign(state, { mergingStatErrors: false, tableIndex: 2, cursor: 0, tableMaxId: 0 });
-    });
-    I.waitForText('67%', 10, '#migrationOverallProgress');
-    I.seeElement('#migrationProgress[aria-valuenow="0"]:not(.progress-bar-animated)');
+    Object.assign(state, { mergingStatErrors: false, tableIndex: 2, cursor: 0, tableMaxId: 0 });
+    await I.waitForText('67%', 10, '#migrationOverallProgress');
+    await I.seeElement('#migrationProgress[aria-valuenow="0"]:not(.progress-bar-animated)');
 });
 
 Scenario('logout', ({ I }) => {
