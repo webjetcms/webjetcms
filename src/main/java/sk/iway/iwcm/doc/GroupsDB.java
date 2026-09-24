@@ -27,7 +27,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import static sk.iway.iwcm.Tools.isEmpty;
 
@@ -179,11 +178,11 @@ public class GroupsDB extends DB
 		DebugTimer dt = new DebugTimer("GroupsDB.reloadGroups");
 
 		//ak vieme predchadzajucu velkost, tak si ju vopred predalokujeme
-		List<GroupDetails> groupsHolderWhileLoading = new CopyOnWriteArrayList<>(); //Collections.synchronizedList(new ArrayList<>(groups!=null?groups.size():300));
+		List<GroupDetails> groupsHolderWhileLoading = new ArrayList<>(groups!=null?groups.size():300);
 		//ak existuje, tak si vopred predalokuj dost miesta pre kluce
-		Map<Integer, GroupDetails> idToGroupsHolderWhileLoading = Collections.synchronizedMap(new HashMap<Integer, GroupDetails>(idToGroups!=null?idToGroups.size():300));
-		Map<String,GroupDetails> domainIdsGroups = Collections.synchronizedMap(new HashMap<String, GroupDetails>(domainIds!=null?domainIds.size():100));
-		Map<String,Integer> domainIdsHolderWhileLoading = Collections.synchronizedMap(new HashMap<String, Integer>(domainIds!=null?domainIds.size():100));
+		Map<Integer, GroupDetails> idToGroupsHolderWhileLoading = new HashMap<Integer, GroupDetails>(idToGroups!=null?idToGroups.size():300);
+		Map<String,GroupDetails> domainIdsGroups = new HashMap<String, GroupDetails>(domainIds!=null?domainIds.size():100);
+		Map<String,Integer> domainIdsHolderWhileLoading = new HashMap<String, Integer>(domainIds!=null?domainIds.size():100);
 
 		java.sql.Connection db_conn = null;
 		java.sql.PreparedStatement ps = null;
@@ -193,8 +192,15 @@ public class GroupsDB extends DB
 			dt.diff("after objects");
 
 			db_conn = DBPool.getConnection(serverName);
-			String sql = "SELECT * FROM groups ORDER BY sort_priority, group_name";
+			String[] additionalFields = DataAccessHelper.getGroupFields();
+			StringBuilder addFieldsSelect = new StringBuilder(); // musi tu byt, pretoze nizsie robime DataAccessHelper.groupLoadData(rs, group); v metode fillFieldsByResultSet
+			for (String field : additionalFields)
+			{
+				addFieldsSelect.append(", ").append(field);
+			}
+			String sql = "SELECT group_id, group_name, internal, parent_group_id, navbar, default_doc_id, temp_id, sort_priority, password_protected, menu_type, url_dir_name, sync_id, sync_status, logon_page_doc_id, domain_name, new_page_docid_template, install_name, field_a, field_b, field_c, field_d, logged_menu_type, link_group_id, lng, hidden_in_admin, force_group_template, html_head"+addFieldsSelect+" FROM groups ORDER BY sort_priority, group_name";
 			ps = db_conn.prepareStatement(sql);
+			ps.setFetchSize(500);
 			rs = ps.executeQuery();
 
 			dt.diff("after rs");
