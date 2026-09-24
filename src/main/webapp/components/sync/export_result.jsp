@@ -1,3 +1,4 @@
+<%@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><iwcm:checkLogon admin="true" perms="cmp_sync"/>
 <%@page import="java.io.InputStream"%>
 <%@page import="org.json.JSONObject"%>
 <%@page import="java.nio.charset.Charset"%>

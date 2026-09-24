@@ -3490,6 +3490,16 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>jvyskoc</string></void>
+                <void property="date"><string>08.06.2026</string></void>
+                <void property="desc"><string>emails - click_hash index efficiency</string></void>
+                <void property="oracle"><string>
+                    CREATE INDEX EMAILS_CLICK_HASH_NLSSORT ON EMAILS (NLSSORT(CLICK_HASH, 'NLS_SORT=BINARY_AI'));
+                </string></void>
+            </object>
+        </void>
 
     </object>
 </java>

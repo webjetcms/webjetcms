@@ -77,7 +77,11 @@ public class CronFacade
 				{
 					Class<?> clazz = task.receiveClazz();
 					schedulerCron.schedule(task.receiveCronPattern(), new RunnableWrapper(clazz, task));
-					Logger.debug(WebjetDatabaseTaskSource.class, String.format("Cron task started {%s}: %s %s, with pattern %s", task.getId(), clazz.getName(), task.getParams(), task.receiveCronPattern()));
+					Logger.debug(WebjetDatabaseTaskSource.class, String.format("Cron task started {%s}: %s %s, [node: %s], with pattern %s", task.getId(), clazz.getName(), task.getParams(), task.getClusterNode(), task.receiveCronPattern()));
+				}
+				catch (ClassNotFoundException e)
+				{
+					sk.iway.iwcm.Logger.error(CronFacade.class, "Cron ERROR - ClassNotFoundException: " + e.getMessage());
 				}
 				catch (Exception e)
 				{

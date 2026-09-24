@@ -88,7 +88,8 @@ public class AdminUploadServlet extends HttpServlet
         if (user == null || user.isAdmin()==false) {
             errorKey = "admin.logon.timeoutTitle";
         }
-        else if (Tools.isNotEmpty(destinationFolder) && "/files/protected/feedback-form/".equals(destinationFolder)==false && user.isFolderWritable(destinationFolder)==false) {
+        else if (Tools.isNotEmpty(destinationFolder) && "/files/protected/upload/".equals(destinationFolder)==false && "/files/protected/feedback-form/".equals(destinationFolder)==false && user.isFolderWritable(destinationFolder)==false) {
+            // /files/protected/upload/ is allowed because of field-type-wjupload.js default folder
             // /files/protected/feedback-form/ je natvrdo povolene, aby bolo mozne nahrat subory k feedback-form
             errorKey = "admin.upload_iframe.wrong_upload_dir";
         }

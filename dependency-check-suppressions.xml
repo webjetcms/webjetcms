@@ -51,4 +51,79 @@
    <vulnerabilityName>GHSA-hfvx-25r5-qc3w</vulnerabilityName>
  </suppress>
 
+ <!-- we use AllowSafeHtmlAttributeConverter on quill instances on backend -->
+ <suppress>
+   <notes><![CDATA[
+   file name: main.00d2424f1cc31435.js
+   ]]></notes>
+   <packageUrl regex="true">^pkg:javascript/quill@.*$</packageUrl>
+   <cve>CVE-2025-15056</cve>
+ </suppress>
+
+ <!-- used only for admin bundle, not relevant for user inputs -->
+ <suppress>
+   <notes><![CDATA[
+   file name: postcss:8.5.9
+   ]]></notes>
+   <packageUrl regex="true">^pkg:npm/postcss@.*$</packageUrl>
+   <vulnerabilityName>CVE-2026-41305</vulnerabilityName>
+ </suppress>
+
+ <!-- we are using latest 4.x version and connecting only to trusted sources -->
+ <suppress>
+    <notes><![CDATA[
+    file name: httpcore-4.4.13.jar
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.httpcomponents/httpcore@.*$</packageUrl>
+    <cve>CVE-2026-54399</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+    file name: httpcore-4.4.13.jar
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.apache\.httpcomponents/httpcore@.*$</packageUrl>
+    <cve>CVE-2026-54428</cve>
+ </suppress>
+
+ <!-- This vulnerability is fixed in 2.18.9, 2.21.5, and 3.1.4 -->
+ <suppress>
+   <notes><![CDATA[
+   file name: jackson-databind-2.22.0.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson-databind@.*$</packageUrl>
+   <cve>CVE-2026-54515</cve>
+ </suppress>
+
+ <!-- not 7.x version mentioned: Affected versions: Spring Security 5.7.0 through 5.7.24; 5.8.0 through 5.8.26; 6.3.0 through 6.3.17; 6.4.0 through 6.4.17; 6.5.0 through 6.5.10. -->
+ <suppress>
+    <notes><![CDATA[
+    file name: spring-security-web-7.1.0.jar
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-web@.*$</packageUrl>
+    <vulnerabilityName>CVE-2026-47838</vulnerabilityName>
+ </suppress>
+
+ <!-- Bug was in python version, not java version -->
+ <suppress>
+   <notes><![CDATA[
+   file name: protobuf-java-4.33.0.jar
+   ]]></notes>
+   <packageUrl regex="true">^pkg:maven/com\.google\.protobuf/protobuf-java@.*$</packageUrl>
+   <cve>CVE-2026-0994</cve>
+ </suppress>
+
+  <!--
+   log4j-over-slf4j is just a bridge between the log4j 1.x API and slf4j/logback, it does not contain
+   the vulnerable classes (JMSAppender, SocketServer, Chainsaw). CVE-2020-9493 and
+   CVE-2022-23307 concern the original Apache log4j 1.2.x, not this library.
+  -->
+  <suppress>
+    <notes><![CDATA[
+    file name: log4j-over-slf4j
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.slf4j/log4j-over-slf4j@.*$</packageUrl>
+    <cve>CVE-2020-9493</cve>
+    <cve>CVE-2022-23307</cve>
+  </suppress>
+
 </suppressions>

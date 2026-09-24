@@ -313,7 +313,7 @@ public class AiAssistantsService {
 
     public static void clearCache() {
         Cache c = Cache.getInstance();
-        c.removeObject(CACHE_KEY_PREFIX + CloudToolsForCore.getDomainId());
+        c.removeObject(CACHE_KEY_PREFIX + CloudToolsForCore.getDomainId(), true);
     }
 
     /**

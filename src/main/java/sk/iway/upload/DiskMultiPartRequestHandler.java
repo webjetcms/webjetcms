@@ -1,7 +1,6 @@
 package sk.iway.upload;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,11 +15,13 @@ import org.apache.commons.fileupload2.core.DiskFileItem;
 import org.apache.commons.fileupload2.core.DiskFileItemFactory;
 import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload;
 
+import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.IwcmRequest;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
-
+import sk.iway.iwcm.users.UsersDB;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.Part;
@@ -59,15 +60,33 @@ public class DiskMultiPartRequestHandler
     *@param  request               Description of the Parameter
     *@exception  ServletException  Description of the Exception
     * @throws FileUploadException
-	 * @throws UnsupportedEncodingException
     */
-   public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, UnsupportedEncodingException, IOException
+   public HttpServletRequest handleRequest(HttpServletRequest request) throws ServletException, FileUploadException, IOException
    {
 		DiskFileItemFactory factory = DiskFileItemFactory.builder().get();
 
 		JakartaServletFileUpload<DiskFileItem, DiskFileItemFactory> upload = new JakartaServletFileUpload<>(factory);
 		files = upload.parseRequest(request);
 		if (files != null) Logger.debug(DiskMultiPartRequestHandler.class, "DiskMultiPartRequestHandler.handleRequest, files="+files.size());
+
+		Identity user = UsersDB.getCurrentUser(request);
+		List<DiskFileItem> allowedFiles = new ArrayList<>();
+		if (files != null) {
+			for (DiskFileItem diskFile : files)
+			{
+				if (diskFile.isFormField() || FileTools.isFileAllowedForUpload(user, diskFile.getName())) {
+					allowedFiles.add(diskFile);
+				} else {
+					Logger.warn(DiskMultiPartRequestHandler.class, "Blocked uploaded file by type, field="+diskFile.getFieldName()+" fileName="+diskFile.getName());
+					try {
+						diskFile.delete();
+					} catch (Exception e) {
+						Logger.error(DiskMultiPartRequestHandler.class, "Error deleting blocked file item", e);
+					}
+				}
+			}
+			files = allowedFiles;
+		}
 
 		IwcmRequest wrapped = new IwcmRequest(request);
 

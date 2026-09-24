@@ -76,7 +76,7 @@ public class UpdateService {
 
 	/************************************************** UPDATE LOGIC SECTION *******************************************************************/
 
-	public static String prepareUpdateFile(MultipartFile uploadFile) throws IOException, ServletException {
+	public static String prepareUpdateFile(MultipartFile uploadFile) throws IOException {
 		if (Tools.isNotEmpty(uploadFile.getName())) {
 			String version = DocTools.removeChars("upload-" + Tools.formatDateTime(Tools.getNow()));
 			String versionDir = version;

@@ -4,6 +4,11 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +36,7 @@ import sk.iway.iwcm.gallery.GalleryBean;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
+import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.users.UsersDB;
@@ -46,7 +52,7 @@ import sk.iway.iwcm.users.UsersDB;
  *@created      Nedela, 2004, apr 18
  *@modified     $Date: $
  */
-@SuppressWarnings({"java:S1075", "java:S1989"})
+@SuppressWarnings({"java:S1075", "java:S1989", "java:S3776"})
 @WebServlet(name = "thumbServlet", urlPatterns = {"/admin/thumb/*", "/thumb/*", "/tumbn/*"})
 public class ThumbServlet extends HttpServlet
 {
@@ -60,6 +66,9 @@ public class ThumbServlet extends HttpServlet
 	private static Pattern pattern = Pattern.compile("[a-z\\-_0-9A-Z]*-(\\d+)x(\\d+)(ip(\\d))?(c([\\da-f]+))?(q(\\d+))?\\.[a-z]{3,4}\\b");
 
 	//public static final String CACHE_DIR = "/WEB-INF/imgcache/";
+
+	// Package-private for testing purposes
+	static final AtomicReference<Set<String>> allowedSizesRef = new AtomicReference<>();
 
 
 	@Override
@@ -299,6 +308,11 @@ public class ThumbServlet extends HttpServlet
 			fillColor = DocTools.removeChars(fillColor).toLowerCase().trim();
 			if (fillColor.length()!=6) fillColor = FILL_COLOR_DEFAULT;
 
+			//sometimes w/h for ip1/2 will be zero but it is not important because it will be calculated
+			//like fixedSize-160-0-1
+			if (ip == 1) height = width;
+			else if (ip == 2) width = height;
+
 			Logger.debug(ThumbServlet.class, "Farba: "+fillColor);
 			//osetrenie stavov
 			if (width > Constants.getInt("imageMaxThumbsWidth") || height > Constants.getInt("imageMaxThumbsHeight") || width < 1 || height < 1 || fillColor.length()!=6)
@@ -352,6 +366,15 @@ public class ThumbServlet extends HttpServlet
 				{
 					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 					return;
+				}
+
+				if (canPost == true) {
+					boolean isSizeAllowd = isSizeAllowed(realPathSmall, user);
+					if (isSizeAllowd == false)
+					{
+						response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+						return;
+					}
 				}
 
 				String thumbWriteServer = Constants.getString("thumbWriteServer");
@@ -750,5 +773,108 @@ public class ThumbServlet extends HttpServlet
 			sk.iway.iwcm.Logger.error(e);
 		}
 		return realPathSmall;
+	}
+
+	/**
+	 * Checks if the requested size is allowed based on the configuration and user permissions
+	 * @param realPathSmall
+	 * @param user
+	 * @return
+	 */
+	public static boolean isSizeAllowed(String realPathSmall, Identity user) {
+		String mode = Constants.getString("thumbServletAllowedSizeMode");
+		if ("deny".equals(mode)) {
+			if (user != null && user.isAdmin()) {
+				return true; // Admins can request any size
+			}
+			return false; // Deny all other users
+		}
+		else if ("allow".equals(mode)) return true;
+
+		// ...imgcache/images/image-730x401ip5ncff00ffq90.jpg -> 730x401ip5ncff00ffq90
+		int lastDashIndex = realPathSmall.lastIndexOf('-');
+		int lastDotIndex = realPathSmall.lastIndexOf('.');
+		if (lastDashIndex == -1 || lastDotIndex == -1 || lastDotIndex < lastDashIndex) return false;
+		String sizePart = realPathSmall.substring(lastDashIndex + 1, lastDotIndex);
+
+		// verify that sizePart is allowed
+		if (isSizePartInMap(sizePart)) {
+			return true;
+		}
+
+		if ("learn".equals(mode) || ("check".equals(mode) && user != null && user.isAdmin())) {
+			//add sizePart to allowed sizes
+			addSizePartToMap(sizePart);
+			return true; // Admins can request any size
+		}
+
+		return false;
+	}
+
+	private static boolean isSizePartInMap(String sizePart) {
+		Set<String> allowedSizes = allowedSizesRef.get();
+		if (allowedSizes == null) {
+			Set<String> loadedAllowedSizes = loadAllowedSizesSnapshot();
+			if (allowedSizesRef.compareAndSet(null, loadedAllowedSizes)) {
+				allowedSizes = loadedAllowedSizes;
+			} else {
+				allowedSizes = allowedSizesRef.get();
+			}
+		}
+
+		return allowedSizes != null && allowedSizes.contains(sizePart);
+	}
+
+	private static void addSizePartToMap(String sizePart) {
+		while (true) {
+			Set<String> allowedSizes = allowedSizesRef.get();
+			if (allowedSizes == null) {
+				Set<String> loadedAllowedSizes = loadAllowedSizesSnapshot();
+				if (allowedSizesRef.compareAndSet(null, loadedAllowedSizes)) {
+					allowedSizes = loadedAllowedSizes;
+				} else {
+					continue;
+				}
+			}
+
+			if (allowedSizes.contains(sizePart)) {
+				return;
+			}
+
+			TreeSet<String> updatedAllowedSizes = new TreeSet<>(allowedSizes);
+			updatedAllowedSizes.add(sizePart);
+			Set<String> updatedSnapshot = Collections.unmodifiableSet(updatedAllowedSizes);
+
+			if (allowedSizesRef.compareAndSet(allowedSizes, updatedSnapshot)) {
+				String currentValue = Constants.getString("thumbServletAllowedSizes");
+				String separator = "\n";
+				if (currentValue != null && currentValue.contains(",")) {
+					separator = ",";
+				}
+
+				ConfDB.setName("thumbServletAllowedSizes", String.join(separator, updatedAllowedSizes), true);
+				return;
+			}
+		}
+	}
+
+	private static Set<String> loadAllowedSizesSnapshot() {
+		Set<String> loadedAllowedSizes = new HashSet<>();
+		String allowedSizesStr = Constants.getString("thumbServletAllowedSizes");
+		if (Tools.isNotEmpty(allowedSizesStr)) {
+			String[] sizes = Tools.getTokens(allowedSizesStr, ",\n");
+			for (String size : sizes) {
+				if (size != null) {
+					String normalizedSize = size.trim();
+					if (normalizedSize.isEmpty() == false) loadedAllowedSizes.add(normalizedSize);
+				}
+			}
+		}
+
+		return Collections.unmodifiableSet(loadedAllowedSizes);
+	}
+
+	public static void cleanAllowedSizesCache() {
+		allowedSizesRef.set(null);
 	}
 }

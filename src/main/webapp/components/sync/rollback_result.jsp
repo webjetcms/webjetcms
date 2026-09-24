@@ -1,3 +1,4 @@
+<%@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><iwcm:checkLogon admin="true" perms="cmp_sync"/>
 <%@page import="sk.iway.iwcm.FileTools"%>
 <%@page import="org.json.JSONArray"%>
 <%@page import="sk.iway.iwcm.io.IwcmInputStream"%>

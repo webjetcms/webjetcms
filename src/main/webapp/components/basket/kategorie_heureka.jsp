@@ -1,4 +1,4 @@
-<%@page import="java.io.StringReader"%>
+<%@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld"%><iwcm:checkLogon admin="true" perms="cmp_basket"/><%@page import="java.io.StringReader"%>
 <%@page import="org.xml.sax.InputSource"%>
 <%@page import="sk.iway.iwcm.Cache"%><%@page import="sk.iway.iwcm.DB"%><%@page import="org.json.JSONArray"%><%@
 page import="java.util.ArrayList"%><%@

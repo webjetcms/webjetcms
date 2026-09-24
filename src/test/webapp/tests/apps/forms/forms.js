@@ -552,3 +552,32 @@ Scenario("vyplnenie formsimple spamProtection=false @singlethread", ({ I, Docume
 Scenario("vyplnenie formsimple spamProtection=false - revert config @singlethread", ({ I, Document }) => {
     Document.setConfigValue("spamProtection", "true");
 });
+
+function prohibitedFileUpload(filePath, I, DT) {
+    let text = "Single file test "+randomNumber;
+    I.amOnPage("/apps/formular/formular-upload.html");
+    I.attachFile('input[accept=".gif,.png,.jpg,.jpeg,.svg"]', filePath);
+    I.fillField("input[name=meno-a-priezvisko]", text);
+    I.fillField("input[name=email]", "**");
+    I.fillField("input[name=email]", "tester@balat.sk");
+    I.fillField("textarea[name=otazka]", "Otázka ľščťžýáíéôň");
+
+    I.wait(5);
+    I.click("Odoslať", "form[name=formMailForm] .btn-primary");
+
+    I.seeInCurrentUrl("formfail=bad_file");
+
+    //
+    I.say("verify admin there is no form submitted");
+    I.amOnPage("/apps/form/admin/detail/?formName=Formular-upload");
+    DT.waitForLoader();
+    DT.filterContains("col_meno-a-priezvisko", text);
+    I.see("Záznamy 0 až 0", ".dt-info");
+}
+
+Scenario("prohibited file upload", ({ I, DT, Document }) => {
+    prohibitedFileUpload('tests/apps/forms/test.jsp', I, DT);
+    //spam protection wait
+    Document.deleteAllCacheObjects(false);
+    prohibitedFileUpload('tests/apps/forms/test.jspx', I, DT);
+});

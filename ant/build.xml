@@ -39,7 +39,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2026.18-jakarta" />
+        <property name="artifact.version" value="2026.18.28-jakarta" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -131,6 +131,7 @@
                 <exclude name="**/apps/basecms/**"/>
                 <exclude name="**/apps/contact/**"/>
                 <exclude name="**/components/aceintegration/**"/>
+                <exclude name="**/components/eshop/**"/>
             </patternset>
         </unzip>
 
@@ -314,6 +315,7 @@
         <copy todir="${finalwar}/components/" overwrite="true">
             <fileset dir="${root}/../../src/main/webapp/components/">
                 <include name="aceintegration/**"/>
+                <include name="eshop/**"/>
             </fileset>
         </copy>
         <copy todir="${finalwar}/apps/" overwrite="true">
@@ -394,6 +396,7 @@
                 <exclude name="**/apps/basecms/**"/>
                 <exclude name="**/apps/contact/**"/>
                 <exclude name="**/components/aceintegration/**"/>
+                <exclude name="**/components/eshop/**"/>
                 <exclude name="**/wjerrorpages/**"/>
             </zipfileset>
             <zipfileset dir="src/main/resources/META-INF/" prefix="WEB-INF/classes/META-INF">

@@ -4,7 +4,7 @@ sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
 import="sk.iway.iwcm.i18n.*,sk.iway.iwcm.*" %>
 <%@ taglib uri="/WEB-INF/iwcm.tld" prefix="iwcm" %>
 <%@ taglib uri="/WEB-INF/iway.tld" prefix="iway" %>
-<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
+<%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %><iwcm:checkLogon admin="true" perms="menuWebpages"/>
 <%
 Prop prop = Prop.getInstance(sk.iway.iwcm.Constants.getServletContext(), request);
 request.setAttribute("iconLink", "");

@@ -10,7 +10,7 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %><%@
 taglib prefix="iway" uri="/WEB-INF/iway.tld" %><%@
 taglib prefix="display" uri="/WEB-INF/displaytag.tld" %><%@
 taglib prefix="stripes" uri="http://stripes.sourceforge.net/stripes.tld"%><%@
-taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><%
+taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><iwcm:checkLogon admin="true" perms="cmp_stat"/><%
 response.setContentType("image/png");
 Identity user = UsersDB.getCurrentUser(request);
 if (Tools.getRequestParameter(request, "document_id") != null && user != null && user.isAdmin())

@@ -359,7 +359,7 @@ public class FileArchivCategoryNodeDB extends JpaDB<FileArchivCategoryNodeBean>
             child = node.addChild(faCategory);
             em.getTransaction().commit();
         }catch (Exception e) {
-            em.getTransaction().rollback();
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             sk.iway.iwcm.Logger.error(e);
         }finally{
             em.clear();
@@ -408,7 +408,7 @@ public class FileArchivCategoryNodeDB extends JpaDB<FileArchivCategoryNodeBean>
 
             em.getTransaction().commit();
         }catch (Exception e) {
-            em.getTransaction().rollback();
+            if (em.getTransaction().isActive()) em.getTransaction().rollback();
             sk.iway.iwcm.Logger.error(e);
         }finally{
             em.clear();

@@ -244,7 +244,7 @@ public class DictionaryDB
 		catch (Exception e)
 		{
 			deleteOk = false;
-			em.getTransaction().rollback();
+			if (em.getTransaction().isActive()) em.getTransaction().rollback();
 			sk.iway.iwcm.Logger.error(e);
 		}
 
@@ -286,7 +286,7 @@ public class DictionaryDB
 		catch (Exception e)
 		{
 			saveOk = false;
-			em.getTransaction().rollback();
+			if (em.getTransaction().isActive()) em.getTransaction().rollback();
 			sk.iway.iwcm.Logger.error(e);
 		}
 
@@ -327,7 +327,7 @@ public class DictionaryDB
 			catch (Exception e)
 			{
 				saveOk = false;
-				em.getTransaction().rollback();
+				if (em.getTransaction().isActive()) em.getTransaction().rollback();
 				sk.iway.iwcm.Logger.error(e);
 			}
 

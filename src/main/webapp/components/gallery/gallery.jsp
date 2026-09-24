@@ -34,11 +34,12 @@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %><stripes:useActionBe
 	pageContext.setAttribute("image_height", Integer.valueOf(imageHeight));
 
 	String style = galleryActionBean.getStyle();
+	if (sk.iway.iwcm.common.FileBrowserTools.hasForbiddenSymbol(style)) style = "prettyPhoto";
 
 	if (Tools.isNotEmpty(style) && style.equals("prettyPhoto")==false && style.equals("photoSwipe")==false)
 	{
 		//skus najst nahradny subor
-      String stylePath = "/components/" + Constants.getInstallName() + "/gallery/gallery-" + style + ".jsp";
+        String stylePath = "/components/" + Constants.getInstallName() + "/gallery/gallery-" + style + ".jsp";
 		File f = new File(sk.iway.iwcm.Tools.getRealPath(stylePath));
 		if (f.exists())
 		{
