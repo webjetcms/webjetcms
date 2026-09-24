@@ -5,8 +5,11 @@ import java.util.Hashtable;
 import java.util.Map;
 
 import org.apache.http.client.HttpResponseException;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.entity.ContentType;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -24,6 +27,9 @@ import sk.iway.iwcm.Tools;
 public class DeepL extends TranslationEngine {
 
     private static final String CACHE_KEY = "DeepL.translations";
+
+    //client respecting system proxy settings (ProxySelector.getDefault(), e.g. WebJETProxySelector), default fluent Executor ignores them
+    private static final CloseableHttpClient HTTP_CLIENT = HttpClients.custom().useSystemProperties().build();
 
     public DeepL() {
         // Constructor for DeepL translation engine
@@ -66,11 +72,11 @@ public class DeepL extends TranslationEngine {
         int attempt = 0;
         while (attempt < MAX_RETRIES) {
             try {
-                String response = Request.Post(translationApiUrl)
-                    .setHeader("Content-Type", "application/json; charset=utf-8")
-                    .setHeader("Authorization", "DeepL-Auth-Key "+getAuthKey())
-                    .bodyString(getBodyString(text, fromLanguage, toLanguage), ContentType.APPLICATION_JSON)
-                    .execute().returnContent().asString(StandardCharsets.UTF_8);
+                String response = Executor.newInstance(HTTP_CLIENT).execute(Request.Post(translationApiUrl)
+                                .setHeader("Content-Type", "application/json; charset=utf-8")
+                                .setHeader("Authorization", "DeepL-Auth-Key "+getAuthKey())
+                                .bodyString(getBodyString(text, fromLanguage, toLanguage), ContentType.APPLICATION_JSON))
+                        .returnContent().asString(StandardCharsets.UTF_8);
 
                 JSONObject json = new JSONObject(response);
                 JSONArray translations = json.getJSONArray("translations");
@@ -157,10 +163,10 @@ public class DeepL extends TranslationEngine {
         int attempt = 0;
         while (attempt < MAX_RETRIES) {
             try {
-                String response = Request.Post(usageApiUrl)
-                        .setHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
-                        .setHeader("Authorization", "DeepL-Auth-Key "+getAuthKey())
-                        .execute().returnContent().asString(StandardCharsets.UTF_8);
+                String response = Executor.newInstance(HTTP_CLIENT).execute(Request.Post(usageApiUrl)
+                                .setHeader("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
+                                .setHeader("Authorization", "DeepL-Auth-Key "+getAuthKey()))
+                        .returnContent().asString(StandardCharsets.UTF_8);
 
                 JSONObject json = new JSONObject(response);
                 Long characterLimit = json.getLong("character_limit");
@@ -174,7 +180,7 @@ public class DeepL extends TranslationEngine {
                     return freeCharacters; // returns number of free characters
                 } else {
                     Logger.error(DeepL.class, "Invalid response from DeepL API usage endpoint: " + response);
-                return Long.valueOf(-1);
+                    return Long.valueOf(-1);
                 }
 
             } catch (Exception ex) {
