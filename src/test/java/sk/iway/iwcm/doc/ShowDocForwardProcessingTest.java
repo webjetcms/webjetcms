@@ -14,12 +14,19 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.doc.showdoc.StyleToHeadHelper;
 import sk.iway.iwcm.system.ConstantsV9;
+import sk.iway.iwcm.stat.heat_map.HeatMapTrackingService;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 /**
@@ -295,5 +302,73 @@ class ShowDocForwardProcessingTest extends BaseWebjetTest {
 
         assertEquals(html, response.getContentAsString(),
                 "Body must be unchanged when no styles were collected");
+    }
+
+    /** Preview output resolves relative assets against the source page and carries the selected document marker. */
+    @Test
+    void testHeatMapPreviewAddsSourceBaseAndDocumentMarker() throws Exception {
+        Constants.setBoolean("showDocMoveStyleToHead", false);
+        DispatchCapturingRequest request = new DispatchCapturingRequest(
+                "<html><head><script src=\"assets/page.js\"></script></head><body>Page</body></html>");
+        request.setAttribute("heatMapPreview", Boolean.TRUE);
+        request.setAttribute("heatMapPreviewBasePath", "/folder/page.html");
+        request.setAttribute("doc_id", 123);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        response.setHeader("Cache-Control", "public,max-age=3600");
+
+        invoke(request, response);
+
+        String html = response.getContentAsString();
+        assertTrue(html.contains("<head><base href=\"/folder/page.html\"><script"));
+        assertTrue(html.contains("<meta name=\"webjet-heatmap-preview\" content=\"123\">"));
+        assertFalse(html.contains("wj-heatmap-tracker"));
+        assertEquals("no-store", response.getHeader("Cache-Control"));
+    }
+
+    /** A template-defined base element keeps its established URL resolution behavior. */
+    @Test
+    void testHeatMapPreviewPreservesTemplateBase() throws Exception {
+        DispatchCapturingRequest request = new DispatchCapturingRequest(
+                "<html><head><BASE href=\"/template-base/\"></head><body>Page</body></html>");
+        request.setAttribute("heatMapPreview", Boolean.TRUE);
+        request.setAttribute("heatMapPreviewBasePath", "/folder/page.html");
+        request.setAttribute("doc_id", 123);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        invoke(request, response);
+
+        String html = response.getContentAsString();
+        assertTrue(html.contains("<BASE href=\"/template-base/\">"));
+        assertFalse(html.contains("href=\"/folder/page.html\""));
+    }
+
+    /** Both template forwarding paths insert the tracker before CSP processing assigns its nonce. */
+    @ParameterizedTest
+    @ValueSource(strings = { "/templates/test.jsp", "/templates/test.html" })
+    void testHeatMapBootstrapReceivesCspNonce(String forwardPath) throws Exception {
+        Constants.setBoolean("showDocMoveStyleToHead", false);
+        Constants.setString("contentSecurityPolicy", "script-src 'self' {nonce}; style-src 'self' {nonce}");
+        DispatchCapturingRequest request = new DispatchCapturingRequest(
+                "<html><head></head><body><p>Published page</p></body></html>");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        RequestBean requestBean = new RequestBean();
+        requestBean.setCspNonce("heatmap-test-nonce");
+        String tracker = "<script id=\"wj-heatmap-tracker\" src=\"/components/stat/heat-map-tracker.js\"></script>";
+
+        try (MockedStatic<HeatMapTrackingService> tracking = Mockito.mockStatic(HeatMapTrackingService.class,
+                Mockito.CALLS_REAL_METHODS);
+                MockedStatic<SetCharacterEncodingFilter> context = Mockito.mockStatic(SetCharacterEncodingFilter.class)) {
+            tracking.when(() -> HeatMapTrackingService.isEnabledForRequest(request)).thenReturn(true);
+            tracking.when(() -> HeatMapTrackingService.bootstrap(request)).thenReturn(tracker);
+            context.when(SetCharacterEncodingFilter::getCurrentRequestBean).thenReturn(requestBean);
+
+            forwardWithBodyProcessing.invoke(showDoc, forwardPath, request, response);
+        }
+
+        String html = response.getContentAsString();
+        assertTrue(html.contains("id=\"wj-heatmap-tracker\""));
+        assertTrue(html.contains("nonce=\"heatmap-test-nonce\""));
+        assertTrue(html.indexOf("wj-heatmap-tracker") < html.indexOf("</body>"));
+        assertTrue(request.includeCalled);
     }
 }

@@ -427,6 +427,8 @@ public class PathFilter implements Filter
 				}
 			}
 
+            sk.iway.iwcm.stat.heat_map.HeatMapTrackingService.receiveCookies(req, res);
+
             ///// SPRING INTEGRACIA
             // ak sa nezacina na /spring (aby sa to necyklilo) a ak je to url ktoru pozna spring, forwardne to na spring servlet
             if (dynamicForwards!=null && !dynamicForwards.isEmpty())
