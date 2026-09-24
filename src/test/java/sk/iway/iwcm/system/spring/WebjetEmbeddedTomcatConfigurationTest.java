@@ -26,8 +26,6 @@ import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.webresources.TomcatURLStreamHandlerFactory;
 import org.apache.coyote.http11.Http11NioProtocol;
-import org.apache.tomcat.util.descriptor.web.SecurityCollection;
-import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.tomcat.autoconfigure.TomcatServerProperties;
@@ -44,7 +42,7 @@ class WebjetEmbeddedTomcatConfigurationTest {
     Path tomcatBase;
 
     @Test
-    void httpConnectorRedirectsAllRequestsToTheConfiguredHttpsPort() {
+    void httpConnectorPreservesSettingsWithoutRequiringHttps() {
         TomcatServerProperties tomcatProperties = new TomcatServerProperties();
         tomcatProperties.setMaxPartCount(1_000);
         tomcatProperties.setMaxConnections(321);
@@ -56,7 +54,7 @@ class WebjetEmbeddedTomcatConfigurationTest {
         TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory(8443);
         factory.setUriEncoding(StandardCharsets.ISO_8859_1);
         factory.setAddress(InetAddress.getLoopbackAddress());
-        factory.setServerHeader("WebJET redirect test");
+        factory.setServerHeader("WebJET HTTP test");
 
         redirectCustomizer(serverProperties, tomcatProperties, environment).customize(factory);
 
@@ -68,7 +66,7 @@ class WebjetEmbeddedTomcatConfigurationTest {
         assertEquals(8443, connector.getRedirectPort());
         assertEquals(1_000, connector.getMaxPartCount());
         assertEquals(StandardCharsets.ISO_8859_1.name(), connector.getURIEncoding());
-        assertEquals("WebJET redirect test", connector.getProperty("server"));
+        assertEquals("WebJET HTTP test", connector.getProperty("server"));
         Http11NioProtocol protocol = assertInstanceOf(Http11NioProtocol.class, connector.getProtocolHandler());
         assertEquals(InetAddress.getLoopbackAddress(), protocol.getAddress());
         assertEquals(4_321, protocol.getConnectionTimeout());
@@ -79,17 +77,11 @@ class WebjetEmbeddedTomcatConfigurationTest {
         StandardContext context = new StandardContext();
         factory.getContextCustomizers().forEach(customizer -> customizer.customize(context));
 
-        SecurityConstraint[] constraints = context.findConstraints();
-        assertEquals(1, constraints.length);
-        assertEquals("CONFIDENTIAL", constraints[0].getUserConstraint());
-        assertFalse(constraints[0].getAuthConstraint());
-        SecurityCollection[] collections = constraints[0].findCollections();
-        assertEquals(1, collections.length);
-        assertTrue(collections[0].findPattern("/*"));
+        assertEquals(0, context.findConstraints().length);
     }
 
     @Test
-    void embeddedTomcatRedirectsPlainHttpBeforeInvokingTheServlet() throws Exception {
+    void embeddedTomcatServesPlainHttpWithoutRedirecting() throws Exception {
         // PD4ML installs a JVM-global URL factory; this test does not need Tomcat's war: URL handler.
         TomcatURLStreamHandlerFactory.disable();
         TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory(9443);
@@ -105,19 +97,20 @@ class WebjetEmbeddedTomcatConfigurationTest {
 
         try {
             server = factory.getWebServer(servletContext -> {
-                ServletRegistration.Dynamic servlet = servletContext.addServlet("redirectProbe", new HttpServlet() {
+                ServletRegistration.Dynamic servlet = servletContext.addServlet("httpProbe", new HttpServlet() {
                     @Override
                     protected void doGet(HttpServletRequest request, HttpServletResponse response)
                             throws IOException {
                         servletInvoked.set(true);
                         response.setStatus(HttpServletResponse.SC_OK);
+                        response.getWriter().write(request.getScheme() + ":" + request.getParameter("value"));
                     }
                 });
                 servlet.addMapping("/probe");
             });
             server.start();
 
-            HttpResponse<Void> response = HttpClient.newBuilder()
+            HttpResponse<String> response = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .build()
                 .send(
@@ -127,13 +120,13 @@ class WebjetEmbeddedTomcatConfigurationTest {
                         .timeout(Duration.ofSeconds(10))
                         .GET()
                         .build(),
-                    HttpResponse.BodyHandlers.discarding()
+                    HttpResponse.BodyHandlers.ofString()
                 );
 
-            assertEquals(HttpServletResponse.SC_FOUND, response.statusCode());
-            assertEquals("https://127.0.0.1:9443/probe?value=1",
-                response.headers().firstValue("Location").orElseThrow());
-            assertFalse(servletInvoked.get());
+            assertEquals(HttpServletResponse.SC_OK, response.statusCode());
+            assertTrue(response.headers().firstValue("Location").isEmpty());
+            assertEquals("http:1", response.body());
+            assertTrue(servletInvoked.get());
         } finally {
             if (server != null) {
                 server.destroy();

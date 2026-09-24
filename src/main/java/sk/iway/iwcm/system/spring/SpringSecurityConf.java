@@ -10,6 +10,8 @@ import org.springframework.security.config.oauth2.client.CommonOAuth2Provider;
 import org.springframework.security.oauth2.client.InMemoryOAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
@@ -104,12 +106,35 @@ public class SpringSecurityConf {
 		Logger.debug(SpringSecurityConf.class, "SpringSecurityConf - configure auth provider");
 		http.authenticationProvider(new WebjetAuthentificationProvider());
 
-		//toto zapne Basic autorizaciu (401) pri neautorizovanom REST volani, inak by request vracal rovno 403 Forbidden
+		//for /admin/rest/ return SC_FORBIDDEN instead of redirect to /admin/logon/
 		String springSecurityAllowedAuths = Constants.getString("springSecurityAllowedAuths");
-		if (springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("basic")) {
+		boolean allowBasicAuth = springSecurityAllowedAuths != null && springSecurityAllowedAuths.contains("basic");
+		AuthenticationEntryPoint adminRestEntryPoint = (request, response, authException) -> {
+			// Write the response directly: sendError would dispatch to the application's error pages.
+			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+			response.setContentType("application/json");
+			response.getWriter().write("{\"error\":\"Access Denied\",\"status\":403}");
+		};
+		RequestMatcher adminSessionRequest = request -> {
+			String path = request.getRequestURI().substring(request.getContextPath().length());
+			String authorization = request.getHeader("Authorization");
+			boolean explicitBasicAuth = authorization != null && authorization.regionMatches(true, 0, "Basic ", 0, 6);
+			return path.startsWith("/admin/rest/") && !(allowBasicAuth && explicitBasicAuth);
+		};
+		// Register before login mechanisms so admin REST always returns 403 instead of an OAuth2
+		// login redirect, including when Basic auth is disabled. The UI handles expired sessions.
+		http.exceptionHandling(exceptions -> exceptions.defaultAuthenticationEntryPointFor(
+			adminRestEntryPoint, adminSessionRequest));
+
+		// Enable Basic authentication for explicit API clients without prompting session-based admin requests.
+		if (allowBasicAuth) {
 			Logger.info(SpringSecurityConf.class, "SpringSecurityConf - configure http - httpBasic");
 			basicAuthEnabled = true; //NOSONAR
 			http.httpBasic(customizer -> customizer.authenticationEntryPoint((request, response, authException) -> {
+				if (adminSessionRequest.matches(request)) {
+					adminRestEntryPoint.commence(request, response, authException);
+					return;
+				}
 				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 				response.setHeader("WWW-Authenticate", "Basic realm=\"Secure Area\"");
 				if (request.getRequestURI().contains("/rest/")) {

@@ -1,13 +1,8 @@
 package sk.iway.iwcm.system.spring;
 
-import jakarta.servlet.annotation.ServletSecurity;
-
-import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.coyote.http11.Http11NioProtocol;
 import org.apache.tomcat.util.threads.VirtualThreadExecutor;
-import org.apache.tomcat.util.descriptor.web.SecurityCollection;
-import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBooleanProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWarDeployment;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -28,13 +23,14 @@ import org.springframework.core.env.Environment;
 @ConditionalOnNotWarDeployment
 public class WebjetEmbeddedTomcatConfiguration {
 
+    // Keep the existing property names for installation compatibility; they control the HTTP listener.
     static final String HTTP_REDIRECT_ENABLED_PROPERTY = "webjet.server.http-redirect.enabled";
     static final String HTTP_REDIRECT_PORT_PROPERTY = "webjet.server.http-redirect.port";
 
     private static final int DEFAULT_HTTP_PORT = 80;
 
     /**
-     * Adds an HTTP connector that redirects every request to the primary HTTPS connector.
+     * Adds a plain HTTP connector alongside the primary HTTPS connector.
      */
     @Bean
     @ConditionalOnBooleanProperty(name = HTTP_REDIRECT_ENABLED_PROPERTY)
@@ -86,12 +82,16 @@ public class WebjetEmbeddedTomcatConfiguration {
             httpConnector.setScheme("http");
             httpConnector.setSecure(false);
             httpConnector.setPort(this.httpPort);
+            // Keep the target port for explicit application transport constraints only.
+            // Setting redirectPort alone does not force ordinary HTTP requests to use HTTPS.
             httpConnector.setRedirectPort(httpsPort);
             httpConnector.setThrowOnFailure(true);
             protocol.setSSLEnabled(false);
 
             factory.addAdditionalConnectors(httpConnector);
-            factory.addContextCustomizers(WebjetEmbeddedTomcatConfiguration::requireSecureTransport);
+            // Do not add a global CONFIDENTIAL constraint: both HTTP and HTTPS must reach WebJET.
+            // HTTPS redirects are controlled by WebJET settings such as adminRequireSSL.
+            //factory.addContextCustomizers(WebjetEmbeddedTomcatConfiguration::requireSecureTransport);
         }
 
         private void configureProtocol(TomcatServletWebServerFactory factory, Http11NioProtocol protocol) {
@@ -179,7 +179,7 @@ public class WebjetEmbeddedTomcatConfiguration {
         return port;
     }
 
-    private static void requireSecureTransport(Context context) {
+    /*private static void requireSecureTransport(Context context) {
         SecurityCollection allRequests = new SecurityCollection(
             "WebJET HTTPS transport", "All requests require HTTPS"
         );
@@ -190,5 +190,5 @@ public class WebjetEmbeddedTomcatConfiguration {
         httpsConstraint.setUserConstraint(ServletSecurity.TransportGuarantee.CONFIDENTIAL.name());
         httpsConstraint.addCollection(allRequests);
         context.addConstraint(httpsConstraint);
-    }
+    }*/
 }
