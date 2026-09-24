@@ -31,7 +31,7 @@ Když návštěvník zadá vyhledávací dotaz:
 
 1. [SearchAction](../../../../../../src/main/java/sk/iway/iwcm/doc/SearchAction.java) určí typ vyhledávání z parametru aplikace `searchType`. Při hodnotě `auto` nebo prázdné hodnotě použije globální konfigurační proměnnou `searchType`.
 2. Při hodnotě `semantic` nebo `hybrid` se použije [SemanticSearchAction](../../../../../../src/main/java/sk/iway/iwcm/doc/SemanticSearchAction.java).
-3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) vygeneruje embedding dotazu podle asistenta `RAG-EMB-SEARCH` a vyhledá nejbližší chunky se stejným poskytovatelem a modelem.
+3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) vygeneruje embedding dotazu podle asistenta `RAG-EMB-SEARCH` s typem vstupu `QUERY` a vyhledá nejblíže . Při indexování se používá typ `DOCUMENT` ; poskytovatel tak může pro oba typy aplikovat rozdílné prefixy požadované modelem.
 4. Výsledky se omezí podle domény, jazyka, typu entity a podle složek zvolených v aplikaci **Vyhledávání**.
 5. Pokud je povolen hybridní režim, spustí se i fulltext nad `rag_embedding_chunks.chunk_text` a výsledky se spojí přes `RRF` (Reciprocal Rank Fusion).
 6. Výsledné chunky se agregují na dokumenty a dokumenty se zobrazí stejným způsobem jako při standardním vyhledávání.
@@ -48,7 +48,7 @@ Při přidání nového serverového poskytovatele se proto embedding komunikace
 ## Požadavky
 
 - **PostgreSQL** s rozšířením **pgvector** (obraz: `pgvector/pgvector:pg18-trixie` nebo novější).
-- **API klíč zvoleného poskytovatele** - používá se stejné nastavení jako pro AI asistenty, například. `ai_openAiAuthKey` pro OpenAI nebo příslušný klíč pro Gemini.
+- **Konfigurace zvoleného poskytovatele** - pro externí službu se používá stejný API klíč jako pro AI asistenty. `ai_openAiAuthKey` pro OpenAI. Lokální embeddingový model namísto klíče vyžaduje cestu k modelovému balíku.
 - Sémantické vyhledávání funguje pouze nad PostgreSQL/pgvector úložištěm. Pokud primární databáze WebJET CMS není PostgreSQL, nastavte samostatnou PostgreSQL databázi přes datasource `rag_jpa`.
 
 ### PostgreSQL jako primární databáze
@@ -91,9 +91,10 @@ Aktivace a nastavení se provádí v [Konfiguraci](../../../../admin/setup/confi
 
 | Proměnná | Výchozí hodnota | Popis |
 | --- | --- | --- |
-| `ragEmbeddingProvider` | `openai` | Poskytovatel použit pouze při automatickém vytvoření chybějícího embedding asistenta. Vestavěné hodnoty jsou `openai`, `gemini`, `openrouter` ; lze použít i identifikátor správně zaregistrovaného vlastního poskytovatele. |
+| `ragEmbeddingProvider` | `openai` | Poskytovatel použit pouze při automatickém vytvoření chybějícího embedding asistenta. Vestavěné externí hodnoty jsou `openai`, `gemini`, `openrouter` ; lokální model vyberte přímo v systémových asistentech. Použít lze i identifikátor správně zaregistrovaného vlastního poskytovatele. |
 | `ragEmbeddingModel` | `text-embedding-3-small` | Model použitý pouze při automatickém vytvoření chybějícího embedding asistenta. |
-| `ragEmbeddingDimensions` | `1536` | Počet dimenzí vektoru. Musí odpovídat použitému modelu a databázové tabulce. |
+| `ragEmbeddingDimensions` | `1536` | Globální počet dimenzí vektoru pro celou instalaci. Musí odpovídat použitému modelu a databázové tabulce. |
+| `ai_localEmbeddingModelBundlePath` | prázdná hodnota | Cesta ke globálnímu schválenému ZIP balíku lokálního modelu `intfloat/multilingual-e5-base`: absolutní cesta na serveru nebo cesta začínající `/WEB-INF/` vůči kořenu nasazené aplikace. Po změně je zapotřebí restart. |
 | `ragEmbeddingChunkSize` | `1000` | Maximální velikost jedné části textu ve znacích. |
 | `ragEmbeddingChunkOverlap` | `200` | Počet znaků, o které se sousední chunky překrývají. |
 
@@ -113,6 +114,18 @@ Fronta `rag_index_queue` ukládá pouze typ entity, ID a akci. Poskytovatel a mo
 !>**Upozornění:** Starší názvy `ragChunkSize` a `ragChunkOverlap` se již nepoužívají.
 
 !>**Upozornění:** Při změně `ragEmbeddingDimensions` se vymažou všechna data z `rag_embedding_chunks` pro všechny poskytovatele a modely, upraví se typ sloupce `embedding` na nové `vector(N)` a znovu se vytvoří HNSW index. Následně spusťte úplné indexování obsahu. Samotná změna modelu ostatní kombinace nevymaže, ale novou kombinaci musíte zaindexovat.
+
+### Lokální embeddingový model
+
+Vestavěný lokální poskytovatel používá model `intfloat/multilingual-e5-base` s `768` dimenzemi. Postup nastavení:
+
+1. Z kořenové složky projektu spusťte skript [`prepare-local-embedding-model.sh`](../../../../../../src/main/webapp/WEB-INF/webjet-ai/local/prepare-local-embedding-model.sh). Vytvoří schválený ZIP balíček a uloží jej jako `src/main/webapp/WEB-INF/local-ai-models/multilingual-e5-base-fp32.zip`. Do `ai_localEmbeddingModelBundlePath` nastavte cestu `/WEB-INF/local-ai-models/multilingual-e5-base-fp32.zip`.
+2. Nastavte globální proměnnou `ragEmbeddingDimensions` na `768`. Tato změna odstraní stávající vektory.
+3. Restartujte aplikační server.
+4. V asistentech `RAG-EMB-INDEX` a `RAG-EMB-SEARCH` vyberte poskytovatele **Lokální embeddingový model** a model `intfloat/multilingual-e5-base`.
+5. Spusťte úplné indexování obsahu.
+
+Modelový balíček definuje odlišné prefixy pro poptávku a dokument. [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) proto při indexování předá typ `DOCUMENT` a při vyhledávání typ `QUERY` ; lokální poskytovatel automaticky doplní správný prefix. Cesta k balíčku i dimenze jsou globální a nesmí se měnit podle domény.
 
 ### Vektorové vyhledávání
 
@@ -260,6 +273,8 @@ Systém automaticky zařadí stránku do indexovací fronty při její:
 
 Manuální indexování v administraci pracuje pouze se stránkami, které jsou povoleny pro vyhledávání.
 
+Manuální indexování a odstranění indexu kontroluje právo uživatele na zvolenou složku i příslušnost k aktuální doméně. Pokud se indexovaná stránka mezi zařazením do fronty a jejím zpracováním odstraní nebo přesune do jiné domény, služba odstraní zastaralé embeddingy z původní domény.
+
 ## Automatizované úkoly
 
 Frontu zpracovává automatizovaná úloha [cs.iway.iwcm.rag.service.RagIndexCronTask](../../../../../../src/main/java/sk/iway/iwcm/rag/service/RagIndexCronTask.java). Doporučené nastavení je spouštění každých 5 minut.
@@ -313,6 +328,7 @@ Výchozí model `text-embedding-3-small` je vícejazyčný a češtinu/češtinu
 | OpenAI `text-embedding-3-small` | `text-embedding-3-small` | `1536` | Dobrá | Výchozí model - levný a rychlý. |
 | OpenAI `text-embedding-3-large` | `text-embedding-3-large` | `3072` | Vysoká | Nejpřesnější OpenAI vícejazyčný model, dražší než `small`. |
 | OpenAI `text-embedding-3-large` zkrácený | `text-embedding-3-large` | `1024` nebo `1536` | Vysoká | Díky MRL lze vektor zkrátit bez výrazné ztráty kvality. |
+| Lokální `intfloat/multilingual-e5-base` | `intfloat/multilingual-e5-base` | `768` | Dobrá | Běží lokálně bez odesílání obsahu externí službě; vyžaduje schválený modelový balíček. |
 
 !>**Upozornění:** Všechny vektory v tabulce `rag_embedding_chunks` musí mít dimenzi odpovídající definici sloupce `embedding`. Různí poskytovatelé a modely mohou existovat současně, ale musí generovat nakonfigurovaný počet dimenzí. Změna dimenze odstraní všechny stávající vektory a vyžaduje úplnou indexaci obsahu.
 

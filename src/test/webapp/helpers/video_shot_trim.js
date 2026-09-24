@@ -32,8 +32,9 @@ function installShotTiming(VideoRecorder) {
 /** Removes setup at a frame boundary and keeps the original until the caller atomically publishes the result. */
 async function trimVideoSetup(sourcePath, { startTime, endTime }, options = {}) {
   const timing = recordings.get(sourcePath);
-  // A static slate can be captured just before the paint callback, with no further frames until removal.
-  const start = timing?.frames.find(frame => frame.timestamp >= startTime && frame.timestamp < endTime) ||
+  // Initial screencast frames can arrive after the paint callback; use the final static slate frame.
+  // A static slate can also be captured just before the callback, with no further frames until removal.
+  const start = timing?.frames.findLast(frame => frame.timestamp >= startTime && frame.timestamp < endTime) ||
     timing?.frames.findLast(frame => frame.timestamp <= startTime);
   if (!start) throw new Error("Cannot locate the shot slate in the Chromium recording; raw video retained.");
   const coreRoot = path.dirname(require.resolve("playwright-core/package.json"));

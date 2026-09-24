@@ -1492,6 +1492,32 @@ const WJ = (() => {
     }
 
     /**
+     * Restores focus without opening a tooltip until focus leaves or the pointer moves over it.
+     * @param {HTMLElement} element The control that should receive focus.
+     */
+    function focusWithoutTooltip(element) {
+        const $element = $(element);
+        const tooltip = window.bootstrap.Tooltip.getInstance(element);
+        $element.off('.wjFocusWithoutTooltip');
+
+        if (tooltip != null) {
+            // Keep the tooltip disabled beyond Bootstrap's delayed focus trigger.
+            tooltip.disable();
+            tooltip.hide();
+            $element.on('focusout.wjFocusWithoutTooltip mousemove.wjFocusWithoutTooltip', function(event) {
+                // Removing a modal can fire mouseenter under a stationary pointer.
+                if (event.type === 'mousemove' && event.originalEvent == null) return;
+
+                $element.off('.wjFocusWithoutTooltip');
+                tooltip.enable();
+                if (event.type === 'mousemove') tooltip.show();
+            });
+        }
+
+        element.focus({preventScroll: true});
+    }
+
+    /**
      * Vrati objekt admin nastaveni podla zadaneho kluca.
      * Je to perzistentna obdoba localStorage
      * @param {*} key
@@ -1841,6 +1867,9 @@ const WJ = (() => {
         },
         initTooltip: ($el, customClass = null) => {
             return initTooltip($el, customClass);
+        },
+        focusWithoutTooltip: (element) => {
+            return focusWithoutTooltip(element);
         },
         getAdminSetting: (key) => {
             return getAdminSetting(key);

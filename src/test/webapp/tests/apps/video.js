@@ -159,6 +159,7 @@ Scenario("YouTube share URL preserves playback start time", async ({ I, Apps, DT
 
     I.switchToPreviousTab();
     I.closeOtherTabs();
+    I.switchTo();
     DTE.cancel();
 });
 

@@ -7,6 +7,7 @@ Video scenarios live in `src/test/webapp/video`. The standard commands are:
 ```shell
 cd src/test/webapp
 npm run video:plan video/<scenario-name>.js
+npm run video:title video/<scenario-name>.js
 npm run audio video/<scenario-name>.js
 npm run video video/<scenario-name>.js
 npm run video:shots video/<scenario-name>.js
@@ -217,6 +218,42 @@ editor before navigating. Mark the intermediate tab work for removal in editing.
 A legacy/demo site can also be recorded in the original tab, but needs its own
 login on that origin; the default instance session does not authenticate it.
 
+## YouTube Thumbnail
+
+Always include a standalone `Scenario("YouTube thumbnail", async (...) => { ... })`
+tagged only `@title` in every new video scenario file, between `Shot plan` and
+the main walkthrough. It must prepare a representative feature screen itself,
+including login and readiness waits, and clean up any temporary editor state.
+Use a short headline in the video's language and explicit `\n` line breaks
+where helpful. Capture it with `await I.videoTitle(text, fontSize, style)`.
+
+The second argument is an optional positive finite font size in CSS pixels on
+the 1280 x 720 thumbnail layout, e.g. `I.videoTitle("New feature\nTry it now", 50, "glow")`.
+The final 1920 x 1080 JPEG scales that layout by 1.5. An explicit size changes
+only the headline's font size, without fitting or overflow checks. The screenshot's
+position, dimensions and crop remain unchanged even when text overlaps it.
+Omitting the size keeps automatic fitting from 100 down to 36 pixels.
+The third argument selects `glow` (default), `clean` or `bold`; legacy
+`I.videoTitle(text, "glow")` calls still work. A size or style argument requests
+a thumbnail outside title mode too. Plain `I.videoTitle(text)` shows an editing
+slate outside title mode and creates an automatically fitted thumbnail inside it.
+
+Run `npm run video:title video/<scenario-name>.js` from `src/test/webapp`.
+The title configuration runs only `@title`, capturing the scene with the recording
+viewport and zoom. The separate thumbnail layout ignores that browser zoom to
+preserve its original composition. It records no video and generates no paid media. CLI `--text` and
+`--style` override the scenario's headline and style, for example:
+
+```shell
+npm run video:title -- video/<scenario-name>.js --style clean --text "New feature"
+npm run video:title -- video/<scenario-name>.js --dry-run
+```
+
+Output is `docs/feature-video/<scenario-name>-title-<style>.jpg`, below 2 MB.
+Only that style's file is replaced after successful rendering; failures preserve
+the previous image. Inspect the generated thumbnail for readable text and useful
+scene framing. Keep this scenario separate from `videoPlan.shots` and its narration.
+
 ## ElevenLabs Audio Profile
 
 Create an ElevenLabs API key under **Developers > API Keys**. Use a restricted
@@ -417,6 +454,16 @@ Scenario("Shot plan", ({ I }) => {
     const { formatShotPlan } = require("../helpers/feature_video_plan.js");
     I.say(formatShotPlan(videoPlan));
 });
+
+Scenario("YouTube thumbnail", async ({ I, DTE, login }) => {
+    login("admin");
+    await I.amOnPage("<editor-url>");
+    await DTE.waitForEditor();
+    await I.waitForVisible("<feature-ready-state>", 20);
+    await I.videoTitle("<localized feature headline>", 50, "glow");
+    await DTE.cancel();
+    await I.waitForInvisible("div.DTED.show", 10);
+}).tag("@title");
 
 Scenario("<scenario-name>", async ({ I, DTE, login }) => {
     const { recordVideoPlan } = require("../helpers/feature_video_plan.js");

@@ -4,6 +4,27 @@ Before(({ I, login }) => {
     login('admin');
 });
 
+async function assertSilentFocusReturn(I, selector) {
+    I.waitForElement(`${selector}:focus`, 5);
+    // Observe past Bootstrap's 300 ms delay to catch a tooltip scheduled by focus restoration.
+    const tooltipAppeared = await I.executeScript(buttonSelector => new Promise(resolve => {
+        const button = document.querySelector(buttonSelector);
+        const hasVisibleTooltip = () => (button.getAttribute('aria-describedby') || '').split(/\s+/)
+            .some(id => document.getElementById(id)?.matches('.tooltip.show'));
+        let appeared = hasVisibleTooltip();
+        const observer = new MutationObserver(() => {
+            appeared = appeared || hasVisibleTooltip();
+        });
+        observer.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['class', 'aria-describedby'] });
+        setTimeout(() => {
+            observer.disconnect();
+            resolve(appeared);
+        }, 450);
+    }), selector);
+    I.assertFalse(tooltipAppeared, "Restoring focus must not show a tooltip, including after its delay");
+    I.seeElement(`${selector}:focus`);
+}
+
 Scenario('basic datatable', async ({ I, a11y }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
     //mark first row as selected to reveal buttons
@@ -456,7 +477,8 @@ Scenario("p48: DT dialog focus", async ({ I, DT, DTE, a11y }) => {
         { name: "create", selector: `${wrapper} button[data-dtbtn="create"]`, expectsFieldFocus: true },
         { name: "edit", selector: `${wrapper} button[data-dtbtn="edit"]`, expectsFieldFocus: true },
         { name: "duplicate", selector: `${wrapper} button[data-dtbtn="duplicate"]`, expectsFieldFocus: true },
-        { name: "remove", selector: `${wrapper} button[data-dtbtn="remove"]`, expectsFieldFocus: false }
+        { name: "remove", selector: `${wrapper} button[data-dtbtn="remove"]`, expectsFieldFocus: false },
+        { name: "remove", selector: `${wrapper} button[data-dtbtn="remove"]`, expectsFieldFocus: false, multiple: true }
     ];
 
     const assertFocusedHeaderButton = async (selector, label) => {
@@ -497,8 +519,18 @@ Scenario("p48: DT dialog focus", async ({ I, DT, DTE, a11y }) => {
     };
 
     for (const action of actions) {
-        I.executeScript(selector => document.querySelector(selector).focus(), action.selector);
-        I.pressKey("Enter");
+        if (action.multiple) {
+            I.forceClick(`${wrapper} .dt-scroll-body tbody tr:nth-child(2) td.dt-select-td`);
+            I.seeNumberOfElements(`${wrapper} .dt-scroll-body tbody tr.selected`, 2);
+        }
+        const rowsBefore = action.name === "remove" ? await I.grabTextFrom(`${wrapper} .dt-scroll-body tbody`) : null;
+        if (action.multiple) {
+            // Leave the pointer on Remove while Cancel is activated by keyboard below.
+            I.clickCss(action.selector);
+        } else {
+            I.executeScript(selector => document.querySelector(selector).focus(), action.selector);
+            I.pressKey("Enter");
+        }
         DTE.waitForEditor();
         I.seeElement(`${modal}.DTED.show[data-dte-focus-state="ready"]`);
         I.waitForElement(`${modal} :focus`, 5);
@@ -541,6 +573,9 @@ Scenario("p48: DT dialog focus", async ({ I, DT, DTE, a11y }) => {
         I.assertTrue(state.activeInDialog, `${action.name} dialog must receive focus when it opens`);
         if (action.expectsFieldFocus) {
             I.assertTrue(state.activeInBody, `${action.name} dialog must focus its first form control`);
+        } else {
+            I.seeElement(`${modal} .DTE_Footer button.btn-close-editor:focus`);
+            I.dontSeeElement('.tooltip.show');
         }
         I.assertEqual(state.dialogRole, "dialog", `${action.name} editor must expose the dialog role`);
         I.assertEqual(state.modal, "true", `${action.name} editor must be announced as modal`);
@@ -578,10 +613,46 @@ Scenario("p48: DT dialog focus", async ({ I, DT, DTE, a11y }) => {
             await a11y.check(modal);
         }
 
-        I.executeScript(selector => document.querySelector(selector).focus(), `${modal} .DTE_Footer button.btn-close-editor`);
+        if (action.name !== "remove") {
+            I.executeScript(selector => document.querySelector(selector).focus(), `${modal} .DTE_Footer button.btn-close-editor`);
+        }
         I.pressKey("Enter");
+        I.waitForElement(`${modal}[data-dte-close-state="closed"]`, 5);
         I.waitForInvisible(modal, 5);
-        I.waitForElement(`${action.selector}:focus`, 5);
+        await assertSilentFocusReturn(I, action.selector);
+
+        if (action.name === "create") {
+            // Keep an independent hover tooltip open while testing keyboard focus.
+            I.moveCursorTo(actions[2].selector);
+            I.waitForElement(`${actions[2].selector}[aria-describedby]`, 5);
+            const hoverTooltipId = await I.grabAttributeFrom(actions[2].selector, 'aria-describedby');
+            I.waitForVisible(`#${hoverTooltipId}`, 5);
+
+            I.pressKey("Tab");
+            I.waitForElement(`${actions[1].selector}:focus[aria-describedby]`, 5);
+            const editTooltipId = await I.grabAttributeFrom(actions[1].selector, 'aria-describedby');
+            I.waitForVisible(`#${editTooltipId}`, 5);
+            I.pressKey("Escape");
+            I.waitForInvisible(`#${editTooltipId}`, 5);
+            I.seeElement(`${actions[1].selector}:focus`);
+
+            I.pressKey(['Shift', 'Tab']);
+            I.waitForElement(`${action.selector}:focus[aria-describedby]`, 5);
+            const createTooltipId = await I.grabAttributeFrom(action.selector, 'aria-describedby');
+            I.waitForVisible(`#${createTooltipId}`, 5);
+            I.pressKey("Escape");
+            I.waitForInvisible(`#${createTooltipId}`, 5);
+            I.seeElement(`${action.selector}:focus`);
+
+            I.moveCursorTo(`${wrapper} .dt-scroll-body tbody tr:first-child td.dt-select-td`);
+            I.waitForInvisible(`#${hoverTooltipId}`, 5);
+        }
+
+        if (action.name === "remove") {
+            const rowsAfter = await I.grabTextFrom(`${wrapper} .dt-scroll-body tbody`);
+            I.assertEqual(rowsAfter, rowsBefore, "Enter on the initial Cancel button must leave every record unchanged");
+            I.seeNumberOfElements(`${wrapper} .dt-scroll-body tbody tr.selected`, action.multiple ? 2 : 1);
+        }
     }
 });
 
@@ -608,6 +679,18 @@ Scenario("p48: cancel waits for focus restoration", async ({ I, DTE }) => {
         const focusRestored = await I.executeScript(selector =>
             document.activeElement === document.querySelector(selector), createButton);
         I.assertTrue(focusRestored, "DTE.cancel must finish after focus returns to the opening button");
+        await assertSilentFocusReturn(I, createButton);
+
+        I.moveCursorTo(filter);
+        I.moveCursorTo(createButton);
+        I.waitForElement(`${createButton}:focus[aria-describedby]`, 5);
+        const tooltipId = await I.grabAttributeFrom(createButton, 'aria-describedby');
+        I.waitForVisible(`#${tooltipId}`, 5);
+        I.moveCursorTo(`#${tooltipId}`);
+        I.seeElement(`#${tooltipId}`);
+        I.pressKey("Escape");
+        I.waitForInvisible(`#${tooltipId}`, 5);
+        I.seeElement(`${createButton}:focus`);
 
         const value = `focus-autotest-${clickTopButton}`;
         I.fillField(filter, value);

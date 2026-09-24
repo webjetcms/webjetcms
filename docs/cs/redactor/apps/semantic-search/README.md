@@ -21,7 +21,7 @@ Ke spuštění sémantického vyhledávání je potřeba:
 - Nastavit typ vyhledávání na hodnotu `semantic` nebo `hybrid`. Můžete to provést globálně přes konfigurační proměnnou `searchType`, nebo přímo v aplikaci **Vyhledávání**.
 - Při hybridním režimu ověřit, že konfigurační proměnná `ragHybridSearchEnabled` je nastavena na hodnotu `true`.
 - Ověřit, že konfigurační proměnná `luceneAsDefaultSearch` je nastavena na hodnotu `false`. Pokud je nastavena na `true`, bude se místo sémantického vyhledávání používat Lucene, protože má vyšší prioritu.
-- Nastavit API klíč zvoleného poskytovatele stejným způsobem jako pro AI asistenty.
+- Nakonfigurovat zvoleného poskytovatele: pro externí službu nastavit API klíč stejným způsobem jako pro AI asistenty nebo nakonfigurovat [lokální embeddingový model](../../ai/settings/README.md#lokální-modely), který nevyžaduje API klíč ani odesílání obsahu externí AI službě.
 - Spustit indexování přes administrátorské rozhraní pro vytvoření vektorů a naplnění vektorové databáze.
 - Nastavit automatizovanou úlohu `sk.iway.iwcm.rag.service.RagIndexCronTask`, která zpracovává frontu indexování.
 
@@ -80,6 +80,8 @@ RAG odpověď používá pouze obsah získaný ze sémantického indexu. Pokud s
 ## Sémantický index
 
 Pro využití sémantického vyhledávání je třeba mít indexovaný obsah pomocí sémantického indexování, které je dostupné v administrátorském rozhraní. Poskytovatel a model se nastavují v systémových AI asistentech `RAG-EMB-INDEX` a `RAG-EMB-SEARCH` ; aby se index použil, obě hodnoty vyhledávacího asistenta se musí přesně shodovat s vytvořeným indexem. Po otevření stránky **Sémantický index** se aktuální indexovací konfigurace zobrazí v informačním oznámení. Indexy různých poskytovatelů a modelů mohou existovat současně. Více informací naleznete v části [Sémantický index](./embedding-chunks.md).
+
+Při použití poskytovatele **Lokální embeddingový model** nastavte cestu `ai_localEmbeddingModelBundlePath`, globální hodnotu `ragEmbeddingDimensions` změňte na `768` av obou systémových asistentech vyberte stejný lokální model. Změna dimenze vymaže existující sémantický index, proto následně znovu spusťte úplné indexování.
 
 ## Detaily implementace a nastavení
 

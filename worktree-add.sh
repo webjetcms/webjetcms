@@ -1,10 +1,12 @@
 #!/bin/bash
-# Creates, checks out, or reopens a branch worktree in a private VS Code workspace.
+# Creates, checks out, or reopens a branch or commit worktree in a private VS Code workspace.
 # Workspace settings and Peacock colors are stored in ~/.vscode-workspaces/.
 #
 # Usage examples:
 #   ./worktree-add.sh feature/ckeditor-thumb-restrictions
 #   ./worktree-add.sh --new feature/ckeditor-thumb-restrictions
+#   ./worktree-add.sh cef6ca9a74d0bba276e5eef414182503b45ef3b7
+# Commit IDs open a detached HEAD worktree without moving any branch.
 
 set -euo pipefail
 
@@ -27,13 +29,13 @@ if [[ "${1:-}" == "--new" ]]; then
 fi
 
 if (( $# > 1 )); then
-    echo "Usage: $0 [--new] [branch-name]" >&2
+    echo "Usage: $0 [branch-name|commit-id] or $0 --new [branch-name]" >&2
     exit 1
 fi
 
 BRANCH_NAME="${1:-}"
 if [[ -z "$BRANCH_NAME" ]]; then
-    read -r -p "Branch name (for example feature/ckeditor-thumb-restrictions): " BRANCH_NAME
+    read -r -p "Branch name or commit ID (for example feature/ckeditor-thumb-restrictions): " BRANCH_NAME
 fi
 
 if ! git check-ref-format --branch "$BRANCH_NAME" >/dev/null 2>&1; then
@@ -46,6 +48,21 @@ REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 REPO_PARENT="$(dirname -- "$REPO_ROOT")"
 LOCAL_FILES_SOURCE="$REPO_PARENT/webjetcms"
 WORKTREE_NAME="${BRANCH_NAME//\//-}"
+COMMIT_ID=""
+# Preserve existing branches with hexadecimal names, including explicit --new requests.
+if [[ "$CREATE_NEW" == false && "$BRANCH_NAME" =~ ^[0-9a-fA-F]{4,40}$ ]] \
+    && ! git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/$BRANCH_NAME" \
+    && ! git -C "$REPO_ROOT" show-ref --verify --quiet "refs/remotes/origin/$BRANCH_NAME"; then
+    if ! COMMIT_ID="$(git -C "$REPO_ROOT" rev-parse --verify --quiet "$BRANCH_NAME^{commit}")"; then
+        echo "Commit is not available locally; fetching branches from origin"
+        git -C "$REPO_ROOT" fetch origin
+        if ! COMMIT_ID="$(git -C "$REPO_ROOT" rev-parse --verify --quiet "$BRANCH_NAME^{commit}")"; then
+            echo "Cannot resolve commit ID after fetching origin: $BRANCH_NAME" >&2
+            exit 1
+        fi
+    fi
+    WORKTREE_NAME="commit-${COMMIT_ID:0:12}"
+fi
 WORKTREE_PATH="$REPO_PARENT/webjetcms-$WORKTREE_NAME"
 WORKSPACE_FILE="$HOME/.vscode-workspaces/webjetcms-$WORKTREE_NAME.code-workspace"
 
@@ -67,7 +84,13 @@ if [[ -e "$WORKTREE_PATH" ]]; then
         exit 1
     fi
 
-    if [[ "$(git -C "$WORKTREE_PATH" branch --show-current)" != "$BRANCH_NAME" ]]; then
+    if [[ -n "$COMMIT_ID" ]]; then
+        if [[ "$(git -C "$WORKTREE_PATH" rev-parse HEAD)" != "$COMMIT_ID" \
+            || -n "$(git -C "$WORKTREE_PATH" branch --show-current)" ]]; then
+            echo "Target worktree is not detached at commit $COMMIT_ID: $WORKTREE_PATH" >&2
+            exit 1
+        fi
+    elif [[ "$(git -C "$WORKTREE_PATH" branch --show-current)" != "$BRANCH_NAME" ]]; then
         echo "Target worktree is not on branch $BRANCH_NAME: $WORKTREE_PATH" >&2
         exit 1
     fi
@@ -97,6 +120,9 @@ if [[ "$EXISTING_WORKTREE" == true ]]; then
         && [[ "$COPY_ANSWER" =~ ^[Yy]([Ee][Ss])?$ ]]; then
         COPY_LOCAL_FILES=true
     fi
+elif [[ -n "$COMMIT_ID" ]]; then
+    echo "Checking out commit $COMMIT_ID with detached HEAD in $WORKTREE_PATH"
+    git -C "$REPO_ROOT" worktree add --detach "$WORKTREE_PATH" "$COMMIT_ID"
 elif [[ "$CREATE_NEW" == true ]]; then
     if git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/$BRANCH_NAME"; then
         echo "Branch already exists locally. Run without --new to use it: $BRANCH_NAME" >&2

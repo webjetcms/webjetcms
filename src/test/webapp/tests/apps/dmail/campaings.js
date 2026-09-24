@@ -1009,7 +1009,7 @@ Scenario('BUG - remove users from unselected groups while campain is not save ye
 
     I.say("Add default recipient");
     I.clickCss(recipientsWrapper + " > div.dt-header-row.clearfix > div > div.col-auto > div > button.btn.btn-sm.buttons-create.btn-success");
-    I.waitForElement(recipientsModal);
+    I.waitForElement(recipientsModal + "[data-dte-focus-state='ready']", 20);
     I.fillField("#DTE_Field_recipientName", "test");
     I.fillField("#DTE_Field_recipientEmail", "testdefault@balat.sk");
     I.clickCss(recipientsModal + " > div > div > div.DTE_Footer.modal-footer > div.DTE_Form_Buttons > button.btn.btn-primary");

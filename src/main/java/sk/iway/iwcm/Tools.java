@@ -24,7 +24,6 @@ import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.form.FormDB;
-import sk.iway.iwcm.helpers.RequestHelper;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
@@ -3200,14 +3199,18 @@ public class Tools
 	}
 
 	/**
-	 * Returns Spring ApplicationContext to access spring beans from not spring classes
-	 * @return
+	 * Returns the request's Spring context, falling back to the servlet application's context
+	 * for background jobs whose request bean has no Spring context.
+	 * @return the available Spring context, or {@code null} when no context is registered
 	 */
 	public static ApplicationContext getSpringContext() {
 		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
 		ApplicationContext context;
-      	if (requestBean == null) context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
-		else context = requestBean.getSpringContext();
+		if (requestBean == null || requestBean.getSpringContext() == null) {
+			context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
+		} else {
+			context = requestBean.getSpringContext();
+		}
 
 		return context;
 	}
@@ -3308,7 +3311,7 @@ public class Tools
 		return new StringBuilder( replaceRegex(source.toString(), regexPattern, newStr, isCaseInsensitive) );
 	}
 
-	/*
+	/**
 	 * Safely set session attribute, if session is invalid, it will not throw IllegalStateException
 	 * @param session
 	 * @param name

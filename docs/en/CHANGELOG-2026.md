@@ -41,7 +41,10 @@
 
 ![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
 
-- Document Manager files in the `/files/archiv` folder are only available for viewing and selection in the link and image insertion dialogs. Uploading, renaming, deleting, and other editing can only be done via the [Document Manager](redactor/files/file-archive/README.md) (#298,#313).
+- Document Manager files in the `/files/archiv` folder are only available for viewing and selection in the link and image insertion dialogs. Uploading, renaming, deleting and other editing can only be done via [Document Manager](redactor/files/file-archive/README.md) (#298,#313,#317).
+
+![](redactor/webpages/working-in-editor/link_dialog-read-only-archive.png)
+
 - [Photobank](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - when downloading an image from the photobank, it is possible to set the file name. The name is automatically pre-filled and cleaned, the extension is determined by the source image and the existing file is not overwritten. Also added support for selecting the image type and category and the ability to search for video files (#58645).
 
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
@@ -49,7 +52,11 @@
 - Page Builder - elements marked with the CSS class [`pb-duplicable`](frontend/page-builder/settings.md#duplicate-element-orange-color) can be moved, duplicated, and deleted within the same parent. Custom or multiple selectors can be set via `pbCustomSettings` (#58750).
 - Page Builder - modified [editor control](redactor/webpages/pagebuilder.md). Added fixed top bar with path to selected block, **Structure** panel, quick actions and mode for inserting sections, containers and columns directly into the page. Frames can be hidden or shown for the entire block hierarchy. Block library has a compact window with previews, categories and combined search with tags. Style settings use drop-down property groups and indicate the currently edited block (#308).
 
-![](redactor/webpages/pagebuilder-structure.png)
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Page Builder - improved detection of changes in the HTML code of the page so that the message "You probably have unsaved text in the editor" is not displayed even if you have not actually changed any text on the page (#317).
 
 ### Headless mode
 
@@ -67,6 +74,14 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- [Forms](redactor/apps/form/README.md#possible-configuration-variables) - both classic and multi-step forms respect `sendMailSaveEmail` and save emails as `.eml` files to `sendMailSaveEmailPath` instead of SMTP sending. If the write fails, the form reports an error.
+- Multi-step forms - added [return to previous step](redactor/apps/multistep-form/README.md#return-to-previous-step) with restoring saved values ​​and files and [CSS template selection](redactor/apps/multistep-form/README.md#css-templates) for each inserted instance and preview in the administration (#58742).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Multi-step forms - fixed evaluating conditions after unchecking a box when returning to the previous step. A hidden or no longer required field will not block continuation due to the originally saved value (#58742).
 - [Multistep form statistics](redactor/apps/multistep-form/stat.md) has been extended with a date filter and advanced metrics for views/attempts/languages ​​etc. (#58509).
 
 ![](redactor/apps/multistep-form/stat-section-advanced.png)
@@ -89,12 +104,12 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ### Semantic search
 
 - Added support for [semantic search](redactor/apps/semantic-search/README.md) built on the `pgvector` and `OpenAI embeddings` vector database technology. It allows visitors to find relevant pages based on **the meaning of the query**, not just keyword matching (#211).
-
 - Added hybrid semantic search mode and optional RAG response from indexed content. The **Search** app has new settings for search type, hybrid behavior, AI assistant selection, and response context limits (#58521).
 
 ![](redactor/apps/semantic-search/rag-result.png)
 
 - Embedding indexing and search uses the provider and model set in the system AI assistant. Indexes of different providers and models can coexist; the **Semantic Index** page displays the current setting and preserves other combinations when re-indexing. The core of embedding requests, responses, and provider communication has been separated into the `webjet-ai` library; WebJET CMS continues to handle assistant selection, indexing, and vector storage (#58694).
+- AI assistants and **semantic search** - added support for [local models](redactor/ai/settings/README.md#local-models) for text generation, translation and embedding directly on the server without sending content to an external AI service. These models can **run on regular hardware** (CPU), **do not require special graphics cards** (#58561).
 
 ### Applications
 
@@ -111,7 +126,6 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](redactor/apps/language-redirect/editor-basic.png)
 
 - Reservations - the **Time Reservation** and **Day Reservation** applications have a unified visual style according to the `Vanilla Calendar` calendar, adjusted contrasting cell colors according to `WCAG`, separated visual CSS styles into separate files, and **Time Reservation** displays the actual price in the hourly cells according to the price list of the reservation object (#58565).
-
 - Reservations - a new application [My Reservations] (redactor/apps/reservation/my-reservations-app/README.md) has been added, which will show the logged-in user an overview of their reservations, reservation status, and the option to delete allowed future reservations (#58565).
 
 ![](editor/apps/reservation/my-reservations-app/app-page.png)
@@ -123,6 +137,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Document Manager - added ability to upload multiple files at once via `drag&drop` (#58593).
 
 ![](redactor/files/file-archive/drag-drop-upload-dialog.png)
+
+- Document Manager - when [bulk uploading files](redactor/files/file-archive/README.md#bulk-uploading-files) it is possible to set a common validity on the **Basic** and **Advanced** tabs, schedule a later upload with email notification, and enter extended document metadata (#58754).
+
+![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
 ### Gallery
 
@@ -185,6 +203,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](sysadmin/update/stat-browser-migration.png)
 
 - Multi-step forms - added moving (`scroll`) to the beginning of the form after moving to the next step (#osk573).
+- Explorer - when updating a file, the selection is limited to one file and a message warns of the wrong type (#317).
+- Explorer - folder information no longer shows inaccurate recursive size (#317).
 
 ### Bug fixes
 
@@ -202,6 +222,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Added support for generating `nonce` for the [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) header (#58533).
 - AI assistants - added protection against `prompt injection` attacks with separation of system instructions from user content and detection of coded inputs (#58549).
+- HTML sanitization - `AllowSafeHtmlAttributeConverter` preserves the `role`, `aria-*`, `data-*`, `id`, `title`, `lang`, `dir` (`ltr`, `rtl`, `auto`) and `tabindex` (`-1`, `0`) attributes on all previously allowed HTML elements. This allows the use of accessibility attributes and custom data attributes (#317).
 
 ### Documentation
 
@@ -537,6 +558,7 @@ Redesigned application properties settings in the editor from the old code in `J
 - Security - tightened validation of database column names when performing dynamic sorting and filtering. **Warning:** Public APIs no longer support custom SQL expressions in sort parameters, only safe column names or available named constants are used (#294).
 - Security - [secured endpoint `row-reorder`](developer/datatables/README.md#row-order) of data tables. Only the numeric field marked `DataTableColumnType.ROW_REORDER` is allowed to be changed, while permissions are checked for each record and additionally for the entire batch using `checkRowReorderScope`. For forms, form and step membership and user access are verified; an invalid request is not saved (#295).
 - CKEditor - added option [configure content cleaning rules](frontend/setup/ckeditor.md#cleaning-html-code-when-pasting-from-wordexcel) when pasting from Word/Excel. **Warning:** default cleaning now also removes the `nowrap` attribute from `TD` cells and CSS classes with `align` and `valign` attributes from `TH` cells (#300).
+- Distribution - reduced the total size of Maven artifacts to about 65 MB by enabling compression, optimizing app previews and Page Builder/GridEditor/HTMLBox blocks, and removing unused administration files. Added script [`npm run scr:optimize`](../../src/test/webapp/README.md#optimize-appstore-screenshots-and-image-previews) to optimize preview images (#58790).
 
 ## 2026.0.28
 
