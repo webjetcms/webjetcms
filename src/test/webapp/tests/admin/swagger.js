@@ -39,8 +39,6 @@ Scenario("base tests", async ({I, Document}) => {
     I.dontSee(title);
     I.see("Chyba 404");
 
-    pause();
-
     response = await I.sendGetRequest(restUrl, {
         'Referer': referer,
         'x-auth-token': '',
