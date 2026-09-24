@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
@@ -52,7 +53,8 @@ public abstract class SupportLogic implements SupportLogicInterface {
     public List<LabelValue> getSupportedModels(Prop prop, HttpServletRequest request) {
         List<LabelValue> supportedValues = new ArrayList<>();
 
-        try (CloseableHttpResponse response = HttpClients.createDefault().execute( getModelsRequest(request) )) {
+        try (CloseableHttpClient client = HttpClients.createSystem();
+             CloseableHttpResponse response = client.execute( getModelsRequest(request) )) {
             if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300) {
                 Pair<String, String> errorPair = handleErrorMessage(response, prop);
                 StringBuilder sb = new StringBuilder("");
@@ -85,7 +87,8 @@ public abstract class SupportLogic implements SupportLogicInterface {
             Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
             String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
 
-            try (CloseableHttpResponse response = HttpClients.createDefault().execute( getResponseRequest(instructions, inputData, assistant, request)) ) {
+            try (CloseableHttpClient client = HttpClients.createSystem();
+                 CloseableHttpResponse response = client.execute( getResponseRequest(instructions, inputData, assistant, request)) ) {
                 if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                     errorAdminLog(assistant, inputPair, METHOD_TEXT_RESPONSE, response, prop);
 
@@ -121,7 +124,8 @@ public abstract class SupportLogic implements SupportLogicInterface {
             Map<Integer, String> replacedIncludes = IncludesHandler.replaceIncludesWithPlaceholders(inputData);
             String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, replacedIncludes);
 
-            try (CloseableHttpResponse response = HttpClients.createDefault().execute( getStremResponseRequest(instructions, inputData, assistant, request) )) {
+            try (CloseableHttpClient client = HttpClients.createSystem();
+                 CloseableHttpResponse response = client.execute( getStremResponseRequest(instructions, inputData, assistant, request) )) {
                 if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                     errorAdminLog(assistant, inputPair, METHOD_TEXT_STREAM_RESPONSE, response, prop);
 
@@ -158,7 +162,8 @@ public abstract class SupportLogic implements SupportLogicInterface {
 
             String instructions = AiAssistantsService.executePromptMacro(assistant.getInstructions(), inputData, null);
 
-            try (CloseableHttpResponse response = HttpClients.createDefault().execute( getImageResponseRequest(instructions, inputData, assistant, request, prop) )) {
+            try (CloseableHttpClient client = HttpClients.createSystem();
+                 CloseableHttpResponse response = client.execute( getImageResponseRequest(instructions, inputData, assistant, request, prop) )) {
                 if (response.getStatusLine().getStatusCode() < 200 || response.getStatusLine().getStatusCode() >= 300)
                     errorAdminLog(assistant, inputPair, METHOD_IMAGE_RESPONSE, response, prop);
 
