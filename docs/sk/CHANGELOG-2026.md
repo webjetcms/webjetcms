@@ -544,6 +544,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Proxy - opravené použitie nastavenej HTTP/HTTPS proxy vrátane výnimiek a autentifikácie pri preklade cez DeepL, volaniach AI asistenta, sťahovaní cez `Tools.downloadUrl`, v proxy module a pri generovaní offline verzie (#331).
 - Webové stránky - opravené ukladanie web stránky s medzerou na konci URL adresy (vykoná sa odstránenie prázdnych znakov) (#OSK650).
 - Webové stránky - opravené zacyklenie nepublikovanej stránky ak URL nekončí na znak `/` - konfiguračná premenná `virtualPathLastSlash=false` (#OSK684).
 - Manažér dokumentov - pridané zmazanie cache pamäte po publikovaní novej verzie súboru (#TB2754).
