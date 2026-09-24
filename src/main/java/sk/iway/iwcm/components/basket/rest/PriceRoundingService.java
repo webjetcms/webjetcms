@@ -18,11 +18,11 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 /**
  * Calculates rounded gross unit prices and allocates VAT rounded per tax rate.
  */
-public final class BasketRoundingService {
+public final class PriceRoundingService {
 
     private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
 
-    private BasketRoundingService() {}
+    private PriceRoundingService() {}
 
     public static boolean isEnabled() {
         return Constants.getBoolean("basketRoundPrices");

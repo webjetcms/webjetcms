@@ -405,8 +405,8 @@ public class ProductListService {
         else
             invoiceItems = biir.findAllByInvoiceIdAndDomainId(invoiceId, domainId);
 
-        if (BasketRoundingService.isEnabled()) {
-            BasketRoundingService.allocateVat(invoiceItems);
+        if (PriceRoundingService.isEnabled()) {
+            PriceRoundingService.allocateVat(invoiceItems);
         }
 
         Integer itemsCount = 0;
@@ -428,7 +428,7 @@ public class ProductListService {
         if(updateStatus) {
             //SAME time, it can change the status of invoice
             BigDecimal totalPayedPrice = getPayedPrice(invoice.getId(), bipr);
-            invoice.setStatusId( ProductListService.getInvoiceStatusByValues(priceToPayVat, totalPayedPrice, BasketRoundingService.isEnabled()) );
+            invoice.setStatusId( ProductListService.getInvoiceStatusByValues(priceToPayVat, totalPayedPrice, PriceRoundingService.isEnabled()) );
         }
 
         bir.save(invoice);
@@ -572,10 +572,10 @@ public class ProductListService {
 					newItem.setDateInsert(new Date(Tools.getNow()));
 					newItem.setInvoiceId(invoiceId.intValue());
 					newItem.setDomainId(domainId);
-					if (BasketRoundingService.isEnabled()) {
+					if (PriceRoundingService.isEnabled()) {
 						newItem.setItemPrice(BasketTools.convertCurrency(newItem.getItemPrice(), itemDoc.getCurrency(), invoice.getCurrency()));
-						BasketRoundingService.recalculateLinePrice(newItem);
-						BasketRoundingService.prepareForSave(newItem);
+						PriceRoundingService.recalculateLinePrice(newItem);
+						PriceRoundingService.prepareForSave(newItem);
 					}
 
 					biir.save(newItem);

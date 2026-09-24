@@ -18,7 +18,7 @@ import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 
 /** Covers selling-unit rounding, small prices and reconciled VAT for a mixed basket. */
-class BasketRoundingServiceTest {
+class PriceRoundingServiceTest {
 
     private String originalFormat;
     private String originalRounding;
@@ -44,7 +44,7 @@ class BasketRoundingServiceTest {
         BasketInvoiceItemEntity item = item("1.594", 23, 1, 1);
         item.setRoundedUnitPriceVat(rounded);
 
-        assertEquals(expected, BasketRoundingService.paymentFeePriceWithVat(item));
+        assertEquals(expected, PriceRoundingService.paymentFeePriceWithVat(item));
     }
 
     /** Delivery prices retain legacy rounding and missing-value handling while keeping enabled fees precise. */
@@ -70,7 +70,7 @@ class BasketRoundingServiceTest {
     @CsvSource({ "1.594,1.59,4.77", "1.595,1.60,4.80", "1.585,1.59,4.77" })
     void chargesTheRoundedUnitPrice(String source, String unit, String total) {
         BasketInvoiceItemEntity item = item(source, 0, 3, 1);
-        BasketRoundingService.allocateVat(List.of(item));
+        PriceRoundingService.allocateVat(List.of(item));
 
         assertEquals(new BigDecimal(unit), item.getItemPriceVat());
         assertEquals(new BigDecimal(total), item.getItemPriceVatQty());
@@ -83,12 +83,12 @@ class BasketRoundingServiceTest {
     void preservesTinyPricesThroughQuantityAndReload() {
         Constants.setString("currencyFormat", "0.00##");
         BasketInvoiceItemEntity original = item("0.00008", 23, 155, 1);
-        BasketRoundingService.recalculateLinePrice(original);
+        PriceRoundingService.recalculateLinePrice(original);
         assertEquals(new BigDecimal("0.0001"), original.getItemPriceVat());
-        BasketRoundingService.prepareForSave(original);
+        PriceRoundingService.prepareForSave(original);
 
         BasketInvoiceItemEntity loaded = item(BigDecimal.valueOf(original.getItemPrice().doubleValue()).toPlainString(), 23, 155, 1);
-        BasketRoundingService.allocateVat(List.of(loaded));
+        PriceRoundingService.allocateVat(List.of(loaded));
         assertEquals(new BigDecimal("0.0001"), loaded.getItemPriceVat());
         assertEquals(new BigDecimal("0.02"), loaded.getItemPriceVatQty());
         assertEquals(new BigDecimal("0.00"), loaded.getLineVatAmount());
@@ -104,7 +104,7 @@ class BasketRoundingServiceTest {
         BasketInvoiceItemEntity reduced = item("10.00", 5, 2, 4);
         BasketInvoiceItemEntity zero = item("1.594", 0, 3, 5);
         List<BasketInvoiceItemEntity> items = new ArrayList<>(List.of(second, first, credit, reduced, zero));
-        BasketRoundingService.allocateVat(items);
+        PriceRoundingService.allocateVat(items);
         List<BigDecimal> expectedVat = List.of(new BigDecimal("0.01"), new BigDecimal("0.00"),
             new BigDecimal("0.00"), new BigDecimal("1.00"), new BigDecimal("0.00"));
         assertEquals(expectedVat, List.of(first, second, credit, reduced, zero).stream()
@@ -113,7 +113,7 @@ class BasketRoundingServiceTest {
         assertEquals(new BigDecimal("24.80"), items.stream().map(BasketInvoiceItemEntity::getItemPriceQty).reduce(BigDecimal.ZERO, BigDecimal::add));
 
         Collections.reverse(items);
-        BasketRoundingService.allocateVat(items);
+        PriceRoundingService.allocateVat(items);
         assertEquals(expectedVat, List.of(first, second, credit, reduced, zero).stream()
             .map(BasketInvoiceItemEntity::getLineVatAmount).toList());
     }

@@ -22,7 +22,7 @@ import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.basket.rest.BasketRoundingService;
+import sk.iway.iwcm.components.basket.rest.PriceRoundingService;
 import sk.iway.iwcm.components.basket.support.SupportMethodEntity;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
@@ -134,7 +134,7 @@ public class DeliveryMethodEntity extends SupportMethodEntity {
     private Integer domainId;
 
     public BigDecimal getPriceVat() {
-        return BasketRoundingService.deliveryPriceWithVat(price, vat);
+        return PriceRoundingService.deliveryPriceWithVat(price, vat);
     }
 
     @JsonIgnore

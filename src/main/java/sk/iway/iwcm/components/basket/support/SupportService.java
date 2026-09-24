@@ -13,7 +13,7 @@ import sk.iway.iwcm.common.BasketTools;
 import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
 import sk.iway.iwcm.editor.rest.Field;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.components.basket.rest.BasketRoundingService;
+import sk.iway.iwcm.components.basket.rest.PriceRoundingService;
 import sk.iway.iwcm.components.basket.rest.EshopService;
 import sk.iway.tags.CurrencyTag;
 
@@ -74,12 +74,12 @@ public class SupportService {
     /** Returns the converted fee amount used by labels and fee previews. */
     public static BigDecimal getLocalPriceVat(BigDecimal priceVat, HttpServletRequest request) {
         BigDecimal converted = BasketTools.convertToBasketDisplayCurrency(priceVat, request);
-        return BasketRoundingService.isEnabled()
-            ? BasketRoundingService.roundLineGross(BasketRoundingService.roundGross(converted), 1) : converted;
+        return PriceRoundingService.isEnabled()
+            ? PriceRoundingService.roundLineGross(PriceRoundingService.roundGross(converted), 1) : converted;
     }
 
     private static String formatPrice(BigDecimal priceVat, HttpServletRequest request) {
-        String currency = BasketRoundingService.isEnabled() ? EshopService.getDisplayCurrency(request) : Constants.getString("basketDisplayCurrency");
+        String currency = PriceRoundingService.isEnabled() ? EshopService.getDisplayCurrency(request) : Constants.getString("basketDisplayCurrency");
         return CurrencyTag.formatNumber(getLocalPriceVat(priceVat, request)) + " " + CurrencyTag.getLabelFromCurrencyCode(currency);
     }
 
