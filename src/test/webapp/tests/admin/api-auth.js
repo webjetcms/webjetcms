@@ -75,6 +75,13 @@ Scenario("API volanie - disabled", async ({ I, Document }) => {
 
     I.sendGetRequest('/admin/rest/web-pages/all?groupId=25');
     //always 403 when api-token auth is disabled
+    let response = await I.sendGetRequest('/admin/rest/web-pages/all?groupId=25');
+    I.say("Response: "+response.data);
+    console.log("basicAuthEnabled: ", basicAuthEnabled);
+    console.log("Response.status: ", response.status);
+    console.log("Response.headers: ", response.headers);
+    console.log("Response.data: ", response.data);
+    //always 403 when api-token auth is disabled
     I.seeResponseCodeIs(code403);
 });
 
