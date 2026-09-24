@@ -115,7 +115,7 @@ Data([{ seoBotsIndexReady: false }, { seoBotsIndexReady: true }]).Scenario('fina
     I.mockRoute('**/admin/rest/settings/stat-browser-migration', route => route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ seoBots: [], browserKeys: [], tables: [], seoBotsIndexReady: current.seoBotsIndexReady })
+        body: JSON.stringify({ seoBots: [], browserKeys: [], tables: [], migrationCompleted: true, seoBotsIndexReady: current.seoBotsIndexReady })
     }));
     I.refreshPage();
     I.waitForElement('#migrationStart:disabled', 10);
@@ -135,7 +135,7 @@ Data([{ finalized: false }, { finalized: true }]).Scenario('analysis separates r
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
-            seoBots: [], browserKeys: [], tables: ['stat_views_2021_7'], seoBotsIndexReady: true,
+            seoBots: [], browserKeys: [], tables: ['stat_views_2021_7'], migrationCompleted: true, seoBotsIndexReady: true,
             retainedKeys: ['', 'Safari 4.0', 'Chrome 110.0', 'Chrome 33', 'Edge Mobile 118', 'Chrome 137']
                 .map(source => ({ source }))
         })
@@ -151,9 +151,90 @@ Data([{ finalized: false }, { finalized: true }]).Scenario('analysis separates r
     I.see('Safari 4.0', '#migrationRetainedMappings');
     I.see('Chrome 137', '#migrationRetainedMappings');
     I.dontSeeElement('#migrationMappings');
+    I.dontSeeElement('#migrationRetainedBrowserPreview');
+    I.seeElement('#migrationAnalysisComplete');
     I.verifyDisabled('#migrationStart');
     I.verifyDisabled('#migrationFinalize');
     I.saveScreenshot(`stat-browser-retained-analysis-${current.finalized}.png`);
+});
+
+Data([{ finalized: false }, { finalized: true }]).Scenario('completed analysis separates retained browser and OS identifiers', async ({ I, current }) => {
+    const markupSource = '<img data-autotest-retained-browser src="x" onerror="window.autotestRetainedBrowserExecuted=true"> 1.0';
+    if (current.finalized) I.resizeWindow(760, 900);
+    I.usePlaywrightTo('mock completed migration with referenced identifiers', async ({ page }) => {
+        await page.route('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ running: false, done: true, finalized: current.finalized })
+        }));
+        await page.route('**/admin/rest/settings/stat-browser-migration', route => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                seoBots: [], browserKeys: [], tables: ['stat_views_2021_7'], migrationCompleted: true, seoBotsIndexReady: true,
+                retainedBrowserKeys: [
+                    { sourceId: 10, targetId: 11, source: 'MSIE 8.0', target: 'MSIE' },
+                    { sourceId: 29539, targetId: 29540, source: 'Yanga WorldSearch Bot v1.1', target: 'Yanga WorldSearch Bot' },
+                    { sourceId: 30, targetId: 31, source: markupSource, target: 'autotest markup browser' }
+                ],
+                retainedKeys: [{ source: 'Safari 4.0' }]
+            })
+        }));
+    });
+    I.amOnPage('/admin/v9/settings/stat-browser-migration/?userlngr=true');
+    I.waitForElement('#migrationStart:disabled', 10);
+    I.click('#migrationAnalyze');
+    I.waitForVisible('#migrationRetainedBrowserPreview', 10);
+    I.seeElement('#migrationAnalysisComplete');
+    I.see('0', '#keyMappingCount');
+    I.see('3', '#retainedBrowserKeyCount');
+    I.see('1', '#retainedKeyCount');
+    I.see('Opakovaná finalizácia ich nezlúči ani neodstráni.', '#migrationRetainedBrowserPreview');
+    I.see('MSIE 8.0', '#migrationRetainedBrowserMappings');
+    I.see('Yanga WorldSearch Bot v1.1', '#migrationRetainedBrowserMappings');
+    I.see(markupSource, '#migrationRetainedBrowserMappings');
+    I.see('Safari 4.0', '#migrationRetainedMappings');
+    I.dontSee('Safari 4.0', '#migrationRetainedBrowserMappings');
+    I.dontSee('MSIE 8.0', '#migrationRetainedMappings');
+    I.dontSee('autotest markup browser', '#migrationRetainedBrowserMappings');
+    I.assertEqual(await I.grabNumberOfVisibleElements('#migrationRetainedBrowserMappings tbody td'), 3, 'Retained browser rows show only the stored source value');
+    I.assertEqual(await I.executeScript(() => document.querySelectorAll('#migrationRetainedBrowserMappings img').length), 0, 'Retained browser values must be rendered as text');
+    I.dontSeeElement('#migrationMappings');
+    I.verifyDisabled('#migrationStart');
+    I.verifyDisabled('#migrationFinalize');
+    I.saveScreenshot(`stat-browser-retained-browser-analysis-${current.finalized}.png`, true);
+    if (current.finalized) I.wjSetDefaultWindowSize();
+});
+
+Scenario('completed analysis enables finalization for remaining unused identifiers', ({ I }) => {
+    I.usePlaywrightTo('mock previously finalized migration with unused identifiers', async ({ page }) => {
+        await page.route('**/admin/rest/settings/stat-browser-migration/status', route => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ running: false, done: true, finalized: true })
+        }));
+        await page.route('**/admin/rest/settings/stat-browser-migration', route => route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                seoBots: [], tables: ['stat_views_2021_7'], migrationCompleted: true, seoBotsIndexReady: true,
+                browserKeys: [{ sourceId: 101, targetId: 10, source: 'Chrome 127.0', target: 'Chrome' }],
+                retainedBrowserKeys: [{ sourceId: 20, targetId: 21, source: 'MSIE 8.0', target: 'MSIE' }],
+                retainedKeys: []
+            })
+        }));
+    });
+    I.refreshPage();
+    I.waitForElement('#migrationStart:disabled', 10);
+    I.click('#migrationAnalyze');
+    I.waitForVisible('#migrationMappings', 10);
+    I.see('1', '#keyMappingCount');
+    I.see('nepoužívaných identifikátorov na odstránenie', '#keyMappingLabel');
+    I.see('Chrome 127.0', '#migrationMappings');
+    I.see('MSIE 8.0', '#migrationRetainedBrowserMappings');
+    I.dontSeeElement('#migrationAnalysisComplete');
+    I.seeElement('#migrationFinalize:not(:disabled)');
+    I.verifyDisabled('#migrationStart');
 });
 
 Data(['modUpdate', 'users.edit_admins']).Scenario('allows access with either migration permission', ({ I, current }) => {

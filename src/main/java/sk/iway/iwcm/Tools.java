@@ -3199,14 +3199,18 @@ public class Tools
 	}
 
 	/**
-	 * Returns Spring ApplicationContext to access spring beans from not spring classes
-	 * @return
+	 * Returns the request's Spring context, falling back to the servlet application's context
+	 * for background jobs whose request bean has no Spring context.
+	 * @return the available Spring context, or {@code null} when no context is registered
 	 */
 	public static ApplicationContext getSpringContext() {
 		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
 		ApplicationContext context;
-      	if (requestBean == null) context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
-		else context = requestBean.getSpringContext();
+		if (requestBean == null || requestBean.getSpringContext() == null) {
+			context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
+		} else {
+			context = requestBean.getSpringContext();
+		}
 
 		return context;
 	}
