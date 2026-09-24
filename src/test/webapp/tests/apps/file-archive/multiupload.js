@@ -88,7 +88,7 @@ Before(({ I, login }) => {
     }
 });
 
-Scenario('Set basic and advanced metadata for all files in a bulk upload @current', async ({ I, DT, DTE }) => {
+Scenario('Set basic and advanced metadata for all files in a bulk upload', async ({ I, DT, DTE }) => {
     const publicationTimestamp = new Date();
     publicationTimestamp.setDate(publicationTimestamp.getDate() + 1);
     publicationTimestamp.setSeconds(0, 0);
