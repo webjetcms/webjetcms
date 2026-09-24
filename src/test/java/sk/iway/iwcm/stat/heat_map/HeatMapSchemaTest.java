@@ -2,15 +2,17 @@ package sk.iway.iwcm.stat.heat_map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -20,10 +22,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,7 +33,9 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.MockedStatic;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
+import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.system.UpdateDatabase;
 
 /** Verifies resumable monthly-table upgrades using JDBC mocks without touching a database. */
@@ -42,14 +46,14 @@ class HeatMapSchemaTest {
         return List.of(Constants.DB_MYSQL, Constants.DB_PGSQL, Constants.DB_MSSQL, Constants.DB_ORACLE);
     }
 
-    /** Each supported database preserves legacy columns and installs compatible defaults and unique indexes. */
+    /** Each database preserves legacy columns and skips duplicate columns and indexes on repeated upgrades. */
     @ParameterizedTest
     @MethodSource("databaseTypes")
     void upgradesOnlyOriginalMonthlyTablesAndCanRunAgain(int databaseType) throws Exception {
-        DatabaseFixture fixture = new DatabaseFixture();
-        when(fixture.metadata.storesUpperCaseIdentifiers()).thenReturn(databaseType == Constants.DB_ORACLE);
+        DatabaseFixture fixture = new DatabaseFixture(databaseType);
 
-        HeatMapSchema.upgradeExistingTables(fixture.connection, databaseType);
+        fixture.upgrade();
+        verify(fixture.connection).close();
 
         assertTrue(fixture.columns.containsAll(Set.of("stat_click_id", "document_id", "x", "y", "day_of_month",
                 "event_id", "domain_name", "viewport_width")));
@@ -74,79 +78,79 @@ class HeatMapSchemaTest {
                 || sql.contains("SET event_id") || sql.contains("SET x") || sql.contains("SET y")));
 
         fixture.executed.clear();
-        HeatMapSchema.upgradeExistingTables(fixture.connection, databaseType);
+        fixture.upgrade();
         assertEquals(List.of(backfill), fixture.executed, "A repeated upgrade only retries unattributed legacy domains");
     }
 
     /** A failure after some DDL leaves those successful steps reusable on the next startup. */
-    @Test
-    void resumesAfterFailedIndexCreationWithoutRepeatingColumns() throws Exception {
-        DatabaseFixture fixture = new DatabaseFixture();
-        fixture.failPageIndex = true;
-        assertThrows(SQLException.class, () -> HeatMapSchema.upgradeExistingTables(fixture.connection, Constants.DB_PGSQL));
+    @ParameterizedTest
+    @MethodSource("databaseTypes")
+    void resumesAfterFailedIndexCreationWithoutRepeatingColumns(int databaseType) throws Exception {
+        DatabaseFixture fixture = new DatabaseFixture(databaseType);
+        fixture.pageIndexFailure = new SQLException("index permission denied");
+        assertSame(fixture.pageIndexFailure, assertThrows(SQLException.class, fixture::upgrade));
+        verify(fixture.connection).close();
         assertTrue(fixture.columns.contains("viewport_width"));
         assertTrue(fixture.indexes.contains("hm_event_2024_2"));
         assertFalse(fixture.indexes.contains("hm_page_2024_2"));
 
-        fixture.failPageIndex = false;
+        fixture.pageIndexFailure = null;
         fixture.executed.clear();
-        HeatMapSchema.upgradeExistingTables(fixture.connection, Constants.DB_PGSQL);
+        fixture.upgrade();
         assertTrue(fixture.indexes.contains("hm_page_2024_2"));
         assertFalse(fixture.executed.stream().anyMatch(sql -> sql.startsWith("ALTER TABLE") || sql.startsWith("CREATE UNIQUE INDEX")));
     }
 
-    /** jTDS schema discovery falls back to SQL without broadening migration to other schemas. */
-    @Test
-    void supportsJdbcDriversWithoutGetSchema() throws Exception {
-        DatabaseFixture fixture = new DatabaseFixture();
-        when(fixture.connection.getSchema()).thenThrow(new AbstractMethodError("JDBC 4.1 not implemented"));
-        ResultSet schema = rows(List.of("dbo"), "unused");
-        when(schema.getString(1)).thenReturn("dbo");
-        when(fixture.statement.executeQuery("SELECT SCHEMA_NAME()")).thenReturn(schema);
+    /** Missing months are skipped while progress and cleanup cover each attempted monthly table. */
+    @ParameterizedTest
+    @MethodSource("databaseTypes")
+    void skipsMissingMonthsAndLogsProgress(int databaseType) throws Exception {
+        DatabaseFixture fixture = new DatabaseFixture(databaseType);
+        fixture.suffixes = new String[] { "_2024_1", "_2024_2", "_2024_3" };
+        try (MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+            fixture.upgrade();
 
-        HeatMapSchema.upgradeExistingTables(fixture.connection, Constants.DB_MSSQL);
-
-        verify(fixture.metadata).getTables(eq("cms"), eq("dbo"), eq("%"), any(String[].class));
-        assertTrue(fixture.executed.stream().filter(sql -> sql.startsWith("ALTER TABLE"))
-                .allMatch(sql -> sql.contains("\"dbo\"." + TABLE)));
+            logger.verify(() -> Logger.println(HeatMapSchema.class, "Updating stat_clicks columns 1/3 _2024_1"));
+            logger.verify(() -> Logger.println(HeatMapSchema.class, "Updating stat_clicks columns 2/3 _2024_2"));
+            logger.verify(() -> Logger.println(HeatMapSchema.class, "Updating stat_clicks columns 3/3 _2024_3"));
+            logger.verify(() -> Logger.println(HeatMapSchema.class, "Updated stat_clicks columns in 1 tables"));
+        }
+        verify(fixture.connection, times(3)).close();
+        verify(fixture.statement, times(3)).close();
+        assertTrue(fixture.columns.contains("viewport_width"));
+        assertFalse(fixture.executed.stream().anyMatch(sql -> sql.contains("stat_clicks_2024_1") || sql.contains("stat_clicks_2024_3")));
     }
 
-    /** Underscores in JDBC schema patterns cannot select a similarly named schema or its columns. */
-    @Test
-    void ignoresMetadataFromOtherSchemasMatchingTheSamePattern() throws Exception {
-        DatabaseFixture fixture = new DatabaseFixture();
-        String activeSchema = "WEBJET_CMS";
-        String foreignSchema = "WEBJET1CMS";
-        when(fixture.connection.getSchema()).thenReturn(activeSchema);
-        when(fixture.metadata.getTables(eq("cms"), eq(activeSchema), eq("%"), any(String[].class))).thenAnswer(invocation -> {
-            ResultSet result = mock(ResultSet.class);
-            AtomicInteger row = new AtomicInteger(-1);
-            when(result.next()).thenAnswer(call -> row.incrementAndGet() < 2);
-            when(result.getString("TABLE_NAME")).thenAnswer(call -> row.get() == 0 ? "stat_clicks_2024_3" : TABLE);
-            when(result.getString("TABLE_SCHEM")).thenAnswer(call -> row.get() == 0 ? foreignSchema : activeSchema);
-            return result;
-        });
-        when(fixture.metadata.getColumns("cms", activeSchema, TABLE, "%")).thenAnswer(invocation -> {
-            List<String> localColumns = new ArrayList<>(fixture.columns);
-            List<String> mixedColumns = new ArrayList<>(localColumns);
-            mixedColumns.addAll(List.of("event_id", "domain_name", "viewport_width"));
-            ResultSet result = mock(ResultSet.class);
-            AtomicInteger row = new AtomicInteger(-1);
-            when(result.next()).thenAnswer(call -> row.incrementAndGet() < mixedColumns.size());
-            when(result.getString("TABLE_NAME")).thenReturn(TABLE);
-            when(result.getString("COLUMN_NAME")).thenAnswer(call -> mixedColumns.get(row.get()));
-            when(result.getString("TABLE_SCHEM")).thenAnswer(call -> row.get() < localColumns.size() ? activeSchema : foreignSchema);
-            return result;
-        });
+    /** A missing backfill dependency must fail the migration rather than be mistaken for a missing month. */
+    @ParameterizedTest
+    @MethodSource("databaseTypes")
+    void propagatesMissingBackfillDependencies(int databaseType) throws Exception {
+        DatabaseFixture fixture = new DatabaseFixture(databaseType);
+        SQLException failure = fixture.missingTable();
+        doThrow(failure).when(fixture.statement).executeUpdate(anyString());
 
-        HeatMapSchema.upgradeExistingTables(fixture.connection, Constants.DB_ORACLE);
-
-        assertEquals(3, fixture.executed.stream().filter(sql -> sql.startsWith("ALTER TABLE")).count());
-        assertFalse(fixture.executed.stream().anyMatch(sql -> sql.contains("stat_clicks_2024_3") || sql.contains(foreignSchema)));
-        verify(fixture.metadata).getIndexInfo("cms", activeSchema, TABLE, false, false);
+        assertSame(failure, assertThrows(SQLException.class, fixture::upgrade));
+        verify(fixture.connection).close();
     }
 
-    /** Startup records success only after every discovered table has been upgraded. */
+    /** Duplicate data in a unique index must not be mistaken for an already existing index. */
+    @ParameterizedTest
+    @MethodSource("databaseTypes")
+    void propagatesDuplicateDataErrors(int databaseType) throws Exception {
+        DatabaseFixture fixture = new DatabaseFixture(databaseType);
+        SQLException failure = switch (databaseType) {
+            case Constants.DB_MYSQL -> new SQLException("duplicate data", "23000", 1062);
+            case Constants.DB_MSSQL -> new SQLException("duplicate data", "23000", 1505);
+            case Constants.DB_ORACLE -> new SQLException("duplicate data", "23000", 1452);
+            default -> new SQLException("duplicate data", "23505");
+        };
+        doThrow(failure).when(fixture.statement).execute(HeatMapSchema.uniqueIndexSql(TABLE, "_2024_2", databaseType));
+
+        assertSame(failure, assertThrows(SQLException.class, fixture::upgrade));
+        verify(fixture.connection).close();
+    }
+
+    /** Startup records success only after all monthly table upgrades have finished. */
     @Test
     void marksStartupMigrationSuccessfulOnlyAfterAllTablesSucceed() throws Exception {
         try (MockedStatic<UpdateDatabase> updates = mockStatic(UpdateDatabase.class);
@@ -164,57 +168,86 @@ class HeatMapSchemaTest {
         }
     }
 
-    private static ResultSet rows(List<String> values, String field) throws SQLException {
-        ResultSet result = mock(ResultSet.class);
-        AtomicInteger position = new AtomicInteger(-1);
-        when(result.next()).thenAnswer(invocation -> position.incrementAndGet() < values.size());
-        when(result.getString(field)).thenAnswer(invocation -> values.get(position.get()));
-        return result;
-    }
-
     private static final class DatabaseFixture {
+        private final int databaseType;
         private final Connection connection = mock(Connection.class);
         private final DatabaseMetaData metadata = mock(DatabaseMetaData.class);
         private final Statement statement = mock(Statement.class);
         private final Set<String> columns = new HashSet<>(Set.of("stat_click_id", "document_id", "x", "y", "day_of_month"));
         private final Set<String> indexes = new HashSet<>(Set.of("to_document__2024_2"));
         private final List<String> executed = new ArrayList<>();
-        private boolean failPageIndex;
+        private SQLException pageIndexFailure;
+        private String[] suffixes = { "_2024_2" };
 
-        private DatabaseFixture() throws SQLException {
+        private void upgrade() throws SQLException {
+            int originalType = Constants.DB_TYPE;
+            try (MockedStatic<DBPool> pool = mockStatic(DBPool.class);
+                    MockedStatic<StatNewDB> statistics = mockStatic(StatNewDB.class)) {
+                Constants.DB_TYPE = databaseType;
+                pool.when(DBPool::getConnection).thenReturn(connection);
+                statistics.when(() -> StatNewDB.getTableSuffix(eq("stat_clicks"), anyLong(), anyLong()))
+                        .thenAnswer(invocation -> {
+                            Calendar from = Calendar.getInstance();
+                            from.setTimeInMillis(invocation.getArgument(1));
+                            assertEquals(2000, from.get(Calendar.YEAR));
+                            assertEquals(Calendar.JANUARY, from.get(Calendar.MONTH));
+                            assertEquals(1, from.get(Calendar.DATE));
+                            Calendar to = Calendar.getInstance();
+                            to.setTimeInMillis(invocation.getArgument(2));
+                            assertEquals(Calendar.getInstance().get(Calendar.YEAR) + 1, to.get(Calendar.YEAR));
+                            return suffixes;
+                        });
+                HeatMapSchema.upgradeExistingTables();
+            } finally {
+                Constants.DB_TYPE = originalType;
+            }
+        }
+
+        private DatabaseFixture(int databaseType) throws SQLException {
+            this.databaseType = databaseType;
             when(connection.getMetaData()).thenReturn(metadata);
-            when(connection.getCatalog()).thenReturn("cms");
-            when(connection.getSchema()).thenReturn("public");
             when(connection.createStatement()).thenReturn(statement);
             when(metadata.getIdentifierQuoteString()).thenReturn("\"");
-            when(metadata.getTables(eq("cms"), any(), eq("%"), any(String[].class))).thenAnswer(invocation -> {
-                ResultSet result = rows(List.of(TABLE, "stat_clicks_v2_2024_2", "stat_clicks_2024_13", "documents"), "TABLE_NAME");
-                when(result.getString("TABLE_SCHEM")).thenReturn(invocation.getArgument(1));
-                return result;
+            when(metadata.storesUpperCaseIdentifiers()).thenReturn(databaseType == Constants.DB_ORACLE);
+            when(statement.executeQuery(anyString())).thenAnswer(invocation -> {
+                if (!invocation.getArgument(0).equals("SELECT 1 FROM " + TABLE + " WHERE 1=0")) throw missingTable();
+                return mock(ResultSet.class);
             });
-            when(metadata.getColumns(eq("cms"), any(), eq(TABLE), eq("%"))).thenAnswer(invocation -> {
-                ResultSet result = rows(new ArrayList<>(columns), "COLUMN_NAME");
-                when(result.getString("TABLE_NAME")).thenReturn(TABLE);
-                when(result.getString("TABLE_SCHEM")).thenReturn(invocation.getArgument(1));
-                return result;
-            });
-            when(metadata.getIndexInfo(eq("cms"), any(), eq(TABLE), anyBoolean(), anyBoolean())).thenAnswer(invocation ->
-                    rows(new ArrayList<>(indexes), "INDEX_NAME"));
             when(statement.execute(anyString())).thenAnswer(invocation -> {
                 String sql = invocation.getArgument(0);
-                executed.add(sql);
-                if (sql.startsWith("ALTER TABLE")) columns.add(sql.split(" ADD ")[1].split(" ")[0]);
-                else if (sql.startsWith("CREATE UNIQUE INDEX")) indexes.add(sql.split(" ")[3]);
-                else if (sql.startsWith("CREATE INDEX")) {
-                    if (failPageIndex) throw new SQLException("index permission denied");
-                    indexes.add(sql.split(" ")[2]);
+                if (sql.startsWith("ALTER TABLE")) {
+                    if (!columns.add(sql.split(" ADD ")[1].split(" ")[0])) throw duplicate(true);
+                } else if (sql.startsWith("CREATE UNIQUE INDEX")) {
+                    if (!indexes.add(sql.split(" ")[3])) throw duplicate(false);
+                } else if (sql.startsWith("CREATE INDEX")) {
+                    if (pageIndexFailure != null) throw pageIndexFailure;
+                    if (!indexes.add(sql.split(" ")[2])) throw duplicate(false);
                 }
+                executed.add(sql);
                 return true;
             });
             when(statement.executeUpdate(anyString())).thenAnswer(invocation -> {
                 executed.add(invocation.getArgument(0));
                 return 3;
             });
+        }
+
+        private SQLException duplicate(boolean column) {
+            return switch (databaseType) {
+                case Constants.DB_MYSQL -> new SQLException("already exists", "42000", column ? 1060 : 1061);
+                case Constants.DB_MSSQL -> new SQLException("already exists", "42000", column ? 2705 : 1913);
+                case Constants.DB_ORACLE -> new SQLException("already exists", "42000", column ? 1430 : 955);
+                default -> new SQLException("already exists", column ? "42701" : "42P07");
+            };
+        }
+
+        private SQLException missingTable() {
+            return switch (databaseType) {
+                case Constants.DB_MYSQL -> new SQLException("missing table", "42S02", 1146);
+                case Constants.DB_MSSQL -> new SQLException("missing table", "S0002", 208);
+                case Constants.DB_ORACLE -> new SQLException("missing table", "42000", 942);
+                default -> new SQLException("missing table", "42P01");
+            };
         }
     }
 }
