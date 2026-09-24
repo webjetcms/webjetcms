@@ -17,7 +17,10 @@ function setApiTokenAuthConf(I, Document, allowed=true) {
 }
 
 async function isBasicAuthEnabled(I) {
-    if (basicAuthEnabled!==null) return basicAuthEnabled;
+    if (basicAuthEnabled!==null) {
+        I.say("Basic auth is "+basicAuthEnabled+" (cached)");
+        return basicAuthEnabled;
+    }
 
     let response = await I.sendGetRequest('/rest/basic-auth-enabled', {
         'x-auth-token': ''

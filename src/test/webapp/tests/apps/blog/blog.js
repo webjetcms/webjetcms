@@ -59,7 +59,7 @@ Scenario('Create blogger and test his logic', async ({ I, DT, DTE }) => {
     I.see("Váš prvý článok");
 
     I.say("Check perm - even blog_admin cant see article without perm cmp_blog");
-    I.amOnPage("/apps/blog/admin?removePerm=cmp_blog");
+    I.amOnPage("/apps/blog/admin/?removePerm=cmp_blog");
     I.see("Na túto aplikáciu/funkciu nemáte prístupové práva");
     I.amOnPage("/apps/blog/admin/bloggers/");
     I.dontSee("Na túto aplikáciu/funkciu nemáte prístupové práva");
