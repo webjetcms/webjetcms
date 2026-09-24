@@ -622,16 +622,30 @@ Scenario("p48: DT dialog focus", async ({ I, DT, DTE, a11y }) => {
         await assertSilentFocusReturn(I, action.selector);
 
         if (action.name === "create") {
+            // Keep an independent hover tooltip open while testing keyboard focus.
+            I.moveCursorTo(actions[2].selector);
+            I.waitForElement(`${actions[2].selector}[aria-describedby]`, 5);
+            const hoverTooltipId = await I.grabAttributeFrom(actions[2].selector, 'aria-describedby');
+            I.waitForVisible(`#${hoverTooltipId}`, 5);
+
             I.pressKey("Tab");
             I.waitForElement(`${actions[1].selector}:focus[aria-describedby]`, 5);
-            I.waitForVisible('.tooltip.show', 5);
+            const editTooltipId = await I.grabAttributeFrom(actions[1].selector, 'aria-describedby');
+            I.waitForVisible(`#${editTooltipId}`, 5);
             I.pressKey("Escape");
-            I.waitForInvisible('.tooltip.show', 5);
+            I.waitForInvisible(`#${editTooltipId}`, 5);
+            I.seeElement(`${actions[1].selector}:focus`);
+
             I.pressKey(['Shift', 'Tab']);
             I.waitForElement(`${action.selector}:focus[aria-describedby]`, 5);
-            I.waitForVisible('.tooltip.show', 5);
+            const createTooltipId = await I.grabAttributeFrom(action.selector, 'aria-describedby');
+            I.waitForVisible(`#${createTooltipId}`, 5);
             I.pressKey("Escape");
-            I.waitForInvisible('.tooltip.show', 5);
+            I.waitForInvisible(`#${createTooltipId}`, 5);
+            I.seeElement(`${action.selector}:focus`);
+
+            I.moveCursorTo(`${wrapper} .dt-scroll-body tbody tr:first-child td.dt-select-td`);
+            I.waitForInvisible(`#${hoverTooltipId}`, 5);
         }
 
         if (action.name === "remove") {
@@ -669,12 +683,13 @@ Scenario("p48: cancel waits for focus restoration", async ({ I, DTE }) => {
 
         I.moveCursorTo(filter);
         I.moveCursorTo(createButton);
-        I.waitForVisible('.tooltip.show', 5);
-        I.seeElement(`${createButton}:focus[aria-describedby]`);
-        I.moveCursorTo('.tooltip.show');
-        I.seeElement('.tooltip.show');
+        I.waitForElement(`${createButton}:focus[aria-describedby]`, 5);
+        const tooltipId = await I.grabAttributeFrom(createButton, 'aria-describedby');
+        I.waitForVisible(`#${tooltipId}`, 5);
+        I.moveCursorTo(`#${tooltipId}`);
+        I.seeElement(`#${tooltipId}`);
         I.pressKey("Escape");
-        I.waitForInvisible('.tooltip.show', 5);
+        I.waitForInvisible(`#${tooltipId}`, 5);
         I.seeElement(`${createButton}:focus`);
 
         const value = `focus-autotest-${clickTopButton}`;
