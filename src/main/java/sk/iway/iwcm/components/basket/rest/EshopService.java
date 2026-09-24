@@ -301,8 +301,7 @@ public class EshopService {
     }
 
     public BasketInvoiceEntity saveOrder(HttpServletRequest request) {
-		if (!PriceRoundingService.isEnabled()) return createOrder(request);
-		//Container-portable per-session lock so concurrent checkout requests cannot double-submit an order.
+		//Serialize checkout requests for the same session until commit and basket cleanup finish.
 		synchronized (WebUtils.getSessionMutex(request.getSession())) {
 			try {
 				TransactionTemplate transaction = new TransactionTemplate(Tools.getSpringBean("webjet2022TransactionManager", PlatformTransactionManager.class));
@@ -379,20 +378,13 @@ public class EshopService {
 					throw orderError(request, "components.basket.order_form.error.select_payment");
 			}
 
-			//Get all items for adminlog
-			List<BasketInvoiceItemEntity> basketItems = new ArrayList<>();
-
-			//Add payment as basket item, if created add it to list
+			//Add payment as a basket item before loading the complete basket.
 			int newItemId = PaymentMethodsService.createPaymentInvoiceItemAndReturnId(invoice, request, biir);
 			if (PriceRoundingService.isEnabled() && newItemId < 0) throw new IllegalStateException("Payment fee could not be resolved.");
-			if(newItemId != -1) {
-				BasketInvoiceItemEntity newBasketItem = getBasketItemById(newItemId);
-				basketItems.add( newBasketItem );
-			}
+			List<BasketInvoiceItemEntity> basketItems = getBasketItems(request);
+			if (basketItems.stream().noneMatch(item -> item.getItemIdInt() > 0)) throw orderError(request, "components.basket.order_form.error.empty_basket");
 
 			if (PriceRoundingService.isEnabled()) {
-				basketItems = getBasketItems(request);
-				if (basketItems.stream().noneMatch(item -> item.getItemIdInt() > 0)) throw orderError(request, "components.basket.order_form.error.empty_basket");
 				for (BasketInvoiceItemEntity item : basketItems) PriceRoundingService.prepareForSave(item);
 				invoice.setPriceToPayVat(getTotalLocalPriceVat(basketItems, request));
 				invoice.setPriceToPayNoVat(getTotalLocalPrice(basketItems, request));
@@ -413,8 +405,6 @@ public class EshopService {
 				} else bindItemsToInvoice(invoice.getId(), invoice.getBrowserId());
 				Adminlog.add(Adminlog.TYPE_BASKET_CREATE, "Vytvorena objednavka: " + StringUtils.join(basketItems.iterator(), ","), invoice.getBasketInvoiceId(), -1);
 				Logger.println(EshopService.class, "Objednavka ulozena, id= " + invoice.getBasketInvoiceId());
-				//zrus browserId
-				if (!PriceRoundingService.isEnabled()) request.getSession().removeAttribute(BROWSER_ID_SESSION_KEY);
 
 			}
 			else
@@ -424,9 +414,7 @@ public class EshopService {
 			}
 		}
 		catch (Exception e) {
-			if (PriceRoundingService.isEnabled()) throw new IllegalStateException("Could not save the rounded order.", e);
-			sk.iway.iwcm.Logger.error(e);
-			invoice = null;
+			throw new IllegalStateException("Could not save the order.", e);
 		}
 
 		return invoice;

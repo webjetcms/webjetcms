@@ -45,8 +45,10 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 
 	@PrePersist
 	public void onPrePersist() {
+		//Rounded checkout prepares totals before saving the invoice and binding its items.
+		//Keep those totals instead of recalculating from browser items with old prices or excluded products.
 		if (priceToPayVat != null) return;
-		//After insert update invoice stats
+		//Run the legacy calculation before insert when totals have not been prepared.
 		ProductListService.updateInvoiceStats(this.getId(), this.browserId, true);
 	}
 

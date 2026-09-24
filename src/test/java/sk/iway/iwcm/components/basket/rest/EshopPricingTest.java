@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mockStatic;
@@ -24,14 +25,17 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.SimpleTransactionStatus;
+import org.springframework.web.util.WebUtils;
 
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.PkeyGenerator;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.basket.delivery_methods.jpa.DeliveryMethodEntity;
@@ -217,10 +221,68 @@ class EshopPricingTest {
         }
     }
 
-    /** Persistence and commit failures leave the customer's basket session intact. */
-    @org.junit.jupiter.params.ParameterizedTest
-    @org.junit.jupiter.params.provider.ValueSource(booleans = { false, true })
-    void retainsBasketOnFailedOrder(boolean commitFails) {
+    /** Both pricing modes keep the session locked through commit and reject a repeated checkout. */
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void commitsBeforeClearingBasketAndRejectsRepeatedCheckout(boolean roundingEnabled) {
+        config("basketRoundPrices", Boolean.toString(roundingEnabled));
+        product(100, "1.594", 0, 3);
+        Object mutex = new Object();
+        request.getSession().setAttribute(WebUtils.SESSION_MUTEX_ATTRIBUTE, mutex);
+        request.getSession().setAttribute("basket.priceOverrides", Map.of());
+        when(invoices.save(any())).thenAnswer(call -> {
+            BasketInvoiceEntity invoice = call.getArgument(0);
+            invoice.setId(501L);
+            return invoice;
+        });
+        PlatformTransactionManager manager = transactionManager();
+        doAnswer(call -> {
+            assertTrue(Thread.holdsLock(mutex));
+            assertEquals("100", request.getSession().getAttribute("BasketDB.browserIdSession"));
+            assertNotNull(request.getSession().getAttribute("basket.priceOverrides"));
+            return null;
+        }).when(manager).commit(any());
+        try (MockedStatic<Tools> tools = transactionTools(manager);
+             MockedStatic<Adminlog> audit = mockStatic(Adminlog.class);
+             MockedStatic<PageLng> language = mockStatic(PageLng.class);
+             MockedStatic<PkeyGenerator> keys = mockStatic(PkeyGenerator.class)) {
+            keys.when(() -> PkeyGenerator.getNextValue("basket_browser_id")).thenReturn(101);
+            assertNotNull(service.saveOrder(request));
+            assertNull(request.getSession().getAttribute("BasketDB.browserIdSession"));
+            assertNull(request.getSession().getAttribute("basket.priceOverrides"));
+
+            assertNull(service.saveOrder(request));
+            assertEquals("components.basket.order_form.error.empty_basket", request.getAttribute(EshopService.ORDER_ERROR_ATTR));
+            verify(invoices).save(any());
+            verify(manager).commit(any());
+            verify(manager).rollback(any());
+        }
+    }
+
+    /** Empty baskets and baskets containing only fees are rejected in both pricing modes. */
+    @ParameterizedTest
+    @CsvSource({ "false,false", "false,true", "true,false", "true,true" })
+    void rejectsBasketsWithoutProducts(boolean roundingEnabled, boolean containsFee) {
+        config("basketRoundPrices", Boolean.toString(roundingEnabled));
+        if (containsFee) originalItems.add(fee());
+        PlatformTransactionManager manager = transactionManager();
+        try (MockedStatic<Tools> tools = transactionTools(manager);
+             MockedStatic<Adminlog> audit = mockStatic(Adminlog.class);
+             MockedStatic<PageLng> language = mockStatic(PageLng.class)) {
+            assertNull(service.saveOrder(request));
+            assertEquals("components.basket.order_form.error.empty_basket", request.getAttribute(EshopService.ORDER_ERROR_ATTR));
+            assertEquals("100", request.getSession().getAttribute("BasketDB.browserIdSession"));
+            verify(invoices, never()).save(any());
+            verify(manager).rollback(any());
+            verify(manager, never()).commit(any());
+        }
+    }
+
+    /** Persistence and commit failures leave the customer's basket session intact in both pricing modes. */
+    @ParameterizedTest
+    @CsvSource({ "false,false", "false,true", "true,false", "true,true" })
+    void retainsBasketOnFailedOrder(boolean roundingEnabled, boolean commitFails) {
+        config("basketRoundPrices", Boolean.toString(roundingEnabled));
         product(100, "1.594", 0, 3);
         PlatformTransactionManager manager = transactionManager();
         if (commitFails) {

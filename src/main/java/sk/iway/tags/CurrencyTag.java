@@ -63,10 +63,10 @@ public class CurrencyTag extends BodyTagSupport
    @Override
 	public int doAfterBody() throws JspTagException
    {
-      boolean decimalPrices = PriceRoundingService.isEnabled();
+      boolean roundingEnabled = PriceRoundingService.isEnabled();
 
    	DecimalFormat formater;
-	   if (decimalPrices)
+	   if (roundingEnabled)
 	   {
           formater = formatter(true);
 	   }
@@ -105,7 +105,7 @@ public class CurrencyTag extends BodyTagSupport
          String out = body;
          try
          {
-            if (decimalPrices)
+            if (roundingEnabled)
             {
                out = formater.format(new BigDecimal(body.trim()));
             }
