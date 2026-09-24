@@ -4,9 +4,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import org.json.JSONArray;
@@ -608,7 +611,6 @@ public class Tools
 		Request request;
 
 		basePath = Tools.natUrl(basePath);
-		//WebJETProxySelector.setProxyForHttpClient(client, basePath);
 		Logger.debug(Tools.class, "downloadUrl: basePath="+basePath);
 		String name;
 		String value;
@@ -668,8 +670,9 @@ public class Tools
 		request.setHeader("Content-Type", contentType);
 		Logger.println(Tools.class,"header: Content-Type: " + contentType);
 
-		try {
-			Response response = request.execute();
+		//.createSystem() will use proxy settings from the system properties
+		try (CloseableHttpClient client = HttpClients.createSystem()) {
+			Response response = Executor.newInstance(client).execute(request);
 			HttpResponse httpResponse = response.returnResponse();
 
 			// write out the response headers
