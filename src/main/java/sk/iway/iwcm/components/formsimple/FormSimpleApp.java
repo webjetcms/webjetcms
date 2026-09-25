@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
@@ -103,21 +104,14 @@ public class FormSimpleApp extends WebjetComponentAbstract {
 
     @Override
     public void initAppEditor(ComponentRequest componentRequest, HttpServletRequest request) {
-        String formName = "";
-
-        if(Tools.isNotEmpty(componentRequest.getParameters())) {
-            java.util.regex.Matcher matcher = java.util.regex.Pattern
-                .compile("[\\\"]*formName[\\\"]*=([^,]+)")
-                .matcher(componentRequest.getParameters());
-
-            formName = matcher.find() ? matcher.group(1) : null;
-        }
+        PageParams pageParams = new PageParams(componentRequest.getParameters());
+        formName = pageParams.getValue("formName", "");
 
         //Set formAttributes into params
         if(Tools.isNotEmpty(formName)) {
             StringBuilder sb = new StringBuilder();
 
-            this.formSettings = formSettingsRepository.findByFormNameAndDomainId(DocTools.removeChars(formName, true), CloudToolsForCore.getDomainId());
+            formSettings = formSettingsRepository.findByFormNameAndDomainId(DocTools.removeChars(formName, true), CloudToolsForCore.getDomainId());
 
             String newParams = componentRequest.getParameters().replaceFirst("editorData=", sb.toString() + ", editorData=");
             componentRequest.setParameters(newParams);
@@ -125,23 +119,23 @@ public class FormSimpleApp extends WebjetComponentAbstract {
 
         //Set defautl values into params, when creating new app
         if(isNewApp(componentRequest)) {
-            this.formSettings = new FormSettingsEntity();
-            this.formSettings.setForceTextPlain(false);
-            this.formSettings.setAddTechInfo(true);
-            this.formSettings.setForwardType("");
+            formSettings = new FormSettingsEntity();
+            formSettings.setForceTextPlain(false);
+            formSettings.setAddTechInfo(true);
+            formSettings.setForwardType("");
 
             UserDetails currentUser =  UsersDB.getCurrentUser(request);
-            if(currentUser != null && Tools.isNotEmpty(currentUser.getEmail())) this.formSettings.setRecipients(currentUser.getEmail());
-            else this.formSettings.setRecipients("");
+            if(currentUser != null && Tools.isNotEmpty(currentUser.getEmail())) formSettings.setRecipients(currentUser.getEmail());
+            else formSettings.setRecipients("");
 
             if(componentRequest.getDocId() < 1) {
                 // New page, set default value
                 String defaultFormName = Prop.getInstance(request).getText("components.formsimple.title") + " " + Tools.formatDate(Tools.getNow());
-                this.formName = defaultFormName;
+                formName = defaultFormName;
             } else {
                 // Page do exist, use values from page
                 DocDetails doc = DocDB.getInstance().getDoc(componentRequest.getDocId());
-                this.formName = doc.getTitle();
+                formName = doc.getTitle();
             }
         }
 

@@ -80,9 +80,11 @@ Scenario("feedback", ({ I }) => {
 
     //
     I.say("skus spam protection");
+    I.waitForElement(container + " div.overview-logged__content button.btn-primary", 10);
+    I.wait(1);
     I.forceClick(container + " div.overview-logged__content button.btn-primary");
 
-    I.waitForElement("#feedback_modal");
+    I.waitForElement("#feedback_modal", 10);
     I.wait(2);
 
     I.fillField("#feedback-group-text", "Test SPAM PROTECTION\n"+random);

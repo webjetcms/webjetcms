@@ -152,6 +152,8 @@ After exporting, the Last Export Date column is automatically set to the current
 
 ## Possible configuration variables
 
+- ```sendMailSaveEmail``` - ​​if set to ```true```, emails from both classic and multi-step forms will be saved as `.eml` files instead of being sent via SMTP. If the write fails, the form will report a sending error.
+- ```sendMailSaveEmailPath``` - ​​directory for saving files `.eml`, default ```/WEB-INF/tmp/emails```. For a development environment, you can set, for example, ```/files/protected/emails```; the directory must be writable. With ```useSMTPServer=false```, the preferred delayed sending of email is retained.
 - ```formmailAllowedRecipients``` - ​​List of email address tails to which forms can be sent, for example: ```@interway.sk,podpora@demo.webjet.sk```. Empty by default, which means that the form can be sent to any address
 - ```formMailEncoding``` - ​​character set for sending emails from forms. By default set to empty, which means that the same character encoding as set for the web page will be used.
 - ```spamProtection``` - ​​if set to ```true```, spam protection in forms will be enabled. Default is set to ```true```.

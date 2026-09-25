@@ -164,7 +164,7 @@ public class BasketInvoiceRestController extends DatatableRestControllerV2<Baske
     @Override
     public void afterSave(BasketInvoiceEntity entity, BasketInvoiceEntity saved) {
         //Update invoice stats
-        ProductListService.updateInvoiceStats(entity.getId(), false);
+        ProductListService.updatePaymentStatus(entity.getId(), false);
 
         BasketInvoiceEditorFields bied = entity.getEditorFields();
         if(bied != null && Boolean.TRUE.equals(bied.getSendNotification())) {
