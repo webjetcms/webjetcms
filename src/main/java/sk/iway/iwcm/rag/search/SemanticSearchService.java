@@ -33,10 +33,8 @@ import sk.iway.iwcm.rag.vectorstore.VectorStore;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
 /**
- * Performs semantic and optional hybrid search over indexed document chunks.
- *
- * Embeds queries, combines vector and full-text rankings, aggregates the best chunk score per document, and
- * optionally generates a sanitized answer for the current request.
+ * Service for semantic search over document embeddings.
+ * Embeds the query, searches the configured vector store, and returns results aggregated by document.
  */
 @Service
 public class SemanticSearchService {

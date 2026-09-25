@@ -36,13 +36,13 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.rag.RagIndexAction;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkEntity;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkEntity;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkRepository;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.service.IndexQueueService;
 import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
 import sk.iway.iwcm.rag.service.RagEntityType;
-import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
+import sk.iway.iwcm.rag.vectorstore.VectorStore;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
@@ -66,10 +66,10 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
     private final IndexQueueService indexQueueService;
     private final RagEmbeddingStatService ragEmbeddingStatService;
 
-    private final PgVectorStore vectorStore;
+    private final VectorStore vectorStore;
 
     @Autowired
-    public EmbeddingChunkRestController(EmbeddingChunkRepository chunkRepository, IndexQueueService indexQueueService, PgVectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService) {
+    public EmbeddingChunkRestController(EmbeddingChunkRepository chunkRepository, IndexQueueService indexQueueService, VectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService) {
         super(chunkRepository);
         this.chunkRepository = chunkRepository;
         this.indexQueueService = indexQueueService;

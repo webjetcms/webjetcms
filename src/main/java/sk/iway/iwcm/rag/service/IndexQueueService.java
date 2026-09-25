@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import sk.iway.iwcm.rag.RagIndexAction;
 import sk.iway.iwcm.rag.jpa.IndexQueueEntity;
 import sk.iway.iwcm.rag.jpa.IndexQueueRepository;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkRepository;
 
 /**
  * Service for managing the RAG indexing queue.
