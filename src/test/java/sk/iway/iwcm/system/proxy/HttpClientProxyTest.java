@@ -1,8 +1,6 @@
 package sk.iway.iwcm.system.proxy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -10,6 +8,7 @@ import java.io.IOException;
 import java.net.Authenticator;
 import java.net.InetSocketAddress;
 import java.net.ProxySelector;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashMap;
@@ -21,7 +20,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 
-import org.apache.http.client.methods.HttpGet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,13 +29,16 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import com.webjetcms.ai.AiClient;
+import com.webjetcms.ai.AiProviderConfig;
+import com.webjetcms.ai.provider.openai.OpenAiProvider;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.ai.providers.SupportLogic;
+import sk.iway.iwcm.components.ai.providers.WebjetAiConfigurationService;
+import sk.iway.iwcm.components.ai.providers.openai.OpenAiService;
 import sk.iway.iwcm.components.offline.OfflineService;
 import sk.iway.iwcm.components.proxy.ProxyByHttpClient4;
 import sk.iway.iwcm.components.proxy.jpa.ProxyBean;
@@ -49,8 +50,8 @@ class HttpClientProxyTest {
     enum Client { TOOLS_GET, TOOLS_POST, AI_MODELS, PROXY_MODULE, OFFLINE }
 
     private static final String HOST = "127.0.0.1";
-    private static final String DIRECT_BODY = "{\"route\":\"direct\"}";
-    private static final String PROXY_BODY = "{\"route\":\"proxy\"}";
+    private static final String DIRECT_BODY = "direct";
+    private static final String PROXY_BODY = "proxy";
 
     private final Map<String, String> originalProperties = new HashMap<>();
     private final Map<String, String> originalConstants = new HashMap<>();
@@ -170,13 +171,18 @@ class HttpClientProxyTest {
                 assertEquals("text=test+value", lastBody.get());
                 return response;
             case AI_MODELS:
-                SupportLogic support = mock(SupportLogic.class, CALLS_REAL_METHODS);
-                when(support.getModelsRequest(request)).thenReturn(new HttpGet(url));
-                when(support.extractModels(any())).thenAnswer(invocation -> {
-                    JsonNode root = invocation.getArgument(0);
-                    return List.of(new LabelValue(root.toString(), "test"));
-                });
-                return support.getSupportedModels(null, request).get(0).getLabel();
+                WebjetAiConfigurationService configuration = mock(WebjetAiConfigurationService.class);
+                AiProviderConfig providerConfig = AiProviderConfig.builder("test-api-key")
+                    .baseUri(URI.create("http://" + HOST + ":" + target.getAddress().getPort() + "/"))
+                    .allowInsecureHttpForLocalTesting()
+                    .build();
+                try (AiClient aiClient = AiClient.of(new OpenAiProvider())) {
+                    OpenAiService service = new OpenAiService(aiClient, configuration);
+                    when(configuration.resolve(service, request)).thenReturn(providerConfig);
+                    List<LabelValue> models = service.getSupportedModels(null, request);
+                    assertEquals(1, models.size());
+                    return models.get(0).getLabel();
+                }
             case PROXY_MODULE:
                 ProxyBean mapping = new ProxyBean();
                 mapping.setLocalUrl("/local/");
@@ -221,8 +227,14 @@ class HttpClientProxyTest {
                     return;
                 }
             }
-            byte[] body = (viaProxy ? PROXY_BODY : DIRECT_BODY).getBytes(StandardCharsets.UTF_8);
-            exchange.getResponseHeaders().add("Content-Type", "application/json; charset=UTF-8");
+            String responseBody = viaProxy ? PROXY_BODY : DIRECT_BODY;
+            String contentType = "text/plain; charset=UTF-8";
+            if ("/models".equals(exchange.getRequestURI().getPath())) {
+                responseBody = "{\"data\":[{\"id\":\"" + responseBody + "\"}]}";
+                contentType = "application/json; charset=UTF-8";
+            }
+            byte[] body = responseBody.getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", contentType);
             exchange.sendResponseHeaders(200, body.length);
             exchange.getResponseBody().write(body);
         } finally {
