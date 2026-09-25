@@ -116,7 +116,7 @@ fi
 if [[ "$EXISTING_WORKTREE" == true ]]; then
     echo "Opening existing worktree: $WORKTREE_PATH"
     COPY_LOCAL_FILES=false
-    if read -r -p "Copy local configuration, plugin and font files, overwriting existing files? [y/N]: " COPY_ANSWER \
+    if read -r -p "Copy local configuration, plugin and font files, and AI models, overwriting existing files? [y/N]: " COPY_ANSWER \
         && [[ "$COPY_ANSWER" =~ ^[Yy]([Ee][Ss])?$ ]]; then
         COPY_LOCAL_FILES=true
     fi
@@ -164,13 +164,18 @@ else
 fi
 
 if [[ "$COPY_LOCAL_FILES" == true ]]; then
-    echo "Copying local configuration and plugin files"
+    echo "Copying local configuration, plugin and font files, and AI models"
     cp "$LOCAL_FILES_SOURCE"/src/main/resources/*.xml "$WORKTREE_PATH/src/main/resources/"
     cp "$LOCAL_FILES_SOURCE"/src/main/webapp/admin/v9/src/js/plugins/*.zip \
         "$WORKTREE_PATH/src/main/webapp/admin/v9/src/js/plugins/"
     mkdir -p "$WORKTREE_PATH/src/main/webapp/WEB-INF/fonts"
     cp "$LOCAL_FILES_SOURCE"/src/main/webapp/WEB-INF/fonts/* \
         "$WORKTREE_PATH/src/main/webapp/WEB-INF/fonts/"
+    if [[ -d "$LOCAL_FILES_SOURCE/src/main/webapp/WEB-INF/local-ai-models" ]]; then
+        mkdir -p "$WORKTREE_PATH/src/main/webapp/WEB-INF/local-ai-models"
+        cp -R "$LOCAL_FILES_SOURCE/src/main/webapp/WEB-INF/local-ai-models/." \
+            "$WORKTREE_PATH/src/main/webapp/WEB-INF/local-ai-models/"
+    fi
 fi
 
 if [[ "$EXISTING_WORKTREE" == false ]]; then
