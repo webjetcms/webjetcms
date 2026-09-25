@@ -21,7 +21,7 @@ Proces indexování:
 2. **Rozdělení na části** - text se rozdělí pomocí [SlidingWindowChunker](../../../../../../src/main/java/sk/iway/iwcm/rag/indexing/SlidingWindowChunker.java). Používají se konfigurační proměnné `ragEmbeddingChunkSize` a `ragEmbeddingChunkOverlap`.
 3. **Opětovné použití embeddingů** - pro každý chunk se vypočítá hash. Pokud se text chunku nezměnil a existuje embedding se stejným poskytovatelem, modelem a správnou dimenzí, použije se existující vektor.
 4. **Generování embeddingů** - nové nebo změněné chunky zpracuje [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) podle poskytovatele a modelu nastaveného v .
-5. **Uložení do databáze** - metadata chunků se ukládají přes JPA repozitář [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorjpa/EmbeddingChunkRepository.java). Zvolená implementace [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java) uloží vektory pomocí nativního SQL pro konkrétní databázi.
+5. **Uložení do databáze** - metadata chunků se ukládají přes JPA repozitář [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorjpa/EmbeddingChunkRepository. Zvolená implementace [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java) uloží vektory pomocí nativního SQL pro konkrétní databázi.
 
 Chunking preferuje přirozené hranice textu: odstavec, řádek, větu, mezeru a teprve potom tvrdé rozdělení podle limitu. U desetinných čísel se tečka nepovažuje za konec věty.
 
@@ -41,15 +41,51 @@ Když návštěvník zadá vyhledávací dotaz:
 
 Jádro embedding logiky bylo vyčleněno z WebJET CMS do samostatné, od frameworku nezávislé knihovny [webjet-ai](https://github.com/webjetcms/webjet-ai). Knihovna obsahuje poskytovatelsky nezávislé typy `EmbeddingRequest`, `EmbeddingOptions`, `EmbeddingResponse` a `EmbeddingVector`, volání `AiClient.embed` a implementace komunikace s jednotlivými poskytovateli. Původní CMS rozhraní `EmbeddingProvider` a implementace `OpenAiEmbeddingProvider` byly odstraněny.
 
-V CMS zůstal tenký adaptér [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java), který provede nastavení systémového AI asistenta a domény na požadavek knihovny, předá konfiguraci. Extrakce obsahu, chunking, opětovné použití vektorů podle hash hodnoty, evidence tokenů, zpracování fronty a ukládání vektorů zůstávají ve správě WebJET CMS.
+V CMS zůstal tenký adaptér [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java), který provede nastavení systémového AI asistenta a domény na požadavek knihovny, předá konfiguraci Extrakce obsahu, chunking, opětovné použití vektorů podle hash hodnoty, evidence tokenů, zpracování fronty a ukládání vektorů zůstávají ve správě WebJET CMS.
 
 Při přidání nového serverového poskytovatele se proto embedding komunikace neimplementuje v RAG modulu CMS. Poskytovatel musí podporovat metodu `AiProvider.embed` v knihovně `webjet-ai` a být zaregistrován v CMS podle postupu v části [Přidání poskytovatele](../../ai/assistants/README.md).
 
 ## Požadavky
 
-- **PostgreSQL** s rozšířením **pgvector** (obraz: `pgvector/pgvector:pg18-trixie` nebo novější).
+- **Vektorová databáze** - PostgreSQL s rozšířením pgvector nebo MariaDB s nativní podporou vektorů podle následujícího přehledu. Stačí jedna z těchto možností.
 - **Konfigurace zvoleného poskytovatele** - pro externí službu se používá stejný API klíč jako pro AI asistenty. `ai_openAiAuthKey` pro OpenAI. Lokální embeddingový model namísto klíče vyžaduje cestu k modelovému balíku.
-- Sémantické vyhledávání funguje pouze nad PostgreSQL/pgvector úložištěm. Pokud primární databáze WebJET CMS není PostgreSQL, nastavte samostatnou PostgreSQL databázi přes datasource `rag_jpa`.
+- **Připojení k databázi** - explicitně nastavený datasource `rag_jpa` má přednost; pokud není nastaven, použije se primární datasource `iwcm`. Pokud primární databáze není podporovaným vektorovým úložištěm, nastavte samostatnou podporovanou databázi přes `rag_jpa`.
+
+### Podporované databáze a verze
+
+| Databáze | Minimální požadavek | Doporučené nasazení | Výhody a omezení |
+| --- | --- | --- | --- |
+| **PostgreSQL + pgvector** | **PostgreSQL 16+** a kompatibilní rozšíření **pgvector s HNSW** (od **0.5.0**). | **PostgreSQL 18** a aktuální opravná verze **pgvector 0.8.x** (při přípravě dokumentace **0.8.6**). Vývojové Docker Compose profily používají obraz `pgvector/pgvector:pg18-trixie`. | WebJET podporuje `cosine`, `l2` i `inner_product`. Rozšíření musí být nainstalováno na serveru a aktivováno v databázi určené pro RAG. |
+| **MariaDB Vector** | **MariaDB 11.8 LTS nebo novější**. | V řadě 11.8 používejte **11.8.9 nebo novější opravnou verzi** ; vývojový Dockerfile používá `mariadb:11.8.9`. Alternativou je aktuální opravná verze **12.3 LTS**. | Nativní typ `VECTOR` a vektorový index bez instalace rozšíření. WebJET podporuje `cosine` a `l2` ; `inner_product` není podporován. |
+
+Minimum PostgreSQL 16 vychází ze [základních požadavků WebJET CMS](../../../../install/setup/README.md#základní-požadavky-na-server). Verze **pgvector 0.5.0** je funkční minimum pro HNSW index, který WebJET vytváří; rozšíření musí zároveň podporovat zvolenou verzi PostgreSQL. Pro **PostgreSQL 18** je třeba **pgvector 0.8.1 nebo novější**, doporučujeme však aktuální opravy. Řada pgvector 0.8 přinesla i zlepšení výkonu HNSW a plánování dotazů s filtry. Podrobnosti jsou v [přehledu změn pgvector](https://github.com/pgvector/pgvector/blob/master/CHANGELOG.md).
+
+U MariaDB se uvedené verze vztahují na **Community Server** používaný ve vývojovém Dockeru. Nativní vektory přibyly již v 11.7, ale minimum WebJETu je **11.8**, první LTS řada s touto funkcí. Všechny vektorové funkce používané WebJETem jsou dostupné v 11.8; přechod na 12.x není podmínkou sémantického vyhledávání. Viz [přehled MariaDB Vector](https://mariadb.com/docs/server/reference/sql-structure/vectors/vector-overview).
+
+Při výběru verze MariaDB zohledněte:
+
+- **11.8 LTS** - základ pro širší kompatibilitu klientů. Používejte aktuální opravy: verze [11.8.3](https://mariadb.com/docs/release-notes/community-server/11.8/11.8.3) opravila poškození vektorového indexu při rollbacku příkazu v transakci a [11.8.9](https://mariadb.com/docs/release-notes/community-server/11.8/11.8.9) opravila zhoršení úspěšnosti nalezení nejbližších výsledků při načtení cosine indexu z disku.
+- **12.1 a novější** - obsahují [optimalizaci výpočtu vzdáleností pomocí extrapolace](https://jira.mariadb.org/browse/MDEV-36205). Databáze automaticky využije část vektoru k vyřazení slabých kandidátů, pokud jsou k tomu embeddingy vhodné, například u Matryoshka modelů.
+- **12.3 LTS** - doporučená volba z řady 12.x pro nová nebo výkonově náročnější nasazení. Obsahuje uvedenou optimalizaci bez potřeby měnit SQL, schéma nebo konfiguraci indexu. MariaDB v [benchmarku oproti 11.8](https://mariadb.com/resources/blog/mariadb-12-3-faster-vector-search-with-matryoshka-optimization/) uvádí až o 30 % více dotazů za sekundu při stejném recall, tedy stejné úspěšnosti nalezení nejbližších výsledků. Výsledek závisí na datech a embeddingovém modelu; nejde o změřené zrychlení celého vyhledávání ve WebJETu.
+
+Podle [politiky údržby MariaDB](https://mariadb.org/about/#maintenance-policy) má Community řadu 11.8 údržbu do **4. června 2028** a řada 12.3 do **12. června 2029**. U stávající podporované PostgreSQL nebo MariaDB můžete ponechat stejný databázový server i pro RAG; u ostatních databází použijte samostatné vektorové úložiště.
+
+### Příprava rozšíření pgvector
+
+Na PostgreSQL serveru musí správce nejprve nainstalovat balík **pgvector kompatibilní s hlavní verzí serveru**. Samotná instalace PostgreSQL nestačí. Při inicializaci WebJET provede `CREATE EXTENSION IF NOT EXISTS vector` ; pokud aplikační uživatel nemá oprávnění vytvořit rozšíření, správce jej musí předem aktivovat v databázi používané přes `rag_jpa` nebo `iwcm`:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+Verzi serveru a aktivovaného rozšíření ověříte ve stejné databázi:
+
+```sql
+SELECT version();
+SELECT extversion FROM pg_extension WHERE extname = 'vector';
+```
+
+Prázdný výsledek druhého dotazu znamená, že rozšíření není v této databázi aktivováno. Aktualizace balíku na serveru sama neaktualizuje aktivované rozšíření; správce provede také `ALTER EXTENSION vector UPDATE`. Uživatel WebJETu musí mít oprávnění k vytváření a úpravě RAG tabulek a indexů. Postup instalace a aktualizace je v [dokumentaci pgvector](https://github.com/pgvector/pgvector#installation).
 
 ### PostgreSQL jako primární databáze
 
@@ -59,13 +95,13 @@ Datasource `rag_jpa` musí být nastaven jako v případě [poolman-docker-pgsql
 
 ### MariaDB jako primární databáze
 
-MariaDB 11.8 nebo novější používá vestavěný typ `VECTOR` bez rozšíření. Stejně jako profil PostgreSQL, také [poolman-docker-mariadb.xml](../../../../../../src/main/resources/poolman-docker-mariadb.xml) definuje samostatný datasource `rag_jpa`, který směřuje do stejné databáze jako `iwcm`. Toto druhé spojení ponechte v obou profilech, aby bylo možné nezávisle změnit jeho ovladač, URL a přihlašovací údaje na jinou vektorovou databázi MariaDB nebo PostgreSQL.
+MariaDB 11.8 nebo novější používá vestavěný typ `VECTOR` bez rozšíření. Stejně jako profil PostgreSQL, i [poolman-docker-mariadb.xml](../../../../../../src/main/resources/poolman-docker-mariadb.xml) definuje samostatný datasource `rag_jpa`, který směřuje do stejné databáze jako @@CODE_ Toto druhé spojení ponechte v obou profilech, aby bylo možné nezávisle změnit jeho ovladač, URL a přihlašovací údaje na jinou vektorovou databázi MariaDB nebo PostgreSQL.
 
-MariaDB podporuje metriky vzdálenosti `cosine` a `l2`. Metriku `inner_product` podporuje pouze PostgreSQL/pgvector; její nastavení na MariaDB vypne vektorové úložiště bez změny existujícího indexu nebo dat.
+MariaDB podporuje metriky vzdálenosti `cosine` a `l2`. Metriku `inner_product` podporuje pouze PostgreSQL/pgvector; její nastavení na MariaDB vypne vektorové úložiště bez změny stávajícího indexu nebo dat.
 
 ### Samostatná vektorová databáze
 
-Pokud primární databáze není podporována, nastavte samostatnou podporovanou PostgreSQL nebo MariaDB databázi jako datasource `rag_jpa`. Explicitní datasource lze použít i k oddělení vektorového úložiště od podporované primární databáze.
+Pokud primární databáze není podporována, nastavte samostatnou podporovanou PostgreSQL nebo MariaDB databázi jako datasource `rag_jpa`. Explicitní datasource lze použít také k oddělení vektorového úložiště od podporované primární databáze.
 
 Pro lokální vývoj je připraven soubor [.devcontainer/db/docker-compose-rag-pgsql.yml](../../../../../../.devcontainer/db/docker-compose-rag-pgsql.yml):
 
@@ -118,7 +154,7 @@ Fronta `rag_index_queue` ukládá pouze typ entity, ID a akci. Poskytovatel a mo
 
 !>**Upozornění:** Starší názvy `ragChunkSize` a `ragChunkOverlap` se již nepoužívají.
 
-!>**Upozornění:** Při změně `ragEmbeddingDimensions` se vymažou všechna data z `rag_embedding_chunks` pro všechny poskytovatele a modely, upraví se vektorový typ pro zvolenou databázi a znovu se vytvoří HNSW index. Následně spusťte úplné indexování obsahu. Samotná změna modelu ostatní kombinace nevymaže, ale novou kombinaci musíte zaindexovat. Změna datasource nebo typu vektorové databáze existující vektory nemigruje; po změně spusťte úplné indexování.
+!>**Upozornění:** Při změně `ragEmbeddingDimensions` se vymažou všechna data z `rag_embedding_chunks` pro všechny poskytovatele a modely, upraví se vektorový typ pro zvolenou databázi a znovu se vytvoří HNSW index. Následně spusťte úplné indexování obsahu. Samotná změna modelu ostatní kombinace nevymaže, ale novou kombinaci musíte zaindexovat. Změna datasource nebo typu vektorové databáze stávající vektory nemigruje; po změně spusťte úplné indexování.
 
 !>**Společná dimenze:** Všechny domény sdílejí jedno vektorové schéma a musí používat stejnou globální hodnotu `ragEmbeddingDimensions`. Odlišné doménové nastavení zablokuje sémantické vyhledávání a indexování pro danou doménu; stránka **Sémantický index** zobrazí chybu. Automatická inicializace MariaDB při nesouladu dimenzí zachová existující data. Chcete-li změnit společnou dimenzi, uložte globální nastavení v **Konfiguraci** — tím se vymažou embeddingy všech domén — a poté spusťte úplné indexování všech domén.
 
@@ -138,8 +174,8 @@ Modelový balíček definuje odlišné prefixy pro poptávku a dokument. [Embedd
 
 | Proměnná | Výchozí hodnota | Popis |
 | --- | --- | --- |
-| `ragSearchEfSearch` | `40` | Parametr HNSW `ef_search`. Vyšší hodnota zlepšuje recall, ale může zpomalit vyhledávání. MariaDB povoluje hodnoty od `1` do `10000`; při neplatné hodnotě zůstane její databázová výchozí hodnota nezměněna. |
-| `ragSearchDistanceMetric` | `cosine` | Metrika vzdálenosti: `cosine`, `inner_product`, `l2`. MariaDB podporuje pouze `cosine` a `l2`; `inner_product` podporuje pouze PostgreSQL. Změna znovu vytvoří vektorový index. |
+| `ragSearchEfSearch` | `40` | Parametr HNSW `ef_search`. Vyšší hodnota zlepšuje recall, ale může zpomalit vyhledávání. MariaDB povoluje hodnoty od `1` do `10000` ; při neplatné hodnotě zůstane její databázová výchozí hodnota nezměněna. |
+| `ragSearchDistanceMetric` | `cosine` | Metrika vzdálenosti: `cosine`, `inner_product`, `l2`. MariaDB podporuje pouze `cosine` a `l2` ; `inner_product` podporuje pouze PostgreSQL. Změna znovu vytvoří vektorový index. |
 | `ragSemanticSearchMinSimilarity` | `0.2` | Minimální hodnota similarity pro výsledky. Používá se spolu s adaptivním prahem podle nejlepšího výsledku. |
 | `ragSemanticSearchMinResults` | `3` | Minimální počet výsledků, které se vrátí i při přísnějším prahu similarity. |
 
@@ -305,7 +341,7 @@ Důležité sloupce:
 - `entity_type`, `entity_id`, `chunk_index` - identifikace zdrojové entity a pořadí chunku.
 - `chunk_text` - ​​text použitý pro embedding a fulltext.
 - `content_hash` - ​​hash textu chunku pro opětovné použití embeddingu.
-- `embedding` - sloupec typu pgvector `vector(N)`, který se používá pouze v PostgreSQL.
+- `embedding` - ​​sloupec typu pgvector `vector(N)`, který se používá pouze v PostgreSQL.
 - `embedding_provider`, `embedding_model`, `dimensions` - poskytovatel, model a dimenze embeddingu.
 - `language`, `domain_id` - jazyk a doména.
 - `group_id`, `root_group_l1`, `root_group_l2`, `root_group_l3` - optimalizované filtrování dokumentů podle složek.

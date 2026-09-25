@@ -103,6 +103,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Semantic search
 
+- Added support for **MariaDB Vector** as an alternative to PostgreSQL/pgvector for semantic and hybrid search and RAG responses. The minimum supported version is **MariaDB 11.8 LTS**, we recommend **11.8.9 or later patch**. Versions from **12.3 LTS** include search acceleration. The minimum and recommended versions of PostgreSQL, pgvector and MariaDB and their benefits are in [database requirements overview](custom-apps/apps/rag/semantic-search/README.md#supported-databases-and-versions) (#58774).
+- An unavailable standalone RAG database no longer blocks CMS startup. RAG persistence is initialized only on first use and allows another attempt after a failed connection without restarting the CMS (#58774).
+
 - Added support for [semantic search](redactor/apps/semantic-search/README.md) built on the `pgvector` and `OpenAI embeddings` vector database technology. It allows visitors to find relevant pages based on **the meaning of the query**, not just keyword matching (#211).
 - Added hybrid semantic search mode and optional RAG response from indexed content. The **Search** app has new settings for search type, hybrid behavior, AI assistant selection, and response context limits (#58521).
 

@@ -13,10 +13,24 @@ Volitelně může nad stejným indexem zobrazit také **RAG odpověď** - krátk
 - Při povolené RAG odpovědi se nad výsledky zobrazí blok **Odpověď AI z vyhledávání**.
 - Pokud odpověď nelze sestavit z indexovaného obsahu, nezobrazí se žádná RAG odpověď.
 
+## Podporované databáze a verze
+
+Pro ukládání a vyhledávání vektorů stačí jedna z následujících databází:
+
+| Databáze | Minimální požadavek | Doporučení a výhody |
+| --- | --- | --- |
+| **PostgreSQL + pgvector** | **PostgreSQL 16+** a kompatibilní rozšíření **pgvector s HNSW** (od **0.5.0**). | Pro nová nasazení doporučujeme **PostgreSQL 18** s aktuální opravnou verzí **pgvector 0.8.x** (při přípravě dokumentace **0.8.6**). WebJET podporuje metriky `cosine`, `l2` i `inner_product`. Vhodné i při stávající PostgreSQL databázi. |
+| **MariaDB Vector** | **MariaDB 11.8 LTS nebo novější**. | V řadě 11.8 doporučujeme **11.8.9 nebo novější opravnou verzi**. Vektorové úložiště je vestavěno, nevyžaduje rozšíření. U stávající podporované MariaDB můžete použít stejný server i pro sémantické vyhledávání. Podporované metriky jsou `cosine` a `l2`. |
+
+**MariaDB 12.3 LTS** je volitelná volba pro vyšší výkon. Obsahuje optimalizaci z verze 12.1, která automaticky zrychluje vyhledávání u vhodných embeddingů, například Matryoshka. Nevyžaduje změnu dotazů ani schémata; základní funkčnost zůstává dostupná i na 11.8. Konkrétní přínos závisí na datech a modelu. Podrobnosti a zdroje jsou v [technickém srovnání verzí](../../../custom-apps/apps/rag/semantic-search/README.md#podporované-databáze-a-verze).
+
+Pokud primární databáze WebJET CMS tyto požadavky nesplňuje, například používáte starší MariaDB, MySQL, Microsoft SQL Server nebo Oracle, správce může připojit samostatnou podporovanou PostgreSQL nebo MariaDB databázi přes datasource `rag_jpa`. Primární databázi CMS proto není třeba měnit.
+
 ## Nastavení sémantického vyhledávání
 
 Ke spuštění sémantického vyhledávání je potřeba:
 
+- Připravit jednu z [podporovaných vektorových databází](#podporované-databáze-a-verze).
 - Povolit sémantické vyhledávání nastavením konfigurační proměnné `ragSemanticSearchEnabled` na hodnotu `true`.
 - Nastavit typ vyhledávání na hodnotu `semantic` nebo `hybrid`. Můžete to provést globálně přes konfigurační proměnnou `searchType`, nebo přímo v aplikaci **Vyhledávání**.
 - Při hybridním režimu ověřit, že konfigurační proměnná `ragHybridSearchEnabled` je nastavena na hodnotu `true`.
@@ -25,7 +39,7 @@ Ke spuštění sémantického vyhledávání je potřeba:
 - Spustit indexování přes administrátorské rozhraní pro vytvoření vektorů a naplnění vektorové databáze.
 - Nastavit automatizovanou úlohu `sk.iway.iwcm.rag.service.RagIndexCronTask`, která zpracovává frontu indexování.
 
-Vektorová databáze se zvolí automaticky. Pokud je nastaven samostatný datasource `rag_jpa`, má přednost; jinak se použije primární datasource `iwcm`. MariaDB nepotřebuje rozšíření, podporuje však pouze metriky vzdálenosti `cosine` a `l2`. Databázové požadavky jsou uvedeny v [technické dokumentaci](../../../custom-apps/apps/rag/semantic-search/README.md).
+Vektorová databáze se zvolí automaticky. Je-li nastaven samostatný datasource `rag_jpa`, má přednost; jinak se použije primární datasource `iwcm`. Postup přípravy databáze a připojení je uveden v [technické dokumentaci](../../../custom-apps/apps/rag/semantic-search/README.md#požadavky).
 
 !>**Upozornění:** Po nasazení změn doporučujeme spustit opětovné indexování stránek. Index nyní ukládá také informace o složce stránky (`group_id`, `root_group_l1`, `root_group_l2`, `root_group_l3`), které se používají při filtrování výsledků podle složek zvolených v aplikaci **Vyhledávání**.
 
@@ -64,7 +78,7 @@ Umožňuje nastavit, kdy se má k vektorovému vyhledávání přidat fulltextov
 - **Prahová podobnost pro fallback** - hranice pro režim `fallback_on_low_vector`.
 - **Váhy vektorové a fulltextové větve** - určují výsledné pořadí při kombinování přes RRF.
 - **Koeficient načítání bloků** - kolik textových částí se načte před agregací na dokumenty.
-- **Použít `ILIKE` fallback pro fulltext** - použije `ILIKE` v PostgreSQL nebo `LIKE` bez rozlišení velikosti písmen v MariaDB, pokud databázový fulltext nic nenajde.
+- **Použít `ILIKE` fallback pro fulltext** - použije `ILIKE` v PostgreSQL nebo `LIKE` bez rozlišování velikosti písmen v MariaDB, pokud databázový fulltext nic nenajde.
 
 ### Karta RAG nastavení
 
