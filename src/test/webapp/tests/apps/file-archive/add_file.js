@@ -126,7 +126,7 @@ Scenario('Checking icon status and filtering with them works', async ({ I, DT })
 });
 
 Scenario('Delete archiv entity (and file using elfinder if neccesary)', async ({I}) => {
-    SL.deleteTestFiles();
+    await SL.deleteTestFiles();
 
     const fileSelector = ".elfinder-cwd-filename[title^='archive_file_test']";
     let wasRemovedByElfinder = await SL.removeFileByElfinder(fileSelector);
@@ -216,8 +216,8 @@ Scenario('Add file in different location', ({ I, DTE, DT }) => {
 });
 
 Scenario('Delete archiv entity 2 (and file using elfinder if neccesary)', async ({I}) => {
-    SL.deleteTestFiles();
-    SL.deleteTestFiles("", "/files/archiv/" + differentLocationFolderName + "/archive_file_test_second.pdf");
+    await SL.deleteTestFiles();
+    await SL.deleteTestFiles("", "/files/archiv/" + differentLocationFolderName + "/archive_file_test_second.pdf");
 });
 
 Scenario('Delete archiv jstree entity', async ({I}) => {

@@ -25,6 +25,7 @@ import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodRepositor
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentState.PaymentStatus;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.RefundationState;
+import sk.iway.iwcm.components.basket.rest.PriceRoundingService;
 import sk.iway.iwcm.components.basket.support.FieldMapAttr;
 import sk.iway.iwcm.components.basket.support.MethodDto;
 import sk.iway.iwcm.components.basket.support.FieldsConfig;
@@ -251,7 +252,8 @@ public abstract class BasePaymentMethod {
             BasketInvoiceItemEntity tmp = new BasketInvoiceItemEntity();
             getPaymentMethodCost(tmp, paymentMethod);
 
-            paymentMethods.add( new MethodDto(paymentMethod.getPaymentMethodName(), SupportService.getCustomerTitle(tmp.getItemPriceVat(), request, prop, annotation), tmp.getItemPriceVat()) );
+            BigDecimal gross = PriceRoundingService.paymentFeePriceWithVat(tmp);
+            paymentMethods.add(new MethodDto(paymentMethod.getPaymentMethodName(), SupportService.getCustomerTitle(gross, request, prop, annotation), gross));
         }
     }
 

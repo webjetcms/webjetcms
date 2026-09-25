@@ -15,9 +15,8 @@ block content
             let pendingFinalization = 0;
 
             function renderState() {
-                if (state.finalized) pendingFinalization = 0;
-                $("#migrationScanned").text(state.scanned || 0);
-                $("#migrationUpdated").text(state.updated || 0);
+                $("#migrationScanned").text(numeral(state.scanned || 0).format("0,0"));
+                $("#migrationUpdated").text(numeral(state.updated || 0).format("0,0"));
                 $("#migrationTable").text(state.table || "—");
                 const percent = state.done ? 100 : (state.tableMaxId > 0 ? Math.min(100, Math.round(state.cursor * 100 / state.tableMaxId)) : 0);
                 const checkingReferences = state.running && state.finalizing && state.tableMaxId === 0;
@@ -57,7 +56,11 @@ block content
             function renderPreview(data) {
                 $("#seoMappingCount").text(data.seoBots.length);
                 $("#keyMappingCount").text(data.browserKeys.length);
+                $("#keyMappingLabel").text(data.migrationCompleted
+                    ? "[[\#{stat.browser-migration.cleanup-count}]]"
+                    : "[[\#{stat.browser-migration.key-count}]]");
                 pendingFinalization = data.seoBots.length + data.browserKeys.length + (data.seoBotsIndexReady === false ? 1 : 0);
+                $("#migrationAnalysisComplete").toggleClass("d-none", !data.migrationCompleted || pendingFinalization > 0);
                 $("#tableCount").text(data.tables.length);
                 if (!state.totalTables) {
                     state.totalTables = data.tables.length;
@@ -68,6 +71,13 @@ block content
                     $("<tr>").append($("<td>").text(item.source || "[[\#{stat.browser-migration.empty-value}]]")).append($("<td>").text(item.target)).appendTo(body);
                 });
                 $("#migrationMappings").toggleClass("d-none", data.seoBots.length + data.browserKeys.length === 0);
+                const retainedBrowserKeys = data.retainedBrowserKeys || [];
+                $("#migrationRetainedBrowserPreview").toggleClass("d-none", retainedBrowserKeys.length === 0);
+                $("#retainedBrowserKeyCount").text(retainedBrowserKeys.length);
+                const retainedBrowserBody = $("#migrationRetainedBrowserMappings tbody").empty();
+                retainedBrowserKeys.forEach(item => {
+                    $("<tr>").append($("<td>").text(item.source || "[[\#{stat.browser-migration.empty-value}]]")).appendTo(retainedBrowserBody);
+                });
                 const retainedKeys = data.retainedKeys || [];
                 $("#migrationRetainedPreview").toggleClass("d-none", retainedKeys.length === 0);
                 $("#retainedKeyCount").text(retainedKeys.length);
@@ -92,6 +102,10 @@ block content
 
             function updateState(response) {
                 statusLoadFailed = false;
+                if (response.finalized && state.finalizing) {
+                    pendingFinalization = 0;
+                    $("#migrationPreview").addClass("d-none");
+                }
                 state = response;
                 renderState();
                 scheduleStatusPoll();
@@ -199,11 +213,12 @@ block content
     #migrationPreview.card.d-none
         .card-header [[\#{stat.browser-migration.preview}]]
         .card-body
+            #migrationAnalysisComplete.alert.alert-info.d-none(role="status") [[\#{stat.browser-migration.analysis-complete}]]
             p
                 span.badge.bg-primary.me-2#seoMappingCount 0
                 | [[\#{stat.browser-migration.seo-count}]]
                 span.badge.bg-secondary.ms-3.me-2#keyMappingCount 0
-                | [[\#{stat.browser-migration.key-count}]]
+                span#keyMappingLabel [[\#{stat.browser-migration.key-count}]]
                 span.badge.bg-info.ms-3.me-2#tableCount 0
                 | [[\#{stat.browser-migration.table-count}]]
             .table-responsive
@@ -213,6 +228,17 @@ block content
                             th [[\#{stat.browser-migration.source}]]
                             th [[\#{stat.browser-migration.target}]]
                     tbody
+            #migrationRetainedBrowserPreview.mt-3.d-none
+                p
+                    span.badge.bg-secondary.me-2#retainedBrowserKeyCount 0
+                    | [[\#{stat.browser-migration.retained-browser-count}]]
+                p.text-muted [[\#{stat.browser-migration.retained-browser-description}]]
+                .table-responsive
+                    table#migrationRetainedBrowserMappings.table.table-sm.table-hover
+                        thead
+                            tr
+                                th [[\#{stat.browser-migration.retained-value}]]
+                        tbody
             #migrationRetainedPreview.mt-3.d-none
                 p
                     span.badge.bg-secondary.me-2#retainedKeyCount 0
@@ -222,5 +248,5 @@ block content
                     table#migrationRetainedMappings.table.table-sm.table-hover
                         thead
                             tr
-                                th [[\#{stat.browser-migration.source}]]
+                                th [[\#{stat.browser-migration.retained-value}]]
                         tbody

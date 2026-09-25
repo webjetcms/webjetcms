@@ -149,16 +149,30 @@ module.exports = {
         return fileName.replace(/(\.)/g, `_v_${version}$1`);
     },
 
-    deleteTestFiles(name = "", filePath = null){
-        if (filePath) {
-            this.openFileArchive(filePath);
-        } else {
-            I.amOnPage(this.fileArchive);
+    /**
+     * Deletes test records from the scheduled and published archive folders, including failed publications.
+     * @param {string} [name=""] - additional prefix after "autotest-" used to identify test records
+     * @param {string|null} [filePath=null] - limits cleanup to this file's parent folder when provided
+     * @returns {Promise<void>} resolves after matching records have been removed
+     */
+    async deleteTestFiles(name = "", filePath = null){
+        // openFileArchive() strips the filename and opens its parent folder; cleanup.pdf is only a placeholder.
+        // Visit the scheduled-upload staging folder first, then the published archive folder.
+        const filePaths = filePath ? [filePath] : [
+            "/files/archiv/files/archiv_insert_later/files/archiv/cleanup.pdf",
+            "/files/archiv/cleanup.pdf"
+        ];
+
+        for (const path of filePaths) {
+            this.openFileArchive(path);
+            DT.filterStartsWith('virtualFileName', 'autotest-' + name);
+            DT.waitForLoader('fileArchiveDataTable');
+            if (await DT.getRecordCount('fileArchiveDataTable') > 0) {
+                DT.deleteAll('fileArchiveDataTable');
+                DT.waitForLoader('fileArchiveDataTable');
+            }
+            I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10, '#fileArchiveDataTable');
         }
-        DT.filterContains('virtualFileName', 'autotest-' + name);
-        I.dontSee("Nenašli sa žiadne vyhovujúce záznamy");
-        DT.deleteAll('fileArchiveDataTable');
-        I.waitForText('Nenašli sa žiadne vyhovujúce záznamy', 10);
     },
 
     rollback(virtualFileName, shouldSucceed = true, text = "Rollback neúspešný"){

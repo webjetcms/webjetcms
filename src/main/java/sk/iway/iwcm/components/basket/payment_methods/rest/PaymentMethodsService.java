@@ -2,10 +2,12 @@ package sk.iway.iwcm.components.basket.payment_methods.rest;
 
 import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -19,6 +21,7 @@ import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoiceItemsRepository;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentEntity;
 import sk.iway.iwcm.components.basket.jpa.BasketInvoicePaymentsRepository;
+import sk.iway.iwcm.components.basket.jpa.BasketInvoicesRepository;
 import sk.iway.iwcm.components.basket.jpa.InvoicePaymentStatus;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodEntity;
 import sk.iway.iwcm.components.basket.payment_methods.jpa.PaymentMethodRepository;
@@ -38,6 +41,8 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
  */
 @Service
 public class PaymentMethodsService {
+
+    static final String INVALID_REFUND_AMOUNT = "components.invoice.payment_refundation.invalid_amount";
 
     private final List<BasePaymentMethod> basePaymentMethodsList;
     private final PaymentMethodRepository paymentMethodRepository;
@@ -76,12 +81,41 @@ public class PaymentMethodsService {
     }
 
     public RefundationState refundPayment(BigDecimal refundAmount, BasketInvoicePaymentEntity paymentEntity, HttpServletRequest request) {
+        BasketInvoicesRepository invoices = Tools.getSpringBean("basketInvoicesRepository", BasketInvoicesRepository.class);
+        BasketInvoiceEntity invoice = invoices.findFirstByIdAndDomainId(paymentEntity.getInvoiceId(), CloudToolsForCore.getDomainId()).orElse(null);
+        if (invoice == null) return new RefundationState(RefundationStatus.ERROR, BasePaymentMethod.REFUNDATION_FAILED);
+        BasketInvoicePaymentsRepository payments = Tools.getSpringBean("basketInvoicePaymentsRepository", BasketInvoicePaymentsRepository.class);
+        BasketInvoicePaymentEntity original = payments.findById(paymentEntity.getId()).orElse(null);
+        if (original == null || !Objects.equals(invoice.getId(), original.getInvoiceId())) {
+            return new RefundationState(RefundationStatus.ERROR, BasePaymentMethod.REFUNDATION_FAILED);
+        }
+        paymentEntity = original;
         //Check that payment is NOT REFUNDATION (refundation have negative price)
         if(paymentEntity.getPayedPrice().signum() == -1) return new RefundationState(RefundationStatus.ERROR, BasePaymentMethod.CANT_REFUND_REFUNDATION, null);
         //Check refundation amount
         if(refundAmount.signum() <= 0) return new RefundationState(RefundationStatus.ERROR, BasePaymentMethod.REFUNDATION_AMOUNT_TOO_LOW, null);
         //Check that payment is confirmed
         if(Tools.isFalse(paymentEntity.getConfirmed())) return new RefundationState(RefundationStatus.ERROR, BasePaymentMethod.CANT_REFUND_NOT_CONFIRMED, null);
+
+        try {
+            refundAmount = refundAmount.setScale(2, RoundingMode.UNNECESSARY);
+            refundAmount.movePointRight(2).longValueExact();
+        } catch (ArithmeticException ex) {
+            return new RefundationState(RefundationStatus.ERROR, INVALID_REFUND_AMOUNT);
+        }
+        BigDecimal invoiceAvailable = BigDecimal.ZERO;
+        BigDecimal paymentAvailable = paymentEntity.getPayedPrice();
+        for (BasketInvoicePaymentEntity confirmed : payments.findAllByInvoiceIdAndConfirmedTrue(invoice.getId())) {
+            invoiceAvailable = invoiceAvailable.add(confirmed.getPayedPrice());
+            if (confirmed.getPayedPrice().signum() < 0 && paymentEntity.getRealPaymentId() != null
+                && Objects.equals(paymentEntity.getRealPaymentId(), confirmed.getRealPaymentId())
+                && Objects.equals(paymentEntity.getPaymentMethod(), confirmed.getPaymentMethod())) {
+                paymentAvailable = paymentAvailable.add(confirmed.getPayedPrice());
+            }
+        }
+        if (refundAmount.compareTo(invoiceAvailable) > 0 || refundAmount.compareTo(paymentAvailable) > 0) {
+            return new RefundationState(RefundationStatus.ERROR, BasePaymentMethod.REFUNDATION_AMOUNT_TOO_HIGH);
+        }
 
         BasePaymentMethod paymentMethod = null;
         for(BasePaymentMethod bpm : basePaymentMethodsList) {
@@ -121,16 +155,15 @@ public class PaymentMethodsService {
                 refundation.setPaymentStatus( InvoicePaymentStatus.REFUND_FAIL.getCode() );
             }
 
-            BasketInvoicePaymentsRepository bpr = Tools.getSpringBean("basketInvoicePaymentsRepository", BasketInvoicePaymentsRepository.class);
-            bpr.save(refundation);
+            payments.save(refundation);
 
             if(status == RefundationStatus.SUCCESS) {
                 //Update invoice status
-                ProductListService.updateInvoiceStats(paymentEntity.getInvoiceId(), true);
+                ProductListService.updatePaymentStatus(paymentEntity.getInvoiceId(), true);
 
                 //Update status of refunded payment
                 paymentEntity.setPaymentStatus( result.getStatusAfterRefund().getCode() );
-                bpr.save(paymentEntity);
+                payments.save(paymentEntity);
             }
         }
 
@@ -276,7 +309,7 @@ public class PaymentMethodsService {
             //If payment was successful
             if(status == PaymentStatus.SUCCESS) {
                 //Update invoice stats
-                ProductListService.updateInvoiceStats(bipe.getInvoiceId(), true);
+                ProductListService.updatePaymentStatus(bipe.getInvoiceId(), true);
             }
 
             return paymentState;

@@ -4,6 +4,74 @@ Tato sekce obsahuje popisy vlastností a **funkcionalit WebJET CMS srozumitelný
 
 ---
 
+## Přehlednější a rychlejší tvorba stránek v PageBuilderu
+
+WebJET CMS modernizuje **PageBuilder – nástroj pro skládání stránek z připravených bloků**. Redaktor má ovládání vybrané části na jednom místě v pevné horní liště. Klikatelná cesta mu ukáže, zda upravuje sloupec, jeho kontejner nebo celou sekci, a umožní jednoduše přejít na nadřazenou část. **Kopii bloku vloží hned vedle původního a pořadí bloků změní rychlým posunem**, což šetří čas při úpravách produktových stránek, kampaní i opakujících se nabídek.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+Nový panel **Struktura zobrazuje přehled všech částí stránky** s názvy odvozenými z obsahu. Redaktor může blok vyhledat a přejít přímo na jeho místo, což usnadňuje orientaci i na dlouhých a složitě členěných stránkách. Při přidávání obsahu si nejprve zvolí označené místo přímo na stránce a následně vybere vhodný blok. Propracovaná knihovna nabízí **vizuální náhledy, kategorie a kombinaci vyhledávání podle názvu s filtrováním podle štítku**, takže připravené prvky firemního designu najde rychleji.
+
+Editor podporuje také **soustředěnou práci s obsahem**: během psaní se označení zjemní a rámečky lze zcela skrýt nebo zobrazit pro celou hierarchii vybraného bloku. Nastavení vzhledu jsou uspořádána do rozbalovacích skupin a při úpravě šířky sloupců nápověda ukazuje, pro které zařízení se rozložení mění. Stávající bloky a možnosti přizpůsobení zůstávají použitelné; **knihovnu i nabízená nastavení lze přizpůsobit konkrétnímu projektu**. Organizace tak získává pohodlnější každodenní správu při zachování svého designu a připraveného obsahu.
+
+**Hlavní benefity:**
+
+- **Rychlejší úpravy stránek**: Duplikování vedle původního bloku a posun o jednu pozici zkracují opakované redakční úkony.
+- **Lepší orientace v obsahu**: Strom struktury a klikatelná cesta pomáhají najít a vybrat přesně tu část, kterou je třeba upravit.
+- **Jednodušší rozšiřování stránky**: Viditelná místa vložení a náhledy v knihovně usnadňují výběr i umístění nového bloku.
+- **Méně rušení při psaní**: Jemnější nebo skryté rámečky umožňují soustředit se na text bez ztráty přístupu k nástrojům.
+- **Přehlednější rozložení pro různá zařízení**: Nápověda při nastavování šířky usnadňuje rozlišení úprav pro mobil, tablet a počítač.
+- **Využití stávajícího designu**: Nové ovládání navazuje na připravené bloky a zachovává možnost upravit knihovnu i dostupné vlastnosti podle potřeb organizace.
+
+![Panel Struktura a společná nástrojová lišta PageBuildera](../../redactor/webpages/pagebuilder-structure.png)
+
+Podrobná dokumentace: [Práce s PageBuilderem](../../redactor/webpages/pagebuilder.md) | [Přizpůsobení bloků](../../frontend/page-builder/blocks.md)
+
+## Lokální umělá inteligence s daty pod vlastní kontrolou
+
+WebJET CMS umožňuje **generovat text, překládat a vyhledávat podle významu přímo na serveru zákazníka**. Při použití lokálních modelů se zpracovávaný obsah ani vyhledávací dotazy **neposílají externí AI službě**. Organizace tak může využívat tyto funkce i tam, kde interní pravidla omezují odesílání údajů mimo vlastní prostředí. Po přípravě a nasazení modelových balíků samotné zpracování **nevyžaduje připojení na internet ani API klíč externího poskytovatele**.
+
+![](local-ai.png)
+
+K dispozici jsou tři samostatné modely: **EuroLLM** pro tvorbu textu, **M2M100** pro překlad čistého textu a **multilingual-e5-base** pro sémantické indexování a vyhledávání. Poskytovatel se vybírá v nastavení konkrétního AI asistenta, takže zákazník může lokální a externí služby kombinovat podle potřeb jednotlivých úkolů. Pro vyhledávání lze lokálně zpracovat obsah i otázku návštěvníka a volitelně zapojit lokální textový model pro vytvoření AI odpovědi.
+
+Modely lze provozovat **na standardních procesorech** bez **speciální grafické karty**. Nasazení vyžaduje doplňkovou knihovnu a připravené modelové balíky; jejich vytvoření potřebuje internetové připojení. Výkon a paměť serveru je třeba přizpůsobit očekávané zátěži. Menší modely mají omezenější kvalitu výstupů a zejména generování AI odpovědí může trvat déle, proto je vhodné před nasazením ověřit výsledky na vlastním obsahu. Lokální překlad podporuje čistý text s určeným zdrojovým a cílovým jazykem, nikoli celé HTML stránky.
+
+Součástí úprav je i **přesnější správa sémantického indexu u více domén**. Ruční indexování a odstranění indexu kontrolují oprávnění ke zvolené složce a její příslušnost k aktuální doméně. Pokud se stránka mezi zařazením do fronty a zpracováním odstraní nebo přesune do jiné domény, systém vyčistí její zastaralé záznamy v původní doméně.
+
+**Hlavní benefity:**
+
+- **Kontrola nad zpracováním údajů**: Obsah i dotazy zůstávají při lokálním zpracování v prostředí zákazníka.
+- **Menší závislost na externích službách**: Nasazené modely zpracovávají požadavky bez internetového připojení a externího AI API.
+- **Využití vlastní infrastruktury**: Provoz na CPU umožňuje nasazení bez nákupu specializované grafické karty, při zohlednění potřebného výkonu a paměti.
+- **Volba podle konkrétní úlohy**: Organizace může samostatně zvolit poskytovatele pro tvorbu textu, překlad a vyhledávání.
+- **Spolehlivější údržba vyhledávání**: Kontrola oprávnění a čištění zastaralého indexu pomáhají udržet výsledky ve správné doméně.
+
+Podrobná dokumentace: [Lokální AI modely](../../redactor/ai/settings/README.md#lokální-modely) | [Sémantické vyhledávání](../../redactor/apps/semantic-search/README.md) | [Správa sémantického indexu](../../redactor/apps/semantic-search/embedding-chunks.md)
+
+## Přehled prodeje a tržeb elektronického obchodu
+
+WebJET CMS přináší **přehled výsledků elektronického obchodu přímo v administraci**. Provozovatel na jednom místě vidí počet objednávek, jejich průměrnou hodnotu, počet prodaných kusů i průměrný počet produktů v objednávce. Graf vývoje tržeb s DPH a bez DPH pomáhá sledovat silnější a slabší období bez ručního sestavování přehledů. **Finanční ukazatele vycházejí z hodnot nestornovaných objednávek** ; stornované objednávky zůstávají viditelné v celkovém počtu a grafech rozdělení objednávek, ale nezvyšují tržby ani počet prodaných produktů.
+
+![Přehled objednávek, tržeb a prodeje produktů v elektronickém obchodě](../../redactor/apps/eshop/stats/stats.png)
+
+Obchodní tým získá podklady pro **plánování sortimentu, zásob a propagace**. Žebříček deseti nejprodávanějších produktů podle počtu kusů ukáže, o které položky je největší zájem, a rozbalovací strom kategorií umožní prozkoumat prodej až po podkategorie. Viditelné zůstávají také kategorie bez prodeje, takže lze snáze najít oblasti, které potřebují pozornost. Grafy zároveň ukazují zastoupení stavů objednávek, způsobů doručení a platby. Samostatný finanční přehled **odděluje poplatky za doručení a platbu od tržeb za produkty**, což usnadňuje posouzení skladby hodnoty objednávek.
+
+Přehled lze **přizpůsobit obdobím, měnou a výběrem jednoho nebo více stavů objednávek**, včetně vlastních stavů nastavených pro projekt. Objednávky v různých měnách se přepočítají do zvolené měny podle nakonfigurovaných kurzů. Zvolené období si prohlížeč pamatuje i po odhlášení a sdílí jej se statistikou návštěvnosti, čímž usnadňuje sledování návštěvnosti a prodeje za stejnou dobu. Údaje se vyhodnocují **samostatně pro aktuální doménu** a přístup je vázán na oprávnění k elektronickému obchodu, což podporuje kontrolovanou správu více obchodů v jednom CMS.
+
+**Hlavní benefity:**
+
+- **Rychlejší přehled o výsledcích**: Souhrnné ukazatele a grafy šetří čas při pravidelném vyhodnocování objednávek a tržeb.
+- **Lepší podklady pro sortiment a propagaci**: Nejprodávanější produkty a prodej podle kategorií pomáhají rozhodnout, které položky podpořit a kde prověřit slabší zájem.
+- **Jasné oddělení poplatků**: Provozovatel vidí hodnotu dopravy a plateb i tržby po odečtení těchto poplatků, takže dokáže lépe vyhodnotit samotný prodej produktů.
+- **Přehled nákupních preferencí**: Zastoupení způsobů doručení a platby poskytuje podklad pro úpravu nabídky služeb podle jejich využívání zákazníky.
+- **Vyhodnocování dle potřeb firmy**: Filtry období, měny a stavů včetně vlastních stavů umožňují zaměřit se na konkrétní část objednávek bez ručního třídění.
+- **Jednodušší správa více obchodů**: Oddělené výsledky jednotlivých domén a přístup podle oprávnění pomáhají udržet obchodní údaje pod kontrolou.
+
+Podrobná dokumentace: [Statistiky elektronického obchodu](../../redactor/apps/eshop/stats/README.md)
+
 ## Jednoduché odhalení a odstranění nepoužívaných souborů
 
 WebJET CMS pomáhá organizacím **odhalit soubory, které již pravděpodobně nejsou potřebné**, přímo ve vlastnostech složky v Průzkumníkovi. Administrátor spustí kontrolu zvolené složky a systém porovná její obsah s použitím v publikovaných webových stránkách, médiích, bannerech, galeriích a dalších standardních částech CMS. Bez zdlouhavého ručního prohledávání tak získá podklad pro uvolnění úložiště a odstranění zastaralého digitálního obsahu.

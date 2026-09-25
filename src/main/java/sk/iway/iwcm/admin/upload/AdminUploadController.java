@@ -15,19 +15,20 @@ import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.i18n.Prop;
 
 /**
- * REST controller handling file upload conflict resolution (skip, overwrite, keep-both).
- * Supports both standard file uploads and file archive uploads.
+ * Resolves conflicts reported by the administrative file upload flow.
+ * Supports discarding temporary uploads, replacing existing files, and retaining both
+ * standard files or file archive versions.
  */
 @RestController
 @RequestMapping("/admin/upload/")
 public class AdminUploadController {
 
     /**
-     * Skips (deletes) a temporarily uploaded file identified by its key.
-     * Called when the user chooses not to overwrite an existing file.
-     * @param fileKey - unique key of the temporary uploaded file
-     * @param request - HTTP request
-     * @return JSON with "success" flag
+     * Discards a temporary upload when the user declines to replace an existing file.
+     *
+     * @param fileKey unique key of the temporary upload
+     * @param request current HTTP request
+     * @return JSON containing the operation success flag
      */
     @PostMapping(path="/skipkey", produces = MediaType.APPLICATION_JSON_VALUE)
     public String skipkey(@RequestParam String fileKey, HttpServletRequest request)
@@ -47,13 +48,14 @@ public class AdminUploadController {
 
     /**
      * Overwrites an existing file with the uploaded temporary file.
-     * Delegates to file archive processing when uploadType is "fileArchive".
-     * @param fileKey - unique key of the temporary uploaded file
-     * @param destinationFolder - target folder path
-     * @param fileName - name of the file to overwrite
-     * @param uploadType - type of upload (e.g. "fileArchive" for archive files)
-     * @param request - HTTP request
-     * @return JSON with operation result
+     * Delegates to archive-aware processing when {@code uploadType} is {@code fileArchive}.
+     *
+     * @param fileKey unique key of the temporary upload
+     * @param destinationFolder target folder path
+     * @param fileName name of the file to overwrite
+     * @param uploadType upload category, such as {@code fileArchive}
+     * @param request current HTTP request
+     * @return JSON containing the operation result
      */
     @PostMapping(path="/overwrite", produces = MediaType.APPLICATION_JSON_VALUE)
 
@@ -66,14 +68,14 @@ public class AdminUploadController {
     }
 
     /**
-     * Keeps both the existing and uploaded file (creates a new version for archive, or renames for standard upload).
-     * Delegates to file archive processing when uploadType is "fileArchive".
-     * @param fileKey - unique key of the temporary uploaded file
-     * @param destinationFolder - target folder path
-     * @param fileName - original file name
-     * @param uploadType - type of upload (e.g. "fileArchive" for archive files)
-     * @param request - HTTP request
-     * @return JSON with operation result
+     * Retains the existing and uploaded files by creating an archive version or renaming a standard upload.
+     *
+     * @param fileKey unique key of the temporary upload
+     * @param destinationFolder target folder path
+     * @param fileName original file name
+     * @param uploadType upload category, such as {@code fileArchive}
+     * @param request current HTTP request
+     * @return JSON containing the operation result
      */
     @PostMapping(path="/keepboth", produces = MediaType.APPLICATION_JSON_VALUE)
 
@@ -86,14 +88,15 @@ public class AdminUploadController {
     }
 
     /**
-     * Processes an upload conflict for a file archive file.
-     * Validates archive permissions, then either overwrites or creates a new version.
-     * @param fileKey - unique key of the temporary uploaded file
-     * @param destinationFolder - raw destination folder from the request
-     * @param fileName - name of the archive file
-     * @param keepBoth - if true, uploads a new version; if false, overwrites the existing file
-     * @param request - HTTP request (used for localization and user identity)
-     * @return JSON string with operation result
+     * Validates an archive conflict request and then replaces the file or creates a new version.
+     * Bulk metadata is applied to the resulting archive record after permission and input validation.
+     *
+     * @param fileKey unique key of the temporary upload
+     * @param destinationFolder raw destination folder from the request
+     * @param fileName name of the archive file
+     * @param keepBoth {@code true} to create a new version; {@code false} to replace the current file
+     * @param request current HTTP request used for localization and user identity
+     * @return JSON containing the operation result
      */
     private static String processArchiveFile(String fileKey, String destinationFolder, String fileName, boolean keepBoth, HttpServletRequest request) {
         JSONObject output = new JSONObject();
@@ -103,30 +106,48 @@ public class AdminUploadController {
 
         String errorKey = FileArchiveUploadService.validateArchiveUploadPermission(user, destinationFolder, referer);
         if (errorKey != null) {
+            AdminUploadServlet.deleteTempFile(fileKey);
             output.put("success", false);
             output.put("error", prop.getText(errorKey));
             return output.toString();
         }
 
         String archiveFolder = FileArchiveUploadService.normalizeArchiveFolder(destinationFolder);
+        FileArchiveBulkUploadOptions bulkUploadOptions = FileArchiveBulkUploadOptions.fromRequest(request);
+        if (bulkUploadOptions.getErrorKey() != null) {
+            AdminUploadServlet.deleteTempFile(fileKey);
+            output.put("success", false);
+            output.put("error", prop.getText(bulkUploadOptions.getErrorKey()));
+            return output.toString();
+        }
+        if (keepBoth == false && bulkUploadOptions.isSaveLater()) {
+            AdminUploadServlet.deleteTempFile(fileKey);
+            output.put("success", false);
+            output.put("error", prop.getText(FileArchiveBulkUploadOptions.ERROR_SAVE_LATER_REPLACE));
+            return output.toString();
+        }
+
         if (keepBoth) {
-            FileArchiveUploadService.uploadNewArchiveFileVersion(user, prop, archiveFolder, fileName, fileKey, output);
+            FileArchiveUploadService.uploadNewArchiveFileVersion(user, prop, archiveFolder, fileName, fileKey,
+                bulkUploadOptions, output);
         } else {
-            FileArchiveUploadService.overwriteArchiveFile(user, prop, archiveFolder, fileName, fileKey, output);
+            FileArchiveUploadService.overwriteArchiveFile(user, prop, archiveFolder, fileName, fileKey,
+                bulkUploadOptions, output);
         }
 
         return output.toString();
     }
 
     /**
-     * Vykona proces prepisania suboru alebo ponechania oboch
-     * @param fileKey
-     * @param destinationFolder
-     * @param fileName
-     * @param uploadType
-     * @param keepBoth - ak je nastavene na true ponecha oba subory, novemu da suffix -xxx
-     * @param request
-     * @return
+     * Resolves a standard upload conflict by replacing the destination or assigning a unique file name.
+     *
+     * @param fileKey unique key of the temporary upload
+     * @param destinationFolder target folder path
+     * @param fileName requested destination file name
+     * @param uploadType upload category used during validation
+     * @param keepBoth {@code true} to retain both files by renaming the upload
+     * @param request current HTTP request
+     * @return JSON containing the operation result
      */
     private static String processOverwrite(String fileKey, String destinationFolder, String fileName, String uploadType, boolean keepBoth, HttpServletRequest request) {
         JSONObject output = new JSONObject();
