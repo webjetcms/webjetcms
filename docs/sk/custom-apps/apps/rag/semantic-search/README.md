@@ -31,7 +31,7 @@ Keď návštevník zadá vyhľadávací dotaz:
 
 1. [SearchAction](../../../../../../src/main/java/sk/iway/iwcm/doc/SearchAction.java) určí typ vyhľadávania z parametra aplikácie `searchType`. Pri hodnote `auto` alebo prázdnej hodnote použije globálnu konfiguračnú premennú `searchType`.
 2. Pri hodnote `semantic` alebo `hybrid` sa použije [SemanticSearchAction](../../../../../../src/main/java/sk/iway/iwcm/doc/SemanticSearchAction.java).
-3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) vygeneruje embedding dotazu podľa asistenta `RAG-EMB-SEARCH` s typom vstupu `QUERY` a vyhľadá najbližšie chunky s rovnakým poskytovateľom a modelom v pgvector databáze. Pri indexovaní sa používa typ `DOCUMENT`; poskytovateľ tak môže pre oba typy aplikovať rozdielne prefixy požadované modelom.
+3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) vygeneruje embedding dotazu podľa asistenta `RAG-EMB-SEARCH` s typom vstupu `QUERY` a vyhľadá najbližšie chunky s rovnakým poskytovateľom a modelom v zvolenej vektorovej databáze. Pri indexovaní sa používa typ `DOCUMENT`; poskytovateľ tak môže pre oba typy aplikovať rozdielne prefixy požadované modelom.
 4. Výsledky sa obmedzia podľa domény, jazyka, typu entity a podľa priečinkov zvolených v aplikácii **Vyhľadávanie**.
 5. Ak je povolený hybridný režim, spustí sa aj fulltext nad `rag_embedding_chunks.chunk_text` a výsledky sa spoja cez `RRF` (Reciprocal Rank Fusion).
 6. Výsledné chunky sa agregujú na dokumenty a dokumenty sa zobrazia rovnakým spôsobom ako pri štandardnom vyhľadávaní.
@@ -47,9 +47,45 @@ Pri pridaní nového serverového poskytovateľa sa preto embedding komunikácia
 
 ## Požiadavky
 
-- **PostgreSQL** s rozšírením **pgvector** (obraz: `pgvector/pgvector:pg18-trixie` alebo novší).
+- **Vektorová databáza** - PostgreSQL s rozšírením pgvector alebo MariaDB s natívnou podporou vektorov podľa nasledujúceho prehľadu. Stačí jedna z týchto možností.
 - **Konfigurácia zvoleného poskytovateľa** - pre externú službu sa používa rovnaký API kľúč ako pre AI asistentov, napr. `ai_openAiAuthKey` pre OpenAI. Lokálny embeddingový model namiesto kľúča vyžaduje cestu k modelovému balíku.
-- Sémantické vyhľadávanie funguje len nad PostgreSQL/pgvector úložiskom. Ak primárna databáza WebJET CMS nie je PostgreSQL, nastavte samostatnú PostgreSQL databázu cez datasource `rag_jpa`.
+- **Pripojenie k databáze** - explicitne nastavený datasource `rag_jpa` má prednosť; ak nie je nastavený, použije sa primárny datasource `iwcm`. Ak primárna databáza nie je podporovaným vektorovým úložiskom, nastavte samostatnú podporovanú databázu cez `rag_jpa`.
+
+### Podporované databázy a verzie
+
+| Databáza | Minimálna požiadavka | Odporúčané nasadenie | Výhody a obmedzenia |
+| --- | --- | --- | --- |
+| **PostgreSQL + pgvector** | **PostgreSQL 16+** a kompatibilné rozšírenie **pgvector s HNSW** (od **0.5.0**). | **PostgreSQL 18** a aktuálna opravná verzia **pgvector 0.8.x** (pri príprave dokumentácie **0.8.6**). Vývojové Docker Compose profily používajú obraz `pgvector/pgvector:pg18-trixie`. | WebJET podporuje `cosine`, `l2` aj `inner_product`. Rozšírenie musí byť nainštalované na serveri a aktivované v databáze určenej pre RAG. |
+| **MariaDB Vector** | **MariaDB 11.8 LTS alebo novšia**. | V rade 11.8 používajte **11.8.9 alebo novšiu opravnú verziu**; vývojový Dockerfile používa `mariadb:11.8.9`. Alternatívou je aktuálna opravná verzia **12.3 LTS**. | Natívny typ `VECTOR` a vektorový index bez inštalácie rozšírenia. WebJET podporuje `cosine` a `l2`; `inner_product` nie je podporovaný. |
+
+Minimum PostgreSQL 16 vychádza zo [základných požiadaviek WebJET CMS](../../../../install/setup/README.md#základné-požiadavky-na-server). Verzia **pgvector 0.5.0** je funkčné minimum pre HNSW index, ktorý WebJET vytvára; rozšírenie musí zároveň podporovať zvolenú verziu PostgreSQL. Pre **PostgreSQL 18** je potrebné **pgvector 0.8.1 alebo novšie**, odporúčame však aktuálne opravy. Rad pgvector 0.8 priniesol aj zlepšenia výkonu HNSW a plánovania dotazov s filtrami. Podrobnosti sú v [prehľade zmien pgvector](https://github.com/pgvector/pgvector/blob/master/CHANGELOG.md).
+
+Pri MariaDB sa uvedené verzie vzťahujú na **Community Server** používaný vo vývojovom Dockeri. Natívne vektory pribudli už v 11.7, ale minimum WebJETu je **11.8**, prvý LTS rad s touto funkciou. Všetky vektorové funkcie používané WebJETom sú dostupné v 11.8; prechod na 12.x nie je podmienkou sémantického vyhľadávania. Pozrite [prehľad MariaDB Vector](https://mariadb.com/docs/server/reference/sql-structure/vectors/vector-overview).
+
+Pri výbere verzie MariaDB zohľadnite:
+
+- **11.8 LTS** - základ pre širšiu kompatibilitu klientov. Používajte aktuálne opravy: verzia [11.8.3](https://mariadb.com/docs/release-notes/community-server/11.8/11.8.3) opravila poškodenie vektorového indexu pri rollbacku príkazu v transakcii a [11.8.9](https://mariadb.com/docs/release-notes/community-server/11.8/11.8.9) opravila zhoršenie úspešnosti nájdenia najbližších výsledkov pri načítaní cosine indexu z disku.
+- **12.1 a novšie** - obsahujú [optimalizáciu výpočtu vzdialeností pomocou extrapolácie](https://jira.mariadb.org/browse/MDEV-36205). Databáza automaticky využije časť vektora na vyradenie slabých kandidátov, ak sú na to embeddingy vhodné, napríklad pri Matryoshka modeloch.
+- **12.3 LTS** - odporúčaná voľba z radu 12.x pre nové alebo výkonovo náročnejšie nasadenia. Obsahuje uvedenú optimalizáciu bez potreby meniť SQL, schému alebo konfiguráciu indexu. MariaDB v [benchmarku oproti 11.8](https://mariadb.com/resources/blog/mariadb-12-3-faster-vector-search-with-matryoshka-optimization/) uvádza až o 30 % viac dotazov za sekundu pri rovnakom recall, teda rovnakej úspešnosti nájdenia najbližších výsledkov. Výsledok závisí od dát a embeddingového modelu; nejde o zmerané zrýchlenie celého vyhľadávania vo WebJETe.
+
+Podľa [politiky údržby MariaDB](https://mariadb.org/about/#maintenance-policy) má Community rad 11.8 údržbu do **4. júna 2028** a rad 12.3 do **12. júna 2029**. Pri existujúcej podporovanej PostgreSQL alebo MariaDB môžete ponechať rovnaký databázový server aj pre RAG; pri ostatných databázach použite samostatné vektorové úložisko.
+
+### Príprava rozšírenia pgvector
+
+Na PostgreSQL serveri musí správca najskôr nainštalovať balík **pgvector kompatibilný s hlavnou verziou servera**. Samotná inštalácia PostgreSQL nestačí. Pri inicializácii WebJET vykoná `CREATE EXTENSION IF NOT EXISTS vector`; ak aplikačný používateľ nemá oprávnenie vytvoriť rozšírenie, správca ho musí vopred aktivovať v databáze používanej cez `rag_jpa` alebo `iwcm`:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+Verziu servera a aktivovaného rozšírenia overíte v tej istej databáze:
+
+```sql
+SELECT version();
+SELECT extversion FROM pg_extension WHERE extname = 'vector';
+```
+
+Prázdny výsledok druhého dotazu znamená, že rozšírenie nie je v tejto databáze aktivované. Aktualizácia balíka na serveri sama neaktualizuje aktivované rozšírenie; správca vykoná aj `ALTER EXTENSION vector UPDATE`. Používateľ WebJETu musí mať oprávnenia na vytváranie a úpravu RAG tabuliek a indexov. Postup inštalácie a aktualizácie je v [dokumentácii pgvector](https://github.com/pgvector/pgvector#installation).
 
 ### PostgreSQL ako primárna databáza
 

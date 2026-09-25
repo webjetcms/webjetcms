@@ -13,10 +13,24 @@ Voliteľne môže nad rovnakým indexom zobraziť aj **RAG odpoveď** - krátku 
 - Pri povolenej RAG odpovedi sa nad výsledkami zobrazí blok **Odpoveď AI z vyhľadávania**.
 - Ak odpoveď nie je možné zostaviť z indexovaného obsahu, nezobrazí sa žiadna RAG odpoveď.
 
+## Podporované databázy a verzie
+
+Na ukladanie a vyhľadávanie vektorov stačí jedna z nasledujúcich databáz:
+
+| Databáza | Minimálna požiadavka | Odporúčanie a výhody |
+| --- | --- | --- |
+| **PostgreSQL + pgvector** | **PostgreSQL 16+** a kompatibilné rozšírenie **pgvector s HNSW** (od **0.5.0**). | Pre nové nasadenia odporúčame **PostgreSQL 18** s aktuálnou opravnou verziou **pgvector 0.8.x** (pri príprave dokumentácie **0.8.6**). WebJET podporuje metriky `cosine`, `l2` aj `inner_product`. Vhodné aj pri existujúcej PostgreSQL databáze. |
+| **MariaDB Vector** | **MariaDB 11.8 LTS alebo novšia**. | V rade 11.8 odporúčame **11.8.9 alebo novšiu opravnú verziu**. Vektorové úložisko je vstavané, nevyžaduje rozšírenie. Pri existujúcej podporovanej MariaDB môžete použiť rovnaký server aj pre sémantické vyhľadávanie. Podporované metriky sú `cosine` a `l2`. |
+
+**MariaDB 12.3 LTS** je voliteľná voľba pre vyšší výkon. Obsahuje optimalizáciu z verzie 12.1, ktorá automaticky zrýchľuje vyhľadávanie pri vhodných embeddingoch, napríklad Matryoshka. Nevyžaduje zmenu dotazov ani schémy; základná funkčnosť zostáva dostupná aj na 11.8. Konkrétny prínos závisí od dát a modelu. Podrobnosti a zdroje sú v [technickom porovnaní verzií](../../../custom-apps/apps/rag/semantic-search/README.md#podporované-databázy-a-verzie).
+
+Ak primárna databáza WebJET CMS tieto požiadavky nespĺňa, napríklad používate staršiu MariaDB, MySQL, Microsoft SQL Server alebo Oracle, správca môže pripojiť samostatnú podporovanú PostgreSQL alebo MariaDB databázu cez datasource `rag_jpa`. Primárnu databázu CMS preto nie je potrebné meniť.
+
 ## Nastavenie sémantického vyhľadávania
 
 Na spustenie sémantického vyhľadávania je potrebné:
 
+- Pripraviť jednu z [podporovaných vektorových databáz](#podporované-databázy-a-verzie).
 - Povoliť sémantické vyhľadávanie nastavením konfiguračnej premennej `ragSemanticSearchEnabled` na hodnotu `true`.
 - Nastaviť typ vyhľadávania na hodnotu `semantic` alebo `hybrid`. Môžete to urobiť globálne cez konfiguračnú premennú `searchType`, alebo priamo v aplikácii **Vyhľadávanie**.
 - Pri hybridnom režime overiť, že konfiguračná premenná `ragHybridSearchEnabled` je nastavená na hodnotu `true`.
@@ -25,7 +39,7 @@ Na spustenie sémantického vyhľadávania je potrebné:
 - Spustiť indexovanie cez administrátorské rozhranie na vytvorenie vektorov a naplnenie vektorovej databázy.
 - Nastaviť automatizovanú úlohu `sk.iway.iwcm.rag.service.RagIndexCronTask`, ktorá spracúva frontu indexovania.
 
-Vektorová databáza sa zvolí automaticky. Ak je nastavený samostatný datasource `rag_jpa`, má prednosť; inak sa použije primárny datasource `iwcm`. MariaDB nepotrebuje rozšírenie, podporuje však iba metriky vzdialenosti `cosine` a `l2`. Databázové požiadavky sú uvedené v [technickej dokumentácii](../../../custom-apps/apps/rag/semantic-search/README.md).
+Vektorová databáza sa zvolí automaticky. Ak je nastavený samostatný datasource `rag_jpa`, má prednosť; inak sa použije primárny datasource `iwcm`. Postup prípravy databázy a pripojenia je uvedený v [technickej dokumentácii](../../../custom-apps/apps/rag/semantic-search/README.md#požiadavky).
 
 !>**Upozornenie:** Po nasadení zmien odporúčame spustiť opätovné indexovanie stránok. Index teraz ukladá aj informácie o priečinku stránky (`group_id`, `root_group_l1`, `root_group_l2`, `root_group_l3`), ktoré sa používajú pri filtrovaní výsledkov podľa priečinkov zvolených v aplikácii **Vyhľadávanie**.
 
