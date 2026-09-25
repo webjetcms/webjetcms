@@ -29,7 +29,7 @@ class VectorStoreDataSourceResolverTest {
         Resolution resolution = VectorStoreDataSourceResolver.resolve(ragDataSource, primaryDataSource);
 
         assertEquals(VectorStoreDataSourceResolver.RAG_DATASOURCE_NAME, resolution.dataSourceName());
-        assertEquals(VectorStoreBackend.POSTGRESQL, resolution.backend());
+        assertEquals(VectorStoreType.POSTGRESQL, resolution.backend());
         assertTrue(resolution.explicit());
         verify(primaryDataSource, never()).getConnection();
     }
@@ -42,7 +42,7 @@ class VectorStoreDataSourceResolverTest {
         );
 
         assertEquals(VectorStoreDataSourceResolver.PRIMARY_DATASOURCE_NAME, resolution.dataSourceName());
-        assertEquals(VectorStoreBackend.POSTGRESQL, resolution.backend());
+        assertEquals(VectorStoreType.POSTGRESQL, resolution.backend());
         assertTrue(resolution.isSupported());
         assertFalse(resolution.explicit());
     }
@@ -54,7 +54,7 @@ class VectorStoreDataSourceResolverTest {
             dataSource("MariaDB", "11.8.9-MariaDB", 11, 8)
         );
 
-        assertEquals(VectorStoreBackend.MARIADB, resolution.backend());
+        assertEquals(VectorStoreType.MARIADB, resolution.backend());
         assertTrue(resolution.isSupported());
         assertEquals("11.8.9-MariaDB", resolution.databaseProductVersion());
     }
@@ -66,7 +66,7 @@ class VectorStoreDataSourceResolverTest {
             dataSource("MariaDB", "11.7.2-MariaDB", 11, 7)
         );
 
-        assertEquals(VectorStoreBackend.UNSUPPORTED, resolution.backend());
+        assertEquals(VectorStoreType.UNSUPPORTED, resolution.backend());
         assertFalse(resolution.isSupported());
         assertTrue(resolution.reason().contains("11.8 or newer"));
     }
@@ -78,7 +78,7 @@ class VectorStoreDataSourceResolverTest {
             dataSource("MySQL", "8.4.0", 8, 4)
         );
 
-        assertEquals(VectorStoreBackend.UNSUPPORTED, resolution.backend());
+        assertEquals(VectorStoreType.UNSUPPORTED, resolution.backend());
         assertTrue(resolution.reason().contains("MySQL"));
     }
 
@@ -91,7 +91,7 @@ class VectorStoreDataSourceResolverTest {
         Resolution resolution = VectorStoreDataSourceResolver.resolve(ragDataSource, primaryDataSource);
 
         assertEquals(VectorStoreDataSourceResolver.RAG_DATASOURCE_NAME, resolution.dataSourceName());
-        assertEquals(VectorStoreBackend.UNSUPPORTED, resolution.backend());
+        assertEquals(VectorStoreType.UNSUPPORTED, resolution.backend());
         assertTrue(resolution.reason().contains("offline"));
         assertTrue(resolution.explicit());
         verify(primaryDataSource, never()).getConnection();
@@ -104,7 +104,7 @@ class VectorStoreDataSourceResolverTest {
         Resolution resolution = VectorStoreDataSourceResolver.resolve(null, true, primaryDataSource);
 
         assertEquals(VectorStoreDataSourceResolver.RAG_DATASOURCE_NAME, resolution.dataSourceName());
-        assertEquals(VectorStoreBackend.UNSUPPORTED, resolution.backend());
+        assertEquals(VectorStoreType.UNSUPPORTED, resolution.backend());
         assertTrue(resolution.reason().contains("unavailable"));
         assertTrue(resolution.explicit());
         verify(primaryDataSource, never()).getConnection();
@@ -118,7 +118,7 @@ class VectorStoreDataSourceResolverTest {
         Resolution resolution = VectorStoreDataSourceResolver.resolve(ragDataSource, primaryDataSource);
 
         assertEquals(VectorStoreDataSourceResolver.RAG_DATASOURCE_NAME, resolution.dataSourceName());
-        assertEquals(VectorStoreBackend.UNSUPPORTED, resolution.backend());
+        assertEquals(VectorStoreType.UNSUPPORTED, resolution.backend());
         assertTrue(resolution.explicit());
         verify(primaryDataSource, never()).getConnection();
     }
@@ -128,7 +128,7 @@ class VectorStoreDataSourceResolverTest {
         Resolution resolution = VectorStoreDataSourceResolver.resolve(null, null);
 
         assertNull(resolution.dataSourceName());
-        assertEquals(VectorStoreBackend.UNSUPPORTED, resolution.backend());
+        assertEquals(VectorStoreType.UNSUPPORTED, resolution.backend());
         assertTrue(resolution.reason().contains("Neither"));
     }
 

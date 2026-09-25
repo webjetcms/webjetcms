@@ -39,7 +39,7 @@ Ke spuštění sémantického vyhledávání je potřeba:
 - Spustit indexování přes administrátorské rozhraní pro vytvoření vektorů a naplnění vektorové databáze.
 - Nastavit automatizovanou úlohu `sk.iway.iwcm.rag.service.RagIndexCronTask`, která zpracovává frontu indexování.
 
-Vektorová databáze se zvolí automaticky. Je-li nastaven samostatný datasource `rag_jpa`, má přednost; jinak se použije primární datasource `iwcm`. Postup přípravy databáze a připojení je uveden v [technické dokumentaci](../../../custom-apps/apps/rag/semantic-search/README.md#požadavky).
+Vektorová databáze se zvolí automaticky. Pokud je nastaven samostatný datasource `rag_jpa`, má přednost, jinak se použije primární datasource `iwcm`. Postup přípravy databáze a připojení je uveden v [technické dokumentaci](../../../custom-apps/apps/rag/semantic-search/README.md#požadavky).
 
 !>**Upozornění:** Po nasazení změn doporučujeme spustit opětovné indexování stránek. Index nyní ukládá také informace o složce stránky (`group_id`, `root_group_l1`, `root_group_l2`, `root_group_l3`), které se používají při filtrování výsledků podle složek zvolených v aplikaci **Vyhledávání**.
 

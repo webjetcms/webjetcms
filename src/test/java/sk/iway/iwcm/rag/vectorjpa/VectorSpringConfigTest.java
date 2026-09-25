@@ -36,7 +36,7 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.system.jpa.JpaTools;
 
 /** Verifies that optional RAG persistence does not participate in the CMS startup scans. */
-class PgvectorSpringConfigTest {
+class VectorSpringConfigTest {
 
     @Test
     void offlineRagDatabaseDoesNotPreventMainJpaStartup() throws Exception {

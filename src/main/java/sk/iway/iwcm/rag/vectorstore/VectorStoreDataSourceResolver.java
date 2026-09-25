@@ -58,7 +58,7 @@ public final class VectorStoreDataSourceResolver {
         if (ragDataSourceConfigured) {
             return new Resolution(
                 RAG_DATASOURCE_NAME,
-                VectorStoreBackend.UNSUPPORTED,
+                VectorStoreType.UNSUPPORTED,
                 null,
                 null,
                 "Configured RAG datasource rag_jpa is unavailable",
@@ -68,7 +68,7 @@ public final class VectorStoreDataSourceResolver {
         if (primaryDataSource != null) {
             return resolveSelectedDataSource(PRIMARY_DATASOURCE_NAME, primaryDataSource, false);
         }
-        return new Resolution(null, VectorStoreBackend.UNSUPPORTED, null, null,
+        return new Resolution(null, VectorStoreType.UNSUPPORTED, null, null,
             "Neither rag_jpa nor iwcm datasource is configured", false);
     }
 
@@ -93,7 +93,7 @@ public final class VectorStoreDataSourceResolver {
             String normalizedProductName = normalize(productName);
 
             if (normalizedProductName.contains("postgresql")) {
-                return new Resolution(dataSourceName, VectorStoreBackend.POSTGRESQL, productName, productVersion,
+                return new Resolution(dataSourceName, VectorStoreType.POSTGRESQL, productName, productVersion,
                     null, explicit);
             }
 
@@ -101,17 +101,17 @@ public final class VectorStoreDataSourceResolver {
                 int majorVersion = metadata.getDatabaseMajorVersion();
                 int minorVersion = metadata.getDatabaseMinorVersion();
                 if (isSupportedMariaDbVersion(majorVersion, minorVersion)) {
-                    return new Resolution(dataSourceName, VectorStoreBackend.MARIADB, productName, productVersion,
+                    return new Resolution(dataSourceName, VectorStoreType.MARIADB, productName, productVersion,
                         null, explicit);
                 }
-                return new Resolution(dataSourceName, VectorStoreBackend.UNSUPPORTED, productName, productVersion,
+                return new Resolution(dataSourceName, VectorStoreType.UNSUPPORTED, productName, productVersion,
                     "MariaDB 11.8 or newer is required, detected " + formatVersion(productVersion, majorVersion, minorVersion), explicit);
             }
 
-            return new Resolution(dataSourceName, VectorStoreBackend.UNSUPPORTED, productName, productVersion,
+            return new Resolution(dataSourceName, VectorStoreType.UNSUPPORTED, productName, productVersion,
                 "Unsupported RAG database product: " + safeValue(productName), explicit);
         } catch (Exception e) {
-            return new Resolution(dataSourceName, VectorStoreBackend.UNSUPPORTED, null, null,
+            return new Resolution(dataSourceName, VectorStoreType.UNSUPPORTED, null, null,
                 "Unable to inspect RAG datasource " + dataSourceName + ": " + safeValue(e.getMessage()), explicit);
         }
     }
@@ -165,14 +165,14 @@ public final class VectorStoreDataSourceResolver {
      */
     public record Resolution(
         String dataSourceName,
-        VectorStoreBackend backend,
+        VectorStoreType backend,
         String databaseProductName,
         String databaseProductVersion,
         String reason,
         boolean explicit
     ) {
         public boolean isSupported() {
-            return backend != VectorStoreBackend.UNSUPPORTED;
+            return backend != VectorStoreType.UNSUPPORTED;
         }
     }
 

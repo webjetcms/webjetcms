@@ -39,7 +39,7 @@ To run a semantic search, you need:
 - Run indexing via the administrator interface to create vectors and populate the vector database.
 - Set up an automated task `sk.iway.iwcm.rag.service.RagIndexCronTask` that processes the indexing queue.
 
-The vector database is selected automatically. If a separate datasource `rag_jpa` is set, it takes precedence; otherwise, the primary datasource `iwcm` is used. The procedure for preparing the database and connecting is described in the [technical documentation](../../../custom-apps/apps/rag/semantic-search/README.md#requirements).
+The vector database is selected automatically. If a separate datasource `rag_jpa` is set, it takes precedence, otherwise the primary datasource `iwcm` is used. The procedure for preparing the database and connecting is described in the [technical documentation](../../../custom-apps/apps/rag/semantic-search/README.md#requirements).
 
 !>**Note:** We recommend that you re-index your pages after implementing these changes. The index now also stores the page folder information (`group_id`, `root_group_l1`, `root_group_l2`, `root_group_l3`), which is used when filtering results by folders selected in the **Search** application.
 

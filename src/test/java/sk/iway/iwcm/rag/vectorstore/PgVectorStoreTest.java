@@ -56,7 +56,7 @@ class PgVectorStoreTest {
             Constants.setInt(tenantDimensionsKey, 768);
             Constants.setConstantsAliasSearch(true);
             resolver.when(VectorStoreDataSourceResolver::resolve).thenReturn(
-                new Resolution("rag_jpa", VectorStoreBackend.POSTGRESQL, "PostgreSQL", "test", null, true)
+                new Resolution("rag_jpa", VectorStoreType.POSTGRESQL, "PostgreSQL", "test", null, true)
             );
 
             RequestBean tenantRequest = SetCharacterEncodingFilter.getCurrentRequestBean();

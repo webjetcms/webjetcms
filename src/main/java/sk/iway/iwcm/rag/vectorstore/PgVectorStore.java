@@ -14,7 +14,6 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkStatus;
@@ -34,7 +33,7 @@ public class PgVectorStore implements VectorStore {
 
     private String getDataSourceName() {
         VectorStoreDataSourceResolver.Resolution resolution = VectorStoreDataSourceResolver.resolve();
-        if (resolution.backend() != VectorStoreBackend.POSTGRESQL) return null;
+        if (resolution.backend() != VectorStoreType.POSTGRESQL) return null;
         return resolution.dataSourceName();
     }
 

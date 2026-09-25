@@ -36,7 +36,6 @@ import sk.iway.iwcm.rag.jpa.IndexQueueRepository;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkEntity;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkRepository;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkStatus;
-import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
 import sk.iway.iwcm.rag.vectorstore.VectorStore;
 import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 

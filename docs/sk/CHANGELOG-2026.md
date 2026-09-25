@@ -103,8 +103,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Sémantické vyhľadávanie
 
-- Pridaná podpora **MariaDB Vector** ako alternatívy k PostgreSQL/pgvector pre sémantické a hybridné vyhľadávanie aj RAG odpovede. Minimálna podporovaná verzia je **MariaDB 11.8 LTS**, odporúčame **11.8.9 alebo novšiu opravnú verziu**.Verzia od **12.3 LTS** obsahuje zrýchlenie vyhľadávania. Minimálne a odporúčané verzie PostgreSQL, pgvector a MariaDB aj ich výhody sú v [prehľade databázových požiadaviek](custom-apps/apps/rag/semantic-search/README.md#podporované-databázy-a-verzie) (#58774).
-- Nedostupná samostatná RAG databáza už neblokuje štart CMS. RAG perzistencia sa inicializuje až pri prvom použití a po neúspešnom pripojení umožňuje ďalší pokus bez reštartu CMS (#58774).
+- Pridaná podpora **MariaDB Vector** ako alternatívy k `PostgreSQL/pgvector` pre sémantické a hybridné vyhľadávanie aj RAG odpovede. Minimálna podporovaná verzia je **MariaDB 11.8 LTS**, odporúčame **11.8.9 alebo novšiu opravnú verziu**.Verzia od **12.3 LTS** obsahuje zrýchlenie vyhľadávania. Minimálne a odporúčané verzie PostgreSQL, pgvector a MariaDB aj ich výhody sú v [prehľade databázových požiadaviek](custom-apps/apps/rag/semantic-search/README.md#podporované-databázy-a-verzie) (#232).
+- Nedostupná samostatná RAG databáza už neblokuje štart CMS. RAG perzistencia sa inicializuje až pri prvom použití a po neúspešnom pripojení umožňuje ďalší pokus bez reštartu CMS (#232).
 
 - Pridaná podpora [sémantického vyhľadávania](redactor/apps/semantic-search/README.md) postaveného na technológii vektorovej databázy `pgvector` a `OpenAI embeddings`. Umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov (#211).
 - Doplnený hybridný režim sémantického vyhľadávania a voliteľná RAG odpoveď z indexovaného obsahu. Aplikácia **Vyhľadávanie** má nové nastavenia pre typ vyhľadávania, hybridné správanie, výber AI asistenta a limity kontextu odpovede (#58521).

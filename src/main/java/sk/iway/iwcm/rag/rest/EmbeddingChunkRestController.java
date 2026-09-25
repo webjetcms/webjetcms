@@ -42,7 +42,6 @@ import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.service.IndexQueueService;
 import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
 import sk.iway.iwcm.rag.service.RagEntityType;
-import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
 import sk.iway.iwcm.rag.vectorstore.VectorStore;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;

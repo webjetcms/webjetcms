@@ -34,7 +34,7 @@ class VectorStoreRouterTest {
             .thenReturn(expected);
 
         try (MockedStatic<VectorStoreDataSourceResolver> resolver = mockStatic(VectorStoreDataSourceResolver.class)) {
-            resolver.when(VectorStoreDataSourceResolver::resolve).thenReturn(resolution(VectorStoreBackend.POSTGRESQL));
+            resolver.when(VectorStoreDataSourceResolver::resolve).thenReturn(resolution(VectorStoreType.POSTGRESQL));
 
             List<VectorSearchResult> actual = router.search(
                 embedding, "openai", "model", RagEntityType.DOCUMENT, 1, "sk", 5, Map.of()
@@ -53,7 +53,7 @@ class VectorStoreRouterTest {
         when(mariaDbVectorStore.recreateIndex()).thenReturn(true);
 
         try (MockedStatic<VectorStoreDataSourceResolver> resolver = mockStatic(VectorStoreDataSourceResolver.class)) {
-            resolver.when(VectorStoreDataSourceResolver::resolve).thenReturn(resolution(VectorStoreBackend.MARIADB));
+            resolver.when(VectorStoreDataSourceResolver::resolve).thenReturn(resolution(VectorStoreType.MARIADB));
 
             assertTrue(router.recreateIndex());
             verify(mariaDbVectorStore).recreateIndex();
@@ -67,7 +67,7 @@ class VectorStoreRouterTest {
         MariaDbVectorStore mariaDbVectorStore = mock(MariaDbVectorStore.class);
         VectorStoreRouter router = new VectorStoreRouter(pgVectorStore, mariaDbVectorStore);
         Resolution unsupported = new Resolution(
-            "rag_jpa", VectorStoreBackend.UNSUPPORTED, "MySQL", "8.4", "Unsupported RAG database product: MySQL", true
+            "rag_jpa", VectorStoreType.UNSUPPORTED, "MySQL", "8.4", "Unsupported RAG database product: MySQL", true
         );
 
         try (MockedStatic<VectorStoreDataSourceResolver> resolver = mockStatic(VectorStoreDataSourceResolver.class);
@@ -82,7 +82,7 @@ class VectorStoreRouterTest {
         }
     }
 
-    private static Resolution resolution(VectorStoreBackend backend) {
+    private static Resolution resolution(VectorStoreType backend) {
         return new Resolution("iwcm", backend, backend.name(), "test", null, false);
     }
 }

@@ -13,7 +13,7 @@ import org.springframework.transaction.interceptor.TransactionalProxy;
  */
 
 @Configuration
-public class PgvectorSpringConfig {
+public class VectorSpringConfig {
 
     /** Returns a proxy that initializes RAG persistence on the first repository operation. */
     @Bean
@@ -40,7 +40,7 @@ public class PgvectorSpringConfig {
     @Lazy
     public AnnotationConfigApplicationContext ragPersistenceContext() {
         AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
-        context.register(PgvectorJpaConfig.class);
+        context.register(VectorJpaConfig.class);
         try {
             context.refresh();
             return context;

@@ -21,7 +21,6 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.service.RagEntityType;
 
@@ -566,7 +565,7 @@ public class MariaDbVectorStore implements VectorStore {
         }
 
         VectorStoreDataSourceResolver.Resolution resolution = VectorStoreDataSourceResolver.resolve();
-        return resolution.backend() == VectorStoreBackend.MARIADB;
+        return resolution.backend() == VectorStoreType.MARIADB;
     }
 
     @Override
@@ -972,7 +971,7 @@ public class MariaDbVectorStore implements VectorStore {
 
     private String getMariaDataSourceName() {
         VectorStoreDataSourceResolver.Resolution resolution = VectorStoreDataSourceResolver.resolve();
-        if (resolution.backend() != VectorStoreBackend.MARIADB) return null;
+        if (resolution.backend() != VectorStoreType.MARIADB) return null;
         return resolution.dataSourceName();
     }
 
