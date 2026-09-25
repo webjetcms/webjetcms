@@ -113,6 +113,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Applications
 
+- E-commerce - added optional [price rounding](redactor/apps/basket/rounding.md) to calculate the basket from the displayed price per item. The number of decimal places is determined by `currencyFormat` ; templates with the `iway:curr` tag will automatically adopt the new formatting (#316).
 - Codebooks - for named string fields, the field type, selection options, mandatory, help text, and length restrictions can be set in the new [String Field Types] tab (redactor/apps/enumeration/README.md#karta-typy-ťazcových-polí) just like for optional fields. The menu and configuration names are based on the last saved version of the codebook type. Unnamed fields remain hidden, are not evaluated as mandatory, and fields without a specific configuration are displayed as regular text. Older custom Excel templates and REST API integrations need to be modified from `string1` to `string12` to `fieldA` to `fieldL` (#58641).
 
 ![](editor/apps/enumeration/editor_stringFieldTypes.png)
@@ -543,6 +544,7 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- Proxy - fixed use of the configured HTTP/HTTPS proxy including exceptions and authentication when translating via DeepL, calling the AI ​​assistant, downloading via `Tools.downloadUrl`, in the proxy module and when generating an offline version (#331).
 - Web pages - fixed saving a web page with a space at the end of the URL (whitespace removal will be performed) (#OSK650).
 - Web pages - fixed looping of unpublished page if URL does not end with `/` - ​​configuration variable `virtualPathLastSlash=false` (#OSK684).
 - Document Manager - added clearing of cache after publishing a new version of a file (#TB2754).
@@ -550,6 +552,7 @@ Redesigned application properties settings in the editor from the old code in `J
 - Gallery - in the application editor, only JSP files from the `/components/{INSTALL_NAME}/gallery` and `/components/gallery` folders are displayed among the visual styles, without duplicate items (#58317-16).
 - Inserting HTML code - in the application preview in the website editor, for content consisting only of `script` elements, the source code is displayed instead of empty content (#OSK625).
 - Video - fixed handling of YouTube links with additional URL parameters including video start time (`t` or `start`). Parameters are now correctly linked to player settings without duplicate `?` character (#OSK714).
+- Easy form - fixed processing of form name if name contains hard space replaced by `editorSingleCharNbsp` (#TB2763).
 - Security - tightened verification of the link to recover a forgotten password. The verification record is checked for the selected user account even with the custom sending method, respects the time validity and after use is invalidated for all accounts included in the request (#292).
 - Security - tightened authorization verification when working with records in administration (#295).
 - Security - tightened control of folder rights when uploading a file to the administration and overwriting it if the file exists.

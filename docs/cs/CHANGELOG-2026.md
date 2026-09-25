@@ -113,6 +113,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Aplikace
 
+- Elektronický obchod - přidáno volitelné [zaokrouhlování cen](redactor/apps/basket/rounding.md), aby se košík počítal ze zobrazené ceny za kus. Počet desetinných míst určuje `currencyFormat` ; šablony se značkou `iway:curr` převezmou nové formátování automaticky (#316).
 - Číselníky - pro pojmenovaná řetězcová pole lze v nové kartě [Typy řetězcových polí](redactor/apps/enumeration/README.md#karta-typy-řetězcových-pole) nastavit typ pole, možnosti výběru, povinnost, pomocný text a omezení délky stejně jako u volitelných polí. Nabídka a názvy konfigurací vycházejí z poslední uložené verze typu číselníku. Nepojmenovaná pole zůstávají skrytá, nevyhodnocují se jako povinná a pole bez specifické konfigurace se zobrazí jako běžný text. Starší vlastní Excel šablony a integrace REST API je třeba upravit z atributů `string1` až `string12` na `fieldA` až `fieldL` (#58641).
 
 ![](redactor/apps/enumeration/editor_stringFieldTypes.png)
@@ -543,6 +544,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+- Proxy - opraveno použití nastavené HTTP/HTTPS proxy včetně výjimek a autentifikace při překladu přes DeepL, voláních AI asistenta, stahování přes `Tools.downloadUrl`, v proxy modulu a při generování offline verze (#331).
 - Webové stránky - opraveno ukládání web stránky s mezerou na konci URL adresy (provede se odstranění prázdných znaků) (#OSK650).
 - Webové stránky - opravené zacyklení nepublikované stránky pokud URL nekončí na znak `/` - ​​konfigurační proměnná `virtualPathLastSlash=false` (#OSK684).
 - Manažer dokumentů - přidáno smazání cache paměti po publikování nové verze souboru (#TB2754).
@@ -550,6 +552,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Galerie - v editoru aplikace se mezi vizuálními styly zobrazují pouze JSP soubory ze složek `/components/{INSTALL_NAME}/gallery` a `/components/gallery`, bez duplicitních položek (#58317-16).
 - Vložení HTML kódu - v náhledu aplikace v editoru webových stránek se pro obsah tvořený pouze elementy `script` zobrazí zdrojový kód namísto prázdného obsahu (#OSK625).
 - Video - opraveno zpracování YouTube odkazů s dalšími URL parametry včetně času spuštění videa (`t` nebo `start`). Parametry se správně spojí s nastavením přehrávače bez duplicitního znaku `?` (#OSK714).
+- Formulář snadno - opraveno zpracování názvu formuláře pokud název obsahuje tvrdou mezeru nahrazenou podle `editorSingleCharNbsp` (#TB2763).
 - Bezpečnost - zpřísněné ověřování odkazu na obnovu zapomenutého hesla. Ověřovací záznam se kontroluje pro vybraný uživatelský účet i při vlastním způsobu odesílání, respektuje časovou platnost a po použití se zneplatní pro všechny účty zahrnuté v žádosti (#292).
 - Bezpečnost - zpřísněné ověřování oprávnění při práci se záznamy v administraci (#295).
 - Bezpečnost - zpřísněná kontrola práv na složku při nahrávání souboru do administrace a její přepsání pokud soubor existuje.
