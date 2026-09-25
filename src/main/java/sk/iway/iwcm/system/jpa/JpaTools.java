@@ -37,7 +37,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.DataSource;
 import sk.iway.iwcm.database.JpaDB;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkEntity;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkEntity;
 import sk.iway.iwcm.utils.Pair;
 
 /**

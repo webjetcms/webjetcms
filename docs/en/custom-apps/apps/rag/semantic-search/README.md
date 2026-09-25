@@ -21,7 +21,7 @@ Indexing process:
 2. **Dividing into parts** - the text is split using [SlidingWindowChunker](../../../../../src/main/java/sk/iway/iwcm/rag/indexing/SlidingWindowChunker.java). The configuration variables `ragEmbeddingChunkSize` and `ragEmbeddingChunkOverlap` are used.
 3. **Reuse of embeddings** - a hash is calculated for each chunk. If the chunk text has not changed and an embedding with the same provider, model, and correct dimension exists, the existing vector is used.
 4. **Generating embeddings** - new or changed chunks are processed by [EmbeddingService](../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) according to the provider and model set in the indexing assistant `RAG-EMB-INDEX`.
-5. **Saving to database** - chunk metadata is stored via the JPA repository [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkRepository.java). The selected implementation of [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java) stores the vectors with database-specific native SQL.
+5. **Saving to database** - chunk metadata is stored via the JPA repository [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorjpa/EmbeddingChunkRepository.java). The selected implementation of [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java) stores the vectors with database-specific native SQL.
 
 Chunking prefers natural text boundaries: paragraph, line, sentence, space, and then hard splitting by limit. For decimal numbers, a period is not considered the end of a sentence.
 
@@ -298,7 +298,7 @@ Queue for asynchronous indexing. Implemented by class [IndexQueueEntity](../../.
 
 ### `rag_embedding_chunks`
 
-Stored chunk metadata and, on PostgreSQL, embedding vectors. Implemented by class [EmbeddingChunkEntity](../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkEntity.java).
+Stored chunk metadata and, on PostgreSQL, embedding vectors. Implemented by class [EmbeddingChunkEntity](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorjpa/EmbeddingChunkEntity.java).
 
 Important columns:
 

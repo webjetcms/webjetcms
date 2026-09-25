@@ -70,7 +70,7 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkRepository;
 import sk.iway.iwcm.rag.vectorstore.VectorStoreBackend;
 import sk.iway.iwcm.rag.vectorstore.VectorStoreDataSourceResolver;
 import sk.iway.iwcm.rag.vectorstore.VectorStoreDataSourceResolver.Resolution;

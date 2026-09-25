@@ -21,7 +21,7 @@ Proces indexovania:
 2. **Rozdelenie na časti** - text sa rozdelí pomocou [SlidingWindowChunker](../../../../../../src/main/java/sk/iway/iwcm/rag/indexing/SlidingWindowChunker.java). Používajú sa konfiguračné premenné `ragEmbeddingChunkSize` a `ragEmbeddingChunkOverlap`.
 3. **Opätovné použitie embeddingov** - pre každý chunk sa vypočíta hash. Ak sa text chunku nezmenil a existuje embedding s rovnakým poskytovateľom, modelom a správnou dimenziou, použije sa existujúci vektor.
 4. **Generovanie embeddingov** - nové alebo zmenené chunky spracuje [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) podľa poskytovateľa a modelu nastaveného v indexovacom asistentovi `RAG-EMB-INDEX`.
-5. **Uloženie do databázy** - metadáta chunkov sa ukladajú cez JPA repozitár [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkRepository.java). Zvolená implementácia [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java) uloží vektory pomocou natívneho SQL pre konkrétnu databázu.
+5. **Uloženie do databázy** - metadáta chunkov sa ukladajú cez JPA repozitár [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorjpa/EmbeddingChunkRepository.java). Zvolená implementácia [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java) uloží vektory pomocou natívneho SQL pre konkrétnu databázu.
 
 Chunking preferuje prirodzené hranice textu: odsek, riadok, vetu, medzeru a až potom tvrdé rozdelenie podľa limitu. Pri desatinných číslach sa bodka nepovažuje za koniec vety.
 
@@ -334,7 +334,7 @@ Fronta pre asynchrónne indexovanie. Implementované triedou [IndexQueueEntity](
 
 ### `rag_embedding_chunks`
 
-Uložené metadáta chunkov a v PostgreSQL aj embedding vektory. Implementované triedou [EmbeddingChunkEntity](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkEntity.java).
+Uložené metadáta chunkov a v PostgreSQL aj embedding vektory. Implementované triedou [EmbeddingChunkEntity](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorjpa/EmbeddingChunkEntity.java).
 
 Dôležité stĺpce:
 

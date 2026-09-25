@@ -1,4 +1,4 @@
-package sk.iway.iwcm.rag.pgvector;
+package sk.iway.iwcm.rag.vectorjpa;
 
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.target.AbstractLazyCreationTargetSource;
@@ -44,7 +44,10 @@ public class PgvectorSpringConfig {
         try {
             context.refresh();
             return context;
-        } catch (RuntimeException | Error e) {
+        } catch (RuntimeException e) {
+            context.close();
+            throw e;
+        } catch (Error e) {
             context.close();
             throw e;
         }

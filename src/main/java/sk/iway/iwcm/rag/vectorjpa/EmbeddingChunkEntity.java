@@ -1,4 +1,4 @@
-package sk.iway.iwcm.rag.pgvector;
+package sk.iway.iwcm.rag.vectorjpa;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

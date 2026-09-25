@@ -1,4 +1,4 @@
-package sk.iway.iwcm.rag.pgvector;
+package sk.iway.iwcm.rag.vectorjpa;
 
 import java.util.Properties;
 
@@ -35,7 +35,7 @@ import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 @EnableJpaRepositories(
     entityManagerFactoryRef = "ragEntityManager",
     transactionManagerRef = "ragTransactionManager",
-    basePackages = { "sk.iway.iwcm.rag.pgvector" }
+    basePackages = { "sk.iway.iwcm.rag.vectorjpa" }
 )
 public class PgvectorJpaConfig {
 
@@ -72,7 +72,7 @@ public class PgvectorJpaConfig {
         emf.setDataSource(DBPool.getInstance().getDataSource(dsName));
         emf.setJpaVendorAdapter(new EclipseLinkJpaVendorAdapter());
         emf.setPersistenceUnitName(dsName);
-        emf.setPackagesToScan("sk.iway.iwcm.rag.pgvector");
+        emf.setPackagesToScan("sk.iway.iwcm.rag.vectorjpa");
 
         Properties properties = new Properties();
         properties.setProperty("eclipselink.weaving", "false");

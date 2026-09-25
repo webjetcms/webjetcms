@@ -21,7 +21,7 @@ Proces indexování:
 2. **Rozdělení na části** - text se rozdělí pomocí [SlidingWindowChunker](../../../../../../src/main/java/sk/iway/iwcm/rag/indexing/SlidingWindowChunker.java). Používají se konfigurační proměnné `ragEmbeddingChunkSize` a `ragEmbeddingChunkOverlap`.
 3. **Opětovné použití embeddingů** - pro každý chunk se vypočítá hash. Pokud se text chunku nezměnil a existuje embedding se stejným poskytovatelem, modelem a správnou dimenzí, použije se existující vektor.
 4. **Generování embeddingů** - nové nebo změněné chunky zpracuje [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) podle poskytovatele a modelu nastaveného v .
-5. **Uložení do databáze** - metadata chunků se ukládají přes JPA repozitář [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkRepository.java). Zvolená implementace [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java) uloží vektory pomocí nativního SQL pro konkrétní databázi.
+5. **Uložení do databáze** - metadata chunků se ukládají přes JPA repozitář [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorjpa/EmbeddingChunkRepository.java). Zvolená implementace [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java) uloží vektory pomocí nativního SQL pro konkrétní databázi.
 
 Chunking preferuje přirozené hranice textu: odstavec, řádek, větu, mezeru a teprve potom tvrdé rozdělení podle limitu. U desetinných čísel se tečka nepovažuje za konec věty.
 
@@ -298,7 +298,7 @@ Fronta pro asynchronní indexování. Prováděno třídou [IndexQueueEntity](..
 
 ### `rag_embedding_chunks`
 
-Uložená metadata chunků a v PostgreSQL také embedding vektory. Implementováno třídou [EmbeddingChunkEntity](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkEntity.java).
+Uložená metadata chunků a v PostgreSQL také embedding vektory. Implementováno třídou [EmbeddingChunkEntity](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorjpa/EmbeddingChunkEntity.java).
 
 Důležité sloupce:
 

@@ -1,4 +1,4 @@
-package sk.iway.iwcm.rag.pgvector;
+package sk.iway.iwcm.rag.vectorjpa;
 
 import java.util.List;
 

@@ -22,7 +22,7 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.service.RagEntityType;
 
 /**

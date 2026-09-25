@@ -44,9 +44,9 @@ import sk.iway.iwcm.rag.indexing.DocDetailsContentExtractor;
 import sk.iway.iwcm.rag.indexing.SlidingWindowChunker;
 import sk.iway.iwcm.rag.jpa.IndexQueueEntity;
 import sk.iway.iwcm.rag.jpa.IndexQueueRepository;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkEntity;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkEntity;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkRepository;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.vectorstore.VectorStore;
 
 class SemanticIndexServiceTest {

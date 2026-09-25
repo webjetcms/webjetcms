@@ -23,7 +23,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.database.SimpleQuery;
-import sk.iway.iwcm.rag.pgvector.PgvectorJpaConfig;
+import sk.iway.iwcm.rag.vectorjpa.PgvectorJpaConfig;
 import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
 /** Verifies that shared vector schema initialization ignores tenant dimension overrides. */

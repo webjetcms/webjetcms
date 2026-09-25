@@ -1,4 +1,4 @@
-package sk.iway.iwcm.rag.pgvector;
+package sk.iway.iwcm.rag.vectorjpa;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -63,7 +63,7 @@ class PgvectorSpringConfigTest {
             context.registerBean("primaryEntityManagerFactory", EntityManagerFactory.class, () -> primaryFactory);
             context.registerBean("jpaContext", DefaultJpaContext.class);
             context.registerBean("jpaMappingContext", JpaMetamodelMappingContextFactoryBean.class);
-            context.scan("sk.iway.iwcm.rag.pgvector");
+            context.scan("sk.iway.iwcm.rag.vectorjpa");
             context.register(JpaTools.class);
 
             assertDoesNotThrow(context::refresh);
