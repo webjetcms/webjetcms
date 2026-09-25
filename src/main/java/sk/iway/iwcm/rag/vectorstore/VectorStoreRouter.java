@@ -92,15 +92,6 @@ public class VectorStoreRouter implements VectorStore {
     }
 
     @Override
-    @Deprecated(forRemoval = false)
-    public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId,
-                                                             String embeddingProvider, String embeddingModel) {
-        VectorStore delegate = getDelegate();
-        if (delegate == null) return Map.of();
-        return delegate.getExistingEmbeddingsByHash(entityType, entityId, embeddingProvider, embeddingModel);
-    }
-
-    @Override
     public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId,
                                                              String embeddingProvider, String embeddingModel,
                                                              int domainId) {

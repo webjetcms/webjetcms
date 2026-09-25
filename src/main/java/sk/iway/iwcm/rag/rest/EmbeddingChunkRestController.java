@@ -78,15 +78,6 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         this.ragEmbeddingStatService = ragEmbeddingStatService;
     }
 
-    /**
-     * Compatibility constructor for extensions compiled against the PostgreSQL-only API.
-     */
-    @Deprecated(forRemoval = false)
-    public EmbeddingChunkRestController(EmbeddingChunkRepository chunkRepository, IndexQueueService indexQueueService,
-                                        PgVectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService) {
-        this(chunkRepository, indexQueueService, (VectorStore) vectorStore, ragEmbeddingStatService);
-    }
-
     @Override
     public Page<EmbeddingChunkEntity> getAllItems(Pageable pageable) {
 

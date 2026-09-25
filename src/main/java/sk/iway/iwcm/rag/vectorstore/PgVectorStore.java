@@ -582,19 +582,6 @@ public class PgVectorStore implements VectorStore {
         return result;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    @Deprecated(forRemoval = false)
-    public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel) {
-        return getExistingEmbeddingsByHash(
-            entityType,
-            entityId,
-            embeddingProvider,
-            embeddingModel,
-            CloudToolsForCore.getDomainId()
-        );
-    }
-
     /**
      * Fetches existing content hashes and embedding vectors for an entity and domain,
      * allowing the indexer to skip re-embedding unchanged chunks.

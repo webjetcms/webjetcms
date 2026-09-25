@@ -23,7 +23,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.database.SimpleQuery;
-import sk.iway.iwcm.rag.vectorjpa.PgvectorJpaConfig;
+import sk.iway.iwcm.rag.vectorstore.VectorStoreDataSourceResolver.Resolution;
 import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
 /** Verifies that shared vector schema initialization ignores tenant dimension overrides. */
@@ -44,7 +44,7 @@ class PgVectorStoreTest {
         }
 
         try (DomainRequestBeanScope tenantScope = DomainRequestBeanScope.open(domainName);
-             MockedStatic<PgvectorJpaConfig> configuration = mockStatic(PgvectorJpaConfig.class);
+             MockedStatic<VectorStoreDataSourceResolver> resolver = mockStatic(VectorStoreDataSourceResolver.class);
              MockedStatic<Logger> logger = mockStatic(Logger.class);
              MockedConstruction<SimpleQuery> queries = mockConstruction(SimpleQuery.class, (query, context) -> {
                  if (failInitialization) {
@@ -55,7 +55,9 @@ class PgVectorStoreTest {
             Constants.setInt(dimensionsKey, 1536);
             Constants.setInt(tenantDimensionsKey, 768);
             Constants.setConstantsAliasSearch(true);
-            configuration.when(PgvectorJpaConfig::getRagDataSourceName).thenReturn("rag_jpa");
+            resolver.when(VectorStoreDataSourceResolver::resolve).thenReturn(
+                new Resolution("rag_jpa", VectorStoreBackend.POSTGRESQL, "PostgreSQL", "test", null, true)
+            );
 
             RequestBean tenantRequest = SetCharacterEncodingFilter.getCurrentRequestBean();
             assertEquals(768, Constants.getInt(dimensionsKey));

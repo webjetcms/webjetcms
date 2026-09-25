@@ -77,21 +77,6 @@ public class SemanticIndexService {
     }
 
     /**
-     * Compatibility constructor for extensions compiled against the PostgreSQL-only API.
-     */
-    @Deprecated(forRemoval = false)
-    public SemanticIndexService(DocDetailsContentExtractor contentExtractor,
-                                SlidingWindowChunker chunker,
-                                EmbeddingService embeddingService,
-                                PgVectorStore vectorStore,
-                                IndexQueueRepository queueRepository,
-                                RagEmbeddingStatService ragEmbeddingStatService,
-                                EmbeddingChunkRepository embeddingChunkRepository) {
-        this(contentExtractor, chunker, embeddingService, (VectorStore) vectorStore, queueRepository,
-            ragEmbeddingStatService, embeddingChunkRepository);
-    }
-
-    /**
      * Process all pending items in the RAG indexing queue.
      * Items are fetched in batches of 500 and processed sequentially.
      * Uses a cache-based flag to prevent concurrent execution.

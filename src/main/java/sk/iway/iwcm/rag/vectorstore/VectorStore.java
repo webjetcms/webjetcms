@@ -88,19 +88,6 @@ public interface VectorStore {
     boolean resetDimensions(int dimensions);
 
     /**
-     * Get existing embeddings for an entity, keyed by content hash.
-     *
-     * @deprecated use the domain-explicit overload for background processing
-     * @param entityType entity type of the indexed object
-     * @param entityId ID of the indexed object
-     * @param embeddingProvider provider that generated the embeddings
-     * @param embeddingModel model that generated the embeddings
-     * @return existing embeddings keyed by content hash
-     */
-    @Deprecated(forRemoval = false)
-    Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel);
-
-    /**
      * Get existing embeddings for an entity and domain, keyed by content hash.
      * Used to skip re-embedding unchanged chunks.
      *
@@ -111,7 +98,5 @@ public interface VectorStore {
      * @param domainId domain that owns the indexed object
      * @return existing embeddings keyed by content hash
      */
-    default Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel, int domainId) {
-        return getExistingEmbeddingsByHash(entityType, entityId, embeddingProvider, embeddingModel);
-    }
+    Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel, int domainId);
 }

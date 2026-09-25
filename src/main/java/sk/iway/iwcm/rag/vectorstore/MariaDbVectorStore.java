@@ -935,24 +935,6 @@ public class MariaDbVectorStore implements VectorStore {
             " (embedding) M=16 DISTANCE=" + indexDistance;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    @Deprecated(forRemoval = false)
-    public Map<String, float[]> getExistingEmbeddingsByHash(
-        String entityType,
-        long entityId,
-        String embeddingProvider,
-        String embeddingModel
-    ) {
-        return getExistingEmbeddingsByHash(
-            entityType,
-            entityId,
-            embeddingProvider,
-            embeddingModel,
-            CloudToolsForCore.getDomainId()
-        );
-    }
-
     @Override
     public Map<String, float[]> getExistingEmbeddingsByHash(
         String entityType,
