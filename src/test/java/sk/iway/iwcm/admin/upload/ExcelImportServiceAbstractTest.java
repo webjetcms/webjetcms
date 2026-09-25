@@ -4,9 +4,12 @@ import ch.qos.logback.classic.Level;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.jspecify.annotations.NonNull;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
@@ -25,6 +28,7 @@ import java.util.Optional;
 // https://www.baeldung.com/java-beforeall-afterall-non-static
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(SpringExtension.class)
+@ActiveProfiles("upload-test")
 @ContextConfiguration(classes = {SpringApplication.class, UploadSpringConfig.class})
 @WebAppConfiguration
 public class ExcelImportServiceAbstractTest {
@@ -33,6 +37,9 @@ public class ExcelImportServiceAbstractTest {
 
     @Autowired
     private ContactRepository repository;
+
+    @Autowired
+    private ApplicationContext applicationContext;
 
     @BeforeAll
     public void setup() {
@@ -78,6 +85,17 @@ public class ExcelImportServiceAbstractTest {
 
         // telefon sa podla zadania meni random v sk.iway.basecms.upload.example.SpringImportService.beforeRow
         // Assertions.assertEquals("+421 907 487 001", contactEntity.getPhone());
+    }
+
+    @Test
+    public void testJpaPersistenceUnit() {
+        LocalContainerEntityManagerFactoryBean entityManagerFactory = applicationContext.getBean(
+            "&basecmsEntityManager", LocalContainerEntityManagerFactoryBean.class
+        );
+
+        Assertions.assertEquals("basecms", entityManagerFactory.getPersistenceUnitName());
+        Assertions.assertDoesNotThrow(() -> entityManagerFactory.getObject()
+            .getMetamodel().managedType(ContactEntity.class));
     }
 
     private Optional<ContactEntity> getContactEntity() {

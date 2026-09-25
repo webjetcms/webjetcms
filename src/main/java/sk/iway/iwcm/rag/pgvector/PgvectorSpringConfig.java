@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Configuration;
 * Spring configuration for RAG module.
  */
 
-@Configuration
+@Configuration("pgvectorSpringConfig")
 @ComponentScan({
     "sk.iway.iwcm.rag.pgvector",
 })
