@@ -964,6 +964,16 @@ block content
                     }
                 });
 
+                // Open the approval queue from the dashboard after both tables exist.
+                window.domReady.add(function () {
+                    if (WJ.urlGetParam("show") === "toapprove" && (hasPagesToApprove || hasGroupsToApprove)) {
+                        $('#pills-pages #pills-waiting-tab').trigger('click');
+                        if (!hasPagesToApprove && hasGroupsToApprove) {
+                            $('#pills-pages_sub #pills-waiting-folder-tab').trigger('click');
+                        }
+                    }
+                });
+
                 function showHideTreeCol(id) {
                     var showTreeCol = true;
                     if ("pills-changes-tab" == id || "pills-waiting-tab" == id) {

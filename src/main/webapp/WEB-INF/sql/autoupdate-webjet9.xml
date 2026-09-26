@@ -3956,5 +3956,14 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>26.09.2026</string></void>
+                <void property="desc"><string>user_settings_admin - use transactional storage for atomic dashboard preferences</string></void>
+                <void property="mysql"><string>ALTER TABLE user_settings_admin ENGINE=InnoDB</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

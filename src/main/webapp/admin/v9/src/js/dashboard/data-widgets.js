@@ -1,0 +1,334 @@
+import { registerWidget } from './registry';
+import { node, text, number, date, link, icon, field, table, empty, fetchData, pagePreview } from './widget-utils';
+import { chartHost, mountChart } from './charts';
+
+const moduleLinks = {
+    approvals: '/admin/v9/webpages/web-pages-list/?show=toapprove', publishing: '/admin/v9/apps/audit-awaiting-publish-webpages/',
+    forms: '/apps/form/admin/', traffic: '/apps/stat/admin/', 'top-pages': '/apps/stat/admin/top/',
+    'search-terms': '/apps/stat/admin/search-engines/', referrers: '/apps/stat/admin/referer/',
+    errors: '/apps/stat/admin/error/', newsletter: '/apps/dmail/admin/'
+};
+const metricKey = metric => ({ views: 'visits', sessions: 'sessionsMetric', uniqueUsers: 'uniqueUsers' })[metric] || 'sessionsMetric';
+
+/** Labels the actual returned interval, including whole-week error aggregates. */
+function period(container, data, context, compact = false) {
+    if (data.from == null || data.to == null) return;
+    const full = `${date(data.from, false)} – ${date(data.to, false)}`;
+    const label = node('p', 'md-dashboard-widget__period small text-muted mb-2', compact ? shortPeriod(data.from, data.to) : full);
+    if (compact) label.title = full;
+    container.append(label);
+    if (data.granularity === 'week') {
+        const weekly = text(context, 'weeklyRequests');
+        if (compact) {
+            label.title = `${full} · ${weekly}`;
+            label.append(node('span', 'visually-hidden', ` · ${weekly}`));
+        } else container.append(node('p', 'small text-muted mb-2', weekly));
+    }
+    return label;
+}
+
+/** Uses compact localized dates without hiding a different calendar year. */
+function shortPeriod(from, to) {
+    const start = new Date(from), end = new Date(to);
+    const locale = (window.userLng === 'cz' ? 'cs' : window.userLng) || 'sk';
+    const year = start.getFullYear() !== new Date().getFullYear() || end.getFullYear() !== start.getFullYear();
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'numeric', ...(year ? { year: 'numeric' } : {}) }).formatRange(start, end);
+}
+
+/** Relative changes have an explicit unavailable state when the baseline is zero. */
+export function change(current, previous) {
+    if (previous == null || previous === 0) return null;
+    const delta = (Number(current) - previous) / previous * 100;
+    return `${delta > 0 ? '+' : ''}${Math.round(delta)} %`;
+}
+
+function summary(container, data, context, href, label, comparisonLabel) {
+    const group = node('div', 'md-dashboard-widget__metric');
+    const main = node('div', 'md-dashboard-widget__metric-main');
+    const total = link(number(data.total), href, 'md-dashboard-widget__number');
+    if (label) total.setAttribute('aria-label', `${label}: ${number(data.total)}`);
+    main.append(total);
+    if (label) main.append(node('span', 'md-dashboard-widget__metric-label small', label));
+    group.append(main);
+    if (data.previous != null) {
+        const delta = change(data.total, data.previous);
+        const direction = delta ? (Number(data.total) > Number(data.previous) ? 'positive' : Number(data.total) < Number(data.previous) ? 'negative' : 'neutral') : 'neutral';
+        const comparison = node('span', `md-dashboard-widget__comparison md-dashboard-widget__comparison--${direction} small`, delta || text(context, 'noComparison'));
+        if (comparisonLabel && delta) comparison.prepend(icon(direction === 'positive' ? 'ti-arrow-up-right' : direction === 'negative' ? 'ti-arrow-down-right' : 'ti-arrow-right'));
+        comparison.title = `${text(context, 'previous')}: ${number(data.previous)}`;
+        const comparisonGroup = node('div', 'md-dashboard-widget__metric-change');
+        comparisonGroup.append(comparison, node('span', 'md-dashboard-widget__comparison-label small', comparisonLabel || text(context, 'previous')));
+        group.append(comparisonGroup);
+    }
+    container.append(group);
+}
+
+function periodField(container, options, context, completed = true) {
+    return field(container, text(context, 'period'), [7, 30, 90].map(days => [days, text(context, `${completed ? "days" : "formDays"}${days}`)]), options.days || 7);
+}
+
+/** Keeps an inaccessible saved selection visible instead of silently changing it. */
+function selectionField(container, label, choices, value, context, allKey) {
+    const values = [['', text(context, allKey)], ...choices.map(choice => [String(choice.id), choice.title])];
+    if (value && !values.some(([id]) => id === String(value))) values.push([String(value), `${value} — ${text(context, 'unavailable')}`]);
+    return field(container, label, values, value || '');
+}
+
+function statSettings({ container, options, context }, metric = false) {
+    const days = periodField(container, options, context);
+    const selectedMetric = metric ? field(container, text(context, 'metric'), ['sessions', 'views', 'uniqueUsers'].map(value => [value, text(context, metricKey(value))]), options.metric || 'sessions') : null;
+    return { read: () => ({ options: { ...options, days: Number(days.value), ...(selectedMetric ? { metric: selectedMetric.value } : {}) } }) };
+}
+
+/** Provides chart values as text, optionally hidden visually while remaining available to screen readers. */
+function chartTable(container, context, headers, rows, visuallyHidden = false) {
+    const region = node(visuallyHidden ? 'div' : 'details', `md-dashboard-widget__chart-data${visuallyHidden ? ' visually-hidden' : ''}`);
+    if (!visuallyHidden) region.append(node('summary', 'small', text(context, 'chartData')));
+    const values = table(region, headers, rows);
+    if (visuallyHidden) values.prepend(node('caption', '', text(context, 'chartData')));
+    container.append(region);
+}
+
+/** Compares equal-length periods while retaining their actual dates in tooltips and the text table. */
+async function lineChart(container, data, context, signal) {
+    const series = data.series || [];
+    if (!series.length) { empty(container, context); return; }
+    const previous = data.previousSeries || [];
+    const metric = text(context, metricKey(data.metric));
+    const host = chartHost(container, `${metric}: ${number(data.total)}; ${text(context, 'previous')}: ${number(data.previous)}`);
+    host.classList.add('md-dashboard-widget__chart--traffic');
+    const legend = node('div', 'md-dashboard-widget__chart-legend');
+    const currentLabel = node('span', 'md-dashboard-widget__chart-key md-dashboard-widget__chart-key--current', shortPeriod(series[0].date, series[series.length - 1].date));
+    currentLabel.title = metric;
+    legend.append(currentLabel);
+    if (previous.length) {
+        const comparison = node('span', 'md-dashboard-widget__chart-key md-dashboard-widget__chart-key--previous', shortPeriod(previous[0].date, previous[previous.length - 1].date));
+        comparison.title = `${text(context, 'previous')}: ${number(data.previous)}`;
+        legend.append(comparison);
+    }
+    container.append(legend);
+    chartTable(container, context, [metric, text(context, 'previous')], series.map((point, index) => [
+        `${date(point.date, false)}: ${number(point.value)}`,
+        previous[index] ? `${date(previous[index].date, false)}: ${number(previous[index].value)}` : '—'
+    ]), true);
+    return mountChart(host, signal, (tools, chartDivId) => {
+        const chartData = new Map([[metric, series.map(point => ({ dayDate: point.date, value: point.value, actualDate: date(point.date, false) }))]]);
+        if (previous.length) chartData.set(text(context, 'previous'), previous.slice(0, series.length).map((point, index) => ({
+            dayDate: series[index].date, value: point.value, actualDate: date(point.date, false)
+        })));
+        return new tools.LineChartForm({ yAxeNames: [{ yAxeName: 'value' }], xAxeName: 'dayDate', chartTitle: '',
+            chartDivId, chartData, dateType: tools.DateType.Days, hideEmpty: false, colorScheme: 'set3' });
+    }, form => {
+        form.chart.yAxes.getIndex(0).setAll({ min: 0, maxPrecision: 0 });
+        form.chart.series.each((line, index) => {
+            if (index === 1) line.strokes.template.set('strokeDasharray', [5, 4]);
+            line.get('tooltip').setAll({ labelText: '{name}\n{actualDate}: [bold]{valueY}[/]', labelAriaLabel: '{name}, {actualDate}: {valueY}' });
+            line.get('tooltip').label.set('ariaHidden', true);
+        });
+    });
+}
+
+async function rankedList(container, data, context, type, detailed, signal, limit = detailed ? 6 : 5) {
+    const items = (data.items || []).slice(0, limit);
+    if (!items.length) { empty(container, context); return; }
+    if (type === 'top-pages') {
+        table(container, [text(context, 'page'), text(context, 'count'), text(context, 'change')], items.map(item => [
+            pagePreview({ title: item.title, fullPath: item.section, perexImage: item.perexImage }, item.url), number(item.value), change(item.value, item.previous) || '—'
+        ]), [1, 2]).classList.add('md-dashboard-widget__table--ranked', 'md-dashboard-widget__table--pages');
+    } else if (type === 'referrers') {
+        const host = chartHost(container, `${text(context, 'source')}: ${number(data.total)}`, true);
+        host.classList.add('md-dashboard-widget__chart--referrers');
+        host.style.height = `${items.length * 48}px`;
+        const chartData = items.map(item => ({ title: item.title, value: item.value,
+            percentage: data.total > 0 ? item.value / data.total * 100 : 0,
+            share: `${number(Math.round((data.total > 0 ? item.value / data.total * 100 : 0) * 10) / 10)} %` }));
+        chartTable(container, context, [text(context, 'source'), text(context, 'count'), text(context, 'observedShare')], chartData.map(item => [item.title, number(item.value), item.share]), true);
+        return mountChart(host, signal, (tools, chartDivId) => new tools.BarChartForm({
+            yAxeName: 'title', xAxeName: 'percentage', chartTitle: '', chartDivId, chartData, horizontal: true, colorScheme: 'set3'
+        }), form => {
+            const tooltip = form.chart.series.getIndex(1).get('tooltip');
+            tooltip.set('labelText', '{title}: {value} ({share})');
+            tooltip.label.setAll({ ignoreFormatting: true, ariaHidden: true });
+        });
+    } else table(container, [text(context, type === 'search-terms' ? 'query' : type === 'referrers' ? 'source' : 'page'), text(context, 'count')], items.map(item => [link(item.title, item.url), number(item.value)]), [1]).classList.add('md-dashboard-widget__table--ranked');
+}
+
+/** Polls only an active newsletter visible in the current browser tab. */
+function pollNewsletter(data, container, signal, refresh) {
+    if (!data.active) return;
+    let visible = false;
+    const observer = new IntersectionObserver(entries => { visible = entries.some(entry => entry.isIntersecting); });
+    observer.observe(container);
+    const timer = window.setInterval(() => { if (visible && document.visibilityState === 'visible' && !signal.aborted) refresh(); }, 30000);
+    return () => { observer.disconnect(); window.clearInterval(timer); };
+}
+
+/** Keeps a meaningful authorized summary when a data card is collapsed. */
+async function renderDataSummary({ container, instance, options, domainOptions, context, signal, refresh }) {
+    const type = instance.type;
+    const params = type === 'newsletter' ? { campaignId: domainOptions.campaignId }
+        : type === 'forms' ? { days: options.days || 7, formName: domainOptions.formName }
+        : ['approvals', 'publishing'].includes(type) ? {} : { days: options.days || 7, ...(type === 'traffic' ? { metric: options.metric || 'sessions' } : {}) };
+    const data = await fetchData(type, params, signal);
+    if (signal.aborted) return;
+    if (type === 'newsletter') {
+        const campaign = data.items[0];
+        if (campaign) container.append(node('p', 'small mb-1', `${campaign.title} · ${text(context, campaign.status === 'sending' ? 'active' : campaign.status)} · ${number(campaign.sent)} / ${number(campaign.recipients)}`));
+        else empty(container, context);
+    } else {
+        const label = type === 'traffic' ? text(context, metricKey(data.metric)) : type === 'forms' ? text(context, 'submissions') : text(context, 'count');
+        container.append(node('p', 'small mb-1', `${label}: ${number(data.total)}`));
+        if (type === 'forms') container.append(node('span', 'small', domainOptions.formName || text(context, 'allForms')));
+        period(container, data, context);
+    }
+    if (type === 'newsletter') return pollNewsletter(data, container, signal, refresh);
+}
+
+/** Registers content, analytics, and newsletter widgets using authorized projections. */
+export function registerDataWidgets() {
+    registerWidget({
+        type: 'approvals', titleKey: 'admin.dashboard.approvals.js', icon: 'ti-checkup-list', sizes: ['1x1', '3x3'], defaultSize: '3x3',
+        headerLink: { href: moduleLinks.approvals },
+        isAvailable: () => window.WJ.hasPermission('menuWebpages'), renderCollapsed: renderDataSummary,
+        async render({ container, instance, context, signal }) {
+            const data = await fetchData('approvals', {}, signal); if (signal.aborted) return;
+            summary(container, data, context, moduleLinks.approvals, text(context, 'pendingPages'));
+            if (instance.size !== '1x1') {
+                if (!data.items.length) empty(container, context);
+                else table(container, [text(context, 'page'), text(context, 'requester'), text(context, 'waitingSince')], data.items.slice(0, 6).map(item => [link(item.title, item.url), item.section, date(item.date)]));
+            }
+        }
+    });
+    registerWidget({
+        type: 'publishing', titleKey: 'admin.dashboard.publishing.js', icon: 'ti-calendar-event', sizes: ['2x2', '2x3'], defaultSize: '2x2',
+        headerLink: { href: () => window.WJ.hasPermission('cmp_adminlog') ? moduleLinks.publishing : '/admin/v9/webpages/web-pages-list/' },
+        isAvailable: () => window.WJ.hasPermission('menuWebpages'), renderCollapsed: renderDataSummary,
+        async render({ container, instance, context, signal }) {
+            const data = await fetchData('publishing', {}, signal); if (signal.aborted) return;
+            if (!data.items.length) empty(container, context);
+            else {
+                const status = node('p', 'md-dashboard-widget__publishing-status small');
+                status.append(icon('ti-clock'), document.createTextNode(text(context, 'scheduledChanges')));
+                container.append(status);
+                const list = node('ul', 'md-dashboard-widget__publishing list-unstyled');
+                data.items.slice(0, instance?.size === '2x2' ? 2 : 5).forEach(item => {
+                    const row = node('li', `md-dashboard-widget__publication${item.kind === 'expire' ? ' md-dashboard-widget__publication--expire' : ''}`);
+                    const locale = (window.userLng === 'cz' ? 'cs' : window.userLng) || 'sk';
+                    const parsed = item.date == null ? null : new Date(item.date);
+                    const validDate = parsed && !Number.isNaN(parsed.getTime());
+                    if (validDate) {
+                        const calendar = node('time', 'md-dashboard-widget__publication-calendar');
+                        calendar.dateTime = parsed.toISOString();
+                        calendar.setAttribute('aria-label', date(item.date));
+                        calendar.append(node('small', '', parsed.toLocaleString(locale, { month: 'short' })), node('strong', '', parsed.toLocaleString(locale, { day: 'numeric' })));
+                        row.append(calendar);
+                    }
+                    const content = node('div', 'md-dashboard-widget__publication-content');
+                    const scheduledTime = validDate ? parsed.toLocaleString(locale, { hour: '2-digit', minute: '2-digit' }) : date(item.date);
+                    const timing = node('span', 'md-dashboard-widget__publication-time small', `${text(context, item.kind === 'expire' ? 'expire' : 'publish')} · ${scheduledTime}`);
+                    if (validDate && parsed.getFullYear() !== new Date().getFullYear()) timing.append(document.createTextNode(' · '), node('span', 'md-dashboard-widget__publication-year', parsed.getFullYear()));
+                    content.append(link(item.title, item.url), timing);
+                    row.append(content);
+                    list.append(row);
+                }); container.append(list);
+            }
+            container.append(node('p', 'md-dashboard-widget__footnote small', text(context, 'nextScheduled')));
+        }
+    });
+    registerWidget({
+        type: 'forms', titleKey: 'admin.dashboard.forms.js', icon: 'ti-forms', sizes: ['1x1', '3x3'], defaultSize: '3x3', multiple: true,
+        headerLink: { href: (instance, context) => {
+            const formName = context.settings.domainOptions?.[instance.id]?.formName;
+            return formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(formName)}` : moduleLinks.forms;
+        } },
+        defaultOptions: { days: 7 }, defaultDomainOptions: { formName: '' }, isAvailable: () => window.WJ.hasPermission('cmp_form'), renderCollapsed: renderDataSummary,
+        async configure({ container, options, domainOptions, context, signal }) {
+            const data = await fetchData('forms', { days: options.days || 7 }, signal);
+            const days = periodField(container, options, context, false);
+            const form = selectionField(container, text(context, 'formName'), data.options || [], domainOptions.formName, context, 'allForms');
+            return { read: () => ({ options: { days: Number(days.value) }, domainOptions: { formName: form.value } }) };
+        },
+        async render({ container, instance, options, domainOptions, context, signal }) {
+            const data = await fetchData('forms', { days: options.days || 7, formName: domainOptions.formName }, signal); if (signal.aborted) return;
+            const href = domainOptions.formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(domainOptions.formName)}` : moduleLinks.forms;
+            const compact = instance.size === '1x1';
+            summary(container, data, context, href, compact ? text(context, 'formSubmissionsPeriod', options.days || 7) : text(context, 'submissions'));
+            if (domainOptions.formName) container.append(node('span', 'small text-muted', domainOptions.formName));
+            const interval = period(container, data, context);
+            if (compact) interval?.classList.add('visually-hidden');
+            if (instance.size !== '1x1') {
+                if (!data.items.length) empty(container, context);
+                else table(container, [text(context, 'formName'), text(context, 'date')], data.items.slice(0, 6).map(item => [link(item.title, item.url), date(item.date)]));
+            }
+        }
+    });
+    const definitions = [
+        ['traffic', 'ti-chart-line', ['1x1', '3x3']], ['top-pages', 'ti-chart-bar', ['2x3', '3x3']],
+        ['search-terms', 'ti-search', ['2x3', '3x3']], ['referrers', 'ti-route', ['2x2', '2x3', '3x3']], ['errors', 'ti-error-404', ['1x1', '3x3']]
+    ];
+    definitions.forEach(([type, icon, sizes]) => registerWidget({
+        type, titleKey: `admin.dashboard.${type}.js`, icon, sizes, defaultSize: type === 'referrers' ? '2x2' : sizes[sizes.length - 1], multiple: true,
+        headerLink: { href: moduleLinks[type] },
+        defaultOptions: { days: 7, ...(type === 'traffic' ? { metric: 'sessions' } : {}) },
+        isAvailable: context => window.WJ.hasPermission('cmp_stat') && context.config.statMode !== 'none',
+        configure: args => statSettings(args, type === 'traffic'), renderCollapsed: renderDataSummary,
+        async render({ container, instance, options, context, signal }) {
+            const data = await fetchData(type, { days: options.days || 7, ...(type === 'traffic' ? { metric: options.metric || 'sessions' } : {}) }, signal); if (signal.aborted) return;
+            if (type === 'traffic') {
+                const days = String(options.days || 7);
+                const label = text(context, `traffic${data.metric === 'views' ? 'Views' : data.metric === 'uniqueUsers' ? 'Users' : 'Sessions'}`, days);
+                summary(container, data, context, moduleLinks.traffic, label, text(context, 'trafficComparison', days));
+            } else if (type === 'errors') summary(container, data, context, moduleLinks.errors, text(context, 'requests'));
+            if (type !== 'referrers') period(container, data, context, type === 'traffic' || (type === 'errors' && instance.size === '1x1'));
+            if (instance.size !== '1x1') {
+                const cleanup = type === 'traffic' ? await lineChart(container, data, context, signal)
+                    : await rankedList(container, data, context, type, instance.size === '3x3', signal, type === 'referrers' && instance.size === '2x2' ? 3 : undefined);
+                if (!signal.aborted && type === 'referrers') {
+                    const caption = node('p', 'md-dashboard-widget__footnote small', text(context, 'observedSourcesPeriod', options.days || 7));
+                    if (data.from != null && data.to != null) caption.title = `${date(data.from, false)} – ${date(data.to, false)}`;
+                    container.append(caption);
+                }
+                return cleanup;
+            }
+        }
+    }));
+    registerWidget({
+        type: 'newsletter', titleKey: 'admin.dashboard.newsletter.js', icon: 'ti-send', sizes: ['2x2', '3x3'], multiple: true,
+        headerLink: { href: moduleLinks.newsletter },
+        defaultDomainOptions: { campaignId: '' }, isAvailable: () => window.WJ.hasPermission('menuEmail'), renderCollapsed: renderDataSummary,
+        async configure({ container, domainOptions, context, signal }) {
+            const data = await fetchData('newsletter', {}, signal);
+            const campaign = selectionField(container, text(context, 'campaign'), data.options || [], domainOptions.campaignId, context, 'automatic');
+            return { read: () => ({ domainOptions: { campaignId: campaign.value } }) };
+        },
+        async render({ container, instance, domainOptions, context, signal, refresh }) {
+            const data = await fetchData('newsletter', { campaignId: domainOptions.campaignId }, signal); if (signal.aborted) return;
+            if (!data.items.length) empty(container, context);
+            else if (instance.size === '3x3') {
+                table(container, [text(context, 'campaign'), text(context, 'status'), text(context, 'sent'), text(context, 'failed')], data.items.slice(0, 3).map(item => [
+                    link(item.title, item.url), text(context, item.status === 'sending' ? 'active' : item.status), `${number(item.sent)} / ${number(item.recipients)}`, number(item.failed)
+                ]));
+            } else {
+                const campaign = data.items[0];
+                const state = ['sending', 'scheduled', 'completed', 'draft', 'paused'].includes(campaign.status) ? campaign.status : 'unknown';
+                const status = node('p', `md-dashboard-widget__newsletter-status md-dashboard-widget__newsletter-status--${state} small`);
+                status.append(icon(state === 'completed' ? 'ti-circle-check' : state === 'sending' ? 'ti-send' : state === 'paused' ? 'ti-player-pause' : 'ti-clock'), document.createTextNode(text(context, state === 'completed' ? 'sendingCompleted' : state === 'sending' ? 'active' : state)));
+                container.append(status, link(campaign.title, campaign.url, 'md-dashboard-widget__newsletter-title'));
+                const metric = node('div', 'md-dashboard-widget__newsletter-metric');
+                const count = node('span');
+                count.append(node('strong', '', number(campaign.sent)), document.createTextNode(` / ${number(campaign.recipients)}`));
+                metric.append(count, node('span', 'md-dashboard-widget__newsletter-percent', campaign.recipients > 0 ? `${number(Math.round(campaign.sent / campaign.recipients * 100))} %` : '—'));
+                const progress = node('progress', 'md-dashboard-widget__newsletter-progress w-100'); progress.max = Math.max(1, campaign.recipients); progress.value = campaign.sent;
+                progress.setAttribute('aria-label', text(context, 'sent'));
+                metric.setAttribute('aria-label', `${text(context, 'sent')}: ${number(campaign.sent)} / ${number(campaign.recipients)}`);
+                container.append(metric, progress);
+                const details = node('div', 'md-dashboard-widget__newsletter-details');
+                for (const [key, label] of [['failed', 'failed'], ['opens', 'opened'], ['clicks', 'clicked']]) {
+                    if (campaign[key] != null && (key === 'failed' || campaign.status === 'completed')) details.append(node('span', key === 'failed' ? 'small d-block' : 'visually-hidden', `${text(context, label)}: ${number(campaign[key])}`));
+                }
+                container.append(details);
+            }
+            return pollNewsletter(data, container, signal, refresh);
+        }
+    });
+}

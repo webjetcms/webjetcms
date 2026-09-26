@@ -4,12 +4,12 @@ Scenario('logoffRequireCsrfToken', async ({ I, Document }) => {
     I.relogin("admin");
     Document.setConfigValue("logoffRequireCsrfToken", "true");
     I.amOnPage("/admin/v9/");
-    I.waitForText("Vitajte, Tester Playwright", 10, ".overview__dashboard__title h2");
+    I.waitForText("Tester Playwright", 10, "button.js-profile-toggler");
 
     //
     I.say("Direct link will not work");
     I.amOnPage("/logoff.do?forward=/admin/logon/");
-    I.waitForText("Vitajte, Tester Playwright", 10, ".overview__dashboard__title h2");
+    I.waitForText("Tester Playwright", 10, "button.js-profile-toggler");
 
     //
     I.say("wrong csrf token");
@@ -17,7 +17,7 @@ Scenario('logoffRequireCsrfToken', async ({ I, Document }) => {
         document.adminLogoffForm["__token"].value = "aaaa"
     });
     I.click(".js-logout-toggler");
-    I.waitForText("Vitajte, Tester Playwright", 10, ".overview__dashboard__title h2");
+    I.waitForText("Tester Playwright", 10, "button.js-profile-toggler");
 
     //
     I.say("click on button to correctly logoff");

@@ -79,7 +79,7 @@ Scenario('uspesne prihlasenie @singlethread', ({ I }) => {
     I.click("login-submit");
     // Wait until the administration UI finishes loading after login.
     I.wait(5);
-    I.see("Vitajte, Tester Playwright");
+    I.see("Tester Playwright");
     //menu polozky
     I.wait(1);
     I.see("Úvod");
@@ -105,7 +105,7 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     I.fillField("password", secret(I.getDefaultPassword()+".sha512"));
     I.click("login-submit");
 
-    I.waitForText("Vitajte, TestUser SHA512", 30, ".overview__dashboard__title h2");
+    I.waitForText("TestUser SHA512", 30, "button.js-profile-toggler");
 
     I.click("body > div.ly-page-wrapper > div.ly-header > div > div.header-link-wrapper > div:nth-child(4) > a");
 
@@ -116,7 +116,7 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     I.fillField("password", secret(I.getDefaultPassword()+".bcrypt"));
     I.click("login-submit");
 
-    I.waitForText("Vitajte, TestUser Bcrypto", 30, ".overview__dashboard__title h2");
+    I.waitForText("TestUser Bcrypto", 30, "button.js-profile-toggler");
 
     I.click("body > div.ly-page-wrapper > div.ly-header > div > div.header-link-wrapper > div:nth-child(4) > a");
 });

@@ -13,109 +13,44 @@ block content
     </div>
 
     script(data-th-inline="javascript").
-        window.webjetOverviewDashboardBootstrapData = {
-            backData: JSON.parse(/*[[${overviewBackData}]]*/ "{}"),
-            admins: JSON.parse(/*[[${overviewAdmins}]]*/ "[]"),
-            recentPages: JSON.parse(/*[[${overviewRecentPages}]]*/ "[]"),
-            changedPages: JSON.parse(/*[[${overviewChangedPages}]]*/ "[]"),
-            adminLog: JSON.parse(/*[[${overviewAdminlog}]]*/ "[]"),
-            todo: JSON.parse(/*[[${overviewTodo}]]*/ "[]"),
-            currentSessions: JSON.parse(/*[[${overviewCurrentSessions}]]*/ "{\"currentSessionId\":\"\",\"userSessions\":[]}")
-        };
+        window.webjetOverviewDashboardBootstrapData = JSON.parse(/*[[${overviewData}]]*/ "{}");
 
-    script.
+    script(data-th-inline="javascript").
         window.domReady.add(function () {
-            window.statMode = "[(${layout.getConstant('statMode')})]";
+            window.statMode = /*[[${layout.getConstant('statMode')}]]*/ "";
 
             const dashboard = document.querySelector("webjet-overview-dashboard");
             const dashboardData = window.webjetOverviewDashboardBootstrapData;
             delete window.webjetOverviewDashboardBootstrapData;
+            const announcement = /*[[\#{admin.overview.changelog}]]*/ "";
             dashboard.configure({
                 data: dashboardData,
                 config: {
                     statMode: window.statMode,
-                    overviewJsonUrl: "[(${layout.getConstant('overviewJsonUrl')})]"
+                    overviewJsonUrl: /*[[${layout.getConstant('overviewJsonUrl')}]]*/ ""
                 },
                 labels: {
-                    overviewViews: '[[\#{stat_time.sessions}]] / [[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]] [[\#{welcome.statBackTime.days}]]',
-                    overviewForms: '[[\#{admin.welcome.newForms}]] / [[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]] [[\#{welcome.statBackTime.days}]]',
-                    overviewForum: '[[\#{components.forum.title}]] / [[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]] [[\#{welcome.statBackTime.days}]]',
-                    overviewErrors: '[[\#{stat_menu.invalidPages}]] / [[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]] [[\#{welcome.statBackTime.days}]]',
-                    printToPdf: '[[\#{components.monitoring.print_to_pdf}]]',
-                    emptySpaceOnDisk: '[[\#{components.monitoring.empty_space_on_disc}]]',
-                    usedMemory: '[[\#{components.monitoring.used_memory.js}]]',
-                    freeMemory: '[[\#{components.monitoring.free_memory.js}]]',
-                    totalMemory: '[[\#{components.monitoring.total_memory.js}]]',
-                    occupancyMemory: '[[\#{components.monitoring.memory_occupancy}]]',
-                    cpuLoad: '[[\#{components.monitoring.cpu_load}]]',
-                    myLastPages: '[[\#{admin.fck.last_pages}]]',
-                    changedWebPages: '[[\#{components.adminlog.changedWebPages}]]',
-                    audit: '[[\#{admin.crontab.audit}]]',
-                    welcome: '[[\#{admin.overview.welcome}]]',
-                    changelog: WJ.parseMarkdown('[[\#{admin.overview.changelog}]]'),
-                    seeCompleteChangelog: '[[\#{admin.overview.seeCompleteChangelog}]]',
-                    loggedAdmins: '[[\#{welcome.logged_admins}]]',
-                    appsForNewWebJET: '[[\#{admin.overview.appsForNewWebJET}]]',
-                    newsInWebJET: '[[\#{admin.overview.newsInWebJET}]]'
+                    overviewViews: (/*[[\#{stat_time.sessions}]]*/ "") + " / " + (/*[[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]]*/ 7) + " " + (/*[[\#{welcome.statBackTime.days}]]*/ ""),
+                    overviewForms: (/*[[\#{admin.welcome.newForms}]]*/ "") + " / " + (/*[[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]]*/ 7) + " " + (/*[[\#{welcome.statBackTime.days}]]*/ ""),
+                    overviewForum: (/*[[\#{components.forum.title}]]*/ "") + " / " + (/*[[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]]*/ 7) + " " + (/*[[\#{welcome.statBackTime.days}]]*/ ""),
+                    overviewErrors: (/*[[\#{stat_menu.invalidPages}]]*/ "") + " / " + (/*[[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]]*/ 7) + " " + (/*[[\#{welcome.statBackTime.days}]]*/ ""),
+                    printToPdf: /*[[\#{components.monitoring.print_to_pdf}]]*/ "",
+                    emptySpaceOnDisk: /*[[\#{components.monitoring.empty_space_on_disc}]]*/ "",
+                    usedMemory: /*[[\#{components.monitoring.used_memory.js}]]*/ "",
+                    freeMemory: /*[[\#{components.monitoring.free_memory.js}]]*/ "",
+                    totalMemory: /*[[\#{components.monitoring.total_memory.js}]]*/ "",
+                    occupancyMemory: /*[[\#{components.monitoring.memory_occupancy}]]*/ "",
+                    cpuLoad: /*[[\#{components.monitoring.cpu_load}]]*/ "",
+                    myLastPages: /*[[\#{admin.fck.last_pages}]]*/ "",
+                    changedWebPages: /*[[\#{components.adminlog.changedWebPages}]]*/ "",
+                    audit: /*[[\#{admin.crontab.audit}]]*/ "",
+                    welcome: /*[[\#{admin.overview.welcome}]]*/ "",
+                    changelog: WJ.parseMarkdown(announcement.replace(/\\n/g, "\n"), { link: true, imgSrcPrefix: "" }),
+                    seeCompleteChangelog: /*[[\#{admin.overview.seeCompleteChangelog}]]*/ "",
+                    loggedAdmins: /*[[\#{welcome.logged_admins}]]*/ "",
+                    appsForNewWebJET: /*[[\#{admin.overview.appsForNewWebJET}]]*/ "",
+                    newsInWebJET: /*[[\#{admin.overview.newsInWebJET}]]*/ ""
                 }
             });
-
-            let container = "toast-container-overview";
-            if ([(${show2FARecommendation==true})]) {
-                WJ.notify("info", "[[\#{user.gauth.title}]]", "[[\#{overview.2fa.warning}]]", 0, [
-                    {
-                        title: "[[\#{button.setup}]]",
-                        cssClass: "btn btn-outline-secondary",
-                        click: "WJ.openPopupDialog('/admin/2factorauth.jsp');",
-                        closeOnClick: false
-                    }
-                ], false, container);
-            }
-            if ([(${layout.getConstantBoolean('statWebJET7Converted')==false})]) {
-                WJ.notify("warning", "[[\#{text.warning}]]", "[[\#{admin.update.databaseNotUpdatedToWebJET7}]]", 0, [
-                    {
-                        title: "[[\#{admin.update.databaseNotUpdatedToWebJET7.startConversion}]]",
-                        cssClass: "btn btn-outline-secondary",
-                        click: "window.open('/admin/update/update_webjet7.jsp?act=fix')",
-                        closeOnClick: false
-                    }
-                ], false, container);
-            }
-            if ([(${showBrowserIdentifierMigrationWarning==true})]) {
-                WJ.notify("warning", "[[\#{text.warning}]]", "[[\#{stat.browser-migration.warning}]]", 0, [
-                    {
-                        title: "[[\#{stat.browser-migration.warning-start}]]",
-                        cssClass: "btn btn-outline-secondary",
-                        click: "window.open('/admin/v9/settings/stat-browser-migration/')",
-                        closeOnClick: false
-                    }
-                ], false, container);
-            }
-            if ([(${showErrorLog==true})]) {
-                WJ.notify("error", "[[\#{update.failed}]]", "[[\#{overview.update.showErrors}]]", 0, [
-                    {
-                        title: "[[\#{button.show}]]",
-                        cssClass: "btn btn-outline-secondary",
-                        click: "window.open('/files/protected/admin/error-log.txt')",
-                        closeOnClick: false
-                    }
-                ], false, container);
-            }
-            if ([(${javaVersionWarningText!=null})]) {
-                WJ.notify("warning", "[[\#{text.warning}]]", "[[${javaVersionWarningText}]]", 0, [], false, container);
-            }
-            if ([(${licenceExpirationWarningText!=null})]) {
-                WJ.notify("warning", "[[\#{text.warning}]]", `[(${licenceExpirationWarningText})]`, 0, [], false, container);
-            }
-            if ([(${amazonSesWarningText!=null})]) {
-                WJ.notify("error", "[[\#{menu.email}]]", "[[${amazonSesWarningText}]]", 0, [
-                    {
-                        title: "[[\#{menu.top.help}]]",
-                        cssClass: "btn btn-outline-secondary",
-                        click: "WJ.showHelpWindow('/install/config/README');",
-                        closeOnClick: false
-                    }
-                ], false, container);
-            }
 
         });

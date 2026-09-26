@@ -6,7 +6,30 @@ Before(({ I, login }) => {
 
 Scenario('dashboard', async ({ I, a11y }) => {
     I.amOnPage('/admin/v9/');
+    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    I.waitForFunction(() => [...document.querySelectorAll('.md-dashboard__widget-body')].every(body => body.getAttribute('aria-busy') !== 'true'), 20);
     await a11y.check();
+});
+
+Scenario('Widget catalogue supports keyboard entry, a focus trap and focus restoration', async ({ I, a11y }) => {
+    I.amOnPage('/admin/v9/');
+    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    await I.executeScript(() => document.querySelector('.md-dashboard__toolbar > button').focus());
+    I.pressKey('Enter');
+    I.waitForVisible('.md-dashboard-modal input[type="search"]', 10);
+    I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard-modal input[type="search"]'), 10);
+    await a11y.check('.md-dashboard-modal');
+    I.pressKey(['Shift', 'Tab']);
+    I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard-modal .modal-header button'), 10);
+    I.pressKey(['Shift', 'Tab']);
+    I.waitForFunction(() => document.querySelector('.md-dashboard-modal').contains(document.activeElement) && document.activeElement !== document.querySelector('.md-dashboard-modal .modal-header button'), 10);
+    I.clickCss('.md-dashboard__reset');
+    I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard-modal button[aria-describedby^="dashboard-reset-"]'), 10);
+    I.seeElement('.md-dashboard__reset[aria-expanded="true"]');
+    await a11y.check('.md-dashboard-modal');
+    I.pressKey('Escape');
+    I.waitForInvisible('.md-dashboard-modal', 10);
+    I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__toolbar > button'), 10);
 });
 
 Scenario("show all notification types", async ({ I, a11y }) => {
