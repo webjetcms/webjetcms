@@ -511,8 +511,56 @@ test('Every active login stays visible with the current session first even when 
     await scope.getWidget('sessions').render({ container, context, instance: { collapsed: false }, signal: new AbortController().signal });
     const rows = container.querySelectorAll('li');
     assert.equal(rows.length, 4);
-    assert.match(rows[0].textContent, /Current browser.*currentSession/);
+    assert.match(rows[0].textContent, /Current browser/);
+    assert.match(rows[0].querySelector('.md-dashboard-widget__session-current').getAttribute('aria-label'), /currentSession/);
     assert.equal(rows[0].querySelector('button'), null);
+});
+
+test('Session rows use installed browser icons and labeled compact status and logout controls', async t => {
+    const names = ['Chrome 153', 'HeadlessChrome 131', 'Safari 18', 'Firefox 131', 'Microsoft Edge 131', '<img src=x>'];
+    const { scope, context, container } = fixture(t, { extraWidgets: true, data: { currentSessions: {
+        currentSessionId: 'browser-0', userSessions: [{ userSessions: names.map((browserName, index) => ({ sessionId: `browser-${index}`, browserName, logonTime: 6000 - index })) }]
+    } } });
+    await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
+    assert.deepEqual([...container.querySelectorAll('.md-dashboard-widget__session-device')].map(icon => icon.classList[1]),
+        ['ti-brand-chrome', 'ti-brand-chrome', 'ti-brand-safari', 'ti-brand-firefox', 'ti-brand-edge', 'ti-device-desktop']);
+    const status = container.querySelector('.md-dashboard-widget__session-current');
+    assert.equal(status.tabIndex, 0);
+    assert.equal(status.getAttribute('title'), status.getAttribute('aria-label'));
+    const logout = container.querySelector('.md-dashboard-widget__session-logout');
+    assert.match(logout.getAttribute('aria-label'), /logoutSession/);
+    assert.ok(logout.querySelector('.ti-logout'));
+    assert.equal(container.querySelector('img'), null);
+});
+
+test('Native session scrolling contains wheel, touch and keyboard events and releases listeners on abort', async t => {
+    const { scope, context, container, window } = fixture(t, { extraWidgets: true, data: { currentSessions: {
+        currentSessionId: 'current', userSessions: [{ userSessions: [{ sessionId: 'other', browserName: 'Chrome' }] }]
+    } } });
+    const controller = new AbortController();
+    await scope.getWidget('sessions').render({ container, context, signal: controller.signal });
+    const list = container.querySelector('ul');
+    let overflow = true, bubbled = 0;
+    Object.defineProperty(list, 'scrollHeight', { get: () => overflow ? 300 : 100 });
+    Object.defineProperty(list, 'clientHeight', { value: 100 });
+    for (const type of ['wheel', 'keydown', 'touchstart', 'touchmove', 'touchend']) container.addEventListener(type, () => bubbled++);
+    const wheel = new window.WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: 60 });
+    list.dispatchEvent(wheel);
+    list.dispatchEvent(new window.KeyboardEvent('keydown', { bubbles: true, key: 'ArrowDown' }));
+    assert.equal(bubbled, 0);
+    assert.equal(wheel.defaultPrevented, false, 'The browser must retain native scrolling.');
+    list.dispatchEvent(new window.Event('touchstart', { bubbles: true }));
+    overflow = false;
+    list.dispatchEvent(new window.Event('touchmove', { bubbles: true }));
+    list.dispatchEvent(new window.Event('touchend', { bubbles: true }));
+    list.querySelector('button').dispatchEvent(new window.KeyboardEvent('keydown', { bubbles: true, key: ' ' }));
+    assert.equal(bubbled, 0, 'The complete native gesture and button activation stay isolated.');
+    list.dispatchEvent(new window.WheelEvent('wheel', { bubbles: true }));
+    assert.equal(bubbled, 1, 'An unscrollable list must not trap page scrolling.');
+    overflow = true;
+    controller.abort();
+    list.dispatchEvent(new window.WheelEvent('wheel', { bubbles: true }));
+    assert.equal(bubbled, 2);
 });
 
 test('Accepted cluster logout stays pending instead of claiming immediate invalidation', async t => {
@@ -533,14 +581,26 @@ test('Accepted cluster logout stays pending instead of claiming immediate invali
 });
 
 
-test('Release announcements preserve paragraph breaks and show a concise introduction with a full changelog link', t => {
+test('Release announcements preserve every Markdown-rendered feature and place collapse beside the changelog link', t => {
     const { scope, context, container } = fixture(t, { extraWidgets: true });
     context.labels.changelog = 'WebJET CMS <strong>2026.18</strong> first feature.<br><br>Second feature.<br><br>Third feature.';
     const news = scope.releaseNews(context);
     assert.equal(news.paragraphs.length, 3);
     assert.equal(news.paragraphs[1], 'Second feature.');
     scope.getWidget('news').render({ container, context });
-    assert.equal(container.querySelectorAll('.md-dashboard-widget__news-highlights p').length, 1);
-    assert.match(container.querySelector('.md-dashboard-widget__news-highlights').textContent, /first feature/);
+    assert.equal(container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, context.labels.changelog);
+    assert.equal(container.querySelector('.md-dashboard-widget__news-header button'), null);
+    const actions = container.querySelector('.md-dashboard-widget__news-actions');
+    assert.equal(actions.children.length, 2);
+    assert.equal(actions.querySelector('button').textContent, 'admin.dashboard.newsCollapse.js');
+    assert.equal(actions.querySelector('button i').getAttribute('aria-hidden'), 'true');
     assert.equal(container.querySelector('.md-dashboard-widget__news-more').getAttribute('href'), 'https://docs.webjetcms.sk/latest/en/CHANGELOG');
+});
+
+test('Expanded release announcements retain headings, lists, emphasis and links from the Markdown renderer', t => {
+    const { scope, context, container } = fixture(t, { extraWidgets: true });
+    context.labels.changelog = '<h2>WebJET CMS 2026.18</h2><p>A <strong>complete</strong> announcement.</p><ul><li>First feature</li><li>Second <em>feature</em></li></ul><p>Read <a href="/release-details/">the details</a>.</p>';
+    assert.equal(scope.releaseNews(context).version, '2026.18');
+    scope.getWidget('news').render({ container, context });
+    assert.equal(container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, context.labels.changelog);
 });

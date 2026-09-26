@@ -6,6 +6,7 @@ let noticesToken;
 
 const settingsRoute = '**/admin/rest/dashboard/settings';
 const noticesRoute = '**/admin/rest/dashboard/notices';
+const sessionsRoute = '**/admin/rest/dashboard/data/sessions*';
 const editButton = '.md-dashboard__toolbar-actions > button[aria-pressed]';
 const newsToggle = '.md-dashboard-widget__news-toggle';
 
@@ -122,6 +123,13 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
 Scenario('Release notes collapse to a persistent summary and can be expanded again', async ({ I }) => {
     await waitForOverview(I);
     I.seeElement('.md-dashboard-widget__news-highlights');
+    I.seeElement('.md-dashboard-widget__news-actions .md-dashboard-widget__news-more');
+    I.seeElement('.md-dashboard-widget__news-actions .md-dashboard-widget__news-toggle');
+    I.assertTrue(await I.executeScript(() => {
+        const original = new DOMParser().parseFromString(document.querySelector('webjet-overview-dashboard').labels.changelog, 'text/html');
+        return document.querySelector('.md-dashboard-widget__news-highlights').innerHTML === original.body.innerHTML;
+    }), 'The full original Markdown announcement must be retained.');
+    I.assertFalse(await I.executeScript(() => document.querySelector('.md-dashboard-widget__news-highlights').textContent.includes('\\n')), 'Translation paragraph escapes must render as Markdown line breaks.');
     I.clickCss(newsToggle);
     waitForSave(I);
     I.waitForVisible('.is-news-collapsed .md-dashboard-widget__news-summary', 10);
@@ -157,9 +165,62 @@ Scenario('Dashboard header, notices, widgets and shortcuts fit the responsive vi
     I.wjSetDefaultWindowSize();
 });
 
+Scenario('Session scrolling stays inside its list and compact controls expose accessible tooltips', async ({ I }) => {
+    I.resizeWindow(1337, 1052);
+    await I.mockRoute(sessionsRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ currentSessions: {
+        currentSessionId: 'session-autotest-0', userSessions: [{ cluster: 'autotest', userSessions: Array.from({ length: 9 }, (_, index) => ({
+            sessionId: `session-autotest-${index}`, browserName: ['Chrome 153', 'Safari 18', 'Firefox 131'][index % 3],
+            logonTime: Date.now() - index * 60000, remoteAddr: '127.0.0.1'
+        })) }]
+    } }) }));
+    I.refreshPage();
+    await waitForOverview(I);
+    const list = '.md-dashboard__sessions .md-dashboard-widget__sessions';
+    I.seeNumberOfElements(`${list} > li`, 9);
+    I.seeElement(`${list} .ti-brand-chrome`);
+    I.seeElement(`${list} .ti-brand-safari`);
+    I.seeElement(`${list} .ti-brand-firefox`);
+    I.executeScript(() => { window.scrollbarMain.setMomentum(0, 0); window.scrollbarMain.setPosition(0, 0); });
+    // Standard scroll helpers do not generate wheel events, which trigger the smooth-scrollbar regression.
+    await I.usePlaywrightTo('wheel over the native session list', async ({ page }) => {
+        const bounds = await page.locator(list).boundingBox();
+        await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + 30);
+        await page.mouse.wheel(0, 130);
+    });
+    I.waitForFunction(selector => document.querySelector(selector).scrollTop > 0, [list], 10);
+    I.assertEqual(await I.executeScript(() => window.scrollbarMain.offset.y), 0, 'Wheel input must not scroll the dashboard behind the session list.');
+    I.executeScript(selector => { const node = document.querySelector(selector); node.focus({ preventScroll: true }); node.scrollTop = 0; }, list);
+    I.pressKey('PageDown');
+    I.waitForFunction(selector => document.querySelector(selector).scrollTop > 0, [list], 10);
+    I.assertEqual(await I.executeScript(() => window.scrollbarMain.offset.y), 0, 'Keyboard scrolling must stay inside the focused list.');
+    const current = `${list} .md-dashboard-widget__session-current`;
+    I.executeScript(selector => { const node = document.querySelector(selector); node.closest('ul').scrollTop = 0; node.focus({ preventScroll: true }); }, current);
+    I.waitForVisible('.tooltip.show', 10);
+    I.see(await I.grabAttributeFrom(current, 'aria-label'), '.tooltip.show');
+    I.pressKey('Escape');
+    I.waitForInvisible('.tooltip.show', 10);
+    const logout = `${list} .md-dashboard-widget__session-logout`;
+    I.executeScript(selector => document.querySelector(selector).focus({ preventScroll: true }), logout);
+    I.waitForVisible('.tooltip.show', 10);
+    I.see(await I.grabAttributeFrom(`${list} > li:nth-child(2) .md-dashboard-widget__session-logout`, 'aria-label'), '.tooltip.show');
+    I.pressKey('Escape');
+    I.waitForInvisible('.tooltip.show', 10);
+    I.clickCss('.md-dashboard__sessions .md-dashboard-widget__session-manage');
+    I.waitForVisible('.md-dashboard-modal .md-dashboard-widget__session-current', 10);
+    I.executeScript(() => document.querySelector('.md-dashboard-modal .md-dashboard-widget__session-current').focus());
+    I.waitForVisible('.tooltip.show', 10);
+    I.pressKey('Escape');
+    I.waitForInvisible('.tooltip.show', 10);
+    I.seeElement('.md-dashboard-modal');
+    I.pressKey('Escape');
+    I.waitForFunction(() => !document.querySelector('.md-dashboard-modal'), 10);
+    await I.stopMockingRoute(sessionsRoute);
+});
+
 Scenario('Remove design fixtures and verify the account preferences were never changed', async ({ I }) => {
     await I.stopMockingRoute(settingsRoute);
     await I.stopMockingRoute(noticesRoute);
+    await I.stopMockingRoute(sessionsRoute);
     I.wjSetDefaultWindowSize();
     I.refreshPage();
     await waitForOverview(I);

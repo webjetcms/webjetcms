@@ -68,7 +68,7 @@ Zdrojom je `src/main/webapp/admin/v9/src/scss/5-modules/_md-dashboard.scss`. SAS
 
 ## Výsledky
 
-Implementované sú všetky vyššie uvedené oblasti. Aktívne relácie zobrazujú celý zoznam; pri veľkom počte má zoznam vlastné rolovanie. Novinky zobrazujú stručný úvodný odsek a odkaz na kompletný zoznam zmien. Uložené staršie rozloženia sa zachovávajú; nový predvolený variant sa uplatní pre nový alebo resetovaný profil.
+Implementované sú všetky vyššie uvedené oblasti. Aktívne relácie zobrazujú celý zoznam; pri veľkom počte má zoznam vlastné rolovanie. Novinky zobrazujú celý obsah prekladového kľúča `admin.overview.changelog` s Markdown formátovaním a odkazom na kompletný zoznam zmien. Uložené staršie rozloženia sa zachovávajú; nový predvolený variant sa uplatní pre nový alebo resetovaný profil.
 
 Pri kontrole sa opravili aj dve vedľajšie chyby: lokalizovaný dátum `02.03.2026` sa už neinterpretuje ako americký dátum a 38px perex náhľady používajú thumbnail službu s výstupom 76 × 76 px. ChartTools dostáva runtime farby vrátane normalizácie desatinných RGB kanálov zo SASS.
 
@@ -109,3 +109,14 @@ Po priamom porovnaní prototypu a implementácie sa upravilo:
 Zachované sú skutočné dáta, uložené poradie a veľkosti kariet, globálna hlavička a tmavé menu. Počet položiek a prázdne stavy sa riadia reálnymi dátami, preto sa obsah líši od ilustračného prototypu.
 
 Overenie tejto úpravy: **58 JavaScript helper testov, 4 dizajnové E2E scenáre a 6 scenárov katalógu**. Prešli kontrola prístupnosti, responzívne šírky 390/768/1337 px, životný cyklus AmCharts, vyhľadávanie, klávesnicové ovládanie a návrat pôvodných preferencií. Development a production zostava prešli. Java služby sa pri tomto doladení nemenili.
+
+## Pripomienky k novinkám a aktívnym prihláseniam
+
+- Rozbalené novinky zachovávajú celý preklad `admin.overview.changelog` vrátane Markdown formátovania. Zápis `\n` v preklade sa pred spracovaním prevedie na nový riadok. Obsah využíva celú dostupnú šírku vedľa prihlásení; skrátený text zostáva iba v zbalenom náhľade.
+- Tlačidlo „Zbaliť novinky“ je pri odkaze „Kompletný zoznam zmien“. Po zbalení zostáva „Viac info“ a zachová sa klávesnicový fokus.
+- Prihlásenia používajú Tabler ikony Chrome, Safari, Firefox a Edge; neznámy prehliadač má všeobecnú ikonu zariadenia.
+- Aktuálna relácia má zelenú bodku s tooltipom „Toto prihlásenie“. Ostatné majú napravo ikonu odhlásenia s tooltipom „Odhlásiť túto reláciu“. Riadok tvorí názov prehliadača a dátum/IP bez tretieho riadku akcie.
+- Dlhý zoznam má vlastné natívne rolovanie. Jeho udalosti kolieska, dotyku a navigačných klávesov sa pri pretekaní nezachytávajú hlavným scrollbarom administrácie. Listenery a tooltipy sa uvoľnia so zánikom widgetu alebo dialógu.
+- Tooltipy fungujú pri hoveri aj klávesnicovom fokuse. Escape skryje viditeľný tooltip; ďalší Escape môže zatvoriť dialóg správy relácií.
+
+Overenie týchto pripomienok: **61 JavaScript helper testov, 5 dizajnových E2E scenárov a 6 scenárov katalógu**. Test s deviatimi reláciami overil koliesko, PageDown, tooltipy aj dvojité Escape v dialógu. Prešli kontrola kompletného HTML noviniek, responzívne šírky 390/768/1337 px a obnovenie pôvodných preferencií. Development aj production zostava prešli; production hlási existujúce upozornenia na veľkosť spoločných bundle súborov. Java služby ani prekladový obsah sa nemenili.

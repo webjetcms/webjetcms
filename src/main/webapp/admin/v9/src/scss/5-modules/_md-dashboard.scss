@@ -74,7 +74,7 @@ webjet-overview-dashboard a:focus-visible {
     &__greeting { font-size: 29px; font-weight: 700; line-height: 1.15; margin: 0 0 20px; letter-spacing: -1px; }
     &__eyebrow { color: var(--wj-dashboard-muted); font-size: 12px; margin-bottom: 10px; &::first-letter { text-transform: uppercase; } }
     &__news, &__sessions, &__search { min-width: 0; }
-    &__news { max-width: 500px; }
+    &__news { width: 100%; }
 
     &__sessions &__widget {
         background: var(--wj-dashboard-security);
@@ -84,16 +84,16 @@ webjet-overview-dashboard a:focus-visible {
     &__sessions &__widget-header { padding: 16px 96px 0 16px; gap: 6px; > .ti { font-size: 16px; } }
     &__sessions &__widget-title { font-size: 12px; }
     &__sessions &__widget-body { padding: 10px 16px 14px; }
-    &__sessions .md-dashboard-widget__sessions { max-height: 190px; overflow-y: auto; }
+    &__sessions .md-dashboard-widget__sessions { max-height: 156px; overflow-y: auto; overscroll-behavior-y: contain; margin-bottom: 0; }
     &__sessions .md-dashboard-widget__session {
         display: grid;
-        grid-template-columns: 20px minmax(0, 1fr) auto;
+        grid-template-columns: 20px minmax(0, 1fr) 24px;
         column-gap: 8px;
         .md-dashboard-widget__session-device { grid-column: 1; grid-row: 1 / 3; align-self: center; font-size: 18px; color: var(--wj-dashboard-muted); }
-        .md-dashboard-widget__session-name { grid-column: 2 / -1; grid-row: 1; font-size: 12px; font-weight: 400; }
-        .md-dashboard-widget__session-detail { grid-column: 2 / -1; grid-row: 2; }
-        .md-dashboard-widget__session-current, .btn { grid-column: 2 / -1; grid-row: 3; justify-self: start; }
-        .btn { padding: 0; font-size: 11px; min-height: 24px; margin: 0; color: var(--wj-dashboard-muted); }
+        .md-dashboard-widget__session-name { grid-column: 2; grid-row: 1; font-size: 12px; font-weight: 400; }
+        .md-dashboard-widget__session-detail { grid-column: 2; grid-row: 2; }
+        .md-dashboard-widget__session-current, .md-dashboard-widget__session-logout { grid-column: 3; grid-row: 1 / 3; align-self: center; }
+        .md-dashboard-widget__session-feedback { grid-column: 2 / -1; margin: 0; }
     }
     &__sessions .md-dashboard-widget__session-manage { position: absolute; right: 16px; top: 12px; font-size: 11px; padding: 0; min-height: 24px; margin: 0; color: var(--wj-primary); border: 0; background: transparent; }
     &__widget-content .text-muted { color: var(--wj-dashboard-muted) !important; }
@@ -410,7 +410,7 @@ webjet-overview-dashboard a:focus-visible {
         > summary:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }
         > table { margin-top: 8px; }
     }
-    &__sessions { overflow-wrap: anywhere; margin-bottom: 8px; }
+    &__sessions { overflow-wrap: anywhere; margin-bottom: 8px; &:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: 2px; } }
     &__session {
         display: flex;
         align-items: baseline;
@@ -424,7 +424,17 @@ webjet-overview-dashboard a:focus-visible {
     }
     &__session-name { font-size: 14px; }
     &__session-detail { color: var(--wj-dashboard-muted); font-size: 11px; flex-basis: 100%; }
-    &__session-current { color: var(--wj-dashboard-positive); font-size: 11px; }
+    &__session-current {
+        display: inline-grid;
+        place-items: center;
+        width: 24px;
+        height: 24px;
+        flex-shrink: 0;
+        border-radius: var(--wj-border-radius);
+        &::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--wj-dashboard-positive); }
+        &:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }
+    }
+    &__session-logout { display: inline-grid; place-items: center; width: 24px; height: 24px; min-height: 24px; padding: 0; margin: 0 !important; font-size: 16px; color: var(--wj-dashboard-muted); &:hover, &:focus-visible { background: var(--wj-dashboard-surface); color: var(--wj-dashboard-danger); } }
     &__session-manage { align-self: start; }
     &__news-header {
         display: flex;
@@ -441,10 +451,15 @@ webjet-overview-dashboard a:focus-visible {
         font-size: 13px;
         line-height: 1.6;
         > p { margin-bottom: 8px; }
+        a { color: var(--wj-dashboard-link); }
+        img { max-width: 100%; height: auto; }
+        pre { white-space: pre-wrap; }
+        overflow-wrap: anywhere;
     }
+    &__news-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin-top: 12px; }
     &__news-more, &__news-toggle { color: var(--wj-dashboard-link); }
     &__news-more { font-size: 12px; font-weight: 400; text-decoration: none; }
-    &__news-toggle { padding: 3px; font-size: 12px; }
+    &__news-toggle { display: inline-flex; align-items: center; gap: 5px; padding: 3px; font-size: 12px; }
     &__news-summary { font-size: 12px; }
     &__search { display: flex; align-items: center; gap: 12px; }
     &__search-scope { display: flex; flex: 0 0 auto; gap: 4px; margin: 0; }

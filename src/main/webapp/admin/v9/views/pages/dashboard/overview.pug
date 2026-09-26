@@ -22,6 +22,7 @@ block content
             const dashboard = document.querySelector("webjet-overview-dashboard");
             const dashboardData = window.webjetOverviewDashboardBootstrapData;
             delete window.webjetOverviewDashboardBootstrapData;
+            const announcement = /*[[\#{admin.overview.changelog}]]*/ "";
             dashboard.configure({
                 data: dashboardData,
                 config: {
@@ -44,7 +45,7 @@ block content
                     changedWebPages: /*[[\#{components.adminlog.changedWebPages}]]*/ "",
                     audit: /*[[\#{admin.crontab.audit}]]*/ "",
                     welcome: /*[[\#{admin.overview.welcome}]]*/ "",
-                    changelog: WJ.parseMarkdown(/*[[\#{admin.overview.changelog}]]*/ ""),
+                    changelog: WJ.parseMarkdown(announcement.replace(/\\n/g, "\n"), { link: true, imgSrcPrefix: "" }),
                     seeCompleteChangelog: /*[[\#{admin.overview.seeCompleteChangelog}]]*/ "",
                     loggedAdmins: /*[[\#{welcome.logged_admins}]]*/ "",
                     appsForNewWebJET: /*[[\#{admin.overview.appsForNewWebJET}]]*/ "",

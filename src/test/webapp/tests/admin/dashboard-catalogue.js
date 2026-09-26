@@ -112,7 +112,10 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
     }
     I.seeNumberOfElements('#toast-container-overview', 1);
     I.seeElement('[data-widget-type="sessions"] .md-dashboard__widget-content button');
-    I.seeNumberOfElements('[data-widget-type="news"] .md-dashboard-widget__news-highlights > p', 1);
+    I.assertTrue(await I.executeScript(() => {
+        const source = new DOMParser().parseFromString(document.querySelector('webjet-overview-dashboard').labels.changelog, 'text/html');
+        return document.querySelector('.md-dashboard-widget__news-highlights').innerHTML === source.body.innerHTML;
+    }), 'Release notes must preserve the entire rendered Markdown announcement.');
     I.resizeWindow(1337, 1052);
     I.saveScreenshot('dashboard-catalogue-desktop.png', true);
     showWidget(I, 'traffic');
@@ -210,7 +213,10 @@ Scenario('Collapse release news across reload and expand it from the compact sum
     I.clickCss('[data-widget-type="news"] .md-dashboard-widget__news-toggle');
     waitForSave(I);
     I.waitForVisible('[data-widget-type="news"]', 10);
-    I.seeNumberOfElements('[data-widget-type="news"] .md-dashboard-widget__news-highlights > p', 1);
+    I.assertTrue(await I.executeScript(() => {
+        const source = new DOMParser().parseFromString(document.querySelector('webjet-overview-dashboard').labels.changelog, 'text/html');
+        return document.querySelector('.md-dashboard-widget__news-highlights').innerHTML === source.body.innerHTML;
+    }), 'Expanding release notes must restore all original Markdown formatting.');
 });
 
 Scenario('Documentation search switches scope and opens the encoded query without an external request', async ({ I }) => {
