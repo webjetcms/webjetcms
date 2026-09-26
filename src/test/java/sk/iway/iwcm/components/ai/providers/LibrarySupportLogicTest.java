@@ -25,6 +25,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 import com.webjetcms.ai.AiClient;
+import com.webjetcms.ai.AiInputHandling;
 import com.webjetcms.ai.AiOperation;
 import com.webjetcms.ai.AiProvider;
 import com.webjetcms.ai.AiProviderConfig;
@@ -216,6 +217,7 @@ class LibrarySupportLogicTest {
         TokenUsage usage = new TokenUsage(2, 3, 5, null);
         AiProviderConfig providerConfig = AiProviderConfig.builder("secret-key").build();
         when(provider.id()).thenReturn("test-provider");
+        when(provider.inputHandling(AiOperation.TEXT)).thenReturn(AiInputHandling.PROTECTED_PROMPT);
         when(provider.execute(any(AiRequest.class), eq(providerConfig)))
             .thenReturn(new AiResponse("descriptive-name", List.of(), usage, "stop"));
         when(configuration.imageNamePrompt()).thenReturn("Create a short filename.");

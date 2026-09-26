@@ -628,7 +628,8 @@ function initClosure() {
             let url = WJ.urlRemoveParam(getJstreeUrl(), "treeSearchValue");
             url = WJ.urlRemoveParam(url, "treeSearchType");
             somStromcek.data('rest-url', url);
-            if (stateToRestore === null) tree.refresh();
+            if (somStromcek.data("search-restore-state") === false) tree.refresh(false, true);
+            else if (stateToRestore === null) tree.refresh();
             else tree.refresh(false, function () { return stateToRestore; });
         }
     }
@@ -799,7 +800,7 @@ function initClosure() {
             }
 
             //console.log("Beforeunload event, modal.length=", $("div.modal.DTED.show").length);
-            if ($("div.modal.DTED.show").length>0 && window.currentUser.login.indexOf("tester")!=0) {
+            if ($("div.modal.DTED.show:visible").length>0 && window.currentUser.login.indexOf("tester")!=0) {
                 var confirmationMessage = WJ.translate("admin.confirmExitMessage.js");
 
                 //console.log("confirmationMessage=", confirmationMessage);
@@ -840,7 +841,9 @@ function initClosure() {
                             "click": "window.location.href=$('.js-logout-toggler').attr('href')"
                         }
                     ]);
-                    WJ.closeIframeModal();
+                    setTimeout(function() {
+                        WJ.closeIframeModal();
+                    }, 300);
                 });
                 iframeWindow.addEventListener("WJ.DTE.open", function(event) {
                     iframeWindow.$("#modalIframeLoader").css("display", "none");

@@ -24,6 +24,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
+import com.webjetcms.ai.EmbeddingInputType;
+
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
@@ -42,9 +44,10 @@ import sk.iway.iwcm.rag.indexing.DocDetailsContentExtractor;
 import sk.iway.iwcm.rag.indexing.SlidingWindowChunker;
 import sk.iway.iwcm.rag.jpa.IndexQueueEntity;
 import sk.iway.iwcm.rag.jpa.IndexQueueRepository;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkEntity;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
-import sk.iway.iwcm.rag.vectorstore.PgVectorStore;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkEntity;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkRepository;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkStatus;
+import sk.iway.iwcm.rag.vectorstore.VectorStore;
 
 class SemanticIndexServiceTest {
 
@@ -192,7 +195,12 @@ class SemanticIndexServiceTest {
             "model-2",
             2
         )).thenReturn(Map.of());
-        when(context.embeddingService.embedWithUsage(List.of("Indexed text"), assistant, domainName))
+        when(context.embeddingService.embedWithUsage(
+            List.of("Indexed text"),
+            assistant,
+            domainName,
+            EmbeddingInputType.DOCUMENT
+        ))
             .thenReturn(new EmbeddingBatchResult(List.of(new float[] {0.1f, 0.2f, 0.3f}), 7));
         when(context.embeddingChunkRepository.saveAllAndFlush(anyList())).thenAnswer(invocation -> {
             List<EmbeddingChunkEntity> chunks = invocation.getArgument(0);
@@ -259,6 +267,12 @@ class SemanticIndexServiceTest {
             2
         );
         verify(context.ragEmbeddingStatService).recordIndexingTokens(assistant, 7, 2);
+        verify(context.embeddingService).embedWithUsage(
+            List.of("Indexed text"),
+            assistant,
+            domainName,
+            EmbeddingInputType.DOCUMENT
+        );
         verify(context.queueRepository).deleteAllByIdInBatch(List.of(13L));
 
         @SuppressWarnings({"rawtypes", "unchecked"})
@@ -269,6 +283,7 @@ class SemanticIndexServiceTest {
         assertEquals(2, storedChunks.get(0).getDomainId());
         assertEquals("provider-2", storedChunks.get(0).getEmbeddingProvider());
         assertEquals("model-2", storedChunks.get(0).getEmbeddingModel());
+        assertEquals(EmbeddingChunkStatus.PENDING, storedChunks.get(0).getStatus());
 
         @SuppressWarnings({"rawtypes", "unchecked"})
         ArgumentCaptor<List<float[]>> embeddingsCaptor = ArgumentCaptor.forClass((Class) List.class);
@@ -291,7 +306,7 @@ class SemanticIndexServiceTest {
         private final DocDetailsContentExtractor contentExtractor = mock(DocDetailsContentExtractor.class);
         private final SlidingWindowChunker chunker = mock(SlidingWindowChunker.class);
         private final EmbeddingService embeddingService = mock(EmbeddingService.class);
-        private final PgVectorStore vectorStore = mock(PgVectorStore.class);
+        private final VectorStore vectorStore = mock(VectorStore.class);
         private final IndexQueueRepository queueRepository = mock(IndexQueueRepository.class);
         private final RagEmbeddingStatService ragEmbeddingStatService = mock(RagEmbeddingStatService.class);
         private final EmbeddingChunkRepository embeddingChunkRepository = mock(EmbeddingChunkRepository.class);

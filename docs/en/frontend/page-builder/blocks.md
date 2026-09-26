@@ -5,7 +5,7 @@ Page Builder also includes the ability to insert ready-made blocks. Their list i
 In the root directory for blocks, you can have the following subdirectories:
 
 - ```section``` - ​​for section blocks (blue marking in Page Builder)
-- ```container``` - ​​for containers (red marking in Page Builder)
+- ```container``` - ​​for containers (pink marking in Page Builder)
 - ```column``` - ​​for columns (green marking in Page Builder)
 - ```content``` - ​​for inserting various texts, buttons, etc. They are inserted using the Blocks icon and the yellow line that appears between the blocks.
 
@@ -190,7 +190,7 @@ The cards themselves are not editable, they are generated automatically. Only th
 
 The ID attributes of individual cards are generated automatically based on the card name. If you need to use a specific name, you can set the value `data-title` on the `.tab-pane` element in the HTML code.
 
-Note the use of the CSS class ```pb-not-container``` on the main container element. This ensures that this element is not marked as a container and that individual tabs are considered containers. Each tab uses the CSS class ```pb-custom-container```, which ensures that the red frame/toolbar of the container is displayed.
+Note the use of the CSS class ```pb-not-container``` on the main container element. This ensures that this element is not marked as a container and that individual tabs are considered containers. Each tab uses the CSS class ```pb-custom-container```, which ensures that the container is marked with a pink border and its tools are available in the common toolbar.
 
 When you select the tab move option (in the container toolbar), all tabs are automatically displayed so that you can easily mark the tab where to move it. This is provided by the Page Builder CSS style.
 
@@ -600,6 +600,8 @@ window.pbBuildTabMenu = function(me, tabMenu) {
 
 };
 ```
+
+The **Style** window displays properties in separate expandable groups. The `pbBuildTabMenu` function receives the original configuration of `tabs` and `items`: `visible: false` hides the group or all groups of the given tab, `name` changes the group title, and the custom order of the items is preserved. If you do not change the order, the new default order starting with the identification is used. Empty groups, such as animations without controls, are not displayed. When opened, the `10` (Identification) group, or the first available group, is expanded.
 
 ## Custom functions for cleaning HTML code
 

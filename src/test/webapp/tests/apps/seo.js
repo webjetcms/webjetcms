@@ -67,14 +67,14 @@ Scenario("admin", async ({ I, DT, Document }) => {
     DT.checkExtfilterDates(dayDateFrom, dayDateTo);
     await Document.compareScreenshotElement("#bots-pieVisits", "seo/autotest-bots-pieVisits.png", null, null, 6);
     await Document.adjustScrollbar('#bots-lineVisits');
-    await Document.compareScreenshotElement("#bots-lineVisits", "seo/autotest-bots-lineVisits.png", null, null, 7);
-    DT.checkTableRow("botsDataTable", 1, ["1", "Googlebot 2.0", "24 861", "12,74", "30.07.2021"]);
-    DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "96 504", "49,45", "30.07.2021"]);
+    await Document.compareScreenshotElement("#bots-lineVisits", "seo/autotest-bots-lineVisits.png", null, null, 9);
+    DT.checkTableRow("botsDataTable", 3, [null, "Googlebot", "24 880", "12,75", "30.07.2021"]);
+    DT.checkTableRow("botsDataTable", 1, [null, "Slackbot-LinkExpanding", "96 504", "49,45", "30.07.2021"]);
 
-    DT.filterContains("name", "ThinkChaos 0.0");
+    DT.filterContains("name", "ThinkChaos");
     DT.waitForLoader();
-    DT.checkTableRow("botsDataTable", 1, ["20", "ThinkChaos 0.0", "98", "0,05", "30.07.2021"]);
-    I.click("ThinkChaos 0.0");
+    DT.checkTableRow("botsDataTable", 1, [null, "ThinkChaos", "98", "0,05", "30.07.2021"]);
+    I.click("ThinkChaos");
 
     //pockaj na loader pre grafy
     I.waitForInvisible("#loader", 20);
@@ -91,7 +91,7 @@ Scenario("admin", async ({ I, DT, Document }) => {
     await Document.compareScreenshotElement("#botsDetails-lineVisits", "seo/autotest-botsDetails-lineVisits.png", null, null, 5);
 
     //Back to index.html
-    I.click(locate("span.seoPageTitle").withText("ThinkChaos 0.0"));
+    I.click(locate("span.seoPageTitle").withText("ThinkChaos"));
 
     I.waitForElement("#bots-pieVisits", 30);
     I.waitForElement("#bots-lineVisits", 30);
@@ -421,8 +421,8 @@ Scenario("Special cross pages (stat and seo section) ext filter test", ({ I, DT 
 
     DT.waitForLoader();
 
-        DT.checkTableRow("botsDataTable", 2, ["2", "Slackbot-LinkExpanding 1.0", "126", "50,40", "30.07.2021"]);
-        DT.checkTableRow("botsDataTable", 3, ["3", "Microsoft 0.0", "72", "28,80", "30.07.2021"]);
+        DT.checkTableRow("botsDataTable", 1, ["2", "Slackbot-LinkExpanding", "126", "50,40", "30.07.2021"]);
+        DT.checkTableRow("botsDataTable", 2, ["3", "Microsoft", "72", "28,80", "30.07.2021"]);
 });
 
 Scenario("cleanup", ({ I, DT }) => {

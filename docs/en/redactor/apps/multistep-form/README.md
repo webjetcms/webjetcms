@@ -28,7 +28,7 @@ The **Form Items** tab is divided into three columns:
 
 - **Form Steps** - table containing a list of form steps.
 - **Form Items** - a table containing a list of form items (individual form fields) belonging to the currently selected step.
-- **Form preview** - display a preview of the currently selected form step.
+- **Form preview** - display a preview of the currently selected form step with the option to [select a CSS template](#select-css-template-in-preview).
 
 ![](real-form.png)
 
@@ -38,7 +38,19 @@ The first column shows a list of form steps. In this list, we can add, duplicate
 
 ![](form-step-editor.png)
 
-You can fill in the **Introductory text** that will appear at the beginning of the step. You can use [logged-in user tags](#logged-in-user-tags) and [item-value tags](#item-value-tags) from previously filled-in steps in the text. In the **Advanced** tab, you can change the text of the button to go to the next step (or submit the form if it is the last step). In the **Script code** tab, you can insert custom HTML/JavaScript code that will be inserted and executed when the step is displayed.
+You can fill in the **Introductory text** that will appear at the beginning of the step. You can use [logged-in user tags](#logged-in-user-tags) and [item-value tags](#item-value-tags) from already filled-in steps in the text. In the **Advanced** tab, you can change the text of the button to go to the next step (or submit the form if it is the last step) and the text of the button to go back to the previous step. In the **Script code** tab, you can insert custom HTML/JavaScript code that will be inserted and executed when the step is displayed.
+
+### Return to previous step
+
+From the second step onwards, the **Go to previous step** button is displayed. The visitor can use it to return to the data already filled in and correct it. You can set the text of the button in the editor of the given step in the **Advanced** tab, in the **Previous step** field, for example to **Back**. If you leave the field empty, the default text will be used.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+When you return, the values ​​saved from the last successful forward step are restored, including checkbox selections and available uploaded files. For images, the preview is also restored. After editing the data and moving forward again, the display conditions and obligations of other fields are evaluated according to the updated values.
+
+!>**Warning:** The back button does not save or validate the currently open step. Changes made by the visitor before clicking **Back** will not be retained unless they have previously saved them by successfully moving forward. This also applies to newly uploaded files in this step.
 
 ### Duplication
 
@@ -230,6 +242,14 @@ The third column in the **Form Content** section is the form preview. This previ
 
 At the end of each step, a button is automatically generated, the text of which changes depending on whether the step is the last or not. If it is not the last, the button will have the text **Go to next step**, otherwise **Submit form**. You can change the button text in the step settings, for example to **Continue** or **Register**.
 
+From the second step onwards, a [return to previous step] button is also displayed.
+
+### Selecting a CSS template in the preview
+
+In the preview header, there is a **CSS template** selection box that you can use to immediately try out the ready-made form layouts. The list contains all available CSS templates and the **No template** option, which displays the basic layout.
+
+The selected template will only be used in the administration view and will not be saved in the form settings. You can set the appearance of the form on the website separately in the **CSS template** field when [inserting the Form application](#css-templates). Each inserted form instance can have a different template selected.
+
 ![](real-form.png)
 
 !>**Warning:** The form preview is for guidance only and may differ compositionally and graphically from the actual display on the page. The editor displays all items regardless of the set conditions so that you can better design and check the form. However, on a real page, the form changes dynamically according to the display conditions (some fields may be hidden or displayed according to the values ​​of other fields) and also according to the template used and the styles of the page into which the form is inserted.
@@ -242,9 +262,15 @@ You can insert the created form into a web page using the Form application, wher
 
 You can also insert multiple instances of the same multi-step form on a single page. Each instance works independently, and the generated HTML field identifiers are given their own prefix, such as `f1-` and `f2-`, so that they don't interfere with each other.
 
+### CSS templates
+
+When inserting or editing a **Form** application on a page, you can select a pre-made form appearance in the **CSS Template** field. The **No Template** option leaves the basic appearance according to the page styles. Each inserted instance can use a different pre-made template without affecting other forms on the page, including forms with the **No Template** option.
+
+The same selection is available in [form preview in administration](#css-template-selection-in-preview). There it is only used to test the appearance and does not change the settings of the application embedded on the page. After selecting a suitable appearance, therefore, set the template in the corresponding application on the page as well.
+
 ### JavaScript event after step is displayed
 
-After inserting the HTML code of the step into the page and initializing its conditions, the form sends a native event `CustomEvent` on the object `window` with the name `WJ.multistepForm.stepShown`. The event is sent for the first step and after each transition to the next step. There is no need to load the administration file `webjet.js` or the library `jQuery`.
+After inserting the HTML code of the step into the page and initializing its conditions, the form sends a native event `CustomEvent` on the object `window` with the name `WJ.multistepForm.stepShown`. The event is sent for the first step, after moving to the next step, and when returning to the previous step. There is no need to load the administration file `webjet.js` or the library `jQuery`.
 
 ```javascript
 window.addEventListener("WJ.multistepForm.stepShown", (event) => {

@@ -162,16 +162,18 @@ module.exports = {
   },
 
   /**
-   * Set configuration value
-   * @param {*} name
-   * @param {*} value
+   * Sets a configuration value, optionally until the next application restart.
+   * @param {string} name - configuration variable name
+   * @param {string} value - configuration value
+   * @param {boolean} [temporary=false] - apply the value without persisting it
    */
-  setConfigValue(name, value) {
+  setConfigValue(name, value, temporary = false) {
     I.amOnPage("/admin/v9/settings/configuration/");
     I.clickCss("button.buttons-create");
     DTE.waitForEditor("configurationDatatable");
     I.fillField("#DTE_Field_name", name);
     I.fillField("#DTE_Field_value", value);
+    if (temporary) DTE.clickSwitch("temporary_0");
     DTE.save();
 
   },

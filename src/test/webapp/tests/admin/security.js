@@ -76,7 +76,8 @@ Scenario("Ninja URL with double quotes", ({ I }) => {
 Scenario("pathFilterBlockedPaths", ({ I, Document }) => {
     let random = I.getRandomTextShort();
     let pathFilterBlockedPaths = ".DS_Store,debug.,config.properties,Thumbs.db,.git,.svn,/WEB-INF/,./";
-    //set default values
+    //
+    I.say("set default values");
     Document.setConfigValue("pathFilterBlockedPaths", pathFilterBlockedPaths);
 
     I.amOnPage("/templates/aceintegration/jet/config.properties?v=1-"+random);
@@ -85,12 +86,14 @@ Scenario("pathFilterBlockedPaths", ({ I, Document }) => {
     I.amOnPage("/WEB-INF./web.xml");
     I.see("Chyba 404 - požadovaná stránka neexistuje");
 
-    //allow config.properties
+    //
+    I.say("allow config.properties");
     Document.setConfigValue("pathFilterBlockedPaths", pathFilterBlockedPaths.replace("config.properties", ""));
 
     I.amOnPage("/templates/aceintegration/jet/config.properties?v=2-"+random);
     I.see("ninjaDebug=false");
 
-    //restore default
+    //
+    I.say("restore default");
     Document.setConfigValue("pathFilterBlockedPaths", pathFilterBlockedPaths);
 });

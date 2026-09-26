@@ -344,6 +344,8 @@ public class Constants {
 		// namiesto redirectovat (ked nie je pouzity LinkType=HTML)
 		setBoolean("forwardVirtualPath", false);
 
+		setBoolean("basketRoundPrices", false, MOD_BASKET,
+			"Round VAT-inclusive selling units to currencyFormat precision before multiplying quantities; line totals settle to cents. Stored invoice totals remain unchanged when configuration changes.");
 		setString("basketPriceField", "fieldK", MOD_BASKET,
 				"Názov poľa v ktorom je v stránke uvedená cena produktu. Štandardne nastavené na hodnotu fieldK");
 		setString("basketProductTypeField", "fieldI", MOD_BASKET,
@@ -1900,8 +1902,6 @@ public class Constants {
 				"Prefix pre PageBuilder, musi voci nemu korespondovat aj CSS PageBuildera (napr. pre CSS PREFIX-column-text-wrapper, predvolene pb-column-text-wrapper)");
 		setString("pageBuilderGrid", "", MOD_EDITOR,
 				"Zoznam grid elementov/selectorov pre pageBuilder, pouziva sa ak je potrebne mat specialne selectory, format je section: 'section', container: 'div.container', row: 'div.row', column: 'div[class*=\"col-\"]', column_content: 'div.column-content'");
-		setInt("pagebuilderFilterAutoOpenItems", 10, MOD_EDITOR,
-				"Počet automaticky otvorených položiek v zozname komponentov PageBuildera pri filtrovaní.");
 		setInt("pagebuilderLibraryImageWidth", 310, MOD_EDITOR,
 				"Maximálna šírka náhľadového obrázka v knižnici obrázkov PageBuildera.");
 

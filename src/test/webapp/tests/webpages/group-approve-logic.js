@@ -154,7 +154,7 @@ function editFolderWithAllChanges(I, DT, DTE, Document, currentFolderName, newNa
 
     fillFolderFields(I, fieldA, fieldB, fieldC, fieldD);
 
-    DTE.save();
+    DTE.save("groups-datatable", true);
     Document.notifyCheckAndClose("Žiadosť o schválenie priečinka dostal: Publish Notification, Tester Playwright");
 }
 
@@ -364,6 +364,7 @@ Scenario('Edit folder that needs approval - as NON-approver ', async ({I, DT, DT
     editFolderWithAllChanges(I, DT, DTE, Document, newFolderName, newFolderName + "_edited", "AAA", "BBB", "CCC", "DDD");
 
     I.say("Verify that no changes were applied yet - folder should have original values");
+    I.jstreeWaitForLoader();
     I.click(DT.btn.tree_edit_button);
     DTE.waitForEditor("groups-datatable");
     I.seeInField("#DTE_Field_groupName", newFolderName);

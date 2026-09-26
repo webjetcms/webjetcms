@@ -1,10 +1,12 @@
 #!/bin/bash
-# Creates or checks out a branch worktree and opens a private VS Code workspace.
+# Creates, checks out, or reopens a branch or commit worktree in a private VS Code workspace.
 # Workspace settings and Peacock colors are stored in ~/.vscode-workspaces/.
 #
 # Usage examples:
 #   ./worktree-add.sh feature/ckeditor-thumb-restrictions
 #   ./worktree-add.sh --new feature/ckeditor-thumb-restrictions
+#   ./worktree-add.sh cef6ca9a74d0bba276e5eef414182503b45ef3b7
+# Commit IDs open a detached HEAD worktree without moving any branch.
 
 set -euo pipefail
 
@@ -27,13 +29,13 @@ if [[ "${1:-}" == "--new" ]]; then
 fi
 
 if (( $# > 1 )); then
-    echo "Usage: $0 [--new] [branch-name]" >&2
+    echo "Usage: $0 [branch-name|commit-id] or $0 --new [branch-name]" >&2
     exit 1
 fi
 
 BRANCH_NAME="${1:-}"
 if [[ -z "$BRANCH_NAME" ]]; then
-    read -r -p "Branch name (for example feature/ckeditor-thumb-restrictions): " BRANCH_NAME
+    read -r -p "Branch name or commit ID (for example feature/ckeditor-thumb-restrictions): " BRANCH_NAME
 fi
 
 if ! git check-ref-format --branch "$BRANCH_NAME" >/dev/null 2>&1; then
@@ -46,6 +48,21 @@ REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 REPO_PARENT="$(dirname -- "$REPO_ROOT")"
 LOCAL_FILES_SOURCE="$REPO_PARENT/webjetcms"
 WORKTREE_NAME="${BRANCH_NAME//\//-}"
+COMMIT_ID=""
+# Preserve existing branches with hexadecimal names, including explicit --new requests.
+if [[ "$CREATE_NEW" == false && "$BRANCH_NAME" =~ ^[0-9a-fA-F]{4,40}$ ]] \
+    && ! git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/$BRANCH_NAME" \
+    && ! git -C "$REPO_ROOT" show-ref --verify --quiet "refs/remotes/origin/$BRANCH_NAME"; then
+    if ! COMMIT_ID="$(git -C "$REPO_ROOT" rev-parse --verify --quiet "$BRANCH_NAME^{commit}")"; then
+        echo "Commit is not available locally; fetching branches from origin"
+        git -C "$REPO_ROOT" fetch origin
+        if ! COMMIT_ID="$(git -C "$REPO_ROOT" rev-parse --verify --quiet "$BRANCH_NAME^{commit}")"; then
+            echo "Cannot resolve commit ID after fetching origin: $BRANCH_NAME" >&2
+            exit 1
+        fi
+    fi
+    WORKTREE_NAME="commit-${COMMIT_ID:0:12}"
+fi
 WORKTREE_PATH="$REPO_PARENT/webjetcms-$WORKTREE_NAME"
 WORKSPACE_FILE="$HOME/.vscode-workspaces/webjetcms-$WORKTREE_NAME.code-workspace"
 
@@ -54,13 +71,40 @@ if [[ ! -d "$LOCAL_FILES_SOURCE" ]]; then
     exit 1
 fi
 
+EXISTING_WORKTREE=false
+COPY_LOCAL_FILES=true
 if [[ -e "$WORKTREE_PATH" ]]; then
-    echo "Target path already exists: $WORKTREE_PATH" >&2
+    if [[ "$CREATE_NEW" == true ]]; then
+        echo "Target path already exists. Run without --new to open it: $WORKTREE_PATH" >&2
+        exit 1
+    fi
+
+    if ! git -C "$REPO_ROOT" worktree list --porcelain | grep -Fx "worktree $WORKTREE_PATH" >/dev/null; then
+        echo "Target path is not a worktree of this repository: $WORKTREE_PATH" >&2
+        exit 1
+    fi
+
+    if [[ -n "$COMMIT_ID" ]]; then
+        if [[ "$(git -C "$WORKTREE_PATH" rev-parse HEAD)" != "$COMMIT_ID" \
+            || -n "$(git -C "$WORKTREE_PATH" branch --show-current)" ]]; then
+            echo "Target worktree is not detached at commit $COMMIT_ID: $WORKTREE_PATH" >&2
+            exit 1
+        fi
+    elif [[ "$(git -C "$WORKTREE_PATH" branch --show-current)" != "$BRANCH_NAME" ]]; then
+        echo "Target worktree is not on branch $BRANCH_NAME: $WORKTREE_PATH" >&2
+        exit 1
+    fi
+
+    EXISTING_WORKTREE=true
+fi
+
+if [[ "$EXISTING_WORKTREE" == false ]] && ! command -v npm >/dev/null 2>&1; then
+    echo "npm is not available in PATH." >&2
     exit 1
 fi
 
-if ! command -v npm >/dev/null 2>&1; then
-    echo "npm is not available in PATH." >&2
+if ! command -v node >/dev/null 2>&1; then
+    echo "node is not available in PATH." >&2
     exit 1
 fi
 
@@ -69,7 +113,17 @@ if ! command -v code >/dev/null 2>&1; then
     exit 1
 fi
 
-if [[ "$CREATE_NEW" == true ]]; then
+if [[ "$EXISTING_WORKTREE" == true ]]; then
+    echo "Opening existing worktree: $WORKTREE_PATH"
+    COPY_LOCAL_FILES=false
+    if read -r -p "Copy local configuration, plugin and font files, and AI models, overwriting existing files? [y/N]: " COPY_ANSWER \
+        && [[ "$COPY_ANSWER" =~ ^[Yy]([Ee][Ss])?$ ]]; then
+        COPY_LOCAL_FILES=true
+    fi
+elif [[ -n "$COMMIT_ID" ]]; then
+    echo "Checking out commit $COMMIT_ID with detached HEAD in $WORKTREE_PATH"
+    git -C "$REPO_ROOT" worktree add --detach "$WORKTREE_PATH" "$COMMIT_ID"
+elif [[ "$CREATE_NEW" == true ]]; then
     if git -C "$REPO_ROOT" show-ref --verify --quiet "refs/heads/$BRANCH_NAME"; then
         echo "Branch already exists locally. Run without --new to use it: $BRANCH_NAME" >&2
         exit 1
@@ -109,23 +163,32 @@ else
         "$WORKTREE_PATH" "origin/$BRANCH_NAME"
 fi
 
-echo "Copying local configuration and plugin files"
-cp "$LOCAL_FILES_SOURCE"/src/main/resources/*.xml "$WORKTREE_PATH/src/main/resources/"
-cp "$LOCAL_FILES_SOURCE"/src/main/webapp/admin/v9/src/js/plugins/*.zip \
-    "$WORKTREE_PATH/src/main/webapp/admin/v9/src/js/plugins/"
-mkdir -p "$WORKTREE_PATH/src/main/webapp/WEB-INF/fonts"
-cp "$LOCAL_FILES_SOURCE"/src/main/webapp/WEB-INF/fonts/* \
-    "$WORKTREE_PATH/src/main/webapp/WEB-INF/fonts/"
+if [[ "$COPY_LOCAL_FILES" == true ]]; then
+    echo "Copying local configuration, plugin and font files, and AI models"
+    cp "$LOCAL_FILES_SOURCE"/src/main/resources/*.xml "$WORKTREE_PATH/src/main/resources/"
+    cp "$LOCAL_FILES_SOURCE"/src/main/webapp/admin/v9/src/js/plugins/*.zip \
+        "$WORKTREE_PATH/src/main/webapp/admin/v9/src/js/plugins/"
+    mkdir -p "$WORKTREE_PATH/src/main/webapp/WEB-INF/fonts"
+    cp "$LOCAL_FILES_SOURCE"/src/main/webapp/WEB-INF/fonts/* \
+        "$WORKTREE_PATH/src/main/webapp/WEB-INF/fonts/"
+    if [[ -d "$LOCAL_FILES_SOURCE/src/main/webapp/WEB-INF/local-ai-models" ]]; then
+        mkdir -p "$WORKTREE_PATH/src/main/webapp/WEB-INF/local-ai-models"
+        cp -R "$LOCAL_FILES_SOURCE/src/main/webapp/WEB-INF/local-ai-models/." \
+            "$WORKTREE_PATH/src/main/webapp/WEB-INF/local-ai-models/"
+    fi
+fi
 
-echo "Installing admin dependencies and building production assets"
-npm --prefix "$WORKTREE_PATH/src/main/webapp/admin/v9" install
-npm --prefix "$WORKTREE_PATH/src/main/webapp/admin/v9" run prod
+if [[ "$EXISTING_WORKTREE" == false ]]; then
+    echo "Installing admin dependencies and building production assets"
+    npm --prefix "$WORKTREE_PATH/src/main/webapp/admin/v9" install
+    npm --prefix "$WORKTREE_PATH/src/main/webapp/admin/v9" run prod
 
-echo "Installing test dependencies"
-npm --prefix "$WORKTREE_PATH/src/test/webapp" install
+    echo "Installing test dependencies"
+    npm --prefix "$WORKTREE_PATH/src/test/webapp" install
 
-echo "Installing documentation dependencies"
-npm --prefix "$WORKTREE_PATH/docs" install
+    echo "Installing documentation dependencies"
+    npm --prefix "$WORKTREE_PATH/docs" install
+fi
 
 echo "Preparing private VS Code workspace: $WORKSPACE_FILE"
 node - "$WORKTREE_PATH" "$WORKSPACE_FILE" <<'NODE'
@@ -303,7 +366,7 @@ NODE
     fi
 fi
 
-echo "Opening the new worktree in VS Code"
+echo "Opening the worktree in VS Code"
 (
     cd -- "$WORKTREE_PATH"
     code --new-window "$WORKSPACE_FILE"

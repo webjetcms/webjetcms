@@ -190,6 +190,9 @@ public class ConstantsV9 {
 		Constants.setBoolean("ai_browserAiEnabled", true, Constants.MOD_AI_ASSISTANTS, "Enable AI assistants in browser - Chrome Built-in AI");
 		Constants.setString("ai_geminiAuthKey", "", Constants.MOD_AI_ASSISTANTS, "Authentifikacny kluc k aistudio.google.com");
 		Constants.setString("ai_openRouterAuthKey", "", Constants.MOD_AI_ASSISTANTS, "Authentifikacny kluc k openrouter.ai");
+		Constants.setString("ai_localEmbeddingModelBundlePath", "", Constants.MOD_RAG, "Absolute path to the approved local embedding model bundle ZIP. The value is global and a restart is required after changing it.");
+		Constants.setString("ai_localTranslateModelBundlePath", "", Constants.MOD_AI_ASSISTANTS, "Absolute path to the approved local M2M100 translation model bundle ZIP. The value is global and a restart is required after changing it.");
+		Constants.setString("ai_localTextModelBundlePath", "", Constants.MOD_AI_ASSISTANTS, "Absolute path to the approved local EuroLLM-1.7B-Instruct model bundle ZIP. The value is global and a restart is required after changing it.");
 		Constants.setString("ai_generateFileNamePrompt", "Generate VERY short, filesystem-safe name for file (lowercase, hyphens). Try generate name as short as possible but meningfull to USER. Do not add explanations, return ONLY generated name.", Constants.MOD_AI_ASSISTANTS, "Prompt to generate image file name");
 		Constants.setString("ai_openAi_generateFileNameModel", "gpt-5-mini", Constants.MOD_AI_ASSISTANTS, "Model that will be used to generate AI image file name");
 		Constants.setString("ai_gemini_generateFileNameModel", "gemini-pro-latest", Constants.MOD_AI_ASSISTANTS, "Model that will be used to generate AI image file name");
@@ -272,11 +275,11 @@ public class ConstantsV9 {
 
 		/* ***** ***** ***** RAG SECTION ***** ***** ***** */
 
-		Constants.setBoolean("ragSemanticSearchEnabled", false, Constants.MOD_RAG, "Povolí sémantické vyhľadávanie nad vektorovou databázou pgvector.");
+		Constants.setBoolean("ragSemanticSearchEnabled", false, Constants.MOD_RAG, "Povolí sémantické vyhľadávanie nad vektorovým úložiskom PostgreSQL/pgvector alebo MariaDB Vector.");
 
-		/* RAG - PGVECTOR STORE */
-		Constants.setInt("ragSearchEfSearch", 40, Constants.MOD_RAG, "HNSW index parameter ef_search — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie datasety zvážte zvýšenie na 100 alebo viac.");
-		Constants.setString("ragSearchDistanceMetric", "cosine", Constants.MOD_RAG, "Metrika vzdialenosti pre pgvector vyhľadávanie. Možné hodnoty: 'cosine' (cosínusová vzdialenosť), 'inner_product' (vnútorný súčin, rýchlejší pre normalizované vektory), 'l2' (euklidovská vzdialenosť). Zmena vyžaduje reindex HNSW indexu.");
+		/* RAG - VECTOR STORE */
+		Constants.setInt("ragSearchEfSearch", 40, Constants.MOD_RAG, "HNSW parameter ef_search — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie datasety zvážte zvýšenie na 100 alebo viac.");
+		Constants.setString("ragSearchDistanceMetric", "cosine", Constants.MOD_RAG, "Metrika vzdialenosti pre vektorové vyhľadávanie. Možné hodnoty: 'cosine' (cosínusová vzdialenosť), 'inner_product' (vnútorný súčin, podporuje iba PostgreSQL/pgvector), 'l2' (euklidovská vzdialenosť). Zmena vyžaduje opätovné vytvorenie vektorového indexu.");
 
 		/* RAG - EMBEDDING */
 		Constants.setString("ragEmbeddingProvider", "openai", Constants.MOD_RAG, "Predvolený poskytovateľ použitý pri vytvorení chýbajúceho RAG embedding asistenta. Vstavané hodnoty sú openai, gemini a openrouter; použiť možno aj identifikátor zaregistrovaného vlastného poskytovateľa.");
@@ -299,7 +302,7 @@ public class ConstantsV9 {
 		Constants.setString("ragHybridFtsWeight", "0.3", Constants.MOD_RAG, "Váha fulltext poradia pri RRF merge hybridného vyhľadávania.");
 		Constants.setInt("ragHybridRrfK", 60, Constants.MOD_RAG, "Hodnota k parametra pre RRF merge hybridného vyhľadávania.");
 		Constants.setInt("ragHybridChunkFetchMultiplier", 3, Constants.MOD_RAG, "Násobič počtu chunkov načítaných pre hybridné vyhľadávanie voči požadovanému počtu výsledkov.");
-		Constants.setBoolean("ragHybridFtsUseIlikeFallback", true, Constants.MOD_RAG, "Pri prázdnych FTS výsledkoch vykoná fallback cez ILIKE nad chunk_text.");
+		Constants.setBoolean("ragHybridFtsUseIlikeFallback", true, Constants.MOD_RAG, "Pri prázdnych FTS výsledkoch vykoná databázovo špecifický fallback cez ILIKE alebo LIKE nad chunk_text.");
 
 		/* RAG - ANSWER */
 		Constants.setBoolean("ragAnswerAllowed", false, Constants.MOD_RAG, "Povolí RAG odpoved.");
@@ -311,7 +314,7 @@ public class ConstantsV9 {
 		Constants.setInt("ragAnswerMaxCharacters", 6000, Constants.MOD_RAG, "Maximalny celkovy pocet znakov post-processovaneho kontextu, ktory sa pouzije pri generovani RAG odpovede.");
 		Constants.setInt("ragAnswerMaxMergedBlockCharacters", 2200, Constants.MOD_RAG, "Maximalny pocet znakov jedneho zluceneho kontextoveho bloku po spojeni susednych chunkov pre RAG odpoved.");
 
-		Constants.setString("searchType", "db", Constants.MOD_SEARCH, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (sémanticke vyhladavanie cez pgvector), hybrid (kombinace vektoroveho a fulltext vyhledavania)");
+		Constants.setString("searchType", "db", Constants.MOD_SEARCH, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (sémanticke vektorove vyhladavanie), hybrid (kombinace vektoroveho a fulltext vyhledavania)");
 
 		Constants.setInt("gdprDeleteDocAndGroupsAfterDays", 186, Constants.MOD_GDPR, "Koľko dní staré priečinky a stránky, ktoré sú v koši, sa majú vymazať (POZOR, nie ako dlho sú v koši).");
 	}

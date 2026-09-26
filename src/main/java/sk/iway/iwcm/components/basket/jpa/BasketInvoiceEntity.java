@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.components.basket.rest.PriceRoundingService;
 import sk.iway.Password;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
@@ -44,7 +45,10 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 
 	@PrePersist
 	public void onPrePersist() {
-		//After insert update invoice stats
+		//Rounded checkout prepares totals before saving the invoice and binding its items.
+		//Keep those totals instead of recalculating from browser items with old prices or excluded products.
+		if (priceToPayVat != null) return;
+		//Run the legacy calculation before insert when totals have not been prepared.
 		ProductListService.updateInvoiceStats(this.getId(), this.browserId, true);
 	}
 
@@ -400,7 +404,9 @@ public class BasketInvoiceEntity extends ActiveRecordRepository implements Seria
 	@JsonIgnore
 	public List<BasketInvoiceItemEntity> getBasketItems() {
 		BasketInvoiceItemsRepository biir = Tools.getSpringBean("basketInvoiceItemsRepository", BasketInvoiceItemsRepository.class);
-		return biir.findAllByBrowserIdAndDomainId(browserId, domainId);
+		List<BasketInvoiceItemEntity> items = biir.findAllByBrowserIdAndDomainId(browserId, domainId);
+		if (PriceRoundingService.isEnabled()) PriceRoundingService.allocateVat(items);
+		return items;
 	}
 
 	@JsonIgnore
