@@ -41,8 +41,8 @@ Explanation of the pictograms used:
 - [x] Add authorization option via `OAuth2`, option to use `mock` server https://github.com/navikt/mock-oauth2-server or https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [x] +Add support for logging into administration via [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
 - [x] Optional fields – add the ability to set a text length limit for a field of type `textarea`, similar to what is currently possible for a field of type `text`.
-- [ ] Datatable – edit fields of type `Date` and `Datetime` so that validation `not null` works correctly.
-- [ ] Datatable – modify the `mergovania` method of the modified entity so that values ​​of type `number` can be reset.
+- [x] Datatable – modify fields of type `Date` and `Datetime` so that validation `not null` works correctly (#58770).
+- [x] Datatable – modify the `mergovania` method of the modified entity so that it is possible to reset values ​​of type `number` (#58770).
 - [x] +Redirects - distinguish automatically created redirects in the database (look for the variable `editorDisableAutomaticRedirect`) from manually created ones, possibility to filter accordingly in the UI (show only manually created redirects) (#58625).
 - [x] +Redirects - add redirect cleaning function - deletes old redirects (it was originally `aaa-bbb` and then `aaa-ccc` was created so `aaa-bbb` has no meaning = it is deleted) and checks for cyclic redirects in which it deletes the last step. Also optimize redirects `aaa-bbb-ccc` to `aaa-ccc` (#58629).
 - [x] +Gallery - add the option to set a different way to resize a large image, e.g. Crop to fit is applied to a small image (they want it to be square) and exact width is applied to a large image (preserves aspect ratio). By default, the value will be NULL=same as for a small image (#58633).

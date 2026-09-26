@@ -41,8 +41,8 @@ Vysvětlení použitých piktogramů:
 - [x] Přidat možnost autorizace přes `OAuth2`, možnost použít `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [x] +Přidat podporu přihlašování se do administrace přes [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
 - [x] Volitelná pole – přidat možnost nastavit omezení délky textu pro pole typu `textarea`, podobně jako je to aktuálně možné u pole typu `text`.
-- [ ] Datatabulka – upravit pole typu `Date` a `Datetime` tak, aby správně fungovala validace `not null`.
-- [ ] Datatabulka – upravit způsob `mergovania` upravené entity tak, aby bylo možné vynulovat hodnoty typu `number`.
+- [x] Datatabulka – upravit pole typu `Date` a `Datetime` tak, aby správně fungovala validace `not null` (#58770).
+- [x] Datatabulka – upravit způsob `mergovania` upravené entity tak, aby bylo možné vynulovat hodnoty typu `number` (#58770).
 - [x] +Přesměrování - rozlišit v databázi automaticky vytvořené přesměrování (hledej proměnnou `editorDisableAutomaticRedirect`) od manuálně vytvořeného, ​​možnost podle toho filtrovat v UI (zobrazit jen manuálně vytvořené přesměrování) (#58625).
 - [x] +Přesměrování - doplnit funkci čištění přesměrování - smaže staré přesměrování (bylo původně `aaa-bbb` a pak vzniklo `aaa-ccc` takže `aaa-bbb` nemá smysl = smaže se) a zkontroluje cyklické přesměrování ve kterém smaže poslední krok. Také optimalizovat přesměrování `aaa-bbb-ccc` na `aaa-ccc` (#58629).
 - [x] +Galerie - přidat možnost nastavit jiný způsob změny velikosti na velký obrázek. na malý obrázek se aplikuje Oříznout na míru (chtějí mít čtverec) a na velký přesná šířka (zachová poměr stran). Ve výchozím nastavení bude hodnota NULL=stejně jako pro malý obrázek (#58633).
