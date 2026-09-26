@@ -7,6 +7,7 @@ let noticesToken;
 const settingsRoute = '**/admin/rest/dashboard/settings';
 const noticesRoute = '**/admin/rest/dashboard/notices';
 const sessionsRoute = '**/admin/rest/dashboard/data/sessions*';
+const recentPagesRoute = '**/admin/rest/dashboard/recent-pages';
 const editButton = '.md-dashboard__toolbar-actions > button[aria-pressed]';
 const newsToggle = '.md-dashboard-widget__news-toggle';
 
@@ -38,6 +39,12 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
         scrollbar.setPosition(0, scrollbar.offset.y + top - 64);
     });
     I.saveScreenshot('dashboard-implementation-traffic.png', false);
+    I.executeScript(() => {
+        const scrollbar = window.scrollbarMain;
+        const sources = document.querySelector('[data-widget-type="referrers"]');
+        if (sources) scrollbar.setPosition(0, scrollbar.offset.y + sources.getBoundingClientRect().top - 64);
+    });
+    I.saveScreenshot('dashboard-implementation-refined-row.png', false);
     I.executeScript(() => {
         const scrollbar = window.scrollbarMain;
         scrollbar.setMomentum(0, 0);
@@ -173,12 +180,17 @@ Scenario('Dashboard header, notices, widgets and shortcuts fit the responsive vi
     I.wjSetDefaultWindowSize();
 });
 
-Scenario('Compact metrics keep short captions and accessible header navigation', async ({ I }) => {
+Scenario('Compact metrics and scrollable recent pages align above three equal preview cards', async ({ I }) => {
     previewSettings.items = [
         { id: 'compact-autotest-traffic', type: 'traffic', size: '3x3', collapsed: false, options: { days: 7 } },
         ...['forms', 'approvals', 'errors'].map(type => ({ id: `compact-autotest-${type}`, type, size: '1x1', collapsed: false, options: { days: 7 } })),
-        { id: 'compact-autotest-pages', type: 'recent-pages', size: '3x3', collapsed: false, options: {} }
+        { id: 'compact-autotest-pages', type: 'recent-pages', size: '3x2', collapsed: false, options: {} },
+        ...['referrers', 'publishing', 'newsletter'].map(type => ({ id: `compact-autotest-${type}`, type, size: '2x2', collapsed: false, options: { days: 7 } }))
     ];
+    await I.mockRoute(recentPagesRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(
+        Array.from({ length: 6 }, (_, index) => ({ docId: index + 1, title: `Recent page autotest ${index + 1}`,
+            fullPath: `/Autotest section/Recent page autotest ${index + 1}`, saveDate: '26.09.2026 10:00', perexImage: '' }))
+    ) }));
     I.resizeWindow(1337, 1052);
     I.refreshPage();
     await waitForOverview(I);
@@ -188,7 +200,7 @@ Scenario('Compact metrics keep short captions and accessible header navigation',
     }));
     const targets = { forms: '/apps/form/admin/', approvals: '/admin/v9/webpages/web-pages-list/?show=toapprove', errors: '/apps/stat/admin/error/' };
     metrics.forEach(metric => {
-        I.assertTrue(metric.height >= 120 && metric.height <= 145, `${metric.type} must fit the compact metric row without clipping.`);
+        I.assertTrue(metric.height >= 120 && metric.height <= 145, `${metric.type} must fit the compact metric row without clipping (actual height: ${metric.height}px).`);
         I.assertEqual(metric.href, targets[metric.type], 'A metric heading must open the corresponding module.');
     });
     I.assertEqual(await I.grabTextFrom('[data-widget-type="forms"] .md-dashboard-widget__metric-label'),
@@ -197,11 +209,54 @@ Scenario('Compact metrics keep short captions and accessible header navigation',
         'Exact form dates remain accessible without taking another visual row.');
     I.executeScript(() => document.querySelector('[data-widget-type="forms"] .md-dashboard__title-link').focus());
     I.assertTrue(await I.executeScript(() => document.activeElement.matches('[data-widget-type="forms"] .md-dashboard__title-link')), 'Metric header navigation must support keyboard focus.');
+    const bounds = await I.executeScript(() => Object.fromEntries(['traffic', 'recent-pages', 'referrers', 'publishing', 'newsletter'].map(type => {
+        const rect = document.querySelector(`[data-widget-type="${type}"]`).getBoundingClientRect();
+        return [type, { top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height }];
+    })));
+    I.assertTrue(Math.abs(bounds.traffic.bottom - bounds['recent-pages'].bottom) <= 1, 'The traffic chart and recent-page list must share a clean bottom edge.');
+    for (const type of ['publishing', 'newsletter']) {
+        I.assertTrue(Math.abs(bounds.referrers.top - bounds[type].top) <= 1, `${type} must share the sources card row.`);
+        I.assertTrue(Math.abs(bounds.referrers.width - bounds[type].width) <= 1, `${type} must have the same two-column width.`);
+        I.assertTrue(Math.abs(bounds.referrers.height - bounds[type].height) <= 1, `${type} must have the same preview height.`);
+    }
+    for (const type of ['referrers', 'publishing', 'newsletter']) {
+        I.seeElement(`[data-widget-type="${type}"] .md-dashboard__title-link`);
+        I.dontSeeElement(`[data-widget-type="${type}"] .md-dashboard-widget__more`);
+    }
+    I.dontSeeElement('[data-widget-type="referrers"] details');
+    const list = '[data-widget-type="recent-pages"] .md-dashboard-widget__pages';
+    I.seeNumberOfElements(`${list} > li`, 6);
+    I.assertTrue(await I.executeScript(selector => {
+        const node = document.querySelector(selector);
+        return node.tabIndex === 0 && Boolean(node.getAttribute('aria-label')) && node.scrollHeight > node.clientHeight;
+    }, list), 'All six pages must remain available inside a labeled, keyboard-focusable scroll area.');
+    const pageOffset = await I.executeScript(() => {
+        const scrollbar = window.scrollbarMain;
+        scrollbar.setMomentum(0, 0);
+        scrollbar.update();
+        scrollbar.setPosition(0, scrollbar.offset.y + document.querySelector('[data-widget-type="traffic"]').getBoundingClientRect().top - 64);
+        return scrollbar.offset.y;
+    });
+    // Standard scroll helpers do not generate the wheel events consumed by smooth-scrollbar.
+    await I.usePlaywrightTo('wheel over the recent-page preview', async ({ page }) => {
+        const rect = await page.locator(list).boundingBox();
+        await page.mouse.move(rect.x + rect.width / 2, rect.y + 30);
+        await page.mouse.wheel(0, 130);
+    });
+    I.waitForFunction(selector => document.querySelector(selector).scrollTop > 0, [list], 10);
+    I.assertTrue(Math.abs(await I.executeScript(() => window.scrollbarMain.offset.y) - pageOffset) <= 1, 'Wheel scrolling must stay in the recent-page list.');
+    I.executeScript(selector => { const node = document.querySelector(selector); node.focus({ preventScroll: true }); node.scrollTop = 0; }, list);
+    I.pressKey('PageDown');
+    I.waitForFunction(selector => document.querySelector(selector).scrollTop > 0, [list], 10);
+    I.assertTrue(Math.abs(await I.executeScript(() => window.scrollbarMain.offset.y) - pageOffset) <= 1, 'Keyboard scrolling must stay in the recent-page list.');
+    I.executeScript(selector => { const node = document.querySelector(selector); node.blur(); node.scrollTop = 0; }, list);
+    I.saveScreenshot('dashboard-design-aligned-previews.png', false);
     I.resizeWindow(390, 1052);
     if (await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) I.clickCss('.js-sidebar-toggler');
     I.assertTrue(await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__widget[data-size="1x1"]')]
         .every(card => card.scrollWidth <= card.clientWidth + 1)), 'Compact metric content must fit narrow cards.');
     I.resizeWindow(1337, 1052);
+    await I.stopMockingRoute(recentPagesRoute);
 });
 
 Scenario('Session scrolling stays inside its list and compact controls expose accessible tooltips', async ({ I }) => {
@@ -260,6 +315,7 @@ Scenario('Remove design fixtures and verify the account preferences were never c
     await I.stopMockingRoute(settingsRoute);
     await I.stopMockingRoute(noticesRoute);
     await I.stopMockingRoute(sessionsRoute);
+    await I.stopMockingRoute(recentPagesRoute);
     I.wjSetDefaultWindowSize();
     I.refreshPage();
     await waitForOverview(I);

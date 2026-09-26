@@ -149,10 +149,10 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, collap
             I.dontSeeElement('[data-widget-type="traffic"] .md-dashboard-widget__more');
             continue;
         }
-        I.seeElement(`[data-widget-type="${type}"] details.md-dashboard-widget__chart-data summary`);
-        I.clickCss(`[data-widget-type="${type}"] details.md-dashboard-widget__chart-data summary`);
-        I.seeElement(`[data-widget-type="${type}"] details[open] .md-dashboard-widget__table`);
-        I.clickCss(`[data-widget-type="${type}"] details.md-dashboard-widget__chart-data summary`);
+        I.dontSeeElement(`[data-widget-type="${type}"] details.md-dashboard-widget__chart-data`);
+        I.seeElementInDOM(`[data-widget-type="${type}"] .visually-hidden .md-dashboard-widget__table`);
+        I.seeElement(`[data-widget-type="${type}"] .md-dashboard__title-link`);
+        I.dontSeeElement(`[data-widget-type="${type}"] .md-dashboard-widget__more`);
     }
     const firstTraffic = await rememberChart(I, 'traffic');
     await widgetAction(I, ids.traffic, 'refresh');

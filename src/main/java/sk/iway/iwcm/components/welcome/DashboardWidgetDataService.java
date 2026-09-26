@@ -101,7 +101,7 @@ public class DashboardWidgetDataService {
         return switch (type) {
             case "sessions" -> sessions(user, currentSessionId);
             case "approvals" -> approvals(user, scope(user, domain));
-            case "publishing" -> publishing(user, domain, days);
+            case "publishing" -> publishing(user, domain);
             case "forms" -> forms(user, domain, formName, recentDays(days, Clock.systemDefaultZone()));
             case "newsletter" -> newsletter(domain, campaignId);
             case "errors" -> errors(domain, range);
@@ -225,9 +225,8 @@ public class DashboardWidgetDataService {
         return response(page.getTotalElements() + groupPage.getTotalElements(), items.stream().limit(PREVIEW_SIZE).toList());
     }
 
-    private Map<String, Object> publishing(Identity user, String domain, int days) {
+    private Map<String, Object> publishing(Identity user, String domain) {
         long now = System.currentTimeMillis();
-        long until = LocalDate.now().plusDays(days + 1L).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
         List<Map<String, Object>> items = new ArrayList<>();
         Set<String> seen = new LinkedHashSet<>();
         List<DocBasic> scheduled = DocDB.getInstance().getPublicableDocs();
@@ -235,20 +234,19 @@ public class DashboardWidgetDataService {
             DocDetails current = DocDB.getInstance().getBasicDocDetails(doc.getDocId(), false);
             if (!DashboardRecentPagesService.isAccessible(current, user, domain)) continue;
             if (doc instanceof DocHistory pending && Boolean.TRUE.equals(pending.getPublicable())) {
-                addPublication(items, seen, doc, "publish", doc.getPublishStart(), now, until);
+                addPublication(items, seen, doc, "publish", doc.getPublishStart(), now);
             }
-            if (doc.isDisableAfterEnd()) addPublication(items, seen, doc, "expire", doc.getPublishEnd(), now, until);
+            if (doc.isDisableAfterEnd()) addPublication(items, seen, doc, "expire", doc.getPublishEnd(), now);
         }
         items.sort(Comparator.comparingLong(DashboardWidgetDataService::dateOf));
         Map<String, Object> result = response(items.size(), items.stream().limit(PREVIEW_SIZE).toList());
         result.put("from", now);
-        result.put("to", until - 1);
         return result;
     }
 
-    private void addPublication(List<Map<String, Object>> items, Set<String> seen, DocBasic doc, String kind, long date, long from, long until) {
+    private void addPublication(List<Map<String, Object>> items, Set<String> seen, DocBasic doc, String kind, long date, long from) {
         String id = doc.getDocId() + "-" + kind + "-" + date;
-        if (date < from || date >= until || !seen.add(id)) return;
+        if (date < from || !seen.add(id)) return;
         Map<String, Object> item = item(id, doc.getTitle(), pageUrl(doc.getDocId()));
         item.put("kind", kind);
         item.put("date", date);

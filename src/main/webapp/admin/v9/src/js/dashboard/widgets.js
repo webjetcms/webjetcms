@@ -1,7 +1,7 @@
 import { getWidget, listWidgets, registerWidget } from './registry';
 import { registerUtilityWidgets } from './utility-widgets';
 import { registerDataWidgets } from './data-widgets';
-import { node, text, localUrl, shortcutUrl, link, icon, field, empty, date } from './widget-utils';
+import { node, text, localUrl, shortcutUrl, link, icon, field, empty, date, containNativeScroll } from './widget-utils';
 
 /** Flattens authorized navigation while retaining distinct submenu destinations. */
 export function menuEntries(context) {
@@ -24,8 +24,8 @@ export function getDashboardDefaults(context) {
         { type: "sessions", size: "2x3" }, { type: "news", size: "3x2" },
         { type: "traffic", size: "3x3" }, { type: "forms", size: "1x1" },
         { type: "approvals", size: "1x1" }, { type: "errors", size: "1x1" },
-        { type: "recent-pages", size: "3x3" }, { type: "referrers", size: "3x3" },
-        { type: "publishing", size: "2x3" }, { type: "newsletter", size: "2x2" },
+        { type: "recent-pages", size: "3x2" }, { type: "referrers", size: "2x2" },
+        { type: "publishing", size: "2x2" }, { type: "newsletter", size: "2x2" },
         { type: "search-terms", size: "2x3" }, { type: "top-pages", size: "3x3" }
     ];
     const menu = menuEntries(context);
@@ -68,10 +68,13 @@ function pageThumbnail(page) {
     return thumbnail;
 }
 
-/** Keeps titles, sections and real edit dates readable in both preview sizes. */
-function recentPagesList(container, pages, size) {
+/** Keeps all preview rows accessible when a compact card needs native scrolling. */
+function recentPagesList(container, pages, context, signal) {
     const list = node('ul', 'md-dashboard-widget__pages');
-    pages.slice(0, size === '2x3' ? 5 : 6).forEach(page => {
+    list.tabIndex = 0;
+    list.setAttribute('aria-label', text(context, 'recent-pages'));
+    containNativeScroll(list, signal);
+    pages.slice(0, 6).forEach(page => {
         const row = node('li');
         const target = link('', `/admin/v9/webpages/web-pages-list/?docid=${encodeURIComponent(page.docId)}`, 'md-dashboard-widget__page');
         const content = node('span', 'md-dashboard-widget__page-content');
@@ -140,14 +143,14 @@ export function registerDashboardWidgets() {
     });
     registerWidget({
         type: "recent-pages", titleKey: "admin.dashboard.recent-pages.js", descriptionKey: "admin.dashboard.recent-pages.description.js",
-        icon: "ti-history", sizes: ["2x3", "3x3"], defaultSize: "3x3",
+        icon: "ti-history", sizes: ["2x3", "3x2", "3x3"], defaultSize: "3x2",
         headerLink: { href: "/admin/v9/webpages/web-pages-list/", labelKey: "admin.dashboard.allShort.js" },
         isAvailable: () => window.WJ.hasPermission("menuWebpages"),
-        async render({ container, instance, context, signal }) {
+        async render({ container, context, signal }) {
             const pages = await recentPages(signal);
             if (signal.aborted) return;
             if (!pages.length) empty(container, context);
-            else recentPagesList(container, pages, instance.size);
+            else recentPagesList(container, pages, context, signal);
         },
         async renderCollapsed({ container, context, signal }) {
             const pages = await recentPages(signal);

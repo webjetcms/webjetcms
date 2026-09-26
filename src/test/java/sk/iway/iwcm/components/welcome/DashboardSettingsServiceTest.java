@@ -63,6 +63,30 @@ class DashboardSettingsServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.validateAndSerialize(settings, "42"));
     }
 
+    /** Compact defaults and existing personal size choices both survive a settings round trip. */
+    @Test
+    void acceptsCompactPreviewSizesWithoutChangingExistingPersonalSizes() {
+        Map<String, java.util.List<String>> variants = Map.of(
+            "recent-pages", java.util.List.of("3x2", "2x3", "3x3"),
+            "referrers", java.util.List.of("2x2", "2x3", "3x3"),
+            "publishing", java.util.List.of("2x2", "2x3")
+        );
+        variants.forEach((type, sizes) -> sizes.forEach(size -> {
+            DashboardSettingsDto source = settings();
+            Item preview = item("preview", type, size);
+            preview.setCollapsed(true);
+            source.getItems().add(preview);
+            when(repository.read(7)).thenReturn(service.validateAndSerialize(source, "42"));
+
+            DashboardSettingsDto loaded = service.load(7, "42");
+
+            assertTrue(loaded.isConfigured(), type + " " + size);
+            assertEquals(size, loaded.getItems().get(1).getSize());
+            assertTrue(loaded.getItems().get(1).isCollapsed());
+        }));
+        verify(repository, never()).replace(anyInt(), anyString(), anyMap(), anySet());
+    }
+
     @Test
     void rejectsUnknownDomainOptionOwnerAndInvalidInstanceIds() {
         DashboardSettingsDto settings = settings();

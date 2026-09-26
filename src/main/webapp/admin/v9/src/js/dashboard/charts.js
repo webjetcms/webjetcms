@@ -97,6 +97,40 @@ function compactChart(form, host) {
         }
         series.appear(0, 0);
     });
+    if (host.classList.contains('md-dashboard-widget__chart--referrers')) {
+        const xAxis = chart.xAxes.getIndex(0), yAxis = chart.yAxes.getIndex(0);
+        xAxis.setAll({ min: 0, max: 100, strictMinMax: true, extraMax: 0, height: 0 });
+        yAxis.set('width', 0);
+        for (const axis of [xAxis, yAxis]) {
+            const renderer = axis.get('renderer');
+            renderer.labels.template.set('forceHidden', true);
+            renderer.grid.template.set('forceHidden', true);
+        }
+        chart.setAll({ paddingTop: 0, paddingRight: 0 });
+        chart.get('cursor')?.set('visible', false);
+        const series = chart.series.getIndex(0);
+        series.setAll({ clustered: false, maskBullets: false });
+        series.columns.template.setAll({ height: 5, dy: 10 });
+        series.columns.template.adapters.remove('fill');
+        series.columns.template.adapters.remove('stroke');
+        series.columns.template.setAll({ fill: primary, strokeOpacity: 0 });
+        const track = chart.series.unshift(window.am5xy.ColumnSeries.new(chart.root, {
+            xAxis, yAxis, valueXField: 'track', categoryYField: form.yAxeName, clustered: false, maskBullets: false
+        }));
+        track.columns.template.setAll({ height: 5, dy: 10, fill: grid, strokeOpacity: 0,
+            cornerRadiusTL: 3, cornerRadiusBL: 3, cornerRadiusTR: 3, cornerRadiusBR: 3 });
+        track.data.setAll(form.chartData.map(item => ({ ...item, track: 100 })));
+        for (const right of [false, true]) track.bullets.push(root => {
+            const caption = window.am5.Label.new(root, {
+                text: right ? '{share}' : `{${form.yAxeName}}`, populateText: true, ignoreFormatting: true,
+                centerX: window.am5.percent(right ? 100 : 0), centerY: window.am5.percent(100), dy: 2,
+                paddingLeft: 0, paddingRight: 0, paddingTop: 0, paddingBottom: 4,
+                fontSize: 11, fill: label, oversizedBehavior: 'truncate', textAlign: right ? 'right' : 'left'
+            });
+            if (!right) caption.adapters.add('maxWidth', () => Math.max(0, chart.plotContainer.width() - 54));
+            return window.am5.Bullet.new(root, { locationX: right ? 1 : 0, sprite: caption });
+        });
+    }
     chart.appear(0, 0);
 }
 

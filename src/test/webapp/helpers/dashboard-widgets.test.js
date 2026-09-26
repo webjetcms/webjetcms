@@ -81,21 +81,56 @@ test('Shortcut settings toggle authorized menu and explicit URL fields and valid
     assert.deepEqual(JSON.parse(JSON.stringify(settings.read())), { options: { source: 'url', href: 'https://other.test/', title: 'My site' } });
 });
 
-test('Recent pages use a bounded preview and expose server-filtered titles safely in both variants', async t => {
+test('Recent pages retain six server-filtered rows safely in every supported size', async t => {
     const pages = Array.from({ length: 8 }, (_, index) => ({ docId: index + 1, title: index ? `Page ${index}` : '<img src=x>', fullPath: '/Section', saveDate: '26.09.2026 10:00' }));
     const { scope, context, container, requests } = fixture(t, { pages });
     const widget = scope.getWidget('recent-pages');
     const signal = new AbortController().signal;
-    await widget.render({ container, context, signal, instance: { size: '2x3' } });
-    assert.equal(container.querySelectorAll('li').length, 5);
-    assert.equal(container.querySelector('img'), null);
-    container.replaceChildren();
-    await widget.render({ container, context, signal, instance: { size: '3x3' } });
-    assert.equal(container.querySelectorAll('li').length, 6);
-    assert.equal(container.querySelectorAll('.md-dashboard-widget__page-section').length, 6);
-    assert.match(container.querySelector('.md-dashboard-widget__page-date').textContent, /26.09.2026/);
+    assert.deepEqual(Array.from(widget.sizes), ['2x3', '3x2', '3x3']);
+    assert.equal(widget.defaultSize, '3x2');
+    for (const size of widget.sizes) {
+        container.replaceChildren();
+        await widget.render({ container, context, signal, instance: { size } });
+        assert.equal(container.querySelectorAll('li').length, 6);
+        assert.equal(container.querySelector('img'), null);
+        assert.equal(container.querySelectorAll('.md-dashboard-widget__page-section').length, 6);
+        assert.match(container.querySelector('.md-dashboard-widget__page-date').textContent, /26.09.2026/);
+    }
     assert.equal(requests[0].options.signal, signal);
     assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
+});
+
+test('Recent pages isolate native scrolling, keep links keyboard accessible and clean up on abort', async t => {
+    const pages = Array.from({ length: 6 }, (_, index) => ({ docId: index + 1, title: `Page ${index}`, fullPath: '/Section' }));
+    const { scope, context, container, window } = fixture(t, { pages });
+    const controller = new AbortController();
+    await scope.getWidget('recent-pages').render({ container, context, signal: controller.signal, instance: { size: '3x2' } });
+    const list = container.querySelector('.md-dashboard-widget__pages');
+    assert.equal(list.tabIndex, 0);
+    assert.equal(list.getAttribute('aria-label'), 'admin.dashboard.recent-pages.js');
+    assert.equal(list.querySelectorAll('a[href]').length, 6);
+    let overflow = true, bubbled = 0;
+    Object.defineProperty(list, 'scrollHeight', { get: () => overflow ? 400 : 200 });
+    Object.defineProperty(list, 'clientHeight', { value: 200 });
+    for (const type of ['wheel', 'keydown', 'touchstart', 'touchmove', 'touchend']) container.addEventListener(type, () => bubbled++);
+    const wheel = new window.WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: 60 });
+    list.dispatchEvent(wheel);
+    list.querySelector('a').dispatchEvent(new window.KeyboardEvent('keydown', { bubbles: true, key: 'PageDown' }));
+    assert.equal(bubbled, 0);
+    assert.equal(wheel.defaultPrevented, false, 'The browser retains native list scrolling.');
+    list.dispatchEvent(new window.Event('touchstart', { bubbles: true }));
+    overflow = false;
+    list.dispatchEvent(new window.Event('touchmove', { bubbles: true }));
+    list.dispatchEvent(new window.Event('touchend', { bubbles: true }));
+    assert.equal(bubbled, 0, 'The complete gesture stays in the list even if its content changes.');
+    list.dispatchEvent(new window.WheelEvent('wheel', { bubbles: true }));
+    assert.equal(bubbled, 1, 'A list that fits must allow page scrolling.');
+    list.dispatchEvent(new window.KeyboardEvent('keydown', { bubbles: true, key: 'Tab' }));
+    assert.equal(bubbled, 2, 'Tab navigation remains unhandled.');
+    overflow = true;
+    controller.abort();
+    list.dispatchEvent(new window.WheelEvent('wheel', { bubbles: true }));
+    assert.equal(bubbled, 3, 'Removed widgets no longer capture scroll events.');
 });
 
 test('Recent page thumbnails use supplied local perex images and restore an icon when loading fails', async t => {
@@ -158,27 +193,40 @@ test('Default shortcuts fall back to the first authorized module when pages and 
     assert.deepEqual(shortcuts.map(item => item.options.href), ['/apps/dmail/admin/']);
 });
 
+test('Default content previews complete the traffic row and use an even three-card second row', t => {
+    const { scope, context } = fixture(t);
+    const defaults = JSON.parse(JSON.stringify(scope.getDashboardDefaults(context)));
+    const grid = defaults.filter(item => !['search', 'sessions', 'news', 'shortcut'].includes(item.type));
+    assert.deepEqual(grid.slice(0, 8), [
+        { type: 'traffic', size: '3x3' }, { type: 'forms', size: '1x1' },
+        { type: 'approvals', size: '1x1' }, { type: 'errors', size: '1x1' },
+        { type: 'recent-pages', size: '3x2' }, { type: 'referrers', size: '2x2' },
+        { type: 'publishing', size: '2x2' }, { type: 'newsletter', size: '2x2' }
+    ]);
+    for (const item of grid) assert.ok(scope.getWidget(item.type).sizes.includes(item.size), item.type);
+});
+
 function chartRuntime(window, { load = async () => {}, create } = {}) {
     const forms = [];
     const roots = new Set();
     const destroyed = [];
     const settings = (initial = {}) => ({
         values: { ...initial },
-        adapters: { add() {} },
+        adapters: { add() {}, remove() {} },
         set(key, value) { this.values[key] = value; },
         setAll(values) { Object.assign(this.values, values); },
         get(key) { return this.values[key]; },
         dispose() { this.disposed = true; },
         appear(duration) { this.appearanceDuration = duration; }
     });
-    const list = values => ({ values, getIndex: index => values[index], each: callback => values.forEach(callback) });
+    const list = values => ({ values, getIndex: index => values[index], each: callback => values.forEach(callback), unshift: value => { values.unshift(value); return value; } });
     const axis = () => settings({ renderer: Object.assign(settings(), { labels: { template: settings() }, grid: { template: settings() } }) });
     class LineChartForm { constructor(config) { Object.assign(this, config); } }
     class BarChartForm { constructor(config) { Object.assign(this, config); } }
     const makeChart = form => {
         const series = Array.from({ length: form instanceof LineChartForm ? form.chartData.size : 1 }, (_, index) => {
             const tooltip = Object.assign(settings(), { label: settings() });
-            return Object.assign(settings({ tooltip }), { strokes: { template: settings() }, fills: { template: settings() }, bullets: [], data: { values: form instanceof LineChartForm ? Array.from(form.chartData.values())[index] : form.chartData } });
+            return Object.assign(settings({ tooltip }), { strokes: { template: settings() }, fills: { template: settings() }, columns: { template: settings() }, bullets: [], data: { values: form instanceof LineChartForm ? Array.from(form.chartData.values())[index] : form.chartData } });
         });
         const chart = Object.assign(settings({ cursor: Object.assign(settings(), { lineY: settings() }), scrollbarX: settings(), scrollbarY: settings(), colors: settings() }), {
             root: { setThemes(themes) { this.themes = themes; } },
@@ -191,6 +239,7 @@ function chartRuntime(window, { load = async () => {}, create } = {}) {
     let loads = 0;
     window.initAmcharts = async () => { loads++; await load(); };
     window.am5 = { percent: value => value, color: value => value };
+    window.am5xy = { ColumnSeries: { new: () => Object.assign(settings(), { columns: { template: settings() }, bullets: [], data: { setAll(values) { this.values = values; } } }) } };
     window.WebjetTheme = { new: () => ({ theme: 'WebJET' }) };
     window.ChartTools = {
         LineChartForm, BarChartForm, DateType: { Days: 'day' },
@@ -281,10 +330,12 @@ test('Detailed referrers use horizontal AmCharts and retain literal labels and s
     assert.equal(form.horizontal, true);
     assert.equal(form.chartData.length, 6);
     assert.equal(form.chartData[0].share, '10 %');
-    assert.equal(form.chart.series.getIndex(0).get('tooltip').label.get('ignoreFormatting'), true);
+    assert.equal(form.chart.series.getIndex(1).get('tooltip').label.get('ignoreFormatting'), true);
+    assert.equal(form.chart.xAxes.getIndex(0).get('max'), 100);
     assert.equal(container.querySelector('img'), null);
-    assert.match(container.querySelector('details').textContent, /<img src=x>\[bold\]/);
-    assert.equal(container.querySelectorAll('details tbody tr').length, 6);
+    assert.equal(container.querySelector('details'), null);
+    assert.match(container.querySelector('.visually-hidden').textContent, /<img src=x>\[bold\]/);
+    assert.equal(container.querySelectorAll('.visually-hidden tbody tr').length, 6);
     cleanup();
     assert.equal(runtime.roots.size, 0);
 });
@@ -294,19 +345,20 @@ test('Compact referrers retain shared horizontal charts, text values, and abort 
     const { scope, context, container, window } = fixture(t, { data });
     const runtime = chartRuntime(window);
     const controller = new AbortController();
-    const cleanup = await scope.getWidget('referrers').render({ container, context, options: {}, instance: { size: '2x3' }, signal: controller.signal });
+    const cleanup = await scope.getWidget('referrers').render({ container, context, options: {}, instance: { size: '2x2' }, signal: controller.signal });
     assert.ok(runtime.forms[0] instanceof window.ChartTools.BarChartForm);
-    assert.equal(runtime.forms[0].chartData.length, 5);
+    assert.equal(runtime.forms[0].chartData.length, 3);
     assert.equal(runtime.forms[0].chartData[0].share, '10 %');
-    assert.ok(container.querySelector('.md-dashboard-widget__chart--compact'));
-    assert.equal(container.querySelectorAll('details tbody tr').length, 5);
+    assert.equal(runtime.forms[0].chartData[0].percentage, 10);
+    assert.ok(container.querySelector('.md-dashboard-widget__chart--referrers'));
+    assert.equal(container.querySelectorAll('.visually-hidden tbody tr').length, 3);
     controller.abort();
     cleanup();
     assert.equal(runtime.roots.size, 0);
     assert.equal(runtime.destroyed.length, 1);
 });
 
-test('Publishing calendars retain full dates and mark only publication events as ready', async t => {
+test('Publishing calendars retain full years and distinguish publication from expiration', async t => {
     const data = { items: [
         { title: '<img src=x>', kind: 'publish', date: Date.UTC(2026, 8, 28, 8), url: '/admin/v9/webpages/web-pages-list/?docid=1' },
         { title: 'Expiry', kind: 'expire', date: Date.UTC(2027, 0, 2, 9), url: '/admin/v9/webpages/web-pages-list/?docid=2' }
@@ -319,8 +371,7 @@ test('Publishing calendars retain full dates and mark only publication events as
     assert.match(rows[1].querySelector('time').getAttribute('aria-label'), /2027/);
     assert.equal(rows[0].querySelector('time strong').textContent, '28');
     assert.match(rows[0].querySelector('.md-dashboard-widget__publication-time').textContent, /publish/);
-    assert.match(rows[0].querySelector('.md-dashboard-widget__publication-status').textContent, /draft/);
-    assert.equal(rows[1].querySelector('.md-dashboard-widget__publication-status'), null);
+    assert.equal(rows[1].querySelector('.md-dashboard-widget__publication-year').textContent, '2027');
     assert.match(rows[1].querySelector('.md-dashboard-widget__publication-time').textContent, /expire/);
     assert.equal(container.querySelector('img'), null);
 });
@@ -339,7 +390,7 @@ test('Newsletter progress preserves actual status and counts without inventing a
     container.replaceChildren();
     Object.assign(campaign, { status: 'completed', sent: 99, recipients: 100, failed: 1 });
     await scope.getWidget('newsletter').render(args);
-    assert.match(container.querySelector('.md-dashboard-widget__newsletter-status').textContent, /completed/);
+    assert.match(container.querySelector('.md-dashboard-widget__newsletter-status').textContent, /sendingCompleted/);
     assert.equal(container.querySelector('.md-dashboard-widget__newsletter-percent').textContent, '99 %');
     assert.equal(container.querySelector('progress').max, 100);
     assert.equal(container.querySelector('progress').value, 99);
@@ -425,6 +476,15 @@ test('Compact forms describe the selected period and retain its exact accessible
     assert.equal(widget.headerLink.href({ id: 'forms' }, context), '/apps/form/admin/detail/?formName=Contact%20%2F%20EN');
     assert.equal(scope.getWidget('approvals').headerLink.href, '/admin/v9/webpages/web-pages-list/?show=toapprove');
     assert.equal(scope.getWidget('errors').headerLink.href, '/apps/stat/admin/error/');
+});
+
+test('Publishing navigation respects the separate audit permission', t => {
+    const { scope, window } = fixture(t);
+    const widget = scope.getWidget('publishing');
+    assert.equal(widget.headerLink.href(), '/admin/v9/apps/audit-awaiting-publish-webpages/');
+    window.WJ.hasPermission = permission => permission === 'menuWebpages';
+    assert.equal(widget.isAvailable(), true);
+    assert.equal(widget.headerLink.href(), '/admin/v9/webpages/web-pages-list/');
 });
 
 test('Compact error totals keep their actual weekly coverage without an extra visible explanation row', async t => {

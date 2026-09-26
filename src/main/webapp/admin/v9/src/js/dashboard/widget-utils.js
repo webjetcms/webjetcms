@@ -8,6 +8,23 @@ export function node(tag, className = "", text) {
 
 export const text = (context, key, ...params) => context.translate(`admin.dashboard.${key}.js`, ...params);
 
+/** Lets a native list consume scroll gestures before the administration's smooth scrollbar. */
+export function containNativeScroll(list, signal) {
+    const overflows = () => list.scrollHeight > list.clientHeight;
+    const wheel = event => { if (overflows()) event.stopPropagation(); };
+    const keyboard = event => {
+        const scrolling = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' '].includes(event.key);
+        if (scrolling && (overflows() || (event.key === ' ' && event.target.closest('button')))) event.stopPropagation();
+    };
+    let ownsTouch = false;
+    const touchStart = event => { ownsTouch = overflows(); if (ownsTouch) event.stopPropagation(); };
+    const touchMove = event => { if (ownsTouch) event.stopPropagation(); };
+    const touchEnd = event => { if (ownsTouch) event.stopPropagation(); if (!event.touches?.length) ownsTouch = false; };
+    const listeners = [['wheel', wheel], ['keydown', keyboard], ['touchstart', touchStart], ['touchmove', touchMove], ['touchend', touchEnd], ['touchcancel', touchEnd]];
+    listeners.forEach(([type, handler]) => list.addEventListener(type, handler, { passive: true }));
+    signal.addEventListener('abort', () => listeners.forEach(([type, handler]) => list.removeEventListener(type, handler)), { once: true });
+}
+
 /** Resolves only HTTP administration links on the current origin. */
 export function localUrl(value) {
     if (typeof value !== "string" || !value.trim()) return null;
