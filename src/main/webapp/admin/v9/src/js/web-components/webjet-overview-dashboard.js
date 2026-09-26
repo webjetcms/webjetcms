@@ -1,4 +1,6 @@
 import './webjet-server-monitoring';
+import { DashboardController } from '../dashboard/dashboard';
+import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/widgets';
 
 /**
  * Configuration for the administration overview dashboard.
@@ -70,6 +72,7 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
     }
 
     disconnectedCallback() {
+        this.dashboardController?.destroy();
         this._feedbackListeners.forEach(([name, listener]) => window.removeEventListener(name, listener));
         this._feedbackListeners = [];
     }
@@ -99,76 +102,72 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         this.disconnectedCallback();
         this.replaceChildren();
         const overview = element("div", "overview");
-        const row = element("div", "row");
-        const main = element("div", "col-lg-9");
-        const side = element("div", "col-lg-3 pl-0-lg");
-        main.append(element("div", "toast-container", null));
-        main.firstChild.id = "toast-container-overview";
-        main.append(this._renderInfo(), this._renderWebsites());
-
-        const monitoring = document.createElement("webjet-server-monitoring");
-        monitoring.configure({ complex: false, labels: this.labels });
-        main.appendChild(monitoring);
-
-        side.append(this._renderUsers(), this._renderBookmarks(), this._renderFeedback(), this._renderNews());
-        row.append(main, side);
-        overview.appendChild(row);
+        const alerts = element("div", "toast-container md-dashboard");
+        alerts.id = "toast-container-overview";
+        const widgets = element("div");
+        overview.append(alerts, widgets);
+        if (this.config.dashboardLegacy !== false) {
+            const legacy = element("details", "md-dashboard__legacy");
+            legacy.append(element("summary", "", WJ.translate("admin.dashboard.legacy.js")));
+            const row = element("div", "row");
+            const main = element("div", "col-lg-9");
+            const side = element("div", "col-lg-3 pl-0-lg");
+            main.append(this._renderWebsites());
+            const monitoring = document.createElement("webjet-server-monitoring");
+            monitoring.configure({ complex: false, labels: this.labels });
+            main.appendChild(monitoring);
+            side.append(this._renderUsers(), this._renderBookmarks(), this._renderFeedback());
+            row.append(main, side);
+            legacy.append(row);
+            overview.append(legacy);
+        }
         this.appendChild(overview);
+        registerDashboardWidgets();
+        const context = { data: this.data, labels: this.labels, config: this.config, overview: this, translate: key => WJ.translate(key) };
+        context.config.dashboardDefaults ||= getDashboardDefaults(context);
+        this.dashboardController = new DashboardController(widgets, context);
+        this.dashboardReady = this.dashboardController.start();
         this.dataset.ready = "true";
         this.dispatchEvent(new CustomEvent("webjet-component-ready", { bubbles: true }));
     }
 
-    _renderInfo() {
-        const section = element("section", "overview__dashboard");
-        const title = element("div", "overview__dashboard__title");
-        title.append(element("h2", "", `${this.labels.welcome || ""}, ${window.currentUser?.fullName || ""}`));
-        const changelog = element("p");
-        changelog.innerHTML = this.labels.changelog || "";
-        const link = element("a", "btn btn-primary", this.labels.seeCompleteChangelog || "");
-        link.href = `http://docs.webjetcms.sk/latest/${window.userLng}/CHANGELOG`;
-        link.target = "_blank";
-        title.append(changelog, link);
-        section.appendChild(title);
-
-        const cards = element("div", "row");
-        const stats = this.data.backData || {};
-        const items = [];
-        if (WJ.hasPermission("cmp_stat") && this.config.statMode !== "none") items.push([this.labels.overviewViews, "navstevy", "ti-chart-area-line", "#0063fb", stats.statViewsNumber, "/apps/stat/admin/"]);
-        if (WJ.hasPermission("cmp_form")) items.push([this.labels.overviewForms, "formulare", "ti-forms", "#007f5e", `+${stats.fillFormsNumber}`, "/apps/form/admin/"]);
-        if (WJ.hasPermission("cmp_diskusia")) items.push([this.labels.overviewForum, "foto", "ti-messages", "#c000d5", `+${stats.documentForumNumber}`, "/apps/forum/admin/"]);
-        if (WJ.hasPermission("cmp_stat") && this.config.statMode !== "none") items.push([this.labels.overviewErrors, "dokumenty", "ti-face-id-error", "#d90575", `+${stats.statErrorNumber}`, "/apps/stat/admin/error/"]);
-        items.forEach(([itemTitle, itemClass, icon, color, number, href]) => {
-            const col = element("div", "col-md-3");
-            const item = element("div", `${itemClass} overview__dashboard__item`);
-            item.append(element("p", "overview__dashboard__item__title", itemTitle || ""));
-            const anchor = element("a", "overview__dashboard__item__info");
-            anchor.href = href;
-            const iconElement = element("i", `ti ${icon} fs-1`);
-            iconElement.style.color = color;
-            anchor.append(iconElement, element("div", "overview__dashboard__item__info__number", number));
-            item.appendChild(anchor);
-            col.appendChild(item);
-            cards.appendChild(col);
-        });
-        section.appendChild(cards);
-        return section;
-    }
-
     _renderWebsites() {
         const wrapper = element("div", "overview__websites");
-        wrapper.innerHTML = `<nav><div class="nav nav-tabs" id="nav-tab" role="tablist"><a class="nav-item nav-link active noperms-menuWebpages" id="nav-mysites-tab" data-bs-toggle="tab" href="#nav-mysites" role="tab">${WJ.escapeHtml(this.labels.myLastPages || "")}</a><a class="nav-item nav-link noperms-menuWebpages" id="nav-websites-tab" data-bs-toggle="tab" href="#nav-websites" role="tab">${WJ.escapeHtml(this.labels.changedWebPages || "")}</a><a class="nav-item nav-link noperms-cmp_adminlog" id="nav-audit-tab" data-bs-toggle="tab" href="#nav-audit" role="tab">${WJ.escapeHtml(this.labels.audit || "")}</a></div></nav><div class="tab-content" id="nav-tabContent"><div class="tab-pane fade show active overview__websites-list" id="nav-mysites"></div><div class="tab-pane fade overview__websites-list" id="nav-websites"></div><div class="tab-pane fade overview__websites-list" id="nav-audit"></div></div>`;
-        this._renderPageList(wrapper.querySelector("#nav-mysites"), this.data.recentPages || [], "recent");
+        const active = WJ.hasPermission("menuWebpages") ? "websites" : "audit";
+        const tabs = [["websites", "menuWebpages", this.labels.changedWebPages], ["audit", "cmp_adminlog", this.labels.audit]];
+        const nav = element("nav");
+        const tabList = element("div", "nav nav-tabs");
+        tabList.setAttribute("role", "tablist");
+        const content = element("div", "tab-content");
+        tabs.forEach(([id, permission, title]) => {
+            const selected = id === active;
+            const tab = element("a", `nav-item nav-link noperms-${permission}${selected ? " active" : ""}`, title || "");
+            tab.id = `nav-${id}-tab`;
+            tab.href = `#nav-${id}`;
+            tab.dataset.bsToggle = "tab";
+            tab.setAttribute("role", "tab");
+            tab.setAttribute("aria-controls", `nav-${id}`);
+            tab.setAttribute("aria-selected", String(selected));
+            tabList.append(tab);
+            const pane = element("div", `tab-pane fade overview__websites-list${selected ? " show active" : ""}`);
+            pane.id = `nav-${id}`;
+            pane.setAttribute("role", "tabpanel");
+            pane.setAttribute("aria-labelledby", tab.id);
+            content.append(pane);
+        });
+        nav.append(tabList);
+        wrapper.append(nav, content);
         this._renderPageList(wrapper.querySelector("#nav-websites"), this.data.changedPages || [], "changed");
         this._renderPageList(wrapper.querySelector("#nav-audit"), this.data.adminLog || [], "audit");
         return wrapper;
     }
 
     /**
-     * Appends recent-page, changed-page, or audit entries to a dashboard list.
+     * Appends changed-page or audit entries to a dashboard list.
      *
      * @param {HTMLElement} container - Element that receives the generated list.
      * @param {Object[]} items - Page or audit entries to render.
-     * @param {string} type - Entry type: `"recent"`, `"changed"`, or `"audit"`.
+     * @param {string} type - Entry type: `"changed"` or `"audit"`.
      */
     _renderPageList(container, items, type) {
         const list = element("ul");
@@ -189,38 +188,9 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
     }
 
     _renderUsers() {
-        const wrapper = createOverviewCard("ti-users", WJ.translate("admin.welcome.logins.title.js"), "users");
-        const sessionsContainer = element("div", "overview-logged__content overview-logged__sessions");
-        const sessionsList = element("ul");
-        sessionsList.append(element("li", "subheading", WJ.translate("admin.welcome.active_sessions.title.js")));
-        const currentSessions = this.data.currentSessions || {};
-        const sessions = (currentSessions.userSessions || []).flatMap(cluster => (cluster.userSessions || []).map(session => ({ ...session, cluster: cluster.cluster }))).sort((a, b) => b.logonTime - a.logonTime);
-        sessions.forEach(session => {
-            const li = element("li");
-            const entry = element("span", "active-session-entry", `${WJ.formatTimeSeconds(session.logonTime)} (${session.browserName}, ${session.remoteAddr})`);
-            entry.title = this._sessionTooltip(session);
-            li.appendChild(entry);
-            if (currentSessions.currentSessionId === session.sessionId) {
-                const current = element("span", "float-end");
-                current.setAttribute("role", "img");
-                current.setAttribute("aria-label", WJ.translate("admin.welcome.active_sessions.current_session.js"));
-                current.innerHTML = '<i class="ti ti-current-location fs-6" aria-hidden="true"></i>';
-                li.appendChild(current);
-            } else {
-                const logout = element("button", "float-end btn btn-sm");
-                logout.type = "button";
-                logout.setAttribute("aria-label", WJ.translate("menu.logout", { domain: session.domainName }));
-                logout.innerHTML = '<i class="ti ti-logout fs-6" aria-hidden="true"></i>';
-                logout.addEventListener("click", () => this._removeSession(session.sessionId, li));
-                li.appendChild(logout);
-            }
-            sessionsList.appendChild(li);
-        });
-        sessionsContainer.appendChild(sessionsList);
-
+        const wrapper = createOverviewCard("ti-users", this.labels.loggedAdmins || "", "users noperms-welcomeShowLoggedAdmins");
         const adminsContainer = element("div", "overview-logged__content overview-logged__admins noperms-welcomeShowLoggedAdmins");
         const adminsList = element("ul");
-        adminsList.append(element("li", "subheading", this.labels.loggedAdmins || ""));
         const admins = this.data.admins || [];
         const renderAdmins = count => {
             adminsList.querySelectorAll("li:not(.subheading)").forEach(item => item.remove());
@@ -253,24 +223,8 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         };
         renderAdmins(4);
         adminsContainer.appendChild(adminsList);
-        wrapper.append(sessionsContainer, adminsContainer);
+        wrapper.append(adminsContainer);
         return wrapper;
-    }
-
-    /**
-     * Invalidates an administrator session and removes its row after a successful response.
-     *
-     * @param {string} sessionId - Server session identifier.
-     * @param {HTMLElement} row - Session row to remove.
-     * @returns {Promise<void>} A promise that settles after the removal request completes.
-     */
-    async _removeSession(sessionId, row) {
-        const response = await fetch("/admin/rest/removeSession", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded; charset=utf-8", "X-CSRF-Token": window.csrfToken }, body: new URLSearchParams({ sessionId }) });
-        if (response.ok) row.remove();
-    }
-
-    _sessionTooltip(session) {
-        return [["admin.welcome.active_sessions.userAgent.js", session.browserName], ["admin.welcome.active_sessions.remoteAddr.js", session.remoteAddr], ["admin.welcome.active_sessions.logonTime.js", session.logonTime ? WJ.formatDateTimeSeconds(new Date(session.logonTime).toUTCString()) : null], ["admin.welcome.active_sessions.domainName.js", session.domainName], ["admin.welcome.active_sessions.server.js", session.cluster]].filter(([, value]) => value).map(([key, value]) => `${WJ.translate(key)}:\n\t${value}`).join("\n");
     }
 
     /**
@@ -428,28 +382,7 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         modal.show();
     }
 
-    _renderNews() {
-        const wrapper = element("div", "overview__news");
-        wrapper.innerHTML = `<div class="overview__news__head"><div class="overview__news__head__icon"><i class="ti ti-rss"></i></div><span>${WJ.escapeHtml(this.labels.newsInWebJET || "")}</span></div><div class="overview__news__content"><ul></ul></div>`;
-        const language = window.userLng === "en" ? "en" : window.userLng === "cs" ? "cs" : "sk";
-        $.get({ url: `${this.config.overviewJsonUrl || ""}wjnews.${language}.json`, success: data => {
-            const list = wrapper.querySelector("ul");
-            (data?.news || []).slice(0, 3).forEach(news => {
-                const li = element("li");
-                const link = element("a", "overview__news__content__link");
-                link.href = news.link;
-                link.target = "_blank";
-                link.title = news.title;
-                link.append(element("span", "title", news.title));
-                const perex = element("span", "perex");
-                perex.innerHTML = WJ.parseMarkdown(news.perex);
-                link.appendChild(perex);
-                li.appendChild(link);
-                list.appendChild(li);
-            });
-        }});
-        return wrapper;
-    }
+
 }
 
 if (!customElements.get("webjet-overview-dashboard")) customElements.define("webjet-overview-dashboard", WebjetOverviewDashboardElement);

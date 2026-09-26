@@ -19,6 +19,7 @@ import sk.iway.iwcm.*;
 import sk.iway.iwcm.admin.ThymeleafEvent;
 import sk.iway.iwcm.admin.layout.AuditDto;
 import sk.iway.iwcm.admin.layout.DocDetailsDto;
+import sk.iway.iwcm.admin.layout.MenuService;
 import sk.iway.iwcm.admin.layout.UserDto;
 import sk.iway.iwcm.common.AdminTools;
 import sk.iway.iwcm.components.todo.ToDoBean;
@@ -26,6 +27,7 @@ import sk.iway.iwcm.components.todo.ToDoDB;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.doc.DebugTimer;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.SessionClusterService;
@@ -46,6 +48,9 @@ public class DashboardListener {
 
     @Autowired
     UserDetailsRepository userDetailsRepository;
+
+    @Autowired
+    DashboardRecentPagesService recentPagesService;
 
     /**
      * Pripravi data pre overview/welcome obrazovku, zatial taketo skarede natvrdo
@@ -99,21 +104,22 @@ public class DashboardListener {
 
             int size = Constants.getInt("dashboardRecentSize");
 
-            //use cached result
+            // Recent pages must reflect the active domain and current permissions on every load.
             Cache cache = Cache.getInstance();
-            String CACHE_KEY = "DashboardListener.recentPages." + user.getUserId();
-            List<DocDetailsDto> recentPagesDto = cache.getObject(CACHE_KEY, List.class);
-            if (recentPagesDto == null) {
-                // posledne stranky
-                List<DocDetails> recentPages = AdminTools.getMyRecentPages(user, size);
-                recentPagesDto = recentPages.stream().map(DocDetailsDto::new).toList();
-                cache.setObjectSeconds(CACHE_KEY, recentPagesDto, 60*30, true);
+            List<DocDetailsDto> recentPagesDto = List.of();
+            if (user.isEnabledItem("menuWebpages")) {
+                try {
+                    recentPagesDto = recentPagesService.getRecentPages(user, DocDB.getDomain(request), Math.max(1, Math.min(20, size)));
+                } catch (IllegalStateException exception) {
+                    Logger.error(DashboardListener.class, "Could not prepare the recent pages preview", exception);
+                }
             }
             model.addAttribute("overviewRecentPages", JsonTools.objectToJSON(recentPagesDto));
+            model.addAttribute("overviewMenu", JsonTools.objectToJSON(new MenuService(request).getMenu()));
             dt.diff("After recent pages");
 
 
-            CACHE_KEY = "DashboardListener.changedPages." + user.getUserId();
+            String CACHE_KEY = "DashboardListener.changedPages." + user.getUserId();
             List<DocDetailsDto> changedPagesDto = cache.getObject(CACHE_KEY, List.class);
             if (changedPagesDto == null) {
                 // zmenene stranky

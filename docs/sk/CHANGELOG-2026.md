@@ -13,6 +13,11 @@
 - Microsoft SQL Server - ukončená bola podpora verzií starších ako 2012 a odstránená konfiguračná premenná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 alebo novší, starý spôsob stránkovania pomocou `TOP` už nie je podporovaný (#293).
 - Formulár ľahko a viackrokové formuláre - upravené zobrazenie `tooltip` z pôvodného `i` elementu na štandardný `button`. Je tak splnená požiadavka na prístupnosť - tooltip je dostupný myšou aj klávesnicou (#306).
 
+### Úvodná obrazovka
+
+- [Úvodná obrazovka](redactor/admin/welcome.md) je osobný prehľad s widgetmi podľa oprávnení a aktuálnej domény. Widgety môžete pridávať, nastavovať, presúvať, minimalizovať a odstrániť s okamžitým vrátením. Rozloženie sa ukladá do konta a je spoločné pre zariadenia; výber formulára alebo kampane sa pamätá podľa domény (#58806).
+- K dispozícii sú skratky do modulov, posledné stránky, schvaľovanie, plán publikovania, formuláre, návštevnosť a jej zdroje, hľadané výrazy, chyby 404 a newsletter. Povinný widget aktívnych prihlásení umožňuje ukončiť inú vlastnú reláciu. Novinky po potvrdení uvoľnia miesto; nevyriešené systémové upozornenia zostávajú viditeľné. Vyhľadávanie má jasný prepínač medzi administráciou a dokumentáciou (#58806).
+
 ### Webové stránky
 
 - Kôš webových stránok - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Pridaná možnosť mazania stránok a priečinkov v koši aj v sekcii [Mazanie dát](sysadmin/data-deleting/README.md) podľa zvoleného rozsahu dátumov. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov (#271).
@@ -234,6 +239,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Vytvorená sekcia [Riešenie problémov](sysadmin/troubleshooting/README.md) v manuáli pre prevádzku.
 
 ### Pre programátora
+
+- Dashboard - pridaný register widgetov, responzívny grid a REST rozhranie na transakčné ukladanie nastavení do `user_settings_admin`. Existujúca tabuľka MySQL/MariaDB sa pri aktualizácii konvertuje na InnoDB. [Etapový plán a pravidlá](developer/admin/dashboard-widgets-plan.md) dopĺňa projektový skill `wj-dashboard-widget` s konkrétnym kontraktom a referenčnými widgetmi (#58806).
 
 - Administrácia - odstránená závislosť od [Vue.js](https://vuejs.org). Stromové polia, úvodná stránka, výber oblasti obrázka a monitorovanie servera používajú natívne [web komponenty](developer/frameworks/web-components.md). Globálny objekt `window.VueTools` ani balíky pre Vue už nie sú súčasťou administrácie. Vlastné rozšírenia ich musia nahradiť web komponentmi alebo si Vue zostaviť samostatne (#58722).
 - AI asistenti - klientska logika nezávislá od poskytovateľa pre OpenAI, Gemini a OpenRouter, spracovanie streamov, typy požiadaviek/odpovedí a ochrana promptov boli vyčlenené do samostatného artefaktu `com.webjetcms:webjet-ai` a externého [repozitára webjet-ai](https://github.com/webjetcms/webjet-ai). WebJET CMS odovzdáva konfiguráciu cez typovaný adaptér a naďalej zabezpečuje auditovanie, perzistenciu a integráciu používateľského rozhrania. Ide o nekompatibilnú zmenu: pôvodné CMS SPI pre vlastných poskytovateľov a jeho transportné a streamovacie podporné triedy boli odstránené. Vlastných poskytovateľov je nutné migrovať na rozhranie `AiProvider` knižnice a CMS adaptér `LibrarySupportLogic`  (#58670).

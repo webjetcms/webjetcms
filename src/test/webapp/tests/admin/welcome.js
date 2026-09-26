@@ -5,7 +5,9 @@ var random;
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage("/admin/v9/");
-    I.wait(3);
+    I.waitForElement(".md-dashboard[data-loaded='true']", 20);
+    I.clickCss(".md-dashboard__legacy > summary");
+    I.waitForVisible(".md-dashboard__legacy .bookmark", 10);
     random = I.getRandomText();
 });
 
