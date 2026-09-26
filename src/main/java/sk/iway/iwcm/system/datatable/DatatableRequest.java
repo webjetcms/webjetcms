@@ -45,6 +45,9 @@ public class DatatableRequest<K, V>
 	//set of columns in excel import (filled in export-import.js during xlsx parsing)
 	private Set<String> importedColumns;
 
+	//sets of columns present in each imported row, including explicit NULL values
+	private Map<K, Set<String>> importedColumnsByRow;
+
 	//sem sa ukaldaju error hlasenia v initBinder
 	private V errorField;
 	private String globalError;

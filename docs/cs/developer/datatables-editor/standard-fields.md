@@ -61,6 +61,10 @@ Textové pole ```type="number"```, prohlížeč typicky zobrazí v poli i šipky
 
 Rozdíl mezi ```NUMBER``` a ```TEXT_NUMBER``` je v zobrazení v datatabulce. ```TEXT_NUMBER``` zobrazí zaokrouhlené číslo, při vyšším čísle vypíše v textové podobě. ```10 tis.``` místo ```10000```. V editoru je chování stejné (zobrazí se přesná hodnota).
 
+Při editaci existujícího záznamu lze vymazat hodnotu objektového pole typu `NUMBER`, například `Integer`, `Long` nebo `Double`. Prázdná hodnota se přenese do entity jako `null` ; primitivní typy `int`, `long` a `double` hodnotu `null` nepodporují. Automatické vynulování se nevztahuje na `TEXT_NUMBER` ; v případě potřeby jej povolte atributem `alwaysCopyProperties = { true }`.
+
+Při importu se původní číselná hodnota zachová, pokud sloupec `NUMBER` není v Excel souboru. Pokud je sloupec importován s hodnotou `NULL`, hodnota entity se vynuluje.
+
 ## PASSWORD
 
 Textové pole ```type="password"``` pro zadání hesla.
@@ -110,8 +114,11 @@ Více řádkové textové pole. Dlouhý text se nezalamuje, pokud chcete zalomit
 
 Výběr data, po kliknutí do pole zobrazí okno pro výběr data.
 
+Pokud je datum povinné, označte pole anotací `@NotNull`. Frontend odešle prázdnou hodnotu jako prázdný řetězec, který server při deserializaci převede na `null`. Editor zobrazí chybové hlášení **Povinné pole. Zadejte datum.** Kalendářový výběr se po neúspěšné validaci automaticky neotevře.
+
 ```java
     @Column(name = "date_from")
+	@NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="calendar.begin",
@@ -124,8 +131,11 @@ Výběr data, po kliknutí do pole zobrazí okno pro výběr data.
 
 Podobné pole jako ```DATE``` ale navíc umožňuje i výběr času.
 
+Pro povinnou hodnotu použijte anotaci `@NotNull`. Editor při prázdné hodnotě zobrazí chybové hlášení **Povinné pole. Zadejte datum a čas.**
+
 ```java
     @Column(name = "date_to")
+	@NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.banner.dateTo",
@@ -464,6 +474,8 @@ Zobrazí textové pole, jehož hodnotu nelze měnit. V příkladu si všimněte,
 ## QUILL
 
 Zobrazí jednoduchý HTML editor, který umožňuje základní formátování textu jako tučné písmo/kurzíva/podtrženo, nadpisy, seznamy a odkaz.
+
+Při validační chybě se červeným okrajem zvýrazní nástrojová lišta i editační plocha, aby byl vadný obsah vizuálně označen stejně jako u ostatních typů polí.
 
 Při otevření nebo potvrzení režimu úpravy HTML kódu editor odstraní nadbytečné prázdné odstavce, například `<p><br></p>`. Pokud by odstraněním zůstal obsah zcela prázdný, původní HTML kód zachová.
 

@@ -473,7 +473,11 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 
 ## Non-existent attributes in the editor
 
-By default, not all entity attributes may come from the editor, so the values ​​of the existing entity and the data sent from the editor are combined before saving. By default, all non-```null``` attributes are overwritten. However, this does not allow you to enter an empty date (if it has already been set). Therefore, attributes annotated with DataTableColumn type ```Date``` are transferred even if they have a ```null``` value. This combination is performed in the ```public T editItem(T entity, long id)``` method using ```NullAwareBeanUtils.copyProperties(entity, one);```.
+By default, not all entity attributes may come from the editor, so the values ​​of the existing entity and the data sent from the editor are combined before saving. All attributes with a value different from ```null``` are overwritten.
+
+The automatic transfer of the ```null``` value only applies to attributes marked with the ```@DataTableColumn``` annotation. Within these attributes, the ```java.util.Date```, ```java.sql.Date```, ```LocalDate```, ```LocalDateTime``` and object arrays with ```inputType = DataTableColumnType.NUMBER``` that support ```null``` are transferred for Java types, so that they can be emptied in the editor. For attributes without the ```@DataTableColumn``` annotation, the input value ```null``` is ignored and the original entity value is preserved, even if it is a date type. Primitive numeric types do not support the value ```null```.
+
+When importing, ```NUMBER``` with the value ```null``` is transferred only if its column is present in the imported Excel file. An omitted column will retain the value of the existing entity; an explicit value of ```NULL``` in the imported column will reset it. For a date stored in another type, such as ```Instant```, ```Timestamp``` or ```Long```, or for ```TEXT_NUMBER```, the transfer of ```null``` can be turned on using ```alwaysCopyProperties = { true }```. The value ```false``` turns off automatic transfer for supported date types and ```NUMBER```. This connection is made in the method ```public T editItem(T entity, long id)``` using ```NullAwareBeanUtils.copyProperties(entity, one);```.
 
 ## Restoring data after saving
 

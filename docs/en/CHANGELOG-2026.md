@@ -353,6 +353,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
 ```
 
+- Data tables - fixed validation of required fields of type [`DATE` and `DATETIME`](developer/datatables-editor/standard-fields.md#date). An empty value is sent from the editor as an empty string, which the server deserializes to `null` ; an error message is displayed according to the field type and the calendar picker does not open automatically after failed validation (#58770).
+- Data tables - when editing, it is possible to reset an object value of type [`NUMBER`](developer/datatables-editor/standard-fields.md#number--text_number) by emptying the field, which supports `null`. When importing, the existing value is preserved if the numeric column is not in the Excel file; the imported value `NULL` resets it.
+- Data tables - field validation error [`QUILL`](developer/datatables-editor/standard-fields.md#quill) highlights both the toolbar and editor border (#58770).
+
 ## 2026.18
 
 > WebJET CMS 2026.18 brings **folder change approval** with support for multi-level approval and **accessibility testing** integrated directly into automated tests.

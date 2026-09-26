@@ -353,6 +353,10 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
 ```
 
+- Datové tabulky - opravena validace povinných polí typu [`DATE` a `DATETIME`](developer/datatables-editor/standard-fields.md#date). Prázdná hodnota se z editoru odešle jako prázdný řetězec, který server deserializuje na `null` ; zobrazí se chybové hlášení podle typu pole a kalendářový výběr se po neúspěšné validaci automaticky neotevře (#58770).
+- Datové tabulky - při editaci je možné vyprázdněním pole vynulovat objektovou hodnotu typu [`NUMBER`](developer/datatables-editor/standard-fields.md#number--text_number), která podporuje `null`. Při importu se stávající hodnota zachová, pokud číselný sloupec není v Excel souboru; importovaná hodnota `NULL` ji vynuluje.
+- Datové tabulky - validační chyba pole [`QUILL`](developer/datatables-editor/standard-fields.md#quill) zároveň zvýrazní okraj nástrojové lišty i editoru (#58770).
+
 ## 2026.18
 
 > WebJET CMS 2026.18 přináší **schvalování změn složek** s podporou víceúrovňového schvalování a **testování přístupnosti** integrované přímo do automatizovaných testů.

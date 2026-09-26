@@ -15,6 +15,7 @@ import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.web.bind.WebDataBinder;
 
 import ch.qos.logback.classic.Level;
 import sk.iway.iwcm.Constants;
@@ -41,9 +42,11 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.persistence.Embeddable;
@@ -287,6 +290,83 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
 
         assertEquals(originalId, embeddedOriginal.getRecordId());
         assertEquals("new value", embeddedOriginal.getName());
+    }
+
+    @Test
+    void testCopyEntityIntoOriginalCopiesNullOnlyForNumberFields() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<NumberMergeTestEntity, Long> repository = mock(JpaRepository.class);
+        DatatableRestControllerV2<NumberMergeTestEntity, Long> numberController =
+                new DatatableRestControllerV2<>(repository) {};
+        NumberMergeTestEntity original = new NumberMergeTestEntity(10, 20, 30);
+
+        numberController.copyEntityIntoOriginal(new NumberMergeTestEntity(null, null, null), original);
+
+        assertNull(original.getNumberValue());
+        assertEquals(20, original.getTextNumberValue());
+        assertEquals(30, original.getNumberOptOutValue());
+
+        numberController.copyEntityIntoOriginal(new NumberMergeTestEntity(40, null, null), original);
+
+        assertEquals(40, original.getNumberValue());
+    }
+
+    @Test
+    void testImportCopiesNullOnlyForIncludedNumberFields() {
+        NumberMergeTestEntity omitted = new NumberMergeTestEntity(10, 20, 30);
+        NumberMergeTestEntity included = new NumberMergeTestEntity(10, 20, 30);
+
+        try {
+            editImportedNumber(omitted, Set.of("textNumberValue"));
+            editImportedNumber(included, Set.of("numberValue"));
+        } finally {
+            controller.getOne(-1L);
+        }
+
+        assertEquals(10, omitted.getNumberValue());
+        assertNull(included.getNumberValue());
+    }
+
+    @Test
+    void testImportUsesColumnsFromEachRowWhenCopyingNullNumberFields() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<NumberMergeTestEntity, Long> repository = mock(JpaRepository.class);
+        NumberMergeTestEntity omitted = new NumberMergeTestEntity(10, 20, 30);
+        NumberMergeTestEntity included = new NumberMergeTestEntity(40, 50, 60);
+        when(repository.existsById(1L)).thenReturn(true);
+        when(repository.existsById(2L)).thenReturn(true);
+        when(repository.findById(1L)).thenReturn(Optional.of(omitted));
+        when(repository.findById(2L)).thenReturn(Optional.of(included));
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DatatableRestControllerV2<NumberMergeTestEntity, Long> numberController =
+                new DatatableRestControllerV2<>(repository) {};
+        TestRequest request = new TestRequest("", "/admin/rest/number-merge/editor");
+        numberController.setRequest(request);
+        numberController.setValidator(validator);
+
+        Map<Long, NumberMergeTestEntity> data = new LinkedHashMap<>();
+        data.put(1L, new NumberMergeTestEntity(null, 20, 30));
+        data.put(2L, new NumberMergeTestEntity(null, 50, 60));
+
+        DatatableRequest<Long, NumberMergeTestEntity> datatableRequest = new DatatableRequest<>();
+        datatableRequest.setAction("edit");
+        datatableRequest.setData(data);
+        datatableRequest.setDztotalchunkcount(1);
+        datatableRequest.setImportedColumns(Set.of("numberValue"));
+        datatableRequest.setImportedColumnsByRow(Map.of(
+                1L, Set.of(),
+                2L, Set.of("numberValue")));
+
+        try {
+            numberController.initBinder(request, new WebDataBinder(datatableRequest));
+            numberController.handleEditor(request, datatableRequest);
+        } finally {
+            controller.getOne(-1L);
+        }
+
+        assertEquals(10, omitted.getNumberValue());
+        assertNull(included.getNumberValue());
     }
 
     @Test
@@ -668,6 +748,26 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         verify(repository, never()).saveAll(any());
     }
 
+    private void editImportedNumber(NumberMergeTestEntity original, Set<String> importedColumns) {
+        @SuppressWarnings("unchecked")
+        JpaRepository<NumberMergeTestEntity, Long> repository = mock(JpaRepository.class);
+        when(repository.existsById(1L)).thenReturn(true);
+        when(repository.findById(1L)).thenReturn(Optional.of(original));
+
+        DatatableRestControllerV2<NumberMergeTestEntity, Long> numberController =
+                new DatatableRestControllerV2<>(repository) {};
+        TestRequest request = new TestRequest("", "/admin/rest/number-merge/editor");
+
+        NumberMergeTestEntity submitted = new NumberMergeTestEntity(null, 40, 30);
+        DatatableRequest<Long, NumberMergeTestEntity> datatableRequest = new DatatableRequest<>();
+        datatableRequest.setData(Map.of(1L, submitted));
+        datatableRequest.setDztotalchunkcount(1);
+        datatableRequest.setImportedColumns(importedColumns);
+
+        numberController.initBinder(request, new WebDataBinder(datatableRequest));
+        numberController.editItem(submitted, 1L);
+    }
+
     private DatatableRestControllerV2<GeneratedIdTestEntity, Long> createGeneratedIdController(
             JpaRepository<GeneratedIdTestEntity, Long> repository) {
         return createGeneratedIdController(repository, null);
@@ -820,6 +920,48 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
 
         public void setName(String name) {
             this.name = name;
+        }
+    }
+
+    private static class NumberMergeTestEntity {
+
+        @DataTableColumn(inputType = DataTableColumnType.NUMBER)
+        private Integer numberValue;
+
+        @DataTableColumn(inputType = DataTableColumnType.TEXT_NUMBER)
+        private Integer textNumberValue;
+
+        @DataTableColumn(inputType = DataTableColumnType.NUMBER, alwaysCopyProperties = { false })
+        private Integer numberOptOutValue;
+
+        NumberMergeTestEntity(Integer numberValue, Integer textNumberValue, Integer numberOptOutValue) {
+            this.numberValue = numberValue;
+            this.textNumberValue = textNumberValue;
+            this.numberOptOutValue = numberOptOutValue;
+        }
+
+        public Integer getNumberValue() {
+            return numberValue;
+        }
+
+        public void setNumberValue(Integer numberValue) {
+            this.numberValue = numberValue;
+        }
+
+        public Integer getTextNumberValue() {
+            return textNumberValue;
+        }
+
+        public void setTextNumberValue(Integer textNumberValue) {
+            this.textNumberValue = textNumberValue;
+        }
+
+        public Integer getNumberOptOutValue() {
+            return numberOptOutValue;
+        }
+
+        public void setNumberOptOutValue(Integer numberOptOutValue) {
+            this.numberOptOutValue = numberOptOutValue;
         }
     }
 
