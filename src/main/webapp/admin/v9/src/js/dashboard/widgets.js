@@ -1,4 +1,4 @@
-import { getWidget, registerWidget } from './registry';
+import { getWidget, listWidgets, registerWidget } from './registry';
 import { registerUtilityWidgets } from './utility-widgets';
 import { registerDataWidgets } from './data-widgets';
 import { node, text, localUrl, link, icon, field, table, empty, footer } from './widget-utils';
@@ -17,17 +17,27 @@ export function menuEntries(context) {
     return [...entries.values()];
 }
 
-/** Initial layout is applied only when the account has no saved dashboard. */
+/** Groups all authorized types into desktop pairs and triples for new or reset profiles. */
 export function getDashboardDefaults(context) {
-    const items = [{ type: "search" }];
-    if (window.WJ.hasPermission("menuWebpages")) items.push({ type: "recent-pages", size: "3x3" });
-    items.push({ type: "sessions" });
+    const items = [
+        { type: "search" },
+        { type: "recent-pages", size: "3x3" }, { type: "forms", size: "3x3" },
+        { type: "sessions", size: "2x3" }, { type: "publishing", size: "2x3" }, { type: "search-terms", size: "2x3" },
+        { type: "traffic", size: "3x3" }, { type: "referrers", size: "3x3" },
+        { type: "top-pages", size: "3x3" }, { type: "newsletter", size: "3x3" },
+        { type: "news", size: "3x2" }, { type: "approvals", size: "1x1" }, { type: "errors", size: "1x1" }
+    ];
     const menu = menuEntries(context);
-    for (const href of ["/admin/v9/webpages/web-pages-list/", "/apps/form/admin/"]) {
-        if (menu.some(item => item.href === href)) items.push({ type: "shortcut", options: { href } });
+    const shortcuts = ["/admin/v9/webpages/web-pages-list/", "/apps/form/admin/"].filter(href => menu.some(item => item.href === href));
+    if (!shortcuts.length && menu.length) shortcuts.push(menu[0].href);
+    shortcuts.forEach(href => items.push({ type: "shortcut", options: { href } }));
+    for (const definition of listWidgets()) {
+        if (!items.some(item => item.type === definition.type) && definition.type !== "shortcut") items.push({ type: definition.type });
     }
-    items.push({ type: "news" });
-    return items;
+    return items.filter(item => {
+        const definition = getWidget(item.type);
+        return definition && (!definition.isAvailable || definition.isAvailable(context));
+    });
 }
 
 /** Loads the permission- and domain-filtered preview without session caching. */

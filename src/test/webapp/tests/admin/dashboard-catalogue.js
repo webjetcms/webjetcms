@@ -25,6 +25,32 @@ function showWidget(I, type) {
     }, [type], 10);
 }
 
+function widgetAction(I, id, action) {
+    I.clickCss(`[data-instance-id="${id}"] .dropdown > button`);
+    I.waitForVisible(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`, 10);
+    I.forceClick(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`);
+}
+
+function waitForChart(I, type) {
+    I.waitForFunction(([type]) => {
+        const host = document.querySelector(`[data-widget-type="${type}"] .md-dashboard-widget__chart`);
+        return Boolean(host && host.querySelector('canvas') && window.am5?.registry.rootElements.some(root => root.dom === host));
+    }, [type], 20);
+}
+
+async function rememberChart(I, type) {
+    return I.executeScript(type => {
+        const host = document.querySelector(`[data-widget-type="${type}"] .md-dashboard-widget__chart`);
+        window.autotestDashboardChart = window.am5.registry.rootElements.find(root => root.dom === host);
+        return host.id;
+    }, type);
+}
+
+async function assertDisposedChart(I) {
+    I.assertTrue(await I.executeScript(() => window.autotestDashboardChart.isDisposed()
+        && !window.am5.registry.rootElements.includes(window.autotestDashboardChart)), 'Replaced charts must release their AmCharts root.');
+}
+
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage('/admin/v9/');
@@ -90,6 +116,73 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
     showWidget(I, 'recent-pages');
     I.saveScreenshot('dashboard-catalogue-mobile.png', true);
     I.wjSetDefaultWindowSize();
+});
+
+Scenario('AmCharts renders accessible data and disposes roots on refresh, collapse, resize and removal', async ({ I, a11y }) => {
+    waitForWidgets(I);
+    waitForChart(I, 'traffic');
+    waitForChart(I, 'referrers');
+    const ids = await I.executeScript(() => Object.fromEntries(['traffic', 'referrers'].map(type => [type,
+        document.querySelector(`[data-widget-type="${type}"]`).dataset.instanceId])));
+    for (const type of ['traffic', 'referrers']) {
+        I.seeElement(`[data-widget-type="${type}"] .md-dashboard-widget__chart[role="img"][aria-label]`);
+        I.seeElement(`[data-widget-type="${type}"] details.md-dashboard-widget__chart-data summary`);
+        I.clickCss(`[data-widget-type="${type}"] details.md-dashboard-widget__chart-data summary`);
+        I.seeElement(`[data-widget-type="${type}"] details[open] .md-dashboard-widget__table`);
+        I.clickCss(`[data-widget-type="${type}"] details.md-dashboard-widget__chart-data summary`);
+    }
+    const firstTraffic = await rememberChart(I, 'traffic');
+    widgetAction(I, ids.traffic, 'refresh');
+    waitForWidgets(I);
+    waitForChart(I, 'traffic');
+    await assertDisposedChart(I);
+    I.assertNotEqual(await I.grabAttributeFrom(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`, 'id'), firstTraffic);
+
+    await rememberChart(I, 'traffic');
+    widgetAction(I, ids.traffic, 'collapse');
+    waitForSave(I);
+    waitForWidgets(I);
+    await assertDisposedChart(I);
+    I.dontSeeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`);
+    I.seeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__more`);
+    widgetAction(I, ids.traffic, 'collapse');
+    waitForSave(I);
+    waitForChart(I, 'traffic');
+    await rememberChart(I, 'traffic');
+    widgetAction(I, ids.traffic, 'settings');
+    I.waitForVisible('.md-dashboard-modal select', 10);
+    I.selectOption('.md-dashboard-modal select[id^="dashboard-size-"]', '1 × 1');
+    I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
+    I.waitForInvisible('.md-dashboard-modal', 10);
+    waitForSave(I);
+    waitForWidgets(I);
+    await assertDisposedChart(I);
+    I.dontSeeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`);
+    widgetAction(I, ids.traffic, 'settings');
+    I.waitForVisible('.md-dashboard-modal select', 10);
+    I.selectOption('.md-dashboard-modal select[id^="dashboard-size-"]', '3 × 3');
+    I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
+    I.waitForInvisible('.md-dashboard-modal', 10);
+    waitForSave(I);
+    waitForChart(I, 'traffic');
+
+    await rememberChart(I, 'referrers');
+    widgetAction(I, ids.referrers, 'remove');
+    waitForSave(I);
+    I.waitForInvisible(`[data-instance-id="${ids.referrers}"]`, 10);
+    await assertDisposedChart(I);
+    I.clickCss('.md-dashboard__undo button');
+    waitForSave(I);
+    waitForChart(I, 'referrers');
+    const rootsMatchHosts = await I.executeScript(() => {
+        const hosts = [...document.querySelectorAll('.md-dashboard-widget__chart')];
+        const roots = window.am5.registry.rootElements.filter(root => root.dom.id.startsWith('dashboard-chart-'));
+        return hosts.length === roots.length && hosts.every(host => roots.filter(root => root.dom === host).length === 1);
+    });
+    I.assertTrue(rootsMatchHosts, 'Every displayed chart must own exactly one live root with no orphan dashboard roots.');
+    await a11y.check('.md-dashboard');
+    showWidget(I, 'traffic');
+    I.saveScreenshot('dashboard-amcharts.png', true);
 });
 
 Scenario('Acknowledge release news across reload and reveal it from the catalogue', async ({ I }) => {

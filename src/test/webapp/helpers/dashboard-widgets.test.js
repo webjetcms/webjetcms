@@ -15,7 +15,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
     const scope = vm.createContext({ window, document: window.document, Node: window.Node, DOMParser: window.DOMParser, URL, URLSearchParams, AbortController, console,
         fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/data/') ? data : pages }; }
     });
-    for (const file of ['registry.js', 'widget-utils.js', 'utility-widgets.js', 'data-widgets.js', 'widgets.js']) {
+    for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
             .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
         vm.runInContext(source, scope, { filename: file });
@@ -70,6 +70,186 @@ test('Default widgets follow permissions and authorized menu destinations', t =>
     assert.deepEqual(JSON.parse(JSON.stringify(scope.getDashboardDefaults(context))).map(item => item.type), ['search', 'sessions', 'news']);
     assert.equal(scope.getWidget('recent-pages').isAvailable(context), false);
     assert.equal(scope.getWidget('shortcut').isAvailable(context), false);
+});
+
+test('New profiles include each available type and no more than two authorized shortcut destinations', t => {
+    const menu = [
+        { text: 'Pages', href: '/admin/v9/webpages/web-pages-list/' }, { text: 'Forms', href: '/apps/form/admin/' },
+        { text: 'Newsletter', href: '/apps/dmail/admin/' }, { text: 'Unsafe', href: 'javascript:alert(1)' }
+    ];
+    const { scope, context } = fixture(t, { menu });
+    const defaults = JSON.parse(JSON.stringify(scope.getDashboardDefaults(context)));
+    const expected = Array.from(scope.listWidgets()).filter(widget => !widget.isAvailable || widget.isAvailable(context));
+    for (const definition of expected) {
+        assert.equal(defaults.filter(item => item.type === definition.type).length, definition.type === 'shortcut' ? 2 : 1);
+    }
+    assert.deepEqual(defaults.filter(item => item.type === 'shortcut').map(item => item.options.href), menu.slice(0, 2).map(item => item.href));
+    assert.equal(defaults.length, expected.length + 1);
+});
+
+test('Default shortcuts fall back to the first authorized module when pages and forms are unavailable', t => {
+    const { scope, context } = fixture(t, { menu: [
+        { text: 'External', href: 'https://other.test/' }, { text: 'Newsletter', href: '/apps/dmail/admin/' },
+        { text: 'Statistics', href: '/apps/stat/admin/' }
+    ] });
+    const shortcuts = JSON.parse(JSON.stringify(scope.getDashboardDefaults(context))).filter(item => item.type === 'shortcut');
+    assert.deepEqual(shortcuts.map(item => item.options.href), ['/apps/dmail/admin/']);
+});
+
+function chartRuntime(window, { load = async () => {}, create } = {}) {
+    const forms = [];
+    const roots = new Set();
+    const destroyed = [];
+    const settings = (initial = {}) => ({
+        values: { ...initial },
+        set(key, value) { this.values[key] = value; },
+        setAll(values) { Object.assign(this.values, values); },
+        get(key) { return this.values[key]; },
+        dispose() { this.disposed = true; },
+        appear(duration) { this.appearanceDuration = duration; }
+    });
+    const list = values => ({ values, getIndex: index => values[index], each: callback => values.forEach(callback) });
+    const axis = () => settings({ renderer: { labels: { template: settings() } } });
+    class LineChartForm { constructor(config) { Object.assign(this, config); } }
+    class BarChartForm { constructor(config) { Object.assign(this, config); } }
+    const makeChart = form => {
+        const series = Array.from({ length: form instanceof LineChartForm ? form.chartData.size : 1 }, () => {
+            const tooltip = Object.assign(settings(), { label: settings() });
+            return Object.assign(settings({ tooltip }), { strokes: { template: settings() } });
+        });
+        const chart = Object.assign(settings({ cursor: settings(), scrollbarX: settings(), scrollbarY: settings() }), {
+            root: { setThemes(themes) { this.themes = themes; } },
+            series: list(series), xAxes: list([axis()]), yAxes: list([axis()]),
+            children: list([settings({ verticalScrollbar: settings() })]), zoomOutButton: settings()
+        });
+        form.chart = chart;
+        roots.add(form.chartDivId);
+    };
+    let loads = 0;
+    window.initAmcharts = async () => { loads++; await load(); };
+    window.am5 = { percent: value => value };
+    window.WebjetTheme = { new: () => ({ theme: 'WebJET' }) };
+    window.ChartTools = {
+        LineChartForm, BarChartForm, DateType: { Days: 'day' },
+        async createAmchart(form) {
+            forms.push(form);
+            if (create) await create(form, makeChart);
+            else makeChart(form);
+        },
+        destroyChart(form) { roots.delete(form.chartDivId); destroyed.push(form.chartDivId); }
+    };
+    return { forms, roots, destroyed, loads: () => loads };
+}
+
+const trafficData = {
+    total: 7, previous: 4, metric: 'sessions',
+    series: [{ date: Date.UTC(2026, 8, 24), value: 3 }, { date: Date.UTC(2026, 8, 25), value: 4 }],
+    previousSeries: [{ date: Date.UTC(2026, 8, 22), value: 1 }, { date: Date.UTC(2026, 8, 23), value: 3 }]
+};
+
+test('Traffic uses shared AmCharts line forms with aligned comparison points and actual accessible dates', async t => {
+    const { scope, context, container, window } = fixture(t, { data: trafficData });
+    const runtime = chartRuntime(window);
+    const controller = new AbortController();
+    const cleanup = await scope.getWidget('traffic').render({ container, context, options: {}, instance: { size: '3x3' }, signal: controller.signal });
+    const form = runtime.forms[0];
+    assert.ok(form instanceof window.ChartTools.LineChartForm);
+    const [current, previous] = Array.from(form.chartData.values());
+    assert.deepEqual(Array.from(current, point => point.dayDate), trafficData.series.map(point => point.date));
+    assert.deepEqual(Array.from(previous, point => point.dayDate), trafficData.series.map(point => point.date));
+    assert.equal(previous[0].actualDate, scope.date(trafficData.previousSeries[0].date, false));
+    assert.deepEqual(Array.from(form.chart.series.getIndex(1).strokes.template.get('strokeDasharray')), [5, 4]);
+    assert.match(form.chart.series.getIndex(1).get('tooltip').get('labelText'), /actualDate/);
+    assert.equal(form.chart.get('scrollbarX'), undefined);
+    assert.equal(form.chart.appearanceDuration, 0);
+    assert.equal(container.querySelectorAll('details tbody tr').length, 2);
+    assert.match(container.querySelector('details').textContent, /9\/22\/2026/);
+    assert.equal(container.querySelector('svg'), null);
+    controller.abort();
+    cleanup();
+    assert.equal(runtime.roots.size, 0);
+    assert.equal(runtime.destroyed.length, 1);
+});
+
+test('Detailed referrers use horizontal AmCharts and retain literal labels and shares of the full total', async t => {
+    const data = { total: 100, items: Array.from({ length: 8 }, (_, index) => ({ title: index ? `Source ${index}` : '<img src=x>[bold]', value: 10 - index })) };
+    const { scope, context, container, window } = fixture(t, { data });
+    const runtime = chartRuntime(window);
+    const cleanup = await scope.getWidget('referrers').render({ container, context, options: {}, instance: { size: '3x3' }, signal: new AbortController().signal });
+    const form = runtime.forms[0];
+    assert.ok(form instanceof window.ChartTools.BarChartForm);
+    assert.equal(form.horizontal, true);
+    assert.equal(form.chartData.length, 6);
+    assert.equal(form.chartData[0].share, '10 %');
+    assert.equal(form.chart.series.getIndex(0).get('tooltip').label.get('ignoreFormatting'), true);
+    assert.equal(container.querySelector('img'), null);
+    assert.match(container.querySelector('details').textContent, /<img src=x>\[bold\]/);
+    assert.equal(container.querySelectorAll('details tbody tr').length, 6);
+    cleanup();
+    assert.equal(runtime.roots.size, 0);
+});
+
+test('Numeric, collapsed, and empty traffic previews do not initialize charts', async t => {
+    const { scope, context, container, window } = fixture(t, { data: { ...trafficData, series: [] } });
+    const runtime = chartRuntime(window);
+    const args = { container, context, options: {}, instance: { size: '1x1', type: 'traffic' }, signal: new AbortController().signal };
+    const widget = scope.getWidget('traffic');
+    await widget.render(args);
+    await widget.renderCollapsed(args);
+    await widget.render({ ...args, instance: { size: '3x3' } });
+    assert.equal(runtime.loads(), 0);
+    assert.equal(container.querySelector('.md-dashboard-widget__chart'), null);
+});
+
+test('An aborted lazy chart load never creates an AmCharts root', async t => {
+    const { scope, context, container, window } = fixture(t, { data: trafficData });
+    let finishLoad;
+    const runtime = chartRuntime(window, { load: () => new Promise(resolve => { finishLoad = resolve; }) });
+    const controller = new AbortController();
+    const rendering = scope.getWidget('traffic').render({ container, context, options: {}, instance: { size: '3x3' }, signal: controller.signal });
+    await new Promise(resolve => setImmediate(resolve));
+    controller.abort();
+    finishLoad();
+    await rendering;
+    assert.equal(runtime.forms.length, 0);
+    assert.equal(container.querySelector('.md-dashboard-widget__more'), null);
+});
+
+test('Late chart creation after an abort disposes the stale root instead of retaining detached resources', async t => {
+    const { scope, context, container, window } = fixture(t, { data: trafficData });
+    let finishCreate;
+    const runtime = chartRuntime(window, { create: (form, makeChart) => new Promise(resolve => { finishCreate = () => { makeChart(form); resolve(); }; }) });
+    const controller = new AbortController();
+    const rendering = scope.getWidget('traffic').render({ container, context, options: {}, instance: { size: '3x3' }, signal: controller.signal });
+    await new Promise(resolve => setImmediate(resolve));
+    controller.abort();
+    finishCreate();
+    const cleanup = await rendering;
+    cleanup();
+    assert.equal(runtime.roots.size, 0);
+});
+
+test('Chart initialization failures release partially created roots and keep the framework error path', async t => {
+    const { scope, context, container, window } = fixture(t, { data: trafficData });
+    const runtime = chartRuntime(window, { create: async (form, makeChart) => { makeChart(form); throw new Error('chart failure'); } });
+    await assert.rejects(scope.getWidget('traffic').render({ container, context, options: {}, instance: { size: '3x3' }, signal: new AbortController().signal }), /chart failure/);
+    assert.equal(runtime.roots.size, 0);
+});
+
+test('Concurrent graph instances own distinct roots and disposing one leaves the other intact', async t => {
+    const { scope, context, container, window } = fixture(t, { data: trafficData });
+    const runtime = chartRuntime(window);
+    const second = window.document.createElement('section');
+    container.append(second);
+    const widget = scope.getWidget('traffic');
+    const firstCleanup = await widget.render({ container, context, options: {}, instance: { size: '3x3' }, signal: new AbortController().signal });
+    const secondCleanup = await widget.render({ container: second, context, options: {}, instance: { size: '3x3' }, signal: new AbortController().signal });
+    assert.notEqual(runtime.forms[0].chartDivId, runtime.forms[1].chartDivId);
+    firstCleanup();
+    assert.equal(runtime.roots.size, 1);
+    assert.ok(runtime.roots.has(runtime.forms[1].chartDivId));
+    secondCleanup();
+    assert.equal(runtime.roots.size, 0);
 });
 
 test('Forms keep the selected form in domain options and preserve unavailable selections', async t => {

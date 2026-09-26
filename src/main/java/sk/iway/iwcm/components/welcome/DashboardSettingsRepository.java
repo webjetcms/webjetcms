@@ -27,6 +27,11 @@ public class DashboardSettingsRepository {
         Connection open() throws SQLException;
     }
 
+    @FunctionalInterface
+    private interface SettingsWrite {
+        void execute(Connection connection) throws SQLException;
+    }
+
     private final ConnectionFactory connections;
 
     public DashboardSettingsRepository() {
@@ -65,6 +70,39 @@ public class DashboardSettingsRepository {
      * Other domains retain existing instances and one write of removed instances for immediate undo.
      */
     public void replace(int userId, String domainKey, Map<String, String> records, Set<String> instanceIds) {
+        write(userId, connection -> {
+            Map<String, String> previous = read(connection, userId);
+            Set<String> previousInstanceIds = previous.keySet().stream().filter(key -> key.startsWith(WIDGET_PREFIX))
+                .map(key -> key.substring(WIDGET_PREFIX.length())).collect(Collectors.toSet());
+            String domainPrefix = DOMAIN_PREFIX + domainKey + ".";
+            for (String key : previous.keySet()) {
+                String instanceId = key.substring(key.lastIndexOf('.') + 1);
+                boolean obsoleteDomain = key.startsWith(DOMAIN_PREFIX)
+                    && !instanceIds.contains(instanceId) && !previousInstanceIds.contains(instanceId);
+                if (key.equals(LAYOUT_KEY) || key.equals(NEWS_KEY) || key.startsWith(WIDGET_PREFIX)
+                    || key.startsWith(domainPrefix) || obsoleteDomain) {
+                    execute(connection, "DELETE FROM user_settings_admin WHERE user_id=? AND skey=?", userId, key, null);
+                }
+            }
+            for (Map.Entry<String, String> record : records.entrySet()) {
+                execute(connection, "INSERT INTO user_settings_admin (user_id, skey, value) VALUES (?, ?, ?)", userId, record.getKey(), record.getValue());
+            }
+        });
+    }
+
+    /** Removes only this account's dashboard records, including options for every domain. */
+    public void reset(int userId) {
+        write(userId, connection -> {
+            for (String key : read(connection, userId).keySet()) {
+                if (key.equals(LAYOUT_KEY) || key.equals(NEWS_KEY) || key.startsWith(WIDGET_PREFIX) || key.startsWith(DOMAIN_PREFIX)) {
+                    execute(connection, "DELETE FROM user_settings_admin WHERE user_id=? AND skey=?", userId, key, null);
+                }
+            }
+        });
+    }
+
+    /** Serializes saves and resets for one account and rolls back every failed mutation. */
+    private void write(int userId, SettingsWrite mutation) {
         try (Connection connection = connections.open()) {
             boolean originalAutoCommit = connection.getAutoCommit();
             String product = connection.getMetaData().getDatabaseProductName().toLowerCase(java.util.Locale.ROOT);
@@ -79,22 +117,7 @@ public class DashboardSettingsRepository {
                 connection.setAutoCommit(false);
                 if (!mysql) lockUser(connection, userId, product);
 
-                Map<String, String> previous = read(connection, userId);
-                Set<String> previousInstanceIds = previous.keySet().stream().filter(key -> key.startsWith(WIDGET_PREFIX))
-                    .map(key -> key.substring(WIDGET_PREFIX.length())).collect(Collectors.toSet());
-                String domainPrefix = DOMAIN_PREFIX + domainKey + ".";
-                for (String key : previous.keySet()) {
-                    String instanceId = key.substring(key.lastIndexOf('.') + 1);
-                    boolean obsoleteDomain = key.startsWith(DOMAIN_PREFIX)
-                        && !instanceIds.contains(instanceId) && !previousInstanceIds.contains(instanceId);
-                    if (key.equals(LAYOUT_KEY) || key.equals(NEWS_KEY) || key.startsWith(WIDGET_PREFIX)
-                        || key.startsWith(domainPrefix) || obsoleteDomain) {
-                        execute(connection, "DELETE FROM user_settings_admin WHERE user_id=? AND skey=?", userId, key, null);
-                    }
-                }
-                for (Map.Entry<String, String> record : records.entrySet()) {
-                    execute(connection, "INSERT INTO user_settings_admin (user_id, skey, value) VALUES (?, ?, ?)", userId, record.getKey(), record.getValue());
-                }
+                mutation.execute(connection);
                 connection.commit();
             } catch (SQLException | RuntimeException exception) {
                 if (!connection.getAutoCommit()) connection.rollback();

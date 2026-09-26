@@ -2,6 +2,8 @@
 
 Úvodná obrazovka je osobný prehľad zložený z widgetov. Ponuka zodpovedá vašim oprávneniam; údaje sa vzťahujú na práve zvolenú doménu. Rozloženie je spoločné pre vaše konto vo všetkých doménach a prehliadačoch. Konkrétny výber formulára alebo kampane sa pamätá osobitne pre každú doménu.
 
+Pri prvom otvorení sa zobrazia všetky dostupné typy widgetov. Širšie prehľady sú na počítači usporiadané do dvojíc, užšie zoznamy do trojice. Skratky predvolene smerujú na webové stránky a formuláre podľa vašich práv; ak tieto moduly nie sú dostupné, zobrazí sa skratka na prvý dostupný modul.
+
 ## Prispôsobenie prehľadu
 
 Tlačidlom **Pridať widget** otvoríte katalóg. Pri widgete použite menu s tromi bodkami:
@@ -14,6 +16,8 @@ Tlačidlom **Pridať widget** otvoríte katalóg. Pri widgete použite menu s tr
 
 Zmena sa prejaví po úspešnom uložení. Pri chybe sa zachová pôvodné nastavenie. Na menšej obrazovke sa karty automaticky usporiadajú pod seba pri zachovaní poradia. Prehľad môže obsahovať najviac 32 widgetov.
 
+V katalógu **Pridať widget** nájdete aj tlačidlo **Resetovať**. Po potvrdení **Obnoviť predvolené** sa obnovia všetky dostupné widgety, ich veľkosti, poradie a nastavenia. Vymažú sa aj filtre widgetov vo všetkých doménach a potvrdenie prečítania noviniek. Ostatné nastavenia účtu a pôvodné záložky zostanú zachované. Existujúce osobné rozloženie sa bez resetu nemení.
+
 ## Dostupné informácie
 
 **Skratka do modulu** otvorí vybranú sekciu administrácie. **Moje posledné stránky** umožnia pokračovať v úpravách; širšia verzia zobrazí aj umiestnenie a dátum úpravy.
@@ -23,6 +27,8 @@ Zmena sa prejaví po úspešnom uložení. Pri chybe sa zachová pôvodné nasta
 Formuláre zobrazujú posledných 7, 30 alebo 90 dní vrátane dnešných odoslaní.
 
 Štatistiky predvolene používajú posledných sedem ukončených dní; možno zvoliť aj 30 alebo 90 dní. Porovnanie používa rovnako dlhé predchádzajúce obdobie. Karta zobrazuje skutočný rozsah dátumov. Chyby 404 zobrazujú počet chybových požiadaviek, nie počet rôznych adries. Evidujú sa po týždňoch, preto sa zahrnú celé týždne zasahujúce do zvoleného obdobia; karta zobrazí skutočný rozsah. Aktuálny týždeň obsahuje údaje dostupné do tohto okamihu. Ak historické údaje nemožno oddeliť podľa domény, karta oznámi ich nedostupnosť.
+
+Graf návštevnosti porovnáva aktuálne a predchádzajúce obdobie; graf zdrojov návštevnosti zobrazuje počty podľa zdroja. Presné hodnoty sú dostupné aj v rozbaliteľnej časti **Údaje grafu**.
 
 Newsletter automaticky vyberá aktívnu kampaň, najbližšiu naplánovanú alebo poslednú dokončenú. Môžete zvoliť aj konkrétnu kampaň. Pri odosielaní sa údaje viditeľnej karty obnovujú každých 30 sekúnd. Počty otvorení a kliknutí predstavujú zaznamenané udalosti.
 

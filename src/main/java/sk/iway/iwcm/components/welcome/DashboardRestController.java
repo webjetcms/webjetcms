@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -48,6 +49,15 @@ public class DashboardRestController {
         DashboardSettingsDto saved = settingsService.save(user.getUserId(), domainKey(request), settings);
         user.setAdminSettings(null);
         return saved;
+    }
+
+    /** Resets the authenticated account's shared layout and all domain-specific dashboard options. */
+    @DeleteMapping("/settings")
+    public DashboardSettingsDto deleteSettings(HttpServletRequest request) {
+        Identity user = currentUser(request);
+        DashboardSettingsDto reset = settingsService.reset(user.getUserId());
+        user.setAdminSettings(null);
+        return reset;
     }
 
     @GetMapping("/menu")

@@ -95,6 +95,12 @@ public class DashboardSettingsService {
         return settings;
     }
 
+    /** Returns an unconfigured profile only after all dashboard preferences have been removed. */
+    public DashboardSettingsDto reset(int userId) {
+        repository.reset(userId);
+        return new DashboardSettingsDto();
+    }
+
     Map<String, String> validateAndSerialize(DashboardSettingsDto settings, String domainKey) {
         require(settings != null && settings.getVersion() == 1, "Unsupported dashboard settings version");
         require(settings.getItems() != null && settings.getItems().size() <= MAX_INSTANCES, "A dashboard supports at most 32 widgets");

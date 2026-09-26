@@ -138,6 +138,24 @@ class DashboardSettingsServiceTest {
         verify(repository, times(2)).replace(eq(7), eq("42"), anyMap(), eq(java.util.Set.of("sessions-1")));
     }
 
+    /** Reset returns a new unconfigured profile only after persistence succeeds. */
+    @Test
+    void resetReturnsCleanDefaultsAndPropagatesPersistenceFailure() {
+        DashboardSettingsDto result = service.reset(7);
+
+        assertEquals(1, result.getVersion());
+        assertFalse(result.isConfigured());
+        assertTrue(result.getItems().isEmpty());
+        assertTrue(result.getDomainOptions().isEmpty());
+        assertNull(result.getAcknowledgedNewsVersion());
+        verify(repository).reset(7);
+        verify(repository, never()).read(anyInt());
+        verify(repository, never()).replace(anyInt(), anyString(), anyMap(), anySet());
+
+        doThrow(new IllegalStateException("Database is unavailable")).when(repository).reset(7);
+        assertThrows(IllegalStateException.class, () -> service.reset(7));
+    }
+
     static DashboardSettingsDto settings() {
         DashboardSettingsDto settings = new DashboardSettingsDto();
         settings.getItems().add(item("sessions-1", "sessions", "2x3"));

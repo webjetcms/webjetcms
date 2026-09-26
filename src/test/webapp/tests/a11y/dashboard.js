@@ -23,6 +23,10 @@ Scenario('Widget catalogue supports keyboard entry, a focus trap and focus resto
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard-modal .modal-header button'), 10);
     I.pressKey(['Shift', 'Tab']);
     I.waitForFunction(() => document.querySelector('.md-dashboard-modal').contains(document.activeElement) && document.activeElement !== document.querySelector('.md-dashboard-modal .modal-header button'), 10);
+    I.clickCss('.md-dashboard__reset');
+    I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard-modal button[aria-describedby^="dashboard-reset-"]'), 10);
+    I.seeElement('.md-dashboard__reset[aria-expanded="true"]');
+    await a11y.check('.md-dashboard-modal');
     I.pressKey('Escape');
     I.waitForInvisible('.md-dashboard-modal', 10);
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__toolbar > button'), 10);

@@ -1,5 +1,6 @@
 import { registerWidget } from './registry';
 import { node, text, number, date, link, field, table, empty, footer, fetchData } from './widget-utils';
+import { chartHost, mountChart } from './charts';
 
 const moduleLinks = {
     approvals: '/admin/v9/webpages/web-pages-list/?show=toapprove', publishing: '/admin/v9/webpages/web-pages-list/',
@@ -53,37 +54,43 @@ function statSettings({ container, options, context }, metric = false) {
     return { read: () => ({ options: { ...options, days: Number(days.value), ...(selectedMetric ? { metric: selectedMetric.value } : {}) } }) };
 }
 
-function svgNode(tag, attributes, textContent) {
-    const result = document.createElementNS('http://www.w3.org/2000/svg', tag);
-    Object.entries(attributes).forEach(([key, value]) => result.setAttribute(key, value));
-    if (textContent != null) result.textContent = textContent;
-    return result;
+/** Keeps every chart value available to keyboard and screen-reader users as ordinary text. */
+function chartTable(container, context, headers, rows) {
+    const details = node('details', 'md-dashboard-widget__chart-data');
+    details.append(node('summary', 'small', text(context, 'chartData')));
+    table(details, headers, rows);
+    container.append(details);
 }
 
-/** A responsive SVG comparison with textual totals and point tooltips. */
-function lineChart(container, data, context) {
+/** Compares equal-length periods while retaining their actual dates in tooltips and the text table. */
+async function lineChart(container, data, context, signal) {
     const series = data.series || [];
     if (!series.length) { empty(container, context); return; }
     const previous = data.previousSeries || [];
-    const maximum = Math.max(1, ...series.map(point => point.value), ...previous.map(point => point.value));
-    const svg = svgNode('svg', { viewBox: '0 0 480 155', role: 'img', class: 'md-dashboard-widget__chart' });
-    const title = `${text(context, metricKey(data.metric))}: ${number(data.total)}; ${text(context, 'previous')}: ${number(data.previous)}`;
-    svg.append(svgNode('title', {}, title));
-    svg.setAttribute('aria-label', title);
-    svg.append(svgNode('line', { x1: 35, y1: 130, x2: 475, y2: 130, stroke: 'currentColor', 'stroke-opacity': '.25' }));
-    svg.append(svgNode('text', { x: 0, y: 15, 'font-size': 12 }, number(maximum)), svgNode('text', { x: 20, y: 132, 'font-size': 12 }, '0'));
-    [previous, series].forEach((points, index) => {
-        const coordinates = points.map((point, position) => [35 + position / Math.max(1, points.length - 1) * 440, 130 - point.value / maximum * 115]);
-        svg.append(svgNode('polyline', { points: coordinates.map(point => point.join(',')).join(' '), fill: 'none', stroke: index ? 'var(--wj-primary)' : 'var(--wj-gray-text)', 'stroke-width': 2, ...(index ? {} : { 'stroke-dasharray': '5 4' }) }));
-        coordinates.forEach(([x, y], position) => {
-            const point = svgNode('circle', { cx: x, cy: y, r: points.length > 35 ? 1.5 : 3, fill: index ? 'var(--wj-primary)' : 'var(--wj-gray-text)' });
-            point.append(svgNode('title', {}, `${date(points[position].date, false)}: ${number(points[position].value)}`)); svg.append(point);
+    const metric = text(context, metricKey(data.metric));
+    const host = chartHost(container, `${metric}: ${number(data.total)}; ${text(context, 'previous')}: ${number(data.previous)}`);
+    if (previous.length) container.append(node('p', 'small text-muted mb-1', `${text(context, 'previous')}: ${number(data.previous)} · ${text(context, 'chartPrevious')}`));
+    chartTable(container, context, [metric, text(context, 'previous')], series.map((point, index) => [
+        `${date(point.date, false)}: ${number(point.value)}`,
+        previous[index] ? `${date(previous[index].date, false)}: ${number(previous[index].value)}` : '—'
+    ]));
+    return mountChart(host, signal, (tools, chartDivId) => {
+        const chartData = new Map([[metric, series.map(point => ({ dayDate: point.date, value: point.value, actualDate: date(point.date, false) }))]]);
+        if (previous.length) chartData.set(text(context, 'previous'), previous.slice(0, series.length).map((point, index) => ({
+            dayDate: series[index].date, value: point.value, actualDate: date(point.date, false)
+        })));
+        return new tools.LineChartForm({ yAxeNames: [{ yAxeName: 'value' }], xAxeName: 'dayDate', chartTitle: '',
+            chartDivId, chartData, dateType: tools.DateType.Days, hideEmpty: false, colorScheme: 'set3' });
+    }, form => {
+        form.chart.yAxes.getIndex(0).setAll({ min: 0, maxPrecision: 0 });
+        form.chart.series.each((line, index) => {
+            if (index === 1) line.strokes.template.set('strokeDasharray', [5, 4]);
+            line.get('tooltip').set('labelText', '{name}\n{actualDate}: [bold]{valueY}[/]');
         });
     });
-    container.append(svg, node('p', 'small text-muted mb-1', `${text(context, 'previous')}: ${number(data.previous)} · ${text(context, 'chartPrevious')}`));
 }
 
-function rankedList(container, data, context, type, detailed) {
+async function rankedList(container, data, context, type, detailed, signal) {
     const items = (data.items || []).slice(0, detailed ? 6 : 5);
     if (!items.length) { empty(container, context); return; }
     if (detailed && type === 'top-pages') {
@@ -91,16 +98,20 @@ function rankedList(container, data, context, type, detailed) {
             link(item.title, item.url), item.section || '', number(item.value), change(item.value, item.previous) || '—'
         ]));
     } else if (detailed && type === 'referrers') {
-        const list = node('ul', 'list-unstyled md-dashboard-widget__bars');
-        items.forEach(item => {
-            const share = data.total > 0 ? item.value / data.total * 100 : 0;
-            const row = node('li', 'mb-2');
-            row.append(node('span', 'd-block small', `${item.title}: ${number(item.value)} (${share.toFixed(1)} %)`));
-            const bar = node('div', 'md-dashboard-widget__bar');
-            bar.style.width = `${Math.max(0, Math.min(100, share))}%`;
-            row.append(bar); list.append(row);
+        const host = chartHost(container, `${text(context, 'source')}: ${number(data.total)}`, true);
+        const chartData = items.map(item => ({ title: item.title, value: item.value,
+            share: `${number(Math.round((data.total > 0 ? item.value / data.total * 100 : 0) * 10) / 10)} %` }));
+        container.append(node('p', 'small text-muted mb-1', text(context, 'observedShare')));
+        chartTable(container, context, [text(context, 'source'), text(context, 'count'), text(context, 'observedShare')], chartData.map(item => [item.title, number(item.value), item.share]));
+        return mountChart(host, signal, (tools, chartDivId) => new tools.BarChartForm({
+            yAxeName: 'title', xAxeName: 'value', chartTitle: '', chartDivId, chartData, horizontal: true, colorScheme: 'set3'
+        }), form => {
+            form.chart.xAxes.getIndex(0).set('maxPrecision', 0);
+            form.chart.yAxes.getIndex(0).get('renderer').labels.template.setAll({ maxWidth: 110, oversizedBehavior: 'truncate', ignoreFormatting: true });
+            const tooltip = form.chart.series.getIndex(0).get('tooltip');
+            tooltip.set('labelText', '{title}: {valueX} ({share})');
+            tooltip.label.set('ignoreFormatting', true);
         });
-        container.append(list, node('p', 'small text-muted', text(context, 'observedShare')));
     } else table(container, [text(context, type === 'search-terms' ? 'query' : type === 'referrers' ? 'source' : 'page'), text(context, 'count')], items.map(item => [link(item.title, item.url), number(item.value)]));
 }
 
@@ -203,9 +214,10 @@ export function registerDataWidgets() {
             if (type === 'traffic' || type === 'errors') summary(container, data, context, moduleLinks[type], type === 'traffic' ? text(context, metricKey(data.metric)) : null);
             period(container, data, context);
             if (instance.size !== '1x1') {
-                if (type === 'traffic') lineChart(container, data, context);
-                else rankedList(container, data, context, type, instance.size === '3x3');
-                footer(container, context, moduleLinks[type]);
+                const cleanup = type === 'traffic' ? await lineChart(container, data, context, signal)
+                    : await rankedList(container, data, context, type, instance.size === '3x3', signal);
+                if (!signal.aborted) footer(container, context, moduleLinks[type]);
+                return cleanup;
             }
         }
     }));

@@ -158,6 +158,10 @@ Každá etapa zahŕňa aktualizáciu skillu a primerané overenie. Všetky zmeny
 
 ## Overené implementačné upresnenia
 
+- Predvolené rozloženie bolo rozšírené z pilotov na všetky dostupné typy widgetov. Široké prehľady tvoria dvojice, zoznamy trojicu; systém naďalej filtruje podľa práv a nemení uložené osobné rozloženia.
+- Katalóg obsahuje **Resetovať → Obnoviť predvolené**. `DELETE /admin/rest/dashboard/settings` atomicky odstráni dashboardové nastavenia aktuálneho konta vrátane všetkých doménových filtrov a potvrdených noviniek. Ostatné nastavenia a legacy záložky zostávajú zachované. Klient zobrazí predvolené widgety až po úspechu; pri chybe zachová pôvodný stav.
+- Grafy používajú existujúce AmCharts cez `window.initAmcharts()` a `ChartTools`. Dáta grafu sú dostupné aj ako tabuľka; graf sa uvoľní pri obnovení, minimalizovaní alebo odstránení widgetu.
+
 - REST požiadavky WebJETu vyžadujú CSRF hlavičku aj pri GET. Všetky nové načítania ju posielajú.
 - Runtime používa JSON konvertor Jackson 3. REST DTO preto používa bežné mapy, nie uzly JSON z Jacksonu 2.
 - Staršie MySQL/MariaDB inštalácie majú `user_settings_admin` typu MyISAM. Cielená migrácia v `autoupdate-webjet9.xml` zmení iba engine tejto existujúcej tabuľky na InnoDB, aby viacriadkové nastavenia podporovali transakcie. Na ostatných databázach sa schéma nemení. Pred dokončením migrácie server zápis odmieta.
@@ -181,3 +185,5 @@ Overené 26. 9. 2026:
 - Skill prešiel `quick_validate.py`, nezávislým skúšobným návrhom Formulárov a záverečným porovnaním s implementáciou. Opravené nejasnosti sú zapracované do kontraktu.
 
 Lokálny server používa pôvodný profil `/poolman-local.xml`. Cielená migrácia tabuľky nastavení na InnoDB prebehla štandardným aktualizačným mechanizmom; ostatné nastavenia zostali zachované. Overenie databázových integrácií prebehlo na lokálnej MariaDB; ostatné podporované databázové platformy neboli v tejto relácii spustené.
+
+Po doplnení všetkých predvolených widgetov, resetu a AmCharts prešiel frontendový build, 45 JavaScript testov a 25 cielených Java testov nastavení, repository a REST rozhrania. Reálny reset bol overený na dočasnom účte vrátane chyby uloženia, obnovenia stránky a následnej personalizácie; účet aj jeho nastavenia boli odstránené a pôvodné konto zostalo nezmenené. Browser testy grafov overujú obnovenie, minimalizovanie, zmenu na 1×1, odstránenie/vrátenie a jediný živý AmCharts root na host. Predvolené desktopové aj mobilné rozloženie a grafy prešli vizuálnou kontrolou; celá zostava widgetov prešla aj axe kontrolou.

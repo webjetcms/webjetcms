@@ -69,6 +69,41 @@ class DashboardRestControllerTest {
         try (MockedStatic<UsersDB> users = mockStatic(UsersDB.class)) {
             assertThrows(AccessDeniedException.class, () -> controller.getSettings(request));
             assertThrows(AccessDeniedException.class, () -> controller.putSettings(new DashboardSettingsDto(), request));
+            assertThrows(AccessDeniedException.class, () -> controller.deleteSettings(request));
+            verifyNoInteractions(settings);
+        }
+    }
+
+    /** Reset ignores forged ownership and clears the current session cache only after success. */
+    @Test
+    void resetUsesAuthenticatedOwnerAndPreservesCacheOnFailure() {
+        DashboardSettingsService settings = mock(DashboardSettingsService.class);
+        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter("userId", "99");
+        request.setParameter("domainId", "999");
+        Identity user = mock(Identity.class);
+        when(user.isAdmin()).thenReturn(true);
+        when(user.getUserId()).thenReturn(7);
+        DashboardSettingsDto reset = new DashboardSettingsDto();
+        when(settings.reset(7)).thenReturn(reset);
+
+        try (MockedStatic<UsersDB> users = mockStatic(UsersDB.class)) {
+            users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
+
+            assertSame(reset, controller.deleteSettings(request));
+            verify(settings).reset(7);
+            verify(settings, never()).reset(99);
+            verify(user).setAdminSettings(null);
+
+            clearInvocations(user);
+            when(settings.reset(7)).thenThrow(new IllegalStateException("Database is unavailable"));
+            assertThrows(IllegalStateException.class, () -> controller.deleteSettings(request));
+            verify(user, never()).setAdminSettings(any());
+
+            when(user.isAdmin()).thenReturn(false);
+            clearInvocations(settings);
+            assertThrows(AccessDeniedException.class, () -> controller.deleteSettings(request));
             verifyNoInteractions(settings);
         }
     }

@@ -11,7 +11,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
 const item = (id, type = "test", size = "2x2", options = {}) => ({ id, type, size, options, collapsed: false });
 
 /** Runs production browser modules against a DOM and a stateful settings server. */
-function fixture(t, { items = [], configured = true, definitions = [], defaults = [], failSave = false, failLoad = false, deferModalShown = false } = {}) {
+function fixture(t, { items = [], configured = true, definitions = [], defaults = [], failSave = false, failLoad = false, failReset = false, deferModalShown = false } = {}) {
     const dom = new JSDOM("<!doctype html><html><body><div id='alerts'>System warning</div><div id='dashboard'></div></body></html>", { url: "http://localhost/admin/v9/" });
     const { window } = dom;
     window.WJ = { translate: key => key };
@@ -39,6 +39,9 @@ function fixture(t, { items = [], configured = true, definitions = [], defaults 
         if (options.method === "PUT") {
             if (failSave) return { ok: false, status: 500 };
             stored = { ...JSON.parse(options.body), configured: true };
+        } else if (options.method === "DELETE") {
+            if (failReset) return { ok: false, status: 503 };
+            stored = { version: 1, configured: false, items: [], domainOptions: {}, acknowledgedNewsVersion: null };
         } else if (failLoad) return { ok: false, status: 503 };
         return { ok: true, json: async () => copy(stored) };
     };
@@ -89,6 +92,75 @@ test("Defaults are used only for an unconfigured profile and mandatory widgets s
     assert.deepEqual(copy(initial.controller.settings.items.map(value => value.type)), ["test", "sessions"]);
     assert.equal(await initial.controller.remove(initial.controller.settings.items[1].id), false);
     assert.equal(initial.requests.length, 1, "Mandatory removal must not reach the server");
+});
+
+test("Reset clears personal preferences and disposes replaced widgets only after server confirmation", async t => {
+    let disposed = 0;
+    let signal;
+    const { controller, host, window, requests, stored } = fixture(t, {
+        items: [item("custom", "resource"), item("removable")], defaults: [{ type: "test", size: "3x3" }],
+        definitions: [
+            { type: "resource", titleKey: "Resource", render: values => { signal = values.signal; return () => disposed++; } },
+            { type: "sessions", titleKey: "Sessions", sizes: ["2x3"], mandatory: true, render() {} }
+        ]
+    });
+    await controller.start();
+    await tick();
+    await controller.saveOptions("custom", { domainOptions: { formName: "Custom form" } });
+    await controller.acknowledgeNews("2026.18");
+    await controller.remove("removable");
+    const previousDisposals = disposed;
+    const alerts = window.document.querySelector("#alerts");
+    assert.equal(await controller.reset(), true);
+    assert.equal(requests.at(-1).method, "DELETE");
+    assert.equal(requests.at(-1).headers["X-CSRF-Token"], "test-csrf-token");
+    assert.equal(requests.at(-1).body, undefined, "Account and domain must never be supplied by the client");
+    assert.equal(stored().configured, false);
+    assert.equal(controller.settings.acknowledgedNewsVersion, null);
+    assert.equal(controller.settings.domainOptions.custom, undefined);
+    assert.equal(controller.removed, null);
+    assert.equal(signal.aborted, true);
+    assert.equal(disposed, previousDisposals + 1);
+    assert.equal(window.document.querySelector("#alerts"), alerts);
+    assert.deepEqual(copy(controller.settings.items.map(value => [value.type, value.size])), [["test", "3x3"], ["sessions", "2x3"]]);
+    assert.equal(host.querySelector('[data-instance-id="custom"]'), null);
+    await controller.start();
+    assert.deepEqual(copy(controller.settings.items.map(value => value.type)), ["test", "sessions"], "A reload reapplies defaults until the first personal edit");
+    await controller.updateInstance(controller.settings.items[0].id, { collapsed: true });
+    assert.equal(stored().configured, true);
+    await controller.start();
+    assert.equal(controller.settings.items[0].collapsed, true);
+});
+
+test("A failed reset preserves the layout, filters, acknowledged news and removal undo", async t => {
+    const { controller, host } = fixture(t, { items: [item("kept"), item("removed")], defaults: [{ type: "test" }], failReset: true });
+    await controller.start();
+    await controller.saveOptions("kept", { domainOptions: { formName: "Contact" } });
+    await controller.acknowledgeNews("2026.18");
+    await controller.remove("removed");
+    const settings = copy(controller.settings);
+    const card = host.querySelector('[data-instance-id="kept"]');
+    assert.equal(await controller.reset(), false);
+    assert.deepEqual(copy(controller.settings), settings);
+    assert.equal(host.querySelector('[data-instance-id="kept"]'), card);
+    assert.equal(controller.removed.instance.id, "removed");
+    assert.match(host.querySelector('[role="status"]').textContent, /previous settings/);
+});
+
+test("Catalogue reset explains its scope and waits for explicit confirmation", async t => {
+    const { controller, window, requests } = fixture(t, { items: [item("custom")], defaults: [{ type: "test" }] });
+    await controller.start();
+    controller.showCatalogue();
+    const dialog = window.document.querySelector('[role="dialog"]');
+    dialog.querySelector(".md-dashboard__reset").click();
+    assert.equal(requests.some(request => request.method === "DELETE"), false);
+    const confirm = dialog.querySelector("button[aria-describedby]");
+    assert.match(window.document.getElementById(confirm.getAttribute("aria-describedby")).textContent, /all domains/);
+    assert.equal(window.document.activeElement, confirm);
+    confirm.click();
+    await tick();
+    assert.equal(requests.at(-1).method, "DELETE");
+    assert.equal(window.document.querySelector('[role="dialog"]'), null);
 });
 
 test("Shared options and domain filters refresh only the changed widget", async t => {

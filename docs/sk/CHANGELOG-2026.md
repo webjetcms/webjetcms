@@ -17,6 +17,7 @@
 
 - [Úvodná obrazovka](redactor/admin/welcome.md) je osobný prehľad s widgetmi podľa oprávnení a aktuálnej domény. Widgety môžete pridávať, nastavovať, presúvať, minimalizovať a odstrániť s okamžitým vrátením. Rozloženie sa ukladá do konta a je spoločné pre zariadenia; výber formulára alebo kampane sa pamätá podľa domény (#58806).
 - K dispozícii sú skratky do modulov, posledné stránky, schvaľovanie, plán publikovania, formuláre, návštevnosť a jej zdroje, hľadané výrazy, chyby 404 a newsletter. Povinný widget aktívnych prihlásení umožňuje ukončiť inú vlastnú reláciu. Novinky po potvrdení uvoľnia miesto; nevyriešené systémové upozornenia zostávajú viditeľné. Vyhľadávanie má jasný prepínač medzi administráciou a dokumentáciou (#58806).
+- Predvolené rozloženie obsahuje všetky dostupné widgety. Cez **Pridať widget → Resetovať** ho môžete obnoviť vrátane filtrov a noviniek. Grafy návštevnosti a zdrojov používajú AmCharts; presné údaje sú dostupné aj v tabuľke (#58806).
 
 ### Webové stránky
 

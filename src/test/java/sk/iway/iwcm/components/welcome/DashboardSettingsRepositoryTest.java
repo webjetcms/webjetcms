@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** Verifies atomic writes, owner scoping, and preservation of other-domain preferences. */
 class DashboardSettingsRepositoryTest {
@@ -163,6 +165,102 @@ class DashboardSettingsRepositoryTest {
         assertThrows(IllegalStateException.class, () -> repository.replace(7, "42", Map.of("overview.layout.v1", "{}"), Set.of()));
 
         verifyNoInteractions(insert, delete, lock, read);
+        verify(connection, never()).commit();
+    }
+
+    /** Clears every dashboard domain while preserving unrelated and legacy account settings. */
+    @ParameterizedTest
+    @ValueSource(strings = { "PostgreSQL", "Oracle", "Microsoft SQL Server" })
+    void resetDeletesOnlyOwnedDashboardRecordsUnderTheSaveLock(String product) throws SQLException {
+        when(connection.getMetaData().getDatabaseProductName()).thenReturn(product);
+        Set<String> removed = Set.of("overview.layout.v1", "overview.news", "overview.widget.form-1",
+            "overview.domain.42.form-1", "overview.domain.84.form-1", "overview.domain.84.orphan");
+        Map<String, String> original = new java.util.LinkedHashMap<>();
+        removed.forEach(key -> original.put(key, "{corrupt"));
+        original.put("overview.bookmarks", "[]");
+        original.put("overview.newsletter", "{}");
+        original.put("overview.layout.v2", "{}");
+        original.put("overview.widgetSettings", "{}");
+        original.put("datatable-state", "{}");
+        stubRecords(original);
+
+        repository.reset(7);
+
+        verify(read).setInt(1, 7);
+        verify(read).setString(2, "overview.%");
+        verify(delete, times(removed.size())).setInt(1, 7);
+        var keys = org.mockito.ArgumentCaptor.forClass(String.class);
+        verify(delete, times(removed.size())).setString(eq(2), keys.capture());
+        assertEquals(removed, Set.copyOf(keys.getAllValues()));
+        String expectedLock = product.contains("SQL Server")
+            ? "SELECT user_id FROM users WITH (UPDLOCK, ROWLOCK, HOLDLOCK) WHERE user_id=?"
+            : "SELECT user_id FROM users WHERE user_id=? FOR UPDATE";
+        var order = inOrder(connection, lock, read, delete);
+        order.verify(connection).setAutoCommit(false);
+        order.verify(connection).prepareStatement(expectedLock);
+        order.verify(lock).setInt(1, 7);
+        order.verify(lock).executeQuery();
+        order.verify(read).executeQuery();
+        order.verify(delete, times(removed.size())).executeUpdate();
+        order.verify(connection).commit();
+        order.verify(connection).setAutoCommit(true);
+        verify(connection, never()).rollback();
+        verifyNoInteractions(insert);
+    }
+
+    /** A partial delete failure must preserve the complete previous profile. */
+    @Test
+    void resetRollsBackWhenARecordCannotBeDeleted() throws SQLException {
+        stubRecords(Map.of("overview.layout.v1", "{}", "overview.news", "{}"));
+        when(delete.executeUpdate()).thenReturn(1).thenThrow(new SQLException("Delete failed"));
+
+        assertThrows(IllegalStateException.class, () -> repository.reset(7));
+
+        verify(connection).rollback();
+        verify(connection, never()).commit();
+        verify(connection).setAutoCommit(true);
+        verifyNoInteractions(insert);
+    }
+
+    /** Reset uses the same MySQL advisory lock and engine guard as a normal save. */
+    @Test
+    void mysqlResetLocksUntilCommitAndReleasesTheLock() throws SQLException {
+        when(connection.getMetaData().getDatabaseProductName()).thenReturn("MariaDB");
+        PreparedStatement engineQuery = mock(PreparedStatement.class);
+        PreparedStatement acquire = mock(PreparedStatement.class);
+        PreparedStatement release = mock(PreparedStatement.class);
+        ResultSet engine = mock(ResultSet.class);
+        ResultSet acquired = mock(ResultSet.class);
+        when(connection.prepareStatement(startsWith("SELECT ENGINE"))).thenReturn(engineQuery);
+        when(connection.prepareStatement("SELECT GET_LOCK(?, 10)")).thenReturn(acquire);
+        when(connection.prepareStatement("SELECT RELEASE_LOCK(?)")).thenReturn(release);
+        when(engineQuery.executeQuery()).thenReturn(engine);
+        when(engine.next()).thenReturn(true);
+        when(engine.getString(1)).thenReturn("InnoDB");
+        when(acquire.executeQuery()).thenReturn(acquired);
+        when(acquired.next()).thenReturn(true);
+        when(acquired.getInt(1)).thenReturn(1);
+        when(release.executeQuery()).thenReturn(mock(ResultSet.class));
+        stubRecords(Map.of("overview.layout.v1", "{}"));
+
+        repository.reset(7);
+
+        var order = inOrder(engineQuery, acquire, connection, delete, release);
+        order.verify(engineQuery).executeQuery();
+        order.verify(acquire).setString(1, "webjet-dashboard-7");
+        order.verify(acquire).executeQuery();
+        order.verify(connection).setAutoCommit(false);
+        order.verify(delete).executeUpdate();
+        order.verify(connection).commit();
+        order.verify(release).setString(1, "webjet-dashboard-7");
+        order.verify(release).executeQuery();
+        order.verify(connection).setAutoCommit(true);
+        verifyNoInteractions(lock, insert);
+
+        clearInvocations(connection, acquire, delete, read, release);
+        when(engine.getString(1)).thenReturn("MyISAM");
+        assertThrows(IllegalStateException.class, () -> repository.reset(7));
+        verifyNoInteractions(acquire, delete, read, release);
         verify(connection, never()).commit();
     }
 }

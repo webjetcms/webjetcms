@@ -423,6 +423,38 @@ export class DashboardController {
         return this._commit(next);
     }
 
+    /** Resets only dashboard preferences, applying defaults after the server confirms deletion. */
+    async reset() {
+        if (this.saving || this.destroyed) return false;
+        this.saving = true;
+        this._setBusy(true);
+        this.status.textContent = this._t("saving", "Saving…");
+        const request = this._request = new AbortController();
+        try {
+            const response = await fetch("/admin/rest/dashboard/settings", {
+                method: "DELETE", credentials: "same-origin", signal: request.signal,
+                headers: { "X-CSRF-Token": window.csrfToken || "" }
+            });
+            if (!response.ok) throw new Error(`Dashboard reset: ${response.status}`);
+            const data = await response.json();
+            if (this.destroyed || request.signal.aborted) return false;
+            this.settings = normalizeSettings(data);
+            this._addDefaults();
+            this._ensureMandatory();
+            this.removed = null;
+            this.undoContainer.hidden = true;
+            this.status.textContent = this._t("resetDone", "The default overview has been restored.");
+            this._render();
+            return true;
+        } catch (error) {
+            if (!this.destroyed && !request.signal.aborted) this._showFailure("saveError", "The change could not be saved. Your previous settings were kept.");
+            return false;
+        } finally {
+            this.saving = false;
+            if (!this.destroyed) this._setBusy(false);
+        }
+    }
+
     _dialog(title, trigger = document.activeElement) {
         const root = node("div", "modal fade md-dashboard-modal");
         root.tabIndex = -1;
@@ -499,6 +531,27 @@ export class DashboardController {
         error.setAttribute("role", "alert");
         if (this.settings.items.length >= MAX_WIDGETS) error.textContent = this._t("limit", "The overview can contain at most 32 widgets.");
         dialog.footer.append(error);
+        const resetDetails = node("div", "w-100");
+        resetDetails.hidden = true;
+        const resetDescription = node("p", "mb-2", this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains and read news will also be reset. Other account settings and bookmarks will be kept."));
+        resetDescription.id = `dashboard-reset-${createInstanceId()}`;
+        const confirmReset = button(this._t("resetConfirm", "Restore defaults"), async () => {
+            confirmReset.disabled = true;
+            if (await this.reset()) dialog.close();
+            else {
+                confirmReset.disabled = false;
+                error.textContent = this._t("saveError", "The change could not be saved. Your previous settings were kept.");
+            }
+        }, "btn btn-sm btn-primary");
+        confirmReset.setAttribute("aria-describedby", resetDescription.id);
+        const reset = button(this._t("reset", "Reset"), () => {
+            resetDetails.hidden = !resetDetails.hidden;
+            reset.setAttribute("aria-expanded", String(!resetDetails.hidden));
+            if (!resetDetails.hidden) confirmReset.focus();
+        }, "btn btn-sm btn-outline-secondary md-dashboard__reset");
+        reset.setAttribute("aria-expanded", "false");
+        resetDetails.append(resetDescription, confirmReset);
+        dialog.footer.append(reset, resetDetails);
         const render = () => {
             list.replaceChildren();
             for (const definition of listWidgets()) {
