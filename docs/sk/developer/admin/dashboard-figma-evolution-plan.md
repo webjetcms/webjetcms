@@ -133,3 +133,15 @@ Overenie týchto pripomienok: **61 JavaScript helper testov, 5 dizajnových E2E 
 Overenie tejto úpravy: **65 JavaScript helper testov, 6 scenárov katalógu a 5 dizajnových E2E scenárov**, všetky úspešné. Zahŕňa navigáciu v hlavičkách, parametre prekladov, dátové ekvivalenty, kontrolu prístupnosti, životný cyklus AmCharts a zachovanie pôvodných preferencií. Development zostava prešla. Vizuálne boli overené reálne karty na desktope a pri šírke 390 px; automatické responzívne kontroly pokrývajú aj 768/1337 px. Java služby sa nemenili.
 
 Aktuálna snímka oboch kariet: `build/test/dashboard-implementation-traffic.png`. Prenosná kópia poznámok a snímky je v `/private/tmp/webjet-dashboard-58806/traffic-polish/`.
+
+## Kompaktné metriky a perex náhľady
+
+- Malé karty Formuláre, Na schválenie a Chyby 404 majú v predvolenom desktopovom rozložení výšku približne **138 px namiesto 180 px**. Výška zostáva prirodzená, bez orezávania dlhšieho obsahu alebo pevného limitu v režime úprav.
+- Formuláre zobrazujú „odoslaní · 7 dní“ podľa zvolených 7/30/90 dní. Úplný interval zostáva v texte dostupnom čítačkám obrazovky. Chyby 404 používajú krátky dátumový rozsah; vysvetlenie týždenných súčtov je dostupné v názve obdobia a pre čítačky bez samostatného viditeľného riadka. Skutočný interval z backendu sa nemení.
+- Nadpisy všetkých troch kariet sú odkazy. Ak je zvolený konkrétny formulár, jeho nadpis vedie na jeho detail a aktualizuje sa spolu s nastaveniami aktívnej domény. Spodné duplicitné odkazy sú odstránené.
+- Príčina chýbajúcich obrázkov bola v dátach: základná cache `DocDB` neobsahuje `perexImage`. Existujúci dotaz posledných úprav teraz načíta aktuálne `documents.perex_image` cez JOIN, bez dodatočného dotazu pre každú stránku. Kontroly domény a oprávnení zostávajú zachované.
+- Náhľad používa `/thumb` s `w=76&h=76&ip=6` pre zobrazenie 38 × 38 px. Prázdny, nepovolený alebo nefunkčný obrázok má pôvodnú ikonu. V lokálnej administrácii bolo overené úspešné načítanie oboch skutočných perex obrázkov posledných stránok.
+
+Overenie: **68 JavaScript helper testov, 4 Java testy služby posledných stránok, 6 dizajnových E2E scenárov a 6 scenárov katalógu**. Development zostava prešla. Lokálny server bol reštartovaný s pôvodnou konfiguráciou, aby používal novú Java službu. Nový E2E scenár meria výšku kompaktného riadka, kontroluje nadpisové odkazy, popisy, fokus a mobilnú šírku. Zmeny zostali bez commitu.
+
+Prenosné poznámky a aktuálny screenshot: `/private/tmp/webjet-dashboard-58806/compact-metrics/`.

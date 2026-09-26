@@ -239,7 +239,9 @@ webjet-overview-dashboard a:focus-visible {
         > .ti { display: block; order: 2; font-size: 16px; }
     }
     &__widget[data-size="1x1"] &__widget-title { font-size: 12px; font-weight: 400; line-height: 1.4; }
-    &__widget[data-size="1x1"] &__widget-body { padding: 12px 18px 18px; }
+    &__widget[data-size="1x1"] &__widget-body { padding: 10px 18px 16px; }
+    &__widget[data-size="1x1"] .md-dashboard-widget__metric { margin-bottom: 0; }
+    &__widget[data-size="1x1"] .md-dashboard-widget__period { margin-bottom: 0 !important; }
     &__widget[data-size="1x1"] .md-dashboard-widget__number { font-size: 32px; }
     &__widget[data-widget-type="traffic"]:not([data-size="1x1"]):not(.is-collapsed) .md-dashboard-widget__number { font-size: 56px; letter-spacing: -2px; }
     &:not(.is-editing) &__widget[data-widget-type="traffic"]:not([data-size="1x1"]):not(.is-collapsed) .md-dashboard-widget__period { position: absolute; top: 24px; right: 22px; font-size: 11px; }

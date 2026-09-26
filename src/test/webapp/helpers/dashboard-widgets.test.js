@@ -102,7 +102,8 @@ test('Recent page thumbnails use supplied local perex images and restore an icon
     const { scope, context, container, window } = fixture(t, { pages: [
         { docId: 1, title: 'Page', fullPath: '/Section/Page', perexImage: '/images/news/photo.jpg', saveDate: '02.03.2026 14:30:22' },
         { docId: 2, title: 'External image', perexImage: '//external.test/photo.jpg' },
-        { docId: 3, title: 'Executable image', perexImage: 'javascript:alert(1)' }
+        { docId: 3, title: 'Executable image', perexImage: 'javascript:alert(1)' },
+        { docId: 4, title: 'No image', perexImage: '' }
     ] });
     await scope.getWidget('recent-pages').render({ container, context, signal: new AbortController().signal, instance: { size: '3x3' } });
     assert.equal(container.querySelectorAll('img').length, 1);
@@ -110,7 +111,8 @@ test('Recent page thumbnails use supplied local perex images and restore an icon
     const image = thumbnail.querySelector('img');
     assert.equal(image.alt, '');
     assert.equal(image.width, 38);
-    assert.equal(image.getAttribute('src'), '/thumb/images/news/photo.jpg?w=76&h=76&ip=5');
+    assert.equal(image.getAttribute('src'), '/thumb/images/news/photo.jpg?w=76&h=76&ip=6');
+    assert.equal(container.querySelectorAll('.md-dashboard-widget__page-image i:not([hidden])').length, 3);
     assert.equal(thumbnail.querySelector('i').hidden, true);
     assert.equal(container.querySelector('.md-dashboard-widget__page-section').textContent, '/Section');
     assert.equal(container.querySelector('.md-dashboard-widget__page-date').textContent, '02.03.2026 14:30:22');
@@ -405,6 +407,35 @@ test('Concurrent graph instances own distinct roots and disposing one leaves the
     assert.ok(runtime.roots.has(runtime.forms[1].chartDivId));
     secondCleanup();
     assert.equal(runtime.roots.size, 0);
+});
+
+test('Compact forms describe the selected period and retain its exact accessible dates', async t => {
+    const { scope, context, container } = fixture(t, { data: { total: 128, from: Date.UTC(2026, 8, 20), to: Date.UTC(2026, 8, 26), items: [] } });
+    context.translate = (key, days) => key.endsWith('formSubmissionsPeriod.js') ? `submissions · ${days} days` : key;
+    const widget = scope.getWidget('forms');
+    for (const days of [7, 30, 90]) {
+        container.replaceChildren();
+        await widget.render({ container, context, options: { days }, domainOptions: {}, instance: { size: '1x1' }, signal: new AbortController().signal });
+        assert.equal(container.querySelector('.md-dashboard-widget__metric-label').textContent, `submissions · ${days} days`);
+        assert.ok(container.querySelector('.md-dashboard-widget__period.visually-hidden').textContent.includes('2026'));
+        assert.equal(container.querySelector('.md-dashboard-widget__more'), null);
+    }
+    assert.equal(widget.headerLink.href({ id: 'forms' }, context), '/apps/form/admin/');
+    context.settings.domainOptions = { forms: { formName: 'Contact / EN' } };
+    assert.equal(widget.headerLink.href({ id: 'forms' }, context), '/apps/form/admin/detail/?formName=Contact%20%2F%20EN');
+    assert.equal(scope.getWidget('approvals').headerLink.href, '/admin/v9/webpages/web-pages-list/?show=toapprove');
+    assert.equal(scope.getWidget('errors').headerLink.href, '/apps/stat/admin/error/');
+});
+
+test('Compact error totals keep their actual weekly coverage without an extra visible explanation row', async t => {
+    const { scope, context, container } = fixture(t, { data: { total: 77, from: Date.UTC(2026, 8, 14), to: Date.UTC(2026, 8, 26), granularity: 'week', items: [] } });
+    await scope.getWidget('errors').render({ container, context, options: { days: 7 }, instance: { size: '1x1' }, signal: new AbortController().signal });
+    const period = container.querySelector('.md-dashboard-widget__period');
+    assert.match(period.title, /2026/);
+    assert.match(period.title, /weeklyRequests/);
+    assert.match(period.querySelector('.visually-hidden').textContent, /weeklyRequests/);
+    assert.equal(container.querySelectorAll('p').length, 1);
+    assert.equal(container.querySelector('.md-dashboard-widget__more'), null);
 });
 
 test('Forms keep the selected form in domain options and preserve unavailable selections', async t => {

@@ -173,6 +173,37 @@ Scenario('Dashboard header, notices, widgets and shortcuts fit the responsive vi
     I.wjSetDefaultWindowSize();
 });
 
+Scenario('Compact metrics keep short captions and accessible header navigation', async ({ I }) => {
+    previewSettings.items = [
+        { id: 'compact-autotest-traffic', type: 'traffic', size: '3x3', collapsed: false, options: { days: 7 } },
+        ...['forms', 'approvals', 'errors'].map(type => ({ id: `compact-autotest-${type}`, type, size: '1x1', collapsed: false, options: { days: 7 } })),
+        { id: 'compact-autotest-pages', type: 'recent-pages', size: '3x3', collapsed: false, options: {} }
+    ];
+    I.resizeWindow(1337, 1052);
+    I.refreshPage();
+    await waitForOverview(I);
+    const metrics = await I.executeScript(() => ['forms', 'approvals', 'errors'].map(type => {
+        const card = document.querySelector(`[data-widget-type="${type}"]`);
+        return { type, height: card.getBoundingClientRect().height, href: card.querySelector('.md-dashboard__title-link')?.getAttribute('href') };
+    }));
+    const targets = { forms: '/apps/form/admin/', approvals: '/admin/v9/webpages/web-pages-list/?show=toapprove', errors: '/apps/stat/admin/error/' };
+    metrics.forEach(metric => {
+        I.assertTrue(metric.height >= 120 && metric.height <= 145, `${metric.type} must fit the compact metric row without clipping.`);
+        I.assertEqual(metric.href, targets[metric.type], 'A metric heading must open the corresponding module.');
+    });
+    I.assertEqual(await I.grabTextFrom('[data-widget-type="forms"] .md-dashboard-widget__metric-label'),
+        await I.executeScript(() => WJ.translate('admin.dashboard.formSubmissionsPeriod.js', 7)));
+    I.assertTrue(await I.executeScript(() => document.querySelector('[data-widget-type="forms"] .md-dashboard-widget__period').getBoundingClientRect().height <= 1),
+        'Exact form dates remain accessible without taking another visual row.');
+    I.executeScript(() => document.querySelector('[data-widget-type="forms"] .md-dashboard__title-link').focus());
+    I.assertTrue(await I.executeScript(() => document.activeElement.matches('[data-widget-type="forms"] .md-dashboard__title-link')), 'Metric header navigation must support keyboard focus.');
+    I.resizeWindow(390, 1052);
+    if (await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) I.clickCss('.js-sidebar-toggler');
+    I.assertTrue(await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__widget[data-size="1x1"]')]
+        .every(card => card.scrollWidth <= card.clientWidth + 1)), 'Compact metric content must fit narrow cards.');
+    I.resizeWindow(1337, 1052);
+});
+
 Scenario('Session scrolling stays inside its list and compact controls expose accessible tooltips', async ({ I }) => {
     I.resizeWindow(1337, 1052);
     await I.mockRoute(sessionsRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ currentSessions: {

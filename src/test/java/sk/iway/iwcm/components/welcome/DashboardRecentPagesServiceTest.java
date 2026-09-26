@@ -25,6 +25,7 @@ import sk.iway.iwcm.editor.EditorForm;
 
 /** Verifies that denied or cross-domain history cannot crowd authorized recent pages out of a preview. */
 class DashboardRecentPagesServiceTest {
+    /** Current image values come from the database even when the basic page cache has no perex image. */
     @Test
     void checksCurrentDomainAndRightsBeforeApplyingTheRequestedLimit() throws Exception {
         Identity user = mock(Identity.class);
@@ -44,8 +45,7 @@ class DashboardRecentPagesServiceTest {
         DocDetails denied = page(12, 102, "Denied");
         DocDetails first = page(13, 103, "Allowed first");
         DocDetails second = page(14, 103, "Allowed second");
-        when(first.getPerexImage()).thenReturn("/images/news/cover.jpg");
-        when(second.getPerexImage()).thenReturn("https://external.example/cover.jpg");
+        when(rows.getString("perex_image")).thenReturn("/images/news/cover.jpg", "https://external.example/cover.jpg");
         when(docs.getBasicDocDetails(11, false)).thenReturn(otherDomain);
         when(docs.getBasicDocDetails(12, false)).thenReturn(denied);
         when(docs.getBasicDocDetails(13, false)).thenReturn(first);

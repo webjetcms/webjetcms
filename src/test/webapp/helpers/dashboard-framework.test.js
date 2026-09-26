@@ -139,6 +139,26 @@ test("Header navigation survives loading, title changes, collapse and edit contr
     assert.equal(actionLink.closest(".md-dashboard__edit-control"), null, "Module navigation stays independent of arrangement controls");
 });
 
+test("Header destinations follow domain settings and validate every update", async t => {
+    const { controller, host, window } = fixture(t, {
+        items: [item("forms", "linked-form")],
+        definitions: [{ type: "linked-form", titleKey: "Form", headerLink: {
+            href: (instance, context) => context.settings.domainOptions[instance.id]?.href || "/apps/form/admin/"
+        }, render() {} }]
+    });
+    await controller.start();
+    const titleLink = host.querySelector('.md-dashboard__title-link');
+    titleLink.focus();
+    await controller.saveOptions("forms", { domainOptions: { href: "/apps/form/admin/detail/?formName=Contact" } });
+    assert.equal(titleLink.getAttribute("href"), "/apps/form/admin/detail/?formName=Contact");
+    assert.equal(window.document.activeElement, titleLink);
+    await controller.saveOptions("forms", { domainOptions: { href: "javascript:alert(1)" } });
+    assert.equal(host.querySelector('.md-dashboard__title-link').tagName, "SPAN");
+    await controller.saveOptions("forms", { domainOptions: { href: "/apps/form/admin/" } });
+    assert.equal(host.querySelector('.md-dashboard__title-link').tagName, "A");
+    assert.equal(host.querySelector('.md-dashboard__title-link').textContent, "Form");
+});
+
 test("Header navigation rejects unsafe and external destinations through the shared link helper", async t => {
     const { controller, host } = fixture(t, {
         items: [item("unsafe", "unsafe-link"), item("external", "external-link")],

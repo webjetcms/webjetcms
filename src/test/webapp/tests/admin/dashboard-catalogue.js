@@ -265,7 +265,7 @@ Scenario('Pending approvals open their supported dashboard destination', async (
         I.say('No pending approvals in this account/domain; the deep-link condition does not apply.');
         return;
     }
-    I.clickCss('[data-widget-type="approvals"] .md-dashboard-widget__more');
+    I.clickCss('[data-widget-type="approvals"] .md-dashboard__title-link');
     I.waitForElement('#pills-pages #pills-waiting-tab.active', 20);
     I.waitForFunction(() => {
         const tabs = document.querySelector('#pills-pages_sub');

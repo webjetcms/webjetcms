@@ -17,7 +17,14 @@ function period(container, data, context, compact = false) {
     const label = node('p', 'md-dashboard-widget__period small text-muted mb-2', compact ? shortPeriod(data.from, data.to) : full);
     if (compact) label.title = full;
     container.append(label);
-    if (data.granularity === 'week') container.append(node('p', 'small text-muted mb-2', text(context, 'weeklyRequests')));
+    if (data.granularity === 'week') {
+        const weekly = text(context, 'weeklyRequests');
+        if (compact) {
+            label.title = `${full} · ${weekly}`;
+            label.append(node('span', 'visually-hidden', ` · ${weekly}`));
+        } else container.append(node('p', 'small text-muted mb-2', weekly));
+    }
+    return label;
 }
 
 /** Uses compact localized dates without hiding a different calendar year. */
@@ -176,7 +183,7 @@ async function renderDataSummary({ container, instance, options, domainOptions, 
         period(container, data, context);
     }
     const href = type === 'forms' && domainOptions.formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(domainOptions.formName)}` : moduleLinks[type];
-    if (type !== 'traffic') footer(container, context, href);
+    if (!['traffic', 'forms', 'approvals', 'errors'].includes(type)) footer(container, context, href);
     if (type === 'newsletter') return pollNewsletter(data, container, signal, refresh);
 }
 
@@ -184,6 +191,7 @@ async function renderDataSummary({ container, instance, options, domainOptions, 
 export function registerDataWidgets() {
     registerWidget({
         type: 'approvals', titleKey: 'admin.dashboard.approvals.js', icon: 'ti-checkup-list', sizes: ['1x1', '3x3'], defaultSize: '3x3',
+        headerLink: { href: moduleLinks.approvals },
         isAvailable: () => window.WJ.hasPermission('menuWebpages'), renderCollapsed: renderDataSummary,
         async render({ container, instance, context, signal }) {
             const data = await fetchData('approvals', {}, signal); if (signal.aborted) return;
@@ -191,7 +199,6 @@ export function registerDataWidgets() {
             if (instance.size !== '1x1') {
                 if (!data.items.length) empty(container, context);
                 else table(container, [text(context, 'page'), text(context, 'requester'), text(context, 'waitingSince')], data.items.slice(0, 6).map(item => [link(item.title, item.url), item.section, date(item.date)]));
-                footer(container, context, moduleLinks.approvals);
             }
         }
     });
@@ -229,6 +236,10 @@ export function registerDataWidgets() {
     });
     registerWidget({
         type: 'forms', titleKey: 'admin.dashboard.forms.js', icon: 'ti-forms', sizes: ['1x1', '3x3'], defaultSize: '3x3', multiple: true,
+        headerLink: { href: (instance, context) => {
+            const formName = context.settings.domainOptions?.[instance.id]?.formName;
+            return formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(formName)}` : moduleLinks.forms;
+        } },
         defaultOptions: { days: 7 }, defaultDomainOptions: { formName: '' }, isAvailable: () => window.WJ.hasPermission('cmp_form'), renderCollapsed: renderDataSummary,
         async configure({ container, options, domainOptions, context, signal }) {
             const data = await fetchData('forms', { days: options.days || 7 }, signal);
@@ -239,13 +250,14 @@ export function registerDataWidgets() {
         async render({ container, instance, options, domainOptions, context, signal }) {
             const data = await fetchData('forms', { days: options.days || 7, formName: domainOptions.formName }, signal); if (signal.aborted) return;
             const href = domainOptions.formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(domainOptions.formName)}` : moduleLinks.forms;
-            summary(container, data, context, href, text(context, 'submissions'));
+            const compact = instance.size === '1x1';
+            summary(container, data, context, href, compact ? text(context, 'formSubmissionsPeriod', options.days || 7) : text(context, 'submissions'));
             if (domainOptions.formName) container.append(node('span', 'small text-muted', domainOptions.formName));
-            period(container, data, context);
+            const interval = period(container, data, context);
+            if (compact) interval?.classList.add('visually-hidden');
             if (instance.size !== '1x1') {
                 if (!data.items.length) empty(container, context);
                 else table(container, [text(context, 'formName'), text(context, 'date')], data.items.slice(0, 6).map(item => [link(item.title, item.url), date(item.date)]));
-                footer(container, context, href);
             }
         }
     });
@@ -255,7 +267,7 @@ export function registerDataWidgets() {
     ];
     definitions.forEach(([type, icon, sizes]) => registerWidget({
         type, titleKey: `admin.dashboard.${type}.js`, icon, sizes, defaultSize: sizes[sizes.length - 1], multiple: true,
-        ...(type === 'traffic' ? { headerLink: { href: moduleLinks.traffic } } : {}),
+        ...(['traffic', 'errors'].includes(type) ? { headerLink: { href: moduleLinks[type] } } : {}),
         defaultOptions: { days: 7, ...(type === 'traffic' ? { metric: 'sessions' } : {}) },
         isAvailable: context => window.WJ.hasPermission('cmp_stat') && context.config.statMode !== 'none',
         configure: args => statSettings(args, type === 'traffic'), renderCollapsed: renderDataSummary,
@@ -266,11 +278,11 @@ export function registerDataWidgets() {
                 const label = text(context, `traffic${data.metric === 'views' ? 'Views' : data.metric === 'uniqueUsers' ? 'Users' : 'Sessions'}`, days);
                 summary(container, data, context, moduleLinks.traffic, label, text(context, 'trafficComparison', days));
             } else if (type === 'errors') summary(container, data, context, moduleLinks.errors, text(context, 'requests'));
-            period(container, data, context, type === 'traffic');
+            period(container, data, context, type === 'traffic' || (type === 'errors' && instance.size === '1x1'));
             if (instance.size !== '1x1') {
                 const cleanup = type === 'traffic' ? await lineChart(container, data, context, signal)
                     : await rankedList(container, data, context, type, instance.size === '3x3', signal);
-                if (!signal.aborted && type !== 'traffic') footer(container, context, moduleLinks[type]);
+                if (!signal.aborted && !['traffic', 'errors'].includes(type)) footer(container, context, moduleLinks[type]);
                 return cleanup;
             }
         }

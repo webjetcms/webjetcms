@@ -194,6 +194,11 @@ export class DashboardController {
         return String(definition?.getTitle?.(instance, this._widgetContext()) || this._t(definition?.titleKey || instance.type));
     }
 
+    _headerHref(instance) {
+        const href = getWidget(instance.type)?.headerLink?.href;
+        return typeof href === "function" ? href(instance, this._widgetContext()) : href;
+    }
+
     _showFailure(key, fallback, retry) {
         this.status.replaceChildren(node("span", "text-danger", this._t(key, fallback)));
         if (retry) this.status.append(button(this._t("retry", "Try again"), retry));
@@ -265,6 +270,16 @@ export class DashboardController {
             view.instance = instance;
             view.titleText.textContent = this._title(instance);
             view.title.title = view.titleText.textContent;
+            const navigation = view.header.querySelector('.md-dashboard__title-link, .md-dashboard__header-link');
+            if (navigation) {
+                const nextLink = link("", this._headerHref(instance), navigation.className);
+                if (nextLink.tagName === navigation.tagName) {
+                    if (nextLink.hasAttribute("href")) navigation.setAttribute("href", nextLink.getAttribute("href"));
+                } else {
+                    nextLink.append(...navigation.childNodes);
+                    navigation.replaceWith(nextLink);
+                }
+            }
             view.card.dataset.size = instance.size;
             view.card.classList.toggle("is-collapsed", Boolean(instance.collapsed));
             view.collapse.textContent = this._t(instance.collapsed ? "expand" : "collapse", instance.collapsed ? "Expand" : "Collapse");
@@ -313,7 +328,7 @@ export class DashboardController {
         const title = node(fixed ? "h2" : "h3", "md-dashboard__widget-title");
         const titleText = node("span");
         if (definition.headerLink && !definition.headerLink.labelKey) {
-            const titleLink = link("", definition.headerLink.href, "md-dashboard__title-link");
+            const titleLink = link("", this._headerHref(instance), "md-dashboard__title-link");
             titleLink.append(titleText, icon("ti-arrow-up-right"));
             title.append(titleLink);
         } else title.append(titleText);
@@ -322,7 +337,7 @@ export class DashboardController {
         if (definition.icon) header.append(icon(definition.icon));
         header.append(title);
         if (definition.headerLink?.labelKey) {
-            const headerLink = link(this._t(definition.headerLink.labelKey), definition.headerLink.href, "md-dashboard__header-link");
+            const headerLink = link(this._t(definition.headerLink.labelKey), this._headerHref(instance), "md-dashboard__header-link");
             headerLink.append(icon("ti-arrow-up-right"));
             header.append(headerLink);
         }

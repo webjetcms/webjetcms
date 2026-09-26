@@ -62,7 +62,7 @@ function pageThumbnail(page) {
         image.height = 38;
         image.addEventListener('error', () => { image.remove(); fallback.hidden = false; }, { once: true });
         fallback.hidden = true;
-        image.src = `/thumb${source}?w=76&h=76&ip=5`;
+        image.src = `/thumb${source}?w=76&h=76&ip=6`;
         thumbnail.append(image);
     }
     return thumbnail;

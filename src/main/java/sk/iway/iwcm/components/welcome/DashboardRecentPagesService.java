@@ -45,7 +45,8 @@ public class DashboardRecentPagesService {
         if (!user.isEnabledItem("menuWebpages")) throw new org.springframework.security.access.AccessDeniedException("Web page access is required");
         List<DocDetailsDto> pages = new ArrayList<>();
         Set<Integer> visited = new HashSet<>();
-        String sql = "SELECT doc_id, save_date FROM documents_history WHERE author_id=? ORDER BY save_date DESC, history_id DESC";
+        String sql = "SELECT h.doc_id, h.save_date, d.perex_image FROM documents_history h"
+            + " JOIN documents d ON d.doc_id=h.doc_id WHERE h.author_id=? ORDER BY h.save_date DESC, h.history_id DESC";
         try (Connection connection = connections.open(); PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, user.getUserId());
             statement.setFetchSize(100);
@@ -64,7 +65,7 @@ public class DashboardRecentPagesService {
                     dto.setTitle(Tools.replace(current.getTitle(), "&#47;", "/"));
                     dto.setVirtualPath(current.getVirtualPath());
                     dto.setFullPath(current.getFullPath());
-                    dto.setPerexImage(previewImage(current.getPerexImage()));
+                    dto.setPerexImage(previewImage(rows.getString("perex_image")));
                     java.sql.Timestamp saved = rows.getTimestamp("save_date");
                     dto.setSaveDate(saved == null ? "" : Tools.formatDateTimeSeconds(saved.getTime()));
                     dto.setCreatedByUserId(user.getUserId());
