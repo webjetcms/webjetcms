@@ -112,6 +112,10 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
     }
     I.seeNumberOfElements('#toast-container-overview', 1);
     I.seeElement('[data-widget-type="sessions"] .md-dashboard__widget-content button');
+    I.seeElement('[data-widget-type="recent-pages"] .md-dashboard__widget-header .md-dashboard__header-link[href="/admin/v9/webpages/web-pages-list/"]');
+    I.dontSeeElement('[data-widget-type="recent-pages"] .md-dashboard-widget__more');
+    I.assertEqual(await I.grabTextFrom('[data-widget-type="traffic"] .md-dashboard-widget__metric-label'),
+        await I.executeScript(() => WJ.translate('admin.dashboard.trafficSessions.js', 7)), 'Traffic descriptions must include the selected number of days.');
     I.assertTrue(await I.executeScript(() => {
         const source = new DOMParser().parseFromString(document.querySelector('webjet-overview-dashboard').labels.changelog, 'text/html');
         return document.querySelector('.md-dashboard-widget__news-highlights').innerHTML === source.body.innerHTML;
@@ -138,6 +142,13 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, collap
         document.querySelector(`[data-widget-type="${type}"]`).dataset.instanceId])));
     for (const type of ['traffic', 'referrers']) {
         I.seeElement(`[data-widget-type="${type}"] .md-dashboard-widget__chart[role="img"][aria-label]`);
+        if (type === 'traffic') {
+            I.dontSeeElement('[data-widget-type="traffic"] details.md-dashboard-widget__chart-data');
+            I.seeElementInDOM('[data-widget-type="traffic"] .visually-hidden .md-dashboard-widget__table');
+            I.seeElement('[data-widget-type="traffic"] .md-dashboard__title-link[href="/apps/stat/admin/"]');
+            I.dontSeeElement('[data-widget-type="traffic"] .md-dashboard-widget__more');
+            continue;
+        }
         I.seeElement(`[data-widget-type="${type}"] details.md-dashboard-widget__chart-data summary`);
         I.clickCss(`[data-widget-type="${type}"] details.md-dashboard-widget__chart-data summary`);
         I.seeElement(`[data-widget-type="${type}"] details[open] .md-dashboard-widget__table`);
@@ -156,7 +167,7 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, collap
     waitForWidgets(I);
     await assertDisposedChart(I);
     I.dontSeeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`);
-    I.seeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__more`);
+    I.seeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard__title-link`);
     await widgetAction(I, ids.traffic, 'collapse');
     waitForSave(I);
     waitForChart(I, 'traffic');

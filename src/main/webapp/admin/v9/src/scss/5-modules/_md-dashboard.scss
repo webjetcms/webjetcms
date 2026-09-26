@@ -14,6 +14,7 @@ $dashboard-danger-text: mix($danger, $secondary, 90%);
 $dashboard-positive: mix($success, $secondary, 48%);
 $dashboard-warning-text: mix($warning, $secondary, 35%);
 $dashboard-chart-primary: mix($success, $secondary, 64%);
+$dashboard-chart-comparison: mix($dashboard-chart-primary, $gray-text, 28%);
 $dashboard-shadow: rgba($secondary, .06);
 
 webjet-overview-dashboard, .md-dashboard-modal {
@@ -206,7 +207,7 @@ webjet-overview-dashboard a:focus-visible {
         border-radius: var(--wj-border-radius);
         background: var(--wj-nice-gray);
 
-        &[data-widget-type="traffic"] { background: var(--wj-dashboard-mint); }
+        &[data-widget-type="traffic"] { background: var(--wj-dashboard-mint); --wj-dashboard-chart-comparison: #{$dashboard-chart-comparison}; }
         &[data-widget-type="forms"], &[data-widget-type="newsletter"] { background: var(--wj-dashboard-lavender); }
         &[data-widget-type="publishing"] { background: var(--wj-dashboard-publishing); }
         &[data-widget-type="approvals"] { background: var(--wj-dashboard-amber); }
@@ -242,6 +243,9 @@ webjet-overview-dashboard a:focus-visible {
     &__widget[data-size="1x1"] .md-dashboard-widget__number { font-size: 32px; }
     &__widget[data-widget-type="traffic"]:not([data-size="1x1"]):not(.is-collapsed) .md-dashboard-widget__number { font-size: 56px; letter-spacing: -2px; }
     &:not(.is-editing) &__widget[data-widget-type="traffic"]:not([data-size="1x1"]):not(.is-collapsed) .md-dashboard-widget__period { position: absolute; top: 24px; right: 22px; font-size: 11px; }
+    &:not(.is-editing) &__widget[data-widget-type="traffic"]:not([data-size="1x1"]):not(.is-collapsed) &__widget-title { padding-right: 112px; }
+    &__widget[data-widget-type="traffic"] .md-dashboard-widget__metric { margin-bottom: 0; }
+    &__widget[data-widget-type="traffic"] .md-dashboard-widget__chart-legend { margin-bottom: 10px; }
     &__widget.is-fixed { min-height: 0; }
 
     &__widget-title {
@@ -254,6 +258,9 @@ webjet-overview-dashboard a:focus-visible {
         font-size: 16px;
         font-weight: 700;
     }
+
+    &__title-link { display: inline-flex; align-items: center; gap: 6px; color: inherit; text-decoration: none; > .ti { font-size: 13px; color: var(--wj-dashboard-muted); } &:hover, &:focus-visible { color: var(--wj-dashboard-link); } }
+    &__header-link { display: inline-flex; align-items: center; flex-shrink: 0; gap: 5px; margin-left: auto; min-height: 24px; font-size: 12px; font-weight: 400; color: var(--wj-dashboard-link); text-decoration: none; > .ti { font-size: 14px; } }
 
     &__drag { cursor: grab; }
     &__widget-controls { display: flex; align-items: center; gap: 4px; }
@@ -360,7 +367,10 @@ webjet-overview-dashboard a:focus-visible {
         &__widget[data-size] { grid-row: auto; }
         &__widget-content { height: auto; }
         &__shortcut-list > .md-dashboard__widget { flex: 0 1 auto; }
-        &:not(.is-editing) &__widget[data-widget-type="traffic"]:not([data-size="1x1"]):not(.is-collapsed) .md-dashboard-widget__period { position: static; }
+        &:not(.is-editing) &__widget[data-widget-type="traffic"]:not([data-size="1x1"]):not(.is-collapsed) {
+            .md-dashboard-widget__period { position: static; margin-top: 8px; }
+            .md-dashboard__widget-title { padding-right: 0; }
+        }
     }
 }
 
@@ -392,11 +402,12 @@ webjet-overview-dashboard a:focus-visible {
     &__comparison-label { color: var(--wj-dashboard-muted); }
 
     &__number { font-size: 38px; line-height: 1.1; letter-spacing: -1px; font-weight: 700; font-variant-numeric: tabular-nums; text-decoration: none; color: var(--wj-secondary); }
-    &__comparison { padding: 0; }
+    &__comparison { display: inline-flex; align-items: center; gap: 3px; padding: 0; }
     &__comparison--positive { color: var(--wj-dashboard-positive); }
     &__comparison--negative { color: var(--wj-dashboard-danger); }
     &__comparison--neutral { color: var(--wj-dashboard-muted); }
     &__chart { display: block; width: 100%; height: 190px; min-width: 0; flex: 0 0 190px; }
+    &__chart--traffic { margin-top: 18px; min-height: 190px; flex: 1 0 190px; }
     &__chart--bars { height: 220px; flex-basis: 220px; }
     &__chart--compact { height: 170px; flex-basis: 170px; }
     &__chart-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 11px; color: var(--wj-dashboard-muted); margin-block: 8px; }

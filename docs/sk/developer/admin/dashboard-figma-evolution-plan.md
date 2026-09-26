@@ -120,3 +120,16 @@ Overenie tejto úpravy: **58 JavaScript helper testov, 4 dizajnové E2E scenáre
 - Tooltipy fungujú pri hoveri aj klávesnicovom fokuse. Escape skryje viditeľný tooltip; ďalší Escape môže zatvoriť dialóg správy relácií.
 
 Overenie týchto pripomienok: **61 JavaScript helper testov, 5 dizajnových E2E scenárov a 6 scenárov katalógu**. Test s deviatimi reláciami overil koliesko, PageDown, tooltipy aj dvojité Escape v dialógu. Prešli kontrola kompletného HTML noviniek, responzívne šírky 390/768/1337 px a obnovenie pôvodných preferencií. Development aj production zostava prešli; production hlási existujúce upozornenia na veľkosť spoločných bundle súborov. Java služby ani prekladový obsah sa nemenili.
+
+## Doladenie návštevnosti a navigácie kariet
+
+- Návštevnosť používa výraznú hlavnú hodnotu, popis metriky so zvoleným počtom dní a šípku pri porovnaní s predchádzajúcim obdobím. Popisy podporujú návštevy, zobrazenia aj unikátnych návštevníkov a intervaly 7/30/90 dní.
+- Graf má iba jemnú vodorovnú mriežku, podfarbenú aktuálnu sériu, tlmenú prerušovanú porovnávaciu sériu a bodku na poslednej aktuálnej hodnote. Os a legenda zobrazujú stručné číselné dátumy; legenda rozlišuje skutočné dátumy oboch intervalov. Pri staršom alebo prelomovom roku rozsah zachová aj rok.
+- Viditeľná sekcia „Údaje grafu“ je z návštevnosti odstránená. Presné dátumy a hodnoty zostávajú v textovej tabuľke dostupnej čítačkám obrazovky a v tooltipovom detaile grafu.
+- Štatistiku otvorí kliknutie na nadpis „Návštevnosť ↗“ alebo hlavnú hodnotu. Spodný odkaz je odstránený. V karte „Pokračujte v práci“ je odkaz „Všetky ↗“ vpravo hore, aj pri zbalenej karte.
+- Registrácia widgetu podporuje spoločné `headerLink` nastavenie: odkaz v nadpise alebo samostatnú akciu v hlavičke. Odkaz zostáva dostupný počas načítania, po zbalení aj po aktualizácii názvu; URL používa spoločnú validáciu.
+- Uložené veľkosti a poradie kariet aj reálne dáta zostávajú zachované. Na úzkej obrazovke sa obdobie presunie pod metriku, aby neprekrývalo nadpis. Nový odtieň porovnávacej čiary má SASS definíciu a runtime CSS premennú.
+
+Overenie tejto úpravy: **65 JavaScript helper testov, 6 scenárov katalógu a 5 dizajnových E2E scenárov**, všetky úspešné. Zahŕňa navigáciu v hlavičkách, parametre prekladov, dátové ekvivalenty, kontrolu prístupnosti, životný cyklus AmCharts a zachovanie pôvodných preferencií. Development zostava prešla. Vizuálne boli overené reálne karty na desktope a pri šírke 390 px; automatické responzívne kontroly pokrývajú aj 768/1337 px. Java služby sa nemenili.
+
+Aktuálna snímka oboch kariet: `build/test/dashboard-implementation-traffic.png`. Prenosná kópia poznámok a snímky je v `/private/tmp/webjet-dashboard-58806/traffic-polish/`.

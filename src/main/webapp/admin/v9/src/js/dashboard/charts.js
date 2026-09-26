@@ -15,6 +15,7 @@ export function chartHost(container, label, bars = false) {
 /** Keeps preview charts compact; the module link provides the full interactive report. */
 function compactChart(form, host) {
     const chart = form.chart;
+    const traffic = host.classList.contains('md-dashboard-widget__chart--traffic');
     const styles = window.getComputedStyle(host);
     const color = (name, fallback) => {
         const value = styles.getPropertyValue(`--wj-dashboard-chart-${name}`).trim() || styles.getPropertyValue(fallback).trim();
@@ -26,6 +27,7 @@ function compactChart(form, host) {
     const comparison = color('comparison', '--wj-gray-text');
     const grid = color('grid', '--wj-nice-gray-100');
     const label = color('label', '--wj-gray-text');
+    const surface = color('surface', '--wj-dashboard-mint');
     chart.root.setThemes([window.WebjetTheme.new(chart.root)]);
     chart.setAll({ height: window.am5.percent(100), paddingTop: 5, paddingBottom: 0, paddingLeft: 0, paddingRight: 5,
         interpolationDuration: 0, stateAnimationDuration: 0 });
@@ -43,15 +45,56 @@ function compactChart(form, host) {
         renderer.labels.template.setAll({ fontSize: 11, ...(label ? { fill: label } : {}) });
         renderer.grid?.template.setAll({ strokeOpacity: 0.45, ...(grid ? { stroke: grid } : {}) });
     });
+    if (traffic) {
+        const xAxis = chart.xAxes.getIndex(0);
+        const xRenderer = xAxis.get('renderer');
+        const yAxis = chart.yAxes.getIndex(0);
+        const yRenderer = yAxis.get('renderer');
+        xAxis.setAll({
+            startLocation: 0.5, endLocation: 0.5, markUnitChange: false,
+            dateFormats: { day: 'd. M.', week: 'd. M.', month: 'd. M.', year: 'yyyy' },
+            gridIntervals: [{ timeUnit: 'day', count: 1 }, { timeUnit: 'day', count: 2 },
+                { timeUnit: 'day', count: 7 }, { timeUnit: 'day', count: 14 }, { timeUnit: 'month', count: 1 }]
+        });
+        xRenderer.set('minGridDistance', 90);
+        xRenderer.grid.template.set('forceHidden', true);
+        xRenderer.labels.template.setAll({ paddingTop: 10, paddingBottom: 0, minPosition: 0, maxPosition: 1 });
+        // Multi-day labels otherwise sit at midnight, before the first data point at the cell centre.
+        xRenderer.labels.template.adapters.add('multiLocation', location => {
+            const interval = xAxis.getPrivate('gridInterval');
+            return interval?.timeUnit === 'day' ? 0.5 / interval.count : location;
+        });
+        const points = chart.series.getIndex(0).data.values;
+        xRenderer.labels.template.adapters.add('centerX', (center, axisLabel) => {
+            const value = axisLabel.dataItem?.get('value');
+            if (value === points[0]?.[form.xAxeName]) return 0;
+            if (value === points[points.length - 1]?.[form.xAxeName]) return window.am5.percent(100);
+            return center;
+        });
+        yAxis.setAll({ min: 0, maxPrecision: 0, numberFormat: '#.#a' });
+        yRenderer.set('minGridDistance', 65);
+        yRenderer.labels.template.setAll({ paddingRight: 8 });
+        yRenderer.grid.template.set('strokeOpacity', 0.3);
+        chart.get('cursor')?.lineY.set('visible', false);
+    }
     if (primary) chart.get('colors')?.set('colors', [primary]);
     chart.series.each((series, index) => {
         const seriesColor = index === 1 ? comparison : primary;
         if (seriesColor) series.setAll({ stroke: seriesColor, fill: seriesColor });
-        series.strokes?.template.setAll({ strokeWidth: index === 1 ? 1.5 : 2.5 });
+        series.strokes?.template.setAll({ strokeWidth: index === 1 ? 1.5 : traffic ? 2 : 2.5 });
         series.fills?.template.setAll({ visible: index === 0, fillOpacity: 0.08 });
         series.columns?.template.setAll({ height: 12, cornerRadiusTL: 4, cornerRadiusBL: 4, cornerRadiusTR: 4, cornerRadiusBR: 4 });
         series.setAll({ interpolationDuration: 0, stateAnimationDuration: 0 });
         series.get('tooltip')?.set('animationDuration', 0);
+        if (traffic && index === 0) {
+            series.set('maskBullets', false);
+            series.bullets.push((root, line, dataItem) => {
+                if (dataItem !== line.dataItems[line.dataItems.length - 1]) return;
+                return window.am5.Bullet.new(root, { sprite: window.am5.Circle.new(root, {
+                    radius: 4, fill: line.get('stroke'), stroke: surface, strokeWidth: 2
+                }) });
+            });
+        }
         series.appear(0, 0);
     });
     chart.appear(0, 0);

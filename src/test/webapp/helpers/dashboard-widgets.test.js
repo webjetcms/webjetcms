@@ -162,6 +162,7 @@ function chartRuntime(window, { load = async () => {}, create } = {}) {
     const destroyed = [];
     const settings = (initial = {}) => ({
         values: { ...initial },
+        adapters: { add() {} },
         set(key, value) { this.values[key] = value; },
         setAll(values) { Object.assign(this.values, values); },
         get(key) { return this.values[key]; },
@@ -169,15 +170,15 @@ function chartRuntime(window, { load = async () => {}, create } = {}) {
         appear(duration) { this.appearanceDuration = duration; }
     });
     const list = values => ({ values, getIndex: index => values[index], each: callback => values.forEach(callback) });
-    const axis = () => settings({ renderer: { labels: { template: settings() }, grid: { template: settings() } } });
+    const axis = () => settings({ renderer: Object.assign(settings(), { labels: { template: settings() }, grid: { template: settings() } }) });
     class LineChartForm { constructor(config) { Object.assign(this, config); } }
     class BarChartForm { constructor(config) { Object.assign(this, config); } }
     const makeChart = form => {
-        const series = Array.from({ length: form instanceof LineChartForm ? form.chartData.size : 1 }, () => {
+        const series = Array.from({ length: form instanceof LineChartForm ? form.chartData.size : 1 }, (_, index) => {
             const tooltip = Object.assign(settings(), { label: settings() });
-            return Object.assign(settings({ tooltip }), { strokes: { template: settings() }, fills: { template: settings() } });
+            return Object.assign(settings({ tooltip }), { strokes: { template: settings() }, fills: { template: settings() }, bullets: [], data: { values: form instanceof LineChartForm ? Array.from(form.chartData.values())[index] : form.chartData } });
         });
-        const chart = Object.assign(settings({ cursor: settings(), scrollbarX: settings(), scrollbarY: settings(), colors: settings() }), {
+        const chart = Object.assign(settings({ cursor: Object.assign(settings(), { lineY: settings() }), scrollbarX: settings(), scrollbarY: settings(), colors: settings() }), {
             root: { setThemes(themes) { this.themes = themes; } },
             series: list(series), xAxes: list([axis()]), yAxes: list([axis()]),
             children: list([settings({ verticalScrollbar: settings() })]), zoomOutButton: settings()
@@ -207,6 +208,18 @@ const trafficData = {
     previousSeries: [{ date: Date.UTC(2026, 8, 22), value: 1 }, { date: Date.UTC(2026, 8, 23), value: 3 }]
 };
 
+test('Traffic descriptions follow the selected metric and period and preserve cross-year dates', async t => {
+    const data = { ...trafficData, metric: 'uniqueUsers', from: Date.UTC(2025, 11, 20), to: Date.UTC(2026, 0, 18) };
+    const { scope, context, container } = fixture(t, { data });
+    context.translate = (key, days) => `${key}:${days}`;
+    await scope.getWidget('traffic').render({ container, context, options: { days: 30 }, instance: { size: '1x1' }, signal: new AbortController().signal });
+    assert.equal(container.querySelector('.md-dashboard-widget__metric-label').textContent, 'admin.dashboard.trafficUsers.js:30');
+    assert.equal(container.querySelector('.md-dashboard-widget__comparison-label').textContent, 'admin.dashboard.trafficComparison.js:30');
+    assert.match(container.querySelector('.md-dashboard-widget__period').textContent, /2025/);
+    assert.match(container.querySelector('.md-dashboard-widget__period').textContent, /2026/);
+    assert.equal(container.querySelector('.md-dashboard-widget__more'), null);
+});
+
 test('Traffic uses shared AmCharts line forms with aligned comparison points and actual accessible dates', async t => {
     const { scope, context, container, window } = fixture(t, { data: trafficData });
     const runtime = chartRuntime(window);
@@ -222,8 +235,13 @@ test('Traffic uses shared AmCharts line forms with aligned comparison points and
     assert.match(form.chart.series.getIndex(1).get('tooltip').get('labelText'), /actualDate/);
     assert.equal(form.chart.get('scrollbarX'), undefined);
     assert.equal(form.chart.appearanceDuration, 0);
-    assert.equal(container.querySelectorAll('details tbody tr').length, 2);
-    assert.match(container.querySelector('details').textContent, /9\/22\/2026/);
+    assert.equal(container.querySelector('details'), null);
+    assert.equal(container.querySelectorAll('.visually-hidden tbody tr').length, 2);
+    assert.match(container.querySelector('.visually-hidden').textContent, /9\/22\/2026/);
+    assert.equal(container.querySelector('.md-dashboard-widget__more'), null);
+    assert.equal(form.chart.series.getIndex(0).get('tooltip').label.get('ariaHidden'), true);
+    assert.match(container.querySelector('.md-dashboard-widget__chart-key--current').textContent, /24/);
+    assert.match(container.querySelector('.md-dashboard-widget__chart-key--previous').textContent, /22/);
     assert.equal(container.querySelector('svg'), null);
     controller.abort();
     cleanup();

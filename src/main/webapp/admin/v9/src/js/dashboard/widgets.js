@@ -1,7 +1,7 @@
 import { getWidget, listWidgets, registerWidget } from './registry';
 import { registerUtilityWidgets } from './utility-widgets';
 import { registerDataWidgets } from './data-widgets';
-import { node, text, localUrl, shortcutUrl, link, icon, field, empty, footer, date } from './widget-utils';
+import { node, text, localUrl, shortcutUrl, link, icon, field, empty, date } from './widget-utils';
 
 /** Flattens authorized navigation while retaining distinct submenu destinations. */
 export function menuEntries(context) {
@@ -141,20 +141,19 @@ export function registerDashboardWidgets() {
     registerWidget({
         type: "recent-pages", titleKey: "admin.dashboard.recent-pages.js", descriptionKey: "admin.dashboard.recent-pages.description.js",
         icon: "ti-history", sizes: ["2x3", "3x3"], defaultSize: "3x3",
+        headerLink: { href: "/admin/v9/webpages/web-pages-list/", labelKey: "admin.dashboard.allShort.js" },
         isAvailable: () => window.WJ.hasPermission("menuWebpages"),
         async render({ container, instance, context, signal }) {
             const pages = await recentPages(signal);
             if (signal.aborted) return;
             if (!pages.length) empty(container, context);
             else recentPagesList(container, pages, instance.size);
-            footer(container, context, "/admin/v9/webpages/web-pages-list/");
         },
         async renderCollapsed({ container, context, signal }) {
             const pages = await recentPages(signal);
             if (signal.aborted) return;
             if (pages.length) container.append(link(pages[0].title, `/admin/v9/webpages/web-pages-list/?docid=${encodeURIComponent(pages[0].docId)}`));
             else empty(container, context);
-            footer(container, context, "/admin/v9/webpages/web-pages-list/");
         }
     });
     registerUtilityWidgets();

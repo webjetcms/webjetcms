@@ -6,7 +6,7 @@ export function node(tag, className = "", text) {
     return result;
 }
 
-export const text = (context, key) => context.translate(`admin.dashboard.${key}.js`);
+export const text = (context, key, ...params) => context.translate(`admin.dashboard.${key}.js`, ...params);
 
 /** Resolves only HTTP administration links on the current origin. */
 export function localUrl(value) {

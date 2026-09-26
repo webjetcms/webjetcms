@@ -1,5 +1,6 @@
 import { getWidget, listWidgets } from './registry';
 import { MAX_WIDGETS, cloneSettings, createInstanceId, normalizeSettings, moveInstanceBefore, createLayoutSegments } from './model';
+import { link } from './widget-utils';
 
 function node(tag, className = "", text) {
     const result = document.createElement(tag);
@@ -46,9 +47,9 @@ export class DashboardController {
         this._build();
     }
 
-    _t(key, fallback = key) {
+    _t(key, fallback = key, ...params) {
         const fullKey = key.includes(".") ? key : `admin.dashboard.${key}.js`;
-        const translated = this.context.translate?.(fullKey) ?? window.WJ?.translate?.(fullKey);
+        const translated = this.context.translate?.(fullKey, ...params) ?? window.WJ?.translate?.(fullKey, ...params);
         return translated && translated !== fullKey ? translated : fallback;
     }
 
@@ -185,7 +186,7 @@ export class DashboardController {
     }
 
     _widgetContext() {
-        return { ...this.context, dashboard: this, settings: this.settings, translate: key => this._t(key) };
+        return { ...this.context, dashboard: this, settings: this.settings, translate: (key, ...params) => this._t(key, key, ...params) };
     }
 
     _title(instance) {
@@ -262,8 +263,8 @@ export class DashboardController {
                 this.views.set(instance.id, view);
             }
             view.instance = instance;
-            view.title.textContent = this._title(instance);
-            view.title.title = view.title.textContent;
+            view.titleText.textContent = this._title(instance);
+            view.title.title = view.titleText.textContent;
             view.card.dataset.size = instance.size;
             view.card.classList.toggle("is-collapsed", Boolean(instance.collapsed));
             view.collapse.textContent = this._t(instance.collapsed ? "expand" : "collapse", instance.collapsed ? "Expand" : "Collapse");
@@ -310,10 +311,21 @@ export class DashboardController {
         card.classList.toggle("is-fixed", fixed);
         const header = node("div", "md-dashboard__widget-header");
         const title = node(fixed ? "h2" : "h3", "md-dashboard__widget-title");
+        const titleText = node("span");
+        if (definition.headerLink && !definition.headerLink.labelKey) {
+            const titleLink = link("", definition.headerLink.href, "md-dashboard__title-link");
+            titleLink.append(titleText, icon("ti-arrow-up-right"));
+            title.append(titleLink);
+        } else title.append(titleText);
         title.id = `dashboard-title-${instance.id}`;
         card.setAttribute("aria-labelledby", title.id);
         if (definition.icon) header.append(icon(definition.icon));
         header.append(title);
+        if (definition.headerLink?.labelKey) {
+            const headerLink = link(this._t(definition.headerLink.labelKey), definition.headerLink.href, "md-dashboard__header-link");
+            headerLink.append(icon("ti-arrow-up-right"));
+            header.append(headerLink);
+        }
         const drag = button(this._t("move", "Move widget"), () => this.showMove(instance.id), "btn btn-sm md-dashboard__drag md-dashboard__control");
         drag.replaceChildren(icon("ti-grip-vertical"));
         drag.setAttribute("aria-label", this._t("move", "Move widget"));
@@ -348,7 +360,7 @@ export class DashboardController {
         body.id = `dashboard-body-${instance.id}`;
         collapse.setAttribute("aria-controls", body.id);
         card.append(header, body);
-        return { card, header, title, body, collapse, instance, abort: null, cleanup: null, signature: null };
+        return { card, header, title, titleText, body, collapse, instance, abort: null, cleanup: null, signature: null };
     }
 
     _instance(id) {

@@ -34,6 +34,14 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
         const scrollbar = window.scrollbarMain;
         scrollbar.setMomentum(0, 0);
         scrollbar.update();
+        const top = document.querySelector('[data-widget-type="traffic"]').getBoundingClientRect().top;
+        scrollbar.setPosition(0, scrollbar.offset.y + top - 64);
+    });
+    I.saveScreenshot('dashboard-implementation-traffic.png', false);
+    I.executeScript(() => {
+        const scrollbar = window.scrollbarMain;
+        scrollbar.setMomentum(0, 0);
+        scrollbar.update();
         scrollbar.setPosition(0, scrollbar.limit.y);
     });
     I.saveScreenshot('dashboard-implementation-widgets.png', true);

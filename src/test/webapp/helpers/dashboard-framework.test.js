@@ -45,8 +45,8 @@ function fixture(t, { items = [], configured = true, definitions = [], defaults 
         } else if (failLoad) return { ok: false, status: 503 };
         return { ok: true, json: async () => copy(stored) };
     };
-    const context = vm.createContext({ window, document: window.document, CustomEvent: window.CustomEvent, AbortController, fetch, console, crypto: require("node:crypto").webcrypto });
-    for (const filename of ["registry.js", "model.js", "dashboard.js"]) {
+    const context = vm.createContext({ window, document: window.document, CustomEvent: window.CustomEvent, URL: window.URL, AbortController, fetch, console, crypto: require("node:crypto").webcrypto });
+    for (const filename of ["registry.js", "model.js", "widget-utils.js", "dashboard.js"]) {
         const source = fs.readFileSync(path.join(moduleDirectory, filename), "utf8").replace(/^import .+;\r?$/gm, "").replace(/^export /gm, "");
         vm.runInContext(source, context, { filename });
     }
@@ -80,6 +80,12 @@ test("Reordering variable-height widgets preserves DOM order and existing widget
     assert.equal(window.document.querySelector("#alerts"), alerts, "Widget edits must preserve system alerts");
 });
 
+test("Widget translations forward interpolation parameters to the shared translator", t => {
+    const { controller } = fixture(t);
+    controller.context.translate = (key, count) => `${key}:${count}`;
+    assert.equal(controller._widgetContext().translate('admin.dashboard.trafficSessions.js', 30), 'admin.dashboard.trafficSessions.js:30');
+});
+
 test("Defaults are used only for an unconfigured profile and mandatory widgets survive an empty profile", async t => {
     const empty = fixture(t, { items: [], configured: true, defaults: [{ type: "test" }] });
     await empty.controller.start();
@@ -92,6 +98,59 @@ test("Defaults are used only for an unconfigured profile and mandatory widgets s
     assert.deepEqual(copy(initial.controller.settings.items.map(value => value.type)), ["test", "sessions"]);
     assert.equal(await initial.controller.remove(initial.controller.settings.items[1].id), false);
     assert.equal(initial.requests.length, 1, "Mandatory removal must not reach the server");
+});
+
+test("Header navigation survives loading, title changes, collapse and edit controls", async t => {
+    let finish;
+    const { controller, host, window } = fixture(t, {
+        items: [item("traffic", "linked-title", "2x2", { title: "Traffic" }), item("pages", "linked-action")],
+        definitions: [
+            { type: "linked-title", titleKey: "Traffic", headerLink: { href: "/apps/stat/admin/" },
+                getTitle: instance => instance.options.title, render: () => new Promise(resolve => { finish = resolve; }) },
+            { type: "linked-action", titleKey: "Recent pages", headerLink: { href: "/admin/v9/webpages/web-pages-list/", labelKey: "admin.dashboard.allShort.js" }, render() {} }
+        ]
+    });
+    window.WJ.translate = key => key === "admin.dashboard.allShort.js" ? "All" : key;
+    await controller.start();
+    const titleLink = host.querySelector('[data-instance-id="traffic"] .md-dashboard__title-link');
+    const actionLink = host.querySelector('[data-instance-id="pages"] .md-dashboard__header-link');
+    assert.equal(titleLink.getAttribute("href"), "/apps/stat/admin/");
+    assert.equal(titleLink.textContent, "Traffic");
+    assert.equal(actionLink.getAttribute("href"), "/admin/v9/webpages/web-pages-list/");
+    assert.equal(actionLink.textContent, "All");
+    assert.equal(titleLink.closest("section").querySelector('[aria-busy="true"]') !== null, true, "Navigation is available before widget data arrives");
+    assert.equal(titleLink.querySelector(".ti-arrow-up-right").getAttribute("aria-hidden"), "true");
+    finish();
+    await tick();
+    titleLink.focus();
+    await controller.saveOptions("traffic", { options: { title: "<strong>Page views</strong>" } });
+    assert.equal(host.querySelector('[data-instance-id="traffic"] .md-dashboard__title-link'), titleLink);
+    assert.equal(window.document.activeElement, titleLink, "Updating the card preserves link focus");
+    assert.equal(titleLink.textContent, "<strong>Page views</strong>");
+    assert.equal(titleLink.querySelector("strong"), null, "Dynamic titles remain text");
+    assert.ok(titleLink.querySelector(".ti-arrow-up-right"), "Updating title text must not erase the navigation icon");
+    finish();
+    await controller.updateInstance("traffic", { collapsed: true });
+    await controller.updateInstance("pages", { collapsed: true });
+    assert.equal(titleLink.closest("section").querySelector(".md-dashboard__widget-body").hidden, true);
+    assert.equal(host.querySelector('[data-instance-id="pages"] .md-dashboard__header-link'), actionLink);
+    controller.setEditing(true);
+    assert.equal(actionLink.closest(".md-dashboard__widget-header").querySelector(".md-dashboard__widget-controls").hidden, false);
+    assert.equal(actionLink.closest(".md-dashboard__edit-control"), null, "Module navigation stays independent of arrangement controls");
+});
+
+test("Header navigation rejects unsafe and external destinations through the shared link helper", async t => {
+    const { controller, host } = fixture(t, {
+        items: [item("unsafe", "unsafe-link"), item("external", "external-link")],
+        definitions: [
+            { type: "unsafe-link", titleKey: "Unsafe", headerLink: { href: "javascript:alert(1)" }, render() {} },
+            { type: "external-link", titleKey: "External", headerLink: { href: "https://example.org/", labelKey: "All" }, render() {} }
+        ]
+    });
+    await controller.start();
+    assert.equal(host.querySelectorAll(".md-dashboard__widget-header a").length, 0);
+    assert.equal(host.querySelector(".md-dashboard__title-link").textContent, "Unsafe");
+    assert.equal(host.querySelector(".md-dashboard__header-link").textContent, "All");
 });
 
 test("Reset clears personal preferences and disposes replaced widgets only after server confirmation", async t => {
@@ -520,7 +579,7 @@ test('Failed notice checks stay visible and offer an independent retry', async t
 
 test('Release note persistence restores the replacement toggle without stealing focus from another control', async t => {
     const { context, window, host } = fixture(t);
-    Object.assign(context, { DOMParser: window.DOMParser, text: (widgetContext, key) => key });
+    Object.assign(context, { DOMParser: window.DOMParser });
     const source = fs.readFileSync(path.join(moduleDirectory, 'utility-widgets.js'), 'utf8')
         .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
     vm.runInContext(source, context, { filename: 'utility-widgets.js' });
@@ -532,6 +591,7 @@ test('Release note persistence restores the replacement toggle without stealing 
     host.append(region, otherControl);
     let finishSave;
     const widgetContext = {
+        translate: key => key,
         labels: { changelog: '<p>WebJET CMS 2026.18</p><p>Release highlights</p>' },
         config: { releaseVersion: '2026.18' }, settings: { acknowledgedNewsVersion: null },
         dashboard: { acknowledgeNews: () => new Promise(resolve => { finishSave = resolve; }) }

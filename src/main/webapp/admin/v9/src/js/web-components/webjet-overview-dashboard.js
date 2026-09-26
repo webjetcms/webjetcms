@@ -115,7 +115,7 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         }
         this.appendChild(overview);
         registerDashboardWidgets();
-        const context = { data: this.data, labels: this.labels, config: this.config, overview: this, translate: key => WJ.translate(key) };
+        const context = { data: this.data, labels: this.labels, config: this.config, overview: this, translate: (key, ...params) => WJ.translate(key, ...params) };
         context.config.dashboardDefaults ||= getDashboardDefaults(context);
         this.dashboardController = new DashboardController(widgets, context);
         this._loadNotices();

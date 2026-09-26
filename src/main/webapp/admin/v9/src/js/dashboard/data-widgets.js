@@ -11,10 +11,21 @@ const moduleLinks = {
 const metricKey = metric => ({ views: 'visits', sessions: 'sessionsMetric', uniqueUsers: 'uniqueUsers' })[metric] || 'sessionsMetric';
 
 /** Labels the actual returned interval, including whole-week error aggregates. */
-function period(container, data, context) {
+function period(container, data, context, compact = false) {
     if (data.from == null || data.to == null) return;
-    container.append(node('p', 'md-dashboard-widget__period small text-muted mb-2', `${date(data.from, false)} – ${date(data.to, false)}`));
+    const full = `${date(data.from, false)} – ${date(data.to, false)}`;
+    const label = node('p', 'md-dashboard-widget__period small text-muted mb-2', compact ? shortPeriod(data.from, data.to) : full);
+    if (compact) label.title = full;
+    container.append(label);
     if (data.granularity === 'week') container.append(node('p', 'small text-muted mb-2', text(context, 'weeklyRequests')));
+}
+
+/** Uses compact localized dates without hiding a different calendar year. */
+function shortPeriod(from, to) {
+    const start = new Date(from), end = new Date(to);
+    const locale = (window.userLng === 'cz' ? 'cs' : window.userLng) || 'sk';
+    const year = start.getFullYear() !== new Date().getFullYear() || end.getFullYear() !== start.getFullYear();
+    return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'numeric', ...(year ? { year: 'numeric' } : {}) }).formatRange(start, end);
 }
 
 /** Relative changes have an explicit unavailable state when the baseline is zero. */
@@ -24,7 +35,7 @@ export function change(current, previous) {
     return `${delta > 0 ? '+' : ''}${Math.round(delta)} %`;
 }
 
-function summary(container, data, context, href, label) {
+function summary(container, data, context, href, label, comparisonLabel) {
     const group = node('div', 'md-dashboard-widget__metric');
     const main = node('div', 'md-dashboard-widget__metric-main');
     const total = link(number(data.total), href, 'md-dashboard-widget__number');
@@ -36,9 +47,10 @@ function summary(container, data, context, href, label) {
         const delta = change(data.total, data.previous);
         const direction = delta ? (Number(data.total) > Number(data.previous) ? 'positive' : Number(data.total) < Number(data.previous) ? 'negative' : 'neutral') : 'neutral';
         const comparison = node('span', `md-dashboard-widget__comparison md-dashboard-widget__comparison--${direction} small`, delta || text(context, 'noComparison'));
+        if (comparisonLabel && delta) comparison.prepend(icon(direction === 'positive' ? 'ti-arrow-up-right' : direction === 'negative' ? 'ti-arrow-down-right' : 'ti-arrow-right'));
         comparison.title = `${text(context, 'previous')}: ${number(data.previous)}`;
         const comparisonGroup = node('div', 'md-dashboard-widget__metric-change');
-        comparisonGroup.append(comparison, node('span', 'md-dashboard-widget__comparison-label small', text(context, 'previous')));
+        comparisonGroup.append(comparison, node('span', 'md-dashboard-widget__comparison-label small', comparisonLabel || text(context, 'previous')));
         group.append(comparisonGroup);
     }
     container.append(group);
@@ -61,12 +73,13 @@ function statSettings({ container, options, context }, metric = false) {
     return { read: () => ({ options: { ...options, days: Number(days.value), ...(selectedMetric ? { metric: selectedMetric.value } : {}) } }) };
 }
 
-/** Keeps every chart value available to keyboard and screen-reader users as ordinary text. */
-function chartTable(container, context, headers, rows) {
-    const details = node('details', 'md-dashboard-widget__chart-data');
-    details.append(node('summary', 'small', text(context, 'chartData')));
-    table(details, headers, rows);
-    container.append(details);
+/** Provides chart values as text, optionally hidden visually while remaining available to screen readers. */
+function chartTable(container, context, headers, rows, visuallyHidden = false) {
+    const region = node(visuallyHidden ? 'div' : 'details', `md-dashboard-widget__chart-data${visuallyHidden ? ' visually-hidden' : ''}`);
+    if (!visuallyHidden) region.append(node('summary', 'small', text(context, 'chartData')));
+    const values = table(region, headers, rows);
+    if (visuallyHidden) values.prepend(node('caption', '', text(context, 'chartData')));
+    container.append(region);
 }
 
 /** Compares equal-length periods while retaining their actual dates in tooltips and the text table. */
@@ -76,10 +89,13 @@ async function lineChart(container, data, context, signal) {
     const previous = data.previousSeries || [];
     const metric = text(context, metricKey(data.metric));
     const host = chartHost(container, `${metric}: ${number(data.total)}; ${text(context, 'previous')}: ${number(data.previous)}`);
+    host.classList.add('md-dashboard-widget__chart--traffic');
     const legend = node('div', 'md-dashboard-widget__chart-legend');
-    legend.append(node('span', 'md-dashboard-widget__chart-key md-dashboard-widget__chart-key--current', metric));
+    const currentLabel = node('span', 'md-dashboard-widget__chart-key md-dashboard-widget__chart-key--current', shortPeriod(series[0].date, series[series.length - 1].date));
+    currentLabel.title = metric;
+    legend.append(currentLabel);
     if (previous.length) {
-        const comparison = node('span', 'md-dashboard-widget__chart-key md-dashboard-widget__chart-key--previous', text(context, 'previous'));
+        const comparison = node('span', 'md-dashboard-widget__chart-key md-dashboard-widget__chart-key--previous', shortPeriod(previous[0].date, previous[previous.length - 1].date));
         comparison.title = `${text(context, 'previous')}: ${number(data.previous)}`;
         legend.append(comparison);
     }
@@ -87,7 +103,7 @@ async function lineChart(container, data, context, signal) {
     chartTable(container, context, [metric, text(context, 'previous')], series.map((point, index) => [
         `${date(point.date, false)}: ${number(point.value)}`,
         previous[index] ? `${date(previous[index].date, false)}: ${number(previous[index].value)}` : '—'
-    ]));
+    ]), true);
     return mountChart(host, signal, (tools, chartDivId) => {
         const chartData = new Map([[metric, series.map(point => ({ dayDate: point.date, value: point.value, actualDate: date(point.date, false) }))]]);
         if (previous.length) chartData.set(text(context, 'previous'), previous.slice(0, series.length).map((point, index) => ({
@@ -99,7 +115,8 @@ async function lineChart(container, data, context, signal) {
         form.chart.yAxes.getIndex(0).setAll({ min: 0, maxPrecision: 0 });
         form.chart.series.each((line, index) => {
             if (index === 1) line.strokes.template.set('strokeDasharray', [5, 4]);
-            line.get('tooltip').set('labelText', '{name}\n{actualDate}: [bold]{valueY}[/]');
+            line.get('tooltip').setAll({ labelText: '{name}\n{actualDate}: [bold]{valueY}[/]', labelAriaLabel: '{name}, {actualDate}: {valueY}' });
+            line.get('tooltip').label.set('ariaHidden', true);
         });
     });
 }
@@ -159,7 +176,7 @@ async function renderDataSummary({ container, instance, options, domainOptions, 
         period(container, data, context);
     }
     const href = type === 'forms' && domainOptions.formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(domainOptions.formName)}` : moduleLinks[type];
-    footer(container, context, href);
+    if (type !== 'traffic') footer(container, context, href);
     if (type === 'newsletter') return pollNewsletter(data, container, signal, refresh);
 }
 
@@ -238,17 +255,22 @@ export function registerDataWidgets() {
     ];
     definitions.forEach(([type, icon, sizes]) => registerWidget({
         type, titleKey: `admin.dashboard.${type}.js`, icon, sizes, defaultSize: sizes[sizes.length - 1], multiple: true,
+        ...(type === 'traffic' ? { headerLink: { href: moduleLinks.traffic } } : {}),
         defaultOptions: { days: 7, ...(type === 'traffic' ? { metric: 'sessions' } : {}) },
         isAvailable: context => window.WJ.hasPermission('cmp_stat') && context.config.statMode !== 'none',
         configure: args => statSettings(args, type === 'traffic'), renderCollapsed: renderDataSummary,
         async render({ container, instance, options, context, signal }) {
             const data = await fetchData(type, { days: options.days || 7, ...(type === 'traffic' ? { metric: options.metric || 'sessions' } : {}) }, signal); if (signal.aborted) return;
-            if (type === 'traffic' || type === 'errors') summary(container, data, context, moduleLinks[type], type === 'traffic' ? text(context, metricKey(data.metric)) : text(context, 'requests'));
-            period(container, data, context);
+            if (type === 'traffic') {
+                const days = String(options.days || 7);
+                const label = text(context, `traffic${data.metric === 'views' ? 'Views' : data.metric === 'uniqueUsers' ? 'Users' : 'Sessions'}`, days);
+                summary(container, data, context, moduleLinks.traffic, label, text(context, 'trafficComparison', days));
+            } else if (type === 'errors') summary(container, data, context, moduleLinks.errors, text(context, 'requests'));
+            period(container, data, context, type === 'traffic');
             if (instance.size !== '1x1') {
                 const cleanup = type === 'traffic' ? await lineChart(container, data, context, signal)
                     : await rankedList(container, data, context, type, instance.size === '3x3', signal);
-                if (!signal.aborted) footer(container, context, moduleLinks[type]);
+                if (!signal.aborted && type !== 'traffic') footer(container, context, moduleLinks[type]);
                 return cleanup;
             }
         }
