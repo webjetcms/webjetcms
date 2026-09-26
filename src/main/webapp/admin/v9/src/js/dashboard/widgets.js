@@ -1,7 +1,7 @@
 import { getWidget, listWidgets, registerWidget } from './registry';
 import { registerUtilityWidgets } from './utility-widgets';
 import { registerDataWidgets } from './data-widgets';
-import { node, text, localUrl, shortcutUrl, link, icon, field, empty, date, containNativeScroll } from './widget-utils';
+import { node, text, localUrl, shortcutUrl, link, icon, field, empty, date, containNativeScroll, pagePreview } from './widget-utils';
 
 /** Flattens authorized navigation while retaining distinct submenu destinations. */
 export function menuEntries(context) {
@@ -26,7 +26,7 @@ export function getDashboardDefaults(context) {
         { type: "approvals", size: "1x1" }, { type: "errors", size: "1x1" },
         { type: "recent-pages", size: "3x2" }, { type: "referrers", size: "2x2" },
         { type: "publishing", size: "2x2" }, { type: "newsletter", size: "2x2" },
-        { type: "search-terms", size: "2x3" }, { type: "top-pages", size: "3x3" }
+        { type: "search-terms", size: "3x3" }, { type: "top-pages", size: "3x3" }
     ];
     const menu = menuEntries(context);
     const shortcuts = ["/admin/v9/webpages/web-pages-list/", "/apps/form/admin/"].filter(href => menu.some(item => item.href === href));
@@ -48,26 +48,6 @@ async function recentPages(signal) {
     return response.json();
 }
 
-/** Presents the authorized page thumbnail with a decorative file icon fallback. */
-function pageThumbnail(page) {
-    const thumbnail = node('span', 'md-dashboard-widget__page-image');
-    const fallback = icon('ti-file-text');
-    thumbnail.append(fallback);
-    const source = typeof page.perexImage === 'string' && page.perexImage.startsWith('/') && !page.perexImage.startsWith('//') ? localUrl(page.perexImage) : null;
-    if (source) {
-        const image = node('img');
-        image.alt = '';
-        image.loading = 'lazy';
-        image.width = 38;
-        image.height = 38;
-        image.addEventListener('error', () => { image.remove(); fallback.hidden = false; }, { once: true });
-        fallback.hidden = true;
-        image.src = `/thumb${source}?w=76&h=76&ip=6`;
-        thumbnail.append(image);
-    }
-    return thumbnail;
-}
-
 /** Keeps all preview rows accessible when a compact card needs native scrolling. */
 function recentPagesList(container, pages, context, signal) {
     const list = node('ul', 'md-dashboard-widget__pages');
@@ -76,13 +56,10 @@ function recentPagesList(container, pages, context, signal) {
     containNativeScroll(list, signal);
     pages.slice(0, 6).forEach(page => {
         const row = node('li');
-        const target = link('', `/admin/v9/webpages/web-pages-list/?docid=${encodeURIComponent(page.docId)}`, 'md-dashboard-widget__page');
-        const content = node('span', 'md-dashboard-widget__page-content');
-        const section = page.fullPath?.endsWith(`/${page.title}`) ? page.fullPath.slice(0, -(page.title.length + 1)) || '/' : page.fullPath;
-        content.append(node('span', 'md-dashboard-widget__page-title', page.title), node('span', 'md-dashboard-widget__page-section', section));
+        const target = pagePreview(page, `/admin/v9/webpages/web-pages-list/?docid=${encodeURIComponent(page.docId)}`);
+        target.classList.add('md-dashboard-widget__page');
         const changed = node('span', 'md-dashboard-widget__page-date', page.date == null ? page.saveDate : date(page.date));
-        target.title = page.fullPath || page.title;
-        target.append(pageThumbnail(page), content, changed);
+        target.append(changed);
         row.append(target);
         list.append(row);
     });

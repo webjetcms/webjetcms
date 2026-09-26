@@ -334,12 +334,9 @@ public class DashboardWidgetDataService {
                 String time = "top-pages".equals(type) ? "view_time" : "search-terms".equals(type) ? "search_date" : "from_time";
                 List<Map<String, Object>> items = ranked(connection, table, column, time, scope, range);
                 if ("top-pages".equals(type)) {
+                    topPageDetails(connection, items, scope);
                     for (Map<String, Object> item : items) {
                         int id = Integer.parseInt((String)item.get("id"));
-                        DocDetails doc = DocDB.getInstance().getBasicDocDetails(id, false);
-                        boolean accessible = doc != null && (scope.groups.contains(doc.getGroupId()) || scope.pages.contains(id));
-                        item.put("title", accessible ? doc.getTitle() : String.valueOf(id));
-                        if (accessible) item.put("section", doc.getFullPath());
                         item.put("url", "/apps/stat/admin/top-details/?docId=" + id + "&dateRange=" + encode("daterange:" + range.from + "-" + (range.until - 1)));
                         item.put("previous", countRows(connection, table, time, scope, range.previous(), " AND s.doc_id=" + id));
                     }
@@ -352,6 +349,37 @@ public class DashboardWidgetDataService {
         }
         period(result, range);
         return result;
+    }
+
+    /** Enriches the bounded ranking from current page metadata and one scoped image projection. */
+    void topPageDetails(Connection connection, List<Map<String, Object>> items, Scope scope) throws SQLException {
+        Map<Integer, Map<String, Object>> accessible = new LinkedHashMap<>();
+        for (Map<String, Object> item : items) {
+            int id = Integer.parseInt((String) item.get("id"));
+            DocDetails doc = DocDB.getInstance().getBasicDocDetails(id, false);
+            boolean allowed = doc != null && scope.domainGroups.contains(doc.getGroupId())
+                && (scope.groups.contains(doc.getGroupId()) || scope.pages.contains(id));
+            item.put("title", allowed ? doc.getTitle() : String.valueOf(id));
+            if (allowed) {
+                item.put("section", doc.getFullPath());
+                accessible.put(id, item);
+            }
+        }
+        if (accessible.isEmpty()) return;
+        String placeholders = accessible.keySet().stream().map(id -> "?").collect(Collectors.joining(","));
+        String sql = "SELECT d.doc_id, d.perex_image FROM documents d WHERE d.doc_id IN (" + placeholders + ") AND " + scope.statisticsSql("d");
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            int parameter = 1;
+            for (int id : accessible.keySet()) statement.setInt(parameter++, id);
+            statement.setMaxRows(PREVIEW_SIZE);
+            statement.setQueryTimeout(15);
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    Map<String, Object> item = accessible.get(rows.getInt("doc_id"));
+                    if (item != null) item.put("perexImage", DashboardRecentPagesService.previewImage(rows.getString("perex_image")));
+                }
+            }
+        }
     }
 
     Map<String, Long> trafficTotals(Connection connection, Scope scope, Range range) throws SQLException {

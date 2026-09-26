@@ -2,6 +2,7 @@
 $dashboard-surface: $white;
 $dashboard-mint: mix($success, $white, 11%);
 $dashboard-lavender: mix($primary, mix($ai-color, $white, 5%), 6%);
+$dashboard-search-surface: mix($primary, $white, 5%);
 $dashboard-amber: mix($warning, $white, 20%);
 $dashboard-publishing: mix($warning, mix($danger-btn-bg, $white, 5%), 13%);
 $dashboard-errors: mix($danger, $nice-gray, 3%);
@@ -22,6 +23,7 @@ webjet-overview-dashboard, .md-dashboard-modal {
     --wj-dashboard-surface: #{$dashboard-surface};
     --wj-dashboard-mint: #{$dashboard-mint};
     --wj-dashboard-lavender: #{$dashboard-lavender};
+    --wj-dashboard-search-surface: #{$dashboard-search-surface};
     --wj-dashboard-amber: #{$dashboard-amber};
     --wj-dashboard-publishing: #{$dashboard-publishing};
     --wj-dashboard-errors: #{$dashboard-errors};
@@ -214,6 +216,7 @@ webjet-overview-dashboard a:focus-visible {
         &[data-widget-type="approvals"] { background: var(--wj-dashboard-amber); }
         &[data-widget-type="errors"] { background: var(--wj-dashboard-errors); }
         &[data-widget-type="referrers"] { --wj-dashboard-chart-primary: #{$dashboard-referrers-primary}; }
+        &[data-widget-type="search-terms"] { background: var(--wj-dashboard-search-surface); }
 
         &[data-size="1x1"] { grid-row: span 1; }
         &[data-size="2x3"], &[data-size="3x3"] { grid-row: span 3; }
@@ -502,16 +505,16 @@ webjet-overview-dashboard a:focus-visible {
     &__search-option input:focus-visible + &__search-label { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }
 
     &__pages { display: flex; flex-direction: column; list-style: none; padding: 0; margin: 0; > li + li { border-top: 1px solid var(--wj-dashboard-divider); } }
-    &__page {
+    &__page, &__page-preview {
         display: flex;
         align-items: center;
         gap: 12px;
-        padding: 12px 0;
         min-width: 0;
         text-decoration: none;
         color: var(--wj-secondary);
         &:hover { color: var(--wj-primary); }
     }
+    &__page { padding: 12px 0; }
     &__page-image {
         display: grid;
         place-items: center;
@@ -527,8 +530,8 @@ webjet-overview-dashboard a:focus-visible {
         > .ti { font-size: 19px; }
     }
     &__page-content { flex: 1; min-width: 0; }
-    &__page-title { display: block; font-size: 13px; font-weight: 400; overflow-wrap: anywhere; }
-    &__page-section { display: block; font-size: 11px; margin-top: 3px; color: var(--wj-dashboard-muted); overflow-wrap: anywhere; }
+    &__page-title { display: block; font-size: 13px; line-height: 1.5; font-weight: 400; overflow-wrap: anywhere; }
+    &__page-section { display: block; font-size: 11px; line-height: 1.5; margin-top: 3px; color: var(--wj-dashboard-muted); overflow-wrap: anywhere; }
     &__page-date { font-size: 11px; color: var(--wj-dashboard-muted); text-align: right; flex: 0 0 auto; }
 
     &__publishing { margin-bottom: 0; }
@@ -559,7 +562,9 @@ webjet-overview-dashboard a:focus-visible {
         --bs-table-bg: transparent;
         --bs-table-border-color: var(--wj-nice-gray-100);
         margin-bottom: 10px;
-        a { color: var(--wj-dashboard-link); }
+        a:not(.md-dashboard-widget__page-preview) { color: var(--wj-dashboard-link); }
+        &.md-dashboard-widget__table--ranked { table-layout: auto; }
+        &.md-dashboard-widget__table--pages td { vertical-align: middle; padding-block: 12px; }
 
         td, th {
             overflow-wrap: anywhere;
@@ -568,6 +573,13 @@ webjet-overview-dashboard a:focus-visible {
             text-overflow: clip;
             vertical-align: top;
             padding: 5px 4px;
+        }
+        .md-dashboard-widget__table-number {
+            width: 1%;
+            padding-left: 16px;
+            text-align: right;
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
         }
     }
 
@@ -578,16 +590,6 @@ webjet-overview-dashboard a:focus-visible {
         padding-left: 1rem;
         margin: 0;
         overflow-wrap: anywhere;
-    }
-
-    &__more {
-        display: block;
-        margin-top: auto;
-        padding-top: 8px;
-        font-weight: 400;
-        font-size: 12px;
-        color: var(--wj-dashboard-link);
-        text-decoration: none;
     }
 
     &__shortcut {

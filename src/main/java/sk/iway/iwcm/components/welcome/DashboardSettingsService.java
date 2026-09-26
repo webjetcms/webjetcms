@@ -34,7 +34,7 @@ public class DashboardSettingsService {
         Map.entry("forms", Set.of("1x1", "3x3")),
         Map.entry("traffic", Set.of("1x1", "3x3")),
         Map.entry("top-pages", Set.of("2x3", "3x3")),
-        Map.entry("search-terms", Set.of("2x3")),
+        Map.entry("search-terms", Set.of("2x3", "3x3")),
         Map.entry("referrers", Set.of("2x2", "2x3", "3x3")),
         Map.entry("newsletter", Set.of("2x2", "3x3")),
         Map.entry("errors", Set.of("1x1", "3x3")),

@@ -1,5 +1,5 @@
 import { registerWidget } from './registry';
-import { node, text, number, date, link, icon, field, table, empty, footer, fetchData } from './widget-utils';
+import { node, text, number, date, link, icon, field, table, empty, fetchData, pagePreview } from './widget-utils';
 import { chartHost, mountChart } from './charts';
 
 const moduleLinks = {
@@ -131,10 +131,10 @@ async function lineChart(container, data, context, signal) {
 async function rankedList(container, data, context, type, detailed, signal, limit = detailed ? 6 : 5) {
     const items = (data.items || []).slice(0, limit);
     if (!items.length) { empty(container, context); return; }
-    if (detailed && type === 'top-pages') {
-        table(container, [text(context, 'page'), text(context, 'section'), text(context, 'count'), text(context, 'change')], items.map(item => [
-            link(item.title, item.url), item.section || '', number(item.value), change(item.value, item.previous) || '—'
-        ]));
+    if (type === 'top-pages') {
+        table(container, [text(context, 'page'), text(context, 'count'), text(context, 'change')], items.map(item => [
+            pagePreview({ title: item.title, fullPath: item.section, perexImage: item.perexImage }, item.url), number(item.value), change(item.value, item.previous) || '—'
+        ]), [1, 2]).classList.add('md-dashboard-widget__table--ranked', 'md-dashboard-widget__table--pages');
     } else if (type === 'referrers') {
         const host = chartHost(container, `${text(context, 'source')}: ${number(data.total)}`, true);
         host.classList.add('md-dashboard-widget__chart--referrers');
@@ -150,7 +150,7 @@ async function rankedList(container, data, context, type, detailed, signal, limi
             tooltip.set('labelText', '{title}: {value} ({share})');
             tooltip.label.setAll({ ignoreFormatting: true, ariaHidden: true });
         });
-    } else table(container, [text(context, type === 'search-terms' ? 'query' : type === 'referrers' ? 'source' : 'page'), text(context, 'count')], items.map(item => [link(item.title, item.url), number(item.value)]));
+    } else table(container, [text(context, type === 'search-terms' ? 'query' : type === 'referrers' ? 'source' : 'page'), text(context, 'count')], items.map(item => [link(item.title, item.url), number(item.value)]), [1]).classList.add('md-dashboard-widget__table--ranked');
 }
 
 /** Polls only an active newsletter visible in the current browser tab. */
@@ -181,8 +181,6 @@ async function renderDataSummary({ container, instance, options, domainOptions, 
         if (type === 'forms') container.append(node('span', 'small', domainOptions.formName || text(context, 'allForms')));
         period(container, data, context);
     }
-    const href = type === 'forms' && domainOptions.formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(domainOptions.formName)}` : moduleLinks[type];
-    if (!['traffic', 'forms', 'approvals', 'errors', 'referrers', 'publishing', 'newsletter'].includes(type)) footer(container, context, href);
     if (type === 'newsletter') return pollNewsletter(data, container, signal, refresh);
 }
 
@@ -266,11 +264,11 @@ export function registerDataWidgets() {
     });
     const definitions = [
         ['traffic', 'ti-chart-line', ['1x1', '3x3']], ['top-pages', 'ti-chart-bar', ['2x3', '3x3']],
-        ['search-terms', 'ti-search', ['2x3']], ['referrers', 'ti-route', ['2x2', '2x3', '3x3']], ['errors', 'ti-error-404', ['1x1', '3x3']]
+        ['search-terms', 'ti-search', ['2x3', '3x3']], ['referrers', 'ti-route', ['2x2', '2x3', '3x3']], ['errors', 'ti-error-404', ['1x1', '3x3']]
     ];
     definitions.forEach(([type, icon, sizes]) => registerWidget({
         type, titleKey: `admin.dashboard.${type}.js`, icon, sizes, defaultSize: type === 'referrers' ? '2x2' : sizes[sizes.length - 1], multiple: true,
-        ...(['traffic', 'errors', 'referrers'].includes(type) ? { headerLink: { href: moduleLinks[type] } } : {}),
+        headerLink: { href: moduleLinks[type] },
         defaultOptions: { days: 7, ...(type === 'traffic' ? { metric: 'sessions' } : {}) },
         isAvailable: context => window.WJ.hasPermission('cmp_stat') && context.config.statMode !== 'none',
         configure: args => statSettings(args, type === 'traffic'), renderCollapsed: renderDataSummary,
@@ -290,7 +288,6 @@ export function registerDataWidgets() {
                     if (data.from != null && data.to != null) caption.title = `${date(data.from, false)} – ${date(data.to, false)}`;
                     container.append(caption);
                 }
-                if (!signal.aborted && !['traffic', 'errors', 'referrers'].includes(type)) footer(container, context, moduleLinks[type]);
                 return cleanup;
             }
         }

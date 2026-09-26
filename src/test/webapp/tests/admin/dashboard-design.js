@@ -8,6 +8,9 @@ const settingsRoute = '**/admin/rest/dashboard/settings';
 const noticesRoute = '**/admin/rest/dashboard/notices';
 const sessionsRoute = '**/admin/rest/dashboard/data/sessions*';
 const recentPagesRoute = '**/admin/rest/dashboard/recent-pages';
+const searchTermsRoute = '**/admin/rest/dashboard/data/search-terms*';
+const topPagesRoute = '**/admin/rest/dashboard/data/top-pages*';
+const missingThumbnailRoute = '**/thumb/images/autotest-dashboard-missing.jpg?*';
 const editButton = '.md-dashboard__toolbar-actions > button[aria-pressed]';
 const newsToggle = '.md-dashboard-widget__news-toggle';
 
@@ -45,6 +48,12 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
         if (sources) scrollbar.setPosition(0, scrollbar.offset.y + sources.getBoundingClientRect().top - 64);
     });
     I.saveScreenshot('dashboard-implementation-refined-row.png', false);
+    I.executeScript(() => {
+        const scrollbar = window.scrollbarMain;
+        const queries = document.querySelector('[data-widget-type="search-terms"]');
+        if (queries) scrollbar.setPosition(0, scrollbar.offset.y + queries.getBoundingClientRect().top - 64);
+    });
+    I.saveScreenshot('dashboard-implementation-ranked-row.png', false);
     I.executeScript(() => {
         const scrollbar = window.scrollbarMain;
         scrollbar.setMomentum(0, 0);
@@ -259,6 +268,95 @@ Scenario('Compact metrics and scrollable recent pages align above three equal pr
     await I.stopMockingRoute(recentPagesRoute);
 });
 
+Scenario('Search queries and top pages share balanced cards and readable numeric columns', async ({ I }) => {
+    const previousItems = previewSettings.items;
+    previewSettings.items = ['search-terms', 'top-pages'].map(type => ({ id: `ranked-autotest-${type}`, type, size: '3x3', collapsed: false, options: { days: 7 } }));
+    const from = Date.UTC(2026, 8, 19), to = Date.UTC(2026, 8, 25);
+    await I.mockRoute(searchTermsRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ from, to, items: [
+        { title: 'Autotest vyhľadávací výraz s veľmi dlhým opisným názvom', value: 128, url: '/apps/stat/admin/search-engines/' },
+        { title: 'AutotestDlhýVýrazBezMedzierOverujúciZalomenieTextu', value: 75, url: '/apps/stat/admin/search-engines/' },
+        { title: 'Autotest kontakt', value: 6, url: '/apps/stat/admin/search-engines/' }
+    ] }) }));
+    await I.mockRoute(topPagesRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ from, to, items: [
+        { title: 'Autotest veľmi dlhý názov najnavštevovanejšej stránky', section: '/Autotest sekcia/Podrobné informácie', perexImage: '/images/zo-sveta-financii/konsolidacia-napriec-trhmi/oil-pump.jpg', value: 128, previous: 100, url: '/admin/v9/webpages/web-pages-list/?docid=1' },
+        { title: 'AutotestDlhýNázovStránkyBezMedzier', section: '/AutotestSekciaBezMedzier', perexImage: '', value: 75, previous: 90, url: '/admin/v9/webpages/web-pages-list/?docid=2' },
+        { title: 'Autotest kontakt', section: '/Autotest', perexImage: '/images/autotest-dashboard-missing.jpg', value: 6, previous: 6, url: '/admin/v9/webpages/web-pages-list/?docid=3' }
+    ] }) }));
+    await I.mockRoute(missingThumbnailRoute, route => route.fulfill({ status: 404, contentType: 'text/plain', body: 'Missing autotest thumbnail' }));
+    I.resizeWindow(1337, 1052);
+    I.refreshPage();
+    await waitForOverview(I);
+    const targets = { 'search-terms': '/apps/stat/admin/search-engines/', 'top-pages': '/apps/stat/admin/top/' };
+    for (const type of Object.keys(targets)) {
+        I.assertEqual(await I.grabAttributeFrom(`[data-widget-type="${type}"] .md-dashboard__title-link`, 'href'), targets[type]);
+        I.dontSeeElement(`[data-widget-type="${type}"] .md-dashboard-widget__more`);
+        I.seeNumberOfElements(`[data-widget-type="${type}"] tbody tr`, 3);
+    }
+    const pagesTable = '[data-widget-type="top-pages"] .md-dashboard-widget__table--pages';
+    I.seeNumberOfElements(`${pagesTable} thead th`, 3);
+    I.seeNumberOfElements(`${pagesTable} tbody .md-dashboard-widget__page-preview`, 3);
+    I.seeNumberOfElements(`${pagesTable} tbody td:first-child .md-dashboard-widget__page-title`, 3);
+    I.seeNumberOfElements(`${pagesTable} tbody td:first-child .md-dashboard-widget__page-section`, 3);
+    I.executeScript(() => {
+        const scrollbar = window.scrollbarMain;
+        scrollbar.setMomentum(0, 0);
+        scrollbar.update();
+        scrollbar.setPosition(0, scrollbar.offset.y + document.querySelector('[data-widget-type="top-pages"]').getBoundingClientRect().top - 64);
+    });
+    I.waitForFunction(selector => {
+        const image = document.querySelector(`${selector} tbody tr:first-child img`);
+        return image?.complete && image.naturalWidth > 0 && !document.querySelector(`${selector} tbody tr:last-child img`);
+    }, [pagesTable], 10);
+    I.assertEqual(await I.grabAttributeFrom(`${pagesTable} tbody tr:first-child img`, 'src'), '/thumb/images/zo-sveta-financii/konsolidacia-napriec-trhmi/oil-pump.jpg?w=76&h=76&ip=6');
+    I.assertEqual(await I.grabAttributeFrom(`${pagesTable} tbody tr:first-child img`, 'alt'), '');
+    I.seeElement(`${pagesTable} tbody tr:nth-child(2) .ti-file-text:not([hidden])`);
+    I.seeElement(`${pagesTable} tbody tr:nth-child(3) .ti-file-text:not([hidden])`);
+    I.assertTrue(await I.executeScript(selector => [...document.querySelectorAll(`${selector} .md-dashboard-widget__page-image`)].every(image => {
+        const rect = image.getBoundingClientRect();
+        return Math.abs(rect.width - 38) <= 1 && Math.abs(rect.height - 38) <= 1;
+    }), pagesTable), 'Real images and file-icon fallbacks must occupy the same compact thumbnail area.');
+    I.saveScreenshot('dashboard-design-page-previews.png', false);
+    for (const width of [1337, 1000, 390]) {
+        I.resizeWindow(width, 1052);
+        if (width < 768 && await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) I.clickCss('.js-sidebar-toggler');
+        if (width < 768) I.waitForFunction(() => document.querySelector('.ly-sidebar').getBoundingClientRect().right <= 1, 10);
+        const cards = await I.executeScript(() => ['search-terms', 'top-pages'].map(type => {
+            const card = document.querySelector(`[data-widget-type="${type}"]`);
+            const table = card.querySelector('.md-dashboard-widget__table--ranked');
+            const rect = card.getBoundingClientRect();
+            const titleWidth = table.querySelector('tbody td:first-child').getBoundingClientRect().width;
+            return { type, width: rect.width, top: rect.top, background: getComputedStyle(card).backgroundColor,
+                fits: card.scrollWidth <= card.clientWidth + 1 && table.scrollWidth <= table.clientWidth + 1
+                    && [...table.querySelectorAll('th, td')].every(cell => cell.scrollWidth <= cell.clientWidth + 1),
+                numbers: [...table.querySelectorAll('.md-dashboard-widget__table-number')].map(cell => ({
+                    tag: cell.tagName, rightAligned: getComputedStyle(cell).textAlign === 'right', verticallyCentered: getComputedStyle(cell).verticalAlign === 'middle',
+                    noWrap: getComputedStyle(cell).whiteSpace === 'nowrap', narrower: cell.getBoundingClientRect().width < titleWidth
+                })) };
+        }));
+        I.assertTrue(Math.abs(cards[0].width - cards[1].width) <= 1, `Both ranked cards must have equal widths at ${width}px.`);
+        if (width === 1337) I.assertTrue(Math.abs(cards[0].top - cards[1].top) <= 1, 'The ranked cards must share a desktop row.');
+        I.assertNotEqual(cards[0].background, cards[1].background, 'Search queries must retain their subtle blue surface.');
+        for (const card of cards) {
+            I.assertTrue(card.fits, `${card.type} must wrap long titles and sections without horizontal overflow at ${width}px.`);
+            I.assertEqual(card.numbers.length, card.type === 'top-pages' ? 8 : 4, 'Numeric styling must cover the header and every data cell.');
+            I.assertTrue(card.numbers.every(cell => cell.rightAligned && cell.noWrap && cell.narrower), `${card.type} numeric columns must stay compact, right aligned and unwrapped at ${width}px.`);
+            if (card.type === 'top-pages') I.assertTrue(card.numbers.filter(cell => cell.tag === 'TD').every(cell => cell.verticallyCentered), 'Page counts and changes must remain vertically centered beside the thumbnail preview.');
+        }
+    }
+    previewSettings.items.find(item => item.type === 'top-pages').size = '2x3';
+    I.resizeWindow(1337, 1052);
+    I.refreshPage();
+    await waitForOverview(I);
+    I.seeNumberOfElements(`${pagesTable} thead th`, 3);
+    I.seeNumberOfElements(`${pagesTable} tbody .md-dashboard-widget__page-preview`, 3);
+    I.seeNumberOfElements(`${pagesTable} tbody .md-dashboard-widget__table-number`, 6);
+    previewSettings.items = previousItems;
+    await I.stopMockingRoute(searchTermsRoute);
+    await I.stopMockingRoute(topPagesRoute);
+    await I.stopMockingRoute(missingThumbnailRoute);
+    I.resizeWindow(1337, 1052);
+});
+
 Scenario('Session scrolling stays inside its list and compact controls expose accessible tooltips', async ({ I }) => {
     I.resizeWindow(1337, 1052);
     await I.mockRoute(sessionsRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ currentSessions: {
@@ -316,6 +414,9 @@ Scenario('Remove design fixtures and verify the account preferences were never c
     await I.stopMockingRoute(noticesRoute);
     await I.stopMockingRoute(sessionsRoute);
     await I.stopMockingRoute(recentPagesRoute);
+    await I.stopMockingRoute(searchTermsRoute);
+    await I.stopMockingRoute(topPagesRoute);
+    await I.stopMockingRoute(missingThumbnailRoute);
     I.wjSetDefaultWindowSize();
     I.refreshPage();
     await waitForOverview(I);

@@ -158,3 +158,25 @@ Prenosné poznámky a aktuálny screenshot: `/private/tmp/webjet-dashboard-58806
 Overenie: **71 JavaScript helper testov, 31 Java testov, 6 dizajnových E2E scenárov, 6 scenárov katalógu a 4 scenáre dátových projekcií**, všetky úspešné. Nové kontroly merajú spoločné hrany kariet, rovnaké rozmery spodného riadka, šesť zachovaných stránok, natívne rolovanie kolieskom a PageDown bez posunu okolitej stránky. Katalóg overuje prístupnosť a uvoľnenie grafov pri obnove, minimalizácii, zmene veľkosti a odstránení. Prešla development zostava a `git diff --check`; zmeny zostali bez commitu. Samostatný validátor formátu skillu sa nespustil, pretože lokálnemu Pythonu chýba PyYAML.
 
 Prenosné poznámky a screenshoty s reálnymi dátami: `/private/tmp/webjet-dashboard-58806/refined-row/`.
+
+## Zladenie tabuliek hľadaných výrazov a najnavštevovanejších stránok
+
+- Oba widgety používajú predvolenú veľkosť `3×3`; aktuálny otvorený profil má hľadané výrazy rozšírené cez nastavenia widgetu. Starší variant `2×3` zostáva podporovaný.
+- Hľadané výrazy majú jemné modré pozadie odvodené od primárnej farby cez SASS token a CSS premennú. Najnavštevovanejšie stránky si zachovávajú neutrálne pozadie.
+- Odkazy na kompletné štatistiky sú v nadpisoch so šípkou. Spodné „Zobraziť všetko“ je odstránené aj z minimalizovaného zobrazenia.
+- Číselné hlavičky aj hodnoty sú zarovnané vpravo, používajú tabuľkové číslice a úzke stĺpce bez zalamovania. Automatické rozdelenie šírky ponecháva priestor celým názvom a sekciám; text sa neskracuje.
+- Overenie: 72 JavaScript helper testov, 11 Java testov nastavení a 7 dizajnových E2E scenárov. Nový scenár kontroluje šírky 1337/1000/390 px, zarovnanie čísel, kompaktné stĺpce, dlhé texty, nadpisové odkazy a zachovanie preferencií. Development zostava a kontrola diffu prešli. Zmeny bez commitu.
+
+Aktuálny screenshot a poznámky: `/private/tmp/webjet-dashboard-58806/ranked-tables/`.
+
+## Náhľady najnavštevovanejších stránok
+
+- Stĺpce Stránka a Sekcia sú zlúčené: náhľad 38 × 38 px, názov stránky a pod ním menšia cesta k nadradenému priečinku. Zobrazenie aj riadkovanie zdieľa komponent s kartou Pokračujte v práci. Celá cesta zostáva dostupná v titulku odkazu; dlhý text sa zalomí.
+- Počet a Zmena zostávajú samostatnými úzkymi stĺpcami, zarovnanými vpravo a vertikálne na stred riadka. Rovnaké zobrazenie podporujú veľkosti `3×3` aj `2×3`.
+- Odkazy stránok naďalej otvárajú detail štatistiky so zvoleným obdobím. Pokračujte v práci naďalej otvára editor stránky.
+- Dátová služba dopĺňa aktuálny `perexImage` jedným spoločným dotazom pre najviac šesť oprávnených stránok. Používa existujúce spojenie a kontroly aktuálnej domény aj oprávnení; obrázky sa nenačítavajú samostatným dotazom pre každý riadok.
+- Náhľady používajú `/thumb` s `w=76&h=76&ip=6`. Chýbajúci, nepovolený alebo nefunkčný obrázok nahradí dekoratívna ikona stránky. Aktuálne najnavštevovanejšie stránky v lokálnych dátach nemajú perex obrázky; obrázkové varianty sú overené samostatnými testovacími dátami bez úprav stránok používateľa.
+
+Overenie: **73 JavaScript helper testov, 18 Java testov dátovej služby, 7 dizajnových E2E scenárov a 4 scenáre dátových projekcií**, všetky úspešné. Kontroly pokrývajú obe veľkosti kariet, šírky 1337/1000/390 px, načítanie náhľadu, prázdny aj nefunkčný obrázok, zarovnanie hodnôt, zachovanie odkazov a pôvodných preferencií. Development zostava a `git diff --check` prešli. Manuálna kontrola potvrdila rovnaké riadkovanie a približne 64 px vysoký bežný riadok v oboch zoznamoch.
+
+Finálne poznámky a screenshoty skutočných aj testovacích dát: `/private/tmp/webjet-dashboard-58806/top-pages-previews/`. Lokálny server používa aktualizovanú dátovú službu; zmeny zostávajú bez commitu.

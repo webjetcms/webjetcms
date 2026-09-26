@@ -197,13 +197,65 @@ test('Default content previews complete the traffic row and use an even three-ca
     const { scope, context } = fixture(t);
     const defaults = JSON.parse(JSON.stringify(scope.getDashboardDefaults(context)));
     const grid = defaults.filter(item => !['search', 'sessions', 'news', 'shortcut'].includes(item.type));
-    assert.deepEqual(grid.slice(0, 8), [
+    assert.deepEqual(grid.slice(0, 10), [
         { type: 'traffic', size: '3x3' }, { type: 'forms', size: '1x1' },
         { type: 'approvals', size: '1x1' }, { type: 'errors', size: '1x1' },
         { type: 'recent-pages', size: '3x2' }, { type: 'referrers', size: '2x2' },
-        { type: 'publishing', size: '2x2' }, { type: 'newsletter', size: '2x2' }
+        { type: 'publishing', size: '2x2' }, { type: 'newsletter', size: '2x2' },
+        { type: 'search-terms', size: '3x3' }, { type: 'top-pages', size: '3x3' }
     ]);
     for (const item of grid) assert.ok(scope.getWidget(item.type).sizes.includes(item.size), item.type);
+});
+
+test('Ranked previews keep numeric columns marked and navigate through their headers in both sizes', async t => {
+    const { scope, context, container } = fixture(t, { data: { total: 12, items: [
+        { title: '<b>Long title</b>', section: '/Section/subsection', value: 12, previous: 24, url: '/apps/stat/admin/' }
+    ] } });
+    for (const type of ['search-terms', 'top-pages']) {
+        const widget = scope.getWidget(type);
+        assert.equal(widget.defaultSize, '3x3');
+        assert.equal(widget.headerLink.href, type === 'top-pages' ? '/apps/stat/admin/top/' : '/apps/stat/admin/search-engines/');
+        for (const size of ['2x3', '3x3']) {
+            container.replaceChildren();
+            const args = { container, context, instance: { type, size }, options: {}, domainOptions: {}, signal: new AbortController().signal };
+            await widget.render(args);
+            const numeric = type === 'top-pages' ? 2 : 1;
+            assert.equal(container.querySelectorAll('th.md-dashboard-widget__table-number').length, numeric);
+            assert.equal(container.querySelectorAll('td.md-dashboard-widget__table-number').length, numeric);
+            assert.equal(container.querySelector(type === 'top-pages' ? '.md-dashboard-widget__page-title' : 'td').textContent, '<b>Long title</b>');
+            assert.equal(container.querySelector('b'), null);
+            assert.equal(container.querySelector('.md-dashboard-widget__more'), null);
+            container.replaceChildren();
+            await widget.renderCollapsed(args);
+            assert.equal(container.querySelector('.md-dashboard-widget__more'), null);
+        }
+    }
+});
+
+test('Top pages combine safe thumbnails and parent paths while retaining statistics destinations and metrics', async t => {
+    const { scope, context, container, window } = fixture(t, { data: { total: 1248, items: [
+        { title: 'Page', section: '/News/Page', perexImage: '/images/news/photo.jpg', value: 1248, previous: 624, url: '/apps/stat/admin/top-details/?docId=12&dateRange=week' },
+        { title: 'No image', section: '/News/No image', perexImage: '', value: 5, previous: 0, url: '/apps/stat/admin/top-details/?docId=13' },
+        { title: 'Unsafe image', perexImage: '//external.test/photo.jpg', value: 2, previous: 4, url: '/apps/stat/admin/top/' }
+    ] } });
+    for (const size of ['2x3', '3x3']) {
+        container.replaceChildren();
+        await scope.getWidget('top-pages').render({ container, context, instance: { type: 'top-pages', size }, options: {}, signal: new AbortController().signal });
+        assert.equal(container.querySelectorAll('thead th').length, 3);
+        const rows = container.querySelectorAll('tbody tr');
+        assert.equal(rows[0].querySelector('.md-dashboard-widget__page-preview').getAttribute('href'), '/apps/stat/admin/top-details/?docId=12&dateRange=week');
+        assert.equal(rows[0].querySelector('.md-dashboard-widget__page-section').textContent, '/News');
+        assert.equal(rows[0].querySelectorAll('td')[2].textContent, '+100 %');
+        assert.equal(rows[1].querySelectorAll('td')[2].textContent, '—');
+        assert.equal(container.querySelectorAll('img').length, 1);
+        const image = rows[0].querySelector('img');
+        assert.equal(image.getAttribute('src'), '/thumb/images/news/photo.jpg?w=76&h=76&ip=6');
+        assert.equal(image.alt, '');
+        assert.equal(rows[1].querySelector('.ti-file-text').hidden, false);
+        image.dispatchEvent(new window.Event('error'));
+        assert.equal(rows[0].querySelector('img'), null);
+        assert.equal(rows[0].querySelector('.ti-file-text').hidden, false);
+    }
 });
 
 function chartRuntime(window, { load = async () => {}, create } = {}) {

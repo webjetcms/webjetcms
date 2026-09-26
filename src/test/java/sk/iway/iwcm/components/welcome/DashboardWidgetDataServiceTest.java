@@ -10,6 +10,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.sql.Connection;
@@ -228,6 +229,76 @@ class DashboardWidgetDataServiceTest {
         verify(statement).setQueryTimeout(15);
     }
 
+    /** Current thumbnails are fetched together without exposing metadata for moved or denied pages. */
+    @Test
+    void topPagesReadSanitizedCurrentImagesForTheAuthorizedPreviewOnly() throws Exception {
+        Connection connection = mock(Connection.class);
+        PreparedStatement statement = mock(PreparedStatement.class);
+        ResultSet rows = mock(ResultSet.class);
+        when(connection.prepareStatement(anyString())).thenReturn(statement);
+        when(statement.executeQuery()).thenReturn(rows);
+        when(rows.next()).thenReturn(true, true, true, false);
+        when(rows.getInt("doc_id")).thenReturn(11, 12, 16);
+        when(rows.getString("perex_image")).thenReturn("/images/news/cover.jpg", "https://external.example/cover.jpg", "");
+        DocDB docs = mock(DocDB.class);
+        Map<Integer, DocDetails> currentPages = Map.of(11, currentPage(10, "Allowed folder"),
+            12, currentPage(20, "Allowed page"), 13, currentPage(30, "Denied page"),
+            14, currentPage(40, "Moved to another domain"), 16, currentPage(10, "Without image"));
+        currentPages.forEach((id, page) -> when(docs.getBasicDocDetails(id, false)).thenReturn(page));
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (int id = 11; id <= 16; id++) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("id", String.valueOf(id));
+            item.put("value", 10L);
+            items.add(item);
+        }
+
+        try (var docStatic = mockStatic(DocDB.class)) {
+            docStatic.when(DocDB::getInstance).thenReturn(docs);
+            service.topPageDetails(connection, items, new DashboardWidgetDataService.Scope(List.of(10), List.of(12, 14), List.of(10, 20, 30)));
+        }
+
+        assertEquals("Allowed folder", items.get(0).get("title"));
+        assertEquals("/Allowed folder", items.get(0).get("section"));
+        assertEquals("/images/news/cover.jpg", items.get(0).get("perexImage"));
+        assertEquals("Allowed page", items.get(1).get("title"));
+        assertEquals("", items.get(1).get("perexImage"));
+        assertEquals("", items.get(5).get("perexImage"));
+        for (int index : List.of(2, 3, 4)) {
+            assertEquals(String.valueOf(index + 11), items.get(index).get("title"));
+            assertFalse(items.get(index).containsKey("section"));
+            assertFalse(items.get(index).containsKey("perexImage"));
+        }
+        assertTrue(items.stream().allMatch(item -> Long.valueOf(10).equals(item.get("value"))));
+        ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
+        verify(connection).prepareStatement(sql.capture());
+        assertTrue(sql.getValue().startsWith("SELECT d.doc_id, d.perex_image FROM documents d WHERE d.doc_id IN (?,?,?)"));
+        assertTrue(sql.getValue().contains("d.group_id IN (10,20,30) AND (d.group_id IN (10) OR d.doc_id IN (12,14))"));
+        verify(statement).setInt(1, 11);
+        verify(statement).setInt(2, 12);
+        verify(statement).setInt(3, 16);
+        verify(statement).setMaxRows(DashboardWidgetDataService.PREVIEW_SIZE);
+        verify(statement).setQueryTimeout(15);
+    }
+
+    /** An empty or entirely inaccessible ranking does not issue an image query. */
+    @Test
+    void topPagesSkipTheProjectionWithoutAnAuthorizedCurrentPage() throws Exception {
+        Connection connection = mock(Connection.class);
+        DocDB docs = mock(DocDB.class);
+        Map<String, Object> deleted = new LinkedHashMap<>();
+        deleted.put("id", "42");
+        try (var docStatic = mockStatic(DocDB.class)) {
+            docStatic.when(DocDB::getInstance).thenReturn(docs);
+            var scope = new DashboardWidgetDataService.Scope(List.of(10), List.of());
+            service.topPageDetails(connection, List.of(), scope);
+            service.topPageDetails(connection, List.of(deleted), scope);
+        }
+        assertEquals("42", deleted.get("title"));
+        assertFalse(deleted.containsKey("perexImage"));
+        verifyNoInteractions(connection);
+    }
+
     @Test
     void failedNewsletterRecipientsAreNotReportedAsSuccessfullySent() throws Exception {
         Connection connection = mock(Connection.class);
@@ -370,6 +441,14 @@ class DashboardWidgetDataServiceTest {
         when(page.getTitle()).thenReturn("Scheduled page " + id);
         when(page.getPublicable()).thenReturn(true);
         when(page.getPublishStart()).thenReturn(date);
+        return page;
+    }
+
+    private static DocDetails currentPage(int groupId, String title) {
+        DocDetails page = mock(DocDetails.class);
+        when(page.getGroupId()).thenReturn(groupId);
+        when(page.getTitle()).thenReturn(title);
+        when(page.getFullPath()).thenReturn("/" + title);
         return page;
     }
 }

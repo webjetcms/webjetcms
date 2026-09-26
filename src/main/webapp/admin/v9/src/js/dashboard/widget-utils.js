@@ -8,6 +8,38 @@ export function node(tag, className = "", text) {
 
 export const text = (context, key, ...params) => context.translate(`admin.dashboard.${key}.js`, ...params);
 
+/** Presents the authorized page thumbnail with a decorative file icon fallback. */
+function pageThumbnail(page) {
+    const thumbnail = node('span', 'md-dashboard-widget__page-image');
+    const fallback = icon('ti-file-text');
+    thumbnail.append(fallback);
+    const source = typeof page.perexImage === 'string' && page.perexImage.startsWith('/') && !page.perexImage.startsWith('//') ? localUrl(page.perexImage) : null;
+    if (source) {
+        const image = node('img');
+        image.alt = '';
+        image.loading = 'lazy';
+        image.width = 38;
+        image.height = 38;
+        image.addEventListener('error', () => { image.remove(); fallback.hidden = false; }, { once: true });
+        fallback.hidden = true;
+        image.src = `/thumb${source}?w=76&h=76&ip=6`;
+        thumbnail.append(image);
+    }
+    return thumbnail;
+}
+
+/** Combines the page image, title and parent path without duplicating its title in the path. */
+export function pagePreview(page, href) {
+    const target = link('', href, 'md-dashboard-widget__page-preview');
+    const content = node('span', 'md-dashboard-widget__page-content');
+    const section = page.fullPath?.endsWith(`/${page.title}`) ? page.fullPath.slice(0, -(page.title.length + 1)) || '/' : page.fullPath;
+    content.append(node('span', 'md-dashboard-widget__page-title', page.title));
+    if (section) content.append(node('span', 'md-dashboard-widget__page-section', section));
+    target.title = page.fullPath || page.title;
+    target.append(pageThumbnail(page), content);
+    return target;
+}
+
 /** Lets a native list consume scroll gestures before the administration's smooth scrollbar. */
 export function containNativeScroll(list, signal) {
     const overflows = () => list.scrollHeight > list.clientHeight;
@@ -79,10 +111,6 @@ export function empty(container, context, key = "empty") {
     container.append(node("p", "text-muted mb-2", text(context, key)));
 }
 
-export function footer(container, context, href, key = "all") {
-    container.append(link(text(context, key), href, "md-dashboard-widget__more"));
-}
-
 /** Adds a labeled setting without sharing input identifiers between instances. */
 export function field(container, label, values, value, inputType = "select") {
     const wrapper = node("label", "d-block mb-3");
@@ -105,12 +133,12 @@ export function field(container, label, values, value, inputType = "select") {
 }
 
 /** Builds an accessible compact preview table with no nested scrolling. */
-export function table(container, headers, rows) {
+export function table(container, headers, rows, numericColumns = []) {
     const result = node("table", "table table-sm md-dashboard-widget__table");
     const head = node("thead");
     const heading = node("tr");
-    headers.forEach(label => {
-        const th = node("th", "", label);
+    headers.forEach((label, index) => {
+        const th = node("th", numericColumns.includes(index) ? "md-dashboard-widget__table-number" : "", label);
         th.scope = "col";
         heading.append(th);
     });
@@ -118,8 +146,8 @@ export function table(container, headers, rows) {
     const body = node("tbody");
     rows.forEach(values => {
         const row = node("tr");
-        values.forEach(value => {
-            const cell = node("td");
+        values.forEach((value, index) => {
+            const cell = node("td", numericColumns.includes(index) ? "md-dashboard-widget__table-number" : "");
             cell.append(value instanceof Node ? value : document.createTextNode(value == null ? "" : String(value)));
             row.append(cell);
         });
