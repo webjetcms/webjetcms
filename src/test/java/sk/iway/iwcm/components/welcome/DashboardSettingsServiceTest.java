@@ -156,6 +156,28 @@ class DashboardSettingsServiceTest {
         assertThrows(IllegalStateException.class, () -> service.reset(7));
     }
 
+    /** Rejects executable and ambiguous destinations before any settings can be persisted. */
+    @Test
+    void validatesCustomShortcutDestinationsAndRetainsLegacyMenuOptions() {
+        for (String href : java.util.List.of("https://www.webjetcms.sk/docs?a=1#help", "http://intranet.example/", "/admin/v9/?x=1")) {
+            DashboardSettingsDto settings = settings();
+            Item shortcut = item("custom", "shortcut", "1x1");
+            shortcut.setOptions(Map.of("source", "url", "href", href, "title", "Documentation"));
+            settings.getItems().add(shortcut);
+            assertDoesNotThrow(() -> service.validateAndSerialize(settings, "42"));
+        }
+        for (String href : java.util.List.of("javascript:alert(1)", "data:text/html,test", "//evil.example/", "/\\evil.example/",
+                "https://user:password@example.com/", "https://example.com/\n", "https:example.com", "relative/path")) {
+            assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(
+                Map.of("source", "url", "href", href, "title", "Unsafe")), href);
+        }
+        assertDoesNotThrow(() -> DashboardSettingsService.validateShortcut(Map.of("href", "/apps/form/admin/")));
+        assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("source", "url", "href", "https://example.com", "title", " ")));
+        assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("source", "other")));
+        assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("href", 123)));
+        verifyNoInteractions(repository);
+    }
+
     static DashboardSettingsDto settings() {
         DashboardSettingsDto settings = new DashboardSettingsDto();
         settings.getItems().add(item("sessions-1", "sessions", "2x3"));

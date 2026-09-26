@@ -37,7 +37,7 @@ class DashboardRestControllerTest {
     @Test
     void ignoresCallerSuppliedOwnerAndDomainParameters() {
         DashboardSettingsService settings = mock(DashboardSettingsService.class);
-        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class));
+        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class), mock(DashboardNoticeService.class), mock(DashboardLegacyDataService.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter("userId", "99");
         request.setParameter("domainId", "999");
@@ -64,7 +64,7 @@ class DashboardRestControllerTest {
     @Test
     void unauthenticatedRequestsNeverAccessSettings() {
         DashboardSettingsService settings = mock(DashboardSettingsService.class);
-        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class));
+        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class), mock(DashboardNoticeService.class), mock(DashboardLegacyDataService.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
         try (MockedStatic<UsersDB> users = mockStatic(UsersDB.class)) {
             assertThrows(AccessDeniedException.class, () -> controller.getSettings(request));
@@ -78,7 +78,7 @@ class DashboardRestControllerTest {
     @Test
     void resetUsesAuthenticatedOwnerAndPreservesCacheOnFailure() {
         DashboardSettingsService settings = mock(DashboardSettingsService.class);
-        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class));
+        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class), mock(DashboardNoticeService.class), mock(DashboardLegacyDataService.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter("userId", "99");
         request.setParameter("domainId", "999");

@@ -224,6 +224,7 @@ test("Failed loading cannot overwrite a user's stored layout with defaults", asy
     await controller.start();
     assert.equal(host.querySelector(".md-dashboard__toolbar button").disabled, true);
     assert.equal(controller.settings.items.length, 0);
+    assert.equal(await controller.acknowledgeNews("2026.18"), false, "A release action must not overwrite unread preferences after a failed load");
     assert.equal(requests.some(request => request.method === "PUT"), false);
 });
 
@@ -254,24 +255,29 @@ test("A failed domain-context reload does not display the previous domain's widg
     assert.equal(host.querySelector(".md-dashboard__widget-content").textContent, "New domain");
 });
 
-test("Collapsing disposes active work and the session summary retains its management action", async t => {
-    let cleanup = 0;
-    let signal;
-    const { controller, host, window } = fixture(t, {
-        items: [item("sessions", "sessions", "2x3")],
+test("Sessions remain expanded in the permanent header while stored preferences stay intact", async t => {
+    let renders = 0;
+    const session = { ...item("sessions", "sessions", "2x3"), collapsed: true };
+    const { controller, host, requests, stored } = fixture(t, {
+        items: [session, item("ordinary")],
         definitions: [{
             type: "sessions", titleKey: "Sessions", mandatory: true, sizes: ["2x3"],
-            render: values => { signal = values.signal; return () => cleanup++; },
-            renderCollapsed: ({ container }) => { const link = window.document.createElement("a"); link.href = "/admin/v9/users/self/"; link.textContent = "Manage sessions"; container.append(link); }
+            render: ({ container, instance }) => { renders++; assert.equal(instance.collapsed, false); container.textContent = "Active session details"; },
+            renderCollapsed: () => assert.fail("Security details must not collapse")
         }]
     });
     await controller.start();
-    await tick();
-    await controller.updateInstance("sessions", { collapsed: true });
-    assert.equal(signal.aborted, true);
-    assert.equal(cleanup, 1);
-    assert.equal(host.querySelector(".md-dashboard__widget-body a").textContent, "Manage sessions");
-    assert.equal(host.querySelector(".md-dashboard__widget-body").hidden, false);
+    assert.match(host.querySelector(".md-dashboard__sessions").textContent, /Active session details/);
+    assert.equal(host.querySelector(".md-dashboard__layout [data-widget-type='sessions']"), null);
+    assert.equal(host.querySelector(".md-dashboard__sessions .md-dashboard__widget-controls"), null);
+    const count = requests.length;
+    assert.equal(await controller.updateInstance("sessions", { collapsed: true }), false);
+    assert.equal(await controller.remove("sessions"), false);
+    assert.equal(await controller.moveBefore("sessions", "ordinary"), false);
+    assert.equal(requests.length, count);
+    await controller.updateInstance("ordinary", { collapsed: true });
+    assert.equal(stored().items[0].collapsed, true, "The visual move must not silently rewrite old preferences");
+    assert.equal(renders, 1, "Unrelated edits must not reload security data");
 });
 
 test("Late asynchronous rendering is cleaned up after removal even if it ignores abort", async t => {
@@ -320,6 +326,7 @@ test("Multiple instances use different ids, singleton duplication is refused and
 test("Keyboard movement dialog offers a target and the end without coordinates", async t => {
     const { controller, host, window } = fixture(t, { items: [item("a"), item("b"), item("c")] });
     await controller.start();
+    controller.setEditing(true);
     const move = host.querySelector('[data-instance-id="a"] .md-dashboard__drag');
     move.focus();
     move.click();
@@ -384,27 +391,168 @@ test("Finishing the opening transition preserves focus in an already edited fiel
     assert.equal(input.value, "autotest title");
 });
 
-test("Acknowledged news disappears without losing its instance and can be revealed from the catalogue", async t => {
-    let cleanup = 0;
+test("Acknowledged news stays in the header and refreshes only its own content", async t => {
+    let newsRenders = 0;
+    let otherRenders = 0;
     const { controller, host, window, stored } = fixture(t, {
-        items: [item("news", "news")],
+        items: [item("news", "news"), item("ordinary", "counted")],
         definitions: [{
-            type: "news", titleKey: "News", isVisible: (instance, context) => context.settings.acknowledgedNewsVersion !== "2026.18",
-            reveal: (instance, context) => context.dashboard.acknowledgeNews(null),
-            render: ({ container }) => { container.textContent = "Release news"; return () => cleanup++; }
+            type: "news", titleKey: "News",
+            render: ({ container, context }) => { newsRenders++; container.textContent = context.settings.acknowledgedNewsVersion ? "Release summary" : "Release news"; }
+        }, { type: "counted", titleKey: "Counted", render: () => { otherRenders++; } }]
+    });
+    await controller.start();
+    const card = host.querySelector('[data-instance-id="news"]');
+    await controller.acknowledgeNews("2026.18");
+    assert.equal(host.querySelector('.md-dashboard__news [data-instance-id="news"]'), card);
+    assert.equal(stored().items[0].id, "news");
+    assert.match(card.textContent, /Release summary/);
+    assert.equal(newsRenders, 2);
+    assert.equal(otherRenders, 1);
+    controller.showCatalogue();
+    assert.equal(window.document.querySelector('.md-dashboard__catalogue-item[data-widget-type="news"]'), null);
+    await controller.acknowledgeNews(null);
+    assert.match(card.textContent, /Release news/);
+});
+
+test("Edit mode reveals arrangement controls without a settings mutation", async t => {
+    const { controller, host, requests } = fixture(t, { items: [item("ordinary")] });
+    await controller.start();
+    const controls = [...host.querySelectorAll('.md-dashboard__edit-control')];
+    assert.ok(controls.length >= 2);
+    assert.ok(controls.every(control => control.hidden));
+    controller.editButton.click();
+    assert.equal(controller.editButton.getAttribute('aria-pressed'), 'true');
+    assert.ok(controls.every(control => !control.hidden));
+    controller.editButton.click();
+    assert.ok(controls.every(control => control.hidden));
+    assert.equal(requests.length, 1);
+});
+
+test("Shortcuts configure before saving and render in the permanent shortcut strip", async t => {
+    const { controller, host, window, requests, stored } = fixture(t, {
+        definitions: [{ type: "shortcut", titleKey: "Shortcut", sizes: ["1x1"], multiple: true,
+            configure: ({ container }) => {
+                const input = window.document.createElement('input'); container.append(input);
+                return { read: () => ({ options: { href: '/admin/v9/users/', title: input.value } }) };
+            }, render: ({ container, options }) => { container.textContent = options.title; }
         }]
     });
     await controller.start();
+    await controller.showAddWidget('shortcut');
+    window.document.querySelector('.modal-header button').click();
+    assert.equal(requests.length, 1, 'Cancelling must not save an empty shortcut');
+    await controller.showAddWidget('shortcut');
+    window.document.querySelector('.md-dashboard__settings input').value = 'My users';
+    window.document.querySelector('.modal-footer button').click();
     await tick();
-    await controller.acknowledgeNews("2026.18");
-    assert.equal(host.querySelector('[data-instance-id="news"]'), null);
-    assert.equal(stored().items[0].id, "news", "Acknowledgement must preserve the user's selected widget");
-    assert.equal(cleanup, 1);
-    controller.showCatalogue();
-    const reveal = window.document.querySelector('.md-dashboard__catalogue-item[data-widget-type="news"] button');
-    assert.equal(reveal.textContent, "Show");
-    reveal.click();
+    assert.equal(stored().items.length, 1);
+    assert.equal(stored().items[0].options.title, 'My users');
+    assert.match(host.querySelector('.md-dashboard__shortcut-list').textContent, /My users/);
+    assert.equal(host.querySelector('.md-dashboard__layout [data-widget-type="shortcut"]'), null);
+});
+
+test("Security remains available when loading personal preferences fails", async t => {
+    const { controller, host } = fixture(t, { failLoad: true,
+        definitions: [{ type: 'sessions', titleKey: 'Sessions', mandatory: true, render: ({ container }) => { container.textContent = 'Current browser session'; } }]
+    });
+    await controller.start();
+    assert.match(host.querySelector('.md-dashboard__sessions').textContent, /Current browser session/);
+    assert.equal(controller.editButton.disabled, true);
+});
+
+/** Loads the overview component against the existing DOM without starting the application shell. */
+function overviewFixture(t) {
+    const environment = fixture(t);
+    const { context, window, controller } = environment;
+    Object.assign(context, { HTMLElement: window.HTMLElement, customElements: window.customElements, WJ: window.WJ });
+    const source = fs.readFileSync(path.join(moduleDirectory, '../web-components/webjet-overview-dashboard.js'), 'utf8')
+        .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
+    vm.runInContext(source, context, { filename: 'webjet-overview-dashboard.js' });
+    const overview = window.document.createElement('webjet-overview-dashboard');
+    overview.dashboardController = controller;
+    return { ...environment, overview };
+}
+
+test('System notices remain independent accordions and invoke their own authorized actions', async t => {
+    const { context, window, controller, overview } = overviewFixture(t);
+    const actions = [];
+    window.WJ.openPopupDialog = url => actions.push(['popup', url]);
+    window.WJ.showHelpWindow = url => actions.push(['help', url]);
+    const requests = [];
+    context.fetch = async (url, options) => {
+        requests.push({ url, options });
+        return { ok: true, json: async () => [
+            { id: 'two-factor', severity: 'warning', icon: 'ti-shield', title: 'Enable verification', bodyHtml: '<p>Protect your account.</p>', action: { type: 'popup', url: '/admin/2factorauth.jsp', label: 'Configure' } },
+            { id: 'ses', severity: 'warning', icon: 'ti-mail', title: 'Configure email', bodyHtml: '<p>Set up sending.</p>', action: { type: 'help', url: '/install/config/README', label: 'Read guide' } }
+        ] };
+    };
+    const customNotice = window.document.createElement('div');
+    customNotice.textContent = 'External application warning';
+    controller.notices.append(customNotice);
+    await overview._loadNotices();
+    assert.equal(customNotice.parentElement, controller.notices, 'Async system notices must preserve externally supplied notifications');
+    assert.equal(requests[0].url, '/admin/rest/dashboard/notices');
+    assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
+    const details = [...controller.notices.querySelectorAll('details')];
+    assert.equal(details.length, 2);
+    assert.deepEqual(details.map(notice => notice.querySelector('summary').textContent), ['Enable verification', 'Configure email']);
+    details[0].open = true;
+    assert.equal(details[1].open, false);
+    details[0].querySelector('button').click();
+    details[1].querySelector('button').click();
+    assert.deepEqual(actions, [['popup', '/admin/2factorauth.jsp'], ['help', '/install/config/README']]);
+    await controller.start();
+    assert.equal(controller.notices.querySelectorAll('details').length, 2, 'Rendering personal layout must preserve system warnings');
+});
+
+test('Failed notice checks stay visible and offer an independent retry', async t => {
+    const { context, controller, overview } = overviewFixture(t);
+    context.fetch = async () => ({ ok: false, status: 503 });
+    await overview._loadNotices();
+    assert.ok(controller.notices.querySelector('[role="alert"]'));
+    assert.equal(controller.notices.querySelector('.md-dashboard__notice-list').getAttribute('aria-busy'), 'false');
+    context.fetch = async () => ({ ok: true, json: async () => [] });
+    controller.notices.querySelector('button').click();
     await tick();
-    assert.ok(host.querySelector('[data-instance-id="news"]'));
-    assert.equal(stored().acknowledgedNewsVersion, null);
+    assert.equal(controller.notices.querySelector('.md-dashboard__notice-list').children.length, 0);
+});
+
+test('Release note persistence restores the replacement toggle without stealing focus from another control', async t => {
+    const { context, window, host } = fixture(t);
+    Object.assign(context, { DOMParser: window.DOMParser, text: (widgetContext, key) => key });
+    const source = fs.readFileSync(path.join(moduleDirectory, 'utility-widgets.js'), 'utf8')
+        .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
+    vm.runInContext(source, context, { filename: 'utility-widgets.js' });
+    context.registerUtilityWidgets();
+    const news = context.getWidget('news');
+    const region = window.document.createElement('section');
+    region.dataset.widgetType = 'news';
+    const otherControl = window.document.createElement('input');
+    host.append(region, otherControl);
+    let finishSave;
+    const widgetContext = {
+        labels: { changelog: '<p>WebJET CMS 2026.18</p><p>Release highlights</p>' },
+        config: { releaseVersion: '2026.18' }, settings: { acknowledgedNewsVersion: null },
+        dashboard: { acknowledgeNews: () => new Promise(resolve => { finishSave = resolve; }) }
+    };
+    const render = () => {
+        const container = window.document.createElement('div');
+        region.replaceChildren(container);
+        news.render({ container, context: widgetContext });
+        return region.querySelector('.md-dashboard-widget__news-toggle');
+    };
+    for (const moveFocusElsewhere of [false, true]) {
+        const toggle = render();
+        toggle.focus();
+        toggle.click();
+        assert.equal(toggle.disabled, true);
+        toggle.blur(); // Browsers blur a focused button when persistence disables it.
+        if (moveFocusElsewhere) otherControl.focus();
+        const replacement = render();
+        finishSave(true);
+        await tick();
+        assert.equal(window.document.activeElement, moveFocusElsewhere ? otherControl : replacement,
+            'Saving must restore lost toggle focus while respecting a deliberate focus change.');
+    }
 });

@@ -6,13 +6,10 @@ import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/wid
  * Configuration for the administration overview dashboard.
  *
  * @typedef {Object} WebjetOverviewDashboardOptions
- * @property {Object} [data={}] - Bootstrap data for statistics, pages, users, sessions, and audit entries.
- * @property {Object} [data.backData={}] - Aggregate dashboard statistics.
- * @property {Object[]} [data.admins=[]] - Logged-in administrators.
- * @property {Object[]} [data.recentPages=[]] - Pages recently edited by the current user.
- * @property {Object[]} [data.changedPages=[]] - Recently changed pages.
- * @property {Object[]} [data.adminLog=[]] - Recent audit entries.
- * @property {Object} [data.currentSessions={}] - Current-session ID and clustered user sessions.
+ * @property {Object} [data={}] - Lightweight bootstrap context; widgets load uncached projections independently.
+ * @property {Object[]} [data.dashboardMenu=[]] - Authorized administration navigation for shortcut selection.
+ * @property {string} [data.userName=""] - Current user's display name.
+ * @property {string} [data.currentDomain=""] - Active domain's display name.
  * @property {Object.<string, string>} [labels={}] - Localized labels used by dashboard sections and server monitoring.
  * @property {Object} [config={}] - Runtime dashboard configuration.
  * @property {string} [config.statMode] - Statistics mode; `"none"` hides statistics cards.
@@ -73,6 +70,8 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
 
     disconnectedCallback() {
         this.dashboardController?.destroy();
+        this._noticesRequest?.abort();
+        this._legacyRequest?.abort();
         this._feedbackListeners.forEach(([name, listener]) => window.removeEventListener(name, listener));
         this._feedbackListeners = [];
     }
@@ -102,23 +101,16 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         this.disconnectedCallback();
         this.replaceChildren();
         const overview = element("div", "overview");
-        const alerts = element("div", "toast-container md-dashboard");
-        alerts.id = "toast-container-overview";
         const widgets = element("div");
-        overview.append(alerts, widgets);
+        overview.append(widgets);
         if (this.config.dashboardLegacy !== false) {
             const legacy = element("details", "md-dashboard__legacy");
             legacy.append(element("summary", "", WJ.translate("admin.dashboard.legacy.js")));
-            const row = element("div", "row");
-            const main = element("div", "col-lg-9");
-            const side = element("div", "col-lg-3 pl-0-lg");
-            main.append(this._renderWebsites());
-            const monitoring = document.createElement("webjet-server-monitoring");
-            monitoring.configure({ complex: false, labels: this.labels });
-            main.appendChild(monitoring);
-            side.append(this._renderUsers(), this._renderBookmarks(), this._renderFeedback());
-            row.append(main, side);
-            legacy.append(row);
+            const content = element("div", "md-dashboard__legacy-content");
+            legacy.append(content);
+            legacy.addEventListener("toggle", () => {
+                if (legacy.open && !legacy.dataset.loaded) this._loadLegacy(legacy, content);
+            });
             overview.append(legacy);
         }
         this.appendChild(overview);
@@ -126,9 +118,101 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         const context = { data: this.data, labels: this.labels, config: this.config, overview: this, translate: key => WJ.translate(key) };
         context.config.dashboardDefaults ||= getDashboardDefaults(context);
         this.dashboardController = new DashboardController(widgets, context);
+        this._loadNotices();
         this.dashboardReady = this.dashboardController.start();
         this.dataset.ready = "true";
         this.dispatchEvent(new CustomEvent("webjet-component-ready", { bubbles: true }));
+    }
+
+    /** Loads system notices independently so uncached checks never delay the dashboard shell. */
+    async _loadNotices() {
+        this._noticesRequest?.abort();
+        const request = this._noticesRequest = new AbortController();
+        const host = this.dashboardController.notices;
+        let container = host.querySelector(".md-dashboard__notice-list");
+        if (!container) {
+            container = element("section", "md-dashboard__notice-list");
+            host.prepend(container);
+        }
+        container.setAttribute("aria-label", WJ.translate("admin.dashboard.notices.js"));
+        container.setAttribute("aria-busy", "true");
+        container.replaceChildren(element("p", "md-dashboard__loading", WJ.translate("admin.dashboard.loading.js")));
+        try {
+            const response = await fetch("/admin/rest/dashboard/notices", { signal: request.signal, credentials: "same-origin", headers: { Accept: "application/json", "X-CSRF-Token": window.csrfToken } });
+            if (!response.ok) throw new Error(`Dashboard notices: ${response.status}`);
+            const notices = await response.json();
+            if (request.signal.aborted) return;
+            container.replaceChildren();
+            for (const notice of notices) {
+                const details = element("details", "md-dashboard__notice");
+                details.dataset.noticeId = notice.id;
+                details.dataset.severity = notice.severity;
+                const summary = element("summary");
+                const icon = element("i", `ti ${/^ti-[a-z0-9-]+$/.test(notice.icon) ? notice.icon : "ti-info-circle"}`);
+                icon.setAttribute("aria-hidden", "true");
+                const chevron = element("i", "ti ti-chevron-down md-dashboard__notice-chevron");
+                chevron.setAttribute("aria-hidden", "true");
+                summary.append(icon, element("span", "md-dashboard__notice-title", notice.title), chevron);
+                const body = element("div", "md-dashboard__notice-body");
+                // This HTML is produced by the authorized server notice service, never by widget preferences.
+                body.innerHTML = notice.bodyHtml || "";
+                if (notice.action) {
+                    const action = element("button", "btn btn-sm btn-outline-secondary", notice.action.label);
+                    action.type = "button";
+                    action.addEventListener("click", () => {
+                        if (notice.action.type === "popup") WJ.openPopupDialog(notice.action.url);
+                        else if (notice.action.type === "help") WJ.showHelpWindow(notice.action.url);
+                        else if (notice.action.type === "link") window.open(notice.action.url, "_blank", "noopener");
+                    });
+                    body.append(action);
+                }
+                details.append(summary, body);
+                container.append(details);
+            }
+        } catch (error) {
+            if (request.signal.aborted) return;
+            const retry = element("button", "btn btn-sm btn-outline-secondary", WJ.translate("admin.dashboard.retry.js"));
+            retry.type = "button";
+            retry.addEventListener("click", () => this._loadNotices());
+            const message = element("p", "text-danger mb-0", WJ.translate("admin.dashboard.noticesError.js"));
+            message.setAttribute("role", "alert");
+            container.replaceChildren(message, retry);
+        } finally {
+            if (!request.signal.aborted) container.setAttribute("aria-busy", "false");
+        }
+    }
+
+    /** Requests legacy projections only when the user first opens the additional overview. */
+    async _loadLegacy(legacy, content) {
+        if (this._legacyRequest && !this._legacyRequest.signal.aborted) return;
+        const request = this._legacyRequest = new AbortController();
+        content.replaceChildren(element("p", "md-dashboard__loading", WJ.translate("admin.dashboard.loading.js")));
+        try {
+            const response = await fetch("/admin/rest/dashboard/legacy-data", { signal: request.signal, credentials: "same-origin", headers: { Accept: "application/json", "X-CSRF-Token": window.csrfToken } });
+            if (!response.ok) throw new Error(`Dashboard legacy data: ${response.status}`);
+            const data = await response.json();
+            if (request.signal.aborted) return;
+            Object.assign(this.data, data);
+            const row = element("div", "row");
+            const main = element("div", "col-lg-9");
+            const side = element("div", "col-lg-3 pl-0-lg");
+            main.append(this._renderWebsites());
+            const monitoring = document.createElement("webjet-server-monitoring");
+            monitoring.configure({ complex: false, labels: this.labels });
+            main.append(monitoring);
+            side.append(this._renderUsers(), this._renderBookmarks(), this._renderFeedback());
+            row.append(main, side);
+            content.replaceChildren(row);
+            legacy.dataset.loaded = "true";
+        } catch (error) {
+            if (request.signal.aborted) return;
+            const retry = element("button", "btn btn-sm btn-outline-secondary", WJ.translate("admin.dashboard.retry.js"));
+            retry.type = "button";
+            retry.addEventListener("click", () => this._loadLegacy(legacy, content));
+            content.replaceChildren(element("p", "text-danger", WJ.translate("admin.dashboard.widgetError.js")), retry);
+        } finally {
+            if (!request.signal.aborted) this._legacyRequest = null;
+        }
     }
 
     _renderWebsites() {

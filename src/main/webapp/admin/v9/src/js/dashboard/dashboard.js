@@ -42,6 +42,7 @@ export class DashboardController {
         this._dialogs = new Set();
         this._request = null;
         this._contextVersion = 0;
+        this.editing = false;
         this._build();
     }
 
@@ -53,11 +54,27 @@ export class DashboardController {
 
     _build() {
         this.host.classList.add("md-dashboard");
+        this.hero = node("div", "md-dashboard__hero");
+        const welcome = node("div", "md-dashboard__welcome");
+        welcome.append(node("p", "md-dashboard__eyebrow", this.context.data?.currentDomain || "WebJET CMS"));
+        welcome.append(node("h1", "md-dashboard__greeting", `${this._t("welcomeBack", "Welcome back,")} ${this.context.data?.userName || ""}`.trim()));
+        this.news = node("div", "md-dashboard__news");
+        welcome.append(this.news);
+        this.sessions = node("div", "md-dashboard__sessions");
+        this.hero.append(welcome, this.sessions);
+        this.notices = node("div", "md-dashboard__notices");
+        this.notices.id = "toast-container-overview";
+        this.search = node("div", "md-dashboard__search");
         this.toolbar = node("div", "md-dashboard__toolbar");
         this.toolbar.append(node("h2", "md-dashboard__title", this._t("title", "My overview")));
-        this.addButton = button(this._t("add", "Add widget"), () => this.showCatalogue(), "btn btn-sm btn-primary md-dashboard__control");
+        const actions = node("div", "md-dashboard__toolbar-actions");
+        this.editButton = button(this._t("editOverview", "Edit overview"), () => this.setEditing(!this.editing), "btn btn-sm btn-outline-secondary md-dashboard__control");
+        this.editButton.setAttribute("aria-pressed", "false");
+        this.addButton = button(this._t("add", "Add widget"), () => this.showCatalogue(), "btn btn-sm btn-primary md-dashboard__control md-dashboard__edit-control");
         this.addButton.prepend(icon("ti-plus"));
-        this.toolbar.append(this.addButton);
+        this.addButton.hidden = true;
+        actions.append(this.addButton, this.editButton);
+        this.toolbar.append(actions);
         this.status = node("div", "md-dashboard__status");
         this.status.setAttribute("role", "status");
         this.status.setAttribute("aria-live", "polite");
@@ -67,7 +84,43 @@ export class DashboardController {
         this.layout = node("div", "md-dashboard__layout");
         this.dropEnd = node("div", "md-dashboard__drop-end", this._t("moveEnd", "At the end"));
         this.dropEnd.setAttribute("aria-hidden", "true");
-        this.host.replaceChildren(this.toolbar, this.status, this.undoContainer, this.layout, this.dropEnd);
+        this.shortcuts = node("section", "md-dashboard__shortcuts");
+        const shortcutsHeader = node("div", "md-dashboard__shortcuts-header");
+        const addShortcut = button(this._t("addShortcut", "Add shortcut"), () => this.showAddWidget("shortcut"), "btn btn-sm btn-outline-secondary md-dashboard__control");
+        addShortcut.prepend(icon("ti-plus"));
+        shortcutsHeader.append(node("h2", "md-dashboard__title", this._t("shortcuts", "Your shortcuts")), addShortcut);
+        this.shortcutList = node("div", "md-dashboard__shortcut-list");
+        this.shortcuts.append(shortcutsHeader, this.shortcutList);
+        this.host.replaceChildren(this.hero, this.notices, this.search, this.toolbar, this.status, this.undoContainer, this.layout, this.dropEnd, this.shortcuts);
+        this._setBusy(true);
+    }
+
+    /** Reveals arrangement controls without changing or saving widget preferences. */
+    setEditing(editing) {
+        this.editing = Boolean(editing);
+        this.host.classList.toggle("is-editing", this.editing);
+        this.editButton.textContent = this._t(this.editing ? "finishEditing" : "editOverview", this.editing ? "Done" : "Edit overview");
+        this.editButton.setAttribute("aria-pressed", String(this.editing));
+        this.host.querySelectorAll(".md-dashboard__edit-control").forEach(control => { control.hidden = !this.editing; });
+        for (const view of this.views.values()) window.bootstrap?.Dropdown?.getInstance(view.header.querySelector('[data-bs-toggle="dropdown"]'))?.hide();
+        this._bindDrag();
+    }
+
+    _region(instance) {
+        return ["sessions", "news", "search"].includes(instance.type) ? instance.type : instance.type === "shortcut" ? "shortcut" : "grid";
+    }
+
+    /** Keeps fixed utilities visible without rewriting saved instances or their preferences. */
+    _displayItems() {
+        const items = this.settings.items.map(instance => this._region(instance) === "grid" || instance.type === "shortcut" ? instance : { ...instance, collapsed: false });
+        for (const type of ["sessions", "news", "search"]) {
+            const definition = getWidget(type);
+            if (definition && !items.some(item => item.type === type)) items.push({ ...this._newInstance(definition), id: `dashboard-fixed-${type}` });
+        }
+        return items.filter(instance => {
+            const definition = getWidget(instance.type);
+            return definition && this._available(definition) && (this._region(instance) !== "grid" || this._visible(definition, instance));
+        });
     }
 
     /** Loads the current account's layout and the active domain's widget filters. */
@@ -86,12 +139,14 @@ export class DashboardController {
             if (!this.settings.configured) this._addDefaults();
             this._ensureMandatory();
             this.status.textContent = "";
-            this.addButton.disabled = false;
+            this._setBusy(false);
             this.layout.hidden = false;
             this._render();
             this.host.dataset.loaded = "true";
         } catch (error) {
             if (request.signal.aborted || this.destroyed) return;
+            this._render();
+            this._setBusy(true);
             this._showFailure("loadError", "The overview could not be loaded.", () => this.start());
         }
     }
@@ -145,7 +200,7 @@ export class DashboardController {
      * Widget content and security actions stay usable while preferences are saved.
      */
     async _commit(next) {
-        if (this.saving || this.destroyed) return false;
+        if (this.saving || this.destroyed || this.host.dataset.loaded !== "true") return false;
         if (next.items.length > MAX_WIDGETS) {
             this.status.textContent = this._t("limit", "The overview can contain at most 32 widgets.");
             return false;
@@ -185,10 +240,7 @@ export class DashboardController {
     }
 
     _render() {
-        const visible = this.settings.items.filter(instance => {
-            const definition = getWidget(instance.type);
-            return definition && this._available(definition) && this._visible(definition, instance);
-        });
+        const visible = this._displayItems();
         const ids = new Set(visible.map(item => item.id));
         for (const [id, view] of this.views) {
             if (!ids.has(id)) {
@@ -200,36 +252,44 @@ export class DashboardController {
         const restoreFocus = this.host.contains(focused);
         const fragment = document.createDocumentFragment();
         const refreshIds = [];
-        for (const segment of createLayoutSegments(visible)) {
-            const grid = node("div", segment.full ? "md-dashboard__full" : "md-dashboard__grid");
-            for (const instance of segment.items) {
-                let view = this.views.get(instance.id);
-                if (!view) {
-                    view = this._createView(instance);
-                    this.views.set(instance.id, view);
-                }
-                view.instance = instance;
-                view.title.textContent = this._title(instance);
-                view.title.title = view.title.textContent;
-                view.card.dataset.size = instance.size;
-                view.card.classList.toggle("is-collapsed", Boolean(instance.collapsed));
-                view.collapse.textContent = this._t(instance.collapsed ? "expand" : "collapse", instance.collapsed ? "Expand" : "Collapse");
-                view.collapse.setAttribute("aria-expanded", String(!instance.collapsed));
-                view.collapse.hidden = instance.size === "1x1";
-                grid.append(view.card);
-                const signature = JSON.stringify([instance.type, instance.size, instance.collapsed, instance.options, this.settings.domainOptions[instance.id], this._contextVersion]);
-                if (view.signature !== signature) {
-                    view.signature = signature;
-                    refreshIds.push(instance.id);
-                }
+        const updateView = instance => {
+            let view = this.views.get(instance.id);
+            if (!view) {
+                view = this._createView(instance);
+                this.views.set(instance.id, view);
             }
+            view.instance = instance;
+            view.title.textContent = this._title(instance);
+            view.title.title = view.title.textContent;
+            view.card.dataset.size = instance.size;
+            view.card.classList.toggle("is-collapsed", Boolean(instance.collapsed));
+            view.collapse.textContent = this._t(instance.collapsed ? "expand" : "collapse", instance.collapsed ? "Expand" : "Collapse");
+            view.collapse.setAttribute("aria-expanded", String(!instance.collapsed));
+            view.collapse.hidden = instance.size === "1x1";
+            const signature = JSON.stringify([instance.type, instance.size, instance.collapsed, instance.options, this.settings.domainOptions[instance.id], this._contextVersion, instance.type === "news" ? this.settings.acknowledgedNewsVersion : null]);
+            if (view.signature !== signature) {
+                view.signature = signature;
+                refreshIds.push(instance.id);
+            }
+            return view.card;
+        };
+        const gridItems = visible.filter(instance => this._region(instance) === "grid");
+        for (const segment of createLayoutSegments(gridItems)) {
+            const grid = node("div", segment.full ? "md-dashboard__full" : "md-dashboard__grid");
+            segment.items.forEach(instance => grid.append(updateView(instance)));
             fragment.append(grid);
         }
-        if (!visible.length) fragment.append(node("p", "md-dashboard__empty", this._t("empty", "Add widgets to create your overview.")));
+        for (const region of ["sessions", "news", "search", "shortcut"]) {
+            const container = region === "shortcut" ? this.shortcutList : this[region];
+            container.replaceChildren(...visible.filter(instance => this._region(instance) === region).map(updateView));
+        }
+        this.shortcuts.hidden = !getWidget("shortcut");
+        if (!gridItems.length) fragment.append(node("p", "md-dashboard__empty", this._t("empty", "Add widgets to create your overview.")));
         this.layout.replaceChildren(fragment);
         refreshIds.forEach(id => this.refresh(id));
         if (restoreFocus) {
             if (this.host.contains(focused)) focused.focus({ preventScroll: true });
+            else if (focused.classList.contains("md-dashboard-widget__news-toggle")) this.news.querySelector(".md-dashboard-widget__news-toggle")?.focus({ preventScroll: true });
             else this.status.focus({ preventScroll: true });
         }
         this._bindDrag();
@@ -242,8 +302,11 @@ export class DashboardController {
         const card = node("section", "md-dashboard__widget");
         card.dataset.instanceId = instance.id;
         card.dataset.widgetType = instance.type;
+        card.tabIndex = -1;
+        const fixed = ["sessions", "news", "search"].includes(this._region(instance));
+        card.classList.toggle("is-fixed", fixed);
         const header = node("div", "md-dashboard__widget-header");
-        const title = node("h3", "md-dashboard__widget-title");
+        const title = node(fixed ? "h2" : "h3", "md-dashboard__widget-title");
         title.id = `dashboard-title-${instance.id}`;
         card.setAttribute("aria-labelledby", title.id);
         if (definition.icon) header.append(icon(definition.icon));
@@ -273,7 +336,11 @@ export class DashboardController {
         menu.append(collapse, menuItem("move", "Move widget", () => this.showMove(instance.id)));
         if (!definition.mandatory) menu.append(menuItem("remove", "Remove", () => this.remove(instance.id)));
         dropdown.append(menuButton, menu);
-        header.append(drag, dropdown);
+        const controls = node("div", "md-dashboard__widget-controls md-dashboard__edit-control");
+        controls.hidden = !this.editing;
+        controls.append(drag, dropdown);
+        if (!fixed) header.append(controls);
+        if (["news", "search"].includes(instance.type)) header.hidden = true;
         const body = node("div", "md-dashboard__widget-body");
         body.id = `dashboard-body-${instance.id}`;
         collapse.setAttribute("aria-controls", body.id);
@@ -307,7 +374,7 @@ export class DashboardController {
             view.cleanup = null;
         }
         const abort = view.abort = new AbortController();
-        const instance = this._instance(id);
+        const instance = view.instance;
         const definition = getWidget(instance.type);
         const renderer = instance.collapsed ? definition.renderCollapsed : definition.render;
         const content = node("div", "md-dashboard__widget-content");
@@ -356,6 +423,7 @@ export class DashboardController {
         const item = next.items.find(instance => instance.id === id);
         if (!item) return false;
         const definition = getWidget(item.type);
+        if (["sessions", "news", "search"].includes(this._region(item))) return false;
         if (values.size && !definition.sizes.includes(values.size)) return false;
         Object.assign(item, values);
         if (item.size === "1x1") item.collapsed = false;
@@ -376,7 +444,7 @@ export class DashboardController {
 
     async remove(id) {
         const instance = this._instance(id);
-        if (!instance || getWidget(instance.type)?.mandatory) return false;
+        if (!instance || getWidget(instance.type)?.mandatory || ["sessions", "news", "search"].includes(this._region(instance))) return false;
         const previous = { instance: cloneSettings(instance), index: this.settings.items.indexOf(instance), domainOptions: cloneSettings(this.settings.domainOptions[id] || {}) };
         const next = cloneSettings(this.settings);
         next.items = next.items.filter(item => item.id !== id);
@@ -406,6 +474,9 @@ export class DashboardController {
     }
 
     async moveBefore(id, beforeId = null) {
+        const instance = this._instance(id);
+        if (!instance || !["grid", "shortcut"].includes(this._region(instance))) return false;
+        if (beforeId && this._region(this._instance(beforeId) || {}) !== this._region(instance)) return false;
         const next = cloneSettings(this.settings);
         next.items = moveInstanceBefore(next.items, id, beforeId);
         const saved = await this._commit(next);
@@ -414,7 +485,8 @@ export class DashboardController {
     }
 
     _focusInstance(id) {
-        this.views.get(id)?.header.querySelector("button")?.focus({ preventScroll: true });
+        const view = this.views.get(id);
+        (this.editing ? view?.header.querySelector("button") : view?.card)?.focus({ preventScroll: true });
     }
 
     async acknowledgeNews(version) {
@@ -555,7 +627,7 @@ export class DashboardController {
         const render = () => {
             list.replaceChildren();
             for (const definition of listWidgets()) {
-                if (!this._available(definition)) continue;
+                if (!this._available(definition) || ["sessions", "news", "search"].includes(definition.type)) continue;
                 const existing = this.settings.items.find(item => item.type === definition.type);
                 const reveal = !definition.multiple && existing && !this._visible(definition, existing) && definition.reveal;
                 if (!definition.multiple && existing && !reveal) continue;
@@ -567,6 +639,12 @@ export class DashboardController {
                 text.append(node("strong", "", title));
                 if (definition.descriptionKey) text.append(node("p", "mb-0 small text-muted", this._t(definition.descriptionKey)));
                 const add = button(reveal ? this._t("show", "Show") : this._t("add", "Add widget"), async () => {
+                    if (definition.type === "shortcut") {
+                        if (window.bootstrap?.Modal) dialog.root.addEventListener("hidden.bs.modal", () => this.showAddWidget(definition.type), { once: true });
+                        dialog.close();
+                        if (!window.bootstrap?.Modal) this.showAddWidget(definition.type);
+                        return;
+                    }
                     add.disabled = true;
                     try {
                         const saved = reveal ? await definition.reveal(cloneSettings(existing), this._widgetContext()) : await this.add(definition.type);
@@ -597,7 +675,7 @@ export class DashboardController {
         const select = node("select", "form-select");
         select.id = `dashboard-move-${id}`;
         label.htmlFor = select.id;
-        this.settings.items.filter(item => item.id !== id && this.views.has(item.id)).forEach(item => {
+        this.settings.items.filter(item => item.id !== id && this.views.has(item.id) && this._region(item) === this._region(instance)).forEach(item => {
             const option = node("option", "", this._title(item));
             option.value = item.id;
             select.append(option);
@@ -605,7 +683,7 @@ export class DashboardController {
         const end = node("option", "", this._t("moveEnd", "At the end"));
         end.value = "";
         select.append(end);
-        const following = this.settings.items.slice(this.settings.items.indexOf(instance) + 1).find(item => this.views.has(item.id));
+        const following = this.settings.items.slice(this.settings.items.indexOf(instance) + 1).find(item => this.views.has(item.id) && this._region(item) === this._region(instance));
         select.value = following?.id || "";
         dialog.body.append(label, select);
         const save = button(this._t("move", "Move widget"), async () => {
@@ -619,8 +697,24 @@ export class DashboardController {
     async showSettings(id) {
         const instance = this._instance(id);
         if (!instance) return;
+        return this._showSettings(instance);
+    }
+
+    /** Configures a new instance before its first atomic save. Cancelling adds nothing. */
+    async showAddWidget(type) {
+        const definition = getWidget(type);
+        if (!definition || !this._available(definition) || this.settings.items.length >= MAX_WIDGETS) {
+            this.status.textContent = this._t("limit", "The overview can contain at most 32 widgets.");
+            return;
+        }
+        if (!definition.multiple && this.settings.items.some(item => item.type === type)) return;
+        return this._showSettings(this._newInstance(definition), true);
+    }
+
+    async _showSettings(instance, adding = false) {
+        const id = instance.id;
         const definition = getWidget(instance.type);
-        const dialog = this._dialog(this._t("settings", "Widget settings"));
+        const dialog = this._dialog(this._t(adding ? "addShortcut" : "settings", adding ? "Add shortcut" : "Widget settings"));
         const sizeLabel = node("label", "form-label", this._t("size", "Size"));
         const size = node("select", "form-select mb-3");
         size.id = `dashboard-size-${id}`;
@@ -643,7 +737,7 @@ export class DashboardController {
         size.addEventListener("change", updatePreview);
         updatePreview();
         preview.append(previewGrid, previewCaption);
-        dialog.body.append(sizeLabel, size, preview);
+        if (definition.sizes.length > 1) dialog.body.append(sizeLabel, size, preview);
         const fields = node("div", "md-dashboard__settings");
         const error = node("p", "text-danger");
         error.setAttribute("role", "alert");
@@ -654,6 +748,10 @@ export class DashboardController {
             try {
                 const values = await configuration?.read?.() || {};
                 const next = cloneSettings(this.settings);
+                if (adding) {
+                    next.items.push(cloneSettings(instance));
+                    next.domainOptions[id] = cloneSettings(definition.defaultDomainOptions);
+                }
                 const updated = next.items.find(item => item.id === id);
                 if (!updated) return;
                 updated.size = size.value;
@@ -688,20 +786,23 @@ export class DashboardController {
             drop: () => { if (this._dragged) this.moveBefore(this._dragged); }
         });
         for (const view of this.views.values()) {
+            if (!["grid", "shortcut"].includes(this._region(view.instance))) continue;
+            if ($(view.card).data("ui-draggable")) $(view.card).draggable("option", "disabled", !this.editing);
+            if (!this.editing) continue;
             if (!$(view.card).data("ui-draggable")) $(view.card).draggable({
                 handle: ".md-dashboard__drag", appendTo: "body", zIndex: 1100, distance: 8,
                 cancel: "input, textarea, select, option",
                 helper: () => {
-                    const helper = $(view.card).clone().attr({ "aria-hidden": "true", inert: "" });
+                    const helper = $(view.card).clone().removeAttr("data-instance-id").attr({ "aria-hidden": "true", inert: "" });
                     helper.find("[id]").removeAttr("id");
                     return helper;
                 },
-                start: () => { if (this.saving) return false; this._dragged = view.instance.id; this.host.classList.add("is-dragging"); },
+                start: () => { if (this.saving || !this.editing) return false; this._dragged = view.instance.id; this.host.classList.add("is-dragging"); },
                 stop: () => { this._dragged = null; this.host.classList.remove("is-dragging"); this.host.querySelectorAll(".is-drop-target").forEach(card => card.classList.remove("is-drop-target")); },
                 revert: "invalid"
             });
             if (!$(view.card).data("ui-droppable")) $(view.card).droppable({
-                accept: ".md-dashboard__widget", tolerance: "pointer",
+                accept: dragged => this._region(this._instance(dragged[0].dataset.instanceId) || {}) === this._region(view.instance), tolerance: "pointer",
                 over: () => { if (this._dragged !== view.instance.id) view.card.classList.add("is-drop-target"); },
                 out: () => view.card.classList.remove("is-drop-target"),
                 drop: () => { if (this._dragged && this._dragged !== view.instance.id) this.moveBefore(this._dragged, view.instance.id); }

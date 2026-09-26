@@ -96,7 +96,7 @@ public class DashboardWidgetDataService {
             Identity user, String domain, String currentSessionId) {
         validate(type, days, metric, formName, campaignId);
         authorize(type, user);
-        if (Tools.isEmpty(domain)) throw new UnavailableException("domain-unavailable");
+        if (!"sessions".equals(type) && Tools.isEmpty(domain)) throw new UnavailableException("domain-unavailable");
         Range range = completedDays(days, Clock.systemDefaultZone());
         return switch (type) {
             case "sessions" -> sessions(user, currentSessionId);

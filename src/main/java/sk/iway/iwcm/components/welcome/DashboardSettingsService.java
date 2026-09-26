@@ -123,6 +123,7 @@ public class DashboardSettingsService {
             require(sizes != null && item.getSize() != null && sizes.contains(item.getSize()), "Unknown widget type or unsupported size");
             if (SINGLETONS.contains(item.getType())) require(singletonTypes.add(item.getType()), "This widget may only appear once");
             if (item.getOptions() == null) item.setOptions(new LinkedHashMap<>());
+            if ("shortcut".equals(item.getType())) validateShortcut(item.getOptions());
             records.put(DashboardSettingsRepository.WIDGET_PREFIX + item.getId(), serializeBounded(item));
             order.add(item.getId());
         }
@@ -132,6 +133,37 @@ public class DashboardSettingsService {
         }
         records.put(DashboardSettingsRepository.LAYOUT_KEY, serializeBounded(metadata));
         return records;
+    }
+
+    /** Custom shortcuts accept only explicit HTTP(S) URLs or root-relative application paths. */
+    static void validateShortcut(Map<String, Object> options) {
+        Object source = options.getOrDefault("source", "menu");
+        require("menu".equals(source) || "url".equals(source), "Invalid shortcut source");
+        Object href = options.getOrDefault("href", "");
+        Object title = options.getOrDefault("title", "");
+        require(href instanceof String && ((String) href).length() <= 1024, "Invalid shortcut URL");
+        require(title instanceof String && ((String) title).length() <= 120, "Invalid shortcut title");
+        String target = (String) href;
+        if ("url".equals(source)) {
+            require(!((String) title).isBlank(), "A custom shortcut requires a title");
+            require(isSafeShortcutUrl(target), "Invalid shortcut URL");
+        } else {
+            // Empty menu shortcuts are allowed while the user chooses an authorized destination.
+            require(target.isEmpty() || target.startsWith("/") && isSafeShortcutUrl(target), "Invalid shortcut URL");
+        }
+    }
+
+    static boolean isSafeShortcutUrl(String value) {
+        if (value == null || value.isBlank() || !value.equals(value.trim()) || value.startsWith("//")
+                || value.indexOf('\\') >= 0 || value.chars().anyMatch(Character::isISOControl)) return false;
+        try {
+            java.net.URI uri = new java.net.URI(value);
+            if (value.startsWith("/")) return uri.getScheme() == null && uri.getRawAuthority() == null;
+            return ("https".equalsIgnoreCase(uri.getScheme()) || "http".equalsIgnoreCase(uri.getScheme()))
+                && uri.getHost() != null && uri.getRawUserInfo() == null;
+        } catch (java.net.URISyntaxException exception) {
+            return false;
+        }
     }
 
     private String serializeBounded(Object value) {

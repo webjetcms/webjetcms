@@ -10,7 +10,13 @@ function waitForSave(I) {
     I.waitForFunction(() => document.querySelector('webjet-overview-dashboard')?.dashboardController?.saving === false, 20);
 }
 
-function openAction(I, id, action) {
+async function enableEditing(I) {
+    await I.clickIfVisible('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
+    I.waitForElement('.md-dashboard.is-editing', 10);
+}
+
+async function openAction(I, id, action) {
+    await enableEditing(I);
     I.clickCss(`[data-instance-id="${id}"] .dropdown > button`);
     I.waitForVisible(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`, 10);
     I.forceClick(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`);
@@ -32,7 +38,9 @@ Scenario('Authenticated dashboard endpoints and initial overview load', async ({
     });
     responses.forEach(response => assert.equal(response.status, 200, `${response.url} must be available to an authenticated administrator (${response.contentType})`));
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-    I.seeElement('#toast-container-overview');
+    I.seeNumberOfElements('#toast-container-overview', 1);
+    I.seeElement('.md-dashboard__sessions [data-widget-type="sessions"]');
+    I.dontSeeElement('.md-dashboard__edit-control');
 });
 
 Scenario('Add and configure a personal shortcut and reload its server preferences', async ({ I }) => {
@@ -40,21 +48,17 @@ Scenario('Add and configure a personal shortcut and reload its server preference
     originalSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     shortcutTitle = `dashboard-autotest-${I.getRandomText()}`;
     const existingIds = originalSettings.items.map(item => item.id);
-    I.clickCss('.md-dashboard__toolbar > button');
-    I.waitForVisible('.md-dashboard-modal', 10);
-    I.clickCss('.md-dashboard__catalogue-item[data-widget-type="shortcut"] button');
+    I.clickCss('.md-dashboard__shortcuts-header > button');
+    I.waitForVisible('.md-dashboard-modal [name="dashboardShortcutSource"]', 10);
+    I.selectOption('.md-dashboard-modal [name="dashboardShortcutSource"]', 'url');
+    I.fillField('.md-dashboard-modal [name="dashboardShortcutUrl"]', '/admin/v9/webpages/web-pages-list/');
+    I.fillField('.md-dashboard-modal [name="dashboardShortcutTitle"]', shortcutTitle);
+    I.seeInField('.md-dashboard-modal [name="dashboardShortcutTitle"]', shortcutTitle);
+    I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
     I.waitForInvisible('.md-dashboard-modal', 10);
     waitForSave(I);
     shortcutId = await I.executeScript(ids => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.find(item => !ids.includes(item.id) && item.type === 'shortcut')?.id, existingIds);
     assert.ok(shortcutId, 'Adding a shortcut must create a new stable instance');
-
-    openAction(I, shortcutId, 'settings');
-    I.waitForVisible('.md-dashboard-modal .md-dashboard__settings input[type="text"]', 10);
-    I.fillField('.md-dashboard-modal .md-dashboard__settings input[type="text"]', shortcutTitle);
-    I.seeInField('.md-dashboard-modal .md-dashboard__settings input[type="text"]', shortcutTitle);
-    I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
-    I.waitForInvisible('.md-dashboard-modal', 10);
-    waitForSave(I);
     I.see(shortcutTitle, `[data-instance-id="${shortcutId}"]`);
     I.refreshPage();
     I.waitForElement(`.md-dashboard[data-loaded="true"] [data-instance-id="${shortcutId}"]`, 20);
@@ -64,37 +68,61 @@ Scenario('Add and configure a personal shortcut and reload its server preference
 Scenario('Move with drag and keyboard controls, collapse and resize without replacing alerts', async ({ I }) => {
     assert.ok(shortcutId, 'The shortcut setup scenario must complete first');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    await enableEditing(I);
     await I.executeScript(() => { window.autotestDashboardAlerts = document.querySelector('#toast-container-overview'); });
-    const firstId = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items[0].id);
-    I.dragAndDrop(`[data-instance-id="${shortcutId}"] .md-dashboard__drag`, `[data-instance-id="${firstId}"] .md-dashboard__widget-header`, { force: true, timeout: 10000 });
+    const { firstId, movedId } = await I.executeScript(() => {
+        const cards = [...document.querySelectorAll('.md-dashboard__layout [data-instance-id]')];
+        return { firstId: cards[0]?.dataset.instanceId, movedId: cards[1]?.dataset.instanceId };
+    });
+    assert.ok(firstId && movedId && firstId !== movedId, 'The grid fixture must contain at least two movable widgets');
+    I.executeScript(id => {
+        const scrollbar = window.scrollbarMain;
+        const top = document.querySelector(`[data-instance-id="${id}"]`).getBoundingClientRect().top;
+        scrollbar.setMomentum(0, 0);
+        scrollbar.setPosition(scrollbar.offset.x, scrollbar.offset.y + top - 160);
+    }, firstId);
+    I.waitForFunction(ids => ids.every(id => {
+        const bounds = document.querySelector(`[data-instance-id="${id}"] .md-dashboard__drag`).getBoundingClientRect();
+        return bounds.top >= 48 && bounds.bottom <= window.innerHeight;
+    }), [firstId, movedId], 10);
+    // jQuery UI needs intermediate pointer moves; the standard helper scrolls its target under the fixed header.
+    await I.usePlaywrightTo('move a dashboard widget with the pointer', async ({ page }) => {
+        const source = await page.locator(`.md-dashboard__layout [data-instance-id="${movedId}"] .md-dashboard__drag`).boundingBox();
+        const target = await page.locator(`.md-dashboard__layout [data-instance-id="${firstId}"] .md-dashboard__widget-header`).boundingBox();
+        await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
+        await page.mouse.down();
+        await page.mouse.move(source.x + source.width / 2 - 12, source.y + source.height / 2, { steps: 2 });
+        await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 12 });
+        await page.mouse.up();
+    });
     waitForSave(I);
-    const movedFirst = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items[0].id);
-    assert.equal(movedFirst, shortcutId, 'Dragging before another card must update the persisted order');
-    I.clickCss(`[data-instance-id="${shortcutId}"] .md-dashboard__drag`);
+    const movedFirst = await I.executeScript(() => document.querySelector('.md-dashboard__layout [data-instance-id]').dataset.instanceId);
+    assert.equal(movedFirst, movedId, 'Dragging before another grid card must update its region order');
+    I.clickCss(`[data-instance-id="${movedId}"] .md-dashboard__drag`);
     I.waitForVisible('.md-dashboard-modal select', 10);
     I.selectOption('.md-dashboard-modal select', '');
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
     I.waitForInvisible('.md-dashboard-modal', 10);
     waitForSave(I);
-    const lastId = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.at(-1).id);
-    assert.equal(lastId, shortcutId, 'Keyboard movement must update the persisted order');
+    const lastId = await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__layout [data-instance-id]')].at(-1).dataset.instanceId);
+    assert.equal(lastId, movedId, 'Keyboard movement must update its region order');
 
     const recentId = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.find(item => item.type === 'recent-pages')?.id);
     assert.ok(recentId, 'The editor default must include recent pages');
     const wasCollapsed = await I.executeScript(id => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.find(item => item.id === id).collapsed, recentId);
     if (wasCollapsed) {
-        openAction(I, recentId, 'collapse');
+        await openAction(I, recentId, 'collapse');
         waitForSave(I);
         I.waitForElement(`[data-instance-id="${recentId}"]:not(.is-collapsed)`, 10);
     }
-    openAction(I, recentId, 'collapse');
+    await openAction(I, recentId, 'collapse');
     waitForSave(I);
     I.waitForElement(`[data-instance-id="${recentId}"].is-collapsed`, 10);
     I.seeElement(`[data-instance-id="${recentId}"] .md-dashboard-widget__more`);
-    openAction(I, recentId, 'collapse');
+    await openAction(I, recentId, 'collapse');
     waitForSave(I);
     I.waitForElement(`[data-instance-id="${recentId}"]:not(.is-collapsed)`, 10);
-    openAction(I, recentId, 'settings');
+    await openAction(I, recentId, 'settings');
     I.waitForVisible('.md-dashboard-modal select', 10);
     I.selectOption('.md-dashboard-modal select', '2 × 3');
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
@@ -120,7 +148,7 @@ Scenario('A second authenticated session reads the persisted personal dashboard'
 Scenario('Remove and undo restores the configured instance', async ({ I }) => {
     assert.ok(shortcutId, 'The shortcut setup scenario must complete first');
     I.waitForElement(`.md-dashboard[data-loaded="true"] [data-instance-id="${shortcutId}"]`, 20);
-    openAction(I, shortcutId, 'remove');
+    await openAction(I, shortcutId, 'remove');
     waitForSave(I);
     I.waitForInvisible(`[data-instance-id="${shortcutId}"]`, 10);
     I.clickCss('.md-dashboard__undo button');
@@ -135,7 +163,7 @@ Scenario('A rejected preference update preserves the confirmed widget', async ({
     await I.mockRoute('**/admin/rest/dashboard/settings', route => route.request().method() === 'PUT'
         ? route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"autotest simulated save failure"}' })
         : route.continue());
-    openAction(I, shortcutId, 'remove');
+    await openAction(I, shortcutId, 'remove');
     waitForSave(I);
     I.waitForElement('.md-dashboard__status .text-danger', 10);
     I.see(shortcutTitle, `[data-instance-id="${shortcutId}"]`);

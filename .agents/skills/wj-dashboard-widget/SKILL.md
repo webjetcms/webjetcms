@@ -20,13 +20,13 @@ Read the [widget contract](references/widget-contract.md) before implementing a 
 
 - Users have mixed responsibilities. Availability follows permissions and active-domain data, not role presets. Enforce access on the server for every data provider.
 - The layout is shared across domains and devices; record filters such as selected forms or folders belong to the active domain. Keep unavailable instances in the stored profile.
-- New and reset profiles include every available widget type in the curated default layout. Preserve existing personal layouts until the user explicitly resets them through the catalogue.
+- New and reset profiles include every useful available widget type in the curated default layout; default shortcuts require an authorized menu destination. Preserve existing personal layouts until the user explicitly resets them through the catalogue.
 - Persist ordered instances and named sizes, never pixel positions. Supported sizes are `1x1`, `2x2`, `2x3`, `3x2`, `3x3`, and full width with natural height. A type advertises only its useful variants.
 - The grid has six logical desktop columns, four below 1200 px, two below 768 px, and one below 360 px. Keep DOM, keyboard, and mobile order aligned; do not enable dense packing.
-- Widget preferences must not remove active system alerts or the mandatory session-management widget. A collapsed session widget must retain access to session management.
+- Keep active system alerts and session management visible outside the personal grid. Sessions, release news and search occupy fixed regions; shortcuts occupy their own strip. Stored collapsed session preferences must not hide the active-login preview.
 - Use shared server persistence. Never put personal layout in localStorage or silently migrate browser-global legacy bookmarks into an account.
-- Render untrusted titles, values, and configuration as text. Resolve shortcut targets from the authorized menu; do not accept arbitrary executable URLs.
-- Preserve focus and provide a keyboard/touch alternative to drag. Use existing Bootstrap controls, WebJET tokens, Tabler icons, and translated labels.
+- Render untrusted titles, values, and configuration as text. Menu shortcuts resolve from authorized entries. Explicit custom-URL shortcuts accept only root-relative local URLs or HTTP(S) URLs without credentials, backslashes, control characters or protocol-relative forms; validate them on the client and server.
+- Show arrangement and widget controls only in the explicit edit mode. Preserve focus and provide a keyboard/touch alternative to drag. Use existing Bootstrap controls, WebJET tokens, Tabler icons, and translated labels.
 - Lists are previews with a link to the complete module, without nested scrolling. Distinguish no results from unavailable or failed data. Never invent unread/processed states for forms.
 - Label metric, period, and comparison. Default statistics to the last seven completed days. Newsletter openings are recorded observations, not complete recipient counts.
 - Use the existing AmCharts infrastructure through `window.initAmcharts()` and `ChartTools` from `libs/chart/chart-tools.js`. Provide a text/table equivalent and release chart roots on refresh, collapse, removal, and aborted asynchronous initialization.

@@ -64,6 +64,7 @@ public class DashboardRecentPagesService {
                     dto.setTitle(Tools.replace(current.getTitle(), "&#47;", "/"));
                     dto.setVirtualPath(current.getVirtualPath());
                     dto.setFullPath(current.getFullPath());
+                    dto.setPerexImage(previewImage(current.getPerexImage()));
                     java.sql.Timestamp saved = rows.getTimestamp("save_date");
                     dto.setSaveDate(saved == null ? "" : Tools.formatDateTimeSeconds(saved.getTime()));
                     dto.setCreatedByUserId(user.getUserId());
@@ -76,6 +77,16 @@ public class DashboardRecentPagesService {
             throw new IllegalStateException("Could not load recent dashboard pages", exception);
         }
         return pages;
+    }
+
+    /** Only local image assets may be passed to the administration thumbnail endpoint. */
+    static String previewImage(String path) {
+        if (path == null || !(path.startsWith("/images/") || path.startsWith("/files/"))
+                || path.indexOf('\\') >= 0 || path.indexOf('?') >= 0 || path.indexOf('#') >= 0
+                || path.indexOf('%') >= 0 || path.contains("/../") || path.contains("/./")
+                || path.chars().anyMatch(character -> Character.isISOControl(character))) return "";
+        String lower = path.toLowerCase(java.util.Locale.ROOT);
+        return lower.matches(".*\\.(png|jpe?g|gif|webp|avif)") ? path : "";
     }
 
     /** Checks the current location and editing permissions of a page without using historical scope. */

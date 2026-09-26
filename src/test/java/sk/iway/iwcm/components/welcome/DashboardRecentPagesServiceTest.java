@@ -44,6 +44,8 @@ class DashboardRecentPagesServiceTest {
         DocDetails denied = page(12, 102, "Denied");
         DocDetails first = page(13, 103, "Allowed first");
         DocDetails second = page(14, 103, "Allowed second");
+        when(first.getPerexImage()).thenReturn("/images/news/cover.jpg");
+        when(second.getPerexImage()).thenReturn("https://external.example/cover.jpg");
         when(docs.getBasicDocDetails(11, false)).thenReturn(otherDomain);
         when(docs.getBasicDocDetails(12, false)).thenReturn(denied);
         when(docs.getBasicDocDetails(13, false)).thenReturn(first);
@@ -68,6 +70,8 @@ class DashboardRecentPagesServiceTest {
             List<DocDetailsDto> result = new DashboardRecentPagesService(() -> connection).getRecentPages(user, "current.example", 2);
 
             assertEquals(List.of(13, 14), result.stream().map(DocDetailsDto::getDocId).toList());
+            assertEquals("/images/news/cover.jpg", result.get(0).getPerexImage());
+            assertEquals("", result.get(1).getPerexImage());
             verify(statement).setInt(1, 7);
         }
     }
@@ -102,6 +106,17 @@ class DashboardRecentPagesServiceTest {
             assertFalse(DashboardRecentPagesService.isAccessible(page(1, 101, "Hidden"), user, "current.example"));
             assertFalse(DashboardRecentPagesService.isAccessible(page(2, 102, "Trash"), user, "current.example"));
             editorStatic.verifyNoInteractions();
+        }
+    }
+
+    /** Prevents external fetches and non-image paths from being used as dashboard thumbnails. */
+    @Test
+    void previewImagesOnlyUseLocalRasterAssets() {
+        assertEquals("/images/news/cover.JPG", DashboardRecentPagesService.previewImage("/images/news/cover.JPG"));
+        assertEquals("/files/article image.webp", DashboardRecentPagesService.previewImage("/files/article image.webp"));
+        for (String value : List.of("//external.example/image.jpg", "https://external.example/image.jpg", "javascript:alert(1)",
+                "/images/icon.svg", "/images/../admin/page.jpg", "/images/%2e%2e/admin.jpg", "/images/cover.jpg?redirect=true", "/images/cover.jpg\n")) {
+            assertEquals("", DashboardRecentPagesService.previewImage(value), value);
         }
     }
 

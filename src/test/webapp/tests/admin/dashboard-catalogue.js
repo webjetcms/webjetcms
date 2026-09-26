@@ -18,14 +18,23 @@ function waitForSave(I) {
 }
 
 function showWidget(I, type) {
-    I.executeScript(type => window.scrollbarMain.scrollIntoView(document.querySelector(`[data-widget-type="${type}"]`)), type);
+    I.executeScript(type => {
+        const scrollbar = window.scrollbarMain;
+        scrollbar.setMomentum(0, 0);
+        scrollbar.update();
+        const top = document.querySelector(`[data-widget-type="${type}"]`).getBoundingClientRect().top;
+        if (scrollbar.limit.y > 0) scrollbar.setPosition(scrollbar.offset.x, scrollbar.offset.y + top - 64);
+        else window.scrollTo(0, window.scrollY + top - 64);
+    }, type);
     I.waitForFunction(([widgetType]) => {
         const bounds = document.querySelector(`[data-widget-type="${widgetType}"]`)?.getBoundingClientRect();
         return Boolean(bounds && bounds.top >= 0 && bounds.top + Math.min(bounds.height, window.innerHeight - 100) <= window.innerHeight);
     }, [type], 10);
 }
 
-function widgetAction(I, id, action) {
+async function widgetAction(I, id, action) {
+    await I.clickIfVisible('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
+    I.waitForElement('.md-dashboard.is-editing', 10);
     I.clickCss(`[data-instance-id="${id}"] .dropdown > button`);
     I.waitForVisible(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`, 10);
     I.forceClick(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`);
@@ -101,9 +110,9 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
         I.assertEqual(error.type, 'errors', 'Only explicitly unavailable legacy 404 domain data may fail.');
         I.assertEqual(error.text, state.expectedDomainError);
     }
-    I.seeElement('#toast-container-overview');
+    I.seeNumberOfElements('#toast-container-overview', 1);
     I.seeElement('[data-widget-type="sessions"] .md-dashboard__widget-content button');
-    I.seeNumberOfElements('[data-widget-type="news"] .md-dashboard-widget__list > li', 3);
+    I.seeNumberOfElements('[data-widget-type="news"] .md-dashboard-widget__news-highlights > p', 2);
     I.resizeWindow(1337, 1052);
     I.saveScreenshot('dashboard-catalogue-desktop.png', true);
     showWidget(I, 'traffic');
@@ -132,24 +141,24 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, collap
         I.clickCss(`[data-widget-type="${type}"] details.md-dashboard-widget__chart-data summary`);
     }
     const firstTraffic = await rememberChart(I, 'traffic');
-    widgetAction(I, ids.traffic, 'refresh');
+    await widgetAction(I, ids.traffic, 'refresh');
     waitForWidgets(I);
     waitForChart(I, 'traffic');
     await assertDisposedChart(I);
     I.assertNotEqual(await I.grabAttributeFrom(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`, 'id'), firstTraffic);
 
     await rememberChart(I, 'traffic');
-    widgetAction(I, ids.traffic, 'collapse');
+    await widgetAction(I, ids.traffic, 'collapse');
     waitForSave(I);
     waitForWidgets(I);
     await assertDisposedChart(I);
     I.dontSeeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`);
     I.seeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__more`);
-    widgetAction(I, ids.traffic, 'collapse');
+    await widgetAction(I, ids.traffic, 'collapse');
     waitForSave(I);
     waitForChart(I, 'traffic');
     await rememberChart(I, 'traffic');
-    widgetAction(I, ids.traffic, 'settings');
+    await widgetAction(I, ids.traffic, 'settings');
     I.waitForVisible('.md-dashboard-modal select', 10);
     I.selectOption('.md-dashboard-modal select[id^="dashboard-size-"]', '1 × 1');
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
@@ -158,7 +167,7 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, collap
     waitForWidgets(I);
     await assertDisposedChart(I);
     I.dontSeeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`);
-    widgetAction(I, ids.traffic, 'settings');
+    await widgetAction(I, ids.traffic, 'settings');
     I.waitForVisible('.md-dashboard-modal select', 10);
     I.selectOption('.md-dashboard-modal select[id^="dashboard-size-"]', '3 × 3');
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
@@ -167,7 +176,7 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, collap
     waitForChart(I, 'traffic');
 
     await rememberChart(I, 'referrers');
-    widgetAction(I, ids.referrers, 'remove');
+    await widgetAction(I, ids.referrers, 'remove');
     waitForSave(I);
     I.waitForInvisible(`[data-instance-id="${ids.referrers}"]`, 10);
     await assertDisposedChart(I);
@@ -185,24 +194,23 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, collap
     I.saveScreenshot('dashboard-amcharts.png', true);
 });
 
-Scenario('Acknowledge release news across reload and reveal it from the catalogue', async ({ I }) => {
+Scenario('Collapse release news across reload and expand it from the compact summary', async ({ I }) => {
     waitForWidgets(I);
     I.waitForVisible('[data-widget-type="news"] .md-dashboard__widget-content button', 10);
     I.clickCss('[data-widget-type="news"] .md-dashboard__widget-content button');
     waitForSave(I);
-    I.waitForInvisible('[data-widget-type="news"]', 10);
+    I.waitForVisible('[data-widget-type="news"] .md-dashboard-widget__news-toggle[aria-expanded="false"]', 10);
+    I.seeElement('[data-widget-type="news"] .md-dashboard-widget__news-summary');
+    I.dontSeeElement('[data-widget-type="news"] .md-dashboard-widget__news-highlights');
     const acknowledged = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.acknowledgedNewsVersion);
     I.assertTrue(typeof acknowledged === 'string' && acknowledged.length > 0);
     I.refreshPage();
     waitForWidgets(I);
-    I.dontSeeElement('[data-widget-type="news"]');
-    I.clickCss('.md-dashboard__toolbar > button');
-    I.waitForVisible('.md-dashboard__catalogue-item[data-widget-type="news"] button', 10);
-    I.clickCss('.md-dashboard__catalogue-item[data-widget-type="news"] button');
-    I.waitForInvisible('.md-dashboard-modal', 10);
+    I.seeElement('[data-widget-type="news"] .md-dashboard-widget__news-summary');
+    I.clickCss('[data-widget-type="news"] .md-dashboard-widget__news-toggle');
     waitForSave(I);
     I.waitForVisible('[data-widget-type="news"]', 10);
-    I.seeNumberOfElements('[data-widget-type="news"] .md-dashboard-widget__list > li', 3);
+    I.seeNumberOfElements('[data-widget-type="news"] .md-dashboard-widget__news-highlights > p', 2);
 });
 
 Scenario('Documentation search switches scope and opens the encoded query without an external request', async ({ I }) => {

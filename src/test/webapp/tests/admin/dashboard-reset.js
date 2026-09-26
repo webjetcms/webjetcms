@@ -6,8 +6,8 @@ let fixtureLogin = process.env.DASHBOARD_RESET_FIXTURE;
 let originalAdminPreferences;
 const confirmation = '.md-dashboard-modal button[aria-describedby^="dashboard-reset-"]';
 const expectedSizes = {
-    search: 'fullauto', 'recent-pages': '3x3', forms: '3x3', sessions: '2x3', publishing: '2x3',
-    'search-terms': '2x3', traffic: '3x3', referrers: '3x3', 'top-pages': '3x3', newsletter: '3x3',
+    search: 'fullauto', 'recent-pages': '3x3', forms: '1x1', sessions: '2x3', publishing: '2x3',
+    'search-terms': '2x3', traffic: '3x3', referrers: '3x3', 'top-pages': '3x3', newsletter: '2x2',
     news: '3x2', approvals: '1x1', errors: '1x1', shortcut: '1x1'
 };
 
@@ -32,8 +32,9 @@ async function assertFixtureIdentity(I) {
         'A destructive reset must only run in the disposable test account');
 }
 
-function openReset(I) {
-    I.clickCss('.md-dashboard__toolbar > button');
+async function openReset(I) {
+    await I.clickIfVisible('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
+    I.clickCss('.md-dashboard__toolbar-actions > .md-dashboard__edit-control');
     I.waitForVisible('.md-dashboard__reset', 10);
     I.dontSeeElement(confirmation);
     I.clickCss('.md-dashboard__reset');
@@ -104,7 +105,7 @@ Scenario('Reset confirms deletion, keeps failed changes and restores every avail
         await I.mockRoute('**/admin/rest/dashboard/settings', route => route.request().method() === 'DELETE'
             ? route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"autotest reset failure"}' })
             : route.continue());
-        openReset(I);
+        await openReset(I);
         assert.deepEqual(await settings(I), custom, 'Opening confirmation must not change the profile');
         I.clickCss(confirmation);
         waitForSave(I);
@@ -125,9 +126,9 @@ Scenario('Reset confirms deletion, keeps failed changes and restores every avail
             assert.equal(item.collapsed, false);
         }
         assert.deepEqual(defaults.items.slice(0, 11).map(item => item.type), [
-            'search', 'recent-pages', 'forms', 'sessions', 'publishing', 'search-terms',
-            'traffic', 'referrers', 'top-pages', 'newsletter', 'news'
-        ], 'Pairs and triples must retain the curated DOM order');
+            'search', 'sessions', 'news', 'traffic', 'forms', 'approvals',
+            'errors', 'recent-pages', 'referrers', 'publishing', 'newsletter'
+        ], 'The overview must retain its curated default order');
         assert.equal(defaults.items.filter(item => item.type === 'sessions').length, 1);
         assert.equal(defaults.domainOptions[defaults.items.find(item => item.type === 'forms').id].formName, '');
         I.refreshPage();
@@ -152,10 +153,11 @@ Scenario('Reset confirms deletion, keeps failed changes and restores every avail
         I.wjSetDefaultWindowSize();
 
         const shortcut = reloaded.items.find(item => item.type === 'shortcut');
+        await I.clickIfVisible('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
         I.clickCss(`[data-instance-id="${shortcut.id}"] .dropdown > button`);
         I.forceClick(`[data-instance-id="${shortcut.id}"] [data-dashboard-action="settings"]`);
-        I.waitForVisible('.md-dashboard__settings input[type="text"]', 10);
-        I.fillField('.md-dashboard__settings input[type="text"]', 'dashboard-reset-autotest personalized');
+        I.waitForVisible('.md-dashboard__settings [name="dashboardShortcutTitle"]', 10);
+        I.fillField('.md-dashboard__settings [name="dashboardShortcutTitle"]', 'dashboard-reset-autotest personalized');
         I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
         I.waitForInvisible('.md-dashboard-modal', 10);
         waitForSave(I);

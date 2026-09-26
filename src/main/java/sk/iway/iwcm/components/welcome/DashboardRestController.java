@@ -32,10 +32,15 @@ import sk.iway.iwcm.users.UsersDB;
 public class DashboardRestController {
     private final DashboardSettingsService settingsService;
     private final DashboardRecentPagesService recentPagesService;
+    private final DashboardNoticeService noticeService;
+    private final DashboardLegacyDataService legacyDataService;
 
-    public DashboardRestController(DashboardSettingsService settingsService, DashboardRecentPagesService recentPagesService) {
+    public DashboardRestController(DashboardSettingsService settingsService, DashboardRecentPagesService recentPagesService,
+            DashboardNoticeService noticeService, DashboardLegacyDataService legacyDataService) {
         this.settingsService = settingsService;
         this.recentPagesService = recentPagesService;
+        this.noticeService = noticeService;
+        this.legacyDataService = legacyDataService;
     }
 
     @GetMapping("/settings")
@@ -64,6 +69,18 @@ public class DashboardRestController {
     public List<MenuBean> getMenu(HttpServletRequest request) {
         currentUser(request);
         return new MenuService(request).getMenu();
+    }
+
+    /** Loads current warnings independently of content previews and stored widget preferences. */
+    @GetMapping("/notices")
+    public List<java.util.Map<String, Object>> getNotices(HttpServletRequest request) {
+        return noticeService.load(currentUser(request), request);
+    }
+
+    /** Called only when the optional original overview is expanded. */
+    @GetMapping("/legacy-data")
+    public java.util.Map<String, Object> getLegacyData(HttpServletRequest request) {
+        return legacyDataService.load(currentUser(request), DocDB.getDomain(request), CloudToolsForCore.getRootGroupId(request));
     }
 
     @GetMapping("/recent-pages")

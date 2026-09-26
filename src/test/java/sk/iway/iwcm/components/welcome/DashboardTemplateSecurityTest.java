@@ -23,19 +23,20 @@ class DashboardTemplateSecurityTest {
         );
 
         assertTrue(template.contains("script(data-th-inline=\"javascript\")."));
-        String[] modelAttributes = {
-            "overviewBackData",
-            "overviewAdmins",
-            "overviewRecentPages",
-            "overviewChangedPages",
-            "overviewAdminlog",
-            "overviewTodo",
-            "overviewCurrentSessions"
-        };
+        String[] modelAttributes = { "overviewData" };
         for (String modelAttribute : modelAttributes) {
             assertTrue(template.contains("JSON.parse(/*[[${" + modelAttribute + "}]]*/"));
             assertFalse(template.contains("[(${" + modelAttribute + "})]"));
         }
+    }
+
+    /** Config and translated Markdown use JavaScript serialization instead of raw quoted interpolation. */
+    @Test
+    void configurationAndReleaseNewsUseJavascriptInlining() throws IOException {
+        String template = Files.readString(Path.of("src/main/webapp/admin/v9/views/pages/dashboard/overview.pug"));
+        assertFalse(template.contains("[(${"));
+        assertTrue(template.contains("WJ.parseMarkdown(/*[[\\#{admin.overview.changelog}]]*/"));
+        assertTrue(template.contains("/*[[${layout.getConstant('statMode')}]]*/"));
     }
 
     @Test
@@ -49,13 +50,13 @@ class DashboardTemplateSecurityTest {
 
         Context context = new Context();
         context.setVariable(
-            "overviewRecentPages",
+            "overviewData",
             "[{\"title\":\"</script><script>globalThis.dashboardXss=true</script>\",\"separators\":\"\u2028\u2029\"}]"
         );
 
         String rendered = templateEngine.process(
             "<script data-th-inline=\"javascript\">" +
-                "window.dashboardData=JSON.parse(/*[[${overviewRecentPages}]]*/ \"[]\");" +
+                "window.dashboardData=JSON.parse(/*[[${overviewData}]]*/ \"[]\");" +
             "</script>",
             context
         );

@@ -172,7 +172,7 @@ class DashboardWidgetDataServiceTest {
         when(user.getUserId()).thenReturn(42);
         try (var sessions = mockStatic(SessionClusterService.class)) {
             sessions.when(() -> SessionClusterService.getSessionInfo("current", 42)).thenReturn("{\"currentSessionId\":\"current\",\"userSessions\":[{\"userSessions\":[{\"sessionId\":\"current\"}]}]}");
-            var result = service.load("sessions", 7, "sessions", null, null, user, "example.test", "current");
+            var result = service.load("sessions", 7, "sessions", null, null, user, null, "current");
             assertEquals(1L, result.get("total"));
             assertTrue(result.get("currentSessions") instanceof Map);
             String json = new tools.jackson.databind.json.JsonMapper().writeValueAsString(result);

@@ -43,6 +43,44 @@ test('Shortcuts resolve authorized submenu targets and never execute user-contro
     assert.equal(container.querySelector('a'), null);
 });
 
+test('Custom shortcuts require explicit URL mode and reject ambiguous or executable targets', t => {
+    const { scope, context, container } = fixture(t);
+    const widget = scope.getWidget('shortcut');
+    const invalid = ['javascript:alert(1)', 'data:text/html,<script>alert(1)</script>', '//other.test/path', '/\\other.test/path',
+        'https://user:secret@other.test/', 'https://other.test/\nscript', 'relative/path', 'https:other.test', 'https:///other.test'];
+    for (const href of invalid) {
+        assert.equal(scope.shortcutUrl(href), null, href);
+        widget.render({ container, context, options: { source: 'url', href, title: 'Unsafe' } });
+    }
+    assert.equal(container.querySelector('a'), null);
+    widget.render({ container, context, options: { href: 'https://other.test/', title: 'Legacy' } });
+    assert.equal(container.querySelector('a'), null);
+    for (const href of ['https://other.test/path?x=1#section', '/apps/form/admin/']) {
+        widget.render({ container, context, options: { source: 'url', href, title: '<img src=x>' } });
+        assert.equal(container.lastElementChild.getAttribute('href'), href);
+    }
+    assert.equal(container.querySelector('img'), null);
+});
+
+test('Shortcut settings toggle authorized menu and explicit URL fields and validate before persistence', t => {
+    const { scope, context, container, window } = fixture(t, { menu: [{ text: 'Forms', href: '/apps/form/admin/' }] });
+    const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
+    const [source, module] = container.querySelectorAll('select');
+    const [url, title] = container.querySelectorAll('input');
+    assert.equal(url.parentElement.hidden, true);
+    assert.equal(settings.read().options.href, '/apps/form/admin/');
+    source.value = 'url';
+    source.dispatchEvent(new window.Event('change'));
+    assert.equal(module.parentElement.hidden, true);
+    assert.equal(url.parentElement.hidden, false);
+    url.value = '//other.test/';
+    assert.throws(() => settings.read(), /shortcutUrlInvalid/);
+    url.value = 'https://other.test';
+    assert.throws(() => settings.read(), /shortcutTitleRequired/);
+    title.value = ' My site ';
+    assert.deepEqual(JSON.parse(JSON.stringify(settings.read())), { options: { source: 'url', href: 'https://other.test/', title: 'My site' } });
+});
+
 test('Recent pages use a bounded preview and expose server-filtered titles safely in both variants', async t => {
     const pages = Array.from({ length: 8 }, (_, index) => ({ docId: index + 1, title: index ? `Page ${index}` : '<img src=x>', fullPath: '/Section', saveDate: '26.09.2026 10:00' }));
     const { scope, context, container, requests } = fixture(t, { pages });
@@ -53,10 +91,32 @@ test('Recent pages use a bounded preview and expose server-filtered titles safel
     assert.equal(container.querySelector('img'), null);
     container.replaceChildren();
     await widget.render({ container, context, signal, instance: { size: '3x3' } });
-    assert.equal(container.querySelectorAll('tbody tr').length, 6);
-    assert.equal(container.querySelectorAll('th[scope=col]').length, 3);
+    assert.equal(container.querySelectorAll('li').length, 6);
+    assert.equal(container.querySelectorAll('.md-dashboard-widget__page-section').length, 6);
+    assert.match(container.querySelector('.md-dashboard-widget__page-date').textContent, /26.09.2026/);
     assert.equal(requests[0].options.signal, signal);
     assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
+});
+
+test('Recent page thumbnails use supplied local perex images and restore an icon when loading fails', async t => {
+    const { scope, context, container, window } = fixture(t, { pages: [
+        { docId: 1, title: 'Page', fullPath: '/Section/Page', perexImage: '/images/news/photo.jpg', saveDate: '02.03.2026 14:30:22' },
+        { docId: 2, title: 'External image', perexImage: '//external.test/photo.jpg' },
+        { docId: 3, title: 'Executable image', perexImage: 'javascript:alert(1)' }
+    ] });
+    await scope.getWidget('recent-pages').render({ container, context, signal: new AbortController().signal, instance: { size: '3x3' } });
+    assert.equal(container.querySelectorAll('img').length, 1);
+    const thumbnail = container.querySelector('.md-dashboard-widget__page-image');
+    const image = thumbnail.querySelector('img');
+    assert.equal(image.alt, '');
+    assert.equal(image.width, 38);
+    assert.equal(image.getAttribute('src'), '/thumb/images/news/photo.jpg?w=76&h=76&ip=5');
+    assert.equal(thumbnail.querySelector('i').hidden, true);
+    assert.equal(container.querySelector('.md-dashboard-widget__page-section').textContent, '/Section');
+    assert.equal(container.querySelector('.md-dashboard-widget__page-date').textContent, '02.03.2026 14:30:22');
+    image.dispatchEvent(new window.Event('error'));
+    assert.equal(thumbnail.querySelector('img'), null);
+    assert.equal(thumbnail.querySelector('i').hidden, false);
 });
 
 test('A denied recent-page request remains an error instead of an empty result', async t => {
@@ -69,7 +129,7 @@ test('Default widgets follow permissions and authorized menu destinations', t =>
     const { scope, context } = fixture(t, { allowed: false, menu: [] });
     assert.deepEqual(JSON.parse(JSON.stringify(scope.getDashboardDefaults(context))).map(item => item.type), ['search', 'sessions', 'news']);
     assert.equal(scope.getWidget('recent-pages').isAvailable(context), false);
-    assert.equal(scope.getWidget('shortcut').isAvailable(context), false);
+    assert.equal(scope.getWidget('shortcut').isAvailable(context), true);
 });
 
 test('New profiles include each available type and no more than two authorized shortcut destinations', t => {
@@ -109,15 +169,15 @@ function chartRuntime(window, { load = async () => {}, create } = {}) {
         appear(duration) { this.appearanceDuration = duration; }
     });
     const list = values => ({ values, getIndex: index => values[index], each: callback => values.forEach(callback) });
-    const axis = () => settings({ renderer: { labels: { template: settings() } } });
+    const axis = () => settings({ renderer: { labels: { template: settings() }, grid: { template: settings() } } });
     class LineChartForm { constructor(config) { Object.assign(this, config); } }
     class BarChartForm { constructor(config) { Object.assign(this, config); } }
     const makeChart = form => {
         const series = Array.from({ length: form instanceof LineChartForm ? form.chartData.size : 1 }, () => {
             const tooltip = Object.assign(settings(), { label: settings() });
-            return Object.assign(settings({ tooltip }), { strokes: { template: settings() } });
+            return Object.assign(settings({ tooltip }), { strokes: { template: settings() }, fills: { template: settings() } });
         });
-        const chart = Object.assign(settings({ cursor: settings(), scrollbarX: settings(), scrollbarY: settings() }), {
+        const chart = Object.assign(settings({ cursor: settings(), scrollbarX: settings(), scrollbarY: settings(), colors: settings() }), {
             root: { setThemes(themes) { this.themes = themes; } },
             series: list(series), xAxes: list([axis()]), yAxes: list([axis()]),
             children: list([settings({ verticalScrollbar: settings() })]), zoomOutButton: settings()
@@ -127,7 +187,7 @@ function chartRuntime(window, { load = async () => {}, create } = {}) {
     };
     let loads = 0;
     window.initAmcharts = async () => { loads++; await load(); };
-    window.am5 = { percent: value => value };
+    window.am5 = { percent: value => value, color: value => value };
     window.WebjetTheme = { new: () => ({ theme: 'WebJET' }) };
     window.ChartTools = {
         LineChartForm, BarChartForm, DateType: { Days: 'day' },
@@ -169,6 +229,26 @@ test('Traffic uses shared AmCharts line forms with aligned comparison points and
     cleanup();
     assert.equal(runtime.roots.size, 0);
     assert.equal(runtime.destroyed.length, 1);
+});
+
+test('Chart colors come from runtime CSS properties while data and lifecycle stay in ChartTools', async t => {
+    const { scope, context, container, window } = fixture(t, { data: trafficData });
+    const runtime = chartRuntime(window, { load: async () => {
+        const chart = container.querySelector('.md-dashboard-widget__chart');
+        chart.style.setProperty('--wj-dashboard-chart-primary', 'rgb(6.84, 129.16, 111.48)');
+        chart.style.setProperty('--wj-dashboard-chart-comparison', '#686f83');
+        chart.style.setProperty('--wj-dashboard-chart-grid', '#dddfe6');
+        chart.style.setProperty('--wj-dashboard-chart-label', '#272727');
+    } });
+    const cleanup = await scope.getWidget('traffic').render({ container, context, options: {}, instance: { size: '3x3' }, signal: new AbortController().signal });
+    const chart = runtime.forms[0].chart;
+    assert.equal(chart.series.getIndex(0).get('stroke'), 'rgb(7,129,111)');
+    assert.equal(chart.series.getIndex(1).get('stroke'), '#686f83');
+    assert.equal(chart.series.getIndex(0).fills.template.get('fillOpacity'), 0.08);
+    assert.equal(chart.xAxes.getIndex(0).get('renderer').labels.template.get('fill'), '#272727');
+    assert.equal(chart.yAxes.getIndex(0).get('renderer').grid.template.get('stroke'), '#dddfe6');
+    cleanup();
+    assert.equal(runtime.roots.size, 0);
 });
 
 test('Detailed referrers use horizontal AmCharts and retain literal labels and shares of the full total', async t => {
@@ -262,18 +342,28 @@ test('Forms keep the selected form in domain options and preserve unavailable se
     assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
 });
 
-test('Release acknowledgement hides only the matching release and supports restoring it', async t => {
-    const { scope, context } = fixture(t, { extraWidgets: true });
+test('Release acknowledgement folds the matching release into a visible summary that can be expanded again', async t => {
+    const { scope, context, container } = fixture(t, { extraWidgets: true });
     context.labels.changelog = '<p>WebJET CMS <strong>2026.18</strong> release.</p><p>Second feature.</p>';
     context.settings.acknowledgedNewsVersion = '2026.18';
     let acknowledged;
     context.dashboard = { acknowledgeNews: async version => { acknowledged = version; return true; } };
     const widget = scope.getWidget('news');
-    assert.equal(widget.isVisible({}, context), false);
-    context.labels.changelog = '<p>WebJET CMS <strong>2026.19</strong> release.</p>';
-    assert.equal(widget.isVisible({}, context), true);
-    await widget.reveal({}, context);
+    widget.render({ container, context });
+    assert.match(container.querySelector('.md-dashboard-widget__news-summary').textContent, /2026.18/);
+    assert.equal(container.querySelector('.md-dashboard-widget__news-highlights'), null);
+    assert.equal(container.querySelector('button').getAttribute('aria-expanded'), 'false');
+    container.querySelector('button').click();
+    await new Promise(resolve => setImmediate(resolve));
     assert.equal(acknowledged, null);
+    container.replaceChildren();
+    context.labels.changelog = '<p>WebJET CMS <strong>2026.19</strong> release.</p>';
+    widget.render({ container, context });
+    assert.equal(container.querySelector('button').getAttribute('aria-expanded'), 'true');
+    assert.match(container.querySelector('.md-dashboard-widget__news-highlights').textContent, /2026.19/);
+    container.querySelector('button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(acknowledged, '2026.19');
 });
 
 test('Visitor comparisons do not fabricate percentage growth from a zero baseline', t => {
@@ -284,7 +374,7 @@ test('Visitor comparisons do not fabricate percentage growth from a zero baselin
     assert.equal(scope.change(5, 10), '-50 %');
 });
 
-test('The mandatory sessions widget exposes management even when collapsed', async t => {
+test('The mandatory sessions widget retains active login details and management even for a stored collapsed layout', async t => {
     const { scope, context, container } = fixture(t, { extraWidgets: true, data: { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [
         { sessionId: 'current', logonTime: 1000, browserName: 'Browser', remoteAddr: '127.0.0.1' }
     ] }] } } });
@@ -292,7 +382,7 @@ test('The mandatory sessions widget exposes management even when collapsed', asy
     assert.equal(widget.mandatory, true);
     await widget.renderCollapsed({ container, context, instance: { collapsed: true }, signal: new AbortController().signal });
     assert.match(container.querySelector('button').textContent, /manageSessions.*\(1\)/);
-    assert.equal(container.querySelector('li'), null);
+    assert.match(container.querySelector('li').textContent, /Browser.*127.0.0.1/);
 });
 
 test('Search exposes separate scopes and changes its accessible hint', t => {
@@ -352,7 +442,7 @@ test('Active newsletter refreshes only while visible and releases its observer a
     cleanup(); assert.equal(disconnected, true); assert.equal(cleared, true);
 });
 
-test('Current login stays visible in the three-session preview even when newer sessions exist', async t => {
+test('Every active login stays visible with the current session first even when newer sessions exist', async t => {
     const { scope, context, container } = fixture(t, { extraWidgets: true, data: { currentSessions: {
         currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [
             { sessionId: 'other-1', logonTime: 5000 }, { sessionId: 'other-2', logonTime: 4000 },
@@ -361,7 +451,7 @@ test('Current login stays visible in the three-session preview even when newer s
     } } });
     await scope.getWidget('sessions').render({ container, context, instance: { collapsed: false }, signal: new AbortController().signal });
     const rows = container.querySelectorAll('li');
-    assert.equal(rows.length, 3);
+    assert.equal(rows.length, 4);
     assert.match(rows[0].textContent, /Current browser.*currentSession/);
     assert.equal(rows[0].querySelector('button'), null);
 });
@@ -391,5 +481,5 @@ test('Release announcements preserve paragraph breaks from the WebJET Markdown r
     assert.equal(news.paragraphs.length, 3);
     assert.equal(news.paragraphs[1], 'Second feature.');
     scope.getWidget('news').render({ container, context });
-    assert.equal(container.querySelectorAll('li').length, 3);
+    assert.equal(container.querySelectorAll('.md-dashboard-widget__news-highlights p').length, 2);
 });

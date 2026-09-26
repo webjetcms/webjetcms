@@ -10,11 +10,11 @@ export function flattenSessions(data) {
 function sessionList(container, data, context, signal, limit) {
     const list = node('ul', 'md-dashboard-widget__sessions list-unstyled');
     flattenSessions(data).slice(0, limit).forEach(session => {
-        const row = node('li', 'mb-2');
+        const row = node('li', 'md-dashboard-widget__session');
         row.dataset.sessionLogon = String(session.logonTime);
-        row.append(node('strong', 'd-block', session.browserName), node('span', 'small d-block', `${date(session.logonTime)} · ${session.remoteAddr || ''}`));
+        row.append(node('strong', 'md-dashboard-widget__session-name', session.browserName), node('span', 'md-dashboard-widget__session-detail', `${date(session.logonTime)} · ${session.remoteAddr || ''}`));
         row.title = [session.domainName, session.cluster].filter(Boolean).join(' · ');
-        if (session.sessionId === data.currentSessionId) row.append(node('span', 'badge bg-light text-dark', text(context, 'currentSession')));
+        if (session.sessionId === data.currentSessionId) row.append(node('span', 'md-dashboard-widget__session-current', text(context, 'currentSession')));
         else {
             const logout = node('button', 'btn btn-sm btn-outline-secondary', text(context, 'logoutSession'));
             logout.type = 'button';
@@ -32,7 +32,7 @@ function sessionList(container, data, context, signal, limit) {
                         logout.replaceWith(node('span', 'small d-block text-muted', text(context, 'sessionPending')));
                     } else {
                         row.remove();
-                        context.dashboard.refresh(context.settings.items.find(item => item.type === 'sessions')?.id);
+                        context.dashboard.refresh(context.settings.items.find(item => item.type === 'sessions')?.id || 'dashboard-fixed-sessions');
                     }
                 } catch (error) {
                     if (signal.aborted) return;
@@ -49,13 +49,13 @@ function sessionList(container, data, context, signal, limit) {
     container.append(list);
 }
 
-async function renderSessions({ container, context, signal, instance }) {
+async function renderSessions({ container, context, signal }) {
     const result = await fetchData('sessions', {}, signal);
     if (signal.aborted) return;
     const data = result.currentSessions;
     const sessions = flattenSessions(data);
-    if (!instance.collapsed) sessionList(container, data, context, signal, 3);
-    const manage = node('button', 'btn btn-sm btn-outline-secondary', `${text(context, 'manageSessions')} (${number(sessions.length)})`);
+    sessionList(container, data, context, signal, Infinity);
+    const manage = node('button', 'btn btn-sm btn-outline-secondary md-dashboard-widget__session-manage', `${text(context, 'manageSessions')} (${number(sessions.length)})`);
     manage.type = 'button';
     manage.addEventListener('click', async () => {
         const dialog = context.dashboard.showDialog(text(context, 'manageSessions'));
@@ -91,32 +91,42 @@ export function registerUtilityWidgets() {
     });
     registerWidget({
         type: 'news', titleKey: 'admin.dashboard.news.js', icon: 'ti-sparkles', sizes: ['3x2'],
-        isVisible: (instance, context) => !releaseNews(context).version || context.settings.acknowledgedNewsVersion !== releaseNews(context).version,
-        reveal: (instance, context) => context.dashboard.acknowledgeNews(null),
-        renderCollapsed({ container, context }) {
-            const { version, paragraphs } = releaseNews(context);
-            container.append(node('p', 'small mb-0', `WebJET CMS ${version} · ${paragraphs[0]?.slice(0, 120) || ''}${paragraphs[0]?.length > 120 ? '…' : ''}`));
-        },
         render({ container, context }) {
             const { version, paragraphs } = releaseNews(context);
-            const show = () => {
-                container.replaceChildren(node('strong', 'd-block mb-2', `WebJET CMS ${version}`));
-                const list = node('ul', 'md-dashboard-widget__list');
-                paragraphs.slice(0, 3).forEach(paragraph => list.append(node('li', '', paragraph.length > 200 ? `${paragraph.slice(0, 197)}…` : paragraph)));
-                container.append(list);
-                const details = node('a', 'd-inline-block mt-2 me-2', context.labels.seeCompleteChangelog || text(context, 'all'));
+            if (!paragraphs.length) { empty(container, context); return; }
+            const collapsed = Boolean(version && context.settings.acknowledgedNewsVersion === version);
+            const header = node('div', 'md-dashboard-widget__news-header');
+            header.append(node('strong', '', `WebJET CMS ${version}`));
+            const toggle = node('button', 'btn btn-sm md-dashboard-widget__news-toggle', text(context, collapsed ? 'newsMore' : 'newsCollapse'));
+            toggle.type = 'button';
+            toggle.setAttribute('aria-expanded', String(!collapsed));
+            toggle.addEventListener('click', async () => {
+                const hadFocus = document.activeElement === toggle;
+                const region = container.closest('[data-widget-type="news"]') || container;
+                toggle.disabled = true;
+                if (!await context.dashboard.acknowledgeNews(collapsed ? null : version)) toggle.disabled = false;
+                if (hadFocus && (document.activeElement === document.body || document.activeElement === toggle)) {
+                    region.querySelector('.md-dashboard-widget__news-toggle')?.focus({ preventScroll: true });
+                }
+            });
+            if (!collapsed) {
+                toggle.setAttribute('aria-label', text(context, 'newsCollapse'));
+                toggle.textContent = '';
+                const close = node('i', 'ti ti-x'); close.setAttribute('aria-hidden', 'true'); toggle.append(close);
+            }
+            const summary = node('p', 'md-dashboard-widget__news-summary', paragraphs[0]);
+            container.classList.toggle('is-news-collapsed', collapsed);
+            if (collapsed) header.append(summary);
+            header.append(toggle);
+            container.append(header);
+            if (!collapsed) {
+                const highlights = node('div', 'md-dashboard-widget__news-highlights');
+                paragraphs.slice(0, 2).forEach(paragraph => highlights.append(node('p', '', paragraph)));
+                container.append(highlights);
+                const details = node('a', 'md-dashboard-widget__news-more', context.labels.seeCompleteChangelog || text(context, 'all'));
                 details.href = docsUrl('CHANGELOG'); details.target = '_blank'; details.rel = 'noopener';
-                const acknowledge = node('button', 'btn btn-sm btn-outline-secondary mt-2', text(context, 'acknowledge'));
-                acknowledge.type = 'button';
-                acknowledge.addEventListener('click', async () => { acknowledge.disabled = true; if (!await context.dashboard.acknowledgeNews(version)) acknowledge.disabled = false; });
-                container.append(details, acknowledge);
-            };
-            if (version && context.settings.acknowledgedNewsVersion === version) {
-                empty(container, context, 'newsRead');
-                const button = node('button', 'btn btn-sm btn-outline-secondary', text(context, 'showNews'));
-                button.type = 'button'; button.addEventListener('click', show); container.append(button);
-            } else if (!paragraphs.length) empty(container, context);
-            else show();
+                container.append(details);
+            }
         }
     });
     registerWidget({
@@ -130,7 +140,7 @@ export function registerUtilityWidgets() {
         },
         render({ container, options, context, instance }) {
             const form = node('form', 'md-dashboard-widget__search');
-            const switcher = node('fieldset', 'd-flex gap-3 mb-2');
+            const switcher = node('fieldset', 'md-dashboard-widget__search-scope');
             switcher.append(node('legend', 'visually-hidden', text(context, 'search')));
             const input = node('input', 'form-control'); input.type = 'search'; input.required = true; input.maxLength = 500;
             let scope = options.scope === 'docs' ? 'docs' : 'admin';

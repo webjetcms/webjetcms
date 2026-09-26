@@ -13,7 +13,7 @@ const metricKey = metric => ({ views: 'visits', sessions: 'sessionsMetric', uniq
 /** Labels the actual returned interval, including whole-week error aggregates. */
 function period(container, data, context) {
     if (data.from == null || data.to == null) return;
-    container.append(node('p', 'small text-muted mb-2', `${date(data.from, false)} – ${date(data.to, false)}`));
+    container.append(node('p', 'md-dashboard-widget__period small text-muted mb-2', `${date(data.from, false)} – ${date(data.to, false)}`));
     if (data.granularity === 'week') container.append(node('p', 'small text-muted mb-2', text(context, 'weeklyRequests')));
 }
 
@@ -26,11 +26,14 @@ export function change(current, previous) {
 
 function summary(container, data, context, href, label) {
     const group = node('div', 'md-dashboard-widget__metric');
-    group.append(link(number(data.total), href, 'md-dashboard-widget__number'));
+    const total = link(number(data.total), href, 'md-dashboard-widget__number');
+    if (label) total.setAttribute('aria-label', `${label}: ${number(data.total)}`);
+    group.append(total);
     if (label) group.append(node('span', 'small', label));
     if (data.previous != null) {
         const delta = change(data.total, data.previous);
-        const comparison = node('span', 'small text-muted', delta || text(context, 'noComparison'));
+        const direction = delta ? (Number(data.total) > Number(data.previous) ? 'positive' : Number(data.total) < Number(data.previous) ? 'negative' : 'neutral') : 'neutral';
+        const comparison = node('span', `md-dashboard-widget__comparison md-dashboard-widget__comparison--${direction} small`, delta || text(context, 'noComparison'));
         comparison.title = `${text(context, 'previous')}: ${number(data.previous)}`;
         group.append(comparison);
     }
@@ -155,7 +158,7 @@ export function registerDataWidgets() {
         isAvailable: () => window.WJ.hasPermission('menuWebpages'), renderCollapsed: renderDataSummary,
         async render({ container, instance, context, signal }) {
             const data = await fetchData('approvals', {}, signal); if (signal.aborted) return;
-            summary(container, data, context, moduleLinks.approvals);
+            summary(container, data, context, moduleLinks.approvals, text(context, 'pendingPages'));
             if (instance.size !== '1x1') {
                 if (!data.items.length) empty(container, context);
                 else table(container, [text(context, 'page'), text(context, 'requester'), text(context, 'waitingSince')], data.items.slice(0, 6).map(item => [link(item.title, item.url), item.section, date(item.date)]));
@@ -171,9 +174,12 @@ export function registerDataWidgets() {
             period(container, data, context);
             if (!data.items.length) empty(container, context);
             else {
-                const list = node('ul', 'list-unstyled');
+                const list = node('ul', 'md-dashboard-widget__publishing list-unstyled');
                 data.items.slice(0, 5).forEach(item => {
-                    const row = node('li', 'mb-2'); row.append(link(item.title, item.url), node('span', 'd-block small text-muted', `${text(context, item.kind === 'expire' ? 'expire' : 'publish')} · ${date(item.date)}`)); list.append(row);
+                    const row = node('li', `md-dashboard-widget__publication${item.kind === 'expire' ? ' md-dashboard-widget__publication--expire' : ''}`);
+                    row.append(link(item.title, item.url), node('span', 'd-block small text-muted', `${text(context, item.kind === 'expire' ? 'expire' : 'publish')} · ${date(item.date)}`));
+                    if (item.kind === 'publish') row.append(node('span', 'md-dashboard-widget__publication-status small', text(context, 'draft')));
+                    list.append(row);
                 }); container.append(list);
             }
             footer(container, context, moduleLinks.publishing);
@@ -191,7 +197,8 @@ export function registerDataWidgets() {
         async render({ container, instance, options, domainOptions, context, signal }) {
             const data = await fetchData('forms', { days: options.days || 7, formName: domainOptions.formName }, signal); if (signal.aborted) return;
             const href = domainOptions.formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(domainOptions.formName)}` : moduleLinks.forms;
-            summary(container, data, context, href, `${text(context, 'submissions')} · ${domainOptions.formName || text(context, 'allForms')}`);
+            summary(container, data, context, href, text(context, 'submissions'));
+            if (domainOptions.formName) container.append(node('span', 'small text-muted', domainOptions.formName));
             period(container, data, context);
             if (instance.size !== '1x1') {
                 if (!data.items.length) empty(container, context);
@@ -211,7 +218,7 @@ export function registerDataWidgets() {
         configure: args => statSettings(args, type === 'traffic'), renderCollapsed: renderDataSummary,
         async render({ container, instance, options, context, signal }) {
             const data = await fetchData(type, { days: options.days || 7, ...(type === 'traffic' ? { metric: options.metric || 'sessions' } : {}) }, signal); if (signal.aborted) return;
-            if (type === 'traffic' || type === 'errors') summary(container, data, context, moduleLinks[type], type === 'traffic' ? text(context, metricKey(data.metric)) : null);
+            if (type === 'traffic' || type === 'errors') summary(container, data, context, moduleLinks[type], type === 'traffic' ? text(context, metricKey(data.metric)) : text(context, 'requests'));
             period(container, data, context);
             if (instance.size !== '1x1') {
                 const cleanup = type === 'traffic' ? await lineChart(container, data, context, signal)
