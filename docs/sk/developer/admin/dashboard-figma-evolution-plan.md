@@ -68,14 +68,14 @@ Zdrojom je `src/main/webapp/admin/v9/src/scss/5-modules/_md-dashboard.scss`. SAS
 
 ## Výsledky
 
-Implementované sú všetky vyššie uvedené oblasti. Aktívne relácie zobrazujú celý zoznam; pri veľkom počte má zoznam vlastné rolovanie. Novinky zobrazujú dva úvodné odseky a odkaz na kompletný zoznam zmien. Uložené staršie rozloženia sa zachovávajú; nový predvolený variant sa uplatní pre nový alebo resetovaný profil.
+Implementované sú všetky vyššie uvedené oblasti. Aktívne relácie zobrazujú celý zoznam; pri veľkom počte má zoznam vlastné rolovanie. Novinky zobrazujú stručný úvodný odsek a odkaz na kompletný zoznam zmien. Uložené staršie rozloženia sa zachovávajú; nový predvolený variant sa uplatní pre nový alebo resetovaný profil.
 
 Pri kontrole sa opravili aj dve vedľajšie chyby: lokalizovaný dátum `02.03.2026` sa už neinterpretuje ako americký dátum a 38px perex náhľady používajú thumbnail službu s výstupom 76 × 76 px. ChartTools dostáva runtime farby vrátane normalizácie desatinných RGB kanálov zo SASS.
 
 Výsledky finálneho overenia:
 
 - Java dashboard testy: **54 úspešných, 0 chýb**.
-- JavaScript dashboard helper testy: **55 úspešných, 0 chýb**.
+- JavaScript dashboard helper testy: **58 úspešných, 0 chýb**.
 - CodeceptJS: **22 overených scenárov** — widgety 8, katalóg 6, dátové projekcie 4, nový dizajn 4. Zahŕňa úspešné cielené opakovania po oprave synchronizácie presunu, rolovania a Bootstrap animácie modalu v testoch.
 - Nové dizajnové scenáre overujú stále dostupné relácie, CSRF pri načítaní upozornení, nezávislé rozbalenie upozornení, režim úprav, klávesnicový presun a návrat fokusu, zbalenie noviniek po obnovení stránky a šírky 390, 768 a 1337 px.
 - Katalóg overuje skutočné oprávnené dáta, textový ekvivalent grafov, kontrolu prístupnosti a uvoľnenie AmCharts pri obnovení, zbalení, zmene veľkosti a odstránení widgetu.
@@ -93,3 +93,19 @@ Pri klávesnicovej kontrole sa opravilo zachovanie fokusu po zbalení noviniek. 
 Prenosný balík `webjet-dashboard-58806.zip` obsahuje tento plán, pôvodný technický plán widgetov, schválený interaktívny prototyp, dizajnové poznámky a snímky implementácie pre desktop a mobil. Snímky implementácie vznikli pred vložením testovacích fixture a zobrazujú skutočné dáta lokálnej administrácie testovacieho účtu. Prázdne formuláre alebo publikovanie preto zostávajú pravdivo prázdne.
 
 Prototyp umožňuje porovnať pôvodné tri vizuálne smery; implementovaný je variant Figma evolúcia. Pri staršej otvorenej karte môže byť potrebné obnovenie bez cache, pretože existujúci serverový filter cacheuje administratívne CSS.
+
+
+## Vizuálne doladenie podľa schváleného prototypu
+
+Po priamom porovnaní prototypu a implementácie sa upravilo:
+
+- Uvítanie ako jedna plocha s levanduľovo-mätovým gradientom, vnútorným odsadením 24 px a užším panelom prihlásení širokým 300 px. Dátum a novinky majú pokojnejšiu typografiu; odkaz na správu prihlásení je v hlavičke panelu.
+- Výraznejšia hlavná hodnota návštevnosti (56 px), menšie metriky (32 px), kompaktné názvy a čitateľné popisy. Formuláre a newsletter majú levanduľový tón, schvaľovanie žltý, chyby jemný ružový a publikovanie oranžový.
+- Posledné stránky používajú priehľadné riadky s jemným delením a samostatnými náhľadmi namiesto vnorených bielych kariet.
+- Vyhľadávanie je jedna kompaktná plocha s natívnymi rádiami vizuálne spracovanými ako segmenty. Skratky sú menšie; upozornenia majú označenie skupiny a počet.
+- Graf má jemnejšie čiary a stručnú legendu. Publikovanie zobrazuje deň/mesiac a čas. Newsletter odlišuje stav, názov, počty a priebeh odosielania.
+- Nové odtiene majú SASS definície a runtime CSS premenné vrátane gradientu, odkazov a tlmeného textu. Odkazy na pastelových podkladoch používajú tmavší existujúci modrý odtieň; upravené sú aj hover/focus stavy.
+
+Zachované sú skutočné dáta, uložené poradie a veľkosti kariet, globálna hlavička a tmavé menu. Počet položiek a prázdne stavy sa riadia reálnymi dátami, preto sa obsah líši od ilustračného prototypu.
+
+Overenie tejto úpravy: **58 JavaScript helper testov, 4 dizajnové E2E scenáre a 6 scenárov katalógu**. Prešli kontrola prístupnosti, responzívne šírky 390/768/1337 px, životný cyklus AmCharts, vyhľadávanie, klávesnicové ovládanie a návrat pôvodných preferencií. Development a production zostava prešli. Java služby sa pri tomto doladení nemenili.

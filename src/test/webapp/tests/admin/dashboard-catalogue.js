@@ -112,7 +112,7 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
     }
     I.seeNumberOfElements('#toast-container-overview', 1);
     I.seeElement('[data-widget-type="sessions"] .md-dashboard__widget-content button');
-    I.seeNumberOfElements('[data-widget-type="news"] .md-dashboard-widget__news-highlights > p', 2);
+    I.seeNumberOfElements('[data-widget-type="news"] .md-dashboard-widget__news-highlights > p', 1);
     I.resizeWindow(1337, 1052);
     I.saveScreenshot('dashboard-catalogue-desktop.png', true);
     showWidget(I, 'traffic');
@@ -210,14 +210,14 @@ Scenario('Collapse release news across reload and expand it from the compact sum
     I.clickCss('[data-widget-type="news"] .md-dashboard-widget__news-toggle');
     waitForSave(I);
     I.waitForVisible('[data-widget-type="news"]', 10);
-    I.seeNumberOfElements('[data-widget-type="news"] .md-dashboard-widget__news-highlights > p', 2);
+    I.seeNumberOfElements('[data-widget-type="news"] .md-dashboard-widget__news-highlights > p', 1);
 });
 
 Scenario('Documentation search switches scope and opens the encoded query without an external request', async ({ I }) => {
     waitForWidgets(I);
     const scope = '[data-widget-type="search"]';
     const query = 'formulár & prístupnosť autotest';
-    I.clickCss(`${scope} input[type="radio"][value="docs"]`);
+    I.clickCss(`${scope} label:has(input[value="docs"])`);
     I.fillField(`${scope} input[type="search"]`, query);
     await I.executeScript(() => {
         window.autotestOriginalOpen = window.open;
@@ -234,7 +234,7 @@ Scenario('Documentation search switches scope and opens the encoded query withou
     I.assertEqual(new URL(popup.url).searchParams.get('q'), query);
     I.assertEqual(popup.target, '_blank');
     I.assertContain(popup.features, 'noopener');
-    I.clickCss(`${scope} input[type="radio"][value="admin"]`);
+    I.clickCss(`${scope} label:has(input[value="admin"])`);
     I.seeElement(`${scope} input[type="radio"][value="admin"]:checked`);
 });
 

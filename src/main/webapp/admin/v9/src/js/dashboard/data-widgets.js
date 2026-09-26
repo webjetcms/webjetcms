@@ -1,5 +1,5 @@
 import { registerWidget } from './registry';
-import { node, text, number, date, link, field, table, empty, footer, fetchData } from './widget-utils';
+import { node, text, number, date, link, icon, field, table, empty, footer, fetchData } from './widget-utils';
 import { chartHost, mountChart } from './charts';
 
 const moduleLinks = {
@@ -26,16 +26,20 @@ export function change(current, previous) {
 
 function summary(container, data, context, href, label) {
     const group = node('div', 'md-dashboard-widget__metric');
+    const main = node('div', 'md-dashboard-widget__metric-main');
     const total = link(number(data.total), href, 'md-dashboard-widget__number');
     if (label) total.setAttribute('aria-label', `${label}: ${number(data.total)}`);
-    group.append(total);
-    if (label) group.append(node('span', 'small', label));
+    main.append(total);
+    if (label) main.append(node('span', 'md-dashboard-widget__metric-label small', label));
+    group.append(main);
     if (data.previous != null) {
         const delta = change(data.total, data.previous);
         const direction = delta ? (Number(data.total) > Number(data.previous) ? 'positive' : Number(data.total) < Number(data.previous) ? 'negative' : 'neutral') : 'neutral';
         const comparison = node('span', `md-dashboard-widget__comparison md-dashboard-widget__comparison--${direction} small`, delta || text(context, 'noComparison'));
         comparison.title = `${text(context, 'previous')}: ${number(data.previous)}`;
-        group.append(comparison);
+        const comparisonGroup = node('div', 'md-dashboard-widget__metric-change');
+        comparisonGroup.append(comparison, node('span', 'md-dashboard-widget__comparison-label small', text(context, 'previous')));
+        group.append(comparisonGroup);
     }
     container.append(group);
 }
@@ -72,7 +76,14 @@ async function lineChart(container, data, context, signal) {
     const previous = data.previousSeries || [];
     const metric = text(context, metricKey(data.metric));
     const host = chartHost(container, `${metric}: ${number(data.total)}; ${text(context, 'previous')}: ${number(data.previous)}`);
-    if (previous.length) container.append(node('p', 'small text-muted mb-1', `${text(context, 'previous')}: ${number(data.previous)} · ${text(context, 'chartPrevious')}`));
+    const legend = node('div', 'md-dashboard-widget__chart-legend');
+    legend.append(node('span', 'md-dashboard-widget__chart-key md-dashboard-widget__chart-key--current', metric));
+    if (previous.length) {
+        const comparison = node('span', 'md-dashboard-widget__chart-key md-dashboard-widget__chart-key--previous', text(context, 'previous'));
+        comparison.title = `${text(context, 'previous')}: ${number(data.previous)}`;
+        legend.append(comparison);
+    }
+    container.append(legend);
     chartTable(container, context, [metric, text(context, 'previous')], series.map((point, index) => [
         `${date(point.date, false)}: ${number(point.value)}`,
         previous[index] ? `${date(previous[index].date, false)}: ${number(previous[index].value)}` : '—'
@@ -100,8 +111,9 @@ async function rankedList(container, data, context, type, detailed, signal) {
         table(container, [text(context, 'page'), text(context, 'section'), text(context, 'count'), text(context, 'change')], items.map(item => [
             link(item.title, item.url), item.section || '', number(item.value), change(item.value, item.previous) || '—'
         ]));
-    } else if (detailed && type === 'referrers') {
+    } else if (type === 'referrers') {
         const host = chartHost(container, `${text(context, 'source')}: ${number(data.total)}`, true);
+        if (!detailed) host.classList.add('md-dashboard-widget__chart--compact');
         const chartData = items.map(item => ({ title: item.title, value: item.value,
             share: `${number(Math.round((data.total > 0 ? item.value / data.total * 100 : 0) * 10) / 10)} %` }));
         container.append(node('p', 'small text-muted mb-1', text(context, 'observedShare')));
@@ -110,7 +122,7 @@ async function rankedList(container, data, context, type, detailed, signal) {
             yAxeName: 'title', xAxeName: 'value', chartTitle: '', chartDivId, chartData, horizontal: true, colorScheme: 'set3'
         }), form => {
             form.chart.xAxes.getIndex(0).set('maxPrecision', 0);
-            form.chart.yAxes.getIndex(0).get('renderer').labels.template.setAll({ maxWidth: 110, oversizedBehavior: 'truncate', ignoreFormatting: true });
+            form.chart.yAxes.getIndex(0).get('renderer').labels.template.setAll({ maxWidth: detailed ? 140 : 95, oversizedBehavior: 'truncate', ignoreFormatting: true });
             const tooltip = form.chart.series.getIndex(0).get('tooltip');
             tooltip.set('labelText', '{title}: {valueX} ({share})');
             tooltip.label.set('ignoreFormatting', true);
@@ -177,8 +189,21 @@ export function registerDataWidgets() {
                 const list = node('ul', 'md-dashboard-widget__publishing list-unstyled');
                 data.items.slice(0, 5).forEach(item => {
                     const row = node('li', `md-dashboard-widget__publication${item.kind === 'expire' ? ' md-dashboard-widget__publication--expire' : ''}`);
-                    row.append(link(item.title, item.url), node('span', 'd-block small text-muted', `${text(context, item.kind === 'expire' ? 'expire' : 'publish')} · ${date(item.date)}`));
-                    if (item.kind === 'publish') row.append(node('span', 'md-dashboard-widget__publication-status small', text(context, 'draft')));
+                    const locale = (window.userLng === 'cz' ? 'cs' : window.userLng) || 'sk';
+                    const parsed = item.date == null ? null : new Date(item.date);
+                    const validDate = parsed && !Number.isNaN(parsed.getTime());
+                    if (validDate) {
+                        const calendar = node('time', 'md-dashboard-widget__publication-calendar');
+                        calendar.dateTime = parsed.toISOString();
+                        calendar.setAttribute('aria-label', date(item.date));
+                        calendar.append(node('small', '', parsed.toLocaleString(locale, { month: 'short' })), node('strong', '', parsed.toLocaleString(locale, { day: 'numeric' })));
+                        row.append(calendar);
+                    }
+                    const content = node('div', 'md-dashboard-widget__publication-content');
+                    const scheduledTime = validDate ? parsed.toLocaleString(locale, { hour: '2-digit', minute: '2-digit' }) : date(item.date);
+                    content.append(link(item.title, item.url), node('span', 'md-dashboard-widget__publication-time small', `${text(context, item.kind === 'expire' ? 'expire' : 'publish')} · ${scheduledTime}`));
+                    if (item.kind === 'publish') content.append(node('span', 'md-dashboard-widget__publication-status small', text(context, 'draft')));
+                    row.append(content);
                     list.append(row);
                 }); container.append(list);
             }
@@ -245,12 +270,23 @@ export function registerDataWidgets() {
                 ]));
             } else {
                 const campaign = data.items[0];
-                container.append(link(campaign.title, campaign.url, 'fw-bold d-block'), node('p', 'small mb-1', text(context, campaign.status === 'sending' ? 'active' : campaign.status)));
-                const progress = node('progress', 'w-100'); progress.max = Math.max(1, campaign.recipients); progress.value = campaign.sent;
-                progress.setAttribute('aria-label', text(context, 'sent')); container.append(progress, node('p', 'small mb-1', `${text(context, 'sent')}: ${number(campaign.sent)} / ${number(campaign.recipients)}`));
+                const state = ['sending', 'scheduled', 'completed', 'draft', 'paused'].includes(campaign.status) ? campaign.status : 'unknown';
+                const status = node('p', `md-dashboard-widget__newsletter-status md-dashboard-widget__newsletter-status--${state} small`);
+                status.append(icon(state === 'completed' ? 'ti-circle-check' : state === 'sending' ? 'ti-send' : state === 'paused' ? 'ti-player-pause' : 'ti-clock'), document.createTextNode(text(context, campaign.status === 'sending' ? 'active' : campaign.status)));
+                container.append(status, link(campaign.title, campaign.url, 'md-dashboard-widget__newsletter-title'));
+                const metric = node('div', 'md-dashboard-widget__newsletter-metric');
+                const count = node('span');
+                count.append(node('strong', '', number(campaign.sent)), document.createTextNode(` / ${number(campaign.recipients)}`));
+                metric.append(count, node('span', 'md-dashboard-widget__newsletter-percent', campaign.recipients > 0 ? `${number(Math.round(campaign.sent / campaign.recipients * 100))} %` : '—'));
+                const progress = node('progress', 'md-dashboard-widget__newsletter-progress w-100'); progress.max = Math.max(1, campaign.recipients); progress.value = campaign.sent;
+                progress.setAttribute('aria-label', text(context, 'sent'));
+                metric.setAttribute('aria-label', `${text(context, 'sent')}: ${number(campaign.sent)} / ${number(campaign.recipients)}`);
+                container.append(metric, progress);
+                const details = node('div', 'md-dashboard-widget__newsletter-details');
                 for (const [key, label] of [['failed', 'failed'], ['opens', 'opened'], ['clicks', 'clicked']]) {
-                    if (campaign[key] != null && (key === 'failed' || campaign.status === 'completed')) container.append(node('span', 'small d-block', `${text(context, label)}: ${number(campaign[key])}`));
+                    if (campaign[key] != null && (key === 'failed' || campaign.status === 'completed')) details.append(node('span', 'small d-block', `${text(context, label)}: ${number(campaign[key])}`));
                 }
+                container.append(details);
             }
             footer(container, context, moduleLinks.newsletter);
             return pollNewsletter(data, container, signal, refresh);

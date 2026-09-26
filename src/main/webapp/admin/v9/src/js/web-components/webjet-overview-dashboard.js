@@ -143,6 +143,11 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
             const notices = await response.json();
             if (request.signal.aborted) return;
             container.replaceChildren();
+            if (notices.length) {
+                const heading = element("p", "md-dashboard__notices-heading", WJ.translate("admin.dashboard.notices.js"));
+                heading.append(element("span", "md-dashboard__notice-count", notices.length));
+                container.append(heading);
+            }
             for (const notice of notices) {
                 const details = element("details", "md-dashboard__notice");
                 details.dataset.noticeId = notice.id;

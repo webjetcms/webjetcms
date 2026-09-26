@@ -56,7 +56,8 @@ export class DashboardController {
         this.host.classList.add("md-dashboard");
         this.hero = node("div", "md-dashboard__hero");
         const welcome = node("div", "md-dashboard__welcome");
-        welcome.append(node("p", "md-dashboard__eyebrow", this.context.data?.currentDomain || "WebJET CMS"));
+        const language = window.userLng === "cz" ? "cs" : window.userLng || "sk";
+        welcome.append(node("p", "md-dashboard__eyebrow", new Intl.DateTimeFormat(language, { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date())));
         welcome.append(node("h1", "md-dashboard__greeting", `${this._t("welcomeBack", "Welcome back,")} ${this.context.data?.userName || ""}`.trim()));
         this.news = node("div", "md-dashboard__news");
         welcome.append(this.news);
@@ -70,6 +71,7 @@ export class DashboardController {
         const actions = node("div", "md-dashboard__toolbar-actions");
         this.editButton = button(this._t("editOverview", "Edit overview"), () => this.setEditing(!this.editing), "btn btn-sm btn-outline-secondary md-dashboard__control");
         this.editButton.setAttribute("aria-pressed", "false");
+        this.editButton.prepend(icon("ti-adjustments-horizontal"));
         this.addButton = button(this._t("add", "Add widget"), () => this.showCatalogue(), "btn btn-sm btn-primary md-dashboard__control md-dashboard__edit-control");
         this.addButton.prepend(icon("ti-plus"));
         this.addButton.hidden = true;
@@ -100,6 +102,7 @@ export class DashboardController {
         this.editing = Boolean(editing);
         this.host.classList.toggle("is-editing", this.editing);
         this.editButton.textContent = this._t(this.editing ? "finishEditing" : "editOverview", this.editing ? "Done" : "Edit overview");
+        this.editButton.prepend(icon(this.editing ? "ti-check" : "ti-adjustments-horizontal"));
         this.editButton.setAttribute("aria-pressed", String(this.editing));
         this.host.querySelectorAll(".md-dashboard__edit-control").forEach(control => { control.hidden = !this.editing; });
         for (const view of this.views.values()) window.bootstrap?.Dropdown?.getInstance(view.header.querySelector('[data-bs-toggle="dropdown"]'))?.hide();

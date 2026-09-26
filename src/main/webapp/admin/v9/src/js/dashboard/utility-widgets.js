@@ -12,11 +12,13 @@ function sessionList(container, data, context, signal, limit) {
     flattenSessions(data).slice(0, limit).forEach(session => {
         const row = node('li', 'md-dashboard-widget__session');
         row.dataset.sessionLogon = String(session.logonTime);
-        row.append(node('strong', 'md-dashboard-widget__session-name', session.browserName), node('span', 'md-dashboard-widget__session-detail', `${date(session.logonTime)} · ${session.remoteAddr || ''}`));
+        const device = node('i', 'ti ti-device-desktop md-dashboard-widget__session-device');
+        device.setAttribute('aria-hidden', 'true');
+        row.append(device, node('strong', 'md-dashboard-widget__session-name', session.browserName), node('span', 'md-dashboard-widget__session-detail', `${date(session.logonTime)} · ${session.remoteAddr || ''}`));
         row.title = [session.domainName, session.cluster].filter(Boolean).join(' · ');
         if (session.sessionId === data.currentSessionId) row.append(node('span', 'md-dashboard-widget__session-current', text(context, 'currentSession')));
         else {
-            const logout = node('button', 'btn btn-sm btn-outline-secondary', text(context, 'logoutSession'));
+            const logout = node('button', 'btn btn-sm md-dashboard-widget__session-logout', text(context, 'logoutSession'));
             logout.type = 'button';
             logout.addEventListener('click', async () => {
                 logout.disabled = true;
@@ -54,9 +56,9 @@ async function renderSessions({ container, context, signal }) {
     if (signal.aborted) return;
     const data = result.currentSessions;
     const sessions = flattenSessions(data);
-    sessionList(container, data, context, signal, Infinity);
-    const manage = node('button', 'btn btn-sm btn-outline-secondary md-dashboard-widget__session-manage', `${text(context, 'manageSessions')} (${number(sessions.length)})`);
+    const manage = node('button', 'btn btn-sm md-dashboard-widget__session-manage', `${text(context, 'manage')} (${number(sessions.length)})`);
     manage.type = 'button';
+    manage.setAttribute('aria-label', `${text(context, 'manageSessions')} (${number(sessions.length)})`);
     manage.addEventListener('click', async () => {
         const dialog = context.dashboard.showDialog(text(context, 'manageSessions'));
         try {
@@ -65,6 +67,7 @@ async function renderSessions({ container, context, signal }) {
         } catch (error) { if (!dialog.signal.aborted) empty(dialog.body, context, 'unavailable'); }
     });
     container.append(manage);
+    sessionList(container, data, context, signal, Infinity);
 }
 
 /** Uses the announcement's release number, so development rebuilds do not reset acknowledgement. */
@@ -121,7 +124,7 @@ export function registerUtilityWidgets() {
             container.append(header);
             if (!collapsed) {
                 const highlights = node('div', 'md-dashboard-widget__news-highlights');
-                paragraphs.slice(0, 2).forEach(paragraph => highlights.append(node('p', '', paragraph)));
+                highlights.append(node('p', '', paragraphs[0]));
                 container.append(highlights);
                 const details = node('a', 'md-dashboard-widget__news-more', context.labels.seeCompleteChangelog || text(context, 'all'));
                 details.href = docsUrl('CHANGELOG'); details.target = '_blank'; details.rel = 'noopener';
@@ -146,15 +149,18 @@ export function registerUtilityWidgets() {
             let scope = options.scope === 'docs' ? 'docs' : 'admin';
             const hint = () => { input.placeholder = text(context, scope === 'docs' ? 'searchDocsHint' : 'searchAdminHint'); input.setAttribute('aria-label', input.placeholder); };
             for (const value of ['admin', 'docs']) {
-                const label = node('label', 'd-flex align-items-center gap-1');
-                const radio = node('input', 'form-check-input mt-0'); radio.type = 'radio'; radio.name = `scope-${instance.id}`; radio.value = value; radio.checked = scope === value;
+                const label = node('label', 'md-dashboard-widget__search-option');
+                const radio = node('input', 'visually-hidden'); radio.type = 'radio'; radio.name = `scope-${instance.id}`; radio.value = value; radio.checked = scope === value;
                 radio.addEventListener('change', () => { scope = value; hint(); });
-                label.append(radio, document.createTextNode(text(context, value === 'admin' ? 'adminSearch' : 'docsSearch'))); switcher.append(label);
+                label.append(radio, node('span', 'md-dashboard-widget__search-label', text(context, value === 'admin' ? 'adminSearch' : 'docsSearch'))); switcher.append(label);
             }
             hint();
-            const group = node('div', 'input-group');
-            const submit = node('button', 'btn btn-primary', text(context, 'searchButton')); submit.type = 'submit'; group.append(input, submit);
-            form.append(switcher, group);
+            const group = node('div', 'input-group md-dashboard-widget__search-input');
+            const submit = node('button', 'btn md-dashboard-widget__search-submit');
+            submit.type = 'submit'; submit.setAttribute('aria-label', text(context, 'searchButton'));
+            const searchIcon = node('i', 'ti ti-search'); searchIcon.setAttribute('aria-hidden', 'true'); submit.append(searchIcon);
+            group.append(input, submit);
+            form.append(group, switcher);
             form.addEventListener('submit', event => {
                 event.preventDefault();
                 const query = input.value.trim(); if (!query) { input.focus(); return; }

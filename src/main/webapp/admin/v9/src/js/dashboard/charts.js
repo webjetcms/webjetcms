@@ -47,7 +47,7 @@ function compactChart(form, host) {
     chart.series.each((series, index) => {
         const seriesColor = index === 1 ? comparison : primary;
         if (seriesColor) series.setAll({ stroke: seriesColor, fill: seriesColor });
-        series.strokes?.template.setAll({ strokeWidth: index === 1 ? 2 : 3 });
+        series.strokes?.template.setAll({ strokeWidth: index === 1 ? 1.5 : 2.5 });
         series.fills?.template.setAll({ visible: index === 0, fillOpacity: 0.08 });
         series.columns?.template.setAll({ height: 12, cornerRadiusTL: 4, cornerRadiusBL: 4, cornerRadiusTR: 4, cornerRadiusBR: 4 });
         series.setAll({ interpolationDuration: 0, stateAnimationDuration: 0 });

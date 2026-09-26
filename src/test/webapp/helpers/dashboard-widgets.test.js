@@ -269,6 +269,63 @@ test('Detailed referrers use horizontal AmCharts and retain literal labels and s
     assert.equal(runtime.roots.size, 0);
 });
 
+test('Compact referrers retain shared horizontal charts, text values, and abort cleanup', async t => {
+    const data = { total: 200, items: Array.from({ length: 6 }, (_, index) => ({ title: `Source ${index}`, value: 20 - index })) };
+    const { scope, context, container, window } = fixture(t, { data });
+    const runtime = chartRuntime(window);
+    const controller = new AbortController();
+    const cleanup = await scope.getWidget('referrers').render({ container, context, options: {}, instance: { size: '2x3' }, signal: controller.signal });
+    assert.ok(runtime.forms[0] instanceof window.ChartTools.BarChartForm);
+    assert.equal(runtime.forms[0].chartData.length, 5);
+    assert.equal(runtime.forms[0].chartData[0].share, '10 %');
+    assert.ok(container.querySelector('.md-dashboard-widget__chart--compact'));
+    assert.equal(container.querySelectorAll('details tbody tr').length, 5);
+    controller.abort();
+    cleanup();
+    assert.equal(runtime.roots.size, 0);
+    assert.equal(runtime.destroyed.length, 1);
+});
+
+test('Publishing calendars retain full dates and mark only publication events as ready', async t => {
+    const data = { items: [
+        { title: '<img src=x>', kind: 'publish', date: Date.UTC(2026, 8, 28, 8), url: '/admin/v9/webpages/web-pages-list/?docid=1' },
+        { title: 'Expiry', kind: 'expire', date: Date.UTC(2027, 0, 2, 9), url: '/admin/v9/webpages/web-pages-list/?docid=2' }
+    ] };
+    const { scope, context, container } = fixture(t, { data });
+    await scope.getWidget('publishing').render({ container, context, signal: new AbortController().signal });
+    const rows = container.querySelectorAll('.md-dashboard-widget__publication');
+    assert.equal(rows[0].querySelector('time').dateTime, '2026-09-28T08:00:00.000Z');
+    assert.match(rows[0].querySelector('time').getAttribute('aria-label'), /2026/);
+    assert.match(rows[1].querySelector('time').getAttribute('aria-label'), /2027/);
+    assert.equal(rows[0].querySelector('time strong').textContent, '28');
+    assert.match(rows[0].querySelector('.md-dashboard-widget__publication-time').textContent, /publish/);
+    assert.match(rows[0].querySelector('.md-dashboard-widget__publication-status').textContent, /draft/);
+    assert.equal(rows[1].querySelector('.md-dashboard-widget__publication-status'), null);
+    assert.match(rows[1].querySelector('.md-dashboard-widget__publication-time').textContent, /expire/);
+    assert.equal(container.querySelector('img'), null);
+});
+
+test('Newsletter progress preserves actual status and counts without inventing a percentage for an empty audience', async t => {
+    const campaign = { title: '<img src=x>', status: 'paused', sent: 0, recipients: 0, failed: 0, opens: 12, clicks: 2, url: '/apps/dmail/admin/' };
+    const { scope, context, container } = fixture(t, { data: { items: [campaign] } });
+    const args = { container, context, instance: { size: '2x2' }, domainOptions: {}, signal: new AbortController().signal };
+    await scope.getWidget('newsletter').render(args);
+    assert.match(container.querySelector('.md-dashboard-widget__newsletter-status').textContent, /paused/);
+    assert.equal(container.querySelector('.md-dashboard-widget__newsletter-percent').textContent, '—');
+    assert.equal(container.querySelector('progress').value, 0);
+    assert.equal(container.querySelector('.md-dashboard-widget__newsletter-metric strong').textContent, '0');
+    assert.doesNotMatch(container.querySelector('.md-dashboard-widget__newsletter-details').textContent, /opened|clicked/);
+    assert.equal(container.querySelector('img'), null);
+    container.replaceChildren();
+    Object.assign(campaign, { status: 'completed', sent: 99, recipients: 100, failed: 1 });
+    await scope.getWidget('newsletter').render(args);
+    assert.match(container.querySelector('.md-dashboard-widget__newsletter-status').textContent, /completed/);
+    assert.equal(container.querySelector('.md-dashboard-widget__newsletter-percent').textContent, '99 %');
+    assert.equal(container.querySelector('progress').max, 100);
+    assert.equal(container.querySelector('progress').value, 99);
+    assert.match(container.querySelector('.md-dashboard-widget__newsletter-details').textContent, /opened.*12.*clicked.*2/);
+});
+
 test('Numeric, collapsed, and empty traffic previews do not initialize charts', async t => {
     const { scope, context, container, window } = fixture(t, { data: { ...trafficData, series: [] } });
     const runtime = chartRuntime(window);
@@ -381,7 +438,7 @@ test('The mandatory sessions widget retains active login details and management 
     const widget = scope.getWidget('sessions');
     assert.equal(widget.mandatory, true);
     await widget.renderCollapsed({ container, context, instance: { collapsed: true }, signal: new AbortController().signal });
-    assert.match(container.querySelector('button').textContent, /manageSessions.*\(1\)/);
+    assert.match(container.querySelector('.md-dashboard-widget__session-manage').getAttribute('aria-label'), /manageSessions.*\(1\)/);
     assert.match(container.querySelector('li').textContent, /Browser.*127.0.0.1/);
 });
 
@@ -390,6 +447,8 @@ test('Search exposes separate scopes and changes its accessible hint', t => {
     scope.getWidget('search').render({ container, context, options: { scope: 'admin' }, instance: { id: 'search-one' } });
     const radios = container.querySelectorAll('[type=radio]');
     assert.equal(radios.length, 2);
+    assert.ok([...radios].every(radio => radio.closest('label')?.textContent.trim()), 'Native search scopes retain their visible accessible labels.');
+    assert.match(container.querySelector('[type=submit]').getAttribute('aria-label'), /searchButton/);
     assert.match(container.querySelector('[type=search]').getAttribute('aria-label'), /searchAdminHint/);
     radios[1].checked = true;
     radios[1].dispatchEvent(new window.Event('change'));
@@ -474,12 +533,14 @@ test('Accepted cluster logout stays pending instead of claiming immediate invali
 });
 
 
-test('Release announcements preserve paragraph breaks from the WebJET Markdown renderer', t => {
+test('Release announcements preserve paragraph breaks and show a concise introduction with a full changelog link', t => {
     const { scope, context, container } = fixture(t, { extraWidgets: true });
     context.labels.changelog = 'WebJET CMS <strong>2026.18</strong> first feature.<br><br>Second feature.<br><br>Third feature.';
     const news = scope.releaseNews(context);
     assert.equal(news.paragraphs.length, 3);
     assert.equal(news.paragraphs[1], 'Second feature.');
     scope.getWidget('news').render({ container, context });
-    assert.equal(container.querySelectorAll('.md-dashboard-widget__news-highlights p').length, 2);
+    assert.equal(container.querySelectorAll('.md-dashboard-widget__news-highlights p').length, 1);
+    assert.match(container.querySelector('.md-dashboard-widget__news-highlights').textContent, /first feature/);
+    assert.equal(container.querySelector('.md-dashboard-widget__news-more').getAttribute('href'), 'https://docs.webjetcms.sk/latest/en/CHANGELOG');
 });
