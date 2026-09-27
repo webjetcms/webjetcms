@@ -93,10 +93,8 @@ Scenario("active session list on dashboard @singlethread", async ({ I }) => {
         I.see(introText, "button.js-profile-toggler");
 
         // Remove only the session created by the first test context.
-        I.waitForVisible('.md-dashboard__widget[data-widget-type="sessions"] .md-dashboard__widget-content > button', 20);
-        I.clickCss('.md-dashboard__widget[data-widget-type="sessions"] .md-dashboard__widget-content > button');
-        const target = `.md-dashboard-modal [data-session-logon="${createdLogonTime}"] button`;
-        I.waitForVisible(target, 10);
+        const target = `.md-dashboard__sessions [data-session-logon="${createdLogonTime}"] .md-dashboard-widget__session-logout`;
+        I.waitForVisible(target, 20);
         I.assertEqual(await I.grabNumberOfVisibleElements(target), 1, 'The session action must target only the context created by this test.');
         I.clickCss(target);
         I.waitForInvisible(target, 10);

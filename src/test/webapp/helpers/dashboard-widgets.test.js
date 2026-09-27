@@ -592,14 +592,15 @@ test('Visitor comparisons do not fabricate percentage growth from a zero baselin
     assert.equal(scope.change(5, 10), '-50 %');
 });
 
-test('The mandatory sessions widget retains active login details and management even for a stored collapsed layout', async t => {
+test('The mandatory sessions widget retains active login details and a static count even for a stored collapsed layout', async t => {
     const { scope, context, container } = fixture(t, { extraWidgets: true, data: { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [
         { sessionId: 'current', logonTime: 1000, browserName: 'Browser', remoteAddr: '127.0.0.1' }
     ] }] } } });
     const widget = scope.getWidget('sessions');
     assert.equal(widget.mandatory, true);
     await widget.renderCollapsed({ container, context, instance: { collapsed: true }, signal: new AbortController().signal });
-    assert.match(container.querySelector('.md-dashboard-widget__session-manage').getAttribute('aria-label'), /manageSessions.*\(1\)/);
+    assert.equal(container.querySelector('span.md-dashboard-widget__session-count').textContent, '1');
+    assert.equal(container.querySelector('button'), null);
     assert.match(container.querySelector('li').textContent, /Browser.*127.0.0.1/);
 });
 

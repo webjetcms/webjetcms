@@ -34,12 +34,12 @@ function sessionTooltips(list, signal) {
     }), { once: true });
 }
 
-function sessionList(container, data, context, signal, limit) {
+function sessionList(container, data, context, signal) {
     const list = node('ul', 'md-dashboard-widget__sessions list-unstyled');
     list.tabIndex = 0;
     list.setAttribute('aria-label', text(context, 'sessions'));
     containNativeScroll(list, signal);
-    flattenSessions(data).slice(0, limit).forEach(session => {
+    flattenSessions(data).forEach(session => {
         const row = node('li', 'md-dashboard-widget__session');
         row.dataset.sessionLogon = String(session.logonTime);
         const device = node('i', `ti ${sessionBrowserIcon(session.browserName)} md-dashboard-widget__session-device`);
@@ -101,18 +101,8 @@ async function renderSessions({ container, context, signal }) {
     if (signal.aborted) return;
     const data = result.currentSessions;
     const sessions = flattenSessions(data);
-    const manage = node('button', 'btn btn-sm md-dashboard-widget__session-manage', `${text(context, 'manage')} (${number(sessions.length)})`);
-    manage.type = 'button';
-    manage.setAttribute('aria-label', `${text(context, 'manageSessions')} (${number(sessions.length)})`);
-    manage.addEventListener('click', async () => {
-        const dialog = context.dashboard.showDialog(text(context, 'manageSessions'));
-        try {
-            const fresh = await fetchData('sessions', {}, dialog.signal);
-            if (!dialog.signal.aborted) sessionList(dialog.body, fresh.currentSessions, context, dialog.signal, Infinity);
-        } catch (error) { if (!dialog.signal.aborted) empty(dialog.body, context, 'unavailable'); }
-    });
-    container.append(manage);
-    sessionList(container, data, context, signal, Infinity);
+    container.append(node('span', 'badge md-dashboard-widget__session-count', number(sessions.length)));
+    sessionList(container, data, context, signal);
 }
 
 /** Uses the announcement's release number, so development rebuilds do not reset acknowledgement. */

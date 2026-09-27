@@ -99,7 +99,7 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
     await waitForOverview(I);
     I.assertTrue(Boolean(noticesToken), 'The independent system-notice request must include CSRF protection.');
     I.seeElement('.md-dashboard__sessions [data-widget-type="sessions"] .md-dashboard-widget__session');
-    I.seeElement('.md-dashboard__sessions .md-dashboard-widget__session-manage');
+    I.seeElement('.md-dashboard__sessions span.md-dashboard-widget__session-count');
     I.dontSeeElement('.md-dashboard__layout [data-widget-type="sessions"]');
     I.dontSeeElement('.md-dashboard__sessions .md-dashboard__widget-controls');
     I.dontSeeElement('.md-dashboard__edit-control');
@@ -481,7 +481,7 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
     assertFlushPane(collapsed);
     I.assertTrue(expanded.hero.height > collapsed.hero.height + 40, 'Collapsing release notes must reduce the whole hero height.');
     I.assertTrue(expanded.listHeight > collapsed.listHeight + 40, 'The session list must give up the same vertical space when release notes collapse.');
-    I.seeElement('.md-dashboard__sessions .md-dashboard-widget__session-manage');
+    I.see('9', '.md-dashboard__sessions span.md-dashboard-widget__session-count');
     I.clickCss(newsToggle);
     waitForSave(I);
     I.waitForVisible('.md-dashboard-widget__news-highlights', 10);
@@ -525,15 +525,7 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
     I.see(await I.grabAttributeFrom(`${list} > li:nth-child(2) .md-dashboard-widget__session-logout`, 'aria-label'), '.tooltip.show');
     I.pressKey('Escape');
     I.waitForInvisible('.tooltip.show', 10);
-    I.clickCss('.md-dashboard__sessions .md-dashboard-widget__session-manage');
-    I.waitForVisible('.md-dashboard-modal .md-dashboard-widget__session-current', 10);
-    I.executeScript(() => document.querySelector('.md-dashboard-modal .md-dashboard-widget__session-current').focus());
-    I.waitForVisible('.tooltip.show', 10);
-    I.pressKey('Escape');
-    I.waitForInvisible('.tooltip.show', 10);
-    I.seeElement('.md-dashboard-modal');
-    I.pressKey('Escape');
-    I.waitForFunction(() => !document.querySelector('.md-dashboard-modal'), 10);
+    I.dontSeeElement('.md-dashboard__sessions .md-dashboard-widget__session-manage');
     await I.stopMockingRoute(sessionsRoute);
     await I.stopMockingRoute(settingsRoute);
 });
