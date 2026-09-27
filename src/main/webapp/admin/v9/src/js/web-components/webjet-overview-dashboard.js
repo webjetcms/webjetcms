@@ -13,9 +13,10 @@ import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/wid
  * @property {Object} [config={}] - Runtime dashboard configuration.
  * @property {string} [config.statMode] - Statistics mode; `"none"` hides statistics cards.
  * @property {string} [config.overviewJsonUrl=""] - Base URL used to load localized WebJET news.
- * @property {string} [config.environmentName="DEV"] - Environment label; an empty value hides the badge.
- * @property {string} [config.environmentIcon="ti-database"] - Tabler icon class for the environment badge.
- * @property {string} [config.environmentColor="#FFF2C9"] - Hex background; border and text colors are derived automatically.
+ * @property {string} [config.environmentName="DEV"] - Expanded environment label; a trailing slash is removed and an empty value hides the badge.
+ * @property {string} [config.environmentType="DEV"] - Server-detected environment used for automatic styling of custom labels.
+ * @property {string} [config.environmentIcon="auto"] - Tabler icon class, or auto to select it by environment.
+ * @property {string} [config.environmentColor="auto"] - Hex background, or auto to select it by environment; border and text colors are derived automatically.
  */
 
 function element(tag, className, text) {

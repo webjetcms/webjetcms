@@ -1,3 +1,5 @@
+const { waitForWidgets } = require('../../helpers/dashboard-browser');
+
 const assert = require('node:assert/strict');
 
 Feature('admin.dashboard-widgets').tag('@singlethread');
@@ -176,7 +178,7 @@ Scenario('A rejected preference update preserves the confirmed widget', async ({
 
 Scenario('Responsive grid preserves visual order and keeps widgets inside the dashboard', async ({ I }) => {
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-    I.waitForFunction(() => [...document.querySelectorAll('.md-dashboard__widget-body')].every(body => body.getAttribute('aria-busy') !== 'true'), 20);
+    await waitForWidgets(I);
     for (const width of [320, 359, 360, 390, 767, 768, 1024, 1199, 1200, 1337, 1920]) {
         I.resizeWindow(width, 1000);
         const geometry = await I.executeScript(() => {

@@ -1,3 +1,5 @@
+const { waitForWidgets } = require('../../helpers/dashboard-browser');
+
 Feature('a11y.dashboard');
 
 Before(({ I, login }) => {
@@ -7,7 +9,7 @@ Before(({ I, login }) => {
 Scenario('dashboard', async ({ I, a11y }) => {
     I.amOnPage('/admin/v9/');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-    I.waitForFunction(() => [...document.querySelectorAll('.md-dashboard__widget-body')].every(body => body.getAttribute('aria-busy') !== 'true'), 20);
+    await waitForWidgets(I);
     await a11y.check();
 });
 

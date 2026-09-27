@@ -1,3 +1,5 @@
+const { waitForWidgets } = require('../../helpers/dashboard-browser');
+
 Feature('admin.dashboard-catalogue').tag('@singlethread');
 
 let originalSettings;
@@ -8,11 +10,6 @@ const catalogue = [
     ['news', '3x2'], ['search', 'fullauto'], ['changed-pages', '3x3'], ['audit', '3x3'],
     ['logged-admins', '2x2'], ['server-memory', '3x2'], ['server-cpu', '3x2']
 ];
-
-function waitForWidgets(I) {
-    I.waitForFunction(() => Boolean(document.querySelector('.md-dashboard[data-loaded="true"]'))
-        && [...document.querySelectorAll('.md-dashboard__widget-body')].every(body => body.getAttribute('aria-busy') === 'false'), 30);
-}
 
 function waitForSave(I) {
     I.waitForFunction(() => document.querySelector('webjet-overview-dashboard')?.dashboardController?.saving === false, 20);
@@ -41,8 +38,9 @@ async function widgetAction(I, id, action) {
     I.forceClick(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`);
 }
 
-function waitForChart(I, type) {
-    I.waitForFunction(([type]) => {
+async function waitForChart(I, type) {
+    await waitForWidgets(I);
+    return I.waitForFunction(([type]) => {
         const host = document.querySelector(`[data-widget-type="${type}"] .md-dashboard-widget__chart`);
         return Boolean(host && host.querySelector('canvas') && window.am5?.registry.rootElements.some(root => root.dom === host));
     }, [type], 20);
@@ -98,10 +96,10 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
         return { saved: await controller._commit(next) };
     }, catalogue);
     I.assertTrue(applied.saved, applied.reason || 'The complete widget fixture must be saved.');
-    waitForWidgets(I);
+    await waitForWidgets(I);
     const state = await I.executeScript(() => ({
         types: [...document.querySelectorAll('.md-dashboard__widget[data-widget-type]')].map(card => card.dataset.widgetType),
-        errors: [...document.querySelectorAll('.md-dashboard__widget-content > .text-danger')].map(error => ({ type: error.closest('[data-widget-type]').dataset.widgetType, text: error.textContent })),
+        errors: [...document.querySelectorAll('.md-dashboard__widget-content > .text-danger:not([hidden])')].map(error => ({ type: error.closest('[data-widget-type]').dataset.widgetType, text: error.textContent })),
         expectedDomainError: WJ.translate('admin.dashboard.domainUnavailable.js'),
         javascriptErrors: window.autotestDashboardRenderErrors
     }));
@@ -138,9 +136,9 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
 });
 
 Scenario('AmCharts renders accessible data and disposes roots on refresh, collapse, resize and removal', async ({ I, a11y }) => {
-    waitForWidgets(I);
-    waitForChart(I, 'traffic');
-    waitForChart(I, 'referrers');
+    await waitForWidgets(I);
+    await waitForChart(I, 'traffic');
+    await waitForChart(I, 'referrers');
     const ids = await I.executeScript(() => Object.fromEntries(['traffic', 'referrers'].map(type => [type,
         document.querySelector(`[data-widget-type="${type}"]`).dataset.instanceId])));
     for (const type of ['traffic', 'referrers']) {
@@ -159,21 +157,21 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, collap
     }
     const firstTraffic = await rememberChart(I, 'traffic');
     await widgetAction(I, ids.traffic, 'refresh');
-    waitForWidgets(I);
-    waitForChart(I, 'traffic');
+    await waitForWidgets(I);
+    await waitForChart(I, 'traffic');
     await assertDisposedChart(I);
     I.assertNotEqual(await I.grabAttributeFrom(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`, 'id'), firstTraffic);
 
     await rememberChart(I, 'traffic');
     await widgetAction(I, ids.traffic, 'collapse');
     waitForSave(I);
-    waitForWidgets(I);
+    await waitForWidgets(I);
     await assertDisposedChart(I);
     I.dontSeeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`);
     I.seeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard__title-link`);
     await widgetAction(I, ids.traffic, 'collapse');
     waitForSave(I);
-    waitForChart(I, 'traffic');
+    await waitForChart(I, 'traffic');
     await rememberChart(I, 'traffic');
     await widgetAction(I, ids.traffic, 'settings');
     I.waitForVisible('.md-dashboard-modal select', 10);
@@ -181,7 +179,7 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, collap
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
     I.waitForInvisible('.md-dashboard-modal', 10);
     waitForSave(I);
-    waitForWidgets(I);
+    await waitForWidgets(I);
     await assertDisposedChart(I);
     I.dontSeeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`);
     await widgetAction(I, ids.traffic, 'settings');
@@ -190,7 +188,7 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, collap
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
     I.waitForInvisible('.md-dashboard-modal', 10);
     waitForSave(I);
-    waitForChart(I, 'traffic');
+    await waitForChart(I, 'traffic');
 
     await rememberChart(I, 'referrers');
     await widgetAction(I, ids.referrers, 'remove');
@@ -199,7 +197,7 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, collap
     await assertDisposedChart(I);
     I.clickCss('.md-dashboard__undo button');
     waitForSave(I);
-    waitForChart(I, 'referrers');
+    await waitForChart(I, 'referrers');
     const rootsMatchHosts = await I.executeScript(() => {
         const hosts = [...document.querySelectorAll('.md-dashboard-widget__chart')];
         const roots = window.am5.registry.rootElements.filter(root => root.dom.id.startsWith('dashboard-chart-'));
@@ -212,7 +210,7 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, collap
 });
 
 Scenario('Collapse release news across reload and expand it from the compact summary', async ({ I }) => {
-    waitForWidgets(I);
+    await waitForWidgets(I);
     I.waitForVisible('[data-widget-type="news"] .md-dashboard__widget-content button', 10);
     I.clickCss('[data-widget-type="news"] .md-dashboard__widget-content button');
     waitForSave(I);
@@ -222,7 +220,7 @@ Scenario('Collapse release news across reload and expand it from the compact sum
     const acknowledged = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.acknowledgedNewsVersion);
     I.assertTrue(typeof acknowledged === 'string' && acknowledged.length > 0);
     I.refreshPage();
-    waitForWidgets(I);
+    await waitForWidgets(I);
     I.seeElement('[data-widget-type="news"] .md-dashboard-widget__news-summary');
     I.clickCss('[data-widget-type="news"] .md-dashboard-widget__news-toggle');
     waitForSave(I);
@@ -234,7 +232,7 @@ Scenario('Collapse release news across reload and expand it from the compact sum
 });
 
 Scenario('Documentation search switches scope and opens the encoded query without an external request', async ({ I }) => {
-    waitForWidgets(I);
+    await waitForWidgets(I);
     const scope = '[data-widget-type="search"]';
     const query = 'formulár & prístupnosť autotest';
     I.clickCss(`${scope} label:has(input[value="docs"])`);
@@ -288,7 +286,7 @@ Scenario('Restore the original account dashboard and current-domain filters', as
     }, originalSettings);
     I.assertEqual(status, 200, 'The original account preferences must be restored.');
     I.refreshPage();
-    waitForWidgets(I);
+    await waitForWidgets(I);
     const restored = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings);
     I.assertDeepEqual(restored.items, originalSettings.items);
     I.assertDeepEqual(restored.domainOptions, originalSettings.domainOptions);

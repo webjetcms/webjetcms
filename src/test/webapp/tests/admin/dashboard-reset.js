@@ -1,3 +1,5 @@
+const { waitForWidgets } = require('../../helpers/dashboard-browser');
+
 const assert = require('node:assert/strict');
 
 Feature('admin.dashboard-reset').tag('@singlethread');
@@ -152,7 +154,7 @@ Scenario('Reset confirms deletion, keeps failed changes and restores every avail
         const reloaded = await settings(I);
         assert.equal(reloaded.configured, false);
         assert.deepEqual(effectiveDefaults(reloaded), effectiveDefaults(defaults), 'Reload must regenerate the same defaults without depending on instance ids');
-        I.waitForFunction(() => [...document.querySelectorAll('.md-dashboard__widget-body')].every(body => body.getAttribute('aria-busy') !== 'true'), 30);
+        await waitForWidgets(I);
         I.resizeWindow(1337, 1052);
         I.saveScreenshot('dashboard-default-desktop.png', true);
         I.executeScript(() => window.scrollbarMain.scrollIntoView(document.querySelector('[data-widget-type="traffic"]')));

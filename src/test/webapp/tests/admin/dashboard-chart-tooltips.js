@@ -1,3 +1,5 @@
+const { waitForWidgets } = require('../../helpers/dashboard-browser');
+
 Feature('admin.dashboard-chart-tooltips').tag('@singlethread');
 
 const routes = ['**/admin/rest/dashboard/settings', '**/admin/rest/dashboard/notices', '**/admin/rest/dashboard/data/traffic*',
@@ -128,6 +130,7 @@ Scenario('Monitoring tooltips stay complete in compact and default charts with a
             next.items.filter(item => item.type.startsWith('server-')).forEach(item => { item.size = size; });
             return controller._commit(next);
         }, size), 'Mocked settings must apply the chart size without changing persisted preferences.');
+        await waitForWidgets(I);
         I.waitForFunction(() => ['server-memory', 'server-cpu'].every(type => {
             const element = document.querySelector(`[data-widget-type="${type}"] .md-dashboard-widget__chart`);
             const root = window.am5?.registry.rootElements.find(root => root.dom === element);

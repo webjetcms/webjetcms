@@ -28,9 +28,10 @@ block content
                 config: {
                     statMode: window.statMode,
                     overviewJsonUrl: /*[[${layout.getConstant('overviewJsonUrl')}]]*/ "",
-                    environmentName: /*[[${layout.getConstant('dashboardEnvironmentName')}]]*/ "DEV",
-                    environmentIcon: /*[[${layout.getConstant('dashboardEnvironmentIcon')}]]*/ "ti-database",
-                    environmentColor: /*[[${layout.getConstant('dashboardEnvironmentColor')}]]*/ "#FFF2C9"
+                    environmentName: /*[[${layout.getConstantExecuteMacro('dashboardEnvironmentName')}]]*/ "DEV",
+                    environmentType: /*[[${layout.environmentName}]]*/ "DEV",
+                    environmentIcon: /*[[${layout.getConstant('dashboardEnvironmentIcon')}]]*/ "auto",
+                    environmentColor: /*[[${layout.getConstant('dashboardEnvironmentColor')}]]*/ "auto"
                 },
                 labels: {
                     changelog: WJ.parseMarkdown(announcement.replace(/\\n/g, "\n"), { link: true, imgSrcPrefix: "" }),

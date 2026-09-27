@@ -1,3 +1,5 @@
+const { waitForWidgets } = require('../../helpers/dashboard-browser');
+
 Feature('admin.dashboard-design').tag('@singlethread');
 
 let originalSettings;
@@ -14,10 +16,9 @@ const missingThumbnailRoute = '**/thumb/images/autotest-dashboard-missing.jpg?*'
 const editButton = '.md-dashboard__toolbar-actions > button[aria-pressed]';
 const newsToggle = '.md-dashboard-widget__news-toggle';
 
-function waitForOverview(I) {
-    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-    return I.waitForFunction(() => document.querySelector('.md-dashboard__notice-list')?.getAttribute('aria-busy') === 'false'
-        && [...document.querySelectorAll('.md-dashboard__widget-body')].every(body => body.getAttribute('aria-busy') === 'false'), 30);
+async function waitForOverview(I) {
+    await waitForWidgets(I);
+    return I.waitForFunction(() => document.querySelector('.md-dashboard__notice-list')?.getAttribute('aria-busy') === 'false', 30);
 }
 
 function waitForSave(I) {
@@ -461,11 +462,12 @@ Scenario('Environment badge uses configured identity and readable colors, and di
     const badge = '.md-dashboard__welcome-meta .md-dashboard__environment';
     const original = await I.executeScript(() => {
         const config = document.querySelector('webjet-overview-dashboard').config;
-        return { environmentName: config.environmentName, environmentIcon: config.environmentIcon, environmentColor: config.environmentColor };
+        return { environmentName: config.environmentName, environmentType: config.environmentType, environmentIcon: config.environmentIcon, environmentColor: config.environmentColor };
     });
-    I.assertEqual(original.environmentName, 'DEV', 'The server must expose the default environment label to the dashboard.');
+    I.assertTrue(/^DEV(?:\/.*)?$/.test(original.environmentName), 'The server must expand the environment and optional current node macros.');
+    I.assertEqual(original.environmentType, 'DEV', 'The server must detect DEV for iwcm.interway.sk.');
     I.see('DEV', badge);
-    I.seeElement(`${badge} .ti-database`);
+    I.seeElement(`${badge} .ti-code`);
     const configureEnvironment = async config => {
         I.executeScript(config => {
             const dashboard = document.querySelector('webjet-overview-dashboard');
@@ -490,6 +492,24 @@ Scenario('Environment badge uses configured identity and readable colors, and di
             borderVisible: parseFloat(style.borderTopWidth) > 0 && style.borderTopStyle !== 'none',
             contrast: (Math.max(background, foreground) + .05) / (Math.min(background, foreground) + .05) };
     }, badge);
+    for (const [environment, expected, icon] of [
+        ['PROD', 'rgb(214, 245, 239)', 'ti-server'],
+        ['UAT', 'rgb(255, 242, 201)', 'ti-clipboard-check'],
+        ['INT', 'rgb(255, 224, 178)', 'ti-git-merge'],
+        ['DEV', 'rgb(255, 217, 222)', 'ti-code']
+    ]) {
+        await configureEnvironment({ environmentName: `${environment}/autotest-node`, environmentColor: 'auto', environmentIcon: 'auto' });
+        I.see(`${environment}/autotest-node`, badge);
+        I.seeElement(`${badge} .${icon}`);
+        const colors = await readColors();
+        I.assertEqual(colors.background, expected, 'Automatic colors must match the environment.');
+        I.assertTrue(colors.contrast >= 4.5 && colors.borderDarker && colors.borderVisible, 'Automatic colors must remain readable and outlined.');
+    }
+    await configureEnvironment({ environmentName: 'DEV/' });
+    I.assertEqual(await I.grabTextFrom(badge), 'DEV', 'An empty cluster name must not leave a trailing slash.');
+    await configureEnvironment({ environmentName: 'Custom environment', environmentType: 'INT' });
+    I.seeElement(`${badge} .ti-git-merge`);
+    I.assertEqual((await readColors()).background, 'rgb(255, 224, 178)', 'Custom labels must use the environment detected by the server.');
     for (const [color, expected] of [['#ffe082', 'rgb(255, 224, 130)'], ['#183153', 'rgb(24, 49, 83)']]) {
         await configureEnvironment({ environmentName: 'autotest INT', environmentIcon: 'ti-server', environmentColor: color });
         I.see('autotest INT', badge);
@@ -500,13 +520,13 @@ Scenario('Environment badge uses configured identity and readable colors, and di
         I.assertTrue(colors.borderDarker && colors.borderVisible, 'A visibly darker border must define the environment label.');
         I.assertTrue(colors.contrast >= 4.5, 'Environment text must remain readable on both light and dark configured backgrounds.');
     }
-    await configureEnvironment({ environmentColor: '#FFF2C9' });
+    await configureEnvironment({ environmentColor: 'auto' });
     const fallback = await readColors();
     await configureEnvironment({ environmentColor: 'invalid-autotest-color' });
     I.assertDeepEqual(await readColors(), fallback, 'An invalid configured color must fall back to the readable default appearance.');
     for (const icon of ['', 'invalid-autotest-icon']) {
         await configureEnvironment({ environmentIcon: icon });
-        I.seeElement(`${badge} .ti-database`);
+        I.seeElement(`${badge} .ti-git-merge`);
     }
     await configureEnvironment({ environmentName: 'autotest integration database', environmentIcon: 'ti-server' });
     I.resizeWindow(390, 1052);

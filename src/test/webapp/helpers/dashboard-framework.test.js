@@ -11,9 +11,10 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
 const item = (id, type = "test", size = "2x2", options = {}) => ({ id, type, size, options, collapsed: false });
 
 /** Runs production browser modules against a DOM and a stateful settings server. */
-function fixture(t, { items = [], configured = true, shortcutsConfigured = configured, legacyBookmarksHandled = false, definitions = [], defaults = [], failSave = false, failLoad = false, failReset = false, deferModalShown = false, withTooltip = false, overview } = {}) {
+function fixture(t, { items = [], configured = true, shortcutsConfigured = configured, legacyBookmarksHandled = false, definitions = [], defaults = [], failSave = false, failLoad = false, failReset = false, deferModalShown = false, withTooltip = false, overview, IntersectionObserver } = {}) {
     const dom = new JSDOM("<!doctype html><html><body><div id='alerts'>System warning</div><div id='dashboard'></div></body></html>", { url: "http://localhost/admin/v9/" });
     const { window } = dom;
+    window.IntersectionObserver = IntersectionObserver;
     const notifications = [];
     const confirmations = [];
     window.WJ = {
@@ -95,6 +96,110 @@ function fixture(t, { items = [], configured = true, shortcutsConfigured = confi
     t.after(() => { controller.destroy(); window.close(); });
     return { window, host, controller, context, requests, tooltipCalls, notifications, confirmations, closeConfirmation, setResetFailure: value => { failReset = value; }, stored: () => copy(stored), setSaveFailure: value => { failSave = value; }, setLoadFailure: value => { failLoad = value; } };
 }
+
+/** Controls viewport entry independently of jsdom's missing layout engine. */
+function observedFixture(t, options) {
+    const targets = new Set();
+    let callback, disconnected = false;
+    const environment = fixture(t, { ...options, IntersectionObserver: class {
+        constructor(handler) { callback = handler; }
+        observe(card) { targets.add(card); }
+        unobserve(card) { targets.delete(card); }
+        disconnect() { targets.clear(); disconnected = true; }
+    } });
+    return { ...environment, targets, disconnected: () => disconnected,
+        intersect: (card, isIntersecting = true) => callback([{ target: card, isIntersecting }]) };
+}
+
+test("Grid widgets wait for viewport entry while fixed utilities render immediately", async t => {
+    const renders = [];
+    const { controller, targets, intersect } = observedFixture(t, {
+        items: [item("first", "lazy"), item("second", "lazy")],
+        definitions: [
+            { type: "lazy", titleKey: "Lazy", sizes: ["2x2"], multiple: true, render: ({ instance }) => renders.push(instance.id) },
+            { type: "sessions", titleKey: "Sessions", sizes: ["2x3"], render: () => renders.push("sessions") }
+        ]
+    });
+    await controller.start();
+    assert.deepEqual(renders, ["sessions"]);
+    assert.equal(targets.size, 2);
+    const first = controller.views.get("first");
+    intersect(first.card, false);
+    await tick();
+    assert.deepEqual(renders, ["sessions"], "Offscreen cards must not invoke their data renderers");
+    intersect(first.card);
+    await tick();
+    assert.deepEqual(renders, ["sessions", "first"]);
+    assert.equal(first.body.getAttribute("aria-busy"), "false");
+    assert.equal(targets.has(first.card), false);
+    intersect(first.card, false);
+    intersect(first.card);
+    await controller.moveBefore("first", null);
+    assert.deepEqual(renders, ["sessions", "first"], "Scrolling or moving loaded cards must not reload their data");
+    const refresh = controller.refresh("first");
+    intersect(first.card);
+    await refresh;
+    assert.deepEqual(renders, ["sessions", "first", "first"], "Explicit refresh still loads once visible");
+    assert.equal(targets.size, 1, "The other card must remain deferred");
+});
+
+test("Deferred renders use the latest configuration and release collapsed cards without a preview", async t => {
+    const periods = [];
+    const { controller, targets, intersect } = observedFixture(t, {
+        items: [item("lazy", "lazy", "2x2", { days: 7 })],
+        definitions: [{ type: "lazy", titleKey: "Lazy", sizes: ["2x2"], render: ({ options }) => periods.push(options.days) }]
+    });
+    await controller.start();
+    const view = controller.views.get("lazy");
+    const originalSignal = view.abort.signal;
+    await controller.saveOptions("lazy", { options: { days: 30 } });
+    assert.equal(originalSignal.aborted, true);
+    assert.deepEqual(periods, []);
+    await controller.updateInstance("lazy", { collapsed: true });
+    assert.equal(targets.size, 0);
+    assert.equal(view.body.hidden, true);
+    assert.equal(view.body.getAttribute("aria-busy"), "false");
+    intersect(view.card);
+    await tick();
+    assert.deepEqual(periods, []);
+    await controller.updateInstance("lazy", { collapsed: false });
+    intersect(view.card);
+    await tick();
+    assert.deepEqual(periods, [30]);
+});
+
+test("Domain changes, removal and destruction cancel pending viewport work", async t => {
+    const domains = [];
+    const { controller, targets, intersect, disconnected } = observedFixture(t, {
+        items: [item("lazy", "lazy")],
+        definitions: [{ type: "lazy", titleKey: "Lazy", sizes: ["2x2"], render: ({ context }) => domains.push(context.config.domain) }]
+    });
+    await controller.start();
+    const view = controller.views.get("lazy");
+    const originalSignal = view.abort.signal;
+    await controller.setContext({ config: { domain: "new-domain" } });
+    assert.equal(originalSignal.aborted, true);
+    assert.deepEqual(domains, []);
+    intersect(view.card);
+    await tick();
+    assert.deepEqual(domains, ["new-domain"]);
+    const pending = controller.refresh("lazy");
+    await controller.remove("lazy");
+    await pending;
+    intersect(view.card);
+    await tick();
+    assert.deepEqual(domains, ["new-domain"], "Stale observer entries must not revive removed widgets");
+    assert.equal(targets.size, 0);
+    await controller.undoRemove();
+    const restored = controller.views.get("lazy");
+    const pendingDestroy = controller.refresh("lazy");
+    controller.destroy();
+    await pendingDestroy;
+    intersect(restored.card);
+    assert.equal(restored.abort.signal.aborted, true);
+    assert.equal(disconnected(), true);
+    assert.deepEqual(domains, ["new-domain"]);
+});
 
 test("Reordering variable-height widgets preserves DOM order and existing widget content", async t => {
     let renders = 0;

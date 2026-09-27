@@ -27,13 +27,21 @@ function dispose(result) {
     else result?.destroy?.();
 }
 
-/** Creates a safe environment label with readable text on a configurable hex background. */
+/** Creates an environment label with automatic identity styling or explicit icon and color overrides. */
 function environmentBadge(config = {}) {
-    const name = String(config.environmentName ?? "DEV").trim();
+    const name = String(config.environmentName ?? "DEV").trim().replace(/\/+$/, "").trim();
     if (!name) return null;
+    const environments = {
+        PROD: { color: "#D6F5EF", icon: "ti-server" },
+        UAT: { color: "#FFF2C9", icon: "ti-clipboard-check" },
+        INT: { color: "#FFE0B2", icon: "ti-git-merge" },
+        DEV: { color: "#FFD9DE", icon: "ti-code" }
+    };
+    const environment = name.match(/^(PROD|UAT|INT|DEV)(?=[/\s-]|$)/i)?.[1].toUpperCase() || config.environmentType;
+    const automatic = environments[environment] || environments.DEV;
     const badge = node("span", "md-dashboard__environment");
-    const iconName = /^ti-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(config.environmentIcon) ? config.environmentIcon : "ti-database";
-    const color = /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(config.environmentColor) ? config.environmentColor : "#FFF2C9";
+    const iconName = /^ti-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(config.environmentIcon) ? config.environmentIcon : automatic.icon;
+    const color = /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(config.environmentColor) ? config.environmentColor : automatic.color;
     const hex = color.length === 4 ? color.slice(1).split("").map(value => value + value).join("") : color.slice(1);
     const channels = hex.match(/../g).map(value => {
         const channel = parseInt(value, 16) / 255;
@@ -56,6 +64,12 @@ export class DashboardController {
         this.context = context;
         this.settings = normalizeSettings();
         this.views = new Map();
+        this._visibilityObserver = typeof window.IntersectionObserver === "function" ? new window.IntersectionObserver(entries => {
+            for (const entry of entries) {
+                const view = this.views.get(entry.target.dataset.instanceId);
+                if (entry.isIntersecting && view?.card === entry.target) view.onVisible?.();
+            }
+        }) : null;
         this.saving = false;
         this.destroyed = false;
         this.removed = null;
@@ -480,6 +494,21 @@ export class DashboardController {
         if ($?.fn.droppable && $(view.card).data("ui-droppable")) $(view.card).droppable("destroy");
     }
 
+    /** Waits for a grid card to enter the viewport, releasing the observer on entry or abort. */
+    _waitForVisibility(view, signal) {
+        return new Promise(resolve => {
+            const finish = () => {
+                this._visibilityObserver.unobserve(view.card);
+                view.onVisible = null;
+                signal.removeEventListener("abort", finish);
+                resolve();
+            };
+            view.onVisible = finish;
+            signal.addEventListener("abort", finish, { once: true });
+            this._visibilityObserver.observe(view.card);
+        });
+    }
+
     /** Refreshes one widget and disposes stale results even when a request ignores abort. */
     async refresh(id) {
         const view = this.views.get(id);
@@ -496,11 +525,15 @@ export class DashboardController {
         const content = node("div", "md-dashboard__widget-content");
         view.body.replaceChildren(content);
         view.body.hidden = !renderer;
+        view.body.setAttribute("aria-busy", String(Boolean(renderer)));
         if (!renderer) return;
         const loading = node("span", "md-dashboard__loading", this._t("loading", "Loading…"));
         view.body.prepend(loading);
-        view.body.setAttribute("aria-busy", "true");
         try {
+            if (this._visibilityObserver && this._region(instance) === "grid") {
+                await this._waitForVisibility(view, abort.signal);
+                if (abort.signal.aborted || this.destroyed) return;
+            }
             const result = await renderer({
                 container: content, instance: cloneSettings(instance), options: cloneSettings(instance.options || {}),
                 domainOptions: cloneSettings(this.settings.domainOptions[id] || definition.defaultDomainOptions),
@@ -1019,6 +1052,7 @@ export class DashboardController {
         window.jQuery?.(this.resetButton).off(".wjTooltipA11y .wjFocusWithoutTooltip");
         this._request?.abort();
         for (const view of this.views.values()) this._disposeView(view);
+        this._visibilityObserver?.disconnect();
         for (const dialog of this._dialogs) dialog.destroy();
         const $ = window.jQuery;
         if ($?.fn.droppable && $(this.dropEnd).data("ui-droppable")) $(this.dropEnd).droppable("destroy");

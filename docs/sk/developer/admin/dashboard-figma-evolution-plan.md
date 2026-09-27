@@ -203,10 +203,19 @@ Označenie prostredia sa nastavuje v **Nastavenia → Konfigurácia** cez premen
 
 | Premenná | Predvolená hodnota | Význam |
 | --- | --- | --- |
-| `dashboardEnvironmentName` | `DEV` | Text označenia, napríklad `PROD`, `INT` alebo názov databázy. Prázdna hodnota označenie skryje. |
-| `dashboardEnvironmentIcon` | `ti-database` | Trieda ikony Tabler vo formáte `ti-*`, napríklad `ti-server`. |
-| `dashboardEnvironmentColor` | `#FFF2C9` | Farba pozadia vo formáte `#RGB` alebo `#RRGGBB`. Rámik sa automaticky odvodí stmavením pozadia a text sa zvolí podľa kontrastu. |
+| `dashboardEnvironmentName` | `{ENVIRONMENT_NAME}/{CLUSTER_NAME}` | Text označenia s makrami cez `Constants.getStringExecuteMacro`. `{CLUSTER_NAME}` používa aktuálny `clusterMyNodeName`, napríklad `DEV/LubosBalatProM5`. Prázdny uzol zanechá len `DEV`, koncové lomítko sa odstráni pri vykreslení štítku. Prázdna hodnota označenie skryje. |
+| `dashboardEnvironmentIcon` | `auto` | PROD: `ti-server`, UAT: `ti-clipboard-check`, INT: `ti-git-merge`, DEV: `ti-code`. Možno zadať aj pevnú triedu Tabler `ti-*`, napríklad `ti-database`. |
+| `dashboardEnvironmentColor` | `auto` | PROD: zelená `#D6F5EF`, UAT: žltá `#FFF2C9`, INT: oranžová `#FFE0B2`, DEV: červená `#FFD9DE`. Možno zadať aj pevnú farbu `#RGB` alebo `#RRGGBB`. Rámik sa automaticky odvodí stmavením pozadia a text sa zvolí podľa kontrastu. |
+
+Detekcia používa výhradne `RequestBean.serverName`, nie zvolenú doménu. Nerozlišuje veľkosť písmen, hľadá celé časti názvu oddelené bodkou, pomlčkou alebo podčiarkovníkom, aj s číslom uzla (`uat01`, `web-prod-02`). Poradie je **PROD → UAT → INT → DEV**:
+
+- PROD: `prod`, `prd`, `production`, `live`.
+- UAT: `uat`, `aut`, `acc`, `acceptance`, `stage`, `staging`, `test`, `testing`, `qa`, `preprod`, `preproduction`; aj `pre-prod`, `pre-production` a varianty s bodkou či podčiarkovníkom. Predprodukcia sa nepovažuje za PROD.
+- INT: `int`, `integration`, `sit`.
+- DEV: všetky ostatné názvy a chýbajúci request; napríklad `localhost`, IP adresa či `iwcm.interway.sk`. Časti slov ako `int` v `interway` sa nezhodujú.
+
+Automatická farba a ikona použijú úvodný token `PROD`, `UAT`, `INT` alebo `DEV` v označení (pred lomítkom, medzerou či pomlčkou); pri vlastnom texte použijú prostredie detegované zo servera. Ručne nastavené hodnoty majú prednosť. Odstraňovanie koncového lomítka sa týka len štítku, ostatné použitia makier (napríklad URL a adresáre) sa nemenia.
 
 Hodnoty sa prenášajú do konfigurácie dashboardu cez šablónu `overview.pug`; po zmene konfigurácie obnovte stránku. Nasadenie nových predvolených hodnôt v Java triede vyžaduje reštart aplikácie.
 
-Overenie: development zostava, Java kompilácia, 73 JavaScript helper testov a všetkých 8 scenárov `dashboard-design.js` prešli. Testy kontrolujú výšku panelu pri zbalení aj rozbalení noviniek, zachovanie rolovania a ikon prihlásení, responzívne zobrazenie a kontrast vlastných farieb štítku. Osobné nastavenia účtu zostali nezmenené.
+Overenie automatického označenia: development zostava, 48 cielených Java testov, 101 JavaScript helper testov a rozšírený E2E scenár označenia prostredia v `dashboard-design.js` prešli. Testy pokrývajú aliasy, hranice tokenov, poradie prostredí, nezávislosť od domény, makrá aktuálneho uzla, štyri automatické farby a ikony, ručné hodnoty, prázdny uzol, kontrast aj mobilné zobrazenie. Lokálna aplikácia bola pred E2E overením reštartovaná; po zostavení môže otvorená karta vyžadovať obnovenie bez cache.

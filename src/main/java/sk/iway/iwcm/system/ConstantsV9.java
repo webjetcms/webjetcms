@@ -105,9 +105,9 @@ public class ConstantsV9 {
 		Constants.setString("changePasswordPageUrlAdmin", "/admin/logon/changePassword", Constants.MOD_PASSWORD, "cesta k suboru (alebo stranke) na zmenu hesla z admin sekcie");
 
 		Constants.setInt("dashboardRecentSize", 8, Constants.MOD_SYSTEM_ADMIN, "Pocet zaznamov v zozname poslednych stranok/auditu na uvodnej obrazovke");
-		Constants.setString("dashboardEnvironmentName", "DEV", Constants.MOD_SYSTEM_ADMIN, "Environment label displayed in the administration dashboard header. An empty value hides the label.");
-		Constants.setString("dashboardEnvironmentIcon", "ti-database", Constants.MOD_SYSTEM_ADMIN, "Tabler icon class for the dashboard environment label, for example ti-database or ti-server.");
-		Constants.setString("dashboardEnvironmentColor", "#FFF2C9", Constants.MOD_SYSTEM_ADMIN, "Background color of the dashboard environment label in #RGB or #RRGGBB format. Border and text colors are derived automatically.");
+		Constants.setString("dashboardEnvironmentName", "{ENVIRONMENT_NAME}", Constants.MOD_SYSTEM_ADMIN, "Environment label in the administration dashboard. {ENVIRONMENT_NAME} detects RequestBean.serverName, fixed label can also be used.");
+		Constants.setString("dashboardEnvironmentIcon", "auto", Constants.MOD_SYSTEM_ADMIN, "Tabler icon class for the dashboard environment label. auto uses PROD=ti-server, UAT=ti-clipboard-check, INT=ti-git-merge, DEV=ti-code. A fixed ti-* class can also be used, for example ti-database. Automatic styling uses the label's leading PROD/UAT/INT/DEV token, or the detected server environment for custom labels.");
+		Constants.setString("dashboardEnvironmentColor", "auto", Constants.MOD_SYSTEM_ADMIN, "Background color of the dashboard environment label. auto uses PROD=#D6F5EF (green), UAT=#FFF2C9 (yellow), INT=#FFE0B2 (orange), DEV=#FFD9DE (red). These colors or another #RGB/#RRGGBB value can also be set directly. Border and text colors are derived automatically. Automatic styling uses the label's leading PROD/UAT/INT/DEV token, or the detected server environment for custom labels.");
 
 		Constants.setInt("contentBlockTypeCount", 5, Constants.MOD_EDITOR, "Pocet dostupnych typov blokov pre obsah");
 
