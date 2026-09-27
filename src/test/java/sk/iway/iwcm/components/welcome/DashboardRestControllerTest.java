@@ -23,7 +23,7 @@ class DashboardRestControllerTest {
         JsonMapper mapper = JsonMapper.builder().build();
         String json = """
             {"version":1,"configured":true,"shortcutsConfigured":true,"legacyBookmarksHandled":true,"items":[
-                {"id":"form-1","type":"forms","size":"3x3","collapsed":false,
+                {"id":"form-1","type":"forms","size":"3x3",
                  "options":{"days":7,"nested":{"enabled":true}}}],
              "domainOptions":{"form-1":{"formName":"Contact"}},"acknowledgedNewsVersion":null}
             """;
@@ -32,6 +32,8 @@ class DashboardRestControllerTest {
         assertEquals(7, settings.getItems().get(0).getOptions().get("days"));
         assertEquals("Contact", settings.getDomainOptions().get("form-1").get("formName"));
         assertEquals(mapper.readTree(json), mapper.readTree(mapper.writeValueAsString(settings)));
+        String legacyJson = json.replace("\"size\":\"3x3\"", "\"size\":\"3x3\",\"collapsed\":true");
+        assertEquals(mapper.readTree(json), mapper.readTree(mapper.writeValueAsString(mapper.readValue(legacyJson, DashboardSettingsDto.class))));
     }
 
     @Test

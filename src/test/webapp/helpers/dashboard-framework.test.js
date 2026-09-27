@@ -8,7 +8,7 @@ const { JSDOM } = require("jsdom");
 const moduleDirectory = path.resolve(__dirname, "../../../main/webapp/admin/v9/src/js/dashboard");
 const copy = value => JSON.parse(JSON.stringify(value));
 const tick = () => new Promise(resolve => setImmediate(resolve));
-const item = (id, type = "test", size = "2x2", options = {}) => ({ id, type, size, options, collapsed: false });
+const item = (id, type = "test", size = "2x2", options = {}) => ({ id, type, size, options });
 
 /** Runs production browser modules against a DOM and a stateful settings server. */
 function fixture(t, { items = [], configured = true, shortcutsConfigured = configured, legacyBookmarksHandled = false, definitions = [], defaults = [], failSave = false, failLoad = false, failReset = false, deferModalShown = false, withTooltip = false, overview, IntersectionObserver } = {}) {
@@ -143,7 +143,7 @@ test("Grid widgets wait for viewport entry while fixed utilities render immediat
     assert.equal(targets.size, 1, "The other card must remain deferred");
 });
 
-test("Deferred renders use the latest configuration and release collapsed cards without a preview", async t => {
+test("Deferred renders use the latest configuration when the card enters the viewport", async t => {
     const periods = [];
     const { controller, targets, intersect } = observedFixture(t, {
         items: [item("lazy", "lazy", "2x2", { days: 7 })],
@@ -155,14 +155,9 @@ test("Deferred renders use the latest configuration and release collapsed cards 
     await controller.saveOptions("lazy", { options: { days: 30 } });
     assert.equal(originalSignal.aborted, true);
     assert.deepEqual(periods, []);
-    await controller.updateInstance("lazy", { collapsed: true });
-    assert.equal(targets.size, 0);
-    assert.equal(view.body.hidden, true);
-    assert.equal(view.body.getAttribute("aria-busy"), "false");
-    intersect(view.card);
-    await tick();
-    assert.deepEqual(periods, []);
-    await controller.updateInstance("lazy", { collapsed: false });
+    assert.equal(targets.size, 1);
+    assert.equal(view.body.hidden, false);
+    assert.equal(view.body.getAttribute("aria-busy"), "true");
     intersect(view.card);
     await tick();
     assert.deepEqual(periods, [30]);
@@ -242,7 +237,28 @@ test("Defaults are used only for an unconfigured profile and mandatory widgets s
     assert.equal(initial.requests.length, 1, "Mandatory removal must not reach the server");
 });
 
-test("Header navigation survives loading, title changes, collapse and edit controls", async t => {
+test("Legacy minimized widgets render their full content and retain size, order and filters", async t => {
+    const legacy = [
+        { ...item("first", "test", "3x3", { days: 30 }), collapsed: true },
+        { ...item("second", "test", "2x2"), collapsed: false }
+    ];
+    const { controller, host, requests, stored } = fixture(t, { items: legacy });
+    await controller.start();
+    assert.deepEqual(copy(controller.settings.items), legacy.map(({ collapsed, ...instance }) => instance));
+    assert.equal(stored().items[0].collapsed, true, "Loading must not write to the stored profile");
+    assert.equal(requests.length, 1);
+    assert.equal(host.querySelector('[data-dashboard-action="collapse"], .is-collapsed'), null);
+    for (const body of host.querySelectorAll('.md-dashboard__widget-body')) {
+        assert.equal(body.hidden, false);
+        assert.equal(body.textContent, "Widget content");
+    }
+    await controller.saveOptions("first", { domainOptions: { formName: "Contact" } });
+    assert.deepEqual(stored().items, legacy.map(({ collapsed, ...instance }) => instance));
+    assert.deepEqual(stored().domainOptions.first, { formName: "Contact" });
+    assert.equal(legacy[0].collapsed, true, "Normalization must not mutate its input");
+});
+
+test("Header navigation survives loading, title changes and edit controls", async t => {
     let finish;
     const { controller, host, window } = fixture(t, {
         items: [item("traffic", "linked-title", "2x2", { title: "Traffic" }), item("pages", "linked-action")],
@@ -272,9 +288,6 @@ test("Header navigation survives loading, title changes, collapse and edit contr
     assert.equal(titleLink.querySelector("strong"), null, "Dynamic titles remain text");
     assert.ok(titleLink.querySelector(".ti-arrow-up-right"), "Updating title text must not erase the navigation icon");
     finish();
-    await controller.updateInstance("traffic", { collapsed: true });
-    await controller.updateInstance("pages", { collapsed: true });
-    assert.equal(titleLink.closest("section").querySelector(".md-dashboard__widget-body").hidden, true);
     assert.equal(host.querySelector('[data-instance-id="pages"] .md-dashboard__header-link'), actionLink);
     controller.setEditing(true);
     assert.equal(actionLink.closest(".md-dashboard__widget-header").querySelector(".md-dashboard__widget-controls").hidden, false);
@@ -347,10 +360,10 @@ test("Reset clears personal preferences and disposes replaced widgets only after
     assert.equal(host.querySelector('[data-instance-id="custom"]'), null);
     await controller.start();
     assert.deepEqual(copy(controller.settings.items.map(value => value.type)), ["test", "sessions"], "A reload reapplies defaults until the first personal edit");
-    await controller.updateInstance(controller.settings.items[0].id, { collapsed: true });
+    await controller.saveOptions(controller.settings.items[0].id, { options: { days: 30 } });
     assert.equal(stored().configured, true);
     await controller.start();
-    assert.equal(controller.settings.items[0].collapsed, true);
+    assert.equal(controller.settings.items[0].options.days, 30);
 });
 
 test("A failed reset preserves the layout, filters, acknowledged news and removal undo", async t => {
@@ -457,11 +470,11 @@ test("Reset suppresses its tooltip through standard confirmation and releases li
 test("Successful preferences use a ten-second standard notification and clear inline status", async t => {
     const { controller, host, notifications, setSaveFailure } = fixture(t, { items: [item("custom")] });
     await controller.start();
-    assert.equal(await controller.updateInstance('custom', { size: '3x3' }), true);
+    assert.equal(await controller.saveOptions('custom', { options: { days: 30 } }), true);
     assert.deepEqual(notifications, [['Saved.', '', 10000]]);
     assert.equal(controller.status.textContent, '');
     setSaveFailure(true);
-    assert.equal(await controller.updateInstance('custom', { size: '3x2' }), false);
+    assert.equal(await controller.saveOptions('custom', { options: { days: 90 } }), false);
     assert.equal(notifications.length, 1, 'Failed persistence must not show a success notification');
     assert.match(controller.status.textContent, /previous settings/);
 });
@@ -512,11 +525,11 @@ test("Removal undo survives a failed save but expires after the next successful 
     await controller.remove("b");
     assert.equal(host.querySelector(".md-dashboard__undo").hidden, false);
     setSaveFailure(true);
-    assert.equal(await controller.updateInstance("a", { collapsed: true }), false);
+    assert.equal(await controller.saveOptions("a", { options: { days: 30 } }), false);
     assert.equal(controller.removed.instance.id, "b");
     assert.equal(host.querySelector(".md-dashboard__undo").hidden, false);
     setSaveFailure(false);
-    assert.equal(await controller.updateInstance("a", { collapsed: true }), true);
+    assert.equal(await controller.saveOptions("a", { options: { days: 30 } }), true);
     assert.equal(controller.removed, null);
     assert.equal(host.querySelector(".md-dashboard__undo").hidden, true);
     assert.equal(await controller.undoRemove(), false);
@@ -538,7 +551,7 @@ test("Unavailable types remain persisted while authorized instances render", asy
     });
     await controller.start();
     assert.equal(host.querySelectorAll("[data-instance-id]").length, 1);
-    await controller.updateInstance("visible", { collapsed: true });
+    await controller.saveOptions("visible", { options: { days: 30 } });
     assert.equal(stored().items.length, 2, "A changed permission must not erase the user's preferences");
 });
 
@@ -558,15 +571,14 @@ test("A failed domain-context reload does not display the previous domain's widg
     assert.equal(host.querySelector(".md-dashboard__widget-content").textContent, "New domain");
 });
 
-test("Sessions remain expanded in the permanent header while stored preferences stay intact", async t => {
+test("Sessions remain in the permanent header without arrangement controls", async t => {
     let renders = 0;
-    const session = { ...item("sessions", "sessions", "2x3"), collapsed: true };
+    const session = item("sessions", "sessions", "2x3");
     const { controller, host, requests, stored } = fixture(t, {
         items: [session, item("ordinary")],
         definitions: [{
             type: "sessions", titleKey: "Sessions", mandatory: true, sizes: ["2x3"],
-            render: ({ container, instance }) => { renders++; assert.equal(instance.collapsed, false); container.textContent = "Active session details"; },
-            renderCollapsed: () => assert.fail("Security details must not collapse")
+            render: ({ container }) => { renders++; container.textContent = "Active session details"; }
         }]
     });
     await controller.start();
@@ -574,12 +586,11 @@ test("Sessions remain expanded in the permanent header while stored preferences 
     assert.equal(host.querySelector(".md-dashboard__layout [data-widget-type='sessions']"), null);
     assert.equal(host.querySelector(".md-dashboard__sessions .md-dashboard__widget-controls"), null);
     const count = requests.length;
-    assert.equal(await controller.updateInstance("sessions", { collapsed: true }), false);
     assert.equal(await controller.remove("sessions"), false);
     assert.equal(await controller.moveBefore("sessions", "ordinary"), false);
     assert.equal(requests.length, count);
-    await controller.updateInstance("ordinary", { collapsed: true });
-    assert.equal(stored().items[0].collapsed, true, "The visual move must not silently rewrite old preferences");
+    await controller.saveOptions("ordinary", { options: { days: 30 } });
+    assert.deepEqual(stored().items[0], session, "Editing another card must preserve session preferences");
     assert.equal(renders, 1, "Unrelated edits must not reload security data");
 });
 
@@ -655,10 +666,10 @@ test("A menu action closes its dropdown before disabling controls for persistenc
         assert.equal(controller.saving, false, "Bootstrap must hide the menu before the toggle is disabled");
         hidden = true;
     }, dispose() {} }) };
-    host.querySelector('[data-dashboard-action="collapse"]').click();
+    host.querySelector('[data-dashboard-action="remove"]').click();
     assert.equal(hidden, true);
     await tick();
-    assert.equal(controller.settings.items[0].collapsed, true);
+    assert.equal(controller.settings.items.length, 0);
 });
 
 test("A settings dialog disposed during async initialization releases the late result", async t => {

@@ -15,9 +15,9 @@ Before(async ({ I, login }) => {
     // Intercept preferences and chart data without changing the user's persisted dashboard.
     let settings = {
         version: 1, configured: true, acknowledgedNewsVersion: null, domainOptions: {}, items: [
-            { id: 'tooltip-autotest-news', type: 'news', size: '3x2', collapsed: true, options: {} },
+            { id: 'tooltip-autotest-news', type: 'news', size: '3x2', options: {} },
             ...['traffic', 'recent-pages', 'search-terms', 'top-pages', 'server-memory', 'server-cpu'].map(type => ({
-                id: `tooltip-autotest-${type}`, type, size: '3x3', collapsed: false, options: { days: 7 }
+                id: `tooltip-autotest-${type}`, type, size: '3x3', options: { days: 7 }
             }))
         ]
     };

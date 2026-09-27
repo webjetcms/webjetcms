@@ -54,12 +54,11 @@ Scenario('Migrated overview widgets persist independently and clean up monitorin
             for (const [type, size] of definitions) {
                 let item = next.items.find(item => item.type === type);
                 if (!item) {
-                    item = { id: `migrated-autotest-${type}`, type, size, collapsed: false, options: {} };
+                    item = { id: `migrated-autotest-${type}`, type, size, options: {} };
                     next.items.push(item);
                 }
                 item.size = size;
-                item.collapsed = false;
-                chosen.push(item);
+                    chosen.push(item);
             }
             next.items = [...next.items.filter(item => !definitions.some(([type]) => item.type === type)), ...chosen];
             return { saved: await controller._commit(next), items: next.items.filter(item => definitions.some(([type]) => item.type === type)) };
@@ -92,19 +91,6 @@ Scenario('Migrated overview widgets persist independently and clean up monitorin
         await waitForChart(I, 'server-memory');
         await assertDisposedChart(I);
         I.assertNotEqual(await I.grabAttributeFrom('[data-widget-type="server-memory"] .md-dashboard-widget__chart', 'id'), firstMemory);
-
-        await rememberChart(I, 'server-memory');
-        await widgetAction(I, ids['server-memory'], 'collapse');
-        waitForSave(I);
-        await waitForWidgets(I);
-        await assertDisposedChart(I);
-        I.dontSeeElementInDOM('[data-widget-type="server-memory"] .md-dashboard-widget__chart');
-        I.refreshPage();
-        await waitForWidgets(I);
-        I.seeElementInDOM('[data-widget-type="server-memory"].is-collapsed');
-        await widgetAction(I, ids['server-memory'], 'collapse');
-        waitForSave(I);
-        await waitForChart(I, 'server-memory');
 
         await rememberChart(I, 'server-cpu');
         await widgetAction(I, ids['server-cpu'], 'remove');

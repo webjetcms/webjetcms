@@ -5,6 +5,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,11 +28,11 @@ public class DashboardSettingsDto {
     /** A widget instance; its position is determined by its index in {@code items}. */
     @Getter
     @Setter
+    @JsonIgnoreProperties("collapsed") // Accept old profiles without retaining the removed minimization state.
     public static class Item {
         private String id;
         private String type;
         private String size;
-        private boolean collapsed;
         private Map<String, Object> options;
     }
 }

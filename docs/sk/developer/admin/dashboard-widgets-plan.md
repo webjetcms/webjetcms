@@ -45,13 +45,13 @@ Použiť prirodzené poradie gridu bez `dense`. Menšie widgety sa môžu sklada
 
 ### Ovládanie
 
-- Menu widgetu ponúkne nastavenia, povolené veľkosti, presun, minimalizovanie a odstránenie.
+- Menu widgetu ponúkne nastavenia, povolené veľkosti, presun a odstránenie.
 - Presun bude možný ťahaním aj voľbou „Presunúť pred… / Na koniec“, dostupnou klávesnicou a dotykom.
 - Ukladá sa poradie, nie pixelové súradnice ani samostatné mobilné rozloženie.
-- Minimalizovaný widget ponechá názov a stručný súhrn; variant 1×1 sa ďalej neminimalizuje.
+- Widget sa vždy zobrazí v zvolenej veľkosti s plným obsahom; samostatný minimalizovaný režim sa nepoužíva.
 - Katalóg umožní pridanie a opätovné pridanie. Odstránenie zasiahne iba widget, s možnosťou okamžitého vrátenia.
 - Viac inštancií podporia skratky, formuláre, štatistiky a newsletter; ostatné typy budú jedinečné.
-- Moje aktívne prihlásenia možno presunúť a minimalizovať, ale nie odstrániť. Správa relácií zostane dostupná.
+- Moje aktívne prihlásenia zostávajú pevne umiestnené v uvítacom paneli a nemožno ich odstrániť. Správa relácií zostane dostupná.
 - Nevyriešené systémové upozornenia nemožno skryť personalizáciou.
 - Novinky sa potvrdzujú pre konkrétnu verziu; v zapnutom widgete sa znovu zobrazia pri ďalšej verzii.
 
@@ -77,7 +77,7 @@ Oprávnenia sa kontrolujú aj na dátových endpointoch. Nedostupné widgety sa 
 ### Etapa 1 — skill, systém a dva piloty
 
 - Vytvoriť úvodnú verziu skillu.
-- Implementovať register, responzívny grid, katalóg, nastavenia, presúvanie, minimalizovanie, odstránenie a serverové ukladanie.
+- Implementovať register, responzívny grid, katalóg, nastavenia, presúvanie, odstránenie a serverové ukladanie.
 - Doplniť skutočný kontrakt do skillu ešte pred implementáciou pilotov.
 - Podľa skillu implementovať **Skratku do modulu** a **Moje posledné stránky**.
 - Výber skratky odvodiť z existujúceho menu filtrovaného oprávneniami.
@@ -153,7 +153,7 @@ Dáta sa obnovia pri načítaní, zmene relevantných nastavení alebo domény a
 
 - **Backend:** vlastníctvo nastavení a relácií, práva a domény, validácia konfigurácií, limity, transakčné uloženie a bezpečné odovzdanie dát frontendu.
 - **Frontend:** povolené varianty, viac inštancií, povinné widgety, obnova po chybe uloženia a správne uvoľnenie zdrojov.
-- **E2E:** pridanie, nastavenie, presun, minimalizovanie, odstránenie, opätovné pridanie, obnovenie stránky a načítanie v druhej relácii.
+- **E2E:** pridanie, nastavenie, presun, odstránenie, opätovné pridanie, obnovenie stránky a načítanie v druhej relácii.
 - **Regresie:** systémové hlásenia prežijú úpravy dashboardu; odhlásenie relácií zostane funkčné; potvrdenie noviniek sa zachová.
 - **Responzivita a prístupnosť:** šírky 320, 390, 768, 1024, 1200, 1337 a 1920 px, hranice breakpointov, klávesnica, fokus, dlhé názvy a 200 % zväčšenie.
 - **Skill:** spustiť `quick_validate.py`, overiť odkazy a porovnať pravidlá s oboma pilotmi. Nezávislý agent dostane skill, repozitár a zadanie widgetu Formuláre na skúšobný návrh bez implementácie; zistené nejasnosti opraviť.
@@ -166,7 +166,7 @@ Každá etapa zahŕňa aktualizáciu skillu a primerané overenie. Všetky zmeny
 - Predvolené rozloženie bolo rozšírené z pilotov na všetky dostupné typy widgetov. Široké prehľady tvoria dvojice, zoznamy trojicu; systém naďalej filtruje podľa práv a nemení uložené osobné rozloženia.
 - Lišta úprav obsahuje **Pridať widget → Resetovať → Hotovo**; reset použije systémové potvrdenie `WJ.confirm`. Úspešné uloženie a reset oznamuje `WJ.notifySuccess` s timeoutom 10 sekúnd. `DELETE /admin/rest/dashboard/settings` atomicky odstráni dashboardové nastavenia aktuálneho konta vrátane všetkých doménových filtrov a potvrdených noviniek. Skratky vrátane ich poradia a stavu migrácie, ostatné nastavenia a legacy záložky zostávajú zachované. Klient zobrazí predvolené widgety až po úspechu; pri chybe zachová pôvodný stav.
 - Pamäť a CPU zdieľajú živé načítavanie `/admin/rest/monitoring/actual` každých 5 sekúnd. Nepotrebujú historické monitorovanie; aktualizujú číselné hodnoty aj existujúce grafy a pozastavia načítavanie pre skrytú kartu či widget.
-- Grafy používajú existujúce AmCharts cez `window.initAmcharts()` a `ChartTools`. Dáta grafu sú dostupné aj ako tabuľka; graf sa uvoľní pri obnovení, minimalizovaní alebo odstránení widgetu.
+- Grafy používajú existujúce AmCharts cez `window.initAmcharts()` a `ChartTools`. Dáta grafu sú dostupné aj ako tabuľka; graf sa uvoľní pri obnovení, zmene veľkosti alebo odstránení widgetu.
 
 - REST požiadavky WebJETu vyžadujú CSRF hlavičku aj pri GET. Všetky nové načítania ju posielajú.
 - Runtime používa JSON konvertor Jackson 3. REST DTO preto používa bežné mapy, nie uzly JSON z Jacksonu 2.
@@ -184,7 +184,7 @@ Overené 26. 9. 2026:
 
 - Frontendový build `npm run dev`; 33 JavaScript testov spoločného systému a widgetov.
 - 40 Java testov dashboardu vrátane vlastníctva, domén, limitov, transakcií a vlastných/vzdialených relácií.
-- Reálne browser scenáre pridania, nastavenia, ťahania, klávesového presunu, minimalizovania, odstránenia/vrátenia, chyby uloženia a druhého prihlásenia. Testy obnovujú pôvodné efektívne nastavenia konta.
+- Reálne browser scenáre pridania, nastavenia, ťahania, klávesového presunu, odstránenia/vrátenia, chyby uloženia a druhého prihlásenia. Testy obnovujú pôvodné efektívne nastavenia konta.
 - Dátové endpointy všetkých providerov, celý katalóg, potvrdenie a opätovné zobrazenie noviniek, prepínač dokumentácie a skutočný preklik do schvaľovania. Dokumentačný test zachytáva otvorenie okna bez odoslania externého dotazu.
 - Šírky 320, 359, 360, 390, 767, 768, 1024, 1199, 1200, 1337 a 1920 px; 200 % zväčšenie textu vrátane zalamovania a čitateľnosti buniek tabuliek.
 - Axe kontrola načítanej úvodnej stránky a katalógu; ovládanie dialógu klávesnicou, zachovanie fokusu a jeho návrat. Zachované lokálne záložky a odhlásenie výlučne relácie vytvorenej testom. Spätná väzba sa pri testoch neodosiela.
@@ -192,13 +192,13 @@ Overené 26. 9. 2026:
 
 Lokálny server používa pôvodný profil `/poolman-local.xml`. Cielená migrácia tabuľky nastavení na InnoDB prebehla štandardným aktualizačným mechanizmom; ostatné nastavenia zostali zachované. Overenie databázových integrácií prebehlo na lokálnej MariaDB; ostatné podporované databázové platformy neboli v tejto relácii spustené.
 
-Po doplnení všetkých predvolených widgetov, resetu a AmCharts prešiel frontendový build, 45 JavaScript testov a 25 cielených Java testov nastavení, repository a REST rozhrania. Reálny reset bol overený na dočasnom účte vrátane chyby uloženia, obnovenia stránky a následnej personalizácie; účet aj jeho nastavenia boli odstránené a pôvodné konto zostalo nezmenené. Browser testy grafov overujú obnovenie, minimalizovanie, zmenu na 1×1, odstránenie/vrátenie a jediný živý AmCharts root na host. Predvolené desktopové aj mobilné rozloženie a grafy prešli vizuálnou kontrolou; celá zostava widgetov prešla aj axe kontrolou.
+Po doplnení všetkých predvolených widgetov, resetu a AmCharts prešiel frontendový build, 45 JavaScript testov a 25 cielených Java testov nastavení, repository a REST rozhrania. Reálny reset bol overený na dočasnom účte vrátane chyby uloženia, obnovenia stránky a následnej personalizácie; účet aj jeho nastavenia boli odstránené a pôvodné konto zostalo nezmenené. Browser testy grafov overujú obnovenie, zmenu na 1×1, odstránenie/vrátenie a jediný živý AmCharts root na host. Predvolené desktopové aj mobilné rozloženie a grafy prešli vizuálnou kontrolou; celá zostava widgetov prešla aj axe kontrolou.
 
 ## Dokončenie migrácie pôvodných prehľadov
 
 Sekcia „Ďalšie prehľady“ je odstránená vrátane pôvodného rozhrania záložiek a spoločného dátového endpointu. Päť samostatných widgetov používa poskytovateľov podľa typu s kontrolou oprávnení na serveri. Nové a resetované rozloženie ich pridá na koniec; uložené osobné rozloženia sa nemenia. „Vaše skratky“ podporujú odkazy do dostupných modulov aj vlastné URL uložené na konto. Pôvodná verzia ukladala pole `{name, path}` do `localStorage["bookmarks"]`, nie do databázy. Pri načítaní dashboardu sa tento neprázdny zoznam automaticky importuje do prihláseného účtu a nahradí iba skratky. Názvy, poradie a konkrétne URL vrátane parametrov sa zachovajú; duplicitné URL sa zlúčia. Widgety, doménové filtre a prečítané novinky zostanú zachované. Až úspešné uloženie nastaví `legacyBookmarksHandled` a odstráni pôvodný lokálny kľúč, pokiaľ sa počas ukladania nezmenil. Chyba uloženia, neplatný záznam alebo prekročenie limitu zachovajú pôvodný zoznam aj aktuálne skratky; ďalšie načítanie import zopakuje. Chýbajúci alebo prázdny zoznam ponechá predvolené skratky. Úspešne dokončený import sa na rovnakom účte neopakuje. Migrácia cez `UpdateDatabase` nie je potrebná.
 
-Monitorovanie používa dostupné historické vzorky za poslednú hodinu a aktuálnu vzorku z rovnakého zdroja ako modul monitorovania. Bez zapnutého záznamu histórie je k dispozícii aktuálna vzorka. Widgety sa načítajú pri otvorení a manuálnom obnovení, grafy sa uvoľnia pri minimalizovaní či odstránení. Audit, administrátori a monitorovanie sú údaje celého servera; zmenené stránky rešpektujú aktuálnu doménu a oprávnenia k stránkam.
+Monitorovanie používa dostupné historické vzorky za poslednú hodinu a aktuálnu vzorku z rovnakého zdroja ako modul monitorovania. Bez zapnutého záznamu histórie je k dispozícii aktuálna vzorka. Widgety sa načítajú pri otvorení a manuálnom obnovení, grafy sa uvoľnia pri zmene veľkosti či odstránení. Audit, administrátori a monitorovanie sú údaje celého servera; zmenené stránky rešpektujú aktuálnu doménu a oprávnenia k stránkam.
 
 Overenie migrácie: frontendový build, 81 JavaScript testov, Java testy dashboardu vrátane ôsmich testov nových providerov, päť browser scenárov dátových endpointov a trojica scenárov skutočného resetu na dočasnom účte prešli. Samostatný browser scenár overuje perzistenciu nových widgetov, životný cyklus grafov a responzívne vykreslenie na šírkach 1337 a 390 px. Účet použitý na reset bol odstránený a pôvodné preferencie administrátora zostali zachované.
 
@@ -216,3 +216,7 @@ Výber cieľa novej skratky kopíruje hierarchiu oprávneného menu: **Hlavná �
 Ikona sa preberá zo zvolenej položky menu; karta bez vlastnej ikony ju dedí z nadradenej sekcie. V dialógu ju možno zmeniť zadaním názvu ikony Tabler, aj pri vlastnej URL. Zmena cieľa predvyplní zodpovedajúcu ikonu, opätovné otvorenie zachová vlastnú voľbu. Farebné vzorky ponúkajú pôvodnú bielu a šesť pastelových farieb z palety dashboardu. Výsledok je viditeľný v živom náhľade a nastavenia sa ukladajú na konto. Staršie skratky bez týchto nastavení zachovajú predvolený vzhľad.
 
 Selecty používajú spoločnú funkciu `WJ.initSelectPicker(root, overrides)`, ktorú volá aj `app-init.js`. Funguje pri prvom načítaní aj po dynamickom vložení polí, obnovuje závislé možnosti a rešpektuje `.no-picker` aj `data-live-search`. V dialógu zachová fokus vyhľadávania; Escape najprv zatvorí rozbalený výber. Pri zatvorení dialógu sa selectpickery uvoľnia.
+
+## Widget minimization removed
+
+Widgets always render their full content at the selected size. The action menu, renderers, styles and settings no longer support a separate minimized state. Legacy `collapsed` fields are ignored when loading both browser and server preferences, preserving widget order, sizes and domain filters. Release-news acknowledgement and its independent summary toggle remain available.

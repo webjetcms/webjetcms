@@ -210,7 +210,7 @@ export class DashboardController {
 
     /** Keeps fixed utilities visible without rewriting saved instances or their preferences. */
     _displayItems() {
-        const items = this.settings.items.map(instance => this._region(instance) === "grid" || instance.type === "shortcut" ? instance : { ...instance, collapsed: false });
+        const items = [...this.settings.items];
         for (const type of ["sessions", "news", "search"]) {
             const definition = getWidget(type);
             if (definition && !items.some(item => item.type === type)) items.push({ ...this._newInstance(definition), id: `dashboard-fixed-${type}` });
@@ -252,7 +252,7 @@ export class DashboardController {
     }
 
     _newInstance(definition, values = {}) {
-        return { id: createInstanceId(), type: definition.type, size: values.size || definition.defaultSize, collapsed: false, options: { ...cloneSettings(definition.defaultOptions), ...values.options } };
+        return { id: createInstanceId(), type: definition.type, size: values.size || definition.defaultSize, options: { ...cloneSettings(definition.defaultOptions), ...values.options } };
     }
 
     _addDefaults() {
@@ -379,12 +379,7 @@ export class DashboardController {
                 }
             }
             view.card.dataset.size = instance.size;
-            view.card.classList.toggle("is-collapsed", Boolean(instance.collapsed));
-            view.collapse.textContent = this._t(instance.collapsed ? "expand" : "collapse", instance.collapsed ? "Expand" : "Collapse");
-            view.collapse.prepend(icon(instance.collapsed ? "ti-chevron-down" : "ti-chevron-up"));
-            view.collapse.setAttribute("aria-expanded", String(!instance.collapsed));
-            view.collapse.hidden = instance.size === "1x1";
-            const signature = JSON.stringify([instance.type, instance.size, instance.collapsed, instance.options, this.settings.domainOptions[instance.id], this._contextVersion, instance.type === "news" ? this.settings.acknowledgedNewsVersion : null]);
+            const signature = JSON.stringify([instance.type, instance.size, instance.options, this.settings.domainOptions[instance.id], this._contextVersion, instance.type === "news" ? this.settings.acknowledgedNewsVersion : null]);
             if (view.signature !== signature) {
                 view.signature = signature;
                 refreshIds.push(instance.id);
@@ -463,8 +458,7 @@ export class DashboardController {
         };
         menu.append(menuItem("refresh", "Refresh", "ti-refresh", () => this.refresh(instance.id)));
         if (definition.configure || definition.sizes.length > 1) menu.append(menuItem("settings", "Settings", "ti-settings", () => this.showSettings(instance.id)));
-        const collapse = menuItem("collapse", "Collapse", "ti-chevron-up", () => this.updateInstance(instance.id, { collapsed: !this._instance(instance.id).collapsed }));
-        menu.append(collapse, menuItem("move", "Move widget", "ti-arrows-move", () => this.showMove(instance.id)));
+        menu.append(menuItem("move", "Move widget", "ti-arrows-move", () => this.showMove(instance.id)));
         if (!definition.mandatory) menu.append(menuItem("remove", "Remove", "ti-trash", () => this.remove(instance.id)));
         dropdown.append(menuButton, menu);
         const controls = node("div", "md-dashboard__widget-controls md-dashboard__edit-control");
@@ -474,10 +468,9 @@ export class DashboardController {
         if (["news", "search"].includes(instance.type)) header.hidden = true;
         const body = node("div", "md-dashboard__widget-body");
         body.id = `dashboard-body-${instance.id}`;
-        collapse.setAttribute("aria-controls", body.id);
         if (instance.type === "shortcut") card.append(body, header);
         else card.append(header, body);
-        return { card, header, title, titleText, body, collapse, instance, abort: null, cleanup: null, signature: null };
+        return { card, header, title, titleText, body, instance, abort: null, cleanup: null, signature: null };
     }
 
     _instance(id) {
@@ -523,12 +516,9 @@ export class DashboardController {
         const abort = view.abort = new AbortController();
         const instance = view.instance;
         const definition = getWidget(instance.type);
-        const renderer = instance.collapsed ? definition.renderCollapsed : definition.render;
         const content = node("div", "md-dashboard__widget-content");
         view.body.replaceChildren(content);
-        view.body.hidden = !renderer;
-        view.body.setAttribute("aria-busy", String(Boolean(renderer)));
-        if (!renderer) return;
+        view.body.setAttribute("aria-busy", "true");
         const loading = node("span", "md-dashboard__loading", this._t("loading", "Loading…"));
         view.body.prepend(loading);
         try {
@@ -536,7 +526,7 @@ export class DashboardController {
                 await this._waitForVisibility(view, abort.signal);
                 if (abort.signal.aborted || this.destroyed) return;
             }
-            const result = await renderer({
+            const result = await definition.render({
                 container: content, instance: cloneSettings(instance), options: cloneSettings(instance.options || {}),
                 domainOptions: cloneSettings(this.settings.domainOptions[id] || definition.defaultDomainOptions),
                 context: this._widgetContext(), signal: abort.signal,
@@ -566,20 +556,6 @@ export class DashboardController {
         next.domainOptions[instance.id] = cloneSettings(definition.defaultDomainOptions);
         const saved = await this._commit(next);
         if (saved) this._focusInstance(instance.id);
-        return saved;
-    }
-
-    async updateInstance(id, values) {
-        const next = cloneSettings(this.settings);
-        const item = next.items.find(instance => instance.id === id);
-        if (!item) return false;
-        const definition = getWidget(item.type);
-        if (["sessions", "news", "search"].includes(this._region(item))) return false;
-        if (values.size && !definition.sizes.includes(values.size)) return false;
-        Object.assign(item, values);
-        if (item.size === "1x1") item.collapsed = false;
-        const saved = await this._commit(next);
-        if (saved) this._focusInstance(id);
         return saved;
     }
 
@@ -986,7 +962,6 @@ export class DashboardController {
                 const updated = next.items.find(item => item.id === id);
                 if (!updated) return;
                 updated.size = size.value;
-                if (updated.size === "1x1") updated.collapsed = false;
                 if (values.options !== undefined) updated.options = cloneSettings(values.options);
                 if (values.domainOptions !== undefined) next.domainOptions[id] = cloneSettings(values.domainOptions);
                 save.disabled = true;

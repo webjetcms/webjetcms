@@ -16,9 +16,9 @@ for (const width of [1337, 390]) {
             version: 1, configured: true, shortcutsConfigured: true, legacyBookmarksHandled: true,
             domainOptions: {}, acknowledgedNewsVersion: null,
             items: [
-                ...Array.from({ length: 6 }, (_, index) => ({ id: `lazy-autotest-${index}`, type: 'forms', size: '3x3', collapsed: false, options: { days: 7 } })),
-                { id: 'lazy-autotest-audit', type: 'audit', size: '3x3', collapsed: false, options: {} },
-                { id: 'lazy-autotest-memory', type: 'server-memory', size: '3x3', collapsed: false, options: {} },
+                ...Array.from({ length: 6 }, (_, index) => ({ id: `lazy-autotest-${index}`, type: 'forms', size: '3x3', options: { days: 7 } })),
+                { id: 'lazy-autotest-audit', type: 'audit', size: '3x3', options: {} },
+                { id: 'lazy-autotest-memory', type: 'server-memory', size: '3x3', options: {} },
                 { id: 'lazy-autotest-cpu', type: 'server-cpu', size: '3x3', collapsed: true, options: {} }
             ]
         };
@@ -55,8 +55,23 @@ for (const width of [1337, 390]) {
             await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.refresh('lazy-autotest-audit'));
             I.assertEqual(requests.filter(type => type === 'audit').length, 2, 'Manual refresh must remain available.');
             await showWidget(I, 'lazy-autotest-cpu');
-            I.seeElementInDOM('[data-instance-id="lazy-autotest-cpu"].is-collapsed .md-dashboard-widget__monitoring-values');
-            I.assertAbove(requests.filter(type => type === 'monitoring').length, 0, 'Visible collapsed monitoring must load its numeric preview.');
+            I.seeElementInDOM('[data-instance-id="lazy-autotest-cpu"] .md-dashboard-widget__monitoring-values');
+            I.seeElementInDOM('[data-instance-id="lazy-autotest-cpu"][data-size="3x3"] .md-dashboard-widget__chart');
+            I.dontSeeElementInDOM('.md-dashboard__widget.is-collapsed, [data-dashboard-action="collapse"]');
+            I.assertFalse(await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.some(item => 'collapsed' in item)),
+                'Legacy minimized widgets must use their saved size and discard the removed state.');
+            I.assertAbove(requests.filter(type => type === 'monitoring').length, 0, 'Visible monitoring must load its full chart and values.');
+            I.executeScript(() => {
+                const scrollbar = window.scrollbarMain;
+                scrollbar.setMomentum(0, 0);
+                scrollbar.setPosition(0, scrollbar.offset.y + document.querySelector('.md-dashboard__toolbar').getBoundingClientRect().top - 64);
+            });
+            I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
+            await showWidget(I, 'lazy-autotest-cpu');
+            I.clickCss('[data-instance-id="lazy-autotest-cpu"] .dropdown > button');
+            I.see('Nastavenia widgetu', '[data-instance-id="lazy-autotest-cpu"] .dropdown-menu');
+            I.dontSee('Minimalizovať', '[data-instance-id="lazy-autotest-cpu"] .dropdown-menu');
+            I.saveScreenshot(`dashboard-no-minimize-${width}.png`, false);
         } finally {
             for (const route of [settingsRoute, noticesRoute, dataRoute, monitoringRoute]) await I.stopMockingRoute(route);
             I.wjSetDefaultWindowSize();

@@ -255,7 +255,6 @@ webjet-overview-dashboard a:focus-visible {
         &[data-size="1x1"] { grid-row: span 1; }
         &[data-size="2x3"], &[data-size="3x3"] { grid-row: span 3; }
         &[data-size="fullauto"] { min-height: var(--dashboard-row-height); }
-        &.is-collapsed { grid-row: span 1; align-self: start; }
         &.is-drop-target { outline: 3px solid var(--wj-primary); outline-offset: 2px; }
         &:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }
         &.ui-draggable-dragging { pointer-events: none; box-shadow: 0 8px 24px var(--wj-dashboard-shadow); }
@@ -282,19 +281,19 @@ webjet-overview-dashboard a:focus-visible {
     &__widget[data-size="1x1"] .md-dashboard-widget__metric { margin-bottom: 0; }
     &__widget[data-size="1x1"] .md-dashboard-widget__period { margin-bottom: 0 !important; }
     &__widget[data-size="1x1"] .md-dashboard-widget__number { font-size: 32px; }
-    &__widget[data-widget-type="traffic"]:not([data-size="1x1"]):not(.is-collapsed) .md-dashboard-widget__number { font-size: 56px; letter-spacing: -2px; }
-    &:not(.is-editing) &__widget[data-widget-type="traffic"]:not([data-size="1x1"]):not(.is-collapsed) .md-dashboard-widget__period { position: absolute; top: 24px; right: 22px; font-size: 11px; }
-    &:not(.is-editing) &__widget[data-widget-type="traffic"]:not([data-size="1x1"]):not(.is-collapsed) &__widget-title { padding-right: 112px; }
+    &__widget[data-widget-type="traffic"]:not([data-size="1x1"]) .md-dashboard-widget__number { font-size: 56px; letter-spacing: -2px; }
+    &:not(.is-editing) &__widget[data-widget-type="traffic"]:not([data-size="1x1"]) .md-dashboard-widget__period { position: absolute; top: 24px; right: 22px; font-size: 11px; }
+    &:not(.is-editing) &__widget[data-widget-type="traffic"]:not([data-size="1x1"]) &__widget-title { padding-right: 112px; }
     &__widget[data-widget-type="traffic"] .md-dashboard-widget__metric { margin-bottom: 0; }
     &__widget[data-widget-type="traffic"] .md-dashboard-widget__chart-legend { margin-bottom: 10px; }
     &__widget.is-fixed { min-height: 0; }
 
-    &__widget[data-widget-type="recent-pages"]:not(.is-collapsed) {
+    &__widget[data-widget-type="recent-pages"] {
         min-height: 0;
         .md-dashboard__widget-body, .md-dashboard__widget-content { min-height: 0; }
         .md-dashboard-widget__pages { flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; touch-action: pan-y; margin-bottom: 0; &:focus-visible { outline: 2px solid var(--wj-primary); outline-offset: 2px; } }
     }
-    &__widget[data-widget-type="logged-admins"]:not(.is-collapsed) {
+    &__widget[data-widget-type="logged-admins"] {
         min-height: 0;
         .md-dashboard__widget-body, .md-dashboard__widget-content { min-height: 0; }
         .md-dashboard-widget__admins { flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; touch-action: pan-y; &:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: 2px; } }
@@ -434,10 +433,10 @@ webjet-overview-dashboard a:focus-visible {
         &__widget { grid-row: auto; min-height: var(--dashboard-row-height); }
         &__widget[data-size] { grid-row: auto; }
         &__widget-content { height: auto; }
-        &__widget[data-widget-type="recent-pages"]:not(.is-collapsed) .md-dashboard-widget__pages { flex: 0 1 auto; max-height: 320px; }
-        &__widget[data-widget-type="logged-admins"]:not(.is-collapsed) .md-dashboard-widget__admins { flex: 0 1 auto; max-height: 240px; }
+        &__widget[data-widget-type="recent-pages"] .md-dashboard-widget__pages { flex: 0 1 auto; max-height: 320px; }
+        &__widget[data-widget-type="logged-admins"] .md-dashboard-widget__admins { flex: 0 1 auto; max-height: 240px; }
         &__shortcut-list > .md-dashboard__widget { flex: 0 1 auto; }
-        &:not(.is-editing) &__widget[data-widget-type="traffic"]:not([data-size="1x1"]):not(.is-collapsed) {
+        &:not(.is-editing) &__widget[data-widget-type="traffic"]:not([data-size="1x1"]) {
             .md-dashboard-widget__period { position: static; margin-top: 8px; }
             .md-dashboard__widget-title { padding-right: 0; }
         }

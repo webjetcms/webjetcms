@@ -423,9 +423,6 @@ test('Logged administrators retain every authorized name with safe email actions
     controller.abort();
     list.dispatchEvent(new window.WheelEvent('wheel', { bubbles: true }));
     assert.equal(bubbled, 1, 'Removed administrator cards must release their native-scroll listeners.');
-    container.replaceChildren();
-    await widget.renderCollapsed({ ...args, signal: new AbortController().signal });
-    assert.match(container.textContent, /6$/);
 });
 
 test('Migrated provider failures stay errors and aborted responses do not append stale content', async t => {
@@ -464,9 +461,6 @@ test('Ranked previews keep numeric columns marked and navigate through their hea
             assert.equal(container.querySelectorAll('td.md-dashboard-widget__table-number').length, numeric);
             assert.equal(container.querySelector(type === 'top-pages' ? '.md-dashboard-widget__page-title' : 'td').textContent, '<b>Long title</b>');
             assert.equal(container.querySelector('b'), null);
-            assert.equal(container.querySelector('.md-dashboard-widget__more'), null);
-            container.replaceChildren();
-            await widget.renderCollapsed(args);
             assert.equal(container.querySelector('.md-dashboard-widget__more'), null);
         }
     }
@@ -597,21 +591,6 @@ test('Monitoring cards preserve timestamped measurements, units, unavailable rea
     }
 });
 
-test('Collapsed monitoring cards never allocate charts or replace unavailable measurements with zero', async t => {
-    for (const type of ['server-memory', 'server-cpu']) {
-        const { scope, context, container, window } = fixture(t, { data: { series: [{ date: 123, used: 0, free: null, total: 128, process: 0, system: null }] } });
-        const runtime = chartRuntime(window);
-        const controller = new AbortController();
-        const cleanup = await scope.getWidget(type).renderCollapsed({ container, context, signal: controller.signal });
-        assert.match(container.textContent, /—/);
-        assert.equal(runtime.loads(), 0);
-        assert.equal(container.querySelector('canvas,.md-dashboard-widget__chart'), null);
-        assert.equal(container.querySelectorAll('.md-dashboard-widget__monitoring-values dd').length, type === 'server-memory' ? 3 : 2);
-        controller.abort();
-        cleanup?.();
-    }
-});
-
 function monitoringClock(scope, window) {
     const timers = new Map();
     const observers = [];
@@ -636,41 +615,6 @@ function monitoringClock(scope, window) {
         visible(container, value) { observers.find(observer => observer.container === container).callback([{ isIntersecting: value }]); }
     };
 }
-
-test('Visible collapsed monitoring cards share live value updates without charts and stop when hidden or removed', async t => {
-    let sample = 1;
-    const { scope, context, container, window, requests } = fixture(t, { fetchResponse: async () => ({ ok: true, json: async () => ({
-        serverActualTime: 1789900000000 + sample * 5000, memUsed: sample * 1048576, memFree: 128 * 1048576,
-        memTotal: 256 * 1048576, cpuUsageProcess: sample, cpuUsage: sample + 10
-    }) }) });
-    context.translate = (key, ...values) => `${key}:${values.join(',')}`;
-    const clock = monitoringClock(scope, window);
-    const runtime = chartRuntime(window);
-    const cpu = window.document.createElement('section');
-    window.document.body.append(cpu);
-    const memoryController = new AbortController(), cpuController = new AbortController();
-    const cleanup = await Promise.all([
-        scope.getWidget('server-memory').renderCollapsed({ container, context, signal: memoryController.signal }),
-        scope.getWidget('server-cpu').renderCollapsed({ container: cpu, context, signal: cpuController.signal })
-    ]);
-    const time = container.querySelector('.md-dashboard-widget__monitoring-time').textContent;
-    assert.equal(requests.length, 1);
-    assert.equal(clock.timers.size, 1);
-    sample = 2;
-    await clock.tick();
-    assert.equal(container.querySelector('dd').textContent, '2 MB');
-    assert.equal(cpu.querySelector('dd').textContent, '2 %');
-    assert.notEqual(container.querySelector('.md-dashboard-widget__monitoring-time').textContent, time);
-    assert.equal(runtime.loads(), 0);
-    assert.equal(runtime.roots.size, 0);
-    clock.visible(container, false);
-    clock.visible(cpu, false);
-    assert.equal(clock.timers.size, 0, 'Offscreen collapsed summaries must stop shared polling.');
-    memoryController.abort(); cleanup[0]();
-    cpuController.abort(); cleanup[1]();
-    assert.ok(clock.observers.every(observer => observer.disconnected));
-    assert.equal(clock.timers.size, 0);
-});
 
 test('Live monitoring starts without history and updates both existing charts, values and bounded tables from shared snapshots', async t => {
     let sample = 0;
@@ -927,13 +871,12 @@ test('Newsletter progress preserves actual status and counts without inventing a
     assert.match(container.querySelector('.md-dashboard-widget__newsletter-details').textContent, /opened.*12.*clicked.*2/);
 });
 
-test('Numeric, collapsed, and empty traffic previews do not initialize charts', async t => {
+test('Numeric and empty traffic previews do not initialize charts', async t => {
     const { scope, context, container, window } = fixture(t, { data: { ...trafficData, series: [] } });
     const runtime = chartRuntime(window);
     const args = { container, context, options: {}, instance: { size: '1x1', type: 'traffic' }, signal: new AbortController().signal };
     const widget = scope.getWidget('traffic');
     await widget.render(args);
-    await widget.renderCollapsed(args);
     await widget.render({ ...args, instance: { size: '3x3' } });
     assert.equal(runtime.loads(), 0);
     assert.equal(container.querySelector('.md-dashboard-widget__chart'), null);
@@ -1070,13 +1013,13 @@ test('Visitor comparisons do not fabricate percentage growth from a zero baselin
     assert.equal(scope.change(5, 10), '-50 %');
 });
 
-test('The mandatory sessions widget retains active login details and a static count even for a stored collapsed layout', async t => {
+test('The mandatory sessions widget retains active login details and a static count', async t => {
     const { scope, context, container } = fixture(t, { extraWidgets: true, data: { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [
         { sessionId: 'current', logonTime: 1000, browserName: 'Browser', remoteAddr: '127.0.0.1' }
     ] }] } } });
     const widget = scope.getWidget('sessions');
     assert.equal(widget.mandatory, true);
-    await widget.renderCollapsed({ container, context, instance: { collapsed: true }, signal: new AbortController().signal });
+    await widget.render({ container, context, signal: new AbortController().signal });
     assert.equal(container.querySelector('span.md-dashboard-widget__session-count').textContent, '1');
     assert.equal(container.querySelector('button'), null);
     assert.match(container.querySelector('li').textContent, /Browser.*127.0.0.1/);
@@ -1105,7 +1048,7 @@ test('An HTTP 200 session-removal rejection leaves the session visible and repor
     }) });
     let refreshed = false;
     context.dashboard = { refresh: () => { refreshed = true; } };
-    await scope.getWidget('sessions').render({ container, context, instance: { collapsed: false }, signal: new AbortController().signal });
+    await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
     const logout = container.querySelector('li button');
     logout.click();
     await new Promise(resolve => setImmediate(resolve));
@@ -1148,7 +1091,7 @@ test('Every active login stays visible with the current session first even when 
             { sessionId: 'other-3', logonTime: 3000 }, { sessionId: 'current', logonTime: 1000, browserName: 'Current browser' }
         ] }]
     } } });
-    await scope.getWidget('sessions').render({ container, context, instance: { collapsed: false }, signal: new AbortController().signal });
+    await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
     const rows = container.querySelectorAll('li');
     assert.equal(rows.length, 4);
     assert.match(rows[0].textContent, /Current browser/);
@@ -1212,7 +1155,7 @@ test('Accepted cluster logout stays pending instead of claiming immediate invali
     }) });
     let refreshed = false;
     context.dashboard = { refresh: () => { refreshed = true; } };
-    await scope.getWidget('sessions').render({ container, context, instance: { collapsed: false }, signal: new AbortController().signal });
+    await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
     container.querySelector('li button').click();
     await new Promise(resolve => setImmediate(resolve));
     assert.match(container.querySelector('li').textContent, /sessionPending/);

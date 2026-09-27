@@ -126,7 +126,7 @@ function docsUrl(path = '') {
 export function registerUtilityWidgets() {
     registerWidget({
         type: 'sessions', titleKey: 'admin.dashboard.sessions.js', icon: 'ti-devices', sizes: ['2x3'], mandatory: true,
-        render: renderSessions, renderCollapsed: renderSessions
+        render: renderSessions
     });
     registerWidget({
         type: 'news', titleKey: 'admin.dashboard.news.js', icon: 'ti-sparkles', sizes: ['3x2'],
@@ -170,9 +170,6 @@ export function registerUtilityWidgets() {
     });
     registerWidget({
         type: 'search', titleKey: 'admin.dashboard.search.js', icon: 'ti-search', sizes: ['fullauto'], defaultOptions: { scope: 'admin' },
-        renderCollapsed({ container, options, context }) {
-            container.append(node('p', 'small mb-0', text(context, options.scope === 'docs' ? 'searchDocsHint' : 'searchAdminHint')));
-        },
         configure({ container, options, context }) {
             const scope = field(container, text(context, 'search'), [['admin', text(context, 'adminSearch')], ['docs', text(context, 'docsSearch')]], options.scope || 'admin');
             return { read: () => ({ options: { scope: scope.value } }) };

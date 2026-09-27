@@ -28,7 +28,7 @@ async function settings(I) {
 }
 
 function effectiveDefaults(profile) {
-    return profile.items.map(({ type, size, collapsed, options, id }) => ({ type, size, collapsed, options, domainOptions: profile.domainOptions[id] }));
+    return profile.items.map(({ type, size, options, id }) => ({ type, size, options, domainOptions: profile.domainOptions[id] }));
 }
 
 async function assertFixtureIdentity(I) {
@@ -138,7 +138,6 @@ Scenario('Reset confirms deletion, keeps failed changes and restores every avail
         assert.deepEqual([...new Set(defaults.items.map(item => item.type))].sort(), Object.keys(expectedSizes).sort());
         for (const item of defaults.items) {
             assert.equal(item.size, expectedSizes[item.type], `Default footprint for ${item.type}`);
-            assert.equal(item.collapsed, false);
         }
         assert.deepEqual(defaults.items.filter(item => item.type !== 'shortcut').slice(0, 11).map(item => item.type), [
             'search', 'sessions', 'news', 'traffic', 'forms', 'approvals',

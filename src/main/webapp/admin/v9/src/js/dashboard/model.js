@@ -11,12 +11,15 @@ export function createInstanceId() {
 
 /** Keeps unavailable widget types in the user's profile across permission changes. */
 export function normalizeSettings(settings = {}) {
+    const items = Array.isArray(settings.items) ? cloneSettings(settings.items) : [];
+    // Older profiles can contain the removed minimization preference.
+    items.forEach(item => { delete item.collapsed; });
     return {
         version: 1,
         configured: settings.configured === true,
         shortcutsConfigured: settings.shortcutsConfigured ?? (settings.configured === true),
         legacyBookmarksHandled: settings.legacyBookmarksHandled === true,
-        items: Array.isArray(settings.items) ? cloneSettings(settings.items) : [],
+        items,
         domainOptions: settings.domainOptions && typeof settings.domainOptions === "object" ? cloneSettings(settings.domainOptions) : {},
         acknowledgedNewsVersion: settings.acknowledgedNewsVersion || null
     };

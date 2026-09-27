@@ -77,12 +77,12 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
     // Preference mutations stay in this intercepted fixture and never reach the account's stored profile.
     previewSettings = {
         version: 1, configured: true, acknowledgedNewsVersion: null, domainOptions: {}, items: [
-            { id: 'design-autotest-pages', type: 'recent-pages', size: '3x3', collapsed: false, options: {} },
-            { id: 'design-autotest-publishing', type: 'publishing', size: '2x3', collapsed: false, options: {} },
-            { id: 'design-autotest-session', type: 'sessions', size: '2x3', collapsed: true, options: {} },
-            { id: 'design-autotest-news', type: 'news', size: '3x2', collapsed: true, options: {} },
-            { id: 'design-autotest-search', type: 'search', size: 'fullauto', collapsed: true, options: { scope: 'admin' } },
-            { id: 'design-autotest-shortcut', type: 'shortcut', size: '1x1', collapsed: false, options: { href: '/admin/v9/webpages/web-pages-list/', title: 'Web pages autotest' } }
+            { id: 'design-autotest-pages', type: 'recent-pages', size: '3x3', options: {} },
+            { id: 'design-autotest-publishing', type: 'publishing', size: '2x3', options: {} },
+            { id: 'design-autotest-session', type: 'sessions', size: '2x3', options: {} },
+            { id: 'design-autotest-news', type: 'news', size: '3x2', options: {} },
+            { id: 'design-autotest-search', type: 'search', size: 'fullauto', options: { scope: 'admin' } },
+            { id: 'design-autotest-shortcut', type: 'shortcut', size: '1x1', options: { href: '/admin/v9/webpages/web-pages-list/', title: 'Web pages autotest' } }
         ]
     };
     await I.mockRoute(settingsRoute, route => {
@@ -168,7 +168,6 @@ Scenario('Release notes collapse to a persistent summary and can be expanded aga
     waitForSave(I);
     await I.waitForVisible('.md-dashboard-widget__news-highlights', 10);
     I.assertEqual(previewSettings.acknowledgedNewsVersion, null);
-    I.assertTrue(previewSettings.items.find(item => item.type === 'sessions').collapsed, 'The fixed security presentation must preserve legacy preferences.');
 });
 
 Scenario('Dashboard header, notices, widgets and shortcuts fit the responsive viewport', async ({ I }) => {
@@ -291,10 +290,10 @@ Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on
 
 Scenario('Compact metrics and scrollable recent pages align above three equal preview cards', async ({ I }) => {
     previewSettings.items = [
-        { id: 'compact-autotest-traffic', type: 'traffic', size: '3x3', collapsed: false, options: { days: 7 } },
-        ...['forms', 'approvals', 'errors'].map(type => ({ id: `compact-autotest-${type}`, type, size: '1x1', collapsed: false, options: { days: 7 } })),
-        { id: 'compact-autotest-pages', type: 'recent-pages', size: '3x2', collapsed: false, options: {} },
-        ...['referrers', 'publishing', 'newsletter'].map(type => ({ id: `compact-autotest-${type}`, type, size: '2x2', collapsed: false, options: { days: 7 } }))
+        { id: 'compact-autotest-traffic', type: 'traffic', size: '3x3', options: { days: 7 } },
+        ...['forms', 'approvals', 'errors'].map(type => ({ id: `compact-autotest-${type}`, type, size: '1x1', options: { days: 7 } })),
+        { id: 'compact-autotest-pages', type: 'recent-pages', size: '3x2', options: {} },
+        ...['referrers', 'publishing', 'newsletter'].map(type => ({ id: `compact-autotest-${type}`, type, size: '2x2', options: { days: 7 } }))
     ];
     await I.mockRoute(recentPagesRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(
         Array.from({ length: 6 }, (_, index) => ({ docId: index + 1, title: `Recent page autotest ${index + 1}`,
@@ -370,7 +369,7 @@ Scenario('Compact metrics and scrollable recent pages align above three equal pr
 
 Scenario('Search queries and top pages share balanced cards and readable numeric columns', async ({ I }) => {
     const previousItems = previewSettings.items;
-    previewSettings.items = ['search-terms', 'top-pages'].map(type => ({ id: `ranked-autotest-${type}`, type, size: '3x3', collapsed: false, options: { days: 7 } }));
+    previewSettings.items = ['search-terms', 'top-pages'].map(type => ({ id: `ranked-autotest-${type}`, type, size: '3x3', options: { days: 7 } }));
     const from = Date.UTC(2026, 8, 19), to = Date.UTC(2026, 8, 25);
     await I.mockRoute(searchTermsRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ from, to, items: [
         { title: 'Autotest vyhľadávací výraz s veľmi dlhým opisným názvom', value: 128, url: '/apps/stat/admin/search-engines/' },
@@ -656,8 +655,8 @@ Scenario('Dragging preserves the widget surface, outline and dimensions', async 
     let settingsWrites = 0;
     const dragSettings = {
         version: 1, configured: true, acknowledgedNewsVersion: null, domainOptions: {}, items: [
-            { id: 'drag-autotest-forms', type: 'forms', size: '1x1', collapsed: false, options: { days: 7 } },
-            { id: 'drag-autotest-traffic', type: 'traffic', size: '3x3', collapsed: false, options: { days: 7 } }
+            { id: 'drag-autotest-forms', type: 'forms', size: '1x1', options: { days: 7 } },
+            { id: 'drag-autotest-traffic', type: 'traffic', size: '3x3', options: { days: 7 } }
         ]
     };
     // Interception keeps drag verification independent of the account's saved layout.

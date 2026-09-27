@@ -250,12 +250,6 @@ export function registerDashboardWidgets() {
             if (signal.aborted) return;
             if (!pages.length) empty(container, context);
             else recentPagesList(container, pages, context, signal);
-        },
-        async renderCollapsed({ container, context, signal }) {
-            const pages = await recentPages(signal);
-            if (signal.aborted) return;
-            if (pages.length) container.append(link(pages[0].title, `/admin/v9/webpages/web-pages-list/?docid=${encodeURIComponent(pages[0].docId)}`));
-            else empty(container, context);
         }
     });
     registerUtilityWidgets();

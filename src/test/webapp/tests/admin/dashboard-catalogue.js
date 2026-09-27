@@ -76,11 +76,10 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
         for (const [type, size] of definitions) {
             let item = next.items.find(item => item.type === type);
             if (!item) {
-                item = { id: `catalogue-autotest-${type}`, type, size, collapsed: false, options: {} };
+                item = { id: `catalogue-autotest-${type}`, type, size, options: {} };
                 next.items.push(item);
             }
             item.size = size;
-            item.collapsed = false;
             item.options = type === 'shortcut' ? { href: '/admin/v9/webpages/web-pages-list/', title: 'catalogue-autotest shortcut' }
                 : type === 'traffic' ? { days: 7, metric: 'sessions' } : type === 'search' ? { scope: 'admin' }
                     : ['forms', 'top-pages', 'search-terms', 'referrers', 'errors'].includes(type) ? { days: 7 } : {};
@@ -135,7 +134,7 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
     I.wjSetDefaultWindowSize();
 });
 
-Scenario('AmCharts renders accessible data and disposes roots on refresh, collapse, resize and removal', async ({ I, a11y }) => {
+Scenario('AmCharts renders accessible data and disposes roots on refresh, resize and removal', async ({ I, a11y }) => {
     await waitForWidgets(I);
     await waitForChart(I, 'traffic');
     await waitForChart(I, 'referrers');
@@ -162,16 +161,6 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, collap
     await assertDisposedChart(I);
     I.assertNotEqual(await I.grabAttributeFrom(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`, 'id'), firstTraffic);
 
-    await rememberChart(I, 'traffic');
-    await widgetAction(I, ids.traffic, 'collapse');
-    waitForSave(I);
-    await waitForWidgets(I);
-    await assertDisposedChart(I);
-    I.dontSeeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`);
-    I.seeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard__title-link`);
-    await widgetAction(I, ids.traffic, 'collapse');
-    waitForSave(I);
-    await waitForChart(I, 'traffic');
     await rememberChart(I, 'traffic');
     await widgetAction(I, ids.traffic, 'settings');
     I.waitForVisible('.md-dashboard-modal select', 10);

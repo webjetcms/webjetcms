@@ -137,7 +137,7 @@ async function monitoringChart(container, points, type, context, signal) {
     } };
 }
 
-/** Shares live updates and stale-data feedback between the chart and its collapsed numeric preview. */
+/** Subscribes monitoring charts and their summaries to live updates and stale-data feedback. */
 function liveMonitoring(container, type, context, signal, update) {
     const status = node('p', 'small text-danger mb-0');
     status.setAttribute('role', 'status');
@@ -163,12 +163,6 @@ export function registerSystemWidgets() {
             const data = await fetchData(type, {}, signal); if (signal.aborted) return;
             if (!data.items.length) empty(container, context);
             else activityList(container, data.items, type, instance.size);
-        },
-        async renderCollapsed({ container, context, signal }) {
-            const data = await fetchData(type, {}, signal); if (signal.aborted) return;
-            const latest = data.items[0];
-            if (latest) container.append(link(type === 'audit' ? latest.type : latest.title, latest.url), node('span', 'small text-muted', date(latest.date)));
-            else empty(container, context);
         }
     });
     registerWidget({
@@ -189,10 +183,6 @@ export function registerSystemWidgets() {
                 list.append(row);
             });
             container.append(list, node('p', 'md-dashboard-widget__footnote small', text(context, 'adminsCount', number(data.total))));
-        },
-        async renderCollapsed({ container, context, signal }) {
-            const data = await fetchData('logged-admins', {}, signal); if (signal.aborted) return;
-            container.append(node('p', 'small mb-0', `${text(context, 'logged-admins')}: ${number(data.total)}`));
         }
     });
     for (const type of ['server-memory', 'server-cpu']) registerWidget({
@@ -213,11 +203,6 @@ export function registerSystemWidgets() {
                 chart.update(points);
             });
             return () => { unsubscribe(); chart.destroy?.(); };
-        },
-        async renderCollapsed({ container, context, signal }) {
-            const snapshot = await readMonitoringSnapshot(signal); if (signal.aborted) return;
-            const updateSummary = monitoringSummary(container, monitoringPoint(snapshot, type), type, context);
-            return liveMonitoring(container, type, context, signal, updateSummary);
         }
     });
 }

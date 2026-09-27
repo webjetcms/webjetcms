@@ -75,7 +75,6 @@ class DashboardSettingsServiceTest {
         variants.forEach((type, sizes) -> sizes.forEach(size -> {
             DashboardSettingsDto source = settings();
             Item preview = item("preview", type, size);
-            preview.setCollapsed(true);
             source.getItems().add(preview);
             when(repository.read(7)).thenReturn(service.validateAndSerialize(source, "42"));
 
@@ -83,8 +82,28 @@ class DashboardSettingsServiceTest {
 
             assertTrue(loaded.isConfigured(), type + " " + size);
             assertEquals(size, loaded.getItems().get(1).getSize());
-            assertTrue(loaded.getItems().get(1).isCollapsed());
         }));
+        verify(repository, never()).replace(anyInt(), anyString(), anyMap(), anySet());
+    }
+
+    /** Legacy minimization flags are ignored without losing the layout or domain filters. */
+    @Test
+    void loadsLegacyMinimizedWidgetsWithoutPersistingTheirRemovedState() {
+        DashboardSettingsDto source = settings();
+        source.getItems().add(item("form-1", "forms", "3x3"));
+        source.getDomainOptions().put("form-1", Map.of("formName", "Contact"));
+        Map<String, String> records = service.validateAndSerialize(source, "42");
+        String key = DashboardSettingsRepository.WIDGET_PREFIX + "form-1";
+        records.put(key, records.get(key).replaceFirst("\\{", "{\"collapsed\":true,"));
+        when(repository.read(7)).thenReturn(records);
+
+        DashboardSettingsDto loaded = service.load(7, "42");
+
+        assertTrue(loaded.isConfigured());
+        assertEquals(java.util.List.of("sessions-1", "form-1"), loaded.getItems().stream().map(Item::getId).toList());
+        assertEquals("3x3", loaded.getItems().get(1).getSize());
+        assertEquals(Map.of("formName", "Contact"), loaded.getDomainOptions().get("form-1"));
+        assertFalse(service.validateAndSerialize(loaded, "42").get(key).contains("collapsed"));
         verify(repository, never()).replace(anyInt(), anyString(), anyMap(), anySet());
     }
 

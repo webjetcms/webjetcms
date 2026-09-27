@@ -163,33 +163,12 @@ function pollNewsletter(data, container, signal, refresh) {
     return () => { observer.disconnect(); window.clearInterval(timer); };
 }
 
-/** Keeps a meaningful authorized summary when a data card is collapsed. */
-async function renderDataSummary({ container, instance, options, domainOptions, context, signal, refresh }) {
-    const type = instance.type;
-    const params = type === 'newsletter' ? { campaignId: domainOptions.campaignId }
-        : type === 'forms' ? { days: options.days || 7, formName: domainOptions.formName }
-        : ['approvals', 'publishing'].includes(type) ? {} : { days: options.days || 7, ...(type === 'traffic' ? { metric: options.metric || 'sessions' } : {}) };
-    const data = await fetchData(type, params, signal);
-    if (signal.aborted) return;
-    if (type === 'newsletter') {
-        const campaign = data.items[0];
-        if (campaign) container.append(node('p', 'small mb-1', `${campaign.title} · ${text(context, campaign.status === 'sending' ? 'active' : campaign.status)} · ${number(campaign.sent)} / ${number(campaign.recipients)}`));
-        else empty(container, context);
-    } else {
-        const label = type === 'traffic' ? text(context, metricKey(data.metric)) : type === 'forms' ? text(context, 'submissions') : text(context, 'count');
-        container.append(node('p', 'small mb-1', `${label}: ${number(data.total)}`));
-        if (type === 'forms') container.append(node('span', 'small', domainOptions.formName || text(context, 'allForms')));
-        period(container, data, context);
-    }
-    if (type === 'newsletter') return pollNewsletter(data, container, signal, refresh);
-}
-
 /** Registers content, analytics, and newsletter widgets using authorized projections. */
 export function registerDataWidgets() {
     registerWidget({
         type: 'approvals', titleKey: 'admin.dashboard.approvals.js', icon: 'ti-checkup-list', sizes: ['1x1', '3x3'], defaultSize: '3x3',
         headerLink: { href: moduleLinks.approvals },
-        isAvailable: () => window.WJ.hasPermission('menuWebpages'), renderCollapsed: renderDataSummary,
+        isAvailable: () => window.WJ.hasPermission('menuWebpages'),
         async render({ container, instance, context, signal }) {
             const data = await fetchData('approvals', {}, signal); if (signal.aborted) return;
             summary(container, data, context, moduleLinks.approvals, text(context, 'pendingPages'));
@@ -202,7 +181,7 @@ export function registerDataWidgets() {
     registerWidget({
         type: 'publishing', titleKey: 'admin.dashboard.publishing.js', icon: 'ti-calendar-event', sizes: ['2x2', '2x3'], defaultSize: '2x2',
         headerLink: { href: () => window.WJ.hasPermission('cmp_adminlog') ? moduleLinks.publishing : '/admin/v9/webpages/web-pages-list/' },
-        isAvailable: () => window.WJ.hasPermission('menuWebpages'), renderCollapsed: renderDataSummary,
+        isAvailable: () => window.WJ.hasPermission('menuWebpages'),
         async render({ container, instance, context, signal }) {
             const data = await fetchData('publishing', {}, signal); if (signal.aborted) return;
             if (!data.items.length) empty(container, context);
@@ -241,7 +220,7 @@ export function registerDataWidgets() {
             const formName = context.settings.domainOptions?.[instance.id]?.formName;
             return formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(formName)}` : moduleLinks.forms;
         } },
-        defaultOptions: { days: 7 }, defaultDomainOptions: { formName: '' }, isAvailable: () => window.WJ.hasPermission('cmp_form'), renderCollapsed: renderDataSummary,
+        defaultOptions: { days: 7 }, defaultDomainOptions: { formName: '' }, isAvailable: () => window.WJ.hasPermission('cmp_form'),
         async configure({ container, options, domainOptions, context, signal }) {
             const data = await fetchData('forms', { days: options.days || 7 }, signal);
             const days = periodField(container, options, context, false);
@@ -271,7 +250,7 @@ export function registerDataWidgets() {
         headerLink: { href: moduleLinks[type] },
         defaultOptions: { days: 7, ...(type === 'traffic' ? { metric: 'sessions' } : {}) },
         isAvailable: context => window.WJ.hasPermission('cmp_stat') && context.config.statMode !== 'none',
-        configure: args => statSettings(args, type === 'traffic'), renderCollapsed: renderDataSummary,
+        configure: args => statSettings(args, type === 'traffic'),
         async render({ container, instance, options, context, signal }) {
             const data = await fetchData(type, { days: options.days || 7, ...(type === 'traffic' ? { metric: options.metric || 'sessions' } : {}) }, signal); if (signal.aborted) return;
             if (type === 'traffic') {
@@ -295,7 +274,7 @@ export function registerDataWidgets() {
     registerWidget({
         type: 'newsletter', titleKey: 'admin.dashboard.newsletter.js', icon: 'ti-send', sizes: ['2x2', '3x3'], multiple: true,
         headerLink: { href: moduleLinks.newsletter },
-        defaultDomainOptions: { campaignId: '' }, isAvailable: () => window.WJ.hasPermission('menuEmail'), renderCollapsed: renderDataSummary,
+        defaultDomainOptions: { campaignId: '' }, isAvailable: () => window.WJ.hasPermission('menuEmail'),
         async configure({ container, domainOptions, context, signal }) {
             const data = await fetchData('newsletter', {}, signal);
             const campaign = selectionField(container, text(context, 'campaign'), data.options || [], domainOptions.campaignId, context, 'automatic');

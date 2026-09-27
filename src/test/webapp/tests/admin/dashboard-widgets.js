@@ -71,7 +71,7 @@ Scenario('Add and configure a personal shortcut and reload its server preference
     I.see(shortcutTitle, `[data-instance-id="${shortcutId}"]`);
 });
 
-Scenario('Move with drag and keyboard controls, collapse and resize without replacing alerts', async ({ I }) => {
+Scenario('Move with drag and keyboard controls and resize without replacing alerts', async ({ I }) => {
     assert.ok(shortcutId, 'The shortcut setup scenario must complete first');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     await enableEditing(I);
@@ -115,19 +115,8 @@ Scenario('Move with drag and keyboard controls, collapse and resize without repl
 
     const recentId = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.find(item => item.type === 'recent-pages')?.id);
     assert.ok(recentId, 'The editor default must include recent pages');
-    const wasCollapsed = await I.executeScript(id => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.find(item => item.id === id).collapsed, recentId);
-    if (wasCollapsed) {
-        await openAction(I, recentId, 'collapse');
-        waitForSave(I);
-        I.waitForElement(`[data-instance-id="${recentId}"]:not(.is-collapsed)`, 10);
-    }
-    await openAction(I, recentId, 'collapse');
-    waitForSave(I);
-    I.waitForElement(`[data-instance-id="${recentId}"].is-collapsed`, 10);
+    I.dontSeeElementInDOM('[data-dashboard-action="collapse"]');
     I.seeElement(`[data-instance-id="${recentId}"] .md-dashboard__header-link`);
-    await openAction(I, recentId, 'collapse');
-    waitForSave(I);
-    I.waitForElement(`[data-instance-id="${recentId}"]:not(.is-collapsed)`, 10);
     await openAction(I, recentId, 'settings');
     I.waitForVisible('.md-dashboard-modal select', 10);
     I.selectOption('.md-dashboard-modal select', '2 × 3');
