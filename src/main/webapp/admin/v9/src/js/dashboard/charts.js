@@ -38,6 +38,8 @@ function compactChart(form, host) {
     }
     chart.get('cursor')?.set('behavior', 'none');
     chart.zoomOutButton?.set('forceHidden', true);
+    // Cursor updates must not reach labels in the shared legend after its wrapper is disposed.
+    chart.series.each(series => series.set('legendDataItem', undefined));
     [...chart.children.values].filter(child => child.get('verticalScrollbar')).forEach(child => child.dispose());
     [...chart.xAxes.values, ...chart.yAxes.values].forEach(axis => {
         axis.setAll({ zoomable: false, interpolationDuration: 0, stateAnimationDuration: 0 });
@@ -50,6 +52,10 @@ function compactChart(form, host) {
         const xRenderer = xAxis.get('renderer');
         const yAxis = chart.yAxes.getIndex(0);
         const yRenderer = yAxis.get('renderer');
+        // Axis tooltips default to unbounded space below the axis, outside this compact canvas.
+        xAxis.get('tooltip').adapters.add('bounds', () => ({
+            left: 1, top: 1, right: chart.root.container.width() - 1, bottom: chart.root.container.height() - 1
+        }));
         xAxis.setAll({
             startLocation: 0.5, endLocation: 0.5, markUnitChange: false,
             dateFormats: { day: 'd. M.', week: 'd. M.', month: 'd. M.', year: 'yyyy' },

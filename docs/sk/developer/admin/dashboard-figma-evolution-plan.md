@@ -186,3 +186,11 @@ Finálne poznámky a screenshoty skutočných aj testovacích dát: `/private/tm
 Dashboard používa štandardné 15 px bočné odsadenie kontajnera administrácie, rovnako ako štatistiky formulára. Dodatočných 24 px na bokoch aj nad obsahom je odstránených; na desktope začína uvítacia plocha na y = 48 px, priamo pod hlavičkou. Obmedzenie šírky na 1440 px je odstránené, takže rovnaké okraje zostávajú aj na širokom monitore. Vnútorné odsadenie kariet a mobilné odsadenie sa nemenili.
 
 Overenie: development zostava a všetkých 7 dizajnových E2E scenárov prešli vrátane responzívnych šírok 390/768/1337 px. Manuálne meranie potvrdilo 15 px bočné okraje pri 1337 aj 1920 px a začiatok obsahu na spodnej hrane hlavičky.
+
+## Tooltipy návštevnosti po scrollovaní
+
+- Zamŕzanie spôsoboval odkaz dátových sérií na pôvodnú odstránenú legendu. Pri pohybe kurzora alebo opustení grafu sa AmCharts pokúšal aktualizovať zrušené popisy a vyvolal chybu `EventDispatcher is disposed`. Dashboard teraz pred odstránením legendy uvoľní tieto odkazy; štandardné spracovanie polohy myši zostáva v AmCharts.
+- Dátumový tooltip má hranice podľa aktuálnej veľkosti plátna. Zmestí sa celý aj pri spodnej hrane bez zväčšovania widgetu alebo zmenšovania vykreslenej plochy grafu.
+- Nový test `dashboard-chart-tooltips.js` používa skutočný pohyb myši, kontroluje oba tooltipy na rôznych dátumoch pred posunutím, po posunutí stránky o 160 px aj po návrate hore a overuje hranice dátumovej bubliny. Testovacie nastavenia a dáta sú izolované cez mockované požiadavky bez zápisu osobných preferencií.
+
+Overenie: development zostava, 73 JavaScript helper testov, 3 nové E2E scenáre a 6 existujúcich scenárov katalógu prešli vrátane obnovy, minimalizácie, zmeny veľkosti, odstránenia a kontroly prístupnosti grafov. Manuálna kontrola s reálnymi dátami potvrdila zmenu tooltipov po scrollovaní aj úplný dátum. Logy a screenshoty: `/private/tmp/webjet-dashboard-58806/chart-tooltips/`.

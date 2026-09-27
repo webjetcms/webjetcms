@@ -272,7 +272,7 @@ function chartRuntime(window, { load = async () => {}, create } = {}) {
         appear(duration) { this.appearanceDuration = duration; }
     });
     const list = values => ({ values, getIndex: index => values[index], each: callback => values.forEach(callback), unshift: value => { values.unshift(value); return value; } });
-    const axis = () => settings({ renderer: Object.assign(settings(), { labels: { template: settings() }, grid: { template: settings() } }) });
+    const axis = () => settings({ tooltip: settings(), renderer: Object.assign(settings(), { labels: { template: settings() }, grid: { template: settings() } }) });
     class LineChartForm { constructor(config) { Object.assign(this, config); } }
     class BarChartForm { constructor(config) { Object.assign(this, config); } }
     const makeChart = form => {
