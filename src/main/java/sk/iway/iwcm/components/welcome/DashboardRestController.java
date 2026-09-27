@@ -33,14 +33,12 @@ public class DashboardRestController {
     private final DashboardSettingsService settingsService;
     private final DashboardRecentPagesService recentPagesService;
     private final DashboardNoticeService noticeService;
-    private final DashboardLegacyDataService legacyDataService;
 
     public DashboardRestController(DashboardSettingsService settingsService, DashboardRecentPagesService recentPagesService,
-            DashboardNoticeService noticeService, DashboardLegacyDataService legacyDataService) {
+            DashboardNoticeService noticeService) {
         this.settingsService = settingsService;
         this.recentPagesService = recentPagesService;
         this.noticeService = noticeService;
-        this.legacyDataService = legacyDataService;
     }
 
     @GetMapping("/settings")
@@ -75,12 +73,6 @@ public class DashboardRestController {
     @GetMapping("/notices")
     public List<java.util.Map<String, Object>> getNotices(HttpServletRequest request) {
         return noticeService.load(currentUser(request), request);
-    }
-
-    /** Called only when the optional original overview is expanded. */
-    @GetMapping("/legacy-data")
-    public java.util.Map<String, Object> getLegacyData(HttpServletRequest request) {
-        return legacyDataService.load(currentUser(request), DocDB.getDomain(request), CloudToolsForCore.getRootGroupId(request));
     }
 
     @GetMapping("/recent-pages")

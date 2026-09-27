@@ -1,4 +1,3 @@
-import './webjet-server-monitoring';
 import { DashboardController } from '../dashboard/dashboard';
 import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/widgets';
 
@@ -10,7 +9,7 @@ import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/wid
  * @property {Object[]} [data.dashboardMenu=[]] - Authorized administration navigation for shortcut selection.
  * @property {string} [data.userName=""] - Current user's display name.
  * @property {string} [data.currentDomain=""] - Active domain's display name.
- * @property {Object.<string, string>} [labels={}] - Localized labels used by dashboard sections and server monitoring.
+ * @property {Object.<string, string>} [labels={}] - Localized labels used by dashboard sections and widgets.
  * @property {Object} [config={}] - Runtime dashboard configuration.
  * @property {string} [config.statMode] - Statistics mode; `"none"` hides statistics cards.
  * @property {string} [config.overviewJsonUrl=""] - Base URL used to load localized WebJET news.
@@ -19,38 +18,11 @@ import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/wid
  * @property {string} [config.environmentColor="#FFF2C9"] - Hex background; border and text colors are derived automatically.
  */
 
-/**
- * Bookmark persisted by the overview dashboard.
- *
- * @typedef {Object} WebjetOverviewBookmark
- * @property {string} name - Display name.
- * @property {string} path - Administration URL.
- * @property {boolean} [baseline] - Whether the bookmark is protected from removal.
- */
-
 function element(tag, className, text) {
     const node = document.createElement(tag);
     if (className) node.className = className;
     if (text != null) node.textContent = text;
     return node;
-}
-
-/**
- * Creates a dashboard side card with an icon, title, and action container.
- *
- * @param {string} icon - Icon CSS class.
- * @param {string} title - Card title.
- * @param {string} extraClass - Card-specific CSS class.
- * @returns {HTMLDivElement} The card wrapper.
- */
-function createOverviewCard(icon, title, extraClass) {
-    const wrapper = element("div", `overview-logged ${extraClass}`);
-    const head = element("div", "overview-logged__head");
-    const iconWrapper = element("div", "overview-logged__head__icon");
-    iconWrapper.innerHTML = `<i class="ti ${icon} fs-4" aria-hidden="true"></i>`;
-    head.append(iconWrapper, element("span", "", title), element("div", "overview-logged__head__more"));
-    wrapper.appendChild(head);
-    return wrapper;
 }
 
 /**
@@ -74,7 +46,6 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
     disconnectedCallback() {
         this.dashboardController?.destroy();
         this._noticesRequest?.abort();
-        this._legacyRequest?.abort();
         this._feedbackListeners.forEach(([name, listener]) => window.removeEventListener(name, listener));
         this._feedbackListeners = [];
     }
@@ -95,7 +66,7 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
     }
 
     /**
-     * Rebuilds all dashboard sections and embedded server monitoring.
+     * Rebuilds the dashboard shell and its independently loaded widgets.
      *
      * Emits a bubbling, non-cancelable `webjet-component-ready` event without detail
      * after the dashboard is rendered.
@@ -106,16 +77,6 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         const overview = element("div", "overview");
         const widgets = element("div");
         overview.append(widgets);
-        if (this.config.dashboardLegacy !== false) {
-            const legacy = element("details", "md-dashboard__legacy");
-            legacy.append(element("summary", "", WJ.translate("admin.dashboard.legacy.js")));
-            const content = element("div", "md-dashboard__legacy-content");
-            legacy.append(content);
-            legacy.addEventListener("toggle", () => {
-                if (legacy.open && !legacy.dataset.loaded) this._loadLegacy(legacy, content);
-            });
-            overview.append(legacy);
-        }
         this.appendChild(overview);
         registerDashboardWidgets();
         const context = { data: this.data, labels: this.labels, config: this.config, overview: this, translate: (key, ...params) => WJ.translate(key, ...params) };
@@ -188,221 +149,6 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         } finally {
             if (!request.signal.aborted) container.setAttribute("aria-busy", "false");
         }
-    }
-
-    /** Requests legacy projections only when the user first opens the additional overview. */
-    async _loadLegacy(legacy, content) {
-        if (this._legacyRequest && !this._legacyRequest.signal.aborted) return;
-        const request = this._legacyRequest = new AbortController();
-        content.replaceChildren(element("p", "md-dashboard__loading", WJ.translate("admin.dashboard.loading.js")));
-        try {
-            const response = await fetch("/admin/rest/dashboard/legacy-data", { signal: request.signal, credentials: "same-origin", headers: { Accept: "application/json", "X-CSRF-Token": window.csrfToken } });
-            if (!response.ok) throw new Error(`Dashboard legacy data: ${response.status}`);
-            const data = await response.json();
-            if (request.signal.aborted) return;
-            Object.assign(this.data, data);
-            const row = element("div", "row");
-            const main = element("div", "col-lg-9");
-            const side = element("div", "col-lg-3 pl-0-lg");
-            main.append(this._renderWebsites());
-            const monitoring = document.createElement("webjet-server-monitoring");
-            monitoring.configure({ complex: false, labels: this.labels });
-            main.append(monitoring);
-            side.append(this._renderUsers(), this._renderBookmarks());
-            row.append(main, side);
-            content.replaceChildren(row);
-            legacy.dataset.loaded = "true";
-        } catch (error) {
-            if (request.signal.aborted) return;
-            const retry = element("button", "btn btn-sm btn-outline-secondary", WJ.translate("admin.dashboard.retry.js"));
-            retry.type = "button";
-            retry.addEventListener("click", () => this._loadLegacy(legacy, content));
-            content.replaceChildren(element("p", "text-danger", WJ.translate("admin.dashboard.widgetError.js")), retry);
-        } finally {
-            if (!request.signal.aborted) this._legacyRequest = null;
-        }
-    }
-
-    _renderWebsites() {
-        const wrapper = element("div", "overview__websites");
-        const active = WJ.hasPermission("menuWebpages") ? "websites" : "audit";
-        const tabs = [["websites", "menuWebpages", this.labels.changedWebPages], ["audit", "cmp_adminlog", this.labels.audit]];
-        const nav = element("nav");
-        const tabList = element("div", "nav nav-tabs");
-        tabList.setAttribute("role", "tablist");
-        const content = element("div", "tab-content");
-        tabs.forEach(([id, permission, title]) => {
-            const selected = id === active;
-            const tab = element("a", `nav-item nav-link noperms-${permission}${selected ? " active" : ""}`, title || "");
-            tab.id = `nav-${id}-tab`;
-            tab.href = `#nav-${id}`;
-            tab.dataset.bsToggle = "tab";
-            tab.setAttribute("role", "tab");
-            tab.setAttribute("aria-controls", `nav-${id}`);
-            tab.setAttribute("aria-selected", String(selected));
-            tabList.append(tab);
-            const pane = element("div", `tab-pane fade overview__websites-list${selected ? " show active" : ""}`);
-            pane.id = `nav-${id}`;
-            pane.setAttribute("role", "tabpanel");
-            pane.setAttribute("aria-labelledby", tab.id);
-            content.append(pane);
-        });
-        nav.append(tabList);
-        wrapper.append(nav, content);
-        this._renderPageList(wrapper.querySelector("#nav-websites"), this.data.changedPages || [], "changed");
-        this._renderPageList(wrapper.querySelector("#nav-audit"), this.data.adminLog || [], "audit");
-        return wrapper;
-    }
-
-    /**
-     * Appends changed-page or audit entries to a dashboard list.
-     *
-     * @param {HTMLElement} container - Element that receives the generated list.
-     * @param {Object[]} items - Page or audit entries to render.
-     * @param {string} type - Entry type: `"changed"` or `"audit"`.
-     */
-    _renderPageList(container, items, type) {
-        const list = element("ul");
-        items.forEach(item => {
-            const li = element("li");
-            const link = element("a", "overview__websites-list__link text-truncate");
-            link.href = type === "audit" ? `/admin/v9/apps/audit-search/?id=${item.logId}` : `/admin/v9/webpages/web-pages-list/?docid=${item.docId}`;
-            link.innerHTML = `<i class="ti ${type === "audit" ? "ti-shield-search" : "ti-pencil fs-5"}"></i>`;
-            if (item.createdByUserId > 0) link.append(element("span", "user", `${item.createdByUserName}: `));
-            link.append(element("span", type === "audit" ? "type" : "title", type === "audit" ? item.type : item.title));
-            if (type === "audit") link.append(element("span", "description", item.description));
-            else link.append(document.createElement("br"), element("span", "path", item.fullPath));
-            link.append(element("span", "date", item.date || item.saveDate));
-            li.appendChild(link);
-            list.appendChild(li);
-        });
-        container.appendChild(list);
-    }
-
-    _renderUsers() {
-        const wrapper = createOverviewCard("ti-users", this.labels.loggedAdmins || "", "users noperms-welcomeShowLoggedAdmins");
-        const adminsContainer = element("div", "overview-logged__content overview-logged__admins noperms-welcomeShowLoggedAdmins");
-        const adminsList = element("ul");
-        const admins = this.data.admins || [];
-        const renderAdmins = count => {
-            adminsList.querySelectorAll("li:not(.subheading)").forEach(item => item.remove());
-            admins.slice(0, count).forEach(user => {
-                const li = element("li");
-                const userWrapper = element("span");
-                if (user.photo) {
-                    const img = element("img");
-                    img.src = user.photo.startsWith("http") ? user.photo : `/thumb${user.photo}?w=30&h=30&ip=5`;
-                    img.alt = user.fullName;
-                    userWrapper.appendChild(img);
-                } else userWrapper.appendChild(element("span", "no-photo ti ti-user fs-3"));
-                const name = element("a", "name", user.fullName);
-                name.href = `mailto:${user.email}`;
-                userWrapper.appendChild(name);
-                const email = element("a", "float-end btn btn-sm");
-                email.href = `mailto:${user.email}`;
-                email.setAttribute("aria-label", WJ.translate("admin.welcome.logins.sendEmail.js"));
-                email.innerHTML = '<i class="ti ti-mail fs-6" aria-hidden="true"></i>';
-                li.append(userWrapper, email);
-                adminsList.appendChild(li);
-            });
-            if (count < admins.length) {
-                const more = element("li", "show-more");
-                const moreButton = element("button", "btn btn-outline p-0", `+${admins.length - count}`);
-                moreButton.addEventListener("click", () => renderAdmins(admins.length));
-                more.appendChild(moreButton);
-                adminsList.appendChild(more);
-            }
-        };
-        renderAdmins(4);
-        adminsContainer.appendChild(adminsList);
-        wrapper.append(adminsContainer);
-        return wrapper;
-    }
-
-    /**
-     * Loads persisted bookmarks, falling back to localized defaults unless storage contains a non-empty array.
-     *
-     * @returns {WebjetOverviewBookmark[]} The stored non-empty bookmark list or default bookmarks.
-     */
-    _getBookmarks() {
-        const defaults = [{ name: WJ.translate("admin.welcome.bookmarks.default.webPages.js"), path: "/admin/v9/webpages/web-pages-list/" }, { name: WJ.translate("admin.welcome.bookmarks.default.forms.js"), path: "/apps/form/admin/" }];
-        try {
-            const stored = JSON.parse(localStorage.getItem("bookmarks"));
-            return Array.isArray(stored) && stored.length ? stored : defaults;
-        } catch (error) {
-            return defaults;
-        }
-    }
-
-    _renderBookmarks() {
-        const wrapper = createOverviewCard("ti-bookmarks", WJ.translate("admin.welcome.bookmarks.title.js"), "bookmark");
-        const add = element("button", "btn btn-outline p-0");
-        add.type = "button";
-        add.setAttribute("aria-label", WJ.translate("button.add"));
-        add.innerHTML = '<i class="ti ti-plus" aria-hidden="true"></i>';
-        add.addEventListener("click", () => this._showBookmarkModal(wrapper));
-        wrapper.querySelector(".overview-logged__head__more").appendChild(add);
-        const content = element("div", "overview-logged__content");
-        const list = element("ul");
-        const render = () => {
-            list.replaceChildren();
-            this._getBookmarks().forEach((bookmark, index) => {
-                const li = element("li");
-                const link = element("a", "", bookmark.name);
-                link.href = bookmark.path;
-                li.appendChild(link);
-                if (!bookmark.baseline) {
-                    const remove = element("button", "float-end btn btn-sm buttons-selected buttons-remove buttons-divider");
-                    remove.type = "button";
-                    remove.setAttribute("aria-label", WJ.translate("button.delete"));
-                    remove.innerHTML = '<span><i class="ti ti-trash fs-6" aria-hidden="true"></i></span>';
-                    remove.addEventListener("click", () => {
-                        const bookmarks = this._getBookmarks();
-                        bookmarks.splice(index, 1);
-                        localStorage.setItem("bookmarks", JSON.stringify(bookmarks));
-                        render();
-                    });
-                    li.appendChild(remove);
-                }
-                list.appendChild(li);
-            });
-        };
-        render();
-        content.appendChild(list);
-        wrapper.appendChild(content);
-        wrapper._renderBookmarks = render;
-        return wrapper;
-    }
-
-    _showBookmarkModal(wrapper) {
-        if (document.querySelector("#bookmark_modal")) return;
-        const modalElement = element("div", "modal fade DTED");
-        modalElement.id = "bookmark_modal";
-        modalElement.setAttribute("role", "dialog");
-        modalElement.innerHTML = `<div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">${WJ.escapeHtml(WJ.translate("admin.welcome.bookmarks.dialog.title.js"))}</h5></div><div class="modal-body"><div class="modal-body-bg"><form class="form-horizontal"><div class="DTE_Field form-group row required"><label class="col-sm-4 col-form-label" for="bookmark-group-name">${WJ.escapeHtml(WJ.translate("admin.welcome.bookmarks.dialog.name.js"))}</label><div class="col-sm-7"><input id="bookmark-group-name" class="form-control"><div class="name-error form-text text-danger small invisible">${WJ.escapeHtml(WJ.translate("admin.welcome.bookmarks.dialog.requiredField.js"))}</div></div></div><div class="DTE_Field form-group row required"><label class="col-sm-4 col-form-label" for="bookmark-group-path">${WJ.escapeHtml(WJ.translate("admin.welcome.bookmarks.dialog.urlAddress.js"))}</label><div class="col-sm-7"><input id="bookmark-group-path" class="form-control" value="/admin/v9/"><div class="path-error form-text text-danger small invisible">${WJ.escapeHtml(WJ.translate("admin.welcome.bookmarks.dialog.requiredField.js"))}</div></div></div></form></div></div><div class="modal-footer"><div class="DTE_Form_Buttons"><button type="button" class="btn btn-outline-secondary btn-close-editor"><i class="ti ti-x"></i> ${WJ.escapeHtml(WJ.translate("button.cancel"))}</button><button type="button" class="btn btn-primary"><i class="ti ti-check"></i> ${WJ.escapeHtml(WJ.translate("button.add"))}</button></div></div></div></div>`;
-        document.body.appendChild(modalElement);
-        const modal = new bootstrap.Modal(modalElement, { keyboard: false, backdrop: "static" });
-        const close = () => { modal.hide(); modalElement.addEventListener("hidden.bs.modal", () => modalElement.remove(), { once: true }); };
-        modalElement.querySelector(".btn-close-editor").addEventListener("click", close);
-        modalElement.querySelector(".btn-primary").addEventListener("click", () => {
-            const name = modalElement.querySelector("#bookmark-group-name");
-            const path = modalElement.querySelector("#bookmark-group-path");
-            let valid = true;
-            [[name, ".name-error"], [path, ".path-error"]].forEach(([input, selector]) => {
-                const error = modalElement.querySelector(selector);
-                error.classList.toggle("invisible", input.value.trim() !== "");
-                if (!input.value.trim()) valid = false;
-            });
-            if (!valid) return;
-            let bookmarkPath = path.value.trim();
-            if (bookmarkPath.startsWith(window.location.origin)) bookmarkPath = bookmarkPath.substring(window.location.origin.length);
-            const bookmarks = this._getBookmarks();
-            bookmarks.push({ name: name.value.trim(), path: bookmarkPath, baseline: false });
-            localStorage.setItem("bookmarks", JSON.stringify(bookmarks));
-            wrapper._renderBookmarks();
-            close();
-        });
-        modal.show();
     }
 
     /**

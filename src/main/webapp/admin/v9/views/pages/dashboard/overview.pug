@@ -33,26 +33,8 @@ block content
                     environmentColor: /*[[${layout.getConstant('dashboardEnvironmentColor')}]]*/ "#FFF2C9"
                 },
                 labels: {
-                    overviewViews: (/*[[\#{stat_time.sessions}]]*/ "") + " / " + (/*[[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]]*/ 7) + " " + (/*[[\#{welcome.statBackTime.days}]]*/ ""),
-                    overviewForms: (/*[[\#{admin.welcome.newForms}]]*/ "") + " / " + (/*[[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]]*/ 7) + " " + (/*[[\#{welcome.statBackTime.days}]]*/ ""),
-                    overviewForum: (/*[[\#{components.forum.title}]]*/ "") + " / " + (/*[[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]]*/ 7) + " " + (/*[[\#{welcome.statBackTime.days}]]*/ ""),
-                    overviewErrors: (/*[[\#{stat_menu.invalidPages}]]*/ "") + " / " + (/*[[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]]*/ 7) + " " + (/*[[\#{welcome.statBackTime.days}]]*/ ""),
-                    printToPdf: /*[[\#{components.monitoring.print_to_pdf}]]*/ "",
-                    emptySpaceOnDisk: /*[[\#{components.monitoring.empty_space_on_disc}]]*/ "",
-                    usedMemory: /*[[\#{components.monitoring.used_memory.js}]]*/ "",
-                    freeMemory: /*[[\#{components.monitoring.free_memory.js}]]*/ "",
-                    totalMemory: /*[[\#{components.monitoring.total_memory.js}]]*/ "",
-                    occupancyMemory: /*[[\#{components.monitoring.memory_occupancy}]]*/ "",
-                    cpuLoad: /*[[\#{components.monitoring.cpu_load}]]*/ "",
-                    myLastPages: /*[[\#{admin.fck.last_pages}]]*/ "",
-                    changedWebPages: /*[[\#{components.adminlog.changedWebPages}]]*/ "",
-                    audit: /*[[\#{admin.crontab.audit}]]*/ "",
-                    welcome: /*[[\#{admin.overview.welcome}]]*/ "",
                     changelog: WJ.parseMarkdown(announcement.replace(/\\n/g, "\n"), { link: true, imgSrcPrefix: "" }),
-                    seeCompleteChangelog: /*[[\#{admin.overview.seeCompleteChangelog}]]*/ "",
-                    loggedAdmins: /*[[\#{welcome.logged_admins}]]*/ "",
-                    appsForNewWebJET: /*[[\#{admin.overview.appsForNewWebJET}]]*/ "",
-                    newsInWebJET: /*[[\#{admin.overview.newsInWebJET}]]*/ ""
+                    seeCompleteChangelog: /*[[\#{admin.overview.seeCompleteChangelog}]]*/ ""
                 }
             });
 

@@ -43,6 +43,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
@@ -65,7 +66,12 @@ import sk.iway.iwcm.editor.approve.WebApproveRestController;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDto;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
 import sk.iway.iwcm.editor.service.WebpagesService;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.SessionClusterService;
+import sk.iway.iwcm.stat.SessionDetails;
+import sk.iway.iwcm.stat.SessionHolder;
+import sk.iway.iwcm.system.ConfDB;
+import sk.iway.iwcm.system.monitoring.CpuInfo;
 import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -77,7 +83,9 @@ import sk.iway.iwcm.users.UsersDB;
 public class DashboardWidgetDataService {
     static final int PREVIEW_SIZE = 6;
     static final Set<String> TYPES = Set.of("approvals", "publishing", "forms", "traffic", "top-pages",
-        "search-terms", "referrers", "newsletter", "errors", "sessions");
+        "search-terms", "referrers", "newsletter", "errors", "sessions", "changed-pages", "audit",
+        "logged-admins", "server-memory", "server-cpu");
+    private static final Set<String> SERVER_TYPES = Set.of("sessions", "audit", "logged-admins", "server-memory", "server-cpu");
     private final DocHistoryRepository history;
     private final GroupSchedulerDtoRepository groupHistory;
     private final FormsRepository forms;
@@ -96,10 +104,14 @@ public class DashboardWidgetDataService {
             Identity user, String domain, String currentSessionId) {
         validate(type, days, metric, formName, campaignId);
         authorize(type, user);
-        if (!"sessions".equals(type) && Tools.isEmpty(domain)) throw new UnavailableException("domain-unavailable");
+        if (!SERVER_TYPES.contains(type) && Tools.isEmpty(domain)) throw new UnavailableException("domain-unavailable");
         Range range = completedDays(days, Clock.systemDefaultZone());
         return switch (type) {
             case "sessions" -> sessions(user, currentSessionId);
+            case "changed-pages" -> changedPages(user, domain, scope(user, domain));
+            case "audit" -> audit();
+            case "logged-admins" -> loggedAdmins();
+            case "server-memory", "server-cpu" -> monitoring(type);
             case "approvals" -> approvals(user, scope(user, domain));
             case "publishing" -> publishing(user, domain);
             case "forms" -> forms(user, domain, formName, recentDays(days, Clock.systemDefaultZone()));
@@ -121,7 +133,10 @@ public class DashboardWidgetDataService {
         if (user == null || !user.isAdmin()) throw new AccessDeniedException("Administrator login is required");
         String permission = switch (type) {
             case "sessions" -> null;
-            case "approvals", "publishing" -> "menuWebpages";
+            case "approvals", "publishing", "changed-pages" -> "menuWebpages";
+            case "audit" -> "cmp_adminlog";
+            case "logged-admins" -> "welcomeShowLoggedAdmins";
+            case "server-memory", "server-cpu" -> "cmp_server_monitoring";
             case "forms" -> "cmp_form";
             case "newsletter" -> "menuEmail";
             default -> "cmp_stat";
@@ -197,6 +212,148 @@ public class DashboardWidgetDataService {
     }
 
     private static List<Integer> orMissing(List<Integer> ids) { return ids.isEmpty() ? List.of(-1) : ids; }
+
+    /** Lists current published pages edited by any author, retaining the original overview's scope. */
+    private Map<String, Object> changedPages(Identity user, String domain, Scope scope) {
+        try (Connection connection = DBPool.getConnection()) {
+            return Map.of("items", changedPages(connection, user, domain, scope));
+        } catch (SQLException exception) { throw new IllegalStateException("Could not load changed pages", exception); }
+    }
+
+    List<Map<String, Object>> changedPages(Connection connection, Identity user, String domain, Scope scope) throws SQLException {
+        String sql = "SELECT d.doc_id, d.date_created, d.author_id, d.perex_image FROM documents d WHERE "
+            + scope.statisticsSql("d") + " AND d.available=" + DB.getBooleanSql(true)
+            + " AND (d.virtual_path IS NULL OR d.virtual_path NOT LIKE '/files/%') ORDER BY d.date_created DESC, d.doc_id DESC";
+        List<Map<String, Object>> items = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setFetchSize(100);
+            statement.setQueryTimeout(15);
+            try (ResultSet rows = statement.executeQuery()) {
+                while (items.size() < PREVIEW_SIZE && rows.next()) {
+                    int id = rows.getInt("doc_id");
+                    DocDetails current = DocDB.getInstance().getBasicDocDetails(id, false);
+                    if (!DashboardRecentPagesService.isAccessible(current, user, domain)) continue;
+                    Map<String, Object> item = item(Integer.toString(id), Tools.replace(current.getTitle(), "&#47;", "/"), pageUrl(id));
+                    item.put("docId", id);
+                    item.put("fullPath", current.getFullPath());
+                    item.put("perexImage", DashboardRecentPagesService.previewImage(rows.getString("perex_image")));
+                    item.put("userFullName", authorName(rows.getInt("author_id")));
+                    putDate(item, rows.getTimestamp("date_created"));
+                    items.add(item);
+                }
+            }
+        }
+        return items;
+    }
+
+    /** The audit module grants server-wide access; only the bounded preview fields leave the provider. */
+    private Map<String, Object> audit() {
+        try (Connection connection = DBPool.getConnection()) {
+            return Map.of("items", audit(connection));
+        } catch (SQLException exception) { throw new IllegalStateException("Could not load audit events", exception); }
+    }
+
+    List<Map<String, Object>> audit(Connection connection) throws SQLException {
+        String sql = "SELECT log_id, log_type, description, create_date, user_id FROM " + ConfDB.ADMINLOG_TABLE_NAME + " ORDER BY log_id DESC";
+        List<Map<String, Object>> items = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setMaxRows(PREVIEW_SIZE);
+            statement.setQueryTimeout(15);
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    int id = rows.getInt("log_id");
+                    String type = Prop.getInstance().getText("components.adminlog." + rows.getInt("log_type"));
+                    Map<String, Object> item = item(Integer.toString(id), type, "/admin/v9/apps/audit-search/?id=" + id);
+                    item.put("logId", id);
+                    item.put("type", type);
+                    item.put("description", DB.prepareString(rows.getString("description"), 140));
+                    item.put("userFullName", authorName(rows.getInt("user_id")));
+                    putDate(item, rows.getTimestamp("create_date"));
+                    items.add(item);
+                }
+            }
+        }
+        return items;
+    }
+
+    private static String authorName(int userId) {
+        var user = userId > 0 ? UsersDB.getUserCached(userId) : null;
+        return user == null ? "" : user.getFullName();
+    }
+
+    /** Shows each currently logged-in administrator once without exposing their account or session DTO. */
+    private Map<String, Object> loggedAdmins() {
+        Set<Integer> visited = new LinkedHashSet<>();
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (SessionDetails session : SessionHolder.getInstance().getList()) {
+            int id = session.getLoggedUserId();
+            if (id <= 0 || !session.isAdmin() || !visited.add(id)) continue;
+            var user = UsersDB.getUserCached(id);
+            if (user == null || !user.isAdmin()) continue;
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("userId", id);
+            item.put("fullName", user.getFullName());
+            item.put("email", user.getEmail());
+            items.add(item);
+        }
+        items.sort(Comparator.comparing(item -> String.valueOf(item.get("fullName")), String.CASE_INSENSITIVE_ORDER));
+        return response(items.size(), items);
+    }
+
+    /** Reuses collected history and the monitoring module's current JVM values without starting a sampler. */
+    private Map<String, Object> monitoring(String type) {
+        long now = System.currentTimeMillis();
+        long from = now - java.time.Duration.ofHours(1).toMillis();
+        boolean memory = "server-memory".equals(type);
+        List<Map<String, Object>> series = new ArrayList<>();
+        if (Constants.getBoolean("serverMonitoringEnable")) {
+            try (Connection connection = DBPool.getConnection()) {
+                series.addAll(monitoringHistory(connection, memory, from, now, Constants.getString("clusterMyNodeName")));
+            } catch (SQLException exception) { throw new IllegalStateException("Could not load server monitoring", exception); }
+        }
+        if (memory) {
+            Runtime runtime = Runtime.getRuntime();
+            series.add(memoryPoint(now, runtime.totalMemory(), runtime.freeMemory()));
+        } else {
+            CpuInfo cpu = new CpuInfo();
+            if (cpu.getCpuUsage() < 0 || cpu.getCpuUsageProcess() < 0) throw new UnavailableException("data-unavailable");
+            series.add(Map.of("date", now, "system", cpu.getCpuUsage(), "process", cpu.getCpuUsageProcess()));
+        }
+        return Map.of("series", series, "from", from, "to", now);
+    }
+
+    List<Map<String, Object>> monitoringHistory(Connection connection, boolean memory, long from, long to, String node) throws SQLException {
+        String fields = memory ? "mem_total, mem_free" : "cpu_usage, process_usage";
+        String nodeFilter = Tools.isEmpty(node) ? "(node_name IS NULL OR node_name=?)" : "node_name=?";
+        String sql = "SELECT date_insert, " + fields + " FROM monitoring WHERE date_insert>=? AND date_insert<=? AND " + nodeFilter + " ORDER BY date_insert DESC";
+        List<Map<String, Object>> series = new ArrayList<>();
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setTimestamp(1, new Timestamp(from));
+            statement.setTimestamp(2, new Timestamp(to));
+            statement.setString(3, node == null ? "" : node);
+            statement.setMaxRows(120);
+            statement.setQueryTimeout(15);
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) {
+                    Timestamp date = rows.getTimestamp("date_insert");
+                    if (date == null) continue;
+                    if (memory) series.add(memoryPoint(date.getTime(), rows.getLong("mem_total"), rows.getLong("mem_free")));
+                    else {
+                        double system = rows.getDouble("cpu_usage");
+                        double process = rows.getDouble("process_usage");
+                        if (system >= 0 && process >= 0) series.add(Map.of("date", date.getTime(), "system", system, "process", process));
+                    }
+                }
+            }
+        }
+        series.sort(Comparator.comparingLong(DashboardWidgetDataService::dateOf));
+        return series;
+    }
+
+    private static Map<String, Object> memoryPoint(long date, long total, long free) {
+        double megabyte = 1024d * 1024d;
+        return Map.of("date", date, "total", total / megabyte, "free", free / megabyte, "used", (total - free) / megabyte);
+    }
 
     private Map<String, Object> approvals(Identity user, Scope scope) {
         Specification<DocHistory> documents = WebApproveRestController.getToApproveConditions(user.getUserId())

@@ -6,9 +6,10 @@ let fixtureLogin = process.env.DASHBOARD_RESET_FIXTURE;
 let originalAdminPreferences;
 const confirmation = '.md-dashboard-modal button[aria-describedby^="dashboard-reset-"]';
 const expectedSizes = {
-    search: 'fullauto', 'recent-pages': '3x3', forms: '1x1', sessions: '2x3', publishing: '2x3',
-    'search-terms': '2x3', traffic: '3x3', referrers: '3x3', 'top-pages': '3x3', newsletter: '2x2',
-    news: '3x2', approvals: '1x1', errors: '1x1', shortcut: '1x1'
+    search: 'fullauto', 'recent-pages': '3x2', forms: '1x1', sessions: '2x3', publishing: '2x2',
+    'search-terms': '3x3', traffic: '3x3', referrers: '2x2', 'top-pages': '3x3', newsletter: '2x2',
+    news: '3x2', approvals: '1x1', errors: '1x1', shortcut: '1x1',
+    'changed-pages': '3x3', audit: '3x3', 'logged-admins': '2x2', 'server-memory': '3x2', 'server-cpu': '3x2'
 };
 
 function waitForDashboard(I) {
@@ -68,7 +69,7 @@ Scenario('Create a disposable dashboard reset account', async ({ I, DT, DTE }) =
     // Select exact module permissions through the permission tree API, without granting user administration or adding mail-enabled user groups.
     const selected = await I.executeScript(() => {
         const tree = window.jQuery('#DTE_Field_editorFields-enabledItems').jstree(true);
-        const ids = ['menuWebpages', 'cmp_form', 'cmp_stat', 'menuEmail'].map(key => `perms_${key}`);
+        const ids = ['menuWebpages', 'cmp_form', 'cmp_stat', 'menuEmail', 'cmp_adminlog', 'welcomeShowLoggedAdmins', 'cmp_server_monitoring'].map(key => `perms_${key}`);
         tree.deselect_all();
         ids.forEach(id => { if (!tree.get_node(id)) throw new Error(`Missing fixture permission: ${id}`); tree.select_node(id); });
         return ids.every(id => tree.is_selected(id));
@@ -130,6 +131,9 @@ Scenario('Reset confirms deletion, keeps failed changes and restores every avail
             'errors', 'recent-pages', 'referrers', 'publishing', 'newsletter'
         ], 'The overview must retain its curated default order');
         assert.equal(defaults.items.filter(item => item.type === 'sessions').length, 1);
+        assert.deepEqual(defaults.items.filter(item => ['changed-pages', 'audit', 'logged-admins', 'server-memory', 'server-cpu'].includes(item.type)).map(item => item.type),
+            ['changed-pages', 'audit', 'server-memory', 'server-cpu', 'logged-admins'], 'Former overview blocks must be included in the reset layout');
+        I.dontSeeElementInDOM('.md-dashboard__legacy');
         assert.equal(defaults.domainOptions[defaults.items.find(item => item.type === 'forms').id].formName, '');
         I.refreshPage();
         waitForDashboard(I);

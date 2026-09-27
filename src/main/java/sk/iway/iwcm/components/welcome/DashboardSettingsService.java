@@ -25,7 +25,8 @@ public class DashboardSettingsService {
     static final int MAX_INSTANCES = 32;
     static final int MAX_RECORD_LENGTH = 2000;
     private static final Pattern INSTANCE_ID = Pattern.compile("[A-Za-z0-9_-]{1,36}");
-    private static final Set<String> SINGLETONS = Set.of("recent-pages", "approvals", "publishing", "sessions", "news", "search");
+    private static final Set<String> SINGLETONS = Set.of("recent-pages", "approvals", "publishing", "sessions", "news", "search",
+        "changed-pages", "audit", "logged-admins", "server-memory", "server-cpu");
     private static final Map<String, Set<String>> SIZES = Map.ofEntries(
         Map.entry("shortcut", Set.of("1x1")),
         Map.entry("recent-pages", Set.of("2x3", "3x2", "3x3")),
@@ -40,7 +41,12 @@ public class DashboardSettingsService {
         Map.entry("errors", Set.of("1x1", "3x3")),
         Map.entry("sessions", Set.of("2x3")),
         Map.entry("news", Set.of("3x2")),
-        Map.entry("search", Set.of("fullauto"))
+        Map.entry("search", Set.of("fullauto")),
+        Map.entry("changed-pages", Set.of("3x2", "3x3")),
+        Map.entry("audit", Set.of("3x2", "3x3")),
+        Map.entry("logged-admins", Set.of("2x2", "2x3")),
+        Map.entry("server-memory", Set.of("3x2", "3x3")),
+        Map.entry("server-cpu", Set.of("3x2", "3x3"))
     );
 
     private final DashboardSettingsRepository repository;

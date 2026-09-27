@@ -88,6 +88,28 @@ class DashboardSettingsServiceTest {
         verify(repository, never()).replace(anyInt(), anyString(), anyMap(), anySet());
     }
 
+    /** All migrated types persist their supported sizes but remain singletons. */
+    @Test
+    void acceptsMigratedOverviewWidgetsAndRejectsDuplicateInstances() {
+        Map<String, java.util.List<String>> variants = Map.of(
+            "changed-pages", java.util.List.of("3x2", "3x3"),
+            "audit", java.util.List.of("3x2", "3x3"),
+            "logged-admins", java.util.List.of("2x2", "2x3"),
+            "server-memory", java.util.List.of("3x2", "3x3"),
+            "server-cpu", java.util.List.of("3x2", "3x3")
+        );
+        variants.forEach((type, sizes) -> sizes.forEach(size -> {
+            DashboardSettingsDto source = settings();
+            source.getItems().add(item("preview", type, size));
+            Map<String, String> records = service.validateAndSerialize(source, "42");
+            assertTrue(records.values().stream().allMatch(record -> record.length() <= 2000));
+            when(repository.read(7)).thenReturn(records);
+            assertEquals(type, service.load(7, "42").getItems().get(1).getType());
+            source.getItems().add(item("duplicate", type, size));
+            assertThrows(IllegalArgumentException.class, () -> service.validateAndSerialize(source, "42"));
+        }));
+    }
+
     @Test
     void rejectsUnknownDomainOptionOwnerAndInvalidInstanceIds() {
         DashboardSettingsDto settings = settings();

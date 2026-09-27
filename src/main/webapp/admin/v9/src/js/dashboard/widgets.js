@@ -1,6 +1,7 @@
 import { getWidget, listWidgets, registerWidget } from './registry';
 import { registerUtilityWidgets } from './utility-widgets';
 import { registerDataWidgets } from './data-widgets';
+import { registerSystemWidgets } from './system-widgets';
 import { node, text, localUrl, shortcutUrl, link, icon, field, empty, date, containNativeScroll, pagePreview } from './widget-utils';
 
 /** Flattens authorized navigation while retaining distinct submenu destinations. */
@@ -26,7 +27,10 @@ export function getDashboardDefaults(context) {
         { type: "approvals", size: "1x1" }, { type: "errors", size: "1x1" },
         { type: "recent-pages", size: "3x2" }, { type: "referrers", size: "2x2" },
         { type: "publishing", size: "2x2" }, { type: "newsletter", size: "2x2" },
-        { type: "search-terms", size: "3x3" }, { type: "top-pages", size: "3x3" }
+        { type: "search-terms", size: "3x3" }, { type: "top-pages", size: "3x3" },
+        { type: "changed-pages", size: "3x3" }, { type: "audit", size: "3x3" },
+        { type: "server-memory", size: "3x2" }, { type: "server-cpu", size: "3x2" },
+        { type: "logged-admins", size: "2x2" }
     ];
     const menu = menuEntries(context);
     const shortcuts = ["/admin/v9/webpages/web-pages-list/", "/apps/form/admin/"].filter(href => menu.some(item => item.href === href));
@@ -138,4 +142,5 @@ export function registerDashboardWidgets() {
     });
     registerUtilityWidgets();
     registerDataWidgets();
+    registerSystemWidgets();
 }

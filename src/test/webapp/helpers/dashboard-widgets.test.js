@@ -15,10 +15,11 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
     const scope = vm.createContext({ window, document: window.document, Node: window.Node, DOMParser: window.DOMParser, URL, URLSearchParams, AbortController, console,
         fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/data/') ? data : pages }; }
     });
-    for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'widgets.js']) {
+    for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'system-widgets.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
             .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
-        vm.runInContext(source, scope, { filename: file });
+        const script = file === 'system-widgets.js' ? `(function () { ${source}\nthis.registerSystemWidgets = registerSystemWidgets; }).call(this);` : source;
+        vm.runInContext(script, scope, { filename: file });
     }
     scope.registerDashboardWidgets();
     if (extraWidgets && !scope.getWidget('sessions')) { scope.registerUtilityWidgets(); scope.registerDataWidgets(); }
@@ -207,6 +208,115 @@ test('Default content previews complete the traffic row and use an even three-ca
     for (const item of grid) assert.ok(scope.getWidget(item.type).sizes.includes(item.size), item.type);
 });
 
+const migratedPermissions = {
+    'changed-pages': 'menuWebpages', audit: 'cmp_adminlog', 'logged-admins': 'welcomeShowLoggedAdmins',
+    'server-memory': 'cmp_server_monitoring', 'server-cpu': 'cmp_server_monitoring'
+};
+
+test('Migrated overview defaults follow their exact permissions and append useful card sizes', t => {
+    const { scope, context, window } = fixture(t);
+    const defaults = JSON.parse(JSON.stringify(scope.getDashboardDefaults(context)));
+    const migrated = defaults.filter(item => Object.hasOwn(migratedPermissions, item.type));
+    assert.deepEqual(migrated, [
+        { type: 'changed-pages', size: '3x3' }, { type: 'audit', size: '3x3' },
+        { type: 'server-memory', size: '3x2' }, { type: 'server-cpu', size: '3x2' }, { type: 'logged-admins', size: '2x2' }
+    ]);
+    const grid = defaults.filter(item => !['search', 'sessions', 'news', 'shortcut'].includes(item.type));
+    assert.deepEqual(grid.slice(-5), migrated);
+    for (const permission of new Set(Object.values(migratedPermissions))) {
+        window.WJ.hasPermission = value => value === permission;
+        for (const [type, required] of Object.entries(migratedPermissions)) {
+            assert.equal(scope.getWidget(type).isAvailable(context), permission === required, `${type} requires ${required}`);
+            assert.equal(scope.getWidget(type).multiple, false);
+        }
+        const visibleDefaults = Array.from(scope.getDashboardDefaults(context), item => item.type);
+        for (const [type, required] of Object.entries(migratedPermissions)) assert.equal(visibleDefaults.includes(type), permission === required);
+    }
+});
+
+test('Changed pages and audit render bounded text-only activity with their supplied destinations and dates', async t => {
+    const items = Array.from({ length: 6 }, (_, index) => ({
+        title: '<img src=x onerror=alert(1)>', type: '<script>audit()</script>', description: '<b>Changed setting</b>',
+        fullPath: '/Section', userFullName: '<svg onload=alert(1)>', date: Date.UTC(2026, 8, 26, 10),
+        url: index === 0 ? '/admin/v9/webpages/web-pages-list/?docid=12' : 'javascript:alert(1)'
+    }));
+    const { scope, context, container, requests } = fixture(t, { data: { items } });
+    const signal = new AbortController().signal;
+    for (const type of ['changed-pages', 'audit']) {
+        const widget = scope.getWidget(type);
+        for (const [size, count] of [['3x2', 2], ['3x3', 4]]) {
+            container.replaceChildren();
+            await widget.render({ container, context, signal, instance: { size }, options: { arbitrary: 'autotest' } });
+            assert.equal(container.querySelectorAll('.md-dashboard-widget__activity > li').length, count);
+            assert.equal(container.querySelectorAll('a[href]').length, 1);
+            assert.equal(container.querySelector('a').getAttribute('href'), items[0].url);
+            assert.equal(container.querySelector('script,img,svg,b'), null);
+            assert.match(container.textContent, /<svg onload=alert\(1\)>/);
+            assert.match(container.querySelector('.md-dashboard-widget__activity-detail').textContent, /2026/);
+            assert.match(container.textContent, type === 'audit' ? /<b>Changed setting<\/b>/ : /<img src=x onerror=alert\(1\)>/);
+        }
+    }
+    for (const request of requests) {
+        assert.equal(request.options.signal, signal);
+        assert.equal(request.options.headers['X-CSRF-Token'], 'test-csrf-token');
+        assert.equal(new URL(request.url, 'http://localhost').search, '', 'Activity requests must not forward stored arbitrary options.');
+    }
+});
+
+test('Logged administrators retain every authorized name with safe email actions in both sizes', async t => {
+    const emails = ['valid+autotest@example.com', 'autotest@example.com?bcc=other@example.com', 'autotest@example.com\r\nBcc:other@example.com',
+        'autotest@example.com,other@example.com', 'autotest@example.com%0aBcc:other@example.com', ''];
+    const items = emails.map((email, userId) => ({ userId, email, fullName: '<img src=x onerror=alert(1)>' }));
+    const { scope, context, container, window } = fixture(t, { data: { items, total: items.length } });
+    context.translate = (key, ...values) => `${key}:${values.join(',')}`;
+    const widget = scope.getWidget('logged-admins');
+    const controller = new AbortController();
+    const args = { container, context, signal: controller.signal };
+    for (const size of ['2x2', '2x3']) {
+        container.replaceChildren();
+        await widget.render({ ...args, instance: { size } });
+        assert.equal(container.querySelectorAll('.md-dashboard-widget__admins > li').length, items.length);
+        assert.equal(container.querySelector('img'), null);
+        assert.equal(container.querySelectorAll('a').length, 1);
+        assert.equal(container.querySelector('a').getAttribute('href'), 'mailto:valid%2Bautotest@example.com');
+        assert.match(container.querySelector('a').getAttribute('aria-label'), /<img src=x onerror=alert\(1\)>/);
+        assert.match(container.querySelector('.md-dashboard-widget__footnote').textContent, /:6$/);
+    }
+    const list = container.querySelector('.md-dashboard-widget__admins');
+    assert.equal(list.tabIndex, 0);
+    assert.match(list.getAttribute('aria-label'), /logged-admins/);
+    Object.defineProperty(list, 'scrollHeight', { value: 400 });
+    Object.defineProperty(list, 'clientHeight', { value: 200 });
+    let bubbled = 0;
+    container.addEventListener('wheel', () => bubbled++);
+    list.dispatchEvent(new window.WheelEvent('wheel', { bubbles: true }));
+    assert.equal(bubbled, 0);
+    controller.abort();
+    list.dispatchEvent(new window.WheelEvent('wheel', { bubbles: true }));
+    assert.equal(bubbled, 1, 'Removed administrator cards must release their native-scroll listeners.');
+    container.replaceChildren();
+    await widget.renderCollapsed({ ...args, signal: new AbortController().signal });
+    assert.match(container.textContent, /6$/);
+});
+
+test('Migrated provider failures stay errors and aborted responses do not append stale content', async t => {
+    for (const type of Object.keys(migratedPermissions)) {
+        const denied = fixture(t, { ok: false });
+        const args = { container: denied.container, context: denied.context, signal: new AbortController().signal, instance: { size: '3x3' } };
+        await assert.rejects(denied.scope.getWidget(type).render(args), /403/, type);
+        assert.equal(denied.container.textContent, '');
+        let finish;
+        const aborted = fixture(t, { fetchResponse: () => new Promise(resolve => { finish = resolve; }) });
+        const controller = new AbortController();
+        const rendering = aborted.scope.getWidget(type).render({ ...args, container: aborted.container, context: aborted.context, signal: controller.signal });
+        controller.abort();
+        finish({ ok: true, json: async () => ({ items: [{ title: 'Stale', fullName: 'Stale' }], series: [{ date: 123, used: 7 }], total: 1 }) });
+        await rendering;
+        assert.equal(aborted.container.textContent, '', type);
+        assert.equal(aborted.requests[0].options.signal.aborted, true);
+    }
+});
+
 test('Ranked previews keep numeric columns marked and navigate through their headers in both sizes', async t => {
     const { scope, context, container } = fixture(t, { data: { total: 12, items: [
         { title: '<b>Long title</b>', section: '/Section/subsection', value: 12, previous: 24, url: '/apps/stat/admin/' }
@@ -294,7 +404,7 @@ function chartRuntime(window, { load = async () => {}, create } = {}) {
     window.am5xy = { ColumnSeries: { new: () => Object.assign(settings(), { columns: { template: settings() }, bullets: [], data: { setAll(values) { this.values = values; } } }) } };
     window.WebjetTheme = { new: () => ({ theme: 'WebJET' }) };
     window.ChartTools = {
-        LineChartForm, BarChartForm, DateType: { Days: 'day' },
+        LineChartForm, BarChartForm, DateType: { Days: 'day', Seconds: 'second' },
         async createAmchart(form) {
             forms.push(form);
             if (create) await create(form, makeChart);
@@ -310,6 +420,67 @@ const trafficData = {
     series: [{ date: Date.UTC(2026, 8, 24), value: 3 }, { date: Date.UTC(2026, 8, 25), value: 4 }],
     previousSeries: [{ date: Date.UTC(2026, 8, 22), value: 1 }, { date: Date.UTC(2026, 8, 23), value: 3 }]
 };
+
+test('Monitoring cards preserve timestamped measurements, units, unavailable readings and chart cleanup', async t => {
+    const series = [
+        { date: Date.UTC(2026, 8, 26, 10, 0, 1), used: 512, free: 256, total: 768, process: 0, system: null },
+        { date: Date.UTC(2026, 8, 26, 10, 0, 31), used: 520, free: 248, total: 768, process: 3.5, system: 8 }
+    ];
+    for (const type of ['server-memory', 'server-cpu']) {
+        const { scope, context, container, window } = fixture(t, { data: { series } });
+        const runtime = chartRuntime(window);
+        const controller = new AbortController();
+        const cleanup = await scope.getWidget(type).render({ container, context, signal: controller.signal });
+        const form = runtime.forms[0];
+        assert.equal(form.dateType, window.ChartTools.DateType.Seconds);
+        assert.equal(form.xAxeName, 'date');
+        const metrics = type === 'server-memory' ? ['used', 'free', 'total'] : ['process', 'system'];
+        const charts = Array.from(form.chartData.values());
+        assert.equal(charts.length, metrics.length);
+        for (const [index, metric] of metrics.entries()) {
+            assert.deepEqual(Array.from(charts[index], point => ({ date: point.date, value: point.value })), series.map(point => ({ date: point.date, value: point[metric] })));
+        }
+        assert.equal(container.querySelectorAll('.visually-hidden table tbody tr').length, series.length);
+        assert.match(container.querySelector('.md-dashboard-widget__monitoring-values').textContent, type === 'server-memory' ? /MB/ : /%/);
+        assert.match(container.querySelector('.md-dashboard-widget__chart').getAttribute('aria-label'), type === 'server-memory' ? /MB/ : /%/);
+        if (type === 'server-cpu') {
+            assert.match(container.querySelector('.visually-hidden table').textContent, /—/);
+            assert.equal(form.chart.yAxes.getIndex(0).get('max'), 100);
+        }
+        controller.abort();
+        cleanup();
+        assert.equal(runtime.roots.size, 0);
+        assert.equal(runtime.destroyed.length, 1, 'Abort and cleanup must share idempotent disposal.');
+    }
+});
+
+test('Collapsed and empty monitoring cards never allocate charts or replace unavailable measurements with zero', async t => {
+    for (const type of ['server-memory', 'server-cpu']) {
+        const { scope, context, container, window } = fixture(t, { data: { series: [{ date: 123, used: 0, free: null, total: 128, process: 0, system: null }] } });
+        const runtime = chartRuntime(window);
+        await scope.getWidget(type).renderCollapsed({ container, context, signal: new AbortController().signal });
+        assert.match(container.textContent, /—/);
+        assert.equal(runtime.loads(), 0);
+        assert.equal(container.querySelector('canvas,.md-dashboard-widget__chart'), null);
+        const emptyData = fixture(t, { data: { series: [] } });
+        await emptyData.scope.getWidget(type).render({ container: emptyData.container, context: emptyData.context, signal: new AbortController().signal });
+        assert.equal(emptyData.container.textContent, 'admin.dashboard.empty.js');
+    }
+});
+
+test('Monitoring cards aborted during lazy bundle loading never create detached chart roots', async t => {
+    const { scope, context, container, window } = fixture(t, { data: { series: [{ date: 123, used: 64, free: 64, total: 128 }] } });
+    let finishLoad;
+    const runtime = chartRuntime(window, { load: () => new Promise(resolve => { finishLoad = resolve; }) });
+    const controller = new AbortController();
+    const rendering = scope.getWidget('server-memory').render({ container, context, signal: controller.signal });
+    await new Promise(resolve => setImmediate(resolve));
+    controller.abort();
+    finishLoad();
+    await rendering;
+    assert.equal(runtime.forms.length, 0);
+    assert.equal(runtime.roots.size, 0);
+});
 
 test('Traffic descriptions follow the selected metric and period and preserve cross-year dates', async t => {
     const data = { ...trafficData, metric: 'uniqueUsers', from: Date.UTC(2025, 11, 20), to: Date.UTC(2026, 0, 18) };

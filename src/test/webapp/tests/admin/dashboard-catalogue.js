@@ -5,7 +5,8 @@ const catalogue = [
     ['shortcut', '1x1'], ['recent-pages', '3x3'], ['approvals', '3x3'], ['publishing', '2x3'],
     ['forms', '3x3'], ['traffic', '3x3'], ['top-pages', '3x3'], ['search-terms', '2x3'],
     ['referrers', '3x3'], ['newsletter', '3x3'], ['errors', '3x3'], ['sessions', '2x3'],
-    ['news', '3x2'], ['search', 'fullauto']
+    ['news', '3x2'], ['search', 'fullauto'], ['changed-pages', '3x3'], ['audit', '3x3'],
+    ['logged-admins', '2x2'], ['server-memory', '3x2'], ['server-cpu', '3x2']
 ];
 
 function waitForWidgets(I) {
@@ -111,6 +112,8 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
         I.assertEqual(error.text, state.expectedDomainError);
     }
     I.seeNumberOfElements('#toast-container-overview', 1);
+    I.dontSeeElementInDOM('.md-dashboard__legacy');
+    I.dontSeeElementInDOM('#webjet-overview-dashboard .bookmark');
     I.seeElement('[data-widget-type="sessions"] .md-dashboard__widget-content button');
     I.seeElement('[data-widget-type="recent-pages"] .md-dashboard__widget-header .md-dashboard__header-link[href="/admin/v9/webpages/web-pages-list/"]');
     I.dontSeeElement('[data-widget-type="recent-pages"] .md-dashboard-widget__more');

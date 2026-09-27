@@ -61,6 +61,40 @@ Scenario('Recent pages remain available through the independent pilot projection
     I.assertTrue(Array.isArray(result.body) && result.body.length <= 6);
 });
 
+Scenario('Former overview blocks expose independent authorized widget projections', async ({ I }) => {
+    const results = await I.executeScript(async () => Promise.all(['changed-pages', 'audit', 'logged-admins', 'server-memory', 'server-cpu'].map(async type => {
+        const response = await fetch(`/admin/rest/dashboard/data/${type}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
+        return { type, status: response.status, body: await response.json() };
+    })));
+    for (const { type, status, body } of results) {
+        I.assertEqual(status, 200, `${type} must load for an authorized administrator.`);
+        if (type.startsWith('server-')) {
+            I.assertTrue(Array.isArray(body.series) && body.series.length > 0, 'Monitoring includes the current sample even before historical samples are collected.');
+            I.assertTrue(Number.isFinite(body.from) && body.from <= body.to, 'Monitoring must describe the actual observed interval.');
+            I.assertTrue(body.series.every(point => Number.isFinite(point.date)), 'Monitoring samples must retain their real timestamp.');
+            const fields = type === 'server-memory' ? ['used', 'free', 'total'] : ['process', 'system'];
+            for (const field of fields) {
+                if (type === 'server-memory') I.assertTrue(body.series.some(point => Number.isFinite(point[field])), `${type} must report recorded ${field} measurements.`);
+                I.assertTrue(body.series.every(point => point[field] === null || (Number.isFinite(point[field]) && point[field] >= 0)), 'Unavailable readings must remain distinct from real zero measurements.');
+            }
+            continue;
+        }
+        I.assertTrue(Array.isArray(body.items), `${type} must contain an item projection.`);
+        if (type === 'logged-admins') I.assertEqual(body.items.length, body.total, 'All authorized online administrators must remain reachable in the scrolling card.');
+        else I.assertTrue(body.items.length <= 6, `${type} must use a bounded activity preview.`);
+        for (const item of body.items) {
+            if (type === 'logged-admins') {
+                I.assertEqual(typeof item.fullName, 'string');
+                continue;
+            }
+            I.assertTrue(Number.isFinite(item.date), 'Activity timestamps must remain machine-readable.');
+            I.assertTrue(typeof item.url === 'string' && item.url.startsWith('/'), 'Activity links must stay in the administration.');
+            if (type === 'changed-pages') I.assertStartsWith(item.url, '/admin/v9/webpages/web-pages-list/?docid=');
+            else I.assertEqual(typeof item.description, 'string');
+        }
+    }
+});
+
 Scenario('Statistical metrics and selected form projections preserve their contracts', async ({ I }) => {
     const result = await I.executeScript(async () => {
         const get = async path => {

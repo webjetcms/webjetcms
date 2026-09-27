@@ -198,10 +198,8 @@ Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on
         return feedback.nextElementSibling.matches('.md-dashboard__edit-control[hidden]')
             && feedback.nextElementSibling.nextElementSibling.matches('button[aria-pressed]');
     }), 'Feedback must precede Add widget and the overview edit control.');
-    I.clickCss('.md-dashboard__legacy > summary');
-    I.waitForElement('.md-dashboard__legacy[data-loaded="true"]', 20);
-    I.assertEqual(await I.grabNumberOfVisibleElements('.md-dashboard__legacy .feedback'), 0, 'The legacy overview must not duplicate the feedback action.');
-    I.clickCss('.md-dashboard__legacy > summary');
+    I.dontSeeElementInDOM('.md-dashboard__legacy');
+    I.seeNumberOfElements('.md-dashboard__feedback', 1);
 
     for (const width of [1337, 390]) {
         I.resizeWindow(width, 1052);

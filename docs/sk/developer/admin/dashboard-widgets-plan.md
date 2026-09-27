@@ -113,7 +113,7 @@ Predvolené obdobie bude posledných sedem ukončených dní, alternatívy 30 a 
 - Implementovať newsletter.
 - Automatický výber kampane: naposledy spustená aktívna, následne najbližšia naplánovaná, následne posledná dokončená; umožniť pripnutie konkrétnej kampane.
 - Odstrániť nahradené pôvodné bloky.
-- Zvyšné monitorovanie, audit, prihlásených administrátorov a pôvodné záložky sprístupniť v zbaliteľnej časti „Ďalšie prehľady“. Zachovať prístup k spätnej väzbe.
+- Zmenené stránky, audit, prihlásených administrátorov, obsadenosť pamäte a zaťaženie CPU sprístupniť ako samostatné widgety. Sekciu „Ďalšie prehľady“ odstrániť; záložky nahrádza pás „Vaše skratky“. Zachovať prístup k spätnej väzbe v hornej lište.
 - Dokončiť používateľskú dokumentáciu a aktualizovať skill podľa všetkých implementovaných vzorov.
 
 Prírastok odberateľov newslettera ani ďalšie nerozpracované moduly nepatria do tejto implementácie. Po overení prvej etapy možno nezávislé widgety vyvíjať paralelne.
@@ -138,6 +138,11 @@ Rozmery znamenajú šírku × výšku v logických jednotkách. Počty riadkov s
 | Moje aktívne prihlásenia | **2×3:** približne 3 relácie, označenie aktuálnej, prehliadač, čas a IP; odhlásenie ostatných a prístup ku všetkým |
 | Systémové upozornenia | **Celá šírka × auto:** závažnosť, vysvetlenie a nápravná akcia |
 | Čo je nové | **3×2:** verzia, 2–3 novinky, detail a potvrdenie prečítania |
+| Zmenené stránky | **3×3:** posledné úpravy dostupných stránok v doméne, autor a dátum; **3×2:** kompaktnejší zoznam |
+| Audit | **3×3:** posledné udalosti auditu; **3×2:** kompaktnejší zoznam |
+| Prihlásení admini | **2×2, 2×3:** prihlásení administrátori s odkazom na email |
+| Obsadenosť pamäte | **3×2, 3×3:** použitá, voľná a celková pamäť JVM v MB |
+| Zaťaženie CPU | **3×2, 3×3:** zaťaženie CPU servera a procesu JVM v percentách |
 | Vyhľadávanie a pomoc | **Celá šírka × auto:** prepínač rozsahu, pole a tlačidlo |
 
 Zoznamy budú stručné náhľady s odkazom na úplný prehľad, bez vnoreného posúvania. Prázdny výsledok sa odlíši od chyby či nedostupných dát.
@@ -172,7 +177,7 @@ Každá etapa zahŕňa aktualizáciu skillu a primerané overenie. Všetky zmeny
 
 ## Stav implementácie a overenie
 
-Implementovaných je všetkých päť etáp: spoločný systém a dva piloty, bezpečnosť/novinky/pomoc, obsah/formuláre, štatistiky a newsletter s dokončením migrácie pôvodných blokov. Katalóg obsahuje 14 typov widgetov; systémové upozornenia majú samostatný stabilný priestor. Nové voliteľné typy sa používateľom s uloženým rozložením ponúkajú cez katalóg.
+Implementovaných je všetkých päť etáp: spoločný systém a dva piloty, bezpečnosť/novinky/pomoc, obsah/formuláre, štatistiky a newsletter s dokončením migrácie pôvodných blokov. Katalóg obsahuje 19 typov widgetov; systémové upozornenia majú samostatný stabilný priestor. Nové voliteľné typy sa používateľom s uloženým rozložením ponúkajú cez katalóg.
 
 Overené 26. 9. 2026:
 
@@ -187,3 +192,11 @@ Overené 26. 9. 2026:
 Lokálny server používa pôvodný profil `/poolman-local.xml`. Cielená migrácia tabuľky nastavení na InnoDB prebehla štandardným aktualizačným mechanizmom; ostatné nastavenia zostali zachované. Overenie databázových integrácií prebehlo na lokálnej MariaDB; ostatné podporované databázové platformy neboli v tejto relácii spustené.
 
 Po doplnení všetkých predvolených widgetov, resetu a AmCharts prešiel frontendový build, 45 JavaScript testov a 25 cielených Java testov nastavení, repository a REST rozhrania. Reálny reset bol overený na dočasnom účte vrátane chyby uloženia, obnovenia stránky a následnej personalizácie; účet aj jeho nastavenia boli odstránené a pôvodné konto zostalo nezmenené. Browser testy grafov overujú obnovenie, minimalizovanie, zmenu na 1×1, odstránenie/vrátenie a jediný živý AmCharts root na host. Predvolené desktopové aj mobilné rozloženie a grafy prešli vizuálnou kontrolou; celá zostava widgetov prešla aj axe kontrolou.
+
+## Dokončenie migrácie pôvodných prehľadov
+
+Sekcia „Ďalšie prehľady“ je odstránená vrátane pôvodného rozhrania záložiek a spoločného dátového endpointu. Päť samostatných widgetov používa poskytovateľov podľa typu s kontrolou oprávnení na serveri. Nové a resetované rozloženie ich pridá na koniec; uložené osobné rozloženia sa nemenia. „Vaše skratky“ podporujú odkazy do dostupných modulov aj vlastné URL uložené na konto. Staré lokálne záložky sa neprepisujú ani automaticky neimportujú.
+
+Monitorovanie používa dostupné historické vzorky za poslednú hodinu a aktuálnu vzorku z rovnakého zdroja ako modul monitorovania. Bez zapnutého záznamu histórie je k dispozícii aktuálna vzorka. Widgety sa načítajú pri otvorení a manuálnom obnovení, grafy sa uvoľnia pri minimalizovaní či odstránení. Audit, administrátori a monitorovanie sú údaje celého servera; zmenené stránky rešpektujú aktuálnu doménu a oprávnenia k stránkam.
+
+Overenie migrácie: frontendový build, 81 JavaScript testov, Java testy dashboardu vrátane ôsmich testov nových providerov, päť browser scenárov dátových endpointov a trojica scenárov skutočného resetu na dočasnom účte prešli. Samostatný browser scenár overuje perzistenciu nových widgetov, životný cyklus grafov a responzívne vykreslenie na šírkach 1337 a 390 px. Účet použitý na reset bol odstránený a pôvodné preferencie administrátora zostali zachované.

@@ -1,6 +1,6 @@
 # Úvodná obrazovka
 
-Úvodná obrazovka je osobný prehľad zložený z widgetov. Ponuka zodpovedá vašim oprávneniam; údaje sa vzťahujú na práve zvolenú doménu. Rozloženie je spoločné pre vaše konto vo všetkých doménach a prehliadačoch. Konkrétny výber formulára alebo kampane sa pamätá osobitne pre každú doménu.
+Úvodná obrazovka je osobný prehľad zložený z widgetov. Ponuka zodpovedá vašim oprávneniam; obsahové údaje sa vzťahujú na práve zvolenú doménu. Rozloženie je spoločné pre vaše konto vo všetkých doménach a prehliadačoch. Konkrétny výber formulára alebo kampane sa pamätá osobitne pre každú doménu.
 
 Pri prvom otvorení sa zobrazia všetky dostupné typy widgetov. Širšie prehľady sú na počítači usporiadané do dvojíc, užšie zoznamy do trojice. Skratky predvolene smerujú na webové stránky a formuláre podľa vašich práv; ak tieto moduly nie sú dostupné, zobrazí sa skratka na prvý dostupný modul.
 
@@ -38,7 +38,7 @@ Vo widgete **Vyhľadávanie a pomoc** zvoľte **V administrácii** alebo **V dok
 
 ## Prihlásenia
 
-Widget vašich prihlásení je povinnou súčasťou prehľadu. Zoznam ostatných prihlásených administrátorov je dostupný v časti **Ďalšie prehľady**, ak naň máte oprávnenie.
+Vaše aktívne prihlásenia zostávajú v hornej časti prehľadu. Zoznam ostatných prihlásených administrátorov je samostatný widget **Prihlásení admini**, dostupný podľa oprávnení.
 
 ### Moje aktívne prihlásenia
 
@@ -54,29 +54,21 @@ Ak máte právo "Úvod - zobrazenie prihlásených administrátorov", zobrazí s
 
 Kliknutím na ikonu <i class="ti ti-mail fs-6"></i> môžete danému administrátorovi odoslať email.
 
-## Záložky
+## Vaše skratky
 
-Pôvodné záložky sú zachované v časti **Ďalšie prehľady**. Nové odkazy odporúčame vytvárať ako widget **Skratka do modulu**, ktorého nastavenie sa ukladá na konto.
+Pás **Vaše skratky** nahrádza pôvodné záložky. Tlačidlom **Pridať skratku** vyberiete dostupný modul administrácie alebo zadáte vlastnú URL a názov. Skratky sa ukladajú na vaše konto a sú dostupné vo všetkých prehliadačoch.
 
-Do mini aplikácie záložky si môžete pridať odkazy na často používané sekcie v administrácii. Po prihlásení tak nemusíte hľadať danú sekciu v menu, ale priamo kliknete na odkaz v záložkách.
+Predvolene smerujú na webové stránky a formuláre podľa vašich oprávnení. Staré záložky uložené iba v prehliadači sa automaticky neprenášajú; vlastné odkazy pridajte cez **Pridať skratku**.
 
-![](bookmarks.png)
+## Zmenené stránky, audit a monitorovanie
 
-Kliknutím na oranžovú ikonu naľavo od textu Záložky sa otvorí dialógové okno, v ktorom zadáte názov záložky a adresu, ktorá sa má otvoriť po kliknutí na meno záložky.
+Pôvodná sekcia **Ďalšie prehľady** bola odstránená. Jej informácie sú dostupné ako samostatné widgety **Zmenené stránky**, **Audit**, **Prihlásení admini**, **Obsadenosť pamäte** a **Zaťaženie CPU**. Pri prvom otvorení alebo po resete sa dostupné widgety pridajú na koniec predvoleného rozloženia. Do existujúceho rozloženia ich môžete pridať cez katalóg.
 
-![](bookmarks-modal.png)
-
-Predvolene sú zobrazené záložky na zoznam web stránok a formulárov. Tieto sa zobrazia aj keď zmažete všetky záložky.
-
-Upozornenie: zoznam záložiek sa ukladá v prehliadači, ak používate viacero prehliadačov nastavte si záložky vo všetkých.
-
-<div class="video-container">
-    <iframe width="560" height="315" src="https://www.youtube.com/embed/G5Ts04jSMX8" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-</div>
+**Zmenené stránky** zobrazujú posledné úpravy dostupných stránok v aktuálnej doméne aj s autorom zmeny. **Audit** zobrazuje posledné udalosti auditu. Grafy pamäte a CPU zobrazujú posledné zaznamenané hodnoty servera; čerstvé údaje načítate cez **Obnoviť údaje** a úplný prehľad otvoríte cez názov widgetu. Audit, prihlásení administrátori a monitorovanie zobrazujú údaje celého servera podľa príslušných oprávnení.
 
 ## Spätná väzba
 
-Tlačidlo nájdete v časti **Ďalšie prehľady**, spolu s monitorovaním servera, auditom a ďalšími pôvodnými prehľadmi.
+Tlačidlo **Zaslať spätnú väzbu** nájdete v hornej lište úvodného prehľadu.
 
 Kliknutím na tlačidlo Zaslať spätnú väzbu môžete nám, programátorom, zaslať vašu spätnú väzbu k používaniu WebJET CMS. Pripomienka sa odošle po vyplnení formuláru emailom.
 

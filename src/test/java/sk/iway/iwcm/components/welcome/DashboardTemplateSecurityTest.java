@@ -35,7 +35,8 @@ class DashboardTemplateSecurityTest {
     void configurationAndReleaseNewsUseJavascriptInlining() throws IOException {
         String template = Files.readString(Path.of("src/main/webapp/admin/v9/views/pages/dashboard/overview.pug"));
         assertFalse(template.contains("[(${"));
-        assertTrue(template.contains("WJ.parseMarkdown(/*[[\\#{admin.overview.changelog}]]*/"));
+        assertTrue(template.contains("const announcement = /*[[\\#{admin.overview.changelog}]]*/"));
+        assertTrue(template.contains("WJ.parseMarkdown(announcement.replace("));
         assertTrue(template.contains("/*[[${layout.getConstant('statMode')}]]*/"));
     }
 
