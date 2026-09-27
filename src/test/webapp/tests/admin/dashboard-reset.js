@@ -9,7 +9,7 @@ const expectedSizes = {
     search: 'fullauto', 'recent-pages': '3x2', forms: '1x1', sessions: '2x3', publishing: '2x2',
     'search-terms': '3x3', traffic: '3x3', referrers: '2x2', 'top-pages': '3x3', newsletter: '2x2',
     news: '3x2', approvals: '1x1', errors: '1x1', shortcut: '1x1',
-    'changed-pages': '3x3', audit: '3x3', 'logged-admins': '2x2', 'server-memory': '3x2', 'server-cpu': '3x2'
+    'changed-pages': '3x3', audit: '3x3', 'logged-admins': '2x2', 'server-memory': '3x3', 'server-cpu': '3x3'
 };
 
 function waitForDashboard(I) {
@@ -35,12 +35,17 @@ async function assertFixtureIdentity(I) {
 
 async function openReset(I) {
     await I.clickIfVisible('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
-    I.clickCss('.md-dashboard__toolbar-actions > .md-dashboard__edit-control');
-    I.waitForVisible('.md-dashboard__reset', 10);
+    I.waitForVisible('.md-dashboard__toolbar-actions .md-dashboard__reset', 10);
+    I.assertTrue(await I.executeScript(() => {
+        const reset = document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__reset');
+        return reset.previousElementSibling.matches('.md-dashboard__edit-control:not(.md-dashboard__reset)')
+            && reset.nextElementSibling.matches('button[aria-pressed="true"]')
+            && (reset.getAttribute('title') || reset.getAttribute('data-bs-original-title')) === WJ.translate('admin.dashboard.resetTooltip.js');
+    }), 'The explained Reset action must appear between Add widget and Done.');
     I.dontSeeElement(confirmation);
-    I.clickCss('.md-dashboard__reset');
+    I.clickCss('.md-dashboard__toolbar-actions .md-dashboard__reset');
     I.waitForVisible(confirmation, 10);
-    I.seeElement('.md-dashboard__reset[aria-expanded="true"]');
+    I.seeElement('.md-dashboard-modal .md-dashboard__reset-confirm');
 }
 
 Before(({ I, login }) => {
@@ -110,7 +115,7 @@ Scenario('Reset confirms deletion, keeps failed changes and restores every avail
         assert.deepEqual(await settings(I), custom, 'Opening confirmation must not change the profile');
         I.clickCss(confirmation);
         waitForSave(I);
-        I.waitForVisible('.md-dashboard-modal .modal-footer .text-danger', 10);
+        I.waitForVisible('.md-dashboard-modal .text-danger[role="alert"]', 10);
         assert.deepEqual(await settings(I), custom, 'A failed DELETE must preserve layout, filters and acknowledged news');
         I.seeElement('.md-dashboard-modal');
         await I.stopMockingRoute('**/admin/rest/dashboard/settings');

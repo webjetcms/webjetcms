@@ -192,12 +192,14 @@ Scenario('Dashboard header, notices, widgets and shortcuts fit the responsive vi
 Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on desktop and mobile', async ({ I }) => {
     await waitForOverview(I);
     const feedback = '.md-dashboard__feedback';
-    const addWidget = '.md-dashboard__toolbar-actions > .md-dashboard__edit-control';
+    const addWidget = '.md-dashboard__toolbar-actions > .md-dashboard__edit-control:not(.md-dashboard__reset)';
+    const resetWidget = '.md-dashboard__toolbar-actions > .md-dashboard__reset';
     I.assertTrue(await I.executeScript(() => {
         const feedback = document.querySelector('.md-dashboard__feedback');
         return feedback.nextElementSibling.matches('.md-dashboard__edit-control[hidden]')
-            && feedback.nextElementSibling.nextElementSibling.matches('button[aria-pressed]');
-    }), 'Feedback must precede Add widget and the overview edit control.');
+            && feedback.nextElementSibling.nextElementSibling.matches('.md-dashboard__reset[hidden]')
+            && feedback.nextElementSibling.nextElementSibling.nextElementSibling.matches('button[aria-pressed]');
+    }), 'Feedback must precede Add widget, Reset and the overview edit control.');
     I.dontSeeElementInDOM('.md-dashboard__legacy');
     I.seeNumberOfElements('.md-dashboard__feedback', 1);
 
@@ -226,8 +228,9 @@ Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on
         I.assertTrue(await I.executeScript(() => {
             const feedback = document.querySelector('.md-dashboard__feedback');
             return feedback.nextElementSibling.matches('.md-dashboard__edit-control:not([hidden])')
-                && feedback.nextElementSibling.nextElementSibling.matches('button[aria-pressed="true"]');
-        }), 'Edit mode must keep Add widget between Feedback and Done.');
+                && feedback.nextElementSibling.nextElementSibling.matches('.md-dashboard__reset:not([hidden])')
+                && feedback.nextElementSibling.nextElementSibling.nextElementSibling.matches('button[aria-pressed="true"]');
+        }), 'Edit mode must keep Add widget and Reset between Feedback and Done.');
         I.clickCss(addWidget);
         I.waitForVisible('.md-dashboard-modal input[type="search"]', 10);
         I.waitForFunction(() => document.querySelector('.md-dashboard-modal')?.contains(document.activeElement), 10);
@@ -237,31 +240,48 @@ Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on
             const title = header.querySelector('.modal-title').getBoundingClientRect();
             const close = header.querySelector('button.btn-close');
             const closeBounds = close.getBoundingClientRect();
-            const footer = modal.querySelector('.modal-footer').getBoundingClientRect();
-            const reset = modal.querySelector('.md-dashboard__reset').getBoundingClientRect();
-            const search = modal.querySelector('input[type="search"]').getBoundingClientRect();
             const content = modal.querySelector('.modal-content').getBoundingClientRect();
             return {
                 closeLabel: close.getAttribute('aria-label'), expectedLabel: WJ.translate('admin.dashboard.close.js'),
                 closeIcon: Boolean(close.querySelector('.ti-x[aria-hidden="true"]')), closeText: close.textContent.trim(),
                 closeRightOfTitle: closeBounds.left >= title.right,
                 centersDifference: Math.abs(closeBounds.top + closeBounds.height / 2 - title.top - title.height / 2),
-                rightAlignment: Math.abs(reset.right - search.right),
-                verticalPaddingDifference: Math.abs(reset.top - footer.top - (footer.bottom - reset.bottom)),
                 horizontalOverflow: content.left < 0 || content.right > window.innerWidth,
-                footerOverflow: reset.left < footer.left || reset.right > footer.right
+                hasReset: Boolean(modal.querySelector('.md-dashboard__reset'))
             };
         });
         I.assertEqual(layout.closeLabel, layout.expectedLabel, 'The close icon must have a localized accessible name.');
         I.assertTrue(layout.closeIcon && layout.closeText === '', 'The header must use the standard X icon without a second text row.');
         I.assertTrue(layout.closeRightOfTitle && layout.centersDifference <= 2, `The title and close icon must share one aligned header row at ${width}px.`);
-        I.assertTrue(layout.rightAlignment <= 1 && layout.verticalPaddingDifference <= 1, `The reset action must align with the body and have equal vertical spacing at ${width}px.`);
-        I.assertFalse(layout.horizontalOverflow || layout.footerOverflow, `The dialog and footer must fit the ${width}px viewport.`);
+        I.assertFalse(layout.hasReset, 'Reset belongs in the overview toolbar instead of the widget catalogue.');
+        I.assertFalse(layout.horizontalOverflow, `The catalogue must fit the ${width}px viewport.`);
         I.saveScreenshot(`dashboard-catalogue-${width}.png`, false);
         I.clickCss('.md-dashboard-modal .modal-header button.btn-close');
         I.waitForFunction(() => !document.querySelector('.md-dashboard-modal'), 10);
         I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), addWidget),
             'Closing the catalogue must return focus to Add widget.');
+        I.moveCursorTo(resetWidget);
+        I.waitForFunction(() => {
+            const tooltipId = document.querySelector('.md-dashboard__reset').getAttribute('aria-describedby');
+            return Boolean(tooltipId && document.getElementById(tooltipId)?.classList.contains('show'));
+        }, 10);
+        I.clickCss(resetWidget);
+        I.waitForVisible('.md-dashboard-modal .md-dashboard__reset-confirm', 10);
+        I.waitForInvisible('.tooltip.wj-tooltip-hoverable.show', 10);
+        I.dontSeeElement('.tooltip.wj-tooltip-hoverable.show');
+        I.assertTrue(await I.executeScript(() => {
+            const content = document.querySelector('.md-dashboard-modal .modal-content').getBoundingClientRect();
+            const confirmation = document.querySelector('.md-dashboard__reset-confirm');
+            return content.left >= 0 && content.right <= window.innerWidth
+                && document.getElementById(confirmation.getAttribute('aria-describedby'))?.textContent.length > 0;
+        }), `Reset must explain its scope in an accessible confirmation that fits the ${width}px viewport.`);
+        I.saveScreenshot(`dashboard-reset-confirmation-${width}.png`, false);
+        I.clickCss('.md-dashboard-modal .modal-header button.btn-close');
+        I.waitForFunction(() => !document.querySelector('.md-dashboard-modal'), 10);
+        I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), resetWidget),
+            'Canceling reset must return focus to its toolbar action without changing preferences.');
+        I.waitForInvisible('.tooltip.wj-tooltip-hoverable.show', 10);
+        I.dontSeeElement('.tooltip.wj-tooltip-hoverable.show');
         I.clickCss(editButton);
     }
     I.wjSetDefaultWindowSize();

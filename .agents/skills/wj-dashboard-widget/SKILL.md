@@ -20,7 +20,7 @@ Read the [widget contract](references/widget-contract.md) before implementing a 
 
 - Users have mixed responsibilities. Availability follows permissions and active-domain data, not role presets. Enforce access on the server for every data provider.
 - The layout is shared across domains and devices; record filters such as selected forms or folders belong to the active domain. Keep unavailable instances in the stored profile.
-- New and reset profiles include every useful available widget type in the curated default layout; default shortcuts require an authorized menu destination. Preserve existing personal layouts until the user explicitly resets them through the catalogue.
+- New and reset profiles include every useful available widget type in the curated default layout; default shortcuts require an authorized menu destination. Preserve existing personal layouts until the user explicitly resets them from the edit toolbar.
 - Persist ordered instances and named sizes, never pixel positions. Supported sizes are `1x1`, `2x2`, `2x3`, `3x2`, `3x3`, and full width with natural height. A type advertises only its useful variants.
 - The grid has six logical desktop columns, four below 1200 px, two below 768 px, and one below 360 px. Keep DOM, keyboard, and mobile order aligned; do not enable dense packing.
 - Keep active system alerts and session management visible outside the personal grid. Sessions, release news and search occupy fixed regions; shortcuts occupy their own strip. Stored collapsed session preferences must not hide the active-login preview.

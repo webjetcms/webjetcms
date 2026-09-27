@@ -16,6 +16,7 @@ export function chartHost(container, label, bars = false) {
 function compactChart(form, host) {
     const chart = form.chart;
     const traffic = host.classList.contains('md-dashboard-widget__chart--traffic');
+    const monitoring = host.classList.contains('md-dashboard-widget__chart--monitoring');
     const styles = window.getComputedStyle(host);
     const color = (name, fallback) => {
         const value = styles.getPropertyValue(`--wj-dashboard-chart-${name}`).trim() || styles.getPropertyValue(fallback).trim();
@@ -47,15 +48,17 @@ function compactChart(form, host) {
         renderer.labels.template.setAll({ fontSize: 11, ...(label ? { fill: label } : {}) });
         renderer.grid?.template.setAll({ strokeOpacity: 0.45, ...(grid ? { stroke: grid } : {}) });
     });
+    if (traffic || monitoring) {
+        // Axis tooltips default to unbounded space below the axis, outside this compact canvas.
+        chart.xAxes.getIndex(0).get('tooltip').adapters.add('bounds', () => ({
+            left: 1, top: 1, right: chart.root.container.width() - 1, bottom: chart.root.container.height() - 1
+        }));
+    }
     if (traffic) {
         const xAxis = chart.xAxes.getIndex(0);
         const xRenderer = xAxis.get('renderer');
         const yAxis = chart.yAxes.getIndex(0);
         const yRenderer = yAxis.get('renderer');
-        // Axis tooltips default to unbounded space below the axis, outside this compact canvas.
-        xAxis.get('tooltip').adapters.add('bounds', () => ({
-            left: 1, top: 1, right: chart.root.container.width() - 1, bottom: chart.root.container.height() - 1
-        }));
         xAxis.setAll({
             startLocation: 0.5, endLocation: 0.5, markUnitChange: false,
             dateFormats: { day: 'd. M.', week: 'd. M.', month: 'd. M.', year: 'yyyy' },

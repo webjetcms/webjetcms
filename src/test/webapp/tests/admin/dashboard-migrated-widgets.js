@@ -1,7 +1,7 @@
 Feature('admin.dashboard-migrated-widgets').tag('@singlethread');
 
 const migratedWidgets = [
-    ['changed-pages', '3x3'], ['audit', '3x3'], ['server-memory', '3x2'], ['server-cpu', '3x2'], ['logged-admins', '2x2']
+    ['changed-pages', '3x3'], ['audit', '3x3'], ['server-memory', '3x3'], ['server-cpu', '3x3'], ['logged-admins', '2x2']
 ];
 
 function waitForWidgets(I) {

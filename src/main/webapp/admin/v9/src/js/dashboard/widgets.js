@@ -29,7 +29,7 @@ export function getDashboardDefaults(context) {
         { type: "publishing", size: "2x2" }, { type: "newsletter", size: "2x2" },
         { type: "search-terms", size: "3x3" }, { type: "top-pages", size: "3x3" },
         { type: "changed-pages", size: "3x3" }, { type: "audit", size: "3x3" },
-        { type: "server-memory", size: "3x2" }, { type: "server-cpu", size: "3x2" },
+        { type: "server-memory", size: "3x3" }, { type: "server-cpu", size: "3x3" },
         { type: "logged-admins", size: "2x2" }
     ];
     const menu = menuEntries(context);

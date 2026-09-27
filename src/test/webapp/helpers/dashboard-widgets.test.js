@@ -219,7 +219,7 @@ test('Migrated overview defaults follow their exact permissions and append usefu
     const migrated = defaults.filter(item => Object.hasOwn(migratedPermissions, item.type));
     assert.deepEqual(migrated, [
         { type: 'changed-pages', size: '3x3' }, { type: 'audit', size: '3x3' },
-        { type: 'server-memory', size: '3x2' }, { type: 'server-cpu', size: '3x2' }, { type: 'logged-admins', size: '2x2' }
+        { type: 'server-memory', size: '3x3' }, { type: 'server-cpu', size: '3x3' }, { type: 'logged-admins', size: '2x2' }
     ]);
     const grid = defaults.filter(item => !['search', 'sessions', 'news', 'shortcut'].includes(item.type));
     assert.deepEqual(grid.slice(-5), migrated);
@@ -374,7 +374,7 @@ function chartRuntime(window, { load = async () => {}, create } = {}) {
     const destroyed = [];
     const settings = (initial = {}) => ({
         values: { ...initial },
-        adapters: { add() {}, remove() {} },
+        adapters: { callbacks: {}, add(name, callback) { this.callbacks[name] = callback; }, remove(name) { delete this.callbacks[name]; } },
         set(key, value) { this.values[key] = value; },
         setAll(values) { Object.assign(this.values, values); },
         get(key) { return this.values[key]; },
@@ -391,7 +391,7 @@ function chartRuntime(window, { load = async () => {}, create } = {}) {
             return Object.assign(settings({ tooltip }), { strokes: { template: settings() }, fills: { template: settings() }, columns: { template: settings() }, bullets: [], data: { values: form instanceof LineChartForm ? Array.from(form.chartData.values())[index] : form.chartData } });
         });
         const chart = Object.assign(settings({ cursor: Object.assign(settings(), { lineY: settings() }), scrollbarX: settings(), scrollbarY: settings(), colors: settings() }), {
-            root: { setThemes(themes) { this.themes = themes; } },
+            root: { container: { width: () => 480, height: () => 260 }, setThemes(themes) { this.themes = themes; } },
             series: list(series), xAxes: list([axis()]), yAxes: list([axis()]),
             children: list([settings({ verticalScrollbar: settings() })]), zoomOutButton: settings()
         });
@@ -443,6 +443,16 @@ test('Monitoring cards preserve timestamped measurements, units, unavailable rea
         assert.equal(container.querySelectorAll('.visually-hidden table tbody tr').length, series.length);
         assert.match(container.querySelector('.md-dashboard-widget__monitoring-values').textContent, type === 'server-memory' ? /MB/ : /%/);
         assert.match(container.querySelector('.md-dashboard-widget__chart').getAttribute('aria-label'), type === 'server-memory' ? /MB/ : /%/);
+        const tooltipBounds = form.chart.xAxes.getIndex(0).get('tooltip').adapters.callbacks.bounds;
+        assert.deepEqual(JSON.parse(JSON.stringify(tooltipBounds())), { left: 1, top: 1, right: 479, bottom: 259 });
+        form.chart.root.container.height = () => 180;
+        assert.equal(tooltipBounds().bottom, 179, 'Date tooltip bounds must follow the actual chart height after resizing.');
+        form.chart.series.each(line => {
+            const tooltip = line.get('tooltip');
+            assert.equal(tooltip.label.get('role'), 'presentation', 'Canvas tooltips must not create duplicate DOM labels with unresolved template values.');
+            assert.equal(tooltip.label.get('ariaHidden'), true);
+            assert.doesNotMatch(tooltip.get('labelAriaLabel'), /\[bold\]/);
+        });
         if (type === 'server-cpu') {
             assert.match(container.querySelector('.visually-hidden table').textContent, /—/);
             assert.equal(form.chart.yAxes.getIndex(0).get('max'), 100);

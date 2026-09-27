@@ -141,8 +141,8 @@ Rozmery znamenajú šírku × výšku v logických jednotkách. Počty riadkov s
 | Zmenené stránky | **3×3:** posledné úpravy dostupných stránok v doméne, autor a dátum; **3×2:** kompaktnejší zoznam |
 | Audit | **3×3:** posledné udalosti auditu; **3×2:** kompaktnejší zoznam |
 | Prihlásení admini | **2×2, 2×3:** prihlásení administrátori s odkazom na email |
-| Obsadenosť pamäte | **3×2, 3×3:** použitá, voľná a celková pamäť JVM v MB |
-| Zaťaženie CPU | **3×2, 3×3:** zaťaženie CPU servera a procesu JVM v percentách |
+| Obsadenosť pamäte | **3×3** predvolene, **3×2** kompaktne: použitá, voľná a celková pamäť JVM v MB |
+| Zaťaženie CPU | **3×3** predvolene, **3×2** kompaktne: zaťaženie CPU servera a procesu JVM v percentách |
 | Vyhľadávanie a pomoc | **Celá šírka × auto:** prepínač rozsahu, pole a tlačidlo |
 
 Zoznamy budú stručné náhľady s odkazom na úplný prehľad, bez vnoreného posúvania. Prázdny výsledok sa odlíši od chyby či nedostupných dát.
@@ -164,7 +164,7 @@ Každá etapa zahŕňa aktualizáciu skillu a primerané overenie. Všetky zmeny
 ## Overené implementačné upresnenia
 
 - Predvolené rozloženie bolo rozšírené z pilotov na všetky dostupné typy widgetov. Široké prehľady tvoria dvojice, zoznamy trojicu; systém naďalej filtruje podľa práv a nemení uložené osobné rozloženia.
-- Katalóg obsahuje **Resetovať → Obnoviť predvolené**. `DELETE /admin/rest/dashboard/settings` atomicky odstráni dashboardové nastavenia aktuálneho konta vrátane všetkých doménových filtrov a potvrdených noviniek. Ostatné nastavenia a legacy záložky zostávajú zachované. Klient zobrazí predvolené widgety až po úspechu; pri chybe zachová pôvodný stav.
+- Lišta úprav obsahuje **Pridať widget → Resetovať → Hotovo**; reset otvorí samostatné potvrdenie **Obnoviť predvolené**. `DELETE /admin/rest/dashboard/settings` atomicky odstráni dashboardové nastavenia aktuálneho konta vrátane všetkých doménových filtrov a potvrdených noviniek. Ostatné nastavenia a legacy záložky zostávajú zachované. Klient zobrazí predvolené widgety až po úspechu; pri chybe zachová pôvodný stav.
 - Grafy používajú existujúce AmCharts cez `window.initAmcharts()` a `ChartTools`. Dáta grafu sú dostupné aj ako tabuľka; graf sa uvoľní pri obnovení, minimalizovaní alebo odstránení widgetu.
 
 - REST požiadavky WebJETu vyžadujú CSRF hlavičku aj pri GET. Všetky nové načítania ju posielajú.

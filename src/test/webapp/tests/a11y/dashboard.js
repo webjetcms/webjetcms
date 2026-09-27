@@ -14,7 +14,8 @@ Scenario('dashboard', async ({ I, a11y }) => {
 Scenario('Widget catalogue supports keyboard entry, a focus trap and focus restoration', async ({ I, a11y }) => {
     I.amOnPage('/admin/v9/');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-    await I.executeScript(() => document.querySelector('.md-dashboard__toolbar > button').focus());
+    I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
+    await I.executeScript(() => document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__edit-control:not(.md-dashboard__reset)').focus());
     I.pressKey('Enter');
     I.waitForVisible('.md-dashboard-modal input[type="search"]', 10);
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard-modal input[type="search"]'), 10);
@@ -23,13 +24,29 @@ Scenario('Widget catalogue supports keyboard entry, a focus trap and focus resto
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard-modal .modal-header button'), 10);
     I.pressKey(['Shift', 'Tab']);
     I.waitForFunction(() => document.querySelector('.md-dashboard-modal').contains(document.activeElement) && document.activeElement !== document.querySelector('.md-dashboard-modal .modal-header button'), 10);
-    I.clickCss('.md-dashboard__reset');
-    I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard-modal button[aria-describedby^="dashboard-reset-"]'), 10);
-    I.seeElement('.md-dashboard__reset[aria-expanded="true"]');
+    I.pressKey('Escape');
+    I.waitForInvisible('.md-dashboard-modal', 10);
+    I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__edit-control:not(.md-dashboard__reset)'), 10);
+    I.pressKey('Tab');
+    I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__reset'), 10);
+    I.pressKey('Enter');
+    I.waitForVisible('.md-dashboard-modal .md-dashboard__reset-confirm', 10);
+    I.waitForFunction(() => {
+        const modal = document.querySelector('.md-dashboard-modal');
+        const state = {
+            opacity: modal ? getComputedStyle(modal).opacity : null,
+            focusedTag: document.activeElement?.tagName,
+            focusedClass: document.activeElement?.className,
+            focusInside: Boolean(modal?.contains(document.activeElement))
+        };
+        if (state.opacity !== '1' || !state.focusInside) console.debug('Dashboard reset accessibility readiness', state);
+        return state.opacity === '1' && state.focusInside;
+    }, 10);
+    I.seeElement('.md-dashboard-modal button[aria-describedby^="dashboard-reset-"]');
     await a11y.check('.md-dashboard-modal');
     I.pressKey('Escape');
     I.waitForInvisible('.md-dashboard-modal', 10);
-    I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__toolbar > button'), 10);
+    I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__reset'), 10);
 });
 
 Scenario("show all notification types", async ({ I, a11y }) => {

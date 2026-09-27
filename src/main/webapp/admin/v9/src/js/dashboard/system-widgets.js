@@ -87,7 +87,8 @@ async function monitoringChart(container, points, type, context, signal) {
             if (index) series.strokes.template.set('strokeDasharray', index === 1 ? [5, 4] : [2, 3]);
             series.fills.template.set('visible', false);
             series.get('tooltip').setAll({ labelText: `{name}: [bold]{valueY} ${unit}[/]`, labelAriaLabel: `{name}: {valueY} ${unit}` });
-            series.get('tooltip').label.set('ariaHidden', true);
+            // The equivalent table supplies accessible values without AmCharts' duplicate unpopulated tooltip nodes.
+            series.get('tooltip').label.setAll({ ariaHidden: true, role: 'presentation' });
             if (points.length === 1) series.bullets.push(root => window.am5.Bullet.new(root, {
                 sprite: window.am5.Circle.new(root, { radius: 4, fill: series.get('stroke') })
             }));
@@ -139,7 +140,7 @@ export function registerSystemWidgets() {
     });
     for (const type of ['server-memory', 'server-cpu']) registerWidget({
         type, titleKey: `admin.dashboard.${type}.js`, descriptionKey: `admin.dashboard.${type}.description.js`, icon: type === 'server-memory' ? 'ti-server' : 'ti-cpu',
-        sizes: ['3x2', '3x3'], defaultSize: '3x2', headerLink: { href: moduleLinks[type] },
+        sizes: ['3x2', '3x3'], defaultSize: '3x3', headerLink: { href: moduleLinks[type] },
         isAvailable: () => window.WJ.hasPermission('cmp_server_monitoring'),
         async render({ container, context, signal }) {
             const data = await fetchData(type, {}, signal); if (signal.aborted) return;

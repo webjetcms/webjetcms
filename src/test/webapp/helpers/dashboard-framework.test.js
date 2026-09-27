@@ -11,7 +11,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
 const item = (id, type = "test", size = "2x2", options = {}) => ({ id, type, size, options, collapsed: false });
 
 /** Runs production browser modules against a DOM and a stateful settings server. */
-function fixture(t, { items = [], configured = true, definitions = [], defaults = [], failSave = false, failLoad = false, failReset = false, deferModalShown = false, overview } = {}) {
+function fixture(t, { items = [], configured = true, definitions = [], defaults = [], failSave = false, failLoad = false, failReset = false, deferModalShown = false, withTooltip = false, overview } = {}) {
     const dom = new JSDOM("<!doctype html><html><body><div id='alerts'>System warning</div><div id='dashboard'></div></body></html>", { url: "http://localhost/admin/v9/" });
     const { window } = dom;
     window.WJ = { translate: key => key };
@@ -32,6 +32,31 @@ function fixture(t, { items = [], configured = true, definitions = [], defaults 
         hide() { this.element.dispatchEvent(new window.Event("hidden.bs.modal")); }
         dispose() {}
     } };
+    const tooltipCalls = [];
+    if (withTooltip) {
+        const instances = new Map();
+        window.jQuery = element => ({ 0: element, off: namespace => tooltipCalls.push(["off", namespace]) });
+        window.jQuery.fn = {};
+        window.WJ.initTooltip = wrapped => {
+            tooltipCalls.push(["init", wrapped[0]]);
+            instances.set(wrapped[0], {
+                enabled: true, visible: false,
+                enable() { this.enabled = true; tooltipCalls.push(["enable"]); },
+                disable() { this.enabled = false; tooltipCalls.push(["disable"]); },
+                hide() { this.visible = false; tooltipCalls.push(["hide"]); },
+                show() { if (this.enabled) this.visible = true; },
+                dispose() { tooltipCalls.push(["dispose"]); instances.delete(wrapped[0]); }
+            });
+        };
+        window.bootstrap.Tooltip = { getInstance: element => instances.get(element) };
+        window.WJ.focusWithoutTooltip = element => {
+            tooltipCalls.push(["focusWithoutTooltip", element]);
+            const tooltip = instances.get(element);
+            tooltip?.disable();
+            tooltip?.hide();
+            element.focus({ preventScroll: true });
+        };
+    }
     const requests = [];
     let stored = { version: 1, configured, items: copy(items), domainOptions: {}, acknowledgedNewsVersion: null };
     const fetch = async (url, options = {}) => {
@@ -56,7 +81,7 @@ function fixture(t, { items = [], configured = true, definitions = [], defaults 
     const host = window.document.querySelector("#dashboard");
     const controller = new context.Controller(host, { config: { dashboardDefaults: defaults }, overview });
     t.after(() => { controller.destroy(); window.close(); });
-    return { window, host, controller, context, requests, stored: () => copy(stored), setSaveFailure: value => { failSave = value; }, setLoadFailure: value => { failLoad = value; } };
+    return { window, host, controller, context, requests, tooltipCalls, setResetFailure: value => { failReset = value; }, stored: () => copy(stored), setSaveFailure: value => { failSave = value; }, setLoadFailure: value => { failLoad = value; } };
 }
 
 test("Reordering variable-height widgets preserves DOM order and existing widget content", async t => {
@@ -226,20 +251,93 @@ test("A failed reset preserves the layout, filters, acknowledged news and remova
     assert.match(host.querySelector('[role="status"]').textContent, /previous settings/);
 });
 
-test("Catalogue reset explains its scope and waits for explicit confirmation", async t => {
-    const { controller, window, requests } = fixture(t, { items: [item("custom")], defaults: [{ type: "test" }] });
+test("The editing toolbar opens reset confirmation with its scope and preserves focus", async t => {
+    const { controller, host, window, requests } = fixture(t, { items: [item("custom")], defaults: [{ type: "test" }], deferModalShown: true });
     await controller.start();
-    controller.showCatalogue();
+    const reset = host.querySelector('.md-dashboard__toolbar-actions .md-dashboard__reset');
+    assert.equal(reset.hidden, true);
+    assert.equal(controller.addButton.nextElementSibling, reset);
+    assert.equal(reset.nextElementSibling, controller.editButton);
+    assert.match(reset.title, /standard widgets, sizes and order/);
+    controller.setEditing(true);
+    assert.equal(reset.hidden, false);
+    reset.click();
+    await tick();
     const dialog = window.document.querySelector('[role="dialog"]');
-    dialog.querySelector(".md-dashboard__reset").click();
+    assert.equal(dialog.querySelector('.md-dashboard__catalogue'), null);
     assert.equal(requests.some(request => request.method === "DELETE"), false);
     const confirm = dialog.querySelector("button[aria-describedby]");
-    assert.match(window.document.getElementById(confirm.getAttribute("aria-describedby")).textContent, /all domains/);
+    const description = window.document.getElementById(confirm.getAttribute("aria-describedby")).textContent;
+    assert.match(description, /all domains/);
+    assert.match(description, /read news/);
     assert.equal(window.document.activeElement, confirm);
     confirm.click();
     await tick();
     assert.equal(requests.at(-1).method, "DELETE");
     assert.equal(window.document.querySelector('[role="dialog"]'), null);
+    assert.equal(window.document.activeElement, reset);
+});
+
+test("Closing reset confirmation preserves preferences and the catalogue contains only widget actions", async t => {
+    const { controller, window, requests } = fixture(t, { items: [item("custom")] });
+    await controller.start();
+    controller.setEditing(true);
+    controller.resetButton.click();
+    window.document.querySelector('.md-dashboard-modal .modal-footer .btn-outline-secondary').click();
+    assert.equal(requests.some(request => request.method === "DELETE"), false);
+    assert.equal(window.document.activeElement, controller.resetButton);
+    controller.showCatalogue();
+    assert.equal(window.document.querySelector('.md-dashboard-modal .md-dashboard__reset'), null);
+    assert.equal(window.document.querySelector('.md-dashboard-modal .md-dashboard__reset-confirm'), null);
+});
+
+test("Failed reset confirmation remains open for retry without changing the personal layout", async t => {
+    const { controller, window, setResetFailure } = fixture(t, { items: [item("custom")], failReset: true, defaults: [{ type: "test" }] });
+    await controller.start();
+    controller.setEditing(true);
+    const original = copy(controller.settings);
+    controller.resetButton.click();
+    const dialog = window.document.querySelector('[role="dialog"]');
+    const confirm = dialog.querySelector('.md-dashboard__reset-confirm');
+    confirm.click();
+    await tick();
+    assert.equal(dialog.isConnected, true);
+    assert.equal(confirm.disabled, false);
+    assert.match(dialog.querySelector('[role="alert"]').textContent, /previous settings/);
+    assert.deepEqual(copy(controller.settings), original);
+    setResetFailure(false);
+    confirm.click();
+    await tick();
+    assert.equal(dialog.isConnected, false);
+    assert.equal(window.document.activeElement, controller.resetButton);
+});
+
+test("Reset uses the shared accessible tooltip and releases it when the dashboard is removed", async t => {
+    const { controller, window, tooltipCalls } = fixture(t, { withTooltip: true });
+    await controller.start();
+    assert.equal(tooltipCalls[0][0], 'init');
+    assert.equal(tooltipCalls[0][1], controller.resetButton);
+    controller.setEditing(true);
+    const tooltip = window.bootstrap.Tooltip.getInstance(controller.resetButton);
+    tooltip.show();
+    assert.equal(tooltip.visible, true);
+    for (let attempt = 0; attempt < 2; attempt++) {
+        controller.resetButton.click();
+        assert.deepEqual(tooltipCalls.slice(-3), [['off', '.wjFocusWithoutTooltip'], ['disable'], ['hide']]);
+        tooltip.show();
+        assert.equal(tooltip.visible, false, 'A delayed hover must not display the tooltip over the open confirmation dialog');
+        window.document.querySelector('.md-dashboard-modal .btn-close').click();
+        assert.equal(tooltipCalls.at(-4)[0], 'enable', 'Dialog cleanup restores the tooltip before the shared focus helper takes over');
+        assert.equal(tooltipCalls.at(-3)[0], 'focusWithoutTooltip');
+        assert.equal(window.document.activeElement, controller.resetButton);
+        tooltip.show();
+        assert.equal(tooltip.visible, false, 'Restoring focus must not reopen a tooltip over the adjacent Done button');
+    }
+    controller.setEditing(false);
+    assert.equal(tooltipCalls.at(-1)[0], 'hide');
+    controller.destroy();
+    assert.equal(tooltipCalls.filter(call => call[0] === 'dispose').length, 1);
+    assert.deepEqual(tooltipCalls.at(-1), ['off', '.wjTooltipA11y .wjFocusWithoutTooltip']);
 });
 
 test("Shared options and domain filters refresh only the changed widget", async t => {
@@ -520,14 +618,16 @@ test("The feedback toolbar action precedes widget controls and opens the existin
     const addWidget = feedback.nextElementSibling;
     assert.ok(addWidget.classList.contains('md-dashboard__edit-control'));
     assert.equal(addWidget.hidden, true);
-    assert.equal(addWidget.nextElementSibling, controller.editButton);
+    assert.equal(addWidget.nextElementSibling, controller.resetButton);
+    assert.equal(controller.resetButton.nextElementSibling, controller.editButton);
     feedback.click();
     assert.equal(opened, 1);
     assert.equal(controller.editing, false);
     controller.editButton.click();
     assert.equal(addWidget.hidden, false);
     assert.equal(feedback.nextElementSibling, addWidget);
-    assert.equal(addWidget.nextElementSibling, controller.editButton);
+    assert.equal(addWidget.nextElementSibling, controller.resetButton);
+    assert.equal(controller.resetButton.nextElementSibling, controller.editButton);
     assert.equal(requests.length, 1, 'Opening feedback must not save or reset dashboard preferences');
 });
 

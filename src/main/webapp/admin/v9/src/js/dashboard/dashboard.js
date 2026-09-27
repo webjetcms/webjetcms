@@ -99,12 +99,16 @@ export class DashboardController {
         this.addButton = button(this._t("add", "Add widget"), () => this.showCatalogue(), "btn btn-sm btn-primary md-dashboard__control md-dashboard__edit-control");
         this.addButton.prepend(icon("ti-plus"));
         this.addButton.hidden = true;
+        this.resetButton = button(this._t("reset", "Reset"), () => this.showReset(), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control md-dashboard__reset");
+        this.resetButton.prepend(icon("ti-restore"));
+        this.resetButton.title = this._t("resetTooltip", "Restore the standard widgets, sizes and order.");
+        this.resetButton.hidden = true;
         if (this.context.overview?.showFeedbackModal) {
             const feedback = button(this._t("admin.welcome.feedback.sendButton.js", "Send feedback"), () => this.context.overview.showFeedbackModal(), "btn btn-sm btn-outline-secondary md-dashboard__feedback");
             feedback.prepend(icon("ti-message-2"));
             actions.append(feedback);
         }
-        actions.append(this.addButton, this.editButton);
+        actions.append(this.addButton, this.resetButton, this.editButton);
         this.toolbar.append(actions);
         this.status = node("div", "md-dashboard__status");
         this.status.setAttribute("role", "status");
@@ -123,12 +127,14 @@ export class DashboardController {
         this.shortcutList = node("div", "md-dashboard__shortcut-list");
         this.shortcuts.append(shortcutsHeader, this.shortcutList);
         this.host.replaceChildren(this.hero, this.notices, this.search, this.toolbar, this.status, this.undoContainer, this.layout, this.dropEnd, this.shortcuts);
+        if (window.jQuery && window.WJ?.initTooltip) window.WJ.initTooltip(window.jQuery(this.resetButton));
         this._setBusy(true);
     }
 
     /** Reveals arrangement controls without changing or saving widget preferences. */
     setEditing(editing) {
         this.editing = Boolean(editing);
+        if (!this.editing) window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.hide();
         this.host.classList.toggle("is-editing", this.editing);
         this.editButton.textContent = this._t(this.editing ? "finishEditing" : "editOverview", this.editing ? "Done" : "Edit overview");
         this.editButton.prepend(icon(this.editing ? "ti-check" : "ti-adjustments-horizontal"));
@@ -613,7 +619,10 @@ export class DashboardController {
             modal?.dispose();
             root.remove();
             this._dialogs.delete(api);
-            if (trigger?.isConnected) trigger.focus({ preventScroll: true });
+            if (trigger?.isConnected) {
+                if (window.WJ?.focusWithoutTooltip) window.WJ.focusWithoutTooltip(trigger);
+                else trigger.focus({ preventScroll: true });
+            }
         };
         const close = () => {
             if (!modal) finish();
@@ -653,6 +662,32 @@ export class DashboardController {
         return this._dialog(title);
     }
 
+    /** Confirms the full reset scope before invoking the shared atomic preference reset. */
+    showReset() {
+        window.jQuery?.(this.resetButton).off(".wjFocusWithoutTooltip");
+        const tooltip = window.bootstrap?.Tooltip?.getInstance(this.resetButton);
+        tooltip?.disable();
+        tooltip?.hide();
+        const dialog = this._dialog(this._t("resetConfirm", "Restore defaults"), this.resetButton);
+        dialog.setCleanup(() => window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.enable());
+        const description = node("p", "mb-0", this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains and read news will also be reset. Other account settings and bookmarks will be kept."));
+        description.id = `dashboard-reset-${createInstanceId()}`;
+        const error = node("p", "text-danger mb-0");
+        error.setAttribute("role", "alert");
+        dialog.body.append(description, error);
+        const confirm = button(this._t("resetConfirm", "Restore defaults"), async () => {
+            confirm.disabled = true;
+            if (await this.reset()) dialog.close();
+            else {
+                confirm.disabled = false;
+                error.textContent = this._t("saveError", "The change could not be saved. Your previous settings were kept.");
+            }
+        }, "btn btn-sm btn-primary md-dashboard__reset-confirm");
+        confirm.setAttribute("aria-describedby", description.id);
+        dialog.footer.append(button(this._t("close", "Close"), () => dialog.close()), confirm);
+        confirm.focus();
+    }
+
     showCatalogue() {
         const dialog = this._dialog(this._t("add", "Add widget"));
         const search = node("input", "form-control mb-3");
@@ -663,28 +698,6 @@ export class DashboardController {
         const error = node("p", "text-danger mb-0");
         error.setAttribute("role", "alert");
         if (this.settings.items.length >= MAX_WIDGETS) error.textContent = this._t("limit", "The overview can contain at most 32 widgets.");
-        dialog.footer.append(error);
-        const resetDetails = node("div", "w-100");
-        resetDetails.hidden = true;
-        const resetDescription = node("p", "mb-2", this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains and read news will also be reset. Other account settings and bookmarks will be kept."));
-        resetDescription.id = `dashboard-reset-${createInstanceId()}`;
-        const confirmReset = button(this._t("resetConfirm", "Restore defaults"), async () => {
-            confirmReset.disabled = true;
-            if (await this.reset()) dialog.close();
-            else {
-                confirmReset.disabled = false;
-                error.textContent = this._t("saveError", "The change could not be saved. Your previous settings were kept.");
-            }
-        }, "btn btn-sm btn-primary");
-        confirmReset.setAttribute("aria-describedby", resetDescription.id);
-        const reset = button(this._t("reset", "Reset"), () => {
-            resetDetails.hidden = !resetDetails.hidden;
-            reset.setAttribute("aria-expanded", String(!resetDetails.hidden));
-            if (!resetDetails.hidden) confirmReset.focus();
-        }, "btn btn-sm btn-outline-secondary md-dashboard__reset");
-        reset.setAttribute("aria-expanded", "false");
-        resetDetails.append(resetDescription, confirmReset);
-        dialog.footer.append(reset, resetDetails);
         const render = () => {
             list.replaceChildren();
             for (const definition of listWidgets()) {
@@ -723,7 +736,7 @@ export class DashboardController {
             if (!list.children.length) list.append(node("p", "", this._t("noWidgets", "No matching widgets are available.")));
         };
         search.addEventListener("input", render);
-        dialog.body.append(search, list);
+        dialog.body.append(search, list, error);
         render();
         dialog.root.addEventListener("shown.bs.modal", () => search.focus(), { once: true });
     }
@@ -892,6 +905,8 @@ export class DashboardController {
 
     destroy() {
         this.destroyed = true;
+        window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.dispose();
+        window.jQuery?.(this.resetButton).off(".wjTooltipA11y .wjFocusWithoutTooltip");
         this._request?.abort();
         for (const view of this.views.values()) this._disposeView(view);
         for (const dialog of this._dialogs) dialog.destroy();
