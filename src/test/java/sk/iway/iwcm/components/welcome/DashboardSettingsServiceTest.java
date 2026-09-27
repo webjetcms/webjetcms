@@ -261,6 +261,33 @@ class DashboardSettingsServiceTest {
         verifyNoInteractions(repository);
     }
 
+    /** Appearance options survive persistence while arbitrary styles and class lists are rejected. */
+    @Test
+    void validatesAndPersistsShortcutAppearance() {
+        DashboardSettingsDto settings = settings();
+        Item shortcut = item("appearance", "shortcut", "1x1");
+        shortcut.setOptions(Map.of("href", "/apps/form/admin/", "icon", "ti-file-text", "color", "mint"));
+        settings.getItems().add(shortcut);
+        Map<String, String> records = service.validateAndSerialize(settings, "42");
+        when(repository.read(7)).thenReturn(records);
+        assertEquals(shortcut.getOptions(), service.load(7, "42").getItems().get(1).getOptions());
+        for (String icon : java.util.List.of("ti-star", "ti-chart-bar", "")) {
+            assertDoesNotThrow(() -> DashboardSettingsService.validateShortcut(Map.of("icon", icon)));
+        }
+        for (Object icon : java.util.List.of("ti-star other-class", "<img src=x>", "ti-" + "a".repeat(80), 123)) {
+            assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("icon", icon)));
+        }
+        for (String color : java.util.List.of("default", "mint", "lavender", "blue", "amber", "peach", "rose")) {
+            assertDoesNotThrow(() -> DashboardSettingsService.validateShortcut(Map.of("color", color)));
+        }
+        for (Object color : java.util.List.of("#ff0000", "url(evil)", "unknown", 123)) {
+            assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("color", color)));
+        }
+        Map<String, Object> nullColor = new LinkedHashMap<>();
+        nullColor.put("color", null);
+        assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(nullColor));
+    }
+
     static DashboardSettingsDto settings() {
         DashboardSettingsDto settings = new DashboardSettingsDto();
         settings.getItems().add(item("sessions-1", "sessions", "2x3"));

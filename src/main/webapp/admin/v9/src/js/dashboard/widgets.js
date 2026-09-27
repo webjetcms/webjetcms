@@ -5,16 +5,17 @@ import { registerSystemWidgets } from './system-widgets';
 import { node, text, localUrl, shortcutUrl, link, icon, field, empty, date, containNativeScroll, pagePreview } from './widget-utils';
 
 /** Flattens authorized navigation while retaining distinct submenu destinations. */
-export function menuEntries(context) {
+export function menuEntries(context, inheritedIcon) {
     const entries = new Map();
-    const visit = items => (items || []).forEach(item => {
+    const visit = (items, inheritedIcon) => (items || []).forEach(item => {
         const href = localUrl(item.href);
+        const itemIcon = item.icon || inheritedIcon;
         if (href && !["/", "/admin/v9/#", "/admin/v9/"].includes(href) && item.text) {
-            entries.set(href, { href, title: item.text, icon: item.icon });
+            entries.set(href, { href, title: item.text, icon: itemIcon });
         }
-        visit(item.childrens || item.children);
+        visit(item.childrens || item.children, itemIcon);
     });
-    visit(context.data.dashboardMenu);
+    visit(context.data.dashboardMenu, inheritedIcon);
     return [...entries.values()];
 }
 
@@ -24,10 +25,27 @@ function shortcutMenuGroups(context) {
         const children = root.childrens || root.children || [];
         const sections = (children.length ? children : [root]).map(section => ({
             title: section.text,
-            entries: menuEntries({ data: { dashboardMenu: [section] } })
+            entries: menuEntries({ data: { dashboardMenu: [section] } }, root.icon)
         })).filter(section => section.entries.length);
         return { title: root.text, sections };
     }).filter(group => group.sections.length);
+}
+
+const SHORTCUT_COLORS = [
+    ['default', 'surface'], ['mint', 'mint'], ['lavender', 'lavender'], ['blue', 'search-surface'],
+    ['amber', 'amber'], ['peach', 'publishing'], ['rose', 'errors']
+];
+
+function shortcutBackground(value) {
+    return `var(--wj-dashboard-${(SHORTCUT_COLORS.find(([name]) => name === value) || SHORTCUT_COLORS[0])[1]})`;
+}
+
+/** Accepts a Tabler name or a single prefixed class, never arbitrary class lists. */
+function shortcutIcon(value) {
+    const name = value.trim();
+    if (!name) return '';
+    const normalized = name.startsWith('ti-') ? name : `ti-${name}`;
+    return normalized.length <= 80 && /^ti-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalized) ? normalized : null;
 }
 
 /** Arranges a traffic overview, compact metrics and content previews for new or reset profiles. */
@@ -97,7 +115,8 @@ export function registerDashboardWidgets() {
             if (!item) { empty(container, context, "chooseModule"); return; }
             const target = node('a', 'md-dashboard-widget__shortcut', options.title || item.title);
             target.href = item.href;
-            target.prepend(icon(item.icon));
+            target.prepend(icon(options.icon || item.icon));
+            (container.closest('.md-dashboard__widget') || target).style.setProperty('--wj-dashboard-shortcut-bg', shortcutBackground(options.color));
             container.append(target);
         },
         configure({ container, options, context }) {
@@ -117,8 +136,55 @@ export function registerDashboardWidgets() {
             url.placeholder = 'https://…';
             const title = field(container, text(context, 'customTitle'), [], options.title || '', 'text');
             title.name = 'dashboardShortcutTitle';
+            const iconInput = field(container, text(context, 'shortcutIcon'), [], '', 'text');
+            iconInput.name = 'dashboardShortcutIcon';
+            iconInput.maxLength = 80;
+            iconInput.placeholder = 'file-text';
+            const iconGroup = node('div', 'input-group');
+            const iconPreview = node('span', 'input-group-text');
+            iconInput.before(iconGroup);
+            iconGroup.append(iconPreview, iconInput);
+            const hint = node('small', 'text-muted', text(context, 'shortcutIconHint'));
+            hint.id = `${iconInput.id}-hint`;
+            iconInput.setAttribute('aria-describedby', hint.id);
+            iconGroup.after(hint);
+            const colors = node('fieldset', 'md-dashboard__shortcut-colors mb-3');
+            colors.append(node('legend', 'form-label', text(context, 'shortcutColor')));
+            for (const [value] of SHORTCUT_COLORS) {
+                const label = node('label', 'md-dashboard__shortcut-swatch');
+                const radio = node('input', 'visually-hidden');
+                radio.type = 'radio';
+                radio.name = `${iconInput.id}-color`;
+                radio.value = value;
+                radio.checked = value === (SHORTCUT_COLORS.some(([name]) => name === options.color) ? options.color : 'default');
+                const name = text(context, `shortcutColor.${value}`);
+                radio.setAttribute('aria-label', name);
+                const swatch = node('span');
+                swatch.title = name;
+                swatch.style.backgroundColor = shortcutBackground(value);
+                swatch.append(icon('ti-check'));
+                label.append(radio, swatch);
+                colors.append(label);
+            }
+            container.append(colors);
+            const preview = node('div', 'md-dashboard__shortcut-preview md-dashboard-widget__shortcut');
+            preview.setAttribute('aria-label', text(context, 'shortcutPreview'));
+            container.append(preview);
             const sections = () => groups[group.value]?.sections || [];
             const destinations = () => sections()[section.value]?.entries || [];
+            const destination = () => destinations().find(entry => entry.href === module.value);
+            const selectedIcon = () => icon(source.value === 'menu' ? destination()?.icon : 'ti-link').classList[1];
+            const color = () => colors.querySelector('input:checked').value;
+            const updatePreview = () => {
+                const name = shortcutIcon(iconInput.value) || selectedIcon();
+                iconPreview.replaceChildren(icon(name));
+                preview.replaceChildren(icon(name), document.createTextNode(title.value.trim() || (source.value === 'menu' ? destination()?.title : '') || text(context, 'shortcut')));
+                preview.style.setProperty('--wj-dashboard-shortcut-bg', shortcutBackground(color()));
+            };
+            const updateIcon = () => {
+                iconInput.value = selectedIcon().replace(/^ti-/, '');
+                updatePreview();
+            };
             const fill = (select, values, selected, placeholder) => {
                 select.replaceChildren(...[['', text(context, placeholder)], ...values].map(([value, label]) => {
                     const option = node('option', '', label);
@@ -131,14 +197,15 @@ export function registerDashboardWidgets() {
                 const custom = source.value === 'url';
                 for (const select of [group, section, module]) {
                     const hidden = custom || select === module && destinations().length === 1;
-                    select.parentElement.hidden = hidden;
-                    select.parentElement.classList.toggle('d-none', hidden);
+                    select.closest('.md-dashboard__field').hidden = hidden;
+                    select.closest('.md-dashboard__field').classList.toggle('d-none', hidden);
                     select.disabled = custom || (select === group ? !groups.length : select === section ? !sections().length : !destinations().length);
                 }
                 url.parentElement.hidden = !custom;
                 url.parentElement.classList.toggle('d-none', !custom);
                 url.disabled = !custom;
                 title.required = custom;
+                window.WJ.initSelectPicker?.(container);
             };
             const updateTabs = selected => {
                 fill(module, destinations().map(item => [item.href, item.title]), selected, 'shortcutChooseTab');
@@ -153,15 +220,23 @@ export function registerDashboardWidgets() {
             const sectionIndex = groups[groupIndex]?.sections.findIndex(section => section.entries.some(item => item.href === href));
             fill(group, groups.map((item, index) => [String(index), item.title]), href ? (groupIndex < 0 ? '' : String(groupIndex)) : undefined, 'shortcutChooseGroup');
             updateSections(sectionIndex >= 0 ? String(sectionIndex) : undefined, href || undefined);
-            group.addEventListener('change', () => updateSections());
-            section.addEventListener('change', () => updateTabs());
-            source.addEventListener('change', update);
+            iconInput.value = (options.icon || selectedIcon()).replace(/^ti-/, '');
+            updatePreview();
+            group.addEventListener('change', () => { updateSections(); updateIcon(); });
+            section.addEventListener('change', () => { updateTabs(); updateIcon(); });
+            module.addEventListener('change', updateIcon);
+            source.addEventListener('change', () => { update(); if (source.value === 'menu') updateIcon(); else updatePreview(); });
+            iconInput.addEventListener('input', updatePreview);
+            title.addEventListener('input', updatePreview);
+            colors.addEventListener('change', updatePreview);
             return { read: () => {
                 const custom = source.value === 'url';
                 const href = custom ? shortcutUrl(url.value) : destinations().find(entry => entry.href === module.value)?.href;
                 if (!href) throw new Error(text(context, custom ? 'shortcutUrlInvalid' : 'shortcutChooseTarget'));
                 if (custom && !title.value.trim()) throw new Error(text(context, 'shortcutTitleRequired'));
-                return { options: { source: custom ? 'url' : 'menu', href, title: title.value.trim() } };
+                const icon = shortcutIcon(iconInput.value);
+                if (icon === null) throw new Error(text(context, 'shortcutIconInvalid'));
+                return { options: { source: custom ? 'url' : 'menu', href, title: title.value.trim(), icon, color: color() } };
             } };
         }
     });

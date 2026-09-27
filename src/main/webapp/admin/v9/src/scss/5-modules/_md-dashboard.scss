@@ -379,11 +379,27 @@ webjet-overview-dashboard a:focus-visible {
         > .md-dashboard__status, > .md-dashboard__undo { margin: 12px 0 0; flex-wrap: wrap; font-size: 12px; }
     }
     &__shortcuts-empty { font-size: 12px; color: var(--wj-dashboard-muted); margin: 0; }
+    &__shortcut-colors {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        legend { font-size: 16px; }
+    }
+    &__shortcut-swatch {
+        position: relative;
+        cursor: pointer;
+        > span { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--wj-nice-gray-300); border-radius: var(--wj-border-radius); color: var(--wj-secondary); }
+        .ti { visibility: hidden; }
+        input:checked + span { border: 2px solid var(--wj-secondary); .ti { visibility: visible; } }
+        input:focus-visible + span { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }
+        &:hover > span { border-color: var(--wj-secondary); }
+    }
+    &__shortcut-preview { width: fit-content; max-width: 100%; padding: 10px 12px; border: 1px solid var(--wj-nice-gray-100); border-radius: var(--wj-border-radius); background: var(--wj-dashboard-shortcut-bg, var(--wj-dashboard-surface)); }
     &__shortcut-list {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        > .md-dashboard__widget { min-height: 0; flex: 0 1 auto; max-width: 100%; flex-direction: row; align-items: center; border-color: var(--wj-nice-gray-100); background: var(--wj-dashboard-surface); }
+        > .md-dashboard__widget { min-height: 0; flex: 0 1 auto; max-width: 100%; flex-direction: row; align-items: center; border-color: var(--wj-nice-gray-100); background: var(--wj-dashboard-shortcut-bg, var(--wj-dashboard-surface)); }
         .md-dashboard__widget[data-size="1x1"] .md-dashboard__widget-body { padding: 0; }
         .md-dashboard-widget__shortcut { padding: 10px 12px; min-height: 42px; }
         .md-dashboard__widget[data-size="1x1"] .md-dashboard__widget-header { padding: 0 6px 0 0; }
@@ -429,6 +445,15 @@ webjet-overview-dashboard a:focus-visible {
 }
 
 .md-dashboard-modal {
+    .bootstrap-select.form-select { background-image: none; }
+    .bootstrap-select.form-control > button.dropdown-toggle {
+        width: 100%;
+        padding-right: 2.25rem;
+        background-image: escape-svg($form-select-indicator);
+        background-repeat: no-repeat;
+        background-position: right 11px center;
+        background-size: 16px 12px;
+    }
     .modal-header { display: flex; align-items: center; gap: 16px; padding: 12px 16px; }
     .modal-title { flex: 1; min-width: 0; margin: 0; padding: 0; white-space: normal; }
     .modal-header .btn-close {

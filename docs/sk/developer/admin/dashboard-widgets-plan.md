@@ -209,4 +209,10 @@ Skratky sú priamo pod pozdravom pred novinkami, bez viditeľného nadpisu. Tla�
 
 Reset skratiek obnoví povolené predvolené odkazy a zachová widgety, filtre aj prečítané novinky. Reset prehľadu zachová skratky, vrátane zámerne prázdneho zoznamu. Odstránenie poslednej skratky neobnovuje odkazy automaticky; používateľ ich môže obnoviť tlačidlom Resetovať. Metadata `shortcutsConfigured` a `legacyBookmarksHandled` sa ukladajú do existujúceho záznamu rozloženia na serveri.
 
-Výber cieľa novej skratky kopíruje hierarchiu oprávneného menu: **Hlavná časť → Sekcia → Karta**, napríklad **Aplikácie → Bannerový systém → Štatistika bannerov**. Nadväzujúce výbery sa pri zmene rodiča vyčistia, sekcia s jediným cieľom nepotrebuje samostatný výber karty. Pri úprave existujúcej skratky sa celá cesta predvyplní. Ukladaný formát skratiek sa nemení.
+Výber cieľa novej skratky kopíruje hierarchiu oprávneného menu: **Hlavná časť → Sekcia → Karta**, napríklad **Aplikácie → Bannerový systém → Štatistika bannerov**. Nadväzujúce výbery sa pri zmene rodiča vyčistia, sekcia s jediným cieľom nepotrebuje samostatný výber karty. Pri úprave existujúcej skratky sa celá cesta predvyplní. Skratka si môže uložiť aj vlastnú ikonu a farbu pozadia.
+
+### Vzhľad skratiek a dynamické výbery
+
+Ikona sa preberá zo zvolenej položky menu; karta bez vlastnej ikony ju dedí z nadradenej sekcie. V dialógu ju možno zmeniť zadaním názvu ikony Tabler, aj pri vlastnej URL. Zmena cieľa predvyplní zodpovedajúcu ikonu, opätovné otvorenie zachová vlastnú voľbu. Farebné vzorky ponúkajú pôvodnú bielu a šesť pastelových farieb z palety dashboardu. Výsledok je viditeľný v živom náhľade a nastavenia sa ukladajú na konto. Staršie skratky bez týchto nastavení zachovajú predvolený vzhľad.
+
+Selecty používajú spoločnú funkciu `WJ.initSelectPicker(root, overrides)`, ktorú volá aj `app-init.js`. Funguje pri prvom načítaní aj po dynamickom vložení polí, obnovuje závislé možnosti a rešpektuje `.no-picker` aj `data-live-search`. V dialógu zachová fokus vyhľadávania; Escape najprv zatvorí rozbalený výber. Pri zatvorení dialógu sa selectpickery uvoľnia.

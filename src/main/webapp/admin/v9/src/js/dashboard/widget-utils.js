@@ -111,11 +111,16 @@ export function empty(container, context, key = "empty") {
     container.append(node("p", "text-muted mb-2", text(context, key)));
 }
 
+let nextFieldId = 0;
+
 /** Adds a labeled setting without sharing input identifiers between instances. */
 export function field(container, label, values, value, inputType = "select") {
-    const wrapper = node("label", "d-block mb-3");
-    wrapper.append(node("span", "form-label d-block", label));
+    const wrapper = node("div", "md-dashboard__field mb-3");
+    const caption = node("label", "form-label d-block", label);
     const input = node(inputType === "select" ? "select" : "input", inputType === "select" ? "form-select" : "form-control");
+    input.id = `dashboard-field-${++nextFieldId}`;
+    caption.htmlFor = input.id;
+    wrapper.append(caption);
     if (inputType === "select") {
         values.forEach(([id, title]) => {
             const option = node("option", "", title);

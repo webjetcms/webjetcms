@@ -1,6 +1,7 @@
 import {Tools} from "./libs/tools/tools";
 import { Base64 } from 'js-base64';
 import {initTextareaLineNumbers} from './textarea-line-numbers';
+import {initSelectPicker} from './select-picker';
 
 const WJ = (() => {
 
@@ -1708,6 +1709,7 @@ const WJ = (() => {
             return translate(key);
         },
         initTextareaLineNumbers,
+        initSelectPicker,
         openPopupDialog: (url, width, height) => {
             return openPopupDialog(url, width, height);
         },

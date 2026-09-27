@@ -16,6 +16,14 @@ function saved(I) {
     I.waitForFunction(() => document.querySelector('webjet-overview-dashboard')?.dashboardController?.saving === false, 20);
 }
 
+async function chooseShortcutOption(I, name, label, search = false) {
+    const id = await I.grabAttributeFrom(`${modal} [name="dashboardShortcut${name}"]`, 'id');
+    I.clickCss(`${modal} button[data-id="${id}"]`);
+    if (search) I.fillField(`${modal} .bs-container > .dropdown-menu.show .bs-searchbox input`, label);
+    I.click(locate(`${modal} .dropdown-menu.show .dropdown-item`).withText(label));
+    I.waitForInvisible(`${modal} .bs-container > .dropdown-menu.show`, 10);
+}
+
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage('/admin/v9/');
@@ -55,13 +63,15 @@ Scenario('Choose a banner tab through the administration hierarchy and restore i
     I.clickCss(`${actions} button[aria-pressed="false"]`);
     I.click('Pridať skratku', actions);
     I.waitForVisible(modal, 10);
-    const group = `${modal} [name="dashboardShortcutGroup"]`;
-    const section = `${modal} [name="dashboardShortcutSection"]`;
     const tab = `${modal} [name="dashboardShortcutMenu"]`;
-    I.selectOption(group, 'Aplikácie');
-    I.selectOption(section, 'Bannerový systém');
+    await chooseShortcutOption(I, 'Group', 'Aplikácie', true);
+    await chooseShortcutOption(I, 'Section', 'Bannerový systém', true);
     I.assertDeepEqual(await I.executeScript(selector => [...document.querySelector(selector).options].slice(1).map(option => option.textContent), tab), ['Zoznam bannerov', 'Štatistika bannerov']);
-    I.selectOption(tab, 'Štatistika bannerov');
+    await chooseShortcutOption(I, 'Menu', 'Štatistika bannerov');
+    I.seeInField(`${modal} [name="dashboardShortcutIcon"]`, 'ad');
+    I.fillField(`${modal} [name="dashboardShortcutIcon"]`, 'chart-bar');
+    I.clickCss(`${modal} input[type="radio"][value="mint"] + span`);
+    I.seeElement(`${modal} .md-dashboard__shortcut-preview .ti-chart-bar`);
     const title = `banner-tab-autotest-${I.getRandomTextShort()}`;
     I.fillField(`${modal} [name="dashboardShortcutTitle"]`, title);
     I.saveScreenshot('dashboard-shortcut-menu.png', true);
@@ -72,20 +82,60 @@ Scenario('Choose a banner tab through the administration hierarchy and restore i
     loaded(I);
     const id = await I.executeScript(title => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.find(item => item.options.title === title)?.id, title);
     I.assertTrue(Boolean(id), 'The selected card must persist as a shortcut.');
-    I.seeElement(`${links} [data-instance-id="${id}"] a[href="/apps/banner/admin/banner-stat/"]`);
+    I.seeElement(`${links} [data-instance-id="${id}"] a[href="/apps/banner/admin/banner-stat/"] .ti-chart-bar`);
+    I.assertTrue(await I.executeScript(id => getComputedStyle(document.querySelector(`[data-instance-id="${id}"]`)).backgroundColor === getComputedStyle(document.querySelector('[data-widget-type="traffic"]')).backgroundColor, id), 'The shortcut uses the existing mint dashboard surface.');
     I.clickCss(`${actions} button[aria-pressed="false"]`);
     I.clickCss(`[data-instance-id="${id}"] .dropdown > button`);
     I.clickCss(`[data-instance-id="${id}"] [data-dashboard-action="settings"]`);
     I.waitForVisible(modal, 10);
     I.assertDeepEqual(await I.executeScript(() => ['Group', 'Section', 'Menu'].map(name => document.querySelector(`[name="dashboardShortcut${name}"]`).selectedOptions[0].textContent)), ['Aplikácie', 'Bannerový systém', 'Štatistika bannerov']);
+    I.seeInField(`${modal} [name="dashboardShortcutIcon"]`, 'chart-bar');
+    I.seeCheckboxIsChecked(`${modal} input[value="mint"]`);
+    const tabId = await I.grabAttributeFrom(tab, 'id');
+    I.clickCss(`${modal} button[data-id="${tabId}"]`);
+    I.fillField(`${modal} .bs-container > .dropdown-menu.show .bs-searchbox input`, 'Zoznam');
+    I.pressKey('Escape');
+    I.waitForInvisible(`${modal} .bs-container > .dropdown-menu.show`, 10);
+    I.seeElement(modal);
     for (const width of [390, 1024, 1337]) {
         I.resizeWindow(width, 900);
         I.assertTrue(await I.executeScript(() => {
             const dialog = document.querySelector('.md-dashboard-modal .modal-dialog').getBoundingClientRect();
-            return dialog.left >= 0 && dialog.right <= innerWidth && [...document.querySelectorAll('.md-dashboard-modal select')].every(select => select.getBoundingClientRect().right <= dialog.right);
+            return dialog.left >= 0 && dialog.right <= innerWidth && [...document.querySelectorAll('.md-dashboard-modal .bootstrap-select > button')].every(select => select.getBoundingClientRect().right <= dialog.right);
         }), `The hierarchy fields must fit at ${width}px.`);
     }
     I.wjSetDefaultWindowSize();
+    I.clickCss(`${modal} .btn-close`);
+    I.waitForInvisible(modal, 10);
+    I.dontSeeElement('.bs-container');
+});
+
+Scenario('Custom URL shortcuts retain their icon and color after saving and reopening', async ({ I }) => {
+    I.clickCss(`${actions} button[aria-pressed="false"]`);
+    I.click('Pridať skratku', actions);
+    I.waitForVisible(modal, 10);
+    await chooseShortcutOption(I, 'Source', 'Vlastná URL adresa');
+    I.dontSeeElement(`${modal} [name="dashboardShortcutGroup"]`);
+    I.fillField(`${modal} [name="dashboardShortcutUrl"]`, 'https://example.com/autotest');
+    const title = `custom-icon-autotest-${I.getRandomTextShort()}`;
+    I.fillField(`${modal} [name="dashboardShortcutTitle"]`, title);
+    I.fillField(`${modal} [name="dashboardShortcutIcon"]`, 'heart');
+    I.clickCss(`${modal} input[value="lavender"] + span`);
+    I.clickCss(`${modal} .modal-footer .btn-primary`);
+    I.waitForInvisible(modal, 10);
+    saved(I);
+    I.refreshPage();
+    loaded(I);
+    const shortcut = await I.executeScript(title => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.find(item => item.options.title === title), title);
+    I.assertEqual(shortcut.options.icon, 'ti-heart');
+    I.assertEqual(shortcut.options.color, 'lavender');
+    I.seeElement(`[data-instance-id="${shortcut.id}"] a[href="https://example.com/autotest"] .ti-heart`);
+    I.clickCss(`${actions} button[aria-pressed="false"]`);
+    I.clickCss(`[data-instance-id="${shortcut.id}"] .dropdown > button`);
+    I.clickCss(`[data-instance-id="${shortcut.id}"] [data-dashboard-action="settings"]`);
+    I.waitForVisible(modal, 10);
+    I.seeInField(`${modal} [name="dashboardShortcutIcon"]`, 'heart');
+    I.seeCheckboxIsChecked(`${modal} input[value="lavender"]`);
     I.clickCss(`${modal} .btn-close`);
     I.waitForInvisible(modal, 10);
 });

@@ -777,6 +777,10 @@ export class DashboardController {
             removed = true;
             lifecycle.abort();
             dispose(cleanup);
+            if (window.jQuery?.fn?.selectpicker) window.jQuery(root).find('select').each(function () {
+                const select = window.jQuery(this);
+                if (select.data('selectpicker')) select.selectpicker('destroy');
+            });
             modal?.dispose();
             root.remove();
             this._dialogs.delete(api);
@@ -807,7 +811,15 @@ export class DashboardController {
         }, { once: true });
         root.addEventListener("hidden.bs.modal", finish, { once: true });
         root.addEventListener("keydown", event => {
-            if (event.key === "Escape") { event.preventDefault(); close(); }
+            if (event.key === "Escape") {
+                event.preventDefault();
+                const pickerButton = root.querySelector('.bootstrap-select > button.dropdown-toggle[aria-expanded="true"]');
+                if (pickerButton) {
+                    event.stopImmediatePropagation();
+                    window.jQuery(pickerButton.parentElement.querySelector('select')).selectpicker('toggle');
+                    pickerButton.focus();
+                } else close();
+            }
         });
         document.body.append(root);
         if (window.bootstrap?.Modal) modal = new window.bootstrap.Modal(root);
@@ -995,6 +1007,7 @@ export class DashboardController {
                 if (!dialog.signal.aborted) error.textContent = this._t("widgetError", "This widget could not be loaded.");
             }
         }
+        if (!dialog.signal.aborted) window.WJ.initSelectPicker?.(dialog.body);
     }
 
     _bindDrag() {
