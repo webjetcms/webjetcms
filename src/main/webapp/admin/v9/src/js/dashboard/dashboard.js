@@ -99,6 +99,11 @@ export class DashboardController {
         this.addButton = button(this._t("add", "Add widget"), () => this.showCatalogue(), "btn btn-sm btn-primary md-dashboard__control md-dashboard__edit-control");
         this.addButton.prepend(icon("ti-plus"));
         this.addButton.hidden = true;
+        if (this.context.overview?.showFeedbackModal) {
+            const feedback = button(this._t("admin.welcome.feedback.sendButton.js", "Send feedback"), () => this.context.overview.showFeedbackModal(), "btn btn-sm btn-outline-secondary md-dashboard__feedback");
+            feedback.prepend(icon("ti-message-2"));
+            actions.append(feedback);
+        }
         actions.append(this.addButton, this.editButton);
         this.toolbar.append(actions);
         this.status = node("div", "md-dashboard__status");
@@ -615,7 +620,10 @@ export class DashboardController {
             else if (shown) modal.hide();
             else closeRequested = true;
         };
-        header.append(heading, button(this._t("close", "Close"), close, "btn btn-sm btn-outline-secondary"));
+        const closeButton = button("", close, "btn btn-outline-secondary btn-close");
+        closeButton.setAttribute("aria-label", this._t("close", "Close"));
+        closeButton.append(icon("ti-x"));
+        header.append(heading, closeButton);
         content.append(header, body, footer);
         dialog.append(content);
         root.append(dialog);
@@ -846,7 +854,14 @@ export class DashboardController {
                 handle: ".md-dashboard__drag", appendTo: "body", zIndex: 1100, distance: 8,
                 cancel: "input, textarea, select, option",
                 helper: () => {
+                    const bounds = view.card.getBoundingClientRect();
+                    const style = window.getComputedStyle(view.card);
                     const helper = $(view.card).clone().removeAttr("data-instance-id").attr({ "aria-hidden": "true", inert: "" });
+                    helper.css({ width: bounds.width, height: bounds.height, backgroundColor: style.backgroundColor, borderColor: style.borderColor, color: style.color, fontSize: style.fontSize });
+                    // The body-level drag helper must retain the dashboard's inherited color tokens.
+                    for (const property of style) {
+                        if (property.startsWith("--wj-dashboard-")) helper[0].style.setProperty(property, style.getPropertyValue(property));
+                    }
                     helper.find("[id]").removeAttr("id");
                     return helper;
                 },

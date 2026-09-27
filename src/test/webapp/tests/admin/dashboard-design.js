@@ -189,6 +189,86 @@ Scenario('Dashboard header, notices, widgets and shortcuts fit the responsive vi
     I.wjSetDefaultWindowSize();
 });
 
+Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on desktop and mobile', async ({ I }) => {
+    await waitForOverview(I);
+    const feedback = '.md-dashboard__feedback';
+    const addWidget = '.md-dashboard__toolbar-actions > .md-dashboard__edit-control';
+    I.assertTrue(await I.executeScript(() => {
+        const feedback = document.querySelector('.md-dashboard__feedback');
+        return feedback.nextElementSibling.matches('.md-dashboard__edit-control[hidden]')
+            && feedback.nextElementSibling.nextElementSibling.matches('button[aria-pressed]');
+    }), 'Feedback must precede Add widget and the overview edit control.');
+    I.clickCss('.md-dashboard__legacy > summary');
+    I.waitForElement('.md-dashboard__legacy[data-loaded="true"]', 20);
+    I.assertEqual(await I.grabNumberOfVisibleElements('.md-dashboard__legacy .feedback'), 0, 'The legacy overview must not duplicate the feedback action.');
+    I.clickCss('.md-dashboard__legacy > summary');
+
+    for (const width of [1337, 390]) {
+        I.resizeWindow(width, 1052);
+        if (width < 768 && await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) I.clickCss('.js-sidebar-toggler');
+        if (width < 768) I.waitForFunction(() => document.querySelector('.ly-sidebar').getBoundingClientRect().right <= 1, 10);
+        I.executeScript(() => {
+            const scrollbar = window.scrollbarMain;
+            scrollbar.setMomentum(0, 0);
+            scrollbar.update();
+            scrollbar.setPosition(0, scrollbar.offset.y + document.querySelector('.md-dashboard__toolbar').getBoundingClientRect().top - 80);
+        });
+        I.clickCss(feedback);
+        I.waitForVisible('#feedback_modal #feedback-group-text', 10);
+        I.waitForFunction(() => document.querySelector('#feedback_modal')?.contains(document.activeElement), 10);
+        I.seeElement('#feedback_modal #feedback-upload');
+        I.seeElement('#feedback_modal #feedback-group-anonymous');
+        // Inspect the original form and cancel without sending feedback or uploading a file.
+        I.clickCss('#feedback_modal .btn-close-editor');
+        I.waitForFunction(() => !document.querySelector('#feedback_modal'), 10);
+        I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), feedback),
+            'Canceling feedback must restore focus to its toolbar action.');
+
+        I.clickCss(editButton);
+        I.assertTrue(await I.executeScript(() => {
+            const feedback = document.querySelector('.md-dashboard__feedback');
+            return feedback.nextElementSibling.matches('.md-dashboard__edit-control:not([hidden])')
+                && feedback.nextElementSibling.nextElementSibling.matches('button[aria-pressed="true"]');
+        }), 'Edit mode must keep Add widget between Feedback and Done.');
+        I.clickCss(addWidget);
+        I.waitForVisible('.md-dashboard-modal input[type="search"]', 10);
+        I.waitForFunction(() => document.querySelector('.md-dashboard-modal')?.contains(document.activeElement), 10);
+        const layout = await I.executeScript(() => {
+            const modal = document.querySelector('.md-dashboard-modal');
+            const header = modal.querySelector('.modal-header');
+            const title = header.querySelector('.modal-title').getBoundingClientRect();
+            const close = header.querySelector('button.btn-close');
+            const closeBounds = close.getBoundingClientRect();
+            const footer = modal.querySelector('.modal-footer').getBoundingClientRect();
+            const reset = modal.querySelector('.md-dashboard__reset').getBoundingClientRect();
+            const search = modal.querySelector('input[type="search"]').getBoundingClientRect();
+            const content = modal.querySelector('.modal-content').getBoundingClientRect();
+            return {
+                closeLabel: close.getAttribute('aria-label'), expectedLabel: WJ.translate('admin.dashboard.close.js'),
+                closeIcon: Boolean(close.querySelector('.ti-x[aria-hidden="true"]')), closeText: close.textContent.trim(),
+                closeRightOfTitle: closeBounds.left >= title.right,
+                centersDifference: Math.abs(closeBounds.top + closeBounds.height / 2 - title.top - title.height / 2),
+                rightAlignment: Math.abs(reset.right - search.right),
+                verticalPaddingDifference: Math.abs(reset.top - footer.top - (footer.bottom - reset.bottom)),
+                horizontalOverflow: content.left < 0 || content.right > window.innerWidth,
+                footerOverflow: reset.left < footer.left || reset.right > footer.right
+            };
+        });
+        I.assertEqual(layout.closeLabel, layout.expectedLabel, 'The close icon must have a localized accessible name.');
+        I.assertTrue(layout.closeIcon && layout.closeText === '', 'The header must use the standard X icon without a second text row.');
+        I.assertTrue(layout.closeRightOfTitle && layout.centersDifference <= 2, `The title and close icon must share one aligned header row at ${width}px.`);
+        I.assertTrue(layout.rightAlignment <= 1 && layout.verticalPaddingDifference <= 1, `The reset action must align with the body and have equal vertical spacing at ${width}px.`);
+        I.assertFalse(layout.horizontalOverflow || layout.footerOverflow, `The dialog and footer must fit the ${width}px viewport.`);
+        I.saveScreenshot(`dashboard-catalogue-${width}.png`, false);
+        I.clickCss('.md-dashboard-modal .modal-header button.btn-close');
+        I.waitForFunction(() => !document.querySelector('.md-dashboard-modal'), 10);
+        I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), addWidget),
+            'Closing the catalogue must return focus to Add widget.');
+        I.clickCss(editButton);
+    }
+    I.wjSetDefaultWindowSize();
+});
+
 Scenario('Compact metrics and scrollable recent pages align above three equal preview cards', async ({ I }) => {
     previewSettings.items = [
         { id: 'compact-autotest-traffic', type: 'traffic', size: '3x3', collapsed: false, options: { days: 7 } },
@@ -528,6 +608,67 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
     I.dontSeeElement('.md-dashboard__sessions .md-dashboard-widget__session-manage');
     await I.stopMockingRoute(sessionsRoute);
     await I.stopMockingRoute(settingsRoute);
+});
+
+Scenario('Dragging preserves the widget surface, outline and dimensions', async ({ I }) => {
+    let settingsWrites = 0;
+    const dragSettings = {
+        version: 1, configured: true, acknowledgedNewsVersion: null, domainOptions: {}, items: [
+            { id: 'drag-autotest-forms', type: 'forms', size: '1x1', collapsed: false, options: { days: 7 } },
+            { id: 'drag-autotest-traffic', type: 'traffic', size: '3x3', collapsed: false, options: { days: 7 } }
+        ]
+    };
+    // Interception keeps drag verification independent of the account's saved layout.
+    await I.mockRoute(settingsRoute, route => {
+        if (route.request().method() !== 'GET') settingsWrites++;
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dragSettings) });
+    });
+    I.resizeWindow(1337, 1052);
+    I.refreshPage();
+    await waitForOverview(I);
+    I.clickCss(editButton);
+    I.waitForElement('.md-dashboard.is-editing', 10);
+    const helper = 'body > .md-dashboard__widget.ui-draggable-dragging';
+    for (const type of ['forms', 'traffic']) {
+        const source = `.md-dashboard__layout [data-instance-id="drag-autotest-${type}"]`;
+        I.executeScript(selector => {
+            const scrollbar = window.scrollbarMain;
+            scrollbar.setMomentum(0, 0);
+            scrollbar.update();
+            scrollbar.setPosition(0, scrollbar.offset.y + document.querySelector(selector).getBoundingClientRect().top - 160);
+        }, source);
+        // The standard drag helper releases the pointer before the in-flight card can be inspected.
+        await I.usePlaywrightTo('hold a dashboard widget during dragging', async ({ page }) => {
+            const handle = await page.locator(`${source} .md-dashboard__drag`).boundingBox();
+            await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+            await page.mouse.down();
+            await page.mouse.move(handle.x + handle.width / 2 - 60, handle.y + handle.height / 2 + 40, { steps: 8 });
+        });
+        I.waitForVisible(helper, 10);
+        const appearance = await I.executeScript(({ source, helper }) => {
+            const read = selector => {
+                const card = document.querySelector(selector);
+                const style = getComputedStyle(card);
+                const bounds = card.getBoundingClientRect();
+                return { background: style.backgroundColor, border: style.borderTop, width: bounds.width, height: bounds.height };
+            };
+            return { source: read(source), helper: read(helper) };
+        }, { source, helper });
+        I.assertNotEqual(appearance.helper.background, 'rgba(0, 0, 0, 0)', 'The dragged card must have a visible surface.');
+        I.assertEqual(appearance.helper.background, appearance.source.background, `${type} must keep its original background while dragging.`);
+        I.assertEqual(appearance.helper.border, appearance.source.border, `${type} must keep the edit-mode outline while dragging.`);
+        for (const dimension of ['width', 'height']) I.assertTrue(Math.abs(appearance.helper[dimension] - appearance.source[dimension]) <= 1,
+            `${type} must keep its original ${dimension} while dragging.`);
+        I.saveScreenshot(`dashboard-drag-${type}.png`, false);
+        // The pointer remains over the original card, so releasing it must not reorder widgets.
+        await I.usePlaywrightTo('release the dashboard widget over its original position', async ({ page }) => { await page.mouse.up(); });
+        I.waitForInvisible(helper, 10);
+        I.waitForFunction(() => !document.querySelector('.md-dashboard.is-dragging'), 10);
+    }
+    I.assertEqual(settingsWrites, 0, 'Inspecting a drag without changing its position must not save preferences.');
+    I.clickCss(editButton);
+    await I.stopMockingRoute(settingsRoute);
+    I.wjSetDefaultWindowSize();
 });
 
 Scenario('Remove design fixtures and verify the account preferences were never changed', async ({ I }) => {

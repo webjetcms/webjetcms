@@ -54,13 +54,12 @@ Scenario("zalozky", ({ I }) => {
 });
 
 Scenario("feedback", ({ I }) => {
-    var container = "#webjet-overview-dashboard .feedback";
+    var trigger = ".md-dashboard__feedback";
 
-    I.see("Spätná väzba", container);
-    I.forceClick(container + " div.overview-logged__content button.btn-primary");
+    I.see("Zaslať spätnú väzbu", trigger);
+    I.clickCss(trigger);
 
-    I.waitForElement("#feedback_modal");
-    I.wait(2);
+    I.waitForVisible("#feedback_modal.show", 10);
 
     I.seeElementInDOM("#feedback_modal #feedback-upload.dz-clickable");
     I.seeElementInDOM("#feedback_modal #upload-wrapper.upload-wrapper");
@@ -82,12 +81,10 @@ Scenario("feedback", ({ I }) => {
 
     //
     I.say("skus spam protection");
-    I.waitForElement(container + " div.overview-logged__content button.btn-primary", 10);
-    I.wait(1);
-    I.forceClick(container + " div.overview-logged__content button.btn-primary");
+    I.waitForVisible(trigger, 10);
+    I.clickCss(trigger);
 
-    I.waitForElement("#feedback_modal", 10);
-    I.wait(2);
+    I.waitForVisible("#feedback_modal.show", 10);
 
     I.fillField("#feedback-group-text", "Test SPAM PROTECTION\n"+random);
     I.forceClick("#feedback_modal button.btn-primary");

@@ -11,7 +11,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
 const item = (id, type = "test", size = "2x2", options = {}) => ({ id, type, size, options, collapsed: false });
 
 /** Runs production browser modules against a DOM and a stateful settings server. */
-function fixture(t, { items = [], configured = true, definitions = [], defaults = [], failSave = false, failLoad = false, failReset = false, deferModalShown = false } = {}) {
+function fixture(t, { items = [], configured = true, definitions = [], defaults = [], failSave = false, failLoad = false, failReset = false, deferModalShown = false, overview } = {}) {
     const dom = new JSDOM("<!doctype html><html><body><div id='alerts'>System warning</div><div id='dashboard'></div></body></html>", { url: "http://localhost/admin/v9/" });
     const { window } = dom;
     window.WJ = { translate: key => key };
@@ -54,7 +54,7 @@ function fixture(t, { items = [], configured = true, definitions = [], defaults 
     context.registerWidget({ type: "test", titleKey: "Test", sizes: ["1x1", "2x2", "2x3", "3x2", "3x3", "fullauto"], multiple: true, render: ({ container }) => { container.textContent = "Widget content"; } });
     definitions.forEach(definition => context.registerWidget(definition));
     const host = window.document.querySelector("#dashboard");
-    const controller = new context.Controller(host, { config: { dashboardDefaults: defaults } });
+    const controller = new context.Controller(host, { config: { dashboardDefaults: defaults }, overview });
     t.after(() => { controller.destroy(); window.close(); });
     return { window, host, controller, context, requests, stored: () => copy(stored), setSaveFailure: value => { failSave = value; }, setLoadFailure: value => { failLoad = value; } };
 }
@@ -301,7 +301,7 @@ test("Removal undo survives a failed save but expires after the next successful 
 test("Failed loading cannot overwrite a user's stored layout with defaults", async t => {
     const { controller, host, requests } = fixture(t, { configured: true, items: [item("stored")], defaults: [{ type: "test" }], failLoad: true });
     await controller.start();
-    assert.equal(host.querySelector(".md-dashboard__toolbar button").disabled, true);
+    assert.equal(host.querySelector(".md-dashboard__toolbar button[aria-pressed]").disabled, true);
     assert.equal(controller.settings.items.length, 0);
     assert.equal(await controller.acknowledgeNews("2026.18"), false, "A release action must not overwrite unread preferences after a failed load");
     assert.equal(requests.some(request => request.method === "PUT"), false);
@@ -411,6 +411,10 @@ test("Keyboard movement dialog offers a target and the end without coordinates",
     move.click();
     const dialog = window.document.querySelector('[role="dialog"]');
     assert.ok(dialog);
+    const close = dialog.querySelector('.modal-header button.btn-close');
+    assert.equal(close.getAttribute('aria-label'), 'Close');
+    assert.equal(close.textContent, '', 'The dialog header must use the standard icon-only close control');
+    assert.equal(close.querySelector('.ti-x').getAttribute('aria-hidden'), 'true');
     dialog.querySelector("select").value = "";
     dialog.querySelector(".modal-footer button").click();
     await tick();
@@ -442,7 +446,7 @@ test("A settings dialog disposed during async initialization releases the late r
     });
     await controller.start();
     const opening = controller.showSettings("configured");
-    window.document.querySelector(".modal-header button").click();
+    window.document.querySelector(".modal-header button.btn-close").click();
     finish({ read: () => ({}), destroy: () => cleanup++ });
     await opening;
     assert.equal(cleanup, 1);
@@ -506,6 +510,25 @@ test("Edit mode reveals arrangement controls without a settings mutation", async
     controller.editButton.click();
     assert.ok(controls.every(control => control.hidden));
     assert.equal(requests.length, 1);
+});
+
+test("The feedback toolbar action precedes widget controls and opens the existing form without saving preferences", async t => {
+    let opened = 0;
+    const { controller, host, requests } = fixture(t, { overview: { showFeedbackModal: () => { opened++; } } });
+    await controller.start();
+    const feedback = host.querySelector('.md-dashboard__feedback');
+    const addWidget = feedback.nextElementSibling;
+    assert.ok(addWidget.classList.contains('md-dashboard__edit-control'));
+    assert.equal(addWidget.hidden, true);
+    assert.equal(addWidget.nextElementSibling, controller.editButton);
+    feedback.click();
+    assert.equal(opened, 1);
+    assert.equal(controller.editing, false);
+    controller.editButton.click();
+    assert.equal(addWidget.hidden, false);
+    assert.equal(feedback.nextElementSibling, addWidget);
+    assert.equal(addWidget.nextElementSibling, controller.editButton);
+    assert.equal(requests.length, 1, 'Opening feedback must not save or reset dashboard preferences');
 });
 
 test("Shortcuts configure before saving and render in the permanent shortcut strip", async t => {

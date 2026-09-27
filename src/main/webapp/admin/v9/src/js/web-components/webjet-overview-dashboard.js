@@ -208,7 +208,7 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
             const monitoring = document.createElement("webjet-server-monitoring");
             monitoring.configure({ complex: false, labels: this.labels });
             main.append(monitoring);
-            side.append(this._renderUsers(), this._renderBookmarks(), this._renderFeedback());
+            side.append(this._renderUsers(), this._renderBookmarks());
             row.append(main, side);
             content.replaceChildren(row);
             legacy.dataset.loaded = "true";
@@ -405,33 +405,15 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         modal.show();
     }
 
-    _renderFeedback() {
-        const wrapper = createOverviewCard("ti-message-2", WJ.translate("admin.welcome.feedback.title.js"), "feedback");
-        const open = element("button", "btn btn-outline p-0");
-        open.type = "button";
-        open.setAttribute("aria-label", WJ.translate("admin.welcome.feedback.sendButton.js"));
-        open.innerHTML = '<i class="ti ti-writing" aria-hidden="true"></i>';
-        open.addEventListener("click", () => this._showFeedbackModal());
-        wrapper.querySelector(".overview-logged__head__more").appendChild(open);
-        const content = element("div", "overview-logged__content");
-        content.append(element("p", "perex", WJ.translate("admin.welcome.feedback.intro.js")));
-        const actions = element("p", "text-end");
-        const send = element("button", "btn btn-primary", WJ.translate("admin.welcome.feedback.sendButton.js"));
-        send.type = "button";
-        send.addEventListener("click", () => this._showFeedbackModal());
-        actions.appendChild(send);
-        content.appendChild(actions);
-        wrapper.appendChild(content);
-        return wrapper;
-    }
-
     /**
      * Opens the feedback form, tracks uploaded files, and submits the completed feedback.
      */
-    _showFeedbackModal() {
+    showFeedbackModal() {
         if (document.querySelector("#feedback_modal")) return;
+        const trigger = document.activeElement;
         const modalElement = element("div", "modal fade DTED");
         modalElement.id = "feedback_modal";
+        modalElement.tabIndex = -1;
         modalElement.innerHTML = `<div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">${WJ.escapeHtml(WJ.translate("admin.welcome.feedback.dialog.title.js"))}</h5></div><form><div class="modal-body"><div class="modal-body-bg"><div class="DTE_Field form-group row required"><label class="col-sm-4 col-form-label" for="feedback-group-text">${WJ.escapeHtml(WJ.translate("admin.welcome.feedback.dialog.feedback_text.js"))}</label><div class="col-sm-7"><textarea id="feedback-group-text" class="form-control" rows="7" aria-describedby="feedback-text-error"></textarea><div id="feedback-text-error" class="text-error form-text text-danger small invisible" role="alert">${WJ.escapeHtml(WJ.translate("admin.welcome.feedback.dialog.error.js"))}</div></div></div><div class="DTE_Field form-group row"><label class="col-sm-4 col-form-label">${WJ.escapeHtml(WJ.translate("admin.welcome.feedback.dialog.files.js"))}</label><div class="col-sm-7"><div id="feedback-upload" class="drop-zone-box dropzone"></div></div></div><div class="DTE_Field form-group row"><label class="col-sm-4 col-form-label" for="feedback-group-anonymous">${WJ.escapeHtml(WJ.translate("admin.welcome.feedback.dialog.send_anonym.js"))}</label><div class="col-sm-7"><input id="feedback-group-anonymous" type="checkbox" class="form-check-input"></div></div></div></div><div class="modal-footer"><div class="DTE_Form_Buttons"><button type="button" class="btn btn-outline-secondary btn-close-editor"><i class="ti ti-x"></i> ${WJ.escapeHtml(WJ.translate("button.cancel"))}</button><button type="submit" class="btn btn-primary"><i class="ti ti-check"></i> ${WJ.escapeHtml(WJ.translate("button.send"))}</button></div></div></form></div></div>`;
         const uploadProgressIndicator = `<svg class="fa-progress-bar float-end" xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 34 34" aria-hidden="true"><circle cx="16" cy="16" r="15" class="fa-progress-bar__background"></circle><circle cx="16" cy="16" r="15" class="fa-progress-bar__progress" style="stroke-dashoffset: 100px"></circle></svg>`;
         const uploadContainer = modalElement.querySelector("#feedback-upload").parentElement;
@@ -459,8 +441,12 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         const close = () => {
             window.removeEventListener("WJ.AdminUpload.success", uploadListener);
             this._feedbackListeners = this._feedbackListeners.filter(([, listener]) => listener !== uploadListener);
+            modalElement.addEventListener("hidden.bs.modal", () => {
+                modal.dispose();
+                modalElement.remove();
+                if (trigger?.isConnected) trigger.focus();
+            }, { once: true });
             modal.hide();
-            modalElement.addEventListener("hidden.bs.modal", () => modalElement.remove(), { once: true });
         };
         modalElement.querySelector(".btn-close-editor").addEventListener("click", close);
         modalElement.querySelector("form").addEventListener("submit", event => {
