@@ -241,6 +241,7 @@ Scenario('Documentation search switches scope and opens the encoded query withou
     I.assertEqual(new URL(popup.url).searchParams.get('q'), query);
     I.assertEqual(popup.target, '_blank');
     I.assertContain(popup.features, 'noopener');
+    I.fillField(`${scope} input[type="search"]`, '');
     I.clickCss(`${scope} label:has(input[value="admin"])`);
     I.seeElement(`${scope} input[type="radio"][value="admin"]:checked`);
 });

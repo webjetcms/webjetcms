@@ -1032,6 +1032,34 @@ test('Search exposes separate scopes and changes its accessible hint', t => {
     assert.match(container.querySelector('[type=search]').getAttribute('aria-label'), /searchDocsHint/);
 });
 
+test('Search scope clicks submit trimmed text even when selected, but empty clicks only change scope', t => {
+    const { scope, context, container, window } = fixture(t, { extraWidgets: true });
+    const opened = [];
+    window.open = (...args) => opened.push(args);
+    scope.getWidget('search').render({ container, context, options: {}, instance: { id: 'search-one' } });
+    const input = container.querySelector('[type=search]');
+    const docs = container.querySelector('[value=docs]');
+    const admin = container.querySelector('[value=admin]');
+    let submissions = 0;
+    container.querySelector('form').addEventListener('submit', () => submissions++);
+    for (const query of ['', '   ']) {
+        input.value = query;
+        docs.click();
+        assert.equal(docs.checked, true);
+        admin.click();
+        assert.equal(admin.checked, true);
+    }
+    assert.equal(submissions, 0);
+    input.value = '  title & URL  ';
+    docs.click();
+    docs.click();
+    assert.equal(submissions, 2);
+    assert.equal(opened.length, 2);
+    assert.equal(new URL(opened[0][0]).searchParams.get('q'), 'title & URL');
+    assert.equal(opened[0][1], '_blank');
+    assert.equal(opened[0][2], 'noopener');
+});
+
 
 test('An HTTP 200 session-removal rejection leaves the session visible and reports failure', async t => {
     const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [

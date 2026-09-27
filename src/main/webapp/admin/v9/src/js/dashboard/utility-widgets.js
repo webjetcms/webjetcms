@@ -1,5 +1,5 @@
 import { registerWidget } from './registry';
-import { node, text, date, number, field, fetchData, empty, containNativeScroll } from './widget-utils';
+import { node, text, date, number, field, fetchData, empty, containNativeScroll, pagePreview } from './widget-utils';
 
 /** Returns individual sessions while retaining the originating cluster label. */
 export function flattenSessions(data) {
@@ -122,6 +122,58 @@ function docsUrl(path = '') {
     return `https://docs.webjetcms.sk/latest/${language}/${path}`;
 }
 
+/** Reuses page lookup with cancellable requests and releases the menu with its widget. */
+function pageAutocomplete(input, group, signal) {
+    if (!window.WJ.hasPermission('menuWebpages') || !window.$?.fn?.autocomplete) return null;
+    const $input = window.$(input);
+    let request;
+    const cancel = () => { request?.abort(); $input.autocomplete('close'); };
+    $input.autocomplete({
+        appendTo: group, minLength: 2, delay: 300,
+        position: { my: 'left top+2', at: 'left bottom', collision: 'flipfit' },
+        async source({ term }, respond) {
+            request?.abort();
+            if (!term.trim()) { respond([]); return; }
+            const current = new AbortController();
+            request = current;
+            try {
+                const response = await fetch(`/admin/skins/webjet6/_doc_autocomplete.jsp?editable=true&docid=${encodeURIComponent(term.trim())}`, {
+                    signal: current.signal, credentials: 'same-origin'
+                });
+                if (!response.ok) throw new Error('Page lookup failed');
+                const items = await response.json();
+                respond(current.signal.aborted ? [] : items.slice(0, 20));
+            } catch (error) { respond([]); }
+        },
+        focus: () => false,
+        select(event, { item }) {
+            event.preventDefault();
+            window.location.assign(`/admin/v9/webpages/web-pages-list/?docid=${encodeURIComponent(item.doc_id)}`);
+        }
+    });
+    const autocomplete = $input.autocomplete('instance');
+    autocomplete.liveRegion.addClass('visually-hidden');
+    autocomplete.menu.element.addClass('md-dashboard-widget__search-results');
+    autocomplete._renderItem = (list, item) => {
+        const row = pagePreview(item);
+        row.classList.add('md-dashboard-widget__page');
+        row.title = [item.fullPath, item.label].filter(Boolean).join('\n');
+        row.append(node('span', 'md-dashboard-widget__page-date', item.saveDate));
+        return window.$(node('li')).append(row).appendTo(list);
+    };
+    autocomplete._resizeMenu = () => autocomplete.menu.element.outerWidth(input.getBoundingClientRect().width);
+    const resize = new ResizeObserver(() => {
+        if (!autocomplete.menu.element.is(':visible')) return;
+        autocomplete._resizeMenu();
+        autocomplete.menu.element.position({ ...autocomplete.options.position, of: $input });
+    });
+    resize.observe(input);
+    containNativeScroll(autocomplete.menu.element[0], signal);
+    input.addEventListener('input', cancel, { signal });
+    signal.addEventListener('abort', () => { request?.abort(); resize.disconnect(); $input.autocomplete('destroy'); }, { once: true });
+    return enabled => { cancel(); $input.autocomplete('option', 'disabled', !enabled); };
+}
+
 /** Registers mandatory security and optional release/help widgets. */
 export function registerUtilityWidgets() {
     registerWidget({
@@ -174,17 +226,22 @@ export function registerUtilityWidgets() {
             const scope = field(container, text(context, 'search'), [['admin', text(context, 'adminSearch')], ['docs', text(context, 'docsSearch')]], options.scope || 'admin');
             return { read: () => ({ options: { scope: scope.value } }) };
         },
-        render({ container, options, context, instance }) {
+        render({ container, options, context, instance, signal }) {
             const form = node('form', 'md-dashboard-widget__search');
             const switcher = node('fieldset', 'md-dashboard-widget__search-scope');
             switcher.append(node('legend', 'visually-hidden', text(context, 'search')));
             const input = node('input', 'form-control'); input.type = 'search'; input.required = true; input.maxLength = 500;
             let scope = options.scope === 'docs' ? 'docs' : 'admin';
+            let autocomplete;
             const hint = () => { input.placeholder = text(context, scope === 'docs' ? 'searchDocsHint' : 'searchAdminHint'); input.setAttribute('aria-label', input.placeholder); };
             for (const value of ['admin', 'docs']) {
                 const label = node('label', 'md-dashboard-widget__search-option');
                 const radio = node('input', 'visually-hidden'); radio.type = 'radio'; radio.name = `scope-${instance.id}`; radio.value = value; radio.checked = scope === value;
-                radio.addEventListener('change', () => { scope = value; hint(); });
+                radio.addEventListener('change', () => { scope = value; hint(); autocomplete?.(scope === 'admin'); });
+                radio.addEventListener('click', () => {
+                    scope = value; hint(); autocomplete?.(scope === 'admin');
+                    if (input.value.trim()) form.requestSubmit();
+                });
                 label.append(radio, node('span', 'md-dashboard-widget__search-label', text(context, value === 'admin' ? 'adminSearch' : 'docsSearch'))); switcher.append(label);
             }
             hint();
@@ -201,6 +258,8 @@ export function registerUtilityWidgets() {
                 else window.location.assign(`/admin/v9/search/index/?text=${encodeURIComponent(query)}`);
             });
             container.append(form);
+            autocomplete = pageAutocomplete(input, group, signal);
+            autocomplete?.(scope === 'admin');
         }
     });
 }

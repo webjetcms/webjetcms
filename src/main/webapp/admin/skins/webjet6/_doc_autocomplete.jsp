@@ -6,10 +6,13 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %>
 <%@page import="org.json.JSONArray"%>
 <%@page import="org.json.JSONObject"%>
 <%@page import="sk.iway.iwcm.doc.DocDB"%>
+<%@page import="sk.iway.iwcm.users.UsersDB"%>
+<%@page import="sk.iway.iwcm.components.welcome.DashboardRecentPagesService,sk.iway.iwcm.admin.layout.DocDetailsDto,java.util.Map"%>
 <%@page import="sk.iway.iwcm.doc.DocDetails"%>
 <%@page import="java.util.Collections"%>
 <%@page import="java.util.Comparator"%>
 <%@ page import="java.util.ArrayList" %>
+<%@ page import="sk.iway.iwcm.editor.EditorDB,sk.iway.iwcm.editor.EditorForm" %>
 <iwcm:checkLogon admin="true" perms="menuWebpages"/>
 <%
 	String searchParam = Tools.getRequestParameter(request, "url");
@@ -84,10 +87,15 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %>
 		}
 	});
 
+	boolean editableOnly = "true".equals(Tools.getRequestParameter(request, "editable"));
+	Identity user = UsersDB.getCurrentUser(request);
+	List<Integer> previewIds = new ArrayList<>();
 	for (DocDetails row : domainFilteredDocs)
 	{
+		if (editableOnly && !EditorDB.isPageEditable(user, new EditorForm(row))) continue;
 		JSONObject entry = new JSONObject();
 		entry.put("doc_id", row.getDocId());
+		entry.put("title", row.getTitle());
 		if (Tools.getRequestParameter(request, "docid") != null)
 		{
 			entry.put("value", row.getDocId());
@@ -101,9 +109,24 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %>
 			entry.put("value", row.getTitle());
 			entry.put("label", row.getTitle());
 		}
-			hints.put(entry);
+		hints.put(entry);
+		if (editableOnly) {
+			previewIds.add(row.getDocId());
+			if (previewIds.size() == 20) break;
+		}
 
 		if (hints.length()>50) break;
+	}
+	if (editableOnly && !previewIds.isEmpty()) {
+		Map<Integer, DocDetailsDto> previews = new DashboardRecentPagesService().getPagePreviews(user, DocDB.getDomain(request), previewIds);
+		for (int i = hints.length() - 1; i >= 0; i--) {
+			JSONObject hint = hints.getJSONObject(i);
+			DocDetailsDto preview = previews.get(hint.getInt("doc_id"));
+			if (preview == null) { hints.remove(i); continue; }
+			hint.put("fullPath", preview.getFullPath());
+			hint.put("perexImage", preview.getPerexImage());
+			hint.put("saveDate", preview.getSaveDate());
+		}
 	}
 	out.print(hints);
 %>
