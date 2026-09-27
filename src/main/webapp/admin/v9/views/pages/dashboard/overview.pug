@@ -27,7 +27,10 @@ block content
                 data: dashboardData,
                 config: {
                     statMode: window.statMode,
-                    overviewJsonUrl: /*[[${layout.getConstant('overviewJsonUrl')}]]*/ ""
+                    overviewJsonUrl: /*[[${layout.getConstant('overviewJsonUrl')}]]*/ "",
+                    environmentName: /*[[${layout.getConstant('dashboardEnvironmentName')}]]*/ "DEV",
+                    environmentIcon: /*[[${layout.getConstant('dashboardEnvironmentIcon')}]]*/ "ti-database",
+                    environmentColor: /*[[${layout.getConstant('dashboardEnvironmentColor')}]]*/ "#FFF2C9"
                 },
                 labels: {
                     overviewViews: (/*[[\#{stat_time.sessions}]]*/ "") + " / " + (/*[[${layout.getConstantInt("welcomeDataBackTime") / 24 / 60}]]*/ 7) + " " + (/*[[\#{welcome.statBackTime.days}]]*/ ""),

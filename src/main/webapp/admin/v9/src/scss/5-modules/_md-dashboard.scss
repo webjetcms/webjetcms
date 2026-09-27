@@ -8,7 +8,7 @@ $dashboard-publishing: mix($warning, mix($danger-btn-bg, $white, 5%), 13%);
 $dashboard-errors: mix($danger, $nice-gray, 3%);
 $dashboard-hero-middle: mix($ai-color, $nice-gray, 2%);
 $dashboard-hero-end: mix($success, $white, 12%);
-$dashboard-security: rgba($white, .78);
+$dashboard-security: rgba($white, .62);
 $dashboard-divider: rgba($secondary, .06);
 $dashboard-muted: mix($gray-text, $secondary, 90%);
 $dashboard-danger-text: mix($danger, $secondary, 90%);
@@ -64,29 +64,60 @@ webjet-overview-dashboard a:focus-visible {
     &__hero {
         display: grid;
         grid-template-columns: minmax(0, 1fr) 300px;
-        align-items: start;
-        gap: 24px;
-        padding: 24px;
+        align-items: stretch;
         margin-bottom: 16px;
+        border: 1px solid var(--wj-dashboard-divider);
         border-radius: var(--wj-border-radius);
         background: linear-gradient(108deg, var(--wj-dashboard-hero-start), var(--wj-dashboard-hero-middle) 50%, var(--wj-dashboard-hero-end));
     }
 
-    &__welcome { min-width: 0; }
+    &__welcome { min-width: 0; min-height: 205px; padding: 24px 24px 18px; }
+    &__welcome-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-height: 24px; margin-bottom: 12px; }
     &__greeting { font-size: 29px; font-weight: 700; line-height: 1.15; margin: 0 0 20px; letter-spacing: -1px; }
-    &__eyebrow { color: var(--wj-dashboard-muted); font-size: 12px; margin-bottom: 10px; &::first-letter { text-transform: uppercase; } }
+    &__eyebrow { color: var(--wj-dashboard-muted); font-size: 12px; margin: 0; &::first-letter { text-transform: uppercase; } }
+    &__environment {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        max-width: 100%;
+        padding: 2px 8px;
+        border: 1px solid color-mix(in srgb, var(--wj-dashboard-environment-bg), #000 25%);
+        border-radius: 4px;
+        background: var(--wj-dashboard-environment-bg);
+        color: var(--wj-dashboard-environment-text);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .6px;
+        overflow-wrap: anywhere;
+        > .ti { flex-shrink: 0; font-size: 14px; }
+        > span { min-width: 0; }
+    }
     &__news, &__sessions, &__search { min-width: 0; }
     &__news { width: 100%; }
 
-    &__sessions &__widget {
-        background: var(--wj-dashboard-security);
+    &__sessions {
+        position: relative;
         min-height: 0;
-        height: auto;
+        border-left: 1px solid var(--wj-dashboard-divider);
+        border-radius: 0 var(--wj-border-radius) var(--wj-border-radius) 0;
+        background: var(--wj-dashboard-security);
+        backdrop-filter: blur(10px);
+    }
+    // The welcome content determines the height; sessions scroll within the available space.
+    &__sessions &__widget {
+        position: absolute;
+        inset: 0;
+        border: 0;
+        border-radius: inherit;
+        background: transparent;
+        min-height: 0;
+        height: 100%;
     }
     &__sessions &__widget-header { padding: 16px 96px 0 16px; gap: 6px; > .ti { font-size: 16px; } }
     &__sessions &__widget-title { font-size: 12px; }
-    &__sessions &__widget-body { padding: 10px 16px 14px; }
-    &__sessions .md-dashboard-widget__sessions { max-height: 156px; overflow-y: auto; overscroll-behavior-y: contain; margin-bottom: 0; }
+    &__sessions &__widget-body { min-height: 0; padding: 10px 16px 14px; }
+    &__sessions &__widget-content { min-height: 0; }
+    &__sessions .md-dashboard-widget__sessions { flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; margin-bottom: 0; }
     &__sessions .md-dashboard-widget__session {
         display: grid;
         grid-template-columns: 20px minmax(0, 1fr) 24px;
@@ -371,7 +402,11 @@ webjet-overview-dashboard a:focus-visible {
     }
 
     @media (max-width: ($bp-mobile - .02px)) {
-        &__hero { grid-template-columns: minmax(0, 1fr); gap: 20px; padding: 20px; }
+        &__hero { grid-template-columns: minmax(0, 1fr); }
+        &__welcome { min-height: 0; padding: 20px; }
+        &__sessions { border-left: 0; border-top: 1px solid var(--wj-dashboard-divider); border-radius: 0 0 var(--wj-border-radius) var(--wj-border-radius); }
+        &__sessions &__widget { position: relative; height: auto; }
+        &__sessions .md-dashboard-widget__sessions { flex: 0 1 auto; max-height: 200px; }
         &__greeting { font-size: 26px; }
         &__grid { grid-auto-rows: auto; }
         &__widget { grid-row: auto; min-height: var(--dashboard-row-height); }

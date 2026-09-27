@@ -105,6 +105,9 @@ public class ConstantsV9 {
 		Constants.setString("changePasswordPageUrlAdmin", "/admin/logon/changePassword", Constants.MOD_PASSWORD, "cesta k suboru (alebo stranke) na zmenu hesla z admin sekcie");
 
 		Constants.setInt("dashboardRecentSize", 8, Constants.MOD_SYSTEM_ADMIN, "Pocet zaznamov v zozname poslednych stranok/auditu na uvodnej obrazovke");
+		Constants.setString("dashboardEnvironmentName", "DEV", Constants.MOD_SYSTEM_ADMIN, "Environment label displayed in the administration dashboard header. An empty value hides the label.");
+		Constants.setString("dashboardEnvironmentIcon", "ti-database", Constants.MOD_SYSTEM_ADMIN, "Tabler icon class for the dashboard environment label, for example ti-database or ti-server.");
+		Constants.setString("dashboardEnvironmentColor", "#FFF2C9", Constants.MOD_SYSTEM_ADMIN, "Background color of the dashboard environment label in #RGB or #RRGGBB format. Border and text colors are derived automatically.");
 
 		Constants.setInt("contentBlockTypeCount", 5, Constants.MOD_EDITOR, "Pocet dostupnych typov blokov pre obsah");
 

@@ -194,3 +194,19 @@ Overenie: development zostava a všetkých 7 dizajnových E2E scenárov prešli 
 - Nový test `dashboard-chart-tooltips.js` používa skutočný pohyb myši, kontroluje oba tooltipy na rôznych dátumoch pred posunutím, po posunutí stránky o 160 px aj po návrate hore a overuje hranice dátumovej bubliny. Testovacie nastavenia a dáta sú izolované cez mockované požiadavky bez zápisu osobných preferencií.
 
 Overenie: development zostava, 73 JavaScript helper testov, 3 nové E2E scenáre a 6 existujúcich scenárov katalógu prešli vrátane obnovy, minimalizácie, zmeny veľkosti, odstránenia a kontroly prístupnosti grafov. Manuálna kontrola s reálnymi dátami potvrdila zmenu tooltipov po scrollovaní aj úplný dátum. Logy a screenshoty: `/private/tmp/webjet-dashboard-58806/chart-tooltips/`.
+
+## Uvítacia plocha a označenie prostredia
+
+Uvítacia plocha používa schválený variant **Čistá Prizma** s pôvodným farebným prechodom. Aktívne prihlásenia tvoria priehľadný bočný panel oddelený čiarou; jeho výška sa prispôsobuje novinkám aj po zbalení. Ikony prehliadačov a zelená bodka aktuálneho prihlásenia zostávajú zachované.
+
+Označenie prostredia sa nastavuje v **Nastavenia → Konfigurácia** cez premenné definované v `ConstantsV9`:
+
+| Premenná | Predvolená hodnota | Význam |
+| --- | --- | --- |
+| `dashboardEnvironmentName` | `DEV` | Text označenia, napríklad `PROD`, `INT` alebo názov databázy. Prázdna hodnota označenie skryje. |
+| `dashboardEnvironmentIcon` | `ti-database` | Trieda ikony Tabler vo formáte `ti-*`, napríklad `ti-server`. |
+| `dashboardEnvironmentColor` | `#FFF2C9` | Farba pozadia vo formáte `#RGB` alebo `#RRGGBB`. Rámik sa automaticky odvodí stmavením pozadia a text sa zvolí podľa kontrastu. |
+
+Hodnoty sa prenášajú do konfigurácie dashboardu cez šablónu `overview.pug`; po zmene konfigurácie obnovte stránku. Nasadenie nových predvolených hodnôt v Java triede vyžaduje reštart aplikácie.
+
+Overenie: development zostava, Java kompilácia, 73 JavaScript helper testov a všetkých 8 scenárov `dashboard-design.js` prešli. Testy kontrolujú výšku panelu pri zbalení aj rozbalení noviniek, zachovanie rolovania a ikon prihlásení, responzívne zobrazenie a kontrast vlastných farieb štítku. Osobné nastavenia účtu zostali nezmenené.

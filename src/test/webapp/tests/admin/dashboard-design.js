@@ -357,8 +357,84 @@ Scenario('Search queries and top pages share balanced cards and readable numeric
     I.resizeWindow(1337, 1052);
 });
 
+Scenario('Environment badge uses configured identity and readable colors, and disappears when empty', async ({ I }) => {
+    await waitForOverview(I);
+    const badge = '.md-dashboard__welcome-meta .md-dashboard__environment';
+    const original = await I.executeScript(() => {
+        const config = document.querySelector('webjet-overview-dashboard').config;
+        return { environmentName: config.environmentName, environmentIcon: config.environmentIcon, environmentColor: config.environmentColor };
+    });
+    I.assertEqual(original.environmentName, 'DEV', 'The server must expose the default environment label to the dashboard.');
+    I.see('DEV', badge);
+    I.seeElement(`${badge} .ti-database`);
+    const configureEnvironment = async config => {
+        I.executeScript(config => {
+            const dashboard = document.querySelector('webjet-overview-dashboard');
+            dashboard.configure({ data: dashboard.data, labels: dashboard.labels, config: { ...dashboard.config, ...config } });
+        }, config);
+        await waitForOverview(I);
+    };
+    const readColors = () => I.executeScript(selector => {
+        const style = getComputedStyle(document.querySelector(selector));
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 1;
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        const luminance = color => {
+            context.fillStyle = color;
+            context.fillRect(0, 0, 1, 1);
+            return [...context.getImageData(0, 0, 1, 1).data].slice(0, 3)
+                .map(channel => channel / 255).map(channel => channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4)
+                .reduce((value, channel, index) => value + channel * [.2126, .7152, .0722][index], 0);
+        };
+        const background = luminance(style.backgroundColor), foreground = luminance(style.color);
+        return { background: style.backgroundColor, borderDarker: luminance(style.borderTopColor) < background,
+            borderVisible: parseFloat(style.borderTopWidth) > 0 && style.borderTopStyle !== 'none',
+            contrast: (Math.max(background, foreground) + .05) / (Math.min(background, foreground) + .05) };
+    }, badge);
+    for (const [color, expected] of [['#ffe082', 'rgb(255, 224, 130)'], ['#183153', 'rgb(24, 49, 83)']]) {
+        await configureEnvironment({ environmentName: 'autotest INT', environmentIcon: 'ti-server', environmentColor: color });
+        I.see('autotest INT', badge);
+        I.seeElement(`${badge} .ti-server`);
+        I.dontSeeElement(`${badge} .ti-database`);
+        const colors = await readColors();
+        I.assertEqual(colors.background, expected, 'The environment background must use the configured color.');
+        I.assertTrue(colors.borderDarker && colors.borderVisible, 'A visibly darker border must define the environment label.');
+        I.assertTrue(colors.contrast >= 4.5, 'Environment text must remain readable on both light and dark configured backgrounds.');
+    }
+    await configureEnvironment({ environmentColor: '#FFF2C9' });
+    const fallback = await readColors();
+    await configureEnvironment({ environmentColor: 'invalid-autotest-color' });
+    I.assertDeepEqual(await readColors(), fallback, 'An invalid configured color must fall back to the readable default appearance.');
+    for (const icon of ['', 'invalid-autotest-icon']) {
+        await configureEnvironment({ environmentIcon: icon });
+        I.seeElement(`${badge} .ti-database`);
+    }
+    await configureEnvironment({ environmentName: 'autotest integration database', environmentIcon: 'ti-server' });
+    I.resizeWindow(390, 1052);
+    if (await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) I.clickCss('.js-sidebar-toggler');
+    I.assertTrue(await I.executeScript(selector => {
+        const badge = document.querySelector(selector), welcome = badge.closest('.md-dashboard__welcome');
+        const bounds = badge.getBoundingClientRect(), container = welcome.getBoundingClientRect();
+        return bounds.left >= container.left && bounds.right <= container.right && badge.scrollWidth <= badge.clientWidth + 1;
+    }, badge), 'A longer environment name must fit the welcome section on a narrow screen.');
+    await configureEnvironment({ environmentName: '   ' });
+    I.dontSeeElement(badge);
+    I.seeElement('.md-dashboard__eyebrow');
+    I.seeElement('.md-dashboard__greeting');
+    I.wjSetDefaultWindowSize();
+    await configureEnvironment(original);
+});
+
 Scenario('Session scrolling stays inside its list and compact controls expose accessible tooltips', async ({ I }) => {
     I.resizeWindow(1337, 1052);
+    const sessionSettings = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings);
+    sessionSettings.configured = true;
+    sessionSettings.acknowledgedNewsVersion = null;
+    // Keep collapse/expand mutations isolated even when this scenario runs without the earlier design fixtures.
+    await I.mockRoute(settingsRoute, route => {
+        if (route.request().method() === 'PUT') Object.assign(sessionSettings, route.request().postDataJSON());
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(sessionSettings) });
+    });
     await I.mockRoute(sessionsRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ currentSessions: {
         currentSessionId: 'session-autotest-0', userSessions: [{ cluster: 'autotest', userSessions: Array.from({ length: 9 }, (_, index) => ({
             sessionId: `session-autotest-${index}`, browserName: ['Chrome 153', 'Safari 18', 'Firefox 131'][index % 3],
@@ -367,11 +443,63 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
     } }) }));
     I.refreshPage();
     await waitForOverview(I);
+    I.executeScript(() => {
+        const dashboard = document.querySelector('webjet-overview-dashboard');
+        dashboard.configure({ data: dashboard.data, config: dashboard.config, labels: { ...dashboard.labels, changelog:
+            '<p>WebJET CMS 2026.18 autotest release includes approval workflows for folders and accessibility checks for published content.</p>'
+            + '<p>Autotest editors can maximize application dialogs, configure accessible labels and continue editing their pages with the latest administration tools.</p>'
+            + '<p>Autotest security updates include additional authentication providers, passkeys and improvements for installations running on several cluster nodes.</p>'
+        } });
+    });
+    await waitForOverview(I);
     const list = '.md-dashboard__sessions .md-dashboard-widget__sessions';
     I.seeNumberOfElements(`${list} > li`, 9);
     I.seeElement(`${list} .ti-brand-chrome`);
     I.seeElement(`${list} .ti-brand-safari`);
     I.seeElement(`${list} .ti-brand-firefox`);
+    const heroBounds = () => I.executeScript(() => {
+        const bounds = selector => {
+            const rect = document.querySelector(selector).getBoundingClientRect();
+            return { top: rect.top, right: rect.right, bottom: rect.bottom, height: rect.height };
+        };
+        const list = document.querySelector('.md-dashboard__sessions .md-dashboard-widget__sessions');
+        return { hero: bounds('.md-dashboard__hero'), pane: bounds('.md-dashboard__sessions'),
+            listHeight: list.clientHeight, contentHeight: list.scrollHeight, rowCount: list.children.length };
+    });
+    const assertFlushPane = bounds => {
+        for (const edge of ['top', 'right', 'bottom']) I.assertTrue(Math.abs(bounds.hero[edge] - bounds.pane[edge]) <= 1,
+            `The security pane must meet the hero's ${edge} edge without an outer padding gap.`);
+        I.assertEqual(bounds.rowCount, 9, 'Resizing the security pane must retain every active session.');
+        I.assertTrue(bounds.contentHeight > bounds.listHeight, 'Sessions beyond the available height must remain in a native scroll area.');
+    };
+    const expanded = await heroBounds();
+    assertFlushPane(expanded);
+    I.clickCss(newsToggle);
+    waitForSave(I);
+    I.waitForVisible('.is-news-collapsed .md-dashboard-widget__news-summary', 10);
+    const collapsed = await heroBounds();
+    assertFlushPane(collapsed);
+    I.assertTrue(expanded.hero.height > collapsed.hero.height + 40, 'Collapsing release notes must reduce the whole hero height.');
+    I.assertTrue(expanded.listHeight > collapsed.listHeight + 40, 'The session list must give up the same vertical space when release notes collapse.');
+    I.seeElement('.md-dashboard__sessions .md-dashboard-widget__session-manage');
+    I.clickCss(newsToggle);
+    waitForSave(I);
+    I.waitForVisible('.md-dashboard-widget__news-highlights', 10);
+    const reopened = await heroBounds();
+    assertFlushPane(reopened);
+    I.assertTrue(Math.abs(expanded.listHeight - reopened.listHeight) <= 1, 'Reopening release notes must restore the space available to sessions.');
+    I.assertTrue(await I.executeScript(() => {
+        const current = document.querySelector('.md-dashboard__sessions .md-dashboard-widget__session-current');
+        const row = current.closest('li');
+        const marker = current.getBoundingClientRect();
+        const name = row.querySelector('.md-dashboard-widget__session-name').getBoundingClientRect();
+        const logout = row.nextElementSibling.querySelector('.md-dashboard-widget__session-logout').getBoundingClientRect();
+        const dot = getComputedStyle(current, '::before');
+        const color = dot.backgroundColor.match(/[\d.]+/g).map(Number);
+        return marker.left >= name.right && Math.abs(marker.right - logout.right) <= 1
+            && parseFloat(dot.width) > 0 && parseFloat(dot.height) > 0 && color[1] > color[0] && color[1] > color[2]
+            && !row.querySelector('button') && Boolean(current.getAttribute('aria-label'));
+    }), 'The current login must keep its accessible green dot in the logout-action column, without offering to log itself out.');
     I.executeScript(() => { window.scrollbarMain.setMomentum(0, 0); window.scrollbarMain.setPosition(0, 0); });
     // Standard scroll helpers do not generate wheel events, which trigger the smooth-scrollbar regression.
     await I.usePlaywrightTo('wheel over the native session list', async ({ page }) => {
@@ -407,6 +535,7 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
     I.pressKey('Escape');
     I.waitForFunction(() => !document.querySelector('.md-dashboard-modal'), 10);
     await I.stopMockingRoute(sessionsRoute);
+    await I.stopMockingRoute(settingsRoute);
 });
 
 Scenario('Remove design fixtures and verify the account preferences were never changed', async ({ I }) => {
