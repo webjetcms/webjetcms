@@ -94,6 +94,24 @@ Scenario('Page suggestions match titles and URLs and keyboard selection opens th
     DTE.cancel();
 });
 
+Scenario('Autocomplete responses use JSON so page titles cannot execute as HTML on direct navigation', async ({ I }) => {
+    const responses = await I.executeScript(async () => {
+        const results = [];
+        for (const query of ['editable=true&docid=obchodny', 'docid=obchodny', 'url=obchodny', 'text=obchodny']) {
+            const response = await fetch(`/admin/skins/webjet6/_doc_autocomplete.jsp?${query}`);
+            results.push({ query, status: response.status, contentType: response.headers.get('content-type'),
+                nosniff: response.headers.get('x-content-type-options'), items: await response.json() });
+        }
+        return results;
+    });
+    for (const response of responses) {
+        I.assertEqual(response.status, 200, response.query);
+        I.assertStartsWith(response.contentType, 'application/json', 'Raw page titles must never be served as an HTML document.');
+        I.assertEqual(response.nosniff, 'nosniff');
+        I.assertTrue(Array.isArray(response.items) && response.items.length > 0, 'The test must cover actual page suggestions.');
+    }
+});
+
 Scenario('Mouse selection opens the page and suggestions fit a narrow viewport', async ({ I, DTE }) => {
     I.resizeWindow(390, 844);
     I.fillField(input, 'https://demo.webjetcms.sk/zo-sveta-financii/mcgregorov-obchodny-uder.html');
@@ -147,6 +165,9 @@ Scenario('Page autocomplete is unavailable without webpage permission', async ({
         return response.url;
     });
     I.assertEqual(new URL(deniedUrl).pathname, '/admin/403.jsp', 'The lookup must enforce webpage permission on the server.');
+});
+
+Scenario('Logout after removing webpage permission', ({ I }) => {
     I.logout();
 });
 

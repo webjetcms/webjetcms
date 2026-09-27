@@ -50,6 +50,20 @@ test('Shortcuts resolve authorized submenu targets and never execute user-contro
     assert.equal(container.querySelector('a'), null);
 });
 
+test('Local links retain their origin when normalized paths start with two slashes', t => {
+    const { scope, context, container, window } = fixture(t);
+    for (const href of ['/.//other.test/autotest', '/%2e//other.test/autotest', '/folder/..//other.test/autotest', '/folder/%2e%2e//other.test/autotest']) {
+        for (const target of [scope.localUrl(href), scope.shortcutUrl(href)]) {
+            assert.equal(new URL(target, window.location.origin).origin, window.location.origin, href);
+            assert.equal(new URL(target, window.location.origin).pathname, '//other.test/autotest', href);
+        }
+        scope.getWidget('shortcut').render({ container, context, options: { source: 'url', href, title: 'autotest local path' } });
+        assert.equal(container.lastElementChild.origin, window.location.origin, href);
+    }
+    assert.equal(scope.localUrl('http://localhost//other.test/autotest'), 'http://localhost//other.test/autotest');
+    assert.equal(scope.localUrl('http://user:secret@localhost//other.test/autotest'), 'http://localhost//other.test/autotest');
+});
+
 test('Custom shortcuts require explicit URL mode and reject ambiguous or executable targets', t => {
     const { scope, context, container } = fixture(t);
     const widget = scope.getWidget('shortcut');

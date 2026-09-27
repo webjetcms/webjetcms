@@ -1,5 +1,5 @@
 <%
-sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/html");
+sk.iway.iwcm.Encoding.setResponseEnc(request, response, "application/json");
 %><%@ page pageEncoding="utf-8" import="sk.iway.iwcm.*" %><%@
 taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %>
 <%@page import="java.util.List"%>

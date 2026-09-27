@@ -63,7 +63,9 @@ export function localUrl(value) {
     try {
         const url = new URL(value, window.location.origin);
         if (url.origin !== window.location.origin || !["http:", "https:"].includes(url.protocol)) return null;
-        return `${url.pathname}${url.search}${url.hash}`;
+        const path = `${url.pathname}${url.search}${url.hash}`;
+        // Keep the origin when dot-segment normalization leaves a network-path reference.
+        return url.pathname.startsWith('//') ? `${url.origin}${path}` : path;
     } catch (error) { return null; }
 }
 
@@ -75,7 +77,7 @@ export function shortcutUrl(value) {
     try {
         const url = new URL(target, window.location.origin);
         if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) return null;
-        return target.startsWith('/') ? `${url.pathname}${url.search}${url.hash}` : url.href;
+        return target.startsWith('/') ? localUrl(target) : url.href;
     } catch (error) { return null; }
 }
 
