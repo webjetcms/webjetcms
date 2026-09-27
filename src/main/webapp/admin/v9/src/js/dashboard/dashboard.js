@@ -120,8 +120,8 @@ export class DashboardController {
         this.addButton = button(this._t("add", "Add widget"), () => this.showCatalogue(), "btn btn-sm btn-primary md-dashboard__control md-dashboard__edit-control");
         this.addButton.prepend(icon("ti-plus"));
         this.addButton.hidden = true;
-        this.resetButton = button(this._t("reset", "Reset"), () => this.showReset(), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control md-dashboard__reset");
-        this.resetButton.prepend(icon("ti-restore"));
+        this.resetButton = button(this._t("datatables.button.restore.js", "Restore"), () => this.showReset(), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control md-dashboard__reset");
+        this.resetButton.prepend(icon("ti-refresh"));
         this.resetButton.title = this._t("resetTooltip", "Restore the standard widgets, sizes and order.");
         this.resetButton.hidden = true;
         if (this.context.overview?.showFeedbackModal) {
@@ -145,8 +145,8 @@ export class DashboardController {
         const shortcutActions = node("div", "md-dashboard__shortcut-actions");
         this.addShortcutButton = button(this._t("addShortcut", "Add shortcut"), () => this.showAddWidget("shortcut"), "btn btn-sm btn-primary md-dashboard__control");
         this.addShortcutButton.prepend(icon("ti-plus"));
-        this.resetShortcutsButton = button(this._t("reset", "Reset"), () => this.showResetShortcuts(), "btn btn-sm btn-outline-secondary md-dashboard__control");
-        this.resetShortcutsButton.prepend(icon("ti-restore"));
+        this.resetShortcutsButton = button(this._t("datatables.button.restore.js", "Restore"), () => this.showResetShortcuts(), "btn btn-sm btn-outline-secondary md-dashboard__control");
+        this.resetShortcutsButton.prepend(icon("ti-refresh"));
         this.editShortcutsButton = button(this._t("editShortcuts", "Edit shortcuts"), () => this.setEditingShortcuts(!this.editingShortcuts), "btn btn-sm btn-outline-secondary md-dashboard__control");
         this.editShortcutsButton.prepend(icon("ti-adjustments-horizontal"));
         this.editShortcutsButton.setAttribute("aria-pressed", "false");
@@ -381,6 +381,7 @@ export class DashboardController {
             view.card.dataset.size = instance.size;
             view.card.classList.toggle("is-collapsed", Boolean(instance.collapsed));
             view.collapse.textContent = this._t(instance.collapsed ? "expand" : "collapse", instance.collapsed ? "Expand" : "Collapse");
+            view.collapse.prepend(icon(instance.collapsed ? "ti-chevron-down" : "ti-chevron-up"));
             view.collapse.setAttribute("aria-expanded", String(!instance.collapsed));
             view.collapse.hidden = instance.size === "1x1";
             const signature = JSON.stringify([instance.type, instance.size, instance.collapsed, instance.options, this.settings.domainOptions[instance.id], this._contextVersion, instance.type === "news" ? this.settings.acknowledgedNewsVersion : null]);
@@ -450,20 +451,21 @@ export class DashboardController {
         menuButton.setAttribute("data-bs-toggle", "dropdown");
         menuButton.setAttribute("aria-expanded", "false");
         const menu = node("div", "dropdown-menu dropdown-menu-end");
-        const menuItem = (key, fallback, action) => {
+        const menuItem = (key, fallback, iconName, action) => {
             const control = button(this._t(key, fallback), () => {
                 window.bootstrap?.Dropdown?.getInstance(menuButton)?.hide();
                 menuButton.focus({ preventScroll: true });
                 action();
             }, "dropdown-item md-dashboard__control");
+            control.prepend(icon(iconName));
             control.dataset.dashboardAction = key;
             return control;
         };
-        menu.append(menuItem("refresh", "Refresh", () => this.refresh(instance.id)));
-        if (definition.configure || definition.sizes.length > 1) menu.append(menuItem("settings", "Settings", () => this.showSettings(instance.id)));
-        const collapse = menuItem("collapse", "Collapse", () => this.updateInstance(instance.id, { collapsed: !this._instance(instance.id).collapsed }));
-        menu.append(collapse, menuItem("move", "Move widget", () => this.showMove(instance.id)));
-        if (!definition.mandatory) menu.append(menuItem("remove", "Remove", () => this.remove(instance.id)));
+        menu.append(menuItem("refresh", "Refresh", "ti-refresh", () => this.refresh(instance.id)));
+        if (definition.configure || definition.sizes.length > 1) menu.append(menuItem("settings", "Settings", "ti-settings", () => this.showSettings(instance.id)));
+        const collapse = menuItem("collapse", "Collapse", "ti-chevron-up", () => this.updateInstance(instance.id, { collapsed: !this._instance(instance.id).collapsed }));
+        menu.append(collapse, menuItem("move", "Move widget", "ti-arrows-move", () => this.showMove(instance.id)));
+        if (!definition.mandatory) menu.append(menuItem("remove", "Remove", "ti-trash", () => this.remove(instance.id)));
         dropdown.append(menuButton, menu);
         const controls = node("div", "md-dashboard__widget-controls md-dashboard__edit-control");
         controls.hidden = !this._isEditing(instance);

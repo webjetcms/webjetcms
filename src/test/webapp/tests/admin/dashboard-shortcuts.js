@@ -30,7 +30,7 @@ Scenario('Welcome shortcuts fit above the fold and own their editing mode', asyn
     I.dontSeeElement(`${links} .md-dashboard__widget-controls`);
     I.clickCss(`${actions} button[aria-pressed="false"]`);
     I.see('Pridať skratku', actions);
-    I.see('Resetovať', actions);
+    I.see('Obnoviť', actions);
     I.dontSeeElement('.md-dashboard__layout .md-dashboard__widget-controls');
     I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
     I.dontSeeElement(`${links} .md-dashboard__widget-controls`);
@@ -140,7 +140,7 @@ Scenario('Automatically import old bookmarks on load with failure recovery and s
 Scenario('Reset shortcuts preserves widgets and an empty shortcut section stays empty after reload', async ({ I }) => {
     const before = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     I.clickCss(`${actions} button[aria-pressed="false"]`);
-    I.click('Resetovať', actions);
+    I.click('Obnoviť', actions);
     const confirm = '#toast-container-webjet .toast[role="dialog"]';
     I.waitForVisible(confirm, 10);
     I.clickCss(`${confirm} button[id^="confirmationYes"]`);
