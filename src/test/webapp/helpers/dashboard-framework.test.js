@@ -14,7 +14,19 @@ const item = (id, type = "test", size = "2x2", options = {}) => ({ id, type, siz
 function fixture(t, { items = [], configured = true, definitions = [], defaults = [], failSave = false, failLoad = false, failReset = false, deferModalShown = false, withTooltip = false, overview } = {}) {
     const dom = new JSDOM("<!doctype html><html><body><div id='alerts'>System warning</div><div id='dashboard'></div></body></html>", { url: "http://localhost/admin/v9/" });
     const { window } = dom;
-    window.WJ = { translate: key => key };
+    const notifications = [];
+    const confirmations = [];
+    window.WJ = {
+        translate: key => key,
+        notifySuccess: (...args) => notifications.push(args),
+        confirm: options => confirmations.push({ options, trigger: window.document.activeElement }),
+        focusWithoutTooltip: element => element.focus({ preventScroll: true })
+    };
+    const closeConfirmation = () => {
+        const confirmation = confirmations.at(-1);
+        confirmation.options.onHidden?.();
+        window.WJ.focusWithoutTooltip(confirmation.trigger);
+    };
     window.csrfToken = "test-csrf-token";
     window.bootstrap = { Modal: class {
         constructor(element) {
@@ -81,7 +93,7 @@ function fixture(t, { items = [], configured = true, definitions = [], defaults 
     const host = window.document.querySelector("#dashboard");
     const controller = new context.Controller(host, { config: { dashboardDefaults: defaults }, overview });
     t.after(() => { controller.destroy(); window.close(); });
-    return { window, host, controller, context, requests, tooltipCalls, setResetFailure: value => { failReset = value; }, stored: () => copy(stored), setSaveFailure: value => { failSave = value; }, setLoadFailure: value => { failLoad = value; } };
+    return { window, host, controller, context, requests, tooltipCalls, notifications, confirmations, closeConfirmation, setResetFailure: value => { failReset = value; }, stored: () => copy(stored), setSaveFailure: value => { failSave = value; }, setLoadFailure: value => { failLoad = value; } };
 }
 
 test("Reordering variable-height widgets preserves DOM order and existing widget content", async t => {
@@ -251,8 +263,8 @@ test("A failed reset preserves the layout, filters, acknowledged news and remova
     assert.match(host.querySelector('[role="status"]').textContent, /previous settings/);
 });
 
-test("The editing toolbar opens reset confirmation with its scope and preserves focus", async t => {
-    const { controller, host, window, requests } = fixture(t, { items: [item("custom")], defaults: [{ type: "test" }], deferModalShown: true });
+test("The editing toolbar delegates the full reset scope to standard confirmation", async t => {
+    const { controller, host, window, requests, confirmations, closeConfirmation } = fixture(t, { items: [item("custom")], defaults: [{ type: "test" }] });
     await controller.start();
     const reset = host.querySelector('.md-dashboard__toolbar-actions .md-dashboard__reset');
     assert.equal(reset.hidden, true);
@@ -262,58 +274,55 @@ test("The editing toolbar opens reset confirmation with its scope and preserves 
     controller.setEditing(true);
     assert.equal(reset.hidden, false);
     reset.click();
-    await tick();
-    const dialog = window.document.querySelector('[role="dialog"]');
-    assert.equal(dialog.querySelector('.md-dashboard__catalogue'), null);
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+    assert.equal(confirmations.length, 1);
+    const { options, trigger } = confirmations[0];
+    assert.equal(trigger, reset);
+    assert.equal(options.title, 'Restore defaults');
+    assert.equal(options.btnOkText, 'Restore defaults');
+    assert.match(options.message, /all domains/);
+    assert.match(options.message, /read news/);
     assert.equal(requests.some(request => request.method === "DELETE"), false);
-    const confirm = dialog.querySelector("button[aria-describedby]");
-    const description = window.document.getElementById(confirm.getAttribute("aria-describedby")).textContent;
-    assert.match(description, /all domains/);
-    assert.match(description, /read news/);
-    assert.equal(window.document.activeElement, confirm);
-    confirm.click();
-    await tick();
+    assert.equal(await options.success(), true);
+    closeConfirmation();
     assert.equal(requests.at(-1).method, "DELETE");
-    assert.equal(window.document.querySelector('[role="dialog"]'), null);
     assert.equal(window.document.activeElement, reset);
 });
 
-test("Closing reset confirmation preserves preferences and the catalogue contains only widget actions", async t => {
-    const { controller, window, requests } = fixture(t, { items: [item("custom")] });
+test("Dismissing standard reset confirmation preserves preferences and catalogue actions", async t => {
+    const { controller, window, requests, closeConfirmation } = fixture(t, { items: [item("custom")] });
     await controller.start();
     controller.setEditing(true);
     controller.resetButton.click();
-    window.document.querySelector('.md-dashboard-modal .modal-footer .btn-outline-secondary').click();
+    closeConfirmation();
     assert.equal(requests.some(request => request.method === "DELETE"), false);
     assert.equal(window.document.activeElement, controller.resetButton);
     controller.showCatalogue();
     assert.equal(window.document.querySelector('.md-dashboard-modal .md-dashboard__reset'), null);
-    assert.equal(window.document.querySelector('.md-dashboard-modal .md-dashboard__reset-confirm'), null);
 });
 
-test("Failed reset confirmation remains open for retry without changing the personal layout", async t => {
-    const { controller, window, setResetFailure } = fixture(t, { items: [item("custom")], failReset: true, defaults: [{ type: "test" }] });
+test("A failed confirmed reset preserves the personal layout and can be retried from the toolbar", async t => {
+    const { controller, host, confirmations, closeConfirmation, setResetFailure, notifications } = fixture(t, { items: [item("custom")], failReset: true, defaults: [{ type: "test" }] });
     await controller.start();
     controller.setEditing(true);
     const original = copy(controller.settings);
     controller.resetButton.click();
-    const dialog = window.document.querySelector('[role="dialog"]');
-    const confirm = dialog.querySelector('.md-dashboard__reset-confirm');
-    confirm.click();
-    await tick();
-    assert.equal(dialog.isConnected, true);
-    assert.equal(confirm.disabled, false);
-    assert.match(dialog.querySelector('[role="alert"]').textContent, /previous settings/);
+    assert.equal(await confirmations.at(-1).options.success(), false);
+    closeConfirmation();
+    assert.match(host.querySelector('[role="status"]').textContent, /previous settings/);
     assert.deepEqual(copy(controller.settings), original);
+    assert.equal(notifications.length, 0);
     setResetFailure(false);
-    confirm.click();
-    await tick();
-    assert.equal(dialog.isConnected, false);
-    assert.equal(window.document.activeElement, controller.resetButton);
+    controller.resetButton.click();
+    assert.equal(await confirmations.at(-1).options.success(), true);
+    closeConfirmation();
+    assert.equal(controller.resetButton.disabled, false);
+    assert.equal(host.querySelector('[role="status"]').textContent, '');
+    assert.deepEqual(notifications, [['The default overview has been restored.', '', 10000]]);
 });
 
-test("Reset uses the shared accessible tooltip and releases it when the dashboard is removed", async t => {
-    const { controller, window, tooltipCalls } = fixture(t, { withTooltip: true });
+test("Reset suppresses its tooltip through standard confirmation and releases listeners on removal", async t => {
+    const { controller, window, tooltipCalls, closeConfirmation } = fixture(t, { withTooltip: true });
     await controller.start();
     assert.equal(tooltipCalls[0][0], 'init');
     assert.equal(tooltipCalls[0][1], controller.resetButton);
@@ -325,9 +334,9 @@ test("Reset uses the shared accessible tooltip and releases it when the dashboar
         controller.resetButton.click();
         assert.deepEqual(tooltipCalls.slice(-3), [['off', '.wjFocusWithoutTooltip'], ['disable'], ['hide']]);
         tooltip.show();
-        assert.equal(tooltip.visible, false, 'A delayed hover must not display the tooltip over the open confirmation dialog');
-        window.document.querySelector('.md-dashboard-modal .btn-close').click();
-        assert.equal(tooltipCalls.at(-4)[0], 'enable', 'Dialog cleanup restores the tooltip before the shared focus helper takes over');
+        assert.equal(tooltip.visible, false, 'A delayed hover must not display the tooltip over confirmation');
+        closeConfirmation();
+        assert.equal(tooltipCalls.at(-4)[0], 'enable', 'Confirmation cleanup restores the tooltip before the shared focus helper takes over');
         assert.equal(tooltipCalls.at(-3)[0], 'focusWithoutTooltip');
         assert.equal(window.document.activeElement, controller.resetButton);
         tooltip.show();
@@ -338,6 +347,18 @@ test("Reset uses the shared accessible tooltip and releases it when the dashboar
     controller.destroy();
     assert.equal(tooltipCalls.filter(call => call[0] === 'dispose').length, 1);
     assert.deepEqual(tooltipCalls.at(-1), ['off', '.wjTooltipA11y .wjFocusWithoutTooltip']);
+});
+
+test("Successful preferences use a ten-second standard notification and clear inline status", async t => {
+    const { controller, host, notifications, setSaveFailure } = fixture(t, { items: [item("custom")] });
+    await controller.start();
+    assert.equal(await controller.updateInstance('custom', { size: '3x3' }), true);
+    assert.deepEqual(notifications, [['Saved.', '', 10000]]);
+    assert.equal(host.querySelector('[role="status"]').textContent, '');
+    setSaveFailure(true);
+    assert.equal(await controller.updateInstance('custom', { size: '3x2' }), false);
+    assert.equal(notifications.length, 1, 'Failed persistence must not show a success notification');
+    assert.match(host.querySelector('[role="status"]').textContent, /previous settings/);
 });
 
 test("Shared options and domain filters refresh only the changed widget", async t => {

@@ -5,20 +5,26 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { JSDOM } = require('jsdom');
 
-function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWidgets = false, data = {}, fetchResponse } = {}) {
+function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWidgets = false, data = {}, actual, fetchResponse } = {}) {
     const dom = new JSDOM('<!doctype html><body><main></main></body>', { url: 'http://localhost/admin/v9/' });
     const window = dom.window;
     window.userLng = 'en';
     window.csrfToken = 'test-csrf-token';
     window.WJ = { hasPermission: () => allowed };
     const requests = [];
-    const scope = vm.createContext({ window, document: window.document, Node: window.Node, DOMParser: window.DOMParser, URL, URLSearchParams, AbortController, console,
-        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/data/') ? data : pages }; }
+    const latest = data.series?.at(-1);
+    const snapshot = actual || { serverActualTime: latest?.date ?? 123, memUsed: latest?.used == null ? null : latest.used * 1048576,
+        memFree: latest?.free == null ? null : latest.free * 1048576, memTotal: latest?.total == null ? null : latest.total * 1048576,
+        cpuUsageProcess: latest?.process ?? null, cpuUsage: latest?.system ?? null };
+    const scope = vm.createContext({ window, document: window.document, Node: window.Node, DOMParser: window.DOMParser, DOMException: window.DOMException, URL, URLSearchParams, AbortController, console,
+        IntersectionObserver: class { observe() {} disconnect() {} },
+        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/monitoring/actual') ? snapshot : url.includes('/data/') ? data : pages }; }
     });
-    for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'system-widgets.js', 'widgets.js']) {
+    for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'monitoring-live.js', 'system-widgets.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
             .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
-        const script = file === 'system-widgets.js' ? `(function () { ${source}\nthis.registerSystemWidgets = registerSystemWidgets; }).call(this);` : source;
+        const exports = { 'system-widgets.js': ['registerSystemWidgets'], 'monitoring-live.js': ['readMonitoringSnapshot', 'subscribeMonitoring'] }[file];
+        const script = exports ? `(function () { ${source}\n${exports.map(name => `this.${name} = ${name};`).join('\n')} }).call(this);` : source;
         vm.runInContext(script, scope, { filename: file });
     }
     scope.registerDashboardWidgets();
@@ -311,7 +317,8 @@ test('Migrated provider failures stay errors and aborted responses do not append
         const rendering = aborted.scope.getWidget(type).render({ ...args, container: aborted.container, context: aborted.context, signal: controller.signal });
         controller.abort();
         finish({ ok: true, json: async () => ({ items: [{ title: 'Stale', fullName: 'Stale' }], series: [{ date: 123, used: 7 }], total: 1 }) });
-        await rendering;
+        if (type.startsWith('server-')) await assert.rejects(rendering, error => error.name === 'AbortError');
+        else await rendering;
         assert.equal(aborted.container.textContent, '', type);
         assert.equal(aborted.requests[0].options.signal.aborted, true);
     }
@@ -388,7 +395,10 @@ function chartRuntime(window, { load = async () => {}, create } = {}) {
     const makeChart = form => {
         const series = Array.from({ length: form instanceof LineChartForm ? form.chartData.size : 1 }, (_, index) => {
             const tooltip = Object.assign(settings(), { label: settings() });
-            return Object.assign(settings({ tooltip }), { strokes: { template: settings() }, fills: { template: settings() }, columns: { template: settings() }, bullets: [], data: { values: form instanceof LineChartForm ? Array.from(form.chartData.values())[index] : form.chartData } });
+            return Object.assign(settings({ tooltip }), { strokes: { template: settings() }, fills: { template: settings() }, columns: { template: settings() }, bullets: [], data: {
+                values: form instanceof LineChartForm ? Array.from(form.chartData.values())[index] : form.chartData,
+                setAll(values) { this.values = values; }
+            } });
         });
         const chart = Object.assign(settings({ cursor: Object.assign(settings(), { lineY: settings() }), scrollbarX: settings(), scrollbarY: settings(), colors: settings() }), {
             root: { container: { width: () => 480, height: () => 260 }, setThemes(themes) { this.themes = themes; } },
@@ -423,8 +433,7 @@ const trafficData = {
 
 test('Monitoring cards preserve timestamped measurements, units, unavailable readings and chart cleanup', async t => {
     const series = [
-        { date: Date.UTC(2026, 8, 26, 10, 0, 1), used: 512, free: 256, total: 768, process: 0, system: null },
-        { date: Date.UTC(2026, 8, 26, 10, 0, 31), used: 520, free: 248, total: 768, process: 3.5, system: 8 }
+        { date: Date.UTC(2026, 8, 26, 10, 0, 31), used: 520, free: 248, total: 768, process: 0, system: null }
     ];
     for (const type of ['server-memory', 'server-cpu']) {
         const { scope, context, container, window } = fixture(t, { data: { series } });
@@ -434,6 +443,7 @@ test('Monitoring cards preserve timestamped measurements, units, unavailable rea
         const form = runtime.forms[0];
         assert.equal(form.dateType, window.ChartTools.DateType.Seconds);
         assert.equal(form.xAxeName, 'date');
+        assert.deepEqual(JSON.parse(JSON.stringify(form.chart.xAxes.getIndex(0).get('baseInterval'))), { timeUnit: 'second', count: 5 });
         const metrics = type === 'server-memory' ? ['used', 'free', 'total'] : ['process', 'system'];
         const charts = Array.from(form.chartData.values());
         assert.equal(charts.length, metrics.length);
@@ -464,18 +474,182 @@ test('Monitoring cards preserve timestamped measurements, units, unavailable rea
     }
 });
 
-test('Collapsed and empty monitoring cards never allocate charts or replace unavailable measurements with zero', async t => {
+test('Collapsed monitoring cards never allocate charts or replace unavailable measurements with zero', async t => {
     for (const type of ['server-memory', 'server-cpu']) {
         const { scope, context, container, window } = fixture(t, { data: { series: [{ date: 123, used: 0, free: null, total: 128, process: 0, system: null }] } });
         const runtime = chartRuntime(window);
-        await scope.getWidget(type).renderCollapsed({ container, context, signal: new AbortController().signal });
+        const controller = new AbortController();
+        const cleanup = await scope.getWidget(type).renderCollapsed({ container, context, signal: controller.signal });
         assert.match(container.textContent, /—/);
         assert.equal(runtime.loads(), 0);
         assert.equal(container.querySelector('canvas,.md-dashboard-widget__chart'), null);
-        const emptyData = fixture(t, { data: { series: [] } });
-        await emptyData.scope.getWidget(type).render({ container: emptyData.container, context: emptyData.context, signal: new AbortController().signal });
-        assert.equal(emptyData.container.textContent, 'admin.dashboard.empty.js');
+        assert.equal(container.querySelectorAll('.md-dashboard-widget__monitoring-values dd').length, type === 'server-memory' ? 3 : 2);
+        controller.abort();
+        cleanup?.();
     }
+});
+
+function monitoringClock(scope, window) {
+    const timers = new Map();
+    const observers = [];
+    let sequence = 0, visibility = 'visible';
+    Object.defineProperty(window.document, 'visibilityState', { get: () => visibility });
+    window.setTimeout = (callback, delay) => { const id = ++sequence; timers.set(id, { callback, delay }); return id; };
+    window.clearTimeout = id => timers.delete(id);
+    scope.IntersectionObserver = class {
+        constructor(callback) { this.callback = callback; observers.push(this); }
+        observe(container) { this.container = container; }
+        disconnect() { this.disconnected = true; }
+    };
+    return {
+        timers, observers,
+        tick() {
+            const [id, timer] = timers.entries().next().value || [];
+            assert.ok(timer, 'A visible monitoring subscription must schedule a refresh.');
+            timers.delete(id);
+            return timer.callback();
+        },
+        visibility(value) { visibility = value; window.document.dispatchEvent(new window.Event('visibilitychange')); },
+        visible(container, value) { observers.find(observer => observer.container === container).callback([{ isIntersecting: value }]); }
+    };
+}
+
+test('Visible collapsed monitoring cards share live value updates without charts and stop when hidden or removed', async t => {
+    let sample = 1;
+    const { scope, context, container, window, requests } = fixture(t, { fetchResponse: async () => ({ ok: true, json: async () => ({
+        serverActualTime: 1789900000000 + sample * 5000, memUsed: sample * 1048576, memFree: 128 * 1048576,
+        memTotal: 256 * 1048576, cpuUsageProcess: sample, cpuUsage: sample + 10
+    }) }) });
+    context.translate = (key, ...values) => `${key}:${values.join(',')}`;
+    const clock = monitoringClock(scope, window);
+    const runtime = chartRuntime(window);
+    const cpu = window.document.createElement('section');
+    window.document.body.append(cpu);
+    const memoryController = new AbortController(), cpuController = new AbortController();
+    const cleanup = await Promise.all([
+        scope.getWidget('server-memory').renderCollapsed({ container, context, signal: memoryController.signal }),
+        scope.getWidget('server-cpu').renderCollapsed({ container: cpu, context, signal: cpuController.signal })
+    ]);
+    const time = container.querySelector('.md-dashboard-widget__monitoring-time').textContent;
+    assert.equal(requests.length, 1);
+    assert.equal(clock.timers.size, 1);
+    sample = 2;
+    await clock.tick();
+    assert.equal(container.querySelector('dd').textContent, '2 MB');
+    assert.equal(cpu.querySelector('dd').textContent, '2 %');
+    assert.notEqual(container.querySelector('.md-dashboard-widget__monitoring-time').textContent, time);
+    assert.equal(runtime.loads(), 0);
+    assert.equal(runtime.roots.size, 0);
+    clock.visible(container, false);
+    clock.visible(cpu, false);
+    assert.equal(clock.timers.size, 0, 'Offscreen collapsed summaries must stop shared polling.');
+    memoryController.abort(); cleanup[0]();
+    cpuController.abort(); cleanup[1]();
+    assert.ok(clock.observers.every(observer => observer.disconnected));
+    assert.equal(clock.timers.size, 0);
+});
+
+test('Live monitoring starts without history and updates both existing charts, values and bounded tables from shared snapshots', async t => {
+    let sample = 0;
+    const { scope, context, container, window, requests } = fixture(t, { fetchResponse: async () => ({ ok: true, json: async () => ({
+        serverActualTime: 1789900000000 + sample * 5000, memUsed: (128 + sample) * 1048576, memFree: (384 - sample) * 1048576,
+        memTotal: 512 * 1048576, cpuUsageProcess: sample, cpuUsage: sample + 10
+    }) }) });
+    const clock = monitoringClock(scope, window);
+    const runtime = chartRuntime(window);
+    const cpu = window.document.createElement('section');
+    window.document.body.append(cpu);
+    const memoryController = new AbortController(), cpuController = new AbortController();
+    const cleanup = await Promise.all([
+        scope.getWidget('server-memory').render({ container, context, signal: memoryController.signal }),
+        scope.getWidget('server-cpu').render({ container: cpu, context, signal: cpuController.signal })
+    ]);
+    assert.equal(requests.length, 1, 'Both initial cards must share the actual snapshot request.');
+    assert.equal(requests[0].url, '/admin/rest/monitoring/actual');
+    assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
+    const reading = container.querySelector('dd');
+    const chart = container.querySelector('.md-dashboard-widget__chart');
+    assert.equal(reading.textContent, '128 MB');
+    assert.equal(container.querySelectorAll('tbody tr').length, 1, 'A single actual sample must render without historical records.');
+    assert.equal(clock.timers.size, 1);
+    assert.equal([...clock.timers.values()][0].delay, 5000);
+    sample++;
+    await clock.tick();
+    assert.equal(container.querySelector('dd'), reading, 'Current readings update without replacing their DOM node.');
+    assert.equal(reading.textContent, '129 MB');
+    assert.equal(cpu.querySelector('dd').textContent, '1 %');
+    assert.equal(container.querySelector('.md-dashboard-widget__chart'), chart);
+    assert.equal(runtime.forms.length, 2, 'Live samples must update the two existing roots rather than allocate new charts.');
+    assert.deepEqual(Array.from(runtime.forms[0].chart.series.getIndex(0).data.values, point => point.value), [128, 129]);
+    assert.equal(container.querySelectorAll('tbody tr').length, 2);
+    await clock.tick();
+    assert.equal(container.querySelectorAll('tbody tr').length, 2, 'A repeated server timestamp replaces its current sample.');
+    for (sample = 2; sample <= 101; sample++) await clock.tick();
+    assert.equal(container.querySelectorAll('tbody tr').length, 100, 'A long-lived overview must bound its sample history.');
+    assert.equal(runtime.forms[0].chart.series.getIndex(0).data.values.length, 100);
+    assert.equal(reading.textContent, '229 MB');
+    memoryController.abort(); cleanup[0]();
+    assert.equal(runtime.roots.size, 1);
+    cpuController.abort(); cleanup[1]();
+    assert.equal(runtime.roots.size, 0);
+    assert.equal(clock.timers.size, 0, 'Removing both monitoring cards must cancel the shared refresh timer.');
+    assert.ok(clock.observers.every(observer => observer.disconnected));
+});
+
+test('Shared monitoring requests do not overlap and release the final request when every consumer is aborted', async t => {
+    let finish;
+    const { scope, container, window, requests } = fixture(t, { fetchResponse: () => new Promise(resolve => { finish = resolve; }) });
+    const first = new AbortController(), second = new AbortController();
+    const initial = scope.readMonitoringSnapshot(first.signal);
+    const shared = scope.readMonitoringSnapshot(second.signal);
+    assert.equal(requests.length, 1);
+    first.abort();
+    await assert.rejects(initial, error => error.name === 'AbortError');
+    assert.equal(requests[0].options.signal.aborted, false, 'One canceled card must not abort another card’s snapshot.');
+    finish({ ok: true, json: async () => ({ serverActualTime: 1 }) });
+    assert.equal((await shared).serverActualTime, 1);
+
+    const clock = monitoringClock(scope, window);
+    const controller = new AbortController();
+    let updates = 0;
+    scope.subscribeMonitoring(container, controller.signal, () => updates++, () => {});
+    const pending = clock.tick();
+    assert.equal(requests.length, 2);
+    assert.equal(clock.timers.size, 0, 'The next tick must be scheduled only after its current response completes.');
+    clock.visible(container, false);
+    clock.visible(container, true);
+    assert.equal(clock.timers.size, 0, 'Visibility changes must not create an overlapping request.');
+    controller.abort();
+    assert.equal(requests[1].options.signal.aborted, true);
+    finish({ ok: true, json: async () => ({ serverActualTime: 2 }) });
+    await pending;
+    assert.equal(updates, 0, 'A late response must not update a removed widget.');
+    assert.equal(clock.timers.size, 0);
+});
+
+test('Monitoring suspends hidden pages, resumes visible cards and reports failures without erasing current data', async t => {
+    let failing = false, value = 1;
+    const { scope, context, container, window } = fixture(t, { fetchResponse: async () => ({ ok: !failing, status: failing ? 503 : 200,
+        json: async () => ({ serverActualTime: value * 5000, memUsed: value * 1048576, memFree: 512 * 1048576, memTotal: 1024 * 1048576 }) }) });
+    const clock = monitoringClock(scope, window);
+    chartRuntime(window);
+    const controller = new AbortController();
+    const cleanup = await scope.getWidget('server-memory').render({ container, context, signal: controller.signal });
+    clock.visibility('hidden');
+    assert.equal(clock.timers.size, 0);
+    clock.visibility('visible');
+    assert.equal([...clock.timers.values()][0].delay, 0);
+    failing = true;
+    await clock.tick();
+    assert.equal(container.querySelector('dd').textContent, '1 MB');
+    assert.equal(container.querySelector('[role="status"]').hidden, false);
+    failing = false; value = 2;
+    await clock.tick();
+    assert.equal(container.querySelector('dd').textContent, '2 MB');
+    assert.equal(container.querySelector('[role="status"]').hidden, true);
+    clock.visible(container, false);
+    assert.equal(clock.timers.size, 0);
+    controller.abort(); cleanup();
 });
 
 test('Monitoring cards aborted during lazy bundle loading never create detached chart roots', async t => {

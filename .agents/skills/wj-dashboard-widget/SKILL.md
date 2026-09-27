@@ -31,7 +31,8 @@ Read the [widget contract](references/widget-contract.md) before implementing a 
 - Label metric, period, and comparison. Default statistics to the last seven completed days. Newsletter openings are recorded observations, not complete recipient counts.
 - Use the existing AmCharts infrastructure through `window.initAmcharts()` and `ChartTools` from `libs/chart/chart-tools.js`. Provide a text/table equivalent and release chart roots on refresh, collapse, removal, and aborted asynchronous initialization.
 - Update only affected widgets. Do not replace the overview root or delete system alerts when settings change. Dispose request work, listeners, charts, and timers when an instance is removed or replaced.
-- Poll only visible, actively sending newsletter widgets, every 30 seconds. Other widgets load on entry, relevant configuration/domain changes, and manual refresh.
+- Live memory and CPU widgets share one request to `/admin/rest/monitoring/actual` every 5 seconds while visible, including collapsed numeric previews. Pause polling for a hidden document or when no visible subscriber remains, avoid overlapping requests, and dispose requests/timers on removal. Newsletter polls only while visible and actively sending, every 30 seconds. Other widgets load on entry, relevant configuration/domain changes, and manual refresh.
+- Use `WJ.notifySuccess` with a 10-second timeout for successful preference changes and `WJ.confirm` for reset confirmation; preserve tooltip cleanup and focus restoration.
 - Validate configuration before persistence: at most 32 instances and 2000 characters per storage record, with rejection instead of truncation. On save failure restore the last confirmed state.
 
 ## Completion

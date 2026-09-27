@@ -30,9 +30,10 @@ Scenario('Widget catalogue supports keyboard entry, a focus trap and focus resto
     I.pressKey('Tab');
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__reset'), 10);
     I.pressKey('Enter');
-    I.waitForVisible('.md-dashboard-modal .md-dashboard__reset-confirm', 10);
+    const resetDialog = '#toast-container-webjet .toast[role="dialog"]';
+    I.waitForVisible(`${resetDialog} button[id^="confirmationYes"]`, 10);
     I.waitForFunction(() => {
-        const modal = document.querySelector('.md-dashboard-modal');
+        const modal = document.querySelector('#toast-container-webjet .toast[role="dialog"]');
         const state = {
             opacity: modal ? getComputedStyle(modal).opacity : null,
             focusedTag: document.activeElement?.tagName,
@@ -42,10 +43,11 @@ Scenario('Widget catalogue supports keyboard entry, a focus trap and focus resto
         if (state.opacity !== '1' || !state.focusInside) console.debug('Dashboard reset accessibility readiness', state);
         return state.opacity === '1' && state.focusInside;
     }, 10);
-    I.seeElement('.md-dashboard-modal button[aria-describedby^="dashboard-reset-"]');
-    await a11y.check('.md-dashboard-modal');
+    I.seeElement(`${resetDialog}[aria-modal="true"][aria-labelledby][aria-describedby]`);
+    I.assertTrue(await I.executeScript(() => document.activeElement?.id.startsWith('confirmationNo')), 'The standard confirmation must initially focus its safe cancel action.');
+    await a11y.check(resetDialog);
     I.pressKey('Escape');
-    I.waitForInvisible('.md-dashboard-modal', 10);
+    I.waitForInvisible(resetDialog, 10);
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__reset'), 10);
 });
 

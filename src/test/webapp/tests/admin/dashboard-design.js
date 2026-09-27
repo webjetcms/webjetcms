@@ -194,6 +194,7 @@ Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on
     const feedback = '.md-dashboard__feedback';
     const addWidget = '.md-dashboard__toolbar-actions > .md-dashboard__edit-control:not(.md-dashboard__reset)';
     const resetWidget = '.md-dashboard__toolbar-actions > .md-dashboard__reset';
+    const resetDialog = '#toast-container-webjet .toast[role="dialog"]';
     I.assertTrue(await I.executeScript(() => {
         const feedback = document.querySelector('.md-dashboard__feedback');
         return feedback.nextElementSibling.matches('.md-dashboard__edit-control[hidden]')
@@ -266,18 +267,18 @@ Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on
             return Boolean(tooltipId && document.getElementById(tooltipId)?.classList.contains('show'));
         }, 10);
         I.clickCss(resetWidget);
-        I.waitForVisible('.md-dashboard-modal .md-dashboard__reset-confirm', 10);
+        I.waitForVisible(`${resetDialog} button[id^="confirmationYes"]`, 10);
         I.waitForInvisible('.tooltip.wj-tooltip-hoverable.show', 10);
         I.dontSeeElement('.tooltip.wj-tooltip-hoverable.show');
         I.assertTrue(await I.executeScript(() => {
-            const content = document.querySelector('.md-dashboard-modal .modal-content').getBoundingClientRect();
-            const confirmation = document.querySelector('.md-dashboard__reset-confirm');
+            const confirmation = document.querySelector('#toast-container-webjet .toast[role="dialog"]');
+            const content = confirmation.getBoundingClientRect();
             return content.left >= 0 && content.right <= window.innerWidth
                 && document.getElementById(confirmation.getAttribute('aria-describedby'))?.textContent.length > 0;
         }), `Reset must explain its scope in an accessible confirmation that fits the ${width}px viewport.`);
         I.saveScreenshot(`dashboard-reset-confirmation-${width}.png`, false);
-        I.clickCss('.md-dashboard-modal .modal-header button.btn-close');
-        I.waitForFunction(() => !document.querySelector('.md-dashboard-modal'), 10);
+        I.clickCss(`${resetDialog} button[id^="confirmationNo"]`);
+        I.waitForInvisible(resetDialog, 10);
         I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), resetWidget),
             'Canceling reset must return focus to its toolbar action without changing preferences.');
         I.waitForInvisible('.tooltip.wj-tooltip-hoverable.show', 10);

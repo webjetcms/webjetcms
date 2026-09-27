@@ -501,7 +501,7 @@ const WJ = (() => {
     }
 
     /**
-     * @param {{title: string: string, message: string, btnCancelText: string, btnOkText: string, success: function, cancel: function}} options
+     * @param {{title?: string, message?: string, btnCancelText?: string, btnOkText?: string, success?: function, cancel?: function, onHidden?: function}} options
      */
     function confirm(options) {
         const title = options.title ? options.title : '';
@@ -629,8 +629,9 @@ const WJ = (() => {
                 },
                 onHidden: () => {
                     toastrInstance.off('.wjConfirmA11y');
+                    if (typeof options.onHidden === 'function') options.onHidden();
                     if (previouslyFocusedElement && document.contains(previouslyFocusedElement)) {
-                        previouslyFocusedElement.focus();
+                        WJ.focusWithoutTooltip(previouslyFocusedElement);
                     }
                 },
                 positionClass: 'toast-container toast-top-right',

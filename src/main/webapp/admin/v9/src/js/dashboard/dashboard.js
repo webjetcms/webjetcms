@@ -265,8 +265,9 @@ export class DashboardController {
             this.settings.configured = true;
             this.removed = null;
             this.undoContainer.hidden = true;
-            this.status.textContent = this._t("saved", "Saved.");
+            this.status.textContent = "";
             this._render();
+            window.WJ.notifySuccess(this._t("saved", "Saved."), "", 10000);
             return true;
         } catch (error) {
             if (!this.destroyed && !request.signal.aborted) this._showFailure("saveError", "The change could not be saved. Your previous settings were kept.");
@@ -579,8 +580,9 @@ export class DashboardController {
             this._ensureMandatory();
             this.removed = null;
             this.undoContainer.hidden = true;
-            this.status.textContent = this._t("resetDone", "The default overview has been restored.");
+            this.status.textContent = "";
             this._render();
+            window.WJ.notifySuccess(this._t("resetDone", "The default overview has been restored."), "", 10000);
             return true;
         } catch (error) {
             if (!this.destroyed && !request.signal.aborted) this._showFailure("saveError", "The change could not be saved. Your previous settings were kept.");
@@ -668,24 +670,14 @@ export class DashboardController {
         const tooltip = window.bootstrap?.Tooltip?.getInstance(this.resetButton);
         tooltip?.disable();
         tooltip?.hide();
-        const dialog = this._dialog(this._t("resetConfirm", "Restore defaults"), this.resetButton);
-        dialog.setCleanup(() => window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.enable());
-        const description = node("p", "mb-0", this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains and read news will also be reset. Other account settings and bookmarks will be kept."));
-        description.id = `dashboard-reset-${createInstanceId()}`;
-        const error = node("p", "text-danger mb-0");
-        error.setAttribute("role", "alert");
-        dialog.body.append(description, error);
-        const confirm = button(this._t("resetConfirm", "Restore defaults"), async () => {
-            confirm.disabled = true;
-            if (await this.reset()) dialog.close();
-            else {
-                confirm.disabled = false;
-                error.textContent = this._t("saveError", "The change could not be saved. Your previous settings were kept.");
-            }
-        }, "btn btn-sm btn-primary md-dashboard__reset-confirm");
-        confirm.setAttribute("aria-describedby", description.id);
-        dialog.footer.append(button(this._t("close", "Close"), () => dialog.close()), confirm);
-        confirm.focus();
+        this.resetButton.focus({ preventScroll: true });
+        window.WJ.confirm({
+            title: this._t("resetConfirm", "Restore defaults"),
+            message: this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains and read news will also be reset. Other account settings and bookmarks will be kept."),
+            btnOkText: this._t("resetConfirm", "Restore defaults"),
+            success: () => this.reset(),
+            onHidden: () => window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.enable()
+        });
     }
 
     showCatalogue() {

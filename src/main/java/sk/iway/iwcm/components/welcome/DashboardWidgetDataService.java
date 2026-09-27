@@ -71,7 +71,6 @@ import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.ConfDB;
-import sk.iway.iwcm.system.monitoring.CpuInfo;
 import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -84,8 +83,8 @@ public class DashboardWidgetDataService {
     static final int PREVIEW_SIZE = 6;
     static final Set<String> TYPES = Set.of("approvals", "publishing", "forms", "traffic", "top-pages",
         "search-terms", "referrers", "newsletter", "errors", "sessions", "changed-pages", "audit",
-        "logged-admins", "server-memory", "server-cpu");
-    private static final Set<String> SERVER_TYPES = Set.of("sessions", "audit", "logged-admins", "server-memory", "server-cpu");
+        "logged-admins");
+    private static final Set<String> SERVER_TYPES = Set.of("sessions", "audit", "logged-admins");
     private final DocHistoryRepository history;
     private final GroupSchedulerDtoRepository groupHistory;
     private final FormsRepository forms;
@@ -111,7 +110,6 @@ public class DashboardWidgetDataService {
             case "changed-pages" -> changedPages(user, domain, scope(user, domain));
             case "audit" -> audit();
             case "logged-admins" -> loggedAdmins();
-            case "server-memory", "server-cpu" -> monitoring(type);
             case "approvals" -> approvals(user, scope(user, domain));
             case "publishing" -> publishing(user, domain);
             case "forms" -> forms(user, domain, formName, recentDays(days, Clock.systemDefaultZone()));
@@ -136,7 +134,6 @@ public class DashboardWidgetDataService {
             case "approvals", "publishing", "changed-pages" -> "menuWebpages";
             case "audit" -> "cmp_adminlog";
             case "logged-admins" -> "welcomeShowLoggedAdmins";
-            case "server-memory", "server-cpu" -> "cmp_server_monitoring";
             case "forms" -> "cmp_form";
             case "newsletter" -> "menuEmail";
             default -> "cmp_stat";
@@ -298,61 +295,6 @@ public class DashboardWidgetDataService {
         }
         items.sort(Comparator.comparing(item -> String.valueOf(item.get("fullName")), String.CASE_INSENSITIVE_ORDER));
         return response(items.size(), items);
-    }
-
-    /** Reuses collected history and the monitoring module's current JVM values without starting a sampler. */
-    private Map<String, Object> monitoring(String type) {
-        long now = System.currentTimeMillis();
-        long from = now - java.time.Duration.ofHours(1).toMillis();
-        boolean memory = "server-memory".equals(type);
-        List<Map<String, Object>> series = new ArrayList<>();
-        if (Constants.getBoolean("serverMonitoringEnable")) {
-            try (Connection connection = DBPool.getConnection()) {
-                series.addAll(monitoringHistory(connection, memory, from, now, Constants.getString("clusterMyNodeName")));
-            } catch (SQLException exception) { throw new IllegalStateException("Could not load server monitoring", exception); }
-        }
-        if (memory) {
-            Runtime runtime = Runtime.getRuntime();
-            series.add(memoryPoint(now, runtime.totalMemory(), runtime.freeMemory()));
-        } else {
-            CpuInfo cpu = new CpuInfo();
-            if (cpu.getCpuUsage() < 0 || cpu.getCpuUsageProcess() < 0) throw new UnavailableException("data-unavailable");
-            series.add(Map.of("date", now, "system", cpu.getCpuUsage(), "process", cpu.getCpuUsageProcess()));
-        }
-        return Map.of("series", series, "from", from, "to", now);
-    }
-
-    List<Map<String, Object>> monitoringHistory(Connection connection, boolean memory, long from, long to, String node) throws SQLException {
-        String fields = memory ? "mem_total, mem_free" : "cpu_usage, process_usage";
-        String nodeFilter = Tools.isEmpty(node) ? "(node_name IS NULL OR node_name=?)" : "node_name=?";
-        String sql = "SELECT date_insert, " + fields + " FROM monitoring WHERE date_insert>=? AND date_insert<=? AND " + nodeFilter + " ORDER BY date_insert DESC";
-        List<Map<String, Object>> series = new ArrayList<>();
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setTimestamp(1, new Timestamp(from));
-            statement.setTimestamp(2, new Timestamp(to));
-            statement.setString(3, node == null ? "" : node);
-            statement.setMaxRows(120);
-            statement.setQueryTimeout(15);
-            try (ResultSet rows = statement.executeQuery()) {
-                while (rows.next()) {
-                    Timestamp date = rows.getTimestamp("date_insert");
-                    if (date == null) continue;
-                    if (memory) series.add(memoryPoint(date.getTime(), rows.getLong("mem_total"), rows.getLong("mem_free")));
-                    else {
-                        double system = rows.getDouble("cpu_usage");
-                        double process = rows.getDouble("process_usage");
-                        if (system >= 0 && process >= 0) series.add(Map.of("date", date.getTime(), "system", system, "process", process));
-                    }
-                }
-            }
-        }
-        series.sort(Comparator.comparingLong(DashboardWidgetDataService::dateOf));
-        return series;
-    }
-
-    private static Map<String, Object> memoryPoint(long date, long total, long free) {
-        double megabyte = 1024d * 1024d;
-        return Map.of("date", date, "total", total / megabyte, "free", free / megabyte, "used", (total - free) / megabyte);
     }
 
     private Map<String, Object> approvals(Identity user, Scope scope) {

@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.access.AccessDeniedException;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.doc.DocDB;
@@ -24,7 +23,6 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
-import sk.iway.iwcm.system.monitoring.CpuInfo;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -38,7 +36,7 @@ class DashboardOverviewWidgetsTest {
         Identity user = mock(Identity.class);
         when(user.isAdmin()).thenReturn(true);
         Map<String, String> permissions = Map.of("changed-pages", "menuWebpages", "audit", "cmp_adminlog",
-            "logged-admins", "welcomeShowLoggedAdmins", "server-memory", "cmp_server_monitoring", "server-cpu", "cmp_server_monitoring");
+            "logged-admins", "welcomeShowLoggedAdmins");
         try (var database = mockStatic(DBPool.class); var sessions = mockStatic(SessionHolder.class)) {
             permissions.forEach((type, permission) -> {
                 assertThrows(AccessDeniedException.class, () -> service.load(type, 7, "sessions", null, null, user, "current.example", "session"));
@@ -162,74 +160,6 @@ class DashboardOverviewWidgetsTest {
             assertEquals(Map.of("userId", 1, "fullName", "Administrator 1", "email", "admin1@example.test"), items.get(0));
             users.verify(() -> UsersDB.getUserCached(1), times(1));
             users.verify(() -> UsersDB.getUserCached(8), never());
-        }
-    }
-
-    /** History stays on the current node and converts bytes to MB before chronological rendering. */
-    @Test
-    void monitoringHistoryUsesCurrentNodeWindowAndBoundedMetricProjection() throws Exception {
-        Connection connection = mock(Connection.class);
-        PreparedStatement statement = mock(PreparedStatement.class);
-        ResultSet rows = mock(ResultSet.class);
-        when(connection.prepareStatement(anyString())).thenReturn(statement);
-        when(statement.executeQuery()).thenReturn(rows);
-        when(rows.next()).thenReturn(true, true, false);
-        when(rows.getTimestamp("date_insert")).thenReturn(new Timestamp(2000), new Timestamp(1000));
-        when(rows.getLong("mem_total")).thenReturn(8L * 1024 * 1024);
-        when(rows.getLong("mem_free")).thenReturn(2L * 1024 * 1024);
-        var series = service.monitoringHistory(connection, true, 500, 2500, "current-node");
-        assertEquals(Map.of("date", 1000L, "total", 8d, "free", 2d, "used", 6d), series.get(0));
-        assertEquals(2000L, series.get(1).get("date"));
-        ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
-        verify(connection).prepareStatement(sql.capture());
-        assertTrue(sql.getValue().startsWith("SELECT date_insert, mem_total, mem_free FROM monitoring"));
-        assertTrue(sql.getValue().contains("AND node_name=? ORDER BY"));
-        assertFalse(sql.getValue().contains("node_name IS NULL"));
-        verify(statement).setString(3, "current-node");
-        verify(statement).setTimestamp(1, new Timestamp(500));
-        verify(statement).setTimestamp(2, new Timestamp(2500));
-        verify(statement).setMaxRows(120);
-    }
-
-    /** Oracle stores an unnamed node as NULL; both representations retain the same time window. */
-    @Test
-    void unnamedMonitoringNodeAcceptsEmptyAndNullWithoutIncludingNamedNodes() throws Exception {
-        for (String node : new String[] {"", null}) {
-            Connection connection = mock(Connection.class);
-            PreparedStatement statement = mock(PreparedStatement.class);
-            ResultSet rows = mock(ResultSet.class);
-            when(connection.prepareStatement(anyString())).thenReturn(statement);
-            when(statement.executeQuery()).thenReturn(rows);
-            assertTrue(service.monitoringHistory(connection, false, 500, 2500, node).isEmpty());
-            ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
-            verify(connection).prepareStatement(sql.capture());
-            assertTrue(sql.getValue().contains("WHERE date_insert>=? AND date_insert<=? AND (node_name IS NULL OR node_name=?) ORDER BY"));
-            verify(statement).setString(3, "");
-            verify(statement).setTimestamp(1, new Timestamp(500));
-            verify(statement).setTimestamp(2, new Timestamp(2500));
-        }
-    }
-
-    /** Disabled historical collection still supplies a real one-time snapshot and needs no domain. */
-    @Test
-    void monitoringWithoutHistoryReturnsCurrentValuesWithoutDatabaseAccess() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(true);
-        when(user.isEnabledItem("cmp_server_monitoring")).thenReturn(true);
-        try (var constants = mockStatic(Constants.class); var database = mockStatic(DBPool.class);
-             var cpu = mockConstruction(CpuInfo.class, (mock, context) -> {
-                 when(mock.getCpuUsage()).thenReturn(25);
-                 when(mock.getCpuUsageProcess()).thenReturn(10);
-             })) {
-            var memory = service.load("server-memory", 7, "sessions", null, null, user, null, "session");
-            var point = (Map<?, ?>)((List<?>)memory.get("series")).get(0);
-            assertTrue(((Number)point.get("total")).doubleValue() > 0);
-            assertEquals(3600000L, (long)memory.get("to") - (long)memory.get("from"));
-            var processor = service.load("server-cpu", 7, "sessions", null, null, user, null, "session");
-            var processorPoint = (Map<?, ?>)((List<?>)processor.get("series")).get(0);
-            assertEquals(25, processorPoint.get("system"));
-            assertEquals(10, processorPoint.get("process"));
-            database.verifyNoInteractions();
         }
     }
 

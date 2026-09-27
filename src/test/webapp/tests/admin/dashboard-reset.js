@@ -4,7 +4,8 @@ Feature('admin.dashboard-reset').tag('@singlethread');
 
 let fixtureLogin = process.env.DASHBOARD_RESET_FIXTURE;
 let originalAdminPreferences;
-const confirmation = '.md-dashboard-modal button[aria-describedby^="dashboard-reset-"]';
+const resetDialog = '#toast-container-webjet .toast[role="dialog"]';
+const confirmation = `${resetDialog} button[id^="confirmationYes"]`;
 const expectedSizes = {
     search: 'fullauto', 'recent-pages': '3x2', forms: '1x1', sessions: '2x3', publishing: '2x2',
     'search-terms': '3x3', traffic: '3x3', referrers: '2x2', 'top-pages': '3x3', newsletter: '2x2',
@@ -45,7 +46,8 @@ async function openReset(I) {
     I.dontSeeElement(confirmation);
     I.clickCss('.md-dashboard__toolbar-actions .md-dashboard__reset');
     I.waitForVisible(confirmation, 10);
-    I.seeElement('.md-dashboard-modal .md-dashboard__reset-confirm');
+    I.seeElement(`${resetDialog}[aria-modal="true"][aria-describedby]`);
+    I.seeElement(`${resetDialog} button[id^="confirmationNo"]`);
 }
 
 Before(({ I, login }) => {
@@ -115,14 +117,17 @@ Scenario('Reset confirms deletion, keeps failed changes and restores every avail
         assert.deepEqual(await settings(I), custom, 'Opening confirmation must not change the profile');
         I.clickCss(confirmation);
         waitForSave(I);
-        I.waitForVisible('.md-dashboard-modal .text-danger[role="alert"]', 10);
+        I.waitForVisible('.md-dashboard__status .text-danger', 10);
         assert.deepEqual(await settings(I), custom, 'A failed DELETE must preserve layout, filters and acknowledged news');
-        I.seeElement('.md-dashboard-modal');
+        I.waitForInvisible(resetDialog, 10);
         await I.stopMockingRoute('**/admin/rest/dashboard/settings');
         await assertFixtureIdentity(I);
+        await openReset(I);
         I.clickCss(confirmation);
         waitForSave(I);
-        I.waitForInvisible('.md-dashboard-modal', 10);
+        I.waitForInvisible(resetDialog, 10);
+        I.waitForText(await I.executeScript(() => WJ.translate('admin.dashboard.resetDone.js')), 10, '#toast-container-webjet .toast-success');
+        I.assertEqual(await I.executeScript(() => document.querySelector('.md-dashboard__status').textContent), '', 'Successful reset must use the standard notification instead of persistent inline text.');
         const defaults = await settings(I);
         assert.equal(defaults.configured, false, 'Reset defaults remain unconfigured until a personal edit');
         assert.equal(defaults.acknowledgedNewsVersion, null);

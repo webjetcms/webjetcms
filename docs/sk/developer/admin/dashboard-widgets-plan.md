@@ -164,7 +164,8 @@ Každá etapa zahŕňa aktualizáciu skillu a primerané overenie. Všetky zmeny
 ## Overené implementačné upresnenia
 
 - Predvolené rozloženie bolo rozšírené z pilotov na všetky dostupné typy widgetov. Široké prehľady tvoria dvojice, zoznamy trojicu; systém naďalej filtruje podľa práv a nemení uložené osobné rozloženia.
-- Lišta úprav obsahuje **Pridať widget → Resetovať → Hotovo**; reset otvorí samostatné potvrdenie **Obnoviť predvolené**. `DELETE /admin/rest/dashboard/settings` atomicky odstráni dashboardové nastavenia aktuálneho konta vrátane všetkých doménových filtrov a potvrdených noviniek. Ostatné nastavenia a legacy záložky zostávajú zachované. Klient zobrazí predvolené widgety až po úspechu; pri chybe zachová pôvodný stav.
+- Lišta úprav obsahuje **Pridať widget → Resetovať → Hotovo**; reset použije systémové potvrdenie `WJ.confirm`. Úspešné uloženie a reset oznamuje `WJ.notifySuccess` s timeoutom 10 sekúnd. `DELETE /admin/rest/dashboard/settings` atomicky odstráni dashboardové nastavenia aktuálneho konta vrátane všetkých doménových filtrov a potvrdených noviniek. Ostatné nastavenia a legacy záložky zostávajú zachované. Klient zobrazí predvolené widgety až po úspechu; pri chybe zachová pôvodný stav.
+- Pamäť a CPU zdieľajú živé načítavanie `/admin/rest/monitoring/actual` každých 5 sekúnd. Nepotrebujú historické monitorovanie; aktualizujú číselné hodnoty aj existujúce grafy a pozastavia načítavanie pre skrytú kartu či widget.
 - Grafy používajú existujúce AmCharts cez `window.initAmcharts()` a `ChartTools`. Dáta grafu sú dostupné aj ako tabuľka; graf sa uvoľní pri obnovení, minimalizovaní alebo odstránení widgetu.
 
 - REST požiadavky WebJETu vyžadujú CSRF hlavičku aj pri GET. Všetky nové načítania ju posielajú.

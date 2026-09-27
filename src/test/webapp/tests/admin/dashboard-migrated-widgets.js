@@ -67,6 +67,9 @@ Scenario('Migrated overview widgets persist independently and clean up monitorin
             return { saved: await controller._commit(next), items: next.items.filter(item => definitions.some(([type]) => item.type === type)) };
         }, migratedWidgets);
         I.assertTrue(applied.saved, 'The migrated widget fixture must fit the account profile and persist successfully.');
+        I.waitForText(await I.executeScript(() => WJ.translate('admin.dashboard.saved.js')), 10, '#toast-container-webjet .toast-success');
+        I.assertEqual(await I.executeScript(() => document.querySelector('.md-dashboard__status').textContent), '', 'Saved preferences must use the standard notification instead of persistent inline text.');
+        I.toastrClose();
         waitForWidgets(I);
         I.refreshPage();
         waitForWidgets(I);

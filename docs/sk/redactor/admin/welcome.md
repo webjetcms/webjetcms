@@ -14,9 +14,9 @@ Tlačidlom **Upraviť prehľad** zobrazíte možnosti **Pridať widget**, **Rese
 - **Odstrániť widget**: odstráni kartu z vášho prehľadu. Údaje v aplikácii zostávajú zachované. Bezprostredne po odstránení je dostupné **Vrátiť späť**; po ďalšej úspešne uloženej úprave táto možnosť zanikne. Widget môžete kedykoľvek pridať znova.
 - **Obnoviť údaje**: načíta čerstvé údaje danej karty.
 
-Zmena sa prejaví po úspešnom uložení. Pri chybe sa zachová pôvodné nastavenie. Na menšej obrazovke sa karty automaticky usporiadajú pod seba pri zachovaní poradia. Prehľad môže obsahovať najviac 32 widgetov.
+Zmena sa prejaví po úspešnom uložení. Potvrdenie uloženia sa zobrazí ako systémová notifikácia a automaticky zmizne po 10 sekundách. Pri chybe sa zachová pôvodné nastavenie. Na menšej obrazovke sa karty automaticky usporiadajú pod seba pri zachovaní poradia. Prehľad môže obsahovať najviac 32 widgetov.
 
-Tlačidlo **Resetovať** nájdete v lište úprav za tlačidlom **Pridať widget**. Tooltip vysvetľuje obnovenie štandardného zobrazenia. Po potvrdení **Obnoviť predvolené** sa obnovia všetky dostupné widgety, ich veľkosti, poradie a nastavenia. Vymažú sa aj filtre widgetov vo všetkých doménach a potvrdenie prečítania noviniek. Ostatné nastavenia účtu a pôvodné záložky zostanú zachované. Existujúce osobné rozloženie sa bez resetu nemení.
+Tlačidlo **Resetovať** nájdete v lište úprav za tlačidlom **Pridať widget**. Tooltip vysvetľuje obnovenie štandardného zobrazenia. Po potvrdení v štandardnom systémovom dialógu sa obnovia všetky dostupné widgety, ich veľkosti, poradie a nastavenia. Vymažú sa aj filtre widgetov vo všetkých doménach a potvrdenie prečítania noviniek. Ostatné nastavenia účtu a pôvodné záložky zostanú zachované. Existujúce osobné rozloženie sa bez resetu nemení.
 
 ## Dostupné informácie
 
@@ -64,7 +64,7 @@ Predvolene smerujú na webové stránky a formuláre podľa vašich oprávnení.
 
 Pôvodná sekcia **Ďalšie prehľady** bola odstránená. Jej informácie sú dostupné ako samostatné widgety **Zmenené stránky**, **Audit**, **Prihlásení admini**, **Obsadenosť pamäte** a **Zaťaženie CPU**. Pri prvom otvorení alebo po resete sa dostupné widgety pridajú na koniec predvoleného rozloženia. Do existujúceho rozloženia ich môžete pridať cez katalóg.
 
-**Zmenené stránky** zobrazujú posledné úpravy dostupných stránok v aktuálnej doméne aj s autorom zmeny. **Audit** zobrazuje posledné udalosti auditu. Grafy pamäte a CPU majú farebne odlíšené pozadie a predvolenú veľkosť **3×3**, aby boli lepšie čitateľné. V nastaveniach widgetu môžete zvoliť aj kompaktnejšiu veľkosť **3×2**. Zobrazujú posledné zaznamenané hodnoty servera; čerstvé údaje načítate cez **Obnoviť údaje** a úplný prehľad otvoríte cez názov widgetu. Audit, prihlásení administrátori a monitorovanie zobrazujú údaje celého servera podľa príslušných oprávnení.
+**Zmenené stránky** zobrazujú posledné úpravy dostupných stránok v aktuálnej doméne aj s autorom zmeny. **Audit** zobrazuje posledné udalosti auditu. Grafy pamäte a CPU majú farebne odlíšené pozadie a predvolenú veľkosť **3×3**, aby boli lepšie čitateľné. V nastaveniach widgetu môžete zvoliť aj kompaktnejšiu veľkosť **3×2**. Grafy aj číselné hodnoty viditeľného widgetu sa aktualizujú každých 5 sekúnd; číselné údaje sa obnovujú aj v minimalizovanom zobrazení. Živé vzorky sa zbierajú od otvorenia widgetu, aj keď je ukladanie historického monitorovania vypnuté. Pri skrytí karty prehliadača alebo widgetu sa pravidelné načítavanie pozastaví. Úplný prehľad otvoríte cez názov widgetu. Audit, prihlásení administrátori a monitorovanie zobrazujú údaje celého servera podľa príslušných oprávnení.
 
 ## Spätná väzba
 

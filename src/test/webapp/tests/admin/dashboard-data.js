@@ -62,23 +62,12 @@ Scenario('Recent pages remain available through the independent pilot projection
 });
 
 Scenario('Former overview blocks expose independent authorized widget projections', async ({ I }) => {
-    const results = await I.executeScript(async () => Promise.all(['changed-pages', 'audit', 'logged-admins', 'server-memory', 'server-cpu'].map(async type => {
+    const results = await I.executeScript(async () => Promise.all(['changed-pages', 'audit', 'logged-admins'].map(async type => {
         const response = await fetch(`/admin/rest/dashboard/data/${type}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
         return { type, status: response.status, body: await response.json() };
     })));
     for (const { type, status, body } of results) {
         I.assertEqual(status, 200, `${type} must load for an authorized administrator.`);
-        if (type.startsWith('server-')) {
-            I.assertTrue(Array.isArray(body.series) && body.series.length > 0, 'Monitoring includes the current sample even before historical samples are collected.');
-            I.assertTrue(Number.isFinite(body.from) && body.from <= body.to, 'Monitoring must describe the actual observed interval.');
-            I.assertTrue(body.series.every(point => Number.isFinite(point.date)), 'Monitoring samples must retain their real timestamp.');
-            const fields = type === 'server-memory' ? ['used', 'free', 'total'] : ['process', 'system'];
-            for (const field of fields) {
-                if (type === 'server-memory') I.assertTrue(body.series.some(point => Number.isFinite(point[field])), `${type} must report recorded ${field} measurements.`);
-                I.assertTrue(body.series.every(point => point[field] === null || (Number.isFinite(point[field]) && point[field] >= 0)), 'Unavailable readings must remain distinct from real zero measurements.');
-            }
-            continue;
-        }
         I.assertTrue(Array.isArray(body.items), `${type} must contain an item projection.`);
         if (type === 'logged-admins') I.assertEqual(body.items.length, body.total, 'All authorized online administrators must remain reachable in the scrolling card.');
         else I.assertTrue(body.items.length <= 6, `${type} must use a bounded activity preview.`);
@@ -93,6 +82,18 @@ Scenario('Former overview blocks expose independent authorized widget projection
             else I.assertEqual(typeof item.description, 'string');
         }
     }
+});
+
+Scenario('Live monitoring reads a current server snapshot independently of persisted history', async ({ I }) => {
+    const result = await I.executeScript(async () => {
+        const response = await fetch('/admin/rest/monitoring/actual', { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
+        return { status: response.status, body: await response.json(), received: Date.now() };
+    });
+    I.assertEqual(result.status, 200);
+    I.assertTrue(Math.abs(result.received - result.body.serverActualTime) < 30000, 'The monitoring endpoint must return a fresh server timestamp.');
+    for (const field of ['memUsed', 'memFree', 'memTotal']) I.assertTrue(Number.isFinite(result.body[field]) && result.body[field] >= 0, `${field} must contain the current byte count.`);
+    I.assertEqual(result.body.memUsed + result.body.memFree, result.body.memTotal);
+    for (const field of ['cpuUsage', 'cpuUsageProcess']) I.assertTrue(Number.isFinite(result.body[field]), `${field} must contain the current CPU reading or the unavailable sentinel.`);
 });
 
 Scenario('Statistical metrics and selected form projections preserve their contracts', async ({ I }) => {
