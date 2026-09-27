@@ -120,9 +120,9 @@ export class DashboardController {
         this.addButton = button(this._t("add", "Add widget"), () => this.showCatalogue(), "btn btn-sm btn-primary md-dashboard__control md-dashboard__edit-control");
         this.addButton.prepend(icon("ti-plus"));
         this.addButton.hidden = true;
-        this.resetButton = button(this._t("datatables.button.restore.js", "Restore"), () => this.showReset(), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control md-dashboard__reset");
+        this.resetButton = button(this._t("datatables.button.restore.js", "Restore"), event => this.showReset(event.shiftKey), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control md-dashboard__reset");
         this.resetButton.prepend(icon("ti-refresh"));
-        this.resetButton.title = this._t("resetTooltip", "Restore the standard widgets, sizes and order.");
+        this.resetButton.title = this._t("resetTooltip", "Restore the standard widgets, sizes and order. Hold Shift to show all widgets in every size.");
         this.resetButton.hidden = true;
         if (this.context.overview?.showFeedbackModal) {
             const feedback = button(this._t("admin.welcome.feedback.sendButton.js", "Send feedback"), () => this.context.overview.showFeedbackModal(), "btn btn-sm btn-outline-secondary md-dashboard__feedback");
@@ -308,7 +308,7 @@ export class DashboardController {
     async _commit(next, status = this.status) {
         if (this.saving || this.destroyed || this.host.dataset.loaded !== "true") return false;
         if (next.items.length > MAX_WIDGETS) {
-            status.textContent = this._t("limit", "The overview can contain at most 32 widgets.");
+            status.textContent = this._t("limit", "The overview can contain at most 48 widgets.");
             return false;
         }
         this.saving = true;
@@ -695,29 +695,46 @@ export class DashboardController {
         return saved;
     }
 
-    /** Resets only dashboard preferences, applying defaults after the server confirms deletion. */
-    async reset() {
+    /** Resets widget preferences atomically, optionally saving every available size variant. */
+    async reset(allSizes = false) {
         if (this.saving || this.destroyed) return false;
+        let variants;
+        if (allSizes) {
+            variants = normalizeSettings({ items: this.settings.items.filter(item => item.type === "shortcut") });
+            for (const definition of listWidgets()) {
+                if (definition.type === "shortcut" || !this._available(definition)) continue;
+                for (const size of definition.sizes) {
+                    const item = this._newInstance(definition, { size });
+                    variants.items.push(item);
+                    variants.domainOptions[item.id] = cloneSettings(definition.defaultDomainOptions);
+                }
+            }
+            if (variants.items.length > MAX_WIDGETS) {
+                this.status.textContent = this._t("limit", "The overview can contain at most 48 widgets.");
+                return false;
+            }
+        }
         this.saving = true;
         this._setBusy(true);
         this.status.textContent = this._t("saving", "Saving…");
         const request = this._request = new AbortController();
         try {
-            const response = await fetch("/admin/rest/dashboard/settings", {
-                method: "DELETE", credentials: "same-origin", signal: request.signal,
-                headers: { "X-CSRF-Token": window.csrfToken || "" }
+            const response = await fetch(allSizes ? "/admin/rest/dashboard/settings/reset" : "/admin/rest/dashboard/settings", {
+                method: allSizes ? "PUT" : "DELETE", credentials: "same-origin", signal: request.signal,
+                headers: { "Content-Type": "application/json", "X-CSRF-Token": window.csrfToken || "" },
+                body: allSizes ? JSON.stringify(variants) : undefined
             });
             if (!response.ok) throw new Error(`Dashboard reset: ${response.status}`);
             const data = await response.json();
             if (this.destroyed || request.signal.aborted) return false;
             this.settings = normalizeSettings(data);
-            this._addDefaults();
+            if (!this.settings.configured) this._addDefaults();
             this._ensureMandatory();
             this.removed = null;
             this.undoContainer.hidden = true;
             this.status.textContent = "";
             this._render();
-            window.WJ.notifySuccess(this._t("resetDone", "The default overview has been restored."), "", 10000);
+            window.WJ.notifySuccess(allSizes ? this._t("resetAllDone", "All available widget sizes have been added.") : this._t("resetDone", "The default overview has been restored."), "", 10000);
             return true;
         } catch (error) {
             if (!this.destroyed && !request.signal.aborted) this._showFailure("saveError", "The change could not be saved. Your previous settings were kept.");
@@ -812,17 +829,17 @@ export class DashboardController {
     }
 
     /** Confirms the full reset scope before invoking the shared atomic preference reset. */
-    showReset() {
+    showReset(allSizes = false) {
         window.jQuery?.(this.resetButton).off(".wjFocusWithoutTooltip");
         const tooltip = window.bootstrap?.Tooltip?.getInstance(this.resetButton);
         tooltip?.disable();
         tooltip?.hide();
         this.resetButton.focus({ preventScroll: true });
         window.WJ.confirm({
-            title: this._t("resetConfirm", "Restore defaults"),
-            message: this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains and read news will also be reset. Your shortcuts and other account settings will be kept."),
-            btnOkText: this._t("resetConfirm", "Restore defaults"),
-            success: () => this.reset(),
+            title: allSizes ? this._t("resetAllConfirm", "Show all") : this._t("resetConfirm", "Restore defaults"),
+            message: allSizes ? this._t("resetAllDescription", "Replace the overview with all available widgets in every supported size? You can then remove the variants you do not want. Widget filters in all domains and read news will also be reset. Your shortcuts and other account settings will be kept.") : this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains and read news will also be reset. Your shortcuts and other account settings will be kept."),
+            btnOkText: allSizes ? this._t("resetAllConfirm", "Show all") : this._t("resetConfirm", "Restore defaults"),
+            success: () => this.reset(allSizes),
             onHidden: () => window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.enable()
         });
     }
@@ -836,7 +853,7 @@ export class DashboardController {
         const list = node("div", "md-dashboard__catalogue");
         const error = node("p", "text-danger mb-0");
         error.setAttribute("role", "alert");
-        if (this.settings.items.length >= MAX_WIDGETS) error.textContent = this._t("limit", "The overview can contain at most 32 widgets.");
+        if (this.settings.items.length >= MAX_WIDGETS) error.textContent = this._t("limit", "The overview can contain at most 48 widgets.");
         const render = () => {
             list.replaceChildren();
             for (const definition of listWidgets()) {
@@ -911,7 +928,7 @@ export class DashboardController {
     async showAddWidget(type) {
         const definition = getWidget(type);
         if (!definition || !this._available(definition) || this.settings.items.length >= MAX_WIDGETS) {
-            this.status.textContent = this._t("limit", "The overview can contain at most 32 widgets.");
+            this.status.textContent = this._t("limit", "The overview can contain at most 48 widgets.");
             return;
         }
         if (!definition.multiple && this.settings.items.some(item => item.type === type)) return;

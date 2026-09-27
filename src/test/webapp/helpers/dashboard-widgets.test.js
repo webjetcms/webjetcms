@@ -299,19 +299,22 @@ test('Default widgets follow permissions and authorized menu destinations', t =>
     assert.equal(scope.getWidget('shortcut').isAvailable(context), true);
 });
 
-test('New profiles include each available type and no more than two authorized shortcut destinations', t => {
+test('New profiles include only curated widgets and no more than two authorized shortcut destinations', t => {
     const menu = [
         { text: 'Pages', href: '/admin/v9/webpages/web-pages-list/' }, { text: 'Forms', href: '/apps/form/admin/' },
         { text: 'Newsletter', href: '/apps/dmail/admin/' }, { text: 'Unsafe', href: 'javascript:alert(1)' }
     ];
     const { scope, context } = fixture(t, { menu });
     const defaults = JSON.parse(JSON.stringify(scope.getDashboardDefaults(context)));
-    const expected = Array.from(scope.listWidgets()).filter(widget => !widget.isAvailable || widget.isAvailable(context));
-    for (const definition of expected) {
-        assert.equal(defaults.filter(item => item.type === definition.type).length, definition.type === 'shortcut' ? 2 : 1);
-    }
+    assert.deepEqual(defaults.map(item => item.type), [
+        'search', 'sessions', 'news', 'traffic', 'forms', 'approvals', 'errors',
+        'recent-pages', 'referrers', 'publishing', 'newsletter', 'shortcut', 'shortcut'
+    ]);
     assert.deepEqual(defaults.filter(item => item.type === 'shortcut').map(item => item.options.href), menu.slice(0, 2).map(item => item.href));
-    assert.equal(defaults.length, expected.length + 1);
+    const catalogue = Array.from(scope.listWidgets()).filter(widget => !widget.isAvailable || widget.isAvailable(context));
+    for (const type of ['search-terms', 'top-pages', ...Object.keys(migratedPermissions)]) {
+        assert.ok(catalogue.some(widget => widget.type === type), `${type} remains available for manual addition`);
+    }
 });
 
 test('Default shortcuts fall back to the first authorized module when pages and forms are unavailable', t => {
@@ -327,12 +330,11 @@ test('Default content previews complete the traffic row and use an even three-ca
     const { scope, context } = fixture(t);
     const defaults = JSON.parse(JSON.stringify(scope.getDashboardDefaults(context)));
     const grid = defaults.filter(item => !['search', 'sessions', 'news', 'shortcut'].includes(item.type));
-    assert.deepEqual(grid.slice(0, 10), [
+    assert.deepEqual(grid, [
         { type: 'traffic', size: '3x3' }, { type: 'forms', size: '1x1' },
         { type: 'approvals', size: '1x1' }, { type: 'errors', size: '1x1' },
         { type: 'recent-pages', size: '3x2' }, { type: 'referrers', size: '2x2' },
-        { type: 'publishing', size: '2x2' }, { type: 'newsletter', size: '2x2' },
-        { type: 'search-terms', size: '3x3' }, { type: 'top-pages', size: '3x3' }
+        { type: 'publishing', size: '2x2' }, { type: 'newsletter', size: '2x2' }
     ]);
     for (const item of grid) assert.ok(scope.getWidget(item.type).sizes.includes(item.size), item.type);
 });
@@ -342,24 +344,16 @@ const migratedPermissions = {
     'server-memory': 'cmp_server_monitoring', 'server-cpu': 'cmp_server_monitoring'
 };
 
-test('Migrated overview defaults follow their exact permissions and append useful card sizes', t => {
+test('Optional system widgets follow their exact permissions without joining the default layout', t => {
     const { scope, context, window } = fixture(t);
-    const defaults = JSON.parse(JSON.stringify(scope.getDashboardDefaults(context)));
-    const migrated = defaults.filter(item => Object.hasOwn(migratedPermissions, item.type));
-    assert.deepEqual(migrated, [
-        { type: 'changed-pages', size: '3x3' }, { type: 'audit', size: '3x3' },
-        { type: 'server-memory', size: '3x3' }, { type: 'server-cpu', size: '3x3' }, { type: 'logged-admins', size: '2x2' }
-    ]);
-    const grid = defaults.filter(item => !['search', 'sessions', 'news', 'shortcut'].includes(item.type));
-    assert.deepEqual(grid.slice(-5), migrated);
     for (const permission of new Set(Object.values(migratedPermissions))) {
         window.WJ.hasPermission = value => value === permission;
         for (const [type, required] of Object.entries(migratedPermissions)) {
             assert.equal(scope.getWidget(type).isAvailable(context), permission === required, `${type} requires ${required}`);
-            assert.equal(scope.getWidget(type).multiple, false);
+            assert.equal(scope.getWidget(type).multiple, true);
         }
         const visibleDefaults = Array.from(scope.getDashboardDefaults(context), item => item.type);
-        for (const [type, required] of Object.entries(migratedPermissions)) assert.equal(visibleDefaults.includes(type), permission === required);
+        for (const type of Object.keys(migratedPermissions)) assert.equal(visibleDefaults.includes(type), false);
     }
 });
 

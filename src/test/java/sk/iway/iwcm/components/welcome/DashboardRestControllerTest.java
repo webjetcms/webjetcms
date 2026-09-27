@@ -72,7 +72,35 @@ class DashboardRestControllerTest {
             assertThrows(AccessDeniedException.class, () -> controller.getSettings(request));
             assertThrows(AccessDeniedException.class, () -> controller.putSettings(new DashboardSettingsDto(), request));
             assertThrows(AccessDeniedException.class, () -> controller.deleteSettings(request));
+            assertThrows(AccessDeniedException.class, () -> controller.resetSettings(new DashboardSettingsDto(), request));
             verifyNoInteractions(settings);
+        }
+    }
+
+    /** Variant reset derives ownership and domain on the server and invalidates cache only after success. */
+    @Test
+    void variantResetUsesAuthenticatedOwnerAndDomain() {
+        DashboardSettingsService settings = mock(DashboardSettingsService.class);
+        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class), mock(DashboardNoticeService.class));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter("userId", "99");
+        request.setParameter("domainId", "999");
+        Identity user = mock(Identity.class);
+        when(user.isAdmin()).thenReturn(true);
+        when(user.getUserId()).thenReturn(7);
+        DashboardSettingsDto layout = DashboardSettingsServiceTest.settings();
+        when(settings.reset(7, "42", layout)).thenReturn(layout);
+        try (MockedStatic<UsersDB> users = mockStatic(UsersDB.class);
+             MockedStatic<CloudToolsForCore> domains = mockStatic(CloudToolsForCore.class)) {
+            users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
+            domains.when(() -> CloudToolsForCore.getRootGroupId(request)).thenReturn(42);
+            assertSame(layout, controller.resetSettings(layout, request));
+            verify(settings).reset(7, "42", layout);
+            verify(user).setAdminSettings(null);
+            clearInvocations(user);
+            when(settings.reset(7, "42", layout)).thenThrow(new IllegalStateException("Database is unavailable"));
+            assertThrows(IllegalStateException.class, () -> controller.resetSettings(layout, request));
+            verify(user, never()).setAdminSettings(any());
         }
     }
 

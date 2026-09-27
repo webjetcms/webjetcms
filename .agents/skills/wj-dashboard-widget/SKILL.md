@@ -20,7 +20,8 @@ Read the [widget contract](references/widget-contract.md) before implementing a 
 
 - Users have mixed responsibilities. Availability follows permissions and active-domain data, not role presets. Enforce access on the server for every data provider.
 - The layout is shared across domains and devices; record filters such as selected forms or folders belong to the active domain. Keep unavailable instances in the stored profile.
-- New and reset profiles include every useful available widget type in the curated default layout; default shortcuts require an authorized menu destination. Preserve existing personal layouts until the user explicitly resets them from the edit toolbar.
+- New and reset profiles include only the explicit, permission-filtered list in `getDashboardDefaults(context)`, ending with Newsletter in the personal grid. Do not append other registered types automatically; they remain available in the catalogue. Default shortcuts require an authorized menu destination. Preserve existing personal layouts until the user explicitly resets them from the edit toolbar.
+- Shift-clicking the widget reset generates one instance per authorized widget type and supported size and persists the layout atomically. Preserve shortcuts; sessions, news and search remain singletons. Grid types support multiple instances so every variant can be resized, removed and restored independently. Normal reset still uses the curated defaults.
 - Persist ordered instances and named sizes, never pixel positions. Supported sizes are `1x1`, `2x2`, `2x3`, `3x2`, `3x3`, and full width with natural height. A type advertises only its useful variants.
 - The grid has six logical desktop columns, four below 1200 px, two below 768 px, and one below 360 px. Keep DOM, keyboard, and mobile order aligned; do not enable dense packing.
 - Keep active system alerts and session management visible outside the personal grid. Sessions, release news and search occupy fixed regions; shortcuts occupy an independent section under the greeting inside the welcome panel. Each section owns its edit controls and reset; a widget reset preserves shortcuts and their migration metadata, and a shortcut reset preserves widget preferences. Legacy `collapsed` fields are ignored; every widget renders its full content at the selected size. The release-news summary toggle is independent.
@@ -34,7 +35,7 @@ Read the [widget contract](references/widget-contract.md) before implementing a 
 - Update only affected widgets. Do not replace the overview root or delete system alerts when settings change. Dispose request work, listeners, charts, and timers when an instance is removed or replaced.
 - Live memory and CPU widgets share one request to `/admin/rest/monitoring/actual` every 5 seconds while visible. Pause polling for a hidden document or when no visible subscriber remains, avoid overlapping requests, and dispose requests/timers on removal. Newsletter polls only while visible and actively sending, every 30 seconds. Other widgets load on entry, relevant configuration/domain changes, and manual refresh.
 - Use `WJ.notifySuccess` with a 10-second timeout for successful preference changes and `WJ.confirm` for reset confirmation; preserve tooltip cleanup and focus restoration.
-- Validate configuration before persistence: at most 32 instances and 2000 characters per storage record, with rejection instead of truncation. On save failure restore the last confirmed state.
+- Validate configuration before persistence: at most 48 instances and 2000 characters per storage record, with rejection instead of truncation. On save failure restore the last confirmed state.
 
 ## Completion
 

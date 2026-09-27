@@ -63,6 +63,15 @@ public class DashboardRestController {
         return reset;
     }
 
+    /** Atomically installs a generated variant layout while retaining the account's shortcuts. */
+    @PutMapping("/settings/reset")
+    public DashboardSettingsDto resetSettings(@RequestBody DashboardSettingsDto layout, HttpServletRequest request) {
+        Identity user = currentUser(request);
+        DashboardSettingsDto reset = settingsService.reset(user.getUserId(), domainKey(request), layout);
+        user.setAdminSettings(null);
+        return reset;
+    }
+
     @GetMapping("/menu")
     public List<MenuBean> getMenu(HttpServletRequest request) {
         currentUser(request);

@@ -22,11 +22,10 @@ import sk.iway.iwcm.components.welcome.DashboardSettingsDto.Item;
 /** Validates the small dashboard-specific settings contract before any database writes. */
 @Service
 public class DashboardSettingsService {
-    static final int MAX_INSTANCES = 32;
+    static final int MAX_INSTANCES = 48;
     static final int MAX_RECORD_LENGTH = 2000;
     private static final Pattern INSTANCE_ID = Pattern.compile("[A-Za-z0-9_-]{1,36}");
-    private static final Set<String> SINGLETONS = Set.of("recent-pages", "approvals", "publishing", "sessions", "news", "search",
-        "changed-pages", "audit", "logged-admins", "server-memory", "server-cpu");
+    private static final Set<String> SINGLETONS = Set.of("sessions", "news", "search");
     private static final Map<String, Set<String>> SIZES = Map.ofEntries(
         Map.entry("shortcut", Set.of("1x1")),
         Map.entry("recent-pages", Set.of("2x3", "3x2", "3x3")),
@@ -109,13 +108,30 @@ public class DashboardSettingsService {
 
     /** Restores widget defaults while retaining shortcuts and migration state under the account lock. */
     public DashboardSettingsDto reset(int userId) {
+        return reset(userId, "0", null);
+    }
+
+    /** Replaces all widget preferences in one transaction, preserving the locked shortcut snapshot. */
+    public DashboardSettingsDto reset(int userId, String domainKey, DashboardSettingsDto layout) {
+        if (layout != null) {
+            validateAndSerialize(layout, domainKey);
+            require(layout.getItems().stream().anyMatch(item -> "sessions".equals(item.getType())), "The session management widget is required");
+        }
         Map<String, String> retained = repository.reset(userId, previous -> {
-            DashboardSettingsDto settings = readSettings(previous, "0");
+            DashboardSettingsDto settings = readSettings(previous, domainKey);
             settings.getItems().removeIf(item -> !"shortcut".equals(item.getType()));
             settings.getDomainOptions().clear();
             settings.setAcknowledgedNewsVersion(null);
-            Map<String, String> records = validateAndSerialize(settings, "0");
-            ObjectNode metadata = mapper.createObjectNode().put("version", 1).put("configured", false)
+            if (layout != null) {
+                for (Item item : layout.getItems()) {
+                    if ("shortcut".equals(item.getType()) && settings.isShortcutsConfigured()) continue;
+                    settings.getItems().add(item);
+                    if (layout.getDomainOptions().containsKey(item.getId())) settings.getDomainOptions().put(item.getId(), layout.getDomainOptions().get(item.getId()));
+                }
+                settings.setShortcutsConfigured(true);
+            }
+            Map<String, String> records = validateAndSerialize(settings, domainKey);
+            ObjectNode metadata = mapper.createObjectNode().put("version", 1).put("configured", layout != null)
                 .put("shortcutsConfigured", settings.isShortcutsConfigured())
                 .put("legacyBookmarksHandled", settings.isLegacyBookmarksHandled());
             ArrayNode order = metadata.putArray("order");
@@ -123,12 +139,12 @@ public class DashboardSettingsService {
             records.put(DashboardSettingsRepository.LAYOUT_KEY, serializeBounded(metadata));
             return records;
         });
-        return readSettings(retained, "0");
+        return readSettings(retained, domainKey);
     }
 
     Map<String, String> validateAndSerialize(DashboardSettingsDto settings, String domainKey) {
         require(settings != null && settings.getVersion() == 1, "Unsupported dashboard settings version");
-        require(settings.getItems() != null && settings.getItems().size() <= MAX_INSTANCES, "A dashboard supports at most 32 widgets");
+        require(settings.getItems() != null && settings.getItems().size() <= MAX_INSTANCES, "A dashboard supports at most 48 widgets");
         require(settings.getDomainOptions() != null, "Domain options must be an object");
         require(settings.getAcknowledgedNewsVersion() == null || settings.getAcknowledgedNewsVersion().length() <= 80, "News version is too long");
         require(domainKey != null && domainKey.matches("[0-9]+"), "Invalid dashboard domain");

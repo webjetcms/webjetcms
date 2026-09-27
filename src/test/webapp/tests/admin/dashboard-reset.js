@@ -1,4 +1,4 @@
-const { waitForWidgets } = require('../../helpers/dashboard-browser');
+const { waitForWidgets, showWidget } = require('../../helpers/dashboard-browser');
 
 const assert = require('node:assert/strict');
 
@@ -10,9 +10,8 @@ const resetDialog = '#toast-container-webjet .toast[role="dialog"]';
 const confirmation = `${resetDialog} button[id^="confirmationYes"]`;
 const expectedSizes = {
     search: 'fullauto', 'recent-pages': '3x2', forms: '1x1', sessions: '2x3', publishing: '2x2',
-    'search-terms': '3x3', traffic: '3x3', referrers: '2x2', 'top-pages': '3x3', newsletter: '2x2',
-    news: '3x2', approvals: '1x1', errors: '1x1', shortcut: '1x1',
-    'changed-pages': '3x3', audit: '3x3', 'logged-admins': '2x2', 'server-memory': '3x3', 'server-cpu': '3x3'
+    traffic: '3x3', referrers: '2x2', newsletter: '2x2',
+    news: '3x2', approvals: '1x1', errors: '1x1', shortcut: '1x1'
 };
 
 function waitForDashboard(I) {
@@ -36,7 +35,12 @@ async function assertFixtureIdentity(I) {
         'A destructive reset must only run in the disposable test account');
 }
 
-async function openReset(I) {
+async function openReset(I, allSizes = false) {
+    I.executeScript(() => {
+        const toolbar = document.querySelector('.md-dashboard__toolbar');
+        window.scrollbarMain.setMomentum(0, 0);
+        window.scrollbarMain.setPosition(0, window.scrollbarMain.offset.y + toolbar.getBoundingClientRect().top - 64);
+    });
     await I.clickIfVisible('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
     I.waitForVisible('.md-dashboard__toolbar-actions .md-dashboard__reset', 10);
     I.assertTrue(await I.executeScript(() => {
@@ -46,7 +50,9 @@ async function openReset(I) {
             && (reset.getAttribute('title') || reset.getAttribute('data-bs-original-title')) === WJ.translate('admin.dashboard.resetTooltip.js');
     }), 'The explained Reset action must appear between Add widget and Done.');
     I.dontSeeElement(confirmation);
+    if (allSizes) I.pressKeyDown('Shift');
     I.clickCss('.md-dashboard__toolbar-actions .md-dashboard__reset');
+    if (allSizes) I.pressKeyUp('Shift');
     I.waitForVisible(confirmation, 10);
     I.seeElement(`${resetDialog}[aria-modal="true"][aria-describedby]`);
     I.seeElement(`${resetDialog} button[id^="confirmationNo"]`);
@@ -93,7 +99,7 @@ Scenario('Create a disposable dashboard reset account', async ({ I, DT, DTE }) =
     I.seeNumberOfElements('#datatableInit tbody tr', 1);
 });
 
-Scenario('Reset confirms deletion, keeps failed changes and restores every available default', async ({ I }) => {
+Scenario('Reset confirms deletion, keeps failed changes and restores only the curated defaults', async ({ I }) => {
     assert.ok(fixtureLogin, 'The disposable account setup must run first');
     await session('dashboard reset autotest', async () => {
         I.amOnPage('/admin/logon/');
@@ -139,13 +145,13 @@ Scenario('Reset confirms deletion, keeps failed changes and restores every avail
         for (const item of defaults.items) {
             assert.equal(item.size, expectedSizes[item.type], `Default footprint for ${item.type}`);
         }
-        assert.deepEqual(defaults.items.filter(item => item.type !== 'shortcut').slice(0, 11).map(item => item.type), [
+        assert.deepEqual(defaults.items.filter(item => item.type !== 'shortcut').map(item => item.type), [
             'search', 'sessions', 'news', 'traffic', 'forms', 'approvals',
             'errors', 'recent-pages', 'referrers', 'publishing', 'newsletter'
         ], 'The overview must retain its curated default order');
         assert.equal(defaults.items.filter(item => item.type === 'sessions').length, 1);
-        assert.deepEqual(defaults.items.filter(item => ['changed-pages', 'audit', 'logged-admins', 'server-memory', 'server-cpu'].includes(item.type)).map(item => item.type),
-            ['changed-pages', 'audit', 'server-memory', 'server-cpu', 'logged-admins'], 'Former overview blocks must be included in the reset layout');
+        I.assertEqual(await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__grid .md-dashboard__widget')].at(-1)?.dataset.widgetType),
+            'newsletter', 'The reset grid must end with Newsletter');
         I.dontSeeElementInDOM('.md-dashboard__legacy');
         assert.equal(defaults.domainOptions[defaults.items.find(item => item.type === 'forms').id].formName, '');
         I.refreshPage();
@@ -184,6 +190,76 @@ Scenario('Reset confirms deletion, keeps failed changes and restores every avail
         assert.equal(personalized.configured, true);
         assert.equal(personalized.items.find(item => item.id === shortcut.id)?.options.title, 'dashboard-reset-autotest personalized');
         assert.deepEqual(personalized.items.map(item => [item.type, item.size]), reloaded.items.map(item => [item.type, item.size]));
+        I.logout();
+    });
+});
+
+Scenario('Shift reset persists every size and allows individual variants to be removed and restored', async ({ I }) => {
+    assert.ok(fixtureLogin, 'The disposable account setup must run first');
+    await session('dashboard reset autotest', async () => {
+        I.amOnPage('/admin/logon/');
+        I.relogin(fixtureLogin, false);
+        I.amOnPage('/admin/v9/');
+        waitForDashboard(I);
+        await assertFixtureIdentity(I);
+        const original = await settings(I);
+        await openReset(I, true);
+        I.see(await I.executeScript(() => WJ.translate('admin.dashboard.resetAllConfirm.js')), resetDialog);
+        I.clickCss(confirmation);
+        waitForSave(I);
+        I.waitForInvisible(resetDialog, 10);
+        const generated = await settings(I);
+        const variants = {
+            'recent-pages': ['2x3', '3x2', '3x3'], approvals: ['1x1', '3x3'], publishing: ['2x2', '2x3'],
+            forms: ['1x1', '3x3'], traffic: ['1x1', '3x3'], 'top-pages': ['2x3', '3x3'],
+            'search-terms': ['2x3', '3x3'], referrers: ['2x2', '2x3', '3x3'], newsletter: ['2x2', '3x3'],
+            errors: ['1x1', '3x3'], sessions: ['2x3'], news: ['3x2'], search: ['fullauto'],
+            'changed-pages': ['3x2', '3x3'], audit: ['3x2', '3x3'], 'logged-admins': ['2x2', '2x3'],
+            'server-memory': ['3x2', '3x3'], 'server-cpu': ['3x2', '3x3']
+        };
+        for (const [type, sizes] of Object.entries(variants)) {
+            assert.deepEqual(generated.items.filter(item => item.type === type).map(item => item.size).sort(), sizes.slice().sort(), `${type} must include every supported size exactly once`);
+        }
+        assert.equal(generated.configured, true);
+        assert.equal(new Set(generated.items.map(item => item.id)).size, generated.items.length);
+        assert.deepEqual(generated.items.filter(item => item.type === 'shortcut'), original.items.filter(item => item.type === 'shortcut'));
+        I.refreshPage();
+        waitForDashboard(I);
+        assert.deepEqual(await settings(I), generated, 'Generated variants must survive reloading before any personal edit');
+        await waitForWidgets(I);
+        I.executeScript(() => {
+            const toolbar = document.querySelector('.md-dashboard__toolbar');
+            window.scrollbarMain.setPosition(0, window.scrollbarMain.offset.y + toolbar.getBoundingClientRect().top - 64);
+        });
+        I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
+        I.resizeWindow(1337, 1052);
+        const preview = generated.items.find(item => item.type === 'recent-pages' && item.size === '3x3');
+        await showWidget(I, preview.id);
+        I.saveScreenshot('dashboard-all-sizes-desktop.png', true);
+        I.resizeWindow(390, 1052);
+        await showWidget(I, preview.id);
+        I.saveScreenshot('dashboard-all-sizes-mobile.png', true);
+        I.wjSetDefaultWindowSize();
+        I.executeScript(() => window.scrollTo(0, 0));
+        await showWidget(I, preview.id);
+        I.waitForVisible(`[data-instance-id="${preview.id}"] .dropdown > button`, 10);
+        I.clickCss(`[data-instance-id="${preview.id}"] .dropdown > button`);
+        I.clickCss(`[data-instance-id="${preview.id}"] [data-dashboard-action="remove"]`);
+        waitForSave(I);
+        assert.equal((await settings(I)).items.some(item => item.id === preview.id), false);
+        I.executeScript(() => {
+            const undo = document.querySelector('.md-dashboard__undo');
+            window.scrollbarMain.setPosition(0, window.scrollbarMain.offset.y + undo.getBoundingClientRect().top - 64);
+        });
+        I.clickCss('.md-dashboard__undo button');
+        waitForSave(I);
+        assert.deepEqual((await settings(I)).items, generated.items, 'Undo must restore one variant while other instances of its type remain');
+        await openReset(I);
+        I.clickCss(confirmation);
+        waitForSave(I);
+        const defaults = await settings(I);
+        assert.equal(defaults.items.filter(item => item.type !== 'shortcut').at(-1).type, 'newsletter');
+        assert.equal(defaults.items.filter(item => item.type === 'recent-pages').length, 1);
         I.logout();
     });
 });

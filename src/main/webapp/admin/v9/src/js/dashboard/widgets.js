@@ -1,4 +1,4 @@
-import { getWidget, listWidgets, registerWidget } from './registry';
+import { getWidget, registerWidget } from './registry';
 import { registerUtilityWidgets } from './utility-widgets';
 import { registerDataWidgets } from './data-widgets';
 import { registerSystemWidgets } from './system-widgets';
@@ -56,19 +56,12 @@ export function getDashboardDefaults(context) {
         { type: "traffic", size: "3x3" }, { type: "forms", size: "1x1" },
         { type: "approvals", size: "1x1" }, { type: "errors", size: "1x1" },
         { type: "recent-pages", size: "3x2" }, { type: "referrers", size: "2x2" },
-        { type: "publishing", size: "2x2" }, { type: "newsletter", size: "2x2" },
-        { type: "search-terms", size: "3x3" }, { type: "top-pages", size: "3x3" },
-        { type: "changed-pages", size: "3x3" }, { type: "audit", size: "3x3" },
-        { type: "server-memory", size: "3x3" }, { type: "server-cpu", size: "3x3" },
-        { type: "logged-admins", size: "2x2" }
+        { type: "publishing", size: "2x2" }, { type: "newsletter", size: "2x2" }
     ];
     const menu = menuEntries(context);
     const shortcuts = ["/admin/v9/webpages/web-pages-list/", "/apps/form/admin/"].filter(href => menu.some(item => item.href === href));
     if (!shortcuts.length && menu.length) shortcuts.push(menu[0].href);
     shortcuts.forEach(href => items.push({ type: "shortcut", options: { href } }));
-    for (const definition of listWidgets()) {
-        if (!items.some(item => item.type === definition.type) && definition.type !== "shortcut") items.push({ type: definition.type });
-    }
     return items.filter(item => {
         const definition = getWidget(item.type);
         return definition && (!definition.isAvailable || definition.isAvailable(context));
@@ -242,7 +235,7 @@ export function registerDashboardWidgets() {
     });
     registerWidget({
         type: "recent-pages", titleKey: "admin.dashboard.recent-pages.js", descriptionKey: "admin.dashboard.recent-pages.description.js",
-        icon: "ti-history", sizes: ["2x3", "3x2", "3x3"], defaultSize: "3x2",
+        icon: "ti-history", multiple: true, sizes: ["2x3", "3x2", "3x3"], defaultSize: "3x2",
         headerLink: { href: "/admin/v9/webpages/web-pages-list/", labelKey: "admin.dashboard.allShort.js" },
         isAvailable: () => window.WJ.hasPermission("menuWebpages"),
         async render({ container, context, signal }) {

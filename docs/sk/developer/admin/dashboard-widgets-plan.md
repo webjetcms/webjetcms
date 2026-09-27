@@ -66,7 +66,7 @@ Používateľské nastavenia sa budú ukladať na server do existujúcej tabuľk
 - Spoločné rozloženie naprieč doménami a zariadeniami.
 - Nastavenia formulárov, priečinkov a ďalších doménových výberov oddelene podľa domény.
 - `overview.layout.v1` pre verziu a poradie inštancií, `overview.widget.<id>` pre konfigurácie a `overview.news` pre potvrdené novinky.
-- Najviac 32 inštancií a 2000 znakov na jeden záznam; prekročenie odmietnuť, nikdy potichu neorezávať.
+- Najviac 48 inštancií a 2000 znakov na jeden záznam; prekročenie odmietnuť, nikdy potichu neorezávať.
 
 Pridať `GET/PUT /admin/rest/dashboard/settings` s čerstvým čítaním a transakčným zápisom. Používateľa a doménový kontext určuje server. Pri chybe uloženia obnoviť posledný potvrdený stav a zobraziť chybu. Medzi zariadeniami platí posledné úspešné uloženie; živá synchronizácia nebude súčasťou prvej verzie.
 
@@ -196,7 +196,7 @@ Po doplnení všetkých predvolených widgetov, resetu a AmCharts prešiel front
 
 ## Dokončenie migrácie pôvodných prehľadov
 
-Sekcia „Ďalšie prehľady“ je odstránená vrátane pôvodného rozhrania záložiek a spoločného dátového endpointu. Päť samostatných widgetov používa poskytovateľov podľa typu s kontrolou oprávnení na serveri. Nové a resetované rozloženie ich pridá na koniec; uložené osobné rozloženia sa nemenia. „Vaše skratky“ podporujú odkazy do dostupných modulov aj vlastné URL uložené na konto. Pôvodná verzia ukladala pole `{name, path}` do `localStorage["bookmarks"]`, nie do databázy. Pri načítaní dashboardu sa tento neprázdny zoznam automaticky importuje do prihláseného účtu a nahradí iba skratky. Názvy, poradie a konkrétne URL vrátane parametrov sa zachovajú; duplicitné URL sa zlúčia. Widgety, doménové filtre a prečítané novinky zostanú zachované. Až úspešné uloženie nastaví `legacyBookmarksHandled` a odstráni pôvodný lokálny kľúč, pokiaľ sa počas ukladania nezmenil. Chyba uloženia, neplatný záznam alebo prekročenie limitu zachovajú pôvodný zoznam aj aktuálne skratky; ďalšie načítanie import zopakuje. Chýbajúci alebo prázdny zoznam ponechá predvolené skratky. Úspešne dokončený import sa na rovnakom účte neopakuje. Migrácia cez `UpdateDatabase` nie je potrebná.
+Sekcia „Ďalšie prehľady“ je odstránená vrátane pôvodného rozhrania záložiek a spoločného dátového endpointu. Päť samostatných widgetov používa poskytovateľov podľa typu s kontrolou oprávnení na serveri. New and reset layouts use only the explicit list in `getDashboardDefaults(context)` and end with Newsletter; these additional widgets remain in the catalogue for manual addition. Saved personal layouts are unchanged. „Vaše skratky“ podporujú odkazy do dostupných modulov aj vlastné URL uložené na konto. Pôvodná verzia ukladala pole `{name, path}` do `localStorage["bookmarks"]`, nie do databázy. Pri načítaní dashboardu sa tento neprázdny zoznam automaticky importuje do prihláseného účtu a nahradí iba skratky. Názvy, poradie a konkrétne URL vrátane parametrov sa zachovajú; duplicitné URL sa zlúčia. Widgety, doménové filtre a prečítané novinky zostanú zachované. Až úspešné uloženie nastaví `legacyBookmarksHandled` a odstráni pôvodný lokálny kľúč, pokiaľ sa počas ukladania nezmenil. Chyba uloženia, neplatný záznam alebo prekročenie limitu zachovajú pôvodný zoznam aj aktuálne skratky; ďalšie načítanie import zopakuje. Chýbajúci alebo prázdny zoznam ponechá predvolené skratky. Úspešne dokončený import sa na rovnakom účte neopakuje. Migrácia cez `UpdateDatabase` nie je potrebná.
 
 Monitorovanie používa dostupné historické vzorky za poslednú hodinu a aktuálnu vzorku z rovnakého zdroja ako modul monitorovania. Bez zapnutého záznamu histórie je k dispozícii aktuálna vzorka. Widgety sa načítajú pri otvorení a manuálnom obnovení, grafy sa uvoľnia pri zmene veľkosti či odstránení. Audit, administrátori a monitorovanie sú údaje celého servera; zmenené stránky rešpektujú aktuálnu doménu a oprávnenia k stránkam.
 
@@ -220,3 +220,8 @@ Selecty používajú spoločnú funkciu `WJ.initSelectPicker(root, overrides)`, 
 ## Widget minimization removed
 
 Widgets always render their full content at the selected size. The action menu, renderers, styles and settings no longer support a separate minimized state. Legacy `collapsed` fields are ignored when loading both browser and server preferences, preserving widget order, sizes and domain filters. Release-news acknowledgement and its independent summary toggle remain available.
+
+
+### All widget size variants
+
+Shift-clicking **Restore** generates every authorized widget type in each supported size through the registry. The generated layout is saved atomically and survives reload; individual variants support normal editing, removal and undo. Shortcuts remain unchanged, while sessions, news and search keep a single fixed instance. Grid widgets support multiple instances. Normal Restore still uses the curated defaults ending with Newsletter. The shared limit is 48 instances, with the existing 2000-character limit for each storage record.

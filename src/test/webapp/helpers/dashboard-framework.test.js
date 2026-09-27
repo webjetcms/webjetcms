@@ -74,7 +74,12 @@ function fixture(t, { items = [], configured = true, shortcutsConfigured = confi
     let stored = { version: 1, configured, shortcutsConfigured, legacyBookmarksHandled, items: copy(items), domainOptions: {}, acknowledgedNewsVersion: null };
     const fetch = async (url, options = {}) => {
         requests.push({ url, ...options });
-        if (options.method === "PUT") {
+        if (url.endsWith("/settings/reset")) {
+            if (failReset) return { ok: false, status: 503 };
+            const layout = JSON.parse(options.body);
+            stored = { ...layout, configured: true, shortcutsConfigured: true, legacyBookmarksHandled: stored.legacyBookmarksHandled,
+                items: [...stored.items.filter(item => item.type === "shortcut"), ...layout.items.filter(item => item.type !== "shortcut")] };
+        } else if (options.method === "PUT") {
             if (failSave) return { ok: false, status: 500 };
             stored = { ...JSON.parse(options.body), configured: true, shortcutsConfigured: true };
         } else if (options.method === "DELETE") {
@@ -407,6 +412,59 @@ test("The editing toolbar delegates the full reset scope to standard confirmatio
     assert.equal(window.document.activeElement, reset);
 });
 
+test("Shift reset confirms and persists every authorized size, supports removal and undo, and rolls back failures", async t => {
+    const { controller, window, host, confirmations, requests, stored, setResetFailure, closeConfirmation } = fixture(t, {
+        items: [item("old"), item("link", "shortcut", "1x1", { href: "/custom/", title: "Custom" })],
+        legacyBookmarksHandled: true, failReset: true,
+        definitions: [
+            { type: "sessions", sizes: ["2x3"], mandatory: true, render() {} },
+            { type: "shortcut", sizes: ["1x1"], multiple: true, render() {} },
+            { type: "denied", sizes: ["1x1", "3x3"], isAvailable: () => false, render() {} }
+        ]
+    });
+    await controller.start();
+    await controller.saveOptions("old", { domainOptions: { formName: "Contact" } });
+    const original = copy(controller.settings);
+    controller.setEditing(true);
+    controller.resetButton.dispatchEvent(new window.MouseEvent("click", { shiftKey: true, bubbles: true }));
+    const confirmation = confirmations.at(-1).options;
+    assert.equal(confirmation.title, "Show all");
+    assert.match(confirmation.message, /every supported size/);
+    assert.deepEqual(copy(controller.settings), original, "Opening the confirmation must not modify preferences");
+    assert.equal(requests.some(request => request.url.endsWith("/settings/reset")), false);
+    assert.equal(await confirmation.success(), false);
+    assert.deepEqual(copy(controller.settings), original);
+    setResetFailure(false);
+    assert.equal(await confirmation.success(), true);
+    closeConfirmation();
+    assert.equal(requests.at(-1).method, "PUT");
+    assert.equal(requests.at(-1).url, "/admin/rest/dashboard/settings/reset");
+    assert.deepEqual(copy(controller.settings.items.filter(value => value.type === "test").map(value => value.size)), ["1x1", "2x2", "2x3", "3x2", "3x3", "fullauto"]);
+    assert.equal(controller.settings.items.filter(value => value.type === "sessions").length, 1);
+    assert.equal(controller.settings.items.some(value => value.type === "denied"), false);
+    assert.deepEqual(copy(controller.settings.items.find(value => value.id === "link")), original.items.find(value => value.id === "link"));
+    assert.equal(controller.settings.domainOptions.old, undefined);
+    assert.equal(controller.settings.legacyBookmarksHandled, true);
+    assert.equal(controller.settings.configured, true);
+    assert.equal(new Set(controller.settings.items.map(value => value.id)).size, controller.settings.items.length);
+    const generated = stored();
+    await controller.start();
+    assert.deepEqual(copy(controller.settings), generated);
+    const variant = controller.settings.items.find(value => value.type === "test");
+    assert.equal(await controller.remove(variant.id), true);
+    assert.equal(await controller.undoRemove(), true);
+    assert.ok(host.querySelector(`[data-instance-id="${variant.id}"]`));
+});
+
+test("An oversized variant reset is rejected before sending any mutation", async t => {
+    const { controller, requests } = fixture(t, { items: Array.from({ length: 48 }, (_, i) => item(`link-${i}`, "shortcut")) });
+    await controller.start();
+    const before = requests.length;
+    assert.equal(await controller.reset(true), false);
+    assert.equal(requests.length, before);
+    assert.equal(controller.settings.items.length, 48);
+});
+
 test("Dismissing standard reset confirmation preserves preferences and catalogue actions", async t => {
     const { controller, window, requests, closeConfirmation } = fixture(t, { items: [item("custom")] });
     await controller.start();
@@ -631,7 +689,7 @@ test("Multiple instances use different ids, singleton duplication is refused and
     await controller.add("test");
     const ids = controller.settings.items.map(value => value.id);
     assert.equal(new Set(ids).size, 3);
-    controller.settings.items = Array.from({ length: 32 }, (_, index) => item(`item-${index}`));
+    controller.settings.items = Array.from({ length: 48 }, (_, index) => item(`item-${index}`));
     const before = requests.length;
     assert.equal(await controller.add("test"), false);
     assert.equal(requests.length, before);
@@ -989,12 +1047,12 @@ test("Failed and oversized automatic imports keep all preferences and retry on a
     assert.equal(window.localStorage.getItem("bookmarks"), legacy);
     assert.match(controller.shortcutStatus.textContent, /could not be saved/);
     setSaveFailure(false);
-    const oversized = JSON.stringify(Array.from({ length: 32 }, (_, i) => ({ name: `Autotest ${i}`, path: `/apps/banner/admin/?id=${i}` })));
+    const oversized = JSON.stringify(Array.from({ length: 48 }, (_, i) => ({ name: `Autotest ${i}`, path: `/apps/banner/admin/?id=${i}` })));
     window.localStorage.setItem("bookmarks", oversized);
     await controller.start();
     assert.deepEqual(stored(), original, "Do not silently truncate an oversized import");
     assert.equal(window.localStorage.getItem("bookmarks"), oversized);
-    assert.match(controller.shortcutStatus.textContent, /at most 32/);
+    assert.match(controller.shortcutStatus.textContent, /at most 48/);
     window.localStorage.setItem("bookmarks", legacy);
     await controller.start();
     assert.equal(stored().items.length, 2);

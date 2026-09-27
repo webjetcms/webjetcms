@@ -157,7 +157,7 @@ function liveMonitoring(container, type, context, signal, update) {
 export function registerSystemWidgets() {
     for (const [type, permission, widgetIcon] of [['changed-pages', 'menuWebpages', 'ti-pencil'], ['audit', 'cmp_adminlog', 'ti-shield-search']]) registerWidget({
         type, titleKey: `admin.dashboard.${type}.js`, descriptionKey: `admin.dashboard.${type}.description.js`, icon: widgetIcon,
-        sizes: ['3x2', '3x3'], defaultSize: '3x3', headerLink: { href: moduleLinks[type], labelKey: 'admin.dashboard.allShort.js' },
+        multiple: true, sizes: ['3x2', '3x3'], defaultSize: '3x3', headerLink: { href: moduleLinks[type], labelKey: 'admin.dashboard.allShort.js' },
         isAvailable: () => window.WJ.hasPermission(permission),
         async render({ container, instance, context, signal }) {
             const data = await fetchData(type, {}, signal); if (signal.aborted) return;
@@ -167,7 +167,7 @@ export function registerSystemWidgets() {
     });
     registerWidget({
         type: 'logged-admins', titleKey: 'admin.dashboard.logged-admins.js', descriptionKey: 'admin.dashboard.logged-admins.description.js', icon: 'ti-users',
-        sizes: ['2x2', '2x3'], defaultSize: '2x2', isAvailable: () => window.WJ.hasPermission('welcomeShowLoggedAdmins'),
+        multiple: true, sizes: ['2x2', '2x3'], defaultSize: '2x2', isAvailable: () => window.WJ.hasPermission('welcomeShowLoggedAdmins'),
         async render({ container, context, signal }) {
             const data = await fetchData('logged-admins', {}, signal); if (signal.aborted) return;
             if (!data.items.length) { empty(container, context); return; }
@@ -187,7 +187,7 @@ export function registerSystemWidgets() {
     });
     for (const type of ['server-memory', 'server-cpu']) registerWidget({
         type, titleKey: `admin.dashboard.${type}.js`, descriptionKey: `admin.dashboard.${type}.description.js`, icon: type === 'server-memory' ? 'ti-server' : 'ti-cpu',
-        sizes: ['3x2', '3x3'], defaultSize: '3x3', headerLink: { href: moduleLinks[type] },
+        multiple: true, sizes: ['3x2', '3x3'], defaultSize: '3x3', headerLink: { href: moduleLinks[type] },
         isAvailable: () => window.WJ.hasPermission('cmp_server_monitoring'),
         async render({ container, context, signal }) {
             const snapshot = await readMonitoringSnapshot(signal); if (signal.aborted) return;

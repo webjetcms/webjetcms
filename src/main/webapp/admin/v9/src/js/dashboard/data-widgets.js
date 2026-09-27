@@ -166,7 +166,7 @@ function pollNewsletter(data, container, signal, refresh) {
 /** Registers content, analytics, and newsletter widgets using authorized projections. */
 export function registerDataWidgets() {
     registerWidget({
-        type: 'approvals', titleKey: 'admin.dashboard.approvals.js', icon: 'ti-checkup-list', sizes: ['1x1', '3x3'], defaultSize: '3x3',
+        type: 'approvals', titleKey: 'admin.dashboard.approvals.js', icon: 'ti-checkup-list', multiple: true, sizes: ['1x1', '3x3'], defaultSize: '3x3',
         headerLink: { href: moduleLinks.approvals },
         isAvailable: () => window.WJ.hasPermission('menuWebpages'),
         async render({ container, instance, context, signal }) {
@@ -179,7 +179,7 @@ export function registerDataWidgets() {
         }
     });
     registerWidget({
-        type: 'publishing', titleKey: 'admin.dashboard.publishing.js', icon: 'ti-calendar-event', sizes: ['2x2', '2x3'], defaultSize: '2x2',
+        type: 'publishing', titleKey: 'admin.dashboard.publishing.js', icon: 'ti-calendar-event', multiple: true, sizes: ['2x2', '2x3'], defaultSize: '2x2',
         headerLink: { href: () => window.WJ.hasPermission('cmp_adminlog') ? moduleLinks.publishing : '/admin/v9/webpages/web-pages-list/' },
         isAvailable: () => window.WJ.hasPermission('menuWebpages'),
         async render({ container, instance, context, signal }) {

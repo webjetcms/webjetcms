@@ -1,4 +1,4 @@
-export const MAX_WIDGETS = 32;
+export const MAX_WIDGETS = 48;
 
 export function cloneSettings(value) {
     return JSON.parse(JSON.stringify(value));
