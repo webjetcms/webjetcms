@@ -22,7 +22,7 @@ class DashboardRestControllerTest {
     void runtimeJsonMapperRoundTripsWidgetAndDomainOptions() {
         JsonMapper mapper = JsonMapper.builder().build();
         String json = """
-            {"version":1,"configured":true,"items":[
+            {"version":1,"configured":true,"shortcutsConfigured":true,"legacyBookmarksHandled":true,"items":[
                 {"id":"form-1","type":"forms","size":"3x3","collapsed":false,
                  "options":{"days":7,"nested":{"enabled":true}}}],
              "domainOptions":{"form-1":{"formName":"Contact"}},"acknowledgedNewsVersion":null}

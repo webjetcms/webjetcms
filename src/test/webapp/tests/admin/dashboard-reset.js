@@ -131,12 +131,14 @@ Scenario('Reset confirms deletion, keeps failed changes and restores every avail
         const defaults = await settings(I);
         assert.equal(defaults.configured, false, 'Reset defaults remain unconfigured until a personal edit');
         assert.equal(defaults.acknowledgedNewsVersion, null);
+        assert.deepEqual(defaults.items.filter(item => item.type === 'shortcut'), custom.items.filter(item => item.type === 'shortcut'), 'Overview reset preserves custom shortcuts, order and stable ids');
+        assert.equal(defaults.shortcutsConfigured, true);
         assert.deepEqual([...new Set(defaults.items.map(item => item.type))].sort(), Object.keys(expectedSizes).sort());
         for (const item of defaults.items) {
             assert.equal(item.size, expectedSizes[item.type], `Default footprint for ${item.type}`);
             assert.equal(item.collapsed, false);
         }
-        assert.deepEqual(defaults.items.slice(0, 11).map(item => item.type), [
+        assert.deepEqual(defaults.items.filter(item => item.type !== 'shortcut').slice(0, 11).map(item => item.type), [
             'search', 'sessions', 'news', 'traffic', 'forms', 'approvals',
             'errors', 'recent-pages', 'referrers', 'publishing', 'newsletter'
         ], 'The overview must retain its curated default order');
@@ -167,7 +169,7 @@ Scenario('Reset confirms deletion, keeps failed changes and restores every avail
         I.wjSetDefaultWindowSize();
 
         const shortcut = reloaded.items.find(item => item.type === 'shortcut');
-        await I.clickIfVisible('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
+        await I.clickIfVisible('.md-dashboard__shortcut-actions button[aria-pressed="false"]');
         I.clickCss(`[data-instance-id="${shortcut.id}"] .dropdown > button`);
         I.forceClick(`[data-instance-id="${shortcut.id}"] [data-dashboard-action="settings"]`);
         I.waitForVisible('.md-dashboard__settings [name="dashboardShortcutTitle"]', 10);
@@ -206,7 +208,7 @@ Scenario('Remove disposable reset preferences and account without changing the a
             const status = await I.executeScript(async () => (await fetch('/admin/rest/dashboard/settings', {
                 method: 'DELETE', credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken }
             })).status);
-            assert.equal(status, 200, 'Remove every dashboard record before deleting the disposable account');
+            assert.equal(status, 200, 'Reset widget preferences before deleting the disposable account');
             I.logout();
         });
         I.seeNumberOfElements('#datatableInit tbody tr', 1);

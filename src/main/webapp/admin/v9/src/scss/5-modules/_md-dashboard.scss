@@ -74,7 +74,10 @@ webjet-overview-dashboard a:focus-visible {
 
     &__welcome { min-width: 0; min-height: 205px; padding: 24px 24px 18px; }
     &__welcome-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-height: 24px; margin-bottom: 12px; }
-    &__greeting { font-size: 29px; font-weight: 700; line-height: 1.15; margin: 0 0 20px; letter-spacing: -1px; }
+    &__welcome-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
+    &__greeting { font-size: 29px; font-weight: 700; line-height: 1.15; margin: 0; letter-spacing: -1px; }
+    &__shortcut-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+    &__shortcut-actions > .btn { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; padding: 7px 10px; }
     &__eyebrow { color: var(--wj-dashboard-muted); font-size: 12px; margin: 0; &::first-letter { text-transform: uppercase; } }
     &__environment {
         display: inline-flex;
@@ -313,9 +316,9 @@ webjet-overview-dashboard a:focus-visible {
 
     &__drag { cursor: grab; }
     &__widget-controls { display: flex; align-items: center; gap: 4px; }
-    &.is-editing &__widget:not(.is-fixed) { border-color: var(--wj-nice-gray-200); }
-    &.is-editing &__widget-header, &__widget.ui-draggable-dragging &__widget-header { flex-wrap: wrap; }
-    &.is-editing &__widget-title, &__widget.ui-draggable-dragging &__widget-title { flex-basis: 50%; }
+    &.is-editing &__layout &__widget { border-color: var(--wj-nice-gray-200); }
+    &.is-editing &__layout &__widget-header, &__widget.ui-draggable-dragging &__widget-header { flex-wrap: wrap; }
+    &.is-editing &__layout &__widget-title, &__widget.ui-draggable-dragging &__widget-title { flex-basis: 50%; }
 
     &__widget-body {
         display: flex;
@@ -346,7 +349,7 @@ webjet-overview-dashboard a:focus-visible {
         text-align: center;
     }
 
-    &.is-dragging &__drop-end { display: block; }
+    &.is-editing.is-dragging &__drop-end { display: block; }
 
     &__catalogue-item {
         display: flex;
@@ -362,32 +365,23 @@ webjet-overview-dashboard a:focus-visible {
     }
 
     &__shortcuts {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 12px;
-        margin-top: 26px;
-        > header, > .md-dashboard__shortcuts-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 0;
-            .md-dashboard__title { font-size: 12px; }
-            .btn { font-size: 12px; border-color: transparent; background: transparent; color: var(--wj-dashboard-link); }
-            .btn:hover, .btn:focus-visible, .btn:active { background: var(--wj-nice-gray); color: var(--wj-dashboard-link); }
-        }
+        margin: 0 0 18px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--wj-dashboard-divider);
+        > .md-dashboard__status, > .md-dashboard__undo { margin: 12px 0 0; flex-wrap: wrap; font-size: 12px; }
     }
+    &__shortcuts-empty { font-size: 12px; color: var(--wj-dashboard-muted); margin: 0; }
     &__shortcut-list {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        > .md-dashboard__widget { min-height: 0; flex: 0 1 auto; }
-        .md-dashboard__widget-body { padding: 10px 12px; }
-        .md-dashboard__widget-header { padding-top: 8px; }
+        > .md-dashboard__widget { min-height: 0; flex: 0 1 auto; max-width: 100%; flex-direction: row; align-items: center; border-color: var(--wj-nice-gray-100); background: var(--wj-dashboard-surface); }
+        .md-dashboard__widget[data-size="1x1"] .md-dashboard__widget-body { padding: 0; }
+        .md-dashboard-widget__shortcut { padding: 10px 12px; min-height: 42px; }
+        .md-dashboard__widget[data-size="1x1"] .md-dashboard__widget-header { padding: 0 6px 0 0; }
+        .md-dashboard__widget-header > .ti, .md-dashboard__widget-title { display: none !important; }
     }
-    &:not(.is-editing) &__shortcut-list &__widget-header { display: none; }
+    &:not(.is-editing-shortcuts) &__shortcut-list &__widget-header { display: none; }
 
     @media (min-width: 360px) {
         &__widget[data-size="1x1"] { grid-column: span 6; }

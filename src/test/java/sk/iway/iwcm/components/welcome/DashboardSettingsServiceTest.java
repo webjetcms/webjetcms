@@ -188,6 +188,10 @@ class DashboardSettingsServiceTest {
     /** Reset returns a new unconfigured profile only after persistence succeeds. */
     @Test
     void resetReturnsCleanDefaultsAndPropagatesPersistenceFailure() {
+        when(repository.reset(eq(7), any())).thenAnswer(call -> {
+            java.util.function.Function<Map<String, String>, Map<String, String>> retain = call.getArgument(1);
+            return retain.apply(Map.of());
+        });
         DashboardSettingsDto result = service.reset(7);
 
         assertEquals(1, result.getVersion());
@@ -195,12 +199,44 @@ class DashboardSettingsServiceTest {
         assertTrue(result.getItems().isEmpty());
         assertTrue(result.getDomainOptions().isEmpty());
         assertNull(result.getAcknowledgedNewsVersion());
-        verify(repository).reset(7);
+        verify(repository).reset(eq(7), any());
         verify(repository, never()).read(anyInt());
         verify(repository, never()).replace(anyInt(), anyString(), anyMap(), anySet());
 
-        doThrow(new IllegalStateException("Database is unavailable")).when(repository).reset(7);
+        doThrow(new IllegalStateException("Database is unavailable")).when(repository).reset(eq(7), any());
         assertThrows(IllegalStateException.class, () -> service.reset(7));
+    }
+
+    /** Reset preserves ordered shortcuts and the migration decision while clearing all widget preferences. */
+    @Test
+    void resetRetainsShortcutsAndTheirMetadata() {
+        DashboardSettingsDto source = settings();
+        Item shortcut = item("link", "shortcut", "1x1");
+        shortcut.setOptions(Map.of("source", "url", "href", "/apps/banner/admin/?id=23#detail", "title", "My banner"));
+        source.getItems().add(shortcut);
+        source.setLegacyBookmarksHandled(true);
+        source.setAcknowledgedNewsVersion("2026.18");
+        source.getDomainOptions().put("sessions-1", Map.of("custom", true));
+        Map<String, String> original = service.validateAndSerialize(source, "42");
+        when(repository.reset(eq(7), any())).thenAnswer(call -> {
+            java.util.function.Function<Map<String, String>, Map<String, String>> retain = call.getArgument(1);
+            return retain.apply(original);
+        });
+        DashboardSettingsDto result = service.reset(7);
+        assertFalse(result.isConfigured());
+        assertTrue(result.isShortcutsConfigured());
+        assertTrue(result.isLegacyBookmarksHandled());
+        assertEquals(java.util.List.of("link"), result.getItems().stream().map(Item::getId).toList());
+        assertEquals(shortcut.getOptions(), result.getItems().get(0).getOptions());
+        assertTrue(result.getDomainOptions().isEmpty());
+        assertNull(result.getAcknowledgedNewsVersion());
+
+        original.remove("overview.widget.link");
+        original.put("overview.layout.v1", "{\"version\":1,\"order\":[]}");
+        result = service.reset(7);
+        assertTrue(result.isShortcutsConfigured(), "Existing empty profiles must not recreate removed shortcuts");
+        assertFalse(result.isLegacyBookmarksHandled(), "Older layouts can still review browser bookmarks");
+        assertTrue(result.getItems().isEmpty());
     }
 
     /** Rejects executable and ambiguous destinations before any settings can be persisted. */

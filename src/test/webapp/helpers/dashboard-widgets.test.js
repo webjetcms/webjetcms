@@ -72,7 +72,8 @@ test('Custom shortcuts require explicit URL mode and reject ambiguous or executa
 test('Shortcut settings toggle authorized menu and explicit URL fields and validate before persistence', t => {
     const { scope, context, container, window } = fixture(t, { menu: [{ text: 'Forms', href: '/apps/form/admin/' }] });
     const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
-    const [source, module] = container.querySelectorAll('select');
+    const source = container.querySelector('[name="dashboardShortcutSource"]');
+    const module = container.querySelector('[name="dashboardShortcutMenu"]');
     const [url, title] = container.querySelectorAll('input');
     assert.equal(url.parentElement.hidden, true);
     assert.equal(settings.read().options.href, '/apps/form/admin/');
@@ -86,6 +87,78 @@ test('Shortcut settings toggle authorized menu and explicit URL fields and valid
     assert.throws(() => settings.read(), /shortcutTitleRequired/);
     title.value = ' My site ';
     assert.deepEqual(JSON.parse(JSON.stringify(settings.read())), { options: { source: 'url', href: 'https://other.test/', title: 'My site' } });
+});
+
+const groupedShortcutMenu = [
+    { text: 'Overviews', childrens: [{ text: 'Traffic', href: '/apps/stat/admin/', childrens: [
+        { text: 'Visits', href: '/apps/stat/admin/' }, { text: 'Top pages', href: '/apps/stat/admin/top/' }
+    ] }] },
+    { text: 'Applications', childrens: [
+        { text: 'Banner system', href: '/apps/banner/admin/', childrens: [
+            { text: 'Banner list', href: '/apps/banner/admin/' }, { text: 'Banner statistics', href: '/apps/banner/admin/banner-stat/' }
+        ] },
+        { text: 'Forms', href: '/apps/form/admin/' },
+        { text: 'Unsafe', href: 'javascript:alert(1)' }
+    ] }
+];
+
+test('Shortcut selection follows main areas, sections and tabs without duplicate parent destinations', t => {
+    const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
+    const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
+    const group = container.querySelector('[name="dashboardShortcutGroup"]');
+    const section = container.querySelector('[name="dashboardShortcutSection"]');
+    const tab = container.querySelector('[name="dashboardShortcutMenu"]');
+    const select = (field, value) => { field.value = value; field.dispatchEvent(new window.Event('change')); };
+    assert.deepEqual([...group.options].slice(1).map(option => option.textContent), ['Overviews', 'Applications']);
+    assert.equal(group.value, '', 'Do not silently choose the first administration destination');
+    assert.equal(section.disabled, true);
+    assert.equal(tab.disabled, true);
+    assert.throws(() => settings.read(), /shortcutChooseTarget/);
+    select(group, '1');
+    assert.deepEqual([...section.options].slice(1).map(option => option.textContent), ['Banner system', 'Forms']);
+    select(section, '0');
+    assert.deepEqual([...tab.options].slice(1).map(option => option.textContent), ['Banner list', 'Banner statistics']);
+    assert.equal(tab.value, '');
+    select(tab, '/apps/banner/admin/banner-stat/');
+    assert.equal(settings.read().options.href, '/apps/banner/admin/banner-stat/');
+    select(group, '0');
+    assert.equal(section.value, '0', 'A sole authorized section needs no extra choice');
+    assert.equal(tab.value, '', 'Changing the main area must discard the old tab');
+    assert.throws(() => settings.read(), /shortcutChooseTarget/);
+    select(group, '1');
+    select(section, '1');
+    assert.equal(tab.parentElement.hidden, true, 'A direct section link needs no redundant tab choice');
+    assert.equal(settings.read().options.href, '/apps/form/admin/');
+});
+
+test('Editing preselects the stored hierarchy and unavailable targets cannot silently change', t => {
+    const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
+    const original = { source: 'menu', href: '/apps/banner/admin/banner-stat/', title: 'Autotest banners' };
+    const settings = scope.getWidget('shortcut').configure({ container, context, options: original });
+    assert.equal(container.querySelector('[name="dashboardShortcutGroup"]').selectedOptions[0].textContent, 'Applications');
+    assert.equal(container.querySelector('[name="dashboardShortcutSection"]').selectedOptions[0].textContent, 'Banner system');
+    assert.equal(container.querySelector('[name="dashboardShortcutMenu"]').selectedOptions[0].textContent, 'Banner statistics');
+    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), original);
+    const source = container.querySelector('[name="dashboardShortcutSource"]');
+    source.value = 'url';
+    source.dispatchEvent(new window.Event('change'));
+    for (const name of ['Group', 'Section', 'Menu']) assert.equal(container.querySelector(`[name="dashboardShortcut${name}"]`).parentElement.hidden, true);
+    source.value = 'menu';
+    source.dispatchEvent(new window.Event('change'));
+    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), original);
+    container.replaceChildren();
+    const unavailable = scope.getWidget('shortcut').configure({ container, context, options: { ...original, href: '/no-longer-authorized/' } });
+    assert.equal(container.querySelector('[name="dashboardShortcutGroup"]').value, '');
+    assert.throws(() => unavailable.read(), /shortcutChooseTarget/);
+});
+
+test('Empty or unsafe-only menu groups offer explicit URLs instead of empty navigation choices', t => {
+    const { scope, context, container } = fixture(t, { menu: [{ text: 'Empty', childrens: [] }, { text: 'Unsafe', childrens: [{ text: 'Script', href: 'javascript:alert(1)' }] }] });
+    scope.getWidget('shortcut').configure({ container, context, options: {} });
+    const source = container.querySelector('[name="dashboardShortcutSource"]');
+    assert.equal(source.value, 'url');
+    assert.equal(source.options[0].disabled, true);
+    assert.equal(container.querySelector('[name="dashboardShortcutGroup"]').parentElement.hidden, true);
 });
 
 test('Recent pages retain six server-filtered rows safely in every supported size', async t => {

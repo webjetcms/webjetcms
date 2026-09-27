@@ -184,7 +184,7 @@ class DashboardSettingsRepositoryTest {
         original.put("datatable-state", "{}");
         stubRecords(original);
 
-        repository.reset(7);
+        repository.reset(7, records -> Map.of());
 
         verify(read).setInt(1, 7);
         verify(read).setString(2, "overview.%");
@@ -208,13 +208,34 @@ class DashboardSettingsRepositoryTest {
         verifyNoInteractions(insert);
     }
 
+    /** Retained shortcuts are reinserted before commit; an insert failure rolls back the reset. */
+    @Test
+    void resetRetainsTheLockedSnapshotAtomically() throws SQLException {
+        Map<String, String> original = Map.of("overview.layout.v1", "old", "overview.widget.link", "shortcut", "overview.news", "read");
+        Map<String, String> retained = Map.of("overview.layout.v1", "new", "overview.widget.link", "shortcut");
+        stubRecords(original);
+        assertEquals(retained, repository.reset(7, snapshot -> { assertEquals(original, snapshot); return retained; }));
+        var order = inOrder(read, delete, insert, connection);
+        order.verify(read).executeQuery();
+        order.verify(delete, times(3)).executeUpdate();
+        order.verify(insert, times(2)).executeUpdate();
+        order.verify(connection).commit();
+
+        clearInvocations(connection);
+        stubRecords(original);
+        when(insert.executeUpdate()).thenThrow(new SQLException("Insert failed"));
+        assertThrows(IllegalStateException.class, () -> repository.reset(7, snapshot -> retained));
+        verify(connection).rollback();
+        verify(connection, never()).commit();
+    }
+
     /** A partial delete failure must preserve the complete previous profile. */
     @Test
     void resetRollsBackWhenARecordCannotBeDeleted() throws SQLException {
         stubRecords(Map.of("overview.layout.v1", "{}", "overview.news", "{}"));
         when(delete.executeUpdate()).thenReturn(1).thenThrow(new SQLException("Delete failed"));
 
-        assertThrows(IllegalStateException.class, () -> repository.reset(7));
+        assertThrows(IllegalStateException.class, () -> repository.reset(7, records -> Map.of()));
 
         verify(connection).rollback();
         verify(connection, never()).commit();
@@ -243,7 +264,7 @@ class DashboardSettingsRepositoryTest {
         when(release.executeQuery()).thenReturn(mock(ResultSet.class));
         stubRecords(Map.of("overview.layout.v1", "{}"));
 
-        repository.reset(7);
+        repository.reset(7, records -> Map.of());
 
         var order = inOrder(engineQuery, acquire, connection, delete, release);
         order.verify(engineQuery).executeQuery();
@@ -259,7 +280,7 @@ class DashboardSettingsRepositoryTest {
 
         clearInvocations(connection, acquire, delete, read, release);
         when(engine.getString(1)).thenReturn("MyISAM");
-        assertThrows(IllegalStateException.class, () -> repository.reset(7));
+        assertThrows(IllegalStateException.class, () -> repository.reset(7, records -> Map.of()));
         verifyNoInteractions(acquire, delete, read, release);
         verify(connection, never()).commit();
     }

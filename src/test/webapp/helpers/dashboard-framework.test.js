@@ -11,7 +11,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
 const item = (id, type = "test", size = "2x2", options = {}) => ({ id, type, size, options, collapsed: false });
 
 /** Runs production browser modules against a DOM and a stateful settings server. */
-function fixture(t, { items = [], configured = true, definitions = [], defaults = [], failSave = false, failLoad = false, failReset = false, deferModalShown = false, withTooltip = false, overview } = {}) {
+function fixture(t, { items = [], configured = true, shortcutsConfigured = configured, legacyBookmarksHandled = false, definitions = [], defaults = [], failSave = false, failLoad = false, failReset = false, deferModalShown = false, withTooltip = false, overview } = {}) {
     const dom = new JSDOM("<!doctype html><html><body><div id='alerts'>System warning</div><div id='dashboard'></div></body></html>", { url: "http://localhost/admin/v9/" });
     const { window } = dom;
     const notifications = [];
@@ -70,15 +70,15 @@ function fixture(t, { items = [], configured = true, definitions = [], defaults 
         };
     }
     const requests = [];
-    let stored = { version: 1, configured, items: copy(items), domainOptions: {}, acknowledgedNewsVersion: null };
+    let stored = { version: 1, configured, shortcutsConfigured, legacyBookmarksHandled, items: copy(items), domainOptions: {}, acknowledgedNewsVersion: null };
     const fetch = async (url, options = {}) => {
         requests.push({ url, ...options });
         if (options.method === "PUT") {
             if (failSave) return { ok: false, status: 500 };
-            stored = { ...JSON.parse(options.body), configured: true };
+            stored = { ...JSON.parse(options.body), configured: true, shortcutsConfigured: true };
         } else if (options.method === "DELETE") {
             if (failReset) return { ok: false, status: 503 };
-            stored = { version: 1, configured: false, items: [], domainOptions: {}, acknowledgedNewsVersion: null };
+            stored = { version: 1, configured: false, shortcutsConfigured: stored.shortcutsConfigured, legacyBookmarksHandled: stored.legacyBookmarksHandled, items: stored.items.filter(item => item.type === "shortcut"), domainOptions: {}, acknowledgedNewsVersion: null };
         } else if (failLoad) return { ok: false, status: 503 };
         return { ok: true, json: async () => copy(stored) };
     };
@@ -260,7 +260,7 @@ test("A failed reset preserves the layout, filters, acknowledged news and remova
     assert.deepEqual(copy(controller.settings), settings);
     assert.equal(host.querySelector('[data-instance-id="kept"]'), card);
     assert.equal(controller.removed.instance.id, "removed");
-    assert.match(host.querySelector('[role="status"]').textContent, /previous settings/);
+    assert.match(controller.status.textContent, /previous settings/);
 });
 
 test("The editing toolbar delegates the full reset scope to standard confirmation", async t => {
@@ -309,7 +309,7 @@ test("A failed confirmed reset preserves the personal layout and can be retried 
     controller.resetButton.click();
     assert.equal(await confirmations.at(-1).options.success(), false);
     closeConfirmation();
-    assert.match(host.querySelector('[role="status"]').textContent, /previous settings/);
+    assert.match(controller.status.textContent, /previous settings/);
     assert.deepEqual(copy(controller.settings), original);
     assert.equal(notifications.length, 0);
     setResetFailure(false);
@@ -317,7 +317,7 @@ test("A failed confirmed reset preserves the personal layout and can be retried 
     assert.equal(await confirmations.at(-1).options.success(), true);
     closeConfirmation();
     assert.equal(controller.resetButton.disabled, false);
-    assert.equal(host.querySelector('[role="status"]').textContent, '');
+    assert.equal(controller.status.textContent, '');
     assert.deepEqual(notifications, [['The default overview has been restored.', '', 10000]]);
 });
 
@@ -354,11 +354,11 @@ test("Successful preferences use a ten-second standard notification and clear in
     await controller.start();
     assert.equal(await controller.updateInstance('custom', { size: '3x3' }), true);
     assert.deepEqual(notifications, [['Saved.', '', 10000]]);
-    assert.equal(host.querySelector('[role="status"]').textContent, '');
+    assert.equal(controller.status.textContent, '');
     setSaveFailure(true);
     assert.equal(await controller.updateInstance('custom', { size: '3x2' }), false);
     assert.equal(notifications.length, 1, 'Failed persistence must not show a success notification');
-    assert.match(host.querySelector('[role="status"]').textContent, /previous settings/);
+    assert.match(controller.status.textContent, /previous settings/);
 });
 
 test("Shared options and domain filters refresh only the changed widget", async t => {
@@ -398,7 +398,7 @@ test("A rejected save leaves the confirmed layout and content untouched", async 
     assert.equal(await controller.remove("a"), false);
     assert.equal(host.querySelector('[data-instance-id="a"]'), card);
     assert.deepEqual(copy(controller.settings.items.map(value => value.id)), ["a", "b"]);
-    assert.match(host.querySelector('[role="status"]').textContent, /previous settings/);
+    assert.match(controller.status.textContent, /previous settings/);
 });
 
 test("Removal undo survives a failed save but expires after the next successful mutation", async t => {
@@ -779,4 +779,179 @@ test('Release note persistence restores the replacement toggle without stealing 
         assert.equal(window.document.activeElement, moveFocusElsewhere ? otherControl : replacement,
             'Saving must restore lost toggle focus while respecting a deliberate focus change.');
     }
+});
+
+
+const shortcutDefinition = { type: "shortcut", titleKey: "Shortcut", sizes: ["1x1"], multiple: true,
+    render: ({ container, options }) => { const link = container.ownerDocument.createElement("a"); link.href = options.href; link.textContent = options.title || options.href; container.append(link); } };
+
+test("Welcome shortcuts and overview have independent edit controls and catalogue entries", async t => {
+    const { controller, host } = fixture(t, { items: [item("grid"), item("link", "shortcut", "1x1", { href: "/apps/banner/admin/" })], definitions: [shortcutDefinition] });
+    await controller.start();
+    assert.ok(host.querySelector('.md-dashboard__welcome .md-dashboard__shortcuts a[href="/apps/banner/admin/"]'));
+    assert.equal(controller.editShortcutsButton.parentElement.parentElement, host.querySelector('.md-dashboard__welcome-heading'));
+    assert.equal(controller.addShortcutButton.hidden, true);
+    const controls = id => host.querySelector(`[data-instance-id="${id}"] .md-dashboard__widget-controls`);
+    controller.setEditingShortcuts(true);
+    assert.equal(controls("link").hidden, false);
+    assert.equal(controls("grid").hidden, true);
+    assert.equal(controller.addShortcutButton.hidden, false);
+    assert.equal(controller.resetShortcutsButton.hidden, false);
+    controller.setEditing(true);
+    assert.equal(controller.editingShortcuts, false);
+    assert.equal(controls("link").hidden, true);
+    assert.equal(controls("grid").hidden, false);
+    controller.showCatalogue();
+    assert.equal(host.ownerDocument.querySelector('.md-dashboard__catalogue [data-widget-type="shortcut"]'), null);
+});
+
+test("Each reset preserves the other section and intentionally empty shortcuts survive reload", async t => {
+    const { controller, stored } = fixture(t, { items: [item("grid"), item("link", "shortcut", "1x1", { href: "/custom/?a=1#anchor", title: "Custom" })], definitions: [shortcutDefinition], defaults: [{ type: "test" }, { type: "shortcut", options: { href: "/default/" } }], legacyBookmarksHandled: true });
+    await controller.start();
+    await controller.saveOptions("grid", { domainOptions: { formName: "Contact" } });
+    await controller.acknowledgeNews("2026.18");
+    assert.equal(await controller.resetShortcuts(), true);
+    assert.deepEqual(stored().domainOptions.grid, { formName: "Contact" });
+    assert.equal(stored().acknowledgedNewsVersion, "2026.18");
+    assert.equal(stored().items[0].id, "grid");
+    const linkId = stored().items.find(item => item.type === "shortcut").id;
+    assert.equal(await controller.reset(), true);
+    assert.equal(controller.settings.items.find(item => item.type === "shortcut").id, linkId);
+    assert.equal(controller.settings.legacyBookmarksHandled, true);
+    await controller.remove(linkId);
+    await controller.start();
+    assert.equal(controller.settings.items.some(item => item.type === "shortcut"), false);
+    await controller.reset();
+    await controller.start();
+    assert.equal(controller.settings.items.some(item => item.type === "shortcut"), false);
+    assert.equal(await controller.resetShortcuts(), true);
+    assert.equal(stored().items.filter(item => item.type === "shortcut").length, 1);
+});
+
+test("Legacy bookmarks automatically replace shortcuts in original order and clear only the migrated source", async t => {
+    const { controller, window, stored, requests, host } = fixture(t, { items: [item("grid"), item("existing", "shortcut", "1x1", { href: "/apps/form/admin/", title: "New label" }), item("extra", "shortcut", "1x1", { href: "/extra/", title: "My extra" })], definitions: [shortcutDefinition] });
+    await controller.start();
+    await controller.saveOptions("grid", { domainOptions: { formName: "Contact" } });
+    await controller.acknowledgeNews("2026.18");
+    await controller.saveOptions("existing", { domainOptions: {} });
+    const previous = stored();
+    window.localStorage.setItem("unrelated", "preserve");
+    window.localStorage.setItem("bookmarks", JSON.stringify([
+        { name: "Banner autotest", path: "/apps/banner/admin/?id=23#detail" },
+        { name: "Forms autotest", path: "http://localhost/apps/form/admin/" },
+        { name: "Duplicate", path: "/apps/form/admin/" },
+        { name: "<img src=x>", path: "https://example.com/docs" }
+    ]));
+    await controller.start();
+    const links = stored().items.filter(item => item.type === "shortcut");
+    assert.deepEqual(links.map(item => item.options), [
+        { source: "url", href: "/apps/banner/admin/?id=23#detail", title: "Banner autotest" },
+        { source: "url", href: "/apps/form/admin/", title: "Forms autotest" },
+        { source: "url", href: "https://example.com/docs", title: "<img src=x>" }
+    ]);
+    assert.deepEqual(stored().items.filter(item => item.type !== "shortcut"), previous.items.filter(item => item.type !== "shortcut"));
+    assert.deepEqual(stored().domainOptions.grid, previous.domainOptions.grid);
+    assert.equal(Object.hasOwn(stored().domainOptions, "existing"), false);
+    assert.equal(stored().acknowledgedNewsVersion, previous.acknowledgedNewsVersion);
+    assert.equal(stored().legacyBookmarksHandled, true);
+    assert.equal(window.localStorage.getItem("bookmarks"), null);
+    assert.equal(window.localStorage.getItem("unrelated"), "preserve");
+    assert.equal(host.querySelector("img, .md-dashboard__legacy-shortcuts, .md-dashboard-modal"), null);
+    const count = requests.filter(request => request.method === "PUT").length;
+    await controller.start();
+    assert.equal(requests.filter(request => request.method === "PUT").length, count, "Reloading must not import twice");
+});
+
+test("Failed and oversized automatic imports keep all preferences and retry on a later load", async t => {
+    const { controller, window, stored, setSaveFailure } = fixture(t, { items: [item("grid"), item("previous", "shortcut", "1x1", { href: "/previous/" })], definitions: [shortcutDefinition], failSave: true });
+    const original = stored();
+    const legacy = JSON.stringify([{ name: "Autotest", path: "/apps/banner/admin/" }]);
+    window.localStorage.setItem("bookmarks", legacy);
+    await controller.start();
+    assert.deepEqual(stored(), original);
+    assert.equal(controller.settings.legacyBookmarksHandled, false);
+    assert.equal(window.localStorage.getItem("bookmarks"), legacy);
+    assert.match(controller.shortcutStatus.textContent, /could not be saved/);
+    setSaveFailure(false);
+    const oversized = JSON.stringify(Array.from({ length: 32 }, (_, i) => ({ name: `Autotest ${i}`, path: `/apps/banner/admin/?id=${i}` })));
+    window.localStorage.setItem("bookmarks", oversized);
+    await controller.start();
+    assert.deepEqual(stored(), original, "Do not silently truncate an oversized import");
+    assert.equal(window.localStorage.getItem("bookmarks"), oversized);
+    assert.match(controller.shortcutStatus.textContent, /at most 32/);
+    window.localStorage.setItem("bookmarks", legacy);
+    await controller.start();
+    assert.equal(stored().items.length, 2);
+    assert.equal(stored().legacyBookmarksHandled, true);
+    assert.equal(window.localStorage.getItem("bookmarks"), null);
+    assert.equal(controller.shortcutStatus.textContent, "");
+});
+
+test("Invalid legacy records remain intact without a partial import", async t => {
+    const { controller, window, stored, requests } = fixture(t, { items: [item("grid")], definitions: [shortcutDefinition] });
+    const original = stored();
+    for (const legacy of ["invalid JSON", "{}", JSON.stringify([{ name: "Valid", path: "/apps/form/admin/" }, { name: "Unsafe", path: "javascript:alert(1)" }])]) {
+        window.localStorage.setItem("bookmarks", legacy);
+        await controller.start();
+        assert.deepEqual(stored(), original);
+        assert.equal(window.localStorage.getItem("bookmarks"), legacy);
+        assert.match(controller.shortcutStatus.textContent, /invalid name or URL/);
+    }
+    assert.equal(requests.some(request => request.method === "PUT"), false);
+});
+
+test("Missing, empty or unavailable browser storage retains default shortcuts without a migration save", async t => {
+    const { controller, window, requests } = fixture(t, { configured: false, definitions: [shortcutDefinition], defaults: [{ type: "shortcut", options: { href: "/apps/form/admin/" } }] });
+    await controller.start();
+    window.localStorage.setItem("bookmarks", "[]");
+    await controller.start();
+    Object.defineProperty(window, "localStorage", { get() { throw new window.DOMException("Storage disabled", "SecurityError"); } });
+    await controller.start();
+    assert.equal(controller.settings.items.filter(item => item.type === "shortcut").length, 1);
+    assert.equal(requests.some(request => request.method === "PUT"), false);
+});
+
+test("A failed profile load never imports browser bookmarks over unknown server preferences", async t => {
+    const { controller, window, requests } = fixture(t, { failLoad: true, definitions: [shortcutDefinition] });
+    const legacy = JSON.stringify([{ name: "Autotest", path: "/apps/form/admin/" }]);
+    window.localStorage.setItem("bookmarks", legacy);
+    await controller.start();
+    assert.equal(window.localStorage.getItem("bookmarks"), legacy);
+    assert.equal(requests.some(request => request.method === "PUT"), false);
+});
+
+test("Import keeps the source until server confirmation and preserves browser changes made during the save", async t => {
+    const { controller, context, window } = fixture(t, { definitions: [shortcutDefinition] });
+    const fetch = context.fetch;
+    let release;
+    const pending = new Promise(resolve => { release = resolve; });
+    context.fetch = async (url, options) => {
+        if (options?.method === "PUT") await pending;
+        return fetch(url, options);
+    };
+    const legacy = JSON.stringify([{ name: "Autotest", path: "/apps/form/admin/" }]);
+    window.localStorage.setItem("bookmarks", legacy);
+    const loading = controller.start();
+    await tick();
+    assert.equal(controller.saving, true);
+    assert.equal(window.localStorage.getItem("bookmarks"), legacy);
+    const updated = JSON.stringify([{ name: "Changed in another tab", path: "/apps/banner/admin/" }]);
+    window.localStorage.setItem("bookmarks", updated);
+    release();
+    await loading;
+    assert.equal(controller.settings.legacyBookmarksHandled, true);
+    assert.equal(window.localStorage.getItem("bookmarks"), updated);
+    await controller.start();
+    assert.equal(controller.settings.items[0].options.href, "/apps/form/admin/", "The account marker prevents a second overwrite");
+});
+
+test("A storage cleanup failure does not repeat an already persisted import", async t => {
+    const { controller, window, requests } = fixture(t, { definitions: [shortcutDefinition] });
+    window.localStorage.setItem("bookmarks", JSON.stringify([{ name: "Autotest", path: "/apps/form/admin/" }]));
+    window.Storage.prototype.removeItem = () => { throw new window.DOMException("Storage disabled", "SecurityError"); };
+    await controller.start();
+    assert.equal(controller.settings.legacyBookmarksHandled, true);
+    assert.notEqual(window.localStorage.getItem("bookmarks"), null);
+    await controller.start();
+    assert.equal(requests.filter(request => request.method === "PUT").length, 1);
 });

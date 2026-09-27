@@ -1,6 +1,6 @@
 import { getWidget, listWidgets } from './registry';
 import { MAX_WIDGETS, cloneSettings, createInstanceId, normalizeSettings, moveInstanceBefore, createLayoutSegments } from './model';
-import { link } from './widget-utils';
+import { link, localUrl, shortcutUrl } from './widget-utils';
 
 function node(tag, className = "", text) {
     const result = document.createElement(tag);
@@ -63,6 +63,7 @@ export class DashboardController {
         this._request = null;
         this._contextVersion = 0;
         this.editing = false;
+        this.editingShortcuts = false;
         this._build();
     }
 
@@ -70,6 +71,10 @@ export class DashboardController {
         const fullKey = key.includes(".") ? key : `admin.dashboard.${key}.js`;
         const translated = this.context.translate?.(fullKey, ...params) ?? window.WJ?.translate?.(fullKey, ...params);
         return translated && translated !== fullKey ? translated : fallback;
+    }
+
+    get status() {
+        return this.editingShortcuts ? this.shortcutStatus : this.overviewStatus;
     }
 
     _build() {
@@ -82,7 +87,9 @@ export class DashboardController {
         const environment = environmentBadge(this.context.config);
         if (environment) meta.append(environment);
         welcome.append(meta);
-        welcome.append(node("h1", "md-dashboard__greeting", `${this._t("welcomeBack", "Welcome back,")} ${this.context.data?.userName || ""}`.trim()));
+        const welcomeHeading = node("div", "md-dashboard__welcome-heading");
+        welcomeHeading.append(node("h1", "md-dashboard__greeting", `${this._t("welcomeBack", "Welcome back,")} ${this.context.data?.userName || ""}`.trim()));
+        welcome.append(welcomeHeading);
         this.news = node("div", "md-dashboard__news");
         welcome.append(this.news);
         this.sessions = node("div", "md-dashboard__sessions");
@@ -110,7 +117,7 @@ export class DashboardController {
         }
         actions.append(this.addButton, this.resetButton, this.editButton);
         this.toolbar.append(actions);
-        this.status = node("div", "md-dashboard__status");
+        this.overviewStatus = node("div", "md-dashboard__status");
         this.status.setAttribute("role", "status");
         this.status.setAttribute("aria-live", "polite");
         this.status.tabIndex = -1;
@@ -120,26 +127,65 @@ export class DashboardController {
         this.dropEnd = node("div", "md-dashboard__drop-end", this._t("moveEnd", "At the end"));
         this.dropEnd.setAttribute("aria-hidden", "true");
         this.shortcuts = node("section", "md-dashboard__shortcuts");
-        const shortcutsHeader = node("div", "md-dashboard__shortcuts-header");
-        const addShortcut = button(this._t("addShortcut", "Add shortcut"), () => this.showAddWidget("shortcut"), "btn btn-sm btn-outline-secondary md-dashboard__control");
-        addShortcut.prepend(icon("ti-plus"));
-        shortcutsHeader.append(node("h2", "md-dashboard__title", this._t("shortcuts", "Your shortcuts")), addShortcut);
+        this.shortcuts.setAttribute("aria-label", this._t("shortcuts", "Your shortcuts"));
+        const shortcutActions = node("div", "md-dashboard__shortcut-actions");
+        this.addShortcutButton = button(this._t("addShortcut", "Add shortcut"), () => this.showAddWidget("shortcut"), "btn btn-sm btn-primary md-dashboard__control");
+        this.addShortcutButton.prepend(icon("ti-plus"));
+        this.resetShortcutsButton = button(this._t("reset", "Reset"), () => this.showResetShortcuts(), "btn btn-sm btn-outline-secondary md-dashboard__control");
+        this.resetShortcutsButton.prepend(icon("ti-restore"));
+        this.editShortcutsButton = button(this._t("editShortcuts", "Edit shortcuts"), () => this.setEditingShortcuts(!this.editingShortcuts), "btn btn-sm btn-outline-secondary md-dashboard__control");
+        this.editShortcutsButton.prepend(icon("ti-adjustments-horizontal"));
+        this.editShortcutsButton.setAttribute("aria-pressed", "false");
+        this.addShortcutButton.hidden = this.resetShortcutsButton.hidden = true;
+        shortcutActions.append(this.addShortcutButton, this.resetShortcutsButton, this.editShortcutsButton);
+        welcomeHeading.append(shortcutActions);
+        this.shortcutStatus = node("div", "md-dashboard__status");
+        this.shortcutStatus.setAttribute("role", "status");
+        this.shortcutStatus.setAttribute("aria-live", "polite");
+        this.shortcutStatus.tabIndex = -1;
         this.shortcutList = node("div", "md-dashboard__shortcut-list");
-        this.shortcuts.append(shortcutsHeader, this.shortcutList);
-        this.host.replaceChildren(this.hero, this.notices, this.search, this.toolbar, this.status, this.undoContainer, this.layout, this.dropEnd, this.shortcuts);
+        this.shortcuts.append(this.shortcutList, this.shortcutStatus);
+        welcome.insertBefore(this.shortcuts, this.news);
+        this.host.replaceChildren(this.hero, this.notices, this.search, this.toolbar, this.overviewStatus, this.undoContainer, this.layout, this.dropEnd);
         if (window.jQuery && window.WJ?.initTooltip) window.WJ.initTooltip(window.jQuery(this.resetButton));
         this._setBusy(true);
     }
 
     /** Reveals arrangement controls without changing or saving widget preferences. */
     setEditing(editing) {
+        if (editing && this.editingShortcuts) this.setEditingShortcuts(false);
         this.editing = Boolean(editing);
         if (!this.editing) window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.hide();
         this.host.classList.toggle("is-editing", this.editing);
         this.editButton.textContent = this._t(this.editing ? "finishEditing" : "editOverview", this.editing ? "Done" : "Edit overview");
         this.editButton.prepend(icon(this.editing ? "ti-check" : "ti-adjustments-horizontal"));
         this.editButton.setAttribute("aria-pressed", String(this.editing));
-        this.host.querySelectorAll(".md-dashboard__edit-control").forEach(control => { control.hidden = !this.editing; });
+        this.toolbar.querySelectorAll(".md-dashboard__edit-control").forEach(control => { control.hidden = !this.editing; });
+        this._updateEditing();
+    }
+
+    /** Shortcuts own their edit mode independently of the overview widgets. */
+    setEditingShortcuts(editing) {
+        if (editing && this.editing) this.setEditing(false);
+        this.editingShortcuts = Boolean(editing);
+        this.host.classList.toggle("is-editing-shortcuts", this.editingShortcuts);
+        this.editShortcutsButton.textContent = this._t(editing ? "finishEditing" : "editShortcuts", editing ? "Done" : "Edit shortcuts");
+        this.editShortcutsButton.prepend(icon(editing ? "ti-check" : "ti-adjustments-horizontal"));
+        this.editShortcutsButton.setAttribute("aria-pressed", String(this.editingShortcuts));
+        this.editShortcutsButton.classList.toggle("btn-primary", this.editingShortcuts);
+        this.editShortcutsButton.classList.toggle("btn-outline-secondary", !this.editingShortcuts);
+        this.addShortcutButton.hidden = this.resetShortcutsButton.hidden = !this.editingShortcuts;
+        this._updateEditing();
+    }
+
+    _isEditing(instance) {
+        return instance.type === "shortcut" ? this.editingShortcuts : this.editing;
+    }
+
+    _updateEditing() {
+        for (const view of this.views.values()) {
+            view.header.querySelectorAll(".md-dashboard__edit-control").forEach(control => { control.hidden = !this._isEditing(view.instance); });
+        }
         for (const view of this.views.values()) window.bootstrap?.Dropdown?.getInstance(view.header.querySelector('[data-bs-toggle="dropdown"]'))?.hide();
         this._bindDrag();
     }
@@ -177,10 +223,12 @@ export class DashboardController {
             if (!this.settings.configured) this._addDefaults();
             this._ensureMandatory();
             this.status.textContent = "";
+            this.shortcutStatus.textContent = "";
             this._setBusy(false);
             this.layout.hidden = false;
             this._render();
             this.host.dataset.loaded = "true";
+            await this.importLegacyBookmarks();
         } catch (error) {
             if (request.signal.aborted || this.destroyed) return;
             this._render();
@@ -195,6 +243,7 @@ export class DashboardController {
 
     _addDefaults() {
         for (const preset of this.context.config?.dashboardDefaults || []) {
+            if (preset.type === "shortcut" && this.settings.shortcutsConfigured) continue;
             const definition = getWidget(preset.type);
             if (!definition || !this._available(definition) || this.settings.items.length >= MAX_WIDGETS) continue;
             if (!definition.multiple && this.settings.items.some(item => item.type === definition.type)) continue;
@@ -242,15 +291,15 @@ export class DashboardController {
      * Saves before applying a change, keeping the last confirmed layout on failure.
      * Widget content and security actions stay usable while preferences are saved.
      */
-    async _commit(next) {
+    async _commit(next, status = this.status) {
         if (this.saving || this.destroyed || this.host.dataset.loaded !== "true") return false;
         if (next.items.length > MAX_WIDGETS) {
-            this.status.textContent = this._t("limit", "The overview can contain at most 32 widgets.");
+            status.textContent = this._t("limit", "The overview can contain at most 32 widgets.");
             return false;
         }
         this.saving = true;
         this._setBusy(true);
-        this.status.textContent = this._t("saving", "Saving…");
+        status.textContent = this._t("saving", "Saving…");
         const request = this._request = new AbortController();
         try {
             const response = await fetch("/admin/rest/dashboard/settings", {
@@ -265,12 +314,12 @@ export class DashboardController {
             this.settings.configured = true;
             this.removed = null;
             this.undoContainer.hidden = true;
-            this.status.textContent = "";
+            status.textContent = "";
             this._render();
             window.WJ.notifySuccess(this._t("saved", "Saved."), "", 10000);
             return true;
         } catch (error) {
-            if (!this.destroyed && !request.signal.aborted) this._showFailure("saveError", "The change could not be saved. Your previous settings were kept.");
+            if (!this.destroyed && !request.signal.aborted) status.replaceChildren(node("span", "text-danger", this._t("saveError", "The change could not be saved. Your previous settings were kept.")));
             return false;
         } finally {
             this.saving = false;
@@ -338,6 +387,7 @@ export class DashboardController {
             container.replaceChildren(...visible.filter(instance => this._region(instance) === region).map(updateView));
         }
         this.shortcuts.hidden = !getWidget("shortcut");
+        if (!this.shortcutList.children.length) this.shortcutList.append(node("p", "md-dashboard__shortcuts-empty", this._t("shortcutsEmpty", "You have no shortcuts yet.")));
         if (!gridItems.length) fragment.append(node("p", "md-dashboard__empty", this._t("empty", "Add widgets to create your overview.")));
         this.layout.replaceChildren(fragment);
         refreshIds.forEach(id => this.refresh(id));
@@ -402,14 +452,15 @@ export class DashboardController {
         if (!definition.mandatory) menu.append(menuItem("remove", "Remove", () => this.remove(instance.id)));
         dropdown.append(menuButton, menu);
         const controls = node("div", "md-dashboard__widget-controls md-dashboard__edit-control");
-        controls.hidden = !this.editing;
+        controls.hidden = !this._isEditing(instance);
         controls.append(drag, dropdown);
         if (!fixed) header.append(controls);
         if (["news", "search"].includes(instance.type)) header.hidden = true;
         const body = node("div", "md-dashboard__widget-body");
         body.id = `dashboard-body-${instance.id}`;
         collapse.setAttribute("aria-controls", body.id);
-        card.append(header, body);
+        if (instance.type === "shortcut") card.append(body, header);
+        else card.append(header, body);
         return { card, header, title, titleText, body, collapse, instance, abort: null, cleanup: null, signature: null };
     }
 
@@ -516,8 +567,10 @@ export class DashboardController {
         delete next.domainOptions[id];
         if (!await this._commit(next)) return false;
         this.removed = previous;
+        if (instance.type === "shortcut") this.shortcuts.append(this.undoContainer);
+        else this.layout.before(this.undoContainer);
         this.undoContainer.hidden = false;
-        this.undoContainer.replaceChildren(node("span", "", this._t("removed", "Widget removed.")), button(this._t("undo", "Undo"), () => this.undoRemove(), "btn btn-sm btn-outline-secondary md-dashboard__control"));
+        this.undoContainer.replaceChildren(node("span", "", this._t(instance.type === "shortcut" ? "shortcutRemoved" : "removed", instance.type === "shortcut" ? "Shortcut removed." : "Widget removed.")), button(this._t("undo", "Undo"), () => this.undoRemove(), "btn btn-sm btn-outline-secondary md-dashboard__control"));
         this.undoContainer.querySelector("button").focus();
         return true;
     }
@@ -551,13 +604,84 @@ export class DashboardController {
 
     _focusInstance(id) {
         const view = this.views.get(id);
-        (this.editing ? view?.header.querySelector("button") : view?.card)?.focus({ preventScroll: true });
+        (view && this._isEditing(view.instance) ? view.header.querySelector("button") : view?.card)?.focus({ preventScroll: true });
     }
 
     async acknowledgeNews(version) {
         const next = cloneSettings(this.settings);
         next.acknowledgedNewsVersion = version;
         return this._commit(next);
+    }
+
+    /** Replaces only shortcuts; widgets, filters and read news retain their stored values. */
+    async resetShortcuts() {
+        const next = cloneSettings(this.settings);
+        for (const item of next.items.filter(item => item.type === "shortcut")) delete next.domainOptions[item.id];
+        next.items = next.items.filter(item => item.type !== "shortcut");
+        for (const preset of this.context.config?.dashboardDefaults || []) {
+            if (preset.type !== "shortcut") continue;
+            const definition = getWidget("shortcut");
+            if (definition && this._available(definition)) next.items.push(this._newInstance(definition, preset));
+        }
+        return this._commit(next);
+    }
+
+    showResetShortcuts() {
+        this.resetShortcutsButton.focus({ preventScroll: true });
+        window.WJ.confirm({
+            title: this._t("resetShortcutsConfirm", "Restore default shortcuts"),
+            message: this._t("resetShortcutsDescription", "Replace your shortcuts with the default links? Your overview widgets will be kept."),
+            btnOkText: this._t("resetConfirm", "Restore defaults"),
+            success: () => this.resetShortcuts()
+        });
+    }
+
+    /** Reads legacy URL bookmarks, retaining the exact source until persistence succeeds. */
+    _legacyBookmarks() {
+        const result = { items: [], invalid: 0, raw: null };
+        try { result.raw = window.localStorage.getItem("bookmarks"); }
+        catch (error) { return result; }
+        if (!result.raw) return result;
+        try {
+            const bookmarks = JSON.parse(result.raw);
+            if (!Array.isArray(bookmarks)) return { ...result, invalid: 1 };
+            const seen = new Set();
+            for (const bookmark of bookmarks) {
+                const href = shortcutUrl(bookmark?.path);
+                const title = typeof bookmark?.name === "string" ? bookmark.name.trim() : "";
+                if (!href || !title || title.length > 120) { result.invalid++; continue; }
+                const target = localUrl(href) || href;
+                if (seen.has(target)) continue;
+                seen.add(target);
+                result.items.push({ source: "url", href: target, title });
+            }
+        } catch (error) { result.invalid = 1; }
+        return result;
+    }
+
+    /** Replaces shortcuts once on load, removing the legacy source only after a successful save. */
+    async importLegacyBookmarks() {
+        if (this.settings.legacyBookmarksHandled) return true;
+        const legacy = this._legacyBookmarks();
+        if (legacy.invalid) {
+            this.shortcutStatus.replaceChildren(node("span", "text-danger", this._t("legacyBookmarksInvalid", "The original bookmarks contain an invalid name or URL and could not be imported. The original browser data and current shortcuts were kept.")));
+            return false;
+        }
+        const definition = getWidget("shortcut");
+        if (!legacy.items.length || !definition) return true;
+        const next = cloneSettings(this.settings);
+        for (const item of next.items.filter(item => item.type === "shortcut")) delete next.domainOptions[item.id];
+        next.items = [...next.items.filter(item => item.type !== "shortcut"), ...legacy.items.map(options => this._newInstance(definition, { options }))];
+        next.legacyBookmarksHandled = true;
+        const saved = await this._commit(next, this.shortcutStatus);
+        if (saved) {
+            try {
+                if (window.localStorage.getItem("bookmarks") === legacy.raw) window.localStorage.removeItem("bookmarks");
+            } catch (error) { /* The server marker prevents a repeated import when browser storage is unavailable. */ }
+        } else if (!this.destroyed) {
+            this.shortcutStatus.append(button(this._t("retry", "Try again"), () => this.importLegacyBookmarks()));
+        }
+        return saved;
     }
 
     /** Resets only dashboard preferences, applying defaults after the server confirms deletion. */
@@ -673,7 +797,7 @@ export class DashboardController {
         this.resetButton.focus({ preventScroll: true });
         window.WJ.confirm({
             title: this._t("resetConfirm", "Restore defaults"),
-            message: this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains and read news will also be reset. Other account settings and bookmarks will be kept."),
+            message: this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains and read news will also be reset. Your shortcuts and other account settings will be kept."),
             btnOkText: this._t("resetConfirm", "Restore defaults"),
             success: () => this.reset(),
             onHidden: () => window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.enable()
@@ -693,7 +817,7 @@ export class DashboardController {
         const render = () => {
             list.replaceChildren();
             for (const definition of listWidgets()) {
-                if (!this._available(definition) || ["sessions", "news", "search"].includes(definition.type)) continue;
+                if (!this._available(definition) || ["sessions", "news", "search", "shortcut"].includes(definition.type)) continue;
                 const existing = this.settings.items.find(item => item.type === definition.type);
                 const reveal = !definition.multiple && existing && !this._visible(definition, existing) && definition.reveal;
                 if (!definition.multiple && existing && !reveal) continue;
@@ -705,12 +829,6 @@ export class DashboardController {
                 text.append(node("strong", "", title));
                 if (definition.descriptionKey) text.append(node("p", "mb-0 small text-muted", this._t(definition.descriptionKey)));
                 const add = button(reveal ? this._t("show", "Show") : this._t("add", "Add widget"), async () => {
-                    if (definition.type === "shortcut") {
-                        if (window.bootstrap?.Modal) dialog.root.addEventListener("hidden.bs.modal", () => this.showAddWidget(definition.type), { once: true });
-                        dialog.close();
-                        if (!window.bootstrap?.Modal) this.showAddWidget(definition.type);
-                        return;
-                    }
                     add.disabled = true;
                     try {
                         const saved = reveal ? await definition.reveal(cloneSettings(existing), this._widgetContext()) : await this.add(definition.type);
@@ -848,13 +966,13 @@ export class DashboardController {
         const $ = window.jQuery;
         if (!$?.fn.draggable || !$.fn.droppable) return;
         if (!$(this.dropEnd).data("ui-droppable")) $(this.dropEnd).droppable({
-            accept: ".md-dashboard__widget", tolerance: "pointer",
+            accept: dragged => this._region(this._instance(dragged[0].dataset.instanceId) || {}) === "grid", tolerance: "pointer",
             drop: () => { if (this._dragged) this.moveBefore(this._dragged); }
         });
         for (const view of this.views.values()) {
             if (!["grid", "shortcut"].includes(this._region(view.instance))) continue;
-            if ($(view.card).data("ui-draggable")) $(view.card).draggable("option", "disabled", !this.editing);
-            if (!this.editing) continue;
+            if ($(view.card).data("ui-draggable")) $(view.card).draggable("option", "disabled", !this._isEditing(view.instance));
+            if (!this._isEditing(view.instance)) continue;
             if (!$(view.card).data("ui-draggable")) $(view.card).draggable({
                 handle: ".md-dashboard__drag", appendTo: "body", zIndex: 1100, distance: 8,
                 cancel: "input, textarea, select, option",
@@ -870,7 +988,7 @@ export class DashboardController {
                     helper.find("[id]").removeAttr("id");
                     return helper;
                 },
-                start: () => { if (this.saving || !this.editing) return false; this._dragged = view.instance.id; this.host.classList.add("is-dragging"); },
+                start: () => { if (this.saving || !this._isEditing(view.instance)) return false; this._dragged = view.instance.id; this.host.classList.add("is-dragging"); },
                 stop: () => { this._dragged = null; this.host.classList.remove("is-dragging"); this.host.querySelectorAll(".is-drop-target").forEach(card => card.classList.remove("is-drop-target")); },
                 revert: "invalid"
             });

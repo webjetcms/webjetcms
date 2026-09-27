@@ -83,7 +83,7 @@ Oprávnenia sa kontrolujú aj na dátových endpointoch. Nedostupné widgety sa 
 - Výber skratky odvodiť z existujúceho menu filtrovaného oprávneniami.
 - Posledné stránky filtrovať podľa práv a domény pred obmedzením počtu; doménu zahrnúť aj do prípadnej cache.
 - Zachovať funkčné pôvodné prihlásenia a systémové upozornenia. Ostatné existujúce bloky ponechať v dočasnej oddelenej časti.
-- Pôvodné lokálne záložky zachovať bez automatického priradenia k používateľskému účtu.
+- Pôvodné lokálne záložky automaticky importovať pri načítaní dashboardu do prihláseného účtu; lokálny zdroj odstrániť až po úspešnom uložení.
 
 Predvolené rozloženie pilotu bude obsahovať posledné stránky a skratky na stránky/formuláre podľa práv. Výsledkom bude použiteľný dashboard so skutočnými dátami a overenou perzistenciou.
 
@@ -164,7 +164,7 @@ Každá etapa zahŕňa aktualizáciu skillu a primerané overenie. Všetky zmeny
 ## Overené implementačné upresnenia
 
 - Predvolené rozloženie bolo rozšírené z pilotov na všetky dostupné typy widgetov. Široké prehľady tvoria dvojice, zoznamy trojicu; systém naďalej filtruje podľa práv a nemení uložené osobné rozloženia.
-- Lišta úprav obsahuje **Pridať widget → Resetovať → Hotovo**; reset použije systémové potvrdenie `WJ.confirm`. Úspešné uloženie a reset oznamuje `WJ.notifySuccess` s timeoutom 10 sekúnd. `DELETE /admin/rest/dashboard/settings` atomicky odstráni dashboardové nastavenia aktuálneho konta vrátane všetkých doménových filtrov a potvrdených noviniek. Ostatné nastavenia a legacy záložky zostávajú zachované. Klient zobrazí predvolené widgety až po úspechu; pri chybe zachová pôvodný stav.
+- Lišta úprav obsahuje **Pridať widget → Resetovať → Hotovo**; reset použije systémové potvrdenie `WJ.confirm`. Úspešné uloženie a reset oznamuje `WJ.notifySuccess` s timeoutom 10 sekúnd. `DELETE /admin/rest/dashboard/settings` atomicky odstráni dashboardové nastavenia aktuálneho konta vrátane všetkých doménových filtrov a potvrdených noviniek. Skratky vrátane ich poradia a stavu migrácie, ostatné nastavenia a legacy záložky zostávajú zachované. Klient zobrazí predvolené widgety až po úspechu; pri chybe zachová pôvodný stav.
 - Pamäť a CPU zdieľajú živé načítavanie `/admin/rest/monitoring/actual` každých 5 sekúnd. Nepotrebujú historické monitorovanie; aktualizujú číselné hodnoty aj existujúce grafy a pozastavia načítavanie pre skrytú kartu či widget.
 - Grafy používajú existujúce AmCharts cez `window.initAmcharts()` a `ChartTools`. Dáta grafu sú dostupné aj ako tabuľka; graf sa uvoľní pri obnovení, minimalizovaní alebo odstránení widgetu.
 
@@ -196,8 +196,17 @@ Po doplnení všetkých predvolených widgetov, resetu a AmCharts prešiel front
 
 ## Dokončenie migrácie pôvodných prehľadov
 
-Sekcia „Ďalšie prehľady“ je odstránená vrátane pôvodného rozhrania záložiek a spoločného dátového endpointu. Päť samostatných widgetov používa poskytovateľov podľa typu s kontrolou oprávnení na serveri. Nové a resetované rozloženie ich pridá na koniec; uložené osobné rozloženia sa nemenia. „Vaše skratky“ podporujú odkazy do dostupných modulov aj vlastné URL uložené na konto. Staré lokálne záložky sa neprepisujú ani automaticky neimportujú.
+Sekcia „Ďalšie prehľady“ je odstránená vrátane pôvodného rozhrania záložiek a spoločného dátového endpointu. Päť samostatných widgetov používa poskytovateľov podľa typu s kontrolou oprávnení na serveri. Nové a resetované rozloženie ich pridá na koniec; uložené osobné rozloženia sa nemenia. „Vaše skratky“ podporujú odkazy do dostupných modulov aj vlastné URL uložené na konto. Pôvodná verzia ukladala pole `{name, path}` do `localStorage["bookmarks"]`, nie do databázy. Pri načítaní dashboardu sa tento neprázdny zoznam automaticky importuje do prihláseného účtu a nahradí iba skratky. Názvy, poradie a konkrétne URL vrátane parametrov sa zachovajú; duplicitné URL sa zlúčia. Widgety, doménové filtre a prečítané novinky zostanú zachované. Až úspešné uloženie nastaví `legacyBookmarksHandled` a odstráni pôvodný lokálny kľúč, pokiaľ sa počas ukladania nezmenil. Chyba uloženia, neplatný záznam alebo prekročenie limitu zachovajú pôvodný zoznam aj aktuálne skratky; ďalšie načítanie import zopakuje. Chýbajúci alebo prázdny zoznam ponechá predvolené skratky. Úspešne dokončený import sa na rovnakom účte neopakuje. Migrácia cez `UpdateDatabase` nie je potrebná.
 
 Monitorovanie používa dostupné historické vzorky za poslednú hodinu a aktuálnu vzorku z rovnakého zdroja ako modul monitorovania. Bez zapnutého záznamu histórie je k dispozícii aktuálna vzorka. Widgety sa načítajú pri otvorení a manuálnom obnovení, grafy sa uvoľnia pri minimalizovaní či odstránení. Audit, administrátori a monitorovanie sú údaje celého servera; zmenené stránky rešpektujú aktuálnu doménu a oprávnenia k stránkam.
 
 Overenie migrácie: frontendový build, 81 JavaScript testov, Java testy dashboardu vrátane ôsmich testov nových providerov, päť browser scenárov dátových endpointov a trojica scenárov skutočného resetu na dočasnom účte prešli. Samostatný browser scenár overuje perzistenciu nových widgetov, životný cyklus grafov a responzívne vykreslenie na šírkach 1337 a 390 px. Účet použitý na reset bol odstránený a pôvodné preferencie administrátora zostali zachované.
+
+
+## Skratky v privítaní
+
+Skratky sú priamo pod pozdravom pred novinkami, bez viditeľného nadpisu. Tlačidlo **Upraviť skratky** je napravo od pozdravu; po zapnutí sa zobrazí **Pridať skratku → Resetovať → Hotovo** a ovládanie jednotlivých odkazov. Úpravy skratiek a widgetov majú oddelené režimy. Odkazy sa na úzkych displejoch zalomia.
+
+Reset skratiek obnoví povolené predvolené odkazy a zachová widgety, filtre aj prečítané novinky. Reset prehľadu zachová skratky, vrátane zámerne prázdneho zoznamu. Odstránenie poslednej skratky neobnovuje odkazy automaticky; používateľ ich môže obnoviť tlačidlom Resetovať. Metadata `shortcutsConfigured` a `legacyBookmarksHandled` sa ukladajú do existujúceho záznamu rozloženia na serveri.
+
+Výber cieľa novej skratky kopíruje hierarchiu oprávneného menu: **Hlavná časť → Sekcia → Karta**, napríklad **Aplikácie → Bannerový systém → Štatistika bannerov**. Nadväzujúce výbery sa pri zmene rodiča vyčistia, sekcia s jediným cieľom nepotrebuje samostatný výber karty. Pri úprave existujúcej skratky sa celá cesta predvyplní. Ukladaný formát skratiek sa nemení.

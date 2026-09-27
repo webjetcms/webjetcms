@@ -103,7 +103,7 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
     I.dontSeeElement('.md-dashboard__layout [data-widget-type="sessions"]');
     I.dontSeeElement('.md-dashboard__sessions .md-dashboard__widget-controls');
     I.dontSeeElement('.md-dashboard__edit-control');
-    I.seeElement('.md-dashboard__shortcuts-header button');
+    I.seeElement('.md-dashboard__shortcut-actions button[aria-pressed]');
 
     const firstNotice = '[data-notice-id="design-autotest-migration"]';
     const secondNotice = '[data-notice-id="design-autotest-security"]';
@@ -599,6 +599,9 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
             && parseFloat(dot.width) > 0 && parseFloat(dot.height) > 0 && color[1] > color[0] && color[1] > color[2]
             && !row.querySelector('button') && Boolean(current.getAttribute('aria-label'));
     }), 'The current login must keep its accessible green dot in the logout-action column, without offering to log itself out.');
+    // Save notifications overlap the session list's pointer target until dismissed.
+    I.toastrClose();
+    I.waitForInvisible('#toast-container-webjet .toast-success', 15);
     I.executeScript(() => { window.scrollbarMain.setMomentum(0, 0); window.scrollbarMain.setPosition(0, 0); });
     // Standard scroll helpers do not generate wheel events, which trigger the smooth-scrollbar regression.
     await I.usePlaywrightTo('wheel over the native session list', async ({ page }) => {

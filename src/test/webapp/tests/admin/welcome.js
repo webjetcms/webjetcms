@@ -10,8 +10,8 @@ Before(({ I, login }) => {
 });
 
 Scenario("Personal shortcuts replace the former bookmark section", ({ I }) => {
-    I.see("Vaše skratky", ".md-dashboard__shortcuts-header");
-    I.seeElement(".md-dashboard__shortcuts-header > button");
+    I.seeElement('.md-dashboard__welcome .md-dashboard__shortcuts[aria-label="Vaše skratky"]');
+    I.see("Upraviť skratky", ".md-dashboard__shortcut-actions");
     I.dontSeeElementInDOM(".md-dashboard__legacy");
     I.dontSeeElementInDOM("#webjet-overview-dashboard .bookmark");
     I.dontSeeElementInDOM("#bookmark_modal");

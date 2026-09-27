@@ -14,6 +14,8 @@ export function normalizeSettings(settings = {}) {
     return {
         version: 1,
         configured: settings.configured === true,
+        shortcutsConfigured: settings.shortcutsConfigured ?? (settings.configured === true),
+        legacyBookmarksHandled: settings.legacyBookmarksHandled === true,
         items: Array.isArray(settings.items) ? cloneSettings(settings.items) : [],
         domainOptions: settings.domainOptions && typeof settings.domainOptions === "object" ? cloneSettings(settings.domainOptions) : {},
         acknowledgedNewsVersion: settings.acknowledgedNewsVersion || null

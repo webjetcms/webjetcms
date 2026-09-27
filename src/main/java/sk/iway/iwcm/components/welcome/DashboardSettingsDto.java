@@ -17,6 +17,8 @@ import lombok.Setter;
 public class DashboardSettingsDto {
     private int version = 1;
     private boolean configured;
+    private boolean shortcutsConfigured;
+    private boolean legacyBookmarksHandled;
     private List<Item> items = new ArrayList<>();
     private Map<String, Map<String, Object>> domainOptions = new LinkedHashMap<>();
     private String acknowledgedNewsVersion;

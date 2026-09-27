@@ -1,0 +1,176 @@
+Feature('admin.dashboard-shortcuts').tag('@singlethread');
+
+let originalSettings;
+let originalBookmarks;
+const actions = '.md-dashboard__shortcut-actions';
+const links = '.md-dashboard__shortcuts';
+const modal = '.md-dashboard-modal';
+const bannerHref = '/apps/banner/admin/?autotest=shortcut#detail';
+
+function loaded(I) {
+    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    saved(I);
+}
+
+function saved(I) {
+    I.waitForFunction(() => document.querySelector('webjet-overview-dashboard')?.dashboardController?.saving === false, 20);
+}
+
+Before(({ I, login }) => {
+    login('admin');
+    I.amOnPage('/admin/v9/');
+    loaded(I);
+});
+
+Scenario('Welcome shortcuts fit above the fold and own their editing mode', async ({ I }) => {
+    originalSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
+    originalBookmarks = await I.executeScript(() => localStorage.getItem('bookmarks'));
+    I.see('Upraviť skratky', actions);
+    I.dontSeeElement(`${actions} > button:first-child`);
+    I.dontSeeElement(`${links} .md-dashboard__widget-controls`);
+    I.clickCss(`${actions} button[aria-pressed="false"]`);
+    I.see('Pridať skratku', actions);
+    I.see('Resetovať', actions);
+    I.dontSeeElement('.md-dashboard__layout .md-dashboard__widget-controls');
+    I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
+    I.dontSeeElement(`${links} .md-dashboard__widget-controls`);
+    I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="true"]');
+    for (const width of [320, 390, 768, 1337]) {
+        I.resizeWindow(width, 900);
+        if (width < 768 && await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) I.clickCss('.js-sidebar-toggler');
+        I.executeScript(() => { window.scrollbarMain.setMomentum(0, 0); window.scrollbarMain.setPosition(0, 0); });
+        I.waitForFunction(() => window.scrollbarMain.offset.y === 0, 10);
+        const geometry = await I.executeScript(() => {
+            const region = document.querySelector('.md-dashboard__shortcuts');
+            const rect = region.getBoundingClientRect();
+            return { top: rect.top, bottom: rect.bottom, right: rect.right, viewport: innerWidth, overflow: region.scrollWidth > region.clientWidth + 1 };
+        });
+        I.assertTrue(geometry.top >= 48 && geometry.bottom < 900, `Shortcuts must be immediately available at ${width}px.`);
+        I.assertTrue(geometry.right <= geometry.viewport + 1 && !geometry.overflow, `Shortcuts must wrap at ${width}px.`);
+    }
+    I.wjSetDefaultWindowSize();
+});
+
+Scenario('Choose a banner tab through the administration hierarchy and restore it when editing', async ({ I }) => {
+    I.clickCss(`${actions} button[aria-pressed="false"]`);
+    I.click('Pridať skratku', actions);
+    I.waitForVisible(modal, 10);
+    const group = `${modal} [name="dashboardShortcutGroup"]`;
+    const section = `${modal} [name="dashboardShortcutSection"]`;
+    const tab = `${modal} [name="dashboardShortcutMenu"]`;
+    I.selectOption(group, 'Aplikácie');
+    I.selectOption(section, 'Bannerový systém');
+    I.assertDeepEqual(await I.executeScript(selector => [...document.querySelector(selector).options].slice(1).map(option => option.textContent), tab), ['Zoznam bannerov', 'Štatistika bannerov']);
+    I.selectOption(tab, 'Štatistika bannerov');
+    const title = `banner-tab-autotest-${I.getRandomTextShort()}`;
+    I.fillField(`${modal} [name="dashboardShortcutTitle"]`, title);
+    I.saveScreenshot('dashboard-shortcut-menu.png', true);
+    I.clickCss(`${modal} .modal-footer .btn-primary`);
+    I.waitForInvisible(modal, 10);
+    saved(I);
+    I.refreshPage();
+    loaded(I);
+    const id = await I.executeScript(title => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.find(item => item.options.title === title)?.id, title);
+    I.assertTrue(Boolean(id), 'The selected card must persist as a shortcut.');
+    I.seeElement(`${links} [data-instance-id="${id}"] a[href="/apps/banner/admin/banner-stat/"]`);
+    I.clickCss(`${actions} button[aria-pressed="false"]`);
+    I.clickCss(`[data-instance-id="${id}"] .dropdown > button`);
+    I.clickCss(`[data-instance-id="${id}"] [data-dashboard-action="settings"]`);
+    I.waitForVisible(modal, 10);
+    I.assertDeepEqual(await I.executeScript(() => ['Group', 'Section', 'Menu'].map(name => document.querySelector(`[name="dashboardShortcut${name}"]`).selectedOptions[0].textContent)), ['Aplikácie', 'Bannerový systém', 'Štatistika bannerov']);
+    for (const width of [390, 1024, 1337]) {
+        I.resizeWindow(width, 900);
+        I.assertTrue(await I.executeScript(() => {
+            const dialog = document.querySelector('.md-dashboard-modal .modal-dialog').getBoundingClientRect();
+            return dialog.left >= 0 && dialog.right <= innerWidth && [...document.querySelectorAll('.md-dashboard-modal select')].every(select => select.getBoundingClientRect().right <= dialog.right);
+        }), `The hierarchy fields must fit at ${width}px.`);
+    }
+    I.wjSetDefaultWindowSize();
+    I.clickCss(`${modal} .btn-close`);
+    I.waitForInvisible(modal, 10);
+});
+
+Scenario('Automatically import old bookmarks on load with failure recovery and server persistence', async ({ I }) => {
+    I.assertTrue(Boolean(originalSettings), 'The fixture must preserve the original profile first.');
+    const before = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
+    const legacy = JSON.stringify([
+        { name: 'Banner autotest', path: bannerHref },
+        { name: 'Banner duplicate autotest', path: 'http://iwcm.interway.sk' + bannerHref },
+        { name: 'Forms autotest', path: '/apps/form/admin/' }
+    ]);
+    const prepared = await I.executeScript(async bookmarks => {
+        const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
+        const next = JSON.parse(JSON.stringify(controller.settings));
+        next.legacyBookmarksHandled = false;
+        localStorage.setItem('bookmarks', bookmarks);
+        return controller._commit(next);
+    }, legacy);
+    I.assertTrue(prepared);
+    await I.mockRoute('**/admin/rest/dashboard/settings', route => route.request().method() === 'PUT'
+        ? route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"autotest import failure"}' }) : route.continue());
+    I.refreshPage();
+    loaded(I);
+    I.seeElement(`${links} .md-dashboard__status .text-danger`);
+    I.assertFalse(await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.legacyBookmarksHandled));
+    I.assertEqual(await I.executeScript(() => localStorage.getItem('bookmarks')), legacy);
+    I.assertDeepEqual(await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings.items))), before.items);
+    await I.stopMockingRoute('**/admin/rest/dashboard/settings');
+    I.refreshPage();
+    loaded(I);
+    I.seeNumberOfElements(`${links} a[href="${bannerHref}"]`, 1);
+    I.dontSeeElement('.md-dashboard__legacy-shortcuts');
+    I.dontSeeElement(modal);
+    const after = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
+    I.assertDeepEqual(after.items.filter(item => item.type === 'shortcut').map(item => item.options), [
+        { source: 'url', href: bannerHref, title: 'Banner autotest' },
+        { source: 'url', href: '/apps/form/admin/', title: 'Forms autotest' }
+    ]);
+    I.assertDeepEqual(after.items.filter(item => item.type !== 'shortcut'), before.items.filter(item => item.type !== 'shortcut'));
+    for (const item of before.items.filter(item => item.type !== 'shortcut')) I.assertDeepEqual(after.domainOptions[item.id], before.domainOptions[item.id]);
+    I.assertTrue(Object.keys(after.domainOptions).every(id => after.items.some(item => item.id === id)), 'Removed shortcuts must not leave orphaned preferences.');
+    I.assertEqual(after.acknowledgedNewsVersion, before.acknowledgedNewsVersion);
+    I.assertTrue(after.legacyBookmarksHandled);
+    I.assertEqual(await I.executeScript(() => localStorage.getItem('bookmarks')), null);
+    I.refreshPage();
+    loaded(I);
+    I.assertDeepEqual(await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings))), after);
+    I.saveScreenshot('dashboard-shortcuts-welcome.png', true);
+});
+
+Scenario('Reset shortcuts preserves widgets and an empty shortcut section stays empty after reload', async ({ I }) => {
+    const before = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
+    I.clickCss(`${actions} button[aria-pressed="false"]`);
+    I.click('Resetovať', actions);
+    const confirm = '#toast-container-webjet .toast[role="dialog"]';
+    I.waitForVisible(confirm, 10);
+    I.clickCss(`${confirm} button[id^="confirmationYes"]`);
+    I.waitForInvisible(confirm, 10);
+    saved(I);
+    const after = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
+    I.assertDeepEqual(after.items.filter(item => item.type !== 'shortcut'), before.items.filter(item => item.type !== 'shortcut'));
+    I.assertEqual(after.acknowledgedNewsVersion, before.acknowledgedNewsVersion);
+    for (const item of before.items.filter(item => item.type !== 'shortcut')) I.assertDeepEqual(after.domainOptions[item.id], before.domainOptions[item.id]);
+    I.assertTrue(after.items.some(item => item.type === 'shortcut'));
+    for (const item of after.items.filter(item => item.type === 'shortcut')) {
+        I.clickCss(`[data-instance-id="${item.id}"] .dropdown > button`);
+        I.clickCss(`[data-instance-id="${item.id}"] [data-dashboard-action="remove"]`);
+        saved(I);
+        I.waitForInvisible(`[data-instance-id="${item.id}"]`, 10);
+    }
+    I.refreshPage();
+    loaded(I);
+    I.seeElement('.md-dashboard__shortcuts-empty');
+    I.dontSeeElement(`${links} a`);
+});
+
+Scenario('Restore the original dashboard and browser bookmarks', async ({ I }) => {
+    await I.stopMockingRoute('**/admin/rest/dashboard/settings');
+    if (!originalSettings) return;
+    const restored = await I.executeScript(async ({ settings, bookmarks }) => {
+        if (bookmarks === null) localStorage.removeItem('bookmarks');
+        else localStorage.setItem('bookmarks', bookmarks);
+        return document.querySelector('webjet-overview-dashboard').dashboardController._commit(settings);
+    }, { settings: originalSettings, bookmarks: originalBookmarks });
+    I.assertTrue(restored, 'Restore the original personal preferences.');
+    I.wjSetDefaultWindowSize();
+});

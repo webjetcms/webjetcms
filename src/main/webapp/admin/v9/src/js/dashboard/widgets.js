@@ -18,6 +18,18 @@ export function menuEntries(context) {
     return [...entries.values()];
 }
 
+/** Groups safe destinations by the same main areas and sections as the authorized sidebar. */
+function shortcutMenuGroups(context) {
+    return (context.data.dashboardMenu || []).map(root => {
+        const children = root.childrens || root.children || [];
+        const sections = (children.length ? children : [root]).map(section => ({
+            title: section.text,
+            entries: menuEntries({ data: { dashboardMenu: [section] } })
+        })).filter(section => section.entries.length);
+        return { title: root.text, sections };
+    }).filter(group => group.sections.length);
+}
+
 /** Arranges a traffic overview, compact metrics and content previews for new or reset profiles. */
 export function getDashboardDefaults(context) {
     const items = [
@@ -89,34 +101,65 @@ export function registerDashboardWidgets() {
             container.append(target);
         },
         configure({ container, options, context }) {
-            const entries = menuEntries(context);
-            const source = field(container, text(context, 'shortcutSource'), [['menu', text(context, 'shortcutSourceMenu')], ['url', text(context, 'shortcutSourceUrl')]], options.source === 'url' || !entries.length ? 'url' : 'menu');
+            const groups = shortcutMenuGroups(context);
+            const source = field(container, text(context, 'shortcutSource'), [['menu', text(context, 'shortcutSourceMenu')], ['url', text(context, 'shortcutSourceUrl')]], options.source === 'url' || !groups.length ? 'url' : 'menu');
             source.name = 'dashboardShortcutSource';
-            source.options[0].disabled = !entries.length;
-            const module = field(container, text(context, "module"), entries.map(item => [item.href, item.title]), options.source === 'url' ? entries[0]?.href : options.href || entries[0]?.href);
+            source.options[0].disabled = !groups.length;
+            const group = field(container, text(context, 'shortcutGroup'), [], '');
+            group.name = 'dashboardShortcutGroup';
+            const section = field(container, text(context, 'shortcutSection'), [], '');
+            section.name = 'dashboardShortcutSection';
+            const module = field(container, text(context, 'shortcutTab'), [], '');
             module.name = 'dashboardShortcutMenu';
             const url = field(container, text(context, 'shortcutUrl'), [], options.source === 'url' ? options.href : '', 'text');
             url.name = 'dashboardShortcutUrl';
             url.maxLength = 1024;
             url.placeholder = 'https://…';
-            const title = field(container, text(context, "customTitle"), [], options.title || "", "text");
+            const title = field(container, text(context, 'customTitle'), [], options.title || '', 'text');
             title.name = 'dashboardShortcutTitle';
+            const sections = () => groups[group.value]?.sections || [];
+            const destinations = () => sections()[section.value]?.entries || [];
+            const fill = (select, values, selected, placeholder) => {
+                select.replaceChildren(...[['', text(context, placeholder)], ...values].map(([value, label]) => {
+                    const option = node('option', '', label);
+                    option.value = value;
+                    return option;
+                }));
+                select.value = selected ?? (values.length === 1 ? values[0][0] : '');
+            };
             const update = () => {
                 const custom = source.value === 'url';
-                module.parentElement.hidden = custom;
-                module.parentElement.classList.toggle('d-none', custom);
-                module.disabled = custom;
+                for (const select of [group, section, module]) {
+                    const hidden = custom || select === module && destinations().length === 1;
+                    select.parentElement.hidden = hidden;
+                    select.parentElement.classList.toggle('d-none', hidden);
+                    select.disabled = custom || (select === group ? !groups.length : select === section ? !sections().length : !destinations().length);
+                }
                 url.parentElement.hidden = !custom;
                 url.parentElement.classList.toggle('d-none', !custom);
                 url.disabled = !custom;
                 title.required = custom;
             };
+            const updateTabs = selected => {
+                fill(module, destinations().map(item => [item.href, item.title]), selected, 'shortcutChooseTab');
+                update();
+            };
+            const updateSections = (selected, href) => {
+                fill(section, sections().map((item, index) => [String(index), item.title]), selected, 'shortcutChooseSection');
+                updateTabs(href);
+            };
+            const href = options.source === 'url' ? '' : options.href;
+            const groupIndex = groups.findIndex(group => group.sections.some(section => section.entries.some(item => item.href === href)));
+            const sectionIndex = groups[groupIndex]?.sections.findIndex(section => section.entries.some(item => item.href === href));
+            fill(group, groups.map((item, index) => [String(index), item.title]), href ? (groupIndex < 0 ? '' : String(groupIndex)) : undefined, 'shortcutChooseGroup');
+            updateSections(sectionIndex >= 0 ? String(sectionIndex) : undefined, href || undefined);
+            group.addEventListener('change', () => updateSections());
+            section.addEventListener('change', () => updateTabs());
             source.addEventListener('change', update);
-            update();
             return { read: () => {
                 const custom = source.value === 'url';
-                const href = custom ? shortcutUrl(url.value) : entries.find(entry => entry.href === module.value)?.href;
-                if (!href) throw new Error(text(context, custom ? 'shortcutUrlInvalid' : 'chooseModule'));
+                const href = custom ? shortcutUrl(url.value) : destinations().find(entry => entry.href === module.value)?.href;
+                if (!href) throw new Error(text(context, custom ? 'shortcutUrlInvalid' : 'shortcutChooseTarget'));
                 if (custom && !title.value.trim()) throw new Error(text(context, 'shortcutTitleRequired'));
                 return { options: { source: custom ? 'url' : 'menu', href, title: title.value.trim() } };
             } };

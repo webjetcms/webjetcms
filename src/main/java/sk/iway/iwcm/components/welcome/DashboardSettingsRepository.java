@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Repository;
@@ -90,15 +91,22 @@ public class DashboardSettingsRepository {
         });
     }
 
-    /** Removes only this account's dashboard records, including options for every domain. */
-    public void reset(int userId) {
+    /** Atomically resets dashboard records, retaining records selected from the locked account snapshot. */
+    public Map<String, String> reset(int userId, Function<Map<String, String>, Map<String, String>> retain) {
+        Map<String, String> retained = new LinkedHashMap<>();
         write(userId, connection -> {
-            for (String key : read(connection, userId).keySet()) {
+            Map<String, String> previous = read(connection, userId);
+            retained.putAll(retain.apply(previous));
+            for (String key : previous.keySet()) {
                 if (key.equals(LAYOUT_KEY) || key.equals(NEWS_KEY) || key.startsWith(WIDGET_PREFIX) || key.startsWith(DOMAIN_PREFIX)) {
                     execute(connection, "DELETE FROM user_settings_admin WHERE user_id=? AND skey=?", userId, key, null);
                 }
             }
+            for (Map.Entry<String, String> record : retained.entrySet()) {
+                execute(connection, "INSERT INTO user_settings_admin (user_id, skey, value) VALUES (?, ?, ?)", userId, record.getKey(), record.getValue());
+            }
         });
+        return retained;
     }
 
     /** Serializes saves and resets for one account and rolls back every failed mutation. */

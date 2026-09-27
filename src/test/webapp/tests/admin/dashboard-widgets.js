@@ -16,7 +16,10 @@ async function enableEditing(I) {
 }
 
 async function openAction(I, id, action) {
-    await enableEditing(I);
+    if (id === shortcutId) {
+        await I.clickIfVisible('.md-dashboard__shortcut-actions button[aria-pressed="false"]');
+        I.waitForElement('.md-dashboard.is-editing-shortcuts', 10);
+    } else await enableEditing(I);
     I.clickCss(`[data-instance-id="${id}"] .dropdown > button`);
     I.waitForVisible(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`, 10);
     I.forceClick(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`);
@@ -48,7 +51,8 @@ Scenario('Add and configure a personal shortcut and reload its server preference
     originalSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     shortcutTitle = `dashboard-autotest-${I.getRandomText()}`;
     const existingIds = originalSettings.items.map(item => item.id);
-    I.clickCss('.md-dashboard__shortcuts-header > button');
+    I.clickCss('.md-dashboard__shortcut-actions button[aria-pressed="false"]');
+    I.clickCss('.md-dashboard__shortcut-actions > button:first-child');
     I.waitForVisible('.md-dashboard-modal [name="dashboardShortcutSource"]', 10);
     I.selectOption('.md-dashboard-modal [name="dashboardShortcutSource"]', 'url');
     I.fillField('.md-dashboard-modal [name="dashboardShortcutUrl"]', '/admin/v9/webpages/web-pages-list/');
@@ -118,7 +122,7 @@ Scenario('Move with drag and keyboard controls, collapse and resize without repl
     await openAction(I, recentId, 'collapse');
     waitForSave(I);
     I.waitForElement(`[data-instance-id="${recentId}"].is-collapsed`, 10);
-    I.seeElement(`[data-instance-id="${recentId}"] .md-dashboard-widget__more`);
+    I.seeElement(`[data-instance-id="${recentId}"] .md-dashboard__header-link`);
     await openAction(I, recentId, 'collapse');
     waitForSave(I);
     I.waitForElement(`[data-instance-id="${recentId}"]:not(.is-collapsed)`, 10);
@@ -183,8 +187,9 @@ Scenario('Responsive grid preserves visual order and keeps widgets inside the da
                 return { id: card.dataset.instanceId, left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
             });
             const clippedCells = [...host.querySelectorAll('.md-dashboard-widget__table td, .md-dashboard-widget__table th')]
-                .map((cell, index) => ({ index, type: cell.closest('[data-widget-type]').dataset.widgetType, whiteSpace: getComputedStyle(cell).whiteSpace, width: cell.clientWidth, contentWidth: cell.scrollWidth }))
-                .filter(cell => cell.whiteSpace !== 'normal' || cell.contentWidth > cell.width + 1);
+                .filter(cell => !cell.closest('.visually-hidden') && cell.checkVisibility())
+                .map((cell, index) => ({ index, type: cell.closest('[data-widget-type]').dataset.widgetType, numeric: cell.classList.contains('md-dashboard-widget__table-number'), whiteSpace: getComputedStyle(cell).whiteSpace, width: cell.clientWidth, contentWidth: cell.scrollWidth }))
+                .filter(cell => (!cell.numeric && cell.whiteSpace !== 'normal') || cell.contentWidth > cell.width + 1);
             return { left: boundary.left, right: boundary.right, cards, clippedCells };
         });
         for (const card of geometry.cards) {
@@ -203,8 +208,9 @@ Scenario('Responsive grid preserves visual order and keeps widgets inside the da
             .filter(body => !body.hidden && body.scrollHeight > body.clientHeight + 1)
             .map(body => body.closest('[data-instance-id]').dataset.instanceId);
         const cells = [...root.querySelectorAll('.md-dashboard-widget__table td, .md-dashboard-widget__table th')]
-            .map((cell, index) => ({ index, type: cell.closest('[data-widget-type]').dataset.widgetType, whiteSpace: getComputedStyle(cell).whiteSpace, width: cell.clientWidth, contentWidth: cell.scrollWidth }))
-            .filter(cell => cell.whiteSpace !== 'normal' || cell.contentWidth > cell.width + 1);
+            .filter(cell => !cell.closest('.visually-hidden') && cell.checkVisibility())
+            .map((cell, index) => ({ index, type: cell.closest('[data-widget-type]').dataset.widgetType, numeric: cell.classList.contains('md-dashboard-widget__table-number'), whiteSpace: getComputedStyle(cell).whiteSpace, width: cell.clientWidth, contentWidth: cell.scrollWidth }))
+            .filter(cell => (!cell.numeric && cell.whiteSpace !== 'normal') || cell.contentWidth > cell.width + 1);
         return { bodies, cells };
     });
     assert.deepEqual(clipped.bodies, [], 'Widget bodies must remain readable with text enlarged to 200 percent');

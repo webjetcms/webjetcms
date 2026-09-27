@@ -81,7 +81,7 @@ Scenario('Migrated overview widgets persist independently and clean up monitorin
         }
         I.dontSeeElementInDOM('.md-dashboard__legacy');
         I.dontSeeElementInDOM('#webjet-overview-dashboard .bookmark');
-        I.seeElementInDOM('.md-dashboard__shortcuts-header > button');
+        I.seeElementInDOM('.md-dashboard__shortcut-actions button[aria-pressed]');
         for (const type of ['server-memory', 'server-cpu']) {
             waitForChart(I, type);
             I.seeElementInDOM(`[data-widget-type="${type}"] .md-dashboard-widget__chart[role="img"][aria-label]`);

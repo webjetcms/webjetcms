@@ -58,7 +58,10 @@ public class DashboardSettingsService {
 
     /** Returns a fresh shared layout with only the requested domain's options. */
     public DashboardSettingsDto load(int userId, String domainKey) {
-        Map<String, String> records = repository.read(userId);
+        return readSettings(repository.read(userId), domainKey);
+    }
+
+    private DashboardSettingsDto readSettings(Map<String, String> records, String domainKey) {
         String layout = records.get(DashboardSettingsRepository.LAYOUT_KEY);
         if (layout == null) return new DashboardSettingsDto();
         try {
@@ -82,7 +85,9 @@ public class DashboardSettingsService {
                 if (news != null && news.path("version").isTextual()) settings.setAcknowledgedNewsVersion(news.get("version").asText());
             }
             validateAndSerialize(settings, domainKey);
-            settings.setConfigured(true);
+            settings.setConfigured(metadata.path("configured").asBoolean(true));
+            settings.setShortcutsConfigured(metadata.path("shortcutsConfigured").asBoolean(true));
+            settings.setLegacyBookmarksHandled(metadata.path("legacyBookmarksHandled").asBoolean(false));
             return settings;
         } catch (JsonProcessingException | IllegalArgumentException exception) {
             // Invalid legacy or manually edited preferences must not prevent login.
@@ -98,13 +103,27 @@ public class DashboardSettingsService {
         settings.getItems().forEach(item -> ids.add(item.getId()));
         repository.replace(userId, domainKey, records, ids);
         settings.setConfigured(true);
+        settings.setShortcutsConfigured(true);
         return settings;
     }
 
-    /** Returns an unconfigured profile only after all dashboard preferences have been removed. */
+    /** Restores widget defaults while retaining shortcuts and migration state under the account lock. */
     public DashboardSettingsDto reset(int userId) {
-        repository.reset(userId);
-        return new DashboardSettingsDto();
+        Map<String, String> retained = repository.reset(userId, previous -> {
+            DashboardSettingsDto settings = readSettings(previous, "0");
+            settings.getItems().removeIf(item -> !"shortcut".equals(item.getType()));
+            settings.getDomainOptions().clear();
+            settings.setAcknowledgedNewsVersion(null);
+            Map<String, String> records = validateAndSerialize(settings, "0");
+            ObjectNode metadata = mapper.createObjectNode().put("version", 1).put("configured", false)
+                .put("shortcutsConfigured", settings.isShortcutsConfigured())
+                .put("legacyBookmarksHandled", settings.isLegacyBookmarksHandled());
+            ArrayNode order = metadata.putArray("order");
+            settings.getItems().forEach(item -> order.add(item.getId()));
+            records.put(DashboardSettingsRepository.LAYOUT_KEY, serializeBounded(metadata));
+            return records;
+        });
+        return readSettings(retained, "0");
     }
 
     Map<String, String> validateAndSerialize(DashboardSettingsDto settings, String domainKey) {
@@ -117,7 +136,8 @@ public class DashboardSettingsService {
         Set<String> ids = new HashSet<>();
         Set<String> singletonTypes = new HashSet<>();
         Map<String, String> records = new LinkedHashMap<>();
-        ObjectNode metadata = mapper.createObjectNode().put("version", 1);
+        ObjectNode metadata = mapper.createObjectNode().put("version", 1)
+            .put("shortcutsConfigured", true).put("legacyBookmarksHandled", settings.isLegacyBookmarksHandled());
         ArrayNode order = metadata.putArray("order");
         if (settings.getAcknowledgedNewsVersion() != null) records.put(DashboardSettingsRepository.NEWS_KEY,
             serializeBounded(mapper.createObjectNode().put("version", settings.getAcknowledgedNewsVersion())));
