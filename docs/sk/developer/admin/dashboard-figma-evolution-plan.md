@@ -180,3 +180,9 @@ Aktuálny screenshot a poznámky: `/private/tmp/webjet-dashboard-58806/ranked-ta
 Overenie: **73 JavaScript helper testov, 18 Java testov dátovej služby, 7 dizajnových E2E scenárov a 4 scenáre dátových projekcií**, všetky úspešné. Kontroly pokrývajú obe veľkosti kariet, šírky 1337/1000/390 px, načítanie náhľadu, prázdny aj nefunkčný obrázok, zarovnanie hodnôt, zachovanie odkazov a pôvodných preferencií. Development zostava a `git diff --check` prešli. Manuálna kontrola potvrdila rovnaké riadkovanie a približne 64 px vysoký bežný riadok v oboch zoznamoch.
 
 Finálne poznámky a screenshoty skutočných aj testovacích dát: `/private/tmp/webjet-dashboard-58806/top-pages-previews/`. Lokálny server používa aktualizovanú dátovú službu; zmeny zostávajú bez commitu.
+
+## Zarovnanie obsahu s ostatnými stránkami administrácie
+
+Dashboard používa štandardné 15 px bočné odsadenie kontajnera administrácie, rovnako ako štatistiky formulára. Dodatočných 24 px na bokoch aj nad obsahom je odstránených; na desktope začína uvítacia plocha na y = 48 px, priamo pod hlavičkou. Obmedzenie šírky na 1440 px je odstránené, takže rovnaké okraje zostávajú aj na širokom monitore. Vnútorné odsadenie kariet a mobilné odsadenie sa nemenili.
+
+Overenie: development zostava a všetkých 7 dizajnových E2E scenárov prešli vrátane responzívnych šírok 390/768/1337 px. Manuálne meranie potvrdilo 15 px bočné okraje pri 1337 aj 1920 px a začiatok obsahu na spodnej hrane hlavičky.

@@ -45,7 +45,7 @@ webjet-overview-dashboard, .md-dashboard-modal {
 }
 webjet-overview-dashboard { display: block; }
 webjet-overview-dashboard > .overview {
-    padding: 38px 24px 20px;
+    padding: 14px 0 20px;
     @media (max-width: ($bp-mobile - .02px)) { padding: 16px 0; }
 }
 webjet-overview-dashboard a:focus-visible {
@@ -56,8 +56,6 @@ webjet-overview-dashboard a:focus-visible {
 .md-dashboard {
     --dashboard-gap: 15px;
     --dashboard-row-height: 128px;
-    max-width: 1440px;
-    margin-inline: auto;
     color: var(--wj-secondary);
     font-size: 14px;
 
