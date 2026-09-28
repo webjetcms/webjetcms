@@ -300,7 +300,7 @@ public class SaveFormService {
         }
 
         // SEND MAIL
-        formMailService.sendMail(form, recipients, subject, formFiles, attachFiles, emailCss, new StringBuilder(emailHtml), request);
+        formMailService.sendMail(form, formSettings, recipients, subject, formFiles, attachFiles, emailCss, new StringBuilder(emailHtml), request);
 
         return null;
     }

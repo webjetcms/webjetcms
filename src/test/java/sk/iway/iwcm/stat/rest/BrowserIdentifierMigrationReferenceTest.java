@@ -68,7 +68,8 @@ class BrowserIdentifierMigrationReferenceTest extends BaseWebjetTest {
         BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService(mock(ExecutorService.class));
         try (TestDatabase fixture = new TestDatabase("seo_bots", "stat_keys");
              Statement sql = fixture.connection.createStatement();
-             MockedStatic<DBPool> dbPool = mockStatic(DBPool.class)) {
+             MockedStatic<DBPool> dbPool = mockStatic(DBPool.class);
+             MockedStatic<UpdateDatabase> updates = mockStatic(UpdateDatabase.class)) {
             if (indexReady == false) sql.execute("DROP INDEX ix_seo_bots_name ON seo_bots");
             Connection connection = spy(fixture.connection);
             doNothing().when(connection).close();

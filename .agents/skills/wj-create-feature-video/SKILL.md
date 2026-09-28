@@ -106,7 +106,15 @@ Keep these scenarios in order:
    `I.generateHead(videoPlan)` once in a synchronous callback and tag only `@head`.
 3. `Shot plan`: format the same object with `formatShotPlan(videoPlan)` from
    `helpers/feature_video_plan.js` and print it with `I.say`; leave it untagged.
-4. The named main walkthrough: tag `@video`. Add `@current` here only if needed.
+4. `YouTube thumbnail`: always create a standalone async scenario tagged only
+   `@title`, run by `npm run video:title video/<scenario-name>.js`. Prepare a
+   representative feature screen, wait for it to be ready, then call
+   `await I.videoTitle("<localized headline>", 50, "glow")`. Choose the headline
+   and size for the feature; the second argument is an optional fixed font size
+   in CSS pixels, and the third selects `glow`, `clean` or `bold`. Keep its login,
+   preparation and cleanup independent of the main walkthrough. See the
+   production reference's **YouTube Thumbnail** section for sizing and outputs.
+5. The named main walkthrough: tag `@video`. Add `@current` here only if needed.
 
 For a quick readable overview, run `npm run video:plan video/<scenario-name>.js`
 from `src/test/webapp`. It statically reads the top-level `const videoPlan` and
@@ -271,8 +279,10 @@ Run proportionate checks:
    Verify the three-second lead-in and two-second tail holds for automatic shots and their absence
    for manual/head entries. Verify that audio validation and generation do not
    execute inline callbacks.
-2. Dry-run the audio-only, head-only and complete video configurations; none may call
+2. Dry-run the audio-only, head-only, thumbnail and complete video configurations; none may call
    ElevenLabs. Check legacy scenarios remain compatible when changing helpers.
+   Use `npm run video:title -- video/<scenario-name>.js --dry-run` to verify that
+   the required `@title` scenario is selected.
    Run `npm run video:plan video/<scenario-name>.js` to inspect narration and timing.
 3. Run `npm run audio video/<scenario-name>.js` only on explicit request with
    an available API key. Object plans produce `<scenario-name>-<language>-1.mp3`,
@@ -299,6 +309,41 @@ commands, output paths, validation and manual gaps. For workflow refactoring,
 explain the schema, reorder/language controls, changed files and verification;
 do not repeat the unchanged complete narration. State whether media was actually
 generated and any unverified browser behavior.
+
+## 6. Final Narration-to-Footage Check
+
+Before handing off a new or changed scenario, audit every shot against its
+actual `text-sk` (or the selected `text-<language>`). Start from the spoken
+sentences, not from `notes` or the title. Passing tests and plausible filming
+notes do not prove that the viewer sees what the voice describes.
+
+- Map each sentence to the visible starting state, on-camera action and result.
+  Read the actual `shot` callback and any helpers it calls; inspect `prepare`
+  and lifecycle callbacks to establish the baseline. A narrated click, edit or
+  transition must happen inside `shot`, in the spoken order. Actions hidden in
+  preparation, cleanup or editing slates do not count as footage. A prepared
+  state can support narration describing that already-visible state.
+- Check the actual controls, labels, values, navigation direction and results.
+  Distinguish selecting or typing from applying or saving. Do not describe a
+  comparison of several instances when the shot shows only one. Opening
+  promises may introduce a later demonstration, but must be phrased as such,
+  not as actions already happening in the current shot. Verify that linked
+  documentation actually contains any instructions promised in the narration.
+- Resolve mismatches by implementing the narrated action, splitting the beat,
+  or narrowing the narration to the useful behavior actually shown. Update
+  `notes` afterward; changing notes alone never resolves a mismatch. Keep result
+  assertions and enough readable footage after the corresponding action.
+- Inspect available recordings against the sentences, including action order,
+  readable results and time available for the narration. When speech exists,
+  listen while viewing the relevant footage. `durationSeconds`, fixed waits and
+  a successful browser run do not establish synchronization. Without audio,
+  report semantic/visual verification separately and leave exact speech timing
+  explicitly unverified; do not trigger paid generation just for this check.
+- Report a concise per-shot mapping of narration to visible evidence, fixes and
+  any remaining gaps. Refresh the derived plan after edits, retake changed
+  browser actions when the environment is available, and identify older audio
+  or recordings that no longer match. Repeat this check after narration,
+  callbacks, preparation or shot order changes.
 
 ## Talking Heads and Credits
 

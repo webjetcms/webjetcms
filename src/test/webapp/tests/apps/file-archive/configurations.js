@@ -88,7 +88,7 @@ Scenario('Set variable and Cronjob fileArchivFromMail to default', async ({ I, D
 
 
 Scenario('Delete archiv entities', async ({I}) => {
-    SL.deleteTestFiles();
+    await SL.deleteTestFiles();
 });
 
 Scenario('Set variable fileArchivAllowPatternVersion and verify behaviour', ({ I, DT, DTE, Document }) => {
@@ -144,6 +144,6 @@ Scenario('Set variable and Cronjob fileArchivAllowPatternVersion to default', ({
 });
 
 Scenario('Delete archiv entity (and file using elfinder if neccesary)', async ({I, TempMail}) => {
-    SL.deleteTestFiles();
+    await SL.deleteTestFiles();
     await TempMail.destroyInbox("webjetarchive2");
 });

@@ -6,10 +6,13 @@ const FONT_PATH = path.resolve(__dirname, "../../../main/webapp/admin/v9/src/fon
 const LOGO_PATH = path.resolve(__dirname, "../../../main/webapp/admin/v9/src/images/logo-cms.svg");
 
 /** Validates thumbnail input before opening the renderer or replacing an artifact. */
-function validateVideoTitle(text, style = "glow") {
+function validateVideoTitle(text, style = "glow", fontSize) {
   if (typeof text !== "string" || !text.trim()) throw new Error("Video title must be a non-empty string.");
   if (Array.from(text).length > 160) throw new Error("Video title must contain at most 160 characters; use a short headline.");
   if (!TITLE_STYLES.includes(style)) throw new Error(`Unknown video title style: ${style}. Choose ${TITLE_STYLES.join(", ")}.`);
+  if (fontSize !== undefined && (!Number.isFinite(fontSize) || fontSize <= 0)) {
+    throw new Error("Video title font size must be a positive finite number in CSS pixels.");
+  }
 }
 
 /**
@@ -20,15 +23,17 @@ function validateVideoTitle(text, style = "glow") {
  * @param {Buffer} screenshot PNG screenshot of the prepared scene
  * @param {string} text Short headline
  * @param {string} [style] One of glow, clean or bold
+ * @param {number} [fontSize] Fixed CSS pixel size on the 1280 x 720 layout; omit to fit automatically from 100 down to 36
  * @returns {Promise<Buffer>} JPEG smaller than 2 MB
  */
-async function renderVideoTitle(browser, screenshot, text, style = "glow") {
-  validateVideoTitle(text, style);
+async function renderVideoTitle(browser, screenshot, text, style = "glow", fontSize) {
+  validateVideoTitle(text, style, fontSize);
   const [font, logo] = await Promise.all([fs.readFile(FONT_PATH), fs.readFile(LOGO_PATH)]);
-  const context = await browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 3 });
+  // Device emulation isolates this fixed layout from the recording profile's native desktop zoom.
+  const context = await browser.newContext({ viewport: { width: 1280, height: 720 }, deviceScaleFactor: 3, isMobile: true });
   try {
     const page = await context.newPage();
-    await page.setContent(`<!doctype html><html><head><meta charset="utf-8"><style>
+    await page.setContent(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><style>
       @font-face { font-family: Asap; src: url(data:font/woff2;base64,${font.toString("base64")}); font-weight: 700; }
       * { box-sizing: border-box; }
       body { margin: 0; width: 1280px; height: 720px; overflow: hidden; font-family: Asap, sans-serif; color: white; background: #080d21; }
@@ -59,10 +64,14 @@ async function renderVideoTitle(browser, screenshot, text, style = "glow") {
       img.src = source;
       await img.decode();
     }, `data:image/png;base64,${screenshot.toString("base64")}`);
-    await page.evaluate(async () => {
+    await page.evaluate(async fontSize => {
       await document.fonts.ready;
       await document.querySelector(".brand img").decode();
       const heading = document.querySelector("h1");
+      if (fontSize !== undefined) {
+        heading.style.fontSize = `${fontSize}px`;
+        return;
+      }
       let size = 100;
       while ((heading.offsetHeight > heading.parentElement.clientHeight || heading.scrollWidth > heading.clientWidth) && size > 36) {
         heading.style.fontSize = `${--size}px`;
@@ -70,7 +79,7 @@ async function renderVideoTitle(browser, screenshot, text, style = "glow") {
       if (heading.offsetHeight > heading.parentElement.clientHeight || heading.scrollWidth > heading.clientWidth) {
         throw new Error("Video title does not fit. Shorten the headline or remove line breaks.");
       }
-    });
+    }, fontSize);
     // Render at twice the output resolution, then filter down once without intermediate JPEG loss.
     const png = await page.screenshot({ type: "png", animations: "disabled" });
     const encoded = await page.evaluate(async source => {

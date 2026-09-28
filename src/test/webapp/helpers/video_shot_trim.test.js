@@ -35,6 +35,25 @@ test("rejects a missing slate instead of publishing setup footage", async () => 
   await assert.rejects(trimVideoSetup("/tmp/wj-no-slate.webm", { startTime: 1, endTime: 3 }), /Cannot locate the shot slate/);
 });
 
+test("skips startup frames timestamped after the slate paint callback", async () => {
+  class Recorder {
+    async _launch() {}
+    writeFrame(frame, timestamp) { this._lastFrameBuffer = frame; this._lastFrameTimestamp = timestamp; }
+  }
+  installShotTiming(Recorder);
+  const recorder = new Recorder();
+  const file = "/tmp/wj-timing-startup.webm";
+  await recorder._launch({ outputFile: file });
+  recorder.writeFrame(Buffer.from("blank"), 100.006);
+  recorder.writeFrame(Buffer.from("slate"), 100.014);
+  recorder.writeFrame(Buffer.from("scene"), 102.01);
+  await trimVideoSetup(file, { startTime: 100, endTime: 102 }, {
+    execFile: async (command, args) => {
+      assert.equal(args[args.indexOf("-ss") + 1], "0.04", "Skip the late startup frame and retain the static slate");
+    }
+  });
+});
+
 for (const type of ["auto", "manual", "head"]) test(`${type} retake starts on its slate, with three seconds before automatic actions`, async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "wj-shot-trim-"));
   const previousCodeceptjs = global.codeceptjs;

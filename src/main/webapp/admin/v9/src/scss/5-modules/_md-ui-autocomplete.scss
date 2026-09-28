@@ -1,31 +1,51 @@
-ul.ui-autocomplete {
+ul.ui-autocomplete.ui-menu {
     z-index: 10011;
-    padding-left: 0px;
-    border: 1px solid rgba(0, 0, 0, 0.15);
-    border-radius: 6px;
+    padding: $dropdown-padding-y $dropdown-padding-x;
+    font-family: $admin-font-family;
+    font-size: $dropdown-font-size;
+    line-height: $line-height-base;
+    color: $dropdown-color;
+    background-color: $dropdown-bg;
+    border: $dropdown-border-width solid $dropdown-border-color;
+    border-radius: $dropdown-border-radius;
     margin-top: 2px;
     max-height: 100vh;
     overflow: auto;
 
     &.dt-autocomplete-select {
-        max-height: 255px;
+        max-height: min(255px, var(--wj-autocomplete-max-height, 100vh));
 
         @include show-scrollbar;
+    }
+
+    > li.ui-menu-divider:first-child {
+        display: none;
     }
 
     li {
         list-style-type: none;
         cursor: pointer;
         white-space: nowrap;
+        width: max-content;
+        min-width: 100%;
 
-        div {
-            padding-left: 6px;
+        > .ui-menu-item-wrapper {
+            padding: $dropdown-item-padding-y $dropdown-item-padding-x;
+            margin: 0;
+            border: 0;
+            color: $dropdown-link-color;
+        }
 
-            &.ui-state-active {
-                //farba podla selectboxov v editore
-                background-color: #f8f9fa;
-                border: 0px;
-                color: black;
+        &:not(.disabled):not(.ui-state-disabled) {
+            > .ui-menu-item-wrapper:hover,
+            > .ui-menu-item-wrapper.ui-state-active {
+                background-color: $nice-gray;
+                color: $dropdown-link-hover-color;
+            }
+
+            &.dt-autocomplete-selected > .ui-menu-item-wrapper {
+                background-color: $dropdown-link-active-bg;
+                color: $dropdown-link-active-color;
             }
         }
     }

@@ -14,7 +14,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms"
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "type": "java",
@@ -26,7 +26,43 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms"
+            "projectName": "${workspaceFolderBasename}"
+        },
+        {
+            "type": "java",
+            "name": "Debug Local DB 8443",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5006,
+            "preLaunchTask": "appStartLocalDB8443",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "${workspaceFolderBasename}"
+        },
+        {
+            "type": "java",
+            "name": "Debug Local DB 9443",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5007,
+            "preLaunchTask": "appStartLocalDB9443",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "${workspaceFolderBasename}"
+        },
+        {
+            "type": "java",
+            "name": "Debug MultiWeb",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5005,
+            "preLaunchTask": "appStartMultiWeb",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "type": "java",
@@ -38,7 +74,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms"
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "type": "java",
@@ -50,7 +86,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms"
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "type": "java",
@@ -62,7 +98,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms"
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "type": "java",
@@ -74,7 +110,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms"
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "type": "java",
@@ -86,7 +122,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms"
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "type": "java",
@@ -98,7 +134,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms"
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "type": "java",
@@ -109,8 +145,8 @@
             "preLaunchTask": "appStartEshopDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "projectName": "webjetcms",
-            "internalConsoleOptions": "neverOpen"
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "type": "java",
@@ -122,7 +158,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms"
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "type": "java",
@@ -134,7 +170,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms"
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "type": "java",
@@ -145,8 +181,8 @@
             "preLaunchTask": "appStartPgSQLDB",
             "postDebugTask": "appStop",
             "timeout": 240000,
-            "projectName": "webjetcms",
-            "internalConsoleOptions": "neverOpen"
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "type": "java",
@@ -158,7 +194,7 @@
             "postDebugTask": "appStop",
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms"
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "type": "java",
@@ -168,7 +204,7 @@
             "port": 5005,
             "timeout": 240000,
             "internalConsoleOptions": "neverOpen",
-            "projectName": "webjetcms"
+            "projectName": "${workspaceFolderBasename}"
         },
         {
             "trace": true,

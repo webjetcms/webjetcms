@@ -28,7 +28,7 @@ Karta **Položky formuláře** je rozdělena na tři sloupce:
 
 - **Kroky formuláře** - tabulka obsahující seznam kroků formuláře.
 - **Položky formuláře** - tabulka obsahující seznam položek (jednotlivá formulářová pole) formuláře patřících do právě vybraného kroku.
-- **Náhled formuláře** - zobrazení náhledu právě zvoleného kroku formuláře.
+- **Náhled formuláře** - zobrazení náhledu právě zvoleného kroku formuláře s možností [výběru CSS šablony](#výběr-css-šablony-v-náhledu).
 
 ![](real-form.png)
 
@@ -38,7 +38,19 @@ První sloupec zobrazuje seznam kroků formuláře. V tomto seznamu můžeme př
 
 ![](form-step-editor.png)
 
-Můžete vyplnit **Úvodní text**, který se zobrazí na začátku kroku. V textu můžete použít [značky přihlášeného uživatele](#značky-přihlášeného-uživatele) a [značky hodnot položek](#značky-hodnot-položek) z již vyplněných kroků. V kartě **Pokročilé** můžete změnit text tlačítka pro přechod na další krok (nebo odeslání formuláře, pokud jde o poslední krok). V kartě **Kód skriptu** můžete vložit vlastní HTML/JavaScript kód, který se vloží a provede při zobrazení kroku.
+Můžete vyplnit **Úvodní text**, který se zobrazí na začátku kroku. V textu můžete použít [značky přihlášeného uživatele](#značky-přihlášeného-uživatele) a [značky hodnot položek](#značky-hodnot-položek) z již vyplněných kroků. V kartě **Pokročilé** můžete změnit text tlačítka pro přechod na další krok (nebo odeslání formuláře, pokud jde o poslední krok) i text tlačítka pro návrat na předchozí krok. V kartě **Kód skriptu** můžete vložit vlastní HTML/JavaScript kód, který se vloží a provede při zobrazení kroku.
+
+### Návrat na předchozí krok
+
+Od druhého kroku se zobrazuje tlačítko **Přejít na předchozí krok**. Návštěvník se jím může vrátit k již vyplněným údajům a opravit je. Text tlačítka nastavíte v editoru daného kroku v kartě **Pokročilé**, v poli **Předchozí krok**, například na **Zpět**. Pokud pole necháte prázdné, použije se výchozí text.
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+Při návratu se obnoví hodnoty uložené při posledním úspěšném přechodu z daného kroku dopředu, včetně výběrů v zaškrtávacích políčkách a dostupných nahraných souborů. U obrázků se obnoví i náhled. Po úpravě údajů a opětovném přechodu dopředu se podmínky zobrazení a povinnosti dalších polí vyhodnotí podle aktualizovaných hodnot.
+
+!>**Upozornění:** Tlačítko pro návrat neukládá ani nevaliduje právě otevřený krok. Změny, které návštěvník provede před kliknutím na **Zpět**, se nezachovají, pokud je předtím neuložil úspěšným přechodem dopředu. To platí i pro nově nahrané soubory v tomto kroku.
 
 ### Duplikování
 
@@ -230,6 +242,14 @@ Třetí sloupec sekce **Obsah formuláře** je náhled formuláře. Tento náhle
 
 Na konci každého kroku se automaticky vygeneruje tlačítko, jehož text se mění podle toho, zda je krok poslední nebo ne. Pokud není poslední, tlačítko bude mít text **Přejít na další krok**, jinak **Odeslat formulář**. Text tlačítka můžete změnit v nastavení kroku, například na **Pokračovat** nebo **Registrovat se**.
 
+Od druhého kroku se zobrazuje také tlačítko na [návrat na předchozí krok](#návrat-na-předchozí-krok).
+
+### Výběr CSS šablony v náhledu
+
+V záhlaví náhledu je výběrové pole **CSS šablona**, pomocí kterého můžete ihned vyzkoušet připravené vzhledy formuláře. Seznam obsahuje všechny dostupné CSS šablony a možnost **Bez šablony**, která zobrazí základní vzhled.
+
+Vybraná šablona se použije pouze v administračním náhledu a neuloží se do nastavení formuláře. Vzhled formuláře na webové stránce nastavíte zvlášť v poli **CSS šablona** při [vložení aplikace Formulář](#css-šablony). Každá vložená instance formuláře může mít zvolenou jinou šablonu.
+
 ![](real-form.png)
 
 !>**Upozornění:** Náhled formuláře je orientační a může se kompozičně i graficky lišit od skutečného zobrazení na stránce. V editoru se zobrazují všechny položky bez ohledu na nastavené podmínky, abyste uměli formulář lépe navrhnout a zkontrolovat. Na reálné stránce se však formulář mění dynamicky podle podmínek zobrazení (některá pole se mohou skrýt nebo zobrazit podle hodnot jiných polí) a zároveň podle použité šablony a stylů stránky, do které je formulář vložen.
@@ -242,9 +262,15 @@ Vytvořený formulář můžete vložit do web stránky pomocí aplikace Formul�
 
 Na jednu stránku můžete vložit i více instancí stejného vícekrokového formuláře. Každá instance pracuje nezávisle a vygenerované HTML identifikátory polí obdrží vlastní prefix, například `f1-` a `f2-`, aby se navzájem neovlivňovaly.
 
+### CSS šablony
+
+Při vkládání nebo úpravě aplikace **Formulář** na stránce můžete v poli **CSS šablona** vybrat připravený vzhled formuláře. Volba **Bez šablony** ponechá základní zobrazení podle stylů stránky. Každá vložená instance může používat jinou připravenou šablonu, aniž by ovlivnila ostatní formuláře na stránce, včetně formulářů s volbou **Bez šablony**.
+
+Stejný výběr je dostupný v [náhledu formuláře v administraci](#výběr-css-šablony-v-náhledu). Tam slouží pouze k vyzkoušení vzhledu a nemění nastavení aplikace vložené na stránce. Po výběru vhodného vzhledu proto nastavte šablonu iv příslušné aplikaci na stránce.
+
 ### JavaScript událost po zobrazení kroku
 
-Po vložení HTML kódu kroku do stránky a inicializaci jeho podmínek formulář odešle na objektu `window` nativní událost `CustomEvent` s názvem `WJ.multistepForm.stepShown`. Událost se odešle pro první krok i po každém přechodu na další krok. Není třeba načítat administrační soubor `webjet.js` ani knihovnu `jQuery`.
+Po vložení HTML kódu kroku do stránky a inicializaci jeho podmínek formulář odešle na objektu `window` nativní událost `CustomEvent` s názvem `WJ.multistepForm.stepShown`. Událost se odešle pro první krok, po přechodu na další krok i při návratu na předchozí krok. Není třeba načítat administrační soubor `webjet.js` ani knihovnu `jQuery`.
 
 ```javascript
 window.addEventListener("WJ.multistepForm.stepShown", (event) => {

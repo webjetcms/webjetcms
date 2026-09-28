@@ -453,13 +453,26 @@ export class DatatablesCkEditor {
 					};
 					removeMaximizedFromIframes($dialogElement);
 
-					//remove stored original sizes from iframes
+					//restore iframe sizes before removing the stored values
 					$dialogElement.find("iframe").each(function() {
-						$(this).removeData("originalWidth originalHeight originalParentWidth");
+						var $iframe = $(this);
+						var originalWidth = $iframe.data("originalWidth");
+						var originalHeight = $iframe.data("originalHeight");
+						var originalParentWidth = $iframe.data("originalParentWidth");
+						if (originalWidth !== undefined && originalHeight !== undefined) {
+							$iframe.css({"width": originalWidth + "px", "height": originalHeight + "px"});
+							if (originalParentWidth !== undefined) {
+								$iframe.parent("div").css("width", originalParentWidth);
+							}
+						}
+						$iframe.removeData("originalWidth originalHeight originalParentWidth");
 					});
 
 					//clear stored dialog size and reset drag state
 					if (dialog._) {
+						if (dialog._.originalWidth !== undefined && dialog._.originalHeight !== undefined) {
+							dialog.resize(dialog._.originalWidth, dialog._.originalHeight);
+						}
 						delete dialog._.originalWidth;
 						delete dialog._.originalHeight;
 						dialog._.moved = false;
@@ -2422,11 +2435,11 @@ export class DatatablesCkEditor {
 				setTimeout(() => {
 					//toto musi byt posledne, inak sa zle nacitaval obsah stranky
 					try {
-						this.setEditingMode(json);
+						resolve(this.setEditingMode(json));
 					} catch (error) {
 						console.error("Error setting CKEditor editing mode:", error);
+						resolve();
 					}
-					resolve();
 				}, 100);
 			});
 		}
@@ -2613,6 +2626,8 @@ export class DatatablesCkEditor {
 
 		if ("pageBuilder"===this.editingMode) {
 			isPageBuilder = true;
+			// The previous iframe document can still be accessible while the next page is loading.
+			pageBuilderIframe.data('pageBuilderPreviousDocument', pageBuilderIframe[0].contentDocument);
 			pageBuilderIframe.attr("src", json.editorFields.editingModeLink);
 
 			var editorTypeForced = WJ.getAdminSetting("editorTypeForced");
@@ -2647,7 +2662,7 @@ export class DatatablesCkEditor {
 			}
 		}
 
-		this.switchEditingMode(this.editingMode, false, json.data);
+		return this.switchEditingMode(this.editingMode, false, json.data);
 	}
 
 	/**
@@ -2663,6 +2678,12 @@ export class DatatablesCkEditor {
 		let pageBuilderElement = $("#"+fieldId+"-trPageBuilder");
 		let editorTypeSelector = $("#"+fieldId+"-editorTypeSelector");
 		let oldEditingMode = this.editingMode;
+		const ck = this.ckEditorInstance;
+		const setMode = mode => new Promise(resolve => {
+			if (ck.mode === mode) resolve();
+			else ck.setMode(mode, resolve);
+		});
+		let modeReady = Promise.resolve();
 
 		var data = null;
 		if (userChange === true) {
@@ -2675,7 +2696,7 @@ export class DatatablesCkEditor {
 			ckEditorElement.hide();
 			pageBuilderElement.show();
 			//prevencia pred zbytocnym loadingom HTML objektov
-			this.ckEditorInstance.setMode('source');
+			modeReady = setMode('source');
 
 			//nastav select na korektnu hodnotu
 			if (pageBuilderElement.find("iframe").length>0 && pageBuilderElement.find("iframe")[0].contentWindow && pageBuilderElement.find("iframe")[0].contentWindow.$) {
@@ -2690,18 +2711,16 @@ export class DatatablesCkEditor {
 			pageBuilderElement.hide();
 			if (setData != null) data = setData;
 			else if (data == null) data = this.ckEditorInstance.getData();
-			var ck = this.ckEditorInstance;
-			const setSourceData = () => {
+			if (data != null && "pageBuilder"===oldEditingMode) {
+				ck.setMode('wysiwyg');
 				ck.setData(data);
+			}
+			modeReady = new Promise(resolve => {
 				setTimeout(() => {
-					// Refresh the gutter after the source editor becomes visible.
-					if (ck.mode !== "source" || !ck.container) return;
-					const codeMirror = ck.container.$.querySelector('.CodeMirror');
-					if (codeMirror && codeMirror.CodeMirror) codeMirror.CodeMirror.refresh();
+					// Preserve the CodeMirror layout delay, but wait for the final content before taking a snapshot.
+					setMode('source').then(() => ck.setData(data, resolve));
 				}, 500);
-			};
-			if (ck.mode === "source") setSourceData();
-			else ck.setMode('source', setSourceData);
+			});
 
 			//nastav select na korektnu hodnotu
 			editorTypeSelector.find("select").selectpicker("val", "html");
@@ -2710,17 +2729,15 @@ export class DatatablesCkEditor {
 
 			ckEditorElement.show();
 			pageBuilderElement.hide();
-			this.ckEditorInstance.setMode('wysiwyg');
+			modeReady = setMode('wysiwyg');
 
 			//nastav select na korektnu hodnotu
 			editorTypeSelector.find("select").selectpicker("val", "");
 
 			if (data != null && "pageBuilder"===oldEditingMode) {
-				var ck = this.ckEditorInstance;
-				setTimeout(()=>{
-					//console.log("forcing setData, data=", data);
-					ck.setData(data);
-				}, 500);
+				modeReady = modeReady.then(() => new Promise(resolve => {
+					setTimeout(() => ck.setData(data, resolve), 500);
+				}));
 			}
 		}
 
@@ -2761,6 +2778,7 @@ export class DatatablesCkEditor {
 		setTimeout(() => {
 			this.resizeEditor(this);
 		}, 500);
+		return modeReady;
 	}
 
 	setStyleComboList(sessionCssParsed) {

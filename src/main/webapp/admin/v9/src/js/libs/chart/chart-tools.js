@@ -420,8 +420,9 @@ const STAT_DATE_RANGE_INPUTS = [".dt-filter-from-dayDate", ".dt-filter-to-dayDat
  * Save the last search criteria so all statistics pages can reuse them.
  * Date range values are persisted in local storage, while other filters remain in session storage.
  * @param {Object|string} DATA DataTable configuration object or filter container selector.
+ * @param {string} dateRangeStorageKey Local storage key used for the date range.
  */
-export function saveSearchCriteria(DATA) {
+export function saveSearchCriteria(DATA, dateRangeStorageKey = STAT_DATE_RANGE_STORAGE_KEY) {
     var inputs = [...STAT_DATE_RANGE_INPUTS, "#rootDir", "#botFilterOut", "#searchUrl", ".dt-filter-lastLogon", "#searchEngineSelect", "#webPageSelect"];
     var specialInputs = ["#searchEngineSelect", "#webPageSelect"]; //Resetting the value of this field is handed specialy
     var defaultSearch = {};
@@ -543,8 +544,8 @@ export function saveSearchCriteria(DATA) {
         }
 
         var dateRangeJson = JSON.stringify(dateRangeSearch);
-        if(dateRangeJson != "{}") window.localStorage.setItem(STAT_DATE_RANGE_STORAGE_KEY, dateRangeJson);
-        else window.localStorage.removeItem(STAT_DATE_RANGE_STORAGE_KEY);
+        if(dateRangeJson != "{}") window.localStorage.setItem(dateRangeStorageKey, dateRangeJson);
+        else window.localStorage.removeItem(dateRangeStorageKey);
     }
 
     //Set new object
@@ -555,14 +556,15 @@ export function saveSearchCriteria(DATA) {
 
 /**
  * Gets saved search criteria from session storage and the persistent date range from local storage.
+ * @param {string} dateRangeStorageKey Local storage key used for the date range.
  * @returns
  */
-export function getSearchCriteria() {
+export function getSearchCriteria(dateRangeStorageKey = STAT_DATE_RANGE_STORAGE_KEY) {
     var defaultSearch = window.sessionStorage.getItem(STAT_FILTER_STORAGE_KEY);
     if ("{}"==defaultSearch) defaultSearch = null;
     if (defaultSearch != null) defaultSearch = JSON.parse(defaultSearch);
 
-    var dateRangeSearch = window.localStorage.getItem(STAT_DATE_RANGE_STORAGE_KEY);
+    var dateRangeSearch = window.localStorage.getItem(dateRangeStorageKey);
     if (dateRangeSearch != null && "{}"!=dateRangeSearch) {
         if (defaultSearch == null) defaultSearch = {};
         for (const name of STAT_DATE_RANGE_INPUTS) delete defaultSearch[name];

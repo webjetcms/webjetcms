@@ -86,6 +86,28 @@ Aktualizácia gradle wrapper
     <iframe width="560" height="315" src="https://www.youtube.com/embed/ZHb8714HXNY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+### Súbežné spustenie vo viacerých worktree
+
+Vo VS Code môžete pre každú worktree vybrať samostatný profil spustenia:
+
+| Profil | HTTPS port | HTTP port | Debug port |
+| --- | --- | --- | --- |
+| `Debug Local DB` | 443 | 80 | 5005 |
+| `Debug Local DB 8443` | 8443 | 8080 | 5006 |
+| `Debug Local DB 9443` | 9443 | 9080 | 5007 |
+
+V každej worktree spúšťajte jeden server a vyberte odlišný profil. Pre profil `Debug Local DB 8443` otvoríte administráciu na adrese `https://localhost:8443/admin/`.
+
+Porty môžete nastaviť aj cez Gradle parametre `-PhttpsPort`, `-PhttpPort` a `-PdebugPort`. Bez parametrov zostávajú predvolené hodnoty 443, 80 a 5005. Napríklad:
+
+```shell
+webjetDbname=/poolman-local.xml ./gradlew appStartDebug -PhttpsPort=8443 -PhttpPort=8080 -PdebugPort=5006
+```
+
+Na macOS úloha VS Code `appStop` používa skript `./app-stop.sh`. Najprv zavolá `./gradlew appStop`, ktorý použije riadiaci port uložený v adresári `build` danej worktree. Po úspešnom odoslaní požiadavky čaká najviac 15 sekúnd na ukončenie servera. Ak Gradle zlyhá alebo server zostane bežať, skript pošle signál `TERM` iba Java procesu označenému identifikátorom tejto worktree. Ak sa neukončí do ďalších 10 sekúnd, použije `KILL`.
+
+Úloha `appKill` (`./app-stop.sh --force`) rovno použije `KILL` pre server danej worktree. Na identifikáciu procesu slúži JVM parameter pridaný pri štarte cez aktuálny `build.gradle`; ostatné worktree sa nezastavujú. Pri zastavovaní netreba znovu zadávať porty.
+
 ## Nastavenie hosts súboru
 
 WebJET je licencovaný podľa domén. Pre lokálnu prácu je potrebné do hosts súboru (na windows je to c:\windows\system32\drivers\etc\hosts) pridať riadok:

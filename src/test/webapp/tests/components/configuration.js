@@ -393,7 +393,7 @@ Scenario('docasna hodnota sa zobrazi, ale do editora sa nacita databazova @baseT
     I.click(name);
     DTE.waitForEditor(datatableName);
 
-    I.fillField("#DTE_Field_value", temporaryValue);
+    DTE.fillField("value", temporaryValue);
     DTE.clickSwitch("temporary_0");
     DTE.save();
 

@@ -47,6 +47,50 @@
     var stepsFirstLoad = true;
     var itemsFirstLoad = true;
 
+    async function loadPreviewCssTemplates() {
+        const select = document.getElementById("previewCssTemplate");
+        if(select == null) return;
+
+        select.addEventListener("change", applyPreviewCssTemplate);
+        try {
+            const response = await fetch("/admin/rest/form-steps/css-templates", {
+                method: "GET",
+                headers: { "Accept": "application/json", "X-CSRF-Token": window.csrfToken }
+            });
+            if(response.ok == false) throw new Error(`HTTP ${response.status}`);
+
+            const templates = await response.json();
+            if(Array.isArray(templates) == false) throw new Error("Invalid CSS templates response");
+            templates.forEach(template => {
+                const option = document.createElement("option");
+                option.textContent = template.label;
+                option.value = template.value;
+                select.appendChild(option);
+            });
+        } catch(error) {
+            console.error("Error fetching CSS templates:", error);
+        }
+    }
+
+    function applyPreviewCssTemplate() {
+        document.getElementById("formStepPreviewCssTemplate")?.remove();
+
+        const cssPath = document.getElementById("previewCssTemplate")?.value;
+        const preview = document.querySelector("div.stepPreview");
+        if(preview == null) return;
+        preview.removeAttribute("data-multistep-css-template");
+        if(cssPath == null || cssPath === "") return;
+
+        preview.setAttribute("data-multistep-css-template", cssPath);
+
+        const stylesheet = document.createElement("link");
+        stylesheet.id = "formStepPreviewCssTemplate";
+        stylesheet.rel = "stylesheet";
+        stylesheet.type = "text/css";
+        stylesheet.href = cssPath;
+        preview.appendChild(stylesheet);
+    }
+
     function getActualPath(stepId) {
         let urlWithParams = WJ.urlUpdateParam(itemUrl, "formName", urlFormName);
         urlWithParams = WJ.urlUpdateParam(urlWithParams, "stepId", stepId);
@@ -75,6 +119,8 @@
     }
 
     window.domReady.add(function () {
+        loadPreviewCssTemplates();
+
         WJ.headerTabs({
             id: 'tabsFilter',
             tabs: [
@@ -203,6 +249,7 @@
                     let itsCreateAction = false;
 
                     const editDialog = $("div.DTE.DTE_Action_Edit");
+                    $("#pills-dt-formItemsDataTable-stat-tab").show();
                     if(editDialog != undefined && editDialog != null && editDialog.length) {
                         // Its edit
 
@@ -211,23 +258,23 @@
                             $("#pills-dt-formItemsDataTable-" + tabId + "-tab").show();
                         });
 
-                        const hiddenTabsByType = formItemsDataTable.DATA.jsonOptions.hiddenTabsByType;
-                        hiddenTabsByType.forEach(tab => {
-                            if(tab.value === selectedFieldType) {
-                                let label = tab.label;
-                                if(label != null && label.trim().length > 0) {
-                                    label.split(",").map(s => s.trim()).forEach(tabId => {
-                                        $("#pills-dt-formItemsDataTable-" + tabId + "-tab").hide();
-                                    });
-                                }
-                            }
-                        });
-
                         //
                         itsCreateAction = false;
                     } else {
                         itsCreateAction = true;
                     }
+
+                    const hiddenTabsByType = formItemsDataTable.DATA.jsonOptions.hiddenTabsByType;
+                    hiddenTabsByType.forEach(tab => {
+                        if(tab.value === selectedFieldType) {
+                            let label = tab.label;
+                            if(label != null && label.trim().length > 0) {
+                                label.split(",").map(s => s.trim()).forEach(tabId => {
+                                    $("#pills-dt-formItemsDataTable-" + tabId + "-tab").hide();
+                                });
+                            }
+                        }
+                    });
 
                     let fieldsToHide = [];
                     for(let i = 0; i < hiddenFieldsByType.length; i++) {
@@ -439,6 +486,8 @@
             $(stepPreview).html(html);
             if (formTooltip) formTooltip.init(stepPreview);
 
+            applyPreviewCssTemplate();
+
             onResize();
 
             // init wysiwyg inside preview
@@ -487,6 +536,10 @@
         border-bottom-width: 0px;
     }
     tr.even-step td { background-color: #F3F3F6 !important; }
+    #formItemsDataTable tbody tr.form-item-support:not(.selected) td {
+        color: var(--wj-gray-text) !important;
+        background-color: var(--wj-nice-gray) !important;
+    }
     button.dt-filtrujem-stepId { display: none; }
     #stepIdSelect > form > div > div > button:hover { background: #999; }
     #stepIdSelect > form > div > div > button {
@@ -516,6 +569,40 @@
     }
     div.stepPreview form {
         pointer-events: none;
+    }
+    .preview-css-template {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: flex-end;
+        height: 39px;
+    }
+    .preview-css-template label {
+        margin: 0;
+        color: var(--wj-gray-text);
+        font-size: 14px;
+        white-space: nowrap;
+    }
+    .preview-css-template select {
+        width: 220px;
+        min-width: 0;
+        height: 34px;
+        padding: 4px 34px 4px 12px;
+        color: var(--wj-secondary, #212529);
+        background-color: white;
+        border: 1px solid var(--wj-nice-gray-300, #d7dbe3);
+        border-radius: 6px;
+        font-size: 14px;
+        line-height: 24px;
+        box-shadow: none;
+    }
+    .preview-css-template select:hover {
+        border-color: var(--wj-gray-text, #6c757d);
+    }
+    .preview-css-template select:focus {
+        border-color: var(--wj-primary);
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+        outline: none;
     }
 
     /* HIDE filter headers */
@@ -548,12 +635,20 @@
 
     <div class="col-md-6 stepPreviewWrapper">
         <div id="" class="dt-header-row clearfix">
-            <div class="row">
-                <div class="col-auto">
+            <div class="row align-items-center flex-nowrap">
+                <div class="col-auto w-auto">
                     <div class="dt-buttons" style="height: 39px; max-height: none;">
                         <div style="padding-top: 5px;">
                             <i class="ti ti-eye"></i> [[#{components.multistep_form.form-content.step-preview}]]
                         </div>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="preview-css-template">
+                        <label for="previewCssTemplate">[[#{components.multistep_form.form-content.css-template}]]</label>
+                        <select id="previewCssTemplate" class="form-select form-select-sm no-picker">
+                            <option value="">[[#{components.multistep_form.form-content.css-template-none}]]</option>
+                        </select>
                     </div>
                 </div>
             </div>

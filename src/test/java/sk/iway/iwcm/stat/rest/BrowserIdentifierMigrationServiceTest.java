@@ -9,10 +9,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,6 +35,8 @@ import java.util.concurrent.ExecutorService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.MockedStatic;
 
@@ -141,6 +145,204 @@ class BrowserIdentifierMigrationServiceTest {
             verify(executor, times(1)).execute(any(Runnable.class));
         }
 
+        service.destroy();
+    }
+
+    /** Verifies that finalization creates late canonical targets and deletes only unreferenced source keys. */
+    @Test
+    void finalizeShouldCreateMissingTargetAndRetainReferencedSource() throws Exception {
+        ExecutorService executor = mock(ExecutorService.class);
+        BrowserIdentifierMigrationService service = spy(new BrowserIdentifierMigrationService(executor));
+        Connection connection = mock(Connection.class);
+        PreparedStatement insert = mockMissingFinalizationTarget(connection);
+        PreparedStatement delete = mock(PreparedStatement.class);
+        PreparedStatement references = mock(PreparedStatement.class);
+        DatabaseMetaData metadata = mock(DatabaseMetaData.class);
+        ResultSet tables = mock(ResultSet.class);
+        Statement columns = mock(Statement.class);
+        ResultSet emptyTable = mock(ResultSet.class);
+        ResultSetMetaData tableMetadata = mock(ResultSetMetaData.class);
+        ResultSet referencedKeys = mock(ResultSet.class);
+        doNothing().when(service).finalizeSeoBots(eq(connection), any());
+        when(connection.prepareStatement(DELETE_STAT_KEY)).thenReturn(delete);
+        when(delete.executeBatch()).thenReturn(new int[] { 1 });
+        when(connection.getMetaData()).thenReturn(metadata);
+        when(metadata.getTables(isNull(), isNull(), eq("%"), any(String[].class))).thenReturn(tables);
+        when(tables.next()).thenReturn(true, false);
+        when(tables.getString("TABLE_NAME")).thenReturn("stat_views");
+        when(connection.createStatement()).thenReturn(columns);
+        when(columns.executeQuery("SELECT * FROM stat_views WHERE 1=0")).thenReturn(emptyTable);
+        when(emptyTable.getMetaData()).thenReturn(tableMetadata);
+        when(tableMetadata.getColumnCount()).thenReturn(1);
+        when(tableMetadata.getColumnName(1)).thenReturn("browser_ua_id");
+        when(connection.prepareStatement("SELECT DISTINCT browser_ua_id FROM stat_views")).thenReturn(references);
+        when(references.executeQuery()).thenReturn(referencedKeys);
+        when(referencedKeys.next()).thenReturn(true, false);
+        when(referencedKeys.getLong(1)).thenReturn(29539L);
+
+        try (MockedStatic<DBPool> dbPool = mockStatic(DBPool.class);
+             MockedStatic<PkeyGenerator> pkeyGenerator = mockStatic(PkeyGenerator.class);
+             MockedStatic<StatDB> statDB = mockStatic(StatDB.class);
+             MockedStatic<ClusterDB> clusterDB = mockStatic(ClusterDB.class);
+             MockedStatic<UpdateDatabase> updateDatabase = mockStatic(UpdateDatabase.class);
+             MockedStatic<Adminlog> adminlog = mockStatic(Adminlog.class);
+             MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+            dbPool.when(DBPool::getConnection).thenReturn(connection);
+            pkeyGenerator.when(() -> PkeyGenerator.getNextValue("stat_keys")).thenReturn(100);
+            updateDatabase.when(() -> UpdateDatabase.isAllreadyUpdated(BrowserIdentifierMigrationService.UPDATE_NOTE)).thenReturn(true);
+
+            service.finalizeCompletedMigration();
+            ArgumentCaptor<Runnable> task = ArgumentCaptor.forClass(Runnable.class);
+            verify(executor).execute(task.capture());
+            task.getValue().run();
+
+            BrowserIdentifierMigrationService.State state = service.getStatus();
+            assertNull(state.getError());
+            assertTrue(state.isFinalized());
+            assertTrue(state.isDone());
+            assertFalse(state.isRunning());
+            assertEquals(1, state.getDeletedStatKeys());
+            assertEquals(1, state.getRetainedStatKeys());
+            statDB.verify(() -> StatDB.getInstance(true), times(2));
+            clusterDB.verify(() -> ClusterDB.addRefresh(StatDB.class), times(2));
+        }
+
+        verify(insert).setLong(1, 100L);
+        verify(insert).setString(2, "Yanga WorldSearch Bot");
+        verify(insert).executeUpdate();
+        verify(delete).setLong(1, 49L);
+        verify(delete, never()).setLong(1, 29539L);
+        verify(delete, never()).setLong(1, 100L);
+        InOrder order = inOrder(insert, connection, references, delete);
+        order.verify(insert).executeUpdate();
+        order.verify(connection).commit();
+        order.verify(references).executeQuery();
+        order.verify(delete).executeBatch();
+        order.verify(connection).commit();
+        verify(connection, never()).rollback();
+        service.destroy();
+    }
+
+    /** Verifies that target creation failure rolls back finalization before cleanup or cache refresh. */
+    @Test
+    void finalizeShouldRollbackWhenMissingTargetCannotBeCreated() throws Exception {
+        ExecutorService executor = mock(ExecutorService.class);
+        BrowserIdentifierMigrationService service = spy(new BrowserIdentifierMigrationService(executor));
+        Connection connection = mock(Connection.class);
+        PreparedStatement insert = mockMissingFinalizationTarget(connection);
+        SQLException insertFailure = new SQLException("stat_keys insert failed");
+        when(insert.executeUpdate()).thenThrow(insertFailure);
+
+        try (MockedStatic<DBPool> dbPool = mockStatic(DBPool.class);
+             MockedStatic<PkeyGenerator> pkeyGenerator = mockStatic(PkeyGenerator.class);
+             MockedStatic<StatDB> statDB = mockStatic(StatDB.class);
+             MockedStatic<ClusterDB> clusterDB = mockStatic(ClusterDB.class);
+             MockedStatic<UpdateDatabase> updateDatabase = mockStatic(UpdateDatabase.class);
+             MockedStatic<Logger> logger = mockStatic(Logger.class)) {
+            dbPool.when(DBPool::getConnection).thenReturn(connection);
+            pkeyGenerator.when(() -> PkeyGenerator.getNextValue("stat_keys")).thenReturn(100);
+            updateDatabase.when(() -> UpdateDatabase.isAllreadyUpdated(BrowserIdentifierMigrationService.UPDATE_NOTE)).thenReturn(true);
+
+            service.finalizeCompletedMigration();
+            ArgumentCaptor<Runnable> task = ArgumentCaptor.forClass(Runnable.class);
+            verify(executor).execute(task.capture());
+            task.getValue().run();
+
+            BrowserIdentifierMigrationService.State state = service.getStatus();
+            assertEquals(insertFailure.getMessage(), state.getError());
+            assertFalse(state.isFinalized());
+            assertFalse(state.isRunning());
+            statDB.verifyNoInteractions();
+            clusterDB.verifyNoInteractions();
+            dbPool.verify(DBPool::getConnection, times(1));
+        }
+
+        verify(connection).rollback();
+        verify(connection, never()).commit();
+        verify(service, never()).findUnusedStatKeys(any(), any());
+        verify(service, never()).finalizeSeoBots(any(), any());
+        verify(connection, never()).prepareStatement(DELETE_STAT_KEY);
+        service.destroy();
+    }
+
+    /** Verifies preview categories use the persisted completion marker and browser references take precedence across tables. */
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void previewShouldClassifyRetainedKeysUsingPersistedCompletion(boolean completed) throws Exception {
+        BrowserIdentifierMigrationService service = new BrowserIdentifierMigrationService(mock(ExecutorService.class));
+        Connection connection = mock(Connection.class);
+        PreparedStatement loadSeoBots = mock(PreparedStatement.class);
+        PreparedStatement loadKeys = mock(PreparedStatement.class);
+        ResultSet seoBots = mock(ResultSet.class);
+        ResultSet keys = mock(ResultSet.class);
+        DatabaseMetaData metadata = mock(DatabaseMetaData.class);
+        ResultSet tables = mock(ResultSet.class);
+        ResultSet seoBotTable = mock(ResultSet.class);
+        ResultSet indexes = mock(ResultSet.class);
+        Statement columns = mock(Statement.class);
+        ResultSet fromColumns = mock(ResultSet.class);
+        ResultSet viewColumns = mock(ResultSet.class);
+        ResultSetMetaData fromMetadata = mock(ResultSetMetaData.class);
+        ResultSetMetaData viewMetadata = mock(ResultSetMetaData.class);
+        PreparedStatement fromReferences = mock(PreparedStatement.class);
+        PreparedStatement viewReferences = mock(PreparedStatement.class);
+        ResultSet operatingSystems = mock(ResultSet.class);
+        ResultSet browsers = mock(ResultSet.class);
+
+        when(connection.prepareStatement(LOAD_SEO_BOTS)).thenReturn(loadSeoBots);
+        when(loadSeoBots.executeQuery()).thenReturn(seoBots);
+        when(connection.prepareStatement(LOAD_STAT_KEYS)).thenReturn(loadKeys);
+        when(loadKeys.executeQuery()).thenReturn(keys);
+        when(keys.next()).thenReturn(true, true, true, true, false);
+        when(keys.getLong(1)).thenReturn(41L, 42L, 43L, 44L);
+        when(keys.getString(2)).thenReturn("Chrome 127", "Windows 11", "Yanga WorldSearch Bot v1.1", "Firefox 128");
+        when(connection.getMetaData()).thenReturn(metadata);
+        when(metadata.getTables(isNull(), isNull(), eq("%"), any(String[].class))).thenReturn(tables, seoBotTable);
+        when(tables.next()).thenReturn(true, true, false);
+        when(tables.getString("TABLE_NAME")).thenReturn("stat_from", "stat_views");
+        when(seoBotTable.next()).thenReturn(true, false);
+        when(seoBotTable.getString("TABLE_NAME")).thenReturn("seo_bots");
+        when(metadata.getIndexInfo(isNull(), isNull(), eq("seo_bots"), eq(true), eq(false))).thenReturn(indexes);
+        when(connection.createStatement()).thenReturn(columns);
+        when(columns.executeQuery("SELECT * FROM stat_from WHERE 1=0")).thenReturn(fromColumns);
+        when(fromColumns.getMetaData()).thenReturn(fromMetadata);
+        when(fromMetadata.getColumnCount()).thenReturn(2);
+        when(fromMetadata.getColumnName(1)).thenReturn("platform_id");
+        when(fromMetadata.getColumnName(2)).thenReturn("subplatform_id");
+        when(columns.executeQuery("SELECT * FROM stat_views WHERE 1=0")).thenReturn(viewColumns);
+        when(viewColumns.getMetaData()).thenReturn(viewMetadata);
+        when(viewMetadata.getColumnCount()).thenReturn(1);
+        when(viewMetadata.getColumnName(1)).thenReturn("browser_ua_id");
+        when(connection.prepareStatement("SELECT DISTINCT platform_id, subplatform_id FROM stat_from")).thenReturn(fromReferences);
+        when(connection.prepareStatement("SELECT DISTINCT browser_ua_id FROM stat_views")).thenReturn(viewReferences);
+        when(fromReferences.executeQuery()).thenReturn(operatingSystems);
+        when(operatingSystems.next()).thenReturn(true, false);
+        when(operatingSystems.getLong(1)).thenReturn(42L);
+        when(operatingSystems.getLong(2)).thenReturn(43L);
+        when(viewReferences.executeQuery()).thenReturn(browsers);
+        when(browsers.next()).thenReturn(true, true, false);
+        when(browsers.getLong(1)).thenReturn(43L, 44L);
+
+        try (MockedStatic<DBPool> dbPool = mockStatic(DBPool.class);
+             MockedStatic<UpdateDatabase> updateDatabase = mockStatic(UpdateDatabase.class)) {
+            dbPool.when(DBPool::getConnection).thenReturn(connection);
+            updateDatabase.when(() -> UpdateDatabase.isAllreadyUpdated(BrowserIdentifierMigrationService.UPDATE_NOTE)).thenReturn(completed);
+
+            BrowserIdentifierMigrationService.Preview preview = service.preview();
+
+            assertEquals(completed, preview.isMigrationCompleted());
+            assertEquals(completed ? List.of(41L) : List.of(41L, 43L, 44L),
+                preview.getBrowserKeys().stream().map(BrowserIdentifierMigrationService.Mapping::getSourceId).toList());
+            assertEquals(completed ? List.of(43L, 44L) : List.of(),
+                preview.getRetainedBrowserKeys().stream().map(BrowserIdentifierMigrationService.Mapping::getSourceId).toList());
+            assertEquals(List.of(42L),
+                preview.getRetainedKeys().stream().map(BrowserIdentifierMigrationService.Mapping::getSourceId).toList());
+        }
+
+        InOrder scans = inOrder(fromReferences, viewReferences);
+        scans.verify(fromReferences).executeQuery();
+        scans.verify(viewReferences).executeQuery();
+        verify(connection, never()).prepareStatement(INSERT_STAT_KEY);
         service.destroy();
     }
 
@@ -671,6 +873,40 @@ class BrowserIdentifierMigrationServiceTest {
         InOrder order = inOrder(deleteSource, createIndex);
         order.verify(deleteSource).executeBatch();
         order.verify(createIndex).executeUpdate(CREATE_SEO_BOTS_NAME_INDEX);
+    }
+
+    private PreparedStatement mockMissingFinalizationTarget(Connection connection) throws SQLException {
+        PreparedStatement loadSeoBots = mock(PreparedStatement.class);
+        ResultSet seoBots = mock(ResultSet.class);
+        PreparedStatement load = mock(PreparedStatement.class);
+        PreparedStatement find = mock(PreparedStatement.class);
+        PreparedStatement available = mock(PreparedStatement.class);
+        PreparedStatement validate = mock(PreparedStatement.class);
+        PreparedStatement insert = mock(PreparedStatement.class);
+        ResultSet sources = mock(ResultSet.class);
+        ResultSet missingTarget = mock(ResultSet.class);
+        ResultSet availableId = mock(ResultSet.class);
+        ResultSet existingTarget = mock(ResultSet.class);
+        ResultSet validatedTarget = mock(ResultSet.class);
+        when(connection.prepareStatement(LOAD_SEO_BOTS)).thenReturn(loadSeoBots);
+        when(loadSeoBots.executeQuery()).thenReturn(seoBots);
+        when(connection.prepareStatement(LOAD_STAT_KEYS)).thenReturn(load);
+        when(connection.prepareStatement(FIND_STAT_KEY)).thenReturn(find);
+        when(connection.prepareStatement(CHECK_STAT_KEY_ID)).thenReturn(available, validate);
+        when(connection.prepareStatement(INSERT_STAT_KEY)).thenReturn(insert);
+        when(load.executeQuery()).thenReturn(sources);
+        when(find.executeQuery()).thenReturn(missingTarget);
+        when(available.executeQuery()).thenReturn(availableId);
+        when(validate.executeQuery()).thenReturn(existingTarget, validatedTarget);
+        when(sources.next()).thenReturn(true, true, false);
+        when(sources.getLong(1)).thenReturn(49L, 29539L);
+        when(sources.getString(2)).thenReturn("Yanga WorldSearch Bot v1.1 1.0", "Yanga WorldSearch Bot v1.1");
+        when(existingTarget.next()).thenReturn(true, false);
+        when(existingTarget.getString(1)).thenReturn("Yanga WorldSearch Bot v1.1");
+        when(validatedTarget.next()).thenReturn(true, false);
+        when(validatedTarget.getString(1)).thenReturn("Yanga WorldSearch Bot");
+        when(insert.executeUpdate()).thenReturn(1);
+        return insert;
     }
 
     private DatabaseMetaData mockSeoBotsMetadata(Connection connection) throws SQLException {

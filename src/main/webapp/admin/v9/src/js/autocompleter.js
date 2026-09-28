@@ -79,9 +79,6 @@ export default class AutoCompleter {
         this._setParameterFromData("params", value => { this.setParams(value) });
 
         this._setParameterFromData("select", value => { this.select = value });
-        if (true===this.select) {
-            this.collision = "none";
-        }
 
         this._setParameterFromData("collision", value => { this.collision = value });
 
@@ -201,7 +198,7 @@ export default class AutoCompleter {
             autoCompleter.$target.autocomplete("instance").widget().menu( "option", "items", "> :not(.disabled)" );
 
             autoCompleter.instance = autoCompleter.$target.autocomplete("instance");
-            
+
             if (autoCompleter.select===true) {
                 //console.log("setting focus", autoCompleter.instance);
                 autoCompleter.$target.on("focus", function () {
@@ -212,6 +209,23 @@ export default class AutoCompleter {
                 });
 
                 autoCompleter.instance.menu.element.addClass("dt-autocomplete-select");
+                const renderItem = autoCompleter.instance._renderItem;
+                autoCompleter.instance._renderItem = function(ul, item) {
+                    // Keep the current value highlighted independently of mouse or keyboard focus.
+                    const selected = String(item.value) === this.element.val();
+                    return renderItem.call(this, ul, item)
+                        .toggleClass("dt-autocomplete-selected", selected)
+                        .attr("aria-current", selected ? "true" : null);
+                };
+                autoCompleter.instance._resizeMenu = function() {
+                    const input = this.element[0].getBoundingClientRect();
+                    const availableHeight = Math.max(input.top, this.window.height() - input.bottom) - 4;
+
+                    // Keep the scrollable menu inside the viewport, including component iframes.
+                    this.menu.element
+                        .css("--wj-autocomplete-max-height", Math.max(0, availableHeight) + "px")
+                        .outerWidth(this.element.outerWidth());
+                };
             }
 
         } catch (e) { console.log("error in addAutoCompleteTo:"); console.log(e); }

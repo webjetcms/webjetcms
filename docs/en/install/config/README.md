@@ -30,6 +30,8 @@ To send emails, you need to set up the SMTP server correctly:
 - `smtpPassword` - ​​password.
 - `smtpPort` - ​​port for connecting to the SMTP server.
 - `useSMTPServer` - ​​disable sending emails (e.g. for cluster nodes that do not have an available SMTP server).
+- `sendMailSaveEmail` - ​​if set to `true`, system emails and emails from [classic and multi-step forms](../../redactor/apps/form/README.md#possible-configuration-variables) are saved as `.eml` files instead of being sent via SMTP. With `useSMTPServer=false`, deferred sending takes precedence.
+- `sendMailSaveEmailPath` - ​​directory for saved files `.eml`, default `/WEB-INF/tmp/emails` ; for development environment you can use for example `/files/protected/emails`. If the directory does not exist, it will be created; if it cannot be written to, the form submission will be reported as failed.
 - `smtpConnectionTimeoutMillis` - ​​number of milliseconds to wait for an SMTP connection to be established.
 - `emailProtectionSenderEmail` - ​​set the email address that will be used as the sender email for all emails if SMTP does not have `OPEN RELAY` set. The typical value is `noreply@domena.sk`. When set, the entered email address is set to the header of each email in `FROM` and the originally set value from `FROM` is set to `REPLY-TO`.
 

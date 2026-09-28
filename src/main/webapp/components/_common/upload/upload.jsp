@@ -105,9 +105,15 @@ PageParams pp = new PageParams(request);
                                 uploadedFiles = JSON.parse(prepopulateWithFiles);
 
                                 for(var i in files) {
-                                    myDropzone.emit("addedfile", files[i]);
-                                    myDropzone.files.push(files[i]);
+                                    var restoredFile = files[i];
+                                    restoredFile.status = Dropzone.SUCCESS;
+                                    restoredFile.accepted = true;
+                                    myDropzone.emit("addedfile", restoredFile);
+                                    if(restoredFile.thumbnailUrl) myDropzone.emit("thumbnail", restoredFile, restoredFile.thumbnailUrl);
+                                    myDropzone.emit("complete", restoredFile);
+                                    myDropzone.files.push(restoredFile);
                                 }
+                                myDropzone._updateMaxFilesReachedClass();
                                 if (myDropzone.files.length > 0) setSingleFileLocked(true);
                             }
                         }, 700);

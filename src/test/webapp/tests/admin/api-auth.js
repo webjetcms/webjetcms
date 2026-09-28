@@ -17,7 +17,10 @@ function setApiTokenAuthConf(I, Document, allowed=true) {
 }
 
 async function isBasicAuthEnabled(I) {
-    if (basicAuthEnabled!==null) return basicAuthEnabled;
+    if (basicAuthEnabled!==null) {
+        I.say("Basic auth is "+basicAuthEnabled+" (cached)");
+        return basicAuthEnabled;
+    }
 
     let response = await I.sendGetRequest('/rest/basic-auth-enabled', {
         'x-auth-token': ''
@@ -71,6 +74,13 @@ Scenario("API volanie - disabled", async ({ I, Document }) => {
     I.see(forgotPassword);
 
     I.sendGetRequest('/admin/rest/web-pages/all?groupId=25');
+    //always 403 when api-token auth is disabled
+    let response = await I.sendGetRequest('/admin/rest/web-pages/all?groupId=25');
+    I.say("Response: "+response.data);
+    console.log("basicAuthEnabled: ", basicAuthEnabled);
+    console.log("Response.status: ", response.status);
+    console.log("Response.headers: ", response.headers);
+    console.log("Response.data: ", response.data);
     //always 403 when api-token auth is disabled
     I.seeResponseCodeIs(code403);
 });

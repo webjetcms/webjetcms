@@ -382,7 +382,10 @@ export const dataTableInit = options => {
                 })
                 .first()[0];
 
-            if (action === 'remove' || focusTarget == null) {
+            if (action === 'remove') {
+                focusTarget = $modal.find('.DTE_Footer button.btn-close-editor:visible:not(:disabled)').first()[0];
+            }
+            if (focusTarget == null) {
                 focusTarget = getEditorFocusableElements(modal).first()[0];
             }
 
@@ -1208,7 +1211,7 @@ export const dataTableInit = options => {
                     if (target == null || !document.contains(target) || target.disabled) {
                         target = $('#' + dte.TABLE.DATA.id + '_wrapper button[data-dtbtn="' + dte._wjFocusReturnButton + '"]:visible:not(:disabled)')[0];
                     }
-                    if (target != null) target.focus({preventScroll: true});
+                    if (target != null) WJ.focusWithoutTooltip(target);
 
                     // Focus handlers may reopen the editor; do not mark that new dialog as closed.
                     if ($modal.attr('data-dte-close-state') === 'closing') {

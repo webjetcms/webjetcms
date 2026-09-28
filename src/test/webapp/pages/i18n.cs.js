@@ -42,7 +42,7 @@ module.exports = {
             "All document versions":  "Všechny verze dokumentu",
             "Replace current document": "Nahradit aktuální dokument",
             "Add to version history":"Přidat do historie verzí",
-            "Upload a new version":"Nahrát novou verzi",
+            "Upload new version":"Nahrát novou verzi",
             "Add":"Přidat",
             "Please wait, EXPORT of documents is in progress and may take several minutes.":"Čekejte prosím, probíhá EXPORT dokumentů a může trvat několik minut.",
             "was successfully deleted":"byl úspěšně vymazán",

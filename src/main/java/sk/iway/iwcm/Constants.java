@@ -344,6 +344,8 @@ public class Constants {
 		// namiesto redirectovat (ked nie je pouzity LinkType=HTML)
 		setBoolean("forwardVirtualPath", false);
 
+		setBoolean("basketRoundPrices", false, MOD_BASKET,
+			"Round VAT-inclusive selling units to currencyFormat precision before multiplying quantities; line totals settle to cents. Stored invoice totals remain unchanged when configuration changes.");
 		setString("basketPriceField", "fieldK", MOD_BASKET,
 				"Názov poľa v ktorom je v stránke uvedená cena produktu. Štandardne nastavené na hodnotu fieldK");
 		setString("basketProductTypeField", "fieldI", MOD_BASKET,
