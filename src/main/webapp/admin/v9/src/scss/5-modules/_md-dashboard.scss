@@ -6,9 +6,6 @@ $dashboard-search-surface: mix($primary, $white, 5%);
 $dashboard-amber: mix($warning, $white, 20%);
 $dashboard-publishing: mix($warning, mix($danger-btn-bg, $white, 5%), 13%);
 $dashboard-errors: mix($danger, $nice-gray, 3%);
-$dashboard-hero-middle: mix($ai-color, $nice-gray, 2%);
-$dashboard-hero-end: mix($success, $white, 12%);
-$dashboard-security: rgba($white, .62);
 $dashboard-divider: rgba($secondary, .06);
 $dashboard-muted: mix($gray-text, $secondary, 90%);
 $dashboard-danger-text: mix($danger, $secondary, 90%);
@@ -27,10 +24,6 @@ webjet-overview-dashboard, .md-dashboard-modal {
     --wj-dashboard-amber: #{$dashboard-amber};
     --wj-dashboard-publishing: #{$dashboard-publishing};
     --wj-dashboard-errors: #{$dashboard-errors};
-    --wj-dashboard-hero-start: #{$dashboard-lavender};
-    --wj-dashboard-hero-middle: #{$dashboard-hero-middle};
-    --wj-dashboard-hero-end: #{$dashboard-hero-end};
-    --wj-dashboard-security: #{$dashboard-security};
     --wj-dashboard-divider: #{$dashboard-divider};
     --wj-dashboard-muted: #{$dashboard-muted};
     --wj-dashboard-positive: #{$dashboard-positive};
@@ -63,21 +56,109 @@ webjet-overview-dashboard a:focus-visible {
     [hidden] { display: none !important; }
 
     &__hero {
+        // WebJET blue with the login image. Keep the image subtle to preserve text contrast.
+        --wj-dashboard-hero-start: #031d46;
+        --wj-dashboard-hero-end: #073780;
+        --wj-dashboard-hero-text: #fff;
+        --wj-dashboard-hero-body: #e3edff;
+        --wj-dashboard-hero-muted: #c0d1ee;
+        --wj-dashboard-hero-link: #b3d8ff;
+        --wj-dashboard-hero-error: #ffb3c0;
+        --wj-dashboard-hero-divider: #32598b;
+        --wj-dashboard-hero-control-bg: rgba(255, 255, 255, .04);
+        --wj-dashboard-hero-control-border: #7895ba;
+        --wj-dashboard-hero-control-hover-bg: #f2f6ff;
+        --wj-dashboard-hero-control-hover-text: #173b70;
+        --wj-dashboard-security: #f8faff;
+        --wj-dashboard-security-shadow: 0 7px 24px #00143226;
+        --wj-dashboard-hero-image-opacity: .12;
+
+        // Uncomment ONE alternative below and rebuild the admin CSS. It overrides the defaults above.
+        // Pure WebJET blue: keep the blue palette and hide the image.
+        /*
+        --wj-dashboard-hero-image-opacity: 0;
+        */
+
+        // Mint porcelain: light surfaces, dark text, matching controls and no background image.
+        /*
+        --wj-dashboard-hero-start: #e6f1ed;
+        --wj-dashboard-hero-end: #d5eae7;
+        --wj-dashboard-hero-text: #173d3a;
+        --wj-dashboard-hero-body: #435d5b;
+        --wj-dashboard-hero-muted: #506b67;
+        --wj-dashboard-hero-link: #0058c9;
+        --wj-dashboard-hero-error: #b21b39;
+        --wj-dashboard-hero-divider: #bfd8d2;
+        --wj-dashboard-hero-control-bg: rgba(255, 255, 255, .32);
+        --wj-dashboard-hero-control-border: #6b8982;
+        --wj-dashboard-hero-control-hover-bg: #fafffd;
+        --wj-dashboard-hero-control-hover-text: #173d3a;
+        --wj-dashboard-security: #fbfdfc;
+        --wj-dashboard-security-shadow: 0 6px 20px #224b4110;
+        --wj-dashboard-hero-image-opacity: 0;
+        */
+
         display: grid;
         grid-template-columns: minmax(0, 1fr) 300px;
         align-items: stretch;
+        position: relative;
+        isolation: isolate;
         margin-bottom: 16px;
-        border: 1px solid var(--wj-dashboard-divider);
         border-radius: var(--wj-border-radius);
-        background: linear-gradient(108deg, var(--wj-dashboard-hero-start), var(--wj-dashboard-hero-middle) 50%, var(--wj-dashboard-hero-end));
+        background: linear-gradient(112deg, var(--wj-dashboard-hero-start), var(--wj-dashboard-hero-end));
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            border-radius: inherit;
+            background: var(--wj-dashboard-hero-image, none) center bottom / cover no-repeat;
+            opacity: var(--wj-dashboard-hero-image-opacity);
+        }
     }
 
-    &__welcome { min-width: 0; min-height: 205px; padding: 24px 24px 18px; }
+    &__welcome {
+        --wj-dashboard-muted: var(--wj-dashboard-hero-muted);
+        --wj-dashboard-link: var(--wj-dashboard-hero-link);
+        --wj-dashboard-divider: var(--wj-dashboard-hero-divider);
+        min-width: 0;
+        min-height: 244px;
+        padding: 24px 24px 18px;
+        color: var(--wj-dashboard-hero-body);
+    }
     &__welcome-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-height: 24px; margin-bottom: 12px; }
     &__welcome-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
-    &__greeting { font-size: 29px; font-weight: 700; line-height: 1.15; margin: 0; letter-spacing: -1px; }
+    &__greeting { font-size: 29px; font-weight: 700; line-height: 1.15; margin: 0; letter-spacing: -1px; color: var(--wj-dashboard-hero-text); }
     &__shortcut-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-left: auto; }
     &__shortcut-actions > .btn { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; padding: 7px 10px; }
+    &__shortcut-actions > .btn-outline-secondary, &__shortcuts > :is(.md-dashboard__status, .md-dashboard__undo) > .btn-outline-secondary {
+        --bs-btn-color: var(--wj-dashboard-hero-body);
+        --bs-btn-bg: var(--wj-dashboard-hero-control-bg);
+        --bs-btn-border-color: var(--wj-dashboard-hero-control-border);
+        --bs-btn-hover-color: var(--wj-dashboard-hero-control-hover-text);
+        --bs-btn-hover-bg: var(--wj-dashboard-hero-control-hover-bg);
+        --bs-btn-hover-border-color: var(--wj-dashboard-hero-control-hover-bg);
+        --bs-btn-active-color: var(--wj-dashboard-hero-control-hover-text);
+        --bs-btn-active-bg: var(--wj-dashboard-hero-control-hover-bg);
+        --bs-btn-active-border-color: var(--wj-dashboard-hero-control-hover-bg);
+        border-color: var(--bs-btn-border-color);
+        &:hover, &:focus-visible, &:active { border-color: var(--bs-btn-hover-border-color); }
+    }
+    &__welcome .md-dashboard-widget__news-highlights, &__welcome .md-dashboard-widget__news-summary { color: var(--wj-dashboard-hero-body); }
+    &__welcome .md-dashboard-widget__news-toggle {
+        --bs-btn-hover-color: var(--wj-dashboard-hero-link);
+        --bs-btn-active-color: var(--wj-dashboard-hero-link);
+        &:hover { text-decoration: underline; }
+    }
+    &__welcome .md-dashboard-widget__news-more:hover { color: var(--wj-dashboard-hero-link); text-decoration: underline; }
+    &__welcome .md-dashboard-widget__news-highlights a:focus-visible, &__welcome .md-dashboard-widget__news-more:focus-visible {
+        outline-color: var(--wj-dashboard-hero-text);
+    }
+    // Shortcut cards keep their configured light surfaces and their own dark controls.
+    &__shortcut-list > &__widget { --wj-dashboard-muted: #{$dashboard-muted}; --wj-dashboard-divider: #{$dashboard-divider}; --wj-dashboard-link: #{$primary-hover}; }
+    &__shortcuts > &__status .text-danger { color: var(--wj-dashboard-hero-error) !important; }
     &__eyebrow { color: var(--wj-dashboard-muted); font-size: 12px; margin: 0; &::first-letter { text-transform: uppercase; } }
     &__environment {
         display: inline-flex;
@@ -102,30 +183,28 @@ webjet-overview-dashboard a:focus-visible {
     &__sessions {
         position: relative;
         min-height: 0;
-        border-left: 1px solid var(--wj-dashboard-divider);
-        border-radius: 0 var(--wj-border-radius) var(--wj-border-radius) 0;
-        background: var(--wj-dashboard-security);
-        backdrop-filter: blur(10px);
     }
-    // The welcome content determines the height; sessions scroll within the available space.
+    // Short lists keep their natural height; longer lists scroll within the welcome panel's height.
     &__sessions &__widget {
         position: absolute;
-        inset: 0;
-        border: 0;
-        border-radius: inherit;
-        background: transparent;
+        inset: 18px 18px auto 0;
+        max-height: calc(100% - 36px);
+        border: 1px solid rgba(54, 85, 91, .12);
+        background: var(--wj-dashboard-security);
+        box-shadow: var(--wj-dashboard-security-shadow);
         min-height: 0;
-        height: 100%;
     }
     &__sessions &__widget-header { padding: 16px 56px 0 16px; gap: 6px; > .ti { font-size: 16px; } }
     &__sessions &__widget-title { font-size: 12px; }
-    &__sessions &__widget-body { min-height: 0; padding: 10px 16px 14px; }
-    &__sessions &__widget-content { min-height: 0; }
-    &__sessions .md-dashboard-widget__sessions { flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; margin-bottom: 0; }
+    &__sessions &__widget-body { flex: 0 1 auto; min-height: 0; padding: 4px 16px 4px; }
+    &__sessions &__widget-content { flex: 0 1 auto; min-height: 0; }
+    &__sessions .md-dashboard-widget__sessions { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; margin-bottom: 0; }
     &__sessions .md-dashboard-widget__session {
         display: grid;
         grid-template-columns: 20px minmax(0, 1fr) 24px;
         column-gap: 8px;
+        padding-block: 12px;
+        min-height: 60px;
         .md-dashboard-widget__session-device { grid-column: 1; grid-row: 1 / 3; align-self: center; font-size: 18px; color: var(--wj-dashboard-muted); }
         .md-dashboard-widget__session-name { grid-column: 2; grid-row: 1; font-size: 12px; font-weight: 400; }
         .md-dashboard-widget__session-detail { grid-column: 2; grid-row: 2; }
@@ -425,8 +504,8 @@ webjet-overview-dashboard a:focus-visible {
     @media (max-width: ($bp-mobile - .02px)) {
         &__hero { grid-template-columns: minmax(0, 1fr); }
         &__welcome { min-height: 0; padding: 20px; }
-        &__sessions { border-left: 0; border-top: 1px solid var(--wj-dashboard-divider); border-radius: 0 0 var(--wj-border-radius) var(--wj-border-radius); }
-        &__sessions &__widget { position: relative; height: auto; }
+        &__sessions { padding: 0 18px 18px; }
+        &__sessions &__widget { position: relative; inset: auto; max-height: none; }
         &__sessions .md-dashboard-widget__sessions { flex: 0 1 auto; max-height: 200px; }
         &__greeting { font-size: 26px; }
         &__grid { grid-auto-rows: auto; }

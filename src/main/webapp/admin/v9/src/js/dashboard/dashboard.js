@@ -94,6 +94,10 @@ export class DashboardController {
     _build() {
         this.host.classList.add("md-dashboard");
         this.hero = node("div", "md-dashboard__hero");
+        if (this.context.config?.heroBackgroundImage !== undefined) {
+            const backgroundImage = shortcutUrl(this.context.config.heroBackgroundImage);
+            this.hero.style.setProperty("--wj-dashboard-hero-image", backgroundImage ? `url(${JSON.stringify(backgroundImage)})` : "none");
+        }
         const welcome = node("div", "md-dashboard__welcome");
         const language = window.userLng === "cz" ? "cs" : window.userLng || "sk";
         const meta = node("div", "md-dashboard__welcome-meta");

@@ -11,7 +11,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
 const item = (id, type = "test", size = "2x2", options = {}) => ({ id, type, size, options });
 
 /** Runs production browser modules against a DOM and a stateful settings server. */
-function fixture(t, { items = [], configured = true, shortcutsConfigured = configured, legacyBookmarksHandled = false, definitions = [], defaults = [], failSave = false, failReset = false, deferModalShown = false, withTooltip = false, overview, IntersectionObserver } = {}) {
+function fixture(t, { items = [], configured = true, shortcutsConfigured = configured, legacyBookmarksHandled = false, definitions = [], defaults = [], config = {}, failSave = false, failReset = false, deferModalShown = false, withTooltip = false, overview, IntersectionObserver } = {}) {
     const dom = new JSDOM("<!doctype html><html><body><div id='alerts'>System warning</div><div id='dashboard'></div></body></html>", { url: "http://localhost/admin/v9/" });
     const { window } = dom;
     window.IntersectionObserver = IntersectionObserver;
@@ -97,7 +97,7 @@ function fixture(t, { items = [], configured = true, shortcutsConfigured = confi
     context.registerWidget({ type: "test", titleKey: "Test", sizes: ["1x1", "2x2", "2x3", "3x2", "3x3", "fullauto"], multiple: true, render: ({ container }) => { container.textContent = "Widget content"; } });
     definitions.forEach(definition => context.registerWidget(definition));
     const host = window.document.querySelector("#dashboard");
-    const controller = new context.Controller(host, { data: { settings: copy(stored) }, config: { dashboardDefaults: defaults }, overview });
+    const controller = new context.Controller(host, { data: { settings: copy(stored) }, config: { dashboardDefaults: defaults, ...config }, overview });
     t.after(() => { controller.destroy(); window.close(); });
     return { window, host, controller, context, requests, tooltipCalls, notifications, confirmations, closeConfirmation, setResetFailure: value => { failReset = value; }, stored: () => copy(stored), setSaveFailure: value => { failSave = value; } };
 }
@@ -136,6 +136,25 @@ test('Embedded unconfigured settings apply defaults without reading REST prefere
     assert.equal(controller.settings.items.length, 1);
     assert.equal(controller.settings.items[0].type, 'test');
     assert.equal(requests.length, 0);
+});
+
+test('Header image configuration binds local and HTTP URLs without accepting executable CSS or URL schemes', t => {
+    const fallback = fixture(t);
+    assert.equal(fallback.controller.hero.style.getPropertyValue('--wj-dashboard-hero-image'), '', 'An omitted setting must preserve the stylesheet image default');
+    for (const [value, expected] of [
+        ['/images/company/header.jpg', 'url("/images/company/header.jpg")'],
+        ['/images/company/header wide.jpg', 'url("/images/company/header%20wide.jpg")'],
+        ['https://cdn.example.test/header.jpg?theme=blue', 'url("https://cdn.example.test/header.jpg?theme=blue")'],
+        ['/images/header");color:red;/*', 'url("/images/header%22);color:red;/*")']
+    ]) {
+        const { controller } = fixture(t, { config: { heroBackgroundImage: value } });
+        assert.equal(controller.hero.style.getPropertyValue('--wj-dashboard-hero-image'), expected);
+        assert.equal(controller.hero.style.color, '', 'A configured image must not inject a separate CSS declaration');
+    }
+    for (const value of ['', '   ', null, 'javascript:alert(1)', 'data:image/svg+xml,<svg/>', '//example.test/header.jpg', 'https://user:secret@example.test/header.jpg', '/images/hero\\image.jpg', '/images/hero\nimage.jpg']) {
+        const { controller } = fixture(t, { config: { heroBackgroundImage: value } });
+        assert.equal(controller.hero.style.getPropertyValue('--wj-dashboard-hero-image'), 'none', 'Empty or invalid configuration must disable the image');
+    }
 });
 
 test("Grid widgets wait for viewport entry while fixed utilities render immediately", async t => {

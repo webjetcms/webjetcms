@@ -554,7 +554,9 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
     await waitForOverview(I);
     I.executeScript(() => {
         const dashboard = document.querySelector('webjet-overview-dashboard');
-        dashboard.configure({ data: dashboard.data, config: dashboard.config, labels: { ...dashboard.labels, changelog:
+        dashboard.configure({ data: dashboard.data,
+            config: { ...dashboard.config, heroBackgroundImage: '/admin/skins/webjet8/assets/global/img/wj/wj9_bg.jpg' },
+            labels: { ...dashboard.labels, changelog:
             '<p>WebJET CMS 2026.18 autotest release includes approval workflows for folders and accessibility checks for published content.</p>'
             + '<p>Autotest editors can maximize application dialogs, configure accessible labels and continue editing their pages with the latest administration tools.</p>'
             + '<p>Autotest security updates include additional authentication providers, passkeys and improvements for installations running on several cluster nodes.</p>'
@@ -569,25 +571,38 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
     const heroBounds = () => I.executeScript(() => {
         const bounds = selector => {
             const rect = document.querySelector(selector).getBoundingClientRect();
-            return { top: rect.top, right: rect.right, bottom: rect.bottom, height: rect.height };
+            return { top: rect.top, right: rect.right, bottom: rect.bottom, left: rect.left, height: rect.height };
         };
         const list = document.querySelector('.md-dashboard__sessions .md-dashboard-widget__sessions');
-        return { hero: bounds('.md-dashboard__hero'), pane: bounds('.md-dashboard__sessions'),
+        return { hero: bounds('.md-dashboard__hero'), welcome: bounds('.md-dashboard__welcome'),
+            card: bounds('.md-dashboard__sessions [data-widget-type="sessions"]'),
             listHeight: list.clientHeight, contentHeight: list.scrollHeight, rowCount: list.children.length };
     });
-    const assertFlushPane = bounds => {
-        for (const edge of ['top', 'right', 'bottom']) I.assertTrue(Math.abs(bounds.hero[edge] - bounds.pane[edge]) <= 1,
-            `The security pane must meet the hero's ${edge} edge without an outer padding gap.`);
-        I.assertEqual(bounds.rowCount, 9, 'Resizing the security pane must retain every active session.');
-        I.assertTrue(bounds.contentHeight > bounds.listHeight, 'Sessions beyond the available height must remain in a native scroll area.');
+    const assertInsetCard = bounds => {
+        const gaps = { top: bounds.card.top - bounds.hero.top, right: bounds.hero.right - bounds.card.right,
+            bottom: bounds.hero.bottom - bounds.card.bottom };
+        for (const [edge, gap] of Object.entries(gaps)) I.assertTrue(Math.abs(gap - 18) <= 1,
+            `The overflowing session card must keep its 18px ${edge} inset within the hero.`);
+        I.assertEqual(bounds.rowCount, 9, 'Resizing the session card must retain every active session.');
+        I.assertTrue(bounds.listHeight > 0 && bounds.contentHeight > bounds.listHeight, 'Sessions beyond the available height must remain in a native scroll area.');
     };
     const expanded = await heroBounds();
-    assertFlushPane(expanded);
+    assertInsetCard(expanded);
+    const decoration = await I.executeScript(() => {
+        const hero = document.querySelector('.md-dashboard__hero');
+        const image = getComputedStyle(hero, '::before');
+        return { background: getComputedStyle(hero).backgroundImage, image: image.backgroundImage,
+            opacity: Number(image.opacity), pointerEvents: image.pointerEvents };
+    });
+    I.assertContain(decoration.background, 'linear-gradient(', 'The welcome block must retain its dark blue gradient under the decorative image.');
+    I.assertContain(decoration.image, '/wj9_bg.jpg', 'The configured login artwork must appear in the welcome background.');
+    I.assertEqual(decoration.opacity, .12, 'The image must remain subdued behind the welcome text.');
+    I.assertEqual(decoration.pointerEvents, 'none', 'The decorative layer must not intercept shortcuts or release-note controls.');
     I.clickCss(newsToggle);
     waitForSave(I);
     I.waitForVisible('.is-news-collapsed .md-dashboard-widget__news-summary', 10);
     const collapsed = await heroBounds();
-    assertFlushPane(collapsed);
+    assertInsetCard(collapsed);
     I.assertTrue(expanded.hero.height > collapsed.hero.height + 40, 'Collapsing release notes must reduce the whole hero height.');
     I.assertTrue(expanded.listHeight > collapsed.listHeight + 40, 'The session list must give up the same vertical space when release notes collapse.');
     I.see('9', '.md-dashboard__sessions span.md-dashboard-widget__session-count');
@@ -595,7 +610,7 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
     waitForSave(I);
     I.waitForVisible('.md-dashboard-widget__news-highlights', 10);
     const reopened = await heroBounds();
-    assertFlushPane(reopened);
+    assertInsetCard(reopened);
     I.assertTrue(Math.abs(expanded.listHeight - reopened.listHeight) <= 1, 'Reopening release notes must restore the space available to sessions.');
     I.assertTrue(await I.executeScript(() => {
         const current = document.querySelector('.md-dashboard__sessions .md-dashboard-widget__session-current');
@@ -638,6 +653,36 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
     I.pressKey('Escape');
     I.waitForInvisible('.tooltip.show', 10);
     I.dontSeeElement('.md-dashboard__sessions .md-dashboard-widget__session-manage');
+    I.resizeWindow(390, 1052);
+    if (await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) I.clickCss('.js-sidebar-toggler');
+    I.waitForFunction(() => document.querySelector('.ly-sidebar').getBoundingClientRect().right <= 1, 10);
+    const mobile = await heroBounds();
+    I.assertTrue(mobile.card.top >= mobile.welcome.bottom - 1 && mobile.card.bottom <= mobile.hero.bottom + 1,
+        'On mobile the session card must follow the welcome content and remain inside the hero.');
+    I.assertTrue(mobile.card.left > mobile.hero.left && mobile.card.right < mobile.hero.right,
+        'The mobile session card must keep visible space at both sides.');
+    I.assertTrue(mobile.listHeight > 0 && mobile.contentHeight > mobile.listHeight,
+        'All nine sessions must remain accessible in a bounded mobile scroll area.');
+    I.seeNumberOfElements(`${list} > li`, 9);
+    I.saveScreenshot('dashboard-hero-image-mobile.png', false);
+    I.resizeWindow(1337, 1052);
+    I.executeScript(() => {
+        const dashboard = document.querySelector('webjet-overview-dashboard');
+        const sessions = dashboard.data.currentSessions;
+        dashboard.configure({ config: dashboard.config, labels: dashboard.labels, data: { ...dashboard.data,
+            currentSessions: { ...sessions, userSessions: [{ ...sessions.userSessions[0], userSessions: sessions.userSessions[0].userSessions.slice(0, 2) }] }
+        } });
+    });
+    await waitForOverview(I);
+    const few = await heroBounds();
+    I.assertEqual(few.rowCount, 2);
+    I.assertTrue(Math.abs(few.card.top - few.hero.top - 18) <= 1 && Math.abs(few.hero.right - few.card.right - 18) <= 1,
+        'A short session card must retain the same top and right inset.');
+    I.assertTrue(few.hero.bottom - few.card.bottom > 48 && few.card.height < expanded.card.height - 30,
+        'Two sessions must use their natural card height instead of stretching through the expanded welcome block.');
+    I.assertTrue(few.listHeight > 0 && few.contentHeight <= few.listHeight + 1,
+        'Both sessions must fit without an unnecessary inner scrollbar.');
+    I.saveScreenshot('dashboard-hero-image-desktop.png', false);
     await I.stopMockingRoute(settingsRoute);
     await I.stopMockingRoute(dashboardPageRoute);
 });

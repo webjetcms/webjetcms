@@ -197,12 +197,15 @@ Overenie: development zostava, 73 JavaScript helper testov, 3 nové E2E scenáre
 
 ## Uvítacia plocha a označenie prostredia
 
-Uvítacia plocha používa schválený variant **Čistá Prizma** s pôvodným farebným prechodom. Aktívne prihlásenia tvoria priehľadný bočný panel oddelený čiarou; jeho výška sa prispôsobuje novinkám aj po zbalení. Ikony prehliadačov a zelená bodka aktuálneho prihlásenia zostávajú zachované.
+Uvítacia plocha používa schválený variant **Modrá s obrazom** s obrázkom prihlasovacej obrazovky pri 12 % nepriehľadnosti. Obrázok je zarovnaný k spodnému okraju, aby presvitalo aj logo. Aktívne prihlásenia tvoria svetlú kartu odsadenú o 18 px od horného a pravého okraja. Krátky zoznam má prirodzenú výšku, dlhší sa posúva v priestore dostupnom vedľa noviniek aj po ich zbalení. Na mobile sa karta presunie pod privítanie. Ikony prehliadačov a zelená bodka aktuálneho prihlásenia zostávajú zachované.
 
-Označenie prostredia sa nastavuje v **Nastavenia → Konfigurácia** cez premenné definované v `ConstantsV9`:
+V `src/main/webapp/admin/v9/src/scss/5-modules/_md-dashboard.scss` sú pri `&__hero` zakomentované alternatívy **Pure WebJET blue** a **Mint porcelain**. Odstránením `/*` a `*/` pri jednej alternatíve sa prepíšu predvolené farby vrátane textu a ovládacích prvkov; obe alternatívy zároveň skryjú obrázok. Po zmene treba v `src/main/webapp/admin/v9` spustiť `npm run dev` a obnoviť stránku. Opätovným zakomentovaním alternatívy sa vráti modrá s obrázkom.
+
+Pozadie a označenie prostredia sa nastavujú v **Nastavenia → Konfigurácia** cez premenné definované v `ConstantsV9`:
 
 | Premenná | Predvolená hodnota | Význam |
 | --- | --- | --- |
+| `dashboardHeroBackgroundImage` | `/admin/skins/webjet8/assets/global/img/wj/wj9_bg.jpg` | Obrázok pozadia: lokálna cesta začínajúca `/` alebo úplná HTTP(S) URL bez prihlasovacích údajov. Prázdna alebo neplatná hodnota obrázok skryje. |
 | `dashboardEnvironmentName` | `{ENVIRONMENT_NAME}/{CLUSTER_NAME}` | Text označenia s makrami cez `Constants.getStringExecuteMacro`. `{CLUSTER_NAME}` používa aktuálny `clusterMyNodeName`, napríklad `DEV/LubosBalatProM5`. Prázdny uzol zanechá len `DEV`, koncové lomítko sa odstráni pri vykreslení štítku. Prázdna hodnota označenie skryje. |
 | `dashboardEnvironmentIcon` | `auto` | PROD: `ti-server`, UAT: `ti-clipboard-check`, INT: `ti-git-merge`, DEV: `ti-code`. Možno zadať aj pevnú triedu Tabler `ti-*`, napríklad `ti-database`. |
 | `dashboardEnvironmentColor` | `auto` | PROD: zelená `#D6F5EF`, UAT: žltá `#FFF2C9`, INT: oranžová `#FFE0B2`, DEV: červená `#FFD9DE`. Možno zadať aj pevnú farbu `#RGB` alebo `#RRGGBB`. Rámik sa automaticky odvodí stmavením pozadia a text sa zvolí podľa kontrastu. |

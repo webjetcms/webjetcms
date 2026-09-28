@@ -19,6 +19,7 @@ import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/wid
  * @property {string} config.recentPagesGroupId - Configured systemPagesRecentPages ID used by the Web pages module.
  * @property {string} [config.statMode] - Statistics mode; `"none"` hides statistics cards.
  * @property {string} [config.overviewJsonUrl=""] - Base URL used to load localized WebJET news.
+ * @property {string} [config.heroBackgroundImage] - Root-relative or HTTP(S) header image URL; an empty value hides it and omission retains the stylesheet default.
  * @property {string} [config.environmentName="DEV"] - Expanded environment label; a trailing slash is removed and an empty value hides the badge.
  * @property {string} [config.environmentType="DEV"] - Server-detected environment used for automatic styling of custom labels.
  * @property {string} [config.environmentIcon="auto"] - Tabler icon class, or auto to select it by environment.
