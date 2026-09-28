@@ -43,7 +43,7 @@ import sk.iway.iwcm.stat.StatNewDB;
 
 /** Verifies dashboard input, authorization, period boundaries, and aggregate query semantics. */
 class DashboardWidgetDataServiceTest {
-    private final DashboardWidgetDataService service = new DashboardWidgetDataService(null, null, null, null);
+    private final DashboardWidgetDataService service = new DashboardWidgetDataService(null, null, null, null, null);
 
     @Test
     void rejectsInvalidConfigurationBeforeAccessingData() {
@@ -367,26 +367,6 @@ class DashboardWidgetDataServiceTest {
         delivery.put(5L, new DashboardWidgetDataService.CampaignDelivery(true, null, null, null));
         delivery.put(3L, new DashboardWidgetDataService.CampaignDelivery(false, null, 400L, null));
         assertEquals(5L, DashboardWidgetDataService.chooseCampaign(allowed, delivery));
-    }
-
-    @Test
-    void accessibleFormsUseOneScopedProjectionInsteadOfPerFormEntityEnrichment() throws Exception {
-        Connection connection = mock(Connection.class);
-        PreparedStatement statement = mock(PreparedStatement.class);
-        ResultSet rows = mock(ResultSet.class);
-        when(connection.prepareStatement(anyString())).thenReturn(statement);
-        when(statement.executeQuery()).thenReturn(rows);
-        when(rows.next()).thenReturn(true, false);
-        when(rows.getString(1)).thenReturn("contact");
-        assertEquals(List.of("contact"), service.allowedFormNames(connection, new DashboardWidgetDataService.Scope(List.of(10), List.of(42)), 7));
-        ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
-        verify(connection).prepareStatement(sql.capture());
-        assertTrue(sql.getValue().contains("d.group_id IN (10) OR d.doc_id IN (42)"));
-        assertTrue(sql.getValue().contains("MAX(create_date) AS latest_created FROM forms WHERE domain_id=?"));
-        assertTrue(sql.getValue().contains("GROUP BY form_name HAVING SUM(CASE WHEN create_date IS NULL THEN 1 ELSE 0 END)>0"));
-        assertFalse(sql.getValue().contains("NOT EXISTS"));
-        verify(statement).setInt(1, 7);
-        verify(statement).setInt(2, 7);
     }
 
     @Test

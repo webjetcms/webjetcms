@@ -51,6 +51,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.forms.FormsRepository;
+import sk.iway.iwcm.components.forms.FormsServiceImpl;
 import sk.iway.iwcm.dmail.jpa.CampaingsEntity;
 import sk.iway.iwcm.dmail.jpa.CampaingsRepository;
 import sk.iway.iwcm.doc.DocBasic;
@@ -88,13 +89,15 @@ public class DashboardWidgetDataService {
     private final DocHistoryRepository history;
     private final GroupSchedulerDtoRepository groupHistory;
     private final FormsRepository forms;
+    private final FormsServiceImpl formsService;
     private final CampaingsRepository campaigns;
 
     public DashboardWidgetDataService(DocHistoryRepository history, GroupSchedulerDtoRepository groupHistory,
-            FormsRepository forms, CampaingsRepository campaigns) {
+            FormsRepository forms, FormsServiceImpl formsService, CampaingsRepository campaigns) {
         this.history = history;
         this.groupHistory = groupHistory;
         this.forms = forms;
+        this.formsService = formsService;
         this.campaigns = campaigns;
     }
 
@@ -354,10 +357,7 @@ public class DashboardWidgetDataService {
 
     private Map<String, Object> forms(Identity user, String domain, String selected, Range range) {
         Scope scope = scope(user, domain);
-        List<String> names;
-        try (Connection connection = DBPool.getConnection()) {
-            names = allowedFormNames(connection, scope, CloudToolsForCore.getDomainId());
-        } catch (SQLException exception) { throw new IllegalStateException("Could not load accessible forms", exception); }
+        List<String> names = formsService.getFormsList(user).stream().map(FormsEntity::getFormName).sorted().toList();
         if (selected != null && !names.contains(selected)) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         List<String> requested = selected == null ? names : List.of(selected);
         List<Map<String, Object>> items = new ArrayList<>();
@@ -376,22 +376,6 @@ public class DashboardWidgetDataService {
         period(result, range);
         result.put("options", names.stream().map(name -> Map.of("id", name, "title", name)).toList());
         return result;
-    }
-
-    /** Resolves the same latest-submission page as form administration without loading or mutating form entities. */
-    List<String> allowedFormNames(Connection connection, Scope scope, int domainId) throws SQLException {
-        String sql = "SELECT DISTINCT f.form_name FROM forms f JOIN (SELECT form_name, MAX(create_date) AS latest_created FROM forms WHERE domain_id=?"
-            + " GROUP BY form_name HAVING SUM(CASE WHEN create_date IS NULL THEN 1 ELSE 0 END)>0) latest ON latest.form_name=f.form_name"
-            + " AND (f.create_date=latest.latest_created OR (f.create_date IS NULL AND latest.latest_created IS NULL))"
-            + " JOIN documents d ON d.doc_id=f.doc_id WHERE f.domain_id=? AND " + scope.sql("d") + " ORDER BY f.form_name";
-        List<String> names = new ArrayList<>();
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, domainId);
-            statement.setInt(2, domainId);
-            statement.setQueryTimeout(15);
-            try (ResultSet rows = statement.executeQuery()) { while (rows.next()) names.add(rows.getString(1)); }
-        }
-        return names;
     }
 
     private Specification<FormsEntity> formSpec(List<String> names, Scope scope, Range range) {

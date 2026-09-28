@@ -173,6 +173,11 @@ If any of the above conflicts with existing repository patterns, align docs & co
 
 - Bean Validation first; enrich errors via custom checks then merge into binding result / response.
 
+### Database Tests
+
+- Database tests must use the project's existing database and test infrastructure. Do not add H2 dependencies, H2 fixtures, or an H2 replacement database.
+- If a database test cannot use the project's database, omit it and report the verification limitation instead of introducing a substitute database.
+
 ### History & Audit
 
 - Doc changes recorded via `DocPublishService` & `DocHistory`; auditing for entities through `AuditEntityListener`.
