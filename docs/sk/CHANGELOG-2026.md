@@ -15,9 +15,10 @@
 
 ### Úvodná obrazovka
 
-- [Úvodná obrazovka](redactor/admin/welcome.md) je osobný prehľad s widgetmi podľa oprávnení a aktuálnej domény. Widgety môžete pridávať, nastavovať, presúvať, minimalizovať a odstrániť s okamžitým vrátením. Rozloženie sa ukladá do konta a je spoločné pre zariadenia; výber formulára alebo kampane sa pamätá podľa domény (#58806).
-- K dispozícii sú skratky do modulov, posledné stránky, schvaľovanie, plán publikovania, formuláre, návštevnosť a jej zdroje, hľadané výrazy, chyby 404 a newsletter. Povinný widget aktívnych prihlásení umožňuje ukončiť inú vlastnú reláciu. Novinky po potvrdení uvoľnia miesto; nevyriešené systémové upozornenia zostávajú viditeľné. Vyhľadávanie má jasný prepínač medzi administráciou a dokumentáciou (#58806).
-- Predvolené rozloženie obsahuje všetky dostupné widgety. Cez **Pridať widget → Resetovať** ho môžete obnoviť vrátane filtrov a noviniek. Grafy návštevnosti a zdrojov používajú AmCharts; presné údaje sú dostupné aj v tabuľke (#58806).
+- [Úvodná obrazovka](redactor/admin/welcome.md) je osobný prehľad s widgetmi podľa oprávnení a aktuálnej domény. Widgety môžete pridávať, nastavovať, presúvať a odstrániť s okamžitým vrátením (#58806).
+- K dispozícii sú skratky, posledné stránky, schvaľovanie, plán publikovania, formuláre, návštevnosť a jej zdroje, hľadané výrazy, chyby 404 a newsletter. Pevný panel zobrazuje všetky aktívne prihlásenia a umožňuje ukončiť inú vlastnú reláciu. Nevyriešené systémové upozornenia zostávajú viditeľné a vyhľadávanie má prepínač medzi administráciou a dokumentáciou (#58806).
+- Predvolené rozloženie obsahuje vybranú zostavu widgetov podľa oprávnení, ostatné sú dostupné cez katalóg. Cez **Upraviť prehľad → Obnoviť** obnovíte predvolený výber, veľkosti a poradie. Vymažú sa filtre vo všetkých doménach a potvrdenie prečítania noviniek. Skratky zostanú zachované. Kliknutie na **Obnoviť** s klávesom **Shift** nahradí prehľad všetkými dostupnými widgetmi v každej podporovanej veľkosti. Údaje kariet sa načítajú pri ich zobrazení (#58806).
+- Skratky pod privítaním majú samostatné ovládanie úprav a obnovy, vlastnú ikonu a farbu pozadia. Pôvodné záložky z prehliadača sa automaticky jednorazovo prenesú do konta a nahradia jeho skratky (#58806).
 
 ### Webové stránky
 
