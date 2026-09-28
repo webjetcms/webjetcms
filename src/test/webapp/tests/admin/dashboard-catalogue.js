@@ -71,7 +71,7 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
         const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
         const next = JSON.parse(JSON.stringify(controller.settings));
         const missing = definitions.filter(([type]) => !next.items.some(item => item.type === type));
-        if (next.items.length + missing.length > 32) return { saved: false, reason: 'Insufficient free widget slots for a nondestructive fixture.' };
+        if (next.items.length + missing.length > 48) return { saved: false, reason: 'Insufficient free widget slots for a nondestructive fixture.' };
         const chosen = [];
         for (const [type, size] of definitions) {
             let item = next.items.find(item => item.type === type);
@@ -99,15 +99,11 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
     const state = await I.executeScript(() => ({
         types: [...document.querySelectorAll('.md-dashboard__widget[data-widget-type]')].map(card => card.dataset.widgetType),
         errors: [...document.querySelectorAll('.md-dashboard__widget-content > .text-danger:not([hidden])')].map(error => ({ type: error.closest('[data-widget-type]').dataset.widgetType, text: error.textContent })),
-        expectedDomainError: WJ.translate('admin.dashboard.domainUnavailable.js'),
         javascriptErrors: window.autotestDashboardRenderErrors
     }));
     for (const [type] of catalogue) I.assertContain(state.types, type, `${type} must render from the final catalogue.`);
     I.assertDeepEqual(state.javascriptErrors, [], 'Widget rendering must not throw JavaScript errors.');
-    for (const error of state.errors) {
-        I.assertEqual(error.type, 'errors', 'Only explicitly unavailable legacy 404 domain data may fail.');
-        I.assertEqual(error.text, state.expectedDomainError);
-    }
+    I.assertDeepEqual(state.errors, [], 'Authorized module previews must load successfully.');
     I.seeNumberOfElements('#toast-container-overview', 1);
     I.dontSeeElementInDOM('.md-dashboard__legacy');
     I.dontSeeElementInDOM('#webjet-overview-dashboard .bookmark');

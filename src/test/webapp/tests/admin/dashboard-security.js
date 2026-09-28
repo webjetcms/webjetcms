@@ -18,6 +18,9 @@ const sizes = { 'recent-pages': '3x2', publishing: '2x2', 'top-pages': '2x3', 's
     newsletter: '2x2', 'changed-pages': '3x2', audit: '3x2', 'logged-admins': '2x2', 'server-memory': '3x2', 'server-cpu': '3x2' };
 function endpoints(type, recentPagesGroupId, statRootGroupId) {
     if (type === 'traffic' || type === 'top-pages') return [`/admin/rest/stat/${type === 'traffic' ? 'views' : 'top'}/search/findByColumns?searchRootDir=${statRootGroupId}&size=6&page=0`];
+    if (type === 'search-terms') return [`/admin/rest/stat/search-engines/search/findByColumns?searchRootDir=${statRootGroupId}&searchWebPage=-1&searchEngine=`];
+    if (type === 'referrers') return [`/admin/rest/stat/referer/search/findByColumns?searchRootDir=${statRootGroupId}&searchChartType=not_chart`];
+    if (type === 'errors') return ['/admin/rest/stat/error/search/findByColumns?searchFilterBotsOut=false&searchurl=&size=6&page=0&sort=count,desc'];
     if (type === 'logged-admins') return [];
     if (type === 'recent-pages') return [`/admin/rest/web-pages/all?groupId=${recentPagesGroupId}&size=6&page=0&sort=dateCreated%2Cdesc`];
     if (type === 'approvals') return ['/admin/rest/webpages/toapprove/all?size=6&page=0&sort=saveDate,desc', '/admin/rest/groups/toapprove/all?size=6&page=0&sort=saveDate,desc'];
@@ -93,7 +96,7 @@ for (const { permission, types } of permissionCases) {
         for (const type of types) I.dontSeeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
         I.seeElementInDOM(`${dashboard} [data-widget-type="sessions"]`);
         for (const result of await readEndpoints(I, paths)) {
-            if (/^\/admin\/rest\/(?:(webpages|groups)\/toapprove\/|web-pages\/all|stat\/(views|top)\/)/.test(result.path)) {
+            if (/^\/admin\/rest\/(?:(webpages|groups)\/toapprove\/|web-pages\/all|stat\/(views|top|search-engines|referer|error)\/)/.test(result.path)) {
                 const deniedBody = result.status === 200 && ['Access Denied', 'Access is denied'].includes(result.error) && result.contentPresence === false;
                 I.assertTrue(result.status === 403 || deniedBody, `${result.path} must deny access without exposing page or approval content.`);
             } else I.assertEqual(result.status, 403, `${result.path} must reject direct requests without ${permission}.`);

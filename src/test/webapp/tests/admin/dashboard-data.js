@@ -32,7 +32,7 @@ Scenario('Initial settings, notices, sessions and administrators render from HTM
 
 Scenario('Read-only widget projections return bounded preview contracts', async ({ I }) => {
     const results = await I.executeScript(async () => {
-        const types = ['publishing', 'forms', 'search-terms', 'referrers', 'newsletter', 'errors'];
+        const types = ['publishing', 'forms', 'newsletter'];
         const results = [];
         for (const type of types) {
             const response = await fetch(`/admin/rest/dashboard/data/${type}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
@@ -43,10 +43,6 @@ Scenario('Read-only widget projections return bounded preview contracts', async 
     });
     for (const { type, status, body } of results) {
         I.say(`${type}: HTTP ${status}, keys=${Object.keys(body).join(',')}`);
-        if (type === 'errors' && status === 503) {
-            I.assertEqual(body.reason, 'domain-unavailable', 'Shared-domain legacy 404 data must explicitly report unsupported domain scoping.');
-            continue;
-        }
         I.assertEqual(status, 200, `${type} must load for an authorized administrator.`);
         I.assertTrue(Number.isInteger(body.total) && body.total >= 0, `${type} must expose an actual nonnegative count.`);
         I.assertTrue(Array.isArray(body.items) && body.items.length <= 6, `${type} previews must be bounded.`);
@@ -61,7 +57,7 @@ Scenario('Read-only widget projections return bounded preview contracts', async 
 
 Scenario('Invalid projection settings are rejected before querying data', async ({ I }) => {
     const statuses = await I.executeScript(async () => {
-        return Promise.all(['referrers?days=365', 'traffic', 'top-pages', 'forms?formName=', 'newsletter?campaignId=-1', 'sessions', 'logged-admins', 'unknown'].map(async value => {
+        return Promise.all(['forms?days=365', 'traffic', 'top-pages', 'search-terms', 'referrers', 'errors', 'forms?formName=', 'newsletter?campaignId=-1', 'sessions', 'logged-admins', 'unknown'].map(async value => {
             const response = await fetch(`/admin/rest/dashboard/data/${value}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
             return { value, status: response.status };
         }));
@@ -197,4 +193,38 @@ Scenario('Traffic and TOP pages reuse the statistics module contracts', async ({
         I.assertEqual(typeof page.name, 'string');
         I.assertTrue(page.perexImage === null || typeof page.perexImage === 'string');
     }
+});
+
+Scenario('Search terms, referrers and errors reuse statistics responses and summaries', async ({ I }) => {
+    const result = await I.executeScript(async () => {
+        const root = document.querySelector('webjet-overview-dashboard').data.statRootGroupId;
+        const read = async (type, filters) => {
+            const params = new URLSearchParams({ searchDayDate: `daterange:${new Date(2022, 4, 1).getTime()}-${new Date(2022, 5, 1).getTime() - 1}`,
+                searchRootDir: root, size: 6, page: 0, sort: 'order,asc', pagination: true, ...filters });
+            const response = await fetch(`/admin/rest/stat/${type}/search/findByColumns?${params}`, { headers: { 'X-CSRF-Token': window.csrfToken } });
+            return { status: response.status, body: await response.json() };
+        };
+        return {
+            queries: await read('search-engines', { searchWebPage: -1, searchEngine: '' }),
+            sources: await read('referer', { searchChartType: 'not_chart' }),
+            errors: await read('error', { searchFilterBotsOut: false, searchurl: '', sort: 'count,desc',
+                searchDayDate: `daterange:${new Date(2023, 9, 1).getTime()}-${new Date(2023, 10, 1).getTime() - 1}` })
+        };
+    });
+    for (const response of Object.values(result)) {
+        I.assertEqual(response.status, 200);
+        I.assertFalse(Boolean(response.body.error));
+        I.assertTrue(response.body.content.length > 0);
+    }
+    for (const [key, name, count] of [['queries', 'queryName', 'queryCount'], ['sources', 'serverName', 'visits']]) {
+        I.assertTrue(result[key].body.content.length <= 100);
+        for (const row of result[key].body.content) {
+            I.assertEqual(typeof row[name], 'string');
+            I.assertTrue(Number.isFinite(row[count]) && row[count] >= 0);
+            I.assertTrue(Number.isFinite(row.percentage) && row.percentage >= 0 && row.percentage <= 100);
+        }
+    }
+    I.assertEqual(result.errors.body.content.length, 6);
+    I.assertTrue(result.errors.body.summary.count >= result.errors.body.content.reduce((sum, row) => sum + row.count, 0));
+    for (const row of result.errors.body.content) I.assertEqual(typeof row.url, 'string');
 });

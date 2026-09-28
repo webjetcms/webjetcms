@@ -19,14 +19,15 @@ function statisticsPeriod(days, now = new Date()) {
 }
 
 /** Reuses the statistics module's date, folder and bot filters and DataTable error handling. */
-function statisticsRequest(type, from, to, context, signal, size) {
-    if (!(context.data.statRootGroupId > 0)) {
+function statisticsRequest(type, from, to, context, signal, size, filters = {}) {
+    if (type !== 'error' && !(context.data.statRootGroupId > 0)) {
         const error = new Error('Statistics domain is unavailable');
         error.dashboardReason = 'domain-unavailable';
         throw error;
     }
-    const params = new URLSearchParams({ searchDayDate: `daterange:${from}-${to}`, searchRootDir: context.data.statRootGroupId,
-        searchFilterBotsOut: true, statType: 'days', size, page: 0, sort: 'order,asc', pagination: true });
+    const params = new URLSearchParams({ searchDayDate: `daterange:${from}-${to}`,
+        ...(type === 'error' ? {} : { searchRootDir: context.data.statRootGroupId }),
+        searchFilterBotsOut: true, statType: 'days', size, page: 0, sort: 'order,asc', pagination: true, ...filters });
     return fetchJson(`/admin/rest/stat/${type}/search/findByColumns?${params}`, signal);
 }
 
@@ -58,6 +59,32 @@ async function fetchTopPages(options, context, signal) {
         value: row.visits, previous: previousValues.get(row.docId),
         url: `/apps/stat/admin/top-details/?docId=${encodeURIComponent(row.docId)}&dateRange=${encodeURIComponent(`daterange:${range.from}-${range.to}`)}`
     })) };
+}
+
+/** Uses the module's bounded ranking and percentages before taking the six-row preview. */
+async function fetchStatisticsList(type, options, context, signal) {
+    const range = statisticsPeriod([7, 30, 90].includes(Number(options.days)) ? Number(options.days) : 7);
+    const queries = type === 'search-terms';
+    const data = await statisticsRequest(queries ? 'search-engines' : 'referer', range.from, range.to, context, signal, 6,
+        queries ? { searchWebPage: -1, searchEngine: '' } : { searchChartType: 'not_chart' });
+    return { ...range, total: data.content.reduce((sum, row) => sum + (queries ? row.queryCount : row.visits), 0),
+        items: data.content.slice(0, 6).map(row => ({ title: queries ? row.queryName : row.serverName,
+            value: queries ? row.queryCount : row.visits, percentage: row.percentage, url: moduleLinks[type] })) };
+}
+
+/** Keeps the module's weekly error coverage and full summary while requesting six rows. */
+async function fetchErrors(options, context, signal) {
+    const range = statisticsPeriod([7, 30, 90].includes(Number(options.days)) ? Number(options.days) : 7);
+    const from = new Date(range.from), until = new Date(range.to);
+    from.setDate(from.getDate() - (from.getDay() + 6) % 7);
+    until.setHours(0, 0, 0, 0);
+    until.setDate(until.getDate() + 7 - (until.getDay() + 6) % 7);
+    range.from = from.getTime();
+    range.to = Math.min(new Date().getTime(), until.getTime()) - 1;
+    const data = await statisticsRequest('error', range.from, range.to, context, signal, 6,
+        { searchFilterBotsOut: false, searchurl: '', sort: 'count,desc' });
+    return { ...range, granularity: 'week', total: data.summary.count,
+        items: data.content.map(row => ({ title: row.url, value: row.count, url: moduleLinks.errors })) };
 }
 
 /** Labels the actual returned interval, including whole-week error aggregates. */
@@ -190,8 +217,8 @@ async function rankedList(container, data, context, type, detailed, signal, limi
         host.classList.add('md-dashboard-widget__chart--referrers');
         host.style.height = `${items.length * 48}px`;
         const chartData = items.map(item => ({ title: item.title, value: item.value,
-            percentage: data.total > 0 ? item.value / data.total * 100 : 0,
-            share: `${number(Math.round((data.total > 0 ? item.value / data.total * 100 : 0) * 10) / 10)} %` }));
+            percentage: item.percentage,
+            share: `${number(Math.round(item.percentage * 10) / 10)} %` }));
         chartTable(container, context, [text(context, 'source'), text(context, 'count'), text(context, 'observedShare')], chartData.map(item => [item.title, number(item.value), item.share]), true);
         return mountChart(host, signal, (tools, chartDivId) => new tools.BarChartForm({
             yAxeName: 'title', xAxeName: 'percentage', chartTitle: '', chartDivId, chartData, horizontal: true, colorScheme: 'set3'
@@ -332,7 +359,8 @@ export function registerDataWidgets() {
         configure: args => statSettings(args, type === 'traffic'),
         async render({ container, instance, options, context, signal }) {
             const data = type === 'traffic' ? await fetchTraffic(options, context, signal)
-                : type === 'top-pages' ? await fetchTopPages(options, context, signal) : await fetchData(type, { days: options.days || 7 }, signal);
+                : type === 'top-pages' ? await fetchTopPages(options, context, signal)
+                : type === 'errors' ? await fetchErrors(options, context, signal) : await fetchStatisticsList(type, options, context, signal);
             if (signal.aborted) return;
             if (type === 'traffic') {
                 const days = String(options.days || 7);

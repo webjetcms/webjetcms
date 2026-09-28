@@ -9,12 +9,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Clock;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -22,7 +18,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
@@ -61,7 +56,6 @@ import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConfDB;
-import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -71,8 +65,7 @@ import sk.iway.iwcm.users.UsersDB;
 @Service
 public class DashboardWidgetDataService {
     static final int PREVIEW_SIZE = 6;
-    static final Set<String> TYPES = Set.of("publishing", "forms",
-        "search-terms", "referrers", "newsletter", "errors", "changed-pages", "audit");
+    static final Set<String> TYPES = Set.of("publishing", "forms", "newsletter", "changed-pages", "audit");
     private static final Set<String> SERVER_TYPES = Set.of("audit");
     private final FormsRepository forms;
     private final FormsServiceImpl formsService;
@@ -90,15 +83,13 @@ public class DashboardWidgetDataService {
         validate(type, days, formName, campaignId);
         authorize(type, user);
         if (!SERVER_TYPES.contains(type) && Tools.isEmpty(domain)) throw new UnavailableException("domain-unavailable");
-        Range range = completedDays(days, Clock.systemDefaultZone());
         return switch (type) {
             case "changed-pages" -> changedPages(user, domain, scope(user, domain));
             case "audit" -> audit();
             case "publishing" -> publishing(user, domain);
             case "forms" -> forms(user, domain, formName, recentDays(days, Clock.systemDefaultZone()));
             case "newsletter" -> newsletter(domain, campaignId);
-            case "errors" -> errors(domain, range);
-            default -> statistics(type, scope(user, domain), range);
+            default -> throw new IllegalArgumentException("Unknown widget");
         };
     }
 
@@ -116,32 +107,15 @@ public class DashboardWidgetDataService {
             case "audit" -> "cmp_adminlog";
             case "forms" -> "cmp_form";
             case "newsletter" -> "menuEmail";
-            default -> "cmp_stat";
+            default -> throw new IllegalArgumentException("Unknown widget");
         };
         if (!user.isEnabledItem(permission)) throw new AccessDeniedException("Widget permission is required");
-        if ("cmp_stat".equals(permission) && "none".equals(Constants.getString("statMode"))) {
-            throw new UnavailableException("statistics-disabled");
-        }
     }
 
-    record Range(long from, long until, ZoneId zone) {
-        Range(long from, long until) { this(from, until, ZoneId.systemDefault()); }
-        Range previous() {
-            LocalDate start = new Date(from).toInstant().atZone(zone).toLocalDate();
-            LocalDate end = new Date(until).toInstant().atZone(zone).toLocalDate();
-            long days = java.time.temporal.ChronoUnit.DAYS.between(start, end);
-            return new Range(start.minusDays(days).atStartOfDay(zone).toInstant().toEpochMilli(), from, zone);
-        }
-    }
-
-    static Range completedDays(int days, Clock clock) {
-        LocalDate today = LocalDate.now(clock);
-        return new Range(today.minusDays(days).atStartOfDay(clock.getZone()).toInstant().toEpochMilli(),
-            today.atStartOfDay(clock.getZone()).toInstant().toEpochMilli(), clock.getZone());
-    }
+    record Range(long from, long until) {}
 
     static Range recentDays(int days, Clock clock) {
-        return new Range(LocalDate.now(clock).minusDays(days - 1L).atStartOfDay(clock.getZone()).toInstant().toEpochMilli(), clock.millis(), clock.getZone());
+        return new Range(LocalDate.now(clock).minusDays(days - 1L).atStartOfDay(clock.getZone()).toInstant().toEpochMilli(), clock.millis());
     }
 
     /** IDs are derived from the current domain and current account, never request parameters. */
@@ -317,70 +291,6 @@ public class DashboardWidgetDataService {
             accessibleDocument(root.get("docId"), query, builder, scope));
     }
 
-    private Map<String, Object> statistics(String type, Scope scope, Range range) {
-        Map<String, Object> result;
-        try (Connection connection = DBPool.getConnection()) {
-            String table = "search-terms".equals(type) ? "stat_searchengine" : "stat_from";
-            String column = "search-terms".equals(type) ? "query" : "referer_server_name";
-            String time = "search-terms".equals(type) ? "search_date" : "from_time";
-            List<Map<String, Object>> items = ranked(connection, table, column, time, scope, range);
-            for (Map<String, Object> item : items) item.put("url", "search-terms".equals(type) ? "/apps/stat/admin/search-engines/" : "/apps/stat/admin/referer/");
-            result = response(countRows(connection, table, time, scope, range), items);
-            result.put("previous", countRows(connection, table, time, scope, range.previous()));
-        } catch (SQLException exception) {
-            throw new IllegalStateException("Could not load dashboard statistics", exception);
-        }
-        period(result, range);
-        return result;
-    }
-
-    private List<Map<String, Object>> ranked(Connection connection, String table, String column, String time, Scope scope, Range range) throws SQLException {
-        String data = union(table, time, "s." + column + " AS item_key", scope, range);
-        return read(connection, "SELECT item_key, COUNT(*) AS item_count FROM (" + data + ") w GROUP BY item_key ORDER BY item_count DESC", range, table, PREVIEW_SIZE,
-            rows -> {
-                Map<String, Object> item = item(rows.getString(1), rows.getString(1), "");
-                item.put("value", rows.getLong(2));
-                return item;
-            });
-    }
-
-    private long countRows(Connection connection, String table, String time, Scope scope, Range range) throws SQLException {
-        String data = union(table, time, "s.doc_id", scope, range);
-        return read(connection, "SELECT COUNT(*) FROM (" + data + ") w", range, table, 1, rows -> rows.getLong(1)).get(0);
-    }
-
-    private String union(String table, String time, String columns, Scope scope, Range range) {
-        List<String> parts = new ArrayList<>();
-        for (String suffix : suffixes(table, range)) {
-            parts.add("SELECT " + columns + " FROM " + table + suffix + " s WHERE s." + time + ">=? AND s." + time + "<? AND " + scope.statisticsSql("s"));
-        }
-        return String.join(" UNION ALL ", parts);
-    }
-
-    private static String[] suffixes(String table, Range range) {
-        String[] suffixes = StatNewDB.getTableSuffix(table, range.from, range.until - 1);
-        for (String suffix : suffixes) if (!suffix.matches("[0-9_]*")) throw new IllegalStateException("Invalid statistics partition");
-        return suffixes;
-    }
-
-    @FunctionalInterface
-    interface RowReader<T> { T read(ResultSet rows) throws SQLException; }
-
-    private <T> List<T> read(Connection connection, String sql, Range range, String table, int maxRows, RowReader<T> reader) throws SQLException {
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            int index = 1;
-            for (String ignored : suffixes(table, range)) {
-                statement.setTimestamp(index++, new Timestamp(range.from));
-                statement.setTimestamp(index++, new Timestamp(range.until));
-            }
-            statement.setMaxRows(maxRows);
-            statement.setQueryTimeout(15);
-            List<T> items = new ArrayList<>();
-            try (ResultSet rows = statement.executeQuery()) { while (rows.next()) items.add(reader.read(rows)); }
-            return items;
-        }
-    }
-
     private Map<String, Object> newsletter(String domain, Long selectedId) {
         int domainId = CloudToolsForCore.getDomainId();
         List<CampaingsEntity> allowed = campaigns.findAllByDomainId(domainId).stream()
@@ -488,68 +398,6 @@ public class DashboardWidgetDataService {
             statement.setQueryTimeout(15);
             try (ResultSet rows = statement.executeQuery()) { rows.next(); item.put("clicks", rows.getLong(1)); }
         }
-    }
-
-    private Map<String, Object> errors(String domain, Range requested) {
-        if (!InitServlet.isTypeCloud() && !Constants.getBoolean("enableStaticFilesExternalDir") && GroupsDB.getInstance().getAllDomainsList().size() > 1) {
-            throw new UnavailableException("domain-unavailable");
-        }
-        Range range = errorRange(requested, Clock.systemDefaultZone());
-        String[] partitions = suffixes("stat_error", range);
-        List<ErrorWeek> weeks = errorWeeks(range, List.of(partitions).contains(""));
-        String weekFilter = weeks.stream().map(week -> "(year=? AND week=?)").collect(Collectors.joining(" OR "));
-        Map<String, Long> counts = new LinkedHashMap<>();
-        try (Connection connection = DBPool.getConnection()) {
-            for (String suffix : partitions) {
-                String sql = "SELECT url, SUM(count) FROM stat_error" + suffix + " WHERE domain_id=? AND (" + weekFilter + ") GROUP BY url";
-                try (PreparedStatement statement = connection.prepareStatement(sql)) {
-                    statement.setInt(1, CloudToolsForCore.getDomainId());
-                    int index = 2;
-                    for (ErrorWeek week : weeks) {
-                        statement.setInt(index++, week.year);
-                        statement.setInt(index++, week.week);
-                    }
-                    statement.setQueryTimeout(15);
-                    try (ResultSet rows = statement.executeQuery()) { while (rows.next()) counts.merge(rows.getString(1), rows.getLong(2), Long::sum); }
-                }
-            }
-        } catch (SQLException exception) { throw new IllegalStateException("Could not load error statistics", exception); }
-        List<Map<String, Object>> items = counts.entrySet().stream().sorted(Map.Entry.<String, Long>comparingByValue().reversed()).limit(PREVIEW_SIZE).map(entry -> {
-            Map<String, Object> item = item(entry.getKey(), entry.getKey(), "/apps/stat/admin/error/");
-            item.put("value", entry.getValue());
-            return item;
-        }).toList();
-        Map<String, Object> result = response(counts.values().stream().mapToLong(Long::longValue).sum(), items);
-        period(result, range);
-        result.put("granularity", "week");
-        return result;
-    }
-
-    record ErrorWeek(int year, int week) {}
-
-    static Range errorRange(Range requested, Clock clock) {
-        ZoneId zone = clock.getZone();
-        LocalDate from = new Date(requested.from).toInstant().atZone(zone).toLocalDate().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-        LocalDate until = new Date(requested.until - 1).toInstant().atZone(zone).toLocalDate().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)).plusDays(1);
-        return new Range(from.atStartOfDay(zone).toInstant().toEpochMilli(), Math.min(clock.millis(), until.atStartOfDay(zone).toInstant().toEpochMilli()), zone);
-    }
-
-    /** Uses the collector's calendar year, including the split year at January 1, rather than an ISO week year. */
-    static List<ErrorWeek> errorWeeks(Range range, boolean includesUnpartitionedTable) {
-        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone(range.zone));
-        calendar.setFirstDayOfWeek(Calendar.MONDAY);
-        calendar.setTimeInMillis(range.from);
-        Set<ErrorWeek> weeks = new LinkedHashSet<>();
-        while (calendar.getTimeInMillis() < range.until) {
-            int week = calendar.get(Calendar.WEEK_OF_YEAR);
-            int month = calendar.get(Calendar.MONTH);
-            if (includesUnpartitionedTable && ((month == Calendar.DECEMBER && week == 1) || (month == Calendar.JANUARY && week > 50))) {
-                throw new UnavailableException("period-unavailable");
-            }
-            weeks.add(new ErrorWeek(calendar.get(Calendar.YEAR), week));
-            calendar.add(Calendar.DAY_OF_YEAR, 1);
-        }
-        return new ArrayList<>(weeks);
     }
 
     private static Map<String, Object> response(long total, List<Map<String, Object>> items) {

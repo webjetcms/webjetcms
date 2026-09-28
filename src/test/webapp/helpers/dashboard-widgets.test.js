@@ -18,6 +18,10 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
         cpuUsageProcess: latest?.process ?? null, cpuUsage: latest?.system ?? null };
     const ClockDate = class extends Date { constructor(...args) { super(...(args.length ? args : [now])); } };
     const statResponse = url => {
+        if (url.includes('/stat/search-engines/')) return { content: (data.items || []).map(item => ({ queryName: item.title, queryCount: item.value })) };
+        if (url.includes('/stat/referer/')) return { content: (data.items || []).map(item => ({ serverName: item.title, visits: item.value,
+            percentage: data.total > 0 ? item.value / data.total * 100 : 0 })) };
+        if (url.includes('/stat/error/')) return { summary: { count: data.total || 0 }, content: (data.items || []).map(item => ({ url: item.title, count: item.value })) };
         if (url.includes('/stat/views/')) return { content: [...(data.previousSeries || []), ...(data.series || [])].map(point => ({
             dayDate: point.date, visits: point.value, sessions: point.value, uniqueUsers: point.value
         })) };
@@ -553,6 +557,65 @@ test('Statistics keep module errors and never query all domains when the active 
         await assert.rejects(load({}, context, signal), error => error.dashboardReason === 'domain-unavailable');
     }
     assert.equal(requests.length, count);
+});
+
+test('Search terms and referrers use module filters and preserve supplied percentages in bounded previews', async t => {
+    const rows = Array.from({ length: 8 }, (_, index) => ({ queryName: `Query ${index}`, queryCount: 20 - index,
+        serverName: `Source ${index}`, visits: 40 - index, percentage: 12.34 - index }));
+    const { scope, context, requests } = fixture(t, { data: { statRootGroupId: 42 },
+        fetchResponse: async () => ({ ok: true, json: async () => ({ content: rows }) }) });
+    const signal = new AbortController().signal;
+    for (const type of ['search-terms', 'referrers']) {
+        const data = await scope.fetchStatisticsList(type, { days: 30 }, context, signal);
+        const url = new URL(requests.at(-1).url, 'http://localhost');
+        assert.equal(url.pathname, `/admin/rest/stat/${type === 'search-terms' ? 'search-engines' : 'referer'}/search/findByColumns`);
+        assert.equal(url.searchParams.get('searchDayDate'), `daterange:${data.from}-${data.to}`);
+        assert.equal(url.searchParams.get('searchRootDir'), '42');
+        assert.equal(url.searchParams.get('size'), '6');
+        assert.equal(requests.at(-1).options.signal, signal);
+        assert.equal(requests.at(-1).options.headers['X-CSRF-Token'], 'test-csrf-token');
+        assert.equal(data.items.length, 6);
+        assert.equal(data.items[0].title, type === 'search-terms' ? 'Query 0' : 'Source 0');
+        assert.equal(data.items[0].value, type === 'search-terms' ? 20 : 40);
+        assert.equal(data.items[0].percentage, 12.34);
+        if (type === 'search-terms') {
+            assert.equal(url.searchParams.get('searchWebPage'), '-1');
+            assert.equal(url.searchParams.get('searchEngine'), '');
+        } else assert.equal(url.searchParams.get('searchChartType'), 'not_chart');
+    }
+    assert.equal(requests.length, 2, 'Each preview uses one module request.');
+});
+
+test('Errors use the module summary and weekly coverage without requesting a future month', async t => {
+    const now = new Date(2026, 8, 30, 12);
+    const { scope, context, requests } = fixture(t, { now, data: { statRootGroupId: -1 }, fetchResponse: async () => ({ ok: true,
+        json: async () => ({ summary: { count: 1234 }, content: [{ url: '/missing', count: 7, year: 2026, week: 40 }] }) }) });
+    const data = await scope.fetchErrors({ days: 7 }, context, new AbortController().signal);
+    assert.equal(data.total, 1234, 'The summary covers more rows than the visible preview.');
+    assert.equal(data.items[0].title, '/missing');
+    assert.equal(data.items[0].value, 7);
+    assert.equal(data.items[0].url, '/apps/stat/admin/error/');
+    assert.equal(data.from, new Date(2026, 8, 21).getTime());
+    assert.equal(data.to, now.getTime() - 1);
+    assert.equal(data.granularity, 'week');
+    const url = new URL(requests[0].url, 'http://localhost');
+    assert.equal(url.pathname, '/admin/rest/stat/error/search/findByColumns');
+    assert.equal(url.searchParams.get('searchDayDate'), `daterange:${data.from}-${data.to}`);
+    assert.equal(url.searchParams.get('searchFilterBotsOut'), 'false');
+    assert.equal(url.searchParams.get('searchurl'), '');
+    assert.equal(url.searchParams.get('sort'), 'count,desc');
+    assert.equal(url.searchParams.get('size'), '6');
+    assert.equal(url.searchParams.has('searchRootDir'), false, 'Errors use the existing module scope.');
+});
+
+test('Statistics lists preserve empty results and module permission errors', async t => {
+    for (const error of [null, 'Access is denied']) {
+        const { scope, context } = fixture(t, { fetchResponse: async () => ({ ok: true, json: async () => ({ error, content: [], summary: { count: 0 } }) }) });
+        for (const load of [() => scope.fetchErrors({}, context), ...['search-terms', 'referrers'].map(type => () => scope.fetchStatisticsList(type, {}, context))]) {
+            if (error) await assert.rejects(load(), failure => failure.dashboardReason === 'permission-denied');
+            else assert.equal((await load()).items.length, 0);
+        }
+    }
 });
 
 test('Ranked previews keep numeric columns marked and navigate through their headers in both sizes', async t => {

@@ -31,7 +31,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.security.access.AccessDeniedException;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.dmail.jpa.CampaingsEntity;
 import sk.iway.iwcm.doc.DocBasic;
@@ -49,8 +48,8 @@ class DashboardWidgetDataServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.load("approvals", 7, null, null, null, "example.test"));
         assertThrows(IllegalArgumentException.class, () -> service.load("logged-admins", 7, null, null, null, "example.test"));
         assertThrows(IllegalArgumentException.class, () -> service.load("sessions", 7, null, null, null, "example.test"));
-        assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("search-terms", 365, null, null));
-        for (String type : List.of("traffic", "top-pages")) assertThrows(IllegalArgumentException.class, () -> service.load(type, 7, null, null, null, "example.test"));
+        assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("forms", 365, null, null));
+        for (String type : List.of("traffic", "top-pages", "search-terms", "referrers", "errors")) assertThrows(IllegalArgumentException.class, () -> service.load(type, 7, null, null, null, "example.test"));
         assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("forms", 7, " ", null));
         assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("newsletter", 7, null, -1L));
     }
@@ -71,29 +70,6 @@ class DashboardWidgetDataServiceTest {
     }
 
     @Test
-    void disabledStatisticsAreUnavailableRatherThanAnEmptySuccess() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(true);
-        when(user.isEnabledItem("cmp_stat")).thenReturn(true);
-        try (var constants = mockStatic(Constants.class)) {
-            constants.when(() -> Constants.getString("statMode")).thenReturn("none");
-            assertThrows(DashboardWidgetDataService.UnavailableException.class, () -> DashboardWidgetDataService.authorize("search-terms", user));
-        }
-    }
-
-    @Test
-    void comparisonUsesCompletedCalendarDaysAcrossDaylightSavingTime() {
-        ZoneId zone = ZoneId.of("Europe/Bratislava");
-        Clock clock = Clock.fixed(Instant.parse("2026-04-01T12:00:00Z"), zone);
-        var range = DashboardWidgetDataService.completedDays(7, clock);
-        assertEquals(LocalDate.of(2026, 3, 25).atStartOfDay(zone).toInstant().toEpochMilli(), range.from());
-        assertEquals(LocalDate.of(2026, 4, 1).atStartOfDay(zone).toInstant().toEpochMilli(), range.until());
-        assertEquals(167, Duration.ofMillis(range.until() - range.from()).toHours());
-        assertEquals(LocalDate.of(2026, 3, 18).atStartOfDay(zone).toInstant().toEpochMilli(), range.previous().from());
-        assertEquals(range.from(), range.previous().until());
-    }
-
-    @Test
     void recentFormsIncludeSevenCalendarDatesThroughToday() {
         ZoneId zone = ZoneId.of("Europe/Bratislava");
         Clock clock = Clock.fixed(Instant.parse("2026-04-01T12:34:56Z"), zone);
@@ -102,7 +78,6 @@ class DashboardWidgetDataServiceTest {
         assertEquals(LocalDate.of(2026, 3, 26).atStartOfDay(zone).toInstant().toEpochMilli(), range.from());
         long todaySubmission = Instant.parse("2026-04-01T09:00:00Z").toEpochMilli();
         assertTrue(todaySubmission >= range.from() && todaySubmission < range.until());
-        assertEquals(DashboardWidgetDataService.completedDays(7, clock).until(), LocalDate.of(2026, 4, 1).atStartOfDay(zone).toInstant().toEpochMilli());
     }
 
     /** The nearest scheduled events remain visible even when they are more than ninety days away. */
@@ -276,28 +251,6 @@ class DashboardWidgetDataServiceTest {
         assertTrue(sql.getValue().contains("retry IS NULL OR retry<>98"));
         assertTrue(sql.getValue().contains("OR retry=98 THEN 1"));
         verify(statement).setInt(5, 7);
-    }
-
-    @Test
-    void weeklyErrorsKeepTheCollectorsCalendarYearAcrossNewYear() {
-        ZoneId zone = ZoneId.of("Europe/Bratislava");
-        var range = new DashboardWidgetDataService.Range(LocalDate.of(2025, 12, 29).atStartOfDay(zone).toInstant().toEpochMilli(),
-            LocalDate.of(2026, 1, 5).atStartOfDay(zone).toInstant().toEpochMilli(), zone);
-        var weeks = DashboardWidgetDataService.errorWeeks(range, false);
-        assertTrue(weeks.stream().anyMatch(week -> week.year() == 2025));
-        assertTrue(weeks.stream().anyMatch(week -> week.year() == 2026));
-        assertTrue(weeks.contains(new DashboardWidgetDataService.ErrorWeek(2025, 1)));
-        assertTrue(weeks.contains(new DashboardWidgetDataService.ErrorWeek(2026, 1)));
-        var exception = assertThrows(DashboardWidgetDataService.UnavailableException.class, () -> DashboardWidgetDataService.errorWeeks(range, true));
-        assertEquals("period-unavailable", exception.getMessage());
-    }
-
-    @Test
-    void partialErrorWeekStopsAtNowWithoutQueryingNextMonthsFuturePartition() {
-        Clock clock = Clock.fixed(Instant.parse("2026-09-30T12:00:00Z"), ZoneId.of("Europe/Bratislava"));
-        var range = DashboardWidgetDataService.errorRange(DashboardWidgetDataService.completedDays(7, clock), clock);
-        assertEquals(clock.millis(), range.until());
-        assertEquals(LocalDate.of(2026, 9, 21).atStartOfDay(clock.getZone()).toInstant().toEpochMilli(), range.from());
     }
 
     private static DocHistory scheduledPage(int id, long date) {

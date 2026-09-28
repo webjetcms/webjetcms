@@ -7,7 +7,7 @@ let previewSettings;
 
 const settingsRoute = '**/admin/rest/dashboard/settings';
 const recentPagesRoute = '**/admin/rest/web-pages/all?*';
-const searchTermsRoute = '**/admin/rest/dashboard/data/search-terms*';
+const searchTermsRoute = '**/admin/rest/stat/search-engines/search/findByColumns?*';
 const topPagesRoute = '**/admin/rest/stat/top/search/findByColumns?*';
 const missingThumbnailRoute = '**/thumb/images/autotest-dashboard-missing.jpg?*';
 const editButton = '.md-dashboard__toolbar-actions > button[aria-pressed]';
@@ -361,11 +361,10 @@ Scenario('Compact metrics and scrollable recent pages align above three equal pr
 Scenario('Search queries and top pages share balanced cards and readable numeric columns', async ({ I }) => {
     const previousItems = previewSettings.items;
     previewSettings.items = ['search-terms', 'top-pages'].map(type => ({ id: `ranked-autotest-${type}`, type, size: '3x3', options: { days: 7 } }));
-    const from = Date.UTC(2026, 8, 19), to = Date.UTC(2026, 8, 25);
-    await I.mockRoute(searchTermsRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ from, to, items: [
-        { title: 'Autotest vyhľadávací výraz s veľmi dlhým opisným názvom', value: 128, url: '/apps/stat/admin/search-engines/' },
-        { title: 'AutotestDlhýVýrazBezMedzierOverujúciZalomenieTextu', value: 75, url: '/apps/stat/admin/search-engines/' },
-        { title: 'Autotest kontakt', value: 6, url: '/apps/stat/admin/search-engines/' }
+    await I.mockRoute(searchTermsRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ content: [
+        { queryName: 'Autotest vyhľadávací výraz s veľmi dlhým opisným názvom', queryCount: 128 },
+        { queryName: 'AutotestDlhýVýrazBezMedzierOverujúciZalomenieTextu', queryCount: 75 },
+        { queryName: 'Autotest kontakt', queryCount: 6 }
     ] }) }));
     await I.mockRoute(topPagesRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ content: [
         { docId: 1, title: 'Autotest veľmi dlhý názov najnavštevovanejšej stránky', name: '/Autotest sekcia/Podrobné informácie/Autotest veľmi dlhý názov najnavštevovanejšej stránky', perexImage: '/images/zo-sveta-financii/konsolidacia-napriec-trhmi/oil-pump.jpg', visits: 128 },
