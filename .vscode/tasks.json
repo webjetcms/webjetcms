@@ -64,6 +64,60 @@
             }
         },
         {
+            "label": "appStartLocalDB8443",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-local.xml ./gradlew appStartDebug -PhttpsPort=8443 -PhttpPort=8080 -PdebugPort=5006",
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5006",
+                    "endsPattern": "Listening for transport dt_socket at address: 5006",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
+            "label": "appStartLocalDB9443",
+            "type": "shell",
+            "command": "webjetDbname=/poolman-local.xml ./gradlew appStartDebug -PhttpsPort=9443 -PhttpPort=9080 -PdebugPort=5007",
+            "group": "build",
+            "problemMatcher": {
+                "owner": "shell",
+                "fileLocation": "relative",
+                "pattern": {
+                "regexp": "^([^\\s].*)\\((\\d+|\\,\\d+|\\d+,\\d+,\\d+,\\d+)\\):\\s+(error|warning|info)\\s+(TS\\d+)\\s*:\\s*(.*)$",
+                "file": 1,
+                "location": 2,
+                "severity": 3,
+                "code": 4,
+                "message": 5
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Listening for transport dt_socket at address: 5007",
+                    "endsPattern": "Listening for transport dt_socket at address: 5007",
+                }
+            },
+            "isBackground": true,
+            "presentation": {
+                "clear": true
+            }
+        },
+        {
             "label": "appStartMultiWeb",
             "type": "shell",
             "command": "webjetDbname=/poolman-local-multiweb.xml ./gradlew appStartDebug",
@@ -412,7 +466,7 @@
         {
             "label": "appStop",
             "type": "shell",
-            "command": "./gradlew appStop; pkill -9 -f appStart",
+            "command": "./app-stop.sh",
             "windows": {
                 "command": ".\\gradlew.bat appStop"
             },
@@ -429,7 +483,7 @@
         {
             "label": "appKill",
             "type": "shell",
-            "command": "pkill -9 -f appStart",
+            "command": "./app-stop.sh --force",
             "group": "build",
             "problemMatcher": [],
             "isBackground": false,
