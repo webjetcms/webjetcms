@@ -173,13 +173,12 @@ async function fetchApprovals(signal) {
     const items = pages.content.map(page => {
         const action = page.isDelete || page.title?.startsWith('[DELETE]') ? 'approve_delete' : 'approve';
         // The page approval REST service swaps docId and historyId for its DataTable.
-        return { title: page.title, section: page.authorName, date: page.saveDate,
+        return { title: page.title, icon: 'ti-article', section: page.authorName, date: page.saveDate,
             url: `/admin/${action}.jsp?docid=${page.historyId}&historyid=${page.docId}` };
     });
     groups.content.forEach(group => {
-        const action = group.isDelete ? 'approve-del-group' : 'approve-group';
-        items.push({ title: group.groupName, section: group.userFullName, date: group.saveDate,
-            url: `/admin/v9/webpages/${action}/?scheduleId=${group.schedulerId}` });
+        items.push({ title: group.groupName, icon: 'ti-folder-filled', section: group.userFullName, date: group.saveDate,
+            url: `/admin/v9/webpages/web-pages-list/?groupid=${group.groupId}&scheduleId=${group.schedulerId}${group.isDelete ? '&act=delete' : ''}` });
     });
     items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return { total: pages.totalElements + groups.totalElements, items: items.slice(0, 6) };
@@ -198,6 +197,9 @@ export function registerDataWidgets() {
                 if (!data.items.length) empty(container, context);
                 else table(container, [text(context, 'page'), text(context, 'requester'), text(context, 'waitingSince')], data.items.map(item => {
                     const approval = link(item.title, item.url);
+                    const typeIcon = icon(item.icon);
+                    typeIcon.classList.add('me-1');
+                    approval.prepend(typeIcon);
                     approval.target = '_blank';
                     approval.rel = 'noopener';
                     return [approval, item.section, date(item.date)];

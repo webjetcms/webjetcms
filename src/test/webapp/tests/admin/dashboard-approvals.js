@@ -11,7 +11,9 @@ const groupRoute = '**/admin/rest/groups/toapprove/all*';
 const documentRoute = `**${listUrl}`;
 const approvalUrl = '/admin/approve.jsp?docid=18&historyid=108';
 const approvalRoute = `**${approvalUrl}`;
-const routes = [settingsRoute, noticesRoute, pageRoute, groupRoute, documentRoute, approvalRoute];
+const folderApprovalUrl = '/admin/v9/webpages/web-pages-list/?groupid=27&scheduleId=207';
+const folderApprovalRoute = `**${folderApprovalUrl}`;
+const routes = [settingsRoute, noticesRoute, pageRoute, groupRoute, documentRoute, approvalRoute, folderApprovalRoute];
 const date = order => Date.UTC(2026, 8, 20, 12, order);
 const result = (content = [], totalElements = content.length) => ({ content, totalElements, totalPages: Math.ceil(totalElements / 6), size: 6, number: 0 });
 
@@ -79,14 +81,16 @@ Scenario('Merge the latest six requests and keep direct approval actions separat
         'autotest folder deletion', '[DELETE] autotest legacy deletion', 'autotest sixth request'
     ], 'The two lists must be merged by request date before applying the six-row limit.');
     I.assertDeepEqual(state.rows.map(row => row.link.href), [
-        '/admin/approve.jsp?docid=18&historyid=108', '/admin/v9/webpages/approve-group/?scheduleId=207',
-        '/admin/approve_delete.jsp?docid=16&historyid=106', '/admin/v9/webpages/approve-del-group/?scheduleId=205',
-        '/admin/approve_delete.jsp?docid=14&historyid=104', '/admin/v9/webpages/approve-group/?scheduleId=203'
+        approvalUrl, folderApprovalUrl,
+        '/admin/approve_delete.jsp?docid=16&historyid=106', '/admin/v9/webpages/web-pages-list/?groupid=25&scheduleId=205&act=delete',
+        '/admin/approve_delete.jsp?docid=14&historyid=104', '/admin/v9/webpages/web-pages-list/?groupid=23&scheduleId=203'
     ], 'The page IDs and folder scheduler IDs must address the pending request, including legacy deletion titles.');
-    for (const row of state.rows) {
+    const icons = ['ti-file-text', 'ti-folder', 'ti-file-text', 'ti-folder', 'ti-file-text', 'ti-folder'];
+    for (const [index, row] of state.rows.entries()) {
         I.assertEqual(row.link.target, '_blank');
         I.assertContain(row.link.rel.split(/\s+/), 'noopener');
         I.assertContain(row.requester, 'autotest');
+        I.seeElement(`${card} tbody tr:nth-child(${index + 1}) a > i.ti.${icons[index]}[aria-hidden="true"]`);
     }
     I.assertEqual(state.total.title, '26', 'The metric must add the full totals rather than count preview rows.');
     for (const link of [state.total, state.header]) {
@@ -101,19 +105,21 @@ Scenario('Merge the latest six requests and keep direct approval actions separat
         I.assertEqual(params.get('sort'), 'saveDate,desc');
         I.assertTrue(request.csrf, 'Both shared approval requests must include the current CSRF token.');
     }
-    // Intercept only this fixture's destination; clicking cannot load or submit a real approval form.
-    await I.mockRoute(approvalRoute, route => route.fulfill({ status: 200, contentType: 'text/html',
-        body: '<!doctype html><html><body><h1>autotest approval destination</h1></body></html>' }));
-    const tabCount = await I.grabNumberOfOpenTabs();
-    I.clickCss(`${card} tbody tr:first-child a`);
-    I.waitForNumberOfTabs(tabCount + 1, 10);
-    I.switchToNextTab();
-    I.waitForText('autotest approval destination', 10);
-    I.seeInCurrentUrl(approvalUrl);
-    I.assertFalse(await I.executeScript(() => Boolean(window.opener)), 'The approval window must not retain an opener.');
-    I.closeCurrentTab();
-    I.seeElement(`${card} .md-dashboard-widget__number`);
-    I.stopMockingRoute(approvalRoute);
+    for (const [row, url, pattern] of [[1, approvalUrl, approvalRoute], [2, folderApprovalUrl, folderApprovalRoute]]) {
+        // Intercept only this fixture's destination; clicking cannot load or submit a real approval form.
+        await I.mockRoute(pattern, route => route.fulfill({ status: 200, contentType: 'text/html',
+            body: '<!doctype html><html><body><h1>autotest approval destination</h1></body></html>' }));
+        const tabCount = await I.grabNumberOfOpenTabs();
+        I.clickCss(`${card} tbody tr:nth-child(${row}) a`);
+        I.waitForNumberOfTabs(tabCount + 1, 10);
+        I.switchToNextTab();
+        I.waitForText('autotest approval destination', 10);
+        I.seeInCurrentUrl(url);
+        I.assertFalse(await I.executeScript(() => Boolean(window.opener)), 'The approval window must not retain an opener.');
+        I.closeCurrentTab();
+        I.seeElement(`${card} .md-dashboard-widget__number`);
+        I.stopMockingRoute(pattern);
+    }
 });
 
 Scenario('Empty shared approval lists show an empty preview and a zero total', async ({ I }) => {
