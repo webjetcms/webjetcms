@@ -10,7 +10,7 @@ const permissionCases = [
     { permission: 'menuWebpages', types: ['recent-pages', 'approvals', 'publishing', 'changed-pages'] },
     { permission: 'cmp_form', types: ['forms'] },
     { permission: 'menuEmail', types: ['newsletter'] },
-    { permission: 'cmp_adminlog', types: ['audit'] },
+    { permission: 'cmp_adminlog', types: ['audit', 'publishing', 'changed-pages'] },
     { permission: 'welcomeShowLoggedAdmins', types: ['logged-admins'] },
     { permission: 'cmp_server_monitoring', types: ['server-memory', 'server-cpu'] }
 ];
@@ -21,6 +21,8 @@ function endpoints(type, recentPagesGroupId, statRootGroupId) {
     if (type === 'search-terms') return [`/admin/rest/stat/search-engines/search/findByColumns?searchRootDir=${statRootGroupId}&searchWebPage=-1&searchEngine=`];
     if (type === 'referrers') return [`/admin/rest/stat/referer/search/findByColumns?searchRootDir=${statRootGroupId}&searchChartType=not_chart`];
     if (type === 'errors') return ['/admin/rest/stat/error/search/findByColumns?searchFilterBotsOut=false&searchurl=&size=6&page=0&sort=count,desc'];
+    if (type === 'publishing') return ['/admin/rest/web-pages/history/all?auditVersion=true'];
+    if (type === 'changed-pages') return ['/admin/rest/web-pages/all?auditVersion=true&size=6&page=0&sort=dateCreated%2Cdesc'];
     if (type === 'logged-admins') return [];
     if (type === 'recent-pages') return [`/admin/rest/web-pages/all?groupId=${recentPagesGroupId}&size=6&page=0&sort=dateCreated%2Cdesc`];
     if (type === 'approvals') return ['/admin/rest/webpages/toapprove/all?size=6&page=0&sort=saveDate,desc', '/admin/rest/groups/toapprove/all?size=6&page=0&sort=saveDate,desc'];
@@ -87,7 +89,7 @@ for (const { permission, types } of permissionCases) {
             I.assertFalse(Boolean(result.error), `${result.path} must not return a DataTable error while authorized.`);
         }
 
-        I.amOnPage(`/admin/v9/?removePerm=${permission === 'cmp_stat' ? 'cmp_stat,cmp_abtesting' : permission}`);
+        I.amOnPage(`/admin/v9/?removePerm=${permission === 'cmp_stat' ? 'cmp_stat,cmp_abtesting' : permission === 'menuWebpages' ? 'menuWebpages,cmp_blog,cmp_blog_admin,cmp_news,cmp_abtesting,cmp_basket' : permission}`);
         loaded(I);
         I.assertFalse(await I.executeScript(permission => WJ.hasPermission(permission), permission));
         if (permission === 'welcomeShowLoggedAdmins') {
@@ -96,7 +98,7 @@ for (const { permission, types } of permissionCases) {
         for (const type of types) I.dontSeeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
         I.seeElementInDOM(`${dashboard} [data-widget-type="sessions"]`);
         for (const result of await readEndpoints(I, paths)) {
-            if (/^\/admin\/rest\/(?:(webpages|groups)\/toapprove\/|web-pages\/all|stat\/(views|top|search-engines|referer|error)\/)/.test(result.path)) {
+            if (/^\/admin\/rest\/(?:(webpages|groups)\/toapprove\/|web-pages\/(?:history\/)?all|stat\/(views|top|search-engines|referer|error)\/)/.test(result.path)) {
                 const deniedBody = result.status === 200 && ['Access Denied', 'Access is denied'].includes(result.error) && result.contentPresence === false;
                 I.assertTrue(result.status === 403 || deniedBody, `${result.path} must deny access without exposing page or approval content.`);
             } else I.assertEqual(result.status, 403, `${result.path} must reject direct requests without ${permission}.`);

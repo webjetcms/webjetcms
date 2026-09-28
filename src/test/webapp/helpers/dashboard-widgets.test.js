@@ -34,7 +34,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
     };
     const scope = vm.createContext({ Date: ClockDate, window, document: window.document, Node: window.Node, DOMParser: window.DOMParser, DOMException: window.DOMException, URL, URLSearchParams, AbortController, console,
         IntersectionObserver: class { observe() {} disconnect() {} },
-        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/stat/') ? statResponse(url) : url.includes('/monitoring/actual') ? snapshot : url.includes('/data/') ? data : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
+        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/stat/') ? statResponse(url) : url.includes('/monitoring/actual') ? snapshot : url.includes('/data/') || url.includes('/web-pages/history/all?') ? data : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
     });
     for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'monitoring-live.js', 'system-widgets.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
@@ -385,16 +385,16 @@ test('Default content previews complete the traffic row and use an even three-ca
 });
 
 const migratedPermissions = {
-    'changed-pages': 'menuWebpages', audit: 'cmp_adminlog', 'logged-admins': 'welcomeShowLoggedAdmins',
-    'server-memory': 'cmp_server_monitoring', 'server-cpu': 'cmp_server_monitoring'
+    'changed-pages': ['menuWebpages', 'cmp_adminlog'], audit: ['cmp_adminlog'], 'logged-admins': ['welcomeShowLoggedAdmins'],
+    'server-memory': ['cmp_server_monitoring'], 'server-cpu': ['cmp_server_monitoring']
 };
 
 test('Optional system widgets follow their exact permissions without joining the default layout', t => {
     const { scope, context, window } = fixture(t);
-    for (const permission of new Set(Object.values(migratedPermissions))) {
+    for (const permission of new Set(Object.values(migratedPermissions).flat())) {
         window.WJ.hasPermission = value => value === permission;
         for (const [type, required] of Object.entries(migratedPermissions)) {
-            assert.equal(scope.getWidget(type).isAvailable(context), permission === required, `${type} requires ${required}`);
+            assert.equal(scope.getWidget(type).isAvailable(context), required.every(value => value === permission), `${type} requires ${required}`);
             assert.equal(scope.getWidget(type).multiple, true);
         }
         const visibleDefaults = Array.from(scope.getDashboardDefaults(context), item => item.type);
@@ -408,7 +408,9 @@ test('Changed pages and audit render bounded text-only activity with their suppl
         fullPath: '/Section', userFullName: '<svg onload=alert(1)>', date: Date.UTC(2026, 8, 26, 10),
         url: index === 0 ? '/admin/v9/webpages/web-pages-list/?docid=12' : 'javascript:alert(1)'
     }));
-    const { scope, context, container, requests } = fixture(t, { data: { items } });
+    const { scope, context, container, requests } = fixture(t, { data: { items }, pages: items.map(item => ({
+        docId: 12, title: item.title, fullPath: item.fullPath, authorName: item.userFullName, dateCreated: item.date
+    })) });
     const signal = new AbortController().signal;
     for (const type of ['changed-pages', 'audit']) {
         const widget = scope.getWidget(type);
@@ -416,7 +418,7 @@ test('Changed pages and audit render bounded text-only activity with their suppl
             container.replaceChildren();
             await widget.render({ container, context, signal, instance: { size }, options: { arbitrary: 'autotest' } });
             assert.equal(container.querySelectorAll('.md-dashboard-widget__activity > li').length, count);
-            assert.equal(container.querySelectorAll('a[href]').length, 1);
+            assert.equal(container.querySelectorAll('a[href]').length, type === 'changed-pages' ? count : 1);
             assert.equal(container.querySelector('a').getAttribute('href'), items[0].url);
             assert.equal(container.querySelector('script,img,svg,b'), null);
             assert.match(container.textContent, /<svg onload=alert\(1\)>/);
@@ -427,7 +429,14 @@ test('Changed pages and audit render bounded text-only activity with their suppl
     for (const request of requests) {
         assert.equal(request.options.signal, signal);
         assert.equal(request.options.headers['X-CSRF-Token'], 'test-csrf-token');
-        assert.equal(new URL(request.url, 'http://localhost').search, '', 'Activity requests must not forward stored arbitrary options.');
+        const url = new URL(request.url, 'http://localhost');
+        assert.equal(url.searchParams.has('arbitrary'), false, 'Activity requests must not forward stored arbitrary options.');
+        if (url.pathname === '/admin/rest/web-pages/all') {
+            assert.equal(url.searchParams.get('auditVersion'), 'true');
+            assert.equal(url.searchParams.get('size'), '6');
+            assert.equal(url.searchParams.get('page'), '0');
+            assert.equal(url.searchParams.get('sort'), 'dateCreated,desc');
+        } else assert.equal(url.pathname, '/admin/rest/dashboard/data/audit');
     }
 });
 
@@ -480,7 +489,7 @@ test('Migrated provider failures stay errors and aborted responses do not append
         const controller = new AbortController();
         const rendering = aborted.scope.getWidget(type).render({ ...args, container: aborted.container, context: aborted.context, signal: controller.signal });
         controller.abort();
-        finish({ ok: true, json: async () => ({ items: [{ title: 'Stale', fullName: 'Stale' }], series: [{ date: 123, used: 7 }], total: 1 }) });
+        finish({ ok: true, json: async () => ({ content: [{ docId: 1, title: 'Stale' }], items: [{ title: 'Stale', fullName: 'Stale' }], series: [{ date: 123, used: 7 }], total: 1 }) });
         if (type.startsWith('server-')) await assert.rejects(rendering, error => error.name === 'AbortError');
         else await rendering;
         assert.equal(aborted.container.textContent, '', type);
@@ -1006,10 +1015,43 @@ test('Compact referrers retain shared horizontal charts, text values, and abort 
     assert.equal(runtime.destroyed.length, 1);
 });
 
+test('Publishing uses the shared schedule and sorts future unique events before limiting the preview', async t => {
+    const later = new Date(2030, 0, 1).getTime();
+    const pages = Array.from({ length: 8 }, (_, index) => ({ docId: index + 1, title: `Page ${index + 1}`,
+        publicable: true, publishStartDate: later + (8 - index) * 1000 }));
+    pages.push(pages[7], { docId: 9, publicable: true, publishStartDate: 1 },
+        { docId: 10, publicable: false, publishStartDate: later },
+        { docId: 11, publicable: true, publishStartDate: null },
+        { docId: 12, disableAfterEnd: true, publishEndDate: later, publicable: false, publishStartDate: later });
+    const { scope, requests } = fixture(t, { data: { content: pages } });
+    const signal = new AbortController().signal;
+    const data = await scope.fetchPublishing(signal);
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].url, '/admin/rest/web-pages/history/all?auditVersion=true');
+    assert.equal(requests[0].options.signal, signal);
+    assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
+    assert.equal(data.items.length, 6);
+    assert.equal(data.items[0].kind, 'expire');
+    assert.equal(data.items[0].url, '/admin/v9/webpages/web-pages-list/?docid=12');
+    assert.deepEqual(Array.from(data.items, item => item.date), Array.from({ length: 6 }, (_, index) => later + index * 1000));
+});
+
+test('Audit page widgets preserve empty results and shared module permission errors', async t => {
+    for (const error of [null, 'Access is denied']) {
+        const { scope, context, container } = fixture(t, { fetchResponse: async () => ({ ok: true, json: async () => ({ error, content: [] }) }) });
+        for (const type of ['publishing', 'changed-pages']) {
+            container.replaceChildren();
+            const rendering = scope.getWidget(type).render({ container, context, instance: { size: '3x3' }, signal: new AbortController().signal });
+            if (error) await assert.rejects(rendering, failure => failure.dashboardReason === 'permission-denied');
+            else { await rendering; assert.match(container.textContent, /empty/); }
+        }
+    }
+});
+
 test('Publishing calendars retain full years and distinguish publication from expiration', async t => {
-    const data = { items: [
-        { title: '<img src=x>', kind: 'publish', date: Date.UTC(2026, 8, 28, 8), url: '/admin/v9/webpages/web-pages-list/?docid=1' },
-        { title: 'Expiry', kind: 'expire', date: Date.UTC(2027, 0, 2, 9), url: '/admin/v9/webpages/web-pages-list/?docid=2' }
+    const data = { content: [
+        { docId: 1, title: '<img src=x>', publicable: true, publishStartDate: Date.UTC(2026, 8, 28, 8) },
+        { docId: 2, title: 'Expiry', disableAfterEnd: true, publishEndDate: Date.UTC(2027, 0, 2, 9) }
     ] };
     const { scope, context, container } = fixture(t, { data });
     await scope.getWidget('publishing').render({ container, context, signal: new AbortController().signal });
@@ -1125,13 +1167,14 @@ test('Compact forms describe the selected period and retain its exact accessible
     assert.equal(scope.getWidget('errors').headerLink.href, '/apps/stat/admin/error/');
 });
 
-test('Publishing navigation respects the separate audit permission', t => {
+test('Audit page widgets require both webpage and audit access', t => {
     const { scope, window } = fixture(t);
     const widget = scope.getWidget('publishing');
-    assert.equal(widget.headerLink.href(), '/admin/v9/apps/audit-awaiting-publish-webpages/');
-    window.WJ.hasPermission = permission => permission === 'menuWebpages';
-    assert.equal(widget.isAvailable(), true);
-    assert.equal(widget.headerLink.href(), '/admin/v9/webpages/web-pages-list/');
+    assert.equal(widget.headerLink.href, '/admin/v9/apps/audit-awaiting-publish-webpages/');
+    for (const allowed of [[], ['menuWebpages'], ['cmp_adminlog'], ['menuWebpages', 'cmp_adminlog']]) {
+        window.WJ.hasPermission = permission => allowed.includes(permission);
+        for (const type of ['publishing', 'changed-pages']) assert.equal(scope.getWidget(type).isAvailable(), allowed.length === 2);
+    }
 });
 
 test('Compact error totals keep their actual weekly coverage without an extra visible explanation row', async t => {

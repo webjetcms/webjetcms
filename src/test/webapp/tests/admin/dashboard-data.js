@@ -32,7 +32,7 @@ Scenario('Initial settings, notices, sessions and administrators render from HTM
 
 Scenario('Read-only widget projections return bounded preview contracts', async ({ I }) => {
     const results = await I.executeScript(async () => {
-        const types = ['publishing', 'forms', 'newsletter'];
+        const types = ['forms', 'newsletter'];
         const results = [];
         for (const type of types) {
             const response = await fetch(`/admin/rest/dashboard/data/${type}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
@@ -57,7 +57,7 @@ Scenario('Read-only widget projections return bounded preview contracts', async 
 
 Scenario('Invalid projection settings are rejected before querying data', async ({ I }) => {
     const statuses = await I.executeScript(async () => {
-        return Promise.all(['forms?days=365', 'traffic', 'top-pages', 'search-terms', 'referrers', 'errors', 'forms?formName=', 'newsletter?campaignId=-1', 'sessions', 'logged-admins', 'unknown'].map(async value => {
+        return Promise.all(['forms?days=365', 'traffic', 'top-pages', 'search-terms', 'referrers', 'errors', 'publishing', 'changed-pages', 'forms?formName=', 'newsletter?campaignId=-1', 'sessions', 'logged-admins', 'unknown'].map(async value => {
             const response = await fetch(`/admin/rest/dashboard/data/${value}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
             return { value, status: response.status };
         }));
@@ -109,8 +109,43 @@ Scenario('Recent pages reuse the Web pages list with bounded pagination', async 
     }
 });
 
-Scenario('Former overview blocks expose independent authorized widget projections', async ({ I }) => {
-    const results = await I.executeScript(async () => Promise.all(['changed-pages', 'audit'].map(async type => {
+Scenario('Changed pages and publishing reuse the shared audit page lists', async ({ I }) => {
+    const result = await I.executeScript(async () => {
+        const read = async path => {
+            const response = await fetch(path, { headers: { 'X-CSRF-Token': window.csrfToken } });
+            return { status: response.status, body: await response.json() };
+        };
+        return {
+            changed: await read('/admin/rest/web-pages/all?auditVersion=true&size=6&page=0&sort=dateCreated%2Cdesc'),
+            publishing: await read('/admin/rest/web-pages/history/all?auditVersion=true')
+        };
+    });
+    for (const response of Object.values(result)) {
+        I.assertEqual(response.status, 200);
+        I.assertFalse(Boolean(response.body.error));
+        I.assertTrue(Array.isArray(response.body.content));
+        for (const page of response.body.content) {
+            I.assertTrue(page.docId > 0);
+            I.assertEqual(typeof page.title, 'string');
+        }
+    }
+    I.assertEqual(result.changed.body.content.length, 6);
+    I.assertTrue(result.changed.body.totalElements >= 6);
+    for (const [index, page] of result.changed.body.content.entries()) {
+        I.assertEqual(typeof page.authorName, 'string');
+        I.assertEqual(typeof page.perexImage, 'string');
+        I.assertTrue(Number.isFinite(page.dateCreated));
+        if (index > 0) I.assertTrue(result.changed.body.content[index - 1].dateCreated >= page.dateCreated);
+    }
+    for (const page of result.publishing.body.content) {
+        I.assertEqual(typeof page.disableAfterEnd, 'boolean');
+        I.assertTrue(page.publishStartDate === null || Number.isFinite(page.publishStartDate));
+        I.assertTrue(page.publishEndDate === null || Number.isFinite(page.publishEndDate));
+    }
+});
+
+Scenario('Audit activity exposes an independent authorized widget projection', async ({ I }) => {
+    const results = await I.executeScript(async () => Promise.all(['audit'].map(async type => {
         const response = await fetch(`/admin/rest/dashboard/data/${type}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
         return { type, status: response.status, body: await response.json() };
     })));
@@ -121,8 +156,7 @@ Scenario('Former overview blocks expose independent authorized widget projection
         for (const item of body.items) {
             I.assertTrue(Number.isFinite(item.date), 'Activity timestamps must remain machine-readable.');
             I.assertTrue(typeof item.url === 'string' && item.url.startsWith('/'), 'Activity links must stay in the administration.');
-            if (type === 'changed-pages') I.assertStartsWith(item.url, '/admin/v9/webpages/web-pages-list/?docid=');
-            else I.assertEqual(typeof item.description, 'string');
+            I.assertEqual(typeof item.description, 'string');
         }
     }
 });

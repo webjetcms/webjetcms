@@ -10,6 +10,22 @@ const moduleLinks = {
 };
 const metricKey = metric => ({ views: 'visits', sessions: 'sessionsMetric', uniqueUsers: 'uniqueUsers' })[metric] || 'sessionsMetric';
 
+/** Selects the nearest publication and expiration events from the audit module's schedule. */
+async function fetchPublishing(signal) {
+    const data = await fetchJson('/admin/rest/web-pages/history/all?auditVersion=true', signal);
+    const now = new Date().getTime(), seen = new Set(), items = [];
+    for (const page of data.content) {
+        for (const [kind, enabled, value] of [['publish', page.publicable, page.publishStartDate], ['expire', page.disableAfterEnd, page.publishEndDate]]) {
+            const date = new Date(value).getTime();
+            const id = `${page.docId}-${kind}-${date}`;
+            if (!enabled || !(date >= now) || seen.has(id)) continue;
+            seen.add(id);
+            items.push({ title: page.title, kind, date, url: `/admin/v9/webpages/web-pages-list/?docid=${encodeURIComponent(page.docId)}` });
+        }
+    }
+    return { items: items.sort((a, b) => a.date - b.date).slice(0, 6) };
+}
+
 /** Uses calendar days so equal-length completed periods also work across daylight-saving changes. */
 function statisticsPeriod(days, now = new Date()) {
     const until = new Date(now); until.setHours(0, 0, 0, 0);
@@ -286,10 +302,10 @@ export function registerDataWidgets() {
     });
     registerWidget({
         type: 'publishing', titleKey: 'admin.dashboard.publishing.js', icon: 'ti-calendar-event', multiple: true, sizes: ['2x2', '2x3'], defaultSize: '2x2',
-        headerLink: { href: () => window.WJ.hasPermission('cmp_adminlog') ? moduleLinks.publishing : '/admin/v9/webpages/web-pages-list/' },
-        isAvailable: () => window.WJ.hasPermission('menuWebpages'),
+        headerLink: { href: moduleLinks.publishing },
+        isAvailable: () => window.WJ.hasPermission('menuWebpages') && window.WJ.hasPermission('cmp_adminlog'),
         async render({ container, instance, context, signal }) {
-            const data = await fetchData('publishing', {}, signal); if (signal.aborted) return;
+            const data = await fetchPublishing(signal); if (signal.aborted) return;
             if (!data.items.length) empty(container, context);
             else {
                 const status = node('p', 'md-dashboard-widget__publishing-status small');

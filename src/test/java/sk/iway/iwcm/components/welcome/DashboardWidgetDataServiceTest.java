@@ -4,11 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -18,11 +15,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,10 +28,6 @@ import org.springframework.security.access.AccessDeniedException;
 
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.dmail.jpa.CampaingsEntity;
-import sk.iway.iwcm.doc.DocBasic;
-import sk.iway.iwcm.doc.DocDB;
-import sk.iway.iwcm.doc.DocDetails;
-import sk.iway.iwcm.doc.DocHistory;
 
 /** Verifies dashboard input, authorization, period boundaries, and aggregate query semantics. */
 class DashboardWidgetDataServiceTest {
@@ -49,7 +40,7 @@ class DashboardWidgetDataServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.load("logged-admins", 7, null, null, null, "example.test"));
         assertThrows(IllegalArgumentException.class, () -> service.load("sessions", 7, null, null, null, "example.test"));
         assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("forms", 365, null, null));
-        for (String type : List.of("traffic", "top-pages", "search-terms", "referrers", "errors")) assertThrows(IllegalArgumentException.class, () -> service.load(type, 7, null, null, null, "example.test"));
+        for (String type : List.of("traffic", "top-pages", "search-terms", "referrers", "errors", "publishing", "changed-pages")) assertThrows(IllegalArgumentException.class, () -> service.load(type, 7, null, null, null, "example.test"));
         assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("forms", 7, " ", null));
         assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("newsletter", 7, null, -1L));
     }
@@ -78,100 +69,6 @@ class DashboardWidgetDataServiceTest {
         assertEquals(LocalDate.of(2026, 3, 26).atStartOfDay(zone).toInstant().toEpochMilli(), range.from());
         long todaySubmission = Instant.parse("2026-04-01T09:00:00Z").toEpochMilli();
         assertTrue(todaySubmission >= range.from() && todaySubmission < range.until());
-    }
-
-    /** The nearest scheduled events remain visible even when they are more than ninety days away. */
-    @Test
-    void publishingIncludesDistantPublicationAndExpirationFromTheAuditsCachedSource() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(true);
-        when(user.isEnabledItem("menuWebpages")).thenReturn(true);
-        long later = System.currentTimeMillis() + Duration.ofDays(365 * 4L).toMillis();
-        DocHistory publish = scheduledPage(11, later);
-        DocDetails expire = mock(DocDetails.class);
-        when(expire.getDocId()).thenReturn(12);
-        when(expire.getTitle()).thenReturn("Scheduled expiration");
-        when(expire.isDisableAfterEnd()).thenReturn(true);
-        when(expire.getPublishEnd()).thenReturn(later + 1000);
-        DocDB docs = mock(DocDB.class);
-        when(docs.getPublicableDocs()).thenReturn(List.of(expire, publish));
-        when(docs.getBasicDocDetails(11, false)).thenReturn(mock(DocDetails.class));
-        when(docs.getBasicDocDetails(12, false)).thenReturn(expire);
-
-        try (var docStatic = mockStatic(DocDB.class);
-             var access = mockStatic(DashboardRecentPagesService.class)) {
-            docStatic.when(DocDB::getInstance).thenReturn(docs);
-            access.when(() -> DashboardRecentPagesService.isAccessible(any(DocDetails.class), eq(user), eq("current.example"))).thenReturn(true);
-            for (int days : List.of(7, 30, 90)) {
-                var result = service.load("publishing", days, null, null, user, "current.example");
-                assertEquals(2L, result.get("total"));
-                List<?> items = (List<?>) result.get("items");
-                Map<?, ?> first = (Map<?, ?>) items.get(0);
-                Map<?, ?> second = (Map<?, ?>) items.get(1);
-                assertEquals("publish", first.get("kind"));
-                assertEquals(later, first.get("date"));
-                assertEquals("/admin/v9/webpages/web-pages-list/?docid=11", first.get("url"));
-                assertEquals("expire", second.get("kind"));
-                assertEquals(later + 1000, second.get("date"));
-                assertTrue((long) result.get("from") < later);
-                assertFalse(result.containsKey("to"));
-            }
-        }
-    }
-
-    /** Filtering and deduplication happen before the six nearest events are selected. */
-    @Test
-    void publishingKeepsCurrentAccessChecksAndSortsBeforeLimitingThePreview() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(true);
-        when(user.isEnabledItem("menuWebpages")).thenReturn(true);
-        long later = System.currentTimeMillis() + Duration.ofDays(365).toMillis();
-        DocDB docs = mock(DocDB.class);
-        List<DocBasic> scheduled = new ArrayList<>();
-        List<DocDetails> allowed = new ArrayList<>();
-        for (int id = 8; id > 0; id--) {
-            scheduled.add(scheduledPage(id, later + id * 1000L));
-            DocDetails current = mock(DocDetails.class);
-            when(docs.getBasicDocDetails(id, false)).thenReturn(current);
-            allowed.add(current);
-        }
-        scheduled.add(scheduled.get(0));
-        scheduled.add(scheduledPage(9, 1));
-        scheduled.add(scheduledPage(10, later));
-        scheduled.add(scheduledPage(11, later));
-        DocDetails past = mock(DocDetails.class);
-        DocDetails denied = mock(DocDetails.class);
-        when(docs.getBasicDocDetails(9, false)).thenReturn(past);
-        when(docs.getBasicDocDetails(10, false)).thenReturn(denied);
-        when(docs.getPublicableDocs()).thenReturn(scheduled);
-
-        try (var docStatic = mockStatic(DocDB.class);
-             var access = mockStatic(DashboardRecentPagesService.class)) {
-            docStatic.when(DocDB::getInstance).thenReturn(docs);
-            for (DocDetails current : allowed) {
-                access.when(() -> DashboardRecentPagesService.isAccessible(current, user, "current.example")).thenReturn(true);
-            }
-            access.when(() -> DashboardRecentPagesService.isAccessible(past, user, "current.example")).thenReturn(true);
-            var result = service.load("publishing", 30, null, null, user, "current.example");
-            assertEquals(8L, result.get("total"));
-            List<?> items = (List<?>) result.get("items");
-            assertEquals(DashboardWidgetDataService.PREVIEW_SIZE, items.size());
-            for (int index = 0; index < items.size(); index++) {
-                assertEquals(later + (index + 1L) * 1000L, ((Map<?, ?>) items.get(index)).get("date"));
-            }
-            access.verify(() -> DashboardRecentPagesService.isAccessible(denied, user, "current.example"));
-            access.verify(() -> DashboardRecentPagesService.isAccessible(null, user, "current.example"));
-        }
-    }
-
-    @Test
-    void emptyAccessScopeCannotBecomeAnUnrestrictedQuery() {
-        var empty = new DashboardWidgetDataService.Scope(List.of(), List.of());
-        assertEquals("(s.group_id IN (-1) OR s.doc_id IN (-1))", empty.sql("s"));
-        var onePage = new DashboardWidgetDataService.Scope(List.of(), List.of(42));
-        assertEquals("(s.group_id IN (-1) OR s.doc_id IN (42))", onePage.sql("s"));
-        var currentDomainPage = new DashboardWidgetDataService.Scope(List.of(), List.of(42), List.of(10, 11));
-        assertEquals("s.group_id IN (10,11) AND (s.group_id IN (-1) OR s.doc_id IN (42))", currentDomainPage.statisticsSql("s"));
     }
 
     @Test
@@ -253,20 +150,4 @@ class DashboardWidgetDataServiceTest {
         verify(statement).setInt(5, 7);
     }
 
-    private static DocHistory scheduledPage(int id, long date) {
-        DocHistory page = mock(DocHistory.class);
-        when(page.getDocId()).thenReturn(id);
-        when(page.getTitle()).thenReturn("Scheduled page " + id);
-        when(page.getPublicable()).thenReturn(true);
-        when(page.getPublishStart()).thenReturn(date);
-        return page;
-    }
-
-    private static DocDetails currentPage(int groupId, String title) {
-        DocDetails page = mock(DocDetails.class);
-        when(page.getGroupId()).thenReturn(groupId);
-        when(page.getTitle()).thenReturn(title);
-        when(page.getFullPath()).thenReturn("/" + title);
-        return page;
-    }
 }

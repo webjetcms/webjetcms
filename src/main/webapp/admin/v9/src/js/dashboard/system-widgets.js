@@ -1,14 +1,21 @@
 import { registerWidget } from './registry';
-import { node, text, number, date, link, icon, table, empty, fetchData, pagePreview, containNativeScroll } from './widget-utils';
+import { node, text, number, date, link, icon, table, empty, fetchData, fetchJson, pagePreview, containNativeScroll } from './widget-utils';
 import { chartHost, mountChart } from './charts';
 import { readMonitoringSnapshot, subscribeMonitoring } from './monitoring-live';
 
 const moduleLinks = {
-    'changed-pages': '/admin/v9/webpages/web-pages-list/',
+    'changed-pages': '/admin/v9/apps/audit-changed-webpages/',
     audit: '/admin/v9/apps/audit-search/',
     'server-memory': '/apps/server_monitoring/admin/',
     'server-cpu': '/apps/server_monitoring/admin/'
 };
+
+/** Reuses the audit page list with its ordering, authors and page previews. */
+async function fetchChangedPages(signal) {
+    const data = await fetchJson('/admin/rest/web-pages/all?auditVersion=true&size=6&page=0&sort=dateCreated%2Cdesc', signal);
+    return { items: data.content.map(page => ({ title: page.title, fullPath: page.fullPath, perexImage: page.perexImage,
+        userFullName: page.authorName, date: page.dateCreated, url: `/admin/v9/webpages/web-pages-list/?docid=${encodeURIComponent(page.docId)}` })) };
+}
 
 /** Renders a bounded activity preview with the author, timestamp and complete linked description. */
 function activityList(container, items, type, size) {
@@ -158,9 +165,9 @@ export function registerSystemWidgets() {
     for (const [type, permission, widgetIcon] of [['changed-pages', 'menuWebpages', 'ti-pencil'], ['audit', 'cmp_adminlog', 'ti-shield-search']]) registerWidget({
         type, titleKey: `admin.dashboard.${type}.js`, descriptionKey: `admin.dashboard.${type}.description.js`, icon: widgetIcon,
         multiple: true, sizes: ['3x2', '3x3'], defaultSize: '3x3', headerLink: { href: moduleLinks[type], labelKey: 'admin.dashboard.allShort.js' },
-        isAvailable: () => window.WJ.hasPermission(permission),
+        isAvailable: () => window.WJ.hasPermission(permission) && window.WJ.hasPermission('cmp_adminlog'),
         async render({ container, instance, context, signal }) {
-            const data = await fetchData(type, {}, signal); if (signal.aborted) return;
+            const data = type === 'changed-pages' ? await fetchChangedPages(signal) : await fetchData(type, {}, signal); if (signal.aborted) return;
             if (!data.items.length) empty(container, context);
             else activityList(container, data.items, type, instance.size);
         }

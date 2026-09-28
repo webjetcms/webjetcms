@@ -14,11 +14,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,10 +44,8 @@ import sk.iway.iwcm.components.forms.FormsRepository;
 import sk.iway.iwcm.components.forms.FormsServiceImpl;
 import sk.iway.iwcm.dmail.jpa.CampaingsEntity;
 import sk.iway.iwcm.dmail.jpa.CampaingsRepository;
-import sk.iway.iwcm.doc.DocBasic;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
-import sk.iway.iwcm.doc.DocHistory;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.GroupsTreeService;
@@ -65,7 +61,7 @@ import sk.iway.iwcm.users.UsersDB;
 @Service
 public class DashboardWidgetDataService {
     static final int PREVIEW_SIZE = 6;
-    static final Set<String> TYPES = Set.of("publishing", "forms", "newsletter", "changed-pages", "audit");
+    static final Set<String> TYPES = Set.of("forms", "newsletter", "audit");
     private static final Set<String> SERVER_TYPES = Set.of("audit");
     private final FormsRepository forms;
     private final FormsServiceImpl formsService;
@@ -84,9 +80,7 @@ public class DashboardWidgetDataService {
         authorize(type, user);
         if (!SERVER_TYPES.contains(type) && Tools.isEmpty(domain)) throw new UnavailableException("domain-unavailable");
         return switch (type) {
-            case "changed-pages" -> changedPages(user, domain, scope(user, domain));
             case "audit" -> audit();
-            case "publishing" -> publishing(user, domain);
             case "forms" -> forms(user, domain, formName, recentDays(days, Clock.systemDefaultZone()));
             case "newsletter" -> newsletter(domain, campaignId);
             default -> throw new IllegalArgumentException("Unknown widget");
@@ -103,7 +97,6 @@ public class DashboardWidgetDataService {
     static void authorize(String type, Identity user) {
         if (user == null || !user.isAdmin()) throw new AccessDeniedException("Administrator login is required");
         String permission = switch (type) {
-            case "publishing", "changed-pages" -> "menuWebpages";
             case "audit" -> "cmp_adminlog";
             case "forms" -> "cmp_form";
             case "newsletter" -> "menuEmail";
@@ -119,22 +112,14 @@ public class DashboardWidgetDataService {
     }
 
     /** IDs are derived from the current domain and current account, never request parameters. */
-    record Scope(List<Integer> groups, List<Integer> pages, List<Integer> domainGroups) {
-        Scope(List<Integer> groups, List<Integer> pages) { this(groups, pages, groups); }
-        String sql(String alias) {
-            return "(" + alias + ".group_id IN (" + ids(groups) + ") OR " + alias + ".doc_id IN (" + ids(pages) + "))";
-        }
-        String statisticsSql(String alias) { return alias + ".group_id IN (" + ids(domainGroups) + ") AND " + sql(alias); }
-    }
+    record Scope(List<Integer> groups, List<Integer> pages) {}
 
     private Scope scope(Identity user, String domain) {
         List<Integer> groups = new ArrayList<>();
         List<Integer> pages = new ArrayList<>();
-        List<Integer> domainGroups = new ArrayList<>();
         boolean onlyPages = Tools.isEmpty(user.getEditableGroups(true)) && Tools.isNotEmpty(user.getEditablePages());
         for (GroupDetails group : GroupsDB.getInstance().getGroupsAll()) {
             if (inDomain(group, domain)) {
-                domainGroups.add(group.getGroupId());
                 if (!onlyPages && GroupsDB.isGroupEditable(user, group.getGroupId())) groups.add(group.getGroupId());
             }
         }
@@ -142,17 +127,13 @@ public class DashboardWidgetDataService {
             DocDetails doc = DocDB.getInstance().getBasicDocDetails(id, false);
             if (doc != null && inDomain(GroupsDB.getInstance().getGroup(doc.getGroupId()), domain)) pages.add(id);
         }
-        return new Scope(groups, pages, domainGroups);
+        return new Scope(groups, pages);
     }
 
     private static boolean inDomain(GroupDetails group, String domain) {
         if (group == null || group.isHiddenInAdmin() || !domain.equalsIgnoreCase(group.getDomainName())) return false;
         String trash = GroupsTreeService.getTrashDirPath();
         return Tools.isEmpty(trash) || group.getFullPath() == null || !group.getFullPath().contains(trash);
-    }
-
-    private static String ids(List<Integer> ids) {
-        return ids.isEmpty() ? "-1" : ids.stream().map(String::valueOf).collect(Collectors.joining(","));
     }
 
     private Predicate accessibleDocument(Expression<Integer> id, CriteriaQuery<?> query, CriteriaBuilder builder, Scope scope) {
@@ -163,39 +144,6 @@ public class DashboardWidgetDataService {
     }
 
     private static List<Integer> orMissing(List<Integer> ids) { return ids.isEmpty() ? List.of(-1) : ids; }
-
-    /** Lists current published pages edited by any author, retaining the original overview's scope. */
-    private Map<String, Object> changedPages(Identity user, String domain, Scope scope) {
-        try (Connection connection = DBPool.getConnection()) {
-            return Map.of("items", changedPages(connection, user, domain, scope));
-        } catch (SQLException exception) { throw new IllegalStateException("Could not load changed pages", exception); }
-    }
-
-    List<Map<String, Object>> changedPages(Connection connection, Identity user, String domain, Scope scope) throws SQLException {
-        String sql = "SELECT d.doc_id, d.date_created, d.author_id, d.perex_image FROM documents d WHERE "
-            + scope.statisticsSql("d") + " AND d.available=" + DB.getBooleanSql(true)
-            + " AND (d.virtual_path IS NULL OR d.virtual_path NOT LIKE '/files/%') ORDER BY d.date_created DESC, d.doc_id DESC";
-        List<Map<String, Object>> items = new ArrayList<>();
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setFetchSize(100);
-            statement.setQueryTimeout(15);
-            try (ResultSet rows = statement.executeQuery()) {
-                while (items.size() < PREVIEW_SIZE && rows.next()) {
-                    int id = rows.getInt("doc_id");
-                    DocDetails current = DocDB.getInstance().getBasicDocDetails(id, false);
-                    if (!DashboardRecentPagesService.isAccessible(current, user, domain)) continue;
-                    Map<String, Object> item = item(Integer.toString(id), Tools.replace(current.getTitle(), "&#47;", "/"), pageUrl(id));
-                    item.put("docId", id);
-                    item.put("fullPath", current.getFullPath());
-                    item.put("perexImage", DashboardRecentPagesService.previewImage(rows.getString("perex_image")));
-                    item.put("userFullName", authorName(rows.getInt("author_id")));
-                    putDate(item, rows.getTimestamp("date_created"));
-                    items.add(item);
-                }
-            }
-        }
-        return items;
-    }
 
     /** The audit module grants server-wide access; only the bounded preview fields leave the provider. */
     private Map<String, Object> audit() {
@@ -230,34 +178,6 @@ public class DashboardWidgetDataService {
     private static String authorName(int userId) {
         var user = userId > 0 ? UsersDB.getUserCached(userId) : null;
         return user == null ? "" : user.getFullName();
-    }
-
-    private Map<String, Object> publishing(Identity user, String domain) {
-        long now = System.currentTimeMillis();
-        List<Map<String, Object>> items = new ArrayList<>();
-        Set<String> seen = new LinkedHashSet<>();
-        List<DocBasic> scheduled = DocDB.getInstance().getPublicableDocs();
-        if (scheduled != null) for (DocBasic doc : scheduled) {
-            DocDetails current = DocDB.getInstance().getBasicDocDetails(doc.getDocId(), false);
-            if (!DashboardRecentPagesService.isAccessible(current, user, domain)) continue;
-            if (doc instanceof DocHistory pending && Boolean.TRUE.equals(pending.getPublicable())) {
-                addPublication(items, seen, doc, "publish", doc.getPublishStart(), now);
-            }
-            if (doc.isDisableAfterEnd()) addPublication(items, seen, doc, "expire", doc.getPublishEnd(), now);
-        }
-        items.sort(Comparator.comparingLong(DashboardWidgetDataService::dateOf));
-        Map<String, Object> result = response(items.size(), items.stream().limit(PREVIEW_SIZE).toList());
-        result.put("from", now);
-        return result;
-    }
-
-    private void addPublication(List<Map<String, Object>> items, Set<String> seen, DocBasic doc, String kind, long date, long from) {
-        String id = doc.getDocId() + "-" + kind + "-" + date;
-        if (date < from || !seen.add(id)) return;
-        Map<String, Object> item = item(id, doc.getTitle(), pageUrl(doc.getDocId()));
-        item.put("kind", kind);
-        item.put("date", date);
-        items.add(item);
     }
 
     private Map<String, Object> forms(Identity user, String domain, String selected, Range range) {
@@ -417,9 +337,7 @@ public class DashboardWidgetDataService {
 
     private static void period(Map<String, Object> result, Range range) { result.put("from", range.from); result.put("to", range.until - 1); }
     private static void putDate(Map<String, Object> item, Date date) { if (date != null) item.put("date", date.getTime()); }
-    private static long dateOf(Map<String, Object> item) { return ((Number)item.getOrDefault("date", 0L)).longValue(); }
     private static String encode(String value) { return URLEncoder.encode(value, StandardCharsets.UTF_8); }
-    private static String pageUrl(int id) { return "/admin/v9/webpages/web-pages-list/?docid=" + id; }
 
     static class UnavailableException extends RuntimeException {
         UnavailableException(String reason) { super(reason); }

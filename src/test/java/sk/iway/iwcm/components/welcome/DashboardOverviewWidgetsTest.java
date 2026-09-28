@@ -8,21 +8,14 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.security.access.AccessDeniedException;
 
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
-import sk.iway.iwcm.doc.DocDB;
-import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.users.UserDetails;
-import sk.iway.iwcm.users.UsersDB;
 
 /** Verifies migrated overview providers, module permissions and bounded safe projections. */
 class DashboardOverviewWidgetsTest {
@@ -33,7 +26,7 @@ class DashboardOverviewWidgetsTest {
     void deniesMissingPermissionsBeforeAnyDataAccess() {
         Identity user = mock(Identity.class);
         when(user.isAdmin()).thenReturn(true);
-        Map<String, String> permissions = Map.of("changed-pages", "menuWebpages", "audit", "cmp_adminlog");
+        Map<String, String> permissions = Map.of("audit", "cmp_adminlog");
         try (var database = mockStatic(DBPool.class)) {
             permissions.forEach((type, permission) -> {
                 assertThrows(AccessDeniedException.class, () -> service.load(type, 7, null, null, user, "current.example"));
@@ -43,55 +36,6 @@ class DashboardOverviewWidgetsTest {
             });
             database.verifyNoInteractions();
         }
-    }
-
-    /** Current location and editor rights are checked before filling the six-entry preview. */
-    @Test
-    void changedPagesFilterDeniedAndMovedPagesBeforeLimiting() throws Exception {
-        Connection connection = mock(Connection.class);
-        PreparedStatement statement = mock(PreparedStatement.class);
-        ResultSet rows = mock(ResultSet.class);
-        when(connection.prepareStatement(anyString())).thenReturn(statement);
-        when(statement.executeQuery()).thenReturn(rows);
-        when(rows.next()).thenReturn(true);
-        when(rows.getInt("doc_id")).thenReturn(1, 2, 3, 4, 5, 6, 7, 8, 9);
-        when(rows.getInt("author_id")).thenReturn(42);
-        when(rows.getString("perex_image")).thenReturn("https://external.example/image.jpg", "/images/page.png");
-        when(rows.getTimestamp("date_created")).thenReturn(new Timestamp(12345));
-        UserDetails author = mock(UserDetails.class);
-        when(author.getFullName()).thenReturn("Another editor");
-        Identity user = mock(Identity.class);
-        DocDB docs = mock(DocDB.class);
-        List<DocDetails> current = new ArrayList<>();
-        for (int id = 1; id <= 9; id++) {
-            DocDetails page = mock(DocDetails.class);
-            when(page.getTitle()).thenReturn("Page " + id);
-            when(page.getFullPath()).thenReturn("/Section/Page " + id);
-            when(docs.getBasicDocDetails(id, false)).thenReturn(page);
-            current.add(page);
-        }
-        try (var docStatic = mockStatic(DocDB.class); var access = mockStatic(DashboardRecentPagesService.class, CALLS_REAL_METHODS);
-             var users = mockStatic(UsersDB.class)) {
-            docStatic.when(DocDB::getInstance).thenReturn(docs);
-            users.when(() -> UsersDB.getUserCached(42)).thenReturn(author);
-            access.when(() -> DashboardRecentPagesService.isAccessible(any(DocDetails.class), eq(user), eq("current.example"))).thenAnswer(call -> current.indexOf(call.getArgument(0)) >= 2);
-            var items = service.changedPages(connection, user, "current.example", new DashboardWidgetDataService.Scope(List.of(10), List.of(22), List.of(10, 20)));
-            assertEquals(6, items.size());
-            assertEquals(3, items.get(0).get("docId"));
-            assertEquals(8, items.get(5).get("docId"));
-            assertEquals("Another editor", items.get(0).get("userFullName"));
-            assertEquals(12345L, items.get(0).get("date"));
-            assertEquals("", items.get(0).get("perexImage"));
-            assertEquals("/images/page.png", items.get(1).get("perexImage"));
-            assertEquals("/admin/v9/webpages/web-pages-list/?docid=3", items.get(0).get("url"));
-            verify(docs, never()).getBasicDocDetails(9, false);
-        }
-        ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
-        verify(connection).prepareStatement(sql.capture());
-        assertTrue(sql.getValue().contains("d.group_id IN (10,20) AND (d.group_id IN (10) OR d.doc_id IN (22))"));
-        assertTrue(sql.getValue().contains("ORDER BY d.date_created DESC"));
-        assertFalse(sql.getValue().contains("d.author_id=?"));
-        verify(statement).setQueryTimeout(15);
     }
 
     /** Audit text is bounded and the projection excludes IP addresses and unrelated record metadata. */
