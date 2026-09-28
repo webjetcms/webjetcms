@@ -39,6 +39,8 @@ Ak pri kliknutí na **Obnoviť** podržíte kláves **Shift**, po potvrdení sa 
 
 Ďalšie widgety zobrazujú požiadavky na schválenie, plán publikovania, odoslané formuláre, návštevnosť, najnavštevovanejšie stránky, hľadané výrazy, zdroje návštevnosti, chyby 404 a stav hromadného emailu. Widgety v osobnom prehľade môžete pridať opakovane s rôznymi veľkosťami alebo nastaveniami.
 
+Widget **Na schválenie** zobrazuje požiadavky dostupné v karte **Neschválené** vo Web stránkach. Väčší variant obsahuje šesť najnovších požiadaviek na zmenu alebo zmazanie stránky či priečinka. Kliknutím na položku otvoríte priamo jej schvaľovanie v novom okne. Nadpis a celkový počet otvoria celý zoznam požiadaviek.
+
 Údaje kariet v osobnom prehľade sa načítajú, keď sa karta dostane do viditeľnej časti stránky. Čerstvé údaje môžete načítať voľbou **Obnoviť údaje** v menu widgetu.
 
 Formuláre zobrazujú posledných 7, 30 alebo 90 dní vrátane dnešných odoslaní.

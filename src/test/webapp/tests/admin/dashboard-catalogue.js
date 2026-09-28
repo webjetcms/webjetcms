@@ -248,9 +248,12 @@ Scenario('Documentation search switches scope and opens the encoded query withou
 
 Scenario('Pending approvals open their supported dashboard destination', async ({ I }) => {
     const total = await I.executeScript(async () => {
-        const response = await fetch('/admin/rest/dashboard/data/approvals', { headers: { 'X-CSRF-Token': window.csrfToken }, credentials: 'same-origin' });
-        if (!response.ok) throw new Error(`Approvals request failed: ${response.status}`);
-        return (await response.json()).total;
+        const pages = await Promise.all(['/admin/rest/webpages/toapprove/all?size=6&page=0&sort=saveDate,desc', '/admin/rest/groups/toapprove/all?size=6&page=0&sort=saveDate,desc'].map(async path => {
+            const response = await fetch(path, { headers: { 'X-CSRF-Token': window.csrfToken }, credentials: 'same-origin' });
+            if (!response.ok) throw new Error(`Approvals request failed: ${response.status}`);
+            return response.json();
+        }));
+        return pages.reduce((sum, page) => sum + page.totalElements, 0);
     });
     if (!total) {
         I.say('No pending approvals in this account/domain; the deep-link condition does not apply.');

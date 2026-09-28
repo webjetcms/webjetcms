@@ -8,7 +8,7 @@ Before(({ I, login }) => {
 
 Scenario('Read-only widget projections return bounded preview contracts', async ({ I }) => {
     const results = await I.executeScript(async () => {
-        const types = ['approvals', 'publishing', 'forms', 'traffic', 'top-pages', 'search-terms', 'referrers', 'newsletter', 'errors', 'sessions'];
+        const types = ['publishing', 'forms', 'traffic', 'top-pages', 'search-terms', 'referrers', 'newsletter', 'errors', 'sessions'];
         const results = [];
         for (const type of types) {
             const response = await fetch(`/admin/rest/dashboard/data/${type}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
@@ -50,6 +50,31 @@ Scenario('Invalid projection settings are rejected before querying data', async 
         }));
     });
     for (const result of statuses) I.assertEqual(result.status, 400, `${result.value} must be rejected.`);
+});
+
+Scenario('The shared approval lists expose bounded pages and their full request totals', async ({ I }) => {
+    const responses = await I.executeScript(async () => Promise.all(['webpages', 'groups'].map(async type => {
+        const response = await fetch(`/admin/rest/${type}/toapprove/all?size=6&page=0&sort=saveDate,desc`, {
+            credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken }
+        });
+        return { type, status: response.status, body: await response.json() };
+    })));
+    for (const { type, status, body } of responses) {
+        I.assertEqual(status, 200, `${type} approvals must use the existing authorized list endpoint.`);
+        I.assertTrue(Array.isArray(body.content) && body.content.length <= 6);
+        I.assertTrue(Number.isInteger(body.totalElements) && body.totalElements >= body.content.length);
+        const timestamps = body.content.map(item => Number(new Date(item.saveDate)));
+        I.assertTrue(timestamps.every(Number.isFinite), 'Approval submission dates must be available to merge both previews.');
+        I.assertDeepEqual(timestamps, [...timestamps].sort((left, right) => right - left));
+        for (const item of body.content) {
+            if (type === 'webpages') {
+                I.assertTrue(item.docId > 0 && item.historyId > 0, 'The existing page list must retain both swapped approval identifiers.');
+            } else {
+                I.assertTrue(item.schedulerId > 0, 'Folder actions must retain the pending scheduler identifier.');
+                I.assertEqual(typeof item.userFullName, 'string');
+            }
+        }
+    }
 });
 
 Scenario('Recent pages remain available through the independent pilot projection', async ({ I }) => {

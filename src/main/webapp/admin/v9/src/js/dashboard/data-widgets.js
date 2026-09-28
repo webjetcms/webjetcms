@@ -1,5 +1,5 @@
 import { registerWidget } from './registry';
-import { node, text, number, date, link, icon, field, table, empty, fetchData, pagePreview } from './widget-utils';
+import { node, text, number, date, link, icon, field, table, empty, fetchData, fetchJson, pagePreview } from './widget-utils';
 import { chartHost, mountChart } from './charts';
 
 const moduleLinks = {
@@ -163,6 +163,28 @@ function pollNewsletter(data, container, signal, refresh) {
     return () => { observer.disconnect(); window.clearInterval(timer); };
 }
 
+/** Combines the existing page and folder approval queues into a six-item preview. */
+async function fetchApprovals(signal) {
+    const query = '?size=6&page=0&sort=saveDate,desc';
+    const [pages, groups] = await Promise.all([
+        fetchJson(`/admin/rest/webpages/toapprove/all${query}`, signal),
+        fetchJson(`/admin/rest/groups/toapprove/all${query}`, signal)
+    ]);
+    const items = pages.content.map(page => {
+        const action = page.isDelete || page.title?.startsWith('[DELETE]') ? 'approve_delete' : 'approve';
+        // The page approval REST service swaps docId and historyId for its DataTable.
+        return { title: page.title, section: page.authorName, date: page.saveDate,
+            url: `/admin/${action}.jsp?docid=${page.historyId}&historyid=${page.docId}` };
+    });
+    groups.content.forEach(group => {
+        const action = group.isDelete ? 'approve-del-group' : 'approve-group';
+        items.push({ title: group.groupName, section: group.userFullName, date: group.saveDate,
+            url: `/admin/v9/webpages/${action}/?scheduleId=${group.schedulerId}` });
+    });
+    items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return { total: pages.totalElements + groups.totalElements, items: items.slice(0, 6) };
+}
+
 /** Registers content, analytics, and newsletter widgets using authorized projections. */
 export function registerDataWidgets() {
     registerWidget({
@@ -170,11 +192,16 @@ export function registerDataWidgets() {
         headerLink: { href: moduleLinks.approvals },
         isAvailable: () => window.WJ.hasPermission('menuWebpages'),
         async render({ container, instance, context, signal }) {
-            const data = await fetchData('approvals', {}, signal); if (signal.aborted) return;
+            const data = await fetchApprovals(signal); if (signal.aborted) return;
             summary(container, data, context, moduleLinks.approvals, text(context, 'pendingPages'));
             if (instance.size !== '1x1') {
                 if (!data.items.length) empty(container, context);
-                else table(container, [text(context, 'page'), text(context, 'requester'), text(context, 'waitingSince')], data.items.slice(0, 6).map(item => [link(item.title, item.url), item.section, date(item.date)]));
+                else table(container, [text(context, 'page'), text(context, 'requester'), text(context, 'waitingSince')], data.items.map(item => {
+                    const approval = link(item.title, item.url);
+                    approval.target = '_blank';
+                    approval.rel = 'noopener';
+                    return [approval, item.section, date(item.date)];
+                }));
             }
         }
     });

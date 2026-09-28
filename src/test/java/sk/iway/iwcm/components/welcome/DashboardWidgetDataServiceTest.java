@@ -43,11 +43,12 @@ import sk.iway.iwcm.stat.StatNewDB;
 
 /** Verifies dashboard input, authorization, period boundaries, and aggregate query semantics. */
 class DashboardWidgetDataServiceTest {
-    private final DashboardWidgetDataService service = new DashboardWidgetDataService(null, null, null, null, null);
+    private final DashboardWidgetDataService service = new DashboardWidgetDataService(null, null, null);
 
     @Test
     void rejectsInvalidConfigurationBeforeAccessingData() {
         assertThrows(IllegalArgumentException.class, () -> service.load("unknown", 7, "sessions", null, null, null, "example.test", "session"));
+        assertThrows(IllegalArgumentException.class, () -> service.load("approvals", 7, "sessions", null, null, null, "example.test", "session"));
         assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("traffic", 365, "sessions", null, null));
         assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("traffic", 7, "COUNT(*)", null, null));
         assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("forms", 7, "sessions", " ", null));

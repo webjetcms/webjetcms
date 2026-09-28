@@ -58,14 +58,9 @@ import sk.iway.iwcm.doc.DocBasic;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocHistory;
-import sk.iway.iwcm.doc.DocHistoryRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.GroupsTreeService;
-import sk.iway.iwcm.editor.approve.GroupsApproveRestController;
-import sk.iway.iwcm.editor.approve.WebApproveRestController;
-import sk.iway.iwcm.editor.rest.GroupSchedulerDto;
-import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.SessionClusterService;
@@ -82,20 +77,15 @@ import sk.iway.iwcm.users.UsersDB;
 @Service
 public class DashboardWidgetDataService {
     static final int PREVIEW_SIZE = 6;
-    static final Set<String> TYPES = Set.of("approvals", "publishing", "forms", "traffic", "top-pages",
+    static final Set<String> TYPES = Set.of("publishing", "forms", "traffic", "top-pages",
         "search-terms", "referrers", "newsletter", "errors", "sessions", "changed-pages", "audit",
         "logged-admins");
     private static final Set<String> SERVER_TYPES = Set.of("sessions", "audit", "logged-admins");
-    private final DocHistoryRepository history;
-    private final GroupSchedulerDtoRepository groupHistory;
     private final FormsRepository forms;
     private final FormsServiceImpl formsService;
     private final CampaingsRepository campaigns;
 
-    public DashboardWidgetDataService(DocHistoryRepository history, GroupSchedulerDtoRepository groupHistory,
-            FormsRepository forms, FormsServiceImpl formsService, CampaingsRepository campaigns) {
-        this.history = history;
-        this.groupHistory = groupHistory;
+    public DashboardWidgetDataService(FormsRepository forms, FormsServiceImpl formsService, CampaingsRepository campaigns) {
         this.forms = forms;
         this.formsService = formsService;
         this.campaigns = campaigns;
@@ -113,7 +103,6 @@ public class DashboardWidgetDataService {
             case "changed-pages" -> changedPages(user, domain, scope(user, domain));
             case "audit" -> audit();
             case "logged-admins" -> loggedAdmins();
-            case "approvals" -> approvals(user, scope(user, domain));
             case "publishing" -> publishing(user, domain);
             case "forms" -> forms(user, domain, formName, recentDays(days, Clock.systemDefaultZone()));
             case "newsletter" -> newsletter(domain, campaignId);
@@ -134,7 +123,7 @@ public class DashboardWidgetDataService {
         if (user == null || !user.isAdmin()) throw new AccessDeniedException("Administrator login is required");
         String permission = switch (type) {
             case "sessions" -> null;
-            case "approvals", "publishing", "changed-pages" -> "menuWebpages";
+            case "publishing", "changed-pages" -> "menuWebpages";
             case "audit" -> "cmp_adminlog";
             case "logged-admins" -> "welcomeShowLoggedAdmins";
             case "forms" -> "cmp_form";
@@ -298,33 +287,6 @@ public class DashboardWidgetDataService {
         }
         items.sort(Comparator.comparing(item -> String.valueOf(item.get("fullName")), String.CASE_INSENSITIVE_ORDER));
         return response(items.size(), items);
-    }
-
-    private Map<String, Object> approvals(Identity user, Scope scope) {
-        Specification<DocHistory> documents = WebApproveRestController.getToApproveConditions(user.getUserId())
-            .and((root, query, builder) -> accessibleDocument(root.get("docId"), query, builder, scope));
-        Page<DocHistory> page = history.findAll(documents, PageRequest.of(0, PREVIEW_SIZE, Sort.by("saveDate").descending()));
-        List<Map<String, Object>> items = new ArrayList<>();
-        page.forEach(doc -> {
-            Map<String, Object> item = item("page-" + doc.getId(), doc.getTitle(), pageUrl(doc.getDocId()));
-            item.put("kind", "page");
-            item.put("section", doc.getAuthorName());
-            putDate(item, doc.getSaveDate());
-            items.add(item);
-        });
-        Specification<GroupSchedulerDto> directories = GroupsApproveRestController.getToApproveConditions(user.getUserId())
-            .and((root, query, builder) -> root.get("groupId").in(orMissing(scope.groups)));
-        Page<GroupSchedulerDto> groupPage = groupHistory.findAll(directories, PageRequest.of(0, PREVIEW_SIZE, Sort.by("saveDate").descending()));
-        groupPage.forEach(group -> {
-            Map<String, Object> item = item("group-" + group.getId(), group.getGroupName(), "/admin/v9/webpages/web-pages-list/?scheduleId=" + group.getId() + (Boolean.TRUE.equals(group.getIsDelete()) ? "&act=delete" : ""));
-            item.put("kind", "group");
-            var author = group.getUserId() == null ? null : UsersDB.getUserCached(group.getUserId());
-            if (author != null) item.put("section", author.getFullName());
-            putDate(item, group.getSaveDate());
-            items.add(item);
-        });
-        items.sort(Comparator.comparingLong(DashboardWidgetDataService::dateOf).reversed());
-        return response(page.getTotalElements() + groupPage.getTotalElements(), items.stream().limit(PREVIEW_SIZE).toList());
     }
 
     private Map<String, Object> publishing(Identity user, String domain) {

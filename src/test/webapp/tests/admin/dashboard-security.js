@@ -14,10 +14,11 @@ const permissionCases = [
 ];
 const sizes = { 'recent-pages': '3x2', publishing: '2x2', 'top-pages': '2x3', 'search-terms': '2x3', referrers: '2x2',
     newsletter: '2x2', 'changed-pages': '3x2', audit: '3x2', 'logged-admins': '2x2', 'server-memory': '3x2', 'server-cpu': '3x2' };
-function endpoint(type) {
-    if (type === 'recent-pages') return '/admin/rest/dashboard/recent-pages';
-    if (type.startsWith('server-')) return '/admin/rest/monitoring/actual';
-    return `/admin/rest/dashboard/data/${type}`;
+function endpoints(type) {
+    if (type === 'recent-pages') return ['/admin/rest/dashboard/recent-pages'];
+    if (type === 'approvals') return ['/admin/rest/webpages/toapprove/all?size=6&page=0&sort=saveDate,desc', '/admin/rest/groups/toapprove/all?size=6&page=0&sort=saveDate,desc'];
+    if (type.startsWith('server-')) return ['/admin/rest/monitoring/actual'];
+    return [`/admin/rest/dashboard/data/${type}`];
 }
 
 function loaded(I) {
@@ -31,7 +32,9 @@ async function readEndpoints(I, paths) {
         const results = [];
         for (const path of paths) {
             const response = await fetch(path, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
-            results.push({ path, status: response.status, url: response.url });
+            const body = await response.json().catch(() => null);
+            results.push({ path, status: response.status, url: response.url, error: body?.error || null,
+                contentPresence: Object.prototype.hasOwnProperty.call(body || {}, 'content') });
         }
         return results;
     }, paths);
@@ -66,9 +69,10 @@ for (const { permission, types } of permissionCases) {
     Scenario(`${permission}: hide saved widgets and catalogue entries and deny direct REST calls`, async ({ I }) => {
         I.assertTrue(await I.executeScript(permission => WJ.hasPermission(permission), permission), 'Logout must restore the real account permissions.');
         for (const type of types) I.seeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
-        const paths = [...new Set(types.map(endpoint))];
+        const paths = [...new Set(types.flatMap(endpoints))];
         for (const result of await readEndpoints(I, paths)) {
             I.assertEqual(result.status, 200, `${result.path} must work before removing ${permission}.`);
+            I.assertFalse(Boolean(result.error), `${result.path} must not return a DataTable error while authorized.`);
         }
 
         I.amOnPage(`/admin/v9/?removePerm=${permission}`);
@@ -77,7 +81,10 @@ for (const { permission, types } of permissionCases) {
         for (const type of types) I.dontSeeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
         I.seeElementInDOM(`${dashboard} [data-widget-type="sessions"]`);
         for (const result of await readEndpoints(I, paths)) {
-            I.assertEqual(result.status, 403, `${result.path} must reject direct requests without ${permission}.`);
+            if (/^\/admin\/rest\/(webpages|groups)\/toapprove\//.test(result.path)) {
+                const deniedBody = result.status === 200 && ['Access Denied', 'Access is denied'].includes(result.error) && result.contentPresence === false;
+                I.assertTrue(result.status === 403 || deniedBody, `${result.path} must deny access without exposing approval content.`);
+            } else I.assertEqual(result.status, 403, `${result.path} must reject direct requests without ${permission}.`);
         }
         I.assertEqual((await readEndpoints(I, ['/admin/rest/dashboard/data/sessions']))[0].status, 200, 'An unrelated authorized request must still pass with this session and token.');
         I.assertTrue(await I.executeScript(types => types.every(type => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.some(item => item.type === type)), types), 'Revoking access must retain the hidden preferences.');
@@ -230,7 +237,7 @@ Scenario('Restore preferences after security tests', async ({ I }) => {
 Scenario('Unauthenticated requests cannot read dashboard data or mutate preferences', async ({ I }) => {
     I.logout();
     const paths = ['/admin/rest/dashboard/settings', '/admin/rest/dashboard/menu', '/admin/rest/dashboard/notices',
-        ...new Set(permissionCases.flatMap(item => item.types).map(endpoint)), '/admin/rest/dashboard/data/sessions'];
+        ...new Set(permissionCases.flatMap(item => item.types).flatMap(endpoints)), '/admin/rest/dashboard/data/sessions'];
     const results = await I.executeScript(async paths => {
         const requests = [...paths.map(path => ({ path, method: 'GET' })),
             { path: '/admin/rest/dashboard/settings', method: 'PUT', body: '{}' },

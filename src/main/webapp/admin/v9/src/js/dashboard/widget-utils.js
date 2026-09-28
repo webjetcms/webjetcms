@@ -171,14 +171,21 @@ export async function fetchData(type, options = {}, signal) {
     Object.entries(options).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== "") params.set(key, value);
     });
-    const response = await fetch(`/admin/rest/dashboard/data/${encodeURIComponent(type)}?${params}`, {
+    return fetchJson(`/admin/rest/dashboard/data/${encodeURIComponent(type)}?${params}`, signal);
+}
+
+/** Fetches an existing module endpoint with the shared request and error handling. */
+export async function fetchJson(url, signal) {
+    const response = await fetch(url, {
         credentials: "same-origin", signal, headers: { Accept: "application/json", "X-CSRF-Token": window.csrfToken }
     });
-    if (!response.ok) {
-        const details = await response.json().catch(() => ({}));
-        const error = new Error(`Dashboard data request failed (${response.status})`);
-        error.dashboardReason = response.status === 404 ? 'selection-unavailable' : details.reason;
+    const details = response.ok ? await response.json() : await response.json().catch(() => ({}));
+    if (!response.ok || details.error) {
+        const error = new Error(details.error || `Dashboard data request failed (${response.status})`);
+        error.dashboardReason = details.reason;
+        if (response.status === 403 || details.error === 'Access Denied' || details.error === 'Access is denied') error.dashboardReason = 'permission-denied';
+        if (response.status === 404) error.dashboardReason = 'selection-unavailable';
         throw error;
     }
-    return response.json();
+    return details;
 }

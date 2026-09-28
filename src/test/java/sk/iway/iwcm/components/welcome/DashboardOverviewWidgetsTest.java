@@ -28,7 +28,7 @@ import sk.iway.iwcm.users.UsersDB;
 
 /** Verifies migrated overview providers, module permissions and bounded safe projections. */
 class DashboardOverviewWidgetsTest {
-    private final DashboardWidgetDataService service = new DashboardWidgetDataService(null, null, null, null, null);
+    private final DashboardWidgetDataService service = new DashboardWidgetDataService(null, null, null);
 
     /** Every migrated endpoint checks its original permission before reading application data. */
     @Test
