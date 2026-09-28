@@ -1344,7 +1344,7 @@
             me.statec = {};
 
             me.grid = me.options.grid || {
-                section:                        'section:not(.pb-not-section), div.pb-section:not(.pb-not-section)',
+                section:                        'section:not(.pb-not-section), div.pb-section',
                 section_default_class:          '',
                 container:                      'div[class^="container"]:not(.pb-not-container), div[class*="pb-custom-container"]',
                 container_default_class:        'container',
