@@ -9,11 +9,13 @@ import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/wid
  * @property {Object[]} [data.dashboardMenu=[]] - Authorized administration navigation for shortcut selection.
  * @property {Object} data.settings - Current account's layout and active-domain preferences.
  * @property {Object[]} data.notices - System notices ready for immediate rendering.
+ * @property {Object[]} [data.loggedAdmins] - Online administrators, supplied only with welcomeShowLoggedAdmins permission.
  * @property {Object} data.currentSessions - Current user sessions, updated after a successful logout.
  * @property {string} [data.userName=""] - Current user's display name.
  * @property {string} [data.currentDomain=""] - Active domain's display name.
  * @property {Object.<string, string>} [labels={}] - Localized labels used by dashboard sections and widgets.
  * @property {Object} [config={}] - Runtime dashboard configuration.
+ * @property {string} config.recentPagesGroupId - Configured systemPagesRecentPages ID used by the Web pages module.
  * @property {string} [config.statMode] - Statistics mode; `"none"` hides statistics cards.
  * @property {string} [config.overviewJsonUrl=""] - Base URL used to load localized WebJET news.
  * @property {string} [config.environmentName="DEV"] - Expanded environment label; a trailing slash is removed and an empty value hides the badge.

@@ -48,6 +48,7 @@ class DashboardWidgetDataServiceTest {
     void rejectsInvalidConfigurationBeforeAccessingData() {
         assertThrows(IllegalArgumentException.class, () -> service.load("unknown", 7, "sessions", null, null, null, "example.test"));
         assertThrows(IllegalArgumentException.class, () -> service.load("approvals", 7, "sessions", null, null, null, "example.test"));
+        assertThrows(IllegalArgumentException.class, () -> service.load("logged-admins", 7, "sessions", null, null, null, "example.test"));
         assertThrows(IllegalArgumentException.class, () -> service.load("sessions", 7, "sessions", null, null, null, "example.test"));
         assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("traffic", 365, "sessions", null, null));
         assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("traffic", 7, "COUNT(*)", null, null));

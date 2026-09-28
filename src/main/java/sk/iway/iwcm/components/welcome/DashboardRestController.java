@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,10 +18,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.admin.layout.MenuBean;
-import sk.iway.iwcm.admin.layout.DocDetailsDto;
 import sk.iway.iwcm.admin.layout.MenuService;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.users.UsersDB;
 
 /** Current-user dashboard configuration; no caller-supplied user or domain IDs are accepted. */
@@ -31,11 +28,9 @@ import sk.iway.iwcm.users.UsersDB;
 @PreAuthorize("@WebjetSecurityService.isAdmin()")
 public class DashboardRestController {
     private final DashboardSettingsService settingsService;
-    private final DashboardRecentPagesService recentPagesService;
 
-    public DashboardRestController(DashboardSettingsService settingsService, DashboardRecentPagesService recentPagesService) {
+    public DashboardRestController(DashboardSettingsService settingsService) {
         this.settingsService = settingsService;
-        this.recentPagesService = recentPagesService;
     }
 
     @PutMapping("/settings")
@@ -68,12 +63,6 @@ public class DashboardRestController {
     public List<MenuBean> getMenu(HttpServletRequest request) {
         currentUser(request);
         return new MenuService(request).getMenu();
-    }
-
-    @GetMapping("/recent-pages")
-    @PreAuthorize("@WebjetSecurityService.hasPermission('menuWebpages')")
-    public List<DocDetailsDto> getRecentPages(@RequestParam(defaultValue = "6") int size, HttpServletRequest request) {
-        return recentPagesService.getRecentPages(currentUser(request), DocDB.getDomain(request), size);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

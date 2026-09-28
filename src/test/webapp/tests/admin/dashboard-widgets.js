@@ -36,7 +36,8 @@ Before(({ I, login }) => {
 Scenario('Authenticated dashboard endpoints and initial overview load', async ({ I }) => {
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     const responses = await I.executeScript(async () => {
-        return Promise.all(['/admin/rest/dashboard/menu', '/admin/rest/dashboard/recent-pages'].map(async url => {
+        const params = new URLSearchParams({ groupId: document.querySelector('webjet-overview-dashboard').config.recentPagesGroupId, size: 6, page: 0, sort: 'dateCreated,desc' });
+        return Promise.all(['/admin/rest/dashboard/menu', `/admin/rest/web-pages/all?${params}`].map(async url => {
             const response = await fetch(url, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
             return { url, status: response.status, contentType: response.headers.get('content-type') };
         }));

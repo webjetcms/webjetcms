@@ -60,8 +60,6 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.stat.SessionDetails;
-import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.users.UsersDB;
@@ -74,9 +72,8 @@ import sk.iway.iwcm.users.UsersDB;
 public class DashboardWidgetDataService {
     static final int PREVIEW_SIZE = 6;
     static final Set<String> TYPES = Set.of("publishing", "forms", "traffic", "top-pages",
-        "search-terms", "referrers", "newsletter", "errors", "changed-pages", "audit",
-        "logged-admins");
-    private static final Set<String> SERVER_TYPES = Set.of("audit", "logged-admins");
+        "search-terms", "referrers", "newsletter", "errors", "changed-pages", "audit");
+    private static final Set<String> SERVER_TYPES = Set.of("audit");
     private final FormsRepository forms;
     private final FormsServiceImpl formsService;
     private final CampaingsRepository campaigns;
@@ -97,7 +94,6 @@ public class DashboardWidgetDataService {
         return switch (type) {
             case "changed-pages" -> changedPages(user, domain, scope(user, domain));
             case "audit" -> audit();
-            case "logged-admins" -> loggedAdmins();
             case "publishing" -> publishing(user, domain);
             case "forms" -> forms(user, domain, formName, recentDays(days, Clock.systemDefaultZone()));
             case "newsletter" -> newsletter(domain, campaignId);
@@ -119,7 +115,6 @@ public class DashboardWidgetDataService {
         String permission = switch (type) {
             case "publishing", "changed-pages" -> "menuWebpages";
             case "audit" -> "cmp_adminlog";
-            case "logged-admins" -> "welcomeShowLoggedAdmins";
             case "forms" -> "cmp_form";
             case "newsletter" -> "menuEmail";
             default -> "cmp_stat";
@@ -262,25 +257,6 @@ public class DashboardWidgetDataService {
     private static String authorName(int userId) {
         var user = userId > 0 ? UsersDB.getUserCached(userId) : null;
         return user == null ? "" : user.getFullName();
-    }
-
-    /** Shows each currently logged-in administrator once without exposing their account or session DTO. */
-    private Map<String, Object> loggedAdmins() {
-        Set<Integer> visited = new LinkedHashSet<>();
-        List<Map<String, Object>> items = new ArrayList<>();
-        for (SessionDetails session : SessionHolder.getInstance().getList()) {
-            int id = session.getLoggedUserId();
-            if (id <= 0 || !session.isAdmin() || !visited.add(id)) continue;
-            var user = UsersDB.getUserCached(id);
-            if (user == null || !user.isAdmin()) continue;
-            Map<String, Object> item = new LinkedHashMap<>();
-            item.put("userId", id);
-            item.put("fullName", user.getFullName());
-            item.put("email", user.getEmail());
-            items.add(item);
-        }
-        items.sort(Comparator.comparing(item -> String.valueOf(item.get("fullName")), String.CASE_INSENSITIVE_ORDER));
-        return response(items.size(), items);
     }
 
     private Map<String, Object> publishing(Identity user, String domain) {

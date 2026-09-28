@@ -6,9 +6,9 @@ Before(({ I, login }) => {
     I.waitForFunction(() => typeof window.csrfToken === 'string' && window.csrfToken.length > 0, 20);
 });
 
-Scenario('Initial settings, notices and sessions render from HTML without REST requests', async ({ I }) => {
+Scenario('Initial settings, notices, sessions and administrators render from HTML without REST requests', async ({ I }) => {
     const requests = [];
-    const routes = ['**/admin/rest/dashboard/settings', '**/admin/rest/dashboard/notices', '**/admin/rest/dashboard/data/sessions*'];
+    const routes = ['**/admin/rest/dashboard/settings', '**/admin/rest/dashboard/notices', '**/admin/rest/dashboard/data/sessions*', '**/admin/rest/dashboard/data/logged-admins*'];
     for (const pattern of routes) await I.mockRoute(pattern, route => {
         if (route.request().method() !== 'GET') return route.continue();
         requests.push(route.request().url());
@@ -19,11 +19,12 @@ Scenario('Initial settings, notices and sessions render from HTML without REST r
         I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
         I.waitForElement('.md-dashboard__sessions .md-dashboard-widget__session-current', 20);
         await I.waitForFunction(() => document.querySelector('.md-dashboard__notice-list')?.getAttribute('aria-busy') === 'false', 20);
-        I.assertEqual(requests.length, 0, 'The initial dashboard must render even when all three read endpoints are unavailable.');
+        I.assertEqual(requests.length, 0, 'The initial dashboard must render even when the removed read endpoints are unavailable.');
         I.assertTrue(await I.executeScript(() => {
             const dashboard = document.querySelector('webjet-overview-dashboard');
-            return Array.isArray(dashboard.data.notices) && dashboard.dashboardController.settings.items.length > 0;
-        }), 'The page must contain real server-provided notices and initialized widget preferences.');
+            return Array.isArray(dashboard.data.notices) && dashboard.dashboardController.settings.items.length > 0
+                && dashboard.data.loggedAdmins.length > 0 && dashboard.data.loggedAdmins.every(admin => typeof admin.fullName === 'string');
+        }), 'The page must contain real server-provided notices, online administrators and initialized widget preferences.');
     } finally {
         for (const pattern of routes) await I.stopMockingRoute(pattern);
     }
@@ -66,7 +67,7 @@ Scenario('Read-only widget projections return bounded preview contracts', async 
 
 Scenario('Invalid projection settings are rejected before querying data', async ({ I }) => {
     const statuses = await I.executeScript(async () => {
-        return Promise.all(['traffic?days=365', 'traffic?metric=invalid', 'forms?formName=', 'newsletter?campaignId=-1', 'unknown'].map(async value => {
+        return Promise.all(['traffic?days=365', 'traffic?metric=invalid', 'forms?formName=', 'newsletter?campaignId=-1', 'sessions', 'logged-admins', 'unknown'].map(async value => {
             const response = await fetch(`/admin/rest/dashboard/data/${value}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
             return { value, status: response.status };
         }));
@@ -99,30 +100,35 @@ Scenario('The shared approval lists expose bounded pages and their full request 
     }
 });
 
-Scenario('Recent pages remain available through the independent pilot projection', async ({ I }) => {
+Scenario('Recent pages reuse the Web pages list with bounded pagination', async ({ I }) => {
     const result = await I.executeScript(async () => {
-        const response = await fetch('/admin/rest/dashboard/recent-pages?size=6', { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
+        const params = new URLSearchParams({ groupId: document.querySelector('webjet-overview-dashboard').config.recentPagesGroupId, size: 6, page: 0, sort: 'dateCreated,desc' });
+        const response = await fetch(`/admin/rest/web-pages/all?${params}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
         return { status: response.status, body: await response.json() };
     });
     I.assertEqual(result.status, 200);
-    I.assertTrue(Array.isArray(result.body) && result.body.length <= 6);
+    I.assertTrue(Array.isArray(result.body.content) && result.body.content.length <= 6);
+    I.assertTrue(Number.isInteger(result.body.totalElements) && result.body.totalElements >= result.body.content.length);
+    const dates = result.body.content.map(page => page.dateCreated);
+    I.assertDeepEqual(dates, [...dates].sort((a, b) => b - a));
+    for (const page of result.body.content) {
+        I.assertTrue(page.docId > 0 && Number.isFinite(page.dateCreated));
+        I.assertEqual(typeof page.title, 'string');
+        I.assertEqual(typeof page.fullPath, 'string');
+        I.assertEqual(typeof page.perexImage, 'string');
+    }
 });
 
 Scenario('Former overview blocks expose independent authorized widget projections', async ({ I }) => {
-    const results = await I.executeScript(async () => Promise.all(['changed-pages', 'audit', 'logged-admins'].map(async type => {
+    const results = await I.executeScript(async () => Promise.all(['changed-pages', 'audit'].map(async type => {
         const response = await fetch(`/admin/rest/dashboard/data/${type}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
         return { type, status: response.status, body: await response.json() };
     })));
     for (const { type, status, body } of results) {
         I.assertEqual(status, 200, `${type} must load for an authorized administrator.`);
         I.assertTrue(Array.isArray(body.items), `${type} must contain an item projection.`);
-        if (type === 'logged-admins') I.assertEqual(body.items.length, body.total, 'All authorized online administrators must remain reachable in the scrolling card.');
-        else I.assertTrue(body.items.length <= 6, `${type} must use a bounded activity preview.`);
+        I.assertTrue(body.items.length <= 6, `${type} must use a bounded activity preview.`);
         for (const item of body.items) {
-            if (type === 'logged-admins') {
-                I.assertEqual(typeof item.fullName, 'string');
-                continue;
-            }
             I.assertTrue(Number.isFinite(item.date), 'Activity timestamps must remain machine-readable.');
             I.assertTrue(typeof item.url === 'string' && item.url.startsWith('/'), 'Activity links must stay in the administration.');
             if (type === 'changed-pages') I.assertStartsWith(item.url, '/admin/v9/webpages/web-pages-list/?docid=');

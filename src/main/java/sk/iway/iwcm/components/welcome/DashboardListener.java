@@ -1,7 +1,12 @@
 package sk.iway.iwcm.components.welcome;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -18,6 +23,8 @@ import sk.iway.iwcm.admin.ThymeleafEvent;
 import sk.iway.iwcm.admin.layout.MenuService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.stat.SessionClusterService;
+import sk.iway.iwcm.stat.SessionDetails;
+import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -32,7 +39,7 @@ public class DashboardListener {
         this.noticeService = noticeService;
     }
 
-    /** Embeds account settings, system notices and current sessions in the dashboard template. */
+    /** Embeds account settings, system notices, current sessions and authorized administrator names in the dashboard template. */
     @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' && event.source.page=='dashboard'")
     protected void setOverviewData(final WebjetEvent<ThymeleafEvent> event) {
         HttpServletRequest request = event.getSource().getRequest();
@@ -46,9 +53,29 @@ public class DashboardListener {
             data.put("settings", settingsService.load(user.getUserId(), DashboardRestController.domainKey(request)));
             data.put("notices", noticeService.load(user, request));
             data.put("currentSessions", new ObjectMapper().readTree(SessionClusterService.getSessionInfo(request.getSession().getId(), user.getUserId())));
+            if (user.isEnabledItem("welcomeShowLoggedAdmins")) data.put("loggedAdmins", loggedAdmins());
             event.getSource().getModel().addAttribute("overviewData", JsonTools.objectToJSON(data));
         } catch (JsonProcessingException exception) {
             Logger.error(DashboardListener.class, exception);
         }
+    }
+
+    /** Shows each currently logged-in administrator once without exposing their account or session DTO. */
+    private List<Map<String, Object>> loggedAdmins() {
+        Set<Integer> visited = new LinkedHashSet<>();
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (SessionDetails session : SessionHolder.getInstance().getList()) {
+            int id = session.getLoggedUserId();
+            if (id <= 0 || !session.isAdmin() || !visited.add(id)) continue;
+            var user = UsersDB.getUserCached(id);
+            if (user == null || !user.isAdmin()) continue;
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("userId", id);
+            item.put("fullName", user.getFullName());
+            item.put("email", user.getEmail());
+            items.add(item);
+        }
+        items.sort(Comparator.comparing(item -> String.valueOf(item.get("fullName")), String.CASE_INSENSITIVE_ORDER));
+        return items;
     }
 }

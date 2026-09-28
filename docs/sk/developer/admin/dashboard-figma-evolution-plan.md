@@ -27,7 +27,7 @@ Prenosný schválený prototyp je súčasťou výstupného balíka ako `prototyp
 | Novinky | Existujúci zdroj noviniek verzie a potvrdenie prečítania |
 | Bezpečnostné a prevádzkové upozornenia | Nový `/admin/rest/dashboard/notices` vracajúci zoznam položiek |
 | Návštevnosť, formuláre, publikovanie, schvaľovanie, newsletter a ďalšie dáta | Existujúce async dashboard REST projekcie nad službami príslušných modulov; nepočítať v DashboardListener |
-| Posledné stránky + perex obrázok | Existujúci `/admin/rest/dashboard/recent-pages`, rozšírený o URL obrázka |
+| Posledné stránky + perex obrázok | Existujúci `/admin/rest/web-pages/all` s `groupId=systemPagesRecentPages`, `size=6` a `sort=dateCreated,desc`; obsahuje aj URL obrázka |
 | Pôvodné doplnkové prehľady | Nový `/admin/rest/dashboard/legacy-data`, až po rozbalení „Ďalšie prehľady“ |
 
 Zoznam upozornení používa stabilné `id`, `severity`, `icon`, `title`, serverom vytvorené `bodyHtml` a voliteľnú akciu. Zachovať všetky existujúce prípady: 2FA, databázová konverzia, konverzia štatistík prehliadačov, aktualizácia WebJET, Java, licencia a Amazon SES. Oprávnenia zostávajú kontrolované na serveri. Chyba načítania nesmie vyzerať ako stav bez upozornení.

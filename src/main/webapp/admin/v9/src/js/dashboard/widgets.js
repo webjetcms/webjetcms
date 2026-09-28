@@ -2,7 +2,7 @@ import { getWidget, registerWidget } from './registry';
 import { registerUtilityWidgets } from './utility-widgets';
 import { registerDataWidgets } from './data-widgets';
 import { registerSystemWidgets } from './system-widgets';
-import { node, text, localUrl, shortcutUrl, link, icon, field, empty, date, containNativeScroll, pagePreview } from './widget-utils';
+import { node, text, localUrl, shortcutUrl, link, icon, field, empty, date, containNativeScroll, pagePreview, fetchJson } from './widget-utils';
 
 /** Flattens authorized navigation while retaining distinct submenu destinations. */
 export function menuEntries(context, inheritedIcon) {
@@ -68,11 +68,11 @@ export function getDashboardDefaults(context) {
     });
 }
 
-/** Loads the permission- and domain-filtered preview without session caching. */
-async function recentPages(signal) {
-    const response = await fetch("/admin/rest/dashboard/recent-pages", { signal, credentials: "same-origin", headers: { Accept: "application/json", "X-CSRF-Token": window.csrfToken } });
-    if (!response.ok) throw new Error(`Recent pages request failed (${response.status})`);
-    return response.json();
+/** Loads the same recent-page list as the Web pages module. */
+async function recentPages(context, signal) {
+    const params = new URLSearchParams({ groupId: context.config.recentPagesGroupId, size: 6, page: 0, sort: 'dateCreated,desc' });
+    const data = await fetchJson(`/admin/rest/web-pages/all?${params}`, signal);
+    return data.content;
 }
 
 /** Keeps all preview rows accessible when a compact card needs native scrolling. */
@@ -85,7 +85,7 @@ function recentPagesList(container, pages, context, signal) {
         const row = node('li');
         const target = pagePreview(page, `/admin/v9/webpages/web-pages-list/?docid=${encodeURIComponent(page.docId)}`);
         target.classList.add('md-dashboard-widget__page');
-        const changed = node('span', 'md-dashboard-widget__page-date', page.date == null ? page.saveDate : date(page.date));
+        const changed = node('span', 'md-dashboard-widget__page-date', date(page.dateCreated));
         target.append(changed);
         row.append(target);
         list.append(row);
@@ -239,7 +239,7 @@ export function registerDashboardWidgets() {
         headerLink: { href: "/admin/v9/webpages/web-pages-list/", labelKey: "admin.dashboard.allShort.js" },
         isAvailable: () => window.WJ.hasPermission("menuWebpages"),
         async render({ container, context, signal }) {
-            const pages = await recentPages(signal);
+            const pages = await recentPages(context, signal);
             if (signal.aborted) return;
             if (!pages.length) empty(container, context);
             else recentPagesList(container, pages, context, signal);

@@ -46,6 +46,11 @@ Before(async ({ I, login }) => {
 
 Scenario('Migrated overview widgets persist independently and clean up monitoring charts', async ({ I }) => {
     const original = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
+    const adminRequests = [];
+    await I.mockRoute('**/admin/rest/dashboard/data/logged-admins*', route => {
+        adminRequests.push(route.request().url());
+        return route.fulfill({ status: 503, contentType: 'application/json', body: '{}' });
+    });
     try {
         const applied = await I.executeScript(async definitions => {
             const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
@@ -61,6 +66,7 @@ Scenario('Migrated overview widgets persist independently and clean up monitorin
                     chosen.push(item);
             }
             next.items = [...next.items.filter(item => !definitions.some(([type]) => item.type === type)), ...chosen];
+            next.domainOptions = Object.fromEntries(Object.entries(next.domainOptions).filter(([id]) => next.items.some(item => item.id === id)));
             return { saved: await controller._commit(next), items: next.items.filter(item => definitions.some(([type]) => item.type === type)) };
         }, migratedWidgets);
         I.assertTrue(applied.saved, 'The migrated widget fixture must fit the account profile and persist successfully.');
@@ -70,6 +76,9 @@ Scenario('Migrated overview widgets persist independently and clean up monitorin
         await waitForWidgets(I);
         I.refreshPage();
         await waitForWidgets(I);
+        I.assertTrue(await I.executeScript(() => document.querySelectorAll('[data-widget-type="logged-admins"] .md-dashboard-widget__admins > li').length
+            === document.querySelector('webjet-overview-dashboard').data.loggedAdmins.length), 'The administrator card must render the complete injected list.');
+        I.assertEqual(adminRequests.length, 0, 'Adding and reloading the administrator widget must not call REST.');
         const reloaded = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings);
         for (const item of applied.items) {
             I.assertDeepEqual(reloaded.items.find(saved => saved.id === item.id), item, `${item.type} must retain its stable instance and size across reload.`);
@@ -131,6 +140,7 @@ Scenario('Migrated overview widgets persist independently and clean up monitorin
             }
         }
     } finally {
+        await I.stopMockingRoute('**/admin/rest/dashboard/data/logged-admins*');
         I.wjSetDefaultWindowSize();
         const restored = await I.executeScript(async settings => {
             const response = await fetch('/admin/rest/dashboard/settings', {

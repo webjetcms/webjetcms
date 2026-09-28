@@ -168,21 +168,21 @@ export function registerSystemWidgets() {
     registerWidget({
         type: 'logged-admins', titleKey: 'admin.dashboard.logged-admins.js', descriptionKey: 'admin.dashboard.logged-admins.description.js', icon: 'ti-users',
         multiple: true, sizes: ['2x2', '2x3'], defaultSize: '2x2', isAvailable: () => window.WJ.hasPermission('welcomeShowLoggedAdmins'),
-        async render({ container, context, signal }) {
-            const data = await fetchData('logged-admins', {}, signal); if (signal.aborted) return;
-            if (!data.items.length) { empty(container, context); return; }
+        render({ container, context, signal }) {
+            const admins = context.data.loggedAdmins;
+            if (!admins.length) { empty(container, context); return; }
             const list = node('ul', 'md-dashboard-widget__admins list-unstyled');
             list.tabIndex = 0;
             list.setAttribute('aria-label', text(context, 'logged-admins'));
             containNativeScroll(list, signal);
-            data.items.forEach(user => {
+            admins.forEach(user => {
                 const row = node('li');
                 row.append(icon('ti-user'), node('span', 'md-dashboard-widget__admin-name', user.fullName));
                 const mail = adminMail(user, context);
                 if (mail) row.append(mail);
                 list.append(row);
             });
-            container.append(list, node('p', 'md-dashboard-widget__footnote small', text(context, 'adminsCount', number(data.total))));
+            container.append(list, node('p', 'md-dashboard-widget__footnote small', text(context, 'adminsCount', number(admins.length))));
         }
     });
     for (const type of ['server-memory', 'server-cpu']) registerWidget({

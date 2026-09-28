@@ -6,7 +6,7 @@ let originalSettings;
 let previewSettings;
 
 const settingsRoute = '**/admin/rest/dashboard/settings';
-const recentPagesRoute = '**/admin/rest/dashboard/recent-pages';
+const recentPagesRoute = '**/admin/rest/web-pages/all?*';
 const searchTermsRoute = '**/admin/rest/dashboard/data/search-terms*';
 const topPagesRoute = '**/admin/rest/dashboard/data/top-pages*';
 const missingThumbnailRoute = '**/thumb/images/autotest-dashboard-missing.jpg?*';
@@ -286,10 +286,10 @@ Scenario('Compact metrics and scrollable recent pages align above three equal pr
         { id: 'compact-autotest-pages', type: 'recent-pages', size: '3x2', options: {} },
         ...['referrers', 'publishing', 'newsletter'].map(type => ({ id: `compact-autotest-${type}`, type, size: '2x2', options: { days: 7 } }))
     ];
-    await I.mockRoute(recentPagesRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(
+    await I.mockRoute(recentPagesRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ content:
         Array.from({ length: 6 }, (_, index) => ({ docId: index + 1, title: `Recent page autotest ${index + 1}`,
-            fullPath: `/Autotest section/Recent page autotest ${index + 1}`, saveDate: '26.09.2026 10:00', perexImage: '' }))
-    ) }));
+            fullPath: `/Autotest section/Recent page autotest ${index + 1}`, dateCreated: Date.UTC(2026, 8, 26, 10), perexImage: '' }))
+    }) }));
     I.resizeWindow(1337, 1052);
     I.refreshPage();
     await waitForOverview(I);

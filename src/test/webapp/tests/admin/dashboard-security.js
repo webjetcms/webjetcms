@@ -16,8 +16,9 @@ const permissionCases = [
 ];
 const sizes = { 'recent-pages': '3x2', publishing: '2x2', 'top-pages': '2x3', 'search-terms': '2x3', referrers: '2x2',
     newsletter: '2x2', 'changed-pages': '3x2', audit: '3x2', 'logged-admins': '2x2', 'server-memory': '3x2', 'server-cpu': '3x2' };
-function endpoints(type) {
-    if (type === 'recent-pages') return ['/admin/rest/dashboard/recent-pages'];
+function endpoints(type, recentPagesGroupId) {
+    if (type === 'logged-admins') return [];
+    if (type === 'recent-pages') return [`/admin/rest/web-pages/all?groupId=${recentPagesGroupId}&size=6&page=0&sort=dateCreated%2Cdesc`];
     if (type === 'approvals') return ['/admin/rest/webpages/toapprove/all?size=6&page=0&sort=saveDate,desc', '/admin/rest/groups/toapprove/all?size=6&page=0&sort=saveDate,desc'];
     if (type.startsWith('server-')) return ['/admin/rest/monitoring/actual'];
     return [`/admin/rest/dashboard/data/${type}`];
@@ -68,10 +69,14 @@ Scenario('Preserve preferences and install all permission-controlled widgets', a
 });
 
 for (const { permission, types } of permissionCases) {
-    Scenario(`${permission}: hide saved widgets and catalogue entries and deny direct REST calls`, async ({ I }) => {
+    Scenario(`${permission}: hide saved widgets and catalogue entries and deny unauthorized data access`, async ({ I }) => {
         I.assertTrue(await I.executeScript(permission => WJ.hasPermission(permission), permission), 'Logout must restore the real account permissions.');
         for (const type of types) I.seeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
-        const paths = [...new Set(types.flatMap(endpoints))];
+        if (permission === 'welcomeShowLoggedAdmins') {
+            I.assertTrue((await I.executeScript(readDashboardBootstrap)).loggedAdmins.length > 0, 'Authorized page data must contain logged-in administrators.');
+        }
+        const recentPagesGroupId = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').config.recentPagesGroupId);
+        const paths = [...new Set(types.flatMap(type => endpoints(type, recentPagesGroupId)))];
         for (const result of await readEndpoints(I, paths)) {
             I.assertEqual(result.status, 200, `${result.path} must work before removing ${permission}.`);
             I.assertFalse(Boolean(result.error), `${result.path} must not return a DataTable error while authorized.`);
@@ -80,12 +85,15 @@ for (const { permission, types } of permissionCases) {
         I.amOnPage(`/admin/v9/?removePerm=${permission}`);
         loaded(I);
         I.assertFalse(await I.executeScript(permission => WJ.hasPermission(permission), permission));
+        if (permission === 'welcomeShowLoggedAdmins') {
+            I.assertFalse(Object.prototype.hasOwnProperty.call(await I.executeScript(readDashboardBootstrap), 'loggedAdmins'), 'The server must omit administrator data without permission.');
+        }
         for (const type of types) I.dontSeeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
         I.seeElementInDOM(`${dashboard} [data-widget-type="sessions"]`);
         for (const result of await readEndpoints(I, paths)) {
-            if (/^\/admin\/rest\/(webpages|groups)\/toapprove\//.test(result.path)) {
+            if (/^\/admin\/rest\/(?:(webpages|groups)\/toapprove\/|web-pages\/all)/.test(result.path)) {
                 const deniedBody = result.status === 200 && ['Access Denied', 'Access is denied'].includes(result.error) && result.contentPresence === false;
-                I.assertTrue(result.status === 403 || deniedBody, `${result.path} must deny access without exposing approval content.`);
+                I.assertTrue(result.status === 403 || deniedBody, `${result.path} must deny access without exposing page or approval content.`);
             } else I.assertEqual(result.status, 403, `${result.path} must reject direct requests without ${permission}.`);
         }
         I.assertEqual((await readEndpoints(I, ['/admin/rest/dashboard/menu']))[0].status, 200, 'An unrelated authorized request must still pass with this session and token.');

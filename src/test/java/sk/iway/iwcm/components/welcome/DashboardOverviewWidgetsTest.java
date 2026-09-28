@@ -21,8 +21,6 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.stat.SessionDetails;
-import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -35,9 +33,8 @@ class DashboardOverviewWidgetsTest {
     void deniesMissingPermissionsBeforeAnyDataAccess() {
         Identity user = mock(Identity.class);
         when(user.isAdmin()).thenReturn(true);
-        Map<String, String> permissions = Map.of("changed-pages", "menuWebpages", "audit", "cmp_adminlog",
-            "logged-admins", "welcomeShowLoggedAdmins");
-        try (var database = mockStatic(DBPool.class); var sessions = mockStatic(SessionHolder.class)) {
+        Map<String, String> permissions = Map.of("changed-pages", "menuWebpages", "audit", "cmp_adminlog");
+        try (var database = mockStatic(DBPool.class)) {
             permissions.forEach((type, permission) -> {
                 assertThrows(AccessDeniedException.class, () -> service.load(type, 7, "sessions", null, null, user, "current.example"));
                 when(user.isEnabledItem(permission)).thenReturn(true);
@@ -45,7 +42,6 @@ class DashboardOverviewWidgetsTest {
                 when(user.isEnabledItem(permission)).thenReturn(false);
             });
             database.verifyNoInteractions();
-            sessions.verifyNoInteractions();
         }
     }
 
@@ -126,41 +122,6 @@ class DashboardOverviewWidgetsTest {
         }
         verify(statement).setMaxRows(6);
         verify(statement).setQueryTimeout(15);
-    }
-
-    /** Multiple sessions do not duplicate people or expose their settings, credentials or session IDs. */
-    @Test
-    void loggedAdminsRetainsEveryDistinctAccountInANarrowProjection() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(true);
-        when(user.isEnabledItem("welcomeShowLoggedAdmins")).thenReturn(true);
-        SessionHolder holder = mock(SessionHolder.class);
-        List<SessionDetails> sessions = new ArrayList<>();
-        for (int id : List.of(1, 1, 2, 3, 4, 5, 6, 7, 8)) {
-            SessionDetails session = mock(SessionDetails.class);
-            when(session.getLoggedUserId()).thenReturn(id);
-            when(session.isAdmin()).thenReturn(id != 8);
-            sessions.add(session);
-        }
-        when(holder.getList()).thenReturn(sessions);
-        try (var sessionStatic = mockStatic(SessionHolder.class); var users = mockStatic(UsersDB.class)) {
-            sessionStatic.when(SessionHolder::getInstance).thenReturn(holder);
-            for (int id = 1; id <= 7; id++) {
-                UserDetails active = mock(UserDetails.class);
-                when(active.isAdmin()).thenReturn(true);
-                when(active.getFullName()).thenReturn("Administrator " + id);
-                when(active.getEmail()).thenReturn("admin" + id + "@example.test");
-                int userId = id;
-                users.when(() -> UsersDB.getUserCached(userId)).thenReturn(active);
-            }
-            var result = service.load("logged-admins", 7, "sessions", null, null, user, null);
-            assertEquals(7L, result.get("total"));
-            List<?> items = (List<?>)result.get("items");
-            assertEquals(7, items.size());
-            assertEquals(Map.of("userId", 1, "fullName", "Administrator 1", "email", "admin1@example.test"), items.get(0));
-            users.verify(() -> UsersDB.getUserCached(1), times(1));
-            users.verify(() -> UsersDB.getUserCached(8), never());
-        }
     }
 
     /** Data failures remain failures rather than an empty audit preview. */

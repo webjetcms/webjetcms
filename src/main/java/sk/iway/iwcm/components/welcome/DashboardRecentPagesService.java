@@ -4,15 +4,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
@@ -26,8 +21,7 @@ import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.EditorForm;
 
-/** Recent edits filtered against current page permissions and domain before limiting the list. */
-@Service
+/** Search previews and shared page checks using current permissions and domain. */
 public class DashboardRecentPagesService {
     private final DashboardSettingsRepository.ConnectionFactory connections;
 
@@ -72,50 +66,6 @@ public class DashboardRecentPagesService {
             }
         } catch (SQLException exception) {
             throw new IllegalStateException("Could not load dashboard page previews", exception);
-        }
-        return pages;
-    }
-
-    /**
-     * Lists the current user's most recently edited distinct pages in the active domain.
-     * Historical rows cannot grant access to a page that was moved or had its permissions changed.
-     */
-    public List<DocDetailsDto> getRecentPages(Identity user, String domain, int size) {
-        if (size < 1 || size > 20) throw new IllegalArgumentException("Recent page count must be between 1 and 20");
-        if (!user.isEnabledItem("menuWebpages")) throw new org.springframework.security.access.AccessDeniedException("Web page access is required");
-        List<DocDetailsDto> pages = new ArrayList<>();
-        Set<Integer> visited = new HashSet<>();
-        String sql = "SELECT h.doc_id, h.save_date, d.perex_image FROM documents_history h"
-            + " JOIN documents d ON d.doc_id=h.doc_id WHERE h.author_id=? ORDER BY h.save_date DESC, h.history_id DESC";
-        try (Connection connection = connections.open(); PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setInt(1, user.getUserId());
-            statement.setFetchSize(100);
-            statement.setQueryTimeout(15);
-            try (ResultSet rows = statement.executeQuery()) {
-                while (rows.next() && pages.size() < size) {
-                    int docId = rows.getInt("doc_id");
-                    if (!visited.add(docId)) continue;
-                    DocDetails current = DocDB.getInstance().getBasicDocDetails(docId, false);
-                    if (!isAccessible(current, user, domain)) continue;
-                    if (current.getVirtualPath() != null && current.getVirtualPath().startsWith("/files/")) continue;
-
-                    DocDetailsDto dto = new DocDetailsDto();
-                    dto.setDocId(docId);
-                    dto.setGroupId(current.getGroupId());
-                    dto.setTitle(Tools.replace(current.getTitle(), "&#47;", "/"));
-                    dto.setVirtualPath(current.getVirtualPath());
-                    dto.setFullPath(current.getFullPath());
-                    dto.setPerexImage(previewImage(rows.getString("perex_image")));
-                    java.sql.Timestamp saved = rows.getTimestamp("save_date");
-                    dto.setSaveDate(saved == null ? "" : Tools.formatDateTimeSeconds(saved.getTime()));
-                    dto.setCreatedByUserId(user.getUserId());
-                    dto.setCreatedByUserName(user.getFullName());
-                    dto.setCreatedByUserLogin(user.getLogin());
-                    pages.add(dto);
-                }
-            }
-        } catch (SQLException exception) {
-            throw new IllegalStateException("Could not load recent dashboard pages", exception);
         }
         return pages;
     }

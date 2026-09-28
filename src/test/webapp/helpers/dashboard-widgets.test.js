@@ -18,7 +18,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
         cpuUsageProcess: latest?.process ?? null, cpuUsage: latest?.system ?? null };
     const scope = vm.createContext({ window, document: window.document, Node: window.Node, DOMParser: window.DOMParser, DOMException: window.DOMException, URL, URLSearchParams, AbortController, console,
         IntersectionObserver: class { observe() {} disconnect() {} },
-        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/monitoring/actual') ? snapshot : url.includes('/data/') ? data : pages }; }
+        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/monitoring/actual') ? snapshot : url.includes('/data/') ? data : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
     });
     for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'monitoring-live.js', 'system-widgets.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
@@ -29,7 +29,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
     }
     scope.registerDashboardWidgets();
     if (extraWidgets && !scope.getWidget('sessions')) { scope.registerUtilityWidgets(); scope.registerDataWidgets(); }
-    const context = { data: { ...data, dashboardMenu: menu }, labels: {}, settings: {}, config: {}, translate: key => key };
+    const context = { data: { ...data, dashboardMenu: menu }, labels: {}, settings: {}, config: { recentPagesGroupId: '99999997' }, translate: key => key };
     t.after(() => window.close());
     return { scope, context, container: window.document.querySelector('main'), requests, window };
 }
@@ -226,8 +226,9 @@ test('URL shortcuts validate icon input and use only predefined background color
 });
 
 test('Recent pages retain six server-filtered rows safely in every supported size', async t => {
-    const pages = Array.from({ length: 8 }, (_, index) => ({ docId: index + 1, title: index ? `Page ${index}` : '<img src=x>', fullPath: '/Section', saveDate: '26.09.2026 10:00' }));
+    const pages = Array.from({ length: 8 }, (_, index) => ({ docId: index + 1, title: index ? `Page ${index}` : '<img src=x>', fullPath: '/Section', dateCreated: Date.UTC(2026, 8, 26, 10) }));
     const { scope, context, container, requests } = fixture(t, { pages });
+    context.config.recentPagesGroupId = '1234567';
     const widget = scope.getWidget('recent-pages');
     const signal = new AbortController().signal;
     assert.deepEqual(Array.from(widget.sizes), ['2x3', '3x2', '3x3']);
@@ -238,8 +239,9 @@ test('Recent pages retain six server-filtered rows safely in every supported siz
         assert.equal(container.querySelectorAll('li').length, 6);
         assert.equal(container.querySelector('img'), null);
         assert.equal(container.querySelectorAll('.md-dashboard-widget__page-section').length, 6);
-        assert.match(container.querySelector('.md-dashboard-widget__page-date').textContent, /26.09.2026/);
+        assert.equal(container.querySelector('.md-dashboard-widget__page-date').textContent, scope.date(pages[0].dateCreated));
     }
+    assert.equal(requests[0].url, '/admin/rest/web-pages/all?groupId=1234567&size=6&page=0&sort=dateCreated%2Cdesc');
     assert.equal(requests[0].options.signal, signal);
     assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
 });
@@ -279,7 +281,7 @@ test('Recent pages isolate native scrolling, keep links keyboard accessible and 
 
 test('Recent page thumbnails use supplied local perex images and restore an icon when loading fails', async t => {
     const { scope, context, container, window } = fixture(t, { pages: [
-        { docId: 1, title: 'Page', fullPath: '/Section/Page', perexImage: '/images/news/photo.jpg', saveDate: '02.03.2026 14:30:22' },
+        { docId: 1, title: 'Page', fullPath: '/Section/Page', perexImage: '/images/news/photo.jpg', dateCreated: Date.UTC(2026, 2, 2, 14, 30, 22) },
         { docId: 2, title: 'External image', perexImage: '//external.test/photo.jpg' },
         { docId: 3, title: 'Executable image', perexImage: 'javascript:alert(1)' },
         { docId: 4, title: 'No image', perexImage: '' }
@@ -294,7 +296,7 @@ test('Recent page thumbnails use supplied local perex images and restore an icon
     assert.equal(container.querySelectorAll('.md-dashboard-widget__page-image i:not([hidden])').length, 3);
     assert.equal(thumbnail.querySelector('i').hidden, true);
     assert.equal(container.querySelector('.md-dashboard-widget__page-section').textContent, '/Section');
-    assert.equal(container.querySelector('.md-dashboard-widget__page-date').textContent, '02.03.2026 14:30:22');
+    assert.equal(container.querySelector('.md-dashboard-widget__page-date').textContent, scope.date(Date.UTC(2026, 2, 2, 14, 30, 22)));
     image.dispatchEvent(new window.Event('error'));
     assert.equal(thumbnail.querySelector('img'), null);
     assert.equal(thumbnail.querySelector('i').hidden, false);
@@ -304,6 +306,19 @@ test('A denied recent-page request remains an error instead of an empty result',
     const { scope, context, container } = fixture(t, { ok: false });
     await assert.rejects(scope.getWidget('recent-pages').render({ container, context, instance: { size: '3x3' }, signal: new AbortController().signal }), /403/);
     assert.equal(container.textContent, '');
+});
+
+test('Recent pages distinguish empty content from DataTable errors', async t => {
+    const args = { signal: new AbortController().signal, instance: { size: '3x2' } };
+    const empty = fixture(t);
+    await empty.scope.getWidget('recent-pages').render({ ...args, context: empty.context, container: empty.container });
+    assert.match(empty.container.textContent, /empty/);
+    for (const error of ['Access Denied', 'Access is denied', 'Database unavailable']) {
+        const denied = fixture(t, { fetchResponse: async () => ({ ok: true, status: 200, json: async () => ({ error }) }) });
+        await assert.rejects(denied.scope.getWidget('recent-pages').render({ ...args, context: denied.context, container: denied.container }),
+            result => result.message === error && (error === 'Database unavailable' || result.dashboardReason === 'permission-denied'));
+        assert.equal(denied.container.textContent, '');
+    }
 });
 
 test('Default widgets follow permissions and authorized menu destinations', t => {
@@ -400,18 +415,18 @@ test('Changed pages and audit render bounded text-only activity with their suppl
     }
 });
 
-test('Logged administrators retain every authorized name with safe email actions in both sizes', async t => {
+test('Injected logged administrators render synchronously with safe email actions and no REST calls', t => {
     const emails = ['valid+autotest@example.com', 'autotest@example.com?bcc=other@example.com', 'autotest@example.com\r\nBcc:other@example.com',
         'autotest@example.com,other@example.com', 'autotest@example.com%0aBcc:other@example.com', ''];
     const items = emails.map((email, userId) => ({ userId, email, fullName: '<img src=x onerror=alert(1)>' }));
-    const { scope, context, container, window } = fixture(t, { data: { items, total: items.length } });
+    const { scope, context, container, window, requests } = fixture(t, { data: { loggedAdmins: items } });
     context.translate = (key, ...values) => `${key}:${values.join(',')}`;
     const widget = scope.getWidget('logged-admins');
     const controller = new AbortController();
     const args = { container, context, signal: controller.signal };
     for (const size of ['2x2', '2x3']) {
         container.replaceChildren();
-        await widget.render({ ...args, instance: { size } });
+        widget.render({ ...args, instance: { size } });
         assert.equal(container.querySelectorAll('.md-dashboard-widget__admins > li').length, items.length);
         assert.equal(container.querySelector('img'), null);
         assert.equal(container.querySelectorAll('a').length, 1);
@@ -431,10 +446,15 @@ test('Logged administrators retain every authorized name with safe email actions
     controller.abort();
     list.dispatchEvent(new window.WheelEvent('wheel', { bubbles: true }));
     assert.equal(bubbled, 1, 'Removed administrator cards must release their native-scroll listeners.');
+    context.data.loggedAdmins = [];
+    container.replaceChildren();
+    widget.render(args);
+    assert.match(container.textContent, /empty/);
+    assert.equal(requests.length, 0, 'Administrator cards must always use the injected list.');
 });
 
 test('Migrated provider failures stay errors and aborted responses do not append stale content', async t => {
-    for (const type of Object.keys(migratedPermissions)) {
+    for (const type of Object.keys(migratedPermissions).filter(type => type !== 'logged-admins')) {
         const denied = fixture(t, { ok: false });
         const args = { container: denied.container, context: denied.context, signal: new AbortController().signal, instance: { size: '3x3' } };
         await assert.rejects(denied.scope.getWidget(type).render(args), /403/, type);
