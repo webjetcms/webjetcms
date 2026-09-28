@@ -42,28 +42,25 @@ V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov 
     - contactus.html
 ```
 
-## Samostatné aplikácie a vlastný HTML kód
+## Vlastný HTML blok bez mriežky
 
-Aplikáciu `!INCLUDE(...)!` môžete vložiť aj mimo stĺpca, napríklad priamo medzi dve sekcie alebo do vlastného elementu vo vnútri sekcie. Page Builder pre ňu vytvorí náhľad a samostatné ovládanie. Aplikáciu môžete vybrať aj v paneli **Štruktúra**, upraviť jej nastavenia, presunúť, duplikovať alebo zmazať. Presun a duplikovanie na zvolené miesto sú obmedzené na elementy s rovnakým priamym rodičom.
-
-Vlastný HTML kód bez okolitej sekcie a mriežky vložíte cez základný blok **Vloženie HTML kódu** pri pridávaní sekcie. Blok používa existujúcu aplikáciu na vkladanie HTML, v ktorej zadáte napríklad:
+Blok v adresári `section/<category>/` môže mať koreňový element `<section>` alebo `<div class="pb-section">`. Trieda `pb-section` označí vlastný DIV ako sekciu: v Page Builderi má rovnaké ovládanie štýlov, presunu, duplikovania a zmazania. Nie je potrebné pridávať `container`, `row` ani stĺpce.
 
 ```html
-<div id="app" data-plugin-type="roaming" data-plugin-customer="b2c"></div>
-<div id="app2">Custom application content</div>
+<div class="pb-section" id="app" data-plugin-type="roaming" data-plugin-customer="b2c"></div>
 ```
 
-Do obsahu stránky sa uloží iba direktíva tejto aplikácie. Pri zobrazení stránky sa na jej mieste vyrenderuje zadaný HTML kód, takže oba `div` elementy môžu byť priamymi súrodencami sekcií. Nepribudne okolo nich `section`, `container`, `row` ani `column-content`. Rovnakým spôsobom je možné vytvoriť aj stránku obsahujúcu iba samostatné aplikácie.
+DIV sa vloží priamo medzi ostatné sekcie. Pri uložení sa zachová jeho značka, trieda `pb-section`, `id` aj vlastné atribúty; editor nepridá ďalší obal. Pre text, ktorý má redaktor upravovať, označte príslušný vnútorný element triedou `pb-editable`.
 
-Aj súbor bloku v adresári `section/<category>/` môže obsahovať iba direktívu aplikácie, napríklad:
+Do takéhoto bloku môžete vložiť aj aplikáciu, napríklad existujúcu aplikáciu **Vloženie HTML kódu**:
 
 ```html
-!INCLUDE(/components/app-htmlembed/embed.jsp, html=)!
+<div class="pb-section" id="app2">!INCLUDE(/components/app-htmlembed/embed.jsp, html=)!</div>
 ```
 
-V tomto prípade kategória `section` určuje miesto vloženia v knižnici, nepridáva však HTML značku `<section>`. Obsah vloženého bloku potom nastavíte cez bežný dialóg aplikácie.
+Aplikácia zobrazí náhľad a jej obsah nastavíte bežným dialógom aplikácie. Presúvanie a ďalšie operácie sa vykonávajú nad celým blokom `div.pb-section`.
 
-Technicky sa počas editácie pridajú dočasné elementy s triedou `pb-temp-wrapper`; vnútorný element má aj triedu `pb-editable` a zabezpečuje inicializáciu CKEditora. Pri získaní obsahu na uloženie alebo prepnutie editora sa tieto elementy odstránia. Pôvodný rodič aplikácie, jeho atribúty aj okolitý text zostanú zachované. Aplikácie v existujúcich editovateľných stĺpcoch alebo elementoch `pb-editable` používajú svoj pôvodný editor. Triedy dočasných elementov preto nepridávajte do zdrojových blokov ručne.
+Náhľad `!INCLUDE(...)!` funguje aj priamo v sekcii alebo vo vlastnom vnorenom DIVe mimo stĺpcov. Page Builder dočasne obalí iba direktívu elementom `div.pb-editable.pb-temp-wrapper`, aby pre ňu inicializoval CKEditor. Pri uložení a prepnutí editora obal odstráni; pôvodný rodič, jeho atribúty a okolitý text zostanú zachované. Aplikácie v existujúcich editovateľných oblastiach používajú svoj pôvodný editor. Dočasný obal do knižničných blokov nepridávajte ručne.
 
 ## Názov a značky bloku
 

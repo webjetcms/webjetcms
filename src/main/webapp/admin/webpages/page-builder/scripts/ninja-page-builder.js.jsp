@@ -52,7 +52,7 @@
 
             //inject section if there is no section in HTML
             let html = $(this.element).html();
-            if (html.indexOf("<section")==-1 && this.get_application_text_nodes(this.$wrapper).length === 0)
+            if (html.indexOf("<section")==-1 && !this.$wrapper.children(this.grid.section).length)
             {
                 //console.log("HTML kod neobsahuje ziadnu section, pridavam, html=", html);
                 if ("<p>&nbsp;</p>"==html) html = "<p>Text</p>";
@@ -82,7 +82,6 @@
                     empty: "<iwcm:text key='pagebuilder.ui.empty'/>",
                     select: "<iwcm:text key='pagebuilder.ui.select'/>",
                     section: "<iwcm:text key='pagebuilder.ui.section'/>",
-                    application: "<iwcm:text key='pagebuilder.ui.application'/>",
                     container: "<iwcm:text key='pagebuilder.ui.container'/>",
                     row: "<iwcm:text key='pagebuilder.ui.row'/>",
                     column: "<iwcm:text key='pagebuilder.ui.column'/>",
@@ -337,7 +336,8 @@
             if ($(target).closest(this.tagc.empty_placeholder_wrapper+', '+this.tagc.modal+', '+this.tagc.library+', '+this.tagc.notify).length) return null;
             var node = $(target).closest(this.tagc._grid_element+', [data-ckeditor-instance]')[0];
             if (node && $(node).is('[data-ckeditor-instance]') && !$(node).hasClass(this.tag._grid_element)) {
-                node = $(node).closest(this.tagc.application+', '+this.tagc.column)[0] || node;
+                var parent = $(node).hasClass(this.tag.temp_wrapper) ? this.tagc.section : this.tagc.column;
+                node = $(node).closest(parent)[0] || node;
             }
             return node && this.$wrapper[0].contains(node) ? node : null;
         },
@@ -350,7 +350,6 @@
 
         workbench_type: function(element) {
             var node = $(element);
-            if (node.hasClass(this.tag.application)) return 'application';
             if (node.hasClass(this.tag.duplicable)) return node.hasClass(this.tag.row) ? 'row' : 'item';
             for (var type of ['column', 'row', 'container', 'section']) {
                 if (node.hasClass(this.tag[type])) return type;
@@ -361,7 +360,6 @@
         /** Returns a short content-derived name without adding metadata to the authored HTML. */
         workbench_name: function(element) {
             var node = $(element), heading = node.find('h1,h2,h3,h4,h5,h6').first();
-            if (node.hasClass(this.tag.application)) return node.find('iframe.wj_component').first().attr('title') || this.ui.labels.application;
             var text = heading.text();
             if (!text) {
                 var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT), part;
@@ -428,13 +426,11 @@
                 if (['duplicate-adjacent', 'before', 'after'].includes(action)) source = 'duplicate';
                 if (['previous', 'next'].includes(action)) source = 'move';
                 var original = toolbar.find(me.tagc['toolbar_button_'+source]);
-                if (!original.length || (['before', 'after'].includes(action) && (node.hasClass(me.tag.duplicable) ||
-                    (node.hasClass(me.tag.application) && node.parent()[0] !== me.$wrapper[0])))) return;
+                if (!original.length || (['before', 'after'].includes(action) && node.hasClass(me.tag.duplicable))) return;
                 var label = action === 'duplicate-adjacent' ? ui.labels.duplicate :
                     ['before', 'after', 'previous', 'next'].includes(action) ? ui.labels[action] : original.attr('data-title');
                 var button = me.workbench_button(action, label, entry[1]);
                 if (['previous', 'next'].includes(action)) button.prop('disabled', !me.workbench_sibling(action));
-                if (action === 'move' && node.hasClass(me.tag.application)) button.prop('disabled', me.application_siblings(node).not(node).length === 0);
                 if (action === 'resize') {
                     var resizing = node.closest('.'+me.state.is_resize_columns).length > 0;
                     button.attr('aria-pressed', String(resizing))
@@ -451,8 +447,7 @@
 
         workbench_sibling: function(direction) {
             var me = this, node = $(me.ui.selected), type = me.workbench_type(node);
-            var siblings = node.hasClass(me.tag.application) ? me.application_siblings(node) : node.parent().children(me.tagc._grid_element).filter(function() {
-                if (type === 'section' && node.parent()[0] === me.$wrapper[0] && $(this).hasClass(me.tag.application)) return true;
+            var siblings = node.parent().children(me.tagc._grid_element).filter(function() {
                 return me.workbench_type(this) === type && (!node.hasClass(me.tag.duplicable) ||
                     ($(this).hasClass(me.tag.duplicable) && this.tagName === node[0].tagName));
             });
@@ -675,7 +670,7 @@
                 if (type === 'row' && !$(this).children(me.tagc.column).length) group(this, 'column');
             });
             groups.forEach(function(item) {
-                var nodes = $(item.parent).children(item.type === 'section' ? me.tagc.section+', '+me.tagc.application : me.tagc[item.type]).filter(':visible').get();
+                var nodes = $(item.parent).children(me.tagc[item.type]).filter(':visible').get();
                 var points = [];
                 for (var i = 0; i <= nodes.length; i++) {
                     var next = nodes[i], previous = nodes[i-1];
@@ -1065,8 +1060,8 @@
             });
             node = me.getClearNode(node);
             me.clearEditorAttributes(node);
-            node.find(me.tagc.temp_wrapper).get().reverse().forEach(function(wrapper) {
-                $(wrapper).replaceWith($(wrapper).contents());
+            node.find(me.tagc.temp_wrapper).each(function() {
+                $(this).replaceWith($(this).contents());
             });
             return node;
         },
@@ -1126,7 +1121,7 @@
                 node.find("aside."+me.tag.size_changer).remove();
 
                 node.find("."+me.tag._grid_element)
-                    .removeClass(me.tag.section)
+                    .removeClass(function() { return this.tagName === 'DIV' && me.tag.section === me.tag.editable_section ? '' : me.tag.section; })
                     .removeClass(me.tag.container)
                     .removeClass(me.tag.row)
                     .removeClass(me.tag.column)
@@ -1185,9 +1180,7 @@
                 container:                      prefix+'container',
                 row:                            prefix+'row',
                 column:                         prefix+'column',
-                application:                    prefix+'application',
                 temp_wrapper:                   prefix+'temp-wrapper',
-                application_target:             prefix+'application-target',
                 duplicable:                     prefix+'duplicable-element',
                 column_content:                 prefix+'column__content',
                 content:                        prefix+'content',
@@ -1293,7 +1286,6 @@
                 container:                      me.tag.container                      +' '+ me.tag._grid_element,
                 row:                            me.tag.row                            +' '+ me.tag._grid_element,
                 column:                         me.tag.column                         +' '+ me.tag._grid_element,
-                application:                    me.tag.application                    +' '+ me.tag._grid_element,
                 duplicable:                     me.tag.duplicable                     +' '+ me.tag._grid_element,
 
                 append:                         me.tag.append                         +' '+ me.tag._plus_button,
@@ -1352,7 +1344,7 @@
             me.statec = {};
 
             me.grid = me.options.grid || {
-                section:                        'section:not(.pb-not-section)',
+                section:                        'section:not(.pb-not-section), div.pb-section:not(.pb-not-section)',
                 section_default_class:          '',
                 container:                      'div[class^="container"]:not(.pb-not-container), div[class*="pb-custom-container"]',
                 container_default_class:        'container',
@@ -1637,11 +1629,6 @@
                 $.each(containers,function(i,v){
                     v.content = '<section class="'+me.grid.section_default_class+'">'+v.content+'</section>';
                 });
-                containers.push({
-                    id: 'pb-basic-application',
-                    textKey: "<iwcm:text key='components.app-htmlembed.title'/>",
-                    content: '!INCLUDE(/components/app-htmlembed/embed.jsp, html=)!'
-                });
                 return containers;
             }
         },
@@ -1693,7 +1680,7 @@
             // <%--// this.mark_editable_elements(this.$wrapper);--%>
 
             //check for empty-placeholder and remove it if neccessary
-            var sections = $(this.$wrapper).children(this.grid.section+', '+this.tagc.application);
+            var sections = $(this.$wrapper).children(this.grid.section);
             if(sections.length==0){
                 this.create_empty_placeholder(this.$wrapper);
             } else {
@@ -1722,48 +1709,28 @@
         /*====================|> MARK ALL SECTIONS IN WRAPPER
         /*=================================================================*/
 
-        /** Finds application directives outside existing editors without parsing unrelated HTML. */
-        get_application_text_nodes: function(root) {
-            var me = this, nodes = [], element = $(root)[0];
+        /** Creates temporary CKEditor regions for applications outside editable content in sections. */
+        prepare_application_blocks: function(root) {
+            var me = this, nodes = [];
             var excluded = 'script, style, textarea, template, noscript, select, iframe, [data-ckeditor-instance], '+
                 me.tagc.editable_content+', '+me.tagc.editable_element+', '+me.tagc.not_editable_element+', '+
-                me.tagc.temp_wrapper+', '+me.tagc.toolbar+', '+me.tagc.modal+', '+me.tagc.library+', '+me.tagc.notify+', '+
-                me.grid.column_content+', '+me.grid.column;
-            var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT), node;
-            while ((node = walker.nextNode())) {
-                if (/!INCLUDE\((.*?)\)!/i.test(node.nodeValue) && !$(node.parentElement).closest(excluded).length) nodes.push(node);
-            }
-            return nodes;
-        },
-
-        /** Creates one temporary editor per directive, preserving its parent and surrounding text. */
-        prepare_application_blocks: function(root) {
-            var me = this;
-            root = $(root || me.$wrapper);
-            me.get_application_text_nodes(root).forEach(function(node) {
+                me.tagc.temp_wrapper+', '+me.grid.column_content+', '+me.grid.column;
+            $(root || me.$wrapper).children(me.grid.section).each(function() {
+                var walker = document.createTreeWalker(this, NodeFilter.SHOW_TEXT), node;
+                while ((node = walker.nextNode())) {
+                    if (/!INCLUDE\((.*?)\)!/i.test(node.nodeValue) && !$(node.parentElement).closest(excluded).length) nodes.push(node);
+                }
+            });
+            nodes.forEach(function(node) {
                 var pattern = /!INCLUDE\((.*?)\)!/gi, match, start = 0, fragment = document.createDocumentFragment();
                 while ((match = pattern.exec(node.nodeValue))) {
-                    fragment.appendChild(document.createTextNode(node.nodeValue.slice(start, match.index)));
-                    var block = $('<div>').addClass(me.tag.temp_wrapper+' '+me.tags.application);
-                    $('<div>').addClass(me.tag.temp_wrapper+' '+me.tag.editable_element).text(match[0]).appendTo(block);
-                    fragment.appendChild(block[0]);
+                    if (match.index > start) fragment.appendChild(document.createTextNode(node.nodeValue.slice(start, match.index)));
+                    var editor = $('<div>').addClass(me.tag.temp_wrapper+' '+me.tag.editable_element).text(match[0]);
+                    fragment.appendChild(editor[0]);
                     start = pattern.lastIndex;
                 }
-                fragment.appendChild(document.createTextNode(node.nodeValue.slice(start)));
+                if (start < node.nodeValue.length) fragment.appendChild(document.createTextNode(node.nodeValue.slice(start)));
                 node.parentNode.replaceChild(fragment, node);
-            });
-            root.find(me.tagc.application).addBack(me.tagc.application).each(function() {
-                $(this).addClass(me.tags.application).attr('data-pb-application-label', "<iwcm:text key='pagebuilder.ui.application'/>");
-                me.create_duplicable_controllers(this);
-            });
-        },
-
-        /** Returns same-parent application destinations, excluding editor chrome and non-content nodes. */
-        application_siblings: function(element) {
-            var me = this;
-            return $(element).parent().children().filter(function() {
-                return !$(this).is('aside, script, style, template, noscript, textarea, select, iframe, object, embed, link, meta, input, img, br, hr, source, wbr, '+
-                    me.tagc.empty_placeholder_wrapper+', '+me.tagc.modal+', '+me.tagc.library+', '+me.tagc.notify+', '+me.tagc.not_editable_element);
             });
         },
 
@@ -1771,7 +1738,7 @@
             var me = this;
             var sections = $(wrapper).children(me.grid.section);
 
-            if(sections.length==0 && !$(wrapper).children(me.tagc.application).length){
+            if(sections.length==0){
                 me.create_empty_placeholder(wrapper);
             }else {
                 sections.each(function(index,section){
@@ -1783,8 +1750,6 @@
         },
 
         mark_section: function (section) {
-            section = $(section).not(this.tagc.application);
-            if (!section.length) return;
             if($(section).hasClass(this.tag.not_editable_element)){
                 return;
             }
@@ -2145,8 +2110,7 @@
             }
 
             // <%--// pre plusko vo wrapper (ak wrapper nema section a chceme tam nejaku pridat)--%>
-            if ($(el).is(me.tagc._plus_button) && $(el).parent().hasClass(me.tag.application_target)) return $(el).parent();
-            if($(el).parent().not(me.grid.section).not(me.tagc.application).parent().hasClass(this.tag.wrapper)){
+            if($(el).parent().not(me.grid.section).parent().hasClass(this.tag.wrapper)){
                 grid_element = $(el).parent().parent();
             }
 
@@ -2190,7 +2154,7 @@
 
                 var buttons = '';
 
-                if ($el.hasClass(this.tag.duplicable) || $el.hasClass(this.tag.application)) {
+                if ($el.hasClass(this.tag.duplicable)) {
                     buttons += this.build_button(this.tags.toolbar_button_move, null, "<iwcm:text key='pagebuilder.toolbar.move'/>");
                     buttons += this.build_button(this.tags.toolbar_button_duplicate, null, "<iwcm:text key='pagebuilder.toolbar.duplicate'/>");
                     buttons += this.build_button(this.tags.toolbar_button_remove, null, "<iwcm:text key='pagebuilder.toolbar.remove'/>");
@@ -2282,7 +2246,7 @@
                             $(el).append(this.build_aside(this.tag.empty_placeholder, content));
                         }
                     }
-                } else if( $(el).hasClass(this.tag.wrapper) && $(el).children(this.tagc.section+', '+this.tagc.application).length < 1 ){
+                } else if( $(el).hasClass(this.tag.wrapper) && $(el).children(this.tagc.section).length < 1 ){
                     $(el).append(this.build_aside(this.tag.empty_placeholder,content));
                 }
             }
@@ -2657,7 +2621,6 @@
 
             var grid_element = this.get_parent_grid_element(el),
                 parent = this.get_parent_grid_element(grid_element);
-            if (grid_element.hasClass(this.tag.application)) parent = grid_element.parent();
 
             var style_id = grid_element.attr(this.user_style.attr_name);
             if( $(this.$wrapper).find(this.tagc._grid_element+'[data-pb-user-style-id='+style_id+']').length < 2 ) $('style[style-id="'+style_id+'"]').remove();
@@ -2674,7 +2637,7 @@
             if (this.ui) this.select_workbench_element($(parent).is(this.tagc._grid_element) ? $(parent)[0] : null);
 
             let pbElement = $(this.element);
-            if (pbElement.children(this.tagc.section+', '+this.tagc.application).length==0) {
+            if (pbElement.children(this.grid.section).length==0) {
                 //zobraz tlacidlo na pridanie tabu
                 if (pbElement.find("."+this.tag.empty_placeholder).length==0) {
                     pbElement.prepend(this.build_aside(this.tag.empty_placeholder, this.build_button(this.tag.empty_placeholder_button, null, "<iwcm:text key='pagebuilder.toolbar.add_block'/>")));
@@ -2689,17 +2652,6 @@
         allow_move_grid_element: function (el) {
             var grid_element = this.get_parent_grid_element(el),
                 is_duplicable = $(grid_element).hasClass(this.tag.duplicable);
-
-            if ($(grid_element).hasClass(this.tag.application)) {
-                var me = this, targets = me.application_siblings(grid_element);
-                if (!me.duplicate) targets = targets.not(grid_element);
-                if (!targets.length) return;
-                targets.addClass(me.tag.application_target).each(function() {
-                    var target = $(this), existing = target.children(me.tagc._plus_button);
-                    me.create_plus_button(target);
-                    target.children(me.tagc._plus_button).not(existing).attr('data-pb-application-control', 'true');
-                });
-            }
 
             $(grid_element).addClass(this.state.is_moving);
             $(grid_element).prev(this.tagc._grid_element).addClass(this.state.is_sibling_left);
@@ -2727,10 +2679,7 @@
             }
             if (!this.ui) this.update_notify_content(this.duplicate ? "<iwcm:text key='pagebuilder.notify_content.duplicate'/>" : "<iwcm:text key='pagebuilder.notify_content.move'/>", '');
 
-            if($(grid_element).hasClass(this.tag.application)) {
-                $(this.$wrapper).addClass(this.state.is_moving_type(this.tag.application));
-            }
-            else if(is_duplicable) {
+            if(is_duplicable) {
                 $(this.$wrapper).addClass(this.state.is_moving_type(this.tag.duplicable));
             }
             else if($(grid_element).hasClass(this.tag.column)) {
@@ -2752,21 +2701,11 @@
 
             var grid_element = this.get_parent_grid_element($(el)),
                 moving = $(this.$wrapper).find(this.tagc._grid_element+this.statec.is_moving).first(),
-                is_duplicable = moving.hasClass(this.tag.duplicable),
-                is_application = moving.hasClass(this.tag.application);
+                is_duplicable = moving.hasClass(this.tag.duplicable);
 
             if (moving.length < 1 || grid_element === null) {
                 return;
             }
-
-            if (is_application && (
-                !$(grid_element).hasClass(this.tag.application_target) ||
-                moving.parent()[0] !== $(grid_element).parent()[0] ||
-                (!$(el).hasClass(this.tag.append) && !$(el).hasClass(this.tag.prepend)) ||
-                (!this.duplicate && moving[0] === $(grid_element)[0])
-            )) return;
-            if (!is_application && $(grid_element).hasClass(this.tag.application) &&
-                (!moving.hasClass(this.tag.section) || moving.parent()[0] !== this.$wrapper[0] || $(grid_element).parent()[0] !== this.$wrapper[0])) return;
 
             if (is_duplicable && (
                 !$(grid_element).hasClass(this.state.is_duplicable_target) ||
@@ -2780,7 +2719,7 @@
             }
 
             var clone = moving.clone().addClass(this.state.is_special_helper),
-                moving_parent = is_duplicable || is_application ? moving.parent() : this.get_parent_grid_element(moving);
+                moving_parent = is_duplicable ? moving.parent() : this.get_parent_grid_element(moving);
 
             var cloned_editors = clone.find("*[class*='editableElement']").addBack("*[class*='editableElement']");
             var me = this;
@@ -2788,7 +2727,6 @@
                 var editor = CKEDITOR.instances[$(this).attr('data-ckeditor-instance')];
                 $(this).html(me.get_application_editor_data(editor)).removeAttr('id');
             });
-            clone.removeClass(me.tag.application_target);
             cloned_editors.removeAttr("data-ckeditor-instance");
             cloned_editors.removeClass("editableElement cke_editable cke_editable_inline cke_contents_ltr cke_show_borders");
 
@@ -2823,7 +2761,7 @@
 
             this.duplicate_user_style_element();
             this.set_toolbar_visible($(this.statec.is_special_helper));
-            if (!is_duplicable && !is_application) {
+            if (!is_duplicable) {
                 this.create_empty_placeholder(moving_parent);
                 this.check_if_parent_is_empty_row(moving_parent);
             }
@@ -2862,8 +2800,6 @@
         },
 
         cancel_move_grid_element: function () {
-            this.$wrapper.find('[data-pb-application-control]').remove();
-            this.$wrapper.find(this.tagc.application_target).removeClass(this.tag.application_target+' som-hover-append som-hover-prepend');
             this.removeClassStartingWith($(this.$wrapper),this.state.is_moving);
             $(this.$wrapper).removeClass(this.state.is_duplicating);
             if (this.ui) {
@@ -2901,7 +2837,7 @@
                 content,
                 new_element;
 
-            if(!me.shift_key_down || $(parent).hasClass(me.tag.application)) {
+            if(!me.shift_key_down) {
                 if($(parent).hasClass(me.tag.column) && empty) {
                     return;
                 }
@@ -3000,26 +2936,27 @@
         },
 
         get_insert_new_element: function (el, new_element, parent) {
-            var $el = $(el), fragment = $('<div>');
-            fragment.append(typeof new_element === 'string' ? $.parseHTML(new_element, document, true) : new_element);
-            this.prepare_application_blocks(fragment);
-            var inserted = fragment.contents();
+            var $el = $(el);
             if($el.hasClass(this.tag.append)){
-                inserted.insertAfter(parent);
+                $(new_element).insertAfter(parent);
+                return $(parent).next();
             }
             else if($el.hasClass(this.tag.prepend)){
-                inserted.insertBefore(parent);
+                $(new_element).insertBefore(parent);
+                return $(parent).prev();
             }
             else if($el.hasClass(this.tag.empty_placeholder_button)){
-                if ($el.closest(this.tagc.empty_placeholder_wrapper).length) {
-                    // Append after all authored content, including applications inside custom root elements.
-                    inserted.insertBefore($el.closest(this.tagc.empty_placeholder_wrapper));
+                if ($el.parents("."+this.tag.empty_placeholder_wrapper).length>0 && $(parent).hasClass(this.tag.wrapper)==false) {
+                    //special case for fixed empty placeholder at the bottom of PB
+                    //then parent is wrapper, we need to insert after last section
+                    $(new_element).insertAfter(parent);
+                    return $(parent).next();
                 } else {
-                    inserted.addClass(this.state.is_special_helper).prependTo(parent);
+                    $(new_element).addClass(this.state.is_special_helper).prependTo(parent);
                     $(parent).children(this.tagc.empty_placeholder).off().unbind().remove();
+                    return $(parent).children(this.statec.is_special_helper);
                 }
             }
-            return inserted.filter(function() { return this.nodeType === Node.ELEMENT_NODE; });
         },
 
         make_new_column: function (column) {
@@ -3156,7 +3093,7 @@
             if (el == null) type = 'content';
             else if ($(parent).hasClass(me.tag.column) || $(parent).hasClass(me.tag.row)) type = 'column';
             else if ($(parent).hasClass(me.tag.container)) type = 'container';
-            else if (empty && $(parent).hasClass(me.tag.section)) type = 'container';
+            else if (empty && ($(parent).hasClass(me.tag.section) || $(parent).hasClass(me.tag.wrapper)) && $(me.element).find(me.grid.section).length) type = 'container';
             me.library_type = type;
 
             var library = me.$wrapper.find(me.tagc.library);
@@ -3175,7 +3112,7 @@
             else if (type === 'content') context = "<iwcm:text key='pagebuilder.library.at_cursor'/>";
             else if (ui) {
                 if (empty) {
-                    var lastSection = $(me.element).children(me.tagc.section+', '+me.tagc.application).last();
+                    var lastSection = $(me.element).children(me.grid.section).last();
                     context = $(parent).hasClass(me.tag.empty_placeholder_wrapper) && lastSection.length ? ui.labels.insertAfter+' “'+me.workbench_name(lastSection[0])+'”' : ui.labels.insertStart;
                 }
                 else context = (me.clicked_button.hasClass(me.tag.prepend) ? ui.labels.insertBefore : ui.labels.insertAfter)+' “'+me.workbench_name($(parent)[0])+'”';
@@ -3257,7 +3194,7 @@
                     if ($(parent).hasClass(me.tag.empty_placeholder_wrapper)) {
                         //check if there are any sections, if yes, insert after last section
                         //fixed empty placeholder at the bottom of PB
-                        var lastSection = $(me.element).children(me.tagc.section+', '+me.tagc.application).last();
+                        var lastSection = $(me.element).children(me.grid.section).last();
                         if (lastSection.length>0) {
                             parent = lastSection;
                             empty = false;
@@ -3383,7 +3320,7 @@
                     insert_content = me.get_insert_new_element(me.clicked_button, content, parent);
                     me.mark_container(insert_content);
                 }
-                else if($(parent).hasClass(me.tag.section) || $(parent).hasClass(me.tag.application)) {
+                else if($(parent).hasClass(me.tag.section) ) {
                     if(empty) {
                         // <%--// ak je prazdna section, potrebujem vlozit container--%>
                         var containers = me.get_json_object_by_attribute(me.template[template_type],'textKey','container');
@@ -3543,7 +3480,7 @@
                 if ($(parent).hasClass(me.tag.column)) parentTag = "column";
                 else if($(parent).hasClass(me.tag.row)) parentTag = "container";
                 else if($(parent).hasClass(me.tag.container)) parentTag = "container";
-                else if($(parent).hasClass(me.tag.section) || $(parent).hasClass(me.tag.application)) parentTag = "section";
+                else if($(parent).hasClass(me.tag.section)) parentTag = "section";
                 else if($(parent).hasClass(me.tag.content)) parentTag = "content";
 
                 //ak sa klikne na emptybutton musime posunut uroven parenta vyssie
@@ -3558,7 +3495,7 @@
 
                         //check if there are any sections, if yes, insert after last section
                         //fixed empty placeholder at the bottom of PB
-                        var lastSection = $(me.element).children(me.tagc.section+', '+me.tagc.application).last();
+                        var lastSection = $(me.element).children(me.grid.section).last();
                         if (lastSection.length>0) {
                             parent = lastSection;
                         }
@@ -5273,7 +5210,6 @@
             $wrapper.find(me.tagc.library).remove();
             $wrapper.find('.'+me.options.prefix+'-workbench, .'+me.options.prefix+'-outline-layer, .'+me.options.prefix+'-structure').remove();
             $wrapper.find('aside.'+me.options.prefix+'-insert-space').remove();
-            $wrapper.find('[data-pb-application-control]').remove();
 
             if (typeof clone !== 'undefined') {
                 return $wrapper;
@@ -5295,7 +5231,6 @@
             }
 
             $(wrapper).find(me.tagc.column).removeAttr(me.tag.column);
-            $(wrapper).find(me.tagc.application_target).removeClass(me.tag.application_target+' som-hover-append som-hover-prepend');
 
             $.each(me.column.valid_prefixes, function(index, class_name) {
                 $(wrapper).find(me.tagc.column).removeAttr(me.column.attr_prefix+class_name);
@@ -5308,13 +5243,13 @@
 
             $(wrapper).find(me.tagc._grid_element).children().removeClass(me.tag.column_content).removeClass(me.tag.editable_content);
 
+            $(wrapper).find(me.tagc._grid_element).not('div').removeClass(me.tag.editable_section);
             $(wrapper).find(me.tagc._grid_element)
-                .removeClass(me.tag.section)
+                .removeClass(function() { return this.tagName === 'DIV' && me.tag.section === me.tag.editable_section ? '' : me.tag.section; })
                 .removeClass(me.tag.container)
                 .removeClass(me.tag.row)
                 .removeClass(me.tag.column)
                 .removeClass(me.tag.duplicable)
-                .removeClass(me.tag.editable_section)
                 .removeClass(me.tag.editable_container)
                 .removeClass(me.tag.editable_element)
                 .removeClass(me.tag._grid_element)

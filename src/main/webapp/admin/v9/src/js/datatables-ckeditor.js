@@ -2555,7 +2555,7 @@ export class DatatablesCkEditor {
 			const $container = pbIframe.$(this);
 			const pageBuilder = $container.data('plugin_ninjaPageBuilder');
 			const $content = pbIframe.$('<div>').html(html);
-			if (!$content.find('section').length && pageBuilder.get_application_text_nodes($content).length === 0) {
+			if (!$content.find('section, '+pageBuilder.grid.section).length) {
 				if ("<p>&nbsp;</p>" === html) $content.html("<p>Text</p>");
 				$content.wrapInner('<section><div class="container"><div class="row"><div class="col-md-12"></div></div></div></section>');
 			}

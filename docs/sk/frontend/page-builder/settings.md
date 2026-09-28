@@ -107,7 +107,7 @@ Pôvodné HTML, CSS triedy, vlastné selektory a funkcie `pbCustomOptions`/`pbCu
 
 ### `SECTION` (modrá farba)
 
-Inicializácia pri použití elementu: ```<section>```.
+Inicializácia pri použití elementu `<section>` alebo `<div class="pb-section">`. Vlastný DIV používa rovnaké ovládanie sekcie bez pridania mriežky; trieda `pb-section` zostáva súčasťou uloženého HTML. [Príklady vlastných blokov](blocks.md#vlastný-html-blok-bez-mriežky).
 
 Štýlovanie pomocou triedy, s prefixom: ```pb-style-section-```
 
