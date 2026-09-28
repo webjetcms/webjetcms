@@ -672,12 +672,17 @@ webjet-overview-dashboard a:focus-visible {
         table-layout: fixed;
         font-size: 12px;
         --bs-table-bg: transparent;
-        --bs-table-border-color: var(--wj-nice-gray-100);
+        --bs-table-border-color: var(--wj-dashboard-divider);
         margin-bottom: 10px;
         a:not(.md-dashboard-widget__page-preview) { color: var(--wj-dashboard-link); }
         &.md-dashboard-widget__table--ranked { table-layout: auto; }
         &.md-dashboard-widget__table--pages td { vertical-align: middle; padding-block: 12px; }
-        &.md-dashboard-widget__table--approvals th:first-child { width: 50%; }
+        &.md-dashboard-widget__table--approvals {
+            th:first-child { width: 50%; }
+            .ti { vertical-align: middle; }
+        }
+        tbody td { border-top-color: var(--bs-table-border-color); }
+        tbody tr:hover, tbody tr:focus-within { background-color: var(--wj-dashboard-divider); }
 
         td, th {
             overflow-wrap: anywhere;
