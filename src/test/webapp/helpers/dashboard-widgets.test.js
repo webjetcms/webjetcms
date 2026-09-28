@@ -558,16 +558,22 @@ test('TOP pages map shared API fields and leave missing previous rankings unavai
     assert.equal(detail.searchParams.get('dateRange'), `daterange:${data.from}-${data.to}`);
 });
 
-test('Statistics keep module errors and never query all domains when the active root is unavailable', async t => {
+test('Statistics keep module errors for configured roots and reject missing roots', async t => {
     const { scope, context, requests } = fixture(t, { fetchResponse: async () => ({ ok: true, json: async () => ({ error: 'Access is denied' }) }) });
     const signal = new AbortController().signal;
-    for (const load of [scope.fetchTraffic, scope.fetchTopPages]) {
-        await assert.rejects(load({}, context, signal), error => error.dashboardReason === 'permission-denied');
+    for (const rootGroupId of [42, -1]) {
+        context.data.statRootGroupId = rootGroupId;
+        for (const load of [scope.fetchTraffic, scope.fetchTopPages]) {
+            await assert.rejects(load({}, context, signal), error => error.dashboardReason === 'permission-denied');
+            assert.equal(new URL(requests.at(-1).url, 'http://localhost').searchParams.get('searchRootDir'), String(rootGroupId));
+        }
     }
     const count = requests.length;
-    context.data.statRootGroupId = -1;
-    for (const load of [scope.fetchTraffic, scope.fetchTopPages]) {
-        await assert.rejects(load({}, context, signal), error => error.dashboardReason === 'domain-unavailable');
+    for (const rootGroupId of [null, undefined]) {
+        context.data.statRootGroupId = rootGroupId;
+        for (const load of [scope.fetchTraffic, scope.fetchTopPages]) {
+            await assert.rejects(load({}, context, signal), error => error.dashboardReason === 'domain-unavailable');
+        }
     }
     assert.equal(requests.length, count);
 });

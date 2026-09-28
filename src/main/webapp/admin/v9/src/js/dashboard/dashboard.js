@@ -520,6 +520,7 @@ export class DashboardController {
             if (abort.signal.aborted || this.destroyed) dispose(result);
             else view.cleanup = result;
         } catch (error) {
+            console.error("Dashboard widget render failed", error);
             if (abort.signal.aborted || this.destroyed) return;
             const reasonKey = { "domain-unavailable": "domainUnavailable", "selection-unavailable": "selectionUnavailable", "permission-denied": "permissionDenied" }[error.dashboardReason] || "widgetError";
             content.replaceChildren(node("p", "text-danger", this._t(reasonKey, "This widget could not be loaded.")), button(this._t("retry", "Try again"), () => this.refresh(id)));

@@ -58,7 +58,7 @@ function statisticsPeriod(days, now = new Date()) {
 
 /** Reuses the statistics module's date, folder and bot filters and DataTable error handling. */
 function statisticsRequest(type, from, to, context, signal, size, filters = {}) {
-    if (type !== 'error' && !(context.data.statRootGroupId > 0)) {
+    if (type !== 'error' && context.data.statRootGroupId == null) {
         const error = new Error('Statistics domain is unavailable');
         error.dashboardReason = 'domain-unavailable';
         throw error;

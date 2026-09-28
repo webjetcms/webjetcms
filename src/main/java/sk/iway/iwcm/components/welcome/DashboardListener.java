@@ -17,6 +17,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.admin.ThymeleafEvent;
@@ -51,7 +52,11 @@ public class DashboardListener {
             data.put("dashboardMenu", new MenuService(request).getMenu());
             data.put("userName", user.getFirstName());
             data.put("currentDomain", DocDB.getDomain(request));
-            data.put("statRootGroupId", CloudToolsForCore.getRootGroupId(request));
+
+            //use rootGroup only in multiweb, because its hard to use all groupIds in a whole domain, we need to update stat tables to use domain_id sometimes
+            if (InitServlet.isTypeCloud()) data.put("statRootGroupId", CloudToolsForCore.getRootGroupId(request));
+            else data.put("statRootGroupId", -1);
+
             data.put("settings", settingsService.load(user.getUserId(), DashboardRestController.domainKey(request)));
             data.put("notices", noticeService.load(user, request));
             data.put("currentSessions", new ObjectMapper().readTree(SessionClusterService.getSessionInfo(request.getSession().getId(), user.getUserId())));
