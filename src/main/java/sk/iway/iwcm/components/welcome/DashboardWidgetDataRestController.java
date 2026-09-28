@@ -40,7 +40,7 @@ public class DashboardWidgetDataRestController {
             HttpServletRequest request) {
         Identity user = UsersDB.getCurrentUser(request);
         if (user == null || !user.isAdmin()) throw new AccessDeniedException("Administrator login is required");
-        return service.load(type, days, metric, formName, campaignId, user, DocDB.getDomain(request), request.getSession().getId());
+        return service.load(type, days, metric, formName, campaignId, user, DocDB.getDomain(request));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

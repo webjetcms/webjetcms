@@ -34,9 +34,6 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
@@ -63,7 +60,6 @@ import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
-import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.ConfDB;
@@ -78,9 +74,9 @@ import sk.iway.iwcm.users.UsersDB;
 public class DashboardWidgetDataService {
     static final int PREVIEW_SIZE = 6;
     static final Set<String> TYPES = Set.of("publishing", "forms", "traffic", "top-pages",
-        "search-terms", "referrers", "newsletter", "errors", "sessions", "changed-pages", "audit",
+        "search-terms", "referrers", "newsletter", "errors", "changed-pages", "audit",
         "logged-admins");
-    private static final Set<String> SERVER_TYPES = Set.of("sessions", "audit", "logged-admins");
+    private static final Set<String> SERVER_TYPES = Set.of("audit", "logged-admins");
     private final FormsRepository forms;
     private final FormsServiceImpl formsService;
     private final CampaingsRepository campaigns;
@@ -93,13 +89,12 @@ public class DashboardWidgetDataService {
 
     /** Returns only fields required by the selected widget, never full module entities. */
     public Map<String, Object> load(String type, int days, String metric, String formName, Long campaignId,
-            Identity user, String domain, String currentSessionId) {
+            Identity user, String domain) {
         validate(type, days, metric, formName, campaignId);
         authorize(type, user);
         if (!SERVER_TYPES.contains(type) && Tools.isEmpty(domain)) throw new UnavailableException("domain-unavailable");
         Range range = completedDays(days, Clock.systemDefaultZone());
         return switch (type) {
-            case "sessions" -> sessions(user, currentSessionId);
             case "changed-pages" -> changedPages(user, domain, scope(user, domain));
             case "audit" -> audit();
             case "logged-admins" -> loggedAdmins();
@@ -122,7 +117,6 @@ public class DashboardWidgetDataService {
     static void authorize(String type, Identity user) {
         if (user == null || !user.isAdmin()) throw new AccessDeniedException("Administrator login is required");
         String permission = switch (type) {
-            case "sessions" -> null;
             case "publishing", "changed-pages" -> "menuWebpages";
             case "audit" -> "cmp_adminlog";
             case "logged-admins" -> "welcomeShowLoggedAdmins";
@@ -130,7 +124,7 @@ public class DashboardWidgetDataService {
             case "newsletter" -> "menuEmail";
             default -> "cmp_stat";
         };
-        if (permission != null && !user.isEnabledItem(permission)) throw new AccessDeniedException("Widget permission is required");
+        if (!user.isEnabledItem(permission)) throw new AccessDeniedException("Widget permission is required");
         if ("cmp_stat".equals(permission) && "none".equals(Constants.getString("statMode"))) {
             throw new UnavailableException("statistics-disabled");
         }
@@ -346,20 +340,6 @@ public class DashboardWidgetDataService {
             builder.greaterThanOrEqualTo(root.get("createDate"), new Date(range.from)),
             builder.lessThan(root.get("createDate"), new Date(range.until)),
             accessibleDocument(root.get("docId"), query, builder, scope));
-    }
-
-    private Map<String, Object> sessions(Identity user, String currentSessionId) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            var data = mapper.readTree(SessionClusterService.getSessionInfo(currentSessionId, user.getUserId()));
-            long count = 0;
-            for (var cluster : data.path("userSessions")) count += cluster.path("userSessions").size();
-            Map<String, Object> result = response(count, List.of());
-            result.put("currentSessions", mapper.convertValue(data, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {}));
-            return result;
-        } catch (JsonProcessingException exception) {
-            throw new UnavailableException("sessions-unavailable");
-        }
     }
 
     private Map<String, Object> statistics(String type, String metric, Scope scope, Range range) {

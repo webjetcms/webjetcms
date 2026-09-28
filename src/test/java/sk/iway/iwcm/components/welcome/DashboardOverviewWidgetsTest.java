@@ -39,7 +39,7 @@ class DashboardOverviewWidgetsTest {
             "logged-admins", "welcomeShowLoggedAdmins");
         try (var database = mockStatic(DBPool.class); var sessions = mockStatic(SessionHolder.class)) {
             permissions.forEach((type, permission) -> {
-                assertThrows(AccessDeniedException.class, () -> service.load(type, 7, "sessions", null, null, user, "current.example", "session"));
+                assertThrows(AccessDeniedException.class, () -> service.load(type, 7, "sessions", null, null, user, "current.example"));
                 when(user.isEnabledItem(permission)).thenReturn(true);
                 DashboardWidgetDataService.authorize(type, user);
                 when(user.isEnabledItem(permission)).thenReturn(false);
@@ -153,7 +153,7 @@ class DashboardOverviewWidgetsTest {
                 int userId = id;
                 users.when(() -> UsersDB.getUserCached(userId)).thenReturn(active);
             }
-            var result = service.load("logged-admins", 7, "sessions", null, null, user, null, "session");
+            var result = service.load("logged-admins", 7, "sessions", null, null, user, null);
             assertEquals(7L, result.get("total"));
             List<?> items = (List<?>)result.get("items");
             assertEquals(7, items.size());
@@ -173,7 +173,7 @@ class DashboardOverviewWidgetsTest {
             Connection connection = mock(Connection.class);
             when(connection.prepareStatement(anyString())).thenThrow(new java.sql.SQLException("Unavailable"));
             database.when(DBPool::getConnection).thenReturn(connection);
-            assertThrows(IllegalStateException.class, () -> service.load("audit", 7, "sessions", null, null, user, null, "session"));
+            assertThrows(IllegalStateException.class, () -> service.load("audit", 7, "sessions", null, null, user, null));
         }
     }
 }

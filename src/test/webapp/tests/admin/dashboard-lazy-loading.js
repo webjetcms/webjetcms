@@ -1,9 +1,7 @@
-const { showWidget } = require('../../helpers/dashboard-browser');
+const { showWidget, mockDashboardBootstrap, dashboardPageRoute } = require('../../helpers/dashboard-browser');
 
 Feature('admin.dashboard-lazy-loading');
 
-const settingsRoute = '**/admin/rest/dashboard/settings';
-const noticesRoute = '**/admin/rest/dashboard/notices';
 const dataRoute = '**/admin/rest/dashboard/data/**';
 const monitoringRoute = '**/admin/rest/monitoring/actual';
 
@@ -22,13 +20,11 @@ for (const width of [1337, 390]) {
                 { id: 'lazy-autotest-cpu', type: 'server-cpu', size: '3x3', collapsed: true, options: {} }
             ]
         };
-        await I.mockRoute(settingsRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(settings) }));
-        await I.mockRoute(noticesRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+        await mockDashboardBootstrap(I, () => ({ settings, notices: [], currentSessions: { userSessions: [] } }));
         await I.mockRoute(dataRoute, route => {
             const type = new URL(route.request().url()).pathname.split('/').pop();
             requests.push(type);
-            const body = type === 'sessions' ? { currentSessions: { userSessions: [] } }
-                : { total: 0, items: [], options: [], from: Date.now() - 86400000, to: Date.now() };
+            const body = { total: 0, items: [], options: [], from: Date.now() - 86400000, to: Date.now() };
             return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
         });
         await I.mockRoute(monitoringRoute, route => {
@@ -73,7 +69,7 @@ for (const width of [1337, 390]) {
             I.dontSee('Minimalizovať', '[data-instance-id="lazy-autotest-cpu"] .dropdown-menu');
             I.saveScreenshot(`dashboard-no-minimize-${width}.png`, false);
         } finally {
-            for (const route of [settingsRoute, noticesRoute, dataRoute, monitoringRoute]) await I.stopMockingRoute(route);
+            for (const route of [dashboardPageRoute, dataRoute, monitoringRoute]) await I.stopMockingRoute(route);
             I.wjSetDefaultWindowSize();
         }
     });

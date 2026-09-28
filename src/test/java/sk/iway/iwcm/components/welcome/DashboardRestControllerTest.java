@@ -39,7 +39,7 @@ class DashboardRestControllerTest {
     @Test
     void ignoresCallerSuppliedOwnerAndDomainParameters() {
         DashboardSettingsService settings = mock(DashboardSettingsService.class);
-        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class), mock(DashboardNoticeService.class));
+        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter("userId", "99");
         request.setParameter("domainId", "999");
@@ -54,10 +54,8 @@ class DashboardRestControllerTest {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
             domains.when(() -> CloudToolsForCore.getRootGroupId(request)).thenReturn(42);
 
-            controller.getSettings(request);
             assertSame(input, controller.putSettings(input, request));
 
-            verify(settings).load(7, "42");
             verify(settings).save(7, "42", input);
             verify(user).setAdminSettings(null);
         }
@@ -66,10 +64,9 @@ class DashboardRestControllerTest {
     @Test
     void unauthenticatedRequestsNeverAccessSettings() {
         DashboardSettingsService settings = mock(DashboardSettingsService.class);
-        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class), mock(DashboardNoticeService.class));
+        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
         try (MockedStatic<UsersDB> users = mockStatic(UsersDB.class)) {
-            assertThrows(AccessDeniedException.class, () -> controller.getSettings(request));
             assertThrows(AccessDeniedException.class, () -> controller.putSettings(new DashboardSettingsDto(), request));
             assertThrows(AccessDeniedException.class, () -> controller.deleteSettings(request));
             assertThrows(AccessDeniedException.class, () -> controller.resetSettings(new DashboardSettingsDto(), request));
@@ -81,7 +78,7 @@ class DashboardRestControllerTest {
     @Test
     void variantResetUsesAuthenticatedOwnerAndDomain() {
         DashboardSettingsService settings = mock(DashboardSettingsService.class);
-        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class), mock(DashboardNoticeService.class));
+        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter("userId", "99");
         request.setParameter("domainId", "999");
@@ -108,7 +105,7 @@ class DashboardRestControllerTest {
     @Test
     void resetUsesAuthenticatedOwnerAndPreservesCacheOnFailure() {
         DashboardSettingsService settings = mock(DashboardSettingsService.class);
-        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class), mock(DashboardNoticeService.class));
+        DashboardRestController controller = new DashboardRestController(settings, mock(DashboardRecentPagesService.class));
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter("userId", "99");
         request.setParameter("domainId", "999");

@@ -40,4 +40,30 @@ async function waitForWidgets(I) {
     }, position);
 }
 
-module.exports = { showWidget, waitForWidgets };
+const dashboardPageRoute = '**/admin/v9/';
+
+/** Overrides embedded data in the HTML response without changing the account's stored preferences. */
+async function mockDashboardBootstrap(I, readData) {
+    await I.stopMockingRoute(dashboardPageRoute);
+    await I.mockRoute(dashboardPageRoute, async route => {
+        const response = await route.fetch();
+        const html = await response.text();
+        const marker = /window\.webjetOverviewDashboardBootstrapData = JSON\.parse\([^\n]+\);/;
+        if (!marker.test(html)) throw new Error('The dashboard bootstrap assignment must exist in the HTML response.');
+        const data = JSON.stringify(readData()).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+        const body = html.replace(marker, match => `${match}\nObject.assign(window.webjetOverviewDashboardBootstrapData, ${data});`);
+        return route.fulfill({ response, body });
+    });
+}
+
+/** Runs through I.executeScript to read fresh server preferences and sessions from the dashboard HTML. */
+async function readDashboardBootstrap(query = '') {
+    const response = await fetch(`/admin/v9/${query}`, { credentials: 'same-origin' });
+    if (!response.ok) throw new Error(`Dashboard page: ${response.status}`);
+    const document = new DOMParser().parseFromString(await response.text(), 'text/html');
+    const script = [...document.scripts].find(script => script.textContent.includes('window.webjetOverviewDashboardBootstrapData ='));
+    const json = script.textContent.match(/window\.webjetOverviewDashboardBootstrapData = JSON\.parse\((.+)\);/)[1];
+    return JSON.parse(JSON.parse(json));
+}
+
+module.exports = { showWidget, waitForWidgets, mockDashboardBootstrap, dashboardPageRoute, readDashboardBootstrap };

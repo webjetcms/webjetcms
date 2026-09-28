@@ -36,7 +36,7 @@ Before(({ I, login }) => {
 Scenario('Authenticated dashboard endpoints and initial overview load', async ({ I }) => {
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     const responses = await I.executeScript(async () => {
-        return Promise.all(['/admin/rest/dashboard/settings', '/admin/rest/dashboard/menu', '/admin/rest/dashboard/recent-pages'].map(async url => {
+        return Promise.all(['/admin/rest/dashboard/menu', '/admin/rest/dashboard/recent-pages'].map(async url => {
             const response = await fetch(url, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
             return { url, status: response.status, contentType: response.headers.get('content-type') };
         }));

@@ -38,7 +38,6 @@ import sk.iway.iwcm.doc.DocBasic;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocHistory;
-import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.stat.StatNewDB;
 
 /** Verifies dashboard input, authorization, period boundaries, and aggregate query semantics. */
@@ -47,8 +46,9 @@ class DashboardWidgetDataServiceTest {
 
     @Test
     void rejectsInvalidConfigurationBeforeAccessingData() {
-        assertThrows(IllegalArgumentException.class, () -> service.load("unknown", 7, "sessions", null, null, null, "example.test", "session"));
-        assertThrows(IllegalArgumentException.class, () -> service.load("approvals", 7, "sessions", null, null, null, "example.test", "session"));
+        assertThrows(IllegalArgumentException.class, () -> service.load("unknown", 7, "sessions", null, null, null, "example.test"));
+        assertThrows(IllegalArgumentException.class, () -> service.load("approvals", 7, "sessions", null, null, null, "example.test"));
+        assertThrows(IllegalArgumentException.class, () -> service.load("sessions", 7, "sessions", null, null, null, "example.test"));
         assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("traffic", 365, "sessions", null, null));
         assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("traffic", 7, "COUNT(*)", null, null));
         assertThrows(IllegalArgumentException.class, () -> DashboardWidgetDataService.validate("forms", 7, "sessions", " ", null));
@@ -58,11 +58,10 @@ class DashboardWidgetDataServiceTest {
     @Test
     void requiresAdminAndTheActualModulePermission() {
         Identity user = mock(Identity.class);
-        assertThrows(AccessDeniedException.class, () -> DashboardWidgetDataService.authorize("sessions", user));
+        assertThrows(AccessDeniedException.class, () -> DashboardWidgetDataService.authorize("forms", user));
         when(user.isAdmin()).thenReturn(true);
-        DashboardWidgetDataService.authorize("sessions", user);
         for (String type : DashboardWidgetDataService.TYPES) {
-            if (!type.equals("sessions")) assertThrows(AccessDeniedException.class, () -> DashboardWidgetDataService.authorize(type, user));
+            assertThrows(AccessDeniedException.class, () -> DashboardWidgetDataService.authorize(type, user));
         }
         when(user.isEnabledItem("menuEmail")).thenReturn(true);
         DashboardWidgetDataService.authorize("newsletter", user);
@@ -129,7 +128,7 @@ class DashboardWidgetDataServiceTest {
             docStatic.when(DocDB::getInstance).thenReturn(docs);
             access.when(() -> DashboardRecentPagesService.isAccessible(any(DocDetails.class), eq(user), eq("current.example"))).thenReturn(true);
             for (int days : List.of(7, 30, 90)) {
-                var result = service.load("publishing", days, "sessions", null, null, user, "current.example", "session");
+                var result = service.load("publishing", days, "sessions", null, null, user, "current.example");
                 assertEquals(2L, result.get("total"));
                 List<?> items = (List<?>) result.get("items");
                 Map<?, ?> first = (Map<?, ?>) items.get(0);
@@ -178,7 +177,7 @@ class DashboardWidgetDataServiceTest {
                 access.when(() -> DashboardRecentPagesService.isAccessible(current, user, "current.example")).thenReturn(true);
             }
             access.when(() -> DashboardRecentPagesService.isAccessible(past, user, "current.example")).thenReturn(true);
-            var result = service.load("publishing", 30, "sessions", null, null, user, "current.example", "session");
+            var result = service.load("publishing", 30, "sessions", null, null, user, "current.example");
             assertEquals(8L, result.get("total"));
             List<?> items = (List<?>) result.get("items");
             assertEquals(DashboardWidgetDataService.PREVIEW_SIZE, items.size());
@@ -326,21 +325,6 @@ class DashboardWidgetDataServiceTest {
         verify(totals).setInt(2, 7);
         verify(clicks).setInt(2, 7);
         assertFalse(item.containsKey("unread"));
-    }
-
-    @Test
-    void sessionResponseUsesPlainValuesCompatibleWithTheSpringJsonMapper() {
-        Identity user = mock(Identity.class);
-        when(user.isAdmin()).thenReturn(true);
-        when(user.getUserId()).thenReturn(42);
-        try (var sessions = mockStatic(SessionClusterService.class)) {
-            sessions.when(() -> SessionClusterService.getSessionInfo("current", 42)).thenReturn("{\"currentSessionId\":\"current\",\"userSessions\":[{\"userSessions\":[{\"sessionId\":\"current\"}]}]}");
-            var result = service.load("sessions", 7, "sessions", null, null, user, null, "current");
-            assertEquals(1L, result.get("total"));
-            assertTrue(result.get("currentSessions") instanceof Map);
-            String json = new tools.jackson.databind.json.JsonMapper().writeValueAsString(result);
-            assertTrue(json.contains("\"currentSessionId\":\"current\""));
-        }
     }
 
     @Test

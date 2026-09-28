@@ -1,14 +1,11 @@
-const { waitForWidgets } = require('../../helpers/dashboard-browser');
+const { waitForWidgets, mockDashboardBootstrap, dashboardPageRoute, readDashboardBootstrap } = require('../../helpers/dashboard-browser');
 
 Feature('admin.dashboard-design').tag('@singlethread');
 
 let originalSettings;
 let previewSettings;
-let noticesToken;
 
 const settingsRoute = '**/admin/rest/dashboard/settings';
-const noticesRoute = '**/admin/rest/dashboard/notices';
-const sessionsRoute = '**/admin/rest/dashboard/data/sessions*';
 const recentPagesRoute = '**/admin/rest/dashboard/recent-pages';
 const searchTermsRoute = '**/admin/rest/dashboard/data/search-terms*';
 const topPagesRoute = '**/admin/rest/dashboard/data/top-pages*';
@@ -69,11 +66,8 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
     I.saveScreenshot('dashboard-implementation-mobile-top.png', false);
     I.saveScreenshot('dashboard-implementation-mobile.png', true);
     I.resizeWindow(1440, 1100);
-    originalSettings = await I.executeScript(async () => {
-        const response = await fetch('/admin/rest/dashboard/settings', { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
-        if (!response.ok) throw new Error('The original dashboard preferences must be readable before testing.');
-        return response.json();
-    });
+    originalSettings = (await I.executeScript(readDashboardBootstrap)).settings;
+
     // Preference mutations stay in this intercepted fixture and never reach the account's stored profile.
     previewSettings = {
         version: 1, configured: true, acknowledgedNewsVersion: null, domainOptions: {}, items: [
@@ -89,16 +83,13 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
         if (route.request().method() === 'PUT') previewSettings = { ...route.request().postDataJSON(), configured: true };
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(previewSettings) });
     });
-    await I.mockRoute(noticesRoute, route => {
-        noticesToken = route.request().headers()['x-csrf-token'];
-        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify([
-            { id: 'design-autotest-migration', severity: 'warning', icon: 'ti-database', title: 'Database migration autotest', bodyHtml: '<p>Statistics require a conversion autotest.</p>', action: { type: 'link', url: '/admin/v9/', label: 'Migration action autotest' } },
-            { id: 'design-autotest-security', severity: 'warning', icon: 'ti-shield-lock', title: 'Account protection autotest', bodyHtml: '<p>Enable a second verification factor autotest.</p>', action: { type: 'popup', url: '/admin/2factorauth.jsp', label: 'Security action autotest' } }
-        ]) });
-    });
+    const notices = [
+        { id: 'design-autotest-migration', severity: 'warning', icon: 'ti-database', title: 'Database migration autotest', bodyHtml: '<p>Statistics require a conversion autotest.</p>', action: { type: 'link', url: '/admin/v9/', label: 'Migration action autotest' } },
+        { id: 'design-autotest-security', severity: 'warning', icon: 'ti-shield-lock', title: 'Account protection autotest', bodyHtml: '<p>Enable a second verification factor autotest.</p>', action: { type: 'popup', url: '/admin/2factorauth.jsp', label: 'Security action autotest' } }
+    ];
+    await mockDashboardBootstrap(I, () => ({ settings: previewSettings, notices }));
     I.refreshPage();
     await waitForOverview(I);
-    I.assertTrue(Boolean(noticesToken), 'The independent system-notice request must include CSRF protection.');
     I.seeElement('.md-dashboard__sessions [data-widget-type="sessions"] .md-dashboard-widget__session');
     I.seeElement('.md-dashboard__sessions span.md-dashboard-widget__session-count');
     I.dontSeeElement('.md-dashboard__layout [data-widget-type="sessions"]');
@@ -553,12 +544,13 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
         if (route.request().method() === 'PUT') Object.assign(sessionSettings, route.request().postDataJSON());
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(sessionSettings) });
     });
-    await I.mockRoute(sessionsRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ currentSessions: {
+    const currentSessions = {
         currentSessionId: 'session-autotest-0', userSessions: [{ cluster: 'autotest', userSessions: Array.from({ length: 9 }, (_, index) => ({
             sessionId: `session-autotest-${index}`, browserName: ['Chrome 153', 'Safari 18', 'Firefox 131'][index % 3],
             logonTime: Date.now() - index * 60000, remoteAddr: '127.0.0.1'
         })) }]
-    } }) }));
+    };
+    await mockDashboardBootstrap(I, () => ({ settings: sessionSettings, currentSessions }));
     I.refreshPage();
     await waitForOverview(I);
     I.executeScript(() => {
@@ -647,8 +639,8 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
     I.pressKey('Escape');
     I.waitForInvisible('.tooltip.show', 10);
     I.dontSeeElement('.md-dashboard__sessions .md-dashboard-widget__session-manage');
-    await I.stopMockingRoute(sessionsRoute);
     await I.stopMockingRoute(settingsRoute);
+    await I.stopMockingRoute(dashboardPageRoute);
 });
 
 Scenario('Dragging preserves the widget surface, outline and dimensions', async ({ I }) => {
@@ -664,6 +656,7 @@ Scenario('Dragging preserves the widget surface, outline and dimensions', async 
         if (route.request().method() !== 'GET') settingsWrites++;
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(dragSettings) });
     });
+    await mockDashboardBootstrap(I, () => ({ settings: dragSettings }));
     I.resizeWindow(1337, 1052);
     I.refreshPage();
     await waitForOverview(I);
@@ -709,13 +702,13 @@ Scenario('Dragging preserves the widget surface, outline and dimensions', async 
     I.assertEqual(settingsWrites, 0, 'Inspecting a drag without changing its position must not save preferences.');
     I.clickCss(editButton);
     await I.stopMockingRoute(settingsRoute);
+    await I.stopMockingRoute(dashboardPageRoute);
     I.wjSetDefaultWindowSize();
 });
 
 Scenario('Remove design fixtures and verify the account preferences were never changed', async ({ I }) => {
     await I.stopMockingRoute(settingsRoute);
-    await I.stopMockingRoute(noticesRoute);
-    await I.stopMockingRoute(sessionsRoute);
+    await I.stopMockingRoute(dashboardPageRoute);
     await I.stopMockingRoute(recentPagesRoute);
     await I.stopMockingRoute(searchTermsRoute);
     await I.stopMockingRoute(topPagesRoute);
@@ -724,9 +717,6 @@ Scenario('Remove design fixtures and verify the account preferences were never c
     I.refreshPage();
     await waitForOverview(I);
     if (!originalSettings) return;
-    const settings = await I.executeScript(async () => {
-        const response = await fetch('/admin/rest/dashboard/settings', { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
-        return response.json();
-    });
+    const settings = (await I.executeScript(readDashboardBootstrap)).settings;
     I.assertDeepEqual(settings, originalSettings, 'Visual regression fixtures must never mutate the real dashboard preferences.');
 });

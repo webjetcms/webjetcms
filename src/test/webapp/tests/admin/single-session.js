@@ -78,9 +78,9 @@ Scenario("active session list on dashboard @singlethread", async ({ I }) => {
         I.amOnPage("/admin/v9/");
         I.relogin("tester3");
         I.see(introText, "button.js-profile-toggler");
-        createdLogonTime = await I.executeScript(async () => {
-            const response = await fetch('/admin/rest/dashboard/data/sessions', { headers: { 'X-CSRF-Token': window.csrfToken } });
-            const { currentSessions } = await response.json();
+        I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+        createdLogonTime = await I.executeScript(() => {
+            const { currentSessions } = document.querySelector('webjet-overview-dashboard').data;
             return currentSessions.userSessions.flatMap(cluster => cluster.userSessions)
                 .find(item => item.sessionId === currentSessions.currentSessionId)?.logonTime;
         });

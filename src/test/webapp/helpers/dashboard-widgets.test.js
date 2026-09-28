@@ -29,7 +29,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
     }
     scope.registerDashboardWidgets();
     if (extraWidgets && !scope.getWidget('sessions')) { scope.registerUtilityWidgets(); scope.registerDataWidgets(); }
-    const context = { data: { dashboardMenu: menu }, labels: {}, settings: {}, config: {}, translate: key => key };
+    const context = { data: { ...data, dashboardMenu: menu }, labels: {}, settings: {}, config: {}, translate: key => key };
     t.after(() => window.close());
     return { scope, context, container: window.document.querySelector('main'), requests, window };
 }
@@ -1033,6 +1033,31 @@ test('The mandatory sessions widget retains active login details and a static co
     assert.match(container.querySelector('li').textContent, /Browser.*127.0.0.1/);
 });
 
+test('Sessions reuse embedded data and update the snapshot and count after removal', async t => {
+    const { scope, context, container, requests } = fixture(t, { extraWidgets: true, fetchResponse: async () => ({
+        ok: true, text: async () => '{success: true}'
+    }) });
+    context.data.currentSessions = { currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [
+        { sessionId: 'other', logonTime: 1000, browserName: 'Autotest browser', remoteAddr: '127.0.0.1' }
+    ] }] };
+    const widget = scope.getWidget('sessions');
+    context.settings.items = [];
+    context.dashboard = { refresh: () => {
+        container.replaceChildren();
+        return widget.render({ container, context, signal: new AbortController().signal });
+    } };
+    const ready = widget.render({ container, context, signal: new AbortController().signal });
+    assert.equal(container.querySelector('.md-dashboard-widget__session-count').textContent, '1');
+    assert.equal(requests.length, 0);
+    await ready;
+    container.querySelector('li button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].url, '/admin/rest/removeSession');
+    assert.equal(requests[0].options.method, 'POST');
+    assert.equal(container.querySelector('.md-dashboard-widget__session-count').textContent, '0');
+});
+
 test('Search exposes separate scopes and changes its accessible hint', t => {
     const { scope, context, container, window } = fixture(t, { extraWidgets: true });
     scope.getWidget('search').render({ container, context, options: { scope: 'admin' }, instance: { id: 'search-one' } });
@@ -1079,7 +1104,7 @@ test('An HTTP 200 session-removal rejection leaves the session visible and repor
     const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [
         { sessionId: 'other', logonTime: 1000, browserName: 'Other browser', remoteAddr: '127.0.0.1' }
     ] }] } };
-    const { scope, context, container, requests } = fixture(t, { extraWidgets: true, fetchResponse: async () => ({
+    const { scope, context, container, requests } = fixture(t, { extraWidgets: true, data, fetchResponse: async () => ({
         ok: true, status: 200, json: async () => data, text: async () => '{success: false}'
     }) });
     let refreshed = false;
@@ -1092,8 +1117,8 @@ test('An HTTP 200 session-removal rejection leaves the session visible and repor
     assert.equal(logout.disabled, false);
     assert.match(container.querySelector('[role=alert]').textContent, /sessionError/);
     assert.equal(refreshed, false);
-    assert.equal(requests[1].options.headers['X-CSRF-Token'], 'test-csrf-token');
-    assert.match(requests[1].options.body.toString(), /sessionId=other/);
+    assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
+    assert.match(requests[0].options.body.toString(), /sessionId=other/);
 });
 
 test('Active newsletter refreshes only while visible and releases its observer and timer', async t => {
@@ -1186,7 +1211,7 @@ test('Accepted cluster logout stays pending instead of claiming immediate invali
     const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'remote', userSessions: [
         { sessionId: 'remote-own', logonTime: 1000, browserName: 'Remote browser' }
     ] }] } };
-    const { scope, context, container } = fixture(t, { extraWidgets: true, fetchResponse: async () => ({
+    const { scope, context, container } = fixture(t, { extraWidgets: true, data, fetchResponse: async () => ({
         ok: true, status: 200, json: async () => data, text: async () => '{"success":true,"pending":true}'
     }) });
     let refreshed = false;

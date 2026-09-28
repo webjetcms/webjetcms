@@ -11,7 +11,7 @@ const tick = () => new Promise(resolve => setImmediate(resolve));
 const item = (id, type = "test", size = "2x2", options = {}) => ({ id, type, size, options });
 
 /** Runs production browser modules against a DOM and a stateful settings server. */
-function fixture(t, { items = [], configured = true, shortcutsConfigured = configured, legacyBookmarksHandled = false, definitions = [], defaults = [], failSave = false, failLoad = false, failReset = false, deferModalShown = false, withTooltip = false, overview, IntersectionObserver } = {}) {
+function fixture(t, { items = [], configured = true, shortcutsConfigured = configured, legacyBookmarksHandled = false, definitions = [], defaults = [], failSave = false, failReset = false, deferModalShown = false, withTooltip = false, overview, IntersectionObserver } = {}) {
     const dom = new JSDOM("<!doctype html><html><body><div id='alerts'>System warning</div><div id='dashboard'></div></body></html>", { url: "http://localhost/admin/v9/" });
     const { window } = dom;
     window.IntersectionObserver = IntersectionObserver;
@@ -85,7 +85,7 @@ function fixture(t, { items = [], configured = true, shortcutsConfigured = confi
         } else if (options.method === "DELETE") {
             if (failReset) return { ok: false, status: 503 };
             stored = { version: 1, configured: false, shortcutsConfigured: stored.shortcutsConfigured, legacyBookmarksHandled: stored.legacyBookmarksHandled, items: stored.items.filter(item => item.type === "shortcut"), domainOptions: {}, acknowledgedNewsVersion: null };
-        } else if (failLoad) return { ok: false, status: 503 };
+        }
         return { ok: true, json: async () => copy(stored) };
     };
     const context = vm.createContext({ window, document: window.document, CustomEvent: window.CustomEvent, URL: window.URL, AbortController, fetch, console, crypto: require("node:crypto").webcrypto });
@@ -97,9 +97,9 @@ function fixture(t, { items = [], configured = true, shortcutsConfigured = confi
     context.registerWidget({ type: "test", titleKey: "Test", sizes: ["1x1", "2x2", "2x3", "3x2", "3x3", "fullauto"], multiple: true, render: ({ container }) => { container.textContent = "Widget content"; } });
     definitions.forEach(definition => context.registerWidget(definition));
     const host = window.document.querySelector("#dashboard");
-    const controller = new context.Controller(host, { config: { dashboardDefaults: defaults }, overview });
+    const controller = new context.Controller(host, { data: { settings: copy(stored) }, config: { dashboardDefaults: defaults }, overview });
     t.after(() => { controller.destroy(); window.close(); });
-    return { window, host, controller, context, requests, tooltipCalls, notifications, confirmations, closeConfirmation, setResetFailure: value => { failReset = value; }, stored: () => copy(stored), setSaveFailure: value => { failSave = value; }, setLoadFailure: value => { failLoad = value; } };
+    return { window, host, controller, context, requests, tooltipCalls, notifications, confirmations, closeConfirmation, setResetFailure: value => { failReset = value; }, stored: () => copy(stored), setSaveFailure: value => { failSave = value; } };
 }
 
 /** Controls viewport entry independently of jsdom's missing layout engine. */
@@ -115,6 +115,28 @@ function observedFixture(t, options) {
     return { ...environment, targets, disconnected: () => disconnected,
         intersect: (card, isIntersecting = true) => callback([{ target: card, isIntersecting }]) };
 }
+
+test('Embedded settings render immediately and context changes use supplied preferences', async t => {
+    const { controller, host, requests, stored } = fixture(t, { items: [item('embedded')] });
+    const ready = controller.start();
+    assert.equal(host.dataset.loaded, 'true');
+    assert.ok(controller.views.has('embedded'));
+    assert.equal(requests.length, 0);
+    await ready;
+    await controller.saveOptions('embedded', { options: { title: 'Saved autotest' } });
+    assert.equal(requests[0].method, 'PUT');
+    await controller.setContext({ data: { settings: stored() }, config: { domain: 'another.example' } });
+    assert.equal(requests.length, 1);
+    assert.equal(controller.settings.items[0].options.title, 'Saved autotest');
+});
+
+test('Embedded unconfigured settings apply defaults without reading REST preferences', async t => {
+    const { controller, requests } = fixture(t, { configured: false, defaults: [{ type: 'test', size: '2x2' }] });
+    await controller.start();
+    assert.equal(controller.settings.items.length, 1);
+    assert.equal(controller.settings.items[0].type, 'test');
+    assert.equal(requests.length, 0);
+});
 
 test("Grid widgets wait for viewport entry while fixed utilities render immediately", async t => {
     const renders = [];
@@ -177,7 +199,7 @@ test("Domain changes, removal and destruction cancel pending viewport work", asy
     await controller.start();
     const view = controller.views.get("lazy");
     const originalSignal = view.abort.signal;
-    await controller.setContext({ config: { domain: "new-domain" } });
+    await controller.setContext({ data: controller.context.data, config: { domain: "new-domain" } });
     assert.equal(originalSignal.aborted, true);
     assert.deepEqual(domains, []);
     intersect(view.card);
@@ -239,7 +261,7 @@ test("Defaults are used only for an unconfigured profile and mandatory widgets s
     await initial.controller.start();
     assert.deepEqual(copy(initial.controller.settings.items.map(value => value.type)), ["test", "sessions"]);
     assert.equal(await initial.controller.remove(initial.controller.settings.items[1].id), false);
-    assert.equal(initial.requests.length, 1, "Mandatory removal must not reach the server");
+    assert.equal(initial.requests.length, 0, "Mandatory removal must not reach the server");
 });
 
 test("Legacy minimized widgets render their full content and retain size, order and filters", async t => {
@@ -251,7 +273,7 @@ test("Legacy minimized widgets render their full content and retain size, order 
     await controller.start();
     assert.deepEqual(copy(controller.settings.items), legacy.map(({ collapsed, ...instance }) => instance));
     assert.equal(stored().items[0].collapsed, true, "Loading must not write to the stored profile");
-    assert.equal(requests.length, 1);
+    assert.equal(requests.length, 0);
     assert.equal(host.querySelector('[data-dashboard-action="collapse"], .is-collapsed'), null);
     for (const body of host.querySelectorAll('.md-dashboard__widget-body')) {
         assert.equal(body.hidden, false);
@@ -593,15 +615,6 @@ test("Removal undo survives a failed save but expires after the next successful 
     assert.equal(await controller.undoRemove(), false);
 });
 
-test("Failed loading cannot overwrite a user's stored layout with defaults", async t => {
-    const { controller, host, requests } = fixture(t, { configured: true, items: [item("stored")], defaults: [{ type: "test" }], failLoad: true });
-    await controller.start();
-    assert.equal(host.querySelector(".md-dashboard__toolbar button[aria-pressed]").disabled, true);
-    assert.equal(controller.settings.items.length, 0);
-    assert.equal(await controller.acknowledgeNews("2026.18"), false, "A release action must not overwrite unread preferences after a failed load");
-    assert.equal(requests.some(request => request.method === "PUT"), false);
-});
-
 test("Unavailable types remain persisted while authorized instances render", async t => {
     const { controller, host, stored } = fixture(t, {
         items: [item("visible"), item("restricted", "restricted")],
@@ -611,22 +624,6 @@ test("Unavailable types remain persisted while authorized instances render", asy
     assert.equal(host.querySelectorAll("[data-instance-id]").length, 1);
     await controller.saveOptions("visible", { options: { days: 30 } });
     assert.equal(stored().items.length, 2, "A changed permission must not erase the user's preferences");
-});
-
-test("A failed domain-context reload does not display the previous domain's widget data", async t => {
-    const { controller, host, setLoadFailure } = fixture(t, {
-        items: [item("domain", "domain")],
-        definitions: [{ type: "domain", titleKey: "Domain", render: ({ container, context }) => { container.textContent = context.data?.name || "Original domain"; } }]
-    });
-    await controller.start();
-    setLoadFailure(true);
-    await controller.setContext({ data: { name: "New domain" }, config: {} });
-    assert.equal(host.querySelector(".md-dashboard__layout").hidden, true);
-    assert.equal(host.dataset.loaded, "false");
-    setLoadFailure(false);
-    await controller.start();
-    assert.equal(host.querySelector(".md-dashboard__layout").hidden, false);
-    assert.equal(host.querySelector(".md-dashboard__widget-content").textContent, "New domain");
 });
 
 test("Sessions remain in the permanent header without arrangement controls", async t => {
@@ -802,7 +799,7 @@ test("Edit mode reveals arrangement controls without a settings mutation", async
     assert.ok(controls.every(control => !control.hidden));
     controller.editButton.click();
     assert.ok(controls.every(control => control.hidden));
-    assert.equal(requests.length, 1);
+    assert.equal(requests.length, 0);
 });
 
 test("The feedback toolbar action precedes widget controls and opens the existing form without saving preferences", async t => {
@@ -823,7 +820,7 @@ test("The feedback toolbar action precedes widget controls and opens the existin
     assert.equal(feedback.nextElementSibling, addWidget);
     assert.equal(addWidget.nextElementSibling, controller.resetButton);
     assert.equal(controller.resetButton.nextElementSibling, controller.editButton);
-    assert.equal(requests.length, 1, 'Opening feedback must not save or reset dashboard preferences');
+    assert.equal(requests.length, 0, 'Opening feedback must not save or reset dashboard preferences');
 });
 
 test("Shortcuts configure before saving and render in the permanent shortcut strip", async t => {
@@ -838,7 +835,7 @@ test("Shortcuts configure before saving and render in the permanent shortcut str
     await controller.start();
     await controller.showAddWidget('shortcut');
     window.document.querySelector('.modal-header button').click();
-    assert.equal(requests.length, 1, 'Cancelling must not save an empty shortcut');
+    assert.equal(requests.length, 0, 'Cancelling must not save an empty shortcut');
     await controller.showAddWidget('shortcut');
     window.document.querySelector('.md-dashboard__settings input').value = 'My users';
     window.document.querySelector('.modal-footer button').click();
@@ -847,15 +844,6 @@ test("Shortcuts configure before saving and render in the permanent shortcut str
     assert.equal(stored().items[0].options.title, 'My users');
     assert.match(host.querySelector('.md-dashboard__shortcut-list').textContent, /My users/);
     assert.equal(host.querySelector('.md-dashboard__layout [data-widget-type="shortcut"]'), null);
-});
-
-test("Security remains available when loading personal preferences fails", async t => {
-    const { controller, host } = fixture(t, { failLoad: true,
-        definitions: [{ type: 'sessions', titleKey: 'Sessions', mandatory: true, render: ({ container }) => { container.textContent = 'Current browser session'; } }]
-    });
-    await controller.start();
-    assert.match(host.querySelector('.md-dashboard__sessions').textContent, /Current browser session/);
-    assert.equal(controller.editButton.disabled, true);
 });
 
 /** Loads the overview component against the existing DOM without starting the application shell. */
@@ -871,26 +859,37 @@ function overviewFixture(t) {
     return { ...environment, overview };
 }
 
+test('Rebuilding the overview after a save never reapplies the embedded settings snapshot', async t => {
+    const { context, overview, requests } = overviewFixture(t);
+    context.registerDashboardWidgets = () => {};
+    context.getDashboardDefaults = () => [];
+    overview.configure({ data: { notices: [], settings: { configured: true, items: [item('embedded')] } } });
+    overview.render();
+    t.after(() => overview.disconnectedCallback());
+    await overview.dashboardReady;
+    assert.equal(requests.length, 0);
+    await overview.dashboardController.saveOptions('embedded', { options: { title: 'Updated autotest' } });
+    overview.render();
+    await overview.dashboardReady;
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].method, 'PUT');
+    assert.equal(overview.dashboardController.settings.items[0].options.title, 'Updated autotest');
+});
+
 test('System notices remain independent accordions and invoke their own authorized actions', async t => {
     const { context, window, controller, overview } = overviewFixture(t);
     const actions = [];
     window.WJ.openPopupDialog = url => actions.push(['popup', url]);
     window.WJ.showHelpWindow = url => actions.push(['help', url]);
-    const requests = [];
-    context.fetch = async (url, options) => {
-        requests.push({ url, options });
-        return { ok: true, json: async () => [
-            { id: 'two-factor', severity: 'warning', icon: 'ti-shield', title: 'Enable verification', bodyHtml: '<p>Protect your account.</p>', action: { type: 'popup', url: '/admin/2factorauth.jsp', label: 'Configure' } },
-            { id: 'ses', severity: 'warning', icon: 'ti-mail', title: 'Configure email', bodyHtml: '<p>Set up sending.</p>', action: { type: 'help', url: '/install/config/README', label: 'Read guide' } }
-        ] };
-    };
+    overview.data.notices = [
+        { id: 'two-factor', severity: 'warning', icon: 'ti-shield', title: 'Enable verification', bodyHtml: '<p>Protect your account.</p>', action: { type: 'popup', url: '/admin/2factorauth.jsp', label: 'Configure' } },
+        { id: 'ses', severity: 'warning', icon: 'ti-mail', title: 'Configure email', bodyHtml: '<p>Set up sending.</p>', action: { type: 'help', url: '/install/config/README', label: 'Read guide' } }
+    ];
     const customNotice = window.document.createElement('div');
     customNotice.textContent = 'External application warning';
     controller.notices.append(customNotice);
-    await overview._loadNotices();
-    assert.equal(customNotice.parentElement, controller.notices, 'Async system notices must preserve externally supplied notifications');
-    assert.equal(requests[0].url, '/admin/rest/dashboard/notices');
-    assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
+    overview._renderNotices();
+    assert.equal(customNotice.parentElement, controller.notices, 'System notices must preserve externally supplied notifications');
     const details = [...controller.notices.querySelectorAll('details')];
     assert.equal(details.length, 2);
     assert.deepEqual(details.map(notice => notice.querySelector('summary').textContent), ['Enable verification', 'Configure email']);
@@ -903,16 +902,17 @@ test('System notices remain independent accordions and invoke their own authoriz
     assert.equal(controller.notices.querySelectorAll('details').length, 2, 'Rendering personal layout must preserve system warnings');
 });
 
-test('Failed notice checks stay visible and offer an independent retry', async t => {
-    const { context, controller, overview } = overviewFixture(t);
-    context.fetch = async () => ({ ok: false, status: 503 });
-    await overview._loadNotices();
-    assert.ok(controller.notices.querySelector('[role="alert"]'));
-    assert.equal(controller.notices.querySelector('.md-dashboard__notice-list').getAttribute('aria-busy'), 'false');
-    context.fetch = async () => ({ ok: true, json: async () => [] });
-    controller.notices.querySelector('button').click();
-    await tick();
-    assert.equal(controller.notices.querySelector('.md-dashboard__notice-list').children.length, 0);
+test('Embedded notices, including an empty list, render without a REST request', async t => {
+    const { controller, overview, requests } = overviewFixture(t);
+    overview.data.notices = [
+        { id: 'autotest-notice', severity: 'warning', title: 'Embedded warning', bodyHtml: '<p>Autotest details</p>' }
+    ];
+    overview._renderNotices();
+    assert.equal(controller.notices.querySelector('summary').textContent, 'Embedded warning');
+    overview.data.notices = [];
+    overview._renderNotices();
+    assert.equal(controller.notices.querySelectorAll('details').length, 0);
+    assert.equal(requests.length, 0);
 });
 
 test('Release note persistence restores the replacement toggle without stealing focus from another control', async t => {
@@ -1082,15 +1082,6 @@ test("Missing, empty or unavailable browser storage retains default shortcuts wi
     Object.defineProperty(window, "localStorage", { get() { throw new window.DOMException("Storage disabled", "SecurityError"); } });
     await controller.start();
     assert.equal(controller.settings.items.filter(item => item.type === "shortcut").length, 1);
-    assert.equal(requests.some(request => request.method === "PUT"), false);
-});
-
-test("A failed profile load never imports browser bookmarks over unknown server preferences", async t => {
-    const { controller, window, requests } = fixture(t, { failLoad: true, definitions: [shortcutDefinition] });
-    const legacy = JSON.stringify([{ name: "Autotest", path: "/apps/form/admin/" }]);
-    window.localStorage.setItem("bookmarks", legacy);
-    await controller.start();
-    assert.equal(window.localStorage.getItem("bookmarks"), legacy);
     assert.equal(requests.some(request => request.method === "PUT"), false);
 });
 

@@ -30,7 +30,7 @@ Use `saveOptions({options, domainOptions})` for an in-widget preference action. 
 
 ## Settings API
 
-`GET /admin/rest/dashboard/settings` reads fresh account preferences. `PUT` saves and returns:
+Preferences are embedded as `overviewData.settings` by `DashboardListener` and read by `DashboardController.start()`. There is no settings GET endpoint or fallback fetch. Successful saves and resets update the page data so rebuilding the component retains the confirmed state. A domain change loads new bootstrap data with the page. `PUT /admin/rest/dashboard/settings` saves and returns:
 
 ```json
 {
@@ -58,6 +58,8 @@ The controller starts in view mode. The toolbar's feedback button opens `context
 Shift-clicking the widget reset calls `PUT /admin/rest/dashboard/settings/reset` with a generated settings DTO. The client iterates authorized registry definitions and each definition's `sizes`, assigning unique IDs and default shared/domain options. Shortcuts keep their own section and are preserved from the locked account snapshot; a previously unconfigured shortcut strip may use the supplied defaults. Sessions, news and search remain singletons; all grid types allow repeated instances. The reset transaction replaces all old widget and domain records, clears news acknowledgement, and stores a configured layout before returning it. Failure preserves the previous profile. The generated layout survives reload immediately and supports removal, undo and size changes through normal editing. A normal reset returns to the curated default list. The 48-instance limit fits the current full catalogue and keeps a UUID-based order record within the 2000-character storage limit; reject overflow before any mutation, never truncate.
 
 ## Data and rendering
+
+`DashboardListener` embeds `settings`, `notices` and `currentSessions` alongside menu/identity data in the existing `overviewData` JSON. Keep Thymeleaf JavaScript inlining in `overview.pug` for safe serialization. All three values are required page data; they have no read REST endpoints or client fallbacks. Sessions come directly from `SessionClusterService`. A completed logout removes the session from the supplied list and updates the count; remote logout remains pending until cluster synchronization. Reloading the page obtains a fresh session list. Browser fixtures for initial data must override the HTML bootstrap with `mockDashboardBootstrap` from `helpers/dashboard-browser.js`; REST mocks remain necessary for writes and independently loaded widget projections.
 
 The controller shares one `IntersectionObserver` for pending grid renders. It creates card shells immediately, then invokes `render` only when the card intersects the viewport, with no prefetch margin. Requests and chart initialization belong inside these renderers. Entry removes observation; scrolling away and back does not reload an unchanged card. Refresh, configuration changes and domain changes abort previous work and wait for viewport entry again. Removal and destruction also cancel pending waits. Sessions, news, search and shortcuts render immediately; browsers without `IntersectionObserver` retain immediate rendering. Live monitoring and newsletter keep their existing visibility-aware polling after the first render. Browser tests inspecting every card must scroll them into view before waiting for their content; `src/test/webapp/helpers/dashboard-browser.js` provides the shared helpers.
 

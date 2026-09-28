@@ -1,11 +1,9 @@
-const { waitForWidgets } = require('../../helpers/dashboard-browser');
+const { waitForWidgets, mockDashboardBootstrap, dashboardPageRoute } = require('../../helpers/dashboard-browser');
 
 Feature('admin.dashboard-approvals');
 
 const card = '[data-widget-type="approvals"]';
 const listUrl = '/admin/v9/webpages/web-pages-list/?show=toapprove';
-const settingsRoute = '**/admin/rest/dashboard/settings';
-const noticesRoute = '**/admin/rest/dashboard/notices';
 const pageRoute = '**/admin/rest/webpages/toapprove/all*';
 const groupRoute = '**/admin/rest/groups/toapprove/all*';
 const documentRoute = `**${listUrl}`;
@@ -13,7 +11,7 @@ const approvalUrl = '/admin/approve.jsp?docid=18&historyid=108';
 const approvalRoute = `**${approvalUrl}`;
 const folderApprovalUrl = '/admin/v9/webpages/web-pages-list/?groupid=27&scheduleId=207';
 const folderApprovalRoute = `**${folderApprovalUrl}`;
-const routes = [settingsRoute, noticesRoute, pageRoute, groupRoute, documentRoute, approvalRoute, folderApprovalRoute];
+const routes = [dashboardPageRoute, pageRoute, groupRoute, documentRoute, approvalRoute, folderApprovalRoute];
 const date = order => Date.UTC(2026, 8, 20, 12, order);
 const result = (content = [], totalElements = content.length) => ({ content, totalElements, totalPages: Math.ceil(totalElements / 6), size: 6, number: 0 });
 
@@ -42,12 +40,12 @@ async function clearRoutes(I) {
 async function openDashboard(I, pageData = pages, groupData = groups, denied) {
     await clearRoutes(I);
     const requests = [];
-    await I.mockRoute(settingsRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+    const settings = {
         version: 1, configured: true, legacyBookmarksHandled: true, domainOptions: {}, items: [
             { id: 'autotest-approval-preview', type: 'approvals', size: '3x3', options: {} }
         ]
-    }) }));
-    await I.mockRoute(noticesRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
+    };
+    await mockDashboardBootstrap(I, () => ({ settings, notices: [] }));
     for (const [type, pattern, body] of [['pages', pageRoute, pageData], ['groups', groupRoute, groupData]]) {
         await I.mockRoute(pattern, route => {
             const request = route.request();

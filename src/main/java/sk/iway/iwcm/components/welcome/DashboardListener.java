@@ -6,6 +6,7 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -16,14 +17,22 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.admin.ThymeleafEvent;
 import sk.iway.iwcm.admin.layout.MenuService;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.users.UsersDB;
 
-/** Supplies only navigation and identity data needed to render the dashboard shell. */
+/** Supplies lightweight initial data while expensive widget previews load independently. */
 @Component
 public class DashboardListener {
+    private final DashboardSettingsService settingsService;
+    private final DashboardNoticeService noticeService;
 
-    /** Keeps database-backed previews and security checks in independently loaded REST resources. */
+    public DashboardListener(DashboardSettingsService settingsService, DashboardNoticeService noticeService) {
+        this.settingsService = settingsService;
+        this.noticeService = noticeService;
+    }
+
+    /** Embeds account settings, system notices and current sessions in the dashboard template. */
     @EventListener(condition = "#event.clazz eq 'sk.iway.iwcm.admin.ThymeleafEvent' && event.source.page=='dashboard'")
     protected void setOverviewData(final WebjetEvent<ThymeleafEvent> event) {
         HttpServletRequest request = event.getSource().getRequest();
@@ -34,6 +43,9 @@ public class DashboardListener {
             data.put("dashboardMenu", new MenuService(request).getMenu());
             data.put("userName", user.getFirstName());
             data.put("currentDomain", DocDB.getDomain(request));
+            data.put("settings", settingsService.load(user.getUserId(), DashboardRestController.domainKey(request)));
+            data.put("notices", noticeService.load(user, request));
+            data.put("currentSessions", new ObjectMapper().readTree(SessionClusterService.getSessionInfo(request.getSession().getId(), user.getUserId())));
             event.getSource().getModel().addAttribute("overviewData", JsonTools.objectToJSON(data));
         } catch (JsonProcessingException exception) {
             Logger.error(DashboardListener.class, exception);

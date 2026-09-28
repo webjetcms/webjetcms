@@ -6,9 +6,32 @@ Before(({ I, login }) => {
     I.waitForFunction(() => typeof window.csrfToken === 'string' && window.csrfToken.length > 0, 20);
 });
 
+Scenario('Initial settings, notices and sessions render from HTML without REST requests', async ({ I }) => {
+    const requests = [];
+    const routes = ['**/admin/rest/dashboard/settings', '**/admin/rest/dashboard/notices', '**/admin/rest/dashboard/data/sessions*'];
+    for (const pattern of routes) await I.mockRoute(pattern, route => {
+        if (route.request().method() !== 'GET') return route.continue();
+        requests.push(route.request().url());
+        return route.fulfill({ status: 503, contentType: 'application/json', body: '{}' });
+    });
+    try {
+        I.refreshPage();
+        I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+        I.waitForElement('.md-dashboard__sessions .md-dashboard-widget__session-current', 20);
+        await I.waitForFunction(() => document.querySelector('.md-dashboard__notice-list')?.getAttribute('aria-busy') === 'false', 20);
+        I.assertEqual(requests.length, 0, 'The initial dashboard must render even when all three read endpoints are unavailable.');
+        I.assertTrue(await I.executeScript(() => {
+            const dashboard = document.querySelector('webjet-overview-dashboard');
+            return Array.isArray(dashboard.data.notices) && dashboard.dashboardController.settings.items.length > 0;
+        }), 'The page must contain real server-provided notices and initialized widget preferences.');
+    } finally {
+        for (const pattern of routes) await I.stopMockingRoute(pattern);
+    }
+});
+
 Scenario('Read-only widget projections return bounded preview contracts', async ({ I }) => {
     const results = await I.executeScript(async () => {
-        const types = ['publishing', 'forms', 'traffic', 'top-pages', 'search-terms', 'referrers', 'newsletter', 'errors', 'sessions'];
+        const types = ['publishing', 'forms', 'traffic', 'top-pages', 'search-terms', 'referrers', 'newsletter', 'errors'];
         const results = [];
         for (const type of types) {
             const response = await fetch(`/admin/rest/dashboard/data/${type}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
@@ -37,7 +60,6 @@ Scenario('Read-only widget projections return bounded preview contracts', async 
             I.assertEqual(body.previousSeries.length, 7);
             I.assertTrue(body.from < body.to);
         }
-        if (type === 'sessions') I.assertTrue(Array.isArray(body.currentSessions.userSessions));
         if (type === 'newsletter' && body.selectedId) I.assertEqual(body.items[0].id, body.selectedId);
     }
 });

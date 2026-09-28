@@ -221,34 +221,19 @@ export class DashboardController {
         });
     }
 
-    /** Loads the current account's layout and the active domain's widget filters. */
+    /** Renders the current account's layout and active-domain filters supplied by the page. */
     async start() {
         this._request?.abort();
-        const request = this._request = new AbortController();
-        this.host.dataset.loaded = "false";
-        this.addButton.disabled = true;
-        this.status.textContent = this._t("loading", "Loading overview…");
-        try {
-            const response = await fetch("/admin/rest/dashboard/settings", { signal: request.signal, credentials: "same-origin", headers: { "X-CSRF-Token": window.csrfToken || "" } });
-            if (!response.ok) throw new Error(`Dashboard settings: ${response.status}`);
-            const data = await response.json();
-            if (request.signal.aborted || this.destroyed) return;
-            this.settings = normalizeSettings(data);
-            if (!this.settings.configured) this._addDefaults();
-            this._ensureMandatory();
-            this.status.textContent = "";
-            this.shortcutStatus.textContent = "";
-            this._setBusy(false);
-            this.layout.hidden = false;
-            this._render();
-            this.host.dataset.loaded = "true";
-            await this.importLegacyBookmarks();
-        } catch (error) {
-            if (request.signal.aborted || this.destroyed) return;
-            this._render();
-            this._setBusy(true);
-            this._showFailure("loadError", "The overview could not be loaded.", () => this.start());
-        }
+        this.settings = normalizeSettings(this.context.data.settings);
+        if (!this.settings.configured) this._addDefaults();
+        this._ensureMandatory();
+        this.status.textContent = "";
+        this.shortcutStatus.textContent = "";
+        this._setBusy(false);
+        this.layout.hidden = false;
+        this._render();
+        this.host.dataset.loaded = "true";
+        await this.importLegacyBookmarks();
     }
 
     _newInstance(definition, values = {}) {
@@ -296,9 +281,8 @@ export class DashboardController {
         return typeof href === "function" ? href(instance, this._widgetContext()) : href;
     }
 
-    _showFailure(key, fallback, retry) {
+    _showFailure(key, fallback) {
         this.status.replaceChildren(node("span", "text-danger", this._t(key, fallback)));
-        if (retry) this.status.append(button(this._t("retry", "Try again"), retry));
     }
 
     /**
@@ -324,6 +308,7 @@ export class DashboardController {
             if (!response.ok) throw new Error(`Dashboard settings: ${response.status}`);
             const saved = await response.json();
             if (this.destroyed || request.signal.aborted) return false;
+            this.context.data.settings = saved;
             this.settings = normalizeSettings(saved);
             this.settings.configured = true;
             this.removed = null;
@@ -727,6 +712,7 @@ export class DashboardController {
             if (!response.ok) throw new Error(`Dashboard reset: ${response.status}`);
             const data = await response.json();
             if (this.destroyed || request.signal.aborted) return false;
+            this.context.data.settings = data;
             this.settings = normalizeSettings(data);
             if (!this.settings.configured) this._addDefaults();
             this._ensureMandatory();
@@ -1041,7 +1027,7 @@ export class DashboardController {
         }
     }
 
-    /** Reloads active-domain options without replacing the overview's security UI. */
+    /** Applies supplied active-domain options without replacing the overview's security UI. */
     async setContext(context) {
         this.context = context;
         this._contextVersion++;

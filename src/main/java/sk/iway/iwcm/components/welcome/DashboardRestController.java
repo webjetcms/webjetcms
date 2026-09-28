@@ -32,18 +32,10 @@ import sk.iway.iwcm.users.UsersDB;
 public class DashboardRestController {
     private final DashboardSettingsService settingsService;
     private final DashboardRecentPagesService recentPagesService;
-    private final DashboardNoticeService noticeService;
 
-    public DashboardRestController(DashboardSettingsService settingsService, DashboardRecentPagesService recentPagesService,
-            DashboardNoticeService noticeService) {
+    public DashboardRestController(DashboardSettingsService settingsService, DashboardRecentPagesService recentPagesService) {
         this.settingsService = settingsService;
         this.recentPagesService = recentPagesService;
-        this.noticeService = noticeService;
-    }
-
-    @GetMapping("/settings")
-    public DashboardSettingsDto getSettings(HttpServletRequest request) {
-        return settingsService.load(currentUser(request).getUserId(), domainKey(request));
     }
 
     @PutMapping("/settings")
@@ -76,12 +68,6 @@ public class DashboardRestController {
     public List<MenuBean> getMenu(HttpServletRequest request) {
         currentUser(request);
         return new MenuService(request).getMenu();
-    }
-
-    /** Loads current warnings independently of content previews and stored widget preferences. */
-    @GetMapping("/notices")
-    public List<java.util.Map<String, Object>> getNotices(HttpServletRequest request) {
-        return noticeService.load(currentUser(request), request);
     }
 
     @GetMapping("/recent-pages")

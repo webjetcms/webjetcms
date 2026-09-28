@@ -1,5 +1,5 @@
 import { registerWidget } from './registry';
-import { node, text, date, number, field, fetchData, empty, containNativeScroll, pagePreview } from './widget-utils';
+import { node, text, date, number, field, empty, containNativeScroll, pagePreview } from './widget-utils';
 
 /** Returns individual sessions while retaining the originating cluster label. */
 export function flattenSessions(data) {
@@ -77,6 +77,9 @@ function sessionList(container, data, context, signal) {
                         window.bootstrap?.Tooltip?.getInstance(logout)?.dispose();
                         logout.replaceWith(node('span', 'md-dashboard-widget__session-feedback small text-muted', text(context, 'sessionPending')));
                     } else {
+                        for (const cluster of data.userSessions) {
+                            cluster.userSessions = cluster.userSessions.filter(item => item.sessionId !== session.sessionId);
+                        }
                         row.remove();
                         context.dashboard.refresh(context.settings.items.find(item => item.type === 'sessions')?.id || 'dashboard-fixed-sessions');
                     }
@@ -96,10 +99,8 @@ function sessionList(container, data, context, signal) {
     sessionTooltips(list, signal);
 }
 
-async function renderSessions({ container, context, signal }) {
-    const result = await fetchData('sessions', {}, signal);
-    if (signal.aborted) return;
-    const data = result.currentSessions;
+function renderSessions({ container, context, signal }) {
+    const data = context.data.currentSessions;
     const sessions = flattenSessions(data);
     container.append(node('span', 'badge md-dashboard-widget__session-count', number(sessions.length)));
     sessionList(container, data, context, signal);

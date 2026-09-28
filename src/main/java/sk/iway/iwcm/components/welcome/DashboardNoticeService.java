@@ -21,7 +21,7 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.rest.BrowserIdentifierMigrationService;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 
-/** Builds independent system notices without delaying the initial dashboard HTML response. */
+/** Builds lightweight system notices for the dashboard template. */
 @Service
 public class DashboardNoticeService {
     private final UserDetailsRepository users;

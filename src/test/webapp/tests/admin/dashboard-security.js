@@ -1,3 +1,5 @@
+const { readDashboardBootstrap } = require('../../helpers/dashboard-browser');
+
 Feature('admin.dashboard-security').tag('@singlethread');
 
 let originalSettings;
@@ -86,7 +88,7 @@ for (const { permission, types } of permissionCases) {
                 I.assertTrue(result.status === 403 || deniedBody, `${result.path} must deny access without exposing approval content.`);
             } else I.assertEqual(result.status, 403, `${result.path} must reject direct requests without ${permission}.`);
         }
-        I.assertEqual((await readEndpoints(I, ['/admin/rest/dashboard/data/sessions']))[0].status, 200, 'An unrelated authorized request must still pass with this session and token.');
+        I.assertEqual((await readEndpoints(I, ['/admin/rest/dashboard/menu']))[0].status, 200, 'An unrelated authorized request must still pass with this session and token.');
         I.assertTrue(await I.executeScript(types => types.every(type => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.some(item => item.type === type)), types), 'Revoking access must retain the hidden preferences.');
 
         I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
@@ -115,10 +117,10 @@ for (const { permission, types } of permissionCases) {
 }
 
 Scenario('Reject unsafe shortcut URLs and appearance values through REST without changing preferences', async ({ I }) => {
-    const results = await I.executeScript(async () => {
+    const before = (await I.executeScript(readDashboardBootstrap)).settings;
+    const results = await I.executeScript(async before => {
         const headers = { 'Content-Type': 'application/json', 'X-CSRF-Token': window.csrfToken };
         const path = '/admin/rest/dashboard/settings';
-        const before = await (await fetch(path, { headers })).json();
         const invalid = [
             ...['javascript:window.autotestDashboardXss=1', 'JaVaScRiPt:alert(1)', 'java\nscript:alert(1)',
                 'data:text/html,<script>alert(1)</script>', 'vbscript:msgbox(1)', '//example.com/autotest', '/\\example.com/autotest',
@@ -135,10 +137,11 @@ Scenario('Reject unsafe shortcut URLs and appearance values through REST without
             const response = await fetch(path, { method: 'PUT', headers, body: JSON.stringify(settings) });
             results.push({ options, status: response.status });
         }
-        return { results, before, after: await (await fetch(path, { headers })).json() };
-    });
-    for (const { options, status } of results.results) I.assertEqual(status, 400, `Reject unsafe shortcut options: ${JSON.stringify(options)}`);
-    I.assertDeepEqual(results.after, results.before, 'Rejected payloads must leave the saved profile unchanged.');
+        return results;
+    }, before);
+    const after = (await I.executeScript(readDashboardBootstrap)).settings;
+    for (const { options, status } of results) I.assertEqual(status, 400, `Reject unsafe shortcut options: ${JSON.stringify(options)}`);
+    I.assertDeepEqual(after, before, 'Rejected payloads must leave the saved profile unchanged.');
 });
 
 Scenario('Persisted shortcut titles remain text and local paths cannot become external links', async ({ I }) => {
@@ -178,33 +181,25 @@ Scenario('Persisted shortcut titles remain text and local paths cannot become ex
 });
 
 Scenario('Ownership parameters cannot select another dashboard or session owner', async ({ I }) => {
-    const result = await I.executeScript(async () => {
-        const headers = { 'X-CSRF-Token': window.csrfToken };
-        const get = async path => {
-            const response = await fetch(path, { headers });
-            return { status: response.status, body: await response.json() };
-        };
-        const settings = await get('/admin/rest/dashboard/settings');
-        const forged = await get('/admin/rest/dashboard/settings?userId=-1&domainId=-1&domainKey=autotest');
-        const sessions = await get('/admin/rest/dashboard/data/sessions?userId=-1');
-        const id = sessions.body.currentSessions.currentSessionId;
-        const response = await fetch(`/admin/rest/removeSession?sessionId=${encodeURIComponent(id)}&userId=-1`, { method: 'POST', headers });
-        return { settings, forged, sessionsStatus: sessions.status, removalStatus: response.status, removal: await response.json(),
-            stillLoggedIn: (await get('/admin/rest/dashboard/settings')).status };
-    });
-    I.assertEqual(result.settings.status, 200);
-    I.assertDeepEqual(result.forged, result.settings, 'Settings ownership and domain must come from the session.');
-    I.assertEqual(result.sessionsStatus, 200);
-    I.assertEqual(result.removalStatus, 200);
+    const data = await I.executeScript(readDashboardBootstrap);
+    const forged = await I.executeScript(readDashboardBootstrap, '?userId=-1&domainId=-1&domainKey=autotest');
+    I.assertDeepEqual(forged.settings, data.settings, 'Settings ownership and domain must come from the session.');
+    I.assertDeepEqual(forged.currentSessions, data.currentSessions, 'Session ownership must come from the signed-in account.');
+    const result = await I.executeScript(async id => {
+        const response = await fetch(`/admin/rest/removeSession?sessionId=${encodeURIComponent(id)}&userId=-1`, {
+            method: 'POST', headers: { 'X-CSRF-Token': window.csrfToken }
+        });
+        return { status: response.status, removal: await response.json() };
+    }, data.currentSessions.currentSessionId);
+    I.assertEqual(result.status, 200);
     I.assertFalse(result.removal.success, 'The current session must not be removed through the other-session action.');
-    I.assertEqual(result.stillLoggedIn, 200);
+    I.assertEqual((await I.executeScript(readDashboardBootstrap)).currentSessions.currentSessionId, data.currentSessions.currentSessionId);
 });
 
 Scenario('Settings mutations and session removal require a valid CSRF token', async ({ I }) => {
-    const result = await I.executeScript(async () => {
+    const before = (await I.executeScript(readDashboardBootstrap)).settings;
+    const result = await I.executeScript(async before => {
         const path = '/admin/rest/dashboard/settings';
-        const headers = { 'Content-Type': 'application/json', 'X-CSRF-Token': window.csrfToken };
-        const before = await (await fetch(path, { headers })).json();
         const requests = [
             { path, method: 'PUT', body: JSON.stringify(before) }, { path, method: 'DELETE' },
             { path: `${path}/reset`, method: 'PUT', body: JSON.stringify(before) },
@@ -218,11 +213,12 @@ Scenario('Settings mutations and session removal require a valid CSRF token', as
                 statuses.push({ path: request.path, method: request.method, token, status: response.status });
             }
         }
-        return { statuses, before, after: await (await fetch(path, { headers })).json() };
-    });
+        return statuses;
+    }, before);
+    const after = (await I.executeScript(readDashboardBootstrap)).settings;
     // PathFilter rejects with 403; its JSP error forward can return 405 for PUT/DELETE.
-    for (const request of result.statuses) I.assertTrue([403, 405].includes(request.status), `${request.method} ${request.path} must reject a missing or invalid token.`);
-    I.assertDeepEqual(result.after, result.before, 'Rejected CSRF requests must not change settings.');
+    for (const request of result) I.assertTrue([403, 405].includes(request.status), `${request.method} ${request.path} must reject a missing or invalid token.`);
+    I.assertDeepEqual(after, before, 'Rejected CSRF requests must not change settings.');
 });
 
 Scenario('Restore preferences after security tests', async ({ I }) => {
@@ -236,8 +232,8 @@ Scenario('Restore preferences after security tests', async ({ I }) => {
 
 Scenario('Unauthenticated requests cannot read dashboard data or mutate preferences', async ({ I }) => {
     I.logout();
-    const paths = ['/admin/rest/dashboard/settings', '/admin/rest/dashboard/menu', '/admin/rest/dashboard/notices',
-        ...new Set(permissionCases.flatMap(item => item.types).flatMap(endpoints)), '/admin/rest/dashboard/data/sessions'];
+    const paths = ['/admin/v9/', '/admin/rest/dashboard/menu',
+        ...new Set(permissionCases.flatMap(item => item.types).flatMap(endpoints))];
     const results = await I.executeScript(async paths => {
         const requests = [...paths.map(path => ({ path, method: 'GET' })),
             { path: '/admin/rest/dashboard/settings', method: 'PUT', body: '{}' },

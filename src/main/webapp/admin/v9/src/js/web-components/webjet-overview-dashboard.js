@@ -7,6 +7,9 @@ import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/wid
  * @typedef {Object} WebjetOverviewDashboardOptions
  * @property {Object} [data={}] - Lightweight bootstrap context; widgets load uncached projections independently.
  * @property {Object[]} [data.dashboardMenu=[]] - Authorized administration navigation for shortcut selection.
+ * @property {Object} data.settings - Current account's layout and active-domain preferences.
+ * @property {Object[]} data.notices - System notices ready for immediate rendering.
+ * @property {Object} data.currentSessions - Current user sessions, updated after a successful logout.
  * @property {string} [data.userName=""] - Current user's display name.
  * @property {string} [data.currentDomain=""] - Active domain's display name.
  * @property {Object.<string, string>} [labels={}] - Localized labels used by dashboard sections and widgets.
@@ -46,7 +49,6 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
 
     disconnectedCallback() {
         this.dashboardController?.destroy();
-        this._noticesRequest?.abort();
         this._feedbackListeners.forEach(([name, listener]) => window.removeEventListener(name, listener));
         this._feedbackListeners = [];
     }
@@ -83,16 +85,15 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         const context = { data: this.data, labels: this.labels, config: this.config, overview: this, translate: (key, ...params) => WJ.translate(key, ...params) };
         context.config.dashboardDefaults ||= getDashboardDefaults(context);
         this.dashboardController = new DashboardController(widgets, context);
-        this._loadNotices();
+        this._renderNotices();
         this.dashboardReady = this.dashboardController.start();
         this.dataset.ready = "true";
         this.dispatchEvent(new CustomEvent("webjet-component-ready", { bubbles: true }));
     }
 
-    /** Loads system notices independently so uncached checks never delay the dashboard shell. */
-    async _loadNotices() {
-        this._noticesRequest?.abort();
-        const request = this._noticesRequest = new AbortController();
+    /** Renders the system notices supplied by the dashboard page. */
+    _renderNotices() {
+        const notices = this.data.notices;
         const host = this.dashboardController.notices;
         let container = host.querySelector(".md-dashboard__notice-list");
         if (!container) {
@@ -100,55 +101,38 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
             host.prepend(container);
         }
         container.setAttribute("aria-label", WJ.translate("admin.dashboard.notices.js"));
-        container.setAttribute("aria-busy", "true");
-        container.replaceChildren(element("p", "md-dashboard__loading", WJ.translate("admin.dashboard.loading.js")));
-        try {
-            const response = await fetch("/admin/rest/dashboard/notices", { signal: request.signal, credentials: "same-origin", headers: { Accept: "application/json", "X-CSRF-Token": window.csrfToken } });
-            if (!response.ok) throw new Error(`Dashboard notices: ${response.status}`);
-            const notices = await response.json();
-            if (request.signal.aborted) return;
-            container.replaceChildren();
-            if (notices.length) {
-                const heading = element("p", "md-dashboard__notices-heading", WJ.translate("admin.dashboard.notices.js"));
-                heading.append(element("span", "md-dashboard__notice-count", notices.length));
-                container.append(heading);
+        container.setAttribute("aria-busy", "false");
+        container.replaceChildren();
+        if (notices.length) {
+            const heading = element("p", "md-dashboard__notices-heading", WJ.translate("admin.dashboard.notices.js"));
+            heading.append(element("span", "md-dashboard__notice-count", notices.length));
+            container.append(heading);
+        }
+        for (const notice of notices) {
+            const details = element("details", "md-dashboard__notice");
+            details.dataset.noticeId = notice.id;
+            details.dataset.severity = notice.severity;
+            const summary = element("summary");
+            const icon = element("i", `ti ${/^ti-[a-z0-9-]+$/.test(notice.icon) ? notice.icon : "ti-info-circle"}`);
+            icon.setAttribute("aria-hidden", "true");
+            const chevron = element("i", "ti ti-chevron-down md-dashboard__notice-chevron");
+            chevron.setAttribute("aria-hidden", "true");
+            summary.append(icon, element("span", "md-dashboard__notice-title", notice.title), chevron);
+            const body = element("div", "md-dashboard__notice-body");
+            // This HTML is produced by the authorized server notice service, never by widget preferences.
+            body.innerHTML = notice.bodyHtml || "";
+            if (notice.action) {
+                const action = element("button", "btn btn-sm btn-outline-secondary", notice.action.label);
+                action.type = "button";
+                action.addEventListener("click", () => {
+                    if (notice.action.type === "popup") WJ.openPopupDialog(notice.action.url);
+                    else if (notice.action.type === "help") WJ.showHelpWindow(notice.action.url);
+                    else if (notice.action.type === "link") window.open(notice.action.url, "_blank", "noopener");
+                });
+                body.append(action);
             }
-            for (const notice of notices) {
-                const details = element("details", "md-dashboard__notice");
-                details.dataset.noticeId = notice.id;
-                details.dataset.severity = notice.severity;
-                const summary = element("summary");
-                const icon = element("i", `ti ${/^ti-[a-z0-9-]+$/.test(notice.icon) ? notice.icon : "ti-info-circle"}`);
-                icon.setAttribute("aria-hidden", "true");
-                const chevron = element("i", "ti ti-chevron-down md-dashboard__notice-chevron");
-                chevron.setAttribute("aria-hidden", "true");
-                summary.append(icon, element("span", "md-dashboard__notice-title", notice.title), chevron);
-                const body = element("div", "md-dashboard__notice-body");
-                // This HTML is produced by the authorized server notice service, never by widget preferences.
-                body.innerHTML = notice.bodyHtml || "";
-                if (notice.action) {
-                    const action = element("button", "btn btn-sm btn-outline-secondary", notice.action.label);
-                    action.type = "button";
-                    action.addEventListener("click", () => {
-                        if (notice.action.type === "popup") WJ.openPopupDialog(notice.action.url);
-                        else if (notice.action.type === "help") WJ.showHelpWindow(notice.action.url);
-                        else if (notice.action.type === "link") window.open(notice.action.url, "_blank", "noopener");
-                    });
-                    body.append(action);
-                }
-                details.append(summary, body);
-                container.append(details);
-            }
-        } catch (error) {
-            if (request.signal.aborted) return;
-            const retry = element("button", "btn btn-sm btn-outline-secondary", WJ.translate("admin.dashboard.retry.js"));
-            retry.type = "button";
-            retry.addEventListener("click", () => this._loadNotices());
-            const message = element("p", "text-danger mb-0", WJ.translate("admin.dashboard.noticesError.js"));
-            message.setAttribute("role", "alert");
-            container.replaceChildren(message, retry);
-        } finally {
-            if (!request.signal.aborted) container.setAttribute("aria-busy", "false");
+            details.append(summary, body);
+            container.append(details);
         }
     }
 

@@ -1,4 +1,4 @@
-const { waitForWidgets } = require('../../helpers/dashboard-browser');
+const { waitForWidgets, mockDashboardBootstrap } = require('../../helpers/dashboard-browser');
 
 Feature('manual-dashboard');
 
@@ -15,6 +15,7 @@ Before(async ({ I, login }) => {
         if (route.request().method() === 'PUT') settings = { ...route.request().postDataJSON(), configured: true };
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(settings) });
     });
+    await mockDashboardBootstrap(I, () => ({ settings }));
     I.amOnPage('/admin/v9/');
     I.resizeWindow(1440, 1100);
     await waitForWidgets(I);
