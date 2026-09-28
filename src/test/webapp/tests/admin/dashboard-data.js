@@ -30,35 +30,24 @@ Scenario('Initial settings, notices, sessions and administrators render from HTM
     }
 });
 
-Scenario('Read-only widget projections return bounded preview contracts', async ({ I }) => {
-    const results = await I.executeScript(async () => {
-        const types = ['forms', 'newsletter'];
-        const results = [];
-        for (const type of types) {
-            const response = await fetch(`/admin/rest/dashboard/data/${type}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
-            const body = await response.json();
-            results.push({ type, status: response.status, body });
-        }
-        return results;
+Scenario('Form overview returns a bounded preview and the full submission count', async ({ I }) => {
+    const { status, body } = await I.executeScript(async () => {
+        const response = await fetch('/admin/rest/forms-list/overview', { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
+        return { status: response.status, body: await response.json() };
     });
-    for (const { type, status, body } of results) {
-        I.say(`${type}: HTTP ${status}, keys=${Object.keys(body).join(',')}`);
-        I.assertEqual(status, 200, `${type} must load for an authorized administrator.`);
-        I.assertTrue(Number.isInteger(body.total) && body.total >= 0, `${type} must expose an actual nonnegative count.`);
-        I.assertTrue(Array.isArray(body.items) && body.items.length <= 6, `${type} previews must be bounded.`);
-        for (const item of body.items) {
-            I.assertEqual(typeof item.title, 'string');
-            I.assertTrue(typeof item.url === 'string' && item.url.startsWith('/'), 'Preview links must stay in the administration.');
-            if (type === 'forms') I.assertStartsWith(item.url, '/apps/form/admin/detail/?formName=');
-        }
-        if (type === 'newsletter' && body.selectedId) I.assertEqual(body.items[0].id, body.selectedId);
+    I.assertEqual(status, 200, 'Forms must load for an authorized administrator.');
+    I.assertTrue(Number.isInteger(body.total) && body.total >= 0, 'Forms must expose an actual nonnegative count.');
+    I.assertTrue(Array.isArray(body.items) && body.items.length <= 6, 'Form previews must be bounded.');
+    for (const item of body.items) {
+        I.assertEqual(typeof item.title, 'string');
+        I.assertStartsWith(item.url, '/apps/form/admin/detail/?formName=');
     }
 });
 
 Scenario('Invalid projection settings are rejected before querying data', async ({ I }) => {
     const statuses = await I.executeScript(async () => {
-        return Promise.all(['forms?days=365', 'traffic', 'top-pages', 'search-terms', 'referrers', 'errors', 'publishing', 'changed-pages', 'forms?formName=', 'newsletter?campaignId=-1', 'sessions', 'logged-admins', 'unknown'].map(async value => {
-            const response = await fetch(`/admin/rest/dashboard/data/${value}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
+        return Promise.all(['?days=365', '?formName=', '?days=0'].map(async value => {
+            const response = await fetch(`/admin/rest/forms-list/overview${value}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
             return { value, status: response.status };
         }));
     });
@@ -144,19 +133,33 @@ Scenario('Changed pages and publishing reuse the shared audit page lists', async
     }
 });
 
-Scenario('Audit activity exposes an independent authorized widget projection', async ({ I }) => {
-    const results = await I.executeScript(async () => Promise.all(['audit'].map(async type => {
-        const response = await fetch(`/admin/rest/dashboard/data/${type}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
-        return { type, status: response.status, body: await response.json() };
-    })));
-    for (const { type, status, body } of results) {
-        I.assertEqual(status, 200, `${type} must load for an authorized administrator.`);
-        I.assertTrue(Array.isArray(body.items), `${type} must contain an item projection.`);
-        I.assertTrue(body.items.length <= 6, `${type} must use a bounded activity preview.`);
-        for (const item of body.items) {
-            I.assertTrue(Number.isFinite(item.date), 'Activity timestamps must remain machine-readable.');
-            I.assertTrue(typeof item.url === 'string' && item.url.startsWith('/'), 'Activity links must stay in the administration.');
-            I.assertEqual(typeof item.description, 'string');
+Scenario('Audit and newsletter reuse bounded module lists', async ({ I }) => {
+    const responses = await I.executeScript(async () => {
+        const read = async path => {
+            const response = await fetch(path, { headers: { 'X-CSRF-Token': window.csrfToken } });
+            return { status: response.status, body: await response.json() };
+        };
+        return {
+            audit: await read('/admin/rest/audit/log/all?size=6&page=0&sort=id%2Cdesc'),
+            newsletter: await read('/admin/rest/dmail/campaings/all?size=14&page=0&sort=id%2Cdesc')
+        };
+    });
+    for (const [type, response] of Object.entries(responses)) {
+        I.assertEqual(response.status, 200);
+        I.assertFalse(Boolean(response.body.error));
+        I.assertTrue(response.body.content.length > 0 && response.body.content.length <= (type === 'audit' ? 6 : 14));
+        for (const [index, item] of response.body.content.entries()) {
+            if (index > 0) I.assertTrue(response.body.content[index - 1].id > item.id);
+            if (type === 'audit') {
+                I.assertEqual(typeof item.description, 'string');
+                I.assertTrue(Number.isFinite(item.createDate));
+                I.assertTrue(response.body.options.logType.some(option => String(option.value) === String(item.logType)));
+            } else {
+                I.assertEqual(typeof item.subject, 'string');
+                I.assertEqual(typeof item.editorFields.status, 'string');
+                I.assertTrue(item.countOfRecipients === null || Number.isInteger(item.countOfRecipients));
+                I.assertTrue(item.countOfSentMails === null || Number.isInteger(item.countOfSentMails));
+            }
         }
     }
 });
@@ -176,13 +179,13 @@ Scenario('Live monitoring reads a current server snapshot independently of persi
 Scenario('Selected form projections preserve their contracts', async ({ I }) => {
     const result = await I.executeScript(async () => {
         const get = async path => {
-            const response = await fetch(`/admin/rest/dashboard/data/${path}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
+            const response = await fetch(`/admin/rest/forms-list/overview${path}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
             return { status: response.status, body: response.headers.get('content-type')?.includes('json') ? await response.json() : null };
         };
-        const forms = await get('forms');
+        const forms = await get('');
         const selectedName = forms.body.options?.[0]?.id;
-        const selected = selectedName ? await get(`forms?formName=${encodeURIComponent(selectedName)}`) : null;
-        const missing = await get('forms?formName=missing-dashboard-form-autotest');
+        const selected = selectedName ? await get(`?formName=${encodeURIComponent(selectedName)}`) : null;
+        const missing = await get('?formName=missing-dashboard-form-autotest');
         return { selectedName, selected, missingStatus: missing.status };
     });
     if (result.selected) {

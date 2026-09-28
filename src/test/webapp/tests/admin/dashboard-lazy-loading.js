@@ -2,7 +2,7 @@ const { showWidget, mockDashboardBootstrap, dashboardPageRoute } = require('../.
 
 Feature('admin.dashboard-lazy-loading');
 
-const dataRoute = '**/admin/rest/dashboard/data/**';
+const dataRoutes = ['**/admin/rest/forms-list/overview?*', '**/admin/rest/audit/log/all?*'];
 const monitoringRoute = '**/admin/rest/monitoring/actual';
 
 Before(({ login }) => login('admin'));
@@ -21,10 +21,10 @@ for (const width of [1337, 390]) {
             ]
         };
         await mockDashboardBootstrap(I, () => ({ settings, notices: [], currentSessions: { userSessions: [] } }));
-        await I.mockRoute(dataRoute, route => {
-            const type = new URL(route.request().url()).pathname.split('/').pop();
+        for (const dataRoute of dataRoutes) await I.mockRoute(dataRoute, route => {
+            const type = route.request().url().includes('/audit/') ? 'audit' : 'forms';
             requests.push(type);
-            const body = { total: 0, items: [], options: [], from: Date.now() - 86400000, to: Date.now() };
+            const body = type === 'audit' ? { content: [], options: { logType: [] } } : { total: 0, items: [], options: [], from: Date.now() - 86400000, to: Date.now() };
             return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
         });
         await I.mockRoute(monitoringRoute, route => {
@@ -69,7 +69,7 @@ for (const width of [1337, 390]) {
             I.dontSee('Minimalizovať', '[data-instance-id="lazy-autotest-cpu"] .dropdown-menu');
             I.saveScreenshot(`dashboard-no-minimize-${width}.png`, false);
         } finally {
-            for (const route of [dashboardPageRoute, dataRoute, monitoringRoute]) await I.stopMockingRoute(route);
+            for (const route of [dashboardPageRoute, ...dataRoutes, monitoringRoute]) await I.stopMockingRoute(route);
             I.wjSetDefaultWindowSize();
         }
     });

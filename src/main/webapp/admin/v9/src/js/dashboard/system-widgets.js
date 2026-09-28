@@ -1,5 +1,5 @@
 import { registerWidget } from './registry';
-import { node, text, number, date, link, icon, table, empty, fetchData, fetchJson, pagePreview, containNativeScroll } from './widget-utils';
+import { node, text, number, date, link, icon, table, empty, fetchJson, pagePreview, containNativeScroll } from './widget-utils';
 import { chartHost, mountChart } from './charts';
 import { readMonitoringSnapshot, subscribeMonitoring } from './monitoring-live';
 
@@ -15,6 +15,14 @@ async function fetchChangedPages(signal) {
     const data = await fetchJson('/admin/rest/web-pages/all?auditVersion=true&size=6&page=0&sort=dateCreated%2Cdesc', signal);
     return { items: data.content.map(page => ({ title: page.title, fullPath: page.fullPath, perexImage: page.perexImage,
         userFullName: page.authorName, date: page.dateCreated, url: `/admin/v9/webpages/web-pages-list/?docid=${encodeURIComponent(page.docId)}` })) };
+}
+
+/** Maps audit rows and the module's localized event names into the activity preview. */
+async function fetchAudit(signal) {
+    const data = await fetchJson('/admin/rest/audit/log/all?size=6&page=0&sort=id%2Cdesc', signal);
+    const types = new Map(data.options.logType.map(option => [String(option.value), option.label]));
+    return { items: data.content.map(row => ({ type: types.get(String(row.logType)), description: row.description,
+        userFullName: row.userFullName, date: row.createDate, url: `/admin/v9/apps/audit-search/?id=${encodeURIComponent(row.id)}` })) };
 }
 
 /** Renders a bounded activity preview with the author, timestamp and complete linked description. */
@@ -167,7 +175,7 @@ export function registerSystemWidgets() {
         multiple: true, sizes: ['3x2', '3x3'], defaultSize: '3x3', headerLink: { href: moduleLinks[type], labelKey: 'admin.dashboard.allShort.js' },
         isAvailable: () => window.WJ.hasPermission(permission) && window.WJ.hasPermission('cmp_adminlog'),
         async render({ container, instance, context, signal }) {
-            const data = type === 'changed-pages' ? await fetchChangedPages(signal) : await fetchData(type, {}, signal); if (signal.aborted) return;
+            const data = type === 'changed-pages' ? await fetchChangedPages(signal) : await fetchAudit(signal); if (signal.aborted) return;
             if (!data.items.length) empty(container, context);
             else activityList(container, data.items, type, instance.size);
         }

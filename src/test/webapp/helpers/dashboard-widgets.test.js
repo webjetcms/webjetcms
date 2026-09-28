@@ -34,7 +34,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
     };
     const scope = vm.createContext({ Date: ClockDate, window, document: window.document, Node: window.Node, DOMParser: window.DOMParser, DOMException: window.DOMException, URL, URLSearchParams, AbortController, console,
         IntersectionObserver: class { observe() {} disconnect() {} },
-        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/stat/') ? statResponse(url) : url.includes('/monitoring/actual') ? snapshot : url.includes('/data/') || url.includes('/web-pages/history/all?') ? data : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
+        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/stat/') ? statResponse(url) : url.includes('/monitoring/actual') ? snapshot : url.includes('/forms-list/overview') || url.includes('/dmail/') || url.includes('/web-pages/history/all?') ? data : url.includes('/audit/log/all?') ? { content: (data.items || []).map((item, index) => ({ id: index + 1, logType: 20, description: item.description, userFullName: item.userFullName, createDate: item.date })), options: { logType: [{ value: '20', label: data.items?.[0]?.type || 'Changed' }] } } : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
     });
     for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'monitoring-live.js', 'system-widgets.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
@@ -45,7 +45,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
     }
     scope.registerDashboardWidgets();
     if (extraWidgets && !scope.getWidget('sessions')) { scope.registerUtilityWidgets(); scope.registerDataWidgets(); }
-    const context = { data: { statRootGroupId: 1, ...data, dashboardMenu: menu }, labels: {}, settings: {}, config: { recentPagesGroupId: '99999997' }, translate: key => key };
+    const context = { data: { statRootGroupId: 1, ...data, dashboardMenu: menu }, labels: { newsletterActive: 'Active' }, settings: {}, config: { recentPagesGroupId: '99999997' }, translate: key => key };
     t.after(() => window.close());
     return { scope, context, container: window.document.querySelector('main'), requests, window };
 }
@@ -418,8 +418,8 @@ test('Changed pages and audit render bounded text-only activity with their suppl
             container.replaceChildren();
             await widget.render({ container, context, signal, instance: { size }, options: { arbitrary: 'autotest' } });
             assert.equal(container.querySelectorAll('.md-dashboard-widget__activity > li').length, count);
-            assert.equal(container.querySelectorAll('a[href]').length, type === 'changed-pages' ? count : 1);
-            assert.equal(container.querySelector('a').getAttribute('href'), items[0].url);
+            assert.equal(container.querySelectorAll('a[href]').length, count);
+            assert.equal(container.querySelector('a').getAttribute('href'), type === 'changed-pages' ? items[0].url : '/admin/v9/apps/audit-search/?id=1');
             assert.equal(container.querySelector('script,img,svg,b'), null);
             assert.match(container.textContent, /<svg onload=alert\(1\)>/);
             assert.match(container.querySelector('.md-dashboard-widget__activity-detail').textContent, /2026/);
@@ -436,7 +436,11 @@ test('Changed pages and audit render bounded text-only activity with their suppl
             assert.equal(url.searchParams.get('size'), '6');
             assert.equal(url.searchParams.get('page'), '0');
             assert.equal(url.searchParams.get('sort'), 'dateCreated,desc');
-        } else assert.equal(url.pathname, '/admin/rest/dashboard/data/audit');
+        } else {
+            assert.equal(url.pathname, '/admin/rest/audit/log/all');
+            assert.equal(url.searchParams.get('size'), '6');
+            assert.equal(url.searchParams.get('sort'), 'id,desc');
+        }
     }
 });
 
@@ -489,7 +493,7 @@ test('Migrated provider failures stay errors and aborted responses do not append
         const controller = new AbortController();
         const rendering = aborted.scope.getWidget(type).render({ ...args, container: aborted.container, context: aborted.context, signal: controller.signal });
         controller.abort();
-        finish({ ok: true, json: async () => ({ content: [{ docId: 1, title: 'Stale' }], items: [{ title: 'Stale', fullName: 'Stale' }], series: [{ date: 123, used: 7 }], total: 1 }) });
+        finish({ ok: true, json: async () => ({ content: [{ docId: 1, title: 'Stale' }], options: { logType: [] }, items: [{ title: 'Stale', fullName: 'Stale' }], series: [{ date: 123, used: 7 }], total: 1 }) });
         if (type.startsWith('server-')) await assert.rejects(rendering, error => error.name === 'AbortError');
         else await rendering;
         assert.equal(aborted.container.textContent, '', type);
@@ -1066,25 +1070,71 @@ test('Publishing calendars retain full years and distinguish publication from ex
     assert.equal(container.querySelector('img'), null);
 });
 
+test('Newsletter reuses recent campaigns and retrieves an older saved selection through the module', async t => {
+    const recent = Array.from({ length: 14 }, (_, index) => ({ id: 30 - index, subject: `Campaign ${30 - index}`,
+        countOfRecipients: 10, countOfSentMails: 4, editorFields: { status: 'Active' } }));
+    const older = { ...recent[0], id: 1, subject: 'Saved campaign', editorFields: { status: 'Inactive' } };
+    const { scope, context, requests } = fixture(t, { fetchResponse: async url => ({ ok: true,
+        json: async () => url.includes('/all?') ? { content: [...recent] } : older }) });
+    const signal = new AbortController().signal;
+    const newest = await scope.fetchNewsletter('', context, signal);
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].url, '/admin/rest/dmail/campaings/all?size=14&page=0&sort=id%2Cdesc');
+    assert.equal(newest.items[0].title, 'Campaign 30');
+    assert.equal(newest.items.length, 3);
+    assert.equal(newest.options.length, 14);
+    assert.equal(newest.active, true);
+    const selected = await scope.fetchNewsletter('1', context, signal);
+    assert.equal(requests.at(-1).url, '/admin/rest/dmail/campaings/1');
+    assert.equal(selected.items[0].title, 'Saved campaign');
+    assert.equal(selected.items[0].status, 'Inactive');
+    assert.equal(selected.active, false);
+    assert.equal(selected.options[0].id, '1');
+    assert.equal(selected.items[0].url, '/apps/dmail/admin/?id=1');
+    recent[0].sendAt = new Date(2030, 0, 1).getTime();
+    assert.equal((await scope.fetchNewsletter('', context, signal)).active, false, 'Future campaigns must not poll as active delivery.');
+    for (const request of requests) assert.equal(request.options.signal, signal);
+});
+
+test('Newsletter keeps empty results and module permission failures distinct', async t => {
+    for (const error of [null, 'Access is denied']) {
+        const { scope, context } = fixture(t, { fetchResponse: async () => ({ ok: true, json: async () => ({ error, content: [] }) }) });
+        const request = scope.fetchNewsletter('', context, new AbortController().signal);
+        if (error) await assert.rejects(request, failure => failure.dashboardReason === 'permission-denied');
+        else assert.equal((await request).items.length, 0);
+    }
+});
+
+test('Newsletter settings allow replacing a saved campaign that is no longer in the recent list', async t => {
+    const { scope, context, container, requests } = fixture(t, { data: { content: [] } });
+    const settings = await scope.getWidget('newsletter').configure({ container, context,
+        domainOptions: { campaignId: '42' }, signal: new AbortController().signal });
+    assert.equal(requests.length, 1);
+    assert.match(requests[0].url, /\/campaings\/all\?/);
+    assert.equal(settings.read().domainOptions.campaignId, '42');
+    container.querySelector('select').value = '';
+    assert.equal(settings.read().domainOptions.campaignId, '');
+});
+
 test('Newsletter progress preserves actual status and counts without inventing a percentage for an empty audience', async t => {
-    const campaign = { title: '<img src=x>', status: 'paused', sent: 0, recipients: 0, failed: 0, opens: 12, clicks: 2, url: '/apps/dmail/admin/' };
-    const { scope, context, container } = fixture(t, { data: { items: [campaign] } });
+    const campaign = { id: 1, subject: '<img src=x>', editorFields: { status: 'Inactive' }, countOfSentMails: 0, countOfRecipients: 0 };
+    const { scope, context, container } = fixture(t, { data: { content: [campaign] } });
     const args = { container, context, instance: { size: '2x2' }, domainOptions: {}, signal: new AbortController().signal };
     await scope.getWidget('newsletter').render(args);
-    assert.match(container.querySelector('.md-dashboard-widget__newsletter-status').textContent, /paused/);
+    assert.match(container.querySelector('.md-dashboard-widget__newsletter-status').textContent, /Inactive/);
     assert.equal(container.querySelector('.md-dashboard-widget__newsletter-percent').textContent, '—');
     assert.equal(container.querySelector('progress').value, 0);
     assert.equal(container.querySelector('.md-dashboard-widget__newsletter-metric strong').textContent, '0');
-    assert.doesNotMatch(container.querySelector('.md-dashboard-widget__newsletter-details').textContent, /opened|clicked/);
+    assert.equal(container.querySelector('.md-dashboard-widget__newsletter-details'), null);
     assert.equal(container.querySelector('img'), null);
     container.replaceChildren();
-    Object.assign(campaign, { status: 'completed', sent: 99, recipients: 100, failed: 1 });
+    Object.assign(campaign, { editorFields: { status: 'All submitted' }, countOfSentMails: 99, countOfRecipients: 100 });
     await scope.getWidget('newsletter').render(args);
-    assert.match(container.querySelector('.md-dashboard-widget__newsletter-status').textContent, /sendingCompleted/);
+    assert.match(container.querySelector('.md-dashboard-widget__newsletter-status').textContent, /All submitted/);
     assert.equal(container.querySelector('.md-dashboard-widget__newsletter-percent').textContent, '99 %');
     assert.equal(container.querySelector('progress').max, 100);
     assert.equal(container.querySelector('progress').value, 99);
-    assert.match(container.querySelector('.md-dashboard-widget__newsletter-details').textContent, /opened.*12.*clicked.*2/);
+    assert.equal(container.querySelector('.md-dashboard-widget__newsletter-details'), null);
 });
 
 test('Numeric and empty traffic previews do not initialize charts', async t => {
@@ -1331,8 +1381,8 @@ test('An HTTP 200 session-removal rejection leaves the session visible and repor
 });
 
 test('Active newsletter refreshes only while visible and releases its observer and timer', async t => {
-    const { scope, context, container, window } = fixture(t, { extraWidgets: true, data: { active: true, items: [{
-        id: 1, title: 'Campaign', status: 'sending', sent: 3, recipients: 10, failed: 1, url: '/apps/dmail/admin/?id=1'
+    const { scope, context, container, window } = fixture(t, { extraWidgets: true, data: { content: [{
+        id: 1, subject: 'Campaign', editorFields: { status: 'Active' }, countOfSentMails: 3, countOfRecipients: 10
     }] } });
     let callback, interval, disconnected = false, cleared = false, refreshed = 0;
     scope.IntersectionObserver = class {

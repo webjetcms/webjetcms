@@ -35,6 +35,7 @@ block content
                     environmentColor: /*[[${layout.getConstant('dashboardEnvironmentColor')}]]*/ "auto"
                 },
                 labels: {
+                    newsletterActive: /*[[\#{components.dmail.campaings.status.enabled}]]*/ "",
                     changelog: WJ.parseMarkdown(announcement.replace(/\\n/g, "\n"), { link: true, imgSrcPrefix: "" }),
                     seeCompleteChangelog: /*[[\#{admin.overview.seeCompleteChangelog}]]*/ ""
                 }

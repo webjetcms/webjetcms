@@ -165,15 +165,6 @@ export function table(container, headers, rows, numericColumns = []) {
     return result;
 }
 
-/** Fetches an authorized dashboard projection; aborts when the widget is replaced. */
-export async function fetchData(type, options = {}, signal) {
-    const params = new URLSearchParams();
-    Object.entries(options).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== "") params.set(key, value);
-    });
-    return fetchJson(`/admin/rest/dashboard/data/${encodeURIComponent(type)}?${params}`, signal);
-}
-
 /** Fetches an existing module endpoint with the shared request and error handling. */
 export async function fetchJson(url, signal) {
     const response = await fetch(url, {

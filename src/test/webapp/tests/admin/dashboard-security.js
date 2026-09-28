@@ -27,7 +27,10 @@ function endpoints(type, recentPagesGroupId, statRootGroupId) {
     if (type === 'recent-pages') return [`/admin/rest/web-pages/all?groupId=${recentPagesGroupId}&size=6&page=0&sort=dateCreated%2Cdesc`];
     if (type === 'approvals') return ['/admin/rest/webpages/toapprove/all?size=6&page=0&sort=saveDate,desc', '/admin/rest/groups/toapprove/all?size=6&page=0&sort=saveDate,desc'];
     if (type.startsWith('server-')) return ['/admin/rest/monitoring/actual'];
-    return [`/admin/rest/dashboard/data/${type}`];
+    if (type === 'forms') return ['/admin/rest/forms-list/overview?days=7'];
+    if (type === 'newsletter') return ['/admin/rest/dmail/campaings/all?size=14&page=0&sort=id%2Cdesc'];
+    if (type === 'audit') return ['/admin/rest/audit/log/all?size=6&page=0&sort=id%2Cdesc'];
+    throw new Error(`Missing endpoint for ${type}`);
 }
 
 function loaded(I) {
@@ -98,7 +101,7 @@ for (const { permission, types } of permissionCases) {
         for (const type of types) I.dontSeeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
         I.seeElementInDOM(`${dashboard} [data-widget-type="sessions"]`);
         for (const result of await readEndpoints(I, paths)) {
-            if (/^\/admin\/rest\/(?:(webpages|groups)\/toapprove\/|web-pages\/(?:history\/)?all|stat\/(views|top|search-engines|referer|error)\/)/.test(result.path)) {
+            if (/^\/admin\/rest\/(?:(webpages|groups)\/toapprove\/|web-pages\/(?:history\/)?all|audit\/log\/|dmail\/campaings\/|forms-list\/overview|stat\/(views|top|search-engines|referer|error)\/)/.test(result.path)) {
                 const deniedBody = result.status === 200 && ['Access Denied', 'Access is denied'].includes(result.error) && result.contentPresence === false;
                 I.assertTrue(result.status === 403 || deniedBody, `${result.path} must deny access without exposing page or approval content.`);
             } else I.assertEqual(result.status, 403, `${result.path} must reject direct requests without ${permission}.`);

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
@@ -34,6 +36,7 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.components.multistep_form.rest.MultistepFormsService;
 import sk.iway.iwcm.database.SimpleQuery;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.form.FormDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.ConfDB;
@@ -75,6 +78,17 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
         this.formSettingsRepository = formSettingsRepository;
         this.formStepsRepository = formStepsRepository;
         this.formItemsRepository = formItemsRepository;
+    }
+
+    /** Provides the authorized form overview with the selected submission period. */
+    @GetMapping("/overview")
+    public ResponseEntity<Map<String, Object>> getOverview(@RequestParam(defaultValue = "7") int days,
+            @RequestParam(required = false) String formName) {
+        try {
+            return ResponseEntity.ok(formsService.getOverview(getUser(), DocDB.getDomain(getRequest()), days, formName));
+        } catch (ResponseStatusException exception) {
+            return ResponseEntity.status(exception.getStatusCode()).body(Map.of("reason", exception.getReason()));
+        }
     }
 
     @Override

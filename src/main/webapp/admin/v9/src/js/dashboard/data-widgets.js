@@ -1,5 +1,5 @@
 import { registerWidget } from './registry';
-import { node, text, number, date, link, icon, field, table, empty, fetchData, fetchJson, pagePreview } from './widget-utils';
+import { node, text, number, date, link, icon, field, table, empty, fetchJson, pagePreview } from './widget-utils';
 import { chartHost, mountChart } from './charts';
 
 const moduleLinks = {
@@ -9,6 +9,28 @@ const moduleLinks = {
     errors: '/apps/stat/admin/error/', newsletter: '/apps/dmail/admin/'
 };
 const metricKey = metric => ({ views: 'visits', sessions: 'sessionsMetric', uniqueUsers: 'uniqueUsers' })[metric] || 'sessionsMetric';
+
+/** Loads the forms module's authorized submission overview and optional form filter. */
+function fetchForms(options, signal) {
+    const params = new URLSearchParams({ days: options.days || 7 });
+    if (options.formName) params.set('formName', options.formName);
+    return fetchJson(`/admin/rest/forms-list/overview?${params}`, signal);
+}
+
+/** Uses recent module campaigns, loading an older saved selection separately when needed. */
+async function fetchNewsletter(selectedId, context, signal) {
+    const data = await fetchJson('/admin/rest/dmail/campaings/all?size=14&page=0&sort=id%2Cdesc', signal);
+    const campaigns = data.content;
+    if (selectedId && !campaigns.some(campaign => String(campaign.id) === String(selectedId))) {
+        campaigns.unshift(await fetchJson(`/admin/rest/dmail/campaings/${encodeURIComponent(selectedId)}`, signal));
+    }
+    const selected = selectedId ? campaigns.find(campaign => String(campaign.id) === String(selectedId)) : campaigns[0];
+    const ordered = selected ? [selected, ...campaigns.filter(campaign => campaign !== selected)] : [];
+    return { options: campaigns.map(campaign => ({ id: String(campaign.id), title: campaign.subject })),
+        active: Boolean(selected && selected.editorFields.status === context.labels.newsletterActive && !(selected.sendAt > new Date().getTime())),
+        items: ordered.slice(0, 3).map(campaign => ({ title: campaign.subject, status: campaign.editorFields.status,
+            sent: campaign.countOfSentMails, recipients: campaign.countOfRecipients, url: `/apps/dmail/admin/?id=${encodeURIComponent(campaign.id)}` })) };
+}
 
 /** Selects the nearest publication and expiration events from the audit module's schedule. */
 async function fetchPublishing(signal) {
@@ -344,13 +366,13 @@ export function registerDataWidgets() {
         } },
         defaultOptions: { days: 7 }, defaultDomainOptions: { formName: '' }, isAvailable: () => window.WJ.hasPermission('cmp_form'),
         async configure({ container, options, domainOptions, context, signal }) {
-            const data = await fetchData('forms', { days: options.days || 7 }, signal);
+            const data = await fetchForms({ days: options.days }, signal);
             const days = periodField(container, options, context, false);
             const form = selectionField(container, text(context, 'formName'), data.options || [], domainOptions.formName, context, 'allForms');
             return { read: () => ({ options: { days: Number(days.value) }, domainOptions: { formName: form.value } }) };
         },
         async render({ container, instance, options, domainOptions, context, signal }) {
-            const data = await fetchData('forms', { days: options.days || 7, formName: domainOptions.formName }, signal); if (signal.aborted) return;
+            const data = await fetchForms({ days: options.days, formName: domainOptions.formName }, signal); if (signal.aborted) return;
             const href = domainOptions.formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(domainOptions.formName)}` : moduleLinks.forms;
             const compact = instance.size === '1x1';
             summary(container, data, context, href, compact ? text(context, 'formSubmissionsPeriod', options.days || 7) : text(context, 'submissions'));
@@ -401,36 +423,30 @@ export function registerDataWidgets() {
         headerLink: { href: moduleLinks.newsletter },
         defaultDomainOptions: { campaignId: '' }, isAvailable: () => window.WJ.hasPermission('menuEmail'),
         async configure({ container, domainOptions, context, signal }) {
-            const data = await fetchData('newsletter', {}, signal);
-            const campaign = selectionField(container, text(context, 'campaign'), data.options || [], domainOptions.campaignId, context, 'automatic');
+            const data = await fetchNewsletter('', context, signal);
+            const campaign = selectionField(container, text(context, 'campaign'), data.options, domainOptions.campaignId, context, 'latestCampaign');
             return { read: () => ({ domainOptions: { campaignId: campaign.value } }) };
         },
         async render({ container, instance, domainOptions, context, signal, refresh }) {
-            const data = await fetchData('newsletter', { campaignId: domainOptions.campaignId }, signal); if (signal.aborted) return;
+            const data = await fetchNewsletter(domainOptions.campaignId, context, signal); if (signal.aborted) return;
             if (!data.items.length) empty(container, context);
             else if (instance.size === '3x3') {
-                table(container, [text(context, 'campaign'), text(context, 'status'), text(context, 'sent'), text(context, 'failed')], data.items.slice(0, 3).map(item => [
-                    link(item.title, item.url), text(context, item.status === 'sending' ? 'active' : item.status), `${number(item.sent)} / ${number(item.recipients)}`, number(item.failed)
+                table(container, [text(context, 'campaign'), text(context, 'status'), text(context, 'sent')], data.items.map(item => [
+                    link(item.title, item.url), item.status, `${number(item.sent)} / ${number(item.recipients)}`
                 ]));
             } else {
                 const campaign = data.items[0];
-                const state = ['sending', 'scheduled', 'completed', 'draft', 'paused'].includes(campaign.status) ? campaign.status : 'unknown';
-                const status = node('p', `md-dashboard-widget__newsletter-status md-dashboard-widget__newsletter-status--${state} small`);
-                status.append(icon(state === 'completed' ? 'ti-circle-check' : state === 'sending' ? 'ti-send' : state === 'paused' ? 'ti-player-pause' : 'ti-clock'), document.createTextNode(text(context, state === 'completed' ? 'sendingCompleted' : state === 'sending' ? 'active' : state)));
+                const status = node('p', 'md-dashboard-widget__newsletter-status small');
+                status.append(icon(data.active ? 'ti-send' : 'ti-clock'), document.createTextNode(campaign.status));
                 container.append(status, link(campaign.title, campaign.url, 'md-dashboard-widget__newsletter-title'));
                 const metric = node('div', 'md-dashboard-widget__newsletter-metric');
                 const count = node('span');
                 count.append(node('strong', '', number(campaign.sent)), document.createTextNode(` / ${number(campaign.recipients)}`));
-                metric.append(count, node('span', 'md-dashboard-widget__newsletter-percent', campaign.recipients > 0 ? `${number(Math.round(campaign.sent / campaign.recipients * 100))} %` : '—'));
+                metric.append(count, node('span', 'md-dashboard-widget__newsletter-percent', campaign.sent != null && campaign.recipients > 0 ? `${number(Math.round(campaign.sent / campaign.recipients * 100))} %` : '—'));
                 const progress = node('progress', 'md-dashboard-widget__newsletter-progress w-100'); progress.max = Math.max(1, campaign.recipients); progress.value = campaign.sent;
                 progress.setAttribute('aria-label', text(context, 'sent'));
                 metric.setAttribute('aria-label', `${text(context, 'sent')}: ${number(campaign.sent)} / ${number(campaign.recipients)}`);
                 container.append(metric, progress);
-                const details = node('div', 'md-dashboard-widget__newsletter-details');
-                for (const [key, label] of [['failed', 'failed'], ['opens', 'opened'], ['clicks', 'clicked']]) {
-                    if (campaign[key] != null && (key === 'failed' || campaign.status === 'completed')) details.append(node('span', key === 'failed' ? 'small d-block' : 'visually-hidden', `${text(context, label)}: ${number(campaign[key])}`));
-                }
-                container.append(details);
             }
             return pollNewsletter(data, container, signal, refresh);
         }
