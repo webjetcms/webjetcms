@@ -8,7 +8,7 @@ let previewSettings;
 const settingsRoute = '**/admin/rest/dashboard/settings';
 const recentPagesRoute = '**/admin/rest/web-pages/all?*';
 const searchTermsRoute = '**/admin/rest/dashboard/data/search-terms*';
-const topPagesRoute = '**/admin/rest/dashboard/data/top-pages*';
+const topPagesRoute = '**/admin/rest/stat/top/search/findByColumns?*';
 const missingThumbnailRoute = '**/thumb/images/autotest-dashboard-missing.jpg?*';
 const editButton = '.md-dashboard__toolbar-actions > button[aria-pressed]';
 const newsToggle = '.md-dashboard-widget__news-toggle';
@@ -367,10 +367,10 @@ Scenario('Search queries and top pages share balanced cards and readable numeric
         { title: 'AutotestDlhýVýrazBezMedzierOverujúciZalomenieTextu', value: 75, url: '/apps/stat/admin/search-engines/' },
         { title: 'Autotest kontakt', value: 6, url: '/apps/stat/admin/search-engines/' }
     ] }) }));
-    await I.mockRoute(topPagesRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ from, to, items: [
-        { title: 'Autotest veľmi dlhý názov najnavštevovanejšej stránky', section: '/Autotest sekcia/Podrobné informácie', perexImage: '/images/zo-sveta-financii/konsolidacia-napriec-trhmi/oil-pump.jpg', value: 128, previous: 100, url: '/admin/v9/webpages/web-pages-list/?docid=1' },
-        { title: 'AutotestDlhýNázovStránkyBezMedzier', section: '/AutotestSekciaBezMedzier', perexImage: '', value: 75, previous: 90, url: '/admin/v9/webpages/web-pages-list/?docid=2' },
-        { title: 'Autotest kontakt', section: '/Autotest', perexImage: '/images/autotest-dashboard-missing.jpg', value: 6, previous: 6, url: '/admin/v9/webpages/web-pages-list/?docid=3' }
+    await I.mockRoute(topPagesRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ content: [
+        { docId: 1, title: 'Autotest veľmi dlhý názov najnavštevovanejšej stránky', name: '/Autotest sekcia/Podrobné informácie/Autotest veľmi dlhý názov najnavštevovanejšej stránky', perexImage: '/images/zo-sveta-financii/konsolidacia-napriec-trhmi/oil-pump.jpg', visits: 128 },
+        { docId: 2, title: 'AutotestDlhýNázovStránkyBezMedzier', name: '/AutotestSekciaBezMedzier/AutotestDlhýNázovStránkyBezMedzier', perexImage: '', visits: 75 },
+        { docId: 3, title: 'Autotest kontakt', name: '/Autotest/Autotest kontakt', perexImage: '/images/autotest-dashboard-missing.jpg', visits: 6 }
     ] }) }));
     await I.mockRoute(missingThumbnailRoute, route => route.fulfill({ status: 404, contentType: 'text/plain', body: 'Missing autotest thumbnail' }));
     I.resizeWindow(1337, 1052);

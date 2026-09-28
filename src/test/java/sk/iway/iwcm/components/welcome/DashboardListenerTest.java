@@ -86,6 +86,7 @@ class DashboardListenerTest {
             var data = new ObjectMapper().readTree((String) model.get("overviewData"));
             assertEquals("Autotest", data.path("userName").asText());
             assertEquals("current.example", data.path("currentDomain").asText());
+            assertEquals(42, data.path("statRootGroupId").asInt());
             assertTrue(data.path("dashboardMenu").isArray());
             assertTrue(data.path("settings").path("configured").asBoolean());
             assertEquals("Contact", data.path("settings").path("domainOptions").path("autotest-form").path("formName").asText());

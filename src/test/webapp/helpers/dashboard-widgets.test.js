@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { JSDOM } = require('jsdom');
 
-function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWidgets = false, data = {}, actual, fetchResponse } = {}) {
+function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWidgets = false, data = {}, actual, fetchResponse, now = new Date(2026, 8, 26) } = {}) {
     const dom = new JSDOM('<!doctype html><body><main></main></body>', { url: 'http://localhost/admin/v9/' });
     const window = dom.window;
     window.userLng = 'en';
@@ -16,9 +16,21 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
     const snapshot = actual || { serverActualTime: latest?.date ?? 123, memUsed: latest?.used == null ? null : latest.used * 1048576,
         memFree: latest?.free == null ? null : latest.free * 1048576, memTotal: latest?.total == null ? null : latest.total * 1048576,
         cpuUsageProcess: latest?.process ?? null, cpuUsage: latest?.system ?? null };
-    const scope = vm.createContext({ window, document: window.document, Node: window.Node, DOMParser: window.DOMParser, DOMException: window.DOMException, URL, URLSearchParams, AbortController, console,
+    const ClockDate = class extends Date { constructor(...args) { super(...(args.length ? args : [now])); } };
+    const statResponse = url => {
+        if (url.includes('/stat/views/')) return { content: [...(data.previousSeries || []), ...(data.series || [])].map(point => ({
+            dayDate: point.date, visits: point.value, sessions: point.value, uniqueUsers: point.value
+        })) };
+        const previous = new URL(url, window.location.origin).searchParams.get('size') === '100';
+        return { content: (data.items || []).filter(item => !previous || item.previous != null).map((item, index) => ({
+            docId: item.docId || Number(new URL(item.url || '/', window.location.origin).searchParams.get('docId')) || index + 1,
+            title: item.title, name: `${item.section || ''}${item.section?.endsWith('/' + item.title) ? '' : '/' + item.title}`,
+            perexImage: item.perexImage, visits: previous ? item.previous : item.value
+        })) };
+    };
+    const scope = vm.createContext({ Date: ClockDate, window, document: window.document, Node: window.Node, DOMParser: window.DOMParser, DOMException: window.DOMException, URL, URLSearchParams, AbortController, console,
         IntersectionObserver: class { observe() {} disconnect() {} },
-        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/monitoring/actual') ? snapshot : url.includes('/data/') ? data : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
+        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/stat/') ? statResponse(url) : url.includes('/monitoring/actual') ? snapshot : url.includes('/data/') ? data : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
     });
     for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'monitoring-live.js', 'system-widgets.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
@@ -29,7 +41,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
     }
     scope.registerDashboardWidgets();
     if (extraWidgets && !scope.getWidget('sessions')) { scope.registerUtilityWidgets(); scope.registerDataWidgets(); }
-    const context = { data: { ...data, dashboardMenu: menu }, labels: {}, settings: {}, config: { recentPagesGroupId: '99999997' }, translate: key => key };
+    const context = { data: { statRootGroupId: 1, ...data, dashboardMenu: menu }, labels: {}, settings: {}, config: { recentPagesGroupId: '99999997' }, translate: key => key };
     t.after(() => window.close());
     return { scope, context, container: window.document.querySelector('main'), requests, window };
 }
@@ -472,6 +484,77 @@ test('Migrated provider failures stay errors and aborted responses do not append
     }
 });
 
+test('Traffic maps every module metric and compares completed calendar periods in one scoped request', async t => {
+    const now = new Date(2026, 2, 30, 15);
+    const rows = [
+        { dayDate: new Date(2026, 2, 29).getTime(), visits: 20, sessions: 8, uniqueUsers: 6 },
+        { dayDate: new Date(2026, 2, 16).getTime(), visits: 10, sessions: 4, uniqueUsers: 3 },
+        { dayDate: new Date(2026, 2, 23).getTime(), visits: 30, sessions: 12, uniqueUsers: 9 }
+    ];
+    const { scope, context, requests } = fixture(t, { now, data: { statRootGroupId: 42 },
+        fetchResponse: async () => ({ ok: true, json: async () => ({ content: rows }) }) });
+    const signal = new AbortController().signal;
+    for (const [metric, total, previous] of [['views', 50, 10], ['sessions', 20, 4], ['uniqueUsers', 15, 3]]) {
+        const data = await scope.fetchTraffic({ days: 7, metric }, context, signal);
+        assert.equal(data.total, total);
+        assert.equal(data.previous, previous);
+        assert.deepEqual(Array.from(data.series, point => point.date), [rows[2].dayDate, rows[0].dayDate]);
+        assert.equal(data.from, new Date(2026, 2, 23).getTime());
+        assert.equal(data.to, new Date(2026, 2, 30).getTime() - 1);
+        assert.equal(data.previousFrom, new Date(2026, 2, 16).getTime());
+        const request = requests.at(-1), url = new URL(request.url, 'http://localhost');
+        assert.equal(url.pathname, '/admin/rest/stat/views/search/findByColumns');
+        assert.equal(url.searchParams.get('searchDayDate'), `daterange:${data.previousFrom}-${data.to}`);
+        assert.equal(url.searchParams.get('searchRootDir'), '42');
+        assert.equal(url.searchParams.get('searchFilterBotsOut'), 'true');
+        assert.equal(url.searchParams.get('size'), '14');
+        assert.equal(url.searchParams.get('pagination'), 'true');
+        assert.equal(request.options.signal, signal);
+        assert.equal(request.options.headers['X-CSRF-Token'], 'test-csrf-token');
+    }
+    assert.equal(requests.length, 3, 'Each render loads both periods in one request.');
+});
+
+test('TOP pages map shared API fields and leave missing previous rankings unavailable', async t => {
+    const current = [{ docId: 12, title: 'Title / with slash', name: '/News/Title / with slash', perexImage: '/images/photo.jpg', visits: 50 },
+        { docId: 13, title: 'New', name: '/News/New', perexImage: '', visits: 30 },
+        ...Array.from({ length: 6 }, (_, index) => ({ docId: 14 + index, title: `Page ${index}`, visits: 20 - index }))];
+    const { scope, context, requests } = fixture(t, { fetchResponse: async url => ({ ok: true, json: async () => ({
+        content: new URL(url, 'http://localhost').searchParams.get('size') === '6' ? current : [{ docId: 12, visits: 25 }]
+    }) }) });
+    const data = await scope.fetchTopPages({ days: 30 }, context, new AbortController().signal);
+    assert.equal(requests.length, 2);
+    assert.equal(data.items.length, 6, 'The module caps its ranking at 100 even when a smaller size is requested.');
+    const urls = requests.map(request => new URL(request.url, 'http://localhost'));
+    assert.ok(urls.every(url => url.pathname === '/admin/rest/stat/top/search/findByColumns'));
+    assert.deepEqual(urls.map(url => url.searchParams.get('size')), ['6', '100']);
+    assert.equal(urls[0].searchParams.get('searchDayDate'), `daterange:${data.from}-${data.to}`);
+    assert.equal(urls[1].searchParams.get('searchDayDate'), `daterange:${data.previousFrom}-${data.from - 1}`);
+    assert.equal(data.items[0].title, current[0].title);
+    assert.equal(data.items[0].section, current[0].name);
+    assert.equal(data.items[0].perexImage, current[0].perexImage);
+    assert.equal(data.items[0].value, 50);
+    assert.equal(data.items[0].previous, 25);
+    assert.equal(data.items[1].previous, undefined);
+    const detail = new URL(data.items[0].url, 'http://localhost');
+    assert.equal(detail.searchParams.get('docId'), '12');
+    assert.equal(detail.searchParams.get('dateRange'), `daterange:${data.from}-${data.to}`);
+});
+
+test('Statistics keep module errors and never query all domains when the active root is unavailable', async t => {
+    const { scope, context, requests } = fixture(t, { fetchResponse: async () => ({ ok: true, json: async () => ({ error: 'Access is denied' }) }) });
+    const signal = new AbortController().signal;
+    for (const load of [scope.fetchTraffic, scope.fetchTopPages]) {
+        await assert.rejects(load({}, context, signal), error => error.dashboardReason === 'permission-denied');
+    }
+    const count = requests.length;
+    context.data.statRootGroupId = -1;
+    for (const load of [scope.fetchTraffic, scope.fetchTopPages]) {
+        await assert.rejects(load({}, context, signal), error => error.dashboardReason === 'domain-unavailable');
+    }
+    assert.equal(requests.length, count);
+});
+
 test('Ranked previews keep numeric columns marked and navigate through their headers in both sizes', async t => {
     const { scope, context, container } = fixture(t, { data: { total: 12, items: [
         { title: '<b>Long title</b>', section: '/Section/subsection', value: 12, previous: 24, url: '/apps/stat/admin/' }
@@ -505,7 +588,7 @@ test('Top pages combine safe thumbnails and parent paths while retaining statist
         await scope.getWidget('top-pages').render({ container, context, instance: { type: 'top-pages', size }, options: {}, signal: new AbortController().signal });
         assert.equal(container.querySelectorAll('thead th').length, 3);
         const rows = container.querySelectorAll('tbody tr');
-        assert.equal(rows[0].querySelector('.md-dashboard-widget__page-preview').getAttribute('href'), '/apps/stat/admin/top-details/?docId=12&dateRange=week');
+        assert.equal(rows[0].querySelector('.md-dashboard-widget__page-preview').getAttribute('href'), `/apps/stat/admin/top-details/?docId=12&dateRange=${encodeURIComponent(`daterange:${scope.statisticsPeriod(7).from}-${scope.statisticsPeriod(7).to}`)}`);
         assert.equal(rows[0].querySelector('.md-dashboard-widget__page-section').textContent, '/News');
         assert.equal(rows[0].querySelectorAll('td')[2].textContent, '+100 %');
         assert.equal(rows[1].querySelectorAll('td')[2].textContent, '—');
@@ -573,7 +656,7 @@ function chartRuntime(window, { load = async () => {}, create } = {}) {
 const trafficData = {
     total: 7, previous: 4, metric: 'sessions',
     series: [{ date: Date.UTC(2026, 8, 24), value: 3 }, { date: Date.UTC(2026, 8, 25), value: 4 }],
-    previousSeries: [{ date: Date.UTC(2026, 8, 22), value: 1 }, { date: Date.UTC(2026, 8, 23), value: 3 }]
+    previousSeries: [{ date: Date.UTC(2026, 8, 17), value: 1 }, { date: Date.UTC(2026, 8, 18), value: 3 }]
 };
 
 test('Monitoring cards preserve timestamped measurements, units, unavailable readings and chart cleanup', async t => {
@@ -763,9 +846,9 @@ test('Monitoring cards aborted during lazy bundle loading never create detached 
 
 test('Traffic descriptions follow the selected metric and period and preserve cross-year dates', async t => {
     const data = { ...trafficData, metric: 'uniqueUsers', from: Date.UTC(2025, 11, 20), to: Date.UTC(2026, 0, 18) };
-    const { scope, context, container } = fixture(t, { data });
+    const { scope, context, container } = fixture(t, { data, now: new Date(2026, 0, 19) });
     context.translate = (key, days) => `${key}:${days}`;
-    await scope.getWidget('traffic').render({ container, context, options: { days: 30 }, instance: { size: '1x1' }, signal: new AbortController().signal });
+    await scope.getWidget('traffic').render({ container, context, options: { days: 30, metric: 'uniqueUsers' }, instance: { size: '1x1' }, signal: new AbortController().signal });
     assert.equal(container.querySelector('.md-dashboard-widget__metric-label').textContent, 'admin.dashboard.trafficUsers.js:30');
     assert.equal(container.querySelector('.md-dashboard-widget__comparison-label').textContent, 'admin.dashboard.trafficComparison.js:30');
     assert.match(container.querySelector('.md-dashboard-widget__period').textContent, /2025/);
@@ -790,11 +873,11 @@ test('Traffic uses shared AmCharts line forms with aligned comparison points and
     assert.equal(form.chart.appearanceDuration, 0);
     assert.equal(container.querySelector('details'), null);
     assert.equal(container.querySelectorAll('.visually-hidden tbody tr').length, 2);
-    assert.match(container.querySelector('.visually-hidden').textContent, /9\/22\/2026/);
+    assert.match(container.querySelector('.visually-hidden').textContent, /9\/17\/2026/);
     assert.equal(container.querySelector('.md-dashboard-widget__more'), null);
     assert.equal(form.chart.series.getIndex(0).get('tooltip').label.get('ariaHidden'), true);
     assert.match(container.querySelector('.md-dashboard-widget__chart-key--current').textContent, /24/);
-    assert.match(container.querySelector('.md-dashboard-widget__chart-key--previous').textContent, /22/);
+    assert.match(container.querySelector('.md-dashboard-widget__chart-key--previous').textContent, /17/);
     assert.equal(container.querySelector('svg'), null);
     controller.abort();
     cleanup();

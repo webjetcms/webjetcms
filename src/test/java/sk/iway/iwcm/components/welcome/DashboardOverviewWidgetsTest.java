@@ -36,7 +36,7 @@ class DashboardOverviewWidgetsTest {
         Map<String, String> permissions = Map.of("changed-pages", "menuWebpages", "audit", "cmp_adminlog");
         try (var database = mockStatic(DBPool.class)) {
             permissions.forEach((type, permission) -> {
-                assertThrows(AccessDeniedException.class, () -> service.load(type, 7, "sessions", null, null, user, "current.example"));
+                assertThrows(AccessDeniedException.class, () -> service.load(type, 7, null, null, user, "current.example"));
                 when(user.isEnabledItem(permission)).thenReturn(true);
                 DashboardWidgetDataService.authorize(type, user);
                 when(user.isEnabledItem(permission)).thenReturn(false);
@@ -134,7 +134,7 @@ class DashboardOverviewWidgetsTest {
             Connection connection = mock(Connection.class);
             when(connection.prepareStatement(anyString())).thenThrow(new java.sql.SQLException("Unavailable"));
             database.when(DBPool::getConnection).thenReturn(connection);
-            assertThrows(IllegalStateException.class, () -> service.load("audit", 7, "sessions", null, null, user, null));
+            assertThrows(IllegalStateException.class, () -> service.load("audit", 7, null, null, user, null));
         }
     }
 }

@@ -32,7 +32,7 @@ Scenario('Initial settings, notices, sessions and administrators render from HTM
 
 Scenario('Read-only widget projections return bounded preview contracts', async ({ I }) => {
     const results = await I.executeScript(async () => {
-        const types = ['publishing', 'forms', 'traffic', 'top-pages', 'search-terms', 'referrers', 'newsletter', 'errors'];
+        const types = ['publishing', 'forms', 'search-terms', 'referrers', 'newsletter', 'errors'];
         const results = [];
         for (const type of types) {
             const response = await fetch(`/admin/rest/dashboard/data/${type}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
@@ -54,12 +54,6 @@ Scenario('Read-only widget projections return bounded preview contracts', async 
             I.assertEqual(typeof item.title, 'string');
             I.assertTrue(typeof item.url === 'string' && item.url.startsWith('/'), 'Preview links must stay in the administration.');
             if (type === 'forms') I.assertStartsWith(item.url, '/apps/form/admin/detail/?formName=');
-            if (type === 'top-pages') I.assertStartsWith(item.url, '/apps/stat/admin/top-details/?docId=');
-        }
-        if (type === 'traffic') {
-            I.assertEqual(body.series.length, 7);
-            I.assertEqual(body.previousSeries.length, 7);
-            I.assertTrue(body.from < body.to);
         }
         if (type === 'newsletter' && body.selectedId) I.assertEqual(body.items[0].id, body.selectedId);
     }
@@ -67,7 +61,7 @@ Scenario('Read-only widget projections return bounded preview contracts', async 
 
 Scenario('Invalid projection settings are rejected before querying data', async ({ I }) => {
     const statuses = await I.executeScript(async () => {
-        return Promise.all(['traffic?days=365', 'traffic?metric=invalid', 'forms?formName=', 'newsletter?campaignId=-1', 'sessions', 'logged-admins', 'unknown'].map(async value => {
+        return Promise.all(['referrers?days=365', 'traffic', 'top-pages', 'forms?formName=', 'newsletter?campaignId=-1', 'sessions', 'logged-admins', 'unknown'].map(async value => {
             const response = await fetch(`/admin/rest/dashboard/data/${value}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
             return { value, status: response.status };
         }));
@@ -149,30 +143,58 @@ Scenario('Live monitoring reads a current server snapshot independently of persi
     for (const field of ['cpuUsage', 'cpuUsageProcess']) I.assertTrue(Number.isFinite(result.body[field]), `${field} must contain the current CPU reading or the unavailable sentinel.`);
 });
 
-Scenario('Statistical metrics and selected form projections preserve their contracts', async ({ I }) => {
+Scenario('Selected form projections preserve their contracts', async ({ I }) => {
     const result = await I.executeScript(async () => {
         const get = async path => {
             const response = await fetch(`/admin/rest/dashboard/data/${path}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
             return { status: response.status, body: response.headers.get('content-type')?.includes('json') ? await response.json() : null };
         };
-        const metrics = [];
-        for (const metric of ['views', 'sessions', 'uniqueUsers']) metrics.push(await get(`traffic?days=30&metric=${metric}`));
         const forms = await get('forms');
         const selectedName = forms.body.options?.[0]?.id;
         const selected = selectedName ? await get(`forms?formName=${encodeURIComponent(selectedName)}`) : null;
         const missing = await get('forms?formName=missing-dashboard-form-autotest');
-        return { metrics, selectedName, selected, missingStatus: missing.status };
+        return { selectedName, selected, missingStatus: missing.status };
     });
-    for (const metric of result.metrics) {
-        I.assertEqual(metric.status, 200);
-        I.assertEqual(metric.body.series.length, 30);
-        I.assertEqual(metric.body.previousSeries.length, 30);
-    }
-    I.assertTrue(result.metrics[0].body.total >= result.metrics[1].body.total);
-    I.assertTrue(result.metrics[0].body.total >= result.metrics[2].body.total);
     if (result.selected) {
         I.assertEqual(result.selected.status, 200);
         I.assertTrue(result.selected.body.items.every(item => item.title === result.selectedName));
     }
     I.assertEqual(result.missingStatus, 404);
+});
+
+Scenario('Traffic and TOP pages reuse the statistics module contracts', async ({ I }) => {
+    const result = await I.executeScript(async () => {
+        const root = document.querySelector('webjet-overview-dashboard').data.statRootGroupId;
+        const to = new Date(); to.setHours(0, 0, 0, 0);
+        const from = new Date(to); from.setDate(from.getDate() - 14);
+        const params = new URLSearchParams({ searchRootDir: root, searchDayDate: `daterange:${from.getTime()}-${to.getTime() - 1}`,
+            searchFilterBotsOut: true, statType: 'days', size: 14, page: 0, sort: 'order,asc', pagination: true });
+        const read = async type => {
+            const response = await fetch(`/admin/rest/stat/${type}/search/findByColumns?${params}`, { headers: { 'X-CSRF-Token': window.csrfToken } });
+            return { status: response.status, body: await response.json() };
+        };
+        const views = await read('views');
+        params.set('size', '6');
+        // Reuse the statistics module's populated fixture period to verify cached page metadata.
+        params.set('searchDayDate', `daterange:${new Date(2022, 4, 1).getTime()}-${new Date(2022, 5, 1).getTime() - 1}`);
+        params.set('searchFilterBotsOut', 'false');
+        const top = await read('top');
+        return { root, views, top };
+    });
+    I.assertTrue(result.root > 0);
+    I.assertEqual(result.views.status, 200);
+    I.assertEqual(result.views.body.content.length, 14);
+    for (const day of result.views.body.content) {
+        I.assertTrue(Number.isFinite(day.dayDate));
+        for (const metric of ['visits', 'sessions', 'uniqueUsers']) I.assertTrue(Number.isFinite(day[metric]) && day[metric] >= 0);
+    }
+    I.assertEqual(result.top.status, 200);
+    I.assertTrue(result.top.body.content.length > 0 && result.top.body.content.length <= 100,
+        'The statistics module returns a ranking capped at 100; the widget displays its first six rows.');
+    for (const page of result.top.body.content) {
+        I.assertTrue(page.docId > 0 && page.visits >= 0);
+        I.assertEqual(typeof page.title, 'string');
+        I.assertEqual(typeof page.name, 'string');
+        I.assertTrue(page.perexImage === null || typeof page.perexImage === 'string');
+    }
 });

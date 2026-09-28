@@ -10,6 +10,56 @@ const moduleLinks = {
 };
 const metricKey = metric => ({ views: 'visits', sessions: 'sessionsMetric', uniqueUsers: 'uniqueUsers' })[metric] || 'sessionsMetric';
 
+/** Uses calendar days so equal-length completed periods also work across daylight-saving changes. */
+function statisticsPeriod(days, now = new Date()) {
+    const until = new Date(now); until.setHours(0, 0, 0, 0);
+    const from = new Date(until); from.setDate(from.getDate() - days);
+    const previousFrom = new Date(from); previousFrom.setDate(previousFrom.getDate() - days);
+    return { from: from.getTime(), to: until.getTime() - 1, previousFrom: previousFrom.getTime() };
+}
+
+/** Reuses the statistics module's date, folder and bot filters and DataTable error handling. */
+function statisticsRequest(type, from, to, context, signal, size) {
+    if (!(context.data.statRootGroupId > 0)) {
+        const error = new Error('Statistics domain is unavailable');
+        error.dashboardReason = 'domain-unavailable';
+        throw error;
+    }
+    const params = new URLSearchParams({ searchDayDate: `daterange:${from}-${to}`, searchRootDir: context.data.statRootGroupId,
+        searchFilterBotsOut: true, statType: 'days', size, page: 0, sort: 'order,asc', pagination: true });
+    return fetchJson(`/admin/rest/stat/${type}/search/findByColumns?${params}`, signal);
+}
+
+/** Maps the module's daily values into the current and previous chart periods. */
+async function fetchTraffic(options, context, signal) {
+    const days = [7, 30, 90].includes(Number(options.days)) ? Number(options.days) : 7;
+    const range = statisticsPeriod(days);
+    const data = await statisticsRequest('views', range.previousFrom, range.to, context, signal, days * 2);
+    const metric = ['views', 'sessions', 'uniqueUsers'].includes(options.metric) ? options.metric : 'sessions';
+    const field = metric === 'views' ? 'visits' : metric;
+    const points = data.content.map(row => ({ date: Number(row.dayDate), value: row[field] })).sort((a, b) => a.date - b.date);
+    const series = points.filter(point => point.date >= range.from && point.date <= range.to);
+    const previousSeries = points.filter(point => point.date >= range.previousFrom && point.date < range.from);
+    return { ...range, metric, series, previousSeries,
+        total: series.reduce((sum, point) => sum + point.value, 0), previous: previousSeries.reduce((sum, point) => sum + point.value, 0) };
+}
+
+/** Compares the current six pages with the statistics module's bounded previous ranking. */
+async function fetchTopPages(options, context, signal) {
+    const days = [7, 30, 90].includes(Number(options.days)) ? Number(options.days) : 7;
+    const range = statisticsPeriod(days);
+    const [current, previous] = await Promise.all([
+        statisticsRequest('top', range.from, range.to, context, signal, 6),
+        statisticsRequest('top', range.previousFrom, range.from - 1, context, signal, 100)
+    ]);
+    const previousValues = new Map(previous.content.map(row => [row.docId, row.visits]));
+    return { ...range, items: current.content.slice(0, 6).map(row => ({
+        title: row.title, section: row.name, perexImage: row.perexImage,
+        value: row.visits, previous: previousValues.get(row.docId),
+        url: `/apps/stat/admin/top-details/?docId=${encodeURIComponent(row.docId)}&dateRange=${encodeURIComponent(`daterange:${range.from}-${range.to}`)}`
+    })) };
+}
+
 /** Labels the actual returned interval, including whole-week error aggregates. */
 function period(container, data, context, compact = false) {
     if (data.from == null || data.to == null) return;
@@ -281,7 +331,9 @@ export function registerDataWidgets() {
         isAvailable: context => window.WJ.hasPermission('cmp_stat') && context.config.statMode !== 'none',
         configure: args => statSettings(args, type === 'traffic'),
         async render({ container, instance, options, context, signal }) {
-            const data = await fetchData(type, { days: options.days || 7, ...(type === 'traffic' ? { metric: options.metric || 'sessions' } : {}) }, signal); if (signal.aborted) return;
+            const data = type === 'traffic' ? await fetchTraffic(options, context, signal)
+                : type === 'top-pages' ? await fetchTopPages(options, context, signal) : await fetchData(type, { days: options.days || 7 }, signal);
+            if (signal.aborted) return;
             if (type === 'traffic') {
                 const days = String(options.days || 7);
                 const label = text(context, `traffic${data.metric === 'views' ? 'Views' : data.metric === 'uniqueUsers' ? 'Users' : 'Sessions'}`, days);

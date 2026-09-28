@@ -12,6 +12,7 @@ import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/wid
  * @property {Object[]} [data.loggedAdmins] - Online administrators, supplied only with welcomeShowLoggedAdmins permission.
  * @property {Object} data.currentSessions - Current user sessions, updated after a successful logout.
  * @property {string} [data.userName=""] - Current user's display name.
+ * @property {number} data.statRootGroupId - Active domain root folder passed to the shared statistics API.
  * @property {string} [data.currentDomain=""] - Active domain's display name.
  * @property {Object.<string, string>} [labels={}] - Localized labels used by dashboard sections and widgets.
  * @property {Object} [config={}] - Runtime dashboard configuration.

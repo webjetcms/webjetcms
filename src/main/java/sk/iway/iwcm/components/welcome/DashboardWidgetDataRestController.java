@@ -34,13 +34,12 @@ public class DashboardWidgetDataRestController {
     @GetMapping("/{type}")
     public Map<String, Object> getData(@PathVariable String type,
             @RequestParam(defaultValue = "7") int days,
-            @RequestParam(defaultValue = "sessions") String metric,
             @RequestParam(required = false) String formName,
             @RequestParam(required = false) Long campaignId,
             HttpServletRequest request) {
         Identity user = UsersDB.getCurrentUser(request);
         if (user == null || !user.isAdmin()) throw new AccessDeniedException("Administrator login is required");
-        return service.load(type, days, metric, formName, campaignId, user, DocDB.getDomain(request));
+        return service.load(type, days, formName, campaignId, user, DocDB.getDomain(request));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

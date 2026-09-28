@@ -2,9 +2,8 @@ const { waitForWidgets, mockDashboardBootstrap, dashboardPageRoute } = require('
 
 Feature('admin.dashboard-chart-tooltips').tag('@singlethread');
 
-const routes = ['**/admin/rest/dashboard/settings', '**/admin/rest/dashboard/data/traffic*',
+const routes = ['**/admin/rest/dashboard/settings', '**/admin/rest/stat/views/search/findByColumns?*',
     '**/admin/rest/monitoring/actual', '**/admin/rest/dashboard/data/server-memory*', '**/admin/rest/dashboard/data/server-cpu*'];
-const day = 24 * 60 * 60 * 1000;
 const from = new Date(2026, 8, 20).getTime();
 const values = [40, 200, 104, 190, 110, 45, 5];
 let actualRequests;
@@ -26,11 +25,14 @@ Before(async ({ I, login }) => {
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(settings) });
     });
     await mockDashboardBootstrap(I, () => ({ settings, notices: [] }));
-    await I.mockRoute(routes[1], route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
-        total: 694, previous: 1450, metric: 'sessions', from, to: from + 6 * day, items: [],
-        series: values.map((value, index) => ({ date: from + index * day, value })),
-        previousSeries: [350, 300, 110, 210, 160, 220, 100].map((value, index) => ({ date: from + (index - 7) * day, value }))
-    }) }));
+    await I.mockRoute(routes[1], route => {
+        const start = Number(new URL(route.request().url()).searchParams.get('searchDayDate').slice(10).split('-')[0]);
+        const content = [...[350, 300, 110, 210, 160, 220, 100], ...values].map((sessions, index) => {
+            const dayDate = new Date(start); dayDate.setDate(dayDate.getDate() + index);
+            return { dayDate: dayDate.getTime(), sessions };
+        });
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ content }) });
+    });
     actualRequests = 0;
     historicalRequests = 0;
     await I.mockRoute(routes[2], route => {

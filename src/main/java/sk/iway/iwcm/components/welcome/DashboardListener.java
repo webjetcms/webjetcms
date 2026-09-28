@@ -22,6 +22,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.admin.ThymeleafEvent;
 import sk.iway.iwcm.admin.layout.MenuService;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
@@ -50,6 +51,7 @@ public class DashboardListener {
             data.put("dashboardMenu", new MenuService(request).getMenu());
             data.put("userName", user.getFirstName());
             data.put("currentDomain", DocDB.getDomain(request));
+            data.put("statRootGroupId", CloudToolsForCore.getRootGroupId(request));
             data.put("settings", settingsService.load(user.getUserId(), DashboardRestController.domainKey(request)));
             data.put("notices", noticeService.load(user, request));
             data.put("currentSessions", new ObjectMapper().readTree(SessionClusterService.getSessionInfo(request.getSession().getId(), user.getUserId())));

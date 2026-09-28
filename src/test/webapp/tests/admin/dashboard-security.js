@@ -16,7 +16,8 @@ const permissionCases = [
 ];
 const sizes = { 'recent-pages': '3x2', publishing: '2x2', 'top-pages': '2x3', 'search-terms': '2x3', referrers: '2x2',
     newsletter: '2x2', 'changed-pages': '3x2', audit: '3x2', 'logged-admins': '2x2', 'server-memory': '3x2', 'server-cpu': '3x2' };
-function endpoints(type, recentPagesGroupId) {
+function endpoints(type, recentPagesGroupId, statRootGroupId) {
+    if (type === 'traffic' || type === 'top-pages') return [`/admin/rest/stat/${type === 'traffic' ? 'views' : 'top'}/search/findByColumns?searchRootDir=${statRootGroupId}&size=6&page=0`];
     if (type === 'logged-admins') return [];
     if (type === 'recent-pages') return [`/admin/rest/web-pages/all?groupId=${recentPagesGroupId}&size=6&page=0&sort=dateCreated%2Cdesc`];
     if (type === 'approvals') return ['/admin/rest/webpages/toapprove/all?size=6&page=0&sort=saveDate,desc', '/admin/rest/groups/toapprove/all?size=6&page=0&sort=saveDate,desc'];
@@ -76,13 +77,14 @@ for (const { permission, types } of permissionCases) {
             I.assertTrue((await I.executeScript(readDashboardBootstrap)).loggedAdmins.length > 0, 'Authorized page data must contain logged-in administrators.');
         }
         const recentPagesGroupId = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').config.recentPagesGroupId);
-        const paths = [...new Set(types.flatMap(type => endpoints(type, recentPagesGroupId)))];
+        const statRootGroupId = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').data.statRootGroupId);
+        const paths = [...new Set(types.flatMap(type => endpoints(type, recentPagesGroupId, statRootGroupId)))];
         for (const result of await readEndpoints(I, paths)) {
             I.assertEqual(result.status, 200, `${result.path} must work before removing ${permission}.`);
             I.assertFalse(Boolean(result.error), `${result.path} must not return a DataTable error while authorized.`);
         }
 
-        I.amOnPage(`/admin/v9/?removePerm=${permission}`);
+        I.amOnPage(`/admin/v9/?removePerm=${permission === 'cmp_stat' ? 'cmp_stat,cmp_abtesting' : permission}`);
         loaded(I);
         I.assertFalse(await I.executeScript(permission => WJ.hasPermission(permission), permission));
         if (permission === 'welcomeShowLoggedAdmins') {
@@ -91,7 +93,7 @@ for (const { permission, types } of permissionCases) {
         for (const type of types) I.dontSeeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
         I.seeElementInDOM(`${dashboard} [data-widget-type="sessions"]`);
         for (const result of await readEndpoints(I, paths)) {
-            if (/^\/admin\/rest\/(?:(webpages|groups)\/toapprove\/|web-pages\/all)/.test(result.path)) {
+            if (/^\/admin\/rest\/(?:(webpages|groups)\/toapprove\/|web-pages\/all|stat\/(views|top)\/)/.test(result.path)) {
                 const deniedBody = result.status === 200 && ['Access Denied', 'Access is denied'].includes(result.error) && result.contentPresence === false;
                 I.assertTrue(result.status === 403 || deniedBody, `${result.path} must deny access without exposing page or approval content.`);
             } else I.assertEqual(result.status, 403, `${result.path} must reject direct requests without ${permission}.`);
@@ -241,7 +243,7 @@ Scenario('Restore preferences after security tests', async ({ I }) => {
 Scenario('Unauthenticated requests cannot read dashboard data or mutate preferences', async ({ I }) => {
     I.logout();
     const paths = ['/admin/v9/', '/admin/rest/dashboard/menu',
-        ...new Set(permissionCases.flatMap(item => item.types).flatMap(endpoints))];
+        ...new Set(permissionCases.flatMap(item => item.types).flatMap(type => endpoints(type, 99999997, 1)))];
     const results = await I.executeScript(async paths => {
         const requests = [...paths.map(path => ({ path, method: 'GET' })),
             { path: '/admin/rest/dashboard/settings', method: 'PUT', body: '{}' },

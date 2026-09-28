@@ -71,7 +71,7 @@ import sk.iway.iwcm.users.UsersDB;
 @Service
 public class DashboardWidgetDataService {
     static final int PREVIEW_SIZE = 6;
-    static final Set<String> TYPES = Set.of("publishing", "forms", "traffic", "top-pages",
+    static final Set<String> TYPES = Set.of("publishing", "forms",
         "search-terms", "referrers", "newsletter", "errors", "changed-pages", "audit");
     private static final Set<String> SERVER_TYPES = Set.of("audit");
     private final FormsRepository forms;
@@ -85,9 +85,9 @@ public class DashboardWidgetDataService {
     }
 
     /** Returns only fields required by the selected widget, never full module entities. */
-    public Map<String, Object> load(String type, int days, String metric, String formName, Long campaignId,
+    public Map<String, Object> load(String type, int days, String formName, Long campaignId,
             Identity user, String domain) {
-        validate(type, days, metric, formName, campaignId);
+        validate(type, days, formName, campaignId);
         authorize(type, user);
         if (!SERVER_TYPES.contains(type) && Tools.isEmpty(domain)) throw new UnavailableException("domain-unavailable");
         Range range = completedDays(days, Clock.systemDefaultZone());
@@ -98,14 +98,13 @@ public class DashboardWidgetDataService {
             case "forms" -> forms(user, domain, formName, recentDays(days, Clock.systemDefaultZone()));
             case "newsletter" -> newsletter(domain, campaignId);
             case "errors" -> errors(domain, range);
-            default -> statistics(type, metric, scope(user, domain), range);
+            default -> statistics(type, scope(user, domain), range);
         };
     }
 
-    static void validate(String type, int days, String metric, String formName, Long campaignId) {
+    static void validate(String type, int days, String formName, Long campaignId) {
         if (!TYPES.contains(type)) throw new IllegalArgumentException("Unknown widget");
         if (days != 7 && days != 30 && days != 90) throw new IllegalArgumentException("Invalid period");
-        if (!Set.of("views", "sessions", "uniqueUsers").contains(metric)) throw new IllegalArgumentException("Invalid metric");
         if (formName != null && (formName.length() > 255 || formName.isBlank())) throw new IllegalArgumentException("Invalid form");
         if (campaignId != null && campaignId < 1) throw new IllegalArgumentException("Invalid campaign");
     }
@@ -318,33 +317,16 @@ public class DashboardWidgetDataService {
             accessibleDocument(root.get("docId"), query, builder, scope));
     }
 
-    private Map<String, Object> statistics(String type, String metric, Scope scope, Range range) {
+    private Map<String, Object> statistics(String type, Scope scope, Range range) {
         Map<String, Object> result;
         try (Connection connection = DBPool.getConnection()) {
-            if ("traffic".equals(type)) {
-                Map<String, Long> current = trafficTotals(connection, scope, range);
-                Map<String, Long> previous = trafficTotals(connection, scope, range.previous());
-                result = response(current.get(metric), List.of());
-                result.put("previous", previous.get(metric));
-                result.put("series", trafficSeries(connection, scope, range, metric));
-                result.put("previousSeries", trafficSeries(connection, scope, range.previous(), metric));
-                result.put("metric", metric);
-            } else {
-                String table = "top-pages".equals(type) ? "stat_views" : "search-terms".equals(type) ? "stat_searchengine" : "stat_from";
-                String column = "top-pages".equals(type) ? "doc_id" : "search-terms".equals(type) ? "query" : "referer_server_name";
-                String time = "top-pages".equals(type) ? "view_time" : "search-terms".equals(type) ? "search_date" : "from_time";
-                List<Map<String, Object>> items = ranked(connection, table, column, time, scope, range);
-                if ("top-pages".equals(type)) {
-                    topPageDetails(connection, items, scope);
-                    for (Map<String, Object> item : items) {
-                        int id = Integer.parseInt((String)item.get("id"));
-                        item.put("url", "/apps/stat/admin/top-details/?docId=" + id + "&dateRange=" + encode("daterange:" + range.from + "-" + (range.until - 1)));
-                        item.put("previous", countRows(connection, table, time, scope, range.previous(), " AND s.doc_id=" + id));
-                    }
-                } else for (Map<String, Object> item : items) item.put("url", "search-terms".equals(type) ? "/apps/stat/admin/search-engines/" : "/apps/stat/admin/referer/");
-                result = response(countRows(connection, table, time, scope, range, ""), items);
-                result.put("previous", countRows(connection, table, time, scope, range.previous(), ""));
-            }
+            String table = "search-terms".equals(type) ? "stat_searchengine" : "stat_from";
+            String column = "search-terms".equals(type) ? "query" : "referer_server_name";
+            String time = "search-terms".equals(type) ? "search_date" : "from_time";
+            List<Map<String, Object>> items = ranked(connection, table, column, time, scope, range);
+            for (Map<String, Object> item : items) item.put("url", "search-terms".equals(type) ? "/apps/stat/admin/search-engines/" : "/apps/stat/admin/referer/");
+            result = response(countRows(connection, table, time, scope, range), items);
+            result.put("previous", countRows(connection, table, time, scope, range.previous()));
         } catch (SQLException exception) {
             throw new IllegalStateException("Could not load dashboard statistics", exception);
         }
@@ -352,64 +334,8 @@ public class DashboardWidgetDataService {
         return result;
     }
 
-    /** Enriches the bounded ranking from current page metadata and one scoped image projection. */
-    void topPageDetails(Connection connection, List<Map<String, Object>> items, Scope scope) throws SQLException {
-        Map<Integer, Map<String, Object>> accessible = new LinkedHashMap<>();
-        for (Map<String, Object> item : items) {
-            int id = Integer.parseInt((String) item.get("id"));
-            DocDetails doc = DocDB.getInstance().getBasicDocDetails(id, false);
-            boolean allowed = doc != null && scope.domainGroups.contains(doc.getGroupId())
-                && (scope.groups.contains(doc.getGroupId()) || scope.pages.contains(id));
-            item.put("title", allowed ? doc.getTitle() : String.valueOf(id));
-            if (allowed) {
-                item.put("section", doc.getFullPath());
-                accessible.put(id, item);
-            }
-        }
-        if (accessible.isEmpty()) return;
-        String placeholders = accessible.keySet().stream().map(id -> "?").collect(Collectors.joining(","));
-        String sql = "SELECT d.doc_id, d.perex_image FROM documents d WHERE d.doc_id IN (" + placeholders + ") AND " + scope.statisticsSql("d");
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
-            int parameter = 1;
-            for (int id : accessible.keySet()) statement.setInt(parameter++, id);
-            statement.setMaxRows(PREVIEW_SIZE);
-            statement.setQueryTimeout(15);
-            try (ResultSet rows = statement.executeQuery()) {
-                while (rows.next()) {
-                    Map<String, Object> item = accessible.get(rows.getInt("doc_id"));
-                    if (item != null) item.put("perexImage", DashboardRecentPagesService.previewImage(rows.getString("perex_image")));
-                }
-            }
-        }
-    }
-
-    Map<String, Long> trafficTotals(Connection connection, Scope scope, Range range) throws SQLException {
-        String data = union("stat_views", "view_time", "s.doc_id, s.session_id, s.browser_id", scope, range, "");
-        return read(connection, "SELECT COUNT(doc_id), COUNT(DISTINCT session_id), COUNT(DISTINCT browser_id) FROM (" + data + ") w", range, "stat_views", 1,
-            rows -> Map.of("views", rows.getLong(1), "sessions", rows.getLong(2), "uniqueUsers", rows.getLong(3))).get(0);
-    }
-
-    private List<Map<String, Object>> trafficSeries(Connection connection, Scope scope, Range range, String metric) throws SQLException {
-        String data = union("stat_views", "view_time", "s.view_time, s.doc_id, s.session_id, s.browser_id", scope, range, "");
-        String expression = "views".equals(metric) ? "COUNT(doc_id)" : "sessions".equals(metric) ? "COUNT(DISTINCT session_id)" : "COUNT(DISTINCT browser_id)";
-        String sql = "SELECT " + StatNewDB.getDMYSelect("view_time") + ", " + expression + " FROM (" + data + ") w GROUP BY " + StatNewDB.getDMYGroupBy("view_time");
-        Map<LocalDate, Long> values = new LinkedHashMap<>();
-        read(connection, sql, range, "stat_views", 91, rows -> {
-            values.put(LocalDate.of(rows.getInt(3), rows.getInt(2), rows.getInt(1)), rows.getLong(4));
-            return 0;
-        });
-        List<Map<String, Object>> series = new ArrayList<>();
-        LocalDate day = new Date(range.from).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        while (day.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli() < range.until) {
-            long from = day.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
-            series.add(Map.of("date", from, "value", values.getOrDefault(day, 0L)));
-            day = day.plusDays(1);
-        }
-        return series;
-    }
-
     private List<Map<String, Object>> ranked(Connection connection, String table, String column, String time, Scope scope, Range range) throws SQLException {
-        String data = union(table, time, "s." + column + " AS item_key", scope, range, "");
+        String data = union(table, time, "s." + column + " AS item_key", scope, range);
         return read(connection, "SELECT item_key, COUNT(*) AS item_count FROM (" + data + ") w GROUP BY item_key ORDER BY item_count DESC", range, table, PREVIEW_SIZE,
             rows -> {
                 Map<String, Object> item = item(rows.getString(1), rows.getString(1), "");
@@ -418,16 +344,15 @@ public class DashboardWidgetDataService {
             });
     }
 
-    private long countRows(Connection connection, String table, String time, Scope scope, Range range, String extra) throws SQLException {
-        String data = union(table, time, "s.doc_id", scope, range, extra);
+    private long countRows(Connection connection, String table, String time, Scope scope, Range range) throws SQLException {
+        String data = union(table, time, "s.doc_id", scope, range);
         return read(connection, "SELECT COUNT(*) FROM (" + data + ") w", range, table, 1, rows -> rows.getLong(1)).get(0);
     }
 
-    private String union(String table, String time, String columns, Scope scope, Range range, String extra) {
+    private String union(String table, String time, String columns, Scope scope, Range range) {
         List<String> parts = new ArrayList<>();
         for (String suffix : suffixes(table, range)) {
-            String bots = "stat_views".equals(table) ? StatNewDB.getWhiteListedUAQuery() : "";
-            parts.add("SELECT " + columns + " FROM " + table + suffix + " s WHERE s." + time + ">=? AND s." + time + "<? AND " + scope.statisticsSql("s") + bots + extra);
+            parts.add("SELECT " + columns + " FROM " + table + suffix + " s WHERE s." + time + ">=? AND s." + time + "<? AND " + scope.statisticsSql("s"));
         }
         return String.join(" UNION ALL ", parts);
     }
