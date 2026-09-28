@@ -677,6 +677,7 @@ webjet-overview-dashboard a:focus-visible {
         a:not(.md-dashboard-widget__page-preview) { color: var(--wj-dashboard-link); }
         &.md-dashboard-widget__table--ranked { table-layout: auto; }
         &.md-dashboard-widget__table--pages td { vertical-align: middle; padding-block: 12px; }
+        &.md-dashboard-widget__table--approvals th:first-child { width: 50%; }
 
         td, th {
             overflow-wrap: anywhere;

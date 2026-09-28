@@ -85,7 +85,7 @@ Scenario('Merge the latest six requests and keep direct approval actions separat
         '/admin/approve_delete.jsp?docid=16&historyid=106', '/admin/v9/webpages/web-pages-list/?groupid=25&scheduleId=205&act=delete',
         '/admin/approve_delete.jsp?docid=14&historyid=104', '/admin/v9/webpages/web-pages-list/?groupid=23&scheduleId=203'
     ], 'The page IDs and folder scheduler IDs must address the pending request, including legacy deletion titles.');
-    const icons = ['ti-file-text', 'ti-folder', 'ti-file-text', 'ti-folder', 'ti-file-text', 'ti-folder'];
+    const icons = ['ti-article', 'ti-folder-filled', 'ti-article', 'ti-folder-filled', 'ti-article', 'ti-folder-filled'];
     for (const [index, row] of state.rows.entries()) {
         I.assertEqual(row.link.target, '_blank');
         I.assertContain(row.link.rel.split(/\s+/), 'noopener');

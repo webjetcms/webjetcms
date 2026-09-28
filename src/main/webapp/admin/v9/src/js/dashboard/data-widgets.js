@@ -203,7 +203,7 @@ export function registerDataWidgets() {
                     approval.target = '_blank';
                     approval.rel = 'noopener';
                     return [approval, item.section, date(item.date)];
-                }));
+                })).classList.add('md-dashboard-widget__table--approvals');
             }
         }
     });
