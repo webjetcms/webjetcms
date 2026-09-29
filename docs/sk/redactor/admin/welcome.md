@@ -1,6 +1,6 @@
 # Úvodná obrazovka
 
-Úvodná obrazovka sústreďuje informácie a odkazy, ktoré potrebujete pri práci s webom. Na jednom mieste môžete skontrolovať návštevnosť, odoslané formuláre či stránky čakajúce na schválenie a vrátiť sa k rozpracovaným stránkam. Nemusíte kvôli každej kontrole otvárať príslušnú časť administrácie.
+Na úvodnej obrazovke môžete skontrolovať návštevnosť, odoslané formuláre či stránky čakajúce na schválenie a vrátiť sa k rozpracovaným stránkam. Nemusíte kvôli každej kontrole otvárať príslušnú časť administrácie.
 
 Prehľad tvoria **widgety**, teda karty s konkrétnymi údajmi, napríklad grafom návštevnosti alebo zoznamom požiadaviek na schválenie. Vyberte si tie, ktoré využívate, a usporiadajte ich podľa toho, čo chcete sledovať ako prvé. Pomocou [skratiek](#vaše-skratky) si otvoríte často používanú časť administrácie alebo konkrétny priečinok bez hľadania v menu.
 
@@ -14,7 +14,7 @@ Pri privítaní sa zobrazuje aj označenie prostredia, napríklad **PROD**, **UA
 
 ## Prispôsobenie prehľadu
 
-Prehľad si prispôsobte svojej práci. Ak napríklad spracúvate formuláre a schvaľujete obsah, umiestnite widgety **Formuláre** a **Na schválenie** na začiatok. Widgety, ktoré nepotrebujete, môžete odstrániť.
+Na začiatok prehľadu umiestnite widgety s údajmi, ktoré kontrolujete najčastejšie. Ak napríklad spracúvate formuláre a schvaľujete obsah, vyberte widgety **Formuláre** a **Na schválenie**. Widgety, ktoré nepotrebujete, môžete odstrániť.
 
 Kliknite na **Upraviť prehľad**. Zobrazia sa možnosti **Pridať widget**, **Obnoviť** a **Hotovo**.
 
@@ -26,10 +26,10 @@ Tlačidlom **Pridať widget** otvorte katalóg. Vyhľadajte požadovaný widget 
 
 Pri widgete použite menu s tromi bodkami:
 
-- **Nastavenia widgetu**: zvoľte dostupnú veľkosť a ďalšie údaje, napríklad obdobie alebo formulár. Nie každý widget ponúka viac veľkostí.
-- **Presunúť widget**: vyberte, pred ktorú kartu sa má presunúť, alebo zvoľte koniec. Na počítači môžete použiť aj rukoväť na ťahanie.
-- **Odstrániť widget**: odstráni kartu z vášho prehľadu. Údaje v aplikácii zostávajú zachované. Bezprostredne po odstránení je dostupné **Vrátiť späť**, po ďalšej úspešne uloženej úprave táto možnosť zanikne. Widget môžete kedykoľvek pridať znova.
-- **Obnoviť údaje**: načíta čerstvé údaje danej karty.
+- **Nastavenia widgetu**: zvoľte dostupnú veľkosť a ďalšie nastavenia, napríklad obdobie alebo formulár. Nie každý widget ponúka viac veľkostí.
+- **Presunúť widget**: vyberte, pred ktorú kartu sa má presunúť, alebo ho presuňte na koniec prehľadu. Na počítači môžete použiť aj rukoväť na ťahanie.
+- **Odstrániť widget**: odstráni kartu z vášho prehľadu. Údaje v aplikácii zostávajú zachované. Bezprostredne po odstránení je dostupná možnosť **Vrátiť späť**. Po ďalšej úspešne uloženej úprave táto možnosť zanikne. Widget môžete kedykoľvek pridať znova.
+- **Obnoviť údaje**: načíta aktuálne údaje danej karty.
 
 V dialógu **Nastavenia widgetu** upravte dostupné možnosti a potvrďte ich tlačidlom **Uložiť**. Väčšiu kartu zvoľte, keď chcete vidieť podrobnejší graf alebo zoznam. Menšia karta zaberie v prehľade menej miesta.
 
@@ -51,29 +51,29 @@ Widgety z katalógu môžete pridať opakovane s rôznymi veľkosťami alebo nas
 
 ### Skratka do modulu
 
-Otvorí vybranú časť administrácie alebo vlastnú URL adresu. Hodí sa na priamy prístup k často používaným miestam, aj keď sú hlbšie v menu či v stromovej štruktúre priečinkov. Postup pridania a príklad odkazu na konkrétny priečinok nájdete v časti [Vaše skratky](#vaše-skratky).
+Často používanú časť administrácie otvoríte bez hľadania v menu či v stromovej štruktúre priečinkov. Skratka môže smerovať aj na vlastnú URL adresu. Postup pridania a príklad odkazu na konkrétny priečinok nájdete v časti [Vaše skratky](#vaše-skratky).
 
 ### Pokračujte v práci
 
-Umožňuje vrátiť sa k rozpracovanej stránke bez vyhľadávania jej priečinka. Zobrazuje najviac šesť vašich posledných upravovaných stránok s náhľadom obrázka, umiestnením a dátumom úpravy. Kliknutím otvoríte editor stránky. Pri menšej veľkosti karty môžete zoznam posúvať.
+K rozpracovanej stránke sa vrátite bez hľadania jej priečinka. Widget zobrazuje najviac šesť vašich naposledy upravovaných stránok s náhľadom obrázka, umiestnením a dátumom úpravy. Kliknutím otvoríte editor stránky. Pri menšej veľkosti karty môžete zoznam posúvať.
 
 ### Na schválenie
 
 Upozorňuje na obsah, ktorý čaká na rozhodnutie schvaľovateľa. Zobrazuje požiadavky dostupné v karte **Neschválené** vo Web stránkach. Väčší variant obsahuje šesť najnovších požiadaviek na zmenu alebo zmazanie stránky či priečinka. Ikona pri názve rozlišuje stránku a priečinok.
 
-Kliknutím na položku otvoríte jej schvaľovanie v novom okne. Pri priečinku sa otvorí príslušný priečinok vo Web stránkach spolu so schvaľovacím dialógom. Nadpis a celkový počet otvoria celý zoznam požiadaviek.
+Kliknutím na položku otvoríte jej schvaľovanie v novom okne. Pri priečinku sa otvorí príslušný priečinok vo Web stránkach spolu so schvaľovacím dialógom. Kliknutím na nadpis alebo celkový počet otvoríte celý zoznam požiadaviek.
 
 ### Najbližšie publikovanie
 
-Zobrazuje plánované publikovanie a ukončenie platnosti stránok s dátumom a časom zmeny. Môžete tak skontrolovať, ktorý obsah sa má v najbližšom čase zverejniť alebo prestať zobrazovať. Kliknutím na nadpis otvoríte úplný plán publikovania.
+Skontrolujete, ktoré stránky sa majú v najbližšom čase zverejniť alebo prestať zobrazovať. Pri každej zmene vidíte dátum a čas plánovaného publikovania alebo ukončenia platnosti. Kliknutím na nadpis otvoríte úplný plán publikovania.
 
 ### Formuláre
 
-Poskytuje prehľad o odoslaných formulároch, napríklad dopytoch alebo kontaktných správach. Zobrazuje údaje za posledných 7, 30 alebo 90 dní vrátane dnešných odoslaní. V nastaveniach môžete vybrať konkrétny formulár alebo všetky dostupné formuláre.
+Skontrolujete tu údaje o odoslaných formulároch, napríklad dopytoch alebo kontaktných správach, za posledných 7, 30 alebo 90 dní vrátane dnešných odoslaní. V nastaveniach môžete vybrať konkrétny formulár alebo všetky dostupné formuláre.
 
 ### Návštevnosť
 
-Umožňuje sledovať, ako sa mení návštevnosť webu. V nastaveniach vyberte obdobie a počet zobrazení, návštev alebo unikátnych návštevníkov.
+Umožňuje sledovať, ako sa mení návštevnosť webu. V nastaveniach vyberte obdobie a sledovaný údaj: počet zobrazení, návštev alebo unikátnych návštevníkov.
 
 Graf porovnáva aktuálne a predchádzajúce obdobie. Presné hodnoty nájdete v popisoch po podržaní kurzora nad grafom. Tabuľka s údajmi je dostupná čítačkám obrazovky.
 
@@ -87,7 +87,7 @@ Zobrazuje hľadané výrazy a ich počty za zvolené obdobie. Podľa výrazov m�
 
 ### Odkiaľ návštevníci prišli
 
-Ukazuje, odkiaľ návštevníci prichádzajú na web, aby ste mohli porovnať jednotlivé zdroje návštevnosti za zvolené obdobie.
+Za zvolené obdobie môžete porovnať zdroje návštevnosti a zistiť, odkiaľ prichádza najviac návštevníkov.
 
 Graf zobrazuje percentuálny podiel jednotlivých evidovaných zdrojov. Presné hodnoty nájdete v popisoch po podržaní kurzora nad grafom. Tabuľka s údajmi je dostupná čítačkám obrazovky.
 
@@ -125,7 +125,7 @@ Zobrazuje, ktorí administrátori práve pracujú v systéme. Môžete tak nájs
 
 ### Zmenené stránky
 
-Zobrazuje posledné úpravy dostupných stránok v aktuálnej doméne aj s autorom zmeny. Pomáha vám sledovať prácu na obsahu a zistiť, kto stránku naposledy upravil.
+Pri kontrole práce na obsahu tu nájdete posledné úpravy dostupných stránok v aktuálnej doméne aj s autorom zmeny.
 
 ### Audit
 
@@ -163,7 +163,7 @@ Kliknutím na ikonu <i class="ti ti-mail fs-6"></i> môžete danému administrá
 
 ## Vaše skratky
 
-Skratky pod privítaním slúžia na priamy prístup k miestam, ktoré často používate. Jedným kliknutím môžete otvoriť aj vnorenú časť administrácie alebo konkrétny priečinok vo Web stránkach. Nemusíte ho pri každom návrate hľadať v menu alebo rozbaľovať strom priečinkov.
+Skratkami pod privítaním otvoríte aj vnorenú časť administrácie alebo konkrétny priečinok vo Web stránkach. Často používané miesta tak nemusíte pri každom návrate hľadať v menu alebo rozbaľovať strom priečinkov.
 
 Skratka môže smerovať na dostupný modul administrácie alebo na vlastnú URL adresu vrátane parametrov. Pri odkaze s parametrami otvorí cieľ v stave, ktorý daná adresa určuje, napríklad s vybraným priečinkom. Skratky sa ukladajú na vaše konto a sú dostupné vo všetkých prehliadačoch.
 
@@ -191,7 +191,7 @@ Pri kontrole práce s obsahom a stavu servera môžete využiť widgety **Zmenen
 
 **Zmenené stránky** zobrazujú posledné úpravy dostupných stránok v aktuálnej doméne aj s autorom zmeny. **Audit** zobrazuje posledné udalosti auditu. Audit, prihlásení administrátori a monitorovanie zobrazujú údaje celého servera podľa príslušných oprávnení.
 
-Grafy pamäte a CPU majú farebne odlíšené pozadie a predvolenú veľkosť **3×3**. V nastaveniach widgetu môžete zvoliť aj kompaktnejšiu veľkosť **3×2**. Grafy aj číselné hodnoty viditeľného widgetu sa aktualizujú každých 5 sekúnd, takže môžete priebežne sledovať zmeny zaťaženia. Úplný prehľad otvoríte cez názov widgetu.
+Grafy pamäte a CPU majú farebne odlíšené pozadie a predvolenú veľkosť **3×3**. V nastaveniach widgetu môžete zvoliť aj menšiu veľkosť **3×2**. Grafy aj číselné hodnoty viditeľného widgetu sa aktualizujú každých 5 sekúnd, takže môžete priebežne sledovať zmeny zaťaženia. Kliknutím na názov widgetu otvoríte úplný prehľad.
 
 Živé vzorky sa zbierajú od otvorenia widgetu, aj keď je ukladanie historického monitorovania vypnuté. Pri skrytí karty prehliadača alebo widgetu sa pravidelné načítavanie pozastaví.
 
