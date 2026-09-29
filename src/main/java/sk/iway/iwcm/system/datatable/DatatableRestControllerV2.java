@@ -29,6 +29,7 @@ import org.json.JSONObject;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.NotReadablePropertyException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
@@ -42,6 +43,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.util.ClassUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
@@ -369,6 +371,11 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					}
 				}
 				return true;
+			} catch (DataAccessException e) {
+				// Let the exception handler translate database failures into user-facing messages.
+				throw e;
+			} catch (TransactionSystemException e) {
+				throw e;
 			} catch (Exception e) {
 				Logger.error(DatatableRestControllerV2.class, e);
 			}

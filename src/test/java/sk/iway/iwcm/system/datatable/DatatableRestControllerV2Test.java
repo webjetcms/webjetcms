@@ -5,16 +5,21 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.jspecify.annotations.NonNull;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.WebDataBinder;
 
 import ch.qos.logback.classic.Level;
@@ -35,8 +40,10 @@ import sk.iway.spring.SpringApplication;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -45,6 +52,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.Serializable;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -61,6 +69,7 @@ import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.RollbackException;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
 
@@ -447,6 +456,36 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         // Verify that beforeDelete and afterDelete were called ONLY once
         assertEquals(1, controller.getBeforeDeleteCounter(), "beforeDelete should be called once");
         assertEquals(1, controller.getAfterDeleteCounter(), "afterDelete should be called once");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"transaction", "integrity", "jpa", "other"})
+    void testDeleteItemPropagatesDatabaseErrorsToExceptionHandler(String exceptionType) {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        GeneratedIdTestEntity entity = new GeneratedIdTestEntity(123L, "referenced record");
+        when(repository.getReferenceById(123L)).thenReturn(entity);
+        when(repository.existsById(123L)).thenReturn(true);
+        when(repository.findById(123L)).thenReturn(Optional.of(entity));
+        SQLIntegrityConstraintViolationException databaseException = new SQLIntegrityConstraintViolationException(
+                "Cannot delete or update a parent row: a foreign key constraint fails", "23000", 1451);
+        RuntimeException exception = switch (exceptionType) {
+            case "transaction" -> new TransactionSystemException(
+                    "Could not commit JPA transaction", new RollbackException(databaseException));
+            case "integrity" -> new DataIntegrityViolationException("Could not execute statement", databaseException);
+            case "jpa" -> new JpaSystemException(new RollbackException(databaseException));
+            default -> new IllegalStateException("Deletion failed");
+        };
+        doThrow(exception).when(repository).delete(entity);
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> deleteController =
+                new DatatableRestControllerV2<>(repository) {};
+
+        if ("other".equals(exceptionType)) {
+            assertEquals(false, deleteController.deleteItem(entity, 123L));
+        } else {
+            assertSame(exception, assertThrows(RuntimeException.class, () -> deleteController.deleteItem(entity, 123L)));
+        }
+        verify(repository).delete(entity);
     }
 
     @Test
