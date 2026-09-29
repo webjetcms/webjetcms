@@ -1,10 +1,28 @@
+/**
+ * Fields consumed from the current server-monitoring response; the endpoint also supplies other metrics.
+ * @typedef {Object} MonitoringSnapshot
+ * @property {number} serverActualTime - Sampling time in epoch milliseconds.
+ * @property {number} memUsed - Used JVM memory in bytes.
+ * @property {number} memFree - Free JVM memory in bytes.
+ * @property {number} memTotal - Allocated JVM memory in bytes.
+ * @property {number} cpuUsageProcess - Process CPU percentage, or a negative value when unavailable.
+ * @property {number} cpuUsage - System CPU percentage, or a negative value when unavailable.
+ */
+
 const POLL_INTERVAL = 5000;
 const subscriptions = new Set();
 let snapshotRequest = null;
 let pollRequest = null;
 let timer = null;
 
-/** Shares a current monitoring request while allowing each widget to cancel its own wait. */
+/**
+ * Shares a current monitoring request while allowing each widget to cancel its own wait.
+ * The underlying fetch is cancelled when its last consumer leaves; successful snapshots are not cached.
+ *
+ * @param {AbortSignal} signal - Lifetime of this consumer's wait.
+ * @returns {Promise<MonitoringSnapshot>} Current server metrics; rejects with AbortError when this consumer aborts.
+ * @throws {Error} If the monitoring endpoint returns an unsuccessful HTTP response; the promise rejects.
+ */
 export function readMonitoringSnapshot(signal) {
     if (signal.aborted) return Promise.reject(new DOMException('Monitoring request aborted', 'AbortError'));
     if (!snapshotRequest) {
@@ -42,7 +60,12 @@ function activeSubscriptions() {
     return [...subscriptions].filter(item => item.visible && item.container.isConnected && !item.signal.aborted);
 }
 
-/** Keeps one non-overlapping timer for all visible monitoring cards. */
+/**
+ * Keeps one non-overlapping timer for all visible monitoring cards.
+ * Cancels polling when the document is hidden or no connected, visible subscription remains.
+ *
+ * @param {boolean} [immediate=false] - Whether to replace a pending timer with a zero-delay poll.
+ */
 function schedule(immediate = false) {
     if (!activeSubscriptions().length) {
         window.clearTimeout(timer);
@@ -55,6 +78,10 @@ function schedule(immediate = false) {
     timer = window.setTimeout(poll, immediate ? 0 : POLL_INTERVAL);
 }
 
+/**
+ * Delivers one shared snapshot or error to active subscribers and schedules the next poll.
+ * @returns {Promise<void>} Resolves after delivery and rescheduling; aborted polls do not notify subscribers.
+ */
 async function poll() {
     timer = null;
     if (!activeSubscriptions().length) return;
@@ -75,7 +102,16 @@ async function poll() {
 
 const visibilityChanged = () => schedule(document.visibilityState !== 'hidden');
 
-/** Pauses offscreen cards and releases observation, polling and requests when their render ends. */
+/**
+ * Pauses offscreen cards and releases observation, polling and requests when their render ends.
+ * Active cards share five-second polling while the document is visible; this does not synchronously deliver a snapshot.
+ *
+ * @param {HTMLElement} container - Connected card content observed for viewport visibility.
+ * @param {AbortSignal} signal - Render lifetime; aborting removes the subscription.
+ * @param {function(MonitoringSnapshot): void} onData - Called synchronously for each successful poll while active; its return value is ignored.
+ * @param {function(Error): void} onError - Called for failed polls while active; its return value is ignored.
+ * @returns {function(): void} Idempotent unsubscribe function, including for an already-aborted signal.
+ */
 export function subscribeMonitoring(container, signal, onData, onError) {
     if (signal.aborted) return () => {};
     const subscription = { container, signal, onData, onError, visible: true };

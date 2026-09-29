@@ -1,13 +1,30 @@
 import { registerWidget } from './registry';
 import { node, text, date, number, field, empty, containNativeScroll, pagePreview } from './widget-utils';
 
-/** Returns individual sessions while retaining the originating cluster label. */
+/**
+ * Clustered session data supplied by the server bootstrap.
+ * @typedef {Object} SessionData
+ * @property {string} currentSessionId - ID of the session displaying the dashboard.
+ * @property {{cluster: string, userSessions: Object[]}[]} [userSessions] - Cluster entries containing sessions with sessionId, logonTime, browserName and connection details.
+ */
+
+/**
+ * Returns individual sessions while retaining the originating cluster label.
+ * Places the current session first, followed by other sessions in descending login-time order.
+ *
+ * @param {SessionData} data - Session clusters and current-session identity.
+ * @returns {Object[]} Copied session records with an added cluster property.
+ */
 export function flattenSessions(data) {
     return (data.userSessions || []).flatMap(cluster => (cluster.userSessions || []).map(session => ({ ...session, cluster: cluster.cluster })))
         .sort((a, b) => Number(b.sessionId === data.currentSessionId) - Number(a.sessionId === data.currentSessionId) || b.logonTime - a.logonTime);
 }
 
-/** Resolves the installed Tabler browser glyph without trusting a CSS class from session data. */
+/**
+ * Resolves the installed Tabler browser glyph without trusting a CSS class from session data.
+ * @param {string} [browserName] - Browser label or user-agent fragment.
+ * @returns {string} A supported browser icon class, or the desktop icon when unrecognized.
+ */
 function sessionBrowserIcon(browserName) {
     const name = String(browserName || '');
     if (/edge|edg\//i.test(name)) return 'ti-brand-edge';
@@ -17,7 +34,11 @@ function sessionBrowserIcon(browserName) {
     return 'ti-device-desktop';
 }
 
-/** Uses the shared hover/focus/Escape tooltip behavior and releases instances with the widget. */
+/**
+ * Uses the shared hover/focus/Escape tooltip behavior and releases instances with the widget.
+ * @param {HTMLElement} list - Session list containing tooltip triggers.
+ * @param {AbortSignal} signal - Disposes tooltips and keyboard handlers on abort.
+ */
 function sessionTooltips(list, signal) {
     if (!window.WJ?.initTooltip || !window.$) return;
     const targets = list.querySelectorAll('[data-bs-toggle="tooltip"]');
@@ -34,6 +55,15 @@ function sessionTooltips(list, signal) {
     }), { once: true });
 }
 
+/**
+ * Renders sessions with logout controls for other sessions and feedback for pending cluster removals.
+ * Successful immediate removals update the supplied session data and refresh the session widget.
+ *
+ * @param {HTMLElement} container - Parent to receive the list.
+ * @param {SessionData} data - Mutable bootstrap session data used for later refreshes.
+ * @param {import('./registry').WidgetContext} context - Translations and dashboard refresh actions.
+ * @param {AbortSignal} signal - Cancels logout requests and releases list resources.
+ */
 function sessionList(container, data, context, signal) {
     const list = node('ul', 'md-dashboard-widget__sessions list-unstyled');
     list.tabIndex = 0;
@@ -106,7 +136,13 @@ function renderSessions({ container, context, signal }) {
     sessionList(container, data, context, signal);
 }
 
-/** Uses the announcement's release number, so development rebuilds do not reset acknowledgement. */
+/**
+ * Uses the announcement's release number, so development rebuilds do not reset acknowledgement.
+ * Preserves the original HTML and extracts plain-text paragraphs for the collapsed summary.
+ *
+ * @param {import('./registry').WidgetContext} context - Supplies changelog HTML and the configured release-version fallback.
+ * @returns {{version: string, paragraphs: string[], html: string}} Announcement content and its acknowledgement key, which may be empty.
+ */
 export function releaseNews(context) {
     const html = context.labels.changelog || '';
     const document = new DOMParser().parseFromString(html, 'text/html');
@@ -118,12 +154,25 @@ export function releaseNews(context) {
     return { version, paragraphs, html };
 }
 
+/**
+ * Builds a documentation URL using a supported administration language, falling back to English.
+ * @param {string} [path=''] - Path relative to the localized documentation root.
+ * @returns {string} Absolute URL under the latest documentation version.
+ */
 function docsUrl(path = '') {
     const language = ['sk', 'cs', 'en'].includes(window.userLng) ? window.userLng : window.userLng === 'cz' ? 'cs' : 'en';
     return `https://docs.webjetcms.sk/latest/${language}/${path}`;
 }
 
-/** Reuses page lookup with cancellable requests and releases the menu with its widget. */
+/**
+ * Reuses page lookup with cancellable requests and releases the menu with its widget.
+ * Selecting a result navigates to the page editor; failed lookups provide an empty suggestion list.
+ *
+ * @param {HTMLInputElement} input - Search control enhanced with jQuery UI autocomplete.
+ * @param {HTMLElement} group - Parent in which the results menu is placed.
+ * @param {AbortSignal} signal - Cancels requests and destroys autocomplete and observers on abort.
+ * @returns {(function(boolean): void)|null} A toggle that cancels pending lookup before enabling or disabling suggestions, or null when unavailable.
+ */
 function pageAutocomplete(input, group, signal) {
     if (!window.WJ.hasPermission('menuWebpages') || !window.$?.fn?.autocomplete) return null;
     const $input = window.$(input);

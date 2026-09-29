@@ -30,7 +30,15 @@ public class DashboardNoticeService {
         this.users = users;
     }
 
-    /** Returns trusted localized HTML with separately described, fixed application actions. */
+    /**
+     * Builds applicable system notices with trusted localized HTML and fixed application actions.
+     * If an update error log exists, copies it to the protected download location used by its notice.
+     *
+     * @param user administrator whose permissions and two-factor authentication setup are checked
+     * @param request request supplying the locale and optional Java version override for the tester account
+     * @return notices containing an ID, severity, icon, title, HTML body and optional action
+     * @throws AccessDeniedException if the user is missing or is not an administrator
+     */
     public List<Map<String, Object>> load(Identity user, HttpServletRequest request) {
         if (user == null || !user.isAdmin()) throw new AccessDeniedException("Administrator login is required");
         Prop prop = Prop.getInstance(request);
@@ -97,7 +105,12 @@ public class DashboardNoticeService {
         return Map.of("type", type, "url", url, "label", prop.getText(labelKey));
     }
 
-    /** Accepts both current Java versions and the legacy 1.x notation. */
+    /**
+     * Extracts the major Java version from current version strings or the legacy {@code 1.x} notation.
+     *
+     * @param version Java version string, or {@code null}
+     * @return leading major version number, or {@code -1} if it cannot be parsed as an integer
+     */
     static int javaMajorVersion(String version) {
         if (version == null) return -1;
         String normalized = version.startsWith("1.") ? version.substring(2) : version;

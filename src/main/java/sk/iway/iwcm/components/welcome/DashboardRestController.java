@@ -22,7 +22,10 @@ import sk.iway.iwcm.admin.layout.MenuService;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.users.UsersDB;
 
-/** Current-user dashboard configuration; no caller-supplied user or domain IDs are accepted. */
+/**
+ * Exposes dashboard settings and menu destinations for the authenticated administrator.
+ * The settings owner and active domain are resolved from the request.
+ */
 @RestController
 @RequestMapping("/admin/rest/dashboard")
 @PreAuthorize("@WebjetSecurityService.isAdmin()")
@@ -33,6 +36,13 @@ public class DashboardRestController {
         this.settingsService = settingsService;
     }
 
+    /**
+     * Saves the shared layout and active-domain options, then clears the user's cached administration settings.
+     *
+     * @param settings dashboard settings to validate and persist
+     * @param request request identifying the administrator and active domain
+     * @return saved settings with the layout and shortcuts marked as configured
+     */
     @PutMapping("/settings")
     public DashboardSettingsDto putSettings(@RequestBody DashboardSettingsDto settings, HttpServletRequest request) {
         Identity user = currentUser(request);
@@ -41,7 +51,13 @@ public class DashboardRestController {
         return saved;
     }
 
-    /** Resets the authenticated account's shared layout and all domain-specific dashboard options. */
+    /**
+     * Clears widget preferences across all domains while retaining shortcuts and their migration state.
+     * The returned layout is marked as unconfigured so the client can supply default widgets.
+     *
+     * @param request request identifying the administrator whose settings are reset
+     * @return retained shortcuts and configuration flags after the reset
+     */
     @DeleteMapping("/settings")
     public DashboardSettingsDto deleteSettings(HttpServletRequest request) {
         Identity user = currentUser(request);
@@ -50,7 +66,13 @@ public class DashboardRestController {
         return reset;
     }
 
-    /** Atomically installs a generated variant layout while retaining the account's shortcuts. */
+    /**
+     * Atomically installs a supplied layout while retaining the account's configured shortcuts.
+     *
+     * @param layout replacement widgets and active-domain options, including default shortcuts for an unconfigured account
+     * @param request request identifying the administrator and active domain
+     * @return persisted layout combined with the retained shortcuts
+     */
     @PutMapping("/settings/reset")
     public DashboardSettingsDto resetSettings(@RequestBody DashboardSettingsDto layout, HttpServletRequest request) {
         Identity user = currentUser(request);
@@ -65,12 +87,24 @@ public class DashboardRestController {
         return new MenuService(request).getMenu();
     }
 
+    /**
+     * Converts a settings validation failure into the error body of a bad-request response.
+     *
+     * @param exception validation failure containing a message for the client
+     * @return response body containing the validation message
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public java.util.Map<String, String> invalidSettings(IllegalArgumentException exception) {
         return java.util.Map.of("error", exception.getMessage());
     }
 
+    /**
+     * Logs a persistence failure and returns a service-unavailable error without exposing internal details.
+     *
+     * @param exception persistence failure to log
+     * @return response body with a stable reason code and a generic error message
+     */
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public java.util.Map<String, String> unavailableSettings(IllegalStateException exception) {
@@ -78,6 +112,12 @@ public class DashboardRestController {
         return java.util.Map.of("reason", "settings-unavailable", "error", "Dashboard settings are temporarily unavailable");
     }
 
+    /**
+     * Converts the active domain's root group ID to a non-negative settings key.
+     *
+     * @param request request used to resolve the active domain's root group
+     * @return decimal root group ID, or {@code "0"} when the resolved ID is negative
+     */
     static String domainKey(HttpServletRequest request) {
         return Integer.toString(Math.max(0, CloudToolsForCore.getRootGroupId(request)));
     }

@@ -10,14 +10,27 @@ const moduleLinks = {
     'server-cpu': '/apps/server_monitoring/admin/'
 };
 
-/** Reuses the audit page list with its ordering, authors and page previews. */
+/**
+ * Page or audit entry displayed in the activity list.
+ * @typedef {import('./widget-utils').PagePreview & {type?: string, description?: string, userFullName: string, date: number, url: string}} ActivityItem
+ */
+
+/**
+ * Reuses the audit page list with its ordering, authors and page previews.
+ * @param {AbortSignal} signal - Cancels the module request when the render ends.
+ * @returns {Promise<{items: ActivityItem[]}>} Changed-page records with editor links and author timestamps.
+ */
 async function fetchChangedPages(signal) {
     const data = await fetchJson('/admin/rest/web-pages/all?auditVersion=true&size=6&page=0&sort=dateCreated%2Cdesc', signal);
     return { items: data.content.map(page => ({ title: page.title, fullPath: page.fullPath, perexImage: page.perexImage,
         userFullName: page.authorName, date: page.dateCreated, url: `/admin/v9/webpages/web-pages-list/?docid=${encodeURIComponent(page.docId)}` })) };
 }
 
-/** Maps audit rows and the module's localized event names into the activity preview. */
+/**
+ * Maps audit rows and the module's localized event names into the activity preview.
+ * @param {AbortSignal} signal - Cancels the module request when the render ends.
+ * @returns {Promise<{items: ActivityItem[]}>} Audit records with localized types and links to their details.
+ */
 async function fetchAudit(signal) {
     const data = await fetchJson('/admin/rest/audit/log/all?size=6&page=0&sort=id%2Cdesc', signal);
     const types = new Map(data.options.logType.map(option => [String(option.value), option.label]));
@@ -25,7 +38,13 @@ async function fetchAudit(signal) {
         userFullName: row.userFullName, date: row.createDate, url: `/admin/v9/apps/audit-search/?id=${encodeURIComponent(row.id)}` })) };
 }
 
-/** Renders a bounded activity preview with the author, timestamp and complete linked description. */
+/**
+ * Renders a bounded activity preview with the author, timestamp and complete linked description.
+ * @param {HTMLElement} container - Parent to receive the activity list.
+ * @param {ActivityItem[]} items - Ordered page or audit records.
+ * @param {'changed-pages'|'audit'} type - Chooses page thumbnails or audit descriptions.
+ * @param {string} size - A 3x2 footprint displays two entries; other sizes display up to four.
+ */
 function activityList(container, items, type, size) {
     const list = node('ul', 'md-dashboard-widget__activity list-unstyled');
     items.slice(0, size === '3x2' ? 2 : 4).forEach(item => {
@@ -46,7 +65,12 @@ function activityList(container, items, type, size) {
     container.append(list);
 }
 
-/** Builds a mail action without allowing the address to add URI headers or additional recipients. */
+/**
+ * Builds a mail action without allowing the address to add URI headers or additional recipients.
+ * @param {{email?: string, fullName: string}} user - Administrator address and label.
+ * @param {import('./registry').WidgetContext} context - Supplies the accessible action label.
+ * @returns {HTMLAnchorElement|null} A detached mail action, or null when the address fails validation.
+ */
 function adminMail(user, context) {
     const email = typeof user.email === 'string' ? user.email.trim() : '';
     if (!email || /[\s<>,;?&#%\\]/.test(email) || !/^[^@]+@[^@]+$/.test(email)) return null;
@@ -63,7 +87,23 @@ function monitoringMetrics(type) {
         : [['process', 'cpuProcess'], ['system', 'cpuSystem']];
 }
 
-/** Maps the live endpoint to chart units without turning unavailable readings into zero. */
+/**
+ * A chart sample containing either memory values in MiB or CPU percentages.
+ * @typedef {Object} MonitoringPoint
+ * @property {number} date - Server sampling time in epoch milliseconds.
+ * @property {number|null} [used] - Used memory, or null when unavailable.
+ * @property {number|null} [free] - Free memory, or null when unavailable.
+ * @property {number|null} [total] - Allocated memory, or null when unavailable.
+ * @property {number|null} [process] - Process CPU usage, or null when unavailable.
+ * @property {number|null} [system] - System CPU usage, or null when unavailable.
+ */
+
+/**
+ * Maps the live endpoint to chart units without turning unavailable readings into zero.
+ * @param {import('./monitoring-live').MonitoringSnapshot} snapshot - Current server metrics.
+ * @param {'server-memory'|'server-cpu'} type - Selects memory or CPU measurements.
+ * @returns {MonitoringPoint} A sample with negative, nonnumeric or nonfinite readings replaced by null.
+ */
 function monitoringPoint(snapshot, type) {
     const measurement = (value, divisor = 1) => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value / divisor : null;
     return type === 'server-memory' ? { date: snapshot.serverActualTime,
@@ -77,7 +117,14 @@ function monitoringDate(value) {
     });
 }
 
-/** Keeps the current values and their precise sampling time in place as live samples arrive. */
+/**
+ * Keeps the current values and their precise sampling time in place as live samples arrive.
+ * @param {HTMLElement} container - Parent to receive metric values and the sampling-time label.
+ * @param {MonitoringPoint} latest - Initial values to display.
+ * @param {'server-memory'|'server-cpu'} type - Selects metric names and units.
+ * @param {import('./registry').WidgetContext} context - Supplies metric and time labels.
+ * @returns {function(MonitoringPoint): void} Updates the existing value and time elements with a new sample.
+ */
 function monitoringSummary(container, latest, type, context) {
     const unit = type === 'server-memory' ? 'MB' : '%';
     const values = node('dl', 'md-dashboard-widget__monitoring-values');
@@ -99,7 +146,15 @@ function monitoringSummary(container, latest, type, context) {
     return update;
 }
 
-/** Uses the shared chart lifecycle and exposes every real monitoring sample in an accessible table. */
+/**
+ * Uses the shared chart lifecycle and exposes every real monitoring sample in an accessible table.
+ * @param {HTMLElement} container - Parent to receive the chart, legend and visually hidden table.
+ * @param {MonitoringPoint[]} points - Initial samples in chronological order.
+ * @param {'server-memory'|'server-cpu'} type - Selects metric names, units and axis limits.
+ * @param {import('./registry').WidgetContext} context - Supplies translated labels.
+ * @param {AbortSignal} signal - Chart render lifetime.
+ * @returns {Promise<{destroy: (function(): void)|undefined, update: function(MonitoringPoint[]): void}>} Cleanup and a sample-replacement callback; updates are ignored after abort or skipped chart creation.
+ */
 async function monitoringChart(container, points, type, context, signal) {
     const metrics = monitoringMetrics(type);
     const unit = type === 'server-memory' ? 'MB' : '%';
@@ -152,7 +207,15 @@ async function monitoringChart(container, points, type, context, signal) {
     } };
 }
 
-/** Subscribes monitoring charts and their summaries to live updates and stale-data feedback. */
+/**
+ * Subscribes monitoring charts and their summaries to live updates and stale-data feedback.
+ * @param {HTMLElement} container - Observed card content receiving a status message.
+ * @param {'server-memory'|'server-cpu'} type - Selects the measurements passed to update.
+ * @param {import('./registry').WidgetContext} context - Supplies the stale-data message.
+ * @param {AbortSignal} signal - Removes the subscription when the render ends.
+ * @param {function(MonitoringPoint): void} update - Updates the chart and summary after a successful poll; its return value is ignored.
+ * @returns {function(): void} Unsubscribes the card from shared monitoring polling.
+ */
 function liveMonitoring(container, type, context, signal, update) {
     const status = node('p', 'small text-danger mb-0');
     status.setAttribute('role', 'status');

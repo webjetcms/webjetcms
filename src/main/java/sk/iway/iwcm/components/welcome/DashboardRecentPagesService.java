@@ -21,7 +21,7 @@ import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.EditorForm;
 
-/** Search previews and shared page checks using current permissions and domain. */
+/** Provides dashboard search previews and page access checks using current permissions and domain membership. */
 public class DashboardRecentPagesService {
     private final DashboardSettingsRepository.ConnectionFactory connections;
 
@@ -33,7 +33,19 @@ public class DashboardRecentPagesService {
         this.connections = connections;
     }
 
-    /** Loads current thumbnails and the latest save by any author for up to twenty authorized search results. */
+    /**
+     * Loads current thumbnail paths and the latest save by any author for accessible search results.
+     * Pages outside the active domain or the user's editing permissions are omitted; pages without
+     * a history save date use their creation date.
+     *
+     * @param user user whose web page access and editing permissions are checked
+     * @param domain active domain name used to filter the pages
+     * @param docIds non-null list of at most twenty page IDs in the requested order
+     * @return previews keyed by page ID in request order, excluding inaccessible or missing pages
+     * @throws IllegalArgumentException if more than twenty page IDs are requested
+     * @throws org.springframework.security.access.AccessDeniedException if the user lacks web page access
+     * @throws IllegalStateException if preview data cannot be loaded from the database
+     */
     public Map<Integer, DocDetailsDto> getPagePreviews(Identity user, String domain, List<Integer> docIds) {
         if (docIds.size() > 20) throw new IllegalArgumentException("Page preview count must not exceed 20");
         if (user == null || !user.isEnabledItem("menuWebpages")) throw new org.springframework.security.access.AccessDeniedException("Web page access is required");
@@ -70,7 +82,14 @@ public class DashboardRecentPagesService {
         return pages;
     }
 
-    /** Only local image assets may be passed to the administration thumbnail endpoint. */
+    /**
+     * Filters image paths for use with the administration thumbnail endpoint.
+     * Only supported image extensions under {@code /images/} or {@code /files/} are accepted,
+     * without traversal segments, encoded characters, query strings or fragments.
+     *
+     * @param path candidate image path, or {@code null}
+     * @return the original path if accepted, otherwise an empty string
+     */
     static String previewImage(String path) {
         if (path == null || !(path.startsWith("/images/") || path.startsWith("/files/"))
                 || path.indexOf('\\') >= 0 || path.indexOf('?') >= 0 || path.indexOf('#') >= 0
@@ -80,7 +99,15 @@ public class DashboardRecentPagesService {
         return lower.matches(".*\\.(png|jpe?g|gif|webp|avif)") ? path : "";
     }
 
-    /** Checks the current location and editing permissions of a page without using historical scope. */
+    /**
+     * Checks whether a page is editable in the active domain using its current location.
+     * Missing pages and pages in hidden groups or the trash are excluded.
+     *
+     * @param currentDoc current page details, or {@code null}
+     * @param user user whose web page access and editing permissions are checked, or {@code null}
+     * @param domain required domain name; a missing or empty value denies access
+     * @return {@code true} if the page passes the location and permission checks
+     */
     public static boolean isAccessible(DocDetails currentDoc, Identity user, String domain) {
         if (currentDoc == null || user == null || !user.isEnabledItem("menuWebpages") || Tools.isEmpty(domain)) return false;
         GroupDetails group = GroupsDB.getInstance().getGroup(currentDoc.getGroupId());

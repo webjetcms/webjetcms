@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import sk.iway.iwcm.components.welcome.DashboardSettingsDto.Item;
 
-/** Validates the small dashboard-specific settings contract before any database writes. */
+/** Validates and persists shared dashboard layouts and domain-specific options, preserving shortcuts during widget resets. */
 @Service
 public class DashboardSettingsService {
     static final int MAX_INSTANCES = 48;
@@ -55,11 +55,25 @@ public class DashboardSettingsService {
         this.repository = repository;
     }
 
-    /** Returns a fresh shared layout with only the requested domain's options. */
+    /**
+     * Reads the shared layout with only the requested domain's options.
+     *
+     * @param userId ID of the account that owns the settings
+     * @param domainKey decimal root group ID identifying the active domain
+     * @return stored settings, or an unconfigured DTO when the stored layout is absent or invalid
+     * @throws IllegalStateException if the settings cannot be read from the database
+     */
     public DashboardSettingsDto load(int userId, String domainKey) {
         return readSettings(repository.read(userId), domainKey);
     }
 
+    /**
+     * Reconstructs and validates a layout from its metadata, widget records and selected domain options.
+     *
+     * @param records stored dashboard records keyed by their administration settings keys
+     * @param domainKey decimal root group ID selecting the domain options to include
+     * @return reconstructed settings, or an unconfigured DTO for missing, unsupported or invalid layout data
+     */
     private DashboardSettingsDto readSettings(Map<String, String> records, String domainKey) {
         String layout = records.get(DashboardSettingsRepository.LAYOUT_KEY);
         if (layout == null) return new DashboardSettingsDto();
@@ -94,7 +108,17 @@ public class DashboardSettingsService {
         }
     }
 
-    /** Validates the entire request before replacing any stored records. */
+    /**
+     * Validates and replaces the shared layout and current-domain options in one transaction.
+     * The layout must include the session management widget.
+     *
+     * @param userId ID of the account that owns the settings
+     * @param domainKey decimal root group ID identifying the active domain
+     * @param settings settings to validate and persist; missing widget options are initialized in place
+     * @return the supplied settings with the layout and shortcuts marked as configured
+     * @throws IllegalArgumentException if the settings are invalid or the session management widget is missing
+     * @throws IllegalStateException if the settings cannot be persisted
+     */
     public DashboardSettingsDto save(int userId, String domainKey, DashboardSettingsDto settings) {
         Map<String, String> records = validateAndSerialize(settings, domainKey);
         require(settings.getItems().stream().anyMatch(item -> "sessions".equals(item.getType())), "The session management widget is required");
@@ -106,12 +130,32 @@ public class DashboardSettingsService {
         return settings;
     }
 
-    /** Restores widget defaults while retaining shortcuts and migration state under the account lock. */
+    /**
+     * Clears widget preferences, all domain options and the news acknowledgement while retaining shortcuts.
+     * Shortcut configuration and migration flags are preserved; the layout is marked as unconfigured
+     * so the client can supply default widgets.
+     *
+     * @param userId ID of the account whose widget preferences are reset
+     * @return retained shortcuts and configuration flags after the reset
+     * @throws IllegalStateException if the reset cannot be persisted
+     */
     public DashboardSettingsDto reset(int userId) {
         return reset(userId, "0", null);
     }
 
-    /** Replaces all widget preferences in one transaction, preserving the locked shortcut snapshot. */
+    /**
+     * Replaces widget preferences atomically while preserving shortcuts read under the account lock.
+     * Existing domain options and the news acknowledgement are cleared. A supplied layout provides
+     * replacement widgets and current-domain options; its shortcuts are included only when the account's
+     * shortcuts have not been configured. The legacy bookmark migration flag is preserved.
+     *
+     * @param userId ID of the account whose widget preferences are reset
+     * @param domainKey decimal root group ID identifying the active domain
+     * @param layout replacement layout, or {@code null} to leave widgets unconfigured for client defaults
+     * @return persisted settings containing retained shortcuts and any supplied replacement widgets
+     * @throws IllegalArgumentException if the supplied or combined layout is invalid
+     * @throws IllegalStateException if the reset cannot be persisted
+     */
     public DashboardSettingsDto reset(int userId, String domainKey, DashboardSettingsDto layout) {
         if (layout != null) {
             validateAndSerialize(layout, domainKey);
@@ -142,6 +186,16 @@ public class DashboardSettingsService {
         return readSettings(retained, domainKey);
     }
 
+    /**
+     * Validates the settings structure and serializes it into records within the storage size limit.
+     * Missing widget option maps are initialized in place. This validation permits layouts without
+     * session management so that stored reset states can be read; save operations enforce its presence.
+     *
+     * @param settings settings to validate and serialize
+     * @param domainKey decimal root group ID used to namespace domain option records
+     * @return JSON records for the shared layout, widgets, current-domain options and any news acknowledgement
+     * @throws IllegalArgumentException if the settings or domain key are invalid, serialization fails or a record is too large
+     */
     Map<String, String> validateAndSerialize(DashboardSettingsDto settings, String domainKey) {
         require(settings != null && settings.getVersion() == 1, "Unsupported dashboard settings version");
         require(settings.getItems() != null && settings.getItems().size() <= MAX_INSTANCES, "A dashboard supports at most 48 widgets");
@@ -177,7 +231,14 @@ public class DashboardSettingsService {
         return records;
     }
 
-    /** Custom shortcuts accept only explicit HTTP(S) URLs or root-relative application paths. */
+    /**
+     * Validates shortcut fields and restricts destinations according to the shortcut source.
+     * Custom shortcuts require a title and an HTTP(S) or root-relative URL; menu shortcuts may have
+     * an empty destination while awaiting selection, otherwise they require a root-relative path.
+     *
+     * @param options non-null shortcut options; an omitted source defaults to {@code menu}
+     * @throws IllegalArgumentException if any shortcut field or destination is invalid
+     */
     static void validateShortcut(Map<String, Object> options) {
         Object source = options.getOrDefault("source", "menu");
         require("menu".equals(source) || "url".equals(source), "Invalid shortcut source");
@@ -200,6 +261,14 @@ public class DashboardSettingsService {
         }
     }
 
+    /**
+     * Checks the syntax of a root-relative path or an absolute HTTP(S) URL without credentials.
+     * Protocol-relative URLs, backslashes, control characters and surrounding whitespace are rejected.
+     * This check does not verify the user's permission to access the destination.
+     *
+     * @param value candidate shortcut destination, or {@code null}
+     * @return {@code true} if the destination has an accepted URL form
+     */
     static boolean isSafeShortcutUrl(String value) {
         if (value == null || value.isBlank() || !value.equals(value.trim()) || value.startsWith("//")
                 || value.indexOf('\\') >= 0 || value.chars().anyMatch(Character::isISOControl)) return false;
@@ -213,6 +282,13 @@ public class DashboardSettingsService {
         }
     }
 
+    /**
+     * Serializes a value as JSON and enforces the per-record character limit.
+     *
+     * @param value value to serialize into an administration settings record
+     * @return JSON representation within the allowed record length
+     * @throws IllegalArgumentException if serialization fails or the JSON exceeds the record length limit
+     */
     private String serializeBounded(Object value) {
         try {
             String json = mapper.writeValueAsString(value);

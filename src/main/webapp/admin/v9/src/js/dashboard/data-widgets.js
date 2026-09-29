@@ -11,7 +11,45 @@ const moduleLinks = {
 const metricKey = metric => ({ views: 'visits', sessions: 'sessionsMetric', uniqueUsers: 'uniqueUsers' })[metric] || 'sessionsMetric';
 const formPreviewLimit = 10;
 
-/** Reuses the forms list and the selected form's paginated, date-filtered submissions. */
+/**
+ * Completed-day interval and the start of its equally long comparison period.
+ * @typedef {{from: number, to: number, previousFrom: number}} StatisticsPeriod
+ */
+
+/**
+ * Ranked module record with optional comparison and page-preview fields.
+ * @typedef {Object} RankedItem
+ * @property {string} title - Row label.
+ * @property {string} url - Module or record destination.
+ * @property {number} value - Recorded count.
+ * @property {number} [previous] - Previous count, absent when the previous ranking has no matching row.
+ * @property {number} [percentage] - Share supplied by the statistics module.
+ * @property {string} [section] - Page path or section label.
+ * @property {string|null} [perexImage] - Optional page thumbnail path.
+ */
+
+/**
+ * Ranking preview with the module's actual interval and optional summary.
+ * @typedef {StatisticsPeriod & {items: RankedItem[], total?: number, granularity?: string}} RankingData
+ */
+
+/**
+ * Daily traffic samples and totals for two completed periods.
+ * @typedef {StatisticsPeriod & {metric: string, series: {date: number, value: number}[], previousSeries: {date: number, value: number}[], total: number, previous: number}} TrafficData
+ */
+
+/**
+ * Reuses the forms list and the selected form's paginated, date-filtered submissions.
+ * Without a selection, returns the all-form total and recent form summaries; selected-form periods include today.
+ *
+ * @param {Object} options - Shared period and domain-specific selection.
+ * @param {string} [options.formName] - Selected form, or an empty value for all forms.
+ * @param {number} [options.days=7] - Calendar days through the current time for a selected form.
+ * @param {boolean} [options.details] - Whether to load up to ten submissions and their column labels.
+ * @param {AbortSignal} signal - Render or configuration lifetime for all requests.
+ * @returns {Promise<{total: number, options: {id: string, title: string}[], items: {title: string, date: number, url: string}[], from?: number, to?: number}>} Counts, available forms and preview rows, with a period for a selected form.
+ * @throws {Error} If a saved form is absent from the authorized list; the rejected error has dashboardReason set to selection-unavailable.
+ */
 async function fetchForms(options, signal) {
     const forms = (await fetchJson('/admin/rest/forms-list/all', signal)).content;
     const data = {
@@ -42,7 +80,12 @@ async function fetchForms(options, signal) {
     return data;
 }
 
-/** Prefers contact fields by label or name, falling back to the first three populated form columns. */
+/**
+ * Prefers contact fields by label or name, falling back to the first three populated form columns.
+ * @param {{columnNamesAndValues?: Object<string, unknown>, formName: string, id: number|string}} item - Submission values and fallback identity.
+ * @param {{value: string, label?: string}[]} [columns] - Field definitions in display order; omitted definitions use the submitted field order.
+ * @returns {string} Combined contact values, other populated values, or a form-name and ID fallback.
+ */
 function formSubmissionTitle(item, columns) {
     const values = item.columnNamesAndValues || {};
     const normalize = value => String(value || '').replace(/\([^)]*\)/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
@@ -57,7 +100,13 @@ function formSubmissionTitle(item, columns) {
     return selected.map(column => String(values[column.value]).trim()).join(' ') || `${item.formName} #${item.id}`;
 }
 
-/** Uses recent module campaigns, loading an older saved selection separately when needed. */
+/**
+ * Uses recent module campaigns, loading an older saved selection separately when needed.
+ * @param {string|number} selectedId - Saved campaign ID, or an empty value to select the newest campaign.
+ * @param {import('./registry').WidgetContext} context - Supplies the localized active-campaign status.
+ * @param {AbortSignal} signal - Cancels campaign requests when the owning render or dialog ends.
+ * @returns {Promise<{options: {id: string, title: string}[], active: boolean, items: {title: string, status: string, sent: number, recipients: number, url: string}[]}>} Campaign choices and up to three previews with the selection first; active excludes future scheduled sends.
+ */
 async function fetchNewsletter(selectedId, context, signal) {
     const data = await fetchJson('/admin/rest/dmail/campaings/all?size=100&page=0&sort=id%2Cdesc', signal);
     const campaigns = data.content;
@@ -72,7 +121,11 @@ async function fetchNewsletter(selectedId, context, signal) {
             sent: campaign.countOfSentMails, recipients: campaign.countOfRecipients, url: `/apps/dmail/admin/?id=${encodeURIComponent(campaign.id)}` })) };
 }
 
-/** Selects the nearest publication and expiration events from the audit module's schedule. */
+/**
+ * Selects the nearest publication and expiration events from the audit module's schedule.
+ * @param {AbortSignal} signal - Cancels the schedule request.
+ * @returns {Promise<{items: {title: string, kind: string, date: number, url: string}[]}>} Up to six distinct future events, ordered by epoch-millisecond event time.
+ */
 async function fetchPublishing(signal) {
     const data = await fetchJson('/admin/rest/web-pages/history/all?auditVersion=true', signal);
     const now = new Date().getTime(), seen = new Set(), items = [];
@@ -88,7 +141,12 @@ async function fetchPublishing(signal) {
     return { items: items.sort((a, b) => a.date - b.date).slice(0, 6) };
 }
 
-/** Uses calendar days so equal-length completed periods also work across daylight-saving changes. */
+/**
+ * Uses calendar days so equal-length completed periods also work across daylight-saving changes.
+ * @param {number} days - Number of completed calendar days in each period.
+ * @param {Date} [now=new Date()] - Reference time; the current day is excluded without mutating this date.
+ * @returns {StatisticsPeriod} Epoch-millisecond bounds with an inclusive end for the current period.
+ */
 function statisticsPeriod(days, now = new Date()) {
     const until = new Date(now); until.setHours(0, 0, 0, 0);
     const from = new Date(until); from.setDate(from.getDate() - days);
@@ -96,7 +154,18 @@ function statisticsPeriod(days, now = new Date()) {
     return { from: from.getTime(), to: until.getTime() - 1, previousFrom: previousFrom.getTime() };
 }
 
-/** Reuses the statistics module's date, folder and bot filters and DataTable error handling. */
+/**
+ * Reuses the statistics module's date, folder and bot filters and DataTable error handling.
+ * @param {string} type - Statistics endpoint suffix; error statistics omit the root-folder filter.
+ * @param {number} from - Inclusive start in epoch milliseconds.
+ * @param {number} to - Inclusive end in epoch milliseconds.
+ * @param {import('./registry').WidgetContext} context - Supplies the authorized statistics root group.
+ * @param {AbortSignal} signal - Cancels the request.
+ * @param {number} size - Requested page size; module-side caps still apply.
+ * @param {Object<string, string|number|boolean>} [filters={}] - Extra query parameters overriding shared defaults.
+ * @returns {Promise<Object>} The statistics module's DataTable response.
+ * @throws {Error} If a non-error request lacks a domain root; dashboardReason is domain-unavailable.
+ */
 function statisticsRequest(type, from, to, context, signal, size, filters = {}) {
     if (type !== 'error' && context.data.statRootGroupId == null) {
         const error = new Error('Statistics domain is unavailable');
@@ -109,7 +178,15 @@ function statisticsRequest(type, from, to, context, signal, size, filters = {}) 
     return fetchJson(`/admin/rest/stat/${type}/search/findByColumns?${params}`, signal);
 }
 
-/** Maps the module's daily values into the current and previous chart periods. */
+/**
+ * Maps the module's daily values into the current and previous chart periods.
+ * @param {Object} options - Shared traffic preferences.
+ * @param {number|string} [options.days=7] - Completed-day count; unsupported values fall back to seven.
+ * @param {string} [options.metric='sessions'] - One of views, sessions or uniqueUsers; unknown values use sessions.
+ * @param {import('./registry').WidgetContext} context - Supplies the current statistics domain root.
+ * @param {AbortSignal} signal - Cancels the request.
+ * @returns {Promise<TrafficData>} Ordered daily samples and their sums for both periods.
+ */
 async function fetchTraffic(options, context, signal) {
     const days = [7, 30, 90].includes(Number(options.days)) ? Number(options.days) : 7;
     const range = statisticsPeriod(days);
@@ -123,7 +200,13 @@ async function fetchTraffic(options, context, signal) {
         total: series.reduce((sum, point) => sum + point.value, 0), previous: previousSeries.reduce((sum, point) => sum + point.value, 0) };
 }
 
-/** Compares the current six pages with the statistics module's bounded previous ranking. */
+/**
+ * Compares the current six pages with the statistics module's bounded previous ranking.
+ * @param {{days?: number|string}} options - Completed-day count of 7, 30 or 90; defaults to seven.
+ * @param {import('./registry').WidgetContext} context - Supplies the current statistics domain root.
+ * @param {AbortSignal} signal - Cancels both ranking requests.
+ * @returns {Promise<RankingData>} Current pages with previous counts when available and period-specific detail links.
+ */
 async function fetchTopPages(options, context, signal) {
     const days = [7, 30, 90].includes(Number(options.days)) ? Number(options.days) : 7;
     const range = statisticsPeriod(days);
@@ -139,7 +222,14 @@ async function fetchTopPages(options, context, signal) {
     })) };
 }
 
-/** Uses the module's bounded ranking and percentages before taking the six-row preview. */
+/**
+ * Uses the module's bounded ranking and percentages before taking the six-row preview.
+ * @param {'search-terms'|'referrers'} type - Ranking and filters to request.
+ * @param {{days?: number|string}} options - Completed-day count of 7, 30 or 90; defaults to seven.
+ * @param {import('./registry').WidgetContext} context - Supplies the current statistics domain root.
+ * @param {AbortSignal} signal - Cancels the request.
+ * @returns {Promise<RankingData>} Up to six rows, their module percentages and a total across all returned ranking rows.
+ */
 async function fetchStatisticsList(type, options, context, signal) {
     const range = statisticsPeriod([7, 30, 90].includes(Number(options.days)) ? Number(options.days) : 7);
     const queries = type === 'search-terms';
@@ -150,7 +240,13 @@ async function fetchStatisticsList(type, options, context, signal) {
             value: queries ? row.queryCount : row.visits, percentage: row.percentage, url: moduleLinks[type] })) };
 }
 
-/** Keeps the module's weekly error coverage and full summary while requesting six rows. */
+/**
+ * Keeps the module's weekly error coverage and full summary while requesting six rows.
+ * @param {{days?: number|string}} options - Requested 7-, 30- or 90-day range, expanded to weeks and capped at the current time.
+ * @param {import('./registry').WidgetContext} context - Current module context.
+ * @param {AbortSignal} signal - Cancels the request.
+ * @returns {Promise<RankingData>} Error rows, the full module summary and the actual weekly interval.
+ */
 async function fetchErrors(options, context, signal) {
     const range = statisticsPeriod([7, 30, 90].includes(Number(options.days)) ? Number(options.days) : 7);
     const from = new Date(range.from), until = new Date(range.to);
@@ -165,7 +261,14 @@ async function fetchErrors(options, context, signal) {
         items: data.content.map(row => ({ title: row.url, value: row.count, url: moduleLinks.errors })) };
 }
 
-/** Labels the actual returned interval, including whole-week error aggregates. */
+/**
+ * Labels the actual returned interval, including whole-week error aggregates.
+ * @param {HTMLElement} container - Parent to receive period labels.
+ * @param {{from?: number, to?: number, granularity?: string}} data - Actual interval and optional week granularity.
+ * @param {import('./registry').WidgetContext} context - Supplies the weekly-aggregation label.
+ * @param {boolean} [compact=false] - Uses a short visible range and retains the full interval in the title.
+ * @returns {HTMLParagraphElement|undefined} The attached range label, or undefined when either bound is absent.
+ */
 function period(container, data, context, compact = false) {
     if (data.from == null || data.to == null) return;
     const full = `${date(data.from, false)} – ${date(data.to, false)}`;
@@ -182,7 +285,12 @@ function period(container, data, context, compact = false) {
     return label;
 }
 
-/** Uses compact localized dates without hiding a different calendar year. */
+/**
+ * Uses compact localized dates without hiding a different calendar year.
+ * @param {number} from - Start time in epoch milliseconds.
+ * @param {number} to - End time in epoch milliseconds.
+ * @returns {string} Localized date range, including years when it spans years or starts outside the current year.
+ */
 function shortPeriod(from, to) {
     const start = new Date(from), end = new Date(to);
     const locale = (window.userLng === 'cz' ? 'cs' : window.userLng) || 'sk';
@@ -190,13 +298,27 @@ function shortPeriod(from, to) {
     return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'numeric', ...(year ? { year: 'numeric' } : {}) }).formatRange(start, end);
 }
 
-/** Relative changes have an explicit unavailable state when the baseline is zero. */
+/**
+ * Relative changes have an explicit unavailable state when the baseline is zero.
+ * @param {number|string} current - Current count, converted to a number.
+ * @param {number|null|undefined} previous - Comparison count; zero and missing values have no relative change.
+ * @returns {string|null} Rounded percentage with a plus sign for positive changes, or null without a usable baseline.
+ */
 export function change(current, previous) {
     if (previous == null || previous === 0) return null;
     const delta = (Number(current) - previous) / previous * 100;
     return `${delta > 0 ? '+' : ''}${Math.round(delta)} %`;
 }
 
+/**
+ * Appends a linked total and an optional previous-period comparison with accessible labels.
+ * @param {HTMLElement} container - Parent to receive the summary.
+ * @param {{total: number, previous?: number}} data - Current total and optional comparison baseline.
+ * @param {import('./registry').WidgetContext} context - Supplies comparison and unavailable-state labels.
+ * @param {string} href - Local destination for the complete report.
+ * @param {string} [label] - Visible and accessible metric label.
+ * @param {string} [comparisonLabel] - Explicit period label; omission uses the generic previous-period text.
+ */
 function summary(container, data, context, href, label, comparisonLabel) {
     const group = node('div', 'md-dashboard-widget__metric');
     const main = node('div', 'md-dashboard-widget__metric-main');
@@ -222,20 +344,42 @@ function periodField(container, options, context, completed = true) {
     return field(container, text(context, 'period'), [7, 30, 90].map(days => [days, text(context, `${completed ? "days" : "formDays"}${days}`)]), options.days || 7);
 }
 
-/** Keeps an inaccessible saved selection visible instead of silently changing it. */
+/**
+ * Keeps an inaccessible saved selection visible instead of silently changing it.
+ * @param {HTMLElement} container - Parent to receive the select field.
+ * @param {string} label - Field label.
+ * @param {{id: string|number, title: string}[]} choices - Currently available form or campaign choices.
+ * @param {string|number|null|undefined} value - Saved selection, or an empty value for the all/latest option.
+ * @param {import('./registry').WidgetContext} context - Supplies placeholder and unavailable labels.
+ * @param {string} allKey - Dashboard translation suffix for the empty selection.
+ * @returns {HTMLSelectElement} The attached select, retaining an unavailable saved value as a choice.
+ */
 function selectionField(container, label, choices, value, context, allKey) {
     const values = [['', text(context, allKey)], ...choices.map(choice => [String(choice.id), choice.title])];
     if (value && !values.some(([id]) => id === String(value))) values.push([String(value), `${value} — ${text(context, 'unavailable')}`]);
     return field(container, label, values, value || '');
 }
 
+/**
+ * Builds a statistics period selector and an optional traffic-metric selector.
+ * @param {import('./registry').WidgetArguments} args - Configuration container, shared options and labels.
+ * @param {boolean} [metric=false] - Whether to include a sessions/views/unique-users choice.
+ * @returns {import('./registry').WidgetConfiguration} Reader that preserves unrelated shared options.
+ */
 function statSettings({ container, options, context }, metric = false) {
     const days = periodField(container, options, context);
     const selectedMetric = metric ? field(container, text(context, 'metric'), ['sessions', 'views', 'uniqueUsers'].map(value => [value, text(context, metricKey(value))]), options.metric || 'sessions') : null;
     return { read: () => ({ options: { ...options, days: Number(days.value), ...(selectedMetric ? { metric: selectedMetric.value } : {}) } }) };
 }
 
-/** Provides chart values as text, optionally hidden visually while remaining available to screen readers. */
+/**
+ * Provides chart values as text, optionally hidden visually while remaining available to screen readers.
+ * @param {HTMLElement} container - Parent to receive the data region.
+ * @param {import('./registry').WidgetContext} context - Supplies the data-table caption or disclosure label.
+ * @param {string[]} headers - Column labels.
+ * @param {unknown[][]} rows - Text values or DOM nodes accepted by the shared table helper.
+ * @param {boolean} [visuallyHidden=false] - Uses a visually hidden captioned table instead of a visible disclosure.
+ */
 function chartTable(container, context, headers, rows, visuallyHidden = false) {
     const region = node(visuallyHidden ? 'div' : 'details', `md-dashboard-widget__chart-data${visuallyHidden ? ' visually-hidden' : ''}`);
     if (!visuallyHidden) region.append(node('summary', 'small', text(context, 'chartData')));
@@ -244,7 +388,14 @@ function chartTable(container, context, headers, rows, visuallyHidden = false) {
     container.append(region);
 }
 
-/** Compares equal-length periods while retaining their actual dates in tooltips and the text table. */
+/**
+ * Compares equal-length periods while retaining their actual dates in tooltips and the text table.
+ * @param {HTMLElement} container - Parent to receive the traffic chart and its text equivalent.
+ * @param {TrafficData} data - Current and previous samples; comparison points align by index.
+ * @param {import('./registry').WidgetContext} context - Supplies metric and period labels.
+ * @param {AbortSignal} signal - Chart render lifetime.
+ * @returns {Promise<(function(): void)|undefined>} Chart cleanup, or undefined when there are no current samples or chart creation is skipped.
+ */
 async function lineChart(container, data, context, signal) {
     const series = data.series || [];
     if (!series.length) { empty(container, context); return; }
@@ -283,6 +434,17 @@ async function lineChart(container, data, context, signal) {
     });
 }
 
+/**
+ * Renders a bounded ranking as a table or a referrer percentage chart with a text equivalent.
+ * @param {HTMLElement} container - Parent to receive the ranking.
+ * @param {RankingData} data - Ranked rows and optional summary.
+ * @param {import('./registry').WidgetContext} context - Supplies headings and empty-state text.
+ * @param {string} type - Widget type selecting page, search, error or referrer presentation.
+ * @param {boolean} detailed - Selects a six-row default instead of five rows.
+ * @param {AbortSignal} signal - Render lifetime for the optional chart.
+ * @param {number} [limit] - Maximum rows; defaults to six when detailed and five otherwise.
+ * @returns {Promise<(function(): void)|undefined>} Referrer-chart cleanup, or undefined for tables, empty results or skipped chart creation.
+ */
 async function rankedList(container, data, context, type, detailed, signal, limit = detailed ? 6 : 5) {
     const items = (data.items || []).slice(0, limit);
     if (!items.length) { empty(container, context); return; }
@@ -308,7 +470,14 @@ async function rankedList(container, data, context, type, detailed, signal, limi
     } else table(container, [text(context, type === 'search-terms' ? 'query' : type === 'referrers' ? 'source' : 'page'), text(context, 'count')], items.map(item => [link(item.title, item.url), number(item.value)]), [1]).classList.add('md-dashboard-widget__table--ranked');
 }
 
-/** Polls only an active newsletter visible in the current browser tab. */
+/**
+ * Polls only an active newsletter visible in the current browser tab.
+ * @param {{active: boolean}} data - Whether the selected campaign is currently sending.
+ * @param {HTMLElement} container - Card observed for viewport visibility.
+ * @param {AbortSignal} signal - Prevents refresh calls once the render is aborted.
+ * @param {function(): Promise<void>} refresh - Invoked every thirty seconds while visible; its return value is ignored.
+ * @returns {(function(): void)|undefined} Observer and timer cleanup for the renderer to return, or undefined for an inactive campaign.
+ */
 function pollNewsletter(data, container, signal, refresh) {
     if (!data.active) return;
     let visible = false;
@@ -318,7 +487,11 @@ function pollNewsletter(data, container, signal, refresh) {
     return () => { observer.disconnect(); window.clearInterval(timer); };
 }
 
-/** Combines the existing page and folder approval queues into a six-item preview. */
+/**
+ * Combines the existing page and folder approval queues into a six-item preview.
+ * @param {AbortSignal} signal - Cancels both module requests.
+ * @returns {Promise<{total: number, items: {title: string, icon: string, section: string, date: number, url: string}[]}>} Combined queue count and the newest requests with their approval destinations.
+ */
 async function fetchApprovals(signal) {
     const query = '?size=6&page=0&sort=saveDate,desc';
     const [pages, groups] = await Promise.all([

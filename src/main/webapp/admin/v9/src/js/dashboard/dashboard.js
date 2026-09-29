@@ -27,7 +27,15 @@ function dispose(result) {
     else result?.destroy?.();
 }
 
-/** Creates an environment label with automatic identity styling or explicit icon and color overrides. */
+/**
+ * Creates an environment label with automatic identity styling or explicit icon and color overrides.
+ * @param {Object} [config={}] - Environment-label configuration.
+ * @param {string} [config.environmentName='DEV'] - Display name; whitespace and trailing slashes are removed.
+ * @param {string} [config.environmentType] - Fallback PROD, UAT, INT or DEV identity when the name has no recognized prefix.
+ * @param {string} [config.environmentIcon] - Optional validated Tabler icon override.
+ * @param {string} [config.environmentColor] - Optional three- or six-digit hexadecimal background color.
+ * @returns {HTMLSpanElement|null} A badge with a contrast-based text color, or null for an empty name.
+ */
 function environmentBadge(config = {}) {
     const name = String(config.environmentName ?? "DEV").trim().replace(/\/+$/, "").trim();
     if (!name) return null;
@@ -55,10 +63,49 @@ function environmentBadge(config = {}) {
 }
 
 /**
+ * Bootstrap context before the controller adds widget-specific services.
+ * @typedef {Omit<import('./registry').WidgetContext, 'dashboard'|'settings'>} DashboardContext
+ */
+
+/**
+ * DOM and resource state retained for one displayed widget instance.
+ * @typedef {Object} DashboardView
+ * @property {HTMLElement} card - Widget section observed for visibility and drag actions.
+ * @property {HTMLElement} header - Title and arrangement controls.
+ * @property {HTMLElement} title - Accessible heading.
+ * @property {HTMLElement} titleText - Text span inside the heading.
+ * @property {HTMLElement} body - Container replaced during refresh.
+ * @property {import('./model').WidgetInstance} instance - Current effective instance.
+ * @property {AbortController|null} abort - Controller for the current render.
+ * @property {import('./registry').WidgetCleanup|null} cleanup - Resources returned by the current renderer.
+ * @property {string|null} signature - Serialized inputs used to detect a required refresh.
+ * @property {(function(): void)|null} [onVisible] - Pending viewport-entry completion callback.
+ */
+
+/**
+ * Shared modal API with abort and resource cleanup tied to its lifetime.
+ * @typedef {Object} DashboardDialog
+ * @property {HTMLDivElement} root - Modal root attached to the document body.
+ * @property {HTMLDivElement} body - Container for dialog controls.
+ * @property {HTMLDivElement} footer - Container for dialog actions.
+ * @property {AbortSignal} signal - Aborted when the dialog is destroyed or finishes closing.
+ * @property {function(): void} close - Requests a close after any opening transition.
+ * @property {function(): void} destroy - Immediately releases resources and restores focus to the trigger when connected.
+ * @property {function(import('./registry').WidgetCleanup|import('./registry').WidgetConfiguration): void} setCleanup - Replaces the resource callback or object disposed when the dialog closes.
+ */
+
+/**
  * Owns dashboard layout, accessible controls, server persistence and widget
  * lifecycles. It never replaces the surrounding system alerts or overview.
+ * Layout updates emit webjet-dashboard-rendered on the host; the event bubbles,
+ * is not cancelable and has no detail payload. Widget data may still be loading.
  */
 export class DashboardController {
+    /**
+     * Builds the dashboard shell in the supplied host and prepares lazy widget rendering.
+     * @param {HTMLElement} host - Dashboard-owned element whose children are replaced during construction.
+     * @param {Partial<DashboardContext>} [context={}] - Initial page context; supply bootstrap data before calling start.
+     */
     constructor(host, context = {}) {
         this.host = host;
         this.context = context;
@@ -81,6 +128,13 @@ export class DashboardController {
         this._build();
     }
 
+    /**
+     * Resolves a full translation key or dashboard suffix, using fallback text for missing translations.
+     * @param {string} key - Full key when it contains a dot, otherwise a dashboard key suffix.
+     * @param {string} [fallback=key] - Text used when neither translator produces a translated value.
+     * @param {...(string|number)} params - Substitutions forwarded to the selected translator.
+     * @returns {string} Translated or fallback text.
+     */
     _t(key, fallback = key, ...params) {
         const fullKey = key.includes(".") ? key : `admin.dashboard.${key}.js`;
         const translated = this.context.translate?.(fullKey, ...params) ?? window.WJ?.translate?.(fullKey, ...params);
@@ -91,6 +145,7 @@ export class DashboardController {
         return this.editingShortcuts ? this.shortcutStatus : this.overviewStatus;
     }
 
+    /** Builds the welcome, fixed-widget and grid regions, replacing host content and initially disabling preference controls. */
     _build() {
         this.host.classList.add("md-dashboard");
         this.hero = node("div", "md-dashboard__hero");
@@ -169,7 +224,11 @@ export class DashboardController {
         this._setBusy(true);
     }
 
-    /** Reveals arrangement controls without changing or saving widget preferences. */
+    /**
+     * Reveals arrangement controls without changing or saving widget preferences.
+     * Entering overview edit mode exits shortcut edit mode.
+     * @param {boolean} editing - Whether overview arrangement controls should be visible.
+     */
     setEditing(editing) {
         if (editing && this.editingShortcuts) this.setEditingShortcuts(false);
         this.editing = Boolean(editing);
@@ -182,7 +241,11 @@ export class DashboardController {
         this._updateEditing();
     }
 
-    /** Shortcuts own their edit mode independently of the overview widgets. */
+    /**
+     * Shortcuts own their edit mode independently of the overview widgets.
+     * Entering shortcut edit mode exits overview edit mode.
+     * @param {boolean} editing - Whether shortcut arrangement controls should be visible.
+     */
     setEditingShortcuts(editing) {
         if (editing && this.editing) this.setEditing(false);
         this.editingShortcuts = Boolean(editing);
@@ -212,7 +275,10 @@ export class DashboardController {
         return ["sessions", "news", "search"].includes(instance.type) ? instance.type : instance.type === "shortcut" ? "shortcut" : "grid";
     }
 
-    /** Keeps fixed utilities visible without rewriting saved instances or their preferences. */
+    /**
+     * Keeps fixed utilities visible without rewriting saved instances or their preferences.
+     * @returns {import('./model').WidgetInstance[]} Available instances, including transient fixed utilities and only visible grid widgets.
+     */
     _displayItems() {
         const items = [...this.settings.items];
         for (const type of ["sessions", "news", "search"]) {
@@ -225,7 +291,11 @@ export class DashboardController {
         });
     }
 
-    /** Renders the current account's layout and active-domain filters supplied by the page. */
+    /**
+     * Renders the current account's layout and active-domain filters supplied by the page.
+     * Applies defaults for an unconfigured profile, ensures mandatory types and attempts legacy bookmark import.
+     * @returns {Promise<void>} Resolves after bookmark import finishes; individual widget renders may still be pending.
+     */
     async start() {
         this._request?.abort();
         this.settings = normalizeSettings(this.context.data.settings);
@@ -240,10 +310,17 @@ export class DashboardController {
         await this.importLegacyBookmarks();
     }
 
+    /**
+     * Creates an instance with a fresh ID, the selected size and copied shared defaults.
+     * @param {import('./registry').WidgetDefinition} definition - Registered widget with resolved defaults.
+     * @param {Partial<import('./model').WidgetInstance>} [values={}] - Size and shared-option overrides; identity and type are generated from the definition.
+     * @returns {import('./model').WidgetInstance} A new instance without domain options or persistence side effects.
+     */
     _newInstance(definition, values = {}) {
         return { id: createInstanceId(), type: definition.type, size: values.size || definition.defaultSize, options: { ...cloneSettings(definition.defaultOptions), ...values.options } };
     }
 
+    /** Adds available configured presets up to the instance limit, preserving configured shortcuts and singleton instances. */
     _addDefaults() {
         for (const preset of this.context.config?.dashboardDefaults || []) {
             if (preset.type === "shortcut" && this.settings.shortcutsConfigured) continue;
@@ -292,6 +369,10 @@ export class DashboardController {
     /**
      * Saves before applying a change, keeping the last confirmed layout on failure.
      * Widget content and security actions stay usable while preferences are saved.
+     *
+     * @param {import('./model').DashboardSettings} next - Complete proposed layout and current-domain options.
+     * @param {HTMLElement} [status=this.status] - Region receiving progress and persistence errors.
+     * @returns {Promise<boolean>} True after applying the server response; false for a blocked, invalid, aborted or failed save.
      */
     async _commit(next, status = this.status) {
         if (this.saving || this.destroyed || this.host.dataset.loaded !== "true") return false;
@@ -335,6 +416,10 @@ export class DashboardController {
         this.host.querySelectorAll(".md-dashboard__control").forEach(control => { control.disabled = busy; });
     }
 
+    /**
+     * Reconciles displayed instances, reuses matching views and refreshes changed inputs while preserving focus.
+     * Dispatches a bubbling, noncancelable webjet-dashboard-rendered event without detail on the host.
+     */
     _render() {
         const visible = this._displayItems();
         const ids = new Set(visible.map(item => item.id));
@@ -400,6 +485,11 @@ export class DashboardController {
         this.host.dispatchEvent(new CustomEvent("webjet-dashboard-rendered", { bubbles: true }));
     }
 
+    /**
+     * Builds an accessible widget shell and binds its navigation and preference actions.
+     * @param {import('./model').WidgetInstance} instance - Available instance with a registered definition.
+     * @returns {DashboardView} A detached view whose content has not yet been rendered.
+     */
     _createView(instance) {
         const definition = getWidget(instance.type);
         const card = node("section", "md-dashboard__widget");
@@ -466,6 +556,10 @@ export class DashboardController {
         return this.settings.items.find(item => item.id === id);
     }
 
+    /**
+     * Aborts a view's render and releases renderer, dropdown and drag resources without removing its DOM.
+     * @param {DashboardView} view - View being removed, replaced or reused with a new context.
+     */
     _disposeView(view) {
         view.abort?.abort();
         if (view.cleanup) {
@@ -478,7 +572,12 @@ export class DashboardController {
         if ($?.fn.droppable && $(view.card).data("ui-droppable")) $(view.card).droppable("destroy");
     }
 
-    /** Waits for a grid card to enter the viewport, releasing the observer on entry or abort. */
+    /**
+     * Waits for a grid card to enter the viewport, releasing the observer on entry or abort.
+     * @param {DashboardView} view - Card to observe with the controller's existing IntersectionObserver.
+     * @param {AbortSignal} signal - Active render signal that also resolves the wait on abort.
+     * @returns {Promise<void>} Resolves on viewport entry or abort; callers must check the signal before rendering.
+     */
     _waitForVisibility(view, signal) {
         return new Promise(resolve => {
             const finish = () => {
@@ -493,7 +592,13 @@ export class DashboardController {
         });
     }
 
-    /** Refreshes one widget and disposes stale results even when a request ignores abort. */
+    /**
+     * Refreshes one widget and disposes stale results even when a request ignores abort.
+     * Grid renders wait for viewport entry; fixed utilities render immediately. Failures are displayed with retry controls.
+     *
+     * @param {string} id - Displayed instance ID, including transient fixed-widget IDs.
+     * @returns {Promise<void>} Resolves after rendering, cancellation or handled failure, or immediately if the view is absent.
+     */
     async refresh(id) {
         const view = this.views.get(id);
         if (!view || this.destroyed) return;
@@ -536,6 +641,11 @@ export class DashboardController {
         }
     }
 
+    /**
+     * Persists a new instance with registered shared and domain defaults, then focuses it.
+     * @param {string} type - Registered widget type to add.
+     * @returns {Promise<boolean>} Whether the instance was saved; false for unavailable types, duplicate singletons or failed saves.
+     */
     async add(type) {
         const definition = getWidget(type);
         if (!definition || !this._available(definition)) return false;
@@ -549,7 +659,12 @@ export class DashboardController {
         return saved;
     }
 
-    /** Persists shared options and filters for only the server's active domain. */
+    /**
+     * Persists shared options and filters for only the server's active domain.
+     * @param {string} id - Persisted instance to update.
+     * @param {import('./registry').WidgetOptionsUpdate} [values={}] - Replacement maps; omitted maps retain their previous values.
+     * @returns {Promise<boolean>} Whether persistence succeeded, or false when the instance does not exist.
+     */
     async saveOptions(id, { options, domainOptions } = {}) {
         const next = cloneSettings(this.settings);
         const item = next.items.find(instance => instance.id === id);
@@ -559,6 +674,11 @@ export class DashboardController {
         return this._commit(next);
     }
 
+    /**
+     * Persists removal of an optional grid widget or shortcut and exposes one-step undo with its domain options.
+     * @param {string} id - Instance to remove; mandatory widgets and fixed utilities cannot be removed.
+     * @returns {Promise<boolean>} Whether removal was saved and the undo action received focus.
+     */
     async remove(id) {
         const instance = this._instance(id);
         if (!instance || getWidget(instance.type)?.mandatory || ["sessions", "news", "search"].includes(this._region(instance))) return false;
@@ -576,6 +696,10 @@ export class DashboardController {
         return true;
     }
 
+    /**
+     * Restores the most recently removed instance and its active-domain options at its previous position.
+     * @returns {Promise<boolean>} Whether restoration was saved; false when no undo exists, it conflicts with current instances or saving fails.
+     */
     async undoRemove() {
         if (!this.removed) return false;
         const removed = this.removed;
@@ -592,6 +716,12 @@ export class DashboardController {
         return true;
     }
 
+    /**
+     * Persists a new order within the grid or shortcut region and focuses the moved instance.
+     * @param {string} id - Grid widget or shortcut to move.
+     * @param {string|null} [beforeId=null] - Instance in the same region, or null to move to the end.
+     * @returns {Promise<boolean>} Whether the resulting order was saved; false for unsupported moves or persistence failure.
+     */
     async moveBefore(id, beforeId = null) {
         const instance = this._instance(id);
         if (!instance || !["grid", "shortcut"].includes(this._region(instance))) return false;
@@ -608,13 +738,21 @@ export class DashboardController {
         (view && this._isEditing(view.instance) ? view.header.querySelector("button") : view?.card)?.focus({ preventScroll: true });
     }
 
+    /**
+     * Persists the release version whose announcement should be collapsed.
+     * @param {string|null} version - Release version to acknowledge, or null to expand the announcement.
+     * @returns {Promise<boolean>} Whether the acknowledgement was saved and applied.
+     */
     async acknowledgeNews(version) {
         const next = cloneSettings(this.settings);
         next.acknowledgedNewsVersion = version;
         return this._commit(next);
     }
 
-    /** Replaces only shortcuts; widgets, filters and read news retain their stored values. */
+    /**
+     * Replaces only shortcuts; widgets, filters and read news retain their stored values.
+     * @returns {Promise<boolean>} Whether available default shortcuts replaced the saved shortcut list successfully.
+     */
     async resetShortcuts() {
         const next = cloneSettings(this.settings);
         for (const item of next.items.filter(item => item.type === "shortcut")) delete next.domainOptions[item.id];
@@ -627,6 +765,7 @@ export class DashboardController {
         return this._commit(next);
     }
 
+    /** Opens a confirmation that restores default shortcuts only after the user accepts it. */
     showResetShortcuts() {
         this.resetShortcutsButton.focus({ preventScroll: true });
         window.WJ.confirm({
@@ -637,7 +776,11 @@ export class DashboardController {
         });
     }
 
-    /** Reads legacy URL bookmarks, retaining the exact source until persistence succeeds. */
+    /**
+     * Reads legacy URL bookmarks, retaining the exact source until persistence succeeds.
+     * Safe destinations are deduplicated; invalid entries are counted so import can reject the entire source.
+     * @returns {{items: {source: string, href: string, title: string}[], invalid: number, raw: string|null}} Parsed shortcuts, invalid-entry count and unchanged storage text; missing or inaccessible storage produces an empty result.
+     */
     _legacyBookmarks() {
         const result = { items: [], invalid: 0, raw: null };
         try { result.raw = window.localStorage.getItem("bookmarks"); }
@@ -660,7 +803,11 @@ export class DashboardController {
         return result;
     }
 
-    /** Replaces shortcuts once on load, removing the legacy source only after a successful save. */
+    /**
+     * Replaces shortcuts once on load, removing the legacy source only after a successful save.
+     * The raw storage value is removed only if it has not changed during persistence.
+     * @returns {Promise<boolean>} True for successful import or when none is needed; false for invalid data or a failed save.
+     */
     async importLegacyBookmarks() {
         if (this.settings.legacyBookmarksHandled) return true;
         const legacy = this._legacyBookmarks();
@@ -685,7 +832,14 @@ export class DashboardController {
         return saved;
     }
 
-    /** Resets widget preferences atomically, optionally saving every available size variant. */
+    /**
+     * Resets widget preferences atomically, optionally saving every available size variant.
+     * The server preserves shortcuts while clearing old domain filters and news acknowledgement.
+     * A normal reset displays configured defaults without saving them as a personal layout.
+     *
+     * @param {boolean} [allSizes=false] - Persists all available size variants instead of applying normal defaults.
+     * @returns {Promise<boolean>} Whether the reset response was applied; false for busy, destroyed, oversized, aborted or failed operations.
+     */
     async reset(allSizes = false) {
         if (this.saving || this.destroyed) return false;
         let variants;
@@ -736,6 +890,12 @@ export class DashboardController {
         }
     }
 
+    /**
+     * Opens a modal with focus restoration, an abort signal and cleanup of controls and owned resources.
+     * @param {string} title - Visible and accessible dialog title.
+     * @param {HTMLElement|null} [trigger=document.activeElement] - Element to refocus after closing if still connected.
+     * @returns {DashboardDialog} Attached dialog containers and lifecycle controls.
+     */
     _dialog(title, trigger = document.activeElement) {
         const root = node("div", "modal fade md-dashboard-modal");
         root.tabIndex = -1;
@@ -814,12 +974,19 @@ export class DashboardController {
         return api;
     }
 
-    /** Opens an accessible widget dialog with the dashboard's cleanup lifecycle. */
+    /**
+     * Opens an accessible widget dialog with the dashboard's cleanup lifecycle.
+     * @param {string} title - Visible and accessible dialog title.
+     * @returns {DashboardDialog} Containers, abort signal and controls for closing and registering cleanup.
+     */
     showDialog(title) {
         return this._dialog(title);
     }
 
-    /** Confirms the full reset scope before invoking the shared atomic preference reset. */
+    /**
+     * Confirms the full reset scope before invoking the shared atomic preference reset.
+     * @param {boolean} [allSizes=false] - Whether acceptance should install every available size variant.
+     */
     showReset(allSizes = false) {
         window.jQuery?.(this.resetButton).off(".wjFocusWithoutTooltip");
         const tooltip = window.bootstrap?.Tooltip?.getInstance(this.resetButton);
@@ -835,6 +1002,7 @@ export class DashboardController {
         });
     }
 
+    /** Opens a searchable catalogue of available grid widgets, excluding existing singletons unless they can be revealed. */
     showCatalogue() {
         const dialog = this._dialog(this._t("add", "Add widget"));
         const search = node("input", "form-control mb-3");
@@ -882,6 +1050,10 @@ export class DashboardController {
         dialog.root.addEventListener("shown.bs.modal", () => search.focus(), { once: true });
     }
 
+    /**
+     * Opens a keyboard-accessible position selector limited to visible instances in the same region.
+     * @param {string} id - Instance to move; unknown IDs are ignored.
+     */
     showMove(id) {
         const instance = this._instance(id);
         if (!instance) return;
@@ -915,7 +1087,11 @@ export class DashboardController {
         return this._showSettings(instance);
     }
 
-    /** Configures a new instance before its first atomic save. Cancelling adds nothing. */
+    /**
+     * Configures a new instance before its first atomic save. Cancelling adds nothing.
+     * @param {string} type - Available registered widget type that does not violate capacity or singleton rules.
+     * @returns {Promise<void>} Resolves once dialog configuration finishes, not when the user saves or cancels.
+     */
     async showAddWidget(type) {
         const definition = getWidget(type);
         if (!definition || !this._available(definition) || this.settings.items.length >= MAX_WIDGETS) {
@@ -926,6 +1102,14 @@ export class DashboardController {
         return this._showSettings(this._newInstance(definition), true);
     }
 
+    /**
+     * Opens size and widget-specific settings, reading and persisting them only when the user saves.
+     * Handles asynchronous configuration failure and disposes configuration that completes after the dialog closes.
+     *
+     * @param {import('./model').WidgetInstance} instance - Existing instance or new unsaved instance.
+     * @param {boolean} [adding=false] - Whether the first successful save must insert the instance.
+     * @returns {Promise<void>} Resolves after initializing configuration controls; user interaction continues independently.
+     */
     async _showSettings(instance, adding = false) {
         const id = instance.id;
         const definition = getWidget(instance.type);
@@ -993,6 +1177,7 @@ export class DashboardController {
         if (!dialog.signal.aborted) window.WJ.initSelectPicker?.(dialog.body);
     }
 
+    /** Synchronizes drag controls with edit modes and restricts drop targets to the source instance's region when jQuery UI is available. */
     _bindDrag() {
         const $ = window.jQuery;
         if (!$?.fn.draggable || !$.fn.droppable) return;
@@ -1032,7 +1217,13 @@ export class DashboardController {
         }
     }
 
-    /** Applies supplied active-domain options without replacing the overview's security UI. */
+    /**
+     * Applies supplied active-domain options without replacing the overview's security UI.
+     * Disposes active renders and dialogs, clears removal undo and restarts from the new bootstrap data.
+     *
+     * @param {DashboardContext} context - Complete replacement page context, including active-domain settings.
+     * @returns {Promise<void>} Resolves after restarting and attempting legacy bookmark import.
+     */
     async setContext(context) {
         this.context = context;
         this._contextVersion++;
@@ -1044,6 +1235,7 @@ export class DashboardController {
         await this.start();
     }
 
+    /** Stops persistence and rendering work, closes dialogs and releases observers and UI resources without removing the host content. */
     destroy() {
         this.destroyed = true;
         window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.dispose();

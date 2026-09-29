@@ -4,7 +4,24 @@ import { registerDataWidgets } from './data-widgets';
 import { registerSystemWidgets } from './system-widgets';
 import { node, text, localUrl, shortcutUrl, link, icon, field, empty, date, containNativeScroll, pagePreview, fetchJson } from './widget-utils';
 
-/** Flattens authorized navigation while retaining distinct submenu destinations. */
+/**
+ * A same-origin destination from the authorized administration menu.
+ * @typedef {Object} MenuEntry
+ * @property {string} href - Normalized destination URL.
+ * @property {string} title - Menu label.
+ * @property {string} [icon] - Own icon or the nearest inherited menu icon.
+ */
+
+/**
+ * Flattens authorized navigation while retaining distinct submenu destinations.
+ * Duplicate destinations use the last visited entry; placeholder roots and unsafe URLs are omitted.
+ *
+ * @param {Object} context - Menu bootstrap data.
+ * @param {Object} context.data - Data containing the authorized navigation tree.
+ * @param {Object[]} [context.data.dashboardMenu] - Root menu entries, with children in children or childrens.
+ * @param {string} [inheritedIcon] - Fallback icon for roots without their own icon.
+ * @returns {MenuEntry[]} Unique destinations in traversal insertion order.
+ */
 export function menuEntries(context, inheritedIcon) {
     const entries = new Map();
     const visit = (items, inheritedIcon) => (items || []).forEach(item => {
@@ -19,7 +36,11 @@ export function menuEntries(context, inheritedIcon) {
     return [...entries.values()];
 }
 
-/** Groups safe destinations by the same main areas and sections as the authorized sidebar. */
+/**
+ * Groups safe destinations by the same main areas and sections as the authorized sidebar.
+ * @param {import('./registry').WidgetContext} context - Context containing the authorized menu tree.
+ * @returns {{title: string, sections: {title: string, entries: MenuEntry[]}[]}[]} Nonempty groups for cascading shortcut selectors.
+ */
 function shortcutMenuGroups(context) {
     return (context.data.dashboardMenu || []).map(root => {
         const children = root.childrens || root.children || [];
@@ -40,7 +61,11 @@ function shortcutBackground(value) {
     return `var(--wj-dashboard-${(SHORTCUT_COLORS.find(([name]) => name === value) || SHORTCUT_COLORS[0])[1]})`;
 }
 
-/** Accepts a Tabler name or a single prefixed class, never arbitrary class lists. */
+/**
+ * Accepts a Tabler name or a single prefixed class, never arbitrary class lists.
+ * @param {string} value - User-entered icon name, trimmed before validation.
+ * @returns {string|null} A normalized ti-prefixed class, an empty string for inheritance, or null for invalid input.
+ */
 function shortcutIcon(value) {
     const name = value.trim();
     if (!name) return '';
@@ -48,7 +73,13 @@ function shortcutIcon(value) {
     return normalized.length <= 80 && /^ti-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalized) ? normalized : null;
 }
 
-/** Arranges a traffic overview, compact metrics and content previews for new or reset profiles. */
+/**
+ * Arranges a traffic overview, compact metrics and content previews for new or reset profiles.
+ * Filters registered types by availability and creates shortcuts only for authorized menu destinations.
+ *
+ * @param {Object} context - Page context with data, labels and config passed to availability callbacks.
+ * @returns {{type: string, size?: string, options?: Object}[]} Ordered presets without instance IDs, ready for controller defaults.
+ */
 export function getDashboardDefaults(context) {
     const items = [
         { type: "search" },
@@ -68,14 +99,25 @@ export function getDashboardDefaults(context) {
     });
 }
 
-/** Loads the same recent-page list as the Web pages module. */
+/**
+ * Loads the same recent-page list as the Web pages module.
+ * @param {import('./registry').WidgetContext} context - Supplies the recent-pages group ID in config.
+ * @param {AbortSignal} signal - Render lifetime for the module request.
+ * @returns {Promise<Object[]>} Up to six page records ordered by descending creation date.
+ */
 async function recentPages(context, signal) {
     const params = new URLSearchParams({ groupId: context.config.recentPagesGroupId, size: 6, page: 0, sort: 'dateCreated,desc' });
     const data = await fetchJson(`/admin/rest/web-pages/all?${params}`, signal);
     return data.content;
 }
 
-/** Keeps all preview rows accessible when a compact card needs native scrolling. */
+/**
+ * Keeps all preview rows accessible when a compact card needs native scrolling.
+ * @param {HTMLElement} container - Parent to receive the recent-page list.
+ * @param {Object[]} pages - Page records with docId, title, fullPath, perexImage and dateCreated.
+ * @param {import('./registry').WidgetContext} context - Supplies list labels.
+ * @param {AbortSignal} signal - Removes scroll containment listeners when the render ends.
+ */
 function recentPagesList(container, pages, context, signal) {
     const list = node('ul', 'md-dashboard-widget__pages');
     list.tabIndex = 0;
@@ -112,6 +154,11 @@ export function registerDashboardWidgets() {
             (container.closest('.md-dashboard__widget') || target).style.setProperty('--wj-dashboard-shortcut-bg', shortcutBackground(options.color));
             container.append(target);
         },
+        /**
+         * Builds cascading menu selectors and custom-URL controls with icon and color previews.
+         * @param {import('./registry').WidgetArguments} args - Dialog container, shared options and current menu context.
+         * @returns {import('./registry').WidgetConfiguration} Reader that validates the destination, custom title and icon before returning shared options.
+         */
         configure({ container, options, context }) {
             const groups = shortcutMenuGroups(context);
             const source = field(container, text(context, 'shortcutSource'), [['menu', text(context, 'shortcutSourceMenu')], ['url', text(context, 'shortcutSourceUrl')]], options.source === 'url' || !groups.length ? 'url' : 'menu');

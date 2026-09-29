@@ -2,7 +2,18 @@ import { node } from './widget-utils';
 
 let dashboardChartSequence = 0;
 
-/** Gives each render its own root, including concurrent renders of the same widget. */
+/**
+ * Forms supported by the dashboard's shared XY chart styling.
+ * @typedef {import('../libs/chart/chart-tools').LineChartForm|import('../libs/chart/chart-tools').BarChartForm} DashboardChartForm
+ */
+
+/**
+ * Gives each render its own root, including concurrent renders of the same widget.
+ * @param {HTMLElement} container - Parent to which the chart host is appended.
+ * @param {string} label - Accessible description of the chart.
+ * @param {boolean} [bars=false] - Whether to apply the bar-chart footprint.
+ * @returns {HTMLDivElement} An attached chart host with a unique ID and an image role.
+ */
 export function chartHost(container, label, bars = false) {
     const host = node('div', `md-dashboard-widget__chart${bars ? ' md-dashboard-widget__chart--bars' : ''}`);
     host.id = `dashboard-chart-${++dashboardChartSequence}`;
@@ -12,7 +23,13 @@ export function chartHost(container, label, bars = false) {
     return host;
 }
 
-/** Keeps preview charts compact; the module link provides the full interactive report. */
+/**
+ * Keeps preview charts compact; the module link provides the full interactive report.
+ * Applies host color tokens, removes report controls and configures traffic, monitoring or referrer variants.
+ *
+ * @param {DashboardChartForm} form - Initialized form whose chart is updated in place.
+ * @param {HTMLElement} host - Host supplying variant classes and CSS color tokens.
+ */
 function compactChart(form, host) {
     const chart = form.chart;
     const traffic = host.classList.contains('md-dashboard-widget__chart--traffic');
@@ -143,7 +160,16 @@ function compactChart(form, host) {
     chart.appear(0, 0);
 }
 
-/** Loads the shared chart bundle and disposes roots on abort, replacement, failure, or stale completion. */
+/**
+ * Loads the shared chart bundle and disposes roots on abort, replacement, failure, or stale completion.
+ * The renderer should return the resolved cleanup function to its owner; creation failures reject the promise.
+ *
+ * @param {HTMLElement} host - Connected host with a unique chart ID.
+ * @param {AbortSignal} signal - Render lifetime; aborting disposes any created chart.
+ * @param {function(typeof import('../libs/chart/chart-tools'), string): DashboardChartForm} createForm - Creates a form from the loaded tools and host ID after the bundle is ready.
+ * @param {function(DashboardChartForm): void} [customize] - Synchronously customizes a live chart after shared styling; its return value is ignored.
+ * @returns {Promise<(function(): void)|undefined>} Idempotent cleanup, or undefined if rendering is skipped before form creation.
+ */
 export async function mountChart(host, signal, createForm, customize) {
     await window.initAmcharts();
     if (signal.aborted || !host.isConnected) return;

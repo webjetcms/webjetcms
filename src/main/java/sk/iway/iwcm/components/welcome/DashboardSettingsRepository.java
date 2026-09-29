@@ -14,7 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import sk.iway.iwcm.DBPool;
 
-/** Stores bounded dashboard records in the existing administration settings table. */
+/** Persists dashboard records in the administration settings table with account-level locking for writes. */
 @Repository
 public class DashboardSettingsRepository {
     static final String PREFIX = "overview.";
@@ -23,13 +23,27 @@ public class DashboardSettingsRepository {
     static final String WIDGET_PREFIX = PREFIX + "widget.";
     static final String DOMAIN_PREFIX = PREFIX + "domain.";
 
+    /** Supplies database connections that callers close after each dashboard operation. */
     @FunctionalInterface
     interface ConnectionFactory {
+        /**
+         * Opens a connection for a dashboard database operation.
+         *
+         * @return connection owned by the caller
+         * @throws SQLException if a connection cannot be obtained
+         */
         Connection open() throws SQLException;
     }
 
+    /** Applies a settings mutation within an account lock and a repository-managed transaction. */
     @FunctionalInterface
     private interface SettingsWrite {
+        /**
+         * Performs the mutation using the current transaction.
+         *
+         * @param connection connection whose transaction is committed or rolled back by the repository
+         * @throws SQLException if the database mutation fails
+         */
         void execute(Connection connection) throws SQLException;
     }
 
@@ -43,7 +57,14 @@ public class DashboardSettingsRepository {
         this.connections = connections;
     }
 
-    /** Reads from the database rather than the cached user or session settings. */
+    /**
+     * Reads all dashboard records for an account directly from the database.
+     * On SQL Server, the read takes the account lock in a transaction to coordinate with writes.
+     *
+     * @param userId ID of the account that owns the settings
+     * @return stored dashboard values keyed by administration settings keys, including options for all domains
+     * @throws IllegalStateException if the database read fails
+     */
     public Map<String, String> read(int userId) {
         try (Connection connection = connections.open()) {
             String product = connection.getMetaData().getDatabaseProductName().toLowerCase(java.util.Locale.ROOT);
@@ -68,7 +89,14 @@ public class DashboardSettingsRepository {
 
     /**
      * Replaces the global layout and current-domain options in one transaction.
-     * Other domains retain existing instances and one write of removed instances for immediate undo.
+     * Other domains retain options for current instances and instances from the previous layout,
+     * allowing an immediately removed widget to be restored by undo.
+     *
+     * @param userId ID of the account that owns the settings
+     * @param domainKey decimal root group ID selecting the domain options to replace
+     * @param records validated records to insert after removing the superseded settings
+     * @param instanceIds widget instance IDs present in the replacement layout
+     * @throws IllegalStateException if the database mutation fails
      */
     public void replace(int userId, String domainKey, Map<String, String> records, Set<String> instanceIds) {
         write(userId, connection -> {
@@ -91,7 +119,15 @@ public class DashboardSettingsRepository {
         });
     }
 
-    /** Atomically resets dashboard records, retaining records selected from the locked account snapshot. */
+    /**
+     * Atomically replaces layout, widget, news and domain records using a locked account snapshot.
+     * The callback computes the replacement records before any existing records are removed.
+     *
+     * @param userId ID of the account whose settings are reset
+     * @param retain callback that builds replacement records from the account's current dashboard records
+     * @return replacement records persisted by the transaction
+     * @throws IllegalStateException if the database mutation fails
+     */
     public Map<String, String> reset(int userId, Function<Map<String, String>, Map<String, String>> retain) {
         Map<String, String> retained = new LinkedHashMap<>();
         write(userId, connection -> {
@@ -109,7 +145,15 @@ public class DashboardSettingsRepository {
         return retained;
     }
 
-    /** Serializes saves and resets for one account and rolls back every failed mutation. */
+    /**
+     * Serializes account mutations and commits them in a transaction, rolling back on failure.
+     * MySQL and MariaDB require InnoDB settings storage and use an advisory lock; other databases
+     * lock the owner's user row. The original auto-commit mode is restored before closing the connection.
+     *
+     * @param userId ID of the account to lock
+     * @param mutation settings changes to apply while holding the account lock
+     * @throws IllegalStateException if a database operation fails
+     */
     private void write(int userId, SettingsWrite mutation) {
         try (Connection connection = connections.open()) {
             boolean originalAutoCommit = connection.getAutoCommit();
@@ -139,6 +183,14 @@ public class DashboardSettingsRepository {
         }
     }
 
+    /**
+     * Reads the account's dashboard-prefixed settings through the supplied connection.
+     *
+     * @param connection connection participating in the caller's current transaction, if any
+     * @param userId ID of the account that owns the settings
+     * @return dashboard setting keys mapped to their stored values
+     * @throws SQLException if the settings query fails
+     */
     private Map<String, String> read(Connection connection, int userId) throws SQLException {
         Map<String, String> records = new LinkedHashMap<>();
         try (PreparedStatement statement = connection.prepareStatement("SELECT skey, value FROM user_settings_admin WHERE user_id=? AND skey LIKE ?")) {
@@ -151,6 +203,16 @@ public class DashboardSettingsRepository {
         return records;
     }
 
+    /**
+     * Executes a settings insert or delete with positional bindings for the owner, key and optional value.
+     *
+     * @param connection connection in the active write transaction
+     * @param sql statement with two placeholders for deletion or three for insertion
+     * @param userId account ID bound to the first placeholder
+     * @param key settings key bound to the second placeholder
+     * @param value value bound to the third placeholder, or {@code null} for a delete statement
+     * @throws SQLException if statement preparation or execution fails
+     */
     private void execute(Connection connection, String sql, int userId, String key, String value) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setInt(1, userId);
@@ -160,6 +222,14 @@ public class DashboardSettingsRepository {
         }
     }
 
+    /**
+     * Locks the owner's user row for the current transaction using database-specific SQL.
+     *
+     * @param connection connection with an active transaction
+     * @param userId ID of the account to lock
+     * @param product lowercase database product name used to select the SQL Server lock syntax
+     * @throws SQLException if the owner does not exist or the lock query fails
+     */
     private void lockUser(Connection connection, int userId, String product) throws SQLException {
         String sql = product.contains("sql server")
             ? "SELECT user_id FROM users WITH (UPDLOCK, ROWLOCK, HOLDLOCK) WHERE user_id=?"
@@ -172,6 +242,12 @@ public class DashboardSettingsRepository {
         }
     }
 
+    /**
+     * Verifies that MySQL or MariaDB can roll back writes to the administration settings table.
+     *
+     * @param connection connection to the database containing the settings table
+     * @throws SQLException if the table is missing, does not use InnoDB or its engine cannot be queried
+     */
     private void requireTransactionalSettings(Connection connection) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement("SELECT ENGINE FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name='user_settings_admin'")) {
             try (ResultSet rows = statement.executeQuery()) {
@@ -182,6 +258,13 @@ public class DashboardSettingsRepository {
         }
     }
 
+    /**
+     * Acquires the account's MySQL or MariaDB advisory lock, waiting for at most ten seconds.
+     *
+     * @param connection connection that will hold the lock until it is explicitly released
+     * @param userId ID of the account whose settings are locked
+     * @throws SQLException if the lock cannot be acquired or the lock query fails
+     */
     private void acquireMysqlLock(Connection connection, int userId) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement("SELECT GET_LOCK(?, 10)")) {
             statement.setString(1, "webjet-dashboard-" + userId);
