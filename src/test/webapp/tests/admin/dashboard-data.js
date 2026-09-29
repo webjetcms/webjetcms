@@ -30,28 +30,18 @@ Scenario('Initial settings, notices, sessions and administrators render from HTM
     }
 });
 
-Scenario('Form overview returns a bounded preview and the full submission count', async ({ I }) => {
+Scenario('Forms reuse the module list with submission counts and latest dates', async ({ I }) => {
     const { status, body } = await I.executeScript(async () => {
-        const response = await fetch('/admin/rest/forms-list/overview', { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
+        const response = await fetch('/admin/rest/forms-list/all', { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
         return { status: response.status, body: await response.json() };
     });
     I.assertEqual(status, 200, 'Forms must load for an authorized administrator.');
-    I.assertTrue(Number.isInteger(body.total) && body.total >= 0, 'Forms must expose an actual nonnegative count.');
-    I.assertTrue(Array.isArray(body.items) && body.items.length === Math.min(10, body.total), 'Form previews must contain up to ten submissions.');
-    for (const item of body.items) {
-        I.assertEqual(typeof item.title, 'string');
-        I.assertStartsWith(item.url, '/apps/form/admin/detail/?formName=');
+    I.assertTrue(Array.isArray(body.content));
+    for (const form of body.content) {
+        I.assertEqual(typeof form.formName, 'string');
+        I.assertTrue(Number.isInteger(form.count) && form.count >= 0);
+        I.assertTrue(form.createDate === null || Number.isFinite(form.createDate));
     }
-});
-
-Scenario('Invalid projection settings are rejected before querying data', async ({ I }) => {
-    const statuses = await I.executeScript(async () => {
-        return Promise.all(['?days=365', '?formName=', '?days=0'].map(async value => {
-            const response = await fetch(`/admin/rest/forms-list/overview${value}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
-            return { value, status: response.status };
-        }));
-    });
-    for (const result of statuses) I.assertEqual(result.status, 400, `${result.value} must be rejected.`);
 });
 
 Scenario('The shared approval lists expose bounded pages and their full request totals', async ({ I }) => {
@@ -176,23 +166,22 @@ Scenario('Live monitoring reads a current server snapshot independently of persi
     for (const field of ['cpuUsage', 'cpuUsageProcess']) I.assertTrue(Number.isFinite(result.body[field]), `${field} must contain the current CPU reading or the unavailable sentinel.`);
 });
 
-Scenario('Selected form projections preserve their contracts', async ({ I }) => {
+Scenario('Selected forms reuse the module date filter, count and descending pagination', async ({ I }) => {
     const result = await I.executeScript(async () => {
-        const get = async path => {
-            const response = await fetch(`/admin/rest/forms-list/overview${path}`, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
-            return { status: response.status, body: response.headers.get('content-type')?.includes('json') ? await response.json() : null };
-        };
-        const forms = await get('');
-        const selectedName = forms.body.options?.[0]?.id;
-        const selected = selectedName ? await get(`?formName=${encodeURIComponent(selectedName)}`) : null;
-        const missing = await get('?formName=missing-dashboard-form-autotest');
-        return { selectedName, selected, missingStatus: missing.status };
+        const formName = 'Multistepform_screens';
+        const to = Date.now(), from = to - 90 * 86400000;
+        const params = new URLSearchParams({ detail: true, formName, searchCreateDate: `daterange:${from}-${to}`, size: 10, page: 0, sort: 'createDate,desc' });
+        const response = await fetch(`/admin/rest/forms-list/search/findByColumns?${params}`, { headers: { 'X-CSRF-Token': window.csrfToken } });
+        return { status: response.status, body: await response.json(), from, to, formName };
     });
-    if (result.selected) {
-        I.assertEqual(result.selected.status, 200);
-        I.assertTrue(result.selected.body.items.every(item => item.title === result.selectedName));
+    I.assertEqual(result.status, 200);
+    I.assertTrue(Number.isInteger(result.body.totalElements) && result.body.totalElements >= result.body.content.length);
+    I.assertTrue(result.body.content.length <= 10);
+    for (const [index, item] of result.body.content.entries()) {
+        I.assertEqual(item.formName, result.formName);
+        I.assertTrue(item.createDate >= result.from && item.createDate <= result.to);
+        if (index > 0) I.assertTrue(result.body.content[index - 1].createDate >= item.createDate);
     }
-    I.assertEqual(result.missingStatus, 404);
 });
 
 Scenario('Traffic and TOP pages reuse the statistics module contracts', async ({ I }) => {

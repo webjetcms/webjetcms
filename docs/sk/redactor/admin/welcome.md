@@ -71,6 +71,8 @@ Skontrolujete, ktoré stránky sa majú v najbližšom čase **zverejniť alebo 
 
 Skontrolujete tu údaje o odoslaných formulároch, napríklad dopytoch alebo kontaktných správach. V nastaveniach môžete **vybrať konkrétny formulár** alebo všetky dostupné formuláre.
 
+Pri zobrazení všetkých formulárov vidíte **celkový počet odoslaných odpovedí za celé obdobie**. Veľký widget zobrazí desať formulárov s najnovším odoslaním, zoradených od najnovšieho. Pri každom je názov a dátum posledného odoslania. Kliknutím na názov otvoríte jeho odpovede.
+
 Pri výbere konkrétneho formulára sa vo veľkom widgete zobrazí posledných desať odoslaní **za zvolené obdobie**. Ak sa zoznam nezmestí do výšky karty, môžete ho rolovať. V stĺpci **Formulár** uvidíte meno, priezvisko a e-mail z vyplnených údajov. Ak formulár takéto polia nemá, zobrazia sa prvé tri vyplnené údaje v poradí stĺpcov formulára. Kliknutím na tieto údaje otvoríte detail konkrétneho odoslania.
 
 ### Návštevnosť

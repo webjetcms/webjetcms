@@ -2,7 +2,7 @@ const { showWidget, mockDashboardBootstrap, dashboardPageRoute } = require('../.
 
 Feature('admin.dashboard-lazy-loading');
 
-const dataRoutes = ['**/admin/rest/forms-list/overview?*', '**/admin/rest/audit/log/all?*'];
+const dataRoutes = ['**/admin/rest/forms-list/all', '**/admin/rest/audit/log/all?*'];
 const monitoringRoute = '**/admin/rest/monitoring/actual';
 
 Before(({ login }) => login('admin'));
@@ -24,7 +24,7 @@ for (const width of [1337, 390]) {
         for (const dataRoute of dataRoutes) await I.mockRoute(dataRoute, route => {
             const type = route.request().url().includes('/audit/') ? 'audit' : 'forms';
             requests.push(type);
-            const body = type === 'audit' ? { content: [], options: { logType: [] } } : { total: 0, items: [], options: [], from: Date.now() - 86400000, to: Date.now() };
+            const body = type === 'audit' ? { content: [], options: { logType: [] } } : { content: [] };
             return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
         });
         await I.mockRoute(monitoringRoute, route => {

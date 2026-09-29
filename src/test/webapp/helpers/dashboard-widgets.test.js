@@ -34,7 +34,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
     };
     const scope = vm.createContext({ Date: ClockDate, window, document: window.document, Node: window.Node, DOMParser: window.DOMParser, DOMException: window.DOMException, URL, URLSearchParams, AbortController, console,
         IntersectionObserver: class { observe() {} disconnect() {} },
-        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/stat/') ? statResponse(url) : url.includes('/monitoring/actual') ? snapshot : url.includes('/forms-list/overview') || url.includes('/dmail/') || url.includes('/web-pages/history/all?') ? data : url.includes('/audit/log/all?') ? { content: (data.items || []).map((item, index) => ({ id: index + 1, logType: 20, description: item.description, userFullName: item.userFullName, createDate: item.date })), options: { logType: [{ value: '20', label: data.items?.[0]?.type || 'Changed' }] } } : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
+        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/stat/') ? statResponse(url) : url.includes('/monitoring/actual') ? snapshot : url.includes('/forms-list/') || url.includes('/dmail/') || url.includes('/web-pages/history/all?') ? data : url.includes('/audit/log/all?') ? { content: (data.items || []).map((item, index) => ({ id: index + 1, logType: 20, description: item.description, userFullName: item.userFullName, createDate: item.date })), options: { logType: [{ value: '20', label: data.items?.[0]?.type || 'Changed' }] } } : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
     });
     for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'monitoring-live.js', 'system-widgets.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
@@ -1206,12 +1206,12 @@ test('Concurrent graph instances own distinct roots and disposing one leaves the
 });
 
 test('Compact forms describe the selected period and retain its exact accessible dates', async t => {
-    const { scope, context, container } = fixture(t, { data: { total: 128, from: Date.UTC(2026, 8, 20), to: Date.UTC(2026, 8, 26), items: [] } });
+    const { scope, context, container } = fixture(t, { data: { totalElements: 128, content: [{ formName: 'Contact', count: 128 }] } });
     context.translate = (key, days) => key.endsWith('formSubmissionsPeriod.js') ? `submissions · ${days} days` : key;
     const widget = scope.getWidget('forms');
     for (const days of [7, 30, 90]) {
         container.replaceChildren();
-        await widget.render({ container, context, options: { days }, domainOptions: {}, instance: { size: '1x1' }, signal: new AbortController().signal });
+        await widget.render({ container, context, options: { days }, domainOptions: { formName: 'Contact' }, instance: { size: '1x1' }, signal: new AbortController().signal });
         assert.equal(container.querySelector('.md-dashboard-widget__metric-label').textContent, `submissions · ${days} days`);
         assert.ok(container.querySelector('.md-dashboard-widget__period.visually-hidden').textContent.includes('2026'));
         assert.equal(container.querySelector('.md-dashboard-widget__more'), null);
@@ -1221,6 +1221,16 @@ test('Compact forms describe the selected period and retain its exact accessible
     assert.equal(widget.headerLink.href({ id: 'forms' }, context), '/apps/form/admin/detail/?formName=Contact%20%2F%20EN');
     assert.equal(scope.getWidget('approvals').headerLink.href, '/admin/v9/webpages/web-pages-list/?show=toapprove');
     assert.equal(scope.getWidget('errors').headerLink.href, '/apps/stat/admin/error/');
+});
+
+test('Selected forms include seven calendar dates through now across daylight-saving changes', async t => {
+    const now = new Date(2026, 3, 1, 14, 34, 56);
+    const { scope, requests } = fixture(t, { now, data: { content: [{ formName: 'Contact' }], totalElements: 1 } });
+    const data = await scope.fetchForms({ formName: 'Contact', days: 7 }, new AbortController().signal);
+    const from = new Date(2026, 2, 26).getTime();
+    assert.equal(data.from, from);
+    assert.equal(data.to, now.getTime() - 1);
+    assert.equal(new URL(requests[1].url, 'http://localhost').searchParams.get('searchCreateDate'), `daterange:${from}-${now.getTime() - 1}`);
 });
 
 test('Form submission titles recognize localized labels and field names before considering other fields', t => {
@@ -1244,14 +1254,14 @@ test('Form submission fallback follows form column order and skips empty values'
     assert.equal(scope.formSubmissionTitle({ ...item, columnNamesAndValues: {} }, columns), 'Contact #12');
 });
 
-test('Selected forms load only the overview submission IDs and link text safely to each record', async t => {
+test('Selected forms request a bounded date-filtered page and link text safely to each record', async t => {
     const formName = 'Contact & EN';
     const from = Date.UTC(2026, 8, 20), to = Date.UTC(2026, 8, 26);
     const signal = new AbortController().signal;
     const { scope, context, container, requests } = fixture(t, { fetchResponse: async url => ({ ok: true, json: async () =>
-        url.includes('/overview?') ? { total: 128, from, to, items: [{ id: '12' }, { id: '11' }] }
+        url.endsWith('/all') ? { content: [{ formName, count: 128 }] }
             : url.includes('/columns/') ? { columns: [{ value: 'f1', label: 'First name' }, { value: 'f2', label: 'E-mail' }] }
-                : { content: [{ id: 12, formName, createDate: to, columnNamesAndValues: { f1: '<img src=x onerror=alert(1)>', f2: 'a@example.test' } },
+                : { totalElements: 128, content: [{ id: 12, formName, createDate: to, columnNamesAndValues: { f1: '<img src=x onerror=alert(1)>', f2: 'a@example.test' } },
                     { id: 11, formName, createDate: from, columnNamesAndValues: { f1: 'Jane', f2: 'b@example.test' } }] }
     }) });
     await scope.getWidget('forms').render({ container, context, options: { days: 7 }, domainOptions: { formName }, instance: { size: '3x3' }, signal });
@@ -1263,7 +1273,8 @@ test('Selected forms load only the overview submission IDs and link text safely 
     const params = new URL(requests.find(request => request.url.includes('/search/')).url, 'http://localhost').searchParams;
     assert.equal(params.get('detail'), 'true');
     assert.equal(params.get('formName'), formName);
-    assert.equal(params.get('searchId'), '12,11');
+    assert.equal(params.get('searchId'), null);
+    assert.equal(params.get('searchCreateDate'), `daterange:${new Date(2026, 8, 20).getTime()}-${new Date(2026, 8, 26).getTime() - 1}`);
     assert.equal(params.get('size'), '10');
     assert.equal(params.get('sort'), 'createDate,desc');
     assert.ok(requests.some(request => request.url === '/admin/rest/forms-list/columns/Contact%20%26%20EN'));
@@ -1273,29 +1284,55 @@ test('Selected forms load only the overview submission IDs and link text safely 
     }
 });
 
-test('Compact, unfiltered, empty and aborted forms do not request submission details', async t => {
+test('All forms use lifetime counts and the ten latest distinct form names without an activity period', async t => {
+    const content = [{ formName: 'Never submitted', count: 0, createDate: null },
+        ...Array.from({ length: 12 }, (_, index) => ({ formName: `Contact & ${index}`, count: index + 1, createDate: 1000 + index }))];
+    const { scope, context, container, requests } = fixture(t, { data: { content } });
+    const widget = scope.getWidget('forms');
+    for (const size of ['3x3', '1x1']) {
+        container.replaceChildren();
+        await widget.render({ container, context, options: { days: 7 }, domainOptions: {}, instance: { size }, signal: new AbortController().signal });
+        assert.equal(container.querySelector('.md-dashboard-widget__number').textContent, '78');
+        assert.match(container.querySelector('.md-dashboard-widget__metric-label').textContent, /totalSubmissions/);
+        assert.equal(container.querySelector('.md-dashboard-widget__period'), null);
+        const links = [...container.querySelectorAll('tbody a')];
+        assert.equal(links.length, size === '3x3' ? 10 : 0);
+        if (size === '3x3') {
+            assert.deepEqual(links.map(link => link.textContent), Array.from({ length: 10 }, (_, index) => `Contact & ${11 - index}`));
+            assert.equal(links[0].getAttribute('href'), '/apps/form/admin/detail/?formName=Contact%20%26%2011');
+        }
+    }
+    assert.equal(requests.length, 2);
+    assert.ok(requests.every(request => request.url === '/admin/rest/forms-list/all'));
+});
+
+test('Compact, unfiltered, empty and aborted forms do not request column metadata', async t => {
     for (const [size, formName, items, aborted] of [
-        ['1x1', 'Contact', [{ id: '12' }], false], ['3x3', '', [{ title: 'Contact', url: '/apps/form/admin/', date: 123 }], false],
+        ['1x1', 'Contact', [{ id: '12' }], false], ['3x3', '', [], false],
         ['3x3', 'Contact', [], false], ['3x3', 'Contact', [{ id: '12' }], true]
     ]) {
-        const { scope, context, container, requests } = fixture(t, { data: { total: items.length, items } });
+        const { scope, context, container, requests } = fixture(t, { fetchResponse: async url => ({ ok: true, json: async () =>
+            url.endsWith('/all') ? { content: [{ formName: 'Contact', count: 1 }] } : { totalElements: items.length, content: items }
+        }) });
         const controller = new AbortController();
         if (aborted) controller.abort();
         await scope.getWidget('forms').render({ container, context, options: {}, domainOptions: { formName }, instance: { size }, signal: controller.signal });
-        assert.equal(requests.length, 1);
-        assert.ok(requests[0].url.includes('/overview?'));
+        assert.equal(requests.length, formName && !aborted ? 2 : 1);
+        assert.ok(requests.every(request => !request.url.includes('/columns/')));
+        if (size === '1x1') assert.equal(new URL(requests[1].url, 'http://localhost').searchParams.get('size'), '1');
         if (aborted) assert.equal(container.childNodes.length, 0);
     }
 });
 
-test('Selected forms propagate detail failures instead of rendering an empty or partial preview', async t => {
-    const { scope, context, container } = fixture(t, { fetchResponse: async url => ({
-        ok: true, json: async () => url.includes('/overview?') ? { total: 1, items: [{ id: '12' }] }
-            : url.includes('/columns/') ? { columns: [] } : { error: 'Access Denied' }
-    }) });
-    await assert.rejects(scope.getWidget('forms').render({ container, context, options: {}, domainOptions: { formName: 'Contact' },
-        instance: { size: '3x3' }, signal: new AbortController().signal }), error => error.dashboardReason === 'permission-denied');
-    assert.equal(container.childNodes.length, 0);
+test('Forms propagate module failures and unavailable selections without a partial preview', async t => {
+    for (const [content, expected] of [[[{ formName: 'Contact' }], 'permission-denied'], [[], 'selection-unavailable']]) {
+        const { scope, context, container } = fixture(t, { fetchResponse: async url => ({
+            ok: true, json: async () => url.endsWith('/all') ? { content } : { error: 'Access Denied' }
+        }) });
+        await assert.rejects(scope.getWidget('forms').render({ container, context, options: {}, domainOptions: { formName: 'Contact' },
+            instance: { size: '3x3' }, signal: new AbortController().signal }), error => error.dashboardReason === expected);
+        assert.equal(container.childNodes.length, 0);
+    }
 });
 
 test('Audit page widgets require both webpage and audit access', t => {
@@ -1320,12 +1357,25 @@ test('Compact error totals keep their actual weekly coverage without an extra vi
 });
 
 test('Forms keep the selected form in domain options and preserve unavailable selections', async t => {
-    const { scope, context, container, requests } = fixture(t, { extraWidgets: true, data: { options: [{ id: 'Contact', title: 'Contact' }] } });
+    const { scope, context, container, requests, window } = fixture(t, { extraWidgets: true, data: { content: [{ formName: 'Contact', count: 1 }] } });
     const widget = scope.getWidget('forms');
-    const settings = await widget.configure({ container, context, options: { days: 30 }, domainOptions: { formName: 'Unavailable form' }, signal: new AbortController().signal });
+    const settings = await widget.configure({ container, context, options: { days: 30 }, domainOptions: { formName: 'Unavailable form' }, signal: new window.AbortController().signal });
     const value = JSON.parse(JSON.stringify(settings.read()));
     assert.deepEqual(value, { options: { days: 30 }, domainOptions: { formName: 'Unavailable form' } });
-    assert.match(requests[0].url, /days=30/);
+    assert.equal(requests[0].url, '/admin/rest/forms-list/all');
+    const [form, days] = container.querySelectorAll('select');
+    const daysField = days.parentElement;
+    // The shared select picker wraps the select after configuration has completed.
+    const picker = window.document.createElement('div');
+    daysField.append(picker);
+    picker.append(days);
+    assert.equal(daysField.hidden, false);
+    form.value = '';
+    form.dispatchEvent(new window.Event('change'));
+    assert.equal(daysField.hidden, true);
+    form.value = 'Contact';
+    form.dispatchEvent(new window.Event('change'));
+    assert.equal(daysField.hidden, false);
     assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
 });
 

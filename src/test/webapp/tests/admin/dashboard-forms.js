@@ -4,7 +4,7 @@ Feature('admin.dashboard-forms');
 
 const formName = 'Multistepform_screens';
 const card = '[data-widget-type="forms"]';
-const overviewRoute = '**/admin/rest/forms-list/overview*';
+const columnsRoute = '**/admin/rest/forms-list/columns/*';
 const detailRoute = '**/admin/rest/forms-list/search/findByColumns*';
 
 Before(({ I, login }) => {
@@ -14,13 +14,12 @@ Before(({ I, login }) => {
 });
 
 /** Displays one selected form without changing the account's saved dashboard. */
-async function openDashboard(I, overview) {
+async function openDashboard(I, selectedName = formName) {
     await mockDashboardBootstrap(I, () => ({ notices: [], settings: {
         version: 1, configured: true, legacyBookmarksHandled: true,
         items: [{ id: 'autotest-form-preview', type: 'forms', size: '3x3', options: { days: 7 } }],
-        domainOptions: { 'autotest-form-preview': { formName } }
+        domainOptions: { 'autotest-form-preview': { formName: selectedName } }
     } }));
-    if (overview) await I.mockRoute(overviewRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(overview) }));
     I.amOnPage('/admin/v9/');
     await waitForWidgets(I);
 }
@@ -39,10 +38,14 @@ Scenario('Selected form displays real submission values and opens the selected r
         return { submissions, columns: metadata.columns };
     }, formName);
     I.assertEqual(source.submissions.content.length, 20, 'The existing multistep form fixture must contain twenty submissions.');
-    const items = source.submissions.content.filter((item, index) => index % 2 === 0);
-    // Use the real latest records regardless of fixture age, retaining the live detail and columns endpoints.
-    await openDashboard(I, { total: source.submissions.totalElements, from: items.at(-1).createDate, to: items[0].createDate,
-        items: items.map(item => ({ id: String(item.id), title: formName, date: item.createDate })) });
+    const items = source.submissions.content.slice(0, 10);
+    // Keep the real search endpoint, using a period that includes the existing fixture regardless of its age.
+    await I.mockRoute(detailRoute, route => {
+        const url = new URL(route.request().url());
+        url.searchParams.set('searchCreateDate', `daterange:${source.submissions.content.at(-1).createDate}-${items[0].createDate}`);
+        return route.continue({ url: url.toString() });
+    });
+    await openDashboard(I);
     const rendered = await I.executeScript(selector => [...document.querySelectorAll(`${selector} tbody tr`)].map(row => ({
         text: row.cells[0].textContent, href: row.querySelector('a').getAttribute('href'), date: row.cells[1].textContent
     })), card);
@@ -92,29 +95,69 @@ Scenario('Selected form displays real submission values and opens the selected r
     I.seeInCurrentUrl(`/apps/form/admin/detail/?formName=${formName}&id=${items[0].id}`);
     DTE.waitForEditor('formDetailDataTable');
     DTE.cancel('formDetailDataTable');
-    I.stopMockingRoute(overviewRoute);
+    I.stopMockingRoute(detailRoute);
     I.stopMockingRoute(dashboardPageRoute);
 });
 
-Scenario('Empty selected form shows an empty preview without loading details', async ({ I }) => {
-    let detailRequests = 0;
-    await I.mockRoute(detailRoute, route => { detailRequests++; return route.continue(); });
-    await openDashboard(I, { total: 0, items: [] });
+Scenario('All forms show the lifetime count and latest form names from the module list', async ({ I }) => {
+    const expected = await I.executeScript(async () => {
+        const response = await fetch('/admin/rest/forms-list/all', { headers: { 'X-CSRF-Token': window.csrfToken } });
+        const { content } = await response.json();
+        return { total: content.reduce((sum, form) => sum + (form.count || 0), 0),
+            names: content.filter(form => form.createDate != null).sort((a, b) => b.createDate - a.createDate).slice(0, 10).map(form => form.formName) };
+    });
+    await openDashboard(I, '');
+    I.assertEqual(await I.executeScript(selector => document.querySelector(`${selector} .md-dashboard-widget__number`).textContent.replace(/\D/g, ''), card), String(expected.total));
+    I.assertDeepEqual(await I.executeScript(selector => [...document.querySelectorAll(`${selector} tbody a`)].map(link => link.textContent), card), expected.names);
+    I.dontSeeElementInDOM(`${card} .md-dashboard-widget__period`);
+    I.stopMockingRoute(dashboardPageRoute);
+});
+
+Scenario('Form settings show the period only for a selected form after picker initialization', async ({ I }) => {
+    await openDashboard(I, '');
+    await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.showSettings('autotest-form-preview'));
+    const modal = '.md-dashboard-modal';
+    I.waitForVisible(modal, 10);
+    const formSelect = `${modal} select:has(option[value="${formName}"])`;
+    const periodField = `${modal} .md-dashboard__field:has(option[value="90"])`;
+    I.dontSeeElement(periodField);
+    I.selectOption(formSelect, formName);
+    I.waitForVisible(periodField, 5);
+    I.see('Obdobie', periodField);
+    I.selectOption(formSelect, '');
+    I.waitForInvisible(periodField, 5);
+    I.clickCss(`${modal} .btn-close`);
+    I.waitForInvisible(modal, 10);
+    I.dontSeeElementInDOM(`${card} .md-dashboard-widget__period`);
+    I.stopMockingRoute(dashboardPageRoute);
+});
+
+Scenario('Empty selected form shows an empty preview without loading column metadata', async ({ I }) => {
+    let columnRequests = 0;
+    await I.mockRoute(columnsRoute, route => { columnRequests++; return route.continue(); });
+    await I.mockRoute(detailRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ totalElements: 0, content: [] }) }));
+    await openDashboard(I);
     I.see('0', `${card} .md-dashboard-widget__number`);
     I.dontSeeElementInDOM(`${card} tbody tr`);
-    I.assertEqual(detailRequests, 0);
+    I.assertEqual(columnRequests, 0);
+    I.stopMockingRoute(columnsRoute);
     I.stopMockingRoute(detailRoute);
-    I.stopMockingRoute(overviewRoute);
     I.stopMockingRoute(dashboardPageRoute);
 });
 
-Scenario('Denied submission details show an error with no partial form preview', async ({ I }) => {
+Scenario('Denied submissions show an error with no partial form preview', async ({ I }) => {
     await I.mockRoute(detailRoute, route => route.fulfill({ status: 403, contentType: 'application/json', body: '{}' }));
-    await openDashboard(I, { total: 1, items: [{ id: '168347' }] });
+    await openDashboard(I);
     I.see(await I.executeScript(() => WJ.translate('admin.dashboard.permissionDenied.js')), `${card} .md-dashboard__widget-content > .text-danger`);
     I.dontSeeElementInDOM(`${card} .md-dashboard-widget__number`);
     I.dontSeeElementInDOM(`${card} tbody tr`);
     I.stopMockingRoute(detailRoute);
-    I.stopMockingRoute(overviewRoute);
+    I.stopMockingRoute(dashboardPageRoute);
+});
+
+Scenario('Unavailable selected form keeps its selection and displays an error', async ({ I }) => {
+    await openDashboard(I, 'missing-dashboard-form-autotest');
+    I.see(await I.executeScript(() => WJ.translate('admin.dashboard.selectionUnavailable.js')), `${card} .md-dashboard__widget-content > .text-danger`);
+    I.dontSeeElementInDOM(`${card} .md-dashboard-widget__number`);
     I.stopMockingRoute(dashboardPageRoute);
 });

@@ -7,7 +7,7 @@ Before(({ I, login }) => {
 });
 
 const settingsRoute = '**/admin/rest/dashboard/settings';
-const formsRoute = '**/admin/rest/forms-list/overview?*';
+const formsRoute = '**/admin/rest/forms-list/all';
 const editOverview = '.md-dashboard__toolbar-actions > button[aria-pressed]';
 const editShortcuts = '.md-dashboard__shortcut-actions > button[aria-pressed]';
 const modal = '.md-dashboard-modal';
@@ -226,7 +226,7 @@ Scenario('Empty and failed widget content is audited after loading completes', a
     let failed = false;
     await I.mockRoute(formsRoute, route => route.fulfill({ status: failed ? 503 : 200, contentType: 'application/json', body: JSON.stringify(failed
         ? { reason: 'domain-unavailable' }
-        : { total: 0, items: [], options: [], from: Date.now() - 86400000, to: Date.now() }) }));
+        : { content: [] }) }));
     const item = widgetItems.find(item => item.type === 'forms' && item.size === '3x3');
     await openAuditDashboard(I, [item]);
     await showWidget(I, item.id);

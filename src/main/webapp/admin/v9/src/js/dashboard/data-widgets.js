@@ -11,19 +11,30 @@ const moduleLinks = {
 const metricKey = metric => ({ views: 'visits', sessions: 'sessionsMetric', uniqueUsers: 'uniqueUsers' })[metric] || 'sessionsMetric';
 const formPreviewLimit = 10;
 
-/** Loads the overview and, for a selected form preview, its authorized submission values. */
+/** Reuses the forms list and the selected form's paginated, date-filtered submissions. */
 async function fetchForms(options, signal) {
-    const params = new URLSearchParams({ days: options.days || 7 });
-    if (options.formName) params.set('formName', options.formName);
-    const data = await fetchJson(`/admin/rest/forms-list/overview?${params}`, signal);
-    if (!options.details || !options.formName || !data.items.length || signal.aborted) return data;
-    // Keep the overview's exact period and editable-page scope when loading submission details.
-    const detailsParams = new URLSearchParams({ detail: true, formName: options.formName,
-        searchId: data.items.map(item => item.id).join(','), size: formPreviewLimit, page: 0, sort: 'createDate,desc' });
-    const [submissions, fields] = await Promise.all([
-        fetchJson(`/admin/rest/forms-list/search/findByColumns?${detailsParams}`, signal),
-        fetchJson(`/admin/rest/forms-list/columns/${encodeURIComponent(options.formName)}`, signal)
-    ]);
+    const forms = (await fetchJson('/admin/rest/forms-list/all', signal)).content;
+    const data = {
+        total: forms.reduce((sum, form) => sum + (form.count || 0), 0),
+        options: forms.map(form => ({ id: form.formName, title: form.formName })).sort((a, b) => a.title.localeCompare(b.title)),
+        items: forms.filter(form => form.createDate != null).sort((a, b) => b.createDate - a.createDate).slice(0, formPreviewLimit)
+            .map(form => ({ title: form.formName, date: form.createDate, url: `${moduleLinks.forms}detail/?formName=${encodeURIComponent(form.formName)}` }))
+    };
+    if (!options.formName || signal.aborted) return data;
+    if (!forms.some(form => form.formName === options.formName)) {
+        const error = new Error('Form selection is unavailable');
+        error.dashboardReason = 'selection-unavailable';
+        throw error;
+    }
+    const from = new Date(), to = from.getTime() - 1;
+    from.setDate(from.getDate() - (options.days || 7) + 1);
+    from.setHours(0, 0, 0, 0);
+    const params = new URLSearchParams({ detail: true, formName: options.formName,
+        searchCreateDate: `daterange:${from.getTime()}-${to}`, size: options.details ? formPreviewLimit : 1, page: 0, sort: 'createDate,desc' });
+    const submissions = await fetchJson(`/admin/rest/forms-list/search/findByColumns?${params}`, signal);
+    Object.assign(data, { total: submissions.totalElements, from: from.getTime(), to, items: [] });
+    if (!options.details || !submissions.content.length || signal.aborted) return data;
+    const fields = await fetchJson(`/admin/rest/forms-list/columns/${encodeURIComponent(options.formName)}`, signal);
     data.items = submissions.content.slice(0, formPreviewLimit).map(item => ({
         title: formSubmissionTitle(item, fields.columns), date: item.createDate,
         url: `${moduleLinks.forms}detail/?formName=${encodeURIComponent(options.formName)}&id=${encodeURIComponent(item.id)}`
@@ -395,16 +406,21 @@ export function registerDataWidgets() {
         } },
         defaultOptions: { days: 7 }, defaultDomainOptions: { formName: '' }, isAvailable: () => window.WJ.hasPermission('cmp_form'),
         async configure({ container, options, domainOptions, context, signal }) {
-            const data = await fetchForms({ days: options.days }, signal);
-            const days = periodField(container, options, context, false);
+            const data = await fetchForms({}, signal);
             const form = selectionField(container, text(context, 'formName'), data.options || [], domainOptions.formName, context, 'allForms');
+            const days = periodField(container, options, context, false);
+            const daysField = days.parentElement;
+            const updatePeriod = () => { daysField.hidden = !form.value; };
+            form.addEventListener('change', updatePeriod, { signal });
+            updatePeriod();
             return { read: () => ({ options: { days: Number(days.value) }, domainOptions: { formName: form.value } }) };
         },
         async render({ container, instance, options, domainOptions, context, signal }) {
             const compact = instance.size === '1x1';
             const data = await fetchForms({ days: options.days, formName: domainOptions.formName, details: !compact }, signal); if (signal.aborted) return;
             const href = domainOptions.formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(domainOptions.formName)}` : moduleLinks.forms;
-            summary(container, data, context, href, compact ? text(context, 'formSubmissionsPeriod', options.days || 7) : text(context, 'submissions'));
+            const label = domainOptions.formName ? (compact ? text(context, 'formSubmissionsPeriod', options.days || 7) : text(context, 'submissions')) : text(context, 'totalSubmissions');
+            summary(container, data, context, href, label);
             if (domainOptions.formName) container.append(node('span', 'small text-muted', domainOptions.formName));
             const interval = period(container, data, context);
             if (compact) interval?.classList.add('visually-hidden');
