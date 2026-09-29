@@ -20,6 +20,9 @@ public class SlidingWindowChunker {
 
     private static final Pattern PARAGRAPH_BREAK = Pattern.compile("\\n[ \\t]*\\n");
 
+    /** A passage and its start offset in the normalized, trimmed source text. */
+    public record Chunk(int startOffset, String text) { }
+
     /**
      * Splits text using the configured approximate chunk size and overlap.
      *
@@ -44,14 +47,36 @@ public class SlidingWindowChunker {
      * @return nonempty chunks with approximate sizes and no gaps in the source content
      */
     public List<String> chunk(String text, int chunkSize, int overlap) {
+        return new ArrayList<>(chunkWithOffsets(text, chunkSize, overlap).stream().map(Chunk::text).toList());
+    }
+
+    /**
+     * Splits text using the configured size and overlap while retaining passage positions.
+     *
+     * @param text full source text
+     * @return chunks whose offsets refer to the source with normalized newlines and trimmed edges
+     */
+    public List<Chunk> chunkWithOffsets(String text) {
+        return chunkWithOffsets(text, Constants.getInt("ragEmbeddingChunkSize"), Constants.getInt("ragEmbeddingChunkOverlap"));
+    }
+
+    /**
+     * Retains source offsets for the same bounded, overlapping passages returned by {@link #chunk(String, int, int)}.
+     *
+     * @param text full source text
+     * @param chunkSize target number of characters per chunk
+     * @param overlap target overlap in characters
+     * @return chunks whose offsets refer to the source with normalized newlines and trimmed edges
+     */
+    public List<Chunk> chunkWithOffsets(String text, int chunkSize, int overlap) {
         if (text == null || text.isBlank()) return new ArrayList<>();
         text = text.replace("\r\n", "\n").replace('\r', '\n').trim();
-        if (chunkSize <= 0 || text.length() <= chunkSize) return new ArrayList<>(List.of(text));
+        if (chunkSize <= 0 || text.length() <= chunkSize) return new ArrayList<>(List.of(new Chunk(0, text)));
 
         overlap = Math.max(0, Math.min(overlap, chunkSize - 1));
         int maximumChunkSize = (int) Math.min(Integer.MAX_VALUE, Math.max(2L, chunkSize + (long) chunkSize / 2));
         List<Integer> boundaries = findBoundaries(text, chunkSize, maximumChunkSize);
-        List<String> chunks = new ArrayList<>();
+        List<Chunk> chunks = new ArrayList<>();
         int start = 0;
         int end = 0;
         while (end < boundaries.size() - 1) {
@@ -64,7 +89,7 @@ public class SlidingWindowChunker {
             end = nearestBoundary(boundaries, targetEnd, end + 1, maximumEndIndex);
             int endOffset = boundaries.get(end);
             String chunk = text.substring(startOffset, endOffset).trim();
-            if (chunk.isEmpty() == false) chunks.add(chunk);
+            if (chunk.isEmpty() == false) chunks.add(new Chunk(startOffset, chunk));
             if (end == boundaries.size() - 1) break;
             start = overlap == 0 ? end
                 : nearestBoundary(boundaries, Math.max(0, endOffset - overlap), start + 1, end);

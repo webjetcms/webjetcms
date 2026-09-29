@@ -15,6 +15,7 @@ import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
 import sk.iway.iwcm.rag.embedding.EmbeddingService;
 import sk.iway.iwcm.rag.indexing.MarkdownContentExtractor;
 import sk.iway.iwcm.rag.indexing.SlidingWindowChunker;
+import sk.iway.iwcm.rag.indexing.SlidingWindowChunker.Chunk;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkEntity;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkRepository;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkStatus;
@@ -48,40 +49,44 @@ class MarkdownIndexServiceTest {
         });
     }
 
-    /**
-     * Verifies that unchanged vectors are reused, source metadata uses domain zero, and new embedding usage is charged to the assistant owner.
-     */
+    /** Reuses matching context, refreshes changed headings, and keeps source metadata and usage accounting intact. */
     @Test
-    void reusesUnchangedVectorsAndStoresSharedMetadataWithOwningDomainUsage() throws Exception {
+    void reusesMatchingContextAndRefreshesChangedHeading() throws Exception {
         float[] reused = {1, 0};
         float[] updated = {0, 1};
+        String markdown = "# Guide\n\n## Overview\n\nunchanged\n\n## Advanced settings\n\nupdated";
+        String unchangedInput = "Guide > Overview\n\nunchanged";
+        String updatedInput = "Guide > Advanced settings\n\nupdated";
         long id = MarkdownIndexService.entityId(ROOT, "sk/guide.md", 0);
-        when(chunker.chunk("# Guide")).thenReturn(List.of("unchanged", "updated"));
+        when(chunker.chunkWithOffsets(markdown)).thenReturn(List.of(
+            new Chunk(markdown.indexOf("unchanged"), "unchanged"), new Chunk(markdown.indexOf("updated"), "updated")));
         when(store.getExistingEmbeddingsByHash("MARKDOWN", id, "local", "model", 0))
-            .thenReturn(Map.of(MarkdownIndexService.hash("unchanged"), reused));
-        when(embeddings.embedWithUsage(List.of("updated"), assistant, "billing.example", EmbeddingInputType.DOCUMENT))
+            .thenReturn(Map.of(MarkdownIndexService.hash(unchangedInput), reused,
+                MarkdownIndexService.hash("Guide > Settings\n\nupdated"), new float[] {1, 1}));
+        when(embeddings.embedWithUsage(List.of(updatedInput), assistant, "billing.example", EmbeddingInputType.DOCUMENT))
             .thenReturn(new EmbeddingBatchResult(List.of(updated), 7));
 
-        service.indexFile(ROOT, "sk/guide.md", "# Guide", assistant, List.of(), "billing.example");
+        service.indexFile(ROOT, "sk/guide.md", markdown, assistant, List.of(), "billing.example");
 
-        verify(embeddings).embedWithUsage(List.of("updated"), assistant, "billing.example", EmbeddingInputType.DOCUMENT);
+        verify(embeddings).embedWithUsage(List.of(updatedInput), assistant, "billing.example", EmbeddingInputType.DOCUMENT);
         verify(statistics).recordIndexingTokens(assistant, 7, 2);
         verify(repository).saveAllAndFlush(savedChunks.capture());
-        assertEquals(2, savedChunks.getValue().size());
+        assertEquals(List.of(unchangedInput, updatedInput), savedChunks.getValue().stream().map(EmbeddingChunkEntity::getChunkText).toList());
+        assertEquals(List.of(MarkdownIndexService.hash(unchangedInput), MarkdownIndexService.hash(updatedInput)),
+            savedChunks.getValue().stream().map(EmbeddingChunkEntity::getContentHash).toList());
         EmbeddingChunkEntity row = savedChunks.getValue().get(0);
         assertEquals(ROOT + "/sk/guide.md", row.getSourcePath());
         assertEquals("Guide", row.getSourceTitle());
         assertEquals("sk", row.getLanguage());
         assertEquals(0, row.getDomainId());
+        assertEquals(MarkdownIndexService.hash(markdown), row.getSourceHash());
         verify(store).updateEmbeddingBatch(List.of(1L, 2L), List.of(reused, updated));
     }
 
-    /**
-     * Verifies that an embedding provider failure propagates before any stored chunks are replaced.
-     */
+    /** Preserves stored chunks when the embedding provider fails. */
     @Test
     void providerFailureKeepsPreviousIndex() throws Exception {
-        when(chunker.chunk("changed")).thenReturn(List.of("changed"));
+        when(chunker.chunkWithOffsets("changed")).thenReturn(List.of(new Chunk(0, "changed")));
         when(embeddings.embedWithUsage(anyList(), eq(assistant), anyString(), any()))
             .thenThrow(new IllegalStateException("Provider unavailable"));
         assertThrows(IllegalStateException.class,
@@ -89,46 +94,45 @@ class MarkdownIndexServiceTest {
         verifyNoInteractions(repository);
     }
 
-    /** Reindexes legacy raw chunks even when the source hash matches, using cleaned text for chunking and embedding. */
+    /** Restores missing stored context using cached vectors, then skips the fully updated source. */
     @Test
-    void cleansBeforeChunkingAndReindexesPreviouslyUncleanedContent() throws Exception {
-        String markdown = "# Guide\n\nRead [settings](../settings.md).\n\n![](screen.png)\n<!-- internal -->";
-        String cleaned = "# Guide\n\nRead settings.";
-        String sourceHash = MarkdownIndexService.hash(markdown);
-        long id = MarkdownIndexService.entityId(ROOT, "en/guide.md", 0);
+    void updatesStoredContextAndSkipsUnchangedSource() throws Exception {
+        String body = "Enable this option.";
+        String markdown = "# Guide\n\n## Settings\n\n" + body;
+        String contextual = "Guide > Settings\n\n" + body;
         EmbeddingChunkEntity existing = new EmbeddingChunkEntity();
         existing.setChunkIndex(0);
         existing.setEmbeddingProvider("local");
         existing.setEmbeddingModel("model");
-        existing.setSourceHash(sourceHash);
-        existing.setContentHash(sourceHash);
+        existing.setSourceHash(MarkdownIndexService.hash(markdown));
+        existing.setContentHash(MarkdownIndexService.hash(contextual));
+        existing.setChunkText(body);
         existing.setDimensions(2);
         existing.setLanguage("en");
         existing.setStatus(EmbeddingChunkStatus.COMPLETED);
-        when(chunker.chunk(cleaned)).thenReturn(List.of(cleaned));
+        when(chunker.chunkWithOffsets(markdown)).thenReturn(List.of(new Chunk(markdown.indexOf(body), body)));
+        long id = MarkdownIndexService.entityId(ROOT, "en/guide.md", 0);
         when(store.getExistingEmbeddingsByHash("MARKDOWN", id, "local", "model", 0))
-            .thenReturn(Map.of(sourceHash, new float[] {1, 0}));
-        when(embeddings.embedWithUsage(List.of(cleaned), assistant, "billing.example", EmbeddingInputType.DOCUMENT))
-            .thenReturn(new EmbeddingBatchResult(List.of(new float[] {0, 1}), 5));
+            .thenReturn(Map.of(existing.getContentHash(), new float[] {1, 0}));
 
         service.indexFile(ROOT, "en/guide.md", markdown, assistant, List.of(existing), "billing.example");
 
-        verify(chunker).chunk(cleaned);
-        verify(embeddings).embedWithUsage(List.of(cleaned), assistant, "billing.example", EmbeddingInputType.DOCUMENT);
         verify(repository).saveAllAndFlush(savedChunks.capture());
-        assertEquals(1, savedChunks.getValue().size());
-        EmbeddingChunkEntity row = savedChunks.getValue().get(0);
-        assertEquals(cleaned, row.getChunkText());
-        assertEquals(MarkdownIndexService.hash(cleaned), row.getContentHash());
-        assertEquals(sourceHash, row.getSourceHash());
-        assertEquals(ROOT + "/en/guide.md", row.getSourcePath());
-        assertEquals("Guide", row.getSourceTitle());
+        EmbeddingChunkEntity updated = savedChunks.getValue().get(0);
+        assertEquals(contextual, updated.getChunkText());
+        updated.setStatus(EmbeddingChunkStatus.COMPLETED);
+        clearInvocations(repository, store);
+
+        service.indexFile(ROOT, "en/guide.md", markdown, assistant, List.of(updated), "billing.example");
+
+        verify(embeddings, never()).embedWithUsage(anyList(), any(), anyString(), any());
+        verifyNoInteractions(statistics, repository, store);
     }
 
     /** Deletes stale chunks without calling the embedding provider when cleanup leaves no content. */
     @Test
     void removesChunksForNoiseOnlySources() throws Exception {
-        when(chunker.chunk("")).thenReturn(List.of());
+        when(chunker.chunkWithOffsets("")).thenReturn(List.of());
         long id = MarkdownIndexService.entityId(ROOT, "en/empty.md", 0);
 
         service.indexFile(ROOT, "en/empty.md", "![](screen.png)\n\n<!-- internal -->", assistant, List.of(), "billing.example");

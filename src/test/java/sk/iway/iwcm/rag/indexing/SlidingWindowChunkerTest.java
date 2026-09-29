@@ -73,6 +73,21 @@ class SlidingWindowChunkerTest {
         ), chunker.chunk(TEXT, 31, overlap));
     }
 
+    /** Repeated overlapping passages retain their distinct offsets after newline and edge normalization. */
+    @Test
+    void preservesOffsetsForRepeatedOverlappingPassages() {
+        String sentence = "Alpha is ready.";
+        String normalized = String.join(" ", sentence, sentence, sentence, sentence);
+        List<SlidingWindowChunker.Chunk> chunks = chunker.chunkWithOffsets(" \r\n" + normalized + "\r\n ", 31, 16);
+
+        assertEquals(List.of(0, 16, 32), chunks.stream().map(SlidingWindowChunker.Chunk::startOffset).toList());
+        assertEquals(List.of(sentence + " " + sentence, sentence + " " + sentence, sentence + " " + sentence),
+            chunks.stream().map(SlidingWindowChunker.Chunk::text).toList());
+        for (SlidingWindowChunker.Chunk chunk : chunks) {
+            assertEquals(chunk.text(), normalized.substring(chunk.startOffset(), chunk.startOffset() + chunk.text().length()));
+        }
+    }
+
     /** Sentences, paragraphs, and tokens within the 50% allowance remain intact. */
     @ParameterizedTest
     @ValueSource(strings = {

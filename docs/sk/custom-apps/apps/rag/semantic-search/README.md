@@ -27,6 +27,10 @@ Proces indexovania:
 
 Veľkosť chunku je približná cieľová hodnota. Maximálna veľkosť je cieľová hodnota zvýšená o 50 %, teda pri predvolenom nastavení najviac `1500` znakov. Začiatok aj koniec chunku sa podľa možnosti prispôsobujú najbližšej rozpoznanej hranici vety alebo odseku, a to aj pri prekrytí. Vety vrátane zalomenia riadkov zostávajú celé, pokiaľ sa zmestia do maxima. Dlhšie vety alebo odseky sa rozdelia medzi slovami; slovo dlhšie než maximum sa rozdelí aj uprostred. Prekrytie sa môže zmenšiť, aby každý ďalší chunk pridal nový obsah a dodržal maximálnu veľkosť. Hodnota `ragEmbeddingChunkSize` menšia alebo rovná nule vypne rozdeľovanie textu. Nové hranice sa na existujúci obsah použijú po opätovnom indexovaní.
 
+Pri Markdown dokumentácii sa pred text každého chunku doplní názov dokumentu a hierarchia nadpisov platná na začiatku danej časti, napríklad `Používateľská príručka > Registrácia > Schválenie`. Názov sa preberá z prvého nadpisu prvej úrovne; ak chýba, použije sa relatívna cesta k súboru. Rozpoznávajú sa nadpisy ATX (`#`) aj Setext (podčiarknuté), nadpisy v ukážkach kódu sa ignorujú. Kontext sa pridáva až po rozdelení textu, takže nastavená veľkosť chunku sa vzťahuje na pôvodnú časť textu. Text s týmto prefixom sa ukladá do indexu aj odosiela na vytvorenie embeddingu, preto je kontext dostupný v náhľade chunkov, fulltexte aj RAG odpovediach.
+
+Opätovné použitie Markdown vektorov vychádza z hash hodnoty celého vstupu vrátane názvu a nadpisov. Zmena nadradeného nadpisu preto obnoví príslušné embeddingy aj vtedy, keď sa samotný text časti nezmenil. Po aktualizácii spustite Markdown indexovanie znova: vektory bez kontextu sa vygenerujú nanovo. Ak už vektor kontext obsahuje, ale uložený text chunku ešte nemá prefix, aktualizuje sa iba uložený text a vektor sa použije znova. Ďalšie indexovanie nezmenených súborov sa preskočí. Index netreba ručne mazať.
+
 ### 2. Vyhľadávanie
 
 Keď návštevník zadá vyhľadávací dotaz:

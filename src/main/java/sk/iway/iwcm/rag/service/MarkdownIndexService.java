@@ -241,7 +241,8 @@ public class MarkdownIndexService {
         String selectedLanguage = sources.detectLanguage(root, sourcePath);
         if (selectedLanguage == null) throw new IllegalArgumentException("Markdown source must be inside a supported language folder");
         long entityId = entityId(root, sourcePath, SHARED_DOMAIN_ID);
-        List<String> chunks = chunker.chunk(extractor.extractText(markdown));
+        String text = extractor.extractText(markdown);
+        List<SlidingWindowChunker.Chunk> chunks = chunker.chunkWithOffsets(text);
         if (chunks.isEmpty()) {
             repository.deleteByEntityTypeAndEntityIdAndDomainId(RagEntityType.MARKDOWN, entityId, SHARED_DOMAIN_ID);
             return;
@@ -249,17 +250,19 @@ public class MarkdownIndexService {
         String provider = assistant.getProvider().trim().toLowerCase(Locale.ROOT);
         String model = assistant.getModel();
         int dimensions = embeddings.getDimensions();
+        String title = extractor.extractTitle(markdown, sourcePath);
+        List<String> inputs = extractor.addHeadingContext(text, title, chunks);
         String sourceHash = hash(markdown);
-        List<String> hashes = chunks.stream().map(MarkdownIndexService::hash).toList();
+        List<String> hashes = inputs.stream().map(MarkdownIndexService::hash).toList();
         List<EmbeddingChunkEntity> current = existing.stream()
             .filter(chunk -> provider.equals(chunk.getEmbeddingProvider()) && model.equals(chunk.getEmbeddingModel())).toList();
-        if (isUnchanged(current, sourceHash, hashes, dimensions, selectedLanguage)) return;
+        if (isUnchanged(current, sourceHash, inputs, hashes, dimensions, selectedLanguage)) return;
 
         Map<String, float[]> vectors = new HashMap<>(vectorStore.getExistingEmbeddingsByHash(RagEntityType.MARKDOWN.name(), entityId, provider, model, SHARED_DOMAIN_ID));
         Map<String, String> changed = new java.util.LinkedHashMap<>();
         for (int i = 0; i < chunks.size(); i++) {
             float[] cached = vectors.get(hashes.get(i));
-            if (cached == null || cached.length != dimensions) changed.put(hashes.get(i), chunks.get(i));
+            if (cached == null || cached.length != dimensions) changed.put(hashes.get(i), inputs.get(i));
         }
         if (changed.isEmpty() == false) {
             // Shared storage does not change which domain supplies credentials or pays for this API call.
@@ -276,14 +279,13 @@ public class MarkdownIndexService {
             }
         }
 
-        String title = extractor.extractTitle(markdown, sourcePath);
         List<EmbeddingChunkEntity> rows = new ArrayList<>();
         for (int i = 0; i < chunks.size(); i++) {
             EmbeddingChunkEntity row = new EmbeddingChunkEntity();
             row.setEntityType(RagEntityType.MARKDOWN);
             row.setEntityId(entityId);
             row.setChunkIndex(i);
-            row.setChunkText(chunks.get(i));
+            row.setChunkText(inputs.get(i));
             row.setContentHash(hashes.get(i));
             row.setEmbeddingProvider(provider);
             row.setEmbeddingModel(model);
@@ -308,18 +310,20 @@ public class MarkdownIndexService {
      *
      * @param current stored chunks for the selected provider and model
      * @param sourceHash hash of the complete raw source
-     * @param hashes content hashes in chunk order
+     * @param inputs contextual text to store and embed, in chunk order
+     * @param hashes contextual embedding-input hashes in chunk order
      * @param dimensions required vector dimension count
      * @param language detected documentation language
      * @return {@code true} when counts match and every stored chunk is completed with matching metadata
      */
-    private boolean isUnchanged(List<EmbeddingChunkEntity> current, String sourceHash, List<String> hashes, int dimensions, String language) {
+    private boolean isUnchanged(List<EmbeddingChunkEntity> current, String sourceHash, List<String> inputs, List<String> hashes, int dimensions, String language) {
         if (current.size() != hashes.size()) return false;
         for (EmbeddingChunkEntity chunk : current) {
             int index = chunk.getChunkIndex();
             if (index < 0 || index >= hashes.size()
                     || chunk.getStatus() != EmbeddingChunkStatus.COMPLETED || Integer.valueOf(dimensions).equals(chunk.getDimensions()) == false
                     || language.equals(chunk.getLanguage()) == false
+                    || inputs.get(index).equals(chunk.getChunkText()) == false
                     || sourceHash.equals(chunk.getSourceHash()) == false || hashes.get(index).equals(chunk.getContentHash()) == false) return false;
         }
         return true;

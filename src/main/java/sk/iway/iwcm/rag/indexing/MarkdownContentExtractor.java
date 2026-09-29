@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,6 +27,7 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
     private static final Pattern HTML_TAG = Pattern.compile(
         "</?([A-Za-z][A-Za-z0-9:-]*)(?:\\s+(?:[^'\"<>]|\"[^\"]*\"|'[^']*')*)?\\s*/?>");
     private static final Pattern PARAGRAPH_BREAK = Pattern.compile("\\n[ \\t]*\\n");
+    private static final Pattern HEADING = Pattern.compile("^ {0,3}(#{1,6})(?:[ \\t]+(.*)|$)");
     private static final Set<String> HIDDEN_TAGS = Set.of("script", "style", "template", "nav", "footer");
     private static final Set<String> BLOCK_TAGS = Set.of("p", "div", "section", "article", "blockquote", "ul", "ol", "table", "tr", "br", "hr");
 
@@ -61,20 +63,89 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
      * @return heading or fallback path, truncated to at most 512 characters
      */
     public String extractTitle(String markdown, String sourcePath) {
-        ProtectedCode code = protectCode(extractText(markdown));
+        String title = findHeadings(extractText(markdown)).stream()
+            .filter(heading -> heading.level() == 1 && heading.title().isBlank() == false)
+            .map(Heading::title).findFirst().orElse(sourcePath);
+        return title.substring(0, Math.min(512, title.length()));
+    }
+
+    /**
+     * Adds the document title and the heading hierarchy at each passage's start to its embedding input.
+     * Passage bodies remain unchanged. Headings inside code examples are ignored, and overlapping
+     * passages retain the context at their own source position.
+     *
+     * @param text cleaned Markdown with normalized newlines, as supplied to the chunker
+     * @param title document title or source-path fallback
+     * @param chunks ordered chunks with offsets in the trimmed source text
+     * @return contextual embedding inputs in chunk order
+     */
+    public List<String> addHeadingContext(String text, String title, List<SlidingWindowChunker.Chunk> chunks) {
+        List<Heading> headings = findHeadings(text);
+        List<Heading> ancestors = new ArrayList<>();
+        List<String> inputs = new ArrayList<>();
+        int headingIndex = 0;
+        int leadingWhitespace = 0;
+        while (leadingWhitespace < text.length() && text.charAt(leadingWhitespace) <= ' ') leadingWhitespace++;
+        for (SlidingWindowChunker.Chunk chunk : chunks) {
+            while (headingIndex < headings.size() && headings.get(headingIndex).offset() <= chunk.startOffset() + leadingWhitespace) {
+                Heading heading = headings.get(headingIndex++);
+                ancestors.removeIf(ancestor -> ancestor.level() >= heading.level());
+                ancestors.add(heading);
+            }
+            StringJoiner context = new StringJoiner(" > ").add(title);
+            for (Heading heading : ancestors) {
+                if (heading.title().isBlank() == false && (heading.level() != 1 || heading.title().equals(title) == false)) {
+                    context.add(heading.title());
+                }
+            }
+            inputs.add(context + "\n\n" + chunk.text());
+        }
+        return inputs;
+    }
+
+    /** Finds ATX and Setext headings, mapping protected code placeholders back to source offsets. */
+    private List<Heading> findHeadings(String text) {
+        ProtectedCode code = protectCode(text);
+        List<Heading> headings = new ArrayList<>();
         String previous = "";
-        for (String line : code.text().split("\\n")) {
+        int offset = 0;
+        int previousOffset = 0;
+        for (String line : code.text().split("\\n", -1)) {
+            Matcher atx = HEADING.matcher(line);
             String title = null;
-            if (line.matches(" {0,3}# .+")) title = line.stripLeading().substring(2).replaceFirst("[ \\t]+#+[ \\t]*$", "");
-            else if (line.matches(" {0,3}=+[ \\t]*") && previous.isBlank() == false && previous.startsWith(code.prefix()) == false) title = previous;
+            int level = 0;
+            int headingOffset = offset;
+            if (atx.matches()) {
+                level = atx.group(1).length();
+                title = atx.group(2) == null ? "" : atx.group(2).replaceFirst("[ \\t]+#+[ \\t]*$", "");
+            } else if (line.matches(" {0,3}(?:=+|-+)[ \\t]*") && isSetextContent(previous, code)) {
+                level = line.stripLeading().charAt(0) == '=' ? 1 : 2;
+                title = previous;
+                headingOffset = previousOffset;
+            }
             if (title != null) {
                 title = code.restore(title).replaceAll("(\\*\\*|__)(.*?)\\1", "$2").replaceAll("`+", "").trim();
-                if (title.isEmpty() == false) return title.substring(0, Math.min(512, title.length()));
+                headings.add(new Heading(headingOffset, level, title));
             }
             previous = line;
+            previousOffset = offset;
+            offset += code.restore(line).length() + 1;
         }
-        return sourcePath.substring(0, Math.min(512, sourcePath.length()));
+        return headings;
     }
+
+    /** Distinguishes a Setext heading's text from preceding list items, quotes, rules, and code blocks. */
+    private boolean isSetextContent(String line, ProtectedCode code) {
+        if (line.isBlank() || HEADING.matcher(line).matches()
+                || line.matches(" {0,3}(?:[-+*](?:[ \\t]+.*)?|[0-9]+[.)][ \\t]+.*|>.*|(?:[-*_][ \\t]*){3,})")) return false;
+        if (line.startsWith(code.prefix())) {
+            String original = code.restore(line);
+            return original.startsWith("`") && original.contains("\n") == false && FENCE.matcher(original).matches() == false;
+        }
+        return true;
+    }
+
+    private record Heading(int offset, int level, String title) { }
 
     /**
      * Protects fenced, indented, and inline code with collision-free placeholders before cleanup.
@@ -104,7 +175,7 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
                 Matcher fence = FENCE.matcher(line);
                 if (fence.matches() && (fence.group(1).charAt(0) != '`' || fence.group(2).contains("`") == false)) {
                     end = source.length();
-                    for (int next = Math.min(lineEnd + 1, source.length()); next < source.length();) {
+                    for (int next = lineEnd + 1; next < source.length();) {
                         int nextEnd = lineEnd(source, next);
                         Matcher closing = FENCE.matcher(source.substring(next, nextEnd));
                         if (closing.matches() && closing.group(1).charAt(0) == fence.group(1).charAt(0)
@@ -116,7 +187,7 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
                     }
                 } else if ((line.startsWith("    ") || line.startsWith("\t")) && line.stripLeading().matches("(?:[-+*] |[0-9]+[.)] ).*") == false) {
                     end = lineEnd;
-                    for (int next = Math.min(lineEnd + 1, source.length()); next < source.length();) {
+                    for (int next = lineEnd + 1; next < source.length();) {
                         int nextEnd = lineEnd(source, next);
                         String nextLine = source.substring(next, nextEnd);
                         if (nextLine.startsWith("    ") || nextLine.startsWith("\t")) end = nextEnd;
@@ -176,25 +247,23 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
         for (int i = 0; i < text.length();) {
             char current = text.charAt(i);
             int open = current == '!' && i + 1 < text.length() && text.charAt(i + 1) == '[' ? i + 1 : i;
-            if (text.charAt(open) == '[') {
-                int close = closingDelimiter(text, open, '[', ']');
-                if (close >= 0) {
-                    String label = text.substring(open + 1, close);
-                    int end = -1;
-                    if (close + 1 < text.length() && text.charAt(close + 1) == '(') {
-                        end = closingDelimiter(text, close + 1, '(', ')');
-                    } else if (close + 1 < text.length() && text.charAt(close + 1) == '[') {
-                        int referenceEnd = closingDelimiter(text, close + 1, '[', ']');
-                        if (referenceEnd >= 0) {
-                            String reference = text.substring(close + 2, referenceEnd);
-                            if (references.contains(normalizeReference(reference.isEmpty() ? label : reference))) end = referenceEnd;
-                        }
-                    } else if (references.contains(normalizeReference(label))) end = close;
-                    if (end >= 0) {
-                        result.append(cleanLinks(label, references));
-                        i = end + 1;
-                        continue;
+            int close = text.charAt(open) == '[' ? closingDelimiter(text, open, '[', ']') : -1;
+            if (close >= 0) {
+                String label = text.substring(open + 1, close);
+                int end = -1;
+                if (close + 1 < text.length() && text.charAt(close + 1) == '(') {
+                    end = closingDelimiter(text, close + 1, '(', ')');
+                } else if (close + 1 < text.length() && text.charAt(close + 1) == '[') {
+                    int referenceEnd = closingDelimiter(text, close + 1, '[', ']');
+                    if (referenceEnd >= 0) {
+                        String reference = text.substring(close + 2, referenceEnd);
+                        if (references.contains(normalizeReference(reference.isEmpty() ? label : reference))) end = referenceEnd;
                     }
+                } else if (references.contains(normalizeReference(label))) end = close;
+                if (end >= 0) {
+                    result.append(cleanLinks(label, references));
+                    i = end + 1;
+                    continue;
                 }
             }
             result.append(current);
