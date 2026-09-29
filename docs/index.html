@@ -8,44 +8,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
   <!-- Theme: Simple -->
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css">
-  <base href="/latest/">
+  <base href="/">
+  <script>
+    var languages = ['sk', 'en', 'cs'];
+    var path = window.location.pathname;
+    var historyRoot = path.match(/^\/(latest|v[0-9]+)(?:\/|$)/);
+    var isRootLanguagePath = languages.includes(path.split('/')[1]);
+    var basePath = path.replace(/index\.(html|jsp)$/, "");
+    if (historyRoot) basePath = "/" + historyRoot[1] + "/";
+    else if (isRootLanguagePath) basePath = "/";
+    if (!basePath.endsWith("/")) basePath += "/";
+    // Keep versioned and root-level language URLs in history mode.
+    // Other deployments use hash routes without requiring server-side URL rewriting.
+    var useHashRouter = !historyRoot && !isRootLanguagePath;
+    document.querySelector("base").href = basePath;
+  </script>
 
-  <link rel="icon" type="image/x-icon" href="/assets/images/favicon-cms.ico">
+  <link rel="icon" type="image/x-icon" href="assets/images/favicon-cms.ico">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="style.css">
 
 </head>
 <body>
   <div id="app">Loading...</div>
 
-  <div id="search" style="display: none;">
-    <div class="search">
-      <div class="input-wrap">
-        <div class="gcse-search"></div>
-        <div class="deepwiki-badge">
-          <span id="ai-search-alternate">Alebo</span> <a href="https://deepwiki.com/webjetcms/webjetcms" target="_blank"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
-    var basePath = "/latest/";
-        if (
-            window.location.href.indexOf("127.0.0.1") > -1
-            || window.location.href.indexOf("iwcm.interway.sk") > -1
-            || window.location.href.indexOf("docs.interway.sk") > -1
-            || window.location.href.indexOf("localhost") > -1
-        ) {
-            basePath = "/";
-        }
     window.$docsify = {
       name: 'WebJET CMS',
       nameLink: basePath,
       repo: 'https://github.com/webjetcms/webjetcms',
       logo: basePath+'assets/images/logo.png',
-      basePath: "/", //because of base tag in head this must be set to /
-      routerMode: 'history',
+      basePath: useHashRouter ? basePath : "/",
+      routerMode: useHashRouter ? 'hash' : 'history',
       auto2top: true, //Scrolls to the top of the screen when the route is changed.
       loadSidebar: true,
       loadNavbar: true, //Loads navbar from the Markdown file _navbar.md
@@ -59,52 +53,23 @@
       },
       executeScript: true,
       nativeEmoji: true,
+      markdown: function (marked, renderer) {
+        return configureMarkdown(marked, renderer);
+      },
       notFoundPage: {
         '/': '/_404.md'
       },
-      relativePath: false, //otherwise history routing will not work
+      relativePath: useHashRouter,
       tabs: {
         persist: false,
         sync: false,
         theme: 'classic', // default
         tabComments: true, // default
         tabHeadings: true // default
-      },
-      // complete configuration parameters
-      /*search: {
-        maxAge: 86400000, // Expiration time, the default one day
-        paths: 'auto',
-
-        // Localization
-        placeholder: {
-          '/sk/': 'Vyhľadávanie',
-          '/': 'Type to search',
-        },
-
-        // Localization
-        noData: {
-          '/sk/': 'Neboli nájdené žiadne výsledky',
-          '/': 'No Results',
-        },
-
-        // Headline depth, 1 - 6
-        depth: 4,
-
-        hideOtherSidebarContent: false, // whether or not to hide other sidebar content
-
-        // To avoid search index collision
-        // between multiple websites under the same domain
-        namespace: 'webjetcms-2024',
-
-        // Use different indexes for path prefixes (namespaces).
-        // NOTE: Only works in 'auto' mode.
-        //
-        // When initialiazing an index, we look for the first path from the sidebar.
-        // If it matches the prefix from the list, we switch to the corresponding index.
-        pathNamespaces: ['/sk', '/en'],
-      },*/
+      }
     }
   </script>
+  <script src="assets/semantic-search.js"></script>
   <!-- Docsify v4 -->
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
   <!-- docsify-themeable -->
@@ -112,9 +77,6 @@
 
   <script src="//cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
   <script src="//cdn.jsdelivr.net/npm/docsify-copy-code/dist/docsify-copy-code.min.js"></script>
-
-  <!-- Full text search - https://docsify.js.org/#/plugins?id=full-text-search -->
-  <!-- script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script-->
 
   <!-- docsify-tabs (latest v1.x.x) https://jhildenbiddle.github.io/docsify-tabs/#/ -->
   <script src="https://cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
@@ -133,108 +95,60 @@
   <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.js"></script>
 
   <script>
-    var languages = ['sk', 'en', 'cs'];
-    //uprav link rendered pre WJ potreby
-    document.addEventListener("DOMContentLoaded", function () {
-      const originalRender = window.$docsify.markdown.renderer.link;
-      window.$docsify.markdown.renderer.link = function(href, title, text) {
-          //console.log("href=", href, "title=", title, "text=", text, "location=", window.location.href, "basePath=", basePath);
-
+    // Adapt rendered links to WebJET documentation routes.
+    function configureMarkdown(marked, renderer) {
+      const originalRender = renderer.link;
+      renderer.link = function(href, title, text) {
           if (href.indexOf("/src/test/")!=-1 || href.indexOf("/src/main/")!=-1 || href.indexOf("/src/webjet8/")!=-1) {
             var i = href.indexOf("/src/");
             href = "https://github.com/webjetcms/webjetcms/tree/main"+href.substring(i);
           }
 
-          if (href.indexOf("http")==0 || href.indexOf("://")!=-1) {
-            var rendered = originalRender(href, title, text);
-            rendered = rendered.replace('href="', 'target="_blank" href="');
-            return rendered;
+          // Docsify handles anchors and external URLs, including mailto: and tel: links.
+          if (href.startsWith('#') || href.startsWith('//') || /^[a-z][a-z0-9+.-]*:/i.test(href)) {
+            return originalRender(href, title, text);
           }
 
-          if (href.indexOf("/") && href.indexOf("#") != 0) {
-            //link in same folder
-            //append link to window.location.pathname without part after last /
-            href = window.location.pathname.substring(0, window.location.pathname.lastIndexOf("/")+1) + href;
-          }
+          // Both routers use the same document-relative paths, without the deployment prefix.
+          const documentPath = useHashRouter
+            ? window.location.hash.substring(1).split('?')[0]
+            : window.location.pathname.substring(basePath.length - 1);
+          const language = (documentPath.match(/^\/([a-z]{2,3}(?:-[a-z0-9]{2,6})?)(?:\/|$)/i) || [null, 'sk'])[1];
+          const isAttachment = /\.(zip|xlsx?|pdf|docx?)(?:[?#]|$)/i.test(href);
 
-          var lngPrefix = "/sk/";
-          if (window.location.href.indexOf("/en/") != -1) {
-            lngPrefix = "/en/";
-          } else if (window.location.href.indexOf("/cs/") != -1) {
-            lngPrefix = "/cs/";
+          // Strip an existing deployment prefix before adding it once to the final URL.
+          if (basePath !== '/' && href.startsWith(basePath)) {
+            href = '/' + href.substring(basePath.length);
           }
-
-          if (href.indexOf("http")!=0 && href.indexOf("..")!=0 && href.indexOf("#")!=0 && href.indexOf("//")!=0 && href.indexOf("/")!=-1) {
-            if (href.indexOf("/sk")!=0 && href.indexOf("/en")!=0 && href.indexOf("/cs")!=0) {
-              href = lngPrefix + href;
-              href = href.replace("//", "/");
+          const javadocIndex = href.indexOf('/javadoc/');
+          if (javadocIndex !== -1) {
+            // Javadoc is shared by languages; preserve its legacy frame entry point.
+            let javadocPath = href.substring(javadocIndex + '/javadoc/'.length);
+            if (href.includes('/developer/javadoc/') && javadocPath !== 'index.html') {
+              javadocPath = 'index.html?' + javadocPath;
             }
+            href = '/javadoc/' + javadocPath;
+          } else if (href.startsWith('/') && !languages.includes(href.split('/')[1]) &&
+                     !href.startsWith('/' + language + '/')) {
+            // Sidebar links omit the language; explicit language switches keep their prefix.
+            href = '/' + language + href;
           }
 
-          //console.log("href=", href)
-          for (var lang of languages) {
-            if (href.indexOf("/"+lang+"/")==0) {
-              //append basePath if href starts with /sk/ or /en/
-              href = basePath + href.substring(1);
-            }
+          // URL resolves ../ segments before either router receives the link.
+          const target = new URL(href, window.location.origin + documentPath);
+          const targetPath = target.pathname.substring(1) + target.search + target.hash;
+          if (javadocIndex !== -1 || isAttachment) {
+            // :ignore prevents .md suffixes; the handler prevents same-origin click interception.
+            return originalRender(basePath + targetPath, (title || '') + ' :ignore :target=_blank', text)
+              .replace('target="_blank"', 'target="_blank" onclick="handleExternalClick(this, event)"');
           }
 
-          let link = originalRender(href, title, text);
-          //console.log("link=", link);
-
-          //ak sa jedna o javadoc otvor do noveho okna a zafrejmuj zobrazenie
-          if (href.indexOf("/javadoc/")!=-1) {
-              //console.log("originalLink=", link);
-              link = link.replace('href="/', 'target="_blank" href="/');
-              link = link.replace('/developer/javadoc/', '/javadoc/index.html?');
-              link = link.replace("/developer/javadoc/index.html?index.html", "/javadoc/index.html");
-              link = link.replace("/javadoc/index.html?index.html", "/javadoc/index.html");
-              link = link.replace(lngPrefix+"javadoc/", "/javadoc/");
-              //console.log("fixed link:", link, "lngPrefix=", lngPrefix);
-          }
-          if (href.indexOf(".zip")!=-1 || href.indexOf(".xls")!=-1 || href.indexOf(".pdf")!=-1 || href.indexOf(".doc")!=-1) {
-              //console.log("originalLink=", link);
-              link = link.replace('href="', 'target="_blank" href="');
-          }
-
-          link = link.replace('href="'+lngPrefix+"../", 'href="../');
-          link = link.replace('href="/../', 'href="../');
-          var pathname = window.location.pathname;
-          if (pathname.endsWith("/")==false) {
-            pathname = pathname.substring(0, pathname.lastIndexOf("/")+1);
-          }
-          link = link.replace('href="../', 'href="'+pathname+'../');
-
-          if (basePath.length>1) {
-            var basePathWithoutSlash = basePath.substring(1, basePath.length-1);
-            link = link.replace('/'+basePathWithoutSlash+lngPrefix+basePathWithoutSlash+'/', '/'+basePathWithoutSlash+lngPrefix);
-          }
-
-          //prevent double lngprefix insertion
-          link = link.replaceAll(lngPrefix+lngPrefix, lngPrefix);
-          link = link.replaceAll(lngPrefix+lngPrefix.substring(1), lngPrefix);
-
-          //prevent docsify onclick event
-          link = link.replace('target="_blank"', 'target="_blank" onclick="handleExternalClick(this, event)"');
-          //console.log("link final: ", link);
-          return link;
+          // Docsify adds the hash and removes .md; history URLs also need the deployment prefix.
+          return originalRender((useHashRouter ? '/' : basePath) + targetPath, title, text);
       }
-
-      //move #search element into aside.sidebar after h1 element
-      var search = document.getElementById("search");
-      var sidebar = document.getElementsByClassName("sidebar")[0];
-      var h1 = sidebar.getElementsByTagName("h1")[0];
-      if (h1) {
-        h1.parentNode.insertBefore(search, h1.nextSibling);
-      }
-      search.style.display = "block";
-
-      if (window.location.href.indexOf("/en/")!=-1) {
-        document.getElementById("ai-search-alternate").innerText = "Or";
-      } else if (window.location.href.indexOf("/cs/")!=-1) {
-        document.getElementById("ai-search-alternate").innerText = "Nebo";
-      }
-    });
+      marked.setOptions({ renderer: renderer });
+      return marked;
+    }
     function handleExternalClick(link, event) {
       event.preventDefault();
       //prevent docsify onclick event
@@ -242,17 +156,8 @@
       window.open(link.href, '_blank');
     }
 
-    var cx = "340da4568aa0d44ca";
-    if (window.location.href.indexOf("/en/")!=-1) cx = "44ede7df6984c4a20";
-    else if (window.location.href.indexOf("/cs/")!=-1) cx = "250b24ddabe5640e4";
-
-    //append this before body end '<script async src="">
-    var tag = document.createElement("script");
-    tag.src = "https://cse.google.com/cse.js?cx="+cx;
-    tag.async = "async";
-    document.getElementsByTagName("body")[0].appendChild(tag);
-
-    if (window.location.pathname==basePath) {
+    var route = useHashRouter ? window.location.hash.substring(1) : window.location.pathname.substring(basePath.length);
+    if (!route || route === "/" || route === "index.html") {
       try {
           var language = navigator.languages
               ? navigator.languages[0]
@@ -260,9 +165,10 @@
 
           //console.log("Redirecting to language: ", language, "basePath=", basePath, "pathname=", window.location.pathname);
 
-          if (language.indexOf("sk")!=-1) window.location.href=basePath+"sk/";
-          else if (language.indexOf("cs")!=-1 || language.indexOf("cz")!=-1) window.location.href=basePath+"cs/";
-          else window.location.href=basePath+"en/";
+          var languageRoot = basePath + (useHashRouter ? "#/" : "");
+          if (language.indexOf("sk")!=-1) window.location.replace(languageRoot+"sk/");
+          else if (language.indexOf("cs")!=-1 || language.indexOf("cz")!=-1) window.location.replace(languageRoot+"cs/");
+          else window.location.replace(languageRoot+"en/");
       } catch (e) {
           console.log(e);
       }

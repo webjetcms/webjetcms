@@ -108,38 +108,137 @@ div.mermaid {
   padding: 6px;
   border-radius: var(--code-block-border-radius);
 }
-.search input {
-    outline: none;
-    width: 100%;
-    padding: 0.6em 7px;
-    font-size: inherit;
-    border: 1px solid transparent;
-}
-.gsc-control-cse {
-  padding-bottom: 5px !important;
-}
-div.gsc-results-wrapper-visible {
-  background-color: white;
-}
-div.input-wrap {
-  background-color: var(--search-input-background-color) !important;
-}
-
-div.deepwiki-badge {
-  margin-left: 13px;
-  margin-bottom: 6px;
+.documentation-search {
+  margin-top: 16px;
   font-size: 14px;
+  color: white;
 }
-div.deepwiki-badge a {
-  margin-left: 6px;
-  display: inline-block;
+.documentation-search-input {
+  display: flex;
+  gap: 6px;
+  margin: 6px 0;
 }
-div.deepwiki-badge img {
-  vertical-align: text-bottom;
+.documentation-search input[type="search"] {
+  min-width: 0;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #868ea5;
+  border-radius: 6px;
+  color: #23262e;
+  background: white;
+  font: inherit;
 }
-
-table.gssb_c {
-  left: auto !important;
+.documentation-search button,
+.documentation-search-dialog button {
+  padding: 8px 12px;
+  border: 1px solid #868ea5;
+  border-radius: 6px;
+  background: #0063fb;
+  color: white;
+  font: inherit;
+  cursor: pointer;
+}
+.documentation-search button:hover,
+.documentation-search-dialog button:hover {
+  background: #0054d5;
+}
+.documentation-search button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.documentation-search :focus-visible,
+.documentation-search-dialog :focus-visible {
+  outline: 2px solid white;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px #13151b;
+}
+.documentation-search-dialog {
+  width: min(800px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  padding: 24px;
+  box-sizing: border-box;
+  border: 1px solid #868ea5;
+  border-radius: 6px;
+  background: var(--base-background-color);
+  color: white;
+}
+.documentation-search-dialog::backdrop {
+  background: rgb(0 0 0 / 65%);
+}
+.documentation-search-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.documentation-search-header h2 {
+  margin: 0;
+  font-size: 22px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.documentation-search-close {
+  flex-shrink: 0;
+}
+.documentation-search-subtitle {
+  margin: 16px 0 0;
+  font-size: 16px;
+  font-weight: normal;
+  overflow-wrap: anywhere;
+}
+.documentation-search-scope {
+  color: var(--link-color);
+  text-decoration: underline;
+  overflow-wrap: anywhere;
+}
+.documentation-search-results {
+  padding-left: 24px;
+}
+.documentation-search-results > li {
+  padding: 12px 0;
+  border-top: 1px solid var(--sidebar-background);
+}
+.documentation-search-results a {
+  color: var(--link-color);
+  font-weight: bold;
+}
+.documentation-search-snippet {
+  margin: 6px 0 0;
+  overflow-wrap: anywhere;
+}
+.documentation-search-snippet > :first-child {
+  margin-top: 0;
+}
+.documentation-search-snippet :is(p, ul, ol, blockquote, pre, table, h1, h2, h3, h4, h5, h6) {
+  margin-bottom: 0;
+  margin-top: 6px;
+}
+.documentation-search-snippet :is(h1, h2, h3, h4, h5, h6) {
+  font-size: 1em;
+  line-height: inherit;
+}
+.documentation-search-snippet :is(ul, ol) {
+  padding-left: 24px;
+}
+.documentation-search-snippet blockquote {
+  margin-left: 0;
+  padding-left: 12px;
+  border-left: 2px solid #868ea5;
+}
+.documentation-search-snippet pre {
+  white-space: pre-wrap;
+}
+.documentation-search-snippet code {
+  background: var(--code-theme-background);
+}
+.documentation-search-snippet table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.documentation-search-answer div {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 input[type="checkbox"] {
   pointer-events: none;

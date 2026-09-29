@@ -6,11 +6,33 @@ Pre presnejšie výsledky sa obsah rozdeľuje na menšie časti - **chunky**. Ka
 
 Správu vektorov nájdete v sekcii **Nastavenia → Sémantický index**.
 
-Aktuálne je podporované indexovanie **webových stránok**. Ďalšie typy môžu pribudnúť v budúcnosti.
+Index je rozdelený na karty **Webové stránky** a **Markdown dokumenty**.
 
 !>**Upozornenie:** Indexovanie **neprebieha okamžite**. Každá požiadavka (pridanie, úprava, vymazanie) sa zaradí do **fronty** a spracuje sa v pravidelných intervaloch pomocou cron úlohy.
 
 Na zobrazenie zoznamu indexovaných objektov je potrebné mať právo Sémantický index.
+
+## Indexovanie Markdown dokumentácie
+
+Markdown dokumentácia a jej index sú spoločné pre všetky domény. Prepnutie domény nemení zobrazené dokumenty ani frontu indexovania. Korene dokumentácie aj embeddingový poskytovateľ a model sa načítajú z globálnej konfigurácie. Pridanie alebo odstránenie indexovania sa preto prejaví vo všetkých doménach; prístupové práva k vyhľadávaniu a asistent pre RAG odpovede sa naďalej riadia aktuálnou požiadavkou.
+
+Na karte **Markdown dokumenty** vyberte priečinok pomocou stromového výberu. Strom začína koreňmi z globálnej konfiguračnej premennej `ragMarkdownFolders`, napríklad `/admin/docs/webjetcms` a `/admin/docs/orange`. Rozbalením koreňa môžete vybrať jeho podpriečinok. Prepínač **Zahrnúť aj podpriečinky** určuje, či tabuľka zobrazí časti súborov aj z vnorených priečinkov; po vypnutí zobrazí iba súbory priamo vo vybranom priečinku. Tabuľka navyše obsahuje stĺpce **Priečinok dokumentácie**, **Cesta dokumentu** a **Názov dokumentu**. Údaje zdroja slúžia len na čítanie.
+
+Pre dokumentáciu použite alias `file:/docs/sk/admin/users`. Správca musí v globálnej premennej `symlinkTranslate` nastaviť mapovanie, napríklad `/docs/|/srv/documentation/webjetcms/`; alias potom označuje priečinok `/srv/documentation/webjetcms/sk/admin/users`. Lokálne môže mapovanie smerovať do priečinka `docs` vášho projektu. Bez mapovania sa alias nedá načítať. Iné lokálne priečinky možno nastaviť absolútnou cestou s prefixom `file:`, napríklad `file:/srv/manuals`. Indexujú sa aj súbory priamo v nastavenom priečinku, napríklad `README.md`. Susedné priečinky sa neprehľadávajú. Lokálne súbory sa indexujú rovnakými tlačidlami; ich indexovanie nevytvára verejnú webovú adresu dokumentácie.
+
+**Dokumentácia musí byť rozdelená do jazykových priečinkov**, napríklad `/sk/`, `/en/` alebo `/cs/`. Jazyk sa určí z najbližšieho rozpoznaného jazykového priečinka v celej ceste vrátane nastaveného koreňa. Priečinok `file:/docs/sk/admin/users` preto automaticky priradí priamym súborom jazyk `sk`. Koreň `file:/docs` môže obsahovať viac jazykových priečinkov naraz. Rozpoznané jazyky vychádzajú z globálnej premennej `languages`; `sk`, `en` a `cs` sú podporované vždy. Súbory bez jazykového priečinka sa pri indexovaní preskočia.
+
+Zelené tlačidlo **Pridať indexovanie** a červené tlačidlo **Odstrániť indexovanie** otvoria dialóg rovnako ako pri webových stránkach. Dialóg prevezme zvolený priečinok aj nastavenie **Zahrnúť aj podpriečinky**; obe voľby môžete zmeniť priamo v dialógu. Rozsah sa uplatní na počty súborov aj na zaradenie do fronty. Jazyk sa nevyberá, určí sa automaticky pre každý súbor z jeho cesty. Dialóg pri indexovaní zobrazuje pravidlo jazykových priečinkov a počty súborov s rozpoznaným jazykom: celkový počet, počet indexovaných súborov a počet vo fronte. Za indexované sa počítajú súbory aktuálneho poskytovateľa, modelu a jazyka odvodeného z ich cesty. Pri odstraňovaní sa zohľadnia všetky uložené indexy vo vybranom rozsahu bez ohľadu na jazyk.
+
+Po potvrdení sa požiadavka uloží do fronty pre každý súbor samostatne. Spracuje ju existujúca úloha `sk.iway.iwcm.rag.service.RagIndexCronTask`; požiadavky na pridanie alebo odstránenie sa nevykonávajú v prehliadači. Chybné požiadavky zostávajú vo fronte na ďalší pokus. Odstránenie zahŕňa aj záznamy súborov vo vybranom rozsahu, ktoré už na disku neexistujú, a nahradí ich prípadné čakajúce požiadavky na indexovanie. Požiadavky z ostatných priečinkov zostávajú vo fronte. Výber podpriečinka nemení nakonfigurovaný koreň ani identifikátory dokumentov.
+
+Fronta aj tabuľka chunkov uchovávajú úplnú cestu k súboru, napríklad `file:/docs/sk/admin/users/README.md`, bez samostatného stĺpca koreňového priečinka. Pri prechode zo staršej verzie odstráňte pôvodné Markdown indexy a čakajúce požiadavky s relatívnymi cestami a zaraďte dokumentáciu na indexovanie znova.
+
+Pri prechode zo staršej verzie musí správca odstrániť staré čakajúce Markdown požiadavky viazané na konkrétnu doménu a zaradiť dokumentáciu znova do spoločného indexu. Postup je uvedený v [technickej dokumentácii](../../../custom-apps/apps/rag/markdown-search.md#správa-indexu-v-administrácii).
+
+Ak nie je nastavený žiadny koreň, karta zobrazí informáciu o potrebnej konfigurácii a akčné tlačidlá sú vypnuté. Podrobnosti o obsahu priečinkov a automatickom sledovaní zmien sú v [dokumentácii Markdown vyhľadávania](../../../custom-apps/apps/rag/markdown-search.md).
+
+!>Odstránenie indexu nemaže Markdown súbory ani nevypína ich automatickú indexáciu. Ak máte nastavenú úlohu `MarkdownIndexCronTask`, ďalšie prehľadanie nakonfigurovaného koreňa vytvorí index znova.
 
 ## Indexovanie webových stránok
 
@@ -48,16 +70,12 @@ Položka vo fronte neobsahuje poskytovateľa ani model; tieto hodnoty sa načít
 
 Veľkosť chunkov sa nastavuje konfiguračnými premennými:
 
-- `ragEmbeddingChunkSize` - maximálna veľkosť jednej časti textu v znakoch, predvolene `1000`.
-- `ragEmbeddingChunkOverlap` - počet znakov prekrytia medzi susednými časťami, predvolene `200`.
+- `ragEmbeddingChunkSize` - približná cieľová veľkosť chunku v znakoch, predvolene `1000`. Maximálna veľkosť je o 50 % vyššia, teda predvolene `1500` znakov. Hodnota menšia alebo rovná nule vypne rozdeľovanie textu.
+- `ragEmbeddingChunkOverlap` - približné prekrytie medzi susednými chunkmi v znakoch, predvolene `200`.
 
-Pri delení textu sa systém snaží zachovať prirodzený kontext. Koniec chunku sa vyberá v tomto poradí:
+Chunky podľa možnosti začínajú a končia na rozpoznanej hranici vety alebo odseku, ktorá je najbližšie k cieľovej veľkosti. Veta zalomená do viacerých riadkov zostane spolu, pokiaľ sa zmestí do maximálnej veľkosti. Dlhšie vety alebo odseky sa rozdelia medzi slovami. Ak aj samotné slovo prekročí maximum, rozdelí sa uprostred.
 
-1. koniec odseku,
-2. koniec riadku,
-3. koniec vety alebo podobná interpunkcia,
-4. medzera medzi slovami,
-5. tvrdé rozdelenie podľa maximálnej veľkosti.
+Prekrytie sa podľa možnosti prispôsobuje celým vetám alebo odsekom, preto sa jeho skutočná veľkosť mení a môže byť aj nulová, ak je to potrebné na pokračovanie v texte alebo dodržanie maximálnej veľkosti. Každý ďalší chunk pridá nový obsah. Nové hranice sa na existujúce dokumenty použijú po opätovnom indexovaní.
 
 Prekrytie sa používa na zachovanie kontextu medzi susednými časťami. Pri RAG odpovedi sa susedné chunky jednej stránky môžu znovu zlúčiť, pričom sa odstráni duplicitný text vzniknutý prekrytím.
 

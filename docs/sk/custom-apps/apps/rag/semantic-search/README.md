@@ -1,5 +1,7 @@
 # Sémantické vyhľadávanie (RAG)
 
+Pre vyhľadávanie v samostatných súboroch dokumentácie pozrite [Vyhľadávanie v Markdown dokumentácii](../markdown-search.md).
+
 Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné stránky podľa **významu otázky**, nielen podľa zhody kľúčových slov. Embedding vektory ukladá do PostgreSQL s [pgvector](https://github.com/pgvector/pgvector) alebo do vstavaného úložiska [MariaDB Vector](https://mariadb.com/docs/server/reference/sql-structure/vectors/vector-overview). Vektory generujú poskytovatelia podporovaní knižnicou `webjet-ai`.
 
 Nad rovnakým indexom je možné použiť aj:
@@ -23,7 +25,11 @@ Proces indexovania:
 4. **Generovanie embeddingov** - nové alebo zmenené chunky spracuje [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) podľa poskytovateľa a modelu nastaveného v indexovacom asistentovi `RAG-EMB-INDEX`.
 5. **Uloženie do databázy** - metadáta chunkov sa ukladajú cez JPA repozitár [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorjpa/EmbeddingChunkRepository.java). Zvolená implementácia [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java) uloží vektory pomocou natívneho SQL pre konkrétnu databázu.
 
-Chunking preferuje prirodzené hranice textu: odsek, riadok, vetu, medzeru a až potom tvrdé rozdelenie podľa limitu. Pri desatinných číslach sa bodka nepovažuje za koniec vety.
+Veľkosť chunku je približná cieľová hodnota. Maximálna veľkosť je cieľová hodnota zvýšená o 50 %, teda pri predvolenom nastavení najviac `1500` znakov. Začiatok aj koniec chunku sa podľa možnosti prispôsobujú najbližšej rozpoznanej hranici vety alebo odseku, a to aj pri prekrytí. Vety vrátane zalomenia riadkov zostávajú celé, pokiaľ sa zmestia do maxima. Dlhšie vety alebo odseky sa rozdelia medzi slovami; slovo dlhšie než maximum sa rozdelí aj uprostred. Prekrytie sa môže zmenšiť, aby každý ďalší chunk pridal nový obsah a dodržal maximálnu veľkosť. Hodnota `ragEmbeddingChunkSize` menšia alebo rovná nule vypne rozdeľovanie textu. Nové hranice sa na existujúci obsah použijú po opätovnom indexovaní.
+
+Pri Markdown dokumentácii sa pred text každého chunku doplní názov dokumentu a hierarchia nadpisov platná na začiatku danej časti, napríklad `Používateľská príručka > Registrácia > Schválenie`. Názov sa preberá z prvého nadpisu prvej úrovne; ak chýba, použije sa relatívna cesta k súboru. Rozpoznávajú sa nadpisy ATX (`#`) aj Setext (podčiarknuté), nadpisy v ukážkach kódu sa ignorujú. Kontext sa pridáva až po rozdelení textu, takže nastavená veľkosť chunku sa vzťahuje na pôvodnú časť textu. Text s týmto prefixom sa ukladá do indexu aj odosiela na vytvorenie embeddingu, preto je kontext dostupný v náhľade chunkov, fulltexte aj RAG odpovediach.
+
+Opätovné použitie Markdown vektorov vychádza z hash hodnoty celého vstupu vrátane názvu a nadpisov. Zmena nadradeného nadpisu preto obnoví príslušné embeddingy aj vtedy, keď sa samotný text časti nezmenil. Po aktualizácii spustite Markdown indexovanie znova: vektory bez kontextu sa vygenerujú nanovo. Ak už vektor kontext obsahuje, ale uložený text chunku ešte nemá prefix, aktualizuje sa iba uložený text a vektor sa použije znova. Ďalšie indexovanie nezmenených súborov sa preskočí. Index netreba ručne mazať.
 
 ### 2. Vyhľadávanie
 
@@ -136,8 +142,8 @@ Aktivácia a nastavenie sa robí v [Konfigurácii](../../../../admin/setup/confi
 | `ragEmbeddingModel` | `text-embedding-3-small` | Model použitý iba pri automatickom vytvorení chýbajúceho embedding asistenta. |
 | `ragEmbeddingDimensions` | `1536` | Globálny počet dimenzií vektora pre celú inštaláciu. Musí zodpovedať použitému modelu a databázovej tabuľke. |
 | `ai_localEmbeddingModelBundlePath` | prázdna hodnota | Cesta ku globálnemu schválenému ZIP balíku lokálneho modelu `intfloat/multilingual-e5-base`: absolútna cesta na serveri alebo cesta začínajúca `/WEB-INF/` voči koreňu nasadenej aplikácie. Po zmene je potrebný reštart. |
-| `ragEmbeddingChunkSize` | `1000` | Maximálna veľkosť jednej časti textu v znakoch. |
-| `ragEmbeddingChunkOverlap` | `200` | Počet znakov, o ktoré sa susedné chunky prekrývajú. |
+| `ragEmbeddingChunkSize` | `1000` | Približná cieľová veľkosť chunku v znakoch. Maximum je o 50 % vyššie; pri predvolenej hodnote je to `1500` znakov. Hodnota menšia alebo rovná nule vypne rozdeľovanie. |
+| `ragEmbeddingChunkOverlap` | `200` | Približné prekrytie v znakoch, podľa možnosti prispôsobené celým vetám alebo odsekom. Môže sa zmenšiť, aby každý ďalší chunk pridal nový obsah a dodržal maximálnu veľkosť. |
 
 Systém podľa potreby automaticky vytvorí dvoch systémových AI asistentov:
 

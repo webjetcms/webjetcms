@@ -25,16 +25,19 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
 import sk.iway.iwcm.rag.embedding.EmbeddingService;
+import sk.iway.iwcm.rag.service.MarkdownIndexService;
 import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
 import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.rag.service.RagSettingsService;
 import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
 import sk.iway.iwcm.rag.vectorstore.VectorStore;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
+import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
 /**
- * Service for semantic search over document embeddings.
- * Embeds the query, searches the configured vector store, and returns results aggregated by document.
+ * Provides shared semantic and hybrid retrieval for document and Markdown embeddings.
+ * Document searches can aggregate chunks and generate answers; source-specific callers can
+ * retrieve raw chunks for authorization and citation enrichment before generating answers.
  */
 @Service
 public class SemanticSearchService {
@@ -76,65 +79,7 @@ public class SemanticSearchService {
      * @return list of document IDs with their best similarity scores
      */
     public List<SemanticSearchResult> search(String query, Integer domainId, String language, int maxResults, RagEntityType entityType, HttpServletRequest request) {
-        if (vectorStore.isAvailableAndInitialized() == false) {
-            // If vector store is not available or not initialized, we cannot perform semantic search, return empty results
-            Logger.debug(SemanticSearchService.class, "Vector store not available or initialized, returning empty results");
-            return List.of();
-        }
-
-        AssistantDefinitionEntity embeddingAssistant;
-        String provider;
-        String model;
-        EmbeddingBatchResult embeddingResult;
-
-        try {
-            embeddingAssistant = ragEmbeddingStatService.getSearchAssistant();
-            if (embeddingAssistant == null) {
-                throw new ProviderCallException("RAG search embedding assistant is not available");
-            }
-            if (Tools.isEmpty(embeddingAssistant.getProvider())) {
-                throw new ProviderCallException("RAG search embedding assistant has no provider configured");
-            }
-            if (Tools.isEmpty(embeddingAssistant.getModel())) {
-                throw new ProviderCallException("RAG search embedding assistant has no model configured");
-            }
-
-            provider = embeddingAssistant.getProvider().trim().toLowerCase(Locale.ROOT);
-            model = embeddingAssistant.getModel();
-            embeddingResult = embeddingService.embedWithUsage(
-                List.of(query),
-                embeddingAssistant,
-                request,
-                EmbeddingInputType.QUERY
-            );
-        } catch (ProviderCallException e) {
-            Logger.error(SemanticSearchService.class, "Error generating query embedding: " + e.getMessage(), e);
-            Adminlog.add(Adminlog.TYPE_SEARCH, "Error generating query embedding: " + e.getMessage(), null, null);
-            return List.of();
-        }
-
-        List<float[]> queryEmbeddings = embeddingResult.getEmbeddings();
-        if (queryEmbeddings.isEmpty()) {
-            Logger.error(SemanticSearchService.class, "Failed to generate query embedding");
-            return List.of();
-        }
-
-        ragEmbeddingStatService.recordSearchTokens(embeddingAssistant, embeddingResult.getUsedTokens());
-
-        float[] queryEmbedding = queryEmbeddings.get(0);
-        if (queryEmbedding.length == 0) {
-            Logger.error(SemanticSearchService.class, "Failed to generate query embedding");
-            return List.of();
-        }
-
-        PageParams pageParams = new PageParams(request);
-
-        double minimumSimilarity = RagSettingsService.getSemanticMinimumSimilarity(pageParams);
-        int minimumResults = RagSettingsService.getSemanticMinimumResults(pageParams);
-        int minimumResultsForCall = Math.min(Math.max(0, minimumResults), Math.max(0, maxResults));
-
-        int chunkFetchMultiplier = Math.max(1, RagSettingsService.getHybridChunkFetchMultiplier(pageParams));
-        int chunkLimit = Math.max(1, maxResults * chunkFetchMultiplier);
+        if (isAvailable() == false) return List.of();
 
         Map<String, Object> bonusParams = null;
         String rootGroupString = String.valueOf(request.getAttribute("rootGroup"));
@@ -170,6 +115,134 @@ public class SemanticSearchService {
             bonusParams.put("rootGroups", restGroups);
         }
 
+        List<VectorSearchResult> chunkResults = searchChunks(query, domainId, language, maxResults, entityType, bonusParams, request);
+        PageParams pageParams = new PageParams(request);
+        double minimumSimilarity = RagSettingsService.getSemanticMinimumSimilarity(pageParams);
+        int minimumResultsForCall = Math.min(Math.max(0, RagSettingsService.getSemanticMinimumResults(pageParams)), Math.max(0, maxResults));
+
+        // Generate answers from raw vector chunks because the answer post-processor has its own context merge rules.
+        String answer = null;
+        if(RagSettingsService.isAnswerAllowed(pageParams)) {
+            answer = ragService.answerQuestion(query, domainId, chunkResults, request);
+            answer = AllowSafeHtmlAttributeConverter.sanitize(answer);
+        }
+        request.setAttribute("ragAnswer", Tools.isEmpty(answer) ? null : answer);
+
+        List<SemanticSearchResult> sortedResults = aggregateByDocumentBestScore(chunkResults);
+
+        return filterResultsBySimilarity(sortedResults, minimumSimilarity, minimumResultsForCall).stream()
+            .limit(maxResults)
+            .toList();
+    }
+
+    /**
+     * Retrieves ranked chunks using the shared embedding and optional hybrid-search pipeline.
+     * Source-specific callers supply filters before retrieval and enrich or authorize chunks before generating answers.
+     *
+     * @param query search query text
+     * @param domainId requesting domain used for assistants and usage; Markdown storage is shared in domain zero
+     * @param language language filter
+     * @param maxResults desired document count used to calculate the chunk retrieval limit
+     * @param entityType source entity type
+     * @param filters additional vector-store filters applied before the result limit
+     * @param request current request with optional component settings
+     * @return ranked chunks without answer generation or document aggregation
+     */
+    public List<VectorSearchResult> searchChunks(String query, Integer domainId, String language, int maxResults,
+            RagEntityType entityType, Map<String, Object> filters, HttpServletRequest request) {
+        boolean markdown = entityType == RagEntityType.MARKDOWN;
+        boolean available;
+        try (DomainRequestBeanScope ignored = markdown ? DomainRequestBeanScope.open(null) : null) {
+            available = isAvailable();
+        }
+        if (available == false) {
+            // If vector store is not available or not initialized, we cannot perform semantic search, return empty results
+            Logger.debug(SemanticSearchService.class, "Vector store not available or initialized, returning empty results");
+            return List.of();
+        }
+
+        AssistantDefinitionEntity embeddingAssistant;
+        String provider;
+        String model;
+        EmbeddingBatchResult embeddingResult;
+
+        try {
+            // Shared Markdown vectors still use the requesting domain's assistant and provider credentials.
+            embeddingAssistant = markdown
+                ? ragEmbeddingStatService.getSearchAssistant(domainId)
+                : ragEmbeddingStatService.getSearchAssistant();
+            if (embeddingAssistant == null) {
+                throw new ProviderCallException("RAG search embedding assistant is not available");
+            }
+            if (Tools.isEmpty(embeddingAssistant.getProvider())) {
+                throw new ProviderCallException("RAG search embedding assistant has no provider configured");
+            }
+            if (Tools.isEmpty(embeddingAssistant.getModel())) {
+                throw new ProviderCallException("RAG search embedding assistant has no model configured");
+            }
+
+            provider = embeddingAssistant.getProvider().trim().toLowerCase(Locale.ROOT);
+            model = embeddingAssistant.getModel();
+            embeddingResult = embeddingService.embedWithUsage(List.of(query), embeddingAssistant, request, EmbeddingInputType.QUERY);
+        } catch (ProviderCallException e) {
+            Logger.error(SemanticSearchService.class, "Error generating query embedding: " + e.getMessage(), e);
+            Adminlog.add(Adminlog.TYPE_SEARCH, "Error generating query embedding: " + e.getMessage(), null, null);
+            return List.of();
+        }
+
+        List<float[]> queryEmbeddings = embeddingResult.getEmbeddings();
+        if (queryEmbeddings.isEmpty()) {
+            Logger.error(SemanticSearchService.class, "Failed to generate query embedding");
+            return List.of();
+        }
+
+        if (markdown) {
+            ragEmbeddingStatService.recordSearchTokens(embeddingAssistant, embeddingResult.getUsedTokens(), domainId);
+        } else {
+            ragEmbeddingStatService.recordSearchTokens(embeddingAssistant, embeddingResult.getUsedTokens());
+        }
+
+        float[] queryEmbedding = queryEmbeddings.get(0);
+        if (queryEmbedding.length == 0) {
+            Logger.error(SemanticSearchService.class, "Failed to generate query embedding");
+            return List.of();
+        }
+
+        // Markdown retrieval uses shared storage and global settings after embedding in the caller's domain.
+        try (DomainRequestBeanScope ignored = markdown ? DomainRequestBeanScope.open(null) : null) {
+            return retrieveChunks(query, queryEmbedding, provider, model,
+                markdown ? Integer.valueOf(MarkdownIndexService.SHARED_DOMAIN_ID) : domainId,
+                language, maxResults, entityType, filters, request);
+        }
+    }
+
+    /**
+     * Retrieves vector matches and optionally combines full-text matches using reciprocal rank fusion.
+     *
+     * @param query original query text for full-text search and hybrid-mode selection
+     * @param queryEmbedding query vector for similarity search
+     * @param provider embedding provider identifier
+     * @param model embedding model identifier
+     * @param domainId storage domain to filter by, or {@code null} for all domains
+     * @param language optional language filter
+     * @param maxResults requested source count used to derive the chunk limit
+     * @param entityType source entity type
+     * @param filters optional source-specific filters
+     * @param request request providing component settings
+     * @return ranked vector or fused chunk results
+     */
+    private List<VectorSearchResult> retrieveChunks(String query, float[] queryEmbedding, String provider, String model,
+            Integer domainId, String language, int maxResults, RagEntityType entityType, Map<String, Object> filters,
+            HttpServletRequest request) {
+        Map<String, Object> bonusParams = filters == null ? null : new HashMap<>(filters);
+        PageParams pageParams = new PageParams(request);
+
+        int minimumResults = RagSettingsService.getSemanticMinimumResults(pageParams);
+        int minimumResultsForCall = Math.min(Math.max(0, minimumResults), Math.max(0, maxResults));
+
+        int chunkFetchMultiplier = Math.max(1, RagSettingsService.getHybridChunkFetchMultiplier(pageParams));
+        int chunkLimit = Math.max(1, maxResults * chunkFetchMultiplier);
+
         List<VectorSearchResult> vectorChunkResults = vectorStore.search(queryEmbedding, provider, model, entityType, domainId, language, chunkLimit, bonusParams);
 
         boolean useHybridSearch = shouldUseHybridSearch(query, vectorChunkResults, minimumResultsForCall, pageParams);
@@ -187,19 +260,7 @@ public class SemanticSearchService {
             }
         }
 
-        // Generate answers from raw vector chunks because the answer post-processor has its own context merge rules.
-        String answer = null;
-        if(RagSettingsService.isAnswerAllowed(pageParams)) {
-            answer = ragService.answerQuestion(query, domainId, chunkResults, request);
-            answer = AllowSafeHtmlAttributeConverter.sanitize(answer);
-        }
-        request.setAttribute("ragAnswer", Tools.isEmpty(answer) ? null : answer);
-
-        List<SemanticSearchResult> sortedResults = aggregateByDocumentBestScore(chunkResults);
-
-        return filterResultsBySimilarity(sortedResults, minimumSimilarity, minimumResultsForCall).stream()
-            .limit(maxResults)
-            .toList();
+        return chunkResults;
     }
 
     /**
@@ -229,6 +290,13 @@ public class SemanticSearchService {
         };
     }
 
+    /**
+     * Classifies a nonempty query as short when either its character count or term count meets the configured limit.
+     *
+     * @param query query text, possibly null
+     * @param pageParams component settings containing short-query limits
+     * @return {@code true} when either configured limit includes the query
+     */
     private boolean isShortQuery(String query, PageParams pageParams) {
         String normalizedQuery = Tools.getStringValue(query, "").trim();
         if (normalizedQuery.isEmpty()) return false;
@@ -276,7 +344,7 @@ public class SemanticSearchService {
             .map(entry -> {
                 VectorSearchResult source = resultByChunkKey.get(entry.getKey());
                 double normalizedSimilarity = Math.min(1d, entry.getValue().doubleValue() * rrfNormalizationFactor);
-                return new VectorSearchResult(
+                VectorSearchResult merged = new VectorSearchResult(
                     source.getChunkId(),
                     source.getEntityType(),
                     source.getEntityId(),
@@ -284,6 +352,9 @@ public class SemanticSearchService {
                     source.getChunkText(),
                     normalizedSimilarity
                 );
+                merged.setSourceTitle(source.getSourceTitle());
+                merged.setSourceUrl(source.getSourceUrl());
+                return merged;
             })
             .toList();
     }
@@ -389,7 +460,22 @@ public class SemanticSearchService {
         return filteredResults;
     }
 
+    /**
+     * Checks search availability and upgrades the shared schema on first use when necessary.
+     * Migration uses global configuration and always restores the requesting domain's context.
+     *
+     * @return whether search can safely access the current vector schema
+     */
     public boolean isAvailable() {
-        return vectorStore.isAvailableAndInitialized();
+        try {
+            if (vectorStore.isAvailableAndInitialized()) return true;
+            if (vectorStore.isAvailable() == false) return false;
+            try (DomainRequestBeanScope ignored = DomainRequestBeanScope.open(null)) {
+                return vectorStore.initializeSchema();
+            }
+        } catch (RuntimeException exception) {
+            Logger.error(SemanticSearchService.class, "Cannot initialize vector store for search", exception);
+            return false;
+        }
     }
 }

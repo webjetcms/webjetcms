@@ -56,6 +56,9 @@ public class MariaDbVectorStore implements VectorStore {
             chunk_index        INT NOT NULL,
             chunk_text         TEXT NOT NULL,
             content_hash       VARCHAR(64) NOT NULL,
+            source_path        TEXT,
+            source_title       VARCHAR(512),
+            source_hash        VARCHAR(64),
             embedding_provider VARCHAR(100) NOT NULL,
             embedding_model    VARCHAR(100) NOT NULL,
             dimensions         INT NOT NULL,
@@ -118,6 +121,14 @@ public class MariaDbVectorStore implements VectorStore {
         updateEmbeddingRow(dataSourceName, id, embedding);
     }
 
+    /**
+     * Stores one vector and marks its chunk completed, recording an error status when the update fails.
+     *
+     * @param dataSourceName resolved RAG datasource name
+     * @param id existing chunk ID
+     * @param embedding nonempty embedding vector
+     * @return {@code true} when the vector and completed status were stored successfully
+     */
     private boolean updateEmbeddingRow(String dataSourceName, Long id, float[] embedding) {
         try (Connection connection = getConnection(dataSourceName)) {
             boolean originalAutoCommit = connection.getAutoCommit();
@@ -170,6 +181,14 @@ public class MariaDbVectorStore implements VectorStore {
         }
     }
 
+    /**
+     * Stores vectors and completed statuses in one transaction, rolling back the batch on failure.
+     *
+     * @param dataSourceName resolved RAG datasource name
+     * @param ids existing chunk IDs in vector order
+     * @param embeddings nonempty vectors corresponding to the IDs
+     * @throws SQLException if a row is invalid, a database operation fails, or batch completion cannot be verified
+     */
     private void updateEmbeddingBatchTransaction(
         String dataSourceName,
         List<Long> ids,
@@ -218,6 +237,14 @@ public class MariaDbVectorStore implements VectorStore {
         }
     }
 
+    /**
+     * Checks that a JDBC batch reports the expected number of results without failed statements.
+     *
+     * @param operation operation name used in error messages
+     * @param updateCounts JDBC batch update counts
+     * @param expectedRows expected number of batch results
+     * @throws IllegalStateException if the result count differs or any statement reports failure
+     */
     private void assertBatchSuccessful(String operation, int[] updateCounts, int expectedRows) {
         if (updateCounts.length != expectedRows) {
             throw new IllegalStateException(
@@ -230,6 +257,13 @@ public class MariaDbVectorStore implements VectorStore {
         }
     }
 
+    /**
+     * Marks a failed vector update with a bounded error message and logs status-update failures.
+     *
+     * @param dataSourceName resolved RAG datasource name
+     * @param id chunk ID to mark as failed
+     * @param errorMessage failure message, or empty for the default message
+     */
     private void markEmbeddingError(String dataSourceName, Long id, String errorMessage) {
         String message = Tools.isEmpty(errorMessage) ? "Embedding vector update failed" : errorMessage;
         if (message.length() > 500) message = message.substring(0, 500);
@@ -295,6 +329,14 @@ public class MariaDbVectorStore implements VectorStore {
         return executeSearchQuery(dataSourceName, sql, params);
     }
 
+    /**
+     * Builds an index-backed nearest-neighbor query with metric-specific similarity conversion.
+     *
+     * @param metric supported distance metric, {@code cosine} or {@code l2}
+     * @param conditions trusted SQL filter fragment with bound-value placeholders
+     * @param efSearch validated search-effort override, or {@code null} to use the session value
+     * @return SQL requiring the query vector, filter values, query vector again, and result limit
+     */
     static String buildVectorSearchSql(String metric, String conditions, Integer efSearch) {
         String distanceFunction = distanceFunction(metric);
         String similarity = "cosine".equals(metric)
@@ -377,6 +419,20 @@ public class MariaDbVectorStore implements VectorStore {
         return results;
     }
 
+    /**
+     * Retrieves completed chunks ranked by native full-text relevance within the requested scope.
+     *
+     * @param dataSourceName resolved RAG datasource name
+     * @param query textual full-text query
+     * @param embeddingProvider provider required on matching chunks
+     * @param embeddingModel model required on matching chunks
+     * @param entityType optional source entity type
+     * @param domainId optional exact storage domain, including zero for shared Markdown
+     * @param language optional language filter
+     * @param limit maximum chunks to return
+     * @param bonusParams optional source-root or document-group constraints
+     * @return matching chunks in descending relevance order
+     */
     private List<VectorSearchResult> executeFulltextSearch(
         String dataSourceName,
         String query,
@@ -409,6 +465,20 @@ public class MariaDbVectorStore implements VectorStore {
         return executeSearchQuery(dataSourceName, sql.toString(), params);
     }
 
+    /**
+     * Retrieves completed chunks using a case-insensitive pattern fallback within the requested scope.
+     *
+     * @param dataSourceName resolved RAG datasource name
+     * @param query query text; SQL pattern wildcards remain active in fallback searches
+     * @param embeddingProvider provider required on matching chunks
+     * @param embeddingModel model required on matching chunks
+     * @param entityType optional source entity type
+     * @param domainId optional exact storage domain, including zero for shared Markdown
+     * @param language optional language filter
+     * @param limit maximum chunks to return
+     * @param bonusParams optional source-root or document-group constraints
+     * @return matching chunks in descending relevance order
+     */
     private List<VectorSearchResult> executeLikeSearch(
         String dataSourceName,
         String query,
@@ -441,6 +511,16 @@ public class MariaDbVectorStore implements VectorStore {
         return executeSearchQuery(dataSourceName, sql.toString(), params);
     }
 
+    /**
+     * Appends optional entity, domain, and language conditions and their bound values.
+     *
+     * @param sql query builder to extend
+     * @param params ordered parameters to extend
+     * @param columnPrefix trusted column qualifier, including its trailing dot
+     * @param entityType source type, or {@code null} for all types
+     * @param domainId exact storage domain, including zero, or {@code null} for all domains
+     * @param language language code, or null or empty to omit the filter
+     */
     private void addScopeFilters(
         StringBuilder sql,
         List<Object> params,
@@ -463,6 +543,16 @@ public class MariaDbVectorStore implements VectorStore {
         }
     }
 
+    /**
+     * Appends a Markdown root-prefix filter or document-group constraints before result limiting.
+     * Markdown root wildcards are escaped; document group conditions are combined with OR.
+     *
+     * @param sql query builder to extend
+     * @param params ordered parameters to extend
+     * @param columnPrefix trusted column qualifier, including its trailing dot
+     * @param entityType source type that selects the applicable filters
+     * @param bonusParams optional {@code sourceRoot}, {@code sourceRoots}, or document root-group collections
+     */
     private void addEntityTypeSpecificConditions(
         StringBuilder sql,
         List<Object> params,
@@ -470,6 +560,21 @@ public class MariaDbVectorStore implements VectorStore {
         RagEntityType entityType,
         Map<String, Object> bonusParams
     ) {
+        if (bonusParams != null && RagEntityType.MARKDOWN == entityType) {
+            List<?> roots = bonusParams.get("sourceRoot") instanceof String sourceRoot ? List.of(sourceRoot) :
+                bonusParams.get("sourceRoots") instanceof List<?> sourceRoots ? sourceRoots : null;
+            if (roots != null) {
+                sql.append(" AND (1=0");
+                for (Object value : roots) {
+                    if (value instanceof String root) {
+                        sql.append(" OR ");
+                        sql.append(columnPrefix).append("source_path LIKE BINARY ? ESCAPE '!'");
+                        params.add(root.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "/%");
+                    }
+                }
+                sql.append(")");
+            }
+        }
         if (bonusParams == null || RagEntityType.DOCUMENT != entityType) return;
 
         List<Integer> rootGroupsL1 = asIntegerList(bonusParams.get("rootGroupL1"));
@@ -491,6 +596,16 @@ public class MariaDbVectorStore implements VectorStore {
         sql.append(")");
     }
 
+    /**
+     * Appends a parameterized IN clause to a group of OR conditions when values are present.
+     *
+     * @param sql query builder to extend
+     * @param params ordered parameters to extend
+     * @param column trusted qualified SQL column name
+     * @param values group IDs to include
+     * @param hasPrevious whether the condition group already contains a clause
+     * @return whether the group contains a clause after this call
+     */
     private boolean appendInCondition(
         StringBuilder sql,
         List<Object> params,
@@ -514,6 +629,12 @@ public class MariaDbVectorStore implements VectorStore {
         return values != null && values.isEmpty() == false;
     }
 
+    /**
+     * Extracts integer values from a collection while ignoring elements of other types.
+     *
+     * @param value candidate collection
+     * @return integer values, or {@code null} when no integers are available
+     */
     private List<Integer> asIntegerList(Object value) {
         if ((value instanceof Collection<?>) == false) return null;
 
@@ -527,6 +648,14 @@ public class MariaDbVectorStore implements VectorStore {
         return result.isEmpty() ? null : result;
     }
 
+    /**
+     * Executes a parameterized chunk search and maps source identity, text, and score.
+     *
+     * @param dataSourceName resolved RAG datasource name
+     * @param sql search query with result columns expected by the mapper
+     * @param params ordered query parameters
+     * @return mapped search results
+     */
     private List<VectorSearchResult> executeSearchQuery(
         String dataSourceName,
         String sql,
@@ -586,6 +715,12 @@ public class MariaDbVectorStore implements VectorStore {
                   AND table_name IN ('rag_embedding_chunks', 'rag_embedding_vectors')
                 """);
             if (tableCount != 2) return false;
+            if (queryForInt(connection, """
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = DATABASE() AND table_name = 'rag_embedding_chunks'
+                  AND (column_name IN ('source_title', 'source_hash')
+                    OR (column_name = 'source_path' AND LOWER(data_type) = 'text'))
+                """) != 3) return false;
             if (hasExpectedVectorColumnDefinition(connection, dimensions) == false) return false;
             if (hasExpectedChunkIndexDefinitions(connection) == false) return false;
             if (hasExpectedVectorForeignKeyDefinition(connection) == false) return false;
@@ -595,6 +730,14 @@ public class MariaDbVectorStore implements VectorStore {
         }
     }
 
+    /**
+     * Checks the vector column type, dimensions, and non-null constraint.
+     *
+     * @param connection open database connection
+     * @param dimensions required vector dimension count
+     * @return whether the stored column matches the required definition
+     * @throws SQLException if schema metadata cannot be queried
+     */
     private boolean hasExpectedVectorColumnDefinition(Connection connection, int dimensions) throws SQLException {
         return queryForInt(connection, """
             SELECT COUNT(*)
@@ -608,6 +751,13 @@ public class MariaDbVectorStore implements VectorStore {
             """, "vector(" + dimensions + ")") == 1;
     }
 
+    /**
+     * Checks whether the vector table already has an embedding column.
+     *
+     * @param connection open database connection
+     * @return whether the embedding column exists
+     * @throws SQLException if schema metadata cannot be queried
+     */
     private boolean vectorColumnExists(Connection connection) throws SQLException {
         return queryForInt(connection, """
             SELECT COUNT(*)
@@ -622,6 +772,12 @@ public class MariaDbVectorStore implements VectorStore {
         return matchesChunkIndexDefinitions(showCreateTable(connection, CHUNK_TABLE_NAME));
     }
 
+    /**
+     * Checks the required unique, entity, domain/language/status, and full-text chunk indexes.
+     *
+     * @param createTableSql SHOW CREATE TABLE output, possibly null
+     * @return {@code true} when all required chunk index definitions are present
+     */
     static boolean matchesChunkIndexDefinitions(String createTableSql) {
         String normalized = normalizeCreateTableSql(createTableSql);
         if (normalized.isEmpty()) return false;
@@ -652,6 +808,12 @@ public class MariaDbVectorStore implements VectorStore {
         return matchesVectorForeignKeyDefinition(showCreateTable(connection, VECTOR_TABLE_NAME));
     }
 
+    /**
+     * Checks for cascading deletion from chunk metadata to stored vectors.
+     *
+     * @param createTableSql SHOW CREATE TABLE output, possibly null
+     * @return {@code true} when the chunk foreign key includes ON DELETE CASCADE
+     */
     static boolean matchesVectorForeignKeyDefinition(String createTableSql) {
         return normalizeCreateTableSql(createTableSql).contains(
             "foreign key (chunk_id) references rag_embedding_chunks (id) on delete cascade");
@@ -661,6 +823,13 @@ public class MariaDbVectorStore implements VectorStore {
         return matchesVectorIndexDefinition(showCreateTable(connection, VECTOR_TABLE_NAME), metric);
     }
 
+    /**
+     * Checks the canonical vector index and its configured distance metric.
+     *
+     * @param createTableSql SHOW CREATE TABLE output, possibly null
+     * @param metric requested metric, with {@code l2} mapped to Euclidean distance
+     * @return {@code true} when the canonical embedding index and expected distance are present
+     */
     static boolean matchesVectorIndexDefinition(String createTableSql, String metric) {
         if (createTableSql == null) return false;
 
@@ -670,6 +839,12 @@ public class MariaDbVectorStore implements VectorStore {
             normalized.contains("distance=" + expectedDistance);
     }
 
+    /**
+     * Normalizes quoting, case, and whitespace for comparison of schema definitions.
+     *
+     * @param createTableSql SHOW CREATE TABLE output, possibly null
+     * @return normalized SQL, or an empty string for null input
+     */
     private static String normalizeCreateTableSql(String createTableSql) {
         if (createTableSql == null) return "";
         return createTableSql
@@ -721,6 +896,12 @@ public class MariaDbVectorStore implements VectorStore {
         return true;
     }
 
+    /**
+     * Adds source and group metadata columns and backfills missing embedding providers.
+     *
+     * @param connection open database connection
+     * @throws SQLException if a schema or provider backfill statement fails
+     */
     private void migrateChunkTable(Connection connection) throws SQLException {
         executeStatement(connection,
             "ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS embedding_provider VARCHAR(100)");
@@ -744,6 +925,14 @@ public class MariaDbVectorStore implements VectorStore {
             "ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS root_group_l2 INT");
         executeStatement(connection,
             "ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS root_group_l3 INT");
+        executeStatement(connection,
+            "ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS source_path TEXT");
+        executeStatement(connection,
+            "ALTER TABLE rag_embedding_chunks MODIFY COLUMN source_path TEXT NULL");
+        executeStatement(connection,
+            "ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS source_title VARCHAR(512)");
+        executeStatement(connection,
+            "ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS source_hash VARCHAR(64)");
     }
 
     private void ensureChunkIndexes(Connection connection) throws SQLException {
@@ -753,6 +942,13 @@ public class MariaDbVectorStore implements VectorStore {
         if (alterSql != null) executeStatement(connection, alterSql);
     }
 
+    /**
+     * Builds repairs for missing or incorrect chunk indexes while preserving unrelated indexes.
+     *
+     * @param createTableSql current chunk-table definition
+     * @param existingIndexNames names of indexes already present
+     * @return combined ALTER TABLE statement, or {@code null} when no repair is needed
+     */
     static String buildChunkIndexRepairSql(String createTableSql, Collection<String> existingIndexNames) {
         String normalized = normalizeCreateTableSql(createTableSql);
         List<String> clauses = new ArrayList<>();
@@ -791,6 +987,15 @@ public class MariaDbVectorStore implements VectorStore {
         return clauses.isEmpty() ? null : "ALTER TABLE rag_embedding_chunks " + String.join(", ", clauses);
     }
 
+    /**
+     * Adds replacement clauses for an incorrect index, retaining the spelling of an existing name when dropping it.
+     *
+     * @param clauses ALTER TABLE clauses to extend
+     * @param existingIndexNames current index names
+     * @param expectedName canonical index name to locate case-insensitively
+     * @param correct whether the existing definition already matches
+     * @param addClause trusted SQL clause creating the required index
+     */
     private static void appendIndexRepair(
         List<String> clauses,
         Collection<String> existingIndexNames,
@@ -805,6 +1010,12 @@ public class MariaDbVectorStore implements VectorStore {
         clauses.add(addClause);
     }
 
+    /**
+     * Replaces conflicting vector foreign keys with the required cascading chunk reference.
+     *
+     * @param connection open database connection
+     * @throws SQLException if schema inspection or foreign-key replacement fails
+     */
     private void ensureVectorForeignKey(Connection connection) throws SQLException {
         String createTableSql = showCreateTable(connection, VECTOR_TABLE_NAME);
         if (matchesVectorForeignKeyDefinition(createTableSql)) return;
@@ -847,6 +1058,13 @@ public class MariaDbVectorStore implements VectorStore {
         }
     }
 
+    /**
+     * Keeps a matching canonical vector index or replaces conflicting vector indexes.
+     *
+     * @param connection open database connection
+     * @param metric supported distance metric
+     * @throws SQLException if index inspection or replacement fails
+     */
     private void ensureVectorIndex(Connection connection, String metric) throws SQLException {
         Map<String, String> indexTypes = getIndexTypes(connection, VECTOR_TABLE_NAME);
         List<String> vectorIndexNames = indexNamesOfType(indexTypes, "VECTOR");
@@ -862,6 +1080,13 @@ public class MariaDbVectorStore implements VectorStore {
         executeStatement(connection, buildVectorIndexRepairSql(indexesToDrop, metric));
     }
 
+    /**
+     * Builds a single ALTER TABLE statement to replace selected indexes with the canonical vector index.
+     *
+     * @param indexesToDrop existing index names to remove
+     * @param metric supported distance metric
+     * @return SQL that drops the selected indexes and adds the configured vector index
+     */
     static String buildVectorIndexRepairSql(Collection<String> indexesToDrop, String metric) {
         List<String> clauses = new ArrayList<>();
         for (String indexName : indexesToDrop) {
@@ -900,6 +1125,14 @@ public class MariaDbVectorStore implements VectorStore {
         return true;
     }
 
+    /**
+     * Deletes all chunk metadata and cascaded vectors before resizing the vector column and rebuilding its index.
+     *
+     * @param connection open database connection
+     * @param dimensions validated new vector dimension count
+     * @param metric supported distance metric
+     * @throws SQLException if inspection, data deletion, or schema alteration fails
+     */
     private void resetVectorDimensions(Connection connection, int dimensions, String metric) throws SQLException {
         boolean columnExists = vectorColumnExists(connection);
         Map<String, String> indexTypes = getIndexTypes(connection, VECTOR_TABLE_NAME);
@@ -912,6 +1145,15 @@ public class MariaDbVectorStore implements VectorStore {
             buildVectorDimensionResetSql(indexesToDrop, dimensions, metric, columnExists));
     }
 
+    /**
+     * Builds the vector-column resize and index recreation statement for an emptied vector table.
+     *
+     * @param indexesToDrop existing index names to remove
+     * @param dimensions validated new vector dimension count
+     * @param metric supported distance metric
+     * @param columnExists whether the embedding column must be modified instead of added
+     * @return ALTER TABLE statement for the column and canonical vector index
+     */
     static String buildVectorDimensionResetSql(
         Collection<String> indexesToDrop,
         int dimensions,
@@ -975,6 +1217,12 @@ public class MariaDbVectorStore implements VectorStore {
         return resolution.dataSourceName();
     }
 
+    /**
+     * Validates the MariaDB vector dimension range and configured distance metric, logging invalid settings.
+     *
+     * @param dimensions requested vector dimension count
+     * @return {@code true} for 1 through 16383 dimensions and a supported metric
+     */
     private boolean validateConfiguration(int dimensions) {
         if (dimensions < 1 || dimensions > MAX_VECTOR_DIMENSIONS) {
             Logger.error(MariaDbVectorStore.class,
@@ -1007,6 +1255,11 @@ public class MariaDbVectorStore implements VectorStore {
         return metric == null ? "" : metric.trim().toLowerCase(Locale.ROOT);
     }
 
+    /**
+     * Logs a configuration error explaining the metrics supported by MariaDB Vector.
+     *
+     * @param metric unsupported configured metric
+     */
     private void logUnsupportedMetric(String metric) {
         if ("inner_product".equals(metric)) {
             Logger.error(MariaDbVectorStore.class,
@@ -1018,6 +1271,12 @@ public class MariaDbVectorStore implements VectorStore {
         }
     }
 
+    /**
+     * Serializes vector components in the bracketed format accepted by VEC_FromText.
+     *
+     * @param embedding vector components in dimension order
+     * @return comma-separated vector enclosed in brackets
+     */
     static String vectorToString(float[] embedding) {
         StringBuilder result = new StringBuilder("[");
         for (int i = 0; i < embedding.length; i++) {
@@ -1027,6 +1286,12 @@ public class MariaDbVectorStore implements VectorStore {
         return result.append("]").toString();
     }
 
+    /**
+     * Parses the bracketed representation returned by VEC_ToText.
+     *
+     * @param vector vector text, possibly null or empty
+     * @return parsed components, or an empty array for missing or empty bracket contents
+     */
     static float[] parseVector(String vector) {
         if (vector == null || vector.length() < 2) return new float[0];
 
@@ -1049,6 +1314,14 @@ public class MariaDbVectorStore implements VectorStore {
         throw new SQLException("Unable to read MariaDB table definition for " + tableName);
     }
 
+    /**
+     * Reads index names and types for a table in the current database.
+     *
+     * @param connection open database connection
+     * @param tableName table whose index metadata is requested
+     * @return index types keyed by index name in name order
+     * @throws SQLException if index metadata cannot be read
+     */
     private Map<String, String> getIndexTypes(Connection connection, String tableName) throws SQLException {
         Map<String, String> result = new LinkedHashMap<>();
         try (PreparedStatement statement = connection.prepareStatement("""
@@ -1068,6 +1341,13 @@ public class MariaDbVectorStore implements VectorStore {
         return result;
     }
 
+    /**
+     * Finds foreign keys on the vector chunk ID or using the canonical constraint name.
+     *
+     * @param connection open database connection
+     * @return matching foreign-key names in name order
+     * @throws SQLException if constraint metadata cannot be read
+     */
     private List<String> getRelevantVectorForeignKeyNames(Connection connection) throws SQLException {
         List<String> result = new ArrayList<>();
         try (PreparedStatement statement = connection.prepareStatement("""
@@ -1106,6 +1386,12 @@ public class MariaDbVectorStore implements VectorStore {
         return "`" + identifier.replace("`", "``") + "`";
     }
 
+    /**
+     * Acquires the connection-scoped RAG schema lock with a 30-second timeout.
+     *
+     * @param connection open database connection
+     * @throws SQLException if the lock cannot be acquired or the lock query fails
+     */
     private void acquireSchemaLock(Connection connection) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement("SELECT GET_LOCK(?, ?)")) {
             statement.setString(1, SCHEMA_LOCK_NAME);
@@ -1128,6 +1414,13 @@ public class MariaDbVectorStore implements VectorStore {
         }
     }
 
+    /**
+     * Obtains a pooled connection and rejects a missing connection explicitly.
+     *
+     * @param dataSourceName resolved RAG datasource name
+     * @return open connection that the caller must close
+     * @throws SQLException if a connection cannot be obtained
+     */
     protected Connection getConnection(String dataSourceName) throws SQLException {
         Connection connection = DBPool.getConnection(dataSourceName);
         if (connection == null) {
@@ -1151,6 +1444,15 @@ public class MariaDbVectorStore implements VectorStore {
         }
     }
 
+    /**
+     * Executes a parameterized query and reads the first column of its first row as an integer.
+     *
+     * @param connection open database connection
+     * @param sql query text
+     * @param params ordered query parameters
+     * @return first integer value, or zero if no row is returned
+     * @throws SQLException if query execution or result access fails
+     */
     private int queryForInt(Connection connection, String sql, Object... params) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(sql)) {
             for (int i = 0; i < params.length; i++) {

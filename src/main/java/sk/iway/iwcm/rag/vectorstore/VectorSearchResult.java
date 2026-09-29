@@ -16,6 +16,9 @@ public class VectorSearchResult {
     private Integer chunkIndex;
     private String chunkText;
     private Double similarity;
+    private String sourceTitle;
+    private String sourceUrl;
+    private String sourcePath;
 
     public VectorSearchResult() {}
 
