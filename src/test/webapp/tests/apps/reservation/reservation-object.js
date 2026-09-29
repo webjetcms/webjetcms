@@ -139,8 +139,8 @@ Scenario('reservation object + special prices test', ({I, DT, DTE}) => {
 
     //Not important but required
     I.clickCss("#DTE_Field_description");
-    I.fillField("#DTE_Field_description", "Reservation entity test + test of special prices inner data table.");
-    I.fillField("#DTE_Field_priceForHour", priceForHour);
+    DTE.fillField("description", "Reservation entity test + test of special prices inner data table.");
+    DTE.fillField("priceForHour", priceForHour);
 
     I.say("During create cant see special prices tab");
     I.dontSeeElement("#pills-dt-reservationObjectDataTable-specialPrice-tab");
@@ -151,13 +151,18 @@ Scenario('reservation object + special prices test', ({I, DT, DTE}) => {
     I.click(prices_reservation_object);
     DTE.waitForEditor("reservationObjectDataTable");
     I.waitForValue("#DTE_Field_priceForHour", priceForHour, 10);
-    I.fillField("#DTE_Field_priceForHour", "");
+    DTE.fillField("timeUnit", "");
+    DTE.fillField("priceForHour", "");
     DTE.save();
+    I.waitForText("Pole „price_for_hour“ je povinné. ", 10, "#reservationObjectDataTable_modal .DTE_Footer .DTE_Form_Error");
+    DTE.fillField("priceForHour", priceForHour);
+    DTE.save(null, true);
 
     DT.filterContains("name", prices_reservation_object);
     I.click(prices_reservation_object);
     DTE.waitForEditor("reservationObjectDataTable");
-    I.seeInField("#DTE_Field_priceForHour", "");
+    I.seeInField("#DTE_Field_timeUnit", "");
+    I.seeInField("#DTE_Field_priceForHour", ""+priceForHour);
     I.seeElement("#pills-dt-reservationObjectDataTable-specialPrice-tab");
 
     I.clickCss("#pills-dt-reservationObjectDataTable-specialPrice-tab");

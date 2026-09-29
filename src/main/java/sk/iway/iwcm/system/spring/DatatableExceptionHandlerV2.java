@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 public class DatatableExceptionHandlerV2
 {
 	private static final Pattern DATA_TOO_LONG_PATTERN = Pattern.compile("Data too long for column ['\"`]([^'\"`]+)['\"`]", Pattern.CASE_INSENSITIVE);
+	private static final Pattern COLUMN_CANNOT_BE_NULL_PATTERN = Pattern.compile("Column ['\"`]([^'\"`]+)['\"`] cannot be null", Pattern.CASE_INSENSITIVE);
 
 	@ResponseBody
 	@ExceptionHandler(MethodArgumentNotValidException.class)
@@ -166,6 +167,11 @@ public class DatatableExceptionHandlerV2
 				Matcher dataTooLongMatcher = DATA_TOO_LONG_PATTERN.matcher(message);
 				if (dataTooLongMatcher.find()) {
 					return Prop.getInstance().getText("datatable.error.valueTooLong", dataTooLongMatcher.group(1));
+				}
+
+				Matcher columnCannotBeNullMatcher = COLUMN_CANNOT_BE_NULL_PATTERN.matcher(message);
+				if (columnCannotBeNullMatcher.find()) {
+					return Prop.getInstance().getText("datatable.error.valueRequired", columnCannotBeNullMatcher.group(1));
 				}
 
 				int start = message.indexOf("Duplicate entry");

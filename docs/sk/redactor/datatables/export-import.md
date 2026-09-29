@@ -40,7 +40,7 @@ Kliknutím na tlačidlo Importovať sa spustí import z vybraného Excel súboru
 
 Väčšina tabuliek pri aktualizácii existujúceho záznamu umožňuje **importovať stĺpce čiastkovo**. V Exceli môžete zmazať stĺpce, ktoré chcete v databáze zachovať bez zmeny. Následne pri importe sa v existujúcich záznamoch prenesú len zmeny z ponechaných stĺpcov v Exceli.
 
-Pri číselných a dátumových poliach, ktoré podporujú prázdnu hodnotu, **prázdna bunka v ponechanom stĺpci vymaže pôvodnú hodnotu**. Rovnako možno použiť text `NULL`. Zoznam importovaných stĺpcov sa určuje podľa hlavičky Excelu, aj keď je prvá dátová bunka stĺpca prázdna. Povinné polia nemožno takto vyprázdniť; import zobrazí validačnú chybu.
+Pri číselných a dátumových poliach, ktoré podporujú prázdnu hodnotu, **prázdna bunka v ponechanom stĺpci vymaže pôvodnú hodnotu**. Rovnako možno použiť text `NULL`. Zoznam importovaných stĺpcov sa určuje podľa hlavičky Excelu, aj keď je prvá dátová bunka stĺpca prázdna. Povinné polia nemožno takto vyprázdniť, import zobrazí chybu validácie.
 
 ### Preskočiť chybné záznamy
 
