@@ -469,7 +469,6 @@ export function bindImportButton(TABLE, DATA) {
                 //console.log(counter);
                 counter += 1;
                 countedData.push(data);
-                countedImportedColumns.push(importedColumnsByRow[index] || []);
                 //console.log("counter="+counter+" chunks="+chunks+" index="+index+" mainData.length - 1="+(mainData.length - 1));
 
                 //data posielame postupne, maximalne naraz chunks objektov
@@ -483,7 +482,6 @@ export function bindImportButton(TABLE, DATA) {
                     //console.log("stringify=", JSON.stringify(readyData.data), "readyData=", readyData);
                     formData['dzchunksize'] = Buffer.byteLength(JSON.stringify(readyData));
                     formData['importedColumns'] = importedColumns;
-                    formData['importedColumnsByRow'] = {...countedImportedColumns};
                     formData['importMode'] = importMode;
                     formData["updateByColumn"] = updateByColumn;
                     formData["skipWrongData"] = skipWrongData;
@@ -541,7 +539,6 @@ export function bindImportButton(TABLE, DATA) {
                     }
                     //console.log("Reseting countedData");
                     countedData = new Array();
-                    countedImportedColumns = new Array();
                 }
                 index++;
             }
@@ -555,7 +552,6 @@ export function bindImportButton(TABLE, DATA) {
 
         const formData = {};
         let countedData = new Array();
-        let countedImportedColumns = new Array();
         let counter = 0;
         let finishCounter = 0;
         let dzchunkindex = 0;
@@ -604,9 +600,9 @@ export function bindImportButton(TABLE, DATA) {
 
     let xlsx;
     let excelData;
+    let excelHeaders;
     let mainData;
     let importedColumns = [];
-    let importedColumnsByRow = [];
 
     let importModalListenersBinded = false;
     $('#datatableImportModal').on('show.bs.modal', function () {
@@ -659,17 +655,17 @@ export function bindImportButton(TABLE, DATA) {
                 const fileReader = new FileReader();
                 mainData = null;
                 importedColumns = [];
-                importedColumnsByRow = [];
                 fileReader.onload = function(e) {
                     const data = e.target.result;
                     //console.log("xlsx=", xlsx);
                     const excelFile = xlsx.read(data, { type: 'binary', cellDates: true });
                     // forEach tam je len pre istotu keby sa tam vyskytlo viac excel suborov v SheetNames (nemalo by sa vyskytnut ale)
                     excelFile.SheetNames.forEach(sheet => {
-                        let rowObject = xlsx.utils.sheet_to_row_object_array(excelFile.Sheets[sheet]);
-                        //let jsonObject = JSON.stringify(rowObject);
-                        //console.log("excel rowObject=", rowObject);
-                        excelData = rowObject;
+                        const worksheet = excelFile.Sheets[sheet];
+                        const headerRange = xlsx.utils.decode_range(worksheet["!ref"] || "A1");
+                        headerRange.e.r = headerRange.s.r;
+                        excelHeaders = xlsx.utils.sheet_to_json(worksheet, {header: 1, range: headerRange})[0] || [];
+                        excelData = xlsx.utils.sheet_to_row_object_array(worksheet);
                     });
                     $( document ).trigger('file-reader-done');
                 };
@@ -683,43 +679,38 @@ export function bindImportButton(TABLE, DATA) {
                 //console.log("excelData=", excelData, "importTable=", importTable);
                 //hashtabulka ciselnikov na prevod nazvo hodnoty na ID
                 let optionsTable = dtWJ.getOptionsTableImport(importTable.DATA);
-                mainData = excelData.map((d, rowIndex) => {
-                    let row = {};
-                    let rowImportedColumns = [];
-                    row.__rowNum__ = d.__rowNum__;
-                    for (let index in importTable.DATA.fields) {
-                        let col = importTable.DATA.fields[index];
-                        let value = d[col.label+"|"+col.data];
-                        //console.log("index: ", index, " col.data=", col.data, "col=", col, " value=", value, "d=", d);
-                        //if (col.data.indexOf(".")!=-1) console.log("col=", col);
-
-                        //skus cele lower case
-                        if (typeof value == "undefined" && col.label!=null && col.data!=null) {
-                            value = d[col.label.toLowerCase()+"|"+col.data.toLowerCase()];
-
-                            if (typeof value == "undefined") {
-                                //check value by iterating over all data in d
-                                let name;
-                                for (let key in d) {
-                                    //key is in format label|name, check only name, label is probably changed
-                                    let i = key.indexOf("|");
-                                    if (i>0) name = key.substring(i+1);
-                                    else name = key; //label is missing, check whole key as name
-
-                                    if (col.name === name) {
-                                        value = d[key];
-                                    }
-                                }
-                            }
+                //Resolve imported fields from the header, independently of empty cells in any row.
+                const columns = [];
+                for (const col of importTable.DATA.fields) {
+                    let header = excelHeaders.find(key => key === col.label+"|"+col.data);
+                    if (typeof header == "undefined" && col.label!=null && col.data!=null) {
+                        header = excelHeaders.find(key => key === col.label.toLowerCase()+"|"+col.data.toLowerCase());
+                        if (typeof header == "undefined") {
+                            header = excelHeaders.find(key => {
+                                if (typeof key !== "string") return false;
+                                const separator = key.indexOf("|");
+                                const name = separator > 0 ? key.substring(separator+1) : key;
+                                return col.name === name;
+                            });
                         }
+                    }
+                    if (typeof header != "undefined") columns.push({col, header});
+                }
+                importedColumns = columns.map(column => column.col.data);
 
-                        //console.log("value=", value, "label=", col.label, "data=", col.data, "d=", d);
-
-                        //nemame hodnotu v exceli, preskocime
-                        if (typeof value == "undefined") continue;
-
-                        //Keep omitted cells distinct from an explicit NULL value for partial imports.
-                        rowImportedColumns.push(col.data);
+                mainData = excelData.map(d => {
+                    let row = {};
+                    row.__rowNum__ = d.__rowNum__;
+                    for (const {col, header} of columns) {
+                        const isNumber = col.attr != null && col.attr.type === "number";
+                        const isDate = col.type === "datetime" || (col.renderFormat != null &&
+                            (col.renderFormat.indexOf("-date")!=-1 || col.renderFormat.indexOf("-time")!=-1));
+                        let value = d[header];
+                        //SheetJS omits empty cells even when their column exists in the header.
+                        if (typeof value == "undefined") {
+                            if (isNumber || isDate) value = null;
+                            else continue;
+                        }
 
                         //sprav TRIM hodnoty
                         try {
@@ -729,14 +720,10 @@ export function bindImportButton(TABLE, DATA) {
                             }
                         } catch (e) {}
 
-                        //teoreticky je mozne hodnotam nastavit NULL a tym padom aktualizovat podla stlpca len tie, ktore zadam
-                        if ("NULL"===value) value = null;
+                        if ("NULL"===value || ((isNumber || isDate) &&
+                            (value === "" || value === WJ.translate('datatables.export.empty.js')))) value = null;
 
-                        if (1==row.__rowNum__) {
-                            importedColumns.push(col.data);
-                        }
-
-                        if (typeof col.renderFormat != "undefined" && col.renderFormat != null) {
+                        if (value != null && typeof col.renderFormat != "undefined" && col.renderFormat != null) {
                             //uprav hodnoty
                             if (col.renderFormat.indexOf("-date-time")!=-1) {
                                 //console.log("PARSING DATETIME, col=", col, " value=", value);
@@ -824,7 +811,6 @@ export function bindImportButton(TABLE, DATA) {
                         //console.log("Setting property, col.data=", col.data, "value=", value);
                         WJ.setJsonProperty(row, col.data, value);
                     }
-                    importedColumnsByRow[rowIndex] = rowImportedColumns;
                     //console.log("row=", row);
                     return row;
                 });

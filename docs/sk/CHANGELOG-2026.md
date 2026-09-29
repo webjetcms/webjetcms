@@ -354,7 +354,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 ```
 
 - Dátové tabuľky - opravená validácia povinných polí typu [`DATE` a `DATETIME`](developer/datatables-editor/standard-fields.md#date). Prázdna hodnota sa z editora odošle ako prázdny reťazec, ktorý server deserializuje na `null`; zobrazí sa chybové hlásenie podľa typu poľa a kalendárový výber sa po neúspešnej validácii automaticky neotvorí (#58770).
-- Dátové tabuľky - pri editácii je možné vyprázdnením poľa vynulovať objektovú hodnotu typu [`NUMBER`](developer/datatables-editor/standard-fields.md#number--text_number), ktorá podporuje `null`. Pri importe sa existujúca hodnota zachová, ak číselný stĺpec nie je v Excel súbore; importovaná hodnota `NULL` ju vynuluje.
+- Dátové tabuľky - pri editácii je možné vyprázdnením poľa vynulovať objektovú hodnotu typu [`NUMBER`](developer/datatables-editor/standard-fields.md#number--text_number), ktorá podporuje `null`. Pri importe sa číselné a dátumové stĺpce určujú podľa hlavičky Excelu: vynechaný stĺpec zachová pôvodnú hodnotu, prázdna bunka alebo hodnota `NULL` v importovanom stĺpci ju vynuluje (#58770).
 - Dátové tabuľky - validačná chyba poľa [`QUILL`](developer/datatables-editor/standard-fields.md#quill) zároveň zvýrazní okraj nástrojovej lišty aj editora (#58770).
 
 ## 2026.18

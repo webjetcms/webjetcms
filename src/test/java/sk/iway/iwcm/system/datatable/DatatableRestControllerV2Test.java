@@ -18,12 +18,16 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.bind.WebDataBinder;
 
 import ch.qos.logback.classic.Level;
+import lombok.Getter;
+import lombok.Setter;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.UploadSpringConfig;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.iwcm.test.TestRequest;
@@ -41,6 +45,9 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -293,80 +300,140 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
     }
 
     @Test
-    void testCopyEntityIntoOriginalCopiesNullOnlyForNumberFields() {
+    void testCopyEntityIntoOriginalCopiesNullForNumbersAndDates() {
         @SuppressWarnings("unchecked")
-        JpaRepository<NumberMergeTestEntity, Long> repository = mock(JpaRepository.class);
-        DatatableRestControllerV2<NumberMergeTestEntity, Long> numberController =
+        JpaRepository<NullMergeTestEntity, Long> repository = mock(JpaRepository.class);
+        DatatableRestControllerV2<NullMergeTestEntity, Long> mergeController =
                 new DatatableRestControllerV2<>(repository) {};
-        NumberMergeTestEntity original = new NumberMergeTestEntity(10, 20, 30);
+        NullMergeTestEntity original = createMergeTestEntity();
 
-        numberController.copyEntityIntoOriginal(new NumberMergeTestEntity(null, null, null), original);
+        mergeController.copyEntityIntoOriginal(new NullMergeTestEntity(), original);
 
         assertNull(original.getNumberValue());
+        assertNull(original.getDateValue());
+        assertNull(original.getSqlDateValue());
+        assertNull(original.getLocalDateValue());
+        assertNull(original.getLocalDateTimeValue());
+        assertNull(original.getMappedNumberValue());
+        assertNull(original.getMappedDateValue());
+        assertNull(original.getForcedNumberValue());
+        assertNull(original.getForcedDateValue());
         assertEquals(20, original.getTextNumberValue());
         assertEquals(30, original.getNumberOptOutValue());
+        assertEquals(new Date(1000), original.getDateOptOutValue());
+        assertEquals(50, original.getHiddenNumberValue());
+        assertEquals(new Date(1000), original.getDisabledDateValue());
 
-        numberController.copyEntityIntoOriginal(new NumberMergeTestEntity(40, null, null), original);
+        NullMergeTestEntity submitted = new NullMergeTestEntity();
+        submitted.setNumberValue(40);
+        mergeController.copyEntityIntoOriginal(submitted, original);
 
         assertEquals(40, original.getNumberValue());
     }
 
     @Test
-    void testImportCopiesNullOnlyForIncludedNumberFields() {
-        NumberMergeTestEntity omitted = new NumberMergeTestEntity(10, 20, 30);
-        NumberMergeTestEntity included = new NumberMergeTestEntity(10, 20, 30);
+    void testImportPreservesOmittedNumbersAndDatesUnlessExplicitlyOverridden() {
+        NullMergeTestEntity original = createMergeTestEntity();
 
         try {
-            editImportedNumber(omitted, Set.of("textNumberValue"));
-            editImportedNumber(included, Set.of("numberValue"));
+            //Mapped fields must use annotation.data rather than their Java field names.
+            editImportedFields(original, Set.of("textNumberValue", "mappedNumberValue", "mappedDateValue"));
         } finally {
             controller.getOne(-1L);
         }
 
-        assertEquals(10, omitted.getNumberValue());
-        assertNull(included.getNumberValue());
+        assertEquals(10, original.getNumberValue());
+        assertEquals(new Date(1000), original.getDateValue());
+        assertEquals(java.sql.Date.valueOf("2026-09-28"), original.getSqlDateValue());
+        assertEquals(LocalDate.of(2026, 9, 28), original.getLocalDateValue());
+        assertEquals(LocalDateTime.of(2026, 9, 28, 10, 30), original.getLocalDateTimeValue());
+        assertEquals(60, original.getMappedNumberValue());
+        assertEquals(new Date(1000), original.getMappedDateValue());
+        assertEquals(40, original.getTextNumberValue());
+        assertNull(original.getForcedNumberValue());
+        assertNull(original.getForcedDateValue());
     }
 
     @Test
-    void testImportUsesColumnsFromEachRowWhenCopyingNullNumberFields() {
+    void testImportCopiesNullForIncludedNumbersAndDates() {
+        NullMergeTestEntity original = createMergeTestEntity();
+
+        try {
+            editImportedFields(original, Set.of("numberValue", "dateValue", "sqlDateValue", "localDateValue",
+                    "localDateTimeValue", "mappedNumber", "mappedDate", "numberOptOutValue", "dateOptOutValue",
+                    "hiddenNumberValue", "disabledDateValue"));
+        } finally {
+            controller.getOne(-1L);
+        }
+
+        assertNull(original.getNumberValue());
+        assertNull(original.getDateValue());
+        assertNull(original.getSqlDateValue());
+        assertNull(original.getLocalDateValue());
+        assertNull(original.getLocalDateTimeValue());
+        assertNull(original.getMappedNumberValue());
+        assertNull(original.getMappedDateValue());
+        assertEquals(30, original.getNumberOptOutValue());
+        assertEquals(new Date(1000), original.getDateOptOutValue());
+        assertEquals(50, original.getHiddenNumberValue());
+        assertEquals(new Date(1000), original.getDisabledDateValue());
+    }
+
+    @Test
+    void testImportWithoutColumnMetadataPreservesNumbersAndDates() {
+        NullMergeTestEntity original = createMergeTestEntity();
+
+        try {
+            editImportedFields(original, null);
+        } finally {
+            controller.getOne(-1L);
+        }
+
+        assertEquals(10, original.getNumberValue());
+        assertEquals(new Date(1000), original.getDateValue());
+        assertEquals(java.sql.Date.valueOf("2026-09-28"), original.getSqlDateValue());
+        assertEquals(LocalDate.of(2026, 9, 28), original.getLocalDateValue());
+        assertEquals(LocalDateTime.of(2026, 9, 28, 10, 30), original.getLocalDateTimeValue());
+    }
+
+    @Test
+    void testImportUsesCommonColumnsAcrossRows() {
         @SuppressWarnings("unchecked")
-        JpaRepository<NumberMergeTestEntity, Long> repository = mock(JpaRepository.class);
-        NumberMergeTestEntity omitted = new NumberMergeTestEntity(10, 20, 30);
-        NumberMergeTestEntity included = new NumberMergeTestEntity(40, 50, 60);
+        JpaRepository<NullMergeTestEntity, Long> repository = mock(JpaRepository.class);
+        NullMergeTestEntity first = createMergeTestEntity();
+        NullMergeTestEntity second = createMergeTestEntity();
         when(repository.existsById(1L)).thenReturn(true);
         when(repository.existsById(2L)).thenReturn(true);
-        when(repository.findById(1L)).thenReturn(Optional.of(omitted));
-        when(repository.findById(2L)).thenReturn(Optional.of(included));
+        when(repository.findById(1L)).thenReturn(Optional.of(first));
+        when(repository.findById(2L)).thenReturn(Optional.of(second));
         when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        DatatableRestControllerV2<NumberMergeTestEntity, Long> numberController =
+        DatatableRestControllerV2<NullMergeTestEntity, Long> mergeController =
                 new DatatableRestControllerV2<>(repository) {};
-        TestRequest request = new TestRequest("", "/admin/rest/number-merge/editor");
-        numberController.setRequest(request);
-        numberController.setValidator(validator);
+        TestRequest request = new TestRequest("", "/admin/rest/null-merge/editor");
+        mergeController.setRequest(request);
+        mergeController.setValidator(validator);
 
-        Map<Long, NumberMergeTestEntity> data = new LinkedHashMap<>();
-        data.put(1L, new NumberMergeTestEntity(null, 20, 30));
-        data.put(2L, new NumberMergeTestEntity(null, 50, 60));
+        Map<Long, NullMergeTestEntity> data = new LinkedHashMap<>();
+        data.put(1L, new NullMergeTestEntity());
+        data.put(2L, new NullMergeTestEntity());
 
-        DatatableRequest<Long, NumberMergeTestEntity> datatableRequest = new DatatableRequest<>();
+        DatatableRequest<Long, NullMergeTestEntity> datatableRequest = new DatatableRequest<>();
         datatableRequest.setAction("edit");
         datatableRequest.setData(data);
         datatableRequest.setDztotalchunkcount(1);
         datatableRequest.setImportedColumns(Set.of("numberValue"));
-        datatableRequest.setImportedColumnsByRow(Map.of(
-                1L, Set.of(),
-                2L, Set.of("numberValue")));
-
         try {
-            numberController.initBinder(request, new WebDataBinder(datatableRequest));
-            numberController.handleEditor(request, datatableRequest);
+            mergeController.initBinder(request, new WebDataBinder(datatableRequest));
+            mergeController.handleEditor(request, datatableRequest);
         } finally {
             controller.getOne(-1L);
         }
 
-        assertEquals(10, omitted.getNumberValue());
-        assertNull(included.getNumberValue());
+        assertNull(first.getNumberValue());
+        assertNull(second.getNumberValue());
+        assertEquals(new Date(1000), first.getDateValue());
+        assertEquals(new Date(1000), second.getDateValue());
     }
 
     @Test
@@ -748,24 +815,45 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         verify(repository, never()).saveAll(any());
     }
 
-    private void editImportedNumber(NumberMergeTestEntity original, Set<String> importedColumns) {
+    private void editImportedFields(NullMergeTestEntity original, Set<String> importedColumns) {
         @SuppressWarnings("unchecked")
-        JpaRepository<NumberMergeTestEntity, Long> repository = mock(JpaRepository.class);
+        JpaRepository<NullMergeTestEntity, Long> repository = mock(JpaRepository.class);
         when(repository.existsById(1L)).thenReturn(true);
         when(repository.findById(1L)).thenReturn(Optional.of(original));
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        DatatableRestControllerV2<NumberMergeTestEntity, Long> numberController =
+        DatatableRestControllerV2<NullMergeTestEntity, Long> mergeController =
                 new DatatableRestControllerV2<>(repository) {};
-        TestRequest request = new TestRequest("", "/admin/rest/number-merge/editor");
+        TestRequest request = new TestRequest("", "/admin/rest/null-merge/editor");
 
-        NumberMergeTestEntity submitted = new NumberMergeTestEntity(null, 40, 30);
-        DatatableRequest<Long, NumberMergeTestEntity> datatableRequest = new DatatableRequest<>();
+        NullMergeTestEntity submitted = new NullMergeTestEntity();
+        submitted.setTextNumberValue(40);
+        DatatableRequest<Long, NullMergeTestEntity> datatableRequest = new DatatableRequest<>();
         datatableRequest.setData(Map.of(1L, submitted));
         datatableRequest.setDztotalchunkcount(1);
         datatableRequest.setImportedColumns(importedColumns);
 
-        numberController.initBinder(request, new WebDataBinder(datatableRequest));
-        numberController.editItem(submitted, 1L);
+        mergeController.initBinder(request, new WebDataBinder(datatableRequest));
+        mergeController.editItem(submitted, 1L);
+    }
+
+    private NullMergeTestEntity createMergeTestEntity() {
+        NullMergeTestEntity entity = new NullMergeTestEntity();
+        entity.setNumberValue(10);
+        entity.setTextNumberValue(20);
+        entity.setNumberOptOutValue(30);
+        entity.setDateValue(new Date(1000));
+        entity.setSqlDateValue(java.sql.Date.valueOf("2026-09-28"));
+        entity.setLocalDateValue(LocalDate.of(2026, 9, 28));
+        entity.setLocalDateTimeValue(LocalDateTime.of(2026, 9, 28, 10, 30));
+        entity.setDateOptOutValue(new Date(1000));
+        entity.setForcedNumberValue(40);
+        entity.setForcedDateValue(new Date(1000));
+        entity.setHiddenNumberValue(50);
+        entity.setDisabledDateValue(new Date(1000));
+        entity.setMappedNumberValue(60);
+        entity.setMappedDateValue(new Date(1000));
+        return entity;
     }
 
     private DatatableRestControllerV2<GeneratedIdTestEntity, Long> createGeneratedIdController(
@@ -923,7 +1011,9 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         }
     }
 
-    private static class NumberMergeTestEntity {
+    @Getter
+    @Setter
+    private static class NullMergeTestEntity {
 
         @DataTableColumn(inputType = DataTableColumnType.NUMBER)
         private Integer numberValue;
@@ -934,35 +1024,39 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         @DataTableColumn(inputType = DataTableColumnType.NUMBER, alwaysCopyProperties = { false })
         private Integer numberOptOutValue;
 
-        NumberMergeTestEntity(Integer numberValue, Integer textNumberValue, Integer numberOptOutValue) {
-            this.numberValue = numberValue;
-            this.textNumberValue = textNumberValue;
-            this.numberOptOutValue = numberOptOutValue;
-        }
+        @DataTableColumn(inputType = DataTableColumnType.DATE)
+        private Date dateValue;
 
-        public Integer getNumberValue() {
-            return numberValue;
-        }
+        @DataTableColumn(inputType = DataTableColumnType.DATE)
+        private java.sql.Date sqlDateValue;
 
-        public void setNumberValue(Integer numberValue) {
-            this.numberValue = numberValue;
-        }
+        @DataTableColumn(inputType = DataTableColumnType.DATE)
+        private LocalDate localDateValue;
 
-        public Integer getTextNumberValue() {
-            return textNumberValue;
-        }
+        @DataTableColumn(inputType = DataTableColumnType.DATETIME)
+        private LocalDateTime localDateTimeValue;
 
-        public void setTextNumberValue(Integer textNumberValue) {
-            this.textNumberValue = textNumberValue;
-        }
+        @DataTableColumn(inputType = DataTableColumnType.DATE, alwaysCopyProperties = { false })
+        private Date dateOptOutValue;
 
-        public Integer getNumberOptOutValue() {
-            return numberOptOutValue;
-        }
+        @DataTableColumn(inputType = DataTableColumnType.NUMBER, alwaysCopyProperties = { true })
+        private Integer forcedNumberValue;
 
-        public void setNumberOptOutValue(Integer numberOptOutValue) {
-            this.numberOptOutValue = numberOptOutValue;
-        }
+        @DataTableColumn(inputType = DataTableColumnType.DATE, alwaysCopyProperties = { true })
+        private Date forcedDateValue;
+
+        @DataTableColumn(inputType = DataTableColumnType.NUMBER, hiddenEditor = true, alwaysCopyProperties = { true })
+        private Integer hiddenNumberValue;
+
+        @DataTableColumn(inputType = DataTableColumnType.DATE, alwaysCopyProperties = { true }, editor = {
+                @DataTableColumnEditor(attr = @DataTableColumnEditorAttr(key = "disabled", value = "disabled")) })
+        private Date disabledDateValue;
+
+        @DataTableColumn(inputType = DataTableColumnType.NUMBER, data = "mappedNumber")
+        private Integer mappedNumberValue;
+
+        @DataTableColumn(inputType = DataTableColumnType.DATE, data = "mappedDate")
+        private Date mappedDateValue;
     }
 
     private static class RowReorderTestEntity {
