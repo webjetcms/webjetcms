@@ -37,7 +37,7 @@ Scenario('Form overview returns a bounded preview and the full submission count'
     });
     I.assertEqual(status, 200, 'Forms must load for an authorized administrator.');
     I.assertTrue(Number.isInteger(body.total) && body.total >= 0, 'Forms must expose an actual nonnegative count.');
-    I.assertTrue(Array.isArray(body.items) && body.items.length <= 6, 'Form previews must be bounded.');
+    I.assertTrue(Array.isArray(body.items) && body.items.length === Math.min(10, body.total), 'Form previews must contain up to ten submissions.');
     for (const item of body.items) {
         I.assertEqual(typeof item.title, 'string');
         I.assertStartsWith(item.url, '/apps/form/admin/detail/?formName=');

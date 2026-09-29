@@ -65,7 +65,7 @@ public class FormsServiceImpl extends FormsService<FormsRepository, FormsEntity>
         long total = 0;
         if (!requested.isEmpty()) {
             Specification<FormsEntity> spec = formSpec(requested, scope, range);
-            Page<FormsEntity> page = formsRepository.findAll(spec, PageRequest.of(0, 6, Sort.by("createDate").descending()));
+            Page<FormsEntity> page = formsRepository.findAll(spec, PageRequest.of(0, 10, Sort.by("createDate").descending()));
             total = page.getTotalElements();
             page.forEach(form -> {
                 Map<String, Object> item = Map.of("id", form.getId().toString(), "title", form.getFormName(),

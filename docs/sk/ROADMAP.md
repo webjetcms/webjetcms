@@ -61,6 +61,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Filter v aplikácii novinky neumožňuje zadať DOC ID viacerých stránok keby chceli podľa filtra “DOC_ID rovná sa” zvoliť viacero stránok
 filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadania viacerých hodnôt (#JT-2139).
 - [ ] +AI - upraviť vytváranie `chunk` tak, aby na začiatku/konci neboli nezmyselné slová, orezať od prvej medzery po poslednú medzeru.
+- [ ] +Webové stránky - upraviť predvolené zobrazenie pre nového používateľa - zobrazovať ID, poradie a usporiadať vzostupne.
 
 ## 2025
 

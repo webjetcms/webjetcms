@@ -422,12 +422,23 @@ webjet-overview-dashboard a:focus-visible {
     &:not(.is-editing) &__widget[data-widget-type="traffic"]:not([data-size="1x1"]) &__widget-title { padding-right: 112px; }
     &__widget[data-widget-type="traffic"] .md-dashboard-widget__metric { margin-bottom: 0; }
     &__widget[data-widget-type="traffic"] .md-dashboard-widget__chart-legend { margin-bottom: 10px; }
+
+    &__widget[data-widget-type="forms"] .md-dashboard-widget__table,
+    &__widget[data-widget-type="approvals"] .md-dashboard-widget__table {
+        th:last-child, td:last-child {
+            width: 128px;
+            white-space: nowrap;
+            padding-left: 16px;
+            font-variant-numeric: tabular-nums;
+        }
+    }
     &__widget.is-fixed { min-height: 0; }
 
-    &__widget[data-widget-type="recent-pages"] {
+    &__widget[data-widget-type="recent-pages"],
+    &__widget[data-widget-type="forms"]:not([data-size="1x1"]) {
         min-height: 0;
         .md-dashboard__widget-body, .md-dashboard__widget-content { min-height: 0; }
-        .md-dashboard-widget__pages { flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; touch-action: pan-y; margin-bottom: 0; &:focus-visible { outline: 2px solid var(--wj-primary); outline-offset: 2px; } }
+        .md-dashboard-widget__pages, .md-dashboard-widget__forms { flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; touch-action: pan-y; margin-bottom: 0; &:focus-visible { outline: 2px solid var(--wj-primary); outline-offset: 2px; } }
     }
     &__widget[data-widget-type="logged-admins"] {
         min-height: 0;
@@ -569,7 +580,8 @@ webjet-overview-dashboard a:focus-visible {
         &__widget { grid-row: auto; min-height: var(--dashboard-row-height); }
         &__widget[data-size] { grid-row: auto; }
         &__widget-content { height: auto; }
-        &__widget[data-widget-type="recent-pages"] .md-dashboard-widget__pages { flex: 0 1 auto; max-height: 320px; }
+        &__widget[data-widget-type="recent-pages"] .md-dashboard-widget__pages,
+        &__widget[data-widget-type="forms"] .md-dashboard-widget__forms { flex: 0 1 auto; max-height: 320px; }
         &__widget[data-widget-type="logged-admins"] .md-dashboard-widget__admins { flex: 0 1 auto; max-height: 240px; }
         &__shortcut-list > .md-dashboard__widget { flex: 0 1 auto; }
         &:not(.is-editing) &__widget[data-widget-type="traffic"]:not([data-size="1x1"]) {
@@ -811,7 +823,10 @@ webjet-overview-dashboard a:focus-visible {
         &.md-dashboard-widget__table--ranked { table-layout: auto; }
         &.md-dashboard-widget__table--pages td { vertical-align: middle; padding-block: 12px; }
         &.md-dashboard-widget__table--approvals {
-            th:first-child { width: 50%; }
+            th:nth-child(2) {
+                width: 136px;
+                @media (max-width: $bp-mobile) { width: 28%; }
+            }
             .ti { vertical-align: middle; }
         }
         tbody td { border-top-color: var(--bs-table-border-color); }

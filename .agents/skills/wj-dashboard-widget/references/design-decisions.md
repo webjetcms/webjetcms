@@ -22,7 +22,7 @@ Settings, notices, sessions and authorized administrator names arrive with the p
 
 The grid preserves DOM order across desktop, keyboard navigation and mobile layouts. Gaps are acceptable; dense packing could make visual and keyboard order diverge. Editing controls appear in an explicit edit mode to keep the everyday overview compact, with a keyboard/touch alternative to dragging.
 
-Recent pages, sessions and logged administrators retain their entries in compact cards through native scrolling. Shared scroll containment prevents the administration's outer scrollbar from consuming those gestures. Other previews are bounded and link to the full module. Charts retain exact values in tooltips and screen-reader tables; compact presentation must preserve access to the underlying data.
+Recent pages, forms, sessions and logged administrators retain their entries in compact cards through native scrolling. Shared scroll containment prevents the administration's outer scrollbar from consuming those gestures. Other previews are bounded and link to the full module. Charts retain exact values in tooltips and screen-reader tables; compact presentation must preserve access to the underlying data.
 
 ## Describe the data the system actually records
 

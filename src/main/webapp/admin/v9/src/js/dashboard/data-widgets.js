@@ -1,5 +1,5 @@
 import { registerWidget } from './registry';
-import { node, text, number, date, link, icon, field, table, empty, fetchJson, pagePreview } from './widget-utils';
+import { node, text, number, date, link, icon, field, table, empty, fetchJson, pagePreview, containNativeScroll } from './widget-utils';
 import { chartHost, mountChart } from './charts';
 
 const moduleLinks = {
@@ -9,17 +9,46 @@ const moduleLinks = {
     errors: '/apps/stat/admin/error/', newsletter: '/apps/dmail/admin/'
 };
 const metricKey = metric => ({ views: 'visits', sessions: 'sessionsMetric', uniqueUsers: 'uniqueUsers' })[metric] || 'sessionsMetric';
+const formPreviewLimit = 10;
 
-/** Loads the forms module's authorized submission overview and optional form filter. */
-function fetchForms(options, signal) {
+/** Loads the overview and, for a selected form preview, its authorized submission values. */
+async function fetchForms(options, signal) {
     const params = new URLSearchParams({ days: options.days || 7 });
     if (options.formName) params.set('formName', options.formName);
-    return fetchJson(`/admin/rest/forms-list/overview?${params}`, signal);
+    const data = await fetchJson(`/admin/rest/forms-list/overview?${params}`, signal);
+    if (!options.details || !options.formName || !data.items.length || signal.aborted) return data;
+    // Keep the overview's exact period and editable-page scope when loading submission details.
+    const detailsParams = new URLSearchParams({ detail: true, formName: options.formName,
+        searchId: data.items.map(item => item.id).join(','), size: formPreviewLimit, page: 0, sort: 'createDate,desc' });
+    const [submissions, fields] = await Promise.all([
+        fetchJson(`/admin/rest/forms-list/search/findByColumns?${detailsParams}`, signal),
+        fetchJson(`/admin/rest/forms-list/columns/${encodeURIComponent(options.formName)}`, signal)
+    ]);
+    data.items = submissions.content.slice(0, formPreviewLimit).map(item => ({
+        title: formSubmissionTitle(item, fields.columns), date: item.createDate,
+        url: `${moduleLinks.forms}detail/?formName=${encodeURIComponent(options.formName)}&id=${encodeURIComponent(item.id)}`
+    }));
+    return data;
+}
+
+/** Prefers contact fields by label or name, falling back to the first three populated form columns. */
+function formSubmissionTitle(item, columns) {
+    const values = item.columnNamesAndValues || {};
+    const normalize = value => String(value || '').replace(/\([^)]*\)/g, '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z]/g, '');
+    const fields = (columns || Object.keys(values).map(value => ({ value })))
+        .filter(column => values[column.value] != null && String(values[column.value]).trim() !== '');
+    const preferred = [
+        ['meno', 'krstnemeno', 'jmeno', 'name', 'firstname', 'givenname', 'fullname', 'vorname'],
+        ['priezvisko', 'prijmeni', 'surname', 'lastname', 'familyname', 'nachname'],
+        ['email', 'emailaddress', 'emailovaadresa', 'emailadresse']
+    ].map(names => fields.find(column => names.includes(normalize(column.label)) || names.includes(normalize(column.value)))).filter(Boolean);
+    const selected = preferred.length ? [...new Set(preferred)] : fields.slice(0, 3);
+    return selected.map(column => String(values[column.value]).trim()).join(' ') || `${item.formName} #${item.id}`;
 }
 
 /** Uses recent module campaigns, loading an older saved selection separately when needed. */
 async function fetchNewsletter(selectedId, context, signal) {
-    const data = await fetchJson('/admin/rest/dmail/campaings/all?size=14&page=0&sort=id%2Cdesc', signal);
+    const data = await fetchJson('/admin/rest/dmail/campaings/all?size=100&page=0&sort=id%2Cdesc', signal);
     const campaigns = data.content;
     if (selectedId && !campaigns.some(campaign => String(campaign.id) === String(selectedId))) {
         campaigns.unshift(await fetchJson(`/admin/rest/dmail/campaings/${encodeURIComponent(selectedId)}`, signal));
@@ -372,16 +401,23 @@ export function registerDataWidgets() {
             return { read: () => ({ options: { days: Number(days.value) }, domainOptions: { formName: form.value } }) };
         },
         async render({ container, instance, options, domainOptions, context, signal }) {
-            const data = await fetchForms({ days: options.days, formName: domainOptions.formName }, signal); if (signal.aborted) return;
-            const href = domainOptions.formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(domainOptions.formName)}` : moduleLinks.forms;
             const compact = instance.size === '1x1';
+            const data = await fetchForms({ days: options.days, formName: domainOptions.formName, details: !compact }, signal); if (signal.aborted) return;
+            const href = domainOptions.formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(domainOptions.formName)}` : moduleLinks.forms;
             summary(container, data, context, href, compact ? text(context, 'formSubmissionsPeriod', options.days || 7) : text(context, 'submissions'));
             if (domainOptions.formName) container.append(node('span', 'small text-muted', domainOptions.formName));
             const interval = period(container, data, context);
             if (compact) interval?.classList.add('visually-hidden');
             if (instance.size !== '1x1') {
                 if (!data.items.length) empty(container, context);
-                else table(container, [text(context, 'formName'), text(context, 'date')], data.items.slice(0, 6).map(item => [link(item.title, item.url), date(item.date)]));
+                else {
+                    const list = node('div', 'md-dashboard-widget__forms');
+                    list.tabIndex = 0;
+                    list.setAttribute('aria-label', text(context, 'forms'));
+                    containNativeScroll(list, signal);
+                    table(list, [text(context, 'formName'), text(context, 'date')], data.items.slice(0, formPreviewLimit).map(item => [link(item.title, item.url), date(item.date)]));
+                    container.append(list);
+                }
             }
         }
     });

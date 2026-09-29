@@ -63,7 +63,7 @@ class FormsOverviewTest {
         assertTrue(todaySubmission >= range.from() && todaySubmission < range.until());
     }
 
-    /** Authorized form choices and full counts accompany only the six newest submission previews. */
+    /** Authorized form choices and full counts accompany only the ten newest submission previews. */
     @Test
     @SuppressWarnings("unchecked")
     void returnsAuthorizedChoicesAndRejectsMissingSelections() {
@@ -77,7 +77,7 @@ class FormsOverviewTest {
         doReturn(List.of(form)).when(service).getFormsList(user);
         when(repository.findAll(any(Specification.class), any(Pageable.class))).thenAnswer(call -> {
             Pageable pageable = call.getArgument(1);
-            assertEquals(6, pageable.getPageSize());
+            assertEquals(10, pageable.getPageSize());
             assertTrue(pageable.getSort().getOrderFor("createDate").isDescending());
             return new PageImpl<>(List.of(form), pageable, 12);
         });

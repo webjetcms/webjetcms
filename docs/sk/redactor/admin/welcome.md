@@ -1,12 +1,12 @@
 # Úvodná obrazovka
 
-Na úvodnej obrazovke môžete skontrolovať návštevnosť, odoslané formuláre či stránky čakajúce na schválenie a vrátiť sa k rozpracovaným stránkam. Nemusíte kvôli každej kontrole otvárať príslušnú časť administrácie.
+Na úvodnej obrazovke môžete rýchlo skontrolovať návštevnosť, odoslané formuláre či stránky čakajúce na schválenie a vrátiť sa k rozpracovaným stránkam.
 
 Prehľad tvoria **widgety**, teda karty s konkrétnymi údajmi, napríklad grafom návštevnosti alebo zoznamom požiadaviek na schválenie. Vyberte si tie, ktoré využívate, a usporiadajte ich podľa toho, čo chcete sledovať ako prvé. Pomocou [skratiek](#vaše-skratky) si otvoríte často používanú časť administrácie alebo konkrétny priečinok bez hľadania v menu.
 
-Pri prvom otvorení sa podľa vašich oprávnení zobrazia predvolené widgety **Návštevnosť**, **Formuláre**, **Na schválenie**, **Chyby 404**, **Pokračujte v práci**, **Odkiaľ návštevníci prišli**, **Najbližšie publikovanie** a **Newsletter**. Ďalšie widgety si môžete pridať cez katalóg. V hornej časti je privítanie so skratkami a novinkami, aktívne prihlásenia a vyhľadávanie.
+Pri prvom otvorení sa podľa vašich oprávnení zobrazia predvolené widgety **Návštevnosť**, **Formuláre**, **Na schválenie**, **Chyby 404**, **Pokračujte v práci**, **Odkiaľ návštevníci prišli**, **Najbližšie publikovanie** a **Newsletter**. Ďalšie widgety si môžete sami pridať. V hornej časti je privítanie so skratkami a novinkami, aktívne prihlásenia a vyhľadávanie.
 
-Ponuka widgetov zodpovedá vašim oprávneniam. Obsahové údaje sa vzťahujú na práve zvolenú doménu. Rozloženie sa ukladá na vaše konto a je spoločné pre všetky domény a prehliadače. Výber konkrétneho formulára alebo kampane sa pamätá osobitne pre každú doménu.
+Ponuka widgetov zodpovedá vašim oprávneniam. Rozloženie sa ukladá na vaše konto a je spoločné pre všetky domény a prehliadače. Výber konkrétneho formulára alebo kampane sa pamätá osobitne pre každú doménu.
 
 ![](dashboard.png)
 
@@ -45,7 +45,7 @@ Ak pri kliknutí na **Obnoviť** podržíte kláves **Shift**, po potvrdení sa 
 
 ## Dostupné informácie
 
-Widgety z katalógu môžete pridať opakovane s rôznymi veľkosťami alebo nastaveniami. Môžete tak napríklad vedľa seba sledovať dva rôzne formuláre alebo návštevnosť za 7 a 30 dní. Ich dostupnosť závisí od vašich oprávnení.
+Widgety z katalógu **môžete pridať opakovane** s rôznymi veľkosťami alebo nastaveniami. Môžete tak napríklad vedľa seba **sledovať dva rôzne formuláre** alebo **návštevnosť za 7 a 30 dní**. Ich dostupnosť závisí od vašich oprávnení.
 
 Štatistické widgety predvolene používajú posledných sedem ukončených dní, možno zvoliť aj 30 alebo 90 dní. Porovnanie používa rovnako dlhé predchádzajúce obdobie. Karta zobrazuje skutočný rozsah dátumov. Osobitné pravidlá pre obdobie formulárov a chýb 404 sú uvedené pri príslušných widgetoch.
 
@@ -55,7 +55,7 @@ Widgety z katalógu môžete pridať opakovane s rôznymi veľkosťami alebo nas
 
 ### Pokračujte v práci
 
-K rozpracovanej stránke sa vrátite bez hľadania jej priečinka. Widget zobrazuje najviac šesť vašich naposledy upravovaných stránok s náhľadom obrázka, umiestnením a dátumom úpravy. Kliknutím otvoríte editor stránky. Pri menšej veľkosti karty môžete zoznam posúvať.
+K rozpracovanej stránke sa vrátite bez hľadania jej priečinka. Widget zobrazuje najviac šesť vašich naposledy upravovaných stránok s náhľadom obrázka, umiestnením a dátumom úpravy. Kliknutím otvoríte editor stránky. Pri menšej veľkosti karty môžete zoznam rolovať.
 
 ### Na schválenie
 
@@ -65,11 +65,13 @@ Kliknutím na položku otvoríte jej schvaľovanie v novom okne. Pri priečinku 
 
 ### Najbližšie publikovanie
 
-Skontrolujete, ktoré stránky sa majú v najbližšom čase zverejniť alebo prestať zobrazovať. Pri každej zmene vidíte dátum a čas plánovaného publikovania alebo ukončenia platnosti. Kliknutím na nadpis otvoríte úplný plán publikovania.
+Skontrolujete, ktoré stránky sa majú v najbližšom čase **zverejniť alebo prestať zobrazovať**. Pri každej zmene vidíte dátum a čas plánovaného publikovania alebo ukončenia platnosti. Kliknutím na nadpis otvoríte úplný plán publikovania.
 
 ### Formuláre
 
-Skontrolujete tu údaje o odoslaných formulároch, napríklad dopytoch alebo kontaktných správach, za posledných 7, 30 alebo 90 dní vrátane dnešných odoslaní. V nastaveniach môžete vybrať konkrétny formulár alebo všetky dostupné formuláre.
+Skontrolujete tu údaje o odoslaných formulároch, napríklad dopytoch alebo kontaktných správach. V nastaveniach môžete **vybrať konkrétny formulár** alebo všetky dostupné formuláre.
+
+Pri výbere konkrétneho formulára sa vo veľkom widgete zobrazí posledných desať odoslaní **za zvolené obdobie**. Ak sa zoznam nezmestí do výšky karty, môžete ho rolovať. V stĺpci **Formulár** uvidíte meno, priezvisko a e-mail z vyplnených údajov. Ak formulár takéto polia nemá, zobrazia sa prvé tri vyplnené údaje v poradí stĺpcov formulára. Kliknutím na tieto údaje otvoríte detail konkrétneho odoslania.
 
 ### Návštevnosť
 
@@ -93,7 +95,7 @@ Graf zobrazuje percentuálny podiel jednotlivých evidovaných zdrojov. Presné 
 
 ### Chyby 404
 
-Pomáha nájsť adresy, na ktorých sa namiesto stránky zobrazuje chyba 404. Podľa počtu chýb môžete určiť, ktoré odkazy alebo presmerovania treba preveriť ako prvé.
+Pomáha nájsť adresy, ktoré neexistujú. Podľa počtu chýb môžete určiť, ktoré odkazy alebo presmerovania treba preveriť ako prvé.
 
 Zobrazuje počet chybových požiadaviek, nie počet rôznych adries. Chyby sa evidujú po týždňoch, preto sa zahrnú celé týždne zasahujúce do zvoleného obdobia. Karta zobrazí skutočný rozsah dátumov a aktuálny týždeň obsahuje údaje dostupné do tohto okamihu.
 
@@ -199,9 +201,9 @@ Grafy pamäte a CPU majú farebne odlíšené pozadie a predvolenú veľkosť **
 
 Pomocou spätnej väzby môžete vývojovému tímu WebJET CMS poslať pripomienku, návrh na zlepšenie alebo pochvalu. Kliknite na **Zaslať spätnú väzbu** v hornej lište úvodného prehľadu. Vyplnený formulár sa odošle emailom.
 
-Vaše pripomienky posúdime pri plánovaní ďalšieho vývoja. Plánované zmeny nájdete v [mape rozvoja](../../ROADMAP.md).
-
 ![](feedback.png)
+
+Vaše pripomienky posúdime pri plánovaní ďalšieho vývoja. Plánované zmeny nájdete v [mape rozvoja](../../ROADMAP.md).
 
 V dialógovom okne opíšte, čo potrebujete zmeniť alebo pri akej práci ste narazili na problém. Môžete priložiť aj súbory, napríklad snímku obrazovky alebo dokument s opisom požiadavky.
 

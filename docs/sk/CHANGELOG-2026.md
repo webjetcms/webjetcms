@@ -15,11 +15,9 @@
 
 ### Úvodná obrazovka
 
-- Widget **Na schválenie** používa rovnaké údaje a oprávnenia ako karta **Neschválené** vo Web stránkach. Ikony pri názvoch rozlišujú stránky a priečinky. Položky otvárajú schválenie zmeny alebo zmazania v novom okne; pri priečinkoch sa použije rovnaký odkaz ako v schvaľovacom emaile. Odkaz na celý zoznam správne vyberie priečinky, ak na schválenie nečakajú žiadne stránky (#58806).
-- [Úvodná obrazovka](redactor/admin/welcome.md) je osobný prehľad s widgetmi podľa oprávnení a aktuálnej domény. Widgety môžete pridávať, nastavovať, presúvať a odstrániť s okamžitým vrátením (#58806).
-- K dispozícii sú skratky, posledné stránky, schvaľovanie, plán publikovania, formuláre, návštevnosť a jej zdroje, hľadané výrazy, chyby 404 a newsletter. Pevný panel zobrazuje všetky aktívne prihlásenia a umožňuje ukončiť inú vlastnú reláciu. Nevyriešené systémové upozornenia zostávajú viditeľné a vyhľadávanie má prepínač medzi administráciou a dokumentáciou (#58806).
-- Predvolené rozloženie obsahuje vybranú zostavu widgetov podľa oprávnení, ostatné sú dostupné cez katalóg. Cez **Upraviť prehľad → Obnoviť** obnovíte predvolený výber, veľkosti a poradie. Vymažú sa filtre vo všetkých doménach a potvrdenie prečítania noviniek. Skratky zostanú zachované. Kliknutie na **Obnoviť** s klávesom **Shift** nahradí prehľad všetkými dostupnými widgetmi v každej podporovanej veľkosti. Údaje kariet sa načítajú pri ich zobrazení (#58806).
-- Skratky pod privítaním majú samostatné ovládanie úprav a obnovy, vlastnú ikonu a farbu pozadia. Pôvodné záložky z prehliadača sa automaticky jednorazovo prenesú do konta a nahradia jeho skratky (#58806).
+- [Úvodnú obrazovku](redactor/admin/welcome.md) sme prerobili na widgetový systém, aby ste mali údaje potrebné pri práci na jednom mieste bez prechádzania jednotlivých častí administrácie. Sami si vyberiete widgety a nastavíte zobrazované údaje, veľkosť a poradie podľa svojich potrieb (#58806).
+
+![](redactor/admin/dashboard.png)
 
 ### Webové stránky
 

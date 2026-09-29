@@ -1223,6 +1223,81 @@ test('Compact forms describe the selected period and retain its exact accessible
     assert.equal(scope.getWidget('errors').headerLink.href, '/apps/stat/admin/error/');
 });
 
+test('Form submission titles recognize localized labels and field names before considering other fields', t => {
+    const { scope } = fixture(t);
+    const item = { id: 12, formName: 'Contact', columnNamesAndValues: {
+        message: 'Ignore this message', field3: 'person@example.test', field2: 'Smith', field1: 'Jane'
+    } };
+    const columns = [{ value: 'message', label: 'Message' }, { value: 'field3', label: 'E-mail (Krok 2)' },
+        { value: 'field2', label: 'PŘÍJMENÍ (Krok 1)' }, { value: 'field1', label: 'Meno * (Krok 1)' }];
+    assert.equal(scope.formSubmissionTitle(item, columns), 'Jane Smith person@example.test');
+    assert.equal(scope.formSubmissionTitle({ columnNamesAndValues: { message: 'Ignore', email_address: 'a@example.test', lastName: 'Smith', first_name: 'Jane' } }), 'Jane Smith a@example.test');
+    item.columnNamesAndValues.field1 = ' ';
+    assert.equal(scope.formSubmissionTitle(item, columns), 'Smith person@example.test');
+});
+
+test('Form submission fallback follows form column order and skips empty values', t => {
+    const { scope } = fixture(t);
+    const item = { id: 12, formName: 'Contact', columnNamesAndValues: { fourth: 'Omit', third: 'Third', second: 'Second', first: 'First', empty: ' ' } };
+    const columns = ['empty', 'first', 'second', 'third', 'fourth'].map(value => ({ value, label: value }));
+    assert.equal(scope.formSubmissionTitle(item, columns), 'First Second Third');
+    assert.equal(scope.formSubmissionTitle({ ...item, columnNamesAndValues: {} }, columns), 'Contact #12');
+});
+
+test('Selected forms load only the overview submission IDs and link text safely to each record', async t => {
+    const formName = 'Contact & EN';
+    const from = Date.UTC(2026, 8, 20), to = Date.UTC(2026, 8, 26);
+    const signal = new AbortController().signal;
+    const { scope, context, container, requests } = fixture(t, { fetchResponse: async url => ({ ok: true, json: async () =>
+        url.includes('/overview?') ? { total: 128, from, to, items: [{ id: '12' }, { id: '11' }] }
+            : url.includes('/columns/') ? { columns: [{ value: 'f1', label: 'First name' }, { value: 'f2', label: 'E-mail' }] }
+                : { content: [{ id: 12, formName, createDate: to, columnNamesAndValues: { f1: '<img src=x onerror=alert(1)>', f2: 'a@example.test' } },
+                    { id: 11, formName, createDate: from, columnNamesAndValues: { f1: 'Jane', f2: 'b@example.test' } }] }
+    }) });
+    await scope.getWidget('forms').render({ container, context, options: { days: 7 }, domainOptions: { formName }, instance: { size: '3x3' }, signal });
+    assert.equal(container.querySelector('.md-dashboard-widget__number').textContent, '128');
+    const links = [...container.querySelectorAll('tbody a')];
+    assert.deepEqual(links.map(link => link.textContent), ['<img src=x onerror=alert(1)> a@example.test', 'Jane b@example.test']);
+    assert.deepEqual(links.map(link => link.getAttribute('href')), [12, 11].map(id => `/apps/form/admin/detail/?formName=Contact%20%26%20EN&id=${id}`));
+    assert.equal(container.querySelector('img'), null);
+    const params = new URL(requests.find(request => request.url.includes('/search/')).url, 'http://localhost').searchParams;
+    assert.equal(params.get('detail'), 'true');
+    assert.equal(params.get('formName'), formName);
+    assert.equal(params.get('searchId'), '12,11');
+    assert.equal(params.get('size'), '10');
+    assert.equal(params.get('sort'), 'createDate,desc');
+    assert.ok(requests.some(request => request.url === '/admin/rest/forms-list/columns/Contact%20%26%20EN'));
+    for (const request of requests) {
+        assert.equal(request.options.signal, signal);
+        assert.equal(request.options.headers['X-CSRF-Token'], 'test-csrf-token');
+    }
+});
+
+test('Compact, unfiltered, empty and aborted forms do not request submission details', async t => {
+    for (const [size, formName, items, aborted] of [
+        ['1x1', 'Contact', [{ id: '12' }], false], ['3x3', '', [{ title: 'Contact', url: '/apps/form/admin/', date: 123 }], false],
+        ['3x3', 'Contact', [], false], ['3x3', 'Contact', [{ id: '12' }], true]
+    ]) {
+        const { scope, context, container, requests } = fixture(t, { data: { total: items.length, items } });
+        const controller = new AbortController();
+        if (aborted) controller.abort();
+        await scope.getWidget('forms').render({ container, context, options: {}, domainOptions: { formName }, instance: { size }, signal: controller.signal });
+        assert.equal(requests.length, 1);
+        assert.ok(requests[0].url.includes('/overview?'));
+        if (aborted) assert.equal(container.childNodes.length, 0);
+    }
+});
+
+test('Selected forms propagate detail failures instead of rendering an empty or partial preview', async t => {
+    const { scope, context, container } = fixture(t, { fetchResponse: async url => ({
+        ok: true, json: async () => url.includes('/overview?') ? { total: 1, items: [{ id: '12' }] }
+            : url.includes('/columns/') ? { columns: [] } : { error: 'Access Denied' }
+    }) });
+    await assert.rejects(scope.getWidget('forms').render({ container, context, options: {}, domainOptions: { formName: 'Contact' },
+        instance: { size: '3x3' }, signal: new AbortController().signal }), error => error.dashboardReason === 'permission-denied');
+    assert.equal(container.childNodes.length, 0);
+});
+
 test('Audit page widgets require both webpage and audit access', t => {
     const { scope, window } = fixture(t);
     const widget = scope.getWidget('publishing');
