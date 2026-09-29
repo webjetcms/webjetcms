@@ -353,9 +353,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
 ```
 
-- Data tables - fixed validation of required fields of type [`DATE` and `DATETIME`](developer/datatables-editor/standard-fields.md#date). An empty value is sent from the editor as an empty string, which the server deserializes to `null` ; an error message is displayed according to the field type and the calendar picker does not open automatically after failed validation (#58770).
-- Data tables - when editing, it is possible to reset an object value of type [`NUMBER`](developer/datatables-editor/standard-fields.md#number--text_number) by emptying the field, which supports `null`. When importing, the existing value is preserved if the numeric column is not in the Excel file; the imported value `NULL` resets it.
+- Data tables - modified validation of required fields of type [`DATE` and `DATETIME`](developer/datatables-editor/standard-fields.md#date). This allows you to delete the set date or number value in the editor - originally, when the value was empty, the value in the saved entity was preserved (#58770).
 - Data tables - field validation error [`QUILL`](developer/datatables-editor/standard-fields.md#quill) highlights both the toolbar and editor border (#58770).
+- Data tables - a clearer error message will be displayed for a duplicate value, an attempt to delete or change a record referenced by other records, or an empty value for the `NOT NULL` column (#58770).
 
 ## 2026.18
 
