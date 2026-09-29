@@ -1,6 +1,8 @@
 package sk.iway.iwcm.rag.search;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -10,12 +12,15 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
 import com.webjetcms.ai.EmbeddingInputType;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
 import sk.iway.iwcm.rag.embedding.EmbeddingService;
@@ -26,8 +31,60 @@ import sk.iway.iwcm.rag.vectorstore.VectorStore;
 import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.iwcm.test.TestRequest;
 
+/**
+ * Tests assistant-based retrieval, shared Markdown accounting, similarity filtering, and reciprocal rank fusion.
+ */
 class SemanticSearchServiceFilterTest extends BaseWebjetTest {
 
+    /** Uses shared Markdown storage while the requesting domain owns embedding usage. */
+    @Test
+    void markdownSearchUsesSharedStorageAndCallerAccounting() throws Exception {
+        boolean originalHybridEnabled = Constants.getBoolean("ragHybridSearchEnabled");
+        RequestBean previous = SetCharacterEncodingFilter.getCurrentRequestBean();
+        RequestBean caller = new RequestBean();
+        caller.setDomain("tenant.example");
+        SetCharacterEncodingFilter.setCurrentRequestBean(caller);
+        Constants.setBoolean("ragHybridSearchEnabled", false);
+        try {
+            EmbeddingService embeddings = mock(EmbeddingService.class);
+            VectorStore vectors = mock(VectorStore.class);
+            RagEmbeddingStatService statistics = mock(RagEmbeddingStatService.class);
+            AssistantDefinitionEntity assistant = new AssistantDefinitionEntity();
+            assistant.setProvider("openai");
+            assistant.setModel("embedding-model");
+            TestRequest request = new TestRequest();
+            when(vectors.isAvailableAndInitialized()).thenReturn(true);
+            when(vectors.search(any(float[].class), any(), any(), any(), any(), any(), anyInt(), any())).thenAnswer(call -> {
+                assertNull(SetCharacterEncodingFilter.getCurrentRequestBean().getDomain());
+                return List.of();
+            });
+            when(statistics.getSearchAssistant(7)).thenAnswer(call -> {
+                assertSame(caller, SetCharacterEncodingFilter.getCurrentRequestBean());
+                return assistant;
+            });
+            when(embeddings.embedWithUsage(List.of("query"), assistant, request, EmbeddingInputType.QUERY))
+                .thenAnswer(call -> {
+                    assertSame(caller, SetCharacterEncodingFilter.getCurrentRequestBean());
+                    return new EmbeddingBatchResult(List.of(new float[] {1f, 2f}), 2);
+                });
+            SemanticSearchService service = new SemanticSearchService(embeddings, vectors, statistics, mock(RagService.class));
+            Map<String, Object> filters = Map.of("sourceRoot", "/docs/webjetcms");
+
+            service.searchChunks("query", 7, "sk", 10, RagEntityType.MARKDOWN, filters, request);
+
+            verify(vectors).search(any(float[].class), eq("openai"), eq("embedding-model"),
+                eq(RagEntityType.MARKDOWN), eq(0), eq("sk"), anyInt(), eq(filters));
+            verify(statistics).recordSearchTokens(assistant, 2, 7);
+            assertSame(caller, SetCharacterEncodingFilter.getCurrentRequestBean());
+        } finally {
+            SetCharacterEncodingFilter.setCurrentRequestBean(previous);
+            Constants.setBoolean("ragHybridSearchEnabled", originalHybridEnabled);
+        }
+    }
+
+    /**
+     * Verifies that query embeddings and retrieval use the existing search assistant, with a normalized provider identifier.
+     */
     @Test
     void searchUsesProviderAndModelFromExistingAssistant() throws Exception {
         boolean originalHybridEnabled = Constants.getBoolean("ragHybridSearchEnabled");
@@ -71,6 +128,9 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
         }
     }
 
+    /**
+     * Verifies that the highest remaining score fills the minimum result count when the adaptive threshold retains too few results.
+     */
     @Test
     void filterResultsBySimilarityAddsFallbackWhenThresholdKeepsTooFew() {
         SemanticSearchService service = new SemanticSearchService(null, null, null, null);
@@ -90,6 +150,9 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
         assertEquals(3L, filtered.get(2).getDocId());
     }
 
+    /**
+     * Verifies that all results above the adaptive threshold remain even when their count exceeds the configured minimum.
+     */
     @Test
     void filterResultsBySimilarityKeepsAllStrongResults() {
         SemanticSearchService service = new SemanticSearchService(null, null, null, null);
@@ -108,6 +171,9 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
         assertEquals(4L, filtered.get(3).getDocId());
     }
 
+    /**
+     * Verifies that the best three results are retained as fallback when every score is below the configured floor.
+     */
     @Test
     void filterResultsBySimilarityUsesConfiguredFloorWhenTopSimilarityIsLow() {
         SemanticSearchService service = new SemanticSearchService(null, null, null, null);
@@ -127,6 +193,9 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
         assertEquals(3L, filtered.get(2).getDocId());
     }
 
+    /**
+     * Verifies that empty input produces no results even when a positive minimum count is requested.
+     */
     @Test
     void filterResultsBySimilarityReturnsEmptyForEmptyInput() {
         SemanticSearchService service = new SemanticSearchService(null, null, null, null);
@@ -136,6 +205,9 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
         assertEquals(0, filtered.size());
     }
 
+    /**
+     * Verifies that reciprocal rank fusion deduplicates chunks and ranks the chunk found by both retrieval sources first.
+     */
     @Test
     void mergeChunkResultsWithRrfBoostsChunksPresentInBothSources() {
         SemanticSearchService service = new SemanticSearchService(null, null, null, null);
