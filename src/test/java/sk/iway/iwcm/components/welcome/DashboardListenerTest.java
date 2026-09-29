@@ -10,11 +10,13 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.ui.ModelMap;
 
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.admin.ThymeleafEvent;
 import sk.iway.iwcm.admin.layout.MenuService;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -28,10 +30,15 @@ import sk.iway.iwcm.users.UsersDB;
 
 /** Verifies authenticated bootstrap ownership and complete initial data. */
 class DashboardListenerTest {
-    /** Injects account/domain data and distinct administrator names only with the required permission. */
+    /** Injects account/domain data in both cloud modes and distinct administrator names only with the required permission. */
     @ParameterizedTest
-    @ValueSource(booleans = { false, true })
-    void embedsInitialDataForCurrentAccountAndDomain(boolean showLoggedAdmins) throws Exception {
+    @CsvSource({
+        "false, false, -1",
+        "false, true, 42",
+        "true, false, -1",
+        "true, true, 42"
+    })
+    void embedsInitialDataForCurrentAccountAndDomain(boolean showLoggedAdmins, boolean cloudMode, int expectedStatRootGroupId) throws Exception {
         var settings = mock(DashboardSettingsService.class);
         var notices = mock(DashboardNoticeService.class);
         var listener = new DashboardListener(settings, notices);
@@ -60,12 +67,14 @@ class DashboardListenerTest {
         when(holder.getList()).thenReturn(adminSessions);
         var model = new ModelMap();
         try (var users = mockStatic(UsersDB.class);
+             var installation = mockStatic(InitServlet.class);
              var domains = mockStatic(CloudToolsForCore.class);
              var docs = mockStatic(DocDB.class);
              var sessions = mockStatic(SessionClusterService.class);
              var holders = mockStatic(SessionHolder.class);
              var menus = mockConstruction(MenuService.class, (menu, context) -> when(menu.getMenu()).thenReturn(List.of()))) {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
+            installation.when(InitServlet::isTypeCloud).thenReturn(cloudMode);
             holders.when(SessionHolder::getInstance).thenReturn(holder);
             for (int id = 1; id <= 7; id++) {
                 UserDetails active = mock(UserDetails.class);
@@ -86,7 +95,7 @@ class DashboardListenerTest {
             var data = new ObjectMapper().readTree((String) model.get("overviewData"));
             assertEquals("Autotest", data.path("userName").asText());
             assertEquals("current.example", data.path("currentDomain").asText());
-            assertEquals(42, data.path("statRootGroupId").asInt());
+            assertEquals(expectedStatRootGroupId, data.path("statRootGroupId").asInt());
             assertTrue(data.path("dashboardMenu").isArray());
             assertTrue(data.path("settings").path("configured").asBoolean());
             assertEquals("Contact", data.path("settings").path("domainOptions").path("autotest-form").path("formName").asText());

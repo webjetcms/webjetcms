@@ -1,0 +1,4 @@
+interface:
+  display_name: "WebJET Anti-Slop"
+  short_description: "Spresnenie slovenskej dokumentácie WebJET CMS"
+  default_prompt: "Použi $wj-anti-slop na úpravu aktuálne otvoreného Markdown súboru podľa pravidiel pre dokumentáciu WebJET CMS."
