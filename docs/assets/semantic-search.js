@@ -50,6 +50,26 @@
   };
 
   /**
+   * Renders preview formatting with Docsify's existing Markdown parser.
+   * Escapes source HTML and keeps only the labels of links and images.
+   *
+   * @param {string} markdown - Markdown excerpt returned by the search endpoint.
+   * @returns {string} HTML containing the formatted excerpt.
+   */
+  function renderSnippet(markdown) {
+    const renderer = new window.marked.Renderer();
+    renderer.html = function (text) {
+      const escaped = document.createElement('span');
+      escaped.textContent = text;
+      return escaped.innerHTML;
+    };
+    renderer.text = text => text.replace(/</g, '&lt;');
+    renderer.link = (href, title, text) => text;
+    renderer.image = (href, title, text) => text;
+    return window.marked(markdown, { renderer: renderer, headerIds: false, highlight: null });
+  }
+
+  /**
    * Registers a localized search form and results dialog with the Docsify lifecycle.
    * Requires the viewer's basePath and useHashRouter globals to be initialized.
    *
@@ -243,8 +263,9 @@
               link.title = labels.open;
             }
             link.textContent = result.title;
-            const snippet = document.createElement('p');
-            snippet.textContent = result.snippet;
+            const snippet = document.createElement('div');
+            snippet.className = 'documentation-search-snippet';
+            snippet.innerHTML = renderSnippet(result.snippet || '');
             item.append(link, snippet);
             results.appendChild(item);
           });

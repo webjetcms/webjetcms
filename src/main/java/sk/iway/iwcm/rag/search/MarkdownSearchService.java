@@ -213,7 +213,7 @@ public class MarkdownSearchService {
             RagSettingsService.getSemanticMinimumSimilarity(null), RagSettingsService.getSemanticMinimumResults(null))
             .stream().limit(MAX_RESULTS).map(result -> {
                 VectorSearchResult chunk = bestChunks.get(result.getDocId());
-                String snippet = Tools.getStringValue(chunk.getChunkText(), "").replaceAll("\\s+", " ").trim();
+                String snippet = Tools.getStringValue(chunk.getChunkText(), "").replace("\r\n", "\n").replace('\r', '\n').strip();
                 if (snippet.length() > MAX_SNIPPET_LENGTH) snippet = snippet.substring(0, MAX_SNIPPET_LENGTH) + "…";
                 return new SearchResult(chunk.getSourceTitle(), chunk.getSourceUrl(), chunk.getSourcePath(), snippet, chunk.getSimilarity());
             }).toList();
@@ -247,7 +247,7 @@ public class MarkdownSearchService {
      * @param title source heading or relative path fallback
      * @param url viewer URL, or {@code null} for filesystem sources
      * @param sourcePath full logical path including the configured root
-     * @param snippet bounded excerpt from the best matching chunk
+     * @param snippet bounded Markdown excerpt from the best matching chunk, retaining line breaks and indentation
      * @param score best chunk similarity or fused ranking score
      */
     public record SearchResult(String title, String url, String sourcePath, String snippet, Double score) {}

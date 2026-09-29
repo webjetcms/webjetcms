@@ -194,7 +194,7 @@ div.mermaid {
 .documentation-search-results {
   padding-left: 24px;
 }
-.documentation-search-results li {
+.documentation-search-results > li {
   padding: 12px 0;
   border-top: 1px solid var(--sidebar-background);
 }
@@ -202,11 +202,41 @@ div.mermaid {
   color: var(--link-color);
   font-weight: bold;
 }
-.documentation-search-results p {
+.documentation-search-snippet {
   margin: 6px 0 0;
+  overflow-wrap: anywhere;
 }
-.documentation-search-answer div,
-.documentation-search-results p {
+.documentation-search-snippet > :first-child {
+  margin-top: 0;
+}
+.documentation-search-snippet :is(p, ul, ol, blockquote, pre, table, h1, h2, h3, h4, h5, h6) {
+  margin-bottom: 0;
+  margin-top: 6px;
+}
+.documentation-search-snippet :is(h1, h2, h3, h4, h5, h6) {
+  font-size: 1em;
+  line-height: inherit;
+}
+.documentation-search-snippet :is(ul, ol) {
+  padding-left: 24px;
+}
+.documentation-search-snippet blockquote {
+  margin-left: 0;
+  padding-left: 12px;
+  border-left: 2px solid #868ea5;
+}
+.documentation-search-snippet pre {
+  white-space: pre-wrap;
+}
+.documentation-search-snippet code {
+  background: var(--code-theme-background);
+}
+.documentation-search-snippet table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.documentation-search-answer div {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }

@@ -81,6 +81,21 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
         assertEquals("/docs/webjetcms/#/sk/guide", hit.getSourceUrl());
         verify(ragService, times(answerAllowed ? 1 : 0)).answerQuestion("query", 7, List.of(hit), request);
     }
+
+    /** Keeps Markdown structure in previews while retaining the existing excerpt length limit. */
+    @Test
+    void preservesMarkdownInBoundedSnippet() {
+        String markdown = "## Editor\r\n\r\n- **Name** and *description*.\r\n  - Nested item.\r\n\r\n" + "More text. ".repeat(40);
+        VectorSearchResult hit = new VectorSearchResult(1L, "markdown", 1L, 0, markdown, .95);
+        doReturn(List.of(hit)).when(semanticSearch).searchChunks("query", 7, "sk", 10,
+            RagEntityType.MARKDOWN, Map.of("sourceRoot", "/docs/webjetcms"), request);
+        when(repository.findAllById(any())).thenReturn(List.of(source(1L, "/docs/webjetcms/sk/guide.md", "sk")));
+
+        MarkdownSearchService.SearchResponse response = service.search("query", "sk", null, 7, request);
+
+        assertEquals(markdown.replace("\r\n", "\n").substring(0, 350) + "…", response.results().get(0).snippet());
+    }
+
     /** Searches public and filesystem roots anonymously while excluding stale, blocked, and other-language sources. */
     @Test
     void searchesAccessibleRootsInSelectedLanguage() {

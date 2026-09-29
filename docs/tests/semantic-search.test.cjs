@@ -52,7 +52,12 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   let requestUrl;
   let response = { json: { results: [
     { title: '<img src=x onerror=alert(1)>', url: deployment + '#/en/redactor/',
-      sourcePath: '/admin/docs/webjetcms/en/redactor/README.md', snippet: '<script>alert(1)</script>' },
+      sourcePath: '/admin/docs/webjetcms/en/redactor/README.md', snippet: [
+        '## Editor', 'Read **bold**, *italic* and `<code>`.', '- First\n- Second', '> Quote',
+        '```html\n<img src=x onerror=alert(1)>\n```',
+        '[Link](javascript:alert(1)) ![Image](https://example.com/image.png)',
+        '<script>alert(1)</script>', 'Inline <code><img src=x onerror=alert(1)></code>'
+      ].join('\n\n') },
     { title: 'External result', url: 'https://example.com/', snippet: 'Excluded' },
     { title: 'Other collection', url: '/cms/admin/docs/other/#/en/', snippet: 'Excluded' }
   ], answer: 'Answer with <script> text.' } };
@@ -73,11 +78,24 @@ test('Docsify navigation, scoped search, safe results and request errors', async
     query: 'Edit a page', language: 'en', directory: '/en/redactor/'
   });
   assert.equal(await page.locator('.documentation-search input[type="checkbox"], dialog input[type="checkbox"]').count(), 0);
-  assert.equal(await page.locator('dialog h2').textContent(), 'Search results');
+  assert.equal(await page.locator('.documentation-search-header h2').textContent(), 'Search results');
   assert.equal(await page.locator('.documentation-search-subtitle').textContent(), 'In /en/redactor/ and its subdirectories, search all directories');
   const result = page.locator('.documentation-search-results a');
   assert.equal(await result.textContent(), '<img src=x onerror=alert(1)>');
-  assert.equal(await page.locator('.documentation-search-results li p').textContent(), '<script>alert(1)</script>');
+  const snippet = page.locator('.documentation-search-snippet');
+  assert.equal(await snippet.locator('h2').textContent(), 'Editor');
+  assert.equal(await snippet.locator('h2').getAttribute('id'), null);
+  assert.equal(await snippet.locator('strong').textContent(), 'bold');
+  assert.equal(await snippet.locator('em').textContent(), 'italic');
+  assert.equal(await snippet.locator('p > code').textContent(), '<code>');
+  assert.deepEqual(await snippet.locator('ul > li').allTextContents(), ['First', 'Second']);
+  assert.equal(await snippet.locator('blockquote').textContent().then(text => text.trim()), 'Quote');
+  assert.equal(await snippet.locator('pre code').textContent(), '<img src=x onerror=alert(1)>\n');
+  assert.match(await snippet.textContent(), /Link Image/);
+  assert.match(await snippet.textContent(), /<script>alert\(1\)<\/script>/);
+  assert.match(await snippet.textContent(), /Inline <code><img src=x onerror=alert\(1\)><\/code>/);
+  assert.equal(await snippet.locator('a, img, script').count(), 0);
+  assert.equal(await snippet.locator('li').first().evaluate(item => getComputedStyle(item).borderTopWidth), '0px');
   assert.equal(await page.locator('.documentation-search-results img, .documentation-search-results script').count(), 0);
   assert.equal(await page.locator('.documentation-search-answer div').textContent(), 'Answer with <script> text.');
   assert.equal(await page.locator('.documentation-search-answer').isVisible(), true);
@@ -104,7 +122,7 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   assert.deepEqual(Object.fromEntries(requestUrl.searchParams), {
     query: 'Edit a page', language: 'en', directory: '/en/redactor/'
   });
-  assert.equal(await page.locator('.documentation-search-results li').count(), 0);
+  assert.equal(await page.locator('.documentation-search-results > li').count(), 0);
   assert.equal(await page.locator('.documentation-search-answer').isVisible(), false);
   assert.equal(await page.locator('dialog[open]').count(), 1);
   await page.getByRole('link', { name: 'search all directories', exact: true }).click();
