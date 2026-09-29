@@ -42,26 +42,6 @@ V každom z týchto podadresárov je potrebné ešte vytvoriť **skupiny blokov 
     - contactus.html
 ```
 
-## Vlastný HTML blok bez mriežky
-
-Blok v adresári `section/<category>/` môže mať koreňový element `<section>` alebo `<div class="pb-section">`. Trieda `pb-section` označí vlastný DIV ako sekciu: v Page Builderi má rovnaké ovládanie štýlov, presunu, duplikovania a zmazania. Nie je potrebné pridávať `container`, `row` ani stĺpce.
-
-```html
-<div class="pb-section" id="app" data-plugin-type="roaming" data-plugin-customer="b2c"></div>
-```
-
-DIV sa vloží priamo medzi ostatné sekcie. Pri uložení sa zachová jeho značka, trieda `pb-section`, `id` aj vlastné atribúty; editor nepridá ďalší obal. Pre text, ktorý má redaktor upravovať, označte príslušný vnútorný element triedou `pb-editable`.
-
-Do takéhoto bloku môžete vložiť aj aplikáciu, napríklad existujúcu aplikáciu **Vloženie HTML kódu**:
-
-```html
-<div class="pb-section" id="app2">!INCLUDE(/components/app-htmlembed/embed.jsp, html=)!</div>
-```
-
-Aplikácia zobrazí náhľad a jej obsah nastavíte bežným dialógom aplikácie. Presúvanie a ďalšie operácie sa vykonávajú nad celým blokom `div.pb-section`.
-
-Náhľad `!INCLUDE(...)!` funguje aj priamo v sekcii alebo vo vlastnom vnorenom DIVe mimo stĺpcov. Page Builder dočasne obalí iba direktívu elementom `div.pb-editable.pb-temp-wrapper`, aby pre ňu inicializoval CKEditor. Pri uložení a prepnutí editora obal odstráni; pôvodný rodič, jeho atribúty a okolitý text zostanú zachované. Aplikácie v existujúcich editovateľných oblastiach používajú svoj pôvodný editor. Dočasný obal do knižničných blokov nepridávajte ručne.
-
 ## Názov a značky bloku
 
 Ak chcete mať pekný názov bloku v zozname blokov, môžete vytvoriť súbor `pagebuilder.properties` v kódovaní `utf-8` v príslušnom pod adresári skupiny blokov (napr. v `section/Contact/pagebuilder.properties`). V ňom môžete definovať názov skupiny blokov, ikonu a značky (tagy) pre vyhľadávanie:

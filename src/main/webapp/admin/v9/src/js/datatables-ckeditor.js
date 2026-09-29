@@ -2541,6 +2541,8 @@ export class DatatablesCkEditor {
 	}
 
 	pbInsertContent(html, mode=null, final=false) {
+		if (html == null) return;
+
 		//console.log("html=", html, mode+" to PageBuilder editors", "markPbElements=", markPbElements);
 
 		//if we are appending content we must wait for final version, otherwise we would append content multiple times
