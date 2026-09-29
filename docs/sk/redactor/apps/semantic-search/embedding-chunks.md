@@ -70,12 +70,12 @@ Položka vo fronte neobsahuje poskytovateľa ani model; tieto hodnoty sa načít
 
 Veľkosť chunkov sa nastavuje konfiguračnými premennými:
 
-- `ragEmbeddingChunkSize` - približná cieľová veľkosť chunku v znakoch, predvolene `1000`.
+- `ragEmbeddingChunkSize` - približná cieľová veľkosť chunku v znakoch, predvolene `1000`. Maximálna veľkosť je o 50 % vyššia, teda predvolene `1500` znakov. Hodnota menšia alebo rovná nule vypne rozdeľovanie textu.
 - `ragEmbeddingChunkOverlap` - približné prekrytie medzi susednými chunkmi v znakoch, predvolene `200`.
 
-Chunky začínajú a končia na rozpoznanej hranici vety alebo odseku, ktorá je najbližšie k cieľovej veľkosti. Veta zalomená do viacerých riadkov zostane spolu. Dlhá veta alebo odsek bez vetnej interpunkcie môže prekročiť cieľovú veľkosť; systém nerozdeľuje slová kvôli dodržaniu limitu.
+Chunky podľa možnosti začínajú a končia na rozpoznanej hranici vety alebo odseku, ktorá je najbližšie k cieľovej veľkosti. Veta zalomená do viacerých riadkov zostane spolu, pokiaľ sa zmestí do maximálnej veľkosti. Dlhšie vety alebo odseky sa rozdelia medzi slovami. Ak aj samotné slovo prekročí maximum, rozdelí sa uprostred.
 
-Prekrytie sa prispôsobuje celým vetám alebo odsekom, preto sa jeho skutočná veľkosť mení a môže byť aj nulová, ak je to potrebné na pokračovanie v texte. Každý ďalší chunk pridá nový obsah. Nové hranice sa na existujúce dokumenty použijú po opätovnom indexovaní.
+Prekrytie sa podľa možnosti prispôsobuje celým vetám alebo odsekom, preto sa jeho skutočná veľkosť mení a môže byť aj nulová, ak je to potrebné na pokračovanie v texte alebo dodržanie maximálnej veľkosti. Každý ďalší chunk pridá nový obsah. Nové hranice sa na existujúce dokumenty použijú po opätovnom indexovaní.
 
 Prekrytie sa používa na zachovanie kontextu medzi susednými časťami. Pri RAG odpovedi sa susedné chunky jednej stránky môžu znovu zlúčiť, pričom sa odstráni duplicitný text vzniknutý prekrytím.
 

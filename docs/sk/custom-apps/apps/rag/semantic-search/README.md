@@ -25,7 +25,7 @@ Proces indexovania:
 4. **Generovanie embeddingov** - nové alebo zmenené chunky spracuje [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) podľa poskytovateľa a modelu nastaveného v indexovacom asistentovi `RAG-EMB-INDEX`.
 5. **Uloženie do databázy** - metadáta chunkov sa ukladajú cez JPA repozitár [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorjpa/EmbeddingChunkRepository.java). Zvolená implementácia [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java) uloží vektory pomocou natívneho SQL pre konkrétnu databázu.
 
-Veľkosť chunku je približná cieľová hodnota. Začiatok aj koniec chunku sa prispôsobujú najbližšej rozpoznanej hranici vety alebo odseku, a to aj pri prekrytí. Zalamovanie riadkov uprostred vety ju nerozdelí. Dlhé vety a odseky bez vetnej interpunkcie môžu prekročiť cieľovú veľkosť; slová sa kvôli limitu počtu znakov nerozdeľujú. Prekrytie tiež zahŕňa celé vety alebo odseky a môže sa zmenšiť, aby každý ďalší chunk pridal nový obsah. Nové hranice sa na existujúci obsah použijú po opätovnom indexovaní.
+Veľkosť chunku je približná cieľová hodnota. Maximálna veľkosť je cieľová hodnota zvýšená o 50 %, teda pri predvolenom nastavení najviac `1500` znakov. Začiatok aj koniec chunku sa podľa možnosti prispôsobujú najbližšej rozpoznanej hranici vety alebo odseku, a to aj pri prekrytí. Vety vrátane zalomenia riadkov zostávajú celé, pokiaľ sa zmestia do maxima. Dlhšie vety alebo odseky sa rozdelia medzi slovami; slovo dlhšie než maximum sa rozdelí aj uprostred. Prekrytie sa môže zmenšiť, aby každý ďalší chunk pridal nový obsah a dodržal maximálnu veľkosť. Hodnota `ragEmbeddingChunkSize` menšia alebo rovná nule vypne rozdeľovanie textu. Nové hranice sa na existujúci obsah použijú po opätovnom indexovaní.
 
 ### 2. Vyhľadávanie
 
@@ -138,8 +138,8 @@ Aktivácia a nastavenie sa robí v [Konfigurácii](../../../../admin/setup/confi
 | `ragEmbeddingModel` | `text-embedding-3-small` | Model použitý iba pri automatickom vytvorení chýbajúceho embedding asistenta. |
 | `ragEmbeddingDimensions` | `1536` | Globálny počet dimenzií vektora pre celú inštaláciu. Musí zodpovedať použitému modelu a databázovej tabuľke. |
 | `ai_localEmbeddingModelBundlePath` | prázdna hodnota | Cesta ku globálnemu schválenému ZIP balíku lokálneho modelu `intfloat/multilingual-e5-base`: absolútna cesta na serveri alebo cesta začínajúca `/WEB-INF/` voči koreňu nasadenej aplikácie. Po zmene je potrebný reštart. |
-| `ragEmbeddingChunkSize` | `1000` | Približná cieľová veľkosť chunku v znakoch, prispôsobená celým vetám alebo odsekom. |
-| `ragEmbeddingChunkOverlap` | `200` | Približné prekrytie v znakoch, prispôsobené celým vetám alebo odsekom tak, aby každý ďalší chunk pridal nový obsah. |
+| `ragEmbeddingChunkSize` | `1000` | Približná cieľová veľkosť chunku v znakoch. Maximum je o 50 % vyššie; pri predvolenej hodnote je to `1500` znakov. Hodnota menšia alebo rovná nule vypne rozdeľovanie. |
+| `ragEmbeddingChunkOverlap` | `200` | Približné prekrytie v znakoch, podľa možnosti prispôsobené celým vetám alebo odsekom. Môže sa zmenšiť, aby každý ďalší chunk pridal nový obsah a dodržal maximálnu veľkosť. |
 
 Systém podľa potreby automaticky vytvorí dvoch systémových AI asistentov:
 
