@@ -1,21 +1,28 @@
 package sk.iway.iwcm.rag.indexing;
 
+import java.text.BreakIterator;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Component;
 
 import sk.iway.iwcm.Constants;
 
-/**
- * Splits text into overlapping chunks using a sliding window approach.
- * This ensures context is preserved at chunk boundaries for better embedding quality.
- */
+/** Splits text into overlapping chunks at sentence or paragraph boundaries. */
 @Component
 public class SlidingWindowChunker {
 
+    private static final Pattern PARAGRAPH_BREAK = Pattern.compile("\\n[ \\t]*\\n");
+
     /**
-     * Split text into overlapping chunks.
+     * Splits text using the configured approximate chunk size and overlap.
+     *
      * @param text the full text to split
      * @return list of text chunks
      */
@@ -26,129 +33,78 @@ public class SlidingWindowChunker {
     }
 
     /**
-     * Split text into overlapping chunks with specified parameters. Chunk ends prefer
-     * paragraph, line, sentence, and whitespace boundaries before falling back to a
-     * hard character split.
+     * Chooses sentence or paragraph boundaries nearest the requested size and overlap.
+     * Each chunk adds new content, even when overlap is large. A sentence or unpunctuated
+     * paragraph longer than the target stays intact instead of being split inside a word.
      *
      * @param text the full text to split
-     * @param chunkSize maximum number of characters per chunk
-     * @param overlap number of characters to overlap between consecutive chunks
-     * @return list of text chunks
+     * @param chunkSize target number of characters per chunk; nonpositive values disable splitting
+     * @param overlap target overlap in characters, rounded to whole sentences or paragraphs
+     * @return nonempty chunks with approximate sizes and no gaps in the source content
      */
     public List<String> chunk(String text, int chunkSize, int overlap) {
-        List<String> chunks = new ArrayList<>();
-
-        if (text == null || text.isBlank()) return chunks;
-
+        if (text == null || text.isBlank()) return new ArrayList<>();
         text = text.replace("\r\n", "\n").replace('\r', '\n').trim();
-
-        if (chunkSize <= 0) {
-            chunks.add(text);
-            return chunks;
-        }
+        if (chunkSize <= 0 || text.length() <= chunkSize) return new ArrayList<>(List.of(text));
 
         overlap = Math.max(0, Math.min(overlap, chunkSize - 1));
-
-        if (text.length() <= chunkSize) {
-            chunks.add(text);
-            return chunks;
+        List<Integer> boundaries = findBoundaries(text);
+        List<String> chunks = new ArrayList<>();
+        int start = 0;
+        int end = 0;
+        while (end < boundaries.size() - 1) {
+            int startOffset = boundaries.get(start);
+            int targetEnd = startOffset + Math.min(chunkSize, text.length() - startOffset);
+            end = nearestBoundary(boundaries, targetEnd, end + 1, boundaries.size() - 1);
+            int endOffset = boundaries.get(end);
+            chunks.add(text.substring(startOffset, endOffset).trim());
+            if (end == boundaries.size() - 1) break;
+            start = overlap == 0 ? end
+                : nearestBoundary(boundaries, Math.max(0, endOffset - overlap), start + 1, end);
         }
-
-        int pos = 0;
-        while (pos < text.length()) {
-            int maxEnd = Math.min(pos + chunkSize, text.length());
-            int end = maxEnd == text.length() ? maxEnd : findBestBoundary(text, pos, maxEnd, chunkSize);
-            if (end <= pos) end = maxEnd;
-
-            String chunk = text.substring(pos, end).trim();
-            if (chunk.isEmpty() == false) {
-                chunks.add(chunk);
-            }
-            if (end == text.length()) break;
-
-            int nextPos = end - overlap;
-            if (nextPos <= pos) {
-                nextPos = pos + Math.max(1, chunkSize - overlap);
-            }
-            pos = Math.min(nextPos, text.length());
-        }
-
         return chunks;
     }
 
     /**
-     * Finds the best natural boundary for a chunk within the current window.
-     * Prefers paragraph breaks, then line breaks, sentence punctuation, whitespace,
-     * and finally the requested hard limit.
+     * Collects sentence starts with the JDK sentence iterator and adds paragraph breaks
+     * for headings and other text without terminal punctuation. Soft line wraps are retained.
      *
-     * @param text normalized source text
-     * @param start start index of the current chunk
-     * @param maxEnd maximum allowed end index for the current chunk
-     * @param chunkSize requested maximum chunk size
-     * @return selected end index for the current chunk
+     * @param text normalized nonempty text
+     * @return ordered unique boundaries, including zero and the end of the text
      */
-    private int findBestBoundary(String text, int start, int maxEnd, int chunkSize) {
-        int minBoundary = start + Math.max(1, (int) Math.floor(chunkSize * 0.55d));
-        if (minBoundary >= maxEnd) return maxEnd;
-
-        int paragraph = text.lastIndexOf("\n\n", maxEnd);
-        if (paragraph >= minBoundary) return paragraph + 2;
-
-        int line = text.lastIndexOf('\n', maxEnd);
-        if (line >= minBoundary) return line + 1;
-
-        for (int i = maxEnd - 1; i >= minBoundary; i--) {
-            char c = text.charAt(i);
-            if (isSentenceBoundary(c) && isBoundaryFollowedByWhitespace(text, i) && isNotDecimalNumber(text, i)) {
-                return i + 1;
-            }
+    private List<Integer> findBoundaries(String text) {
+        Set<Integer> boundaries = new TreeSet<>();
+        boundaries.add(0);
+        BreakIterator sentences = BreakIterator.getSentenceInstance(Locale.ROOT);
+        sentences.setText(text);
+        for (int end = sentences.next(); end != BreakIterator.DONE; end = sentences.next()) {
+            boundaries.add(skipWhitespace(text, end));
         }
+        Matcher paragraphs = PARAGRAPH_BREAK.matcher(text);
+        while (paragraphs.find()) boundaries.add(skipWhitespace(text, paragraphs.end()));
+        return new ArrayList<>(boundaries);
+    }
 
-        for (int i = maxEnd - 1; i >= minBoundary; i--) {
-            if (Character.isWhitespace(text.charAt(i))) {
-                return i + 1;
-            }
-        }
-
-        return maxEnd;
+    private int skipWhitespace(String text, int offset) {
+        while (offset < text.length() && Character.isWhitespace(text.charAt(offset))) offset++;
+        return offset;
     }
 
     /**
-     * Checks whether a character can act as a sentence-like boundary.
+     * Finds the closest allowed boundary, preferring the earlier boundary on a tie.
+     * Index bounds ensure that successive chunks advance without dropping source content.
      *
-     * @param c character to inspect
-     * @return true when the character is accepted as sentence punctuation
+     * @param boundaries ordered character offsets
+     * @param target desired character offset
+     * @param minimum first allowed boundary index
+     * @param maximum last allowed boundary index
+     * @return index of the nearest allowed boundary
      */
-    private boolean isSentenceBoundary(char c) {
-        return c == '.' || c == '!' || c == '?' || c == ';' || c == ':';
-    }
-
-    /**
-     * Verifies that punctuation is followed by whitespace or the end of the text.
-     *
-     * @param text source text
-     * @param boundaryIndex index of the candidate boundary punctuation
-     * @return true when the boundary is followed by whitespace or no more text
-     */
-    private boolean isBoundaryFollowedByWhitespace(String text, int boundaryIndex) {
-        int next = boundaryIndex + 1;
-        return next >= text.length() || Character.isWhitespace(text.charAt(next));
-    }
-
-    /**
-     * Prevents decimal numbers from being treated as sentence boundaries.
-     *
-     * @param text source text
-     * @param boundaryIndex index of the candidate period
-     * @return true when the period is not between two digits
-     */
-    private boolean isNotDecimalNumber(String text, int boundaryIndex) {
-        if (text.charAt(boundaryIndex) != '.') return true;
-
-        int previous = boundaryIndex - 1;
-        int next = boundaryIndex + 1;
-        return previous < 0 || next >= text.length() ||
-                Character.isDigit(text.charAt(previous)) == false ||
-                Character.isDigit(text.charAt(next)) == false;
+    private int nearestBoundary(List<Integer> boundaries, int target, int minimum, int maximum) {
+        int match = Collections.binarySearch(boundaries, target);
+        if (match >= 0) return Math.max(minimum, Math.min(match, maximum));
+        int next = Math.max(minimum, Math.min(-match - 1, maximum));
+        int previous = Math.max(minimum, next - 1);
+        return Math.abs(boundaries.get(previous) - target) <= Math.abs(boundaries.get(next) - target) ? previous : next;
     }
 }

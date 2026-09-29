@@ -287,8 +287,8 @@ public class ConstantsV9 {
 		Constants.setString("ragEmbeddingProvider", "openai", Constants.MOD_RAG, "Predvolený poskytovateľ použitý pri vytvorení chýbajúceho RAG embedding asistenta. Vstavané hodnoty sú openai, gemini a openrouter; použiť možno aj identifikátor zaregistrovaného vlastného poskytovateľa.");
 		Constants.setString("ragEmbeddingModel", "text-embedding-3-small", Constants.MOD_RAG, "Predvolený model použitý pri vytvorení chýbajúceho RAG embedding asistenta.");
 		Constants.setInt("ragEmbeddingDimensions", 1536, Constants.MOD_RAG, "Počet dimenzií embedding vektora generovaného pre RAG. Hodnota musí zodpovedať použitému modelu a definícii stĺpca vo vektorovej databáze.");
-		Constants.setInt("ragEmbeddingChunkSize", 1000, Constants.MOD_RAG, "Maximálna veľkosť jedného textového chunku v znakoch pri rozdeľovaní dokumentov pre RAG indexovanie.");
-		Constants.setInt("ragEmbeddingChunkOverlap", 200, Constants.MOD_RAG, "Počet znakov, ktoré sa majú prekrývať medzi susednými chunkmi pri rozdeľovaní textu pre RAG indexovanie.");
+		Constants.setInt("ragEmbeddingChunkSize", 1000, Constants.MOD_RAG, "Približná cieľová veľkosť textového chunku v znakoch pri RAG indexovaní. Hranice sa prispôsobujú celým vetám alebo odsekom, ktoré môžu túto veľkosť prekročiť.");
+		Constants.setInt("ragEmbeddingChunkOverlap", 200, Constants.MOD_RAG, "Približné prekrytie v znakoch medzi susednými chunkmi pri RAG indexovaní. Prispôsobuje sa celým vetám alebo odsekom tak, aby každý ďalší chunk pridal nový obsah.");
 
 		/* RAG - SEMANTIC SEARCH */
 		Constants.setString("ragSemanticSearchMinSimilarity", "0.2", Constants.MOD_RAG, "Minimálna hodnota similarity pre výsledky sémantického vyhľadávania. Ak je hodnota mimo intervalu 0-1, použije sa najbližšia hranica.");
