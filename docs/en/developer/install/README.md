@@ -86,6 +86,28 @@ Gradle wrapper update
     <iframe width="560" height="315" src="https://www.youtube.com/embed/ZHb8714HXNY" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+### Concurrent execution in multiple worktrees
+
+In VS Code, you can select a separate launch profile for each worktree:
+
+| Profile | HTTPS port | HTTP port | Debug port |
+| --- | --- | --- | --- |
+| `Debug Local DB` | 443 | 80 | 5005 |
+| `Debug Local DB 8443` | 8443 | 8080 | 5006 |
+| `Debug Local DB 9443` | 9443 | 9080 | 5007 |
+
+In each worktree, start one server and select a different profile. For profile `Debug Local DB 8443`, open the administration at `https://localhost:8443/admin/`.
+
+You can also set the ports via Gradle parameters `-PhttpsPort`, `-PhttpPort` and `-PdebugPort`. Without parameters, the default values ​​are 443, 80 and 5005. For example:
+
+```shell
+webjetDbname=/poolman-local.xml ./gradlew appStartDebug -PhttpsPort=8443 -PhttpPort=8080 -PdebugPort=5006
+```
+
+On macOS, the VS Code task `appStop` uses the script `./app-stop.sh`. It first calls `./gradlew appStop`, which uses the control port stored in the `build` directory of the given worktree. After successfully sending the request, it waits up to 15 seconds for the server to terminate. If Gradle fails or the server is left running, the script sends the signal `TERM` only to the Java process identified by the identifier of this worktree. If it does not terminate within another 10 seconds, it uses `KILL`.
+
+The task `appKill` (`./app-stop.sh --force`) will directly use `KILL` for the server of the given worktree. The JVM parameter added at startup via the current `build.gradle` is used to identify the process; other worktrees are not stopped. There is no need to re-enter the ports when stopping.
+
 ## Setting up the hosts file
 
 WebJET is licensed by domain. For local operation, you need to add the following line to the hosts file (on Windows it is c:\windows\system32\drivers\etc\hosts):
