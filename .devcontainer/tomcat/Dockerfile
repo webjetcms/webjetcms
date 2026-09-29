@@ -2,9 +2,12 @@ FROM tomcat:11.0.24-jdk17-temurin-noble
 
 ENV TZ=Europe/Bratislava
 
+# Install the SVG codec and Inkscape renderer explicitly when skipping recommended packages.
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends \
         imagemagick \
+        inkscape \
+        libmagickcore-6.q16-7-extra \
         locales \
         tzdata \
     && printf '%s\n' 'sk_SK.UTF-8 UTF-8' > /etc/locale.gen \

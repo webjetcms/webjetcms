@@ -72,8 +72,15 @@ Scenario('Set variable fileArchivFromMail and verify behaviour', async ({ I, Doc
     await SL.setCronjob('*/10', '*');
 
     I.amOnPage(SL.fileArchive);
-    SL.uploadFile(scheduledDocVirtualFileName, scheduledDocFileName, null , null, null, SL.getFutureTimestamp(30), "webjetarchive2"+TempMail.getTempMailDomain());
-    DTE.save('fileArchiveDataTable');
+    SL.uploadFile(scheduledDocVirtualFileName, scheduledDocFileName);
+    DTE.clickSwitch('editorFields-saveLater_0');
+    await I.fillField("#DTE_Field_editorFields-emails", "webjetarchive2"+TempMail.getTempMailDomain());
+
+    // Calculate the deadline after the queued navigation and upload steps have finished.
+    const dateUploadLater = SL.getFutureTimestamp(30);
+    DTE.fillField('editorFields-dateUploadLater', dateUploadLater);
+    I.say("Scheduled document will be uploaded at: " + dateUploadLater);
+    DTE.save('fileArchiveDataTable', true);
     I.wait(30);
 
     await TempMail.login("webjetarchive2");
