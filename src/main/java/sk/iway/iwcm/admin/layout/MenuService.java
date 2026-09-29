@@ -299,7 +299,7 @@ public class MenuService {
             { "/components/stat/stat_userlogon.jsp", "/apps/stat/admin/logon-user/"},
             { "/components/stat/stat_searchengines.jsp", "/apps/stat/admin/search-engines/"},
             { "/components/stat/stat_complete.jsp", ""},
-            { "/components/stat/admin_heat_map.jsp", ""},
+            { "/components/stat/admin_heat_map.jsp", "/apps/stat/admin/heat-map/"},
             //seo
             { "/components/seo/admin_bots.jsp", "/apps/seo/admin/"},
             { "/components/seo/admin_management_keywords.jsp", "/apps/seo/admin/management-keywords/"},

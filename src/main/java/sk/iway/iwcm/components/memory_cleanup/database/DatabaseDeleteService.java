@@ -124,7 +124,8 @@ public class DatabaseDeleteService {
             for (DatabaseDeleteBean entity : items) {
                 entity.setFrom(datePair.first);
                 entity.setTo(datePair.second);
-                if (entity.isTablePartitioning() && Constants.getBoolean("statEnableTablePartitioning")) {
+                if ("stat_clicks".equals(entity.getTableName())
+                        || (entity.isTablePartitioning() && Constants.getBoolean("statEnableTablePartitioning"))) {
                     entity.setNumberOfEntriesToDelete(DataDeletingManager.checkTablePartitioning(entity.getTableName(), datePair.first, datePair.second));
                 } else if(entity.getGroupId() == 6) {
                     if("documents".equals(entity.getTableName())) {
@@ -160,7 +161,8 @@ public class DatabaseDeleteService {
     boolean delete(DatabaseDeleteBean entity) {
         try {
             Pair<Date, Date> datePair = new Pair<>(entity.getFrom(), entity.getTo());
-            if (entity.isTablePartitioning() && Constants.getBoolean("statEnableTablePartitioning")) {
+            if ("stat_clicks".equals(entity.getTableName())
+                    || (entity.isTablePartitioning() && Constants.getBoolean("statEnableTablePartitioning"))) {
                 DataDeletingManager.deleteTablePartitioning(entity.getTableName(), datePair.first, datePair.second, true);
             }
 

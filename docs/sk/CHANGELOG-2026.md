@@ -15,6 +15,8 @@
 
 ### Webové stránky
 
+- Štatistika - obnovená [Mapa kliknutí](redactor/apps/stat/heat-map.md) so samostatnými údajmi pre presné šírky okna a náhľadom historického obsahu podľa konca obdobia. Meranie sa zapína v šablóne alebo skupine šablón a rešpektuje súhlas so štatistickými cookies. Pôvodné mesačné tabuľky sa rozšíria; staré kliknutia zostávajú dostupné s predvolenou šírkou 1920 px. (#318)
+
 - Kôš webových stránok - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Pridaná možnosť mazania stránok a priečinkov v koši aj v sekcii [Mazanie dát](sysadmin/data-deleting/README.md) podľa zvoleného rozsahu dátumov. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov (#271).
 
 ![](sysadmin/data-deleting/database-delete.png)

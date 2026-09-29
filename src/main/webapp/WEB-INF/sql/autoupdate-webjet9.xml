@@ -3956,5 +3956,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>14.09.2026</string></void>
+                <void property="desc"><string>Statistics - inherited page measurement mode for templates and template groups</string></void>
+                <void property="mysql"><string>ALTER TABLE templates ADD COLUMN statistics_mode INT NOT NULL DEFAULT 0; ALTER TABLE templates_group ADD COLUMN statistics_mode INT NOT NULL DEFAULT 0;</string></void>
+                <void property="mssql"><string>ALTER TABLE templates ADD statistics_mode INT NOT NULL DEFAULT 0; ALTER TABLE templates_group ADD statistics_mode INT NOT NULL DEFAULT 0;</string></void>
+                <void property="oracle"><string>ALTER TABLE templates ADD (statistics_mode INTEGER DEFAULT 0 NOT NULL); ALTER TABLE templates_group ADD (statistics_mode INTEGER DEFAULT 0 NOT NULL);</string></void>
+                <void property="pgsql"><string>ALTER TABLE templates ADD COLUMN statistics_mode INT NOT NULL DEFAULT 0; ALTER TABLE templates_group ADD COLUMN statistics_mode INT NOT NULL DEFAULT 0;</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

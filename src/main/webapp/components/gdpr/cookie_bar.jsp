@@ -111,6 +111,7 @@
 
             var categories = rels.join("_")
             $.cookie("enableCookieCategory", categories, {path: '/', expires: 365});
+            document.dispatchEvent(new Event("webjet:cookie-consent"));
 
             if (typeof window.dataLayer != "undefined") {
                 try {
