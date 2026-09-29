@@ -1,8 +1,8 @@
 # Úvodná obrazovka
 
-Úvodná obrazovka je osobný prehľad zložený z widgetov. Ponuka zodpovedá vašim oprávneniam; obsahové údaje sa vzťahujú na práve zvolenú doménu. Rozloženie je spoločné pre vaše konto vo všetkých doménach a prehliadačoch. Konkrétny výber formulára alebo kampane sa pamätá osobitne pre každú doménu.
+Úvodná obrazovka je osobný prehľad zložený z widgetov. Ponuka zodpovedá vašim oprávneniam - obsahové údaje sa vzťahujú na práve zvolenú doménu. Rozloženie je spoločné pre vaše konto vo všetkých doménach a prehliadačoch. Konkrétny výber formulára alebo kampane sa pamätá osobitne pre každú doménu.
 
-Pri prvom otvorení sa podľa vašich oprávnení zobrazia predvolené widgety **Návštevnosť**, **Formuláre**, **Na schválenie**, **Chyby 404**, **Pokračujte v práci**, **Odkiaľ návštevníci prišli**, **Najbližšie publikovanie** a **Newsletter**. Ďalšie typy si môžete pridať cez katalóg. V hornej časti zostávajú privítanie so skratkami a novinkami, aktívne prihlásenia a vyhľadávanie. Skratky predvolene smerujú na webové stránky a formuláre podľa vašich práv; ak tieto moduly nie sú dostupné, zobrazí sa skratka na prvý dostupný modul.
+Pri prvom otvorení sa podľa vašich oprávnení zobrazia predvolené widgety **Návštevnosť**, **Formuláre**, **Na schválenie**, **Chyby 404**, **Pokračujte v práci**, **Odkiaľ návštevníci prišli**, **Najbližšie publikovanie** a **Newsletter**. Ďalšie widgety si môžete pridať cez katalóg. V hornej časti je privítanie so skratkami a novinkami, aktívne prihlásenia a vyhľadávanie. Skratky predvolene smerujú na webové stránky a formuláre podľa vašich práv. Ak tieto moduly nie sú dostupné, zobrazí sa skratka na prvý dostupný modul.
 
 ![](dashboard.png)
 
@@ -22,18 +22,18 @@ Pri widgete použite menu s tromi bodkami:
 
 - **Nastavenia widgetu**: zvoľte dostupnú veľkosť a ďalšie údaje, napríklad obdobie alebo formulár. Nie každý widget ponúka viac veľkostí.
 - **Presunúť widget**: vyberte, pred ktorú kartu sa má presunúť, alebo zvoľte koniec. Na počítači môžete použiť aj rukoväť na ťahanie.
-- **Odstrániť widget**: odstráni kartu z vášho prehľadu. Údaje v aplikácii zostávajú zachované. Bezprostredne po odstránení je dostupné **Vrátiť späť**; po ďalšej úspešne uloženej úprave táto možnosť zanikne. Widget môžete kedykoľvek pridať znova.
+- **Odstrániť widget**: odstráni kartu z vášho prehľadu. Údaje v aplikácii zostávajú zachované. Bezprostredne po odstránení je dostupné **Vrátiť späť**, po ďalšej úspešne uloženej úprave táto možnosť zanikne. Widget môžete kedykoľvek pridať znova.
 - **Obnoviť údaje**: načíta čerstvé údaje danej karty.
 
 Dialóg nastavení widgetu:
 
 ![](dashboard-widget-settings.png)
 
-Widgety zobrazujú plný obsah v zvolenej veľkosti. Zmena sa prejaví po úspešnom uložení. Potvrdenie uloženia sa zobrazí ako systémová notifikácia a automaticky zmizne po 10 sekundách. Pri chybe sa zachová pôvodné nastavenie. Na menšej obrazovke sa karty automaticky usporiadajú pod seba pri zachovaní poradia. Rozloženie môže obsahovať najviac 48 položiek vrátane skratiek, prihlásení, noviniek a vyhľadávania.
+Na menšej obrazovke sa karty automaticky usporiadajú pod seba pri zachovaní poradia. Rozloženie môže obsahovať najviac 48 položiek vrátane skratiek, prihlásení, noviniek a vyhľadávania.
 
-Tlačidlo **Obnoviť** nájdete v lište úprav za tlačidlom **Pridať widget**. Po potvrdení v dialógu sa obnoví predvolený výber widgetov, ich veľkosti, poradie a nastavenia. Vymažú sa aj filtre widgetov vo všetkých doménach a potvrdenie prečítania noviniek. Vaše skratky a ostatné nastavenia účtu zostanú zachované. Existujúce osobné rozloženie sa bez tejto obnovy nemení.
+Tlačidlo **Obnoviť** nájdete v lište úprav za tlačidlom **Pridať widget**. Po potvrdení v dialógu sa obnoví predvolený výber widgetov, ich veľkosti, poradie a nastavenia. Vymažú sa aj filtre widgetov vo všetkých doménach a potvrdenie prečítania noviniek. Vaše skratky a ostatné nastavenia účtu zostanú zachované.
 
-Ak pri kliknutí na **Obnoviť** podržíte kláves **Shift**, po potvrdení sa prehľad nahradí všetkými dostupnými widgetmi v každej podporovanej veľkosti. Nepotrebné varianty môžete následne odstrániť. Aj táto obnova vymaže filtre vo všetkých doménach a potvrdenie prečítania noviniek; skratky zachová. Prihlásenia, novinky a vyhľadávanie zostávajú zobrazené po jednom.
+Ak pri kliknutí na **Obnoviť** podržíte kláves **Shift**, po potvrdení sa prehľad nahradí všetkými dostupnými widgetmi v každej podporovanej veľkosti. Nepotrebné varianty môžete následne odstrániť.
 
 ## Dostupné informácie
 

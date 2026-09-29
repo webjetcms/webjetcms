@@ -26,12 +26,12 @@ Detekcia nerozlišuje veľkosť písmen. Hľadá celé časti názvu oddelené b
 | INT | `int`, `integration`, `sit` | `ti-git-merge` | oranžová `#FFE0B2` |
 | DEV | Ostatné názvy, napríklad `localhost`, IP adresa alebo `iwcm.interway.sk` | `ti-code` | červená `#FFD9DE` |
 
-Predprodukcia zahŕňa aj zápisy `pre-prod`, `pre-production` a ich varianty s bodkou či podčiarkovníkom; tieto časti názvu sa nepovažujú za PROD. Časť slova, napríklad `int` v `interway`, sa nezhoduje s prostredím INT.
+Pred produkcia zahŕňa aj zápisy `pre-prod`, `pre-production` a ich varianty s bodkou či podčiarkovníkom. Tieto časti názvu sa nepovažujú za PROD. Časť slova, napríklad `int` v `interway`, sa nezhoduje s prostredím INT.
 
-Automatická ikona a farba prednostne použijú úvodné označenie `PROD`, `UAT`, `INT` alebo `DEV` v texte štítku, za ktorým nasleduje lomka, medzera, pomlčka alebo koniec textu. Pri inom vlastnom texte vychádzajú z prostredia zisteného podľa servera. Platná ručne nastavená ikona alebo farba má prednosť; neplatná hodnota použije automatický výber.
+Automatická ikona a farba prednostne použijú úvodné označenie `PROD`, `UAT`, `INT` alebo `DEV` v texte štítku, za ktorým nasleduje lomka, medzera, pomlčka alebo koniec textu. Pri inom vlastnom texte vychádzajú z prostredia zisteného podľa servera. Platná ručne nastavená ikona alebo farba má prednosť, neplatná hodnota použije automatický výber.
 
 ## Názov uzla a vlastné označenie
 
 Ak chcete zobraziť aj názov uzla klastra, nastavte `dashboardEnvironmentName` na `{ENVIRONMENT_NAME}/{CLUSTER_NAME}`. Makro `{CLUSTER_NAME}` používa hodnotu `clusterMyNodeName` aktuálneho uzla. Výsledkom môže byť napríklad `UAT/node-1`. Pri prázdnom názve uzla sa koncová lomka v štítku odstráni a zostane `UAT`.
 
-Môžete použiť aj pevný text, napríklad `UAT/Školenie`, alebo vlastné označenie `Školiaci server`. Na skrytie štítku nastavte prázdnu hodnotu `dashboardEnvironmentName`; na skrytie obrázka pozadia nastavte prázdnu hodnotu `dashboardHeroBackgroundImage`.
+Môžete použiť aj pevný text, napríklad `UAT/Školenie`, alebo vlastné označenie `Školiaci server`. Na skrytie štítku nastavte prázdnu hodnotu `dashboardEnvironmentName`, na skrytie obrázka pozadia nastavte prázdnu hodnotu `dashboardHeroBackgroundImage`.
