@@ -29,7 +29,6 @@ class HeatMapTemplateTest {
         StaticMessageSource messages = new StaticMessageSource();
         messages.addMessage("stat_menu.heat_map", Locale.ENGLISH, "Click map");
         messages.addMessage("components.summary.total_title", Locale.ENGLISH, "Total");
-        messages.addMessage("components.stat.heatmap.listHelp", Locale.ENGLISH, "Select a page");
         engine.setMessageSource(messages);
         LayoutBean layout = mock(LayoutBean.class);
         when(layout.getDataTableColumns("sk.iway.iwcm.stat.jpa.HeatMapPageDTO"))
