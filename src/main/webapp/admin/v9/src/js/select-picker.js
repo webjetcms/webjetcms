@@ -11,8 +11,16 @@ export function initSelectPicker(root = document, overrides = {}) {
     $(root).find('select').addBack('select').not('.no-picker').each(function () {
         const $select = $(this);
         if ($select.hasClass('form-select')) $select.addClass('form-control');
+        const syncAria = () => {
+            const picker = $select.data('selectpicker');
+            if (!picker) return;
+            picker.$button.attr('aria-controls', picker.$menuInner.attr('id'));
+            picker.$searchbox.attr('aria-expanded', picker.$button.attr('aria-expanded') || 'false');
+        };
+        $select.off('.wjSelectPickerA11y').on('shown.bs.select.wjSelectPickerA11y hidden.bs.select.wjSelectPickerA11y refreshed.bs.select.wjSelectPickerA11y', syncAria);
         if ($select.data('selectpicker')) {
             $select.selectpicker('refresh');
+            syncAria();
             return;
         }
         const options = {
@@ -27,5 +35,6 @@ export function initSelectPicker(root = document, overrides = {}) {
         const liveSearch = $select.data('live-search');
         if (liveSearch !== undefined) options.liveSearch = liveSearch;
         $select.selectpicker(options);
+        syncAria();
     });
 }

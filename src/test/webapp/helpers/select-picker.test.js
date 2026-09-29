@@ -15,7 +15,12 @@ function fixture(t) {
     $.fn.selectpicker = function (options) {
         this.each(function () {
             calls.push({ element: this, options, disabled: this.disabled, count: this.options.length });
-            if (typeof options === 'object') $(this).data('selectpicker', { options });
+            if (typeof options === 'object') $(this).data('selectpicker', {
+                options,
+                $button: $('<button role="combobox" aria-expanded="false">'),
+                $menuInner: $(`<div role="listbox" id="${this.id}-options">`),
+                $searchbox: $('<input role="combobox">')
+            });
         });
         return this;
     };
@@ -52,4 +57,21 @@ test('Dynamic option updates refresh existing pickers instead of duplicating the
     assert.equal(calls[1].options, 'refresh');
     assert.equal(calls[1].count, 2);
     assert.equal(calls[1].disabled, true);
+});
+
+test('Picker controls and search expose the listbox relationship and current expanded state', t => {
+    const { $, init } = fixture(t);
+    const select = $('#page');
+    init(select);
+    const picker = select.data('selectpicker');
+    assert.equal(picker.$button.attr('aria-controls'), 'page-options');
+    assert.equal(picker.$searchbox.attr('aria-expanded'), 'false');
+    picker.$button.attr('aria-expanded', 'true');
+    select.trigger('shown.bs.select');
+    assert.equal(picker.$searchbox.attr('aria-expanded'), 'true');
+    init(select);
+    assert.equal(picker.$searchbox.attr('aria-expanded'), 'true', 'Refreshing an open picker must preserve its expanded state');
+    picker.$button.attr('aria-expanded', 'false');
+    select.trigger('hidden.bs.select');
+    assert.equal(picker.$searchbox.attr('aria-expanded'), 'false');
 });
