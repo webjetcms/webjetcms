@@ -37,25 +37,93 @@ Ak pri kliknutí na **Obnoviť** podržíte kláves **Shift**, po potvrdení sa 
 
 ## Dostupné informácie
 
-**Skratka do modulu** otvorí vybranú sekciu administrácie. **Pokračujte v práci** zobrazuje najviac šesť vašich posledných upravovaných stránok s náhľadom obrázka, umiestnením a dátumom úpravy. Kliknutím otvoríte editor stránky. Pri menšej veľkosti karty môžete zoznam posúvať.
+Widgety v môžete pridať opakovane s rôznymi veľkosťami alebo nastaveniami. Ich dostupnosť závisí od vašich oprávnení.
 
-Ďalšie widgety zobrazujú požiadavky na schválenie, plán publikovania, odoslané formuláre, návštevnosť, najnavštevovanejšie stránky, hľadané výrazy, zdroje návštevnosti, chyby 404 a stav hromadného emailu. Widgety v osobnom prehľade môžete pridať opakovane s rôznymi veľkosťami alebo nastaveniami.
+Štatistické widgety predvolene používajú posledných sedem ukončených dní, možno zvoliť aj 30 alebo 90 dní. Porovnanie používa rovnako dlhé predchádzajúce obdobie. Karta zobrazuje skutočný rozsah dátumov. Osobitné pravidlá pre obdobie formulárov a chýb 404 sú uvedené pri príslušných widgetoch.
 
-Widget **Na schválenie** zobrazuje požiadavky dostupné v karte **Neschválené** vo Web stránkach. Väčší variant obsahuje šesť najnovších požiadaviek na zmenu alebo zmazanie stránky či priečinka. Ikona pri názve rozlišuje stránku a priečinok. Kliknutím na položku otvoríte jej schvaľovanie v novom okne; pri priečinku sa otvorí príslušný priečinok vo Web stránkach spolu so schvaľovacím dialógom. Nadpis a celkový počet otvoria celý zoznam požiadaviek.
+### Skratka do modulu
 
-Údaje kariet v osobnom prehľade sa načítajú, keď sa karta dostane do viditeľnej časti stránky. Čerstvé údaje môžete načítať voľbou **Obnoviť údaje** v menu widgetu.
+Otvorí vybranú sekciu administrácie.
 
-Formuláre zobrazujú posledných 7, 30 alebo 90 dní vrátane dnešných odoslaní.
+### Pokračujte v práci
 
-Štatistiky predvolene používajú posledných sedem ukončených dní; možno zvoliť aj 30 alebo 90 dní. Porovnanie používa rovnako dlhé predchádzajúce obdobie. Karta zobrazuje skutočný rozsah dátumov. Chyby 404 zobrazujú počet chybových požiadaviek, nie počet rôznych adries. Evidujú sa po týždňoch, preto sa zahrnú celé týždne zasahujúce do zvoleného obdobia; karta zobrazí skutočný rozsah. Aktuálny týždeň obsahuje údaje dostupné do tohto okamihu. Ak historické údaje nemožno oddeliť podľa domény, karta oznámi ich nedostupnosť.
+Zobrazuje najviac šesť vašich posledných upravovaných stránok s náhľadom obrázka, umiestnením a dátumom úpravy. Kliknutím otvoríte editor stránky. Pri menšej veľkosti karty môžete zoznam posúvať.
 
-Graf návštevnosti porovnáva aktuálne a predchádzajúce obdobie; graf zdrojov návštevnosti zobrazuje percentuálny podiel jednotlivých evidovaných zdrojov. Presné hodnoty nájdete v popisoch po podržaní kurzora nad grafom. Tabuľka s údajmi je dostupná čítačkám obrazovky.
+### Na schválenie
 
-Newsletter automaticky vyberá aktívnu kampaň, najbližšiu naplánovanú alebo poslednú dokončenú. Môžete zvoliť aj konkrétnu kampaň. Pri odosielaní sa údaje viditeľnej karty obnovujú každých 30 sekúnd. Počty otvorení a kliknutí predstavujú zaznamenané udalosti.
+Zobrazuje požiadavky dostupné v karte **Neschválené** vo Web stránkach. Väčší variant obsahuje šesť najnovších požiadaviek na zmenu alebo zmazanie stránky či priečinka. Ikona pri názve rozlišuje stránku a priečinok.
 
-Novinky aktuálnej verzie sú v uvítacom paneli. Tlačidlom **Zbaliť novinky** potvrdíte ich prečítanie a ponecháte stručný súhrn s tlačidlom **Viac info** na opätovné rozbalenie. Stav sa uloží do vášho konta; nová verzia oznámenia sa zobrazí rozbalená automaticky. Systémové upozornenia zostávajú viditeľné do vyriešenia ich príčiny. Kliknutím na nadpis upozornenia rozbalíte jeho vysvetlenie a dostupnú nápravnú akciu.
+Kliknutím na položku otvoríte jej schvaľovanie v novom okne. Pri priečinku sa otvorí príslušný priečinok vo Web stránkach spolu so schvaľovacím dialógom. Nadpis a celkový počet otvoria celý zoznam požiadaviek.
 
-Vo widgete **Vyhľadávanie a pomoc** zvoľte **V administrácii** alebo **V dokumentácii**. Hľadanie v dokumentácii otvorí nové okno so zadaným výrazom. Kontextový Pomocník v hlavičke zostáva dostupný.
+### Najbližšie publikovanie
+
+Zobrazuje plánované publikovanie a ukončenie platnosti stránok s dátumom a časom zmeny. Kliknutím na nadpis otvoríte úplný plán publikovania.
+
+### Formuláre
+
+Zobrazuje odoslané formuláre za posledných 7, 30 alebo 90 dní vrátane dnešných odoslaní. V nastaveniach môžete vybrať konkrétny formulár alebo všetky dostupné formuláre.
+
+### Návštevnosť
+
+Zobrazuje návštevnosť za zvolené obdobie. V nastaveniach môžete vybrať počet zobrazení, návštev alebo unikátnych návštevníkov.
+
+Graf porovnáva aktuálne a predchádzajúce obdobie. Presné hodnoty nájdete v popisoch po podržaní kurzora nad grafom. Tabuľka s údajmi je dostupná čítačkám obrazovky.
+
+### Najnavštevovanejšie stránky
+
+Zobrazuje najnavštevovanejšie stránky za zvolené obdobie s počtom zobrazení. Kliknutím na stránku otvoríte jej podrobnú štatistiku.
+
+### Čo návštevníci hľadajú
+
+Zobrazuje hľadané výrazy a ich počty za zvolené obdobie.
+
+### Odkiaľ návštevníci prišli
+
+Zobrazuje zdroje návštevnosti za zvolené obdobie. Graf zobrazuje percentuálny podiel jednotlivých evidovaných zdrojov. Presné hodnoty nájdete v popisoch po podržaní kurzora nad grafom. Tabuľka s údajmi je dostupná čítačkám obrazovky.
+
+### Chyby 404
+
+Zobrazuje počet chybových požiadaviek, nie počet rôznych adries. Chyby sa evidujú po týždňoch, preto sa zahrnú celé týždne zasahujúce do zvoleného obdobia. Karta zobrazí skutočný rozsah dátumov a aktuálny týždeň obsahuje údaje dostupné do tohto okamihu.
+
+Ak historické údaje nemožno oddeliť podľa domény, karta oznámi ich nedostupnosť.
+
+### Newsletter
+
+Zobrazuje stav hromadného emailu. Automaticky vyberá aktívnu kampaň, najbližšiu naplánovanú alebo poslednú dokončenú. Môžete zvoliť aj konkrétnu kampaň.
+
+Pri odosielaní sa údaje viditeľnej karty obnovujú každých 30 sekúnd. Počty otvorení a kliknutí predstavujú zaznamenané udalosti.
+
+### Čo je nové
+
+Novinky aktuálnej verzie sú v uvítacom paneli. Tlačidlom **Zbaliť novinky** potvrdíte ich prečítanie a ponecháte stručný súhrn s tlačidlom **Viac info** na opätovné rozbalenie. Systémové upozornenia zostávajú viditeľné do vyriešenia ich príčiny. Kliknutím na nadpis upozornenia rozbalíte jeho vysvetlenie a dostupnú nápravnú akciu.
+
+### Vyhľadávanie a pomoc
+
+Umožňuje hľadať **V administrácii** alebo **V dokumentácii**. Hľadanie v dokumentácii otvorí nové okno so zadaným výrazom. Kontextový Pomocník v hlavičke zostáva dostupný.
+
+### Moje aktívne prihlásenia
+
+Zobrazuje vaše aktívne relácie a umožňuje odhlásiť ostatné relácie. Zostáva vždy v hornej časti prehľadu a nemožno ho odstrániť. Podrobnosti nájdete v časti [Prihlásenia](#prihlásenia).
+
+### Prihlásení admini
+
+Zobrazuje zoznam všetkých prihlásených administrátorov podľa vašich oprávnení. Podrobnosti nájdete v časti [Prihlásení administrátori](#prihlásení-administrátori).
+
+### Zmenené stránky
+
+Zobrazuje posledné úpravy dostupných stránok v aktuálnej doméne aj s autorom zmeny.
+
+### Audit
+
+Zobrazuje posledné udalosti auditu z celého servera podľa vašich oprávnení.
+
+### Obsadenosť pamäte
+
+Zobrazuje graf a číselné hodnoty využitia pamäte servera. Údaje viditeľného widgetu sa aktualizujú každých 5 sekúnd. Podrobnosti nájdete v časti [Zmenené stránky, audit a monitorovanie](#zmenené-stránky-audit-a-monitorovanie).
+
+### Zaťaženie CPU
+
+Zobrazuje graf a číselné hodnoty zaťaženia procesora servera. Údaje viditeľného widgetu sa aktualizujú každých 5 sekúnd. Podrobnosti nájdete v časti [Zmenené stránky, audit a monitorovanie](#zmenené-stránky-audit-a-monitorovanie).
 
 ## Prihlásenia
 
@@ -67,7 +135,7 @@ Panel **Moje aktívne prihlásenia** zobrazuje všetky vaše aktívne relácie s
 
 ![](sessions.png)
 
-Pri inej vlastnej relácii môžete zvoliť **Odhlásiť túto reláciu**. V aktuálnom uzle clustra sa ukončí okamžite; v inom uzle sa zobrazí informácia o čakaní na synchronizáciu medzi uzlami (typicky do minúty). Doména a uzol sú uvedené v pomocnom texte po podržaní kurzora nad záznamom.
+Pri inej vlastnej relácii môžete zvoliť **Odhlásiť túto reláciu**. V aktuálnom uzle clustra sa ukončí okamžite, v inom uzle sa zobrazí informácia o čakaní na synchronizáciu medzi uzlami (typicky do minúty). Doména a uzol sú uvedené v pomocnom texte po podržaní kurzora nad záznamom.
 
 Poznámka: údaje sa aktualizujú po prihlásení používateľa. Môžete nastaviť nový záznam do [úlohy na pozadí](../../admin/settings/cronjob/README.md) na častejšiu aktualizáciu údajov, kde ako názov úlohy zadáte hodnotu `sk.iway.iwcm.stat.SessionClusterService`. Interval zadajte podľa potreby, napr. každých 10 minút. Pri úlohe na pozadí sa z databázy zmažú záznamy staršie ako 60 minút. Ak nie je úloha na pozadí nastavená, záznamy sa mažú pri prihlásení používateľa, ak sú staršie ako 24 hodín.
 
