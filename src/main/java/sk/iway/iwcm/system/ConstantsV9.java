@@ -41,7 +41,7 @@ public class ConstantsV9 {
 		Constants.setString("passwordHashAlgorithm", "bcrypt", Constants.MOD_PASSWORD, "Meno algoritmu pre hashovanie, možné hodnoty bcrypt alebo sha-512");
 		Constants.setInt("bcryptSaltRounds", 12, Constants.MOD_PASSWORD, "log2 počtu opakovaní saltovania pri bcrypt algoritme hashovania hesiel");
 
-		//domena a priecinok s novinkami pre dashboard
+		// Domain and folder containing dashboard news
 		Constants.setString("overviewJsonUrl", "https://docs.webjetcms.sk/json/", Constants.MOD_SYSTEM_ADMIN, "Zakladna URL adresa pre nacitanie zoznamu noviniek na administracnom dashboarde.");
 		Constants.setString("languages", "sk,cz,en,de,pl,hu,cho,ru,esp", Constants.MOD_LOCALIZATION, "Zoznam jazykov pre webjet cms");
 
@@ -119,7 +119,7 @@ public class ConstantsV9 {
 		Constants.setBoolean("logoffRequireCsrfToken", false, Constants.MOD_CSRF, "If true, /logoff.do requires CSRF token");
 		Constants.setString("csrfRequiredUrls", "", Constants.MOD_CSRF, "Comma separated list of URLs that require CSRF token");
 
-		// OAuth2 konfiguračné premenné
+		// OAuth2 configuration settings
 		Constants.setString("oauth2_clients", "", Constants.MOD_OAUTH2, "Čiarkou oddelený zoznam OAuth2 poskytovateľov (napr. google,facebook,keycloak)");
 		Constants.setString("oauth2_clientsWithPermissions", "keycloak", Constants.MOD_OAUTH2, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí poskytujú práva na synchronizáciu skupín a admin práv (napr. keycloak,okta)");
 		Constants.setString("oauth2_adminLogonAutoRedirect", "", Constants.MOD_OAUTH2, "Ak je nastavené na názov poskytovateľa, automaticky presmeruje na OAuth2 prihlásenie namiesto zobrazenia prihlasovacieho formulára");
@@ -276,6 +276,8 @@ public class ConstantsV9 {
 		/* ***** ***** ***** RAG SECTION ***** ***** ***** */
 
 		Constants.setBoolean("ragSemanticSearchEnabled", false, Constants.MOD_RAG, "Povolí sémantické vyhľadávanie nad vektorovým úložiskom PostgreSQL/pgvector alebo MariaDB Vector.");
+		Constants.setString("ragMarkdownFolders", "", Constants.MOD_RAG, "Global comma-separated documentation folders shared by all domains: application-relative paths such as /admin/docs/webjetcms, the documentation alias file:/docs/sk/admin/users with a required global symlinkTranslate mapping such as /docs/|/srv/documentation/webjetcms/, or absolute filesystem paths prefixed with file:, for example file:/srv/manuals. Indexing includes Markdown files directly in each folder and its subfolders. Documentation must use language folders such as /sk/, /en/ or /cs/. The nearest recognized language folder in the configured root and source path determines each document language; files without one are skipped. Recognized languages come from the global languages setting, with sk, en and cs always supported. Search login is controlled by ragMarkdownSearchRequireLogin for all roots; administrator access is not required. REST result URLs are null for filesystem roots; Docsify links file:/docs results using sourcePath when it serves the mapped documentation.");
+		Constants.setBoolean("ragMarkdownSearchRequireLogin", true, Constants.MOD_RAG, "Require a logged-in user for /rest/rag/markdown/search. Any authenticated user is accepted without administrator access. Set to false to allow anonymous searches of configured Markdown roots, including file: and /admin/ roots. Explicit file permissions and blocked paths still apply. This setting does not change access to the documentation viewer or index administration.");
 
 		/* RAG - VECTOR STORE */
 		Constants.setInt("ragSearchEfSearch", 40, Constants.MOD_RAG, "HNSW parameter ef_search — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie datasety zvážte zvýšenie na 100 alebo viac.");
