@@ -75,7 +75,8 @@ webjet-overview-dashboard a:focus-visible {
         --wj-dashboard-security: transparent;
         --wj-dashboard-security-border: rgba(188, 216, 255, .3);
         // A cool edge glow and a downward shadow lift the glass without a hard outline.
-        --wj-dashboard-security-shadow: inset 0 1px 1px rgba(230, 241, 255, .2), 0 0 18px rgba(100, 176, 255, .16), 0 12px 24px -6px rgba(0, 12, 38, .48);
+        //--wj-dashboard-security-shadow: inset 0 1px 1px rgba(230, 241, 255, .2), 0 0 18px rgba(100, 176, 255, .16), 0 12px 24px -6px rgba(0, 12, 38, .48);
+        --wj-dashboard-security-shadow: inset 1px 1px 1px 0px rgba(230, 241, 255, .2), 0 0 14px 3px rgba(100, 176, 255, .16), 0 3px 12px -6px rgba(0, 12, 38, .48);
         --wj-dashboard-security-filter: blur(18px) saturate(115%);
         --wj-dashboard-security-text: #edf4ff;
         --wj-dashboard-security-muted: #bed2ef;
@@ -534,7 +535,7 @@ webjet-overview-dashboard a:focus-visible {
         gap: 8px;
         > .md-dashboard__widget { min-height: 0; flex: 0 1 auto; max-width: 100%; flex-direction: row; align-items: center; border-color: var(--wj-nice-gray-100); background: var(--wj-dashboard-shortcut-bg, var(--wj-dashboard-surface)); }
         .md-dashboard__widget[data-size="1x1"] .md-dashboard__widget-body { padding: 0; }
-        .md-dashboard-widget__shortcut { padding: 10px 12px; min-height: 42px; }
+        .md-dashboard-widget__shortcut { padding: 7px 12px; }
         .md-dashboard__widget[data-size="1x1"] .md-dashboard__widget-header { padding: 0 6px 0 0; }
         .md-dashboard__widget-header > .ti, .md-dashboard__widget-title { display: none !important; }
     }
