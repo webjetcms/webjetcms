@@ -92,13 +92,13 @@ Scenario('Shortcut settings and feedback', async ({ I, Document }) => {
 
     showOverview(I);
     Document.screenshotElement('.md-dashboard__toolbar', '/redactor/admin/feedback.png');
+    I.wjSetDefaultWindowSize();
     I.clickCss('.md-dashboard__feedback');
     I.waitForVisible('#feedback_modal.show', 10);
-    Document.screenshotElement('#feedback_modal .modal-content', '/redactor/admin/feedback-modal.png');
+    Document.screenshot('/redactor/admin/feedback-modal.png');
     I.clickCss('#feedback_modal .btn-close-editor');
     I.waitForInvisible('#feedback_modal', 10);
     I.stopMockingRoute(settingsRoute);
-    I.wjSetDefaultWindowSize();
 });
 
 Scenario('Active sessions', async ({ I, Document }) => {
@@ -111,7 +111,7 @@ Scenario('Active sessions', async ({ I, Document }) => {
     I.waitForFunction(() => document.querySelectorAll('.md-dashboard__sessions .md-dashboard-widget__session').length >= 3, 20);
     I.seeElement('.md-dashboard__sessions .md-dashboard-widget__session-current');
     I.moveCursorTo('.ly-header');
-    Document.screenshotElement('.md-dashboard__sessions', '/redactor/admin/sessions.png');
+    Document.screenshotElement('.md-dashboard__sessions section', '/redactor/admin/sessions.png');
 
     await session('dashboard screenshot first login', () => I.logout());
     await session('dashboard screenshot second login', () => I.logout());

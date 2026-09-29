@@ -6,6 +6,8 @@ Pri prvom otvorení sa podľa vašich oprávnení zobrazia predvolené widgety *
 
 ![](dashboard.png)
 
+Pri privítaní sa zobrazuje aj označenie prostredia, napríklad **PROD**, **UAT**, **INT** alebo **DEV**. Správca môže upraviť jeho text, ikonu, farbu a obrázok pozadia podľa [konfigurácie úvodnej obrazovky](../../admin/setup/configuration/dashboard.md).
+
 ## Prispôsobenie prehľadu
 
 Tlačidlom **Upraviť prehľad** zobrazíte možnosti **Pridať widget**, **Obnoviť** a **Hotovo**.

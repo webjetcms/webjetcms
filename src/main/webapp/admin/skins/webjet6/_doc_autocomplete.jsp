@@ -12,7 +12,6 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %>
 <%@page import="java.util.Collections"%>
 <%@page import="java.util.Comparator"%>
 <%@ page import="java.util.ArrayList" %>
-<%@ page import="sk.iway.iwcm.editor.EditorDB,sk.iway.iwcm.editor.EditorForm" %>
 <iwcm:checkLogon admin="true" perms="menuWebpages"/>
 <%
 	String searchParam = Tools.getRequestParameter(request, "url");
@@ -57,10 +56,10 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %>
 		};
 	}
 
+	String currentDomain = DocDB.getDomain(request);
 	List<DocDetails> domainFilteredDocs;
 	if(Constants.getBoolean("multiDomainEnabled")){
 		domainFilteredDocs = new ArrayList<>();
-		String currentDomain = DocDB.getDomain(request);
 		for(DocDetails doc : documents){
 			String domain = doc.getFieldT();
 			if(currentDomain.equals(domain)){
@@ -92,7 +91,7 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %>
 	List<Integer> previewIds = new ArrayList<>();
 	for (DocDetails row : domainFilteredDocs)
 	{
-		if (editableOnly && !EditorDB.isPageEditable(user, new EditorForm(row))) continue;
+		if (editableOnly && !DashboardRecentPagesService.isAccessible(row, user, currentDomain)) continue;
 		JSONObject entry = new JSONObject();
 		entry.put("doc_id", row.getDocId());
 		entry.put("title", row.getTitle());
@@ -118,7 +117,7 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %>
 		if (hints.length()>50) break;
 	}
 	if (editableOnly && !previewIds.isEmpty()) {
-		Map<Integer, DocDetailsDto> previews = new DashboardRecentPagesService().getPagePreviews(user, DocDB.getDomain(request), previewIds);
+		Map<Integer, DocDetailsDto> previews = new DashboardRecentPagesService().getPagePreviews(user, currentDomain, previewIds);
 		for (int i = hints.length() - 1; i >= 0; i--) {
 			JSONObject hint = hints.getJSONObject(i);
 			DocDetailsDto preview = previews.get(hint.getInt("doc_id"));

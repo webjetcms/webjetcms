@@ -5,7 +5,7 @@ description: Create or modify widgets on the WebJET CMS administration home dash
 
 # Dashboard Widgets
 
-Build widgets through the shared dashboard framework. Read the approved [implementation plan](../../../../docs/sk/developer/admin/dashboard-widgets-plan.md) for the catalogue and product scope, and the repository design guidance before changing presentation.
+Build widgets through the shared dashboard framework. The [user guide](../../../docs/sk/redactor/admin/welcome.md) describes the dashboard's user-facing behavior. Follow the repository [design guidance](../../../.github/agents/AGENTS-design.md) before changing presentation.
 
 ## Workflow
 
@@ -15,6 +15,8 @@ Build widgets through the shared dashboard framework. Read the approved [impleme
 4. Verify real data, empty results, denied access, invalid configuration, responsive rendering, and cleanup. Update this skill when implementation establishes a reusable rule.
 
 Read the [widget contract](references/widget-contract.md) before implementing a widget. It describes the registration, settings API, and lifecycle in the framework source. Keep it aligned with verified code as the framework evolves.
+
+Read the [design decisions](references/design-decisions.md) when changing shared architecture, personalization or presentation. They explain the reasons for the current behavior; widget registrations and the contract define the supported interfaces and variants.
 
 ## Invariants
 

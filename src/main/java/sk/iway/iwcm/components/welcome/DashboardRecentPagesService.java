@@ -81,7 +81,7 @@ public class DashboardRecentPagesService {
     }
 
     /** Checks the current location and editing permissions of a page without using historical scope. */
-    static boolean isAccessible(DocDetails currentDoc, Identity user, String domain) {
+    public static boolean isAccessible(DocDetails currentDoc, Identity user, String domain) {
         if (currentDoc == null || user == null || !user.isEnabledItem("menuWebpages") || Tools.isEmpty(domain)) return false;
         GroupDetails group = GroupsDB.getInstance().getGroup(currentDoc.getGroupId());
         if (group == null || group.isHiddenInAdmin() || !domain.equalsIgnoreCase(group.getDomainName())) return false;

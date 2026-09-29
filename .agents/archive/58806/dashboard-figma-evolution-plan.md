@@ -1,3 +1,5 @@
+> **Historical archive — 2026-09-29, #58806.** This snapshot contains superseded plans and session results. It is not current development guidance. See the [archive index](README.md) for maintained documentation. The original record follows unchanged.
+
 # Úvodný prehľad administrácie – Figma evolúcia
 
 Dátum: 26. 9. 2026. Vetva: `feature/58806-new-welcome-page`.

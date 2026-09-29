@@ -1,3 +1,5 @@
+> **Historical archive — 2026-09-29, #58806.** This snapshot contains superseded plans and session results. It is not current development guidance. See the [archive index](README.md) for maintained documentation. The original record follows unchanged.
+
 # Nová úvodná stránka WebJET CMS — etapový implementačný plán
 
 ## 1. Cieľ a pravidlá pre ďalší vývoj
