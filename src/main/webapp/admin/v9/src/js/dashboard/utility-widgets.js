@@ -187,8 +187,6 @@ export function registerUtilityWidgets() {
             const { version, paragraphs, html } = releaseNews(context);
             if (!html.trim()) { empty(container, context); return; }
             const collapsed = Boolean(version && context.settings.acknowledgedNewsVersion === version);
-            const header = node('div', 'md-dashboard-widget__news-header');
-            header.append(node('strong', '', `WebJET CMS ${version}`));
             const toggle = node('button', 'btn btn-sm md-dashboard-widget__news-toggle', text(context, collapsed ? 'newsMore' : 'newsCollapse'));
             toggle.type = 'button';
             toggle.setAttribute('aria-expanded', String(!collapsed));
@@ -204,11 +202,12 @@ export function registerUtilityWidgets() {
                     region.querySelector('.md-dashboard-widget__news-toggle')?.focus({ preventScroll: true });
                 }
             });
-            const summary = node('p', 'md-dashboard-widget__news-summary', paragraphs[0]);
             container.classList.toggle('is-news-collapsed', collapsed);
-            if (collapsed) header.append(summary, toggle);
-            container.append(header);
-            if (!collapsed) {
+            if (collapsed) {
+                const header = node('div', 'md-dashboard-widget__news-header');
+                header.append(node('p', 'md-dashboard-widget__news-summary', paragraphs[0]), toggle);
+                container.append(header);
+            } else {
                 const highlights = node('div', 'md-dashboard-widget__news-highlights');
                 // The translated announcement has already passed through WJ.parseMarkdown in overview.pug.
                 highlights.innerHTML = html;

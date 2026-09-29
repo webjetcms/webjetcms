@@ -71,8 +71,8 @@ webjet-overview-dashboard a:focus-visible {
         --wj-dashboard-hero-control-hover-text: #173b70;
         --wj-dashboard-hero-image-opacity: .12;
 
-        // Blue glass session card. Adjust the tint alpha and blur here to tune the frost effect.
-        --wj-dashboard-security: linear-gradient(145deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, .035)), rgba(6, 26, 61, .45);
+        // Clear blue glass: blur and saturation reveal the hero colors without a milky overlay.
+        --wj-dashboard-security: transparent;
         --wj-dashboard-security-border: rgba(188, 216, 255, .3);
         --wj-dashboard-security-shadow: inset 0 1px 1px rgba(230, 241, 255, .13), 0 8px 24px rgba(0, 12, 38, .2);
         --wj-dashboard-security-filter: blur(18px) saturate(115%);
@@ -505,8 +505,8 @@ webjet-overview-dashboard a:focus-visible {
     }
 
     &__shortcuts {
-        margin: 0 0 18px;
-        padding-bottom: 18px;
+        margin: 0 0 12px;
+        padding-bottom: 14px;
         border-bottom: 1px solid var(--wj-dashboard-divider);
         > .md-dashboard__status, > .md-dashboard__undo { margin: 12px 0 0; flex-wrap: wrap; font-size: 12px; }
     }
@@ -701,7 +701,6 @@ webjet-overview-dashboard a:focus-visible {
         gap: 10px;
         min-width: 0;
         margin-bottom: 7px;
-        > strong { flex-shrink: 0; font-size: 12px; font-weight: 400; color: var(--wj-dashboard-muted); }
         > button { margin-left: auto; flex-shrink: 0; }
     }
     &__news-summary { margin: 0; color: var(--wj-dashboard-muted); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; min-width: 0; }
@@ -857,9 +856,6 @@ webjet-overview-dashboard a:focus-visible {
 
     @media (max-width: ($bp-mobile - .02px)) {
         &__search { flex-direction: column; align-items: stretch; gap: 10px; }
-        &__news-header { flex-wrap: wrap; }
-        .is-news-collapsed &__news-header { flex-wrap: nowrap; }
-        .is-news-collapsed &__news-header > strong { display: none; }
         &__page { gap: 10px; flex-wrap: wrap; }
         &__page-date { padding-left: 48px; width: 100%; text-align: left; }
     }

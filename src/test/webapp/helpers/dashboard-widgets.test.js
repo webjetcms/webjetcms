@@ -1498,7 +1498,7 @@ test('Release announcements preserve every Markdown-rendered feature and place c
     assert.equal(news.paragraphs[1], 'Second feature.');
     scope.getWidget('news').render({ container, context });
     assert.equal(container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, context.labels.changelog);
-    assert.equal(container.querySelector('.md-dashboard-widget__news-header button'), null);
+    assert.equal(container.querySelector('.md-dashboard-widget__news-header'), null, 'Expanded news must not add a duplicate release heading or empty header.');
     const actions = container.querySelector('.md-dashboard-widget__news-actions');
     assert.equal(actions.children.length, 2);
     assert.equal(actions.querySelector('button').textContent, 'admin.dashboard.newsCollapse.js');
