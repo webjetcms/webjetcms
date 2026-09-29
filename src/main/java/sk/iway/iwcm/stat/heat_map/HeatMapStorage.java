@@ -197,7 +197,6 @@ public final class HeatMapStorage {
     }
 
     private static String normalizeDomain(String domain) {
-        if (domain == null || domain.isBlank() || domain.length() > 255) throw new IllegalArgumentException("Invalid heatmap domain");
         return domain.trim().toLowerCase(Locale.ROOT);
     }
 
