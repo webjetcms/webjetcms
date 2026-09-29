@@ -1,5 +1,7 @@
 # Sémantické vyhľadávanie (RAG)
 
+Pre vyhľadávanie v samostatných súboroch dokumentácie pozrite [Vyhľadávanie v Markdown dokumentácii](../markdown-search.md).
+
 Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné stránky podľa **významu otázky**, nielen podľa zhody kľúčových slov. Embedding vektory ukladá do PostgreSQL s [pgvector](https://github.com/pgvector/pgvector) alebo do vstavaného úložiska [MariaDB Vector](https://mariadb.com/docs/server/reference/sql-structure/vectors/vector-overview). Vektory generujú poskytovatelia podporovaní knižnicou `webjet-ai`.
 
 Nad rovnakým indexom je možné použiť aj:
