@@ -1,6 +1,6 @@
-const { showWidget, mockDashboardBootstrap, dashboardPageRoute } = require('../../helpers/dashboard-browser');
+const { showWidget, mockDashboardBootstrap, dashboardPageRoute } = require('../../../helpers/dashboard-browser');
 
-Feature('admin.dashboard-lazy-loading');
+Feature('admin.dashboard.lazy-loading');
 
 const dataRoutes = ['**/admin/rest/forms-list/all', '**/admin/rest/audit/log/all?*'];
 const monitoringRoute = '**/admin/rest/monitoring/actual';
@@ -8,6 +8,11 @@ const monitoringRoute = '**/admin/rest/monitoring/actual';
 Before(({ login }) => login('admin'));
 
 for (const width of [1337, 390]) {
+    /**
+     * Checks on desktop and mobile that widgets below the visible screen load only after the user scrolls to
+     * them. Returning to a loaded card reuses its content, manual refresh loads it again, and older
+     * minimized widgets display their full saved size.
+     */
     Scenario(`Offscreen data loads only on viewport entry at ${width}px`, async ({ I }) => {
         const requests = [];
         const settings = {

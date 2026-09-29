@@ -1,4 +1,4 @@
-Feature('admin.dashboard-autocomplete').tag('@singlethread');
+Feature('admin.dashboard.autocomplete').tag('@singlethread');
 
 let marker;
 let query;
@@ -26,6 +26,10 @@ async function request(I, url, body) {
     }, { url, body });
 }
 
+/**
+ * Creates temporary pages in hidden and visible folders so the following tests can check whether hidden
+ * matches crowd useful pages out of search suggestions.
+ */
 Scenario('Create isolated autocomplete candidates with hidden matches before valid pages', async ({ I }) => {
     const suffix = I.getRandomText();
     marker = `dashboard-autocomplete-autotest-${suffix}`;
@@ -72,12 +76,20 @@ async function verifySuggestions(I) {
         'The limit must count twenty eligible results while preserving URL order.');
 }
 
+/**
+ * Checks that pages in hidden folders do not occupy the twenty available suggestions. A matching visible
+ * page must still be found even when hidden matches come first.
+ */
 Scenario('Hidden folders do not consume the dashboard autocomplete limit', async ({ I }) => {
     const hidden = await request(I, `/admin/rest/groups/${folders[0].groupId}`);
     I.assertTrue(hidden.hiddenInAdmin, 'The fixture must exercise a hidden folder.');
     await verifySuggestions(I);
 });
 
+/**
+ * Moves the temporary hidden folder to the trash and checks the same search limit again. Deleted pages must
+ * not prevent visible pages from appearing in suggestions.
+ */
 Scenario('Trashed folders do not consume the dashboard autocomplete limit', async ({ I }) => {
     const id = folders[0].groupId;
     const folder = await request(I, `/admin/rest/groups/${id}`);
@@ -90,6 +102,10 @@ Scenario('Trashed folders do not consume the dashboard autocomplete limit', asyn
     await verifySuggestions(I);
 });
 
+/**
+ * Deletes only the folders and pages created for these search checks, including copies in the trash, and
+ * confirms that they no longer appear in search results.
+ */
 Scenario('Remove only the autocomplete fixture folders and pages', async ({ I }) => {
     for (const folder of folders) {
         I.assertTrue(folder.groupName.startsWith(marker), 'Cleanup must only remove this test fixture.');

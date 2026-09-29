@@ -1,6 +1,6 @@
-const { readDashboardBootstrap } = require('../../helpers/dashboard-browser');
+const { readDashboardBootstrap } = require('../../../helpers/dashboard-browser');
 
-Feature('admin.dashboard-security').tag('@singlethread');
+Feature('admin.dashboard.security').tag('@singlethread');
 
 let originalSettings;
 const dashboard = '.md-dashboard[data-loaded="true"]';
@@ -58,6 +58,10 @@ Before(({ I, login }) => {
     loaded(I);
 });
 
+/**
+ * Saves the original layout and prepares widgets for every permission being tested. Existing widget
+ * identities are retained so their saved options can be restored afterwards.
+ */
 Scenario('Preserve preferences and install all permission-controlled widgets', async ({ I }) => {
     originalSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     const installed = await I.executeScript(async ({ types, sizes }) => {
@@ -78,6 +82,11 @@ Scenario('Preserve preferences and install all permission-controlled widgets', a
 });
 
 for (const { permission, types } of permissionCases) {
+    /**
+     * Checks each removed permission: the affected widgets and catalogue choices disappear, direct data
+     * requests are denied, and saved preferences remain available for when access is restored. Active-
+     * session controls must remain visible.
+     */
     Scenario(`${permission}: hide saved widgets and catalogue entries and deny unauthorized data access`, async ({ I }) => {
         I.assertTrue(await I.executeScript(permission => WJ.hasPermission(permission), permission), 'Logout must restore the real account permissions.');
         for (const type of types) I.seeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
@@ -129,11 +138,19 @@ for (const { permission, types } of permissionCases) {
     });
 
     // removePerm persists in the session even if the preceding scenario fails.
+    /**
+     * Signs out after temporarily removing a permission so the next scenario regains the account's normal
+     * access, even if the preceding check failed.
+     */
     Scenario(`${permission}: logout after removing session permission`, ({ I }) => {
         I.logout();
     });
 }
 
+/**
+ * Checks that the server refuses unsafe shortcut addresses, icons and colors even when they bypass the
+ * settings dialog. Every rejected attempt must leave saved preferences unchanged.
+ */
 Scenario('Reject unsafe shortcut URLs and appearance values through REST without changing preferences', async ({ I }) => {
     const before = (await I.executeScript(readDashboardBootstrap)).settings;
     const results = await I.executeScript(async before => {
@@ -162,6 +179,10 @@ Scenario('Reject unsafe shortcut URLs and appearance values through REST without
     I.assertDeepEqual(after, before, 'Rejected payloads must leave the saved profile unchanged.');
 });
 
+/**
+ * Checks that shortcut titles containing markup remain harmless text after saving and reopening. Unusual
+ * local paths must stay on the same site, and the settings dialog must reject an executable address.
+ */
 Scenario('Persisted shortcut titles remain text and local paths cannot become external links', async ({ I }) => {
     const title = 'autotest <img src=x onerror="window.autotestDashboardXss=1"><svg onload="window.autotestDashboardXss=1">';
     const installed = await I.executeScript(async title => {
@@ -198,6 +219,10 @@ Scenario('Persisted shortcut titles remain text and local paths cannot become ex
     I.waitForInvisible(modal, 10);
 });
 
+/**
+ * Checks that changing user or domain parameters in a request cannot select another account's dashboard or
+ * session list. The action for ending other sessions must also refuse to end the current session.
+ */
 Scenario('Ownership parameters cannot select another dashboard or session owner', async ({ I }) => {
     const data = await I.executeScript(readDashboardBootstrap);
     const forged = await I.executeScript(readDashboardBootstrap, '?userId=-1&domainId=-1&domainKey=autotest');
@@ -214,6 +239,10 @@ Scenario('Ownership parameters cannot select another dashboard or session owner'
     I.assertEqual((await I.executeScript(readDashboardBootstrap)).currentSessions.currentSessionId, data.currentSessions.currentSessionId);
 });
 
+/**
+ * Checks that saving or resetting the dashboard and ending a session require the current request-security
+ * token. Missing or invalid tokens must be refused without changing the saved layout.
+ */
 Scenario('Settings mutations and session removal require a valid CSRF token', async ({ I }) => {
     const before = (await I.executeScript(readDashboardBootstrap)).settings;
     const result = await I.executeScript(async before => {
@@ -239,6 +268,9 @@ Scenario('Settings mutations and session removal require a valid CSRF token', as
     I.assertDeepEqual(after, before, 'Rejected CSRF requests must not change settings.');
 });
 
+/**
+ * Restores the layout saved before the security checks and verifies it after reloading the dashboard.
+ */
 Scenario('Restore preferences after security tests', async ({ I }) => {
     if (!originalSettings) return;
     I.assertTrue(await I.executeScript(settings => document.querySelector('webjet-overview-dashboard').dashboardController._commit(settings), originalSettings));
@@ -248,6 +280,10 @@ Scenario('Restore preferences after security tests', async ({ I }) => {
         { ...originalSettings, configured: true, shortcutsConfigured: true });
 });
 
+/**
+ * Signs out and checks that the dashboard, its data and its change actions all require login. Requests must
+ * be refused or directed to the login page.
+ */
 Scenario('Unauthenticated requests cannot read dashboard data or mutate preferences', async ({ I }) => {
     I.logout();
     const paths = ['/admin/v9/', '/admin/rest/dashboard/menu',

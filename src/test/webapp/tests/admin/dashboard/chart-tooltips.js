@@ -1,6 +1,6 @@
-const { waitForWidgets, mockDashboardBootstrap, dashboardPageRoute } = require('../../helpers/dashboard-browser');
+const { waitForWidgets, mockDashboardBootstrap, dashboardPageRoute } = require('../../../helpers/dashboard-browser');
 
-Feature('admin.dashboard-chart-tooltips').tag('@singlethread');
+Feature('admin.dashboard.chart-tooltips').tag('@singlethread');
 
 const routes = ['**/admin/rest/dashboard/settings', '**/admin/rest/stat/views/search/findByColumns?*',
     '**/admin/rest/monitoring/actual', '**/admin/rest/dashboard/data/server-memory*', '**/admin/rest/dashboard/data/server-cpu*'];
@@ -92,6 +92,10 @@ async function hoverDate(I, index, type = 'traffic') {
     }, [index, type], 5);
 }
 
+/**
+ * Checks that pointing at a traffic-chart date shows the corresponding values before and after scrolling the
+ * dashboard. The tooltip must follow the pointer without chart errors.
+ */
 Scenario('Traffic tooltips follow the real pointer after transformed page scrolling', async ({ I }) => {
     await hoverDate(I, 2);
     const before = await I.executeScript(() => document.querySelector('[data-widget-type="traffic"] .md-dashboard-widget__chart').getBoundingClientRect().top);
@@ -108,6 +112,10 @@ Scenario('Traffic tooltips follow the real pointer after transformed page scroll
     await hoverDate(I, 1);
 });
 
+/**
+ * Checks that the date shown while hovering over the traffic chart remains fully visible inside the chart
+ * instead of being cut off at its edge.
+ */
 Scenario('Traffic date tooltip is fully inside its rendering surface', async ({ I }) => {
     await hoverDate(I, 2);
     const bounds = await I.executeScript(() => {
@@ -123,6 +131,10 @@ Scenario('Traffic date tooltip is fully inside its rendering surface', async ({ 
     I.saveScreenshot('dashboard-chart-tooltip-complete.png');
 });
 
+/**
+ * Checks that memory and CPU readings update together in the chart, summary and accessible table. Both chart
+ * sizes must show complete tooltip values and units, and the larger size must provide a taller graph.
+ */
 Scenario('Monitoring tooltips stay complete in compact and default charts with a taller plotted graph', async ({ I }) => {
     const heights = {};
     for (const size of ['3x2', '3x3']) {
@@ -221,6 +233,10 @@ Scenario('Monitoring tooltips stay complete in compact and default charts with a
     I.assertAbove(actualRequests, 1, 'Monitoring must fetch current snapshots after the initial sample.');
 });
 
+/**
+ * Removes the simulated chart data and settings responses, then reopens the dashboard using the normal
+ * server data.
+ */
 Scenario('Restore unmocked dashboard requests', async ({ I }) => {
     for (const route of [...routes, dashboardPageRoute]) await I.stopMockingRoute(route);
     I.amOnPage('/admin/v9/');

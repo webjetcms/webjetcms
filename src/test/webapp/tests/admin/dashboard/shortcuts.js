@@ -1,4 +1,4 @@
-Feature('admin.dashboard-shortcuts').tag('@singlethread');
+Feature('admin.dashboard.shortcuts').tag('@singlethread');
 
 let originalSettings;
 let originalBookmarks;
@@ -30,6 +30,10 @@ Before(({ I, login }) => {
     loaded(I);
 });
 
+/**
+ * Checks that shortcuts are visible near the top of the dashboard and fit narrow screens. Shortcut editing
+ * and widget editing must expose their own controls without being active together.
+ */
 Scenario('Welcome shortcuts fit above the fold and own their editing mode', async ({ I }) => {
     originalSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     originalBookmarks = await I.executeScript(() => localStorage.getItem('bookmarks'));
@@ -59,6 +63,11 @@ Scenario('Welcome shortcuts fit above the fold and own their editing mode', asyn
     I.wjSetDefaultWindowSize();
 });
 
+/**
+ * Creates a shortcut by choosing an administration area, section and tab, then changes its title, icon and
+ * color. Reopening its settings must restore those choices, and the dialog must fit mobile and desktop
+ * screens.
+ */
 Scenario('Choose a banner tab through the administration hierarchy and restore it when editing', async ({ I }) => {
     I.clickCss(`${actions} button[aria-pressed="false"]`);
     I.click('Pridať skratku', actions);
@@ -110,6 +119,10 @@ Scenario('Choose a banner tab through the administration hierarchy and restore i
     I.dontSeeElement('.bs-container');
 });
 
+/**
+ * Creates a custom-address shortcut with a chosen icon and color, reloads the dashboard and checks that both
+ * its appearance and editable settings are retained.
+ */
 Scenario('Custom URL shortcuts retain their icon and color after saving and reopening', async ({ I }) => {
     I.clickCss(`${actions} button[aria-pressed="false"]`);
     I.click('Pridať skratku', actions);
@@ -140,6 +153,11 @@ Scenario('Custom URL shortcuts retain their icon and color after saving and reop
     I.waitForInvisible(modal, 10);
 });
 
+/**
+ * Checks that old browser bookmarks are imported once as personal shortcuts without duplicates. A failed
+ * save preserves both the original bookmarks and layout; a successful retry retains other widgets and
+ * survives reloading.
+ */
 Scenario('Automatically import old bookmarks on load with failure recovery and server persistence', async ({ I }) => {
     I.assertTrue(Boolean(originalSettings), 'The fixture must preserve the original profile first.');
     const before = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
@@ -187,6 +205,10 @@ Scenario('Automatically import old bookmarks on load with failure recovery and s
     I.saveScreenshot('dashboard-shortcuts-welcome.png', true);
 });
 
+/**
+ * Checks that restoring default shortcuts leaves widget settings and release-news choices intact. After the
+ * user removes every shortcut, the section must remain empty after reloading.
+ */
 Scenario('Reset shortcuts preserves widgets and an empty shortcut section stays empty after reload', async ({ I }) => {
     const before = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     I.clickCss(`${actions} button[aria-pressed="false"]`);
@@ -213,6 +235,10 @@ Scenario('Reset shortcuts preserves widgets and an empty shortcut section stays 
     I.dontSeeElement(`${links} a`);
 });
 
+/**
+ * Restores the original dashboard preferences and browser bookmarks after the shortcut checks and removes
+ * the simulated save response.
+ */
 Scenario('Restore the original dashboard and browser bookmarks', async ({ I }) => {
     await I.stopMockingRoute('**/admin/rest/dashboard/settings');
     if (!originalSettings) return;

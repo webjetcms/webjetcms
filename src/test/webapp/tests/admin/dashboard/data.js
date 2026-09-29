@@ -1,4 +1,4 @@
-Feature('admin.dashboard-data');
+Feature('admin.dashboard.data');
 
 Before(({ I, login }) => {
     login('admin');
@@ -6,6 +6,10 @@ Before(({ I, login }) => {
     I.waitForFunction(() => typeof window.csrfToken === 'string' && window.csrfToken.length > 0, 20);
 });
 
+/**
+ * Checks that the initial layout, notices, active sessions and online administrators are supplied with the
+ * dashboard page. They must still appear without additional requests to the removed dashboard data services.
+ */
 Scenario('Initial settings, notices, sessions and administrators render from HTML without REST requests', async ({ I }) => {
     const requests = [];
     const routes = ['**/admin/rest/dashboard/settings', '**/admin/rest/dashboard/notices', '**/admin/rest/dashboard/data/sessions*', '**/admin/rest/dashboard/data/logged-admins*'];
@@ -30,6 +34,10 @@ Scenario('Initial settings, notices, sessions and administrators render from HTM
     }
 });
 
+/**
+ * Checks that the forms data available to the dashboard includes each form name, its submission count and
+ * its latest submission date when one exists.
+ */
 Scenario('Forms reuse the module list with submission counts and latest dates', async ({ I }) => {
     const { status, body } = await I.executeScript(async () => {
         const response = await fetch('/admin/rest/forms-list/all', { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
@@ -44,6 +52,11 @@ Scenario('Forms reuse the module list with submission counts and latest dates', 
     }
 });
 
+/**
+ * Checks that page and folder approval data includes at most six recent requests per list and the full
+ * waiting count. Dates and request identifiers must be present so the dashboard can order requests and link
+ * to the right approval.
+ */
 Scenario('The shared approval lists expose bounded pages and their full request totals', async ({ I }) => {
     const responses = await I.executeScript(async () => Promise.all(['webpages', 'groups'].map(async type => {
         const response = await fetch(`/admin/rest/${type}/toapprove/all?size=6&page=0&sort=saveDate,desc`, {
@@ -69,6 +82,10 @@ Scenario('The shared approval lists expose bounded pages and their full request 
     }
 });
 
+/**
+ * Checks that recent-page data contains at most six entries, newest first, with the titles, paths and image
+ * information needed for page previews.
+ */
 Scenario('Recent pages reuse the Web pages list with bounded pagination', async ({ I }) => {
     const result = await I.executeScript(async () => {
         const params = new URLSearchParams({ groupId: document.querySelector('webjet-overview-dashboard').config.recentPagesGroupId, size: 6, page: 0, sort: 'dateCreated,desc' });
@@ -88,6 +105,10 @@ Scenario('Recent pages reuse the Web pages list with bounded pagination', async 
     }
 });
 
+/**
+ * Checks that the dashboard can obtain recent page changes with authors and dates, together with the
+ * publication and expiry dates needed to show scheduled changes.
+ */
 Scenario('Changed pages and publishing reuse the shared audit page lists', async ({ I }) => {
     const result = await I.executeScript(async () => {
         const read = async path => {
@@ -123,6 +144,10 @@ Scenario('Changed pages and publishing reuse the shared audit page lists', async
     }
 });
 
+/**
+ * Checks that activity and newsletter data is returned newest first in limited lists. Activity entries must
+ * have understandable event labels, and campaigns must include their status and available sending counts.
+ */
 Scenario('Audit and newsletter reuse bounded module lists', async ({ I }) => {
     const responses = await I.executeScript(async () => {
         const read = async path => {
@@ -154,6 +179,10 @@ Scenario('Audit and newsletter reuse bounded module lists', async ({ I }) => {
     }
 });
 
+/**
+ * Checks that server monitoring supplies current memory and CPU readings with a recent timestamp, without
+ * requiring previously recorded monitoring history.
+ */
 Scenario('Live monitoring reads a current server snapshot independently of persisted history', async ({ I }) => {
     const result = await I.executeScript(async () => {
         const response = await fetch('/admin/rest/monitoring/actual', { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
@@ -166,6 +195,10 @@ Scenario('Live monitoring reads a current server snapshot independently of persi
     for (const field of ['cpuUsage', 'cpuUsageProcess']) I.assertTrue(Number.isFinite(result.body[field]), `${field} must contain the current CPU reading or the unavailable sentinel.`);
 });
 
+/**
+ * Checks that a selected form returns only submissions from that form and period, newest first. The preview
+ * is limited to ten rows while the total includes all matching submissions.
+ */
 Scenario('Selected forms reuse the module date filter, count and descending pagination', async ({ I }) => {
     const result = await I.executeScript(async () => {
         const formName = 'Multistepform_screens';
@@ -184,6 +217,10 @@ Scenario('Selected forms reuse the module date filter, count and descending pagi
     }
 });
 
+/**
+ * Checks that traffic data covers the requested days and that popular pages include visit counts, titles,
+ * paths and optional thumbnails for the dashboard preview.
+ */
 Scenario('Traffic and TOP pages reuse the statistics module contracts', async ({ I }) => {
     const result = await I.executeScript(async () => {
         const root = document.querySelector('webjet-overview-dashboard').data.statRootGroupId;
@@ -221,6 +258,10 @@ Scenario('Traffic and TOP pages reuse the statistics module contracts', async ({
     }
 });
 
+/**
+ * Checks that search terms and referring sites include counts and percentages. Error data must also provide
+ * the full request total, rather than counting only the displayed preview rows.
+ */
 Scenario('Search terms, referrers and errors reuse statistics responses and summaries', async ({ I }) => {
     const result = await I.executeScript(async () => {
         const root = document.querySelector('webjet-overview-dashboard').data.statRootGroupId;

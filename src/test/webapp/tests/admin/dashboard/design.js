@@ -1,6 +1,6 @@
-const { waitForWidgets, mockDashboardBootstrap, dashboardPageRoute, readDashboardBootstrap } = require('../../helpers/dashboard-browser');
+const { waitForWidgets, mockDashboardBootstrap, dashboardPageRoute, readDashboardBootstrap } = require('../../../helpers/dashboard-browser');
 
-Feature('admin.dashboard-design').tag('@singlethread');
+Feature('admin.dashboard.design').tag('@singlethread');
 
 let originalSettings;
 let previewSettings;
@@ -28,6 +28,11 @@ Before(({ I, login }) => {
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
 });
 
+/**
+ * Checks that active sessions stay in the welcome area, notices can be expanded independently, and
+ * arrangement controls appear only in edit mode. Closing the keyboard move dialog must return focus without
+ * collapsing open notices.
+ */
 Scenario('Pinned security, independent notices and edit mode keep the dashboard readable', async ({ I }) => {
     await waitForOverview(I);
     I.resizeWindow(1440, 1100);
@@ -136,6 +141,10 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
     I.saveScreenshot('dashboard-design-desktop.png', true);
 });
 
+/**
+ * Checks that the complete release announcement can be collapsed to a remembered summary and expanded again.
+ * Keyboard focus stays on the toggle, and active sessions remain visible.
+ */
 Scenario('Release notes collapse to a persistent summary and can be expanded again', async ({ I }) => {
     await waitForOverview(I);
     I.seeElement('.md-dashboard-widget__news-highlights');
@@ -161,6 +170,10 @@ Scenario('Release notes collapse to a persistent summary and can be expanded aga
     I.assertEqual(previewSettings.acknowledgedNewsVersion, null);
 });
 
+/**
+ * Checks that the welcome area, search, notices, widgets and shortcuts fit mobile, tablet and desktop widths
+ * without extending beyond the dashboard.
+ */
 Scenario('Dashboard header, notices, widgets and shortcuts fit the responsive viewport', async ({ I }) => {
     await waitForOverview(I);
     for (const width of [390, 768, 1337]) {
@@ -180,6 +193,11 @@ Scenario('Dashboard header, notices, widgets and shortcuts fit the responsive vi
     I.wjSetDefaultWindowSize();
 });
 
+/**
+ * Checks that feedback, widget selection and reset confirmation use readable dialogs on desktop and mobile.
+ * Closing or cancelling returns focus to the opening button; feedback is not sent and reset is not
+ * confirmed.
+ */
 Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on desktop and mobile', async ({ I }) => {
     await waitForOverview(I);
     const feedback = '.md-dashboard__feedback';
@@ -279,6 +297,10 @@ Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on
     I.wjSetDefaultWindowSize();
 });
 
+/**
+ * Checks that compact counts and preview cards align on desktop and fit a narrow screen. All six recent
+ * pages must remain reachable by scrolling their own list with the mouse or keyboard.
+ */
 Scenario('Compact metrics and scrollable recent pages align above three equal preview cards', async ({ I }) => {
     previewSettings.items = [
         { id: 'compact-autotest-traffic', type: 'traffic', size: '3x3', options: { days: 7 } },
@@ -358,6 +380,10 @@ Scenario('Compact metrics and scrollable recent pages align above three equal pr
     await I.stopMockingRoute(recentPagesRoute);
 });
 
+/**
+ * Checks that search-term and popular-page cards keep long labels and numeric columns readable at different
+ * widths. Page previews must show a thumbnail or a matching fallback icon when the image is missing.
+ */
 Scenario('Search queries and top pages share balanced cards and readable numeric columns', async ({ I }) => {
     const previousItems = previewSettings.items;
     previewSettings.items = ['search-terms', 'top-pages'].map(type => ({ id: `ranked-autotest-${type}`, type, size: '3x3', options: { days: 7 } }));
@@ -446,6 +472,10 @@ Scenario('Search queries and top pages share balanced cards and readable numeric
     I.resizeWindow(1337, 1052);
 });
 
+/**
+ * Checks that the environment label uses the configured name, icon and color with readable text. Invalid
+ * appearance settings use defaults, long names fit mobile screens, and an empty name hides the label.
+ */
 Scenario('Environment badge uses configured identity and readable colors, and disappears when empty', async ({ I }) => {
     await waitForOverview(I);
     const badge = '.md-dashboard__welcome-meta .md-dashboard__environment';
@@ -533,6 +563,11 @@ Scenario('Environment badge uses configured identity and readable colors, and di
     await configureEnvironment(original);
 });
 
+/**
+ * Checks that every active session remains reachable as the welcome area changes height and on mobile.
+ * Scrolling stays inside the session list, and keyboard users can read and dismiss the current-session and
+ * logout hints.
+ */
 Scenario('Session scrolling stays inside its list and compact controls expose accessible tooltips', async ({ I }) => {
     I.resizeWindow(1337, 1052);
     const sessionSettings = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings);
@@ -687,6 +722,10 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
     await I.stopMockingRoute(dashboardPageRoute);
 });
 
+/**
+ * Checks that a widget keeps its background, outline and dimensions while being dragged. Releasing it over
+ * its original position must not save a layout change.
+ */
 Scenario('Dragging preserves the widget surface, outline and dimensions', async ({ I }) => {
     let settingsWrites = 0;
     const dragSettings = {
@@ -750,6 +789,10 @@ Scenario('Dragging preserves the widget surface, outline and dimensions', async 
     I.wjSetDefaultWindowSize();
 });
 
+/**
+ * Removes the temporary display data and simulated responses, restores the window size and confirms that the
+ * real account preferences were never changed by the design checks.
+ */
 Scenario('Remove design fixtures and verify the account preferences were never changed', async ({ I }) => {
     await I.stopMockingRoute(settingsRoute);
     await I.stopMockingRoute(dashboardPageRoute);

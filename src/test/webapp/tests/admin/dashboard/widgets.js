@@ -1,8 +1,8 @@
-const { waitForWidgets } = require('../../helpers/dashboard-browser');
+const { waitForWidgets } = require('../../../helpers/dashboard-browser');
 
 const assert = require('node:assert/strict');
 
-Feature('admin.dashboard-widgets').tag('@singlethread');
+Feature('admin.dashboard.widgets').tag('@singlethread');
 
 let originalSettings;
 let shortcutId;
@@ -33,6 +33,10 @@ Before(({ I, login }) => {
     I.waitForElement('webjet-overview-dashboard .md-dashboard__toolbar', 20);
 });
 
+/**
+ * Checks that a signed-in administrator can load the dashboard, its menu and recent pages. Active sessions
+ * and one notices area are present, while arrangement controls start hidden.
+ */
 Scenario('Authenticated dashboard endpoints and initial overview load', async ({ I }) => {
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     const responses = await I.executeScript(async () => {
@@ -49,6 +53,10 @@ Scenario('Authenticated dashboard endpoints and initial overview load', async ({
     I.dontSeeElement('.md-dashboard__edit-control');
 });
 
+/**
+ * Creates a personal shortcut through the settings dialog and checks that its title and identity remain
+ * after reloading the dashboard.
+ */
 Scenario('Add and configure a personal shortcut and reload its server preferences', async ({ I }) => {
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     originalSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
@@ -72,6 +80,10 @@ Scenario('Add and configure a personal shortcut and reload its server preference
     I.see(shortcutTitle, `[data-instance-id="${shortcutId}"]`);
 });
 
+/**
+ * Checks that widgets can be reordered by dragging or the move dialog and resized through settings. These
+ * changes must keep the existing system-notice area in place.
+ */
 Scenario('Move with drag and keyboard controls and resize without replacing alerts', async ({ I }) => {
     assert.ok(shortcutId, 'The shortcut setup scenario must complete first');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
@@ -129,6 +141,10 @@ Scenario('Move with drag and keyboard controls and resize without replacing aler
     assert.equal(alertsPreserved, true, 'Preference changes must preserve the active system alert container');
 });
 
+/**
+ * Signs into the same account in another browser session and checks that the previously saved personal
+ * shortcut is available there too.
+ */
 Scenario('A second authenticated session reads the persisted personal dashboard', async ({ I }) => {
     assert.ok(shortcutId, 'The shortcut setup scenario must complete first');
     await session('dashboard preferences autotest', async () => {
@@ -141,6 +157,9 @@ Scenario('A second authenticated session reads the persisted personal dashboard'
     });
 });
 
+/**
+ * Removes the configured shortcut and uses Undo to bring back the same instance with its saved title.
+ */
 Scenario('Remove and undo restores the configured instance', async ({ I }) => {
     assert.ok(shortcutId, 'The shortcut setup scenario must complete first');
     I.waitForElement(`.md-dashboard[data-loaded="true"] [data-instance-id="${shortcutId}"]`, 20);
@@ -153,6 +172,10 @@ Scenario('Remove and undo restores the configured instance', async ({ I }) => {
     I.see(shortcutTitle, `[data-instance-id="${shortcutId}"]`);
 });
 
+/**
+ * Simulates a failed save while removing a shortcut. The dashboard must show an error and keep the last
+ * successfully saved shortcut visible.
+ */
 Scenario('A rejected preference update preserves the confirmed widget', async ({ I }) => {
     assert.ok(shortcutId, 'The shortcut setup scenario must complete first');
     I.waitForElement(`.md-dashboard[data-loaded="true"] [data-instance-id="${shortcutId}"]`, 20);
@@ -166,6 +189,10 @@ Scenario('A rejected preference update preserves the confirmed widget', async ({
     await I.stopMockingRoute('**/admin/rest/dashboard/settings');
 });
 
+/**
+ * Checks that widgets stay inside the dashboard and keep their reading order across screen widths. Table
+ * text must remain readable without clipping, including when enlarged to twice its size.
+ */
 Scenario('Responsive grid preserves visual order and keeps widgets inside the dashboard', async ({ I }) => {
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     await waitForWidgets(I);
@@ -209,6 +236,10 @@ Scenario('Responsive grid preserves visual order and keeps widgets inside the da
     assert.deepEqual(clipped.cells, [], 'Table headers and cells must wrap without clipping with text enlarged to 200 percent');
 });
 
+/**
+ * Restores the personal layout saved before the widget checks and confirms that the temporary shortcut is
+ * gone after reloading.
+ */
 Scenario('Restore the initial personal dashboard preferences', async ({ I }) => {
     await I.stopMockingRoute('**/admin/rest/dashboard/settings');
     if (!originalSettings) return;

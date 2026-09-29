@@ -1,6 +1,6 @@
-const { waitForWidgets } = require('../../helpers/dashboard-browser');
+const { waitForWidgets } = require('../../../helpers/dashboard-browser');
 
-Feature('admin.dashboard-migrated-widgets').tag('@singlethread');
+Feature('admin.dashboard.migrated-widgets').tag('@singlethread');
 
 const migratedWidgets = [
     ['changed-pages', '3x3'], ['audit', '3x3'], ['server-memory', '3x3'], ['server-cpu', '3x3'], ['logged-admins', '2x2']
@@ -44,6 +44,11 @@ Before(async ({ I, login }) => {
     await waitForWidgets(I);
 });
 
+/**
+ * Checks that page changes, activity, online administrators, memory and CPU cards keep their saved size
+ * after reloading and fit desktop and mobile screens. Refresh, removal and undo must release old charts; the
+ * original layout is restored afterwards.
+ */
 Scenario('Migrated overview widgets persist independently and clean up monitoring charts', async ({ I }) => {
     const original = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     const adminRequests = [];

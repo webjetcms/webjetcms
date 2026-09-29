@@ -1,6 +1,6 @@
-const { waitForWidgets, mockDashboardBootstrap, dashboardPageRoute } = require('../../helpers/dashboard-browser');
+const { waitForWidgets, mockDashboardBootstrap, dashboardPageRoute } = require('../../../helpers/dashboard-browser');
 
-Feature('admin.dashboard-approvals');
+Feature('admin.dashboard.approvals');
 
 const card = '[data-widget-type="approvals"]';
 const listUrl = '/admin/v9/webpages/web-pages-list/?show=toapprove';
@@ -63,6 +63,10 @@ async function openDashboard(I, pageData = pages, groupData = groups, denied) {
     return requests;
 }
 
+/**
+ * Checks that the approval card combines the six newest page and folder requests and shows the full waiting
+ * count. Each request opens its own approval screen in a new tab, while the heading opens the complete list.
+ */
 Scenario('Merge the latest six requests and keep direct approval actions separate from list navigation', async ({ I }) => {
     const requests = await openDashboard(I);
     const state = await I.executeScript(selector => {
@@ -120,6 +124,10 @@ Scenario('Merge the latest six requests and keep direct approval actions separat
     }
 });
 
+/**
+ * Checks the state shown when no pages or folders need approval: the count is zero and an empty-list message
+ * appears without an error.
+ */
 Scenario('Empty shared approval lists show an empty preview and a zero total', async ({ I }) => {
     await openDashboard(I, result(), result());
     I.see('0', `${card} .md-dashboard-widget__number`);
@@ -129,6 +137,10 @@ Scenario('Empty shared approval lists show an empty preview and a zero total', a
 });
 
 for (const type of ['pages', 'groups']) {
+    /**
+     * Checks that losing access to either approval list shows a permission message and a retry button. The
+     * card must not display an incomplete count or only the requests from the other list.
+     */
     Scenario(`A forbidden ${type} list shows an error instead of a partial approval total`, async ({ I }) => {
         await openDashboard(I, pages, groups, { type, status: 403 });
         I.seeElement(`${card} .md-dashboard__widget-content > .text-danger`);
@@ -140,6 +152,10 @@ for (const type of ['pages', 'groups']) {
 }
 
 for (const [type, error] of [['pages', 'Access Denied'], ['groups', 'Access is denied']]) {
+    /**
+     * Checks that a permission refusal is still shown when the server returns it inside an otherwise
+     * successful response. No approval count or preview may appear.
+     */
     Scenario(`An HTTP 200 DataTable denial from ${type} retains the permission error`, async ({ I }) => {
         await openDashboard(I, pages, groups, { type, status: 200, error });
         I.see(await I.executeScript(() => WJ.translate('admin.dashboard.permissionDenied.js')), `${card} .md-dashboard__widget-content > .text-danger`);
@@ -150,6 +166,10 @@ for (const [type, error] of [['pages', 'Access Denied'], ['groups', 'Access is d
 }
 
 for (const hasPages of [false, true]) {
+    /**
+     * Checks where the approval heading takes the user: to page requests when both lists contain work, or
+     * directly to folder requests when only folders need approval.
+     */
     Scenario(`The approval deep link selects ${hasPages ? 'pages when both queues have requests' : 'folders when only folders need approval'}`, async ({ I }) => {
         await openDashboard(I, hasPages ? pages : result(), groups);
         let replaced = 0;
@@ -176,6 +196,10 @@ for (const hasPages of [false, true]) {
     });
 }
 
+/**
+ * Removes the simulated approval responses and reopens the dashboard with its normal data sources for
+ * subsequent tests.
+ */
 Scenario('Restore unmocked approval routes', async ({ I }) => {
     await clearRoutes(I);
     I.amOnPage('/admin/v9/');

@@ -1,8 +1,8 @@
-const { waitForWidgets, showWidget } = require('../../helpers/dashboard-browser');
+const { waitForWidgets, showWidget } = require('../../../helpers/dashboard-browser');
 
 const assert = require('node:assert/strict');
 
-Feature('admin.dashboard-reset').tag('@singlethread');
+Feature('admin.dashboard.reset').tag('@singlethread');
 
 let fixtureLogin = process.env.DASHBOARD_RESET_FIXTURE;
 let originalAdminPreferences;
@@ -64,6 +64,10 @@ Before(({ I, login }) => {
     waitForDashboard(I);
 });
 
+/**
+ * Creates a separate temporary account with the permissions needed for dashboard checks. Reset tests use
+ * this account so the existing administrator layout and domain preferences remain untouched.
+ */
 Scenario('Create a disposable dashboard reset account', async ({ I, DT, DTE }) => {
     originalAdminPreferences = await I.executeScript(() => Object.fromEntries(Object.entries(window.currentUser.adminSettings).filter(([key]) => key.startsWith('overview.'))));
     fixtureLogin = `dashboard-reset-autotest-${I.getRandomTextShort()}`;
@@ -99,6 +103,11 @@ Scenario('Create a disposable dashboard reset account', async ({ I, DT, DTE }) =
     I.seeNumberOfElements('#datatableInit tbody tr', 1);
 });
 
+/**
+ * Checks that reset asks for confirmation and keeps the saved layout when the request fails. A successful
+ * reset restores the standard widgets while preserving personal shortcuts, and later personal edits still
+ * survive reloading.
+ */
 Scenario('Reset confirms deletion, keeps failed changes and restores only the curated defaults', async ({ I }) => {
     assert.ok(fixtureLogin, 'The disposable account setup must run first');
     await session('dashboard reset autotest', async () => {
@@ -194,6 +203,11 @@ Scenario('Reset confirms deletion, keeps failed changes and restores only the cu
     });
 });
 
+/**
+ * Checks that holding Shift during reset saves every supported widget size while retaining shortcuts. Each
+ * size variant can be removed and restored independently, and a normal reset returns to the standard
+ * selection.
+ */
 Scenario('Shift reset persists every size and allows individual variants to be removed and restored', async ({ I }) => {
     assert.ok(fixtureLogin, 'The disposable account setup must run first');
     await session('dashboard reset autotest', async () => {
@@ -264,6 +278,10 @@ Scenario('Shift reset persists every size and allows individual variants to be r
     });
 });
 
+/**
+ * Clears the temporary account's dashboard, deletes that account and confirms that the original administrator
+ * preferences have not changed.
+ */
 Scenario('Remove disposable reset preferences and account without changing the administrator', async ({ I, DT, DTE }) => {
     if (!fixtureLogin) return;
     assert.match(fixtureLogin, /^dashboard-reset-autotest-[A-Za-z0-9-]+$/, 'Cleanup only accepts explicitly marked disposable dashboard accounts');

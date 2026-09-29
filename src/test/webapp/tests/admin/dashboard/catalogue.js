@@ -1,6 +1,6 @@
-const { waitForWidgets } = require('../../helpers/dashboard-browser');
+const { waitForWidgets } = require('../../../helpers/dashboard-browser');
 
-Feature('admin.dashboard-catalogue').tag('@singlethread');
+Feature('admin.dashboard.catalogue').tag('@singlethread');
 
 let originalSettings;
 const catalogue = [
@@ -65,6 +65,11 @@ Before(({ I, login }) => {
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
 });
 
+/**
+ * Adds the available widget types to a saved copy of the current layout and loads their real data. Checks
+ * that the cards, session controls and complete release announcement appear without loading errors on
+ * desktop and mobile.
+ */
 Scenario('Render the complete catalogue using real authorized data', async ({ I }) => {
     originalSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     const applied = await I.executeScript(async definitions => {
@@ -130,6 +135,11 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
     I.wjSetDefaultWindowSize();
 });
 
+/**
+ * Checks that traffic and referrer charts provide values for screen readers and remain usable after refresh,
+ * resizing, removal and undo. Replaced charts must release their resources so they do not accumulate in the
+ * browser.
+ */
 Scenario('AmCharts renders accessible data and disposes roots on refresh, resize and removal', async ({ I, a11y }) => {
     await waitForWidgets(I);
     await waitForChart(I, 'traffic');
@@ -194,6 +204,10 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
     I.saveScreenshot('dashboard-amcharts.png', true);
 });
 
+/**
+ * Collapses the release announcement, reloads the page and checks that the choice is remembered. Expanding
+ * it again must restore the complete announcement and its formatting.
+ */
 Scenario('Collapse release news across reload and expand it from the compact summary', async ({ I }) => {
     await waitForWidgets(I);
     I.waitForVisible('[data-widget-type="news"] .md-dashboard__widget-content button', 10);
@@ -216,6 +230,11 @@ Scenario('Collapse release news across reload and expand it from the compact sum
     }), 'Expanding release notes must restore all original Markdown formatting.');
 });
 
+/**
+ * Checks that documentation search keeps the entered text, including accents and special characters, and
+ * requests a separate tab. The test captures the destination without opening the external documentation
+ * site.
+ */
 Scenario('Documentation search switches scope and opens the encoded query without an external request', async ({ I }) => {
     await waitForWidgets(I);
     const scope = '[data-widget-type="search"]';
@@ -242,6 +261,10 @@ Scenario('Documentation search switches scope and opens the encoded query withou
     I.seeElement(`${scope} input[type="radio"][value="admin"]:checked`);
 });
 
+/**
+ * When the account has pending approvals, checks that the approval heading opens the waiting-requests
+ * section. Accounts with no pending requests skip this navigation check.
+ */
 Scenario('Pending approvals open their supported dashboard destination', async ({ I }) => {
     const total = await I.executeScript(async () => {
         const pages = await Promise.all(['/admin/rest/webpages/toapprove/all?size=6&page=0&sort=saveDate,desc', '/admin/rest/groups/toapprove/all?size=6&page=0&sort=saveDate,desc'].map(async path => {
@@ -263,6 +286,10 @@ Scenario('Pending approvals open their supported dashboard destination', async (
     }, 10);
 });
 
+/**
+ * Restores the account layout saved before these checks, including its current-domain filters and release-
+ * announcement choice, and verifies the restored values after reloading.
+ */
 Scenario('Restore the original account dashboard and current-domain filters', async ({ I }) => {
     if (!originalSettings) return;
     const status = await I.executeScript(async settings => {

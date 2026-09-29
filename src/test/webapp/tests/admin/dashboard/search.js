@@ -1,4 +1,4 @@
-Feature('admin.dashboard-search');
+Feature('admin.dashboard.search');
 
 const search = '[data-widget-type="search"]';
 const input = `${search} input[type="search"]`;
@@ -28,6 +28,11 @@ Before(({ I, login }) => {
     I.clickCss(admin);
 });
 
+/**
+ * Checks that changing search scope with an empty query does nothing, while a nonempty documentation query
+ * opens a separate tab. Clicking the scope, pressing Enter and using the search button must preserve the
+ * entered text.
+ */
 Scenario('Empty scope switches do not submit and documentation clicks submit the current query', async ({ I }) => {
     I.executeScript(() => {
         window.autotestSearchPopups = [];
@@ -62,6 +67,10 @@ Scenario('Empty scope switches do not submit and documentation clicks submit the
 });
 
 for (const fromDocs of [false, true]) {
+    /**
+     * Checks that choosing administration search submits the entered query both when switching from
+     * documentation and when administration search is already selected.
+     */
     Scenario(`Administration scope submits ${fromDocs ? 'when switching from documentation' : 'when already selected'}`, ({ I }) => {
         if (fromDocs) I.clickCss(docs);
         I.fillField(input, 'dashboard & search autotest');
@@ -70,6 +79,10 @@ for (const fromDocs of [false, true]) {
     });
 }
 
+/**
+ * Checks that page suggestions match titles with or without accents and show a thumbnail, folder path and
+ * latest save time. Selecting a suggestion with the keyboard must open the correct page editor.
+ */
 Scenario('Page suggestions match titles and URLs and keyboard selection opens the editor', async ({ I, DTE }) => {
     // Spaces and diacritics distinguish a title match from the hyphenated URL.
     I.fillField(input, 'obchodný úder');
@@ -94,6 +107,10 @@ Scenario('Page suggestions match titles and URLs and keyboard selection opens th
     DTE.cancel();
 });
 
+/**
+ * Checks that suggestion responses are delivered as data, not as an HTML page, so page titles cannot run
+ * embedded markup when the suggestion address is opened directly.
+ */
 Scenario('Autocomplete responses use JSON so page titles cannot execute as HTML on direct navigation', async ({ I }) => {
     const responses = await I.executeScript(async () => {
         const results = [];
@@ -112,6 +129,10 @@ Scenario('Autocomplete responses use JSON so page titles cannot execute as HTML 
     }
 });
 
+/**
+ * Checks that searching by a page URL offers the correct page, that suggestions fit a narrow screen and that
+ * clicking a result opens its editor.
+ */
 Scenario('Mouse selection opens the page and suggestions fit a narrow viewport', async ({ I, DTE }) => {
     I.resizeWindow(390, 844);
     I.fillField(input, 'https://demo.webjetcms.sk/zo-sveta-financii/mcgregorov-obchodny-uder.html');
@@ -127,6 +148,10 @@ Scenario('Mouse selection opens the page and suggestions fit a narrow viewport',
     I.wjSetDefaultWindowSize();
 });
 
+/**
+ * Checks that empty or failed suggestions do not prevent ordinary search. Suggestion titles are displayed as
+ * plain text, and Escape closes the list without clearing the query.
+ */
 Scenario('Empty and failed lookups leave ordinary search usable and results render as text', async ({ I }) => {
     I.mockRoute(lookup, route => route.fulfill({ status: 200, contentType: 'application/json', body: '[]' }));
     I.fillField(input, 'missing-autotest');
@@ -156,6 +181,10 @@ Scenario('Empty and failed lookups leave ordinary search usable and results rend
     I.seeInCurrentUrl('/admin/v9/search/index/?text=safe-title-autotest');
 });
 
+/**
+ * Checks that an account without web-page permission has no page suggestions and cannot retrieve them by
+ * requesting the search address directly.
+ */
 Scenario('Page autocomplete is unavailable without webpage permission', async ({ I }) => {
     I.amOnPage('/admin/v9/?removePerm=menuWebpages');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
@@ -167,10 +196,17 @@ Scenario('Page autocomplete is unavailable without webpage permission', async ({
     I.assertEqual(new URL(deniedUrl).pathname, '/admin/403.jsp', 'The lookup must enforce webpage permission on the server.');
 });
 
+/**
+ * Signs out after the permission check so the next scenario starts with the account's normal permissions.
+ */
 Scenario('Logout after removing webpage permission', ({ I }) => {
     I.logout();
 });
 
+/**
+ * Checks that switching to documentation search cancels unfinished page suggestions. Refreshing the search
+ * widget must remove the old suggestion menu and accessibility announcements before creating new controls.
+ */
 Scenario('Switching scope cancels pending suggestions and refreshing disposes the old autocomplete', async ({ I }) => {
     // Observe the AbortSignal directly without relying on network interception timing.
     I.executeScript(() => {

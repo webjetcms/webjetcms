@@ -1,6 +1,6 @@
-const { showWidget, waitForWidgets, mockDashboardBootstrap, dashboardPageRoute } = require('../../helpers/dashboard-browser');
+const { showWidget, waitForWidgets, mockDashboardBootstrap, dashboardPageRoute } = require('../../../helpers/dashboard-browser');
 
-Feature('admin.dashboard-forms');
+Feature('admin.dashboard.forms');
 
 const formName = 'Multistepform_screens';
 const card = '[data-widget-type="forms"]';
@@ -24,6 +24,11 @@ async function openDashboard(I, selectedName = formName) {
     await waitForWidgets(I);
 }
 
+/**
+ * Checks that a selected form shows the submitted contact values and dates and that a row opens the matching
+ * submission. All ten preview rows must remain readable and reachable by mouse or keyboard on different
+ * screen widths.
+ */
 Scenario('Selected form displays real submission values and opens the selected record', async ({ I, DTE }) => {
     const source = await I.executeScript(async formName => {
         const read = async url => {
@@ -99,6 +104,10 @@ Scenario('Selected form displays real submission values and opens the selected r
     I.stopMockingRoute(dashboardPageRoute);
 });
 
+/**
+ * Checks that the all-forms view shows the total submission count across all time and the ten most recently
+ * used form names, without a selected-period label.
+ */
 Scenario('All forms show the lifetime count and latest form names from the module list', async ({ I }) => {
     const expected = await I.executeScript(async () => {
         const response = await fetch('/admin/rest/forms-list/all', { headers: { 'X-CSRF-Token': window.csrfToken } });
@@ -113,6 +122,10 @@ Scenario('All forms show the lifetime count and latest form names from the modul
     I.stopMockingRoute(dashboardPageRoute);
 });
 
+/**
+ * Checks that the period selector appears only after a specific form is selected and disappears again when
+ * the user returns to all forms.
+ */
 Scenario('Form settings show the period only for a selected form after picker initialization', async ({ I }) => {
     await openDashboard(I, '');
     await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.showSettings('autotest-form-preview'));
@@ -132,6 +145,10 @@ Scenario('Form settings show the period only for a selected form after picker in
     I.stopMockingRoute(dashboardPageRoute);
 });
 
+/**
+ * Checks that a selected form with no matching submissions shows a zero count and no rows. It must not
+ * request field labels that are unnecessary for an empty preview.
+ */
 Scenario('Empty selected form shows an empty preview without loading column metadata', async ({ I }) => {
     let columnRequests = 0;
     await I.mockRoute(columnsRoute, route => { columnRequests++; return route.continue(); });
@@ -145,6 +162,10 @@ Scenario('Empty selected form shows an empty preview without loading column meta
     I.stopMockingRoute(dashboardPageRoute);
 });
 
+/**
+ * Checks that denied access to submissions produces a permission message without showing a partial count or
+ * preview.
+ */
 Scenario('Denied submissions show an error with no partial form preview', async ({ I }) => {
     await I.mockRoute(detailRoute, route => route.fulfill({ status: 403, contentType: 'application/json', body: '{}' }));
     await openDashboard(I);
@@ -155,6 +176,10 @@ Scenario('Denied submissions show an error with no partial form preview', async 
     I.stopMockingRoute(dashboardPageRoute);
 });
 
+/**
+ * Checks that a saved form which is no longer available produces a clear selection error instead of silently
+ * showing data from another form.
+ */
 Scenario('Unavailable selected form keeps its selection and displays an error', async ({ I }) => {
     await openDashboard(I, 'missing-dashboard-form-autotest');
     I.see(await I.executeScript(() => WJ.translate('admin.dashboard.selectionUnavailable.js')), `${card} .md-dashboard__widget-content > .text-danger`);
