@@ -16,6 +16,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -139,10 +140,12 @@ class HeatMapAccessTest {
         when(docs.getBasicDocDetails(123, false)).thenReturn(document);
 
         try (MockedStatic<UsersDB> users = mockStatic(UsersDB.class);
+                MockedStatic<Constants> constants = mockStatic(Constants.class);
                 MockedStatic<CloudToolsForCore> domains = mockStatic(CloudToolsForCore.class);
                 MockedStatic<DocDB> docLookup = mockStatic(DocDB.class);
                 MockedStatic<GroupsDB> groupLookup = mockStatic(GroupsDB.class)) {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
+            constants.when(() -> Constants.getBoolean("multiDomainEnabled")).thenReturn(true);
             domains.when(CloudToolsForCore::getDomainName).thenReturn("PUBLIC.EXAMPLE");
             docLookup.when(DocDB::getInstance).thenReturn(docs);
             groupLookup.when(GroupsDB::getInstance).thenReturn(groups);
@@ -158,10 +161,48 @@ class HeatMapAccessTest {
         }
     }
 
+    /** Single-domain installations use the same empty domain for the list and all detail requests. */
+    @Test
+    void acceptsLegacyPagesWithoutADomainWhenMultidomainIsDisabled() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        Identity user = statisticsUser();
+        when(user.isEnabledItem("cmp_stat_seeallgroups")).thenReturn(true);
+        DocDetails document = mock(DocDetails.class);
+        when(document.getGroupId()).thenReturn(5);
+        GroupDetails group = mock(GroupDetails.class);
+        when(group.getGroupId()).thenReturn(5);
+        when(group.getDomainName()).thenReturn("");
+        GroupsDB groups = mock(GroupsDB.class);
+        when(groups.getGroup(5)).thenReturn(group);
+        DocDB docs = mock(DocDB.class);
+        when(docs.getBasicDocDetails(2788, false)).thenReturn(document);
+
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedStatic<UsersDB> users = mockStatic(UsersDB.class);
+                MockedStatic<CloudToolsForCore> domains = mockStatic(CloudToolsForCore.class);
+                MockedStatic<DocDB> docLookup = mockStatic(DocDB.class);
+                MockedStatic<GroupsDB> groupLookup = mockStatic(GroupsDB.class)) {
+            constants.when(() -> Constants.getBoolean("multiDomainEnabled")).thenReturn(false);
+            domains.when(CloudToolsForCore::getDomainName).thenReturn("admin.example");
+            users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
+            docLookup.when(DocDB::getInstance).thenReturn(docs);
+            groupLookup.when(GroupsDB::getInstance).thenReturn(groups);
+
+            assertEquals("", access.currentDomain(request));
+            assertTrue(access.canViewDocument(user, access.currentDomain(request), document));
+            assertSame(document, access.requireDocument(request, 2788));
+            when(groups.isInTrash(5)).thenReturn(true);
+            assertEquals(HttpStatus.NOT_FOUND, assertThrows(ResponseStatusException.class,
+                    () -> access.requireDocument(request, 2788)).getStatusCode());
+        }
+    }
+
     /** An unresolved domain must not silently broaden a statistics query to all tenants. */
     @Test
     void rejectsAnUnknownDomain() {
-        try (MockedStatic<CloudToolsForCore> domains = mockStatic(CloudToolsForCore.class)) {
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedStatic<CloudToolsForCore> domains = mockStatic(CloudToolsForCore.class)) {
+            constants.when(() -> Constants.getBoolean("multiDomainEnabled")).thenReturn(true);
             domains.when(CloudToolsForCore::getDomainName).thenReturn("unknown");
             assertEquals(HttpStatus.FORBIDDEN, assertThrows(ResponseStatusException.class,
                     () -> access.currentDomain(new MockHttpServletRequest())).getStatusCode());

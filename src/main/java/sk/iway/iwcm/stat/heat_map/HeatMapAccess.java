@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
 
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
@@ -25,6 +26,7 @@ import sk.iway.iwcm.users.UsersDB;
 @Component
 public class HeatMapAccess {
     public String currentDomain(HttpServletRequest request) {
+        if (!Constants.getBoolean("multiDomainEnabled")) return "";
         String domain = CloudToolsForCore.getDomainName();
         if (Tools.isEmpty(domain) || "unknown".equals(domain)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);

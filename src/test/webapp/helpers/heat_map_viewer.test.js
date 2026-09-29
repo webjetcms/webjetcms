@@ -11,6 +11,8 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
     const browser = await chromium.launch({headless: true});
     t.after(() => browser.close());
     const page = await browser.newPage({viewport: {width: 1024, height: 1000}});
+    const csrfToken = "autotest-csrf-token";
+    await page.addInitScript(token => { window.csrfToken = token; }, csrfToken);
     const errors = [];
     page.on("pageerror", error => errors.push(error.message));
     const markup = fs.readFileSync(path.join(adminPath, "heat-map-details.html"), "utf8").split('<section id="heatMapViewer"')[1];
@@ -25,6 +27,11 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
     await page.route("**/*", async route => {
         const url = new URL(route.request().url());
         requests.push(url);
+        if (url.pathname.startsWith("/admin/rest/stat/heat-map/")
+            && !url.pathname.includes("/html/") && !url.pathname.includes("/binary/")
+            && route.request().headers()["x-csrf-token"] !== csrfToken) {
+            return route.fulfill({status: 403, body: "Missing CSRF token"});
+        }
         if (url.pathname.endsWith("heat-map-viewer.js")) return route.fulfill({contentType: "text/javascript", body: fs.readFileSync(path.join(adminPath, "heat-map-viewer.js"), "utf8")});
         if (url.pathname.endsWith("heat-map.css")) return route.fulfill({contentType: "text/css", body: fs.readFileSync(path.join(adminPath, "heat-map.css"), "utf8")});
         if (url.pathname.endsWith("/widths")) {
@@ -45,17 +52,17 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
                 source: mode === "unavailable" ? "unavailable" : "history", historicalUnavailable: false, multipleVersions: true
             }});
         }
-        if (url.pathname.endsWith("/preview")) return route.fulfill({contentType: "text/html", body: mode === "invalid"
+        if (url.pathname.endsWith("/html/preview")) return route.fulfill({contentType: "text/html", body: mode === "invalid"
             ? "<!doctype html><html><body>Login</body></html>"
             : '<!doctype html><html><head><meta name="webjet-heatmap-preview" content="11"><style>body{margin:0}main{height:3500px;min-width:2200px;background:linear-gradient(white,#ddd)}</style></head><body><main><h1>autotest preview</h1><a href="/leave">Link</a></main></body></html>'});
-        if (url.pathname.endsWith("/tile")) return route.fulfill({contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><circle cx="150" cy="100" r="50" fill="red" opacity=".6"/></svg>'});
+        if (url.pathname.endsWith("/binary/tile")) return route.fulfill({contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024"><circle cx="150" cy="100" r="50" fill="red" opacity=".6"/></svg>'});
         return route.fulfill({contentType: "text/html", body: html});
     });
     const dateRange = "daterange:1788213600000-1789423200000";
     await page.goto("http://heatmap.test/apps/stat/admin/heat-map-details/?docId=11&dateRange=" + dateRange);
     await page.locator("#heatMapViewport:not(.d-none)").waitFor();
     assert.equal(await page.locator("#heatMapWidth").inputValue(), "1280");
-    const frame = page.frames().find(item => item.url().includes("/preview"));
+    const frame = page.frames().find(item => item.url().includes("/html/preview"));
     assert.equal(await frame.evaluate(() => innerWidth), 1280);
     assert.equal(await frame.evaluate(() => innerHeight), 800);
     await page.waitForFunction(() => document.querySelectorAll("#heatMapTiles img").length === 2);
@@ -66,7 +73,7 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
     await frame.evaluate(() => scrollTo(900, 1400));
     await page.waitForFunction(() => document.getElementById("heatMapTiles").style.transform === "translate(-900px, -1400px)");
     assert.ok(await page.locator('#heatMapTiles img[data-tile="2:1"]').count(), "Horizontal overflow must render tiles beyond the viewport width");
-    for (const url of requests.filter(item => item.pathname.endsWith("/tile"))) {
+    for (const url of requests.filter(item => item.pathname.endsWith("/binary/tile"))) {
         assert.equal(url.searchParams.get("dateRange"), dateRange);
         assert.equal(url.searchParams.get("width"), "1280");
     }

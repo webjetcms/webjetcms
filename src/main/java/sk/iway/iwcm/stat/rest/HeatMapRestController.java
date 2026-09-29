@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -63,7 +62,6 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
 
     private Page<HeatMapPageDTO> pageTotals() {
         String domain = access.currentDomain(getRequest());
-        if (Constants.getBoolean("multiDomainEnabled")==false) domain = "";
         String dateRange = getRequest().getParameter("dateRange");
         if (Tools.isEmpty(dateRange)) dateRange = getRequest().getParameter("fixed_dateRange");
         if (Tools.isEmpty(dateRange)) dateRange = getRequest().getParameter("searchDayDate");
@@ -120,7 +118,7 @@ public class HeatMapRestController extends DatatableRestControllerV2<HeatMapPage
         return result;
     }
 
-    @GetMapping(value = "/tile", produces = MediaType.IMAGE_PNG_VALUE)
+    @GetMapping(value = "/binary/tile", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<byte[]> tile(@RequestParam("docId") int docId,
             @RequestParam(value = "dateRange", required = false) String dateRange, @RequestParam("width") int width,
             @RequestParam("tileX") int tileX, @RequestParam("tileY") int tileY) throws IOException {

@@ -93,7 +93,7 @@ class HeatMapPreviewRequestTest {
         assertFalse(HeatMapPreviewRequest.isPreviewReferrer(request));
         try (MockedStatic<Tools> tools = mockStatic(Tools.class)) {
             tools.when(() -> Tools.getServerName(request, false)).thenReturn("admin.example");
-            for (String referer : List.of("not a URI", "/admin/rest/stat/heat-map/preview",
+            for (String referer : List.of("not a URI", HeatMapPreviewRequest.PREVIEW_PATH,
                     "https://other.example" + HeatMapPreviewRequest.PREVIEW_PATH,
                     "https://admin.example/public-page.html")) {
                 request.removeHeader("Referer");

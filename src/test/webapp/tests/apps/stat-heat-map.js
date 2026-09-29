@@ -21,6 +21,13 @@ function mockMap(I, options = {}) {
     I.usePlaywrightTo("provide click map preview fixtures", async ({ page }) => {
         await page.route("**/admin/rest/stat/heat-map/**", async route => {
             const url = new URL(route.request().url());
+            if (!url.pathname.includes("/html/") && !url.pathname.includes("/binary/")) {
+                const csrfToken = await page.evaluate(() => window.csrfToken);
+                if (!csrfToken || route.request().headers()["x-csrf-token"] !== csrfToken) {
+                    await route.fulfill({status: 403, body: "Missing CSRF token"});
+                    return;
+                }
+            }
             if (url.pathname.endsWith("/widths")) {
                 await route.fulfill({json: options.empty ? [] : [{width: 1280, clicks: 32}, {width: 390, clicks: 8}]});
             } else if (url.pathname.endsWith("/metadata")) {
@@ -31,11 +38,11 @@ function mockMap(I, options = {}) {
                     source: options.fallback ? "current" : "history",
                     historicalUnavailable: Boolean(options.fallback), multipleVersions: Boolean(options.multiple)
                 }});
-            } else if (url.pathname.endsWith("/preview")) {
+            } else if (url.pathname.endsWith("/html/preview")) {
                 await route.fulfill({contentType: "text/html", body: options.invalidPreview
                     ? "<!doctype html><html><body>autotest unavailable preview</body></html>"
                     : '<!doctype html><html><head><meta name="webjet-heatmap-preview" content="11"><style>body{margin:0}main{height:3500px;min-width:2200px;background:linear-gradient(white,#ddd)}h1{margin:0}</style></head><body><main><h1>autotest page</h1><a href="/autotest-navigation">autotest link</a></main></body></html>'});
-            } else if (url.pathname.endsWith("/tile")) {
+            } else if (url.pathname.endsWith("/binary/tile")) {
                 await route.fulfill({contentType: "image/png", body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=", "base64")});
             } else await route.continue();
         });
@@ -59,12 +66,16 @@ Scenario("enforces statistics permission", ({ DT }) => {
 
 Scenario("keeps exact viewport width and loads only visible tiles", ({ I }) => {
     mockMap(I);
-    I.amOnPage(detailsUrl);
+    // Navigate from the administration to satisfy the same-origin referrer check.
+    I.executeScript(url => window.location.assign(url), detailsUrl);
     I.waitForVisible("#heatMapViewport", 20);
+    I.seeElement("#heatMapWidth");
+    I.seeElement("#heatMapScale");
+    I.dontSeeElement(".pg-heatmap-controls .bootstrap-select");
     I.seeInField("#heatMapWidth", "1280");
     I.see("autotest click map preview", "#heatMapTitle");
     I.usePlaywrightTo("verify width, scale and lazy tile alignment", async ({ page }) => {
-        const frame = page.frames().find(item => item.url().includes("/heat-map/preview"));
+        const frame = page.frames().find(item => item.url().includes("/heat-map/html/preview"));
         assert.ok(frame, "The authenticated preview frame must be loaded");
         assert.equal(await frame.evaluate(() => window.innerWidth), 1280);
         assert.equal(await frame.evaluate(() => window.innerHeight), 800);
@@ -84,7 +95,7 @@ Scenario("keeps exact viewport width and loads only visible tiles", ({ I }) => {
     });
     I.selectOption("#heatMapScale", "0.5");
     I.usePlaywrightTo("scaling must not change the page layout width", async ({ page }) => {
-        const frame = page.frames().find(item => item.url().includes("/heat-map/preview"));
+        const frame = page.frames().find(item => item.url().includes("/heat-map/html/preview"));
         assert.equal(await frame.evaluate(() => window.innerWidth), 1280);
         assert.equal(await page.locator("#heatMapStage").evaluate(node => node.style.transform), "scale(0.5)");
     });
@@ -100,7 +111,7 @@ Scenario("keeps exact viewport width and loads only visible tiles", ({ I }) => {
 
 Scenario("shows historical fallback and mixed-version notices", ({ I }) => {
     mockMap(I, {fallback: true, multiple: true});
-    I.amOnPage(detailsUrl);
+    I.executeScript(url => window.location.assign(url), detailsUrl);
     I.waitForVisible("#heatMapViewport", 20);
     I.see("Aktuálny obsah", "#heatMapVersion");
     I.see("Historickú verziu sa nepodarilo určiť", "#heatMapNotice");
@@ -109,7 +120,7 @@ Scenario("shows historical fallback and mixed-version notices", ({ I }) => {
 
 Scenario("shows empty data and refuses an unrelated preview document", ({ I }) => {
     mockMap(I, {empty: true});
-    I.amOnPage(detailsUrl);
+    I.executeScript(url => window.location.assign(url), detailsUrl);
     I.waitForText("Vo vybranom období nie sú zaznamenané kliknutia", 20, "#heatMapStatus");
     I.verifyDisabled("#heatMapWidth");
     I.dontSeeElement("#heatMapViewport");

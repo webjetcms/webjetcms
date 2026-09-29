@@ -14,7 +14,7 @@ import sk.iway.iwcm.users.UsersDB;
 /** Limits a preview forward to the server-selected page and identifies its asynchronous statistics requests. */
 public final class HeatMapPreviewRequest extends HttpServletRequestWrapper {
 
-    public static final String PREVIEW_PATH = "/admin/rest/stat/heat-map/preview";
+    public static final String PREVIEW_PATH = "/admin/rest/stat/heat-map/html/preview";
     private final String docId;
 
     public HeatMapPreviewRequest(HttpServletRequest request, int docId) {

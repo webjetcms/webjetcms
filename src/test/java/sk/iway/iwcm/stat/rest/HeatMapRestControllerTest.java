@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -52,17 +54,19 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
         return controller;
     }
 
-    @Test
-    void widthsUseTrustedDomainAndInclusiveDaysAndOrderPopularWidthsFirst() {
+    @ParameterizedTest
+    @ValueSource(strings = { "public.example", "" })
+    void widthsUseTrustedDomainAndInclusiveDaysAndOrderPopularWidthsFirst(String domain) {
         HeatMapRestController controller = controller();
+        when(access.currentDomain(request)).thenReturn(domain);
         request.addParameter("domain", "untrusted.example");
         try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class)) {
-            storage.when(() -> HeatMapStorage.getWidths("public.example", 123, FROM, TO))
+            storage.when(() -> HeatMapStorage.getWidths(domain, 123, FROM, TO))
                     .thenReturn(Map.of(1440, 2L, 390, 7L, 1280, 2L));
             assertEquals(List.of(new HeatMapRestController.WidthCount(390, 7), new HeatMapRestController.WidthCount(1280, 2),
                     new HeatMapRestController.WidthCount(1440, 2)), controller.widths(123, "period"));
             verify(access).requireDocument(request, 123);
-            storage.verify(() -> HeatMapStorage.getWidths("public.example", 123, FROM, TO));
+            storage.verify(() -> HeatMapStorage.getWidths(domain, 123, FROM, TO));
         }
     }
 
@@ -81,24 +85,28 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
         }
     }
 
-    @Test
-    void authorizedTileUsesTheSameScopeAndIsNeverCachedByTheBrowser() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = { "public.example", "" })
+    void authorizedTileUsesTheSameScopeAndIsNeverCachedByTheBrowser(String domain) throws Exception {
         HeatMapRestController controller = controller();
+        when(access.currentDomain(request)).thenReturn(domain);
         byte[] png = { 1, 2, 3 };
         try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class)) {
-            storage.when(() -> HeatMapStorage.getTile("public.example", 123, FROM, TO, 390, 0, 2)).thenReturn(png);
+            storage.when(() -> HeatMapStorage.getTile(domain, 123, FROM, TO, 390, 0, 2)).thenReturn(png);
             var response = controller.tile(123, "period", 390, 0, 2);
             assertArrayEquals(png, response.getBody());
             assertEquals(MediaType.IMAGE_PNG, response.getHeaders().getContentType());
             assertEquals("no-store", response.getHeaders().getCacheControl());
             verify(access).requireDocument(request, 123);
-            storage.verify(() -> HeatMapStorage.getTile("public.example", 123, FROM, TO, 390, 0, 2));
+            storage.verify(() -> HeatMapStorage.getTile(domain, 123, FROM, TO, 390, 0, 2));
         }
     }
 
-    @Test
-    void pageListHidesUnauthorizedAndDeletedDocuments() {
+    @ParameterizedTest
+    @ValueSource(strings = { "public.example", "" })
+    void pageListHidesUnauthorizedAndDeletedDocuments(String domain) {
         HeatMapRestController controller = controller();
+        when(access.currentDomain(request)).thenReturn(domain);
         Identity user = mock(Identity.class);
         doReturn(user).when(controller).getUser();
         request.addParameter("dateRange", "period");
@@ -106,13 +114,13 @@ class HeatMapRestControllerTest extends BaseWebjetTest {
         DocDetails forbidden = mock(DocDetails.class);
         when(visible.getDocId()).thenReturn(123);
         when(visible.getTitle()).thenReturn("Visible page");
-        when(access.canViewDocument(user, "public.example", visible)).thenReturn(true);
+        when(access.canViewDocument(user, domain, visible)).thenReturn(true);
         DocDB docs = mock(DocDB.class);
         when(docs.getBasicDocDetails(123, false)).thenReturn(visible);
         when(docs.getBasicDocDetails(456, false)).thenReturn(forbidden);
         try (MockedStatic<HeatMapStorage> storage = mockStatic(HeatMapStorage.class);
                 MockedStatic<DocDB> docLookup = mockStatic(DocDB.class)) {
-            storage.when(() -> HeatMapStorage.getPageCounts("public.example", FROM, TO)).thenReturn(Map.of(123, 5L, 456, 9L, 789, 8L));
+            storage.when(() -> HeatMapStorage.getPageCounts(domain, FROM, TO)).thenReturn(Map.of(123, 5L, 456, 9L, 789, 8L));
             docLookup.when(DocDB::getInstance).thenReturn(docs);
             docLookup.when(() -> DocDB.getURLFromDocId(123, request)).thenReturn("/visible.html");
             List<HeatMapPageDTO> rows = controller.getAllItems(Pageable.unpaged()).getContent();

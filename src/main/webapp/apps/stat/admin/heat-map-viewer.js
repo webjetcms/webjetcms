@@ -73,7 +73,7 @@ export class HeatMapViewer {
 
     async getJson(path, extra = {}) {
         const response = await fetch(this.endpoint(path, extra), {
-            credentials: "same-origin", headers: {Accept: "application/json"}, signal: this.requestController.signal
+            credentials: "same-origin", headers: {Accept: "application/json", "X-CSRF-Token": window.csrfToken}, signal: this.requestController.signal
         });
         if (!response.ok) throw new Error("Heat map request failed");
         return response.json();
@@ -120,7 +120,7 @@ export class HeatMapViewer {
             this.nodes.Frame.style.width = this.width + "px";
             this.nodes.Stage.style.width = this.width + "px";
             this.nodes.Stage.style.height = this.height + "px";
-            this.nodes.Frame.src = this.endpoint("/preview", {previewRevision: revision});
+            this.nodes.Frame.src = this.endpoint("/html/preview", {previewRevision: revision});
             this.previewTimer = setTimeout(() => {
                 if (revision === this.revision && !this.frameReady) this.status(this.texts.previewError, true);
             }, 30000);
@@ -139,7 +139,7 @@ export class HeatMapViewer {
             const frameWindow = this.nodes.Frame.contentWindow;
             const doc = frameWindow.document;
             const loadedUrl = new URL(frameWindow.location.href);
-            if (loadedUrl.pathname === this.api + "/preview" && loadedUrl.searchParams.get("previewRevision") !== String(this.revision)) return;
+            if (loadedUrl.pathname === this.api + "/html/preview" && loadedUrl.searchParams.get("previewRevision") !== String(this.revision)) return;
             clearTimeout(this.previewTimer);
             if (doc.querySelector('meta[name="webjet-heatmap-preview"]')?.content !== String(this.docId)) {
                 throw new Error("Unexpected preview document");
@@ -210,7 +210,7 @@ export class HeatMapViewer {
                 tile.addEventListener("error", () => {
                     if (revision === this.revision && tile.isConnected) this.status(this.texts.tileError, true);
                 }, {once: true});
-                tile.src = this.endpoint("/tile", {width: this.width, tileX: x, tileY: y});
+                tile.src = this.endpoint("/binary/tile", {width: this.width, tileX: x, tileY: y});
                 this.tiles.set(key, tile);
                 this.nodes.Tiles.append(tile);
             }
