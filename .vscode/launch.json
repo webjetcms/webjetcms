@@ -30,6 +30,30 @@
         },
         {
             "type": "java",
+            "name": "Debug Local DB 8443",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5006,
+            "preLaunchTask": "appStartLocalDB8443",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "${workspaceFolderBasename}"
+        },
+        {
+            "type": "java",
+            "name": "Debug Local DB 9443",
+            "request": "attach",
+            "hostName": "localhost",
+            "port": 5007,
+            "preLaunchTask": "appStartLocalDB9443",
+            "postDebugTask": "appStop",
+            "timeout": 240000,
+            "internalConsoleOptions": "neverOpen",
+            "projectName": "${workspaceFolderBasename}"
+        },
+        {
+            "type": "java",
             "name": "Debug MultiWeb",
             "request": "attach",
             "hostName": "localhost",

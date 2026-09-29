@@ -353,6 +353,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
 ```
 
+- Data tables - modified validation of required fields of type [`DATE` and `DATETIME`](developer/datatables-editor/standard-fields.md#date). This allows you to delete the set date or number value in the editor - originally, when the value was empty, the value in the saved entity was preserved (#58770).
+- Data tables - field validation error [`QUILL`](developer/datatables-editor/standard-fields.md#quill) highlights both the toolbar and editor border (#58770).
+- Data tables - a clearer error message will be displayed for a duplicate value, an attempt to delete or change a record referenced by other records, or an empty value for the `NOT NULL` column (#58770).
+
 ## 2026.18
 
 > WebJET CMS 2026.18 brings **folder change approval** with support for multi-level approval and **accessibility testing** integrated directly into automated tests.

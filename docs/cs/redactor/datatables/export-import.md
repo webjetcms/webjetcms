@@ -40,6 +40,8 @@ Klepnutím na tlačítko Importovat se spustí import z vybraného Excel souboru
 
 Většina tabulek při aktualizaci existujícího záznamu umožňuje **importovat sloupce dílčí**. V Excelu můžete smazat sloupce, které chcete v databázi zachovat beze změny. Následně při importu se ve stávajících záznamech přenesou jen změny z ponechaných sloupců v Excelu.
 
+U číselných a datových polí, která podporují prázdnou hodnotu, **prázdná buňka v ponechaném sloupci vymaže původní hodnotu**. Rovněž lze použít text `NULL`. Seznam importovaných sloupců se určuje podle hlavičky Excelu, i když je první datová buňka sloupce prázdná. Povinná pole nelze takto vyprázdnit, import zobrazí chybu validace.
+
 ### Přeskočit vadné záznamy
 
 Import nabízí možnost přeskočení vadných záznamů. Pokud je tato možnost **vypnuta**, a importovaná data obsahují chybu, import se přeruší a bude zobrazeno chybové hlášení. Nevýhoda je při importování velkého množství záznamů, kde jedna chyba přeruší importování dalších záznamů.
