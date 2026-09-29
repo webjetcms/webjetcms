@@ -10,13 +10,17 @@
   <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css">
   <base href="/">
   <script>
+    var languages = ['sk', 'en', 'cs'];
     var path = window.location.pathname;
     var historyRoot = path.match(/^\/(latest|v[0-9]+)(?:\/|$)/);
-    var basePath = historyRoot ? "/" + historyRoot[1] + "/" : path.replace(/index\.(html|jsp)$/, "");
+    var isRootLanguagePath = languages.includes(path.split('/')[1]);
+    var basePath = path.replace(/index\.(html|jsp)$/, "");
+    if (historyRoot) basePath = "/" + historyRoot[1] + "/";
+    else if (isRootLanguagePath) basePath = "/";
     if (!basePath.endsWith("/")) basePath += "/";
-    // Keep existing public version URLs in history mode. Nested deployments and local previews
-    // use hash routes so opening a documentation page does not require server-side URL rewriting.
-    var useHashRouter = !/^\/(latest|v[0-9]+)\/$/.test(basePath);
+    // Keep versioned and root-level language URLs in history mode.
+    // Other deployments use hash routes without requiring server-side URL rewriting.
+    var useHashRouter = !historyRoot && !isRootLanguagePath;
     document.querySelector("base").href = basePath;
   </script>
 
@@ -91,7 +95,6 @@
   <script src="//cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.js"></script>
 
   <script>
-    var languages = ['sk', 'en', 'cs'];
     // Adapt rendered links to WebJET documentation routes.
     function configureMarkdown(marked, renderer) {
       const originalRender = renderer.link;

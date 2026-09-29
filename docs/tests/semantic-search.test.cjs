@@ -171,6 +171,21 @@ test('Docsify navigation, scoped search, safe results and request errors', async
     await page.keyboard.press('Escape');
   }
 
+  // Existing root-level language URLs keep their document, root assets, and history navigation.
+  for (const language of ['sk', 'en', 'cs']) {
+    const documentUrl = base + '/' + language + '/admin/users/README';
+    await page.goto(documentUrl);
+    await waitForDocument(page, language + '/admin/users/README.md');
+    assert.equal(page.url(), documentUrl);
+    assert.equal(await page.evaluate(() => window.$docsify.routerMode), 'history');
+    assert.equal(await page.locator('link[href="style.css"]').evaluate(link => link.href), base + '/style.css');
+    await page.locator('.sidebar-nav a[href$="/admin/users/user-groups"]').click();
+    await waitForDocument(page, language + '/admin/users/user-groups.md');
+    assert.equal(page.url(), base + '/' + language + '/admin/users/user-groups');
+    await page.reload();
+    await waitForDocument(page, language + '/admin/users/user-groups.md');
+  }
+
   // Keep one legacy-router smoke check without repeating the deployment/language matrix.
   await page.goto(base + '/latest/en/');
   await page.locator('.sidebar-nav a[href$="/redactor/README"]').click();

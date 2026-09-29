@@ -30,6 +30,8 @@ Po otvorení `/admin/docs/webjetcms` Tomcat použije existujúci welcome-file `i
 
 Vnorené nasadenie používa odkazy s `#/`, napríklad `/admin/docs/webjetcms/#/sk/redactor/`. Nevyžaduje vlastný 404 handler. Existujúce verejné adresy `/latest/...` a `/v2026/...` používajú pôvodné history smerovanie a existujúci `404.jsp`. Pri samostatnej dokumentačnej doméne musí byť REST služba dostupná na rovnakom origine; samotný statický server alebo Tomcat bez WebJET backendu vyhľadávanie neposkytuje.
 
+Pri nasadení dokumentácie v koreňovom priečinku zostávajú podporované aj pôvodné adresy `/sk/...`, `/en/...` a `/cs/...` bez `#/`. Používajú history smerovanie a načítavajú súbory prehliadača z koreňa `/`. Server musí pri otvorení takejto adresy vrátiť `index.html`, napríklad pomocou fallbacku v `docsify serve`. Existujúci `404.jsp` túto obsluhu nezabezpečuje pre adresy bez verzie.
+
 Shell naďalej načítava knižnice Docsify a ich doplnky z existujúcich CDN. Do WAR nemusíte kopírovať `node_modules`, testy ani nástroje na generovanie dokumentácie.
 
 ## Konfigurácia
