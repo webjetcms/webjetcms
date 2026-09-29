@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-/** Verifies atomic writes, owner scoping, and preservation of other-domain preferences. */
+/** Verifies JDBC transaction calls, scoped statements and record selection with a mocked connection. */
 class DashboardSettingsRepositoryTest {
     private final Connection connection = mock(Connection.class);
     private final PreparedStatement read = mock(PreparedStatement.class);
@@ -78,16 +78,17 @@ class DashboardSettingsRepositoryTest {
     }
 
     @Test
-    void readsOnlyTheAuthenticatedOwnersDashboardNamespace() throws SQLException {
+    void bindsOwnerAndDashboardNamespaceToTheReadQuery() throws SQLException {
         repository.read(17);
 
+        verify(connection).prepareStatement("SELECT skey, value FROM user_settings_admin WHERE user_id=? AND skey LIKE ?");
         verify(read).setInt(1, 17);
         verify(read).setString(2, "overview.%");
         verifyNoInteractions(insert, delete);
         verify(connection, never()).setAutoCommit(false);
     }
 
-    /** Prevents a locking SQL Server read from mixing records from concurrent saves. */
+    /** Requests the writer's account lock before a SQL Server read and commits afterwards. */
     @Test
     void sqlServerReadsUseTheSameOwnerLockAsWriters() throws SQLException {
         when(connection.getMetaData().getDatabaseProductName()).thenReturn("Microsoft SQL Server");
@@ -105,7 +106,7 @@ class DashboardSettingsRepositoryTest {
         verifyNoInteractions(insert, delete);
     }
 
-    /** Releases the SQL Server read lock and connection state when a query fails. */
+    /** Requests rollback and restores auto-commit when a SQL Server read fails. */
     @Test
     void sqlServerReadFailureRollsBackAndRestoresConnection() throws SQLException {
         when(connection.getMetaData().getDatabaseProductName()).thenReturn("Microsoft SQL Server");
@@ -168,7 +169,7 @@ class DashboardSettingsRepositoryTest {
         verify(connection, never()).commit();
     }
 
-    /** Clears every dashboard domain while preserving unrelated and legacy account settings. */
+    /** Selects dashboard records across domains for owner-bound deletion, excluding unrelated keys. */
     @ParameterizedTest
     @ValueSource(strings = { "PostgreSQL", "Oracle", "Microsoft SQL Server" })
     void resetDeletesOnlyOwnedDashboardRecordsUnderTheSaveLock(String product) throws SQLException {
@@ -208,7 +209,7 @@ class DashboardSettingsRepositoryTest {
         verifyNoInteractions(insert);
     }
 
-    /** Retained shortcuts are reinserted before commit; an insert failure rolls back the reset. */
+    /** Inserts retained records before requesting commit and requests rollback when insertion fails. */
     @Test
     void resetRetainsTheLockedSnapshotAtomically() throws SQLException {
         Map<String, String> original = Map.of("overview.layout.v1", "old", "overview.widget.link", "shortcut", "overview.news", "read");
@@ -229,7 +230,7 @@ class DashboardSettingsRepositoryTest {
         verify(connection, never()).commit();
     }
 
-    /** A partial delete failure must preserve the complete previous profile. */
+    /** Requests rollback without commit or inserts when deletion fails partway through a reset. */
     @Test
     void resetRollsBackWhenARecordCannotBeDeleted() throws SQLException {
         stubRecords(Map.of("overview.layout.v1", "{}", "overview.news", "{}"));

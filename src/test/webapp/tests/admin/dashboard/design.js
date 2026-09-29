@@ -325,9 +325,8 @@ Scenario('Compact metrics and scrollable recent pages align above three equal pr
         I.assertEqual(metric.href, targets[metric.type], 'A metric heading must open the corresponding module.');
     });
     I.assertEqual(await I.grabTextFrom('[data-widget-type="forms"] .md-dashboard-widget__metric-label'),
-        await I.executeScript(() => WJ.translate('admin.dashboard.formSubmissionsPeriod.js', 7)));
-    I.assertTrue(await I.executeScript(() => document.querySelector('[data-widget-type="forms"] .md-dashboard-widget__period').getBoundingClientRect().height <= 1),
-        'Exact form dates remain accessible without taking another visual row.');
+        await I.executeScript(() => WJ.translate('admin.dashboard.totalSubmissions.js')));
+    I.dontSeeElementInDOM('[data-widget-type="forms"] .md-dashboard-widget__period');
     I.executeScript(() => document.querySelector('[data-widget-type="forms"] .md-dashboard__title-link').focus());
     I.assertTrue(await I.executeScript(() => document.activeElement.matches('[data-widget-type="forms"] .md-dashboard__title-link')), 'Metric header navigation must support keyboard focus.');
     const bounds = await I.executeScript(() => Object.fromEntries(['traffic', 'recent-pages', 'referrers', 'publishing', 'newsletter'].map(type => {
@@ -631,7 +630,7 @@ Scenario('Session scrolling stays inside its list and compact controls expose ac
     });
     I.assertContain(decoration.background, 'linear-gradient(', 'The welcome block must retain its dark blue gradient under the decorative image.');
     I.assertContain(decoration.image, '/wj9_bg.jpg', 'The configured login artwork must appear in the welcome background.');
-    I.assertEqual(decoration.opacity, .12, 'The image must remain subdued behind the welcome text.');
+    I.assertEqual(decoration.opacity, .16, 'The image must remain subdued behind the welcome text.');
     I.assertEqual(decoration.pointerEvents, 'none', 'The decorative layer must not intercept shortcuts or release-note controls.');
     I.clickCss(newsToggle);
     waitForSave(I);

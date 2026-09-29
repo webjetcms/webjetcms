@@ -240,7 +240,8 @@ Scenario('Traffic and TOP pages reuse the statistics module contracts', async ({
         const top = await read('top');
         return { root, views, top };
     });
-    I.assertTrue(result.root > 0);
+    I.assertTrue(Number.isInteger(result.root) && (result.root === -1 || result.root > 0),
+        'Statistics use all permitted folders (-1) outside the cloud or the positive cloud root ID.');
     I.assertEqual(result.views.status, 200);
     I.assertEqual(result.views.body.content.length, 14);
     for (const day of result.views.body.content) {

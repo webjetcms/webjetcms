@@ -52,10 +52,10 @@ async function readEndpoints(I, paths) {
     }, paths);
 }
 
-Before(({ I, login }) => {
+Before(function ({ I, login }) {
     login('admin');
     I.amOnPage('/admin/v9/');
-    loaded(I);
+    if (this.currentTest.title !== 'Restore preferences after security tests') loaded(I);
 });
 
 /**
@@ -180,24 +180,30 @@ Scenario('Reject unsafe shortcut URLs and appearance values through REST without
 });
 
 /**
- * Checks that shortcut titles containing markup remain harmless text after saving and reopening. Unusual
- * local paths must stay on the same site, and the settings dialog must reject an executable address.
+ * Checks the real dashboard template after saving titles with markup, script terminators, quotes and
+ * Unicode line separators. Local paths must stay on the same site, and executable addresses are rejected.
  */
 Scenario('Persisted shortcut titles remain text and local paths cannot become external links', async ({ I }) => {
     const title = 'autotest <img src=x onerror="window.autotestDashboardXss=1"><svg onload="window.autotestDashboardXss=1">';
-    const installed = await I.executeScript(async title => {
+    const scriptTitle = 'autotest </script><script>window.autotestDashboardXss=1</script>"\'\\\u2028\u2029';
+    const installed = await I.executeScript(async ({ title, scriptTitle }) => {
         const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
         const settings = JSON.parse(JSON.stringify(controller.settings));
         settings.items.push({ id: 'autotest-security-xss', type: 'shortcut', size: '1x1',
             options: { source: 'url', href: '/admin/v9/?autotest=%22%3E%3Csvg%20onload%3Dalert(1)%3E', title } });
+        settings.items.push({ id: 'autotest-security-script', type: 'shortcut', size: '1x1',
+            options: { source: 'url', href: '/admin/v9/', title: scriptTitle } });
         for (const [index, href] of ['/.//example.com/autotest', '/%2e//example.com/autotest', '/folder/..//example.com/autotest', '/folder/%2e%2e//example.com/autotest'].entries()) {
             settings.items.push({ id: `autotest-security-path-${index}`, type: 'shortcut', size: '1x1', options: { source: 'url', href, title: 'autotest local link' } });
         }
         return controller._commit(settings);
-    }, title);
+    }, { title, scriptTitle });
     I.assertTrue(installed);
     I.refreshPage();
     loaded(I);
+    I.assertEqual(await I.executeScript(() => document.querySelector('[data-instance-id="autotest-security-script"] a').textContent),
+        scriptTitle, 'The server-rendered bootstrap must preserve script terminators, quotes, backslashes and Unicode separators as text.');
+    I.dontSeeElementInDOM('[data-instance-id="autotest-security-script"] script');
     I.see(title, '[data-instance-id="autotest-security-xss"]');
     I.dontSeeElementInDOM('[data-instance-id="autotest-security-xss"] img, [data-instance-id="autotest-security-xss"] svg');
     I.assertTrue(await I.executeScript(() => window.autotestDashboardXss === undefined), 'The stored title must not execute markup.');
@@ -273,7 +279,13 @@ Scenario('Settings mutations and session removal require a valid CSRF token', as
  */
 Scenario('Restore preferences after security tests', async ({ I }) => {
     if (!originalSettings) return;
-    I.assertTrue(await I.executeScript(settings => document.querySelector('webjet-overview-dashboard').dashboardController._commit(settings), originalSettings));
+    I.assertTrue(await I.executeScript(async settings => {
+        // Restore through REST even if the tested payload prevented the dashboard or shell script from starting.
+        const csrfToken = window.csrfToken || document.documentElement.innerHTML.match(/window\.csrfToken\s*=\s*'([^']+)'/)[1];
+        const response = await fetch('/admin/rest/dashboard/settings', { method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken }, body: JSON.stringify(settings) });
+        return response.ok;
+    }, originalSettings));
     I.refreshPage();
     loaded(I);
     I.assertDeepEqual(await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings))),

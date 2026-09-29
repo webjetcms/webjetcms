@@ -19,15 +19,15 @@ Scenario('zle zadane heslo @singlethread', ({ I }) => {
 });
 
 function login(I, correctPassword=false, checkText=true) {
-    I.wait(1);
+    I.waitForVisible('#username', 10);
     I.fillField("username", "tester");
     if (correctPassword) I.fillField("password", secret(I.getDefaultPassword()));
     else I.fillField("password", "tralala");
     I.clickCss("#login-submit");
 
     if (checkText) {
-        if (correctPassword) I.see("Moje posledné stránky");
-        else I.dontSee("Moje posledné stránky");
+        if (correctPassword) I.waitForText("Vitajte späť, Tester Playwright", 30, ".md-dashboard__greeting");
+        else I.dontSeeElement('.md-dashboard__greeting');
     }
 }
 
@@ -72,14 +72,12 @@ Scenario('prihlasenie zablokovane @singlethread', ({ I }) => {
 });
 
 Scenario('uspesne prihlasenie @singlethread', ({ I }) => {
-    I.amOnPage('/admin/');
+    I.logout();
     I.fillField("username", "tester");
 
     I.fillField("password", secret(I.getDefaultPassword()));
     I.click("login-submit");
-    // Wait until the administration UI finishes loading after login.
-    I.wait(5);
-    I.see("Vitajte späť, Tester Playwright");
+    I.waitForText("Vitajte späť, Tester Playwright", 30, ".md-dashboard__greeting");
     //menu polozky
     I.wait(1);
     I.see("Úvod");
@@ -99,7 +97,7 @@ Scenario('uspesne prihlasenie @singlethread', ({ I }) => {
 
 Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     //SHA512
-    I.amOnPage('/admin/');
+    I.logout();
     I.fillField("username", "user_sha512");
 
     I.fillField("password", secret(I.getDefaultPassword()+".sha512"));
@@ -107,7 +105,8 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
 
     I.waitForText("Vitajte späť, TestUser SHA512", 30, ".md-dashboard__greeting");
 
-    I.click("body > div.ly-page-wrapper > div.ly-header > div > div.header-link-wrapper > div:nth-child(4) > a");
+    I.clickCss('.js-logout-toggler');
+    I.waitForVisible('#username', 10);
 
     //BCrypto
     I.amOnPage('/admin/');
@@ -118,7 +117,8 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
 
     I.waitForText("Vitajte späť, TestUser Bcrypto", 30, ".md-dashboard__greeting");
 
-    I.click("body > div.ly-page-wrapper > div.ly-header > div > div.header-link-wrapper > div:nth-child(4) > a");
+    I.clickCss('.js-logout-toggler');
+    I.waitForVisible('#username', 10);
 });
 
  function changePasswordHeslo(I, DT, DTE) {
@@ -175,8 +175,8 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     I.clickCss("#login-submit");
 
     I.say("over zobrazenie welcome obrazovky");
-    I.see("Vitajte, User Slabeheslo");
-    I.see("Prehľad");
+    I.waitForText("Vitajte späť, User Slabeheslo", 30, ".md-dashboard__greeting");
+    I.seeElement('.md-dashboard__toolbar');
 
     I.logout();
 
@@ -185,8 +185,8 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     I.fillField("password", newPassword);
     I.forceClick("Prihlásiť sa");
 
-    I.see("Vitajte, User Slabeheslo");
-    I.see("Prehľad");
+    I.waitForText("Vitajte späť, User Slabeheslo", 30, ".md-dashboard__greeting");
+    I.seeElement('.md-dashboard__toolbar');
 
     I.say("over znova zmenu hesla, ci nepovoli pass history");
     I.logout();
@@ -207,8 +207,8 @@ Scenario('Test prihlasenia uzivatela SHA512/BCrypto @singlethread', ({ I }) => {
     I.fillField("#retypeNewPassword", "x"+newPassword);
     I.clickCss("#login-submit");
 
-    I.see("Vitajte, User Slabeheslo");
-    I.see("Prehľad");
+    I.waitForText("Vitajte späť, User Slabeheslo", 30, ".md-dashboard__greeting");
+    I.seeElement('.md-dashboard__toolbar');
 
  });
 

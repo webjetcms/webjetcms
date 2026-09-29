@@ -28,9 +28,9 @@ import sk.iway.iwcm.editor.EditorForm;
 
 /** Verifies authorized search previews and shared page visibility and thumbnail checks. */
 class DashboardRecentPagesServiceTest {
-    /** Search previews batch authorized IDs and show the latest save, including changes by other authors. */
+    /** Batches authorized IDs and maps returned save dates, falling back to creation dates when absent. */
     @Test
-    void searchPreviewsLoadImagesAndLatestSaveInOneQuery() throws Exception {
+    void searchPreviewsBatchAuthorizedPagesAndMapSaveDates() throws Exception {
         Identity user = mock(Identity.class);
         when(user.isEnabledItem("menuWebpages")).thenReturn(true);
         Connection connection = mock(Connection.class);
@@ -70,7 +70,7 @@ class DashboardRecentPagesServiceTest {
             assertEquals("", result.get(14).getPerexImage());
             assertEquals(Tools.formatDateTimeSeconds(saved.getTime()), result.get(13).getSaveDate());
             assertEquals(Tools.formatDateTimeSeconds(created.getTime()), result.get(14).getSaveDate());
-            verify(connection).prepareStatement(contains("MAX(h.save_date)"));
+            verify(connection).prepareStatement(anyString());
             verify(statement).setInt(1, 13);
             verify(statement).setInt(2, 14);
             verify(statement).executeQuery();

@@ -191,7 +191,8 @@ Scenario('A rejected preference update preserves the confirmed widget', async ({
 
 /**
  * Checks that widgets stay inside the dashboard and keep their reading order across screen widths. Table
- * text must remain readable without clipping, including when enlarged to twice its size.
+ * text must remain readable without clipping, including when enlarged to twice its size. Numeric values
+ * and dates may stay on one line if they fit inside their cells.
  */
 Scenario('Responsive grid preserves visual order and keeps widgets inside the dashboard', async ({ I }) => {
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
@@ -207,8 +208,13 @@ Scenario('Responsive grid preserves visual order and keeps widgets inside the da
             });
             const clippedCells = [...host.querySelectorAll('.md-dashboard-widget__table td, .md-dashboard-widget__table th')]
                 .filter(cell => !cell.closest('.visually-hidden') && cell.checkVisibility())
-                .map((cell, index) => ({ index, type: cell.closest('[data-widget-type]').dataset.widgetType, numeric: cell.classList.contains('md-dashboard-widget__table-number'), whiteSpace: getComputedStyle(cell).whiteSpace, width: cell.clientWidth, contentWidth: cell.scrollWidth }))
-                .filter(cell => (!cell.numeric && cell.whiteSpace !== 'normal') || cell.contentWidth > cell.width + 1);
+                .map((cell, index) => {
+                    const type = cell.closest('[data-widget-type]').dataset.widgetType;
+                    const singleLine = cell.classList.contains('md-dashboard-widget__table-number')
+                        || (['forms', 'approvals'].includes(type) && cell.matches(':last-child'));
+                    return { index, type, singleLine, whiteSpace: getComputedStyle(cell).whiteSpace, width: cell.clientWidth, contentWidth: cell.scrollWidth };
+                })
+                .filter(cell => (!cell.singleLine && cell.whiteSpace !== 'normal') || cell.contentWidth > cell.width + 1);
             return { left: boundary.left, right: boundary.right, cards, clippedCells };
         });
         for (const card of geometry.cards) {
@@ -216,7 +222,7 @@ Scenario('Responsive grid preserves visual order and keeps widgets inside the da
         }
         const visual = [...geometry.cards].sort((a, b) => Math.abs(a.top - b.top) > 1 ? a.top - b.top : a.left - b.left);
         assert.deepEqual(visual.map(card => card.id), geometry.cards.map(card => card.id), `Visual order must follow DOM order at ${width}px`);
-        assert.deepEqual(geometry.clippedCells, [], `Table headers and cells must wrap without clipping at ${width}px`);
+        assert.deepEqual(geometry.clippedCells, [], `Table headers and cells must fit without clipping at ${width}px`);
     }
     I.wjSetDefaultWindowSize();
     const clipped = await I.executeScript(() => {
@@ -228,12 +234,17 @@ Scenario('Responsive grid preserves visual order and keeps widgets inside the da
             .map(body => body.closest('[data-instance-id]').dataset.instanceId);
         const cells = [...root.querySelectorAll('.md-dashboard-widget__table td, .md-dashboard-widget__table th')]
             .filter(cell => !cell.closest('.visually-hidden') && cell.checkVisibility())
-            .map((cell, index) => ({ index, type: cell.closest('[data-widget-type]').dataset.widgetType, numeric: cell.classList.contains('md-dashboard-widget__table-number'), whiteSpace: getComputedStyle(cell).whiteSpace, width: cell.clientWidth, contentWidth: cell.scrollWidth }))
-            .filter(cell => (!cell.numeric && cell.whiteSpace !== 'normal') || cell.contentWidth > cell.width + 1);
+            .map((cell, index) => {
+                const type = cell.closest('[data-widget-type]').dataset.widgetType;
+                const singleLine = cell.classList.contains('md-dashboard-widget__table-number')
+                    || (['forms', 'approvals'].includes(type) && cell.matches(':last-child'));
+                return { index, type, singleLine, whiteSpace: getComputedStyle(cell).whiteSpace, width: cell.clientWidth, contentWidth: cell.scrollWidth };
+            })
+            .filter(cell => (!cell.singleLine && cell.whiteSpace !== 'normal') || cell.contentWidth > cell.width + 1);
         return { bodies, cells };
     });
     assert.deepEqual(clipped.bodies, [], 'Widget bodies must remain readable with text enlarged to 200 percent');
-    assert.deepEqual(clipped.cells, [], 'Table headers and cells must wrap without clipping with text enlarged to 200 percent');
+    assert.deepEqual(clipped.cells, [], 'Table headers and cells must fit without clipping with text enlarged to 200 percent');
 });
 
 /**

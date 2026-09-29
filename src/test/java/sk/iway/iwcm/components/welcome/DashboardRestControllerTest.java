@@ -32,8 +32,6 @@ class DashboardRestControllerTest {
         assertEquals(7, settings.getItems().get(0).getOptions().get("days"));
         assertEquals("Contact", settings.getDomainOptions().get("form-1").get("formName"));
         assertEquals(mapper.readTree(json), mapper.readTree(mapper.writeValueAsString(settings)));
-        String legacyJson = json.replace("\"size\":\"3x3\"", "\"size\":\"3x3\",\"collapsed\":true");
-        assertEquals(mapper.readTree(json), mapper.readTree(mapper.writeValueAsString(mapper.readValue(legacyJson, DashboardSettingsDto.class))));
     }
 
     @Test

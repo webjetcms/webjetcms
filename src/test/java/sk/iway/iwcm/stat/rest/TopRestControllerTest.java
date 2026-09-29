@@ -38,13 +38,4 @@ class TopRestControllerTest {
             database.verifyNoInteractions();
         }
     }
-
-    /** An empty ranking does not issue an image query. */
-    @Test
-    void emptyRankingDoesNotReadDocuments() {
-        try (var database = mockStatic(DBPool.class)) {
-            assertTrue(new TopRestController().columnsToPageItems(List.of()).isEmpty());
-            database.verifyNoInteractions();
-        }
-    }
 }

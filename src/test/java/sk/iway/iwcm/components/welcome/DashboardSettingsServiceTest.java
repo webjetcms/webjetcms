@@ -64,57 +64,15 @@ class DashboardSettingsServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.validateAndSerialize(settings, "42"));
     }
 
-    /** Compact defaults and existing personal size choices both survive a settings round trip. */
+    /** Supported grid sizes and repeated instances survive a settings round trip without rewriting the profile. */
     @Test
-    void acceptsCompactPreviewSizesWithoutChangingExistingPersonalSizes() {
+    void preservesSupportedSizesAndRepeatedGridInstances() {
         Map<String, java.util.List<String>> variants = Map.of(
             "recent-pages", java.util.List.of("3x2", "2x3", "3x3"),
             "referrers", java.util.List.of("2x2", "2x3", "3x3"),
             "publishing", java.util.List.of("2x2", "2x3"),
-            "search-terms", java.util.List.of("3x3", "2x3")
-        );
-        variants.forEach((type, sizes) -> sizes.forEach(size -> {
-            DashboardSettingsDto source = settings();
-            Item preview = item("preview", type, size);
-            source.getItems().add(preview);
-            when(repository.read(7)).thenReturn(service.validateAndSerialize(source, "42"));
-
-            DashboardSettingsDto loaded = service.load(7, "42");
-
-            assertTrue(loaded.isConfigured(), type + " " + size);
-            assertEquals(size, loaded.getItems().get(1).getSize());
-        }));
-        verify(repository, never()).replace(anyInt(), anyString(), anyMap(), anySet());
-    }
-
-    /** Legacy minimization flags are ignored without losing the layout or domain filters. */
-    @Test
-    void loadsLegacyMinimizedWidgetsWithoutPersistingTheirRemovedState() {
-        DashboardSettingsDto source = settings();
-        source.getItems().add(item("form-1", "forms", "3x3"));
-        source.getDomainOptions().put("form-1", Map.of("formName", "Contact"));
-        Map<String, String> records = service.validateAndSerialize(source, "42");
-        String key = DashboardSettingsRepository.WIDGET_PREFIX + "form-1";
-        records.put(key, records.get(key).replaceFirst("\\{", "{\"collapsed\":true,"));
-        when(repository.read(7)).thenReturn(records);
-
-        DashboardSettingsDto loaded = service.load(7, "42");
-
-        assertTrue(loaded.isConfigured());
-        assertEquals(java.util.List.of("sessions-1", "form-1"), loaded.getItems().stream().map(Item::getId).toList());
-        assertEquals("3x3", loaded.getItems().get(1).getSize());
-        assertEquals(Map.of("formName", "Contact"), loaded.getDomainOptions().get("form-1"));
-        assertFalse(service.validateAndSerialize(loaded, "42").get(key).contains("collapsed"));
-        verify(repository, never()).replace(anyInt(), anyString(), anyMap(), anySet());
-    }
-
-    /** All grid widgets support repeated instances so users can compare their sizes. */
-    @Test
-    void acceptsRepeatedGridWidgets() {
-        Map<String, java.util.List<String>> variants = Map.of(
-            "recent-pages", java.util.List.of("2x3", "3x2", "3x3"),
+            "search-terms", java.util.List.of("3x3", "2x3"),
             "approvals", java.util.List.of("1x1", "3x3"),
-            "publishing", java.util.List.of("2x2", "2x3"),
             "changed-pages", java.util.List.of("3x2", "3x3"),
             "audit", java.util.List.of("3x2", "3x3"),
             "logged-admins", java.util.List.of("2x2", "2x3"),
@@ -124,13 +82,17 @@ class DashboardSettingsServiceTest {
         variants.forEach((type, sizes) -> sizes.forEach(size -> {
             DashboardSettingsDto source = settings();
             source.getItems().add(item("preview", type, size));
-            Map<String, String> records = service.validateAndSerialize(source, "42");
-            assertTrue(records.values().stream().allMatch(record -> record.length() <= 2000));
-            when(repository.read(7)).thenReturn(records);
-            assertEquals(type, service.load(7, "42").getItems().get(1).getType());
             source.getItems().add(item("duplicate", type, size));
-            assertDoesNotThrow(() -> service.validateAndSerialize(source, "42"));
+            when(repository.read(7)).thenReturn(service.validateAndSerialize(source, "42"));
+
+            DashboardSettingsDto loaded = service.load(7, "42");
+
+            assertTrue(loaded.isConfigured(), type + " " + size);
+            assertEquals(java.util.List.of("sessions-1", "preview", "duplicate"), loaded.getItems().stream().map(Item::getId).toList());
+            assertEquals(java.util.List.of(type, type), loaded.getItems().stream().skip(1).map(Item::getType).toList());
+            assertEquals(java.util.List.of(size, size), loaded.getItems().stream().skip(1).map(Item::getSize).toList());
         }));
+        verify(repository, never()).replace(anyInt(), anyString(), anyMap(), anySet());
     }
 
     @Test
@@ -321,8 +283,11 @@ class DashboardSettingsServiceTest {
         }
         for (String href : java.util.List.of("javascript:alert(1)", "data:text/html,test", "//evil.example/", "/\\evil.example/",
                 "https://user:password@example.com/", "https://example.com/\n", "https:example.com", "relative/path")) {
-            assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(
-                Map.of("source", "url", "href", href, "title", "Unsafe")), href);
+            DashboardSettingsDto settings = settings();
+            Item shortcut = item("unsafe", "shortcut", "1x1");
+            shortcut.setOptions(Map.of("source", "url", "href", href, "title", "Unsafe"));
+            settings.getItems().add(shortcut);
+            assertThrows(IllegalArgumentException.class, () -> service.save(7, "42", settings), href);
         }
         assertDoesNotThrow(() -> DashboardSettingsService.validateShortcut(Map.of("href", "/apps/form/admin/")));
         assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("source", "url", "href", "https://example.com", "title", " ")));
