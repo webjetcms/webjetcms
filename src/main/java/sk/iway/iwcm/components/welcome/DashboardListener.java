@@ -50,7 +50,7 @@ public class DashboardListener {
         try {
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("dashboardMenu", new MenuService(request).getMenu());
-            data.put("userName", user.getFirstName());
+            data.put("userName", user.getFullName());
             data.put("currentDomain", DocDB.getDomain(request));
 
             //use rootGroup only in multiweb, because its hard to use all groupIds in a whole domain, we need to update stat tables to use domain_id sometimes

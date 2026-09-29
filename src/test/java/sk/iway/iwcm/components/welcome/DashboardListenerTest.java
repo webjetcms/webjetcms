@@ -49,7 +49,7 @@ class DashboardListenerTest {
         when(user.isAdmin()).thenReturn(true);
         when(user.isEnabledItem("welcomeShowLoggedAdmins")).thenReturn(showLoggedAdmins);
         when(user.getUserId()).thenReturn(7);
-        when(user.getFirstName()).thenReturn("Autotest");
+        when(user.getFullName()).thenReturn("Autotest Administrator");
         var preferences = new DashboardSettingsDto();
         preferences.setConfigured(true);
         preferences.getDomainOptions().put("autotest-form", Map.of("formName", "Contact"));
@@ -93,7 +93,7 @@ class DashboardListenerTest {
             listener.setOverviewData(new WebjetEvent<>(new ThymeleafEvent("dashboard", null, model, null, request), null));
 
             var data = new ObjectMapper().readTree((String) model.get("overviewData"));
-            assertEquals("Autotest", data.path("userName").asText());
+            assertEquals("Autotest Administrator", data.path("userName").asText());
             assertEquals("current.example", data.path("currentDomain").asText());
             assertEquals(expectedStatRootGroupId, data.path("statRootGroupId").asInt());
             assertTrue(data.path("dashboardMenu").isArray());

@@ -12,19 +12,19 @@ Before(({ login }) => {
  * @param {*} sessionSingleLogon
  */
 function checkMultiUserLogon(I, sessionSingleLogon=false, secondUserName="tester2") {
-    var introText = "Tester2 Playwright2";
+    var introText = "Vitajte späť, Tester2 Playwright2";
 
     session('first user', () => {
         I.amOnPage("/admin/v9/");
         I.relogin("tester2");
-        I.see(introText, "button.js-profile-toggler");
+        I.see(introText, ".md-dashboard__greeting");
     });
 
     session('second user', () => {
-        if ("tester3"===secondUserName) introText = "Tester_L2 Playwright";
+        if ("tester3"===secondUserName) introText = "Vitajte späť, Tester_L2 Playwright";
         I.relogin(secondUserName);
         I.amOnPage("/admin/v9/");
-        I.see(introText, "button.js-profile-toggler");
+        I.see(introText, ".md-dashboard__greeting");
 
         I.wait(10);
         I.dontSeeElement(logoffLocator);
@@ -63,7 +63,7 @@ Scenario("overenie single session @singlethread", async ({ I, Document }) => {
     //
     I.say("main user should still be logged in");
     I.amOnPage("/admin/v9/");
-    I.see("Tester Playwright", "button.js-profile-toggler");
+    I.see("Vitajte späť, Tester Playwright", ".md-dashboard__greeting");
 });
 
 Scenario("reset settings @singlethread", async ({ I, Document }) => {
@@ -72,12 +72,12 @@ Scenario("reset settings @singlethread", async ({ I, Document }) => {
 
 Scenario("active session list on dashboard @singlethread", async ({ I }) => {
 
-    var introText = "Tester_L2 Playwright";
+    var introText = "Vitajte späť, Tester_L2 Playwright";
     let createdLogonTime;
     session('first user', async () => {
         I.amOnPage("/admin/v9/");
         I.relogin("tester3");
-        I.see(introText, "button.js-profile-toggler");
+        I.see(introText, ".md-dashboard__greeting");
         I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
         createdLogonTime = await I.executeScript(() => {
             const { currentSessions } = document.querySelector('webjet-overview-dashboard').data;
@@ -90,7 +90,7 @@ Scenario("active session list on dashboard @singlethread", async ({ I }) => {
     session('second user', async () => {
         I.relogin("tester3");
         I.amOnPage("/admin/v9/");
-        I.see(introText, "button.js-profile-toggler");
+        I.see(introText, ".md-dashboard__greeting");
 
         // Remove only the session created by the first test context.
         const target = `.md-dashboard__sessions [data-session-logon="${createdLogonTime}"] .md-dashboard-widget__session-logout`;

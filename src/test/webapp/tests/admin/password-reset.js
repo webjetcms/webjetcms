@@ -75,6 +75,7 @@ Scenario('forgotten password - administration - VIA login @singlethread', async 
   I.fillField('#username', 'user_slabeheslo');
   I.fillField('#password', randomPassword);
   I.clickCss('button[name="login-submit"]');
+  I.waitForText("Vitajte späť,", 30, ".md-dashboard__greeting");
   I.waitForElement(".md-dashboard[data-loaded='true']", 20);
 });
 
@@ -107,6 +108,7 @@ Scenario('forgotten password - administration - VIA email @singlethread', async 
     I.fillField('#password', randomPassword);
     I.clickCss('button[name="login-submit"]');
     if (user === selectedUserForPasswordChange){
+      I.waitForText("Vitajte späť,", 30, ".md-dashboard__greeting");
       I.waitForElement(".md-dashboard[data-loaded='true']", 20);
       I.logout();
     }
