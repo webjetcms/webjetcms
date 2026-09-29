@@ -110,7 +110,7 @@ import sk.iway.iwcm.users.UsersDB;
  *  Abstraktny univerzalny RestController na pracu s DataTables Editor-om
  *
  */
-@SuppressWarnings({"java:S6813", "java:S119", "java:S3776"})
+@SuppressWarnings({"java:S6813", "java:S119", "java:S3776", "java:S2147"})
 public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 {
 	private final JpaRepository<T, Long> repo;
@@ -375,6 +375,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 				// Let the exception handler translate database failures into user-facing messages.
 				throw e;
 			} catch (TransactionSystemException e) {
+				//cant combine because of AspectException
 				throw e;
 			} catch (Exception e) {
 				Logger.error(DatatableRestControllerV2.class, e);
