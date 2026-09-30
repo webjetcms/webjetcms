@@ -71,7 +71,7 @@ Karta obsahuje základní informace pro vložení dokumentu.
   - dokument nesmí čekat na nahrání (musí být již nahrán)
   - nemůže to být vzor
 - **Poznámka** - poznámka se zobrazí na stránce při odkazu na dokument
-- **Uložit dokument i když již existuje** - manažer standardně nedovoluje přidání téhož dokumentu vícekrát (aby se zabránilo duplicitě). Chcete-li to povolit, musíte zaškrtnout tuto možnost.
+- **Uložit dokument i když již existuje** - povolí uložení souboru se stejným obsahem, jaký již má jiný dokument v manažeru. Podrobnosti naleznete v části [Kontrola duplicitních dokumentů](#kontrola-duplicitních-dokumentů).
 
 !>**Upozornění:** pole **Produkt** / **Kategorie** / **Kód produktu** Vám později poslouží při filtrování zobrazení souborů na stránce
 
@@ -89,13 +89,23 @@ Pokud jste nahráli soubor se špatným formátem, validace záznam neuloží, a
 
 ![](invalid-file-type.png)
 
-Na pozadí se kontroluje, zda nahrávaný soubor/dokument, již existuje v manažeru.
+## Kontrola duplicitních dokumentů
 
-!>**Upozornění:** nekontroluje se název dokumentu ale jeho **obsah**. To znamená, že pokud dokumenty jsou stejné, nepomůže jejich přejmenování.
+Při nahrávání souboru manažer kontroluje, zda již neexistuje dokument se **stejným obsahem**. Ze souboru vypočítá kontrolní součet MD5 (otisk jeho obsahu) a porovná jej s hlavními dokumenty v aktuální doméně, bez ohledu na jejich název nebo složku. Kontrola se provádí při vložení nového dokumentu i při nahrávání nové verze či nahrazení aktuálního dokumentu.
 
-V případě, že se detekuje již existující dokument, uložení bude přerušeno a zobrazí se chybová hláška. Zobrazena bude i notifikace obsahující seznam všech dokumentů se stejným obsahem. Chcete-li tento dokument přesto uložit, musíte povolit možnost **Uložit dokument i když již existuje** z karty pokročilé.
+!>**Upozornění:** samotné přejmenování souboru v počítači nemění jeho obsah. Pokud například přejmenujete `cennik.pdf` na `cennik-novy.pdf` bez úpravy obsahu, manažer jej stále rozpozná jako stejný soubor. Platí to i tehdy, když jej chcete nahrát jako novou verzi původního dokumentu.
+
+Pokud manažer najde shodný obsah, standardně přeruší uložení a zobrazí upozornění se seznamem shodných dokumentů. Také hlášení „Manažer dokumentů zjistil, že soubor … který jste nahráli, již v archivu existuje“ znamená shodu obsahu souborů, nikoli pouze jejich názvů.
 
 ![](file-duplicity-notif.png)
+
+Cílem kontroly je předejít ukládání stejného dokumentu na více míst. Na jeden uložený dokument můžete odkazovat z více stránek. Při jeho aktualizaci pak stačí nahrát novou verzi na jednom místě a stávající odkazy budou směřovat na aktuální soubor. Zároveň se šetří místo na disku a snižuje riziko, že na některé stránce zůstane odkaz na neaktualizovanou kopii.
+
+Při upozornění postupujte podle toho, čeho chcete dosáhnout:
+
+- **Použít stejný dokument na další stránce** - použijte odkaz na již existující dokument uvedený v upozornění.
+- **Aktualizovat dokument** - upravte jeho obsah, uložte změny do souboru av manažeru použijte akci [Nahrát novou verzi](#akce---nahrát-novou-verzi). Samotné přejmenování lokálního souboru na vytvoření nové verze nestačí.
+- **Záměrně uložit stejný obsah znovu** - na kartě **Pokročilé** zaškrtněte možnost **Uložit dokument i když již existuje** a uložení zopakujte. Tato volba umožní obejít kontrolu duplicity i při nahrávání nové verze.
 
 ## Publikování naplánovaných verzí
 
@@ -136,6 +146,8 @@ Karta základní nabízí možnost fyzicky **přejmenovat dokument** (tedy reál
 ### Akce - Nahrát novou verzi
 
 Tato akce vytvoří novou aktuální verzi dokumentu. Z právě aktuální verze (kterou lze nahradit) se stane historická verze dokumentu. Stačí nahrát nový dokument, přičemž cílový adresář musí zůstat stejný jako adresář aktuálního dokumentu. K možnosti **Nahrát dokument později** se dostaneme až v následující části.
+
+I při této akci se provádí [kontrola duplicitních dokumentů](#kontrola-duplicitních-dokumentů). Pokud soubor pouze přejmenujete a jeho obsah zůstane stejný, manažer standardně odmítne jeho uložení jako nové verze.
 
 !>**Upozornění:** povoleno je nahrát pouze dokument se stejným typem, jako právě nahrazovaný aktuální dokument.
 

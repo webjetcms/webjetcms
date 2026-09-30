@@ -41,7 +41,10 @@
 
 ![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
 
-- Súbory Manažéra dokumentov v priečinku `/files/archiv` sú v dialógoch vkladania odkazu a obrázka dostupné iba na zobrazenie a výber. Nahrávanie, premenovanie, mazanie a ostatné úpravy je možné vykonať len cez [Manažér dokumentov](redactor/files/file-archive/README.md) (#298,#313).
+- Súbory Manažéra dokumentov v priečinku `/files/archiv` sú v dialógoch vkladania odkazu a obrázka dostupné iba na zobrazenie a výber. Nahrávanie, premenovanie, mazanie a ostatné úpravy je možné vykonať len cez [Manažér dokumentov](redactor/files/file-archive/README.md) (#298,#313,#317).
+
+![](redactor/webpages/working-in-editor/link_dialog-read-only-archive.png)
+
 - [Fotobanka](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - pri sťahovaní obrázka z fotobanky je možné nastaviť názov súboru. Názov sa automaticky predvyplní a očistí, prípona sa určí podľa zdrojového obrázka a existujúci súbor sa neprepíše. Pridaná aj podpora výberu typu a kategórie obrázku a možnosť hľadať video súbory (#58645).
 
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
@@ -52,6 +55,8 @@
 <div class="video-container">
     <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+- Page Builder - zlepšená detekcia zmien v HTML kóde stránky, aby sa nezobrazilo hlásenie "V editore pravdepodobne máte neuložený text" aj keď ste reálne žiaden text v stránke nezmenili (#317).
 
 ### Headless režim
 
@@ -100,6 +105,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Sémantické vyhľadávanie
 
+- Pridaná podpora **MariaDB Vector** ako alternatívy k `PostgreSQL/pgvector` pre sémantické a hybridné vyhľadávanie aj RAG odpovede. Minimálna podporovaná verzia je **MariaDB 11.8 LTS**, odporúčame **11.8.9 alebo novšiu opravnú verziu**.Verzia od **12.3 LTS** obsahuje zrýchlenie vyhľadávania. Minimálne a odporúčané verzie PostgreSQL, pgvector a MariaDB aj ich výhody sú v [prehľade databázových požiadaviek](custom-apps/apps/rag/semantic-search/README.md#podporované-databázy-a-verzie) (#232).
+- Nedostupná samostatná RAG databáza už neblokuje štart CMS. RAG perzistencia sa inicializuje až pri prvom použití a po neúspešnom pripojení umožňuje ďalší pokus bez reštartu CMS (#232).
+
 - Pridaná podpora [sémantického vyhľadávania](redactor/apps/semantic-search/README.md) postaveného na technológii vektorovej databázy `pgvector` a `OpenAI embeddings`. Umožňuje návštevníkom nájsť relevantné stránky na základe **významu otázky**, nielen zhody kľúčových slov (#211).
 - Doplnený hybridný režim sémantického vyhľadávania a voliteľná RAG odpoveď z indexovaného obsahu. Aplikácia **Vyhľadávanie** má nové nastavenia pre typ vyhľadávania, hybridné správanie, výber AI asistenta a limity kontextu odpovede (#58521).
 
@@ -110,6 +118,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Aplikácie
 
+- Elektronický obchod - pridané voliteľné [zaokrúhľovanie cien](redactor/apps/basket/rounding.md), aby sa košík počítal zo zobrazenej ceny za kus. Počet desatinných miest určuje `currencyFormat`; šablóny so značkou `iway:curr` prevezmú nové formátovanie automaticky (#316).
 - Číselníky - pre pomenované reťazcové polia je možné v novej karte [Typy reťazcových polí](redactor/apps/enumeration/README.md#karta-typy-reťazcových-polí) nastaviť typ poľa, možnosti výberu, povinnosť, pomocný text a obmedzenia dĺžky rovnako ako pri voliteľných poliach. Ponuka a názvy konfigurácií vychádzajú z poslednej uloženej verzie typu číselníka. Nepomenované polia zostávajú skryté, nevyhodnocujú sa ako povinné a polia bez špecifickej konfigurácie sa zobrazia ako bežný text. Staršie vlastné Excel šablóny a integrácie REST API je potrebné upraviť z atribútov `string1` až `string12` na `fieldA` až `fieldL` (#58641).
 
 ![](redactor/apps/enumeration/editor_stringFieldTypes.png)
@@ -200,6 +209,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 ![](sysadmin/update/stat-browser-migration.png)
 
 - Viackrokové formuláre - doplnené presunutie (`scroll`) na začiatok formuláru po prechode na ďalší krok (#osk573).
+- Prieskumník - pri aktualizácii súboru je výber obmedzený na jeden súbor a hlásenie upozorní na nesprávny typ (#317).
+- Prieskumník - v informáciách o priečinku sa už nezobrazuje nepresná rekurzívna veľkosť (#317).
 
 ### Oprava chýb
 
@@ -219,6 +230,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
 - AI asistenti - pridaná ochrana pred `prompt injection` útokmi s oddelením systémových inštrukcií od používateľského obsahu a detekciou kódovaných vstupov (#58549).
+- HTML sanitizácia - `AllowSafeHtmlAttributeConverter` zachováva na všetkých doteraz povolených HTML elementoch atribúty `role`, `aria-*`, `data-*`, `id`, `title`, `lang`, `dir` (`ltr`, `rtl`, `auto`) a `tabindex` (`-1`, `0`). Umožňuje tak používať atribúty prístupnosti a vlastné dátové atribúty (#317).
 
 ### Dokumentácia
 
@@ -344,6 +356,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 		setBoolean("zmluvyEnableVo", false, "zmluvy",
 				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
 ```
+
+- Dátové tabuľky - upravená validácia povinných polí typu [`DATE` a `DATETIME`](developer/datatables-editor/standard-fields.md#date). Umožňuje to vymazať nastavenú hodnotu dátumu alebo čísla v editore - pôvodne sa pri prázdnej hodnote zachovala hodnota v uloženej entite (#58770).
+- Dátové tabuľky - validačná chyba poľa [`QUILL`](developer/datatables-editor/standard-fields.md#quill) zároveň zvýrazní okraj nástrojovej lišty aj editora (#58770).
+- Dátové tabuľky - pri duplicitnej hodnote, pokuse vymazať či zmeniť záznam, na ktorý odkazujú ďalšie záznamy, prázdnej hodnote pre `NOT NULL` stĺpec sa zobrazí zrozumiteľnejšia chybová správa (#58770).
 
 ## 2026.18
 
@@ -539,6 +555,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Proxy - opravené použitie nastavenej HTTP/HTTPS proxy vrátane výnimiek a autentifikácie pri preklade cez DeepL, volaniach AI asistenta, sťahovaní cez `Tools.downloadUrl`, v proxy module a pri generovaní offline verzie (#331).
 - Webové stránky - opravené ukladanie web stránky s medzerou na konci URL adresy (vykoná sa odstránenie prázdnych znakov) (#OSK650).
 - Webové stránky - opravené zacyklenie nepublikovanej stránky ak URL nekončí na znak `/` - konfiguračná premenná `virtualPathLastSlash=false` (#OSK684).
 - Manažér dokumentov - pridané zmazanie cache pamäte po publikovaní novej verzie súboru (#TB2754).
@@ -546,6 +563,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 - Galéria - v editore aplikácie sa medzi vizuálnymi štýlmi zobrazujú iba JSP súbory z priečinkov `/components/{INSTALL_NAME}/gallery` a `/components/gallery`, bez duplicitných položiek (#58317-16).
 - Vloženie HTML kódu - v náhľade aplikácie v editore webových stránok sa pre obsah tvorený iba elementmi `script` zobrazí zdrojový kód namiesto prázdneho obsahu (#OSK625).
 - Video - opravené spracovanie YouTube odkazov s ďalšími URL parametrami vrátane času spustenia videa (`t` alebo `start`). Parametre sa správne spoja s nastaveniami prehrávača bez duplicitného znaku `?` (#OSK714).
+- Formulár ľahko - opravené spracovanie názvu formulára ak názov obsahuje tvrdú medzeru nahradenú podľa `editorSingleCharNbsp` (#TB2763).
 - Bezpečnosť - sprísnené overovanie odkazu na obnovu zabudnutého hesla. Overovací záznam sa kontroluje pre vybraný používateľský účet aj pri vlastnom spôsobe odosielania, rešpektuje časovú platnosť a po použití sa zneplatní pre všetky účty zahrnuté v žiadosti (#292).
 - Bezpečnosť - sprísnené overovanie oprávnení pri práci so záznamami v administrácii (#295).
 - Bezpečnosť - sprísnená kontrola práv na priečinok pri nahrávaní súboru do administrácie a jeho prepísaní ak súbor existuje.

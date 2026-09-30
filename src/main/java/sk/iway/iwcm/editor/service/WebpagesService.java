@@ -701,7 +701,10 @@ public class WebpagesService {
 					}
 					if (groupIdsTrash.isEmpty()==false) {
 						predicates.add(builder.not(root.get(GROUP_ID).in(groupIdsTrash)));
-						predicates.add(builder.not(root.get("rootGroupL2").in(groupIdsTrash)));
+						predicates.add(builder.or(
+							builder.isNull(root.get("rootGroupL2")),
+							builder.not(root.get("rootGroupL2").in(groupIdsTrash))
+						));
 					}
 				}
 			}

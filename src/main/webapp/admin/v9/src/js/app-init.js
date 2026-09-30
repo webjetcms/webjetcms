@@ -800,7 +800,7 @@ function initClosure() {
             }
 
             //console.log("Beforeunload event, modal.length=", $("div.modal.DTED.show").length);
-            if ($("div.modal.DTED.show").length>0 && window.currentUser.login.indexOf("tester")!=0) {
+            if ($("div.modal.DTED.show:visible").length>0 && window.currentUser.login.indexOf("tester")!=0) {
                 var confirmationMessage = WJ.translate("admin.confirmExitMessage.js");
 
                 //console.log("confirmationMessage=", confirmationMessage);

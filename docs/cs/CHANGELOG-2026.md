@@ -41,7 +41,10 @@
 
 ![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
 
-- Soubory Manažera dokumentů ve složce `/files/archiv` jsou v dialozích vkládání odkazu a obrázku dostupné pouze pro zobrazení a výběr. Nahrávání, přejmenování, mazání a ostatní úpravy lze provést pouze přes [Manažer dokumentů](redactor/files/file-archive/README.md) (#298,#313).
+- Soubory Manažera dokumentů ve složce `/files/archiv` jsou v dialozích vkládání odkazu a obrázku dostupné pouze pro zobrazení a výběr. Nahrávání, přejmenování, mazání a ostatní úpravy lze provést pouze přes [Manažer dokumentů](redactor/files/file-archive/README.md) (#298,#313,#317).
+
+![](redactor/webpages/working-in-editor/link_dialog-read-only-archive.png)
+
 - [Fotobanka](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - při stahování obrázku z fotobanky lze nastavit název souboru. Název se automaticky předvyplní a očistí, přípona se určí podle zdrojového obrázku a stávající soubor se nepřepíše. Přidána také podpora výběru typu a kategorie obrázku a možnost hledat video soubory (#58645).
 
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
@@ -52,6 +55,8 @@
 <div class="video-container">
     <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+- Page Builder - zlepšená detekce změn v HTML kódu stránky, aby se nezobrazilo hlášení "V editoru pravděpodobně máte neuložený text" i když jste reálně žádný text ve stránce nezměnili (#317).
 
 ### Headless režim
 
@@ -100,6 +105,9 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Sémantické vyhledávání
 
+- Přidána podpora **MariaDB Vector** jako alternativy k `PostgreSQL/pgvector` pro sémantické a hybridní vyhledávání i RAG odpovědi. Minimální podporovaná verze je **MariaDB 11.8 LTS**, doporučujeme **11.8.9 nebo novější opravnou verzi**.Verze od **12.3 LTS** obsahuje zrychlení vyhledávání. Minimální a doporučené verze PostgreSQL, pgvector a MariaDB i jejich výhody jsou v [přehledu databázových požadavků](custom-apps/apps/rag/semantic-search/README.md#podporované-databáze-a-verze) (#232).
+- Nedostupná samostatná RAG databáze již neblokuje start CMS. RAG perzistence se inicializuje až při prvním použití a po neúspěšném připojení umožňuje další pokus bez restartu CMS (#232).
+
 - Přidána podpora [sémantického vyhledávání](redactor/apps/semantic-search/README.md) postaveného na technologii vektorové databáze `pgvector` a `OpenAI embeddings`. Umožňuje návštěvníkům najít relevantní stránky na základě **významu otázky**, nejen shody klíčových slov (#211).
 - Doplněný hybridní režim sémantického vyhledávání a volitelná RAG odpověď z indexovaného obsahu. Aplikace **Vyhledávání** má nová nastavení pro typ vyhledávání, hybridní chování, výběr AI asistenta a limity kontextu odpovědi (#58521).
 
@@ -110,6 +118,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Aplikace
 
+- Elektronický obchod - přidáno volitelné [zaokrouhlování cen](redactor/apps/basket/rounding.md), aby se košík počítal ze zobrazené ceny za kus. Počet desetinných míst určuje `currencyFormat` ; šablony se značkou `iway:curr` převezmou nové formátování automaticky (#316).
 - Číselníky - pro pojmenovaná řetězcová pole lze v nové kartě [Typy řetězcových polí](redactor/apps/enumeration/README.md#karta-typy-řetězcových-pole) nastavit typ pole, možnosti výběru, povinnost, pomocný text a omezení délky stejně jako u volitelných polí. Nabídka a názvy konfigurací vycházejí z poslední uložené verze typu číselníku. Nepojmenovaná pole zůstávají skrytá, nevyhodnocují se jako povinná a pole bez specifické konfigurace se zobrazí jako běžný text. Starší vlastní Excel šablony a integrace REST API je třeba upravit z atributů `string1` až `string12` na `fieldA` až `fieldL` (#58641).
 
 ![](redactor/apps/enumeration/editor_stringFieldTypes.png)
@@ -200,6 +209,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 ![](sysadmin/update/stat-browser-migration.png)
 
 - Vícekrokové formuláře - doplněné přesunutí (`scroll`) na začátek formuláře po přechodu na další krok (#osk573).
+- Průzkumník - při aktualizaci souboru je výběr omezen na jeden soubor a hlášení upozorní na nesprávný typ (#317).
+- Průzkumník - v informacích o složce se již nezobrazuje nepřesná rekurzivní velikost (#317).
 
 ### Oprava chyb
 
@@ -219,6 +230,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 - Přidána podpora generování `nonce` pro [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
 - AI asistenti - přidána ochrana před `prompt injection` útoky s oddělením systémových instrukcí od uživatelského obsahu a detekcí kódovaných vstupů (#58549).
+- HTML sanitizace - `AllowSafeHtmlAttributeConverter` zachovává na všech dosud povolených HTML elementech atributy `role`, `aria-*`, `data-*`, `id`, `title`, `lang`, `dir` (`ltr`, `rtl` (`-1`, `0`). Umožňuje tak používat atributy přístupnosti a vlastní datové atributy (#317).
 
 ### Dokumentace
 
@@ -344,6 +356,10 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 		setBoolean("zmluvyEnableVo", false, "zmluvy",
 				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
 ```
+
+- Datové tabulky - upravená validace povinných polí typu [`DATE` a `DATETIME`](developer/datatables-editor/standard-fields.md#date). Umožňuje to vymazat nastavenou hodnotu data nebo čísla v editoru - původně se při prázdné hodnotě zachovala hodnota v uložené entitě (#58770).
+- Datové tabulky - validační chyba pole [`QUILL`](developer/datatables-editor/standard-fields.md#quill) zároveň zvýrazní okraj nástrojové lišty i editoru (#58770).
+- Datové tabulky - při duplicitní hodnotě, pokusu vymazat či změnit záznam, na který odkazují další záznamy, prázdné hodnotě pro `NOT NULL` sloupec se zobrazí srozumitelnější chybová zpráva (#58770).
 
 ## 2026.18
 
@@ -539,6 +555,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 > Opravná verze původní verze 2026.0.
 
+- Proxy - opraveno použití nastavené HTTP/HTTPS proxy včetně výjimek a autentifikace při překladu přes DeepL, voláních AI asistenta, stahování přes `Tools.downloadUrl`, v proxy modulu a při generování offline verze (#331).
 - Webové stránky - opraveno ukládání web stránky s mezerou na konci URL adresy (provede se odstranění prázdných znaků) (#OSK650).
 - Webové stránky - opravené zacyklení nepublikované stránky pokud URL nekončí na znak `/` - ​​konfigurační proměnná `virtualPathLastSlash=false` (#OSK684).
 - Manažer dokumentů - přidáno smazání cache paměti po publikování nové verze souboru (#TB2754).
@@ -546,6 +563,7 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 - Galerie - v editoru aplikace se mezi vizuálními styly zobrazují pouze JSP soubory ze složek `/components/{INSTALL_NAME}/gallery` a `/components/gallery`, bez duplicitních položek (#58317-16).
 - Vložení HTML kódu - v náhledu aplikace v editoru webových stránek se pro obsah tvořený pouze elementy `script` zobrazí zdrojový kód namísto prázdného obsahu (#OSK625).
 - Video - opraveno zpracování YouTube odkazů s dalšími URL parametry včetně času spuštění videa (`t` nebo `start`). Parametry se správně spojí s nastavením přehrávače bez duplicitního znaku `?` (#OSK714).
+- Formulář snadno - opraveno zpracování názvu formuláře pokud název obsahuje tvrdou mezeru nahrazenou podle `editorSingleCharNbsp` (#TB2763).
 - Bezpečnost - zpřísněné ověřování odkazu na obnovu zapomenutého hesla. Ověřovací záznam se kontroluje pro vybraný uživatelský účet i při vlastním způsobu odesílání, respektuje časovou platnost a po použití se zneplatní pro všechny účty zahrnuté v žádosti (#292).
 - Bezpečnost - zpřísněné ověřování oprávnění při práci se záznamy v administraci (#295).
 - Bezpečnost - zpřísněná kontrola práv na složku při nahrávání souboru do administrace a její přepsání pokud soubor existuje.

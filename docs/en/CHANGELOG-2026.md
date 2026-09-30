@@ -41,7 +41,10 @@
 
 ![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
 
-- Document Manager files in the `/files/archiv` folder are only available for viewing and selection in the link and image insertion dialogs. Uploading, renaming, deleting, and other editing can only be done via the [Document Manager](redactor/files/file-archive/README.md) (#298,#313).
+- Document Manager files in the `/files/archiv` folder are only available for viewing and selection in the link and image insertion dialogs. Uploading, renaming, deleting and other editing can only be done via [Document Manager](redactor/files/file-archive/README.md) (#298,#313,#317).
+
+![](redactor/webpages/working-in-editor/link_dialog-read-only-archive.png)
+
 - [Photobank](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - when downloading an image from the photobank, it is possible to set the file name. The name is automatically pre-filled and cleaned, the extension is determined by the source image and the existing file is not overwritten. Also added support for selecting the image type and category and the ability to search for video files (#58645).
 
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
@@ -52,6 +55,8 @@
 <div class="video-container">
     <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+- Page Builder - improved detection of changes in the HTML code of the page so that the message "You probably have unsaved text in the editor" is not displayed even if you have not actually changed any text on the page (#317).
 
 ### Headless mode
 
@@ -100,6 +105,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Semantic search
 
+- Added support for **MariaDB Vector** as an alternative to `PostgreSQL/pgvector` for semantic and hybrid search and RAG responses. The minimum supported version is **MariaDB 11.8 LTS**, we recommend **11.8.9 or later patch**. Versions from **12.3 LTS** include search acceleration. The minimum and recommended versions of PostgreSQL, pgvector and MariaDB and their benefits are in [database requirements overview](custom-apps/apps/rag/semantic-search/README.md#supported-databases-and-versions) (#232).
+- An unavailable standalone RAG database no longer blocks CMS startup. RAG persistence is initialized only on first use and allows another attempt after a failed connection without restarting the CMS (#232).
+
 - Added support for [semantic search](redactor/apps/semantic-search/README.md) built on the `pgvector` and `OpenAI embeddings` vector database technology. It allows visitors to find relevant pages based on **the meaning of the query**, not just keyword matching (#211).
 - Added hybrid semantic search mode and optional RAG response from indexed content. The **Search** app has new settings for search type, hybrid behavior, AI assistant selection, and response context limits (#58521).
 
@@ -110,6 +118,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Applications
 
+- E-commerce - added optional [price rounding](redactor/apps/basket/rounding.md) to calculate the basket from the displayed price per item. The number of decimal places is determined by `currencyFormat` ; templates with the `iway:curr` tag will automatically adopt the new formatting (#316).
 - Codebooks - for named string fields, the field type, selection options, mandatory, help text, and length restrictions can be set in the new [String Field Types] tab (redactor/apps/enumeration/README.md#karta-typy-ťazcových-polí) just like for optional fields. The menu and configuration names are based on the last saved version of the codebook type. Unnamed fields remain hidden, are not evaluated as mandatory, and fields without a specific configuration are displayed as regular text. Older custom Excel templates and REST API integrations need to be modified from `string1` to `string12` to `fieldA` to `fieldL` (#58641).
 
 ![](editor/apps/enumeration/editor_stringFieldTypes.png)
@@ -200,6 +209,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](sysadmin/update/stat-browser-migration.png)
 
 - Multi-step forms - added moving (`scroll`) to the beginning of the form after moving to the next step (#osk573).
+- Explorer - when updating a file, the selection is limited to one file and a message warns of the wrong type (#317).
+- Explorer - folder information no longer shows inaccurate recursive size (#317).
 
 ### Bug fixes
 
@@ -219,6 +230,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Added support for generating `nonce` for the [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) header (#58533).
 - AI assistants - added protection against `prompt injection` attacks with separation of system instructions from user content and detection of coded inputs (#58549).
+- HTML sanitization - `AllowSafeHtmlAttributeConverter` preserves the `role`, `aria-*`, `data-*`, `id`, `title`, `lang`, `dir` (`ltr`, `rtl`, `auto`) and `tabindex` (`-1`, `0`) attributes on all previously allowed HTML elements. This allows the use of accessibility attributes and custom data attributes (#317).
 
 ### Documentation
 
@@ -344,6 +356,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 		setBoolean("zmluvyEnableVo", false, "zmluvy",
 				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
 ```
+
+- Data tables - modified validation of required fields of type [`DATE` and `DATETIME`](developer/datatables-editor/standard-fields.md#date). This allows you to delete the set date or number value in the editor - originally, when the value was empty, the value in the saved entity was preserved (#58770).
+- Data tables - field validation error [`QUILL`](developer/datatables-editor/standard-fields.md#quill) highlights both the toolbar and editor border (#58770).
+- Data tables - a clearer error message will be displayed for a duplicate value, an attempt to delete or change a record referenced by other records, or an empty value for the `NOT NULL` column (#58770).
 
 ## 2026.18
 
@@ -539,6 +555,7 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- Proxy - fixed use of the configured HTTP/HTTPS proxy including exceptions and authentication when translating via DeepL, calling the AI ​​assistant, downloading via `Tools.downloadUrl`, in the proxy module and when generating an offline version (#331).
 - Web pages - fixed saving a web page with a space at the end of the URL (whitespace removal will be performed) (#OSK650).
 - Web pages - fixed looping of unpublished page if URL does not end with `/` - ​​configuration variable `virtualPathLastSlash=false` (#OSK684).
 - Document Manager - added clearing of cache after publishing a new version of a file (#TB2754).
@@ -546,6 +563,7 @@ Redesigned application properties settings in the editor from the old code in `J
 - Gallery - in the application editor, only JSP files from the `/components/{INSTALL_NAME}/gallery` and `/components/gallery` folders are displayed among the visual styles, without duplicate items (#58317-16).
 - Inserting HTML code - in the application preview in the website editor, for content consisting only of `script` elements, the source code is displayed instead of empty content (#OSK625).
 - Video - fixed handling of YouTube links with additional URL parameters including video start time (`t` or `start`). Parameters are now correctly linked to player settings without duplicate `?` character (#OSK714).
+- Easy form - fixed processing of form name if name contains hard space replaced by `editorSingleCharNbsp` (#TB2763).
 - Security - tightened verification of the link to recover a forgotten password. The verification record is checked for the selected user account even with the custom sending method, respects the time validity and after use is invalidated for all accounts included in the request (#292).
 - Security - tightened authorization verification when working with records in administration (#295).
 - Security - tightened control of folder rights when uploading a file to the administration and overwriting it if the file exists.

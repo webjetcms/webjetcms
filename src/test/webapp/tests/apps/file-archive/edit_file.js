@@ -53,7 +53,7 @@ Scenario('Add new file and edit', async ({ I, DT, DTE }) => {
 });
 
 Scenario('Delete archiv entity (and file using elfinder if neccesary)', async ({I}) => {
-    SL.deleteTestFiles();
+    await SL.deleteTestFiles();
 
     const fileSelector = ".elfinder-cwd-filename[title^='archive_file_test']";
     let wasRemovedByElfinder = await SL.removeFileByElfinder(fileSelector);

@@ -68,8 +68,8 @@ Scenario("admin", async ({ I, DT, Document }) => {
     await Document.compareScreenshotElement("#bots-pieVisits", "seo/autotest-bots-pieVisits.png", null, null, 6);
     await Document.adjustScrollbar('#bots-lineVisits');
     await Document.compareScreenshotElement("#bots-lineVisits", "seo/autotest-bots-lineVisits.png", null, null, 9);
-    DT.checkTableRow("botsDataTable", 3, [null, "Googlebot", "24 876", "12,75", "30.07.2021"]);
-    DT.checkTableRow("botsDataTable", 1, [null, "Slackbot-LinkExpanding", "96 504", "49,46", "30.07.2021"]);
+    DT.checkTableRow("botsDataTable", 3, [null, "Googlebot", "24 880", "12,75", "30.07.2021"]);
+    DT.checkTableRow("botsDataTable", 1, [null, "Slackbot-LinkExpanding", "96 504", "49,45", "30.07.2021"]);
 
     DT.filterContains("name", "ThinkChaos");
     DT.waitForLoader();

@@ -71,7 +71,7 @@ The card contains basic information for inserting a document.
   - the document must not be waiting to be uploaded (it must already be uploaded)
   - it can't be a pattern
 - **Note** - the note will appear on the page when linking to the document
-- **Save document even if it already exists** - by default the manager does not allow adding the same document multiple times (to prevent duplication). If you want to allow this, you must check this option.
+- **Save document even if it already exists** - allows saving a file with the same content as another document already in the manager. For details, see [Duplicate document check](#duplicate-document-check).
 
 !>**Note:** The **Product** / **Category** / **Product Code** fields will later be used to filter the display of files on the page
 
@@ -89,13 +89,23 @@ If you uploaded a file with the wrong format, validation will not save the recor
 
 ![](invalid-file-type.png)
 
-In the background, it checks whether the uploaded file/document already exists in the manager.
+## Check for duplicate documents
 
-!>**Warning:** it is not the document name that is checked, but its **content**. This means that if the documents are the same, renaming them will not help.
+When uploading a file, the manager checks whether a document with **the same content** already exists. It calculates an MD5 checksum (a fingerprint of its content) from the file and compares it with the main documents in the current domain, regardless of their name or folder. The check is performed when inserting a new document, uploading a new version, or replacing the current document.
 
-If an existing document is detected, the save operation will be aborted and an error message will be displayed. A notification will also be displayed listing all documents with the same content. If you want to save this document anyway, you must enable the **Save document even if it already exists** option from the Advanced tab.
+!>**Note:** Simply renaming a file on your computer does not change its contents. For example, if you rename `cennik.pdf` to `cennik-novy.pdf` without changing the contents, the manager will still recognize it as the same file. This is true even if you want to upload it as a new version of the original document.
+
+If the manager finds a match, it will by default abort the save and display a notification with a list of matching documents. The message "Document Manager has detected that the file ... you uploaded already exists in the archive" also means that the file content matches, not just their names.
 
 ![](file-duplicity-notif.png)
+
+The goal of the check is to prevent the same document from being saved in multiple locations. You can link to a single saved document from multiple sites. When updating it, you just need to upload the new version in one location and existing links will point to the current file. This also saves disk space and reduces the risk of a link to an outdated copy remaining on a site.
+
+When alerting, follow the steps below to achieve what you want:
+
+- **Use the same document on the next page** - use a link to an existing document listed in the notification.
+- **Update document** - edit its content, save the changes to the file and use the [Upload new version] action in the manager (#action---upload-new-version). Simply renaming a local file is not enough to create a new version.
+- **Intentionally save the same content again** - on the **Advanced** tab, check the **Save document even if it already exists** option and save again. This option will allow you to bypass the duplicate check even when uploading a new version.
 
 ## Publishing scheduled versions
 
@@ -136,6 +146,8 @@ The Basic tab offers the option to physically **rename the document** (i.e. the 
 ### Action - Upload new version
 
 This action will create a new current version of the document. The current version (which we are going to replace) will become the historical version of the document. Simply upload the new document, and the destination directory must remain the same as the current document's directory. We will get to the **Upload document later** option in the next section.
+
+This action also performs a [duplicate document check](#duplicate-document-check). If you simply rename the file and its contents remain the same, the manager will by default refuse to save it as a new version.
 
 !>**Warning:** You are only allowed to upload a document of the same type as the current document being replaced.
 

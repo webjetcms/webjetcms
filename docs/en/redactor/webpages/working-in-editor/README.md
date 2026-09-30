@@ -107,6 +107,10 @@ To create a link to a document/file, select the text that should be the link, cl
 
 !> [Document Manager](../../files/file-archive/README.md) files and folders stored in `/files/archiv` are only available for viewing and selection in the **Link** and **Image** dialog tree structure. They cannot be uploaded, renamed, deleted, or otherwise modified. Use the **Document Manager** tab to manage these files and folders.
 
+In the **Link** dialog, they are indicated by an icon<i class="ti ti-folder-x"></i> read-only:
+
+![](link_dialog-read-only-archive.png)
+
 - if the document is **intended only for the current web page**, it is necessary to select the item “Media of this page” and then the item “Files”.
   - You search for a document, click on it, and the link to the document is automatically copied into the URL field.
   - If the required document is not in the list, you can use the ```drag&drop``` function to upload a document from your computer.
