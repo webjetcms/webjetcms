@@ -1,5 +1,9 @@
 # WebJET Feature Video Production Reference
 
+For the finished Tesseract edit, narration retiming, camera zooms and the shared
+brand outro, read [Tesseract Editing](tesseract-editing.md). That reference also
+distinguishes reusable repository instructions from gitignored render artifacts.
+
 ## Repository Recording Profile
 
 Video scenarios live in `src/test/webapp/video`. The standard commands are:
@@ -233,6 +237,20 @@ The final 1920 x 1080 JPEG scales that layout by 1.5. An explicit size changes
 only the headline's font size, without fitting or overflow checks. The screenshot's
 position, dimensions and crop remain unchanged even when text overlaps it.
 Omitting the size keeps automatic fitting from 100 down to 36 pixels.
+To adapt framing to the screenshot, pass a fourth argument:
+`I.videoTitle(text, 50, "glow", { fitScene: true })`. This opt-in layout shows a
+complete widescreen image beside a narrower headline. Taller captures use more
+of the thumbnail height with a small bleed over the right edge. These layouts preserve
+the screenshot's aspect ratio and use a smaller tilt. Existing calls retain
+their framing; inspect longer headlines for wrapping in the narrower column.
+For a tall desktop dashboard capture, keep the page around 1360 CSS pixels wide
+and measure the last visible widget to choose the height, including a small
+bottom margin. Account for native recording zoom: at the standard 141.18% zoom,
+1360 CSS pixels require a 1920-pixel capture. The Playwright viewport and
+`window.innerWidth/innerHeight` can differ. Verify the CSS dimensions so a headed
+capture does not accidentally switch to a tablet layout. Remove unused space
+below the dashboard instead of blindly multiplying an estimated height. Change
+capture dimensions, never stretch a screenshot. The final JPEG remains 1920 x 1080.
 The third argument selects `glow` (default), `clean` or `bold`; legacy
 `I.videoTitle(text, "glow")` calls still work. A size or style argument requests
 a thumbnail outside title mode too. Plain `I.videoTitle(text)` shows an editing
@@ -271,8 +289,29 @@ The default model is Eleven v3
 optional `{ modelId, voiceId }` argument to `I.generateAudio`. Precedence is:
 explicit helper argument, non-empty environment variable, repository default.
 The API key is accepted only from the environment. The request uses
-`mp3_44100_128` and does not send `voice_settings`, leaving ElevenLabs to apply
-the voice's stored or default settings.
+`mp3_44100_128`. By default it omits `voice_settings` and `language_code`, leaving
+ElevenLabs to apply the voice's stored or default settings and detect language.
+
+For per-narration settings, use:
+
+```javascript
+I.generateAudio(videoPlan, {
+    modelId: "eleven_v4",
+    voiceId: "Zai7B4Aol2bJtneyq0L1",
+    languageCode: "sk",
+    voiceSettings: { stability: 0.3, similarityBoost: 0.5 }
+});
+```
+
+`voiceSettings` accepts optional `stability` and `similarityBoost` values from
+0 to 1 (30% and 50% in this example). The client maps them to the API's
+`voice_settings.stability` and `voice_settings.similarity_boost`. Unspecified
+fields remain omitted. `languageCode` is an optional two-letter ISO 639-1 code
+sent as `language_code`; it is separate from `language`, which selects the
+plan's `text-<language>`. It does not translate the narration. Multilingual v2
+does not support language enforcement. Invalid settings fail in preflight;
+the resolved settings are logged before generation. These options do not change
+repository defaults. See the [API reference](https://elevenlabs.io/docs/api-reference/text-to-speech/convert).
 
 The Luki Zajo default is a community voice. Community voice API access can
 depend on the account plan and may not be available on the free tier. If the
@@ -289,7 +328,7 @@ retry, avoiding a second charge after an ambiguous network failure.
 `helpers/audio_plan.js` packs whole localized shots in plan order. A new part
 starts before a shot would exceed the model limit, counting Unicode characters
 and the two newlines between shots. Limits are 5,000 for `eleven_v3`, 10,000 for
-Multilingual v1/v2, 40,000 for Flash/Turbo v2.5 and 30,000 for Flash/Turbo v2.
+`eleven_v4` and Multilingual v1/v2, 40,000 for Flash/Turbo v2.5 and 30,000 for Flash/Turbo v2.
 Unlisted models use the conservative 5,000-character default. A shot longer than
 the limit fails before any API call, identifying the shot, size and model; split
 that shot in the plan. Manual and head narration stay included; silent shots do
@@ -537,7 +576,11 @@ in `helpers/feature_video_plan.js`.
 Move whole objects in `shots` to reorder the film. Derived numbering and time
 ranges update automatically; inline callbacks move with the metadata. Never sort
 by old timestamps or maintain another ordered callback list. Each callback needs an
-independent baseline. The `308-pb-redesign.js` example reopens the editor and
+independently recoverable baseline, not an unconditional reset. Prefer one-time
+setup and reuse an already suitable screen. Keep a complete topic's clicks and
+results in one longer shot; sentence boundaries are narration cues, not automatic
+cut points. Preparation must also work for a single-shot retake without running
+another shot's demonstration. The `308-pb-redesign.js` example reopens the editor and
 installs isolated browser-only content per shot, with extra preparation for the
 structure drawer and section library. Its shared lifecycle branches by stable
 shot id for the legacy editor, preview and documentation. The legacy editor
@@ -545,6 +588,13 @@ logs in on the demo origin, the preview reopens its URL in the recording tab,
 and the automatic outro uses `I.videoDocumentation`. Shared Page Builder
 preparation skips the legacy editor and documentation; shared cleanup skips
 the preview and documentation because neither leaves an editor open. Setup and cleanup are cut out during editing.
+That editor-specific reset pattern is not a default for other productions. The
+five-topic `332-58806-new-welcome-page.js` example keeps each user flow together,
+reuses its dashboard between topics and drives action cues from the actual
+localized narration lines. Its estimated reading holds do not establish exact
+audio synchronization; inspect each result alongside generated speech when it
+is available, and adjust pacing before the next action instead of padding only
+the end of a shot.
 The migrated 260, 283, 289 and 293 scenarios provide examples for scoped upload
 fixtures, tree selection, nested editors and configuration views. Each shot must
 prepare its own prerequisites with ordinary clicks; never invoke another shot

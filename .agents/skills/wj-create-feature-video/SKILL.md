@@ -1,6 +1,6 @@
 ---
 name: wj-create-feature-video
-description: "Create WebJET CMS feature-video assets from a pull request or branch: one JavaScript shot plan with localized narration and inline CodeceptJS/Playwright shot functions, ElevenLabs audio generation, and browser recordings with editing slates and a visible cursor. Use when preparing a YouTube demo, release video, PR walkthrough, or automated product-video scenario."
+description: "Create WebJET CMS feature videos from a pull request or branch: a JavaScript shot plan with localized narration and browser steps, ElevenLabs audio, recordings, and a finished Tesseract edit with the standard WebJET outro. Use when preparing or revising a YouTube demo, release video, PR walkthrough, or automated product-video scenario."
 ---
 
 # Create a WebJET CMS Feature Video
@@ -36,6 +36,14 @@ Default to nontechnical WebJET CMS customers, Slovak, 16:9 landscape, about
 80 to 90 seconds, and a closing invitation to the feature documentation. Follow
 explicit requests for other lengths or languages.
 
+Prefer a few substantial topic shots with a continuous user flow. When the user
+lists topics, use those as the shot boundaries unless a real filming constraint
+requires otherwise. Keep opening a control, changing values, applying them and
+showing the result together. Do not split each click or sentence into a short
+shot: repeated setup and returns to the same starting screen make editing slow
+and the finished video feel disconnected. Extend the duration when several
+complete workflows need room; do not force them into the default 80–90 seconds.
+
 Identify one main promise and up to three supporting benefits. Explain what
 becomes easier, faster, clearer or safer. Lead with the problem or benefit, show
 the improvement and close with the documentation call to action.
@@ -45,6 +53,15 @@ Slovak, short sentences and one idea per sentence. Keep `WebJET CMS` spelled
 exactly this way. Do not include headings, SSML, pause tags, bracketed shot
 instructions or unsupported claims in spoken text. Keep production directions
 in `notes` and ElevenLabs settings outside the text.
+
+Address the customer consistently in the second person. In Slovak, use the
+second-person plural (polite address): `môžete`, `pridáte`, `otvoríte`, and
+imperatives such as `kliknite`, `vyberte`, `uložte` for instructions. Do not
+narrate the customer's actions as `klikneme`, `pridáme` or `otvoríme`.
+For example: `Kliknite na Upraviť prehľad` and `Pridáte si ďalšiu kartu a v jej
+menu otvoríte Nastavenia widgetu`. First-person wording may describe the WebJET
+team's response, such as `Budeme radi, keď nám napíšete`, but not the customer's
+on-screen actions.
 
 Start around 170 to 195 Slovak words for the default duration. Count words
 across all shots, including manual and head entries. Use measured voice duration
@@ -72,8 +89,10 @@ when it is available; `durationSeconds` remains an editing estimate until adjust
   Old `AUTO 1`, `AUTO 2` labels were shot numbers, not
   different execution types. Never encode position in the type or use an array
   index as the action id.
-- Store one narration beat and matching browser action/state per shot. If an
-  old shot covers different narration beats, split it into separate stable ids.
+- Store one coherent topic or user workflow per shot. It can contain several
+  narration beats and clicks, in spoken order. Split only at meaningful topic,
+  location or filming boundaries, not merely because the next sentence describes
+  another action. Prefer one complete example over several partial examples.
 - The array order is authoritative for narration, shot-plan numbering, derived
   time ranges and automatic execution. Move the entire shot object to reorder
   it, including its inline callbacks. Do not maintain a separate narration block,
@@ -84,7 +103,8 @@ when it is available; `durationSeconds` remains an editing estimate until adjust
   use `""` only for a deliberately silent shot. Translating narration alone does
   not translate UI selectors, fixture content or the browser login language.
 - Put browser-external actions, unreliable third-party pages and final
-  title/outro cards in manual shots. Documentation pages can be automatic shots
+  feature-specific title/closing cards in manual shots. The standard brand outro
+  is appended during final editing as described in section 7. Documentation pages can be automatic shots
   using `I.videoDocumentation(url)`. Use `head` only for a requested generated
   presenter; do not silently convert existing manual cards to paid head clips.
   Keep every manual shot in the plan so its audio and duration remain part of
@@ -154,7 +174,9 @@ or maintain separate callback maps. Pass `I` first and one options object with
 `plan`, optional `context` and `language`, and the lifecycle callbacks needed:
 
 - `setup`: one-time login and shared setup, after automatic callbacks are validated.
-- `prepare`: a shared baseline before every automatic shot; receives the resolved shot.
+- `prepare`: optional readiness/baseline work before automatic shots; receives
+  the resolved shot. Reuse an already suitable scene instead of unconditionally
+  navigating or reconstructing it.
 - `cleanup`: cleanup after each successful automatic shot; receives the resolved shot.
 
 For automatic shots, the runner logs
@@ -216,8 +238,12 @@ retain raw footage and do not replace existing outputs. The clean scene after
 the slate lasts three seconds before automatic actions, in both recording modes.
 
 A reordered shot must not depend on a prior shot's dialog, selection, search or
-mutation. Reopen/reset the editor with isolated browser-only content when that
-is the simplest reliable baseline. Use `I.clickCss` for CSS selectors or ordinary
+mutation. Keep one-time login and common fixtures in `setup`. Use idempotent,
+shot-specific preparation only for prerequisites that are actually missing, so
+a full run continues naturally while an isolated retake or reordered run still
+works. Do not reset the whole application between steps of the same workflow.
+Reopen/reset an editor with isolated browser-only content only when necessary
+for a reliable baseline. Use `I.clickCss` for CSS selectors or ordinary
 `I.click` during preparation to avoid cursor animation and editing holds in
 footage that will be cut. Discard temporary changes during cleanup. When a shot
 uses an iframe, return to the top-level page before closing its editor. Handle
@@ -251,15 +277,22 @@ cursor in the editor. Keep code comments and shot titles in English.
 ## 5. Generate Audio and Validate
 
 The default ElevenLabs model is `eleven_v3`, voice Luki Zajo
-(`Zai7B4Aol2bJtneyq0L1`). Do not send `voice_settings`. Model/voice precedence is
+(`Zai7B4Aol2bJtneyq0L1`). Omit `voice_settings` and `language_code` by default. Model/voice precedence is
 explicit `{ modelId, voiceId }`, non-empty `ELEVENLABS_MODEL_ID` /
 `ELEVENLABS_VOICE_ID`, repository default. The API key comes only from
 `ELEVENLABS_API_KEY`; never store it in code or command arguments.
 
+For an explicitly configured narration, `I.generateAudio` also accepts
+`languageCode: "sk"` to enforce Slovak pronunciation and
+`voiceSettings: { stability: 0.3, similarityBoost: 0.5 }` for 30% stability and
+50% similarity. Values use the 0–1 range. `language` selects the plan's localized
+text; `languageCode` is a separate optional ElevenLabs API setting. Use
+`modelId: "eleven_v4"` when requested, without changing the repository default.
+
 `I.generateAudio(videoPlan)` packs the selected `text-<language>` fields,
 including manual and head shots, into numbered MP3 parts in array order. It
 starts a new part when the next complete shot, including its paragraph separator,
-would exceed the model's character limit (5,000 for `eleven_v3`). Never split a
+would exceed the model's character limit (5,000 for `eleven_v3`, 10,000 for `eleven_v4`). Never split a
 shot between files. An oversized individual shot fails preflight and must be
 divided into smaller shots in the plan. Silent shots add no text or empty parts.
 It never invokes `shot` or `prepare` or forces speech to match estimated durations.
@@ -317,6 +350,13 @@ actual `text-sk` (or the selected `text-<language>`). Start from the spoken
 sentences, not from `notes` or the title. Passing tests and plausible filming
 notes do not prove that the viewer sees what the voice describes.
 
+Write the spoken sequence first, implement its actions in that order, and derive
+`notes` last. For longer shots, keep a sentence-to-action mapping inside the
+callback (for example numbered narration lines and matching cues). Keep one
+canonical narration; do not copy its text into a second timing script. Leave
+readable time at each result before moving to the next narrated action, rather
+than doing every click immediately and holding only the final screen.
+
 - Map each sentence to the visible starting state, on-camera action and result.
   Read the actual `shot` callback and any helpers it calls; inspect `prepare`
   and lifecycle callbacks to establish the baseline. A narrated click, edit or
@@ -329,9 +369,10 @@ notes do not prove that the viewer sees what the voice describes.
   promises may introduce a later demonstration, but must be phrased as such,
   not as actions already happening in the current shot. Verify that linked
   documentation actually contains any instructions promised in the narration.
-- Resolve mismatches by implementing the narrated action, splitting the beat,
+- Resolve mismatches by implementing or reordering the narrated action,
   or narrowing the narration to the useful behavior actually shown. Update
-  `notes` afterward; changing notes alone never resolves a mismatch. Keep result
+  `notes` afterward; changing notes alone never resolves a mismatch. Split the
+  shot only when a meaningful topic or filming boundary requires it. Keep result
   assertions and enough readable footage after the corresponding action.
 - Inspect available recordings against the sentences, including action order,
   readable results and time available for the narration. When speech exists,
@@ -344,6 +385,28 @@ notes do not prove that the viewer sees what the voice describes.
   browser actions when the environment is available, and identify older audio
   or recordings that no longer match. Repeat this check after narration,
   callbacks, preparation or shot order changes.
+
+## 7. Assemble the Finished Video
+
+When a finished edit or retiming is requested, use the installed Tesseract video
+skill and read [references/tesseract-editing.md](references/tesseract-editing.md).
+Keep the approved narration as the timing anchor, preserve continuous topic
+flows, and use purposeful zooms on the controls being explained. Omit numbered
+chapter-title overlays unless explicitly requested.
+
+Always finish the complete WebJET feature video with the supplied animation in
+`src/test/webapp/video/assets/outro.mp4`, unless the user requests a different
+ending. Append it once, at its original speed, after the final narration and
+the brief closing hold. Preserve the entire animation and any source audio.
+Include it in both the editable Tesseract project and the final MP4; merely
+linking the asset or documenting a manual editing step is not a finished result.
+Feature-only retakes remain standalone; do not append the outro to every shot.
+
+Store reusable editing knowledge in this skill's version-controlled references.
+`docs/feature-video/`, including project readmes and working scripts, is ignored
+and may disappear with the worktree. Keep generated media there, but do not use
+it as the only copy of instructions needed for the next production. Check new
+references and shared source assets with `git status`; leave commits to the user.
 
 ## Talking Heads and Credits
 
