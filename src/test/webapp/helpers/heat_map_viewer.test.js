@@ -16,9 +16,9 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
     const errors = [];
     page.on("pageerror", error => errors.push(error.message));
     const markup = fs.readFileSync(path.join(adminPath, "heat-map-details.html"), "utf8").split('<section id="heatMapViewer"')[1];
-    const texts = {loading: "Loading", empty: "Empty", error: "Error", previewError: "Preview error", tileError: "Tile error", clicks: "Clicks", historical: "Historic", current: "Current", fallback: "Fallback", multiple: "Multiple", unavailable: "Unavailable"};
+    const texts = {title: "Click map", loading: "Loading", empty: "Empty", error: "Error", previewError: "Preview error", tileError: "Tile error", clicks: "Clicks", historical: "Historic", current: "Current", fallback: "Fallback", multiple: "Multiple", unavailable: "Unavailable"};
     const html = '<!doctype html><html><head><style>.d-none{display:none!important}body{margin:20px}</style><link rel="stylesheet" href="/apps/stat/admin/heat-map.css"></head><body><section id="heatMapViewer"'
-        + markup + '<script>window.WJ={formatDate:v=>new Date(v).toISOString(),formatDateTime:v=>new Date(v).toISOString()};</script><script type="module">import {HeatMapViewer} from "/apps/stat/admin/heat-map-viewer.js";new HeatMapViewer(document.getElementById("heatMapViewer"),'
+        + markup + '<script>window.notifications=[];window.WJ={formatDate:v=>new Date(v).toISOString(),formatDateTime:v=>new Date(v).toISOString(),notifyWarning:(...args)=>window.notifications.push(args)};</script><script type="module">import {HeatMapViewer} from "/apps/stat/admin/heat-map-viewer.js";new HeatMapViewer(document.getElementById("heatMapViewer"),'
         + JSON.stringify(texts) + ').init();</script></body></html>';
     let mode = "normal";
     let metadataPaused;
@@ -61,6 +61,8 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
     const dateRange = "daterange:1788213600000-1789423200000";
     await page.goto("http://heatmap.test/apps/stat/admin/heat-map-details/?docId=11&dateRange=" + dateRange);
     await page.locator("#heatMapViewport:not(.d-none)").waitFor();
+    assert.deepEqual(await page.evaluate(() => window.notifications), [["Click map", "Multiple", 5000]]);
+    assert.equal(await page.locator("#heatMapNotice").count(), 0);
     assert.equal(await page.locator("#heatMapWidth").inputValue(), "1280");
     const frame = page.frames().find(item => item.url().includes("/html/preview"));
     assert.equal(await frame.evaluate(() => innerWidth), 1280);

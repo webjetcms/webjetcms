@@ -192,8 +192,13 @@ Scenario("shows historical fallback and mixed-version notices", ({ I }) => {
     I.executeScript(url => window.location.assign(url), detailsUrl);
     I.waitForVisible("#heatMapViewport", 20);
     I.dontSeeElement("#heatMapVersion");
-    I.see("Historickú verziu sa nepodarilo určiť", "#heatMapNotice");
-    I.see("Mapa spája kliknutia z viacerých verzií", "#heatMapNotice");
+    I.dontSeeElement("#heatMapNotice");
+    I.waitForVisible("#toast-container-webjet .toast-warning", 5);
+    I.see("Mapa kliknutí", "#toast-container-webjet .toast-warning .toast-title");
+    I.see("Historickú verziu sa nepodarilo určiť", "#toast-container-webjet .toast-warning");
+    I.see("Mapa spája kliknutia z viacerých verzií", "#toast-container-webjet .toast-warning");
+    I.waitToHide("#toast-container-webjet .toast-warning", 7);
+    I.seeElement("#heatMapViewport");
 });
 
 Scenario("shows empty data and refuses an unrelated preview document", ({ I }) => {

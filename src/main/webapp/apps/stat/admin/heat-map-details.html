@@ -2,6 +2,7 @@
 <script data-th-inline="javascript">
     if (window !== window.parent) document.documentElement.classList.add("pg-heatmap-embedded");
     const heatMapTexts = {
+        title: /*[[#{stat_menu.heat_map}]]*/ "Click map",
         loading: /*[[#{components.stat.heatmap.loading}]]*/ "Loading…",
         empty: /*[[#{components.stat.heatmap.empty}]]*/ "No clicks in this period.",
         error: /*[[#{components.stat.heatmap.error}]]*/ "The click map could not be loaded.",
@@ -63,7 +64,6 @@
             <i class="ti ti-refresh" aria-hidden="true"></i><span class="visually-hidden" data-th-text="#{components.stat.heatmap.reload}"></span>
         </button>
     </div>
-    <div id="heatMapNotice" class="alert alert-warning d-none" role="status"></div>
     <div id="heatMapStatus" class="alert alert-info" role="status" aria-live="polite" data-th-text="#{components.stat.heatmap.loading}"></div>
     <div id="heatMapViewport" class="pg-heatmap-viewport d-none">
         <div id="heatMapStageSize" class="pg-heatmap-stage-size">

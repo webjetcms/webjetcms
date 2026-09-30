@@ -15,7 +15,7 @@ export class HeatMapViewer {
         this.width = 0;
         this.tileSize = 1024;
         this.nodes = {};
-        ["Width", "Scale", "Opacity", "OpacityValue", "Visible", "Reload", "Frame", "Viewport", "Stage", "StageSize", "Overlay", "Tiles", "Status", "Notice", "Title", "Back"].forEach(name => {
+        ["Width", "Scale", "Opacity", "OpacityValue", "Visible", "Reload", "Frame", "Viewport", "Stage", "StageSize", "Overlay", "Tiles", "Status", "Title", "Back"].forEach(name => {
             this.nodes[name] = element.querySelector("#heatMap" + name);
         });
         this.closeOnEscape = event => {
@@ -100,7 +100,6 @@ export class HeatMapViewer {
         this.frameReady = false;
         this.nodes.Viewport.classList.add("d-none");
         this.nodes.Reload.disabled = true;
-        this.nodes.Notice.classList.add("d-none");
         this.clearTiles();
         this.status(this.texts.loading);
         this.width = Number(this.nodes.Width.value);
@@ -112,8 +111,7 @@ export class HeatMapViewer {
             const notes = [];
             if (metadata.historicalUnavailable && metadata.source === "current") notes.push(this.texts.fallback);
             if (metadata.multipleVersions) notes.push(this.texts.multiple);
-            this.nodes.Notice.textContent = notes.join(" ");
-            this.nodes.Notice.classList.toggle("d-none", notes.length === 0);
+            if (notes.length > 0) WJ.notifyWarning(this.texts.title, notes.join(" "), 5000);
             if (metadata.source === "unavailable") {
                 this.status(this.texts.unavailable, true);
                 return;
@@ -168,9 +166,9 @@ export class HeatMapViewer {
     resize() {
         if (!this.frameReady) return;
         const scale = this.nodes.Scale.value === "fit"
-            ? Math.min(1, Math.max(1, this.nodes.Viewport.clientWidth - 30) / this.width)
+            ? Math.min(1, Math.max(1, this.nodes.Viewport.clientWidth - 10) / this.width)
             : Number(this.nodes.Scale.value);
-        this.height = Math.max(1, Math.floor((this.nodes.Viewport.clientHeight - 30) / scale));
+        this.height = Math.max(1, Math.floor((this.nodes.Viewport.clientHeight - 10) / scale));
         this.nodes.Frame.style.height = this.height + "px";
         this.nodes.Stage.style.height = this.height + "px";
         this.nodes.Stage.style.transform = "scale(" + scale + ")";

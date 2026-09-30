@@ -42,14 +42,15 @@
 .pg-heatmap-opacity output { color: var(--wj-gray-text); font-variant-numeric: tabular-nums; }
 .pg-heatmap-opacity .form-range { display: block; height: 31px; margin: 0; }
 .pg-heatmap-opacity:has(input:disabled) { color: var(--wj-gray-text); }
-#heatMapReload { width: 31px; height: 31px; padding: 0; flex-shrink: 0; }
+#heatMapReload { display: inline-flex; align-items: center; justify-content: center; width: 31px; height: 31px; padding: 0; flex-shrink: 0; }
+#heatMapReload .ti { margin: 0; line-height: 1; }
 .pg-heatmap > .alert { margin: 15px 15px 0; flex-shrink: 0; }
 .pg-heatmap-viewport {
     flex: 1;
     min-height: 0;
     overflow: auto;
     max-width: 100%;
-    padding: 15px;
+    padding: 5px;
     background: var(--wj-nice-gray);
     overscroll-behavior: contain;
 }
