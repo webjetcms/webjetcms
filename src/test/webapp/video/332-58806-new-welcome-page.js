@@ -406,8 +406,29 @@ Scenario("YouTube thumbnail", async ({ I, login }) => {
     login("admin");
     const context = dashboardVideoContext(I);
     try {
+        await I.usePlaywrightTo("capture the desktop dashboard at 1360 by 1450 CSS pixels", async ({ page }) => {
+            const viewport = page.viewportSize();
+            const dimensions = await page.evaluate(() => ({ width: innerWidth, height: innerHeight }));
+            // Keep the same desktop layout in headed and headless Chromium despite native recording zoom.
+            await page.setViewportSize({
+                width: Math.round(1360 * viewport.width / dimensions.width),
+                height: Math.round(1450 * viewport.height / dimensions.height)
+            });
+        });
         await context.setup();
-        await I.videoTitle("Váš WebJET CMS\nVáš prehľad", 50, "glow");
+        await I.usePlaywrightTo("fit the capture height to the complete dashboard", async ({ page }) => {
+            const viewport = page.viewportSize();
+            const dimensions = await page.evaluate(() => {
+                const widgets = [...document.querySelectorAll(".md-dashboard [data-widget-type]")]
+                    .map(widget => widget.getBoundingClientRect()).filter(rect => rect.height > 0);
+                return { height: innerHeight, bottom: Math.max(...widgets.map(rect => rect.bottom)) };
+            });
+            // Remove only the empty area below the widgets, preserving the native zoom and desktop layout.
+            const height = Math.ceil((dimensions.bottom + 32) * viewport.height / dimensions.height);
+            await page.setViewportSize({ width: viewport.width, height });
+            console.log(`[Thumbnail capture] ${viewport.width}x${height}; complete dashboard at 1360 CSS pixels wide`);
+        });
+        await I.videoTitle("Úvodná stránka\n\nVšetko dôležité na jednom mieste", 50, "glow", { fitScene: true });
     } finally {
         await context.dispose();
     }

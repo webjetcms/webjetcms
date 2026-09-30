@@ -237,6 +237,20 @@ The final 1920 x 1080 JPEG scales that layout by 1.5. An explicit size changes
 only the headline's font size, without fitting or overflow checks. The screenshot's
 position, dimensions and crop remain unchanged even when text overlaps it.
 Omitting the size keeps automatic fitting from 100 down to 36 pixels.
+To adapt framing to the screenshot, pass a fourth argument:
+`I.videoTitle(text, 50, "glow", { fitScene: true })`. This opt-in layout shows a
+complete widescreen image beside a narrower headline. Taller captures use more
+of the thumbnail height with a small bleed over the right edge. These layouts preserve
+the screenshot's aspect ratio and use a smaller tilt. Existing calls retain
+their framing; inspect longer headlines for wrapping in the narrower column.
+For a tall desktop dashboard capture, keep the page around 1360 CSS pixels wide
+and measure the last visible widget to choose the height, including a small
+bottom margin. Account for native recording zoom: at the standard 141.18% zoom,
+1360 CSS pixels require a 1920-pixel capture. The Playwright viewport and
+`window.innerWidth/innerHeight` can differ. Verify the CSS dimensions so a headed
+capture does not accidentally switch to a tablet layout. Remove unused space
+below the dashboard instead of blindly multiplying an estimated height. Change
+capture dimensions, never stretch a screenshot. The final JPEG remains 1920 x 1080.
 The third argument selects `glow` (default), `clean` or `bold`; legacy
 `I.videoTitle(text, "glow")` calls still work. A size or style argument requests
 a thumbnail outside title mode too. Plain `I.videoTitle(text)` shows an editing
