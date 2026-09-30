@@ -33,6 +33,7 @@ public class FileArchivatorInsertLater
             return;
         }
 
+        boolean deleteFullCache = false;
         try
         {
             //prevent to run at the same time on different cluster nodes, because of possible file conflicts, so we add random sleep before start
@@ -69,28 +70,26 @@ public class FileArchivatorInsertLater
                 if(fab.getUploaded()==-2)
                     continue;
 
-                if(fab != null)
+                int stav = 0;
+
+                //ulozime subor na nove miesto
+                String uniqueFileName = renameFile(fab);
+
+                if(uniqueFileName==null)
                 {
-                    int stav = 0;
-
-                    //ulozime subor na nove miesto
-                    String uniqueFileName = renameFile(fab);
-
-                    if(uniqueFileName==null)
-                    {
-                        stav = 1;
-                        fab.setUploaded(-2);
-                        fab.save();
-                    }
-                    else
-                    {
-                        //vymazeme prazdne priecinky
-                        if( !removeEmptyDirs(fab.getFilePath(), "archiv_insert_later") )
-                            stav = 4;
-                    }
-
-                    sendMail(fab, stav);
+                    stav = 1;
+                    fab.setUploaded(-2);
+                    fab.save();
                 }
+                else
+                {
+                    //vymazeme prazdne priecinky
+                    if( !removeEmptyDirs(fab.getFilePath(), "archiv_insert_later") )
+                        stav = 4;
+                }
+
+                sendMail(fab, stav);
+                deleteFullCache = true;
             }
         }
         catch (Exception e)
@@ -103,7 +102,13 @@ public class FileArchivatorInsertLater
         }
         finally
         {
-            Cache.getInstance().removeObjectStartsWithName(FileArchivatorDB.getCachePrefix()+"getWaitingFileList");
+            if (deleteFullCache) {
+                //clean all cache, so public node will fetch new list of files with updated names etc
+                Cache.getInstance().removeObjectStartsWithName(FileArchivatorDB.getCachePrefix(), true);
+            } else {
+                //clear only local waiting list cache
+                Cache.getInstance().removeObjectStartsWithName(FileArchivatorDB.getCachePrefix()+"getWaitingFileList");
+            }
         }
         SetCharacterEncodingFilter.unRegisterDataContext();
     }

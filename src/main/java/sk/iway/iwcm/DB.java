@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import org.apache.commons.beanutils.DynaBean;
 import org.apache.commons.beanutils.RowSetDynaClass;
@@ -42,8 +43,96 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
 @SuppressWarnings({"deprecation", "java:S1118"})
 public class DB
 {
+	private static final Pattern SQL_IDENTIFIER_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*"); //NOSONAR
+	private static final Pattern SQL_IDENTIFIER_PATH_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)+"); //NOSONAR
+
 	//zoznam stlpcov ktore mozu obsahovat HTML kod
 	private static Set<String> htmlAllowedFields = null;
+
+	/**
+	 * Checks whether the supplied value is an unquoted SQL identifier. One or more
+	 * dot-separated qualifiers or property-path segments can be enabled explicitly.
+	 * This method validates only identifier syntax; it does not verify that the path,
+	 * table, or column exists.
+	 * A qualified value must not be appended directly to an SQL expression because
+	 * the same syntax can also represent a package function. Use
+	 * {@link #fixUntrustedColumnName(String, String, String...)} when the value is
+	 * used as a column reference in an SQL expression.
+	 *
+	 * @param value identifier to validate (column name or a qualified/property path)
+	 * @param allowDot {@code true} to allow a path such as {@code customer.address.city}
+	 * @return {@code true} for {@code field_a} and, when enabled, qualified paths
+	 */
+	public static boolean isValidColumnName(String value, boolean allowDot)
+	{
+		if (Tools.isEmpty(value)) return false;
+		if (allowDot) return SQL_IDENTIFIER_PATH_PATTERN.matcher(value).matches() || SQL_IDENTIFIER_PATTERN.matcher(value).matches();
+		return SQL_IDENTIFIER_PATTERN.matcher(value).matches();
+	}
+
+	/**
+	 * Resolves an untrusted column name against table qualifiers that are known to
+	 * exist in the current query. A qualifier can be a table name or its SQL alias.
+	 * An unqualified value is bound to {@code defaultQualifier}; a qualified value is
+	 * accepted only when its qualifier matches one of the trusted qualifiers. The
+	 * returned reference is always reconstructed from the trusted qualifier and the
+	 * validated column token.
+	 * Multi-segment paths are intentionally rejected because this resolver is meant
+	 * for SQL column references, not JPQL property paths.
+	 *
+	 * <p>This method validates syntax and query context, but it does not verify that
+	 * the column exists in the database.</p>
+	 *
+	 * <pre>{@code
+	 * column = DB.fixUntrustedColumnName(column, "documents");
+	 * if (column == null) return Collections.emptyList();
+	 * }</pre>
+	 *
+	 * @param columnName unqualified or qualified column name
+	 * @param tableNameAlias trusted table name or alias used for unqualified values
+	 * @param additionalTableNameAliases other trusted qualifiers present in the query
+	 * @return canonical {@code qualifier.column} reference, or {@code null} when invalid
+	 */
+	public static String fixUntrustedColumnName(String columnName, String tableNameAlias, String... additionalTableNameAliases)
+	{
+		if (isValidColumnName(tableNameAlias, false) == false || Tools.isEmpty(columnName)) return null;
+
+		String trustedTableNameAlias = tableNameAlias;
+		String column = columnName;
+		int dot = columnName.indexOf('.');
+		if (dot >= 0)
+		{
+			if (columnName.indexOf('.', dot + 1) >= 0) return null;
+
+			String suppliedTableNameAlias = columnName.substring(0, dot);
+			column = columnName.substring(dot + 1);
+			trustedTableNameAlias = resolveTrustedTableNameAlias(suppliedTableNameAlias, tableNameAlias, additionalTableNameAliases);
+			if (trustedTableNameAlias == null) return null;
+		}
+
+		if (isValidColumnName(column, false) == false) return null;
+		return trustedTableNameAlias + "." + column;
+	}
+
+	/**
+	 * Resolves a supplied qualifier (table name or alias) against a default and additional trusted qualifiers. The
+	 * @param suppliedQualifier - the qualifier to validate
+	 * @param defaultQualifier - the default qualifier to use when the supplied qualifier is unqualified
+	 * @param additionalAllowedQualifiers - additional trusted qualifiers to check against
+	 * @return the trusted qualifier if valid, or {@code null} if invalid
+	 */
+	private static String resolveTrustedTableNameAlias(String suppliedQualifier, String defaultQualifier, String... additionalAllowedQualifiers)
+	{
+		if (defaultQualifier.equalsIgnoreCase(suppliedQualifier)) return defaultQualifier;
+		if (additionalAllowedQualifiers == null) return null;
+
+		for (String allowedQualifier : additionalAllowedQualifiers)
+		{
+			if (isValidColumnName(allowedQualifier, false) && allowedQualifier.equalsIgnoreCase(suppliedQualifier))
+				return allowedQualifier;
+		}
+		return null;
+	}
 
 	/**
 	 * Overi, ci je mozne v danom DB stlpci pouzit HTML kod, ak nie, tak sa pri citani rovno escapnu specialne znaky

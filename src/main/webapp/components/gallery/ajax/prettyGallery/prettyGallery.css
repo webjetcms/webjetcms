@@ -42,7 +42,7 @@
 				display: block;
 				width: 100%; height: 15px;
 				text-indent: -10000px;
-				background: url(previous.gif) top left no-repeat;
+				background: url(/components/gallery/ajax/prettyGallery/previous.gif) top left no-repeat;
 				font-size: 0px;
 			}
 			
@@ -51,7 +51,7 @@
 				display: block;
 				width: 100%; height: 15px;
 				text-indent: -10000px;
-				background: url(next.gif) top right no-repeat;
+				background: url(/components/gallery/ajax/prettyGallery/next.gif) top right no-repeat;
   			font-size: 0px;
 			}
 			

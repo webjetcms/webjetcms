@@ -160,7 +160,8 @@ public class UrlRedirectDB
 		if (oldUrl.indexOf('^')==-1) redirectBean = getRedirectImpl(oldUrl + "/", "");
 		if (redirectBean != null) return redirectBean;
 
-		if (oldUrl.endsWith("/")==false && oldUrl.endsWith(".html")==false)
+		if (Constants.getBoolean("virtualPathLastSlash") &&
+			oldUrl.endsWith("/")==false && oldUrl.endsWith(".html")==false)
 		{
 			//skus najst stranku s / na konci (/produkty vs /produkty/)
 			DocDB docDB = DocDB.getInstance();

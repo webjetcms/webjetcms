@@ -55,6 +55,17 @@ public class BloggerRestController extends DatatableRestControllerV2<BloggerBean
     }
 
     @Override
+    public boolean checkItemPerms(BloggerBean entity, Long id) {
+        if (id == null) return false;
+
+        Long entityId = entity == null ? null : entity.getId();
+        if (id.longValue() == -1L) return entityId == null || entityId.longValue() < 1L;
+        if (id.longValue() < 1L || entityId == null || !id.equals(entityId)) return false;
+
+        return BloggerService.isBloggerInCurrentScope(id);
+    }
+
+    @Override
     public BloggerBean insertItem(BloggerBean entity) {
         boolean result = BloggerService.saveBlogger(entity, userDetailsRepository, editorFacade, getRequest());
         if(Boolean.FALSE.equals(result)) throwError("datatable.error.unknown");

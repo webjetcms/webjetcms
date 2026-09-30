@@ -743,6 +743,11 @@ public class EditorService {
 		int virtualPathConflictDocId = -1;
 		if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML && editedDoc.getVirtualPath().startsWith("javascript:") == false) {
 			boolean mustGenerateVirtualPath = false;
+
+			//trim URL address - it is also in setter, but setVirtualPath can be called from other places
+			editedDoc.setVirtualPath(editedDoc.getVirtualPath().trim());
+			if (editedDoc.getEditorVirtualPath() != null) editedDoc.setEditorVirtualPath(editedDoc.getEditorVirtualPath().trim());
+
 			if (Tools.isNotEmpty(editedDoc.getVirtualPath())) {
 				int actualDocId = DocDB.getDocIdFromURL(editedDoc.getVirtualPath(), domain);
 				if (actualDocId > 0 && actualDocId != editedDoc.getDocId()) {
@@ -767,7 +772,8 @@ public class EditorService {
 				String lastVirtualPath = null;
 				for (long i = 2; i < 1000; i++) {
 
-					if (i>990) i = Tools.getNow();
+					//too many files, skip counter and use timestamp instead
+					if (i>990) i = Tools.getNow(); //NOSONAR
 
 					if(virtualPath != null && virtualPath.length() > 255) {
 						String vpTmp = virtualPath.substring(0, virtualPath.length() - ending.length());

@@ -29,6 +29,7 @@ import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.AdminTools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.FilePathTools;
 import sk.iway.iwcm.sync.FileBean;
 import sk.iway.iwcm.system.cluster.ClusterDB;
@@ -1246,6 +1247,10 @@ public class IwcmFsDB
 				fhb.setChangeDate(new Date());
 				fhb.setFileUrl(virtualPath);
 				RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+				int domainId = CloudToolsForCore.getDomainId();
+				// Domain 1 is the administrative fallback when the current domain cannot be resolved.
+				if (domainId < 1) domainId = 1;
+
 				if (rb == null) {
 					rb = new RequestBean();
 					rb.setUserId(-1);
@@ -1253,6 +1258,7 @@ public class IwcmFsDB
 				fhb.setUserId(rb.getUserId());
 				fhb.setDeleted(deleted);
 				fhb.setIpAddress(rb.getRemoteIP());
+				fhb.setDomainId(domainId);
 				if(!deleted)
 				{
 					fhb.setHistoryPath(fileHistory + getVirtualPath(file.getParent()) + "/");

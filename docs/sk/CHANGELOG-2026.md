@@ -20,6 +20,29 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+## 2026.0.40
+
+> Opravná verzia pôvodnej verzie 2026.0.
+
+- Proxy - opravené použitie nastavenej HTTP/HTTPS proxy vrátane výnimiek a autentifikácie pri preklade cez DeepL, volaniach AI asistenta, sťahovaní cez `Tools.downloadUrl`, v proxy module a pri generovaní offline verzie (#331).
+- Webové stránky - opravené ukladanie web stránky s medzerou na konci URL adresy (vykoná sa odstránenie prázdnych znakov) (#OSK650).
+- Webové stránky - opravené zacyklenie nepublikovanej stránky ak URL nekončí na znak `/` - konfiguračná premenná `virtualPathLastSlash=false` (#OSK684).
+- Manažér dokumentov - pridané zmazanie cache pamäte po publikovaní novej verzie súboru (#TB2754).
+- Multiweb - opravená možnosť zmazať alebo upraviť doménové presmerovanie, ktoré obsahuje `http/s` prefix (#58317-15).
+- Galéria - v editore aplikácie sa medzi vizuálnymi štýlmi zobrazujú iba JSP súbory z priečinkov `/components/{INSTALL_NAME}/gallery` a `/components/gallery`, bez duplicitných položiek (#58317-16).
+- Vloženie HTML kódu - v náhľade aplikácie v editore webových stránok sa pre obsah tvorený iba elementmi `script` zobrazí zdrojový kód namiesto prázdneho obsahu (#OSK625).
+- Video - opravené spracovanie YouTube odkazov s ďalšími URL parametrami vrátane času spustenia videa (`t` alebo `start`). Parametre sa správne spoja s nastaveniami prehrávača bez duplicitného znaku `?` (#OSK714).
+- Formulár ľahko - opravené spracovanie názvu formulára ak názov obsahuje tvrdú medzeru nahradenú podľa `editorSingleCharNbsp` (#TB2763).
+- Bezpečnosť - sprísnené overovanie odkazu na obnovu zabudnutého hesla. Overovací záznam sa kontroluje pre vybraný používateľský účet aj pri vlastnom spôsobe odosielania, rešpektuje časovú platnosť a po použití sa zneplatní pre všetky účty zahrnuté v žiadosti (#292).
+- Bezpečnosť - sprísnené overovanie oprávnení pri práci so záznamami v administrácii (#295).
+- Bezpečnosť - sprísnená kontrola práv na priečinok pri nahrávaní súboru do administrácie a jeho prepísaní ak súbor existuje.
+- Bezpečnosť - sprísnená kontrola oprávnení pri obnove historickej verzie súboru (#295).
+- Bezpečnosť - sprísnená kontrola oprávnení pri správe blogerov (#295).
+- Bezpečnosť - sprísnená validácia názvov databázových stĺpcov pri dynamickom usporiadaní a filtrovaní. **Upozornenie:** verejné API už v parametroch usporiadania nepodporujú vlastné SQL výrazy, používajú sa iba bezpečné názvy stĺpcov alebo dostupné pomenované konštanty (#294).
+- Bezpečnosť - [zabezpečený koncový bod `row-reorder`](developer/datatables/README.md#poradie-usporiadania-riadkov) dátových tabuliek. Povolené je meniť iba numerické pole označené `DataTableColumnType.ROW_REORDER`, pričom sa kontrolujú oprávnenia pre každý záznam aj dodatočný rozsah celej dávky pomocou `checkRowReorderScope`. Pri formulároch sa overuje príslušnosť k formuláru a kroku aj prístup používateľa; neplatná požiadavka sa neuloží (#295).
+- CKEditor - doplnená možnosť [konfigurovať pravidlá čistenia obsahu](frontend/setup/ckeditor.md#čistenie-html-kódu-pri-vložení-z-wordexcel) pri vložení z Word/Excel. **Upozornenie:** predvolené čistenie po novom odstraňuje aj atribút `nowrap` z buniek `TD` a CSS triedy s atribútmi `align` a `valign` z buniek `TH` (#300).
+- Distribúcia - zmenšená celková veľkosť Maven artefaktov na približne 65 MB zapnutím kompresie, optimalizáciou náhľadov aplikácií a blokov Page Builder/GridEditor/HTMLBox a odstránením nepoužívaných súborov administrácie. Pridaný skript [`npm run scr:optimize`](../../src/test/webapp/README.md#optimize-appstore-screenshots-and-image-previews) na optimalizáciu náhľadových obrázkov (#58790).
+
 ## 2026.0.28
 
 > Opravná verzia pôvodnej verzie 2026.0.
@@ -110,6 +133,7 @@
 - Webové stránky - opravená uzatváracia značka `</link>`, správne nahradená za `/>`, keďže `link` je prázdny element (#osk498).
 - Webové stránky - opravená chyba odstránenia časovej zložky pri nastavení dátumu konania (#54273-89).
 - Webové stránky - pridaná možnosť [nastaviť JavaScript funkciu](frontend/setup/config.md) pre `target="_blank"` odkazy, predvolene nastavené na `return openTargetBlank(this, event)`. Hodnota sa nastavuje v konfiguračnej premennej `editorTargetBlankFunction`, ak je nastavené na prázdnu hodnotu `onclick` funkcia sa nenastaví (#225).
+- Hromadný email - opravené vytváranie kampaní a emailov pri duplikovaní kampane (#58649).
 
 Jakarta verzia:
 

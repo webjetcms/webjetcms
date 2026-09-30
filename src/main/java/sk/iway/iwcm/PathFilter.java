@@ -760,16 +760,13 @@ public class PathFilter implements Filter
 				return;
 			}
 
-			if (path.toLowerCase().endsWith(".jsp") || path.endsWith("/"))
+			if (isJspFromStaticFiles(path, req.getServletPath()))
 			{
-				if (path.startsWith("/images") || path.startsWith("/files") || path.startsWith("/shared"))
-				{
-					Logger.debug(PathFilter.class, "Volane JSP z nepovoleneho adresara, path="+path);
-					//not found posielame aby sa admin cast tvarila akoze vobec neexistuje
-					res.setStatus(HttpServletResponse.SC_NOT_FOUND);
-					forwardSafely("/404.jsp", req, res);
-					return;
-				}
+				Logger.debug(PathFilter.class, "Volane JSP z nepovoleneho adresara, path="+path);
+				//not found posielame aby sa admin cast tvarila akoze vobec neexistuje
+				res.setStatus(HttpServletResponse.SC_NOT_FOUND);
+				forwardSafely("/404.jsp", req, res);
+				return;
 			}
 
 			if (path.endsWith(".appcache"))
@@ -1255,7 +1252,7 @@ public class PathFilter implements Filter
 				int fHistoryId = Tools.getIntValue(req.getParameter("fHistoryId"), -1);
 				if (fHistoryId > 0)
 				{
-					boolean sendOK = FileHistoryDB.sendFileFromHistory(path, fHistoryId, res);
+					boolean sendOK = FileHistoryDB.sendFileFromHistory(path, fHistoryId, user, res);
 					if (sendOK == false)
 					{
 						res.setStatus(404);
@@ -2694,6 +2691,25 @@ public class PathFilter implements Filter
 		}
 
 		return false;
+	}
+
+	/**
+	 * Blocks directories and JSP/Jasper resources under public upload roots.
+	 * @param path request path
+	 * @return true when the path must not be served from an upload root
+	 */
+	private static boolean isJspFromStaticFiles(String path) {
+		if (Tools.isEmpty(path)) return false;
+
+		boolean isStaticFilesRoot = path.startsWith("/images") || path.startsWith("/files") || path.startsWith("/shared");
+		return isStaticFilesRoot && (path.endsWith("/") || FileTools.isFileTypeForbiddenForUpload(path));
+	}
+
+	/**
+	 * Checks both the raw request URI and the container-decoded servlet path.
+	 */
+	private static boolean isJspFromStaticFiles(String requestPath, String servletPath) {
+		return isJspFromStaticFiles(requestPath) || isJspFromStaticFiles(servletPath);
 	}
 
 	private static boolean isPathSafe(String path) {

@@ -292,7 +292,7 @@ const WJ = (() => {
                     }
                 });
             } catch (e) {}
-            if (found === true) return;
+            if (found === true) return true;
         }
 
         const options = {
@@ -681,9 +681,8 @@ const WJ = (() => {
                     text = text.replace(regexB, "/");
                 }
             });
-
-            return text;
         }
+        return text;
     }
 
     function _formatTime(timestamp, format) {

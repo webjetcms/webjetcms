@@ -74,7 +74,7 @@ public class FileTools
 		//JSP / Jasper engine (Tomcat maps *.jsp and *.jspx by default, others are common custom/legacy mappings or get compiled by Jasper)
 		"jsp", "jspx", "jspf", "jsw", "jsv", "jspa", "jhtml", "tag", "tagx", "tagf",
 		//Java sources / classes / deployable archives
-		"class", "java", "war", "ear",
+		"class", "java", "jar", "war", "ear",
 		//JSF / Facelets
 		"xhtml",
 		//Server Side Includes (SSI servlet)
@@ -959,16 +959,29 @@ public class FileTools
 			return true;
 		}
 
-		String fileExt = getFileExtension(fileName).toLowerCase();
-		for (String ext : NOT_ALLOWED_FILE_TYPES) {
-			if (ext.equals(fileExt)) {
-				return false;
-			}
-		}
+		if (isFileTypeForbiddenForUpload(fileName)) return false;
 
 		if (FileBrowserTools.hasForbiddenSymbol(fileName)) return false;
 
 		return true;
+	}
+
+	/**
+	 * Checks the file extension against the common non-uploadable file types.
+	 * This method intentionally does not contain an administrator bypass.
+	 *
+	 * @param fileName file name or path to check
+	 * @return true when the extension is forbidden for upload
+	 */
+	public static boolean isFileTypeForbiddenForUpload(String fileName)
+	{
+		if (Tools.isEmpty(fileName)) return false;
+
+		String fileExt = getFileExtension(fileName);
+		for (String ext : NOT_ALLOWED_FILE_TYPES) {
+			if (ext.equals(fileExt)) return true;
+		}
+		return false;
 	}
 
 	/**

@@ -924,6 +924,10 @@ Scenario('BUG recipients missing in duplicated entity', ({I, DT, DTE}) => {
 
     I.say("Check recipients in duplicated entity");
     DT.filterContains("subject", duplicatedName);
+
+    I.say("Check campaign status");
+    DT.checkTableRow("campaingsDataTable", 1, ["", duplicatedName, "Tester Playwright", "tester@balat.sk", "", "", "", "0 / 2", "Neaktívny"]);
+
     I.click(duplicatedName);
     DTE.waitForEditor("campaingsDataTable");
     I.clickCss("#pills-dt-campaingsDataTable-receivers-tab");

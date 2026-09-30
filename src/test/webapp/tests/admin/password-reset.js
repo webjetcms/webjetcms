@@ -94,9 +94,9 @@ Scenario('forgotten password - administration - VIA email @singlethread', async 
   I.closeOtherTabs();
   I.say('Verification that each of these users is displayed in the options on the page');
   await checkUsersSelectOptions(I, users, true);
-  const selectedUserForPasswordChange = getRandomElement(users);
+  const selectedUserForPasswordChange = 'sameB';
 
-  I.say('Select random user');
+  I.say('Select a user other than the first issued user');
   I.selectOption('#selectedLogin', selectedUserForPasswordChange);
   changePassword(I, randomPassword, 'Zmena hesla úspešne dokončená', true);
 
@@ -304,7 +304,7 @@ async function checkAudit(I, DT, lastId = null){
     DT.filterSelect('logType', 'USER_CHANGE_PASSWORD');
     const lastId = await I.grabAttributeFrom('tbody tr:first-child', 'id');
     DT.filterId('id', lastId );
-    I.see('Same D Mail');
+    I.see('Same A Mail'); //order by userId desc, so first one is Same A Mail
     I.logout();
     return lastId;
   }
@@ -361,10 +361,6 @@ function changePassword(I, newPassword, msg, isAdminSection, secondPassword = nu
   I.waitForText(msg, 10);
   //this text is shown only after logon if the old password is not valid anymore
   I.dontSee("Vaše heslo nespĺňa bezpečnostné nastavenia aplikácie, alebo mu vypršala platnosť.");
-}
-
-function getRandomElement(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function checkUrlDoesNotWork(I, changePasswordUrl, isAdminSection) {

@@ -3,14 +3,24 @@ package sk.iway.iwcm.security;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.mockito.MockedStatic;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.io.FileHistoryDB;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 import java.lang.reflect.Method;
 
+import jakarta.servlet.FilterChain;
+
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 /**
  * JUnit tests for PathFilter security fixes.
@@ -20,8 +30,14 @@ import static org.junit.jupiter.api.Assertions.*;
 @Execution(ExecutionMode.SAME_THREAD)
 class PathFilterSecurityTest extends BaseWebjetTest {
 
+    private static final String[] JSP_FILE_EXTENSIONS = {
+        "jsp", "jspx", "jspf", "jsw", "jsv", "jspa", "jhtml", "tag", "tagx", "tagf"
+    };
+
     private Method isPathBlockedMethod;
     private Method isPathSafeMethod;
+    private Method isUploadPathBlockedMethod;
+    private Method isUploadRequestBlockedMethod;
 
     public PathFilterSecurityTest() throws Exception {
         // Get private methods via reflection
@@ -29,6 +45,10 @@ class PathFilterSecurityTest extends BaseWebjetTest {
         isPathBlockedMethod.setAccessible(true);
         isPathSafeMethod = PathFilter.class.getDeclaredMethod("isPathSafe", String.class);
         isPathSafeMethod.setAccessible(true);
+        isUploadPathBlockedMethod = PathFilter.class.getDeclaredMethod("isJspFromStaticFiles", String.class);
+        isUploadPathBlockedMethod.setAccessible(true);
+        isUploadRequestBlockedMethod = PathFilter.class.getDeclaredMethod("isJspFromStaticFiles", String.class, String.class);
+        isUploadRequestBlockedMethod.setAccessible(true);
     }
 
     // --- Tests for isPathBlocked ---
@@ -145,6 +165,49 @@ class PathFilterSecurityTest extends BaseWebjetTest {
             "Path with backslash should be blocked");
     }
 
+    // --- Tests for JSP/Jasper files under upload roots ---
+
+    @Test
+    void testIsUploadPathBlocked_BlocksJSPFamily() throws Exception {
+        String[] uploadRoots = { "/images/", "/files/", "/shared/" };
+
+        for (String uploadRoot : uploadRoots) {
+            for (String extension : JSP_FILE_EXTENSIONS) {
+                String path = uploadRoot + "shell." + extension;
+                assertTrue((Boolean) isUploadPathBlockedMethod.invoke(null, path),
+                    path + " should be blocked");
+            }
+        }
+
+        assertTrue((Boolean) isUploadPathBlockedMethod.invoke(null, "/files/shell.JsPx"),
+            "JSP-family checks should be case-insensitive");
+    }
+
+    @Test
+    void testIsUploadPathBlocked_DoesNotBlockOtherFileTypes() throws Exception {
+        assertFalse((Boolean) isUploadPathBlockedMethod.invoke(null, "/images/photo.jpg"));
+        assertFalse((Boolean) isUploadPathBlockedMethod.invoke(null, "/files/download.png"));
+        assertFalse((Boolean) isUploadPathBlockedMethod.invoke(null, "/shared/application.css"));
+        assertFalse((Boolean) isUploadPathBlockedMethod.invoke(null, "/components/shell.txt"));
+    }
+
+    @Test
+    void testIsUploadPathBlocked_PreservesDirectoryBlocking() throws Exception {
+        assertTrue((Boolean) isUploadPathBlockedMethod.invoke(null, "/images/gallery/"));
+        assertTrue((Boolean) isUploadPathBlockedMethod.invoke(null, "/files/docs/"));
+        assertTrue((Boolean) isUploadPathBlockedMethod.invoke(null, "/shared/data/"));
+    }
+
+    @Test
+    void testIsUploadRequestBlocked_UsesDecodedServletPath() throws Exception {
+        assertTrue((Boolean) isUploadRequestBlockedMethod.invoke(
+            null, "/files/shell%2ejspx", "/files/shell.jspx"),
+            "The decoded servlet path should block an encoded JSPX extension");
+        assertFalse((Boolean) isUploadRequestBlockedMethod.invoke(
+            null, "/files/document%2epdf", "/files/document.pdf"),
+            "Safe encoded file extensions should remain accessible");
+    }
+
     // --- Tests for resetBlockedPaths ---
 
     @Test
@@ -158,5 +221,33 @@ class PathFilterSecurityTest extends BaseWebjetTest {
         // The reset simply clears the cached array - verify it doesn't throw
         assertDoesNotThrow(PathFilter::resetBlockedPaths,
             "resetBlockedPaths should not throw");
+    }
+
+    @Test
+    void historyDownloadPassesSessionUserToSecuredOverloadAndReturns404WhenRejected() throws Exception {
+        String path = "/images/file-history-security-test-does-not-exist/file.txt";
+        int historyId = 987654321;
+        Identity user = new Identity();
+        user.setAdmin(true);
+        user.setWritableFolders("/images/*");
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI(path);
+        request.addHeader("Referer", "http://localhost/admin/v9/elfinder/");
+        request.setParameter("fHistoryId", String.valueOf(historyId));
+        request.getSession().setAttribute(Constants.USER_KEY, user);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain chain = mock(FilterChain.class);
+
+        try (MockedStatic<FileHistoryDB> history = mockStatic(FileHistoryDB.class)) {
+            history.when(() -> FileHistoryDB.sendFileFromHistory(path, historyId, user, response))
+                .thenReturn(false);
+
+            new PathFilter().doFilter(request, response, chain);
+
+            assertEquals(404, response.getStatus());
+            history.verify(() -> FileHistoryDB.sendFileFromHistory(path, historyId, user, response));
+            verifyNoInteractions(chain);
+        }
     }
 }

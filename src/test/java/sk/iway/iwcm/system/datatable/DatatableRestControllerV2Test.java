@@ -1,12 +1,15 @@
 package sk.iway.iwcm.system.datatable;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.MockedStatic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.jspecify.annotations.NonNull;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.context.ContextConfiguration;
@@ -18,19 +21,38 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.UploadSpringConfig;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
+import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.iwcm.test.TestRequest;
 import sk.iway.spring.SpringApplication;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Validator;
-
-import org.junit.jupiter.api.BeforeAll;
 
 /**
  * Test REST controller methods
@@ -98,6 +120,173 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         // Verify that beforeSave and afterSave were called ONLY once
         assertEquals(1, controller.getBeforeSaveCounter(), "beforeSave should be called once");
         assertEquals(1, controller.getAfterSaveCounter(), "afterSave should be called once");
+    }
+
+    @Test
+    void testAddClearsInheritedGeneratedIdBeforeSave() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        AtomicReference<Long> idAtSave = new AtomicReference<>();
+        when(repository.save(any())).thenAnswer(invocation -> {
+            GeneratedIdTestEntity entity = invocation.getArgument(0);
+            idAtSave.set(entity.getRecordId());
+            return new GeneratedIdTestEntity(123L, entity.getName());
+        });
+
+        AtomicReference<Long> idSeenByBeforeSave = new AtomicReference<>();
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository, idSeenByBeforeSave);
+        GeneratedIdTestEntity submitted = new GeneratedIdTestEntity(999L, "new record");
+
+        GeneratedIdTestEntity saved = generatedIdController.add(submitted).getBody();
+
+        verify(repository).save(any());
+        assertNull(idSeenByBeforeSave.get(), "Controller hooks must not see a client-provided generated ID");
+        assertNull(idAtSave.get(), "A generated body ID must not turn create into JPA merge");
+        assertEquals(123L, saved.getRecordId());
+    }
+
+    @Test
+    void testAddAllowsExplicitLegacyGeneratedIdOptOut() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        AtomicReference<Long> idAtSave = new AtomicReference<>();
+        when(repository.save(any())).thenAnswer(invocation -> {
+            GeneratedIdTestEntity entity = invocation.getArgument(0);
+            idAtSave.set(entity.getRecordId());
+            return entity;
+        });
+
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> legacyController =
+                new DatatableRestControllerV2<>(repository) {
+                    @Override
+                    protected boolean allowGeneratedIdOnCreate(GeneratedIdTestEntity entity) {
+                        return true;
+                    }
+                };
+        legacyController.setValidator(validator);
+        legacyController.setRequest(controller.getRequest());
+
+        legacyController.add(new GeneratedIdTestEntity(999L, "legacy update"));
+
+        assertEquals(999L, idAtSave.get());
+    }
+
+    @Test
+    void testAddPreservesAssignedId() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<AssignedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DatatableRestControllerV2<AssignedIdTestEntity, Long> assignedIdController =
+                new DatatableRestControllerV2<>(repository) {};
+        assignedIdController.setValidator(validator);
+        assignedIdController.setRequest(controller.getRequest());
+
+        AssignedIdTestEntity submitted = new AssignedIdTestEntity(999L);
+        assignedIdController.add(submitted);
+
+        assertEquals(999L, submitted.getRecordId(), "Application-assigned IDs must stay backwards compatible");
+    }
+
+    @Test
+    void testEditorCreateClearsGeneratedIdForNewAndDuplicatedRows() {
+        assertEditorCreateClearsGeneratedId(-1L);
+        assertEditorCreateClearsGeneratedId(999L);
+    }
+
+    @Test
+    void testEditRejectsDifferentPositiveBodyIdBeforeHooks() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        AtomicReference<Long> idSeenByBeforeSave = new AtomicReference<>();
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository, idSeenByBeforeSave);
+
+        GeneratedIdTestEntity submitted = new GeneratedIdTestEntity(999L, "attacker value");
+
+        assertThrows(ConstraintViolationException.class, () -> generatedIdController.edit(123L, submitted));
+        assertNull(idSeenByBeforeSave.get(), "Mismatched ID must be rejected before controller hooks");
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void testEditorEditRejectsDifferentPositiveBodyId() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository);
+
+        DatatableRequest<Long, GeneratedIdTestEntity> request = new DatatableRequest<>();
+        request.setAction("edit");
+        request.setData(Map.of(123L, new GeneratedIdTestEntity(999L, "attacker value")));
+
+        assertThrows(ConstraintViolationException.class,
+                () -> generatedIdController.handleEditor(generatedIdController.getRequest(), request));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void testDeleteRejectsDifferentPositiveBodyId() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository);
+
+        assertThrows(ConstraintViolationException.class,
+                () -> generatedIdController.delete(123L, new GeneratedIdTestEntity(999L, "attacker value")));
+
+        verify(repository, never()).delete(any());
+    }
+
+    @Test
+    void testEditUsesPathIdForOlderPayloadWithoutId() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        GeneratedIdTestEntity original = new GeneratedIdTestEntity(123L, "old value");
+        when(repository.existsById(123L)).thenReturn(true);
+        when(repository.findById(123L)).thenReturn(Optional.of(original));
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        AtomicReference<Long> idSeenByBeforeSave = new AtomicReference<>();
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository, idSeenByBeforeSave);
+        GeneratedIdTestEntity submitted = new GeneratedIdTestEntity(null, "new value");
+
+        generatedIdController.edit(123L, submitted);
+
+        assertEquals(123L, submitted.getRecordId());
+        assertEquals(123L, idSeenByBeforeSave.get(), "Hooks must see the server-authoritative path ID");
+        assertEquals(123L, original.getRecordId());
+        assertEquals("new value", original.getName());
+    }
+
+    @Test
+    void testCopyEntityIntoOriginalNeverCopiesJpaIdentifiers() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository);
+        GeneratedIdTestEntity original = new GeneratedIdTestEntity(123L, "old value");
+
+        generatedIdController.copyEntityIntoOriginal(
+                new GeneratedIdTestEntity(999L, "new value"), original);
+
+        assertEquals(123L, original.getRecordId());
+        assertEquals("new value", original.getName());
+
+        @SuppressWarnings("unchecked")
+        JpaRepository<EmbeddedIdTestEntity, Long> embeddedRepository = mock(JpaRepository.class);
+        DatatableRestControllerV2<EmbeddedIdTestEntity, Long> embeddedController =
+                new DatatableRestControllerV2<>(embeddedRepository) {};
+        EmbeddedTestId originalId = new EmbeddedTestId(1L, 2L);
+        EmbeddedIdTestEntity embeddedOriginal = new EmbeddedIdTestEntity(originalId, "old value");
+
+        embeddedController.copyEntityIntoOriginal(
+                new EmbeddedIdTestEntity(new EmbeddedTestId(9L, 9L), "new value"), embeddedOriginal);
+
+        assertEquals(originalId, embeddedOriginal.getRecordId());
+        assertEquals("new value", embeddedOriginal.getName());
     }
 
     @Test
@@ -207,6 +396,509 @@ class DatatableRestControllerV2Test extends BaseWebjetTest {
         assertEquals(1, controller.getAfterSaveCounter(), "afterSave should be called twice");
         assertEquals(0, controller.getBeforeDeleteCounter(), "beforeDelete should be called once");
         assertEquals(0, controller.getAfterDeleteCounter(), "afterDelete should be called once");
+    }
+
+    @Test
+    void testHandleEditorUpdateByColumnChecksInsertPermissionsWhenNoItemMatches() {
+        AtomicReference<Long> checkedId = new AtomicReference<>();
+        RestControllerMock restrictedController = new RestControllerMock() {
+            @Override
+            public boolean checkItemPerms(Object entity, Long id) {
+                checkedId.set(id);
+                return false;
+            }
+        };
+        restrictedController.setRequest(controller.getRequest());
+        restrictedController.setValidator(validator);
+
+        DatatableRequest<Long, Object> datatableRequest = new DatatableRequest<>();
+        datatableRequest.setData(Map.of(1L, new Object()));
+        datatableRequest.setAction("edit");
+        datatableRequest.setImportMode("update");
+        datatableRequest.setUpdateByColumn("id");
+
+        assertThrows(ConstraintViolationException.class,
+            () -> restrictedController.handleEditor(restrictedController.getRequest(), datatableRequest));
+
+        assertEquals(Long.valueOf(-1L), checkedId.get());
+        assertEquals(0, restrictedController.getInsertItemCounter());
+        assertEquals(1, restrictedController.getBeforeSaveCounter());
+        assertEquals(0, restrictedController.getAfterSaveCounter());
+    }
+
+    @Test
+    void testRowReorderChecksItemPermissionsBeforeModification() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity entity = new RowReorderTestEntity(1L, 10);
+        when(repository.findAllById(List.of(1L))).thenReturn(List.of(entity));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> restrictedController =
+                new DatatableRestControllerV2<>(repository) {
+                    @Override
+                    public boolean checkItemPerms(RowReorderTestEntity checkedEntity, Long id) {
+                        return false;
+                    }
+                };
+        restrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(new RowReorderDto.RowReorderValue(1L, 10, 20)));
+
+        assertThrows(ConstraintViolationException.class,
+                () -> restrictedController.rowReorder(controller.getRequest(), request));
+        assertEquals(10, entity.getPosition());
+        verify(repository, never()).saveAll(any());
+    }
+
+    @Test
+    void testRowReorderRejectsScopeBeforeBatchModification() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity first = new RowReorderTestEntity(1L, 10);
+        RowReorderTestEntity second = new RowReorderTestEntity(2L, 20);
+        List<RowReorderTestEntity> entities = List.of(first, second);
+        when(repository.findAllById(List.of(1L, 2L))).thenReturn(entities);
+
+        AtomicReference<List<RowReorderTestEntity>> checkedEntities = new AtomicReference<>();
+        DatatableRestControllerV2<RowReorderTestEntity, Long> restrictedController =
+                new DatatableRestControllerV2<>(repository) {
+                    @Override
+                    protected boolean checkRowReorderScope(jakarta.servlet.http.HttpServletRequest request,
+                            List<RowReorderTestEntity> scopedEntities) {
+                        checkedEntities.set(scopedEntities);
+                        return false;
+                    }
+                };
+        restrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(
+            new RowReorderDto.RowReorderValue(1L, 10, 20),
+            new RowReorderDto.RowReorderValue(2L, 20, 10)
+        ));
+
+        assertEquals(Boolean.FALSE, restrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(entities, checkedEntities.get());
+        assertEquals(10, first.getPosition());
+        assertEquals(20, second.getPosition());
+        verify(repository, never()).saveAll(any());
+    }
+
+    @Test
+    void testRowReorderRejectsUnannotatedNumericProperty() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity entity = new RowReorderTestEntity(1L, 10);
+        when(repository.findAllById(List.of(1L))).thenReturn(List.of(entity));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> unrestrictedController =
+                new DatatableRestControllerV2<>(repository) {};
+        unrestrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("unrestrictedValue");
+        request.setValues(List.of(new RowReorderDto.RowReorderValue(1L, 0, 99)));
+
+        assertEquals(Boolean.FALSE, unrestrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(0, entity.getUnrestrictedValue());
+        verify(repository, never()).saveAll(any());
+    }
+
+    @Test
+    void testRowReorderUpdatesAnnotatedProperty() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity entity = new RowReorderTestEntity(1L, 10);
+        when(repository.findAllById(List.of(1L))).thenReturn(List.of(entity));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> unrestrictedController =
+                new DatatableRestControllerV2<>(repository) {};
+        unrestrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(new RowReorderDto.RowReorderValue(1L, 10, 20)));
+
+        assertEquals(Boolean.TRUE, unrestrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(20, entity.getPosition());
+        verify(repository).saveAll(List.of(entity));
+    }
+
+    @Test
+    void testRowReorderRejectsIdProperty() {
+        assertRejectedRowReorderProperty("id");
+    }
+
+    @Test
+    void testRowReorderRejectsDomainIdPropertyEvenWhenAnnotated() {
+        assertRejectedRowReorderProperty("domainId");
+    }
+
+    @Test
+    void testRowReorderDoesNotModifyOrSaveWhenAnyValueIsInvalid() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity first = new RowReorderTestEntity(1L, 10);
+        RowReorderTestEntity second = new RowReorderTestEntity(2L, 20);
+        when(repository.findAllById(List.of(1L, 2L))).thenReturn(List.of(first, second));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> unrestrictedController =
+                new DatatableRestControllerV2<>(repository) {};
+        unrestrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(
+            new RowReorderDto.RowReorderValue(1L, 10, 20),
+            new RowReorderDto.RowReorderValue(2L, 20, null)
+        ));
+
+        assertEquals(Boolean.FALSE, unrestrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(10, first.getPosition());
+        assertEquals(20, second.getPosition());
+        verify(repository, never()).saveAll(any());
+    }
+
+    @Test
+    void testRowReorderRejectsRequestWhenAnyEntityIsMissing() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity entity = new RowReorderTestEntity(1L, 10);
+        when(repository.findAllById(List.of(1L, 2L))).thenReturn(List.of(entity));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> unrestrictedController =
+                new DatatableRestControllerV2<>(repository) {};
+        unrestrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(
+            new RowReorderDto.RowReorderValue(1L, 10, 20),
+            new RowReorderDto.RowReorderValue(2L, 20, 10)
+        ));
+
+        assertEquals(Boolean.FALSE, unrestrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(10, entity.getPosition());
+        verify(repository, never()).saveAll(any());
+    }
+
+    @Test
+    void testRowReorderRejectsRequestContainingEntityFromAnotherDomain() {
+        int currentDomainId = 1;
+        int foreignDomainId = 2;
+        List<Long> requestedIds = List.of(1L, 2L);
+
+        @SuppressWarnings("unchecked")
+        DomainIdRepository<RowReorderTestEntity, Long> repository = mock(DomainIdRepository.class);
+        RowReorderTestEntity currentDomainEntity = new RowReorderTestEntity(1L, 10);
+        currentDomainEntity.setDomainId(currentDomainId);
+        RowReorderTestEntity foreignDomainEntity = new RowReorderTestEntity(2L, 20);
+        foreignDomainEntity.setDomainId(foreignDomainId);
+
+        when(repository.findAllByIdInAndDomainId(requestedIds, currentDomainId))
+            .thenReturn(List.of(currentDomainEntity));
+        // This is what the unscoped implementation would load and subsequently modify.
+        when(repository.findAllById(requestedIds)).thenReturn(List.of(currentDomainEntity, foreignDomainEntity));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> domainController =
+                new DatatableRestControllerV2<>(repository) {};
+        domainController.checkDomainId = true;
+        domainController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(
+            new RowReorderDto.RowReorderValue(1L, 10, 20),
+            new RowReorderDto.RowReorderValue(2L, 20, 10)
+        ));
+
+        try (MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class)) {
+            cloudTools.when(CloudToolsForCore::getDomainId).thenReturn(currentDomainId);
+
+            assertEquals(Boolean.FALSE, domainController.rowReorder(controller.getRequest(), request).getBody());
+        }
+
+        assertEquals(10, currentDomainEntity.getPosition());
+        assertEquals(20, foreignDomainEntity.getPosition());
+        verify(repository).findAllByIdInAndDomainId(requestedIds, currentDomainId);
+        verify(repository, never()).findAllById(any());
+        verify(repository, never()).saveAll(any());
+    }
+
+    @Test
+    void testRowReorderAllowsAnnotatedPropertyInheritedFromSuperclass() {
+        @SuppressWarnings("unchecked")
+        JpaRepository<InheritedRowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        InheritedRowReorderTestEntity entity = new InheritedRowReorderTestEntity(1L, 10);
+        when(repository.findAllById(List.of(1L))).thenReturn(List.of(entity));
+
+        DatatableRestControllerV2<InheritedRowReorderTestEntity, Long> unrestrictedController =
+                new DatatableRestControllerV2<>(repository) {};
+        unrestrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc("position");
+        request.setValues(List.of(new RowReorderDto.RowReorderValue(1L, 10, 20)));
+
+        assertEquals(Boolean.TRUE, unrestrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(20, entity.getPosition());
+        verify(repository).saveAll(List.of(entity));
+    }
+
+    private void assertRejectedRowReorderProperty(String dataSrc) {
+        @SuppressWarnings("unchecked")
+        JpaRepository<RowReorderTestEntity, Long> repository = mock(JpaRepository.class);
+        RowReorderTestEntity entity = new RowReorderTestEntity(1L, 10);
+        when(repository.findAllById(List.of(1L))).thenReturn(List.of(entity));
+
+        DatatableRestControllerV2<RowReorderTestEntity, Long> unrestrictedController =
+                new DatatableRestControllerV2<>(repository) {};
+        unrestrictedController.setRequest(controller.getRequest());
+
+        RowReorderDto request = new RowReorderDto();
+        request.setDataSrc(dataSrc);
+        request.setValues(List.of(new RowReorderDto.RowReorderValue(1L, 1, 2)));
+
+        assertEquals(Boolean.FALSE, unrestrictedController.rowReorder(controller.getRequest(), request).getBody());
+        assertEquals(1L, entity.getId());
+        assertEquals(1, entity.getDomainId());
+        verify(repository, never()).saveAll(any());
+    }
+
+    private DatatableRestControllerV2<GeneratedIdTestEntity, Long> createGeneratedIdController(
+            JpaRepository<GeneratedIdTestEntity, Long> repository) {
+        return createGeneratedIdController(repository, null);
+    }
+
+    private DatatableRestControllerV2<GeneratedIdTestEntity, Long> createGeneratedIdController(
+            JpaRepository<GeneratedIdTestEntity, Long> repository, AtomicReference<Long> idSeenByBeforeSave) {
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                new DatatableRestControllerV2<>(repository) {
+                    @Override
+                    public void beforeSave(GeneratedIdTestEntity entity) {
+                        if (idSeenByBeforeSave != null) idSeenByBeforeSave.set(entity.getRecordId());
+                    }
+                };
+        generatedIdController.setValidator(validator);
+        generatedIdController.setRequest(controller.getRequest());
+        return generatedIdController;
+    }
+
+    private void assertEditorCreateClearsGeneratedId(long requestId) {
+        @SuppressWarnings("unchecked")
+        JpaRepository<GeneratedIdTestEntity, Long> repository = mock(JpaRepository.class);
+        AtomicReference<Long> idAtSave = new AtomicReference<>();
+        when(repository.save(any())).thenAnswer(invocation -> {
+            GeneratedIdTestEntity entity = invocation.getArgument(0);
+            idAtSave.set(entity.getRecordId());
+            return new GeneratedIdTestEntity(123L, entity.getName());
+        });
+
+        DatatableRestControllerV2<GeneratedIdTestEntity, Long> generatedIdController =
+                createGeneratedIdController(repository);
+        DatatableRequest<Long, GeneratedIdTestEntity> request = new DatatableRequest<>();
+        request.setAction("create");
+        request.setData(Map.of(requestId, new GeneratedIdTestEntity(999L, "new record")));
+
+        generatedIdController.handleEditor(generatedIdController.getRequest(), request);
+
+        verify(repository).save(any());
+        assertNull(idAtSave.get(), "Editor create must persist without a client-provided generated ID");
+    }
+
+    private static class GeneratedIdTestEntityBase {
+
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long recordId;
+
+        GeneratedIdTestEntityBase(Long recordId) {
+            this.recordId = recordId;
+        }
+
+        public Long getRecordId() {
+            return recordId;
+        }
+
+        public void setRecordId(Long recordId) {
+            this.recordId = recordId;
+        }
+    }
+
+    private static class GeneratedIdTestEntity extends GeneratedIdTestEntityBase {
+
+        private String name;
+
+        GeneratedIdTestEntity(Long recordId, String name) {
+            super(recordId);
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    private static class AssignedIdTestEntity {
+
+        @Id
+        private Long recordId;
+
+        AssignedIdTestEntity(Long recordId) {
+            this.recordId = recordId;
+        }
+
+        public Long getRecordId() {
+            return recordId;
+        }
+
+        public void setRecordId(Long recordId) {
+            this.recordId = recordId;
+        }
+    }
+
+    @Embeddable
+    private static class EmbeddedTestId implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
+        private Long parentId;
+        private Long itemId;
+
+        EmbeddedTestId() {
+            // JPA constructor
+        }
+
+        EmbeddedTestId(Long parentId, Long itemId) {
+            this.parentId = parentId;
+            this.itemId = itemId;
+        }
+
+        @Override
+        public boolean equals(Object object) {
+            if (this == object) return true;
+            if (object instanceof EmbeddedTestId == false) return false;
+            EmbeddedTestId other = (EmbeddedTestId)object;
+            return java.util.Objects.equals(parentId, other.parentId) && java.util.Objects.equals(itemId, other.itemId);
+        }
+
+        @Override
+        public int hashCode() {
+            return java.util.Objects.hash(parentId, itemId);
+        }
+    }
+
+    private static class EmbeddedIdTestEntity {
+
+        @EmbeddedId
+        private EmbeddedTestId recordId;
+        private String name;
+
+        EmbeddedIdTestEntity(EmbeddedTestId recordId, String name) {
+            this.recordId = recordId;
+            this.name = name;
+        }
+
+        public EmbeddedTestId getRecordId() {
+            return recordId;
+        }
+
+        public void setRecordId(EmbeddedTestId recordId) {
+            this.recordId = recordId;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+    }
+
+    private static class RowReorderTestEntity {
+
+        @Id
+        @DataTableColumn(inputType = {DataTableColumnType.ID, DataTableColumnType.ROW_REORDER})
+        private Long id;
+        @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER)
+        private Integer position;
+        @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER)
+        private Integer domainId = 1;
+        private Integer unrestrictedValue = 0;
+
+        RowReorderTestEntity(Long id, Integer position) {
+            this.id = id;
+            this.position = position;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public Integer getPosition() {
+            return position;
+        }
+
+        public void setPosition(Integer position) {
+            this.position = position;
+        }
+
+        public Integer getDomainId() {
+            return domainId;
+        }
+
+        public void setDomainId(Integer domainId) {
+            this.domainId = domainId;
+        }
+
+        public Integer getUnrestrictedValue() {
+            return unrestrictedValue;
+        }
+
+        public void setUnrestrictedValue(Integer unrestrictedValue) {
+            this.unrestrictedValue = unrestrictedValue;
+        }
+    }
+
+    private static class RowReorderTestEntityBase {
+
+        @DataTableColumn(inputType = DataTableColumnType.ROW_REORDER)
+        private Integer position;
+
+        RowReorderTestEntityBase(Integer position) {
+            this.position = position;
+        }
+
+        public Integer getPosition() {
+            return position;
+        }
+
+        public void setPosition(Integer position) {
+            this.position = position;
+        }
+    }
+
+    private static class InheritedRowReorderTestEntity extends RowReorderTestEntityBase {
+
+        @Id
+        private Long id;
+
+        InheritedRowReorderTestEntity(Long id, Integer position) {
+            super(position);
+            this.id = id;
+        }
+
+        public Long getId() {
+            return id;
+        }
     }
 
 }

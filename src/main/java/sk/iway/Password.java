@@ -311,7 +311,7 @@ public class Password
 			{
 				if(vyprsanieHesla > 0)
 				{
-					long lastDate = Adminlog.getLastDate(Adminlog.TYPE_USER_CHANGE_PASSWORD, userId);
+					long lastDate = Adminlog.getLastDate(Adminlog.TYPE_USER_CHANGE_PASSWORD, userId, null, -1);
 					Calendar calExpiryDate = Calendar.getInstance();
 					calExpiryDate.setTimeInMillis(lastDate);
 					calExpiryDate.add(Calendar.DATE, vyprsanieHesla);
