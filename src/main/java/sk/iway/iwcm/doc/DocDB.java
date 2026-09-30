@@ -2459,7 +2459,7 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, show_in_navbar, show_in_sitemap, logged_show_in_menu, logged_show_in_sitemap, logged_show_in_navbar, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents";
+			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, show_in_navbar, show_in_sitemap, logged_show_in_menu, logged_show_in_sitemap, logged_show_in_navbar, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c, perex_image FROM documents";
 
 			ps = db_conn.prepareStatement(sql);
 			rs = ps.executeQuery();
@@ -2493,6 +2493,7 @@ public class DocDB extends DB
 				doc.setFieldA(DB.getDbString(rs, "field_a"));
 				doc.setFieldB(DB.getDbString(rs, "field_b"));
 				doc.setFieldC(DB.getDbString(rs, "field_c"));
+				doc.setPerexImage(DB.getDbString(rs, "perex_image"));
 
 				//POZOR: do fieldT si neskor ulozime DOMENU
 
@@ -2568,10 +2569,10 @@ public class DocDB extends DB
 	}
 
 	/**
-	 * Vrati docDetails s cache, su tam len zakladne info - docId, title, navbar, externalLink, groupId, virtualPath, available, showInMenu, showInSitemap, showInNavbar, loggedShowIn...
-	 * @param docId - id stranky
-	 * @param doNotReturnNull - ak je nastavene na true, tak to vzdy vrati aspon prazdny objekt
-	 * @return
+	 * Returns cached basic page metadata, including its title, URL, visibility and perex image.
+	 * @param docId page ID
+	 * @param doNotReturnNull whether a missing page should return a placeholder instead of null
+	 * @return cached metadata, a placeholder, or null when the page is missing
 	 */
 	public DocDetails getBasicDocDetails(int docId, boolean doNotReturnNull)
 	{
@@ -5034,7 +5035,7 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents WHERE doc_id=?";
+			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c, perex_image FROM documents WHERE doc_id=?";
 
 			ps = db_conn.prepareStatement(sql);
 			ps.setInt(1, docId);
@@ -5078,6 +5079,7 @@ public class DocDB extends DB
 				doc.setFieldA(DB.getDbString(rs, "field_a"));
 				doc.setFieldB(DB.getDbString(rs, "field_b"));
 				doc.setFieldC(DB.getDbString(rs, "field_c"));
+				doc.setPerexImage(DB.getDbString(rs, "perex_image"));
 
 				//POZOR: do fieldT si neskor ulozime DOMENU
 				GroupDetails group = GroupsDB.getInstance().getGroup(doc.getGroupId());

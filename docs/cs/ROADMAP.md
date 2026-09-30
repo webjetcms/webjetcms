@@ -57,10 +57,11 @@ Vysvětlení použitých piktogramů:
 - [ ] Automatický promazávat `temp` soubory, které se mohou hromadit.
 - [x] +Administrace - odstranit závislost na `Vue.js` a nahradit interní komponenty nativními webovými komponenty (#58722).
 - [ ] +Upravit načítání admin části tak, aby se vyměnilo přes volání REST služby pouze vnitřek stránky, nikoli kompletní reload HTML kódu.
-- [ ] +Vylepšit úvodní stránku administrace - dynamické bloky, možnost vlastního nastavení co se zobrazí, užitečné informace a bloky.
+- [x] +Vylepšit úvodní stránku administrace - dynamické bloky, možnost vlastního nastavení co se zobrazí, užitečné informace a bloky (#332).
 - [ ] +Filtr v aplikaci novinky neumožňuje zadat DOC ID více stránek kdyby chtěli podle filtru “DOC_ID rovná se” zvolit více stránek
 filtr bere pouze první hodnotu. Dodělat tedy možnost `IN` pro možnost zadání více hodnot (#JT-2139).
 - [ ] +AI - upravit vytváření `chunk` tak, aby na začátku/konci nebyla nesmyslná slova, oříznout od první mezery po poslední mezeru.
+- [ ] +Webové stránky - upravit výchozí zobrazení pro nového uživatele - zobrazovat ID, pořadí a uspořádat vzestupně.
 
 ## 2025
 

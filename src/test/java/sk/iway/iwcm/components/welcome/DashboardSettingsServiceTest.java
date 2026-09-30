@@ -1,0 +1,339 @@
+package sk.iway.iwcm.components.welcome;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
+
+import org.junit.jupiter.api.Test;
+
+import sk.iway.iwcm.components.welcome.DashboardSettingsDto.Item;
+
+/** Verifies dashboard invariants and the portable settings record limits. */
+class DashboardSettingsServiceTest {
+    private final DashboardSettingsRepository repository = mock(DashboardSettingsRepository.class);
+    private final DashboardSettingsService service = new DashboardSettingsService(repository);
+
+    @Test
+    void supportsFortyEightInstancesWithoutExceedingTheLayoutRecordLimit() {
+        DashboardSettingsDto settings = settings();
+        settings.getItems().get(0).setId(UUID.randomUUID().toString());
+        for (int i = 1; i < 48; i++) settings.getItems().add(item(UUID.randomUUID().toString(), "shortcut", "1x1"));
+
+        Map<String, String> records = service.validateAndSerialize(settings, "42");
+
+        assertEquals(49, records.size());
+        assertTrue(records.values().stream().allMatch(value -> value.length() <= 2000));
+        settings.getItems().add(item("excess", "forms", "1x1"));
+        assertThrows(IllegalArgumentException.class, () -> service.save(7, "42", settings));
+        verifyNoInteractions(repository);
+    }
+
+    @Test
+    void rejectsOversizedGlobalAndDomainOptionsBeforeWriting() {
+        DashboardSettingsDto settings = settings();
+        settings.getItems().get(0).setOptions(Map.of("text", "x".repeat(2000)));
+        assertThrows(IllegalArgumentException.class, () -> service.save(7, "42", settings));
+
+        settings.getItems().get(0).setOptions(Map.of());
+        settings.getDomainOptions().put("sessions-1", Map.of("text", "x".repeat(2000)));
+        assertThrows(IllegalArgumentException.class, () -> service.save(7, "42", settings));
+        verifyNoInteractions(repository);
+    }
+
+    @Test
+    void rejectsUnknownTypesInvalidSizesAndDuplicateInstances() {
+        DashboardSettingsDto settings = settings();
+        settings.getItems().clear();
+        settings.getItems().add(item("bad", "unregistered", "1x1"));
+        assertThrows(IllegalArgumentException.class, () -> service.validateAndSerialize(settings, "42"));
+
+        settings.setItems(settings().getItems());
+        settings.getItems().get(0).setSize("3x3");
+        assertThrows(IllegalArgumentException.class, () -> service.validateAndSerialize(settings, "42"));
+
+        settings.setItems(settings().getItems());
+        settings.getItems().add(item("sessions-1", "shortcut", "1x1"));
+        assertThrows(IllegalArgumentException.class, () -> service.validateAndSerialize(settings, "42"));
+
+        settings.setItems(settings().getItems());
+        settings.getItems().add(item("sessions-2", "sessions", "2x3"));
+        assertThrows(IllegalArgumentException.class, () -> service.validateAndSerialize(settings, "42"));
+    }
+
+    /** Supported grid sizes and repeated instances survive a settings round trip without rewriting the profile. */
+    @Test
+    void preservesSupportedSizesAndRepeatedGridInstances() {
+        Map<String, java.util.List<String>> variants = Map.of(
+            "recent-pages", java.util.List.of("3x2", "2x3", "3x3"),
+            "referrers", java.util.List.of("2x2", "2x3", "3x3"),
+            "publishing", java.util.List.of("2x2", "2x3"),
+            "search-terms", java.util.List.of("3x3", "2x3"),
+            "approvals", java.util.List.of("1x1", "3x3"),
+            "changed-pages", java.util.List.of("3x2", "3x3"),
+            "audit", java.util.List.of("3x2", "3x3"),
+            "logged-admins", java.util.List.of("2x2", "2x3"),
+            "server-memory", java.util.List.of("3x2", "3x3"),
+            "server-cpu", java.util.List.of("3x2", "3x3")
+        );
+        variants.forEach((type, sizes) -> sizes.forEach(size -> {
+            DashboardSettingsDto source = settings();
+            source.getItems().add(item("preview", type, size));
+            source.getItems().add(item("duplicate", type, size));
+            when(repository.read(7)).thenReturn(service.validateAndSerialize(source, "42"));
+
+            DashboardSettingsDto loaded = service.load(7, "42");
+
+            assertTrue(loaded.isConfigured(), type + " " + size);
+            assertEquals(java.util.List.of("sessions-1", "preview", "duplicate"), loaded.getItems().stream().map(Item::getId).toList());
+            assertEquals(java.util.List.of(type, type), loaded.getItems().stream().skip(1).map(Item::getType).toList());
+            assertEquals(java.util.List.of(size, size), loaded.getItems().stream().skip(1).map(Item::getSize).toList());
+        }));
+        verify(repository, never()).replace(anyInt(), anyString(), anyMap(), anySet());
+    }
+
+    @Test
+    void rejectsUnknownDomainOptionOwnerAndInvalidInstanceIds() {
+        DashboardSettingsDto settings = settings();
+        settings.getDomainOptions().put("other-user-widget", Map.of());
+        assertThrows(IllegalArgumentException.class, () -> service.validateAndSerialize(settings, "42"));
+
+        settings.getDomainOptions().clear();
+        settings.getItems().get(0).setId("../another.preference");
+        assertThrows(IllegalArgumentException.class, () -> service.validateAndSerialize(settings, "42"));
+    }
+
+    @Test
+    void readsTheSharedLayoutWithOnlyCurrentDomainOptions() {
+        DashboardSettingsDto source = settings();
+        source.getItems().add(item("form-1", "forms", "3x3"));
+        source.getDomainOptions().put("form-1", Map.of("formName", "contact-a"));
+        source.setAcknowledgedNewsVersion("2026.18");
+        Map<String, String> records = new LinkedHashMap<>(service.validateAndSerialize(source, "42"));
+        records.put("overview.domain.84.form-1", "{\"formName\":\"contact-b\"}");
+        when(repository.read(7)).thenReturn(records);
+
+        DashboardSettingsDto first = service.load(7, "42");
+        DashboardSettingsDto second = service.load(7, "84");
+
+        assertTrue(first.isConfigured());
+        assertEquals("contact-a", first.getDomainOptions().get("form-1").get("formName"));
+        assertEquals("contact-b", second.getDomainOptions().get("form-1").get("formName"));
+        assertEquals("2026.18", second.getAcknowledgedNewsVersion());
+        assertEquals(first.getItems().stream().map(Item::getId).toList(), second.getItems().stream().map(Item::getId).toList());
+        verify(repository, times(2)).read(7);
+    }
+
+    @Test
+    void distinguishesMissingConfigurationAndDoesNotOverwriteCorruptRecords() {
+        when(repository.read(7)).thenReturn(Map.of());
+        assertFalse(service.load(7, "42").isConfigured());
+
+        when(repository.read(7)).thenReturn(Map.of("overview.layout.v1", "{truncated"));
+        assertFalse(service.load(7, "42").isConfigured());
+
+        when(repository.read(7)).thenReturn(Map.of("overview.layout.v1", ""));
+        assertFalse(service.load(7, "42").isConfigured());
+
+        when(repository.read(7)).thenReturn(Map.of("overview.layout.v1", "{\"version\":1,\"order\":[\"sessions-1\"]}", "overview.widget.sessions-1", "null"));
+        assertFalse(service.load(7, "42").isConfigured());
+        verify(repository, never()).replace(anyInt(), anyString(), anyMap(), anySet());
+    }
+
+    /** Requires the security widget on writes while allowing the UI to retain and upgrade an older layout. */
+    @Test
+    void requiresSessionsForWritesWithoutDiscardingLegacyLayoutsOnRead() {
+        DashboardSettingsDto legacy = new DashboardSettingsDto();
+        legacy.getItems().add(item("shortcut-1", "shortcut", "1x1"));
+        when(repository.read(7)).thenReturn(service.validateAndSerialize(legacy, "42"));
+
+        DashboardSettingsDto loaded = service.load(7, "42");
+        assertTrue(loaded.isConfigured());
+        assertEquals("shortcut-1", loaded.getItems().get(0).getId());
+        assertThrows(IllegalArgumentException.class, () -> service.save(7, "42", loaded));
+        verify(repository, never()).replace(anyInt(), anyString(), anyMap(), anySet());
+    }
+
+    @Test
+    void returnsConfiguredOnlyAfterSuccessfulPersistence() {
+        DashboardSettingsDto settings = settings();
+        doThrow(new IllegalStateException("Database is unavailable")).when(repository).replace(anyInt(), anyString(), anyMap(), anySet());
+
+        assertThrows(IllegalStateException.class, () -> service.save(7, "42", settings));
+        assertFalse(settings.isConfigured());
+
+        doNothing().when(repository).replace(anyInt(), anyString(), anyMap(), anySet());
+        assertTrue(service.save(7, "42", settings).isConfigured());
+        verify(repository, times(2)).replace(eq(7), eq("42"), anyMap(), eq(java.util.Set.of("sessions-1")));
+    }
+
+    /** Reset returns a new unconfigured profile only after persistence succeeds. */
+    @Test
+    void resetReturnsCleanDefaultsAndPropagatesPersistenceFailure() {
+        when(repository.reset(eq(7), any())).thenAnswer(call -> {
+            java.util.function.Function<Map<String, String>, Map<String, String>> retain = call.getArgument(1);
+            return retain.apply(Map.of());
+        });
+        DashboardSettingsDto result = service.reset(7);
+
+        assertEquals(1, result.getVersion());
+        assertFalse(result.isConfigured());
+        assertTrue(result.getItems().isEmpty());
+        assertTrue(result.getDomainOptions().isEmpty());
+        assertNull(result.getAcknowledgedNewsVersion());
+        verify(repository).reset(eq(7), any());
+        verify(repository, never()).read(anyInt());
+        verify(repository, never()).replace(anyInt(), anyString(), anyMap(), anySet());
+
+        doThrow(new IllegalStateException("Database is unavailable")).when(repository).reset(eq(7), any());
+        assertThrows(IllegalStateException.class, () -> service.reset(7));
+    }
+
+    /** Reset preserves ordered shortcuts and the migration decision while clearing all widget preferences. */
+    @Test
+    void resetRetainsShortcutsAndTheirMetadata() {
+        DashboardSettingsDto source = settings();
+        Item shortcut = item("link", "shortcut", "1x1");
+        shortcut.setOptions(Map.of("source", "url", "href", "/apps/banner/admin/?id=23#detail", "title", "My banner"));
+        source.getItems().add(shortcut);
+        source.setLegacyBookmarksHandled(true);
+        source.setAcknowledgedNewsVersion("2026.18");
+        source.getDomainOptions().put("sessions-1", Map.of("custom", true));
+        Map<String, String> original = service.validateAndSerialize(source, "42");
+        when(repository.reset(eq(7), any())).thenAnswer(call -> {
+            java.util.function.Function<Map<String, String>, Map<String, String>> retain = call.getArgument(1);
+            return retain.apply(original);
+        });
+        DashboardSettingsDto result = service.reset(7);
+        assertFalse(result.isConfigured());
+        assertTrue(result.isShortcutsConfigured());
+        assertTrue(result.isLegacyBookmarksHandled());
+        assertEquals(java.util.List.of("link"), result.getItems().stream().map(Item::getId).toList());
+        assertEquals(shortcut.getOptions(), result.getItems().get(0).getOptions());
+        assertTrue(result.getDomainOptions().isEmpty());
+        assertNull(result.getAcknowledgedNewsVersion());
+
+        original.remove("overview.widget.link");
+        original.put("overview.layout.v1", "{\"version\":1,\"order\":[]}");
+        result = service.reset(7);
+        assertTrue(result.isShortcutsConfigured(), "Existing empty profiles must not recreate removed shortcuts");
+        assertFalse(result.isLegacyBookmarksHandled(), "Older layouts can still review browser bookmarks");
+        assertTrue(result.getItems().isEmpty());
+    }
+
+    /** Variant resets save repeated cards and retain shortcuts from the locked server snapshot. */
+    @Test
+    void resetsToPersistentVariantsAndRejectsInvalidLayoutsBeforeWriting() {
+        DashboardSettingsDto previous = settings();
+        previous.getItems().add(item("kept-link", "shortcut", "1x1"));
+        previous.setLegacyBookmarksHandled(true);
+        previous.setAcknowledgedNewsVersion("old");
+        Map<String, String> original = service.validateAndSerialize(previous, "42");
+        when(repository.reset(eq(7), any())).thenAnswer(call -> {
+            java.util.function.Function<Map<String, String>, Map<String, String>> retain = call.getArgument(1);
+            return retain.apply(original);
+        });
+        DashboardSettingsDto layout = settings();
+        layout.getItems().add(item("stale-link", "shortcut", "1x1"));
+        layout.getItems().add(item("recent-small", "recent-pages", "2x3"));
+        layout.getItems().add(item("recent-large", "recent-pages", "3x3"));
+        layout.getDomainOptions().put("recent-small", Map.of("days", 7));
+        DashboardSettingsDto result = service.reset(7, "42", layout);
+        assertTrue(result.isConfigured());
+        assertTrue(result.isShortcutsConfigured());
+        assertTrue(result.isLegacyBookmarksHandled());
+        assertNull(result.getAcknowledgedNewsVersion());
+        assertEquals(java.util.List.of("kept-link", "sessions-1", "recent-small", "recent-large"), result.getItems().stream().map(Item::getId).toList());
+        assertEquals(Map.of("days", 7), result.getDomainOptions().get("recent-small"));
+        when(repository.read(7)).thenReturn(service.validateAndSerialize(result, "42"));
+        assertEquals(4, service.load(7, "42").getItems().size());
+        clearInvocations(repository);
+        layout.getItems().removeIf(item -> "sessions".equals(item.getType()));
+        assertThrows(IllegalArgumentException.class, () -> service.reset(7, "42", layout));
+        verifyNoInteractions(repository);
+    }
+
+    /** A new account keeps supplied default shortcuts, while an explicitly empty strip stays empty. */
+    @Test
+    void variantResetDistinguishesNewAndEmptyShortcutPreferences() {
+        DashboardSettingsDto layout = settings();
+        layout.getItems().add(item("default-link", "shortcut", "1x1"));
+        Map<String, String> original = new LinkedHashMap<>();
+        when(repository.reset(eq(7), any())).thenAnswer(call -> {
+            java.util.function.Function<Map<String, String>, Map<String, String>> retain = call.getArgument(1);
+            return retain.apply(original);
+        });
+        assertEquals(2, service.reset(7, "42", layout).getItems().size());
+        original.putAll(service.validateAndSerialize(settings(), "42"));
+        assertEquals(1, service.reset(7, "42", layout).getItems().size());
+    }
+
+    /** Rejects executable and ambiguous destinations before any settings can be persisted. */
+    @Test
+    void validatesCustomShortcutDestinationsAndRetainsLegacyMenuOptions() {
+        for (String href : java.util.List.of("https://www.webjetcms.sk/docs?a=1#help", "http://intranet.example/", "/admin/v9/?x=1")) {
+            DashboardSettingsDto settings = settings();
+            Item shortcut = item("custom", "shortcut", "1x1");
+            shortcut.setOptions(Map.of("source", "url", "href", href, "title", "Documentation"));
+            settings.getItems().add(shortcut);
+            assertDoesNotThrow(() -> service.validateAndSerialize(settings, "42"));
+        }
+        for (String href : java.util.List.of("javascript:alert(1)", "data:text/html,test", "//evil.example/", "/\\evil.example/",
+                "https://user:password@example.com/", "https://example.com/\n", "https:example.com", "relative/path")) {
+            DashboardSettingsDto settings = settings();
+            Item shortcut = item("unsafe", "shortcut", "1x1");
+            shortcut.setOptions(Map.of("source", "url", "href", href, "title", "Unsafe"));
+            settings.getItems().add(shortcut);
+            assertThrows(IllegalArgumentException.class, () -> service.save(7, "42", settings), href);
+        }
+        assertDoesNotThrow(() -> DashboardSettingsService.validateShortcut(Map.of("href", "/apps/form/admin/")));
+        assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("source", "url", "href", "https://example.com", "title", " ")));
+        assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("source", "other")));
+        assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("href", 123)));
+        verifyNoInteractions(repository);
+    }
+
+    /** Appearance options survive persistence while arbitrary styles and class lists are rejected. */
+    @Test
+    void validatesAndPersistsShortcutAppearance() {
+        DashboardSettingsDto settings = settings();
+        Item shortcut = item("appearance", "shortcut", "1x1");
+        shortcut.setOptions(Map.of("href", "/apps/form/admin/", "icon", "ti-file-text", "color", "mint"));
+        settings.getItems().add(shortcut);
+        Map<String, String> records = service.validateAndSerialize(settings, "42");
+        when(repository.read(7)).thenReturn(records);
+        assertEquals(shortcut.getOptions(), service.load(7, "42").getItems().get(1).getOptions());
+        for (String icon : java.util.List.of("ti-star", "ti-chart-bar", "")) {
+            assertDoesNotThrow(() -> DashboardSettingsService.validateShortcut(Map.of("icon", icon)));
+        }
+        for (Object icon : java.util.List.of("ti-star other-class", "<img src=x>", "ti-" + "a".repeat(80), 123)) {
+            assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("icon", icon)));
+        }
+        for (String color : java.util.List.of("default", "mint", "lavender", "blue", "amber", "peach", "rose")) {
+            assertDoesNotThrow(() -> DashboardSettingsService.validateShortcut(Map.of("color", color)));
+        }
+        for (Object color : java.util.List.of("#ff0000", "url(evil)", "unknown", 123)) {
+            assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("color", color)));
+        }
+        Map<String, Object> nullColor = new LinkedHashMap<>();
+        nullColor.put("color", null);
+        assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(nullColor));
+    }
+
+    static DashboardSettingsDto settings() {
+        DashboardSettingsDto settings = new DashboardSettingsDto();
+        settings.getItems().add(item("sessions-1", "sessions", "2x3"));
+        return settings;
+    }
+
+    static Item item(String id, String type, String size) {
+        Item item = new Item();
+        item.setId(id);
+        item.setType(type);
+        item.setSize(size);
+        return item;
+    }
+}

@@ -1,0 +1,314 @@
+import { registerWidget } from './registry';
+import { node, text, date, number, field, empty, containNativeScroll, pagePreview } from './widget-utils';
+
+/**
+ * Clustered session data supplied by the server bootstrap.
+ * @typedef {Object} SessionData
+ * @property {string} currentSessionId - ID of the session displaying the dashboard.
+ * @property {{cluster: string, userSessions: Object[]}[]} [userSessions] - Cluster entries containing sessions with sessionId, logonTime, browserName and connection details.
+ */
+
+/**
+ * Returns individual sessions while retaining the originating cluster label.
+ * Places the current session first, followed by other sessions in descending login-time order.
+ *
+ * @param {SessionData} data - Session clusters and current-session identity.
+ * @returns {Object[]} Copied session records with an added cluster property.
+ */
+export function flattenSessions(data) {
+    return (data.userSessions || []).flatMap(cluster => (cluster.userSessions || []).map(session => ({ ...session, cluster: cluster.cluster })))
+        .sort((a, b) => Number(b.sessionId === data.currentSessionId) - Number(a.sessionId === data.currentSessionId) || b.logonTime - a.logonTime);
+}
+
+/**
+ * Resolves the installed Tabler browser glyph without trusting a CSS class from session data.
+ * @param {string} [browserName] - Browser label or user-agent fragment.
+ * @returns {string} A supported browser icon class, or the desktop icon when unrecognized.
+ */
+function sessionBrowserIcon(browserName) {
+    const name = String(browserName || '');
+    if (/edge|edg\//i.test(name)) return 'ti-brand-edge';
+    if (/firefox|fxios/i.test(name)) return 'ti-brand-firefox';
+    if (/chrome|chromium|crios/i.test(name)) return 'ti-brand-chrome';
+    if (/safari/i.test(name)) return 'ti-brand-safari';
+    return 'ti-device-desktop';
+}
+
+/**
+ * Uses the shared hover/focus/Escape tooltip behavior and releases instances with the widget.
+ * @param {HTMLElement} list - Session list containing tooltip triggers.
+ * @param {AbortSignal} signal - Disposes tooltips and keyboard handlers on abort.
+ */
+function sessionTooltips(list, signal) {
+    if (!window.WJ?.initTooltip || !window.$) return;
+    const targets = list.querySelectorAll('[data-bs-toggle="tooltip"]');
+    window.WJ.initTooltip(window.$(targets));
+    window.$(targets).off('keydown.wjTooltipA11y').on('keydown.wjTooltipA11y', function(event) {
+        if (event.key !== 'Escape') return;
+        const visible = document.getElementById(this.getAttribute('aria-describedby'))?.classList.contains('show');
+        window.bootstrap?.Tooltip?.getInstance(this)?.hide();
+        if (visible) { event.preventDefault(); event.stopPropagation(); }
+    });
+    signal.addEventListener('abort', () => targets.forEach(target => {
+        window.bootstrap?.Tooltip?.getInstance(target)?.dispose();
+        window.$(target).off('.wjTooltipA11y');
+    }), { once: true });
+}
+
+/**
+ * Renders sessions with logout controls for other sessions and feedback for pending cluster removals.
+ * Successful immediate removals update the supplied session data and refresh the session widget.
+ *
+ * @param {HTMLElement} container - Parent to receive the list.
+ * @param {SessionData} data - Mutable bootstrap session data used for later refreshes.
+ * @param {import('./registry').WidgetContext} context - Translations and dashboard refresh actions.
+ * @param {AbortSignal} signal - Cancels logout requests and releases list resources.
+ */
+function sessionList(container, data, context, signal) {
+    const list = node('ul', 'md-dashboard-widget__sessions list-unstyled');
+    list.tabIndex = 0;
+    list.setAttribute('aria-label', text(context, 'sessions'));
+    containNativeScroll(list, signal);
+    flattenSessions(data).forEach(session => {
+        const row = node('li', 'md-dashboard-widget__session');
+        row.dataset.sessionLogon = String(session.logonTime);
+        const device = node('i', `ti ${sessionBrowserIcon(session.browserName)} md-dashboard-widget__session-device`);
+        device.setAttribute('aria-hidden', 'true');
+        row.append(device, node('strong', 'md-dashboard-widget__session-name', session.browserName), node('span', 'md-dashboard-widget__session-detail', `${date(session.logonTime)} · ${session.remoteAddr || ''}`));
+        row.title = [session.domainName, session.cluster].filter(Boolean).join(' · ');
+        if (session.sessionId === data.currentSessionId) {
+            const current = node('span', 'md-dashboard-widget__session-current');
+            current.tabIndex = 0;
+            current.setAttribute('role', 'img');
+            current.setAttribute('aria-label', text(context, 'currentSession'));
+            current.setAttribute('title', text(context, 'currentSession'));
+            current.setAttribute('data-bs-toggle', 'tooltip');
+            row.append(current);
+        }
+        else {
+            const logout = node('button', 'btn btn-sm md-dashboard-widget__session-logout');
+            logout.type = 'button';
+            logout.setAttribute('aria-label', text(context, 'logoutSession'));
+            logout.setAttribute('title', text(context, 'logoutSession'));
+            logout.setAttribute('data-bs-toggle', 'tooltip');
+            const logoutIcon = node('i', 'ti ti-logout'); logoutIcon.setAttribute('aria-hidden', 'true'); logout.append(logoutIcon);
+            logout.addEventListener('click', async () => {
+                window.bootstrap?.Tooltip?.getInstance(logout)?.hide();
+                logout.disabled = true;
+                try {
+                    const response = await fetch('/admin/rest/removeSession', {
+                        method: 'POST', signal, credentials: 'same-origin',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8', 'X-CSRF-Token': window.csrfToken },
+                        body: new URLSearchParams({ sessionId: session.sessionId })
+                    });
+                    const result = await response.text();
+                    if (!response.ok || !/\b["']?success["']?\s*:\s*true\b/.test(result)) throw new Error('Session removal failed');
+                    if (/\b["']?pending["']?\s*:\s*true\b/.test(result)) {
+                        window.bootstrap?.Tooltip?.getInstance(logout)?.dispose();
+                        logout.replaceWith(node('span', 'md-dashboard-widget__session-feedback small text-muted', text(context, 'sessionPending')));
+                    } else {
+                        for (const cluster of data.userSessions) {
+                            cluster.userSessions = cluster.userSessions.filter(item => item.sessionId !== session.sessionId);
+                        }
+                        row.remove();
+                        context.dashboard.refresh(context.settings.items.find(item => item.type === 'sessions')?.id || 'dashboard-fixed-sessions');
+                    }
+                } catch (error) {
+                    if (signal.aborted) return;
+                    logout.disabled = false;
+                    let message = row.querySelector('[role="alert"]');
+                    if (!message) { message = node('p', 'md-dashboard-widget__session-feedback text-danger small'); message.setAttribute('role', 'alert'); row.append(message); }
+                    message.textContent = text(context, 'sessionError');
+                }
+            });
+            row.append(logout);
+        }
+        list.append(row);
+    });
+    container.append(list);
+    sessionTooltips(list, signal);
+}
+
+function renderSessions({ container, context, signal }) {
+    const data = context.data.currentSessions;
+    const sessions = flattenSessions(data);
+    container.append(node('span', 'badge md-dashboard-widget__session-count', number(sessions.length)));
+    sessionList(container, data, context, signal);
+}
+
+/**
+ * Uses the announcement's release number, so development rebuilds do not reset acknowledgement.
+ * Preserves the original HTML and extracts plain-text paragraphs for the collapsed summary.
+ *
+ * @param {import('./registry').WidgetContext} context - Supplies changelog HTML and the configured release-version fallback.
+ * @returns {{version: string, paragraphs: string[], html: string}} Announcement content and its acknowledgement key, which may be empty.
+ */
+export function releaseNews(context) {
+    const html = context.labels.changelog || '';
+    const document = new DOMParser().parseFromString(html, 'text/html');
+    document.body.querySelectorAll('br').forEach(br => br.replaceWith(document.createTextNode('\n')));
+    document.body.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote').forEach(block => block.append(document.createTextNode('\n\n')));
+    const content = document.body.textContent || '';
+    const paragraphs = content.replace(/\\n/g, '\n').split(/\n\s*\n/).map(value => value.trim()).filter(Boolean);
+    const version = paragraphs.join(' ').match(/\b20\d{2}\.\d+(?:\.\d+)?\b/)?.[0] || context.config.releaseVersion || '';
+    return { version, paragraphs, html };
+}
+
+/**
+ * Builds a documentation URL using a supported administration language, falling back to English.
+ * @param {string} [path=''] - Path relative to the localized documentation root.
+ * @returns {string} Absolute URL under the latest documentation version.
+ */
+function docsUrl(path = '') {
+    const language = ['sk', 'cs', 'en'].includes(window.userLng) ? window.userLng : window.userLng === 'cz' ? 'cs' : 'en';
+    return `https://docs.webjetcms.sk/latest/${language}/${path}`;
+}
+
+/**
+ * Reuses page lookup with cancellable requests and releases the menu with its widget.
+ * Selecting a result navigates to the page editor; failed lookups provide an empty suggestion list.
+ *
+ * @param {HTMLInputElement} input - Search control enhanced with jQuery UI autocomplete.
+ * @param {HTMLElement} group - Parent in which the results menu is placed.
+ * @param {AbortSignal} signal - Cancels requests and destroys autocomplete and observers on abort.
+ * @returns {(function(boolean): void)|null} A toggle that cancels pending lookup before enabling or disabling suggestions, or null when unavailable.
+ */
+function pageAutocomplete(input, group, signal) {
+    if (!window.WJ.hasPermission('menuWebpages') || !window.$?.fn?.autocomplete) return null;
+    const $input = window.$(input);
+    let request;
+    const cancel = () => { request?.abort(); $input.autocomplete('close'); };
+    $input.autocomplete({
+        appendTo: group, minLength: 2, delay: 300,
+        position: { my: 'left top+2', at: 'left bottom', collision: 'flipfit' },
+        async source({ term }, respond) {
+            request?.abort();
+            if (!term.trim()) { respond([]); return; }
+            const current = new AbortController();
+            request = current;
+            try {
+                const response = await fetch(`/admin/skins/webjet6/_doc_autocomplete.jsp?editable=true&docid=${encodeURIComponent(term.trim())}`, {
+                    signal: current.signal, credentials: 'same-origin'
+                });
+                if (!response.ok) throw new Error('Page lookup failed');
+                const items = await response.json();
+                respond(current.signal.aborted ? [] : items.slice(0, 20));
+            } catch (error) { respond([]); }
+        },
+        focus: () => false,
+        select(event, { item }) {
+            event.preventDefault();
+            window.location.assign(`/admin/v9/webpages/web-pages-list/?docid=${encodeURIComponent(item.doc_id)}`);
+        }
+    });
+    const autocomplete = $input.autocomplete('instance');
+    autocomplete.liveRegion.addClass('visually-hidden');
+    autocomplete.menu.element.addClass('md-dashboard-widget__search-results');
+    autocomplete._renderItem = (list, item) => {
+        const row = pagePreview(item);
+        row.classList.add('md-dashboard-widget__page');
+        row.title = [item.fullPath, item.label].filter(Boolean).join('\n');
+        row.append(node('span', 'md-dashboard-widget__page-date', item.saveDate));
+        return window.$(node('li')).append(row).appendTo(list);
+    };
+    autocomplete._resizeMenu = () => autocomplete.menu.element.outerWidth(input.getBoundingClientRect().width);
+    const resize = new ResizeObserver(() => {
+        if (!autocomplete.menu.element.is(':visible')) return;
+        autocomplete._resizeMenu();
+        autocomplete.menu.element.position({ ...autocomplete.options.position, of: $input });
+    });
+    resize.observe(input);
+    containNativeScroll(autocomplete.menu.element[0], signal);
+    input.addEventListener('input', cancel, { signal });
+    signal.addEventListener('abort', () => { request?.abort(); resize.disconnect(); $input.autocomplete('destroy'); }, { once: true });
+    return enabled => { cancel(); $input.autocomplete('option', 'disabled', !enabled); };
+}
+
+/** Registers mandatory security and optional release/help widgets. */
+export function registerUtilityWidgets() {
+    registerWidget({
+        type: 'sessions', titleKey: 'admin.dashboard.sessions.js', icon: 'ti-devices', sizes: ['2x3'], mandatory: true,
+        render: renderSessions
+    });
+    registerWidget({
+        type: 'news', titleKey: 'admin.dashboard.news.js', icon: 'ti-sparkles', sizes: ['3x2'],
+        render({ container, context }) {
+            const { version, paragraphs, html } = releaseNews(context);
+            if (!html.trim()) { empty(container, context); return; }
+            const collapsed = Boolean(version && context.settings.acknowledgedNewsVersion === version);
+            const toggle = node('button', 'btn btn-sm md-dashboard-widget__news-toggle', text(context, collapsed ? 'newsMore' : 'newsCollapse'));
+            toggle.type = 'button';
+            toggle.setAttribute('aria-expanded', String(!collapsed));
+            const toggleIcon = node('i', `ti ti-chevron-${collapsed ? 'down' : 'up'}`);
+            toggleIcon.setAttribute('aria-hidden', 'true');
+            toggle.prepend(toggleIcon);
+            toggle.addEventListener('click', async () => {
+                const hadFocus = document.activeElement === toggle;
+                const region = container.closest('[data-widget-type="news"]') || container;
+                toggle.disabled = true;
+                if (!await context.dashboard.acknowledgeNews(collapsed ? null : version)) toggle.disabled = false;
+                if (hadFocus && (document.activeElement === document.body || document.activeElement === toggle)) {
+                    region.querySelector('.md-dashboard-widget__news-toggle')?.focus({ preventScroll: true });
+                }
+            });
+            container.classList.toggle('is-news-collapsed', collapsed);
+            if (collapsed) {
+                const header = node('div', 'md-dashboard-widget__news-header');
+                header.append(node('p', 'md-dashboard-widget__news-summary', paragraphs[0]), toggle);
+                container.append(header);
+            } else {
+                const highlights = node('div', 'md-dashboard-widget__news-highlights');
+                // The translated announcement has already passed through WJ.parseMarkdown in overview.pug.
+                highlights.innerHTML = html;
+                container.append(highlights);
+                const actions = node('div', 'md-dashboard-widget__news-actions');
+                const details = node('a', 'md-dashboard-widget__news-more', context.labels.seeCompleteChangelog || text(context, 'all'));
+                details.href = docsUrl('CHANGELOG'); details.target = '_blank'; details.rel = 'noopener';
+                actions.append(details, toggle);
+                container.append(actions);
+            }
+        }
+    });
+    registerWidget({
+        type: 'search', titleKey: 'admin.dashboard.search.js', icon: 'ti-search', sizes: ['fullauto'], defaultOptions: { scope: 'admin' },
+        configure({ container, options, context }) {
+            const scope = field(container, text(context, 'search'), [['admin', text(context, 'adminSearch')], ['docs', text(context, 'docsSearch')]], options.scope || 'admin');
+            return { read: () => ({ options: { scope: scope.value } }) };
+        },
+        render({ container, options, context, instance, signal }) {
+            const form = node('form', 'md-dashboard-widget__search');
+            const switcher = node('fieldset', 'md-dashboard-widget__search-scope');
+            switcher.append(node('legend', 'visually-hidden', text(context, 'search')));
+            const input = node('input', 'form-control'); input.type = 'search'; input.required = true; input.maxLength = 500;
+            let scope = options.scope === 'docs' ? 'docs' : 'admin';
+            let autocomplete;
+            const hint = () => { input.placeholder = text(context, scope === 'docs' ? 'searchDocsHint' : 'searchAdminHint'); input.setAttribute('aria-label', input.placeholder); };
+            for (const value of ['admin', 'docs']) {
+                const label = node('label', 'md-dashboard-widget__search-option');
+                const radio = node('input', 'visually-hidden'); radio.type = 'radio'; radio.name = `scope-${instance.id}`; radio.value = value; radio.checked = scope === value;
+                radio.addEventListener('change', () => { scope = value; hint(); autocomplete?.(scope === 'admin'); });
+                radio.addEventListener('click', () => {
+                    scope = value; hint(); autocomplete?.(scope === 'admin');
+                    if (input.value.trim()) form.requestSubmit();
+                });
+                label.append(radio, node('span', 'md-dashboard-widget__search-label', text(context, value === 'admin' ? 'adminSearch' : 'docsSearch'))); switcher.append(label);
+            }
+            hint();
+            const group = node('div', 'input-group md-dashboard-widget__search-input');
+            const submit = node('button', 'btn md-dashboard-widget__search-submit');
+            submit.type = 'submit'; submit.setAttribute('aria-label', text(context, 'searchButton'));
+            const searchIcon = node('i', 'ti ti-search'); searchIcon.setAttribute('aria-hidden', 'true'); submit.append(searchIcon);
+            group.append(input, submit);
+            form.append(group, switcher);
+            form.addEventListener('submit', event => {
+                event.preventDefault();
+                const query = input.value.trim(); if (!query) { input.focus(); return; }
+                if (scope === 'docs') window.open(`${docsUrl()}?q=${encodeURIComponent(query)}`, '_blank', 'noopener');
+                else window.location.assign(`/admin/v9/search/index/?text=${encodeURIComponent(query)}`);
+            });
+            container.append(form);
+            autocomplete = pageAutocomplete(input, group, signal);
+            autocomplete?.(scope === 'admin');
+        }
+    });
+}
