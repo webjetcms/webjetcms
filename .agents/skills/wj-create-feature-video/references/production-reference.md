@@ -537,7 +537,11 @@ in `helpers/feature_video_plan.js`.
 Move whole objects in `shots` to reorder the film. Derived numbering and time
 ranges update automatically; inline callbacks move with the metadata. Never sort
 by old timestamps or maintain another ordered callback list. Each callback needs an
-independent baseline. The `308-pb-redesign.js` example reopens the editor and
+independently recoverable baseline, not an unconditional reset. Prefer one-time
+setup and reuse an already suitable screen. Keep a complete topic's clicks and
+results in one longer shot; sentence boundaries are narration cues, not automatic
+cut points. Preparation must also work for a single-shot retake without running
+another shot's demonstration. The `308-pb-redesign.js` example reopens the editor and
 installs isolated browser-only content per shot, with extra preparation for the
 structure drawer and section library. Its shared lifecycle branches by stable
 shot id for the legacy editor, preview and documentation. The legacy editor
@@ -545,6 +549,13 @@ logs in on the demo origin, the preview reopens its URL in the recording tab,
 and the automatic outro uses `I.videoDocumentation`. Shared Page Builder
 preparation skips the legacy editor and documentation; shared cleanup skips
 the preview and documentation because neither leaves an editor open. Setup and cleanup are cut out during editing.
+That editor-specific reset pattern is not a default for other productions. The
+five-topic `332-58806-new-welcome-page.js` example keeps each user flow together,
+reuses its dashboard between topics and drives action cues from the actual
+localized narration lines. Its estimated reading holds do not establish exact
+audio synchronization; inspect each result alongside generated speech when it
+is available, and adjust pacing before the next action instead of padding only
+the end of a shot.
 The migrated 260, 283, 289 and 293 scenarios provide examples for scoped upload
 fixtures, tree selection, nested editors and configuration views. Each shot must
 prepare its own prerequisites with ordinary clicks; never invoke another shot

@@ -36,6 +36,14 @@ Default to nontechnical WebJET CMS customers, Slovak, 16:9 landscape, about
 80 to 90 seconds, and a closing invitation to the feature documentation. Follow
 explicit requests for other lengths or languages.
 
+Prefer a few substantial topic shots with a continuous user flow. When the user
+lists topics, use those as the shot boundaries unless a real filming constraint
+requires otherwise. Keep opening a control, changing values, applying them and
+showing the result together. Do not split each click or sentence into a short
+shot: repeated setup and returns to the same starting screen make editing slow
+and the finished video feel disconnected. Extend the duration when several
+complete workflows need room; do not force them into the default 80–90 seconds.
+
 Identify one main promise and up to three supporting benefits. Explain what
 becomes easier, faster, clearer or safer. Lead with the problem or benefit, show
 the improvement and close with the documentation call to action.
@@ -72,8 +80,10 @@ when it is available; `durationSeconds` remains an editing estimate until adjust
   Old `AUTO 1`, `AUTO 2` labels were shot numbers, not
   different execution types. Never encode position in the type or use an array
   index as the action id.
-- Store one narration beat and matching browser action/state per shot. If an
-  old shot covers different narration beats, split it into separate stable ids.
+- Store one coherent topic or user workflow per shot. It can contain several
+  narration beats and clicks, in spoken order. Split only at meaningful topic,
+  location or filming boundaries, not merely because the next sentence describes
+  another action. Prefer one complete example over several partial examples.
 - The array order is authoritative for narration, shot-plan numbering, derived
   time ranges and automatic execution. Move the entire shot object to reorder
   it, including its inline callbacks. Do not maintain a separate narration block,
@@ -154,7 +164,9 @@ or maintain separate callback maps. Pass `I` first and one options object with
 `plan`, optional `context` and `language`, and the lifecycle callbacks needed:
 
 - `setup`: one-time login and shared setup, after automatic callbacks are validated.
-- `prepare`: a shared baseline before every automatic shot; receives the resolved shot.
+- `prepare`: optional readiness/baseline work before automatic shots; receives
+  the resolved shot. Reuse an already suitable scene instead of unconditionally
+  navigating or reconstructing it.
 - `cleanup`: cleanup after each successful automatic shot; receives the resolved shot.
 
 For automatic shots, the runner logs
@@ -216,8 +228,12 @@ retain raw footage and do not replace existing outputs. The clean scene after
 the slate lasts three seconds before automatic actions, in both recording modes.
 
 A reordered shot must not depend on a prior shot's dialog, selection, search or
-mutation. Reopen/reset the editor with isolated browser-only content when that
-is the simplest reliable baseline. Use `I.clickCss` for CSS selectors or ordinary
+mutation. Keep one-time login and common fixtures in `setup`. Use idempotent,
+shot-specific preparation only for prerequisites that are actually missing, so
+a full run continues naturally while an isolated retake or reordered run still
+works. Do not reset the whole application between steps of the same workflow.
+Reopen/reset an editor with isolated browser-only content only when necessary
+for a reliable baseline. Use `I.clickCss` for CSS selectors or ordinary
 `I.click` during preparation to avoid cursor animation and editing holds in
 footage that will be cut. Discard temporary changes during cleanup. When a shot
 uses an iframe, return to the top-level page before closing its editor. Handle
@@ -317,6 +333,13 @@ actual `text-sk` (or the selected `text-<language>`). Start from the spoken
 sentences, not from `notes` or the title. Passing tests and plausible filming
 notes do not prove that the viewer sees what the voice describes.
 
+Write the spoken sequence first, implement its actions in that order, and derive
+`notes` last. For longer shots, keep a sentence-to-action mapping inside the
+callback (for example numbered narration lines and matching cues). Keep one
+canonical narration; do not copy its text into a second timing script. Leave
+readable time at each result before moving to the next narrated action, rather
+than doing every click immediately and holding only the final screen.
+
 - Map each sentence to the visible starting state, on-camera action and result.
   Read the actual `shot` callback and any helpers it calls; inspect `prepare`
   and lifecycle callbacks to establish the baseline. A narrated click, edit or
@@ -329,9 +352,10 @@ notes do not prove that the viewer sees what the voice describes.
   promises may introduce a later demonstration, but must be phrased as such,
   not as actions already happening in the current shot. Verify that linked
   documentation actually contains any instructions promised in the narration.
-- Resolve mismatches by implementing the narrated action, splitting the beat,
+- Resolve mismatches by implementing or reordering the narrated action,
   or narrowing the narration to the useful behavior actually shown. Update
-  `notes` afterward; changing notes alone never resolves a mismatch. Keep result
+  `notes` afterward; changing notes alone never resolves a mismatch. Split the
+  shot only when a meaningful topic or filming boundary requires it. Keep result
   assertions and enough readable footage after the corresponding action.
 - Inspect available recordings against the sentences, including action order,
   readable results and time available for the narration. When speech exists,
