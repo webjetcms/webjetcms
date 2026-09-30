@@ -400,7 +400,7 @@ export class DashboardController {
             this.undoContainer.hidden = true;
             status.textContent = "";
             this._render();
-            window.WJ.notifySuccess(this._t("saved", "Saved."), "", 10000);
+            window.WJ.notifySuccess(this._t("saved", "Saved."), "", 3000);
             return true;
         } catch (error) {
             if (!this.destroyed && !request.signal.aborted) status.replaceChildren(node("span", "text-danger", this._t("saveError", "The change could not be saved. Your previous settings were kept.")));
@@ -879,7 +879,7 @@ export class DashboardController {
             this.undoContainer.hidden = true;
             this.status.textContent = "";
             this._render();
-            window.WJ.notifySuccess(allSizes ? this._t("resetAllDone", "All available widget sizes have been added.") : this._t("resetDone", "The default overview has been restored."), "", 10000);
+            window.WJ.notifySuccess(allSizes ? this._t("resetAllDone", "All available widget sizes have been added.") : this._t("resetDone", "The default overview has been restored."), "", 3000);
             return true;
         } catch (error) {
             if (!this.destroyed && !request.signal.aborted) this._showFailure("saveError", "The change could not be saved. Your previous settings were kept.");
