@@ -2,6 +2,10 @@
 
 Na úvodnej obrazovke môžete rýchlo skontrolovať návštevnosť, odoslané formuláre či stránky čakajúce na schválenie a vrátiť sa k rozpracovaným stránkam.
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Prehľad tvoria **widgety**, teda karty s konkrétnymi údajmi, napríklad grafom návštevnosti alebo zoznamom požiadaviek na schválenie. Vyberte si tie, ktoré využívate, a usporiadajte ich podľa toho, čo chcete sledovať ako prvé. Pomocou [skratiek](#vaše-skratky) si otvoríte často používanú časť administrácie alebo konkrétny priečinok bez hľadania v menu.
 
 Pri prvom otvorení sa podľa vašich oprávnení zobrazia predvolené widgety **Návštevnosť**, **Formuláre**, **Na schválenie**, **Chyby 404**, **Pokračujte v práci**, **Odkiaľ návštevníci prišli**, **Najbližšie publikovanie** a **Newsletter**. Ďalšie widgety si môžete sami pridať. V hornej časti je privítanie so skratkami a novinkami, aktívne prihlásenia a vyhľadávanie.

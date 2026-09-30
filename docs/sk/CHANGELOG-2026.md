@@ -17,7 +17,9 @@
 
 - [Úvodnú obrazovku](redactor/admin/welcome.md) sme prerobili na widgetový systém, aby ste mali údaje potrebné pri práci na jednom mieste bez prechádzania jednotlivých častí administrácie. Sami si vyberiete widgety a nastavíte zobrazované údaje, veľkosť a poradie podľa svojich potrieb (#58806).
 
-![](redactor/admin/dashboard.png)
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ### Webové stránky
 
