@@ -12,7 +12,7 @@ const videoPlan = {
             "text-sk": `Nová úvodná stránka WebJET CMS prináša informácie, ktoré potrebujete hneď po prihlásení.
 Hore máte svoje skratky, novinky aj prehľad aktívnych prihlásení.
 Pod nimi vidíte návštevnosť, odoslané formuláre a obsah čakajúci na schválenie.
-K rozpracovaným stránkam sa ľahko vrátite cez kartu Pokračujte v práci.`,
+K naposledy uloženým stránkam sa ľahko vrátite cez kartu Pokračujte v práci.`,
             notes: "Lines 1-2: hold the welcome panel. Line 3: smoothly reveal the overview and its real metrics. Line 4: show the recent-page card. End at the overview toolbar so widget editing continues from the same screen.",
             shot: async ({ I, shot, cue, scrollTo }) => {
                 await cue(shot, 1, async () => {
@@ -97,9 +97,9 @@ Kliknutím na Hotovo ukončíte úpravy. Dôležité údaje tak máte na začiat
             "text-sk": `Vyhľadávanie máte poruke priamo na úvodnej stránke.
 V administrácii stačí začať písať názov stránky, napríklad gregor.
 Ponuka zobrazí zodpovedajúce stránky aj s náhľadovým obrázkom a priečinkom, takže ich ľahšie rozlíšite.
-Kliknutím na slovenskú stránku otvoríte priamo jej editor.
+Kliknutím na stránku otvoríte priamo jej editor.
 Ak potrebujete návod, do rovnakého poľa zadáte napríklad formuláre a kliknete na tlačidlo V dokumentácii.
-Otvorí sa dokumentácia s vyhľadaným výrazom, rýchlejšie sa tak dostanete k potrebným informáciám.`,
+Otvorí sa dokumentácia s výsledkami vyhľadávania zadaného textu.`,
             notes: "Lines 1-4: reveal search, type gregor, hold the loaded thumbnails and paths, then click the Slovak result. Close the editor and return home as an unvoiced transition. Line 5: type formuláre and click documentation scope. Line 6: show the real documentation search. The scope click submits the existing query; do not submit gregor to documentation. Reopen the actual popup URL in the original recording tab, as each tab has a separate WebM.",
             shot: async ({ I, DTE, shot, cue, scrollTo, typeText, home, openDocumentationSearch, searchInput }) => {
                 const results = ".md-dashboard-widget__search-results";
@@ -154,7 +154,7 @@ Vráťte sa na úvod a pridajte druhú skratku.
 Tentoraz ako cieľ zvoľte Vlastná URL adresa.
 Vložte adresu zoznamu webových stránok aj s parametrom pre priečinok číslo dvadsaťštyri.
 Skratku pomenujte Zo sveta financií a uložte ju.
-Po ukončení úprav na ňu kliknite. Otvorí sa priamo sekcia Zo sveta financií so zoznamom článkov, bez rozbaľovania stromu priečinkov.`,
+Po ukončení úprav na ňu kliknite. Otvorí sa priamo sekcia Zo sveta financií so zoznamom článkov, bez potreby rozbaľovania stromu priečinkov.`,
             notes: "Lines 1-6: introduce the benefit, open shortcut editing; select Aplikácie, Bannerový systém and Štatistika bannerov in three separate spoken cues; save, finish editing and visit /apps/banner/admin/banner-stat/. Lines 7-10: return through the logo, add a custom URL, visibly type /admin/v9/webpages/web-pages-list/?groupid=24 and the title, then save. Line 11: finish editing and click the new link; assert the selected folder and loaded article list. Return home on camera as an unvoiced transition to feedback. Do not replace these steps with pre-created shortcuts.",
             shot: async ({ I, DT, shot, cue, choose, typeText, save, home, editShortcuts, addShortcut, modal }) => {
                 await cue(shot, 1, async () => { await I.seeElement(".md-dashboard__shortcuts"); });
