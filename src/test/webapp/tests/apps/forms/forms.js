@@ -128,7 +128,7 @@ Scenario("vyhladavanie podla datumu do", ({ I, DT }) => {
     });
 });
 
-function fillFormSimple(I, DTE, random) {
+function fillFormSimple(I, DTE, random, expectedResult="Formulár bol úspešne odoslaný") {
     if (DTE == null) I.fillField("Meno a priezvisko", "Form-autotest-"+random);
     else I.fillField("Meno a priezvisko", "Form-autotest-"+random+"<b>strong</b>");
 
@@ -151,7 +151,8 @@ function fillFormSimple(I, DTE, random) {
     I.click("Súhlas s podmienkami");
     I.click("Odoslať");
 
-    I.waitForElement("#ajaxFormResultContainer");
+    // The result container exists before the AJAX response arrives.
+    I.waitForText(expectedResult, 30, "#ajaxFormResultContainer");
 }
 
 Scenario("vyplnenie formsimple", ({ I }) => {
@@ -162,7 +163,7 @@ Scenario("vyplnenie formsimple", ({ I }) => {
 
     //over spam ochranu
     I.wait(5);
-    fillFormSimple(I, null, randomNumber2);
+    fillFormSimple(I, null, randomNumber2, "Formulár bol detekovaný ako SPAM");
     I.dontSee("Formulár bol úspešne odoslaný");
     I.see("Formulár bol detekovaný ako SPAM");
 
