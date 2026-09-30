@@ -4,6 +4,7 @@
 
 - Configuration
   - [Configuration](/admin/setup/configuration/README.md)
+  - [Home Screen](/admin/setup/configuration/dashboard.md)
   - [Languages](/admin/setup/languages.md)
   - [Translator](/admin/setup/translation.md)
 
