@@ -15,15 +15,20 @@ export class HeatMapViewer {
         this.width = 0;
         this.tileSize = 1024;
         this.nodes = {};
-        ["Width", "Scale", "Opacity", "OpacityValue", "Visible", "Reload", "Frame", "Viewport", "Stage", "StageSize", "Overlay", "Tiles", "Status", "Notice", "Version", "Title", "Url", "Period", "Back"].forEach(name => {
+        ["Width", "Scale", "Opacity", "OpacityValue", "Visible", "Reload", "Frame", "Viewport", "Stage", "StageSize", "Overlay", "Tiles", "Status", "Notice", "Title", "Back"].forEach(name => {
             this.nodes[name] = element.querySelector("#heatMap" + name);
         });
+        this.closeOnEscape = event => {
+            if (event.key === "Escape" && window !== window.parent) {
+                event.preventDefault();
+                window.parent.WJ.closeIframeModal();
+            }
+        };
     }
 
     async init() {
         this.nodes.Back.href += "?dateRange=" + encodeURIComponent(this.dateRange);
-        const dates = this.dateRange.replace(/^daterange:/, "").split("-");
-        this.nodes.Period.textContent = dates.filter(value => Number(value) > 0).map(value => WJ.formatDate(Number(value))).join(" – ");
+        document.addEventListener("keydown", this.closeOnEscape);
         this.nodes.Width.addEventListener("change", () => this.loadWidth());
         this.nodes.Reload.addEventListener("click", () => this.loadWidth());
         this.nodes.Scale.addEventListener("change", () => this.resize());
@@ -33,6 +38,7 @@ export class HeatMapViewer {
         });
         this.nodes.Visible.addEventListener("change", () => {
             this.nodes.Overlay.hidden = !this.nodes.Visible.checked;
+            this.nodes.Opacity.disabled = !this.nodes.Visible.checked;
             this.scheduleTiles();
         });
         this.nodes.Frame.addEventListener("load", () => this.frameLoaded());
@@ -95,7 +101,6 @@ export class HeatMapViewer {
         this.nodes.Viewport.classList.add("d-none");
         this.nodes.Reload.disabled = true;
         this.nodes.Notice.classList.add("d-none");
-        this.nodes.Version.textContent = "";
         this.clearTiles();
         this.status(this.texts.loading);
         this.width = Number(this.nodes.Width.value);
@@ -103,7 +108,6 @@ export class HeatMapViewer {
             const metadata = await this.getJson("/metadata", {width: this.width});
             if (revision !== this.revision) return;
             this.nodes.Title.textContent = metadata.title;
-            this.nodes.Url.textContent = metadata.url;
             this.tileSize = metadata.tileSize;
             const notes = [];
             if (metadata.historicalUnavailable && metadata.source === "current") notes.push(this.texts.fallback);
@@ -114,9 +118,6 @@ export class HeatMapViewer {
                 this.status(this.texts.unavailable, true);
                 return;
             }
-            this.nodes.Version.textContent = (metadata.source === "history"
-                ? this.texts.historical + " " + WJ.formatDateTime(metadata.effectiveFrom)
-                : this.texts.current) + " · " + this.texts.clicks + ": " + metadata.clicks.toLocaleString();
             this.nodes.Frame.style.width = this.width + "px";
             this.nodes.Stage.style.width = this.width + "px";
             this.nodes.Stage.style.height = this.height + "px";
@@ -151,6 +152,7 @@ export class HeatMapViewer {
             frameWindow.addEventListener("resize", () => this.scheduleTiles());
             doc.addEventListener("click", event => event.preventDefault(), true);
             doc.addEventListener("submit", event => event.preventDefault(), true);
+            doc.addEventListener("keydown", this.closeOnEscape);
             this.contentObserver?.disconnect();
             this.contentObserver = new ResizeObserver(() => this.scheduleTiles());
             this.contentObserver.observe(doc.documentElement);
@@ -168,6 +170,9 @@ export class HeatMapViewer {
         const scale = this.nodes.Scale.value === "fit"
             ? Math.min(1, Math.max(1, this.nodes.Viewport.clientWidth - 30) / this.width)
             : Number(this.nodes.Scale.value);
+        this.height = Math.max(1, Math.floor((this.nodes.Viewport.clientHeight - 30) / scale));
+        this.nodes.Frame.style.height = this.height + "px";
+        this.nodes.Stage.style.height = this.height + "px";
         this.nodes.Stage.style.transform = "scale(" + scale + ")";
         this.nodes.StageSize.style.width = this.width * scale + "px";
         this.nodes.StageSize.style.height = this.height * scale + "px";
@@ -237,6 +242,7 @@ export class HeatMapViewer {
         clearTimeout(this.previewTimer);
         cancelAnimationFrame(this.animationFrame);
         this.resizeObserver.disconnect();
+        document.removeEventListener("keydown", this.closeOnEscape);
         this.clearTiles();
     }
 }

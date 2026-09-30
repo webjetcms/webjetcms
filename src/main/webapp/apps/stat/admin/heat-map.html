@@ -24,6 +24,7 @@
                 column.render = function (value, type, row) {
                     if (type !== "display") return value;
                     const link = document.createElement("a");
+                    link.className = "heat-map-detail-link";
                     link.href = "/apps/stat/admin/heat-map-details/?docId=" + encodeURIComponent(row.id)
                         + "&dateRange=" + encodeURIComponent(ChartTools.getDateRange(null));
                     link.textContent = value;
@@ -46,6 +47,34 @@
                 data.fixed_dateRange = ChartTools.getDateRange(null);
             },
             summary: {mode: "all", columns: ["clicks"], title: "[[#{components.summary.total_title}]]"}
+        });
+        $("#heatMapDataTable").on("click", "a.heat-map-detail-link", function (event) {
+            if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey || event.button !== 0) return;
+            event.preventDefault();
+            event.stopPropagation();
+
+            const link = this;
+            const title = link.textContent;
+            const modal = $("#modalIframe");
+            modal.find(".modal-footer").addClass("d-none");
+            modal.attr("aria-label", title);
+            $("#modalIframeIframeElement").attr("title", title);
+            modal.one("hidden.bs.modal.heatMap", function () {
+                modal.find(".modal-footer").removeClass("d-none");
+                modal.removeAttr("aria-label");
+                modal.off("keydown.heatMap");
+                $("#modalIframeIframeElement").removeAttr("title");
+                if (link.isConnected) link.focus();
+            });
+            modal.on("keydown.heatMap", function (event) {
+                if (event.key === "Escape" && !event.isDefaultPrevented()) WJ.closeIframeModal();
+            });
+            WJ.openIframeModal({
+                url: link.href,
+                title: $("<span>").text(title).html(),
+                width: Math.min(1210, window.innerWidth - 32),
+                height: Math.max(320, window.innerHeight - 160)
+            });
         });
         $("#heatMapDataTable_extfilter").on("click", "button.filtrujem", function () {
             ChartTools.saveSearchCriteria(heatMapDataTable.DATA);

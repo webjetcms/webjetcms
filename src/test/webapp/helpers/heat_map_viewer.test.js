@@ -64,8 +64,14 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
     assert.equal(await page.locator("#heatMapWidth").inputValue(), "1280");
     const frame = page.frames().find(item => item.url().includes("/html/preview"));
     assert.equal(await frame.evaluate(() => innerWidth), 1280);
-    assert.equal(await frame.evaluate(() => innerHeight), 800);
-    await page.waitForFunction(() => document.querySelectorAll("#heatMapTiles img").length === 2);
+    await page.waitForFunction(() => {
+        const frame = document.getElementById("heatMapFrame");
+        return frame.getBoundingClientRect().height > 0 && frame.getBoundingClientRect().bottom <= innerHeight;
+    });
+    await page.waitForFunction(() => {
+        const doc = document.getElementById("heatMapFrame").contentDocument.documentElement;
+        return document.querySelectorAll("#heatMapTiles img").length === Math.ceil(doc.clientWidth / 1024) * Math.ceil(doc.clientHeight / 1024);
+    });
     await frame.evaluate(() => scrollTo(0, 1400));
     await page.waitForFunction(() => document.getElementById("heatMapTiles").style.transform === "translate(0px, -1400px)");
     assert.equal(await page.locator('#heatMapTiles img[data-tile="0:0"]').count(), 0);
@@ -79,11 +85,24 @@ test("click map keeps CSS coordinates while scrolling, scaling and switching wid
     }
     await page.selectOption("#heatMapScale", "0.5");
     assert.equal(await frame.evaluate(() => innerWidth), 1280);
+    const originalHeight = await frame.evaluate(() => innerHeight);
+    await page.setViewportSize({width: 1024, height: 1200});
+    await page.waitForFunction(height => document.getElementById("heatMapFrame").contentWindow.innerHeight > height, originalHeight);
+    assert.equal(await frame.evaluate(() => innerWidth), 1280);
+    await page.setViewportSize({width: 1024, height: 1000});
+    await page.waitForFunction(height => document.getElementById("heatMapFrame").contentWindow.innerHeight === height, originalHeight);
     await page.selectOption("#heatMapWidth", "390");
     await page.waitForFunction(() => document.getElementById("heatMapFrame").contentWindow.innerWidth === 390 && !document.getElementById("heatMapViewport").classList.contains("d-none"));
-    await page.waitForFunction(() => document.querySelectorAll("#heatMapTiles img").length === 1);
+    await page.waitForFunction(() => document.querySelectorAll("#heatMapTiles img").length === Math.ceil(document.getElementById("heatMapFrame").contentDocument.documentElement.clientHeight / 1024));
     await page.uncheck("#heatMapVisible");
     assert.equal(await page.locator("#heatMapOverlay").isVisible(), false);
+    assert.equal(await page.locator("#heatMapOpacity").isDisabled(), true);
+    await page.check("#heatMapVisible");
+    assert.equal(await page.locator("#heatMapOpacity").isDisabled(), false);
+    await page.locator("#heatMapOpacity").fill("40");
+    assert.equal(await page.locator("#heatMapOpacityValue").textContent(), "40 %");
+    assert.equal(await page.locator("#heatMapOverlay").evaluate(node => node.style.opacity), "0.4");
+    assert.equal(await page.locator("#heatMapUrl, #heatMapPeriod, #heatMapVersion").count(), 0);
     mode = "delayed";
     await page.selectOption("#heatMapWidth", "1280");
     await page.locator("#heatMapViewport:not(.d-none)").waitFor();
