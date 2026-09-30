@@ -1,5 +1,9 @@
 # WebJET Feature Video Production Reference
 
+For the finished Tesseract edit, narration retiming, camera zooms and the shared
+brand outro, read [Tesseract Editing](tesseract-editing.md). That reference also
+distinguishes reusable repository instructions from gitignored render artifacts.
+
 ## Repository Recording Profile
 
 Video scenarios live in `src/test/webapp/video`. The standard commands are:
@@ -271,8 +275,29 @@ The default model is Eleven v3
 optional `{ modelId, voiceId }` argument to `I.generateAudio`. Precedence is:
 explicit helper argument, non-empty environment variable, repository default.
 The API key is accepted only from the environment. The request uses
-`mp3_44100_128` and does not send `voice_settings`, leaving ElevenLabs to apply
-the voice's stored or default settings.
+`mp3_44100_128`. By default it omits `voice_settings` and `language_code`, leaving
+ElevenLabs to apply the voice's stored or default settings and detect language.
+
+For per-narration settings, use:
+
+```javascript
+I.generateAudio(videoPlan, {
+    modelId: "eleven_v4",
+    voiceId: "Zai7B4Aol2bJtneyq0L1",
+    languageCode: "sk",
+    voiceSettings: { stability: 0.3, similarityBoost: 0.5 }
+});
+```
+
+`voiceSettings` accepts optional `stability` and `similarityBoost` values from
+0 to 1 (30% and 50% in this example). The client maps them to the API's
+`voice_settings.stability` and `voice_settings.similarity_boost`. Unspecified
+fields remain omitted. `languageCode` is an optional two-letter ISO 639-1 code
+sent as `language_code`; it is separate from `language`, which selects the
+plan's `text-<language>`. It does not translate the narration. Multilingual v2
+does not support language enforcement. Invalid settings fail in preflight;
+the resolved settings are logged before generation. These options do not change
+repository defaults. See the [API reference](https://elevenlabs.io/docs/api-reference/text-to-speech/convert).
 
 The Luki Zajo default is a community voice. Community voice API access can
 depend on the account plan and may not be available on the free tier. If the
@@ -289,7 +314,7 @@ retry, avoiding a second charge after an ambiguous network failure.
 `helpers/audio_plan.js` packs whole localized shots in plan order. A new part
 starts before a shot would exceed the model limit, counting Unicode characters
 and the two newlines between shots. Limits are 5,000 for `eleven_v3`, 10,000 for
-Multilingual v1/v2, 40,000 for Flash/Turbo v2.5 and 30,000 for Flash/Turbo v2.
+`eleven_v4` and Multilingual v1/v2, 40,000 for Flash/Turbo v2.5 and 30,000 for Flash/Turbo v2.
 Unlisted models use the conservative 5,000-character default. A shot longer than
 the limit fails before any API call, identifying the shot, size and model; split
 that shot in the plan. Manual and head narration stay included; silent shots do

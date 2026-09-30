@@ -2,7 +2,7 @@ Feature("video.332-58806-new-welcome-page");
 
 const videoPlan = {
     language: "sk",
-    notes: "Five continuous topic shots, in the requested order. Each narration line drives one matching on-camera cue; notes are editing guidance only. Keep the clicks and results within each topic together. Durations and cue holds are estimates, not measured speech synchronization. No paid audio has been generated. Dashboard preferences are isolated in memory; statistics and search results are real. Do not send the feedback form. Documentation: https://docs.webjetcms.sk/latest/sk/redactor/admin/welcome.",
+    notes: "Five continuous topic shots, in the requested order. Each narration line drives one matching on-camera cue; notes are editing guidance only. Keep the clicks and results within each topic together. Durations and cue holds are estimates, not measured speech synchronization. Dashboard preferences are isolated in memory; statistics and search results are real. Do not send the feedback form. Documentation: https://docs.webjetcms.sk/latest/sk/redactor/admin/welcome.",
     shots: [
         {
             id: "welcome-overview",
@@ -236,7 +236,13 @@ Budeme radi, keď nám napíšete. Vaše skúsenosti z každodennej práce sú n
 
 Scenario("ElevenLabs", ({ I }) => {
     I.generateAudio(videoPlan, {
-        modelId: "eleven_multilingual_v2"
+        modelId: "eleven_v4",
+        voiceId: "Zai7B4Aol2bJtneyq0L1",
+        languageCode: "sk",
+        voiceSettings: {
+            stability: 0.3,
+            similarityBoost: 0.5
+        }
     });
 }).tag("@audio");
 

@@ -1,6 +1,6 @@
 ---
 name: wj-create-feature-video
-description: "Create WebJET CMS feature-video assets from a pull request or branch: one JavaScript shot plan with localized narration and inline CodeceptJS/Playwright shot functions, ElevenLabs audio generation, and browser recordings with editing slates and a visible cursor. Use when preparing a YouTube demo, release video, PR walkthrough, or automated product-video scenario."
+description: "Create WebJET CMS feature videos from a pull request or branch: a JavaScript shot plan with localized narration and browser steps, ElevenLabs audio, recordings, and a finished Tesseract edit with the standard WebJET outro. Use when preparing or revising a YouTube demo, release video, PR walkthrough, or automated product-video scenario."
 ---
 
 # Create a WebJET CMS Feature Video
@@ -103,7 +103,8 @@ when it is available; `durationSeconds` remains an editing estimate until adjust
   use `""` only for a deliberately silent shot. Translating narration alone does
   not translate UI selectors, fixture content or the browser login language.
 - Put browser-external actions, unreliable third-party pages and final
-  title/outro cards in manual shots. Documentation pages can be automatic shots
+  feature-specific title/closing cards in manual shots. The standard brand outro
+  is appended during final editing as described in section 7. Documentation pages can be automatic shots
   using `I.videoDocumentation(url)`. Use `head` only for a requested generated
   presenter; do not silently convert existing manual cards to paid head clips.
   Keep every manual shot in the plan so its audio and duration remain part of
@@ -276,15 +277,22 @@ cursor in the editor. Keep code comments and shot titles in English.
 ## 5. Generate Audio and Validate
 
 The default ElevenLabs model is `eleven_v3`, voice Luki Zajo
-(`Zai7B4Aol2bJtneyq0L1`). Do not send `voice_settings`. Model/voice precedence is
+(`Zai7B4Aol2bJtneyq0L1`). Omit `voice_settings` and `language_code` by default. Model/voice precedence is
 explicit `{ modelId, voiceId }`, non-empty `ELEVENLABS_MODEL_ID` /
 `ELEVENLABS_VOICE_ID`, repository default. The API key comes only from
 `ELEVENLABS_API_KEY`; never store it in code or command arguments.
 
+For an explicitly configured narration, `I.generateAudio` also accepts
+`languageCode: "sk"` to enforce Slovak pronunciation and
+`voiceSettings: { stability: 0.3, similarityBoost: 0.5 }` for 30% stability and
+50% similarity. Values use the 0–1 range. `language` selects the plan's localized
+text; `languageCode` is a separate optional ElevenLabs API setting. Use
+`modelId: "eleven_v4"` when requested, without changing the repository default.
+
 `I.generateAudio(videoPlan)` packs the selected `text-<language>` fields,
 including manual and head shots, into numbered MP3 parts in array order. It
 starts a new part when the next complete shot, including its paragraph separator,
-would exceed the model's character limit (5,000 for `eleven_v3`). Never split a
+would exceed the model's character limit (5,000 for `eleven_v3`, 10,000 for `eleven_v4`). Never split a
 shot between files. An oversized individual shot fails preflight and must be
 divided into smaller shots in the plan. Silent shots add no text or empty parts.
 It never invokes `shot` or `prepare` or forces speech to match estimated durations.
@@ -377,6 +385,28 @@ than doing every click immediately and holding only the final screen.
   browser actions when the environment is available, and identify older audio
   or recordings that no longer match. Repeat this check after narration,
   callbacks, preparation or shot order changes.
+
+## 7. Assemble the Finished Video
+
+When a finished edit or retiming is requested, use the installed Tesseract video
+skill and read [references/tesseract-editing.md](references/tesseract-editing.md).
+Keep the approved narration as the timing anchor, preserve continuous topic
+flows, and use purposeful zooms on the controls being explained. Omit numbered
+chapter-title overlays unless explicitly requested.
+
+Always finish the complete WebJET feature video with the supplied animation in
+`src/test/webapp/video/assets/outro.mp4`, unless the user requests a different
+ending. Append it once, at its original speed, after the final narration and
+the brief closing hold. Preserve the entire animation and any source audio.
+Include it in both the editable Tesseract project and the final MP4; merely
+linking the asset or documenting a manual editing step is not a finished result.
+Feature-only retakes remain standalone; do not append the outro to every shot.
+
+Store reusable editing knowledge in this skill's version-controlled references.
+`docs/feature-video/`, including project readmes and working scripts, is ignored
+and may disappear with the worktree. Keep generated media there, but do not use
+it as the only copy of instructions needed for the next production. Check new
+references and shared source assets with `git status`; leave commits to the user.
 
 ## Talking Heads and Credits
 
