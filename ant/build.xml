@@ -41,7 +41,7 @@
     <target name="define-artifact-properties">
         <property name="artifact.group" value="com.webjetcms" />
         <property name="artifact.name" value="webjetcms" />
-        <property name="artifact.version" value="2026.0-jakarta-SNAPSHOT" />
+        <property name="artifact.version" value="2026.0-boot-SNAPSHOT" />
         <property name="artifact.type" value="jar" />
         <property name="artifact.dir" value="${root}/artifacts" />
         <property name="artifact.pom" value="${artifact.dir}/${artifact.name}-${artifact.version}.pom" />
@@ -93,7 +93,7 @@
         <exec executable="./gradlew" failonerror="true">
             <arg value="javadoc"/>
         </exec>
-        <exec executable="./gradlew">
+        <exec executable="./gradlew" failonerror="true">
             <arg value="delombok"/>
         </exec>
     </target>
@@ -484,7 +484,7 @@
     </target>
 
     <target name="deployGithub" depends="define-artifact-properties,prepareAllJars" description="deploy (SNAPSHOT) version to GitHub repository">
-        <exec executable="mvn">
+        <exec executable="mvn" failonerror="true">
             <arg value="-e"/>
             <arg value="-X"/>
             <arg value="gpg:sign-and-deploy-file"/>

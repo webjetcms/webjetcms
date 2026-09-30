@@ -877,7 +877,10 @@ tasks.register('verifyBootWar') {
 //generovanie javadoc dokumentacie
 //generovat pocas buildu, aby sa dali generovat aj triedy, ktore tu nemame, napr. Constants
 javadoc {
-  failOnError = false
+  failOnError = true
+  options.encoding = 'UTF-8'
+  options.docEncoding = 'UTF-8'
+  options.charSet = 'UTF-8'
   title = "WebJET CMS"
   destinationDir = file('docs/javadoc')
   options.addStringOption('Xdoclint:none', '-quiet')
