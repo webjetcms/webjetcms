@@ -54,6 +54,15 @@ exactly this way. Do not include headings, SSML, pause tags, bracketed shot
 instructions or unsupported claims in spoken text. Keep production directions
 in `notes` and ElevenLabs settings outside the text.
 
+Address the customer consistently in the second person. In Slovak, use the
+second-person plural (polite address): `môžete`, `pridáte`, `otvoríte`, and
+imperatives such as `kliknite`, `vyberte`, `uložte` for instructions. Do not
+narrate the customer's actions as `klikneme`, `pridáme` or `otvoríme`.
+For example: `Kliknite na Upraviť prehľad` and `Pridáte si ďalšiu kartu a v jej
+menu otvoríte Nastavenia widgetu`. First-person wording may describe the WebJET
+team's response, such as `Budeme radi, keď nám napíšete`, but not the customer's
+on-screen actions.
+
 Start around 170 to 195 Slovak words for the default duration. Count words
 across all shots, including manual and head entries. Use measured voice duration
 when it is available; `durationSeconds` remains an editing estimate until adjusted.

@@ -2,7 +2,7 @@ Feature("video.332-58806-new-welcome-page");
 
 const videoPlan = {
     language: "sk",
-    notes: "Five continuous topic shots, in the requested order. Each narration line drives one matching on-camera cue; notes are editing guidance only. Keep the clicks and results within each topic together. Durations and cue holds are estimates, not measured speech synchronization. No paid audio has been generated. Dashboard preferences are isolated in memory; statistics and search results are real. Do not send the feedback form. Documentation: https://docs.webjetcms.sk/latest/sk/redactor/admin/welcome — publish the updated repository article before linking this video to the new dashboard instructions; the public article was still the old version during authoring.",
+    notes: "Five continuous topic shots, in the requested order. Each narration line drives one matching on-camera cue; notes are editing guidance only. Keep the clicks and results within each topic together. Durations and cue holds are estimates, not measured speech synchronization. No paid audio has been generated. Dashboard preferences are isolated in memory; statistics and search results are real. Do not send the feedback form. Documentation: https://docs.webjetcms.sk/latest/sk/redactor/admin/welcome.",
     shots: [
         {
             id: "welcome-overview",
@@ -39,13 +39,13 @@ K rozpracovaným stránkam sa ľahko vrátite cez kartu Pokračujte v práci.`,
             durationSeconds: 48,
             title: "Add, configure, resize and drag one widget",
             "text-sk": `Prehľad si môžete prispôsobiť tomu, čo pri práci sledujete najčastejšie.
-Klikneme na Upraviť prehľad a cez Pridať widget vyhľadáme Návštevnosť.
-Pridáme si ďalšiu kartu a v jej menu otvoríme Nastavenia widgetu.
-Zvolíme menšiu veľkosť jeden krát jeden.
-Obdobie nastavíme na posledných tridsať ukončených dní.
-Nastavenia uložíme. Nová karta teraz ukazuje návštevnosť za dlhšie obdobie a zaberá menej miesta.
-Uchopíme ju za rukoväť a potiahneme pred pôvodný graf.
-Kliknutím na Hotovo ukončíme úpravy. Dôležité údaje tak máme na začiatku prehľadu.`,
+Kliknite na Upraviť prehľad a cez Pridať widget vyhľadajte Návštevnosť.
+Pridáte si ďalšiu kartu a v jej menu otvoríte Nastavenia widgetu.
+Zvoľte menšiu veľkosť jeden krát jeden.
+Obdobie nastavte na posledných tridsať ukončených dní.
+Nastavenia uložte. Nová karta teraz ukazuje návštevnosť za dlhšie obdobie a zaberá menej miesta.
+Uchopte ju za rukoväť a potiahnite pred pôvodný graf.
+Kliknutím na Hotovo ukončíte úpravy. Dôležité údaje tak máte na začiatku prehľadu.`,
             notes: "One uninterrupted example. Lines 1-3: editing, catalogue, add a second traffic card and open its settings. Lines 4-5: visibly choose 1 × 1, then 30 days, each with its own spoken cue. Line 6: save and read the compact result. Line 7: real pointer drag before the original traffic card; never substitute the move dialog. Line 8: finish editing. Preserve the resulting layout for subsequent shots.",
             prepare: async ({ scrollTo }) => { await scrollTo(".md-dashboard__toolbar", 0); },
             shot: async ({ I, shot, cue, scrollTo, typeText, choose, save, dragBefore, editWidgets, modal }) => {
@@ -97,10 +97,10 @@ Kliknutím na Hotovo ukončíme úpravy. Dôležité údaje tak máme na začiat
             "text-sk": `Vyhľadávanie máte poruke priamo na úvodnej stránke.
 V administrácii stačí začať písať názov stránky, napríklad gregor.
 Ponuka zobrazí zodpovedajúce stránky aj s náhľadovým obrázkom a priečinkom, takže ich ľahšie rozlíšite.
-Kliknutím na slovenskú stránku otvoríme priamo jej editor.
+Kliknutím na slovenskú stránku otvoríte priamo jej editor.
 Ak potrebujete návod, do rovnakého poľa zadáte napríklad formuláre a kliknete na tlačidlo V dokumentácii.
 Otvorí sa dokumentácia s vyhľadaným výrazom, rýchlejšie sa tak dostanete k potrebným informáciám.`,
-            notes: "Follow the narration lines literally: reveal search → type gregor → hold the loaded thumbnails and paths → click the Slovak result → close the editor and return home → type formuláre and click documentation scope → show the real documentation search. The scope click submits the existing query; do not submit gregor to documentation. Reopen the actual popup URL in the original recording tab, as each tab has a separate WebM.",
+            notes: "Lines 1-4: reveal search, type gregor, hold the loaded thumbnails and paths, then click the Slovak result. Close the editor and return home as an unvoiced transition. Line 5: type formuláre and click documentation scope. Line 6: show the real documentation search. The scope click submits the existing query; do not submit gregor to documentation. Reopen the actual popup URL in the original recording tab, as each tab has a separate WebM.",
             shot: async ({ I, DTE, shot, cue, scrollTo, typeText, home, openDocumentationSearch, searchInput }) => {
                 const results = ".md-dashboard-widget__search-results";
                 await cue(shot, 1, async () => { await scrollTo('[data-widget-type="search"]'); });
@@ -124,17 +124,16 @@ Otvorí sa dokumentácia s vyhľadaným výrazom, rýchlejšie sa tak dostanete 
                     }, 20);
                     await I.wait(2);
                 });
+                // Return to search between the editor and documentation narration.
+                await I.videoClick("#datatableInit_modal .btn-close-editor");
+                await I.waitForInvisible("#datatableInit_modal", 10);
+                await home();
+                await scrollTo('[data-widget-type="search"]');
                 await cue(shot, 5, async () => {
-                    await I.videoClick("#datatableInit_modal .btn-close-editor");
-                    await I.waitForInvisible("#datatableInit_modal", 10);
-                    await home();
-                    await scrollTo('[data-widget-type="search"]');
-                });
-                await cue(shot, 6, async () => {
                     await typeText(searchInput, "formuláre");
                     await openDocumentationSearch();
                 });
-                await cue(shot, 7, async () => {
+                await cue(shot, 6, async () => {
                     await I.seeInField('input.gsc-input', "formuláre");
                     await I.waitForVisible(".gsc-results", 30);
                 });
@@ -145,20 +144,18 @@ Otvorí sa dokumentácia s vyhľadaným výrazom, rýchlejšie sa tak dostanete 
             type: "auto",
             durationSeconds: 68,
             title: "Create shortcuts to a nested module and a specific folder",
-            "text-sk": `Skratky v hornej časti vás dostanú priamo na miesta, ktoré často používate.
-            Ušetríte tak klikanie v menu - sekciu, ktorú často navštevujete máte dostupnú na jeden klik.
-Klikneme na Upraviť skratky a potom na Pridať skratku.
-V hlavnej časti vyberieme Aplikácie.
-V sekcii zvolíme Bannerový systém.
-Nakoniec vyberieme kartu Štatistika bannerov.
-Skratku uložíme, ukončíme úpravy a otvoríme ňou rovno štatistiku bannerov.
-Vrátime sa na úvod a pridáme druhú skratku.
-Tentoraz ako cieľ zvolíme Vlastná URL adresa.
-Vložíme adresu zoznamu webových stránok aj s parametrom pre priečinok číslo dvadsaťštyri.
-Skratku pomenujeme Zo sveta financií a uložíme ju.
-Po ukončení úprav na ňu klikneme. Otvorí sa priamo sekcia Zo sveta financií so zoznamom článkov, bez rozbaľovania stromu priečinkov.
-`,
-            notes: "Lines 1-6: open shortcut editing; select Aplikácie, Bannerový systém and Štatistika bannerov in three separate spoken cues; save, finish editing and visit /apps/banner/admin/banner-stat/. Lines 7-10: return through the logo, add a custom URL, visibly type /admin/v9/webpages/web-pages-list/?groupid=24 and the title, then save. Line 11: finish editing and click the new link; assert the selected folder and loaded article list. Line 12: return home on camera, preserving a natural bridge to feedback. Do not replace these steps with pre-created shortcuts.",
+            "text-sk": `Skratky v hornej časti vás dostanú priamo na miesta, ktoré často používate. Ušetríte tak klikanie v menu - sekciu, ktorú často navštevujete, máte dostupnú na jeden klik.
+Kliknite na Upraviť skratky a potom na Pridať skratku.
+V hlavnej časti vyberte Aplikácie.
+V sekcii zvoľte Bannerový systém.
+Nakoniec vyberte kartu Štatistika bannerov.
+Skratku uložte, ukončite úpravy a otvorte ňou rovno štatistiku bannerov.
+Vráťte sa na úvod a pridajte druhú skratku.
+Tentoraz ako cieľ zvoľte Vlastná URL adresa.
+Vložte adresu zoznamu webových stránok aj s parametrom pre priečinok číslo dvadsaťštyri.
+Skratku pomenujte Zo sveta financií a uložte ju.
+Po ukončení úprav na ňu kliknite. Otvorí sa priamo sekcia Zo sveta financií so zoznamom článkov, bez rozbaľovania stromu priečinkov.`,
+            notes: "Lines 1-6: introduce the benefit, open shortcut editing; select Aplikácie, Bannerový systém and Štatistika bannerov in three separate spoken cues; save, finish editing and visit /apps/banner/admin/banner-stat/. Lines 7-10: return through the logo, add a custom URL, visibly type /admin/v9/webpages/web-pages-list/?groupid=24 and the title, then save. Line 11: finish editing and click the new link; assert the selected folder and loaded article list. Return home on camera as an unvoiced transition to feedback. Do not replace these steps with pre-created shortcuts.",
             shot: async ({ I, DT, shot, cue, choose, typeText, save, home, editShortcuts, addShortcut, modal }) => {
                 await cue(shot, 1, async () => { await I.seeElement(".md-dashboard__shortcuts"); });
                 await cue(shot, 2, async () => {
@@ -208,7 +205,7 @@ Po ukončení úprav na ňu klikneme. Otvorí sa priamo sekcia Zo sveta financi�
                     await I.waitForText("Zo sveta financií", 20, "#SomStromcek .jstree-clicked");
                     await I.waitForVisible("#datatableInit tbody tr td.dt-row-edit", 20);
                 });
-                await cue(shot, 12, home);
+                await home();
             }
         },
         {
