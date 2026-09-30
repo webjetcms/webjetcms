@@ -1,5 +1,6 @@
 package sk.iway.iwcm.system.spring;
 
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -10,6 +11,7 @@ import sk.iway.webjet.v9.V9SpringConfig;
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = WebjetBootstrapMode.PROPERTY_NAME, havingValue = WebjetBootstrapMode.PRODUCTION_VALUE)
+@ImportAutoConfiguration(WebjetTransactionAutoConfiguration.class)
 @Import({
     BaseSpringConfig.class,
     V9SpringConfig.class,
@@ -17,7 +19,7 @@ import sk.iway.webjet.v9.V9SpringConfig;
     SpringSecurityConf.class,
     GlobalExceptionHandler.class,
     WebjetCustomerSpringConfigurationImportSelector.class,
-    WebjetAdditionalSpringPackagesRegistrar.class
+    WebjetAdditionalSpringPackagesImportSelector.class
 })
 @ComponentScan(
     basePackages = {

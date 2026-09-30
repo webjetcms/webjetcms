@@ -278,7 +278,7 @@ class ApplicationConfigurationDefinitionTest {
         ConfigurationClassPostProcessor configurationProcessor = new ConfigurationClassPostProcessor();
         configurationProcessor.setEnvironment(applicationContext.getEnvironment());
         configurationProcessor.setResourceLoader(applicationContext);
-        configurationProcessor.postProcessBeanDefinitionRegistry(applicationContext);
+        configurationProcessor.postProcessBeanDefinitionRegistry(applicationContext.getDefaultListableBeanFactory());
     }
 
     private void assertDefinitionCount(DefaultListableBeanFactory beanFactory, Class<?> beanType,
