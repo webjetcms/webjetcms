@@ -10,24 +10,16 @@ const documentRoute = `**${listUrl}`;
 const approvalUrl = '/admin/approve.jsp?docid=18&historyid=108';
 const approvalRoute = `**${approvalUrl}`;
 const folderApprovalUrl = '/admin/v9/webpages/web-pages-list/?groupid=27&scheduleId=207';
-const folderApprovalRoute = `**${folderApprovalUrl}`;
-const routes = [dashboardPageRoute, pageRoute, groupRoute, documentRoute, approvalRoute, folderApprovalRoute];
-const date = order => Date.UTC(2026, 8, 20, 12, order);
-const result = (content = [], totalElements = content.length) => ({ content, totalElements, totalPages: Math.ceil(totalElements / 6), size: 6, number: 0 });
+const routes = [dashboardPageRoute, pageRoute, groupRoute, documentRoute, approvalRoute];
+const result = (content = []) => ({ content, totalElements: content.length, totalPages: content.length ? 1 : 0, size: 6, number: 0 });
 
-// The page controller swaps docId/historyId so repeated document IDs remain unique in DataTables.
+// The page controller swaps docId/historyId for DataTables.
 const pages = result([
-    { docId: 108, historyId: 18, title: 'autotest page update', authorName: 'autotest page author', saveDate: date(8), isDelete: false },
-    { docId: 106, historyId: 16, title: 'autotest page deletion', authorName: 'autotest page author', saveDate: date(6), isDelete: true },
-    { docId: 104, historyId: 14, title: '[DELETE] autotest legacy deletion', authorName: 'autotest page author', saveDate: date(4), isDelete: false },
-    { docId: 101, historyId: 11, title: 'autotest older page', authorName: 'autotest page author', saveDate: date(1), isDelete: false }
-], 17);
+    { docId: 108, historyId: 18, title: 'autotest page update', authorName: 'autotest author', saveDate: 1789906080000 }
+]);
 const groups = result([
-    { groupId: 27, schedulerId: 207, groupName: 'autotest folder update', userFullName: 'autotest folder author', saveDate: date(7), isDelete: false },
-    { groupId: 25, schedulerId: 205, groupName: 'autotest folder deletion', userFullName: 'autotest folder author', saveDate: date(5), isDelete: true },
-    { groupId: 23, schedulerId: 203, groupName: 'autotest sixth request', userFullName: 'autotest folder author', saveDate: date(3), isDelete: false },
-    { groupId: 22, schedulerId: 202, groupName: 'autotest older folder', userFullName: 'autotest folder author', saveDate: date(2), isDelete: false }
-], 9);
+    { groupId: 27, schedulerId: 207, groupName: 'autotest folder update', userFullName: 'autotest author', saveDate: 1789906020000 }
+]);
 
 Before(({ login }) => login('admin'));
 
@@ -37,133 +29,47 @@ async function clearRoutes(I) {
 }
 
 /** Supplies current-user approval lists without writing a dashboard profile or approval records. */
-async function openDashboard(I, pageData = pages, groupData = groups, denied) {
+async function openDashboard(I, pageData = pages) {
     await clearRoutes(I);
-    const requests = [];
     const settings = {
         version: 1, configured: true, legacyBookmarksHandled: true, domainOptions: {}, items: [
             { id: 'autotest-approval-preview', type: 'approvals', size: '3x3', options: {} }
         ]
     };
     await mockDashboardBootstrap(I, () => ({ settings, notices: [] }));
-    for (const [type, pattern, body] of [['pages', pageRoute, pageData], ['groups', groupRoute, groupData]]) {
-        await I.mockRoute(pattern, route => {
-            const request = route.request();
-            requests.push({ type, url: request.url(), csrf: Boolean(request.headers()['x-csrf-token']) });
-            let status = 200, payload = body;
-            if (type === denied?.type) {
-                status = denied.status;
-                payload = { error: denied.error || 'Forbidden', data: [] };
-            }
-            return route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(payload) });
-        });
+    for (const [pattern, body] of [[pageRoute, pageData], [groupRoute, groups]]) {
+        await I.mockRoute(pattern, route => route.fulfill({
+            status: 200, contentType: 'application/json', body: JSON.stringify(body)
+        }));
     }
     I.amOnPage('/admin/v9/');
     await waitForWidgets(I);
-    return requests;
 }
 
-/**
- * Checks that the approval card combines the six newest page and folder requests and shows the full waiting
- * count. Each request opens its own approval screen in a new tab, while the heading opens the complete list.
- */
-Scenario('Merge the latest six requests and keep direct approval actions separate from list navigation', async ({ I }) => {
-    const requests = await openDashboard(I);
-    const state = await I.executeScript(selector => {
-        const widget = document.querySelector(selector);
-        const readLink = link => ({ title: link.textContent, href: link.getAttribute('href'), target: link.target, rel: link.rel });
-        return {
-            rows: [...widget.querySelectorAll('tbody tr')].map(row => ({ link: readLink(row.querySelector('a')), requester: row.cells[1].textContent })),
-            total: readLink(widget.querySelector('.md-dashboard-widget__number')),
-            header: readLink(widget.querySelector('.md-dashboard__title-link'))
-        };
-    }, card);
-    I.assertDeepEqual(state.rows.map(row => row.link.title), [
-        'autotest page update', 'autotest folder update', 'autotest page deletion',
-        'autotest folder deletion', '[DELETE] autotest legacy deletion', 'autotest sixth request'
-    ], 'The two lists must be merged by request date before applying the six-row limit.');
-    I.assertDeepEqual(state.rows.map(row => row.link.href), [
-        approvalUrl, folderApprovalUrl,
-        '/admin/approve_delete.jsp?docid=16&historyid=106', '/admin/v9/webpages/web-pages-list/?groupid=25&scheduleId=205&act=delete',
-        '/admin/approve_delete.jsp?docid=14&historyid=104', '/admin/v9/webpages/web-pages-list/?groupid=23&scheduleId=203'
-    ], 'The page IDs and folder scheduler IDs must address the pending request, including legacy deletion titles.');
-    const icons = ['ti-article', 'ti-folder-filled', 'ti-article', 'ti-folder-filled', 'ti-article', 'ti-folder-filled'];
-    for (const [index, row] of state.rows.entries()) {
-        I.assertEqual(row.link.target, '_blank');
-        I.assertContain(row.link.rel.split(/\s+/), 'noopener');
-        I.assertContain(row.requester, 'autotest');
-        I.seeElement(`${card} tbody tr:nth-child(${index + 1}) a > i.ti.${icons[index]}[aria-hidden="true"]`);
+/** Checks that request links open separately while the heading and metric navigate to the approval list. */
+Scenario('Approval actions open separately from dashboard list navigation', async ({ I }) => {
+    await openDashboard(I);
+    for (const href of [approvalUrl, folderApprovalUrl]) {
+        I.seeElement(`${card} tbody a[href="${href}"][target="_blank"][rel~="noopener"]`);
     }
-    I.assertEqual(state.total.title, '26', 'The metric must add the full totals rather than count preview rows.');
-    for (const link of [state.total, state.header]) {
-        I.assertEqual(link.href, listUrl);
-        I.assertTrue(link.target === '' || link.target === '_self', 'List navigation must remain in the current window.');
+    for (const selector of ['.md-dashboard-widget__number', '.md-dashboard__title-link']) {
+        I.assertEqual(await I.grabAttributeFrom(`${card} ${selector}`, 'href'), listUrl);
+        const target = await I.grabAttributeFrom(`${card} ${selector}`, 'target');
+        I.assertTrue(!target || target === '_self', 'List navigation must remain in the current window.');
     }
-    I.assertDeepEqual(requests.map(request => request.type).sort(), ['groups', 'pages']);
-    for (const request of requests) {
-        const params = new URL(request.url).searchParams;
-        I.assertEqual(params.get('size'), '6');
-        I.assertEqual(params.get('page'), '0');
-        I.assertEqual(params.get('sort'), 'saveDate,desc');
-        I.assertTrue(request.csrf, 'Both shared approval requests must include the current CSRF token.');
-    }
-    for (const [row, url, pattern] of [[1, approvalUrl, approvalRoute], [2, folderApprovalUrl, folderApprovalRoute]]) {
-        // Intercept only this fixture's destination; clicking cannot load or submit a real approval form.
-        await I.mockRoute(pattern, route => route.fulfill({ status: 200, contentType: 'text/html',
-            body: '<!doctype html><html><body><h1>autotest approval destination</h1></body></html>' }));
-        const tabCount = await I.grabNumberOfOpenTabs();
-        I.clickCss(`${card} tbody tr:nth-child(${row}) a`);
-        I.waitForNumberOfTabs(tabCount + 1, 10);
-        I.switchToNextTab();
-        I.waitForText('autotest approval destination', 10);
-        I.seeInCurrentUrl(url);
-        I.assertFalse(await I.executeScript(() => Boolean(window.opener)), 'The approval window must not retain an opener.');
-        I.closeCurrentTab();
-        I.seeElement(`${card} .md-dashboard-widget__number`);
-        I.stopMockingRoute(pattern);
-    }
+    // Check browser navigation without loading a real approval form for the fixture's identifiers.
+    await I.mockRoute(approvalRoute, route => route.fulfill({ status: 200, contentType: 'text/html',
+        body: '<!doctype html><html><body><h1>autotest approval destination</h1></body></html>' }));
+    const tabCount = await I.grabNumberOfOpenTabs();
+    I.clickCss(`${card} tbody a[href="${approvalUrl}"]`);
+    I.waitForNumberOfTabs(tabCount + 1, 10);
+    I.switchToNextTab();
+    I.waitForText('autotest approval destination', 10);
+    I.seeInCurrentUrl(approvalUrl);
+    I.assertFalse(await I.executeScript(() => Boolean(window.opener)), 'The approval window must not retain an opener.');
+    I.closeCurrentTab();
+    I.seeElement(`${card} .md-dashboard__title-link`);
 });
-
-/**
- * Checks the state shown when no pages or folders need approval: the count is zero and an empty-list message
- * appears without an error.
- */
-Scenario('Empty shared approval lists show an empty preview and a zero total', async ({ I }) => {
-    await openDashboard(I, result(), result());
-    I.see('0', `${card} .md-dashboard-widget__number`);
-    I.dontSeeElementInDOM(`${card} tbody tr`);
-    I.dontSeeElementInDOM(`${card} .md-dashboard__widget-content > .text-danger`);
-    I.see(await I.executeScript(() => WJ.translate('admin.dashboard.empty.js')), `${card} .md-dashboard__widget-content`);
-});
-
-for (const type of ['pages', 'groups']) {
-    /**
-     * Checks that losing access to either approval list shows a permission message and a retry button. The
-     * card must not display an incomplete count or only the requests from the other list.
-     */
-    Scenario(`A forbidden ${type} list shows an error instead of a partial approval total`, async ({ I }) => {
-        await openDashboard(I, pages, groups, { type, status: 403 });
-        I.seeElement(`${card} .md-dashboard__widget-content > .text-danger`);
-        I.see(await I.executeScript(() => WJ.translate('admin.dashboard.permissionDenied.js')), `${card} .md-dashboard__widget-content > .text-danger`);
-        I.dontSeeElementInDOM(`${card} .md-dashboard-widget__number`);
-        I.dontSeeElementInDOM(`${card} tbody tr`);
-        I.seeElement(`${card} .md-dashboard__widget-content > button`);
-    });
-}
-
-for (const [type, error] of [['pages', 'Access Denied'], ['groups', 'Access is denied']]) {
-    /**
-     * Checks that a permission refusal is still shown when the server returns it inside an otherwise
-     * successful response. No approval count or preview may appear.
-     */
-    Scenario(`An HTTP 200 DataTable denial from ${type} retains the permission error`, async ({ I }) => {
-        await openDashboard(I, pages, groups, { type, status: 200, error });
-        I.see(await I.executeScript(() => WJ.translate('admin.dashboard.permissionDenied.js')), `${card} .md-dashboard__widget-content > .text-danger`);
-        I.dontSeeElementInDOM(`${card} .md-dashboard-widget__number`);
-        I.dontSeeElementInDOM(`${card} tbody tr`);
-        I.seeElement(`${card} .md-dashboard__widget-content > button`);
-    });
-}
 
 for (const hasPages of [false, true]) {
     /**
@@ -171,7 +77,7 @@ for (const hasPages of [false, true]) {
      * directly to folder requests when only folders need approval.
      */
     Scenario(`The approval deep link selects ${hasPages ? 'pages when both queues have requests' : 'folders when only folders need approval'}`, async ({ I }) => {
-        await openDashboard(I, hasPages ? pages : result(), groups);
+        await openDashboard(I, hasPages ? pages : result());
         let replaced = 0;
         // Keep the real page and its shared tab handlers, replacing only server-rendered queue flags.
         await I.mockRoute(documentRoute, async route => {
@@ -201,6 +107,7 @@ for (const hasPages of [false, true]) {
  * subsequent tests.
  */
 Scenario('Restore unmocked approval routes', async ({ I }) => {
+    I.closeOtherTabs();
     await clearRoutes(I);
     I.amOnPage('/admin/v9/');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);

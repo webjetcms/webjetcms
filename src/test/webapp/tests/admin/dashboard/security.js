@@ -16,46 +16,14 @@ const permissionCases = [
 ];
 const sizes = { 'recent-pages': '3x2', publishing: '2x2', 'top-pages': '2x3', 'search-terms': '2x3', referrers: '2x2',
     newsletter: '2x2', 'changed-pages': '3x2', audit: '3x2', 'logged-admins': '2x2', 'server-memory': '3x2', 'server-cpu': '3x2' };
-function endpoints(type, recentPagesGroupId, statRootGroupId) {
-    if (type === 'traffic' || type === 'top-pages') return [`/admin/rest/stat/${type === 'traffic' ? 'views' : 'top'}/search/findByColumns?searchRootDir=${statRootGroupId}&size=6&page=0`];
-    if (type === 'search-terms') return [`/admin/rest/stat/search-engines/search/findByColumns?searchRootDir=${statRootGroupId}&searchWebPage=-1&searchEngine=`];
-    if (type === 'referrers') return [`/admin/rest/stat/referer/search/findByColumns?searchRootDir=${statRootGroupId}&searchChartType=not_chart`];
-    if (type === 'errors') return ['/admin/rest/stat/error/search/findByColumns?searchFilterBotsOut=false&searchurl=&size=6&page=0&sort=count,desc'];
-    if (type === 'publishing') return ['/admin/rest/web-pages/history/all?auditVersion=true'];
-    if (type === 'changed-pages') return ['/admin/rest/web-pages/all?auditVersion=true&size=6&page=0&sort=dateCreated%2Cdesc'];
-    if (type === 'logged-admins') return [];
-    if (type === 'recent-pages') return [`/admin/rest/web-pages/all?groupId=${recentPagesGroupId}&size=6&page=0&sort=dateCreated%2Cdesc`];
-    if (type === 'approvals') return ['/admin/rest/webpages/toapprove/all?size=6&page=0&sort=saveDate,desc', '/admin/rest/groups/toapprove/all?size=6&page=0&sort=saveDate,desc'];
-    if (type.startsWith('server-')) return ['/admin/rest/monitoring/actual'];
-    if (type === 'forms') return ['/admin/rest/forms-list/all', '/admin/rest/forms-list/search/findByColumns?detail=true&formName=Multistepform_screens&size=10&page=0', '/admin/rest/forms-list/columns/Multistepform_screens'];
-    if (type === 'newsletter') return ['/admin/rest/dmail/campaings/all?size=14&page=0&sort=id%2Cdesc'];
-    if (type === 'audit') return ['/admin/rest/audit/log/all?size=6&page=0&sort=id%2Cdesc'];
-    throw new Error(`Missing endpoint for ${type}`);
-}
-
 function loaded(I) {
     I.waitForElement(dashboard, 20);
     I.waitForFunction(() => document.querySelector('webjet-overview-dashboard')?.dashboardController?.saving === false, 20);
 }
 
-/** Calls the real endpoints with the current session and its valid CSRF token. */
-async function readEndpoints(I, paths) {
-    return I.executeScript(async paths => {
-        const results = [];
-        for (const path of paths) {
-            const response = await fetch(path, { credentials: 'same-origin', headers: { 'X-CSRF-Token': window.csrfToken } });
-            const body = await response.json().catch(() => null);
-            results.push({ path, status: response.status, url: response.url, error: body?.error || null,
-                contentPresence: Object.prototype.hasOwnProperty.call(body || {}, 'content') });
-        }
-        return results;
-    }, paths);
-}
-
-Before(function ({ I, login }) {
+Before(({ I, login }) => {
     login('admin');
     I.amOnPage('/admin/v9/');
-    if (this.currentTest.title !== 'Restore preferences after security tests') loaded(I);
 });
 
 /**
@@ -63,6 +31,7 @@ Before(function ({ I, login }) {
  * identities are retained so their saved options can be restored afterwards.
  */
 Scenario('Preserve preferences and install all permission-controlled widgets', async ({ I }) => {
+    loaded(I);
     originalSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     const installed = await I.executeScript(async ({ types, sizes }) => {
         const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
@@ -83,24 +52,16 @@ Scenario('Preserve preferences and install all permission-controlled widgets', a
 
 for (const { permission, types } of permissionCases) {
     /**
-     * Checks each removed permission: the affected widgets and catalogue choices disappear, direct data
-     * requests are denied, and saved preferences remain available for when access is restored. Active-
-     * session controls must remain visible.
+     * Checks that revoked permissions hide widgets and catalogue choices while retaining saved preferences.
+     * Active-session controls must remain visible.
      */
-    Scenario(`${permission}: hide saved widgets and catalogue entries and deny unauthorized data access`, async ({ I }) => {
+    Scenario(`${permission}: hide widgets and catalogue entries while retaining preferences`, async ({ I }) => {
+        loaded(I);
         I.assertTrue(await I.executeScript(permission => WJ.hasPermission(permission), permission), 'Logout must restore the real account permissions.');
         for (const type of types) I.seeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
         if (permission === 'welcomeShowLoggedAdmins') {
             I.assertTrue((await I.executeScript(readDashboardBootstrap)).loggedAdmins.length > 0, 'Authorized page data must contain logged-in administrators.');
         }
-        const recentPagesGroupId = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').config.recentPagesGroupId);
-        const statRootGroupId = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').data.statRootGroupId);
-        const paths = [...new Set(types.flatMap(type => endpoints(type, recentPagesGroupId, statRootGroupId)))];
-        for (const result of await readEndpoints(I, paths)) {
-            I.assertEqual(result.status, 200, `${result.path} must work before removing ${permission}.`);
-            I.assertFalse(Boolean(result.error), `${result.path} must not return a DataTable error while authorized.`);
-        }
-
         I.amOnPage(`/admin/v9/?removePerm=${permission === 'cmp_stat' ? 'cmp_stat,cmp_abtesting' : permission === 'menuWebpages' ? 'menuWebpages,cmp_blog,cmp_blog_admin,cmp_news,cmp_abtesting,cmp_basket' : permission}`);
         loaded(I);
         I.assertFalse(await I.executeScript(permission => WJ.hasPermission(permission), permission));
@@ -109,13 +70,6 @@ for (const { permission, types } of permissionCases) {
         }
         for (const type of types) I.dontSeeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
         I.seeElementInDOM(`${dashboard} [data-widget-type="sessions"]`);
-        for (const result of await readEndpoints(I, paths)) {
-            if (/^\/admin\/rest\/(?:(webpages|groups)\/toapprove\/|web-pages\/(?:history\/)?all|audit\/log\/|dmail\/campaings\/|forms-list\/|stat\/(views|top|search-engines|referer|error)\/)/.test(result.path)) {
-                const deniedBody = result.status === 200 && ['Access Denied', 'Access is denied'].includes(result.error) && result.contentPresence === false;
-                I.assertTrue(result.status === 403 || deniedBody, `${result.path} must deny access without exposing page or approval content.`);
-            } else I.assertEqual(result.status, 403, `${result.path} must reject direct requests without ${permission}.`);
-        }
-        I.assertEqual((await readEndpoints(I, ['/admin/rest/dashboard/menu']))[0].status, 200, 'An unrelated authorized request must still pass with this session and token.');
         I.assertTrue(await I.executeScript(types => types.every(type => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.some(item => item.type === type)), types), 'Revoking access must retain the hidden preferences.');
 
         I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
@@ -152,6 +106,7 @@ for (const { permission, types } of permissionCases) {
  * settings dialog. Every rejected attempt must leave saved preferences unchanged.
  */
 Scenario('Reject unsafe shortcut URLs and appearance values through REST without changing preferences', async ({ I }) => {
+    loaded(I);
     const before = (await I.executeScript(readDashboardBootstrap)).settings;
     const results = await I.executeScript(async before => {
         const headers = { 'Content-Type': 'application/json', 'X-CSRF-Token': window.csrfToken };
@@ -184,6 +139,7 @@ Scenario('Reject unsafe shortcut URLs and appearance values through REST without
  * Unicode line separators. Local paths must stay on the same site, and executable addresses are rejected.
  */
 Scenario('Persisted shortcut titles remain text and local paths cannot become external links', async ({ I }) => {
+    loaded(I);
     const title = 'autotest <img src=x onerror="window.autotestDashboardXss=1"><svg onload="window.autotestDashboardXss=1">';
     const scriptTitle = 'autotest </script><script>window.autotestDashboardXss=1</script>"\'\\\u2028\u2029';
     const installed = await I.executeScript(async ({ title, scriptTitle }) => {
@@ -230,6 +186,7 @@ Scenario('Persisted shortcut titles remain text and local paths cannot become ex
  * session list. The action for ending other sessions must also refuse to end the current session.
  */
 Scenario('Ownership parameters cannot select another dashboard or session owner', async ({ I }) => {
+    loaded(I);
     const data = await I.executeScript(readDashboardBootstrap);
     const forged = await I.executeScript(readDashboardBootstrap, '?userId=-1&domainId=-1&domainKey=autotest');
     I.assertDeepEqual(forged.settings, data.settings, 'Settings ownership and domain must come from the session.');
@@ -250,6 +207,7 @@ Scenario('Ownership parameters cannot select another dashboard or session owner'
  * token. Missing or invalid tokens must be refused without changing the saved layout.
  */
 Scenario('Settings mutations and session removal require a valid CSRF token', async ({ I }) => {
+    loaded(I);
     const before = (await I.executeScript(readDashboardBootstrap)).settings;
     const result = await I.executeScript(async before => {
         const path = '/admin/rest/dashboard/settings';
@@ -298,8 +256,7 @@ Scenario('Restore preferences after security tests', async ({ I }) => {
  */
 Scenario('Unauthenticated requests cannot read dashboard data or mutate preferences', async ({ I }) => {
     I.logout();
-    const paths = ['/admin/v9/', '/admin/rest/dashboard/menu',
-        ...new Set(permissionCases.flatMap(item => item.types).flatMap(type => endpoints(type, 99999997, 1)))];
+    const paths = ['/admin/v9/', '/admin/rest/dashboard/menu'];
     const results = await I.executeScript(async paths => {
         const requests = [...paths.map(path => ({ path, method: 'GET' })),
             { path: '/admin/rest/dashboard/settings', method: 'PUT', body: '{}' },

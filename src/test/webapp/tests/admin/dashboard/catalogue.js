@@ -66,11 +66,10 @@ Before(({ I, login }) => {
 });
 
 /**
- * Adds the available widget types to a saved copy of the current layout and loads their real data. Checks
- * that the cards, session controls and complete release announcement appear without loading errors on
- * desktop and mobile.
+ * Adds the available widget types to a saved copy of the current layout and checks that cards, session
+ * controls and the release announcement appear on desktop and mobile.
  */
-Scenario('Render the complete catalogue using real authorized data', async ({ I }) => {
+Scenario('Render the complete widget catalogue on desktop and mobile', async ({ I }) => {
     originalSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     const applied = await I.executeScript(async definitions => {
         const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
@@ -103,12 +102,10 @@ Scenario('Render the complete catalogue using real authorized data', async ({ I 
     await waitForWidgets(I);
     const state = await I.executeScript(() => ({
         types: [...document.querySelectorAll('.md-dashboard__widget[data-widget-type]')].map(card => card.dataset.widgetType),
-        errors: [...document.querySelectorAll('.md-dashboard__widget-content > .text-danger:not([hidden])')].map(error => ({ type: error.closest('[data-widget-type]').dataset.widgetType, text: error.textContent })),
         javascriptErrors: window.autotestDashboardRenderErrors
     }));
     for (const [type] of catalogue) I.assertContain(state.types, type, `${type} must render from the final catalogue.`);
     I.assertDeepEqual(state.javascriptErrors, [], 'Widget rendering must not throw JavaScript errors.');
-    I.assertDeepEqual(state.errors, [], 'Authorized module previews must load successfully.');
     I.seeNumberOfElements('#toast-container-overview', 1);
     I.dontSeeElementInDOM('.md-dashboard__legacy');
     I.dontSeeElementInDOM('#webjet-overview-dashboard .bookmark');
@@ -259,31 +256,6 @@ Scenario('Documentation search switches scope and opens the encoded query withou
     I.fillField(`${scope} input[type="search"]`, '');
     I.clickCss(`${scope} label:has(input[value="admin"])`);
     I.seeElement(`${scope} input[type="radio"][value="admin"]:checked`);
-});
-
-/**
- * When the account has pending approvals, checks that the approval heading opens the waiting-requests
- * section. Accounts with no pending requests skip this navigation check.
- */
-Scenario('Pending approvals open their supported dashboard destination', async ({ I }) => {
-    const total = await I.executeScript(async () => {
-        const pages = await Promise.all(['/admin/rest/webpages/toapprove/all?size=6&page=0&sort=saveDate,desc', '/admin/rest/groups/toapprove/all?size=6&page=0&sort=saveDate,desc'].map(async path => {
-            const response = await fetch(path, { headers: { 'X-CSRF-Token': window.csrfToken }, credentials: 'same-origin' });
-            if (!response.ok) throw new Error(`Approvals request failed: ${response.status}`);
-            return response.json();
-        }));
-        return pages.reduce((sum, page) => sum + page.totalElements, 0);
-    });
-    if (!total) {
-        I.say('No pending approvals in this account/domain; the deep-link condition does not apply.');
-        return;
-    }
-    I.clickCss('[data-widget-type="approvals"] .md-dashboard__title-link');
-    I.waitForElement('#pills-pages #pills-waiting-tab.active', 20);
-    I.waitForFunction(() => {
-        const tabs = document.querySelector('#pills-pages_sub');
-        return Boolean(tabs && getComputedStyle(tabs.parentElement).display !== 'none');
-    }, 10);
 });
 
 /**

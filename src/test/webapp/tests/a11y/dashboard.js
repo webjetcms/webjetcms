@@ -269,14 +269,9 @@ Scenario('Widget catalogue supports keyboard entry, a focus trap and focus resto
     I.waitForVisible(`${resetDialog} button[id^="confirmationYes"]`, 10);
     I.waitForFunction(() => {
         const modal = document.querySelector('#toast-container-webjet .toast[role="dialog"]');
-        const state = {
-            opacity: modal ? getComputedStyle(modal).opacity : null,
-            focusedTag: document.activeElement?.tagName,
-            focusedClass: document.activeElement?.className,
-            focusInside: Boolean(modal?.contains(document.activeElement))
-        };
-        if (state.opacity !== '1' || !state.focusInside) console.debug('Dashboard reset accessibility readiness', state);
-        return state.opacity === '1' && state.focusInside;
+        // Check contrast after the focused cancel button finishes its color transition.
+        return modal && getComputedStyle(modal).opacity === '1' && modal.contains(document.activeElement)
+            && modal.getAnimations({ subtree: true }).every(animation => animation.playState === 'finished');
     }, 10);
     I.seeElement(`${resetDialog}[aria-modal="true"][aria-labelledby][aria-describedby]`);
     I.assertTrue(await I.executeScript(() => document.activeElement?.id.startsWith('confirmationNo')), 'The standard confirmation must initially focus its safe cancel action.');
