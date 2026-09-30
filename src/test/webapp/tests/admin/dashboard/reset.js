@@ -1,4 +1,4 @@
-const { waitForWidgets, showWidget } = require('../../../helpers/dashboard-browser');
+const { waitForWidgets, showWidget, readDashboardBootstrap } = require('../../../helpers/dashboard-browser');
 
 const assert = require('node:assert/strict');
 
@@ -69,7 +69,7 @@ Before(({ I, login }) => {
  * this account so the existing administrator layout and domain preferences remain untouched.
  */
 Scenario('Create a disposable dashboard reset account', async ({ I, DT, DTE }) => {
-    originalAdminPreferences = await I.executeScript(() => Object.fromEntries(Object.entries(window.currentUser.adminSettings).filter(([key]) => key.startsWith('overview.'))));
+    originalAdminPreferences = (await I.executeScript(readDashboardBootstrap)).settings;
     fixtureLogin = `dashboard-reset-autotest-${I.getRandomTextShort()}`;
     I.amOnPage('/admin/v9/users/user-list/');
     DT.waitForLoader();
@@ -314,6 +314,6 @@ Scenario('Remove disposable reset preferences and account without changing the a
     }
     I.amOnPage('/admin/v9/');
     waitForDashboard(I);
-    const preserved = await I.executeScript(() => Object.fromEntries(Object.entries(window.currentUser.adminSettings).filter(([key]) => key.startsWith('overview.'))));
-    if (originalAdminPreferences) assert.deepEqual(preserved, originalAdminPreferences, 'The existing administrator and all its domain preferences must remain untouched');
+    const preserved = (await I.executeScript(readDashboardBootstrap)).settings;
+    if (originalAdminPreferences) assert.deepEqual(preserved, originalAdminPreferences, 'The existing administrator layout and active-domain preferences must remain untouched');
 });
