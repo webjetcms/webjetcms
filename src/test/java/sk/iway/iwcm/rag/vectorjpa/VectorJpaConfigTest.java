@@ -1,4 +1,4 @@
-package sk.iway.iwcm.rag.pgvector;
+package sk.iway.iwcm.rag.vectorjpa;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -14,7 +14,7 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 
 import sk.iway.iwcm.DBPool;
 
-class PgvectorJpaConfigTest {
+class VectorJpaConfigTest {
 
     @Test
     void entityManagerFactoryUsesDedicatedPersistenceUnitWithRagDataSource() {
@@ -26,7 +26,7 @@ class PgvectorJpaConfigTest {
             when(dbPool.getDataSource("rag_jpa")).thenReturn(ragDataSource);
 
             LocalContainerEntityManagerFactoryBean entityManagerFactory =
-                new PgvectorJpaConfig().entityManagerFactory();
+                new VectorJpaConfig().entityManagerFactory();
 
             assertEquals("webjet-rag", entityManagerFactory.getPersistenceUnitName());
             assertSame(ragDataSource, entityManagerFactory.getDataSource());
@@ -44,7 +44,7 @@ class PgvectorJpaConfigTest {
             when(dbPool.getDataSource("iwcm")).thenReturn(iwcmDataSource);
 
             LocalContainerEntityManagerFactoryBean entityManagerFactory =
-                new PgvectorJpaConfig().entityManagerFactory();
+                new VectorJpaConfig().entityManagerFactory();
 
             assertEquals("webjet-rag", entityManagerFactory.getPersistenceUnitName());
             assertSame(iwcmDataSource, entityManagerFactory.getDataSource());

@@ -70,8 +70,10 @@ import sk.iway.iwcm.editor.service.WebpagesService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmInputStream;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkRepository;
-import sk.iway.iwcm.rag.pgvector.PgvectorJpaConfig;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkRepository;
+import sk.iway.iwcm.rag.vectorstore.VectorStoreType;
+import sk.iway.iwcm.rag.vectorstore.VectorStoreDataSourceResolver;
+import sk.iway.iwcm.rag.vectorstore.VectorStoreDataSourceResolver.Resolution;
 import sk.iway.iwcm.stat.StatNewDB;
 import sk.iway.iwcm.stripes.SyncDirAction;
 import sk.iway.iwcm.sync.WarningListener;
@@ -2866,8 +2868,9 @@ public class UpdateDatabase
 		String note = "25.06.2026 [sivan] pridanie stlpcov root_group_l1, root_group_l2, root_group_l3, group_id do tabulky rag_embedding_chunks a ich vyplnennie.";
 		if (isAllreadyUpdated(note)) return;
 
-		String databaseName = PgvectorJpaConfig.getRagDataSourceName();
-		if (Tools.isEmpty(databaseName)) return;
+		Resolution resolution = VectorStoreDataSourceResolver.resolve();
+		if (resolution.backend() != VectorStoreType.POSTGRESQL) return;
+		String databaseName = resolution.dataSourceName();
 
 		String tableName = "rag_embedding_chunks";
 		String[] requiredColumns = {"root_group_l1", "root_group_l2", "root_group_l3", "group_id"};
@@ -2928,8 +2931,9 @@ public class UpdateDatabase
 		String note = "24.08.2026 [sivan] add embedding_provider column to rag_embedding_chunks.";
 		if (isAllreadyUpdated(note)) return;
 
-		String databaseName = PgvectorJpaConfig.getRagDataSourceName();
-		if (Tools.isEmpty(databaseName)) return;
+		Resolution resolution = VectorStoreDataSourceResolver.resolve();
+		if (resolution.backend() != VectorStoreType.POSTGRESQL) return;
+		String databaseName = resolution.dataSourceName();
 
 		String tableName = "rag_embedding_chunks";
 		String defaultProvider = Constants.getString("ragEmbeddingProvider");

@@ -1,4 +1,4 @@
-package sk.iway.iwcm.rag.pgvector;
+package sk.iway.iwcm.rag.vectorjpa;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,9 +20,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
 /**
- * Entity representing a chunk of text with its embedding vector stored in PostgreSQL (pgvector).
- * The 'embedding' column is of type vector(1536) in PgSQL and is handled via native SQL,
- * not mapped as a JPA field (JPA/EclipseLink does not support pgvector types natively).
+ * Entity representing a chunk of text whose embedding is held by the configured vector store.
+ * Native vector types are handled through SQL and are not mapped as a JPA field.
  */
 @Entity
 @Table(name = "rag_embedding_chunks")
@@ -95,8 +94,8 @@ public class EmbeddingChunkEntity extends BaseEditorFields {
     )
     private String contentHash;
 
-    // embedding column is NOT mapped here - it's vector(1536) type handled via native SQL
-    // Use PgVectorStore for embedding operations
+    // Native vector storage is not mapped as a JPA field.
+    // Vector storage is managed through the database-specific VectorStore implementation.
 
     @Column(name = "embedding_provider", nullable = false, length = 100)
     @DataTableColumn(

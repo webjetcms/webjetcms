@@ -5,7 +5,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
-import sk.iway.iwcm.rag.pgvector.PgvectorSpringConfig;
+import sk.iway.iwcm.rag.vectorjpa.VectorSpringConfig;
 import sk.iway.webjet.v9.V9SpringConfig;
 
 @Configuration(proxyBeanMethods = false)
@@ -13,7 +13,7 @@ import sk.iway.webjet.v9.V9SpringConfig;
 @Import({
     BaseSpringConfig.class,
     V9SpringConfig.class,
-    PgvectorSpringConfig.class,
+    VectorSpringConfig.class,
     SpringSecurityConf.class,
     GlobalExceptionHandler.class,
     WebjetCustomerSpringConfigurationImportSelector.class,

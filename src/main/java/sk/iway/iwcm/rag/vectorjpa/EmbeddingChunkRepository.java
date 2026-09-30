@@ -1,4 +1,4 @@
-package sk.iway.iwcm.rag.pgvector;
+package sk.iway.iwcm.rag.vectorjpa;
 
 import java.util.List;
 
@@ -14,7 +14,8 @@ import sk.iway.iwcm.system.datatable.spring.DomainIdRepository;
 /**
  * Spring Data repository for {@link EmbeddingChunkEntity}.
  * Provides JPA query methods for managing embedding chunks in the rag_embedding_chunks table.
- * Note: the actual embedding vector column is managed via native SQL in {@link sk.iway.iwcm.rag.vectorstore.PgVectorStore}.
+ * Note: the actual embedding vector storage is managed via native SQL through
+ * {@link sk.iway.iwcm.rag.vectorstore.VectorStore}.
  */
 @Repository
 public interface EmbeddingChunkRepository extends DomainIdRepository<EmbeddingChunkEntity, Long> {

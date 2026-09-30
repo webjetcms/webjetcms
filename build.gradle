@@ -646,6 +646,10 @@ jacoco {
     toolVersion = "+"
 }
 
+// Identify the worktree without spaces so app-stop.sh can target only its server process.
+def worktreeId = java.security.MessageDigest.getInstance('SHA-256')
+    .digest(rootDir.canonicalPath.getBytes('UTF-8')).encodeHex().toString()
+
 bootRun {
     // Migrated from gretty JVM args (old build.gradle before Spring Boot migration)
     // These preserve the exact runtime behavior from the gretty/Tomcat setup
@@ -659,6 +663,7 @@ bootRun {
         '-Duser.country=SK',
         // Remote debug on port 5005
         '-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005',
+        "-Dwebjet.worktreeId=${worktreeId}",
         // WebJET configuration overrides (from old gretty config)
         '-Dwebjet.smtpServer=mxrelay.dev.iway.sk',
         "-DwebjetDbname=${webjetDbname}",

@@ -103,6 +103,9 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Sémantické vyhledávání
 
+- Přidána podpora **MariaDB Vector** jako alternativy k `PostgreSQL/pgvector` pro sémantické a hybridní vyhledávání i RAG odpovědi. Minimální podporovaná verze je **MariaDB 11.8 LTS**, doporučujeme **11.8.9 nebo novější opravnou verzi**.Verze od **12.3 LTS** obsahuje zrychlení vyhledávání. Minimální a doporučené verze PostgreSQL, pgvector a MariaDB i jejich výhody jsou v [přehledu databázových požadavků](custom-apps/apps/rag/semantic-search/README.md#podporované-databáze-a-verze) (#232).
+- Nedostupná samostatná RAG databáze již neblokuje start CMS. RAG perzistence se inicializuje až při prvním použití a po neúspěšném připojení umožňuje další pokus bez restartu CMS (#232).
+
 - Přidána podpora [sémantického vyhledávání](redactor/apps/semantic-search/README.md) postaveného na technologii vektorové databáze `pgvector` a `OpenAI embeddings`. Umožňuje návštěvníkům najít relevantní stránky na základě **významu otázky**, nejen shody klíčových slov (#211).
 - Doplněný hybridní režim sémantického vyhledávání a volitelná RAG odpověď z indexovaného obsahu. Aplikace **Vyhledávání** má nová nastavení pro typ vyhledávání, hybridní chování, výběr AI asistenta a limity kontextu odpovědi (#58521).
 
@@ -349,6 +352,10 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 		setBoolean("zmluvyEnableVo", false, "zmluvy",
 				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
 ```
+
+- Datové tabulky - upravená validace povinných polí typu [`DATE` a `DATETIME`](developer/datatables-editor/standard-fields.md#date). Umožňuje to vymazat nastavenou hodnotu data nebo čísla v editoru - původně se při prázdné hodnotě zachovala hodnota v uložené entitě (#58770).
+- Datové tabulky - validační chyba pole [`QUILL`](developer/datatables-editor/standard-fields.md#quill) zároveň zvýrazní okraj nástrojové lišty i editoru (#58770).
+- Datové tabulky - při duplicitní hodnotě, pokusu vymazat či změnit záznam, na který odkazují další záznamy, prázdné hodnotě pro `NOT NULL` sloupec se zobrazí srozumitelnější chybová zpráva (#58770).
 
 ## 2026.18
 
