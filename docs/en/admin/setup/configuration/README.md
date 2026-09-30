@@ -13,6 +13,8 @@ The tree can be searched. Module names are technical names and are not translate
 
 The installation section contains a list of [most commonly used configuration variables](../../../install/config/README.md).
 
+The background and labeling of the environment in the administration is described in [Homescreen Configuration](dashboard.md).
+
 ## Adding configuration variables
 
 When adding, the most important parameter is **Configuration Name**, which behaves like a text field with auto-complete. When entering a configuration name, it will offer names of already existing variables, including those that are not yet edited (not in the table).

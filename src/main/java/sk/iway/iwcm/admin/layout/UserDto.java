@@ -38,6 +38,8 @@ public class UserDto {
         Map<String, SettingsAdminBean> settingsMap = user.getAdminSettings();
         for (Map.Entry<String, SettingsAdminBean> entry : settingsMap.entrySet()) {
             SettingsAdminBean s = entry.getValue();
+            // Dashboard preferences are supplied separately by DashboardListener in overviewData.settings.
+            if (s.getSkey().startsWith("overview.")) continue;
             adminSettings.put(s.getSkey(), s.getValue());
         }
     }

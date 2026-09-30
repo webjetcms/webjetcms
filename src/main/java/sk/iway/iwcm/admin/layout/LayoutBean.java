@@ -49,6 +49,18 @@ public class LayoutBean {
         return Constants.getString(name, defaultValue);
     }
 
+    /** Returns a configuration value with request and installation macros expanded. */
+    public String getConstantExecuteMacro(String name)
+    {
+        return Constants.getStringExecuteMacro(name);
+    }
+
+    /** Returns the environment detected from the request server name for automatic dashboard styling. */
+    public String getEnvironmentName()
+    {
+        return Constants.getEnvironmentName();
+    }
+
     public int getConstantInt(String name)
     {
         return Constants.getInt(name);
