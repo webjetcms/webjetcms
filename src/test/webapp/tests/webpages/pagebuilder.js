@@ -3036,8 +3036,8 @@ async function openRawPbSections(I, DT, DTE, Document) {
     DT.waitForLoader();
     I.click(DT.btn.add_button);
     DTE.waitForEditor();
-    I.fillField('#DTE_Field_title', title);
-    I.fillField('#DTE_Field_navbar', title);
+    DTE.fillField('title', title);
+    DTE.fillField('navbar', title);
     I.clickCss('#pills-dt-datatableInit-content-tab');
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
     I.waitForVisible('.pb-workbench', 20);
@@ -3058,6 +3058,30 @@ async function rawPbSource(I) {
     const html = await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
     return html.replace(/!INCLUDE\([\s\S]*?\)!/gi, macro => macro.replace(/&quot;/g, '"'));
 }
+
+Scenario('pb-section preview edges select the section without opening application settings @current', async ({I, DT, DTE, Document}) => {
+    await openRawPbSections(I, DT, DTE, Document);
+    I.switchTo('#raw-app-autotest iframe.wj_component');
+    I.waitForText('Application autotest', 20, '#raw-preview-autotest');
+    I.switchTo();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    for (const edge of ['top', 'bottom']) {
+        I.click('#raw-fixed-autotest');
+        // Standard clicks target the center; use the actual border coordinates outside the preview iframe.
+        await I.usePlaywrightTo('select the application section using its ' + edge + ' edge', async ({page}) => {
+            const frame = await getPageBuilderFrame(page);
+            const wrapper = frame.locator('#raw-app-autotest > .pb-temp-wrapper');
+            await wrapper.scrollIntoViewIfNeeded();
+            const box = await wrapper.boundingBox();
+            await page.mouse.click(box.x + box.width / 2, edge === 'top' ? box.y + 8 : box.y + box.height - 8);
+        });
+        I.assertEqual(await I.executeScript(() => window.pageBuilder.ui.selected?.id), 'raw-app-autotest', 'Clicking the preview edge must select the section');
+        I.dontSeeElement('.cke_dialog');
+    }
+    I.assertContain(await rawPbSource(I), rawPbApplication, 'Selecting preview edges must preserve the authored INCLUDE without editor decorations');
+    I.switchTo();
+    DTE.cancel();
+});
 
 Scenario('pb-section div variants preserve authored markup through mode switching and save/reopen', async ({I, DT, DTE, Document}) => {
     const title = await openRawPbSections(I, DT, DTE, Document);

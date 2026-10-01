@@ -2,6 +2,12 @@
     position: relative;
 }
 
+// Leave a clickable edge outside the application iframe for selecting its section.
+body.is-edit-mode .#{$prefix}-temp-wrapper {
+    border-block: 16px solid rgba($color-section, .12);
+    cursor: pointer;
+}
+
 .#{$prefix}-grid-element {
     position: relative;
     transition: opacity 0.3s ease-in-out;

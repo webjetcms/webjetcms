@@ -146,7 +146,7 @@ Do takéhoto bloku môžete vložiť aj aplikáciu, napríklad existujúcu aplik
 <div class="pb-section" id="app2">!INCLUDE(/components/app-htmlembed/embed.jsp, html=)!</div>
 ```
 
-Aplikácia zobrazí náhľad a jej obsah nastavíte bežným dialógom aplikácie. Presúvanie a ďalšie operácie sa vykonávajú nad celým blokom `div.pb-section`.
+Aplikácia zobrazí náhľad a jej obsah nastavíte bežným dialógom aplikácie. Kliknutím na modrý pás nad alebo pod náhľadom označíte sekciu bez otvorenia nastavení aplikácie. Pásy sa zobrazujú iba počas editovania. Presúvanie a ďalšie operácie sa vykonávajú nad celým blokom `div.pb-section`.
 
 Náhľad `!INCLUDE(...)!` funguje aj priamo v sekcii alebo vo vnorenom `DIV` mimo stĺpcov. Page Builder dočasne obalí direktívu elementom `div.pb-editable.pb-temp-wrapper`, aby pre ňu inicializoval editor. Pri uložení a prepnutí editora obal odstráni. Pôvodný rodič, jeho atribúty a okolitý text zostanú zachované.
 
