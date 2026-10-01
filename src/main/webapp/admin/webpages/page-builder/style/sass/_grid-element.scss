@@ -2,10 +2,14 @@
     position: relative;
 }
 
-// Leave a clickable edge outside the application iframe for selecting its section.
+// Leave a clickable edge outside the application iframe for selecting its section or container.
 body.is-edit-mode .#{$prefix}-temp-wrapper {
     border-block: 16px solid rgba($color-section, .12);
     cursor: pointer;
+}
+
+body.is-edit-mode .#{$prefix}-container .#{$prefix}-temp-wrapper {
+    border-block-color: rgba($color-container, .12);
 }
 
 .#{$prefix}-grid-element {

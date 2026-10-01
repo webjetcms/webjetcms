@@ -154,6 +154,16 @@ Náhľad `!INCLUDE(...)!` funguje aj priamo v sekcii alebo vo vnorenom `DIV` mim
 
 Inicializácia pri použití CSS triedy: ```container``` alebo ```pb-custom-container```. Nastavením CSS triedy ```pb-not-container``` sa element **nebude považovať za kontajner** aj keď má CSS triedu ```container```.
 
+Aplikáciu môžete vložiť priamo do kontajnera bez riadka a stĺpca:
+
+```html
+<section>
+    <div class="container">!INCLUDE(/components/app-htmlembed/embed.jsp, html=)!</div>
+</section>
+```
+
+Page Builder k aplikácii nepridá prázdny `row`. Kliknutím na ružový pás nad alebo pod náhľadom označíte kontajner a môžete použiť jeho bežné ovládanie. Pri uložení zostane INCLUDE priamo v pôvodnom kontajneri.
+
 Štýlovanie pomocou triedy, s prefixom: ```pb-style-container-```
 
 ```html

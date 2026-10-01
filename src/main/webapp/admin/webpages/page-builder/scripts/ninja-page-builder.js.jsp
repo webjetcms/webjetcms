@@ -336,7 +336,7 @@
             if ($(target).closest(this.tagc.empty_placeholder_wrapper+', '+this.tagc.modal+', '+this.tagc.library+', '+this.tagc.notify).length) return null;
             var node = $(target).closest(this.tagc._grid_element+', [data-ckeditor-instance]')[0];
             if (node && $(node).is('[data-ckeditor-instance]') && !$(node).hasClass(this.tag._grid_element)) {
-                var parent = $(node).hasClass(this.tag.temp_wrapper) ? this.tagc.section : this.tagc.column;
+                var parent = $(node).hasClass(this.tag.temp_wrapper) ? this.tagc.container+', '+this.tagc.section : this.tagc.column;
                 node = $(node).closest(parent)[0] || node;
             }
             return node && this.$wrapper[0].contains(node) ? node : null;
@@ -2235,7 +2235,8 @@
                 if( $(el).hasClass(this.tag.empty_placeholder_wrapper) && $(el).children(this.tagc.empty_placeholder).length <1 ){
                     //console.log("Appending empty placeholder to wrapper");
                     $(el).append(this.build_aside(this.tag.empty_placeholder,content));
-                } else if( $(el).children().not('aside[class^="'+this.options.prefix+'"]').length < 1 ||
+                } else if( ($(el).children().not('aside[class^="'+this.options.prefix+'"]').length < 1 &&
+                    !$(el).contents().filter(function() { return this.nodeType === Node.TEXT_NODE && this.nodeValue.trim().length; }).length) ||
                     $(el).children(this.tagc.column_content).is(':empty')
                 ) {
                     if($(el).hasClass(this.tag.container)) {

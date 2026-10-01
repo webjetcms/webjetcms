@@ -3028,8 +3028,8 @@ function waitForRawPbSections(I) {
     });
 }
 
-/** Creates an isolated unsaved page and loads all three authored div section variants. */
-async function openRawPbSections(I, DT, DTE, Document) {
+/** Creates an isolated unsaved page and loads the supplied PageBuilder markup. */
+async function openRawPbSections(I, DT, DTE, Document, source = rawPbFixed + rawPbApplication + rawPbMixed) {
     const title = 'pb-section-autotest-' + I.getRandomText();
     Document.resetPageBuilderMode();
     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=34495');
@@ -3047,7 +3047,7 @@ async function openRawPbSections(I, DT, DTE, Document) {
     await I.executeScript(source => {
         document.querySelector('.CodeMirror').CodeMirror.setValue(source);
         window.switchEditorType({value: 'pageBuilder'});
-    }, rawPbFixed + rawPbApplication + rawPbMixed);
+    }, source);
     I.switchTo('#DTE_Field_data-pageBuilderIframe');
     await waitForRawPbSections(I);
     return title;
@@ -3079,6 +3079,43 @@ Scenario('pb-section preview edges select the section without opening applicatio
         I.dontSeeElement('.cke_dialog');
     }
     I.assertContain(await rawPbSource(I), rawPbApplication, 'Selecting preview edges must preserve the authored INCLUDE without editor decorations');
+    I.switchTo();
+    DTE.cancel();
+});
+
+Scenario('application directly in a container keeps its structure and container controls @current', async ({I, DT, DTE, Document}) => {
+    const container = '<div id="raw-app-autotest" class="container raw-container-autotest" data-plugin-customer="b2c">' + rawPbInclude + '</div>';
+    await openRawPbSections(I, DT, DTE, Document, rawPbFixed + '<section>' + container + '<div id="raw-empty-container-autotest" class="container">  </div></section>');
+    I.switchTo('#raw-app-autotest iframe.wj_component');
+    I.waitForText('Application autotest', 20, '#raw-preview-autotest');
+    I.switchTo();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    const state = await I.executeScript(() => {
+        const element = document.querySelector('#raw-app-autotest');
+        const editorName = element.querySelector('[data-ckeditor-instance]').dataset.ckeditorInstance;
+        window.markPbElements('doc_data');
+        window.markPbElements('doc_data');
+        return {rows: element.querySelectorAll('.row').length, wrappers: element.querySelectorAll('.pb-temp-wrapper').length,
+            sameEditor: element.querySelector('[data-ckeditor-instance]').dataset.ckeditorInstance === editorName,
+            emptyRows: document.querySelectorAll('#raw-empty-container-autotest > .row').length};
+    });
+    I.assertDeepEqual(state, {rows: 0, wrappers: 1, sameEditor: true, emptyRows: 1}, 'An application is content; only a genuinely empty container needs a new row');
+    // The application fills the center, so click the selectable border using actual page coordinates.
+    await I.usePlaywrightTo('select the container through the application edge', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const wrapper = frame.locator('#raw-app-autotest > .pb-temp-wrapper');
+        await wrapper.scrollIntoViewIfNeeded();
+        const box = await wrapper.boundingBox();
+        await page.mouse.click(box.x + box.width / 2, box.y + 8);
+    });
+    I.assertEqual(await I.executeScript(() => window.pageBuilder.ui.selected?.id), 'raw-app-autotest', 'The application edge must select the nearest container');
+    I.waitForVisible('.pb-outline[data-type=container]:not(.is-hover)', 10);
+    I.dontSeeElement('.cke_dialog');
+    I.assertContain(await rawPbSource(I), container, 'Serialization must preserve the container and INCLUDE without an empty row or temporary wrapper');
+    I.click('.pb-workbench [data-pb-action=duplicate-adjacent]');
+    I.waitForElement('.raw-container-autotest + .raw-container-autotest iframe.wj_component', 20);
+    I.assertEqual(await I.grabNumberOfVisibleElements('.raw-container-autotest'), 2, 'Standard duplication must duplicate the container');
+    I.dontSeeElement('.raw-container-autotest .row');
     I.switchTo();
     DTE.cancel();
 });
