@@ -1,0 +1,45 @@
+#!/bin/sh
+# Pre-commit hook to detect secrets in staged files using detect-secrets.
+# Install: run scripts/setup-hooks.sh or execute: git config core.hooksPath .githooks
+
+BASELINE=".secrets.baseline"
+
+# Check if detect-secrets is installed
+if ! command -v detect-secrets-hook >/dev/null 2>&1; then
+    echo "WARNING: detect-secrets is not installed. Secret scanning skipped."
+    echo "         Install it with: pip install detect-secrets"
+    echo "         Then run: scripts/setup-hooks.sh"
+    exit 0
+fi
+
+# Exit early if there are no staged files (excluding deleted files)
+if [ -z "$(git diff --cached --name-only --diff-filter=ACM)" ]; then
+    exit 0
+fi
+
+# Run detect-secrets-hook on staged files (NUL-delimited for filenames with spaces)
+if [ -f "$BASELINE" ]; then
+    git diff --cached --name-only --diff-filter=ACM -z | xargs -0 detect-secrets-hook --baseline "$BASELINE"
+else
+    git diff --cached --name-only --diff-filter=ACM -z | xargs -0 detect-secrets-hook
+fi
+
+EXIT_CODE=$?
+
+if [ $EXIT_CODE -ne 0 ]; then
+    echo ""
+    echo "ERROR: Potential secrets detected in staged files!"
+    echo ""
+    echo "Please review the flagged content above. If the detected value is"
+    echo "intentional and not a real secret, you can add it to the baseline:"
+    echo ""
+    echo "  detect-secrets scan > $BASELINE"
+    echo "  git add $BASELINE"
+    echo ""
+    echo "To bypass this check (use with caution):"
+    echo "  git commit --no-verify"
+    echo ""
+    exit 1
+fi
+
+exit 0
