@@ -223,7 +223,7 @@ public class DocDB extends DB
 		{
 			if (force_refresh)
 			{
-				DocDB myDocDB = new DocDB(servletContext, serverName);
+				DocDB myDocDB = new DocDB(servletContext, serverName, force_refresh);
 				//save us to server space
 				servletContext.setAttribute(Constants.A_DOC_DB, myDocDB);
 
@@ -234,7 +234,7 @@ public class DocDB extends DB
 				DocDB myDocDB = (DocDB) servletContext.getAttribute(Constants.A_DOC_DB);
 				if (myDocDB == null)
 				{
-					myDocDB = new DocDB(servletContext, serverName);
+					myDocDB = new DocDB(servletContext, serverName, force_refresh);
 					//	remove
 					//servletContext.removeAttribute(Constants.A_DOC_DB);
 					//save us to server space
@@ -254,7 +254,7 @@ public class DocDB extends DB
 	 * @param serverName
 	 *           Description of the Parameter
 	 */
-	private DocDB(javax.servlet.ServletContext servletContext, String serverName)
+	private DocDB(javax.servlet.ServletContext servletContext, String serverName, boolean force_refresh)
 	{
 		Logger.println(this,"DocDB: constructor ["+Constants.getInstallName()+"]");
 		Logger.debugMemInfo();
@@ -280,7 +280,7 @@ public class DocDB extends DB
 
 		loadUrls();
 
-		ClusterDB.addRefresh(DocDB.class);
+		if (force_refresh) ClusterDB.addRefresh(DocDB.class);
 
 		Logger.debug(this,"DocDB: constructor ["+Constants.getInstallName()+"] done");
 		Logger.debugMemInfo();

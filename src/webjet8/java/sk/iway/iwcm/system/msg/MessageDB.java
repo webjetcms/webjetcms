@@ -58,17 +58,17 @@ public class MessageDB
 				return (messageDB);
 			}
 		}
-		return (new MessageDB());
+		return (new MessageDB(forceRefresh));
 	}
 
-	private MessageDB()
+	private MessageDB(boolean forceRefresh)
 	{
 		//remove
 		Constants.getServletContext().removeAttribute(CONTEXT_NAME);
 		//save us to server space
 		Constants.getServletContext().setAttribute(CONTEXT_NAME, this);
 
-		ClusterDB.addRefresh(MessageDB.class);
+		if (forceRefresh) ClusterDB.addRefresh(MessageDB.class);
 	}
 
 	public boolean saveMessage(HttpSession session, AdminMessageBean msg)

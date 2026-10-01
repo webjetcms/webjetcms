@@ -4,7 +4,8 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
-- Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#).
+- Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#337).
+- Cluster - optimalizované zapisovanie zmeny v clustri pri štarte nového uzla (#337).
 
 ## 2026.0.40
 
