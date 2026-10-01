@@ -109,7 +109,12 @@ Scenario('Render the complete widget catalogue on desktop and mobile', async ({ 
     I.seeNumberOfElements('#toast-container-overview', 1);
     I.dontSeeElementInDOM('.md-dashboard__legacy');
     I.dontSeeElementInDOM('#webjet-overview-dashboard .bookmark');
-    I.seeElement('[data-widget-type="sessions"] .md-dashboard__widget-content button');
+    I.seeElement('[data-widget-type="sessions"] .md-dashboard-widget__session-current');
+    const otherSessions = await I.executeScript(() => {
+        const data = document.querySelector('webjet-overview-dashboard').data.currentSessions;
+        return data.userSessions.flatMap(cluster => cluster.userSessions).filter(session => session.sessionId !== data.currentSessionId).length;
+    });
+    I.seeNumberOfElements('[data-widget-type="sessions"] .md-dashboard-widget__session-logout', otherSessions);
     I.seeElement('[data-widget-type="recent-pages"] .md-dashboard__widget-header .md-dashboard__header-link[href="/admin/v9/webpages/web-pages-list/"]');
     I.dontSeeElement('[data-widget-type="recent-pages"] .md-dashboard-widget__more');
     I.assertEqual(await I.grabTextFrom('[data-widget-type="traffic"] .md-dashboard-widget__metric-label'),

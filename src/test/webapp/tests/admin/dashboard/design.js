@@ -221,7 +221,9 @@ Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on
             const scrollbar = window.scrollbarMain;
             scrollbar.setMomentum(0, 0);
             scrollbar.update();
-            scrollbar.setPosition(0, scrollbar.offset.y + document.querySelector('.md-dashboard__toolbar').getBoundingClientRect().top - 80);
+            const top = document.querySelector('.md-dashboard__toolbar').getBoundingClientRect().top;
+            if (scrollbar.limit.y > 0) scrollbar.setPosition(0, scrollbar.offset.y + top - 80);
+            else window.scrollTo(0, window.scrollY + top - 80);
         });
         I.clickCss(feedback);
         I.waitForVisible('#feedback_modal #feedback-group-text', 10);
@@ -270,6 +272,20 @@ Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on
         I.waitForFunction(() => !document.querySelector('.md-dashboard-modal'), 10);
         I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), addWidget),
             'Closing the catalogue must return focus to Add widget.');
+        // moveCursorTo only moves the pointer; it does not scroll a wrapped mobile toolbar into view.
+        I.waitForFunction(selector => {
+            const button = document.querySelector(selector);
+            const bounds = button.getBoundingClientRect();
+            if (bounds.top < 64 || bounds.bottom > window.innerHeight) {
+                const scrollbar = window.scrollbarMain;
+                scrollbar.setMomentum(0, 0);
+                scrollbar.update();
+                if (scrollbar.limit.y > 0) scrollbar.setPosition(0, scrollbar.offset.y + bounds.top - 80);
+                else window.scrollTo(0, window.scrollY + bounds.top - 80);
+                return false;
+            }
+            return button.contains(document.elementFromPoint(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2));
+        }, [resetWidget], 10);
         I.moveCursorTo(resetWidget);
         I.waitForFunction(() => {
             const tooltipId = document.querySelector('.md-dashboard__reset').getAttribute('aria-describedby');

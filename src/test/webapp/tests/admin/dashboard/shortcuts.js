@@ -161,9 +161,10 @@ Scenario('Custom URL shortcuts retain their icon and color after saving and reop
 Scenario('Automatically import old bookmarks on load with failure recovery and server persistence', async ({ I }) => {
     I.assertTrue(Boolean(originalSettings), 'The fixture must preserve the original profile first.');
     const before = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
+    const origin = await I.executeScript(() => window.location.origin);
     const legacy = JSON.stringify([
         { name: 'Banner autotest', path: bannerHref },
-        { name: 'Banner duplicate autotest', path: 'http://iwcm.interway.sk' + bannerHref },
+        { name: 'Banner duplicate autotest', path: origin + bannerHref },
         { name: 'Forms autotest', path: '/apps/form/admin/' }
     ]);
     const prepared = await I.executeScript(async bookmarks => {
