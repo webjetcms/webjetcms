@@ -473,7 +473,13 @@ public void addSpecSearch(Map<String, String> params, List<Predicate> predicates
 
 ## Neexistující atributy v editoru
 
-Standardně z editoru nemusí přicházet všechny atributy entity, proto se před uložením spojují hodnoty stávající entity a údajů zaslaných z editoru. Standardně se přepíší všechny ne ```null``` atributy. To ale neumožňuje zadat prázdné datum (pokud již bylo jednou nastaveno). Proto jsou atributy anotované DataTableColumn typu ```Date``` přeneseny, i když mají hodnotu ```null```. Toto spojení se provádí v metodě ```public T editItem(T entity, long id)``` s využitím ```NullAwareBeanUtils.copyProperties(entity, one);```.
+Standardně z editoru nemusí přicházet všechny atributy entity, proto se před uložením spojují hodnoty stávající entity a dat zaslaných z editoru. Přepíší se všechny atributy s hodnotou odlišnou od ```null```.
+
+Automatický přenos hodnoty ```null``` se týká pouze atributů označených anotací ```@DataTableColumn```. V rámci těchto atributů se přenese pro Java typy ```java.util.Date```, ```java.sql.Date```, ```LocalDate```, ```LocalDateTime``` a objektová pole s ```inputType = DataTableColumnType.NUMBER```, která podporují ```null```, aby je bylo možné v editoru vyprázdnit. U atributů bez anotace ```@DataTableColumn``` se vstupní hodnota ```null``` ignoruje a zachová se původní hodnota entity, i když se jedná o datový typ. Primitivní číselné typy hodnotu ```null``` nepodporují.
+
+Při importu se hodnota ```null``` pro tyto datové atributy a ```NUMBER``` automaticky přenese pouze tehdy, když se jejich sloupec nachází v hlavičce importovaného Excel souboru. Společný seznam ```importedColumns``` se vytváří z hlavičky nezávisle na hodnotách v jednotlivých řádcích. Vynechaný sloupec zachová hodnotu existující entity; prázdná buňka nebo explicitní hodnota ```NULL``` v importovaném sloupci ji vynuluje. Povinná pole nadále podléhají validaci, například ```@NotNull```.
+
+Pro datum uložené v jiném typu, například ```Instant```, ```Timestamp``` nebo ```Long```, případně pro ```TEXT_NUMBER```, lze přenos ```null``` zapnout pomocí ```alwaysCopyProperties = { true }```. Toto nastavení vynutí přenos i při vynechaném sloupci importu. Hodnotou ```false``` se automatický přenos pro podporované datové typy a ```NUMBER``` vypne. Toto spojení se provádí v metodě ```public T editItem(T entity, long id)``` s využitím ```NullAwareBeanUtils.copyProperties(entity, one);```.
 
 ## Obnovení dat po uložení
 

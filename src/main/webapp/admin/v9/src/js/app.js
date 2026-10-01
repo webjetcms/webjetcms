@@ -148,6 +148,7 @@ window.dataTableCellVisibilityService = new CellVisibilityService();
 
 /* WEB COMPONENTS */
 import './web-components/webjet-overview-dashboard';
+import './web-components/webjet-server-monitoring';
 import './web-components/webjet-image-area-selector';
 
 /* DYNAMIC IMPORTS */

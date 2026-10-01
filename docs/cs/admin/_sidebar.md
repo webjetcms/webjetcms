@@ -4,6 +4,7 @@
 
 - Konfigurace
   - [Konfigurace](/admin/setup/configuration/README.md)
+  - [Úvodní obrazovka](/admin/setup/configuration/dashboard.md)
   - [Jazyky](/admin/setup/languages.md)
   - [Překladač](/admin/setup/translation.md)
 

@@ -50,12 +50,20 @@ Scenario("filter podla datumu", async ({ I, DT }) => {
 Scenario("aktualne hodnoty", async ({ I }) => {
   I.amOnPage("/apps/server_monitoring/admin/");
 
+  const configureType = await I.executeScript(() => typeof document.querySelector("webjet-server-monitoring")?.configure);
+  I.assertEqual(configureType, "function", "The administration bundle must register the monitoring component");
+  I.waitForElement("webjet-server-monitoring[data-ready='true']", 10);
+  I.waitForElement(".monitoring-table", 10);
+  I.waitForFunction(() => {
+    const charts = document.querySelector("webjet-server-monitoring").charts;
+    return [charts.memoryAmchart, charts.cpuAmchart].every(chart => chart?.series.values[0]?.data.length > 0);
+  }, 20);
+
   //over fungovanie prekladov
   I.see("Dátum a čas spustenia servera");
   I.see("Správca jazyka JAVA");
   I.seeNumberOfElements(".server-monitoring-tables > .col-md-6", 2);
   I.see("Kódovanie znakov", ".server-monitoring-tables > .col-md-6:first-child");
-  I.waitForElement(".monitoring-table", 10);
 
   const tableSemantics = await I.executeScript(() => {
     const tables = [...document.querySelectorAll(".server-monitoring-tables .monitoring-table")];
@@ -93,6 +101,12 @@ Scenario("aktualne hodnoty", async ({ I }) => {
   I.see("0 dní");
   I.see("hodín");
   I.see("minút");
+
+  I.click("#secondsDropdown button");
+  I.click("#secondsDropdown [data-seconds='10']");
+  I.see("10s", "#seconds-display");
+  const refreshInterval = await I.executeScript(() => document.querySelector("webjet-server-monitoring").refreshInterval);
+  I.assertEqual(refreshInterval, 10000, "The selected interval must update live monitoring polling");
 });
 
 /**

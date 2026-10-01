@@ -78,7 +78,7 @@ class AudioHelper extends Helper {
   /**
    * Generates numbered MP3 parts, keeping every shot together within the model's character limit.
    * @param {string|object} text Legacy narration or a video plan with localized shot text; callbacks are not executed
-   * @param {{modelId?: string, voiceId?: string, language?: string}} [options] Voice and language overrides
+   * @param {{modelId?: string, voiceId?: string, language?: string, languageCode?: string, voiceSettings?: {stability?: number, similarityBoost?: number}}} [options] Narration language and optional API language/voice overrides (voice values from 0 to 1)
    * @returns {Promise<string[]>} Absolute paths of the generated MP3 parts in narration order
    * @throws {Error} When generation is disabled, configuration is invalid, or generation fails
    */
@@ -100,7 +100,7 @@ class AudioHelper extends Helper {
     }
     this.audioGenerationStarted = true;
 
-    const { modelId, voiceId, language, chunks } = resolveAudioPlan(text, options);
+    const { modelId, voiceId, languageCode, voiceSettings, language, chunks } = resolveAudioPlan(text, options);
     const apiKey = getEnvironmentOverride("ELEVENLABS_API_KEY");
     if (apiKey == null) {
       throw new Error("ELEVENLABS_API_KEY must be set before generating audio.");
@@ -114,6 +114,8 @@ class AudioHelper extends Helper {
       apiKey,
       modelId,
       voiceId,
+      languageCode,
+      voiceSettings,
       creditLabel: "audio"
     });
 

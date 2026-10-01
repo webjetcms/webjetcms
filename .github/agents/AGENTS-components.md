@@ -5,6 +5,8 @@
 
 Collection of pluggable feature modules (apps/widgets) each encapsulated in its own subdirectory (e.g., banner, blog, forms, gallery, news, seo, sitemap, stat). They integrate into templates via tags/macros or dynamic includes and often expose admin DataTable CRUD endpoints.
 
+For administration home dashboard widgets (`components/welcome` and `admin/v9/src/js/dashboard`), use the [dashboard widget skill](../../.agents/skills/wj-dashboard-widget/SKILL.md) and its maintained contract and design decisions.
+
 ## Structure & Conventions
 
 - One folder per component: keep internal naming consistent with folder (e.g., `banner/` -> classes prefixed `Banner`).

@@ -29,6 +29,7 @@ import org.json.JSONObject;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.NotReadablePropertyException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
@@ -42,6 +43,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.util.ClassUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindingResult;
@@ -108,7 +110,7 @@ import sk.iway.iwcm.users.UsersDB;
  *  Abstraktny univerzalny RestController na pracu s DataTables Editor-om
  *
  */
-@SuppressWarnings({"java:S6813", "java:S119", "java:S3776"})
+@SuppressWarnings({"java:S6813", "java:S119", "java:S3776", "java:S2147"})
 public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 {
 	private final JpaRepository<T, Long> repo;
@@ -190,6 +192,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		boolean forceReload = isForceReload();
 		List<NotifyBean> notify = getThreadData().getNotify();
 		boolean isImporting = isImporting();
+		Set<String> importedColumns = getImportedColumns();
 
 		//toto nam zabezpeci aby sa nam nestratili udaje, ktore nemame v editore
 		T one = getOne(id);
@@ -197,6 +200,7 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		if (isForceReload()) setForceReload(forceReload);
 		if (notify!=null) addNotify(notify);
 		setImporting(isImporting);
+		setImportedColumns(importedColumns);
 
 		copyEntityIntoOriginal(entity, one);
 
@@ -367,6 +371,12 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					}
 				}
 				return true;
+			} catch (DataAccessException e) {
+				// Let the exception handler translate database failures into user-facing messages.
+				throw e;
+			} catch (TransactionSystemException e) {
+				//cant combine because of AspectException
+				throw e;
 			} catch (Exception e) {
 				Logger.error(DatatableRestControllerV2.class, e);
 			}
@@ -2383,6 +2393,8 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 		List<String> alwaysCopyProperties = new ArrayList<>();
 		List<String> ignoreProperties = new ArrayList<>();
 		List<String> identifierProperties = new ArrayList<>();
+		boolean importing = isImporting();
+		Set<String> importedColumns = getImportedColumns();
 		for (Field field : getIdentifierFields(entity.getClass())) {
 			identifierProperties.add(field.getName());
 		}
@@ -2426,8 +2438,12 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					//implicit false value
 					if (alwaysCopy==false) continue;
 				}
-				if (alwaysCopy || field.getType().isAssignableFrom(Date.class) || field.getType().isAssignableFrom(java.sql.Date.class) || field.getType().isAssignableFrom(LocalDate.class) || field.getType().isAssignableFrom(LocalDateTime.class)) {
-					//ak je to datum tak ho dajme do ignore, aby isiel zadat v GUI prazdny datum
+				boolean isNumber = Arrays.asList(annotation.inputType()).contains(DataTableColumnType.NUMBER);
+				boolean isDate = field.getType().isAssignableFrom(Date.class) || field.getType().isAssignableFrom(java.sql.Date.class) || field.getType().isAssignableFrom(LocalDate.class) || field.getType().isAssignableFrom(LocalDateTime.class);
+				String columnName = Tools.isNotEmpty(annotation.data()) ? annotation.data() : field.getName();
+				boolean copyNull = (isNumber || isDate) && (importing==false || (importedColumns!=null && importedColumns.contains(columnName)));
+				if (alwaysCopy || copyNull) {
+					//Allow clearing dates and NUMBER fields, but preserve omitted import columns unless explicitly overridden.
 					alwaysCopyProperties.add(field.getName());
 				}
 			}
