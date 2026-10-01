@@ -50,7 +50,7 @@
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
 - Page Builder - elementy označené CSS triedou [`pb-duplicable`](frontend/page-builder/settings.md#duplikovateľný-element-oranžová-farba) je možné v rámci rovnakého rodiča presúvať, duplikovať a zmazať. Vlastné alebo viaceré selektory je možné nastaviť cez `pbCustomSettings` (#58750).
-- Page Builder - vlastný [HTML blok bez mriežky](frontend/page-builder/blocks.md#vlastný-html-blok-bez-mriežky) môžete označiť triedou `pb-section` na DIV elemente. Získa bežné ovládanie sekcie bez pridania ďalších obalov. Aplikácie `!INCLUDE(...)!` mimo stĺpcov zobrazujú náhľad; dočasný obal editora sa pri uložení odstráni (#osk711).
+- Page Builder - pridaná možnosť vytvoriť [div.pb-section](frontend/page-builder/settings.md), ktorý získa bežné ovládanie sekcie. Naviac vložené aplikácie `!INCLUDE(...)!` zobrazujú náhľad aj ak sú mimo bežného stĺpca (#osk711).
 - Page Builder - upravené [ovládanie editora](redactor/webpages/pagebuilder.md). Pridaná pevná horná lišta s cestou k vybranému bloku, panel **Štruktúra**, rýchle akcie a režim vkladania sekcií, kontajnerov a stĺpcov priamo do stránky. Rámiky je možné skryť alebo zobraziť pre celú hierarchiu bloku. Knižnica blokov má kompaktné okno s náhľadmi, kategóriami a kombinovaným vyhľadávaním so štítkami. Nastavenie štýlu používa rozbaľovacie skupiny vlastností a označuje práve upravovaný blok (#308).
 
 <div class="video-container">
