@@ -4,6 +4,8 @@
 
 > Opravná verzia pôvodnej verzie 2026.0.
 
+- Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#).
+
 ## 2026.0.40
 
 > Opravná verzia pôvodnej verzie 2026.0.

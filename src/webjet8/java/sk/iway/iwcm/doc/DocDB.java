@@ -182,6 +182,15 @@ public class DocDB extends DB
 	}
 
 	/**
+	 * Returns initialized document caches without checking scheduled publication.
+	 * Used while loading groups, since publication requires a fully initialized GroupsDB.
+	 */
+	static DocDB getInstanceWithoutPublishCheck()
+	{
+		return getInstanceWithoutPublishCheck(false, "iwcm");
+	}
+
+	/**
 	 *  Gets the instance attribute of the DocDB class
 	 *
 	 *@param  servletContext2  Description of the Parameter
@@ -193,14 +202,20 @@ public class DocDB extends DB
 	@Deprecated
 	public static DocDB getInstance(javax.servlet.ServletContext servletContext2, boolean force_refresh, String serverName)
 	{
+		DocDB myDocDB = getInstanceWithoutPublishCheck(force_refresh, serverName);
+		// Publication may initialize GroupsDB, so run it outside the DocDB initialization lock.
+		myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
+		return myDocDB;
+	}
+
+	private static DocDB getInstanceWithoutPublishCheck(boolean force_refresh, String serverName)
+	{
 		javax.servlet.ServletContext servletContext = Constants.getServletContext();
 		if (!force_refresh)
 		{
 			DocDB myDocDB = (DocDB) servletContext.getAttribute(Constants.A_DOC_DB);
 			if (myDocDB != null && myDocDB.urlsByUrlDomains!=null)
 			{
-				//Set publishable service and call checkPublishable
-				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 		}
@@ -212,7 +227,6 @@ public class DocDB extends DB
 				//save us to server space
 				servletContext.setAttribute(Constants.A_DOC_DB, myDocDB);
 
-				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 			else
@@ -227,7 +241,6 @@ public class DocDB extends DB
 					servletContext.setAttribute(Constants.A_DOC_DB, myDocDB);
 
 				}
-				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 		}
