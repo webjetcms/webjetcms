@@ -179,19 +179,25 @@ Skratky predvolene smerujú na webové stránky a formuláre podľa vašich opr�
 
 Novú skratku pridáte takto:
 
-1. Kliknite na **Upraviť skratky** a potom na **Pridať skratku**.
-2. V poli **Cieľ skratky** vyberte **Stránka v administrácii** alebo **Vlastná URL adresa**. Pri stránke v administrácii vyberte hlavnú časť, sekciu a prípadne kartu. Pri vlastnej adrese vyplňte pole **URL adresa**.
-3. Vyplňte **Vlastný názov**, podľa ktorého skratku spoznáte. Pri vlastnej URL adrese je názov povinný.
-4. Podľa potreby nastavte **Ikonu** a **Farbu pozadia**, aby ste skratku v zozname ľahšie našli.
-5. Kliknite na **Uložiť**. Po dokončení úprav skratiek kliknite na **Hotovo**.
+1. Kliknite na **Pridať skratku** priamo za zoznamom skratiek.
+2. Do poľa **Kam má skratka viesť?** napíšte názov sekcie, karty alebo webovej stránky. Výsledky zobrazujú ikonu, názov a cestu; cieľ vyberte kliknutím alebo šípkami a klávesom **Enter**. Pre vlastný odkaz kliknite na **Použiť vlastnú adresu URL…** a vyplňte **URL adresu**.
+3. Podľa potreby vyplňte **Názov skratky**. Ak zostane prázdny, použije sa názov vybraného cieľa. Pri vlastnej URL adrese je názov povinný.
+4. Vyberte **Ikonu** a **Farbu**. Prvá ikona vychádza z vybraného cieľa. Voľba **Vlastná…** umožňuje zadať názov ikony z knižnice Tabler; náhľad sa zmení hneď a neexistujúci názov nemožno uložiť. Farba sa použije iba na pozadie ikony. Paleta obsahuje aj možnosť **Bez farby**.
+5. Skontrolujte náhľad a kliknite na **Pridať skratku**.
+
+Dlhé názvy sa skrátia trojbodkou. Celý názov sa zobrazí pri podržaní myši alebo pri zameraní klávesnicou. Skratka na nedostupnú položku menu zostáva zobrazená s vysvetlením; v režime úprav ju môžete opraviť alebo odstrániť.
+
+Režim úprav zapnete tlačidlom s ceruzkou **Upraviť skratky** za zoznamom. Ceruzku nahradí tlačidlo **Hotovo** napravo od privítania, nad skratkami. Kliknutie na skratku potom otvorí jej nastavenia. Po zmene cieľa, názvu, ikony alebo farby kliknite na **Uložiť zmeny**. Oznámenie ponúkne **Späť** na 8 sekúnd. Rovnaký formulár obsahuje aj tlačidlo **Odstrániť skratku**. Po dokončení úprav kliknite na **Hotovo**.
+
+Skratku presuniete úchytom pred ikonou. Počas presunu zostáva na pôvodnom mieste prerušovaný obrys a biela čiara označuje miesto vloženia. Pri ovládaní klávesnicou presuňte fokus na úchyt: **medzerník** skratku zdvihne, **šípky vľavo/vpravo** zmenia pozíciu, **Enter** potvrdí presun a **Esc** ho zruší. Kliknutím na úchyt môžete pozíciu vybrať aj v dialógovom okne.
 
 ![](dashboard-shortcut-settings.png)
 
-Ak chcete skratku na konkrétny priečinok, otvorte ho vo Web stránkach a skopírujte adresu z adresného riadka prehliadača aj s parametrom `groupid`. Pri pridávaní skratky zvoľte **Vlastná URL adresa**, vložte skopírovanú adresu a zadajte názov, napríklad **Aktuality**.
+Ak chcete skratku na konkrétny priečinok, otvorte ho vo Web stránkach a skopírujte adresu z adresného riadka prehliadača aj s parametrom `groupid`. Pri pridávaní skratky zvoľte **Použiť vlastnú adresu URL…**, vložte skopírovanú adresu a zadajte názov, napríklad **Aktuality**.
 
 Adresa môže mať napríklad tvar `/admin/v9/webpages/web-pages-list/?groupid=123`, kde `123` je ID požadovaného priečinka. Použite ID zo svojej skopírovanej adresy. Kliknutím na takúto skratku otvoríte priamo daný priečinok, aj keď je vnorený hlbšie v štruktúre webu.
 
-Tlačidlo **Obnoviť** v úprave skratiek obnoví predvolené odkazy a zachová widgety, ich filtre aj stav noviniek. Po odstránení všetkých skratiek zostane zoznam prázdny až do pridania novej skratky alebo obnovy predvolených odkazov.
+Krížik **×** odstráni skratku bez potvrdenia. Oznámenie ponúkne **Späť** na 8 sekúnd. Odstrániť môžete aj poslednú skratku; zobrazí sa **Žiadna skratka** a tlačidlo na pridanie. Widgety, ich filtre aj stav noviniek zostávajú zachované.
 
 ## Zmenené stránky, audit a monitorovanie
 

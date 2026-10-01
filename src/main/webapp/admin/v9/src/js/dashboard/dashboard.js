@@ -160,7 +160,7 @@ export class DashboardController {
         const environment = environmentBadge(this.context.config);
         if (environment) meta.append(environment);
         welcome.append(meta);
-        const welcomeHeading = node("div", "md-dashboard__welcome-heading");
+        const welcomeHeading = this.welcomeHeading = node("div", "md-dashboard__welcome-heading");
         welcomeHeading.append(node("h1", "md-dashboard__greeting", `${this._t("welcomeBack", "Welcome back,")} ${this.context.data?.userName || ""}`.trim()));
         welcome.append(welcomeHeading);
         this.news = node("div", "md-dashboard__news");
@@ -201,26 +201,31 @@ export class DashboardController {
         this.dropEnd.setAttribute("aria-hidden", "true");
         this.shortcuts = node("section", "md-dashboard__shortcuts");
         this.shortcuts.setAttribute("aria-label", this._t("shortcuts", "Your shortcuts"));
-        const shortcutActions = node("div", "md-dashboard__shortcut-actions");
-        this.addShortcutButton = button(this._t("addShortcut", "Add shortcut"), () => this.showAddWidget("shortcut"), "btn btn-sm btn-primary md-dashboard__control");
+        this.shortcutActions = node("div", "md-dashboard__shortcut-actions");
+        this.addShortcutButton = button(this._t("addShortcut", "Add shortcut"), () => this.showAddWidget("shortcut"), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__shortcut-add");
         this.addShortcutButton.prepend(icon("ti-plus"));
-        this.resetShortcutsButton = button(this._t("datatables.button.restore.js", "Restore"), () => this.showResetShortcuts(), "btn btn-sm btn-outline-secondary md-dashboard__control");
-        this.resetShortcutsButton.prepend(icon("ti-refresh"));
-        this.editShortcutsButton = button(this._t("editShortcuts", "Edit shortcuts"), () => this.setEditingShortcuts(!this.editingShortcuts), "btn btn-sm btn-outline-secondary md-dashboard__control");
-        this.editShortcutsButton.prepend(icon("ti-adjustments-horizontal"));
+        this.editShortcutsButton = button(this._t("editShortcuts", "Edit shortcuts"), () => this.setEditingShortcuts(!this.editingShortcuts), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__shortcut-edit");
+        this.editShortcutsButton.replaceChildren(icon("ti-pencil"), node("span", "visually-hidden", this._t("editShortcuts", "Edit shortcuts")));
+        this.editShortcutsButton.title = this._t("editShortcuts", "Edit shortcuts");
+        // Finish tooltip cleanup before moving the focused control to the heading.
+        this.editShortcutsButton.setAttribute("data-bs-animation", "false");
         this.editShortcutsButton.setAttribute("aria-pressed", "false");
-        this.addShortcutButton.hidden = this.resetShortcutsButton.hidden = true;
-        shortcutActions.append(this.addShortcutButton, this.resetShortcutsButton, this.editShortcutsButton);
-        welcomeHeading.append(shortcutActions);
+        this.shortcutActions.append(this.addShortcutButton, this.editShortcutsButton);
         this.shortcutStatus = node("div", "md-dashboard__status");
         this.shortcutStatus.setAttribute("role", "status");
         this.shortcutStatus.setAttribute("aria-live", "polite");
         this.shortcutStatus.tabIndex = -1;
         this.shortcutList = node("div", "md-dashboard__shortcut-list");
         this.shortcuts.append(this.shortcutList, this.shortcutStatus);
+        const moveHint = node("p", "visually-hidden", this._t("shortcutMoveHint", "Space lifts the shortcut, Left and Right move it, Enter drops it, Escape cancels."));
+        moveHint.id = `dashboard-shortcut-move-${createInstanceId()}`;
+        this.shortcutMoveHint = moveHint;
+        this.shortcuts.append(moveHint);
         welcome.insertBefore(this.shortcuts, this.news);
         this.host.replaceChildren(this.hero, this.notices, this.search, this.toolbar, this.overviewStatus, this.undoContainer, this.layout, this.dropEnd);
-        if (window.jQuery && window.WJ?.initTooltip) window.WJ.initTooltip(window.jQuery(this.resetButton));
+        if (window.jQuery && window.WJ?.initTooltip) {
+            for (const control of [this.resetButton, this.editShortcutsButton]) window.WJ.initTooltip(window.jQuery(control));
+        }
         this._setBusy(true);
     }
 
@@ -249,13 +254,23 @@ export class DashboardController {
     setEditingShortcuts(editing) {
         if (editing && this.editing) this.setEditing(false);
         this.editingShortcuts = Boolean(editing);
+        if (!this.editingShortcuts) this._finishShortcutMove(false);
         this.host.classList.toggle("is-editing-shortcuts", this.editingShortcuts);
-        this.editShortcutsButton.textContent = this._t(editing ? "finishEditing" : "editShortcuts", editing ? "Done" : "Edit shortcuts");
-        this.editShortcutsButton.prepend(icon(editing ? "ti-check" : "ti-adjustments-horizontal"));
+        const label = this._t(editing ? "finishEditing" : "editShortcuts", editing ? "Done" : "Edit shortcuts");
+        const restoreFocus = document.activeElement === this.editShortcutsButton;
+        const tooltip = window.bootstrap?.Tooltip?.getInstance(this.editShortcutsButton);
+        window.jQuery?.(this.editShortcutsButton).off(".wjFocusWithoutTooltip");
+        tooltip?.hide();
+        if (editing) tooltip?.disable();
+        else tooltip?.enable();
+        this.editShortcutsButton.removeAttribute("title");
+        this.editShortcutsButton.replaceChildren(icon(editing ? "ti-check" : "ti-pencil"), node("span", editing ? "" : "visually-hidden", label));
         this.editShortcutsButton.setAttribute("aria-pressed", String(this.editingShortcuts));
-        this.editShortcutsButton.classList.toggle("btn-primary", this.editingShortcuts);
-        this.editShortcutsButton.classList.toggle("btn-outline-secondary", !this.editingShortcuts);
-        this.addShortcutButton.hidden = this.resetShortcutsButton.hidden = !this.editingShortcuts;
+        (editing ? this.welcomeHeading : this.shortcutActions).append(this.editShortcutsButton);
+        if (restoreFocus) {
+            if (!editing && window.WJ?.focusWithoutTooltip) window.WJ.focusWithoutTooltip(this.editShortcutsButton);
+            else this.editShortcutsButton.focus({ preventScroll: true });
+        }
         this._updateEditing();
     }
 
@@ -265,7 +280,8 @@ export class DashboardController {
 
     _updateEditing() {
         for (const view of this.views.values()) {
-            view.header.querySelectorAll(".md-dashboard__edit-control").forEach(control => { control.hidden = !this._isEditing(view.instance); });
+            view.card.querySelectorAll(".md-dashboard__edit-control").forEach(control => { control.hidden = !this._isEditing(view.instance); });
+            if (view.instance.type === "shortcut") this._updateShortcutLink(view);
         }
         for (const view of this.views.values()) window.bootstrap?.Dropdown?.getInstance(view.header.querySelector('[data-bs-toggle="dropdown"]'))?.hide();
         this._bindDrag();
@@ -372,10 +388,12 @@ export class DashboardController {
      *
      * @param {import('./model').DashboardSettings} next - Complete proposed layout and current-domain options.
      * @param {HTMLElement} [status=this.status] - Region receiving progress and persistence errors.
+     * @param {Object} [options={}] - Controls the generic notification and shortcut reflow animation.
      * @returns {Promise<boolean>} True after applying the server response; false for a blocked, invalid, aborted or failed save.
      */
-    async _commit(next, status = this.status) {
+    async _commit(next, status = this.status, { notify = true, animateShortcuts = false } = {}) {
         if (this.saving || this.destroyed || this.host.dataset.loaded !== "true") return false;
+        this._finishShortcutMove(false);
         if (next.items.length > MAX_WIDGETS) {
             status.textContent = this._t("limit", "The overview can contain at most 48 widgets.");
             return false;
@@ -398,9 +416,21 @@ export class DashboardController {
             this.settings.configured = true;
             this.removed = null;
             this.undoContainer.hidden = true;
+            this._clearShortcutUndo();
             status.textContent = "";
+            const positions = animateShortcuts ? new Map([...this.shortcutList.querySelectorAll('[data-instance-id]')].map(card => [card.dataset.instanceId, card.getBoundingClientRect()])) : null;
             this._render();
-            window.WJ.notifySuccess(this._t("saved", "Saved."), "", 3000);
+            if (positions && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+                for (const [id, previous] of positions) {
+                    const card = this.views.get(id)?.card;
+                    if (!card) continue;
+                    const current = card.getBoundingClientRect();
+                    if (current.left !== previous.left || current.top !== previous.top) card.animate?.([
+                        { transform: `translate(${previous.left - current.left}px, ${previous.top - current.top}px)` }, { transform: 'none' }
+                    ], { duration: 180, easing: 'ease-out' });
+                }
+            }
+            if (notify) window.WJ.notifySuccess(this._t("saved", "Saved."), "", 3000);
             return true;
         } catch (error) {
             if (!this.destroyed && !request.signal.aborted) status.replaceChildren(node("span", "text-danger", this._t("saveError", "The change could not be saved. Your previous settings were kept.")));
@@ -471,7 +501,8 @@ export class DashboardController {
             container.replaceChildren(...visible.filter(instance => this._region(instance) === region).map(updateView));
         }
         this.shortcuts.hidden = !getWidget("shortcut");
-        if (!this.shortcutList.children.length) this.shortcutList.append(node("p", "md-dashboard__shortcuts-empty", this._t("shortcutsEmpty", "You have no shortcuts yet.")));
+        if (!this.shortcutList.children.length) this.shortcutList.append(node("p", "md-dashboard__shortcuts-empty", this._t("shortcutsEmpty", "No shortcuts.")));
+        this.shortcutList.append(this.shortcutActions);
         if (!gridItems.length) fragment.append(node("p", "md-dashboard__empty", this._t("empty", "Add widgets to create your overview.")));
         this.layout.replaceChildren(fragment);
         refreshIds.forEach(id => this.refresh(id));
@@ -518,6 +549,34 @@ export class DashboardController {
         const drag = button(this._t("move", "Move widget"), () => this.showMove(instance.id), "btn btn-sm md-dashboard__drag md-dashboard__control");
         drag.replaceChildren(icon("ti-grip-vertical"));
         drag.setAttribute("aria-label", this._t("move", "Move widget"));
+        if (instance.type === "shortcut") {
+            card.classList.add("md-dashboard__shortcut-card");
+            header.classList.add("visually-hidden");
+            drag.classList.add("md-dashboard__edit-control");
+            drag.setAttribute("aria-label", this._t("moveShortcut", "Move shortcut"));
+            drag.setAttribute("aria-describedby", this.shortcutMoveHint.id);
+            drag.setAttribute("aria-pressed", "false");
+            drag.addEventListener("keydown", event => this._shortcutMoveKey(event, instance.id));
+            const remove = button("", () => this.remove(instance.id), "btn btn-sm md-dashboard__shortcut-remove md-dashboard__control md-dashboard__edit-control");
+            remove.append(icon("ti-x"));
+            remove.setAttribute("aria-label", this._t("removeShortcut", "Remove shortcut"));
+            remove.title = this._t("removeShortcut", "Remove shortcut");
+            drag.hidden = remove.hidden = !this.editingShortcuts;
+            const body = node("div", "md-dashboard__widget-body");
+            body.id = `dashboard-body-${instance.id}`;
+            const edit = event => {
+                if (!this.editingShortcuts || !event.target.closest("a")) return;
+                event.preventDefault();
+                if (!this.saving) {
+                    this._finishShortcutMove(false);
+                    this.showSettings(instance.id);
+                }
+            };
+            body.addEventListener("click", edit);
+            body.addEventListener("keydown", event => { if (event.key === "Enter" || event.key === " ") edit(event); });
+            card.append(header, drag, body, remove);
+            return { card, header, title, titleText, body, instance, abort: null, cleanup: null, signature: null };
+        }
         const dropdown = node("div", "dropdown");
         const menuButton = button("", () => {}, "btn btn-sm md-dashboard__control");
         menuButton.append(icon("ti-dots-vertical"));
@@ -547,8 +606,7 @@ export class DashboardController {
         if (["news", "search"].includes(instance.type)) header.hidden = true;
         const body = node("div", "md-dashboard__widget-body");
         body.id = `dashboard-body-${instance.id}`;
-        if (instance.type === "shortcut") card.append(body, header);
-        else card.append(header, body);
+        card.append(header, body);
         return { card, header, title, titleText, body, instance, abort: null, cleanup: null, signature: null };
     }
 
@@ -637,6 +695,7 @@ export class DashboardController {
             if (!abort.signal.aborted && !this.destroyed) {
                 loading.remove();
                 view.body.setAttribute("aria-busy", "false");
+                if (instance.type === "shortcut") this._updateShortcutLink(view);
             }
         }
     }
@@ -686,12 +745,19 @@ export class DashboardController {
         const next = cloneSettings(this.settings);
         next.items = next.items.filter(item => item.id !== id);
         delete next.domainOptions[id];
-        if (!await this._commit(next)) return false;
+        const shortcut = instance.type === "shortcut";
+        const following = shortcut ? this.shortcutList.querySelector(`[data-instance-id="${id}"]`)?.nextElementSibling?.dataset.instanceId : null;
+        if (!await this._commit(next, shortcut ? this.shortcutStatus : this.status, { notify: !shortcut, animateShortcuts: shortcut })) return false;
+        if (shortcut) {
+            this._showShortcutUndo(previous, "remove");
+            if (following) this._focusInstance(following);
+            else this.addShortcutButton.focus({ preventScroll: true });
+            return true;
+        }
         this.removed = previous;
-        if (instance.type === "shortcut") this.shortcuts.append(this.undoContainer);
-        else this.layout.before(this.undoContainer);
+        this.layout.before(this.undoContainer);
         this.undoContainer.hidden = false;
-        this.undoContainer.replaceChildren(node("span", "", this._t(instance.type === "shortcut" ? "shortcutRemoved" : "removed", instance.type === "shortcut" ? "Shortcut removed." : "Widget removed.")), button(this._t("undo", "Undo"), () => this.undoRemove(), "btn btn-sm btn-outline-secondary md-dashboard__control"));
+        this.undoContainer.replaceChildren(node("span", "", this._t("removed", "Widget removed.")), button(this._t("undo", "Undo"), () => this.undoRemove(), "btn btn-sm btn-outline-secondary md-dashboard__control"));
         this.undoContainer.querySelector("button").focus();
         return true;
     }
@@ -728,14 +794,14 @@ export class DashboardController {
         if (beforeId && this._region(this._instance(beforeId) || {}) !== this._region(instance)) return false;
         const next = cloneSettings(this.settings);
         next.items = moveInstanceBefore(next.items, id, beforeId);
-        const saved = await this._commit(next);
+        const saved = await this._commit(next, this._region(instance) === "shortcut" ? this.shortcutStatus : this.status, { animateShortcuts: instance.type === "shortcut" });
         if (saved) this._focusInstance(id);
         return saved;
     }
 
     _focusInstance(id) {
         const view = this.views.get(id);
-        (view && this._isEditing(view.instance) ? view.header.querySelector("button") : view?.card)?.focus({ preventScroll: true });
+        (view && this._isEditing(view.instance) ? view.card.querySelector(".md-dashboard__drag") : view?.card)?.focus({ preventScroll: true });
     }
 
     /**
@@ -749,31 +815,171 @@ export class DashboardController {
         return this._commit(next);
     }
 
-    /**
-     * Replaces only shortcuts; widgets, filters and read news retain their stored values.
-     * @returns {Promise<boolean>} Whether available default shortcuts replaced the saved shortcut list successfully.
-     */
-    async resetShortcuts() {
-        const next = cloneSettings(this.settings);
-        for (const item of next.items.filter(item => item.type === "shortcut")) delete next.domainOptions[item.id];
-        next.items = next.items.filter(item => item.type !== "shortcut");
-        for (const preset of this.context.config?.dashboardDefaults || []) {
-            if (preset.type !== "shortcut") continue;
-            const definition = getWidget("shortcut");
-            if (definition && this._available(definition)) next.items.push(this._newInstance(definition, preset));
+    /** Makes shortcut activation open settings instead of navigating while its section is being edited. */
+    _updateShortcutLink(view) {
+        for (const target of view.body.querySelectorAll("a")) {
+            if (this.editingShortcuts) {
+                if (target.hasAttribute("href")) target.dataset.shortcutHref = target.getAttribute("href");
+                target.removeAttribute("href");
+                target.setAttribute("role", "button");
+                target.removeAttribute("aria-disabled");
+                target.tabIndex = 0;
+            } else {
+                if (target.dataset.shortcutHref) target.setAttribute("href", target.dataset.shortcutHref);
+                target.removeAttribute("role");
+                target.removeAttribute("tabindex");
+                if (target.classList.contains("is-unavailable")) {
+                    target.setAttribute("aria-disabled", "true");
+                    target.tabIndex = 0;
+                }
+            }
         }
-        return this._commit(next);
     }
 
-    /** Opens a confirmation that restores default shortcuts only after the user accepts it. */
-    showResetShortcuts() {
-        this.resetShortcutsButton.focus({ preventScroll: true });
-        window.WJ.confirm({
-            title: this._t("resetShortcutsConfirm", "Restore default shortcuts"),
-            message: this._t("resetShortcutsDescription", "Replace your shortcuts with the default links? Your overview widgets will be kept."),
-            btnOkText: this._t("resetConfirm", "Restore defaults"),
-            success: () => this.resetShortcuts()
+    /** Shows the last shortcut change as an eight-second, keyboard-accessible undo notification. */
+    _showShortcutUndo(previous, action) {
+        this._clearShortcutUndo();
+        const container = node("div", "toast-container md-dashboard__shortcut-toast");
+        container.id = `dashboard-shortcut-undo-${createInstanceId()}`;
+        document.body.append(container);
+        window.WJ.notify("info", this._t(action === "remove" ? "shortcutRemoved" : "shortcutUpdated", action === "remove" ? "Shortcut removed." : "Shortcut updated."), "", 8000, null, false, container.id);
+        const undo = button(this._t("shortcutUndo", "Undo"), () => this._undoShortcutChange(), "btn btn-sm btn-outline-light");
+        undo.dataset.dashboardShortcutUndo = "true";
+        container.querySelector(".toast").append(undo);
+        container.addEventListener("click", event => {
+            if (event.target.closest(".toast-close-button")) this._clearShortcutUndo();
         });
+        this._shortcutUndo = { previous, action, container, undo, timer: window.setTimeout(() => this._clearShortcutUndo(), 8000) };
+    }
+
+    _clearShortcutUndo() {
+        if (!this._shortcutUndo) return;
+        const { container, timer } = this._shortcutUndo;
+        window.clearTimeout(timer);
+        if (container.contains(document.activeElement)) this.addShortcutButton.focus({ preventScroll: true });
+        container.remove();
+        this._shortcutUndo = null;
+    }
+
+    /** Restores only the changed shortcut, preserving the current widgets and other shortcut settings. */
+    async _undoShortcutChange() {
+        if (!this._shortcutUndo || this.saving) return false;
+        const { previous, action, undo, timer } = this._shortcutUndo;
+        const next = cloneSettings(this.settings);
+        const index = next.items.findIndex(item => item.id === previous.instance.id);
+        if (action === "remove" && index === -1) next.items.splice(Math.min(previous.index, next.items.length), 0, cloneSettings(previous.instance));
+        else if (action === "edit" && index >= 0) next.items[index] = cloneSettings(previous.instance);
+        else return false;
+        next.domainOptions[previous.instance.id] = cloneSettings(previous.domainOptions);
+        window.clearTimeout(timer);
+        undo.disabled = true;
+        if (!await this._commit(next, this.shortcutStatus, { animateShortcuts: true })) {
+            if (!this.destroyed) this._showShortcutUndo(previous, action);
+            return false;
+        }
+        this._focusInstance(previous.instance.id);
+        return true;
+    }
+
+    /** Clones a compact shortcut outside the transformed dashboard, retaining its theme and dimensions. */
+    _shortcutDragHelper(view) {
+        const bounds = view.card.getBoundingClientRect();
+        const style = window.getComputedStyle(view.card);
+        const helper = view.card.cloneNode(true);
+        helper.classList.add("md-dashboard__shortcut-drag-helper");
+        helper.removeAttribute("data-instance-id");
+        helper.setAttribute("aria-hidden", "true");
+        helper.setAttribute("inert", "");
+        helper.querySelectorAll("[id]").forEach(element => element.removeAttribute("id"));
+        Object.assign(helper.style, { width: `${bounds.width}px`, height: `${bounds.height}px`, backgroundColor: style.backgroundColor, borderColor: style.borderColor, color: style.color, fontSize: style.fontSize });
+        for (const property of Array.from(style)) {
+            if (property.startsWith("--wj-dashboard-")) helper.style.setProperty(property, style.getPropertyValue(property));
+        }
+        return helper;
+    }
+
+    /** Starts a provisional move; the persisted order changes only after a successful drop. */
+    _beginShortcutMove(id, keyboard = false) {
+        if (this.saving || !this.editingShortcuts) return false;
+        this._finishShortcutMove(false);
+        const view = this.views.get(id);
+        const cards = [...this.shortcutList.querySelectorAll('[data-instance-id]')];
+        const following = cards[cards.indexOf(view.card) + 1]?.dataset.instanceId || null;
+        const marker = node("span", "md-dashboard__shortcut-drop-marker");
+        marker.setAttribute("aria-hidden", "true");
+        const helper = keyboard ? this._shortcutDragHelper(view) : null;
+        if (helper) {
+            helper.style.position = "fixed";
+            document.body.append(helper);
+        }
+        this._shortcutMove = { id, beforeId: following, originalBeforeId: following, marker, helper };
+        this.shortcutList.append(marker);
+        view.card.classList.add("is-shortcut-placeholder");
+        view.card.querySelector(".md-dashboard__drag").setAttribute("aria-pressed", "true");
+        this._showShortcutDrop(following);
+        return true;
+    }
+
+    _showShortcutDrop(beforeId) {
+        const move = this._shortcutMove;
+        if (!move) return;
+        move.beforeId = beforeId;
+        const target = beforeId ? this.views.get(beforeId)?.card : this.shortcutActions;
+        if (!target) return;
+        const bounds = target.getBoundingClientRect();
+        const region = this.shortcutList.getBoundingClientRect();
+        Object.assign(move.marker.style, { left: `${bounds.left - region.left - 5}px`, top: `${bounds.top - region.top}px`, height: `${bounds.height}px` });
+        move.marker.hidden = false;
+        if (move.helper) {
+            Object.assign(move.helper.style, { left: `${bounds.left}px`, top: `${bounds.top - 8}px` });
+            const others = [...this.shortcutList.querySelectorAll('[data-instance-id]')].filter(card => card.dataset.instanceId !== move.id);
+            const position = beforeId ? others.findIndex(card => card.dataset.instanceId === beforeId) + 1 : others.length + 1;
+            this.shortcutStatus.textContent = this._t("shortcutMovePosition", "Position {1} of {2}. Enter drops, Escape cancels.", position, others.length + 1).replace("{1}", position).replace("{2}", others.length + 1);
+        }
+    }
+
+    /** Tracks horizontal insertion positions across wrapped shortcut rows. */
+    _shortcutPointerMove(event) {
+        const move = this._shortcutMove;
+        if (!move) return;
+        const region = this.shortcutList.getBoundingClientRect();
+        const x = event.clientX, y = event.clientY;
+        if (x < region.left || x > region.right || y < region.top || y > region.bottom) { move.marker.hidden = true; return; }
+        const target = [...this.shortcutList.querySelectorAll('[data-instance-id]')].find(card => {
+            if (card.dataset.instanceId === move.id) return false;
+            const bounds = card.getBoundingClientRect();
+            return y < bounds.top || y <= bounds.bottom && x < bounds.left + bounds.width / 2;
+        });
+        this._showShortcutDrop(target?.dataset.instanceId || null);
+    }
+
+    /** Implements lift, provisional arrow movement, drop and cancellation on the shortcut grip. */
+    _shortcutMoveKey(event, id) {
+        if (event.repeat) { event.preventDefault(); return; }
+        if (![" ", "Enter", "ArrowLeft", "ArrowRight", "Escape", "Tab"].includes(event.key)) return;
+        if (event.key === "Tab") { this._finishShortcutMove(false); return; }
+        if (!this._shortcutMove && ![" ", "Enter"].includes(event.key)) return;
+        event.preventDefault();
+        if (!this._shortcutMove) { this._beginShortcutMove(id, true); return; }
+        if (event.key === "Escape") { this._finishShortcutMove(false); return; }
+        if (event.key === "Enter" || event.key === " ") { this._finishShortcutMove(true); return; }
+        const others = [...this.shortcutList.querySelectorAll('[data-instance-id]')].map(card => card.dataset.instanceId).filter(value => value !== id);
+        const index = this._shortcutMove.beforeId ? others.indexOf(this._shortcutMove.beforeId) : others.length;
+        const next = Math.max(0, Math.min(others.length, index + (event.key === "ArrowLeft" ? -1 : 1)));
+        this._showShortcutDrop(others[next] || null);
+    }
+
+    _finishShortcutMove(save) {
+        const move = this._shortcutMove;
+        if (!move) return;
+        this._shortcutMove = null;
+        move.marker.remove();
+        move.helper?.remove();
+        const card = this.views.get(move.id)?.card;
+        card?.classList.remove("is-shortcut-placeholder");
+        card?.querySelector(".md-dashboard__drag").setAttribute("aria-pressed", "false");
+        this.shortcutStatus.textContent = "";
+        if (save && move.beforeId !== move.originalBeforeId) return this.moveBefore(move.id, move.beforeId);
     }
 
     /**
@@ -875,6 +1081,7 @@ export class DashboardController {
             this.settings = normalizeSettings(data);
             if (!this.settings.configured) this._addDefaults();
             this._ensureMandatory();
+            this._clearShortcutUndo();
             this.removed = null;
             this.undoContainer.hidden = true;
             this.status.textContent = "";
@@ -897,6 +1104,7 @@ export class DashboardController {
      * @returns {DashboardDialog} Attached dialog containers and lifecycle controls.
      */
     _dialog(title, trigger = document.activeElement) {
+        this._finishShortcutMove(false);
         const root = node("div", "modal fade md-dashboard-modal");
         root.tabIndex = -1;
         root.setAttribute("role", "dialog");
@@ -1113,7 +1321,18 @@ export class DashboardController {
     async _showSettings(instance, adding = false) {
         const id = instance.id;
         const definition = getWidget(instance.type);
-        const dialog = this._dialog(this._t(adding ? "addShortcut" : "settings", adding ? "Add shortcut" : "Widget settings"));
+        const shortcut = instance.type === "shortcut";
+        const shortcutLink = shortcut ? this.views.get(id)?.body.querySelector('a') : null;
+        const shortcutTooltip = shortcutLink && window.bootstrap?.Tooltip?.getInstance(shortcutLink);
+        shortcutTooltip?.disable();
+        shortcutTooltip?.hide();
+        const dialog = this._dialog(this._t(adding ? "addShortcut" : shortcut ? "editShortcut" : "settings", adding ? "Add shortcut" : shortcut ? "Edit shortcut" : "Widget settings"));
+        if (shortcut) dialog.root.classList.add("md-dashboard-modal--shortcut");
+        if (shortcut) dialog.root.addEventListener("hidden.bs.modal", () => {
+            if (shortcutLink) window.bootstrap?.Tooltip?.getInstance(shortcutLink)?.enable();
+            if (this.views.has(id)) this.views.get(id).body.querySelector("a")?.focus({ preventScroll: true });
+            else this.addShortcutButton.focus({ preventScroll: true });
+        }, { once: true });
         const sizeLabel = node("label", "form-label", this._t("size", "Size"));
         const size = node("select", "form-select mb-3");
         size.id = `dashboard-size-${id}`;
@@ -1142,7 +1361,7 @@ export class DashboardController {
         error.setAttribute("role", "alert");
         dialog.body.append(fields, error);
         let configuration;
-        const save = button(this._t("save", "Save"), async () => {
+        const save = button(this._t(shortcut ? adding ? "addShortcut" : "saveShortcutChanges" : "save", shortcut ? adding ? "Add shortcut" : "Save changes" : "Save"), async () => {
             error.textContent = "";
             try {
                 const values = await configuration?.read?.() || {};
@@ -1153,16 +1372,34 @@ export class DashboardController {
                 }
                 const updated = next.items.find(item => item.id === id);
                 if (!updated) return;
+                const previous = { instance: cloneSettings(updated), index: next.items.indexOf(updated), domainOptions: cloneSettings(next.domainOptions[id] || {}) };
                 updated.size = size.value;
                 if (values.options !== undefined) updated.options = cloneSettings(values.options);
                 if (values.domainOptions !== undefined) next.domainOptions[id] = cloneSettings(values.domainOptions);
                 save.disabled = true;
-                if (await this._commit(next)) dialog.close();
+                if (await this._commit(next, shortcut ? this.shortcutStatus : this.status, { notify: !shortcut || adding })) {
+                    if (shortcut && !adding) this._showShortcutUndo(previous, "edit");
+                    dialog.close();
+                }
                 else { error.textContent = this._t("saveError", "The change could not be saved."); save.disabled = false; }
             } catch (failure) {
                 error.textContent = failure.message || this._t("invalidSettings", "Check the widget settings.");
             }
         }, "btn btn-primary");
+        if (shortcut && adding) save.prepend(icon("ti-plus"));
+        if (shortcut) {
+            if (!adding) {
+                const remove = button(this._t("removeShortcut", "Remove shortcut"), async () => {
+                    remove.disabled = save.disabled = true;
+                    if (await this.remove(id)) dialog.close();
+                    else { remove.disabled = save.disabled = false; error.textContent = this._t("saveError", "The change could not be saved."); }
+                }, "btn btn-link text-danger me-auto");
+                remove.dataset.dashboardAction = "removeShortcut";
+                remove.prepend(icon("ti-trash"));
+                dialog.footer.append(remove);
+            }
+            dialog.footer.append(button(this._t("button.cancel", "Cancel"), () => dialog.close(), "btn btn-outline-secondary"));
+        }
         dialog.footer.append(save);
         if (definition.configure) {
             save.disabled = true;
@@ -1185,14 +1422,21 @@ export class DashboardController {
             accept: dragged => this._region(this._instance(dragged[0].dataset.instanceId) || {}) === "grid", tolerance: "pointer",
             drop: () => { if (this._dragged) this.moveBefore(this._dragged); }
         });
+        if (!$(this.shortcutList).data("ui-droppable")) $(this.shortcutList).droppable({
+            accept: dragged => this.editingShortcuts && this._instance(dragged[0].dataset.instanceId)?.type === "shortcut",
+            tolerance: "pointer",
+            drop: () => this._finishShortcutMove(true)
+        });
         for (const view of this.views.values()) {
             if (!["grid", "shortcut"].includes(this._region(view.instance))) continue;
             if ($(view.card).data("ui-draggable")) $(view.card).draggable("option", "disabled", !this._isEditing(view.instance));
             if (!this._isEditing(view.instance)) continue;
             if (!$(view.card).data("ui-draggable")) $(view.card).draggable({
                 handle: ".md-dashboard__drag", appendTo: "body", zIndex: 1100, distance: 8,
+                cursorAt: view.instance.type === "shortcut" ? { left: 0, top: -8 } : false,
                 cancel: "input, textarea, select, option",
                 helper: () => {
+                    if (view.instance.type === "shortcut") return $(this._shortcutDragHelper(view));
                     const bounds = view.card.getBoundingClientRect();
                     const style = window.getComputedStyle(view.card);
                     const helper = $(view.card).clone().removeAttr("data-instance-id").attr({ "aria-hidden": "true", inert: "" });
@@ -1204,11 +1448,22 @@ export class DashboardController {
                     helper.find("[id]").removeAttr("id");
                     return helper;
                 },
-                start: () => { if (this.saving || !this._isEditing(view.instance)) return false; this._dragged = view.instance.id; this.host.classList.add("is-dragging"); },
-                stop: () => { this._dragged = null; this.host.classList.remove("is-dragging"); this.host.querySelectorAll(".is-drop-target").forEach(card => card.classList.remove("is-drop-target")); },
+                start: () => {
+                    if (this.saving || !this._isEditing(view.instance)) return false;
+                    if (view.instance.type === "shortcut") this._beginShortcutMove(view.instance.id);
+                    this._dragged = view.instance.id;
+                    this.host.classList.add("is-dragging");
+                },
+                drag: event => { if (view.instance.type === "shortcut") this._shortcutPointerMove(event); },
+                stop: () => {
+                    this._finishShortcutMove(false);
+                    this._dragged = null;
+                    this.host.classList.remove("is-dragging");
+                    this.host.querySelectorAll(".is-drop-target").forEach(card => card.classList.remove("is-drop-target"));
+                },
                 revert: "invalid"
             });
-            if (!$(view.card).data("ui-droppable")) $(view.card).droppable({
+            if (view.instance.type !== "shortcut" && !$(view.card).data("ui-droppable")) $(view.card).droppable({
                 accept: dragged => this._region(this._instance(dragged[0].dataset.instanceId) || {}) === this._region(view.instance), tolerance: "pointer",
                 over: () => { if (this._dragged !== view.instance.id) view.card.classList.add("is-drop-target"); },
                 out: () => view.card.classList.remove("is-drop-target"),
@@ -1225,6 +1480,8 @@ export class DashboardController {
      * @returns {Promise<void>} Resolves after restarting and attempting legacy bookmark import.
      */
     async setContext(context) {
+        this._finishShortcutMove(false);
+        this._clearShortcutUndo();
         this.context = context;
         this._contextVersion++;
         this.layout.hidden = true;
@@ -1237,15 +1494,20 @@ export class DashboardController {
 
     /** Stops persistence and rendering work, closes dialogs and releases observers and UI resources without removing the host content. */
     destroy() {
+        this._finishShortcutMove(false);
+        this._clearShortcutUndo();
         this.destroyed = true;
-        window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.dispose();
-        window.jQuery?.(this.resetButton).off(".wjTooltipA11y .wjFocusWithoutTooltip");
+        for (const control of [this.resetButton, this.editShortcutsButton]) {
+            window.bootstrap?.Tooltip?.getInstance(control)?.dispose();
+            window.jQuery?.(control).off(".wjTooltipA11y .wjFocusWithoutTooltip");
+        }
         this._request?.abort();
         for (const view of this.views.values()) this._disposeView(view);
         this._visibilityObserver?.disconnect();
         for (const dialog of this._dialogs) dialog.destroy();
         const $ = window.jQuery;
         if ($?.fn.droppable && $(this.dropEnd).data("ui-droppable")) $(this.dropEnd).droppable("destroy");
+        if ($?.fn.droppable && $(this.shortcutList).data("ui-droppable")) $(this.shortcutList).droppable("destroy");
         this.views.clear();
     }
 }

@@ -20,6 +20,13 @@ function fixture(t, { items = [], configured = true, shortcutsConfigured = confi
     window.WJ = {
         translate: key => key,
         notifySuccess: (...args) => notifications.push(args),
+        notify: (type, title, message, timeout, buttons, append, id) => {
+            const toast = window.document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = title;
+            toast.dataset.timeout = timeout;
+            window.document.getElementById(id).append(toast);
+        },
         confirm: options => confirmations.push({ options, trigger: window.document.activeElement }),
         focusWithoutTooltip: element => element.focus({ preventScroll: true })
     };
@@ -562,7 +569,7 @@ test("Reset suppresses its tooltip through standard confirmation and releases li
     controller.setEditing(false);
     assert.equal(tooltipCalls.at(-1)[0], 'hide');
     controller.destroy();
-    assert.equal(tooltipCalls.filter(call => call[0] === 'dispose').length, 1);
+    assert.equal(tooltipCalls.filter(call => call[0] === 'dispose').length, 2);
     assert.deepEqual(tooltipCalls.at(-1), ['off', '.wjTooltipA11y .wjFocusWithoutTooltip']);
 });
 
@@ -857,7 +864,7 @@ test("Shortcuts configure before saving and render in the permanent shortcut str
     assert.equal(requests.length, 0, 'Cancelling must not save an empty shortcut');
     await controller.showAddWidget('shortcut');
     window.document.querySelector('.md-dashboard__settings input').value = 'My users';
-    window.document.querySelector('.modal-footer button').click();
+    window.document.querySelector('.modal-footer .btn-primary').click();
     await tick();
     assert.equal(stored().items.length, 1);
     assert.equal(stored().items[0].options.title, 'My users');
@@ -979,31 +986,47 @@ const shortcutDefinition = { type: "shortcut", titleKey: "Shortcut", sizes: ["1x
     render: ({ container, options }) => { const link = container.ownerDocument.createElement("a"); link.href = options.href; link.textContent = options.title || options.href; container.append(link); } };
 
 test("Welcome shortcuts and overview have independent edit controls and catalogue entries", async t => {
-    const { controller, host } = fixture(t, { items: [item("grid"), item("link", "shortcut", "1x1", { href: "/apps/banner/admin/" })], definitions: [shortcutDefinition] });
+    const { controller, host, window } = fixture(t, { items: [item("grid"), item("link", "shortcut", "1x1", { href: "/apps/banner/admin/" })], definitions: [shortcutDefinition], withTooltip: true });
     await controller.start();
     assert.ok(host.querySelector('.md-dashboard__welcome .md-dashboard__shortcuts a[href="/apps/banner/admin/"]'));
-    assert.equal(controller.editShortcutsButton.parentElement.parentElement, host.querySelector('.md-dashboard__welcome-heading'));
-    assert.equal(controller.addShortcutButton.hidden, true);
-    const controls = id => host.querySelector(`[data-instance-id="${id}"] .md-dashboard__widget-controls`);
+    assert.equal(controller.editShortcutsButton.parentElement, controller.shortcutList.lastElementChild);
+    assert.equal(controller.shortcutActions.previousElementSibling.dataset.instanceId, 'link');
+    assert.equal(controller.addShortcutButton.hidden, false);
+    assert.equal(controller.editShortcutsButton.textContent, 'Edit shortcuts');
+    assert.ok(controller.editShortcutsButton.querySelector('.ti-pencil'));
+    const tooltip = window.bootstrap.Tooltip.getInstance(controller.editShortcutsButton);
+    controller.editShortcutsButton.focus();
+    tooltip.show();
+    assert.equal(tooltip.visible, true);
+    const controls = id => host.querySelector(`[data-instance-id="${id}"] .md-dashboard__edit-control`);
     controller.setEditingShortcuts(true);
     assert.equal(controls("link").hidden, false);
     assert.equal(controls("grid").hidden, true);
     assert.equal(controller.addShortcutButton.hidden, false);
-    assert.equal(controller.resetShortcutsButton.hidden, false);
+    assert.equal(controller.shortcutActions.children.length, 1);
+    assert.ok(controller.editShortcutsButton.querySelector('.ti-check'));
+    assert.equal(controller.editShortcutsButton.parentElement, controller.welcomeHeading);
+    assert.equal(controller.editShortcutsButton.textContent, 'Done');
+    assert.equal(controller.editShortcutsButton.querySelector('.visually-hidden'), null);
+    assert.equal(window.document.activeElement, controller.editShortcutsButton);
+    assert.equal(tooltip.visible, false);
+    assert.equal(tooltip.enabled, false);
     controller.setEditing(true);
     assert.equal(controller.editingShortcuts, false);
+    assert.equal(controller.editShortcutsButton.parentElement, controller.shortcutActions);
+    assert.ok(controller.editShortcutsButton.querySelector('.ti-pencil'));
+    assert.equal(controller.addShortcutButton.hidden, false);
     assert.equal(controls("link").hidden, true);
     assert.equal(controls("grid").hidden, false);
     controller.showCatalogue();
     assert.equal(host.ownerDocument.querySelector('.md-dashboard__catalogue [data-widget-type="shortcut"]'), null);
 });
 
-test("Each reset preserves the other section and intentionally empty shortcuts survive reload", async t => {
+test("Widget reset preserves shortcuts and intentionally empty shortcuts survive reload", async t => {
     const { controller, stored } = fixture(t, { items: [item("grid"), item("link", "shortcut", "1x1", { href: "/custom/?a=1#anchor", title: "Custom" })], definitions: [shortcutDefinition], defaults: [{ type: "test" }, { type: "shortcut", options: { href: "/default/" } }], legacyBookmarksHandled: true });
     await controller.start();
     await controller.saveOptions("grid", { domainOptions: { formName: "Contact" } });
     await controller.acknowledgeNews("2026.18");
-    assert.equal(await controller.resetShortcuts(), true);
     assert.deepEqual(stored().domainOptions.grid, { formName: "Contact" });
     assert.equal(stored().acknowledgedNewsVersion, "2026.18");
     assert.equal(stored().items[0].id, "grid");
@@ -1017,8 +1040,7 @@ test("Each reset preserves the other section and intentionally empty shortcuts s
     await controller.reset();
     await controller.start();
     assert.equal(controller.settings.items.some(item => item.type === "shortcut"), false);
-    assert.equal(await controller.resetShortcuts(), true);
-    assert.equal(stored().items.filter(item => item.type === "shortcut").length, 1);
+    assert.equal(stored().items.filter(item => item.type === "shortcut").length, 0);
 });
 
 test("Legacy bookmarks automatically replace shortcuts in original order and clear only the migrated source", async t => {
@@ -1138,4 +1160,111 @@ test("A storage cleanup failure does not repeat an already persisted import", as
     assert.notEqual(window.localStorage.getItem("bookmarks"), null);
     await controller.start();
     assert.equal(requests.filter(request => request.method === "PUT").length, 1);
+});
+
+test('Shortcut editing replaces navigation and menu actions with a leading grip and direct removal', async t => {
+    const { controller, host, window } = fixture(t, { items: [item('link', 'shortcut', '1x1', { href: '/target/' })], definitions: [shortcutDefinition] });
+    await controller.start();
+    const card = controller.views.get('link').card;
+    const target = card.querySelector('a');
+    assert.equal(target.getAttribute('href'), '/target/');
+    assert.equal(card.querySelector('.dropdown'), null);
+    controller.setEditingShortcuts(true);
+    assert.equal(card.children[1].classList.contains('md-dashboard__drag'), true);
+    assert.equal(card.lastElementChild.classList.contains('md-dashboard__shortcut-remove'), true);
+    assert.equal(target.hasAttribute('href'), false);
+    assert.equal(target.getAttribute('role'), 'button');
+    const click = new window.MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
+    target.dispatchEvent(click);
+    assert.equal(click.defaultPrevented, true);
+    assert.match(window.document.querySelector('.modal-title').textContent, /Edit shortcut/);
+    window.document.querySelector('.btn-close').click();
+    controller.setEditingShortcuts(false);
+    assert.equal(target.getAttribute('href'), '/target/');
+    assert.equal(target.hasAttribute('role'), false);
+    assert.equal(host.querySelectorAll('.md-dashboard__shortcut-actions button').length, 2);
+});
+
+test('Shortcut keyboard moves remain provisional until Enter and roll back on cancellation or save failure', async t => {
+    const { controller, window, requests, stored, setSaveFailure } = fixture(t, { items: ['first', 'second', 'third'].map(id => item(id, 'shortcut', '1x1', { href: `/${id}/` })), definitions: [shortcutDefinition] });
+    await controller.start();
+    controller.setEditingShortcuts(true);
+    const grip = controller.views.get('first').card.querySelector('.md-dashboard__drag');
+    const press = key => grip.dispatchEvent(new window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    press(' ');
+    press('ArrowRight');
+    assert.equal(controller._shortcutMove.beforeId, 'third');
+    assert.equal(requests.length, 0);
+    assert.ok(window.document.querySelector('.md-dashboard__shortcut-drag-helper'));
+    press('Escape');
+    assert.equal(controller._shortcutMove, null);
+    assert.equal(window.document.querySelector('.md-dashboard__shortcut-drag-helper'), null);
+    assert.deepEqual(stored().items.map(item => item.id), ['first', 'second', 'third']);
+    press(' ');
+    press('ArrowRight');
+    press('Enter');
+    await tick();
+    assert.deepEqual(stored().items.map(item => item.id), ['second', 'first', 'third']);
+    assert.equal(window.document.activeElement, grip);
+    setSaveFailure(true);
+    press(' ');
+    press('ArrowRight');
+    press('Enter');
+    await tick();
+    assert.deepEqual(stored().items.map(item => item.id), ['second', 'first', 'third']);
+    assert.equal(window.document.querySelector('.is-shortcut-placeholder'), null);
+});
+
+test('Shortcut removal has an eight-second undo, preserves the last shortcut on failure and can retry undo', async t => {
+    const { controller, window, stored, confirmations, setSaveFailure } = fixture(t, { items: [item('grid'), item('last', 'shortcut', '1x1', { href: '/last/', color: 'blue' })], definitions: [shortcutDefinition] });
+    const timers = [];
+    window.setTimeout = (callback, delay) => { timers.push({ callback, delay }); return timers.length; };
+    window.clearTimeout = () => {};
+    await controller.start();
+    setSaveFailure(true);
+    assert.equal(await controller.remove('last'), false);
+    assert.equal(stored().items.length, 2);
+    assert.equal(controller._shortcutUndo, undefined);
+    setSaveFailure(false);
+    assert.equal(await controller.remove('last'), true);
+    assert.equal(confirmations.length, 0);
+    assert.equal(stored().items.length, 1);
+    assert.ok(controller.shortcutList.querySelector('.md-dashboard__shortcuts-empty'));
+    assert.equal(timers.at(-1).delay, 8000);
+    assert.equal(window.document.querySelector('.md-dashboard__shortcut-toast .toast').dataset.timeout, '8000');
+    setSaveFailure(true);
+    assert.equal(await controller._undoShortcutChange(), false);
+    assert.ok(window.document.querySelector('[data-dashboard-shortcut-undo]'));
+    setSaveFailure(false);
+    assert.equal(await controller._undoShortcutChange(), true);
+    assert.equal(stored().items[1].options.color, 'blue');
+    await controller.remove('last');
+    timers.at(-1).callback();
+    assert.equal(window.document.querySelector('[data-dashboard-shortcut-undo]'), null);
+    assert.equal(await controller._undoShortcutChange(), false);
+});
+
+test('Shortcut settings save immediately, support undo and include direct removal without confirmation', async t => {
+    const { controller, window, stored, confirmations } = fixture(t, { items: [item('grid'), item('link', 'shortcut', '1x1', { href: '/old/', title: 'Original' })], definitions: [{ ...shortcutDefinition,
+        configure: () => ({ read: () => ({ options: { href: '/new/', title: 'Changed', color: 'red' } }) })
+    }] });
+    await controller.start();
+    controller.setEditingShortcuts(true);
+    await controller.showSettings('link');
+    assert.match(window.document.querySelector('.modal-footer .btn-primary').textContent, /Save changes/);
+    window.document.querySelector('.modal-footer .btn-primary').click();
+    await tick();
+    assert.equal(stored().items[1].options.title, 'Changed');
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+    assert.equal(await controller._undoShortcutChange(), true);
+    assert.equal(stored().items[1].options.title, 'Original');
+    assert.equal(stored().items[0].id, 'grid');
+    await controller.showSettings('link');
+    window.document.querySelector('[data-dashboard-action="removeShortcut"]').click();
+    await tick();
+    assert.equal(stored().items.length, 1);
+    assert.equal(confirmations.length, 0);
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+    assert.equal(await controller._undoShortcutChange(), true);
+    assert.equal(stored().items[1].options.title, 'Original');
 });

@@ -15,8 +15,15 @@ $dashboard-chart-primary: mix($success, $secondary, 64%);
 $dashboard-chart-comparison: mix($dashboard-chart-primary, $gray-text, 28%);
 $dashboard-referrers-primary: mix($primary, $nice-gray, 64%);
 $dashboard-shadow: rgba($secondary, .06);
+$dashboard-shortcut-colors: (
+    'default': #eef0f4, 'red': #c4001f, 'peach': #c24e00, 'amber': #f6be3f,
+    'mint': #007e69, 'cyan': #00707f, 'blue': $primary, 'lavender': #6e00dc, 'gray': #4d5262
+);
 
 webjet-overview-dashboard, .md-dashboard-modal {
+    @each $name, $color in $dashboard-shortcut-colors {
+        --wj-dashboard-shortcut-#{$name}: #{$color};
+    }
     --wj-dashboard-surface: #{$dashboard-surface};
     --wj-dashboard-mint: #{$dashboard-mint};
     --wj-dashboard-lavender: #{$dashboard-lavender};
@@ -163,8 +170,16 @@ webjet-overview-dashboard a:focus-visible {
     &__welcome-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-height: 24px; margin-bottom: 12px; }
     &__welcome-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; }
     &__greeting { font-size: 29px; font-weight: 700; line-height: 1.15; margin: 0; letter-spacing: -1px; color: var(--wj-dashboard-hero-text); }
-    &__shortcut-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-left: auto; }
-    &__shortcut-actions > .btn { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; padding: 7px 10px; }
+    &__welcome-heading > &__shortcut-edit {
+        display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; gap: 8px;
+        height: 32px; margin-left: auto; padding: 0 12px; border: 0; font-size: 14px;
+        color: var(--wj-primary); background: $white;
+        > .ti { margin: 0; font-size: 16px; }
+        &:hover, &:focus-visible { color: var(--wj-primary); background: var(--wj-dashboard-search-surface); }
+    }
+    &__shortcut-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; max-width: 100%; }
+    &__shortcut-actions > .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 32px; padding: 0 12px; font-size: 14px; line-height: 22px; white-space: nowrap; > .ti { flex-shrink: 0; width: 16px; margin: 0; font-size: 16px; } }
+    &__shortcut-actions > &__shortcut-add { width: 136px; border-style: dashed; }
     &__shortcut-actions > .btn-outline-secondary, &__shortcuts > :is(.md-dashboard__status, .md-dashboard__undo) > .btn-outline-secondary {
         --bs-btn-color: var(--wj-dashboard-hero-body);
         --bs-btn-bg: var(--wj-dashboard-hero-control-bg);
@@ -177,6 +192,17 @@ webjet-overview-dashboard a:focus-visible {
         --bs-btn-active-border-color: var(--wj-dashboard-hero-control-hover-bg);
         border-color: var(--bs-btn-border-color);
         &:hover, &:focus-visible, &:active { border-color: var(--bs-btn-hover-border-color); }
+        &[aria-pressed="true"] { color: var(--bs-btn-active-color); background: var(--bs-btn-active-bg); border-color: var(--bs-btn-active-border-color); }
+    }
+    &__shortcut-actions > .btn[aria-pressed] {
+        width: 32px;
+        padding: 0;
+        border: 0;
+        > .ti { font-size: 16px; }
+        &[aria-pressed="false"] {
+            background: rgba($white, .08);
+            &:hover, &:focus-visible { background: rgba($white, .16); color: $white; }
+        }
     }
     &__welcome .md-dashboard-widget__news-highlights, &__welcome .md-dashboard-widget__news-summary { color: var(--wj-dashboard-hero-body); }
     &__welcome .md-dashboard-widget__news-toggle {
@@ -188,7 +214,7 @@ webjet-overview-dashboard a:focus-visible {
     &__welcome .md-dashboard-widget__news-highlights a:focus-visible, &__welcome .md-dashboard-widget__news-more:focus-visible {
         outline-color: var(--wj-dashboard-hero-text);
     }
-    // Shortcut cards keep their configured light surfaces and their own dark controls.
+    // Shortcut cards keep neutral surfaces and their own dark controls inside the hero.
     &__shortcut-list > &__widget { --wj-dashboard-muted: #{$dashboard-muted}; --wj-dashboard-divider: #{$dashboard-divider}; --wj-dashboard-link: #{$primary-hover}; }
     &__shortcuts > &__status .text-danger { color: var(--wj-dashboard-hero-error) !important; }
     &__eyebrow { color: var(--wj-dashboard-muted); font-size: 12px; margin: 0; &::first-letter { text-transform: uppercase; } }
@@ -528,30 +554,31 @@ webjet-overview-dashboard a:focus-visible {
     &__shortcut-colors {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
-        legend { font-size: 16px; }
+        gap: 12px;
+        legend { font-size: 14px; }
+        > .form-text { width: 100%; margin: 0; }
     }
     &__shortcut-swatch {
         position: relative;
         cursor: pointer;
-        > span { display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid var(--wj-nice-gray-300); border-radius: var(--wj-border-radius); color: var(--wj-secondary); }
-        .ti { visibility: hidden; }
-        input:checked + span { border: 2px solid var(--wj-secondary); .ti { visibility: visible; } }
-        input:focus-visible + span { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }
-        &:hover > span { border-color: var(--wj-secondary); }
+        > span { display: block; width: 28px; height: 28px; border: 1px solid transparent; border-radius: 50%; }
+        input[value="default"] + span { border-color: var(--wj-nice-gray-200); }
+        input:checked + span { outline: 2px solid var(--wj-secondary); outline-offset: 3px; }
+        input:focus-visible + span { outline: 3px solid var(--wj-primary); outline-offset: 3px; }
+        &:hover > span { box-shadow: 0 0 0 2px var(--wj-nice-gray-100); }
     }
-    &__shortcut-preview { width: fit-content; max-width: 100%; padding: 10px 12px; border: 1px solid var(--wj-nice-gray-100); border-radius: var(--wj-border-radius); background: var(--wj-dashboard-shortcut-bg, var(--wj-dashboard-surface)); }
+    &__shortcut-preview { width: fit-content; max-width: 240px; height: 32px; padding: 3px 12px 3px 3px; border: 1px solid var(--wj-nice-gray-100); border-radius: var(--wj-border-radius); background: var(--wj-dashboard-surface); }
+    &__shortcut-preview-panel { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; background: linear-gradient(110deg, #031d46, #073780); }
+    &__shortcut-preview-label { color: #c0d1ee; font-size: 12px; flex-shrink: 0; }
+    &__shortcut-optional { margin-left: 6px; font-weight: 400; color: var(--wj-gray-text); }
     &__shortcut-list {
+        position: relative;
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
         gap: 8px;
-        > .md-dashboard__widget { min-height: 0; flex: 0 1 auto; max-width: 100%; flex-direction: row; align-items: center; border-color: var(--wj-nice-gray-100); background: var(--wj-dashboard-shortcut-bg, var(--wj-dashboard-surface)); }
-        .md-dashboard__widget[data-size="1x1"] .md-dashboard__widget-body { padding: 0; }
-        .md-dashboard-widget__shortcut { padding: 7px 12px; }
-        .md-dashboard__widget[data-size="1x1"] .md-dashboard__widget-header { padding: 0 6px 0 0; }
-        .md-dashboard__widget-header > .ti, .md-dashboard__widget-title { display: none !important; }
+        .md-dashboard-widget__shortcut:focus-visible { outline: 3px solid #8fa3ff; outline-offset: 2px; }
     }
-    &:not(.is-editing-shortcuts) &__shortcut-list &__widget-header { display: none; }
 
     @media (min-width: 360px) {
         &__widget[data-size="1x1"] { grid-column: span 6; }
@@ -588,6 +615,57 @@ webjet-overview-dashboard a:focus-visible {
             .md-dashboard-widget__period { position: static; margin-top: 8px; }
             .md-dashboard__widget-title { padding-right: 0; }
         }
+    }
+}
+
+.md-dashboard__shortcut-card.md-dashboard__widget {
+    height: 32px;
+    min-height: 32px;
+    flex: 0 1 auto;
+    max-width: min(240px, 100%);
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    border-color: var(--wj-nice-gray-100);
+    background: var(--wj-dashboard-surface);
+    &[data-size] .md-dashboard__widget-body { padding: 0; min-width: 0; }
+    .md-dashboard-widget__shortcut { padding: 3px 12px 3px 3px; cursor: pointer; }
+    .md-dashboard-widget__shortcut:hover { color: var(--wj-secondary); background: var(--wj-dashboard-search-surface); }
+    &:has(.is-unavailable) { background: var(--wj-nice-gray-200); }
+    > .btn { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 24px; height: 28px; padding: 2px; color: var(--wj-gray-text); border: 0; }
+    > .md-dashboard__drag { width: 20px; cursor: grab; touch-action: none; }
+    > .md-dashboard__shortcut-remove:hover { color: var(--bs-danger); background: var(--wj-nice-gray); }
+    &.is-shortcut-placeholder { background: transparent; border: 1px dashed var(--wj-dashboard-hero-control-border); > * { visibility: hidden; } > .md-dashboard__drag { visibility: visible; opacity: 0; } }
+    &.md-dashboard__shortcut-drag-helper { z-index: 1100; pointer-events: none; box-shadow: 0 8px 18px rgba($black, .35); }
+}
+.md-dashboard__shortcut-drop-marker { position: absolute; width: 3px; background: $white; border-radius: 2px; pointer-events: none; }
+.toast-container.md-dashboard__shortcut-toast {
+    position: fixed;
+    z-index: 1100;
+    bottom: 20px;
+    top: auto;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: max-content;
+    max-width: calc(100% - 32px);
+    > div.toast.toast-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: auto;
+        max-width: 100%;
+        padding: 8px 40px 8px 36px;
+        background: $secondary;
+        color: $white;
+        border-radius: $border-radius;
+        box-shadow: 0 4px 16px rgba($black, .2);
+        cursor: default;
+        &::before { color: $white; font-size: 18px; left: 12px; top: 50%; transform: translateY(-50%); }
+        .toast-title { padding: 0; background: transparent; color: inherit; font-weight: 400; }
+        .toast-message:empty { display: none; }
+        .toast-close-button { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: $white; &:hover { background: rgba($white, .15); } }
+        [data-dashboard-shortcut-undo] { flex-shrink: 0; border-color: transparent; color: $nice-primary; &:hover { background: rgba($white, .15); color: $white; } }
     }
 }
 
@@ -636,6 +714,67 @@ webjet-overview-dashboard a:focus-visible {
         > .is-selected { background: var(--wj-primary); }
     }
     .modal-body { max-height: 70vh; overflow-y: auto; padding: 16px; }
+}
+
+.md-dashboard-modal--shortcut {
+    .modal-dialog { max-width: 560px; }
+    .modal-content { background: $white; border-radius: 12px; box-shadow: 0 20px 48px -8px rgba($secondary, .24); }
+    .modal-header { padding: 24px 24px 20px; border: 0; background: transparent; }
+    .modal-title { font-size: 20px !important; font-weight: 700; }
+    .modal-body { padding: 0 24px 24px; max-height: calc(100dvh - 195px); }
+    .modal-footer { padding: 16px 24px; }
+    .modal-footer .btn { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; font-size: 14px; }
+    .modal-footer .btn-link { text-decoration: none; padding-inline: 0; }
+    .md-dashboard__settings > .md-dashboard__field,
+    .md-dashboard__settings > fieldset { margin: 0 0 24px !important; }
+    .form-label { font-size: 14px; margin-bottom: 8px; color: var(--wj-secondary); }
+    .form-control { height: 40px; font-size: 16px; border-color: var(--wj-nice-gray-200); }
+    .form-control:focus { border-color: var(--wj-primary); box-shadow: 0 0 0 1px var(--wj-primary); }
+    .form-text { display: block; margin-top: 6px; font-size: 12px; color: var(--wj-gray-text); }
+    [hidden] { display: none !important; }
+    .md-dashboard__shortcut-search { position: relative; > .ti { position: absolute; left: 14px; top: 12px; font-size: 16px; color: var(--wj-gray-text); } > input { padding-left: 40px; } }
+    .md-dashboard__shortcut-suggestions { padding: 6px 4px; margin-top: 6px; border: 1px solid var(--wj-nice-gray-100); border-radius: 8px; }
+    .md-dashboard__shortcut-matches { max-height: 224px; overflow-y: auto; }
+    .md-dashboard__shortcut-result-heading { padding: 6px 12px; font-size: 12px; color: var(--wj-gray-text); }
+    .md-dashboard__shortcut-result {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 4px 12px;
+        min-height: 48px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        > .ti { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; background: var(--wj-nice-gray); border-radius: 6px; color: var(--wj-gray-text); font-size: 16px; }
+        &[aria-selected="true"], &:hover { background: var(--wj-dashboard-search-surface); }
+        &-text { display: flex; flex: 1; flex-direction: column; min-width: 0; line-height: 20px; > span, > small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; } > small { font-size: 12px; line-height: 16px; color: var(--wj-gray-text); } }
+        .md-dashboard__shortcut-enter { visibility: hidden; color: var(--wj-primary); font-size: 12px; }
+        &[aria-selected="true"] .md-dashboard__shortcut-enter { visibility: visible; }
+        &-url { margin-top: 4px; border-top: 1px solid var(--wj-nice-gray-100); border-radius: 0; color: var(--wj-primary); > .ti { width: 14px; height: auto; background: transparent; color: inherit; } }
+        &-message { padding: 6px 12px; margin: 0; font-size: 12px; color: var(--wj-gray-text); }
+    }
+    .md-dashboard__shortcut-back { padding: 6px 0 0; font-size: 14px; text-decoration: none; }
+    .md-dashboard__shortcut-icon-choices { display: flex; flex-wrap: wrap; gap: 6px; }
+    .md-dashboard__shortcut-icon-choice {
+        position: relative;
+        cursor: pointer;
+        > span { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 40px; height: 40px; padding: 0 10px; border: 1px solid var(--wj-nice-gray-100); border-radius: 6px; color: var(--wj-gray-text); font-size: 14px; }
+        input:checked + span { border-color: var(--wj-primary); box-shadow: inset 0 0 0 1px var(--wj-primary); color: var(--wj-primary); background: var(--wj-dashboard-search-surface); }
+        input:focus-visible + span { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }
+        &:hover > span { background: var(--wj-dashboard-search-surface); }
+    }
+    .md-dashboard__shortcut-custom-icon { position: relative; max-width: 360px; > input { padding-inline: 40px; } &.is-invalid > input { border-color: $danger; box-shadow: 0 0 0 1px $danger; } }
+    .md-dashboard__shortcut-icon-preview { position: absolute; display: grid; place-items: center; left: 8px; top: 6px; width: 28px; height: 28px; border-radius: 4px; background: var(--wj-nice-gray); font-size: 16px; }
+    .md-dashboard__shortcut-icon-state { position: absolute; right: 12px; top: 10px; color: var(--wj-dashboard-shortcut-mint); font-size: 16px; }
+    .md-dashboard__shortcut-icon-library { display: inline-flex; align-items: center; gap: 4px; > .ti { font-size: 12px; } }
+    .md-dashboard__shortcut-preview-panel { margin-top: 4px; }
+    .md-dashboard__settings + .text-danger { margin: 0; &:not(:empty) { margin-top: 16px; } }
+    @media (max-width: ($bp-dinosaur - .02px)) {
+        .modal-header { padding: 16px; }
+        .modal-body { padding: 0 16px 16px; }
+        .modal-footer { padding: 12px 16px; }
+        .md-dashboard__shortcut-preview-panel { flex-wrap: wrap; }
+    }
 }
 
 .md-dashboard-widget {
@@ -868,8 +1007,10 @@ webjet-overview-dashboard a:focus-visible {
         line-height: 1.2;
         color: var(--wj-secondary);
         text-decoration: none;
-        font-size: 12px;
-        > .ti { flex-shrink: 0; font-size: 18px; color: var(--wj-dashboard-muted); }
+        font-size: 14px;
+        border-radius: var(--wj-border-radius);
+        &-label { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; min-width: 0; }
+        > .ti { display: grid; place-items: center; flex-shrink: 0; width: 24px; height: 24px; border-radius: 4px; font-size: 18px; color: var(--wj-dashboard-shortcut-color, var(--wj-secondary)); background: var(--wj-dashboard-shortcut-bg, var(--wj-dashboard-shortcut-default)); }
     }
 
     @media (max-width: ($bp-mobile - .02px)) {

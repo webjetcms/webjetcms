@@ -312,7 +312,7 @@ class DashboardSettingsServiceTest {
         for (Object icon : java.util.List.of("ti-star other-class", "<img src=x>", "ti-" + "a".repeat(80), 123)) {
             assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("icon", icon)));
         }
-        for (String color : java.util.List.of("default", "mint", "lavender", "blue", "amber", "peach", "rose")) {
+        for (String color : java.util.List.of("default", "mint", "lavender", "blue", "amber", "peach", "rose", "cyan", "gray", "red")) {
             assertDoesNotThrow(() -> DashboardSettingsService.validateShortcut(Map.of("color", color)));
         }
         for (Object color : java.util.List.of("#ff0000", "url(evil)", "unknown", 123)) {

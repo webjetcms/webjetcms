@@ -250,7 +250,7 @@ public class DashboardSettingsService {
         require(icon instanceof String && ((String) icon).length() <= 80
             && (((String) icon).isEmpty() || ((String) icon).matches("ti-[a-z0-9]+(?:-[a-z0-9]+)*")), "Invalid shortcut icon");
         Object color = options.getOrDefault("color", "default");
-        require(color instanceof String && Set.of("default", "mint", "lavender", "blue", "amber", "peach", "rose").contains(color), "Invalid shortcut color");
+        require(color instanceof String && Set.of("default", "mint", "lavender", "blue", "amber", "peach", "rose", "cyan", "gray", "red").contains(color), "Invalid shortcut color");
         String target = (String) href;
         if ("url".equals(source)) {
             require(!((String) title).isBlank(), "A custom shortcut requires a title");

@@ -8,6 +8,12 @@ const { JSDOM } = require('jsdom');
 function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWidgets = false, data = {}, actual, fetchResponse, now = new Date(2026, 8, 26) } = {}) {
     const dom = new JSDOM('<!doctype html><body><main></main></body>', { url: 'http://localhost/admin/v9/' });
     const window = dom.window;
+    const glyphCss = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/node_modules/@tabler/icons-webfont/dist/tabler-icons.css'), 'utf8');
+    const glyphs = new Set([...glyphCss.matchAll(/\.ti-([a-z0-9-]+):before/g)].map(match => 'ti-' + match[1]));
+    const computedStyle = window.getComputedStyle.bind(window);
+    window.getComputedStyle = (element, pseudo) => pseudo === '::before'
+        ? { content: [...element.classList].some(name => glyphs.has(name)) ? '"glyph"' : 'none' }
+        : computedStyle(element);
     window.userLng = 'en';
     window.csrfToken = 'test-csrf-token';
     window.WJ = { hasPermission: () => allowed };
@@ -36,7 +42,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
         IntersectionObserver: class { observe() {} disconnect() {} },
         fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/stat/') ? statResponse(url) : url.includes('/monitoring/actual') ? snapshot : url.includes('/forms-list/') || url.includes('/dmail/') || url.includes('/web-pages/history/all?') ? data : url.includes('/audit/log/all?') ? { content: (data.items || []).map((item, index) => ({ id: index + 1, logType: 20, description: item.description, userFullName: item.userFullName, createDate: item.date })), options: { logType: [{ value: '20', label: data.items?.[0]?.type || 'Changed' }] } } : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
     });
-    for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'monitoring-live.js', 'system-widgets.js', 'widgets.js']) {
+    for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'monitoring-live.js', 'system-widgets.js', 'shortcut-widget.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
             .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
         const exports = { 'system-widgets.js': ['registerSystemWidgets'], 'monitoring-live.js': ['readMonitoringSnapshot', 'subscribeMonitoring'] }[file];
@@ -63,7 +69,26 @@ test('Shortcuts resolve authorized submenu targets and never execute user-contro
     assert.match(container.textContent, /<script>bad\(\)<\/script>/);
     container.replaceChildren();
     widget.render({ container, context, options: { href: 'javascript:alert(1)' } });
-    assert.equal(container.querySelector('a'), null);
+    assert.equal(container.querySelector('a[href]'), null);
+});
+
+test('Shortcut tooltips show truncated names as plain text without repeating fully visible labels', t => {
+    const { scope, context, container, window } = fixture(t);
+    const configs = [];
+    window.jQuery = element => ({ off() {} });
+    window.bootstrap = { Tooltip: class { constructor(element, config) { configs.push(config); } } };
+    const title = '<img src=x> **autotest**';
+    scope.getWidget('shortcut').render({ container, context, options: { source: 'url', href: 'https://example.com', title } });
+    assert.equal(configs[0].html, false);
+    assert.equal(configs[0].title, title);
+    assert.equal(container.querySelector('img'), null);
+    const link = container.querySelector('a');
+    assert.equal(link.hasAttribute('title'), false, 'A visible name must not create a native tooltip.');
+    const show = () => link.dispatchEvent(new window.Event('show.bs.tooltip', { cancelable: true }));
+    assert.equal(show(), false, 'Do not repeat a fully visible name.');
+    const label = link.querySelector('span');
+    Object.defineProperty(label, 'scrollWidth', { value: 250 });
+    assert.equal(show(), true, 'A truncated name must still be readable through its tooltip.');
 });
 
 test('Local links retain their origin when normalized paths start with two slashes', t => {
@@ -89,34 +114,14 @@ test('Custom shortcuts require explicit URL mode and reject ambiguous or executa
         assert.equal(scope.shortcutUrl(href), null, href);
         widget.render({ container, context, options: { source: 'url', href, title: 'Unsafe' } });
     }
-    assert.equal(container.querySelector('a'), null);
+    assert.equal(container.querySelector('a[href]'), null);
     widget.render({ container, context, options: { href: 'https://other.test/', title: 'Legacy' } });
-    assert.equal(container.querySelector('a'), null);
+    assert.equal(container.querySelector('a[href]'), null);
     for (const href of ['https://other.test/path?x=1#section', '/apps/form/admin/']) {
         widget.render({ container, context, options: { source: 'url', href, title: '<img src=x>' } });
         assert.equal(container.lastElementChild.getAttribute('href'), href);
     }
     assert.equal(container.querySelector('img'), null);
-});
-
-test('Shortcut settings toggle authorized menu and explicit URL fields and validate before persistence', t => {
-    const { scope, context, container, window } = fixture(t, { menu: [{ text: 'Forms', href: '/apps/form/admin/' }] });
-    const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
-    const source = container.querySelector('[name="dashboardShortcutSource"]');
-    const module = container.querySelector('[name="dashboardShortcutMenu"]');
-    const [url, title] = container.querySelectorAll('input');
-    assert.equal(url.parentElement.hidden, true);
-    assert.equal(settings.read().options.href, '/apps/form/admin/');
-    source.value = 'url';
-    source.dispatchEvent(new window.Event('change'));
-    assert.equal(module.parentElement.hidden, true);
-    assert.equal(url.parentElement.hidden, false);
-    url.value = '//other.test/';
-    assert.throws(() => settings.read(), /shortcutUrlInvalid/);
-    url.value = 'https://other.test';
-    assert.throws(() => settings.read(), /shortcutTitleRequired/);
-    title.value = ' My site ';
-    assert.deepEqual(JSON.parse(JSON.stringify(settings.read())), { options: { source: 'url', href: 'https://other.test/', title: 'My site', icon: 'ti-link', color: 'default' } });
 });
 
 const groupedShortcutMenu = [
@@ -127,118 +132,216 @@ const groupedShortcutMenu = [
         { text: 'Banner system', href: '/apps/banner/admin/', icon: 'ti ti-ad', childrens: [
             { text: 'Banner list', href: '/apps/banner/admin/' }, { text: 'Banner statistics', href: '/apps/banner/admin/banner-stat/' }
         ] },
-        { text: 'Forms', href: '/apps/form/admin/' },
+        { text: 'Formuláre', href: '/apps/form/admin/', icon: 'ti-forms' },
         { text: 'Unsafe', href: 'javascript:alert(1)' }
     ] }
 ];
 
-test('Shortcut selection follows main areas, sections and tabs without duplicate parent destinations', t => {
+function searchShortcut(container, window, value) {
+    const search = container.querySelector('[name="dashboardShortcutSearch"]');
+    search.value = value;
+    search.dispatchEvent(new window.Event('input', { bubbles: true }));
+    return search;
+}
+
+function pickShortcut(container, title) {
+    const row = [...container.querySelectorAll('[role="option"]')].find(row => row.querySelector('.md-dashboard__shortcut-result-text > span')?.textContent === title);
+    assert.ok(row, 'An authorized destination must be offered');
+    row.click();
+}
+
+test('Shortcut autocomplete searches authorized breadcrumbs, deduplicates tabs and requires explicit selection', t => {
     const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
     const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
-    const group = container.querySelector('[name="dashboardShortcutGroup"]');
-    const section = container.querySelector('[name="dashboardShortcutSection"]');
-    const tab = container.querySelector('[name="dashboardShortcutMenu"]');
-    const select = (field, value) => { field.value = value; field.dispatchEvent(new window.Event('change')); };
-    assert.deepEqual([...group.options].slice(1).map(option => option.textContent), ['Overviews', 'Applications']);
-    assert.equal(group.value, '', 'Do not silently choose the first administration destination');
-    assert.equal(section.disabled, true);
-    assert.equal(tab.disabled, true);
     assert.throws(() => settings.read(), /shortcutChooseTarget/);
-    select(group, '1');
-    assert.deepEqual([...section.options].slice(1).map(option => option.textContent), ['Banner system', 'Forms']);
-    select(section, '0');
-    assert.deepEqual([...tab.options].slice(1).map(option => option.textContent), ['Banner list', 'Banner statistics']);
-    assert.equal(tab.value, '');
-    select(tab, '/apps/banner/admin/banner-stat/');
+    const search = searchShortcut(container, window, 'applications banner');
+    assert.deepEqual([...container.querySelectorAll('.md-dashboard__shortcut-result-text > span')].map(row => row.textContent), ['Banner list', 'Banner statistics']);
+    assert.equal(search.getAttribute('aria-expanded'), 'true');
+    search.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    assert.equal(container.querySelector('[aria-selected="true"] .md-dashboard__shortcut-result-text > span').textContent, 'Banner statistics');
+    search.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    assert.equal(search.value, 'Applications › Banner system › Banner statistics');
     assert.equal(settings.read().options.href, '/apps/banner/admin/banner-stat/');
-    select(group, '0');
-    assert.equal(section.value, '0', 'A sole authorized section needs no extra choice');
-    assert.equal(tab.value, '', 'Changing the main area must discard the old tab');
-    assert.throws(() => settings.read(), /shortcutChooseTarget/);
-    select(group, '1');
-    select(section, '1');
-    assert.equal(tab.parentElement.hidden, true, 'A direct section link needs no redundant tab choice');
+    assert.equal(search.getAttribute('aria-expanded'), 'false');
+    assert.equal(search.hasAttribute('aria-activedescendant'), false);
+    searchShortcut(container, window, 'formulare');
+    pickShortcut(container, 'Formuláre');
     assert.equal(settings.read().options.href, '/apps/form/admin/');
+    assert.equal(settings.read().options.title, '', 'A menu name remains inherited when the optional title is empty');
+    searchShortcut(container, window, 'unmatched');
+    assert.throws(() => settings.read(), /shortcutChooseTarget/, 'Typing must invalidate a previously chosen target');
+    search.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    assert.equal(search.getAttribute('aria-expanded'), 'false');
 });
 
-test('Editing preselects the stored hierarchy and unavailable targets cannot silently change', t => {
+test('Shortcut custom URL mode preserves choices and validates safe destinations and required titles', t => {
     const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
+    const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
+    searchShortcut(container, window, 'banner');
+    pickShortcut(container, 'Banner list');
+    searchShortcut(container, window, 'banner');
+    pickShortcut(container, 'Banner list');
+    container.querySelector('[name="dashboardShortcutSearch"]').click();
+    container.querySelector('.md-dashboard__shortcut-result-url').click();
+    const url = container.querySelector('[name="dashboardShortcutUrl"]');
+    const title = container.querySelector('[name="dashboardShortcutTitle"]');
+    assert.equal(url.parentElement.hidden, false);
+    url.value = '//other.test/';
+    assert.throws(() => settings.read(), /shortcutUrlInvalid/);
+    url.value = 'https://other.test';
+    assert.throws(() => settings.read(), /shortcutTitleRequired/);
+    title.value = ' My site ';
+    assert.equal(settings.read().options.href, 'https://other.test/');
+    assert.equal(settings.read().options.title, 'My site');
+    assert.equal(settings.read().options.source, 'url');
+    container.querySelector('.md-dashboard__shortcut-back').click();
+    assert.equal(url.parentElement.hidden, true);
+    assert.equal(settings.read().options.href, '/apps/banner/admin/');
+});
+
+test('Editing restores the selected breadcrumb and an unavailable target remains editable without navigation', t => {
+    const { scope, context, container } = fixture(t, { menu: groupedShortcutMenu });
     const original = { source: 'menu', href: '/apps/banner/admin/banner-stat/', title: 'Autotest banners', icon: 'ti-ad', color: 'default' };
-    const settings = scope.getWidget('shortcut').configure({ container, context, options: original });
-    assert.equal(container.querySelector('[name="dashboardShortcutGroup"]').selectedOptions[0].textContent, 'Applications');
-    assert.equal(container.querySelector('[name="dashboardShortcutSection"]').selectedOptions[0].textContent, 'Banner system');
-    assert.equal(container.querySelector('[name="dashboardShortcutMenu"]').selectedOptions[0].textContent, 'Banner statistics');
-    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), original);
-    const source = container.querySelector('[name="dashboardShortcutSource"]');
-    source.value = 'url';
-    source.dispatchEvent(new window.Event('change'));
-    for (const name of ['Group', 'Section', 'Menu']) assert.equal(container.querySelector(`[name="dashboardShortcut${name}"]`).parentElement.hidden, true);
-    source.value = 'menu';
-    source.dispatchEvent(new window.Event('change'));
-    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), original);
-    container.replaceChildren();
-    const unavailable = scope.getWidget('shortcut').configure({ container, context, options: { ...original, href: '/no-longer-authorized/' } });
-    assert.equal(container.querySelector('[name="dashboardShortcutGroup"]').value, '');
-    assert.throws(() => unavailable.read(), /shortcutChooseTarget/);
-});
-
-test('Empty or unsafe-only menu groups offer explicit URLs instead of empty navigation choices', t => {
-    const { scope, context, container } = fixture(t, { menu: [{ text: 'Empty', childrens: [] }, { text: 'Unsafe', childrens: [{ text: 'Script', href: 'javascript:alert(1)' }] }] });
-    scope.getWidget('shortcut').configure({ container, context, options: {} });
-    const source = container.querySelector('[name="dashboardShortcutSource"]');
-    assert.equal(source.value, 'url');
-    assert.equal(source.options[0].disabled, true);
-    assert.equal(container.querySelector('[name="dashboardShortcutGroup"]').parentElement.hidden, true);
-});
-
-test('Shortcut icons inherit section icons, allow overrides and follow a newly selected destination', t => {
-    const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
     const widget = scope.getWidget('shortcut');
-    const options = { source: 'menu', href: '/apps/banner/admin/banner-stat/', title: 'Autotest', icon: 'ti-star', color: 'mint' };
-    const settings = widget.configure({ container, context, options });
-    const iconInput = container.querySelector('[name="dashboardShortcutIcon"]');
-    const tab = container.querySelector('[name="dashboardShortcutMenu"]');
-    assert.equal(iconInput.value, 'star', 'Editing preserves the personal icon');
-    assert.equal(container.querySelector('.md-dashboard__shortcut-preview i').className, 'ti ti-star');
-    assert.equal(container.querySelector('input[type="radio"]:checked').value, 'mint');
-    tab.value = '/apps/banner/admin/';
-    tab.dispatchEvent(new window.Event('change'));
-    assert.equal(iconInput.value, 'ad', 'Tabs without their own icon inherit the section icon');
-    iconInput.value = 'chart-bar';
-    iconInput.dispatchEvent(new window.Event('input'));
-    assert.equal(settings.read().options.icon, 'ti-chart-bar');
-    assert.equal(settings.read().options.color, 'mint');
+    const settings = widget.configure({ container, context, options: original });
+    assert.equal(container.querySelector('[name="dashboardShortcutSearch"]').value, 'Applications › Banner system › Banner statistics');
+    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), original);
     container.replaceChildren();
-    widget.render({ container, context, options: { href: '/apps/banner/admin/banner-stat/' } });
-    assert.equal(container.querySelector('i').className, 'ti ti-ad', 'Existing shortcuts also inherit the menu icon');
+    const options = { ...original, href: '/no-longer-authorized/' };
+    const unavailable = widget.configure({ container, context, options });
+    assert.throws(() => unavailable.read(), /shortcutChooseTarget/);
     container.replaceChildren();
     widget.render({ container, context, options });
-    assert.equal(container.querySelector('i').className, 'ti ti-star');
-    assert.equal(container.querySelector('a').style.getPropertyValue('--wj-dashboard-shortcut-bg'), 'var(--wj-dashboard-mint)');
+    assert.equal(container.querySelector('a').hasAttribute('href'), false);
+    assert.equal(container.querySelector('a').getAttribute('aria-disabled'), 'true');
+    assert.equal(container.querySelector('a').tabIndex, 0, 'The explanation remains reachable from the keyboard');
+    assert.match(container.querySelector('a').title, /shortcutUnavailable/);
+    assert.equal(container.querySelector('a span').textContent, original.title);
 });
 
-test('URL shortcuts validate icon input and use only predefined background colors', t => {
-    const { scope, context, container, window } = fixture(t);
-    const options = { source: 'url', href: 'https://example.com', title: 'Autotest', icon: 'ti-heart', color: 'rose' };
-    const widget = scope.getWidget('shortcut');
-    const settings = widget.configure({ container, context, options });
+test('Editing an explicit local URL never silently converts it into an authorized menu shortcut', t => {
+    const { scope, context, container } = fixture(t, { menu: groupedShortcutMenu });
+    const options = { source: 'url', href: '/apps/banner/admin/', title: 'Autotest explicit URL', icon: 'ti-link', color: 'default' };
+    const settings = scope.getWidget('shortcut').configure({ container, context, options });
+    assert.equal(container.querySelector('[name="dashboardShortcutUrl"]').parentElement.hidden, false);
+    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), options);
+});
+
+test('Empty or unsafe menus still offer a custom URL and never offer an unsafe destination', t => {
+    const { scope, context, container, window } = fixture(t, { menu: [{ text: 'Unsafe', href: 'javascript:alert(1)' }] });
+    scope.getWidget('shortcut').configure({ container, context, options: {} });
+    searchShortcut(container, window, '');
+    assert.equal(container.querySelectorAll('[role="option"]').length, 1);
+    container.querySelector('.md-dashboard__shortcut-result-url').click();
+    assert.equal(container.querySelector('[name="dashboardShortcutUrl"]').parentElement.hidden, false);
+});
+
+test('Shortcut icon presets inherit the destination and custom names must exist in the installed font', t => {
+    const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
+    const settings = scope.getWidget('shortcut').configure({ container, context, options: { href: '/apps/banner/admin/', icon: 'ti-star', color: 'mint' } });
     const iconInput = container.querySelector('[name="dashboardShortcutIcon"]');
-    const color = container.querySelector('input[value="lavender"]');
-    color.checked = true;
-    color.dispatchEvent(new window.Event('change', { bubbles: true }));
-    assert.equal(settings.read().options.color, 'lavender');
-    assert.equal(container.querySelector('.md-dashboard__shortcut-preview').style.getPropertyValue('--wj-dashboard-shortcut-bg'), 'var(--wj-dashboard-lavender)');
-    for (const invalid of ['ti-star other-class', '<img src=x>', 'url(evil)', 'a'.repeat(81)]) {
+    assert.equal(iconInput.value, 'star');
+    assert.equal(container.querySelector('.md-dashboard__shortcut-preview > i').className, 'ti ti-star');
+    searchShortcut(container, window, 'formulare');
+    pickShortcut(container, 'Formuláre');
+    assert.equal(settings.read().options.icon, 'ti-forms');
+    const custom = container.querySelector('.md-dashboard__shortcut-icon-choices input[value="custom"]');
+    custom.checked = true;
+    custom.dispatchEvent(new window.Event('change', { bubbles: true }));
+    for (const invalid of ['', 'not-a-real-shortcut-icon', 'ti-star other-class', '<img src=x>', 'url(evil)', 'a'.repeat(81)]) {
         iconInput.value = invalid;
+        iconInput.dispatchEvent(new window.Event('input'));
         assert.throws(() => settings.read(), /shortcutIconInvalid/);
+        assert.equal(iconInput.getAttribute('aria-invalid'), 'true');
     }
-    iconInput.value = '';
-    assert.equal(settings.read().options.icon, '', 'An empty icon restores the automatic fallback');
+    iconInput.value = 'rocket';
+    iconInput.dispatchEvent(new window.Event('input'));
+    assert.equal(settings.read().options.icon, 'ti-rocket');
+    assert.equal(iconInput.getAttribute('aria-invalid'), 'false');
+    const preset = container.querySelector('.md-dashboard__shortcut-icon-choices input[value="ti-photo"]');
+    preset.checked = true;
+    preset.dispatchEvent(new window.Event('change', { bubbles: true }));
+    assert.equal(settings.read().options.icon, 'ti-photo');
+    assert.equal(iconInput.closest('.md-dashboard__field').hidden, true);
+});
+
+test('Shortcut autofocus never interrupts typing started during the modal opening animation', t => {
+    const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
+    const modal = window.document.createElement('div');
+    modal.className = 'modal';
+    modal.tabIndex = -1;
+    container.before(modal);
+    modal.append(container);
+    scope.getWidget('shortcut').configure({ container, context, options: { href: '/apps/banner/admin/' } });
+    const title = container.querySelector('[name="dashboardShortcutTitle"]');
+    title.focus();
+    title.value = 'Autotest while opening';
+    modal.dispatchEvent(new window.Event('shown.bs.modal'));
+    assert.equal(window.document.activeElement, title);
+    assert.equal(title.value, 'Autotest while opening');
+});
+
+test('Shortcut colors share the preview palette and keep unsupported values out of CSS', t => {
+    const { scope, context, container, window } = fixture(t);
+    const widget = scope.getWidget('shortcut');
+    const options = { source: 'url', href: 'https://example.com', title: 'Autotest', icon: 'ti-heart', color: 'rose' };
+    const settings = widget.configure({ container, context, options });
+    const colors = container.querySelector('.md-dashboard__shortcut-colors');
+    assert.equal(colors.querySelectorAll('input').length, 9);
+    assert.equal(colors.querySelector('input:checked').value, 'red');
+    for (const value of ['cyan', 'gray', 'red', 'amber', 'default']) {
+        colors.querySelector('input[value="' + value + '"]').checked = true;
+        colors.dispatchEvent(new window.Event('change'));
+        assert.equal(settings.read().options.color, value);
+        assert.equal(container.querySelector('.md-dashboard__shortcut-preview').style.getPropertyValue('--wj-dashboard-shortcut-bg'), 'var(--wj-dashboard-shortcut-' + value + ')');
+    }
+    assert.equal(container.querySelector('.md-dashboard__shortcut-preview').style.getPropertyValue('--wj-dashboard-shortcut-color'), 'var(--wj-secondary)');
     container.replaceChildren();
     widget.render({ container, context, options: { ...options, icon: '<img src=x>', color: 'url(evil)' } });
     assert.equal(container.querySelector('img'), null);
     assert.equal(container.querySelector('i').className, 'ti ti-link');
-    assert.equal(container.querySelector('a').style.getPropertyValue('--wj-dashboard-shortcut-bg'), 'var(--wj-dashboard-surface)');
+    assert.equal(container.querySelector('a').style.getPropertyValue('--wj-dashboard-shortcut-bg'), 'var(--wj-dashboard-shortcut-default)');
+});
+
+test('Page suggestions reuse authorized search, ignore stale responses and retain the selected page URL', async t => {
+    let resolveFirst;
+    const { scope, context, container, window, requests } = fixture(t, { menu: groupedShortcutMenu, fetchResponse: url => url.includes('first')
+        ? new Promise(resolve => { resolveFirst = resolve; })
+        : Promise.resolve({ ok: true, json: async () => [{ doc_id: 42, title: 'Contact autotest', label: '/contact' }] }) });
+    const timers = [];
+    window.setTimeout = callback => { timers.push(callback); return timers.length; };
+    window.clearTimeout = () => {};
+    const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
+    searchShortcut(container, window, 'first');
+    const pending = timers.at(-1)();
+    searchShortcut(container, window, 'contact');
+    await timers.at(-1)();
+    assert.match(requests[0].url, /editable=true/);
+    assert.equal(requests[0].options.signal.aborted, true);
+    resolveFirst({ ok: true, json: async () => [{ doc_id: 8, title: 'Stale', label: '/stale' }] });
+    await pending;
+    assert.equal(container.textContent.includes('Stale'), false);
+    pickShortcut(container, 'Contact autotest');
+    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), { source: 'url', href: '/admin/v9/webpages/web-pages-list/?docid=42', title: 'Contact autotest', icon: 'ti-file-text', color: 'default' });
+    settings.dispose();
+    assert.equal(container.querySelector('[role="listbox"]').hidden, true);
+});
+
+test('Page lookup failures keep menu choices and custom URLs available, and denied users make no requests', async t => {
+    for (const allowed of [true, false]) {
+        const { scope, context, container, window, requests } = fixture(t, { menu: groupedShortcutMenu, allowed, ok: false });
+        const timers = [];
+        window.setTimeout = callback => { timers.push(callback); return timers.length; };
+        window.clearTimeout = () => {};
+        const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
+        searchShortcut(container, window, 'banner');
+        if (allowed) {
+            await timers.at(-1)();
+            assert.match(container.textContent, /shortcutPageSearchFailed/);
+        } else assert.equal(requests.length, 0);
+        pickShortcut(container, 'Banner list');
+        assert.equal(settings.read().options.href, '/apps/banner/admin/');
+    }
 });
 
 test('Recent pages retain six server-filtered rows safely in every supported size', async t => {
