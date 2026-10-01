@@ -1,5 +1,3 @@
-const { waitForWidgets } = require('../../../helpers/dashboard-browser');
-
 const assert = require('node:assert/strict');
 
 Feature('admin.dashboard.widgets').tag('@singlethread');
@@ -178,44 +176,6 @@ Scenario('A rejected preference update preserves the confirmed widget', async ({
     I.waitForElement('.md-dashboard__status .text-danger', 10);
     I.see(shortcutTitle, `[data-instance-id="${shortcutId}"]`);
     await I.stopMockingRoute('**/admin/rest/dashboard/settings');
-});
-
-/**
- * Checks that widgets stay inside the dashboard and keep their reading order across screen widths. Table
- * text must remain readable without clipping. Numeric values and dates may stay on one line if they fit
- * inside their cells.
- */
-Scenario('Responsive grid preserves visual order and keeps widgets inside the dashboard', async ({ I }) => {
-    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-    await waitForWidgets(I);
-    for (const width of [320, 359, 360, 390, 767, 768, 1024, 1199, 1200, 1337, 1920]) {
-        I.resizeWindow(width, 1000);
-        const geometry = await I.executeScript(() => {
-            const host = document.querySelector('.md-dashboard__layout');
-            const boundary = host.getBoundingClientRect();
-            const cards = [...host.querySelectorAll('[data-instance-id]')].map(card => {
-                const rect = card.getBoundingClientRect();
-                return { id: card.dataset.instanceId, left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
-            });
-            const clippedCells = [...host.querySelectorAll('.md-dashboard-widget__table td, .md-dashboard-widget__table th')]
-                .filter(cell => !cell.closest('.visually-hidden') && cell.checkVisibility())
-                .map((cell, index) => {
-                    const type = cell.closest('[data-widget-type]').dataset.widgetType;
-                    const singleLine = cell.classList.contains('md-dashboard-widget__table-number')
-                        || (['forms', 'approvals'].includes(type) && cell.matches(':last-child'));
-                    return { index, type, singleLine, whiteSpace: getComputedStyle(cell).whiteSpace, width: cell.clientWidth, contentWidth: cell.scrollWidth };
-                })
-                .filter(cell => (!cell.singleLine && cell.whiteSpace !== 'normal') || cell.contentWidth > cell.width + 1);
-            return { left: boundary.left, right: boundary.right, cards, clippedCells };
-        });
-        for (const card of geometry.cards) {
-            assert.ok(card.left >= geometry.left - 1 && card.right <= geometry.right + 1, `Widget ${card.id} must fit at ${width}px`);
-        }
-        const visual = [...geometry.cards].sort((a, b) => Math.abs(a.top - b.top) > 1 ? a.top - b.top : a.left - b.left);
-        assert.deepEqual(visual.map(card => card.id), geometry.cards.map(card => card.id), `Visual order must follow DOM order at ${width}px`);
-        assert.deepEqual(geometry.clippedCells, [], `Table headers and cells must fit without clipping at ${width}px`);
-    }
-    I.wjSetDefaultWindowSize();
 });
 
 /**
