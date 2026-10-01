@@ -1,0 +1,12 @@
+@media (min-width: $bp-mobile) {
+    .pg-configuration-tree-layout {
+        > .tree-col {
+            width: 220px;
+        }
+
+        > .datatable-col {
+            flex: 1;
+            min-width: 0;
+        }
+    }
+}

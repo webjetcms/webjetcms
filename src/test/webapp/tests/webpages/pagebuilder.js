@@ -3007,3 +3007,225 @@ Scenario("NewPageDocIdTemplate is used for new page", ({I, DT, DTE}) => {
     checkNewPageTemplate(112952, true, I, DT, DTE);
 
 });
+
+const rawPbInclude = '!INCLUDE(/components/app-htmlembed/embed.jsp, html="' + Buffer.from('<div id="raw-preview-autotest">Application autotest</div>').toString('base64') + '")!';
+const rawPbFixed = '<div id="raw-fixed-autotest" class="pb-section" data-plugin-type="roaming" data-plugin-customer="b2c">Fixed autotest content</div>';
+const rawPbApplication = '<div id="raw-app-autotest" class="pb-section" data-plugin-customer="b2c">' + rawPbInclude + '</div>';
+const rawPbMixed = '<div id="raw-mixed-autotest" class="pb-section"><strong>Fixed autotest content</strong><div class="pb-editable"><p>Editable autotest content</p></div></div>';
+let rawPbSavedTitle;
+
+/** Waits for the authored sections and their existing or temporary editable regions. */
+function waitForRawPbSections(I) {
+    I.waitForVisible('.pb-workbench', 20);
+    I.waitForElement('#raw-app-autotest > .pb-temp-wrapper.pb-editable iframe.wj_component', 20);
+    // CodeceptJS 3.6 passes a FrameLocator to waitForFunction, so this check needs the actual frame.
+    return I.usePlaywrightTo('wait for the div section editors to own their content', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        await frame.waitForFunction(() => Array.from(document.querySelectorAll('#wjInline-docdata [data-ckeditor-instance]')).every(element => {
+            const editor = CKEDITOR.instances[element.dataset.ckeditorInstance];
+            return editor?.status === 'ready' && editor.element.$ === element;
+        }), null, {timeout: 20000});
+    });
+}
+
+/** Creates an isolated unsaved page and loads the supplied PageBuilder markup. */
+async function openRawPbSections(I, DT, DTE, Document, source = rawPbFixed + rawPbApplication + rawPbMixed) {
+    const title = 'pb-section-autotest-' + I.getRandomText();
+    Document.resetPageBuilderMode();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=34495');
+    DT.waitForLoader();
+    I.click(DT.btn.add_button);
+    DTE.waitForEditor();
+    DTE.fillField('title', title);
+    DTE.fillField('navbar', title);
+    I.clickCss('#pills-dt-datatableInit-content-tab');
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForVisible('.pb-workbench', 20);
+    I.selectOption('.exit-inline-editor select', 'html');
+    I.switchTo();
+    I.waitForVisible('.CodeMirror', 20);
+    await I.executeScript(source => {
+        document.querySelector('.CodeMirror').CodeMirror.setValue(source);
+        window.switchEditorType({value: 'pageBuilder'});
+    }, source);
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    await waitForRawPbSections(I);
+    return title;
+}
+
+/** Reads serialized content, normalizing only quote entities in application parameters. */
+async function rawPbSource(I) {
+    const html = await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
+    return html.replace(/!INCLUDE\([\s\S]*?\)!/gi, macro => macro.replace(/&quot;/g, '"'));
+}
+
+Scenario('pb-section preview edges select the section without opening application settings @current', async ({I, DT, DTE, Document}) => {
+    await openRawPbSections(I, DT, DTE, Document);
+    I.switchTo('#raw-app-autotest iframe.wj_component');
+    I.waitForText('Application autotest', 20, '#raw-preview-autotest');
+    I.switchTo();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    for (const edge of ['top', 'bottom']) {
+        I.click('#raw-fixed-autotest');
+        // Standard clicks target the center; use the actual border coordinates outside the preview iframe.
+        await I.usePlaywrightTo('select the application section using its ' + edge + ' edge', async ({page}) => {
+            const frame = await getPageBuilderFrame(page);
+            const wrapper = frame.locator('#raw-app-autotest > .pb-temp-wrapper');
+            await wrapper.scrollIntoViewIfNeeded();
+            const box = await wrapper.boundingBox();
+            await page.mouse.click(box.x + box.width / 2, edge === 'top' ? box.y + 8 : box.y + box.height - 8);
+        });
+        I.assertEqual(await I.executeScript(() => window.pageBuilder.ui.selected?.id), 'raw-app-autotest', 'Clicking the preview edge must select the section');
+        I.dontSeeElement('.cke_dialog');
+    }
+    I.assertContain(await rawPbSource(I), rawPbApplication, 'Selecting preview edges must preserve the authored INCLUDE without editor decorations');
+    I.switchTo();
+    DTE.cancel();
+});
+
+Scenario('application directly in a container keeps its structure and container controls @current', async ({I, DT, DTE, Document}) => {
+    const container = '<div id="raw-app-autotest" class="container raw-container-autotest" data-plugin-customer="b2c">' + rawPbInclude + '</div>';
+    await openRawPbSections(I, DT, DTE, Document, rawPbFixed + '<section>' + container + '<div id="raw-empty-container-autotest" class="container">  </div></section>');
+    I.switchTo('#raw-app-autotest iframe.wj_component');
+    I.waitForText('Application autotest', 20, '#raw-preview-autotest');
+    I.switchTo();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    const state = await I.executeScript(() => {
+        const element = document.querySelector('#raw-app-autotest');
+        const editorName = element.querySelector('[data-ckeditor-instance]').dataset.ckeditorInstance;
+        window.markPbElements('doc_data');
+        window.markPbElements('doc_data');
+        return {rows: element.querySelectorAll('.row').length, wrappers: element.querySelectorAll('.pb-temp-wrapper').length,
+            sameEditor: element.querySelector('[data-ckeditor-instance]').dataset.ckeditorInstance === editorName,
+            emptyRows: document.querySelectorAll('#raw-empty-container-autotest > .row').length};
+    });
+    I.assertDeepEqual(state, {rows: 0, wrappers: 1, sameEditor: true, emptyRows: 1}, 'An application is content; only a genuinely empty container needs a new row');
+    // The application fills the center, so click the selectable border using actual page coordinates.
+    await I.usePlaywrightTo('select the container through the application edge', async ({page}) => {
+        const frame = await getPageBuilderFrame(page);
+        const wrapper = frame.locator('#raw-app-autotest > .pb-temp-wrapper');
+        await wrapper.scrollIntoViewIfNeeded();
+        const box = await wrapper.boundingBox();
+        await page.mouse.click(box.x + box.width / 2, box.y + 8);
+    });
+    I.assertEqual(await I.executeScript(() => window.pageBuilder.ui.selected?.id), 'raw-app-autotest', 'The application edge must select the nearest container');
+    I.waitForVisible('.pb-outline[data-type=container]:not(.is-hover)', 10);
+    I.dontSeeElement('.cke_dialog');
+    I.assertContain(await rawPbSource(I), container, 'Serialization must preserve the container and INCLUDE without an empty row or temporary wrapper');
+    I.click('.pb-workbench [data-pb-action=duplicate-adjacent]');
+    I.waitForElement('.raw-container-autotest + .raw-container-autotest iframe.wj_component', 20);
+    I.assertEqual(await I.grabNumberOfVisibleElements('.raw-container-autotest'), 2, 'Standard duplication must duplicate the container');
+    I.dontSeeElement('.raw-container-autotest .row');
+    I.switchTo();
+    DTE.cancel();
+});
+
+Scenario('pb-section div variants preserve authored markup through mode switching and save/reopen', async ({I, DT, DTE, Document}) => {
+    const title = await openRawPbSections(I, DT, DTE, Document);
+    const state = await I.executeScript(() => {
+        const editors = Array.from(document.querySelectorAll('#wjInline-docdata [data-ckeditor-instance]')).map(element => element.dataset.ckeditorInstance);
+        window.markPbElements('doc_data');
+        window.markPbElements('doc_data');
+        return {
+            types: Array.from(document.querySelectorAll('#wjInline-docdata > div.pb-section')).map(element => window.pageBuilder.workbench_type(element)),
+            wrappers: document.querySelectorAll('#wjInline-docdata .pb-temp-wrapper').length,
+            fixedEditors: document.querySelectorAll('#raw-fixed-autotest [data-ckeditor-instance]').length,
+            nestedEditors: document.querySelectorAll('[data-ckeditor-instance] [data-ckeditor-instance]').length,
+            editors, after: Array.from(document.querySelectorAll('#wjInline-docdata [data-ckeditor-instance]')).map(element => element.dataset.ckeditorInstance)
+        };
+    });
+    I.assertDeepEqual(state.types, ['section', 'section', 'section'], 'All authored div variants must use normal section controls');
+    I.assertEqual(state.wrappers, 1, 'Only the naked INCLUDE needs one temporary editable wrapper');
+    I.assertEqual(state.editors.length, 2, 'The authored pb-editable region and the INCLUDE must each initialize an editor');
+    I.assertEqual(state.fixedEditors + state.nestedEditors, 0, 'Fixed content must remain outside CKEditor and editors must not be nested');
+    I.assertDeepEqual(state.after, state.editors, 'Repeated marking must preserve existing editor instances');
+    I.switchTo('#raw-app-autotest iframe.wj_component');
+    I.waitForText('Application autotest', 20, '#raw-preview-autotest');
+    I.switchTo();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.selectOption('.exit-inline-editor select', 'html');
+    I.switchTo();
+    I.waitForVisible('.CodeMirror', 20);
+    await I.executeScript(() => window.switchEditorType({value: 'pageBuilder'}));
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    await waitForRawPbSections(I);
+    const beforeSave = await rawPbSource(I);
+    I.assertContain(beforeSave, rawPbFixed, 'The fixed div must preserve its exact tag, class and plugin attributes');
+    I.assertContain(beforeSave, rawPbApplication, 'The INCLUDE div must preserve its exact parent without paragraph wrappers');
+    I.assertFalse(/pb-temp-wrapper|pb-application|data-ckeditor-instance|iframe|pb-grid-element/.test(beforeSave), 'Editor helpers and previews must not enter saved source');
+    I.switchTo();
+    DTE.save();
+    rawPbSavedTitle = title;
+    DT.filterEquals('title', title);
+    I.click(locate('#datatableInit a').withText(title));
+    DTE.waitForEditor();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    await waitForRawPbSections(I);
+    const reopened = await rawPbSource(I);
+    I.assertContain(reopened, rawPbFixed, 'The persisted pb-section class and plugin attributes must survive reopening');
+    I.assertContain(reopened, rawPbApplication, 'The persisted INCLUDE must reopen in its original div');
+    I.seeElementInDOM('#raw-mixed-autotest.pb-section > strong + .pb-editable:not(.pb-temp-wrapper) > p');
+    I.see('Fixed autotest content', '#raw-mixed-autotest > strong');
+    I.see('Editable autotest content', '#raw-mixed-autotest .pb-editable');
+    I.switchTo();
+    DTE.cancel();
+});
+
+Scenario('pb-section div library blocks use standard style move duplicate and delete actions', async ({I, DT, DTE, Document}) => {
+    await openRawPbSections(I, DT, DTE, Document);
+    I.click('.pb-empty-placeholder-wrapper .pb-empty-placeholder__button');
+    I.waitForVisible('.pb-library', 10);
+    await I.executeScript((root, include) => {
+        const item = {id: 'pb-autotest-library', textKey: 'Raw section autotest', content: '<div class="pb-section raw-library-autotest" data-plugin-type="roaming">' + include + '</div>'};
+        window.pageBuilder.template.basic.find(category => category.textKey === 'section').groups.push(item);
+        $('.library-tab-item--basic .library-template-block--section .library-results').append($('<button>', {class: 'library-tab-item-button', 'data-library-item-id': item.id}).text(item.textKey));
+    }, rawPbInclude);
+    I.click('.pb-library .library-tab-link[data-library-type=basic]');
+    I.click('.pb-library [data-library-item-id="pb-autotest-library"]');
+    I.waitForInvisible('.pb-library', 10);
+    I.waitForElement('#raw-mixed-autotest + .raw-library-autotest iframe.wj_component', 20);
+    await waitForRawPbSections(I);
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.click('.pb-workbench [data-pb-action=style]');
+    I.waitForVisible('.pb-modal', 10);
+    closeStyleModal(I);
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.click('.pb-workbench [data-pb-action=previous]');
+    I.waitForElement('#raw-app-autotest + .raw-library-autotest + #raw-mixed-autotest', 10);
+    I.click('.pb-workbench [data-pb-action=duplicate-adjacent]');
+    I.waitForElement('.raw-library-autotest + .raw-library-autotest [data-ckeditor-instance]', 20);
+    await waitForRawPbSections(I);
+    const editors = await I.executeScript(() => Array.from(document.querySelectorAll('.raw-library-autotest [data-ckeditor-instance]')).map(element => element.dataset.ckeditorInstance));
+    I.assertEqual(new Set(editors).size, 2, 'Duplicated sections must own separate application editors');
+    const beforeCancel = await rawPbSource(I);
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.click('.pb-workbench [data-pb-action=move]');
+    I.pressKey('Escape');
+    I.assertEqual(await rawPbSource(I), beforeCancel, 'Cancelling a standard section move must not change saved content');
+    I.click('.pb-workbench [data-pb-action=more]');
+    I.amAcceptingPopups();
+    I.click('.pb-workbench [data-pb-action=remove]');
+    I.waitForInvisible('.raw-library-autotest + .raw-library-autotest', 10);
+    const clean = await I.executeScript(() => {
+        const saved = document.createElement('div');
+        saved.innerHTML = window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data;
+        const block = saved.querySelector('.raw-library-autotest');
+        return {tag: block.tagName, section: block.classList.contains('pb-section'), plugin: block.dataset.pluginType, children: block.children.length,
+            helpers: saved.querySelectorAll('.pb-temp-wrapper, .pb-grid-element, iframe, [data-ckeditor-instance], aside[class^="pb-"]').length};
+    });
+    I.assertDeepEqual(clean, {tag: 'DIV', section: true, plugin: 'roaming', children: 0, helpers: 0}, 'The library section must save its authored div and attributes with only the INCLUDE as content');
+    I.switchTo();
+    DTE.cancel();
+});
+
+Scenario('pb-section div cleanup of the saved autotest page', async ({I, DT}) => {
+    if (!rawPbSavedTitle) return;
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=34495');
+    DT.waitForLoader();
+    DT.filterEquals('title', rawPbSavedTitle);
+    const count = await I.grabNumberOfVisibleElements(locate('#datatableInit tbody tr').withText(rawPbSavedTitle));
+    if (count === 0) return;
+    I.assertEqual(count, 1, 'Cleanup must match only the page created by this test');
+    DT.deleteAll();
+    DT.waitForLoader();
+});

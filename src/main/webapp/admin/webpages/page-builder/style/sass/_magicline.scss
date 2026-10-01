@@ -1,3 +1,7 @@
+.#{$prefix}-temp-wrapper ##{$prefix}-wjmagicline {
+    display: none !important;
+}
+
 ##{$prefix}-wjmagicline {
     border-top: 0px solid $color-magicline;
     outline-style: solid;
