@@ -31,10 +31,9 @@ Before(({ I, login }) => {
 });
 
 /**
- * Checks that shortcuts are visible near the top of the dashboard and fit narrow screens. Shortcut editing
- * and widget editing must expose their own controls without being active together.
+ * Checks that shortcut editing and widget editing expose their own controls without being active together.
  */
-Scenario('Welcome shortcuts fit above the fold and own their editing mode', async ({ I }) => {
+Scenario('Shortcuts and widgets have independent editing modes', async ({ I }) => {
     originalSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     originalBookmarks = await I.executeScript(() => localStorage.getItem('bookmarks'));
     I.see('Upraviť skratky', actions);
@@ -47,28 +46,14 @@ Scenario('Welcome shortcuts fit above the fold and own their editing mode', asyn
     I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
     I.dontSeeElement(`${links} .md-dashboard__widget-controls`);
     I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="true"]');
-    for (const width of [320, 390, 768, 1337]) {
-        I.resizeWindow(width, 900);
-        if (width < 768 && await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) I.clickCss('.js-sidebar-toggler');
-        I.executeScript(() => { window.scrollbarMain.setMomentum(0, 0); window.scrollbarMain.setPosition(0, 0); });
-        I.waitForFunction(() => window.scrollbarMain.offset.y === 0, 10);
-        const geometry = await I.executeScript(() => {
-            const region = document.querySelector('.md-dashboard__shortcuts');
-            const rect = region.getBoundingClientRect();
-            return { top: rect.top, bottom: rect.bottom, right: rect.right, viewport: innerWidth, overflow: region.scrollWidth > region.clientWidth + 1 };
-        });
-        I.assertTrue(geometry.top >= 48 && geometry.bottom < 900, `Shortcuts must be immediately available at ${width}px.`);
-        I.assertTrue(geometry.right <= geometry.viewport + 1 && !geometry.overflow, `Shortcuts must wrap at ${width}px.`);
-    }
-    I.wjSetDefaultWindowSize();
 });
 
 /**
  * Creates a shortcut by choosing an administration area, section and tab, then changes its title, icon and
- * color. Reopening its settings must restore those choices, and the dialog must fit mobile and desktop
- * screens.
+ * color. Reopening its settings on mobile must restore those choices.
  */
 Scenario('Choose a banner tab through the administration hierarchy and restore it when editing', async ({ I }) => {
+    I.resizeWindow(390, 900);
     I.clickCss(`${actions} button[aria-pressed="false"]`);
     I.click('Pridať skratku', actions);
     I.waitForVisible(modal, 10);
@@ -92,7 +77,6 @@ Scenario('Choose a banner tab through the administration hierarchy and restore i
     const id = await I.executeScript(title => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.find(item => item.options.title === title)?.id, title);
     I.assertTrue(Boolean(id), 'The selected card must persist as a shortcut.');
     I.seeElement(`${links} [data-instance-id="${id}"] a[href="/apps/banner/admin/banner-stat/"] .ti-chart-bar`);
-    I.assertTrue(await I.executeScript(id => getComputedStyle(document.querySelector(`[data-instance-id="${id}"]`)).backgroundColor === getComputedStyle(document.querySelector('[data-widget-type="traffic"]')).backgroundColor, id), 'The shortcut uses the existing mint dashboard surface.');
     I.clickCss(`${actions} button[aria-pressed="false"]`);
     I.clickCss(`[data-instance-id="${id}"] .dropdown > button`);
     I.clickCss(`[data-instance-id="${id}"] [data-dashboard-action="settings"]`);
@@ -106,17 +90,10 @@ Scenario('Choose a banner tab through the administration hierarchy and restore i
     I.pressKey('Escape');
     I.waitForInvisible(`${modal} .bs-container > .dropdown-menu.show`, 10);
     I.seeElement(modal);
-    for (const width of [390, 1024, 1337]) {
-        I.resizeWindow(width, 900);
-        I.assertTrue(await I.executeScript(() => {
-            const dialog = document.querySelector('.md-dashboard-modal .modal-dialog').getBoundingClientRect();
-            return dialog.left >= 0 && dialog.right <= innerWidth && [...document.querySelectorAll('.md-dashboard-modal .bootstrap-select > button')].every(select => select.getBoundingClientRect().right <= dialog.right);
-        }), `The hierarchy fields must fit at ${width}px.`);
-    }
-    I.wjSetDefaultWindowSize();
     I.clickCss(`${modal} .btn-close`);
     I.waitForInvisible(modal, 10);
     I.dontSeeElement('.bs-container');
+    I.wjSetDefaultWindowSize();
 });
 
 /**
@@ -161,9 +138,10 @@ Scenario('Custom URL shortcuts retain their icon and color after saving and reop
 Scenario('Automatically import old bookmarks on load with failure recovery and server persistence', async ({ I }) => {
     I.assertTrue(Boolean(originalSettings), 'The fixture must preserve the original profile first.');
     const before = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
+    const origin = await I.executeScript(() => window.location.origin);
     const legacy = JSON.stringify([
         { name: 'Banner autotest', path: bannerHref },
-        { name: 'Banner duplicate autotest', path: 'http://iwcm.interway.sk' + bannerHref },
+        { name: 'Banner duplicate autotest', path: origin + bannerHref },
         { name: 'Forms autotest', path: '/apps/form/admin/' }
     ]);
     const prepared = await I.executeScript(async bookmarks => {

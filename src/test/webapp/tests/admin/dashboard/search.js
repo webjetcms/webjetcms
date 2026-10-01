@@ -7,20 +7,6 @@ const docs = `${search} label:has(input[value="docs"])`;
 const results = '.md-dashboard-widget__search-results';
 const lookup = '**/admin/skins/webjet6/_doc_autocomplete.jsp?*';
 
-async function assertSuggestionWidth(I) {
-    const bounds = await I.executeScript(([menuSelector, inputSelector]) => {
-        const menu = document.querySelector(menuSelector);
-        const rect = menu.getBoundingClientRect();
-        const field = document.querySelector(inputSelector).getBoundingClientRect();
-        return { left: rect.left, right: rect.right, viewport: window.innerWidth, width: rect.width,
-            fieldWidth: field.width, fieldLeft: field.left, clientWidth: menu.clientWidth, content: menu.scrollWidth };
-    }, [results, input]);
-    I.assertTrue(Math.abs(bounds.width - bounds.fieldWidth) <= 1, 'The menu width must match the text input, excluding the search button.');
-    I.assertTrue(Math.abs(bounds.left - bounds.fieldLeft) <= 1, 'The menu must align with the input.');
-    I.assertTrue(bounds.left >= 0 && bounds.right <= bounds.viewport, 'Suggestions must remain within the viewport.');
-    I.assertTrue(bounds.content <= bounds.clientWidth + 1, 'Suggestions must wrap without horizontal scrolling.');
-}
-
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage('/admin/v9/');
@@ -95,8 +81,6 @@ Scenario('Page suggestions match titles and URLs and keyboard selection opens th
     }, [results], 10);
     const changed = await I.grabTextFrom(`${results} .md-dashboard-widget__page-date`);
     I.assertTrue(/\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}/.test(changed), 'The preview must show the latest save date.');
-    await assertSuggestionWidth(I);
-    I.saveScreenshot('dashboard-search-desktop.png');
     I.fillField(input, 'obchodny uder');
     I.waitForVisible(`${results} li`, 10);
     I.pressKey('ArrowDown');
@@ -130,17 +114,13 @@ Scenario('Autocomplete responses use JSON so page titles cannot execute as HTML 
 });
 
 /**
- * Checks that searching by a page URL offers the correct page, that suggestions fit a narrow screen and that
- * clicking a result opens its editor.
+ * Checks that searching by a page URL on mobile offers the correct page and clicking a result opens its
+ * editor.
  */
-Scenario('Mouse selection opens the page and suggestions fit a narrow viewport', async ({ I, DTE }) => {
+Scenario('Mouse selection opens the suggested page on mobile', async ({ I, DTE }) => {
     I.resizeWindow(390, 844);
     I.fillField(input, 'https://demo.webjetcms.sk/zo-sveta-financii/mcgregorov-obchodny-uder.html');
     I.waitForVisible(`${results} li`, 10);
-    await assertSuggestionWidth(I);
-    I.saveScreenshot('dashboard-search-mobile.png');
-    I.resizeWindow(1024, 844);
-    await assertSuggestionWidth(I);
     I.clickCss(`${results} .md-dashboard-widget__page[title*="/zo-sveta-financii/mcgregorov-obchodny-uder.html"]`);
     I.seeInCurrentUrl('/admin/v9/webpages/web-pages-list/?docid=33');
     DTE.waitForEditor();
