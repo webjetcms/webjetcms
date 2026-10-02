@@ -2,6 +2,7 @@ package sk.iway.iwcm.doc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -10,6 +11,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,12 +41,20 @@ import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 
+/**
+ * Regression tests for group and document cache initialization, scheduled publication
+ * checks and cluster refresh notifications. Mocked database access and DocDB construction
+ * allow slow group loading to be simulated without a real database or waiting.
+ */
 class GroupsDBInitializationTest
 {
 
 	private ServletContext originalContext;
 	private MockServletContext context;
 
+	/**
+	 * Isolates cached instances in a fresh servlet context for each test invocation.
+	 */
 	@BeforeEach
 	void setUp()
 	{
@@ -53,12 +63,23 @@ class GroupsDBInitializationTest
 		Constants.setServletContext(context);
 	}
 
+	/**
+	 * Restores the original servlet context so other tests keep their cached instances.
+	 */
 	@AfterEach
 	void tearDown()
 	{
 		Constants.setServletContext(originalContext);
 	}
 
+	/**
+	 * Simulates the publication check interval expiring while a group's default document
+	 * is being read. Verifies that both initialization orders load groups only once,
+	 * preserve navbar and domain data, perform one publication check and send no cluster event.
+	 *
+	 * @param documentsFirst whether DocDB is requested before GroupsDB
+	 * @param documentCacheExists whether a DocDB instance is already stored in the context
+	 */
 	@ParameterizedTest
 	@CsvSource({"false, false", "false, true", "true, false", "true, true"})
 	void initializesGroupsAndNavbarAfterPublishIntervalExpires(boolean documentsFirst, boolean documentCacheExists) throws Exception
@@ -124,9 +145,53 @@ class GroupsDBInitializationTest
 			verify(publication).refreshPagesToPublish();
 			verify(statement).executeQuery();
 			verify(connection).close();
+			cluster.verifyNoInteractions();
 		}
 	}
 
+	/**
+	 * Verifies that initial loading and cached lookups send no cluster event, while an
+	 * explicit refresh reloads groups, replaces the cached instance and sends exactly one event.
+	 */
+	@Test
+	void notifiesClusterOnlyOnExplicitGroupsRefresh() throws Exception
+	{
+		Connection connection = mock(Connection.class);
+		PreparedStatement statement = mock(PreparedStatement.class);
+		ResultSet resultSet = mock(ResultSet.class);
+		when(connection.prepareStatement(anyString())).thenReturn(statement);
+		when(statement.executeQuery()).thenReturn(resultSet);
+
+		try (MockedStatic<DBPool> dbPool = mockStatic(DBPool.class);
+			MockedStatic<ClusterDB> cluster = mockStatic(ClusterDB.class);
+			MockedStatic<Cache> cache = mockStatic(Cache.class))
+		{
+			dbPool.when(() -> DBPool.getConnection("iwcm")).thenReturn(connection);
+			cache.when(Cache::getInstance).thenReturn(mock(Cache.class));
+
+			GroupsDB initialGroups = GroupsDB.getInstance();
+			assertTrue(initialGroups.getGroupsAll().isEmpty());
+			cluster.verifyNoInteractions();
+
+			assertSame(initialGroups, GroupsDB.getInstance());
+			cluster.verifyNoInteractions();
+
+			GroupsDB refreshedGroups = GroupsDB.getInstance(true);
+			assertNotSame(initialGroups, refreshedGroups);
+			assertTrue(refreshedGroups.getGroupsAll().isEmpty());
+			assertSame(refreshedGroups, GroupsDB.getInstance());
+			cluster.verify(() -> ClusterDB.addRefresh(GroupsDB.class));
+			cluster.verifyNoMoreInteractions();
+			verify(statement, times(2)).executeQuery();
+		}
+	}
+
+	/**
+	 * Verifies that publication is checked after the new DocDB instance is stored in the
+	 * servlet context and after releasing the DocDB initialization lock for both argument values.
+	 *
+	 * @param forceRefresh whether DocDB creation is explicitly forced
+	 */
 	@ParameterizedTest
 	@ValueSource(booleans = {false, true})
 	void checksPublicationOutsideDocumentInitializationLock(boolean forceRefresh)
@@ -147,6 +212,10 @@ class GroupsDBInitializationTest
 		}
 	}
 
+	/**
+	 * Verifies that assigning a default document preserves an existing custom navbar anchor,
+	 * including its URL and attributes.
+	 */
 	@Test
 	void preservesCustomNavbarLink()
 	{
@@ -157,6 +226,10 @@ class GroupsDBInitializationTest
 		assertEquals(navbar, group.getNavbar());
 	}
 
+	/**
+	 * Configures a DocDB mock with an initialized URL cache marker, the supplied publication
+	 * service and a fixed link for the default document used by the group fixture.
+	 */
 	private void prepareDocDB(DocDB docDB, DocPublishService publication)
 	{
 		ReflectionTestUtils.setField(docDB, "urlsByUrlDomains", new Hashtable<>());
