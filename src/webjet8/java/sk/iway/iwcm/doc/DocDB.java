@@ -182,8 +182,11 @@ public class DocDB extends DB
 	}
 
 	/**
-	 * Returns initialized document caches without checking scheduled publication.
-	 * Used while loading groups, since publication requires a fully initialized GroupsDB.
+	 * Returns document caches for navbar link generation without checking scheduled publication.
+	 * Called by GroupDetails while GroupsDB is being constructed; a publication check could
+	 * re-enter GroupsDB initialization before its instance is stored in the servlet context.
+	 *
+	 * @return the cached or newly initialized DocDB instance
 	 */
 	static DocDB getInstanceWithoutPublishCheck()
 	{
@@ -208,6 +211,16 @@ public class DocDB extends DB
 		return myDocDB;
 	}
 
+	/**
+	 * Retrieves or creates the DocDB instance without running scheduled publication checks.
+	 * Separating cache initialization from publication allows public getInstance methods to
+	 * check publication after this method returns, outside the DocDB initialization lock.
+	 *
+	 * @param force_refresh true to replace the cached instance and request a cluster refresh;
+	 *                      false to reuse it or initialize it without notifying the cluster
+	 * @param serverName database connection name used when creating the instance
+	 * @return the cached or newly initialized DocDB instance stored in the servlet context
+	 */
 	private static DocDB getInstanceWithoutPublishCheck(boolean force_refresh, String serverName)
 	{
 		javax.servlet.ServletContext servletContext = Constants.getServletContext();

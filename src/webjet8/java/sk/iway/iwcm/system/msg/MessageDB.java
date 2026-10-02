@@ -45,7 +45,7 @@ public class MessageDB
 {
 	private static final String CONTEXT_NAME = "sk.iway.iwcm.system.msg.MessageDB";
 
-	public synchronized static MessageDB getInstance(boolean forceRefresh)
+	public static synchronized MessageDB getInstance(boolean forceRefresh)
 	{
 		//try to get it from server space
 		if (forceRefresh == false)
