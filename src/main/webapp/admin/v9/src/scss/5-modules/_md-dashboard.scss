@@ -343,9 +343,10 @@ webjet-overview-dashboard a:focus-visible {
     }
 
     &__title {
-        font-size: 16px;
+        font-size: 20px;
         font-weight: 400;
-        color: var(--wj-dashboard-muted);
+        line-height: 28px;
+        color: var(--wj-secondary);
         margin: 0;
     }
     &__toolbar-actions > .btn { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; padding: 7px 12px; }
