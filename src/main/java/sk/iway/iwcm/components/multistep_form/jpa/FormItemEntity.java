@@ -35,7 +35,7 @@ import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 @Table(name = "form_items")
 @Getter
 @Setter
-@EntityListeners({sk.iway.iwcm.system.adminlog.AuditEntityListener.class, FormValidationFieldsListener.class})
+@EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_MULTISTEP_FORM)
 @DataTableTabs(tabs = {
     @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),

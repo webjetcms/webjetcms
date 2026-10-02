@@ -1791,7 +1791,7 @@ public class MultistepFormsService {
 
     /**
      * Evicts a form's validation definitions locally and requests domain-wide eviction on the cluster.
-     * Called by the entity listener after committing changes to steps or items.
+     * Called explicitly after saving, deleting, duplicating, or reordering the form structure.
      *
      * @param formName logical form name
      * @param domainId domain owning the form

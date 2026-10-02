@@ -5,7 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -17,6 +19,7 @@ import java.util.Optional;
 
 import jakarta.validation.ConstraintViolationException;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -24,6 +27,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
@@ -36,6 +40,7 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormItemsConditionsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.datatable.RowReorderDto;
 
 @Execution(ExecutionMode.SAME_THREAD)
@@ -54,9 +59,16 @@ class FormRowReorderScopeTest {
 
     private TestFormStepsRestController stepsController;
     private TestFormItemsRestController itemsController;
+    private Cache cache;
+    private MockedStatic<Cache> caches;
+    private MockedStatic<ClusterDB> clusters;
 
     @BeforeEach
     void setUp() {
+        cache = mock(Cache.class);
+        caches = mockStatic(Cache.class);
+        caches.when(Cache::getInstance).thenReturn(cache);
+        clusters = mockStatic(ClusterDB.class);
         formStepsRepository = mock(FormStepsRepository.class);
         formItemsRepository = mock(FormItemsRepository.class);
         multistepFormsService = mock(MultistepFormsService.class);
@@ -91,6 +103,12 @@ class FormRowReorderScopeTest {
         }
     }
 
+    @AfterEach
+    void tearDown() {
+        clusters.close();
+        caches.close();
+    }
+
     @Test
     void stepsRejectMixedFormWithoutSavingOrRecalculating() {
         FormStepEntity first = step(1L, FORM_A, 10);
@@ -106,6 +124,7 @@ class FormRowReorderScopeTest {
         assertEquals(20, second.getSortPriority());
         verify(formStepsRepository, never()).saveAll(any());
         verify(multistepFormsService, never()).updateStepsPositions(anyString());
+        verify(cache, never()).removeObject(anyString(), anyBoolean());
     }
 
     @Test
@@ -128,6 +147,7 @@ class FormRowReorderScopeTest {
         verify(formStepsRepository).saveAll(entities);
         verify(multistepFormsService).updateStepsPositions(FORM_A);
         verify(multistepFormsService, never()).updateStepsPositions(FORM_B);
+        verify(cache).removeObject(anyString(), eq(false));
     }
 
     @Test
@@ -164,6 +184,7 @@ class FormRowReorderScopeTest {
         assertEquals(20, second.getSortPriority());
         verify(formItemsRepository, never()).saveAll(any());
         verify(multistepFormsService, never()).updateFormPattern(anyString());
+        verify(cache, never()).removeObject(anyString(), anyBoolean());
     }
 
     @Test
@@ -205,6 +226,7 @@ class FormRowReorderScopeTest {
         assertEquals(10, second.getSortPriority());
         verify(formItemsRepository).saveAll(entities);
         verify(multistepFormsService, never()).updateFormPattern(anyString());
+        verify(cache).removeObject(anyString(), eq(false));
     }
 
     @Test
