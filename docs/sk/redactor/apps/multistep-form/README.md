@@ -111,6 +111,8 @@ Zapnete ju v administrácii v [Konfigurácia](../../../admin/setup/configuration
 
 Kontrola sa riadi nastaveniami **Povinné pole**, **Orezať medzery** a **Povolená hodnota**. Podmienky povinnosti sa zohľadnia až pri odoslaní kroku, keď sa skontrolujú všetky údaje. Samotné opustenie poľa údaje neukladá.
 
+V poli **Povolená hodnota** vyberáte [regulárne výrazy](../form/regexps.md), ktorým musí zadaná hodnota vyhovieť. Kontrolujú sa všetky vybrané pravidlá. Pri prázdnom výbere sa formát hodnoty neoveruje.
+
 ### Automatické dopĺňanie
 
 Typ poľa **Automatické dopĺňanie - autocomplete** ponúka návštevníkovi možnosti podľa zadávaného textu. Zoznam vytvoríte v poli **Povolené možnosti** alebo ho prepojíte s aplikáciou [Číselníky](../../apps/enumeration/README.md). Každá možnosť môže mať odlišný zobrazovaný text a odosielanú hodnotu.

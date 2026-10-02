@@ -4,7 +4,9 @@
 
 Kontrolu textových polí pri strate fokusu zapnete konfiguračnou premennou `multistepform_validateOnBlur` nastavenou na hodnotu `true`. Predvolená hodnota je `false`. Nastavenie platí pre všetky viackrokové formuláre.
 
-Kontroluje sa statická povinnosť, orezanie medzier a povolené hodnoty, chyba sa zobrazí pri poli. Kontrola neukladá údaje ani nevolá spracovateľa. Úplná validácia vrátane podmienok prebehne pri odoslaní kroku.
+Kontrola používa nastavenie **Povinné pole** a pred validáciou oreže úvodné a koncové medzery podľa nastavenia **Orezať medzery**. **Povolená hodnota** označuje [regulárne výrazy](../../../redactor/apps/form/regexps.md) vybrané v editore konkrétnej položky. Zadaná hodnota musí vyhovieť všetkým vybraným pravidlám. Ak nie je vybrané žiadne pravidlo, formát hodnoty sa touto kontrolou neoveruje.
+
+Chyba sa zobrazí pri poli. Kontrola neukladá údaje ani nevolá spracovateľa. Úplná validácia vrátane podmienok prebehne pri odoslaní kroku.
 
 ## Rozpracované údaje pri návrate
 
