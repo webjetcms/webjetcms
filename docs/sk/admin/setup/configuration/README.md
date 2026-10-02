@@ -13,6 +13,8 @@ Strom je možné prehľadávať. Názvy modulov sú technické názvy a neprekla
 
 V sekcii inštalácia je zoznam [najpoužívanejších konfiguračných premenných](../../../install/config/README.md).
 
+Pozadie a označenie prostredia v administrácii opisuje [Konfigurácia úvodnej obrazovky](dashboard.md).
+
 ## Pridávanie konfiguračných premenných
 
 Pri pridávaní je najdôležitejší parameter **Názov konfigurácie**, ktorý sa správa ako textové pole s funkciou automatického doplnenia. Pri zadávaní názvu konfigurácie bude ponúkať názvy už existujúcich premenných, vrátane tých, ktoré ešte nie sú upravené (nie sú v tabuľke).

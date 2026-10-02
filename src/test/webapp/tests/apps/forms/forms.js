@@ -493,7 +493,7 @@ Scenario("form attachments", async ({ I }) => {
         window.location.href=url;
     }, url11size);
     //should be redirected to homepage
-    I.see("Vitajte, Tester2 Playwright2");
+    I.see("Vitajte späť, Tester2 Playwright2", "h1.md-dashboard__greeting");
 });
 
 Scenario("odhlasenie2", async ({ I }) => {

@@ -13,6 +13,12 @@
 - Microsoft SQL Server - ukončena byla podpora verzí starších než 2012 a odstraněna konfigurační proměnná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 nebo novější, starý způsob stránkování pomocí `TOP` již není podporován (#293).
 - Formulář snadno a vícekrokové formuláře - upravené zobrazení `tooltip` z původního `i` elementu na standardní `button`. Je tak splněn požadavek na přístupnost - tooltip je dostupný myší i klávesnicí (#306).
 
+### Úvodní obrazovka
+
+- [Úvodní obrazovku](redactor/admin/welcome.md) jsme předělali na widgetový systém, abyste měli údaje potřebné při práci na jednom místě bez procházení jednotlivých částí administrace. Sami si vyberete widgety a nastavíte zobrazované údaje, velikost a pořadí podle svých potřeb (#58806).
+
+![](redactor/admin/dashboard.png)
+
 ### Webové stránky
 
 - Koš webových stránek - přidáno [automatické mazání starých stránek a složek](redactor/apps/gdpr/data-deleting.md) z koše podle nastaveného retenčního období. Přidána možnost mazání stránek a složek v koši i v sekci [Mazání dat](sysadmin/data-deleting/README.md) podle zvoleného rozsahu dat. Sjednocená logika výpočtu počtu a mazání, opraveno trvalé odstranění složky koše a prázdných složek (#271).
@@ -238,6 +244,8 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Vytvořená sekce [Řešení problémů](sysadmin/troubleshooting/README.md) v manuálu pro provoz.
 
 ### Pro programátora
+
+- Dashboard - přidán registr widgetů, responzivní grid a REST rozhraní pro transakční ukládání nastavení do `user_settings_admin`. Stávající tabulka MySQL/MariaDB se při aktualizaci konvertuje na InnoDB. Používání popisuje [dokumentace úvodní obrazovky](redactor/admin/welcome.md), pozadí a označení prostředí její [konfigurace](admin/setup/configuration/dashboard.md). Pravidla vývoje, kontrakt a důvody rozhodnutí udržuje projektový skill `wj-dashboard-widget` v `.agents/skills/wj-dashboard-widget/` (#58806).
 
 - Administrace - odstraněná závislost na [Vue.js](https://vuejs.org). Stromová pole, úvodní stránka, výběr oblasti obrázku a monitorování serveru používají nativní [web komponenty](developer/frameworks/web-components.md). Globální objekt `window.VueTools` ani balíky pro Vue již nejsou součástí administrace. Vlastní rozšíření je musí nahradit web komponenty nebo si Vue sestavit samostatně (#58722).
 - AI asistenti - klientská logika nezávislá na poskytovateli pro OpenAI, Gemini a OpenRouter, zpracování streamů, typy požadavků/odpovědí a ochrana promptů byly vyčleněny do samostatného artefaktu `com.webjetcms:webjet-ai` a externího [repozitáře webjet-ai](https://github.com/webjetcms/webjetcmi/webjetcmi). WebJET CMS předává konfiguraci přes typovaný adaptér a nadále zajišťuje auditování, perzistenci a integraci uživatelského rozhraní. Jedná se o nekompatibilní změnu: původní CMS SPI pro vlastní poskytovatele a jeho transportní a streamovací podpůrné třídy byly odstraněny. Vlastní poskytovatelé je nutné migrovat na rozhraní `AiProvider` knihovny a CMS adaptér `LibrarySupportLogic` (#58670).

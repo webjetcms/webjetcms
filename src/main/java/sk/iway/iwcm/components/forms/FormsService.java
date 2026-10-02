@@ -464,7 +464,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                     if (Tools.isNotEmpty(value) && "false".equals(value)==false) {
                         predicates.add(builder.isNull(root.get(value)));
                     }
-                } else if ("id".equals(key)) {
+                } else if ("id".equals(key) || "searchId".equals(key)) {
                         String value = DatatableRestControllerV2.getCleanValue(paramsEntry.getValue());
                         int[] ids = Tools.getTokensInt(value, ",");
                         List<Integer> idsList = Arrays.stream(ids).boxed().collect(Collectors.toList());

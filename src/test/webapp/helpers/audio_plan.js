@@ -4,6 +4,7 @@ const { DEFAULT_MODEL_ID, getAudioSettings, getRequiredText } = require("./eleve
 // https://elevenlabs.io/docs/overview/models#character-limits
 const MODEL_CHARACTER_LIMITS = {
   eleven_v3: 5000,
+  eleven_v4: 10000,
   eleven_multilingual_v2: 10000,
   eleven_multilingual_v1: 10000,
   eleven_flash_v2_5: 40000,
@@ -19,7 +20,7 @@ function normalizeNarration(text) {
 /**
  * Packs complete localized shots into sequential TTS requests without executing callbacks.
  * @param {string|object} input Legacy narration or a video plan
- * @param {{modelId?: string, voiceId?: string, language?: string}} [options] Model, voice and language overrides
+ * @param {{modelId?: string, voiceId?: string, language?: string, languageCode?: string, voiceSettings?: {stability?: number, similarityBoost?: number}}} [options] Model, narration language and optional API language/voice overrides (voice values from 0 to 1)
  * @returns {object} Resolved settings, language, character limit and chunks with text and shot IDs
  * @throws {Error} When narration is empty or an individual shot exceeds the model limit
  */

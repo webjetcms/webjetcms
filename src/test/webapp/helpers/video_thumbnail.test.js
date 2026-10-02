@@ -76,6 +76,49 @@ test("renders all styles as uploadable JPEGs with literal, fitted Unicode text a
   } finally { await browser.close(); }
 });
 
+test("adapts scene framing to widescreen and tall captures without stretching them", async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const source = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+    await source.setContent('<body style="background:#0063fb">Complete scene</body>');
+    const renderingBrowser = { newContext: async options => {
+      const context = await browser.newContext(options);
+      const close = context.close.bind(context);
+      context.close = async () => {
+        const state = await context.pages()[0].evaluate(() => {
+          const scene = document.querySelector(".scene").getBoundingClientRect();
+          const heading = document.querySelector("h1").getBoundingClientRect();
+          const img = document.querySelector(".scene img");
+          return { scene: scene.toJSON(), headlineRight: heading.right,
+            ratio: img.clientWidth / img.clientHeight, sourceRatio: img.naturalWidth / img.naturalHeight };
+        });
+        assert.ok(state.scene.left > state.headlineRight, "The screenshot must not overlap the headline");
+        assert.ok(state.scene.top >= 0 && state.scene.bottom <= 720,
+          "The screenshot must remain vertically inside the thumbnail");
+        if (state.sourceRatio < 1.6) {
+          const minimumHeight = state.sourceRatio < 1 ? 650 : 500;
+          assert.ok(state.scene.height > minimumHeight, "A tall capture must fill most of the thumbnail height");
+          assert.ok(state.scene.right > 1280 && state.scene.right <= 1344,
+            "A tall capture may bleed only slightly over the right edge");
+        } else {
+          assert.ok(state.scene.right <= 1280, "The complete widescreen capture must remain visible");
+        }
+        assert.ok(Math.abs(state.ratio - state.sourceRatio) < 0.005, "The screenshot must retain its aspect ratio");
+        await close();
+      };
+      return context;
+    } };
+    for (const viewport of [{ width: 1920, height: 1080 }, { width: 1920, height: 1368 }, { width: 1360, height: 1450 }]) {
+      await source.setViewportSize(viewport);
+      const screenshot = await source.screenshot();
+      for (const style of TITLE_STYLES) {
+        await renderVideoTitle(renderingBrowser, screenshot,
+          "Úvodná stránka WebJET CMS\nVšetko dôležité na jednom mieste", style, 50, { fitScene: true });
+      }
+    }
+  } finally { await browser.close(); }
+});
+
 test("keeps the thumbnail at its original scale under native Chromium recording zoom", async () => {
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), "wj-title-zoom-"));
   let context;

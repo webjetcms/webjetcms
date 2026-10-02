@@ -1,0 +1,4 @@
+interface:
+  display_name: "WebJET Dashboard Widget"
+  short_description: "Create and maintain WebJET dashboard widgets"
+  default_prompt: "Use $wj-dashboard-widget to create or update a WebJET CMS administration dashboard widget."

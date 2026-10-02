@@ -1,0 +1,296 @@
+const { waitForWidgets } = require('../../../helpers/dashboard-browser');
+
+Feature('admin.dashboard.catalogue').tag('@singlethread');
+
+let originalSettings;
+const catalogue = [
+    ['shortcut', '1x1'], ['recent-pages', '3x3'], ['approvals', '3x3'], ['publishing', '2x3'],
+    ['forms', '3x3'], ['traffic', '3x3'], ['top-pages', '3x3'], ['search-terms', '2x3'],
+    ['referrers', '3x3'], ['newsletter', '3x3'], ['errors', '3x3'], ['sessions', '2x3'],
+    ['news', '3x2'], ['search', 'fullauto'], ['changed-pages', '3x3'], ['audit', '3x3'],
+    ['logged-admins', '2x2'], ['server-memory', '3x2'], ['server-cpu', '3x2']
+];
+
+function waitForSave(I) {
+    I.waitForFunction(() => document.querySelector('webjet-overview-dashboard')?.dashboardController?.saving === false, 20);
+}
+
+function showWidget(I, type) {
+    I.executeScript(type => {
+        const scrollbar = window.scrollbarMain;
+        scrollbar.setMomentum(0, 0);
+        scrollbar.update();
+        const top = document.querySelector(`[data-widget-type="${type}"]`).getBoundingClientRect().top;
+        if (scrollbar.limit.y > 0) scrollbar.setPosition(scrollbar.offset.x, scrollbar.offset.y + top - 64);
+        else window.scrollTo(0, window.scrollY + top - 64);
+    }, type);
+    I.waitForFunction(([widgetType]) => {
+        const bounds = document.querySelector(`[data-widget-type="${widgetType}"]`)?.getBoundingClientRect();
+        return Boolean(bounds && bounds.top >= 0 && bounds.top + Math.min(bounds.height, window.innerHeight - 100) <= window.innerHeight);
+    }, [type], 10);
+}
+
+async function widgetAction(I, id, action) {
+    await I.clickIfVisible('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
+    I.waitForElement('.md-dashboard.is-editing', 10);
+    I.clickCss(`[data-instance-id="${id}"] .dropdown > button`);
+    I.waitForVisible(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`, 10);
+    I.forceClick(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`);
+}
+
+async function waitForChart(I, type) {
+    await waitForWidgets(I);
+    return I.waitForFunction(([type]) => {
+        const host = document.querySelector(`[data-widget-type="${type}"] .md-dashboard-widget__chart`);
+        return Boolean(host && host.querySelector('canvas') && window.am5?.registry.rootElements.some(root => root.dom === host));
+    }, [type], 20);
+}
+
+async function rememberChart(I, type) {
+    return I.executeScript(type => {
+        const host = document.querySelector(`[data-widget-type="${type}"] .md-dashboard-widget__chart`);
+        window.autotestDashboardChart = window.am5.registry.rootElements.find(root => root.dom === host);
+        return host.id;
+    }, type);
+}
+
+async function assertDisposedChart(I) {
+    I.assertTrue(await I.executeScript(() => window.autotestDashboardChart.isDisposed()
+        && !window.am5.registry.rootElements.includes(window.autotestDashboardChart)), 'Replaced charts must release their AmCharts root.');
+}
+
+/** Reads release text and destinations in the browser without depending on its HTML wrappers. */
+function readAnnouncement(fromLabels = false) {
+    const content = fromLabels
+        ? new DOMParser().parseFromString(document.querySelector('webjet-overview-dashboard').labels.changelog, 'text/html').body
+        : document.querySelector('.md-dashboard-widget__news-highlights');
+    return {
+        text: content.textContent.replace(/\s+/g, ' ').trim(),
+        links: [...content.querySelectorAll('a')].map(link => link.getAttribute('href'))
+    };
+}
+
+Before(({ I, login }) => {
+    login('admin');
+    I.amOnPage('/admin/v9/');
+    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+});
+
+/**
+ * Adds the available widget types to a saved copy of the current layout and checks that cards, session
+ * controls and the release announcement appear on desktop and mobile.
+ */
+Scenario('Render the complete widget catalogue on desktop and mobile', async ({ I }) => {
+    originalSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
+    const applied = await I.executeScript(async definitions => {
+        const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
+        const next = JSON.parse(JSON.stringify(controller.settings));
+        const missing = definitions.filter(([type]) => !next.items.some(item => item.type === type));
+        if (next.items.length + missing.length > 48) return { saved: false, reason: 'Insufficient free widget slots for a nondestructive fixture.' };
+        const chosen = [];
+        for (const [type, size] of definitions) {
+            let item = next.items.find(item => item.type === type);
+            if (!item) {
+                item = { id: `catalogue-autotest-${type}`, type, size, options: {} };
+                next.items.push(item);
+            }
+            item.size = size;
+            item.options = type === 'shortcut' ? { href: '/admin/v9/webpages/web-pages-list/', title: 'catalogue-autotest shortcut' }
+                : type === 'traffic' ? { days: 7, metric: 'sessions' } : type === 'search' ? { scope: 'admin' }
+                    : ['forms', 'top-pages', 'search-terms', 'referrers', 'errors'].includes(type) ? { days: 7 } : {};
+            next.domainOptions[item.id] = {};
+            chosen.push(item);
+        }
+        const selectedIds = chosen.map(item => item.id);
+        next.items = [...chosen, ...next.items.filter(item => !selectedIds.includes(item.id))];
+        next.acknowledgedNewsVersion = null;
+        window.autotestDashboardRenderErrors = [];
+        window.addEventListener('error', event => { if (event.message) window.autotestDashboardRenderErrors.push(event.message); });
+        window.addEventListener('unhandledrejection', event => window.autotestDashboardRenderErrors.push(String(event.reason)));
+        return { saved: await controller._commit(next) };
+    }, catalogue);
+    I.assertTrue(applied.saved, applied.reason || 'The complete widget fixture must be saved.');
+    await waitForWidgets(I);
+    const state = await I.executeScript(() => ({
+        types: [...document.querySelectorAll('.md-dashboard__widget[data-widget-type]')].map(card => card.dataset.widgetType),
+        javascriptErrors: window.autotestDashboardRenderErrors
+    }));
+    for (const [type] of catalogue) I.assertContain(state.types, type, `${type} must render from the final catalogue.`);
+    I.assertDeepEqual(state.javascriptErrors, [], 'Widget rendering must not throw JavaScript errors.');
+    I.seeNumberOfElements('#toast-container-overview', 1);
+    I.dontSeeElementInDOM('.md-dashboard__legacy');
+    I.dontSeeElementInDOM('#webjet-overview-dashboard .bookmark');
+    I.seeElement('[data-widget-type="sessions"] .md-dashboard-widget__session-current');
+    const otherSessions = await I.executeScript(() => {
+        const data = document.querySelector('webjet-overview-dashboard').data.currentSessions;
+        return data.userSessions.flatMap(cluster => cluster.userSessions).filter(session => session.sessionId !== data.currentSessionId).length;
+    });
+    I.seeNumberOfElements('[data-widget-type="sessions"] .md-dashboard-widget__session-logout', otherSessions);
+    I.seeElement('[data-widget-type="recent-pages"] .md-dashboard__widget-header .md-dashboard__header-link[href="/admin/v9/webpages/web-pages-list/"]');
+    I.assertEqual(await I.grabTextFrom('[data-widget-type="traffic"] .md-dashboard-widget__metric-label'),
+        await I.executeScript(() => WJ.translate('admin.dashboard.trafficSessions.js', 7)), 'Traffic descriptions must include the selected number of days.');
+    I.resizeWindow(1337, 1052);
+    I.saveScreenshot('dashboard-catalogue-desktop.png', true);
+    showWidget(I, 'traffic');
+    I.saveScreenshot('dashboard-catalogue-statistics.png', true);
+    showWidget(I, 'news');
+    I.saveScreenshot('dashboard-catalogue-bottom.png', true);
+    I.resizeWindow(390, 1052);
+    if (await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) I.clickCss('.js-sidebar-toggler');
+    I.waitForFunction(() => document.querySelector('.ly-sidebar').getBoundingClientRect().right <= 1, 10);
+    showWidget(I, 'recent-pages');
+    I.saveScreenshot('dashboard-catalogue-mobile.png', true);
+    I.wjSetDefaultWindowSize();
+});
+
+/**
+ * Checks that traffic and referrer charts provide values for screen readers and remain usable after refresh,
+ * resizing, removal and undo. Replaced charts must release their resources so they do not accumulate in the
+ * browser.
+ */
+Scenario('AmCharts renders accessible data and disposes roots on refresh, resize and removal', async ({ I, a11y }) => {
+    await waitForWidgets(I);
+    await waitForChart(I, 'traffic');
+    await waitForChart(I, 'referrers');
+    const ids = await I.executeScript(() => Object.fromEntries(['traffic', 'referrers'].map(type => [type,
+        document.querySelector(`[data-widget-type="${type}"]`).dataset.instanceId])));
+    for (const type of ['traffic', 'referrers']) {
+        I.seeElement(`[data-widget-type="${type}"] .md-dashboard-widget__chart[role="img"][aria-label]`);
+        if (type === 'traffic') {
+            I.dontSeeElement('[data-widget-type="traffic"] details.md-dashboard-widget__chart-data');
+            I.seeElementInDOM('[data-widget-type="traffic"] .visually-hidden .md-dashboard-widget__table');
+            I.seeElement('[data-widget-type="traffic"] .md-dashboard__title-link[href="/apps/stat/admin/"]');
+            continue;
+        }
+        I.dontSeeElement(`[data-widget-type="${type}"] details.md-dashboard-widget__chart-data`);
+        I.seeElementInDOM(`[data-widget-type="${type}"] .visually-hidden .md-dashboard-widget__table`);
+        I.seeElement(`[data-widget-type="${type}"] .md-dashboard__title-link`);
+    }
+    const firstTraffic = await rememberChart(I, 'traffic');
+    await widgetAction(I, ids.traffic, 'refresh');
+    await waitForWidgets(I);
+    await waitForChart(I, 'traffic');
+    await assertDisposedChart(I);
+    I.assertNotEqual(await I.grabAttributeFrom(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`, 'id'), firstTraffic);
+
+    await rememberChart(I, 'traffic');
+    await widgetAction(I, ids.traffic, 'settings');
+    I.waitForVisible('.md-dashboard-modal select', 10);
+    I.selectOption('.md-dashboard-modal select[id^="dashboard-size-"]', '1 × 1');
+    I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
+    I.waitForInvisible('.md-dashboard-modal', 10);
+    waitForSave(I);
+    await waitForWidgets(I);
+    await assertDisposedChart(I);
+    I.dontSeeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`);
+    await widgetAction(I, ids.traffic, 'settings');
+    I.waitForVisible('.md-dashboard-modal select', 10);
+    I.selectOption('.md-dashboard-modal select[id^="dashboard-size-"]', '3 × 3');
+    I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
+    I.waitForInvisible('.md-dashboard-modal', 10);
+    waitForSave(I);
+    await waitForChart(I, 'traffic');
+
+    await rememberChart(I, 'referrers');
+    await widgetAction(I, ids.referrers, 'remove');
+    waitForSave(I);
+    I.waitForInvisible(`[data-instance-id="${ids.referrers}"]`, 10);
+    await assertDisposedChart(I);
+    I.clickCss('.md-dashboard__undo button');
+    waitForSave(I);
+    await waitForChart(I, 'referrers');
+    const rootsMatchHosts = await I.executeScript(() => {
+        const hosts = [...document.querySelectorAll('.md-dashboard-widget__chart')];
+        const roots = window.am5.registry.rootElements.filter(root => root.dom.id.startsWith('dashboard-chart-'));
+        return hosts.length === roots.length && hosts.every(host => roots.filter(root => root.dom === host).length === 1);
+    });
+    I.assertTrue(rootsMatchHosts, 'Every displayed chart must own exactly one live root with no orphan dashboard roots.');
+    await a11y.check('.md-dashboard');
+    showWidget(I, 'traffic');
+    I.saveScreenshot('dashboard-amcharts.png', true);
+});
+
+/**
+ * Collapses the release announcement, reloads the page and checks that the choice is remembered. Expanding
+ * it again must restore the announcement text and links, while collapsing it preserves keyboard focus.
+ */
+Scenario('Collapse release news across reload and expand it from the compact summary', async ({ I }) => {
+    await waitForWidgets(I);
+    I.waitForVisible('[data-widget-type="news"] .md-dashboard__widget-content button', 10);
+    const announcement = await I.executeScript(readAnnouncement, true);
+    I.assertTrue(announcement.text.length > 0, 'The release announcement must contain text.');
+    I.assertNotContain(announcement.text, '\\n', 'Translation paragraph escapes must not appear as literal text.');
+    I.assertDeepEqual(await I.executeScript(readAnnouncement), announcement, 'The full announcement text and links must render.');
+    I.clickCss('[data-widget-type="news"] .md-dashboard__widget-content button');
+    waitForSave(I);
+    I.waitForVisible('[data-widget-type="news"] .md-dashboard-widget__news-toggle[aria-expanded="false"]', 10);
+    I.seeElement('[data-widget-type="news"] .md-dashboard-widget__news-summary');
+    I.dontSeeElement('[data-widget-type="news"] .md-dashboard-widget__news-highlights');
+    I.assertTrue(await I.executeScript(() => document.activeElement.matches('.md-dashboard-widget__news-toggle')),
+        'Collapsing release notes must keep focus on their toggle.');
+    const acknowledged = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.acknowledgedNewsVersion);
+    I.assertTrue(typeof acknowledged === 'string' && acknowledged.length > 0);
+    I.refreshPage();
+    await waitForWidgets(I);
+    I.seeElement('[data-widget-type="news"] .md-dashboard-widget__news-summary');
+    I.clickCss('[data-widget-type="news"] .md-dashboard-widget__news-toggle');
+    waitForSave(I);
+    I.waitForVisible('[data-widget-type="news"]', 10);
+    I.waitForVisible('[data-widget-type="news"] .md-dashboard-widget__news-highlights', 10);
+    I.assertDeepEqual(await I.executeScript(readAnnouncement), announcement,
+        'Expanding release notes must restore their content and links.');
+});
+
+/**
+ * Checks that documentation search keeps the entered text, including accents and special characters, and
+ * requests a separate tab. The test captures the destination without opening the external documentation
+ * site.
+ */
+Scenario('Documentation search switches scope and opens the encoded query without an external request', async ({ I }) => {
+    await waitForWidgets(I);
+    const scope = '[data-widget-type="search"]';
+    const query = 'formulár & prístupnosť autotest';
+    I.clickCss(`${scope} label:has(input[value="docs"])`);
+    I.fillField(`${scope} input[type="search"]`, query);
+    await I.executeScript(() => {
+        window.autotestOriginalOpen = window.open;
+        window.autotestSearchPopup = null;
+        window.open = (url, target, features) => { window.autotestSearchPopup = { url, target, features }; return null; };
+    });
+    I.clickCss(`${scope} button[type="submit"]`);
+    const popup = await I.executeScript(() => {
+        try { return window.autotestSearchPopup; }
+        finally { window.open = window.autotestOriginalOpen; delete window.autotestOriginalOpen; }
+    });
+    I.assertTrue(Boolean(popup));
+    I.assertEqual(new URL(popup.url).origin, 'https://docs.webjetcms.sk');
+    I.assertEqual(new URL(popup.url).searchParams.get('q'), query);
+    I.assertEqual(popup.target, '_blank');
+    I.assertContain(popup.features, 'noopener');
+    I.fillField(`${scope} input[type="search"]`, '');
+    I.clickCss(`${scope} label:has(input[value="admin"])`);
+    I.seeElement(`${scope} input[type="radio"][value="admin"]:checked`);
+});
+
+/**
+ * Restores the account layout saved before these checks, including its current-domain filters and release-
+ * announcement choice, and verifies the restored values after reloading.
+ */
+Scenario('Restore the original account dashboard and current-domain filters', async ({ I }) => {
+    if (!originalSettings) return;
+    const status = await I.executeScript(async settings => {
+        const response = await fetch('/admin/rest/dashboard/settings', {
+            method: 'PUT', credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': window.csrfToken },
+            body: JSON.stringify(settings)
+        });
+        return response.status;
+    }, originalSettings);
+    I.assertEqual(status, 200, 'The original account preferences must be restored.');
+    I.refreshPage();
+    await waitForWidgets(I);
+    const restored = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings);
+    I.assertDeepEqual(restored.items, originalSettings.items);
+    I.assertDeepEqual(restored.domainOptions, originalSettings.domainOptions);
+    I.assertEqual(restored.acknowledgedNewsVersion, originalSettings.acknowledgedNewsVersion);
+});
