@@ -182,6 +182,18 @@ public class DocDB extends DB
 	}
 
 	/**
+	 * Returns document caches for navbar link generation without checking scheduled publication.
+	 * Called by GroupDetails while GroupsDB is being constructed; a publication check could
+	 * re-enter GroupsDB initialization before its instance is stored in the servlet context.
+	 *
+	 * @return the cached or newly initialized DocDB instance
+	 */
+	static DocDB getInstanceWithoutPublishCheck()
+	{
+		return getInstanceWithoutPublishCheck(false, "iwcm");
+	}
+
+	/**
 	 *  Gets the instance attribute of the DocDB class
 	 *
 	 *@param  servletContext2  Description of the Parameter
@@ -193,14 +205,30 @@ public class DocDB extends DB
 	@Deprecated
 	public static DocDB getInstance(javax.servlet.ServletContext servletContext2, boolean force_refresh, String serverName)
 	{
+		DocDB myDocDB = getInstanceWithoutPublishCheck(force_refresh, serverName);
+		// Publication may initialize GroupsDB, so run it outside the DocDB initialization lock.
+		myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
+		return myDocDB;
+	}
+
+	/**
+	 * Retrieves or creates the DocDB instance without running scheduled publication checks.
+	 * Separating cache initialization from publication allows public getInstance methods to
+	 * check publication after this method returns, outside the DocDB initialization lock.
+	 *
+	 * @param force_refresh true to replace the cached instance and request a cluster refresh;
+	 *                      false to reuse it or initialize it without notifying the cluster
+	 * @param serverName database connection name used when creating the instance
+	 * @return the cached or newly initialized DocDB instance stored in the servlet context
+	 */
+	private static DocDB getInstanceWithoutPublishCheck(boolean force_refresh, String serverName)
+	{
 		javax.servlet.ServletContext servletContext = Constants.getServletContext();
 		if (!force_refresh)
 		{
 			DocDB myDocDB = (DocDB) servletContext.getAttribute(Constants.A_DOC_DB);
 			if (myDocDB != null && myDocDB.urlsByUrlDomains!=null)
 			{
-				//Set publishable service and call checkPublishable
-				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 		}
@@ -208,11 +236,10 @@ public class DocDB extends DB
 		{
 			if (force_refresh)
 			{
-				DocDB myDocDB = new DocDB(servletContext, serverName);
+				DocDB myDocDB = new DocDB(servletContext, serverName, force_refresh);
 				//save us to server space
 				servletContext.setAttribute(Constants.A_DOC_DB, myDocDB);
 
-				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 			else
@@ -220,14 +247,13 @@ public class DocDB extends DB
 				DocDB myDocDB = (DocDB) servletContext.getAttribute(Constants.A_DOC_DB);
 				if (myDocDB == null)
 				{
-					myDocDB = new DocDB(servletContext, serverName);
+					myDocDB = new DocDB(servletContext, serverName, force_refresh);
 					//	remove
 					//servletContext.removeAttribute(Constants.A_DOC_DB);
 					//save us to server space
 					servletContext.setAttribute(Constants.A_DOC_DB, myDocDB);
 
 				}
-				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 		}
@@ -241,7 +267,7 @@ public class DocDB extends DB
 	 * @param serverName
 	 *           Description of the Parameter
 	 */
-	private DocDB(javax.servlet.ServletContext servletContext, String serverName)
+	private DocDB(javax.servlet.ServletContext servletContext, String serverName, boolean force_refresh)
 	{
 		Logger.println(this,"DocDB: constructor ["+Constants.getInstallName()+"]");
 		Logger.debugMemInfo();
@@ -267,7 +293,7 @@ public class DocDB extends DB
 
 		loadUrls();
 
-		ClusterDB.addRefresh(DocDB.class);
+		if (force_refresh) ClusterDB.addRefresh(DocDB.class);
 
 		Logger.debug(this,"DocDB: constructor ["+Constants.getInstallName()+"] done");
 		Logger.debugMemInfo();

@@ -65,19 +65,19 @@ public class FormDB
 		{
 			synchronized (FormDB.class)
 			{
-				instance = new FormDB();
+				instance = new FormDB(forceRefresh);
 			}
 		}
 		return instance;
 	}
 
 	/**
-	 * Private konstruktor
+	 * Creates the local instance and optionally notifies the cluster.
 	 */
-	private FormDB()
+	private FormDB(boolean forceRefresh)
 	{
 		Logger.debug(FormDB.class, "FormDB.constructor");
-		ClusterDB.addRefresh(FormDB.class);
+		if (forceRefresh) ClusterDB.addRefresh(FormDB.class);
 	}
 
 	public static List<FormDetails> getForms(UserDetails user,boolean alsoArchive)

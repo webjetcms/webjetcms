@@ -66,7 +66,7 @@ public class TemplatesDB extends DB
 		{
 			if (forceRefresh)
 			{
-				TemplatesDB tempDB = new TemplatesDB();
+				TemplatesDB tempDB = new TemplatesDB(forceRefresh);
 				//	remove
 				Constants.getServletContext().removeAttribute(Constants.A_TEMP_DB);
 				//save us to server space
@@ -80,7 +80,7 @@ public class TemplatesDB extends DB
 				TemplatesDB tempDB = (TemplatesDB) Constants.getServletContext().getAttribute(Constants.A_TEMP_DB);
 				if (tempDB == null)
 				{
-					tempDB = new TemplatesDB();
+					tempDB = new TemplatesDB(forceRefresh);
 					//	remove
 					Constants.getServletContext().removeAttribute(Constants.A_TEMP_DB);
 					//save us to server space
@@ -98,7 +98,7 @@ public class TemplatesDB extends DB
 	 * @param servletContext Description of the Parameter
 	 * @param serverName     Description of the Parameter
 	 */
-	private TemplatesDB() {
+	private TemplatesDB(boolean forceRefresh) {
 		DebugTimer dt = new DebugTimer("TempDB: constructor [" + Constants.getInstallName() + "]");
 
 		try {
@@ -108,7 +108,7 @@ public class TemplatesDB extends DB
 			Logger.error(TemplatesDB.class, ex);
 		}
 
-		ClusterDB.addRefresh(TemplatesDB.class);
+		if (forceRefresh) ClusterDB.addRefresh(TemplatesDB.class);
 
 		dt.diff("done");
 	}
