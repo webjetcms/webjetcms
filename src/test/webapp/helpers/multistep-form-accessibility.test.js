@@ -6,6 +6,7 @@ const { chromium } = require("playwright");
 
 const source = fs.readFileSync(path.resolve(__dirname, "../../../main/webapp/apps/form/mvc/multistep-form.js"), "utf8")
     .replace(/^export /gm, "");
+const stylesheet = fs.readFileSync(path.resolve(__dirname, "../../../main/webapp/apps/form/mvc/default.css"), "utf8");
 let browser;
 
 before(async () => { browser = await chromium.launch({ headless: true }); });
@@ -19,14 +20,14 @@ async function createPage(t, additionalFields = () => "") {
         const request = route.request();
         const url = new URL(request.url());
         if (url.pathname === "/") {
-            return route.fulfill({ contentType: "text/html", body: '<div id="multistep-form-wrapper-first"></div><div id="multistep-form-wrapper-second"></div>' });
+            return route.fulfill({ contentType: "text/html", body: `<style>${stylesheet}</style><div id="multistep-form-wrapper-first"></div><div id="multistep-form-wrapper-second"></div>` });
         }
         if (url.pathname.endsWith("/get-step")) {
             const prefix = request.headers()["x-csrf-token"] === "first" ? "f1-" : "f2-";
             return route.fulfill({ json: {
                 domIdPrefix: prefix,
                 validateOnBlur: true,
-                html: `<form>
+                html: `<form action="/rest/multistep-form/save-form">
                     <div class="form-group">
                         <label for="${prefix}email">Email</label>
                         <input id="${prefix}email" name="${prefix}email" aria-describedby="${prefix}help">
@@ -177,5 +178,62 @@ test("file errors display escaped filenames as text without creating HTML or run
         assert.equal(await error.textContent(), message.text);
         assert.equal(await error.locator("b, img").count(), 0);
         assert.equal(await page.evaluate(() => window.injected), undefined);
+    }
+});
+
+for (const [buttonName, instance, width, motion] of [
+    ["Next", "first", 600, "no-preference"],
+    ["Submit", "second", 375, "reduce"]
+]) {
+    test(`${buttonName} reveals the first visible field error on every failed attempt in a small viewport`, async t => {
+        const page = await createPage(t, prefix => `
+            <div hidden class="form-group"><input id="${prefix}hidden"><div class="cs-error cs-error-${prefix}hidden"></div></div>
+            <div class="submission-spacer"></div>
+            <button type="submit">${buttonName}</button>`);
+        await page.setViewportSize({ width, height: 400 });
+        await page.emulateMedia({ reducedMotion: motion });
+        await page.addStyleTag({ content: `
+            body { padding-top: 250px; }
+            body::before { content: "Fixed header"; position: fixed; top: 0; left: 0; width: 100%; height: 80px; background: white; z-index: 1; }
+            .submission-spacer { height: 1200px; }` });
+        const wrapper = page.locator(`#multistep-form-wrapper-${instance}`);
+        const error = wrapper.locator(`.cs-error-${instance === "first" ? "f1" : "f2"}-email`);
+        if (instance === "second") {
+            await page.evaluate(() => firstForm.postSaveAction({ fieldErrors: { email: "Other form error." } }));
+        }
+        let submissions = 0;
+        await page.route("**/save-form?*", route => {
+            submissions++;
+            return route.fulfill({ json: { fieldErrors: {
+                hidden: "Hidden field error.", message: "Message is required.", email: "Email is invalid."
+            } } });
+        });
+
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            await wrapper.getByRole("button", { name: buttonName }).click();
+            await page.waitForFunction(name => !window[`${name}Form`]._isNavigating, instance);
+            assert.equal(submissions, attempt);
+            await page.waitForFunction(selector => {
+                const rect = document.querySelector(selector).getBoundingClientRect();
+                return rect.top >= 80 && rect.bottom <= innerHeight;
+            }, `#multistep-form-wrapper-${instance} .cs-error-${instance === "first" ? "f1" : "f2"}-email`, { timeout: 1500 });
+            assert.equal(await error.evaluate(element => element === document.activeElement), true);
+        }
+    });
+}
+
+test("global errors are focused and revealed again after scrolling away", async t => {
+    const page = await createPage(t, () => '<div style="height: 1600px"></div>');
+    await page.setViewportSize({ width: 600, height: 400 });
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.addStyleTag({ content: "body { padding-top: 250px; }" });
+    const alert = page.locator("#multistep-form-wrapper-first .alert-danger");
+
+    for (let attempt = 0; attempt < 2; attempt++) {
+        await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+        await page.evaluate(() => firstForm.showGlobalErr({ err_msg: "The upload failed." }));
+        const rect = await alert.boundingBox();
+        assert.ok(rect.y >= 0 && rect.y + rect.height <= 400);
+        assert.equal(await alert.evaluate(element => element === document.activeElement), true);
     }
 });

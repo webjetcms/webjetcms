@@ -554,6 +554,18 @@ export class MultistepForm {
         }
     }
 
+    /** Focus and reveal the first visible error in this form's document order after submission. */
+    _focusFirstError() {
+        const firstError = Array.from(this.wrapper.querySelectorAll('.alert-danger, .cs-error'))
+            .find(element => element.textContent.trim() && element.getClientRects().length > 0
+                && window.getComputedStyle(element).visibility !== 'hidden');
+        if (!firstError) return;
+
+        if (!firstError.hasAttribute('tabindex')) firstError.setAttribute('tabindex', '-1');
+        firstError.focus({ preventScroll: true });
+        firstError.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+    }
+
     /**
      * Collect step values, synchronizing rich text and retaining empty draft selections.
      * @param {HTMLFormElement} form - Current step form.
@@ -727,7 +739,7 @@ export class MultistepForm {
         if (p) p.textContent = this.errorMessage;
         const ul = danger.querySelector('ul');
         if (ul) ul.innerHTML = `<li><span>${errorMsg}</span></li>`;
-        danger.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+        this._focusFirstError();
     }
 
     /**
@@ -1223,6 +1235,7 @@ export class MultistepForm {
             for (const [fieldName, errorMsg] of Object.entries(fieldErrors)) {
                 this._showFieldError(fieldName, errorMsg);
             }
+            this._focusFirstError();
             return;
         }
 
