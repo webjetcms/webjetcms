@@ -105,9 +105,9 @@ Ak chcete definovať vlastné položky formulárov, alebo chcete zmeniť existuj
 
 ### Validácia pri opustení poľa
 
-Voliteľná kontrola upozorní na chybu v textovom poli hneď po jeho opustení, napríklad klávesom `Tab`. Chybová správa sa zobrazí pri poli. Funkcia je predvolene vypnutá.
+Kontrola upozorní na chybu v textovom poli hneď po jeho opustení, napríklad klávesom `Tab`. Chybová správa sa zobrazí pri poli. Funkcia je predvolene zapnutá.
 
-Zapnete ju v administrácii v [Konfigurácia](../../../admin/setup/configuration/README.md). Nastavte premennú `multistepform_validateOnBlur` na hodnotu `true`.
+Vypnete ju v administrácii v [Konfigurácia](../../../admin/setup/configuration/README.md) nastavením premennej `multistepform_validateOnBlur` na hodnotu `false`.
 
 Kontrola sa riadi nastaveniami **Povinné pole**, **Orezať medzery** a **Povolená hodnota**. Podmienky povinnosti sa zohľadnia až pri odoslaní kroku, keď sa skontrolujú všetky údaje. Samotné opustenie poľa údaje neukladá.
 
@@ -324,4 +324,4 @@ Dostupné konfiguračné premenné pre viackrokové formuláre:
 - `multistepform_emailFields` - zoznam začiatkov identifikátorov polí, ktoré budú považované za polia pre emailovú adresu. Napríklad hodnota `email` zodpovedá aj položke `emailova-adresa-1`. Na potvrdenie prijatia formulára sa použijú všetky nájdené platné emailové adresy.
 - `multistepform_attachmentDefaultName` - prednastavený názov prílohy v emailoch, ktorý sa použije ak sa nepodarí získať skutočný názov súboru prílohy.
 - `multistepform_subjectDefaultValue` - prednastavený prekladový kľúč pre predmet emailu, ktorý sa použije ak nie je zadaný predmet v nastaveniach/atribútoch formuláru.
-- `multistepform_validateOnBlur` - zapne [validáciu textových polí pri ich opustení](#validácia-pri-opustení-poľa). V **Nastavenia → Konfigurácia** nastavte hodnotu `true`. Predvolená hodnota je `false`; nastavenie platí pre všetky viackrokové formuláre a uplatní sa pri načítaní kroku.
+- `multistepform_validateOnBlur` - riadi [validáciu textových polí pri ich opustení](#validácia-pri-opustení-poľa). Predvolená hodnota je `true`. Kontrolu vypnete nastavením hodnoty `false` v **Nastavenia → Konfigurácia**. Nastavenie platí pre všetky viackrokové formuláre a uplatní sa pri načítaní kroku.

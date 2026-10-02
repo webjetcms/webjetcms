@@ -2,7 +2,11 @@
 
 ## Validace při opuštění pole
 
-Nastavení `multistepform_validateOnBlur=true` zapne kontrolu textových polí při ztrátě fokusu. Ve výchozím nastavení je vypnuté. Kontroluje se statická povinnost, oříznutí mezer a povolené hodnoty; chyba se zobrazí u pole. Kontrola neukládá údaje ani nevolá vlastního zpracovatele. Úplná validace včetně podmínek proběhne při odeslání kroku.
+Kontrola textových polí při ztrátě fokusu je ve výchozím nastavení zapnuta. Konfigurační proměnná `multistepform_validateOnBlur` má výchozí hodnotu `true` ; nastavením na `false` kontrolu vypnete. Nastavení platí pro všechny vícekrokové formuláře.
+
+Kontrola používá nastavení **Povinné pole** a před validací ořízne úvodní a koncové mezery podle nastavení **Oříznout mezery**. **Povolená hodnota** označuje [regulární výrazy](../../../redactor/apps/form/regexps.md) vybrané v editoru konkrétní položky. Zadaná hodnota musí vyhovět všem vybraným pravidlům. Pokud není vybráno žádné pravidlo, formát hodnoty se touto kontrolou neověřuje.
+
+Chyba se zobrazí u pole. Kontrola neukládá údaje ani nevolá zpracovatele. Úplná validace včetně podmínek proběhne při odeslání kroku.
 
 ## Rozpracované údaje při návratu
 

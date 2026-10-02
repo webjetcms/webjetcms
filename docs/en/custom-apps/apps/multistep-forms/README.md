@@ -1,14 +1,18 @@
 # Forms
 
-## Validation when leaving a field
+## Validation when leaving the field
 
-Setting `multistepform_validateOnBlur=true` enables checks of text fields when they lose focus. It is disabled by default. The checks apply the static required setting, trim spaces, and validate allowed values; errors appear beside the field. This check does not save data or call the custom form processor. Full validation, including conditional rules, runs when the step is submitted.
+Text field validation on loss of focus is enabled by default. The configuration variable `multistepform_validateOnBlur` has a default value of `true` ; setting it to `false` disables the validation. The setting applies to all multi-step forms.
 
-## Unfinished data when going back
+The check uses the **Required Field** setting and trims leading and trailing spaces according to the **Trim Spaces** setting before validation. **Allowed Value** refers to the [regular expressions](../../../redactor/apps/form/regexps.md) selected in the editor for a specific item. The entered value must satisfy all selected rules. If no rule is selected, the value format is not validated by this check.
 
-The **Back** button temporarily saves the current step's values in the HTTP session, separately from confirmed answers. Incomplete values, hidden fields, cleared selections, and completed uploads are preserved. This does not require successful validation and also works when validation on leaving a field is disabled.
+An error is displayed next to the field. The check does not save data or call the handler. Full validation, including conditions, occurs when the step is submitted.
 
-When the step is reopened, unfinished values take precedence over older confirmed answers. Moving forward validates and confirms the values of visible fields. If temporary saving fails, the current step remains open. Unfinished data is removed when the form is completed, the attempt is permanently ended, or the session expires; it is not restored after refreshing the page.
+## Data processed upon return
+
+The **Back** button temporarily saves the values ​​of the current step to the HTTP session, separate from the confirmed responses. Incomplete values, hidden fields, canceled selections, and completed uploads are also preserved. This saving does not require successful validation and works even if field exit checking is disabled.
+
+When returning to a step, the processed values ​​take precedence over older confirmed responses. Moving forward will check and confirm the values ​​of visible fields. If the temporary save fails, the current step remains open. Processed data is deleted when the form is completed, the attempt is finally terminated, or the session expires; it is not restored when the page is refreshed.
 
 ## Custom form processing
 

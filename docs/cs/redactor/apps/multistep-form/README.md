@@ -48,11 +48,11 @@ Od druhého kroku se zobrazuje tlačítko **Přejít na předchozí krok**. Náv
     <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-Tlačítko **Zpět** zachová rozpracované údaje i bez vyplnění všech povinných polí. Když se do kroku vrátíte, obnoví se texty, výběry i dokončená nahrávání. Zachová se také vymazání hodnoty nebo zrušení výběru. Ověření CAPTCHA je nutné zopakovat. Pokud se údaje nepodaří uchovat, zůstanete v aktuálním kroku a můžete návrat zkusit znovu.
+Tlačítko **Zpět** zachová rozpracované údaje i bez vyplnění všech povinných polí. Když se do kroku vrátíte, obnoví se texty, výběry i dokončená nahrávání. Zachová se také vymazání hodnoty nebo zrušení výběru. Ověření CAPTCHA je třeba zopakovat. Pokud se data nepodaří uchovat, zůstanete v aktuálním kroku a můžete návrat zkusit znovu.
 
 Při pokračování dopředu se údaje zkontrolují. Hodnoty skrytých polí se uchovají pro případ jejich opětovného zobrazení, ale při odeslání daného kroku se nepoužijí.
 
-!>**Upozornění:** Používejte tlačítko **Zpět** ve formuláři. Uchování údajů je dočasné a neslouží k pokračování po obnovení nebo zavření stránky.
+!>**Upozornění:** Používejte tlačítko **Zpět** ve formuláři. Zachování dat je dočasné a neslouží k pokračování po obnovení nebo zavření stránky.
 
 ### Duplikování
 
@@ -105,9 +105,13 @@ Chcete-li definovat vlastní položky formulářů, nebo chcete změnit existuj�
 
 ### Validace při opuštění pole
 
-Volitelná kontrola upozorní na chybu v textovém poli hned po jeho opuštění, například klávesou `Tab`. Chybová zpráva se zobrazí u pole a oznámí čtečce obrazovky. Po opravě a opětovné kontrole zmizí. Funkce je ve výchozím nastavení vypnutá.
+Kontrola upozorní na chybu v textovém poli hned po jeho opuštění, například klávesou `Tab`. Chybová zpráva se zobrazí u pole. Funkce je ve výchozím nastavení zapnuta.
+
+Vypnete ji v administraci v [Konfigurace](../../../admin/setup/configuration/README.md) nastavením proměnné `multistepform_validateOnBlur` na hodnotu `false`.
 
 Kontrola se řídí nastaveními **Povinné pole**, **Oříznout mezery** a **Povolená hodnota**. Podmínky povinnosti se zohlední až při odeslání kroku, kdy se zkontrolují všechny údaje. Samotné opuštění pole údaje neukládá.
+
+V poli **Povolená hodnota** vybíráte [regulární výrazy](../form/regexps.md), kterým musí zadaná hodnota vyhovět. Kontrolují se všechna vybraná pravidla. Při prázdném výběru se formát hodnoty neověřuje.
 
 ### Automatické doplňování
 
@@ -320,4 +324,4 @@ Dostupné konfigurační proměnné pro vícekrokové formuláře:
 - `multistepform_emailFields` - ​​seznam začátků identifikátorů polí, která budou považována za pole pro emailovou adresu. Například hodnota `email` odpovídá také položce `emailova-adresa-1`. Na potvrzení přijetí formuláře se použijí všechny nalezené platné emailové adresy.
 - `multistepform_attachmentDefaultName` - ​​přednastavený název přílohy v emailech, který se použije pokud se nepodaří získat skutečný název souboru přílohy.
 - `multistepform_subjectDefaultValue` - ​​přednastavený překladový klíč pro předmět emailu, který se použije pokud není zadaný předmět v nastaveních/atributech formuláře.
-- `multistepform_validateOnBlur` - zapne [validaci textových polí při jejich opuštění](#validace-při-opuštění-pole). Výchozí hodnota je `false`; nastavení se uplatní při načtení kroku.
+- `multistepform_validateOnBlur` - ​​řídí [validaci textových polí při jejich opuštění](#validace-při-opuštění-pole). Výchozí hodnota je `true`. Kontrolu vypnete nastavením hodnoty `false` v **Nastavení → Konfigurace**. Nastavení platí pro všechny vícekrokové formuláře a uplatní se při načtení kroku.

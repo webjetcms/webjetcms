@@ -48,11 +48,11 @@ From the second step onwards, the **Go to previous step** button is displayed. T
     <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-The **Back** button preserves unfinished data even if some required fields are empty. When you return to the step, text, selections, and completed uploads are restored. Cleared values and deselected options are also remembered. CAPTCHA verification must be repeated. If the data cannot be preserved, you remain in the current step and can try going back again.
+The **Back** button will save the data in progress even without filling in all the required fields. When you return to a step, the texts, selections and completed uploads will be restored. Deleting a value or canceling a selection will also be preserved. CAPTCHA verification must be repeated. If the data cannot be saved, you will remain in the current step and can try returning again.
 
-The data is checked when you move forward. Hidden field values are kept in case the fields become visible again, but are not used when submitting that step.
+The data is validated when you continue forward. The values ​​of hidden fields are preserved in case they are displayed again, but they are not used when you submit the step.
 
-!>**Warning:** Use the **Back** button within the form. Data is kept temporarily and cannot be restored after refreshing or closing the page.
+!>**Warning:** Please use the **Back** button on the form. Data retention is temporary and does not allow you to continue after refreshing or closing the page.
 
 ### Duplication
 
@@ -103,11 +103,15 @@ If you want to define your own form items, or want to change existing ones, or c
 
 !>**Warning:** When editing a form item, we do not recommend changing the item type, but rather replacing the original item with a new one.
 
-### Validation when leaving a field
+### Validation when leaving the field
 
-An optional check flags an error in a text field as soon as you leave it, for example by pressing `Tab`. The error message appears beside the field and is announced by screen readers. It disappears once the value is corrected and checked again. This feature is disabled by default.
+The checker will alert you to an error in a text field as soon as you leave it, for example by pressing the `Tab` key. An error message will be displayed next to the field. The feature is enabled by default.
 
-The check follows the **Required field**, **Trim spaces**, and **Allowed value** settings. Conditional requirements are evaluated only when the step is submitted and all data is checked. Leaving a field does not save its value.
+You can disable it in the administration in [Configuration](../../../admin/setup/configuration/README.md) by setting the variable `multistepform_validateOnBlur` to the value `false`.
+
+The validation is governed by the **Required Field**, **Trim Spaces**, and **Allowed Value** settings. The requirement conditions are only considered when the step is submitted, when all data has been validated. Leaving the field alone does not save the data.
+
+In the **Allowed value** field, you select [regular expressions](../form/regexps.md) that the entered value must match. All selected rules are checked. If the selection is empty, the value format is not validated.
 
 ### Automatic replenishment
 
@@ -320,4 +324,4 @@ Available configuration variables for multi-step forms:
 - `multistepform_emailFields` - ​​list of starting field identifiers that will be considered as email address fields. For example, the value `email` also matches the entry `emailova-adresa-1`. All found valid email addresses will be used to confirm receipt of the form.
 - `multistepform_attachmentDefaultName` - ​​default attachment name in emails, which will be used if the actual attachment file name cannot be obtained.
 - `multistepform_subjectDefaultValue` - ​​default translation key for the email subject, which will be used if no subject is specified in the form settings/attributes.
-- `multistepform_validateOnBlur` - enables [validation of text fields when leaving them](#validation-when-leaving-a-field). The default is `false`; the setting takes effect when a step is loaded.
+- `multistepform_validateOnBlur` - ​​controls [validation of text fields when they are left](#validation-when-field-is-left). The default value is `true`. To disable the check, set the value `false` in **Settings → Configuration**. The setting applies to all multi-step forms and is applied when a step is loaded.
