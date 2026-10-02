@@ -43,7 +43,7 @@ async function waitForWidgets(I) {
 const dashboardPageRoute = '**/admin/v9/';
 
 /** Overrides embedded data in the HTML response without changing the account's stored preferences. */
-async function mockDashboardBootstrap(I, readData) {
+async function mockDashboardBootstrap(I, readData, readNoticePreferences) {
     await I.stopMockingRoute(dashboardPageRoute);
     await I.mockRoute(dashboardPageRoute, async route => {
         const response = await route.fetch();
@@ -51,7 +51,13 @@ async function mockDashboardBootstrap(I, readData) {
         const marker = /window\.webjetOverviewDashboardBootstrapData = JSON\.parse\([^\n]+\);/;
         if (!marker.test(html)) throw new Error('The dashboard bootstrap assignment must exist in the HTML response.');
         const data = JSON.stringify(readData()).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
-        const body = html.replace(marker, match => `${match}\nObject.assign(window.webjetOverviewDashboardBootstrapData, ${data});`);
+        let body = html.replace(marker, match => `${match}\nObject.assign(window.webjetOverviewDashboardBootstrapData, ${data});`);
+        if (readNoticePreferences) {
+            const userMarker = /window\.currentUser = JSON\.parse\([^\n]+\);/;
+            if (!userMarker.test(html)) throw new Error('The current-user assignment must exist in the HTML response.');
+            const preferences = JSON.stringify(JSON.stringify(readNoticePreferences())).replace(/</g, '\\u003c');
+            body = body.replace(userMarker, match => `${match}\nwindow.currentUser.adminSettings['dashboard.notices'] = ${preferences};`);
+        }
         return route.fulfill({ response, body });
     });
 }

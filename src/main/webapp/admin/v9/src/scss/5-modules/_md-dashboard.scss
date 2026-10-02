@@ -292,41 +292,44 @@ webjet-overview-dashboard a:focus-visible {
 
     &__notices { margin-block: 0 20px; }
     &__notice-list:empty { display: none; }
-    &__notices-heading { display: flex; align-items: center; gap: 8px; color: var(--wj-dashboard-muted); font-size: 12px; margin: 0 0 8px; }
+    &__notices-heading { display: flex; align-items: center; gap: 8px; color: var(--wj-secondary); font-size: 12px; font-weight: 700; margin: 0 0 8px; }
     &__notice-count { padding: 0 5px; background: var(--wj-nice-gray); border-radius: var(--wj-border-radius); font-size: 11px; }
-    &__notices:not(:has(.md-dashboard__notice, .toast, .md-dashboard__loading, [role="alert"])) { display: none; }
+    &__notices:not(:has(.md-dashboard__notice-list:not([hidden]), .toast, .md-dashboard__loading, > [role="alert"])) { display: none; }
     &__notice {
-        background: var(--wj-dashboard-publishing);
-        border-radius: var(--wj-border-radius);
+        overflow: hidden;
         margin-bottom: 6px;
         color: var(--wj-secondary);
-        > summary {
-            list-style: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 13px;
-            cursor: pointer;
-            font-size: 13px;
-            &::-webkit-details-marker { display: none; }
-            > .ti:first-child { color: var(--wj-dashboard-warning-text); font-size: 17px; }
-            > .ti:last-child { margin-left: auto; }
+        --notice-color: #{$dashboard-warning-text};
+        --notice-border: #{mix($warning, $white, 60%)};
+        --notice-background: #{$dashboard-publishing};
+        &[data-severity="error"] {
+            --notice-color: #{$dashboard-danger-text};
+            --notice-border: #{mix($danger-btn-bg, $white, 55%)};
+            --notice-background: #{mix($danger-btn-bg, $white, 6%)};
         }
-        &[open] > summary > .ti:last-child { transform: rotate(180deg); }
-        &[data-severity="error"] > summary > .ti:first-child { color: var(--wj-dashboard-danger); }
-        &[data-severity="info"] { background: var(--wj-dashboard-lavender); }
+        &[data-severity="info"] {
+            --notice-color: #{$primary-hover};
+            --notice-border: #{mix($primary, $white, 50%)};
+            --notice-background: #{$dashboard-lavender};
+        }
     }
-    &__notice-title { flex: 1; overflow-wrap: anywhere; font-weight: 400; }
-    &__notice-body {
-        padding: 0 14px 14px 44px;
-        font-size: 14px;
-        overflow-wrap: anywhere;
-        > .btn { display: block; margin-top: 10px; }
-    }
-
-    &__notice > summary:focus-visible {
-        outline: 2px solid var(--wj-secondary);
-        outline-offset: 2px;
+    &__notice-row { display: flex; align-items: center; gap: 10px; padding: 7px 12px; background: var(--notice-background); border: 1px solid var(--notice-border); border-radius: var(--wj-border-radius); }
+    &__notice-row > .ti { flex-shrink: 0; font-size: 16px; color: var(--notice-color); }
+    &__notice-text { flex: 1; min-width: 0; font-size: 12px; overflow-wrap: anywhere; }
+    &__notice-title { font-weight: 700; margin-right: 6px; }
+    &__notice-description { color: var(--wj-dashboard-muted); }
+    &__notice-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    &__notice-actions > .btn { font-size: 12px; white-space: nowrap; }
+    &__notice-action { background: var(--wj-dashboard-surface); border-color: var(--wj-nice-gray-200); }
+    &__notice-actions > .btn-link { color: var(--wj-secondary); text-decoration: none; padding-inline: 4px; }
+    &__notice-dismiss { min-width: 24px; min-height: 24px; }
+    &__notice-status { font-size: 12px; }
+    &__notice-status:empty { display: none; }
+    @media (max-width: ($bp-mobile - .02px)) {
+        &__notice-row { flex-wrap: wrap; gap: 6px 10px; }
+        &__notice-text { flex-basis: calc(100% - 26px); }
+        &__notice-actions { flex-wrap: wrap; margin-left: 26px; flex-shrink: 1; }
+        &__notice-actions > .btn { white-space: normal; }
     }
 
     &__toolbar {
@@ -1001,6 +1004,29 @@ webjet-overview-dashboard a:focus-visible {
         &__page { gap: 10px; flex-wrap: wrap; }
         &__page-date { padding-left: 48px; width: 100%; text-align: left; }
     }
+}
+
+// Keep notice undo above the scrolling content and centered in the administration area.
+.md-dashboard__notice-toast {
+    position: fixed;
+    z-index: $zindex-toast;
+    bottom: 24px;
+    left: calc(50% + 110px);
+    transform: translateX(-50%);
+    max-width: calc(100% - 250px);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-radius: var(--wj-border-radius);
+    background: var(--wj-secondary);
+    color: $white;
+    font-size: 12px;
+    box-shadow: 0 4px 16px rgba($secondary, .2);
+    > .btn { color: mix($primary, $white, 40%); padding: 4px; font-size: 12px; flex-shrink: 0; }
+    > .btn:last-child { color: $white; min-width: 24px; min-height: 24px; font-size: 16px; }
+    > .btn:focus-visible { outline-color: $white; }
+    @media (max-width: ($bp-laptop - .02px)) { left: 50%; max-width: calc(100% - 24px); }
 }
 
 // Persistent alerts remain outside the personalized grid.

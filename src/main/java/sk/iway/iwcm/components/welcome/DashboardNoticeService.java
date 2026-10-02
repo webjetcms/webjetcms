@@ -48,7 +48,7 @@ public class DashboardNoticeService {
                 && Tools.isEmpty(Constants.getString("adminLogonMethod")) && !AuthenticationFilter.weTrustIIS()) {
             String message = prop.getText("overview.2fa.warning");
             if (Tools.isNotEmpty(message) && message.length() > 2 && Tools.isEmpty(users.getMobileDeviceByUserId((long) user.getUserId()))) {
-                notices.add(notice(prop, "twoFactor", "info", "ti-shield-lock", message,
+                notices.add(notice(prop, "twoFactor", "warning", "ti-shield-lock", message,
                     action(prop, "popup", "/admin/2factorauth.jsp", "button.setup")));
             }
         }
@@ -65,7 +65,7 @@ public class DashboardNoticeService {
         if (logFile.exists()) {
             FileTools.copyFile(logFile, new IwcmFile(Tools.getRealPath("/files/protected/admin/error-log.txt")));
             notices.add(notice(prop, "update", "error", "ti-alert-circle", prop.getText("overview.update.showErrors"),
-                action(prop, "link", "/files/protected/admin/error-log.txt", "button.show")));
+                action(prop, "link", "/files/protected/admin/error-log.txt", "admin.dashboard.notice.details.js")));
         }
 
         int requiredJavaVersion = Constants.getInt("javaMinimalVersion");
@@ -73,7 +73,10 @@ public class DashboardNoticeService {
         if ("tester".equals(user.getLogin()) && request.getParameter("javaVersion") != null) currentJavaVersion = request.getParameter("javaVersion");
         if (requiredJavaVersion > 0 && javaMajorVersion(currentJavaVersion) > 0 && javaMajorVersion(currentJavaVersion) < requiredJavaVersion) {
             notices.add(notice(prop, "java", "warning", "ti-server", prop.getText("system.javaVersionWarningText",
-                Integer.toString(requiredJavaVersion), Tools.escapeHtml(currentJavaVersion)), null));
+                Integer.toString(requiredJavaVersion), Tools.escapeHtml(currentJavaVersion)),
+                action(prop, "help", "/install/versions", "admin.dashboard.notice.requirements.js")));
+            notices.get(notices.size() - 1).put("description", prop.getText("admin.dashboard.notice.java.description.js",
+                Integer.toString(requiredJavaVersion), currentJavaVersion));
         }
 
         long expiry = Constants.getLong("licenseExpiryDate");
@@ -81,7 +84,9 @@ public class DashboardNoticeService {
         warningDate.add(Calendar.MONTH, 2);
         if (expiry > 0 && warningDate.getTimeInMillis() >= expiry) {
             notices.add(notice(prop, "license", "warning", "ti-license", prop.getText("overview.license.expirationWarning",
-                Tools.escapeHtml(Tools.formatDate(expiry))), null));
+                Tools.escapeHtml(Tools.formatDate(expiry))),
+                action(prop, "link", "https://www.webjetcms.com", "admin.dashboard.notice.license.action.js")));
+            notices.get(notices.size() - 1).put("description", prop.getText("admin.dashboard.notice.license.description.js", Tools.formatDate(expiry)));
         }
         if (Constants.getBoolean("useAmazonSES")) {
             notices.add(notice(prop, "amazonSes", "error", "ti-mail", prop.getText("overview.useAmazonSES.deprecated"),
@@ -96,6 +101,7 @@ public class DashboardNoticeService {
         notice.put("severity", severity);
         notice.put("icon", icon);
         notice.put("title", prop.getText("admin.dashboard.notice." + id + ".js"));
+        notice.put("description", prop.getText("admin.dashboard.notice." + id + ".description.js"));
         notice.put("bodyHtml", bodyHtml);
         if (action != null) notice.put("action", action);
         return notice;

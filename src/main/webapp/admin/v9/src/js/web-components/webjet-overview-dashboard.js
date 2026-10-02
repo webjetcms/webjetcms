@@ -1,4 +1,5 @@
 import { DashboardController } from '../dashboard/dashboard';
+import { DashboardNotices } from '../dashboard/notices';
 import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/widgets';
 
 /**
@@ -49,6 +50,8 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
 
     disconnectedCallback() {
         this.dashboardController?.destroy();
+        this.noticeController?.destroy();
+        this.noticeController = null;
         this._feedbackListeners.forEach(([name, listener]) => window.removeEventListener(name, listener));
         this._feedbackListeners = [];
     }
@@ -97,47 +100,8 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
 
     /** Renders the system notices supplied by the dashboard page. */
     _renderNotices() {
-        const notices = this.data.notices;
-        const host = this.dashboardController.notices;
-        let container = host.querySelector(".md-dashboard__notice-list");
-        if (!container) {
-            container = element("section", "md-dashboard__notice-list");
-            host.prepend(container);
-        }
-        container.setAttribute("aria-label", WJ.translate("admin.dashboard.notices.js"));
-        container.setAttribute("aria-busy", "false");
-        container.replaceChildren();
-        if (notices.length) {
-            const heading = element("p", "md-dashboard__notices-heading", WJ.translate("admin.dashboard.notices.js"));
-            heading.append(element("span", "md-dashboard__notice-count", notices.length));
-            container.append(heading);
-        }
-        for (const notice of notices) {
-            const details = element("details", "md-dashboard__notice");
-            details.dataset.noticeId = notice.id;
-            details.dataset.severity = notice.severity;
-            const summary = element("summary");
-            const icon = element("i", `ti ${/^ti-[a-z0-9-]+$/.test(notice.icon) ? notice.icon : "ti-info-circle"}`);
-            icon.setAttribute("aria-hidden", "true");
-            const chevron = element("i", "ti ti-chevron-down md-dashboard__notice-chevron");
-            chevron.setAttribute("aria-hidden", "true");
-            summary.append(icon, element("span", "md-dashboard__notice-title", notice.title), chevron);
-            const body = element("div", "md-dashboard__notice-body");
-            // This HTML is produced by the authorized server notice service, never by widget preferences.
-            body.innerHTML = notice.bodyHtml || "";
-            if (notice.action) {
-                const action = element("button", "btn btn-sm btn-outline-secondary", notice.action.label);
-                action.type = "button";
-                action.addEventListener("click", () => {
-                    if (notice.action.type === "popup") WJ.openPopupDialog(notice.action.url);
-                    else if (notice.action.type === "help") WJ.showHelpWindow(notice.action.url);
-                    else if (notice.action.type === "link") window.open(notice.action.url, "_blank", "noopener");
-                });
-                body.append(action);
-            }
-            details.append(summary, body);
-            container.append(details);
-        }
+        this.noticeController ||= new DashboardNotices(this.dashboardController.notices, this.data);
+        this.noticeController.render();
     }
 
     /**

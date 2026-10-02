@@ -104,7 +104,25 @@ for (const width of [1337, 320]) {
     });
 }
 
-Scenario('Dashboard controls and expanded notices support Space and keyboard search scope', async ({ I, a11y }) => {
+Scenario('System notice actions support keyboard dismissal and undo', async ({ I, a11y }) => {
+    await openAuditDashboard(I, []);
+    await I.mockRoute('**/admin/rest/admin-settings/', route => route.fulfill({ status: 200, contentType: 'application/json', body: 'true' }));
+    focusControl(I, '[data-notice-id="a11y-autotest-warning"] .md-dashboard__notice-dismiss');
+    I.pressKey('Space');
+    I.waitForVisible('.md-dashboard__notice-toast', 5);
+    I.dontSeeElement('[data-notice-id="a11y-autotest-warning"]');
+    I.seeElement('[data-notice-id="a11y-autotest-error"] .md-dashboard__notice-action');
+    I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__notice-toast button'), 5);
+    await a11y.check('.md-dashboard__notice-toast');
+    I.pressKey('Space');
+    I.waitToHide('.md-dashboard__notice-toast', 5);
+    I.seeElement('[data-notice-id="a11y-autotest-warning"] .md-dashboard__notice-action');
+    I.waitForFunction(() => document.activeElement === document.querySelector('[data-notice-id="a11y-autotest-warning"] .md-dashboard__notice-action'), 5);
+    await I.stopMockingRoute('**/admin/rest/admin-settings/');
+    await a11y.check('.md-dashboard__notices');
+});
+
+Scenario('Dashboard controls support Space and keyboard search scope', async ({ I, a11y }) => {
     await openAuditDashboard(I);
     for (const selector of [editShortcuts, editOverview]) {
         focusControl(I, selector);
@@ -113,13 +131,6 @@ Scenario('Dashboard controls and expanded notices support Space and keyboard sea
         I.pressKey('Space');
         I.waitForElement(`${selector}[aria-pressed="false"]`, 5);
     }
-    for (const severity of ['info', 'warning', 'error']) {
-        const notice = `[data-notice-id="a11y-autotest-${severity}"]`;
-        focusControl(I, `${notice} summary`);
-        I.pressKey('Space');
-        I.waitForVisible(`${notice}[open] .md-dashboard__notice-body`, 5);
-    }
-    await a11y.check('.md-dashboard__notices');
     const newsToggle = '.md-dashboard-widget__news-toggle';
     focusControl(I, newsToggle);
     I.pressKey('Space');

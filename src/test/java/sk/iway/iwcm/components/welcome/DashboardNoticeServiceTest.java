@@ -35,6 +35,8 @@ class DashboardNoticeServiceTest {
         when(user.isEnabledItem("modUpdate|users.edit_admins")).thenReturn(true);
         Prop prop = mock(Prop.class);
         when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(prop.getText(anyString(), anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(prop.getText(anyString(), anyString(), anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         when(prop.getText(eq("system.javaVersionWarningText"), anyString(), anyString()))
             .thenAnswer(invocation -> invocation.getArgument(2));
         when(prop.getText(eq("overview.license.expirationWarning"), anyString())).thenReturn("<a href=\"https://www.webjetcms.sk\">License</a>");
@@ -60,6 +62,12 @@ class DashboardNoticeServiceTest {
             assertEquals(List.of("twoFactor", "database", "browserMigration", "update", "java", "license", "amazonSes"), result.stream().map(notice -> notice.get("id")).toList());
             assertEquals("8.&lt;script&gt;alert(1)&lt;/script&gt;", result.get(4).get("bodyHtml"));
             assertTrue(result.get(5).get("bodyHtml").toString().startsWith("<a href="));
+            assertEquals("warning", result.get(0).get("severity"));
+            for (Map<String, Object> notice : result) {
+                assertNotNull(notice.get("description"), "Each notice must contain an explanation");
+                assertFalse(notice.get("description").toString().isBlank(), "The explanation must not be empty");
+                assertNotNull(notice.get("action"), "Each notice must provide an action");
+            }
             assertEquals("popup", ((Map<?, ?>) result.get(0).get("action")).get("type"));
             assertEquals("/admin/v9/settings/stat-browser-migration/", ((Map<?, ?>) result.get(2).get("action")).get("url"));
             assertTrue(result.stream().noneMatch(notice -> notice.containsKey("onclick")));

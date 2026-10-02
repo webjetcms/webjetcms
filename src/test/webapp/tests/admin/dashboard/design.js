@@ -29,47 +29,11 @@ Before(({ I, login }) => {
 });
 
 /**
- * Checks that active sessions stay in the welcome area, notices can be expanded independently, and
+ * Checks that active sessions stay in the welcome area, notice actions stay visible, and
  * arrangement controls appear only in edit mode. Closing the keyboard move dialog must return focus without
- * collapsing open notices.
+ * hiding notice actions.
  */
-Scenario('Pinned security, independent notices and edit mode keep the dashboard readable', async ({ I }) => {
-    await waitForOverview(I);
-    I.resizeWindow(1440, 1100);
-    I.saveScreenshot('dashboard-implementation-desktop.png', true);
-    I.executeScript(() => {
-        const scrollbar = window.scrollbarMain;
-        scrollbar.setMomentum(0, 0);
-        scrollbar.update();
-        const top = document.querySelector('[data-widget-type="traffic"]').getBoundingClientRect().top;
-        scrollbar.setPosition(0, scrollbar.offset.y + top - 64);
-    });
-    I.saveScreenshot('dashboard-implementation-traffic.png', false);
-    I.executeScript(() => {
-        const scrollbar = window.scrollbarMain;
-        const sources = document.querySelector('[data-widget-type="referrers"]');
-        if (sources) scrollbar.setPosition(0, scrollbar.offset.y + sources.getBoundingClientRect().top - 64);
-    });
-    I.saveScreenshot('dashboard-implementation-refined-row.png', false);
-    I.executeScript(() => {
-        const scrollbar = window.scrollbarMain;
-        const queries = document.querySelector('[data-widget-type="search-terms"]');
-        if (queries) scrollbar.setPosition(0, scrollbar.offset.y + queries.getBoundingClientRect().top - 64);
-    });
-    I.saveScreenshot('dashboard-implementation-ranked-row.png', false);
-    I.executeScript(() => {
-        const scrollbar = window.scrollbarMain;
-        scrollbar.setMomentum(0, 0);
-        scrollbar.update();
-        scrollbar.setPosition(0, scrollbar.limit.y);
-    });
-    I.saveScreenshot('dashboard-implementation-widgets.png', true);
-    I.executeScript(() => window.scrollbarMain.setPosition(0, 0));
-    I.resizeWindow(390, 1052);
-    if (await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) I.clickCss('.js-sidebar-toggler');
-    I.waitForFunction(() => document.querySelector('.ly-sidebar').getBoundingClientRect().right <= 1, 10);
-    I.saveScreenshot('dashboard-implementation-mobile-top.png', false);
-    I.saveScreenshot('dashboard-implementation-mobile.png', true);
+Scenario('Pinned security, inline notices and edit mode keep the dashboard readable', async ({ I }) => {
     I.resizeWindow(1440, 1100);
     originalSettings = (await I.executeScript(readDashboardBootstrap)).settings;
 
@@ -104,20 +68,13 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
 
     const firstNotice = '[data-notice-id="design-autotest-migration"]';
     const secondNotice = '[data-notice-id="design-autotest-security"]';
-    I.see('Database migration autotest', `${firstNotice} summary`);
-    I.see('Account protection autotest', `${secondNotice} summary`);
-    I.dontSeeElement(`${firstNotice} .md-dashboard__notice-body`);
-    I.executeScript(selector => document.querySelector(selector).focus(), `${firstNotice} summary`);
-    I.pressKey('Enter');
-    I.waitForVisible(`${firstNotice}[open] .md-dashboard__notice-body`, 10);
+    I.see('Database migration autotest', `${firstNotice} .md-dashboard__notice-title`);
+    I.see('Account protection autotest', `${secondNotice} .md-dashboard__notice-title`);
     I.see('Statistics require a conversion autotest.', firstNotice);
-    I.dontSeeElement(`${secondNotice} .md-dashboard__notice-body`);
-    I.clickCss(`${secondNotice} summary`);
-    I.seeElement(`${firstNotice}[open]`);
-    I.seeElement(`${secondNotice}[open]`);
+    I.see('Enable a second verification factor autotest.', secondNotice);
     // Inspect notice actions without executing real migration or account-security operations.
-    I.see('Migration action autotest', `${firstNotice} button`);
-    I.see('Security action autotest', `${secondNotice} button`);
+    I.see('Migration action autotest', `${firstNotice} .md-dashboard__notice-action`);
+    I.see('Security action autotest', `${secondNotice} .md-dashboard__notice-action`);
 
     I.clickCss(editButton);
     I.waitForElement('.md-dashboard.is-editing', 10);
@@ -135,10 +92,8 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
     I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), handle), 'Closing keyboard movement must return focus to its handle.');
     I.clickCss(editButton);
     I.dontSeeElement('.md-dashboard__edit-control');
-    I.seeElement(`${firstNotice}[open]`);
-    I.clickCss(`${firstNotice} summary`);
-    I.clickCss(`${secondNotice} summary`);
-    I.saveScreenshot('dashboard-design-desktop.png', true);
+    I.seeElement(`${firstNotice} .md-dashboard__notice-action`);
+    I.seeElement(`${secondNotice} .md-dashboard__notice-action`);
 });
 
 /**

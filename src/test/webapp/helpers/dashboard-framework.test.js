@@ -877,11 +877,14 @@ function overviewFixture(t) {
     const environment = fixture(t);
     const { context, window, controller } = environment;
     Object.assign(context, { HTMLElement: window.HTMLElement, customElements: window.customElements, WJ: window.WJ });
+    const noticesSource = fs.readFileSync(path.join(moduleDirectory, 'notices.js'), 'utf8').replace(/^export /gm, '');
+    vm.runInContext(`{ ${noticesSource}; this.DashboardNotices = DashboardNotices; }`, context);
     const source = fs.readFileSync(path.join(moduleDirectory, '../web-components/webjet-overview-dashboard.js'), 'utf8')
         .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
     vm.runInContext(source, context, { filename: 'webjet-overview-dashboard.js' });
     const overview = window.document.createElement('webjet-overview-dashboard');
     overview.dashboardController = controller;
+    t.after(() => overview.noticeController?.destroy());
     return { ...environment, overview };
 }
 
@@ -902,42 +905,36 @@ test('Rebuilding the overview after a save never reapplies the embedded settings
     assert.equal(overview.dashboardController.settings.items[0].options.title, 'Updated autotest');
 });
 
-test('System notices remain independent accordions and invoke their own authorized actions', async t => {
-    const { context, window, controller, overview } = overviewFixture(t);
+test('System notice rows invoke authorized actions and survive personal layout rendering', async t => {
+    const { window, controller, overview } = overviewFixture(t);
     const actions = [];
     window.WJ.openPopupDialog = url => actions.push(['popup', url]);
     window.WJ.showHelpWindow = url => actions.push(['help', url]);
     overview.data.notices = [
         { id: 'two-factor', severity: 'warning', icon: 'ti-shield', title: 'Enable verification', bodyHtml: '<p>Protect your account.</p>', action: { type: 'popup', url: '/admin/2factorauth.jsp', label: 'Configure' } },
-        { id: 'ses', severity: 'warning', icon: 'ti-mail', title: 'Configure email', bodyHtml: '<p>Set up sending.</p>', action: { type: 'help', url: '/install/config/README', label: 'Read guide' } }
+        { id: 'ses', severity: 'error', icon: 'ti-mail', title: 'Configure email', bodyHtml: '<p>Set up sending.</p>', action: { type: 'help', url: '/install/config/README', label: 'Read guide' } }
     ];
     const customNotice = window.document.createElement('div');
     customNotice.textContent = 'External application warning';
     controller.notices.append(customNotice);
     overview._renderNotices();
     assert.equal(customNotice.parentElement, controller.notices, 'System notices must preserve externally supplied notifications');
-    const details = [...controller.notices.querySelectorAll('details')];
-    assert.equal(details.length, 2);
-    assert.deepEqual(details.map(notice => notice.querySelector('summary').textContent), ['Enable verification', 'Configure email']);
-    details[0].open = true;
-    assert.equal(details[1].open, false);
-    details[0].querySelector('button').click();
-    details[1].querySelector('button').click();
+    controller.notices.querySelector('[data-notice-id="two-factor"] .md-dashboard__notice-action').click();
+    controller.notices.querySelector('[data-notice-id="ses"] .md-dashboard__notice-action').click();
     assert.deepEqual(actions, [['popup', '/admin/2factorauth.jsp'], ['help', '/install/config/README']]);
     await controller.start();
-    assert.equal(controller.notices.querySelectorAll('details').length, 2, 'Rendering personal layout must preserve system warnings');
+    assert.equal(controller.notices.querySelectorAll('.md-dashboard__notice').length, 2, 'Rendering personal layout must preserve system warnings');
+    assert.equal(customNotice.parentElement, controller.notices, 'Rendering personal layout must preserve external notifications');
 });
 
 test('Embedded notices, including an empty list, render without a REST request', async t => {
     const { controller, overview, requests } = overviewFixture(t);
-    overview.data.notices = [
-        { id: 'autotest-notice', severity: 'warning', title: 'Embedded warning', bodyHtml: '<p>Autotest details</p>' }
-    ];
+    overview.data.notices = [{ id: 'autotest-notice', severity: 'warning', title: 'Embedded warning', bodyHtml: '<p>Autotest details</p>' }];
     overview._renderNotices();
-    assert.equal(controller.notices.querySelector('summary').textContent, 'Embedded warning');
+    assert.equal(controller.notices.querySelector('.md-dashboard__notice-title').textContent, 'Embedded warning');
     overview.data.notices = [];
     overview._renderNotices();
-    assert.equal(controller.notices.querySelectorAll('details').length, 0);
+    assert.equal(controller.notices.querySelectorAll('.md-dashboard__notice').length, 0);
     assert.equal(requests.length, 0);
 });
 

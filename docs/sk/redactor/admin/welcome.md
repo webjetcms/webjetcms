@@ -117,7 +117,7 @@ Pri odosielaní sa údaje viditeľnej karty obnovujú každých 30 sekúnd. Poč
 
 V uvítacom paneli nájdete novinky aktuálnej verzie WebJET CMS. Tlačidlom **Zbaliť novinky** potvrdíte ich prečítanie a ponecháte stručný súhrn. Tlačidlom **Viac info** ich znova rozbalíte.
 
-Systémové upozornenia informujú o stave, ktorý vyžaduje pozornosť, a zostávajú viditeľné do vyriešenia príčiny. Kliknutím na nadpis upozornenia rozbalíte jeho vysvetlenie a dostupnú nápravnú akciu.
+Systémové upozornenia sú zoradené podľa závažnosti: chyby, varovania a informácie. Každý riadok obsahuje vysvetlenie a dostupnú akciu. Chyby zostávajú viditeľné do vyriešenia príčiny. Varovanie môžete odložiť na 7 dní tlačidlom **Pripomenúť neskôr** alebo **×**.
 
 ### Vyhľadávanie a pomoc
 
