@@ -685,7 +685,8 @@ public class GroupDetails implements Cloneable, DocGroupInterface
 		//set navbar
 		if (defaultDocId > 0 && navbar != null && navbar.length() > 1 && navbar.indexOf("<a") < 0)
 		{
-			DocDB docDB = DocDB.getInstance();
+			// This setter also runs inside the GroupsDB constructor; publication would re-enter it.
+			DocDB docDB = DocDB.getInstanceWithoutPublishCheck();
 			navbar = "<a href='" + docDB.getDocLink(defaultDocId) + "'>" + navbar + "</a>";
 		}
 	}
