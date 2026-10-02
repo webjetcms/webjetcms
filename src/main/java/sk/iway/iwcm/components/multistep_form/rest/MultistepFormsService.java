@@ -1565,7 +1565,7 @@ public class MultistepFormsService {
                 if (count > 1) {
                     errors.merge(
                         uploadedFilesParamName,
-                        prop.getText("multistep_form.duplicate_file", fileName),
+                        prop.getText("multistep_form.duplicate_file", ResponseUtils.filter(fileName)),
                         (oldVal, newVal) -> oldVal + "\n" + newVal
                     );
                 }

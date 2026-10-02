@@ -83,6 +83,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
+- Formuláre - validácia nahraných súborov rozlišuje nepovolený znak v názve a nepovolenú príponu. Chyba názvu uvedie konkrétny zakázaný znak alebo reťazec. Názvy súborov v chybových hláseniach sa zobrazujú ako text, aby sa prípadné HTML značky v názve nevykonali (#58794).
 - Viackrokové formuláre - pri [návrate na predchádzajúci krok](redactor/apps/multistep-form/README.md#návrat-na-predchádzajúci-krok) sa zachovajú rozpracované hodnoty aj dokončené nahrávania (#58794).
 - Viackrokové formuláre - pridaná [validácia pri opustení poľa](redactor/apps/multistep-form/README.md#validácia-pri-opustení-poľa), ktorú zapnete nastavením konfiguračnej premennej `multistepform_validateOnBlur` na `true` (#58794).
 - [Formuláre](redactor/apps/form/README.md#možné-konfiguračné-premenné) - klasické aj viackrokové formuláre rešpektujú `sendMailSaveEmail` a ukladajú emaily ako súbory `.eml` do `sendMailSaveEmailPath` namiesto SMTP odoslania. Ak sa zápis nepodarí, formulár oznámi chybu.

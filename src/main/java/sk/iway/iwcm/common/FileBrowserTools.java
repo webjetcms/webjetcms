@@ -55,20 +55,31 @@ public class FileBrowserTools {
     }
 
     /**
-     * Kontrola, ci v nazve suboru nie je zakazany symbol
-     * @param name
-     * @return
+     * Checks whether a file name or path contains a forbidden character or substring.
+     *
+     * @param name file name or path to check; may be {@code null}
+     * @return {@code true} when a forbidden character or substring is found
      */
     public static boolean hasForbiddenSymbol(String name)
     {
+        return getForbiddenSymbol(name) != null;
+    }
+
+    /**
+     * Finds a forbidden character or substring using the same exceptions as filename validation.
+     *
+     * @param name file name or path to check; may be {@code null}
+     * @return the first matching token in the forbidden list, or {@code null} when none is found
+     */
+    public static String getForbiddenSymbol(String name)
+    {
         if (name == null)
         {
-            return(false);
+            return null;
         }
         //in html folder we have valid files with name showdoc.dodocid=1234.html, allow this
         name = name.replace("showdoc.dodocid=" , "");
 
-        //	kontrola zakazanych znakov v adrese
         name = name.toLowerCase();
         for (String fSymbol : forbiddenSymbols)
         {
@@ -80,10 +91,10 @@ public class FileBrowserTools {
             }
             if (name.indexOf(fSymbol) != -1)
             {
-                return(true);
+                return fSymbol;
             }
         }
-        return(false);
+        return null;
     }
 
     public static IwcmFile cleanMetadata(InputStream is, int length , String filename, boolean closeIs)

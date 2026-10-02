@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
@@ -187,6 +188,44 @@ class MultistepFormsServiceTest {
             );
 
             assertInstanceOf(SaveFormException.class, exception.getCause());
+        }
+    }
+
+    /** Escapes user-controlled filenames in duplicate upload errors. */
+    @Test
+    void escapesFilenameInDuplicateUploadError() {
+        FormItemsRepository repository = mock(FormItemsRepository.class);
+        MultistepFormsService service = new MultistepFormsService(null, null, repository, null, null);
+        MockHttpServletRequest request = formRequest();
+        FormSettingsEntity settings = new FormSettingsEntity();
+        XhrFileUploadService uploads = mock(XhrFileUploadService.class);
+        Prop prop = mock(Prop.class, CALLS_REAL_METHODS);
+        doReturn("The file {1} has been uploaded multiple times.").when(prop).getText("multistep_form.duplicate_file");
+        FormItemEntity uploadItem = validationField("upload", "multiupload");
+        JSONObject received = new JSONObject().put("upload", "fileA;fileB");
+        HashMap<String, String> errors = new HashMap<>();
+
+        when(uploads.getTempFilePath(anyString())).thenAnswer(invocation -> "/tmp/" + invocation.getArgument(0));
+        when(uploads.getTempFileName(anyString())).thenReturn("temporary-upload.pdf");
+        when(uploads.getOriginalFileName(anyString())).thenReturn("report<b> & \"draft\".pdf");
+        when(repository.findAllForValidation("contact-form", 1)).thenReturn(List.of(uploadItem));
+
+        try (
+            MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class);
+            MockedStatic<FormSettingsService> formSettings = mockStatic(FormSettingsService.class);
+            MockedStatic<XhrFileUploadServlet> uploadServlet = mockStatic(XhrFileUploadServlet.class);
+            MockedStatic<Prop> props = mockStatic(Prop.class);
+            MockedStatic<Cache> caches = mockStatic(Cache.class);
+            MockedStatic<Tools> tools = mockValidationFields(repository)
+        ) {
+            caches.when(Cache::getInstance).thenReturn(mock(Cache.class));
+            cloudTools.when(CloudToolsForCore::getDomainId).thenReturn(1);
+            uploadServlet.when(XhrFileUploadServlet::getService).thenReturn(uploads);
+            props.when(() -> Prop.getInstance("en")).thenReturn(prop);
+
+            ReflectionTestUtils.invokeMethod(service, "validateFileFields", "contact-form", settings, List.of(uploadItem), received, errors, request);
+
+            assertEquals("The file report&lt;b&gt; &amp; &quot;draft&quot;.pdf has been uploaded multiple times.", errors.get("upload"));
         }
     }
 

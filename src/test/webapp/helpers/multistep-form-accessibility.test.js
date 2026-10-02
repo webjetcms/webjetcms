@@ -153,3 +153,29 @@ test("submission errors reset independently across form instances and after a st
     assert.equal(await page.locator("#f1-email").getAttribute("aria-describedby"), `f1-help ${emailErrorId}`);
     assert.equal(await page.locator("#f1-email").getAttribute("aria-invalid"), "true");
 });
+
+test("file errors display escaped filenames as text without creating HTML or running event handlers", async t => {
+    const page = await createPage(t, prefix => `
+        <div class="form-group">
+            <input id="${prefix}upload" name="${prefix}upload" aria-label="Upload">
+            <div class="cs-error cs-error-${prefix}upload"></div>
+        </div>`);
+    const messages = [
+        {
+            encoded: "File Draft B · 08 · System notifications &lt;b&gt;B11a–c.png contains a forbidden character or string in its name: &gt;.",
+            text: "File Draft B · 08 · System notifications <b>B11a–c.png contains a forbidden character or string in its name: >."
+        },
+        {
+            encoded: "File report&lt;img src=x onerror=window.injected=true&gt;.pdf contains a forbidden character or string in its name: &gt;.",
+            text: "File report<img src=x onerror=window.injected=true>.pdf contains a forbidden character or string in its name: >."
+        }
+    ];
+    const error = page.locator(".cs-error-f1-upload");
+
+    for (const message of messages) {
+        await page.evaluate(encoded => firstForm.postSaveAction({ fieldErrors: { upload: encoded } }), message.encoded);
+        assert.equal(await error.textContent(), message.text);
+        assert.equal(await error.locator("b, img").count(), 0);
+        assert.equal(await page.evaluate(() => window.injected), undefined);
+    }
+});
