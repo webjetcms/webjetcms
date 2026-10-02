@@ -103,7 +103,7 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
     }
 
     /**
-     * Regenerates form metadata after saving a step outside the duplicate workflow.
+     * Clears cached validation fields and regenerates metadata after saving a step outside duplication.
      *
      * @param entity submitted step values
      * @param saved persisted step entity
@@ -113,6 +113,7 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
         // After save ensure that form pattern is updated, and all step positions
         // !! do not call, when action was duplication
         if(isDuplicate() == false) {
+            MultistepFormsService.clearValidationFieldsCache(saved.getFormName(), saved.getDomainId());
             multistepFormsService.updateFormPattern(entity.getFormName());
             multistepFormsService.updateStepsPositions(entity.getFormName());
         }
@@ -169,6 +170,7 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
         // After delete remove all step items binded to this form step
         formItemsRepository.deleteAllByStepIdAndDomainId(id, CloudToolsForCore.getDomainId());
 
+        MultistepFormsService.clearValidationFieldsCache(entity.getFormName(), CloudToolsForCore.getDomainId());
         // Now update form pattern
         multistepFormsService.updateFormPattern(entity.getFormName());
 
@@ -222,6 +224,7 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
             formItemsRepository.save(stepItem);
         }
 
+        MultistepFormsService.clearValidationFieldsCache(entity.getFormName(), CloudToolsForCore.getDomainId());
         // Now update form pattern
         multistepFormsService.updateFormPattern(entity.getFormName());
 
@@ -280,6 +283,7 @@ public class FormStepsRestController extends DatatableRestControllerV2<FormStepE
         ResponseEntity<Boolean> response = super.rowReorder(request, rowReorderDto);
 
         if(response.getStatusCode().is2xxSuccessful() && response.getBody() == Boolean.TRUE) {
+            MultistepFormsService.clearValidationFieldsCache(formName, CloudToolsForCore.getDomainId());
             // All good, now update steps positions in form
             multistepFormsService.updateStepsPositions(formName);
         }

@@ -3,32 +3,44 @@ package sk.iway.iwcm.components.multistep_form.rest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.RETURNS_SELF;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.withSettings;
 
 import java.lang.reflect.UndeclaredThrowableException;
-import java.sql.ResultSet;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
+import sk.iway.iwcm.components.forms.FormsController;
+import sk.iway.iwcm.components.forms.FormsEntity;
+import sk.iway.iwcm.components.forms.FormsRepository;
+import sk.iway.iwcm.components.forms.FormsService;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemEntity;
 import sk.iway.iwcm.components.multistep_form.jpa.FormItemsRepository;
 import sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity;
@@ -36,18 +48,108 @@ import sk.iway.iwcm.components.multistep_form.jpa.FormStepsRepository;
 import sk.iway.iwcm.components.multistep_form.support.SaveFormException;
 import sk.iway.iwcm.components.upload.XhrFileUploadService;
 import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
-import sk.iway.iwcm.database.ComplexQuery;
-import sk.iway.iwcm.database.Mapper;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.form.FormFileRestriction;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 
 /**
- * Tests identifiers, condition-field loading, upload limits and saved selections in
- * {@link MultistepFormsService}.
+ * Tests caching, identifiers, conditions, uploads, and saved selections in {@link MultistepFormsService}.
  */
 class MultistepFormsServiceTest {
+
+    /**
+     * Verifies cached copies are reused and reloaded after administrative changes or cluster eviction.
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {"local", "cluster", "itemSave", "itemDelete", "stepSave", "stepDelete", "stepDuplicate", "formDuplicate", "formDelete"})
+    void cachesValidationFieldsUntilInvalidated(String operation) {
+        String formName = "contact-form";
+        String otherDomainKey = "multistep_form.validationFields.10.other";
+        FormItemsRepository repository = mock(FormItemsRepository.class);
+        FormItemEntity field = validationField("name", "text");
+        field.setFormName(formName);
+        field.setDomainId(1);
+        when(repository.findAllForValidation(formName, 1)).thenReturn(List.of(field));
+
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class, CALLS_REAL_METHODS);
+                MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class);
+                MockedStatic<ClusterDB> clusters = mockStatic(ClusterDB.class);
+                MockedStatic<Tools> tools = mockValidationFields(repository)) {
+            constants.when(Constants::getServletContext).thenReturn(new MockServletContext());
+            cloudTools.when(CloudToolsForCore::getDomainId).thenReturn(1);
+            Cache cache = Cache.getInstance();
+            cache.setObjectSeconds(otherDomainKey, List.of(field), 3600, false);
+
+            MultistepFormsService.getFormItemsForValidation(formName).get(0).setLabel("Changed by caller");
+            field.setLabel("Updated in database");
+            assertEquals("name", MultistepFormsService.getFormItemsForValidation(formName).get(0).getLabel());
+            verify(repository).findAllForValidation(formName, 1);
+
+            invalidateValidationFields(operation, field, repository);
+
+            assertEquals("Updated in database", MultistepFormsService.getFormItemsForValidation(formName).get(0).getLabel());
+            verify(repository, times(2)).findAllForValidation(formName, 1);
+            assertEquals(List.of(field), cache.getObject(otherDomainKey));
+        }
+    }
+
+    /** Invokes the production operation responsible for invalidating a warmed validation cache. */
+    private void invalidateValidationFields(String operation, FormItemEntity field, FormItemsRepository items) {
+        String formName = field.getFormName();
+        MultistepFormsService service = mock(MultistepFormsService.class);
+        FormStepEntity step = new FormStepEntity();
+        step.setId(field.getStepId());
+        step.setFormName(formName);
+        step.setDomainId(field.getDomainId());
+
+        switch(operation) {
+            case "local" -> MultistepFormsService.clearValidationFieldsCache(formName, field.getDomainId());
+            case "cluster" -> MultistepFormsService.refresh(field.getDomainId());
+            case "itemSave", "itemDelete" -> {
+                FormItemsRestController controller = mock(FormItemsRestController.class, CALLS_REAL_METHODS);
+                ReflectionTestUtils.setField(controller, "multistepFormsService", service);
+                doReturn(new MockHttpServletRequest()).when(controller).getRequest();
+                if("itemSave".equals(operation)) controller.afterSave(field, field);
+                else controller.afterDelete(field, 1L);
+            }
+            case "stepSave", "stepDelete", "stepDuplicate" -> {
+                FormStepsRestController controller = mock(FormStepsRestController.class, CALLS_REAL_METHODS);
+                ReflectionTestUtils.setField(controller, "multistepFormsService", service);
+                ReflectionTestUtils.setField(controller, "formItemsRepository", items);
+                doReturn(false).when(controller).isDuplicate();
+                doReturn(new Identity()).when(controller).getUser();
+                if("stepSave".equals(operation)) controller.afterSave(step, step);
+                else if("stepDelete".equals(operation)) controller.afterDelete(step, step.getId());
+                else controller.afterDuplicate(step, 2L);
+            }
+            case "formDuplicate" -> {
+                FormsController controller = mock(FormsController.class, CALLS_REAL_METHODS);
+                doReturn(true).when(controller).isDuplicate();
+                FormsEntity form = new FormsEntity();
+                form.setFormName(formName);
+                form.setDomainId(field.getDomainId());
+                try {
+                    controller.afterSave(form, form);
+                } finally {
+                    FormsController.setRedirect(null);
+                }
+            }
+            case "formDelete" -> {
+                FormsEntity form = new FormsEntity();
+                form.setId(1L);
+                form.setFormName(formName);
+                form.setDomainId(field.getDomainId());
+                FormsRepository forms = mock(FormsRepository.class);
+                FormStepsRepository steps = mock(FormStepsRepository.class);
+                when(forms.findFirstByIdAndDomainId(form.getId(), field.getDomainId())).thenReturn(Optional.of(form));
+                FormsService<FormsRepository, FormsEntity> formsService = new FormsService<>(forms, null, steps, items);
+                assertTrue(formsService.deleteItem(form, form.getId(), steps, items, null));
+            }
+            default -> throw new IllegalArgumentException("Unknown cache invalidation operation: " + operation);
+        }
+    }
 
     /**
      * Verifies that item form IDs remain unique across fields with different types.
@@ -125,6 +227,7 @@ class MultistepFormsServiceTest {
 
         when(restriction.getMaxCombinedSizeInKilobytes()).thenReturn(1500L);
         when(uploads.getTempFilePath(anyString())).thenAnswer(invocation -> "/tmp/" + invocation.getArgument(0));
+        when(repository.findAllForValidation("contact-form", 1)).thenReturn(List.of(validationField("upload", "multiupload")));
 
         try (
             MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class);
@@ -135,8 +238,10 @@ class MultistepFormsServiceTest {
                 when(file.exists()).thenReturn(true);
                 when(file.length()).thenReturn(800L * 1024L);
             });
-            MockedConstruction<ComplexQuery> queries = mockFormItemsQuery("upload", "multiupload")
+            MockedStatic<Cache> caches = mockStatic(Cache.class);
+            MockedStatic<Tools> tools = mockValidationFields(repository)
         ) {
+            caches.when(Cache::getInstance).thenReturn(mock(Cache.class));
             cloudTools.when(CloudToolsForCore::getDomainId).thenReturn(1);
             formSettings.when(() -> FormSettingsService.getFileRestriction("contact-form", settings)).thenReturn(restriction);
             uploadServlet.when(XhrFileUploadServlet::getService).thenReturn(uploads);
@@ -150,12 +255,52 @@ class MultistepFormsServiceTest {
         }
     }
 
+    /** Escapes user-controlled filenames in duplicate upload errors. */
+    @Test
+    void escapesFilenameInDuplicateUploadError() {
+        FormItemsRepository repository = mock(FormItemsRepository.class);
+        MultistepFormsService service = new MultistepFormsService(null, null, repository, null, null);
+        MockHttpServletRequest request = formRequest();
+        FormSettingsEntity settings = new FormSettingsEntity();
+        XhrFileUploadService uploads = mock(XhrFileUploadService.class);
+        Prop prop = mock(Prop.class, CALLS_REAL_METHODS);
+        doReturn("The file {1} has been uploaded multiple times.").when(prop).getText("multistep_form.duplicate_file");
+        FormItemEntity uploadItem = validationField("upload", "multiupload");
+        JSONObject received = new JSONObject().put("upload", "fileA;fileB");
+        HashMap<String, String> errors = new HashMap<>();
+
+        when(uploads.getTempFilePath(anyString())).thenAnswer(invocation -> "/tmp/" + invocation.getArgument(0));
+        when(uploads.getTempFileName(anyString())).thenReturn("temporary-upload.pdf");
+        when(uploads.getOriginalFileName(anyString())).thenReturn("report<b> & \"draft\".pdf");
+        when(repository.findAllForValidation("contact-form", 1)).thenReturn(List.of(uploadItem));
+
+        try (
+            MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class);
+            MockedStatic<FormSettingsService> formSettings = mockStatic(FormSettingsService.class);
+            MockedStatic<XhrFileUploadServlet> uploadServlet = mockStatic(XhrFileUploadServlet.class);
+            MockedStatic<Prop> props = mockStatic(Prop.class);
+            MockedStatic<Cache> caches = mockStatic(Cache.class);
+            MockedStatic<Tools> tools = mockValidationFields(repository)
+        ) {
+            caches.when(Cache::getInstance).thenReturn(mock(Cache.class));
+            cloudTools.when(CloudToolsForCore::getDomainId).thenReturn(1);
+            uploadServlet.when(XhrFileUploadServlet::getService).thenReturn(uploads);
+            props.when(() -> Prop.getInstance("en")).thenReturn(prop);
+
+            ReflectionTestUtils.invokeMethod(service, "validateFileFields", "contact-form", settings, List.of(uploadItem), received, errors, request);
+
+            assertEquals("The file report&lt;b&gt; &amp; &quot;draft&quot;.pdf has been uploaded multiple times.", errors.get("upload"));
+        }
+    }
+
     /**
      * Verifies that a checkbox value containing a comma round-trips exactly while
      * retaining the legacy string session value.
      */
     @Test
     void restoresCommaContainingCheckboxValue() {
+        FormItemsRepository repository = mock(FormItemsRepository.class);
+        when(repository.findAllForValidation("contact-form", 1)).thenReturn(List.of(validationField("choices", "checkbox")));
         MultistepFormsService service = new MultistepFormsService(null, null, null, null, null);
         MockHttpServletRequest request = formRequest();
         Prop prop = mock(Prop.class);
@@ -166,8 +311,10 @@ class MultistepFormsServiceTest {
             MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class);
             MockedStatic<Prop> props = mockStatic(Prop.class);
             MockedStatic<XhrFileUploadServlet> uploads = mockStatic(XhrFileUploadServlet.class);
-            MockedConstruction<ComplexQuery> queries = mockFormItemsQuery("choices", "checkbox")
+            MockedStatic<Cache> caches = mockStatic(Cache.class);
+            MockedStatic<Tools> tools = mockValidationFields(repository)
         ) {
+            caches.when(Cache::getInstance).thenReturn(mock(Cache.class));
             cloudTools.when(CloudToolsForCore::getDomainId).thenReturn(1);
             props.when(() -> Prop.getInstance(request)).thenReturn(prop);
 
@@ -187,16 +334,18 @@ class MultistepFormsServiceTest {
         return request;
     }
 
-    private static MockedConstruction<ComplexQuery> mockFormItemsQuery(String itemFormId, String fieldType) {
-        return mockConstruction(ComplexQuery.class, withSettings().defaultAnswer(RETURNS_SELF), (query, context) ->
-            when(query.list(any())).thenAnswer(invocation -> {
-                Mapper<?> mapper = invocation.getArgument(0);
-                ResultSet row = mock(ResultSet.class);
-                when(row.getString("item_form_id")).thenReturn(itemFormId);
-                when(row.getString("field_type")).thenReturn(fieldType);
-                mapper.map(row);
-                return List.of();
-            })
-        );
+    private static MockedStatic<Tools> mockValidationFields(FormItemsRepository repository) {
+        MockedStatic<Tools> tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
+        tools.when(() -> Tools.getSpringBean("formItemsRepository", FormItemsRepository.class)).thenReturn(repository);
+        return tools;
+    }
+
+    private static FormItemEntity validationField(String itemFormId, String fieldType) {
+        FormItemEntity field = new FormItemEntity();
+        field.setStepId(1L);
+        field.setItemFormId(itemFormId);
+        field.setLabel(itemFormId);
+        field.setFieldType(fieldType);
+        return field;
     }
 }
