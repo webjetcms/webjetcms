@@ -218,23 +218,6 @@ webjet-overview-dashboard a:focus-visible {
     &__shortcut-list > &__widget { --wj-dashboard-muted: #{$dashboard-muted}; --wj-dashboard-divider: #{$dashboard-divider}; --wj-dashboard-link: #{$primary-hover}; }
     &__shortcuts > &__status .text-danger { color: var(--wj-dashboard-hero-error) !important; }
     &__eyebrow { color: var(--wj-dashboard-muted); font-size: 12px; margin: 0; &::first-letter { text-transform: uppercase; } }
-    &__environment {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        max-width: 100%;
-        padding: 2px 8px;
-        border: 1px solid color-mix(in srgb, var(--wj-dashboard-environment-bg), #000 25%);
-        border-radius: 4px;
-        background: var(--wj-dashboard-environment-bg);
-        color: var(--wj-dashboard-environment-text);
-        font-size: 11px;
-        font-weight: 700;
-        letter-spacing: .6px;
-        overflow-wrap: anywhere;
-        > .ti { flex-shrink: 0; font-size: 14px; }
-        > span { min-width: 0; }
-    }
     &__news, &__sessions, &__search { min-width: 0; }
     &__news { width: 100%; }
 

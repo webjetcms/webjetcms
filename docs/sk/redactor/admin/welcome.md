@@ -14,7 +14,7 @@ Ponuka widgetov zodpovedá vašim oprávneniam. Rozloženie sa ukladá na vaše 
 
 ![](dashboard.png)
 
-Pri privítaní sa zobrazuje aj označenie prostredia, napríklad **PROD**, **UAT**, **INT** alebo **DEV**. Pomáha vám rozlíšiť, či pracujete s produkčným webom alebo v testovacom prostredí. Správca môže upraviť jeho text, ikonu, farbu a obrázok pozadia podľa [konfigurácie úvodnej obrazovky](../../admin/setup/configuration/dashboard.md).
+Pred názvom stránky v hlavičke celej administrácie a na prihlasovacej stránke sa zobrazuje označenie prostredia: **PROD**, **TEST**, **CIT**, **INT**, **UAT**, **DEMO**, **LOCAL** alebo **DEV**. Je aj v titulku karty prehliadača, aby ste rozlíšili otvorené prostredia. Správca môže upraviť text, ikonu, farbu, štýl a popis označenia podľa [konfigurácie prostredia](../../admin/setup/configuration/dashboard.md).
 
 ## Prispôsobenie prehľadu
 

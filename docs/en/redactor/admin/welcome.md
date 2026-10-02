@@ -10,7 +10,7 @@ The widget menu corresponds to your permissions. The layout is saved to your acc
 
 ![](dashboard.png)
 
-The welcome screen also displays an environment label, such as **PROD**, **UAT**, **INT**, or **DEV**. It helps you distinguish whether you are working with a production site or a test environment. The administrator can customize its text, icon, color, and background image according to the [splash screen configuration](../../admin/setup/configuration/dashboard.md).
+The environment badge appears before the page title throughout administration v9 and on the login page: **PROD**, **TEST**, **CIT**, **INT**, **UAT**, **DEMO**, **LOCAL** or **DEV**. It also prefixes the browser tab title. Administrators can configure its text, icon, color, style and description using [environment configuration](../../admin/setup/configuration/dashboard.md).
 
 ## Customize the report
 

@@ -28,41 +28,6 @@ function dispose(result) {
 }
 
 /**
- * Creates an environment label with automatic identity styling or explicit icon and color overrides.
- * @param {Object} [config={}] - Environment-label configuration.
- * @param {string} [config.environmentName='DEV'] - Display name; whitespace and trailing slashes are removed.
- * @param {string} [config.environmentType] - Fallback PROD, UAT, INT or DEV identity when the name has no recognized prefix.
- * @param {string} [config.environmentIcon] - Optional validated Tabler icon override.
- * @param {string} [config.environmentColor] - Optional three- or six-digit hexadecimal background color.
- * @returns {HTMLSpanElement|null} A badge with a contrast-based text color, or null for an empty name.
- */
-function environmentBadge(config = {}) {
-    const name = String(config.environmentName ?? "DEV").trim().replace(/\/+$/, "").trim();
-    if (!name) return null;
-    const environments = {
-        PROD: { color: "#D6F5EF", icon: "ti-server" },
-        UAT: { color: "#FFF2C9", icon: "ti-clipboard-check" },
-        INT: { color: "#FFE0B2", icon: "ti-git-merge" },
-        DEV: { color: "#FFD9DE", icon: "ti-code" }
-    };
-    const environment = name.match(/^(PROD|UAT|INT|DEV)(?=[/\s-]|$)/i)?.[1].toUpperCase() || config.environmentType;
-    const automatic = environments[environment] || environments.DEV;
-    const badge = node("span", "md-dashboard__environment");
-    const iconName = /^ti-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(config.environmentIcon) ? config.environmentIcon : automatic.icon;
-    const color = /^#(?:[\da-f]{3}|[\da-f]{6})$/i.test(config.environmentColor) ? config.environmentColor : automatic.color;
-    const hex = color.length === 4 ? color.slice(1).split("").map(value => value + value).join("") : color.slice(1);
-    const channels = hex.match(/../g).map(value => {
-        const channel = parseInt(value, 16) / 255;
-        return channel <= .04045 ? channel / 12.92 : ((channel + .055) / 1.055) ** 2.4;
-    });
-    const luminance = channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
-    badge.style.setProperty("--wj-dashboard-environment-bg", color);
-    badge.style.setProperty("--wj-dashboard-environment-text", luminance > .179 ? "#000" : "#fff");
-    badge.append(icon(iconName), node("span", "", name));
-    return badge;
-}
-
-/**
  * Bootstrap context before the controller adds widget-specific services.
  * @typedef {Omit<import('./registry').WidgetContext, 'dashboard'|'settings'>} DashboardContext
  */
@@ -157,8 +122,6 @@ export class DashboardController {
         const language = window.userLng === "cz" ? "cs" : window.userLng || "sk";
         const meta = node("div", "md-dashboard__welcome-meta");
         meta.append(node("p", "md-dashboard__eyebrow", new Intl.DateTimeFormat(language, { weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date())));
-        const environment = environmentBadge(this.context.config);
-        if (environment) meta.append(environment);
         welcome.append(meta);
         const welcomeHeading = this.welcomeHeading = node("div", "md-dashboard__welcome-heading");
         welcomeHeading.append(node("h1", "md-dashboard__greeting", `${this._t("welcomeBack", "Welcome back,")} ${this.context.data?.userName || ""}`.trim()));
