@@ -74,7 +74,7 @@ export function registerDashboardWidgets() {
     registerWidget({
         type: "recent-pages", titleKey: "admin.dashboard.recent-pages.js", descriptionKey: "admin.dashboard.recent-pages.description.js",
         icon: "ti-history", multiple: true, sizes: ["2x3", "3x2", "3x3"], defaultSize: "3x2",
-        headerLink: { href: "/admin/v9/webpages/web-pages-list/", labelKey: "admin.dashboard.allShort.js" },
+        headerLink: { href: "/admin/v9/webpages/web-pages-list/" },
         isAvailable: () => window.WJ.hasPermission("menuWebpages"),
         async render({ container, context, signal }) {
             const pages = await recentPages(context, signal);

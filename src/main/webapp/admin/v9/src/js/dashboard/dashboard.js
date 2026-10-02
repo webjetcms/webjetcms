@@ -1,6 +1,7 @@
 import { getWidget, listWidgets } from './registry';
 import { MAX_WIDGETS, cloneSettings, createInstanceId, normalizeSettings, moveInstanceBefore, createLayoutSegments } from './model';
 import { link, localUrl, shortcutUrl } from './widget-utils';
+import { DashboardEditor } from './editor';
 
 function node(tag, className = "", text) {
     const result = document.createElement(tag);
@@ -134,15 +135,20 @@ export class DashboardController {
         this.notices.id = "toast-container-overview";
         this.search = node("div", "md-dashboard__search");
         this.toolbar = node("div", "md-dashboard__toolbar");
-        this.toolbar.append(node("h2", "md-dashboard__title", this._t("title", "My overview")));
+        const toolbarHeading = node("div", "md-dashboard__toolbar-heading");
+        this.toolbarTitle = node("h2", "md-dashboard__title", this._t("title", "My overview"));
+        this.editHint = node("p", "md-dashboard__edit-hint", this._t("editHint", "Drag widgets by their grips; change their size in settings."));
+        this.editHint.hidden = true;
+        toolbarHeading.append(this.toolbarTitle, this.editHint);
+        this.toolbar.append(toolbarHeading);
         const actions = node("div", "md-dashboard__toolbar-actions");
-        this.editButton = button(this._t("editOverview", "Edit overview"), () => this.setEditing(!this.editing), "btn btn-sm btn-outline-secondary md-dashboard__control");
+        this.editButton = button(this._t("editOverview", "Edit overview"), () => this.editing ? this.saveEditing() : this.setEditing(true), "btn btn-sm btn-outline-secondary md-dashboard__control");
         this.editButton.setAttribute("aria-pressed", "false");
         this.editButton.prepend(icon("ti-adjustments-horizontal"));
-        this.addButton = button(this._t("add", "Add widget"), () => this.showCatalogue(), "btn btn-sm btn-primary md-dashboard__control md-dashboard__edit-control");
+        this.addButton = button(this._t("add", "Add widget"), () => this.showCatalogue(), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control");
         this.addButton.prepend(icon("ti-plus"));
         this.addButton.hidden = true;
-        this.resetButton = button(this._t("datatables.button.restore.js", "Restore"), event => this.showReset(event.shiftKey), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control md-dashboard__reset");
+        this.resetButton = button(this._t("resetConfirm", "Restore defaults"), event => this.showReset(event.shiftKey), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control md-dashboard__reset");
         this.resetButton.prepend(icon("ti-refresh"));
         this.resetButton.title = this._t("resetTooltip", "Restore the standard widgets, sizes and order. Hold Shift to show all widgets in every size.");
         this.resetButton.hidden = true;
@@ -151,7 +157,9 @@ export class DashboardController {
             feedback.prepend(icon("ti-message-2"));
             actions.append(feedback);
         }
-        actions.append(this.addButton, this.resetButton, this.editButton);
+        this.cancelButton = button(this._t("button.cancel", "Cancel"), () => this.cancelEditing(), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control md-dashboard__cancel");
+        this.cancelButton.hidden = true;
+        actions.append(this.resetButton, this.addButton, this.cancelButton, this.editButton);
         this.toolbar.append(actions);
         this.overviewStatus = node("div", "md-dashboard__status");
         this.status.setAttribute("role", "status");
@@ -160,8 +168,12 @@ export class DashboardController {
         this.undoContainer = node("div", "md-dashboard__undo");
         this.undoContainer.hidden = true;
         this.layout = node("div", "md-dashboard__layout");
-        this.dropEnd = node("div", "md-dashboard__drop-end", this._t("moveEnd", "At the end"));
-        this.dropEnd.setAttribute("aria-hidden", "true");
+        this.widgetMoveHint = node("p", "visually-hidden", this._t("widgetMoveHint", "Space lifts the widget, arrows move it, Enter drops it, Escape cancels."));
+        this.widgetMoveHint.id = `dashboard-widget-move-${createInstanceId()}`;
+        this.widgetMoveStatus = node("div", "visually-hidden");
+        this.widgetMoveStatus.setAttribute("role", "status");
+        this.widgetMoveStatus.setAttribute("aria-live", "polite");
+        this.widgetMoveStatus.setAttribute("aria-atomic", "true");
         this.shortcuts = node("section", "md-dashboard__shortcuts");
         this.shortcuts.setAttribute("aria-label", this._t("shortcuts", "Your shortcuts"));
         this.shortcutActions = node("div", "md-dashboard__shortcut-actions");
@@ -185,7 +197,7 @@ export class DashboardController {
         this.shortcutMoveHint = moveHint;
         this.shortcuts.append(moveHint);
         welcome.insertBefore(this.shortcuts, this.news);
-        this.host.replaceChildren(this.hero, this.notices, this.search, this.toolbar, this.overviewStatus, this.undoContainer, this.layout, this.dropEnd);
+        this.host.replaceChildren(this.hero, this.notices, this.search, this.toolbar, this.overviewStatus, this.undoContainer, this.layout, this.widgetMoveHint, this.widgetMoveStatus);
         if (window.jQuery && window.WJ?.initTooltip) {
             for (const control of [this.resetButton, this.editShortcutsButton]) window.WJ.initTooltip(window.jQuery(control));
         }
@@ -198,15 +210,63 @@ export class DashboardController {
      * @param {boolean} editing - Whether overview arrangement controls should be visible.
      */
     setEditing(editing) {
+        if (Boolean(editing) === this.editing) return;
         if (editing && this.editingShortcuts) this.setEditingShortcuts(false);
+        if (editing) this.editor = new DashboardEditor(this);
+        else {
+            for (const dialog of this._dialogs) dialog.destroy();
+            this.editor?.destroy();
+            this.editor = null;
+        }
         this.editing = Boolean(editing);
         if (!this.editing) window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.hide();
         this.host.classList.toggle("is-editing", this.editing);
-        this.editButton.textContent = this._t(this.editing ? "finishEditing" : "editOverview", this.editing ? "Done" : "Edit overview");
+        this.editButton.textContent = this._t(this.editing ? "save" : "editOverview", this.editing ? "Save" : "Edit overview");
         this.editButton.prepend(icon(this.editing ? "ti-check" : "ti-adjustments-horizontal"));
         this.editButton.setAttribute("aria-pressed", String(this.editing));
+        this.editButton.classList.toggle("btn-primary", this.editing);
+        this.editButton.classList.toggle("btn-outline-secondary", !this.editing);
+        this.toolbarTitle.textContent = this._t(this.editing ? "editOverview" : "title", this.editing ? "Edit overview" : "My overview");
+        this.editHint.hidden = !this.editing;
+        this.widgetMoveStatus.textContent = "";
         this.toolbar.querySelectorAll(".md-dashboard__edit-control").forEach(control => { control.hidden = !this.editing; });
         this._updateEditing();
+        this.editor?.positionToolbar();
+    }
+
+    /** Atomically saves the widget draft, retaining it for retry if the server rejects it. */
+    async saveEditing() {
+        if (!this.editor || this.saving) return false;
+        this.editor.finishMove(true);
+        for (const dialog of this._dialogs) dialog.destroy();
+        if (this.editor.dirty && !await this._commit(cloneSettings(this.settings), this.overviewStatus, { notify: false, draft: false, overviewSave: true })) return false;
+        this.setEditing(false);
+        this.editButton.focus({ preventScroll: true });
+        window.WJ.notifySuccess(this._t("overviewSaved", "The overview has been saved."), "", 10000);
+        return true;
+    }
+
+    /** Confirms discarding a dirty widget draft before closing it or entering shortcut editing. */
+    cancelEditing(after) {
+        if (!this.editor || this.saving) return;
+        this.editor.finishMove(false);
+        const cancel = () => {
+            this.settings = cloneSettings(this.editor.original);
+            this.setEditing(false);
+            this._render();
+            this.overviewStatus.textContent = "";
+            this.editButton.focus({ preventScroll: true });
+            after?.();
+        };
+        if (!this.editor.dirty) { cancel(); return; }
+        const dialog = this._dialog(this._t("discardConfirm", "Discard unsaved changes?"));
+        dialog.root.classList.add("md-dashboard-modal--confirm");
+        dialog.body.append(node("p", "mb-0", this._t("discardDescription", "Widget positions, sizes and settings changed during this edit will be discarded. Your shortcuts will be kept.")));
+        const keep = button(this._t("continueEditing", "Continue editing"), () => dialog.close(), "btn btn-outline-secondary");
+        const discard = button(this._t("discardChanges", "Discard changes"), () => { dialog.close(); cancel(); }, "btn btn-danger");
+        dialog.footer.append(keep, discard);
+        dialog.root.addEventListener("shown.bs.modal", () => keep.focus({ preventScroll: true }), { once: true });
+        keep.focus({ preventScroll: true });
     }
 
     /**
@@ -215,7 +275,7 @@ export class DashboardController {
      * @param {boolean} editing - Whether shortcut arrangement controls should be visible.
      */
     setEditingShortcuts(editing) {
-        if (editing && this.editing) this.setEditing(false);
+        if (editing && this.editing) { this.cancelEditing(() => this.setEditingShortcuts(true)); return; }
         this.editingShortcuts = Boolean(editing);
         if (!this.editingShortcuts) this._finishShortcutMove(false);
         this.host.classList.toggle("is-editing-shortcuts", this.editingShortcuts);
@@ -246,7 +306,10 @@ export class DashboardController {
             view.card.querySelectorAll(".md-dashboard__edit-control").forEach(control => { control.hidden = !this._isEditing(view.instance); });
             if (view.instance.type === "shortcut") this._updateShortcutLink(view);
         }
-        for (const view of this.views.values()) window.bootstrap?.Dropdown?.getInstance(view.header.querySelector('[data-bs-toggle="dropdown"]'))?.hide();
+        for (const view of this.views.values()) {
+            window.bootstrap?.Dropdown?.getInstance(view.header.querySelector('[data-bs-toggle="dropdown"]'))?.hide();
+            for (const target of view.header.querySelectorAll('[data-dashboard-tooltip]')) window.bootstrap?.Tooltip?.getInstance(target)?.hide();
+        }
         this._bindDrag();
     }
 
@@ -346,27 +409,30 @@ export class DashboardController {
     }
 
     /**
-     * Saves before applying a change, keeping the last confirmed layout on failure.
-     * Widget content and security actions stay usable while preferences are saved.
+     * Stages widget changes during editing or saves independent preferences immediately.
+     * A failed overview save retains the draft; independent saves preserve the confirmed widget layout.
      *
      * @param {import('./model').DashboardSettings} next - Complete proposed layout and current-domain options.
      * @param {HTMLElement} [status=this.status] - Region receiving progress and persistence errors.
-     * @param {Object} [options={}] - Controls the generic notification and shortcut reflow animation.
-     * @returns {Promise<boolean>} True after applying the server response; false for a blocked, invalid, aborted or failed save.
+     * @param {Object} [options={}] - Controls staging, final overview persistence, notification and shortcut animation.
+     * @returns {Promise<boolean>} True after staging or applying the response; false for a blocked, invalid, aborted or failed save.
      */
-    async _commit(next, status = this.status, { notify = true, animateShortcuts = false } = {}) {
+    async _commit(next, status = this.status, { notify = true, animateShortcuts = false, draft = true, overviewSave = false } = {}) {
         if (this.saving || this.destroyed || this.host.dataset.loaded !== "true") return false;
         this._finishShortcutMove(false);
         if (next.items.length > MAX_WIDGETS) {
             status.textContent = this._t("limit", "The overview can contain at most 48 widgets.");
             return false;
         }
+        if (this.editor && draft) return this.editor.stage(next);
+        const independent = this.editor && !overviewSave;
+        if (independent) next = this.editor.mergeIndependent(this.editor.original, next);
         this.saving = true;
         this._setBusy(true);
         status.textContent = this._t("saving", "Saving…");
         const request = this._request = new AbortController();
         try {
-            const response = await fetch("/admin/rest/dashboard/settings", {
+            const response = await fetch(overviewSave && this.editor.reset ? "/admin/rest/dashboard/settings/reset" : "/admin/rest/dashboard/settings", {
                 method: "PUT", credentials: "same-origin", signal: request.signal,
                 headers: { "Content-Type": "application/json", "X-CSRF-Token": window.csrfToken || "" },
                 body: JSON.stringify(next)
@@ -375,7 +441,8 @@ export class DashboardController {
             const saved = await response.json();
             if (this.destroyed || request.signal.aborted) return false;
             this.context.data.settings = saved;
-            this.settings = normalizeSettings(saved);
+            if (independent) this.editor.sync(normalizeSettings(saved));
+            else this.settings = normalizeSettings(saved);
             this.settings.configured = true;
             this.removed = null;
             this.undoContainer.hidden = true;
@@ -393,10 +460,10 @@ export class DashboardController {
                     ], { duration: 180, easing: 'ease-out' });
                 }
             }
-            if (notify) window.WJ.notifySuccess(this._t("saved", "Saved."), "", 3000);
+            if (notify) window.WJ.notifySuccess(this._t("saved", "Saved."), "", 10000);
             return true;
         } catch (error) {
-            if (!this.destroyed && !request.signal.aborted) status.replaceChildren(node("span", "text-danger", this._t("saveError", "The change could not be saved. Your previous settings were kept.")));
+            if (!this.destroyed && !request.signal.aborted) status.replaceChildren(node("span", "text-danger", this._t(overviewSave ? "draftSaveError" : "saveError", overviewSave ? "The overview could not be saved. Your changes are still available; try again." : "The change could not be saved. Your previous settings were kept.")));
             return false;
         } finally {
             this.saving = false;
@@ -512,6 +579,9 @@ export class DashboardController {
         const drag = button(this._t("move", "Move widget"), () => this.showMove(instance.id), "btn btn-sm md-dashboard__drag md-dashboard__control");
         drag.replaceChildren(icon("ti-grip-vertical"));
         drag.setAttribute("aria-label", this._t("move", "Move widget"));
+        drag.addEventListener("click", event => {
+            if (this.editor?.suppressClick) { event.stopImmediatePropagation(); this.editor.suppressClick = false; }
+        }, { capture: true });
         if (instance.type === "shortcut") {
             card.classList.add("md-dashboard__shortcut-card");
             header.classList.add("visually-hidden");
@@ -541,8 +611,17 @@ export class DashboardController {
             return { card, header, title, titleText, body, instance, abort: null, cleanup: null, signature: null };
         }
         const dropdown = node("div", "dropdown");
-        const menuButton = button("", () => {}, "btn btn-sm md-dashboard__control");
-        menuButton.append(icon("ti-dots-vertical"));
+        drag.classList.add("md-dashboard__edit-control");
+        drag.hidden = !this.editing;
+        drag.setAttribute("aria-describedby", this.widgetMoveHint.id);
+        drag.setAttribute("aria-pressed", "false");
+        drag.addEventListener("keydown", event => this.editor?.moveKey(event, instance.id));
+        drag.addEventListener("pointerdown", event => {
+            window.bootstrap?.Tooltip?.getInstance(drag)?.hide();
+            this.editor?.pointerDown(event, this.views.get(instance.id));
+        });
+        const menuButton = button("", () => {}, "btn btn-sm btn-outline-primary md-dashboard__control");
+        menuButton.append(icon("ti-adjustments-horizontal"));
         menuButton.setAttribute("aria-label", this._t("actions", "Widget actions"));
         menuButton.setAttribute("data-bs-toggle", "dropdown");
         menuButton.setAttribute("aria-expanded", "false");
@@ -559,13 +638,39 @@ export class DashboardController {
         };
         menu.append(menuItem("refresh", "Refresh", "ti-refresh", () => this.refresh(instance.id)));
         if (definition.configure || definition.sizes.length > 1) menu.append(menuItem("settings", "Settings", "ti-settings", () => this.showSettings(instance.id)));
-        menu.append(menuItem("move", "Move widget", "ti-arrows-move", () => this.showMove(instance.id)));
-        if (!definition.mandatory) menu.append(menuItem("remove", "Remove", "ti-trash", () => this.remove(instance.id)));
+        const keyboardMove = menuItem("keyboardMove", "Move with keyboard", "ti-arrows-move", () => this.showMove(instance.id));
+        keyboardMove.dataset.dashboardAction = "move";
+        menu.append(keyboardMove);
+        if (!definition.mandatory) {
+            menu.append(node("hr", "dropdown-divider"));
+            const remove = menuItem("removeFromOverview", "Remove from overview", "ti-trash", () => this.remove(instance.id));
+            remove.dataset.dashboardAction = "remove";
+            remove.classList.add("text-danger");
+            menu.append(remove);
+        }
         dropdown.append(menuButton, menu);
         const controls = node("div", "md-dashboard__widget-controls md-dashboard__edit-control");
         controls.hidden = !this._isEditing(instance);
-        controls.append(drag, dropdown);
-        if (!fixed) header.append(controls);
+        controls.append(dropdown);
+        if (!fixed) {
+            header.prepend(drag);
+            header.append(controls);
+            menuButton.addEventListener("show.bs.dropdown", () => window.bootstrap?.Tooltip?.getInstance(dropdown)?.hide());
+            menuButton.addEventListener("keydown", event => {
+                if (event.key === "Escape") window.bootstrap?.Dropdown?.getInstance(menuButton)?.hide();
+            });
+            drag.addEventListener("hidden.bs.tooltip", () => drag.setAttribute("aria-describedby", this.widgetMoveHint.id));
+            // Bootstrap stores one plugin per element, so the menu tooltip belongs to its wrapper.
+            for (const [target, control] of [[drag, drag], [dropdown, menuButton]]) {
+                target.title = control.getAttribute("aria-label");
+                target.setAttribute("data-dashboard-tooltip", "");
+                target.setAttribute("data-bs-animation", "false");
+                target.addEventListener("show.bs.tooltip", event => {
+                    if (!this.editing || this.editor?.move || this.editor?.stopPointer || this._dialogs.size || control.matches(":active") || menuButton.getAttribute("aria-expanded") === "true") event.preventDefault();
+                });
+                if (window.jQuery && window.WJ?.initTooltip) window.WJ.initTooltip(window.jQuery(target));
+            }
+        }
         if (["news", "search"].includes(instance.type)) header.hidden = true;
         const body = node("div", "md-dashboard__widget-body");
         body.id = `dashboard-body-${instance.id}`;
@@ -588,6 +693,10 @@ export class DashboardController {
             view.cleanup = null;
         }
         window.bootstrap?.Dropdown?.getInstance(view.header.querySelector('[data-bs-toggle="dropdown"]'))?.dispose();
+        for (const target of view.header.querySelectorAll('[data-dashboard-tooltip]')) {
+            window.bootstrap?.Tooltip?.getInstance(target)?.dispose();
+            window.jQuery?.(target).off(".wjTooltipA11y .wjFocusWithoutTooltip");
+        }
         const $ = window.jQuery;
         if ($?.fn.draggable && $(view.card).data("ui-draggable")) $(view.card).draggable("destroy");
         if ($?.fn.droppable && $(view.card).data("ui-droppable")) $(view.card).droppable("destroy");
@@ -664,7 +773,7 @@ export class DashboardController {
     }
 
     /**
-     * Persists a new instance with registered shared and domain defaults, then focuses it.
+     * Adds an instance with registered defaults to the widget draft or saved shortcut list, then focuses it.
      * @param {string} type - Registered widget type to add.
      * @returns {Promise<boolean>} Whether the instance was saved; false for unavailable types, duplicate singletons or failed saves.
      */
@@ -676,13 +785,13 @@ export class DashboardController {
         const instance = this._newInstance(definition);
         next.items.push(instance);
         next.domainOptions[instance.id] = cloneSettings(definition.defaultDomainOptions);
-        const saved = await this._commit(next);
+        const saved = await this._commit(next, this.status, { draft: type !== "shortcut" });
         if (saved) this._focusInstance(instance.id);
         return saved;
     }
 
     /**
-     * Persists shared options and filters for only the server's active domain.
+     * Stages grid options during editing or saves independent preferences for the active domain.
      * @param {string} id - Persisted instance to update.
      * @param {import('./registry').WidgetOptionsUpdate} [values={}] - Replacement maps; omitted maps retain their previous values.
      * @returns {Promise<boolean>} Whether persistence succeeded, or false when the instance does not exist.
@@ -693,13 +802,13 @@ export class DashboardController {
         if (!item) return false;
         if (options !== undefined) item.options = cloneSettings(options);
         if (domainOptions !== undefined) next.domainOptions[id] = cloneSettings(domainOptions);
-        return this._commit(next);
+        return this._commit(next, this.status, { draft: this._region(item) === "grid" });
     }
 
     /**
-     * Persists removal of an optional grid widget or shortcut and exposes one-step undo with its domain options.
+     * Removes an optional widget from the draft or saves shortcut removal, retaining options for undo.
      * @param {string} id - Instance to remove; mandatory widgets and fixed utilities cannot be removed.
-     * @returns {Promise<boolean>} Whether removal was saved and the undo action received focus.
+     * @returns {Promise<boolean>} Whether removal was applied and an undo action made available.
      */
     async remove(id) {
         const instance = this._instance(id);
@@ -710,11 +819,18 @@ export class DashboardController {
         delete next.domainOptions[id];
         const shortcut = instance.type === "shortcut";
         const following = shortcut ? this.shortcutList.querySelector(`[data-instance-id="${id}"]`)?.nextElementSibling?.dataset.instanceId : null;
-        if (!await this._commit(next, shortcut ? this.shortcutStatus : this.status, { notify: !shortcut, animateShortcuts: shortcut })) return false;
+        if (!await this._commit(next, shortcut ? this.shortcutStatus : this.status, { notify: !shortcut && !this.editor, animateShortcuts: shortcut, draft: !shortcut })) return false;
         if (shortcut) {
             this._showShortcutUndo(previous, "remove");
             if (following) this._focusInstance(following);
             else this.addShortcutButton.focus({ preventScroll: true });
+            return true;
+        }
+        if (this.editor) {
+            this.editor.showRemoval(id);
+            const nextView = [...this.views.values()].find(view => this._region(view.instance) === "grid");
+            if (nextView) this._focusInstance(nextView.instance.id);
+            else this.addButton.focus({ preventScroll: true });
             return true;
         }
         this.removed = previous;
@@ -730,6 +846,7 @@ export class DashboardController {
      * @returns {Promise<boolean>} Whether restoration was saved; false when no undo exists, it conflicts with current instances or saving fails.
      */
     async undoRemove() {
+        if (this.editor) return this.editor.undo();
         if (!this.removed) return false;
         const removed = this.removed;
         const next = cloneSettings(this.settings);
@@ -746,7 +863,7 @@ export class DashboardController {
     }
 
     /**
-     * Persists a new order within the grid or shortcut region and focuses the moved instance.
+     * Stages a grid order or persists a shortcut order and focuses the moved instance.
      * @param {string} id - Grid widget or shortcut to move.
      * @param {string|null} [beforeId=null] - Instance in the same region, or null to move to the end.
      * @returns {Promise<boolean>} Whether the resulting order was saved; false for unsupported moves or persistence failure.
@@ -757,7 +874,7 @@ export class DashboardController {
         if (beforeId && this._region(this._instance(beforeId) || {}) !== this._region(instance)) return false;
         const next = cloneSettings(this.settings);
         next.items = moveInstanceBefore(next.items, id, beforeId);
-        const saved = await this._commit(next, this._region(instance) === "shortcut" ? this.shortcutStatus : this.status, { animateShortcuts: instance.type === "shortcut" });
+        const saved = await this._commit(next, this._region(instance) === "shortcut" ? this.shortcutStatus : this.status, { animateShortcuts: instance.type === "shortcut", draft: instance.type !== "shortcut" });
         if (saved) this._focusInstance(id);
         return saved;
     }
@@ -775,7 +892,7 @@ export class DashboardController {
     async acknowledgeNews(version) {
         const next = cloneSettings(this.settings);
         next.acknowledgedNewsVersion = version;
-        return this._commit(next);
+        return this._commit(next, this.status, { draft: false });
     }
 
     /** Makes shortcut activation open settings instead of navigating while its section is being edited. */
@@ -836,7 +953,7 @@ export class DashboardController {
         next.domainOptions[previous.instance.id] = cloneSettings(previous.domainOptions);
         window.clearTimeout(timer);
         undo.disabled = true;
-        if (!await this._commit(next, this.shortcutStatus, { animateShortcuts: true })) {
+        if (!await this._commit(next, this.shortcutStatus, { animateShortcuts: true, draft: false })) {
             if (!this.destroyed) this._showShortcutUndo(previous, action);
             return false;
         }
@@ -1002,12 +1119,12 @@ export class DashboardController {
     }
 
     /**
-     * Resets widget preferences atomically, optionally saving every available size variant.
-     * The server preserves shortcuts while clearing old domain filters and news acknowledgement.
-     * A normal reset displays configured defaults without saving them as a personal layout.
+     * Stages defaults or every available size variant during editing, preserving shortcuts.
+     * Final Save clears old domain filters and news acknowledgement atomically.
+     * Outside editing, reset uses the existing immediate reset endpoints.
      *
-     * @param {boolean} [allSizes=false] - Persists all available size variants instead of applying normal defaults.
-     * @returns {Promise<boolean>} Whether the reset response was applied; false for busy, destroyed, oversized, aborted or failed operations.
+     * @param {boolean} [allSizes=false] - Uses all available size variants instead of normal defaults.
+     * @returns {Promise<boolean>} Whether the reset was staged or saved; false for busy, destroyed, oversized, aborted or failed operations.
      */
     async reset(allSizes = false) {
         if (this.saving || this.destroyed) return false;
@@ -1026,6 +1143,20 @@ export class DashboardController {
                 this.status.textContent = this._t("limit", "The overview can contain at most 48 widgets.");
                 return false;
             }
+        }
+        if (this.editor) {
+            if (!variants) {
+                const previous = this.settings;
+                this.settings = normalizeSettings({ ...previous, configured: false, shortcutsConfigured: true,
+                    items: previous.items.filter(item => item.type === "shortcut"),
+                    domainOptions: Object.fromEntries(previous.items.filter(item => item.type === "shortcut").map(item => [item.id, cloneSettings(previous.domainOptions[item.id] || {})])),
+                    acknowledgedNewsVersion: null });
+                this._addDefaults();
+                this._ensureMandatory();
+                variants = this.settings;
+                this.settings = previous;
+            }
+            return this.editor.stage(variants, true);
         }
         this.saving = true;
         this._setBusy(true);
@@ -1049,7 +1180,7 @@ export class DashboardController {
             this.undoContainer.hidden = true;
             this.status.textContent = "";
             this._render();
-            window.WJ.notifySuccess(allSizes ? this._t("resetAllDone", "All available widget sizes have been added.") : this._t("resetDone", "The default overview has been restored."), "", 3000);
+            window.WJ.notifySuccess(allSizes ? this._t("resetAllDone", "All available widget sizes have been added.") : this._t("resetDone", "The default overview has been restored."), "", 10000);
             return true;
         } catch (error) {
             if (!this.destroyed && !request.signal.aborted) this._showFailure("saveError", "The change could not be saved. Your previous settings were kept.");
@@ -1166,7 +1297,7 @@ export class DashboardController {
         this.resetButton.focus({ preventScroll: true });
         window.WJ.confirm({
             title: allSizes ? this._t("resetAllConfirm", "Show all") : this._t("resetConfirm", "Restore defaults"),
-            message: allSizes ? this._t("resetAllDescription", "Replace the overview with all available widgets in every supported size? You can then remove the variants you do not want. Widget filters in all domains and read news will also be reset. Your shortcuts and other account settings will be kept.") : this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains and read news will also be reset. Your shortcuts and other account settings will be kept."),
+            message: (allSizes ? this._t("resetAllDescription", "Replace the overview with all available widgets in every supported size? You can then remove the variants you do not want. Widget filters in all domains and read news will also be reset. Your shortcuts and other account settings will be kept.") : this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains and read news will also be reset. Your shortcuts and other account settings will be kept.")) + (this.editor ? ` ${this._t("draftResetHint", "Changes will be saved only when you select Save in the edit toolbar.")}` : ""),
             btnOkText: allSizes ? this._t("resetAllConfirm", "Show all") : this._t("resetConfirm", "Restore defaults"),
             success: () => this.reset(allSizes),
             onHidden: () => window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.enable()
@@ -1222,12 +1353,13 @@ export class DashboardController {
     }
 
     /**
-     * Opens a keyboard-accessible position selector limited to visible instances in the same region.
+     * Lifts an editing grid widget for keyboard movement or opens the shortcut position selector.
      * @param {string} id - Instance to move; unknown IDs are ignored.
      */
     showMove(id) {
         const instance = this._instance(id);
         if (!instance) return;
+        if (this.editor && this._region(instance) === "grid") { this.editor.beginMove(id); return; }
         const dialog = this._dialog(this._t("move", "Move widget"));
         const label = node("label", "form-label", this._t("moveBefore", "Move before"));
         const select = node("select", "form-select");
@@ -1264,6 +1396,7 @@ export class DashboardController {
      * @returns {Promise<void>} Resolves once dialog configuration finishes, not when the user saves or cancels.
      */
     async showAddWidget(type) {
+        if (type === "shortcut" && this.editor) { this.cancelEditing(() => this.showAddWidget(type)); return; }
         const definition = getWidget(type);
         if (!definition || !this._available(definition) || this.settings.items.length >= MAX_WIDGETS) {
             this.status.textContent = this._t("limit", "The overview can contain at most 48 widgets.");
@@ -1274,7 +1407,7 @@ export class DashboardController {
     }
 
     /**
-     * Opens size and widget-specific settings, reading and persisting them only when the user saves.
+     * Opens existing size and widget settings, staging grid changes when Apply is selected.
      * Handles asynchronous configuration failure and disposes configuration that completes after the dialog closes.
      *
      * @param {import('./model').WidgetInstance} instance - Existing instance or new unsaved instance.
@@ -1289,8 +1422,13 @@ export class DashboardController {
         const shortcutTooltip = shortcutLink && window.bootstrap?.Tooltip?.getInstance(shortcutLink);
         shortcutTooltip?.disable();
         shortcutTooltip?.hide();
+        const editingWidget = !adding && this.editing && this._region(instance) === "grid";
         const dialog = this._dialog(this._t(adding ? "addShortcut" : shortcut ? "editShortcut" : "settings", adding ? "Add shortcut" : shortcut ? "Edit shortcut" : "Widget settings"));
         if (shortcut) dialog.root.classList.add("md-dashboard-modal--shortcut");
+        if (editingWidget) {
+            dialog.root.classList.add("md-dashboard-modal--settings");
+            dialog.root.querySelector(".modal-dialog").classList.add("modal-dialog-centered");
+        }
         if (shortcut) dialog.root.addEventListener("hidden.bs.modal", () => {
             if (shortcutLink) window.bootstrap?.Tooltip?.getInstance(shortcutLink)?.enable();
             if (this.views.has(id)) this.views.get(id).body.querySelector("a")?.focus({ preventScroll: true });
@@ -1324,7 +1462,7 @@ export class DashboardController {
         error.setAttribute("role", "alert");
         dialog.body.append(fields, error);
         let configuration;
-        const save = button(this._t(shortcut ? adding ? "addShortcut" : "saveShortcutChanges" : "save", shortcut ? adding ? "Add shortcut" : "Save changes" : "Save"), async () => {
+        const save = button(this._t(shortcut ? adding ? "addShortcut" : "saveShortcutChanges" : this.editing ? "apply" : "save", shortcut ? adding ? "Add shortcut" : "Save changes" : this.editing ? "Apply" : "Save"), async () => {
             error.textContent = "";
             try {
                 const values = await configuration?.read?.() || {};
@@ -1340,7 +1478,7 @@ export class DashboardController {
                 if (values.options !== undefined) updated.options = cloneSettings(values.options);
                 if (values.domainOptions !== undefined) next.domainOptions[id] = cloneSettings(values.domainOptions);
                 save.disabled = true;
-                if (await this._commit(next, shortcut ? this.shortcutStatus : this.status, { notify: !shortcut || adding })) {
+                if (await this._commit(next, shortcut ? this.shortcutStatus : this.status, { notify: !shortcut || adding, draft: !shortcut })) {
                     if (shortcut && !adding) this._showShortcutUndo(previous, "edit");
                     dialog.close();
                 }
@@ -1350,8 +1488,8 @@ export class DashboardController {
             }
         }, "btn btn-primary");
         if (shortcut && adding) save.prepend(icon("ti-plus"));
-        if (shortcut) {
-            if (!adding) {
+        if (shortcut || editingWidget) {
+            if (shortcut && !adding) {
                 const remove = button(this._t("removeShortcut", "Remove shortcut"), async () => {
                     remove.disabled = save.disabled = true;
                     if (await this.remove(id)) dialog.close();
@@ -1364,6 +1502,7 @@ export class DashboardController {
             dialog.footer.append(button(this._t("button.cancel", "Cancel"), () => dialog.close(), "btn btn-outline-secondary"));
         }
         dialog.footer.append(save);
+        if (editingWidget) dialog.footer.prepend(node("p", "md-dashboard__settings-hint", this._t("draftSettingsHint", "Apply changes here, then save the overview in the edit toolbar.")));
         if (definition.configure) {
             save.disabled = true;
             try {
@@ -1375,62 +1514,36 @@ export class DashboardController {
             }
         }
         if (!dialog.signal.aborted) window.WJ.initSelectPicker?.(dialog.body);
+        if (editingWidget && !dialog.signal.aborted) {
+            dialog.setCleanup(configuration);
+            (dialog.body.querySelector(".bootstrap-select > button, select, input, button") || save).focus({ preventScroll: true });
+        }
     }
 
-    /** Synchronizes drag controls with edit modes and restricts drop targets to the source instance's region when jQuery UI is available. */
+    /** Keeps existing shortcut pointer movement independent of the widget edit session. */
     _bindDrag() {
         const $ = window.jQuery;
         if (!$?.fn.draggable || !$.fn.droppable) return;
-        if (!$(this.dropEnd).data("ui-droppable")) $(this.dropEnd).droppable({
-            accept: dragged => this._region(this._instance(dragged[0].dataset.instanceId) || {}) === "grid", tolerance: "pointer",
-            drop: () => { if (this._dragged) this.moveBefore(this._dragged); }
-        });
         if (!$(this.shortcutList).data("ui-droppable")) $(this.shortcutList).droppable({
             accept: dragged => this.editingShortcuts && this._instance(dragged[0].dataset.instanceId)?.type === "shortcut",
             tolerance: "pointer",
             drop: () => this._finishShortcutMove(true)
         });
         for (const view of this.views.values()) {
-            if (!["grid", "shortcut"].includes(this._region(view.instance))) continue;
-            if ($(view.card).data("ui-draggable")) $(view.card).draggable("option", "disabled", !this._isEditing(view.instance));
-            if (!this._isEditing(view.instance)) continue;
-            if (!$(view.card).data("ui-draggable")) $(view.card).draggable({
+            if (view.instance.type !== "shortcut") continue;
+            if ($(view.card).data("ui-draggable")) $(view.card).draggable("option", "disabled", !this.editingShortcuts);
+            if (!this.editingShortcuts || $(view.card).data("ui-draggable")) continue;
+            $(view.card).draggable({
                 handle: ".md-dashboard__drag", appendTo: "body", zIndex: 1100, distance: 8,
-                cursorAt: view.instance.type === "shortcut" ? { left: 0, top: -8 } : false,
-                cancel: "input, textarea, select, option",
-                helper: () => {
-                    if (view.instance.type === "shortcut") return $(this._shortcutDragHelper(view));
-                    const bounds = view.card.getBoundingClientRect();
-                    const style = window.getComputedStyle(view.card);
-                    const helper = $(view.card).clone().removeAttr("data-instance-id").attr({ "aria-hidden": "true", inert: "" });
-                    helper.css({ width: bounds.width, height: bounds.height, backgroundColor: style.backgroundColor, borderColor: style.borderColor, color: style.color, fontSize: style.fontSize });
-                    // The body-level drag helper must retain the dashboard's inherited color tokens.
-                    for (const property of style) {
-                        if (property.startsWith("--wj-dashboard-")) helper[0].style.setProperty(property, style.getPropertyValue(property));
-                    }
-                    helper.find("[id]").removeAttr("id");
-                    return helper;
-                },
+                cursorAt: { left: 0, top: -8 }, cancel: "input, textarea, select, option",
+                helper: () => $(this._shortcutDragHelper(view)),
                 start: () => {
-                    if (this.saving || !this._isEditing(view.instance)) return false;
-                    if (view.instance.type === "shortcut") this._beginShortcutMove(view.instance.id);
-                    this._dragged = view.instance.id;
-                    this.host.classList.add("is-dragging");
+                    if (this.saving || !this.editingShortcuts) return false;
+                    this._beginShortcutMove(view.instance.id);
                 },
-                drag: event => { if (view.instance.type === "shortcut") this._shortcutPointerMove(event); },
-                stop: () => {
-                    this._finishShortcutMove(false);
-                    this._dragged = null;
-                    this.host.classList.remove("is-dragging");
-                    this.host.querySelectorAll(".is-drop-target").forEach(card => card.classList.remove("is-drop-target"));
-                },
+                drag: event => this._shortcutPointerMove(event),
+                stop: () => this._finishShortcutMove(false),
                 revert: "invalid"
-            });
-            if (view.instance.type !== "shortcut" && !$(view.card).data("ui-droppable")) $(view.card).droppable({
-                accept: dragged => this._region(this._instance(dragged[0].dataset.instanceId) || {}) === this._region(view.instance), tolerance: "pointer",
-                over: () => { if (this._dragged !== view.instance.id) view.card.classList.add("is-drop-target"); },
-                out: () => view.card.classList.remove("is-drop-target"),
-                drop: () => { if (this._dragged && this._dragged !== view.instance.id) this.moveBefore(this._dragged, view.instance.id); }
             });
         }
     }
@@ -1443,6 +1556,7 @@ export class DashboardController {
      * @returns {Promise<void>} Resolves after restarting and attempting legacy bookmark import.
      */
     async setContext(context) {
+        this.setEditing(false);
         this._finishShortcutMove(false);
         this._clearShortcutUndo();
         this.context = context;
@@ -1457,6 +1571,7 @@ export class DashboardController {
 
     /** Stops persistence and rendering work, closes dialogs and releases observers and UI resources without removing the host content. */
     destroy() {
+        this.setEditing(false);
         this._finishShortcutMove(false);
         this._clearShortcutUndo();
         this.destroyed = true;
@@ -1469,7 +1584,6 @@ export class DashboardController {
         this._visibilityObserver?.disconnect();
         for (const dialog of this._dialogs) dialog.destroy();
         const $ = window.jQuery;
-        if ($?.fn.droppable && $(this.dropEnd).data("ui-droppable")) $(this.dropEnd).droppable("destroy");
         if ($?.fn.droppable && $(this.shortcutList).data("ui-droppable")) $(this.shortcutList).droppable("destroy");
         this.views.clear();
     }

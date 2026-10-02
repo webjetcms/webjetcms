@@ -10,7 +10,7 @@ Users have mixed responsibilities, so widget availability follows permissions ra
 
 Store ordered instances and named sizes on the account so the same arrangement works across devices and domains. Record selections belong to the active domain because a form or folder from one domain may not be meaningful in another. Keep temporarily unavailable instances in storage so a permission or domain change does not erase the user's choices.
 
-New optional types enter the catalogue. The curated defaults apply to new or explicitly reset profiles; silently appending every registered type would change existing personal layouts. Layout and domain records share a transaction so a failed save cannot leave a partially updated profile. The existing settings table requires InnoDB on MySQL/MariaDB for this guarantee. Immediate removal undo retains other-domain filters until the next successful edit. The last successful save wins across devices; there is no live layout synchronization.
+New optional types enter the catalogue. The curated defaults apply to new or explicitly reset profiles; silently appending every registered type would change existing personal layouts. Layout and domain records share a transaction so a failed save cannot leave a partially updated profile. The existing settings table requires InnoDB on MySQL/MariaDB for this guarantee. Widget changes stay provisional until toolbar Save; removal and undo preserve instance IDs and domain filters. Shortcut and fixed preferences continue to save independently. Reset previews defaults and clears old domain records only in the final atomic request. The last successful save wins across devices; there is no live layout synchronization.
 
 ## Reuse the owning modules and keep initial loading small
 

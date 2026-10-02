@@ -352,6 +352,26 @@ webjet-overview-dashboard a:focus-visible {
     &__toolbar-actions > .btn { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; padding: 7px 12px; }
     &__toolbar-actions > [aria-pressed="false"] { background: var(--wj-nice-gray); border-color: transparent; }
     &__toolbar-actions > [aria-pressed="false"]:hover { border-color: var(--wj-nice-gray-200); color: var(--wj-secondary); }
+    &__toolbar &__toolbar-heading { display: block; }
+    &__edit-hint { margin: 2px 0 0; font-size: 12px; color: var(--wj-gray-text); }
+    &__edit-hint[hidden] { display: none; }
+    &.is-editing &__toolbar {
+        position: sticky;
+        top: 48px;
+        z-index: 100;
+        padding: 10px 12px;
+        border: 1px solid rgba($primary, .25);
+        border-radius: $border-radius;
+        background: mix($primary, $white, 5%);
+        &.is-stuck { box-shadow: 0 4px 12px rgba($secondary, .12); }
+        .md-dashboard__title { font-size: 14px; font-weight: 700; line-height: 20px; }
+        .md-dashboard__feedback { display: none; }
+        .md-dashboard__reset {
+            border-color: transparent;
+            background: transparent;
+            &:hover, &:active, &:focus-visible { color: var(--wj-secondary); border-color: var(--wj-nice-gray-100); background: var(--wj-nice-gray-100); }
+        }
+    }
 
     &__status, &__undo {
         display: flex;
@@ -425,7 +445,7 @@ webjet-overview-dashboard a:focus-visible {
         padding: 18px 18px 0;
         > .ti { display: block; order: 2; font-size: 16px; }
     }
-    &__widget[data-size="1x1"] &__widget-title { font-size: 12px; font-weight: 400; line-height: 1.4; }
+    &__widget[data-size="1x1"] &__widget-title { font-size: 12px; font-weight: 400; }
     &__widget[data-size="1x1"] &__widget-body { padding: 10px 18px 16px; }
     &__widget[data-size="1x1"] .md-dashboard-widget__metric { margin-bottom: 0; }
     &__widget[data-size="1x1"] .md-dashboard-widget__period { margin-bottom: 0 !important; }
@@ -465,7 +485,7 @@ webjet-overview-dashboard a:focus-visible {
         margin: 0;
         overflow-wrap: anywhere;
         white-space: normal;
-        line-height: 1.25;
+        line-height: 16px;
         font-size: 16px;
         font-weight: 700;
     }
@@ -483,9 +503,16 @@ webjet-overview-dashboard a:focus-visible {
             > .ti { font-size: 15px; margin-right: 7px; vertical-align: text-bottom; }
         }
     }
-    &.is-editing &__layout &__widget { border-color: var(--wj-nice-gray-200); }
-    &.is-editing &__layout &__widget-header, &__widget.ui-draggable-dragging &__widget-header { flex-wrap: wrap; }
-    &.is-editing &__layout &__widget-title, &__widget.ui-draggable-dragging &__widget-title { flex-basis: 50%; }
+    &.is-editing &__layout &__widget {
+        border: 1px dashed rgba($primary, .65);
+    }
+    &__widget.is-widget-placeholder {
+        background: rgba($primary, .04) !important;
+        border: 2px dashed var(--wj-primary) !important;
+        > * { visibility: hidden; }
+        .md-dashboard__drag { visibility: visible; opacity: 0; }
+        &::after { content: attr(data-drop-label); position: absolute; inset: 0; display: grid; place-items: center; padding: 16px; font-size: 14px; color: var(--wj-primary-hover); text-align: center; pointer-events: none; }
+    }
 
     &__widget-body {
         display: flex;
@@ -507,16 +534,6 @@ webjet-overview-dashboard a:focus-visible {
     }
 
     &__loading { font-size: 14px; color: var(--wj-dashboard-muted); }
-
-    &__drop-end {
-        display: none;
-        padding: 15px;
-        margin-top: 15px;
-        border: 2px dashed var(--wj-primary);
-        text-align: center;
-    }
-
-    &.is-editing.is-dragging &__drop-end { display: block; }
 
     &__catalogue-item {
         display: flex;
@@ -701,6 +718,51 @@ webjet-overview-dashboard a:focus-visible {
         > .is-selected { background: var(--wj-primary); }
     }
     .modal-body { max-height: 70vh; overflow-y: auto; padding: 16px; }
+}
+
+.md-dashboard__widget-drag-helper {
+    z-index: 1100;
+    pointer-events: none;
+    transform: rotate(-1.5deg);
+    box-shadow: 0 12px 28px rgba($secondary, .22);
+}
+.md-dashboard.is-editing .md-dashboard__layout, .md-dashboard__widget-drag-helper {
+    .md-dashboard__widget-header {
+        align-items: flex-end;
+        gap: 6px;
+        > .ti, .md-dashboard__title-link > .ti, .md-dashboard__header-link { display: none; }
+        > .md-dashboard__drag, .md-dashboard__widget-controls > .dropdown > button {
+            --bs-btn-color: var(--wj-secondary);
+            --bs-btn-hover-color: var(--wj-secondary);
+            --bs-btn-hover-bg: transparent;
+            --bs-btn-hover-border-color: var(--wj-primary);
+            --bs-btn-active-color: var(--wj-secondary);
+            --bs-btn-active-bg: transparent;
+            --bs-btn-active-border-color: var(--wj-primary);
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            min-height: 0;
+            padding: 3px;
+            margin-block: -4px;
+            border: 1px solid transparent;
+            line-height: 1;
+            &:hover, &:active, &.show { border-color: var(--wj-primary); }
+            > .ti { font-size: 16px; }
+        }
+        > .md-dashboard__drag { min-width: 24px; width: 24px; touch-action: none; margin-left: -7px; }
+    }
+    .md-dashboard__widget-controls {
+        position: static; margin-left: auto;
+        button.md-dashboard__control {
+            margin-right: -7px;
+        }
+    }
+}
+.md-dashboard-modal--settings .md-dashboard__settings-hint { flex-basis: 100%; margin: 0 0 4px; font-size: 12px; color: var(--wj-gray-text); }
+.md-dashboard-modal--confirm .modal-dialog { max-width: 480px; }
+@media (prefers-reduced-motion: reduce) {
+    .md-dashboard__widget-drag-helper { transform: none; }
 }
 
 .md-dashboard-modal--shortcut {

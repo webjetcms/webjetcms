@@ -20,7 +20,7 @@ Pred názvom stránky v hlavičke celej administrácie a na prihlasovacej strán
 
 Na začiatok prehľadu umiestnite widgety s údajmi, ktoré kontrolujete najčastejšie. Ak napríklad spracúvate formuláre a schvaľujete obsah, vyberte widgety **Formuláre** a **Na schválenie**. Widgety, ktoré nepotrebujete, môžete odstrániť.
 
-Kliknite na **Upraviť prehľad**. Zobrazia sa možnosti **Pridať widget**, **Obnoviť** a **Hotovo**.
+Kliknite na **Upraviť prehľad**. Zobrazí sa lišta s možnosťami **Obnoviť predvolené**, **Pridať widget**, **Zrušiť** a **Uložiť**. Pri posúvaní zostáva pod hlavičkou. Widgety majú prerušovaný obrys, úchyt na presun a tlačidlo **Možnosti widgetu**. Doplnkové ikony a odkazy v hlavičkách sa počas úprav skryjú. Systémové upozornenia zostávajú aktívne.
 
 ![](dashboard-edit.png)
 
@@ -28,24 +28,26 @@ Tlačidlom **Pridať widget** otvorte katalóg. Vyhľadajte požadovaný widget 
 
 ![](dashboard-catalogue.png)
 
-Pri widgete použite menu s tromi bodkami:
+Pri widgete použite tlačidlo **Možnosti widgetu**:
 
-- **Nastavenia widgetu**: zvoľte dostupnú veľkosť a ďalšie nastavenia, napríklad obdobie alebo formulár. Nie každý widget ponúka viac veľkostí.
-- **Presunúť widget**: vyberte, pred ktorú kartu sa má presunúť, alebo ho presuňte na koniec prehľadu. Na počítači môžete použiť aj rukoväť na ťahanie.
-- **Odstrániť widget**: odstráni kartu z vášho prehľadu. Údaje v aplikácii zostávajú zachované. Bezprostredne po odstránení je dostupná možnosť **Vrátiť späť**. Po ďalšej úspešne uloženej úprave táto možnosť zanikne. Widget môžete kedykoľvek pridať znova.
+- **Nastavenia widgetu**: v dialógovom okne zvoľte dostupnú veľkosť a ďalšie nastavenia, napríklad obdobie alebo formulár. Veľkosti zostávajú pomenované podľa mriežky, napríklad **1 × 1** alebo **3 × 3**. Nie každý widget ponúka viac veľkostí.
+- **Presunúť klávesnicou**: widget sa zdvihne, šípky zmenia jeho pozíciu, **Enter** ho položí a **Esc** vráti. Rovnaký presun spustíte medzerníkom na úchyte. Pri ťahaní myšou prerušovaný cieľ označuje miesto vloženia; **Esc** presun zruší.
+- **Odstrániť z prehľadu**: odstráni kartu bez potvrdenia. Údaje v aplikácii zostávajú zachované. Oznámenie ponúkne **Späť** na 8 sekúnd; pri podržaní myši alebo zameraní klávesnicou sa odpočet zastaví. **Ctrl Z** vráti poslednú úpravu aj po zmiznutí oznámenia. Widget môžete pridať znova z katalógu.
 - **Obnoviť údaje**: načíta aktuálne údaje danej karty.
 
-V dialógu **Nastavenia widgetu** upravte dostupné možnosti a potvrďte ich tlačidlom **Uložiť**. Väčšiu kartu zvoľte, keď chcete vidieť podrobnejší graf alebo zoznam. Menšia karta zaberie v prehľade menej miesta.
+V dialógovom okne **Nastavenia widgetu** upravte veľkosť a ďalšie dostupné možnosti a potvrďte ich tlačidlom **Použiť**. Zmení sa rozpracovaný prehľad. Väčšiu kartu zvoľte, keď chcete vidieť podrobnejší graf alebo zoznam. Menšia karta zaberie v prehľade menej miesta.
 
 ![](dashboard-widget-settings.png)
 
-Po dokončení úprav kliknite na **Hotovo**.
+Po dokončení úprav kliknite na **Uložiť** v lište. Až týmto krokom sa uložia pozície, veľkosti, nastavenia aj pridanie či odstránenie widgetov. Zobrazí sa oznámenie **Prehľad bol uložený** a režim úprav sa zatvorí. Pri chybe zostanú rozpracované zmeny dostupné na opätovné uloženie.
+
+Tlačidlo **Zrušiť** pri neuložených zmenách otvorí potvrdenie s možnosťami **Pokračovať v úpravách** a **Zahodiť zmeny**. Pri odchode zo stránky upozorní prehliadač. Skratky majú vlastný režim úprav cez ceruzku v hornom paneli a ukladajú sa samostatne.
 
 Na menšej obrazovke sa karty automaticky usporiadajú pod seba pri zachovaní poradia. Rozloženie môže obsahovať najviac 48 položiek vrátane skratiek, prihlásení, noviniek a vyhľadávania.
 
-Tlačidlo **Obnoviť** nájdete v lište úprav za tlačidlom **Pridať widget**. Po potvrdení v dialógu sa obnoví predvolený výber widgetov, ich veľkosti, poradie a nastavenia. Vymažú sa aj filtre widgetov vo všetkých doménach a potvrdenie prečítania noviniek. Vaše skratky a ostatné nastavenia účtu zostanú zachované.
+Tlačidlo **Obnoviť predvolené** nájdete v lište úprav pred tlačidlom **Pridať widget**. Po potvrdení v dialógu sa pripraví predvolený výber widgetov, ich veľkosti, poradie a nastavenia. Až tlačidlom **Uložiť** sa zmena uloží a vymažú sa aj filtre widgetov vo všetkých doménach a potvrdenie prečítania noviniek. Vaše skratky a ostatné nastavenia účtu zostanú zachované.
 
-Ak pri kliknutí na **Obnoviť** podržíte kláves **Shift**, po potvrdení sa prehľad nahradí všetkými dostupnými widgetmi v každej podporovanej veľkosti. Nepotrebné varianty môžete následne odstrániť.
+Ak pri kliknutí na **Obnoviť predvolené** podržíte kláves **Shift**, po potvrdení sa pripraví prehľad so všetkými dostupnými widgetmi v každej podporovanej veľkosti. Nepotrebné varianty môžete odstrániť a výsledok potvrdiť tlačidlom **Uložiť**.
 
 ## Dostupné informácie
 
@@ -59,7 +61,7 @@ Widgety z katalógu **môžete pridať opakovane** s rôznymi veľkosťami alebo
 
 ### Pokračujte v práci
 
-K rozpracovanej stránke sa vrátite bez hľadania jej priečinka. Widget zobrazuje najviac šesť vašich naposledy upravovaných stránok s náhľadom obrázka, umiestnením a dátumom úpravy. Kliknutím otvoríte editor stránky. Pri menšej veľkosti karty môžete zoznam rolovať.
+K rozpracovanej stránke sa vrátite bez hľadania jej priečinka. Widget zobrazuje najviac šesť vašich naposledy upravovaných stránok s náhľadom obrázka, umiestnením a dátumom úpravy. Kliknutím otvoríte editor stránky. Nadpis widgetu otvorí celý zoznam webových stránok. Pri menšej veľkosti karty môžete zoznam rolovať.
 
 ### Na schválenie
 
