@@ -67,21 +67,30 @@ function waitForSave(I) {
 Before(({ login }) => { login('admin'); });
 
 Scenario('Editing headers align controls, hide supplementary icons and keep reset hover readable', async ({ I }) => {
-    const formsGeometry = () => I.executeScript(id => {
+    const widgetGeometry = () => I.executeScript(([id, trafficId]) => {
         const card = document.querySelector(`[data-instance-id="${id}"]`);
         const bounds = card.getBoundingClientRect();
+        const traffic = document.querySelector(`[data-instance-id="${trafficId}"]`);
+        const trafficBounds = traffic.getBoundingClientRect();
         return {
+            height: bounds.height,
             header: card.querySelector('.md-dashboard__widget-header').getBoundingClientRect().height,
             title: card.querySelector('.md-dashboard__widget-title span').getBoundingClientRect().top - bounds.top,
-            number: card.querySelector('.md-dashboard-widget__number').getBoundingClientRect().top - bounds.top
+            number: card.querySelector('.md-dashboard-widget__number').getBoundingClientRect().top - bounds.top,
+            trafficHeight: trafficBounds.height,
+            trafficChartTop: traffic.querySelector('.md-dashboard-widget__chart--traffic').getBoundingClientRect().top - trafficBounds.top
         };
-    }, formsId);
+    }, [formsId, trafficId]);
     for (const width of [1440, 1024, 390]) {
         I.resizeWindow(width, 1000);
         await openFixture(I, false, [
             { id: 'edit-autotest-approvals', type: 'approvals', size: '1x1', options: {} },
             { id: 'edit-autotest-errors', type: 'errors', size: '1x1', options: {} }
         ]);
+        await showWidget(I, trafficId);
+        const trafficPeriod = `[data-instance-id="${trafficId}"] .md-dashboard-widget__period`;
+        I.seeElementInDOM(trafficPeriod);
+        I.dontSeeElement(trafficPeriod);
         I.dontSeeElementInDOM('.md-dashboard__resize');
         I.dontSeeElement('.md-dashboard__layout .md-dashboard__widget-header > .ti');
         I.dontSeeElement('.md-dashboard__layout .md-dashboard__title-link > .ti');
@@ -100,12 +109,25 @@ Scenario('Editing headers align controls, hide supplementary icons and keep rese
         I.moveCursorTo('.md-dashboard__reset');
         I.assertEqual(await I.grabCssPropertyFrom('.md-dashboard__reset', 'color'), 'rgb(19, 21, 27)', 'Reset hover must keep dark readable text');
         I.saveScreenshot(`dashboard-edit-headers-${width}.png`);
-        const editingGeometry = await formsGeometry();
+        const editingGeometry = await widgetGeometry();
         I.clickCss('.md-dashboard__cancel');
         I.waitForElement('.md-dashboard:not(.is-editing)', 10);
-        const viewingGeometry = await formsGeometry();
-        I.assertTrue(Object.keys(viewingGeometry).every(key => Math.abs(editingGeometry[key] - viewingGeometry[key]) < 0.1),
-            `Editing must preserve the compact header height and title/content positions at ${width}px: ${JSON.stringify({ viewingGeometry, editingGeometry })}`);
+        const viewingGeometry = await widgetGeometry();
+        // On mobile the period belongs to the content, so hiding it intentionally shortens the natural-height card.
+        const geometryKeys = Object.keys(viewingGeometry).filter(key => width >= 768 || !['height', 'trafficHeight', 'trafficChartTop'].includes(key));
+        I.assertTrue(geometryKeys.every(key => Math.abs(editingGeometry[key] - viewingGeometry[key]) < 0.1),
+            `Editing must preserve header/content positions and desktop grid heights at ${width}px: ${JSON.stringify({ viewingGeometry, editingGeometry })}`);
+        I.seeElement(trafficPeriod);
+        if (width === 1440) {
+            I.clickCss(editButton);
+            focusGrip(I, trafficId);
+            I.pressKey('Space');
+            I.seeElement('.md-dashboard__widget-drag-helper');
+            I.dontSeeElement('.md-dashboard__widget-drag-helper .md-dashboard-widget__period');
+            I.pressKey('Escape');
+            I.clickCss('.md-dashboard__cancel');
+            I.waitForElement('.md-dashboard:not(.is-editing)', 10);
+        }
         I.seeElement(`${pageHeading} > .ti`);
         I.seeElement(`[data-instance-id="${formsId}"] .md-dashboard__widget-header > .ti`);
         I.dontSeeElementInDOM(`[data-instance-id="${pagesId}"] .md-dashboard__header-link`);

@@ -726,6 +726,10 @@ webjet-overview-dashboard a:focus-visible {
     transform: rotate(-1.5deg);
     box-shadow: 0 12px 28px rgba($secondary, .22);
 }
+.md-dashboard.is-editing .md-dashboard__layout .md-dashboard__widget[data-widget-type="traffic"]:not([data-size="1x1"]),
+.md-dashboard__widget-drag-helper[data-widget-type="traffic"]:not([data-size="1x1"]) {
+    .md-dashboard-widget__period { display: none; }
+}
 .md-dashboard.is-editing .md-dashboard__layout, .md-dashboard__widget-drag-helper {
     .md-dashboard__widget-header {
         align-items: flex-end;
