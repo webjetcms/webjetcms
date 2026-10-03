@@ -80,7 +80,10 @@ export class DashboardController {
         this._visibilityObserver = typeof window.IntersectionObserver === "function" ? new window.IntersectionObserver(entries => {
             for (const entry of entries) {
                 const view = this.views.get(entry.target.dataset.instanceId);
-                if (entry.isIntersecting && view?.card === entry.target) view.onVisible?.();
+                if (entry.isIntersecting && view?.card === entry.target) {
+                    if (view.card.dataset.motion === "pending") delete view.card.dataset.motion;
+                    view.onVisible?.();
+                }
             }
         }) : null;
         this.saving = false;
@@ -498,6 +501,9 @@ export class DashboardController {
             if (!view) {
                 view = this._createView(instance);
                 this.views.set(instance.id, view);
+            } else {
+                // Reordering existing nodes must not replay their entrance.
+                if (view.card.dataset.motion === "intro") delete view.card.dataset.motion;
             }
             view.instance = instance;
             view.titleText.textContent = this._title(instance);
@@ -559,6 +565,14 @@ export class DashboardController {
         card.tabIndex = -1;
         const fixed = ["sessions", "news", "search"].includes(this._region(instance));
         card.classList.toggle("is-fixed", fixed);
+        if (!fixed) {
+            if (this.host.dataset.loaded === "true") card.dataset.motion = "added";
+            else if (instance.type === "shortcut") card.dataset.motion = "intro";
+            else if (this._visibilityObserver) card.dataset.motion = "pending";
+            card.addEventListener("animationend", event => {
+                if (event.target === card && ["md-dashboard-shortcut-enter", "md-dashboard-pop"].includes(event.animationName)) delete card.dataset.motion;
+            });
+        }
         const header = node("div", "md-dashboard__widget-header");
         const title = node(fixed ? "h2" : "h3", "md-dashboard__widget-title");
         const titleText = node("span");
@@ -1382,6 +1396,7 @@ export class DashboardController {
                     if (await this.add(definition.type)) {
                         if (dialog.signal.aborted) return;
                         added.add(definition.type);
+                        add.dataset.motion = "added";
                         window.clearTimeout(addedTimers.get(definition.type));
                         addedTimers.set(definition.type, window.setTimeout(() => {
                             addedTimers.delete(definition.type);
@@ -1394,6 +1409,7 @@ export class DashboardController {
                 updateStates();
                 (add.disabled ? dialog.footer.querySelector("button") : add).focus({ preventScroll: true });
             });
+            add.addEventListener("animationend", () => { delete add.dataset.motion; });
             actions.append(add);
             item.append(emblem, text, actions);
             list.append(item);
