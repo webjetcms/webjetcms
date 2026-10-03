@@ -545,6 +545,7 @@ webjet-overview-dashboard a:focus-visible {
     &__shortcut-colors {
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
         gap: 12px;
         legend { font-size: 14px; }
         > .form-text { width: 100%; margin: 0; }
@@ -874,6 +875,8 @@ webjet-overview-dashboard a:focus-visible {
         input:focus-visible + span { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }
         &:hover > span { background: var(--wj-dashboard-search-surface); }
     }
+    .md-dashboard__shortcut-custom-color > span { height: 32px; padding-inline: 8px; }
+    .md-dashboard__shortcut-custom-color-swatch { width: 16px; height: 16px; border: 1px solid var(--wj-nice-gray-200); border-radius: 50%; }
     .md-dashboard__shortcut-custom-icon { position: relative; max-width: 360px; > input { padding-inline: 40px; } &.is-invalid > input { border-color: $danger; box-shadow: 0 0 0 1px $danger; } }
     .md-dashboard__shortcut-icon-preview { position: absolute; display: grid; place-items: center; left: 8px; top: 6px; width: 28px; height: 28px; border-radius: 4px; background: var(--wj-nice-gray); font-size: 16px; }
     .md-dashboard__shortcut-icon-state { position: absolute; right: 12px; top: 10px; color: var(--wj-dashboard-shortcut-mint); font-size: 16px; }

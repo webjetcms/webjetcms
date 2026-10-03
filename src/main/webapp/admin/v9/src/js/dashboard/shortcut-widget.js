@@ -1,5 +1,6 @@
 import { registerWidget } from './registry';
 import { node, text, localUrl, shortcutUrl, icon, field, containNativeScroll } from './widget-utils';
+import 'color-dialog-box';
 
 /**
  * A same-origin destination from the authorized administration menu.
@@ -36,19 +37,53 @@ export function menuEntries(context, inheritedIcon) {
     return [...entries.values()];
 }
 
+/**
+ * Keeps the authorized menu hierarchy, with selectable URLs only on terminal cards.
+ * Empty branches and unsafe destinations are omitted; cards inherit their nearest menu icon.
+ * @param {Object} context - Bootstrap data containing the authorized dashboard menu.
+ * @returns {Object[]} Main areas containing sections and terminal cards.
+ */
+function shortcutMenu(context) {
+    const visit = (items, parents = [], inheritedIcon) => (items || []).flatMap(item => {
+        const itemIcon = item.icon || inheritedIcon;
+        const descendants = item.childrens || item.children || [];
+        const children = visit(descendants, [...parents, item.text].filter(Boolean), itemIcon);
+        if (!item.text) return children;
+        const path = parents.filter((label, index) => label !== parents[index - 1]);
+        if (path.at(-1) === item.text) path.pop();
+        const entry = { title: item.text, icon: itemIcon, path: path.join(' › ') };
+        if (children.length) return [{ ...entry, children }];
+        const href = localUrl(item.href);
+        return !descendants.length && href && !["/", "/admin/v9/#", "/admin/v9/"].includes(href) ? [{ ...entry, href }] : [];
+    });
+    return visit(context.data.dashboardMenu);
+}
+
 const SHORTCUT_COLORS = [
     'default', 'red', 'peach', 'amber', 'mint', 'cyan', 'blue', 'lavender', 'gray'
 ];
+const SHORTCUT_HEX_COLOR = /^#[a-f0-9]{6}(?:[a-f0-9]{2})?$/i;
 
 function shortcutColor(value) {
-    return value === 'rose' ? 'red' : SHORTCUT_COLORS.includes(value) ? value : 'default';
+    return value === 'rose' ? 'red' : typeof value === 'string' && SHORTCUT_HEX_COLOR.test(value) ? value.toLowerCase() : SHORTCUT_COLORS.includes(value) ? value : 'default';
 }
 
 function shortcutBackground(value) {
-    return `var(--wj-dashboard-shortcut-${shortcutColor(value)})`;
+    const color = shortcutColor(value);
+    return color.startsWith('#') ? color : `var(--wj-dashboard-shortcut-${color})`;
 }
 
 function shortcutForeground(value) {
+    const color = shortcutColor(value);
+    if (color.startsWith('#')) {
+        const alpha = color.length === 9 ? parseInt(color.slice(7), 16) / 255 : 1;
+        const channels = color.slice(1, 7).match(/.{2}/g).map(channel => {
+            const value = (parseInt(channel, 16) * alpha + 255 * (1 - alpha)) / 255;
+            return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+        });
+        const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+        return luminance > 0.196 ? 'var(--wj-secondary)' : '#fff';
+    }
     return ['default', 'amber'].includes(shortcutColor(value)) ? 'var(--wj-secondary)' : '#fff';
 }
 
@@ -65,6 +100,7 @@ function shortcutIcon(value) {
 }
 
 export function registerShortcutWidget() {
+    let colorPicker;
     registerWidget({
         type: "shortcut", titleKey: "admin.dashboard.shortcut.js", descriptionKey: "admin.dashboard.shortcut.description.js",
         icon: "ti-link", sizes: ["1x1"], multiple: true, defaultOptions: { source: "menu", href: "", title: "" },
@@ -108,12 +144,17 @@ export function registerShortcutWidget() {
          */
         configure({ container, options, context, signal }) {
             const menu = menuEntries(context);
+            const tree = shortcutMenu(context);
+            const tabs = new Map();
+            const collect = items => items.forEach(item => item.children ? collect(item.children) : tabs.set(item.href, item));
+            collect(tree);
+            let trail = [];
             const pageHref = /^\/admin\/v9\/webpages\/web-pages-list\/\?docid=\d+$/;
             let selected = options.source === 'url'
                 ? pageHref.test(options.href) ? { href: options.href, title: options.title, path: '', icon: 'ti-file-text', source: 'url' } : null
                 : menu.find(item => item.href === options.href);
             let custom = options.source === 'url' && !selected;
-            let request, timer, revision = 0, active = 0, results = [], disposed = false;
+            let active = 0, results = [];
             const search = field(container, text(context, 'shortcutDestination'), [], selected ? [selected.path, selected.title].filter(Boolean).join(' › ') : '', 'text');
             search.name = 'dashboardShortcutSearch';
             search.placeholder = text(context, 'shortcutSearchPlaceholder');
@@ -203,6 +244,8 @@ export function registerShortcutWidget() {
             const colorLegend = node('legend', 'form-label', text(context, 'shortcutColor'));
             colorLegend.append(node('span', 'md-dashboard__shortcut-optional', text(context, 'shortcutOptional')));
             colors.append(colorLegend);
+            let previousColor = shortcutColor(options.color);
+            let customColor = previousColor.startsWith('#') ? previousColor : '#0063fb';
             for (const value of SHORTCUT_COLORS) {
                 const label = node('label', 'md-dashboard__shortcut-swatch');
                 const radio = node('input', 'visually-hidden');
@@ -218,13 +261,45 @@ export function registerShortcutWidget() {
                 label.append(radio, swatch);
                 colors.append(label);
             }
+            const customColorLabel = node('label', 'md-dashboard__shortcut-icon-choice md-dashboard__shortcut-custom-color');
+            const customColorRadio = node('input', 'visually-hidden');
+            customColorRadio.type = 'radio';
+            customColorRadio.name = iconInput.id + '-color';
+            customColorRadio.value = 'custom';
+            customColorRadio.checked = previousColor.startsWith('#');
+            customColorRadio.setAttribute('aria-label', text(context, 'shortcutIconCustom'));
+            customColorRadio.setAttribute('aria-haspopup', 'dialog');
+            customColorRadio.setAttribute('aria-expanded', 'false');
+            const customColorFace = node('span');
+            const customColorSwatch = node('span', 'md-dashboard__shortcut-custom-color-swatch');
+            customColorFace.append(customColorSwatch, document.createTextNode(text(context, 'shortcutIconCustom')));
+            customColorLabel.append(customColorRadio, customColorFace);
+            colors.append(customColorLabel);
+            if (!colorPicker) {
+                // Set translated attributes before the custom element is upgraded on insertion.
+                const template = node('template');
+                template.innerHTML = '<color-picker></color-picker>';
+                colorPicker = template.content.firstElementChild;
+                for (const [attribute, key] of [['title', 'title'], ['hue', 'hue'], ['saturation', 'saturation'], ['lightness', 'lightness'], ['opacity', 'alpha'], ['ok', 'ok']]) {
+                    colorPicker.setAttribute('label-' + attribute, context.translate('datatables.field.color.' + key + '.js'));
+                }
+            }
+            colorPicker.id = iconInput.id + '-color-picker';
+            colors.append(colorPicker);
             colors.append(node('small', 'form-text', text(context, 'shortcutColorHint')));
             container.append(colors);
+            const colorDialog = colorPicker.shadowRoot?.querySelector('dialog');
+            const colorCancel = colorDialog?.querySelector('[part="cancel"]');
+            const colorHeading = colorDialog?.querySelector('h3');
+            if (colorHeading) {
+                colorHeading.id = colorPicker.id + '-title';
+                colorDialog.setAttribute('aria-labelledby', colorHeading.id);
+            }
             const previewPanel = node('div', 'md-dashboard__shortcut-preview-panel');
             const preview = node('div', 'md-dashboard__shortcut-preview md-dashboard-widget__shortcut');
             previewPanel.append(node('span', 'md-dashboard__shortcut-preview-label', text(context, 'shortcutPreview')), preview);
             container.append(previewPanel);
-            const color = () => colors.querySelector('input:checked').value;
+            const color = () => customColorRadio.checked ? customColor : colors.querySelector('input:checked').value;
             const iconValue = () => {
                 const value = iconChoices.querySelector('input:checked').value;
                 return value === 'auto' ? autoIcon() : value === 'custom' ? shortcutIcon(iconInput.value) : value;
@@ -262,10 +337,45 @@ export function registerShortcutWidget() {
                 customIconField.hidden = !isCustom;
                 autoHint.hidden = isCustom;
                 validateIcon();
+                customColorSwatch.style.backgroundColor = customColor;
                 preview.replaceChildren(icon(name || 'ti-link'), node('span', 'md-dashboard-widget__shortcut-label', title.value.trim() || (!custom && selected?.title) || text(context, 'shortcut')));
                 preview.style.setProperty('--wj-dashboard-shortcut-bg', shortcutBackground(color()));
                 preview.style.setProperty('--wj-dashboard-shortcut-color', shortcutForeground(color()));
             };
+            let originalColor, originalCustomColor;
+            const openColorPicker = () => {
+                originalColor = previousColor;
+                originalCustomColor = customColor;
+                colorPicker.setAttribute('hex', customColor);
+                colorPicker.setAttribute('open', 'true');
+                customColorRadio.setAttribute('aria-expanded', 'true');
+                colorDialog?.querySelector('[part="hex-input"]')?.focus({ preventScroll: true });
+                updatePreview();
+            };
+            const updateColor = event => {
+                if (typeof event.detail?.hex !== 'string' || !SHORTCUT_HEX_COLOR.test(event.detail.hex)) return;
+                customColor = shortcutColor(event.detail.hex);
+                updatePreview();
+            };
+            const closeColorPicker = () => {
+                previousColor = color();
+                colorPicker.removeAttribute('open');
+                customColorRadio.setAttribute('aria-expanded', 'false');
+                if (customColorRadio.isConnected) customColorRadio.focus({ preventScroll: true });
+            };
+            const cancelColorPicker = () => {
+                customColor = originalCustomColor;
+                colorPicker.setAttribute('hex', customColor);
+                colors.querySelector('input[value="' + (originalColor.startsWith('#') ? 'custom' : originalColor) + '"]').checked = true;
+                updatePreview();
+            };
+            const colorKeydown = event => { if (event.key === 'Escape') event.stopPropagation(); };
+            customColorRadio.addEventListener('click', openColorPicker);
+            colorPicker.addEventListener('update-color', updateColor);
+            colorDialog?.addEventListener('close', closeColorPicker);
+            colorDialog?.addEventListener('cancel', cancelColorPicker);
+            colorCancel?.addEventListener('click', cancelColorPicker);
+            colorDialog?.addEventListener('keydown', colorKeydown);
             const updateSource = () => {
                 search.closest('.md-dashboard__field').hidden = custom;
                 url.parentElement.hidden = !custom;
@@ -282,9 +392,6 @@ export function registerShortcutWidget() {
                 suggestions.hidden = true;
                 search.setAttribute('aria-expanded', 'false');
                 search.removeAttribute('aria-activedescendant');
-                request?.abort();
-                window.clearTimeout(timer);
-                revision++;
             };
             const highlight = index => {
                 active = Math.max(0, Math.min(results.length - 1, index));
@@ -296,6 +403,16 @@ export function registerShortcutWidget() {
                 }
             };
             const select = item => {
+                if (item.children || item.back) {
+                    if (item.back) trail.pop();
+                    else trail.push(item);
+                    selected = null;
+                    search.value = '';
+                    updateSource();
+                    search.focus();
+                    browse();
+                    return;
+                }
                 close();
                 if (item.custom) {
                     custom = true;
@@ -310,33 +427,33 @@ export function registerShortcutWidget() {
                     search.focus();
                 }
             };
-            const renderResults = (entries, pages = [], failed = false) => {
-                const previous = results[active]?.href;
+            const renderResults = (entries, heading, parent) => {
+                const previous = results[active];
                 matches.replaceChildren();
                 suggestions.replaceChildren(matches);
-                results = [...entries, ...pages, { custom: true }];
+                const goBack = parent ? { back: true, title: context.translate('button.back'), path: trail.map(item => item.title).join(' › '), icon: 'ti-arrow-left' } : null;
+                results = [...(goBack ? [goBack] : []), ...entries, { custom: true }];
                 let index = 0;
-                for (const [heading, items] of [[text(context, 'shortcutMenuResults'), entries], [text(context, 'shortcutPageResults'), pages]]) {
-                    if (!items.length) continue;
-                    const group = node('div');
-                    group.setAttribute('role', 'group');
-                    group.setAttribute('aria-label', heading);
-                    const caption = node('div', 'md-dashboard__shortcut-result-heading', heading);
-                    caption.setAttribute('role', 'presentation');
-                    group.append(caption);
-                    for (const item of items) {
-                        const row = node('div', 'md-dashboard__shortcut-result');
-                        row.id = suggestions.id + '-' + index++;
-                        row.setAttribute('role', 'option');
-                        const copy = node('span', 'md-dashboard__shortcut-result-text');
-                        copy.append(node('span', '', item.title), node('small', '', item.path || item.href));
-                        row.append(icon(item.icon), copy, node('small', 'md-dashboard__shortcut-enter', 'Enter'));
-                        row.addEventListener('click', () => select(item));
-                        group.append(row);
-                    }
-                    matches.append(group);
+                const group = node('div');
+                group.setAttribute('role', 'group');
+                group.setAttribute('aria-label', heading);
+                const caption = node('div', 'md-dashboard__shortcut-result-heading', heading);
+                caption.setAttribute('role', 'presentation');
+                group.append(caption);
+                for (const item of results.slice(0, -1)) {
+                    const row = node('div', 'md-dashboard__shortcut-result');
+                    if (item.back) row.classList.add('md-dashboard__shortcut-result-back');
+                    row.id = suggestions.id + '-' + index++;
+                    row.setAttribute('role', 'option');
+                    const copy = node('span', 'md-dashboard__shortcut-result-text');
+                    copy.append(node('span', '', item.title));
+                    if (item.path) copy.append(node('small', '', item.path));
+                    row.append(icon(item.icon), copy, node('small', 'md-dashboard__shortcut-enter', 'Enter'));
+                    row.addEventListener('click', () => select(item));
+                    group.append(row);
                 }
-                if (!entries.length && !pages.length || failed) matches.append(node('p', 'md-dashboard__shortcut-result-message', text(context, failed ? 'shortcutPageSearchFailed' : 'shortcutNoResults')));
+                matches.append(group);
+                if (!entries.length) matches.append(node('p', 'md-dashboard__shortcut-result-message', text(context, 'shortcutNoResults')));
                 const ownUrl = node('div', 'md-dashboard__shortcut-result md-dashboard__shortcut-result-url');
                 ownUrl.id = suggestions.id + '-' + index;
                 ownUrl.setAttribute('role', 'option');
@@ -345,39 +462,25 @@ export function registerShortcutWidget() {
                 suggestions.append(ownUrl);
                 suggestions.hidden = false;
                 search.setAttribute('aria-expanded', 'true');
-                highlight(previous ? Math.max(0, results.findIndex(item => item.href === previous)) : 0);
-                lookupStatus.textContent = text(context, 'shortcutResultCount', entries.length + pages.length);
+                highlight(results.includes(previous) ? results.indexOf(previous) : goBack && entries.length ? 1 : 0);
+                lookupStatus.textContent = heading + '. ' + text(context, 'shortcutResultCount', entries.length);
+            };
+            const browse = () => {
+                const parent = trail.at(-1);
+                const heading = text(context, !parent ? 'shortcutGroup' : trail.length === 1 ? 'shortcutSection' : 'shortcutChooseTab');
+                renderResults(parent ? parent.children : tree, heading, parent);
             };
             const searchTargets = () => {
-                request?.abort();
-                window.clearTimeout(timer);
-                const current = ++revision;
                 const term = search.value.trim();
+                if (selected || !term) { browse(); return; }
                 const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
                 const words = normalize(term).split(/\s+/);
                 const titleMatches = item => words.every(word => normalize(item.title).includes(word));
-                const entries = menu.filter(item => words.every(word => normalize(item.title + ' ' + item.path).includes(word)))
+                const entries = [...tabs.values()].filter(item => words.every(word => normalize(item.title + ' ' + item.path).includes(word)))
                     .sort((a, b) => Number(titleMatches(b)) - Number(titleMatches(a))).slice(0, 8);
-                renderResults(entries);
-                if (term.length < 2 || !window.WJ.hasPermission('menuWebpages')) return;
-                timer = window.setTimeout(async () => {
-                    request = new AbortController();
-                    try {
-                        const response = await fetch('/admin/skins/webjet6/_doc_autocomplete.jsp?editable=true&docid=' + encodeURIComponent(term), { signal: request.signal, credentials: 'same-origin' });
-                        if (!response.ok) throw new Error('Page lookup failed');
-                        const data = await response.json();
-                        if (disposed || current !== revision) return;
-                        const pages = data.filter(page => Number.isSafeInteger(Number(page.doc_id)) && Number(page.doc_id) > 0).slice(0, 5).map(page => ({
-                            href: '/admin/v9/webpages/web-pages-list/?docid=' + Number(page.doc_id),
-                            title: page.title, path: page.label || page.fullPath, icon: 'ti-file-text', source: 'url'
-                        }));
-                        renderResults(entries, pages);
-                    } catch (error) {
-                        if (!disposed && current === revision && error.name !== 'AbortError') renderResults(entries, [], true);
-                    }
-                }, 250);
+                renderResults(entries, text(context, 'shortcutChooseTab'));
             };
-            search.addEventListener('input', () => { selected = null; searchTargets(); updateSource(); });
+            search.addEventListener('input', () => { selected = null; trail = []; searchTargets(); updateSource(); });
             search.addEventListener('focus', () => { if (!search.value.trim() && !custom) searchTargets(); });
             search.addEventListener('click', () => { search.select(); searchTargets(); });
             search.addEventListener('keydown', event => {
@@ -391,17 +494,30 @@ export function registerShortcutWidget() {
                 else highlight(active + (event.key === 'ArrowDown' ? 1 : -1));
             });
             suggestions.addEventListener('mousedown', event => event.preventDefault());
-            const outside = event => { if (!search.closest('.md-dashboard__field').contains(event.target)) close(); };
+            const outside = event => { if (!event.composedPath().includes(search.closest('.md-dashboard__field'))) close(); };
             container.addEventListener('focusin', outside);
             container.addEventListener('click', outside);
             back.addEventListener('click', () => { custom = false; updateSource(); search.focus(); search.select(); searchTargets(); });
             iconChoices.addEventListener('change', () => { updatePreview(); if (!customIconField.hidden) iconInput.focus(); });
             iconInput.addEventListener('input', updatePreview);
             title.addEventListener('input', updatePreview);
-            colors.addEventListener('change', updatePreview);
+            colors.addEventListener('change', () => { previousColor = color(); updatePreview(); });
             chooseIcon(options.icon);
             updateSource();
-            const dispose = () => { disposed = true; close(); };
+            let disposed = false;
+            const dispose = () => {
+                if (disposed) return;
+                disposed = true;
+                close();
+                colorDialog?.removeEventListener('close', closeColorPicker);
+                colorDialog?.removeEventListener('cancel', cancelColorPicker);
+                colorCancel?.removeEventListener('click', cancelColorPicker);
+                colorDialog?.removeEventListener('keydown', colorKeydown);
+                colorPicker.removeEventListener('update-color', updateColor);
+                if (colorDialog?.open) colorDialog.close();
+                colorPicker.removeAttribute('open');
+                colorPicker.remove();
+            };
             signal?.addEventListener('abort', dispose, { once: true });
             if (signal) containNativeScroll(matches, signal);
             const modal = container.closest('.modal');

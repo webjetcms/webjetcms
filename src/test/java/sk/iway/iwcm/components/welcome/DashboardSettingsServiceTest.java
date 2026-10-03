@@ -312,15 +312,29 @@ class DashboardSettingsServiceTest {
         for (Object icon : java.util.List.of("ti-star other-class", "<img src=x>", "ti-" + "a".repeat(80), 123)) {
             assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("icon", icon)));
         }
-        for (String color : java.util.List.of("default", "mint", "lavender", "blue", "amber", "peach", "rose", "cyan", "gray", "red")) {
+        for (String color : java.util.List.of("default", "mint", "lavender", "blue", "amber", "peach", "rose", "cyan", "gray", "red", "#ff0000", "#12ABEF80")) {
             assertDoesNotThrow(() -> DashboardSettingsService.validateShortcut(Map.of("color", color)));
         }
-        for (Object color : java.util.List.of("#ff0000", "url(evil)", "unknown", 123)) {
+        for (Object color : java.util.List.of("#fff", "#12345", "#1234567", "#123456789", "#gg0000", "red; color: white", "url(evil)", "unknown", 123)) {
             assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(Map.of("color", color)));
         }
         Map<String, Object> nullColor = new LinkedHashMap<>();
         nullColor.put("color", null);
         assertThrows(IllegalArgumentException.class, () -> DashboardSettingsService.validateShortcut(nullColor));
+    }
+
+    /** Custom hex colors, including alpha, survive account persistence without being replaced by presets. */
+    @Test
+    void persistsCustomShortcutColors() {
+        for (String color : java.util.List.of("#123456", "#ABCDEF", "#12345680", "#00000000")) {
+            DashboardSettingsDto settings = settings();
+            Item shortcut = item("custom-color", "shortcut", "1x1");
+            shortcut.setOptions(Map.of("href", "/apps/form/admin/", "color", color));
+            settings.getItems().add(shortcut);
+            Map<String, String> records = service.validateAndSerialize(settings, "42");
+            when(repository.read(7)).thenReturn(records);
+            assertEquals(color, service.load(7, "42").getItems().get(1).getOptions().get("color"));
+        }
     }
 
     static DashboardSettingsDto settings() {

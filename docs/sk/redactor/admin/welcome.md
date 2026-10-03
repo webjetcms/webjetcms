@@ -182,9 +182,9 @@ Skratky predvolene smerujú na webové stránky a formuláre podľa vašich opr�
 Novú skratku pridáte takto:
 
 1. Kliknite na **Pridať skratku** priamo za zoznamom skratiek.
-2. Do poľa **Kam má skratka viesť?** napíšte názov sekcie, karty alebo webovej stránky. Výsledky zobrazujú ikonu, názov a cestu; cieľ vyberte kliknutím alebo šípkami a klávesom **Enter**. Pre vlastný odkaz kliknite na **Použiť vlastnú adresu URL…** a vyplňte **URL adresu**.
+2. V poli **Kam má skratka viesť?** postupne vyberte **Hlavnú časť**, **Sekciu** a kartu pod nadpisom **Vyberte kartu**. Sekciu bez ďalších kariet vyberiete priamo. Voľba **Naspäť** vráti zoznam o úroveň vyššie. Môžete tiež napísať názov cieľa: vyhľadávanie ponúkne koncové karty zo všetkých častí menu, napríklad po zadaní „číselník“ obe karty Číselníkov. Cieľ vyberte kliknutím alebo šípkami a klávesom **Enter**. Pre vlastný odkaz kliknite na **Použiť vlastnú adresu URL…** a vyplňte **URL adresu**.
 3. Podľa potreby vyplňte **Názov skratky**. Ak zostane prázdny, použije sa názov vybraného cieľa. Pri vlastnej URL adrese je názov povinný.
-4. Vyberte **Ikonu** a **Farbu**. Prvá ikona vychádza z vybraného cieľa. Voľba **Vlastná…** umožňuje zadať názov ikony z knižnice Tabler; náhľad sa zmení hneď a neexistujúci názov nemožno uložiť. Farba sa použije iba na pozadie ikony. Paleta obsahuje aj možnosť **Bez farby**.
+4. Vyberte **Ikonu** a **Farbu**. Prvá ikona vychádza z vybraného cieľa. Voľba **Vlastná…** pri ikone umožňuje zadať názov z knižnice Tabler; náhľad sa zmení hneď a neexistujúci názov nemožno uložiť. Pri farbe otvorí **Vlastná…** výber farby s nastavením priehľadnosti a zadaním HEX hodnoty. Farba sa použije iba na pozadie ikony, ktorej svetlosť sa prispôsobí zvolenému pozadiu. Paleta obsahuje aj možnosť **Bez farby**.
 5. Skontrolujte náhľad a kliknite na **Pridať skratku**.
 
 Dlhé názvy sa skrátia trojbodkou. Celý názov sa zobrazí pri podržaní myši alebo pri zameraní klávesnicou. Skratka na nedostupnú položku menu zostáva zobrazená s vysvetlením; v režime úprav ju môžete opraviť alebo odstrániť.

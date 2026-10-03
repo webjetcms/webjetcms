@@ -5,7 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { JSDOM } = require('jsdom');
 
-function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWidgets = false, data = {}, actual, fetchResponse, now = new Date(2026, 8, 26) } = {}) {
+function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWidgets = false, colorPicker = false, data = {}, actual, fetchResponse, now = new Date(2026, 8, 26) } = {}) {
     const dom = new JSDOM('<!doctype html><body><main></main></body>', { url: 'http://localhost/admin/v9/' });
     const window = dom.window;
     const glyphCss = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/node_modules/@tabler/icons-webfont/dist/tabler-icons.css'), 'utf8');
@@ -42,6 +42,15 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
         IntersectionObserver: class { observe() {} disconnect() {} },
         fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/stat/') ? statResponse(url) : url.includes('/monitoring/actual') ? snapshot : url.includes('/forms-list/') || url.includes('/dmail/') || url.includes('/web-pages/history/all?') ? data : url.includes('/audit/log/all?') ? { content: (data.items || []).map((item, index) => ({ id: index + 1, logType: 20, description: item.description, userFullName: item.userFullName, createDate: item.date })), options: { logType: [{ value: '20', label: data.items?.[0]?.type || 'Changed' }] } } : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
     });
+    if (colorPicker) {
+        // Load the installed component with browser dialog and adopted-style APIs supplied for JSDOM.
+        window.HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
+        window.HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); this.dispatchEvent(new window.Event('close')); };
+        Object.assign(scope, { HTMLElement: window.HTMLElement, customElements: window.customElements, CustomEvent: window.CustomEvent,
+            CSSStyleSheet: class { replaceSync() {} } });
+        const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/node_modules/color-dialog-box/dist/index.js'), 'utf8');
+        vm.runInContext(`(function () { ${source} }).call(this);`, scope);
+    }
     for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'monitoring-live.js', 'system-widgets.js', 'shortcut-widget.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
             .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
@@ -91,6 +100,27 @@ test('Shortcut tooltips show truncated names as plain text without repeating ful
     assert.equal(show(), true, 'A truncated name must still be readable through its tooltip.');
 });
 
+test('Shortcut menu icons ignore duplicate Tabler prefixes in suggestions, previews and saved links', t => {
+    const { scope, context, container, window } = fixture(t, { menu: [{ text: 'Users', icon: 'ti ti-users', children: [
+        { text: 'Users', href: '/admin/v9/users/user-list/', icon: 'ti ti-ti ti-users' }
+    ] }] });
+    const widget = scope.getWidget('shortcut');
+    const settings = widget.configure({ container, context, options: {} });
+    searchShortcut(container, window, '');
+    pickShortcut(container, 'Users');
+    assert.equal(container.querySelector('.md-dashboard__shortcut-result:not(.md-dashboard__shortcut-result-back) > i').className, 'ti ti-users');
+    assert.notEqual(window.getComputedStyle(container.querySelector('.md-dashboard__shortcut-result:not(.md-dashboard__shortcut-result-back) > i'), '::before').content, 'none');
+    pickShortcut(container, 'Users');
+    assert.equal(container.querySelector('.md-dashboard__shortcut-preview > i').className, 'ti ti-users');
+    assert.equal(container.querySelector('[name="dashboardShortcutIcon"]').value, 'users');
+    assert.equal(settings.read().options.icon, 'ti-users');
+    settings.dispose();
+    container.replaceChildren();
+    widget.render({ container, context, options: { href: '/admin/v9/users/user-list/' } });
+    assert.equal(container.querySelector('a > i').className, 'ti ti-users');
+    assert.equal(scope.icon('ti ti-ti').className, 'ti ti-link', 'A duplicated prefix alone must use the safe fallback');
+});
+
 test('Local links retain their origin when normalized paths start with two slashes', t => {
     const { scope, context, container, window } = fixture(t);
     for (const href of ['/.//other.test/autotest', '/%2e//other.test/autotest', '/folder/..//other.test/autotest', '/folder/%2e%2e//other.test/autotest']) {
@@ -134,7 +164,11 @@ const groupedShortcutMenu = [
         ] },
         { text: 'Formuláre', href: '/apps/form/admin/', icon: 'ti-forms' },
         { text: 'Unsafe', href: 'javascript:alert(1)' }
-    ] }
+    ] },
+    { text: 'Settings', children: [{ text: 'Číselníky', href: '/apps/enumeration/admin/', icon: 'ti-table', children: [
+        { text: 'Zoznam dát číselníkov', href: '/apps/enumeration/admin/' },
+        { text: 'Typy číselníkov', href: '/apps/enumeration/admin/enumeration-type/' }
+    ] }] }
 ];
 
 function searchShortcut(container, window, value) {
@@ -149,6 +183,71 @@ function pickShortcut(container, title) {
     assert.ok(row, 'An authorized destination must be offered');
     row.click();
 }
+
+test('Shortcut browsing follows main areas, sections and cards without selecting a parent URL', t => {
+    const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
+    const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
+    const search = container.querySelector('[name="dashboardShortcutSearch"]');
+    search.click();
+    const heading = () => container.querySelector('.md-dashboard__shortcut-result-heading').textContent;
+    const titles = () => [...container.querySelectorAll('.md-dashboard__shortcut-result-text > span')].map(row => row.textContent);
+    assert.match(heading(), /shortcutGroup/);
+    assert.deepEqual(titles(), ['Overviews', 'Applications', 'Settings']);
+    pickShortcut(container, 'Applications');
+    assert.equal(search.getAttribute('aria-expanded'), 'true', 'Replacing a clicked row must keep the list open');
+    assert.equal(window.document.activeElement, search);
+    assert.match(heading(), /shortcutSection/);
+    assert.deepEqual(titles(), ['button.back', 'Banner system', 'Formuláre']);
+    assert.throws(() => settings.read(), /shortcutChooseTarget/);
+    pickShortcut(container, 'Banner system');
+    assert.match(heading(), /shortcutChooseTab/);
+    assert.deepEqual(titles(), ['button.back', 'Banner list', 'Banner statistics']);
+    assert.throws(() => settings.read(), /shortcutChooseTarget/, 'A section URL must not be selected before its card');
+    pickShortcut(container, 'Banner statistics');
+    assert.equal(settings.read().options.href, '/apps/banner/admin/banner-stat/');
+    assert.equal(search.getAttribute('aria-expanded'), 'false');
+    search.click();
+    assert.match(heading(), /shortcutChooseTab/);
+    container.querySelector('.md-dashboard__shortcut-result-back').click();
+    assert.match(heading(), /shortcutSection/);
+    assert.throws(() => settings.read(), /shortcutChooseTarget/, 'Browsing invalidates an earlier destination');
+    pickShortcut(container, 'Formuláre');
+    assert.equal(settings.read().options.href, '/apps/form/admin/', 'A section without tabs is selectable directly');
+    settings.dispose();
+    assert.equal(container.querySelector('[role="listbox"]').hidden, true);
+});
+
+test('Shortcut keyboard browsing can return to the root and search terminal cards across all areas', t => {
+    const { scope, context, container, window, requests } = fixture(t, { menu: groupedShortcutMenu });
+    const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
+    const search = container.querySelector('[name="dashboardShortcutSearch"]');
+    const key = value => search.dispatchEvent(new window.KeyboardEvent('keydown', { key: value, bubbles: true }));
+    search.focus();
+    key('Enter');
+    assert.match(container.querySelector('.md-dashboard__shortcut-result-heading').textContent, /shortcutSection/);
+    key('Enter');
+    assert.match(container.querySelector('.md-dashboard__shortcut-result-heading').textContent, /shortcutChooseTab/);
+    key('ArrowUp');
+    key('Enter');
+    key('ArrowUp');
+    key('Enter');
+    assert.match(container.querySelector('.md-dashboard__shortcut-result-heading').textContent, /shortcutGroup/);
+    pickShortcut(container, 'Applications');
+    searchShortcut(container, window, 'číselník');
+    assert.match(container.querySelector('.md-dashboard__shortcut-result-heading').textContent, /shortcutChooseTab/);
+    assert.deepEqual([...container.querySelectorAll('.md-dashboard__shortcut-result-text > span')].map(row => row.textContent), ['Zoznam dát číselníkov', 'Typy číselníkov']);
+    assert.equal(container.querySelector('.md-dashboard__shortcut-result-back'), null);
+    assert.equal(requests.length, 0, 'Searching only terminal menu cards must not request web-page suggestions');
+    pickShortcut(container, 'Typy číselníkov');
+    assert.equal(settings.read().options.href, '/apps/enumeration/admin/enumeration-type/');
+    assert.equal(settings.read().options.icon, 'ti-table');
+    searchShortcut(container, window, 'ciselnik');
+    assert.equal(container.querySelectorAll('.md-dashboard__shortcut-result-text > span').length, 2);
+    searchShortcut(container, window, '');
+    assert.match(container.querySelector('.md-dashboard__shortcut-result-heading').textContent, /shortcutGroup/);
+    key('Tab');
+    assert.equal(search.getAttribute('aria-expanded'), 'false');
+});
 
 test('Shortcut autocomplete searches authorized breadcrumbs, deduplicates tabs and requires explicit selection', t => {
     const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
@@ -236,6 +335,20 @@ test('Empty or unsafe menus still offer a custom URL and never offer an unsafe d
     assert.equal(container.querySelector('[name="dashboardShortcutUrl"]').parentElement.hidden, false);
 });
 
+test('Shortcut browsing retains all authorized sections and omits branches without safe cards', t => {
+    const sections = Array.from({ length: 12 }, (_, index) => ({ text: `Section ${index}`, href: `/apps/autotest-${index}/` }));
+    const { scope, context, container, window } = fixture(t, { menu: [
+        { text: 'Applications', children: sections },
+        { text: 'Empty area', href: '/apps/parent/', children: [{ text: 'Unsafe', href: 'javascript:alert(1)' }] }
+    ] });
+    scope.getWidget('shortcut').configure({ container, context, options: {} });
+    searchShortcut(container, window, '');
+    assert.deepEqual([...container.querySelectorAll('.md-dashboard__shortcut-result-text > span')].map(row => row.textContent), ['Applications']);
+    pickShortcut(container, 'Applications');
+    assert.equal(container.querySelectorAll('.md-dashboard__shortcut-result-text > span').length, 13, 'Browsing must include every section plus the back action');
+    assert.match(container.textContent, /Section 11/);
+});
+
 test('Shortcut icon presets inherit the destination and custom names must exist in the installed font', t => {
     const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
     const settings = scope.getWidget('shortcut').configure({ container, context, options: { href: '/apps/banner/admin/', icon: 'ti-star', color: 'mint' } });
@@ -287,7 +400,7 @@ test('Shortcut colors share the preview palette and keep unsupported values out 
     const options = { source: 'url', href: 'https://example.com', title: 'Autotest', icon: 'ti-heart', color: 'rose' };
     const settings = widget.configure({ container, context, options });
     const colors = container.querySelector('.md-dashboard__shortcut-colors');
-    assert.equal(colors.querySelectorAll('input').length, 9);
+    assert.equal(colors.querySelectorAll('input').length, 10);
     assert.equal(colors.querySelector('input:checked').value, 'red');
     for (const value of ['cyan', 'gray', 'red', 'amber', 'default']) {
         colors.querySelector('input[value="' + value + '"]').checked = true;
@@ -303,45 +416,82 @@ test('Shortcut colors share the preview palette and keep unsupported values out 
     assert.equal(container.querySelector('a').style.getPropertyValue('--wj-dashboard-shortcut-bg'), 'var(--wj-dashboard-shortcut-default)');
 });
 
-test('Page suggestions reuse authorized search, ignore stale responses and retain the selected page URL', async t => {
-    let resolveFirst;
-    const { scope, context, container, window, requests } = fixture(t, { menu: groupedShortcutMenu, fetchResponse: url => url.includes('first')
-        ? new Promise(resolve => { resolveFirst = resolve; })
-        : Promise.resolve({ ok: true, json: async () => [{ doc_id: 42, title: 'Contact autotest', label: '/contact' }] }) });
-    const timers = [];
-    window.setTimeout = callback => { timers.push(callback); return timers.length; };
-    window.clearTimeout = () => {};
-    const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
-    searchShortcut(container, window, 'first');
-    const pending = timers.at(-1)();
-    searchShortcut(container, window, 'contact');
-    await timers.at(-1)();
-    assert.match(requests[0].url, /editable=true/);
-    assert.equal(requests[0].options.signal.aborted, true);
-    resolveFirst({ ok: true, json: async () => [{ doc_id: 8, title: 'Stale', label: '/stale' }] });
-    await pending;
-    assert.equal(container.textContent.includes('Stale'), false);
-    pickShortcut(container, 'Contact autotest');
-    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), { source: 'url', href: '/admin/v9/webpages/web-pages-list/?docid=42', title: 'Contact autotest', icon: 'ti-file-text', color: 'default' });
+test('Custom shortcut colors use the existing picker and preserve selection, cancellation and dialog cleanup', t => {
+    const { scope, context, container, window } = fixture(t, { colorPicker: true });
+    const widget = scope.getWidget('shortcut');
+    const options = { source: 'url', href: 'https://example.com', title: 'Autotest', color: 'amber' };
+    const lifecycle = new AbortController();
+    const settings = widget.configure({ container, context, options, signal: lifecycle.signal });
+    const picker = container.querySelector('color-picker');
+    const dialog = picker.shadowRoot.querySelector('dialog');
+    const input = dialog.querySelector('[part="hex-input"]');
+    const custom = container.querySelector('.md-dashboard__shortcut-custom-color input');
+    const preview = container.querySelector('.md-dashboard__shortcut-preview');
+    const change = value => { input.value = value; input.dispatchEvent(new window.Event('input', { bubbles: true })); };
+    assert.equal(dialog.querySelector('h3').textContent, 'datatables.field.color.title.js');
+    assert.equal(custom.getAttribute('aria-label'), context.translate('admin.dashboard.shortcutIconCustom.js'));
+    custom.click();
+    assert.equal(dialog.open, true);
+    assert.equal(picker.shadowRoot.activeElement, input);
+    assert.equal(custom.getAttribute('aria-expanded'), 'true');
+    change('#12345680');
+    assert.equal(settings.read().options.color, '#12345680');
+    assert.equal(preview.style.getPropertyValue('--wj-dashboard-shortcut-bg'), '#12345680');
+    assert.equal(preview.style.getPropertyValue('--wj-dashboard-shortcut-color'), 'var(--wj-secondary)');
+    dialog.querySelector('[part="cancel"]').click();
+    assert.equal(settings.read().options.color, 'amber', 'Cancel restores the preset selected before opening.');
+    assert.equal(dialog.open, false);
+    assert.equal(custom.getAttribute('aria-expanded'), 'false');
+    custom.click();
+    change('#123456');
+    dialog.querySelector('[part="confirm"]').click();
+    assert.equal(settings.read().options.color, '#123456ff');
+    assert.equal(preview.style.getPropertyValue('--wj-dashboard-shortcut-color'), '#fff');
+    assert.equal(window.document.activeElement, custom);
+    custom.click();
+    change('#FFFFFF');
+    dialog.dispatchEvent(new window.Event('cancel'));
+    dialog.close();
+    assert.equal(settings.read().options.color, '#123456ff', 'Escape restores the custom color selected before opening.');
+    lifecycle.abort();
+    container.replaceChildren();
+    const reopened = widget.configure({ container, context, options: { ...options, color: '#ABCDEF80' } });
     settings.dispose();
-    assert.equal(container.querySelector('[role="listbox"]').hidden, true);
+    assert.equal(container.querySelector('color-picker'), picker, 'Reopening reuses the component without attaching stale listeners.');
+    assert.equal(container.querySelector('.md-dashboard__shortcut-custom-color input').checked, true);
+    assert.equal(reopened.read().options.color, '#abcdef80');
+    container.querySelector('.md-dashboard__shortcut-custom-color input').click();
+    change('#00000000');
+    assert.equal(reopened.read().options.color, '#00000000');
+    assert.equal(settings.read().options.color, '#123456ff', 'Disposed settings must not receive updates from the next dialog.');
+    assert.equal(container.querySelector('.md-dashboard__shortcut-preview').style.getPropertyValue('--wj-dashboard-shortcut-color'), 'var(--wj-secondary)');
+    reopened.dispose();
+    assert.equal(dialog.open, false);
+    assert.equal(picker.isConnected, false);
 });
 
-test('Page lookup failures keep menu choices and custom URLs available, and denied users make no requests', async t => {
-    for (const allowed of [true, false]) {
-        const { scope, context, container, window, requests } = fixture(t, { menu: groupedShortcutMenu, allowed, ok: false });
-        const timers = [];
-        window.setTimeout = callback => { timers.push(callback); return timers.length; };
-        window.clearTimeout = () => {};
-        const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
-        searchShortcut(container, window, 'banner');
-        if (allowed) {
-            await timers.at(-1)();
-            assert.match(container.textContent, /shortcutPageSearchFailed/);
-        } else assert.equal(requests.length, 0);
-        pickShortcut(container, 'Banner list');
-        assert.equal(settings.read().options.href, '/apps/banner/admin/');
+test('Saved custom shortcut colors use readable foregrounds and reject malformed CSS', t => {
+    const { scope, context, container } = fixture(t);
+    const widget = scope.getWidget('shortcut');
+    for (const [color, foreground] of [['#000000', '#fff'], ['#FFFFFF', 'var(--wj-secondary)'], ['#00000000', 'var(--wj-secondary)']]) {
+        container.replaceChildren();
+        widget.render({ container, context, options: { source: 'url', href: 'https://example.com', title: 'Autotest', color } });
+        assert.equal(container.querySelector('a').style.getPropertyValue('--wj-dashboard-shortcut-bg'), color.toLowerCase());
+        assert.equal(container.querySelector('a').style.getPropertyValue('--wj-dashboard-shortcut-color'), foreground);
     }
+    for (const color of ['#fff', '#1234567', '#gg0000', '#123456; color: red', null, 123]) {
+        container.replaceChildren();
+        widget.render({ container, context, options: { color } });
+        assert.equal(container.querySelector('a').style.getPropertyValue('--wj-dashboard-shortcut-bg'), 'var(--wj-dashboard-shortcut-default)');
+    }
+});
+
+test('Previously saved page shortcuts remain editable after menu search stops suggesting web pages', t => {
+    const { scope, context, container } = fixture(t, { menu: groupedShortcutMenu });
+    const options = { source: 'url', href: '/admin/v9/webpages/web-pages-list/?docid=42', title: 'Contact autotest', icon: 'ti-file-text', color: 'default' };
+    const settings = scope.getWidget('shortcut').configure({ container, context, options });
+    assert.equal(container.querySelector('[name="dashboardShortcutSearch"]').value, 'Contact autotest');
+    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), options);
 });
 
 test('Recent pages retain six server-filtered rows safely in every supported size', async t => {

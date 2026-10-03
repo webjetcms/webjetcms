@@ -2,6 +2,7 @@ Feature('admin.dashboard.shortcuts').tag('@singlethread');
 
 let originalSettings;
 let originalBookmarks;
+let originalColorSettings;
 const actions = '.md-dashboard__shortcut-actions';
 const links = '.md-dashboard__shortcuts';
 const modal = '.md-dashboard-modal';
@@ -118,6 +119,158 @@ Scenario('Welcome shortcuts fit above the fold and own their editing mode', asyn
     I.wjSetDefaultWindowSize();
 });
 
+/** Checks hierarchical browsing, back navigation and global terminal-card search without saving a shortcut. */
+Scenario('Browse main areas, sections and cards or search terminal cards directly', async ({ I }) => {
+    I.resizeWindow(1448, 1231);
+    I.click('Pridať skratku', actions);
+    I.waitForVisible(modal, 10);
+    I.clickCss(modal + ' [name="dashboardShortcutSearch"]');
+    const heading = modal + ' .md-dashboard__shortcut-result-heading';
+    const optionTitle = modal + ' .md-dashboard__shortcut-result-text > span';
+    I.see('Hlavná časť', heading);
+    I.see('Prehľady', optionTitle);
+    I.see('Webové stránky', optionTitle);
+    I.see('Príspevky', optionTitle);
+    I.see('Aplikácie', optionTitle);
+    I.dontSee('Návštevnosť', optionTitle);
+    I.saveScreenshot('dashboard-shortcut-browse-main.png', true);
+    I.click(locate(optionTitle).withText('Aplikácie'));
+    I.see('Sekcia', heading);
+    I.see('Ankety', optionTitle);
+    I.see('Bannerový systém', optionTitle);
+    I.saveScreenshot('dashboard-shortcut-browse-sections.png', true);
+    I.click(locate(optionTitle).withText('Číselníky'));
+    I.see('Vyberte kartu', heading);
+    I.see('Zoznam dát číselníkov', optionTitle);
+    I.see('Typy číselníkov', optionTitle);
+    I.saveScreenshot('dashboard-shortcut-browse-cards.png', true);
+    I.clickCss(modal + ' .md-dashboard__shortcut-result-back');
+    I.see('Sekcia', heading);
+    I.clickCss(modal + ' .md-dashboard__shortcut-result-back');
+    I.see('Hlavná časť', heading);
+    searchShortcut(I, 'číselník');
+    I.see('Vyberte kartu', heading);
+    I.assertDeepEqual(await I.grabTextFromAll(optionTitle), ['Zoznam dát číselníkov', 'Typy číselníkov']);
+    I.dontSeeElement(modal + ' .md-dashboard__shortcut-result-back');
+    I.pressKey('ArrowDown');
+    I.pressKey('Enter');
+    I.waitForInvisible(modal + ' [role="listbox"]', 10);
+    I.seeInField(modal + ' [name="dashboardShortcutSearch"]', 'Aplikácie › Číselníky › Typy číselníkov');
+    searchShortcut(I, 'ciselnik');
+    I.assertDeepEqual(await I.grabTextFromAll(optionTitle), ['Zoznam dát číselníkov', 'Typy číselníkov']);
+    searchShortcut(I, '');
+    I.see('Hlavná časť', heading);
+    I.click('Zrušiť', modal + ' .modal-footer');
+    I.waitForInvisible(modal, 10);
+    I.wjSetDefaultWindowSize();
+});
+
+/** Checks that the users menu class list resolves to a visible glyph in the list and selected preview. */
+Scenario('Users shortcut retains its menu icon in suggestions and preview', async ({ I }) => {
+    I.resizeWindow(1448, 1231);
+    I.click('Pridať skratku', actions);
+    I.waitForVisible(modal, 10);
+    I.clickCss(modal + ' [name="dashboardShortcutSearch"]');
+    const optionTitle = modal + ' .md-dashboard__shortcut-result-text > span';
+    I.click(locate(optionTitle).withText('Používatelia'));
+    const selectedIcon = modal + ' .md-dashboard__shortcut-result[aria-selected="true"] > i';
+    I.assertEqual(await I.grabAttributeFrom(selectedIcon, 'class'), 'ti ti-users');
+    I.assertTrue(await I.executeScript(selector => {
+        const content = getComputedStyle(document.querySelector(selector), '::before').content;
+        return !!content && !['none', 'normal', '""', "''"].includes(content);
+    }, selectedIcon), 'The users option must render a glyph from the loaded Tabler font.');
+    I.saveScreenshot('dashboard-shortcut-users-icon.png', true);
+    I.click(locate(optionTitle).withText('Používatelia'));
+    I.waitForInvisible(modal + ' [role="listbox"]', 10);
+    I.seeElement(modal + ' .md-dashboard__shortcut-preview > .ti-users');
+    I.click('Zrušiť', modal + ' .modal-footer');
+    I.waitForInvisible(modal, 10);
+    I.wjSetDefaultWindowSize();
+});
+
+/** Checks the shared color picker, cancellation and persisted custom colors with alpha. */
+Scenario('Custom shortcut colors use the shared picker and persist after reload', async ({ I }) => {
+    originalColorSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
+    I.resizeWindow(1448, 1231);
+    I.click('Pridať skratku', actions);
+    I.waitForVisible(modal, 10);
+    searchShortcut(I, '');
+    I.clickCss(modal + ' .md-dashboard__shortcut-result-url');
+    I.fillField(modal + ' [name="dashboardShortcutUrl"]', 'https://example.com/autotest-color');
+    const title = 'custom-color-autotest-' + I.getRandomTextShort();
+    I.fillField(modal + ' [name="dashboardShortcutTitle"]', title);
+    const customColor = modal + ' .md-dashboard__shortcut-custom-color';
+    const hex = modal + ' color-picker [part="hex-input"]';
+    const confirm = modal + ' color-picker [part="confirm"]';
+    const cancel = modal + ' color-picker [part="cancel"]';
+    const previewColor = () => I.executeScript(() => {
+        const style = getComputedStyle(document.querySelector('.md-dashboard__shortcut-preview > .ti'));
+        return { background: style.backgroundColor, foreground: style.color };
+    });
+    I.clickCss(modal + ' .md-dashboard__shortcut-colors input[value="amber"] + span');
+    I.clickCss(customColor + ' > span');
+    I.waitForVisible(hex, 10);
+    I.see('Zvoľte farbu', modal + ' color-picker h3');
+    I.assertEqual(await I.grabAttributeFrom(customColor + ' input', 'aria-expanded'), 'true');
+    I.fillField(hex, '#112233');
+    I.assertDeepEqual(await previewColor(), { background: 'rgb(17, 34, 51)', foreground: 'rgb(255, 255, 255)' });
+    I.pressKey('Escape');
+    I.waitForInvisible(hex, 10);
+    I.seeElement(modal);
+    I.seeCheckboxIsChecked(modal + ' .md-dashboard__shortcut-colors input[value="amber"]');
+    I.assertTrue(await I.executeScript(() => document.activeElement.matches('.md-dashboard__shortcut-custom-color input')), 'Closing the picker returns focus to its opener.');
+    I.clickCss(customColor + ' > span');
+    I.waitForVisible(hex, 10);
+    I.fillField(hex, '#0A246380');
+    const chosenPreview = await previewColor();
+    I.assertEqual(chosenPreview.foreground, 'rgb(19, 21, 27)');
+    I.assertTrue(/^rgba\(10, 36, 99, 0\.5(?:0[0-9]*)?\)$/.test(chosenPreview.background), 'The preview retains the chosen RGB channels and half opacity.');
+    I.saveScreenshot('dashboard-shortcut-custom-color-picker.png', true);
+    I.clickCss(confirm);
+    I.waitForInvisible(hex, 10);
+    I.seeCheckboxIsChecked(customColor + ' input');
+    I.saveScreenshot('dashboard-shortcut-custom-color.png', true);
+    I.clickCss(modal + ' .modal-footer .btn-primary');
+    I.waitForInvisible(modal, 10);
+    saved(I);
+    I.refreshPage();
+    loaded(I);
+    const shortcut = await I.executeScript(title => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.find(item => item.options.title === title), title);
+    I.assertEqual(shortcut.options.color, '#0a246380');
+    I.assertTrue(await I.executeScript(({ id, expected }) => {
+        const icon = document.querySelector('[data-instance-id="' + id + '"] .md-dashboard-widget__shortcut > .ti');
+        const style = getComputedStyle(icon);
+        return style.backgroundColor === expected.background && style.color === expected.foreground;
+    }, { id: shortcut.id, expected: chosenPreview }), 'Custom color and readable foreground must survive reloading.');
+    I.clickCss(actions + ' button[aria-pressed="false"]');
+    I.clickCss('[data-instance-id="' + shortcut.id + '"] .md-dashboard-widget__shortcut');
+    I.waitForVisible(modal, 10);
+    I.seeCheckboxIsChecked(customColor + ' input');
+    I.clickCss(customColor + ' > span');
+    I.waitForVisible(hex, 10);
+    I.seeInField(hex, '#0a246380');
+    I.fillField(hex, '#000000');
+    I.clickCss(cancel);
+    I.waitForInvisible(hex, 10);
+    I.assertEqual((await previewColor()).background, chosenPreview.background);
+    I.resizeWindow(390, 900);
+    I.assertTrue(await I.executeScript(() => {
+        const body = document.querySelector('.md-dashboard-modal .modal-body');
+        return body.scrollWidth <= body.clientWidth;
+    }), 'The custom color choice must fit the narrow shortcut modal.');
+    I.click('Zrušiť', modal + ' .modal-footer');
+    I.waitForInvisible(modal, 10);
+    I.wjSetDefaultWindowSize();
+});
+
+/** Restores the complete original profile even when the custom color scenario fails. */
+Scenario('Restore the dashboard after custom shortcut color checks', async ({ I }) => {
+    if (!originalColorSettings) return;
+    const restored = await I.executeScript(settings => document.querySelector('webjet-overview-dashboard').dashboardController._commit(settings), originalColorSettings);
+    I.assertTrue(restored, 'Restore the personal preferences captured before custom color checks.');
+    I.wjSetDefaultWindowSize();
+});
+
 /**
  * Searches authorized menu breadcrumbs, selects a tab with the keyboard and preserves its optional
  * title and appearance. The combobox and edit dialog must remain usable at narrow widths.
@@ -126,7 +279,7 @@ Scenario('Choose a menu target through autocomplete and restore its settings whe
     I.click('Pridať skratku', actions);
     I.waitForVisible(modal, 10);
     searchShortcut(I, 'banner');
-    I.see('Sekcie administrácie', modal);
+    I.see('Vyberte kartu', modal);
     I.see('Aplikácie', modal);
     I.see('Zoznam bannerov', modal);
     I.see('Štatistika bannerov', modal);
@@ -307,26 +460,20 @@ Scenario('Shortcut labels open settings in edit mode and both save and modal rem
 });
 
 /** Checks the two autocomplete result groups, the full-title tooltip and unavailable-link edit access. */
-Scenario('Shortcut search includes pages and long or unavailable destinations retain accessible states', async ({ I }) => {
+Scenario('Shortcut search offers terminal cards and long or unavailable destinations retain accessible states', async ({ I }) => {
     I.resizeWindow(1448, 1231);
-    await I.mockRoute('**/_doc_autocomplete.jsp?*', route => route.fulfill({
-        status: 200, contentType: 'application/json',
-        body: JSON.stringify([{ doc_id: 42, title: 'Kontaktný formulár autotest', label: '/kontakt/formular' }])
-    }));
     I.click('Pridať skratku', actions);
     I.waitForVisible(modal, 10);
     searchShortcut(I, 'formul');
-    I.waitForText('Kontaktný formulár autotest', 10, modal);
-    I.see('Sekcie administrácie', modal);
-    I.see('Webové stránky', modal);
+    I.see('Vyberte kartu', modal);
+    I.see('Zoznam formulárov', modal);
     I.see('Použiť vlastnú adresu URL', modal);
     I.saveScreenshot('dashboard-shortcut-add-search.png', true);
-    chooseShortcut(I, 'Kontaktný formulár autotest');
-    I.seeInField(modal + ' [name="dashboardShortcutSearch"]', 'Kontaktný formulár autotest');
-    I.see('Kontaktný formulár autotest', modal + ' .md-dashboard__shortcut-preview');
+    chooseShortcut(I, 'Zoznam formulárov');
+    I.seeInField(modal + ' [name="dashboardShortcutSearch"]', 'Zoznam formulárov');
+    I.see('Zoznam formulárov', modal + ' .md-dashboard__shortcut-preview');
     I.click('Zrušiť', modal + ' .modal-footer');
     I.waitForInvisible(modal, 10);
-    await I.stopMockingRoute('**/_doc_autocomplete.jsp?*');
     I.wjSetDefaultWindowSize();
 
     const id = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.find(item => item.type === 'shortcut' && item.options.source !== 'url').id);
