@@ -142,7 +142,7 @@ export function registerShortcutWidget() {
          * @param {import('./registry').WidgetArguments} args - Dialog content, saved options, authorized menu and lifecycle.
          * @returns {import('./registry').WidgetConfiguration} Validated settings reader and lookup cleanup.
          */
-        configure({ container, options, context, signal }) {
+        configure({ container, options, context, signal, adding = false }) {
             const menu = menuEntries(context);
             const tree = shortcutMenu(context);
             const tabs = new Map();
@@ -244,7 +244,10 @@ export function registerShortcutWidget() {
             const colorLegend = node('legend', 'form-label', text(context, 'shortcutColor'));
             colorLegend.append(node('span', 'md-dashboard__shortcut-optional', text(context, 'shortcutOptional')));
             colors.append(colorLegend);
-            let previousColor = shortcutColor(options.color);
+            // New shortcuts start with a random palette color; saved colors stay unchanged.
+            let previousColor = adding
+                ? SHORTCUT_COLORS[1 + Math.floor(Math.random() * (SHORTCUT_COLORS.length - 1))]
+                : shortcutColor(options.color);
             let customColor = previousColor.startsWith('#') ? previousColor : '#0063fb';
             for (const value of SHORTCUT_COLORS) {
                 const label = node('label', 'md-dashboard__shortcut-swatch');
@@ -252,7 +255,7 @@ export function registerShortcutWidget() {
                 radio.type = 'radio';
                 radio.name = iconInput.id + '-color';
                 radio.value = value;
-                radio.checked = value === shortcutColor(options.color);
+                radio.checked = value === previousColor;
                 const name = text(context, 'shortcutColor.' + value);
                 radio.setAttribute('aria-label', name);
                 const swatch = node('span');

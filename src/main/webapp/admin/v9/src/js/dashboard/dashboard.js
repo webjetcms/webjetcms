@@ -1580,7 +1580,7 @@ export class DashboardController {
         if (definition.configure) {
             save.disabled = true;
             try {
-                configuration = await definition.configure({ container: fields, instance: cloneSettings(instance), options: cloneSettings(instance.options || {}), domainOptions: cloneSettings(this.settings.domainOptions[id] || definition.defaultDomainOptions), context: this._widgetContext(), signal: dialog.signal });
+                configuration = await definition.configure({ container: fields, instance: cloneSettings(instance), options: cloneSettings(instance.options || {}), domainOptions: cloneSettings(this.settings.domainOptions[id] || definition.defaultDomainOptions), context: this._widgetContext(), signal: dialog.signal, adding });
                 if (dialog.signal.aborted) dispose(configuration);
                 else { dialog.setCleanup(configuration); save.disabled = false; }
             } catch (failure) {

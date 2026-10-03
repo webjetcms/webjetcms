@@ -26,6 +26,7 @@
  * @property {Object} domainOptions - Copy of current-domain preferences or their registered defaults.
  * @property {WidgetContext} context - Current dashboard services and page data.
  * @property {AbortSignal} signal - Aborted when the render or dialog is replaced or disposed.
+ * @property {boolean} [adding=false] - Configuration-only flag for a new, unsaved widget.
  * @property {function(): Promise<void>} [refresh] - Render-only callback that reloads this instance.
  * @property {function(WidgetOptionsUpdate): Promise<boolean>} [saveOptions] - Render-only callback resolving to whether persistence succeeded.
  */
