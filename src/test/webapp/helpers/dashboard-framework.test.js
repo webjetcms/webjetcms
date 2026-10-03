@@ -562,102 +562,73 @@ test("Catalogue combines category and title or description search using only aut
     assert.equal(modal.querySelector('[data-widget-type="pages"]').hidden, false);
 });
 
-test("Catalogue retains focus and filters when repeatedly adding widgets without settings to the draft", async t => {
+test("Catalogue opens settings and adds a configured widget only after confirmation", async t => {
     const { controller, window, requests, stored } = fixture(t, { items: [item("original")], definitions: [
-        { type: "pages", titleKey: "Recent pages", category: "content", multiple: true, sizes: ["3x2"], render() {} }
+        { type: "pages", titleKey: "Recent pages", category: "content", multiple: true, sizes: ["1x1", "3x2"], defaultSize: "3x2", render() {} }
     ] });
     await controller.start();
     controller.setEditing(true);
     controller.addButton.focus();
     controller.showCatalogue();
-    const modal = window.document.querySelector('.md-dashboard-modal--catalogue');
-    modal.querySelector('button[data-category="content"]').click();
-    const search = modal.querySelector('input[type="search"]');
-    search.value = "recent";
-    search.dispatchEvent(new window.Event("input"));
-    const card = modal.querySelector('[data-widget-type="pages"]');
+    const catalogue = window.document.querySelector('.md-dashboard-modal--catalogue');
+    const card = catalogue.querySelector('[data-widget-type="pages"]');
     assert.equal(card.querySelector('.md-dashboard__catalogue-meta').textContent, "Content · Default size 3×2");
-    const add = card.querySelector('button');
-    assert.equal(add.textContent, "Add");
-    for (let count = 1; count <= 2; count++) {
-        add.click();
-        await tick();
-        assert.equal(controller.settings.items.filter(item => item.type === "pages").length, count);
-        assert.equal(controller.settings.items.at(-1).type, "pages");
-        assert.equal(modal.isConnected, true);
-        assert.equal(window.document.activeElement, add);
-        assert.equal(card.classList.contains("is-added"), true);
-        assert.equal(card.querySelector('.md-dashboard__catalogue-added'), null);
-        assert.equal(card.querySelector('.md-dashboard__catalogue-badge').hidden, false);
-        assert.equal(add.textContent, "Added");
-        assert.ok(add.querySelector('.ti-check'));
-        assert.equal(add.disabled, false);
-        assert.equal(search.value, "recent");
-        assert.equal(modal.querySelector('button[data-category="content"]').getAttribute("aria-pressed"), "true");
-    }
+    card.querySelector('button').click();
+    await tick();
+    assert.equal(catalogue.isConnected, false);
+    assert.equal(controller.settings.items.length, 1, "Opening settings must not insert an instance");
+    const settings = window.document.querySelector('.md-dashboard-modal--settings');
+    assert.equal(settings.querySelector('.btn-primary').textContent, "Add widget");
+    settings.querySelector('.md-dashboard__size-choice input[value="1x1"]').click();
+    settings.querySelector('.btn-primary').click();
+    await tick();
+    assert.equal(controller.settings.items.at(-1).type, "pages");
+    assert.equal(controller.settings.items.at(-1).size, "1x1");
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+    assert.equal(window.document.activeElement, controller.addButton);
     assert.equal(requests.length, 0);
     assert.equal(stored().items.length, 1);
-    modal.querySelector('.modal-footer button').click();
-    assert.equal(modal.isConnected, false);
-    assert.equal(window.document.activeElement, controller.addButton);
     assert.equal(await controller.saveEditing(), true);
-    assert.equal(stored().items.filter(item => item.type === "pages").length, 2);
+    assert.equal(stored().items.length, 2);
 });
 
-test("Catalogue confirms additions in the button for five seconds and clears feedback timers on close", async t => {
-    const { controller, window } = fixture(t, { items: [item("original")] });
-    const timers = new Map();
-    let now = 0, nextTimer = 0;
-    window.setTimeout = (callback, delay) => { const id = ++nextTimer; timers.set(id, { callback, at: now + delay }); return id; };
-    window.clearTimeout = id => timers.delete(id);
-    const advance = elapsed => {
-        now += elapsed;
-        for (const [id, timer] of timers) if (timer.at <= now) { timers.delete(id); timer.callback(); }
-    };
+test("Cancelling catalogue settings adds nothing and another widget requires reopening the catalogue", async t => {
+    const { controller, window, requests } = fixture(t, { items: [item("original")] });
     await controller.start();
     controller.setEditing(true);
-    controller.showCatalogue();
-    const modal = window.document.querySelector('.md-dashboard-modal--catalogue');
-    const add = modal.querySelector('.md-dashboard__catalogue-item button');
-    add.click();
-    await tick();
-    assert.equal(add.textContent, "Added");
-    assert.equal(add.getAttribute("aria-label"), "Added · Test");
-    advance(4999);
-    assert.equal(add.textContent, "Added");
-    add.click();
-    await tick();
-    assert.equal(timers.size, 1, "Another addition restarts the same button's feedback timer");
-    advance(4999);
-    assert.equal(add.textContent, "Added");
-    advance(1);
-    assert.equal(add.textContent, "Add another");
-    assert.ok(add.querySelector('.ti-plus'));
-    assert.equal(add.getAttribute("aria-label"), "Add another · Test");
-    assert.equal(window.document.activeElement, add);
-    add.click();
-    await tick();
-    modal.querySelector('.modal-footer button').click();
-    assert.equal(timers.size, 0, "Closing the catalogue clears its pending feedback timers");
+    for (let attempt = 0; attempt < 2; attempt++) {
+        controller.addButton.focus();
+        controller.addButton.click();
+        const catalogue = window.document.querySelector('.md-dashboard-modal--catalogue');
+        assert.equal(catalogue.querySelector('.md-dashboard__catalogue-item button').textContent, "Add another");
+        catalogue.querySelector('.md-dashboard__catalogue-item button').click();
+        await tick();
+        const settings = window.document.querySelector('.md-dashboard-modal--settings');
+        assert.equal(catalogue.isConnected, false);
+        settings.querySelector('.modal-footer .btn-outline-secondary').click();
+        assert.equal(controller.settings.items.length, 1);
+        assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+        assert.equal(window.document.activeElement, controller.addButton);
+    }
+    assert.equal(requests.length, 0);
 });
 
-test("Catalogue disables all add actions at capacity and announces the limit", async t => {
+test("Catalogue disables additions at capacity after confirming the final available slot", async t => {
     const { controller, window, requests } = fixture(t, { items: Array.from({ length: 47 }, (_, index) => item(`existing-${index}`)) });
     await controller.start();
     controller.setEditing(true);
     controller.showCatalogue();
-    const modal = window.document.querySelector('.md-dashboard-modal--catalogue');
-    const add = modal.querySelector('.md-dashboard__catalogue-item button');
-    assert.equal(add.textContent, "Add another");
-    assert.equal(modal.querySelector('.md-dashboard__catalogue-item').classList.contains("is-added"), false);
-    add.click();
+    window.document.querySelector('.md-dashboard__catalogue-item button').click();
+    await tick();
+    assert.equal(controller.settings.items.length, 47);
+    window.document.querySelector('.md-dashboard-modal--settings .btn-primary').click();
     await tick();
     assert.equal(controller.settings.items.length, 48);
-    assert.equal(add.disabled, true);
-    assert.equal(window.document.activeElement, modal.querySelector('.modal-footer button'));
-    assert.match(modal.querySelector('[role="alert"]').textContent, /48 widgets/);
+    controller.showCatalogue();
+    const catalogue = window.document.querySelector('.md-dashboard-modal--catalogue');
+    assert.equal(catalogue.querySelector('.md-dashboard__catalogue-item button').disabled, true);
+    assert.match(catalogue.querySelector('[role="alert"]').textContent, /48 widgets/);
     assert.equal(requests.length, 0);
-    assert.equal(modal.isConnected, true);
 });
 
 test("A confirmed reset can be cancelled and a failed save retains the draft for retry", async t => {
@@ -1468,9 +1439,9 @@ test('Widget settings apply to a draft in a centered modal and Cancel keeps the 
     const dialog = window.document.querySelector('.md-dashboard-modal--settings');
     assert.ok(dialog.querySelector('.modal-dialog-centered'));
     assert.equal(dialog.getAttribute('aria-modal'), 'true');
-    assert.equal(dialog.querySelector('.md-dashboard__size-grid').children.length, 18);
+    assert.equal(dialog.querySelectorAll('.md-dashboard__size-choice input').length, 6);
     assert.equal(dialog.contains(window.document.activeElement), true);
-    dialog.querySelector('select').value = '3x3';
+    dialog.querySelector('.md-dashboard__size-choice input[value="3x3"]').click();
     dialog.querySelector('.btn-primary').click();
     await tick();
     assert.equal(controller._instance('draft').size, '3x3');
@@ -1490,6 +1461,86 @@ test('Widget settings apply to a draft in a centered modal and Cancel keeps the 
     assert.equal(window.document.querySelector('.md-dashboard-modal--settings'), null, 'Exiting editing must dispose open draft settings');
     assert.equal(controller.notices.hasAttribute('inert'), false);
     assert.equal(requests.length, 0);
+});
+
+test('Live previews follow size, domain selection and color without mutating the dashboard', async t => {
+    const renders = [];
+    const { controller, window, requests } = fixture(t, {
+        items: [item('preview-autotest', 'previewable', '1x1', { days: 7 })],
+        definitions: [{ type: 'previewable', titleKey: 'Preview autotest', sizes: ['1x1', '3x3'], multiple: true,
+            defaultDomainOptions: { formName: 'initial-autotest' },
+            headerLink: { href: (instance, context) => `/apps/form/admin/detail/?formName=${context.settings.domainOptions[instance.id]?.formName || ''}` },
+            render: ({ container, instance, options, domainOptions, signal }) => {
+                renders.push({ id: instance.id, size: instance.size, options: copy(options), domainOptions: copy(domainOptions), signal });
+                container.textContent = `${instance.size} / ${options.days} / ${domainOptions.formName}`;
+            },
+            configure: ({ container }) => {
+                const select = window.document.createElement('select');
+                select.innerHTML = '<option value="initial-autotest">Initial autotest</option><option value="changed-autotest">Changed autotest</option>';
+                container.append(select);
+                return { read: () => ({ options: { days: 30 }, domainOptions: { formName: select.value } }) };
+            } }]
+    });
+    await controller.start();
+    controller.setEditing(true);
+    const original = copy(controller.settings);
+    await controller.showSettings('preview-autotest');
+    await tick();
+    const dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    const preview = dialog.querySelector('.md-dashboard__widget-preview .md-dashboard__widget');
+    assert.equal(preview.textContent, 'Preview autotest1x1 / 30 / initial-autotest');
+    assert.equal(dialog.querySelectorAll('.md-dashboard__widget').length, 1, 'The live card replaces the separate background sample');
+    assert.equal(preview.querySelector('.md-dashboard__drag, .dropdown'), null);
+    const firstRender = renders.at(-1);
+    dialog.querySelector('.md-dashboard__size-choice input[value="3x3"]').click();
+    await tick();
+    assert.equal(firstRender.signal.aborted, true, 'Changing size must abort the previous preview');
+    assert.equal(preview.dataset.size, '3x3');
+    const form = dialog.querySelector('select');
+    form.value = 'changed-autotest';
+    form.dispatchEvent(new window.Event('change', { bubbles: true }));
+    await tick();
+    assert.match(preview.textContent, /3x3 \/ 30 \/ changed-autotest/);
+    assert.equal(preview.querySelector('a').getAttribute('href'), '/apps/form/admin/detail/?formName=changed-autotest');
+    const count = renders.length;
+    dialog.querySelector('.md-dashboard__widget-colors input[value="custom"]').click();
+    dialog.querySelector('color-picker').dispatchEvent(new window.CustomEvent('update-color', { detail: { hex: '#fff1ec' } }));
+    assert.equal(preview.style.backgroundColor, 'rgb(255, 241, 236)');
+    assert.equal(renders.length, count, 'Changing color must not refetch widget data');
+    assert.deepEqual(copy(controller.settings), original);
+    const lastRender = renders.at(-1);
+    dialog.querySelector('.modal-footer .btn-outline-secondary').click();
+    assert.equal(lastRender.signal.aborted, true);
+    assert.deepEqual(copy(controller.settings), original);
+    assert.equal(requests.length, 0);
+});
+
+test('Replaced and closed previews dispose late renderer results without restoring stale content', async t => {
+    const pending = [];
+    const disposed = [];
+    const { controller, window } = fixture(t, {
+        items: [item('late-autotest', 'late-preview', '1x1')],
+        definitions: [{ type: 'late-preview', titleKey: 'Late preview', sizes: ['1x1', '3x3'],
+            render: ({ instance, signal }) => instance.id.startsWith('preview-') ? new Promise(resolve => pending.push({ signal, resolve })) : undefined }]
+    });
+    await controller.start();
+    controller.setEditing(true);
+    await controller.showSettings('late-autotest');
+    await tick();
+    const dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    dialog.querySelector('.md-dashboard__size-choice input[value="3x3"]').click();
+    await tick();
+    assert.equal(pending.length, 2);
+    assert.equal(pending[0].signal.aborted, true);
+    pending[0].resolve(() => disposed.push('replaced'));
+    await tick();
+    assert.deepEqual(disposed, ['replaced']);
+    dialog.querySelector('.modal-footer .btn-outline-secondary').click();
+    assert.equal(pending[1].signal.aborted, true);
+    pending[1].resolve({ destroy: () => disposed.push('closed') });
+    await tick();
+    assert.deepEqual(disposed, ['replaced', 'closed']);
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
 });
 
 test('Background settings preserve defaults, stage palette colors and survive save and reload', async t => {
@@ -1547,7 +1598,7 @@ test('Custom backgrounds preview immediately, reject unreadable shades and cance
     const picker = dialog.querySelector('color-picker');
     dialog.querySelector('input[value="custom"]').click();
     picker.dispatchEvent(new window.CustomEvent('update-color', { detail: { hex: '#112233' } }));
-    assert.equal(dialog.querySelector('.md-dashboard__color-preview').style.backgroundColor, 'rgb(17, 34, 51)');
+    assert.equal(dialog.querySelector('.md-dashboard__widget-preview .md-dashboard__widget').style.backgroundColor, 'rgb(17, 34, 51)');
     dialog.querySelector('.btn-primary').click();
     await tick();
     assert.ok(dialog.querySelector('[role="alert"]').textContent);
@@ -1559,7 +1610,7 @@ test('Custom backgrounds preview immediately, reject unreadable shades and cance
     assert.equal(requests.length, 0);
     await controller.showSettings('custom');
     const reopened = window.document.querySelector('.md-dashboard-modal--settings');
-    assert.equal(reopened.querySelector('input:checked').value, 'custom');
+    assert.equal(reopened.querySelector('.md-dashboard__widget-colors input:checked').value, 'custom');
     reopened.querySelector('input[value="figma-mint"]').click();
     reopened.querySelector('.btn-outline-secondary').click();
     assert.equal(controller._instance('custom').options.backgroundColor, '#fff1ec', 'Closing settings must discard unconfirmed colors');

@@ -398,14 +398,14 @@ export class DashboardController {
         return { ...this.context, dashboard: this, settings: this.settings, translate: (key, ...params) => this._t(key, key, ...params) };
     }
 
-    _title(instance) {
+    _title(instance, context = this._widgetContext()) {
         const definition = getWidget(instance.type);
-        return String(definition?.getTitle?.(instance, this._widgetContext()) || this._t(definition?.titleKey || instance.type));
+        return String(definition?.getTitle?.(instance, context) || this._t(definition?.titleKey || instance.type));
     }
 
-    _headerHref(instance) {
+    _headerHref(instance, context = this._widgetContext()) {
         const href = getWidget(instance.type)?.headerLink?.href;
-        return typeof href === "function" ? href(instance, this._widgetContext()) : href;
+        return typeof href === "function" ? href(instance, context) : href;
     }
 
     _showFailure(key, fallback) {
@@ -557,9 +557,11 @@ export class DashboardController {
     /**
      * Builds an accessible widget shell and binds its navigation and preference actions.
      * @param {import('./model').WidgetInstance} instance - Available instance with a registered definition.
+     * @param {boolean} [preview=false] - Whether to omit arrangement controls and entrance animation.
+     * @param {import('./registry').WidgetContext} [context] - Context containing the preview's unsaved domain preferences.
      * @returns {DashboardView} A detached view whose content has not yet been rendered.
      */
-    _createView(instance) {
+    _createView(instance, preview = false, context = this._widgetContext()) {
         const definition = getWidget(instance.type);
         const card = node("section", "md-dashboard__widget");
         card.dataset.instanceId = instance.id;
@@ -567,7 +569,7 @@ export class DashboardController {
         card.tabIndex = -1;
         const fixed = ["sessions", "news", "search"].includes(this._region(instance));
         card.classList.toggle("is-fixed", fixed);
-        if (!fixed) {
+        if (!fixed && !preview) {
             if (this.host.dataset.loaded === "true") card.dataset.motion = "added";
             else if (instance.type === "shortcut") card.dataset.motion = "intro";
             else if (this._visibilityObserver) card.dataset.motion = "pending";
@@ -579,7 +581,7 @@ export class DashboardController {
         const title = node(fixed ? "h2" : "h3", "md-dashboard__widget-title");
         const titleText = node("span");
         if (definition.headerLink && !definition.headerLink.labelKey) {
-            const titleLink = link("", this._headerHref(instance), "md-dashboard__title-link");
+            const titleLink = link("", this._headerHref(instance, context), "md-dashboard__title-link");
             titleLink.append(titleText, icon("ti-arrow-up-right"));
             title.append(titleLink);
         } else title.append(titleText);
@@ -588,9 +590,15 @@ export class DashboardController {
         if (definition.icon) header.append(icon(definition.icon));
         header.append(title);
         if (definition.headerLink?.labelKey) {
-            const headerLink = link(this._t(definition.headerLink.labelKey), this._headerHref(instance), "md-dashboard__header-link");
+            const headerLink = link(this._t(definition.headerLink.labelKey), this._headerHref(instance, context), "md-dashboard__header-link");
             headerLink.append(icon("ti-arrow-up-right"));
             header.append(headerLink);
+        }
+        if (preview) {
+            const body = node("div", "md-dashboard__widget-body");
+            body.id = `dashboard-body-${instance.id}`;
+            card.append(header, body);
+            return { card, header, title, titleText, body, instance, abort: null, cleanup: null, signature: null };
         }
         const drag = button(this._t("move", "Move widget"), () => this.showMove(instance.id), "btn btn-sm md-dashboard__drag md-dashboard__control");
         drag.replaceChildren(icon("ti-grip-vertical"));
@@ -748,6 +756,20 @@ export class DashboardController {
     async refresh(id) {
         const view = this.views.get(id);
         if (!view || this.destroyed) return;
+        return this._renderView(view, this._widgetContext(), {
+            refresh: () => this.refresh(id), saveOptions: values => this.saveOptions(id, values)
+        });
+    }
+
+    /**
+     * Renders a dashboard card or an isolated settings preview with the same loading, error and cleanup lifecycle.
+     * @param {DashboardView} view - Card owning this render's resources.
+     * @param {import('./registry').WidgetContext} context - Effective preferences, including unsaved preview values.
+     * @param {Object} callbacks - Refresh and preference callbacks for this view.
+     * @param {boolean} [lazy=true] - Whether grid rendering waits for viewport entry.
+     * @returns {Promise<void>} Resolves after rendering, cancellation or a handled failure.
+     */
+    async _renderView(view, context, callbacks, lazy = true) {
         view.abort?.abort();
         if (view.cleanup) {
             try { dispose(view.cleanup); } catch (error) { console.warn("Dashboard widget cleanup failed", error); }
@@ -762,15 +784,14 @@ export class DashboardController {
         const loading = node("span", "md-dashboard__loading", this._t("loading", "Loading…"));
         view.body.prepend(loading);
         try {
-            if (this._visibilityObserver && this._region(instance) === "grid") {
+            if (lazy && this._visibilityObserver && this._region(instance) === "grid") {
                 await this._waitForVisibility(view, abort.signal);
                 if (abort.signal.aborted || this.destroyed) return;
             }
             const result = await definition.render({
                 container: content, instance: cloneSettings(instance), options: cloneSettings(instance.options || {}),
-                domainOptions: cloneSettings(this.settings.domainOptions[id] || definition.defaultDomainOptions),
-                context: this._widgetContext(), signal: abort.signal,
-                refresh: () => this.refresh(id), saveOptions: values => this.saveOptions(id, values)
+                domainOptions: cloneSettings(context.settings.domainOptions[instance.id] || definition.defaultDomainOptions),
+                context, signal: abort.signal, ...callbacks
             });
             if (abort.signal.aborted || this.destroyed) dispose(result);
             else view.cleanup = result;
@@ -778,7 +799,7 @@ export class DashboardController {
             console.error("Dashboard widget render failed", error);
             if (abort.signal.aborted || this.destroyed) return;
             const reasonKey = { "domain-unavailable": "domainUnavailable", "selection-unavailable": "selectionUnavailable", "permission-denied": "permissionDenied" }[error.dashboardReason] || "widgetError";
-            content.replaceChildren(node("p", "text-danger", this._t(reasonKey, "This widget could not be loaded.")), button(this._t("retry", "Try again"), () => this.refresh(id)));
+            content.replaceChildren(node("p", "text-danger", this._t(reasonKey, "This widget could not be loaded.")), button(this._t("retry", "Try again"), callbacks.refresh));
         } finally {
             if (!abort.signal.aborted && !this.destroyed) {
                 loading.remove();
@@ -1320,7 +1341,7 @@ export class DashboardController {
         });
     }
 
-    /** Opens the permission-filtered grid catalogue, retaining filters and focus while widgets are added. */
+    /** Opens the permission-filtered grid catalogue and continues to settings when a widget is chosen. */
     showCatalogue() {
         const dialog = this._dialog(this._t("add", "Add widget"));
         dialog.root.classList.add("md-dashboard-modal--catalogue");
@@ -1342,11 +1363,6 @@ export class DashboardController {
         const empty = node("p", "md-dashboard__catalogue-empty mb-0", this._t("noWidgets", "No matching widgets are available."));
         const error = node("p", "text-danger mb-0");
         error.setAttribute("role", "alert");
-        const announcement = node("p", "visually-hidden");
-        announcement.setAttribute("role", "status");
-        const added = new Set();
-        const addedTimers = new Map();
-        dialog.setCleanup(() => { for (const timer of addedTimers.values()) window.clearTimeout(timer); });
         const cards = [];
         const filter = () => {
             const query = search.value.trim().toLocaleLowerCase();
@@ -1360,10 +1376,8 @@ export class DashboardController {
             for (const card of cards) {
                 const exists = this.settings.items.some(item => item.type === card.definition.type);
                 card.badge.hidden = !exists;
-                card.item.classList.toggle("is-added", added.has(card.definition.type));
-                const recentlyAdded = addedTimers.has(card.definition.type);
-                const label = recentlyAdded ? this._t("catalogueAdded", "Added") : exists ? this._t("catalogueAddAnother", "Add another") : this._t("catalogueAdd", "Add");
-                card.add.replaceChildren(icon(recentlyAdded ? "ti-check" : "ti-plus"), document.createTextNode(label));
+                const label = exists ? this._t("catalogueAddAnother", "Add another") : this._t("catalogueAdd", "Add");
+                card.add.replaceChildren(icon("ti-plus"), document.createTextNode(label));
                 card.add.setAttribute("aria-label", `${card.add.textContent} · ${card.title}`);
                 card.add.disabled = full;
             }
@@ -1391,27 +1405,11 @@ export class DashboardController {
             const size = definition.defaultSize === "fullauto" ? this._t("fullWidth", "Full width") : definition.defaultSize.replace("x", "×");
             text.append(heading, node("p", "md-dashboard__catalogue-description", description), node("p", "md-dashboard__catalogue-meta", `${categories[widgetCategory]} · ${this._t("catalogueDefaultSize", "Default size")} ${size}`));
             const actions = node("div", "md-dashboard__catalogue-actions");
-            const add = button("", async () => {
+            const add = button("", () => {
                 add.disabled = true;
-                error.textContent = "";
-                try {
-                    if (await this.add(definition.type)) {
-                        if (dialog.signal.aborted) return;
-                        added.add(definition.type);
-                        add.dataset.motion = "added";
-                        window.clearTimeout(addedTimers.get(definition.type));
-                        addedTimers.set(definition.type, window.setTimeout(() => {
-                            addedTimers.delete(definition.type);
-                            updateStates();
-                        }, 5000));
-                        announcement.textContent = `${title} · ${this._t("catalogueAdded", "Added")}`;
-                    } else error.textContent = this._t("saveError", "The change could not be saved.");
-                } catch (failure) { error.textContent = this._t("saveError", "The change could not be saved."); }
-                if (dialog.signal.aborted) return;
-                updateStates();
-                (add.disabled ? dialog.footer.querySelector("button") : add).focus({ preventScroll: true });
+                dialog.root.addEventListener("hidden.bs.modal", () => this.showAddWidget(definition.type), { once: true });
+                dialog.close();
             });
-            add.addEventListener("animationend", () => { delete add.dataset.motion; });
             actions.append(add);
             item.append(emblem, text, actions);
             list.append(item);
@@ -1419,7 +1417,7 @@ export class DashboardController {
         }
         tools.append(searchField, filters);
         dialog.body.before(tools);
-        dialog.body.append(list, empty, announcement);
+        dialog.body.append(list, empty);
         containNativeScroll(dialog.body, dialog.signal);
         dialog.footer.append(error, node("p", "md-dashboard__catalogue-hint", this._t("catalogueHint", "Added widgets appear at the end of the overview. They are saved with your other changes.")), button(this._t("catalogueDone", "Done"), dialog.close, "btn btn-primary"));
         search.addEventListener("input", filter);
@@ -1498,50 +1496,96 @@ export class DashboardController {
         const shortcutTooltip = shortcutLink && window.bootstrap?.Tooltip?.getInstance(shortcutLink);
         shortcutTooltip?.disable();
         shortcutTooltip?.hide();
-        const editingWidget = !adding && this.editing && this._region(instance) === "grid";
-        const dialog = this._dialog(this._t(adding ? "addShortcut" : shortcut ? "editShortcut" : "settings", adding ? "Add shortcut" : shortcut ? "Edit shortcut" : "Widget settings"));
+        const gridWidget = this._region(instance) === "grid";
+        const editingWidget = this.editing && gridWidget;
+        const dialog = this._dialog(this._t(shortcut ? adding ? "addShortcut" : "editShortcut" : "settings", shortcut ? adding ? "Add shortcut" : "Edit shortcut" : "Widget settings"));
         if (shortcut) dialog.root.classList.add("md-dashboard-modal--shortcut");
-        if (editingWidget) {
+        if (gridWidget) {
             dialog.root.classList.add("md-dashboard-modal--settings");
-            dialog.root.querySelector(".modal-dialog").classList.add("modal-dialog-centered");
+            dialog.root.querySelector(".modal-dialog").classList.add("modal-xl", "modal-dialog-centered");
         }
         if (shortcut) dialog.root.addEventListener("hidden.bs.modal", () => {
             if (shortcutLink) window.bootstrap?.Tooltip?.getInstance(shortcutLink)?.enable();
             if (this.views.has(id)) this.views.get(id).body.querySelector("a")?.focus({ preventScroll: true });
             else this.addShortcutButton.focus({ preventScroll: true });
         }, { once: true });
-        const sizeLabel = node("label", "form-label", this._t("size", "Size"));
-        const size = node("select", "form-select mb-3");
-        size.id = `dashboard-size-${id}`;
-        sizeLabel.htmlFor = size.id;
+        const settings = node("div", "md-dashboard__settings-panel");
+        const sizes = node("fieldset", "md-dashboard__size-picker mb-3");
+        sizes.append(node("legend", "form-label", this._t("size", "Size")));
+        const sizeChoices = node("div", "md-dashboard__size-choices");
         definition.sizes.forEach(value => {
-            const option = node("option", "", value === "fullauto" ? this._t("fullWidth", "Full width") : value.replace("x", " × "));
-            option.value = value;
-            size.append(option);
+            const choice = node("label", "md-dashboard__size-choice");
+            const input = node("input", "visually-hidden");
+            input.type = "radio";
+            input.name = `dashboard-size-${id}`;
+            input.value = value;
+            input.checked = value === instance.size;
+            const face = node("span", "md-dashboard__size-face");
+            const illustration = node("span", "md-dashboard__size-illustration");
+            illustration.setAttribute("aria-hidden", "true");
+            const footprint = node("span");
+            const [columns, rows] = value === "fullauto" ? [6, 3] : value.split("x").map(Number);
+            footprint.style.width = `${columns / 6 * 100}%`;
+            footprint.style.height = `${rows / 3 * 100}%`;
+            illustration.append(footprint);
+            face.append(illustration, node("span", "", value === "fullauto" ? this._t("fullWidth", "Full width") : value));
+            choice.append(input, face);
+            sizeChoices.append(choice);
         });
-        size.value = instance.size;
-        const preview = node("figure", "md-dashboard__size-preview");
-        const previewGrid = node("div", "md-dashboard__size-grid");
-        previewGrid.setAttribute("aria-hidden", "true");
-        const previewCaption = node("figcaption", "small text-muted");
-        const updatePreview = () => {
-            const dimensions = size.value === "fullauto" ? [6, 3] : size.value.split("x").map(Number);
-            previewGrid.replaceChildren(...Array.from({ length: 18 }, (_, index) => node("span", index % 6 < dimensions[0] && Math.floor(index / 6) < dimensions[1] ? "is-selected" : "")));
-            previewCaption.textContent = `${this._t("sizePreview", "Size preview")}: ${size.selectedOptions[0].textContent}`;
-        };
-        size.addEventListener("change", updatePreview);
-        updatePreview();
-        preview.append(previewGrid, previewCaption);
-        if (definition.sizes.length > 1) dialog.body.append(sizeLabel, size, preview);
-        const colorSettings = this._region(instance) === "grid" ? createWidgetColorSettings({ container: dialog.body, instance, context: this._widgetContext() }) : null;
+        sizes.append(sizeChoices);
+        if (definition.sizes.length > 1) settings.append(sizes);
+        const previewContext = { ...this._widgetContext(), settings: cloneSettings(this.settings) };
+        const previewInstance = { ...cloneSettings(instance), id: `preview-${id}` };
+        const previewView = gridWidget ? this._createView(previewInstance, true, previewContext) : null;
+        if (previewView) {
+            const preview = node("div", "md-dashboard md-dashboard__widget-preview");
+            preview.append(previewView.card);
+            preview.addEventListener("click", event => { if (event.target.closest("a")) event.preventDefault(); });
+            dialog.body.append(preview);
+            previewView.card.dataset.size = instance.size;
+        }
+        dialog.body.append(settings);
+        let colorSettings;
         const fields = node("div", "md-dashboard__settings");
         const error = node("p", "text-danger");
         error.setAttribute("role", "alert");
-        dialog.body.append(fields, error);
         let configuration;
-        const cleanup = () => { dispose(configuration); dispose(colorSettings); };
+        let previewRevision = 0;
+        let previewTimer;
+        let previewReady = !definition.configure;
+        const updatePreview = async () => {
+            if (!previewView || !previewReady || dialog.signal.aborted) return;
+            const revision = ++previewRevision;
+            previewView.abort?.abort();
+            try {
+                const values = await configuration?.read?.() || {};
+                if (dialog.signal.aborted || revision !== previewRevision) return;
+                error.textContent = "";
+                previewView.instance = { ...previewInstance, size: sizeChoices.querySelector("input:checked").value,
+                    options: cloneSettings(values.options ?? instance.options ?? {}) };
+                previewContext.settings.domainOptions[previewInstance.id] = cloneSettings(values.domainOptions ?? this.settings.domainOptions[id] ?? definition.defaultDomainOptions);
+                previewView.card.dataset.size = previewView.instance.size;
+                const [columns, rows] = previewView.instance.size === "fullauto" ? [3, 3] : previewView.instance.size.split("x").map(Number);
+                previewView.card.style.setProperty("--preview-columns", columns);
+                previewView.card.style.setProperty("--preview-rows", rows);
+                previewView.titleText.textContent = this._title(previewView.instance, previewContext);
+                const navigation = previewView.header.querySelector(".md-dashboard__title-link, .md-dashboard__header-link");
+                if (navigation) navigation.href = localUrl(this._headerHref(previewView.instance, previewContext)) || "#";
+                await this._renderView(previewView, previewContext, { refresh: updatePreview, saveOptions: async () => false }, false);
+            } catch (failure) {
+                if (!dialog.signal.aborted) error.textContent = failure.message || this._t("invalidSettings", "Check the widget settings.");
+            }
+        };
+        colorSettings = gridWidget ? createWidgetColorSettings({ container: settings, instance, context: this._widgetContext(), preview: previewView.card,
+            onChange: () => {
+                if (!colorSettings || instance.type !== "traffic") return;
+                window.clearTimeout(previewTimer);
+                previewTimer = window.setTimeout(updatePreview, 150);
+            } }) : null;
+        settings.append(fields, error);
+        const cleanup = () => { window.clearTimeout(previewTimer); if (previewView) this._disposeView(previewView); dispose(configuration); dispose(colorSettings); };
         dialog.setCleanup(cleanup);
-        const save = button(this._t(shortcut ? adding ? "addShortcut" : "saveShortcutChanges" : this.editing ? "apply" : "save", shortcut ? adding ? "Add shortcut" : "Save changes" : this.editing ? "Apply" : "Save"), async () => {
+        const save = button(this._t(shortcut ? adding ? "addShortcut" : "saveShortcutChanges" : adding ? "add" : this.editing ? "apply" : "save", shortcut ? adding ? "Add shortcut" : "Save changes" : adding ? "Add widget" : this.editing ? "Apply" : "Save"), async () => {
             error.textContent = "";
             try {
                 const values = await configuration?.read?.() || {};
@@ -1553,7 +1597,7 @@ export class DashboardController {
                 const updated = next.items.find(item => item.id === id);
                 if (!updated) return;
                 const previous = { instance: cloneSettings(updated), index: next.items.indexOf(updated), domainOptions: cloneSettings(next.domainOptions[id] || {}) };
-                updated.size = size.value;
+                updated.size = sizeChoices.querySelector("input:checked").value;
                 if (values.options !== undefined) updated.options = cloneSettings(values.options);
                 if (colorSettings) {
                     const backgroundColor = colorSettings.read();
@@ -1599,6 +1643,11 @@ export class DashboardController {
             }
         }
         if (!dialog.signal.aborted) window.WJ.initSelectPicker?.(dialog.body);
+        if (previewView && !dialog.signal.aborted && !save.disabled) {
+            previewReady = true;
+            settings.addEventListener("change", event => { if (!event.target.closest(".md-dashboard__widget-colors")) updatePreview(); }, { signal: dialog.signal });
+            updatePreview();
+        }
         if (editingWidget && !dialog.signal.aborted) {
             (dialog.body.querySelector(".bootstrap-select > button, select, input, button") || save).focus({ preventScroll: true });
         }

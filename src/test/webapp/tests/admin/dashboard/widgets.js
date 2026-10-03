@@ -122,8 +122,8 @@ Scenario('Move with drag and keyboard controls and resize without replacing aler
     I.dontSeeElementInDOM('[data-dashboard-action="collapse"]');
     I.seeElement(`[data-instance-id="${recentId}"] .md-dashboard__header-link`);
     await openAction(I, recentId, 'settings');
-    I.waitForVisible('.md-dashboard-modal select', 10);
-    I.selectOption('.md-dashboard-modal select', '2 × 3');
+    I.waitForVisible('.md-dashboard-modal .md-dashboard__size-choices', 10);
+    I.clickCss('.md-dashboard-modal .md-dashboard__size-choice:has(input[value="2x3"])');
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
     I.waitForInvisible('.md-dashboard-modal', 10);
     waitForSave(I);

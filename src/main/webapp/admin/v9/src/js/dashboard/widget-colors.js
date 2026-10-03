@@ -38,9 +38,11 @@ function readableWidgetColor(value) {
  * @param {HTMLElement} args.container - Dialog body receiving the controls.
  * @param {import('./model').WidgetInstance} args.instance - Widget whose default surface is previewed.
  * @param {import('./registry').WidgetContext} args.context - Translation and widget context.
+ * @param {HTMLElement} [args.preview] - Live widget card to color instead of creating a separate sample.
+ * @param {function(): void} [args.onChange] - Updates a preview whose chart colors depend on its background.
  * @returns {{read: function(): string, destroy: function(): void}} Selected background and picker cleanup.
  */
-export function createWidgetColorSettings({ container, instance, context }) {
+export function createWidgetColorSettings({ container, instance, context, preview, onChange }) {
     const colors = node('fieldset', 'md-dashboard__widget-colors md-dashboard__shortcut-colors');
     colors.append(node('legend', 'form-label', text(context, 'backgroundColor')));
     const stored = instance.options?.backgroundColor;
@@ -68,7 +70,6 @@ export function createWidgetColorSettings({ container, instance, context }) {
     }
     const customChoice = choice('custom', 'md-dashboard__shortcut-icon-choice md-dashboard__shortcut-custom-color');
     customChoice.radio.setAttribute('aria-haspopup', 'dialog');
-    customChoice.radio.setAttribute('aria-expanded', 'false');
     const customSwatch = node('span', 'md-dashboard__shortcut-custom-color-swatch');
     customChoice.face.append(customSwatch, document.createTextNode(text(context, 'shortcutIconCustom')));
     const template = node('template');
@@ -79,12 +80,17 @@ export function createWidgetColorSettings({ container, instance, context }) {
     }
     picker.id = `dashboard-background-picker-${instance.id}`;
     colors.append(picker, node('small', 'form-text', text(context, 'backgroundColorHint')));
-    const preview = node('div', 'md-dashboard__widget md-dashboard__color-preview');
-    preview.dataset.widgetType = instance.type;
-    preview.append(node('strong', '', text(context, 'backgroundColorPreview')), node('small', '', text(context, 'backgroundColorPreviewText')));
+    const standalonePreview = !preview;
+    if (standalonePreview) {
+        preview = node('div', 'md-dashboard__widget md-dashboard__color-preview');
+        preview.dataset.widgetType = instance.type;
+        preview.append(node('strong', '', text(context, 'backgroundColorPreview')), node('small', '', text(context, 'backgroundColorPreviewText')));
+    }
     const warning = node('p', 'form-text text-danger');
     warning.setAttribute('aria-live', 'polite');
-    container.append(colors, preview, warning);
+    container.append(colors);
+    if (standalonePreview) container.append(preview);
+    container.append(warning);
     defaultSwatch.style.backgroundColor = window.getComputedStyle(preview).backgroundColor;
     const dialog = picker.shadowRoot?.querySelector('dialog');
     const heading = dialog?.querySelector('h3');
@@ -97,6 +103,7 @@ export function createWidgetColorSettings({ container, instance, context }) {
         preview.style.backgroundColor = widgetBackground(selected());
         customSwatch.style.backgroundColor = custom;
         warning.textContent = customChoice.radio.checked && !readableWidgetColor(custom) ? text(context, 'backgroundColorLight') : '';
+        onChange?.();
     };
     let original, originalCustom;
     const open = () => {
@@ -104,7 +111,6 @@ export function createWidgetColorSettings({ container, instance, context }) {
         originalCustom = custom;
         picker.setAttribute('hex', custom);
         picker.setAttribute('open', 'true');
-        customChoice.radio.setAttribute('aria-expanded', 'true');
         dialog?.querySelector('[part="hex-input"]')?.focus({ preventScroll: true });
         update();
     };
@@ -122,7 +128,6 @@ export function createWidgetColorSettings({ container, instance, context }) {
     const close = () => {
         previous = selected();
         picker.removeAttribute('open');
-        customChoice.radio.setAttribute('aria-expanded', 'false');
         if (customChoice.radio.isConnected) customChoice.radio.focus({ preventScroll: true });
     };
     const keydown = event => { if (event.key === 'Escape') event.stopPropagation(); };

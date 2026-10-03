@@ -166,8 +166,8 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
 
     await rememberChart(I, 'traffic');
     await widgetAction(I, ids.traffic, 'settings');
-    I.waitForVisible('.md-dashboard-modal select', 10);
-    I.selectOption('.md-dashboard-modal select[id^="dashboard-size-"]', '1 × 1');
+    I.waitForVisible('.md-dashboard-modal .md-dashboard__size-choices', 10);
+    I.clickCss('.md-dashboard-modal .md-dashboard__size-choice:has(input[value="1x1"])');
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
     I.waitForInvisible('.md-dashboard-modal', 10);
     waitForSave(I);
@@ -175,8 +175,8 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
     await assertDisposedChart(I);
     I.dontSeeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`);
     await widgetAction(I, ids.traffic, 'settings');
-    I.waitForVisible('.md-dashboard-modal select', 10);
-    I.selectOption('.md-dashboard-modal select[id^="dashboard-size-"]', '3 × 3');
+    I.waitForVisible('.md-dashboard-modal .md-dashboard__size-choices', 10);
+    I.clickCss('.md-dashboard-modal .md-dashboard__size-choice:has(input[value="3x3"])');
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
     I.waitForInvisible('.md-dashboard-modal', 10);
     waitForSave(I);

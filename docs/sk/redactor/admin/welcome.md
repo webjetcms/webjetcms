@@ -24,20 +24,20 @@ Kliknite na **Upraviť prehľad**. Zobrazí sa lišta s možnosťami **Obnoviť 
 
 ![](dashboard-edit.png)
 
-Tlačidlom **Pridať widget** otvorte katalóg. Vyhľadajte požadovaný widget podľa názvu a pri ňom kliknite na **Pridať widget**.
+Tlačidlom **Pridať widget** otvorte katalóg. Vyhľadajte požadovaný widget podľa názvu a pri ňom kliknite na **Pridať** alebo **Pridať ďalší**. Otvorí sa nastavenie s náhľadom. Vyberte veľkosť a ďalšie možnosti a potvrďte ich tlačidlom **Pridať widget**. Widget pribudne na koniec rozpracovaného prehľadu a dialóg sa zatvorí. Ak nastavenie zrušíte, widget sa nepridá. Pre ďalší widget znova otvorte katalóg z lišty úprav.
 
 ![](dashboard-catalogue.png)
 
 Pri widgete použite tlačidlo **Možnosti widgetu**:
 
-- **Nastavenia widgetu**: v dialógovom okne zvoľte dostupnú veľkosť a ďalšie nastavenia, napríklad obdobie alebo formulár. Veľkosti zostávajú pomenované podľa mriežky, napríklad **1 × 1** alebo **3 × 3**. Nie každý widget ponúka viac veľkostí.
+- **Nastavenia widgetu**: v dialógovom okne zvoľte dostupnú veľkosť a ďalšie nastavenia, napríklad obdobie alebo formulár. Veľkosť vyberte kartičkou s ilustráciou rozmeru a označením, napríklad **1x1** alebo **3x3**. Nie každý widget ponúka viac veľkostí.
 - **Presunúť klávesnicou**: widget sa zdvihne, šípky zmenia jeho pozíciu, **Enter** ho položí a **Esc** vráti. Rovnaký presun spustíte medzerníkom na úchyte. Pri ťahaní myšou prerušovaný cieľ označuje miesto vloženia; **Esc** presun zruší.
 - **Odstrániť z prehľadu**: odstráni kartu bez potvrdenia. Údaje v aplikácii zostávajú zachované. Oznámenie ponúkne **Späť** na 8 sekúnd; pri podržaní myši alebo zameraní klávesnicou sa odpočet zastaví. **Ctrl Z** vráti poslednú úpravu aj po zmiznutí oznámenia. Widget môžete pridať znova z katalógu.
 - **Obnoviť údaje**: načíta aktuálne údaje danej karty.
 
-V dialógovom okne **Nastavenia widgetu** upravte veľkosť a ďalšie dostupné možnosti a potvrďte ich tlačidlom **Použiť**. Zmení sa rozpracovaný prehľad. Väčšiu kartu zvoľte, keď chcete vidieť podrobnejší graf alebo zoznam. Menšia karta zaberie v prehľade menej miesta.
+V dialógovom okne **Nastavenia widgetu** je vľavo náhľad widgetu so skutočnými údajmi a vpravo jeho nastavenia. Náhľad sa mení podľa zvolenej veľkosti, farby aj ďalších možností. Na menšej obrazovke sa nastavenia zobrazia pod náhľadom. Úpravy potvrďte tlačidlom **Použiť**. Zmení sa rozpracovaný prehľad. Väčšiu kartu zvoľte, keď chcete vidieť podrobnejší graf alebo zoznam. Menšia karta zaberie v prehľade menej miesta.
 
-V časti **Farba pozadia** vyberte jemný odtieň z palety alebo **Vlastnú farbu**, ktorú môžete zadať aj kódom HEX. Náhľad ukazuje nadpis a drobný text na vybranom pozadí. Pri príliš tmavej vlastnej farbe vás nastavenie vyzve zvoliť svetlejší odtieň. Voľba **Predvolená** obnoví pôvodné pozadie konkrétneho widgetu; nové widgety používajú túto farbu automaticky.
+V časti **Farba pozadia** vyberte jemný odtieň z palety alebo **Vlastnú farbu**, ktorú môžete zadať aj kódom HEX. Vybraná farba sa hneď zobrazí v náhľade widgetu. Pri príliš tmavej vlastnej farbe vás nastavenie vyzve zvoliť svetlejší odtieň. Voľba **Predvolená** obnoví pôvodné pozadie konkrétneho widgetu; nové widgety používajú túto farbu automaticky.
 
 Vo widgete **Návštevnosť** sa farby čiar grafu, bodov a legendy prispôsobia odtieňu pozadia automaticky. Pri bielom alebo sivom pozadí sú čiary sivé. Predchádzajúce obdobie zostáva odlíšené prerušovanou čiarou.
 

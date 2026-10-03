@@ -229,7 +229,7 @@ Scenario('Widget removal stays provisional, supports Undo and Ctrl Z, and Cancel
     I.assertEqual(mutations.length, 0, 'Discarding must preserve the saved profile');
 });
 
-Scenario('Settings retain the size grid in a centered modal and a rejected Save keeps changes for retry', async ({ I, a11y }) => {
+Scenario('Settings preview size changes in a centered modal and a rejected Save keeps changes for retry', async ({ I, a11y }) => {
     await openFixture(I);
     await showWidget(I, pagesId);
     I.clickCss(`[data-instance-id="${pagesId}"] .dropdown > button`);
@@ -237,16 +237,17 @@ Scenario('Settings retain the size grid in a centered modal and a rejected Save 
     I.waitForVisible('.md-dashboard-modal--settings.show', 10);
     I.waitForEnabled('.md-dashboard-modal--settings .btn-primary', 20);
     I.seeElement('.modal-backdrop');
-    I.seeNumberOfElements('.md-dashboard-modal--settings .md-dashboard__size-grid > span', 18);
+    I.seeNumberOfElements('.md-dashboard-modal--settings .md-dashboard__widget-preview .md-dashboard__widget', 1);
+    I.seeElement('.md-dashboard__widget-preview [data-size="3x2"]');
     I.waitForFunction(() => {
         const rect = document.querySelector('.md-dashboard-modal--settings .modal-content').getBoundingClientRect();
         return Math.abs(rect.x + rect.width / 2 - window.innerWidth / 2) < 2 && Math.abs(rect.y + rect.height / 2 - window.innerHeight / 2) < 2;
     }, 10);
     await a11y.check('.md-dashboard-modal--settings');
-    I.clickCss('.md-dashboard-modal--settings .bootstrap-select:has(select[id^="dashboard-size-"]) > button');
-    I.waitForVisible('.md-dashboard-modal--settings .bootstrap-select .dropdown-menu.show', 10);
-    I.saveScreenshot('dashboard-restored-settings.png');
-    I.click(locate('.md-dashboard-modal--settings .dropdown-item').withText('2 × 3'));
+    I.clickCss('.md-dashboard-modal--settings .md-dashboard__size-choice:has(input[value="2x3"])');
+    I.waitForElement('.md-dashboard__widget-preview [data-size="2x3"]', 10);
+    I.assertEqual(await I.grabAttributeFrom('.md-dashboard__layout [data-instance-id="edit-autotest-pages"]', 'data-size'), '3x2', 'The live preview must not resize the dashboard before Apply');
+    I.saveScreenshot('dashboard-widget-settings-preview.png');
     I.clickCss('.md-dashboard-modal--settings .btn-primary');
     I.waitForInvisible('.md-dashboard-modal--settings', 10);
     I.seeElement(`[data-instance-id="${pagesId}"][data-size="2x3"]`);
@@ -264,6 +265,79 @@ Scenario('Settings retain the size grid in a centered modal and a rejected Save 
     I.waitForElement('.md-dashboard:not(.is-editing)', 10);
     await I.waitForVisible('#toast-container-webjet .toast-success', 10);
     I.assertEqual(saved.items.find(item => item.id === pagesId).size, '2x3');
+});
+
+Scenario('Catalogue configures a widget before adding and closes after confirmation', async ({ I, a11y }) => {
+    await openFixture(I);
+    const addButton = '.md-dashboard__toolbar-actions > button:has(.ti-plus)';
+    const catalogueAdd = '.md-dashboard__catalogue-item[data-widget-type="forms"] button';
+    I.clickCss(addButton);
+    I.waitForVisible('.md-dashboard-modal--catalogue', 10);
+    I.clickCss(catalogueAdd);
+    I.waitForVisible('.md-dashboard-modal--settings', 10);
+    I.waitForEnabled('.md-dashboard-modal--settings .btn-primary', 20);
+    I.dontSeeElementInDOM('.md-dashboard-modal--catalogue');
+    I.assertEqual(await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.length), saved.items.length, 'Choosing a type must not add the widget');
+    I.see('Pridať widget', '.md-dashboard-modal--settings .modal-footer .btn-primary');
+    I.waitForFunction(() => getComputedStyle(document.querySelector('.md-dashboard-modal--settings')).opacity === '1', 10);
+    await a11y.check('.md-dashboard-modal--settings');
+    I.clickCss('.md-dashboard-modal--settings .modal-footer .btn-outline-secondary');
+    I.waitForInvisible('.md-dashboard-modal--settings', 10);
+    I.waitForFunction(selector => document.activeElement === document.querySelector(selector), [addButton], 10);
+    I.assertEqual(mutations.length, 0);
+    I.clickCss(addButton);
+    I.waitForVisible('.md-dashboard-modal--catalogue', 10);
+    I.clickCss(catalogueAdd);
+    I.waitForVisible('.md-dashboard-modal--settings', 10);
+    I.waitForEnabled('.md-dashboard-modal--settings .btn-primary', 20);
+    I.clickCss('.md-dashboard-modal--settings .md-dashboard__size-choice:has(input[value="3x3"])');
+    I.waitForElement('.md-dashboard__widget-preview [data-size="3x3"]', 10);
+    I.saveScreenshot('dashboard-add-widget-settings.png');
+    I.clickCss('.md-dashboard-modal--settings .modal-footer .btn-primary');
+    I.waitForInvisible('.md-dashboard-modal--settings', 10);
+    I.dontSeeElementInDOM('.md-dashboard-modal--catalogue');
+    const added = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.at(-1));
+    I.assertEqual(added.type, 'forms');
+    I.assertEqual(added.size, '3x3');
+    I.assertEqual(mutations.length, 0, 'Confirming settings must stage the widget until overview Save');
+    I.clickCss(editButton);
+    waitForSave(I);
+    await I.waitForElement('.md-dashboard:not(.is-editing)', 10);
+    I.assertEqual(saved.items.find(item => item.id === added.id)?.size, '3x3');
+});
+
+Scenario('Widget settings keep full-width fields and fit desktop, tablet and mobile', async ({ I, a11y }) => {
+    for (const width of [1440, 1024, 390]) {
+        I.resizeWindow(width, 1000);
+        await openFixture(I);
+        I.clickCss(`[data-instance-id="${formsId}"] .dropdown > button`);
+        I.clickCss(`[data-instance-id="${formsId}"] [data-dashboard-action="settings"]`);
+        I.waitForVisible('.md-dashboard-modal--settings', 10);
+        I.waitForEnabled('.md-dashboard-modal--settings .btn-primary', 20);
+        I.clickCss('.md-dashboard__size-choice:has(input[value="3x3"])');
+        I.waitForFunction(() => document.querySelector('.md-dashboard__widget-preview .md-dashboard__widget-body')?.getAttribute('aria-busy') === 'false', 20);
+        const layout = await I.executeScript(() => {
+            const modal = document.querySelector('.md-dashboard-modal--settings');
+            const body = modal.querySelector('.modal-body');
+            const preview = modal.querySelector('.md-dashboard__widget-preview').getBoundingClientRect();
+            const panel = modal.querySelector('.md-dashboard__settings-panel').getBoundingClientRect();
+            const field = modal.querySelector('.md-dashboard__settings .bootstrap-select').getBoundingClientRect();
+            const content = modal.querySelector('.modal-content').getBoundingClientRect();
+            return { preview: { x: preview.x, y: preview.y, right: preview.right }, panel: { x: panel.x, y: panel.y },
+                fullWidth: Math.abs(field.width - panel.width) < 2, overflow: body.scrollWidth > body.clientWidth + 1,
+                fits: content.left >= 0 && content.right <= window.innerWidth };
+        });
+        I.assertTrue(layout.fits && !layout.overflow && layout.fullWidth, `Settings must fit and keep the form selector full width at ${width}px`);
+        I.assertTrue(width >= 768 ? layout.preview.right <= layout.panel.x : layout.preview.y < layout.panel.y, 'The preview and settings must use responsive columns');
+        await a11y.check('.md-dashboard-modal--settings');
+        I.saveScreenshot(`dashboard-widget-settings-${width}.png`);
+        I.clickCss('.md-dashboard-modal--settings .modal-footer .btn-outline-secondary');
+        I.waitForInvisible('.md-dashboard-modal--settings', 10);
+        I.assertEqual(mutations.length, 0);
+        I.clickCss('.md-dashboard__cancel');
+        I.waitForElement('.md-dashboard:not(.is-editing)', 10);
+    }
+    I.wjSetDefaultWindowSize();
 });
 
 Scenario('Pointer movement uses a raised helper and dashed target and Escape restores the layout', async ({ I }) => {
