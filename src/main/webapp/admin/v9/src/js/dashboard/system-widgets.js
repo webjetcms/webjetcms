@@ -82,6 +82,24 @@ function adminMail(user, context) {
     return action;
 }
 
+/** Renders the complete, permission-filtered administrator bootstrap list in a widget or login dialog. */
+export function renderLoggedAdmins({ container, context, signal }) {
+    const admins = context.data.loggedAdmins || [];
+    if (!admins.length) { empty(container, context); return; }
+    const list = node('ul', 'md-dashboard-widget__admins list-unstyled');
+    list.tabIndex = 0;
+    list.setAttribute('aria-label', text(context, 'logged-admins'));
+    containNativeScroll(list, signal);
+    admins.forEach(user => {
+        const row = node('li');
+        row.append(icon('ti-user'), node('span', 'md-dashboard-widget__admin-name', user.fullName));
+        const mail = adminMail(user, context);
+        if (mail) row.append(mail);
+        list.append(row);
+    });
+    container.append(list, node('p', 'md-dashboard-widget__footnote small', text(context, 'adminsCount', number(admins.length))));
+}
+
 function monitoringMetrics(type) {
     return type === 'server-memory' ? [['used', 'memoryUsed'], ['free', 'memoryFree'], ['total', 'memoryTotal']]
         : [['process', 'cpuProcess'], ['system', 'cpuSystem']];
@@ -246,22 +264,7 @@ export function registerSystemWidgets() {
     registerWidget({
         type: 'logged-admins', titleKey: 'admin.dashboard.logged-admins.js', descriptionKey: 'admin.dashboard.logged-admins.description.js', icon: 'ti-users',
         multiple: true, sizes: ['2x2', '2x3'], defaultSize: '2x2', isAvailable: () => window.WJ.hasPermission('welcomeShowLoggedAdmins'),
-        render({ container, context, signal }) {
-            const admins = context.data.loggedAdmins;
-            if (!admins.length) { empty(container, context); return; }
-            const list = node('ul', 'md-dashboard-widget__admins list-unstyled');
-            list.tabIndex = 0;
-            list.setAttribute('aria-label', text(context, 'logged-admins'));
-            containNativeScroll(list, signal);
-            admins.forEach(user => {
-                const row = node('li');
-                row.append(icon('ti-user'), node('span', 'md-dashboard-widget__admin-name', user.fullName));
-                const mail = adminMail(user, context);
-                if (mail) row.append(mail);
-                list.append(row);
-            });
-            container.append(list, node('p', 'md-dashboard-widget__footnote small', text(context, 'adminsCount', number(admins.length))));
-        }
+        render: renderLoggedAdmins
     });
     for (const type of ['server-memory', 'server-cpu']) registerWidget({
         type, titleKey: `admin.dashboard.${type}.js`, descriptionKey: `admin.dashboard.${type}.description.js`, icon: type === 'server-memory' ? 'ti-server' : 'ti-cpu',

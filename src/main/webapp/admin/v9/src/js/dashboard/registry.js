@@ -64,6 +64,7 @@
  * @property {Object} [headerLink] - Navigation shown in the widget header.
  * @property {string|function(import('./model').WidgetInstance, WidgetContext): string} headerLink.href - Local destination or resolver for the current instance.
  * @property {string} [headerLink.labelKey] - Translation key for a separate link; omission links the title.
+ * @property {function(import('./model').WidgetInstance, WidgetContext): void} [headerAction] - Opens a dialog from the title instead of navigating.
  * @property {function(WidgetArguments): (WidgetCleanup|Promise<WidgetCleanup>)} render - Populates content and optionally returns resources to dispose.
  * @property {function(WidgetArguments): (WidgetConfiguration|Promise<WidgetConfiguration>)} [configure] - Populates settings controls and returns their reader and optional cleanup.
  */

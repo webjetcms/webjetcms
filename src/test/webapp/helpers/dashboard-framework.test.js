@@ -10,6 +10,20 @@ const copy = value => JSON.parse(JSON.stringify(value));
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const item = (id, type = "test", size = "2x2", options = {}) => ({ id, type, size, options });
 
+test('Dialog headings retain their button and action when the dashboard reconciles views', async t => {
+    let opened = 0;
+    const { controller, host } = fixture(t, { items: [item('sessions-autotest', 'dialog-test')], definitions: [{ type: 'dialog-test',
+        headerAction: () => opened++, render() {} }] });
+    await controller.start();
+    const heading = host.querySelector('.md-dashboard__title-action');
+    assert.equal(heading.tagName, 'BUTTON');
+    heading.click();
+    controller._render();
+    assert.equal(host.querySelector('.md-dashboard__title-action'), heading);
+    heading.click();
+    assert.equal(opened, 2);
+});
+
 /** Runs production browser modules against a DOM and a stateful settings server. */
 function fixture(t, { items = [], configured = true, shortcutsConfigured = configured, legacyBookmarksHandled = false, definitions = [], defaults = [], config = {}, failSave = false, failReset = false, deferModalShown = false, withTooltip = false, overview, IntersectionObserver } = {}) {
     const dom = new JSDOM("<!doctype html><html><body><div id='alerts'>System warning</div><div id='dashboard'></div></body></html>", { url: "http://localhost/admin/v9/" });
@@ -1108,6 +1122,7 @@ test('Release note persistence restores the replacement toggle without stealing 
     const source = fs.readFileSync(path.join(moduleDirectory, 'utility-widgets.js'), 'utf8')
         .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
     vm.runInContext(source, context, { filename: 'utility-widgets.js' });
+    context.registerSessionWidgets = () => {};
     context.registerUtilityWidgets();
     const news = context.getWidget('news');
     const region = window.document.createElement('section');

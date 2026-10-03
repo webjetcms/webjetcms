@@ -1,5 +1,6 @@
 import { DashboardController } from '../dashboard/dashboard';
 import { DashboardNotices } from '../dashboard/notices';
+import { showActiveSessions } from '../dashboard/session-widgets';
 import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/widgets';
 
 /**
@@ -100,7 +101,8 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
 
     /** Renders the system notices supplied by the dashboard page. */
     _renderNotices() {
-        this.noticeController ||= new DashboardNotices(this.dashboardController.notices, this.data);
+        this.noticeController ||= new DashboardNotices(this.dashboardController.notices, this.data,
+            () => showActiveSessions(this.dashboardController._widgetContext()));
         this.noticeController.render();
     }
 

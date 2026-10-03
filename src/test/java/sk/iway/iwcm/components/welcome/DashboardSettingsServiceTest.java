@@ -67,7 +67,7 @@ class DashboardSettingsServiceTest {
     /** Supported grid sizes and repeated instances survive a settings round trip without rewriting the profile. */
     @Test
     void preservesSupportedSizesAndRepeatedGridInstances() {
-        Map<String, java.util.List<String>> variants = Map.of(
+        Map<String, java.util.List<String>> variants = new java.util.LinkedHashMap<>(Map.of(
             "recent-pages", java.util.List.of("3x2", "2x3", "3x3"),
             "referrers", java.util.List.of("2x2", "2x3", "3x3"),
             "publishing", java.util.List.of("2x2", "2x3"),
@@ -78,7 +78,8 @@ class DashboardSettingsServiceTest {
             "logged-admins", java.util.List.of("2x2", "2x3"),
             "server-memory", java.util.List.of("3x2", "3x3"),
             "server-cpu", java.util.List.of("3x2", "3x3")
-        );
+        ));
+        variants.put("my-sessions", java.util.List.of("1x1", "2x2", "2x3"));
         variants.forEach((type, sizes) -> sizes.forEach(size -> {
             DashboardSettingsDto source = settings();
             source.getItems().add(item("preview", type, size));

@@ -45,6 +45,22 @@ test('Severity sorting and forged dismissals keep errors visible with inline act
     assert.equal(host.querySelector('.md-dashboard__notice-count').textContent, '3');
 });
 
+test('Multiple-session warning opens the dialog and disappears as soon as only one session remains', t => {
+    const { controller, data, host } = fixture(t, null, []);
+    data.currentSessions = { userSessions: [{ userSessions: [{ sessionId: 'autotest-current' }, { sessionId: 'autotest-other' }] }] };
+    let opened = 0;
+    controller.openSessions = () => opened++;
+    controller.render();
+    const notice = host.querySelector('[data-notice-id="multipleSessions"]');
+    assert.ok(notice);
+    assert.match(notice.textContent, /description.js 2/);
+    notice.querySelector('.md-dashboard__notice-action').click();
+    assert.equal(opened, 1);
+    data.currentSessions.userSessions[0].userSessions.pop();
+    controller.render();
+    assert.equal(host.querySelector('[data-notice-id="multipleSessions"]'), null);
+});
+
 test('Saved dismissals are restored without writing to the account', t => {
     const { host, requests } = fixture(t, { dismissedUntil: { warning: Date.UTC(2026, 9, 9), info: 0 } });
     assert.deepEqual([...host.querySelectorAll('[data-notice-id]:not([hidden])')].map(row => row.dataset.noticeId), ['error']);

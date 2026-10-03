@@ -39,6 +39,7 @@ public class DashboardSettingsService {
         Map.entry("newsletter", Set.of("2x2", "3x3")),
         Map.entry("errors", Set.of("1x1", "3x3")),
         Map.entry("sessions", Set.of("2x3")),
+        Map.entry("my-sessions", Set.of("1x1", "2x2", "2x3")),
         Map.entry("news", Set.of("3x2")),
         Map.entry("search", Set.of("fullauto")),
         Map.entry("changed-pages", Set.of("3x2", "3x3")),

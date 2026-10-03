@@ -17,7 +17,8 @@ function button(label, action, className = "btn btn-sm btn-link") {
 
 /** Owns only system-notice rendering and account preferences, independently of the personal grid. */
 export class DashboardNotices {
-    constructor(host, data) {
+    constructor(host, data, openSessions) {
+        this.openSessions = openSessions;
         this.host = host;
         this.data = data;
         this.state = { dismissedUntil: {} };
@@ -41,7 +42,14 @@ export class DashboardNotices {
         window.clearTimeout(this.expiryTimer);
         const rank = { error: 0, warning: 1, info: 2 };
         const now = Date.now();
-        const notices = (this.data.notices || []).filter(notice => {
+        const active = [...(this.data.notices || [])];
+        const sessionCount = (this.data.currentSessions?.userSessions || []).reduce((count, cluster) => count + (cluster.userSessions || []).length, 0);
+        if (sessionCount > 1) active.push({
+            id: "multipleSessions", severity: "warning", icon: "ti-devices",
+            title: this._t("notice.multipleSessions"), description: this._t("notice.multipleSessions.description", sessionCount),
+            action: { type: "sessions", label: this._t("activeSessions") }
+        });
+        const notices = active.filter(notice => {
             const until = this.state.dismissedUntil[notice.id];
             return notice.severity === "error" || !(until > now || notice.severity === "info" && until === 0);
         }).sort((first, second) => (rank[first.severity] ?? 2) - (rank[second.severity] ?? 2));
@@ -77,10 +85,14 @@ export class DashboardNotices {
             node("span", "md-dashboard__notice-description", notice.description || body.textContent));
         const actions = node("div", "md-dashboard__notice-actions");
         if (notice.action) {
-            actions.append(button(notice.action.label, () => {
+            actions.append(button(notice.action.label, event => {
                 if (notice.action.type === "popup") WJ.openPopupDialog(notice.action.url);
                 else if (notice.action.type === "help") WJ.showHelpWindow(notice.action.url);
                 else if (notice.action.type === "link") window.open(notice.action.url, "_blank", "noopener");
+                else if (notice.action.type === "sessions") {
+                    event.currentTarget.focus({ preventScroll: true });
+                    this.openSessions?.();
+                }
             }, "btn btn-sm btn-outline-secondary md-dashboard__notice-action"));
         }
         if (notice.severity !== "error") {

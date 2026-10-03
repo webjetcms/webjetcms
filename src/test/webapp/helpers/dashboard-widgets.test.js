@@ -51,10 +51,10 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/node_modules/color-dialog-box/dist/index.js'), 'utf8');
         vm.runInContext(`(function () { ${source} }).call(this);`, scope);
     }
-    for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'monitoring-live.js', 'system-widgets.js', 'shortcut-widget.js', 'widgets.js']) {
+    for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'monitoring-live.js', 'system-widgets.js', 'session-widgets.js', 'utility-widgets.js', 'data-widgets.js', 'shortcut-widget.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
             .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
-        const exports = { 'system-widgets.js': ['registerSystemWidgets'], 'monitoring-live.js': ['readMonitoringSnapshot', 'subscribeMonitoring'] }[file];
+        const exports = { 'system-widgets.js': ['registerSystemWidgets', 'renderLoggedAdmins'], 'monitoring-live.js': ['readMonitoringSnapshot', 'subscribeMonitoring'] }[file];
         const script = exports ? `(function () { ${source}\n${exports.map(name => `this.${name} = ${name};`).join('\n')} }).call(this);` : source;
         vm.runInContext(script, scope, { filename: file });
     }
@@ -1731,14 +1731,14 @@ test('The mandatory sessions widget retains active login details and a static co
 
 test('Sessions reuse embedded data and update the snapshot and count after removal', async t => {
     const { scope, context, container, requests } = fixture(t, { extraWidgets: true, fetchResponse: async () => ({
-        ok: true, text: async () => '{success: true}'
+        ok: true, json: async () => ({ success: true, pending: false })
     }) });
     context.data.currentSessions = { currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [
         { sessionId: 'other', logonTime: 1000, browserName: 'Autotest browser', remoteAddr: '127.0.0.1' }
     ] }] };
     const widget = scope.getWidget('sessions');
     context.settings.items = [];
-    context.dashboard = { refresh: () => {
+    context.dashboard = { refreshSessions: () => {
         container.replaceChildren();
         return widget.render({ container, context, signal: new AbortController().signal });
     } };
@@ -1804,7 +1804,7 @@ test('An HTTP 200 session-removal rejection leaves the session visible and repor
         ok: true, status: 200, json: async () => data, text: async () => '{success: false}'
     }) });
     let refreshed = false;
-    context.dashboard = { refresh: () => { refreshed = true; } };
+    context.dashboard = { refreshSessions: () => { refreshed = true; } };
     await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
     const logout = container.querySelector('li button');
     logout.click();
@@ -1908,16 +1908,105 @@ test('Accepted cluster logout stays pending instead of claiming immediate invali
         { sessionId: 'remote-own', logonTime: 1000, browserName: 'Remote browser' }
     ] }] } };
     const { scope, context, container } = fixture(t, { extraWidgets: true, data, fetchResponse: async () => ({
-        ok: true, status: 200, json: async () => data, text: async () => '{"success":true,"pending":true}'
+        ok: true, status: 200, json: async () => ({ success: true, pending: true }), text: async () => '{"success":true,"pending":true}'
     }) });
     let refreshed = false;
-    context.dashboard = { refresh: () => { refreshed = true; } };
+    context.dashboard = { refreshSessions: () => { refreshed = true; } };
     await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
     container.querySelector('li button').click();
     await new Promise(resolve => setImmediate(resolve));
     assert.match(container.querySelector('li').textContent, /sessionPending/);
     assert.equal(container.querySelector('li button'), null);
-    assert.equal(refreshed, false);
+    assert.equal(refreshed, true, 'Pending state must propagate to every session view.');
+});
+
+function sessionDialogFixture(context, window) {
+    const lifecycle = new AbortController();
+    let refreshed = 0;
+    context.dashboard = {
+        refreshSessions: () => { refreshed++; },
+        showDialog: () => {
+            const root = window.document.createElement('div');
+            root.setAttribute('aria-labelledby', 'sessions-autotest-title');
+            root.innerHTML = '<div class="modal-dialog"><div class="modal-content"><div class="modal-body"></div><div class="modal-footer"></div></div></div>';
+            window.document.body.append(root);
+            return { root, body: root.querySelector('.modal-body'), footer: root.querySelector('.modal-footer'), signal: lifecycle.signal,
+                close: () => { lifecycle.abort(); root.remove(); } };
+        }
+    };
+    return { signal: lifecycle.signal, refreshed: () => refreshed };
+}
+
+test('Personal session widget supports counts and complete scrollable lists without additional reads', async t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+        { sessionId: 'current', logonTime: 1, browserName: 'Chrome autotest' },
+        { sessionId: 'other', logonTime: 2, browserName: '<img src=x> autotest', remoteAddr: '127.0.0.2' }
+    ] }] } };
+    const { scope, context, container, requests } = fixture(t, { data });
+    const widget = scope.getWidget('my-sessions');
+    assert.deepEqual(Array.from(widget.sizes), ['1x1', '2x2', '2x3']);
+    for (const size of widget.sizes) {
+        container.replaceChildren();
+        await widget.render({ container, instance: { size }, context, signal: new AbortController().signal });
+        if (size === '1x1') assert.equal(container.querySelector('.md-dashboard-widget__metric').textContent, '2');
+        else {
+            assert.equal(container.querySelectorAll('li').length, 2);
+            assert.equal(container.querySelectorAll('li button').length, 1);
+            assert.equal(container.querySelector('img'), null);
+        }
+    }
+    assert.equal(requests.length, 0);
+});
+
+test('Session dialog protects the current session and retains pending and failed bulk removals', async t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'autotest', userSessions: [
+        { sessionId: 'current', logonTime: 1, lastActivity: Date.now(), browserName: 'Chrome autotest', remoteAddr: '127.0.0.1' },
+        ...['removed', 'pending', 'failed'].map(sessionId => ({ sessionId, logonTime: 2, lastActivity: Date.now() - 600000, browserName: '<script>autotest</script>', remoteAddr: '127.0.0.2' }))
+    ] }] } };
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async (url, options) => ({
+        ok: true, json: async () => ({ success: options.body.get('sessionId') !== 'failed', pending: options.body.get('sessionId') === 'pending' })
+    }) });
+    const dialog = sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    assert.equal(root.querySelectorAll('[role="tab"]').length, 2, 'Administrator data must not appear when omitted from the authorized bootstrap.');
+    assert.equal(root.querySelector('tbody tr').querySelector('button'), null);
+    assert.equal(root.querySelectorAll('script,img').length, 0);
+    assert.match(root.querySelector('.md-dashboard-sessions__activity').textContent, /sessionActiveNow/);
+    root.querySelector('.md-dashboard-sessions__summary button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(requests.map(item => item.options.body.get('sessionId')), ['removed', 'pending', 'failed']);
+    assert.equal(root.querySelectorAll('tbody tr').length, 3);
+    assert.match(root.querySelector('.md-dashboard-sessions__status').textContent, /sessionError/);
+    assert.match(root.querySelector('.md-dashboard-sessions__mine').textContent, /sessionPending/);
+    assert.equal(root.querySelectorAll('tbody button').length, 1, 'Only the failed session offers retry.');
+    assert.equal(dialog.refreshed(), 1);
+    assert.equal(scope.flattenSessions(context.data.currentSessions).length, 3);
+});
+
+test('History loads only on tab activation, pages safely and aborts when the dialog closes', async t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [] }, loggedAdmins: [{ fullName: 'Admin autotest', email: 'autotest@example.com' }] };
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async () => ({ ok: true, json: async () => ({
+        content: [{ createDate: Date.now(), ip: '127.0.0.1', description: '<img src=x> autotest login' }],
+        totalElements: 21, totalPages: 2, first: true, last: false
+    }) }) });
+    const fixtureDialog = sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    const tabs = root.querySelectorAll('[role="tab"]');
+    assert.equal(tabs.length, 3);
+    assert.equal(requests.length, 0);
+    tabs[0].dispatchEvent(new window.KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(tabs[2].getAttribute('aria-selected'), 'true');
+    assert.equal(requests[0].url, '/rest/audit/my-login-history?page=0');
+    assert.equal(root.querySelector('.md-dashboard-sessions__history img'), null);
+    root.querySelector('.md-dashboard-sessions__pagination button:last-child').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(requests[1].url, '/rest/audit/my-login-history?page=1');
+    root.querySelector('.modal-footer button').click();
+    assert.equal(fixtureDialog.signal.aborted, true);
+    assert.equal(requests[0].options.signal.aborted, true);
 });
 
 

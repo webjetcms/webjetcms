@@ -23,6 +23,20 @@ class DashboardSessionRemovalTest {
     private final Identity user = mock(Identity.class);
     private final ObjectMapper mapper = new ObjectMapper();
 
+    /** Last activity survives the cluster JSON round trip without exposing internal page-tracking fields. */
+    @Test
+    void includesLastActivityInSessionJson() throws Exception {
+        SessionDetails session = new SessionDetails();
+        session.setSessionId("autotest-session");
+        session.setLastActivity(123456789L);
+        session.setLastURL("/private-autotest-page");
+        var json = mapper.valueToTree(session);
+        assertEquals(123456789L, json.path("lastActivity").asLong());
+        assertFalse(json.has("lastURL"));
+        assertFalse(json.has("lastActivityAsDate"));
+        assertEquals(123456789L, mapper.treeToValue(json, SessionDetails.class).getLastActivity());
+    }
+
     /** A local owned session is invalidated, while another user's session never reaches propagation. */
     @Test
     void removesOnlyTheAuthenticatedUsersOtherLocalSession() throws Exception {

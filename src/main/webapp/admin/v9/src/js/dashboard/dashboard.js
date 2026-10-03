@@ -509,7 +509,7 @@ export class DashboardController {
             view.instance = instance;
             view.titleText.textContent = this._title(instance);
             view.title.title = view.titleText.textContent;
-            const navigation = view.header.querySelector('.md-dashboard__title-link, .md-dashboard__header-link');
+            const navigation = view.header.querySelector('.md-dashboard__title-link:not(.md-dashboard__title-action), .md-dashboard__header-link');
             if (navigation) {
                 const nextLink = link("", this._headerHref(instance), navigation.className);
                 if (nextLink.tagName === navigation.tagName) {
@@ -584,6 +584,13 @@ export class DashboardController {
             const titleLink = link("", this._headerHref(instance, context), "md-dashboard__title-link");
             titleLink.append(titleText, icon("ti-arrow-up-right"));
             title.append(titleLink);
+        } else if (definition.headerAction) {
+            const action = button("", () => {
+                action.focus({ preventScroll: true });
+                definition.headerAction(this._instance(instance.id) || instance, this._widgetContext());
+            }, "md-dashboard__title-link md-dashboard__title-action");
+            action.append(titleText);
+            title.append(action);
         } else title.append(titleText);
         title.id = `dashboard-title-${instance.id}`;
         card.setAttribute("aria-labelledby", title.id);
@@ -759,6 +766,14 @@ export class DashboardController {
         return this._renderView(view, this._widgetContext(), {
             refresh: () => this.refresh(id), saveOptions: values => this.saveOptions(id, values)
         });
+    }
+
+    /** Refreshes all session views and security notices from the shared, updated session bootstrap. */
+    refreshSessions() {
+        for (const [id, view] of this.views) {
+            if (["sessions", "my-sessions"].includes(view.instance.type)) this.refresh(id);
+        }
+        this.context.overview?.noticeController?.render();
     }
 
     /**
