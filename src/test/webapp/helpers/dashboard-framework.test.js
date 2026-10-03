@@ -531,6 +531,135 @@ test("Dismissing standard reset confirmation preserves preferences and catalogue
     assert.equal(window.document.querySelector('.md-dashboard-modal .md-dashboard__reset'), null);
 });
 
+test("Catalogue combines category and title or description search using only authorized widgets", async t => {
+    const { controller, window } = fixture(t, { definitions: [
+        { type: "pages", titleKey: "Recent pages", descriptionKey: "Continue editing in selected folders", category: "content", multiple: true, render() {} },
+        { type: "visits", titleKey: "Visits", descriptionKey: "Visitor totals", category: "traffic", multiple: true, render() {} },
+        { type: "denied", titleKey: "Denied", category: "content", isAvailable: () => false, render() {} }
+    ] });
+    await controller.start();
+    controller.showCatalogue();
+    const modal = window.document.querySelector('.md-dashboard-modal--catalogue');
+    assert.ok(modal.querySelector('.modal-lg.modal-dialog-centered.modal-dialog-scrollable'));
+    assert.equal(modal.querySelector('[data-widget-type="denied"]'), null);
+    assert.equal(modal.querySelector('[data-category="all"] .md-dashboard__catalogue-count').textContent, "3");
+    const content = modal.querySelector('button[data-category="content"]');
+    content.click();
+    assert.equal(content.getAttribute("aria-pressed"), "true");
+    assert.equal(modal.querySelector('[data-widget-type="visits"]').hidden, true);
+    const search = modal.querySelector('input[type="search"]');
+    search.value = " FOLDERS ";
+    search.dispatchEvent(new window.Event("input"));
+    assert.equal(modal.querySelector('[data-widget-type="pages"]').hidden, false);
+    assert.equal(modal.querySelector('.md-dashboard__catalogue-empty').hidden, true);
+    search.value = "visitor";
+    search.dispatchEvent(new window.Event("input"));
+    assert.equal(modal.querySelector('.md-dashboard__catalogue-empty').hidden, false);
+    modal.querySelector('button[data-category="all"]').click();
+    assert.equal(modal.querySelector('[data-widget-type="visits"]').hidden, false);
+    search.value = "recent";
+    search.dispatchEvent(new window.Event("input"));
+    assert.equal(modal.querySelector('[data-widget-type="pages"]').hidden, false);
+});
+
+test("Catalogue retains focus and filters when repeatedly adding widgets without settings to the draft", async t => {
+    const { controller, window, requests, stored } = fixture(t, { items: [item("original")], definitions: [
+        { type: "pages", titleKey: "Recent pages", category: "content", multiple: true, sizes: ["3x2"], render() {} }
+    ] });
+    await controller.start();
+    controller.setEditing(true);
+    controller.addButton.focus();
+    controller.showCatalogue();
+    const modal = window.document.querySelector('.md-dashboard-modal--catalogue');
+    modal.querySelector('button[data-category="content"]').click();
+    const search = modal.querySelector('input[type="search"]');
+    search.value = "recent";
+    search.dispatchEvent(new window.Event("input"));
+    const card = modal.querySelector('[data-widget-type="pages"]');
+    assert.equal(card.querySelector('.md-dashboard__catalogue-meta').textContent, "Content · Default size 3×2");
+    const add = card.querySelector('button');
+    assert.equal(add.textContent, "Add");
+    for (let count = 1; count <= 2; count++) {
+        add.click();
+        await tick();
+        assert.equal(controller.settings.items.filter(item => item.type === "pages").length, count);
+        assert.equal(controller.settings.items.at(-1).type, "pages");
+        assert.equal(modal.isConnected, true);
+        assert.equal(window.document.activeElement, add);
+        assert.equal(card.classList.contains("is-added"), true);
+        assert.equal(card.querySelector('.md-dashboard__catalogue-added'), null);
+        assert.equal(card.querySelector('.md-dashboard__catalogue-badge').hidden, false);
+        assert.equal(add.textContent, "Added");
+        assert.ok(add.querySelector('.ti-check'));
+        assert.equal(add.disabled, false);
+        assert.equal(search.value, "recent");
+        assert.equal(modal.querySelector('button[data-category="content"]').getAttribute("aria-pressed"), "true");
+    }
+    assert.equal(requests.length, 0);
+    assert.equal(stored().items.length, 1);
+    modal.querySelector('.modal-footer button').click();
+    assert.equal(modal.isConnected, false);
+    assert.equal(window.document.activeElement, controller.addButton);
+    assert.equal(await controller.saveEditing(), true);
+    assert.equal(stored().items.filter(item => item.type === "pages").length, 2);
+});
+
+test("Catalogue confirms additions in the button for five seconds and clears feedback timers on close", async t => {
+    const { controller, window } = fixture(t, { items: [item("original")] });
+    const timers = new Map();
+    let now = 0, nextTimer = 0;
+    window.setTimeout = (callback, delay) => { const id = ++nextTimer; timers.set(id, { callback, at: now + delay }); return id; };
+    window.clearTimeout = id => timers.delete(id);
+    const advance = elapsed => {
+        now += elapsed;
+        for (const [id, timer] of timers) if (timer.at <= now) { timers.delete(id); timer.callback(); }
+    };
+    await controller.start();
+    controller.setEditing(true);
+    controller.showCatalogue();
+    const modal = window.document.querySelector('.md-dashboard-modal--catalogue');
+    const add = modal.querySelector('.md-dashboard__catalogue-item button');
+    add.click();
+    await tick();
+    assert.equal(add.textContent, "Added");
+    assert.equal(add.getAttribute("aria-label"), "Added · Test");
+    advance(4999);
+    assert.equal(add.textContent, "Added");
+    add.click();
+    await tick();
+    assert.equal(timers.size, 1, "Another addition restarts the same button's feedback timer");
+    advance(4999);
+    assert.equal(add.textContent, "Added");
+    advance(1);
+    assert.equal(add.textContent, "Add another");
+    assert.ok(add.querySelector('.ti-plus'));
+    assert.equal(add.getAttribute("aria-label"), "Add another · Test");
+    assert.equal(window.document.activeElement, add);
+    add.click();
+    await tick();
+    modal.querySelector('.modal-footer button').click();
+    assert.equal(timers.size, 0, "Closing the catalogue clears its pending feedback timers");
+});
+
+test("Catalogue disables all add actions at capacity and announces the limit", async t => {
+    const { controller, window, requests } = fixture(t, { items: Array.from({ length: 47 }, (_, index) => item(`existing-${index}`)) });
+    await controller.start();
+    controller.setEditing(true);
+    controller.showCatalogue();
+    const modal = window.document.querySelector('.md-dashboard-modal--catalogue');
+    const add = modal.querySelector('.md-dashboard__catalogue-item button');
+    assert.equal(add.textContent, "Add another");
+    assert.equal(modal.querySelector('.md-dashboard__catalogue-item').classList.contains("is-added"), false);
+    add.click();
+    await tick();
+    assert.equal(controller.settings.items.length, 48);
+    assert.equal(add.disabled, true);
+    assert.equal(window.document.activeElement, modal.querySelector('.modal-footer button'));
+    assert.match(modal.querySelector('[role="alert"]').textContent, /48 widgets/);
+    assert.equal(requests.length, 0);
+    assert.equal(modal.isConnected, true);
+});
+
 test("A confirmed reset can be cancelled and a failed save retains the draft for retry", async t => {
     const { controller, window, confirmations, closeConfirmation, setResetFailure, notifications, requests, stored } = fixture(t, { items: [item("custom")], failReset: true, defaults: [{ type: "test" }] });
     await controller.start();

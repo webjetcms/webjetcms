@@ -234,7 +234,7 @@ function liveMonitoring(container, type, context, signal, update) {
 /** Registers the activity, online-administrator and monitoring cards that replace the legacy section. */
 export function registerSystemWidgets() {
     for (const [type, permission, widgetIcon] of [['changed-pages', 'menuWebpages', 'ti-pencil'], ['audit', 'cmp_adminlog', 'ti-shield-search']]) registerWidget({
-        type, titleKey: `admin.dashboard.${type}.js`, descriptionKey: `admin.dashboard.${type}.description.js`, icon: widgetIcon,
+        type, titleKey: `admin.dashboard.${type}.js`, descriptionKey: `admin.dashboard.${type}.description.js`, category: type === 'changed-pages' ? 'content' : 'system', icon: widgetIcon,
         multiple: true, sizes: ['3x2', '3x3'], defaultSize: '3x3', headerLink: { href: moduleLinks[type], labelKey: 'admin.dashboard.allShort.js' },
         isAvailable: () => window.WJ.hasPermission(permission) && window.WJ.hasPermission('cmp_adminlog'),
         async render({ container, instance, context, signal }) {

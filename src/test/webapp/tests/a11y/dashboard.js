@@ -264,6 +264,8 @@ Scenario('Widget catalogue supports keyboard entry, a focus trap and focus resto
     await I.executeScript(() => document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__edit-control:not(.md-dashboard__reset)').focus());
     I.pressKey('Enter');
     I.waitForVisible('.md-dashboard-modal input[type="search"]', 10);
+    I.seeElement('.md-dashboard-modal--catalogue .modal-dialog-centered');
+    I.seeElement('.md-dashboard__catalogue-filter[data-category="all"][aria-pressed="true"]');
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard-modal input[type="search"]'), 10);
     await a11y.check('.md-dashboard-modal');
     I.pressKey(['Shift', 'Tab']);
@@ -273,7 +275,7 @@ Scenario('Widget catalogue supports keyboard entry, a focus trap and focus resto
     I.pressKey('Escape');
     I.waitForInvisible('.md-dashboard-modal', 10);
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__edit-control:not(.md-dashboard__reset)'), 10);
-    I.pressKey('Tab');
+    I.pressKey(['Shift', 'Tab']);
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__reset'), 10);
     I.pressKey('Enter');
     const resetDialog = '#toast-container-webjet .toast[role="dialog"]';

@@ -48,6 +48,7 @@
  * @property {string} type - Unique type identifier accepted by the settings backend.
  * @property {string} [titleKey] - Translation key for the default title.
  * @property {string} [descriptionKey] - Translation key for the catalogue description.
+ * @property {"content"|"traffic"|"system"} [category="system"] - Catalogue category.
  * @property {string} [icon] - Tabler icon class.
  * @property {string[]} [sizes] - Supported footprints; defaults to a single 2x2 size.
  * @property {string} [defaultSize] - Initial footprint; defaults to the first supported size.

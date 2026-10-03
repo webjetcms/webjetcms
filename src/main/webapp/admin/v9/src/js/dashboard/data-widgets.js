@@ -515,7 +515,7 @@ async function fetchApprovals(signal) {
 /** Registers content, analytics, and newsletter widgets using authorized projections. */
 export function registerDataWidgets() {
     registerWidget({
-        type: 'approvals', titleKey: 'admin.dashboard.approvals.js', icon: 'ti-checkup-list', multiple: true, sizes: ['1x1', '3x3'], defaultSize: '3x3',
+        type: 'approvals', titleKey: 'admin.dashboard.approvals.js', descriptionKey: 'admin.dashboard.approvals.description.js', category: 'content', icon: 'ti-checkup-list', multiple: true, sizes: ['1x1', '3x3'], defaultSize: '3x3',
         headerLink: { href: moduleLinks.approvals },
         isAvailable: () => window.WJ.hasPermission('menuWebpages'),
         async render({ container, instance, context, signal }) {
@@ -536,7 +536,7 @@ export function registerDataWidgets() {
         }
     });
     registerWidget({
-        type: 'publishing', titleKey: 'admin.dashboard.publishing.js', icon: 'ti-calendar-event', multiple: true, sizes: ['2x2', '2x3'], defaultSize: '2x2',
+        type: 'publishing', titleKey: 'admin.dashboard.publishing.js', descriptionKey: 'admin.dashboard.publishing.description.js', category: 'content', icon: 'ti-calendar-event', multiple: true, sizes: ['2x2', '2x3'], defaultSize: '2x2',
         headerLink: { href: moduleLinks.publishing },
         isAvailable: () => window.WJ.hasPermission('menuWebpages') && window.WJ.hasPermission('cmp_adminlog'),
         async render({ container, instance, context, signal }) {
@@ -572,7 +572,7 @@ export function registerDataWidgets() {
         }
     });
     registerWidget({
-        type: 'forms', titleKey: 'admin.dashboard.forms.js', icon: 'ti-forms', sizes: ['1x1', '3x3'], defaultSize: '3x3', multiple: true,
+        type: 'forms', titleKey: 'admin.dashboard.forms.js', descriptionKey: 'admin.dashboard.forms.description.js', category: 'content', icon: 'ti-forms', sizes: ['1x1', '3x3'], defaultSize: '3x3', multiple: true,
         headerLink: { href: (instance, context) => {
             const formName = context.settings.domainOptions?.[instance.id]?.formName;
             return formName ? `${moduleLinks.forms}detail/?formName=${encodeURIComponent(formName)}` : moduleLinks.forms;
@@ -615,7 +615,7 @@ export function registerDataWidgets() {
         ['search-terms', 'ti-search', ['2x3', '3x3']], ['referrers', 'ti-route', ['2x2', '2x3', '3x3']], ['errors', 'ti-error-404', ['1x1', '3x3']]
     ];
     definitions.forEach(([type, icon, sizes]) => registerWidget({
-        type, titleKey: `admin.dashboard.${type}.js`, icon, sizes, defaultSize: type === 'referrers' ? '2x2' : sizes[sizes.length - 1], multiple: true,
+        type, titleKey: `admin.dashboard.${type}.js`, descriptionKey: `admin.dashboard.${type}.description.js`, category: 'traffic', icon, sizes, defaultSize: type === 'referrers' ? '2x2' : sizes[sizes.length - 1], multiple: true,
         headerLink: { href: moduleLinks[type] },
         defaultOptions: { days: 7, ...(type === 'traffic' ? { metric: 'sessions' } : {}) },
         isAvailable: context => window.WJ.hasPermission('cmp_stat') && context.config.statMode !== 'none',
@@ -644,7 +644,7 @@ export function registerDataWidgets() {
         }
     }));
     registerWidget({
-        type: 'newsletter', titleKey: 'admin.dashboard.newsletter.js', icon: 'ti-send', sizes: ['2x2', '3x3'], multiple: true,
+        type: 'newsletter', titleKey: 'admin.dashboard.newsletter.js', descriptionKey: 'admin.dashboard.newsletter.description.js', category: 'content', icon: 'ti-send', sizes: ['2x2', '3x3'], multiple: true,
         headerLink: { href: moduleLinks.newsletter },
         defaultDomainOptions: { campaignId: '' }, isAvailable: () => window.WJ.hasPermission('menuEmail'),
         async configure({ container, domainOptions, context, signal }) {

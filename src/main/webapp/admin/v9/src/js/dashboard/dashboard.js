@@ -1,6 +1,6 @@
 import { getWidget, listWidgets } from './registry';
 import { MAX_WIDGETS, cloneSettings, createInstanceId, normalizeSettings, moveInstanceBefore, createLayoutSegments } from './model';
-import { link, localUrl, shortcutUrl } from './widget-utils';
+import { link, localUrl, shortcutUrl, containNativeScroll } from './widget-utils';
 import { DashboardEditor } from './editor';
 
 function node(tag, className = "", text) {
@@ -1304,51 +1304,109 @@ export class DashboardController {
         });
     }
 
-    /** Opens a searchable catalogue of available grid widgets, excluding existing singletons unless they can be revealed. */
+    /** Opens the permission-filtered grid catalogue, retaining filters and focus while widgets are added. */
     showCatalogue() {
         const dialog = this._dialog(this._t("add", "Add widget"));
-        const search = node("input", "form-control mb-3");
+        dialog.root.classList.add("md-dashboard-modal--catalogue");
+        dialog.root.querySelector(".modal-dialog").classList.add("modal-lg", "modal-dialog-centered", "modal-dialog-scrollable");
+        const tools = node("div", "md-dashboard__catalogue-tools");
+        const searchField = node("div", "md-dashboard__catalogue-search");
+        const search = node("input", "form-control");
         search.type = "search";
         search.setAttribute("aria-label", this._t("searchWidgets", "Search widgets"));
         search.placeholder = this._t("searchWidgets", "Search widgets");
+        searchField.append(icon("ti-search"), search);
+        const categories = { all: this._t("catalogueAll", "All"), content: this._t("catalogueContent", "Content"), traffic: this._t("catalogueTraffic", "Traffic"), system: this._t("catalogueSystem", "System") };
+        const definitions = listWidgets().filter(definition => this._available(definition) && !["sessions", "news", "search", "shortcut"].includes(definition.type));
+        const filters = node("div", "md-dashboard__catalogue-filters");
+        filters.setAttribute("role", "group");
+        filters.setAttribute("aria-label", this._t("catalogueCategories", "Widget categories"));
+        let category = "all";
         const list = node("div", "md-dashboard__catalogue");
+        const empty = node("p", "md-dashboard__catalogue-empty mb-0", this._t("noWidgets", "No matching widgets are available."));
         const error = node("p", "text-danger mb-0");
         error.setAttribute("role", "alert");
-        if (this.settings.items.length >= MAX_WIDGETS) error.textContent = this._t("limit", "The overview can contain at most 48 widgets.");
-        const render = () => {
-            list.replaceChildren();
-            for (const definition of listWidgets()) {
-                if (!this._available(definition) || ["sessions", "news", "search", "shortcut"].includes(definition.type)) continue;
-                const existing = this.settings.items.find(item => item.type === definition.type);
-                const reveal = !definition.multiple && existing && !this._visible(definition, existing) && definition.reveal;
-                if (!definition.multiple && existing && !reveal) continue;
-                const title = this._t(definition.titleKey);
-                if (!title.toLocaleLowerCase().includes(search.value.toLocaleLowerCase())) continue;
-                const item = node("div", "md-dashboard__catalogue-item");
-                item.dataset.widgetType = definition.type;
-                const text = node("div");
-                text.append(node("strong", "", title));
-                if (definition.descriptionKey) text.append(node("p", "mb-0 small text-muted", this._t(definition.descriptionKey)));
-                const add = button(reveal ? this._t("show", "Show") : this._t("add", "Add widget"), async () => {
-                    add.disabled = true;
-                    try {
-                        const saved = reveal ? await definition.reveal(cloneSettings(existing), this._widgetContext()) : await this.add(definition.type);
-                        if (saved) dialog.close();
-                        else { add.disabled = false; error.textContent = this._t("saveError", "The change could not be saved."); }
-                    } catch (failure) {
-                        add.disabled = false;
-                        error.textContent = this._t("saveError", "The change could not be saved.");
-                    }
-                });
-                add.disabled = !reveal && this.settings.items.length >= MAX_WIDGETS;
-                item.append(text, add);
-                list.append(item);
-            }
-            if (!list.children.length) list.append(node("p", "", this._t("noWidgets", "No matching widgets are available.")));
+        const announcement = node("p", "visually-hidden");
+        announcement.setAttribute("role", "status");
+        const added = new Set();
+        const addedTimers = new Map();
+        dialog.setCleanup(() => { for (const timer of addedTimers.values()) window.clearTimeout(timer); });
+        const cards = [];
+        const filter = () => {
+            const query = search.value.trim().toLocaleLowerCase();
+            for (const card of cards) card.item.hidden = (category !== "all" && card.category !== category) || !card.searchText.includes(query);
+            empty.hidden = cards.some(card => !card.item.hidden);
+            for (const control of filters.children) control.setAttribute("aria-pressed", String(control.dataset.category === category));
         };
-        search.addEventListener("input", render);
-        dialog.body.append(search, list, error);
-        render();
+        const updateStates = () => {
+            const full = this.settings.items.length >= MAX_WIDGETS;
+            if (full) error.textContent = this._t("limit", "The overview can contain at most 48 widgets.");
+            for (const card of cards) {
+                const exists = this.settings.items.some(item => item.type === card.definition.type);
+                card.badge.hidden = !exists;
+                card.item.classList.toggle("is-added", added.has(card.definition.type));
+                const recentlyAdded = addedTimers.has(card.definition.type);
+                const label = recentlyAdded ? this._t("catalogueAdded", "Added") : exists ? this._t("catalogueAddAnother", "Add another") : this._t("catalogueAdd", "Add");
+                card.add.replaceChildren(icon(recentlyAdded ? "ti-check" : "ti-plus"), document.createTextNode(label));
+                card.add.setAttribute("aria-label", `${card.add.textContent} · ${card.title}`);
+                card.add.disabled = full;
+            }
+        };
+        for (const [value, label] of Object.entries(categories)) {
+            const count = value === "all" ? definitions.length : definitions.filter(definition => (definition.category || "system") === value).length;
+            const control = button("", () => { category = value; filter(); }, "btn btn-sm md-dashboard__catalogue-filter");
+            control.dataset.category = value;
+            control.append(document.createTextNode(label), node("span", "md-dashboard__catalogue-count", count));
+            filters.append(control);
+        }
+        for (const definition of definitions) {
+            const title = this._t(definition.titleKey);
+            const description = definition.descriptionKey ? this._t(definition.descriptionKey) : "";
+            const widgetCategory = definition.category || "system";
+            const item = node("div", "md-dashboard__catalogue-item");
+            item.dataset.widgetType = definition.type;
+            item.dataset.category = widgetCategory;
+            const emblem = node("span", "md-dashboard__catalogue-icon");
+            emblem.append(icon(definition.icon || "ti-layout-grid"));
+            const text = node("div", "md-dashboard__catalogue-text");
+            const heading = node("div", "md-dashboard__catalogue-heading");
+            const badge = node("span", "md-dashboard__catalogue-badge", this._t("catalogueOnOverview", "On overview"));
+            heading.append(node("strong", "", title), badge);
+            const size = definition.defaultSize === "fullauto" ? this._t("fullWidth", "Full width") : definition.defaultSize.replace("x", "×");
+            text.append(heading, node("p", "md-dashboard__catalogue-description", description), node("p", "md-dashboard__catalogue-meta", `${categories[widgetCategory]} · ${this._t("catalogueDefaultSize", "Default size")} ${size}`));
+            const actions = node("div", "md-dashboard__catalogue-actions");
+            const add = button("", async () => {
+                add.disabled = true;
+                error.textContent = "";
+                try {
+                    if (await this.add(definition.type)) {
+                        if (dialog.signal.aborted) return;
+                        added.add(definition.type);
+                        window.clearTimeout(addedTimers.get(definition.type));
+                        addedTimers.set(definition.type, window.setTimeout(() => {
+                            addedTimers.delete(definition.type);
+                            updateStates();
+                        }, 5000));
+                        announcement.textContent = `${title} · ${this._t("catalogueAdded", "Added")}`;
+                    } else error.textContent = this._t("saveError", "The change could not be saved.");
+                } catch (failure) { error.textContent = this._t("saveError", "The change could not be saved."); }
+                if (dialog.signal.aborted) return;
+                updateStates();
+                (add.disabled ? dialog.footer.querySelector("button") : add).focus({ preventScroll: true });
+            });
+            actions.append(add);
+            item.append(emblem, text, actions);
+            list.append(item);
+            cards.push({ definition, item, badge, add, title, category: widgetCategory, searchText: `${title} ${description}`.toLocaleLowerCase() });
+        }
+        tools.append(searchField, filters);
+        dialog.body.before(tools);
+        dialog.body.append(list, empty, announcement);
+        containNativeScroll(dialog.body, dialog.signal);
+        dialog.footer.append(error, node("p", "md-dashboard__catalogue-hint", this._t("catalogueHint", "Added widgets appear at the end of the overview. They are saved with your other changes.")), button(this._t("catalogueDone", "Done"), dialog.close, "btn btn-primary"));
+        search.addEventListener("input", filter);
+        updateStates();
+        filter();
         dialog.root.addEventListener("shown.bs.modal", () => search.focus(), { once: true });
     }
 
