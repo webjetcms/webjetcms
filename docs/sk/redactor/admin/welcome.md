@@ -37,6 +37,10 @@ Pri widgete použite tlačidlo **Možnosti widgetu**:
 
 V dialógovom okne **Nastavenia widgetu** upravte veľkosť a ďalšie dostupné možnosti a potvrďte ich tlačidlom **Použiť**. Zmení sa rozpracovaný prehľad. Väčšiu kartu zvoľte, keď chcete vidieť podrobnejší graf alebo zoznam. Menšia karta zaberie v prehľade menej miesta.
 
+V časti **Farba pozadia** vyberte jemný odtieň z palety alebo **Vlastnú farbu**, ktorú môžete zadať aj kódom HEX. Náhľad ukazuje nadpis a drobný text na vybranom pozadí. Pri príliš tmavej vlastnej farbe vás nastavenie vyzve zvoliť svetlejší odtieň. Voľba **Predvolená** obnoví pôvodné pozadie konkrétneho widgetu; nové widgety používajú túto farbu automaticky.
+
+Vo widgete **Návštevnosť** sa farby čiar grafu, bodov a legendy prispôsobia odtieňu pozadia automaticky. Pri bielom alebo sivom pozadí sú čiary sivé. Predchádzajúce obdobie zostáva odlíšené prerušovanou čiarou.
+
 ![](dashboard-widget-settings.png)
 
 Po dokončení úprav kliknite na **Uložiť** v lište. Až týmto krokom sa uložia pozície, veľkosti, nastavenia aj pridanie či odstránenie widgetov. Zobrazí sa oznámenie **Prehľad bol uložený** a režim úprav sa zatvorí. Pri chybe zostanú rozpracované zmeny dostupné na opätovné uloženie.

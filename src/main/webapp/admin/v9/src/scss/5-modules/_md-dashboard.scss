@@ -15,12 +15,20 @@ $dashboard-chart-primary: mix($success, $secondary, 64%);
 $dashboard-chart-comparison: mix($dashboard-chart-primary, $gray-text, 28%);
 $dashboard-referrers-primary: mix($primary, $nice-gray, 64%);
 $dashboard-shadow: rgba($secondary, .06);
+$dashboard-widget-colors: (
+    'yellow': #fef2cc, 'cream': #fff2e1, 'peach': #fff1ec, 'pink': #fff0f1,
+    'lavender': #f5f2ff, 'blue': #f1f3ff, 'light-blue': #f2f7ff, 'cyan': #e1f7ff,
+    'mint': #dff9f1, 'green': #e4fbd2
+);
 $dashboard-shortcut-colors: (
     'default': #eef0f4, 'red': #c4001f, 'peach': #c24e00, 'amber': #f6be3f,
     'mint': #007e69, 'cyan': #00707f, 'blue': $primary, 'lavender': #6e00dc, 'gray': #4d5262
 );
 
 webjet-overview-dashboard, .md-dashboard-modal {
+    @each $name, $color in $dashboard-widget-colors {
+        --wj-dashboard-widget-#{$name}: #{$color};
+    }
     @each $name, $color in $dashboard-shortcut-colors {
         --wj-dashboard-shortcut-#{$name}: #{$color};
     }
@@ -562,6 +570,16 @@ webjet-overview-dashboard a:focus-visible {
     &__shortcut-preview { width: fit-content; max-width: 240px; height: 32px; padding: 3px 12px 3px 3px; border: 1px solid var(--wj-nice-gray-100); border-radius: var(--wj-border-radius); background: var(--wj-dashboard-surface); }
     &__shortcut-preview-panel { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 8px; background: linear-gradient(110deg, #031d46, #073780); }
     &__shortcut-preview-label { color: #c0d1ee; font-size: 12px; flex-shrink: 0; }
+    &__widget-colors {
+        margin-bottom: 12px;
+        .md-dashboard__shortcut-swatch > span { border-color: var(--wj-nice-gray-200); }
+    }
+    &__color-preview {
+        padding: 12px 16px;
+        gap: 4px;
+        small { color: var(--wj-dashboard-muted); }
+        + .form-text { margin: 4px 0 16px; }
+    }
     &__shortcut-optional { margin-left: 6px; font-weight: 400; color: var(--wj-gray-text); }
     &__shortcut-list {
         position: relative;
@@ -662,6 +680,16 @@ webjet-overview-dashboard a:focus-visible {
 }
 
 .md-dashboard-modal {
+    .md-dashboard__shortcut-icon-choice {
+        position: relative;
+        cursor: pointer;
+        > span { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 40px; height: 40px; padding: 0 10px; border: 1px solid var(--wj-nice-gray-100); border-radius: 6px; color: var(--wj-gray-text); font-size: 14px; }
+        input:checked + span { border-color: var(--wj-primary); box-shadow: inset 0 0 0 1px var(--wj-primary); color: var(--wj-primary); background: var(--wj-dashboard-search-surface); }
+        input:focus-visible + span { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }
+        &:hover > span { background: var(--wj-dashboard-search-surface); }
+    }
+    .md-dashboard__shortcut-custom-color > span { height: 32px; padding-inline: 8px; }
+    .md-dashboard__shortcut-custom-color-swatch { width: 16px; height: 16px; border: 1px solid var(--wj-nice-gray-200); border-radius: 50%; }
     .bootstrap-select.form-select { background-image: none; }
     .bootstrap-select.form-control > button.dropdown-toggle {
         width: 100%;
@@ -913,16 +941,6 @@ webjet-overview-dashboard a:focus-visible {
     }
     .md-dashboard__shortcut-back { padding: 6px 0 0; font-size: 14px; text-decoration: none; }
     .md-dashboard__shortcut-icon-choices { display: flex; flex-wrap: wrap; gap: 6px; }
-    .md-dashboard__shortcut-icon-choice {
-        position: relative;
-        cursor: pointer;
-        > span { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 40px; height: 40px; padding: 0 10px; border: 1px solid var(--wj-nice-gray-100); border-radius: 6px; color: var(--wj-gray-text); font-size: 14px; }
-        input:checked + span { border-color: var(--wj-primary); box-shadow: inset 0 0 0 1px var(--wj-primary); color: var(--wj-primary); background: var(--wj-dashboard-search-surface); }
-        input:focus-visible + span { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }
-        &:hover > span { background: var(--wj-dashboard-search-surface); }
-    }
-    .md-dashboard__shortcut-custom-color > span { height: 32px; padding-inline: 8px; }
-    .md-dashboard__shortcut-custom-color-swatch { width: 16px; height: 16px; border: 1px solid var(--wj-nice-gray-200); border-radius: 50%; }
     .md-dashboard__shortcut-custom-icon { position: relative; max-width: 360px; > input { padding-inline: 40px; } &.is-invalid > input { border-color: $danger; box-shadow: 0 0 0 1px $danger; } }
     .md-dashboard__shortcut-icon-preview { position: absolute; display: grid; place-items: center; left: 8px; top: 6px; width: 28px; height: 28px; border-radius: 4px; background: var(--wj-nice-gray); font-size: 16px; }
     .md-dashboard__shortcut-icon-state { position: absolute; right: 12px; top: 10px; color: var(--wj-dashboard-shortcut-mint); font-size: 16px; }

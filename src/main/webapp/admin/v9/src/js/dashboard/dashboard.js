@@ -2,6 +2,7 @@ import { getWidget, listWidgets } from './registry';
 import { MAX_WIDGETS, cloneSettings, createInstanceId, normalizeSettings, moveInstanceBefore, createLayoutSegments } from './model';
 import { link, localUrl, shortcutUrl, containNativeScroll } from './widget-utils';
 import { DashboardEditor } from './editor';
+import { widgetBackground, createWidgetColorSettings } from './widget-colors';
 
 function node(tag, className = "", text) {
     const result = document.createElement(tag);
@@ -519,6 +520,7 @@ export class DashboardController {
                 }
             }
             view.card.dataset.size = instance.size;
+            if (this._region(instance) === "grid") view.card.style.backgroundColor = widgetBackground(instance.options?.backgroundColor);
             const signature = JSON.stringify([instance.type, instance.size, instance.options, this.settings.domainOptions[instance.id], this._contextVersion, instance.type === "news" ? this.settings.acknowledgedNewsVersion : null]);
             if (view.signature !== signature) {
                 view.signature = signature;
@@ -651,7 +653,7 @@ export class DashboardController {
             return control;
         };
         menu.append(menuItem("refresh", "Refresh", "ti-refresh", () => this.refresh(instance.id)));
-        if (definition.configure || definition.sizes.length > 1) menu.append(menuItem("settings", "Settings", "ti-settings", () => this.showSettings(instance.id)));
+        if (this._region(instance) === "grid" || definition.configure || definition.sizes.length > 1) menu.append(menuItem("settings", "Settings", "ti-settings", () => this.showSettings(instance.id)));
         const keyboardMove = menuItem("keyboardMove", "Move with keyboard", "ti-arrows-move", () => this.showMove(instance.id));
         keyboardMove.dataset.dashboardAction = "move";
         menu.append(keyboardMove);
@@ -1531,11 +1533,14 @@ export class DashboardController {
         updatePreview();
         preview.append(previewGrid, previewCaption);
         if (definition.sizes.length > 1) dialog.body.append(sizeLabel, size, preview);
+        const colorSettings = this._region(instance) === "grid" ? createWidgetColorSettings({ container: dialog.body, instance, context: this._widgetContext() }) : null;
         const fields = node("div", "md-dashboard__settings");
         const error = node("p", "text-danger");
         error.setAttribute("role", "alert");
         dialog.body.append(fields, error);
         let configuration;
+        const cleanup = () => { dispose(configuration); dispose(colorSettings); };
+        dialog.setCleanup(cleanup);
         const save = button(this._t(shortcut ? adding ? "addShortcut" : "saveShortcutChanges" : this.editing ? "apply" : "save", shortcut ? adding ? "Add shortcut" : "Save changes" : this.editing ? "Apply" : "Save"), async () => {
             error.textContent = "";
             try {
@@ -1550,6 +1555,12 @@ export class DashboardController {
                 const previous = { instance: cloneSettings(updated), index: next.items.indexOf(updated), domainOptions: cloneSettings(next.domainOptions[id] || {}) };
                 updated.size = size.value;
                 if (values.options !== undefined) updated.options = cloneSettings(values.options);
+                if (colorSettings) {
+                    const backgroundColor = colorSettings.read();
+                    updated.options ||= {};
+                    if (backgroundColor === "default") delete updated.options.backgroundColor;
+                    else updated.options.backgroundColor = backgroundColor;
+                }
                 if (values.domainOptions !== undefined) next.domainOptions[id] = cloneSettings(values.domainOptions);
                 save.disabled = true;
                 if (await this._commit(next, shortcut ? this.shortcutStatus : this.status, { notify: !shortcut || adding, draft: !shortcut })) {
@@ -1582,14 +1593,13 @@ export class DashboardController {
             try {
                 configuration = await definition.configure({ container: fields, instance: cloneSettings(instance), options: cloneSettings(instance.options || {}), domainOptions: cloneSettings(this.settings.domainOptions[id] || definition.defaultDomainOptions), context: this._widgetContext(), signal: dialog.signal, adding });
                 if (dialog.signal.aborted) dispose(configuration);
-                else { dialog.setCleanup(configuration); save.disabled = false; }
+                else save.disabled = false;
             } catch (failure) {
                 if (!dialog.signal.aborted) error.textContent = this._t("widgetError", "This widget could not be loaded.");
             }
         }
         if (!dialog.signal.aborted) window.WJ.initSelectPicker?.(dialog.body);
         if (editingWidget && !dialog.signal.aborted) {
-            dialog.setCleanup(configuration);
             (dialog.body.querySelector(".bootstrap-select > button, select, input, button") || save).focus({ preventScroll: true });
         }
     }

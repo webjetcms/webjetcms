@@ -96,7 +96,7 @@ function fixture(t, { items = [], configured = true, shortcutsConfigured = confi
         return { ok: true, json: async () => copy(stored) };
     };
     const context = vm.createContext({ window, document: window.document, CustomEvent: window.CustomEvent, URL: window.URL, AbortController, fetch, console, crypto: require("node:crypto").webcrypto });
-    for (const filename of ["registry.js", "model.js", "widget-utils.js", "editor.js", "dashboard.js"]) {
+    for (const filename of ["registry.js", "model.js", "widget-utils.js", "widget-colors.js", "editor.js", "dashboard.js"]) {
         const source = fs.readFileSync(path.join(moduleDirectory, filename), "utf8").replace(/^import .+;\r?$/gm, "").replace(/^export /gm, "");
         vm.runInContext(source, context, { filename });
     }
@@ -1490,6 +1490,79 @@ test('Widget settings apply to a draft in a centered modal and Cancel keeps the 
     assert.equal(window.document.querySelector('.md-dashboard-modal--settings'), null, 'Exiting editing must dispose open draft settings');
     assert.equal(controller.notices.hasAttribute('inert'), false);
     assert.equal(requests.length, 0);
+});
+
+test('Background settings preserve defaults, stage palette colors and survive save and reload', async t => {
+    const { controller, window, context, requests, stored } = fixture(t, {
+        items: [item('colored', 'one-size', '1x1', { days: 7 })],
+        definitions: [{ type: 'one-size', titleKey: 'One size', sizes: ['1x1'], multiple: true,
+            render: ({ container }) => { container.textContent = 'Widget autotest'; },
+            configure: () => ({ read: () => ({ options: { days: 30 } }) }) }]
+    });
+    await controller.start();
+    const card = controller.views.get('colored').card;
+    assert.equal(card.style.backgroundColor, '', 'Unconfigured backgrounds must keep the existing stylesheet');
+    assert.ok(card.querySelector('[data-dashboard-action="settings"]'), 'A single-size widget must expose background settings');
+    controller.setEditing(true);
+    await controller.showSettings('colored');
+    let dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    assert.equal(dialog.querySelector('.md-dashboard__widget-colors input:checked').value, 'default');
+    assert.equal(dialog.querySelectorAll('.md-dashboard__shortcut-swatch').length, 12, 'The palette must include the six restored shades and the four Figma alternatives');
+    dialog.querySelector('input[value="figma-lavender"]').click();
+    dialog.querySelector('.btn-primary').click();
+    await tick();
+    assert.equal(controller._instance('colored').options.backgroundColor, 'figma-lavender');
+    assert.equal(controller._instance('colored').options.days, 30);
+    assert.equal(requests.length, 0, 'Applying a color must remain provisional until overview Save');
+    await controller.saveEditing();
+    assert.equal(stored().items[0].options.backgroundColor, 'figma-lavender');
+    await controller.setContext({ data: { settings: stored() } });
+    assert.equal(context.widgetBackground(controller._instance('colored').options.backgroundColor), 'var(--wj-dashboard-widget-lavender)');
+    controller.setEditing(true);
+    await controller.showSettings('colored');
+    dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    dialog.querySelector('input[value="default"]').click();
+    dialog.querySelector('.btn-primary').click();
+    await tick();
+    assert.equal(controller._instance('colored').options.backgroundColor, undefined);
+    assert.equal(controller.views.get('colored').card.style.backgroundColor, '', 'Default must remove the custom surface');
+    for (const invalid of ['constructor', '__proto__', 'url(https://example.test)', '#fff', '#ffffff; color:red', ['mint'], {}, null]) {
+        assert.equal(context.widgetBackground(invalid), '', 'Invalid stored values must never become CSS');
+    }
+    await controller.saveOptions('colored', { options: { backgroundColor: 'mint' } });
+    await controller.showSettings('colored');
+    dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    assert.equal(dialog.querySelector('.md-dashboard__widget-colors input:checked').value, 'figma-mint', 'Previously selected shades must resolve to their merged Figma alternative');
+    dialog.querySelector('.btn-primary').click();
+    await tick();
+    assert.equal(controller._instance('colored').options.backgroundColor, 'figma-mint');
+});
+
+test('Custom backgrounds preview immediately, reject unreadable shades and cancel without changing the draft', async t => {
+    const { controller, window, requests } = fixture(t, { items: [item('custom')] });
+    await controller.start();
+    controller.setEditing(true);
+    await controller.showSettings('custom');
+    const dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    const picker = dialog.querySelector('color-picker');
+    dialog.querySelector('input[value="custom"]').click();
+    picker.dispatchEvent(new window.CustomEvent('update-color', { detail: { hex: '#112233' } }));
+    assert.equal(dialog.querySelector('.md-dashboard__color-preview').style.backgroundColor, 'rgb(17, 34, 51)');
+    dialog.querySelector('.btn-primary').click();
+    await tick();
+    assert.ok(dialog.querySelector('[role="alert"]').textContent);
+    assert.equal(controller._instance('custom').options.backgroundColor, undefined);
+    picker.dispatchEvent(new window.CustomEvent('update-color', { detail: { hex: '#FFF1EC' } }));
+    dialog.querySelector('.btn-primary').click();
+    await tick();
+    assert.equal(controller._instance('custom').options.backgroundColor, '#fff1ec');
+    assert.equal(requests.length, 0);
+    await controller.showSettings('custom');
+    const reopened = window.document.querySelector('.md-dashboard-modal--settings');
+    assert.equal(reopened.querySelector('input:checked').value, 'custom');
+    reopened.querySelector('input[value="figma-mint"]').click();
+    reopened.querySelector('.btn-outline-secondary').click();
+    assert.equal(controller._instance('custom').options.backgroundColor, '#fff1ec', 'Closing settings must discard unconfirmed colors');
 });
 
 test('A failed overview save keeps all staged changes for retry and shows no success toast', async t => {

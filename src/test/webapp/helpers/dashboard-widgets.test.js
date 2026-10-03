@@ -1240,6 +1240,59 @@ test('Chart colors come from runtime CSS properties while data and lifecycle sta
     assert.equal(runtime.roots.size, 0);
 });
 
+test('Traffic line colors retain readable contrast across the palette and composite transparent custom surfaces', t => {
+    const { scope } = fixture(t);
+    const luminance = hex => hex.slice(1).match(/.{2}/g).reduce((sum, channel, index) => {
+        const value = parseInt(channel, 16) / 255;
+        return sum + (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4) * [0.2126, 0.7152, 0.0722][index];
+    }, 0);
+    for (const hex of ['#e3f8f4', '#ffffff', '#f3f3f6', '#fef2cc', '#fff2e1', '#fff1ec', '#fff0f1',
+        '#f5f2ff', '#f1f3ff', '#f2f7ff', '#e1f7ff', '#dff9f1', '#e4fbd2']) {
+        const colors = scope.deriveChartColors(`rgb(${hex.slice(1).match(/.{2}/g).map(channel => parseInt(channel, 16)).join(',')})`);
+        assert.notEqual(colors.primary, colors.comparison, 'Current and comparison lines must remain distinct.');
+        for (const color of [colors.primary, colors.comparison]) {
+            assert.ok((luminance(hex) + 0.05) / (luminance(color) + 0.05) >= 3, `Line ${color} must contrast with ${hex}.`);
+        }
+    }
+    const transparent = scope.deriveChartColors('rgba(0, 0, 0, 0)');
+    assert.deepEqual(JSON.parse(JSON.stringify(transparent)), { primary: '#474747', comparison: '#5c5c5c', surface: '#ffffff' });
+    const translucent = scope.deriveChartColors('rgba(241, 243, 255, 0.5)');
+    assert.equal(translucent.surface, '#f8f9ff');
+    assert.equal(translucent.primary, '#474747', 'A nearly white composited surface must use neutral lines.');
+    const translucentMint = scope.deriveChartColors('rgba(223, 249, 241, 0.5)');
+    assert.equal(translucentMint.surface, '#effcf8');
+    assert.equal(translucentMint.primary, '#0e815d');
+});
+
+test('Traffic chart strokes, fills, last-point rings and legend tokens follow each rendered background', async t => {
+    const { scope, context, container, window } = fixture(t, { data: trafficData });
+    container.classList.add('md-dashboard__widget');
+    const runtime = chartRuntime(window);
+    window.am5.Circle = { new: (root, settings) => settings };
+    window.am5.Bullet = { new: (root, settings) => settings };
+    for (const [background, primary, comparison] of [['#e3f8f4', '#0e816b', '#40776d'],
+        ['#f1f3ff', '#0e1f81', '#404877'], ['#fff0f1', '#810e16', '#774044'],
+        ['#ffffff', '#474747', '#5c5c5c'], ['#f3f3f6', '#474747', '#5c5c5c'], ['#e3f8f4', '#0e816b', '#40776d']]) {
+        container.style.backgroundColor = background;
+        const cleanup = await scope.getWidget('traffic').render({ container, context, options: {}, instance: { size: '3x3' }, signal: new AbortController().signal });
+        const series = runtime.forms.at(-1).chart.series;
+        assert.equal(series.getIndex(0).get('stroke'), primary);
+        assert.equal(series.getIndex(0).get('fill'), primary);
+        assert.equal(series.getIndex(1).get('stroke'), comparison);
+        assert.equal(container.style.getPropertyValue('--wj-dashboard-chart-primary'), primary);
+        assert.equal(container.style.getPropertyValue('--wj-dashboard-chart-comparison'), comparison);
+        assert.deepEqual(Array.from(series.getIndex(1).strokes.template.get('strokeDasharray')), [5, 4]);
+        const current = series.getIndex(0);
+        current.dataItems = current.data.values.map(() => ({}));
+        const bullet = current.bullets.at(-1)(null, current, current.dataItems.at(-1));
+        assert.equal(bullet.sprite.fill, primary);
+        assert.equal(bullet.sprite.stroke, background, 'The last-point ring must blend into the selected surface.');
+        cleanup();
+        container.replaceChildren();
+        assert.equal(runtime.roots.size, 0);
+    }
+});
+
 test('Detailed referrers use horizontal AmCharts and retain literal labels and shares of the full total', async t => {
     const data = { total: 100, items: Array.from({ length: 8 }, (_, index) => ({ title: index ? `Source ${index}` : '<img src=x>[bold]', value: 10 - index })) };
     const { scope, context, container, window } = fixture(t, { data });
