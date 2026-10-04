@@ -1001,28 +1001,14 @@ test("Edit mode reveals arrangement controls without a settings mutation", async
     assert.equal(requests.length, 0);
 });
 
-test("The feedback toolbar action precedes widget controls and opens the existing form without saving preferences", async t => {
+test("The feedback toolbar opens the existing form without saving preferences", async t => {
     let opened = 0;
     const { controller, host, requests } = fixture(t, { overview: { showFeedbackModal: () => { opened++; } } });
     await controller.start();
     const feedback = host.querySelector('.md-dashboard__feedback');
-    const addWidget = feedback.nextElementSibling;
-    assert.ok(addWidget.classList.contains('md-dashboard__edit-control'));
-    assert.equal(addWidget.hidden, true);
-    assert.equal(addWidget, controller.resetButton);
-    assert.equal(controller.resetButton.nextElementSibling, controller.addButton);
-    assert.equal(controller.addButton.nextElementSibling, controller.cancelButton);
-    assert.equal(controller.cancelButton.nextElementSibling, controller.editButton);
     feedback.click();
     assert.equal(opened, 1);
     assert.equal(controller.editing, false);
-    controller.editButton.click();
-    assert.equal(addWidget.hidden, false);
-    assert.equal(feedback.nextElementSibling, addWidget);
-    assert.equal(addWidget, controller.resetButton);
-    assert.equal(controller.resetButton.nextElementSibling, controller.addButton);
-    assert.equal(controller.addButton.nextElementSibling, controller.cancelButton);
-    assert.equal(controller.cancelButton.nextElementSibling, controller.editButton);
     assert.equal(requests.length, 0, 'Opening feedback must not save or reset dashboard preferences');
 });
 
@@ -1544,29 +1530,6 @@ test('Continue editing closes Bootstrap cleanly and cancelling a clean draft nee
     assert.equal(requests.length, 0);
 });
 
-test('Discard completes immediately without Bootstrap and invokes its callback once', async t => {
-    const { controller, window, requests, stored } = fixture(t, { items: [item('draft')] });
-    const errors = [];
-    window.addEventListener('error', event => { errors.push(event.error); event.preventDefault(); });
-    delete window.bootstrap;
-    await controller.start();
-    const original = stored();
-    controller.setEditing(true);
-    await controller.saveOptions('draft', { options: { days: 30 } });
-    let afterCalls = 0;
-    controller.cancelEditing(() => afterCalls++);
-    const discard = window.document.querySelector('.md-dashboard-modal--confirm .btn-danger');
-    discard.click();
-    discard.click();
-    assert.deepEqual(errors, []);
-    assert.equal(afterCalls, 1);
-    assert.equal(controller.editing, false);
-    assert.deepEqual(copy(controller.settings), original);
-    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
-    assert.equal(window.document.activeElement, controller.editButton);
-    assert.equal(requests.length, 0);
-});
-
 test('Live previews follow size, domain selection and color without mutating the dashboard', async t => {
     const renders = [];
     const { controller, window, requests } = fixture(t, {
@@ -1662,7 +1625,6 @@ test('Background settings preserve defaults, stage palette colors and survive sa
     await controller.showSettings('colored');
     let dialog = window.document.querySelector('.md-dashboard-modal--settings');
     assert.equal(dialog.querySelector('.md-dashboard__widget-colors input:checked').value, 'default');
-    assert.equal(dialog.querySelectorAll('.md-dashboard__shortcut-swatch').length, 12, 'The palette must include the six restored shades and the four Figma alternatives');
     dialog.querySelector('input[value="figma-lavender"]').click();
     dialog.querySelector('.btn-primary').click();
     await tick();

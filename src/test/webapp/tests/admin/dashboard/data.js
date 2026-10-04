@@ -59,18 +59,18 @@ Scenario('A widget handles empty results and recovers from a failed load through
     I.amOnPage('/admin/v9/');
     await waitForWidgets(I);
     I.see(await I.executeScript(() => WJ.translate('admin.dashboard.empty.js')), card);
-    I.dontSeeElementInDOM(`${card} .text-danger`);
+    I.dontSeeElementInDOM(`${card} .md-dashboard__widget-content > .text-danger`);
 
     responseMode = 'error';
     await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.refresh('autotest-data-loading'));
-    I.see(await I.executeScript(() => WJ.translate('admin.dashboard.widgetError.js')), `${card} .text-danger`);
+    I.see(await I.executeScript(() => WJ.translate('admin.dashboard.widgetError.js')), `${card} .md-dashboard__widget-content > .text-danger`);
     I.seeElement(`${card} .md-dashboard__widget-content > button`);
 
     responseMode = 'real';
     I.clickCss(`${card} .md-dashboard__widget-content > button`);
     await waitForWidgets(I);
     I.assertEqual(realResponseStatus, 200, 'Retry must send the widget request to the application server.');
-    I.dontSeeElementInDOM(`${card} .text-danger`);
+    I.dontSeeElementInDOM(`${card} .md-dashboard__widget-content > .text-danger`);
     I.dontSeeElementInDOM(`${card} .md-dashboard__widget-content > button`);
     I.assertTrue(await I.executeScript(selector => {
         const content = document.querySelector(`${selector} .md-dashboard__widget-content`);

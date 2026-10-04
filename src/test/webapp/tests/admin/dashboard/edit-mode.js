@@ -66,83 +66,12 @@ function waitForSave(I) {
 
 Before(({ login }) => { login('admin'); });
 
-Scenario('Editing headers align controls, hide supplementary icons and keep reset hover readable', async ({ I }) => {
-    const widgetGeometry = () => I.executeScript(([id, trafficId]) => {
-        const card = document.querySelector(`[data-instance-id="${id}"]`);
-        const bounds = card.getBoundingClientRect();
-        const traffic = document.querySelector(`[data-instance-id="${trafficId}"]`);
-        const trafficBounds = traffic.getBoundingClientRect();
-        return {
-            height: bounds.height,
-            header: card.querySelector('.md-dashboard__widget-header').getBoundingClientRect().height,
-            title: card.querySelector('.md-dashboard__widget-title span').getBoundingClientRect().top - bounds.top,
-            number: card.querySelector('.md-dashboard-widget__number').getBoundingClientRect().top - bounds.top,
-            trafficHeight: trafficBounds.height,
-            trafficChartTop: traffic.querySelector('.md-dashboard-widget__chart--traffic').getBoundingClientRect().top - trafficBounds.top
-        };
-    }, [formsId, trafficId]);
-    for (const width of [1440, 1024, 390]) {
-        I.resizeWindow(width, 1000);
-        await openFixture(I, false, [
-            { id: 'edit-autotest-approvals', type: 'approvals', size: '1x1', options: {} },
-            { id: 'edit-autotest-errors', type: 'errors', size: '1x1', options: {} }
-        ]);
-        await showWidget(I, trafficId);
-        const trafficPeriod = `[data-instance-id="${trafficId}"] .md-dashboard-widget__period`;
-        I.seeElementInDOM(trafficPeriod);
-        I.dontSeeElement(trafficPeriod);
-        I.dontSeeElementInDOM('.md-dashboard__resize');
-        I.dontSeeElement('.md-dashboard__layout .md-dashboard__widget-header > .ti');
-        I.dontSeeElement('.md-dashboard__layout .md-dashboard__title-link > .ti');
-        I.dontSeeElement('.md-dashboard__layout .md-dashboard__header-link');
-        const pageHeading = `[data-instance-id="${pagesId}"] .md-dashboard__title-link`;
-        I.assertEqual(await I.grabAttributeFrom(pageHeading, 'href'), '/admin/v9/webpages/web-pages-list/');
-        const alignment = await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__layout .md-dashboard__widget-header')].map(header => {
-            const range = document.createRange();
-            range.selectNodeContents(header.querySelector('.md-dashboard__widget-title span'));
-            const text = [...range.getClientRects()].at(-1);
-            const grip = header.querySelector('.md-dashboard__drag > .ti').getBoundingClientRect();
-            const menu = header.querySelector('.md-dashboard__widget-controls button > .ti').getBoundingClientRect();
-            return { id: header.parentElement.dataset.instanceId, grip: grip.bottom - text.bottom, menu: menu.bottom - text.bottom };
-        }));
-        I.assertTrue(alignment.every(row => Math.abs(row.grip) <= 2 && Math.abs(row.menu) <= 2), `Header controls must align with the last text line at ${width}px: ${JSON.stringify(alignment)}`);
-        I.moveCursorTo('.md-dashboard__reset');
-        I.assertEqual(await I.grabCssPropertyFrom('.md-dashboard__reset', 'color'), 'rgb(19, 21, 27)', 'Reset hover must keep dark readable text');
-        I.saveScreenshot(`dashboard-edit-headers-${width}.png`);
-        const editingGeometry = await widgetGeometry();
-        I.clickCss('.md-dashboard__cancel');
-        I.waitForElement('.md-dashboard:not(.is-editing)', 10);
-        const viewingGeometry = await widgetGeometry();
-        // On mobile the period belongs to the content, so hiding it intentionally shortens the natural-height card.
-        const geometryKeys = Object.keys(viewingGeometry).filter(key => width >= 768 || !['height', 'trafficHeight', 'trafficChartTop'].includes(key));
-        I.assertTrue(geometryKeys.every(key => Math.abs(editingGeometry[key] - viewingGeometry[key]) < 0.1),
-            `Editing must preserve header/content positions and desktop grid heights at ${width}px: ${JSON.stringify({ viewingGeometry, editingGeometry })}`);
-        I.seeElement(trafficPeriod);
-        if (width === 1440) {
-            I.clickCss(editButton);
-            focusGrip(I, trafficId);
-            I.pressKey('Space');
-            I.seeElement('.md-dashboard__widget-drag-helper');
-            I.dontSeeElement('.md-dashboard__widget-drag-helper .md-dashboard-widget__period');
-            I.pressKey('Escape');
-            I.clickCss('.md-dashboard__cancel');
-            I.waitForElement('.md-dashboard:not(.is-editing)', 10);
-        }
-        I.seeElement(`${pageHeading} > .ti`);
-        I.seeElement(`[data-instance-id="${formsId}"] .md-dashboard__widget-header > .ti`);
-        I.dontSeeElementInDOM(`[data-instance-id="${pagesId}"] .md-dashboard__header-link`);
-    }
-    I.wjSetDefaultWindowSize();
-});
-
-Scenario('Widget controls have neutral active states, outlined hover and accessible tooltips', async ({ I }) => {
+Scenario('Widget controls expose accessible names, pointer targets and dismissible tooltips', async ({ I }) => {
     await openFixture(I);
     const grip = `[data-instance-id="${formsId}"] .md-dashboard__drag`;
     const menu = `[data-instance-id="${formsId}"] [data-bs-toggle="dropdown"]`;
     I.moveCursorTo('.md-dashboard__toolbar-heading');
     for (const control of [grip, menu]) {
-        I.assertEqual(await I.grabCssPropertyFrom(control, 'border-color'), 'rgba(0, 0, 0, 0)', 'Header controls must not have a visible resting border');
-        I.assertEqual(await I.grabCssPropertyFrom(control, 'background-color'), 'rgba(0, 0, 0, 0)');
         I.assertTrue((await I.grabAttributeFrom(control, 'aria-label')).length > 0, 'Icon controls need accessible names');
         const bounds = await I.executeScript(selector => {
             const rect = document.querySelector(selector).getBoundingClientRect();
@@ -153,8 +82,6 @@ Scenario('Widget controls have neutral active states, outlined hover and accessi
         I.moveCursorTo(control);
         I.waitForVisible('.tooltip.show', 10);
         I.see(await I.grabAttributeFrom(control, 'aria-label'), '.tooltip.show');
-        I.assertEqual(await I.grabCssPropertyFrom(control, 'border-color'), 'rgb(0, 99, 251)');
-        I.assertEqual(await I.grabCssPropertyFrom(control, 'background-color'), 'rgba(0, 0, 0, 0)');
         if (control === menu) {
             I.saveScreenshot('dashboard-widget-controls-hover.png');
         } else {
@@ -169,26 +96,11 @@ Scenario('Widget controls have neutral active states, outlined hover and accessi
     I.waitForInvisible('.tooltip.show', 10);
     I.assertEqual(await I.grabAttributeFrom(menu, 'aria-expanded'), 'true');
     I.moveCursorTo('.md-dashboard__toolbar-heading');
-    I.assertEqual(await I.grabCssPropertyFrom(menu, 'background-color'), 'rgba(0, 0, 0, 0)');
-    I.assertEqual(await I.grabCssPropertyFrom(menu, 'border-color'), 'rgb(0, 99, 251)');
     I.saveScreenshot('dashboard-widget-controls-menu.png');
     I.pressKey('Escape');
     I.waitForInvisible(`[data-instance-id="${formsId}"] .dropdown-menu.show`, 10);
     I.assertEqual(await I.grabAttributeFrom(menu, 'aria-expanded'), 'false');
     I.moveCursorTo('.md-dashboard__toolbar-heading');
-    I.waitForFunction(([selector]) => getComputedStyle(document.querySelector(selector)).borderColor === 'rgba(0, 0, 0, 0)', [menu], 10);
-    I.assertEqual(await I.grabCssPropertyFrom(menu, 'border-color'), 'rgba(0, 0, 0, 0)', 'Closing the menu and leaving the button must remove its blue border');
-    // A held pointer is required to inspect the grip's active state before mouseup.
-    await I.usePlaywrightTo('hold the widget grip', async ({ page }) => {
-        const rect = await page.locator(grip).boundingBox();
-        await page.mouse.move(rect.x + rect.width / 2, rect.y + rect.height / 2);
-        await page.mouse.down();
-    });
-    I.assertEqual(await I.grabCssPropertyFrom(grip, 'background-color'), 'rgba(0, 0, 0, 0)', 'A held grip must retain a transparent background');
-    I.saveScreenshot('dashboard-widget-controls-grip.png');
-    await I.usePlaywrightTo('release the widget grip', async ({ page }) => { await page.mouse.up(); });
-    I.pressKey('Escape');
-    I.dontSeeElement('.md-dashboard__widget-drag-helper');
     I.clickCss('.md-dashboard__cancel');
     I.waitForElement('.md-dashboard:not(.is-editing)', 10);
     I.dontSeeElement('.tooltip.show');

@@ -114,7 +114,7 @@ Scenario('Migrated overview widgets persist independently and clean up monitorin
         waitForSave(I);
         I.waitForInvisible(`[data-instance-id="${ids['server-cpu']}"]`, 10);
         await assertDisposedChart(I);
-        I.clickCss('.md-dashboard__undo button');
+        I.clickCss('[data-dashboard-widget-undo]');
         waitForSave(I);
         await waitForChart(I, 'server-cpu');
         I.assertTrue(await I.executeScript(() => {

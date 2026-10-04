@@ -4,8 +4,20 @@ const badge = '.md-environment';
 const headerTooltip = '.tooltip.wj-tooltip-hoverable.show';
 const loginTooltip = '#environment-description';
 
-Before(({ login }) => {
+let originalEnvironment;
+Before(async ({ I, login }) => {
     login('admin');
+    if (!originalEnvironment) {
+        I.amOnPage('/admin/v9/');
+        originalEnvironment = await I.executeScript(async () => {
+            const names = ['dashboardEnvironmentName', 'dashboardEnvironmentDescription', 'dashboardEnvironmentIcon', 'dashboardEnvironmentColor'];
+            return Object.fromEntries(await Promise.all(names.map(async name => {
+                const response = await fetch('/admin/rest/settings/configuration/autocomplete/detail?name=' + name, { headers: { 'X-CSRF-Token': window.csrfToken } });
+                if (!response.ok) throw new Error('Cannot preserve environment configuration: ' + response.status);
+                return [name, (await response.json()).value];
+            })));
+        });
+    }
 });
 
 /** Verifies the shared identity, fixed ordering and keyboard tooltip across layouts and viewports. */
@@ -117,6 +129,14 @@ Scenario('Environment configuration controls the header and login', async ({ I, 
     I.pressKey('Shift+Tab');
     I.waitForVisible(loginTooltip, 5);
     I.pressKey('Tab');
+    I.moveCursorTo('#username');
+    const pointerTarget = await I.executeScript(() => {
+        const badge = document.querySelector('.md-environment');
+        const bounds = badge.getBoundingClientRect();
+        const target = document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+        return { reachable: badge.contains(target), coveringElement: target?.className };
+    });
+    I.assertTrue(pointerTarget.reachable, 'The login environment badge must receive pointer input; covering element: ' + pointerTarget.coveringElement);
     I.moveCursorTo(badge);
     I.waitForVisible(loginTooltip, 5);
     I.moveCursorTo(`${loginTooltip} > span`);
@@ -142,11 +162,7 @@ Scenario('Empty environment name hides the badge and title prefix', ({ I, Docume
 
 /** Restores temporary configuration independently so cleanup also runs after a failed scenario. */
 Scenario('Cleanup environment configuration', ({ I, Document }) => {
-    Document.setConfigValue('dashboardEnvironmentName', '{ENVIRONMENT_NAME}', true);
-    Document.setConfigValue('dashboardEnvironmentDescription', '', true);
-    Document.setConfigValue('dashboardEnvironmentIcon', 'auto', true);
-    Document.setConfigValue('dashboardEnvironmentColor', 'auto', true);
-    Document.setConfigValue('dashboardEnvironmentStyle', 'auto', true);
+    for (const [name, value] of Object.entries(originalEnvironment || {})) Document.setConfigValue(name, value, true);
     I.amOnPage('/admin/v9/');
     I.waitForElement(badge, 20);
     I.seeInTitle('[DEV]');

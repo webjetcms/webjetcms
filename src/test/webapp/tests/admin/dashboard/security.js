@@ -84,7 +84,7 @@ for (const { permission, types } of permissionCases) {
         I.clickCss(`${modal} .btn-close`);
         I.waitForInvisible(modal, 10);
         if (permission === 'cmp_stat') {
-            I.dontSeeElementInDOM('[data-instance-id="autotest-security-menu"] a');
+            I.assertEqual(await I.grabAttributeFrom('[data-instance-id="autotest-security-menu"] a', 'href'), null, 'A shortcut without permission must not expose a navigable destination.');
             const menu = await I.executeScript(async () => {
                 const response = await fetch('/admin/rest/dashboard/menu', { headers: { 'X-CSRF-Token': window.csrfToken } });
                 const paths = [];
@@ -172,8 +172,7 @@ Scenario('Persisted shortcut titles remain text and local paths cannot become ex
         && [...document.querySelectorAll('[data-instance-id^="autotest-security-path-"] a')].every(link => link.origin === location.origin)), 'Dot segments must not turn a local shortcut into a different origin.');
 
     I.clickCss('.md-dashboard__shortcut-actions button[aria-pressed="false"]');
-    I.clickCss('[data-instance-id="autotest-security-xss"] .dropdown > button');
-    I.clickCss('[data-instance-id="autotest-security-xss"] [data-dashboard-action="settings"]');
+    I.clickCss('[data-instance-id="autotest-security-xss"] .md-dashboard-widget__shortcut');
     I.waitForVisible(modal, 10);
     I.seeInField(`${modal} [name="dashboardShortcutTitle"]`, title);
     I.dontSeeElementInDOM(`${modal} .md-dashboard__shortcut-preview img, ${modal} .md-dashboard__shortcut-preview svg`);

@@ -70,13 +70,15 @@ Scenario('Real sessions and personal login history are available from the welcom
     I.waitForElement(`${modal} .md-dashboard-sessions__history[aria-busy="false"]`, 20);
     I.dontSeeElement(`${modal} .md-dashboard-sessions__history .text-danger`);
     const history = await I.executeScript(async () => {
-        const result = await fetch('/admin/rest/sessions/login-history?userId=1&logType=20&days=365&size=999');
+        const result = await fetch('/admin/rest/sessions/login-history?userId=1&logType=20&days=365&size=999', { headers: { 'X-CSRF-Token': window.csrfToken } });
+        if (!result.ok) throw new Error('Personal login history: HTTP ' + result.status);
         const body = await result.json();
         return { ok: result.ok, items: body.content, size: body.size };
     });
     const ownId = await I.executeScript(() => window.currentUser.userId);
     I.assertTrue(history.ok, 'Personal history must not require a request to the privileged audit endpoint.');
     I.assertEqual(history.size, 20);
+    I.assertTrue(history.items.length > 0, 'The current login must provide a record for the ownership assertions.');
     I.assertTrue(history.items.every(item => item.userId === ownId && item.logType === 80 && new Date(item.createDate).getTime() >= Date.now() - 30 * 86400000),
         'Client-supplied audit filters must not broaden ownership, type or period.');
     I.saveScreenshot('dashboard-sessions-real-history.png');

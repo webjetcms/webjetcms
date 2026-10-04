@@ -17,7 +17,7 @@ async function openNotices(I) {
         if (!failSave) state = JSON.parse(route.request().postDataJSON().value);
         return route.fulfill({ status: failSave ? 503 : 200, contentType: 'application/json', body: failSave ? 'false' : 'true' });
     });
-    await mockDashboardBootstrap(I, () => ({ notices }), () => state);
+    await mockDashboardBootstrap(I, () => ({ notices, currentSessions: { userSessions: [] } }), () => state);
     await I.amOnPage('/admin/v9/');
     await ready(I);
 }

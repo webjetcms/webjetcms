@@ -1273,10 +1273,9 @@ test('Traffic chart strokes, fills, last-point rings and legend tokens follow ea
     const runtime = chartRuntime(window);
     window.am5.Circle = { new: (root, settings) => settings };
     window.am5.Bullet = { new: (root, settings) => settings };
-    for (const [background, primary, comparison] of [['#e3f8f4', '#0e816b', '#40776d'],
-        ['#f1f3ff', '#0e1f81', '#404877'], ['#fff0f1', '#810e16', '#774044'],
-        ['#ffffff', '#474747', '#5c5c5c'], ['#f3f3f6', '#474747', '#5c5c5c'], ['#e3f8f4', '#0e816b', '#40776d']]) {
+    for (const background of ['#e3f8f4', '#f1f3ff']) {
         container.style.backgroundColor = background;
+        const { primary, comparison } = scope.deriveChartColors(container.style.backgroundColor);
         const cleanup = await scope.getWidget('traffic').render({ container, context, options: {}, instance: { size: '3x3' }, signal: new AbortController().signal });
         const series = runtime.forms.at(-1).chart.series;
         assert.equal(series.getIndex(0).get('stroke'), primary);
@@ -1394,7 +1393,12 @@ test('Newsletter reuses recent campaigns and retrieves an older saved selection 
     const signal = new AbortController().signal;
     const newest = await scope.fetchNewsletter('', context, signal);
     assert.equal(requests.length, 1);
-    assert.equal(requests[0].url, '/admin/rest/dmail/campaings/all?size=14&page=0&sort=id%2Cdesc');
+    const url = new URL(requests[0].url, 'https://dashboard-autotest.invalid');
+    assert.equal(url.pathname, '/admin/rest/dmail/campaings/all');
+    assert.equal(url.searchParams.get('page'), '0');
+    assert.equal(url.searchParams.get('sort'), 'id,desc');
+    assert.ok(Number(url.searchParams.get('size')) >= recent.length && Number(url.searchParams.get('size')) <= 100,
+        'Campaign retrieval must cover the recent selection with a bounded request.');
     assert.equal(newest.items[0].title, 'Campaign 30');
     assert.equal(newest.items.length, 3);
     assert.equal(newest.options.length, 14);

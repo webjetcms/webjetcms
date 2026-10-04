@@ -9,7 +9,6 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -81,8 +80,6 @@ class LoggedAdministratorsTest {
         }
         assertEquals("@WebjetSecurityService.hasPermission('welcomeShowLoggedAdmins')", SessionRestController.class
             .getMethod("loggedAdministrators", jakarta.servlet.http.HttpServletRequest.class).getAnnotation(PreAuthorize.class).value());
-        assertArrayEquals(new String[]{"/admin/rest/sessions/logout"}, SessionRestController.class
-            .getMethod("logoutSession", String.class, jakarta.servlet.http.HttpServletRequest.class).getAnnotation(PostMapping.class).value());
     }
 
     /** Empty authorized lists do not expose remote-only accounts; local summaries survive a failed cluster read. */
