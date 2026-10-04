@@ -62,6 +62,25 @@ webjet-overview-dashboard a:focus-visible {
     outline-offset: 2px;
 }
 
+.md-dashboard__widget {
+    @media (forced-colors: none) {
+        :is(.md-dashboard-widget__pages, .md-dashboard-widget__forms, .md-dashboard-widget__sessions, .md-dashboard-widget__admins) {
+            scrollbar-color: var(--wj-dashboard-security-scrollbar, var(--wj-gray-text)) transparent;
+            @supports (scrollbar-color: auto) { scrollbar-width: thin; }
+            &::-webkit-scrollbar { width: 8px; height: 8px; }
+            &::-webkit-scrollbar-track { background: transparent; }
+            &::-webkit-scrollbar-thumb { background: var(--wj-dashboard-security-scrollbar, var(--wj-gray-text)); border-radius: 4px; }
+        }
+        @media (hover: hover) and (pointer: fine) {
+            // Keep the scrollbar width stable when hiding it; keyboard focus reveals it too.
+            &:not(:hover):not(:focus-within) :is(.md-dashboard-widget__pages, .md-dashboard-widget__forms, .md-dashboard-widget__sessions, .md-dashboard-widget__admins) {
+                scrollbar-color: transparent transparent;
+                &::-webkit-scrollbar-thumb { background: transparent; }
+            }
+        }
+    }
+}
+
 .md-dashboard {
     --dashboard-gap: 15px;
     --dashboard-row-height: 128px;

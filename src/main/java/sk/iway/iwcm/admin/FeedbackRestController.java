@@ -4,7 +4,6 @@ import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.jsoup.Jsoup;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -46,7 +45,7 @@ public class FeedbackRestController {
         Map<String, String[]> params =  request.getParameterMap();
 
         // Preserve basic editor formatting while retaining support for plain-text clients.
-        String message = prepareFeedbackText(request.getParameter(textKey), "true".equals(request.getParameter("data[isHtml]")));
+        String message = prepareFeedbackText(request.getParameter(textKey));
         StringBuilder feedbackText = new StringBuilder();
         feedbackText.append(message).append("\n<p>");
 
@@ -124,13 +123,8 @@ public class FeedbackRestController {
      * @param isHtml whether the client sends editor HTML instead of plain text
      * @return safe HTML suitable for the feedback email
      */
-    static String prepareFeedbackText(String text, boolean isHtml) {
-        String message = isHtml
-            ? AllowSafeHtmlAttributeConverter.sanitize(text)
-            : "<p>" + Tools.replace(ResponseUtils.filter(text == null ? "" : text), "\n", "<br/>\n") + "</p>";
-        if (Jsoup.parse(message).text().replace('\u00a0', ' ').trim().isEmpty()) {
-            throw new IllegalArgumentException("Feedback text is required.");
-        }
+    static String prepareFeedbackText(String text) {
+        String message =AllowSafeHtmlAttributeConverter.sanitize(text);
         return message;
     }
 
