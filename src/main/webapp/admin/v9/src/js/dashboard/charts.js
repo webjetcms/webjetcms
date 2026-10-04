@@ -74,6 +74,16 @@ function compactChart(form, host) {
     const grid = color('grid', '--wj-nice-gray-100');
     const label = color('label', '--wj-gray-text');
     const surface = color('surface', '--wj-dashboard-mint');
+    const tooltipSurface = color('tooltip-surface', '--wj-dashboard-surface');
+    const tooltipText = color('tooltip-text', '--wj-secondary');
+    const styleTooltip = tooltip => {
+        if (!tooltip) return;
+        // Series colors can be dark; keep tooltip contrast independent of the widget palette.
+        tooltip.setAll({ getFillFromSprite: false, getStrokeFromSprite: false, autoTextColor: false, animationDuration: 0,
+            paddingTop: 4, paddingBottom: 4, paddingLeft: 8, paddingRight: 8 });
+        tooltip.get('background').setAll({ fill: tooltipSurface, fillOpacity: 0.90, stroke: label, strokeOpacity: 0.3 });
+        tooltip.label.set('fill', tooltipText);
+    };
     chart.root.setThemes([window.WebjetTheme.new(chart.root)]);
     chart.setAll({ height: window.am5.percent(100), paddingTop: 5, paddingBottom: 0, paddingLeft: 0, paddingRight: 5,
         interpolationDuration: 0, stateAnimationDuration: 0 });
@@ -92,6 +102,7 @@ function compactChart(form, host) {
         const renderer = axis.get('renderer');
         renderer.labels.template.setAll({ fontSize: 11, ...(label ? { fill: label } : {}) });
         renderer.grid?.template.setAll({ strokeOpacity: 0.45, ...(grid ? { stroke: grid } : {}) });
+        styleTooltip(axis.get('tooltip'));
     });
     if (traffic || monitoring) {
         // Axis tooltips default to unbounded space below the axis, outside this compact canvas.
@@ -139,7 +150,7 @@ function compactChart(form, host) {
         series.fills?.template.setAll({ visible: index === 0, fillOpacity: 0.08 });
         series.columns?.template.setAll({ height: 12, cornerRadiusTL: 4, cornerRadiusBL: 4, cornerRadiusTR: 4, cornerRadiusBR: 4 });
         series.setAll({ interpolationDuration: 0, stateAnimationDuration: 0 });
-        series.get('tooltip')?.set('animationDuration', 0);
+        styleTooltip(series.get('tooltip'));
         if (traffic && index === 0) {
             series.set('maskBullets', false);
             series.bullets.push((root, line, dataItem) => {

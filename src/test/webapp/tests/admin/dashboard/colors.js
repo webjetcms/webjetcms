@@ -136,3 +136,67 @@ Scenario('Widget backgrounds keep defaults and persist palette or readable custo
     await I.stopMockingRoute(settingsRoute);
     await I.stopMockingRoute(dashboardPageRoute);
 });
+
+/** Exercises visible series and date tooltips against every preset and custom alpha backgrounds. */
+Scenario('Chart tooltips remain readable across widget background colors', async ({ I }) => {
+    const backgrounds = ['default', 'white', 'gray', 'yellow', 'figma-cream', 'peach', 'pink', 'figma-lavender',
+        'figma-blue', 'light-blue', 'cyan', 'figma-mint', 'green', '#fff1ec', '#dff9f180', '#11223300'];
+    const settings = { version: 1, configured: true, shortcutsConfigured: true, legacyBookmarksHandled: true, domainOptions: {},
+        items: backgrounds.map((backgroundColor, index) => ({ id: `colors-autotest-tooltip-${index}`, type: 'traffic', size: '3x3',
+            options: { days: 7, metric: 'sessions', ...(backgroundColor === 'default' ? {} : { backgroundColor }) } })) };
+    const trafficRoute = '**/admin/rest/stat/views/search/findByColumns?*';
+    await I.mockRoute(trafficRoute, route => {
+        const from = Number(new URL(route.request().url()).searchParams.get('searchDayDate').match(/daterange:(\d+)-/)[1]);
+        const content = Array.from({ length: 14 }, (_, index) => {
+            const day = new Date(from);
+            day.setDate(day.getDate() + index);
+            return { dayDate: day.getTime(), sessions: index < 7 ? 80 + index * 10 : 20 + index * 5 };
+        });
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ content }) });
+    });
+    await mockDashboardBootstrap(I, () => ({ settings, statRootGroupId: 1 }));
+    I.resizeWindow(1448, 1231);
+    I.amOnPage('/admin/v9/');
+    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    for (const [index, background] of backgrounds.entries()) {
+        const id = settings.items[index].id;
+        await showWidget(I, id);
+        const host = `[data-instance-id="${id}"] .md-dashboard-widget__chart`;
+        I.moveCursorTo(host);
+        I.waitForFunction(selector => {
+            const root = window.am5?.registry.rootElements.find(root => root.dom === document.querySelector(selector));
+            const findChart = item => item?.series ? item : item?.children?.values.map(findChart).find(Boolean);
+            const chart = root && findChart(root.container);
+            return chart && [...chart.series.values, ...chart.xAxes.values].every(item => {
+                const tooltip = item.get('tooltip');
+                return tooltip.isVisible() && !tooltip.isHidden() && tooltip.get('opacity') === 1;
+            });
+        }, [host], 10);
+        const tooltips = await I.executeScript(selector => {
+            const root = window.am5.registry.rootElements.find(root => root.dom === document.querySelector(selector));
+            const findChart = item => item?.series ? item : item?.children?.values.map(findChart).find(Boolean);
+            const chart = findChart(root.container);
+            const luminance = channels => channels.map(value => {
+                return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+            }).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+            return [...chart.series.values, ...chart.xAxes.values].map(item => {
+                const tooltip = item.get('tooltip');
+                const surface = tooltip.get('background');
+                const channels = color => color.toCSSHex().slice(1).match(/../g).map(channel => parseInt(channel, 16) / 255);
+                // A black backdrop is the worst case for dark text, including a chart line under the tooltip.
+                const light = luminance(channels(surface.get('fill')).map(value => value * surface.get('fillOpacity')));
+                const dark = luminance(channels(tooltip.label.get('fill')));
+                return { fill: surface.get('fill').toCSSHex().toLowerCase(),
+                    contrast: (Math.max(light, dark) + 0.05) / (Math.min(light, dark) + 0.05) };
+            });
+        }, host);
+        I.assertEqual(tooltips.length, 3, `${background}: both periods and the date must have tooltips.`);
+        for (const tooltip of tooltips) {
+            I.assertEqual(tooltip.fill, '#ffffff', `${background}: tooltip surfaces must stay white after hover.`);
+            I.assertTrue(tooltip.contrast >= 4.5, `${background}: tooltip text contrast over the darkest backdrop must be at least 4.5:1; got ${tooltip.contrast}.`);
+        }
+        if (['default', 'pink', 'figma-blue'].includes(background)) I.saveElementScreenshot(`[data-instance-id="${id}"]`, `dashboard-chart-tooltip-${background}.png`);
+    }
+    await I.stopMockingRoute(trafficRoute);
+    await I.stopMockingRoute(dashboardPageRoute);
+});

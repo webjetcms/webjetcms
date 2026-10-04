@@ -2,64 +2,28 @@ const { waitForWidgets, mockDashboardBootstrap, dashboardPageRoute, readDashboar
 
 Feature('admin.dashboard.design').tag('@singlethread');
 
-const settingsRoute = '**/admin/rest/dashboard/settings';
-const responses = {
-    '**/admin/rest/forms-list/all': { content: [
-        { formName: 'Autotest contact form', count: 128, createDate: Date.UTC(2026, 8, 26, 10) },
-        { formName: 'Autotest registration form with a longer name', count: 75, createDate: Date.UTC(2026, 8, 25, 10) }
-    ] },
-    '**/admin/rest/web-pages/all?*': { content: Array.from({ length: 6 }, (_, index) => ({
-        docId: index + 1, title: `Autotest recent page ${index + 1}`, fullPath: `/Autotest section/Autotest recent page ${index + 1}`,
-        dateCreated: Date.UTC(2026, 8, 26, 10), perexImage: ''
-    })) },
-    '**/admin/rest/stat/search-engines/search/findByColumns?*': { content: [
-        { queryName: 'Autotest search phrase with a longer description', queryCount: 128 },
-        { queryName: 'AutotestLongSearchPhraseWithoutSpaces', queryCount: 75 },
-        { queryName: 'Autotest contact', queryCount: 6 }
-    ] },
-    '**/admin/rest/stat/top/search/findByColumns?*': { content: [
-        { docId: 1, title: 'Autotest popular page with a longer title', name: '/Autotest section/Autotest popular page with a longer title', visits: 128, perexImage: '' },
-        { docId: 2, title: 'AutotestLongPageTitleWithoutSpaces', name: '/Autotest section/AutotestLongPageTitleWithoutSpaces', visits: 75, perexImage: '' },
-        { docId: 3, title: 'Autotest contact', name: '/Autotest section/Autotest contact', visits: 6, perexImage: '' }
-    ] }
-};
-const settings = {
-    version: 1, configured: true, legacyBookmarksHandled: true, acknowledgedNewsVersion: null, domainOptions: {}, items: [
-        { id: 'visual-autotest-news', type: 'news', size: '3x2', options: {} },
-        { id: 'visual-autotest-search', type: 'search', size: 'fullauto', options: { scope: 'admin' } },
-        { id: 'visual-autotest-shortcut', type: 'shortcut', size: '1x1', options: { source: 'url', title: 'Autotest shortcut', href: 'https://example.com/autotest', icon: 'ti-heart', color: 'lavender' } },
-        { id: 'visual-autotest-count', type: 'forms', size: '1x1', options: {} },
-        { id: 'visual-autotest-forms', type: 'forms', size: '3x3', options: {} },
-        { id: 'visual-autotest-pages', type: 'recent-pages', size: '3x2', options: {} },
-        ...['top-pages', 'search-terms'].map(type => ({ id: `visual-autotest-${type}`, type, size: '2x3', options: { days: 7 } }))
-    ]
-};
 let originalSettings;
+let previewSettings;
 
-Before(({ login }) => login('admin'));
+const settingsRoute = '**/admin/rest/dashboard/settings';
+const recentPagesRoute = '**/admin/rest/web-pages/all?*';
+const searchTermsRoute = '**/admin/rest/stat/search-engines/search/findByColumns?*';
+const topPagesRoute = '**/admin/rest/stat/top/search/findByColumns?*';
+const missingThumbnailRoute = '**/thumb/images/autotest-dashboard-missing.jpg?*';
+const editButton = '.md-dashboard__toolbar-actions > button[aria-pressed]';
+const newsToggle = '.md-dashboard-widget__news-toggle';
 
-/** Installs fixed display data and intercepts preferences so visual checks never save the fixture. */
-Scenario('Prepare deterministic dashboard screenshots', async ({ I, Browser }) => {
-    if (!Browser.isChromium()) return;
-    I.amOnPage('/admin/v9/');
-    originalSettings = (await I.executeScript(readDashboardBootstrap)).settings;
-    await I.mockRoute(settingsRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(settings) }));
-    for (const [pattern, response] of Object.entries(responses)) {
-        await I.mockRoute(pattern, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(response) }));
-    }
-    await mockDashboardBootstrap(I, () => ({
-        settings, userName: 'Autotest editor', statRootGroupId: 1,
-        notices: [{ id: 'visual-autotest-notice', severity: 'warning', icon: 'ti-shield-lock', title: 'Autotest account protection', bodyHtml: '<p>Autotest security notice.</p>' }],
-        currentSessions: { currentSessionId: 'visual-autotest-current', userSessions: [{ cluster: 'autotest', userSessions: [
-            { sessionId: 'visual-autotest-current', browserName: 'Chrome', logonTime: Date.UTC(2026, 8, 27, 8), remoteAddr: '127.0.0.1' },
-            { sessionId: 'visual-autotest-other', browserName: 'Firefox', logonTime: Date.UTC(2026, 8, 26, 8), remoteAddr: '127.0.0.2' }
-        ] }] }
-    }));
-});
+async function waitForOverview(I) {
+    await waitForWidgets(I);
+    return I.waitForFunction(() => document.querySelector('.md-dashboard__notice-list')?.getAttribute('aria-busy') === 'false', 30);
+}
 
-/** Opens a fresh preview so a failed comparison cannot leave a dialog open for the next scenario. */
-async function openPreview(I, width = 1337) {
-    I.resizeWindow(width, 1052);
+function waitForSave(I) {
+    I.waitForFunction(() => document.querySelector('webjet-overview-dashboard')?.dashboardController?.saving === false, 20);
+}
+
+Before(({ I, login }) => {
+    login('admin');
     I.amOnPage('/admin/v9/');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
 });
