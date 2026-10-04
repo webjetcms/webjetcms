@@ -72,7 +72,7 @@ Tokens are defined at the top of `ninja.scss`. Shared runtime CSS properties are
 
 ## Typography and Icons
 
-- The administration font is **Asap**, with local font faces for weights 100, 400, and 700 and a `sans-serif` fallback.
+- The administration font is **Asap**, with local font faces for weights 400 and 700 and a `sans-serif` fallback.
 - Body text is `16px`; compact controls commonly use the Bootstrap small size configured as `14px` with line-height `1.5`.
 - Use the existing hierarchy and weights from the nearest component. Do not add a new font family for a feature.
 - Use Tabler Icons through `ti ti-*`; filled icons use the configured `tabler-icons-filled` font.

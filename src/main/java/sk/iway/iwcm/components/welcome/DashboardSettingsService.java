@@ -39,6 +39,7 @@ public class DashboardSettingsService {
         Map.entry("newsletter", Set.of("2x2", "3x3")),
         Map.entry("errors", Set.of("1x1", "3x3")),
         Map.entry("sessions", Set.of("2x3")),
+        Map.entry("my-sessions", Set.of("1x1", "2x2", "2x3")),
         Map.entry("news", Set.of("3x2")),
         Map.entry("search", Set.of("fullauto")),
         Map.entry("changed-pages", Set.of("3x2", "3x3")),
@@ -250,7 +251,8 @@ public class DashboardSettingsService {
         require(icon instanceof String && ((String) icon).length() <= 80
             && (((String) icon).isEmpty() || ((String) icon).matches("ti-[a-z0-9]+(?:-[a-z0-9]+)*")), "Invalid shortcut icon");
         Object color = options.getOrDefault("color", "default");
-        require(color instanceof String && Set.of("default", "mint", "lavender", "blue", "amber", "peach", "rose").contains(color), "Invalid shortcut color");
+        require(color instanceof String && (Set.of("default", "mint", "lavender", "blue", "amber", "peach", "rose", "cyan", "gray", "red").contains(color)
+            || ((String) color).matches("#[a-fA-F0-9]{6}(?:[a-fA-F0-9]{2})?")), "Invalid shortcut color");
         String target = (String) href;
         if ("url".equals(source)) {
             require(!((String) title).isBlank(), "A custom shortcut requires a title");

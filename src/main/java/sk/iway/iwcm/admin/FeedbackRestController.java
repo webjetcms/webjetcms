@@ -16,6 +16,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.AdminUploadServlet;
 import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -43,16 +44,22 @@ public class FeedbackRestController {
         //Get params from request
         Map<String, String[]> params =  request.getParameterMap();
 
-        //Handle text
+        // Preserve basic editor formatting while retaining support for plain-text clients.
+        String message = prepareFeedbackText(request.getParameter(textKey));
         StringBuilder feedbackText = new StringBuilder();
-        feedbackText.append("<p>")
-            .append(Tools.replace(ResponseUtils.filter(params.get(textKey)[0]), "\n", "<br/>\n"))
-            .append("</p>\n<p>");
+        feedbackText.append(message).append("\n<p>");
 
         feedbackText.append("Version: " + ResponseUtils.filter(InitServlet.getActualVersionLong()) + "<br/>");
+        String type = request.getParameter("data[type]");
+        if ("idea".equals(type) || "problem".equals(type) || "praise".equals(type)) {
+            feedbackText.append("Type: ").append(type).append("<br/>");
+        }
+        String pageUrl = request.getParameter("data[pageUrl]");
+        if (Tools.isNotEmpty(pageUrl)) feedbackText.append("Page: ").append(ResponseUtils.filter(pageUrl)).append("<br/>");
+        feedbackText.append("User-Agent: ").append(ResponseUtils.filter(request.getHeader("User-Agent"))).append("<br/>");
 
         //Handle isAnonymous
-        if(!params.get(isAnonymousKey)[0].equals("true")) {
+        if(!"true".equals(request.getParameter(isAnonymousKey))) {
             Identity user = UsersDB.getCurrentUser(request);
 
             //Use user name and email
@@ -63,7 +70,6 @@ public class FeedbackRestController {
             feedbackText.append("Login: " + ResponseUtils.filter(user.getLogin()) + "<br/>");
             feedbackText.append("Name: " + ResponseUtils.filter(user.getFullName()) + "<br/>");
             feedbackText.append("Email: " + ResponseUtils.filter(user.getEmail()) + "<br/>");
-            feedbackText.append("User-Agent: " + ResponseUtils.filter(request.getHeader("User-Agent")) + "<br/>");
         } else {
             //Set anonymous
             mailHelper.setFromName("Anonymous");
@@ -108,6 +114,18 @@ public class FeedbackRestController {
         }
 
         return "OK";
+    }
+
+    /**
+     * Validates the message and sanitizes rich text using the shared HTML policy.
+     *
+     * @param text submitted message
+     * @param isHtml whether the client sends editor HTML instead of plain text
+     * @return safe HTML suitable for the feedback email
+     */
+    static String prepareFeedbackText(String text) {
+        String message =AllowSafeHtmlAttributeConverter.sanitize(text);
+        return message;
     }
 
     /**

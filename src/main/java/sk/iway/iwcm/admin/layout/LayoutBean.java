@@ -55,10 +55,16 @@ public class LayoutBean {
         return Constants.getStringExecuteMacro(name);
     }
 
-    /** Returns the environment detected from the request server name for automatic dashboard styling. */
+    /** Returns the environment detected from the request server name. */
     public String getEnvironmentName()
     {
         return Constants.getEnvironmentName();
+    }
+
+    /** Returns the shared environment badge with the current request's configuration and macros. */
+    public EnvironmentBadge getEnvironmentBadge()
+    {
+        return new EnvironmentBadge();
     }
 
     public int getConstantInt(String name)

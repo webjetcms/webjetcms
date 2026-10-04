@@ -9,7 +9,7 @@ Before(({ I, login }) => {
 const settingsRoute = '**/admin/rest/dashboard/settings';
 const formsRoute = '**/admin/rest/forms-list/all';
 const editOverview = '.md-dashboard__toolbar-actions > button[aria-pressed]';
-const editShortcuts = '.md-dashboard__shortcut-actions > button[aria-pressed]';
+const editShortcuts = '.md-dashboard__shortcut-edit';
 const modal = '.md-dashboard-modal';
 const variants = {
     'recent-pages': ['2x3', '3x2', '3x3'], approvals: ['1x1', '3x3'], publishing: ['2x2', '2x3'],
@@ -71,6 +71,20 @@ function closeDialog(I, trigger) {
     I.waitForFunction(selector => document.activeElement === document.querySelector(selector), [trigger], 10);
 }
 
+/** Audits settled UI so viewport entrance animations cannot create transient contrast failures. */
+async function audit(I, a11y, context = null) {
+    await I.waitForFunction(selector => {
+        const root = document.querySelector(selector);
+        if (!root || root.getAnimations({ subtree: true }).some(animation => animation.playState === 'running')) return false;
+        const cards = root.matches('.md-dashboard__widget') ? [root] : [...root.querySelectorAll('.md-dashboard__widget')];
+        return cards.filter(card => {
+            const bounds = card.getBoundingClientRect();
+            return bounds.bottom > 48 && bounds.top < innerHeight;
+        }).every(card => getComputedStyle(card).opacity === '1');
+    }, [context || '.md-dashboard'], 10);
+    await a11y.check(context);
+}
+
 After(async ({ I }) => {
     for (const route of [dashboardPageRoute, settingsRoute, formsRoute]) await I.stopMockingRoute(route);
     I.wjSetDefaultWindowSize();
@@ -80,31 +94,49 @@ Scenario('dashboard', async ({ I, a11y }) => {
     I.amOnPage('/admin/v9/');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     await waitForWidgets(I);
-    await a11y.check();
+    await audit(I, a11y);
 });
 
 for (const width of [1337, 320]) {
     Scenario(`All widget variants are audited in the viewport at ${width}px`, async ({ I, a11y }) => {
         I.resizeWindow(width, 1000);
         await openAuditDashboard(I);
-        await a11y.check();
+        await audit(I, a11y);
         // Scanning only after returning to the top can miss contrast in clipped, offscreen cards.
         for (const item of widgetItems) {
             const card = `[data-instance-id="${item.id}"]`;
             await showWidget(I, item.id);
             I.dontSeeElement(`${card} .md-dashboard__widget-content > .text-danger`);
-            await a11y.check(card);
+            await audit(I, a11y, card);
         }
         I.assertDeepEqual(await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__hero, .md-dashboard__search, .md-dashboard__toolbar, .md-dashboard__widget')]
             .filter(element => {
                 const bounds = element.getBoundingClientRect();
                 return bounds.left < -1 || bounds.right > window.innerWidth + 1 || element.scrollWidth > element.clientWidth + 1;
             }).map(element => element.dataset.instanceId || element.className)), [], `Dashboard content must reflow at ${width}px.`);
-        await a11y.check();
+        await audit(I, a11y);
     });
 }
 
-Scenario('Dashboard controls and expanded notices support Space and keyboard search scope', async ({ I, a11y }) => {
+Scenario('System notice actions support keyboard dismissal and undo', async ({ I, a11y }) => {
+    await openAuditDashboard(I, []);
+    await I.mockRoute('**/admin/rest/admin-settings/', route => route.fulfill({ status: 200, contentType: 'application/json', body: 'true' }));
+    focusControl(I, '[data-notice-id="a11y-autotest-warning"] .md-dashboard__notice-dismiss');
+    I.pressKey('Space');
+    I.waitForVisible('.md-dashboard__notice-toast', 5);
+    I.dontSeeElement('[data-notice-id="a11y-autotest-warning"]');
+    I.seeElement('[data-notice-id="a11y-autotest-error"] .md-dashboard__notice-action');
+    I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__notice-toast button'), 5);
+    await audit(I, a11y, '.md-dashboard__notice-toast');
+    I.pressKey('Space');
+    I.waitToHide('.md-dashboard__notice-toast', 5);
+    I.seeElement('[data-notice-id="a11y-autotest-warning"] .md-dashboard__notice-action');
+    I.waitForFunction(() => document.activeElement === document.querySelector('[data-notice-id="a11y-autotest-warning"] .md-dashboard__notice-action'), 5);
+    await I.stopMockingRoute('**/admin/rest/admin-settings/');
+    await audit(I, a11y, '.md-dashboard__notices');
+});
+
+Scenario('Dashboard controls support Space and keyboard search scope', async ({ I, a11y }) => {
     await openAuditDashboard(I);
     for (const selector of [editShortcuts, editOverview]) {
         focusControl(I, selector);
@@ -113,19 +145,12 @@ Scenario('Dashboard controls and expanded notices support Space and keyboard sea
         I.pressKey('Space');
         I.waitForElement(`${selector}[aria-pressed="false"]`, 5);
     }
-    for (const severity of ['info', 'warning', 'error']) {
-        const notice = `[data-notice-id="a11y-autotest-${severity}"]`;
-        focusControl(I, `${notice} summary`);
-        I.pressKey('Space');
-        I.waitForVisible(`${notice}[open] .md-dashboard__notice-body`, 5);
-    }
-    await a11y.check('.md-dashboard__notices');
     const newsToggle = '.md-dashboard-widget__news-toggle';
     focusControl(I, newsToggle);
     I.pressKey('Space');
     I.waitForElement(`${newsToggle}[aria-expanded="false"]`, 10);
     I.waitForFunction(selector => document.activeElement === document.querySelector(selector), [newsToggle], 10);
-    await a11y.check('.md-dashboard__hero');
+    await audit(I, a11y, '.md-dashboard__hero');
     I.pressKey('Space');
     I.waitForElement(`${newsToggle}[aria-expanded="true"]`, 10);
     focusControl(I, '.md-dashboard__search input[type="radio"]:checked');
@@ -135,32 +160,51 @@ Scenario('Dashboard controls and expanded notices support Space and keyboard sea
         const search = document.querySelector('.md-dashboard__search input[type="search"]');
         return search.getAttribute('aria-label') === search.placeholder && search.placeholder.length > 0;
     }), 'The search field must retain an accessible name when switching scope.');
-    await a11y.check('.md-dashboard__search');
+    await audit(I, a11y, '.md-dashboard__search');
 });
 
-Scenario('Shortcut settings, color choices and movement dialogs are accessible', async ({ I, a11y }) => {
+Scenario('Shortcut settings, color choices and keyboard movement are accessible', async ({ I, a11y }) => {
     await openAuditDashboard(I);
     I.clickCss(editShortcuts);
     const addShortcut = '.md-dashboard__shortcut-actions > button:first-child';
     focusControl(I, addShortcut);
     I.pressKey('Enter');
     waitForDialog(I);
-    await a11y.check(modal);
-    I.clickCss(`${modal} .bootstrap-select:has(select[name="dashboardShortcutGroup"]) > button`);
-    I.waitForVisible(`${modal} .bootstrap-select .dropdown-menu.show .bs-searchbox input`, 5);
-    await a11y.check(modal);
+    await audit(I, a11y, modal);
+    const search = `${modal} [name="dashboardShortcutSearch"]`;
+    focusControl(I, search);
+    I.pressKey('ArrowDown');
+    I.waitForVisible(`${modal} [role="listbox"]`, 5);
+    I.seeElement(`${search}[role="combobox"][aria-expanded="true"][aria-controls]`);
+    await audit(I, a11y, modal);
+    const optionCount = await I.grabNumberOfVisibleElements(`${modal} [role="option"]`);
+    I.pressKey('ArrowUp');
+    for (let index = 0; index < optionCount; index++) {
+        if (index > 0) I.pressKey('ArrowDown');
+        I.assertTrue(await I.executeScript(() => {
+            const input = document.querySelector('[name="dashboardShortcutSearch"]');
+            const list = document.getElementById(input.getAttribute('aria-controls'));
+            const selected = document.getElementById(input.getAttribute('aria-activedescendant'));
+            const footer = list.querySelector('.md-dashboard__shortcut-result-url');
+            const bounds = list.getBoundingClientRect();
+            const row = selected.getBoundingClientRect();
+            const bottom = selected === footer ? bounds.bottom : Math.min(bounds.bottom, footer.getBoundingClientRect().top);
+            return document.activeElement === input && row.top >= bounds.top - 1 && row.bottom <= bottom + 1;
+        }), 'Keyboard selection must scroll each suggestion into view without hiding it behind the custom URL action.');
+    }
     I.pressKey('Escape');
-    I.waitForInvisible(`${modal} .bootstrap-select .dropdown-menu.show`, 5);
-    I.seeElement(modal);
-    I.seeElement(`${modal} .bootstrap-select > button[aria-controls][aria-expanded="false"]`);
-    I.assertTrue(await I.executeScript(() => [...document.querySelectorAll('.md-dashboard-modal .bs-searchbox input')]
-        .every(input => input.getAttribute('aria-expanded') === 'false')), 'Closing a picker must update its search combobox state.');
-    I.selectOption(`${modal} select[name="dashboardShortcutSource"]`, 'url');
+    I.waitForInvisible(`${modal} [role="listbox"]`, 5);
+    I.seeElement(`${search}[aria-expanded="false"]`);
+    I.clickCss(search);
+    I.clickCss(`${modal} .md-dashboard__shortcut-result-url`);
     I.waitForVisible(`${modal} input[name="dashboardShortcutUrl"]`, 5);
-    await a11y.check(modal);
-    focusControl(I, `${modal} input[type="radio"]:checked`);
+    await audit(I, a11y, modal);
+    const colors = `${modal} .md-dashboard__shortcut-colors`;
+    focusControl(I, colors + ' input[value="default"]');
+    I.pressKey('Space');
+    const initial = await I.grabAttributeFrom(colors + ' input:checked', 'value');
     I.pressKey('ArrowRight');
-    I.waitForFunction(() => document.querySelector('.md-dashboard-modal input[type="radio"]:checked').value === 'mint', 5);
+    I.assertNotEqual(await I.grabAttributeFrom(colors + ' input:checked', 'value'), initial, 'Arrow keys must change the selected color.');
     I.assertTrue(await I.executeScript(() => {
         const swatch = document.activeElement.nextElementSibling;
         return parseFloat(getComputedStyle(swatch).outlineWidth) >= 2;
@@ -168,10 +212,14 @@ Scenario('Shortcut settings, color choices and movement dialogs are accessible',
     closeDialog(I, addShortcut);
     const move = '[data-instance-id="a11y-autotest-shortcut"] .md-dashboard__drag';
     focusControl(I, move);
-    I.pressKey('Enter');
-    waitForDialog(I);
-    await a11y.check(modal);
-    closeDialog(I, move);
+    I.pressKey('Space');
+    I.seeElement(move + '[aria-pressed="true"]');
+    I.seeElement('.md-dashboard__shortcut-drag-helper');
+    await audit(I, a11y, '.md-dashboard__shortcuts');
+    I.pressKey('Escape');
+    I.dontSeeElement('.md-dashboard__shortcut-drag-helper');
+    I.seeElement(move + '[aria-pressed="false"]');
+    I.waitForFunction(selector => document.activeElement === document.querySelector(selector), [move], 10);
 });
 
 Scenario('Every widget settings form and action menu is accessible', async ({ I, a11y }) => {
@@ -186,39 +234,35 @@ Scenario('Every widget settings form and action menu is accessible', async ({ I,
         I.pressKey('Enter');
         I.waitForVisible(`${card} .dropdown-menu.show`, 5);
         // Audit the open popup; the underlying card was checked without the overlay above it.
-        await a11y.check(`${card} .dropdown-menu.show`);
+        await audit(I, a11y, `${card} .dropdown-menu.show`);
         I.clickCss(`${card} [data-dashboard-action="settings"]`);
         waitForDialog(I);
         I.waitForEnabled(`${modal} .modal-footer button`, 20);
-        await a11y.check(modal);
+        await audit(I, a11y, modal);
         closeDialog(I, trigger);
     }
 });
 
-Scenario('Feedback has a named dialog, required field, accessible validation and focus restoration', async ({ I, a11y }) => {
+Scenario('Feedback has a named dialog, required editor, blocks empty submissions and restores focus', async ({ I, a11y }) => {
     await openAuditDashboard(I);
     const trigger = '.md-dashboard__feedback';
     focusControl(I, trigger);
     I.pressKey('Enter');
     waitForDialog(I, '#feedback_modal');
-    await a11y.check('#feedback_modal');
+    await audit(I, a11y, '#feedback_modal');
     I.assertTrue(await I.executeScript(() => {
         const dialog = document.querySelector('#feedback_modal');
         const title = document.getElementById(dialog.getAttribute('aria-labelledby'));
         return Boolean(title?.textContent.trim());
     }), 'The feedback dialog must expose its visible title as its accessible name.');
-    I.seeElement('#feedback-group-text[aria-required="true"]');
-    // An empty submission exercises local validation without sending a message or uploading a file.
-    I.clickCss('#feedback_modal button[type="submit"]');
-    I.waitForVisible('#feedback-text-error:not(.invisible)', 5);
-    I.seeElement('#feedback-group-text[aria-invalid="true"]');
-    I.waitForFunction(() => document.activeElement?.id === 'feedback-group-text', 5);
-    await a11y.check('#feedback_modal');
-    I.fillField('#feedback-group-text', 'Feedback draft autotest');
-    I.dontSeeElement('#feedback-group-text[aria-invalid="true"]');
-    I.dontSeeElement('#feedback-text-error:not(.invisible)');
+    const editor = '#feedback-group-text .ql-editor';
+    I.seeElement(editor + '[role="textbox"][aria-required="true"][aria-multiline="true"]');
+    I.seeElement('#feedback_modal button[type="submit"]:disabled');
+    I.fillField(editor, 'Feedback draft autotest');
+    I.waitForEnabled('#feedback_modal button[type="submit"]', 5);
+    await audit(I, a11y, '#feedback_modal');
     I.pressKey('Escape');
-    I.waitForFunction(() => !document.querySelector('#feedback_modal'), 10);
+    I.waitForInvisible('#feedback_modal', 10);
     I.waitForFunction(selector => document.activeElement === document.querySelector(selector), [trigger], 10);
 });
 
@@ -230,20 +274,20 @@ Scenario('Empty and failed widget content is audited after loading completes', a
     const item = widgetItems.find(item => item.type === 'forms' && item.size === '3x3');
     await openAuditDashboard(I, [item]);
     await showWidget(I, item.id);
-    await a11y.check();
+    await audit(I, a11y);
     failed = true;
     I.refreshPage();
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     await showWidget(I, item.id);
     const card = `[data-instance-id="${item.id}"]`;
     I.seeElement(`${card} .md-dashboard__widget-content > .text-danger`);
-    await a11y.check();
+    await audit(I, a11y);
     failed = false;
     focusControl(I, `${card} .md-dashboard__widget-content > button`);
     I.pressKey('Space');
     I.waitForInvisible(`${card} .md-dashboard__widget-content > .text-danger`, 10);
     await showWidget(I, item.id);
-    await a11y.check(card);
+    await audit(I, a11y, card);
 });
 
 Scenario('Widget catalogue supports keyboard entry, a focus trap and focus restoration', async ({ I, a11y }) => {
@@ -253,8 +297,10 @@ Scenario('Widget catalogue supports keyboard entry, a focus trap and focus resto
     await I.executeScript(() => document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__edit-control:not(.md-dashboard__reset)').focus());
     I.pressKey('Enter');
     I.waitForVisible('.md-dashboard-modal input[type="search"]', 10);
+    I.seeElement('.md-dashboard-modal--catalogue .modal-dialog-centered');
+    I.seeElement('.md-dashboard__catalogue-filter[data-category="all"][aria-pressed="true"]');
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard-modal input[type="search"]'), 10);
-    await a11y.check('.md-dashboard-modal');
+    await audit(I, a11y, '.md-dashboard-modal');
     I.pressKey(['Shift', 'Tab']);
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard-modal .modal-header button'), 10);
     I.pressKey(['Shift', 'Tab']);
@@ -262,7 +308,7 @@ Scenario('Widget catalogue supports keyboard entry, a focus trap and focus resto
     I.pressKey('Escape');
     I.waitForInvisible('.md-dashboard-modal', 10);
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__edit-control:not(.md-dashboard__reset)'), 10);
-    I.pressKey('Tab');
+    I.pressKey(['Shift', 'Tab']);
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__reset'), 10);
     I.pressKey('Enter');
     const resetDialog = '#toast-container-webjet .toast[role="dialog"]';
@@ -275,7 +321,7 @@ Scenario('Widget catalogue supports keyboard entry, a focus trap and focus resto
     }, 10);
     I.seeElement(`${resetDialog}[aria-modal="true"][aria-labelledby][aria-describedby]`);
     I.assertTrue(await I.executeScript(() => document.activeElement?.id.startsWith('confirmationNo')), 'The standard confirmation must initially focus its safe cancel action.');
-    await a11y.check(resetDialog);
+    await audit(I, a11y, resetDialog);
     I.pressKey('Escape');
     I.waitForInvisible(resetDialog, 10);
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__reset'), 10);
@@ -312,7 +358,7 @@ Scenario("show all notification types", async ({ I, a11y }) => {
         return notifications.length === 4 && notifications.every(toast => getComputedStyle(toast).opacity === '1');
     }, 10);
 
-    await a11y.check();
+    await audit(I, a11y);
 });
 
 Scenario("p44: confirm notification focus", async ({ I, a11y }) => {
@@ -338,7 +384,7 @@ Scenario("p44: confirm notification focus", async ({ I, a11y }) => {
     I.seeElement(`${dialogSelector}[aria-modal="true"][aria-labelledby][aria-describedby]`);
 
     I.waitForFunction(() => getComputedStyle(document.querySelector('#toast-container-webjet .toast')).opacity === '1', 10);
-    await a11y.check(dialogSelector);
+    await audit(I, a11y, dialogSelector);
 
     I.pressKey('Tab');
     I.waitForFunction(() => document.activeElement?.id.startsWith('confirmationYes'));

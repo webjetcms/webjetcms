@@ -276,8 +276,8 @@ Při názvu projektu `basecms` vzniknou v `build/libs` tyto archivy:
 | Archiv | Použití |
 | --- | --- |
 | `basecms-plain.war` | Výstup úlohy `war`, určený k nasazení do externího Tomcatu 11. Neobsahuje knihovny vestavěného Tomcatu. |
-| `basecms.war` | Výstup role `bootWar`, který má knihovny vestavěného Tomcatu odděleny v `WEB-INF/lib-provided`. Lze jej nasadit i do externího Tomcatu. |
-| `basecms-public.war` | Veřejná část bez administrace, vytvářená zvláště příkazem `./gradlew buildAllArtifacts` spolu s `basecms-plain.war`. |
+| `basecms.war` | Výstup úlohy `bootWar`, který má knihovny vestavěného Tomcatu odděleny v `WEB-INF/lib-provided`. Lze jej nasadit i do externího Tomcatu. |
+| `basecms-public.war` | Veřejná část bez administrace, vytvářená zvlášť příkazem `./gradlew buildAllArtifacts` spolu s `basecms-plain.war`. |
 
 Názvy vycházejí z `rootProject.name` v `settings.gradle` ; pokud projekt nastavuje vlastní názvy archivů nebo verzi, zohledněte je v nasazovacích skriptech. Pro běžné nasazení použijte `-plain.war` a zachovejte dosavadní kontext aplikace, například nasazením jako `ROOT.war`. Databázové spojení nastavte stávajícím způsobem na serveru, protože lokálně `poolman-*.xml` se do WAR nebalí.
 

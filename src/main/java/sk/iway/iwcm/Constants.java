@@ -30,8 +30,12 @@ public class Constants {
 
 	public static final String NON_BREAKING_SPACE = "\u00A0";
 	private static final Pattern PRODUCTION_SERVER = Pattern.compile("(?:^|[._-])(?<!pre[._-])(?:prod|prd|production|live)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
-	private static final Pattern ACCEPTANCE_SERVER = Pattern.compile("(?:^|[._-])(?:uat|aut|acc|acceptance|stage|staging|test|testing|qa|pre[._-]?prod(?:uction)?)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern ACCEPTANCE_SERVER = Pattern.compile("(?:^|[._-])(?:uat|aut|acc|acceptance|stage|staging|pre[._-]?prod(?:uction)?)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
 	private static final Pattern INTEGRATION_SERVER = Pattern.compile("(?:^|[._-])(?:int|integration|sit)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern CUSTOMER_TEST_SERVER = Pattern.compile("(?:^|[._-])cit[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern TEST_SERVER = Pattern.compile("(?:^|[._-])(?:test|testing|qa)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern DEMO_SERVER = Pattern.compile("(?:^|[._-])demo[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern LOCAL_SERVER = Pattern.compile("(?:^|[._-])(?:local|localhost)[0-9]*(?:[._-]|$)|^127(?:\\.[0-9]{1,3}){3}$|^\\[?(?:0:0:0:0:0:0:0:1|::1)\\]?$", Pattern.CASE_INSENSITIVE);
 
 	private static Map<String, Object> constantsMap = new Hashtable<>();
 
@@ -2322,10 +2326,10 @@ public class Constants {
 	/**
 	 * Detects the environment from the current request's server name, independently of its domain.
 	 * Matches complete hostname tokens separated by dots, hyphens or underscores, optionally
-	 * followed by a node number. Production takes precedence over acceptance and integration;
+	 * followed by a node number. Precedence is PROD, UAT, CIT, INT, TEST, DEMO, LOCAL, DEV;
 	 * pre-production names belong to acceptance. Unknown hosts and missing requests use DEV.
 	 *
-	 * @return PROD, UAT, INT or DEV
+	 * @return PROD, UAT, CIT, INT, TEST, DEMO, LOCAL or DEV
 	 */
 	public static String getEnvironmentName() {
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
@@ -2333,7 +2337,11 @@ public class Constants {
 		if (serverName != null) {
 			if (PRODUCTION_SERVER.matcher(serverName).find()) return "PROD";
 			if (ACCEPTANCE_SERVER.matcher(serverName).find()) return "UAT";
+			if (CUSTOMER_TEST_SERVER.matcher(serverName).find()) return "CIT";
 			if (INTEGRATION_SERVER.matcher(serverName).find()) return "INT";
+			if (TEST_SERVER.matcher(serverName).find()) return "TEST";
+			if (DEMO_SERVER.matcher(serverName).find()) return "DEMO";
+			if (LOCAL_SERVER.matcher(serverName).find()) return "LOCAL";
 		}
 		return "DEV";
 	}

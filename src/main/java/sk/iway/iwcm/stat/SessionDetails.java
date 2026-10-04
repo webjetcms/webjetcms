@@ -30,7 +30,6 @@ public class SessionDetails
 	private String lastURL = "";
 	private String remoteAddr;
 	private long logonTime;
-	@JsonIgnore
 	private long lastActivity;
 	@JsonIgnore
 	private String loggedUserName = null;
@@ -41,6 +40,7 @@ public class SessionDetails
 	private int domainId;
 	private String domainName;
 	private String browserName;
+	private String operatingSystem;
 
 	public long getLastActivity() {
 		return lastActivity;

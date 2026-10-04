@@ -120,13 +120,9 @@ Scenario('Render the complete widget catalogue on desktop and mobile', async ({ 
     I.seeNumberOfElements('#toast-container-overview', 1);
     I.dontSeeElementInDOM('.md-dashboard__legacy');
     I.dontSeeElementInDOM('#webjet-overview-dashboard .bookmark');
-    I.seeElement('[data-widget-type="sessions"] .md-dashboard-widget__session-current');
-    const otherSessions = await I.executeScript(() => {
-        const data = document.querySelector('webjet-overview-dashboard').data.currentSessions;
-        return data.userSessions.flatMap(cluster => cluster.userSessions).filter(session => session.sessionId !== data.currentSessionId).length;
-    });
-    I.seeNumberOfElements('[data-widget-type="sessions"] .md-dashboard-widget__session-logout', otherSessions);
-    I.seeElement('[data-widget-type="recent-pages"] .md-dashboard__widget-header .md-dashboard__header-link[href="/admin/v9/webpages/web-pages-list/"]');
+    I.seeElement('[data-widget-type="sessions"] .md-dashboard__widget-content button');
+    I.seeElement('[data-widget-type="recent-pages"] .md-dashboard__widget-header .md-dashboard__title-link[href="/admin/v9/webpages/web-pages-list/"]');
+    I.dontSeeElement('[data-widget-type="recent-pages"] .md-dashboard-widget__more');
     I.assertEqual(await I.grabTextFrom('[data-widget-type="traffic"] .md-dashboard-widget__metric-label'),
         await I.executeScript(() => WJ.translate('admin.dashboard.trafficSessions.js', 7)), 'Traffic descriptions must include the selected number of days.');
     I.resizeWindow(1337, 1052);
@@ -175,8 +171,8 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
 
     await rememberChart(I, 'traffic');
     await widgetAction(I, ids.traffic, 'settings');
-    I.waitForVisible('.md-dashboard-modal select', 10);
-    I.selectOption('.md-dashboard-modal select[id^="dashboard-size-"]', '1 × 1');
+    I.waitForVisible('.md-dashboard-modal .md-dashboard__size-choices', 10);
+    I.clickCss('.md-dashboard-modal .md-dashboard__size-choice:has(input[value="1x1"])');
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
     I.waitForInvisible('.md-dashboard-modal', 10);
     waitForSave(I);
@@ -184,8 +180,8 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
     await assertDisposedChart(I);
     I.dontSeeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`);
     await widgetAction(I, ids.traffic, 'settings');
-    I.waitForVisible('.md-dashboard-modal select', 10);
-    I.selectOption('.md-dashboard-modal select[id^="dashboard-size-"]', '3 × 3');
+    I.waitForVisible('.md-dashboard-modal .md-dashboard__size-choices', 10);
+    I.clickCss('.md-dashboard-modal .md-dashboard__size-choice:has(input[value="3x3"])');
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
     I.waitForInvisible('.md-dashboard-modal', 10);
     waitForSave(I);
@@ -196,7 +192,7 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
     waitForSave(I);
     I.waitForInvisible(`[data-instance-id="${ids.referrers}"]`, 10);
     await assertDisposedChart(I);
-    I.clickCss('.md-dashboard__undo button');
+    I.clickCss('[data-dashboard-widget-undo]');
     waitForSave(I);
     await waitForChart(I, 'referrers');
     const rootsMatchHosts = await I.executeScript(() => {
@@ -257,7 +253,7 @@ Scenario('Documentation search switches scope and opens the encoded query withou
         window.autotestSearchPopup = null;
         window.open = (url, target, features) => { window.autotestSearchPopup = { url, target, features }; return null; };
     });
-    I.clickCss(`${scope} button[type="submit"]`);
+    I.pressKey('Enter');
     const popup = await I.executeScript(() => {
         try { return window.autotestSearchPopup; }
         finally { window.open = window.autotestOriginalOpen; delete window.autotestOriginalOpen; }

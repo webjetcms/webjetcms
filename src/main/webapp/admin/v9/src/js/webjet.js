@@ -1063,9 +1063,12 @@ const WJ = (() => {
         let $headerTitle = $(".header-title");
         $headerTitle.text(title);
 
-        let pipeIndex = document.title.indexOf("|");
-        if (pipeIndex==-1) document.title = title + " | " + document.title;
-        else document.title = title + " " + document.title.substring(pipeIndex);
+        const environment = document.querySelector(".md-environment")?.dataset.environmentName;
+        const prefix = environment ? `[${environment}] ` : "";
+        $headerTitle.attr("aria-label", prefix + title.trim());
+        const currentTitle = prefix && document.title.startsWith(prefix) ? document.title.substring(prefix.length) : document.title;
+        const pipeIndex = currentTitle.indexOf("|");
+        document.title = prefix + title + (pipeIndex === -1 ? " | " + currentTitle : " " + currentTitle.substring(pipeIndex));
     }
 
     /**

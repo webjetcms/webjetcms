@@ -10,9 +10,23 @@ const copy = value => JSON.parse(JSON.stringify(value));
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const item = (id, type = "test", size = "2x2", options = {}) => ({ id, type, size, options });
 
+test('Dialog headings retain their button and action when the dashboard reconciles views', async t => {
+    let opened = 0;
+    const { controller, host } = fixture(t, { items: [item('sessions-autotest', 'dialog-test')], definitions: [{ type: 'dialog-test',
+        headerAction: () => opened++, render() {} }] });
+    await controller.start();
+    const heading = host.querySelector('.md-dashboard__title-action');
+    assert.equal(heading.tagName, 'BUTTON');
+    heading.click();
+    controller._render();
+    assert.equal(host.querySelector('.md-dashboard__title-action'), heading);
+    heading.click();
+    assert.equal(opened, 2);
+});
+
 /** Runs production browser modules against a DOM and a stateful settings server. */
-function fixture(t, { items = [], configured = true, shortcutsConfigured = configured, legacyBookmarksHandled = false, definitions = [], defaults = [], config = {}, failSave = false, failReset = false, deferModalShown = false, withTooltip = false, overview, IntersectionObserver } = {}) {
-    const dom = new JSDOM("<!doctype html><html><body><div id='alerts'>System warning</div><div id='dashboard'></div></body></html>", { url: "http://localhost/admin/v9/" });
+function fixture(t, { items = [], configured = true, shortcutsConfigured = configured, legacyBookmarksHandled = false, definitions = [], defaults = [], config = {}, failSave = false, failReset = false, deferModalShown = false, realBootstrap = false, withTooltip = false, overview, IntersectionObserver } = {}) {
+    const dom = new JSDOM("<!doctype html><html><body><div id='alerts'>System warning</div><div id='dashboard'></div></body></html>", { url: "http://localhost/admin/v9/", runScripts: realBootstrap ? "outside-only" : undefined });
     const { window } = dom;
     window.IntersectionObserver = IntersectionObserver;
     const notifications = [];
@@ -20,6 +34,13 @@ function fixture(t, { items = [], configured = true, shortcutsConfigured = confi
     window.WJ = {
         translate: key => key,
         notifySuccess: (...args) => notifications.push(args),
+        notify: (type, title, message, timeout, buttons, append, id) => {
+            const toast = window.document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = title;
+            toast.dataset.timeout = timeout;
+            window.document.getElementById(id).append(toast);
+        },
         confirm: options => confirmations.push({ options, trigger: window.document.activeElement }),
         focusWithoutTooltip: element => element.focus({ preventScroll: true })
     };
@@ -45,6 +66,7 @@ function fixture(t, { items = [], configured = true, shortcutsConfigured = confi
         hide() { this.element.dispatchEvent(new window.Event("hidden.bs.modal")); }
         dispose() {}
     } };
+    if (realBootstrap) window.eval(fs.readFileSync(path.resolve(moduleDirectory, "../../../node_modules/bootstrap/dist/js/bootstrap.bundle.js"), "utf8"));
     const tooltipCalls = [];
     if (withTooltip) {
         const instances = new Map();
@@ -89,7 +111,7 @@ function fixture(t, { items = [], configured = true, shortcutsConfigured = confi
         return { ok: true, json: async () => copy(stored) };
     };
     const context = vm.createContext({ window, document: window.document, CustomEvent: window.CustomEvent, URL: window.URL, AbortController, fetch, console, crypto: require("node:crypto").webcrypto });
-    for (const filename of ["registry.js", "model.js", "widget-utils.js", "dashboard.js"]) {
+    for (const filename of ["registry.js", "model.js", "widget-utils.js", "widget-colors.js", "editor.js", "dashboard.js"]) {
         const source = fs.readFileSync(path.join(moduleDirectory, filename), "utf8").replace(/^import .+;\r?$/gm, "").replace(/^export /gm, "");
         vm.runInContext(source, context, { filename });
     }
@@ -432,8 +454,9 @@ test("The editing toolbar delegates the full reset scope to standard confirmatio
     await controller.start();
     const reset = host.querySelector('.md-dashboard__toolbar-actions .md-dashboard__reset');
     assert.equal(reset.hidden, true);
-    assert.equal(controller.addButton.nextElementSibling, reset);
-    assert.equal(reset.nextElementSibling, controller.editButton);
+    assert.equal(reset.nextElementSibling, controller.addButton);
+    assert.equal(controller.addButton.nextElementSibling, controller.cancelButton);
+    assert.equal(controller.cancelButton.nextElementSibling, controller.editButton);
     assert.match(reset.title, /standard widgets, sizes and order/);
     controller.setEditing(true);
     assert.equal(reset.hidden, false);
@@ -449,8 +472,10 @@ test("The editing toolbar delegates the full reset scope to standard confirmatio
     assert.equal(requests.some(request => request.method === "DELETE"), false);
     assert.equal(await options.success(), true);
     closeConfirmation();
-    assert.equal(requests.at(-1).method, "DELETE");
+    assert.equal(requests.length, 0, "Confirmed reset remains provisional until Save");
     assert.equal(window.document.activeElement, reset);
+    await controller.saveEditing();
+    assert.equal(requests.at(-1).url, "/admin/rest/dashboard/settings/reset");
 });
 
 test("Shift reset confirms and persists every authorized size, supports removal and undo, and rolls back failures", async t => {
@@ -473,11 +498,14 @@ test("Shift reset confirms and persists every authorized size, supports removal 
     assert.match(confirmation.message, /every supported size/);
     assert.deepEqual(copy(controller.settings), original, "Opening the confirmation must not modify preferences");
     assert.equal(requests.some(request => request.url.endsWith("/settings/reset")), false);
-    assert.equal(await confirmation.success(), false);
-    assert.deepEqual(copy(controller.settings), original);
-    setResetFailure(false);
     assert.equal(await confirmation.success(), true);
     closeConfirmation();
+    const draft = copy(controller.settings);
+    assert.equal(await controller.saveEditing(), false);
+    assert.deepEqual(copy(controller.settings), draft, "Failed save retains the complete provisional reset");
+    assert.equal(controller.editing, true);
+    setResetFailure(false);
+    assert.equal(await controller.saveEditing(), true);
     assert.equal(requests.at(-1).method, "PUT");
     assert.equal(requests.at(-1).url, "/admin/rest/dashboard/settings/reset");
     assert.deepEqual(copy(controller.settings.items.filter(value => value.type === "test").map(value => value.size)), ["1x1", "2x2", "2x3", "3x2", "3x3", "fullauto"]);
@@ -518,24 +546,132 @@ test("Dismissing standard reset confirmation preserves preferences and catalogue
     assert.equal(window.document.querySelector('.md-dashboard-modal .md-dashboard__reset'), null);
 });
 
-test("A failed confirmed reset preserves the personal layout and can be retried from the toolbar", async t => {
-    const { controller, host, confirmations, closeConfirmation, setResetFailure, notifications } = fixture(t, { items: [item("custom")], failReset: true, defaults: [{ type: "test" }] });
+test("Catalogue combines category and title or description search using only authorized widgets", async t => {
+    const { controller, window } = fixture(t, { definitions: [
+        { type: "pages", titleKey: "Recent pages", descriptionKey: "Continue editing in selected folders", category: "content", multiple: true, render() {} },
+        { type: "visits", titleKey: "Visits", descriptionKey: "Visitor totals", category: "traffic", multiple: true, render() {} },
+        { type: "denied", titleKey: "Denied", category: "content", isAvailable: () => false, render() {} }
+    ] });
+    await controller.start();
+    controller.showCatalogue();
+    const modal = window.document.querySelector('.md-dashboard-modal--catalogue');
+    assert.ok(modal.querySelector('.modal-lg.modal-dialog-centered.modal-dialog-scrollable'));
+    assert.equal(modal.querySelector('[data-widget-type="denied"]'), null);
+    assert.equal(modal.querySelector('[data-category="all"] .md-dashboard__catalogue-count').textContent, "3");
+    const content = modal.querySelector('button[data-category="content"]');
+    content.click();
+    assert.equal(content.getAttribute("aria-pressed"), "true");
+    assert.equal(modal.querySelector('[data-widget-type="visits"]').hidden, true);
+    const search = modal.querySelector('input[type="search"]');
+    search.value = " FOLDERS ";
+    search.dispatchEvent(new window.Event("input"));
+    assert.equal(modal.querySelector('[data-widget-type="pages"]').hidden, false);
+    assert.equal(modal.querySelector('.md-dashboard__catalogue-empty').hidden, true);
+    search.value = "visitor";
+    search.dispatchEvent(new window.Event("input"));
+    assert.equal(modal.querySelector('.md-dashboard__catalogue-empty').hidden, false);
+    modal.querySelector('button[data-category="all"]').click();
+    assert.equal(modal.querySelector('[data-widget-type="visits"]').hidden, false);
+    search.value = "recent";
+    search.dispatchEvent(new window.Event("input"));
+    assert.equal(modal.querySelector('[data-widget-type="pages"]').hidden, false);
+});
+
+test("Catalogue opens settings and adds a configured widget only after confirmation", async t => {
+    const { controller, window, requests, stored } = fixture(t, { items: [item("original")], definitions: [
+        { type: "pages", titleKey: "Recent pages", category: "content", multiple: true, sizes: ["1x1", "3x2"], defaultSize: "3x2", render() {} }
+    ] });
     await controller.start();
     controller.setEditing(true);
-    const original = copy(controller.settings);
-    controller.resetButton.click();
-    assert.equal(await confirmations.at(-1).options.success(), false);
-    closeConfirmation();
-    assert.match(controller.status.textContent, /previous settings/);
-    assert.deepEqual(copy(controller.settings), original);
-    assert.equal(notifications.length, 0);
-    setResetFailure(false);
+    controller.addButton.focus();
+    controller.showCatalogue();
+    const catalogue = window.document.querySelector('.md-dashboard-modal--catalogue');
+    const card = catalogue.querySelector('[data-widget-type="pages"]');
+    assert.equal(card.querySelector('.md-dashboard__catalogue-meta').textContent, "Content · Default size 3×2");
+    card.querySelector('button').click();
+    await tick();
+    assert.equal(catalogue.isConnected, false);
+    assert.equal(controller.settings.items.length, 1, "Opening settings must not insert an instance");
+    const settings = window.document.querySelector('.md-dashboard-modal--settings');
+    assert.equal(settings.querySelector('.btn-primary').textContent, "Add widget");
+    settings.querySelector('.md-dashboard__size-choice input[value="1x1"]').click();
+    settings.querySelector('.btn-primary').click();
+    await tick();
+    assert.equal(controller.settings.items.at(-1).type, "pages");
+    assert.equal(controller.settings.items.at(-1).size, "1x1");
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+    assert.equal(window.document.activeElement, controller.addButton);
+    assert.equal(requests.length, 0);
+    assert.equal(stored().items.length, 1);
+    assert.equal(await controller.saveEditing(), true);
+    assert.equal(stored().items.length, 2);
+});
+
+test("Cancelling catalogue settings adds nothing and another widget requires reopening the catalogue", async t => {
+    const { controller, window, requests } = fixture(t, { items: [item("original")] });
+    await controller.start();
+    controller.setEditing(true);
+    for (let attempt = 0; attempt < 2; attempt++) {
+        controller.addButton.focus();
+        controller.addButton.click();
+        const catalogue = window.document.querySelector('.md-dashboard-modal--catalogue');
+        assert.equal(catalogue.querySelector('.md-dashboard__catalogue-item button').textContent, "Add another");
+        catalogue.querySelector('.md-dashboard__catalogue-item button').click();
+        await tick();
+        const settings = window.document.querySelector('.md-dashboard-modal--settings');
+        assert.equal(catalogue.isConnected, false);
+        settings.querySelector('.modal-footer .btn-outline-secondary').click();
+        assert.equal(controller.settings.items.length, 1);
+        assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+        assert.equal(window.document.activeElement, controller.addButton);
+    }
+    assert.equal(requests.length, 0);
+});
+
+test("Catalogue disables additions at capacity after confirming the final available slot", async t => {
+    const { controller, window, requests } = fixture(t, { items: Array.from({ length: 47 }, (_, index) => item(`existing-${index}`)) });
+    await controller.start();
+    controller.setEditing(true);
+    controller.showCatalogue();
+    window.document.querySelector('.md-dashboard__catalogue-item button').click();
+    await tick();
+    assert.equal(controller.settings.items.length, 47);
+    window.document.querySelector('.md-dashboard-modal--settings .btn-primary').click();
+    await tick();
+    assert.equal(controller.settings.items.length, 48);
+    controller.showCatalogue();
+    const catalogue = window.document.querySelector('.md-dashboard-modal--catalogue');
+    assert.equal(catalogue.querySelector('.md-dashboard__catalogue-item button').disabled, true);
+    assert.match(catalogue.querySelector('[role="alert"]').textContent, /48 widgets/);
+    assert.equal(requests.length, 0);
+});
+
+test("A confirmed reset can be cancelled and a failed save retains the draft for retry", async t => {
+    const { controller, window, confirmations, closeConfirmation, setResetFailure, notifications, requests, stored } = fixture(t, { items: [item("custom")], failReset: true, defaults: [{ type: "test" }] });
+    await controller.start();
+    controller.setEditing(true);
+    const original = stored();
     controller.resetButton.click();
     assert.equal(await confirmations.at(-1).options.success(), true);
     closeConfirmation();
-    assert.equal(controller.resetButton.disabled, false);
-    assert.equal(controller.status.textContent, '');
-    assert.deepEqual(notifications, [['The default overview has been restored.', '', 10000]]);
+    assert.equal(requests.length, 0);
+    const draft = copy(controller.settings);
+    assert.equal(await controller.saveEditing(), false);
+    assert.match(controller.status.textContent, /changes are still available/);
+    assert.deepEqual(copy(controller.settings), draft);
+    assert.deepEqual(stored(), original);
+    assert.equal(notifications.length, 0);
+    controller.cancelEditing();
+    window.document.querySelector('.md-dashboard-modal--confirm .btn-danger').click();
+    assert.deepEqual(copy(controller.settings), original);
+    controller.setEditing(true);
+    controller.resetButton.click();
+    await confirmations.at(-1).options.success();
+    closeConfirmation();
+    setResetFailure(false);
+    assert.equal(await controller.saveEditing(), true);
+    assert.equal(controller.editing, false);
+    assert.deepEqual(notifications, [['The overview has been saved.', '', 10000]]);
 });
 
 test("Reset suppresses its tooltip through standard confirmation and releases listeners on removal", async t => {
@@ -562,7 +698,7 @@ test("Reset suppresses its tooltip through standard confirmation and releases li
     controller.setEditing(false);
     assert.equal(tooltipCalls.at(-1)[0], 'hide');
     controller.destroy();
-    assert.equal(tooltipCalls.filter(call => call[0] === 'dispose').length, 1);
+    assert.equal(tooltipCalls.filter(call => call[0] === 'dispose').length, 2);
     assert.deepEqual(tooltipCalls.at(-1), ['off', '.wjTooltipA11y .wjFocusWithoutTooltip']);
 });
 
@@ -576,6 +712,38 @@ test("Successful preferences use a ten-second standard notification and clear in
     assert.equal(await controller.saveOptions('custom', { options: { days: 90 } }), false);
     assert.equal(notifications.length, 1, 'Failed persistence must not show a success notification');
     assert.match(controller.status.textContent, /previous settings/);
+});
+
+test("Widget controls hide and dispose tooltips and retain the grip's keyboard description", async t => {
+    const { controller, host, window } = fixture(t, { items: [item('tooltip-widget')], withTooltip: true });
+    await controller.start();
+    controller.setEditing(true);
+    const grip = host.querySelector('.md-dashboard__layout .md-dashboard__drag');
+    const menu = host.querySelector('.md-dashboard__layout [data-bs-toggle="dropdown"]');
+    const gripTooltip = window.bootstrap.Tooltip.getInstance(grip);
+    const menuTooltip = window.bootstrap.Tooltip.getInstance(menu.parentElement);
+    assert.equal(grip.title, grip.getAttribute('aria-label'));
+    assert.equal(menu.parentElement.title, menu.getAttribute('aria-label'));
+    grip.setAttribute('aria-describedby', 'temporary-tooltip');
+    grip.dispatchEvent(new window.Event('hidden.bs.tooltip'));
+    assert.equal(grip.getAttribute('aria-describedby'), controller.widgetMoveHint.id);
+    menuTooltip.show();
+    menu.dispatchEvent(new window.Event('show.bs.dropdown'));
+    assert.equal(menuTooltip.visible, false);
+    gripTooltip.show();
+    controller.editor.beginMove('tooltip-widget');
+    assert.equal(gripTooltip.visible, false);
+    const showing = new window.Event('show.bs.tooltip', { cancelable: true });
+    grip.dispatchEvent(showing);
+    assert.equal(showing.defaultPrevented, true, 'Movement must prevent delayed tooltip display');
+    controller.editor.finishMove(false);
+    gripTooltip.show();
+    controller.setEditing(false);
+    assert.equal(gripTooltip.visible, false, 'Leaving edit mode hides the tooltip before its control disappears');
+    controller.setEditing(true);
+    await controller.remove('tooltip-widget');
+    assert.equal(window.bootstrap.Tooltip.getInstance(grip), undefined);
+    assert.equal(window.bootstrap.Tooltip.getInstance(menu.parentElement), undefined);
 });
 
 test("Shared options and domain filters refresh only the changed widget", async t => {
@@ -711,25 +879,37 @@ test("Multiple instances use different ids, singleton duplication is refused and
     assert.equal(requests.length, before);
 });
 
-test("Keyboard movement dialog offers a target and the end without coordinates", async t => {
-    const { controller, host, window } = fixture(t, { items: [item("a"), item("b"), item("c")] });
+test("Widget grips lift, move, drop and cancel with the keyboard without persisting a draft", async t => {
+    const { controller, window, requests, stored } = fixture(t, { items: [item("a"), item("b"), item("c")] });
     await controller.start();
     controller.setEditing(true);
-    const move = host.querySelector('[data-instance-id="a"] .md-dashboard__drag');
-    move.focus();
-    move.click();
-    const dialog = window.document.querySelector('[role="dialog"]');
-    assert.ok(dialog);
-    const close = dialog.querySelector('.modal-header button.btn-close');
-    assert.equal(close.getAttribute('aria-label'), 'Close');
-    assert.equal(close.textContent, '', 'The dialog header must use the standard icon-only close control');
-    assert.equal(close.querySelector('.ti-x').getAttribute('aria-hidden'), 'true');
-    dialog.querySelector("select").value = "";
-    dialog.querySelector(".modal-footer button").click();
-    await tick();
+    const canvas = window.document.createElement('canvas');
+    controller.views.get("a").body.append(canvas);
+    let chartCopied = false;
+    window.HTMLCanvasElement.prototype.getContext = () => ({ drawImage(source) { chartCopied = source === canvas; } });
+    const grip = controller.views.get("a").card.querySelector('.md-dashboard__drag');
+    const key = value => grip.dispatchEvent(new window.KeyboardEvent('keydown', { key: value, bubbles: true, cancelable: true }));
+    key(' ');
+    assert.equal(grip.getAttribute('aria-pressed'), 'true');
+    assert.ok(window.document.querySelector('.md-dashboard__widget-drag-helper'));
+    assert.equal(chartCopied, true, 'The raised helper must retain the chart pixels');
+    key('ArrowRight');
+    assert.deepEqual(copy(controller.settings.items.map(value => value.id)), ["b", "a", "c"]);
+    assert.match(controller.widgetMoveStatus.textContent, /position 2 of 3/);
+    assert.equal(controller.overviewStatus.textContent, '', 'Move announcements must not add a row above the grid');
+    key('Escape');
+    assert.deepEqual(copy(controller.settings.items.map(value => value.id)), ["a", "b", "c"]);
+    assert.equal(window.document.querySelector('.md-dashboard__widget-drag-helper'), null);
+    grip.click();
+    key('ArrowRight');
+    key('ArrowRight');
+    key('Enter');
     assert.deepEqual(copy(controller.settings.items.map(value => value.id)), ["b", "c", "a"]);
-    assert.equal(window.document.querySelector('[role="dialog"]'), null);
-    assert.equal(window.document.activeElement, move);
+    assert.equal(requests.length, 0);
+    assert.deepEqual(stored().items.map(value => value.id), ["a", "b", "c"]);
+    assert.equal(window.document.activeElement, grip);
+    assert.equal(await controller.saveEditing(), true);
+    assert.deepEqual(stored().items.map(value => value.id), ["b", "c", "a"]);
 });
 
 test("A menu action closes its dropdown before disabling controls for persistence", async t => {
@@ -821,24 +1001,14 @@ test("Edit mode reveals arrangement controls without a settings mutation", async
     assert.equal(requests.length, 0);
 });
 
-test("The feedback toolbar action precedes widget controls and opens the existing form without saving preferences", async t => {
+test("The feedback toolbar opens the existing form without saving preferences", async t => {
     let opened = 0;
     const { controller, host, requests } = fixture(t, { overview: { showFeedbackModal: () => { opened++; } } });
     await controller.start();
     const feedback = host.querySelector('.md-dashboard__feedback');
-    const addWidget = feedback.nextElementSibling;
-    assert.ok(addWidget.classList.contains('md-dashboard__edit-control'));
-    assert.equal(addWidget.hidden, true);
-    assert.equal(addWidget.nextElementSibling, controller.resetButton);
-    assert.equal(controller.resetButton.nextElementSibling, controller.editButton);
     feedback.click();
     assert.equal(opened, 1);
     assert.equal(controller.editing, false);
-    controller.editButton.click();
-    assert.equal(addWidget.hidden, false);
-    assert.equal(feedback.nextElementSibling, addWidget);
-    assert.equal(addWidget.nextElementSibling, controller.resetButton);
-    assert.equal(controller.resetButton.nextElementSibling, controller.editButton);
     assert.equal(requests.length, 0, 'Opening feedback must not save or reset dashboard preferences');
 });
 
@@ -857,7 +1027,7 @@ test("Shortcuts configure before saving and render in the permanent shortcut str
     assert.equal(requests.length, 0, 'Cancelling must not save an empty shortcut');
     await controller.showAddWidget('shortcut');
     window.document.querySelector('.md-dashboard__settings input').value = 'My users';
-    window.document.querySelector('.modal-footer button').click();
+    window.document.querySelector('.modal-footer .btn-primary').click();
     await tick();
     assert.equal(stored().items.length, 1);
     assert.equal(stored().items[0].options.title, 'My users');
@@ -870,11 +1040,14 @@ function overviewFixture(t) {
     const environment = fixture(t);
     const { context, window, controller } = environment;
     Object.assign(context, { HTMLElement: window.HTMLElement, customElements: window.customElements, WJ: window.WJ });
+    const noticesSource = fs.readFileSync(path.join(moduleDirectory, 'notices.js'), 'utf8').replace(/^export /gm, '');
+    vm.runInContext(`{ ${noticesSource}; this.DashboardNotices = DashboardNotices; }`, context);
     const source = fs.readFileSync(path.join(moduleDirectory, '../web-components/webjet-overview-dashboard.js'), 'utf8')
         .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
     vm.runInContext(source, context, { filename: 'webjet-overview-dashboard.js' });
     const overview = window.document.createElement('webjet-overview-dashboard');
     overview.dashboardController = controller;
+    t.after(() => overview.noticeController?.destroy());
     return { ...environment, overview };
 }
 
@@ -895,42 +1068,38 @@ test('Rebuilding the overview after a save never reapplies the embedded settings
     assert.equal(overview.dashboardController.settings.items[0].options.title, 'Updated autotest');
 });
 
-test('System notices remain independent accordions and invoke their own authorized actions', async t => {
-    const { context, window, controller, overview } = overviewFixture(t);
+test('System notice rows invoke authorized actions and survive personal layout rendering', async t => {
+    const { window, controller, overview } = overviewFixture(t);
     const actions = [];
     window.WJ.openPopupDialog = url => actions.push(['popup', url]);
     window.WJ.showHelpWindow = url => actions.push(['help', url]);
     overview.data.notices = [
         { id: 'two-factor', severity: 'warning', icon: 'ti-shield', title: 'Enable verification', bodyHtml: '<p>Protect your account.</p>', action: { type: 'popup', url: '/admin/2factorauth.jsp', label: 'Configure' } },
-        { id: 'ses', severity: 'warning', icon: 'ti-mail', title: 'Configure email', bodyHtml: '<p>Set up sending.</p>', action: { type: 'help', url: '/install/config/README', label: 'Read guide' } }
+        { id: 'ses', severity: 'error', icon: 'ti-mail', title: 'Configure email', bodyHtml: '<p>Set up sending.</p>', action: { type: 'help', url: '/install/config/README', label: 'Read guide' } }
     ];
     const customNotice = window.document.createElement('div');
     customNotice.textContent = 'External application warning';
     controller.notices.append(customNotice);
     overview._renderNotices();
     assert.equal(customNotice.parentElement, controller.notices, 'System notices must preserve externally supplied notifications');
-    const details = [...controller.notices.querySelectorAll('details')];
-    assert.equal(details.length, 2);
-    assert.deepEqual(details.map(notice => notice.querySelector('summary').textContent), ['Enable verification', 'Configure email']);
-    details[0].open = true;
-    assert.equal(details[1].open, false);
-    details[0].querySelector('button').click();
-    details[1].querySelector('button').click();
+    controller.setEditing(true);
+    assert.equal(controller.notices.hasAttribute('inert'), false, 'System notices must stay interactive during overview editing');
+    controller.notices.querySelector('[data-notice-id="two-factor"] .md-dashboard__notice-action').click();
+    controller.notices.querySelector('[data-notice-id="ses"] .md-dashboard__notice-action').click();
     assert.deepEqual(actions, [['popup', '/admin/2factorauth.jsp'], ['help', '/install/config/README']]);
     await controller.start();
-    assert.equal(controller.notices.querySelectorAll('details').length, 2, 'Rendering personal layout must preserve system warnings');
+    assert.equal(controller.notices.querySelectorAll('.md-dashboard__notice').length, 2, 'Rendering personal layout must preserve system warnings');
+    assert.equal(customNotice.parentElement, controller.notices, 'Rendering personal layout must preserve external notifications');
 });
 
 test('Embedded notices, including an empty list, render without a REST request', async t => {
     const { controller, overview, requests } = overviewFixture(t);
-    overview.data.notices = [
-        { id: 'autotest-notice', severity: 'warning', title: 'Embedded warning', bodyHtml: '<p>Autotest details</p>' }
-    ];
+    overview.data.notices = [{ id: 'autotest-notice', severity: 'warning', title: 'Embedded warning', bodyHtml: '<p>Autotest details</p>' }];
     overview._renderNotices();
-    assert.equal(controller.notices.querySelector('summary').textContent, 'Embedded warning');
+    assert.equal(controller.notices.querySelector('.md-dashboard__notice-title').textContent, 'Embedded warning');
     overview.data.notices = [];
     overview._renderNotices();
-    assert.equal(controller.notices.querySelectorAll('details').length, 0);
+    assert.equal(controller.notices.querySelectorAll('.md-dashboard__notice').length, 0);
     assert.equal(requests.length, 0);
 });
 
@@ -940,6 +1109,7 @@ test('Release note persistence restores the replacement toggle without stealing 
     const source = fs.readFileSync(path.join(moduleDirectory, 'utility-widgets.js'), 'utf8')
         .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
     vm.runInContext(source, context, { filename: 'utility-widgets.js' });
+    context.registerSessionWidgets = () => {};
     context.registerUtilityWidgets();
     const news = context.getWidget('news');
     const region = window.document.createElement('section');
@@ -979,31 +1149,47 @@ const shortcutDefinition = { type: "shortcut", titleKey: "Shortcut", sizes: ["1x
     render: ({ container, options }) => { const link = container.ownerDocument.createElement("a"); link.href = options.href; link.textContent = options.title || options.href; container.append(link); } };
 
 test("Welcome shortcuts and overview have independent edit controls and catalogue entries", async t => {
-    const { controller, host } = fixture(t, { items: [item("grid"), item("link", "shortcut", "1x1", { href: "/apps/banner/admin/" })], definitions: [shortcutDefinition] });
+    const { controller, host, window } = fixture(t, { items: [item("grid"), item("link", "shortcut", "1x1", { href: "/apps/banner/admin/" })], definitions: [shortcutDefinition], withTooltip: true });
     await controller.start();
     assert.ok(host.querySelector('.md-dashboard__welcome .md-dashboard__shortcuts a[href="/apps/banner/admin/"]'));
-    assert.equal(controller.editShortcutsButton.parentElement.parentElement, host.querySelector('.md-dashboard__welcome-heading'));
-    assert.equal(controller.addShortcutButton.hidden, true);
-    const controls = id => host.querySelector(`[data-instance-id="${id}"] .md-dashboard__widget-controls`);
+    assert.equal(controller.editShortcutsButton.parentElement, controller.shortcutList.lastElementChild);
+    assert.equal(controller.shortcutActions.previousElementSibling.dataset.instanceId, 'link');
+    assert.equal(controller.addShortcutButton.hidden, false);
+    assert.equal(controller.editShortcutsButton.textContent, 'Edit shortcuts');
+    assert.ok(controller.editShortcutsButton.querySelector('.ti-pencil'));
+    const tooltip = window.bootstrap.Tooltip.getInstance(controller.editShortcutsButton);
+    controller.editShortcutsButton.focus();
+    tooltip.show();
+    assert.equal(tooltip.visible, true);
+    const controls = id => host.querySelector(`[data-instance-id="${id}"] .md-dashboard__edit-control`);
     controller.setEditingShortcuts(true);
     assert.equal(controls("link").hidden, false);
     assert.equal(controls("grid").hidden, true);
     assert.equal(controller.addShortcutButton.hidden, false);
-    assert.equal(controller.resetShortcutsButton.hidden, false);
+    assert.equal(controller.shortcutActions.children.length, 1);
+    assert.ok(controller.editShortcutsButton.querySelector('.ti-check'));
+    assert.equal(controller.editShortcutsButton.parentElement, controller.welcomeHeading);
+    assert.equal(controller.editShortcutsButton.textContent, 'Done');
+    assert.equal(controller.editShortcutsButton.querySelector('.visually-hidden'), null);
+    assert.equal(window.document.activeElement, controller.editShortcutsButton);
+    assert.equal(tooltip.visible, false);
+    assert.equal(tooltip.enabled, false);
     controller.setEditing(true);
     assert.equal(controller.editingShortcuts, false);
+    assert.equal(controller.editShortcutsButton.parentElement, controller.shortcutActions);
+    assert.ok(controller.editShortcutsButton.querySelector('.ti-pencil'));
+    assert.equal(controller.addShortcutButton.hidden, false);
     assert.equal(controls("link").hidden, true);
     assert.equal(controls("grid").hidden, false);
     controller.showCatalogue();
     assert.equal(host.ownerDocument.querySelector('.md-dashboard__catalogue [data-widget-type="shortcut"]'), null);
 });
 
-test("Each reset preserves the other section and intentionally empty shortcuts survive reload", async t => {
+test("Widget reset preserves shortcuts and intentionally empty shortcuts survive reload", async t => {
     const { controller, stored } = fixture(t, { items: [item("grid"), item("link", "shortcut", "1x1", { href: "/custom/?a=1#anchor", title: "Custom" })], definitions: [shortcutDefinition], defaults: [{ type: "test" }, { type: "shortcut", options: { href: "/default/" } }], legacyBookmarksHandled: true });
     await controller.start();
     await controller.saveOptions("grid", { domainOptions: { formName: "Contact" } });
     await controller.acknowledgeNews("2026.18");
-    assert.equal(await controller.resetShortcuts(), true);
     assert.deepEqual(stored().domainOptions.grid, { formName: "Contact" });
     assert.equal(stored().acknowledgedNewsVersion, "2026.18");
     assert.equal(stored().items[0].id, "grid");
@@ -1017,8 +1203,7 @@ test("Each reset preserves the other section and intentionally empty shortcuts s
     await controller.reset();
     await controller.start();
     assert.equal(controller.settings.items.some(item => item.type === "shortcut"), false);
-    assert.equal(await controller.resetShortcuts(), true);
-    assert.equal(stored().items.filter(item => item.type === "shortcut").length, 1);
+    assert.equal(stored().items.filter(item => item.type === "shortcut").length, 0);
 });
 
 test("Legacy bookmarks automatically replace shortcuts in original order and clear only the migrated source", async t => {
@@ -1138,4 +1323,472 @@ test("A storage cleanup failure does not repeat an already persisted import", as
     assert.notEqual(window.localStorage.getItem("bookmarks"), null);
     await controller.start();
     assert.equal(requests.filter(request => request.method === "PUT").length, 1);
+});
+
+test('Shortcut editing replaces navigation and menu actions with a leading grip and direct removal', async t => {
+    const { controller, host, window } = fixture(t, { items: [item('link', 'shortcut', '1x1', { href: '/target/' })], definitions: [shortcutDefinition] });
+    await controller.start();
+    const card = controller.views.get('link').card;
+    const target = card.querySelector('a');
+    assert.equal(target.getAttribute('href'), '/target/');
+    assert.equal(card.querySelector('.dropdown'), null);
+    controller.setEditingShortcuts(true);
+    assert.equal(card.children[1].classList.contains('md-dashboard__drag'), true);
+    assert.equal(card.lastElementChild.classList.contains('md-dashboard__shortcut-remove'), true);
+    assert.equal(target.hasAttribute('href'), false);
+    assert.equal(target.getAttribute('role'), 'button');
+    const click = new window.MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
+    target.dispatchEvent(click);
+    assert.equal(click.defaultPrevented, true);
+    assert.match(window.document.querySelector('.modal-title').textContent, /Edit shortcut/);
+    window.document.querySelector('.btn-close').click();
+    controller.setEditingShortcuts(false);
+    assert.equal(target.getAttribute('href'), '/target/');
+    assert.equal(target.hasAttribute('role'), false);
+    assert.equal(host.querySelectorAll('.md-dashboard__shortcut-actions button').length, 2);
+});
+
+test('Shortcut keyboard moves remain provisional until Enter and roll back on cancellation or save failure', async t => {
+    const { controller, window, requests, stored, setSaveFailure } = fixture(t, { items: ['first', 'second', 'third'].map(id => item(id, 'shortcut', '1x1', { href: `/${id}/` })), definitions: [shortcutDefinition] });
+    await controller.start();
+    controller.setEditingShortcuts(true);
+    const grip = controller.views.get('first').card.querySelector('.md-dashboard__drag');
+    const press = key => grip.dispatchEvent(new window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    press(' ');
+    press('ArrowRight');
+    assert.equal(controller._shortcutMove.beforeId, 'third');
+    assert.equal(requests.length, 0);
+    assert.ok(window.document.querySelector('.md-dashboard__shortcut-drag-helper'));
+    press('Escape');
+    assert.equal(controller._shortcutMove, null);
+    assert.equal(window.document.querySelector('.md-dashboard__shortcut-drag-helper'), null);
+    assert.deepEqual(stored().items.map(item => item.id), ['first', 'second', 'third']);
+    press(' ');
+    press('ArrowRight');
+    press('Enter');
+    await tick();
+    assert.deepEqual(stored().items.map(item => item.id), ['second', 'first', 'third']);
+    assert.equal(window.document.activeElement, grip);
+    setSaveFailure(true);
+    press(' ');
+    press('ArrowRight');
+    press('Enter');
+    await tick();
+    assert.deepEqual(stored().items.map(item => item.id), ['second', 'first', 'third']);
+    assert.equal(window.document.querySelector('.is-shortcut-placeholder'), null);
+});
+
+test('Shortcut removal has an eight-second undo, preserves the last shortcut on failure and can retry undo', async t => {
+    const { controller, window, stored, confirmations, setSaveFailure } = fixture(t, { items: [item('grid'), item('last', 'shortcut', '1x1', { href: '/last/', color: 'blue' })], definitions: [shortcutDefinition] });
+    const timers = [];
+    window.setTimeout = (callback, delay) => { timers.push({ callback, delay }); return timers.length; };
+    window.clearTimeout = () => {};
+    await controller.start();
+    setSaveFailure(true);
+    assert.equal(await controller.remove('last'), false);
+    assert.equal(stored().items.length, 2);
+    assert.equal(controller._shortcutUndo, undefined);
+    setSaveFailure(false);
+    assert.equal(await controller.remove('last'), true);
+    assert.equal(confirmations.length, 0);
+    assert.equal(stored().items.length, 1);
+    assert.ok(controller.shortcutList.querySelector('.md-dashboard__shortcuts-empty'));
+    assert.equal(timers.at(-1).delay, 8000);
+    assert.equal(window.document.querySelector('.md-dashboard__shortcut-toast .toast').dataset.timeout, '8000');
+    setSaveFailure(true);
+    assert.equal(await controller._undoShortcutChange(), false);
+    assert.ok(window.document.querySelector('[data-dashboard-shortcut-undo]'));
+    setSaveFailure(false);
+    assert.equal(await controller._undoShortcutChange(), true);
+    assert.equal(stored().items[1].options.color, 'blue');
+    await controller.remove('last');
+    timers.at(-1).callback();
+    assert.equal(window.document.querySelector('[data-dashboard-shortcut-undo]'), null);
+    assert.equal(await controller._undoShortcutChange(), false);
+});
+
+test('Shortcut settings save immediately, support undo and include direct removal without confirmation', async t => {
+    const { controller, window, stored, confirmations } = fixture(t, { items: [item('grid'), item('link', 'shortcut', '1x1', { href: '/old/', title: 'Original' })], definitions: [{ ...shortcutDefinition,
+        configure: () => ({ read: () => ({ options: { href: '/new/', title: 'Changed', color: 'red' } }) })
+    }] });
+    await controller.start();
+    controller.setEditingShortcuts(true);
+    await controller.showSettings('link');
+    assert.match(window.document.querySelector('.modal-footer .btn-primary').textContent, /Save changes/);
+    window.document.querySelector('.modal-footer .btn-primary').click();
+    await tick();
+    assert.equal(stored().items[1].options.title, 'Changed');
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+    assert.equal(await controller._undoShortcutChange(), true);
+    assert.equal(stored().items[1].options.title, 'Original');
+    assert.equal(stored().items[0].id, 'grid');
+    await controller.showSettings('link');
+    window.document.querySelector('[data-dashboard-action="removeShortcut"]').click();
+    await tick();
+    assert.equal(stored().items.length, 1);
+    assert.equal(confirmations.length, 0);
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+    assert.equal(await controller._undoShortcutChange(), true);
+    assert.equal(stored().items[1].options.title, 'Original');
+});
+
+test('Widget settings apply to a draft in a centered modal and Cancel keeps the confirmed layout', async t => {
+    const { controller, window, requests, stored } = fixture(t, { items: [item('draft')] });
+    await controller.start();
+    controller.setEditing(true);
+    assert.equal(controller.notices.hasAttribute('inert'), false);
+    await controller.showSettings('draft');
+    const dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    assert.ok(dialog.querySelector('.modal-dialog-centered'));
+    assert.equal(dialog.getAttribute('aria-modal'), 'true');
+    assert.equal(dialog.querySelectorAll('.md-dashboard__size-choice input').length, 6);
+    assert.equal(dialog.contains(window.document.activeElement), true);
+    dialog.querySelector('.md-dashboard__size-choice input[value="3x3"]').click();
+    dialog.querySelector('.btn-primary').click();
+    await tick();
+    assert.equal(controller._instance('draft').size, '3x3');
+    assert.equal(requests.length, 0);
+    assert.equal(stored().items[0].size, '2x2');
+    controller.cancelEditing();
+    const confirm = window.document.querySelector('.md-dashboard-modal--confirm');
+    assert.equal(window.document.activeElement.textContent, 'Continue editing');
+    confirm.querySelector('.btn-outline-secondary:not(.btn-close)').click();
+    assert.equal(controller.editing, true);
+    assert.equal(controller._instance('draft').size, '3x3');
+    await controller.showSettings('draft');
+    controller.cancelEditing();
+    window.document.querySelector('.md-dashboard-modal--confirm .btn-danger').click();
+    assert.equal(controller.editing, false);
+    assert.equal(controller._instance('draft').size, '2x2');
+    assert.equal(window.document.querySelector('.md-dashboard-modal--settings'), null, 'Exiting editing must dispose open draft settings');
+    assert.equal(controller.notices.hasAttribute('inert'), false);
+    assert.equal(requests.length, 0);
+});
+
+for (const switchToShortcuts of [false, true]) {
+    test(`Discard waits for Bootstrap cleanup before ${switchToShortcuts ? 'entering shortcut editing' : 'leaving overview editing'}`, { timeout: 2000 }, async t => {
+        const { controller, window, requests, stored } = fixture(t, { items: [item('draft')], realBootstrap: true });
+        const errors = [];
+        window.addEventListener('error', event => { errors.push(event.error); event.preventDefault(); });
+        await controller.start();
+        const original = stored();
+        controller.setEditing(true);
+        await controller.saveOptions('draft', { options: { days: 30 } });
+        let afterCalls = 0;
+        controller.cancelEditing(() => {
+            afterCalls++;
+            assert.equal(window.document.body.classList.contains('modal-open'), false);
+            assert.equal(window.document.body.style.overflow, '');
+            if (switchToShortcuts) controller.setEditingShortcuts(true);
+        });
+        const dialog = window.document.querySelector('.md-dashboard-modal--confirm');
+        await new Promise(resolve => dialog.addEventListener('shown.bs.modal', resolve, { once: true }));
+        assert.equal(window.document.body.classList.contains('modal-open'), true);
+        assert.equal(window.document.body.style.overflow, 'hidden');
+        const hidden = new Promise(resolve => dialog.addEventListener('hidden.bs.modal', resolve, { once: true }));
+        const discard = dialog.querySelector('.btn-danger');
+        discard.click();
+        discard.click();
+        assert.equal(controller.editing, true, 'The editor must remain alive until the hide transition finishes');
+        assert.equal(discard.disabled, true);
+        assert.equal(afterCalls, 0);
+        await hidden;
+        assert.deepEqual(errors, []);
+        assert.equal(afterCalls, 1);
+        assert.equal(controller.editing, false);
+        assert.equal(controller.editingShortcuts, switchToShortcuts);
+        assert.deepEqual(copy(controller.settings), original);
+        assert.equal(window.document.querySelector('.modal-backdrop, .md-dashboard-modal'), null);
+        assert.equal(controller._dialogs.size, 0);
+        assert.equal(window.document.activeElement, controller.editButton);
+        assert.equal(requests.length, 0);
+    });
+}
+
+test('Continue editing closes Bootstrap cleanly and cancelling a clean draft needs no modal', { timeout: 2000 }, async t => {
+    const { controller, window, requests } = fixture(t, { items: [item('draft')], realBootstrap: true });
+    await controller.start();
+    controller.setEditing(true);
+    controller.cancelEditing();
+    assert.equal(controller.editing, false);
+    assert.equal(controller._dialogs.size, 0);
+    controller.setEditing(true);
+    await controller.saveOptions('draft', { options: { days: 30 } });
+    let afterCalls = 0;
+    controller.cancelEditing(() => afterCalls++);
+    const dialog = window.document.querySelector('.md-dashboard-modal--confirm');
+    await new Promise(resolve => dialog.addEventListener('shown.bs.modal', resolve, { once: true }));
+    const hidden = new Promise(resolve => dialog.addEventListener('hidden.bs.modal', resolve, { once: true }));
+    dialog.querySelector('.modal-footer .btn-outline-secondary').click();
+    await hidden;
+    assert.equal(controller.editing, true);
+    assert.equal(controller._instance('draft').options.days, 30);
+    assert.equal(afterCalls, 0);
+    assert.equal(window.document.body.classList.contains('modal-open'), false);
+    assert.equal(window.document.body.style.overflow, '');
+    assert.equal(window.document.querySelector('.modal-backdrop, .md-dashboard-modal'), null);
+    assert.equal(requests.length, 0);
+});
+
+test('Live previews follow size, domain selection and color without mutating the dashboard', async t => {
+    const renders = [];
+    const { controller, window, requests } = fixture(t, {
+        items: [item('preview-autotest', 'previewable', '1x1', { days: 7 })],
+        definitions: [{ type: 'previewable', titleKey: 'Preview autotest', sizes: ['1x1', '3x3'], multiple: true,
+            defaultDomainOptions: { formName: 'initial-autotest' },
+            headerLink: { href: (instance, context) => `/apps/form/admin/detail/?formName=${context.settings.domainOptions[instance.id]?.formName || ''}` },
+            render: ({ container, instance, options, domainOptions, signal }) => {
+                renders.push({ id: instance.id, size: instance.size, options: copy(options), domainOptions: copy(domainOptions), signal });
+                container.textContent = `${instance.size} / ${options.days} / ${domainOptions.formName}`;
+            },
+            configure: ({ container }) => {
+                const select = window.document.createElement('select');
+                select.innerHTML = '<option value="initial-autotest">Initial autotest</option><option value="changed-autotest">Changed autotest</option>';
+                container.append(select);
+                return { read: () => ({ options: { days: 30 }, domainOptions: { formName: select.value } }) };
+            } }]
+    });
+    await controller.start();
+    controller.setEditing(true);
+    const original = copy(controller.settings);
+    await controller.showSettings('preview-autotest');
+    await tick();
+    const dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    const preview = dialog.querySelector('.md-dashboard__widget-preview .md-dashboard__widget');
+    assert.equal(preview.textContent, 'Preview autotest1x1 / 30 / initial-autotest');
+    assert.equal(dialog.querySelectorAll('.md-dashboard__widget').length, 1, 'The live card replaces the separate background sample');
+    assert.equal(preview.querySelector('.md-dashboard__drag, .dropdown'), null);
+    const firstRender = renders.at(-1);
+    dialog.querySelector('.md-dashboard__size-choice input[value="3x3"]').click();
+    await tick();
+    assert.equal(firstRender.signal.aborted, true, 'Changing size must abort the previous preview');
+    assert.equal(preview.dataset.size, '3x3');
+    const form = dialog.querySelector('select');
+    form.value = 'changed-autotest';
+    form.dispatchEvent(new window.Event('change', { bubbles: true }));
+    await tick();
+    assert.match(preview.textContent, /3x3 \/ 30 \/ changed-autotest/);
+    assert.equal(preview.querySelector('a').getAttribute('href'), '/apps/form/admin/detail/?formName=changed-autotest');
+    const count = renders.length;
+    dialog.querySelector('.md-dashboard__widget-colors input[value="custom"]').click();
+    dialog.querySelector('color-picker').dispatchEvent(new window.CustomEvent('update-color', { detail: { hex: '#fff1ec' } }));
+    assert.equal(preview.style.backgroundColor, 'rgb(255, 241, 236)');
+    assert.equal(renders.length, count, 'Changing color must not refetch widget data');
+    assert.deepEqual(copy(controller.settings), original);
+    const lastRender = renders.at(-1);
+    dialog.querySelector('.modal-footer .btn-outline-secondary').click();
+    assert.equal(lastRender.signal.aborted, true);
+    assert.deepEqual(copy(controller.settings), original);
+    assert.equal(requests.length, 0);
+});
+
+test('Replaced and closed previews dispose late renderer results without restoring stale content', async t => {
+    const pending = [];
+    const disposed = [];
+    const { controller, window } = fixture(t, {
+        items: [item('late-autotest', 'late-preview', '1x1')],
+        definitions: [{ type: 'late-preview', titleKey: 'Late preview', sizes: ['1x1', '3x3'],
+            render: ({ instance, signal }) => instance.id.startsWith('preview-') ? new Promise(resolve => pending.push({ signal, resolve })) : undefined }]
+    });
+    await controller.start();
+    controller.setEditing(true);
+    await controller.showSettings('late-autotest');
+    await tick();
+    const dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    dialog.querySelector('.md-dashboard__size-choice input[value="3x3"]').click();
+    await tick();
+    assert.equal(pending.length, 2);
+    assert.equal(pending[0].signal.aborted, true);
+    pending[0].resolve(() => disposed.push('replaced'));
+    await tick();
+    assert.deepEqual(disposed, ['replaced']);
+    dialog.querySelector('.modal-footer .btn-outline-secondary').click();
+    assert.equal(pending[1].signal.aborted, true);
+    pending[1].resolve({ destroy: () => disposed.push('closed') });
+    await tick();
+    assert.deepEqual(disposed, ['replaced', 'closed']);
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+});
+
+test('Background settings preserve defaults, stage palette colors and survive save and reload', async t => {
+    const { controller, window, context, requests, stored } = fixture(t, {
+        items: [item('colored', 'one-size', '1x1', { days: 7 })],
+        definitions: [{ type: 'one-size', titleKey: 'One size', sizes: ['1x1'], multiple: true,
+            render: ({ container }) => { container.textContent = 'Widget autotest'; },
+            configure: () => ({ read: () => ({ options: { days: 30 } }) }) }]
+    });
+    await controller.start();
+    const card = controller.views.get('colored').card;
+    assert.equal(card.style.backgroundColor, '', 'Unconfigured backgrounds must keep the existing stylesheet');
+    assert.ok(card.querySelector('[data-dashboard-action="settings"]'), 'A single-size widget must expose background settings');
+    controller.setEditing(true);
+    await controller.showSettings('colored');
+    let dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    assert.equal(dialog.querySelector('.md-dashboard__widget-colors input:checked').value, 'default');
+    dialog.querySelector('input[value="figma-lavender"]').click();
+    dialog.querySelector('.btn-primary').click();
+    await tick();
+    assert.equal(controller._instance('colored').options.backgroundColor, 'figma-lavender');
+    assert.equal(controller._instance('colored').options.days, 30);
+    assert.equal(requests.length, 0, 'Applying a color must remain provisional until overview Save');
+    await controller.saveEditing();
+    assert.equal(stored().items[0].options.backgroundColor, 'figma-lavender');
+    await controller.setContext({ data: { settings: stored() } });
+    assert.equal(context.widgetBackground(controller._instance('colored').options.backgroundColor), 'var(--wj-dashboard-widget-lavender)');
+    controller.setEditing(true);
+    await controller.showSettings('colored');
+    dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    dialog.querySelector('input[value="default"]').click();
+    dialog.querySelector('.btn-primary').click();
+    await tick();
+    assert.equal(controller._instance('colored').options.backgroundColor, undefined);
+    assert.equal(controller.views.get('colored').card.style.backgroundColor, '', 'Default must remove the custom surface');
+    for (const invalid of ['constructor', '__proto__', 'url(https://example.test)', '#fff', '#ffffff; color:red', ['mint'], {}, null]) {
+        assert.equal(context.widgetBackground(invalid), '', 'Invalid stored values must never become CSS');
+    }
+    await controller.saveOptions('colored', { options: { backgroundColor: 'mint' } });
+    await controller.showSettings('colored');
+    dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    assert.equal(dialog.querySelector('.md-dashboard__widget-colors input:checked').value, 'figma-mint', 'Previously selected shades must resolve to their merged Figma alternative');
+    dialog.querySelector('.btn-primary').click();
+    await tick();
+    assert.equal(controller._instance('colored').options.backgroundColor, 'figma-mint');
+});
+
+test('Custom backgrounds preview immediately, reject unreadable shades and cancel without changing the draft', async t => {
+    const { controller, window, requests } = fixture(t, { items: [item('custom')] });
+    await controller.start();
+    controller.setEditing(true);
+    await controller.showSettings('custom');
+    const dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    const picker = dialog.querySelector('color-picker');
+    dialog.querySelector('input[value="custom"]').click();
+    picker.dispatchEvent(new window.CustomEvent('update-color', { detail: { hex: '#112233' } }));
+    assert.equal(dialog.querySelector('.md-dashboard__widget-preview .md-dashboard__widget').style.backgroundColor, 'rgb(17, 34, 51)');
+    dialog.querySelector('.btn-primary').click();
+    await tick();
+    assert.ok(dialog.querySelector('[role="alert"]').textContent);
+    assert.equal(controller._instance('custom').options.backgroundColor, undefined);
+    picker.dispatchEvent(new window.CustomEvent('update-color', { detail: { hex: '#FFF1EC' } }));
+    dialog.querySelector('.btn-primary').click();
+    await tick();
+    assert.equal(controller._instance('custom').options.backgroundColor, '#fff1ec');
+    assert.equal(requests.length, 0);
+    await controller.showSettings('custom');
+    const reopened = window.document.querySelector('.md-dashboard-modal--settings');
+    assert.equal(reopened.querySelector('.md-dashboard__widget-colors input:checked').value, 'custom');
+    reopened.querySelector('input[value="figma-mint"]').click();
+    reopened.querySelector('.btn-outline-secondary').click();
+    assert.equal(controller._instance('custom').options.backgroundColor, '#fff1ec', 'Closing settings must discard unconfirmed colors');
+});
+
+test('A failed overview save keeps all staged changes for retry and shows no success toast', async t => {
+    const { controller, notifications, requests, stored, setSaveFailure } = fixture(t, { items: [item('kept'), item('removed')], failSave: true });
+    await controller.start();
+    controller.setEditing(true);
+    await controller.remove('removed');
+    await controller.saveOptions('kept', { options: { days: 30 }, domainOptions: { formName: 'autotest' } });
+    assert.equal(requests.length, 0);
+    assert.equal(await controller.saveEditing(), false);
+    assert.equal(controller.editing, true);
+    assert.equal(controller._instance('kept').options.days, 30);
+    assert.equal(stored().items.length, 2);
+    assert.deepEqual(notifications, []);
+    setSaveFailure(false);
+    assert.equal(await controller.saveEditing(), true);
+    assert.equal(controller.editing, false);
+    assert.equal(stored().items.length, 1);
+    assert.equal(stored().domainOptions.kept.formName, 'autotest');
+    assert.deepEqual(notifications, [['The overview has been saved.', '', 10000]]);
+});
+
+test('Removing a widget offers pausable undo and Ctrl Z restores draft changes until editing closes', async t => {
+    const { controller, window, requests } = fixture(t, { items: [item('first'), item('second', 'test', '3x3', { title: 'autotest' })] });
+    await controller.start();
+    controller.settings.domainOptions.second = { folder: 123 };
+    controller.setEditing(true);
+    await controller.remove('second');
+    const toast = window.document.querySelector('.md-dashboard__widget-toast');
+    assert.ok(toast);
+    assert.ok(controller.editor.toastTimer);
+    toast.dispatchEvent(new window.Event('mouseenter'));
+    assert.equal(controller.editor.toastTimer, null);
+    toast.dispatchEvent(new window.Event('mouseleave'));
+    assert.ok(controller.editor.toastTimer);
+    const undo = toast.querySelector('[data-dashboard-widget-undo]');
+    undo.focus();
+    assert.equal(controller.editor.toastTimer, null);
+    undo.click();
+    assert.equal(controller._instance('second').options.title, 'autotest');
+    assert.equal(controller.settings.domainOptions.second.folder, 123);
+    await controller.remove('second');
+    controller.editor.clearToast();
+    controller.cancelButton.focus();
+    controller.cancelButton.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'z', ctrlKey: true, bubbles: true, cancelable: true }));
+    assert.ok(controller._instance('second'), 'Keyboard undo remains available after the toast expires');
+    assert.equal(requests.length, 0);
+});
+
+test('Browser departure warns only for a dirty draft and edit-session cleanup removes the warning', async t => {
+    const { controller, window } = fixture(t, { items: [item('draft')] });
+    await controller.start();
+    controller.setEditing(true);
+    const leave = () => {
+        const event = new window.Event('beforeunload', { cancelable: true });
+        window.dispatchEvent(event);
+        return event.defaultPrevented;
+    };
+    assert.equal(leave(), false);
+    await controller.saveOptions('draft', { options: { days: 30 } });
+    assert.equal(leave(), true);
+    controller.editor.undo();
+    assert.equal(leave(), false);
+    await controller.saveOptions('draft', { options: { days: 90 } });
+    controller.destroy();
+    assert.equal(leave(), false);
+});
+
+test('Independent release preferences never persist widget drafts or disappear when the draft is cancelled', async t => {
+    const { controller, window, stored } = fixture(t, { items: [item('draft')] });
+    await controller.start();
+    controller.setEditing(true);
+    await controller.saveOptions('draft', { options: { days: 30 } });
+    await controller.acknowledgeNews('autotest-news');
+    assert.deepEqual(stored().items[0].options, {});
+    assert.equal(stored().acknowledgedNewsVersion, 'autotest-news');
+    assert.equal(controller._instance('draft').options.days, 30);
+    controller.cancelEditing();
+    window.document.querySelector('.md-dashboard-modal--confirm .btn-danger').click();
+    assert.equal(controller.settings.acknowledgedNewsVersion, 'autotest-news');
+    assert.deepEqual(copy(controller._instance('draft').options), {});
+});
+
+test('Entering shortcut editing confirms discarding dirty widgets, then shortcut edits still save immediately', async t => {
+    const { controller, window, stored } = fixture(t, { items: [item('draft'), item('link', 'shortcut', '1x1')], definitions: [shortcutDefinition] });
+    await controller.start();
+    controller.setEditing(true);
+    await controller.saveOptions('draft', { options: { days: 30 } });
+    controller.editShortcutsButton.click();
+    assert.equal(controller.editingShortcuts, false);
+    window.document.querySelector('.md-dashboard-modal--confirm .btn-danger').click();
+    assert.equal(controller.editing, false);
+    assert.equal(controller.editingShortcuts, true);
+    await controller.saveOptions('link', { options: { source: 'url', href: '/admin/v9/', title: 'autotest shortcut' } });
+    assert.equal(stored().items.find(value => value.id === 'link').options.title, 'autotest shortcut');
+    assert.deepEqual(stored().items.find(value => value.id === 'draft').options, {});
+});
+
+test('The edit toolbar counteracts smooth scrolling and releases its scroll listener on exit', async t => {
+    const { controller, window } = fixture(t);
+    await controller.start();
+    const listeners = new Set();
+    window.scrollbarMain = { addListener: listener => listeners.add(listener), removeListener: listener => listeners.delete(listener) };
+    controller.toolbar.getBoundingClientRect = () => ({ top: -200 + (controller.editor?.toolbarShift || 0), height: 60 });
+    controller.host.getBoundingClientRect = () => ({ bottom: 1000 });
+    controller.setEditing(true);
+    assert.equal(controller.toolbar.style.transform, 'translateY(248px)');
+    assert.equal(listeners.size, 1);
+    controller.setEditing(false);
+    assert.equal(listeners.size, 0);
+    assert.equal(controller.toolbar.style.transform, '');
 });

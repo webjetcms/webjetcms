@@ -39,9 +39,6 @@ import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.StatDB;
-import sk.iway.iwcm.stat.SessionClusterService;
-import sk.iway.iwcm.stat.SessionDetails;
-import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticator;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorKey;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorQRGenerator;
@@ -642,29 +639,4 @@ public class AdminLogonController {
 		return -1;
 	}
 
-    /** Rejects the current or another user's session and distinguishes queued cluster invalidation. */
-    @PostMapping(value = "/rest/removeSession", produces = "application/json")
-    @PreAuthorize("@WebjetSecurityService.isAdmin()")
-    @ResponseBody
-    public String removeSession(@RequestParam("sessionId") String sessionId, HttpServletRequest request) {
-        Identity user = UsersDB.getCurrentUser(request);
-        if (user == null || !user.isAdmin() || Tools.isEmpty(sessionId) || sessionId.equals(request.getSession().getId())) {
-            return "{\"success\":false,\"pending\":false}";
-        }
-        SessionHolder holder = SessionHolder.getInstance();
-        SessionDetails local = holder.get(sessionId);
-        if (local != null) {
-            boolean success = local.getLoggedUserId() == user.getUserId() && holder.invalidateSession(user.getUserId(), sessionId);
-            return "{\"success\":" + success + ",\"pending\":false}";
-        }
-        for (var node : SessionClusterService.getUserSessionsAllNodes(user.getUserId())) {
-            for (var session : node.path("userSessions")) {
-                if (sessionId.equals(session.path("sessionId").asText()) && session.path("loggedUserId").asInt() == user.getUserId()) {
-                    holder.invalidateSession(user.getUserId(), sessionId);
-                    return "{\"success\":true,\"pending\":true}";
-                }
-            }
-        }
-        return "{\"success\":false,\"pending\":false}";
-    }
 }

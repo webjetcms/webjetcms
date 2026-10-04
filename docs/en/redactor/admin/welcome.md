@@ -14,38 +14,44 @@ The widget menu corresponds to your permissions. The layout is saved to your acc
 
 ![](dashboard.png)
 
-The welcome screen also displays an environment label, such as **PROD**, **UAT**, **INT**, or **DEV**. It helps you distinguish whether you are working with a production site or a test environment. The administrator can customize its text, icon, color, and background image according to the [splash screen configuration](../../admin/setup/configuration/dashboard.md).
+The environment label is displayed before the page name in the header of the entire administration and on the login page: **PROD**, **TEST**, **CIT**, **INT**, **UAT**, **DEMO**, **LOCAL** or **DEV**. It is also in the browser tab title to distinguish between open environments. The administrator can edit the text, icon, color, style and description of the label according to [environment configuration](../../admin/setup/configuration/dashboard.md).
 
 ## Customize the report
 
 Place widgets at the top of your report with the data you check most often. For example, if you process forms and approve content, select the **Forms** and **For Approval** widgets. You can remove widgets you don't need.
 
-Click **Edit Report**. You will see the options **Add Widget**, **Refresh**, and **Done**.
+Click **Edit Overview**. A bar appears with **Restore Defaults**, **Add Widget**, **Cancel**, and **Save** options. It remains below the header when scrolled. Widgets have a dashed outline, a drag handle, and a **Widget Options** button. Additional icons and links in the headers are hidden while editing. System notifications remain active.
 
 ![](dashboard-edit.png)
 
-Click the **Add widget** button to open the catalog. Search for the desired widget by name and click **Add widget** next to it.
+Click the **Add widget** button to open the catalog. Search for the desired widget by name and click **Add** or **Add another** next to it. The settings with a preview will open. Select the size and other options and confirm them with the **Add widget** button. The widget will be added to the end of the current overview and the dialog will close. If you cancel the settings, the widget will not be added. For another widget, open the catalog again from the edit bar.
 
 ![](dashboard-catalogue.png)
 
-For the widget, use the three-dot menu:
+For the widget, use the **Widget Options** button:
 
-- **Widget settings**: choose an available size and other settings, such as time period or form. Not every widget offers multiple sizes.
-- **Move widget**: choose which tab to move it to, or drag it to the bottom of the overview. You can also use the drag handle on a computer.
-- **Remove widget**: removes the card from your dashboard. The data in the app remains intact. The **Revert** option is available immediately after removal. This option will disappear after the next successfully saved edit. You can add the widget again at any time.
+- **Widget Settings**: In the dialog box, select an available size and other settings, such as period or form. Select the size using the card with an illustration of the size and a label, such as **1x1** or **3x3**. Not every widget offers multiple sizes.
+- **Move with keyboard**: the widget is lifted, the arrows change its position, **Enter** places it and **Esc** returns it. You can also start the same move with the spacebar on the handle. When dragging with the mouse, a dashed target indicates the insertion point; **Esc** cancels the move.
+- **Remove from overview**: removes the card without confirmation. The data in the application remains intact. The notification offers **Back** for 8 seconds; when you hold the mouse or focus with the keyboard, the countdown stops. **Ctrl Z** undoes the last edit even after the notification disappears. You can add the widget again from the catalog.
 - **Refresh data**: loads the current data of the given card.
 
-In the **Widget Settings** dialog, adjust the available options and confirm them with the **Save** button. Select a larger tab when you want to see a more detailed graph or list. A smaller tab takes up less space in the overview.
+In the **Widget Settings** dialog box, there is a preview of the widget with the actual data on the left and its settings on the right. The preview changes according to the selected size, color, and other options. On a smaller screen, the settings appear below the preview. Confirm your changes with the **Apply** button. The progress report will change. Select a larger tab when you want to see a more detailed graph or list. A smaller tab takes up less space in the report.
+
+In the **Background Color** section, select a subtle shade from the palette or a **Custom Color**, which you can also enter using a HEX code. The selected color will immediately appear in the widget preview. If the custom color is too dark, the setting will prompt you to choose a lighter shade. The **Default** option will restore the original background of the specific widget; new widgets will use this color automatically.
+
+In the **Visit** widget, the colors of the graph lines, points, and legend automatically adapt to the background color. On a white or gray background, the lines are gray. The previous period remains distinguished by a dashed line.
 
 ![](dashboard-widget-settings.png)
 
-When you're finished editing, click **Done**.
+When you are finished editing, click **Save** in the toolbar. This will save the positions, sizes, settings, and additions or removals of widgets. You will see a notification saying **Overview saved** and the editing mode will close. In case of an error, the changes in progress will remain available for re-saving.
+
+The **Cancel** button opens a confirmation with the options **Continue editing** and **Discard changes** for unsaved changes. The browser will notify you when you leave the page. Shortcuts have their own editing mode via the pencil in the top bar and are saved separately.
 
 On a smaller screen, tabs automatically stack under each other, preserving their order. A layout can contain up to 48 items, including shortcuts, logins, news, and search.
 
-The **Reset** button can be found in the edit bar after the **Add widget** button. After confirming in the dialog, the default widget selection, sizes, order, and settings will be restored. Widget filters across all domains and news read receipts will also be cleared. Your shortcuts and other account settings will be preserved.
+The **Restore defaults** button can be found in the edit bar before the **Add widget** button. After confirming in the dialog, a default selection of widgets, their sizes, order and settings will be prepared. Only by clicking the **Save** button will the change be saved and the widget filters in all domains and the confirmation of reading the news will be deleted. Your shortcuts and other account settings will be preserved.
 
-If you hold down the **Shift** key while clicking **Refresh**, the overview will be replaced with all available widgets in each supported size upon confirmation. You can then remove any variants you don't need.
+If you hold down the **Shift** key while clicking **Restore Defaults**, a summary of all available widgets in each supported size will be prepared after confirmation. You can remove unnecessary variants and confirm the result with the **Save** button.
 
 ## Available information
 
@@ -59,7 +65,7 @@ You can open frequently used parts of the administration without searching in th
 
 ### Keep working.
 
-You can return to a page you've been working on without having to search for its folder. The widget displays up to six of your most recently edited pages with a thumbnail image, location, and date modified. Click to open the page editor. You can scroll the list when the tab is smaller.
+You can return to a page you've been working on without having to search for its folder. The widget displays up to six of your most recently edited pages with a thumbnail image, location, and date modified. Click to open the page editor. The widget's title opens the full list of web pages. You can scroll the list when the tab is smaller.
 
 ### For approval
 
@@ -117,7 +123,7 @@ When sending, the visible card data is refreshed every 30 seconds. The number of
 
 In the welcome panel you will find news of the current version of WebJET CMS. Click the **Collapse news** button to confirm reading them and leave a brief summary. Click the **More info** button to expand them again.
 
-System alerts inform you of a condition that requires attention and remain visible until the cause is resolved. Click the alert title to expand its explanation and available corrective action.
+System alerts are sorted by severity: errors, warnings, and information. Each line contains an explanation and an available action. Errors remain visible until the cause is resolved. You can snooze the alert for 7 days by clicking **Remind me later** or **×**.
 
 ### Search and help
 
@@ -179,19 +185,25 @@ By default, shortcuts point to web pages and forms based on your permissions. If
 
 To add a new shortcut:
 
-1. Click **Edit Shortcuts** and then **Add Shortcut**.
-2. In the **Shortcut Target** field, select **Administration Page** or **Custom URL**. For an administration page, select the main section, section, and possibly a tab. For a custom address, fill in the **URL** field.
-3. Fill in **Custom name**, which will help you recognize the abbreviation. For a custom URL, the name is required.
-4. Set the **Icon** and **Background Color** as needed to make the shortcut easier to find in the list.
-5. Click **Save**. When you are finished editing the shortcuts, click **Done**.
+1. Click **Add Shortcut** directly after the list of shortcuts.
+2. In the **Where should the shortcut go?** field, select **Main section**, **Section**, and the tab under the heading **Select tab**. You can select a section without any other tabs directly. The **Back** option will return the list one level higher. You can also type the name of the destination: the search will offer end tabs from all parts of the menu, for example, after entering "dial", both Dial tabs. Select the destination by clicking or using the arrows and the **Enter** key. For a custom link, click **Use custom URL…** and fill in the **URL address**.
+3. Fill in the **Shortcut Name** as needed. If left blank, the name of the selected destination will be used. For a custom URL, the name is required.
+4. Select **Icon** and **Color**. The first icon is based on the selected target. The **Custom…** option for the icon allows you to enter a name from the Tabler library; the preview changes immediately and a non-existent name cannot be saved. For the color, **Custom…** opens a color picker with transparency settings and a HEX value. The color is used only for the icon background, the brightness of which is adjusted to the selected background. The palette also includes the **No color** option.
+5. Check the preview and click **Add Shortcut**.
+
+Long names are abbreviated with an ellipsis. The full name is displayed when you hover over it or when you focus with the keyboard. The shortcut to an unavailable menu item remains displayed with an explanation; you can correct or delete it in edit mode.
+
+You can enter editing mode by clicking the **Edit Shortcuts** pencil button behind the list. The pencil is replaced by the **Done** button to the right of the welcome, above the shortcuts. Clicking on a shortcut will then open its settings. After changing the destination, name, icon, or color, click **Save Changes**. A notification will offer **Back** for 8 seconds. The same form also includes a **Delete Shortcut** button. When you're done editing, click **Done**.
+
+You move the shortcut by using the handle in front of the icon. A dashed outline remains in place while you move it, and a white line indicates the insertion point. When using the keyboard, move the focus to the handle: **spacebar** picks up the shortcut, **left/right arrows** change the position, **Enter** confirms the move, and **Esc** cancels it. You can also click the handle to select a position in the dialog box.
 
 ![](dashboard-shortcut-settings.png)
 
-If you want a shortcut to a specific folder, open it in Web Pages and copy the address from the browser's address bar, including the `groupid` parameter. When adding a shortcut, select **Custom URL**, paste the copied address, and enter a name, such as **News**.
+If you want a shortcut to a specific folder, open it in Web Pages and copy the address from the browser's address bar, including the `groupid` parameter. When adding a shortcut, select **Use custom URL…**, paste the copied address, and enter a name, such as **News**.
 
 For example, the address may be in the form `/admin/v9/webpages/web-pages-list/?groupid=123`, where `123` is the ID of the desired folder. Use the ID from your copied address. Clicking on such a shortcut will open the folder directly, even if it is nested deeper in the website structure.
 
-The **Reset** button in the shortcuts editor will restore the default links and preserve widgets, their filters, and news status. After deleting all shortcuts, the list will remain empty until you add a new shortcut or restore the default links.
+The cross **×** will remove the shortcut without confirmation. The notification will offer **Back** for 8 seconds. You can also remove the last shortcut; **No shortcut** and an add button will be displayed. Widgets, their filters, and news status will be preserved.
 
 ## Changed pages, auditing and monitoring
 

@@ -4,7 +4,7 @@ Login page
 /* logo page */
 body {
   font-size: 16px;
-  font-weight: 100;
+  font-weight: 400;
 }
 
 body.login input.form-control, body.login select.form-select, body.login .btn {
@@ -33,7 +33,7 @@ label {
   font-size: 16px;
   margin-bottom: 4px;
   line-height: 26px;
-  font-weight: 100;
+  font-weight: 400;
 }
 body.login div.form-group {
   margin-bottom: 24px;
@@ -244,7 +244,7 @@ div.password-strength-info {
 .welcome-title h1 {
   font-size: 60px;
   line-height: 60px;
-  font-weight: 100;
+  font-weight: 400;
   margin: 0;
   margin-bottom: 3px;
   opacity: 0; /* Start with the element hidden */
@@ -254,7 +254,7 @@ div.password-strength-info {
 
 .welcome-title h2 {
   font-size: 33px;
-  font-weight: 100;
+  font-weight: 400;
   opacity: 0; /* Start with the element hidden */
   transform: translate(20px, -10px); /* Start with the element moved up and right */
   animation: revealH2 1s ease-out forwards; /* Apply the animation */
@@ -294,7 +294,12 @@ div.password-strength-info {
   color: white;
   cursor: pointer;
   font-size: 16px;
-  font-weight: 100;
+  font-weight: 400;
+}
+
+.login .language-select .custom-select {
+  width: fit-content;
+  margin-inline: auto;
 }
 
 .custom-select i {

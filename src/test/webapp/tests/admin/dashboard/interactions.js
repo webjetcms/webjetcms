@@ -29,11 +29,11 @@ Before(({ I, login }) => {
 });
 
 /**
- * Checks that active sessions stay in the welcome area, notices can be expanded independently, and
- * arrangement controls appear only in edit mode. Closing the keyboard move dialog must return focus without
- * collapsing open notices.
+ * Checks that active sessions stay in the welcome area, notice actions stay visible, and
+ * arrangement controls appear only in edit mode. Cancelling keyboard movement must return focus without
+ * hiding notice actions.
  */
-Scenario('Pinned security, independent notices and edit mode keep the dashboard readable', async ({ I }) => {
+Scenario('Pinned security, inline notices and edit mode keep the dashboard readable', async ({ I }) => {
     await waitForOverview(I);
     originalSettings = (await I.executeScript(readDashboardBootstrap)).settings;
 
@@ -68,20 +68,13 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
 
     const firstNotice = '[data-notice-id="design-autotest-migration"]';
     const secondNotice = '[data-notice-id="design-autotest-security"]';
-    I.see('Database migration autotest', `${firstNotice} summary`);
-    I.see('Account protection autotest', `${secondNotice} summary`);
-    I.dontSeeElement(`${firstNotice} .md-dashboard__notice-body`);
-    I.executeScript(selector => document.querySelector(selector).focus(), `${firstNotice} summary`);
-    I.pressKey('Enter');
-    I.waitForVisible(`${firstNotice}[open] .md-dashboard__notice-body`, 10);
+    I.see('Database migration autotest', `${firstNotice} .md-dashboard__notice-title`);
+    I.see('Account protection autotest', `${secondNotice} .md-dashboard__notice-title`);
     I.see('Statistics require a conversion autotest.', firstNotice);
-    I.dontSeeElement(`${secondNotice} .md-dashboard__notice-body`);
-    I.clickCss(`${secondNotice} summary`);
-    I.seeElement(`${firstNotice}[open]`);
-    I.seeElement(`${secondNotice}[open]`);
+    I.see('Enable a second verification factor autotest.', secondNotice);
     // Inspect notice actions without executing real migration or account-security operations.
-    I.see('Migration action autotest', `${firstNotice} button`);
-    I.see('Security action autotest', `${secondNotice} button`);
+    I.see('Migration action autotest', `${firstNotice} .md-dashboard__notice-action`);
+    I.see('Security action autotest', `${secondNotice} .md-dashboard__notice-action`);
 
     I.clickCss(editButton);
     I.waitForElement('.md-dashboard.is-editing', 10);
@@ -91,17 +84,14 @@ Scenario('Pinned security, independent notices and edit mode keep the dashboard 
     const handle = '[data-instance-id="design-autotest-pages"] .md-dashboard__drag';
     I.executeScript(selector => document.querySelector(selector).focus(), handle);
     I.pressKey('Enter');
-    I.waitForVisible('.md-dashboard-modal select', 10);
-    I.waitForFunction(() => document.querySelector('.md-dashboard-modal')?.contains(document.activeElement), 10);
+    I.waitForElement('.md-dashboard__widget-drag-helper', 10);
     I.pressKey('Escape');
-    // Bootstrap removes the backdrop before hidden.bs.modal restores the invoking control's focus.
-    I.waitForFunction(() => !document.querySelector('.md-dashboard-modal'), 10);
-    I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), handle), 'Closing keyboard movement must return focus to its handle.');
+    I.dontSeeElement('.md-dashboard__widget-drag-helper');
+    I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), handle), 'Cancelling keyboard movement must return focus to its handle.');
     I.clickCss(editButton);
     I.dontSeeElement('.md-dashboard__edit-control');
-    I.seeElement(`${firstNotice}[open]`);
-    I.clickCss(`${firstNotice} summary`);
-    I.clickCss(`${secondNotice} summary`);
+    I.seeElement(`${firstNotice} .md-dashboard__notice-action`);
+    I.seeElement(`${secondNotice} .md-dashboard__notice-action`);
 });
 
 /**
@@ -138,8 +128,8 @@ Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on
         I.seeElement('#feedback_modal #feedback-upload');
         I.seeElement('#feedback_modal #feedback-group-anonymous');
         // Inspect the original form and cancel without sending feedback or uploading a file.
-        I.clickCss('#feedback_modal .btn-close-editor');
-        I.waitForFunction(() => !document.querySelector('#feedback_modal'), 10);
+        I.clickCss('#feedback_modal .md-feedback__close');
+        I.waitForInvisible('#feedback_modal', 10);
         I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), feedback),
             'Canceling feedback must restore focus to its toolbar action.');
 
@@ -313,32 +303,6 @@ Scenario('Ranked cards link to their modules and handle missing thumbnails', asy
     I.resizeWindow(1337, 1052);
 });
 
-/** Checks configured environment names, custom icons and hiding an empty label. */
-Scenario('Environment badge follows configured identity and disappears when empty', async ({ I }) => {
-    await waitForOverview(I);
-    const badge = '.md-dashboard__welcome-meta .md-dashboard__environment';
-    const original = await I.executeScript(() => ({ ...document.querySelector('webjet-overview-dashboard').config }));
-    const configureEnvironment = async config => {
-        I.executeScript(config => {
-            const dashboard = document.querySelector('webjet-overview-dashboard');
-            dashboard.configure({ data: dashboard.data, labels: dashboard.labels, config: { ...dashboard.config, ...config } });
-        }, config);
-        await waitForOverview(I);
-    };
-    await configureEnvironment({ environmentName: 'PROD/autotest-node', environmentIcon: 'auto' });
-    I.see('PROD/autotest-node', badge);
-    await configureEnvironment({ environmentName: 'DEV/' });
-    I.assertEqual(await I.grabTextFrom(badge), 'DEV', 'An empty cluster name must not leave a trailing slash.');
-    await configureEnvironment({ environmentName: 'Autotest environment', environmentType: 'INT', environmentIcon: 'ti-server' });
-    I.see('Autotest environment', badge);
-    I.seeElement(`${badge} .ti-server`);
-    await configureEnvironment({ environmentName: '   ' });
-    I.dontSeeElement(badge);
-    I.seeElement('.md-dashboard__eyebrow');
-    I.seeElement('.md-dashboard__greeting');
-    await configureEnvironment(original);
-});
-
 /**
  * Checks that every active session remains reachable as the welcome area changes height and on mobile.
  * Scrolling stays inside the session list, and keyboard users can read and dismiss the current-session and
@@ -456,7 +420,7 @@ Scenario('Releasing a dragged widget in its original position does not save pref
     await waitForOverview(I);
     I.clickCss(editButton);
     I.waitForElement('.md-dashboard.is-editing', 10);
-    const helper = 'body > .md-dashboard__widget.ui-draggable-dragging';
+    const helper = '.md-dashboard__widget-drag-helper';
     for (const type of ['forms', 'traffic']) {
         const source = `.md-dashboard__layout [data-instance-id="drag-autotest-${type}"]`;
         I.executeScript(selector => {
@@ -476,10 +440,14 @@ Scenario('Releasing a dragged widget in its original position does not save pref
         // The pointer remains over the original card, so releasing it must not reorder widgets.
         await I.usePlaywrightTo('release the dashboard widget over its original position', async ({ page }) => { await page.mouse.up(); });
         I.waitForInvisible(helper, 10);
-        I.waitForFunction(() => !document.querySelector('.md-dashboard.is-dragging'), 10);
+        I.dontSeeElementInDOM('.is-widget-placeholder');
+        I.assertDeepEqual(await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__layout [data-instance-id]')].map(card => card.dataset.instanceId)),
+            dragSettings.items.map(item => item.id), 'Dropping at the original position must preserve the layout order.');
     }
     I.assertEqual(settingsWrites, 0, 'Inspecting a drag without changing its position must not save preferences.');
     I.clickCss(editButton);
+    I.waitForElement('.md-dashboard:not(.is-editing)', 10);
+    I.assertEqual(settingsWrites, 0, 'Confirming the unchanged layout must not save preferences.');
     await I.stopMockingRoute(settingsRoute);
     await I.stopMockingRoute(dashboardPageRoute);
     I.wjSetDefaultWindowSize();

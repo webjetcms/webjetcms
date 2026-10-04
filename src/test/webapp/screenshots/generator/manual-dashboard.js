@@ -61,7 +61,7 @@ Scenario('Overview, catalogue and widget settings', async ({ I, Document }) => {
     Document.screenshotElement(`${dialog} .modal-content`, '/redactor/admin/dashboard-widget-settings.png');
     closeDialog(I);
 
-    I.clickCss('.md-dashboard__toolbar .md-dashboard__edit-control.btn-primary');
+    I.clickCss('.md-dashboard__toolbar-actions > button:has(.ti-plus)');
     I.waitForVisible(`${dialog}.show .md-dashboard__catalogue-item`, 10);
     I.resizeWindow(1440, 1800);
     Document.screenshotElement(`${dialog} .modal-content`, '/redactor/admin/dashboard-catalogue.png');
@@ -73,22 +73,24 @@ Scenario('Overview, catalogue and widget settings', async ({ I, Document }) => {
 });
 
 Scenario('Shortcut settings and feedback', async ({ I, Document }) => {
-    I.clickCss('.md-dashboard__shortcut-actions button[aria-pressed]');
-    I.clickCss('.md-dashboard__shortcut-actions button.btn-primary:not([aria-pressed])');
+    I.clickCss('.md-dashboard__shortcut-edit[aria-pressed="false"]');
+    I.clickCss('.md-dashboard__shortcut-add');
     I.waitForVisible(`${dialog}.show`, 10);
-    // Use the translated option text from the real select to operate its Bootstrap picker in any language.
-    const urlLabel = await I.grabTextFrom('select[name="dashboardShortcutSource"] option[value="url"]');
-    I.clickCss('select[name="dashboardShortcutSource"] + button');
-    I.click(locate('.dropdown-menu.show .dropdown-item').withText(urlLabel));
-    I.waitForVisible('input[name="dashboardShortcutUrl"]', 10);
-    I.fillField('input[name="dashboardShortcutUrl"]', `https://docs.webjetcms.sk/latest/${I.getConfLng()}/`);
-    I.fillField('input[name="dashboardShortcutTitle"]', 'WebJET CMS Docs');
-    I.fillField('input[name="dashboardShortcutIcon"]', 'book');
-    I.clickCss('.md-dashboard__shortcut-swatch:has(input[value="blue"])');
+    I.clickCss(`${dialog} [name="dashboardShortcutSearch"]`);
+    I.waitForVisible(`${dialog} [role="listbox"]`, 10);
+    I.clickCss(`${dialog} .md-dashboard__shortcut-result-url`);
+    I.waitForVisible(`${dialog} input[name="dashboardShortcutUrl"]`, 10);
+    I.fillField(`${dialog} input[name="dashboardShortcutUrl"]`, `https://docs.webjetcms.sk/latest/${I.getConfLng()}/`);
+    I.fillField(`${dialog} input[name="dashboardShortcutTitle"]`, 'WebJET CMS Docs');
+    I.clickCss(`${dialog} .md-dashboard__shortcut-icon-choices input[value="custom"] + span`);
+    I.fillField(`${dialog} input[name="dashboardShortcutIcon"]`, 'book');
+    I.clickCss(`${dialog} .md-dashboard__shortcut-swatch:has(input[value="blue"])`);
+    I.waitForVisible(`${dialog} .md-dashboard__shortcut-preview > .ti-book`, 10);
+    I.waitForEnabled(`${dialog} .modal-footer .btn-primary`, 10);
     I.moveCursorTo(`${dialog} .modal-title`);
     Document.screenshotElement(`${dialog} .modal-content`, '/redactor/admin/dashboard-shortcut-settings.png');
     closeDialog(I);
-    I.clickCss('.md-dashboard__shortcut-actions button[aria-pressed]');
+    I.clickCss('.md-dashboard__shortcut-edit[aria-pressed="true"]');
 
     showOverview(I);
     Document.screenshotElement('.md-dashboard__toolbar', '/redactor/admin/feedback.png');
@@ -96,7 +98,7 @@ Scenario('Shortcut settings and feedback', async ({ I, Document }) => {
     I.clickCss('.md-dashboard__feedback');
     I.waitForVisible('#feedback_modal.show', 10);
     Document.screenshot('/redactor/admin/feedback-modal.png');
-    I.clickCss('#feedback_modal .btn-close-editor');
+    I.clickCss('#feedback_modal .md-feedback__close');
     I.waitForInvisible('#feedback_modal', 10);
     I.stopMockingRoute(settingsRoute);
 });

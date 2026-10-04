@@ -26,6 +26,7 @@
  * @property {Object} domainOptions - Copy of current-domain preferences or their registered defaults.
  * @property {WidgetContext} context - Current dashboard services and page data.
  * @property {AbortSignal} signal - Aborted when the render or dialog is replaced or disposed.
+ * @property {boolean} [adding=false] - Configuration-only flag for a new, unsaved widget.
  * @property {function(): Promise<void>} [refresh] - Render-only callback that reloads this instance.
  * @property {function(WidgetOptionsUpdate): Promise<boolean>} [saveOptions] - Render-only callback resolving to whether persistence succeeded.
  */
@@ -48,6 +49,7 @@
  * @property {string} type - Unique type identifier accepted by the settings backend.
  * @property {string} [titleKey] - Translation key for the default title.
  * @property {string} [descriptionKey] - Translation key for the catalogue description.
+ * @property {"content"|"traffic"|"system"} [category="system"] - Catalogue category.
  * @property {string} [icon] - Tabler icon class.
  * @property {string[]} [sizes] - Supported footprints; defaults to a single 2x2 size.
  * @property {string} [defaultSize] - Initial footprint; defaults to the first supported size.
@@ -62,6 +64,7 @@
  * @property {Object} [headerLink] - Navigation shown in the widget header.
  * @property {string|function(import('./model').WidgetInstance, WidgetContext): string} headerLink.href - Local destination or resolver for the current instance.
  * @property {string} [headerLink.labelKey] - Translation key for a separate link; omission links the title.
+ * @property {function(import('./model').WidgetInstance, WidgetContext): void} [headerAction] - Opens a dialog from the title instead of navigating.
  * @property {function(WidgetArguments): (WidgetCleanup|Promise<WidgetCleanup>)} render - Populates content and optionally returns resources to dispose.
  * @property {function(WidgetArguments): (WidgetConfiguration|Promise<WidgetConfiguration>)} [configure] - Populates settings controls and returns their reader and optional cleanup.
  */

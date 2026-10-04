@@ -60,13 +60,18 @@ for (const { permission, types } of permissionCases) {
         I.assertTrue(await I.executeScript(permission => WJ.hasPermission(permission), permission), 'Logout must restore the real account permissions.');
         for (const type of types) I.seeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
         if (permission === 'welcomeShowLoggedAdmins') {
-            I.assertTrue((await I.executeScript(readDashboardBootstrap)).loggedAdmins.length > 0, 'Authorized page data must contain logged-in administrators.');
+            I.assertTrue(await I.executeScript(async () => {
+                const response = await fetch('/admin/rest/sessions/administrators', { headers: { 'X-CSRF-Token': window.csrfToken } });
+                return response.ok && (await response.json()).length > 0;
+            }), 'The authorized REST service must list logged-in administrators.');
         }
         I.amOnPage(`/admin/v9/?removePerm=${permission === 'cmp_stat' ? 'cmp_stat,cmp_abtesting' : permission === 'menuWebpages' ? 'menuWebpages,cmp_blog,cmp_blog_admin,cmp_news,cmp_abtesting,cmp_basket' : permission}`);
         loaded(I);
         I.assertFalse(await I.executeScript(permission => WJ.hasPermission(permission), permission));
         if (permission === 'welcomeShowLoggedAdmins') {
-            I.assertFalse(Object.prototype.hasOwnProperty.call(await I.executeScript(readDashboardBootstrap), 'loggedAdmins'), 'The server must omit administrator data without permission.');
+            I.assertFalse(Object.prototype.hasOwnProperty.call(await I.executeScript(readDashboardBootstrap), 'loggedAdmins'), 'Administrator data must never be injected.');
+            I.assertEqual(await I.executeScript(async () => (await fetch('/admin/rest/sessions/administrators', { headers: { 'X-CSRF-Token': window.csrfToken } })).status), 403,
+                'The REST service must reject missing list permission even if administrator management remains allowed.');
         }
         for (const type of types) I.dontSeeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
         I.seeElementInDOM(`${dashboard} [data-widget-type="sessions"]`);
@@ -79,7 +84,7 @@ for (const { permission, types } of permissionCases) {
         I.clickCss(`${modal} .btn-close`);
         I.waitForInvisible(modal, 10);
         if (permission === 'cmp_stat') {
-            I.dontSeeElementInDOM('[data-instance-id="autotest-security-menu"] a');
+            I.assertEqual(await I.grabAttributeFrom('[data-instance-id="autotest-security-menu"] a', 'href'), null, 'A shortcut without permission must not expose a navigable destination.');
             const menu = await I.executeScript(async () => {
                 const response = await fetch('/admin/rest/dashboard/menu', { headers: { 'X-CSRF-Token': window.csrfToken } });
                 const paths = [];
@@ -167,8 +172,7 @@ Scenario('Persisted shortcut titles remain text and local paths cannot become ex
         && [...document.querySelectorAll('[data-instance-id^="autotest-security-path-"] a')].every(link => link.origin === location.origin)), 'Dot segments must not turn a local shortcut into a different origin.');
 
     I.clickCss('.md-dashboard__shortcut-actions button[aria-pressed="false"]');
-    I.clickCss('[data-instance-id="autotest-security-xss"] .dropdown > button');
-    I.clickCss('[data-instance-id="autotest-security-xss"] [data-dashboard-action="settings"]');
+    I.clickCss('[data-instance-id="autotest-security-xss"] .md-dashboard-widget__shortcut');
     I.waitForVisible(modal, 10);
     I.seeInField(`${modal} [name="dashboardShortcutTitle"]`, title);
     I.dontSeeElementInDOM(`${modal} .md-dashboard__shortcut-preview img, ${modal} .md-dashboard__shortcut-preview svg`);
@@ -192,7 +196,7 @@ Scenario('Ownership parameters cannot select another dashboard or session owner'
     I.assertDeepEqual(forged.settings, data.settings, 'Settings ownership and domain must come from the session.');
     I.assertDeepEqual(forged.currentSessions, data.currentSessions, 'Session ownership must come from the signed-in account.');
     const result = await I.executeScript(async id => {
-        const response = await fetch(`/admin/rest/removeSession?sessionId=${encodeURIComponent(id)}&userId=-1`, {
+        const response = await fetch(`/admin/rest/sessions/logout?sessionId=${encodeURIComponent(id)}&userId=-1`, {
             method: 'POST', headers: { 'X-CSRF-Token': window.csrfToken }
         });
         return { status: response.status, removal: await response.json() };
@@ -214,7 +218,7 @@ Scenario('Settings mutations and session removal require a valid CSRF token', as
         const requests = [
             { path, method: 'PUT', body: JSON.stringify(before) }, { path, method: 'DELETE' },
             { path: `${path}/reset`, method: 'PUT', body: JSON.stringify(before) },
-            { path: '/admin/rest/removeSession?sessionId=autotest-nonexistent-session', method: 'POST' }
+            { path: '/admin/rest/sessions/logout?sessionId=autotest-nonexistent-session', method: 'POST' }
         ];
         const statuses = [];
         for (const request of requests) {
@@ -262,7 +266,7 @@ Scenario('Unauthenticated requests cannot read dashboard data or mutate preferen
             { path: '/admin/rest/dashboard/settings', method: 'PUT', body: '{}' },
             { path: '/admin/rest/dashboard/settings', method: 'DELETE' },
             { path: '/admin/rest/dashboard/settings/reset', method: 'PUT', body: '{}' },
-            { path: '/admin/rest/removeSession?sessionId=autotest-nonexistent-session', method: 'POST' }];
+            { path: '/admin/rest/sessions/logout?sessionId=autotest-nonexistent-session', method: 'POST' }];
         const results = [];
         for (const request of requests) {
             const response = await fetch(request.path, { method: request.method, body: request.body, headers: { 'Content-Type': 'application/json' } });

@@ -7,6 +7,20 @@ const docs = `${search} label:has(input[value="docs"])`;
 const results = '.md-dashboard-widget__search-results';
 const lookup = '**/admin/skins/webjet6/_doc_autocomplete.jsp?*';
 
+async function assertSuggestionWidth(I) {
+    const bounds = await I.executeScript(([menuSelector, inputSelector]) => {
+        const menu = document.querySelector(menuSelector);
+        const rect = menu.getBoundingClientRect();
+        const field = document.querySelector(inputSelector).getBoundingClientRect();
+        return { left: rect.left, right: rect.right, viewport: window.innerWidth, width: rect.width,
+            fieldWidth: field.width, fieldLeft: field.left, clientWidth: menu.clientWidth, content: menu.scrollWidth };
+    }, [results, input]);
+    I.assertTrue(Math.abs(bounds.width - bounds.fieldWidth) <= 1, 'The menu width must match the text input.');
+    I.assertTrue(Math.abs(bounds.left - bounds.fieldLeft) <= 1, 'The menu must align with the input.');
+    I.assertTrue(bounds.left >= 0 && bounds.right <= bounds.viewport, 'Suggestions must remain within the viewport.');
+    I.assertTrue(bounds.content <= bounds.clientWidth + 1, 'Suggestions must wrap without horizontal scrolling.');
+}
+
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage('/admin/v9/');
@@ -16,7 +30,7 @@ Before(({ I, login }) => {
 
 /**
  * Checks that changing search scope with an empty query does nothing, while a nonempty documentation query
- * opens a separate tab. Clicking the scope, pressing Enter and using the search button must preserve the
+ * opens a separate tab. Clicking the scope and pressing Enter must preserve the
  * entered text.
  */
 Scenario('Empty scope switches do not submit and documentation clicks submit the current query', async ({ I }) => {
@@ -38,11 +52,10 @@ Scenario('Empty scope switches do not submit and documentation clicks submit the
     I.fillField(input, `  ${query}  `);
     I.clickCss(docs);
     I.clickCss(docs);
-    I.clickCss(`${search} button[type="submit"]`);
     I.clickCss(input);
     I.pressKey('Enter');
     const popups = await I.executeScript(() => window.autotestSearchPopups);
-    I.assertEqual(popups.length, 4, 'Switching, clicking the selected scope, the search button and Enter must each submit once.');
+    I.assertEqual(popups.length, 3, 'Switching, clicking the selected scope and Enter must each submit once.');
     for (const popup of popups) {
         I.assertEqual(new URL(popup.url).origin, 'https://docs.webjetcms.sk');
         I.assertEqual(new URL(popup.url).searchParams.get('q'), query);

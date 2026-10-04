@@ -147,6 +147,8 @@ import { CellVisibilityService } from './libs/data-tables-extends/';
 window.dataTableCellVisibilityService = new CellVisibilityService();
 
 /* WEB COMPONENTS */
+import { showFeedbackDialog } from './feedback';
+WJ.showFeedbackDialog = showFeedbackDialog;
 import './web-components/webjet-overview-dashboard';
 import './web-components/webjet-server-monitoring';
 import './web-components/webjet-image-area-selector';

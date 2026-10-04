@@ -19,7 +19,10 @@ async function openAction(I, id, action) {
     if (id === shortcutId) {
         await I.clickIfVisible('.md-dashboard__shortcut-actions button[aria-pressed="false"]');
         I.waitForElement('.md-dashboard.is-editing-shortcuts', 10);
-    } else await enableEditing(I);
+        I.clickCss(`[data-instance-id="${id}"] .md-dashboard__shortcut-remove`);
+        return;
+    }
+    await enableEditing(I);
     I.clickCss(`[data-instance-id="${id}"] .dropdown > button`);
     I.waitForVisible(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`, 10);
     I.forceClick(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`);
@@ -53,8 +56,9 @@ Scenario('Add and configure a personal shortcut and reload its server preference
     const existingIds = originalSettings.items.map(item => item.id);
     I.clickCss('.md-dashboard__shortcut-actions button[aria-pressed="false"]');
     I.clickCss('.md-dashboard__shortcut-actions > button:first-child');
-    I.waitForVisible('.md-dashboard-modal [name="dashboardShortcutSource"]', 10);
-    I.selectOption('.md-dashboard-modal [name="dashboardShortcutSource"]', 'url');
+    I.waitForVisible('.md-dashboard-modal [name="dashboardShortcutSearch"]', 10);
+    I.clickCss('.md-dashboard-modal [name="dashboardShortcutSearch"]');
+    I.clickCss('.md-dashboard-modal .md-dashboard__shortcut-result-url');
     I.fillField('.md-dashboard-modal [name="dashboardShortcutUrl"]', '/admin/v9/webpages/web-pages-list/');
     I.fillField('.md-dashboard-modal [name="dashboardShortcutTitle"]', shortcutTitle);
     I.seeInField('.md-dashboard-modal [name="dashboardShortcutTitle"]', shortcutTitle);
@@ -70,7 +74,7 @@ Scenario('Add and configure a personal shortcut and reload its server preference
 });
 
 /**
- * Checks that widgets can be reordered by dragging or the move dialog and resized through settings. These
+ * Checks that widgets can be reordered by pointer and keyboard movement and resized through settings. These
  * changes must keep the existing system-notice area in place.
  */
 Scenario('Move with drag and keyboard controls and resize without replacing alerts', async ({ I }) => {
@@ -93,41 +97,43 @@ Scenario('Move with drag and keyboard controls and resize without replacing aler
         const bounds = document.querySelector(`[data-instance-id="${id}"] .md-dashboard__drag`).getBoundingClientRect();
         return bounds.top >= 48 && bounds.bottom <= window.innerHeight;
     }), [firstId, movedId], 10);
-    // jQuery UI needs intermediate pointer moves; the standard helper scrolls its target under the fixed header.
+    // Intermediate pointer moves keep the insertion target below the fixed header.
     await I.usePlaywrightTo('move a dashboard widget with the pointer', async ({ page }) => {
         const source = await page.locator(`.md-dashboard__layout [data-instance-id="${movedId}"] .md-dashboard__drag`).boundingBox();
         const target = await page.locator(`.md-dashboard__layout [data-instance-id="${firstId}"] .md-dashboard__widget-header`).boundingBox();
         await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
         await page.mouse.down();
         await page.mouse.move(source.x + source.width / 2 - 12, source.y + source.height / 2, { steps: 2 });
-        await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 12 });
+        await page.mouse.move(target.x + 4, target.y + target.height / 2, { steps: 12 });
         await page.mouse.up();
     });
     waitForSave(I);
     const movedFirst = await I.executeScript(() => document.querySelector('.md-dashboard__layout [data-instance-id]').dataset.instanceId);
     assert.equal(movedFirst, movedId, 'Dragging before another grid card must update its region order');
-    I.clickCss(`[data-instance-id="${movedId}"] .md-dashboard__drag`);
-    I.waitForVisible('.md-dashboard-modal select', 10);
-    I.selectOption('.md-dashboard-modal select', '');
-    I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
-    I.waitForInvisible('.md-dashboard-modal', 10);
-    waitForSave(I);
-    const lastId = await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__layout [data-instance-id]')].at(-1).dataset.instanceId);
-    assert.equal(lastId, movedId, 'Keyboard movement must update its region order');
+    I.executeScript(id => document.querySelector(`[data-instance-id="${id}"] .md-dashboard__drag`).focus(), movedId);
+    I.pressKey('Space');
+    I.pressKey('ArrowRight');
+    I.pressKey('Enter');
+    const keyboardFirst = await I.executeScript(() => document.querySelector('.md-dashboard__layout [data-instance-id]').dataset.instanceId);
+    assert.equal(keyboardFirst, firstId, 'Keyboard movement must update the grid order');
 
     const recentId = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.find(item => item.type === 'recent-pages')?.id);
     assert.ok(recentId, 'The editor default must include recent pages');
     I.dontSeeElementInDOM('[data-dashboard-action="collapse"]');
-    I.seeElement(`[data-instance-id="${recentId}"] .md-dashboard__header-link`);
+    I.seeElement(`[data-instance-id="${recentId}"] .md-dashboard__title-link`);
     await openAction(I, recentId, 'settings');
-    I.waitForVisible('.md-dashboard-modal select', 10);
-    I.selectOption('.md-dashboard-modal select', '2 × 3');
+    I.waitForVisible('.md-dashboard-modal .md-dashboard__size-choices', 10);
+    I.clickCss('.md-dashboard-modal .md-dashboard__size-choice:has(input[value="2x3"])');
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
     I.waitForInvisible('.md-dashboard-modal', 10);
     waitForSave(I);
     I.waitForElement(`[data-instance-id="${recentId}"][data-size="2x3"]`, 10);
     const alertsPreserved = await I.executeScript(() => window.autotestDashboardAlerts === document.querySelector('#toast-container-overview'));
     assert.equal(alertsPreserved, true, 'Preference changes must preserve the active system alert container');
+    I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="true"]');
+    waitForSave(I);
+    I.refreshPage();
+    I.waitForElement(`[data-instance-id="${recentId}"][data-size="2x3"]`, 20);
 });
 
 /**
@@ -155,7 +161,7 @@ Scenario('Remove and undo restores the configured instance', async ({ I }) => {
     await openAction(I, shortcutId, 'remove');
     waitForSave(I);
     I.waitForInvisible(`[data-instance-id="${shortcutId}"]`, 10);
-    I.clickCss('.md-dashboard__undo button');
+    I.clickCss('[data-dashboard-shortcut-undo]');
     waitForSave(I);
     I.waitForElement(`[data-instance-id="${shortcutId}"]`, 10);
     I.see(shortcutTitle, `[data-instance-id="${shortcutId}"]`);
