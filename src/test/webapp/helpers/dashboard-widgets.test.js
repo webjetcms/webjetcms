@@ -1763,7 +1763,8 @@ test('Search exposes separate scopes and changes its accessible hint', t => {
     const radios = container.querySelectorAll('[type=radio]');
     assert.equal(radios.length, 2);
     assert.ok([...radios].every(radio => radio.closest('label')?.textContent.trim()), 'Native search scopes retain their visible accessible labels.');
-    assert.match(container.querySelector('[type=submit]').getAttribute('aria-label'), /searchButton/);
+    assert.equal(container.querySelector('[type=submit]'), null);
+    assert.equal(container.querySelector('.md-dashboard-widget__search-icon').getAttribute('aria-hidden'), 'true');
     assert.match(container.querySelector('[type=search]').getAttribute('aria-label'), /searchAdminHint/);
     radios[1].checked = true;
     radios[1].dispatchEvent(new window.Event('change'));

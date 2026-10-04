@@ -157,11 +157,9 @@ export function registerUtilityWidgets() {
                 label.append(radio, node('span', 'md-dashboard-widget__search-label', text(context, value === 'admin' ? 'adminSearch' : 'docsSearch'))); switcher.append(label);
             }
             hint();
-            const group = node('div', 'input-group md-dashboard-widget__search-input');
-            const submit = node('button', 'btn md-dashboard-widget__search-submit');
-            submit.type = 'submit'; submit.setAttribute('aria-label', text(context, 'searchButton'));
-            const searchIcon = node('i', 'ti ti-search'); searchIcon.setAttribute('aria-hidden', 'true'); submit.append(searchIcon);
-            group.append(input, submit);
+            const group = node('div', 'md-dashboard-widget__search-input');
+            const searchIcon = node('i', 'ti ti-search md-dashboard-widget__search-icon'); searchIcon.setAttribute('aria-hidden', 'true');
+            group.append(input, searchIcon);
             form.append(group, switcher);
             form.addEventListener('submit', event => {
                 event.preventDefault();
