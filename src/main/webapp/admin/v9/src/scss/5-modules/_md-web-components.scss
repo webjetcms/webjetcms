@@ -109,6 +109,86 @@ webjet-image-area-selector {
     display: block !important;
 }
 
+#feedback_modal.md-feedback {
+    .modal-dialog { max-width: 640px; }
+    .modal-header { display: flex; align-items: center; gap: 8px; padding: 16px 20px; }
+    .modal-title { flex: 1; margin: 0; font-weight: 700; }
+    .md-feedback__close, .md-feedback__back { padding: 2px 4px; color: var(--wj-gray-text); }
+    form { display: flex; flex-direction: column; min-height: 0; }
+    .modal-body { padding: 0 20px 20px; }
+    .modal-footer { padding: 12px 20px; gap: 8px; }
+    .btn-link { color: var(--wj-secondary); text-decoration: none; }
+    .md-feedback__fields { min-width: 0; }
+    .md-feedback__fields:disabled { pointer-events: none; }
+
+    .md-feedback__types {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding: 3px;
+        margin-bottom: 16px;
+        border-radius: $border-radius;
+        background: var(--wj-nice-gray);
+        .btn { color: var(--wj-gray-text); border: 1px solid transparent; padding: 7px 4px; }
+        .btn-check:checked + .btn { background: white; color: var(--wj-secondary); border-color: $nice-gray-100; font-weight: 700; box-shadow: 0 1px 3px rgba($secondary, .08); i { color: var(--wj-primary); } }
+        .btn-check:focus-visible + .btn { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }
+    }
+
+    .md-feedback__editor {
+        border: 1px solid $nice-gray-300;
+        border-radius: $border-radius;
+        margin-bottom: 16px;
+        overflow: hidden;
+        &:focus-within { border-color: var(--wj-primary); box-shadow: 0 0 0 1px var(--wj-primary); }
+        .ql-toolbar { border: 0; border-bottom: 1px solid $nice-gray-100; background: var(--wj-nice-gray); padding: 6px; }
+        .ql-container { border: 0; font: inherit; }
+        .ql-editor { min-height: 170px; max-height: 280px; padding: 12px; }
+        .ql-editor.ql-blank::before { font-style: normal; color: var(--wj-gray-text); left: 12px; right: 12px; }
+        .ql-toolbar button { border-radius: 3px; &:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: 1px; } }
+    }
+
+    .md-feedback__screenshot-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; .form-check { margin: 0; flex: 1; } }
+    .md-feedback__preview { width: 76px; height: 48px; object-fit: cover; object-position: top; border: 1px solid $nice-gray-100; border-radius: 3px; }
+    .md-feedback__upload { margin-bottom: 16px; .form-label { font-size: 14px; color: var(--wj-gray-text); } }
+    .upload-wrapper { position: static; width: auto; box-shadow: none; margin-top: 8px; }
+    .toast-container-progress { display: none; }
+    .toast-container-upload .toast-message { padding-right: 32px; span { max-width: calc(100% - 90px); } }
+    .md-feedback__remove-file { position: absolute; right: 4px; top: 4px; padding: 4px; }
+    #feedback-upload {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        min-height: 76px;
+        padding: 8px 12px;
+        border: 1px dashed $nice-gray-300;
+        border-radius: $border-radius;
+        .dz-message { margin: 0; font-size: 14px; line-height: 1.5; }
+    }
+    .md-feedback__anonymous { margin-bottom: 12px; }
+    .md-feedback__context { margin: 0; display: flex; gap: 6px; align-items: baseline; }
+    .md-feedback__error { margin: 16px 0 0; padding: 12px; border-radius: $border-radius; color: $danger; background: rgba($danger, .06); }
+    .md-feedback__success {
+        padding: 20px 32px 24px;
+        text-align: center;
+        h3 { font-size: 18px; font-weight: 700; margin: 16px 0 8px; }
+        p { color: var(--wj-gray-text); }
+    }
+    .md-feedback__success-icon { display: inline-flex; justify-content: center; align-items: center; width: 48px; height: 48px; border-radius: 50%; background: rgba($success, .12); color: var(--wj-secondary); font-size: 24px; }
+    .md-feedback__success-actions { display: flex; justify-content: center; gap: 12px; margin-top: 24px; }
+
+    @media (prefers-reduced-motion: reduce) {
+        .ti-spin { animation: none; }
+    }
+
+    @media (max-width: $bp-mobile) {
+        .modal-dialog { margin: 12px; }
+        .modal-header { padding: 12px 16px; }
+        .modal-body { padding: 0 16px 16px; }
+        .modal-footer { padding: 12px 16px; }
+        .md-feedback__screenshot-row { flex-wrap: wrap; }
+        .md-feedback__success { padding: 20px 16px; }
+    }
+}
+
 #webjet-overview-dashboard {
     .overview__dashboard,
     .overview__news {
