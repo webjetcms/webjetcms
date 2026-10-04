@@ -1,19 +1,21 @@
 # Konfigurace úvodní obrazovky a označení prostředí
 
-Pozadí uvítacího panelu a označení prostředí nastavíte přes **Nastavení → Konfigurace**, poté obnovte stránku. Označení se zobrazuje před názvem stránky v celé administraci v9 a na přihlašovací stránce. Na mobilu následuje za tlačítkem menu. Postup úpravy hodnot popisuje [Konfigurace](README.md).
+Pozadí uvítacího panelu a označení prostředí nastavíte přes **Nastavení → Konfigurace**. Po změně obnovte stránku. Označení se zobrazuje před názvem stránky ve společné hlavičce administrace v9 a na přihlašovací stránce. Na mobilu je za tlačítkem menu. Postup úpravy hodnot popisuje [Konfigurace](README.md).
 
 ## Konfigurační proměnné
 
 | Proměnná | Výchozí hodnota | Význam |
 | --- | --- | --- |
 | `dashboardHeroBackgroundImage` | `/admin/skins/webjet8/assets/global/img/wj/wj9_bg.jpg` | Obrázek pozadí uvítacího panelu. Prázdná nebo neplatná hodnota obrázek skryje. |
-| `dashboardEnvironmentName` | `{ENVIRONMENT_NAME}` | Text s podporou maker. Zobrazí nejvýše 8 velkých písmen; celý název zůstane v tooltipu. Prázdná hodnota skryje označení i předponu titulku karty, také na produkci. |
-| `dashboardEnvironmentIcon` | `auto` | Automatická ikona, název Tabler jako `rocket` nebo `ti-database`, případně `none` či prázdná hodnota pro skrytí ikony. Při neexistujícím názvu se ikona nezobrazí. |
-| `dashboardEnvironmentColor` | `auto` | Paleta prostředí nebo vlastní pozadí `#RGB`/`#RRGGBB`. Text a ikona pro vlastní barvu budou černé nebo bílé s kontrastem alespoň 4,5 : 1. |
-| `dashboardEnvironmentStyle` | `auto` | `subtle` = jemný, `strong` = výrazný, `auto` = výrazný pro PROD a jemný pro ostatní prostředí. |
-| `dashboardEnvironmentDescription` | prázdná | Popis za celým názvem v tooltipu při ukázání myší i fokusu klávesnicí. Podporuje makra. Escape tooltip skryje. |
+| `dashboardEnvironmentName` | `{ENVIRONMENT_NAME}` | Text označení. Podporuje makra i vlastní text. Zobrazuje nejvýše 8 znaků velkými písmeny; celý název zůstane v tooltipu. Prázdná hodnota označení skryje iz titulku karty. |
+| `dashboardEnvironmentIcon` | `auto` | Ikona podle prostředí nebo název ikony Tabler. `rocket` nebo `ti-database`. Hodnota `none` nebo prázdná hodnota ikonu skryje. Při neexistujícím názvu se ikona nezobrazí. |
+| `dashboardEnvironmentColor` | `auto` | Barva z palety dle prostředí a stylu. Vlastní barva `#RGB` či `#RRGGBB` automaticky obdrží černý nebo bílý text a ikonu s kontrastem alespoň 4,5:1. |
+| `dashboardEnvironmentStyle` | `auto` | `subtle` = jemný, `strong` = výrazný. Hodnota `auto` použije výrazný styl pro PROD, jemný pro ostatní prostředí. |
+| `dashboardEnvironmentDescription` | prázdná | Doplňující popis za celým názvem v tooltipu. Podporuje makra. Tooltip funguje při ukázání myší i při fokusu klávesnicí; Escape ho skryje. |
 
-Obrázek může používat místní cestu začínající `/` nebo úplnou HTTP(S) URL bez přihlašovacích údajů. Adresy začínající `//`, adresy se zpětnými lomítky nebo řídicími znaky a jiné protokoly nejsou povoleny. Maximální délka adresy je 1024 znaků.
+Název se přidává také do titulku karty prohlížeče a přístupného názvu hlavičky, například `[TEST] Webové stránky | WebJET CMS`. Ikona je volitelná, text zůstává povinen. Na produkci můžete označení vypnout prázdnou hodnotou `dashboardEnvironmentName`.
+
+Obrázek pozadí může používat lokální cestu začínající `/` nebo úplnou HTTP(S) URL bez přihlašovacích údajů. Adresy začínající `//`, adresy se zpětnými lomítky nebo řídicími znaky a jiné protokoly nejsou povoleny. Maximální délka adresy je 1024 znaků.
 
 ## Automatické označení prostředí
 
@@ -32,12 +34,12 @@ Detekce nerozlišuje velikost písmen. Hledá celé části názvu oddělené te
 | LOCAL | `local`, `localhost`, zpětná smyčka IPv4 `127.*.*.*` nebo IPv6 `::1` | `ti-device-laptop` | `#E6E8EE` / `#353944` | `#353944` / `#FFFFFF` |
 | DEV | Ostatní názvy, například `iwcm.interway.sk` | `ti-code` | `#CFF5E4` / `#00533D` | `#007E69` / `#FFFFFF` |
 
-Předprodukce zahrnuje také `pre-prod`, `pre-production` a varianty s tečkou či podtržítkem; tyto části se nepovažují za PROD. Část slova, například `int` v `interway`, se neshoduje s INT. TEST je samostatné prostředí: `test`, `testing` a `qa` již neoznačují UAT.
+Předprodukce zahrnuje i zápisy `pre-prod`, `pre-production` a jejich varianty s tečkou či podtržítkem. Tyto části názvu se nepovažují za PROD. Část slova, například `int` v `interway`, se neshoduje s prostředím INT. TEST je samostatné prostředí; názvy `test`, `testing` a `qa` již neoznačují UAT.
 
-Automatický vzhled použije rozpoznané prostředí na začátku nakonfigurovaného názvu, za kterým následuje lomítko, mezera, pomlčka nebo konec textu. Jiné vlastní názvy použijí detekci serveru. Ručně nastavená ikona nebo barva má přednost. Při neplatné barvě se použije automatický výběr.
+Automatický vzhled přednostně použije úvodní označení prostředí v nakonfigurovaném textu, za kterým následuje lomítko, mezera, pomlčka nebo konec textu. Při jiném vlastním textu vychází z detekce serveru. Ručně nastavená ikona nebo barva má přednost. Při neplatné barvě se použije automatický výběr.
 
 ## Název uzlu a vlastní označení
 
-`dashboardEnvironmentName={ENVIRONMENT_NAME}/{CLUSTER_NAME}` doplní `clusterMyNodeName` aktuálního uzlu. Celý název, například `UAT/node-1`, zůstane v tooltipu; štítek zobrazí prvních 8 znaků velkými písmeny. Při prázdném názvu uzlu se koncové lomítko odstraní.
+Například `dashboardEnvironmentName={ENVIRONMENT_NAME}/{CLUSTER_NAME}` doplní název aktuálního uzlu z `clusterMyNodeName`. Celý název, například `UAT/node-1`, je v tooltipu; štítek zobrazí prvních 8 znaků velkými písmeny. Při prázdném názvu uzlu se koncový lomítko odstraní.
 
-Pro krátký štítek a delší popis nastavte `dashboardEnvironmentName=TEST` a `dashboardEnvironmentDescription=Testovací prostředí, uzel {CLUSTER_NAME}`. Text se přidá také do titulku karty a přístupného názvu hlavičky, například `[TEST] Webové stránky | WebJET CMS`. Nastavení používá stávající konfiguraci; samostatný dialog na úvodní obrazovce není k dispozici.
+Pro krátký štítek a delší popis nastavte `dashboardEnvironmentName=TEST` a `dashboardEnvironmentDescription=Testovacie prostredie, uzol {CLUSTER_NAME}`. Nastavení prostředí používá existující konfiguraci; samostatný dialog na úvodní obrazovce není k dispozici.

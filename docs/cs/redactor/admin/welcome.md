@@ -2,6 +2,10 @@
 
 Na úvodní obrazovce můžete rychle zkontrolovat návštěvnost, odeslané formuláře či stránky čekající na schválení a vrátit se k rozpracovaným stránkám.
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Přehled tvoří **widgety**, tedy karty s konkrétními údaji, například grafem návštěvnosti nebo seznamem požadavků na schválení. Vyberte si ty, které využíváte, a uspořádejte je podle toho, co chcete sledovat jako první. Pomocí [zkratek](#vaše-zkratky) si otevřete často používanou část administrace nebo konkrétní složku bez hledání v menu.
 
 Při prvním otevření se podle vašich oprávnění zobrazí výchozí widgety **Návštěvnost**, **Formuláře**, **Ke schválení**, **Chyby 404**, **Pokračujte v práci**, **Odkud návštěvníci přišli**, **Nejbližší publikování** a **Newsletter**. Další widgety si můžete sami přidat. V horní části je přivítání se zkratkami a novinkami, aktivní přihlášení a vyhledávání.
@@ -10,38 +14,44 @@ Nabídka widgetů odpovídá vašim oprávněním. Rozložení se ukládá na v�
 
 ![](dashboard.png)
 
-Před názvem stránky v celé administraci a na přihlašovací stránce se zobrazuje označení prostředí: **PROD**, **TEST**, **CIT**, **INT**, **UAT**, **DEMO**, **LOCAL** nebo **DEV**. Je také v titulku karty prohlížeče. Správce může nastavit text, ikonu, barvu, styl a popis podle [konfigurace prostředí](../../admin/setup/configuration/dashboard.md).
+Před názvem stránky v hlavičce celé administrace a na přihlašovací stránce se zobrazuje označení prostředí: **PROD**, **TEST**, **CIT**, **INT**, **UAT**, **DEMO**, **LOCAL** nebo **DEV**. Je také v titulku karty prohlížeče, abyste rozlišili otevřená prostředí. Správce může upravit text, ikonu, barvu, styl a popis označení podle [konfigurace prostředí](../../admin/setup/configuration/dashboard.md).
 
 ## Přizpůsobení přehledu
 
 Na začátek přehledu umístěte widgety s údaji, které kontrolujete nejčastěji. Pokud například zpracováváte formuláře a schvalujete obsah, vyberte widgety **Formuláře** a **Ke schválení**. Widgety, které nepotřebujete, můžete odstranit.
 
-Klepněte na **Upravit přehled**. Zobrazí se možnosti **Přidat widget**, **Obnovit** a **Hotovo**.
+Klepněte na **Upravit přehled**. Zobrazí se panel s možnostmi **Obnovit výchozí**, **Přidat widget**, **Zrušit** a **Uložit**. Při posouvání zůstává pod hlavičkou. Widgety mají přerušovaný obrys, úchyt pro přesun a tlačítko **Možnosti widgetu**. Doplňkové ikony a odkazy v hlavičkách se během úprav skryjí. Systémová upozornění zůstávají aktivní.
 
 ![](dashboard-edit.png)
 
-Tlačítkem **Přidat widget** otevřete katalog. Vyhledejte požadovaný widget podle názvu a při něm klikněte na **Přidat widget**.
+Tlačítkem **Přidat widget** otevřete katalog. Vyhledejte požadovaný widget podle názvu a při něm klikněte na **Přidat** nebo **Přidat další**. Otevře se nastavení s náhledem. Vyberte velikost a další možnosti a potvrďte je tlačítkem **Přidat widget**. Widget přibude na konec rozpracovaného přehledu a dialog se zavře. Pokud nastavení zrušíte, widget se nepřidá. Pro další widget znovu otevřete katalog z lišty úprav.
 
 ![](dashboard-catalogue.png)
 
-Při widgetu použijte menu se třemi tečkami:
+Při widgetu použijte tlačítko **Možnosti widgetu**:
 
-- **Nastavení widgetu**: zvolte dostupnou velikost a další nastavení, například období nebo formulář. Ne každý widget nabízí více velikostí.
-- **Přesunout widget**: vyberte, před kterou kartu se má přesunout, nebo jej přesuňte na konec přehledu. Na počítači můžete použít také rukojeť k tahání.
-- **Odstranit widget**: odstraní kartu z vašeho přehledu. Data v aplikaci zůstávají zachována. Bezprostředně po odstranění je dostupná možnost **Vrátit zpět**. Po další úspěšně uložené úpravě tato možnost zanikne. Widget můžete kdykoli přidat znovu.
+- **Nastavení widgetu**: v dialogovém okně zvolte dostupnou velikost a další nastavení, například období nebo formulář. Velikost vyberte kartičkou s ilustrací rozměru a označením, například **1x1** nebo **3x3**. Ne každý widget nabízí více velikostí.
+- **Přesunout klávesnicí**: widget se zvedne, šipky změní jeho pozici, **Enter** jej položí a **Esc** vrátí. Stejný přesun spustíte mezerníkem na úchytu. Při tažení myší přerušovaný cíl označuje místo vložení; **Esc** přesun zruší.
+- **Odstranit z přehledu**: odstraní kartu bez potvrzení. Data v aplikaci zůstávají zachována. Oznámení nabídne **Zpět** na 8 sekund; při podržení myši nebo zaměření klávesnicí se odpočet zastaví. **Ctrl Z** vrátí poslední úpravu i po zmizení oznámení. Widget můžete přidat znovu z katalogu.
 - **Obnovit údaje**: načte aktuální údaje dané karty.
 
-V dialogu **Nastavení widgetu** upravte dostupné možnosti a potvrďte je tlačítkem **Uložit**. Větší kartu zvolte, když chcete vidět podrobnější graf nebo seznam. Menší karta zabere v přehledu méně místa.
+V dialogovém okně **Nastavení widgetu** je vlevo náhled widgetu se skutečnými údaji a vpravo jeho nastavení. Náhled se mění dle zvolené velikosti, barvy i dalších možností. Na menší obrazovce se nastavení zobrazí pod náhledem. Úpravy potvrďte tlačítkem **Použít**. Změní se rozpracovaný přehled. Větší kartu zvolte, když chcete vidět podrobnější graf nebo seznam. Menší karta zabere v přehledu méně místa.
+
+V části **Barva pozadí** vyberte jemný odstín z palety nebo **Vlastní barvu**, kterou můžete zadat i kódem HEX. Vybraná barva se hned zobrazí v náhledu widgetu. Při příliš tmavé vlastní barvě vás nastavení vyzve zvolit světlejší odstín. Volba **Výchozí** obnoví původní pozadí konkrétního widgetu; nové widgety používají tuto barvu automaticky.
+
+Ve widgetu **Návštěvnost** se barvy čar grafu, bodů a legendy přizpůsobí odstínu pozadí automaticky. U bílého nebo šedého pozadí jsou čáry šedé. Předchozí období zůstává odlišeno přerušovanou čarou.
 
 ![](dashboard-widget-settings.png)
 
-Po dokončení úprav klikněte na **Hotovo**.
+Po dokončení úprav klikněte na **Uložit** v liště. Až tímto krokem se uloží pozice, velikosti, nastavení i přidání či odstranění widgetů. Zobrazí se oznámení **Přehled byl uložen** a režim úprav se zavře. Při chybě zůstanou rozpracované změny dostupné pro opětovné uložení.
+
+Tlačítko **Zrušit** při neuložených změnách otevře potvrzení s možnostmi **Pokračovat v úpravách** a **Zahodit změny**. Při odchodu ze stránky upozorní prohlížeč. Zkratky mají vlastní režim úprav přes tužku v horním panelu a ukládají se samostatně.
 
 Na menší obrazovce se karty automaticky uspořádají pod sebe při zachování pořadí. Rozložení může obsahovat nejvýše 48 položek včetně zkratek, přihlášení, novinek a vyhledávání.
 
-Tlačítko **Obnovit** naleznete v liště úprav za tlačítkem **Přidat widget**. Po potvrzení v dialogu se obnoví výchozí výběr widgetů, jejich velikosti, pořadí a nastavení. Vymažou se i filtry widgetů ve všech doménách a potvrzení přečtení novinek. Vaše zkratky a ostatní nastavení účtu zůstanou zachovány.
+Tlačítko **Obnovit výchozí** naleznete v liště úprav před tlačítkem **Přidat widget**. Po potvrzení v dialogu se připraví výchozí výběr widgetů, jejich velikosti, pořadí a nastavení. Až tlačítkem **Uložit** se změna uloží a vymažou se i filtry widgetů ve všech doménách a potvrzení přečtení novinek. Vaše zkratky a ostatní nastavení účtu zůstanou zachovány.
 
-Pokud při klepnutí na **Obnovit** podržíte klávesu **Shift**, po potvrzení se přehled nahradí všemi dostupnými widgety v každé podporované velikosti. Nepotřebné varianty můžete následně odstranit.
+Pokud při klepnutí na **Obnovit výchozí** podržíte klávesu **Shift**, po potvrzení se připraví přehled se všemi dostupnými widgety v každé podporované velikosti. Nepotřebné varianty můžete odstranit a výsledek potvrdit tlačítkem **Uložit**.
 
 ## Dostupné informace
 
@@ -55,7 +65,7 @@ Statistické widgety ve výchozím nastavení používají posledních sedm ukon
 
 ### Pokračujte v práci
 
-K rozpracované stránce se vrátíte bez hledání její složky. Widget zobrazuje maximálně šest vašich naposledy upravovaných stránek s náhledem obrázku, umístěním a datem úpravy. Klepnutím otevřete editor stránky. Při menší velikosti karty můžete seznam rolovat.
+K rozpracované stránce se vrátíte bez hledání její složky. Widget zobrazuje maximálně šest vašich naposledy upravovaných stránek s náhledem obrázku, umístěním a datem úpravy. Klepnutím otevřete editor stránky. Nadpis widgetu otevře celý seznam webových stránek. Při menší velikosti karty můžete seznam rolovat.
 
 ### Ke schválení
 
@@ -113,7 +123,7 @@ Při odesílání se údaje viditelné karty obnovují každých 30 sekund. Poč
 
 V uvítacím panelu naleznete novinky aktuální verze WebJET CMS. Tlačítkem **Sbalit novinky** potvrdíte jejich přečtení a ponecháte stručný souhrn. Tlačítkem **Více info** je znovu rozbalíte.
 
-Systémová upozornění informují o stavu, který vyžaduje pozornost, a zůstávají viditelné do vyřešení příčiny. Klepnutím na nadpis upozornění rozbalíte jeho vysvětlení a dostupnou nápravnou akci.
+Systémová upozornění jsou seřazena podle závažnosti: chyby, varování a informace. Každý řádek obsahuje vysvětlení a dostupnou akci. Chyby zůstávají viditelné do vyřešení příčiny. Varování můžete odložit na 7 dní tlačítkem **Připomenout později** nebo **×**.
 
 ### Vyhledávání a pomoc
 
@@ -175,19 +185,25 @@ Ve výchozím nastavení jsou zkratky směřovány na webové stránky a formul�
 
 Novou zkratku přidáte takto:
 
-1. Klepněte na **Upravit zkratky** a poté na **Přidat zkratku**.
-2. V poli **Cíl zkratky** vyberte **Stránka v administraci** nebo **Vlastní URL adresa**. U stránky v administraci vyberte hlavní část, sekci a případně kartu. U vlastní adresy vyplňte pole **URL adresa**.
-3. Vyplňte **Vlastní název**, podle kterého zkratku poznáte. U vlastní URL adresy je název povinen.
-4. Podle potřeby nastavte **Ikonu** a **Barvu pozadí**, abyste zkratku v seznamu snáze našli.
-5. Klepněte na **Uložit**. Po dokončení úprav zkratek klikněte na **Hotovo**.
+1. Klepněte na **Přidat zkratku** přímo za seznamem zkratek.
+2. V poli **Kam má zkratka vést?** postupně vyberte **Hlavní část**, **Sekci** a kartu pod nadpisem **Vyberte kartu**. Sekci bez dalších karet vyberete přímo. Volba **Zpět** vrátí seznam o úroveň výše. Můžete také napsat název cíle: vyhledávání nabídne koncové karty ze všech částí menu, například po zadání „číselník“ obě karty Číselníků. Cíl vyberte klepnutím nebo šipkami a klávesou **Enter**. Pro vlastní odkaz klikněte na **Použít vlastní adresu URL…** a vyplňte **URL adresu**.
+3. Podle potřeby vyplňte **Název zkratky**. Pokud zůstane prázdný, použije se název vybraného cíle. U vlastní URL adresy je název povinen.
+4. Vyberte **Ikonu** a **Barvu**. První ikona vychází z vybraného cíle. Volba **Vlastní…** u ikony umožňuje zadat název z knihovny Tabler; náhled se změní hned a neexistující název nelze uložit. U barvy otevře **Vlastní…** výběr barvy s nastavením průhlednosti a zadáním HEX hodnoty. Barva se použije pouze na pozadí ikony, jejíž světlost se přizpůsobí zvolenému pozadí. Paleta obsahuje také možnost **Bez barvy**.
+5. Zkontrolujte náhled a klikněte na **Přidat zkratku**.
+
+Dlouhé názvy se zkrátí trojtečkou. Celý název se zobrazí při podržení myši nebo při zaměření klávesnicí. Zkratka na nedostupnou položku menu zůstává zobrazena s vysvětlením; v režimu úprav ji můžete opravit nebo odstranit.
+
+Režim úprav zapnete tlačítkem s tužkou **Upravit zkratky** za seznamem. Tužku nahradí tlačítko **Hotovo** napravo od přivítání, nad zkratkami. Klepnutí na zkratku pak otevře její nastavení. Po změně cíle, názvu, ikony nebo barvy klikněte na **Uložit změny**. Oznámení nabídne **Zpět** na 8 sekund. Stejný formulář obsahuje i tlačítko **Odstranit zkratku**. Po dokončení úprav klikněte na **Hotovo**.
+
+Zkratku přesunete úchytem před ikonou. Během přesunu zůstává na původním místě přerušovaný obrys a bílá čára označuje místo vložení. Při ovládání klávesnicí přesuňte fokus na úchyt: **mezerník** zkratku zvedne, **šipky vlevo/vpravo** změní pozici, **Enter** potvrdí přesun a **Esc** jej zruší. Klepnutím na úchyt můžete pozici vybrat také v dialogovém okně.
 
 ![](dashboard-shortcut-settings.png)
 
-Chcete-li zkratku na konkrétní složku, otevřete ji ve Web stránkách a zkopírujte adresu z adresního řádku prohlížeče is parametrem `groupid`. Při přidávání zkratky zvolte **Vlastní URL adresa**, vložte zkopírovanou adresu a zadejte název, například **Aktuality**.
+Chcete-li zkratku na konkrétní složku, otevřete ji ve Web stránkách a zkopírujte adresu z adresního řádku prohlížeče is parametrem `groupid`. Při přidávání zkratky zvolte **Použít vlastní adresu URL…**, vložte zkopírovanou adresu a zadejte název, například **Aktuality**.
 
 Adresa může mít například tvar `/admin/v9/webpages/web-pages-list/?groupid=123`, kde `123` je ID požadované složky. Použijte ID ze své zkopírované adresy. Klepnutím na takovou zkratku otevřete přímo danou složku, i když je vnořená hlouběji ve struktuře webu.
 
-Tlačítko **Obnovit** v úpravě zkratek obnoví výchozí odkazy a zachová widgety, jejich filtry i stav novinek. Po odstranění všech zkratek zůstane seznam prázdný až do přidání nové zkratky nebo obnovy výchozích odkazů.
+Křížek **×** odstraní zkratku bez potvrzení. Oznámení nabídne **Zpět** na 8 sekund. Odstranit můžete i poslední zkratku; zobrazí se **Žádná zkratka** a tlačítko pro přidání. Widgety, jejich filtry i stav novinek zůstávají zachovány.
 
 ## Změněné stránky, audit a monitorování
 
