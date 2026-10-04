@@ -91,7 +91,7 @@ Scenario('Widget backgrounds keep defaults and persist palette or readable custo
         ['light-blue', 'rgb(242, 247, 255)'], ['cyan', 'rgb(225, 247, 255)'],
         ['green', 'rgb(228, 251, 210)'], ['figma-mint', 'rgb(223, 249, 241)']]) {
         I.clickCss(`${palette} input[value="${name}"] + span`);
-        I.assertEqual(await I.grabCssPropertyFrom(modal + ' .md-dashboard__color-preview', 'background-color'), expected);
+        I.assertEqual(await I.grabCssPropertyFrom(modal + ' .md-dashboard__widget-preview .md-dashboard__widget', 'background-color'), expected);
     }
     I.saveScreenshot('dashboard-widget-background-settings.png');
     I.resizeWindow(390, 900);
