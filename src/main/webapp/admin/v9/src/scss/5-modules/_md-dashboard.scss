@@ -1014,8 +1014,16 @@ webjet-overview-dashboard a:focus-visible {
     .form-text { display: block; margin-top: 6px; font-size: 12px; color: var(--wj-gray-text); }
     [hidden] { display: none !important; }
     .md-dashboard__shortcut-search { position: relative; > .ti { position: absolute; left: 14px; top: 12px; font-size: 16px; color: var(--wj-gray-text); } > input { padding-left: 40px; } }
-    .md-dashboard__shortcut-suggestions { padding: 6px 4px; margin-top: 6px; border: 1px solid var(--wj-nice-gray-100); border-radius: 8px; }
-    .md-dashboard__shortcut-matches { max-height: 224px; overflow-y: auto; }
+    .md-dashboard__shortcut-suggestions {
+        padding: 6px 4px;
+        margin-top: 6px;
+        border: 1px solid var(--wj-nice-gray-100);
+        border-radius: 8px;
+        max-height: 288px;
+        overflow-y: auto;
+        // Keep keyboard-selected options above the pinned custom URL action.
+        scroll-padding-bottom: 64px;
+    }
     .md-dashboard__shortcut-result-heading { padding: 6px 12px; font-size: 12px; color: var(--wj-gray-text); }
     .md-dashboard__shortcut-result {
         display: flex;
@@ -1031,7 +1039,7 @@ webjet-overview-dashboard a:focus-visible {
         &-text { display: flex; flex: 1; flex-direction: column; min-width: 0; line-height: 20px; > span, > small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; } > small { font-size: 12px; line-height: 16px; color: var(--wj-gray-text); } }
         .md-dashboard__shortcut-enter { visibility: hidden; color: var(--wj-primary); font-size: 12px; }
         &[aria-selected="true"] .md-dashboard__shortcut-enter { visibility: visible; }
-        &-url { margin-top: 4px; border-top: 1px solid var(--wj-nice-gray-100); border-radius: 0; color: var(--wj-primary); > .ti { width: 14px; height: auto; background: transparent; color: inherit; } }
+        &-url { position: sticky; bottom: 0; background: $white; margin-top: 4px; border-top: 1px solid var(--wj-nice-gray-100); border-radius: 0; color: var(--wj-primary); > .ti { width: 14px; height: auto; background: transparent; color: inherit; } }
         &-message { padding: 6px 12px; margin: 0; font-size: 12px; color: var(--wj-gray-text); }
     }
     .md-dashboard__shortcut-back { padding: 6px 0 0; font-size: 14px; text-decoration: none; }

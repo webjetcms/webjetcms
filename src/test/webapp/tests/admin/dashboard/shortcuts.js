@@ -177,7 +177,10 @@ Scenario('Custom shortcut colors use the shared picker and persist after reload'
     I.clickCss(customColor + ' > span');
     I.waitForVisible(hex, 10);
     I.see('Zvoľte farbu', modal + ' color-picker h3');
-    I.assertEqual(await I.grabAttributeFrom(customColor + ' input', 'aria-expanded'), 'true');
+    I.assertTrue(await I.executeScript(() => {
+        const picker = document.querySelector('.md-dashboard-modal color-picker');
+        return picker.shadowRoot.activeElement?.matches('[part="hex-input"]');
+    }), 'Opening the picker focuses its color input.');
     I.fillField(hex, '#112233');
     I.assertDeepEqual(await previewColor(), { background: 'rgb(17, 34, 51)', foreground: 'rgb(255, 255, 255)' });
     I.pressKey('Escape');

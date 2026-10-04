@@ -297,6 +297,11 @@ div.password-strength-info {
   font-weight: 400;
 }
 
+.login .language-select .custom-select {
+  width: fit-content;
+  margin-inline: auto;
+}
+
 .custom-select i {
   margin-right: 8px;
 }

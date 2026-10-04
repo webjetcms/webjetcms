@@ -272,7 +272,6 @@ export function registerShortcutWidget() {
             customColorRadio.checked = previousColor.startsWith('#');
             customColorRadio.setAttribute('aria-label', text(context, 'shortcutIconCustom'));
             customColorRadio.setAttribute('aria-haspopup', 'dialog');
-            customColorRadio.setAttribute('aria-expanded', 'false');
             const customColorFace = node('span');
             const customColorSwatch = node('span', 'md-dashboard__shortcut-custom-color-swatch');
             customColorFace.append(customColorSwatch, document.createTextNode(text(context, 'shortcutIconCustom')));
@@ -351,7 +350,6 @@ export function registerShortcutWidget() {
                 originalCustomColor = customColor;
                 colorPicker.setAttribute('hex', customColor);
                 colorPicker.setAttribute('open', 'true');
-                customColorRadio.setAttribute('aria-expanded', 'true');
                 colorDialog?.querySelector('[part="hex-input"]')?.focus({ preventScroll: true });
                 updatePreview();
             };
@@ -363,7 +361,6 @@ export function registerShortcutWidget() {
             const closeColorPicker = () => {
                 previousColor = color();
                 colorPicker.removeAttribute('open');
-                customColorRadio.setAttribute('aria-expanded', 'false');
                 if (customColorRadio.isConnected) customColorRadio.focus({ preventScroll: true });
             };
             const cancelColorPicker = () => {
@@ -522,7 +519,7 @@ export function registerShortcutWidget() {
                 colorPicker.remove();
             };
             signal?.addEventListener('abort', dispose, { once: true });
-            if (signal) containNativeScroll(matches, signal);
+            if (signal) containNativeScroll(suggestions, signal);
             const modal = container.closest('.modal');
             modal?.addEventListener('shown.bs.modal', () => {
                 if (document.activeElement === modal) (custom ? url : search).focus();

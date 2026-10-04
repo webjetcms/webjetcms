@@ -433,7 +433,6 @@ test('Custom shortcut colors use the existing picker and preserve selection, can
     custom.click();
     assert.equal(dialog.open, true);
     assert.equal(picker.shadowRoot.activeElement, input);
-    assert.equal(custom.getAttribute('aria-expanded'), 'true');
     change('#12345680');
     assert.equal(settings.read().options.color, '#12345680');
     assert.equal(preview.style.getPropertyValue('--wj-dashboard-shortcut-bg'), '#12345680');
@@ -441,7 +440,6 @@ test('Custom shortcut colors use the existing picker and preserve selection, can
     dialog.querySelector('[part="cancel"]').click();
     assert.equal(settings.read().options.color, 'amber', 'Cancel restores the preset selected before opening.');
     assert.equal(dialog.open, false);
-    assert.equal(custom.getAttribute('aria-expanded'), 'false');
     custom.click();
     change('#123456');
     dialog.querySelector('[part="confirm"]').click();

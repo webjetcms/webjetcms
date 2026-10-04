@@ -177,6 +177,21 @@ Scenario('Shortcut settings, color choices and keyboard movement are accessible'
     I.waitForVisible(`${modal} [role="listbox"]`, 5);
     I.seeElement(`${search}[role="combobox"][aria-expanded="true"][aria-controls]`);
     await audit(I, a11y, modal);
+    const optionCount = await I.grabNumberOfVisibleElements(`${modal} [role="option"]`);
+    I.pressKey('ArrowUp');
+    for (let index = 0; index < optionCount; index++) {
+        if (index > 0) I.pressKey('ArrowDown');
+        I.assertTrue(await I.executeScript(() => {
+            const input = document.querySelector('[name="dashboardShortcutSearch"]');
+            const list = document.getElementById(input.getAttribute('aria-controls'));
+            const selected = document.getElementById(input.getAttribute('aria-activedescendant'));
+            const footer = list.querySelector('.md-dashboard__shortcut-result-url');
+            const bounds = list.getBoundingClientRect();
+            const row = selected.getBoundingClientRect();
+            const bottom = selected === footer ? bounds.bottom : Math.min(bounds.bottom, footer.getBoundingClientRect().top);
+            return document.activeElement === input && row.top >= bounds.top - 1 && row.bottom <= bottom + 1;
+        }), 'Keyboard selection must scroll each suggestion into view without hiding it behind the custom URL action.');
+    }
     I.pressKey('Escape');
     I.waitForInvisible(`${modal} [role="listbox"]`, 5);
     I.seeElement(`${search}[aria-expanded="false"]`);
@@ -185,8 +200,9 @@ Scenario('Shortcut settings, color choices and keyboard movement are accessible'
     I.waitForVisible(`${modal} input[name="dashboardShortcutUrl"]`, 5);
     await audit(I, a11y, modal);
     const colors = `${modal} .md-dashboard__shortcut-colors`;
+    focusControl(I, colors + ' input[value="default"]');
+    I.pressKey('Space');
     const initial = await I.grabAttributeFrom(colors + ' input:checked', 'value');
-    focusControl(I, colors + ' input:checked');
     I.pressKey('ArrowRight');
     I.assertNotEqual(await I.grabAttributeFrom(colors + ' input:checked', 'value'), initial, 'Arrow keys must change the selected color.');
     I.assertTrue(await I.executeScript(() => {
