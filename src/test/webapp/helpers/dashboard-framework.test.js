@@ -25,8 +25,8 @@ test('Dialog headings retain their button and action when the dashboard reconcil
 });
 
 /** Runs production browser modules against a DOM and a stateful settings server. */
-function fixture(t, { items = [], configured = true, shortcutsConfigured = configured, legacyBookmarksHandled = false, definitions = [], defaults = [], config = {}, failSave = false, failReset = false, deferModalShown = false, withTooltip = false, overview, IntersectionObserver } = {}) {
-    const dom = new JSDOM("<!doctype html><html><body><div id='alerts'>System warning</div><div id='dashboard'></div></body></html>", { url: "http://localhost/admin/v9/" });
+function fixture(t, { items = [], configured = true, shortcutsConfigured = configured, legacyBookmarksHandled = false, definitions = [], defaults = [], config = {}, failSave = false, failReset = false, deferModalShown = false, realBootstrap = false, withTooltip = false, overview, IntersectionObserver } = {}) {
+    const dom = new JSDOM("<!doctype html><html><body><div id='alerts'>System warning</div><div id='dashboard'></div></body></html>", { url: "http://localhost/admin/v9/", runScripts: realBootstrap ? "outside-only" : undefined });
     const { window } = dom;
     window.IntersectionObserver = IntersectionObserver;
     const notifications = [];
@@ -66,6 +66,7 @@ function fixture(t, { items = [], configured = true, shortcutsConfigured = confi
         hide() { this.element.dispatchEvent(new window.Event("hidden.bs.modal")); }
         dispose() {}
     } };
+    if (realBootstrap) window.eval(fs.readFileSync(path.resolve(moduleDirectory, "../../../node_modules/bootstrap/dist/js/bootstrap.bundle.js"), "utf8"));
     const tooltipCalls = [];
     if (withTooltip) {
         const instances = new Map();
@@ -1475,6 +1476,94 @@ test('Widget settings apply to a draft in a centered modal and Cancel keeps the 
     assert.equal(controller._instance('draft').size, '2x2');
     assert.equal(window.document.querySelector('.md-dashboard-modal--settings'), null, 'Exiting editing must dispose open draft settings');
     assert.equal(controller.notices.hasAttribute('inert'), false);
+    assert.equal(requests.length, 0);
+});
+
+for (const switchToShortcuts of [false, true]) {
+    test(`Discard waits for Bootstrap cleanup before ${switchToShortcuts ? 'entering shortcut editing' : 'leaving overview editing'}`, { timeout: 2000 }, async t => {
+        const { controller, window, requests, stored } = fixture(t, { items: [item('draft')], realBootstrap: true });
+        const errors = [];
+        window.addEventListener('error', event => { errors.push(event.error); event.preventDefault(); });
+        await controller.start();
+        const original = stored();
+        controller.setEditing(true);
+        await controller.saveOptions('draft', { options: { days: 30 } });
+        let afterCalls = 0;
+        controller.cancelEditing(() => {
+            afterCalls++;
+            assert.equal(window.document.body.classList.contains('modal-open'), false);
+            assert.equal(window.document.body.style.overflow, '');
+            if (switchToShortcuts) controller.setEditingShortcuts(true);
+        });
+        const dialog = window.document.querySelector('.md-dashboard-modal--confirm');
+        await new Promise(resolve => dialog.addEventListener('shown.bs.modal', resolve, { once: true }));
+        assert.equal(window.document.body.classList.contains('modal-open'), true);
+        assert.equal(window.document.body.style.overflow, 'hidden');
+        const hidden = new Promise(resolve => dialog.addEventListener('hidden.bs.modal', resolve, { once: true }));
+        const discard = dialog.querySelector('.btn-danger');
+        discard.click();
+        discard.click();
+        assert.equal(controller.editing, true, 'The editor must remain alive until the hide transition finishes');
+        assert.equal(discard.disabled, true);
+        assert.equal(afterCalls, 0);
+        await hidden;
+        assert.deepEqual(errors, []);
+        assert.equal(afterCalls, 1);
+        assert.equal(controller.editing, false);
+        assert.equal(controller.editingShortcuts, switchToShortcuts);
+        assert.deepEqual(copy(controller.settings), original);
+        assert.equal(window.document.querySelector('.modal-backdrop, .md-dashboard-modal'), null);
+        assert.equal(controller._dialogs.size, 0);
+        assert.equal(window.document.activeElement, controller.editButton);
+        assert.equal(requests.length, 0);
+    });
+}
+
+test('Continue editing closes Bootstrap cleanly and cancelling a clean draft needs no modal', { timeout: 2000 }, async t => {
+    const { controller, window, requests } = fixture(t, { items: [item('draft')], realBootstrap: true });
+    await controller.start();
+    controller.setEditing(true);
+    controller.cancelEditing();
+    assert.equal(controller.editing, false);
+    assert.equal(controller._dialogs.size, 0);
+    controller.setEditing(true);
+    await controller.saveOptions('draft', { options: { days: 30 } });
+    let afterCalls = 0;
+    controller.cancelEditing(() => afterCalls++);
+    const dialog = window.document.querySelector('.md-dashboard-modal--confirm');
+    await new Promise(resolve => dialog.addEventListener('shown.bs.modal', resolve, { once: true }));
+    const hidden = new Promise(resolve => dialog.addEventListener('hidden.bs.modal', resolve, { once: true }));
+    dialog.querySelector('.modal-footer .btn-outline-secondary').click();
+    await hidden;
+    assert.equal(controller.editing, true);
+    assert.equal(controller._instance('draft').options.days, 30);
+    assert.equal(afterCalls, 0);
+    assert.equal(window.document.body.classList.contains('modal-open'), false);
+    assert.equal(window.document.body.style.overflow, '');
+    assert.equal(window.document.querySelector('.modal-backdrop, .md-dashboard-modal'), null);
+    assert.equal(requests.length, 0);
+});
+
+test('Discard completes immediately without Bootstrap and invokes its callback once', async t => {
+    const { controller, window, requests, stored } = fixture(t, { items: [item('draft')] });
+    const errors = [];
+    window.addEventListener('error', event => { errors.push(event.error); event.preventDefault(); });
+    delete window.bootstrap;
+    await controller.start();
+    const original = stored();
+    controller.setEditing(true);
+    await controller.saveOptions('draft', { options: { days: 30 } });
+    let afterCalls = 0;
+    controller.cancelEditing(() => afterCalls++);
+    const discard = window.document.querySelector('.md-dashboard-modal--confirm .btn-danger');
+    discard.click();
+    discard.click();
+    assert.deepEqual(errors, []);
+    assert.equal(afterCalls, 1);
+    assert.equal(controller.editing, false);
+    assert.deepEqual(copy(controller.settings), original);
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+    assert.equal(window.document.activeElement, controller.editButton);
     assert.equal(requests.length, 0);
 });
 

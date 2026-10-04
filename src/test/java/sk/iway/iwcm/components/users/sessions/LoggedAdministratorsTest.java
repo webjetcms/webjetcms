@@ -81,7 +81,7 @@ class LoggedAdministratorsTest {
         }
         assertEquals("@WebjetSecurityService.hasPermission('welcomeShowLoggedAdmins')", SessionRestController.class
             .getMethod("loggedAdministrators", jakarta.servlet.http.HttpServletRequest.class).getAnnotation(PreAuthorize.class).value());
-        assertArrayEquals(new String[]{"/sessions/logout"}, SessionRestController.class
+        assertArrayEquals(new String[]{"/admin/rest/sessions/logout"}, SessionRestController.class
             .getMethod("logoutSession", String.class, jakarta.servlet.http.HttpServletRequest.class).getAnnotation(PostMapping.class).value());
     }
 

@@ -5,7 +5,6 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +17,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.upload.AdminUploadServlet;
 import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -118,7 +118,7 @@ public class FeedbackRestController {
     }
 
     /**
-     * Validates the message and limits rich text to the feedback editor's formatting.
+     * Validates the message and sanitizes rich text using the shared HTML policy.
      *
      * @param text submitted message
      * @param isHtml whether the client sends editor HTML instead of plain text
@@ -126,11 +126,7 @@ public class FeedbackRestController {
      */
     static String prepareFeedbackText(String text, boolean isHtml) {
         String message = isHtml
-            ? Jsoup.clean(text == null ? "" : text, new Safelist()
-                .addTags("p", "br", "strong", "b", "em", "i", "u", "ol", "ul", "li", "a")
-                .addAttributes("a", "href")
-                .addProtocols("a", "href", "http", "https", "mailto")
-                .addEnforcedAttribute("a", "rel", "nofollow noopener"))
+            ? AllowSafeHtmlAttributeConverter.sanitize(text)
             : "<p>" + Tools.replace(ResponseUtils.filter(text == null ? "" : text), "\n", "<br/>\n") + "</p>";
         if (Jsoup.parse(message).text().replace('\u00a0', ' ').trim().isEmpty()) {
             throw new IllegalArgumentException("Feedback text is required.");

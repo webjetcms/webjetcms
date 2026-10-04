@@ -5,7 +5,7 @@ Feature('admin.dashboard.sessions').tag('@singlethread');
 const modal = '.md-dashboard-modal--sessions';
 let permissionsChanged = false;
 const administratorsRoute = '**/admin/rest/sessions/administrators';
-const historyRoute = '**/rest/audit/my-login-history*';
+const historyRoute = '**/admin/rest/sessions/login-history*';
 const logoutRoute = '**/admin/rest/sessions/logout';
 const adminLogoutRoute = '**/admin/rest/sessions/logout-administrator';
 
@@ -70,7 +70,7 @@ Scenario('Real sessions and personal login history are available from the welcom
     I.waitForElement(`${modal} .md-dashboard-sessions__history[aria-busy="false"]`, 20);
     I.dontSeeElement(`${modal} .md-dashboard-sessions__history .text-danger`);
     const history = await I.executeScript(async () => {
-        const result = await fetch('/rest/audit/my-login-history?userId=1&logType=20&days=365&size=999');
+        const result = await fetch('/admin/rest/sessions/login-history?userId=1&logType=20&days=365&size=999');
         const body = await result.json();
         return { ok: result.ok, items: body.content, size: body.size };
     });

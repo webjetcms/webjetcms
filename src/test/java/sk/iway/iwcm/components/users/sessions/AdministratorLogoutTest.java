@@ -16,12 +16,13 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
+import sk.iway.iwcm.system.audit.jpa.AuditRepository;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
 /** Verifies administrator-management permission, domain visibility and cluster-wide session logout. */
 class AdministratorLogoutTest {
-    private final SessionRestController controller = new SessionRestController(new SessionService());
+    private final SessionRestController controller = new SessionRestController(new SessionService(), mock(AuditRepository.class));
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private final Identity actor = mock(Identity.class);
     private final SessionHolder holder = mock(SessionHolder.class);

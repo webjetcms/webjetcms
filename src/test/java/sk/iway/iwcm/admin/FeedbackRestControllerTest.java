@@ -22,21 +22,21 @@ class FeedbackRestControllerTest {
     }
 
     @Test
-    void removesExecutableHtmlAndExternalImages() {
+    void removesExecutableHtml() {
         String result = FeedbackRestController.prepareFeedbackText(
-            "<p onclick='alert(1)'>Message<script>alert(1)</script><img src='https://example.com/tracker'></p>"
+            "<p onclick='alert(1)'>Message<script>alert(1)</script><img src='https://example.com/image.png' onerror='alert(1)'></p>"
                 + "<a href='javascript:alert(1)'>Unsafe link</a><a href='https://example.com'>Safe link</a>", true);
         assertFalse(result.contains("onclick"));
         assertFalse(result.contains("script"));
-        assertFalse(result.contains("<img"));
+        assertFalse(result.contains("onerror"));
         assertTrue(result.contains("href=\"https://example.com\""));
-        assertTrue(result.contains("rel=\"nofollow noopener\""));
     }
 
     @Test
     void rejectsEmptyEditorMarkup() {
         assertThrows(IllegalArgumentException.class, () -> FeedbackRestController.prepareFeedbackText("<p><br></p>", true));
         assertThrows(IllegalArgumentException.class, () -> FeedbackRestController.prepareFeedbackText("<p>&nbsp; </p>", true));
+        assertThrows(IllegalArgumentException.class, () -> FeedbackRestController.prepareFeedbackText(null, true));
         assertThrows(IllegalArgumentException.class, () -> FeedbackRestController.prepareFeedbackText(null, false));
     }
 

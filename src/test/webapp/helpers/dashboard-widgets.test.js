@@ -2118,11 +2118,11 @@ test('History loads only on tab activation, pages safely and aborts when the dia
     tabs[0].dispatchEvent(new window.KeyboardEvent('keydown', { key: 'End', bubbles: true }));
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(tabs[2].getAttribute('aria-selected'), 'true');
-    assert.equal(requests[0].url, '/rest/audit/my-login-history?page=0');
+    assert.equal(requests[0].url, '/admin/rest/sessions/login-history?page=0');
     assert.equal(root.querySelector('.md-dashboard-sessions__history img'), null);
     root.querySelector('.md-dashboard-sessions__pagination button:last-child').click();
     await new Promise(resolve => setImmediate(resolve));
-    assert.equal(requests[1].url, '/rest/audit/my-login-history?page=1');
+    assert.equal(requests[1].url, '/admin/rest/sessions/login-history?page=1');
     root.querySelector('.modal-footer button').click();
     assert.equal(fixtureDialog.signal.aborted, true);
     assert.equal(requests[0].options.signal.aborted, true);

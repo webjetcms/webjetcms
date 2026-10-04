@@ -13,11 +13,12 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
+import sk.iway.iwcm.system.audit.jpa.AuditRepository;
 import sk.iway.iwcm.users.UsersDB;
 
 /** Verifies session ownership and local versus queued cluster logout responses. */
 class SessionRemovalTest {
-    private final SessionRestController controller = new SessionRestController(new SessionService());
+    private final SessionRestController controller = new SessionRestController(new SessionService(), mock(AuditRepository.class));
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private final SessionHolder holder = mock(SessionHolder.class);
     private final Identity user = mock(Identity.class);

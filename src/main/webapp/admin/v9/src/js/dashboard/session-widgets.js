@@ -413,7 +413,7 @@ export function showActiveSessions(context) {
         history.replaceChildren(node('p', '', text(context, 'loading')));
         history.setAttribute('aria-busy', 'true');
         try {
-            const data = await fetchJson(`/rest/audit/my-login-history?page=${page}`, dialog.signal);
+            const data = await fetchJson(`/admin/rest/sessions/login-history?page=${page}`, dialog.signal);
             if (dialog.signal.aborted) return;
             history.replaceChildren();
             if (!data.content.length) history.append(node('p', 'text-muted', text(context, 'sessionHistoryEmpty')));

@@ -267,7 +267,13 @@ export class DashboardController {
         dialog.root.classList.add("md-dashboard-modal--confirm");
         dialog.body.append(node("p", "mb-0", this._t("discardDescription", "Widget positions, sizes and settings changed during this edit will be discarded. Your shortcuts will be kept.")));
         const keep = button(this._t("continueEditing", "Continue editing"), () => dialog.close(), "btn btn-outline-secondary");
-        const discard = button(this._t("discardChanges", "Discard changes"), () => { dialog.close(); cancel(); }, "btn btn-danger");
+        const discard = button(this._t("discardChanges", "Discard changes"), () => {
+            discard.disabled = true;
+            const hasBootstrapModal = Boolean(window.bootstrap?.Modal);
+            if (hasBootstrapModal) dialog.root.addEventListener("hidden.bs.modal", cancel, { once: true });
+            dialog.close();
+            if (!hasBootstrapModal) cancel();
+        }, "btn btn-danger");
         dialog.footer.append(keep, discard);
         dialog.root.addEventListener("shown.bs.modal", () => keep.focus({ preventScroll: true }), { once: true });
         keep.focus({ preventScroll: true });
