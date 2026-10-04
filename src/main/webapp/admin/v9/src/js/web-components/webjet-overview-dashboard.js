@@ -11,7 +11,6 @@ import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/wid
  * @property {Object[]} [data.dashboardMenu=[]] - Authorized administration navigation for shortcut selection.
  * @property {Object} data.settings - Current account's layout and active-domain preferences.
  * @property {Object[]} data.notices - System notices ready for immediate rendering.
- * @property {Object[]} [data.loggedAdmins] - Online administrators, supplied only with welcomeShowLoggedAdmins permission.
  * @property {Object} data.currentSessions - Current user sessions, updated after a successful logout.
  * @property {string} [data.userName=""] - Current user's display name.
  * @property {number} data.statRootGroupId - Active domain root folder passed to the shared statistics API.

@@ -5,10 +5,10 @@ Feature('admin.dashboard.data');
 Before(({ login }) => login('admin'));
 
 /**
- * Checks that the initial layout, notices, active sessions and online administrators are supplied with the
- * dashboard page. They must still appear without additional requests to the removed dashboard data services.
+ * Checks that the initial layout, notices and active sessions are supplied with the dashboard page.
+ * They must still appear without additional requests to the removed dashboard data services.
  */
-Scenario('Initial settings, notices, sessions and administrators render from HTML without REST requests', async ({ I }) => {
+Scenario('Initial settings, notices and sessions render from HTML without REST requests', async ({ I }) => {
     I.amOnPage('/admin/v9/');
     const requests = [];
     const routes = ['**/admin/rest/dashboard/settings', '**/admin/rest/dashboard/notices', '**/admin/rest/dashboard/data/sessions*', '**/admin/rest/dashboard/data/logged-admins*'];
@@ -26,7 +26,7 @@ Scenario('Initial settings, notices, sessions and administrators render from HTM
         I.assertTrue(await I.executeScript(() => {
             const dashboard = document.querySelector('webjet-overview-dashboard');
             return Array.isArray(dashboard.data.notices) && dashboard.dashboardController.settings.items.length > 0
-                && Array.isArray(dashboard.data.loggedAdmins);
+                && !Object.hasOwn(dashboard.data, 'loggedAdmins');
         }), 'The dashboard must initialize its embedded data and widget preferences.');
     } finally {
         for (const pattern of routes) await I.stopMockingRoute(pattern);

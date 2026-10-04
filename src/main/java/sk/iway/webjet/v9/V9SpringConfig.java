@@ -125,6 +125,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.components.user",
     "sk.iway.iwcm.components.users.groups_approve",
     "sk.iway.iwcm.components.users.permgroups",
+    "sk.iway.iwcm.components.users.sessions",
     "sk.iway.iwcm.components.users.userdetail",
     "sk.iway.iwcm.components.users.usergroups",
     "sk.iway.iwcm.components.welcome",

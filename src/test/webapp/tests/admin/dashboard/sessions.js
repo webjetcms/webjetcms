@@ -3,8 +3,11 @@ const { mockDashboardBootstrap, dashboardPageRoute, showWidget, readDashboardBoo
 Feature('admin.dashboard.sessions').tag('@singlethread');
 
 const modal = '.md-dashboard-modal--sessions';
+let permissionsChanged = false;
+const administratorsRoute = '**/admin/rest/sessions/administrators';
 const historyRoute = '**/rest/audit/my-login-history*';
-const logoutRoute = '**/admin/rest/removeSession';
+const logoutRoute = '**/admin/rest/sessions/logout';
+const adminLogoutRoute = '**/admin/rest/sessions/logout-administrator';
 
 function waitForSessionDialog(I) {
     I.waitForVisible(modal, 10);
@@ -24,7 +27,10 @@ After(async ({ I }) => {
     await I.stopMockingRoute(dashboardPageRoute);
     await I.stopMockingRoute(historyRoute);
     await I.stopMockingRoute(logoutRoute);
+    await I.stopMockingRoute(adminLogoutRoute);
+    await I.stopMockingRoute(administratorsRoute);
     I.wjSetDefaultWindowSize();
+    if (permissionsChanged) { I.logout(); permissionsChanged = false; }
 });
 
 /** Real bootstrap and audit data expose activity, own records and the same authorized administrators. */
@@ -35,10 +41,30 @@ Scenario('Real sessions and personal login history are available from the welcom
     const bootstrap = await I.executeScript(readDashboardBootstrap);
     I.assertTrue(bootstrap.currentSessions.userSessions.some(cluster => cluster.userSessions.some(session => session.lastActivity > 0)),
         'The real session API must include the last activity timestamp.');
-    if (bootstrap.loggedAdmins) {
+    const current = bootstrap.currentSessions.userSessions.flatMap(cluster => cluster.userSessions).find(session => session.sessionId === bootstrap.currentSessions.currentSessionId);
+    I.assertTrue(Boolean(current?.operatingSystem) && !/\d/.test(current.browserName), 'New sessions must contain a browser family without its version and a separate operating system.');
+    I.see(`${current.browserName} · ${current.operatingSystem}`, `${modal} .md-dashboard-sessions__mine`);
+    I.assertTrue(!Object.hasOwn(bootstrap, 'loggedAdmins'), 'Administrator summaries must not be injected into the page.');
+    const administrators = await I.executeScript(async () => {
+        const response = await fetch('/admin/rest/sessions/administrators', { headers: { 'X-CSRF-Token': window.csrfToken } });
+        return response.ok ? response.json() : null;
+    });
+    I.assertTrue(Array.isArray(administrators), 'The real session REST endpoint must return authorized administrator DTOs.');
+    const protectedResult = await I.executeScript(async sessionId => {
+        const response = await fetch('/admin/rest/sessions/logout', {
+            method: 'POST', headers: { 'X-CSRF-Token': window.csrfToken }, body: new URLSearchParams({ sessionId })
+        });
+        return { ok: response.ok, ...await response.json() };
+    }, bootstrap.currentSessions.currentSessionId);
+    I.assertTrue(protectedResult.ok && protectedResult.success === false && protectedResult.pending === false,
+        'The session controller must reject the requesting session without invalidation.');
+    if (administrators) {
         I.clickCss(`${modal} [role="tab"]:nth-child(2)`);
-        I.assertEqual(await I.grabNumberOfVisibleElements(`${modal} .md-dashboard-widget__admins > li`), bootstrap.loggedAdmins.length,
+        I.waitForElement(`${modal} .md-dashboard-sessions__admins[aria-busy="false"]`, 10);
+        I.assertEqual(await I.grabNumberOfVisibleElements(`${modal} .md-dashboard-sessions__admins-table tbody tr`), administrators.length,
             'The dialog must reuse the logged-administrator widget source.');
+        I.see('Aktívne relácie', `${modal} .md-dashboard-sessions__admins`);
+        I.saveScreenshot('dashboard-active-admins-real.png');
     }
     I.click('História (30 dní)', modal);
     I.waitForElement(`${modal} .md-dashboard-sessions__history[aria-busy="false"]`, 20);
@@ -71,12 +97,17 @@ Scenario('Session widgets and notices open the dialog and update after individua
                 ...['1x1', '2x2', '2x3'].map(size => ({ id: `sessions-autotest-${size}`, type: 'my-sessions', size, options: {} }))], domainOptions: {} },
         notices: [],
         currentSessions: { currentSessionId: 'sessions-autotest-current', userSessions: [{ cluster: 'autotest-node', userSessions: [
-            { sessionId: 'sessions-autotest-current', logonTime: now - 3600000, lastActivity: now, browserName: 'Chrome 154', remoteAddr: '127.0.0.1' },
-            { sessionId: 'sessions-autotest-other', logonTime: now - 7200000, lastActivity: now - 12 * 60000, browserName: 'Firefox 131', remoteAddr: '192.0.2.2' },
-            { sessionId: 'sessions-autotest-third', logonTime: now - 86400000, lastActivity: now - 2 * 3600000, browserName: 'Safari', remoteAddr: '192.0.2.3' }
+            { sessionId: 'sessions-autotest-current', logonTime: now - 3600000, lastActivity: now, browserName: 'Chrome', operatingSystem: 'macOS', remoteAddr: '127.0.0.1' },
+            { sessionId: 'sessions-autotest-other', logonTime: now - 7200000, lastActivity: now - 12 * 60000, browserName: 'Firefox', operatingSystem: 'Windows', remoteAddr: '192.0.2.2' },
+            { sessionId: 'sessions-autotest-third', logonTime: now - 86400000, lastActivity: now - 2 * 3600000, browserName: 'Safari', operatingSystem: 'iOS', remoteAddr: '192.0.2.3' }
         ] }] }
     };
     await mockDashboardBootstrap(I, () => data, () => ({ dismissedUntil: {} }));
+    let administratorReads = 0;
+    await I.mockRoute(administratorsRoute, route => {
+        administratorReads++;
+        return route.fulfill({ contentType: 'application/json', body: '[]' });
+    });
     await I.mockRoute(logoutRoute, route => {
         removed.push(new URLSearchParams(route.request().postData()).get('sessionId'));
         return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ success: true, pending: false }) });
@@ -99,6 +130,7 @@ Scenario('Session widgets and notices open the dialog and update after individua
     I.clickCss('[data-instance-id="sessions-autotest-2x3"] .md-dashboard__title-action');
     waitForSessionDialog(I);
     I.see('Moje prihlásenia (3)', modal);
+    I.see('Chrome · macOS', modal);
     I.see('pred 12 minútami', modal);
     I.saveScreenshot('dashboard-active-sessions-desktop.png');
     for (const width of [1100, 390]) {
@@ -130,4 +162,115 @@ Scenario('Session widgets and notices open the dialog and update after individua
     I.waitForText('Za posledných 30 dní nemáte žiadne záznamy prihlásení.', 10, modal);
     I.pressKey('Escape');
     I.waitToHide(modal, 10);
+    I.assertEqual(administratorReads, 0, 'A personal-only dashboard and inactive administrator tab must not load administrator data.');
+});
+
+/** Every administrator logout is intercepted before interaction; no real administrator sessions are invalidated. */
+Scenario('Administrator session summaries match the design and coordinate authorized logout', async ({ I }) => {
+    const removed = [];
+    const now = Date.now();
+    const data = {
+        settings: { version: 1, configured: true, shortcutsConfigured: true, legacyBookmarksHandled: true,
+            items: [{ id: 'admins-autotest-widget', type: 'logged-admins', size: '2x2', options: {} }], domainOptions: {} },
+        notices: [],
+        currentSessions: { currentSessionId: 'admins-autotest-current', userSessions: [{ userSessions: [
+            { sessionId: 'admins-autotest-current', browserName: 'Chrome', operatingSystem: 'macOS', logonTime: now, lastActivity: now }
+        ] }] },
+        administrators: [
+            { userId: 900001, fullName: 'Autotest Current User', login: 'autotest-current', current: true, sessionCount: 1, lastActivity: now, clients: ['Chrome · macOS'] },
+            { userId: 900002, fullName: 'Autotest Other Administrator', login: 'autotest-other', email: 'autotest@example.test', sessionCount: 2, lastActivity: now - 300000, clients: ['Chrome · Windows', 'Safari · iOS'] },
+            { userId: 900003, fullName: 'Autotest Remote Administrator', login: 'autotest-remote', sessionCount: 1, lastActivity: now - 2400000, clients: ['Firefox · Linux'] }
+        ]
+    };
+    let administrators = data.administrators;
+    delete data.administrators;
+    let reads = 0;
+    await mockDashboardBootstrap(I, () => data, () => ({ dismissedUntil: {} }));
+    await I.mockRoute(administratorsRoute, route => {
+        reads++;
+        return route.fulfill({ contentType: 'application/json', body: JSON.stringify(administrators) });
+    });
+    await I.mockRoute(adminLogoutRoute, route => {
+        const userId = new URLSearchParams(route.request().postData()).get('userId');
+        removed.push(userId);
+        if (userId === '900002') administrators = administrators.filter(user => user.userId !== 900002);
+        return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ success: true, pending: userId === '900003' }) });
+    });
+    I.refreshPage();
+    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    I.assertTrue(await I.executeScript(() => WJ.hasPermission('users.edit_admins')), 'This fixture account must have administrator management permission.');
+    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    waitForSessionDialog(I);
+    I.clickCss(`${modal} [role="tab"]:nth-child(2)`);
+    I.waitForText('Prihlásení administrátori (3)', 10, modal);
+    I.see('autotest-current', `${modal} [data-admin-user-id="900001"]`);
+    I.see('Chrome · Windows, Safari · iOS', modal);
+    I.dontSee('Nové zariadenie', modal);
+    I.dontSee('Zobraziť automatizovaných klientov', modal);
+    I.assertTrue(await I.executeScript(() => getComputedStyle(document.querySelector('.md-dashboard-sessions__avatar')).backgroundColor !== 'rgba(0, 0, 0, 0)'),
+        'Administrator initials must have their visible themed avatar background.');
+    I.saveScreenshot('dashboard-active-admins-desktop.png');
+    administrators[1].sessionCount = 3;
+    I.click('Obnoviť údaje', `${modal} .md-dashboard-sessions__admins`);
+    I.waitForText('3', 10, `${modal} [data-admin-user-id="900002"] .md-dashboard-sessions__admin-connections > div`);
+    for (const width of [1100, 390]) {
+        I.resizeWindow(width, 850);
+        I.assertTrue(await I.executeScript(() => {
+            const dialog = document.querySelector('.md-dashboard-modal--sessions .modal-content');
+            const body = dialog.querySelector('.modal-body');
+            const bounds = dialog.getBoundingClientRect();
+            return bounds.left >= 0 && bounds.right <= innerWidth && body.scrollWidth <= body.clientWidth + 1;
+        }), `The administrator table must fit the ${width}px viewport.`);
+    }
+    I.saveScreenshot('dashboard-active-admins-mobile.png');
+    I.wjSetDefaultWindowSize();
+    I.click('Moje prihlásenia', `${modal} [data-admin-user-id="900001"]`);
+    I.see('Chrome · macOS', `${modal} .md-dashboard-sessions__mine`);
+    I.clickCss(`${modal} [role="tab"]:nth-child(2)`);
+    I.waitForText('Prihlásení administrátori (3)', 10, modal);
+    I.click('Odhlásiť', `${modal} [data-admin-user-id="900002"]`);
+    I.waitForText('Prihlásení administrátori (2)', 10, modal);
+    I.dontSeeElement(`${modal} [data-admin-user-id="900002"]`);
+    I.click('Odhlásiť', `${modal} [data-admin-user-id="900003"]`);
+    I.waitForText('Odhlásenie bolo prijaté.', 10, `${modal} [data-admin-user-id="900003"]`);
+    I.assertDeepEqual(removed, ['900002', '900003'], 'Only the selected fictional administrators may reach the intercepted route.');
+    I.click('Zavrieť', `${modal} .modal-footer`);
+    I.waitToHide(modal, 10);
+    await showWidget(I, 'admins-autotest-widget');
+    I.dontSee('Autotest Other Administrator', '[data-instance-id="admins-autotest-widget"]');
+    I.see('Autotest Remote Administrator', '[data-instance-id="admins-autotest-widget"]');
+    I.assertTrue(reads >= 4, 'Widget and dialog must read fresh summaries after logout.');
+});
+
+/** Both real POSTs target only the requesting account, which the service always refuses to log out. */
+Scenario('Administrator list and logout enforce independent permissions through REST', async ({ I }) => {
+    permissionsChanged = true;
+    I.amOnPage('/admin/v9/?removePerm=welcomeShowLoggedAdmins');
+    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    I.assertTrue(await I.executeScript(() => WJ.hasPermission('users.edit_admins')), 'List revocation must retain administrator management.');
+    let result = await I.executeScript(async () => {
+        const list = await fetch('/admin/rest/sessions/administrators', { headers: { 'X-CSRF-Token': window.csrfToken } });
+        const logout = await fetch('/admin/rest/sessions/logout-administrator', {
+            method: 'POST', headers: { 'X-CSRF-Token': window.csrfToken }, body: new URLSearchParams({ userId: window.currentUser.userId })
+        });
+        return { list: list.status, logout: logout.status };
+    });
+    I.assertDeepEqual(result, { list: 403, logout: 400 }, 'Management alone must not expose the list; an own-account logout must still be rejected.');
+    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    waitForSessionDialog(I);
+    I.dontSeeElement(`${modal} .md-dashboard-sessions__admins`);
+    I.click('Zavrieť', `${modal} .modal-footer`);
+    I.logout();
+    I.relogin('admin', false);
+    I.amOnPage('/admin/v9/?removePerm=users.edit_admins');
+    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    I.assertTrue(await I.executeScript(() => WJ.hasPermission('welcomeShowLoggedAdmins')), 'Management revocation must retain list permission.');
+    result = await I.executeScript(async () => {
+        const list = await fetch('/admin/rest/sessions/administrators', { headers: { 'X-CSRF-Token': window.csrfToken } });
+        const logout = await fetch('/admin/rest/sessions/logout-administrator', {
+            method: 'POST', headers: { 'X-CSRF-Token': window.csrfToken }, body: new URLSearchParams({ userId: window.currentUser.userId })
+        });
+        return { list: list.status, logout: logout.status };
+    });
+    I.assertDeepEqual(result, { list: 200, logout: 403 }, 'Displaying administrator summaries must not grant logout access.');
 });

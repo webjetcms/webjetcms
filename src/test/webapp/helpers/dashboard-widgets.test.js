@@ -40,7 +40,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
     };
     const scope = vm.createContext({ Date: ClockDate, window, document: window.document, Node: window.Node, DOMParser: window.DOMParser, DOMException: window.DOMException, URL, URLSearchParams, AbortController, console,
         IntersectionObserver: class { observe() {} disconnect() {} },
-        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/stat/') ? statResponse(url) : url.includes('/monitoring/actual') ? snapshot : url.includes('/forms-list/') || url.includes('/dmail/') || url.includes('/web-pages/history/all?') ? data : url.includes('/audit/log/all?') ? { content: (data.items || []).map((item, index) => ({ id: index + 1, logType: 20, description: item.description, userFullName: item.userFullName, createDate: item.date })), options: { logType: [{ value: '20', label: data.items?.[0]?.type || 'Changed' }] } } : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
+        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url === '/admin/rest/sessions/administrators' ? (data.loggedAdmins || []) : url.includes('/stat/') ? statResponse(url) : url.includes('/monitoring/actual') ? snapshot : url.includes('/forms-list/') || url.includes('/dmail/') || url.includes('/web-pages/history/all?') ? data : url.includes('/audit/log/all?') ? { content: (data.items || []).map((item, index) => ({ id: index + 1, logType: 20, description: item.description, userFullName: item.userFullName, createDate: item.date })), options: { logType: [{ value: '20', label: data.items?.[0]?.type || 'Changed' }] } } : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
     });
     if (colorPicker) {
         // Load the installed component with browser dialog and adopted-style APIs supplied for JSDOM.
@@ -54,7 +54,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
     for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'monitoring-live.js', 'system-widgets.js', 'session-widgets.js', 'utility-widgets.js', 'data-widgets.js', 'shortcut-widget.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
             .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
-        const exports = { 'system-widgets.js': ['registerSystemWidgets', 'renderLoggedAdmins'], 'monitoring-live.js': ['readMonitoringSnapshot', 'subscribeMonitoring'] }[file];
+        const exports = { 'system-widgets.js': ['registerSystemWidgets', 'renderLoggedAdmins', 'adminMail', 'fetchLoggedAdministrators'], 'monitoring-live.js': ['readMonitoringSnapshot', 'subscribeMonitoring'] }[file];
         const script = exports ? `(function () { ${source}\n${exports.map(name => `this.${name} = ${name};`).join('\n')} }).call(this);` : source;
         vm.runInContext(script, scope, { filename: file });
     }
@@ -697,18 +697,19 @@ test('Changed pages and audit render bounded text-only activity with their suppl
     }
 });
 
-test('Injected logged administrators render synchronously with safe email actions and no REST calls', t => {
+test('Logged administrators load fresh REST data with safe email actions and abort cleanup', async t => {
     const emails = ['valid+autotest@example.com', 'autotest@example.com?bcc=other@example.com', 'autotest@example.com\r\nBcc:other@example.com',
         'autotest@example.com,other@example.com', 'autotest@example.com%0aBcc:other@example.com', ''];
     const items = emails.map((email, userId) => ({ userId, email, fullName: '<img src=x onerror=alert(1)>' }));
-    const { scope, context, container, window, requests } = fixture(t, { data: { loggedAdmins: items } });
+    const data = { loggedAdmins: items };
+    const { scope, context, container, window, requests } = fixture(t, { data });
     context.translate = (key, ...values) => `${key}:${values.join(',')}`;
     const widget = scope.getWidget('logged-admins');
     const controller = new AbortController();
     const args = { container, context, signal: controller.signal };
     for (const size of ['2x2', '2x3']) {
         container.replaceChildren();
-        widget.render({ ...args, instance: { size } });
+        await widget.render({ ...args, instance: { size } });
         assert.equal(container.querySelectorAll('.md-dashboard-widget__admins > li').length, items.length);
         assert.equal(container.querySelector('img'), null);
         assert.equal(container.querySelectorAll('a').length, 1);
@@ -728,15 +729,17 @@ test('Injected logged administrators render synchronously with safe email action
     controller.abort();
     list.dispatchEvent(new window.WheelEvent('wheel', { bubbles: true }));
     assert.equal(bubbled, 1, 'Removed administrator cards must release their native-scroll listeners.');
-    context.data.loggedAdmins = [];
+    data.loggedAdmins = [];
     container.replaceChildren();
-    widget.render(args);
+    const nextController = new AbortController();
+    await widget.render({ ...args, signal: nextController.signal });
     assert.match(container.textContent, /empty/);
-    assert.equal(requests.length, 0, 'Administrator cards must always use the injected list.');
+    assert.equal(requests.length, 3, 'Every render must read fresh administrator data.');
+    assert.ok(requests.every(request => request.url === '/admin/rest/sessions/administrators'));
 });
 
 test('Migrated provider failures stay errors and aborted responses do not append stale content', async t => {
-    for (const type of Object.keys(migratedPermissions).filter(type => type !== 'logged-admins')) {
+    for (const type of Object.keys(migratedPermissions)) {
         const denied = fixture(t, { ok: false });
         const args = { container: denied.container, context: denied.context, signal: new AbortController().signal, instance: { size: '3x3' } };
         await assert.rejects(denied.scope.getWidget(type).render(args), /403/, type);
@@ -1749,7 +1752,7 @@ test('Sessions reuse embedded data and update the snapshot and count after remov
     container.querySelector('li button').click();
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(requests.length, 1);
-    assert.equal(requests[0].url, '/admin/rest/removeSession');
+    assert.equal(requests[0].url, '/admin/rest/sessions/logout');
     assert.equal(requests[0].options.method, 'POST');
     assert.equal(container.querySelector('.md-dashboard-widget__session-count').textContent, '0');
 });
@@ -1939,8 +1942,8 @@ function sessionDialogFixture(context, window) {
 
 test('Personal session widget supports counts and complete scrollable lists without additional reads', async t => {
     const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
-        { sessionId: 'current', logonTime: 1, browserName: 'Chrome autotest' },
-        { sessionId: 'other', logonTime: 2, browserName: '<img src=x> autotest', remoteAddr: '127.0.0.2' }
+        { sessionId: 'current', logonTime: 1, browserName: 'Chrome', operatingSystem: 'macOS' },
+        { sessionId: 'other', logonTime: 2, browserName: '<img src=x> autotest', operatingSystem: '<img src=unsafe>', remoteAddr: '127.0.0.2' }
     ] }] } };
     const { scope, context, container, requests } = fixture(t, { data });
     const widget = scope.getWidget('my-sessions');
@@ -1953,9 +1956,85 @@ test('Personal session widget supports counts and complete scrollable lists with
             assert.equal(container.querySelectorAll('li').length, 2);
             assert.equal(container.querySelectorAll('li button').length, 1);
             assert.equal(container.querySelector('img'), null);
+            assert.equal(container.querySelector('.md-dashboard-widget__session-name').textContent, 'Chrome · macOS');
         }
     }
     assert.equal(requests.length, 0);
+});
+
+test('Administrator table uses safe account and session summaries and omits logout without management permission', async t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+        { sessionId: 'current', browserName: 'Chrome', operatingSystem: 'macOS', logonTime: 1 },
+        { sessionId: 'other', browserName: 'Firefox', operatingSystem: 'Linux', logonTime: 2 }
+    ] }] }, loggedAdmins: [
+        { userId: 8, fullName: '<img src=x> Admin', login: '<script>login</script>', email: 'other@example.test', sessionCount: 3, clients: ['Chrome · <img src=x>'], lastActivity: Date.now() - 600000 },
+        { userId: 7, fullName: 'Autotest User', login: 'autotest', current: true, sessionCount: 2, clients: ['Chrome · macOS', 'Firefox · Linux'] }
+    ] };
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async url => {
+        if (url === '/admin/rest/sessions/administrators') return { ok: true, json: async () => data.loggedAdmins };
+        data.loggedAdmins[1].sessionCount = 1;
+        data.loggedAdmins[1].clients = ['Chrome · macOS'];
+        return { ok: true, json: async () => ({ success: true }) };
+    } });
+    window.WJ.hasPermission = permission => permission !== 'users.edit_admins';
+    sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    assert.equal(requests.length, 0, 'The administrator list must wait for tab activation.');
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await new Promise(resolve => setImmediate(resolve));
+    const rows = root.querySelectorAll('.md-dashboard-sessions__admins-table tbody tr');
+    assert.equal(rows.length, 2);
+    assert.equal(rows[0].dataset.adminUserId, '7');
+    assert.equal(rows[0].querySelector('.md-dashboard-sessions__admin-connections div').textContent, '2');
+    assert.match(rows[0].querySelector('small').textContent, /autotest/);
+    assert.match(rows[0].querySelector('.md-dashboard-sessions__admin-connections small').textContent, /Chrome · macOS, Firefox · Linux/);
+    assert.equal(rows[1].querySelector('button'), null);
+    assert.match(rows[1].querySelector('a').href, /mailto:other@example.test/);
+    assert.equal(root.querySelectorAll('script,img,input').length, 0);
+    rows[0].querySelector('button').click();
+    assert.equal(root.querySelectorAll('[role="tab"]')[0].getAttribute('aria-selected'), 'true');
+    assert.match(root.querySelector('.md-dashboard-sessions__device-name').textContent, /Chrome · macOS/);
+    root.querySelector('.md-dashboard-sessions__mine tbody tr:nth-child(2) button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(root.querySelector('.md-dashboard-sessions__admin-connections div').textContent, '1');
+    assert.equal(requests.length, 3);
+});
+
+test('Authorized administrator logout refreshes REST data and retains pending and failed feedback', async t => {
+    let administrators = [{ userId: 7, fullName: 'Own Account', current: true },
+        ...[8, 9, 10].map(userId => ({ userId, fullName: `Administrator ${userId}`, sessionCount: 2, clients: ['Firefox · Linux'] }))];
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [] } };
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async (url, options) => {
+        if (url === '/admin/rest/sessions/administrators') return { ok: true, json: async () => administrators };
+        const userId = options.body.get('userId');
+        if (userId === '8') administrators = administrators.filter(user => user.userId !== 8);
+        return { ok: true, json: async () => ({ success: userId !== '10', pending: userId === '9' }) };
+    } });
+    sessionDialogFixture(context, window);
+    let refreshed = 0;
+    context.dashboard.refreshLoggedAdmins = () => { refreshed++; };
+    scope.showActiveSessions(context);
+    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    root.querySelectorAll('[role="tab"]')[1].click();
+    await new Promise(resolve => setImmediate(resolve));
+    for (const id of [8, 9, 10]) {
+        root.querySelector(`[data-admin-user-id="${id}"] button`).click();
+        await new Promise(resolve => setImmediate(resolve));
+    }
+    const posts = requests.filter(request => request.options.method === 'POST');
+    assert.deepEqual(posts.map(request => request.url), Array(3).fill('/admin/rest/sessions/logout-administrator'));
+    assert.deepEqual(posts.map(request => request.options.body.get('userId')), ['8', '9', '10']);
+    assert.equal(requests.filter(request => !request.options.method).length, 3);
+    assert.equal(root.querySelector('[data-admin-user-id="8"]'), null);
+    assert.equal(root.querySelector('[data-admin-user-id="9"] button'), null);
+    assert.match(root.querySelector('[data-admin-user-id="9"]').textContent, /sessionPending/);
+    assert.ok(root.querySelector('[data-admin-user-id="10"] button'));
+    assert.match(root.querySelector('.md-dashboard-sessions__status').textContent, /sessionAdminLogoutError/);
+    assert.equal(refreshed, 2);
+    window.WJ.hasPermission = () => false;
+    root.querySelector('[data-admin-user-id="10"] button').click();
+    assert.equal(requests.length, 6);
 });
 
 test('Session dialog protects the current session and retains pending and failed bulk removals', async t => {
@@ -1969,7 +2048,7 @@ test('Session dialog protects the current session and retains pending and failed
     const dialog = sessionDialogFixture(context, window);
     scope.showActiveSessions(context);
     const root = window.document.querySelector('.md-dashboard-modal--sessions');
-    assert.equal(root.querySelectorAll('[role="tab"]').length, 2, 'Administrator data must not appear when omitted from the authorized bootstrap.');
+    assert.equal(root.querySelectorAll('[role="tab"]').length, 3, 'Tab availability follows permission, independently of bootstrap data.');
     assert.equal(root.querySelector('tbody tr').querySelector('button'), null);
     assert.equal(root.querySelectorAll('script,img').length, 0);
     assert.match(root.querySelector('.md-dashboard-sessions__activity').textContent, /sessionActiveNow/);
@@ -1982,6 +2061,45 @@ test('Session dialog protects the current session and retains pending and failed
     assert.equal(root.querySelectorAll('tbody button').length, 1, 'Only the failed session offers retry.');
     assert.equal(dialog.refreshed(), 1);
     assert.equal(scope.flattenSessions(context.data.currentSessions).length, 3);
+});
+
+test('Administrator tab refreshes fresh REST data, retries failures, separates permissions and aborts on close', async t => {
+    let fail = true;
+    let users = [];
+    const { scope, context, window, requests } = fixture(t, {
+        data: { currentSessions: { currentSessionId: 'current', userSessions: [] } },
+        fetchResponse: async () => ({ ok: !fail, status: fail ? 403 : 200, json: async () => fail ? {} : users })
+    });
+    window.WJ.hasPermission = permission => permission === 'users.edit_admins';
+    const dialog = sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    let root = window.document.querySelector('.md-dashboard-modal--sessions');
+    assert.equal(root.querySelectorAll('[role="tab"]').length, 2, 'Edit permission alone must not display the list tab.');
+    assert.equal(requests.length, 0);
+    root.querySelector('.modal-footer button').click();
+    window.WJ.hasPermission = permission => permission === 'welcomeShowLoggedAdmins';
+    sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    root = window.document.querySelector('.md-dashboard-modal--sessions');
+    const adminTab = root.querySelectorAll('[role="tab"]')[1];
+    adminTab.click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.match(root.querySelector('.md-dashboard-sessions__admins [role="alert"]').textContent, /unavailable/);
+    assert.equal(root.querySelector('.md-dashboard-sessions__admins-table'), null, 'A failed load must not claim an empty list.');
+    fail = false;
+    root.querySelector('.md-dashboard-sessions__admins button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.match(root.querySelector('.md-dashboard-sessions__admins').textContent, /empty/);
+    users = [{ userId: 8, fullName: 'Autotest Refreshed', sessionCount: 1 }];
+    root.querySelector('.md-dashboard-sessions__admins .md-dashboard-sessions__summary button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.match(root.querySelector('.md-dashboard-sessions__admins').textContent, /Autotest Refreshed/);
+    assert.equal(root.querySelector('[data-admin-user-id="8"] button'), null);
+    adminTab.click();
+    assert.equal(requests.length, 3, 'Revisiting a loaded tab must not implicitly fetch again.');
+    root.querySelector('.modal-footer button').click();
+    assert.equal(requests[0].options.signal.aborted, true);
+    assert.equal(dialog.signal.aborted, true);
 });
 
 test('History loads only on tab activation, pages safely and aborts when the dialog closes', async t => {

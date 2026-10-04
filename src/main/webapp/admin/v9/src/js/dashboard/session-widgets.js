@@ -1,6 +1,6 @@
 import { registerWidget } from './registry';
 import { node, text, date, number, icon, containNativeScroll, fetchJson } from './widget-utils';
-import { renderLoggedAdmins } from './system-widgets';
+import { adminMail, fetchLoggedAdministrators } from './system-widgets';
 
 function sessionButton(label, action, className) {
     const control = node('button', className, label);
@@ -20,6 +20,12 @@ function sessionButton(label, action, className) {
 export function flattenSessions(data) {
     return (data?.userSessions || []).flatMap(cluster => (cluster.userSessions || []).map(session => ({ ...session, cluster: cluster.cluster })))
         .sort((a, b) => Number(b.sessionId === data.currentSessionId) - Number(a.sessionId === data.currentSessionId) || b.logonTime - a.logonTime);
+}
+
+/** Joins the API's browser and operating system without showing absent or unknown platform data. */
+function sessionClient(session) {
+    const system = /^unknown$/i.test(session.operatingSystem || '') ? '' : session.operatingSystem;
+    return [session.browserName, system].filter(Boolean).join(' · ');
 }
 
 /** Resolves only known browser glyphs, never a CSS class supplied by session data. */
@@ -73,7 +79,7 @@ function sessionTooltips(list, signal) {
 async function logoutSession(session, context, signal) {
     const data = context.data.currentSessions;
     if (session.sessionId === data.currentSessionId) throw new Error('The current session cannot be removed');
-    const response = await fetch('/admin/rest/removeSession', {
+    const response = await fetch('/admin/rest/sessions/logout', {
         method: 'POST', signal, credentials: 'same-origin',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8', 'X-CSRF-Token': window.csrfToken },
         body: new URLSearchParams({ sessionId: session.sessionId })
@@ -94,6 +100,7 @@ async function logoutSession(session, context, signal) {
 /** Refreshes both session widgets and the independent system notices after a logout. */
 function refreshSessions(context) {
     context.dashboard.refreshSessions();
+    context.dashboard.refreshLoggedAdmins?.();
 }
 
 /** Shares the complete, scrollable session list between the welcome panel and personal widgets. */
@@ -107,7 +114,7 @@ function sessionList(container, data, context, signal) {
         row.dataset.sessionLogon = String(session.logonTime);
         const device = icon(sessionBrowserIcon(session.browserName));
         device.classList.add('md-dashboard-widget__session-device');
-        row.append(device, node('strong', 'md-dashboard-widget__session-name', session.browserName),
+        row.append(device, node('strong', 'md-dashboard-widget__session-name', sessionClient(session)),
             node('span', 'md-dashboard-widget__session-detail', `${date(session.logonTime)} · ${session.remoteAddr || ''}`));
         row.title = [session.domainName, session.cluster].filter(Boolean).join(' · ');
         if (session.sessionId === data.currentSessionId) {
@@ -167,11 +174,15 @@ export function showActiveSessions(context) {
     const admins = node('section', 'md-dashboard-sessions__admins');
     const history = node('section', 'md-dashboard-sessions__history');
     const tabDefinitions = [['mine', 'mySessions', mine]];
-    if (Array.isArray(context.data.loggedAdmins) && window.WJ.hasPermission('welcomeShowLoggedAdmins')) {
+    if (window.WJ.hasPermission('welcomeShowLoggedAdmins')) {
         tabDefinitions.push(['admins', 'sessionAdmins', admins]);
     }
     tabDefinitions.push(['history', 'sessionHistory', history]);
     let historyLoaded = false;
+    let adminsLoaded = false;
+    let adminsLoading = false;
+    let administrators = [];
+    const pendingAdministrators = new Set();
     const tabButtons = tabDefinitions.map(([id, label, panel], index) => {
         const tab = sessionButton(text(context, label), () => selectTab(index), 'nav-link');
         tab.id = `${dialog.root.getAttribute('aria-labelledby')}-${id}`;
@@ -201,12 +212,14 @@ export function showActiveSessions(context) {
             tab.tabIndex = i === index ? 0 : -1;
             tabDefinitions[i][2].hidden = i !== index;
         });
+        if (tabDefinitions[index][0] === 'admins' && !adminsLoaded) loadAdmins();
         if (tabDefinitions[index][0] === 'history' && !historyLoaded) { historyLoaded = true; loadHistory(0); }
     }
 
     const status = node('span', 'md-dashboard-sessions__status text-danger small');
     status.setAttribute('role', 'alert');
     let busy = false;
+    let adminBusy = false;
     function renderMine() {
         const data = context.data.currentSessions;
         const sessions = flattenSessions(data);
@@ -249,7 +262,7 @@ export function showActiveSessions(context) {
             const identity = node('div', 'md-dashboard-sessions__device');
             const glyph = node('span', 'md-dashboard-sessions__device-icon'); glyph.append(icon(sessionBrowserIcon(session.browserName)));
             const details = node('div');
-            const name = node('div', 'md-dashboard-sessions__device-name', session.browserName);
+            const name = node('div', 'md-dashboard-sessions__device-name', sessionClient(session));
             const current = session.sessionId === data.currentSessionId;
             if (current) name.append(node('span', 'md-dashboard-sessions__current', text(context, 'currentSession')));
             details.append(name, node('small', '', text(context, 'sessionLoggedAt', date(session.logonTime))));
@@ -260,7 +273,7 @@ export function showActiveSessions(context) {
             else {
                 const logout = sessionButton(text(context, 'sessionLogout'), () => remove([session]), 'btn btn-sm btn-link');
                 logout.prepend(icon('ti-logout')); logout.disabled = busy;
-                logout.setAttribute('aria-label', `${text(context, 'sessionLogout')}: ${session.browserName}, ${session.remoteAddr || ''}`);
+                logout.setAttribute('aria-label', `${text(context, 'sessionLogout')}: ${sessionClient(session)}, ${session.remoteAddr || ''}`);
                 action.append(logout);
             }
             const activity = node('td', current ? 'md-dashboard-sessions__activity is-current' : 'md-dashboard-sessions__activity', sessionActivity(session, data.currentSessionId, context));
@@ -285,7 +298,115 @@ export function showActiveSessions(context) {
         busy = false;
         refreshSessions(context);
         renderMine();
+        if (adminsLoaded) await loadAdmins();
         tabButtons[0].focus({ preventScroll: true });
+    }
+
+    /** Loads only on tab activation, explicit refresh, or a logout after this tab has already loaded. */
+    async function loadAdmins() {
+        if (adminsLoading || dialog.signal.aborted) return;
+        adminsLoading = true;
+        admins.replaceChildren(node('p', '', text(context, 'loading')));
+        admins.setAttribute('aria-busy', 'true');
+        try {
+            const users = await fetchLoggedAdministrators(dialog.signal);
+            if (dialog.signal.aborted) return;
+            administrators = users;
+            adminsLoaded = true;
+            renderAdmins();
+        } catch (error) {
+            if (dialog.signal.aborted) return;
+            const message = node('p', 'text-danger', text(context, 'unavailable'));
+            message.setAttribute('role', 'alert');
+            admins.replaceChildren(message, sessionButton(text(context, 'retry'), loadAdmins, 'btn btn-sm btn-outline-secondary'));
+        } finally {
+            adminsLoading = false;
+            admins.setAttribute('aria-busy', 'false');
+        }
+    }
+
+    /** Renders the fresh REST summary, retaining feedback for accepted remote invalidations. */
+    function renderAdmins() {
+        const index = tabDefinitions.findIndex(([id]) => id === 'admins');
+        if (index < 0) return;
+        const users = [...administrators].sort((a, b) => Number(Boolean(b.current)) - Number(Boolean(a.current)));
+        tabButtons[index].textContent = `${text(context, 'sessionAdmins')} (${number(users.length)})`;
+        admins.replaceChildren();
+        const summary = node('div', 'md-dashboard-sessions__summary');
+        const explanation = node('div');
+        explanation.append(node('strong', '', text(context, 'sessionAdminsHeading')), node('p', '', text(context, 'sessionAdminsDescription')));
+        const refresh = sessionButton(text(context, 'refresh'), loadAdmins, 'btn btn-sm btn-outline-secondary');
+        refresh.prepend(icon('ti-refresh')); refresh.disabled = adminBusy;
+        summary.append(explanation, refresh); admins.append(summary);
+        if (!users.length) { admins.append(node('p', 'text-muted', text(context, 'empty'))); return; }
+        const table = node('table', 'md-dashboard-sessions__table md-dashboard-sessions__admins-table');
+        const head = node('thead'), heading = node('tr');
+        ['sessionUser', 'sessionActiveSessions', 'sessionLastActivity', 'sessionActions'].forEach((key, index) => {
+            const cell = node('th'); cell.scope = 'col';
+            cell.append(node('span', index === 3 ? 'visually-hidden' : '', text(context, key))); heading.append(cell);
+        });
+        head.append(heading); table.append(head);
+        const body = node('tbody');
+        users.forEach(user => {
+            const row = node('tr');
+            row.dataset.adminUserId = String(user.userId);
+            const identity = node('td');
+            const device = node('div', 'md-dashboard-sessions__device');
+            const initials = String(user.fullName || '').trim().split(/\s+/).filter(Boolean).map(word => word[0]).slice(0, 2).join('').toLocaleUpperCase();
+            const avatar = node('span', 'md-dashboard-sessions__avatar', initials); avatar.setAttribute('aria-hidden', 'true');
+            const name = node('div'); name.append(node('div', 'md-dashboard-sessions__device-name', user.fullName), node('small', '', user.login));
+            device.append(avatar, name); identity.append(device);
+            const clients = user.clients || [];
+            const count = user.sessionCount;
+            const connections = node('td', 'md-dashboard-sessions__admin-connections');
+            connections.dataset.label = text(context, 'sessionActiveSessions');
+            connections.append(node('div', '', count == null ? '—' : number(count)), node('small', '', clients.filter(Boolean).join(', ')));
+            const activity = node('td', `md-dashboard-sessions__activity${user.current ? ' is-current' : ''}`,
+                sessionActivity({ lastActivity: user.lastActivity, sessionId: user.current ? 'current' : '' }, 'current', context));
+            if (user.lastActivity > 0) activity.title = date(user.lastActivity);
+            const actions = node('td', 'md-dashboard-sessions__action');
+            if (user.current) actions.append(sessionButton(text(context, 'mySessions'), () => selectTab(0), 'btn btn-sm btn-link'));
+            else {
+                const mail = adminMail(user, context); if (mail) actions.append(mail);
+                if (window.WJ.hasPermission('users.edit_admins')) {
+                    if (pendingAdministrators.has(user.userId)) actions.append(node('span', 'small text-muted', text(context, 'sessionPending')));
+                    else {
+                        const logout = sessionButton(text(context, 'sessionLogout'), () => removeAdministrator(user), 'btn btn-sm btn-link text-danger');
+                        logout.prepend(icon('ti-logout')); logout.disabled = adminBusy;
+                        logout.setAttribute('aria-label', `${text(context, 'sessionLogout')}: ${user.fullName}`);
+                        actions.append(logout);
+                    }
+                }
+            }
+            row.append(identity, connections, activity, actions); body.append(row);
+        });
+        table.append(body); admins.append(table);
+    }
+
+    async function removeAdministrator(user) {
+        if (adminBusy || user.current || !window.WJ.hasPermission('users.edit_admins')) return;
+        adminBusy = true; status.textContent = '';
+        admins.querySelectorAll('button').forEach(control => { control.disabled = true; });
+        try {
+            const response = await fetch('/admin/rest/sessions/logout-administrator', {
+                method: 'POST', signal: dialog.signal, credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8', 'X-CSRF-Token': window.csrfToken },
+                body: new URLSearchParams({ userId: user.userId })
+            });
+            const result = await response.json();
+            if (!response.ok || result.success !== true) throw new Error('Administrator logout failed');
+            if (dialog.signal.aborted) return;
+            if (result.pending) pendingAdministrators.add(user.userId);
+            context.dashboard.refreshLoggedAdmins();
+            adminBusy = false;
+            await loadAdmins();
+        } catch (error) {
+            if (dialog.signal.aborted) return;
+            status.textContent = text(context, 'sessionAdminLogoutError');
+            adminBusy = false;
+            renderAdmins();
+        }
+        tabButtons[tabDefinitions.findIndex(([id]) => id === 'admins')].focus({ preventScroll: true });
     }
 
     async function loadHistory(page) {
@@ -322,11 +443,6 @@ export function showActiveSessions(context) {
     }
 
     renderMine();
-    if (tabDefinitions.some(([id]) => id === 'admins')) {
-        const index = tabDefinitions.findIndex(([id]) => id === 'admins');
-        tabButtons[index].textContent += ` (${number(context.data.loggedAdmins.length)})`;
-        renderLoggedAdmins({ container: admins, context, signal: dialog.signal });
-    }
     dialog.footer.append(node('small', 'text-muted me-auto', text(context, 'sessionsImmediate')), status,
         sessionButton(text(context, 'close'), dialog.close, 'btn btn-sm btn-outline-secondary'));
     selectTab(0);

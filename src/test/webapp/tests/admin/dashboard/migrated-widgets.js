@@ -52,9 +52,12 @@ Before(async ({ I, login }) => {
 Scenario('Migrated overview widgets persist independently and clean up monitoring charts', async ({ I }) => {
     const original = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     const adminRequests = [];
-    await I.mockRoute('**/admin/rest/dashboard/data/logged-admins*', route => {
+    let administratorCount = 0;
+    await I.mockRoute('**/admin/rest/sessions/administrators', async route => {
         adminRequests.push(route.request().url());
-        return route.fulfill({ status: 503, contentType: 'application/json', body: '{}' });
+        const response = await route.fetch();
+        administratorCount = (await response.json()).length;
+        return route.fulfill({ response });
     });
     try {
         const applied = await I.executeScript(async definitions => {
@@ -81,9 +84,9 @@ Scenario('Migrated overview widgets persist independently and clean up monitorin
         await waitForWidgets(I);
         I.refreshPage();
         await waitForWidgets(I);
-        I.assertTrue(await I.executeScript(() => document.querySelectorAll('[data-widget-type="logged-admins"] .md-dashboard-widget__admins > li').length
-            === document.querySelector('webjet-overview-dashboard').data.loggedAdmins.length), 'The administrator card must render the complete injected list.');
-        I.assertEqual(adminRequests.length, 0, 'Adding and reloading the administrator widget must not call REST.');
+        I.assertEqual(await I.grabNumberOfVisibleElements('[data-widget-type="logged-admins"] .md-dashboard-widget__admins > li'), administratorCount,
+            'The administrator card must render the complete REST response.');
+        I.assertTrue(adminRequests.length >= 2, 'Adding and reloading the administrator widget must read fresh REST data.');
         const reloaded = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings);
         for (const item of applied.items) {
             I.assertDeepEqual(reloaded.items.find(saved => saved.id === item.id), item, `${item.type} must retain its stable instance and size across reload.`);
@@ -145,7 +148,7 @@ Scenario('Migrated overview widgets persist independently and clean up monitorin
             }
         }
     } finally {
-        await I.stopMockingRoute('**/admin/rest/dashboard/data/logged-admins*');
+        await I.stopMockingRoute('**/admin/rest/sessions/administrators');
         I.wjSetDefaultWindowSize();
         const restored = await I.executeScript(async settings => {
             const response = await fetch('/admin/rest/dashboard/settings', {

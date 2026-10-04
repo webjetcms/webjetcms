@@ -71,7 +71,7 @@ function activityList(container, items, type, size) {
  * @param {import('./registry').WidgetContext} context - Supplies the accessible action label.
  * @returns {HTMLAnchorElement|null} A detached mail action, or null when the address fails validation.
  */
-function adminMail(user, context) {
+export function adminMail(user, context) {
     const email = typeof user.email === 'string' ? user.email.trim() : '';
     if (!email || /[\s<>,;?&#%\\]/.test(email) || !/^[^@]+@[^@]+$/.test(email)) return null;
     const action = node('a', 'btn btn-sm md-dashboard-widget__admin-mail');
@@ -82,9 +82,15 @@ function adminMail(user, context) {
     return action;
 }
 
-/** Renders the complete, permission-filtered administrator bootstrap list in a widget or login dialog. */
-export function renderLoggedAdmins({ container, context, signal }) {
-    const admins = context.data.loggedAdmins || [];
+/** Reads a fresh, server-authorized administrator summary for a visible widget or active dialog tab. */
+export function fetchLoggedAdministrators(signal) {
+    return fetchJson('/admin/rest/sessions/administrators', signal);
+}
+
+/** Loads the administrator list when the shared widget lifecycle starts or refreshes this render. */
+export async function renderLoggedAdmins({ container, context, signal }) {
+    const admins = await fetchLoggedAdministrators(signal);
+    if (signal.aborted) return;
     if (!admins.length) { empty(container, context); return; }
     const list = node('ul', 'md-dashboard-widget__admins list-unstyled');
     list.tabIndex = 0;

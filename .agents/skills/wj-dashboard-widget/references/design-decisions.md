@@ -16,7 +16,7 @@ New optional types enter the catalogue. The curated defaults apply to new or exp
 
 The dashboard is a preview of existing modules. Reusing their endpoints preserves authorization, metric definitions and data scope without maintaining a second query implementation. Scope follows the owning module: server-wide audit and monitoring data must not be presented as active-domain metrics. Add a projection only when the module's existing API cannot supply the necessary data.
 
-Settings, notices, sessions and authorized administrator names arrive with the page. Expensive previews and chart initialization wait for viewport entry. This keeps security information independent of chart requests and avoids loading reports the user never sees. Live monitoring shares current samples between memory and CPU; it works without historical monitoring enabled. Other refresh policies are specified in the contract.
+Settings, notices and current-user sessions arrive with the page. Authorized administrator summaries load through the session REST service only when their widget is visible or their dialog tab is active, allowing explicit refresh without paying for unused lists. Expensive previews and chart initialization wait for viewport entry. This keeps security information independent of chart requests and avoids loading reports the user never sees. Live monitoring shares current samples between memory and CPU; it works without historical monitoring enabled. Other refresh policies are specified in the contract.
 
 ## Keep reading order and access to content predictable
 

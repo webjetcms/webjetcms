@@ -40,6 +40,7 @@ public class SessionDetails
 	private int domainId;
 	private String domainName;
 	private String browserName;
+	private String operatingSystem;
 
 	public long getLastActivity() {
 		return lastActivity;

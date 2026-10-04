@@ -776,6 +776,13 @@ export class DashboardController {
         this.context.overview?.noticeController?.render();
     }
 
+    /** Reloads administrator widgets through REST after an authorized logout. */
+    refreshLoggedAdmins() {
+        for (const [id, view] of this.views) {
+            if (view.instance.type === "logged-admins") this.refresh(id);
+        }
+    }
+
     /**
      * Renders a dashboard card or an isolated settings preview with the same loading, error and cleanup lifecycle.
      * @param {DashboardView} view - Card owning this render's resources.

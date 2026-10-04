@@ -1,23 +1,23 @@
-package sk.iway.iwcm.components.welcome;
+package sk.iway.iwcm.components.users.sessions;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.security.access.AccessDeniedException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import sk.iway.iwcm.Identity;
-import sk.iway.iwcm.logon.AdminLogonController;
 import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.users.UsersDB;
 
 /** Verifies session ownership and local versus queued cluster logout responses. */
-class DashboardSessionRemovalTest {
-    private final AdminLogonController controller = new AdminLogonController(null);
+class SessionRemovalTest {
+    private final SessionRestController controller = new SessionRestController(new SessionService());
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private final SessionHolder holder = mock(SessionHolder.class);
     private final Identity user = mock(Identity.class);
@@ -30,10 +30,14 @@ class DashboardSessionRemovalTest {
         session.setSessionId("autotest-session");
         session.setLastActivity(123456789L);
         session.setLastURL("/private-autotest-page");
+        session.setBrowserName("Chrome");
+        session.setOperatingSystem("macOS");
         var json = mapper.valueToTree(session);
         assertEquals(123456789L, json.path("lastActivity").asLong());
         assertFalse(json.has("lastURL"));
         assertFalse(json.has("lastActivityAsDate"));
+        assertEquals("Chrome", json.path("browserName").asText());
+        assertEquals("macOS", mapper.treeToValue(json, SessionDetails.class).getOperatingSystem());
         assertEquals(123456789L, mapper.treeToValue(json, SessionDetails.class).getLastActivity());
     }
 
@@ -54,10 +58,10 @@ class DashboardSessionRemovalTest {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
             holders.when(SessionHolder::getInstance).thenReturn(holder);
 
-            var success = mapper.readTree(controller.removeSession("owned", request));
-            assertTrue(success.path("success").asBoolean());
-            assertFalse(success.path("pending").asBoolean());
-            assertFalse(mapper.readTree(controller.removeSession("foreign", request)).path("success").asBoolean());
+            var success = controller.logoutSession("owned", request);
+            assertTrue(success.isSuccess());
+            assertFalse(success.isPending());
+            assertFalse(controller.logoutSession("foreign", request).isSuccess());
             verify(holder).invalidateSession(7, "owned");
             verify(holder, never()).invalidateSession(7, "foreign");
             cluster.verifyNoInteractions();
@@ -71,9 +75,9 @@ class DashboardSessionRemovalTest {
         try (var users = mockStatic(UsersDB.class); var holders = mockStatic(SessionHolder.class);
              var cluster = mockStatic(SessionClusterService.class)) {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
-            assertFalse(mapper.readTree(controller.removeSession(request.getSession().getId(), request)).path("success").asBoolean());
+            assertFalse(controller.logoutSession(request.getSession().getId(), request).isSuccess());
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(null);
-            assertFalse(mapper.readTree(controller.removeSession("other", request)).path("success").asBoolean());
+            assertThrows(AccessDeniedException.class, () -> controller.logoutSession("other", request));
             holders.verifyNoInteractions();
             cluster.verifyNoInteractions();
         }
@@ -94,11 +98,11 @@ class DashboardSessionRemovalTest {
             holders.when(SessionHolder::getInstance).thenReturn(holder);
             cluster.when(() -> SessionClusterService.getUserSessionsAllNodes(7)).thenReturn(nodes);
 
-            var accepted = mapper.readTree(controller.removeSession("remote-owned", request));
-            assertTrue(accepted.path("success").asBoolean());
-            assertTrue(accepted.path("pending").asBoolean());
-            assertFalse(mapper.readTree(controller.removeSession("remote-foreign", request)).path("success").asBoolean());
-            assertFalse(mapper.readTree(controller.removeSession("missing", request)).path("success").asBoolean());
+            var accepted = controller.logoutSession("remote-owned", request);
+            assertTrue(accepted.isSuccess());
+            assertTrue(accepted.isPending());
+            assertFalse(controller.logoutSession("remote-foreign", request).isSuccess());
+            assertFalse(controller.logoutSession("missing", request).isSuccess());
             verify(holder).invalidateSession(7, "remote-owned");
             verify(holder, never()).invalidateSession(7, "remote-foreign");
             verify(holder, never()).invalidateSession(7, "missing");
