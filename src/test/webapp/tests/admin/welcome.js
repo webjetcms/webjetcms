@@ -27,6 +27,7 @@ async function mockFeedbackCapture(I) {
                 state.calls.push(options);
                 state.overlaysHidden.push(getComputedStyle(document.querySelector('#feedback_modal')).visibility === 'hidden'
                     && getComputedStyle(document.querySelector('.modal-backdrop')).visibility === 'hidden');
+                if (state.hold) await new Promise(resolve => { state.resume = resolve; });
                 if (state.error) throw new DOMException('Capture autotest', state.error);
                 const canvas = document.createElement('canvas');
                 canvas.width = 320;
@@ -232,6 +233,76 @@ Scenario("feedback native capture cancellation, failure and stream cleanup", asy
     I.seeElement("#feedback_modal .md-feedback__send:not(:disabled)");
     I.clickCss("#feedback_modal .md-feedback__cancel");
 });
+
+for (const captureOutcome of ["cancel", "success"]) {
+    Scenario("feedback preserves unfinished uploads during screenshot " + captureOutcome, async ({ I }) => {
+        await mockFeedbackCapture(I);
+        let releaseUploads;
+        const uploadsReady = new Promise(resolve => { releaseUploads = resolve; });
+        let uploadCount = 0;
+        let submitted;
+        await I.mockRoute("**/admin/upload/chunk", async route => {
+            const key = "feedback-pending-autotest-" + ++uploadCount;
+            await uploadsReady;
+            return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ key, exists: false }) });
+        });
+        await I.mockRoute("**/admin/upload/skipkey", route => route.fulfill({ status: 200, contentType: "application/json", body: '{"success":true}' }));
+        await I.mockRoute("**/admin/rest/feedback", route => {
+            submitted = new URLSearchParams(route.request().postData());
+            return route.fulfill({ status: 200, contentType: "text/plain", body: "OK" });
+        });
+        I.clickCss(".md-dashboard__feedback");
+        I.waitForVisible("#feedback_modal.show", 10);
+        I.fillField("#feedback-group-text .ql-editor", "Pending attachments autotest " + random);
+        I.executeScript(() => {
+            const files = new DataTransfer();
+            files.items.add(new File(['Active upload autotest'], 'feedback-active-autotest.txt', { type: 'text/plain' }));
+            files.items.add(new File(['Queued upload autotest'], 'feedback-queued-autotest.txt', { type: 'text/plain' }));
+            const input = document.querySelector('input.dz-hidden-input-feedback-upload');
+            input.files = files.files;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        I.waitForFunction(() => {
+            const files = document.querySelector('#feedback-upload').dropzone.files;
+            return files.length === 2 && files[0].status === 'uploading' && files[1].status === 'queued';
+        }, 10);
+        I.executeScript(outcome => {
+            window.feedbackCaptureState.hold = true;
+            window.feedbackCaptureState.error = outcome === 'cancel' ? 'NotAllowedError' : null;
+        }, captureOutcome);
+        I.clickCss("#feedback_modal label[for=feedback-screenshot]");
+        I.waitForFunction(() => typeof window.feedbackCaptureState.resume === 'function', 10);
+        I.seeElementInDOM("#feedback_modal form[aria-busy=true]");
+        I.seeElementInDOM("#feedback_modal fieldset:disabled");
+        I.dontSeeElementInDOM("#feedback-upload.dz-clickable");
+        const duringCapture = await I.executeScript(() => document.querySelector('#feedback-upload').dropzone.files.map(file => file.status));
+        I.assertDeepEqual(duringCapture, ['uploading', 'queued'], "Capture must preserve both active and queued uploads.");
+        I.executeScript(() => window.feedbackCaptureState.resume());
+        I.waitForVisible("#feedback_modal fieldset:not(:disabled)", 10);
+        if (captureOutcome === 'success') I.waitForVisible("#feedback_modal .md-feedback__preview", 10);
+        else {
+            I.dontSeeCheckboxIsChecked("#feedback-screenshot");
+            I.dontSeeElement("#feedback_modal .md-feedback__capture-error");
+        }
+        I.seeElement("#feedback-upload.dz-clickable");
+        I.seeElement("#feedback_modal .md-feedback__send:disabled");
+        const afterCapture = await I.executeScript(() => document.querySelector('#feedback-upload').dropzone.files.map(file => file.status));
+        await I.assertDeepEqual(afterCapture, ['uploading', 'queued'], "Finishing capture must preserve unfinished attachments.");
+        releaseUploads();
+        I.waitForFunction(() => document.querySelector('#feedback-upload').dropzone.files.every(file => file.status === 'success'), 10);
+        I.waitForElement("#feedback_modal .md-feedback__send:not(:disabled)", 10);
+        I.clickCss("#feedback_modal .md-feedback__send");
+        await I.waitForText("Ďakujeme za spätnú väzbu", 10, "#feedback_modal");
+        const expectedKeys = ['feedback-pending-autotest-1', 'feedback-pending-autotest-2'];
+        if (captureOutcome === 'success') expectedKeys.push('feedback-pending-autotest-3');
+        I.assertDeepEqual(submitted.getAll('data[fileKeys][]'), expectedKeys, "Sending must include both attachments and any captured screenshot.");
+        I.clickCss("#feedback_modal .md-feedback__done");
+        I.waitForInvisible("#feedback_modal", 10);
+        await I.stopMockingRoute("**/admin/rest/feedback");
+        await I.stopMockingRoute("**/admin/upload/chunk");
+        await I.stopMockingRoute("**/admin/upload/skipkey");
+    });
+}
 
 for (const discardAction of ["cancel", "remove", "replace"]) {
     Scenario("feedback screenshot uses temporary upload and is discarded on " + discardAction, async ({ I }) => {

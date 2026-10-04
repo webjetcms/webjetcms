@@ -219,8 +219,7 @@ class FeedbackDialog {
         if (busy) this.find('form').setAttribute('aria-busy', 'true');
         else this.find('form').removeAttribute('aria-busy');
         this.find('.md-feedback__fields').disabled = busy;
-        if (busy) this.uploader.disable();
-        else this.uploader.enable();
+        this.uploader.setFileSelectionDisabled(busy);
         this.quill.enable(!busy);
         this.element.querySelectorAll('.md-feedback__close, .md-feedback__back, .md-feedback__cancel').forEach(button => { button.disabled = busy; });
         this.updateSend();
