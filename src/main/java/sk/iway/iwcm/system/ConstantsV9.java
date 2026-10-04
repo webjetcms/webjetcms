@@ -66,7 +66,7 @@ public class ConstantsV9 {
 
 		Constants.setString("DocTools.removeCharsDir", "[^a-zA-Z/_0-9\\-\\.=]", Constants.mods(Constants.MOD_SECURITY, Constants.MOD_FILES, Constants.MOD_WEBPAGES), "Regex pre znaky, ktore sa maju odstranit z nazvu suboru/adresara. Pouziva sa v metode DocTools.removeCharsDir(). Hodnota premennej sa reloadne za behu.");
 
-		Constants.setString("FileBrowserTools.forbiddenSymbols", "@,#,+,(,),{,},=", Constants.mods(Constants.MOD_SECURITY, Constants.MOD_FILES), "Zoznam zakazanych znakov v nazve suboru/adresara. Okrem defaultne zakazanych znakov sa pomocou konfiguracnej premennej definuju dalsie zakazane znaky. Oddelujeme ich ciarkou. Pouziva sa v metode FileBrowserTools.hasForbiddenSymbol(). Hodnota premennej sa reloadne iba pri starte.");
+		Constants.setString("FileBrowserTools.forbiddenSymbols", "@,#,+,{,},=", Constants.mods(Constants.MOD_SECURITY, Constants.MOD_FILES), "Zoznam zakazanych znakov v nazve suboru/adresara. Okrem defaultne zakazanych znakov sa pomocou konfiguracnej premennej definuju dalsie zakazane znaky. Oddelujeme ich ciarkou. Pouziva sa v metode FileBrowserTools.hasForbiddenSymbol(). Hodnota premennej sa reloadne iba pri starte.");
 
 		Constants.setBoolean("structureMirroringDisabledOnCreate", true, Constants.MOD_STRUCTURE_MIRRORING, "Pri hodnote true budu novo vytvorene zrkadlene stranky mat vypnute zobrazenie aby sa nezacali ihned zobrazovat");
 
@@ -258,6 +258,7 @@ public class ConstantsV9 {
 		Constants.setString("multistepform_emailFields", "email,e-mail", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_attachmentDefaultName", "prilohy.html", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_subjectDefaultValue", "components.form.default_subject", Constants.MOD_FORMMAIL, "");
+		Constants.setBoolean("multistepform_validateOnBlur", true, Constants.MOD_FORMMAIL, "Validate multistep form text inputs and plain textareas on the server when they lose focus.");
 
 		Constants.setBoolean("password_passKeyEnabled", true, Constants.MOD_PASSWORD, "Povoli prihlasovanie pomocou PassKey/WebAuthN technológie. Tá zabezpečuje prihlasovanie pomocou biometrických údajov alebo bezpečnostných kľúčov. Vyžaduje HTTPS komunikáciu.");
 		Constants.setString("password_passKeyRpId", "", Constants.MOD_PASSWORD, "Relying Party ID pre PassKey/WebAuthN. Obvykle sa jedná o doménu bez subdomén (napr. example.com). Ak nie je nastavená, použije sa základná doména z URL adresy.");

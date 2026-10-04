@@ -405,26 +405,7 @@ function getSaveData()
 		 }
 
 		 var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
-        var node = pageBuilderInstance.getClearNode();
-        //console.log(node);
-
-        //console.log("Node html:");
-        //console.log(node.html());
-
-        var editableElements = node.find("*[class*='editableElement']");
-        editableElements.each(function()
-        {
-           var editorName =  $(this).attr("data-ckeditor-instance");
-           //console.log("editorName="+editorName);
-			  //console.log($(this));
-           //console.log($(this).html());
-
-           var editorData = CKEDITOR.instances[editorName].getData();
-           $(this).html(editorData);
-        });
-
-		  //console.log("Before unwrap HTML:", node.html());
-		  pageBuilderInstance.clearEditorAttributes(node);
+        var node = pageBuilderInstance.getSaveNode();
 
         var htmlCode = node.html();
 
@@ -484,13 +465,6 @@ function initializePageData(editingMode, html, pageDiv) {
 
 			//parameter inlineEditingNewPage=true je tam, ked potrebujeme zobrazit cistu stranku (pri novej stranke je zobrazena default stranka adresara)
 			if (window.location.href.indexOf("inlineEditingNewPage=true")!=-1) html = "<p><iwcm:text key='editor.newDocumentName'/></p>";
-
-			if (html.indexOf("<section")==-1)
-			{
-				//console.log("HTML kod neobsahuje ziadnu section, pridavam, html=", html);
-				if ("<p>&nbsp;</p>"==html) html = "<p>Text</p>";
-				html = "<section><div class=\"container\"><div class=\"row\"><div class=\"col-md-12\">"+html+"</div></div></div></section>";
-			}
 
 			html = html.replace(/data-bs-toggle="/gi, 'data-<%=pbPrefix%>-toggle="');
 			html = html.replace(/data-bs-toggle="/gi, 'data-<%=pbPrefix%>-toggle="');
@@ -665,6 +639,7 @@ function setNewsAppEditing()
 
 function initPageBuilderEditors(pageDiv)
 {
+    pageDiv.data('plugin_ninjaPageBuilder').prepare_application_blocks(pageDiv);
     <%--var editableElements = pageDiv.find("* [class*='npb-column__content']");--%>
 	//console.log("initPageBuilderEditors, pageDiv=", pageDiv);
     var editableElements = pageDiv.find("*[class*='<%=pbPrefix%>-editable'], *[class*='<%=pbPrefix%>-content']");

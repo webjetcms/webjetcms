@@ -39,6 +39,11 @@
     padding-left: 20px;
 }
 
+.multistep-form-app .cs-error,
+.multistep-form-app .alert-danger {
+    scroll-margin-top: 100px;
+}
+
 form.multistep-form .wj-form-tooltip-trigger:focus-visible {
     border-radius: 2px;
     outline: 2px solid currentColor;

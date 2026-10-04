@@ -58,6 +58,7 @@
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
 - Page Builder - elements marked with the CSS class [`pb-duplicable`](frontend/page-builder/settings.md#duplicate-element-orange-color) can be moved, duplicated, and deleted within the same parent. Custom or multiple selectors can be set via `pbCustomSettings` (#58750).
+- Page Builder - added the ability to create a [div.pb-section](frontend/page-builder/settings.md), which will get the normal section control. Additionally, `!INCLUDE(...)!` applications inserted directly in a section, or containers, display a preview even though they are inserted outside the normal column (#osk711).
 - Page Builder - modified [editor control](redactor/webpages/pagebuilder.md). Added fixed top bar with path to selected block, **Structure** panel, quick actions and mode for inserting sections, containers and columns directly into the page. Frames can be hidden or shown for the entire block hierarchy. Block library has a compact window with previews, categories and combined search with tags. Style settings use drop-down property groups and indicate the currently edited block (#308).
 
 <div class="video-container">
@@ -82,6 +83,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Multi-step forms - after unsuccessfully moving to the next step or submitting, the page will scroll to the first visible error message even when retrying (#58794).
+- Forms - validation of uploaded files distinguishes between an illegal character in the name and an illegal extension. A name error will indicate the specific illegal character or string. File names in error messages are displayed as text to prevent any HTML tags in the name from being executed (#58794).
+- Multi-step forms - when [returning to the previous step](redactor/apps/multistep-form/README.md#returning-to-the-previous-step) both the processed values ​​and the completed uploads are preserved (#58794).
+- Multi-step forms - added [field-abandonment validation] (redactor/apps/multistep-form/README.md#field-abandonment-validation) enabled by default. To disable it, set the configuration variable `multistepform_validateOnBlur` to `false` (#58794).
 - [Forms](redactor/apps/form/README.md#possible-configuration-variables) - both classic and multi-step forms respect `sendMailSaveEmail` and save emails as `.eml` files to `sendMailSaveEmailPath` instead of SMTP sending. If the write fails, the form reports an error.
 - Multi-step forms - added [return to previous step](redactor/apps/multistep-form/README.md#return-to-previous-step) with restoring saved values ​​and files and [CSS template selection](redactor/apps/multistep-form/README.md#css-templates) for each inserted instance and preview in the administration (#58742).
 
@@ -220,6 +225,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Multi-step forms - fixed validation of fields with chained visibility conditions (#58794).
 - Forms - fixed archiving of forms (#305).
 - Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
@@ -228,6 +234,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Performance
 
+- Multi-step forms - accelerated repeated field checks during filling (#58794).
 - Optimized loading of template groups when displaying a page and searching for optional fields. The group is cached and reused without having to read it from the database (#311).
 
 ### Safety
@@ -558,6 +565,13 @@ Redesigned application properties settings in the editor from the old code in `J
 ![meme](_media/meme/2026-18.jpg ":no-zoom")
 
 ## 2026.0.x
+
+> A patch version of the original version 2026.0.
+
+- Websites - fixed looping of folder initialization and scheduled publishing check on slow database connection (#337).
+- Cluster - optimized writing of changes in the cluster when starting a new node (#337).
+
+## 2026.0.40
 
 > A patch version of the original version 2026.0.
 

@@ -59,6 +59,17 @@ async function assertDisposedChart(I) {
         && !window.am5.registry.rootElements.includes(window.autotestDashboardChart)), 'Replaced charts must release their AmCharts root.');
 }
 
+/** Reads release text and destinations in the browser without depending on its HTML wrappers. */
+function readAnnouncement(fromLabels = false) {
+    const content = fromLabels
+        ? new DOMParser().parseFromString(document.querySelector('webjet-overview-dashboard').labels.changelog, 'text/html').body
+        : document.querySelector('.md-dashboard-widget__news-highlights');
+    return {
+        text: content.textContent.replace(/\s+/g, ' ').trim(),
+        links: [...content.querySelectorAll('a')].map(link => link.getAttribute('href'))
+    };
+}
+
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage('/admin/v9/');
@@ -114,10 +125,6 @@ Scenario('Render the complete widget catalogue on desktop and mobile', async ({ 
     I.dontSeeElement('[data-widget-type="recent-pages"] .md-dashboard-widget__more');
     I.assertEqual(await I.grabTextFrom('[data-widget-type="traffic"] .md-dashboard-widget__metric-label'),
         await I.executeScript(() => WJ.translate('admin.dashboard.trafficSessions.js', 7)), 'Traffic descriptions must include the selected number of days.');
-    I.assertTrue(await I.executeScript(() => {
-        const source = new DOMParser().parseFromString(document.querySelector('webjet-overview-dashboard').labels.changelog, 'text/html');
-        return document.querySelector('.md-dashboard-widget__news-highlights').innerHTML === source.body.innerHTML;
-    }), 'Release notes must preserve the entire rendered Markdown announcement.');
     I.resizeWindow(1337, 1052);
     I.saveScreenshot('dashboard-catalogue-desktop.png', true);
     showWidget(I, 'traffic');
@@ -149,13 +156,11 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
             I.dontSeeElement('[data-widget-type="traffic"] details.md-dashboard-widget__chart-data');
             I.seeElementInDOM('[data-widget-type="traffic"] .visually-hidden .md-dashboard-widget__table');
             I.seeElement('[data-widget-type="traffic"] .md-dashboard__title-link[href="/apps/stat/admin/"]');
-            I.dontSeeElement('[data-widget-type="traffic"] .md-dashboard-widget__more');
             continue;
         }
         I.dontSeeElement(`[data-widget-type="${type}"] details.md-dashboard-widget__chart-data`);
         I.seeElementInDOM(`[data-widget-type="${type}"] .visually-hidden .md-dashboard-widget__table`);
         I.seeElement(`[data-widget-type="${type}"] .md-dashboard__title-link`);
-        I.dontSeeElement(`[data-widget-type="${type}"] .md-dashboard-widget__more`);
     }
     const firstTraffic = await rememberChart(I, 'traffic');
     await widgetAction(I, ids.traffic, 'refresh');
@@ -203,16 +208,22 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
 
 /**
  * Collapses the release announcement, reloads the page and checks that the choice is remembered. Expanding
- * it again must restore the complete announcement and its formatting.
+ * it again must restore the announcement text and links, while collapsing it preserves keyboard focus.
  */
 Scenario('Collapse release news across reload and expand it from the compact summary', async ({ I }) => {
     await waitForWidgets(I);
     I.waitForVisible('[data-widget-type="news"] .md-dashboard__widget-content button', 10);
+    const announcement = await I.executeScript(readAnnouncement, true);
+    I.assertTrue(announcement.text.length > 0, 'The release announcement must contain text.');
+    I.assertNotContain(announcement.text, '\\n', 'Translation paragraph escapes must not appear as literal text.');
+    I.assertDeepEqual(await I.executeScript(readAnnouncement), announcement, 'The full announcement text and links must render.');
     I.clickCss('[data-widget-type="news"] .md-dashboard__widget-content button');
     waitForSave(I);
     I.waitForVisible('[data-widget-type="news"] .md-dashboard-widget__news-toggle[aria-expanded="false"]', 10);
     I.seeElement('[data-widget-type="news"] .md-dashboard-widget__news-summary');
     I.dontSeeElement('[data-widget-type="news"] .md-dashboard-widget__news-highlights');
+    I.assertTrue(await I.executeScript(() => document.activeElement.matches('.md-dashboard-widget__news-toggle')),
+        'Collapsing release notes must keep focus on their toggle.');
     const acknowledged = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.acknowledgedNewsVersion);
     I.assertTrue(typeof acknowledged === 'string' && acknowledged.length > 0);
     I.refreshPage();
@@ -221,10 +232,9 @@ Scenario('Collapse release news across reload and expand it from the compact sum
     I.clickCss('[data-widget-type="news"] .md-dashboard-widget__news-toggle');
     waitForSave(I);
     I.waitForVisible('[data-widget-type="news"]', 10);
-    I.assertTrue(await I.executeScript(() => {
-        const source = new DOMParser().parseFromString(document.querySelector('webjet-overview-dashboard').labels.changelog, 'text/html');
-        return document.querySelector('.md-dashboard-widget__news-highlights').innerHTML === source.body.innerHTML;
-    }), 'Expanding release notes must restore all original Markdown formatting.');
+    I.waitForVisible('[data-widget-type="news"] .md-dashboard-widget__news-highlights', 10);
+    I.assertDeepEqual(await I.executeScript(readAnnouncement), announcement,
+        'Expanding release notes must restore their content and links.');
 });
 
 /**

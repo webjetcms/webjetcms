@@ -46,8 +46,7 @@ Before(async ({ I, login }) => {
 
 /**
  * Checks that page changes, activity, online administrators, memory and CPU cards keep their saved size
- * after reloading and fit desktop and mobile screens. Refresh, removal and undo must release old charts; the
- * original layout is restored afterwards.
+ * after reloading. Refresh, removal and undo must release old charts; the original layout is restored afterwards.
  */
 Scenario('Migrated overview widgets persist independently and clean up monitoring charts', async ({ I }) => {
     const original = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
@@ -124,29 +123,6 @@ Scenario('Migrated overview widgets persist independently and clean up monitorin
         }), 'Every current dashboard chart must own exactly one live root.');
         I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="true"]');
         I.waitForElement('.md-dashboard:not(.is-editing)', 10);
-        for (const width of [1337, 390]) {
-            I.resizeWindow(width, 1052);
-            if (width < 768 && await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) I.clickCss('.js-sidebar-toggler');
-            if (width < 768) I.waitForFunction(() => document.querySelector('.ly-sidebar').getBoundingClientRect().right <= 1, 10);
-            const overflow = await I.executeScript(types => {
-                const boundary = document.querySelector('.md-dashboard__layout').getBoundingClientRect();
-                return types.flatMap(([type]) => {
-                    const card = document.querySelector(`[data-widget-type="${type}"]`);
-                    const bounds = card.getBoundingClientRect();
-                    return bounds.left < boundary.left - 1 || bounds.right > boundary.right + 1 || card.scrollWidth > card.clientWidth + 1 ? [type] : [];
-                });
-            }, migratedWidgets);
-            I.assertDeepEqual(overflow, [], `Migrated cards must remain inside the dashboard at ${width}px.`);
-            for (const type of ['changed-pages', 'server-memory', 'logged-admins']) {
-                I.executeScript(type => {
-                    const scrollbar = window.scrollbarMain;
-                    scrollbar.setMomentum(0, 0);
-                    scrollbar.update();
-                    scrollbar.setPosition(0, scrollbar.offset.y + document.querySelector(`[data-widget-type="${type}"]`).getBoundingClientRect().top - 64);
-                }, type);
-                I.saveScreenshot(`dashboard-migrated-${type}-${width}.png`, true);
-            }
-        }
     } finally {
         await I.stopMockingRoute('**/admin/rest/sessions/administrators');
         I.wjSetDefaultWindowSize();

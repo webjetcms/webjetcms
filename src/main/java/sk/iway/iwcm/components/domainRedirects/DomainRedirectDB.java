@@ -59,7 +59,7 @@ public class DomainRedirectDB
 		{
 			if (instance == null || forceRefresh)
 			{
-				instance = new DomainRedirectDB();
+				instance = new DomainRedirectDB(forceRefresh);
 			}
 			return instance;
 		}
@@ -83,12 +83,12 @@ public class DomainRedirectDB
 	/**
 	 * Private konstruktor
 	 */
-	private DomainRedirectDB()
+	private DomainRedirectDB(boolean forceRefresh)
 	{
 		Logger.debug(DomainRedirectDB.class, "DomainRedirectDB.constructor");
 		refreshTable();
 
-		ClusterDB.addRefresh(DomainRedirectDB.class);
+		if (forceRefresh) ClusterDB.addRefresh(DomainRedirectDB.class);
 	}
 
 	public static List<DomainRedirectBean> getAllRedirects() {

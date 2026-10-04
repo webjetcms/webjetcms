@@ -107,7 +107,7 @@ Pôvodné HTML, CSS triedy, vlastné selektory a funkcie `pbCustomOptions`/`pbCu
 
 ### `SECTION` (modrá farba)
 
-Inicializácia pri použití elementu: ```<section>```.
+Inicializácia pri použití elementu `<section>` alebo `<div class="pb-section">`.
 
 Štýlovanie pomocou triedy, s prefixom: ```pb-style-section-```
 
@@ -117,9 +117,52 @@ Inicializácia pri použití elementu: ```<section>```.
 
 Nastavením CSS triedy ```pb-not-section``` sa element **nebude považovať za section* element.
 
+Trieda `pb-section` označí aj bežný `DIV` ako sekciu - v Page Builderi má rovnaké ovládanie štýlov, presunu, duplikovania a zmazania. Technicky nemusí obsahovať vnorené `container`, `row` a ani stĺpce. Je to užitočné pre špecifické prípady, kedy potrebujete mať v stránke špeciálne elementy.
+
+Príklad:
+
+```html
+<div class="pb-section" id="app" data-plugin-type="roaming" data-plugin-customer="b2c"></div>
+```
+
+DIV sa vloží priamo medzi ostatné sekcie. Pri uložení sa zachová jeho značka, trieda `pb-section`, `id` aj vlastné atribúty.
+
+Trieda `pb-editable` umožní redaktorovi upravovať obsah vnoreného DIVu priamo v `pb-section`, aj mimo bežnej štruktúry `container` / `row` / stĺpec:
+
+```html
+<div id="app" class="pb-section" data-plugin-type="roaming" data-plugin-customer="b2c">
+    <p>FIXED CONTENT</p>
+    <div class="pb-editable">
+        <p>Editable content</p>
+    </div>
+</div>
+```
+
+V tomto príklade sa editor inicializuje iba vo vnorenom `div.pb-editable`. Text `Editable content` môže redaktor upravovať, zatiaľ čo `FIXED CONTENT` zostáva pevnou súčasťou bloku.
+
+Do takéhoto bloku môžete vložiť aj aplikáciu, napríklad existujúcu aplikáciu **Vloženie HTML kódu**:
+
+```html
+<div class="pb-section" id="app2">!INCLUDE(/components/app-htmlembed/embed.jsp, html=)!</div>
+```
+
+Aplikácia zobrazí náhľad a jej obsah nastavíte bežným dialógom aplikácie. Kliknutím na modrý pás nad alebo pod náhľadom označíte sekciu bez otvorenia nastavení aplikácie. Pásy sa zobrazujú iba počas editovania. Presúvanie a ďalšie operácie sa vykonávajú nad celým blokom `div.pb-section`.
+
+Náhľad `!INCLUDE(...)!` funguje aj priamo v sekcii alebo vo vnorenom `DIV` mimo stĺpcov. Page Builder dočasne obalí direktívu elementom `div.pb-editable.pb-temp-wrapper`, aby pre ňu inicializoval editor. Pri uložení a prepnutí editora obal odstráni. Pôvodný rodič, jeho atribúty a okolitý text zostanú zachované.
+
 ### `CONTAINER` (ružová farba)
 
 Inicializácia pri použití CSS triedy: ```container``` alebo ```pb-custom-container```. Nastavením CSS triedy ```pb-not-container``` sa element **nebude považovať za kontajner** aj keď má CSS triedu ```container```.
+
+Aplikáciu môžete vložiť priamo do kontajnera bez riadka a stĺpca:
+
+```html
+<section>
+    <div class="container">!INCLUDE(/components/app-htmlembed/embed.jsp, html=)!</div>
+</section>
+```
+
+Page Builder k aplikácii nepridá prázdny `row`. Kliknutím na ružový pás nad alebo pod náhľadom označíte kontajner a môžete použiť jeho bežné ovládanie. Pri uložení zostane INCLUDE priamo v pôvodnom kontajneri.
 
 Štýlovanie pomocou triedy, s prefixom: ```pb-style-container-```
 

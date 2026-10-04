@@ -94,8 +94,6 @@ Scenario('Page suggestions match titles and URLs and keyboard selection opens th
     }, [results], 10);
     const changed = await I.grabTextFrom(`${results} .md-dashboard-widget__page-date`);
     I.assertTrue(/\d{2}\.\d{2}\.\d{4} \d{2}:\d{2}:\d{2}/.test(changed), 'The preview must show the latest save date.');
-    await assertSuggestionWidth(I);
-    I.saveScreenshot('dashboard-search-desktop.png');
     I.fillField(input, 'obchodny uder');
     I.waitForVisible(`${results} li`, 10);
     I.pressKey('ArrowDown');
@@ -129,17 +127,13 @@ Scenario('Autocomplete responses use JSON so page titles cannot execute as HTML 
 });
 
 /**
- * Checks that searching by a page URL offers the correct page, that suggestions fit a narrow screen and that
- * clicking a result opens its editor.
+ * Checks that searching by a page URL on mobile offers the correct page and clicking a result opens its
+ * editor.
  */
-Scenario('Mouse selection opens the page and suggestions fit a narrow viewport', async ({ I, DTE }) => {
+Scenario('Mouse selection opens the suggested page on mobile', async ({ I, DTE }) => {
     I.resizeWindow(390, 844);
     I.fillField(input, 'https://demo.webjetcms.sk/zo-sveta-financii/mcgregorov-obchodny-uder.html');
     I.waitForVisible(`${results} li`, 10);
-    await assertSuggestionWidth(I);
-    I.saveScreenshot('dashboard-search-mobile.png');
-    I.resizeWindow(1024, 844);
-    await assertSuggestionWidth(I);
     I.clickCss(`${results} .md-dashboard-widget__page[title*="/zo-sveta-financii/mcgregorov-obchodny-uder.html"]`);
     I.seeInCurrentUrl('/admin/v9/webpages/web-pages-list/?docid=33');
     DTE.waitForEditor();

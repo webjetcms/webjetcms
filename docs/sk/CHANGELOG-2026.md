@@ -58,6 +58,7 @@
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
 - Page Builder - elementy označené CSS triedou [`pb-duplicable`](frontend/page-builder/settings.md#duplikovateľný-element-oranžová-farba) je možné v rámci rovnakého rodiča presúvať, duplikovať a zmazať. Vlastné alebo viaceré selektory je možné nastaviť cez `pbCustomSettings` (#58750).
+- Page Builder - pridaná možnosť vytvoriť [div.pb-section](frontend/page-builder/settings.md), ktorý získa bežné ovládanie sekcie. Naviac aplikácie `!INCLUDE(...)!` vložené priamo v sekcii, alebo kontajnery, zobrazujú náhľad aj napriek tomu, že sú vložené mimo bežného stĺpca (#osk711).
 - Page Builder - upravené [ovládanie editora](redactor/webpages/pagebuilder.md). Pridaná pevná horná lišta s cestou k vybranému bloku, panel **Štruktúra**, rýchle akcie a režim vkladania sekcií, kontajnerov a stĺpcov priamo do stránky. Rámiky je možné skryť alebo zobraziť pre celú hierarchiu bloku. Knižnica blokov má kompaktné okno s náhľadmi, kategóriami a kombinovaným vyhľadávaním so štítkami. Nastavenie štýlu používa rozbaľovacie skupiny vlastností a označuje práve upravovaný blok (#308).
 
 <div class="video-container">
@@ -82,6 +83,10 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
+- Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).
+- Formuláre - validácia nahraných súborov rozlišuje nepovolený znak v názve a nepovolenú príponu. Chyba názvu uvedie konkrétny zakázaný znak alebo reťazec. Názvy súborov v chybových hláseniach sa zobrazujú ako text, aby sa prípadné HTML značky v názve nevykonali (#58794).
+- Viackrokové formuláre - pri [návrate na predchádzajúci krok](redactor/apps/multistep-form/README.md#návrat-na-predchádzajúci-krok) sa zachovajú rozpracované hodnoty aj dokončené nahrávania (#58794).
+- Viackrokové formuláre - pridaná predvolene zapnutá [validácia pri opustení poľa](redactor/apps/multistep-form/README.md#validácia-pri-opustení-poľa). Vypnete ju nastavením konfiguračnej premennej `multistepform_validateOnBlur` na `false` (#58794).
 - [Formuláre](redactor/apps/form/README.md#možné-konfiguračné-premenné) - klasické aj viackrokové formuláre rešpektujú `sendMailSaveEmail` a ukladajú emaily ako súbory `.eml` do `sendMailSaveEmailPath` namiesto SMTP odoslania. Ak sa zápis nepodarí, formulár oznámi chybu.
 - Viackrokové formuláre - pridaný [návrat na predchádzajúci krok](redactor/apps/multistep-form/README.md#návrat-na-predchádzajúci-krok) s obnovením uložených hodnôt a súborov a [výber CSS šablóny](redactor/apps/multistep-form/README.md#css-šablóny) pre každú vloženú inštanciu a náhľad v administrácii (#58742).
 
@@ -220,6 +225,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Viackrokové formuláre - opravená validácia polí s reťazenými podmienkami viditeľnosti (#58794).
 - Formuláre - opravené archivovanie formulárov (#305).
 - Prieskumník - upravené porovnávanie súborov s diakritikou pri kontrole existencie súboru pri jeho prepísaní - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Webové stránky - opravené pridávanie prázdneho `P` elementu na koniec stránky (#58317-13).
@@ -228,6 +234,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Výkon
 
+- Viackrokové formuláre - zrýchlené opakované kontroly polí počas vypĺňania (#58794).
 - Optimalizované načítanie skupiny šablón pri zobrazení stránky a hľadaní voliteľných polí. Skupina je uložená do cache a znova použitá bez potreby jej čítania z databázy (#311).
 
 ### Bezpečnosť
@@ -558,6 +565,13 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ![meme](_media/meme/2026-18.jpg ":no-zoom")
 
 ## 2026.0.x
+
+> Opravná verzia pôvodnej verzie 2026.0.
+
+- Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#337).
+- Cluster - optimalizované zapisovanie zmeny v clustri pri štarte nového uzla (#337).
+
+## 2026.0.40
 
 > Opravná verzia pôvodnej verzie 2026.0.
 

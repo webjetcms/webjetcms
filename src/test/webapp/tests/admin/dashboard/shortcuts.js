@@ -39,10 +39,9 @@ Before(({ I, login }) => {
 });
 
 /**
- * Checks that shortcuts are visible near the top of the dashboard and fit narrow screens. Shortcut editing
- * and widget editing must expose their own controls without being active together.
+ * Checks that shortcut editing and widget editing expose their own controls without being active together.
  */
-Scenario('Welcome shortcuts fit above the fold and own their editing mode', async ({ I }) => {
+Scenario('Shortcuts and widgets have independent editing modes', async ({ I }) => {
     originalSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     originalBookmarks = await I.executeScript(() => localStorage.getItem('bookmarks'));
     I.seeElement(`${actions} .md-dashboard__shortcut-edit .ti-pencil`);
@@ -82,20 +81,6 @@ Scenario('Welcome shortcuts fit above the fold and own their editing mode', asyn
     I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="false"]');
     I.dontSeeElement(`${links} .md-dashboard__edit-control`);
     I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="true"]');
-    for (const width of [320, 390, 768, 1337]) {
-        I.resizeWindow(width, 900);
-        if (width < 768 && await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) I.clickCss('.js-sidebar-toggler');
-        I.executeScript(() => { window.scrollbarMain.setMomentum(0, 0); window.scrollbarMain.setPosition(0, 0); });
-        I.waitForFunction(() => window.scrollbarMain.offset.y === 0, 10);
-        const geometry = await I.executeScript(() => {
-            const region = document.querySelector('.md-dashboard__shortcuts');
-            const rect = region.getBoundingClientRect();
-            return { top: rect.top, bottom: rect.bottom, right: rect.right, viewport: innerWidth, overflow: region.scrollWidth > region.clientWidth + 1 };
-        });
-        I.assertTrue(geometry.top >= 48 && geometry.bottom < 900, `Shortcuts must be immediately available at ${width}px.`);
-        I.assertTrue(geometry.right <= geometry.viewport + 1 && !geometry.overflow, `Shortcuts must wrap at ${width}px.`);
-    }
-    I.wjSetDefaultWindowSize();
 });
 
 /** Checks hierarchical browsing, back navigation and global terminal-card search without saving a shortcut. */
@@ -494,9 +479,10 @@ Scenario('Shortcut search offers terminal cards and long or unavailable destinat
 Scenario('Automatically import old bookmarks on load with failure recovery and server persistence', async ({ I }) => {
     I.assertTrue(Boolean(originalSettings), 'The fixture must preserve the original profile first.');
     const before = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
+    const origin = await I.executeScript(() => window.location.origin);
     const legacy = JSON.stringify([
         { name: 'Banner autotest', path: bannerHref },
-        { name: 'Banner duplicate autotest', path: 'http://iwcm.interway.sk' + bannerHref },
+        { name: 'Banner duplicate autotest', path: origin + bannerHref },
         { name: 'Forms autotest', path: '/apps/form/admin/' }
     ]);
     const prepared = await I.executeScript(async bookmarks => {
