@@ -4,19 +4,21 @@ function showWidget(I, id) {
         const scrollbar = window.scrollbarMain;
         scrollbar.setMomentum(0, 0);
         scrollbar.update();
+        const inset = 64 + (document.querySelector('.md-dashboard.is-editing .md-dashboard__toolbar')?.offsetHeight || 0);
         const top = document.querySelector(`[data-instance-id="${id}"]`).getBoundingClientRect().top;
-        if (scrollbar.limit.y > 0) scrollbar.setPosition(0, scrollbar.offset.y + top - 64);
-        else window.scrollTo(0, window.scrollY + top - 64);
+        if (scrollbar.limit.y > 0) scrollbar.setPosition(0, scrollbar.offset.y + top - inset);
+        else window.scrollTo(0, window.scrollY + top - inset);
     }, id);
     return I.waitForFunction(id => {
         const card = document.querySelector(`[data-instance-id="${id}"]`);
         const bounds = card.getBoundingClientRect();
-        if (bounds.bottom <= 64 || bounds.top >= window.innerHeight) {
+        const inset = 64 + (document.querySelector('.md-dashboard.is-editing .md-dashboard__toolbar')?.offsetHeight || 0);
+        if (bounds.bottom <= inset || bounds.top >= window.innerHeight) {
             // Natural-height mobile cards can move the target as preceding widgets finish loading.
             const scrollbar = window.scrollbarMain;
             scrollbar.update();
-            if (scrollbar.limit.y > 0) scrollbar.setPosition(0, scrollbar.offset.y + bounds.top - 64);
-            else window.scrollTo(0, window.scrollY + bounds.top - 64);
+            if (scrollbar.limit.y > 0) scrollbar.setPosition(0, scrollbar.offset.y + bounds.top - inset);
+            else window.scrollTo(0, window.scrollY + bounds.top - inset);
             return false;
         }
         return card.querySelector('.md-dashboard__widget-body').getAttribute('aria-busy') === 'false';
@@ -72,4 +74,38 @@ async function readDashboardBootstrap(query = '') {
     return JSON.parse(JSON.parse(json));
 }
 
-module.exports = { showWidget, waitForWidgets, mockDashboardBootstrap, dashboardPageRoute, readDashboardBootstrap };
+/** Restores the standard overview through its confirmation and Save controls, then checks persistence. */
+async function restoreDefaultDashboard(I) {
+    const dashboard = '.md-dashboard[data-loaded="true"]';
+    const toolbar = '.md-dashboard__toolbar-actions';
+    const dialog = '#toast-container-webjet .toast[role="dialog"]';
+    const readLayout = () => {
+        const settings = document.querySelector('webjet-overview-dashboard').dashboardController.settings;
+        return settings.items.map(({ id, type, size, options }) => ({ type, size, options, domainOptions: settings.domainOptions[id] || {} }));
+    };
+
+    I.amOnPage('/admin/v9/');
+    I.waitForElement(dashboard, 20);
+    I.executeScript(() => {
+        const scrollbar = window.scrollbarMain;
+        scrollbar.setMomentum(0, 0);
+        scrollbar.setPosition(0, scrollbar.offset.y + document.querySelector('.md-dashboard__toolbar').getBoundingClientRect().top - 64);
+    });
+    I.clickCss(`${toolbar} button[aria-pressed="false"]`);
+    I.waitForVisible(`${toolbar} .md-dashboard__reset`, 10);
+    I.clickCss(`${toolbar} .md-dashboard__reset`);
+    I.waitForVisible(`${dialog} button[id^="confirmationYes"]`, 10);
+    I.clickCss(`${dialog} button[id^="confirmationYes"]`);
+    I.waitForInvisible(dialog, 10);
+    const defaults = await I.executeScript(readLayout);
+    I.clickCss(`${toolbar} button[aria-pressed="true"]`);
+    I.waitForFunction(() => {
+        const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
+        return !controller.editing && !controller.saving;
+    }, 20);
+    I.refreshPage();
+    I.waitForElement(dashboard, 20);
+    I.assertDeepEqual(await I.executeScript(readLayout), defaults, 'The default overview must remain saved after reloading.');
+}
+
+module.exports = { showWidget, waitForWidgets, mockDashboardBootstrap, dashboardPageRoute, readDashboardBootstrap, restoreDefaultDashboard };

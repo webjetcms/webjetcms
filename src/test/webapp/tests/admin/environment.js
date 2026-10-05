@@ -5,10 +5,26 @@ const headerTooltip = '.tooltip.wj-tooltip-hoverable.show';
 const loginTooltip = '#environment-description';
 
 let originalEnvironment;
+let originalBadge;
+let originalTitle;
+
+function readBadge() {
+    const element = document.querySelector('.md-environment');
+    if (!element) return null;
+    return {
+        name: element.textContent.trim(), icon: element.querySelector('i')?.className || '',
+        background: getComputedStyle(element).backgroundColor,
+        description: element.getAttribute('data-bs-original-title') || element.getAttribute('title')
+    };
+}
+
 Before(async ({ I, login }) => {
     login('admin');
     if (!originalEnvironment) {
         I.amOnPage('/admin/v9/');
+        I.waitForElement('.header-title[aria-label]', 20);
+        originalBadge = await I.executeScript(readBadge);
+        originalTitle = await I.grabTitle();
         originalEnvironment = await I.executeScript(async () => {
             const names = ['dashboardEnvironmentName', 'dashboardEnvironmentDescription', 'dashboardEnvironmentIcon', 'dashboardEnvironmentColor'];
             return Object.fromEntries(await Promise.all(names.map(async name => {
@@ -22,16 +38,19 @@ Before(async ({ I, login }) => {
 
 /** Verifies the shared identity, fixed ordering and keyboard tooltip across layouts and viewports. */
 Scenario('Environment stays before the page title on every v9 page', async ({ I }) => {
-    const tooltip = locate(headerTooltip).withText('DEV');
+    const environment = new URL(await I.grabCurrentUrl()).hostname === 'demo.webjetcms.sk'
+        ? { name: 'DEMO', icon: 'ti-eye', background: 'rgb(255, 240, 179)' }
+        : { name: 'DEV', icon: 'ti-code', background: 'rgb(207, 245, 228)' };
+    const tooltip = locate(headerTooltip).withText(environment.name);
     for (const url of ['/admin/v9/', '/admin/v9/webpages/web-pages-list/', '/apps/stat/admin/']) {
         I.amOnPage(url);
         I.waitForElement('.header-title[aria-label]', 20);
-        I.see('DEV', `${badge} > span:first-of-type`);
-        I.seeElement(`${badge} .ti-code`);
+        I.see(environment.name, `${badge} > span:first-of-type`);
+        I.seeElement(`${badge} .${environment.icon}`);
         I.dontSeeElement('.md-dashboard__environment');
-        I.seeInTitle('[DEV]');
+        I.seeInTitle(`[${environment.name}]`);
         I.assertFalse(await I.executeScript(() => performance.getEntriesByType('resource').some(resource => resource.name.includes('/dist/js/environment.js'))));
-        I.assertEqual(await I.grabCssPropertyFrom(badge, 'background-color'), 'rgb(207, 245, 228)');
+        I.assertEqual(await I.grabCssPropertyFrom(badge, 'background-color'), environment.background);
         for (const width of [1440, 1024, 390]) {
             I.resizeWindow(width, 1000);
             I.waitForFunction(() => {
@@ -83,8 +102,8 @@ Scenario('Environment stays before the page title on every v9 page', async ({ I 
         WJ.setTitle('autotest long page title '.repeat(10));
         WJ.setTitle('autotest renamed page');
     });
-    I.seeInTitle('[DEV] autotest renamed page');
-    I.assertEqual(await I.grabAttributeFrom('.header-title', 'aria-label'), '[DEV] autotest renamed page');
+    I.seeInTitle(`[${environment.name}] autotest renamed page`);
+    I.assertEqual(await I.grabAttributeFrom('.header-title', 'aria-label'), `[${environment.name}] autotest renamed page`);
     I.amOnPage('/admin/v9/');
     I.saveScreenshot('environment-header-desktop.png');
 });
@@ -161,9 +180,10 @@ Scenario('Empty environment name hides the badge and title prefix', ({ I, Docume
 });
 
 /** Restores temporary configuration independently so cleanup also runs after a failed scenario. */
-Scenario('Cleanup environment configuration', ({ I, Document }) => {
+Scenario('Cleanup environment configuration', async ({ I, Document }) => {
     for (const [name, value] of Object.entries(originalEnvironment || {})) Document.setConfigValue(name, value, true);
     I.amOnPage('/admin/v9/');
-    I.waitForElement(badge, 20);
-    I.seeInTitle('[DEV]');
+    I.waitForElement('.header-title[aria-label]', 20);
+    I.assertDeepEqual(await I.executeScript(readBadge), originalBadge, 'Cleanup must restore the original environment badge, including a hidden badge.');
+    I.assertEqual(await I.grabTitle(), originalTitle, 'Cleanup must restore the original title prefix.');
 });

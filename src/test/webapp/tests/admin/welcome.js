@@ -44,6 +44,8 @@ async function mockFeedbackCapture(I) {
 }
 
 Scenario("feedback draft and type selection", async ({ I }) => {
+    // Exercise the unsupported-capture state on both HTTP and HTTPS; capture scenarios supply their own stream.
+    I.executeScript(() => Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: undefined }));
     I.clickCss(".md-dashboard__feedback");
     I.waitForVisible("#feedback_modal.show", 10);
     I.dontSeeElement("#feedback_modal .md-feedback__screenshot-row");

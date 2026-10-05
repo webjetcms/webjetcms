@@ -953,13 +953,13 @@ function chartRuntime(window, { load = async () => {}, create } = {}) {
         appear(duration) { this.appearanceDuration = duration; }
     });
     const list = values => ({ values, getIndex: index => values[index], each: callback => values.forEach(callback), unshift: value => { values.unshift(value); return value; } });
-    const axis = () => settings({ tooltip: settings(), renderer: Object.assign(settings(), { labels: { template: settings() }, grid: { template: settings() } }) });
+    const tooltip = () => Object.assign(settings({ background: settings() }), { label: settings() });
+    const axis = () => settings({ tooltip: tooltip(), renderer: Object.assign(settings(), { labels: { template: settings() }, grid: { template: settings() } }) });
     class LineChartForm { constructor(config) { Object.assign(this, config); } }
     class BarChartForm { constructor(config) { Object.assign(this, config); } }
     const makeChart = form => {
         const series = Array.from({ length: form instanceof LineChartForm ? form.chartData.size : 1 }, (_, index) => {
-            const tooltip = Object.assign(settings(), { label: settings() });
-            return Object.assign(settings({ tooltip }), { strokes: { template: settings() }, fills: { template: settings() }, columns: { template: settings() }, bullets: [], data: {
+            return Object.assign(settings({ tooltip: tooltip() }), { strokes: { template: settings() }, fills: { template: settings() }, columns: { template: settings() }, bullets: [], data: {
                 values: form instanceof LineChartForm ? Array.from(form.chartData.values())[index] : form.chartData,
                 setAll(values) { this.values = values; }
             } });

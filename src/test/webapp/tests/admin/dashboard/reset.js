@@ -27,7 +27,12 @@ async function settings(I) {
 }
 
 function effectiveDefaults(profile) {
-    return profile.items.map(({ type, size, options, id }) => ({ type, size, options, domainOptions: profile.domainOptions[id] }));
+    return profile.items.map(({ type, size, options, id }) => ({ type, size, options, domainOptions: profile.domainOptions[id] || {} }));
+}
+
+function saveOverview(I) {
+    I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="true"]');
+    waitForSave(I);
 }
 
 async function assertFixtureIdentity(I) {
@@ -45,10 +50,11 @@ async function openReset(I, allSizes = false) {
     I.waitForVisible('.md-dashboard__toolbar-actions .md-dashboard__reset', 10);
     I.assertTrue(await I.executeScript(() => {
         const reset = document.querySelector('.md-dashboard__toolbar-actions .md-dashboard__reset');
-        return reset.previousElementSibling.matches('.md-dashboard__edit-control:not(.md-dashboard__reset)')
-            && reset.nextElementSibling.matches('button[aria-pressed="true"]')
+        return reset.nextElementSibling.matches('.md-dashboard__edit-control:not(.md-dashboard__reset):not(.md-dashboard__cancel)')
+            && reset.nextElementSibling.nextElementSibling.matches('.md-dashboard__cancel')
+            && reset.nextElementSibling.nextElementSibling.nextElementSibling.matches('button[aria-pressed="true"]')
             && (reset.getAttribute('title') || reset.getAttribute('data-bs-original-title')) === WJ.translate('admin.dashboard.resetTooltip.js');
-    }), 'The explained Reset action must appear between Add widget and Done.');
+    }), 'The explained Reset action must precede Add widget, Cancel and Save.');
     I.dontSeeElement(confirmation);
     if (allSizes) I.pressKeyDown('Shift');
     I.clickCss('.md-dashboard__toolbar-actions .md-dashboard__reset');
@@ -104,11 +110,11 @@ Scenario('Create a disposable dashboard reset account', async ({ I, DT, DTE }) =
 });
 
 /**
- * Checks that reset asks for confirmation and keeps the saved layout when the request fails. A successful
+ * Checks that reset asks for confirmation and keeps both the saved layout and draft when saving fails. A successful
  * reset restores the standard widgets while preserving personal shortcuts, and later personal edits still
  * survive reloading.
  */
-Scenario('Reset confirms deletion, keeps failed changes and restores only the curated defaults', async ({ I }) => {
+Scenario('Reset confirms changes, retains a failed draft and saves only the curated defaults', async ({ I }) => {
     assert.ok(fixtureLogin, 'The disposable account setup must run first');
     await session('dashboard reset autotest', async () => {
         I.amOnPage('/admin/logon/');
@@ -127,26 +133,27 @@ Scenario('Reset confirms deletion, keeps failed changes and restores only the cu
         });
         assert.equal(saved, true, 'The isolated custom profile must be persisted');
         const custom = await settings(I);
-        await I.mockRoute('**/admin/rest/dashboard/settings', route => route.request().method() === 'DELETE'
+        await I.mockRoute('**/admin/rest/dashboard/settings/reset', route => route.request().method() === 'PUT'
             ? route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"autotest reset failure"}' })
             : route.continue());
         await openReset(I);
         assert.deepEqual(await settings(I), custom, 'Opening confirmation must not change the profile');
         I.clickCss(confirmation);
-        waitForSave(I);
+        I.waitForInvisible(resetDialog, 10);
+        const draft = await settings(I);
+        assert.deepEqual((await I.executeScript(readDashboardBootstrap)).settings, custom, 'Confirming reset must leave the saved profile unchanged until Save');
+        saveOverview(I);
         I.waitForVisible('.md-dashboard__status .text-danger', 10);
-        assert.deepEqual(await settings(I), custom, 'A failed DELETE must preserve layout, filters and acknowledged news');
-        I.waitForInvisible(resetDialog, 10);
-        await I.stopMockingRoute('**/admin/rest/dashboard/settings');
+        assert.deepEqual(await settings(I), draft, 'A failed save must retain the reset draft for retry');
+        assert.deepEqual((await I.executeScript(readDashboardBootstrap)).settings, custom, 'A failed save must preserve the stored layout, filters and acknowledged news');
+        await I.stopMockingRoute('**/admin/rest/dashboard/settings/reset');
         await assertFixtureIdentity(I);
-        await openReset(I);
-        I.clickCss(confirmation);
-        waitForSave(I);
-        I.waitForInvisible(resetDialog, 10);
-        I.waitForText(await I.executeScript(() => WJ.translate('admin.dashboard.resetDone.js')), 10, '#toast-container-webjet .toast-success');
+        saveOverview(I);
+        I.waitForElement('.md-dashboard:not(.is-editing)', 10);
+        I.waitForText(await I.executeScript(() => WJ.translate('admin.dashboard.overviewSaved.js')), 10, '#toast-container-webjet .toast-success');
         I.assertEqual(await I.executeScript(() => document.querySelector('.md-dashboard__status').textContent), '', 'Successful reset must use the standard notification instead of persistent inline text.');
         const defaults = await settings(I);
-        assert.equal(defaults.configured, false, 'Reset defaults remain unconfigured until a personal edit');
+        assert.equal(defaults.configured, true, 'Saving the reset confirms the chosen default layout');
         assert.equal(defaults.acknowledgedNewsVersion, null);
         assert.deepEqual(defaults.items.filter(item => item.type === 'shortcut'), custom.items.filter(item => item.type === 'shortcut'), 'Overview reset preserves custom shortcuts, order and stable ids');
         assert.equal(defaults.shortcutsConfigured, true);
@@ -166,8 +173,8 @@ Scenario('Reset confirms deletion, keeps failed changes and restores only the cu
         I.refreshPage();
         waitForDashboard(I);
         const reloaded = await settings(I);
-        assert.equal(reloaded.configured, false);
-        assert.deepEqual(effectiveDefaults(reloaded), effectiveDefaults(defaults), 'Reload must regenerate the same defaults without depending on instance ids');
+        assert.equal(reloaded.configured, true);
+        assert.deepEqual(effectiveDefaults(reloaded), effectiveDefaults(defaults), 'Reload must retain the saved defaults');
         await waitForWidgets(I);
         I.resizeWindow(1337, 1052);
         I.saveScreenshot('dashboard-default-desktop.png', true);
@@ -186,8 +193,7 @@ Scenario('Reset confirms deletion, keeps failed changes and restores only the cu
 
         const shortcut = reloaded.items.find(item => item.type === 'shortcut');
         await I.clickIfVisible('.md-dashboard__shortcut-actions button[aria-pressed="false"]');
-        I.clickCss(`[data-instance-id="${shortcut.id}"] .dropdown > button`);
-        I.forceClick(`[data-instance-id="${shortcut.id}"] [data-dashboard-action="settings"]`);
+        I.clickCss(`[data-instance-id="${shortcut.id}"] .md-dashboard-widget__shortcut`);
         I.waitForVisible('.md-dashboard__settings [name="dashboardShortcutTitle"]', 10);
         I.fillField('.md-dashboard__settings [name="dashboardShortcutTitle"]', 'dashboard-reset-autotest personalized');
         I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
@@ -220,8 +226,9 @@ Scenario('Shift reset persists every size and allows individual variants to be r
         await openReset(I, true);
         I.see(await I.executeScript(() => WJ.translate('admin.dashboard.resetAllConfirm.js')), resetDialog);
         I.clickCss(confirmation);
-        waitForSave(I);
         I.waitForInvisible(resetDialog, 10);
+        saveOverview(I);
+        I.waitForElement('.md-dashboard:not(.is-editing)', 10);
         const generated = await settings(I);
         const variants = {
             'recent-pages': ['2x3', '3x2', '3x3'], approvals: ['1x1', '3x3'], publishing: ['2x2', '2x3'],
@@ -261,16 +268,15 @@ Scenario('Shift reset persists every size and allows individual variants to be r
         I.clickCss(`[data-instance-id="${preview.id}"] [data-dashboard-action="remove"]`);
         waitForSave(I);
         assert.equal((await settings(I)).items.some(item => item.id === preview.id), false);
-        I.executeScript(() => {
-            const undo = document.querySelector('.md-dashboard__undo');
-            window.scrollbarMain.setPosition(0, window.scrollbarMain.offset.y + undo.getBoundingClientRect().top - 64);
-        });
-        I.clickCss('.md-dashboard__undo button');
+        I.waitForVisible('[data-dashboard-widget-undo]', 10);
+        I.clickCss('[data-dashboard-widget-undo]');
         waitForSave(I);
         assert.deepEqual((await settings(I)).items, generated.items, 'Undo must restore one variant while other instances of its type remain');
         await openReset(I);
         I.clickCss(confirmation);
-        waitForSave(I);
+        I.waitForInvisible(resetDialog, 10);
+        saveOverview(I);
+        I.waitForElement('.md-dashboard:not(.is-editing)', 10);
         const defaults = await settings(I);
         assert.equal(defaults.items.filter(item => item.type !== 'shortcut').at(-1).type, 'newsletter');
         assert.equal(defaults.items.filter(item => item.type === 'recent-pages').length, 1);

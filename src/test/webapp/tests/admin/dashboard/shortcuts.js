@@ -44,6 +44,15 @@ Before(({ I, login }) => {
 Scenario('Shortcuts and widgets have independent editing modes', async ({ I }) => {
     originalSettings = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     originalBookmarks = await I.executeScript(() => localStorage.getItem('bookmarks'));
+    I.assertTrue(await I.executeScript(async () => {
+        const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
+        const next = JSON.parse(JSON.stringify(controller.settings));
+        next.items = [...next.items.filter(item => item.type !== 'shortcut'), {
+            id: 'shortcut-editing-autotest', type: 'shortcut', size: '1x1',
+            options: { source: 'url', href: '/admin/v9/', title: 'autotest' }
+        }];
+        return controller._commit(next);
+    }), 'Editing checks must create a shortcut even when the account has none.');
     I.seeElement(`${actions} .md-dashboard__shortcut-edit .ti-pencil`);
     I.see('Pridať skratku', actions);
     I.assertTrue(await I.executeScript(() => {
@@ -67,9 +76,9 @@ Scenario('Shortcuts and widgets have independent editing modes', async ({ I }) =
     I.click('Hotovo', '.md-dashboard__welcome-heading');
     I.seeElement(`${actions} .md-dashboard__shortcut-edit .ti-pencil`);
     I.assertTrue(await I.executeScript(() => {
-        const link = document.querySelector('.md-dashboard__shortcut-card a');
+        const link = document.querySelector('[data-instance-id="shortcut-editing-autotest"] a');
         const label = link.querySelector('.md-dashboard-widget__shortcut-label');
-        if (label.scrollWidth > label.clientWidth) return true;
+        if (label.scrollWidth > label.clientWidth) return false;
         window.bootstrap.Tooltip.getInstance(link).show();
         return !link.hasAttribute('aria-describedby') && !link.hasAttribute('title');
     }), 'A fully visible shortcut title must not have a duplicate tooltip.');

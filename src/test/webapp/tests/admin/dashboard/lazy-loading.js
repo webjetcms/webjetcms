@@ -19,7 +19,8 @@ for (const width of [1337, 390]) {
             version: 1, configured: true, shortcutsConfigured: true, legacyBookmarksHandled: true,
             domainOptions: {}, acknowledgedNewsVersion: null,
             items: [
-                ...Array.from({ length: 6 }, (_, index) => ({ id: `lazy-autotest-${index}`, type: 'forms', size: '3x3', options: { days: 7 } })),
+                // Mobile cards initially have only their minimum height, before the data expands them.
+                ...Array.from({ length: 12 }, (_, index) => ({ id: `lazy-autotest-${index}`, type: 'forms', size: '3x3', options: { days: 7 } })),
                 { id: 'lazy-autotest-audit', type: 'audit', size: '3x3', options: {} },
                 { id: 'lazy-autotest-memory', type: 'server-memory', size: '3x3', options: {} },
                 { id: 'lazy-autotest-cpu', type: 'server-cpu', size: '3x3', collapsed: true, options: {} }
