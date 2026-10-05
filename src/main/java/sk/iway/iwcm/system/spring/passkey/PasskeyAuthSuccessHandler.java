@@ -5,7 +5,6 @@ import java.io.IOException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -16,6 +15,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 /**
  * Success handler for WebAuthn/PassKey authentication.
@@ -62,15 +62,8 @@ public class PasskeyAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             LogonTools.logonUserWithAllChecks(identity, request);
             Adminlog.add(Adminlog.TYPE_USER_LOGON, "PassKey - user (ADMIN) successfully logged: name=" + userDetails.getLogin(), -1, -1);
 
-            // Check for saved redirect URL
-            HttpSession session = request.getSession();
-            String afterLogonRedirect = (String) session.getAttribute("adminAfterLogonRedirect");
-            if (afterLogonRedirect != null) {
-                session.removeAttribute("adminAfterLogonRedirect");
-                response.sendRedirect(afterLogonRedirect);
-            } else {
-                response.sendRedirect("/admin/v9/");
-            }
+            AdminDeviceService.recordSuccessfulLogin(identity, request, response);
+            response.sendRedirect(AdminDeviceService.getAfterLoginRedirect(request));
         } catch (Exception ex) {
             Logger.error(PasskeyAuthSuccessHandler.class, "PassKey onAuthenticationSuccess error: " + ex.getMessage(), ex);
             response.sendRedirect("/admin/logon/?error=passkey_exception");

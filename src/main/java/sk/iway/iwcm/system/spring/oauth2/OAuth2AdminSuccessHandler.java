@@ -15,6 +15,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.PermissionGroupBean;
@@ -83,7 +84,8 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
 
             LogonTools.logonUserWithAllChecks(identity, request);
 
-            response.sendRedirect("/admin/");
+            AdminDeviceService.recordSuccessfulLogin(identity, request, response);
+            response.sendRedirect(AdminDeviceService.getAfterLoginRedirect(request));
 
             //update request bean to current user for correct logging
             SetCharacterEncodingFilter.registerDataContext(request);

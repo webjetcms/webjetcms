@@ -1255,7 +1255,9 @@ public class InitServlet extends HttpServlet
 		String serverName = Tools.getServerName(request, false);
 
 		//default allowed domains
-		if (serverName.equals("iwcm.interway.sk") || serverName.equals("neweb.interway.sk") || serverName.equals("localhost") ||
+		if (serverName.equals("iwcm.interway.sk") || serverName.equals("iwcm8443.interway.sk") || serverName.equals("iwcm9443.interway.sk") ||
+			serverName.equals("iwcm8080.interway.sk") || serverName.equals("iwcm9080.interway.sk") ||
+			serverName.equals("neweb.interway.sk") || serverName.equals("localhost") ||
 			serverName.endsWith(".iway.sk") || serverName.endsWith(".iway.local") || serverName.endsWith(".iwcp.dev") || serverName.endsWith("npp.int-dev.iway"))
 		{
 			return (true);

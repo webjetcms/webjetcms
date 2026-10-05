@@ -1040,7 +1040,7 @@ function overviewFixture(t) {
     const environment = fixture(t);
     const { context, window, controller } = environment;
     Object.assign(context, { HTMLElement: window.HTMLElement, customElements: window.customElements, WJ: window.WJ });
-    const noticesSource = fs.readFileSync(path.join(moduleDirectory, 'notices.js'), 'utf8').replace(/^export /gm, '');
+    const noticesSource = fs.readFileSync(path.join(moduleDirectory, 'notices.js'), 'utf8').replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
     vm.runInContext(`{ ${noticesSource}; this.DashboardNotices = DashboardNotices; }`, context);
     const source = fs.readFileSync(path.join(moduleDirectory, '../web-components/webjet-overview-dashboard.js'), 'utf8')
         .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
@@ -1066,6 +1066,26 @@ test('Rebuilding the overview after a save never reapplies the embedded settings
     assert.equal(requests.length, 1);
     assert.equal(requests[0].method, 'PUT');
     assert.equal(overview.dashboardController.settings.items[0].options.title, 'Updated autotest');
+});
+
+test('Email login details open once from the authenticated bootstrap, including unavailable links', async t => {
+    for (const event of [{ id: 'autotest-event', createdAt: 1000 }, null]) {
+        const { context, overview, requests } = overviewFixture(t);
+        context.registerDashboardWidgets = () => {};
+        context.getDashboardDefaults = () => [];
+        const opened = [];
+        context.showActiveSessions = (widgetContext, securityEvent) => opened.push(securityEvent);
+        overview.configure({ data: { notices: [], settings: { configured: true, items: [] }, securityEventRequested: true, requestedSecurityEvent: event } });
+        overview.render();
+        await overview.dashboardReady;
+        assert.equal(opened.length, 1);
+        assert.equal(opened[0], event);
+        overview.render();
+        await overview.dashboardReady;
+        assert.equal(opened.length, 1, 'Dashboard rerenders must not reopen the dismissed dialog.');
+        assert.equal(requests.length, 0, 'Opening an email link must not mutate account data.');
+        overview.disconnectedCallback();
+    }
 });
 
 test('System notice rows invoke authorized actions and survive personal layout rendering', async t => {

@@ -3965,5 +3965,53 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>05.10.2026</string></void>
+                <void property="desc"><string>user_login_devices - remember authenticated administration browsers</string></void>
+                <void property="mysql"><string>
+                    CREATE TABLE user_login_devices (domain_id INT NOT NULL, user_id INT NOT NULL, token_hash CHAR(64) NOT NULL, last_seen DATETIME(3) NOT NULL, revoked_at DATETIME(3) NULL, CONSTRAINT pk_user_login_devices PRIMARY KEY (domain_id, user_id, token_hash)) ENGINE=InnoDB;
+                    CREATE INDEX ix_login_devices_seen ON user_login_devices (last_seen);
+                    CREATE TABLE user_login_events (event_id VARCHAR(36) NOT NULL, domain_id INT NOT NULL, user_id INT NOT NULL, token_hash CHAR(64) NOT NULL, created_at DATETIME(3) NOT NULL, browser_name VARCHAR(128), browser_version VARCHAR(64), operating_system VARCHAR(128), ip_address VARCHAR(64), confirmed_at DATETIME(3) NULL, reported_at DATETIME(3) NULL, CONSTRAINT pk_user_login_events PRIMARY KEY (event_id)) ENGINE=InnoDB;
+                    CREATE INDEX ix_login_events_owner ON user_login_events (domain_id, user_id, created_at);
+                    CREATE INDEX ix_login_events_created ON user_login_events (created_at);
+                </string></void>
+                <void property="mssql"><string>
+                    CREATE TABLE user_login_devices (domain_id INT NOT NULL, user_id INT NOT NULL, token_hash CHAR(64) NOT NULL, last_seen DATETIME2(3) NOT NULL, revoked_at DATETIME2(3) NULL, CONSTRAINT pk_user_login_devices PRIMARY KEY (domain_id, user_id, token_hash));
+                    CREATE INDEX ix_login_devices_seen ON user_login_devices (last_seen);
+                    CREATE TABLE user_login_events (event_id VARCHAR(36) NOT NULL, domain_id INT NOT NULL, user_id INT NOT NULL, token_hash CHAR(64) NOT NULL, created_at DATETIME2(3) NOT NULL, browser_name NVARCHAR(128), browser_version NVARCHAR(64), operating_system NVARCHAR(128), ip_address VARCHAR(64), confirmed_at DATETIME2(3) NULL, reported_at DATETIME2(3) NULL, CONSTRAINT pk_user_login_events PRIMARY KEY (event_id));
+                    CREATE INDEX ix_login_events_owner ON user_login_events (domain_id, user_id, created_at);
+                    CREATE INDEX ix_login_events_created ON user_login_events (created_at);
+                </string></void>
+                <void property="oracle"><string>
+                    CREATE TABLE user_login_devices (domain_id INTEGER NOT NULL, user_id INTEGER NOT NULL, token_hash CHAR(64) NOT NULL, last_seen TIMESTAMP(3) NOT NULL, revoked_at TIMESTAMP(3) NULL, CONSTRAINT pk_user_login_devices PRIMARY KEY (domain_id, user_id, token_hash));
+                    CREATE INDEX ix_login_devices_seen ON user_login_devices (last_seen);
+                    CREATE TABLE user_login_events (event_id VARCHAR2(36) NOT NULL, domain_id INTEGER NOT NULL, user_id INTEGER NOT NULL, token_hash CHAR(64) NOT NULL, created_at TIMESTAMP(3) NOT NULL, browser_name NVARCHAR2(128), browser_version NVARCHAR2(64), operating_system NVARCHAR2(128), ip_address VARCHAR2(64), confirmed_at TIMESTAMP(3) NULL, reported_at TIMESTAMP(3) NULL, CONSTRAINT pk_user_login_events PRIMARY KEY (event_id));
+                    CREATE INDEX ix_login_events_owner ON user_login_events (domain_id, user_id, created_at);
+                    CREATE INDEX ix_login_events_created ON user_login_events (created_at);
+                </string></void>
+                <void property="pgsql"><string>
+                    CREATE TABLE user_login_devices (domain_id INT NOT NULL, user_id INT NOT NULL, token_hash CHAR(64) NOT NULL, last_seen TIMESTAMP(3) NOT NULL, revoked_at TIMESTAMP(3) NULL, CONSTRAINT pk_user_login_devices PRIMARY KEY (domain_id, user_id, token_hash));
+                    CREATE INDEX ix_login_devices_seen ON user_login_devices (last_seen);
+                    CREATE TABLE user_login_events (event_id VARCHAR(36) NOT NULL, domain_id INT NOT NULL, user_id INT NOT NULL, token_hash CHAR(64) NOT NULL, created_at TIMESTAMP(3) NOT NULL, browser_name VARCHAR(128), browser_version VARCHAR(64), operating_system VARCHAR(128), ip_address VARCHAR(64), confirmed_at TIMESTAMP(3) NULL, reported_at TIMESTAMP(3) NULL, CONSTRAINT pk_user_login_events PRIMARY KEY (event_id));
+                    CREATE INDEX ix_login_events_owner ON user_login_events (domain_id, user_id, created_at);
+                    CREATE INDEX ix_login_events_created ON user_login_events (created_at);
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>05.10.2026</string></void>
+                <void property="desc"><string>crontab - clean up expired administration login devices and events daily</string></void>
+                <void property="mysql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Users - Remove expired login device history', '0', '41', '3', '*', '*', '*', '*', 'sk.iway.iwcm.users.devices.AdminDeviceCleanup', NULL, 'false', 'all')</string></void>
+                <void property="mssql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Users - Remove expired login device history', '0', '41', '3', '*', '*', '*', '*', 'sk.iway.iwcm.users.devices.AdminDeviceCleanup', NULL, 'false', 'all')</string></void>
+                <void property="oracle"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Users - Remove expired login device history', '0', '41', '3', '*', '*', '*', '*', 'sk.iway.iwcm.users.devices.AdminDeviceCleanup', NULL, 0, 'all')</string></void>
+                <void property="pgsql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Users - Remove expired login device history', '0', '41', '3', '*', '*', '*', '*', 'sk.iway.iwcm.users.devices.AdminDeviceCleanup', NULL, false, 'all')</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

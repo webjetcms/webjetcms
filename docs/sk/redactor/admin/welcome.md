@@ -123,7 +123,20 @@ Pri odosielaní sa údaje viditeľnej karty obnovujú každých 30 sekúnd. Poč
 
 V uvítacom paneli nájdete novinky aktuálnej verzie WebJET CMS. Tlačidlom **Zbaliť novinky** potvrdíte ich prečítanie a ponecháte stručný súhrn. Tlačidlom **Viac info** ich znova rozbalíte.
 
-Systémové upozornenia sú zoradené podľa závažnosti: chyby, varovania a informácie. Každý riadok obsahuje vysvetlenie a dostupnú akciu. Chyby zostávajú viditeľné do vyriešenia príčiny. Varovanie môžete odložiť na 7 dní tlačidlom **Pripomenúť neskôr** alebo **×**.
+### Systémové upozornenia
+
+V tejto časti skontrolujete problémy vyžadujúce vašu pozornosť. Upozornenie na prihlásenie z neznámeho zariadenia je vždy prvé. Ostatné upozornenia sú zoradené podľa závažnosti: chyby, varovania a informácie. Každý riadok obsahuje vysvetlenie a dostupnú akciu. Chyby zostávajú viditeľné do vyriešenia príčiny. Bežné varovanie môžete odložiť na 7 dní tlačidlom **Pripomenúť neskôr** alebo **×**.
+
+**Nové prihlásenie z neznámeho zariadenia** sa zobrazí po úspešnom prihlásení v prehliadači, ktorý WebJET CMS pre váš účet nerozpozná ako použitý počas posledných 90 dní. Súčasne vám odošle email. Upozornenie obsahuje prehliadač, operačný systém, IP adresu a čas prihlásenia.
+
+- Ak prihlásenie poznáte, kliknite na **Bol som to ja**. Upozornenie sa odstráni vo všetkých vašich prehliadačoch po obnovení prehľadu.
+- Ak prihlásenie nepoznáte, kliknite na **Nebol som to ja**. Otvorí sa detail udalosti a zoznam vašich aktívnych prihlásení. Tlačidlom **Toto prihlásenie nepoznám** zrušíte zapamätanie daného prehliadača. Potom odhláste neznáme relácie a použite **Zmeniť heslo WebJET CMS**. Pri firemnom účte zmeňte heslo u poskytovateľa prihlásenia alebo kontaktujte správcu.
+
+Otvorenie detailu ani označenie prihlásenia ako cudzieho neodhlási aktívne relácie. Odhláste ich samostatne; samotná zmena hesla nemusí ukončiť všetky relácie. Rovnaký detail otvoríte aj tlačidlom v emaili, po prihlásení do svojho účtu.
+
+Toto upozornenie nemá krížik ani možnosť odloženia. Zmizne po potvrdení **Bol som to ja** alebo po 7 dňoch od zaznamenania udalosti. Ďalšie prihlásenia túto sedemdňovú lehotu nepredlžujú.
+
+WebJET CMS si prehliadač pamätá pomocou cookie. Každé dokončené prihlásenie predĺži jeho zapamätanie o ďalších 90 dní; bežné odhlásenie cookie neodstráni. Nové upozornenie preto môžete dostať aj po vymazaní cookies, pri použití iného profilu alebo anonymného okna. Aktualizácia prehliadača či zmena IP adresy pri zachovanej cookie nové upozornenie nevyvolá. Lehotu môže správca zmeniť v [konfigurácii](../../admin/setup/configuration/dashboard.md).
 
 ### Vyhľadávanie a pomoc
 

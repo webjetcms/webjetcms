@@ -22,6 +22,8 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.rest.BrowserIdentifierMigrationService;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
+import sk.iway.iwcm.users.devices.AdminLoginEvent;
 
 /** Verifies that security notices retain their conditions and use data-only action descriptors. */
 class DashboardNoticeServiceTest {
@@ -57,7 +59,7 @@ class DashboardNoticeServiceTest {
             constants.when(() -> Constants.getInt("javaMinimalVersion")).thenReturn(17);
             constants.when(() -> Constants.getLong("licenseExpiryDate")).thenReturn(System.currentTimeMillis());
 
-            List<Map<String, Object>> result = new DashboardNoticeService(users).load(user, request);
+            List<Map<String, Object>> result = new DashboardNoticeService(users, mock(AdminDeviceService.class)).load(user, request);
 
             assertEquals(List.of("twoFactor", "database", "browserMigration", "update", "java", "license", "amazonSes"), result.stream().map(notice -> notice.get("id")).toList());
             assertEquals("8.&lt;script&gt;alert(1)&lt;/script&gt;", result.get(4).get("bodyHtml"));
@@ -92,7 +94,7 @@ class DashboardNoticeServiceTest {
             tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
             constants.when(() -> Constants.getBoolean("statWebJET7Converted")).thenReturn(true);
 
-            assertTrue(new DashboardNoticeService(users).load(user, request).isEmpty());
+            assertTrue(new DashboardNoticeService(users, mock(AdminDeviceService.class)).load(user, request).isEmpty());
             verifyNoInteractions(users);
             migration.verifyNoInteractions();
         }
@@ -101,7 +103,7 @@ class DashboardNoticeServiceTest {
     @Test
     void deniedRequestsDoNotCheckUserSecurityOrDatabaseState() {
         UserDetailsRepository users = mock(UserDetailsRepository.class);
-        assertThrows(AccessDeniedException.class, () -> new DashboardNoticeService(users).load(mock(Identity.class), new MockHttpServletRequest()));
+        assertThrows(AccessDeniedException.class, () -> new DashboardNoticeService(users, mock(AdminDeviceService.class)).load(mock(Identity.class), new MockHttpServletRequest()));
         verifyNoInteractions(users);
     }
 
@@ -112,5 +114,63 @@ class DashboardNoticeServiceTest {
         assertEquals(8, DashboardNoticeService.javaMajorVersion("1.8.0_202"));
         assertEquals(-1, DashboardNoticeService.javaMajorVersion("unknown"));
         assertEquals(-1, DashboardNoticeService.javaMajorVersion(null));
+    }
+
+    /** Security events remain account-owned data and precede ordinary system warnings. */
+    @Test
+    void embedsAccountSecurityEventsWithoutGenericDismissalActions() {
+        var users = mock(UserDetailsRepository.class);
+        var devices = mock(AdminDeviceService.class);
+        var user = mock(Identity.class);
+        when(user.isAdmin()).thenReturn(true);
+        var request = new MockHttpServletRequest();
+        var prop = mock(Prop.class);
+        when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        var event = new AdminLoginEvent("autotest-event", 100, 200, "Firefox", "131", "Windows 11", "192.0.2.1", null, null);
+        when(devices.activeEvents(user)).thenReturn(List.of(event));
+        try (var constants = mockStatic(Constants.class);
+             var properties = mockStatic(Prop.class);
+             var tools = mockStatic(Tools.class);
+             var files = mockConstruction(IwcmFile.class)) {
+            constants.when(() -> Constants.getBoolean("statWebJET7Converted")).thenReturn(true);
+            properties.when(() -> Prop.getInstance(request)).thenReturn(prop);
+            tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+            var notices = new DashboardNoticeService(users, devices).load(user, request);
+            assertEquals(1, notices.size());
+            assertEquals("newDevice:autotest-event", notices.get(0).get("id"));
+            assertEquals("newDevice", notices.get(0).get("kind"));
+            assertSame(event, notices.get(0).get("securityEvent"));
+            assertFalse(notices.get(0).containsKey("action"));
+            assertFalse(notices.get(0).containsKey("bodyHtml"));
+            verify(devices).activeEvents(user);
+        }
+    }
+
+    /** Device-storage failures leave other notices visible and add an error that cannot be dismissed. */
+    @Test
+    void retainsOrdinaryNoticesWhenDeviceStorageFails() {
+        var users = mock(UserDetailsRepository.class);
+        var devices = mock(AdminDeviceService.class);
+        var user = mock(Identity.class);
+        when(user.isAdmin()).thenReturn(true);
+        var request = new MockHttpServletRequest();
+        var prop = mock(Prop.class);
+        when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(devices.activeEvents(user)).thenThrow(new IllegalStateException("Sensitive database details"));
+        try (var constants = mockStatic(Constants.class);
+             var properties = mockStatic(Prop.class);
+             var tools = mockStatic(Tools.class);
+             var files = mockConstruction(IwcmFile.class)) {
+            properties.when(() -> Prop.getInstance(request)).thenReturn(prop);
+            tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+
+            var notices = new DashboardNoticeService(users, devices).load(user, request);
+
+            assertEquals(List.of("newDeviceUnavailable", "database"), notices.stream().map(notice -> notice.get("id")).toList());
+            assertEquals("error", notices.get(0).get("severity"));
+            assertEquals("admin.dashboard.newDevice.unavailable.js", notices.get(0).get("description"));
+            assertFalse(notices.get(0).containsKey("kind"));
+            assertFalse(notices.toString().contains("Sensitive database details"));
+        }
     }
 }

@@ -14,20 +14,25 @@ import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.rest.BrowserIdentifierMigrationService;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
+import sk.iway.iwcm.users.devices.AdminLoginEvent;
 
 /** Builds lightweight system notices for the dashboard template. */
 @Service
 public class DashboardNoticeService {
     private final UserDetailsRepository users;
+    private final AdminDeviceService devices;
 
-    public DashboardNoticeService(UserDetailsRepository users) {
+    public DashboardNoticeService(UserDetailsRepository users, AdminDeviceService devices) {
         this.users = users;
+        this.devices = devices;
     }
 
     /**
@@ -43,6 +48,25 @@ public class DashboardNoticeService {
         if (user == null || !user.isAdmin()) throw new AccessDeniedException("Administrator login is required");
         Prop prop = Prop.getInstance(request);
         List<Map<String, Object>> notices = new ArrayList<>();
+
+        try {
+            for (AdminLoginEvent event : devices.activeEvents(user)) {
+                Map<String, Object> securityNotice = new LinkedHashMap<>();
+                securityNotice.put("id", "newDevice:" + event.id());
+                securityNotice.put("kind", "newDevice");
+                securityNotice.put("severity", "warning");
+                securityNotice.put("icon", "ti-shield-lock");
+                securityNotice.put("title", prop.getText("admin.dashboard.newDevice.title.js"));
+                securityNotice.put("description", "");
+                securityNotice.put("securityEvent", event);
+                notices.add(securityNotice);
+            }
+        } catch (IllegalStateException exception) {
+            Logger.error(DashboardNoticeService.class, "Cannot load administrator device notices (" + exception.getClass().getSimpleName() + ")");
+            notices.add(Map.of("id", "newDeviceUnavailable", "severity", "error", "icon", "ti-shield-lock",
+                "title", prop.getText("admin.dashboard.newDevice.title.js"),
+                "description", prop.getText("admin.dashboard.newDevice.unavailable.js")));
+        }
 
         if (Constants.getBoolean("2factorAuthEnabled") && Tools.isEmpty(Constants.getString("ldapProviderUrl"))
                 && Tools.isEmpty(Constants.getString("adminLogonMethod")) && !AuthenticationFilter.weTrustIIS()) {

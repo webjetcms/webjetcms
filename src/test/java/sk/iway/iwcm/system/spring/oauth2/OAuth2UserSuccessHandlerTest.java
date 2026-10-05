@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
@@ -27,6 +29,7 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -608,6 +611,43 @@ class OAuth2UserSuccessHandlerTest extends BaseWebjetTest {
 
             UserDetails savedUser = userCaptor.getValue();
             assertFalse(savedUser.isAdmin(), "User handler should ignore NTLMAdminGroupName");
+        }
+    }
+
+    /** Existing administrators retain device protection when authenticating through the public OAuth2 entry point. */
+    @ParameterizedTest
+    @CsvSource({ "true,true", "true,false", "false,true" })
+    void recognizesOnlyAdministratorSessionsAndPreservesAppropriateReturnTarget(boolean administrator, boolean hasAdminTarget) throws IOException {
+        OAuth2User oauth2User = new DefaultOAuth2User(List.of(new SimpleGrantedAuthority("ROLE_USER")),
+            createGoogleOAuth2Attributes("device-owner@example.com", "Device", "Owner"), "email");
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+        UserDetails account = createTestUser("device-owner@example.com", "Device", "Owner");
+        account.setUserId(7);
+        account.setAdmin(administrator);
+        String eventTarget = "/admin/v9/?securityEvent=d12b2090-5818-49d8-808c-688593fe71a4";
+        when(session.getAttribute("afterLogonRedirect")).thenReturn("/sk/produkty/");
+        when(session.getAttribute("adminAfterLogonRedirect")).thenReturn(hasAdminTarget ? eventTarget : null);
+
+        try (var users = mockStatic(UsersDB.class);
+             var logon = mockStatic(LogonTools.class);
+             var providers = mockStatic(WebjetAuthentificationProvider.class);
+             var devices = mockStatic(AdminDeviceService.class)) {
+            users.when(() -> UsersDB.getUserByEmail("device-owner@example.com", 1)).thenReturn(account);
+            users.when(() -> UsersDB.saveUser(any(UserDetails.class))).thenReturn(true);
+            providers.when(() -> WebjetAuthentificationProvider.authenticate(any(Identity.class))).thenReturn(authentication);
+            devices.when(() -> AdminDeviceService.getAfterLoginRedirect(request)).thenReturn(eventTarget);
+
+            handler.onAuthenticationSuccess(request, response, authentication);
+
+            verify(response).sendRedirect(administrator && hasAdminTarget ? eventTarget : "/sk/produkty/");
+            if (administrator) {
+                var identity = ArgumentCaptor.forClass(Identity.class);
+                devices.verify(() -> AdminDeviceService.recordSuccessfulLogin(identity.capture(), eq(request), eq(response)));
+                assertEquals(7, identity.getValue().getUserId());
+                assertTrue(identity.getValue().isAdmin());
+                if (hasAdminTarget) devices.verify(() -> AdminDeviceService.getAfterLoginRedirect(request));
+                devices.verifyNoMoreInteractions();
+            } else devices.verifyNoInteractions();
         }
     }
 

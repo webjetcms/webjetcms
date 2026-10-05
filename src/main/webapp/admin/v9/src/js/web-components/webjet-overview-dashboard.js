@@ -12,6 +12,8 @@ import { showFeedbackDialog } from '../feedback';
  * @property {Object[]} [data.dashboardMenu=[]] - Authorized administration navigation for shortcut selection.
  * @property {Object} data.settings - Current account's layout and active-domain preferences.
  * @property {Object[]} data.notices - System notices ready for immediate rendering.
+ * @property {boolean} [data.securityEventRequested=false] - Whether an email link requested a login detail.
+ * @property {Object|null} [data.requestedSecurityEvent] - Owned login detail, or null when unavailable.
  * @property {Object} data.currentSessions - Current user sessions, updated after a successful logout.
  * @property {string} [data.userName=""] - Current user's display name.
  * @property {number} data.statRootGroupId - Active domain root folder passed to the shared statistics API.
@@ -92,6 +94,10 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         this.dashboardController = new DashboardController(widgets, context);
         this._renderNotices();
         this.dashboardReady = this.dashboardController.start();
+        if (this.data.securityEventRequested && !this.securityEventOpened) {
+            this.securityEventOpened = true;
+            showActiveSessions(this.dashboardController._widgetContext(), this.data.requestedSecurityEvent || null);
+        }
         this.dataset.ready = "true";
         this.dispatchEvent(new CustomEvent("webjet-component-ready", { bubbles: true }));
     }
@@ -99,7 +105,8 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
     /** Renders the system notices supplied by the dashboard page. */
     _renderNotices() {
         this.noticeController ||= new DashboardNotices(this.dashboardController.notices, this.data,
-            () => showActiveSessions(this.dashboardController._widgetContext()));
+            () => showActiveSessions(this.dashboardController._widgetContext()),
+            event => showActiveSessions(this.dashboardController._widgetContext(), event));
         this.noticeController.render();
     }
 

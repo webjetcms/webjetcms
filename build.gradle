@@ -440,6 +440,7 @@ test {
     systemProperty 'user.language', 'sk'
     systemProperty 'user.country', 'SK'
     systemProperty 'webjetDbname', System.getProperty('webjetDbname') ?: '/poolman-local.xml'
+    systemProperty 'webjetDeviceIntegration', System.getProperty('webjetDeviceIntegration', 'false')
     testLogging {
         events "passed", "skipped", "failed", "standard_out", "standard_error"
         showStandardStreams = true

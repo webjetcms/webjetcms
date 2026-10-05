@@ -50,6 +50,7 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 /**
  *  LogonAction.java - prihlasenie usera do systemu pomocou NTLM filtra
@@ -153,6 +154,7 @@ public class NtlmLogonAction
 						identity.setValid(true);
 						//je korektne prihlaseny
 						LogonTools.setUserToSession(request.getSession(), identity);
+						AdminDeviceService.recordSuccessfulLogin(identity, request, response);
 
 						Logger.debug(NtlmLogonAction.class,"NtlmLogonAction: admin prihlaseny");
 						if (request.getParameter("admin")!=null)
@@ -183,6 +185,9 @@ public class NtlmLogonAction
 					request.getSession().removeAttribute("afterLogonRedirect");
 					request.setAttribute("afterLogonRedirect", afterLogonRedirect);
 					if (Tools.isNotEmpty(afterLogonRedirect)) afterLogonUrl = afterLogonRedirect;
+					if (user.isAdmin() && request.getSession().getAttribute("adminAfterLogonRedirect") != null) {
+						afterLogonUrl = AdminDeviceService.getAfterLoginRedirect(request);
+					}
 
 					response.sendRedirect(Tools.sanitizeHttpHeaderParam(afterLogonUrl));
 					return;

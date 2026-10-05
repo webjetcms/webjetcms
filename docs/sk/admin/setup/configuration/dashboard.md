@@ -12,6 +12,8 @@ Pozadie uvítacieho panelu a označenie prostredia nastavíte cez **Nastavenia �
 | `dashboardEnvironmentColor` | `auto` | Farba z palety podľa prostredia a štýlu. Vlastná farba `#RGB` či `#RRGGBB` automaticky dostane čierny alebo biely text a ikonu s kontrastom aspoň 4,5 : 1. |
 | `dashboardEnvironmentStyle` | `auto` | `subtle` = jemný, `strong` = výrazný. Hodnota `auto` použije výrazný štýl pre PROD, jemný pre ostatné prostredia. |
 | `dashboardEnvironmentDescription` | prázdna | Doplňujúci popis za celým názvom v tooltipe. Podporuje makrá. Tooltip funguje pri ukázaní myšou aj pri fokuse klávesnicou; Escape ho skryje. |
+| `adminNewDeviceDetectionEnabled` | `true` | Zapne rozpoznávanie prehliadačov pri dokončenom prihlásení administrátora, upozornenia na prehľade a emaily o novom zariadení. |
+| `adminNewDeviceMaxAgeDays` | `90` | Počet dní od posledného úspešného prihlásenia, počas ktorých sa prehliadač považuje za známy pre daný účet. Určuje aj platnosť cookie. |
 
 Názov sa pridáva aj do titulku karty prehliadača a prístupného názvu hlavičky, napríklad `[TEST] Webové stránky | WebJET CMS`. Ikona je voliteľná, text zostáva povinný. Na produkcii môžete označenie vypnúť prázdnou hodnotou `dashboardEnvironmentName`.
 
@@ -43,3 +45,13 @@ Automatický vzhľad prednostne použije úvodné označenie prostredia v nakonf
 Napríklad `dashboardEnvironmentName={ENVIRONMENT_NAME}/{CLUSTER_NAME}` doplní názov aktuálneho uzla z `clusterMyNodeName`. Celý názov, napríklad `UAT/node-1`, je v tooltipe; štítok zobrazí prvých 8 znakov veľkými písmenami. Pri prázdnom názve uzla sa koncová lomka odstráni.
 
 Pre krátky štítok a dlhší popis nastavte `dashboardEnvironmentName=TEST` a `dashboardEnvironmentDescription=Testovacie prostredie, uzol {CLUSTER_NAME}`. Nastavenie prostredia používa existujúcu konfiguráciu; samostatný dialóg na úvodnej obrazovke nie je k dispozícii.
+
+## Detekcia nových zariadení
+
+Funkcia upozorní administrátora na úspešné prihlásenie z prehliadača, ktorý jeho účet nepoužil v nastavenej lehote. Pri prvom prihlásení po zapnutí funkcie dostane upozornenie aj email. Používateľský postup opisujú [Systémové upozornenia](../../../redactor/admin/welcome.md#systémové-upozornenia).
+
+Cookie `wjAdminDevice` obsahuje náhodný identifikátor; tabuľka `user_login_devices` uchováva jeho hash a čas posledného prihlásenia pre účet a doménu. Cookie má cestu `/`, atribúty `HttpOnly`, `SameSite=Lax` a pri HTTPS aj `Secure`. Každé dokončené prihlásenie obnoví cookie a zapamätanie účtu na ďalších `adminNewDeviceMaxAgeDays` dní. Bežné požiadavky počas otvorenej relácie ani neúspešné prihlásenie lehotu nepredlžujú. Odhlásenie cookie zachová. Neplatná alebo nekladná konfigurácia použije 90 dní; horná hranica platnosti cookie je 24 855 dní.
+
+Email sa zaradí do existujúcej fronty cez `SendMail.sendLater`. Meno a adresa odosielateľa sa určia rovnako ako pri zabudnutom hesle: najprv `passwordResetDefaultSenderName` a `passwordResetDefaultSenderEmail`, potom `defaultSenderName` a `defaultSenderEmail`, nakoniec náhradné údaje používateľa. Email obsahuje prehliadač, systém, IP adresu, čas, názov servera a označenie z `dashboardEnvironmentName`. Chyba odoslania sa zaznamená bez zrušenia prihlásenia alebo upozornenia na prehľade.
+
+Upozornenie zanikne po potvrdení alebo po 7 dňoch od udalosti, nezávisle od platnosti cookie. Tabuľka `user_login_events` uchováva udalosti 90 dní, aby zostal dostupný detail z emailu. Úloha `sk.iway.iwcm.users.devices.AdminDeviceCleanup`, pridaná databázovou aktualizáciou, každý deň o 03:41 odstráni staré udalosti a expirované záznamy zariadení. Pri zapnutých doménových variantoch konfigurácie použije čistenie najdlhšiu nastavenú lehotu; pri prihlásení sa naďalej kontroluje platnosť podľa konfigurácie danej domény. Platnosť sa kontroluje aj pri každom načítaní; čistenie pokračuje aj pri vypnutej detekcii.

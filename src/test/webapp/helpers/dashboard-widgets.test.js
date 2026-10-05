@@ -2154,3 +2154,126 @@ test('Expanded release announcements retain headings, lists, emphasis and links 
     scope.getWidget('news').render({ container, context });
     assert.equal(container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, context.labels.changelog);
 });
+
+test('Security review focuses its initial tab after the modal transition without stealing child focus', t => {
+    for (const preserveFocus of [false, true]) {
+        const { scope, context, window } = fixture(t, { data: { currentSessions: { userSessions: [] } } });
+        sessionDialogFixture(context, window);
+        scope.showActiveSessions(context, { id: 'autotest-focus', createdAt: 1000 });
+        const root = window.document.querySelector('.md-dashboard-modal--security');
+        root.tabIndex = -1;
+        const expected = root.querySelector(preserveFocus ? '.md-dashboard-sessions__report' : '[role="tab"]');
+        (preserveFocus ? expected : root).focus();
+        root.dispatchEvent(new window.Event('shown.bs.modal'));
+        assert.equal(window.document.activeElement, expected);
+    }
+});
+
+test('Login security dialog reports explicitly without dismissing notices or ending sessions', async t => {
+    const securityEvent = { id: 'autotest-login', createdAt: 1000, browserName: '<img src=x>', browserVersion: '123', operatingSystem: 'Linux', ipAddress: '127.0.0.1' };
+    const data = { notices: [{ kind: 'newDevice', securityEvent: { ...securityEvent } }], currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+        { sessionId: 'current', browserName: 'Current autotest', logonTime: 1000 },
+        { sessionId: 'other', browserName: 'Other autotest', logonTime: 2000 }
+    ] }] } };
+    let fail = true;
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async () => ({ ok: !fail, json: async () => ({ ...securityEvent, reportedAt: 3000 }) }) });
+    context.translate = (key, ...params) => [key, ...params].join(' ');
+    sessionDialogFixture(context, window);
+    scope.showActiveSessions(context, securityEvent);
+    const root = window.document.querySelector('.md-dashboard-modal--security');
+    assert.equal(requests.length, 0, 'Opening the security dialog must be read-only.');
+    assert.equal(root.querySelectorAll('[role="tab"]').length, 1);
+    assert.equal(root.querySelector('.md-dashboard-sessions__summary button'), null, 'This guided flow must only offer individual logout.');
+    assert.equal(root.querySelectorAll('tbody button').length, 2, 'Both current and other sessions offer an explicit logout action.');
+    assert.equal(root.querySelector('img'), null);
+    assert.match(root.querySelector('.md-dashboard-sessions__security').textContent, /<img src=x>/);
+    root.querySelector('.md-dashboard-sessions__report').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.ok(root.querySelector('.md-dashboard-sessions__report'));
+    assert.match(root.querySelector('[role="alert"]').textContent, /newDevice.saveError/);
+    fail = false;
+    root.querySelector('.md-dashboard-sessions__report').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(root.querySelector('.md-dashboard-sessions__report'), null);
+    assert.match(root.querySelector('.md-dashboard-sessions__security [role="status"]').textContent, /newDevice.reported/);
+    assert.equal(requests[1].url, '/admin/rest/security/login-events/autotest-login/report');
+    assert.equal(requests[1].options.method, 'POST');
+    assert.equal(requests[1].options.headers['X-CSRF-Token'], 'test-csrf-token');
+    assert.equal(context.data.notices.length, 1, 'Reporting must not hide the warning.');
+    assert.equal(context.data.notices[0].securityEvent.reportedAt, 3000);
+    assert.equal(scope.flattenSessions(context.data.currentSessions).length, 2, 'Reporting must not terminate sessions.');
+});
+
+test('Security review uses the normal logout form for this browser and the existing API for other sessions', async t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+        { sessionId: 'current', browserName: 'Current autotest' }, { sessionId: 'other', browserName: 'Other autotest' }
+    ] }] } };
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async () => ({ ok: true, json: async () => ({ success: true, pending: false }) }) });
+    sessionDialogFixture(context, window);
+    let signedOut = 0;
+    const form = window.document.createElement('form');
+    form.name = 'adminLogoffForm';
+    form.requestSubmit = () => { signedOut++; };
+    window.document.body.append(form);
+    scope.showActiveSessions(context, { id: 'autotest-login', createdAt: 1000 });
+    const root = window.document.querySelector('.md-dashboard-modal--security');
+    root.querySelector('tbody tr:first-child button').click();
+    assert.equal(signedOut, 1);
+    assert.equal(requests.length, 0, 'Current-session logout must not use the protected other-session API.');
+    root.querySelector('tbody tr:nth-child(2) button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(requests[0].url, '/admin/rest/sessions/logout');
+    assert.equal(requests[0].options.body.get('sessionId'), 'other');
+    assert.equal(root.querySelectorAll('tbody tr').length, 1);
+});
+
+test('Security password action closes its dialog before opening the current account profile', async t => {
+    const { scope, context, window } = fixture(t, { data: { currentSessions: { userSessions: [] } } });
+    const dialog = sessionDialogFixture(context, window);
+    window.currentUser = { userId: 7 };
+    let profile;
+    window.openProfileDialog = (...args) => {
+        assert.equal(window.document.querySelector('.md-dashboard-modal--security'), null);
+        profile = args;
+    };
+    scope.showActiveSessions(context, { id: 'autotest-login', createdAt: 1000 });
+    window.document.querySelector('.md-dashboard-sessions__password').click();
+    assert.equal(dialog.signal.aborted, true);
+    await new Promise(resolve => window.setTimeout(resolve, 0));
+    assert.deepEqual(profile, [7, true]);
+});
+
+test('Unavailable security links show a neutral message without account actions or reads', t => {
+    const { scope, context, window, requests } = fixture(t);
+    sessionDialogFixture(context, window);
+    scope.showActiveSessions(context, null);
+    const root = window.document.querySelector('.md-dashboard-modal--security');
+    assert.match(root.textContent, /newDevice.unavailable/);
+    assert.equal(root.querySelectorAll('button').length, 1);
+    assert.equal(root.querySelector('table'), null);
+    assert.equal(requests.length, 0);
+});
+
+test('Reporting a previously confirmed email event restores its warning only before its original expiry', async t => {
+    for (const active of [true, false]) {
+        const securityEvent = { id: 'autotest-confirmed', createdAt: 1000, confirmedAt: 2000, expiresAt: Date.now() + (active ? 60000 : -60000) };
+        const { scope, context, window } = fixture(t, {
+            data: { notices: [], currentSessions: { userSessions: [] }, requestedSecurityEvent: securityEvent },
+            fetchResponse: async () => ({ ok: true, json: async () => ({ ...securityEvent, confirmedAt: null, reportedAt: 3000 }) })
+        });
+        sessionDialogFixture(context, window);
+        let rendered = 0;
+        context.overview = { noticeController: { render: () => { rendered++; } } };
+        scope.showActiveSessions(context, securityEvent);
+        window.document.querySelector('.md-dashboard-sessions__report').click();
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(context.data.notices.length, active ? 1 : 0);
+        assert.equal(context.data.requestedSecurityEvent.confirmedAt, null);
+        assert.equal(rendered, 1);
+        if (active) {
+            assert.equal(context.data.notices[0].id, 'newDevice:autotest-confirmed');
+            assert.equal(context.data.notices[0].securityEvent.expiresAt, securityEvent.expiresAt);
+            assert.equal(context.data.notices[0].securityEvent.reportedAt, 3000);
+        }
+    }
+});

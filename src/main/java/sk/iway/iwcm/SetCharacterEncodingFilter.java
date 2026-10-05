@@ -26,6 +26,7 @@ import sk.iway.iwcm.system.ntlm.NtlmLogonAction;
 import sk.iway.iwcm.system.ntlm.RedirectedException;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -988,6 +989,9 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		}
 
 		Identity loggedUser = UsersDB.getCurrentUser(request);
+		if (loggedUser != null && loggedUser.isAdmin()) {
+			AdminDeviceService.recordSuccessfulLogin(loggedUser, request, response);
+		}
 
 		Logger.debug(SetCharacterEncodingFilter.class, "logUserInViaNtlm() END, user="+loggedUser);
 

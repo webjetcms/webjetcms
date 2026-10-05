@@ -1,3 +1,5 @@
+import { date } from './widget-utils';
+
 const SETTINGS_KEY = "dashboard.notices";
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 
@@ -17,8 +19,9 @@ function button(label, action, className = "btn btn-sm btn-link") {
 
 /** Owns only system-notice rendering and account preferences, independently of the personal grid. */
 export class DashboardNotices {
-    constructor(host, data, openSessions) {
+    constructor(host, data, openSessions, openSecurityEvent) {
         this.openSessions = openSessions;
+        this.openSecurityEvent = openSecurityEvent;
         this.host = host;
         this.data = data;
         this.state = { dismissedUntil: {} };
@@ -50,9 +53,11 @@ export class DashboardNotices {
             action: { type: "sessions", label: this._t("activeSessions") }
         });
         const notices = active.filter(notice => {
+            if (notice.kind === "newDevice") return !notice.securityEvent.confirmedAt && notice.securityEvent.expiresAt > now;
             const until = this.state.dismissedUntil[notice.id];
             return notice.severity === "error" || !(until > now || notice.severity === "info" && until === 0);
-        }).sort((first, second) => (rank[first.severity] ?? 2) - (rank[second.severity] ?? 2));
+        }).sort((first, second) => Number(second.kind === "newDevice") - Number(first.kind === "newDevice")
+            || (rank[first.severity] ?? 2) - (rank[second.severity] ?? 2));
         this.container.replaceChildren();
         if (notices.length) {
             const heading = node("h2", "md-dashboard__notices-heading", this._t("notices"));
@@ -65,7 +70,9 @@ export class DashboardNotices {
         this.container.append(this.status);
         this.container.hidden = !notices.length;
         this._setBusy(this.busy);
-        const expiry = Object.values(this.state.dismissedUntil).filter(until => until > now).sort((a, b) => a - b)[0];
+        const expiry = [...Object.values(this.state.dismissedUntil),
+            ...notices.filter(notice => notice.kind === "newDevice").map(notice => notice.securityEvent.expiresAt)]
+            .filter(until => until > now).sort((a, b) => a - b)[0];
         if (expiry) this.expiryTimer = window.setTimeout(() => this.render(), Math.min(expiry - now + 1, 2147483647));
         window.scrollbarMain?.update();
     }
@@ -81,10 +88,22 @@ export class DashboardNotices {
         const body = document.createElement("div");
         // Older embedded notices can supply trusted HTML; the compact row renders its text only.
         body.innerHTML = notice.bodyHtml || "";
+        let description = notice.description || body.textContent;
+        if (notice.kind === "newDevice") {
+            const event = notice.securityEvent;
+            const browser = [event.browserName, event.browserVersion].filter(Boolean).join(" ");
+            const device = [browser, event.operatingSystem].filter(Boolean).join(" · ");
+            description = this._t("newDevice.details", device || "—", event.ipAddress || "—", date(event.createdAt));
+        }
         text.append(node("strong", "md-dashboard__notice-title", notice.title),
-            node("span", "md-dashboard__notice-description", notice.description || body.textContent));
+            node("span", "md-dashboard__notice-description", description));
         const actions = node("div", "md-dashboard__notice-actions");
-        if (notice.action) {
+        if (notice.kind === "newDevice") {
+            actions.append(button(this._t("newDevice.confirm"), () => this._confirmSecurityEvent(notice),
+                "btn btn-sm btn-outline-secondary md-dashboard__notice-confirm"));
+            actions.append(button(this._t("newDevice.notMe"), () => this.openSecurityEvent?.(notice.securityEvent),
+                "btn btn-sm btn-link text-danger md-dashboard__notice-report"));
+        } else if (notice.action) {
             actions.append(button(notice.action.label, event => {
                 if (notice.action.type === "popup") WJ.openPopupDialog(notice.action.url);
                 else if (notice.action.type === "help") WJ.showHelpWindow(notice.action.url);
@@ -95,7 +114,7 @@ export class DashboardNotices {
                 }
             }, "btn btn-sm btn-outline-secondary md-dashboard__notice-action"));
         }
-        if (notice.severity !== "error") {
+        if (notice.kind !== "newDevice" && notice.severity !== "error") {
             if (notice.severity === "warning") actions.append(button(this._t("notice.later"), () => this._dismiss(notice, wrapper)));
             const close = button("", () => this._dismiss(notice, wrapper), "btn btn-sm btn-link md-dashboard__notice-dismiss");
             const label = this._t(notice.severity === "warning" ? "notice.later" : "notice.hide");
@@ -114,6 +133,35 @@ export class DashboardNotices {
     _setBusy(busy) {
         this.container.querySelectorAll("button").forEach(control => { control.disabled = !!busy; });
         this.container.setAttribute("aria-busy", String(!!busy));
+    }
+
+    /** Acknowledges a login on the server without using the ordinary notice-dismissal preferences. */
+    async _confirmSecurityEvent(notice) {
+        if (this.busy || this.destroyed) return;
+        this.busy = true;
+        this._setBusy(true);
+        this.request = new AbortController();
+        try {
+            const response = await fetch(`/admin/rest/security/login-events/${encodeURIComponent(notice.securityEvent.id)}/confirm`, {
+                method: "POST", credentials: "same-origin", signal: this.request.signal,
+                headers: { "X-CSRF-Token": window.csrfToken || "" }
+            });
+            if (!response.ok) throw new Error("Login confirmation failed");
+            const event = await response.json();
+            if (event.id !== notice.securityEvent.id || !event.confirmedAt) throw new Error("Login confirmation was not saved");
+            if (this.destroyed) return;
+            this.data.notices = this.data.notices.filter(item => item.id !== notice.id);
+            if (this.data.requestedSecurityEvent?.id === event.id) this.data.requestedSecurityEvent = event;
+            this.busy = false;
+            this.render();
+            (this.container.querySelector("button") || this.host.closest("webjet-overview-dashboard")?.querySelector("button"))?.focus({ preventScroll: true });
+            WJ.notifySuccess?.(this._t("newDevice.confirmed"), "", 10000);
+        } catch (error) {
+            if (!this.destroyed) this.status.textContent = this._t("newDevice.saveError");
+        } finally {
+            this.busy = false;
+            if (!this.destroyed) this._setBusy(false);
+        }
     }
 
     /** Saves just the notice record through the existing administration settings API. */
@@ -144,7 +192,7 @@ export class DashboardNotices {
     }
 
     async _dismiss(notice, row) {
-        if (notice.severity === "error" || this.busy) return;
+        if (notice.kind === "newDevice" || notice.severity === "error" || this.busy) return;
         const keyboard = row.contains(document.activeElement) && document.activeElement.matches(":focus-visible");
         const previous = this.state.dismissedUntil[notice.id];
         const until = notice.severity === "warning" ? Date.now() + WEEK : 0;

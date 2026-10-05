@@ -22,16 +22,19 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 /** Supplies lightweight initial data while expensive widget previews load independently. */
 @Component
 public class DashboardListener {
     private final DashboardSettingsService settingsService;
     private final DashboardNoticeService noticeService;
+    private final AdminDeviceService deviceService;
 
-    public DashboardListener(DashboardSettingsService settingsService, DashboardNoticeService noticeService) {
+    public DashboardListener(DashboardSettingsService settingsService, DashboardNoticeService noticeService, AdminDeviceService deviceService) {
         this.settingsService = settingsService;
         this.noticeService = noticeService;
+        this.deviceService = deviceService;
     }
 
     /** Embeds account settings, system notices and current sessions in the dashboard template. */
@@ -52,6 +55,16 @@ public class DashboardListener {
 
             data.put("settings", settingsService.load(user.getUserId(), DashboardRestController.domainKey(request)));
             data.put("notices", noticeService.load(user, request));
+            boolean securityEventRequested = request.getParameter("securityEvent") != null;
+            data.put("securityEventRequested", securityEventRequested);
+            if (securityEventRequested) {
+                data.put("requestedSecurityEvent", null);
+                try {
+                    data.put("requestedSecurityEvent", deviceService.findEvent(user, request.getParameter("securityEvent")));
+                } catch (IllegalStateException exception) {
+                    Logger.error(DashboardListener.class, "Cannot load requested administrator login event (" + exception.getClass().getSimpleName() + ")");
+                }
+            }
             data.put("currentSessions", new ObjectMapper().readTree(SessionClusterService.getSessionInfo(request.getSession().getId(), user.getUserId())));
             event.getSource().getModel().addAttribute("overviewData", JsonTools.objectToJSON(data));
         } catch (JsonProcessingException exception) {

@@ -49,6 +49,7 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.PasswordSecurity;
 import sk.iway.iwcm.users.UserChangePasswordService;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 /**
  * LogonController.java
@@ -167,10 +168,10 @@ public class AdminLogonController {
                 // - with changePasswordActionSuccess parameter
                 return "redirect:/admin/logon/?act=changePasswordActionSuccess";
             } else {
-                String forwardAfterToken = (String)session.getAttribute("adminAfterLogonRedirect");
-                if (Tools.isEmpty(forwardAfterToken))
-                    return "redirect:/admin/v9/";
-                return "redirect:" + forwardAfterToken;
+                String twoFaRedirect = set2FaAuthForm(user, request);
+                if (Tools.isNotEmpty(twoFaRedirect)) return twoFaRedirect;
+                AdminDeviceService.recordSuccessfulLogin(user, request, response);
+                return "redirect:" + AdminDeviceService.getAfterLoginRedirect(request);
             }
         } else {
             if (errors.size()>0) model.addAttribute("errorsList", errors);
@@ -326,7 +327,7 @@ public class AdminLogonController {
 
         Prop prop = Prop.getInstance(request.getServletContext(), request);
 
-        String twoFaRedirect = verify2FaKey(request);
+        String twoFaRedirect = verify2FaKey(request, response);
         if (Tools.isNotEmpty(twoFaRedirect)) return twoFaRedirect;
 
         if (Tools.isEmpty(userForm.getUsername()) || Tools.isEmpty(userForm.getPassword())) {
@@ -374,16 +375,8 @@ public class AdminLogonController {
         determineRootWebPageDirectory(session, user);
         StatDB.addAdmin(request);
 
-        String adminAfterLogonRedirect = (String)session.getAttribute("adminAfterLogonRedirect");
-        if (Tools.isNotEmpty(adminAfterLogonRedirect)) {
-            if (adminAfterLogonRedirect.startsWith("/admin/v9/") || adminAfterLogonRedirect.startsWith("/admin/approve") ||
-                (adminAfterLogonRedirect.startsWith("/apps/") && adminAfterLogonRedirect.contains("/admin/")) ||
-                (adminAfterLogonRedirect.startsWith("/components/") && adminAfterLogonRedirect.contains("/admin"))) {
-                return "redirect:" + adminAfterLogonRedirect;
-            }
-        }
-
-        return "redirect:/admin/v9/";
+        AdminDeviceService.recordSuccessfulLogin(user, request, response);
+        return "redirect:" + AdminDeviceService.getAfterLoginRedirect(request);
     }
 
 
@@ -524,12 +517,13 @@ public class AdminLogonController {
     }
 
     /**
-     * Overi odoslanu hodnotu 2FA cisla, ak je nespravna vrati linku na formular, inak presmerovanie do administracie
-     * Vrati NULL ak 2FA nie je aktivovana
-     * @param request
-     * @return
+     * Verifies a pending second factor before completing device recognition and redirecting.
+     *
+     * @param request authentication request containing the submitted code
+     * @param response response receiving the recognized-browser cookie
+     * @return challenge form, successful redirect, or null when no challenge is pending
      */
-    private static String verify2FaKey(HttpServletRequest request) {
+    private static String verify2FaKey(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession();
         //ocakava sa token
         String generatedToken = (String)session.getAttribute("token");
@@ -572,9 +566,10 @@ public class AdminLogonController {
                     new SimpleQuery().execute("UPDATE users SET mobile_device = ? WHERE user_id = ?", token, sessionUserAfterToken.getUserId());
                     sessionUserAfterToken.setMobileDevice(currentCode);
                 }
+                AdminDeviceService.recordSuccessfulLogin(sessionUserAfterToken, request, response);
             }
 
-            return "redirect:/admin/v9/";
+            return "redirect:" + AdminDeviceService.getAfterLoginRedirect(request);
         }
 
         //kod je nespravny, zaloguj neuspesny pokus

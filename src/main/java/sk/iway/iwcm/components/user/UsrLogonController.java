@@ -23,6 +23,7 @@ import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 /**
  * Logon on standard webpage to private section,
@@ -53,9 +54,15 @@ public class UsrLogonController extends WebjetComponentAbstract {
 
                 PathFilter.setNginxProxyMode(request, response);
 
+                if (user.isAdmin()) AdminDeviceService.recordSuccessfulLogin(user, request, response);
+
                 //zavola triedu/metodu z konstanty. (robene kvoli plussport, kde sa namiesto session pouzila cookie)
 		        LogonTools.afterLogon(user, request, response);
 
+                if (user.isAdmin() && request.getSession().getAttribute("adminAfterLogonRedirect") != null) {
+                    response.sendRedirect(AdminDeviceService.getAfterLoginRedirect(request));
+                    return;
+                }
 
                 if (afterLogonRedirect!=null)
                 {
