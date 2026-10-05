@@ -5,6 +5,8 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 %><%@ taglib prefix="form" uri="http://www.springframework.org/tags/form"
 %><%
 
+    pageContext.setAttribute("environment", new sk.iway.iwcm.admin.layout.EnvironmentBadge());
+
     String lng = Prop.getLng(request, false);
     Prop prop = Prop.getInstance(request);
     String brandSuffix = InitServlet.getBrandSuffix();
@@ -39,13 +41,15 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 <html lang="<%= sk.iway.iwcm.PageLng.getUserLngIso(lng) %>">
 <head>
     <meta http-equiv="Content-type" content="text/html;charset=<%=(String)request.getAttribute("SetCharacterEncodingFilter.encoding")%>" >
-    <title>WebJET CMS</title>
+    <title><c:if test="${environment.visible}">[<c:out value="${environment.name}"/>] </c:if>WebJET CMS</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <meta content="www.interway.sk" name="author"/>
 
     <iwcm:combine type="css" set="adminStandardCss" />
     <iwcm:combine type="css" set="/admin/skins/webjet8/assets/admin/pages/css/login-soft.css" combine="false"/>
+
+    <style><%=FileTools.readFileContent("/admin/v9/dist/css/environment.css")%></style>
 
     <link rel="shortcut icon" href="/admin/skins/webjet8/assets/global/img/wj/favicon-cms.ico"/>
 
@@ -220,6 +224,16 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 
 
             <form:form method="post" name="logonForm" modelAttribute="userForm" action="/admin/logon/">
+
+                <c:if test="${environment.visible}">
+                    <div class="form-group" style="position: absolute">
+                        <span class="md-environment" style="<c:out value='${environment.cssStyle}'/>" data-environment-name="<c:out value='${environment.name}'/>" tabindex="0" aria-describedby="environment-description">
+                            <c:if test="${not empty environment.icon}"><i class="ti <c:out value='${environment.icon}'/>" aria-hidden="true"></i></c:if>
+                            <span><c:out value="${environment.name}"/></span>
+                            <span id="environment-description" class="md-environment__tooltip" role="tooltip"><span><c:out value="${environment.description}"/></span></span>
+                        </span>
+                    </div>
+                </c:if>
 
                 <div class="form-group language-select">
                     <div class="custom-select">
@@ -434,6 +448,15 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
     };
 
     jQuery(document).ready(function() {
+        $(".md-environment").on("keydown", function(event) {
+            if (event.key === "Escape") {
+                this.setAttribute("data-tooltip-dismissed", "true");
+                event.stopPropagation();
+            }
+        }).on("focus mouseenter", function() {
+            this.removeAttribute("data-tooltip-dismissed");
+        });
+
         try {
             bindPasswordStrength();
             $("#username").focus();

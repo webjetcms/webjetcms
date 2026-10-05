@@ -40,13 +40,14 @@ if [[ "$BRANCH_NAME" =~ ^[0-9a-fA-F]{4,40}$ ]] \
     WORKTREE_NAME="commit-${COMMIT_ID:0:12}"
 fi
 
+EXPECTED_WORKTREE_ROOT="$(dirname -- "$MAIN_WORKTREE")/webjetcms-$WORKTREE_NAME"
 WORKTREE_ROOT=""
 REGISTERED_PATH=""
 while IFS= read -r -d '' FIELD; do
     case "$FIELD" in
         worktree\ *)
             REGISTERED_PATH="${FIELD#worktree }"
-            if [[ -n "$COMMIT_ID" && "$REGISTERED_PATH" == "$(dirname -- "$MAIN_WORKTREE")/webjetcms-$WORKTREE_NAME" ]]; then
+            if [[ -n "$COMMIT_ID" && "$REGISTERED_PATH" == "$EXPECTED_WORKTREE_ROOT" ]]; then
                 WORKTREE_ROOT="$REGISTERED_PATH"
             fi
             ;;
@@ -56,37 +57,57 @@ while IFS= read -r -d '' FIELD; do
     esac
 done < <(git worktree list --porcelain -z)
 
+worktree_is_unregistered() {
+    # With pipefail, a failed Git query also prevents recursive deletion.
+    git worktree list --porcelain -z | (
+        while IFS= read -r -d '' FIELD; do
+            if [[ "$FIELD" == "worktree $1" ]]; then exit 1; fi
+        done
+        exit 0
+    )
+}
+
+WORKTREE_REGISTERED=true
 if [[ -z "$WORKTREE_ROOT" ]]; then
-    echo "No worktree found for branch or commit: $BRANCH_NAME" >&2
-    exit 1
+    WORKTREE_REGISTERED=false
+    WORKTREE_ROOT="$EXPECTED_WORKTREE_ROOT"
+    if ! worktree_is_unregistered "$WORKTREE_ROOT"; then
+        echo "Cannot clean up a directory registered to another worktree or whose Git registration cannot be verified: $WORKTREE_ROOT" >&2
+        exit 1
+    fi
+    echo "No registered worktree found; cleaning up remaining files: $WORKTREE_ROOT"
 fi
 if [[ "$WORKTREE_ROOT" == "$MAIN_WORKTREE" ]]; then
     echo "Refusing to remove the main worktree: $WORKTREE_ROOT" >&2
     exit 1
 fi
 
-if [[ ! -f "$WORKTREE_ROOT/.git" ]]; then
-    echo "Linked worktree metadata is missing: $WORKTREE_ROOT" >&2
-    exit 1
-fi
-if [[ -n "$COMMIT_ID" ]]; then
-    if [[ "$(git -C "$WORKTREE_ROOT" rev-parse HEAD)" != "$COMMIT_ID" \
-        || -n "$(git -C "$WORKTREE_ROOT" branch --show-current)" ]]; then
-        echo "Worktree is not detached at commit $COMMIT_ID: $WORKTREE_ROOT" >&2
+if [[ "$WORKTREE_REGISTERED" == true ]]; then
+    if [[ ! -f "$WORKTREE_ROOT/.git" ]]; then
+        echo "Linked worktree metadata is missing: $WORKTREE_ROOT" >&2
         exit 1
     fi
-elif [[ "$(git -C "$WORKTREE_ROOT" branch --show-current)" != "$BRANCH_NAME" ]]; then
-    echo "Worktree is no longer on branch $BRANCH_NAME: $WORKTREE_ROOT" >&2
-    exit 1
-fi
-WORKTREE_STATUS="$(git -C "$WORKTREE_ROOT" status --short --untracked-files=all)"
-if [[ -n "$WORKTREE_STATUS" ]]; then
-    printf 'Worktree has uncommitted or untracked files:\n%s\n' "$WORKTREE_STATUS" >&2
-    echo "Commit, stash, or remove them before closing the worktree." >&2
-    exit 1
+    if [[ -n "$COMMIT_ID" ]]; then
+        if [[ "$(git -C "$WORKTREE_ROOT" rev-parse HEAD)" != "$COMMIT_ID" \
+            || -n "$(git -C "$WORKTREE_ROOT" branch --show-current)" ]]; then
+            echo "Worktree is not detached at commit $COMMIT_ID: $WORKTREE_ROOT" >&2
+            exit 1
+        fi
+    elif [[ "$(git -C "$WORKTREE_ROOT" branch --show-current)" != "$BRANCH_NAME" ]]; then
+        echo "Worktree is no longer on branch $BRANCH_NAME: $WORKTREE_ROOT" >&2
+        exit 1
+    fi
+    WORKTREE_STATUS="$(git -C "$WORKTREE_ROOT" status --short --untracked-files=all)"
+    if [[ -n "$WORKTREE_STATUS" ]]; then
+        printf 'Worktree has uncommitted or untracked files:\n%s\n' "$WORKTREE_STATUS" >&2
+        echo "Commit, stash, or remove them before closing the worktree." >&2
+        exit 1
+    fi
 fi
 
-if [[ -z "$COMMIT_ID" ]]; then
+LOCAL_BRANCH_EXISTS=false
+if [[ -z "$COMMIT_ID" ]] && git show-ref --verify --quiet "refs/heads/$BRANCH_NAME"; then
+    LOCAL_BRANCH_EXISTS=true
     # Match git branch -d: require commits to be reachable from the upstream or HEAD.
     MERGE_TARGET="$(git rev-parse --verify --quiet "$BRANCH_NAME@{upstream}" || git rev-parse HEAD)"
     if ! git merge-base --is-ancestor "refs/heads/$BRANCH_NAME" "$MERGE_TARGET"; then
@@ -140,7 +161,7 @@ NODE
 echo "The following will be removed:"
 if [[ -n "$COMMIT_ID" ]]; then
     printf '  Worktree at commit (detached HEAD): %s\n' "$COMMIT_ID"
-else
+elif [[ "$LOCAL_BRANCH_EXISTS" == true ]]; then
     printf '  Local branch: %s\n' "$BRANCH_NAME"
 fi
 printf '  Worktree directory: %s\n' "$WORKTREE_ROOT"
@@ -152,25 +173,29 @@ if ! IFS= read -r -p "Type Y to confirm removal: " CONFIRM || [[ "$CONFIRM" != "
 fi
 
 echo "Removing worktree: $WORKTREE_ROOT"
-if ! git worktree remove "$WORKTREE_ROOT"; then
-    # Git may have removed its metadata before a build recreated empty directories.
-    if [[ -e "$WORKTREE_ROOT/.git" ]]; then
-        exit 1
+if [[ "$WORKTREE_REGISTERED" == true ]]; then
+    if ! git worktree remove "$WORKTREE_ROOT"; then
+        echo "Git removal failed; checking registration before cleaning up remaining files."
     fi
-    for attempt in 1 2 3; do
-        if [[ ! -d "$WORKTREE_ROOT" ]]; then break; fi
-        sleep 1
-        find "$WORKTREE_ROOT" -depth -type d -exec rmdir {} \; 2>/dev/null || true
-    done
-    if [[ -e "$WORKTREE_ROOT" ]]; then
-        echo "Files remain in $WORKTREE_ROOT; inspect them before removing the directory." >&2
-        exit 1
-    fi
+fi
+if ! worktree_is_unregistered "$WORKTREE_ROOT"; then
+    echo "Cannot remove remaining files while the worktree is registered or its Git registration cannot be verified: $WORKTREE_ROOT" >&2
+    exit 1
+fi
+# Build tools may leave or recreate files after Git removes the worktree metadata.
+for attempt in 1 2 3; do
+    if [[ ! -e "$WORKTREE_ROOT" && ! -L "$WORKTREE_ROOT" ]]; then break; fi
+    if (( attempt > 1 )); then sleep 1; fi
+    rm -rf -- "$WORKTREE_ROOT" || true
+done
+if [[ -e "$WORKTREE_ROOT" || -L "$WORKTREE_ROOT" ]]; then
+    echo "Could not remove the remaining worktree directory: $WORKTREE_ROOT" >&2
+    exit 1
 fi
 echo "Removed worktree: $WORKTREE_ROOT"
 
 manage_workspace remove
-if [[ -z "$COMMIT_ID" ]]; then
+if [[ "$LOCAL_BRANCH_EXISTS" == true ]]; then
     echo "Removing local branch: $BRANCH_NAME"
     git branch -d -- "$BRANCH_NAME"
 fi

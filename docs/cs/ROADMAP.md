@@ -41,8 +41,8 @@ Vysvětlení použitých piktogramů:
 - [x] Přidat možnost autorizace přes `OAuth2`, možnost použít `mock` server https://github.com/navikt/mock-oauth2-server nebo https://github.com/patientsknowbest/fake-oauth2-server (#56665).
 - [x] +Přidat podporu přihlašování se do administrace přes [PassKeys](https://passkeys.dev/docs/tools-libraries/libraries/) (#58369).
 - [x] Volitelná pole – přidat možnost nastavit omezení délky textu pro pole typu `textarea`, podobně jako je to aktuálně možné u pole typu `text`.
-- [ ] Datatabulka – upravit pole typu `Date` a `Datetime` tak, aby správně fungovala validace `not null`.
-- [ ] Datatabulka – upravit způsob `mergovania` upravené entity tak, aby bylo možné vynulovat hodnoty typu `number`.
+- [x] Datatabulka – upravit pole typu `Date` a `Datetime` tak, aby správně fungovala validace `not null` (#58770).
+- [x] Datatabulka – upravit způsob `mergovania` upravené entity tak, aby bylo možné vynulovat hodnoty typu `number` (#58770).
 - [x] +Přesměrování - rozlišit v databázi automaticky vytvořené přesměrování (hledej proměnnou `editorDisableAutomaticRedirect`) od manuálně vytvořeného, ​​možnost podle toho filtrovat v UI (zobrazit jen manuálně vytvořené přesměrování) (#58625).
 - [x] +Přesměrování - doplnit funkci čištění přesměrování - smaže staré přesměrování (bylo původně `aaa-bbb` a pak vzniklo `aaa-ccc` takže `aaa-bbb` nemá smysl = smaže se) a zkontroluje cyklické přesměrování ve kterém smaže poslední krok. Také optimalizovat přesměrování `aaa-bbb-ccc` na `aaa-ccc` (#58629).
 - [x] +Galerie - přidat možnost nastavit jiný způsob změny velikosti na velký obrázek. na malý obrázek se aplikuje Oříznout na míru (chtějí mít čtverec) a na velký přesná šířka (zachová poměr stran). Ve výchozím nastavení bude hodnota NULL=stejně jako pro malý obrázek (#58633).
@@ -57,10 +57,11 @@ Vysvětlení použitých piktogramů:
 - [ ] Automatický promazávat `temp` soubory, které se mohou hromadit.
 - [x] +Administrace - odstranit závislost na `Vue.js` a nahradit interní komponenty nativními webovými komponenty (#58722).
 - [ ] +Upravit načítání admin části tak, aby se vyměnilo přes volání REST služby pouze vnitřek stránky, nikoli kompletní reload HTML kódu.
-- [ ] +Vylepšit úvodní stránku administrace - dynamické bloky, možnost vlastního nastavení co se zobrazí, užitečné informace a bloky.
+- [x] +Vylepšit úvodní stránku administrace - dynamické bloky, možnost vlastního nastavení co se zobrazí, užitečné informace a bloky (#332).
 - [ ] +Filtr v aplikaci novinky neumožňuje zadat DOC ID více stránek kdyby chtěli podle filtru “DOC_ID rovná se” zvolit více stránek
 filtr bere pouze první hodnotu. Dodělat tedy možnost `IN` pro možnost zadání více hodnot (#JT-2139).
 - [ ] +AI - upravit vytváření `chunk` tak, aby na začátku/konci nebyla nesmyslná slova, oříznout od první mezery po poslední mezeru.
+- [ ] +Webové stránky - upravit výchozí zobrazení pro nového uživatele - zobrazovat ID, pořadí a uspořádat vzestupně.
 
 ## 2025
 

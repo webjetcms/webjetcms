@@ -4,9 +4,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import org.json.JSONArray;
@@ -607,7 +610,6 @@ public class Tools
 		Request request;
 
 		basePath = Tools.natUrl(basePath);
-		//WebJETProxySelector.setProxyForHttpClient(client, basePath);
 		Logger.debug(Tools.class, "downloadUrl: basePath="+basePath);
 		String name;
 		String value;
@@ -667,8 +669,9 @@ public class Tools
 		request.setHeader("Content-Type", contentType);
 		Logger.println(Tools.class,"header: Content-Type: " + contentType);
 
-		try {
-			Response response = request.execute();
+		//.createSystem() will use proxy settings from the system properties
+		try (CloseableHttpClient client = HttpClients.createSystem()) {
+			Response response = Executor.newInstance(client).execute(request);
 			HttpResponse httpResponse = response.returnResponse();
 
 			// write out the response headers
@@ -3199,14 +3202,18 @@ public class Tools
 	}
 
 	/**
-	 * Returns Spring ApplicationContext to access spring beans from not spring classes
-	 * @return
+	 * Returns the request's Spring context, falling back to the servlet application's context
+	 * for background jobs whose request bean has no Spring context.
+	 * @return the available Spring context, or {@code null} when no context is registered
 	 */
 	public static ApplicationContext getSpringContext() {
 		RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
 		ApplicationContext context;
-      	if (requestBean == null) context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
-		else context = requestBean.getSpringContext();
+		if (requestBean == null || requestBean.getSpringContext() == null) {
+			context = (ApplicationContext) Constants.getServletContext().getAttribute("springContext");
+		} else {
+			context = requestBean.getSpringContext();
+		}
 
 		return context;
 	}

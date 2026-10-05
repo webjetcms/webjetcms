@@ -1,11 +1,24 @@
 export function typeWysiwyg() {
 
-    var DIRTY_CHECK_DELAY_MS = 5000;
     var FOCUS_READY_TIMEOUT_MS = 10000;
     var FOCUS_RETRY_DELAY_MS = 50;
 
     function getThisField(conf) { //NOSONAR
         return conf.EDITOR.field(conf.data);
+    }
+
+    /** Captures normalized HTML only for the current, fully initialized editor session. */
+    function captureDirtySnapshot(conf, request) {
+        if (!conf.editorOpen || conf.dirtyResetRequest !== request || conf.dirtyDataOriginal !== undefined) return;
+        if (conf.wjeditor == null) return;
+
+        if (conf.wjeditor.editingMode === 'pageBuilder') {
+            const iframe = $("#"+conf._id+"-pageBuilderIframe");
+            if (iframe[0]?.contentWindow?.pageBuilderReady !== true ||
+                iframe[0].contentDocument === iframe.data('pageBuilderPreviousDocument')) return;
+        }
+
+        conf.dirtyDataOriginal = getThisField(conf).get(conf);
     }
 
     /**
@@ -108,6 +121,8 @@ export function typeWysiwyg() {
                     return;
                 }
 
+                conf.editorOpen = true;
+
                 //console.log("data field: ", EDITOR.field( 'data' ).val());
                 if (conf.wjeditor==null) {
                     window.createDatatablesCkEditor().then(module => {
@@ -164,11 +179,24 @@ export function typeWysiwyg() {
                     //nastav otvorene docid do inputu
                     if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != "undefined") window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
                 }
+                getThisField(conf).resetDirty(conf);
+            });
+
+            window.addEventListener('WJ.PageBuilder.ready', function(event) {
+                if (conf.wjeditor?.editingMode !== 'pageBuilder') return;
+                const iframe = document.getElementById(id+"-pageBuilderIframe");
+                if (event.detail.document !== iframe?.contentDocument) return;
+                captureDirtySnapshot(conf, conf.dirtyResetRequest);
             });
 
             EDITOR.on( 'close', function ( e, type ) {
                 //console.log("EDITOR.onClose");
-                $("#"+id+"-pageBuilderIframe").attr("src", "about:blank");
+                conf.editorOpen = false;
+                conf.dirtyResetRequest = null;
+                conf.dirtyDataOriginal = undefined;
+                const iframe = $("#"+id+"-pageBuilderIframe");
+                iframe.data('pageBuilderPreviousDocument', iframe[0]?.contentDocument);
+                iframe.attr("src", "about:blank");
             });
 
             if (typeof window.switchEditorType == "undefined") {
@@ -285,15 +313,76 @@ export function typeWysiwyg() {
         isDirty: function ( conf ) {
             try
             {
-                var now = Date.now();
-                var timeDiff = now - conf.editorLastResetDirty;
-                if (typeof conf.editorLastResetDirty === "undefined" || conf.editorLastResetDirty == null || (timeDiff < DIRTY_CHECK_DELAY_MS))
+                if (conf.dirtyDataOriginal === undefined)
                 {
                     return false;
                 }
                 var currentData = getThisField(conf).get(conf);
                 if (currentData != conf.dirtyDataOriginal) {
-                    //console.log("isDirty check, currentData=", currentData, "dirtyDataOriginal=", conf.dirtyDataOriginal);
+                    try {
+                        // Keep carriage returns so changes in line endings remain visible.
+                        const originalLines = String(conf.dirtyDataOriginal).split("\n");
+                        const currentLines = String(currentData).split("\n");
+                        let firstChangedLine = 0;
+                        while (firstChangedLine < Math.min(originalLines.length, currentLines.length) &&
+                            originalLines[firstChangedLine] === currentLines[firstChangedLine]) {
+                            firstChangedLine++;
+                        }
+                        const contextStart = Math.max(0, firstChangedLine - 1);
+                        const originalContext = originalLines.slice(contextStart, firstChangedLine + 2).join("\n");
+                        const currentContext = currentLines.slice(contextStart, firstChangedLine + 2).join("\n");
+                        const originalLine = originalLines[firstChangedLine] ?? "";
+                        const currentLine = currentLines[firstChangedLine] ?? "";
+                        let firstChangedCharacter = 0;
+                        while (firstChangedCharacter < Math.min(originalLine.length, currentLine.length) &&
+                            originalLine[firstChangedCharacter] === currentLine[firstChangedCharacter]) {
+                            firstChangedCharacter++;
+                        }
+                        const previewStart = Math.max(0, firstChangedCharacter - 15);
+                        const previewEnd = firstChangedCharacter + 20;
+                        // Quote snippets so spaces, tabs and carriage returns can be inspected in the console heading.
+                        const originalPreview = originalLines[firstChangedLine] === undefined ? "(end of content)" : JSON.stringify(originalLine.slice(previewStart, previewEnd));
+                        const currentPreview = currentLines[firstChangedLine] === undefined ? "(end of content)" : JSON.stringify(currentLine.slice(previewStart, previewEnd));
+                        const differencePreview = `${originalPreview} VS ${currentPreview}`;
+
+                        window.top.lastDirty = {
+                            field: conf.data,
+                            original: conf.dirtyDataOriginal,
+                            current: currentData,
+                            summary: `Found difference on line ${firstChangedLine + 1}: ${differencePreview}\n\nOriginal (from line ${contextStart + 1}):\n${originalContext}\n\nChanged (from line ${contextStart + 1}):\n${currentContext}`,
+                            firstDifference: {
+                                line: firstChangedLine + 1,
+                                contextStartLine: contextStart + 1,
+                                original: originalContext,
+                                current: currentContext
+                            }
+                        };
+
+                        // TEMPORARY: customer diagnostics. Log each new difference without flooding the console.
+                        const rows = [];
+                        const contextEnd = Math.min(firstChangedLine + 2, Math.max(originalLines.length, currentLines.length));
+                        for (let index = contextStart; index < contextEnd; index++) {
+                            rows.push({
+                                Line: index + 1,
+                                Change: index === firstChangedLine ? ">>> FIRST DIFFERENCE" : "",
+                                Original: originalLines[index] ?? "(end of content)",
+                                Changed: currentLines[index] ?? "(end of content)"
+                            });
+                        }
+
+                        console.groupCollapsed("%c[WebJET isDirty]%c %s: first difference on line %d: %s",
+                            "background: #fff3cd; color: #664d03; padding: 2px 6px; border-radius: 3px; font-weight: bold;",
+                            "font-weight: bold;", conf.data, firstChangedLine + 1, differencePreview);
+                        console.table(rows);
+                        console.groupCollapsed("Full HTML");
+                        console.log("%cOriginal HTML", "color: #b42318; font-weight: bold;", conf.dirtyDataOriginal);
+                        console.log("%cChanged HTML", "color: #067647; font-weight: bold;", currentData);
+                        console.groupEnd();
+                        console.log("Debug snapshot (window.top.lastDirty):", window.top.lastDirty);
+                        console.groupEnd();
+                    } catch (e) {
+                        // Debug recording must not affect dirty detection when the top window is inaccessible.
+                    }
                     return true;
                 }
             }
@@ -302,12 +391,13 @@ export function typeWysiwyg() {
         },
 
         resetDirty: function ( conf ) {
-            conf.editorLastResetDirty = Date.now();
-            //get current data to compare
-            setTimeout(() => {
-                conf.dirtyDataOriginal = getThisField(conf).get(conf);
-                //console.log("resetDirty called, dirtyDataOriginal=", conf.dirtyDataOriginal);
-            }, DIRTY_CHECK_DELAY_MS);
+            const request = {};
+            conf.dirtyResetRequest = request;
+            conf.dirtyDataOriginal = undefined;
+            // Read the readiness chain after the synchronous DTE open handlers have queued their writes.
+            Promise.resolve().then(() => conf.wjeditorReadyPromise).then(() => {
+                captureDirtySnapshot(conf, request);
+            }).catch(error => console.error("Error capturing editor dirty snapshot:", error));
         },
 
         /**

@@ -263,6 +263,65 @@ test("resolves the default audio artifact directly below docs/feature-video", ()
   );
 });
 
+test("sends explicit v4 voice settings and language enforcement in every audio part", async t => {
+  t.mock.method(console, "log", () => {});
+  await withOutputDirectory(async outputDirectory => {
+    process.env.ELEVENLABS_API_KEY = "test-api-key";
+    const plan = createLongPlan();
+    plan.shots.push({ ...plan.shots[0], id: "fourth" });
+    const requests = [];
+    global.fetch = mockGenerationFetch(async (url, options) => {
+      requests.push({ url, body: JSON.parse(options.body) });
+      return successfulResponse();
+    });
+    const helper = new AudioHelper({ generationEnabled: true, featureVideoDirectory: outputDirectory });
+    registerAudioTest(helper, createAudioTest("/project/video/v4.js"));
+    await helper.generateAudio(plan, {
+      modelId: "eleven_v4",
+      voiceId: "Zai7B4Aol2bJtneyq0L1",
+      languageCode: " SK ",
+      voiceSettings: { stability: 0.3, similarityBoost: 0.5 }
+    });
+    assert.equal(requests.length, 2);
+    for (const request of requests) {
+      assert.equal(new URL(request.url).pathname, "/v1/text-to-speech/Zai7B4Aol2bJtneyq0L1");
+      assert.deepEqual(request.body, {
+        text: request.body.text,
+        model_id: "eleven_v4",
+        language_code: "sk",
+        voice_settings: { stability: 0.3, similarity_boost: 0.5 }
+      });
+    }
+    assert.equal(requests.map(request => request.body.text).join("\n\n"), plan.shots.map(shot => shot["text-sk"]).join("\n\n"));
+  });
+});
+
+test("rejects invalid voice and language overrides before network calls or output writes", async () => {
+  await withOutputDirectory(async outputDirectory => {
+    process.env.ELEVENLABS_API_KEY = "test-api-key";
+    global.fetch = async () => { throw new Error("Invalid settings must not contact ElevenLabs"); };
+    const invalidOptions = [
+      { voiceSettings: [] }, { voiceSettings: "invalid" },
+      { voiceSettings: { similarity_boost: 0.5 } },
+      { languageCode: "Slovak" }, { languageCode: "" }, { languageCode: 42 }
+    ];
+    for (const field of ["stability", "similarityBoost"]) {
+      for (const value of [-0.1, 1.1, NaN, Infinity, "0.3", null]) {
+        invalidOptions.push({ voiceSettings: { [field]: value } });
+      }
+    }
+    for (const options of invalidOptions) {
+      const helper = new AudioHelper({ generationEnabled: true, featureVideoDirectory: outputDirectory });
+      registerAudioTest(helper, createAudioTest("/project/video/invalid-settings.js"));
+      await assert.rejects(helper.generateAudio("Narration", options), /voiceSettings|languageCode/);
+    }
+    assert.deepEqual(await fs.readdir(outputDirectory), []);
+    assert.deepEqual(getAudioSettings({ voiceSettings: { stability: 0, similarityBoost: 1 } }).voiceSettings,
+      { stability: 0, similarityBoost: 1 });
+    assert.deepEqual(getAudioSettings({ voiceSettings: {} }), getAudioSettings());
+  });
+});
+
 test("generates localized plan narration in shot order without executing inline callbacks", async t => {
   const lines = [];
   t.mock.method(console, "log", line => lines.push(line));

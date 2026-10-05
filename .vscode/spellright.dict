@@ -261,6 +261,7 @@ elfinder
 Elfinder
 elfinderom
 embeddingov
+embeddingového
 embeddingový
 embeddingu
 embeddingy
@@ -352,6 +353,7 @@ implementujúcej
 implementujúcu
 INCLUDE
 indexovacej
+Indexovací
 indexovacia
 Info
 inicializovanie
@@ -412,6 +414,7 @@ kontroléra
 kontroléri
 kontrolérov
 Korbel
+košíku
 krížikom
 krokovania
 kurzívnym
@@ -507,6 +510,7 @@ NTLM
 OAuth
 obalovať
 Objects
+Obsadenosť
 oddeľovací
 oddeľovač
 odfotením
@@ -568,6 +572,7 @@ podadresár
 podadresáre
 podadresárov
 podčiarkovník
+podčiarkovníkom
 podfarbujúci
 podkategóriu
 podnadpis
@@ -672,6 +677,7 @@ responzívne
 responzívneho
 responzívnosti
 responzívnu
+responzívny
 restové
 Reštartnite
 reštartovania
@@ -685,6 +691,7 @@ rolovateľné
 ROW
 rozbaľovacej
 saltovania
+sanitizácia
 screenshotov
 Script
 scroll
@@ -845,8 +852,16 @@ webjetdatatables
 webjetjs
 webpack
 webpages
+widgete
+widgetmi
+widgetoch
+widgetov
+widgetový
+widgetu
+Widgety
 Within
 WJ
+worktree
 WSL
 WYSIWYG
 XLS
@@ -871,6 +886,8 @@ zaheslovať
 zaheslujete
 zahlcuje
 zahltení
+zaindexovaný
+zaindexovať
 zakomentovaním
 zakomentovať
 zalomeným

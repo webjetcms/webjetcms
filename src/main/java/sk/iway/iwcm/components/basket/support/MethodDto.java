@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.Data;
-import sk.iway.iwcm.common.BasketTools;
 
 /**
  * Data transfer object for delivery/payment methods
@@ -23,6 +22,6 @@ public class MethodDto {
     }
 
     public BigDecimal getLocalPriceVat(HttpServletRequest request) {
-        return BasketTools.convertToBasketDisplayCurrency(getPriceVat(), request);
+        return SupportService.getLocalPriceVat(getPriceVat(), request);
     }
 }

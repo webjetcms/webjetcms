@@ -13,6 +13,7 @@ import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.ThymeleafEvent;
+import sk.iway.iwcm.admin.upload.FileArchiveBulkUploadOptions;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.elfinder.DirTreeItem;
@@ -20,7 +21,7 @@ import sk.iway.iwcm.system.spring.events.WebjetEvent;
 
 /**
  * Thymeleaf event listener for the file archive admin page.
- * Populates the model with accepted file extensions and the initial
+ * Populates the model with accepted file extensions, bulk-upload fields, and the initial
  * directory tree JSON used for pre-expanding the folder tree on page load.
  */
 @Component
@@ -28,7 +29,7 @@ public class FileArchiveListener {
 
     /**
      * Handles the Thymeleaf rendering event for the file-archive index page.
-     * Sets model attributes: accepted file extensions and pre-expanded tree JSON
+     * Sets model attributes: accepted file extensions, bulk-upload fields, and pre-expanded tree JSON
      * based on the requested "dir" parameter.
      * @param event - the WebjetEvent wrapping the ThymeleafEvent
      */
@@ -36,6 +37,7 @@ public class FileArchiveListener {
     private void setData(final WebjetEvent<ThymeleafEvent> event) {
         try {
             ModelMap model = event.getSource().getModel();
+            model.addAttribute("fileArchiveBulkUploadFields", FileArchiveBulkUploadOptions.getAllowedFields());
 
             String[] acceptedFiles = Tools.getTokens(Constants.getString("fileArchivAllowExt"), ",");
             model.addAttribute("fileArchiveAcceptedFiles", acceptedFiles);

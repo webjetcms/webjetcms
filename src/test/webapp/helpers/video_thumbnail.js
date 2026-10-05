@@ -24,9 +24,10 @@ function validateVideoTitle(text, style = "glow", fontSize) {
  * @param {string} text Short headline
  * @param {string} [style] One of glow, clean or bold
  * @param {number} [fontSize] Fixed CSS pixel size on the 1280 x 720 layout; omit to fit automatically from 100 down to 36
+ * @param {{fitScene?: boolean}} [options] Fit widescreen scenes or fill the thumbnail height with tall scenes beside a narrower headline
  * @returns {Promise<Buffer>} JPEG smaller than 2 MB
  */
-async function renderVideoTitle(browser, screenshot, text, style = "glow", fontSize) {
+async function renderVideoTitle(browser, screenshot, text, style = "glow", fontSize, options = {}) {
   validateVideoTitle(text, style, fontSize);
   const [font, logo] = await Promise.all([fs.readFile(FONT_PATH), fs.readFile(LOGO_PATH)]);
   // Device emulation isolates this fixed layout from the recording profile's native desktop zoom.
@@ -55,7 +56,13 @@ async function renderVideoTitle(browser, screenshot, text, style = "glow", fontS
       .bold h1 { text-transform: uppercase; text-shadow: 5px 6px 0 #13151b; }
       .bold .accent { background: #fabd00; }
       .bold .scene { border: 5px solid #fff; box-shadow: 12px 14px 0 #13151b; transform: rotate(-6deg); }
-    </style></head><body><main class="${style}">
+      .fit-scene .headline { width: 435px; }
+      .fit-scene .scene { left: 535px; top: 190px; width: 690px; height: auto; transform: rotate(-2deg); }
+      .fit-scene .scene img { height: auto; }
+      .fit-scene .scene.scene-tall { left: 535px; top: 62px; width: 775px; }
+      .fit-scene .scene.scene-portrait { left: 660px; top: 18px; width: 640px; }
+      .clean.fit-scene .scene { transform: none; }
+    </style></head><body><main class="${style}${options.fitScene === true ? " fit-scene" : ""}">
       <div class="brand"><img alt="WebJET CMS" src="data:image/svg+xml;base64,${logo.toString("base64")}"></div><div class="headline"><h1></h1></div>
       <div class="scene"><img alt="Video scene"></div><div class="accent"></div>
     </main></body></html>`);
@@ -63,6 +70,8 @@ async function renderVideoTitle(browser, screenshot, text, style = "glow", fontS
     await page.locator(".scene img").evaluate(async (img, source) => {
       img.src = source;
       await img.decode();
+      img.parentElement.classList.toggle("scene-tall", img.naturalHeight / img.naturalWidth > 0.625);
+      img.parentElement.classList.toggle("scene-portrait", img.naturalHeight > img.naturalWidth);
     }, `data:image/png;base64,${screenshot.toString("base64")}`);
     await page.evaluate(async fontSize => {
       await document.fonts.ready;

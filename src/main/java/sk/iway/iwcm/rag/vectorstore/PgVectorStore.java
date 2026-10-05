@@ -14,11 +14,9 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.database.SimpleQuery;
-import sk.iway.iwcm.rag.pgvector.EmbeddingChunkStatus;
-import sk.iway.iwcm.rag.pgvector.PgvectorJpaConfig;
+import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
@@ -32,6 +30,12 @@ import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 public class PgVectorStore implements VectorStore {
 
     private static final String DIMENSION_PLACEHOLDER = "{DIMENSION_PLACEHOLDER}";
+
+    private String getDataSourceName() {
+        VectorStoreDataSourceResolver.Resolution resolution = VectorStoreDataSourceResolver.resolve();
+        if (resolution.backend() != VectorStoreType.POSTGRESQL) return null;
+        return resolution.dataSourceName();
+    }
 
     private static final String CREATE_EXTENSION_SQL = "CREATE EXTENSION IF NOT EXISTS vector";
 
@@ -129,7 +133,7 @@ public class PgVectorStore implements VectorStore {
     public void updateEmbedding(Long id, float[] embedding) {
         if (id == null || embedding == null || embedding.length == 0) return;
 
-        String dsName = PgvectorJpaConfig.getRagDataSourceName();
+        String dsName = getDataSourceName();
         if (dsName == null) return;
 
         updateEmbeddingRow(dsName, id, embedding);
@@ -162,7 +166,7 @@ public class PgVectorStore implements VectorStore {
             throw new IllegalArgumentException("IDs/embeddings count mismatch: ids=" + ids.size() + ", embeddings=" + embeddings.size());
         }
 
-        String dsName = PgvectorJpaConfig.getRagDataSourceName();
+        String dsName = getDataSourceName();
         if (dsName == null) return;
 
         try {
@@ -248,7 +252,7 @@ public class PgVectorStore implements VectorStore {
 
     @Override
     public List<VectorSearchResult> search(float[] queryEmbedding, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
-        String dsName = PgvectorJpaConfig.getRagDataSourceName();
+        String dsName = getDataSourceName();
         if (dsName == null) return new ArrayList<>();
 
         // Apply configured ef_search parameter if not default
@@ -298,7 +302,7 @@ public class PgVectorStore implements VectorStore {
 
     @Override
     public List<VectorSearchResult> searchFulltext(String query, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
-        String dsName = PgvectorJpaConfig.getRagDataSourceName();
+        String dsName = getDataSourceName();
         if (dsName == null || Tools.isEmpty(query) || limit <= 0) return new ArrayList<>();
 
         List<VectorSearchResult> ftsResults = executeFulltextSearch(dsName, query, embeddingProvider, embeddingModel, entityType, domainId, language, limit, bonusParams);
@@ -442,8 +446,7 @@ public class PgVectorStore implements VectorStore {
 
     @Override
     public boolean isAvailable() {
-        // PgVector is available only when the RAG datasource is enabled and reachable.
-        return PgvectorJpaConfig.isRagAvailable();
+        return Constants.getBoolean("ragSemanticSearchEnabled") && getDataSourceName() != null;
     }
 
     @Override
@@ -452,7 +455,7 @@ public class PgVectorStore implements VectorStore {
         if (isAvailable() == false) return false;
 
         try {
-            new SimpleQuery(PgvectorJpaConfig.getRagDataSourceName()).forInt("SELECT 1 FROM rag_embedding_chunks WHERE embedding_provider IS NOT NULL LIMIT 1");
+            new SimpleQuery(getDataSourceName()).forInt("SELECT 1 FROM rag_embedding_chunks WHERE embedding_provider IS NOT NULL LIMIT 1");
             return true;
         } catch (Exception e) {
             return false;
@@ -461,7 +464,7 @@ public class PgVectorStore implements VectorStore {
 
     @Override
     public boolean initializeSchema() {
-        String dsName = PgvectorJpaConfig.getRagDataSourceName();
+        String dsName = getDataSourceName();
         if (dsName == null) {
             Logger.println(PgVectorStore.class, "RAG datasource not available, skipping schema initialization");
             return false;
@@ -509,11 +512,19 @@ public class PgVectorStore implements VectorStore {
         sq.execute("ALTER TABLE rag_embedding_chunks ADD CONSTRAINT uq_rag_chunk UNIQUE (entity_type, entity_id, chunk_index, embedding_provider, embedding_model)");
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public boolean recreateIndex() {
+        return recreateHnswIndex();
+    }
+
     /**
-     * Recreates HNSW index according to configured distance metric.
+     * Recreates the PostgreSQL HNSW index according to configured distance metric.
+     *
+     * @return true when the index was recreated successfully
      */
     public boolean recreateHnswIndex() {
-        String dsName = PgvectorJpaConfig.getRagDataSourceName();
+        String dsName = getDataSourceName();
         if (dsName == null) {
             Logger.println(PgVectorStore.class, "RAG datasource not available, skipping HNSW index recreation");
             return false;
@@ -570,26 +581,13 @@ public class PgVectorStore implements VectorStore {
         return result;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    @Deprecated(forRemoval = false)
-    public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel) {
-        return getExistingEmbeddingsByHash(
-            entityType,
-            entityId,
-            embeddingProvider,
-            embeddingModel,
-            CloudToolsForCore.getDomainId()
-        );
-    }
-
     /**
      * Fetches existing content hashes and embedding vectors for an entity and domain,
      * allowing the indexer to skip re-embedding unchanged chunks.
      */
     @Override
     public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel, int domainId) {
-        String dsName = PgvectorJpaConfig.getRagDataSourceName();
+        String dsName = getDataSourceName();
         if (dsName == null) return new java.util.HashMap<>();
 
         try {
@@ -621,7 +619,7 @@ public class PgVectorStore implements VectorStore {
             return false;
         }
 
-        String dsName = PgvectorJpaConfig.getRagDataSourceName();
+        String dsName = getDataSourceName();
         if (dsName == null) {
             Logger.println(PgVectorStore.class, "RAG datasource not available, skipping dimension reset");
             return false;

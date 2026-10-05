@@ -2221,6 +2221,9 @@ export class DatatablesCkEditor {
 
 			allowedContent: true,
 
+			// Dialog fields are updated programmatically, rather prevent confirm
+			dialog_noConfirmCancel: true,
+
 			floatSpacePinnedOffsetY: 50,
 
 			customConfig: configLink,
@@ -2275,10 +2278,12 @@ export class DatatablesCkEditor {
 				{
 					//console.log("getData, e=", e);
 					var data = e.editor.getData(true);
-					data = data.replace(/<article>/gi, '');
-					data = data.replace(/<\/article>/gi, '');
-					data = data.replace(/&lt;article&gt;/gi, '');
-					data = data.replace(/&lt;\/article&gt;/gi, '');
+					if (e.editor.mode !== "source") {
+						data = data.replace(/<article>/gi, '');
+						data = data.replace(/<\/article>/gi, '');
+						data = data.replace(/&lt;article&gt;/gi, '');
+						data = data.replace(/&lt;\/article&gt;/gi, '');
+					}
 					e.data.dataValue = data;
 					//console.log("Vysledne GET data=", data);
 				},
@@ -2292,9 +2297,11 @@ export class DatatablesCkEditor {
 					}
 					var data = e.data.dataValue;
 					if (data == null) data = "";
-					data = data.replace(/(!INCLUDE\((.*?)\)!)/gi, '<article>$1</article>');
-					data = data.replace(/<article><article>/gi, '<article>');
-					data = data.replace(/<\/article><\/article>/gi, '</article>');
+					if (e.editor.mode !== "source") {
+						data = data.replace(/(!INCLUDE\((.*?)\)!)/gi, '<article>$1</article>');
+						data = data.replace(/<article><article>/gi, '<article>');
+						data = data.replace(/<\/article><\/article>/gi, '</article>');
+					}
 					e.data.dataValue = data;
 					//console.log("Vysledne data=", data);
 				},
@@ -2431,11 +2438,11 @@ export class DatatablesCkEditor {
 				setTimeout(() => {
 					//toto musi byt posledne, inak sa zle nacitaval obsah stranky
 					try {
-						this.setEditingMode(json);
+						resolve(this.setEditingMode(json));
 					} catch (error) {
 						console.error("Error setting CKEditor editing mode:", error);
+						resolve();
 					}
-					resolve();
 				}, 100);
 			});
 		}
@@ -2536,18 +2543,13 @@ export class DatatablesCkEditor {
 		return htmlCode;
 	}
 
-	pbInsertContent(html, mode=null, final=false) {
+	pbInsertContent(html, mode=null, final=false, scrollToBottom=true) {
+		if (html == null) return;
+
 		//console.log("html=", html, mode+" to PageBuilder editors", "markPbElements=", markPbElements);
 
 		//if we are appending content we must wait for final version, otherwise we would append content multiple times
 		if ("append" === mode && final===false) return;
-
-		if (html.indexOf("<section")==-1)
-        {
-            //console.log("HTML kod neobsahuje ziadnu section, pridavam, html=", html);
-            if ("<p>&nbsp;</p>"==html) html = "<p>Text</p>";
-            html = "<section><div class=\"container\"><div class=\"row\"><div class=\"col-md-12\">"+html+"</div></div></div></section>";
-        }
 
 		//let options = self.EDITOR.field(aiCol.to).s.opts;
 		let fieldId = this.options.fieldid;
@@ -2555,23 +2557,27 @@ export class DatatablesCkEditor {
 		pbIframe.$("[data-wjapp='pageBuilder']").each(function(index) {
 			if ("doc_data" != $(this).data("wjappfield")) return;
 
-			const $container = $(this);
+			const $container = pbIframe.$(this);
+			const pageBuilder = $container.data('plugin_ninjaPageBuilder');
+			const $content = pbIframe.$('<div>').html(html);
+			if (!$content.find('section, '+pageBuilder.grid.section).length) {
+				if ("<p>&nbsp;</p>" === html) $content.html("<p>Text</p>");
+				$content.wrapInner('<section><div class="container"><div class="row"><div class="col-md-12"></div></div></div></section>');
+			}
 
 			if ("replace" === mode || "edit" === mode) {
-				//remove all section elements, in edit mode we expect to send all data and return whole new HTML code
-				$container.children('section').remove();
-				//remove all custom styles
-				$container.children('style').remove();
+				pageBuilder.disable_after_esc_pressed(true);
+				if (pageBuilder.ui && pageBuilder.ui.inserting) pageBuilder.set_workbench_insertion(false);
+				pageBuilder.select_workbench_element(null);
+				pageBuilder.destroy_ckeditor_instances($container);
 			}
-			const $lastSection = $container.children('section').last();
-			if ($lastSection.length > 0) {
-				$lastSection.after(html);
-			} else {
-				// if there are no sections yet, just prepend to container
-				$container.prepend(html);
-			}
-			//scroll window to bottom
-			pbIframe.scrollTo(0, pbIframe.document.body.scrollHeight+200);
+			const $chrome = $container.children([
+				pageBuilder.tagc.modal, pageBuilder.tagc.library, pageBuilder.tagc.notify, pageBuilder.tagc.empty_placeholder_wrapper
+			].join(', ')).detach();
+			if ("replace" === mode || "edit" === mode) $container.empty();
+			$container.append($content.contents()).append($chrome);
+			// Mode changes start at the top; generated content keeps scrolling to the bottom.
+			pbIframe.scrollTo(0, scrollToBottom ? pbIframe.document.body.scrollHeight+200 : 0);
 		});
 		//reinitialize pb blocks
 		if (final===true) {
@@ -2625,6 +2631,8 @@ export class DatatablesCkEditor {
 
 		if ("pageBuilder"===this.editingMode) {
 			isPageBuilder = true;
+			// The previous iframe document can still be accessible while the next page is loading.
+			pageBuilderIframe.data('pageBuilderPreviousDocument', pageBuilderIframe[0].contentDocument);
 			pageBuilderIframe.attr("src", json.editorFields.editingModeLink);
 
 			var editorTypeForced = WJ.getAdminSetting("editorTypeForced");
@@ -2659,7 +2667,7 @@ export class DatatablesCkEditor {
 			}
 		}
 
-		this.switchEditingMode(this.editingMode, false, json.data);
+		return this.switchEditingMode(this.editingMode, false, json.data);
 	}
 
 	/**
@@ -2675,6 +2683,12 @@ export class DatatablesCkEditor {
 		let pageBuilderElement = $("#"+fieldId+"-trPageBuilder");
 		let editorTypeSelector = $("#"+fieldId+"-editorTypeSelector");
 		let oldEditingMode = this.editingMode;
+		const ck = this.ckEditorInstance;
+		const setMode = mode => new Promise(resolve => {
+			if (ck.mode === mode) resolve();
+			else ck.setMode(mode, resolve);
+		});
+		let modeReady = Promise.resolve();
 
 		var data = null;
 		if (userChange === true) {
@@ -2687,7 +2701,7 @@ export class DatatablesCkEditor {
 			ckEditorElement.hide();
 			pageBuilderElement.show();
 			//prevencia pred zbytocnym loadingom HTML objektov
-			this.ckEditorInstance.setMode('source');
+			modeReady = setMode('source');
 
 			//nastav select na korektnu hodnotu
 			if (pageBuilderElement.find("iframe").length>0 && pageBuilderElement.find("iframe")[0].contentWindow && pageBuilderElement.find("iframe")[0].contentWindow.$) {
@@ -2695,23 +2709,23 @@ export class DatatablesCkEditor {
 			}
 
 			if (data != null) {
-				this.pbInsertContent(data, "replace", true);
+				this.pbInsertContent(data, "replace", true, false);
 			}
 		} else if ("html"===this.editingMode) {
 			ckEditorElement.show();
 			pageBuilderElement.hide();
 			if (setData != null) data = setData;
 			else if (data == null) data = this.ckEditorInstance.getData();
-			var ck = this.ckEditorInstance;
 			if (data != null && "pageBuilder"===oldEditingMode) {
 				ck.setMode('wysiwyg');
 				ck.setData(data);
 			}
-			setTimeout(()=>{
-				//this fix problems with codemirror line gutter
-				if (ck.mode!=="source") ck.setMode('source');
-				ck.setData(data);
-			}, 500);
+			modeReady = new Promise(resolve => {
+				setTimeout(() => {
+					// Preserve the CodeMirror layout delay, but wait for the final content before taking a snapshot.
+					setMode('source').then(() => ck.setData(data, resolve));
+				}, 500);
+			});
 
 			//nastav select na korektnu hodnotu
 			editorTypeSelector.find("select").selectpicker("val", "html");
@@ -2720,17 +2734,15 @@ export class DatatablesCkEditor {
 
 			ckEditorElement.show();
 			pageBuilderElement.hide();
-			this.ckEditorInstance.setMode('wysiwyg');
+			modeReady = setMode('wysiwyg');
 
 			//nastav select na korektnu hodnotu
 			editorTypeSelector.find("select").selectpicker("val", "");
 
 			if (data != null && "pageBuilder"===oldEditingMode) {
-				var ck = this.ckEditorInstance;
-				setTimeout(()=>{
-					//console.log("forcing setData, data=", data);
-					ck.setData(data);
-				}, 500);
+				modeReady = modeReady.then(() => new Promise(resolve => {
+					setTimeout(() => ck.setData(data, resolve), 500);
+				}));
 			}
 		}
 
@@ -2771,6 +2783,7 @@ export class DatatablesCkEditor {
 		setTimeout(() => {
 			this.resizeEditor(this);
 		}, 500);
+		return modeReady;
 	}
 
 	setStyleComboList(sessionCssParsed) {

@@ -184,8 +184,8 @@ Scenario('Revert cronjob', async () => {
     await SL.setCronjob('0', '*/5');
 });
 
-Scenario('Delete archive entity',  ({I}) => {
-    SL.deleteTestFiles();
+Scenario('Delete archive entity', async ({I}) => {
+    await SL.deleteTestFiles();
 });
 
 Scenario('Import', async ({ I, DT, DTE}) => {
@@ -203,10 +203,10 @@ Scenario('Special file upload - Add to version history', async ({ I, DT, DTE }) 
     I.clickCss('button.buttons-select-all');
     SL.editFile(null, null, null, null, 'Pridať do histórie verzií', addToHistoryFourthVersionFileName);
     I.clickCss("button[data-id='DTE_Field_editorFields-saveAfterSelect']");
-    I.seeElement(locate('span').withText('files/archiv/archive_file_test_v_1.pdf  (poradie : 5)'));
-    I.seeElement(locate('span').withText('files/archiv/archive_file_test_v_2.pdf  (poradie : 4)'));
-    I.seeElement(locate('span').withText('files/archiv/archive_file_test_v_3.pdf  (poradie : 3)'));
-    I.click(locate('span').withText('files/archiv/archive_file_test_v_2.pdf  (poradie : 4)'));
+    I.seeElement(locate('span').withText('files/archiv/archive_file_test_v_1.pdf  (Poradie : 5)'));
+    I.seeElement(locate('span').withText('files/archiv/archive_file_test_v_2.pdf  (Poradie : 4)'));
+    I.seeElement(locate('span').withText('files/archiv/archive_file_test_v_3.pdf  (Poradie : 3)'));
+    I.click(locate('span').withText('files/archiv/archive_file_test_v_2.pdf  (Poradie : 4)'));
     DTE.save('fileArchiveDataTable');
 
     // 2. Overenie v datatabuľke
@@ -250,7 +250,7 @@ Scenario('Special file upload - Add to version history', async ({ I, DT, DTE }) 
 });
 
 Scenario('Delete archiv entity (and file using elfinder if neccesary)', async ({I}) => {
-    SL.deleteTestFiles();
+    await SL.deleteTestFiles();
 
     const fileSelector = ".elfinder-cwd-filename[title^='archive_file_test']";
     let wasRemovedByElfinder = await SL.removeFileByElfinder(fileSelector);
@@ -295,7 +295,7 @@ Scenario('Special file upload - Replace current file', async ({ I, DTE, DT }) =>
 Scenario('Delete archiv entity 2 and file using elfinder if neccesary', async ({I}) => {
     const importFileSelector = ".elfinder-cwd-filename[title^='file_archiv_export_aceintegration']";
     await SL.removeFileByElfinder(importFileSelector);
-    SL.deleteTestFiles();
+    await SL.deleteTestFiles();
 
     const fileSelector = ".elfinder-cwd-filename[title^='archive_file_test']";
     let wasRemovedByElfinder = await SL.removeFileByElfinder(fileSelector);

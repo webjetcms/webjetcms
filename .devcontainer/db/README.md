@@ -19,7 +19,7 @@ export WEBJET_DB_PASS="your_password_here"
 
 ## Notes
 
-- MariaDB uses `utf8mb4` charset
+- MariaDB 11.8.9 uses the `utf8mb4` charset and its built-in vector storage for RAG
 - PostgreSQL creates tables in the `webjet_cms` schema
 - Oracle may take longer to start (large image ~4GB) and initialization scripts may need manual execution
 - Persistent volumes are created for each database to maintain data between container restarts
@@ -29,8 +29,10 @@ export WEBJET_DB_PASS="your_password_here"
 ### MariaDB
 
 - **Files**: `docker-compose-mariadb.yml`, `Dockerfile-mariadb`
+- **Version**: 11.8.9
 - **Port**: 13306/3306
 - **VS Code Tasks**: "Docker DB MariaDB Start", "Docker DB MariaDB Stop"
+- **RAG storage**: native MariaDB `VECTOR`; like the PostgreSQL profile, the development pool defines a separate `rag_jpa` datasource pointing to the same database as `iwcm`. Keep this second connection so its driver, URL, and credentials can be changed independently to use another MariaDB or PostgreSQL vector database.
 
 ### Microsoft SQL Server
 

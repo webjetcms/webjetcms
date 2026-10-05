@@ -69,7 +69,7 @@ public class UserGroupsDB extends DB
 				return ((UserGroupsDB) servletContext.getAttribute(Constants.A_USER_GROUPS_DB + serverName));
 			}
 		}
-		return (new UserGroupsDB(servletContext, serverName));
+		return (new UserGroupsDB(servletContext, serverName, force_refresh));
 	}
 
 	/**
@@ -78,7 +78,7 @@ public class UserGroupsDB extends DB
 	 *@param  servletContext  Description of the Parameter
 	 *@param  serverName      Description of the Parameter
 	 */
-	private UserGroupsDB(jakarta.servlet.ServletContext servletContext, String serverName)
+	private UserGroupsDB(jakarta.servlet.ServletContext servletContext, String serverName, boolean force_refresh)
 	{
 		this.serverName = serverName;
 
@@ -87,7 +87,7 @@ public class UserGroupsDB extends DB
 
 		servletContext.setAttribute(Constants.A_USER_GROUPS_DB + serverName, this);
 
-		ClusterDB.addRefresh(UserGroupsDB.class);
+		if (force_refresh) ClusterDB.addRefresh(UserGroupsDB.class);
 	}
 
 	/**

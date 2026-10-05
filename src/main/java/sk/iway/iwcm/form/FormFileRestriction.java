@@ -1,13 +1,14 @@
 package sk.iway.iwcm.form;
 
 import sk.iway.iwcm.FileTools;
-import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.components.upload.XhrFileUploadService;
 import sk.iway.iwcm.gallery.ImageInfo;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.upload.UploadedFile;
 
 /**
@@ -57,7 +58,7 @@ public class FormFileRestriction
 	}
 
 	/**
-	 * Validates file restrictions (size, extension, image dimensions).
+	 * Validates file restrictions (size, extension, filename, image dimensions).
 	 *
 	 * @param fileSize the file size in bytes
 	 * @param fileName the original file name
@@ -67,21 +68,39 @@ public class FormFileRestriction
 	 */
 	private String validateFile(long fileSize, String fileName, ImageInfo imageInfo, Prop prop) {
 		if (prop == null) prop = Prop.getInstance();
+		String safeFileName = ResponseUtils.filter(fileName);
 
 		if (isBelowMaxSize(fileSize) == false) {
 			return prop.getText(
 				"components.forms.file_to_big_err",
-				fileName,
+				safeFileName,
 				FileTools.formatFileSize(fileSize),
 				FileTools.formatFileSizeFromKb(maxSizeInKilobytes)
+			);
+		}
+
+		if (FileTools.isFileTypeForbiddenForUpload(fileName)) {
+			return prop.getText(
+				"components.forms.forbidden_file_extension_err",
+				safeFileName,
+				ResponseUtils.filter(FileTools.getFileExtension(fileName))
+			);
+		}
+
+		String forbiddenSymbol = FileBrowserTools.getForbiddenSymbol(fileName);
+		if (forbiddenSymbol != null) {
+			return prop.getText(
+				"components.forms.bad_file_name_err",
+				safeFileName,
+				ResponseUtils.filter(forbiddenSymbol)
 			);
 		}
 
 		if (hasAllowedExtension(fileName) == false) {
 			return prop.getText(
 				"components.forms.bad_file_extension_err",
-				fileName,
-				allowedExtensions
+				safeFileName,
+				ResponseUtils.filter(allowedExtensions)
 			);
 		}
 
@@ -89,7 +108,7 @@ public class FormFileRestriction
 			if (hasNeededWidthAndHeight(imageInfo) == false) {
 				return prop.getText(
 					"components.forms.image_dimensions_err",
-					fileName,
+					safeFileName,
 					String.valueOf(imageInfo.getWidth()),
 					String.valueOf(imageInfo.getHeight()),
 					String.valueOf(pictureWidth),
@@ -108,11 +127,6 @@ public class FormFileRestriction
 
 	private boolean hasAllowedExtension(String fileName)
 	{
-		//for FormMail we never want to allow unsafe file types
-		Identity fakeUser = new Identity();
-		fakeUser.setAdmin(false);
-		if (FileTools.isFileAllowedForUpload(fakeUser, fileName)==false) return false; //check global file type restrictions first
-
 		if (Tools.isEmpty(allowedExtensions))
 			return true;
 

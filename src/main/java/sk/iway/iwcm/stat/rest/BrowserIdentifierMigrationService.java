@@ -94,7 +94,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         private final String target;
     }
 
-    /** Contains the read-only analysis shown before an administrator starts the migration. */
+    /** Contains read-only migration candidates and identifiers retained by existing statistics. */
     @Getter
     @AllArgsConstructor
     public static class Preview {
@@ -103,6 +103,8 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
         private final List<Mapping> retainedKeys;
         private final List<String> tables;
         private final boolean seoBotsIndexReady;
+        private final List<Mapping> retainedBrowserKeys;
+        private final boolean migrationCompleted;
     }
 
     /** Summarizes how many obsolete statistics keys were deleted or retained during finalization. */
@@ -149,8 +151,8 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
     /**
      * Analyzes the current database without creating identifiers or modifying statistics.
      *
-     * @return actionable mappings, keys retained only for non-browser dimensions, statistics
-     * tables, and whether the unique bot-name index already exists
+     * @return actionable mappings, retained browser and non-browser keys, statistics tables,
+     * migration completion, and whether the unique bot-name index already exists
      * @throws SQLException if identifiers or table metadata cannot be read
      */
     public Preview preview() throws SQLException {
@@ -158,18 +160,23 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
             List<Mapping> botMappings = buildSeoBotMappings(connection, false);
             StatKeyMappingResult keyMappings = buildStatKeyMappings(connection, false);
             List<String> tables = discoverTables(connection);
-            Set<Long> retainedIds = findNonBrowserStatKeys(connection, keyMappings.mappings(), tables);
+            StatKeyUsage usage = findStatKeyUsage(connection, keyMappings.mappings(), tables);
+            boolean migrationCompleted = UpdateDatabase.isAllreadyUpdated(UPDATE_NOTE);
             DatabaseMetaData metadata = connection.getMetaData();
             boolean indexReady = hasUniqueSingleColumnIndex(metadata, findTable(connection, metadata, "seo_bots"), "name");
             return new Preview(botMappings,
-                keyMappings.mappings().stream().filter(mapping -> !retainedIds.contains(mapping.sourceId)).toList(),
-                keyMappings.mappings().stream().filter(mapping -> retainedIds.contains(mapping.sourceId)).toList(),
-                tables, indexReady);
+                keyMappings.mappings().stream().filter(mapping -> !usage.nonBrowserIds().contains(mapping.sourceId) &&
+                    (!migrationCompleted || !usage.browserIds().contains(mapping.sourceId))).toList(),
+                keyMappings.mappings().stream().filter(mapping -> usage.nonBrowserIds().contains(mapping.sourceId)).toList(),
+                tables, indexReady,
+                migrationCompleted ? keyMappings.mappings().stream()
+                    .filter(mapping -> usage.browserIds().contains(mapping.sourceId)).toList() : List.of(),
+                migrationCompleted);
         }
     }
 
     /**
-     * Finds mapping candidates used only as operating systems or their versions, not as browsers.
+     * Classifies mapping candidates referenced as browsers or only as operating systems and their versions.
      * Unreferenced keys remain actionable because finalization can remove them. A browser reference
      * in any table takes precedence over non-browser references, including those found earlier.
      * This read-only analysis never changes migration progress.
@@ -177,13 +184,14 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
      * @param connection connection used to inspect statistics references
      * @param mappings candidates from the shared stat-key dictionary
      * @param tables allowlisted statistics tables to inspect
-     * @return source IDs referenced exclusively by non-browser dimensions
+     * @return browser source IDs and source IDs referenced exclusively by non-browser dimensions
      * @throws SQLException if table columns or references cannot be read
      */
-    Set<Long> findNonBrowserStatKeys(Connection connection, List<Mapping> mappings, List<String> tables) throws SQLException {
+    StatKeyUsage findStatKeyUsage(Connection connection, List<Mapping> mappings, List<String> tables) throws SQLException {
         Set<Long> candidates = new HashSet<>();
         for (Mapping mapping : mappings) candidates.add(mapping.sourceId);
-        Set<Long> retained = new HashSet<>();
+        Set<Long> browserIds = new HashSet<>();
+        Set<Long> nonBrowserIds = new HashSet<>();
         for (String table : tables) {
             if (candidates.isEmpty()) break;
             Set<String> columns = readTableColumns(connection, table);
@@ -198,16 +206,17 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
                         if (rs.wasNull() || !candidates.contains(id)) continue;
                         if ("browser_ua_id".equals(keyColumns.get(column - 1))) {
                             candidates.remove(id);
-                            retained.remove(id);
+                            browserIds.add(id);
+                            nonBrowserIds.remove(id);
                         } else {
-                            retained.add(id);
+                            nonBrowserIds.add(id);
                         }
                     }
                     if (candidates.isEmpty()) break;
                 }
             }
         }
-        return retained;
+        return new StatKeyUsage(browserIds, nonBrowserIds);
     }
 
     /**
@@ -323,7 +332,8 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
     }
 
     /**
-     * Rebuilds and validates canonical mappings, then removes obsolete identifiers transactionally.
+     * Prepares and validates canonical mappings, then removes obsolete identifiers transactionally.
+     * Missing targets are created even when a previously prepared target still has a version suffix.
      *
      * <p>Successful cleanup is audited and followed by a local and cluster-wide statistics cache
      * refresh. Any database or runtime failure is logged and exposed in the shared state.</p>
@@ -336,8 +346,7 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
                 connection.setAutoCommit(false);
                 try {
                     botMappings = buildSeoBotMappings(connection, false);
-                    keyMappings = buildStatKeyMappings(connection, false);
-                    verifyStatKeyTargets(connection, keyMappings.mappings());
+                    keyMappings = buildStatKeyMappings(connection, true);
                     connection.commit();
                 } catch (SQLException ex) {
                     connection.rollback();
@@ -1519,6 +1528,9 @@ public class BrowserIdentifierMigrationService implements DisposableBean {
 
     /** Represents one persisted {@code stat_keys} row during mapping analysis. */
     private record StatKeyRow(long id, String value) {}
+
+    /** Separates browser references from identifiers used exclusively by non-browser dimensions. */
+    record StatKeyUsage(Set<Long> browserIds, Set<Long> nonBrowserIds) {}
 
     /** Holds the stable mappings and table order reused while a migration is paused and resumed. */
     private record MigrationPlan(List<Mapping> keyMappings, Map<Long, Long> botIds, Map<Long, Long> keyIds,

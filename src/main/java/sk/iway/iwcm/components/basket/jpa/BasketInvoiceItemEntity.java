@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.basket.jpa;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Date;
 
 import jakarta.persistence.Column;
@@ -14,12 +15,14 @@ import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Transient;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Getter;
 import lombok.Setter;
+import sk.iway.iwcm.components.basket.rest.PriceRoundingService;
 import sk.iway.iwcm.components.basket.rest.EshopService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -73,13 +76,24 @@ public class BasketInvoiceItemEntity {
 		renderFormat = "dt-format-number--decimal",
 		title = "components.basket.price_without_DPH"
 	)
+	@NotNull
 	private BigDecimal itemPrice;
+
+	/** Calculated for the current request; the existing itemPrice column retains the net unit price. */
+	@Transient
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	private BigDecimal roundedUnitPriceVat;
+
+	@Transient
+	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
+	private BigDecimal lineVatAmount;
 
 	@Column(name="item_qty")
 	@DataTableColumn(
 		inputType = DataTableColumnType.NUMBER,
 		title = "components.basket.count"
 	)
+	@NotNull
 	@Min(1)
 	private Integer itemQty;
 
@@ -123,7 +137,20 @@ public class BasketInvoiceItemEntity {
 	 * @return
 	 */
 	public BigDecimal getItemPriceQty() {
+		if (hasRoundedPrice()) {
+			if (lineVatAmount != null) return getItemPriceVatQty().subtract(lineVatAmount);
+			return getRoundedNetUnitPrice().multiply(BigDecimal.valueOf(getItemQty()));
+		}
 		return BigDecimal.valueOf(getItemQty()).multiply(itemPrice);
+	}
+
+	public boolean hasRoundedPrice() {
+		return roundedUnitPriceVat != null;
+	}
+
+	private BigDecimal getRoundedNetUnitPrice() {
+		return roundedUnitPriceVat.multiply(BigDecimal.valueOf(100))
+			.divide(BigDecimal.valueOf(100L + getItemVat()), Math.max(12, roundedUnitPriceVat.stripTrailingZeros().scale()), RoundingMode.HALF_UP);
 	}
 
 	public int getBasketItemId() {
@@ -135,10 +162,7 @@ public class BasketInvoiceItemEntity {
 	 * @return
 	 */
 	public BigDecimal getItemPriceVat() {
-		//vypocet DPH (aka VAT)
-		BigDecimal vat = BigDecimal.valueOf( getItemVat() );
-		vat = ( vat.divide(BigDecimal.valueOf(100)) ).add(BigDecimal.valueOf(1));
-		return getItemPrice().multiply(vat);
+		return hasRoundedPrice() ? roundedUnitPriceVat : PriceRoundingService.sellingPriceWithVat(getItemPrice(), BigDecimal.valueOf(getItemVat()));
 	}
 
 	public boolean itemAlreadyPurchased() {
@@ -150,7 +174,9 @@ public class BasketInvoiceItemEntity {
 	 * @return
 	 */
 	public BigDecimal getItemPriceVatQty() {
-		return getItemPriceVat().multiply( BigDecimal.valueOf(getItemQty()) );
+		BigDecimal grossUnit = getItemPriceVat();
+		return hasRoundedPrice() || PriceRoundingService.isEnabled()
+			? PriceRoundingService.roundLineGross(grossUnit, getItemQty()) : grossUnit.multiply(BigDecimal.valueOf(getItemQty()));
 	}
 
 	public String getTitle() {
@@ -180,41 +206,41 @@ public class BasketInvoiceItemEntity {
 	 */
 
 	public BigDecimal getLocalPrice(HttpServletRequest request, String currency) {
+		if (hasRoundedPrice()) return getRoundedNetUnitPrice();
 		if (itemAlreadyPurchased())
 			return getItemPrice();
 		return getDoc().getLocalPrice(request, currency);
 	}
 
 	public BigDecimal getLocalPrice(HttpServletRequest request) {
+		if (hasRoundedPrice()) return getRoundedNetUnitPrice();
 		if (itemAlreadyPurchased())
 			return getItemPrice();
 		return getDoc().getLocalPrice(request);
 	}
 
 	public BigDecimal getItemLocalPriceQty(HttpServletRequest request, String currency) {
+		if (hasRoundedPrice()) return getItemPriceQty();
 		return BigDecimal.valueOf(getItemQty()).multiply( getLocalPrice(request, currency) );
 	}
 
 	public BigDecimal getItemLocalPriceQty(HttpServletRequest request) {
+		if (hasRoundedPrice()) return getItemPriceQty();
 		return BigDecimal.valueOf(getItemQty()).multiply( getLocalPrice(request) );
 	}
 
 	public BigDecimal getItemLocalPriceVatQty(HttpServletRequest request, String currency) {
-		BigDecimal vat = BigDecimal.valueOf(getItemVat());
-		vat = (vat.divide(BigDecimal.valueOf(100))).add(BigDecimal.valueOf(1));
-		return vat.multiply(BigDecimal.valueOf(getItemQty())).multiply(getLocalPrice(request, currency));
+		BigDecimal grossUnit = getLocalPriceVat(request, currency);
+		return hasRoundedPrice() || PriceRoundingService.isEnabled()
+			? PriceRoundingService.roundLineGross(grossUnit, getItemQty()) : grossUnit.multiply(BigDecimal.valueOf(getItemQty()));
 	}
 
 	public BigDecimal getLocalPriceVat(HttpServletRequest request, String currency) {
-		BigDecimal vat = BigDecimal.valueOf(getItemVat());
-		vat = (vat.divide(BigDecimal.valueOf(100))).add(BigDecimal.valueOf(1));
-		return vat.multiply( getLocalPrice(request, currency) );
+		return hasRoundedPrice() ? roundedUnitPriceVat : PriceRoundingService.sellingPriceWithVat(getLocalPrice(request, currency), BigDecimal.valueOf(getItemVat()));
 	}
 
 	public BigDecimal getLocalPriceVat(HttpServletRequest request) {
-		BigDecimal vat = BigDecimal.valueOf(getItemVat());
-		vat = (vat.divide(BigDecimal.valueOf(100))).add(BigDecimal.valueOf(1));
-		return vat.multiply( getLocalPrice(request) );
+		return hasRoundedPrice() ? roundedUnitPriceVat : PriceRoundingService.sellingPriceWithVat(getLocalPrice(request), BigDecimal.valueOf(getItemVat()));
 	}
 
 	public BigDecimal getItemLocalPriceVatQty(HttpServletRequest request) {

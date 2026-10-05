@@ -71,7 +71,7 @@ The card contains basic information for inserting a document.
   - the document must not be waiting to be uploaded (it must already be uploaded)
   - it can't be a pattern
 - **Note** - the note will appear on the page when linking to the document
-- **Save document even if it already exists** - by default the manager does not allow adding the same document multiple times (to prevent duplication). If you want to allow this, you must check this option.
+- **Save document even if it already exists** - allows saving a file with the same content as another document already in the manager. For details, see [Duplicate document check](#duplicate-document-check).
 
 !>**Note:** The **Product** / **Category** / **Product Code** fields will later be used to filter the display of files on the page
 
@@ -89,13 +89,23 @@ If you uploaded a file with the wrong format, validation will not save the recor
 
 ![](invalid-file-type.png)
 
-In the background, it checks whether the uploaded file/document already exists in the manager.
+## Check for duplicate documents
 
-!>**Warning:** it is not the document name that is checked, but its **content**. This means that if the documents are the same, renaming them will not help.
+When uploading a file, the manager checks whether a document with **the same content** already exists. It calculates an MD5 checksum (a fingerprint of its content) from the file and compares it with the main documents in the current domain, regardless of their name or folder. The check is performed when inserting a new document, uploading a new version, or replacing the current document.
 
-If an existing document is detected, the save operation will be aborted and an error message will be displayed. A notification will also be displayed listing all documents with the same content. If you want to save this document anyway, you must enable the **Save document even if it already exists** option from the Advanced tab.
+!>**Note:** Simply renaming a file on your computer does not change its contents. For example, if you rename `cennik.pdf` to `cennik-novy.pdf` without changing the contents, the manager will still recognize it as the same file. This is true even if you want to upload it as a new version of the original document.
+
+If the manager finds a match, it will by default abort the save and display a notification with a list of matching documents. The message "Document Manager has detected that the file ... you uploaded already exists in the archive" also means that the file content matches, not just their names.
 
 ![](file-duplicity-notif.png)
+
+The goal of the check is to prevent the same document from being saved in multiple locations. You can link to a single saved document from multiple sites. When updating it, you just need to upload the new version in one location and existing links will point to the current file. This also saves disk space and reduces the risk of a link to an outdated copy remaining on a site.
+
+When alerting, follow the steps below to achieve what you want:
+
+- **Use the same document on the next page** - use a link to an existing document listed in the notification.
+- **Update document** - edit its content, save the changes to the file and use the [Upload new version] action in the manager (#action---upload-new-version). Simply renaming a local file is not enough to create a new version.
+- **Intentionally save the same content again** - on the **Advanced** tab, check the **Save document even if it already exists** option and save again. This option will allow you to bypass the duplicate check even when uploading a new version.
 
 ## Publishing scheduled versions
 
@@ -135,9 +145,13 @@ The Basic tab offers the option to physically **rename the document** (i.e. the 
 
 ### Action - Upload new version
 
-This action will create a new current version of the document. The current version (which we are going to replace) will become the historical version of the document. You just need to upload a new document, as the destination directory is pre-populated (but can be changed). We will get to the **Upload document later** option in the next section.
+This action will create a new current version of the document. The current version (which we are going to replace) will become the historical version of the document. Simply upload the new document, and the destination directory must remain the same as the current document's directory. We will get to the **Upload document later** option in the next section.
+
+This action also performs a [duplicate document check](#duplicate-document-check). If you simply rename the file and its contents remain the same, the manager will by default refuse to save it as a new version.
 
 !>**Warning:** You are only allowed to upload a document of the same type as the current document being replaced.
+
+!>**Warning:** When uploading a new version or replacing a document, it is not possible to change its destination directory. If the configuration variable `fileArchivUseCategoryAsLink` is set to `true`, it is also not possible to change the category to a value that would move the document to a different directory.
 
 Please note that the uploaded document will be automatically physically renamed to the name of the document being replaced after saving. If you want the document to be called differently, you must use the **Physically rename document** option and enter a new name.
 
@@ -174,6 +188,8 @@ All pending versions of a given document are available directly in its **Pending
 This action does exactly what the name suggests. It does not upload a new version of the document, but replaces the current main document with another one, i.e. the file representing the document is replaced. The document can have a different name, but the original document name is automatically preserved.
 
 This action works for **Template** documents as well as documents that are waiting to be uploaded. This way, you can, for example, replace a document that is to be uploaded in the future without having to delete the original document and create a new record.
+
+The target directory of the replaced document must remain unchanged. The same restriction applies to the category if the category is configured to specify the physical directory of the document.
 
 !>**Warning:** You are only allowed to upload a document of the same type as the current document being replaced.
 
@@ -252,6 +268,14 @@ As with deleting patterns, these scheduled versions can be deleted **ONLY** usin
 
 You can also upload files to the currently selected folder directly from the document list. Drag one or more files from your computer onto the document manager page. The upload uses the currently selected folder in the tree structure and the allowed file extensions from the configuration variable `fileArchivAllowExt`.
 
+If `fileArchivUseCategoryAsLink` is set to `true` and you specify a category when bulk uploading, the target folder is derived from that category. Files with the same name in that folder are also checked and the selected **Replace** or **New Version** actions are performed.
+
+Before starting the upload, the same editor as when creating a document is displayed, containing only fields intended for bulk settings. On the **Basic** tab, you can optionally set the same **Valid from** and **Valid to** for all selected files. By enabling the **Upload document later** option, you can also set a future upload date and email addresses for notification.
+
+![](drag-drop-upload-settings-dialog.png)
+
+The **Advanced** tab allows you to set the product, category, product code, display, indexing, priority, master document reference, note, and permission to save a document with existing content for all uploaded files. Empty text fields and unedited radio buttons will leave the default or existing values. The **Cancel** button will cancel the entire pending upload.
+
 During the upload, a progress bar will be displayed for each file and the overall progress. After a successful upload, a separate master document will be created for each file, its name will be pre-filled from the file name without the extension, and the table will be automatically refreshed.
 
 ![](drag-drop-upload-dialog.png)
@@ -263,6 +287,8 @@ If a file with the same real name already exists in the selected folder, recordi
 - **New version** - the new file will be saved as the current version of the document and the original file will be moved to historical versions.
 
 At the bottom of the panel, you can use the same option for all files awaiting a decision at once.
+
+The set validity dates are also used for the **Replace** and **New Version** options. These options reject a category change that would move an existing document to a different physical directory. Scheduled upload of a duplicate file is supported for the **New Version** option, not for immediate replacement. The **Skip** option does not change the existing document.
 
 ![](drag-drop-upload-duplicity-dialog.png)
 

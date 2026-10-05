@@ -6,7 +6,7 @@ meta(name='viewport' content='width=device-width, initial-scale=1, shrink-to-fit
 meta(http-equiv='Content-type' content='text/html;charset=utf-8')
 meta(http-equiv='Content-language' content='sk-SK')
 
-title #{WPD.name}
+title(data-th-with="environment=${layout.environmentBadge}" data-th-text="${environment.visible ? '[' + environment.name + '] WebJET CMS' : 'WebJET CMS'}") #{WPD.name}
 
 meta(name='author' content=`${WPD.author}`)
 meta(name='generator' content=`${WPD.generator}`)
@@ -24,7 +24,6 @@ script.
     window.bootstrapVersion = "[(${layout.getConstant('bootstrapVersion')})]";
     window.csrfToken = '[[${layout.csrfToken}]]';
     window.csrfError = "[[\#{components.csrfError}]]";
-    window.currentUser = [(${layout.userDto})];
     window.propertiesLastModified = [[${layout.propertiesLastModified}]];
     window.pixabayEnabled = [(${layout.getConstant('pixabayEnabled')})];
     window.editorImageAutoTitle = [(${layout.getConstant('editorImageAutoTitle')})];
@@ -44,6 +43,10 @@ script.
         }
         return tokens;
     }
+
+// Serialize user settings as a JavaScript string so stored text cannot close the script element.
+script(data-th-inline="javascript").
+    window.currentUser = JSON.parse(/*[[${layout.userDto}]]*/ "{}");
 
 // Outpul all script files
 -

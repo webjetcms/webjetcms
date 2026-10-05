@@ -13,6 +13,14 @@
 - Microsoft SQL Server - support for versions older than 2012 has been discontinued and the `mssqlUseOldTopQuery` configuration variable has been removed. WebJET CMS requires Microsoft SQL Server 2012 or later, the old paging method using `TOP` is no longer supported (#293).
 - Easy form and multi-step forms - modified display of `tooltip` from the original `i` element to the standard `button`. This meets the accessibility requirement - the tooltip is available with both the mouse and keyboard (#306).
 
+### Home screen
+
+- We have converted the [Home screen](redactor/admin/welcome.md) into a widget system so that you have the data you need to work in one place without having to navigate through individual parts of the administration. You choose the widgets yourself and set the displayed data, size and order according to your needs (#58806).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ### Websites
 
 - Website Trash - added [automatic deletion of old pages and folders](redactor/apps/gdpr/data-deleting.md) from the trash according to the set retention period. Added the ability to delete pages and folders in the trash and in the [Data deletion](sysadmin/data-deleting/README.md) section according to the selected date range. Unified logic for calculating the number and deleting, fixed permanent deletion of the trash folder and empty folders (#271).
@@ -41,15 +49,24 @@
 
 ![](redactor/webpages/working-in-editor/link_dialog-file-archive.png)
 
-- Document Manager files in the `/files/archiv` folder are only available for viewing and selection in the link and image insertion dialogs. Uploading, renaming, deleting, and other editing can only be done via the [Document Manager](redactor/files/file-archive/README.md) (#298,#313).
+- Document Manager files in the `/files/archiv` folder are only available for viewing and selection in the link and image insertion dialogs. Uploading, renaming, deleting and other editing can only be done via [Document Manager](redactor/files/file-archive/README.md) (#298,#313,#317).
+
+![](redactor/webpages/working-in-editor/link_dialog-read-only-archive.png)
+
 - [Photobank](redactor/webpages/working-in-editor/README.md#karta-fotobanka) - when downloading an image from the photobank, it is possible to set the file name. The name is automatically pre-filled and cleaned, the extension is determined by the source image and the existing file is not overwritten. Also added support for selecting the image type and category and the ability to search for video files (#58645).
 
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
 - Page Builder - elements marked with the CSS class [`pb-duplicable`](frontend/page-builder/settings.md#duplicate-element-orange-color) can be moved, duplicated, and deleted within the same parent. Custom or multiple selectors can be set via `pbCustomSettings` (#58750).
+- Page Builder - added the ability to create a [div.pb-section](frontend/page-builder/settings.md), which will get the normal section control. Additionally, `!INCLUDE(...)!` applications inserted directly in a section, or containers, display a preview even though they are inserted outside the normal column (#osk711).
 - Page Builder - modified [editor control](redactor/webpages/pagebuilder.md). Added fixed top bar with path to selected block, **Structure** panel, quick actions and mode for inserting sections, containers and columns directly into the page. Frames can be hidden or shown for the entire block hierarchy. Block library has a compact window with previews, categories and combined search with tags. Style settings use drop-down property groups and indicate the currently edited block (#308).
 
-![](redactor/webpages/pagebuilder-structure.png)
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- Page Builder - improved detection of changes in the HTML code of the page so that the message "You probably have unsaved text in the editor" is not displayed even if you have not actually changed any text on the page (#317).
+- [Page Builder](redactor/webpages/pagebuilder.md) - after clicking on the + in the yellow line in the **Insert Block** window on the **Basic** tab, the **Image** and **Application** options have been added. They will open the corresponding editor dialog and allow you to insert content at the selected location (#339).
 
 ### Headless mode
 
@@ -67,6 +84,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Multi-step forms - after unsuccessfully moving to the next step or submitting, the page will scroll to the first visible error message even when retrying (#58794).
+- Forms - validation of uploaded files distinguishes between an illegal character in the name and an illegal extension. A name error will indicate the specific illegal character or string. File names in error messages are displayed as text to prevent any HTML tags in the name from being executed (#58794).
+- Multi-step forms - when [returning to the previous step](redactor/apps/multistep-form/README.md#returning-to-the-previous-step) both the processed values ​​and the completed uploads are preserved (#58794).
+- Multi-step forms - added [field-abandonment validation] (redactor/apps/multistep-form/README.md#field-abandonment-validation) enabled by default. To disable it, set the configuration variable `multistepform_validateOnBlur` to `false` (#58794).
 - [Forms](redactor/apps/form/README.md#possible-configuration-variables) - both classic and multi-step forms respect `sendMailSaveEmail` and save emails as `.eml` files to `sendMailSaveEmailPath` instead of SMTP sending. If the write fails, the form reports an error.
 - Multi-step forms - added [return to previous step](redactor/apps/multistep-form/README.md#return-to-previous-step) with restoring saved values ​​and files and [CSS template selection](redactor/apps/multistep-form/README.md#css-templates) for each inserted instance and preview in the administration (#58742).
 
@@ -96,6 +117,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Semantic search
 
+- Added support for **MariaDB Vector** as an alternative to `PostgreSQL/pgvector` for semantic and hybrid search and RAG responses. The minimum supported version is **MariaDB 11.8 LTS**, we recommend **11.8.9 or later patch**. Versions from **12.3 LTS** include search acceleration. The minimum and recommended versions of PostgreSQL, pgvector and MariaDB and their benefits are in [database requirements overview](custom-apps/apps/rag/semantic-search/README.md#supported-databases-and-versions) (#232).
+- An unavailable standalone RAG database no longer blocks CMS startup. RAG persistence is initialized only on first use and allows another attempt after a failed connection without restarting the CMS (#232).
+
 - Added support for [semantic search](redactor/apps/semantic-search/README.md) built on the `pgvector` and `OpenAI embeddings` vector database technology. It allows visitors to find relevant pages based on **the meaning of the query**, not just keyword matching (#211).
 - Added hybrid semantic search mode and optional RAG response from indexed content. The **Search** app has new settings for search type, hybrid behavior, AI assistant selection, and response context limits (#58521).
 
@@ -106,6 +130,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Applications
 
+- E-commerce - added optional [price rounding](redactor/apps/basket/rounding.md) to calculate the basket from the displayed price per item. The number of decimal places is determined by `currencyFormat` ; templates with the `iway:curr` tag will automatically adopt the new formatting (#316).
 - Codebooks - for named string fields, the field type, selection options, mandatory, help text, and length restrictions can be set in the new [String Field Types] tab (redactor/apps/enumeration/README.md#karta-typy-ťazcových-polí) just like for optional fields. The menu and configuration names are based on the last saved version of the codebook type. Unnamed fields remain hidden, are not evaluated as mandatory, and fields without a specific configuration are displayed as regular text. Older custom Excel templates and REST API integrations need to be modified from `string1` to `string12` to `fieldA` to `fieldL` (#58641).
 
 ![](editor/apps/enumeration/editor_stringFieldTypes.png)
@@ -119,7 +144,6 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](redactor/apps/language-redirect/editor-basic.png)
 
 - Reservations - the **Time Reservation** and **Day Reservation** applications have a unified visual style according to the `Vanilla Calendar` calendar, adjusted contrasting cell colors according to `WCAG`, separated visual CSS styles into separate files, and **Time Reservation** displays the actual price in the hourly cells according to the price list of the reservation object (#58565).
-
 - Reservations - a new application [My Reservations] (redactor/apps/reservation/my-reservations-app/README.md) has been added, which will show the logged-in user an overview of their reservations, reservation status, and the option to delete allowed future reservations (#58565).
 
 ![](editor/apps/reservation/my-reservations-app/app-page.png)
@@ -131,6 +155,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Document Manager - added ability to upload multiple files at once via `drag&drop` (#58593).
 
 ![](redactor/files/file-archive/drag-drop-upload-dialog.png)
+
+- Document Manager - when [bulk uploading files](redactor/files/file-archive/README.md#bulk-uploading-files) it is possible to set a common validity on the **Basic** and **Advanced** tabs, schedule a later upload with email notification, and enter extended document metadata (#58754).
+
+![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
 ### Gallery
 
@@ -193,9 +221,12 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 ![](sysadmin/update/stat-browser-migration.png)
 
 - Multi-step forms - added moving (`scroll`) to the beginning of the form after moving to the next step (#osk573).
+- Explorer - when updating a file, the selection is limited to one file and a message warns of the wrong type (#317).
+- Explorer - folder information no longer shows inaccurate recursive size (#317).
 
 ### Bug fixes
 
+- Multi-step forms - fixed validation of fields with chained visibility conditions (#58794).
 - Forms - fixed archiving of forms (#305).
 - Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
@@ -204,19 +235,24 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Performance
 
+- Multi-step forms - accelerated repeated field checks during filling (#58794).
 - Optimized loading of template groups when displaying a page and searching for optional fields. The group is cached and reused without having to read it from the database (#311).
 
 ### Safety
 
 - Added support for generating `nonce` for the [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) header (#58533).
 - AI assistants - added protection against `prompt injection` attacks with separation of system instructions from user content and detection of coded inputs (#58549).
+- HTML sanitization - `AllowSafeHtmlAttributeConverter` preserves the `role`, `aria-*`, `data-*`, `id`, `title`, `lang`, `dir` (`ltr`, `rtl`, `auto`) and `tabindex` (`-1`, `0`) attributes on all previously allowed HTML elements. This allows the use of accessibility attributes and custom data attributes (#317).
 
 ### Documentation
 
+- Datatables - added explanation of [notifications about unsaved changes](redactor/datatables/README.md#notifications-about-unsaved-changes) when refreshing or leaving the page and when closing the editor with the Cancel button (#339).
 - A new section [Overview of new features] (sales/README.md) has been created, which contains descriptions of new features and **functionalities of WebJET CMS in understandable language**, without unnecessarily technical formulations (#58505).
 - Created a [Troubleshooting] section (sysadmin/troubleshooting/README.md) in the operation manual.
 
 ### For the programmer
+
+- Dashboard - added widget registry, responsive grid and REST interface for transactional settings storage to `user_settings_admin`. Existing MySQL/MariaDB table is converted to InnoDB during update. Usage is described in [welcome screen documentation](redactor/admin/welcome.md), background and environment labeling of its [configuration](admin/setup/configuration/dashboard.md). Development rules, contract and reasons for decisions are maintained by project skill `wj-dashboard-widget` in `.agents/skills/wj-dashboard-widget/` (#58806).
 
 - Administration - removed dependency on [Vue.js](https://vuejs.org). Tree fields, start page, image area selection and server monitoring use native [web components](developer/frameworks/web-components.md). The global object `window.VueTools` and packages for Vue are no longer part of the administration. Custom extensions must replace them with web components or compile Vue themselves (#58722).
 - AI Assistants - Provider-independent client logic for OpenAI, Gemini, and OpenRouter, stream processing, request/response types, and prompt protection have been separated into a separate artifact `com.webjetcms:webjet-ai` and an external [webjet-ai repository](https://github.com/webjetcms/webjet-ai). WebJET CMS passes configuration through a typed adapter and continues to provide auditing, persistence, and UI integration. This is an incompatible change: the original CMS SPI for custom providers and its transport and streaming support classes have been removed. Custom providers must be migrated to the `AiProvider` library interface and the CMS adapter `LibrarySupportLogic` (#58670).
@@ -335,6 +371,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 		setBoolean("zmluvyEnableVo", false, "zmluvy",
 				"Ak je nastavena na true, tak sa budu zobrazovat aj skupiny pre verejne obstaravanie.");
 ```
+
+- Data tables - modified validation of required fields of type [`DATE` and `DATETIME`](developer/datatables-editor/standard-fields.md#date). This allows you to delete the set date or number value in the editor - originally, when the value was empty, the value in the saved entity was preserved (#58770).
+- Data tables - field validation error [`QUILL`](developer/datatables-editor/standard-fields.md#quill) highlights both the toolbar and editor border (#58770).
+- Data tables - a clearer error message will be displayed for a duplicate value, an attempt to delete or change a record referenced by other records, or an empty value for the `NOT NULL` column (#58770).
 
 ## 2026.18
 
@@ -530,6 +570,14 @@ Redesigned application properties settings in the editor from the old code in `J
 
 > A patch version of the original version 2026.0.
 
+- Websites - fixed looping of folder initialization and scheduled publishing check on slow database connection (#337).
+- Cluster - optimized writing of changes in the cluster when starting a new node (#337).
+
+## 2026.0.40
+
+> A patch version of the original version 2026.0.
+
+- Proxy - fixed use of the configured HTTP/HTTPS proxy including exceptions and authentication when translating via DeepL, calling the AI ​​assistant, downloading via `Tools.downloadUrl`, in the proxy module and when generating an offline version (#331).
 - Web pages - fixed saving a web page with a space at the end of the URL (whitespace removal will be performed) (#OSK650).
 - Web pages - fixed looping of unpublished page if URL does not end with `/` - ​​configuration variable `virtualPathLastSlash=false` (#OSK684).
 - Document Manager - added clearing of cache after publishing a new version of a file (#TB2754).
@@ -537,6 +585,7 @@ Redesigned application properties settings in the editor from the old code in `J
 - Gallery - in the application editor, only JSP files from the `/components/{INSTALL_NAME}/gallery` and `/components/gallery` folders are displayed among the visual styles, without duplicate items (#58317-16).
 - Inserting HTML code - in the application preview in the website editor, for content consisting only of `script` elements, the source code is displayed instead of empty content (#OSK625).
 - Video - fixed handling of YouTube links with additional URL parameters including video start time (`t` or `start`). Parameters are now correctly linked to player settings without duplicate `?` character (#OSK714).
+- Easy form - fixed processing of form name if name contains hard space replaced by `editorSingleCharNbsp` (#TB2763).
 - Security - tightened verification of the link to recover a forgotten password. The verification record is checked for the selected user account even with the custom sending method, respects the time validity and after use is invalidated for all accounts included in the request (#292).
 - Security - tightened authorization verification when working with records in administration (#295).
 - Security - tightened control of folder rights when uploading a file to the administration and overwriting it if the file exists.

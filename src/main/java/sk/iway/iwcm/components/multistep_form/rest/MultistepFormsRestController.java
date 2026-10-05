@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
@@ -65,6 +66,7 @@ public class MultistepFormsRestController {
         }
 
         catch (SaveFormException sfe) {
+            if(sfe.isEndUserTry()) multistepFormsService.clearStepDrafts(formName, request);
             Logger.error(MultistepFormsRestController.class, "saveForm() failed. " + sfe.getLocalizedMessage(), sfe);
             response.put("err_msg", sfe.getLocalizedMessage());
             response.put("end_try", sfe.isEndUserTry());
@@ -88,13 +90,65 @@ public class MultistepFormsRestController {
     }
 
     /**
+     * Saves unconfirmed step values without validating or submitting the form.
+     *
+     * @param formName logical form name
+     * @param stepId current step identifier
+     * @param language language used for error messages
+     * @param request request containing JSON field values and the form session
+     * @return success or localized error details; failures leave the current step available
+     */
+    @PostMapping(value = "/save-draft", params = {"form-name", "step-id", "language"}, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> saveDraft(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, @RequestParam("language") String language, HttpServletRequest request) { //NOSONAR language is consumed implicitly by PageLng.getUserLng(request)
+        JSONObject response = new JSONObject();
+        try {
+            multistepFormsService.saveStepDraft(formName, stepId, request);
+            return ResponseEntity.ok(response.put("success", true).toString());
+        } catch (SaveFormException e) {
+            response.put("err_msg", e.getLocalizedMessage());
+        } catch (Exception e) {
+            Logger.error(MultistepFormsRestController.class, "saveDraft() failed.", e);
+            response.put("err_msg", Prop.getInstance(PageLng.getUserLng(request)).getText("datatable.error.unknown"));
+        }
+        return ResponseEntity.badRequest().body(response.toString());
+    }
+
+    /**
+     * Validates one field value without evaluating conditional rules or saving the step.
+     *
+     * @param formName logical form name
+     * @param stepId current step identifier
+     * @param fieldId logical field identifier without the form-instance prefix
+     * @param language language used to localize validation messages
+     * @param request request containing the single-field JSON payload and form session
+     * @return field errors, a bad-request response, or not found when blur validation is disabled
+     */
+    @PostMapping(value = "/validate-field", params = {"form-name", "step-id", "field-id", "language"}, consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> validateField(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, @RequestParam("field-id") String fieldId, @RequestParam("language") String language, HttpServletRequest request) { //NOSONAR language is consumed implicitly by PageLng.getUserLng(request)
+        if (Constants.getBoolean("multistepform_validateOnBlur") == false) return ResponseEntity.notFound().build();
+
+        JSONObject response = new JSONObject();
+        try {
+            response.put("fieldErrors", multistepFormsService.validateField(formName, stepId, fieldId, request));
+            return ResponseEntity.ok(response.toString());
+        } catch (SaveFormException e) {
+            response.put("err_msg", e.getLocalizedMessage());
+        } catch (Exception e) {
+            Logger.error(MultistepFormsRestController.class, "validateField() failed.", e);
+            response.put("err_msg", Prop.getInstance(PageLng.getUserLng(request)).getText("datatable.error.unknown"));
+        }
+        return ResponseEntity.badRequest().body(response.toString());
+    }
+
+    /**
      * Returns rendered content and saved state for a permitted form step.
      *
      * @param formName logical form name
      * @param stepId requested step identifier
      * @param language language used to render localized form content
      * @param request request containing the form session
-     * @return JSON containing step HTML, conditions, and saved values, or an error response
+     * @return JSON containing step HTML, the DOM identifier prefix, blur-validation setting,
+     *         conditions, confirmed and draft values, and upload metadata, or an error response
      */
     @GetMapping(value="/get-step", params={"form-name", "step-id", "language"})
     public ResponseEntity<String> getFormStepHtml(@RequestParam("form-name") String formName, @RequestParam("step-id") Long stepId, @RequestParam("language") String language, HttpServletRequest request) { //NOSONAR language is consumed implicitly by PageLng.getUserLng(request)
@@ -110,15 +164,19 @@ public class MultistepFormsRestController {
             FormHtmlHandler formHtmlHandler = new FormHtmlHandler(formName, request);
             FormConditionsHandler formConditionsHandler = new FormConditionsHandler(formName, request);
             Pair<JSONObject, JSONObject> savedStepData = multistepFormsService.getSavedStepData(formName, stepId, request);
+            Pair<JSONObject, JSONObject> draftStepData = multistepFormsService.getDraftStepData(formName, stepId, request);
             request.setAttribute("multistepFormPrefix", formHtmlHandler.getDomIdPrefix());
 
             JSONObject result = new JSONObject();
             result.put("html", formHtmlHandler.getFormStepHtml(stepId, request));
             result.put("domIdPrefix", formHtmlHandler.getDomIdPrefix());
+            result.put("validateOnBlur", Constants.getBoolean("multistepform_validateOnBlur"));
             result.put("visibilityConditions", formConditionsHandler.getVisibilityConditions(stepId));
             result.put("requirementConditions", formConditionsHandler.getRequirementConditions(stepId));
             result.put("savedValues", savedStepData.getFirst());
             result.put("savedFiles", savedStepData.getSecond());
+            result.put("draftValues", draftStepData.getFirst());
+            result.put("draftFiles", draftStepData.getSecond());
 
             return ResponseEntity.ok()
                 .header("Content-Type", contentTypeWithCharset)

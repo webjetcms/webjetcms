@@ -549,14 +549,19 @@ jacoco {
     toolVersion = "+"
 }
 
+// Identify the worktree without spaces so app-stop.sh can target only its server process.
+def worktreeId = java.security.MessageDigest.getInstance('SHA-256')
+    .digest(rootDir.canonicalPath.getBytes('UTF-8')).encodeHex().toString()
+
 gretty {
     // supported values:
     // 'jetty7', 'jetty8', 'jetty9', 'jetty9.3', 'jetty9.4', 'tomcat7', 'tomcat8'
     servletContainer = 'tomcat11'
     contextPath = ''
-    httpPort = 80
+    // Override ports with -PhttpPort, -PhttpsPort and -PdebugPort when running multiple worktrees.
+    httpPort = (project.findProperty('httpPort') ?: '80') as int
     httpsEnabled = true
-    httpsPort = 443
+    httpsPort = (project.findProperty('httpsPort') ?: '443') as int
     //hard mod spusti WJ rovno z src/main/webapp co zrychli start (netreba kopirovat JSP subory niekde inde)
     inplaceMode = 'hard'
     //scanovania pre hotswap
@@ -567,6 +572,7 @@ gretty {
     //managedClassReload = true - nie je mozne pouzit s Java > 8
     //chceme aby sa tomcat nereloadol po zmene triedy, v IDE je potrebne kliknut na Hot Code Replace pre aplikovanie zmeny v triede
     reloadOnClassChange = false
+    debugPort = (project.findProperty('debugPort') ?: '5005') as int
     debugSuspend = false
 
     //extraResourceBase 'src/webjet8/webapp'
@@ -579,8 +585,9 @@ gretty {
         '-Dfile.encoding=utf-8',
         '-Duser.language=sk',
         '-Duser.country=SK',
-        //povolenie remote debug na porte 5005
-        '-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005',
+        // Keep debugging available for appStart as well as appStartDebug.
+        "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=${debugPort}",
+        "-Dwebjet.worktreeId=${worktreeId}",
         //lokalny poolman-local.xml subor
         //'-DwebjetPoolmanPath=/poolman-local.xml',
         //Uprava konfiguracie pre WebJET, tymto sa prepisuju hodnoty z databazy v Ovladaci panel->Konfiguracia

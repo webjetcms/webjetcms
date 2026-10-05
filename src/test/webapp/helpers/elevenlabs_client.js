@@ -31,12 +31,35 @@ function getAudioSettings(options = {}) {
     throw new Error("Audio generation options must be an object.");
   }
 
-  return {
+  const settings = {
     modelId: getOptionalOverride(options.modelId, "modelId") ||
       getEnvironmentOverride("ELEVENLABS_MODEL_ID") || DEFAULT_MODEL_ID,
     voiceId: getOptionalOverride(options.voiceId, "voiceId") ||
       getEnvironmentOverride("ELEVENLABS_VOICE_ID") || DEFAULT_VOICE_ID
   };
+  if (options.languageCode != null) {
+    settings.languageCode = getRequiredText(options.languageCode, "languageCode").toLowerCase();
+    if (!/^[a-z]{2}$/.test(settings.languageCode)) {
+      throw new Error("languageCode must be a two-letter ISO 639-1 code, such as sk.");
+    }
+  }
+  if (options.voiceSettings != null) {
+    if (typeof options.voiceSettings !== "object" || Array.isArray(options.voiceSettings)) {
+      throw new Error("voiceSettings must be an object.");
+    }
+    settings.voiceSettings = {};
+    for (const [name, value] of Object.entries(options.voiceSettings)) {
+      if (!["stability", "similarityBoost"].includes(name)) {
+        throw new Error(`Unsupported voiceSettings option: ${name}. Use stability or similarityBoost.`);
+      }
+      if (typeof value !== "number" || !Number.isFinite(value) || value < 0 || value > 1) {
+        throw new Error(`voiceSettings.${name} must be a number between 0 and 1.`);
+      }
+      settings.voiceSettings[name] = value;
+    }
+    if (Object.keys(settings.voiceSettings).length === 0) delete settings.voiceSettings;
+  }
+  return settings;
 }
 
 function getSafeErrorDetail(value) {
@@ -73,6 +96,8 @@ async function requestSpeechAudio({
   text,
   modelId,
   voiceId,
+  languageCode,
+  voiceSettings,
   fetchImpl = globalThis.fetch,
   timeoutMs = REQUEST_TIMEOUT_MS,
   onCost
@@ -97,7 +122,12 @@ async function requestSpeechAudio({
         },
         body: JSON.stringify({
           text,
-          model_id: modelId
+          model_id: modelId,
+          language_code: languageCode,
+          voice_settings: voiceSettings == null ? undefined : {
+            stability: voiceSettings.stability,
+            similarity_boost: voiceSettings.similarityBoost
+          }
         }),
         redirect: "error",
         signal: controller.signal
@@ -191,6 +221,8 @@ async function generateAudioArtifacts({
   apiKey,
   modelId,
   voiceId,
+  languageCode,
+  voiceSettings,
   fetchImpl = globalThis.fetch,
   fsImpl = fs,
   creditLabel,
@@ -215,6 +247,7 @@ async function generateAudioArtifacts({
       }
     }
 
+    log(`[ElevenLabs audio] Settings: ${JSON.stringify({ modelId, voiceId, languageCode, voiceSettings })}`);
     chunks.forEach((chunk, index) => {
       log(`[ElevenLabs audio] Part ${index + 1}/${chunks.length} | ${Array.from(chunk.text).length} characters | Shots: ${chunk.shotIds?.join(", ") || "narration"} | Output: ${chunk.targetPath}`);
       log(`[ElevenLabs audio] Text to generate:\n${chunk.text}\n`);
@@ -231,7 +264,7 @@ async function generateAudioArtifacts({
         let audio;
         try {
           audio = await requestSpeechAudio({
-            apiKey, text: chunk.text, modelId, voiceId, fetchImpl,
+            apiKey, text: chunk.text, modelId, voiceId, languageCode, voiceSettings, fetchImpl,
             onCost: value => { cost = value; }
           });
         } finally {

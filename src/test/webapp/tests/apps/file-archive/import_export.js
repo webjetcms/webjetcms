@@ -59,8 +59,8 @@ Scenario('Upload a file, export that file, delete and try to import again', asyn
 
     // 3. Vymazanie súboru a nahradenie
     I.say("Phase3 - Deleting the file");
-    SL.deleteTestFiles("exportimportfile");
-    SL.deleteTestFiles("future", futureUploadFilePath);
+    await SL.deleteTestFiles("exportimportfile");
+    await SL.deleteTestFiles("future", futureUploadFilePath);
 
     I.say("Phase3 - Replacing the file");
     I.amOnPage(SL.fileArchive);
@@ -98,8 +98,8 @@ Scenario('Delete archiv entity (and file using elfinder if neccesary)', async ({
     const importFileSelector = ".elfinder-cwd-filename[title^='file_archiv_export_aceintegration']";
     await SL.removeFileByElfinder(importFileSelector);
 
-    SL.deleteTestFiles();
-    SL.deleteTestFiles("future", futureUploadFilePath);
+    await SL.deleteTestFiles();
+    await SL.deleteTestFiles("future", futureUploadFilePath);
 
     const fileSelector = ".elfinder-cwd-filename[title^='archive_export_import']";
     let wasRemovedByElfinder = await SL.removeFileByElfinder(fileSelector);

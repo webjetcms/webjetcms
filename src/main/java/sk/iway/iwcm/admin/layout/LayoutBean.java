@@ -49,6 +49,24 @@ public class LayoutBean {
         return Constants.getString(name, defaultValue);
     }
 
+    /** Returns a configuration value with request and installation macros expanded. */
+    public String getConstantExecuteMacro(String name)
+    {
+        return Constants.getStringExecuteMacro(name);
+    }
+
+    /** Returns the environment detected from the request server name. */
+    public String getEnvironmentName()
+    {
+        return Constants.getEnvironmentName();
+    }
+
+    /** Returns the shared environment badge with the current request's configuration and macros. */
+    public EnvironmentBadge getEnvironmentBadge()
+    {
+        return new EnvironmentBadge();
+    }
+
     public int getConstantInt(String name)
     {
         return Constants.getInt(name);

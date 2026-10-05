@@ -66,7 +66,7 @@ public class ConstantsV9 {
 
 		Constants.setString("DocTools.removeCharsDir", "[^a-zA-Z/_0-9\\-\\.=]", Constants.mods(Constants.MOD_SECURITY, Constants.MOD_FILES, Constants.MOD_WEBPAGES), "Regex pre znaky, ktore sa maju odstranit z nazvu suboru/adresara. Pouziva sa v metode DocTools.removeCharsDir(). Hodnota premennej sa reloadne za behu.");
 
-		Constants.setString("FileBrowserTools.forbiddenSymbols", "@,#,+,(,),{,},=", Constants.mods(Constants.MOD_SECURITY, Constants.MOD_FILES), "Zoznam zakazanych znakov v nazve suboru/adresara. Okrem defaultne zakazanych znakov sa pomocou konfiguracnej premennej definuju dalsie zakazane znaky. Oddelujeme ich ciarkou. Pouziva sa v metode FileBrowserTools.hasForbiddenSymbol(). Hodnota premennej sa reloadne iba pri starte.");
+		Constants.setString("FileBrowserTools.forbiddenSymbols", "@,#,+,{,},=", Constants.mods(Constants.MOD_SECURITY, Constants.MOD_FILES), "Zoznam zakazanych znakov v nazve suboru/adresara. Okrem defaultne zakazanych znakov sa pomocou konfiguracnej premennej definuju dalsie zakazane znaky. Oddelujeme ich ciarkou. Pouziva sa v metode FileBrowserTools.hasForbiddenSymbol(). Hodnota premennej sa reloadne iba pri starte.");
 
 		Constants.setBoolean("structureMirroringDisabledOnCreate", true, Constants.MOD_STRUCTURE_MIRRORING, "Pri hodnote true budu novo vytvorene zrkadlene stranky mat vypnute zobrazenie aby sa nezacali ihned zobrazovat");
 
@@ -105,6 +105,12 @@ public class ConstantsV9 {
 		Constants.setString("changePasswordPageUrlAdmin", "/admin/logon/changePassword", Constants.MOD_PASSWORD, "cesta k suboru (alebo stranke) na zmenu hesla z admin sekcie");
 
 		Constants.setInt("dashboardRecentSize", 8, Constants.MOD_SYSTEM_ADMIN, "Pocet zaznamov v zozname poslednych stranok/auditu na uvodnej obrazovke");
+		Constants.setString("dashboardHeroBackgroundImage", "/admin/skins/webjet8/assets/global/img/wj/wj9_bg.jpg", Constants.MOD_SYSTEM_ADMIN, "Background image in the administration dashboard header. Use a root-relative path or an HTTP(S) URL. An empty value hides the image.");
+		Constants.setString("dashboardEnvironmentName", "{ENVIRONMENT_NAME}", Constants.MOD_SYSTEM_ADMIN, "Environment badge in the v9 header and login page. Supports macros; empty hides it (also on PROD). Displays at most 8 uppercase characters, with the full name in the tooltip.");
+		Constants.setString("dashboardEnvironmentIcon", "auto", Constants.MOD_SYSTEM_ADMIN, "Tabler icon name or ti-* class, auto for the environment default, none or empty to hide the icon. Defaults: PROD=alert-triangle, TEST=test-pipe, DEMO=eye, DEV=code, UAT=none, INT=plug-connected, CIT=user-check, LOCAL=device-laptop.");
+		Constants.setString("dashboardEnvironmentColor", "auto", Constants.MOD_SYSTEM_ADMIN, "Environment badge background: auto uses the UX palette (PROD red, TEST orange, DEMO yellow, DEV green, UAT cyan, INT blue, CIT purple, LOCAL gray). Custom #RGB/#RRGGBB colors use black or white text with at least 4.5:1 contrast.");
+		Constants.setString("dashboardEnvironmentStyle", "auto", Constants.MOD_SYSTEM_ADMIN, "Environment badge style: subtle, strong, or auto (strong for PROD, subtle elsewhere). Custom background colors are used as supplied.");
+		Constants.setString("dashboardEnvironmentDescription", "", Constants.MOD_SYSTEM_ADMIN, "Optional environment description appended to the full configured name in the hover and keyboard-focus tooltip. Supports configuration macros.");
 
 		Constants.setInt("contentBlockTypeCount", 5, Constants.MOD_EDITOR, "Pocet dostupnych typov blokov pre obsah");
 
@@ -252,6 +258,7 @@ public class ConstantsV9 {
 		Constants.setString("multistepform_emailFields", "email,e-mail", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_attachmentDefaultName", "prilohy.html", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_subjectDefaultValue", "components.form.default_subject", Constants.MOD_FORMMAIL, "");
+		Constants.setBoolean("multistepform_validateOnBlur", true, Constants.MOD_FORMMAIL, "Validate multistep form text inputs and plain textareas on the server when they lose focus.");
 
 		Constants.setBoolean("password_passKeyEnabled", true, Constants.MOD_PASSWORD, "Povoli prihlasovanie pomocou PassKey/WebAuthN technológie. Tá zabezpečuje prihlasovanie pomocou biometrických údajov alebo bezpečnostných kľúčov. Vyžaduje HTTPS komunikáciu.");
 		Constants.setString("password_passKeyRpId", "", Constants.MOD_PASSWORD, "Relying Party ID pre PassKey/WebAuthN. Obvykle sa jedná o doménu bez subdomén (napr. example.com). Ak nie je nastavená, použije sa základná doména z URL adresy.");
@@ -275,11 +282,11 @@ public class ConstantsV9 {
 
 		/* ***** ***** ***** RAG SECTION ***** ***** ***** */
 
-		Constants.setBoolean("ragSemanticSearchEnabled", false, Constants.MOD_RAG, "Povolí sémantické vyhľadávanie nad vektorovou databázou pgvector.");
+		Constants.setBoolean("ragSemanticSearchEnabled", false, Constants.MOD_RAG, "Povolí sémantické vyhľadávanie nad vektorovým úložiskom PostgreSQL/pgvector alebo MariaDB Vector.");
 
-		/* RAG - PGVECTOR STORE */
-		Constants.setInt("ragSearchEfSearch", 40, Constants.MOD_RAG, "HNSW index parameter ef_search — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie datasety zvážte zvýšenie na 100 alebo viac.");
-		Constants.setString("ragSearchDistanceMetric", "cosine", Constants.MOD_RAG, "Metrika vzdialenosti pre pgvector vyhľadávanie. Možné hodnoty: 'cosine' (cosínusová vzdialenosť), 'inner_product' (vnútorný súčin, rýchlejší pre normalizované vektory), 'l2' (euklidovská vzdialenosť). Zmena vyžaduje reindex HNSW indexu.");
+		/* RAG - VECTOR STORE */
+		Constants.setInt("ragSearchEfSearch", 40, Constants.MOD_RAG, "HNSW parameter ef_search — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie datasety zvážte zvýšenie na 100 alebo viac.");
+		Constants.setString("ragSearchDistanceMetric", "cosine", Constants.MOD_RAG, "Metrika vzdialenosti pre vektorové vyhľadávanie. Možné hodnoty: 'cosine' (cosínusová vzdialenosť), 'inner_product' (vnútorný súčin, podporuje iba PostgreSQL/pgvector), 'l2' (euklidovská vzdialenosť). Zmena vyžaduje opätovné vytvorenie vektorového indexu.");
 
 		/* RAG - EMBEDDING */
 		Constants.setString("ragEmbeddingProvider", "openai", Constants.MOD_RAG, "Predvolený poskytovateľ použitý pri vytvorení chýbajúceho RAG embedding asistenta. Vstavané hodnoty sú openai, gemini a openrouter; použiť možno aj identifikátor zaregistrovaného vlastného poskytovateľa.");
@@ -302,7 +309,7 @@ public class ConstantsV9 {
 		Constants.setString("ragHybridFtsWeight", "0.3", Constants.MOD_RAG, "Váha fulltext poradia pri RRF merge hybridného vyhľadávania.");
 		Constants.setInt("ragHybridRrfK", 60, Constants.MOD_RAG, "Hodnota k parametra pre RRF merge hybridného vyhľadávania.");
 		Constants.setInt("ragHybridChunkFetchMultiplier", 3, Constants.MOD_RAG, "Násobič počtu chunkov načítaných pre hybridné vyhľadávanie voči požadovanému počtu výsledkov.");
-		Constants.setBoolean("ragHybridFtsUseIlikeFallback", true, Constants.MOD_RAG, "Pri prázdnych FTS výsledkoch vykoná fallback cez ILIKE nad chunk_text.");
+		Constants.setBoolean("ragHybridFtsUseIlikeFallback", true, Constants.MOD_RAG, "Pri prázdnych FTS výsledkoch vykoná databázovo špecifický fallback cez ILIKE alebo LIKE nad chunk_text.");
 
 		/* RAG - ANSWER */
 		Constants.setBoolean("ragAnswerAllowed", false, Constants.MOD_RAG, "Povolí RAG odpoved.");
@@ -314,7 +321,7 @@ public class ConstantsV9 {
 		Constants.setInt("ragAnswerMaxCharacters", 6000, Constants.MOD_RAG, "Maximalny celkovy pocet znakov post-processovaneho kontextu, ktory sa pouzije pri generovani RAG odpovede.");
 		Constants.setInt("ragAnswerMaxMergedBlockCharacters", 2200, Constants.MOD_RAG, "Maximalny pocet znakov jedneho zluceneho kontextoveho bloku po spojeni susednych chunkov pre RAG odpoved.");
 
-		Constants.setString("searchType", "db", Constants.MOD_SEARCH, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (sémanticke vyhladavanie cez pgvector), hybrid (kombinace vektoroveho a fulltext vyhledavania)");
+		Constants.setString("searchType", "db", Constants.MOD_SEARCH, "Typ vyhladavania: db (databazove), lucene (Lucene fulltext), semantic (sémanticke vektorove vyhladavanie), hybrid (kombinace vektoroveho a fulltext vyhledavania)");
 
 		Constants.setInt("gdprDeleteDocAndGroupsAfterDays", 186, Constants.MOD_GDPR, "Koľko dní staré priečinky a stránky, ktoré sú v koši, sa majú vymazať (POZOR, nie ako dlho sú v koši).");
 	}

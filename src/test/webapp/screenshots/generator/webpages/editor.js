@@ -32,6 +32,20 @@ Scenario('editor', ({I, DTE, Document}) => {
     Document.screenshot("/redactor/webpages/editor/html-mode.png");
 });
 
+Scenario('file-archive-read-only-icon', ({ I, DTE, Document, i18n }) => {
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=16');
+    DTE.waitForEditor();
+    I.clickCss('#trEditor');
+    I.clickCss('.cke_button_icon.cke_button__link_icon');
+    I.waitForElement('#wjLinkIframe', 10);
+    I.wait(1);
+    I.switchTo('#wjLinkIframe');
+    I.waitForVisible(locate('.elfinder-navbar-root').withText(i18n.get("Document manager")), 20);
+    I.click(locate('.elfinder-navbar-root').withText(i18n.get("Document manager")));
+    I.switchTo();
+    Document.screenshotElement(locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), '/redactor/webpages/working-in-editor/link_dialog-read-only-archive.png');
+});
+
 Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
     Document.setConfigValue("ckeditor_svgIcon_path", "");
     Document.setConfigValue('editorFontAwesomeCssPath', "");

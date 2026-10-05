@@ -270,24 +270,7 @@ function initClosure() {
     // SELECTPICKER INIT
     // =======================
 
-    $.fn.selectpicker.Constructor.BootstrapVersion = '5';
-
-    $('select').each(function() {
-        let $this = $(this);
-        if ($this.hasClass("no-picker")) return;
-        let options = {
-            container: "body",
-            style: "dropdown bootstrap-select btn-outline-secondary",
-            liveSearch: true,
-            showSubtext: true,
-            noneSelectedText: '\xa0', //nbsp
-            iconBase: 'ti',
-        }
-        let liveSearch = $this.data("live-search");
-        //console.log("liveSearch=", liveSearch);
-        if (typeof liveSearch !== "undefined") options.liveSearch = liveSearch;
-        $this.selectpicker(options);
-    });
+    WJ.initSelectPicker(document);
 
     // =======================
     // JSTREE INIT
@@ -800,7 +783,7 @@ function initClosure() {
             }
 
             //console.log("Beforeunload event, modal.length=", $("div.modal.DTED.show").length);
-            if ($("div.modal.DTED.show").length>0 && window.currentUser.login.indexOf("tester")!=0) {
+            if ($("div.modal.DTED.show:visible").length>0 && window.currentUser.login.indexOf("tester")!=0) {
                 var confirmationMessage = WJ.translate("admin.confirmExitMessage.js");
 
                 //console.log("confirmationMessage=", confirmationMessage);

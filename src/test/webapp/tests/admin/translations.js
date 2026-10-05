@@ -15,10 +15,10 @@ Scenario("CZ verzia preklady", ({ I, DTE }) => {
     I.wait(3);
     I.see("Nápověda");
     I.dontSee("Pomocník");
-    I.see("Zpětná vazba");
-    I.see("Vítejte, Tester Playwright");
-    I.see("Změněné stránky");
-    I.see("Novinky ve WebJETu");
+    I.see("Zaslat zpětnou vazbu");
+    I.see("Vítejte zpět, Tester Playwright");
+    I.see("Pokračujte v práci");
+    I.see("Úplný seznam změn");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=141");
     DTE.waitForEditor();
@@ -45,10 +45,10 @@ Scenario("EN verzia preklady", ({ I, DTE }) => {
     I.wait(3);
     I.see("Help");
     I.dontSee("Pomocník");
-    I.see("Feedback");
-    I.see("Welcome, Tester Playwright");
-    I.see("Changed Web pages");
-    I.see("News in WebJET");
+    I.see("Send feedback");
+    I.see("Welcome back, Tester Playwright");
+    I.see("Continue your work");
+    I.see("Complete changelog");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=141");
     DTE.waitForEditor();
