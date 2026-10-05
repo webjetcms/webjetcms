@@ -29,12 +29,11 @@ import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.BrowserDetector;
-import sk.iway.iwcm.users.UsersDB;
 
 /** Verifies cookie lifecycle, successful-login boundaries, account isolation and safe notification data. */
 class AdminDeviceServiceTest {
     private static final long NOW = Instant.parse("2026-10-05T10:00:00Z").toEpochMilli();
-    private static final String EVENT_ID = "d12b2090-5818-49d8-808c-688593fe71a4";
+    private static final String EVENT_ID = "42";
     private static final String TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG";
     private final DeviceService repository = mock(DeviceService.class);
     private final AdminDeviceService service = spy(new AdminDeviceService(repository, Clock.fixed(Instant.ofEpochMilli(NOW), ZoneOffset.UTC)));
@@ -43,14 +42,12 @@ class AdminDeviceServiceTest {
     private final MockHttpServletResponse response = new MockHttpServletResponse();
     private MockedStatic<Constants> constants;
     private MockedStatic<Tools> tools;
-    private MockedStatic<UsersDB> users;
     private MockedConstruction<BrowserDetector> browsers;
 
     @BeforeEach
     void prepareLogin() {
         constants = mockStatic(Constants.class);
         tools = mockStatic(Tools.class);
-        users = mockStatic(UsersDB.class);
         browsers = mockConstruction(BrowserDetector.class, (browser, context) -> {
             when(browser.getBrowserName()).thenReturn("Firefox");
             when(browser.getBrowserVersion()).thenReturn("131.0");
@@ -59,7 +56,6 @@ class AdminDeviceServiceTest {
         });
         constants.when(() -> Constants.getBoolean("adminNewDeviceDetectionEnabled")).thenReturn(true);
         constants.when(() -> Constants.getInt("adminNewDeviceMaxAgeDays")).thenReturn(90);
-        users.when(UsersDB::getDomainId).thenReturn(12);
         tools.when(() -> Tools.getSpringBean("adminDeviceService", AdminDeviceService.class)).thenReturn(service);
         tools.when(() -> Tools.getRemoteIP(any())).thenReturn("192.0.2.1");
         tools.when(() -> Tools.isSecure(any())).thenReturn(true);
@@ -79,7 +75,6 @@ class AdminDeviceServiceTest {
     @AfterEach
     void releaseMocks() {
         browsers.close();
-        users.close();
         tools.close();
         constants.close();
     }
@@ -87,7 +82,7 @@ class AdminDeviceServiceTest {
     /** A newly issued browser identifier is opaque, protected and persisted only as a hash. */
     @Test
     void issuesProtectedCookieAndQueuesOnlyNewEvents() {
-        when(repository.recordLogin(anyInt(), anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
+        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
             .thenReturn(event());
 
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
@@ -102,7 +97,7 @@ class AdminDeviceServiceTest {
         assertEquals("/", cookie.getPath());
         assertNull(cookie.getDomain());
         assertEquals(90 * 86400, cookie.getMaxAge());
-        verify(repository).recordLogin(7, 12, AdminDeviceService.hashToken(cookie.getValue()), NOW,
+        verify(repository).recordLogin(7, AdminDeviceService.hashToken(cookie.getValue()), NOW,
             NOW - Duration.ofDays(90).toMillis(), "Firefox", "131.0", "Windows 11", "192.0.2.1");
         verify(service).sendNotification(user, request, event());
     }
@@ -113,7 +108,7 @@ class AdminDeviceServiceTest {
         request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
-        verify(repository, times(1)).recordLogin(anyInt(), anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
+        verify(repository, times(1)).recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
 
         var laterRequest = new MockHttpServletRequest();
         laterRequest.setSession(request.getSession());
@@ -122,7 +117,7 @@ class AdminDeviceServiceTest {
         AdminDeviceService.recordSuccessfulLogin(user, laterRequest, new MockHttpServletResponse());
 
         assertEquals(TOKEN, response.getCookie(AdminDeviceService.COOKIE_NAME).getValue());
-        verify(repository, times(2)).recordLogin(eq(7), eq(12), eq(AdminDeviceService.hashToken(TOKEN)), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
+        verify(repository, times(2)).recordLogin(eq(7), eq(AdminDeviceService.hashToken(TOKEN)), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
         verify(service, never()).sendNotification(any(), any(), any());
     }
 
@@ -133,8 +128,8 @@ class AdminDeviceServiceTest {
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
         when(user.getUserId()).thenReturn(8);
         AdminDeviceService.recordSuccessfulLogin(user, request, new MockHttpServletResponse());
-        verify(repository).recordLogin(eq(7), eq(12), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
-        verify(repository).recordLogin(eq(8), eq(12), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
+        verify(repository).recordLogin(eq(7), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
+        verify(repository).recordLogin(eq(8), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -147,7 +142,7 @@ class AdminDeviceServiceTest {
         assertNotEquals("malformed", cookie.getValue());
         assertEquals(30 * 86400, cookie.getMaxAge());
         assertFalse(cookie.getSecure());
-        verify(repository).recordLogin(eq(7), eq(12), anyString(), eq(NOW), eq(NOW - Duration.ofDays(30).toMillis()), anyString(), anyString(), anyString(), anyString());
+        verify(repository).recordLogin(eq(7), anyString(), eq(NOW), eq(NOW - Duration.ofDays(30).toMillis()), anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -166,7 +161,7 @@ class AdminDeviceServiceTest {
 
     @Test
     void storageFailureCannotRejectSuccessfulAuthentication() {
-        when(repository.recordLogin(anyInt(), anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
+        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
             .thenThrow(new IllegalStateException("Autotest storage unavailable"));
         try (var logger = mockStatic(Logger.class)) {
             assertDoesNotThrow(() -> AdminDeviceService.recordSuccessfulLogin(user, request, response));
@@ -177,7 +172,7 @@ class AdminDeviceServiceTest {
     @Test
     void blockedCookieStillRecordsAndNotifiesOnlyOncePerLoginRequest() {
         tools.when(() -> Tools.addCookie(any(), any(), any())).thenReturn(false);
-        when(repository.recordLogin(anyInt(), anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
+        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
             .thenReturn(event());
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
@@ -190,13 +185,16 @@ class AdminDeviceServiceTest {
         assertNull(service.confirm(user, "foreign-or-invalid"));
         assertNull(service.report(user, "../event"));
         assertNull(service.findEvent(user, null));
+        assertNull(service.findEvent(user, "0"));
+        assertNull(service.findEvent(user, "-1"));
+        assertNull(service.findEvent(user, "9223372036854775808"));
         verifyNoInteractions(repository);
         service.findEvent(user, EVENT_ID);
         service.confirm(user, EVENT_ID);
         service.report(user, EVENT_ID);
-        verify(repository).findEvent(7, 12, EVENT_ID, NOW);
-        verify(repository).confirm(7, 12, EVENT_ID, NOW);
-        verify(repository).report(7, 12, EVENT_ID, NOW);
+        verify(repository).findEvent(7, 42L);
+        verify(repository).confirm(7, 42L, NOW);
+        verify(repository).report(7, 42L, NOW);
     }
 
     @ParameterizedTest

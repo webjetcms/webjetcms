@@ -1,6 +1,6 @@
 package sk.iway.iwcm.users.devices;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 import java.time.Duration;
@@ -21,12 +21,13 @@ class DeviceCleanupTest {
             tools.when(() -> Tools.getSpringBean("deviceService", DeviceService.class)).thenReturn(devices);
             constants.when(() -> Constants.getInt("adminNewDeviceMaxAgeDays")).thenReturn(180);
 
+            long earliestCutoff = System.currentTimeMillis() - Duration.ofDays(180).toMillis();
             DeviceCleanup.main(new String[0]);
+            long latestCutoff = System.currentTimeMillis() - Duration.ofDays(180).toMillis();
 
-            ArgumentCaptor<Long> now = ArgumentCaptor.forClass(Long.class);
             ArgumentCaptor<Long> cutoff = ArgumentCaptor.forClass(Long.class);
-            verify(devices).cleanup(now.capture(), cutoff.capture());
-            assertEquals(Duration.ofDays(180).toMillis(), now.getValue() - cutoff.getValue());
+            verify(devices).cleanup(cutoff.capture());
+            assertTrue(cutoff.getValue() >= earliestCutoff && cutoff.getValue() <= latestCutoff);
         }
     }
 

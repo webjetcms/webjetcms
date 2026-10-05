@@ -180,7 +180,10 @@ Scenario('Real browser recognition, login warnings and protected account actions
     await signIn(I, 'tester', false);
     const afterReport = await I.executeScript(readDashboardBootstrap);
     rememberCreated(afterReport, 'tester', afterReportStarted);
-    await I.assertEqual(eventIds(afterReport).filter(id => !eventIds(reported).includes(id)).length, 1, 'A reported browser must produce a new warning at its next login.');
+    const refreshed = afterReport.notices.find(item => item.securityEvent?.id === eventId)?.securityEvent;
+    await I.assertTrue(Boolean(refreshed), 'A reported browser must renew the warning on the same device.');
+    await I.assertTrue(refreshed.createdAt > event.createdAt && refreshed.confirmedAt == null && refreshed.reportedAt == null,
+        'The next login must replace the previous notice and clear its acknowledgment.');
 
     const otherStarted = Date.now();
     await signIn(I, 'tester2');
@@ -190,7 +193,7 @@ Scenario('Real browser recognition, login warnings and protected account actions
         await I.assertEqual((await postEvent(I, eventId, action, testerId)).status, 404, `Another account must not ${action} the tester event, even with a forged userId.`);
     }
     const foreign = await I.executeScript(readDashboardBootstrap, `?securityEvent=${eventId}&userId=${testerId}`);
-    const absent = await I.executeScript(readDashboardBootstrap, '?securityEvent=00000000-0000-4000-8000-000000000000');
+    const absent = await I.executeScript(readDashboardBootstrap, '?securityEvent=9223372036854775807');
     await I.assertTrue(foreign.securityEventRequested && absent.securityEventRequested);
     await I.assertEqual(foreign.requestedSecurityEvent, null);
     await I.assertEqual(absent.requestedSecurityEvent, null, 'Missing and foreign events must expose the same neutral result.');

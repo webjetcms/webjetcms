@@ -3,109 +3,93 @@ package sk.iway.iwcm.users.devices;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
 
-/** Account-independent browser history; callers supply the authenticated account and domain. */
+/** Recognizes a user's browsers and maintains one current notice per device. */
 @Service
 public class DeviceService {
     static final long NOTICE_AGE = Duration.ofDays(7).toMillis();
-    static final long EVENT_AGE = Duration.ofDays(90).toMillis();
 
     private final DeviceRepository devices;
-    private final LoginEventRepository events;
 
-    public DeviceService(DeviceRepository devices, LoginEventRepository events) {
+    public DeviceService(DeviceRepository devices) {
         this.devices = devices;
-        this.events = events;
     }
 
     /**
-     * Saves recognition and a new event independently before the caller sends its notification.
+     * Refreshes recognition and replaces the device's notice when it is no longer recognized.
      *
      * @return the new login snapshot, or null when the device was already recognized
      */
-    public LoginEvent recordLogin(int userId, int domainId, String tokenHash, long now, long knownSinceCutoff,
+    public LoginEvent recordLogin(int userId, String tokenHash, long now, long knownSinceCutoff,
         String browserName, String browserVersion, String operatingSystem, String ipAddress) {
         return execute(() -> {
-            DeviceEntity device = devices.findById(new DeviceId(domainId, userId, tokenHash)).orElse(null);
-            boolean recognized = device != null && device.getRevokedAt() == null
+            DeviceEntity device = devices.findByUserIdAndTokenHash(userId, tokenHash).orElse(null);
+            boolean recognized = device != null && device.getReportedAt() == null
                 && device.getLastSeen().toEpochMilli() > knownSinceCutoff;
             if (device == null) {
                 device = new DeviceEntity();
                 device.setUserId(userId);
-                device.setDomainId(domainId);
                 device.setTokenHash(tokenHash);
             }
             device.setLastSeen(Instant.ofEpochMilli(now));
-            device.setRevokedAt(null);
-            devices.save(device);
-            if (recognized) return null;
-
-            LoginEventEntity event = new LoginEventEntity();
-            event.setId(UUID.randomUUID().toString());
-            event.setUserId(userId);
-            event.setDomainId(domainId);
-            event.setTokenHash(tokenHash);
-            event.setCreatedAt(Instant.ofEpochMilli(now));
-            event.setBrowserName(browserName);
-            event.setBrowserVersion(browserVersion);
-            event.setOperatingSystem(operatingSystem);
-            event.setIpAddress(ipAddress);
-            events.save(event);
-            return snapshot(event);
+            if (!recognized) {
+                device.setCreateDate(Instant.ofEpochMilli(now));
+                device.setBrowserName(browserName);
+                device.setBrowserVersion(browserVersion);
+                device.setOperatingSystem(operatingSystem);
+                device.setIpAddress(ipAddress);
+                device.setConfirmedAt(null);
+                device.setReportedAt(null);
+            }
+            DeviceEntity saved = devices.save(device);
+            return recognized ? null : snapshot(saved);
         });
     }
 
     /** Returns unconfirmed login snapshots within the original seven-day notice period. */
-    public List<LoginEvent> findActive(int userId, int domainId, long now) {
-        return execute(() -> events.findByUserIdAndDomainIdAndConfirmedAtIsNullAndCreatedAtAfterOrderByCreatedAtDescIdAsc(
-            userId, domainId, Instant.ofEpochMilli(now - NOTICE_AGE)).stream().map(DeviceService::snapshot).toList());
+    public List<LoginEvent> findActive(int userId, long now) {
+        return execute(() -> devices.findByUserIdAndConfirmedAtIsNullAndCreateDateAfterOrderByCreateDateDescIdAsc(
+            userId, Instant.ofEpochMilli(now - NOTICE_AGE)).stream().map(DeviceService::snapshot).toList());
     }
 
-    /** Returns a retained owned event without changing either recognition or acknowledgment. */
-    public LoginEvent findEvent(int userId, int domainId, String id, long now) {
-        return execute(() -> events.findByUserIdAndDomainIdAndIdAndCreatedAtAfter(userId, domainId, id,
-            Instant.ofEpochMilli(now - EVENT_AGE)).map(DeviceService::snapshot).orElse(null));
+    /** Returns the device's current notice while the owned device record exists. */
+    public LoginEvent findEvent(int userId, long id) {
+        return execute(() -> devices.findByUserIdAndId(userId, id).map(DeviceService::snapshot).orElse(null));
     }
 
     /** Acknowledges an owned event without changing browser recognition or its last-login time. */
-    public LoginEvent confirm(int userId, int domainId, String id, long now) {
+    public LoginEvent confirm(int userId, long id, long now) {
         return execute(() -> {
-            LoginEventEntity event = events.findByUserIdAndDomainIdAndIdAndCreatedAtAfter(userId, domainId, id, Instant.ofEpochMilli(now - EVENT_AGE)).orElse(null);
-            if (event == null) return null;
-            if (event.getConfirmedAt() == null) {
-                event.setConfirmedAt(Instant.ofEpochMilli(now));
-                events.save(event);
+            DeviceEntity device = devices.findByUserIdAndId(userId, id).orElse(null);
+            if (device == null) return null;
+            if (device.getConfirmedAt() == null) {
+                device.setConfirmedAt(Instant.ofEpochMilli(now));
+                devices.save(device);
             }
-            return snapshot(event);
+            return snapshot(device);
         });
     }
 
     /** Reports an event, retaining its notice and revoking only that account's browser recognition. */
-    public LoginEvent report(int userId, int domainId, String id, long now) {
+    public LoginEvent report(int userId, long id, long now) {
         return execute(() -> {
-            LoginEventEntity event = events.findByUserIdAndDomainIdAndIdAndCreatedAtAfter(userId, domainId, id, Instant.ofEpochMilli(now - EVENT_AGE)).orElse(null);
-            if (event == null) return null;
-            if (event.getReportedAt() == null) {
-                devices.findById(new DeviceId(domainId, userId, event.getTokenHash())).ifPresent(device -> {
-                    device.setRevokedAt(Instant.ofEpochMilli(now));
-                    devices.save(device);
-                });
-                event.setReportedAt(Instant.ofEpochMilli(now));
-                event.setConfirmedAt(null);
-                events.save(event);
+            DeviceEntity device = devices.findByUserIdAndId(userId, id).orElse(null);
+            if (device == null) return null;
+            if (device.getReportedAt() == null) {
+                device.setReportedAt(Instant.ofEpochMilli(now));
+                device.setConfirmedAt(null);
+                devices.save(device);
             }
-            return snapshot(event);
+            return snapshot(device);
         });
     }
 
-    /** Removes expired records in bulk while preserving the independent event-retention window. */
-    public void cleanup(long now, long knownSinceCutoff) {
+    /** Removes inactive devices and their notices in one bulk delete. */
+    public void cleanup(long knownSinceCutoff) {
         execute(() -> {
-            events.deleteExpired(Instant.ofEpochMilli(now - EVENT_AGE));
             devices.deleteExpired(Instant.ofEpochMilli(knownSinceCutoff));
             return null;
         });
@@ -119,10 +103,10 @@ public class DeviceService {
         }
     }
 
-    private static LoginEvent snapshot(LoginEventEntity event) {
-        long createdAt = event.getCreatedAt().toEpochMilli();
-        return new LoginEvent(event.getId(), createdAt, createdAt + NOTICE_AGE, event.getBrowserName(), event.getBrowserVersion(),
-            event.getOperatingSystem(), event.getIpAddress(), event.getConfirmedAt() == null ? null : event.getConfirmedAt().toEpochMilli(),
-            event.getReportedAt() == null ? null : event.getReportedAt().toEpochMilli());
+    private static LoginEvent snapshot(DeviceEntity device) {
+        long createdAt = device.getCreateDate().toEpochMilli();
+        return new LoginEvent(device.getId().toString(), createdAt, createdAt + NOTICE_AGE, device.getBrowserName(), device.getBrowserVersion(),
+            device.getOperatingSystem(), device.getIpAddress(), device.getConfirmedAt() == null ? null : device.getConfirmedAt().toEpochMilli(),
+            device.getReportedAt() == null ? null : device.getReportedAt().toEpochMilli());
     }
 }

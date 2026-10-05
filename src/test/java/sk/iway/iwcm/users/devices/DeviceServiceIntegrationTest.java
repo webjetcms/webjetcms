@@ -56,97 +56,99 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
     private static final long KNOWN_AGE = Duration.ofDays(90).toMillis();
     private static final String HASH = "0123456789abcdef".repeat(4);
 
-    /** Recognition is per account and tenant, refreshes until expiry and is invalidated by a report. */
+    /** Generated device IDs isolate users and keep a single current notice through reporting and expiry. */
     @Test
-    void recognitionExpiryAndReportingRemainScopedToAccountAndTenant() throws Exception {
+    void recognitionAndNoticesRemainScopedToUser() throws Exception {
         try (TestDatabase database = new TestDatabase()) {
-            DeviceService repository = database.service;
-            LoginEvent first = record(repository, 1, 42, HASH, NOW);
-            assertNotNull(first);
-            assertNull(record(repository, 1, 42, HASH, NOW + 100));
-            assertNotNull(record(repository, 2, 42, HASH, NOW + 100));
-            assertNotNull(record(repository, 1, 43, HASH, NOW + 100));
-            assertEquals(1, repository.findActive(1, 42, NOW + 100).size());
+            DeviceService service = database.service;
+            LoginEvent first = record(service, 1, HASH, NOW);
+            long id = Long.parseLong(first.id());
+            assertTrue(id > 0, "The database must generate the device ID");
+            assertNull(record(service, 1, HASH, NOW + 100));
+            LoginEvent secondUser = record(service, 2, HASH, NOW + 100);
+            assertNotEquals(first.id(), secondUser.id());
+            assertEquals(2, database.count());
+            assertEquals(1, service.findActive(1, NOW + 100).size());
 
-            assertNull(repository.findEvent(2, 42, first.id(), NOW));
-            assertNull(repository.findEvent(1, 43, first.id(), NOW));
-            assertNull(repository.report(2, 42, first.id(), NOW));
-            assertNull(repository.confirm(1, 43, first.id(), NOW));
+            assertNull(service.findEvent(2, id));
+            assertNull(service.report(2, id, NOW));
+            assertNull(service.confirm(2, id, NOW));
 
-            repository.report(1, 42, first.id(), NOW + 200);
-            assertEquals(1, repository.findActive(1, 42, NOW + 200).size());
-            assertNotNull(record(repository, 1, 42, HASH, NOW + 300));
-            repository.report(1, 42, first.id(), NOW + 400);
-            assertNull(record(repository, 1, 42, HASH, NOW + 500));
-            assertNull(record(repository, 2, 42, HASH, NOW + 500));
+            service.confirm(1, id, NOW + 150);
+            assertTrue(service.findActive(1, NOW + 150).isEmpty());
+            LoginEvent reported = service.report(1, id, NOW + 200);
+            assertNull(reported.confirmedAt());
+            assertEquals(reported, service.report(1, id, NOW + 250));
+            assertEquals(1, service.findActive(1, NOW + 250).size());
 
-            assertNotNull(record(repository, 1, 42, HASH, NOW + 500 + KNOWN_AGE));
-            assertNull(record(repository, 1, 42, HASH, NOW + 501 + KNOWN_AGE));
+            LoginEvent renewed = record(service, 1, HASH, NOW + 300);
+            assertEquals(first.id(), renewed.id());
+            assertEquals(NOW + 300, renewed.createdAt());
+            assertNull(renewed.confirmedAt());
+            assertNull(renewed.reportedAt());
+            assertEquals(renewed, service.findEvent(1, id), "Old links must resolve to the device's current notice");
+            assertNull(record(service, 2, HASH, NOW + 300));
+
+            LoginEvent expired = record(service, 1, HASH, NOW + 300 + KNOWN_AGE);
+            assertEquals(first.id(), expired.id());
+            assertEquals(NOW + 300 + KNOWN_AGE, expired.createdAt());
+            assertEquals(2, database.count(), "Re-detection must update the device rather than insert history");
         }
     }
 
-    /** Warning expiry and history retention do not depend on cleanup or the recognition retention setting. */
+    /** Notices expire after seven days; device cleanup also removes the email detail. */
     @Test
-    void deadlinesApplyBeforeCleanupAndHistorySurvivesDevicePruning() throws Exception {
+    void noticeDeadlineAndDeviceCleanupUseTheirOwnDates() throws Exception {
         try (TestDatabase database = new TestDatabase()) {
-            DeviceService repository = database.service;
-            LoginEvent first = record(repository, 1, 42, HASH, NOW);
-            assertEquals(1, repository.findActive(1, 42, NOW + DeviceService.NOTICE_AGE - 1).size());
-            assertTrue(repository.findActive(1, 42, NOW + DeviceService.NOTICE_AGE).isEmpty());
-            assertNotNull(repository.findEvent(1, 42, first.id(), NOW + KNOWN_AGE - 1));
-            assertNull(repository.findEvent(1, 42, first.id(), NOW + KNOWN_AGE));
+            DeviceService service = database.service;
+            LoginEvent first = record(service, 1, HASH, NOW);
+            long id = Long.parseLong(first.id());
+            assertEquals(1, service.findActive(1, NOW + DeviceService.NOTICE_AGE - 1).size());
+            assertTrue(service.findActive(1, NOW + DeviceService.NOTICE_AGE).isEmpty());
 
-            long thirtyDaysLater = NOW + Duration.ofDays(30).toMillis();
-            repository.cleanup(thirtyDaysLater, NOW);
-            assertNotNull(repository.findEvent(1, 42, first.id(), thirtyDaysLater));
-            assertNotNull(record(repository, 1, 42, HASH, thirtyDaysLater));
-            repository.cleanup(NOW + KNOWN_AGE, NOW);
-            assertEquals(1, database.count("user_login_events"));
-            assertEquals(1, database.count("user_login_devices"));
+            long later = NOW + Duration.ofDays(30).toMillis();
+            assertNull(record(service, 1, HASH, later));
+            assertEquals(first, service.findEvent(1, id), "A normal login must preserve the notice details");
+            service.cleanup(NOW);
+            assertNotNull(service.findEvent(1, id), "Cleanup must use lastSeen rather than the notice date");
+            service.cleanup(later);
+            assertNull(service.findEvent(1, id));
+            assertEquals(0, database.count());
+
+            LoginEvent recreated = record(service, 1, HASH, later + 1);
+            assertNotEquals(first.id(), recreated.id());
+            assertEquals(1, database.count());
         }
     }
 
-    /** A rejected event insert leaves the independently saved browser recognition in place. */
-    @Test
-    void failedEventInsertLeavesDeviceRecognitionSaved() throws Exception {
-        try (TestDatabase database = new TestDatabase()) {
-            database.execute("CREATE TRIGGER reject_login_event BEFORE INSERT ON user_login_events "
-                + "FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Intentional fixture event failure'");
-            assertThrows(IllegalStateException.class, () -> record(database.service, 1, 42, HASH, NOW));
-            assertEquals(1, database.count("user_login_devices"));
-            assertEquals(0, database.count("user_login_events"));
-            database.execute("DROP TRIGGER reject_login_event");
-            assertNull(record(database.service, 1, 42, HASH, NOW));
-            assertEquals(1, database.count("user_login_devices"));
-            assertEquals(0, database.count("user_login_events"));
-        }
-    }
-
-    /** Independent persistence factories see acknowledgments and revocation without local cache eviction. */
+    /** Independent persistence factories see confirmation, reporting and refreshed notices without cache eviction. */
     @Test
     void independentPersistenceContextsObserveEachOthersChanges() throws Exception {
         try (TestDatabase database = new TestDatabase()) {
             DeviceService firstNode = database.service;
             DeviceService secondNode = database.newContext().getBean(DeviceService.class);
-            LoginEvent first = record(firstNode, 1, 42, HASH, NOW);
-            assertNotNull(secondNode.findEvent(1, 42, first.id(), NOW));
-            assertNull(record(secondNode, 1, 42, HASH, NOW + 100));
+            LoginEvent first = record(firstNode, 1, HASH, NOW);
+            long id = Long.parseLong(first.id());
+            assertNotNull(secondNode.findEvent(1, id));
+            assertNull(record(secondNode, 1, HASH, NOW + 100));
 
-            firstNode.confirm(1, 42, first.id(), NOW + 200);
-            assertEquals(NOW + 200, secondNode.findEvent(1, 42, first.id(), NOW + 200).confirmedAt());
-            assertTrue(secondNode.findActive(1, 42, NOW + 200).isEmpty());
+            firstNode.confirm(1, id, NOW + 200);
+            assertEquals(NOW + 200, secondNode.findEvent(1, id).confirmedAt());
+            assertTrue(secondNode.findActive(1, NOW + 200).isEmpty());
 
-            secondNode.report(1, 42, first.id(), NOW + 300);
-            LoginEvent reported = firstNode.findEvent(1, 42, first.id(), NOW + 300);
+            secondNode.report(1, id, NOW + 300);
+            LoginEvent reported = firstNode.findEvent(1, id);
             assertEquals(NOW + 300, reported.reportedAt());
             assertNull(reported.confirmedAt());
-            assertNotNull(record(firstNode, 1, 42, HASH, NOW + 400));
-            assertNull(record(secondNode, 1, 42, HASH, NOW + 500));
+            assertEquals(first.id(), record(firstNode, 1, HASH, NOW + 400).id());
+            assertNull(record(secondNode, 1, HASH, NOW + 500));
+            assertEquals(NOW + 400, secondNode.findEvent(1, id).createdAt());
+            assertEquals(1, database.count());
         }
     }
 
-    private static LoginEvent record(DeviceService repository, int userId, int domainId, String hash, long now) {
-        return repository.recordLogin(userId, domainId, hash, now, now - KNOWN_AGE, "Firefox", "131", "Windows 11", "127.0.0.1");
+    private static LoginEvent record(DeviceService service, int userId, String hash, long now) {
+        return service.recordLogin(userId, hash, now, now - KNOWN_AGE, "Firefox", "131", "Windows 11", "127.0.0.1");
     }
 
     /** Owns only an isolated database whose name is generated in this test process. */
@@ -185,7 +187,7 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
                 try (Statement statement = connection.createStatement()) {
                     statement.execute(users.group());
                     for (String sql : ddl.split(";")) if (!sql.isBlank()) statement.execute(sql.trim());
-                    statement.execute("INSERT INTO users (user_id, login, password) VALUES (1, 'device-test-one', 'disabled'), (2, 'device-test-two', 'disabled')");
+                    statement.execute("INSERT INTO users (user_id, domain_id, login, password) VALUES (1, 1, 'autotest-device-one', 'disabled'), (2, 42, 'autotest-device-two', 'disabled')");
                 }
                 service = newContext().getBean(DeviceService.class);
             } catch (Exception | AssertionError exception) {
@@ -214,18 +216,9 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
             return context;
         }
 
-        /** Test-only DDL is always executed after verifying the generated schema is selected. */
-        void execute(String sql) throws SQLException {
+        int count() throws SQLException {
             requireIsolatedCatalog(connection);
-            try (Statement statement = connection.createStatement()) {
-                statement.execute(sql);
-            }
-        }
-
-        int count(String table) throws SQLException {
-            assertTrue(List.of("user_login_devices", "user_login_events").contains(table));
-            requireIsolatedCatalog(connection);
-            try (Statement statement = connection.createStatement(); ResultSet rows = statement.executeQuery("SELECT COUNT(*) FROM " + table)) {
+            try (Statement statement = connection.createStatement(); ResultSet rows = statement.executeQuery("SELECT COUNT(*) FROM user_login_devices")) {
                 assertTrue(rows.next());
                 return rows.getInt(1);
             }
@@ -330,8 +323,8 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
         }
 
         @Bean
-        DeviceService deviceService(DeviceRepository devices, LoginEventRepository events) {
-            return new DeviceService(devices, events);
+        DeviceService deviceService(DeviceRepository devices) {
+            return new DeviceService(devices);
         }
     }
 }

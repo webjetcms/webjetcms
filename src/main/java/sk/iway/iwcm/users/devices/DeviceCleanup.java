@@ -5,7 +5,7 @@ import java.time.Duration;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 
-/** Daily cron task removing expired device recognition and login event history. */
+/** Daily cron task removing inactive devices and their notices. */
 public class DeviceCleanup {
     private DeviceCleanup() {
     }
@@ -14,9 +14,9 @@ public class DeviceCleanup {
     public static void main(String[] args) {
         long now = System.currentTimeMillis();
         try {
-            Tools.getSpringBean("deviceService", DeviceService.class).cleanup(now, now - Duration.ofDays(AdminDeviceService.maxAgeDays()).toMillis());
+            Tools.getSpringBean("deviceService", DeviceService.class).cleanup(now - Duration.ofDays(AdminDeviceService.maxAgeDays()).toMillis());
         } catch (RuntimeException exception) {
-            Logger.error(DeviceCleanup.class, "Could not clean up expired login device history");
+            Logger.error(DeviceCleanup.class, "Could not clean up inactive login devices");
         }
     }
 

@@ -5,61 +5,54 @@ import java.time.Instant;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
-import jakarta.persistence.PostLoad;
-import jakarta.persistence.PostPersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
-
-import org.springframework.data.domain.Persistable;
 
 import lombok.Getter;
 import lombok.Setter;
 
-/** Account-scoped browser recognition, always read from the database rather than a shared JPA cache. */
+/** Stores a user's browser recognition and its latest new-device notice. */
 @Entity
 @Table(name = "user_login_devices")
-@IdClass(DeviceId.class)
 @Cacheable(false)
 @Getter
 @Setter
-public class DeviceEntity implements Persistable<DeviceId> {
+public class DeviceEntity {
     @Id
-    @Column(name = "domain_id", nullable = false)
-    private int domainId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "device_id")
+    private Long id;
 
-    @Id
     @Column(name = "user_id", nullable = false)
     private int userId;
 
-    @Id
     @Column(name = "token_hash", nullable = false, length = 64)
     private String tokenHash;
+
+    /** Creation time of the latest notice, refreshed when the browser is detected again. */
+    @Column(name = "create_date", nullable = false)
+    private Instant createDate;
 
     @Column(name = "last_seen", nullable = false)
     private Instant lastSeen;
 
-    @Column(name = "revoked_at")
-    private Instant revokedAt;
+    @Column(name = "browser_name", length = 128)
+    private String browserName;
 
-    @Transient
-    private boolean newEntity = true;
+    @Column(name = "browser_version", length = 64)
+    private String browserVersion;
 
-    @Override
-    public DeviceId getId() {
-        return new DeviceId(domainId, userId, tokenHash);
-    }
+    @Column(name = "operating_system", length = 128)
+    private String operatingSystem;
 
-    /** Distinguishes new assigned identifiers from records loaded from the database. */
-    @Override
-    public boolean isNew() {
-        return newEntity;
-    }
+    @Column(name = "ip_address", length = 64)
+    private String ipAddress;
 
-    @PostLoad
-    @PostPersist
-    private void markPersisted() {
-        newEntity = false;
-    }
+    @Column(name = "confirmed_at")
+    private Instant confirmedAt;
+
+    @Column(name = "reported_at")
+    private Instant reportedAt;
 }
