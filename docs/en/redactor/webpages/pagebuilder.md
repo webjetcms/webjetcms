@@ -88,6 +88,8 @@ You can also open the library for a selected block via **More actions → Insert
 
 The library opens as a narrow window above the page. The header says, for example, **Insert section** and below it the insertion point. You can move the window by dragging the header. You can close it with the cross in the top right or with the **Escape** key.
 
+When inserting content via `+` in the yellow line or the **Blocks** button in the editor bar, you will also find the **Image** and **Application** options on the **Basic** tab. They open the same dialogs as the corresponding buttons in the bar. After confirmation, the image or application will be inserted in the selected location; you do not need to insert the auxiliary paragraph manually.
+
 In the **Library** tab, blocks are grouped into categories with a number of blocks. Click a category to expand it; only one remains open at a time. The tabs display the title and a preview in the original aspect ratio. Click the preview or title to insert the block into the page.
 
 The **Search block…** field filters by name and can be combined with a single label. When filtering, the matching category is left open or the first one with a result is opened. The numbers for categories take the filter into account, the numbers for labels indicate the total number of blocks with the given label. **All** only removes the label and keeps the search text. If nothing is found, the **Clear filters** button removes both the text and the label. When scrolling through the results, the search and labels remain available.
@@ -104,7 +106,7 @@ When you enable insert mode, temporary spaces are smoothly expanded without movi
 
 Closing the library will return you to the selected plus. You can exit insert mode by pressing **Exit · Esc** in the helper or the **Escape** key. The spaces will collapse smoothly, the regular bar will be restored, and the focus will return to `+`. Clicking in the content will exit the mode and select the given block. If you have animation restrictions set in your system, showing and hiding will occur immediately. Help strips are not saved or displayed in the preview.
 
-## Page structure and calm display
+## Page structure
 
 The **Structure** button opens a tree of blocks with names derived from their contents. You can search for blocks by name or type. Clicking on an item selects the corresponding block, moves the page to its location, and expands a closed branch. Clicking on an item again leaves the branch open; you can use the arrow next to the name to expand or collapse it without changing the selection.
 
