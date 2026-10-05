@@ -52,8 +52,10 @@ import sk.iway.iwcm.users.PermissionGroupBean;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 public class LogonTools {
+    private static final String SUCCESS_LOGON_REQUEST_MARKER = LogonTools.class.getName() + ".afterSuccessLogon";
 
     protected LogonTools() {
         //utility class
@@ -820,8 +822,6 @@ public class LogonTools {
 			return errors;
 		}
 
-        callLogonLogoffInterceptor(user, request);
-
         return errors;
     }
 
@@ -850,7 +850,29 @@ public class LogonTools {
         SetCharacterEncodingFilter.registerDataContext(request);
     }
 
-    public static void afterLogon(Identity user, HttpServletRequest request, HttpServletResponse response)
+    /**
+     * Runs post-login callbacks and browser recognition once for the current account and request.
+     * Call after the session is established, password policy and all required authentication factors
+     * have succeeded, and before redirecting or forwarding. API token and HTTP Basic authentication
+     * must not call this browser-login hook.
+     *
+     * @param request completed authentication request containing the logged-in user's session
+     * @param response response receiving login cookies
+     */
+    public static void afterSuccessLogon(HttpServletRequest request, HttpServletResponse response) {
+        Identity user = UsersDB.getCurrentUser(request);
+        if (user == null) return;
+
+        Integer account = user.getUserId();
+        if (account.equals(request.getAttribute(SUCCESS_LOGON_REQUEST_MARKER))) return;
+        request.setAttribute(SUCCESS_LOGON_REQUEST_MARKER, account);
+
+        callLogonLogoffInterceptor(user, request);
+        AdminDeviceService.recordSuccessfulLogin(user, request, response);
+        afterLogon(user, request, response);
+    }
+
+    private static void afterLogon(Identity user, HttpServletRequest request, HttpServletResponse response)
 	{
 		String afterLogon = Constants.getString("afterLogonMethod");
 		if (Tools.isNotEmpty(afterLogon))

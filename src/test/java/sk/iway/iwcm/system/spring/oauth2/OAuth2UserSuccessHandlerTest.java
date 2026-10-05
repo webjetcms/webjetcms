@@ -614,10 +614,10 @@ class OAuth2UserSuccessHandlerTest extends BaseWebjetTest {
         }
     }
 
-    /** Existing administrators retain device protection when authenticating through the public OAuth2 entry point. */
+    /** Public OAuth2 logins run shared post-login actions and preserve the appropriate return target. */
     @ParameterizedTest
     @CsvSource({ "true,true", "true,false", "false,true" })
-    void recognizesOnlyAdministratorSessionsAndPreservesAppropriateReturnTarget(boolean administrator, boolean hasAdminTarget) throws IOException {
+    void runsPostLoginActionsAndPreservesAppropriateReturnTarget(boolean administrator, boolean hasAdminTarget) throws IOException {
         OAuth2User oauth2User = new DefaultOAuth2User(List.of(new SimpleGrantedAuthority("ROLE_USER")),
             createGoogleOAuth2Attributes("device-owner@example.com", "Device", "Owner"), "email");
         when(authentication.getPrincipal()).thenReturn(oauth2User);
@@ -640,11 +640,12 @@ class OAuth2UserSuccessHandlerTest extends BaseWebjetTest {
             handler.onAuthenticationSuccess(request, response, authentication);
 
             verify(response).sendRedirect(administrator && hasAdminTarget ? eventTarget : "/sk/produkty/");
+            logon.verify(() -> LogonTools.afterSuccessLogon(request, response));
+            var identity = ArgumentCaptor.forClass(Identity.class);
+            logon.verify(() -> LogonTools.setUserToSession(eq(session), identity.capture()));
+            assertEquals(7, identity.getValue().getUserId());
+            assertEquals(administrator, identity.getValue().isAdmin());
             if (administrator) {
-                var identity = ArgumentCaptor.forClass(Identity.class);
-                devices.verify(() -> AdminDeviceService.recordSuccessfulLogin(identity.capture(), eq(request), eq(response)));
-                assertEquals(7, identity.getValue().getUserId());
-                assertTrue(identity.getValue().isAdmin());
                 if (hasAdminTarget) devices.verify(() -> AdminDeviceService.getAfterLoginRedirect(request));
                 devices.verifyNoMoreInteractions();
             } else devices.verifyNoInteractions();

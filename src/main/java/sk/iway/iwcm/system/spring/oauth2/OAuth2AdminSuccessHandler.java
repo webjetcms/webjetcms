@@ -84,7 +84,7 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
 
             LogonTools.logonUserWithAllChecks(identity, request);
 
-            AdminDeviceService.recordSuccessfulLogin(identity, request, response);
+            LogonTools.afterSuccessLogon(request, response);
             response.sendRedirect(AdminDeviceService.getAfterLoginRedirect(request));
 
             //update request bean to current user for correct logging

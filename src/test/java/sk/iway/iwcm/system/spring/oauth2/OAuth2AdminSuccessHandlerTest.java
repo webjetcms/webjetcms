@@ -116,7 +116,7 @@ class OAuth2AdminSuccessHandlerTest extends BaseWebjetTest {
             // Overenie
             verify(response).sendRedirect("/admin/v9/?securityEvent=42");
             logonToolsMock.verify(() -> LogonTools.logonUserWithAllChecks(any(Identity.class), eq(request)));
-            devices.verify(() -> AdminDeviceService.recordSuccessfulLogin(any(Identity.class), eq(request), eq(response)));
+            logonToolsMock.verify(() -> LogonTools.afterSuccessLogon(request, response));
         }
     }
 

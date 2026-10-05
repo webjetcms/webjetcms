@@ -33,7 +33,6 @@ import sk.iway.iwcm.stat.BrowserDetector;
 @Service
 public class AdminDeviceService {
     static final String COOKIE_NAME = "wjAdminDevice";
-    private static final String REQUEST_MARKER = AdminDeviceService.class.getName() + ".recorded";
     private static final Pattern TOKEN_PATTERN = Pattern.compile("[A-Za-z0-9_-]{43}");
     private static final SecureRandom RANDOM = new SecureRandom();
     private final DeviceService devices;
@@ -51,7 +50,8 @@ public class AdminDeviceService {
 
     /**
      * Records a completed interactive login without allowing notification failures to deny access.
-     * Call only after password policy and all required authentication factors have succeeded.
+     * Called by {@link sk.iway.iwcm.common.LogonTools#afterSuccessLogon(HttpServletRequest, HttpServletResponse)}
+     * after password policy and all required authentication factors have succeeded.
      *
      * @param user authenticated administrator
      * @param request successful authentication request
@@ -67,11 +67,8 @@ public class AdminDeviceService {
         }
     }
 
-    /** Applies the account-specific inactivity window once per completed authentication request. */
+    /** Applies the account-specific inactivity window and renews the browser cookie. */
     void record(Identity user, HttpServletRequest request, HttpServletResponse response) {
-        Integer account = user.getUserId();
-        if (account.equals(request.getAttribute(REQUEST_MARKER))) return;
-        request.setAttribute(REQUEST_MARKER, account);
         String token = readToken(request);
         if (token == null) {
             byte[] bytes = new byte[32];

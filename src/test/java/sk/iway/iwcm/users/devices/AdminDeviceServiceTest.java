@@ -22,13 +22,16 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.access.AccessDeniedException;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.BrowserDetector;
+import sk.iway.iwcm.users.UsersDB;
 
 /** Verifies cookie lifecycle, successful-login boundaries, account isolation and safe notification data. */
 class AdminDeviceServiceTest {
@@ -42,12 +45,15 @@ class AdminDeviceServiceTest {
     private final MockHttpServletResponse response = new MockHttpServletResponse();
     private MockedStatic<Constants> constants;
     private MockedStatic<Tools> tools;
+    private MockedStatic<UsersDB> users;
     private MockedConstruction<BrowserDetector> browsers;
 
     @BeforeEach
     void prepareLogin() {
         constants = mockStatic(Constants.class);
         tools = mockStatic(Tools.class);
+        users = mockStatic(UsersDB.class);
+        users.when(() -> UsersDB.getCurrentUser(any(HttpServletRequest.class))).thenReturn(user);
         browsers = mockConstruction(BrowserDetector.class, (browser, context) -> {
             when(browser.getBrowserName()).thenReturn("Firefox");
             when(browser.getBrowserVersion()).thenReturn("131.0");
@@ -75,6 +81,7 @@ class AdminDeviceServiceTest {
     @AfterEach
     void releaseMocks() {
         browsers.close();
+        users.close();
         tools.close();
         constants.close();
     }
@@ -106,15 +113,15 @@ class AdminDeviceServiceTest {
     @Test
     void renewsKnownCookieAndProcessesALaterLoginInTheSameSession() {
         request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
-        AdminDeviceService.recordSuccessfulLogin(user, request, response);
-        AdminDeviceService.recordSuccessfulLogin(user, request, response);
+        LogonTools.afterSuccessLogon(request, response);
+        LogonTools.afterSuccessLogon(request, response);
         verify(repository, times(1)).recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
 
         var laterRequest = new MockHttpServletRequest();
         laterRequest.setSession(request.getSession());
         laterRequest.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
         laterRequest.addHeader("User-Agent", "Updated Autotest Browser");
-        AdminDeviceService.recordSuccessfulLogin(user, laterRequest, new MockHttpServletResponse());
+        LogonTools.afterSuccessLogon(laterRequest, new MockHttpServletResponse());
 
         assertEquals(TOKEN, response.getCookie(AdminDeviceService.COOKIE_NAME).getValue());
         verify(repository, times(2)).recordLogin(eq(7), eq(AdminDeviceService.hashToken(TOKEN)), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
@@ -125,9 +132,9 @@ class AdminDeviceServiceTest {
     @Test
     void scopesAnotherAccountIndependently() {
         request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
-        AdminDeviceService.recordSuccessfulLogin(user, request, response);
+        LogonTools.afterSuccessLogon(request, response);
         when(user.getUserId()).thenReturn(8);
-        AdminDeviceService.recordSuccessfulLogin(user, request, new MockHttpServletResponse());
+        LogonTools.afterSuccessLogon(request, new MockHttpServletResponse());
         verify(repository).recordLogin(eq(7), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
         verify(repository).recordLogin(eq(8), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
     }
@@ -174,8 +181,8 @@ class AdminDeviceServiceTest {
         tools.when(() -> Tools.addCookie(any(), any(), any())).thenReturn(false);
         when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
             .thenReturn(event());
-        AdminDeviceService.recordSuccessfulLogin(user, request, response);
-        AdminDeviceService.recordSuccessfulLogin(user, request, response);
+        LogonTools.afterSuccessLogon(request, response);
+        LogonTools.afterSuccessLogon(request, response);
         verify(service, times(1)).sendNotification(user, request, event());
         assertEquals(0, response.getCookies().length);
     }

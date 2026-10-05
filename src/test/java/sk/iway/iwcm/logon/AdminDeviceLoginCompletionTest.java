@@ -11,6 +11,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -72,6 +73,11 @@ class AdminDeviceLoginCompletionTest {
         when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         props.when(() -> Prop.getInstance(request.getServletContext(), request)).thenReturn(prop);
         logon = staticMock(LogonTools.class);
+        logon.when(() -> LogonTools.setUserToSession(any(), any())).thenAnswer(invocation -> {
+            request.getSession().setAttribute(Constants.USER_KEY, invocation.getArgument(1));
+            return null;
+        });
+        logon.when(() -> LogonTools.afterSuccessLogon(request, response)).thenCallRealMethod();
         logon.when(() -> LogonTools.logon(eq(form.getUsername()), eq(form.getPassword()), any(Identity.class), any(), eq(request), eq(prop)))
             .thenAnswer(invocation -> {
                 Identity user = invocation.getArgument(2);
@@ -116,6 +122,7 @@ class AdminDeviceLoginCompletionTest {
             });
         assertEquals("/admin/skins/webjet8/logon-spring", submit());
         devices.verifyNoInteractions();
+        logon.verify(() -> LogonTools.afterSuccessLogon(request, response), never());
     }
 
     /** Password authentication alone must not recognize the browser while a second factor is pending. */
@@ -125,6 +132,7 @@ class AdminDeviceLoginCompletionTest {
         assertEquals(TWO_FACTOR_FORM, submit());
         assertNotNull(request.getSession().getAttribute("adminUser_waitingForToken"));
         devices.verifyNoInteractions();
+        logon.verify(() -> LogonTools.afterSuccessLogon(request, response), never());
     }
 
     /** An incorrect second factor leaves the browser unrecognized and keeps the challenge active. */
@@ -137,6 +145,7 @@ class AdminDeviceLoginCompletionTest {
             assertEquals(TWO_FACTOR_FORM, submit());
             assertNotNull(request.getSession().getAttribute("adminUser_waitingForToken"));
             devices.verifyNoInteractions();
+            logon.verify(() -> LogonTools.afterSuccessLogon(request, response), never());
         }
     }
 
@@ -162,6 +171,7 @@ class AdminDeviceLoginCompletionTest {
         assertEquals(PASSWORD_FORM, submit());
         assertNotNull(request.getSession().getAttribute(Constants.USER_KEY + "_changepassword"));
         devices.verifyNoInteractions();
+        logon.verify(() -> LogonTools.afterSuccessLogon(request, response), never());
     }
 
     /** Completing a mandatory password change must still require the account's configured second factor. */
@@ -180,6 +190,7 @@ class AdminDeviceLoginCompletionTest {
         assertEquals(TWO_FACTOR_FORM, controller.edit(form, new ModelMap(), request, response, request.getSession()));
         assertEquals(user, request.getSession().getAttribute("adminUser_waitingForToken"));
         devices.verifyNoInteractions();
+        logon.verify(() -> LogonTools.afterSuccessLogon(request, response), never());
     }
 
     /** A completed mandatory password change recognizes the device immediately when no second factor is required. */

@@ -62,7 +62,7 @@ public class PasskeyAuthSuccessHandler extends SimpleUrlAuthenticationSuccessHan
             LogonTools.logonUserWithAllChecks(identity, request);
             Adminlog.add(Adminlog.TYPE_USER_LOGON, "PassKey - user (ADMIN) successfully logged: name=" + userDetails.getLogin(), -1, -1);
 
-            AdminDeviceService.recordSuccessfulLogin(identity, request, response);
+            LogonTools.afterSuccessLogon(request, response);
             response.sendRedirect(AdminDeviceService.getAfterLoginRedirect(request));
         } catch (Exception ex) {
             Logger.error(PasskeyAuthSuccessHandler.class, "PassKey onAuthenticationSuccess error: " + ex.getMessage(), ex);

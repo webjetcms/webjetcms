@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
 
@@ -32,8 +31,7 @@ class PasskeyDeviceLoginTest {
         UserDetails user = mock(UserDetails.class);
         when(user.isAdmin()).thenReturn(true);
         try (var users = mockStatic(UsersDB.class); var logon = mockStatic(LogonTools.class);
-             var audit = mockStatic(Adminlog.class); var devices = mockStatic(AdminDeviceService.class);
-             var identities = mockConstruction(Identity.class)) {
+             var audit = mockStatic(Adminlog.class); var devices = mockStatic(AdminDeviceService.class)) {
             users.when(() -> UsersDB.getUser("passkey-admin")).thenReturn(user);
             devices.when(() -> AdminDeviceService.getAfterLoginRedirect(request)).thenReturn("/admin/v9/?securityEvent=42");
 
@@ -41,7 +39,7 @@ class PasskeyDeviceLoginTest {
 
             assertEquals("/admin/v9/?securityEvent=42", response.getRedirectedUrl());
             logon.verify(() -> LogonTools.logonUserWithAllChecks(any(Identity.class), eq(request)));
-            devices.verify(() -> AdminDeviceService.recordSuccessfulLogin(identities.constructed().get(0), request, response));
+            logon.verify(() -> LogonTools.afterSuccessLogon(request, response));
         }
     }
 

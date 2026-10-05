@@ -170,7 +170,7 @@ public class AdminLogonController {
             } else {
                 String twoFaRedirect = set2FaAuthForm(user, request);
                 if (Tools.isNotEmpty(twoFaRedirect)) return twoFaRedirect;
-                AdminDeviceService.recordSuccessfulLogin(user, request, response);
+                LogonTools.afterSuccessLogon(request, response);
                 return "redirect:" + AdminDeviceService.getAfterLoginRedirect(request);
             }
         } else {
@@ -375,7 +375,7 @@ public class AdminLogonController {
         determineRootWebPageDirectory(session, user);
         StatDB.addAdmin(request);
 
-        AdminDeviceService.recordSuccessfulLogin(user, request, response);
+        LogonTools.afterSuccessLogon(request, response);
         return "redirect:" + AdminDeviceService.getAfterLoginRedirect(request);
     }
 
@@ -566,7 +566,7 @@ public class AdminLogonController {
                     new SimpleQuery().execute("UPDATE users SET mobile_device = ? WHERE user_id = ?", token, sessionUserAfterToken.getUserId());
                     sessionUserAfterToken.setMobileDevice(currentCode);
                 }
-                AdminDeviceService.recordSuccessfulLogin(sessionUserAfterToken, request, response);
+                LogonTools.afterSuccessLogon(request, response);
             }
 
             return "redirect:" + AdminDeviceService.getAfterLoginRedirect(request);

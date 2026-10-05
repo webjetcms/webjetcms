@@ -17,6 +17,7 @@ Shared higher-level utilities sitting above low-level generic helpers: domain to
 - `DocTools`: Document-related convenience (classification, formatting, path adjustments).
 - `FilePathTools`: Normalization & security filtering of file system paths.
 - `WriteTagToolsForCore`: Determines inclusion of custom CSS/JS assets in admin layout.
+- `LogonTools.afterSuccessLogon(request, response)`: Runs login interceptors, administrator browser recognition and the configured `afterLogonMethod` once per account/request. Reads the identity from the established session. Call after all required authentication steps and before redirect/forward; skip API token and HTTP Basic authentication. `setUserToSession` only updates identity/security context and must not trigger these actions.
 
 ## Core Patterns
 

@@ -154,7 +154,6 @@ public class NtlmLogonAction
 						identity.setValid(true);
 						//je korektne prihlaseny
 						LogonTools.setUserToSession(request.getSession(), identity);
-						AdminDeviceService.recordSuccessfulLogin(identity, request, response);
 
 						Logger.debug(NtlmLogonAction.class,"NtlmLogonAction: admin prihlaseny");
 						if (request.getParameter("admin")!=null)
@@ -177,6 +176,7 @@ public class NtlmLogonAction
 
 				if (logonSuccess)
 				{
+					LogonTools.afterSuccessLogon(request, response);
 					if (request.getParameter("origDocId")!=null)
 					{
 						afterLogonUrl = "/showdoc.do?docid="+request.getParameter("origDocId");
@@ -378,6 +378,7 @@ public class NtlmLogonAction
 		Identity userLogged = new Identity();
 		BeanUtils.copyProperties(userLogged, user);
 		LogonTools.setUserToSession(request.getSession(), userLogged);
+		LogonTools.afterSuccessLogon(request, response);
 		String afterLogonUrl = "/";
 		if (request.getParameter("origDocId")!=null)
 		{

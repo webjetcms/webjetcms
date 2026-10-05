@@ -54,10 +54,7 @@ public class UsrLogonController extends WebjetComponentAbstract {
 
                 PathFilter.setNginxProxyMode(request, response);
 
-                if (user.isAdmin()) AdminDeviceService.recordSuccessfulLogin(user, request, response);
-
-                //zavola triedu/metodu z konstanty. (robene kvoli plussport, kde sa namiesto session pouzila cookie)
-		        LogonTools.afterLogon(user, request, response);
+                LogonTools.afterSuccessLogon(request, response);
 
                 if (user.isAdmin() && request.getSession().getAttribute("adminAfterLogonRedirect") != null) {
                     response.sendRedirect(AdminDeviceService.getAfterLoginRedirect(request));
