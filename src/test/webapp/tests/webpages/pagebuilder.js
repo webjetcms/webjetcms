@@ -105,6 +105,38 @@ Scenario('bug - prepnutie editora', async ({I, DTE, Apps, Document}) => {
     Document.resetPageBuilderMode();
 });
 
+Scenario('switching back to Page Builder resets the canvas scroll', async ({I, DTE, Document}) => {
+    Document.resetPageBuilderMode();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+    DTE.waitForEditor();
+    I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe')?.contentWindow.pageBuilderReady === true, 20);
+
+    for (const mode of ['html', '']) {
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        const previousScroll = await I.executeScript(() => {
+            window.scrollTo({top: document.documentElement.scrollHeight, behavior: 'instant'});
+            return window.scrollY;
+        });
+        I.assertAbove(previousScroll, 0, 'The page must be scrolled before switching editor modes');
+        I.selectOption('#DTE_Field_data-editorTypeSelector select', mode);
+        I.switchTo();
+        I.waitForVisible(mode === 'html' ? '.CodeMirror' : '.cke_wysiwyg_frame', 10);
+        I.clickCss('#DTE_Field_data-editorTypeSelector button');
+        I.click(locate('.dropdown-item').withText('Page Builder'));
+        I.waitForVisible('#DTE_Field_data-pageBuilderIframe', 10);
+        I.waitForFunction(() => {
+            const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe').contentWindow;
+            const elements = Array.from(frame.document.querySelectorAll('#wjInline-docdata [data-ckeditor-instance]'));
+            return elements.length > 0 && elements.every(element => frame.CKEDITOR.instances[element.dataset.ckeditorInstance]?.status === 'ready');
+        }, 20);
+        const scroll = await I.executeScript(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').contentWindow.scrollY);
+        I.assertTrue(scroll <= 1, 'Returning from ' + (mode || 'standard') + ' mode must show the top of the page, actual scroll: ' + scroll);
+    }
+
+    DTE.cancel();
+    Document.resetPageBuilderMode();
+});
+
 Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', async ({I, DTE, Document}) => {
     //bug: ked prepnem z PB na standardny, zatvorim okno, otvorim, tak sa prepinac nezobrazi
     //overit aj to, ze sa nezobrazi na stranke, kde nie je PB zapnute
@@ -2931,6 +2963,88 @@ Scenario('library content insertion preserves the CKEditor selection', async ({I
     DTE.cancel();
 });
 
+for (const action of [
+    {name: 'image', id: 'pb-basic-4.13', command: 'image'},
+    {name: 'application', id: 'pb-basic-4.14', command: 'webjetcomponentsDialog'}
+]) {
+    Scenario('library inserts '+action.name+' through the CKEditor dialog', async ({I, DTE, Document}) => {
+        await openWorkbenchFixture(I, DTE, Document);
+        const paragraph = workbenchFixture+' .pb-workbench-copy';
+        if (action.name === 'application') {
+            // Use viewport coordinates because the Page Builder iframe can scale the editable content.
+            await I.usePlaywrightTo('hover the insertion point before the first heading', async ({page}) => {
+                const frame = await getPageBuilderFrame(page);
+                const box = await frame.locator(workbenchFixture+' h2').boundingBox();
+                await page.mouse.move(box.x+20, box.y+2);
+            });
+            I.waitForVisible('#pb-wjmagiclinePlus', 10);
+            // Magicline listens to mouseup and its animated handle cannot satisfy the locator stability check.
+            I.executeScript(() => document.querySelector('#pb-wjmagiclinePlus').dispatchEvent(new MouseEvent('mouseup', {bubbles: true})));
+        } else {
+            I.executeScript((root, selector) => {
+                const element = document.querySelector(selector);
+                const editor = CKEDITOR.instances[element.closest('[data-ckeditor-instance]').dataset.ckeditorInstance];
+                const range = editor.createRange();
+                range.moveToElementEditEnd(new CKEDITOR.dom.element(element));
+                editor.getSelection().selectRanges([range]);
+            }, paragraph);
+            I.clickCss('.cke_button__htmlbox');
+        }
+        I.waitForVisible('.pb-library--content', 10);
+        if (action.name === 'application') I.seeElement(workbenchFixture+' .column-content > p:first-child + h2');
+        const before = await I.executeScript(() => window.pageBuilder.library_editor_bookmark.editor.getData());
+        for (const cancel of [true, false]) {
+            I.clickCss('.pb-library--content [data-library-type=basic]');
+            I.see('Obrázok', '.pb-library--content');
+            I.see('Aplikácia', '.pb-library--content');
+            if (!cancel) I.saveScreenshot('autotest-pagebuilder-insert-'+action.name+'.png');
+            I.focus('.pb-library--content [data-library-item-id="'+action.id+'"]');
+            I.pressKey('Enter');
+            I.waitForInvisible('.pb-library--content', 10);
+            I.waitForVisible('.cke_dialog_container', 10);
+            I.assertEqual(await I.executeScript(() => CKEDITOR.dialog.getCurrent().getName()), action.command, 'The library must open the standard CKEditor dialog');
+            if (cancel) {
+                I.clickCss('.cke_dialog_container:visible .cke_dialog_ui_button_cancel');
+                I.waitForInvisible('.cke_dialog_container', 10);
+                const after = await I.executeScript(() => window.getCkEditorInstance().getData());
+                I.assertTrue(after === before, 'Cancelling the dialog must preserve the content at the insertion point');
+                I.clickCss('.cke_button__htmlbox');
+                I.waitForVisible('.pb-library--content', 10);
+                continue;
+            }
+            if (action.name === 'image') {
+                I.switchTo('#wjImageIframeElement');
+                I.waitForVisible('#txtUrl', 10);
+                I.fillField('#txtUrl', '/templates/aceintegration/jet/assets/images/logo-jet.png');
+            } else {
+                I.switchTo('.cke_dialog_container:visible .cke_dialog_ui_iframe');
+                I.waitForElement('#editorComponent', 10);
+                I.switchTo('#editorComponent');
+                I.waitForVisible('#search', 10);
+                I.fillField('#search', 'Dátum a meniny');
+                I.waitForVisible('#components-app-date-title', 10);
+                I.clickCss('#components-app-date-title');
+                I.waitForVisible('a.buy:visible', 10);
+                I.clickCss('a.buy:visible');
+                DTE.waitForEditor('component-datatable');
+            }
+            I.switchTo();
+            I.switchTo('#DTE_Field_data-pageBuilderIframe');
+            I.clickCss('.cke_dialog_container:visible .cke_dialog_ui_button_ok');
+            I.waitForInvisible('.cke_dialog_container', 10);
+        }
+        if (action.name === 'image') {
+            I.seeElement(paragraph+' img[src="/templates/aceintegration/jet/assets/images/logo-jet.png"]');
+        } else {
+            I.seeElement(workbenchFixture+' .column-content > iframe.wj_component:first-child + h2');
+            I.seeElement(workbenchFixture+' h2 + .pb-workbench-copy');
+        }
+        I.switchTo();
+        DTE.cancel();
+        I.wjSetDefaultWindowSize();
+    });
+}
+
 Scenario("insert blocks into page", async ({I, DTE, Document}) => {
     await openBlockLibrary(I, DTE, Document);
 
@@ -3059,7 +3173,7 @@ async function rawPbSource(I) {
     return html.replace(/!INCLUDE\([\s\S]*?\)!/gi, macro => macro.replace(/&quot;/g, '"'));
 }
 
-Scenario('pb-section preview edges select the section without opening application settings @current', async ({I, DT, DTE, Document}) => {
+Scenario('pb-section preview edges select the section without opening application settings', async ({I, DT, DTE, Document}) => {
     await openRawPbSections(I, DT, DTE, Document);
     I.switchTo('#raw-app-autotest iframe.wj_component');
     I.waitForText('Application autotest', 20, '#raw-preview-autotest');
@@ -3083,7 +3197,7 @@ Scenario('pb-section preview edges select the section without opening applicatio
     DTE.cancel();
 });
 
-Scenario('application directly in a container keeps its structure and container controls @current', async ({I, DT, DTE, Document}) => {
+Scenario('application directly in a container keeps its structure and container controls', async ({I, DT, DTE, Document}) => {
     const container = '<div id="raw-app-autotest" class="container raw-container-autotest" data-plugin-customer="b2c">' + rawPbInclude + '</div>';
     await openRawPbSections(I, DT, DTE, Document, rawPbFixed + '<section>' + container + '<div id="raw-empty-container-autotest" class="container">  </div></section>');
     I.switchTo('#raw-app-autotest iframe.wj_component');

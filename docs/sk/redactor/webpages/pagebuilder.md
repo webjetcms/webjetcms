@@ -88,6 +88,8 @@ Knižnicu môžete otvoriť aj pre označený blok cez **Ďalšie akcie → Vlo�
 
 Knižnica sa otvára ako úzke okno nad stránkou. Hlavička uvádza napríklad **Vložiť sekciu** a pod ňou miesto vloženia. Ťahaním za hlavičku môžete okno presunúť. Zatvoríte ho krížikom vpravo hore alebo klávesom **Escape**.
 
+Pri vkladaní obsahu cez `+` v žltej čiare alebo tlačidlo **Bloky** v lište editora nájdete na karte **Základné** aj možnosti **Obrázok** a **Aplikácia**. Otvoria rovnaké dialógy ako príslušné tlačidlá v lište. Po potvrdení sa obrázok alebo aplikácia vloží na zvolené miesto; pomocný odsek nemusíte vkladať ručne.
+
 V karte **Knižnica** sú bloky zoskupené do kategórií s počtom blokov. Kliknutím kategóriu rozbalíte; otvorená zostáva vždy iba jedna. Karty zobrazujú názov a náhľad v pôvodnom pomere strán. Kliknutím na náhľad alebo názov vložíte blok do stránky.
 
 Pole **Hľadať blok…** filtruje podľa názvu a dá sa kombinovať s jedným štítkom. Pri filtrovaní sa ponechá otvorená vyhovujúca kategória alebo sa otvorí prvá s výsledkom. Počty pri kategóriách zohľadňujú filter, počty pri štítkoch označujú celkový počet blokov s daným štítkom. **Všetky** zruší len štítok a ponechá hľadaný text. Ak sa nič nenájde, tlačidlo **Vyčistiť filtre** zruší text aj štítok. Pri posúvaní výsledkov zostávajú vyhľadávanie a štítky dostupné.
@@ -104,7 +106,7 @@ Pri zapnutí režimu vkladania sa plynulo rozbalia dočasné medzery bez odsunut
 
 Zatvorením knižnice sa vrátite na vybrané plus. Režim vkladania ukončíte tlačidlom **Ukončiť · Esc** v pomocníkovi alebo klávesom **Escape**. Medzery sa plynulo zbalia, obnoví sa bežná lišta a fokus sa vráti na `+`. Kliknutie do obsahu ukončí režim a vyberie daný blok. Ak máte v systéme nastavené obmedzenie animácií, zobrazenie aj skrytie prebehne okamžite. Pomocné pásy sa neukladajú ani nezobrazujú v náhľade.
 
-## Štruktúra stránky a pokojné zobrazenie
+## Štruktúra stránky
 
 Tlačidlo **Štruktúra** otvorí strom blokov s názvami odvodenými z ich obsahu. Bloky môžete vyhľadať podľa názvu alebo typu. Kliknutie na položku označí príslušný blok, posunie stránku na jeho miesto a rozbalí zatvorenú vetvu. Opakované kliknutie na položku nechá vetvu otvorenú; šípkou vedľa názvu ju môžete rozbaliť alebo zbaliť bez zmeny výberu.
 

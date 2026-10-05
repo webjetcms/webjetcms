@@ -66,6 +66,7 @@
 </div>
 
 - Page Builder - zlepšená detekcia zmien v HTML kóde stránky, aby sa nezobrazilo hlásenie "V editore pravdepodobne máte neuložený text" aj keď ste reálne žiaden text v stránke nezmenili (#317).
+- [Page Builder](redactor/webpages/pagebuilder.md) - po kliknutí na + v žltej čiare v okne **Vložiť blok** na karte **Základné** pribudli možnosti **Obrázok** a **Aplikácia**. Otvoria príslušný dialóg editora a umožnia vložiť obsah na zvolené miesto (#339).
 
 ### Headless režim
 
@@ -245,6 +246,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Dokumentácia
 
+- Datatabuľky - doplnené vysvetlenie [upozornení na neuložené zmeny](redactor/datatables/README.md#upozornenia-na-neuložené-zmeny) pri obnovení alebo opustení stránky a pri zatvorení editora tlačidlom Zrušiť (#339).
 - Vytvorená nová sekcia [Prehľad nových vlastností](sales/README.md) ktorá obsahuje opisy nových vlastností a **funkcionalít WebJET CMS zrozumiteľným jazykom**, bez zbytočne technických formulácií (#58505).
 - Vytvorená sekcia [Riešenie problémov](sysadmin/troubleshooting/README.md) v manuáli pre prevádzku.
 
