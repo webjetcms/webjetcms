@@ -3173,7 +3173,7 @@ async function rawPbSource(I) {
     return html.replace(/!INCLUDE\([\s\S]*?\)!/gi, macro => macro.replace(/&quot;/g, '"'));
 }
 
-Scenario('pb-section preview edges select the section without opening application settings @current', async ({I, DT, DTE, Document}) => {
+Scenario('pb-section preview edges select the section without opening application settings', async ({I, DT, DTE, Document}) => {
     await openRawPbSections(I, DT, DTE, Document);
     I.switchTo('#raw-app-autotest iframe.wj_component');
     I.waitForText('Application autotest', 20, '#raw-preview-autotest');
@@ -3197,7 +3197,7 @@ Scenario('pb-section preview edges select the section without opening applicatio
     DTE.cancel();
 });
 
-Scenario('application directly in a container keeps its structure and container controls @current', async ({I, DT, DTE, Document}) => {
+Scenario('application directly in a container keeps its structure and container controls', async ({I, DT, DTE, Document}) => {
     const container = '<div id="raw-app-autotest" class="container raw-container-autotest" data-plugin-customer="b2c">' + rawPbInclude + '</div>';
     await openRawPbSections(I, DT, DTE, Document, rawPbFixed + '<section>' + container + '<div id="raw-empty-container-autotest" class="container">  </div></section>');
     I.switchTo('#raw-app-autotest iframe.wj_component');
