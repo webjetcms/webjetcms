@@ -22,7 +22,7 @@ class AdminDeviceRestControllerTest {
         var user = mock(Identity.class);
         var service = mock(AdminDeviceService.class);
         var controller = new AdminDeviceRestController(service);
-        var event = new AdminLoginEvent("autotest-event", 10, 20, "Firefox", "131", "Windows", "192.0.2.1", 15L, null);
+        var event = new LoginEvent("autotest-event", 10, 20, "Firefox", "131", "Windows", "192.0.2.1", 15L, null);
         when(service.confirm(user, event.id())).thenReturn(event);
         when(service.report(user, event.id())).thenReturn(event);
         try (var users = mockStatic(UsersDB.class)) {
@@ -50,7 +50,7 @@ class AdminDeviceRestControllerTest {
 
     @Test
     void unauthenticatedRequestCannotMutateAnEventEvenWithoutMethodSecurityProxy() {
-        var service = new AdminDeviceService(mock(AdminDeviceRepository.class));
+        var service = new AdminDeviceService(mock(DeviceService.class));
         var controller = new AdminDeviceRestController(service);
         var request = new MockHttpServletRequest();
         try (var users = mockStatic(UsersDB.class)) {

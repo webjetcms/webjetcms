@@ -23,7 +23,7 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.rest.BrowserIdentifierMigrationService;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.users.devices.AdminDeviceService;
-import sk.iway.iwcm.users.devices.AdminLoginEvent;
+import sk.iway.iwcm.users.devices.LoginEvent;
 
 /** Verifies that security notices retain their conditions and use data-only action descriptors. */
 class DashboardNoticeServiceTest {
@@ -126,7 +126,7 @@ class DashboardNoticeServiceTest {
         var request = new MockHttpServletRequest();
         var prop = mock(Prop.class);
         when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
-        var event = new AdminLoginEvent("autotest-event", 100, 200, "Firefox", "131", "Windows 11", "192.0.2.1", null, null);
+        var event = new LoginEvent("autotest-event", 100, 200, "Firefox", "131", "Windows 11", "192.0.2.1", null, null);
         when(devices.activeEvents(user)).thenReturn(List.of(event));
         try (var constants = mockStatic(Constants.class);
              var properties = mockStatic(Prop.class);

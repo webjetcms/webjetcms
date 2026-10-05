@@ -22,7 +22,7 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.rest.BrowserIdentifierMigrationService;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.users.devices.AdminDeviceService;
-import sk.iway.iwcm.users.devices.AdminLoginEvent;
+import sk.iway.iwcm.users.devices.LoginEvent;
 
 /** Builds lightweight system notices for the dashboard template. */
 @Service
@@ -50,7 +50,7 @@ public class DashboardNoticeService {
         List<Map<String, Object>> notices = new ArrayList<>();
 
         try {
-            for (AdminLoginEvent event : devices.activeEvents(user)) {
+            for (LoginEvent event : devices.activeEvents(user)) {
                 Map<String, Object> securityNotice = new LinkedHashMap<>();
                 securityNotice.put("id", "newDevice:" + event.id());
                 securityNotice.put("kind", "newDevice");

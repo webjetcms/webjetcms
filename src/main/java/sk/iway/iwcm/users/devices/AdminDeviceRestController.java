@@ -29,13 +29,13 @@ public class AdminDeviceRestController {
 
     /** Confirms a login using the request's account, never a submitted user identifier. */
     @PostMapping("/{id}/confirm")
-    public AdminLoginEvent confirm(@PathVariable("id") String id, HttpServletRequest request) {
+    public LoginEvent confirm(@PathVariable("id") String id, HttpServletRequest request) {
         return requireEvent(service.confirm(UsersDB.getCurrentUser(request), id));
     }
 
     /** Forgets the reported browser without terminating sessions or suppressing the warning. */
     @PostMapping("/{id}/report")
-    public AdminLoginEvent report(@PathVariable("id") String id, HttpServletRequest request) {
+    public LoginEvent report(@PathVariable("id") String id, HttpServletRequest request) {
         return requireEvent(service.report(UsersDB.getCurrentUser(request), id));
     }
 
@@ -47,7 +47,7 @@ public class AdminDeviceRestController {
         return Map.of("error", "Security events are temporarily unavailable");
     }
 
-    private static AdminLoginEvent requireEvent(AdminLoginEvent event) {
+    private static LoginEvent requireEvent(LoginEvent event) {
         if (event == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Security event is unavailable");
         return event;
     }

@@ -20,6 +20,8 @@ Handles user security metadata (password policy, permission groups) and DTO mapp
 
 ## Password & Security Patterns
 
+- `users.devices`: Shared JPA device/event entities and Spring Data repositories are coordinated by `DeviceService`; scope every account-facing query by user and domain. Device inserts use assigned-ID `Persistable` semantics, pessimistic locking and bounded retry in a fresh transaction. Disable shared JPA caching for these security records. `AdminDeviceService` supplies only the administration-specific authentication, cookie and email integration.
+
 - Centralize hashing in `PasswordSecurity`; never duplicate hashing logic in controllers/services.
 - When upgrading algorithm: maintain backward compatibility by detecting legacy hash format and rehashing on successful login.
 - Keep iteration counts & algorithm identifiers configurable (via Constants) to adjust strength without redeploying code.

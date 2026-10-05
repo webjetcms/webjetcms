@@ -36,7 +36,7 @@ class AdminDeviceServiceTest {
     private static final long NOW = Instant.parse("2026-10-05T10:00:00Z").toEpochMilli();
     private static final String EVENT_ID = "d12b2090-5818-49d8-808c-688593fe71a4";
     private static final String TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG";
-    private final AdminDeviceRepository repository = mock(AdminDeviceRepository.class);
+    private final DeviceService repository = mock(DeviceService.class);
     private final AdminDeviceService service = spy(new AdminDeviceService(repository, Clock.fixed(Instant.ofEpochMilli(NOW), ZoneOffset.UTC)));
     private final Identity user = mock(Identity.class);
     private final MockHttpServletRequest request = new MockHttpServletRequest();
@@ -246,7 +246,7 @@ class AdminDeviceServiceTest {
         }
     }
 
-    private static AdminLoginEvent event() {
-        return new AdminLoginEvent(EVENT_ID, NOW, NOW + Duration.ofDays(7).toMillis(), "Firefox", "131.0", "Windows 11", "192.0.2.1", null, null);
+    private static LoginEvent event() {
+        return new LoginEvent(EVENT_ID, NOW, NOW + Duration.ofDays(7).toMillis(), "Firefox", "131.0", "Windows 11", "192.0.2.1", null, null);
     }
 }

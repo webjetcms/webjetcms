@@ -30,7 +30,7 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.BrowserDetector;
 import sk.iway.iwcm.users.UsersDB;
 
-/** Recognizes browser profiles after completed administrator authentication. */
+/** Integrates shared device history with administrator authentication, cookies, notices and email links. */
 @Service
 public class AdminDeviceService {
     static final String COOKIE_NAME = "wjAdminDevice";
@@ -38,16 +38,16 @@ public class AdminDeviceService {
     private static final Pattern TOKEN_PATTERN = Pattern.compile("[A-Za-z0-9_-]{43}");
     private static final Pattern EVENT_PATTERN = Pattern.compile("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}");
     private static final SecureRandom RANDOM = new SecureRandom();
-    private final AdminDeviceRepository repository;
+    private final DeviceService devices;
     private final Clock clock;
 
     @Autowired
-    public AdminDeviceService(AdminDeviceRepository repository) {
-        this(repository, Clock.systemUTC());
+    public AdminDeviceService(DeviceService devices) {
+        this(devices, Clock.systemUTC());
     }
 
-    AdminDeviceService(AdminDeviceRepository repository, Clock clock) {
-        this.repository = repository;
+    AdminDeviceService(DeviceService devices, Clock clock) {
+        this.devices = devices;
         this.clock = clock;
     }
 
@@ -86,7 +86,7 @@ public class AdminDeviceService {
             int maxAgeDays = maxAgeDays();
             BrowserDetector browser = new BrowserDetector(request.getHeader("User-Agent"));
             String operatingSystem = join(browser.getBrowserPlatform(), browser.getBrowserSubplatform());
-            AdminLoginEvent event = repository.recordLogin(user.getUserId(), domainId, hashToken(token), now,
+            LoginEvent event = devices.recordLogin(user.getUserId(), domainId, hashToken(token), now,
                 now - Duration.ofDays(maxAgeDays).toMillis(), bounded(browser.getBrowserName(), 128), bounded(browser.getBrowserVersion(), 64),
                 bounded(operatingSystem, 128), bounded(Tools.getRemoteIP(request), 64));
 
@@ -103,40 +103,36 @@ public class AdminDeviceService {
 
     /** Returns the configured inactivity window, bounded to a valid cookie lifetime. */
     static int maxAgeDays() {
-        return maxAgeDays(Constants.getInt("adminNewDeviceMaxAgeDays"));
-    }
-
-    /** Applies the same supported lifetime range to login and cleanup configuration values. */
-    static int maxAgeDays(int configured) {
+        int configured = Constants.getInt("adminNewDeviceMaxAgeDays");
         return configured > 0 ? Math.min(configured, Integer.MAX_VALUE / 86_400) : 90;
     }
 
     /** Returns outstanding account-owned warnings; acknowledgement does not affect recognition. */
-    public List<AdminLoginEvent> activeEvents(Identity user) {
+    public List<LoginEvent> activeEvents(Identity user) {
         requireAdministrator(user);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled")) return List.of();
-        return repository.findActive(user.getUserId(), UsersDB.getDomainId(), clock.millis());
+        return devices.findActive(user.getUserId(), UsersDB.getDomainId(), clock.millis());
     }
 
     /** Looks up a retained event without exposing whether another account owns its identifier. */
-    public AdminLoginEvent findEvent(Identity user, String eventId) {
+    public LoginEvent findEvent(Identity user, String eventId) {
         requireAdministrator(user);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled") || !validEventId(eventId)) return null;
-        return repository.findEvent(user.getUserId(), UsersDB.getDomainId(), eventId, clock.millis());
+        return devices.findEvent(user.getUserId(), UsersDB.getDomainId(), eventId, clock.millis());
     }
 
     /** Confirms an owned event without extending the device's last-login time. */
-    public AdminLoginEvent confirm(Identity user, String eventId) {
+    public LoginEvent confirm(Identity user, String eventId) {
         requireAdministrator(user);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled") || !validEventId(eventId)) return null;
-        return repository.confirm(user.getUserId(), UsersDB.getDomainId(), eventId, clock.millis());
+        return devices.confirm(user.getUserId(), UsersDB.getDomainId(), eventId, clock.millis());
     }
 
     /** Reports an owned event and forgets only that account's recognition of its browser. */
-    public AdminLoginEvent report(Identity user, String eventId) {
+    public LoginEvent report(Identity user, String eventId) {
         requireAdministrator(user);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled") || !validEventId(eventId)) return null;
-        return repository.report(user.getUserId(), UsersDB.getDomainId(), eventId, clock.millis());
+        return devices.report(user.getUserId(), UsersDB.getDomainId(), eventId, clock.millis());
     }
 
     /**
@@ -202,7 +198,7 @@ public class AdminDeviceService {
     }
 
     /** Queues one localized message through the existing mail sender after persistence succeeds. */
-    void sendNotification(Identity user, HttpServletRequest request, AdminLoginEvent event) {
+    void sendNotification(Identity user, HttpServletRequest request, LoginEvent event) {
         if (Tools.isEmpty(user.getEmail())) {
             Logger.error(AdminDeviceService.class, "Cannot notify administrator without an email address: " + user.getUserId());
             return;
