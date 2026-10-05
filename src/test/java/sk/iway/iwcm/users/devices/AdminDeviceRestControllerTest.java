@@ -22,15 +22,17 @@ class AdminDeviceRestControllerTest {
         var user = mock(Identity.class);
         var service = mock(AdminDeviceService.class);
         var controller = new AdminDeviceRestController(service);
-        var event = new LoginEvent("autotest-event", 10, 20, "Firefox", "131", "Windows", "192.0.2.1", 15L, null);
-        when(service.confirm(user, event.id())).thenReturn(event);
-        when(service.report(user, event.id())).thenReturn(event);
+        var event = new DeviceEntity();
+        event.setId(42L);
+        String id = event.getId().toString();
+        when(service.confirm(user, id)).thenReturn(event);
+        when(service.report(user, id)).thenReturn(event);
         try (var users = mockStatic(UsersDB.class)) {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
-            assertSame(event, controller.confirm(event.id(), request));
-            assertSame(event, controller.report(event.id(), request));
-            verify(service).confirm(user, event.id());
-            verify(service).report(user, event.id());
+            assertSame(event, controller.confirm(id, request));
+            assertSame(event, controller.report(id, request));
+            verify(service).confirm(user, id);
+            verify(service).report(user, id);
             verifyNoMoreInteractions(service);
         }
     }

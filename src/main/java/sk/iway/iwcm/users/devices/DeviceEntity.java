@@ -2,6 +2,8 @@ package sk.iway.iwcm.users.devices;
 
 import java.time.Instant;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,6 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -26,9 +29,11 @@ public class DeviceEntity {
     private Long id;
 
     @Column(name = "user_id", nullable = false)
+    @JsonIgnore
     private int userId;
 
     @Column(name = "token_hash", nullable = false, length = 64)
+    @JsonIgnore
     private String tokenHash;
 
     /** Creation time of the latest notice, refreshed when the browser is detected again. */
@@ -36,6 +41,7 @@ public class DeviceEntity {
     private Instant createDate;
 
     @Column(name = "last_seen", nullable = false)
+    @JsonIgnore
     private Instant lastSeen;
 
     @Column(name = "browser_name", length = 128)
@@ -55,4 +61,10 @@ public class DeviceEntity {
 
     @Column(name = "reported_at")
     private Instant reportedAt;
+
+    /** Returns the notice deadline without storing a separate expiration column. */
+    @Transient
+    public long getExpiresAt() {
+        return createDate.toEpochMilli() + DeviceService.NOTICE_AGE;
+    }
 }

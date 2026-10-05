@@ -71,9 +71,9 @@ Scenario('Notice rows fit desktop, tablet and mobile widths', async ({ I }) => {
 
 Scenario('New-device notices require an explicit server confirmation and cannot be postponed', async ({ I }) => {
     await openNotices(I);
-    const securityEvent = { id: 'autotest-login', createdAt: Date.now(), expiresAt: Date.now() + 7 * 86400000, browserName: 'Firefox autotest', operatingSystem: 'Linux', ipAddress: '127.0.0.1' };
-    notices.push({ ...notice('security', 'warning'), id: 'newDevice:autotest-login', kind: 'newDevice', securityEvent });
-    state.dismissedUntil['newDevice:autotest-login'] = Date.now() + 30 * 86400000;
+    const securityEvent = { id: 42, createDate: Date.now(), expiresAt: Date.now() + 7 * 86400000, browserName: 'Firefox autotest', operatingSystem: 'Linux', ipAddress: '127.0.0.1' };
+    notices.push({ ...notice('security', 'warning'), id: 'newDevice:42', kind: 'newDevice', securityEvent });
+    state.dismissedUntil['newDevice:42'] = Date.now() + 30 * 86400000;
     let failConfirm = true;
     const routePattern = '**/admin/rest/security/login-events/*/confirm';
     await I.mockRoute(routePattern, route => {
@@ -82,14 +82,14 @@ Scenario('New-device notices require an explicit server confirmation and cannot 
     });
     await I.refreshPage();
     await ready(I);
-    const row = '[data-notice-id="newDevice:autotest-login"]';
-    await I.assertEqual(await I.executeScript(() => document.querySelector('.md-dashboard__notice').dataset.noticeId), 'newDevice:autotest-login');
+    const row = '[data-notice-id="newDevice:42"]';
+    await I.assertEqual(await I.executeScript(() => document.querySelector('.md-dashboard__notice').dataset.noticeId), 'newDevice:42');
     await I.dontSeeElement(`${row} .md-dashboard__notice-dismiss`);
     await I.assertEqual(await I.grabNumberOfVisibleElements(`${row} button`), 2);
     for (const width of [1440, 1100, 390]) {
         await I.resizeWindow(width, 1100);
         await I.assertTrue(await I.executeScript(() => {
-            const element = document.querySelector('[data-notice-id="newDevice:autotest-login"] .md-dashboard__notice-row');
+            const element = document.querySelector('[data-notice-id="newDevice:42"] .md-dashboard__notice-row');
             return element.scrollWidth <= element.clientWidth + 1;
         }), `Security actions must fit a ${width}px viewport.`);
     }
@@ -110,8 +110,8 @@ Scenario('New-device notices require an explicit server confirmation and cannot 
 
 Scenario('Keyboard review and reporting an unfamiliar login preserve its warning and restore focus', async ({ I }) => {
     await openNotices(I);
-    const securityEvent = { id: 'autotest-review', createdAt: Date.now(), expiresAt: Date.now() + 7 * 86400000, browserName: 'Firefox autotest', browserVersion: '123', operatingSystem: 'Linux', ipAddress: '127.0.0.1' };
-    notices = [{ ...notice('security', 'warning'), id: 'newDevice:autotest-review', kind: 'newDevice', securityEvent }];
+    const securityEvent = { id: 43, createDate: Date.now(), expiresAt: Date.now() + 7 * 86400000, browserName: 'Firefox autotest', browserVersion: '123', operatingSystem: 'Linux', ipAddress: '127.0.0.1' };
+    notices = [{ ...notice('security', 'warning'), id: 'newDevice:43', kind: 'newDevice', securityEvent }];
     let reports = 0;
     const routePattern = '**/admin/rest/security/login-events/*/report';
     await I.mockRoute(routePattern, route => {
@@ -144,14 +144,14 @@ Scenario('Keyboard review and reporting an unfamiliar login preserve its warning
     await I.dontSeeElement(`${dialog} .md-dashboard-sessions__report`);
     await I.clickCss(`${dialog} .modal-footer button:last-child`);
     await I.waitForDetached(dialog, 10);
-    await I.seeElement('[data-notice-id="newDevice:autotest-review"]');
+    await I.seeElement('[data-notice-id="newDevice:43"]');
     await I.stopMockingRoute(routePattern);
     await I.stopMockingRoute(dashboardPageRoute);
     await I.stopMockingRoute(preferencesRoute);
 });
 
 Scenario('Email bootstrap opens login details and unavailable links without a mutation', async ({ I }) => {
-    const securityEvent = { id: 'autotest-email', createdAt: Date.now(), browserName: 'Email browser autotest', operatingSystem: 'Linux', ipAddress: '127.0.0.1' };
+    const securityEvent = { id: 44, createDate: Date.now(), browserName: 'Email browser autotest', operatingSystem: 'Linux', ipAddress: '127.0.0.1' };
     let requestedSecurityEvent = securityEvent;
     await mockDashboardBootstrap(I, () => ({ notices: [], currentSessions: { userSessions: [] }, securityEventRequested: true, requestedSecurityEvent }));
     await I.amOnPage('/admin/v9/');

@@ -1069,7 +1069,7 @@ test('Rebuilding the overview after a save never reapplies the embedded settings
 });
 
 test('Email login details open once from the authenticated bootstrap, including unavailable links', async t => {
-    for (const event of [{ id: 'autotest-event', createdAt: 1000 }, null]) {
+    for (const event of [{ id: 'autotest-event', createDate: 1000 }, null]) {
         const { context, overview, requests } = overviewFixture(t);
         context.registerDashboardWidgets = () => {};
         context.getDashboardDefaults = () => [];

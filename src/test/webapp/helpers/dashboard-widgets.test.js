@@ -2159,7 +2159,7 @@ test('Security review focuses its initial tab after the modal transition without
     for (const preserveFocus of [false, true]) {
         const { scope, context, window } = fixture(t, { data: { currentSessions: { userSessions: [] } } });
         sessionDialogFixture(context, window);
-        scope.showActiveSessions(context, { id: 'autotest-focus', createdAt: 1000 });
+        scope.showActiveSessions(context, { id: 'autotest-focus', createDate: 1000 });
         const root = window.document.querySelector('.md-dashboard-modal--security');
         root.tabIndex = -1;
         const expected = root.querySelector(preserveFocus ? '.md-dashboard-sessions__report' : '[role="tab"]');
@@ -2170,7 +2170,7 @@ test('Security review focuses its initial tab after the modal transition without
 });
 
 test('Login security dialog reports explicitly without dismissing notices or ending sessions', async t => {
-    const securityEvent = { id: 'autotest-login', createdAt: 1000, browserName: '<img src=x>', browserVersion: '123', operatingSystem: 'Linux', ipAddress: '127.0.0.1' };
+    const securityEvent = { id: 42, createDate: 1000, browserName: '<img src=x>', browserVersion: '123', operatingSystem: 'Linux', ipAddress: '127.0.0.1' };
     const data = { notices: [{ kind: 'newDevice', securityEvent: { ...securityEvent } }], currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
         { sessionId: 'current', browserName: 'Current autotest', logonTime: 1000 },
         { sessionId: 'other', browserName: 'Other autotest', logonTime: 2000 }
@@ -2196,7 +2196,7 @@ test('Login security dialog reports explicitly without dismissing notices or end
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(root.querySelector('.md-dashboard-sessions__report'), null);
     assert.match(root.querySelector('.md-dashboard-sessions__security [role="status"]').textContent, /newDevice.reported/);
-    assert.equal(requests[1].url, '/admin/rest/security/login-events/autotest-login/report');
+    assert.equal(requests[1].url, '/admin/rest/security/login-events/42/report');
     assert.equal(requests[1].options.method, 'POST');
     assert.equal(requests[1].options.headers['X-CSRF-Token'], 'test-csrf-token');
     assert.equal(context.data.notices.length, 1, 'Reporting must not hide the warning.');
@@ -2215,7 +2215,7 @@ test('Security review uses the normal logout form for this browser and the exist
     form.name = 'adminLogoffForm';
     form.requestSubmit = () => { signedOut++; };
     window.document.body.append(form);
-    scope.showActiveSessions(context, { id: 'autotest-login', createdAt: 1000 });
+    scope.showActiveSessions(context, { id: 42, createDate: 1000 });
     const root = window.document.querySelector('.md-dashboard-modal--security');
     root.querySelector('tbody tr:first-child button').click();
     assert.equal(signedOut, 1);
@@ -2236,7 +2236,7 @@ test('Security password action closes its dialog before opening the current acco
         assert.equal(window.document.querySelector('.md-dashboard-modal--security'), null);
         profile = args;
     };
-    scope.showActiveSessions(context, { id: 'autotest-login', createdAt: 1000 });
+    scope.showActiveSessions(context, { id: 42, createDate: 1000 });
     window.document.querySelector('.md-dashboard-sessions__password').click();
     assert.equal(dialog.signal.aborted, true);
     await new Promise(resolve => window.setTimeout(resolve, 0));
@@ -2256,7 +2256,7 @@ test('Unavailable security links show a neutral message without account actions 
 
 test('Reporting a previously confirmed email event restores its warning only before its original expiry', async t => {
     for (const active of [true, false]) {
-        const securityEvent = { id: 'autotest-confirmed', createdAt: 1000, confirmedAt: 2000, expiresAt: Date.now() + (active ? 60000 : -60000) };
+        const securityEvent = { id: 'autotest-confirmed', createDate: 1000, confirmedAt: 2000, expiresAt: Date.now() + (active ? 60000 : -60000) };
         const { scope, context, window } = fixture(t, {
             data: { notices: [], currentSessions: { userSessions: [] }, requestedSecurityEvent: securityEvent },
             fetchResponse: async () => ({ ok: true, json: async () => ({ ...securityEvent, confirmedAt: null, reportedAt: 3000 }) })

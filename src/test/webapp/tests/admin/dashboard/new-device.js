@@ -17,7 +17,7 @@ async function signIn(I, account = 'tester', logoff = true) {
 
 /** Records only events created by this test so cleanup cannot acknowledge unrelated warnings. */
 function rememberCreated(bootstrap, account, since) {
-    for (const notice of bootstrap.notices.filter(item => item.kind === 'newDevice' && item.securityEvent.createdAt >= since)) {
+    for (const notice of bootstrap.notices.filter(item => item.kind === 'newDevice' && item.securityEvent.createDate >= since)) {
         const id = notice.securityEvent.id;
         if (!createdEvents[account].includes(id)) createdEvents[account].push(id);
     }
@@ -106,7 +106,7 @@ Scenario('Real browser recognition, login warnings and protected account actions
         'The default cookie lifetime must be ninety days.');
     await I.assertFalse(await I.executeScript(() => document.cookie.split(';').some(cookie => cookie.trim().startsWith('wjAdminDevice='))), 'HttpOnly must also hold in the actual document.');
     await I.assertTrue(Boolean(event.browserName && event.browserVersion && event.operatingSystem && event.ipAddress), 'The event must contain the actual login snapshot.');
-    await I.assertEqual(event.expiresAt - event.createdAt, 7 * 86400000);
+    await I.assertEqual(event.expiresAt - event.createDate, 7 * 86400000);
     const row = `[data-notice-id="newDevice:${eventId}"]`;
     await I.see(event.browserName, row);
     await I.see(event.browserVersion, row);
@@ -182,7 +182,7 @@ Scenario('Real browser recognition, login warnings and protected account actions
     rememberCreated(afterReport, 'tester', afterReportStarted);
     const refreshed = afterReport.notices.find(item => item.securityEvent?.id === eventId)?.securityEvent;
     await I.assertTrue(Boolean(refreshed), 'A reported browser must renew the warning on the same device.');
-    await I.assertTrue(refreshed.createdAt > event.createdAt && refreshed.confirmedAt == null && refreshed.reportedAt == null,
+    await I.assertTrue(refreshed.createDate > event.createDate && refreshed.confirmedAt == null && refreshed.reportedAt == null,
         'The next login must replace the previous notice and clear its acknowledgment.');
 
     const otherStarted = Date.now();

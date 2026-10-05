@@ -89,8 +89,9 @@ class AdminDeviceServiceTest {
     /** A newly issued browser identifier is opaque, protected and persisted only as a hash. */
     @Test
     void issuesProtectedCookieAndQueuesOnlyNewEvents() {
+        DeviceEntity event = event();
         when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
-            .thenReturn(event());
+            .thenReturn(event);
 
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
 
@@ -106,7 +107,7 @@ class AdminDeviceServiceTest {
         assertEquals(90 * 86400, cookie.getMaxAge());
         verify(repository).recordLogin(7, AdminDeviceService.hashToken(cookie.getValue()), NOW,
             NOW - Duration.ofDays(90).toMillis(), "Firefox", "131.0", "Windows 11", "192.0.2.1");
-        verify(service).sendNotification(user, request, event());
+        verify(service).sendNotification(user, request, event);
     }
 
     /** Browser-version changes retain the token; repeated hooks do not duplicate one login. */
@@ -179,11 +180,12 @@ class AdminDeviceServiceTest {
     @Test
     void blockedCookieStillRecordsAndNotifiesOnlyOncePerLoginRequest() {
         tools.when(() -> Tools.addCookie(any(), any(), any())).thenReturn(false);
+        DeviceEntity event = event();
         when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
-            .thenReturn(event());
+            .thenReturn(event);
         LogonTools.afterSuccessLogon(request, response);
         LogonTools.afterSuccessLogon(request, response);
-        verify(service, times(1)).sendNotification(user, request, event());
+        verify(service, times(1)).sendNotification(user, request, event);
         assertEquals(0, response.getCookies().length);
     }
 
@@ -251,7 +253,14 @@ class AdminDeviceServiceTest {
         }
     }
 
-    private static LoginEvent event() {
-        return new LoginEvent(EVENT_ID, NOW, NOW + Duration.ofDays(7).toMillis(), "Firefox", "131.0", "Windows 11", "192.0.2.1", null, null);
+    private static DeviceEntity event() {
+        DeviceEntity device = new DeviceEntity();
+        device.setId(Long.parseLong(EVENT_ID));
+        device.setCreateDate(Instant.ofEpochMilli(NOW));
+        device.setBrowserName("Firefox");
+        device.setBrowserVersion("131.0");
+        device.setOperatingSystem("Windows 11");
+        device.setIpAddress("192.0.2.1");
+        return device;
     }
 }

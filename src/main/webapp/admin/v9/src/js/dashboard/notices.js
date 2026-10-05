@@ -93,7 +93,7 @@ export class DashboardNotices {
             const event = notice.securityEvent;
             const browser = [event.browserName, event.browserVersion].filter(Boolean).join(" ");
             const device = [browser, event.operatingSystem].filter(Boolean).join(" · ");
-            description = this._t("newDevice.details", device || "—", event.ipAddress || "—", date(event.createdAt));
+            description = this._t("newDevice.details", device || "—", event.ipAddress || "—", date(event.createDate));
         }
         text.append(node("strong", "md-dashboard__notice-title", notice.title),
             node("span", "md-dashboard__notice-description", description));

@@ -23,7 +23,7 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.rest.BrowserIdentifierMigrationService;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.users.devices.AdminDeviceService;
-import sk.iway.iwcm.users.devices.LoginEvent;
+import sk.iway.iwcm.users.devices.DeviceEntity;
 
 /** Verifies that security notices retain their conditions and use data-only action descriptors. */
 class DashboardNoticeServiceTest {
@@ -126,7 +126,8 @@ class DashboardNoticeServiceTest {
         var request = new MockHttpServletRequest();
         var prop = mock(Prop.class);
         when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
-        var event = new LoginEvent("autotest-event", 100, 200, "Firefox", "131", "Windows 11", "192.0.2.1", null, null);
+        var event = new DeviceEntity();
+        event.setId(42L);
         when(devices.activeEvents(user)).thenReturn(List.of(event));
         try (var constants = mockStatic(Constants.class);
              var properties = mockStatic(Prop.class);
@@ -137,7 +138,7 @@ class DashboardNoticeServiceTest {
             tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
             var notices = new DashboardNoticeService(users, devices).load(user, request);
             assertEquals(1, notices.size());
-            assertEquals("newDevice:autotest-event", notices.get(0).get("id"));
+            assertEquals("newDevice:42", notices.get(0).get("id"));
             assertEquals("newDevice", notices.get(0).get("kind"));
             assertSame(event, notices.get(0).get("securityEvent"));
             assertFalse(notices.get(0).containsKey("action"));

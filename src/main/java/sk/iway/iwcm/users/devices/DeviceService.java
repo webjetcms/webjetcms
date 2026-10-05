@@ -21,9 +21,9 @@ public class DeviceService {
     /**
      * Refreshes recognition and replaces the device's notice when it is no longer recognized.
      *
-     * @return the new login snapshot, or null when the device was already recognized
+     * @return the device with a new notice, or null when the device was already recognized
      */
-    public LoginEvent recordLogin(int userId, String tokenHash, long now, long knownSinceCutoff,
+    public DeviceEntity recordLogin(int userId, String tokenHash, long now, long knownSinceCutoff,
         String browserName, String browserVersion, String operatingSystem, String ipAddress) {
         return execute(() -> {
             DeviceEntity device = devices.findByUserIdAndTokenHash(userId, tokenHash).orElse(null);
@@ -45,23 +45,23 @@ public class DeviceService {
                 device.setReportedAt(null);
             }
             DeviceEntity saved = devices.save(device);
-            return recognized ? null : snapshot(saved);
+            return recognized ? null : saved;
         });
     }
 
-    /** Returns unconfirmed login snapshots within the original seven-day notice period. */
-    public List<LoginEvent> findActive(int userId, long now) {
+    /** Returns devices with unconfirmed notices within the original seven-day notice period. */
+    public List<DeviceEntity> findActive(int userId, long now) {
         return execute(() -> devices.findByUserIdAndConfirmedAtIsNullAndCreateDateAfterOrderByCreateDateDescIdAsc(
-            userId, Instant.ofEpochMilli(now - NOTICE_AGE)).stream().map(DeviceService::snapshot).toList());
+            userId, Instant.ofEpochMilli(now - NOTICE_AGE)));
     }
 
     /** Returns the device's current notice while the owned device record exists. */
-    public LoginEvent findEvent(int userId, long id) {
-        return execute(() -> devices.findByUserIdAndId(userId, id).map(DeviceService::snapshot).orElse(null));
+    public DeviceEntity findEvent(int userId, long id) {
+        return execute(() -> devices.findByUserIdAndId(userId, id).orElse(null));
     }
 
     /** Acknowledges an owned event without changing browser recognition or its last-login time. */
-    public LoginEvent confirm(int userId, long id, long now) {
+    public DeviceEntity confirm(int userId, long id, long now) {
         return execute(() -> {
             DeviceEntity device = devices.findByUserIdAndId(userId, id).orElse(null);
             if (device == null) return null;
@@ -69,12 +69,12 @@ public class DeviceService {
                 device.setConfirmedAt(Instant.ofEpochMilli(now));
                 devices.save(device);
             }
-            return snapshot(device);
+            return device;
         });
     }
 
     /** Reports an event, retaining its notice and revoking only that account's browser recognition. */
-    public LoginEvent report(int userId, long id, long now) {
+    public DeviceEntity report(int userId, long id, long now) {
         return execute(() -> {
             DeviceEntity device = devices.findByUserIdAndId(userId, id).orElse(null);
             if (device == null) return null;
@@ -83,7 +83,7 @@ public class DeviceService {
                 device.setConfirmedAt(null);
                 devices.save(device);
             }
-            return snapshot(device);
+            return device;
         });
     }
 
@@ -101,12 +101,5 @@ public class DeviceService {
         } catch (RuntimeException exception) {
             throw new IllegalStateException("Device history is temporarily unavailable", exception);
         }
-    }
-
-    private static LoginEvent snapshot(DeviceEntity device) {
-        long createdAt = device.getCreateDate().toEpochMilli();
-        return new LoginEvent(device.getId().toString(), createdAt, createdAt + NOTICE_AGE, device.getBrowserName(), device.getBrowserVersion(),
-            device.getOperatingSystem(), device.getIpAddress(), device.getConfirmedAt() == null ? null : device.getConfirmedAt().toEpochMilli(),
-            device.getReportedAt() == null ? null : device.getReportedAt().toEpochMilli());
     }
 }

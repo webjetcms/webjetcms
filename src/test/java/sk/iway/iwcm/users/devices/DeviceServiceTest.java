@@ -38,7 +38,7 @@ class DeviceServiceTest {
     /** A new browser and its notice are saved together and exposed using the generated device ID. */
     @Test
     void newDeviceReturnsAccountOwnedNotice() {
-        LoginEvent result = recordLogin();
+        DeviceEntity result = recordLogin();
 
         ArgumentCaptor<DeviceEntity> saved = ArgumentCaptor.forClass(DeviceEntity.class);
         verify(devices).save(saved.capture());
@@ -47,15 +47,15 @@ class DeviceServiceTest {
         assertEquals(TOKEN_HASH, device.getTokenHash());
         assertEquals(Instant.ofEpochMilli(NOW), device.getCreateDate());
         assertEquals(Instant.ofEpochMilli(NOW), device.getLastSeen());
-        assertEquals(Long.toString(DEVICE_ID), result.id());
-        assertEquals(NOW, result.createdAt());
-        assertEquals(NOW + Duration.ofDays(7).toMillis(), result.expiresAt());
-        assertEquals("Firefox", result.browserName());
-        assertEquals("131.0", result.browserVersion());
-        assertEquals("Windows 11", result.operatingSystem());
-        assertEquals("192.0.2.1", result.ipAddress());
-        assertNull(result.confirmedAt());
-        assertNull(result.reportedAt());
+        assertEquals(DEVICE_ID, result.getId());
+        assertEquals(NOW, result.getCreateDate().toEpochMilli());
+        assertEquals(NOW + Duration.ofDays(7).toMillis(), result.getExpiresAt());
+        assertEquals("Firefox", result.getBrowserName());
+        assertEquals("131.0", result.getBrowserVersion());
+        assertEquals("Windows 11", result.getOperatingSystem());
+        assertEquals("192.0.2.1", result.getIpAddress());
+        assertNull(result.getConfirmedAt());
+        assertNull(result.getReportedAt());
     }
 
     /** A regular login changes lastSeen without altering the notice or its acknowledgment. */
@@ -82,12 +82,12 @@ class DeviceServiceTest {
         device.setConfirmedAt(Instant.ofEpochMilli(CUTOFF + 1));
         when(devices.findByUserIdAndTokenHash(USER_ID, TOKEN_HASH)).thenReturn(Optional.of(device));
 
-        LoginEvent result = recordLogin();
+        DeviceEntity result = recordLogin();
 
-        assertEquals(Long.toString(DEVICE_ID), result.id());
-        assertEquals(NOW, result.createdAt());
-        assertNull(result.confirmedAt());
-        assertNull(result.reportedAt());
+        assertEquals(DEVICE_ID, result.getId());
+        assertEquals(NOW, result.getCreateDate().toEpochMilli());
+        assertNull(result.getConfirmedAt());
+        assertNull(result.getReportedAt());
         verify(devices).save(device);
     }
 
@@ -99,12 +99,12 @@ class DeviceServiceTest {
         device.setConfirmedAt(Instant.ofEpochMilli(NOW - 25));
         when(devices.findByUserIdAndTokenHash(USER_ID, TOKEN_HASH)).thenReturn(Optional.of(device));
 
-        LoginEvent result = recordLogin();
+        DeviceEntity result = recordLogin();
 
-        assertEquals(Long.toString(DEVICE_ID), result.id());
-        assertEquals(NOW, result.createdAt());
-        assertNull(result.reportedAt());
-        assertNull(result.confirmedAt());
+        assertEquals(DEVICE_ID, result.getId());
+        assertEquals(NOW, result.getCreateDate().toEpochMilli());
+        assertNull(result.getReportedAt());
+        assertNull(result.getConfirmedAt());
         assertEquals(Instant.ofEpochMilli(NOW), device.getLastSeen());
         verify(devices).save(device);
     }
@@ -128,14 +128,14 @@ class DeviceServiceTest {
         device.setConfirmedAt(Instant.ofEpochMilli(NOW - 50));
         ownedDevice(device);
 
-        LoginEvent first = service.report(USER_ID, DEVICE_ID, NOW);
-        LoginEvent repeated = service.report(USER_ID, DEVICE_ID, NOW + 1);
+        DeviceEntity first = service.report(USER_ID, DEVICE_ID, NOW);
+        DeviceEntity repeated = service.report(USER_ID, DEVICE_ID, NOW + 1);
 
         assertEquals(first, repeated);
-        assertEquals(NOW, first.reportedAt());
-        assertNull(first.confirmedAt());
-        assertEquals(NOW - 100, first.createdAt());
-        assertEquals(NOW - 100 + Duration.ofDays(7).toMillis(), first.expiresAt());
+        assertEquals(Instant.ofEpochMilli(NOW), first.getReportedAt());
+        assertNull(first.getConfirmedAt());
+        assertEquals(NOW - 100, first.getCreateDate().toEpochMilli());
+        assertEquals(NOW - 100 + Duration.ofDays(7).toMillis(), first.getExpiresAt());
         assertEquals(Instant.ofEpochMilli(NOW - 100), device.getLastSeen());
         verify(devices).save(device);
     }
@@ -147,12 +147,12 @@ class DeviceServiceTest {
         device.setReportedAt(Instant.ofEpochMilli(NOW - 50));
         ownedDevice(device);
 
-        LoginEvent first = service.confirm(USER_ID, DEVICE_ID, NOW);
-        LoginEvent repeated = service.confirm(USER_ID, DEVICE_ID, NOW + 1);
+        DeviceEntity first = service.confirm(USER_ID, DEVICE_ID, NOW);
+        DeviceEntity repeated = service.confirm(USER_ID, DEVICE_ID, NOW + 1);
 
-        assertEquals(NOW, first.confirmedAt());
+        assertEquals(Instant.ofEpochMilli(NOW), first.getConfirmedAt());
         assertEquals(first, repeated);
-        assertEquals(NOW - 50, first.reportedAt());
+        assertEquals(Instant.ofEpochMilli(NOW - 50), first.getReportedAt());
         assertEquals(Instant.ofEpochMilli(NOW - 100), device.getLastSeen());
         verify(devices).save(device);
     }
@@ -216,7 +216,7 @@ class DeviceServiceTest {
         verify(devices).deleteExpired(Instant.ofEpochMilli(CUTOFF));
     }
 
-    private LoginEvent recordLogin() {
+    private DeviceEntity recordLogin() {
         return service.recordLogin(USER_ID, TOKEN_HASH, NOW, CUTOFF,
             "Firefox", "131.0", "Windows 11", "192.0.2.1");
     }

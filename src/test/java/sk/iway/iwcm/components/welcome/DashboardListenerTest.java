@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.welcome;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +27,7 @@ import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.users.devices.AdminDeviceService;
+import sk.iway.iwcm.users.devices.DeviceEntity;
 
 /** Verifies authenticated bootstrap ownership and complete initial data. */
 class DashboardListenerTest {
@@ -40,10 +42,12 @@ class DashboardListenerTest {
     void embedsInitialDataForCurrentAccountAndDomain(boolean showLoggedAdmins, boolean cloudMode, int expectedStatRootGroupId) throws Exception {
         var settings = mock(DashboardSettingsService.class);
         var notices = mock(DashboardNoticeService.class);
-        var listener = new DashboardListener(settings, notices, mock(AdminDeviceService.class));
+        var devices = mock(AdminDeviceService.class);
+        var listener = new DashboardListener(settings, notices, devices);
         var request = new MockHttpServletRequest();
         request.setParameter("userId", "999");
         request.setParameter("domainId", "999");
+        request.setParameter("securityEvent", "42");
         var user = mock(Identity.class);
         when(user.isAdmin()).thenReturn(true);
         when(user.isEnabledItem("welcomeShowLoggedAdmins")).thenReturn(showLoggedAdmins);
@@ -53,7 +57,14 @@ class DashboardListenerTest {
         preferences.setConfigured(true);
         preferences.getDomainOptions().put("autotest-form", Map.of("formName", "Contact"));
         when(settings.load(7, "42")).thenReturn(preferences);
-        when(notices.load(user, request)).thenReturn(List.of(Map.of("id", "autotest-notice", "bodyHtml", "<p>Warning</p>")));
+        var device = new DeviceEntity();
+        device.setId(42L);
+        device.setUserId(7);
+        device.setTokenHash("a".repeat(64));
+        device.setCreateDate(Instant.ofEpochMilli(1791201600123L));
+        device.setLastSeen(Instant.ofEpochMilli(1791201600223L));
+        when(devices.findEvent(user, "42")).thenReturn(device);
+        when(notices.load(user, request)).thenReturn(List.of(Map.of("id", "autotest-notice", "securityEvent", device)));
         String sessionId = request.getSession().getId();
         var model = new ModelMap();
         try (var users = mockStatic(UsersDB.class);
@@ -80,6 +91,17 @@ class DashboardListenerTest {
             assertTrue(data.path("settings").path("configured").asBoolean());
             assertEquals("Contact", data.path("settings").path("domainOptions").path("autotest-form").path("formName").asText());
             assertEquals("autotest-notice", data.path("notices").get(0).path("id").asText());
+            var securityEvent = data.path("requestedSecurityEvent");
+            assertTrue(data.path("securityEventRequested").asBoolean());
+            assertTrue(securityEvent.path("id").isIntegralNumber());
+            assertEquals(42L, securityEvent.path("id").longValue());
+            assertEquals(1791201600123L, securityEvent.path("createDate").longValue());
+            assertTrue(securityEvent.path("confirmedAt").isNull());
+            assertTrue(securityEvent.path("reportedAt").isNull());
+            assertFalse(securityEvent.has("userId"));
+            assertFalse(securityEvent.has("tokenHash"));
+            assertFalse(securityEvent.has("lastSeen"));
+            assertEquals(securityEvent, data.path("notices").get(0).path("securityEvent"));
             assertEquals(sessionId, data.path("currentSessions").path("currentSessionId").asText());
             assertFalse(data.has("loggedAdmins"));
             holders.verifyNoInteractions();
@@ -87,8 +109,9 @@ class DashboardListenerTest {
             sessions.verify(() -> SessionClusterService.getSessionsForUsers(anySet()), never());
             verify(settings).load(7, "42");
             verify(notices).load(user, request);
+            verify(devices).findEvent(user, "42");
             sessions.verify(() -> SessionClusterService.getSessionInfo(sessionId, 7));
-            verifyNoMoreInteractions(settings, notices);
+            verifyNoMoreInteractions(settings, notices, devices);
         }
     }
 

@@ -79,7 +79,7 @@ public class AdminDeviceService {
         int maxAgeDays = maxAgeDays();
         BrowserDetector browser = new BrowserDetector(request.getHeader("User-Agent"));
         String operatingSystem = join(browser.getBrowserPlatform(), browser.getBrowserSubplatform());
-        LoginEvent event = devices.recordLogin(user.getUserId(), hashToken(token), now,
+        DeviceEntity event = devices.recordLogin(user.getUserId(), hashToken(token), now,
             now - Duration.ofDays(maxAgeDays).toMillis(), bounded(browser.getBrowserName(), 128), bounded(browser.getBrowserVersion(), 64),
             bounded(operatingSystem, 128), bounded(Tools.getRemoteIP(request), 64));
 
@@ -100,14 +100,14 @@ public class AdminDeviceService {
     }
 
     /** Returns outstanding account-owned warnings; acknowledgement does not affect recognition. */
-    public List<LoginEvent> activeEvents(Identity user) {
+    public List<DeviceEntity> activeEvents(Identity user) {
         requireAdministrator(user);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled")) return List.of();
         return devices.findActive(user.getUserId(), clock.millis());
     }
 
     /** Looks up the device's current notice without exposing whether another account owns it. */
-    public LoginEvent findEvent(Identity user, String eventId) {
+    public DeviceEntity findEvent(Identity user, String eventId) {
         requireAdministrator(user);
         long id = deviceId(eventId);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled") || id <= 0) return null;
@@ -115,7 +115,7 @@ public class AdminDeviceService {
     }
 
     /** Confirms an owned event without extending the device's last-login time. */
-    public LoginEvent confirm(Identity user, String eventId) {
+    public DeviceEntity confirm(Identity user, String eventId) {
         requireAdministrator(user);
         long id = deviceId(eventId);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled") || id <= 0) return null;
@@ -123,7 +123,7 @@ public class AdminDeviceService {
     }
 
     /** Reports an owned event and forgets only that account's recognition of its browser. */
-    public LoginEvent report(Identity user, String eventId) {
+    public DeviceEntity report(Identity user, String eventId) {
         requireAdministrator(user);
         long id = deviceId(eventId);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled") || id <= 0) return null;
@@ -197,14 +197,14 @@ public class AdminDeviceService {
     }
 
     /** Queues one localized message through the existing mail sender after persistence succeeds. */
-    void sendNotification(Identity user, HttpServletRequest request, LoginEvent event) {
+    void sendNotification(Identity user, HttpServletRequest request, DeviceEntity event) {
         if (Tools.isEmpty(user.getEmail())) {
             Logger.error(AdminDeviceService.class, "Cannot notify administrator without an email address: " + user.getUserId());
             return;
         }
         Prop prop = Prop.getInstance(request);
         String baseHref = Tools.getBaseHref(request);
-        String link = baseHref.replaceAll("/+$", "") + "/admin/v9/?securityEvent=" + event.id();
+        String link = baseHref.replaceAll("/+$", "") + "/admin/v9/?securityEvent=" + event.getId();
         String domain = Tools.getServerName(request);
         String environment = Constants.getStringExecuteMacro("dashboardEnvironmentName");
         String fromName = SendMail.getDefaultSenderName("passwordReset", Tools.getRequestAttribute(request, "sendPasswordFromName", user.getFullName()));
@@ -213,9 +213,9 @@ public class AdminDeviceService {
             + "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.greeting", user.getFirstName())) + "</p>"
             + "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.intro")) + "</p>"
             + "<div style=\"background:#f3f3f6;padding:16px;border-radius:6px\">"
-            + emailLine(prop, "device", join(event.browserName(), event.browserVersion()) + " · " + event.operatingSystem())
-            + emailLine(prop, "ip", event.ipAddress())
-            + emailLine(prop, "time", Tools.formatDateTime(event.createdAt()))
+            + emailLine(prop, "device", join(event.getBrowserName(), event.getBrowserVersion()) + " · " + event.getOperatingSystem())
+            + emailLine(prop, "ip", event.getIpAddress())
+            + emailLine(prop, "time", Tools.formatDateTime(event.getCreateDate().toEpochMilli()))
             + emailLine(prop, "environment", domain + (Tools.isEmpty(environment) ? "" : " (" + environment + ")"))
             + "</div><p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.instruction")) + "</p>"
             + "<p><a style=\"display:inline-block;background:#e00028;color:#fff;padding:12px 16px;border-radius:6px;text-decoration:none\" href=\""

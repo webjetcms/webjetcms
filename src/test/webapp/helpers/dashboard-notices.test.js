@@ -136,10 +136,10 @@ test('Notice summaries render untrusted strings as text', t => {
     assert.ok(host.textContent.includes('<script>'));
 });
 
-function securityNotice(id = 'autotest-login') {
-    const createdAt = Date.UTC(2026, 9, 2);
+function securityNotice(id = 42) {
+    const createDate = Date.UTC(2026, 9, 2);
     return { ...notice(`newDevice:${id}`, 'warning'), kind: 'newDevice', securityEvent: {
-        id, createdAt, expiresAt: createdAt + week, confirmedAt: null, reportedAt: null,
+        id, createDate, expiresAt: createDate + week, confirmedAt: null, reportedAt: null,
         browserName: '<img src=x> Firefox', browserVersion: '123', operatingSystem: 'Linux', ipAddress: '127.0.0.1'
     } };
 }

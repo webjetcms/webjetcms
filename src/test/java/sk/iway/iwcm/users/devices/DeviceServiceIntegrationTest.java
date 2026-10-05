@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import jakarta.persistence.EntityManagerFactory;
 
 import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 import sk.iway.iwcm.test.BaseWebjetTest;
@@ -39,15 +40,15 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
 
     /** Generated device IDs isolate users and keep a single current notice through reporting and expiry. */
     @Test
-    void recognitionAndNoticesRemainScopedToUser() {
+    void recognitionAndNoticesRemainScopedToUser() throws Exception {
         try (TestDatabase database = new TestDatabase()) {
             DeviceService service = database.service;
-            LoginEvent first = record(service, USER_ID, database.hash, NOW);
-            long id = Long.parseLong(first.id());
+            DeviceEntity first = record(service, USER_ID, database.hash, NOW);
+            long id = first.getId();
             assertTrue(id > 0, "The database must generate the device ID");
             assertNull(record(service, USER_ID, database.hash, NOW + 100));
-            LoginEvent secondUser = record(service, OTHER_USER_ID, database.hash, NOW + 100);
-            assertNotEquals(first.id(), secondUser.id());
+            DeviceEntity secondUser = record(service, OTHER_USER_ID, database.hash, NOW + 100);
+            assertNotEquals(first.getId(), secondUser.getId());
             assertEquals(2, database.count());
             assertEquals(1, service.findActive(USER_ID, NOW + 100).size());
 
@@ -57,39 +58,41 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
 
             service.confirm(USER_ID, id, NOW + 150);
             assertTrue(service.findActive(USER_ID, NOW + 150).isEmpty());
-            LoginEvent reported = service.report(USER_ID, id, NOW + 200);
-            assertNull(reported.confirmedAt());
-            assertEquals(reported, service.report(USER_ID, id, NOW + 250));
+            DeviceEntity reported = service.report(USER_ID, id, NOW + 200);
+            assertNull(reported.getConfirmedAt());
+            assertEquals(JsonTools.objectToJSON(reported), JsonTools.objectToJSON(service.report(USER_ID, id, NOW + 250)));
             assertEquals(1, service.findActive(USER_ID, NOW + 250).size());
 
-            LoginEvent renewed = record(service, USER_ID, database.hash, NOW + 300);
-            assertEquals(first.id(), renewed.id());
-            assertEquals(NOW + 300, renewed.createdAt());
-            assertNull(renewed.confirmedAt());
-            assertNull(renewed.reportedAt());
-            assertEquals(renewed, service.findEvent(USER_ID, id), "Old links must resolve to the device's current notice");
+            DeviceEntity renewed = record(service, USER_ID, database.hash, NOW + 300);
+            assertEquals(first.getId(), renewed.getId());
+            assertEquals(NOW + 300, renewed.getCreateDate().toEpochMilli());
+            assertNull(renewed.getConfirmedAt());
+            assertNull(renewed.getReportedAt());
+            assertEquals(JsonTools.objectToJSON(renewed), JsonTools.objectToJSON(service.findEvent(USER_ID, id)),
+                "Old links must resolve to the device's current notice");
             assertNull(record(service, OTHER_USER_ID, database.hash, NOW + 300));
 
-            LoginEvent expired = record(service, USER_ID, database.hash, NOW + 300 + KNOWN_AGE);
-            assertEquals(first.id(), expired.id());
-            assertEquals(NOW + 300 + KNOWN_AGE, expired.createdAt());
+            DeviceEntity expired = record(service, USER_ID, database.hash, NOW + 300 + KNOWN_AGE);
+            assertEquals(first.getId(), expired.getId());
+            assertEquals(NOW + 300 + KNOWN_AGE, expired.getCreateDate().toEpochMilli());
             assertEquals(2, database.count(), "Re-detection must update the device rather than insert history");
         }
     }
 
     /** Notice expiration preserves recognition; deleting the device also removes the email detail. */
     @Test
-    void noticeExpirationAndDeviceDeletionShareOneRecord() {
+    void noticeExpirationAndDeviceDeletionShareOneRecord() throws Exception {
         try (TestDatabase database = new TestDatabase()) {
             DeviceService service = database.service;
-            LoginEvent first = record(service, USER_ID, database.hash, NOW);
-            long id = Long.parseLong(first.id());
+            DeviceEntity first = record(service, USER_ID, database.hash, NOW);
+            long id = first.getId();
             assertEquals(1, service.findActive(USER_ID, NOW + DeviceService.NOTICE_AGE - 1).size());
             assertTrue(service.findActive(USER_ID, NOW + DeviceService.NOTICE_AGE).isEmpty());
 
             long later = NOW + Duration.ofDays(30).toMillis();
             assertNull(record(service, USER_ID, database.hash, later));
-            assertEquals(first, service.findEvent(USER_ID, id), "A normal login must preserve the notice details");
+            assertEquals(JsonTools.objectToJSON(first), JsonTools.objectToJSON(service.findEvent(USER_ID, id)),
+                "A normal login must preserve the notice details");
             DeviceEntity device = database.devices.findById(id).orElseThrow();
             assertEquals(Instant.ofEpochMilli(NOW), device.getCreateDate());
             assertEquals(Instant.ofEpochMilli(later), device.getLastSeen());
@@ -97,8 +100,8 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
             assertNull(service.findEvent(USER_ID, id));
             assertEquals(0, database.count());
 
-            LoginEvent recreated = record(service, USER_ID, database.hash, later + 1);
-            assertNotEquals(first.id(), recreated.id());
+            DeviceEntity recreated = record(service, USER_ID, database.hash, later + 1);
+            assertNotEquals(first.getId(), recreated.getId());
             assertEquals(1, database.count());
         }
     }
@@ -109,27 +112,27 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
         try (TestDatabase database = new TestDatabase()) {
             DeviceService firstNode = database.service;
             DeviceService secondNode = database.newContext().getBean(DeviceService.class);
-            LoginEvent first = record(firstNode, USER_ID, database.hash, NOW);
-            long id = Long.parseLong(first.id());
+            DeviceEntity first = record(firstNode, USER_ID, database.hash, NOW);
+            long id = first.getId();
             assertNotNull(secondNode.findEvent(USER_ID, id));
             assertNull(record(secondNode, USER_ID, database.hash, NOW + 100));
 
             firstNode.confirm(USER_ID, id, NOW + 200);
-            assertEquals(NOW + 200, secondNode.findEvent(USER_ID, id).confirmedAt());
+            assertEquals(Instant.ofEpochMilli(NOW + 200), secondNode.findEvent(USER_ID, id).getConfirmedAt());
             assertTrue(secondNode.findActive(USER_ID, NOW + 200).isEmpty());
 
             secondNode.report(USER_ID, id, NOW + 300);
-            LoginEvent reported = firstNode.findEvent(USER_ID, id);
-            assertEquals(NOW + 300, reported.reportedAt());
-            assertNull(reported.confirmedAt());
-            assertEquals(first.id(), record(firstNode, USER_ID, database.hash, NOW + 400).id());
+            DeviceEntity reported = firstNode.findEvent(USER_ID, id);
+            assertEquals(Instant.ofEpochMilli(NOW + 300), reported.getReportedAt());
+            assertNull(reported.getConfirmedAt());
+            assertEquals(first.getId(), record(firstNode, USER_ID, database.hash, NOW + 400).getId());
             assertNull(record(secondNode, USER_ID, database.hash, NOW + 500));
-            assertEquals(NOW + 400, secondNode.findEvent(USER_ID, id).createdAt());
+            assertEquals(NOW + 400, secondNode.findEvent(USER_ID, id).getCreateDate().toEpochMilli());
             assertEquals(1, database.count());
         }
     }
 
-    private static LoginEvent record(DeviceService service, int userId, String hash, long now) {
+    private static DeviceEntity record(DeviceService service, int userId, String hash, long now) {
         return service.recordLogin(userId, hash, now, now - KNOWN_AGE, "Firefox", "131", "Windows 11", "127.0.0.1");
     }
 

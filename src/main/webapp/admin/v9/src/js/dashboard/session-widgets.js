@@ -241,7 +241,7 @@ export function showActiveSessions(context, securityEvent) {
         const client = [securityEvent.browserName, securityEvent.browserVersion].filter(Boolean).join(' ');
         const device = [client, securityEvent.operatingSystem].filter(Boolean).join(' · ');
         securityDetails.append(node('strong', '', text(context, 'newDevice.title')),
-            node('p', 'mb-2', text(context, 'newDevice.details', device || '—', securityEvent.ipAddress || '—', date(securityEvent.createdAt))));
+            node('p', 'mb-2', text(context, 'newDevice.details', device || '—', securityEvent.ipAddress || '—', date(securityEvent.createDate))));
         if (securityEvent.reportedAt) {
             const reported = node('p', 'mb-0', text(context, 'newDevice.reported'));
             reported.tabIndex = -1;

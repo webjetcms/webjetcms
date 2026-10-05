@@ -27,13 +27,13 @@ public class AdminDeviceRestController {
 
     /** Confirms a login using the request's account, never a submitted user identifier. */
     @PostMapping("/{id}/confirm")
-    public LoginEvent confirm(@PathVariable("id") String id, HttpServletRequest request) {
+    public DeviceEntity confirm(@PathVariable("id") String id, HttpServletRequest request) {
         return requireEvent(service.confirm(UsersDB.getCurrentUser(request), id));
     }
 
     /** Forgets the reported browser without terminating sessions or suppressing the warning. */
     @PostMapping("/{id}/report")
-    public LoginEvent report(@PathVariable("id") String id, HttpServletRequest request) {
+    public DeviceEntity report(@PathVariable("id") String id, HttpServletRequest request) {
         return requireEvent(service.report(UsersDB.getCurrentUser(request), id));
     }
 
@@ -50,7 +50,7 @@ public class AdminDeviceRestController {
         Logger.error(AdminDeviceRestController.class, "Administrator device persistence is unavailable", exception);
     }
 
-    private static LoginEvent requireEvent(LoginEvent event) {
+    private static DeviceEntity requireEvent(DeviceEntity event) {
         if (event == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Security event is unavailable");
         return event;
     }
