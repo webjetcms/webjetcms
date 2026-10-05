@@ -2543,7 +2543,7 @@ export class DatatablesCkEditor {
 		return htmlCode;
 	}
 
-	pbInsertContent(html, mode=null, final=false) {
+	pbInsertContent(html, mode=null, final=false, scrollToBottom=true) {
 		if (html == null) return;
 
 		//console.log("html=", html, mode+" to PageBuilder editors", "markPbElements=", markPbElements);
@@ -2576,8 +2576,8 @@ export class DatatablesCkEditor {
 			].join(', ')).detach();
 			if ("replace" === mode || "edit" === mode) $container.empty();
 			$container.append($content.contents()).append($chrome);
-			//scroll window to bottom
-			pbIframe.scrollTo(0, pbIframe.document.body.scrollHeight+200);
+			// Mode changes start at the top; generated content keeps scrolling to the bottom.
+			pbIframe.scrollTo(0, scrollToBottom ? pbIframe.document.body.scrollHeight+200 : 0);
 		});
 		//reinitialize pb blocks
 		if (final===true) {
@@ -2709,7 +2709,7 @@ export class DatatablesCkEditor {
 			}
 
 			if (data != null) {
-				this.pbInsertContent(data, "replace", true);
+				this.pbInsertContent(data, "replace", true, false);
 			}
 		} else if ("html"===this.editingMode) {
 			ckEditorElement.show();

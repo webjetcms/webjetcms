@@ -105,6 +105,38 @@ Scenario('bug - prepnutie editora', async ({I, DTE, Apps, Document}) => {
     Document.resetPageBuilderMode();
 });
 
+Scenario('switching back to Page Builder resets the canvas scroll', async ({I, DTE, Document}) => {
+    Document.resetPageBuilderMode();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+    DTE.waitForEditor();
+    I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe')?.contentWindow.pageBuilderReady === true, 20);
+
+    for (const mode of ['html', '']) {
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        const previousScroll = await I.executeScript(() => {
+            window.scrollTo({top: document.documentElement.scrollHeight, behavior: 'instant'});
+            return window.scrollY;
+        });
+        I.assertAbove(previousScroll, 0, 'The page must be scrolled before switching editor modes');
+        I.selectOption('#DTE_Field_data-editorTypeSelector select', mode);
+        I.switchTo();
+        I.waitForVisible(mode === 'html' ? '.CodeMirror' : '.cke_wysiwyg_frame', 10);
+        I.clickCss('#DTE_Field_data-editorTypeSelector button');
+        I.click(locate('.dropdown-item').withText('Page Builder'));
+        I.waitForVisible('#DTE_Field_data-pageBuilderIframe', 10);
+        I.waitForFunction(() => {
+            const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe').contentWindow;
+            const elements = Array.from(frame.document.querySelectorAll('#wjInline-docdata [data-ckeditor-instance]'));
+            return elements.length > 0 && elements.every(element => frame.CKEDITOR.instances[element.dataset.ckeditorInstance]?.status === 'ready');
+        }, 20);
+        const scroll = await I.executeScript(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').contentWindow.scrollY);
+        I.assertTrue(scroll <= 1, 'Returning from ' + (mode || 'standard') + ' mode must show the top of the page, actual scroll: ' + scroll);
+    }
+
+    DTE.cancel();
+    Document.resetPageBuilderMode();
+});
+
 Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', async ({I, DTE, Document}) => {
     //bug: ked prepnem z PB na standardny, zatvorim okno, otvorim, tak sa prepinac nezobrazi
     //overit aj to, ze sa nezobrazi na stranke, kde nie je PB zapnute
