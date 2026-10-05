@@ -1,7 +1,5 @@
 package sk.iway.iwcm.users.devices;
 
-import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -39,12 +37,17 @@ public class AdminDeviceRestController {
         return requireEvent(service.report(UsersDB.getCurrentUser(request), id));
     }
 
-    /** Hides storage details while allowing the client to retain its confirmed state on failure. */
+    /**
+     * Returns HTTP 503 instead of the default 500.jsp, which changes the status to 404
+     * and can expose exception details to administrators. No response body is needed:
+     * the client checks the HTTP status and displays its own localized error message.
+     *
+     * @param exception persistence failure to log with its stack trace
+     */
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
-    public Map<String, String> unavailable(IllegalStateException exception) {
-        Logger.error(AdminDeviceRestController.class, "Administrator device persistence is unavailable (" + exception.getClass().getSimpleName() + ")");
-        return Map.of("error", "Security events are temporarily unavailable");
+    public void unavailable(IllegalStateException exception) {
+        Logger.error(AdminDeviceRestController.class, "Administrator device persistence is unavailable", exception);
     }
 
     private static LoginEvent requireEvent(LoginEvent event) {

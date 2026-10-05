@@ -55,7 +55,7 @@ import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 public class LogonTools {
-    private static final String SUCCESS_LOGON_REQUEST_MARKER = LogonTools.class.getName() + ".afterSuccessLogon";
+    private static final String AFTER_SUCCESS_LOGON_ALREADY_EXECUTED = LogonTools.class.getName() + ".afterSuccessLogon";
 
     protected LogonTools() {
         //utility class
@@ -863,10 +863,12 @@ public class LogonTools {
         Identity user = UsersDB.getCurrentUser(request);
         if (user == null) return;
 
+        //prevent duplicate execution
         Integer account = user.getUserId();
-        if (account.equals(request.getAttribute(SUCCESS_LOGON_REQUEST_MARKER))) return;
-        request.setAttribute(SUCCESS_LOGON_REQUEST_MARKER, account);
+        if (account.equals(request.getAttribute(AFTER_SUCCESS_LOGON_ALREADY_EXECUTED))) return;
+        request.setAttribute(AFTER_SUCCESS_LOGON_ALREADY_EXECUTED, account);
 
+        //call all required post-login hooks
         callLogonLogoffInterceptor(user, request);
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
         afterLogon(user, request, response);

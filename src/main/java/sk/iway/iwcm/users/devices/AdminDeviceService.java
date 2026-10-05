@@ -61,14 +61,14 @@ public class AdminDeviceService {
         if (user == null || !user.isAdmin() || user.getUserId() <= 0 || request == null || response == null
                 || !Constants.getBoolean("adminNewDeviceDetectionEnabled")) return;
         try {
-            Tools.getSpringBean("adminDeviceService", AdminDeviceService.class).record(user, request, response);
+            Tools.getSpringBean("adminDeviceService", AdminDeviceService.class).saveDataAndCookie(user, request, response);
         } catch (Exception exception) {
             Logger.error(AdminDeviceService.class, "Cannot record administrator device login (" + exception.getClass().getSimpleName() + ")");
         }
     }
 
     /** Applies the account-specific inactivity window and renews the browser cookie. */
-    void record(Identity user, HttpServletRequest request, HttpServletResponse response) {
+    private void saveDataAndCookie(Identity user, HttpServletRequest request, HttpServletResponse response) {
         String token = readToken(request);
         if (token == null) {
             byte[] bytes = new byte[32];

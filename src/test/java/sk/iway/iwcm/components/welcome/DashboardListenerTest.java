@@ -26,7 +26,6 @@ import sk.iway.iwcm.stat.SessionHolder;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.users.devices.AdminDeviceService;
-import sk.iway.iwcm.users.devices.LoginEvent;
 
 /** Verifies authenticated bootstrap ownership and complete initial data. */
 class DashboardListenerTest {
