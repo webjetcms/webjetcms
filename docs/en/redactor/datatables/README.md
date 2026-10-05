@@ -89,6 +89,8 @@ In the **website editor**, before closing, the current page content is compared 
 
 This check applies to **web page content**, not all form fields. It does not detect changes to the page name or settings on other tabs in this way. Other datasheets do not have a general check for changes to all fields on the **Cancel** button either. If you want to keep the data in progress, use **Save** before closing.
 
+When investigating the cause of the warning, you can view the `window.top.lastDirty` object in the browser console. After a change is detected, it contains the original and current HTML code, as well as the first difference found. You can print a readable summary with the `console.log(window.top.lastDirty.summary)` command. The object stores the last detected change and is used **only for web page content**, not for other fields or data tables.
+
 ## Keyboard shortcuts
 
 For more efficient work, you can use the following keyboard shortcuts (```Windows/MacOS```):

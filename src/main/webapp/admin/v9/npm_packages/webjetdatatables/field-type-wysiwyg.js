@@ -344,7 +344,6 @@ export function typeWysiwyg() {
                         const originalPreview = originalLines[firstChangedLine] === undefined ? "(end of content)" : JSON.stringify(originalLine.slice(previewStart, previewEnd));
                         const currentPreview = currentLines[firstChangedLine] === undefined ? "(end of content)" : JSON.stringify(currentLine.slice(previewStart, previewEnd));
                         const differencePreview = `${originalPreview} VS ${currentPreview}`;
-                        const previousDirty = window.top.lastDirty;
 
                         window.top.lastDirty = {
                             field: conf.data,
@@ -360,30 +359,27 @@ export function typeWysiwyg() {
                         };
 
                         // TEMPORARY: customer diagnostics. Log each new difference without flooding the console.
-                        if (previousDirty?.field !== conf.data || previousDirty?.original !== conf.dirtyDataOriginal ||
-                            previousDirty?.current !== currentData) {
-                            const rows = [];
-                            const contextEnd = Math.min(firstChangedLine + 2, Math.max(originalLines.length, currentLines.length));
-                            for (let index = contextStart; index < contextEnd; index++) {
-                                rows.push({
-                                    Line: index + 1,
-                                    Change: index === firstChangedLine ? ">>> FIRST DIFFERENCE" : "",
-                                    Original: originalLines[index] ?? "(end of content)",
-                                    Changed: currentLines[index] ?? "(end of content)"
-                                });
-                            }
-
-                            console.groupCollapsed("%c[WebJET isDirty]%c %s: first difference on line %d: %s",
-                                "background: #fff3cd; color: #664d03; padding: 2px 6px; border-radius: 3px; font-weight: bold;",
-                                "font-weight: bold;", conf.data, firstChangedLine + 1, differencePreview);
-                            console.table(rows);
-                            console.groupCollapsed("Full HTML");
-                            console.log("%cOriginal HTML", "color: #b42318; font-weight: bold;", conf.dirtyDataOriginal);
-                            console.log("%cChanged HTML", "color: #067647; font-weight: bold;", currentData);
-                            console.groupEnd();
-                            console.log("Debug snapshot (window.top.lastDirty):", window.top.lastDirty);
-                            console.groupEnd();
+                        const rows = [];
+                        const contextEnd = Math.min(firstChangedLine + 2, Math.max(originalLines.length, currentLines.length));
+                        for (let index = contextStart; index < contextEnd; index++) {
+                            rows.push({
+                                Line: index + 1,
+                                Change: index === firstChangedLine ? ">>> FIRST DIFFERENCE" : "",
+                                Original: originalLines[index] ?? "(end of content)",
+                                Changed: currentLines[index] ?? "(end of content)"
+                            });
                         }
+
+                        console.groupCollapsed("%c[WebJET isDirty]%c %s: first difference on line %d: %s",
+                            "background: #fff3cd; color: #664d03; padding: 2px 6px; border-radius: 3px; font-weight: bold;",
+                            "font-weight: bold;", conf.data, firstChangedLine + 1, differencePreview);
+                        console.table(rows);
+                        console.groupCollapsed("Full HTML");
+                        console.log("%cOriginal HTML", "color: #b42318; font-weight: bold;", conf.dirtyDataOriginal);
+                        console.log("%cChanged HTML", "color: #067647; font-weight: bold;", currentData);
+                        console.groupEnd();
+                        console.log("Debug snapshot (window.top.lastDirty):", window.top.lastDirty);
+                        console.groupEnd();
                     } catch (e) {
                         // Debug recording must not affect dirty detection when the top window is inaccessible.
                     }

@@ -89,6 +89,8 @@ V **editoru webových stránek** se před zavřením porovnává aktuální obsa
 
 Tato kontrola se týká **obsahu webové stránky**, ne všech polí formuláře. Samotnou změnu názvu stránky nebo nastavení na jiných kartách tímto způsobem nezjišťuje. Ani ostatní datatabulky nemají všeobecnou kontrolu změn všech polí u tlačítka **Zrušit**. Chcete-li rozpracované údaje zachovat, před zavřením použijte **Uložit**.
 
+Při zjišťování příčiny upozornění můžete v konzoli prohlížeče zobrazit objekt `window.top.lastDirty`. Po zjištění změny obsahuje původní a aktuální HTML kód i první nalezený rozdíl. Čitelný souhrn vypíšete příkazem `console.log(window.top.lastDirty.summary)`. Objekt uchovává poslední zjištěnou změnu a slouží **pouze pro obsah webových stránek**, nikoli pro ostatní pole nebo datatabulky.
+
 ## Klávesové zkratky
 
 Pro efektivnější práci můžete použít následující klávesové zkratky (```Windows/MacOS```):
