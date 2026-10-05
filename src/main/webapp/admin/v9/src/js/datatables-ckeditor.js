@@ -2221,6 +2221,9 @@ export class DatatablesCkEditor {
 
 			allowedContent: true,
 
+			// Dialog fields are updated programmatically, rather prevent confirm
+			dialog_noConfirmCancel: true,
+
 			floatSpacePinnedOffsetY: 50,
 
 			customConfig: configLink,

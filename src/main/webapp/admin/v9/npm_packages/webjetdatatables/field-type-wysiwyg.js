@@ -319,7 +319,74 @@ export function typeWysiwyg() {
                 }
                 var currentData = getThisField(conf).get(conf);
                 if (currentData != conf.dirtyDataOriginal) {
-                    //console.log("isDirty check, currentData=", currentData, "dirtyDataOriginal=", conf.dirtyDataOriginal);
+                    try {
+                        // Keep carriage returns so changes in line endings remain visible.
+                        const originalLines = String(conf.dirtyDataOriginal).split("\n");
+                        const currentLines = String(currentData).split("\n");
+                        let firstChangedLine = 0;
+                        while (firstChangedLine < Math.min(originalLines.length, currentLines.length) &&
+                            originalLines[firstChangedLine] === currentLines[firstChangedLine]) {
+                            firstChangedLine++;
+                        }
+                        const contextStart = Math.max(0, firstChangedLine - 1);
+                        const originalContext = originalLines.slice(contextStart, firstChangedLine + 2).join("\n");
+                        const currentContext = currentLines.slice(contextStart, firstChangedLine + 2).join("\n");
+                        const originalLine = originalLines[firstChangedLine] ?? "";
+                        const currentLine = currentLines[firstChangedLine] ?? "";
+                        let firstChangedCharacter = 0;
+                        while (firstChangedCharacter < Math.min(originalLine.length, currentLine.length) &&
+                            originalLine[firstChangedCharacter] === currentLine[firstChangedCharacter]) {
+                            firstChangedCharacter++;
+                        }
+                        const previewStart = Math.max(0, firstChangedCharacter - 15);
+                        const previewEnd = firstChangedCharacter + 20;
+                        // Quote snippets so spaces, tabs and carriage returns can be inspected in the console heading.
+                        const originalPreview = originalLines[firstChangedLine] === undefined ? "(end of content)" : JSON.stringify(originalLine.slice(previewStart, previewEnd));
+                        const currentPreview = currentLines[firstChangedLine] === undefined ? "(end of content)" : JSON.stringify(currentLine.slice(previewStart, previewEnd));
+                        const differencePreview = `${originalPreview} VS ${currentPreview}`;
+                        const previousDirty = window.top.lastDirty;
+
+                        window.top.lastDirty = {
+                            field: conf.data,
+                            original: conf.dirtyDataOriginal,
+                            current: currentData,
+                            summary: `Found difference on line ${firstChangedLine + 1}: ${differencePreview}\n\nOriginal (from line ${contextStart + 1}):\n${originalContext}\n\nChanged (from line ${contextStart + 1}):\n${currentContext}`,
+                            firstDifference: {
+                                line: firstChangedLine + 1,
+                                contextStartLine: contextStart + 1,
+                                original: originalContext,
+                                current: currentContext
+                            }
+                        };
+
+                        // TEMPORARY: customer diagnostics. Log each new difference without flooding the console.
+                        if (previousDirty?.field !== conf.data || previousDirty?.original !== conf.dirtyDataOriginal ||
+                            previousDirty?.current !== currentData) {
+                            const rows = [];
+                            const contextEnd = Math.min(firstChangedLine + 2, Math.max(originalLines.length, currentLines.length));
+                            for (let index = contextStart; index < contextEnd; index++) {
+                                rows.push({
+                                    Line: index + 1,
+                                    Change: index === firstChangedLine ? ">>> FIRST DIFFERENCE" : "",
+                                    Original: originalLines[index] ?? "(end of content)",
+                                    Changed: currentLines[index] ?? "(end of content)"
+                                });
+                            }
+
+                            console.groupCollapsed("%c[WebJET isDirty]%c %s: first difference on line %d: %s",
+                                "background: #fff3cd; color: #664d03; padding: 2px 6px; border-radius: 3px; font-weight: bold;",
+                                "font-weight: bold;", conf.data, firstChangedLine + 1, differencePreview);
+                            console.table(rows);
+                            console.groupCollapsed("Full HTML");
+                            console.log("%cOriginal HTML", "color: #b42318; font-weight: bold;", conf.dirtyDataOriginal);
+                            console.log("%cChanged HTML", "color: #067647; font-weight: bold;", currentData);
+                            console.groupEnd();
+                            console.log("Debug snapshot (window.top.lastDirty):", window.top.lastDirty);
+                            console.groupEnd();
+                        }
+                    } catch (e) {
+                        // Debug recording must not affect dirty detection when the top window is inaccessible.
+                    }
                     return true;
                 }
             }

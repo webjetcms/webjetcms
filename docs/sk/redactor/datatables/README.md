@@ -70,6 +70,25 @@ Automatické nastavenie počtu riadkov tabuľky sa použije len v hlavnom okne, 
 
 Hodnota všetky je limitovaná nastavením konfiguračnej premennej `datatablesExportMaxRows`, čiže pri hodnote Všetky sa reálne načíta maximálny počet riadkov definovaný v tejto konfiguračnej premennej. Riadky sa zobrazujú priamo v prehliadači a pri vysokom počte dôjde k vysokému zaťaženiu procesora.
 
+## Upozornenia na neuložené zmeny
+
+### Obnovenie alebo opustenie stránky
+
+Ak máte otvorené okno editora datatabuľky a obnovíte stránku klávesom **F5**, prejdete na inú stránku alebo zatvoríte kartu prehliadača, prehliadač zobrazí upozornenie na možné neuložené zmeny. V tomto prípade sa kontroluje iba to, či je okno editora otvorené a viditeľné. **Nekontroluje sa, či ste v jeho poliach skutočne niečo zmenili.** Upozornenie sa preto môže zobraziť aj hneď po otvorení záznamu bez úprav.
+
+Ide o ochranu pred stratou rozpracovaných údajov pri nechcenom obnovení alebo opustení stránky. Ak chcete zmeny zachovať, zostaňte na stránke a uložte ich tlačidlom **Uložiť**. Potvrdením odchodu alebo obnovenia sa neuložené údaje zahodia. Presný text upozornenia a názvy tlačidiel určuje prehliadač, preto sa napríklad v Chrome a Firefoxe líšia.
+
+### Tlačidlo Zrušiť v okne editora
+
+Tlačidlo **Zrušiť** zatvára okno editora bez uloženia rozpracovaných zmien. Samotná stránka administrácie zostáva otvorená, takže sa nevyvoláva vyššie opísané upozornenie pri odchode zo stránky.
+
+V **editore webových stránok** sa pred zatvorením porovnáva aktuálny obsah stránky s obsahom zaznamenaným po načítaní editora:
+
+- Ak sa obsah nezmenil, okno sa zatvorí bez upozornenia.
+- Ak sa obsah zmenil, zobrazí sa upozornenie na neuložený text. Tlačidlom **OK** potvrdíte zatvorenie bez uloženia, tlačidlom **Zrušiť** v upozornení sa vrátite do editora.
+
+Táto kontrola sa týka **obsahu webovej stránky**, nie všetkých polí formulára. Samotnú zmenu názvu stránky alebo nastavení na iných kartách týmto spôsobom nezisťuje. Ani ostatné datatabuľky nemajú všeobecnú kontrolu zmien všetkých polí pri tlačidle **Zrušiť**. Ak chcete rozpracované údaje zachovať, pred zatvorením použite **Uložiť**.
+
 ## Klávesové skratky
 
 Pre efektívnejšiu prácu môžete použiť nasledovné klávesové skratky (```Windows/MacOS```):
