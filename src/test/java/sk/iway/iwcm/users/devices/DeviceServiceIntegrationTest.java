@@ -16,11 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
@@ -47,7 +43,7 @@ import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 /**
- * Exercises the production Spring Data repositories and EclipseLink transactions on MySQL/MariaDB.
+ * Exercises independent Spring Data repository writes with EclipseLink on MySQL/MariaDB.
  * Each test uses an isolated schema with the existing CI users fixture and the actual migration SQL.
  * Requires explicit opt-in with {@code -DwebjetDeviceIntegration=true} in the test JVM and create/drop
  * database permissions. All table mutations run in a verified, newly created UUID schema; each borrowed
@@ -89,17 +85,6 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
         }
     }
 
-    /** Two independent connections emit one event at first use and one when the same browser expires. */
-    @Test
-    void simultaneousLoginsCreateExactlyOneEventAtFirstUseAndAfterExpiry() throws Exception {
-        try (TestDatabase database = new TestDatabase()) {
-            assertEquals(1, concurrentLogins(database.service, NOW));
-            assertEquals(1, database.service.findActive(1, 42, NOW).size());
-            assertEquals(1, concurrentLogins(database.service, NOW + KNOWN_AGE));
-            assertEquals(1, database.service.findActive(1, 42, NOW + KNOWN_AGE).size());
-        }
-    }
-
     /** Warning expiry and history retention do not depend on cleanup or the recognition retention setting. */
     @Test
     void deadlinesApplyBeforeCleanupAndHistorySurvivesDevicePruning() throws Exception {
@@ -121,50 +106,19 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
         }
     }
 
-    /** A rejected event insert rolls back the already flushed browser insert in the same transaction. */
+    /** A rejected event insert leaves the independently saved browser recognition in place. */
     @Test
-    void failedEventInsertRollsBackDeviceRecognition() throws Exception {
+    void failedEventInsertLeavesDeviceRecognitionSaved() throws Exception {
         try (TestDatabase database = new TestDatabase()) {
             database.execute("CREATE TRIGGER reject_login_event BEFORE INSERT ON user_login_events "
                 + "FOR EACH ROW SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Intentional fixture event failure'");
             assertThrows(IllegalStateException.class, () -> record(database.service, 1, 42, HASH, NOW));
-            assertEquals(0, database.count("user_login_devices"));
+            assertEquals(1, database.count("user_login_devices"));
             assertEquals(0, database.count("user_login_events"));
             database.execute("DROP TRIGGER reject_login_event");
-            assertNotNull(record(database.service, 1, 42, HASH, NOW));
+            assertNull(record(database.service, 1, 42, HASH, NOW));
             assertEquals(1, database.count("user_login_devices"));
-            assertEquals(1, database.count("user_login_events"));
-        }
-    }
-
-    /** Both transactions observe an absent device before either inserts, forcing a real database retry. */
-    @Test
-    void firstInsertCollisionRetriesInAFreshTransaction() throws Exception {
-        try (TestDatabase database = new TestDatabase()) {
-            AnnotationConfigApplicationContext context = database.contexts.get(0);
-            DeviceRepository repository = context.getBean(DeviceRepository.class);
-            AtomicInteger reads = new AtomicInteger();
-            CountDownLatch absentReads = new CountDownLatch(2);
-            DeviceRepository concurrentRepository = (DeviceRepository) Proxy.newProxyInstance(
-                DeviceRepository.class.getClassLoader(), new Class<?>[] { DeviceRepository.class }, (proxy, method, args) -> {
-                    try {
-                        Object result = method.invoke(repository, args);
-                        if (method.getName().equals("findForUpdate") && reads.incrementAndGet() <= 2) {
-                            assertTrue(((java.util.Optional<?>) result).isEmpty(), "Both first transactions must observe no device");
-                            absentReads.countDown();
-                            assertTrue(absentReads.await(5, TimeUnit.SECONDS), "Both first lookups must reach the insertion barrier");
-                        }
-                        return result;
-                    } catch (InvocationTargetException exception) {
-                        throw exception.getCause();
-                    }
-                });
-            DeviceService service = new DeviceService(concurrentRepository, context.getBean(LoginEventRepository.class),
-                context.getBean("webjet2022TransactionManager", PlatformTransactionManager.class));
-            assertEquals(1, concurrentLogins(service, NOW));
-            assertTrue(reads.get() >= 3, "The database conflict must be followed by a fresh lookup");
-            assertEquals(1, database.count("user_login_devices"));
-            assertEquals(1, database.count("user_login_events"));
+            assertEquals(0, database.count("user_login_events"));
         }
     }
 
@@ -193,30 +147,6 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
 
     private static LoginEvent record(DeviceService repository, int userId, int domainId, String hash, long now) {
         return repository.recordLogin(userId, domainId, hash, now, now - KNOWN_AGE, "Firefox", "131", "Windows 11", "127.0.0.1");
-    }
-
-    private static long concurrentLogins(DeviceService repository, long now) throws Exception {
-        var executor = Executors.newFixedThreadPool(2);
-        CountDownLatch ready = new CountDownLatch(2);
-        CountDownLatch start = new CountDownLatch(1);
-        try {
-            java.util.concurrent.Callable<LoginEvent> login = () -> {
-                ready.countDown();
-                assertTrue(start.await(5, TimeUnit.SECONDS));
-                return record(repository, 1, 42, HASH, now);
-            };
-            var first = executor.submit(login);
-            var second = executor.submit(login);
-            assertTrue(ready.await(5, TimeUnit.SECONDS));
-            start.countDown();
-            LoginEvent firstResult = first.get(15, TimeUnit.SECONDS);
-            LoginEvent secondResult = second.get(15, TimeUnit.SECONDS);
-            return (firstResult == null ? 0 : 1) + (secondResult == null ? 0 : 1);
-        } finally {
-            start.countDown();
-            executor.shutdownNow();
-            assertTrue(executor.awaitTermination(15, TimeUnit.SECONDS));
-        }
     }
 
     /** Owns only an isolated database whose name is generated in this test process. */
@@ -400,9 +330,8 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
         }
 
         @Bean
-        DeviceService deviceService(DeviceRepository devices, LoginEventRepository events,
-            PlatformTransactionManager transactionManager) {
-            return new DeviceService(devices, events, transactionManager);
+        DeviceService deviceService(DeviceRepository devices, LoginEventRepository events) {
+            return new DeviceService(devices, events);
         }
     }
 }

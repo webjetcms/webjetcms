@@ -51,7 +51,7 @@ public class DeviceEntity implements Persistable<DeviceId> {
         return new DeviceId(domainId, userId, tokenHash);
     }
 
-    /** Assigned identifiers must use INSERT on first use so concurrent creation hits the unique key. */
+    /** Distinguishes new assigned identifiers from records loaded from the database. */
     @Override
     public boolean isNew() {
         return newEntity;

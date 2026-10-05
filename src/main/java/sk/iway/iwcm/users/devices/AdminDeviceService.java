@@ -73,32 +73,30 @@ public class AdminDeviceService {
     void record(Identity user, HttpServletRequest request, HttpServletResponse response) {
         int domainId = UsersDB.getDomainId();
         String account = domainId + ":" + user.getUserId();
-        synchronized (request) {
-            if (account.equals(request.getAttribute(REQUEST_MARKER))) return;
-            request.setAttribute(REQUEST_MARKER, account);
-            String token = readToken(request);
-            if (token == null) {
-                byte[] bytes = new byte[32];
-                RANDOM.nextBytes(bytes);
-                token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-            }
-            long now = clock.millis();
-            int maxAgeDays = maxAgeDays();
-            BrowserDetector browser = new BrowserDetector(request.getHeader("User-Agent"));
-            String operatingSystem = join(browser.getBrowserPlatform(), browser.getBrowserSubplatform());
-            LoginEvent event = devices.recordLogin(user.getUserId(), domainId, hashToken(token), now,
-                now - Duration.ofDays(maxAgeDays).toMillis(), bounded(browser.getBrowserName(), 128), bounded(browser.getBrowserVersion(), 64),
-                bounded(operatingSystem, 128), bounded(Tools.getRemoteIP(request), 64));
-
-            Cookie cookie = new Cookie(COOKIE_NAME, token);
-            cookie.setPath("/");
-            cookie.setHttpOnly(true);
-            cookie.setSecure(Tools.isSecure(request));
-            cookie.setAttribute("SameSite", "Lax");
-            cookie.setMaxAge((int) Duration.ofDays(maxAgeDays).toSeconds());
-            Tools.addCookie(cookie, response, request);
-            if (event != null) sendNotification(user, request, event);
+        if (account.equals(request.getAttribute(REQUEST_MARKER))) return;
+        request.setAttribute(REQUEST_MARKER, account);
+        String token = readToken(request);
+        if (token == null) {
+            byte[] bytes = new byte[32];
+            RANDOM.nextBytes(bytes);
+            token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
         }
+        long now = clock.millis();
+        int maxAgeDays = maxAgeDays();
+        BrowserDetector browser = new BrowserDetector(request.getHeader("User-Agent"));
+        String operatingSystem = join(browser.getBrowserPlatform(), browser.getBrowserSubplatform());
+        LoginEvent event = devices.recordLogin(user.getUserId(), domainId, hashToken(token), now,
+            now - Duration.ofDays(maxAgeDays).toMillis(), bounded(browser.getBrowserName(), 128), bounded(browser.getBrowserVersion(), 64),
+            bounded(operatingSystem, 128), bounded(Tools.getRemoteIP(request), 64));
+
+        Cookie cookie = new Cookie(COOKIE_NAME, token);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setSecure(Tools.isSecure(request));
+        cookie.setAttribute("SameSite", "Lax");
+        cookie.setMaxAge((int) Duration.ofDays(maxAgeDays).toSeconds());
+        Tools.addCookie(cookie, response, request);
+        if (event != null) sendNotification(user, request, event);
     }
 
     /** Returns the configured inactivity window, bounded to a valid cookie lifetime. */
