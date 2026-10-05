@@ -45,7 +45,7 @@ Scenario("base tests", async ({I, Document}) => {
         'Cookie': "JSESSIONID="+sessionId,
         'X-CSRF-Token': csrfToken
     });
-    I.seeResponseCodeIs(404);
+    I.seeResponseCodeIs(403);
 
     //disable swagger
     I.relogin("admin");
@@ -59,7 +59,7 @@ Scenario("base tests", async ({I, Document}) => {
         'Cookie': "JSESSIONID="+sessionId,
         'X-CSRF-Token': csrfToken
     });
-    I.seeResponseCodeIs(404);
+    I.seeResponseCodeIs(403);
 
     Document.setConfigValue("swaggerEnabled", "true");
 });

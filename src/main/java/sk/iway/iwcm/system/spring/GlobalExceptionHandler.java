@@ -1,11 +1,13 @@
 package sk.iway.iwcm.system.spring;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,6 +17,23 @@ import java.io.IOException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<String> handleResponseStatusException(ResponseStatusException ex, HttpServletRequest request) {
+        if (request.getRequestURI().contains("/rest/")) {
+            Logger.debug(this, "ResponseStatusException caught for REST request: " + ex.getStatusCode() + " " + ex.getReason());
+
+            String body = ex.getReason();
+            if (body == null || body.isEmpty()) {
+                body = ex.getStatusCode().toString();
+            }
+            return ResponseEntity.status(ex.getStatusCode())
+                    //.header("WWW-Authenticate", "Basic realm=\"Secure Area\"")
+                    .body(body);
+        }
+
+        throw ex;
+    }
 
     @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
     @ResponseStatus(HttpStatus.FORBIDDEN)

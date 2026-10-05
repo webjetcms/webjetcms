@@ -5,7 +5,22 @@ This directory contains Docker configurations for running test databases for Web
 
 In VS Code you can directly run `Debug Docker [DBTYPE]` to start Docker DB instance and debug WebJET CMS. So you don't need to start DB instance manually. For first run follow info in [Database Connection Details](#database-connection-details) section.
 
-After first start go to [WebJET CMS Setup page](http://localhost/wjerrorpages/setup/setup) to setup WebJET. There should be information populated from `poolman-docker-DBNAME.xml` config file. More info is on [official documentation](https://docs.webjetcms.sk/latest/en/install/setup/README).
+For the first start with an empty database, explicitly enable the protected setup mode. Generate a token and set these variables in the environment from which you start VS Code or `bootRun`:
+
+```bash
+export WEBJET_SETUP_ENABLED=true
+export WEBJET_SETUP_TOKEN="$(openssl rand -base64 32)"
+```
+
+Start `Debug Docker [DBTYPE]`, open [the WebJET CMS setup page](https://localhost/wjerrorpages/setup/setup), and sign in with username `setup` and the generated token as the password. Connection details may be populated from `poolman-docker-DBNAME.xml`, but passwords are never prefilled. Enter `${WEBJET_DB_PASS}` in the database password field; WebJET resolves this placeholder from the server environment.
+
+After setup succeeds, stop WebJET, remove the setup variables, and start the application again:
+
+```bash
+unset WEBJET_SETUP_ENABLED WEBJET_SETUP_TOKEN
+```
+
+The full manual restart is required to switch from the setup bean graph to production. More information is in the [setup documentation](../../docs/sk/install/setup/README.md).
 
 ## Usage
 

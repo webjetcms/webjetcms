@@ -14,6 +14,7 @@ import sk.iway.iwcm.io.FileHistoryDB;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import jakarta.servlet.FilterChain;
 
@@ -224,6 +225,38 @@ class PathFilterSecurityTest extends BaseWebjetTest {
     }
 
     @Test
+    void blocksAnonymousDirectoryIndexForwardForProtectedComponent() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest(Constants.getServletContext());
+        request.setMethod("GET");
+        request.setRequestURI("/components/");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        AtomicBoolean chainCalled = new AtomicBoolean(false);
+
+        new PathFilter().doFilter(request, response, (servletRequest, servletResponse) -> chainCalled.set(true));
+
+        assertEquals(403, response.getStatus());
+        assertEquals("/403.jsp", response.getForwardedUrl());
+        assertFalse(chainCalled.get());
+    }
+
+    @Test
+    void preservesQueryStringWhenRedirectingDirectoryToTrailingSlash() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest(Constants.getServletContext());
+        request.setMethod("GET");
+        request.setContextPath("/cms");
+        request.setRequestURI("/cms/components");
+        request.setQueryString("view=grid&lang=sk");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        AtomicBoolean chainCalled = new AtomicBoolean(false);
+
+        new PathFilter().doFilter(request, response, (servletRequest, servletResponse) -> chainCalled.set(true));
+
+        assertEquals(302, response.getStatus());
+        assertEquals("/cms/components/?view=grid&lang=sk", response.getHeader("Location"));
+        assertNull(response.getForwardedUrl());
+        assertFalse(chainCalled.get());
+    }
+
     void historyDownloadPassesSessionUserToSecuredOverloadAndReturns404WhenRejected() throws Exception {
         String path = "/images/file-history-security-test-does-not-exist/file.txt";
         int historyId = 987654321;
