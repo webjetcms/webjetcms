@@ -2963,6 +2963,88 @@ Scenario('library content insertion preserves the CKEditor selection', async ({I
     DTE.cancel();
 });
 
+for (const action of [
+    {name: 'image', id: 'pb-basic-4.13', command: 'image'},
+    {name: 'application', id: 'pb-basic-4.14', command: 'webjetcomponentsDialog'}
+]) {
+    Scenario('library inserts '+action.name+' through the CKEditor dialog', async ({I, DTE, Document}) => {
+        await openWorkbenchFixture(I, DTE, Document);
+        const paragraph = workbenchFixture+' .pb-workbench-copy';
+        if (action.name === 'application') {
+            // Use viewport coordinates because the Page Builder iframe can scale the editable content.
+            await I.usePlaywrightTo('hover the insertion point before the first heading', async ({page}) => {
+                const frame = await getPageBuilderFrame(page);
+                const box = await frame.locator(workbenchFixture+' h2').boundingBox();
+                await page.mouse.move(box.x+20, box.y+2);
+            });
+            I.waitForVisible('#pb-wjmagiclinePlus', 10);
+            // Magicline listens to mouseup and its animated handle cannot satisfy the locator stability check.
+            I.executeScript(() => document.querySelector('#pb-wjmagiclinePlus').dispatchEvent(new MouseEvent('mouseup', {bubbles: true})));
+        } else {
+            I.executeScript((root, selector) => {
+                const element = document.querySelector(selector);
+                const editor = CKEDITOR.instances[element.closest('[data-ckeditor-instance]').dataset.ckeditorInstance];
+                const range = editor.createRange();
+                range.moveToElementEditEnd(new CKEDITOR.dom.element(element));
+                editor.getSelection().selectRanges([range]);
+            }, paragraph);
+            I.clickCss('.cke_button__htmlbox');
+        }
+        I.waitForVisible('.pb-library--content', 10);
+        if (action.name === 'application') I.seeElement(workbenchFixture+' .column-content > p:first-child + h2');
+        const before = await I.executeScript(() => window.pageBuilder.library_editor_bookmark.editor.getData());
+        for (const cancel of [true, false]) {
+            I.clickCss('.pb-library--content [data-library-type=basic]');
+            I.see('Obrázok', '.pb-library--content');
+            I.see('Aplikácia', '.pb-library--content');
+            if (!cancel) I.saveScreenshot('autotest-pagebuilder-insert-'+action.name+'.png');
+            I.focus('.pb-library--content [data-library-item-id="'+action.id+'"]');
+            I.pressKey('Enter');
+            I.waitForInvisible('.pb-library--content', 10);
+            I.waitForVisible('.cke_dialog_container', 10);
+            I.assertEqual(await I.executeScript(() => CKEDITOR.dialog.getCurrent().getName()), action.command, 'The library must open the standard CKEditor dialog');
+            if (cancel) {
+                I.clickCss('.cke_dialog_container:visible .cke_dialog_ui_button_cancel');
+                I.waitForInvisible('.cke_dialog_container', 10);
+                const after = await I.executeScript(() => window.getCkEditorInstance().getData());
+                I.assertTrue(after === before, 'Cancelling the dialog must preserve the content at the insertion point');
+                I.clickCss('.cke_button__htmlbox');
+                I.waitForVisible('.pb-library--content', 10);
+                continue;
+            }
+            if (action.name === 'image') {
+                I.switchTo('#wjImageIframeElement');
+                I.waitForVisible('#txtUrl', 10);
+                I.fillField('#txtUrl', '/templates/aceintegration/jet/assets/images/logo-jet.png');
+            } else {
+                I.switchTo('.cke_dialog_container:visible .cke_dialog_ui_iframe');
+                I.waitForElement('#editorComponent', 10);
+                I.switchTo('#editorComponent');
+                I.waitForVisible('#search', 10);
+                I.fillField('#search', 'Dátum a meniny');
+                I.waitForVisible('#components-app-date-title', 10);
+                I.clickCss('#components-app-date-title');
+                I.waitForVisible('a.buy:visible', 10);
+                I.clickCss('a.buy:visible');
+                DTE.waitForEditor('component-datatable');
+            }
+            I.switchTo();
+            I.switchTo('#DTE_Field_data-pageBuilderIframe');
+            I.clickCss('.cke_dialog_container:visible .cke_dialog_ui_button_ok');
+            I.waitForInvisible('.cke_dialog_container', 10);
+        }
+        if (action.name === 'image') {
+            I.seeElement(paragraph+' img[src="/templates/aceintegration/jet/assets/images/logo-jet.png"]');
+        } else {
+            I.seeElement(workbenchFixture+' .column-content > iframe.wj_component:first-child + h2');
+            I.seeElement(workbenchFixture+' h2 + .pb-workbench-copy');
+        }
+        I.switchTo();
+        DTE.cancel();
+        I.wjSetDefaultWindowSize();
+    });
+}
+
 Scenario("insert blocks into page", async ({I, DTE, Document}) => {
     await openBlockLibrary(I, DTE, Document);
 

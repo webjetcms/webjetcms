@@ -1489,6 +1489,8 @@
                                         { id: "pb-basic-4.8", textKey: "<iwcm:text key='daisydiff.diff-pre'/>", content: "<pre><iwcm:text key='daisydiff.diff-pre'/></pre>" },
                                         { id: "pb-basic-4.9", textKey: "<iwcm:text key='daisydiff.diff-blockquote'/>", content: "<blockquote><iwcm:text key='daisydiff.diff-blockquote'/></blockquote>" },
                                         { id: "pb-basic-4.10", textKey: "<iwcm:text key='daisydiff.diff-hr'/>", content: "<hr/>" },
+                                        { id: "pb-basic-4.13", textKey: "<iwcm:text key='pagebuilder.modal.background_image'/>", command: "image" },
+                                        { id: "pb-basic-4.14", textKey: "<iwcm:text key='pagebuilder.library.insert_application'/>", command: "webjetcomponentsDialog" },
                                         { id: "pb-basic-4.11", textKey: "<iwcm:text key='components.htmlbox.pageWithDocId'/>", content: "!INCLUDE(/components/htmlbox/showdoc.jsp, docid=-2)!" },
                                         { id: "pb-basic-4.12", textKey: "<iwcm:text key='pagebuilder.grid.split_cell'/>", content: "<p class='pb-split-column-placeholder'><iwcm:text key='pagebuilder.grid.split_cell'/></p>" }
                                     ]
@@ -3209,6 +3211,14 @@
                     //its content element, insert into CkEditor
                     var columns = me.get_json_object_by_attribute(me.template[template_type],'textKey','content');
                     var groups = me.get_json_object_by_attribute(columns.groups,'id',id);
+
+                    if (groups.command) {
+                        var editor = me.library_editor_bookmark ? me.library_editor_bookmark.editor : window.getCkEditorInstance();
+                        // Restore the insertion caret before the dialog captures its own selection.
+                        me.hide_library();
+                        editor.execCommand(groups.command);
+                        return;
+                    }
 
                     //console.log("Inserting content into CKEditor:", content, "groups=", groups);
                     var html = groups.content;
