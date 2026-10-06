@@ -1588,7 +1588,6 @@ export class DashboardController {
             try {
                 const values = await configuration?.read?.() || {};
                 if (dialog.signal.aborted || revision !== previewRevision) return;
-                error.textContent = "";
                 previewView.instance = { ...previewInstance, size: sizeChoices.querySelector("input:checked").value,
                     options: cloneSettings(values.options ?? instance.options ?? {}) };
                 previewContext.settings.domainOptions[previewInstance.id] = cloneSettings(values.domainOptions ?? this.settings.domainOptions[id] ?? definition.defaultDomainOptions);
@@ -1606,6 +1605,7 @@ export class DashboardController {
         };
         colorSettings = gridWidget ? createWidgetColorSettings({ container: settings, instance, context: this._widgetContext(), preview: previewView.card,
             onChange: () => {
+                error.textContent = "";
                 if (!colorSettings || instance.type !== "traffic") return;
                 window.clearTimeout(previewTimer);
                 previewTimer = window.setTimeout(updatePreview, 150);
@@ -1673,7 +1673,11 @@ export class DashboardController {
         if (!dialog.signal.aborted) window.WJ.initSelectPicker?.(dialog.body);
         if (previewView && !dialog.signal.aborted && !save.disabled) {
             previewReady = true;
-            settings.addEventListener("change", event => { if (!event.target.closest(".md-dashboard__widget-colors")) updatePreview(); }, { signal: dialog.signal });
+            settings.addEventListener("change", event => {
+                if (event.target.closest(".md-dashboard__widget-colors")) return;
+                error.textContent = "";
+                updatePreview();
+            }, { signal: dialog.signal });
             updatePreview();
         }
         if (editingWidget && !dialog.signal.aborted) {

@@ -46,7 +46,8 @@ class CustomWebjetHelper extends Helper {
 
     try {
       if (numVisible) {
-        return helper.click(selector) && true;
+        await helper.click(selector);
+        return true;
       } else {
         console.log(`Skipping operation, element ${selector} is not visible.`);
         return false;

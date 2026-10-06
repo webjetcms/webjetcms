@@ -180,6 +180,7 @@ Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on
         // Inspect the original form and cancel without sending feedback or uploading a file.
         I.clickCss('#feedback_modal .md-feedback__cancel');
         I.waitForInvisible('#feedback_modal', 10);
+        I.waitForFunction(selector => document.activeElement === document.querySelector(selector), [feedback], 10);
         I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), feedback),
             'Canceling feedback must restore focus to its toolbar action.');
 
@@ -227,6 +228,7 @@ Scenario('Feedback toolbar and widget catalogue keep familiar dialog controls on
         I.saveScreenshot(`dashboard-reset-confirmation-${width}.png`, false);
         I.clickCss(`${resetDialog} button[id^="confirmationNo"]`);
         I.waitForInvisible(resetDialog, 10);
+        I.waitForFunction(selector => document.activeElement === document.querySelector(selector), [resetWidget], 10);
         I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), resetWidget),
             'Canceling reset must return focus to its toolbar action without changing preferences.');
         I.waitForInvisible('.tooltip.wj-tooltip-hoverable.show', 10);
