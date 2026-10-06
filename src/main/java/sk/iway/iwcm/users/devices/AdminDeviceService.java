@@ -32,7 +32,7 @@ import sk.iway.iwcm.stat.BrowserDetector;
 /** Integrates shared device history with administrator authentication, cookies, notices and email links. */
 @Service
 public class AdminDeviceService {
-    static final String COOKIE_NAME = "wjAdminDevice";
+    static final String COOKIE_NAME = "wjdevice";
     private static final Pattern TOKEN_PATTERN = Pattern.compile("[A-Za-z0-9_-]{43}");
     private static final SecureRandom RANDOM = new SecureRandom();
     private final DeviceService deviceService;
@@ -209,16 +209,24 @@ public class AdminDeviceService {
         String environment = Constants.getStringExecuteMacro("dashboardEnvironmentName");
         String fromName = SendMail.getDefaultSenderName("passwordReset", Tools.getRequestAttribute(request, "sendPasswordFromName", user.getFullName()));
         String fromEmail = SendMail.getDefaultSenderEmail("passwordReset", Tools.getRequestAttribute(request, "sendPasswordFromEmail", user.getEmail()));
-        String message = "<!doctype html><html><body style=\"font-family:Arial,sans-serif;color:#272727\">"
+        // Declare both schemes so Apple Mail uses our colors instead of automatically recoloring the button.
+        String message = "<!doctype html><html><head><meta charset=\"UTF-8\">"
+            + "<meta name=\"color-scheme\" content=\"light dark\"><meta name=\"supported-color-schemes\" content=\"light dark\">"
+            + "<style>:root{color-scheme:light dark;supported-color-schemes:light dark}"
+            + "@media(prefers-color-scheme:dark){"
+            + ".email-body{background:#272727!important;color:#f3f3f6!important}"
+            + ".email-details{background:#39393b!important;color:#f3f3f6!important}"
+            + ".email-action{background:#e00028!important;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important}"
+            + "}</style></head><body class=\"email-body\" style=\"font-family:Arial,sans-serif;background:#ffffff;color:#272727\">"
             + "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.greeting", user.getFirstName())) + "</p>"
             + "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.intro")) + "</p>"
-            + "<div style=\"background:#f3f3f6;padding:16px;border-radius:6px\">"
+            + "<div class=\"email-details\" style=\"background:#f3f3f6;padding:16px;border-radius:6px\">"
             + emailLine(prop, "device", join(event.getBrowserName(), event.getBrowserVersion()) + " · " + event.getOperatingSystem())
             + emailLine(prop, "ip", event.getIpAddress())
             + emailLine(prop, "time", Tools.formatDateTime(event.getCreateDate().toEpochMilli()))
             + emailLine(prop, "environment", domain + (Tools.isEmpty(environment) ? "" : " (" + environment + ")"))
             + "</div><p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.instruction")) + "</p>"
-            + "<p><a style=\"display:inline-block;background:#e00028;color:#fff;padding:12px 16px;border-radius:6px;text-decoration:none\" href=\""
+            + "<p><a class=\"email-action\" style=\"display:inline-block;background:#e00028;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;padding:12px 16px;border-radius:6px;text-decoration:none\" href=\""
             + Tools.escapeHtml(link) + "\">" + Tools.escapeHtml(prop.getText("admin.newDevice.email.action")) + "</a></p></body></html>";
         boolean queued = SendMail.sendLater(fromName, fromEmail, user.getEmail(), null, null, null,
             prop.getText("admin.newDevice.email.subject", domain), message, baseHref, null, null);

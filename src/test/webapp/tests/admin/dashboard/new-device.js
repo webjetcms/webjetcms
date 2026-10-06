@@ -2,7 +2,7 @@ const { readDashboardBootstrap } = require('../../../helpers/dashboard-browser')
 
 Feature('admin.dashboard.new-device').tag('@singlethread');
 
-const cookieName = 'wjAdminDevice';
+const cookieName = 'wjdevice';
 const mailbox = 'webjetcmsnotif@fexpost.com';
 const dashboard = '.md-dashboard[data-loaded="true"]';
 const dialog = '.md-dashboard-modal--security';

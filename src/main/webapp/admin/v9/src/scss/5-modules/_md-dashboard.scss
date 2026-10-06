@@ -348,7 +348,7 @@ webjet-overview-dashboard a:focus-visible {
     &__notice-description { color: var(--wj-dashboard-muted); }
     &__notice-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     &__notice-actions > .btn { font-size: 12px; white-space: nowrap; }
-    &__notice-action { background: var(--wj-dashboard-surface); border-color: var(--wj-nice-gray-200); }
+    &__notice-action, &__notice-confirm { background: var(--wj-dashboard-surface); border-color: var(--wj-nice-gray-200); }
     &__notice-actions > .btn-link { color: var(--wj-secondary); text-decoration: none; padding-inline: 4px; }
     &__notice-dismiss { min-width: 24px; min-height: 24px; }
     &__notice-status { font-size: 12px; }
@@ -932,6 +932,7 @@ webjet-overview-dashboard a:focus-visible {
     .modal-footer { padding: 12px 24px; background: var(--wj-dashboard-surface); }
     .md-dashboard-sessions {
         &__security { overflow-wrap: anywhere; font-size: 14px; }
+        &__report { --bs-btn-bg: var(--wj-dashboard-surface); }
         &__tabs { padding-inline: 24px; flex-shrink: 0; gap: 20px; border-color: var(--wj-nice-gray-100); }
         &__tabs .nav-link { margin: 0 0 -1px; padding: 10px 0; border: 0; border-bottom: 2px solid transparent; background: transparent; border-radius: 0; color: var(--wj-gray-text); font-size: 14px; white-space: normal; &:hover { color: var(--wj-primary); } &:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: -2px; } &.active { color: var(--wj-primary); border-bottom-color: var(--wj-primary); } }
         &__two-factor { display: flex; align-items: center; gap: 10px; padding: 12px 16px; margin-bottom: 20px; background: var(--wj-dashboard-publishing); border-radius: var(--wj-border-radius); font-size: 14px; > .ti { color: var(--wj-dashboard-warning-text); } > .btn { margin-left: auto; white-space: nowrap; } }
