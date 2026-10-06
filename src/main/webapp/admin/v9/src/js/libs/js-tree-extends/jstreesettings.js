@@ -144,6 +144,7 @@ export class JstreeSettings {
     getTreeWidth() {
         //console.log("treeWidth=", this.getSettings().treeWidth);
         let width = this.getSettings().treeWidth;
+        if (typeof width == "undefined") width = $("#SomStromcek").data("default-tree-width");
         if (typeof width != "undefined") return parseInt(width);
         return 4;
     }

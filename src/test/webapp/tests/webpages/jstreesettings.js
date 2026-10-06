@@ -289,7 +289,8 @@ Scenario('nastavenie sirky stlpcov @singlethread', ({ I }) => {
 
 Data([
     "/admin/v9/webpages/web-pages-list/?groupid=0",
-    "/admin/v9/settings/translation-keys/"
+    "/admin/v9/settings/translation-keys/",
+    "/admin/v9/settings/configuration/"
 ]).Scenario('fixed tree widths @singlethread', async ({ I, DT, current }) => {
     I.amOnPage(current);
     I.waitForVisible("#SomStromcek", 20);
