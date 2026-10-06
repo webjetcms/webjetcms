@@ -37,13 +37,15 @@ class AdminDeviceRestControllerTest {
         }
     }
 
+    /** Both actions map a null service result to the same HTTP 404 response. */
     @Test
-    void missingForeignAndExpiredEventsUseTheSameUnavailableResponse() {
+    void returnsNotFoundWhenServiceReturnsNoEvent() {
         var controller = new AdminDeviceRestController(mock(AdminDeviceService.class));
         var request = new MockHttpServletRequest();
         try (var users = mockStatic(UsersDB.class)) {
-            var confirm = assertThrows(ResponseStatusException.class, () -> controller.confirm("autotest-missing", request));
-            var report = assertThrows(ResponseStatusException.class, () -> controller.report("autotest-foreign", request));
+            users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(mock(Identity.class));
+            var confirm = assertThrows(ResponseStatusException.class, () -> controller.confirm("42", request));
+            var report = assertThrows(ResponseStatusException.class, () -> controller.report("42", request));
             assertEquals(HttpStatus.NOT_FOUND, confirm.getStatusCode());
             assertEquals(confirm.getStatusCode(), report.getStatusCode());
             assertEquals(confirm.getReason(), report.getReason());

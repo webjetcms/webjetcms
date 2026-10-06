@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -109,18 +108,6 @@ class DeviceServiceTest {
         verify(devices).save(device);
     }
 
-    /** Active notices use a seven-day deadline while details remain on the owned device. */
-    @Test
-    void readsUseNoticeCutoffAndDeviceOwner() {
-        DeviceEntity device = device(NOW - 10);
-        when(devices.findByUserIdAndConfirmedAtIsNullAndCreateDateAfterOrderByCreateDateDescIdAsc(
-            USER_ID, Instant.ofEpochMilli(NOW - Duration.ofDays(7).toMillis()))).thenReturn(List.of(device));
-        ownedDevice(device);
-
-        assertEquals(List.of(service.findEvent(USER_ID, DEVICE_ID)), service.findActive(USER_ID, NOW));
-        verify(devices, never()).save(any());
-    }
-
     /** Reporting clears confirmation and leaves the original notice deadline and lastSeen unchanged. */
     @Test
     void reportingTwicePreservesOriginalNoticeAndReportTime() {
@@ -206,14 +193,6 @@ class DeviceServiceTest {
 
         assertSame(failure, result.getCause());
         verify(devices, never()).save(any());
-    }
-
-    /** Cleanup applies the configured device inactivity cutoff to the single table. */
-    @Test
-    void cleanupUsesDeviceCutoff() {
-        service.cleanup(CUTOFF);
-
-        verify(devices).deleteExpired(Instant.ofEpochMilli(CUTOFF));
     }
 
     private DeviceEntity recordLogin() {

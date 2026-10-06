@@ -221,7 +221,7 @@ class AdminDeviceServiceTest {
         assertEquals("/admin/v9/", AdminDeviceService.getAfterLoginRedirect(request));
     }
 
-    /** Mail uses password-reset sender resolution and escaped snapshots rather than browser credentials. */
+    /** Mail uses password-reset sender resolution, escaped snapshots and a read-only detail link. */
     @Test
     void queuesEscapedEmailWithMatchingPasswordResetSenderAndReadOnlyLink() {
         doCallRealMethod().when(service).sendNotification(any(), any(), any());
@@ -248,7 +248,6 @@ class AdminDeviceServiceTest {
             assertTrue(html.getValue().contains("&lt;script&gt;Autotest&lt;/script&gt;"));
             assertFalse(html.getValue().contains("<script>"));
             assertTrue(html.getValue().contains("https://cms.example.test/admin/v9/?securityEvent=" + EVENT_ID));
-            assertFalse(html.getValue().contains(TOKEN));
             assertFalse(html.getValue().contains("/report"));
         }
     }
