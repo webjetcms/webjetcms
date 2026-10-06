@@ -283,6 +283,7 @@ function initClosure() {
     var jsTreeSingleSelect = somStromcek.data("single-select") === true;
     var jsTreeStateBeforeSearch = null;
     var treeInitialJsonFired = false;
+    const searchTextTemplate = document.createElement("template");
 
     function getJstreeUrl() {
         if (typeof window.getJstreeUrl=="function") return window.getJstreeUrl();
@@ -448,8 +449,14 @@ function initClosure() {
         "search": {
             "show_only_matches": true,
             "search_callback": function(word, node) {
+                let text = node.text || "";
+                if (text.includes("&") || text.includes("<")) {
+                    // Decode rendered labels using one reusable, inert template.
+                    searchTextTemplate.innerHTML = text;
+                    text = searchTextTemplate.content.textContent || "";
+                }
                 word = WJ.internationalToEnglish(word).toLowerCase();
-                if (WJ.internationalToEnglish(node.text || "").toLowerCase().indexOf(word) >= 0) {
+                if (WJ.internationalToEnglish(text).toLowerCase().indexOf(word) >= 0) {
                     return true;
                 }
                 return false;
