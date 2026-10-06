@@ -1,4 +1,5 @@
 import { date } from './widget-utils';
+import { confirmSecurityEvent } from './security-events';
 
 const SETTINGS_KEY = "dashboard.notices";
 const WEEK = 7 * 24 * 60 * 60 * 1000;
@@ -142,16 +143,8 @@ export class DashboardNotices {
         this._setBusy(true);
         this.request = new AbortController();
         try {
-            const response = await fetch(`/admin/rest/security/login-events/${encodeURIComponent(notice.securityEvent.id)}/confirm`, {
-                method: "POST", credentials: "same-origin", signal: this.request.signal,
-                headers: { "X-CSRF-Token": window.csrfToken || "" }
-            });
-            if (!response.ok) throw new Error("Login confirmation failed");
-            const event = await response.json();
-            if (event.id !== notice.securityEvent.id || !event.confirmedAt) throw new Error("Login confirmation was not saved");
+            await confirmSecurityEvent(this.data, notice.securityEvent.id, this.request.signal);
             if (this.destroyed) return;
-            this.data.notices = this.data.notices.filter(item => item.id !== notice.id);
-            if (this.data.requestedSecurityEvent?.id === event.id) this.data.requestedSecurityEvent = event;
             this.busy = false;
             this.render();
             (this.container.querySelector("button") || this.host.closest("webjet-overview-dashboard")?.querySelector("button"))?.focus({ preventScroll: true });

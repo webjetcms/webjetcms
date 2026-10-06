@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -65,7 +66,13 @@ public class DashboardListener {
                     Logger.error(DashboardListener.class, "Cannot load requested administrator login event (" + exception.getClass().getSimpleName() + ")");
                 }
             }
-            data.put("currentSessions", new ObjectMapper().readTree(SessionClusterService.getSessionInfo(request.getSession().getId(), user.getUserId())));
+            JsonNode sessions = new ObjectMapper().readTree(SessionClusterService.getSessionInfo(request.getSession().getId(), user.getUserId()));
+            try {
+                deviceService.addSessionDeviceStatus(user, sessions);
+            } catch (IllegalStateException exception) {
+                Logger.error(DashboardListener.class, "Cannot load session device confirmation (" + exception.getClass().getSimpleName() + ")");
+            }
+            data.put("currentSessions", sessions);
             event.getSource().getModel().addAttribute("overviewData", JsonTools.objectToJSON(data));
         } catch (JsonProcessingException exception) {
             Logger.error(DashboardListener.class, exception);

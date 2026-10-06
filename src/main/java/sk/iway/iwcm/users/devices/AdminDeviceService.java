@@ -11,7 +11,14 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
@@ -32,6 +39,7 @@ import sk.iway.iwcm.stat.BrowserDetector;
 /** Integrates shared device history with administrator authentication, cookies, notices and email links. */
 @Service
 public class AdminDeviceService {
+    public static final String SESSION_DEVICE_ID = "wjdeviceId";
     static final String COOKIE_NAME = "wjdevice";
     private static final Pattern TOKEN_PATTERN = Pattern.compile("[A-Za-z0-9_-]{43}");
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -69,6 +77,7 @@ public class AdminDeviceService {
 
     /** Applies the account-specific inactivity window and renews the browser cookie. */
     private void saveDataAndCookie(Identity user, HttpServletRequest request, HttpServletResponse response) {
+        request.getSession().removeAttribute(SESSION_DEVICE_ID);
         String token = readToken(request);
         if (token == null) {
             byte[] bytes = new byte[32];
@@ -79,7 +88,8 @@ public class AdminDeviceService {
         int maxAgeDays = maxAgeDays();
         BrowserDetector browser = new BrowserDetector(request.getHeader("User-Agent"));
         String operatingSystem = join(browser.getBrowserPlatform(), browser.getBrowserSubplatform());
-        DeviceEntity event = deviceService.recordLogin(user.getUserId(), hashToken(token), now,
+        String tokenHash = hashToken(token);
+        DeviceEntity event = deviceService.recordLogin(user.getUserId(), tokenHash, now,
             now - Duration.ofDays(maxAgeDays).toMillis(), bounded(browser.getBrowserName(), 128), bounded(browser.getBrowserVersion(), 64),
             bounded(operatingSystem, 128), bounded(Tools.getRemoteIP(request), 64));
 
@@ -90,6 +100,8 @@ public class AdminDeviceService {
         cookie.setAttribute("SameSite", "Lax");
         cookie.setMaxAge((int) Duration.ofDays(maxAgeDays).toSeconds());
         Tools.addCookie(cookie, response, request);
+        DeviceEntity device = event != null ? event : deviceService.findByTokenHash(user.getUserId(), tokenHash);
+        if (device != null) request.getSession().setAttribute(SESSION_DEVICE_ID, device.getId());
         if (event != null) sendNotification(user, request, event);
     }
 
@@ -128,6 +140,29 @@ public class AdminDeviceService {
         long id = deviceId(eventId);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled") || id <= 0) return null;
         return deviceService.report(user.getUserId(), id, clock.millis());
+    }
+
+    /** Adds fresh, account-owned confirmation state to session bootstrap data without exposing browser tokens. */
+    public void addSessionDeviceStatus(Identity user, JsonNode sessionInfo) {
+        requireAdministrator(user);
+        if (!Constants.getBoolean("adminNewDeviceDetectionEnabled")) return;
+        Set<Long> ids = new HashSet<>();
+        for (JsonNode cluster : sessionInfo.path("userSessions")) {
+            for (JsonNode session : cluster.path("userSessions")) {
+                long id = session.path("deviceId").asLong();
+                if (id > 0) ids.add(id);
+            }
+        }
+        Map<Long, Boolean> confirmed = new HashMap<>();
+        for (DeviceEntity device : deviceService.findByIds(user.getUserId(), ids)) {
+            confirmed.put(device.getId(), device.getConfirmedAt() != null);
+        }
+        for (JsonNode cluster : sessionInfo.path("userSessions")) {
+            for (JsonNode session : cluster.path("userSessions")) {
+                Boolean state = confirmed.get(session.path("deviceId").asLong());
+                if (state != null) ((ObjectNode) session).put("deviceConfirmed", state);
+            }
+        }
     }
 
     /**

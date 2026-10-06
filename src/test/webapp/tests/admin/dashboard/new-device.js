@@ -5,7 +5,7 @@ Feature('admin.dashboard.new-device').tag('@singlethread');
 const cookieName = 'wjdevice';
 const mailbox = 'webjetcmsnotif@fexpost.com';
 const dashboard = '.md-dashboard[data-loaded="true"]';
-const dialog = '.md-dashboard-modal--security';
+const dialog = '.md-dashboard-modal--sessions';
 let originalCookie;
 let eventId;
 
@@ -60,7 +60,7 @@ Scenario('New device login sends an email and can be confirmed from its detail',
     I.see(event.operatingSystem, `${dialog} .md-dashboard-sessions__security`);
     I.see(event.ipAddress, `${dialog} .md-dashboard-sessions__security`);
 
-    I.clickCss(`${dialog} .modal-footer button:last-child`);
+    I.clickCss(`${dialog} .modal-footer > button:last-child`);
     I.waitForDetached(dialog, 10);
     I.clickCss(`${row} .md-dashboard__notice-confirm`);
     I.waitForInvisible(row, 10);

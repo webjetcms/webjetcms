@@ -9,6 +9,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
 
@@ -26,6 +27,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 /**
  *  Toto drzi globalne info o session pouzivatelov, pretoze SessionListener pri
@@ -221,12 +223,16 @@ public class SessionHolder
 			}
 		}
 
+		Long previousDeviceId = det.getDeviceId();
+		Object deviceId = request.getSession().getAttribute(AdminDeviceService.SESSION_DEVICE_ID);
+		det.setDeviceId(user != null && user.isAdmin() && deviceId instanceof Long id ? id : null);
+
 		// ziskaj IP a remoteHost
 		det.setLastActivity(Tools.getNow());
 		det.setSessionId(sessionId);
 		data.put(sessionId, det);
 
-		if(newSession == true && det.isAdmin() == true) {
+		if ((newSession || !Objects.equals(previousDeviceId, det.getDeviceId())) && det.isAdmin()) {
 			// After new session was added (logon for example) - update session stat data
 			SessionClusterService.updateSessionData();
 		}

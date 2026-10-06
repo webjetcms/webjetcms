@@ -110,6 +110,7 @@ class DashboardListenerTest {
             verify(settings).load(7, "42");
             verify(notices).load(user, request);
             verify(devices).findEvent(user, "42");
+            verify(devices).addSessionDeviceStatus(eq(user), any());
             sessions.verify(() -> SessionClusterService.getSessionInfo(sessionId, 7));
             verifyNoMoreInteractions(settings, notices, devices);
         }

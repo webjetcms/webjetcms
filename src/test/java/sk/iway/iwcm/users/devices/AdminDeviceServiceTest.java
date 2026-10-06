@@ -8,6 +8,10 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Set;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,12 +112,14 @@ class AdminDeviceServiceTest {
         verify(repository).recordLogin(7, AdminDeviceService.hashToken(cookie.getValue()), NOW,
             NOW - Duration.ofDays(90).toMillis(), "Firefox", "131.0", "Windows 11", "192.0.2.1");
         verify(service).sendNotification(user, request, event);
+        assertEquals(event.getId(), request.getSession().getAttribute(AdminDeviceService.SESSION_DEVICE_ID));
     }
 
     /** Browser-version changes retain the token; repeated hooks do not duplicate one login. */
     @Test
     void renewsKnownCookieAndProcessesALaterLoginInTheSameSession() {
         request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
+        when(repository.findByTokenHash(7, AdminDeviceService.hashToken(TOKEN))).thenReturn(event());
         LogonTools.afterSuccessLogon(request, response);
         LogonTools.afterSuccessLogon(request, response);
         verify(repository, times(1)).recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
@@ -127,6 +133,7 @@ class AdminDeviceServiceTest {
         assertEquals(TOKEN, response.getCookie(AdminDeviceService.COOKIE_NAME).getValue());
         verify(repository, times(2)).recordLogin(eq(7), eq(AdminDeviceService.hashToken(TOKEN)), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
         verify(service, never()).sendNotification(any(), any(), any());
+        assertEquals(42L, request.getSession().getAttribute(AdminDeviceService.SESSION_DEVICE_ID));
     }
 
     /** Sharing a browser token never shares account recognition. */
@@ -169,12 +176,51 @@ class AdminDeviceServiceTest {
 
     @Test
     void storageFailureCannotRejectSuccessfulAuthentication() {
+        request.getSession().setAttribute(AdminDeviceService.SESSION_DEVICE_ID, 99L);
         when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
             .thenThrow(new IllegalStateException("Autotest storage unavailable"));
         try (var logger = mockStatic(Logger.class)) {
             assertDoesNotThrow(() -> AdminDeviceService.recordSuccessfulLogin(user, request, response));
         }
         verify(service, never()).sendNotification(any(), any(), any());
+        assertNull(request.getSession().getAttribute(AdminDeviceService.SESSION_DEVICE_ID));
+    }
+
+    /** Device state comes from the current account's database records, including notices older than seven days. */
+    @Test
+    void enrichesOnlyOwnedSessionDevicesWithFreshConfirmation() throws Exception {
+        var sessions = new ObjectMapper().readTree("""
+            {"userSessions":[{"userSessions":[
+                {"deviceId":42},{"deviceId":43},{"deviceId":42},{"deviceId":99},{}
+            ]}]}
+            """);
+        DeviceEntity unconfirmed = event();
+        unconfirmed.setCreateDate(Instant.ofEpochMilli(NOW - Duration.ofDays(8).toMillis()));
+        DeviceEntity confirmed = event();
+        confirmed.setId(43L);
+        confirmed.setConfirmedAt(Instant.ofEpochMilli(NOW));
+        when(repository.findByIds(7, Set.of(42L, 43L, 99L))).thenReturn(List.of(unconfirmed, confirmed));
+
+        service.addSessionDeviceStatus(user, sessions);
+
+        var rows = sessions.path("userSessions").get(0).path("userSessions");
+        assertFalse(rows.get(0).path("deviceConfirmed").asBoolean(true));
+        assertTrue(rows.get(1).path("deviceConfirmed").asBoolean());
+        assertFalse(rows.get(2).path("deviceConfirmed").asBoolean(true));
+        assertFalse(rows.get(3).has("deviceConfirmed"), "Foreign devices must not receive an actionable state");
+        assertFalse(rows.get(4).has("deviceConfirmed"), "Older sessions without a device must remain usable");
+        verify(repository).findByIds(7, Set.of(42L, 43L, 99L));
+        assertFalse(sessions.toString().contains("tokenHash"));
+    }
+
+    /** Disabled detection and unauthorized accounts cannot load confirmation metadata. */
+    @Test
+    void gatesSessionDeviceStateByFeatureAndAdministrator() throws Exception {
+        var sessions = new ObjectMapper().readTree("{\"userSessions\":[{\"userSessions\":[{\"deviceId\":42}]}]}");
+        constants.when(() -> Constants.getBoolean("adminNewDeviceDetectionEnabled")).thenReturn(false);
+        service.addSessionDeviceStatus(user, sessions);
+        assertThrows(AccessDeniedException.class, () -> service.addSessionDeviceStatus(null, sessions));
+        verifyNoInteractions(repository);
     }
 
     @Test

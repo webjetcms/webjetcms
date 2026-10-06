@@ -3,6 +3,7 @@ package sk.iway.iwcm.users.devices;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -14,6 +15,8 @@ public interface DeviceRepository extends JpaRepository<DeviceEntity, Long>, Jpa
     Optional<DeviceEntity> findByUserIdAndTokenHash(int userId, String tokenHash);
 
     Optional<DeviceEntity> findByUserIdAndId(int userId, long id);
+
+    List<DeviceEntity> findByUserIdAndIdIn(int userId, Set<Long> ids);
 
     List<DeviceEntity> findByUserIdAndConfirmedAtIsNullAndCreateDateAfterOrderByCreateDateDescIdAsc(int userId, Instant cutoff);
 

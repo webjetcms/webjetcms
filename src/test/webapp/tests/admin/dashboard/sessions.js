@@ -42,6 +42,7 @@ Scenario('Real sessions and personal login history are available from the welcom
     I.assertTrue(bootstrap.currentSessions.userSessions.some(cluster => cluster.userSessions.some(session => session.lastActivity > 0)),
         'The real session API must include the last activity timestamp.');
     const current = bootstrap.currentSessions.userSessions.flatMap(cluster => cluster.userSessions).find(session => session.sessionId === bootstrap.currentSessions.currentSessionId);
+    I.assertTrue(current.deviceId > 0 && typeof current.deviceConfirmed === 'boolean', 'A completed login must associate its device and load current confirmation state.');
     I.assertTrue(Boolean(current?.operatingSystem) && !/\d/.test(current.browserName), 'New sessions must contain a browser family without its version and a separate operating system.');
     I.see(`${current.browserName} · ${current.operatingSystem}`, `${modal} .md-dashboard-sessions__mine`);
     I.assertTrue(!Object.hasOwn(bootstrap, 'loggedAdmins'), 'Administrator summaries must not be injected into the page.');
@@ -165,6 +166,87 @@ Scenario('Session widgets and notices open the dialog and update after individua
     I.pressKey('Escape');
     I.waitToHide(modal, 10);
     I.assertEqual(administratorReads, 0, 'A personal-only dashboard and inactive administrator tab must not load administrator data.');
+});
+
+/** Device decisions use mocked owned records; only the selected session is removed when denied. */
+Scenario('New session devices can be confirmed or denied from either dialog entry point', async ({ I }) => {
+    const now = Date.now();
+    const device = { id: 43, createDate: now, expiresAt: now + 7 * 86400000, browserName: 'Firefox autotest', operatingSystem: 'Windows', ipAddress: '192.0.2.2' };
+    const data = {
+        notices: [{ id: 'newDevice:43', kind: 'newDevice', severity: 'warning', icon: 'ti-shield-lock', title: 'New device autotest', securityEvent: device }],
+        currentSessions: { currentSessionId: 'devices-autotest-current', userSessions: [{ userSessions: [
+            { sessionId: 'devices-autotest-current', browserName: 'Chrome', operatingSystem: 'macOS', remoteAddr: '127.0.0.1', logonTime: now, deviceId: 42, deviceConfirmed: true },
+            { sessionId: 'devices-autotest-other', browserName: 'Firefox autotest', operatingSystem: 'Windows', remoteAddr: '192.0.2.2', logonTime: now - 1000, deviceId: 43, deviceConfirmed: false },
+            { sessionId: 'devices-autotest-third', browserName: 'Safari', operatingSystem: 'iOS', remoteAddr: '192.0.2.3', logonTime: now - 2000, deviceId: 44, deviceConfirmed: true },
+            { sessionId: 'devices-autotest-remote', browserName: 'Edge autotest', operatingSystem: 'Windows', remoteAddr: '192.0.2.4', logonTime: now - 3000, deviceId: 45, deviceConfirmed: false }
+        ] }] }
+    };
+    let failConfirm = true;
+    const confirmed = [], removed = [];
+    const confirmRoute = '**/admin/rest/security/login-events/*/confirm';
+    await mockDashboardBootstrap(I, () => data, () => ({ dismissedUntil: {} }));
+    await I.mockRoute(confirmRoute, route => {
+        confirmed.push(route.request().url().match(/login-events\/(\d+)\/confirm/)[1]);
+        if (!failConfirm) {
+            device.confirmedAt = Date.now();
+            data.currentSessions.userSessions[0].userSessions[1].deviceConfirmed = true;
+            data.notices = [];
+        }
+        return route.fulfill({ status: failConfirm ? 503 : 200, contentType: 'application/json', body: JSON.stringify(failConfirm ? {} : device) });
+    });
+    await I.mockRoute(logoutRoute, route => {
+        const sessionId = new URLSearchParams(route.request().postData()).get('sessionId');
+        removed.push(sessionId);
+        data.currentSessions.userSessions[0].userSessions = data.currentSessions.userSessions[0].userSessions.filter(session => session.sessionId !== sessionId);
+        return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ success: true, pending: false }) });
+    });
+    I.refreshPage();
+    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    waitForSessionDialog(I);
+    I.assertEqual(await I.grabNumberOfVisibleElements(`${modal} .md-dashboard-sessions__new`), 2);
+    I.see('Nové', `${modal} tbody tr:nth-child(2)`);
+    I.dontSeeElement(`${modal} tbody tr:nth-child(3) .md-dashboard-sessions__confirm-device`);
+    for (const width of [1440, 1100, 390]) {
+        I.resizeWindow(width, 1100);
+        I.assertTrue(await I.executeScript(() => {
+            const body = document.querySelector('.md-dashboard-modal--sessions .modal-body');
+            return body.scrollWidth <= body.clientWidth + 1;
+        }), `Device decisions must fit a ${width}px viewport.`);
+    }
+    I.saveScreenshot('dashboard-session-device-actions-mobile.png');
+    I.wjSetDefaultWindowSize();
+    I.saveScreenshot('dashboard-session-device-actions.png');
+    I.clickCss(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__confirm-device`);
+    I.waitForVisible(`${modal} .md-dashboard-sessions__status:not(:empty)`, 10);
+    I.seeElement(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__new`);
+    I.click('Zavrieť', `${modal} .modal-footer`);
+    I.waitForDetached(modal, 10);
+    I.clickCss('[data-notice-id="newDevice:43"] .md-dashboard__notice-report');
+    waitForSessionDialog(I);
+    I.seeElement(`${modal} .md-dashboard-sessions__security`);
+    I.assertEqual(await I.grabNumberOfVisibleElements(`${modal} .md-dashboard-sessions__new`), 2);
+    failConfirm = false;
+    I.clickCss(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__confirm-device`);
+    I.waitForInvisible(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__new`, 10);
+    I.see('Odhlásiť', `${modal} tbody tr:nth-child(2)`);
+    I.dontSeeElement(`${modal} .md-dashboard-sessions__security`);
+    I.clickCss(`${modal} tbody tr:nth-child(4) .md-dashboard-sessions__deny-device`);
+    I.waitForText('Moje prihlásenia (3)', 10, modal);
+    I.assertDeepEqual(confirmed, ['43', '43']);
+    I.assertDeepEqual(removed, ['devices-autotest-remote']);
+    I.click('Zavrieť', `${modal} .modal-footer`);
+    I.waitForDetached(modal, 10);
+    I.refreshPage();
+    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    I.dontSeeElement('[data-notice-id="newDevice:43"]');
+    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    waitForSessionDialog(I);
+    I.dontSeeElement(`${modal} .md-dashboard-sessions__new`);
+    I.see('Odhlásiť', `${modal} tbody tr:nth-child(2)`);
+    I.click('Zavrieť', `${modal} .modal-footer`);
+    I.waitForDetached(modal, 10);
+    await I.stopMockingRoute(confirmRoute);
 });
 
 /** Every administrator logout is intercepted before interaction; no real administrator sessions are invalidated. */

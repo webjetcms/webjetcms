@@ -130,7 +130,7 @@ V tejto časti skontrolujete problémy vyžadujúce vašu pozornosť. Upozorneni
 **Nové prihlásenie z neznámeho zariadenia** sa zobrazí po úspešnom prihlásení v prehliadači, ktorý WebJET CMS pre váš účet nerozpozná ako použitý počas posledných 90 dní. Súčasne vám odošle email. Upozornenie obsahuje prehliadač, operačný systém, IP adresu a čas prihlásenia.
 
 - Ak prihlásenie poznáte, kliknite na **Bol som to ja**. Upozornenie sa odstráni vo všetkých vašich prehliadačoch po obnovení prehľadu.
-- Ak prihlásenie nepoznáte, kliknite na **Nebol som to ja**. Otvorí sa detail udalosti a zoznam vašich aktívnych prihlásení. Tlačidlom **Toto prihlásenie nepoznám** zrušíte zapamätanie daného prehliadača. Potom odhláste neznáme relácie a použite **Zmeniť heslo WebJET CMS**. Pri firemnom účte zmeňte heslo u poskytovateľa prihlásenia alebo kontaktujte správcu.
+- Ak prihlásenie nepoznáte, kliknite na **Nebol som to ja**. Otvorí sa okno **Aktívne prihlásenia** s detailom udalosti a kartami **Moje prihlásenia**, **Prihlásení administrátori** (podľa oprávnení) a **História (30 dní)**. Varovanie sa zobrazuje iba v karte **Moje prihlásenia**. V karte **História (30 dní)** môžete skontrolovať predchádzajúce prihlásenia a ich IP adresy. Tlačidlom **Toto prihlásenie nepoznám** zrušíte zapamätanie daného prehliadača. Potom odhláste neznáme relácie jednotlivo alebo tlačidlom **Odhlásiť všetky ostatné** a použite **Zmeniť heslo**. Pri firemnom účte zmeňte heslo u poskytovateľa prihlásenia alebo kontaktujte správcu.
 
 Otvorenie detailu ani označenie prihlásenia ako cudzieho neodhlási aktívne relácie. Odhláste ich samostatne; samotná zmena hesla nemusí ukončiť všetky relácie. Rovnaký detail otvoríte aj tlačidlom v emaili, po prihlásení do svojho účtu.
 
@@ -173,6 +173,10 @@ V hornej časti prehľadu môžete skontrolovať svoje aktívne prihlásenia a o
 ### Moje aktívne prihlásenia
 
 Panel **Moje aktívne prihlásenia** zobrazuje všetky vaše aktívne relácie, teda prihlásenia pod vaším kontom, s prehliadačom, časom a IP adresou. Pri dlhšom zozname môžete jeho obsah posúvať. Vaša aktuálna relácia je prvá a má zelenú bodku s popisom **Toto prihlásenie**. Ostatné relácie môžete odhlásiť priamo v zozname, napríklad keď ste sa zabudli odhlásiť na inom počítači. Tento panel je vždy v hornej časti a nemožno ho odstrániť.
+
+Kliknutím na nadpis panela otvoríte okno **Aktívne prihlásenia**. Okrem vlastných relácií ponúka históriu prihlásení za posledných 30 dní a podľa oprávnení aj prihlásených administrátorov. Tlačidlo **Zmeniť heslo** v spodnej časti okna otvorí váš profil na zmenu hesla. Informačná ikona vedľa tlačidla zobrazí pokyny pre zmenu hesla pri firemnom účte.
+
+V karte **Moje prihlásenia** majú nepotvrdené zariadenia štítok **Nové**. Tlačidlo **Bol som to ja** potvrdí zariadenie, odstráni jeho upozornenie a obnoví zoznam s bežnou akciou **Odhlásiť** pri ostatných reláciách. Potvrdenie platí aj pre ďalšie relácie rovnakého zariadenia. Červené tlačidlo **Nebol som to ja** v riadku odhlási iba vybranú reláciu; ak ide o aktuálne prihlásenie, odhlási tento prehliadač. Rovnaké akcie sú dostupné pri otvorení okna z nadpisu panela aj zo systémového upozornenia.
 
 ![](sessions.png)
 

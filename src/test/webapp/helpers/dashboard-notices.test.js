@@ -25,6 +25,7 @@ function fixture(t, state, notices = [notice('warning', 'warning'), notice('info
     });
     const utilities = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard/widget-utils.js'), 'utf8').replace(/^export /gm, '');
     vm.runInContext(`{ ${utilities}; this.date = date; }`, context);
+    vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard/security-events.js'), 'utf8').replace(/^export /gm, ''), context);
     vm.runInContext(fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard/notices.js'), 'utf8').replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '') + '\nthis.Notices = DashboardNotices;', context);
     const data = { notices };
     const host = window.document.querySelector('#notices');
@@ -173,6 +174,7 @@ test('New-device notices ignore dismissals, precede errors and expire from the l
 test('Login confirmation keeps the notice on failures and removes it only after server acknowledgment', async t => {
     const security = securityNotice('autotest/login');
     const { controller, host, requests, fail, respond, window, data, now } = fixture(t, null, [security]);
+    data.currentSessions = { userSessions: [{ userSessions: [{ deviceId: security.securityEvent.id, deviceConfirmed: false }] }] };
     window.csrfToken = 'autotest-csrf';
     fail(true);
     await controller._confirmSecurityEvent(security);
@@ -187,6 +189,7 @@ test('Login confirmation keeps the notice on failures and removes it only after 
     await controller._confirmSecurityEvent(security);
     assert.equal(host.querySelector('.md-dashboard__notice-confirm'), null);
     assert.equal(data.requestedSecurityEvent.confirmedAt, now());
+    assert.equal(data.currentSessions.userSessions[0].userSessions[0].deviceConfirmed, true);
     assert.equal(requests[0].url, '/admin/rest/security/login-events/autotest%2Flogin/confirm');
     assert.equal(requests[0].method, 'POST');
     assert.equal(requests[0].headers['X-CSRF-Token'], 'autotest-csrf');

@@ -6,6 +6,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,8 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
             assertNull(record(service, USER_ID, database.hash, NOW + 100));
             DeviceEntity secondUser = record(service, OTHER_USER_ID, database.hash, NOW + 100);
             assertNotEquals(first.getId(), secondUser.getId());
+            assertEquals(id, service.findByTokenHash(USER_ID, database.hash).getId());
+            assertEquals(List.of(id), service.findByIds(USER_ID, Set.of(id, secondUser.getId())).stream().map(DeviceEntity::getId).toList());
             assertEquals(2, database.count());
             assertEquals(1, service.findActive(USER_ID, NOW + 100).size());
 
@@ -57,6 +60,7 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
             assertNull(service.confirm(OTHER_USER_ID, id, NOW));
 
             service.confirm(USER_ID, id, NOW + 150);
+            assertNotNull(service.findByIds(USER_ID, Set.of(id)).get(0).getConfirmedAt());
             assertTrue(service.findActive(USER_ID, NOW + 150).isEmpty());
             DeviceEntity reported = service.report(USER_ID, id, NOW + 200);
             assertNull(reported.getConfirmedAt());

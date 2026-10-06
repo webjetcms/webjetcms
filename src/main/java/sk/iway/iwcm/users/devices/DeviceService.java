@@ -3,6 +3,7 @@ package sk.iway.iwcm.users.devices;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
@@ -58,6 +59,17 @@ public class DeviceService {
     /** Returns the device's current notice while the owned device record exists. */
     public DeviceEntity findEvent(int userId, long id) {
         return execute(() -> devices.findByUserIdAndId(userId, id).orElse(null));
+    }
+
+    /** Resolves an existing browser after a recognized login without changing its notice. */
+    public DeviceEntity findByTokenHash(int userId, String tokenHash) {
+        return execute(() -> devices.findByUserIdAndTokenHash(userId, tokenHash).orElse(null));
+    }
+
+    /** Loads current confirmation state for the account's session devices in one query. */
+    public List<DeviceEntity> findByIds(int userId, Set<Long> ids) {
+        if (ids.isEmpty()) return List.of();
+        return execute(() -> devices.findByUserIdAndIdIn(userId, ids));
     }
 
     /** Acknowledges an owned event without changing browser recognition or its last-login time. */

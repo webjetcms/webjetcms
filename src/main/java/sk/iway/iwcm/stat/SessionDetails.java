@@ -42,6 +42,9 @@ public class SessionDetails
 	private String browserName;
 	private String operatingSystem;
 
+	/** Account-owned browser record linked at completed login; older sessions may have no device. */
+	private Long deviceId;
+
 	public long getLastActivity() {
 		return lastActivity;
 	}

@@ -1813,7 +1813,7 @@ public class Constants {
 
 		setString("xsrfUrlException", "", MOD_CSRF, "Zoznam povolenych URL pre ktore sa nekontroluje referer");
 		setString("xsrfParamNameExceptionSystem",
-				"docid,historyid,_logLevel,combineEnabled,combineEnabledRequest,groupid,forward,forceBrowserDetector,_writePerfStat,_disableCache,printTrace,isPopup,isDmail,NO_WJTOOLBAR,userlngr,page,words,datumOd,datumDo,btnSubmit,search,language,__lng,lng,userid,userId,webjetDmsp,formId,hash,invoiceId,auth,loginName,t,f,v,forum,NO_WJTOOLBAR,isPdfVersion,fbclid,utm_source,utm_medium,utm_campaign,utm_term,utm_content,formName,showTextKeys,extURL,id,removePerm,showBanner,tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId,rootDir",
+				"docid,historyid,_logLevel,combineEnabled,combineEnabledRequest,groupid,forward,forceBrowserDetector,_writePerfStat,_disableCache,printTrace,isPopup,isDmail,NO_WJTOOLBAR,userlngr,page,words,datumOd,datumDo,btnSubmit,search,language,__lng,lng,userid,userId,webjetDmsp,formId,hash,invoiceId,auth,loginName,t,f,v,forum,NO_WJTOOLBAR,isPdfVersion,fbclid,utm_source,utm_medium,utm_campaign,utm_term,utm_content,formName,showTextKeys,extURL,id,removePerm,showBanner,tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId,rootDir,securityEvent",
 				MOD_CSRF,
 				"Zoznam systemovych povolenych parametrov, ktore sa preskakuju pri GET poziadavke na kontrolu existencie parametra (bez ohladu na velkost pismen)");
 		setString("xsrfParamNameException", "", MOD_CSRF,
