@@ -64,7 +64,6 @@ export class JstreeSettings {
                 self.saveSettings(settings);
                 self.settingsModal.hide();
                 self.setTreeColWidth(settings.treeWidth);
-                window.dispatchEvent(new Event("resize"));
                 somStromcek.trigger("settings_changed.jstree", [settings]);
                 return;
             }
@@ -195,11 +194,16 @@ export class JstreeSettings {
     }
 
     setTreeColWidth(width) {
-        var dtWidth = 12 - width;
-        //console.log("Menim sirku stlpcov, width=", width, "dtWidth=", dtWidth);
         var treeCol = $(".tree-col");
-        treeCol.attr("class", "tree-col col-md-"+width);
         var datatableCol = $(".datatable-col");
-        datatableCol.attr("class", "datatable-col col-md-"+dtWidth);
+        // Values above the 12-column grid represent fixed widths in pixels.
+        if (width > 12) {
+            treeCol.attr("class", "tree-col col-md-auto").css("--wj-tree-width", width + "px");
+            datatableCol.attr("class", "datatable-col col-md");
+        } else {
+            treeCol.attr("class", "tree-col col-md-" + width).css("--wj-tree-width", "");
+            datatableCol.attr("class", "datatable-col col-md-" + (12 - width));
+        }
+        window.dispatchEvent(new Event("resize"));
     }
 }

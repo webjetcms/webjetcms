@@ -24,7 +24,7 @@ V ľavom paneli sa zobrazuje strom priečinkov, v pravom paneli zoznam článkov
 
 Priečinky môžete rozbaľovať, vyhľadávať podľa názvu a obnoviť tlačidlom nad stromom. Spoločné nadradené priečinky, napríklad **Aplikácie** a **Blog**, zachovávajú hierarchiu. Ak slúžia iba na navigáciu, majú odlišnú ikonu a nemožno ich vybrať ako sekciu. Celá cesta sa zobrazí po prejdení myšou nad názov priečinka.
 
-Tlačidlom **Nastavenia** nad stromom môžete zmeniť pomer šírky stromu a tabuľky. Nastavenie sa uloží pre prihláseného používateľa samostatne pre túto aplikáciu.
+Tlačidlom **Nastavenia** nad stromom môžete zmeniť pomer šírky stromu a tabuľky alebo nastaviť pevnú šírku stromu v pixeloch. Nastavenie sa uloží pre prihláseného používateľa samostatne pre túto aplikáciu.
 
 Bloger vidí svoje priečinky, administrátor blogerov priečinky blogerov v aktuálnej doméne. Strom rešpektuje aj oprávnenie zobrazovať skryté priečinky. Výber sekcie zostáva zachovaný pri vyhľadávaní, obnovení stromu a opätovnom otvorení adresy s ID priečinka za znakom `#`. Na úzkej obrazovke sa zoznam článkov zobrazí pod stromom.
 

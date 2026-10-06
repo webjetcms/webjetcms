@@ -10,7 +10,7 @@ Typy číselníkov sa vyberajú v stromovom zozname v ľavom paneli. Pravý pane
 
 Samostatnú kartu **Typy číselníkov** nahrádza stromová štruktúra v ľavej časti. Tlačidlami nad stromom môžete typ vytvoriť, upraviť, duplikovať, zmazať, importovať alebo exportovať. Pri úprave sa otvorí rovnaký editor s nastaveniami polí a prepojení. Vyhľadávanie pod tlačidlami filtruje názvy typov.
 
-Tlačidlom <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-adjustments-horizontal"></i></span></button> nad stromom môžete zmeniť pomer šírky stromu a tabuľky alebo zobraziť **vymazané typy**. Nastavenie sa uloží pre prihláseného používateľa samostatne pre túto aplikáciu.
+Tlačidlom <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-adjustments-horizontal"></i></span></button> nad stromom môžete zmeniť pomer šírky stromu a tabuľky, nastaviť pevnú šírku stromu v pixeloch alebo zobraziť **vymazané typy**. Nastavenie sa uloží pre prihláseného používateľa samostatne pre túto aplikáciu.
 
 !> **Vymazané typy** sa štandardne v strome nezobrazujú. V nastaveniach stromu môžete zapnúť voľbu **Zobraziť vymazané typy**; zobrazia sa červenou farbou s ikonou koša a môžete ich vybrať a upraviť. Pri výbere vymazaného typu sú akcie zmazania a duplikovania blokované, kým typ neobnovíte.
 

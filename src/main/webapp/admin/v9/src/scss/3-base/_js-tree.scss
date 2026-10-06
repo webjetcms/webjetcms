@@ -2,6 +2,16 @@
     border-right: 1px solid $nice-gray-100;
 }
 
+@media (min-width: $bp-mobile) {
+    .tree-col.col-md-auto {
+        width: var(--wj-tree-width);
+    }
+
+    .datatable-col.col-md {
+        min-width: 0;
+    }
+}
+
 .jstree .jstree-icon, .jstree span.jstree-text-icon {
     color: $dark-60;
     font-size: 15px;
