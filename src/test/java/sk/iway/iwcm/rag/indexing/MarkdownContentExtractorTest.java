@@ -51,15 +51,17 @@ class MarkdownContentExtractorTest {
         assertEquals("en/guide.md", extractor.extractTitle(code, "en/guide.md"));
     }
 
-    /** Repeated passages inherit their own section; code headings and list separators do not become ancestors. */
+    /** Merged siblings use their common parent; overlapping passages retain their own section context. */
     @Test
     void includesTitleAndHeadingHierarchy() {
         String body = "Enable this option.";
         String text = "# Guide\n\n## Users\n\n### Approval\n\n~~~markdown\n## Example\n~~~\n\n" + body
-            + "\n\nPages\n-----\n\n- Store\n---\n\n### Details\n\n" + body;
-        List<Chunk> chunks = List.of(new Chunk(text.indexOf(body), body), new Chunk(text.lastIndexOf(body), body));
+            + "\n\n### Access\n\n" + body + "\n\nPages\n-----\n\n- Store\n---\n\n### Details\n\n" + body;
+        String merged = text.substring(text.indexOf(body), text.indexOf("\n\nPages"));
+        List<Chunk> chunks = List.of(new Chunk(text.indexOf(body), merged),
+            new Chunk(text.indexOf(body, text.indexOf(body) + body.length()), body), new Chunk(text.lastIndexOf(body), body));
 
-        assertEquals(List.of("Guide > Users > Approval\n\n" + body, "Guide > Pages > Details\n\n" + body),
+        assertEquals(List.of("Guide > Users\n\n" + merged, "Guide > Users > Access\n\n" + body, "Guide > Pages > Details\n\n" + body),
             extractor.addHeadingContext(text, "Guide", chunks));
     }
 }

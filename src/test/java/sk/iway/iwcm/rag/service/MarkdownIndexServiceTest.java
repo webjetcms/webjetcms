@@ -14,7 +14,7 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
 import sk.iway.iwcm.rag.embedding.EmbeddingService;
 import sk.iway.iwcm.rag.indexing.MarkdownContentExtractor;
-import sk.iway.iwcm.rag.indexing.SlidingWindowChunker;
+import sk.iway.iwcm.rag.indexing.MarkdownChunker;
 import sk.iway.iwcm.rag.indexing.SlidingWindowChunker.Chunk;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkEntity;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkRepository;
@@ -26,7 +26,7 @@ import sk.iway.iwcm.rag.vectorstore.VectorStore;
  */
 class MarkdownIndexServiceTest {
     private static final String ROOT = "/admin/docs/test";
-    private final SlidingWindowChunker chunker = mock(SlidingWindowChunker.class);
+    private final MarkdownChunker chunker = mock(MarkdownChunker.class);
     private final EmbeddingService embeddings = mock(EmbeddingService.class);
     private final RagEmbeddingStatService statistics = mock(RagEmbeddingStatService.class);
     private final EmbeddingChunkRepository repository = mock(EmbeddingChunkRepository.class);

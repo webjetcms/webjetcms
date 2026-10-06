@@ -70,9 +70,9 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
     }
 
     /**
-     * Adds the document title and the heading hierarchy at each passage's start to its embedding input.
-     * Passage bodies remain unchanged. Headings inside code examples are ignored, and overlapping
-     * passages retain the context at their own source position.
+     * Adds the document title and the shared heading hierarchy of each passage to its embedding input.
+     * Merged sibling subsections use their common parent. Passage bodies remain unchanged, code
+     * headings are ignored, and overlapping passages retain context at their own source positions.
      *
      * @param text cleaned Markdown with normalized newlines, as supplied to the chunker
      * @param title document title or source-path fallback
@@ -87,13 +87,23 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
         int leadingWhitespace = 0;
         while (leadingWhitespace < text.length() && text.charAt(leadingWhitespace) <= ' ') leadingWhitespace++;
         for (SlidingWindowChunker.Chunk chunk : chunks) {
-            while (headingIndex < headings.size() && headings.get(headingIndex).offset() <= chunk.startOffset() + leadingWhitespace) {
+            int startOffset = chunk.startOffset() + leadingWhitespace;
+            while (headingIndex < headings.size() && headings.get(headingIndex).offset() <= startOffset) {
                 Heading heading = headings.get(headingIndex++);
                 ancestors.removeIf(ancestor -> ancestor.level() >= heading.level());
                 ancestors.add(heading);
             }
+            int endOffset = startOffset + chunk.text().length();
+            if (chunk.startOffset() == 0) {
+                for (int i = 0; i < chunk.text().length() && chunk.text().charAt(i) <= ' '; i++) endOffset--;
+            }
+            List<Heading> shared = new ArrayList<>(ancestors);
+            for (int i = headingIndex; i < headings.size() && headings.get(i).offset() < endOffset; i++) {
+                int level = headings.get(i).level();
+                shared.removeIf(heading -> heading.level() >= level);
+            }
             StringJoiner context = new StringJoiner(" > ").add(title);
-            for (Heading heading : ancestors) {
+            for (Heading heading : shared) {
                 if (heading.title().isBlank() == false && (heading.level() != 1 || heading.title().equals(title) == false)) {
                     context.add(heading.title());
                 }
@@ -104,7 +114,7 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
     }
 
     /** Finds ATX and Setext headings, mapping protected code placeholders back to source offsets. */
-    private List<Heading> findHeadings(String text) {
+    List<Heading> findHeadings(String text) {
         ProtectedCode code = protectCode(text);
         List<Heading> headings = new ArrayList<>();
         String previous = "";
@@ -125,7 +135,7 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
             }
             if (title != null) {
                 title = code.restore(title).replaceAll("(\\*\\*|__)(.*?)\\1", "$2").replaceAll("`+", "").trim();
-                headings.add(new Heading(headingOffset, level, title));
+                headings.add(new Heading(headingOffset, offset + code.restore(line).length(), level, title));
             }
             previous = line;
             previousOffset = offset;
@@ -138,14 +148,10 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
     private boolean isSetextContent(String line, ProtectedCode code) {
         if (line.isBlank() || HEADING.matcher(line).matches()
                 || line.matches(" {0,3}(?:[-+*](?:[ \\t]+.*)?|[0-9]+[.)][ \\t]+.*|>.*|(?:[-*_][ \\t]*){3,})")) return false;
-        if (line.startsWith(code.prefix())) {
-            String original = code.restore(line);
-            return original.startsWith("`") && original.contains("\n") == false && FENCE.matcher(original).matches() == false;
-        }
-        return true;
+        return code.isBlock(line) == false;
     }
 
-    private record Heading(int offset, int level, String title) { }
+    record Heading(int offset, int endOffset, int level, String title) { }
 
     /**
      * Protects fenced, indented, and inline code with collision-free placeholders before cleanup.
@@ -155,7 +161,7 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
      * @param source Markdown with normalized line endings
      * @return protected text and the original examples needed to restore it
      */
-    private ProtectedCode protectCode(String source) {
+    ProtectedCode protectCode(String source) {
         String prefix = "\uE000WJ_CODE_";
         while (source.contains(prefix)) prefix += "_";
         List<String> examples = new ArrayList<>();
@@ -325,7 +331,14 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
         return result.toString().replaceAll("<([A-Za-z][A-Za-z0-9+.-]*:[^<>\\s]+|[^<>\\s]+@[^<>\\s]+)>", "$1");
     }
 
-    private record ProtectedCode(String text, String prefix, List<String> examples) {
+    record ProtectedCode(String text, String prefix, List<String> examples) {
+        /** Identifies a protected block while allowing an inline code span at the start of a line. */
+        boolean isBlock(String line) {
+            if (line.startsWith(prefix) == false) return false;
+            String original = restore(line);
+            return original.startsWith("`") == false || original.contains("\n") || FENCE.matcher(original).matches();
+        }
+
         String restore(String cleaned) {
             for (int i = 0; i < examples.size(); i++) cleaned = cleaned.replace(prefix + i + ';', examples.get(i));
             return cleaned;

@@ -35,6 +35,7 @@ import sk.iway.iwcm.rag.RagIndexAction;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
 import sk.iway.iwcm.rag.embedding.EmbeddingService;
 import sk.iway.iwcm.rag.indexing.MarkdownContentExtractor;
+import sk.iway.iwcm.rag.indexing.MarkdownChunker;
 import sk.iway.iwcm.rag.indexing.SlidingWindowChunker;
 import sk.iway.iwcm.rag.jpa.IndexQueueEntity;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkEntity;
@@ -52,7 +53,7 @@ public class MarkdownIndexService {
 
     private final MarkdownSourceService sources;
     private final MarkdownContentExtractor extractor;
-    private final SlidingWindowChunker chunker;
+    private final MarkdownChunker chunker;
     private final EmbeddingService embeddings;
     private final RagEmbeddingStatService statistics;
     private final EmbeddingChunkRepository repository;
@@ -60,7 +61,7 @@ public class MarkdownIndexService {
     private final ReentrantLock indexingLock = new ReentrantLock();
 
     public MarkdownIndexService(MarkdownSourceService sources, MarkdownContentExtractor extractor,
-            SlidingWindowChunker chunker, EmbeddingService embeddings, RagEmbeddingStatService statistics,
+            MarkdownChunker chunker, EmbeddingService embeddings, RagEmbeddingStatService statistics,
             EmbeddingChunkRepository repository, VectorStore vectorStore) {
         this.sources = sources;
         this.extractor = extractor;
