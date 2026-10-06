@@ -560,6 +560,7 @@ Scenario('Test special import logic', ({I, DTE, DT}) => {
 
 Scenario('Delete enum data', async ({I}) => {
     I.amOnPage("/apps/enumeration/admin/#3076");
+    I.waitForText("Three", 15, "#enumerationDataDataTable");
 
     let rows = await I.executeScript(() => enumerationDataDataTable.page.info().recordsDisplay);
     if(rows > 0) {
