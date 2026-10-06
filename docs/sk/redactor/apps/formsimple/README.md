@@ -166,6 +166,23 @@ Hodnota tooltipu sa nahrádza iba raz. Ak samotný text tooltipu obsahuje výraz
 
 V zobrazení do emailu sa hodnota poľa tooltip nahrádza za prázdny znak (aby v emaile nebol zbytočne nefunkčný tooltip).
 
+### HTML tlačidla na predchádzajúci krok
+
+Vo [viackrokových formulároch](../multistep-form/README.md#návrat-na-predchádzajúci-krok) môžete upraviť HTML tlačidla **Späť** v sekcii **Nastavenia → Editácia textov** cez kľúč `components.mustistep.form.back_button`. Tlačidlo sa zobrazí od druhého kroku; do emailovej podoby formulára sa nevkladá.
+
+V hodnote kľúča sú dostupné značky:
+
+- `${previousStepId}` - ID predchádzajúceho kroku.
+- `${backButtonText}` - text tlačidla nastavený v aktuálnom kroku, prípadne predvolený preklad `components.mustistep.form.back_step`. Text sa pred vložením do HTML escapuje.
+
+Predvolený kód:
+
+```properties
+components.mustistep.form.back_button=<button type="button" class="btn btn-outline-secondary mt-3 me-2" data-multistep-back-step="${previousStepId}">${backButtonText}</button>
+```
+
+Pri zmene vzhľadu zachovajte `type="button"` a atribút `data-multistep-back-step="${previousStepId}"`, podľa ktorého sa vykonáva návrat na predchádzajúci krok.
+
 ### Napojenie na číselník
 
 Výberové pole (`select`) môžete ľahko napojiť na číselník:

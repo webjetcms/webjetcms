@@ -44,6 +44,8 @@ Môžete vyplniť **Úvodný text**, ktorý sa zobrazí na začiatku kroku. V te
 
 Od druhého kroku sa zobrazuje tlačidlo **Prejsť na predchádzajúci krok**. Návštevník sa ním môže vrátiť k už vyplneným údajom a opraviť ich. Text tlačidla nastavíte v editore daného kroku v karte **Pokročilé**, v poli **Predchádzajúci krok**, napríklad na **Späť**. Ak pole necháte prázdne, použije sa predvolený text.
 
+Web dizajnér môže upraviť aj [HTML kód tlačidla](../formsimple/README.md#html-tlačidla-na-predchádzajúci-krok), napríklad jeho CSS triedy alebo pridať ikonu.
+
 <div class="video-container">
     <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>

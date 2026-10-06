@@ -477,7 +477,9 @@ Zobrazí jednoduchý HTML editor, ktorý umožňuje základné formátovanie tex
 
 Pri validačnej chybe sa červeným okrajom zvýrazní nástrojová lišta aj editačná plocha, aby bol chybný obsah vizuálne označený rovnako ako pri ostatných typoch polí.
 
-Pri otvorení alebo potvrdení režimu úpravy HTML kódu editor odstráni nadbytočné prázdne odseky, napríklad `<p><br></p>`. Ak by odstránením zostal obsah úplne prázdny, pôvodný HTML kód zachová.
+Pri úprave HTML kódu editor zachováva vnorené obalové elementy `div` a prázdne odseky medzi obsahom, napríklad `<p><br></p>`. Jednoduché `div` bez atribútov a vnorených blokov prevedie na odseky `p`; odsadenie zdrojového kódu medzi blokmi nevytvára ďalšie prázdne riadky.
+
+Pri získaní hodnoty na uloženie sa odstránia prázdne odseky na konci obsahu, aj keď sú vnorené do koncových obalových elementov `div`. Prázdne odseky medzi neprázdnymi blokmi zostávajú zachované.
 
 Všimnite si použitie konvertora ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)```, ktorý povolí odoslať len [bezpečný HTML kód](../backend/security.md) (bez vložených JavaScript elementov a podobne).
 
