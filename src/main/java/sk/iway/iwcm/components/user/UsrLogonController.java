@@ -23,7 +23,6 @@ import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
 import sk.iway.iwcm.users.UsersDB;
-import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 /**
  * Logon on standard webpage to private section,
@@ -56,10 +55,6 @@ public class UsrLogonController extends WebjetComponentAbstract {
 
                 LogonTools.afterSuccessLogon(request, response);
 
-                if (user.isAdmin() && request.getSession().getAttribute("adminAfterLogonRedirect") != null) {
-                    response.sendRedirect(AdminDeviceService.getAfterLoginRedirect(request));
-                    return;
-                }
 
                 if (afterLogonRedirect!=null)
                 {
@@ -141,7 +136,7 @@ public class UsrLogonController extends WebjetComponentAbstract {
                         "newPassword".equals(name) || "retypeNewPassword".equals(name) ||
                         "org.apache.struts.taglib.html.TOKEN".equals(name)) continue;
 
-					String values[] = request.getParameterValues(name);
+					String[] values = request.getParameterValues(name);
                     for (int i=0; i<values.length; i++)
                     {
                         if (url.indexOf("?")==-1)

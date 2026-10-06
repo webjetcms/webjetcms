@@ -35,16 +35,16 @@ public class AdminDeviceService {
     static final String COOKIE_NAME = "wjAdminDevice";
     private static final Pattern TOKEN_PATTERN = Pattern.compile("[A-Za-z0-9_-]{43}");
     private static final SecureRandom RANDOM = new SecureRandom();
-    private final DeviceService devices;
+    private final DeviceService deviceService;
     private final Clock clock;
 
     @Autowired
-    public AdminDeviceService(DeviceService devices) {
-        this(devices, Clock.systemUTC());
+    public AdminDeviceService(DeviceService deviceService) {
+        this(deviceService, Clock.systemUTC());
     }
 
-    AdminDeviceService(DeviceService devices, Clock clock) {
-        this.devices = devices;
+    AdminDeviceService(DeviceService deviceService, Clock clock) {
+        this.deviceService = deviceService;
         this.clock = clock;
     }
 
@@ -79,7 +79,7 @@ public class AdminDeviceService {
         int maxAgeDays = maxAgeDays();
         BrowserDetector browser = new BrowserDetector(request.getHeader("User-Agent"));
         String operatingSystem = join(browser.getBrowserPlatform(), browser.getBrowserSubplatform());
-        DeviceEntity event = devices.recordLogin(user.getUserId(), hashToken(token), now,
+        DeviceEntity event = deviceService.recordLogin(user.getUserId(), hashToken(token), now,
             now - Duration.ofDays(maxAgeDays).toMillis(), bounded(browser.getBrowserName(), 128), bounded(browser.getBrowserVersion(), 64),
             bounded(operatingSystem, 128), bounded(Tools.getRemoteIP(request), 64));
 
@@ -100,10 +100,10 @@ public class AdminDeviceService {
     }
 
     /** Returns outstanding account-owned warnings; acknowledgement does not affect recognition. */
-    public List<DeviceEntity> activeEvents(Identity user) {
+    public List<DeviceEntity> getActiveEvents(Identity user) {
         requireAdministrator(user);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled")) return List.of();
-        return devices.findActive(user.getUserId(), clock.millis());
+        return deviceService.findActive(user.getUserId(), clock.millis());
     }
 
     /** Looks up the device's current notice without exposing whether another account owns it. */
@@ -111,7 +111,7 @@ public class AdminDeviceService {
         requireAdministrator(user);
         long id = deviceId(eventId);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled") || id <= 0) return null;
-        return devices.findEvent(user.getUserId(), id);
+        return deviceService.findEvent(user.getUserId(), id);
     }
 
     /** Confirms an owned event without extending the device's last-login time. */
@@ -119,7 +119,7 @@ public class AdminDeviceService {
         requireAdministrator(user);
         long id = deviceId(eventId);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled") || id <= 0) return null;
-        return devices.confirm(user.getUserId(), id, clock.millis());
+        return deviceService.confirm(user.getUserId(), id, clock.millis());
     }
 
     /** Reports an owned event and forgets only that account's recognition of its browser. */
@@ -127,7 +127,7 @@ public class AdminDeviceService {
         requireAdministrator(user);
         long id = deviceId(eventId);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled") || id <= 0) return null;
-        return devices.report(user.getUserId(), id, clock.millis());
+        return deviceService.report(user.getUserId(), id, clock.millis());
     }
 
     /**
@@ -204,7 +204,7 @@ public class AdminDeviceService {
         }
         Prop prop = Prop.getInstance(request);
         String baseHref = Tools.getBaseHref(request);
-        String link = baseHref.replaceAll("/+$", "") + "/admin/v9/?securityEvent=" + event.getId();
+        String link = baseHref + "/admin/v9/?securityEvent=" + event.getId();
         String domain = Tools.getServerName(request);
         String environment = Constants.getStringExecuteMacro("dashboardEnvironmentName");
         String fromName = SendMail.getDefaultSenderName("passwordReset", Tools.getRequestAttribute(request, "sendPasswordFromName", user.getFullName()));

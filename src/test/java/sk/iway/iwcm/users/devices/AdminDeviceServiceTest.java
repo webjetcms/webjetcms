@@ -157,7 +157,7 @@ class AdminDeviceServiceTest {
     void disabledFeatureAndNonAdministratorsDoNotReadOrWriteDevices() {
         constants.when(() -> Constants.getBoolean("adminNewDeviceDetectionEnabled")).thenReturn(false);
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
-        assertTrue(service.activeEvents(user).isEmpty());
+        assertTrue(service.getActiveEvents(user).isEmpty());
         assertNull(service.findEvent(user, EVENT_ID));
         constants.when(() -> Constants.getBoolean("adminNewDeviceDetectionEnabled")).thenReturn(true);
         when(user.isAdmin()).thenReturn(false);

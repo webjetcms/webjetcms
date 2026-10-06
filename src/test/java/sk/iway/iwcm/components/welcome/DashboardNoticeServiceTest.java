@@ -128,7 +128,7 @@ class DashboardNoticeServiceTest {
         when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         var event = new DeviceEntity();
         event.setId(42L);
-        when(devices.activeEvents(user)).thenReturn(List.of(event));
+        when(devices.getActiveEvents(user)).thenReturn(List.of(event));
         try (var constants = mockStatic(Constants.class);
              var properties = mockStatic(Prop.class);
              var tools = mockStatic(Tools.class);
@@ -143,7 +143,7 @@ class DashboardNoticeServiceTest {
             assertSame(event, notices.get(0).get("securityEvent"));
             assertFalse(notices.get(0).containsKey("action"));
             assertFalse(notices.get(0).containsKey("bodyHtml"));
-            verify(devices).activeEvents(user);
+            verify(devices).getActiveEvents(user);
         }
     }
 
@@ -157,7 +157,7 @@ class DashboardNoticeServiceTest {
         var request = new MockHttpServletRequest();
         var prop = mock(Prop.class);
         when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
-        when(devices.activeEvents(user)).thenThrow(new IllegalStateException("Sensitive database details"));
+        when(devices.getActiveEvents(user)).thenThrow(new IllegalStateException("Sensitive database details"));
         try (var constants = mockStatic(Constants.class);
              var properties = mockStatic(Prop.class);
              var tools = mockStatic(Tools.class);
