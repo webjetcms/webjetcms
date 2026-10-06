@@ -59,6 +59,7 @@ public class FormHtmlHandler {
 
     private static final String FORM_START_KEY = "components.mustistep.form.start";
     private static final String FORM_END_KEY = "components.mustistep.form.end";
+    private static final String FORM_BACK_BUTTON_KEY = "components.mustistep.form.back_button";
     private static final String FORM_LOADER_KEY = "components.mustistep.form.loader";
 
     private final FormStepsRepository formStepsRepository;
@@ -337,11 +338,9 @@ public class FormHtmlHandler {
         StringBuilder formEndHtml = new StringBuilder();
         FormStepEntity previousStep = MultistepFormsService.getPreviousStep(formName, formStep, formStepsRepository);
         if(isEmailRender == false && previousStep != null) {
-            formEndHtml.append("<button type=\"button\" class=\"btn btn-outline-secondary mt-3 me-2\" data-multistep-back-step=\"")
-                .append(previousStep.getId())
-                .append("\">")
-                .append(StringEscapeUtils.escapeHtml4(buttonsLabels.getFirst()))
-                .append("</button>");
+            formEndHtml.append(prop.getText(FORM_BACK_BUTTON_KEY));
+            Tools.replace(formEndHtml, "${previousStepId}", previousStep.getId().toString());
+            Tools.replace(formEndHtml, "${backButtonText}", StringEscapeUtils.escapeHtml4(buttonsLabels.getFirst()));
         }
         formEndHtml.append(getFormEnd(buttonsLabels.getSecond(), request));
 
@@ -393,8 +392,9 @@ public class FormHtmlHandler {
 
     /**
      * Builds and stores the complete multistep form representation for email delivery.
-     * Converts it to plain text when configured, optionally encrypts it, and collects
-     * stylesheet data for email and PDF variants.
+     * Uses validated session values for encrypted forms, converts the content to plain
+     * text when configured, and encrypts only the stored HTML. Collects stylesheet
+     * data for readable email and PDF variants.
      *
      * @param form  entity whose HTML field receives the rendered email content
      * @param request  current HTTP request
@@ -417,6 +417,17 @@ public class FormHtmlHandler {
 
         // prepare data
         this.formData = MultistepFormsService.getFormDataAsMap(form);
+        if (Tools.isNotEmpty(this.publicKey)) {
+            String sessionPrefix = MultistepFormsService.getSessionKey(this.formName, request) + "_";
+            for (FormItemEntity stepItem : MultistepFormsService.getFormItemsForValidation(this.formName)) {
+                if ("captcha".equals(stepItem.getFieldType()) || MultistepFormsService.isFileUploadField(stepItem.getFieldType())) continue;
+
+                Object sessionValue = request.getSession().getAttribute(sessionPrefix + stepItem.getItemFormId());
+                String value = sessionValue == null ? "" : sessionValue.toString();
+                String code = prop.getText("components.formsimple.input." + stepItem.getFieldType());
+                this.formData.put(stepItem.getItemFormId(), SaveFormService.filterHtml(code, value));
+            }
+        }
 
         for(FormStepEntity formSteps : formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(this.formName, CloudToolsForCore.getDomainId()))
             formHtml.append( getStepHtml(request, formSteps) ).append("<hr>");

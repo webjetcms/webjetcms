@@ -59,13 +59,16 @@ public class FormMailService {
 
 	/**
 	 * Extracts values from the given form for fields whose names match the configured list
-	 * defined by the provided {@code constant} key.
+	 * defined by the provided {@code constant} key. For encrypted forms, reads the original
+	 * validated values from the current form session instead of the stored ciphertext.
 	 *
 	 * @param form the submitted form entity containing serialized field data
 	 * @param constant configuration key whose value is an array of field names
+	 * @param formDataEncrypted whether the stored form values are encrypted
+	 * @param request current request identifying the submitted form session
 	 * @return ordered list of matching field values; empty list when none found or no data
 	 */
-    private List<String> getFieldsValues(FormsEntity form, String constant) {
+    private List<String> getFieldsValues(FormsEntity form, String constant, boolean formDataEncrypted, HttpServletRequest request) {
         List<String> foundValues = new ArrayList<>();
 
         if(form.getData() == null) return foundValues;
@@ -78,14 +81,18 @@ public class FormMailService {
             String[] comboArr = Tools.getTokens(combo, "~");
             if(comboArr.length != 2) continue;
 
-			//
-			comboArr[0] = comboArr[0].replaceFirst("-\\d+$", ""); //NOSONAR
-
             // Match a field name that starts with one of the configured names
             // (e.g. configured "email" matches field "emailova-adresa")
-            String fieldName = comboArr[0].toLowerCase();
-            if(fieldsNames.stream().anyMatch(fieldName::startsWith))
-                foundValues.add(comboArr[1]);
+            String fieldName = comboArr[0].replaceFirst("-\\d+$", "").toLowerCase(); //NOSONAR
+            if(fieldsNames.stream().anyMatch(fieldName::startsWith)) {
+                String value = comboArr[1];
+                if (formDataEncrypted) {
+                    String sessionKey = MultistepFormsService.getSessionKey(form.getFormName(), request) + "_" + comboArr[0];
+                    Object sessionValue = request.getSession().getAttribute(sessionKey);
+                    value = sessionValue == null ? null : sessionValue.toString();
+                }
+                if (Tools.isNotEmpty(value)) foundValues.add(value);
+            }
         }
 
         return foundValues;
@@ -116,11 +123,11 @@ public class FormMailService {
 		boolean formDataEncrypted = Tools.isNotEmpty(formSettings.getEncryptKey());
 
         String meno = null;
-        List<String> namesList = getFieldsValues(form, NAME_FIELD_KEY);
+        List<String> namesList = getFieldsValues(form, NAME_FIELD_KEY, formDataEncrypted, request);
         if(namesList.size() > 0) meno = namesList.stream().map(DB::internationalToEnglish).collect(Collectors.joining(" "));
 
         String email = null;
-        List<String> emailsList = getFieldsValues(form, EMAIL_FIELD_KEY);
+        List<String> emailsList = getFieldsValues(form, EMAIL_FIELD_KEY, formDataEncrypted, request);
 		//remove invalid emails
 		emailsList = emailsList.stream().filter(Tools::isEmail).toList();
         if(emailsList.size() > 0) email = emailsList.get(0);
