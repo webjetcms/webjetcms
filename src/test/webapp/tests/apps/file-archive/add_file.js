@@ -1,4 +1,4 @@
-Feature('apps.file-archive.add_file');
+Feature('apps.file-archive.add_file').tag('@singlethread');
 
 const SL = require("./SL.js");
 const WebjetDteJsTree = require("../../../pages/WebjetDteJsTree");

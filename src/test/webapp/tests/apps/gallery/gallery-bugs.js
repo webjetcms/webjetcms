@@ -109,6 +109,8 @@ Scenario('BUG set gallery dimmension by not saved/white parent #56393-10', ({ I,
 
     I.waitForElement(locate("a.jstree-anchor.jstree-clicked").withText("blog"));
     I.seeElement(locate("a.jstree-anchor.jstree-clicked").withText("blog").find("i.jstree-icon.ti.ti-folder"));
+    // The initial tree selection updates dimension defaults in a later event.
+    I.waitForFunction(() => window.lastGalleryDimension?.path === '/images/gallery/apps/blog', 10);
 
     I.click(".tree-col button.buttons-create");
     DTE.waitForEditor("galleryDimensionDatatable");

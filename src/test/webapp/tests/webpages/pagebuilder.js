@@ -187,7 +187,8 @@ Scenario('bug - zobrazenie standardny po prepnuti a zatvoreni okna', async ({I, 
     Document.resetPageBuilderMode();
 });
 
-Scenario('bug - nova stranka sablona podla priecinka', async ({I, DT, DTE}) => {
+Scenario('bug - nova stranka sablona podla priecinka', async ({I, DT, DTE, Document}) => {
+    Document.resetPageBuilderMode();
     I.amOnPage("/admin/v9/webpages/web-pages-list/?groupid=0");
     DT.waitForLoader();
     I.jstreeNavigate(["Test stavov", "Page Builder"]);

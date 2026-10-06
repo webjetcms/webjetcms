@@ -192,7 +192,9 @@ Scenario('Reset confirms changes, retains a failed draft and saves only the cura
         I.wjSetDefaultWindowSize();
 
         const shortcut = reloaded.items.find(item => item.type === 'shortcut');
-        await I.clickIfVisible('.md-dashboard__shortcut-actions button[aria-pressed="false"]');
+        await showWidget(I, shortcut.id);
+        I.clickCss('.md-dashboard__shortcut-actions button[aria-pressed="false"]');
+        I.waitForElement('.md-dashboard.is-editing-shortcuts', 10);
         I.clickCss(`[data-instance-id="${shortcut.id}"] .md-dashboard-widget__shortcut`);
         I.waitForVisible('.md-dashboard__settings [name="dashboardShortcutTitle"]', 10);
         I.fillField('.md-dashboard__settings [name="dashboardShortcutTitle"]', 'dashboard-reset-autotest personalized');

@@ -66,7 +66,7 @@ function fixture(t, { items = [], configured = true, shortcutsConfigured = confi
         hide() { this.element.dispatchEvent(new window.Event("hidden.bs.modal")); }
         dispose() {}
     } };
-    if (realBootstrap) window.eval(fs.readFileSync(path.resolve(moduleDirectory, "../../../node_modules/bootstrap/dist/js/bootstrap.bundle.js"), "utf8"));
+    if (realBootstrap) window.eval(fs.readFileSync(require.resolve("bootstrap/dist/js/bootstrap.bundle.js"), "utf8"));
     const tooltipCalls = [];
     if (withTooltip) {
         const instances = new Map();
@@ -1608,6 +1608,37 @@ test('Replaced and closed previews dispose late renderer results without restori
     await tick();
     assert.deepEqual(disposed, ['replaced', 'closed']);
     assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+});
+
+test('A late preview cannot clear validation from a newer Apply action', async t => {
+    let deferRead = false;
+    let finishPreview;
+    const { controller, window, requests } = fixture(t, {
+        items: [item('validation-autotest', 'validation-preview', '1x1')],
+        definitions: [{ type: 'validation-preview', sizes: ['1x1', '3x3'], render() {},
+            configure: () => ({ read: () => deferRead
+                ? new Promise(resolve => { finishPreview = resolve; }) : { options: {} } }) }]
+    });
+    await controller.start();
+    controller.setEditing(true);
+    await controller.showSettings('validation-autotest');
+    await tick();
+    const dialog = window.document.querySelector('.md-dashboard-modal--settings');
+    deferRead = true;
+    dialog.querySelector('.md-dashboard__size-choice input[value="3x3"]').click();
+    await tick();
+    assert.equal(typeof finishPreview, 'function');
+    deferRead = false;
+    dialog.querySelector('.md-dashboard__widget-colors input[value="custom"]').click();
+    dialog.querySelector('color-picker').dispatchEvent(new window.CustomEvent('update-color', { detail: { hex: '#112233' } }));
+    dialog.querySelector('.modal-footer .btn-primary').click();
+    await tick();
+    const error = dialog.querySelector('[role="alert"]');
+    assert.equal(error.textContent, 'admin.dashboard.backgroundColorLight.js');
+    finishPreview({ options: {} });
+    await tick();
+    assert.equal(error.textContent, 'admin.dashboard.backgroundColorLight.js', 'Completing an older preview must retain the Apply error');
+    assert.equal(requests.length, 0, 'Invalid settings must never be saved');
 });
 
 test('Background settings preserve defaults, stage palette colors and survive save and reload', async t => {

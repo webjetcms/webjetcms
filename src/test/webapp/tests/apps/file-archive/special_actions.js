@@ -1,4 +1,4 @@
-Feature('apps.file-archive.special_actions');
+Feature('apps.file-archive.special_actions').tag('@singlethread');
 
 const SL = require("./SL.js");
 
