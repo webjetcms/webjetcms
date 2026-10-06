@@ -6,14 +6,22 @@ Aplikace Novinky, vloží do stránky seznam web stránek v zadané složce. Pou
 
 ## Seznam novinek
 
-Seznam novinek v administraci je podobný seznamu web stránek, ale neobsahuje stromovou strukturu. Nachází se v menu Příspěvky/Novinky. V horní části lze vybrat složku pro zobrazení v tabulce.
+Seznam novinek v administraci se nachází v menu Příspěvky/Novinky. Vlevo se zobrazuje strom složek, vpravo tabulka novinek z vybrané složky. Složky můžete rozbalit a vybírat i jejich podsložky. Strom slouží k výběru složky; samotné složky se spravují v části Web stránky.
 
 ![](admin-dt.png)
 
-Hodnoty ve výběrovém poli sekce v hlavičce se generují:
+Složky s novinkami se určují:
 
-- automaticky - je-li konf. proměnná `newsAdminGroupIds` nastavená na prázdnou hodnotu získá se seznam ID složek s novinkami vyhledáváním výrazu `!INCLUDE(/components/news/` v tělech stránek a dohledáním nastavené ID složky `groupIds`.
+- automaticky - je-li konf. proměnná `newsAdminGroupIds` nastavená na prázdnou hodnotu získá se seznam ID složek s novinkami vyhledáváním výrazu `!INCLUDE(/components/news/` v tělech stránek a dohledáním nastavené ID složky `groupIds`. Kořenové složky blogerů a jejich podsložky se vynechávají.
 - podle konf. proměnné `newsAdminGroupIds`, kde je možné zadat čárkou oddělený seznam ID složek, například. `17,23*,72`, přičemž pokud ID složky končí na znak `*` načtou se při výběru i novinky (web stránky) z pod složek.
+
+Strom zobrazuje také jejich společné nadřazené složky, například `Aplikácie → Novinky → 2026`. Nadřazené složky, které nejsou součástí nastaveného seznamu novinek ani jeho podsložek, mají bílou ikonu složky a slouží pouze k rozbalování větví. Jejich výběr nemění seznam novinek a nelze v nich takto vytvořit novinku. Ostatní složky mimo nastavený rozsah se nezobrazují.
+
+Nad stromem můžete vyhledávat složky podle názvu včetně dosud nerozbalených podsložek. Tlačítko obnovení načte aktuální strukturu. Zobrazují se pouze dostupné složky aktuální domény podle práv uživatele.
+
+Tlačítkem <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-adjustments-horizontal"></i></span></button> nad stromem můžete změnit poměr šířky stromu a tabulky nebo nastavit pevnou šířku stromu v pixelech. Nastavení se uloží pro přihlášeného uživatele samostatně pro tuto aplikaci.
+
+Při výběru složky s nastavením `*` zůstává zachován seznam novinek včetně podsložek. Výběr konkrétní podsložky zobrazí pouze jeho novinky, pokud také nemá výslovně nastaveno `*`. Nová novinka se vytváří ve vybrané složce. Výběr se zachovává v odkazu na stránku, například `/apps/news/admin/#23*`. Pokud není dostupná žádná složka, zobrazí se prázdný seznam a vytváření novinek je vypnuté.
 
 Klepnutím na název novinky se otevře editor shodný s [editorem stránek](../../webpages/editor/README.md).
 
@@ -84,7 +92,7 @@ V kartě filtr můžete definovat pokročilé možnosti zobrazení novinek podle
 
 ### Novinky
 
-V kartě novinky se zobrazí seznam novinek, které se načtou podle zvolených adresářů z karty Parametry aplikace. Vidíte tak seznam novinek a můžete jednoduše stávající novinky upravovat (upravit nadpis, fotografii, případně text novinky). Rovněž můžete vytvořit novou novinku.
+V kartě novinky se zobrazí strom složek a seznam novinek. Kořenové složky se načítají podle zvolených adresářů z karty Parametry aplikace; ve stromu můžete vybírat i jejich podsložky. Vidíte tak seznam novinek a můžete jednoduše stávající novinky upravovat (upravit nadpis, fotografii, případně text novinky). Rovněž můžete vytvořit novou novinku.
 
 ![](editor-dialog-newslist.png)
 

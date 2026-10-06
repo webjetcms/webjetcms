@@ -1,10 +1,21 @@
+<div data-th-include="apps/enumeration/admin/partials/enumeration-type.html" data-th-remove="tag"></div>
+
 <script data-th-inline="javascript">
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.enumerations.model.EnumerationDataBean")})]*/ '';
 </script>
 <script type="text/javascript">
     var enumerationDataDataTable = null;
-    var lastIgnoredChildId = null;
-    var lastIgnoredParentId = null;
+    var selectedTypeNode = null;
+
+    window.getJstreeUrl = function() {
+        let url = $("#SomStromcek").data("rest-url");
+        url = WJ.urlUpdateParam(url, "showHidden", window.jstreeSettings.getSettings().showHidden === true);
+        const hash = window.location.hash.substring(1);
+        if (/^\d+$/.test(hash)) url = WJ.urlUpdateParam(url, "selectedId", hash);
+        url = WJ.urlRemoveParam(url, "selectedNodeId");
+        if (selectedTypeNode && selectedTypeNode.a_attr["data-type-id"] === hash) url = WJ.urlUpdateParam(url, "selectedNodeId", selectedTypeNode.id);
+        return url;
+    };
 
     window.disableDeletedEnum = function(ul, item) {
         var deletedPrefix = WJ.translate("enum_type.deleted_type_mark.js");
@@ -21,105 +32,140 @@
     }
 
     window.domReady.add(function () {
-        let url = "/admin/rest/enumeration/enumeration-data";
-        let enumTypes = {};
+        const treeElement = $("#SomStromcek");
+        const dataUrl = "/admin/rest/enumeration/enumeration-data";
+        let selectedTypeId = "0";
 
-        //SET enumeration type select filter
-        $.ajax({url: url + "/enum-types", success: function(json) {
-            enumTypes=json;
-            setEnumerationTypeFilterSelect(enumTypes);
-            $("#enumerationTypeFilterSelect").trigger("change");
-        }});
+        enumerationTypeDataTable.buttons(".buttons-create, .buttons-edit, .btn-duplicate, .buttons-remove")
+            .nodes().prependTo(".tree-col .dt-buttons");
+        enumerationTypeDataTable.buttons(".btn-import-dialog, .btn-export-dialog")
+            .nodes().appendTo(".tree-col .dt-buttons");
 
-        //Onchange events - update data based on selected enumeration type
-        $("#enumerationTypeFilterSelect").on("change", function() {
-            var enumTypeSelectValue = $('#enumerationTypeFilterSelect').val();
-            window.location.hash = enumTypeSelectValue;
-
-            var newUrl = WJ.urlAddParam(url, "enumerationTypeId", enumTypeSelectValue);
-            if (enumerationDataDataTable == null) {
-                if (Object.entries(enumTypes).length==0) {
-                    window.location.href="/apps/enumeration/admin/enumeration-type/";
-                } else {
-                    enumerationDataDataTable = WJ.DataTable({
-                        url: newUrl,
-                        serverSide: true,
-                        columns: columns,
-                        id: "enumerationDataDataTable",
-                        customFieldsUpdateColumns: true,
-                        fetchOnCreate: true,
-                        fetchOnEdit: true
-                    });
-
-                    //move #enumerationType_extfilter into .dt-buttons
-                    $("#enumerationType_extfilter .buttons-select").prependTo("#enumerationDataDataTable_wrapper .dt-buttons");
-                    $("#enumerationDataDataTable_wrapper .dt-buttons div.bootstrap-select").addClass("form-select");
-                    var bsButton = $("#enumerationDataDataTable_wrapper .dt-buttons div.bootstrap-select button.dropdown-toggle");
-                    bsButton.attr("class", "btn dropdown-toggle btn-light");
-
-                    enumerationDataDataTable.EDITOR.on('open', function (e, mode, action) {
-                        var enumTypeSelectValue = $('#enumerationTypeFilterSelect').val();
-
-                        //Hide field, used only for value
-                        enumerationDataDataTable.EDITOR.field("typeId").hide();
-
-                        //During create action typeId is not set yet, we must set it manually because autocomplete use this value
-                        if(action === 'create')
-                            enumerationDataDataTable.EDITOR.field("typeId").val(enumTypeSelectValue);
-
-                        $.ajax({url: url + "/enum-type?enumerationTypeId=" + enumTypeSelectValue, success: function(enumType) {
-                            //Handle child enum type id visibility (and select options)
-                            if(enumType['allowChildEnumerationType'])
-                                enumerationDataDataTable.EDITOR.field("editorFields.childEnumTypeName").show();
-                            else enumerationDataDataTable.EDITOR.field("editorFields.childEnumTypeName").hide();
-
-                            //Handle parent enum data id visibility (and select options)
-                            if(enumType['allowParentEnumerationData'])
-                                enumerationDataDataTable.EDITOR.field("editorFields.parentEnumDataName").show();
-                            else
-                                enumerationDataDataTable.EDITOR.field("editorFields.parentEnumDataName").hide();
-                        }});
-                    });
-                }
-            } else {
-                //add table filter params
-                enumerationDataDataTable.setAjaxUrl(newUrl);
-                enumerationDataDataTable.EDITOR.ajax().url = WJ.urlAddPath(newUrl, '/editor');
-                //reload tables values
-                enumerationDataDataTable.ajax.reload();
+        function selectTypeRow() {
+            enumerationTypeDataTable.rows().deselect();
+            enumerationTypeDataTable.row("#" + selectedTypeId).select();
+            enumerationTypeDataTable.buttons(".buttons-remove, .btn-duplicate")
+                .enable(selectedTypeId !== "0" && selectedTypeNode.a_attr["data-hidden"] !== "true");
+        }
+        enumerationTypeDataTable.on("draw.dt", selectTypeRow);
+        enumerationTypeDataTable.on("xhr.dt", function() {
+            if (treeElement.jstree(true)) treeElement.jstree(true).refresh(false, true);
+        });
+        $(".tree-col .buttons-refresh").on("click", function() {
+            enumerationTypeDataTable.ajax.reload();
+        });
+        treeElement.on("settings_changed.jstree", function(e, settings) {
+            const url = WJ.urlUpdateParam(enumerationTypeDataTable.getAjaxUrl(), "showHidden", settings.showHidden === true);
+            if (url === enumerationTypeDataTable.getAjaxUrl()) return;
+            if (!settings.showHidden && selectedTypeNode && selectedTypeNode.a_attr["data-hidden"] === "true") selectType(null);
+            enumerationTypeDataTable.setAjaxUrl(url);
+            enumerationTypeDataTable.ajax.reload();
+        });
+        enumerationTypeDataTable.EDITOR.on("submitSuccess", function(e, json, data, action) {
+            if (action === "create" && json.data && json.data.length) {
+                window.history.replaceState(null, "", "#" + json.data[0].id);
             }
+            $("#tree-folder-search-input").val("");
+            let url = treeElement.data("rest-url");
+            treeElement.data("rest-url", WJ.urlRemoveParam(WJ.urlRemoveParam(url, "treeSearchValue"), "treeSearchType"));
+            enumerationTypeDataTable.ajax.reload();
         });
 
-        /**
-         * Set external filter data for filtering enumeration data. It's list of enumerationTypes
-         * !! List contains ONLY NON HIDDEN enumeration types !! (provided by REST)
-         * @param mapOfTypes
-         */
-        function setEnumerationTypeFilterSelect(mapOfTypes) {
-            //Get object, select
-            let enumerationTypeFilterSelect = document.getElementById('enumerationTypeFilterSelect');
-            //Remove all options except the default one
-            while(enumerationTypeFilterSelect.options.length > 1)
-            enumerationTypeFilterSelect.remove(1);
-            //Add new options
-            for (const [key, value] of Object.entries(mapOfTypes)) {
-                enumerationTypeFilterSelect.add(new Option(value, key));
-            }
-
-            //set selected value
-            var hash = window.location.hash;
-            if (hash != "") $(enumerationTypeFilterSelect).val(hash.substr(1));
-
-            //Refresh object
-            $("#enumerationTypeFilterSelect").selectpicker('refresh');
+        function updateDataButtons() {
+            enumerationDataDataTable.buttons(".buttons-create, .btn-import-dialog")
+                .enable(selectedTypeId !== "0" && selectedTypeNode.a_attr["data-hidden"] !== "true");
         }
+
+        /** Loads the selected type's entries and applies its field definitions to the editor and columns. */
+        function selectType(node) {
+            selectedTypeNode = node;
+            selectedTypeId = node ? node.a_attr["data-type-id"] : "0";
+            selectTypeRow();
+            $("#enumeration-types-empty").toggleClass("d-none", node != null);
+            if (node) window.history.replaceState(null, "", "#" + selectedTypeId);
+            const url = WJ.urlAddParam(dataUrl, "enumerationTypeId", selectedTypeId);
+            if (enumerationDataDataTable == null) {
+                enumerationDataDataTable = WJ.DataTable({
+                    url: url,
+                    serverSide: true,
+                    columns: columns,
+                    id: "enumerationDataDataTable",
+                    customFieldsUpdateColumns: true,
+                    fetchOnCreate: true,
+                    fetchOnEdit: true
+                });
+                // Include the empty state in the header measured by automatic table sizing.
+                $("#enumeration-types-empty").prependTo("#enumerationDataDataTable_wrapper .dt-header-row");
+                enumerationDataDataTable.on("draw.dt", updateDataButtons);
+                enumerationDataDataTable.EDITOR.on("open", function(e, mode, action) {
+                    const editor = enumerationDataDataTable.EDITOR;
+                    editor.field("typeId").hide();
+                    if (action === "create") editor.field("typeId").val(selectedTypeId);
+                    $.get(dataUrl + "/enum-type", { enumerationTypeId: selectedTypeId }, function(type) {
+                        editor.field("editorFields.childEnumTypeName")[type.allowChildEnumerationType ? "show" : "hide"]();
+                        editor.field("editorFields.parentEnumDataName")[type.allowParentEnumerationData ? "show" : "hide"]();
+                    });
+                });
+            } else {
+                enumerationDataDataTable.setAjaxUrl(url);
+                enumerationDataDataTable.EDITOR.ajax().url = WJ.urlAddPath(url, "/editor");
+                enumerationDataDataTable.ajax.reload();
+            }
+            updateDataButtons();
+        }
+
+        treeElement.on("select_node.jstree", function(e, data) {
+            selectType(data.node);
+        });
+        treeElement.on("ready.jstree refresh.jstree", function() {
+            // Searching leaves the current entries visible even when their type is outside the results.
+            if ($("#tree-folder-search-input").val()) return;
+            const tree = treeElement.jstree(true);
+            const selected = tree.get_selected(true)[0] || null;
+            selectType(selected);
+            // Keep restored and newly created types visible without scrolling the whole page.
+            if (selected) {
+                const nodeBounds = tree.get_node(selected, true)[0].getBoundingClientRect();
+                const treeBounds = treeElement[0].getBoundingClientRect();
+                if (nodeBounds.top < treeBounds.top) treeElement[0].scrollTop -= treeBounds.top - nodeBounds.top;
+                else if (nodeBounds.bottom > treeBounds.bottom) treeElement[0].scrollTop += nodeBounds.bottom - treeBounds.bottom;
+            }
+        });
+        window.addEventListener("hashchange", function() {
+            treeElement.jstree(true).refresh(false, true);
+        });
+
     });
-    </script>
+</script>
 
-    <div id="enumerationType_extfilter" style="display: none;">
-        <div class="btn btn-sm buttons-select">
-            <select id="enumerationTypeFilterSelect"></select>
+<div class="row">
+    <div class="col-md-4 tree-col">
+        <div class="dt-header-row clearfix">
+            <div class="row">
+                <div class="col-auto">
+                    <div class="dt-buttons">
+                        <button class="btn btn-sm btn-outline-secondary buttons-jstree-settings buttons-right" type="button"
+                            data-toggle="tooltip" data-th-title="#{datatables.button.settings.js}"
+                            data-th-aria-label="#{datatables.button.settings.js}">
+                            <span><i class="ti ti-adjustments-horizontal" aria-hidden="true"></i></span>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary buttons-refresh buttons-right" type="button"
+                            data-toggle="tooltip" data-th-title="#{datatables.button.reload.js}"
+                            data-th-aria-label="#{datatables.button.reload.js}">
+                            <span><i class="ti ti-refresh" aria-hidden="true"></i></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
+        <div id="SomStromcek" class="hide-while-loading" data-settings-key="jstreeSettings_enumeration" data-rest-url="/admin/rest/enumeration/enumeration-type"
+            data-rest-param-name="id" data-single-select="true" data-search-restore-state="false"
+            data-th-data-search-label="#{components.enumerations.typeName}"></div>
     </div>
+    <div class="col-md-8 datatable-col">
+        <div id="enumeration-types-empty" class="alert alert-info d-none" role="status" data-th-text="#{components.enumerations.noTypes}"></div>
+        <table id="enumerationDataDataTable" class="datatableInit table"></table>
+    </div>
+</div>
 
-    <table id="enumerationDataDataTable" class="datatableInit table"></table>
+<div data-th-include="admin/v9/views/partials/tree-width-settings.html" data-th-with="showDeletedTypes=true" data-th-remove="tag"></div>

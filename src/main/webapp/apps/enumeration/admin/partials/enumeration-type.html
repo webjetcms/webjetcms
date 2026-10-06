@@ -1,12 +1,12 @@
 <script data-th-inline="javascript">
-    let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean")})]*/ '';
+    let typeColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean")})]*/ '';
 </script>
 <script type="text/javascript">
     var enumerationTypeDataTable;
     var isAllSet = false;
     var lastIgnoredId = null;
 
-    var tabs = [
+    var typeTabs = [
             { id: 'basic', title: '[[#{datatable.tab.basic}]]', selected: true},
             { id: 'strings', title: '[[#{enum_type.strings}]]'},
             { id: 'numbers', title: '[[#{enum_type.numbers}]]'},
@@ -17,17 +17,19 @@
 
     window.domReady.add(function () {
 
-        let url = "/admin/rest/enumeration/enumeration-type";
-
         enumerationTypeDataTable = WJ.DataTable({
-            url: url,
+            url: WJ.urlUpdateParam("/admin/rest/enumeration/enumeration-type", "showHidden", window.jstreeSettings.getSettings().showHidden === true),
             serverSide: true,
-            columns: columns,
-            tabs: tabs,
+            paging: false,
+            hideTable: true,
+            columns: typeColumns,
+            tabs: typeTabs,
             id: "enumerationTypeDataTable",
             customFieldsUpdateColumns: true,
             fetchOnCreate: true,
-            fetchOnEdit: true
+            fetchOnEdit: true,
+            idAutoOpener: false,
+            initHashFilter: false
         });
 
         window.addEventListener("WJ.DTE.innerTableInitialized", function(event) {
