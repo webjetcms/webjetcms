@@ -25,6 +25,7 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
+import sk.iway.iwcm.components.blog.rest.BloggerService;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
@@ -150,6 +151,7 @@ public class NewsRestController extends WebpagesDatatable {
                 // -------------------------- set by GroupsDB if parent folder doesnt exists
                 List<String> dataList = new SimpleQuery().forListString("SELECT data FROM documents WHERE data LIKE '%!INCLUDE(/components/news/%' AND file_name NOT LIKE '"+trashDirName+"%' AND file_name NOT LIKE '--------------------------'");
                 Set<String> duplicityCheck = new HashSet<>();
+                Set<Integer> bloggerGroupIds = new HashSet<>(BloggerService.getAllBloggersGroupIds());
 
                 for (String data : dataList) {
 
@@ -162,6 +164,7 @@ public class NewsRestController extends WebpagesDatatable {
                         PageParams pp = new PageParams(group);
                         int[] groupIds = Tools.getTokensInt(pp.getValue("groupIds", null), ",+");
                         for (int groupId : groupIds) {
+                            if (bloggerGroupIds.contains(groupId)) continue;
                             if (groupId > 0) {
                                 GroupDetails groupDetails = groupsDB.getGroup(groupId);
                                 if (groupDetails != null) {

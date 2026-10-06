@@ -119,7 +119,7 @@ public class ScopedGroupsTreeService {
             item.setGroupIdList(navigationOnly ? null : filters.getOrDefault(id, String.valueOf(id)));
             int parent = parentId(group);
             item.setParent(parent == 0 ? "#" : String.valueOf(parent));
-            if (navigationOnly) item.setIcon("ti ti-folders");
+            if (navigationOnly) item.setIcon("ti ti-folder-x");
             item.setAAttr(Map.of("title", group.getFullPath()));
             item.getState().setDisabled(!selectable.contains(id));
             item.getState().setSelected(id == selection);

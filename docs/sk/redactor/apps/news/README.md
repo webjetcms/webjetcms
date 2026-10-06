@@ -12,10 +12,10 @@ Zoznam noviniek v administrácii sa nachádza v menu Príspevky/Novinky. Vľavo 
 
 Priečinky s novinkami sa určujú:
 
-- automaticky - ak je konf. premenná `newsAdminGroupIds` nastavená na prázdnu hodnotu získa sa zoznam ID priečinkov s novinkami vyhľadávaním výrazu `!INCLUDE(/components/news/` v telách stránok a dohľadaním nastaveného ID priečinka `groupIds`.
+- automaticky - ak je konf. premenná `newsAdminGroupIds` nastavená na prázdnu hodnotu získa sa zoznam ID priečinkov s novinkami vyhľadávaním výrazu `!INCLUDE(/components/news/` v telách stránok a dohľadaním nastaveného ID priečinka `groupIds`. Koreňové priečinky blogerov a ich podpriečinky sa vynechávajú.
 - podľa konf. premennej `newsAdminGroupIds`, kde je možné zadať čiarkou oddelený zoznam ID priečinkov, napr. `17,23*,72`, pričom ak ID priečinka končí na znak `*` načítajú sa pri výbere aj novinky (web stránky) z pod priečinkov.
 
-Strom zobrazuje aj ich spoločné nadradené priečinky, napríklad `Aplikácie → Blog → blogger`. Nadradené priečinky, ktoré nie sú súčasťou nastaveného zoznamu noviniek ani jeho podpriečinkov, majú ikonu viacerých priečinkov a slúžia iba na rozbaľovanie vetiev. Ich výber nemení zoznam noviniek a nemožno v nich takto vytvoriť novinku. Ostatné priečinky mimo nastaveného rozsahu sa nezobrazujú.
+Strom zobrazuje aj ich spoločné nadradené priečinky, napríklad `Aplikácie → Novinky → 2026`. Nadradené priečinky, ktoré nie sú súčasťou nastaveného zoznamu noviniek ani jeho podpriečinkov, majú bielu ikonu priečinka a slúžia iba na rozbaľovanie vetiev. Ich výber nemení zoznam noviniek a nemožno v nich takto vytvoriť novinku. Ostatné priečinky mimo nastaveného rozsahu sa nezobrazujú.
 
 Nad stromom môžete vyhľadávať priečinky podľa názvu vrátane zatiaľ nerozbalených podpriečinkov. Tlačidlo obnovenia načíta aktuálnu štruktúru. Zobrazujú sa iba dostupné priečinky aktuálnej domény podľa práv používateľa.
 
