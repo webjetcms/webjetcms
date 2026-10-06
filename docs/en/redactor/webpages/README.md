@@ -89,7 +89,7 @@ If necessary, you can click the icon in the tree structure<i class="ti ti-adjust
 - **Sort order** - Displays the sort order in the form (order) after the name.
 - **Web Pages** - Displays web pages in the tree structure. **Warning:** reduces performance and data loading speed. We recommend enabling this option only if you need to move web pages using the `Drag&Drop` function.
 - **Tree Folders as Table** - Displays the Folders tab in the datasheet. Allows you to use datasheet features like bulk operations, duplicate, edit in grid view, etc. with tree folders.
-- **Tree:Table Column Width Ratio** - Sets the column width ratio of the displayed tree structure and data table to better utilize the monitor width. The default ratio is 4:8. Warning: with some ratios and inappropriate monitor size, the toolbar/buttons may not be displayed correctly.
+- **Tree Width** - Select the ratio of the width of the tree to the table (default 4:8) or a fixed tree width of 120px, 150px, 200px, 250px, 300px, 400px or 500px. With a fixed width, the tree does not expand when the window is enlarged and the table uses the remaining space. Warning: with some widths and inappropriate monitor sizes, the toolbar/buttons may not be displayed correctly.
 - **Sort tree by** - Select the directory parameter by which the folder tree should be sorted. The selection box supports the following parameters
   - **Priority**
   - **Name**

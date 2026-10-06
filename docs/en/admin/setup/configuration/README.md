@@ -9,6 +9,8 @@ The configuration section is used to view and manage configuration variables. On
 
 The tree can be searched. Module names are technical names and are not translated. In the selected module, it is possible to edit an existing variable, but not to create a new one or to start an import, because the database variable itself does not have information about being included in the module.
 
+You can change the ratio of the tree width to the table width using the **Settings** button above the tree or set a fixed width for the tree in pixels. The default width is 200px. The custom choice is saved for the logged in user separately for configuration.
+
 ![](page.png)
 
 The installation section contains a list of [most commonly used configuration variables](../../../install/config/README.md).

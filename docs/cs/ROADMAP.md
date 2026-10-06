@@ -50,7 +50,9 @@ Vysvětlení použitých piktogramů:
 - [x] +Číselníky - přidat možnost definovat typ pole pro řetězec jak máme ve volitelných polích (#58641).
 - [x] +Fotobanka - přidat možnost nastavit název souboru před stažením z fotobanky, automaticky nastavit podle hledaného výrazu (#58645).
 - [x] +Úkoly na pozadí - možnost manuálně spustit úlohu na `node`, který má úloha nastaven, nyní se spustí na `node` kde je uživatel přihlášen (#58718).
-- [ ] +Číselník, Blog, Novinky - upravit tak, aby výběr typu číselníku nebo složky pro novinky byl vlevo podobně jako v galerii/webových stránkách. Nemusí být pak karty ale vše najednou zobrazeno.
+- [x] +Číselník - přesunout výběr a správu typů číselníků do stromu v levém panelu, s vyhledáváním a zachováním editoru nastavení (#58786).
+- [x] +Blog - přesunout výběr složky do stromu vlevo, s vyhledáváním a zachováním výběru Všechny sekce i přidávání sekcí (#58786).
+- [x] +Novinky - přesunout výběr složky do stromu vlevo podobně jako v galerii/webových stránkách, s výběrem podsložek a vyhledáváním (#58786).
 - [x] +Překladové klíče - zobrazovat stromovou strukturu překladových klíčů pro lepší orientaci (#58714).
 - [x] +Konfigurace - doplnit možnost nastavit proměnnou pouze pro aktuální uzel (neuložit ji do databáze - jen nastavit do Constants objektu), přidat tam zaškrtávací pole "Nastavit dočasně" s info ikonou že hodnota se nastaví pouze dočasně a při restartu se obnoví hodnota jako je v databázi. (#291)
 - [ ] Průzkumník - opravit zobrazování souborů se speciálními znaky (například `@`).
@@ -62,6 +64,9 @@ Vysvětlení použitých piktogramů:
 filtr bere pouze první hodnotu. Dodělat tedy možnost `IN` pro možnost zadání více hodnot (#JT-2139).
 - [ ] +AI - upravit vytváření `chunk` tak, aby na začátku/konci nebyla nesmyslná slova, oříznout od první mezery po poslední mezeru.
 - [ ] +Webové stránky - upravit výchozí zobrazení pro nového uživatele - zobrazovat ID, pořadí a uspořádat vzestupně.
+- [ ] +Webové stránky - přidat možnost přidat více stránkám najednou perex skupinu, čili ke stávajícím perex skupinám se přidá zvolená.
+- [ ] +Webové stránky - při smazání složky, která má i zrcadlenou verzi zobrazit notifikaci, že byly smazány i zrcadlené složky XXX,YYY.
+- [ ] +Přidat podporu obrázků typu AVIF.
 
 ## 2025
 
