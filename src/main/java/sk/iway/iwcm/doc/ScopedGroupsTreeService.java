@@ -16,7 +16,17 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
-/** Builds a scoped application folder tree with navigation-only ancestors above its configured folders. */
+/**
+ * Builds jsTree folder nodes within the configured scope of applications such as News and Blog.
+ *
+ * <p>The scope is resolved from {@link GroupsDB} during construction and contains configured roots
+ * and their visible descendants. Visible ancestors outside that scope provide navigation paths
+ * but cannot be selected. Folder permissions determine visibility and selection unless the caller
+ * explicitly disables those checks for an application-managed scope.</p>
+ *
+ * <p>Supports initial tree loading, lazy child loading, and folder-name searches through
+ * {@link #getItems(int, int, String, String)}.</p>
+ */
 public class ScopedGroupsTreeService {
     private final Identity user;
     private final boolean checkGroupsPerms;
@@ -27,14 +37,40 @@ public class ScopedGroupsTreeService {
     private final Set<Integer> navigationParents = new HashSet<>();
 
     /**
-     * Resolves configured roots and their visible descendants from the cached folder structure.
-     * Viewable ancestors remain expandable but cannot select an article list.
+     * Resolves the application folder scope with folder permission checks enabled.
+     *
+     * @param folders configured roots whose values contain a positive folder ID, optionally followed
+     *                by {@code *} to preserve recursive article filtering
+     * @param user user whose permissions and tree sorting preferences apply; {@code null} produces
+     *             an empty scope
+     * @param domain domain to include when {@code multiDomainEnabled} is enabled; must not be
+     *               {@code null} in that case
+     * @see #ScopedGroupsTreeService(List, Identity, String, boolean)
      */
     public ScopedGroupsTreeService(List<LabelValue> folders, Identity user, String domain) {
         this(folders, user, domain, true);
     }
 
-    /** Allows applications with their own administrative folder scope to supply trusted roots. */
+    /**
+     * Resolves configured roots, visible descendants, and navigation ancestors from the folder cache.
+     *
+     * <p>Descendants are traversed regardless of a root's {@code *} suffix. The suffix is retained
+     * in the node's article filter, and a suffixed value takes precedence for duplicate root IDs.
+     * Folders that fail visibility checks are skipped together with their descendant traversal.</p>
+     *
+     * <p>With permission checks enabled, only editable folders are selectable; viewable folders
+     * remain available for navigation. Users restricted to individual pages without editable folders
+     * receive an empty scope. Ancestors added above the configured roots are never selectable.</p>
+     *
+     * @param folders configured roots whose values contain a positive folder ID, optionally followed
+     *                by {@code *}; labels are unused, and invalid or nonpositive IDs are ignored
+     * @param user user whose permissions and tree sorting preferences apply; {@code null} produces
+     *             an empty scope
+     * @param domain domain to include when {@code multiDomainEnabled} is enabled; must not be
+     *               {@code null} in that case
+     * @param checkGroupsPerms whether to enforce folder edit and view permissions; {@code false}
+     *                         trusts the caller's configured scope while retaining domain and hidden-folder checks
+     */
     public ScopedGroupsTreeService(List<LabelValue> folders, Identity user, String domain, boolean checkGroupsPerms) {
         this.user = user;
         this.checkGroupsPerms = checkGroupsPerms;
@@ -78,8 +114,25 @@ public class ScopedGroupsTreeService {
     }
 
     /**
-     * Returns roots, lazy children, or search matches with their scoped ancestors.
-     * The initial response opens the selected folder's path and includes its siblings.
+     * Creates a flat list of jsTree nodes for initial loading, lazy child loading, or searching.
+     *
+     * <p>Without a search, {@code parentId == 0} loads the roots and opens navigation ancestors
+     * and the selected folder's path, including direct children of every opened folder. If the
+     * requested selection is unavailable, the first selectable folder collected during construction
+     * is selected if one exists. A nonzero parent ID loads only that folder's direct children.</p>
+     *
+     * <p>A nonblank search takes precedence over both IDs and returns matching folder names with
+     * their scoped ancestors opened. Comparisons ignore case and diacritics. Search and lazy-load
+     * responses do not mark any node as selected. Nodes outside the selectable set are disabled.</p>
+     *
+     * @param parentId parent folder whose children to load, or {@code 0} for the initial tree
+     * @param selectedId preferred selectable folder for initial loading; ignored for searches
+     *                   and lazy child loading
+     * @param searchValue folder-name search text, or {@code null} or a blank string to load the tree
+     * @param searchType comparison mode: {@code startwith}, {@code endwith}, or {@code equals};
+     *                   any other value, including {@code null}, uses substring matching
+     * @return nodes ordered by the user's tree sorting preferences, with parent IDs and loading
+     *         states set for jsTree; empty if no nodes qualify or a requested lazy-load parent is unknown
      */
     public List<GroupsJsTreeItem> getItems(int parentId, int selectedId, String searchValue, String searchType) {
         Set<Integer> included = new LinkedHashSet<>();
@@ -131,11 +184,24 @@ public class ScopedGroupsTreeService {
         return items;
     }
 
-    /** Checks whether a folder can be selected within this user's application scope. */
+    /**
+     * Checks whether a folder belongs to the selectable scope resolved during construction.
+     *
+     * @param groupId folder ID to check
+     * @return {@code true} if the folder is selectable; {@code false} for navigation-only,
+     *         excluded, or unknown folders
+     */
     public boolean isSelectable(int groupId) {
         return selectable.contains(groupId);
     }
 
+    /**
+     * Applies domain, hidden-folder, and optional folder permission checks to a candidate folder.
+     *
+     * @param group candidate folder, or {@code null} if it does not exist
+     * @param domain required folder domain when {@code multiDomainEnabled} is enabled
+     * @return {@code true} if the folder exists and passes all applicable visibility checks
+     */
     private boolean isVisible(GroupDetails group, String domain) {
         if (group == null) return false;
         if (Constants.getBoolean("multiDomainEnabled") && !domain.equals(group.getDomainName())) return false;
@@ -147,6 +213,16 @@ public class ScopedGroupsTreeService {
         return groups.containsKey(group.getParentGroupId()) ? group.getParentGroupId() : 0;
     }
 
+    /**
+     * Adds a folder's scoped ancestors to the included and opened node sets.
+     *
+     * <p>Traversal stops at the scoped root or a repeated folder to avoid following cycles
+     * indefinitely. An unknown starting folder leaves both sets unchanged.</p>
+     *
+     * @param id folder ID whose ancestor path to traverse
+     * @param included mutable set to which ancestor IDs are added
+     * @param opened mutable set to which ancestor IDs to expand are added
+     */
     private void addParents(int id, Set<Integer> included, Set<Integer> opened) {
         Set<Integer> visited = new HashSet<>();
         GroupDetails group = groups.get(id);
