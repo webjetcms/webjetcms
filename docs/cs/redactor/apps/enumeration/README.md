@@ -8,7 +8,7 @@ Typy číselníků se vybírají ve stromovém seznamu v levém panelu. Pravý p
 
 ## Typy číselníků
 
-Samostatnou kartu **Typy číselníků** nahrazuje stromová struktura v levé části. Tlačítky nad stromem můžete typ vytvořit, upravit, duplikovat, smazat, importovat nebo exportovat. Při úpravě se otevře stejný editor s nastaveními polí a propojení. Vyhledávání pod tlačítky filtruje názvy typů.
+Typy číselníků jsou zobrazeny ve stromové struktuře v levé části. Tlačítky nad stromem můžete typ vytvořit, upravit, duplikovat, smazat, importovat nebo exportovat. Při úpravě se otevře stejný editor s nastaveními polí a propojení. Vyhledávání pod tlačítky filtruje názvy typů.
 
 Tlačítkem <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-adjustments-horizontal"></i></span></button> nad stromem můžete změnit poměr šířky stromu a tabulky, nastavit pevnou šířku stromu v pixelech nebo zobrazit **vymazané typy**. Nastavení se uloží pro přihlášeného uživatele samostatně pro tuto aplikaci.
 

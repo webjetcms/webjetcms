@@ -4,7 +4,7 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('novinky', ({ I, DT, DTE, Document }) => {
+Scenario('novinky', ({ I, DT, DTE, Document, i18n }) => {
     I.amOnPage("/apps/news/admin/");
     DT.waitForLoader("newsDataTable");
 
@@ -33,7 +33,7 @@ Scenario('novinky', ({ I, DT, DTE, Document }) => {
         I.clickCss("#pills-dt-component-datatable-filter-tab");
         addFilter(I, "AUTHOR_ID", "<=", "123");
         addFilter(I, "DATE_CREATED", "=", "01.10.2025");
-        addFilter(I, "DATA", "Začína na", "This is first ");
+        addFilter(I, "DATA", i18n.get("Starting at"), "This is first ");
         addFilter(I, "AVAILABLE", "=", "false");
         I.clickCss("td.valueTd > input");
         Document.screenshot("/redactor/apps/news/editor-dialog-filter.png");

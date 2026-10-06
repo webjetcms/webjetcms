@@ -8,7 +8,7 @@ The codebook types are selected in the tree list in the left panel. The right pa
 
 ## Dial types
 
-The separate **Codebook Types** tab is replaced by a tree structure on the left. You can use the buttons above the tree to create, edit, duplicate, delete, import, or export a type. When editing, the same editor opens with field and link settings. The search below the buttons filters the type names.
+The types of codebooks are displayed in a tree structure on the left. You can use the buttons above the tree to create, edit, duplicate, delete, import, or export the type. When editing, the same editor opens with field and link settings. The search below the buttons filters the type names.
 
 By button <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-adjustments-horizontal"></i></span></button> above the tree you can change the ratio of the width of the tree to the table, set a fixed width of the tree in pixels or show **deleted types**. The setting is saved for the logged in user separately for this application.
 
