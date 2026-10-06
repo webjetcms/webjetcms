@@ -14,10 +14,9 @@ Scenario('novinky', ({ I, DT, DTE, Document, i18n }) => {
 
     Document.screenshot("/redactor/apps/news/admin-dt.png");
 
-    I.click("McGregor sales force");
+    I.click("Trhy sú naďalej vydesené");
     DTE.waitForEditor("newsDataTable");
     I.wait(10);
-    I.toastrClose();
     Document.screenshot("/redactor/apps/news/admin-edit.png");
 
     //editor

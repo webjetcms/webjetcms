@@ -275,13 +275,13 @@ Scenario('set groupIds parameter in webpage', ({ I, DT, DTE }) => {
 Scenario('News tree permissions and empty state', async ({ I, DT }) => {
     I.amOnPage("/apps/news/admin/");
     DT.waitForLoader("newsDataTable");
-    I.seeElement('#SomStromcek a[title="/Aplikácie/Blog/blogger"]');
+    I.seeElement('#SomStromcek a[title="/Aplikácie/Novinky"]');
     I.seeElement('#SomStromcek a[title="/English/News"]');
 
     I.relogin("tester2");
     I.amOnPage("/apps/news/admin/");
     DT.waitForLoader("newsDataTable");
-    I.seeElement('#SomStromcek a[title="/Aplikácie/Blog/blogger"]');
+    I.seeElement('#SomStromcek a[title="/Aplikácie/Novinky"]');
     I.dontSeeElement('#SomStromcek a[title="/English/News"]');
     I.fillField("#tree-folder-search-input", "News");
     I.clickCss("#tree-folder-search-button");
@@ -302,7 +302,7 @@ Scenario('News tree shared parents', async ({ I, DT }) => {
     const include = "!INCLUDE(/components/news/news-velocity.jsp, groupIds=24+25)!";
     await I.amOnPageAsync("/apps/news/admin/?include=" + encodeURI(include).replace(/\+/g, "%2B") + "#1");
     I.waitForElement('#SomStromcek [id="24_anchor"].jstree-clicked');
-    I.seeElement('#SomStromcek [id="1_anchor"].jstree-disabled .ti-folders');
+    I.seeElement('#SomStromcek [id="1_anchor"].jstree-disabled .ti-folder-x');
     I.see("Jet portal 4", '#SomStromcek [id="1_anchor"]');
     DT.waitForLoader("newsDataTable");
 
