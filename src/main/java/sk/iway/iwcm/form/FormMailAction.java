@@ -2464,7 +2464,7 @@ public class FormMailAction extends HttpServlet
 	}
 
 	/**
-	 * Sends the visitor notification while optionally disabling every deferred-delivery path.
+	 * Sends the visitor notification using the configured SMTP, EML storage, or deferred-delivery mode.
 	 *
 	 * @param sendUserInfoDocId notification page ID
 	 * @param formId saved form ID

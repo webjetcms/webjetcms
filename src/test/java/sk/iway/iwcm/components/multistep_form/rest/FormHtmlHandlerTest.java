@@ -11,7 +11,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.LinkedHashMap;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -63,22 +62,20 @@ class FormHtmlHandlerTest {
         verifyNoInteractions(prop);
     }
 
-    /** Resolves exact or legacy selections once per field while retaining choices containing commas. */
+    /** Resolves selected and unselected options from exact or legacy values containing commas. */
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
-    void reusesSelectionsAcrossRenderedOptions(boolean exactSelections) {
+    void resolvesSelectedOptionsWithCommaContainingValues(boolean exactSelections) {
         FormHtmlHandler handler = mock(FormHtmlHandler.class, CALLS_REAL_METHODS);
         MockHttpServletRequest request = new MockHttpServletRequest();
         ReflectionTestUtils.setField(handler, "formName", "contact-form");
         ReflectionTestUtils.setField(handler, "formData", Map.of("choices", "Research, development"));
-        ReflectionTestUtils.setField(handler, "selectedValuesByField", new HashMap<>());
         try (MockedStatic<MultistepFormsService> forms = mockStatic(MultistepFormsService.class)) {
             forms.when(() -> MultistepFormsService.getSavedSelectedValues("contact-form", "choices", request))
                 .thenReturn(exactSelections ? new String[] {"Research, development"} : null);
 
             assertTrue((Boolean) ReflectionTestUtils.invokeMethod(handler, "isCheckboxOrRadioSelected", "Research, development", "choices", request));
             assertFalse((Boolean) ReflectionTestUtils.invokeMethod(handler, "isCheckboxOrRadioSelected", "Other", "choices", request));
-            forms.verify(() -> MultistepFormsService.getSavedSelectedValues("contact-form", "choices", request));
         }
     }
 }

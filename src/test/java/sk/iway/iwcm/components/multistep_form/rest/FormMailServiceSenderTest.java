@@ -31,10 +31,10 @@ import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.multistep_form.rest.SaveFormService.FormFiles;
 import sk.iway.iwcm.i18n.Prop;
 
-/** Tests sender selection from notification values without sending an actual email. */
+/** Tests sender selection and audit contents from prepared form data without sending an actual email. */
 class FormMailServiceSenderTest {
 
-    /** Uses ordered notification values for senders, ignores stale session answers, and audits only stored data. */
+    /** Uses prepared form data for the sender and audit, ignoring stored values and stale session answers. */
     @ParameterizedTest
     @CsvSource({
         "true, true, Jane & Doe, jane@example.com",
@@ -42,7 +42,7 @@ class FormMailServiceSenderTest {
         "false, true, Jane & Doe, jane@example.com",
         "false, false, recipient@example.com, recipient@example.com"
     })
-    void resolvesSenderFromAppropriateSubmissionData(boolean encrypted, boolean notificationValuesPresent,
+    void resolvesSenderFromAppropriateSubmissionData(boolean encrypted, boolean formDataPresent,
             String expectedName, String expectedEmail) throws Exception {
         FormSettingsEntity settings = new FormSettingsEntity();
         if (encrypted) settings.setEncryptKey("test-public-key");
@@ -52,11 +52,11 @@ class FormMailServiceSenderTest {
         form.setData(encrypted
             ? "first-name-7~encrypted-first|last-name-2~encrypted-last|email-address-11~encrypted-email"
             : "first-name-7~Stored|last-name-2~Name|email-address-11~stored@example.com");
-        Map<String, String> notificationValues = new LinkedHashMap<>();
-        if (notificationValuesPresent) {
-            notificationValues.put("first-name-7", "Jane &amp;");
-            notificationValues.put("last-name-2", "Doe");
-            notificationValues.put("email-address-11", "jane@example.com");
+        Map<String, String> formData = new LinkedHashMap<>();
+        if (formDataPresent) {
+            formData.put("first-name-7", "Jane &amp;");
+            formData.put("last-name-2", "Doe");
+            formData.put("email-address-11", "jane@example.com");
         }
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter("language", "en");
@@ -79,7 +79,7 @@ class FormMailServiceSenderTest {
             request.getSession().setAttribute(sessionPrefix + "first-name-7", "Other");
             request.getSession().setAttribute(sessionPrefix + "email-address-11", "other@example.com");
 
-            new FormMailService().sendMail(form, notificationValues, settings, "recipient@example.com", "Contact",
+            new FormMailService().sendMail(form, formData, settings, "recipient@example.com", "Contact",
                 new FormFiles(), true, "", new StringBuilder("Submitted form"), request);
 
             ArgumentCaptor<Message> sent = ArgumentCaptor.forClass(Message.class);
@@ -91,8 +91,15 @@ class FormMailServiceSenderTest {
             ArgumentCaptor<String> audit = ArgumentCaptor.forClass(String.class);
             adminlog.verify(() -> Adminlog.add(eq(Adminlog.TYPE_MULTISTEP_FORM_USERS), audit.capture(), eq(1L), eq(42L)), atLeastOnce());
             String parameters = audit.getValue().split("form parameters: ")[1].split("formName:")[0];
-            assertTrue(parameters.contains(encrypted ? "encrypted-first" : "Stored"));
-            assertFalse(parameters.contains("Jane"));
+            if (formDataPresent) {
+                assertTrue(parameters.contains("first-name-7: Jane &amp;"));
+                assertTrue(parameters.contains("last-name-2: Doe"));
+                assertTrue(parameters.contains("email-address-11: jane@example.com"));
+            } else {
+                assertTrue(parameters.isBlank());
+            }
+            assertFalse(parameters.contains(encrypted ? "encrypted-first" : "Stored"));
+            assertFalse(parameters.contains("other@example.com"));
         }
     }
 }

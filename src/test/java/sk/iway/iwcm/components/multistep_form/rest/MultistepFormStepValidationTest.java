@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
@@ -154,7 +155,7 @@ class MultistepFormStepValidationTest {
             JSONObject response = new JSONObject();
             service.saveFormStep("contact-form", 2L, request, response);
             draft = service.getDraftStepData("contact-form", 2L, request).first;
-            if (checkboxInCurrentStep == false) verify(session).getAttribute(sessionKey + "_invoice");
+            if (checkboxInCurrentStep == false) verify(session, atLeastOnce()).getAttribute(sessionKey + "_invoice");
 
             if (shouldProceed) {
                 assertFalse(response.has("fieldErrors"));

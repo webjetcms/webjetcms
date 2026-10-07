@@ -40,8 +40,6 @@ public class FormConditionsHandler {
 
     private String formName;
     private HttpServletRequest request;
-    // Each handler belongs to one validation or render operation; never share values across requests.
-    private final Map<String, String> sessionValues = new HashMap<>();
 
     private static String getConditionsCacheKey(Long formItemId, ConditionType conditionType, Integer domainId) {
         return CACHE_KEY_PREFIX + domainId + "." + formItemId + "." + conditionType.name();
@@ -165,12 +163,10 @@ public class FormConditionsHandler {
     }
 
 
-    /** Reads each fallback answer once while keeping current submitted values outside the cache. */
+    /** Reads a saved answer from the HTTP session, returning an empty string if it is missing. */
     private String getSessionValue(String fieldId, String sessionPrefix) {
-        return sessionValues.computeIfAbsent(fieldId, key -> {
-            Object value = request.getSession().getAttribute(sessionPrefix + key);
-            return value == null ? "" : value.toString();
-        });
+        Object value = request.getSession().getAttribute(sessionPrefix + fieldId);
+        return value == null ? "" : value.toString();
     }
 
     /**

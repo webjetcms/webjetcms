@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -83,7 +82,6 @@ public class FormHtmlHandler {
     private String formAddClasses;
     private String formCss;
     private Map<String, String> formData;
-    private final Map<String, String[]> selectedValuesByField = new HashMap<>();
 
     private String emailTextBefore;
     private String emailTextAfter;
@@ -410,7 +408,6 @@ public class FormHtmlHandler {
     public final void setFormHtml(FormsEntity form, Map<String, String> formData, HttpServletRequest request, Integer docId) {
         // Check that provided form has same name as formName provided in constructor
         if(form.getFormName().equals(this.formName) == false) throw new IllegalStateException("Provided form has different name taht provided in constructor.");
-        selectedValuesByField.clear();
 
         StringBuilder formHtml = new StringBuilder("");
 
@@ -747,11 +744,7 @@ public class FormHtmlHandler {
      * @return {@code true} when the value is selected
      */
     private boolean isCheckboxOrRadioSelected(String inputValue, String itemFormId, HttpServletRequest request) {
-        // Cache missing arrays too, so legacy selections are loaded only once per field and render.
-        if (selectedValuesByField.containsKey(itemFormId) == false) {
-            selectedValuesByField.put(itemFormId, MultistepFormsService.getSavedSelectedValues(this.formName, itemFormId, request));
-        }
-        String[] selectedValues = selectedValuesByField.get(itemFormId);
+        String[] selectedValues = MultistepFormsService.getSavedSelectedValues(this.formName, itemFormId, request);
         if(selectedValues != null) return Arrays.asList(selectedValues).contains(inputValue);
 
         String values = this.formData.get(itemFormId);
