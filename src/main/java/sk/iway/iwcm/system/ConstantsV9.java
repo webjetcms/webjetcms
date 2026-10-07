@@ -293,6 +293,7 @@ public class ConstantsV9 {
 		/* RAG - SEMANTIC SEARCH */
 		Constants.setString("ragSemanticSearchMinSimilarity", "0.2", Constants.MOD_RAG, "Minimálna hodnota similarity pre výsledky sémantického vyhľadávania. Ak je hodnota mimo intervalu 0-1, použije sa najbližšia hranica.");
 		Constants.setInt("ragSemanticSearchMinResults", 3, Constants.MOD_RAG, "Minimálny počet výsledkov sémantického vyhľadávania. Ak ich je po filtrovaní menej, doplnia sa podľa najvyššej similarity.");
+		Constants.setString("ragRerankLexicalWeight", "0.15", Constants.MOD_RAG, "Váha textovej zhody pri lokálnom preusporiadaní výsledkov. Váha pôvodného skóre vyhľadávania je 1 mínus táto hodnota: 0.15 nastaví pomer 85/15. Hodnoty sa obmedzia na interval 0-1; pri neplatných hodnotách, NaN alebo nekonečne sa použije 0.15. Nula zachová iba pôvodné skóre vyhľadávania. Nastavenie ovplyvňuje výsledky vyhľadávania aj RAG kontext bez potreby opätovného indexovania.");
 
 		/* RAG - HYBRID */
 		Constants.setBoolean("ragHybridSearchEnabled", true, Constants.MOD_RAG, "Zapne hybridné vyhľadávanie nad rag_embedding_chunks kombinujúce vektorové a fulltext výsledky.");

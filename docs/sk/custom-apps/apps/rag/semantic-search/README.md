@@ -7,6 +7,7 @@ Sémantické vyhľadávanie umožňuje návštevníkom nájsť relevantné strá
 Nad rovnakým indexom je možné použiť aj:
 
 - **hybridné vyhľadávanie** - kombináciu vektorového vyhľadávania a fulltextu nad textom chunkov,
+- **reranking** - dodatočné zoradenie nájdených chunkov podľa ich relevantnosti pre otázku,
 - **RAG odpoveď** - AI odpoveď vygenerovanú iba z nájdeného kontextu.
 
 ## Ako to funguje
@@ -47,8 +48,9 @@ Keď návštevník zadá vyhľadávací dotaz:
 3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) vygeneruje embedding dotazu podľa asistenta `RAG-EMB-SEARCH` s typom vstupu `QUERY` a vyhľadá najbližšie chunky s rovnakým poskytovateľom a modelom v zvolenej vektorovej databáze. Pri indexovaní sa používa typ `DOCUMENT`; poskytovateľ tak môže pre oba typy aplikovať rozdielne prefixy požadované modelom.
 4. Výsledky sa obmedzia podľa domény, jazyka, typu entity a podľa priečinkov zvolených v aplikácii **Vyhľadávanie**.
 5. Ak je povolený hybridný režim, spustí sa aj fulltext nad `rag_embedding_chunks.chunk_text` a výsledky sa spoja cez `RRF` (Reciprocal Rank Fusion).
-6. Výsledné chunky sa agregujú na dokumenty a dokumenty sa zobrazia rovnakým spôsobom ako pri štandardnom vyhľadávaní.
-7. Ak je povolená RAG odpoveď, z nájdených chunkov sa ešte pripraví kontext pre AI odpoveď.
+6. Vylúčia sa nedostupné, neprehľadávateľné a interné stránky aj zdroje bez oprávnenia používateľa.
+7. Lokálny reranker podľa textovej zhody upraví poradie výsledkov aj výber kontextu pre RAG odpoveď.
+8. Dokumenty sa zobrazia rovnakým spôsobom ako pri štandardnom vyhľadávaní. Ak je povolená RAG odpoveď, z vybraných chunkov sa pripraví kontext pre AI odpoveď.
 
 ### Rozdelenie zodpovedností medzi WebJET CMS a `webjet-ai`
 
@@ -223,9 +225,25 @@ flowchart TD
 	FR --> RRF
 
 	RRF --> S[Zoradenie chunkov podľa výsledného skóre]
-	S --> D[Agregácia na dokumenty]
+	S --> A[Kontrola prístupu k zdrojom]
+	A --> R[Lokálny reranking podľa textu]
+	R --> D[Agregácia na dokumenty]
 	D --> O[Finálny zoznam výsledkov]
 ```
+
+### Reranking výsledkov
+
+[RerankerService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/RerankerService.java) upraví poradie výsledkov aj výber kontextu pre RAG podľa zhody otázky s názvom, Markdown hierarchiou a textom. Zohľadňuje zhodu slov, ich blízkosť a vyššiu váhu menej bežných slov. Nevyžaduje ďalšie AI volanie ani opätovné indexovanie.
+
+Predvolene kombinuje **85 % pôvodného skóre a 15 % textovej zhody**:
+
+| Premenná | Predvolená hodnota | Popis |
+| --- | --- | --- |
+| `ragRerankLexicalWeight` | `0.15` | Váha textovej zhody v rozsahu `0`–`1`. Hodnota `0` použije iba pôvodné skóre, `1` iba textovú zhodu. Zmena sa prejaví bez reštartu. |
+
+Nadpisový bonus používa iba názov zdroja a uložený prefix Markdown hierarchie. Nadpisy v tele chunku sa hodnotia ako bežný text, aby sa za nadpisy nepovažovali komentáre v rozdelených ukážkach kódu.
+
+Prahy similarity a minimálny počet výsledkov zostávajú zachované; filtrovanie používa pôvodné skóre. Pri príprave RAG kontextu sa navyše vynechajú plne opakované pasáže rovnakého zdroja.
 
 ## RAG odpoveď vo vyhľadávaní
 
@@ -250,11 +268,11 @@ V aplikácii **Vyhľadávanie** možno tieto hodnoty prepísať lokálne. Prázd
 
 [RagChunkPostProcessor](../../../../../../src/main/java/sk/iway/iwcm/rag/search/RagChunkPostProcessor.java) pripravuje kontext pre model:
 
-1. zoradí chunky podľa similarity a vyberie top K,
-2. použije adaptívny prah similarity, ale nikdy nevyhodí všetko, ak existuje aspoň jeden použiteľný výsledok,
+1. zoradí chunky podľa lokálneho rerank skóre, ak je dostupné, inak podľa similarity, vynechá plne opakované pasáže rovnakého zdroja a vyberie top K,
+2. použije adaptívny prah pôvodnej similarity a ponechá aspoň najlepší výsledok,
 3. zoskupí chunky podľa entity,
 4. zlúči susedné chunky a odstráni duplicitný text z prekrytia,
-5. obmedzí počet blokov a celkový počet znakov.
+5. zoradí bloky podľa najlepšieho rerank skóre alebo similarity a obmedzí počet blokov a celkový počet znakov.
 
 Výsledkom sú objekty [MergedContextBlock](../../../../../../src/main/java/sk/iway/iwcm/rag/search/MergedContextBlock.java), ktoré sa odosielajú modelu ako JSON.
 

@@ -12,13 +12,13 @@ import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
  * Post-processing pipeline for RAG retrieved chunks.
  *
  * Steps:
- * 1. Select top-K chunks by similarity, then apply soft minimum similarity filter
+ * 1. Select distinct top-K chunks by ranking score, then apply soft minimum similarity filter
  * 2. Sort by entityId, then chunkIndex
  * 3. Group by entity type and entity ID
  * 4. Merge adjacent chunks within each group (removing sliding-window overlap)
  * 5. Limit output to maxBlocks / maxCharacters
  *
- * Similarity is used for ranking and soft filtering, never as hard truth.
+ * Local ranking controls order; original similarity controls soft filtering, never as hard truth.
  * The pipeline never returns zero chunks when decent top results exist.
  */
 public class RagChunkPostProcessor {
@@ -60,7 +60,7 @@ public class RagChunkPostProcessor {
             return List.of();
         }
 
-        // 1. Select top-K by similarity, then apply soft similarity filter
+        // 1. Select distinct top-K by ranking score, then apply soft similarity filter
         List<VectorSearchResult> filtered = selectAndFilter(chunks);
         if (filtered.isEmpty()) {
             return List.of();
@@ -78,23 +78,24 @@ public class RagChunkPostProcessor {
             merged.addAll(mergeAdjacentChunks(entityChunks));
         }
 
-        // 5. Sort by maxSimilarity descending, then limit
-        merged.sort(Comparator.comparingDouble(MergedContextBlock::getMaxSimilarity).reversed());
+        // 5. Preserve the selected ranking when enforcing the context budget.
+        merged.sort(Comparator.comparingDouble(MergedContextBlock::getRankingScore).reversed());
 
         return limitBlocks(merged);
     }
 
     /**
-     * Select top-K chunks by similarity first, then apply an adaptive similarity threshold.
+     * Select distinct top-K chunks by ranking score, then apply an adaptive retrieval similarity threshold.
      *
      * Strategy:
-     * 1. Sort all chunks by similarity descending and take top K.
+     * 1. Sort all chunks by ranking score, skip fully repeated passages from the same source, and take top K.
      * 2. Compute an adaptive threshold based on the number of available chunks:
      *    - Many chunks available → tighter threshold (be selective, less noise)
      *    - Few chunks available → looser threshold (keep more info)
      *    The threshold scales linearly between minSimilarity * 0.6 (for 1 chunk)
      *    and minSimilarity * 1.2 (for topK or more chunks).
      * 3. Never return zero — always keep at least the single best result.
+     * Local reranking does not bypass the original similarity threshold.
      *
      * @param chunks raw chunks to rank, possibly null or empty
      * @return top-ranked chunks above the adaptive threshold, retaining the best nonempty candidate
@@ -104,12 +105,30 @@ public class RagChunkPostProcessor {
             return List.of();
         }
 
-        // Sort by similarity descending and take top K
+        // Sort by the effective ranking score and take top K.
         List<VectorSearchResult> ranked = new ArrayList<>(chunks);
-        ranked.sort(Comparator.comparingDouble(this::getSimilarity).reversed());
+        ranked.sort(Comparator.comparingDouble(VectorSearchResult::getRankingScore).reversed());
 
-        int limit = Math.min(topK, ranked.size());
-        List<VectorSearchResult> topChunks = new ArrayList<>(ranked.subList(0, limit));
+        List<VectorSearchResult> topChunks = new ArrayList<>();
+        List<String> selectedTexts = new ArrayList<>();
+        for (VectorSearchResult candidate : ranked) {
+            String text = normalizeWhitespace(candidate.getChunkText());
+            boolean repeated = false;
+            for (int i = 0; i < topChunks.size() && text.isEmpty() == false; i++) {
+                VectorSearchResult selected = topChunks.get(i);
+                if (candidate.getEntityId() != null && java.util.Objects.equals(selected.getEntityId(), candidate.getEntityId())
+                        && java.util.Objects.equals(selected.getEntityType(), candidate.getEntityType())
+                        && getSimilarity(selected) >= getSimilarity(candidate)
+                        && (" " + selectedTexts.get(i) + " ").contains(" " + text + " ")) {
+                    repeated = true;
+                    break;
+                }
+            }
+            if (repeated) continue;
+            topChunks.add(candidate);
+            selectedTexts.add(text);
+            if (topChunks.size() == topK) break;
+        }
 
         // Adaptive threshold: scale based on how many chunks we have
         double adaptiveThreshold = computeAdaptiveThreshold(topChunks.size());
@@ -256,6 +275,12 @@ public class RagChunkPostProcessor {
         // Finalize last block
         blocks.add(buildBlock(first, startIndex, endIndex,
                 textBuilder.toString(), maxSim, sumSim, count));
+
+        for (MergedContextBlock block : blocks) {
+            block.setRerankScore(entityChunks.stream()
+                .filter(chunk -> getChunkIndex(chunk) >= block.getStartChunkIndex() && getChunkIndex(chunk) <= block.getEndChunkIndex())
+                .map(VectorSearchResult::getRerankScore).filter(java.util.Objects::nonNull).max(Double::compareTo).orElse(null));
+        }
 
         return blocks;
     }
@@ -408,7 +433,7 @@ public class RagChunkPostProcessor {
      * @return copied block with the supplied text
      */
     private MergedContextBlock copyWithText(MergedContextBlock source, String text) {
-        return new MergedContextBlock(
+        MergedContextBlock copy = new MergedContextBlock(
             source.getEntityType(),
             source.getEntityId(),
             source.getStartChunkIndex(),
@@ -420,6 +445,8 @@ public class RagChunkPostProcessor {
             source.getSourceTitle(),
             source.getSourceUrl()
         );
+        copy.setRerankScore(source.getRerankScore());
+        return copy;
     }
 
     /**

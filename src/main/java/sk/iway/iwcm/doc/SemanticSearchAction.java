@@ -140,7 +140,7 @@ public class SemanticSearchAction {
 				sd.setDocId(loaded.getDocId());
 				sd.setTitle(loaded.getTitle());
 				sd.setVirtualPath(loaded.getVirtualPath());
-				sd.setSimilarity(sr.getSimilarity());
+				sd.setSimilarity(sr.getRankingScore());
 
 				if (group != null) {
 					sd.setLink(groupsDB.getNavbar(group.getGroupId()));

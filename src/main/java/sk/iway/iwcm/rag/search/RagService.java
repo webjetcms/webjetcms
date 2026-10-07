@@ -145,6 +145,7 @@ public class RagService {
             chunk.put("endChunkIndex", block.getEndChunkIndex());
             chunk.put("maxSimilarity", block.getMaxSimilarity());
             chunk.put("averageSimilarity", block.getAverageSimilarity());
+            if (block.getRerankScore() != null) chunk.put("rerankScore", block.getRerankScore());
             chunk.put("sourceChunkCount", block.getSourceChunkCount());
             chunk.put("text", block.getText());
 

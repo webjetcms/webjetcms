@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,6 +23,9 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
 import sk.iway.iwcm.rag.embedding.EmbeddingService;
 import sk.iway.iwcm.rag.service.RagEmbeddingStatService;
@@ -67,7 +71,7 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
                     assertSame(caller, SetCharacterEncodingFilter.getCurrentRequestBean());
                     return new EmbeddingBatchResult(List.of(new float[] {1f, 2f}), 2);
                 });
-            SemanticSearchService service = new SemanticSearchService(embeddings, vectors, statistics, mock(RagService.class));
+            SemanticSearchService service = new SemanticSearchService(embeddings, vectors, statistics, mock(RagService.class), null);
             Map<String, Object> filters = Map.of("sourceRoot", "/docs/webjetcms");
 
             service.searchChunks("query", 7, "sk", 10, RagEntityType.MARKDOWN, filters, request);
@@ -92,7 +96,7 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
         Constants.setBoolean("ragHybridSearchEnabled", false);
         Constants.setBoolean("ragAnswerAllowed", false);
 
-        try {
+        try (var documents = mockStatic(DocDB.class); var groups = mockStatic(GroupsDB.class)) {
             EmbeddingService embeddingService = mock(EmbeddingService.class);
             VectorStore vectorStore = mock(VectorStore.class);
             RagEmbeddingStatService statService = mock(RagEmbeddingStatService.class);
@@ -106,10 +110,35 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
             when(statService.getSearchAssistant()).thenReturn(assistant);
             when(embeddingService.embedWithUsage(List.of("query"), assistant, request, EmbeddingInputType.QUERY))
                 .thenReturn(new EmbeddingBatchResult(List.of(new float[] {1f, 2f}), 3));
+            DocDB docDb = mock(DocDB.class);
+            documents.when(DocDB::getInstance).thenReturn(docDb);
+            groups.when(GroupsDB::getInstance).thenReturn(mock(GroupsDB.class));
+            for (int id = 1; id <= 2; id++) {
+                DocDetails doc = new DocDetails();
+                doc.setAvailable(true);
+                doc.setSearchable(true);
+                when(docDb.getBasicDocDetails(id, false)).thenReturn(doc);
+                boolean allowed = id == 1;
+                documents.when(() -> DocDB.canAccess(doc, null, true)).thenReturn(allowed);
+            }
+            var hits = List.of(
+                new VectorSearchResult(1L, "document", 1L, 0, "Answer", .75),
+                new VectorSearchResult(2L, "document", 1L, 1, "Overview", .8),
+                new VectorSearchResult(3L, "document", 2L, 0, "Denied", .9));
+            when(vectorStore.search(any(), any(), any(), any(), any(), any(), anyInt(), any())).thenReturn(hits);
+            RerankerService reranker = mock(RerankerService.class);
+            hits.get(0).setRerankScore(.7875);
+            hits.get(1).setRerankScore(.68);
+            when(reranker.rerank("query", hits.subList(0, 2))).thenReturn(hits.subList(0, 2));
+            SemanticSearchService service = new SemanticSearchService(embeddingService, vectorStore, statService, mock(RagService.class), reranker);
 
-            SemanticSearchService service = new SemanticSearchService(embeddingService, vectorStore, statService, mock(RagService.class));
+            var results = service.search("query", 1, "sk", 10, RagEntityType.DOCUMENT, request);
 
-            service.search("query", 1, "sk", 10, RagEntityType.DOCUMENT, request);
+            assertEquals(List.of(1L), results.stream().map(SemanticSearchResult::getDocId).toList());
+            assertEquals(.8, results.get(0).getSimilarity());
+            assertEquals(.7875, results.get(0).getRankingScore());
+            assertEquals(results, service.filterResultsBySimilarity(results, .79, 0));
+            verify(reranker).rerank("query", hits.subList(0, 2));
 
             verify(embeddingService).embedWithUsage(List.of("query"), assistant, request, EmbeddingInputType.QUERY);
             verify(vectorStore).search(
@@ -133,7 +162,7 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
      */
     @Test
     void filterResultsBySimilarityAddsFallbackWhenThresholdKeepsTooFew() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null, null);
+        SemanticSearchService service = new SemanticSearchService(null, null, null, null, null);
 
         List<SemanticSearchResult> results = List.of(
             new SemanticSearchResult(1L, 0.90),
@@ -155,7 +184,7 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
      */
     @Test
     void filterResultsBySimilarityKeepsAllStrongResults() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null, null);
+        SemanticSearchService service = new SemanticSearchService(null, null, null, null, null);
 
         List<SemanticSearchResult> results = List.of(
             new SemanticSearchResult(1L, 0.95),
@@ -176,7 +205,7 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
      */
     @Test
     void filterResultsBySimilarityUsesConfiguredFloorWhenTopSimilarityIsLow() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null, null);
+        SemanticSearchService service = new SemanticSearchService(null, null, null, null, null);
 
         List<SemanticSearchResult> results = List.of(
             new SemanticSearchResult(1L, 0.25),
@@ -198,7 +227,7 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
      */
     @Test
     void filterResultsBySimilarityReturnsEmptyForEmptyInput() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null, null);
+        SemanticSearchService service = new SemanticSearchService(null, null, null, null, null);
 
         List<SemanticSearchResult> filtered = service.filterResultsBySimilarity(List.of(), 0.2d, 3);
 
@@ -210,7 +239,7 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
      */
     @Test
     void mergeChunkResultsWithRrfBoostsChunksPresentInBothSources() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null, null);
+        SemanticSearchService service = new SemanticSearchService(null, null, null, null, null);
 
         List<VectorSearchResult> vectorResults = List.of(
             new VectorSearchResult(1L, "document", 10L, 0, "vector-1", 0.90),

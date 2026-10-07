@@ -96,6 +96,7 @@ public class MarkdownSearchService {
         List<VectorSearchResult> chunks = semanticSearchService.searchChunks(normalizedQuery, domainId,
             normalizedLanguage, MAX_RESULTS, RagEntityType.MARKDOWN, filters, request);
         List<VectorSearchResult> authorized = authorizeSources(chunks, roots, searchPaths, normalizedLanguage, user, request);
+        authorized = semanticSearchService.rerankChunks(normalizedQuery, authorized);
         List<SearchResult> results;
         try (DomainRequestBeanScope ignored = DomainRequestBeanScope.open(null)) {
             results = aggregateResults(authorized);
@@ -203,19 +204,18 @@ public class MarkdownSearchService {
      */
     private List<SearchResult> aggregateResults(List<VectorSearchResult> chunks) {
         Map<Long, VectorSearchResult> bestChunks = new LinkedHashMap<>();
-        chunks.stream().filter(chunk -> chunk.getSimilarity() != null)
-            .sorted(Comparator.comparing(VectorSearchResult::getSimilarity).reversed())
+        chunks.stream().filter(chunk -> chunk.getSimilarity() != null || chunk.getRerankScore() != null)
+            .sorted(Comparator.comparingDouble(VectorSearchResult::getRankingScore).reversed())
             .forEach(chunk -> bestChunks.putIfAbsent(chunk.getEntityId(), chunk));
 
-        List<SemanticSearchResult> scores = bestChunks.values().stream()
-            .map(chunk -> new SemanticSearchResult(chunk.getEntityId(), chunk.getSimilarity())).toList();
+        List<SemanticSearchResult> scores = semanticSearchService.aggregateBySourceBestScore(chunks);
         return semanticSearchService.filterResultsBySimilarity(scores,
             RagSettingsService.getSemanticMinimumSimilarity(null), RagSettingsService.getSemanticMinimumResults(null))
             .stream().limit(MAX_RESULTS).map(result -> {
                 VectorSearchResult chunk = bestChunks.get(result.getDocId());
                 String snippet = Tools.getStringValue(chunk.getChunkText(), "").replace("\r\n", "\n").replace('\r', '\n').strip();
                 if (snippet.length() > MAX_SNIPPET_LENGTH) snippet = snippet.substring(0, MAX_SNIPPET_LENGTH) + "…";
-                return new SearchResult(chunk.getSourceTitle(), chunk.getSourceUrl(), chunk.getSourcePath(), snippet, chunk.getSimilarity());
+                return new SearchResult(chunk.getSourceTitle(), chunk.getSourceUrl(), chunk.getSourcePath(), snippet, chunk.getRankingScore());
             }).toList();
     }
 
@@ -248,7 +248,7 @@ public class MarkdownSearchService {
      * @param url viewer URL, or {@code null} for filesystem sources
      * @param sourcePath full logical path including the configured root
      * @param snippet bounded Markdown excerpt from the best matching chunk, retaining line breaks and indentation
-     * @param score best chunk similarity or fused ranking score
+     * @param score best chunk rerank score when available, otherwise its retrieval score
      */
     public record SearchResult(String title, String url, String sourcePath, String snippet, Double score) {}
 

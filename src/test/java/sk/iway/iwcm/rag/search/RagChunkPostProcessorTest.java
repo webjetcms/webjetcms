@@ -12,6 +12,28 @@ import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
 
 class RagChunkPostProcessorTest {
 
+    /** Ranking survives merging and truncation; duplicates are skipped only when retrieval filtering remains safe. */
+    @Test
+    void preservesRankingAndFiltersRepeatedContext() {
+        var overview = chunk(1L, 0, "Overview", .81);
+        var first = chunk(2L, 0, "Specific answer. Shared details.", .80);
+        var next = chunk(2L, 1, "Shared details. New setting.", .78);
+        var duplicate = chunk(2L, 2, "Specific answer.", .77);
+        overview.setRerankScore(.69);
+        first.setRerankScore(.82);
+        next.setRerankScore(.80);
+        duplicate.setRerankScore(.81);
+        var chunks = List.of(overview, first, next, duplicate);
+        var processor = new RagChunkPostProcessor(3, .5, 1, 1, 12, 1000);
+
+        assertEquals(List.of(first, next, overview), processor.selectAndFilter(chunks));
+        var block = processor.process(chunks).get(0);
+        assertEquals(2L, block.getEntityId());
+        assertEquals(.82, block.getRerankScore());
+        first.setSimilarity(.1);
+        assertEquals(List.of(duplicate, next), processor.selectAndFilter(chunks));
+    }
+
     /**
      * Verifies that adaptive filtering keeps the best top-K chunks above threshold.
      */

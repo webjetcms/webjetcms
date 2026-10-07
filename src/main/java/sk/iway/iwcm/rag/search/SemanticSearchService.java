@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -16,11 +17,14 @@ import com.webjetcms.ai.EmbeddingInputType;
 
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Adminlog;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageParams;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.providers.ProviderCallException;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.rag.embedding.EmbeddingBatchResult;
@@ -33,6 +37,7 @@ import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
 import sk.iway.iwcm.rag.vectorstore.VectorStore;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * Provides shared semantic and hybrid retrieval for document and Markdown embeddings.
@@ -53,14 +58,17 @@ public class SemanticSearchService {
     private final RagEmbeddingStatService ragEmbeddingStatService;
 
     private final RagService ragService;
+    private final RerankerService rerankerService;
 
     @Autowired
-    public SemanticSearchService(EmbeddingService embeddingService, VectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService, RagService ragService) {
+    public SemanticSearchService(EmbeddingService embeddingService, VectorStore vectorStore, RagEmbeddingStatService ragEmbeddingStatService,
+            RagService ragService, RerankerService rerankerService) {
         this.embeddingService = embeddingService;
         this.vectorStore = vectorStore;
         this.ragEmbeddingStatService = ragEmbeddingStatService;
 
         this.ragService = ragService;
+        this.rerankerService = rerankerService;
     }
 
     /**
@@ -116,11 +124,12 @@ public class SemanticSearchService {
         }
 
         List<VectorSearchResult> chunkResults = searchChunks(query, domainId, language, maxResults, entityType, bonusParams, request);
+        chunkResults = rerankChunks(query, authorizeDocuments(chunkResults, request));
         PageParams pageParams = new PageParams(request);
         double minimumSimilarity = RagSettingsService.getSemanticMinimumSimilarity(pageParams);
         int minimumResultsForCall = Math.min(Math.max(0, RagSettingsService.getSemanticMinimumResults(pageParams)), Math.max(0, maxResults));
 
-        // Generate answers from raw vector chunks because the answer post-processor has its own context merge rules.
+        // The answer post-processor applies context merging to authorized, optionally reranked chunks.
         String answer = null;
         if(RagSettingsService.isAnswerAllowed(pageParams)) {
             answer = ragService.answerQuestion(query, domainId, chunkResults, request);
@@ -128,11 +137,38 @@ public class SemanticSearchService {
         }
         request.setAttribute("ragAnswer", Tools.isEmpty(answer) ? null : answer);
 
-        List<SemanticSearchResult> sortedResults = aggregateByDocumentBestScore(chunkResults);
+        List<SemanticSearchResult> sortedResults = aggregateBySourceBestScore(chunkResults);
 
         return filterResultsBySimilarity(sortedResults, minimumSimilarity, minimumResultsForCall).stream()
             .limit(maxResults)
             .toList();
+    }
+
+    /**
+     * Reranks authorized chunks before source aggregation and answer context selection.
+     *
+     * @param query user question
+     * @param chunks authorized retrieval candidates
+     * @return all candidates ordered by retrieval score and local text matches
+     */
+    public List<VectorSearchResult> rerankChunks(String query, List<VectorSearchResult> chunks) {
+        return rerankerService.rerank(query, chunks);
+    }
+
+    /** Excludes unavailable, internal, and inaccessible pages before their text reaches an AI provider. */
+    List<VectorSearchResult> authorizeDocuments(List<VectorSearchResult> chunks, HttpServletRequest request) {
+        List<VectorSearchResult> authorized = new ArrayList<>();
+        Identity user = UsersDB.getCurrentUser(request);
+        for (VectorSearchResult chunk : chunks) {
+            if ("document".equalsIgnoreCase(chunk.getEntityType()) == false || chunk.getEntityId() == null) continue;
+            DocDetails doc = DocDB.getInstance().getBasicDocDetails(chunk.getEntityId().intValue(), false);
+            if (doc == null || doc.isAvailable() == false || doc.isSearchable() == false) continue;
+            GroupDetails group = GroupsDB.getInstance().getGroup(doc.getGroupId());
+            if ((group != null && group.isInternal()) || DocDB.canAccess(doc, user, true) == false) continue;
+            chunk.setSourceTitle(doc.getTitle());
+            authorized.add(chunk);
+        }
+        return authorized;
     }
 
     /**
@@ -397,32 +433,25 @@ public class SemanticSearchService {
     }
 
     /**
-     * Aggregates document chunks by entity ID and retains each document's highest similarity.
+     * Aggregates one source type by entity ID, preserving independent best retrieval and ranking scores.
      *
      * @param chunkResults chunk-level search results
-     * @return document-level results sorted by descending best similarity
+     * @return source-level results sorted by descending best ranking score
      */
-    private List<SemanticSearchResult> aggregateByDocumentBestScore(List<VectorSearchResult> chunkResults) {
-        Map<Long, SemanticSearchResult> docMap = new HashMap<>();
+    List<SemanticSearchResult> aggregateBySourceBestScore(List<VectorSearchResult> chunkResults) {
+        Map<Long, SemanticSearchResult> docMap = new LinkedHashMap<>();
         for (VectorSearchResult chunk : chunkResults) {
-            if ("document".equalsIgnoreCase(chunk.getEntityType()) == false) continue;
-
-            docMap.compute(chunk.getEntityId(), (id, existing) -> {
-                if (existing == null) {
-                    return new SemanticSearchResult(chunk.getEntityId(), chunk.getSimilarity());
-                }
-
-                Double currentSimilarity = chunk.getSimilarity();
-                Double existingSimilarity = existing.getSimilarity();
-                if (currentSimilarity != null && (existingSimilarity == null || currentSimilarity.doubleValue() > existingSimilarity.doubleValue())) {
-                    existing.setSimilarity(currentSimilarity);
-                }
-                return existing;
-            });
+            SemanticSearchResult result = docMap.computeIfAbsent(chunk.getEntityId(), id -> new SemanticSearchResult(chunk));
+            if (chunk.getSimilarity() != null && (result.getSimilarity() == null || chunk.getSimilarity() > result.getSimilarity())) {
+                result.setSimilarity(chunk.getSimilarity());
+            }
+            if (chunk.getRerankScore() != null && (result.getRerankScore() == null || chunk.getRerankScore() > result.getRerankScore())) {
+                result.setRerankScore(chunk.getRerankScore());
+            }
         }
 
         return docMap.values().stream()
-            .sorted(Comparator.comparing(SemanticSearchResult::getSimilarity, Comparator.nullsLast(Double::compareTo)).reversed())
+            .sorted(Comparator.comparingDouble(SemanticSearchResult::getRankingScore).reversed())
             .toList();
     }
 
@@ -431,8 +460,9 @@ public class SemanticSearchService {
      *
      * Input order is preserved. Results with a similarity value are retained until the requested minimum count is
      * reached; subsequent results must meet the effective threshold. Results without a similarity value are omitted.
+     * Local reranking changes order, while thresholds still use original retrieval similarities.
      *
-     * @param sortedResults results ordered by descending similarity
+     * @param sortedResults results ordered by descending ranking score
      * @param minimumSimilarity absolute similarity floor, clamped to the range {@code 0.0}–{@code 1.0}
      * @param minimumResultCount requested minimum number of non-null-similarity results
      * @return filtered results in their original order
@@ -445,8 +475,8 @@ public class SemanticSearchService {
         int minCount = Math.max(0, minimumResultCount);
         double similarityFloor = Math.max(0d, Math.min(1d, minimumSimilarity));
 
-        Double topSimilarityValue = sortedResults.get(0).getSimilarity();
-        double topSimilarity = topSimilarityValue == null ? 0d : topSimilarityValue.doubleValue();
+        double topSimilarity = sortedResults.stream().map(SemanticSearchResult::getSimilarity)
+            .filter(java.util.Objects::nonNull).mapToDouble(Double::doubleValue).max().orElse(0d);
         double adaptiveSimilarityThreshold = Math.max(similarityFloor, topSimilarity * ADAPTIVE_THRESHOLD_TOP_RATIO);
 
         List<SemanticSearchResult> filteredResults = new ArrayList<>();

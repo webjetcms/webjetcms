@@ -32,7 +32,8 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 
 /** Covers the access gate and the authorized Markdown result/answer path. */
 class MarkdownSearchServiceTest extends BaseWebjetTest {
-    private final SemanticSearchService semanticSearch = spy(new SemanticSearchService(null, null, null, null));
+    private final RerankerService reranker = mock(RerankerService.class);
+    private final SemanticSearchService semanticSearch = spy(new SemanticSearchService(null, null, null, null, reranker));
     private final EmbeddingChunkRepository repository = mock(EmbeddingChunkRepository.class);
     private final RagService ragService = mock(RagService.class);
     private final MockHttpServletRequest request = new MockHttpServletRequest();
@@ -44,6 +45,7 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
 
     @BeforeEach
     void configureDocumentation() {
+        when(reranker.rerank(anyString(), anyList())).thenAnswer(call -> call.getArgument(1));
         Constants.setString("ragMarkdownFolders", "/docs/webjetcms");
         Constants.setBoolean("ragAnswerAllowed", true);
         Constants.setBoolean("ragMarkdownSearchRequireLogin", false);
@@ -96,7 +98,7 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
         assertEquals(markdown.replace("\r\n", "\n").substring(0, 350) + "…", response.results().get(0).snippet());
     }
 
-    /** Searches public and filesystem roots anonymously while excluding stale, blocked, and other-language sources. */
+    /** Reranks accessible public and filesystem sources while excluding stale, blocked, and other-language sources. */
     @Test
     void searchesAccessibleRootsInSelectedLanguage() {
         Constants.setString("ragMarkdownFolders", "/docs/webjetcms,/docs/client,/admin/docs/private,file:/docs");
@@ -113,12 +115,17 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
         Map<String, Object> filters = Map.of("sourceRoots", List.of("/docs/webjetcms", "/docs/client", "file:/docs"));
         doReturn(hits).when(semanticSearch).searchChunks("query", 7, "sk", 10, RagEntityType.MARKDOWN, filters, request);
         when(repository.findAllById(any())).thenReturn(sources);
+        hits.get(5).setRerankScore(.99);
+        List<VectorSearchResult> ranked = List.of(hits.get(5), hits.get(1), hits.get(0));
+        when(reranker.rerank(eq("query"), anyList())).thenReturn(ranked);
 
         MarkdownSearchService.SearchResponse response = service.search("query", "SK", null, 7, request);
 
-        assertEquals(List.of(paths.get(0), paths.get(1), paths.get(5)), response.results().stream().map(MarkdownSearchService.SearchResult::sourcePath).toList());
+        assertEquals(List.of(paths.get(5), paths.get(1), paths.get(0)), response.results().stream().map(MarkdownSearchService.SearchResult::sourcePath).toList());
+        assertEquals(.99, response.results().get(0).score());
+        verify(reranker).rerank("query", List.of(hits.get(0), hits.get(1), hits.get(5)));
         verify(semanticSearch).searchChunks("query", 7, "sk", 10, RagEntityType.MARKDOWN, filters, request);
-        verify(ragService).answerQuestion("query", 7, List.of(hits.get(0), hits.get(1), hits.get(5)), request);
+        verify(ragService).answerQuestion("query", 7, ranked, request);
     }
 
     /** Keeps all-root searches empty or forbidden without invoking an embedding provider when no root is accessible. */

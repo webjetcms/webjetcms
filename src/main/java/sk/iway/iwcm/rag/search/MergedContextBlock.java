@@ -18,6 +18,7 @@ public class MergedContextBlock {
     private String text;
     private double maxSimilarity;
     private double averageSimilarity;
+    private Double rerankScore;
     private int sourceChunkCount;
     private String sourceTitle;
     private String sourceUrl;
@@ -26,6 +27,11 @@ public class MergedContextBlock {
      * Creates an empty merged context block for frameworks and manual population.
      */
     public MergedContextBlock() {}
+
+    /** Returns the best rerank score in this block, or its original best retrieval score. */
+    public double getRankingScore() {
+        return rerankScore != null ? rerankScore : maxSimilarity;
+    }
 
     /**
      * Creates a merged context block without optional source metadata.

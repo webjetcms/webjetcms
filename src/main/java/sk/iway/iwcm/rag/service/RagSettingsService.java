@@ -31,6 +31,12 @@ public class RagSettingsService {
         return minimumResults;
     }
 
+    /** Returns the configured text-match weight in 0-1, defaulting to 0.15 for invalid or non-finite values. */
+    public static double getRerankLexicalWeight() {
+        double weight = Tools.getDoubleValue(Constants.getString("ragRerankLexicalWeight"), 0.15d);
+        return Double.isFinite(weight) ? Math.max(0d, Math.min(1d, weight)) : 0.15d;
+    }
+
     /* RAG - HYBRID SEARCH */
 
     public static String getHybridSearchMode(PageParams pageParams) {
