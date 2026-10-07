@@ -10,8 +10,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.UndeclaredThrowableException;
@@ -27,9 +29,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpSession;
 import org.springframework.mock.web.MockServletContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
@@ -303,6 +307,8 @@ class MultistepFormsServiceTest {
         when(repository.findAllForValidation("contact-form", 1)).thenReturn(List.of(validationField("choices", "checkbox")));
         MultistepFormsService service = new MultistepFormsService(null, null, null, null, null);
         MockHttpServletRequest request = formRequest();
+        MockHttpSession session = spy(new MockHttpSession());
+        request.setSession(session);
         Prop prop = mock(Prop.class);
         when(prop.getText("components.formsimple.input.checkbox")).thenReturn("<input type=\"checkbox\">");
         JSONObject received = new JSONObject().put("choices", new JSONArray().put("Research, development"));
@@ -323,7 +329,31 @@ class MultistepFormsServiceTest {
 
             assertEquals(List.of("Research, development"), restored.getJSONArray("choices").toList());
             String sessionKey = MultistepFormsService.getSessionKey("contact-form", request);
+            verify(session).getAttribute(sessionKey + "_choices");
             assertEquals("Research, development", request.getSession().getAttribute(sessionKey + "_choices"));
+
+            session.setAttribute(sessionKey + "_choices", "Changed by processor");
+            assertEquals("Changed by processor", service.getSavedStepData("contact-form", 1L, request).first.getString("choices"));
+        }
+    }
+
+    /** Leaves headers without known field placeholders unchanged without accessing the session. */
+    @Test
+    void skipsSessionForHeadersWithoutFieldPlaceholders() {
+        FormItemsRepository repository = mock(FormItemsRepository.class);
+        when(repository.findAllForValidation("contact-form", 1)).thenReturn(List.of(validationField("name", "text")));
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        try (
+            MockedStatic<CloudToolsForCore> cloud = mockStatic(CloudToolsForCore.class);
+            MockedStatic<Cache> caches = mockStatic(Cache.class);
+            MockedStatic<Tools> tools = mockValidationFields(repository)
+        ) {
+            cloud.when(CloudToolsForCore::getDomainId).thenReturn(1);
+            caches.when(Cache::getInstance).thenReturn(mock(Cache.class));
+            for (String header : List.of("Thank you", "Thank you!", "Hello !unknown!")) {
+                assertEquals(header, MultistepFormsService.updateFormValues("contact-form", request, new StringBuilder(header)).toString());
+            }
+            verifyNoInteractions(request);
         }
     }
 

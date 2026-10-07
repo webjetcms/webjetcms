@@ -4,8 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
@@ -18,6 +21,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpSession;
 
 import jakarta.servlet.http.Cookie;
 import sk.iway.iwcm.Cache;
@@ -107,6 +111,8 @@ class MultistepFormStepValidationTest {
         Cache cache = mock(Cache.class);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpSession session = spy(new MockHttpSession());
+        request.setSession(session);
         request.addHeader("X-CSRF-Token", "test-token");
         request.setParameter("language", "en");
         request.setCookies(new Cookie("JSESSIONID", "test-session"));
@@ -149,6 +155,7 @@ class MultistepFormStepValidationTest {
             JSONObject response = new JSONObject();
             service.saveFormStep("contact-form", 2L, request, response);
             draft = service.getDraftStepData("contact-form", 2L, request).first;
+            if (checkboxInCurrentStep == false) verify(session, atLeastOnce()).getAttribute(sessionKey + "_invoice");
 
             if (shouldProceed) {
                 assertFalse(response.has("fieldErrors"));

@@ -55,11 +55,10 @@ class FormMailServiceDeliveryTest {
 			mail.when(() -> SendMail.getSession(any(Properties.class))).thenReturn(Session.getInstance(new Properties()));
 			mail.when(() -> SendMail.sendMessage(any(Message.class))).thenThrow(new IOException("EML directory is not writable"));
 			forms.when(() -> MultistepFormsService.getFormIdStatic("contact")).thenReturn(1);
-			forms.when(() -> MultistepFormsService.getFormDataAsMap(form)).thenReturn(Map.of());
 			org.mockito.Mockito.when(prop.getText("checkform.emailNotSend")).thenReturn("Email could not be saved");
 
 			SaveFormException failure = assertThrows(SaveFormException.class, () ->
-				service.sendMail(form, settings, "recipient@example.com", "Contact", new FormFiles(), true, null, new StringBuilder("Submitted form"), request));
+				service.sendMail(form, Map.of(), settings, "recipient@example.com", "Contact", new FormFiles(), true, null, new StringBuilder("Submitted form"), request));
 
 			assertEquals("Email could not be saved", failure.getMessage());
 			mail.verify(() -> SendMail.sendMessage(any(Message.class)));
