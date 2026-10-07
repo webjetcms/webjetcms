@@ -40,6 +40,8 @@ public class FormConditionsHandler {
 
     private String formName;
     private HttpServletRequest request;
+    // Each handler belongs to one validation or render operation; never share values across requests.
+    private final Map<String, String> sessionValues = new HashMap<>();
 
     private static String getConditionsCacheKey(Long formItemId, ConditionType conditionType, Integer domainId) {
         return CACHE_KEY_PREFIX + domainId + "." + formItemId + "." + conditionType.name();
@@ -120,8 +122,6 @@ public class FormConditionsHandler {
 
         if (conditions == null || conditions.isEmpty()) return null; // no conditions found
 
-        String sessionPrefix = MultistepFormsService.getSessionKey(formName, request) + "_";
-
         try {
             Boolean combinedResult = null;
             JoinOperatorType prevJoinOperator = JoinOperatorType.AND;
@@ -137,8 +137,7 @@ public class FormConditionsHandler {
                 // First check current step data (received JSON), then previous steps from session.
                 String actualValue = received.optString(fieldId, null);
                 if (actualValue == null) {
-                    Object sessionValue = request.getSession().getAttribute(sessionPrefix + fieldId);
-                    actualValue = sessionValue != null ? sessionValue.toString() : "";
+                    actualValue = getSessionValue(fieldId);
                 }
 
                 boolean met = evaluateOperator(operatorType, actualValue, requiredValue, caseInsensitive);
@@ -165,7 +164,16 @@ public class FormConditionsHandler {
     }
 
 
-        /**
+    /** Reads each fallback answer once while keeping current submitted values outside the cache. */
+    private String getSessionValue(String fieldId) {
+        return sessionValues.computeIfAbsent(fieldId, key -> {
+            String sessionPrefix = MultistepFormsService.getSessionKey(formName, request) + "_";
+            Object value = request.getSession().getAttribute(sessionPrefix + key);
+            return value == null ? "" : value.toString();
+        });
+    }
+
+    /**
      * Evaluate a single condition operator.
      * @param operator the operator (equals, not_equals, contains, not_contains, empty, not_empty)
      * @param actualValue the actual field value
@@ -263,8 +271,6 @@ public class FormConditionsHandler {
             }
         }
 
-        String sessionPrefix = MultistepFormsService.getSessionKey(formName, request) + "_";
-
         for (FormItemEntity stepItem : stepItems) {
             List<FormItemsConditionEntity> conditionsX = conditionsByItemId.get(stepItem.getId());
             if (conditionsX == null || conditionsX.isEmpty()) continue;
@@ -302,8 +308,7 @@ public class FormConditionsHandler {
                         continue;
                     }
 
-                    Object sessionValue = request.getSession().getAttribute(sessionPrefix + fieldId);
-                    String storedValue = sessionValue != null ? sessionValue.toString() : "";
+                    String storedValue = getSessionValue(fieldId);
 
                     boolean met = evaluateOperator(operatorType, storedValue, requiredValue, caseInsensitive);
 
