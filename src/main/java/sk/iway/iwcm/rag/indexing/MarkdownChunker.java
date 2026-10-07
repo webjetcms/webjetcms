@@ -75,7 +75,12 @@ public class MarkdownChunker {
         return chunks;
     }
 
-    /** Finds blocks on code-protected lines, mapping their positions back to the original text. */
+    /**
+     * Finds blocks on code-protected lines, mapping their positions back to the original text.
+     *
+     * @param text Markdown with normalized line endings
+     * @return ordered source ranges for headings, paragraphs, lists, tables, and code blocks
+     */
     private List<Block> findBlocks(String text) {
         MarkdownContentExtractor.ProtectedCode code = extractor.protectCode(text);
         List<MarkdownContentExtractor.Heading> headings = extractor.findHeadings(text);
@@ -124,7 +129,17 @@ public class MarkdownChunker {
         return blocks;
     }
 
-    /** Keeps fitting sections whole; otherwise packs near the target with whole-unit overlap. */
+    /**
+     * Keeps fitting sections whole; otherwise packs near the target with whole-unit overlap.
+     *
+     * @param text Markdown source with normalized line endings
+     * @param section consecutive blocks belonging to one section
+     * @param size target number of characters per chunk
+     * @param overlap target overlap in characters between chunks
+     * @param maximum maximum chunk length including the size allowance
+     * @param leadingWhitespace leading source characters excluded from reported offsets
+     * @param chunks output list receiving the section's chunks
+     */
     private void addSection(String text, List<Block> section, int size, int overlap, int maximum,
             int leadingWhitespace, List<Chunk> chunks) {
         if (section.isEmpty()) return;
@@ -156,7 +171,15 @@ public class MarkdownChunker {
         }
     }
 
-    /** Keeps fitting subsections whole, attaches leading headings, and splits only oversized units. */
+    /**
+     * Keeps fitting subsections whole, attaches leading headings, and splits only oversized units.
+     *
+     * @param text Markdown source containing the section
+     * @param section ordered section blocks with source offsets
+     * @param size target size passed to the fallback splitter
+     * @param maximum maximum length of an intact unit
+     * @return ordered source ranges that fit within the chunk cap
+     */
     private List<Block> prepareUnits(String text, List<Block> section, int size, int maximum) {
         List<Block> units = new ArrayList<>();
         int index = 0;
@@ -195,6 +218,13 @@ public class MarkdownChunker {
         return start;
     }
 
+    /**
+     * Identifies a Markdown block or combined unit in the normalized source.
+     *
+     * @param start inclusive source offset
+     * @param end exclusive source offset
+     * @param headingLevel heading level, or zero for a body block or completed subsection
+     */
     private record Block(int start, int end, int headingLevel) {
         boolean heading() { return headingLevel > 0; }
     }

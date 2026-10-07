@@ -17,7 +17,11 @@ public class SemanticSearchResult {
 
     public SemanticSearchResult() {}
 
-    /** Initializes source scores from one candidate chunk. */
+    /**
+     * Initializes source scores from one candidate chunk.
+     *
+     * @param chunk candidate supplying the source ID, retrieval score, and optional rerank score
+     */
     public SemanticSearchResult(VectorSearchResult chunk) {
         this(chunk.getEntityId(), chunk.getSimilarity());
         this.rerankScore = chunk.getRerankScore();

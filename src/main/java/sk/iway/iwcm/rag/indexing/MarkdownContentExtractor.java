@@ -113,7 +113,12 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
         return inputs;
     }
 
-    /** Finds ATX and Setext headings, mapping protected code placeholders back to source offsets. */
+    /**
+     * Finds ATX and Setext headings, mapping protected code placeholders back to source offsets.
+     *
+     * @param text cleaned Markdown with normalized line endings
+     * @return headings in source order, excluding protected code examples
+     */
     List<Heading> findHeadings(String text) {
         ProtectedCode code = protectCode(text);
         List<Heading> headings = new ArrayList<>();
@@ -144,13 +149,27 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
         return headings;
     }
 
-    /** Distinguishes a Setext heading's text from preceding list items, quotes, rules, and code blocks. */
+    /**
+     * Distinguishes a Setext heading's text from preceding list items, quotes, rules, and code blocks.
+     *
+     * @param line protected line immediately before a potential Setext underline
+     * @param code placeholders used to distinguish prose from code blocks
+     * @return {@code true} when the line can supply a Setext heading's title
+     */
     private boolean isSetextContent(String line, ProtectedCode code) {
         if (line.isBlank() || HEADING.matcher(line).matches()
                 || line.matches(" {0,3}(?:[-+*](?:[ \\t]+.*)?|[0-9]+[.)][ \\t]+.*|>.*|(?:[-*_][ \\t]*){3,})")) return false;
         return code.isBlock(line) == false;
     }
 
+    /**
+     * Describes a heading and its range in the source before code protection.
+     *
+     * @param offset inclusive start of the heading text
+     * @param endOffset exclusive end of the heading, including a Setext underline when present
+     * @param level heading depth from one through six
+     * @param title restored heading text with emphasis and backtick markers removed
+     */
     record Heading(int offset, int endOffset, int level, String title) { }
 
     /**
@@ -279,7 +298,15 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
         return result.toString();
     }
 
-    /** Finds a balanced delimiter, allowing escaped characters and quoted link titles. */
+    /**
+     * Finds a balanced delimiter, allowing escaped characters and quoted link titles.
+     *
+     * @param text Markdown containing the opening delimiter
+     * @param start index of the opening delimiter
+     * @param opening delimiter that increases nesting depth
+     * @param closing delimiter that decreases nesting depth
+     * @return index of the matching closing delimiter, or {@code -1} when unmatched
+     */
     private int closingDelimiter(String text, int start, char opening, char closing) {
         int depth = 1;
         for (int i = start + 1; i < text.length(); i++) {
@@ -331,8 +358,20 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
         return result.toString().replaceAll("<([A-Za-z][A-Za-z0-9+.-]*:[^<>\\s]+|[^<>\\s]+@[^<>\\s]+)>", "$1");
     }
 
+    /**
+     * Retains protected Markdown and the code examples needed to restore its placeholders.
+     *
+     * @param text Markdown with code examples replaced by placeholders
+     * @param prefix collision-free prefix shared by the placeholders
+     * @param examples original code examples in placeholder-index order
+     */
     record ProtectedCode(String text, String prefix, List<String> examples) {
-        /** Identifies a protected block while allowing an inline code span at the start of a line. */
+        /**
+         * Identifies a protected block while allowing an inline code span at the start of a line.
+         *
+         * @param line protected line to classify
+         * @return {@code true} when the line begins with a protected block
+         */
         boolean isBlock(String line) {
             if (line.startsWith(prefix) == false) return false;
             String original = restore(line);

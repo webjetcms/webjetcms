@@ -20,7 +20,12 @@ public class SlidingWindowChunker {
 
     private static final Pattern PARAGRAPH_BREAK = Pattern.compile("\\n[ \\t]*\\n");
 
-    /** A passage and its start offset in the normalized, trimmed source text. */
+    /**
+     * Stores a passage and its start offset in the normalized, trimmed source text.
+     *
+     * @param startOffset source offset at the selected boundary, before trimming the passage
+     * @param text passage text
+     */
     public record Chunk(int startOffset, String text) { }
 
     /**
@@ -131,7 +136,15 @@ public class SlidingWindowChunker {
         return bounded;
     }
 
-    /** Prefers whitespace near the target within the cap, otherwise splitting without breaking a surrogate pair. */
+    /**
+     * Prefers whitespace near the target within the cap, otherwise splitting without breaking a surrogate pair.
+     *
+     * @param text normalized source containing the oversized unit
+     * @param start start offset of the remaining unit
+     * @param target preferred split offset
+     * @param maximum greatest permitted split offset
+     * @return source offset at which the next unit begins
+     */
     private int splitOversizedUnit(String text, int start, int target, int maximum) {
         for (int offset = target - 1; offset >= start; offset--) {
             if (Character.isWhitespace(text.charAt(offset))) return offset + 1;

@@ -21,10 +21,9 @@ import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
 /**
- * PgVector implementation of VectorStore.
- * Handles ONLY the embedding (vector) column via native SQL using pgvector operators.
- * Entity CRUD operations are handled by EmbeddingChunkRepository (JPA).
- * Connects to the RAG datasource (primary PgSQL or secondary rag_jpa).
+ * Stores and searches embeddings in PostgreSQL using pgvector and native full-text queries.
+ * Manages vector updates and schema initialization while normal chunk persistence uses the JPA repository.
+ * Connects to the resolved RAG datasource, either the primary PostgreSQL database or {@code rag_jpa}.
  */
 @Service
 public class PgVectorStore implements VectorStore {

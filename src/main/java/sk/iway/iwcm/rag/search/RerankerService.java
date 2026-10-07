@@ -29,7 +29,7 @@ public class RerankerService {
 
     /**
      * Combines retrieval score with configured lexical relevance, defaulting to an 85/15 ratio.
-     * Retains all authorized candidates and reads the weight on every call.
+     * Retains all authorized candidates, updates their rerank scores in place, and reads the weight on every call.
      * Original similarity remains available for filtering. Equal scores retain retrieval order.
      *
      * @param query original user question
@@ -62,7 +62,12 @@ public class RerankerService {
         return ranked;
     }
 
-    /** Tokenizes once for scoring and source frequency, keeping passage positions intact for proximity. */
+    /**
+     * Tokenizes once for scoring and source frequency, keeping passage positions intact for proximity.
+     *
+     * @param chunk candidate supplying body text, source title, and stored Markdown heading context
+     * @return normalized tokens, heading tokens, and distinct terms associated with the candidate
+     */
     private Passage passage(VectorSearchResult chunk) {
         String text = chunk.getChunkText() == null ? "" : chunk.getChunkText();
         String title = chunk.getSourceTitle() == null ? "" : chunk.getSourceTitle();
@@ -82,7 +87,13 @@ public class RerankerService {
         return new Passage(chunk, bodyWords, titleWords, headings, terms);
     }
 
-    /** Uses capped rarity in the retrieved sources, counting repeated chunks of each source only once. */
+    /**
+     * Uses capped rarity in the retrieved sources, counting repeated chunks of each source only once.
+     *
+     * @param terms distinct query terms to weight
+     * @param passages tokenized retrieval candidates used to count source frequency
+     * @return weights from one to 2.5 in query-term iteration order
+     */
     private Map<String, Double> termWeights(Set<String> terms, List<Passage> passages) {
         Map<String, Set<String>> sources = new HashMap<>();
         for (Passage passage : passages) {
@@ -104,7 +115,13 @@ public class RerankerService {
             .mapToDouble(Map.Entry::getValue).sum() / total;
     }
 
-    /** Averages the best forward gap for each distinct query pair; repeated occurrences add no bonus. */
+    /**
+     * Averages the best forward gap for each distinct query pair; repeated occurrences add no bonus.
+     *
+     * @param pairs distinct ordered pairs of neighboring query terms
+     * @param text passage tokens in their original order
+     * @return mean inverse gap for matches up to four positions apart, or zero when no pair matches
+     */
     private double proximity(Set<List<String>> pairs, List<String> text) {
         if (pairs.isEmpty()) return 0d;
         double score = 0d;
@@ -133,6 +150,15 @@ public class RerankerService {
             .toLowerCase(Locale.ROOT).replaceAll("[^\\p{L}\\p{N}]+", " ").trim();
     }
 
+    /**
+     * Holds normalized passage tokens used by local relevance scoring.
+     *
+     * @param chunk candidate whose rerank score is updated
+     * @param body body tokens in source order
+     * @param title source-title tokens in source order
+     * @param headings tokenized title and stored heading hierarchy
+     * @param terms distinct body and title terms used for coverage and source-frequency weights
+     */
     private record Passage(VectorSearchResult chunk, List<String> body, List<String> title,
             List<List<String>> headings, Set<String> terms) { }
 }

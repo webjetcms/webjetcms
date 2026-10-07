@@ -31,7 +31,11 @@ public class RagSettingsService {
         return minimumResults;
     }
 
-    /** Returns the configured text-match weight in 0-1, defaulting to 0.15 for invalid or non-finite values. */
+    /**
+     * Resolves the text-match weight, clamping finite values and replacing invalid values with the default.
+     *
+     * @return weight in the range zero to one, or 0.15 for invalid or non-finite input
+     */
     public static double getRerankLexicalWeight() {
         double weight = Tools.getDoubleValue(Constants.getString("ragRerankLexicalWeight"), 0.15d);
         return Double.isFinite(weight) ? Math.max(0d, Math.min(1d, weight)) : 0.15d;
@@ -39,6 +43,12 @@ public class RagSettingsService {
 
     /* RAG - HYBRID SEARCH */
 
+    /**
+     * Resolves the hybrid retrieval mode, using global configuration for empty or automatic component values.
+     *
+     * @param pageParams optional component settings
+     * @return trimmed mode, or an empty string when no value is available
+     */
     public static String getHybridSearchMode(PageParams pageParams) {
         String hybridSearchMode = null;
         if(pageParams != null) {
@@ -105,6 +115,14 @@ public class RagSettingsService {
         return hybridChunkFetchMultiplier;
     }
 
+    /**
+     * Resolves whether full-text retrieval may fall back to a database-specific text-pattern search.
+     * Recognizes component values {@code true}, {@code trueValue}, {@code false}, and {@code falseValue};
+     * other values retain the global setting.
+     *
+     * @param pageParams optional component settings
+     * @return whether the full-text fallback is enabled
+     */
     public static boolean getHybridFtsUseIlikeFallback(PageParams pageParams) {
         boolean hybridFtsUseIlikeFallback = Constants.getBoolean("ragHybridFtsUseIlikeFallback");
 
@@ -180,6 +198,13 @@ public class RagSettingsService {
         return ragAnswerMaxMergedBlockCharacters;
     }
 
+    /**
+     * Combines the global hybrid-search switch with the component's retrieval mode and search type.
+     * An {@code off} mode disables hybrid retrieval; empty or automatic search types retain the global switch.
+     *
+     * @param pageParams optional component settings
+     * @return {@code true} when hybrid search is globally enabled and the component selection permits it
+     */
     public static boolean isHybridSearchEnabled(PageParams pageParams) {
         if(Constants.getBoolean("ragHybridSearchEnabled") == false) {
             // Does not matter what user selected, if hybrid search is disabled in settings, it should not be allowed
@@ -204,6 +229,13 @@ public class RagSettingsService {
         return "hybrid".equalsIgnoreCase(searchType);
     }
 
+    /**
+     * Applies the global answer-generation gate and the component's optional answer preference.
+     * Empty or automatic preferences retain the global setting; unrecognized preferences disable answers.
+     *
+     * @param pageParams optional component settings
+     * @return {@code true} when answer generation is enabled globally and allowed by the component
+     */
     public static boolean isAnswerAllowed(PageParams pageParams) {
         if(Constants.getBoolean("ragAnswerAllowed") == false) {
             // Does not matter what user selected, if RAG answer is disabled in settings, it should not be allowed

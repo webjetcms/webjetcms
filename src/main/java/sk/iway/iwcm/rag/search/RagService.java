@@ -25,6 +25,10 @@ import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
 import sk.iway.iwcm.rag.service.RagSettingsService;
 import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
 
+/**
+ * Generates answers from retrieved chunks using a domain's configured or default RAG assistant.
+ * Merges and limits context before supplying the question and source metadata to the AI service.
+ */
 @Service
 public class RagService {
 
@@ -52,6 +56,18 @@ public class RagService {
         this.statRepo = statRepo;
     }
 
+    /**
+     * Generates an answer after merging and limiting authorized retrieval context.
+     * Uses the component's selected assistant when available, otherwise creates or reuses the domain's default.
+     * Callers are responsible for authorizing the supplied chunks and sanitizing the returned answer for display.
+     *
+     * @param question user question
+     * @param domainId domain owning the selected or default answer assistant
+     * @param vectorChunkResults authorized chunks with retrieval scores and optional ranking and citation metadata
+     * @param request request supplying component settings and AI provider context
+     * @return trimmed assistant response, or {@code null} for missing input, unavailable context or assistant,
+     *         an empty or cannot-answer response, or a failed provider call
+     */
     public String answerQuestion(String question, Integer domainId, List<VectorSearchResult> vectorChunkResults, HttpServletRequest request) {
         if(Tools.isEmpty(question) || vectorChunkResults == null || vectorChunkResults.isEmpty()) {
             Logger.debug(RagService.class, "Cannot answer RAG question because question is empty or no retrieved chunks. question=" + question + ", vectorChunkResults=" + (vectorChunkResults == null ? "null" : vectorChunkResults.size()));
@@ -162,9 +178,8 @@ public class RagService {
     }
 
     /**
-     * Checks whether the assistant returned the cannot-answer sentinel. The
-     * comparison accepts the new sentinel and the legacy misspelled value, with
-     * light normalization for quotes, backticks, and a trailing period.
+     * Checks whether the response contains the case-sensitive cannot-answer sentinel.
+     * Trims surrounding quotes, backticks, and trailing periods before checking for the sentinel.
      *
      * @param ragAnswer raw assistant response
      * @return true when the response means the answer is not present in context
@@ -192,6 +207,12 @@ public class RagService {
         return normalized.contains(CANNOT_ANSWER_SENTINEL);
     }
 
+    /**
+     * Reuses the first domain-specific RAG assistant or saves a default and clears the assistant cache.
+     *
+     * @param domainId domain owning the answer assistant
+     * @return existing or newly saved assistant, or {@code null} if creation fails
+     */
     private AssistantDefinitionEntity getOrCreateAssistant(Integer domainId) {
         Optional<AssistantDefinitionEntity> existing = assistantRepository.findFirstByClassNameAndDomainIdOrderByIdAsc(RagService.class.getName(), domainId);
         if (existing.isPresent()) return existing.get();
@@ -207,6 +228,12 @@ public class RagService {
         }
     }
 
+    /**
+     * Builds an active, non-streaming answer assistant with the default prompt and configured model.
+     *
+     * @param domainId domain assigned to the assistant
+     * @return unsaved assistant definition
+     */
     private AssistantDefinitionEntity buildAssistant(Integer domainId) {
         AssistantDefinitionEntity assistant = new AssistantDefinitionEntity();
         assistant.setName(RAG_ASSIST_NAME);

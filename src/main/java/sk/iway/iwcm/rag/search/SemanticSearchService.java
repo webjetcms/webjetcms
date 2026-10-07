@@ -74,7 +74,7 @@ public class SemanticSearchService {
     /**
      * Searches for documents similar to the query text.
      *
-     * Returns unique document IDs ordered by best chunk similarity.
+     * Returns unique document IDs ordered by their best local ranking score.
      * Depending on component settings, vector results may be merged with full-text results. When answer generation is
      * enabled, the sanitized answer is stored in the request attribute {@code ragAnswer}.
      *
@@ -84,7 +84,7 @@ public class SemanticSearchService {
      * @param maxResults maximum number of unique documents to return
      * @param entityType entity type to filter by
      * @param request current request with component PageParams and rootGroup attributes
-     * @return list of document IDs with their best similarity scores
+     * @return document IDs with their best retrieval and rerank scores, ordered by ranking score
      */
     public List<SemanticSearchResult> search(String query, Integer domainId, String language, int maxResults, RagEntityType entityType, HttpServletRequest request) {
         if (isAvailable() == false) return List.of();
@@ -155,7 +155,14 @@ public class SemanticSearchService {
         return rerankerService.rerank(query, chunks);
     }
 
-    /** Excludes unavailable, internal, and inaccessible pages before their text reaches an AI provider. */
+    /**
+     * Excludes unavailable, internal, and inaccessible pages before their text reaches an AI provider.
+     * Adds the current document title to each retained chunk for local reranking and citations.
+     *
+     * @param chunks retrieved document candidates
+     * @param request request identifying the user whose document access is checked
+     * @return authorized document chunks in retrieval order
+     */
     List<VectorSearchResult> authorizeDocuments(List<VectorSearchResult> chunks, HttpServletRequest request) {
         List<VectorSearchResult> authorized = new ArrayList<>();
         Identity user = UsersDB.getCurrentUser(request);
