@@ -3983,6 +3983,11 @@
                         ip_address VARCHAR(64),
                         confirmed_at DATETIME(3) NULL,
                         reported_at DATETIME(3) NULL,
+                        confirmation_hash CHAR(64),
+                        confirmation_expires DATETIME(3),
+                        code_hash CHAR(64),
+                        code_expires DATETIME(3),
+                        code_attempts INT NOT NULL DEFAULT 0,
                         CONSTRAINT pk_user_login_devices PRIMARY KEY (device_id),
                         CONSTRAINT uq_login_devices_user_token UNIQUE (user_id, token_hash)
                     ) ENGINE=InnoDB;
@@ -4001,6 +4006,11 @@
                         ip_address VARCHAR(64),
                         confirmed_at DATETIME2(3) NULL,
                         reported_at DATETIME2(3) NULL,
+                        confirmation_hash CHAR(64),
+                        confirmation_expires DATETIME2(3),
+                        code_hash CHAR(64),
+                        code_expires DATETIME2(3),
+                        code_attempts INT NOT NULL DEFAULT 0,
                         CONSTRAINT pk_user_login_devices PRIMARY KEY (device_id),
                         CONSTRAINT uq_login_devices_user_token UNIQUE (user_id, token_hash)
                     );
@@ -4019,6 +4029,11 @@
                         ip_address VARCHAR2(64),
                         confirmed_at TIMESTAMP(3) NULL,
                         reported_at TIMESTAMP(3) NULL,
+                        confirmation_hash CHAR(64),
+                        confirmation_expires TIMESTAMP(3),
+                        code_hash CHAR(64),
+                        code_expires TIMESTAMP(3),
+                        code_attempts INTEGER DEFAULT 0 NOT NULL,
                         CONSTRAINT pk_user_login_devices PRIMARY KEY (device_id),
                         CONSTRAINT uq_login_devices_user_token UNIQUE (user_id, token_hash)
                     );
@@ -4037,6 +4052,11 @@
                         ip_address VARCHAR(64),
                         confirmed_at TIMESTAMP(3) NULL,
                         reported_at TIMESTAMP(3) NULL,
+                        confirmation_hash CHAR(64),
+                        confirmation_expires TIMESTAMP(3),
+                        code_hash CHAR(64),
+                        code_expires TIMESTAMP(3),
+                        code_attempts INT NOT NULL DEFAULT 0,
                         CONSTRAINT pk_user_login_devices PRIMARY KEY (device_id),
                         CONSTRAINT uq_login_devices_user_token UNIQUE (user_id, token_hash)
                     );

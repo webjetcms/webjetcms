@@ -330,6 +330,9 @@ webjet-overview-dashboard a:focus-visible {
         --notice-color: #{$dashboard-warning-text};
         --notice-border: #{mix($warning, $white, 60%)};
         --notice-background: #{$dashboard-publishing};
+        background: var(--notice-background);
+        border: 1px solid var(--notice-border);
+        border-radius: var(--wj-border-radius);
         &[data-severity="error"] {
             --notice-color: #{$dashboard-danger-text};
             --notice-border: #{mix($danger-btn-bg, $white, 55%)};
@@ -341,14 +344,18 @@ webjet-overview-dashboard a:focus-visible {
             --notice-background: #{$dashboard-lavender};
         }
     }
-    &__notice-row { display: flex; align-items: center; gap: 10px; padding: 7px 12px; background: var(--notice-background); border: 1px solid var(--notice-border); border-radius: var(--wj-border-radius); }
+    &__notice-row { display: flex; align-items: center; gap: 10px; padding: 7px 12px; }
+    &__notice-verification {
+        padding: 10px 12px 12px 38px;
+        border-top: 1px solid var(--notice-border);
+        .md-dashboard-device-confirmation { max-width: none; }
+    }
     &__notice-row > .ti { flex-shrink: 0; font-size: 16px; color: var(--notice-color); }
     &__notice-text { flex: 1; min-width: 0; font-size: 12px; overflow-wrap: anywhere; }
     &__notice-title { font-weight: 700; margin-right: 6px; }
     &__notice-description { color: var(--wj-dashboard-muted); }
     &__notice-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     &__notice-actions > .btn { font-size: 12px; white-space: nowrap; }
-    &__notice-action, &__notice-confirm { background: var(--wj-dashboard-surface); border-color: var(--wj-nice-gray-200); }
     &__notice-actions > .btn-link { color: var(--wj-secondary); text-decoration: none; padding-inline: 4px; }
     &__notice-dismiss { min-width: 24px; min-height: 24px; }
     &__notice-status { font-size: 12px; }
@@ -1376,4 +1383,21 @@ webjet-overview-dashboard a:focus-visible {
             .toast-title { overflow-wrap: anywhere; }
         }
     }
+}
+
+.md-dashboard-device-confirmation {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 8px 12px;
+    max-width: 320px;
+    white-space: normal;
+    text-align: left;
+    > [role="status"] { flex-basis: 100%; margin: 0; }
+    > [role="status"]:empty { display: none; }
+    .form-label { display: block; margin: 0; font-size: 12px; }
+    .form-control { max-width: 160px; background-color: $white; }
+}
+@media (max-width: $bp-mobile) {
+    .md-dashboard-modal--sessions .md-dashboard-sessions__action.has-device-confirmation { grid-column: 1 / -1; grid-row: auto; }
 }

@@ -586,6 +586,8 @@ gretty {
         // Keep debugging available for appStart as well as appStartDebug.
         "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=${debugPort}",
         "-Dwebjet.worktreeId=${worktreeId}",
+        "-Dwebjet.httpServerPort=${httpPort}",
+        "-Dwebjet.httpsServerPort=${httpsPort}",
         //lokalny poolman-local.xml subor
         //'-DwebjetPoolmanPath=/poolman-local.xml',
         //Uprava konfiguracie pre WebJET, tymto sa prepisuju hodnoty z databazy v Ovladaci panel->Konfiguracia

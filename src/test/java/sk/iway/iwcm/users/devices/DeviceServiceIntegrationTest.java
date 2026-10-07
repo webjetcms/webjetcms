@@ -57,9 +57,10 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
 
             assertNull(service.findEvent(OTHER_USER_ID, id));
             assertNull(service.report(OTHER_USER_ID, id, NOW));
-            assertNull(service.confirm(OTHER_USER_ID, id, NOW));
+            assertNull(service.confirm(OTHER_USER_ID, id, database.hash, NOW, false));
 
-            service.confirm(USER_ID, id, NOW + 150);
+            service.issueConfirmation(USER_ID, id, database.hash, NOW, false);
+            service.confirm(USER_ID, id, database.hash, NOW + 150, false);
             assertNotNull(service.findByIds(USER_ID, Set.of(id)).get(0).getConfirmedAt());
             assertTrue(service.findActive(USER_ID, NOW + 150).isEmpty());
             DeviceEntity reported = service.report(USER_ID, id, NOW + 200);
@@ -121,7 +122,8 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
             assertNotNull(secondNode.findEvent(USER_ID, id));
             assertNull(record(secondNode, USER_ID, database.hash, NOW + 100));
 
-            firstNode.confirm(USER_ID, id, NOW + 200);
+            firstNode.issueConfirmation(USER_ID, id, database.hash, NOW, false);
+            firstNode.confirm(USER_ID, id, database.hash, NOW + 200, false);
             assertEquals(Instant.ofEpochMilli(NOW + 200), secondNode.findEvent(USER_ID, id).getConfirmedAt());
             assertTrue(secondNode.findActive(USER_ID, NOW + 200).isEmpty());
 
@@ -133,6 +135,20 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
             assertNull(record(secondNode, USER_ID, database.hash, NOW + 500));
             assertEquals(NOW + 400, secondNode.findEvent(USER_ID, id).getCreateDate().toEpochMilli());
             assertEquals(1, database.count());
+        }
+    }
+
+    /** Email codes reject incorrect input and are cleared after successful confirmation. */
+    @Test
+    void codeConfirmationRejectsWrongAndConsumedProofs() {
+        try (TestDatabase database = new TestDatabase()) {
+            DeviceService service = database.service;
+            long id = record(service, USER_ID, database.hash, NOW).getId();
+            service.issueConfirmation(USER_ID, id, database.hash, NOW, true);
+            assertNull(service.confirm(USER_ID, id, "wrong", NOW + 1, true));
+            assertEquals(1, service.findEvent(USER_ID, id).getCodeAttempts());
+            assertNotNull(service.confirm(USER_ID, id, database.hash, NOW + 3, true));
+            assertNull(service.confirm(USER_ID, id, database.hash, NOW + 4, true));
         }
     }
 

@@ -62,6 +62,26 @@ public class DeviceEntity {
     @Column(name = "reported_at")
     private Instant reportedAt;
 
+    @Column(name = "confirmation_hash", length = 64)
+    @JsonIgnore
+    private String confirmationHash;
+
+    @Column(name = "confirmation_expires")
+    @JsonIgnore
+    private Instant confirmationExpires;
+
+    @Column(name = "code_hash", length = 64)
+    @JsonIgnore
+    private String codeHash;
+
+    @Column(name = "code_expires")
+    @JsonIgnore
+    private Instant codeExpires;
+
+    @Column(name = "code_attempts", nullable = false)
+    @JsonIgnore
+    private int codeAttempts;
+
     /** Returns the notice deadline without storing a separate expiration column. */
     @Transient
     public long getExpiresAt() {

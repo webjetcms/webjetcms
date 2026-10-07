@@ -127,12 +127,13 @@ V uvítacom paneli nájdete novinky aktuálnej verzie WebJET CMS. Tlačidlom **Z
 
 V tejto časti skontrolujete problémy vyžadujúce vašu pozornosť. Upozornenie na prihlásenie z neznámeho zariadenia je vždy prvé. Ostatné upozornenia sú zoradené podľa závažnosti: chyby, varovania a informácie. Každý riadok obsahuje vysvetlenie a dostupnú akciu. Chyby zostávajú viditeľné do vyriešenia príčiny. Bežné varovanie môžete odložiť na 7 dní tlačidlom **Pripomenúť neskôr** alebo **×**.
 
-**Nové prihlásenie z neznámeho zariadenia** sa zobrazí po úspešnom prihlásení v prehliadači, ktorý WebJET CMS pre váš účet nerozpozná ako použitý počas posledných 90 dní. Súčasne vám odošle email. Upozornenie obsahuje prehliadač, operačný systém, IP adresu a čas prihlásenia.
+**Nové prihlásenie z neznámeho zariadenia** sa zobrazí po úspešnom prihlásení v prehliadači, ktorý WebJET CMS pre váš účet nerozpozná ako použitý počas posledných 90 dní. Súčasne vám odošle email. Pri aktuálnom prehliadači sa zobrazí informácia **Prihlásili ste sa z nového prehliadača** s časom a označením **Tento prehliadač**. Pri inom zariadení zostáva varovanie s prehliadačom, operačným systémom, IP adresou a časom prihlásenia.
 
-- Ak prihlásenie poznáte, kliknite na **Bol som to ja**. Upozornenie sa odstráni vo všetkých vašich prehliadačoch po obnovení prehľadu.
+- Ak prihlásenie poznáte, kliknite na **Bol som to ja**. Na váš email sa odošle šesťmiestny kód, ktorý zadáte pri upozornení. Platí 10 minút a umožňuje najviac 5 pokusov; nový kód možno poslať po minúte a nahradí predchádzajúci. Až po overení kódu sa zariadenie potvrdí a upozornenie sa odstráni vo všetkých vašich prehliadačoch po obnovení prehľadu.
+- Prihlásenie môžete potvrdiť aj odkazom **Bol som to ja** v pôvodnom emaile. Odkaz platí 24 hodín, funguje iba po prihlásení do príslušného účtu a možno ho použiť raz. Nový kód tento odkaz nezruší; úspešné potvrdenie zneplatní odkaz aj kód.
 - Ak prihlásenie nepoznáte, kliknite na **Nebol som to ja**. Otvorí sa okno **Aktívne prihlásenia** s detailom udalosti a kartami **Moje prihlásenia**, **Prihlásení administrátori** (podľa oprávnení) a **História (30 dní)**. Varovanie sa zobrazuje iba v karte **Moje prihlásenia**. V karte **História (30 dní)** môžete skontrolovať predchádzajúce prihlásenia a ich IP adresy. Tlačidlom **Toto prihlásenie nepoznám** zrušíte zapamätanie daného prehliadača. Potom odhláste neznáme relácie jednotlivo alebo tlačidlom **Odhlásiť všetky ostatné** a použite **Zmeniť heslo**. Pri firemnom účte zmeňte heslo u poskytovateľa prihlásenia alebo kontaktujte správcu.
 
-Otvorenie detailu ani označenie prihlásenia ako cudzieho neodhlási aktívne relácie. Odhláste ich samostatne; samotná zmena hesla nemusí ukončiť všetky relácie. Rovnaký detail otvoríte aj tlačidlom v emaili, po prihlásení do svojho účtu.
+Otvorenie detailu ani označenie prihlásenia ako cudzieho neodhlási aktívne relácie. Odhláste ich samostatne; samotná zmena hesla nemusí ukončiť všetky relácie. Rovnaký detail otvoríte aj odkazom **Nebol som to ja – zabezpečiť účet** v emaile, po prihlásení do svojho účtu.
 
 Toto upozornenie nemá krížik ani možnosť odloženia. Zmizne po potvrdení **Bol som to ja** alebo po 7 dňoch od zaznamenania udalosti. Ďalšie prihlásenia túto sedemdňovú lehotu nepredlžujú.
 
@@ -176,7 +177,7 @@ Panel **Moje aktívne prihlásenia** zobrazuje všetky vaše aktívne relácie, 
 
 Kliknutím na nadpis panela otvoríte okno **Aktívne prihlásenia**. Okrem vlastných relácií ponúka históriu prihlásení za posledných 30 dní a podľa oprávnení aj prihlásených administrátorov. Tlačidlo **Zmeniť heslo** v spodnej časti okna otvorí váš profil na zmenu hesla. Informačná ikona vedľa tlačidla zobrazí pokyny pre zmenu hesla pri firemnom účte.
 
-V karte **Moje prihlásenia** majú nepotvrdené zariadenia štítok **Nové**. Tlačidlo **Bol som to ja** potvrdí zariadenie, odstráni jeho upozornenie a obnoví zoznam s bežnou akciou **Odhlásiť** pri ostatných reláciách. Potvrdenie platí aj pre ďalšie relácie rovnakého zariadenia. Červené tlačidlo **Nebol som to ja** v riadku odhlási iba vybranú reláciu; ak ide o aktuálne prihlásenie, odhlási tento prehliadač. Rovnaké akcie sú dostupné pri otvorení okna z nadpisu panela aj zo systémového upozornenia.
+V karte **Moje prihlásenia** majú nepotvrdené zariadenia štítok **Nové**. Tlačidlo **Bol som to ja** odošle na email jednorazový kód a zobrazí pole na jeho zadanie priamo v riadku. Až po overení kódu potvrdí zariadenie, odstráni jeho upozornenie a obnoví zoznam s bežnou akciou **Odhlásiť** pri ostatných reláciách. Rovnaké overenie vyžaduje aj riadok so štítkom **Toto prihlásenie**. Potvrdenie platí aj pre ďalšie relácie rovnakého zariadenia. Červené tlačidlo **Nebol som to ja** v riadku odhlási iba vybranú reláciu; ak ide o aktuálne prihlásenie, odhlási tento prehliadač. Rovnaké akcie sú dostupné pri otvorení okna z nadpisu panela aj zo systémového upozornenia.
 
 ![](sessions.png)
 

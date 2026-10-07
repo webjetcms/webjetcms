@@ -1,6 +1,7 @@
 import { DashboardController } from '../dashboard/dashboard';
 import { DashboardNotices } from '../dashboard/notices';
 import { showActiveSessions } from '../dashboard/session-widgets';
+import { confirmSecurityEvent } from '../dashboard/security-events';
 import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/widgets';
 import { showFeedbackDialog } from '../feedback';
 
@@ -51,6 +52,7 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
     }
 
     disconnectedCallback() {
+        this.deviceConfirmationRequest?.abort();
         this.dashboardController?.destroy();
         this.noticeController?.destroy();
         this.noticeController = null;
@@ -96,7 +98,27 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         this.dashboardReady = this.dashboardController.start();
         if (this.data.securityEventRequested && !this.securityEventOpened) {
             this.securityEventOpened = true;
-            showActiveSessions(this.dashboardController._widgetContext(), this.data.requestedSecurityEvent || null);
+            const url = new URL(window.location.href);
+            const confirmationToken = url.searchParams.get('deviceConfirmation');
+            if (confirmationToken) {
+                url.searchParams.delete('deviceConfirmation');
+                window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+            }
+            const sessionContext = this.dashboardController._widgetContext();
+            const securityEvent = this.data.requestedSecurityEvent || null;
+            if (confirmationToken && securityEvent) {
+                const signal = (this.deviceConfirmationRequest = new AbortController()).signal;
+                // Consume the email proof with an authenticated POST without opening the session dialog.
+                confirmSecurityEvent(this.data, securityEvent.id, signal, { token: confirmationToken })
+                    .then(() => {
+                        if (signal.aborted) return;
+                        this.dashboardController.refreshSessions();
+                        WJ.notifySuccess(sessionContext.translate('sessions'), sessionContext.translate('admin.dashboard.newDevice.confirmed.js'), 10000);
+                    })
+                    .catch(() => {
+                        if (!signal.aborted) WJ.notifyError(sessionContext.translate('sessions'), sessionContext.translate('admin.dashboard.newDevice.linkInvalid.js'), 10000);
+                    });
+            } else showActiveSessions(sessionContext, securityEvent);
         }
         this.dataset.ready = "true";
         this.dispatchEvent(new CustomEvent("webjet-component-ready", { bubbles: true }));

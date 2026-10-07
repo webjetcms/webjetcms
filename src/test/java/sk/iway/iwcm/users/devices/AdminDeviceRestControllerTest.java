@@ -25,31 +25,45 @@ class AdminDeviceRestControllerTest {
         var event = new DeviceEntity();
         event.setId(42L);
         String id = event.getId().toString();
-        when(service.confirm(user, id)).thenReturn(event);
+        when(service.confirm(user, id, "proof", false)).thenReturn(event);
         when(service.report(user, id)).thenReturn(event);
         try (var users = mockStatic(UsersDB.class)) {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
-            assertSame(event, controller.confirm(id, request));
+            assertSame(event, controller.confirm(id, new AdminDeviceRestController.Confirmation("proof", null), request));
             assertSame(event, controller.report(id, request));
-            verify(service).confirm(user, id);
+            verify(service).confirm(user, id, "proof", false);
             verify(service).report(user, id);
             verifyNoMoreInteractions(service);
         }
     }
 
-    /** Both actions map a null service result to the same HTTP 404 response. */
+    /** Invalid proof is a generic bad request; unavailable report details remain not found. */
     @Test
     void returnsNotFoundWhenServiceReturnsNoEvent() {
         var controller = new AdminDeviceRestController(mock(AdminDeviceService.class));
         var request = new MockHttpServletRequest();
         try (var users = mockStatic(UsersDB.class)) {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(mock(Identity.class));
-            var confirm = assertThrows(ResponseStatusException.class, () -> controller.confirm("42", request));
+            var confirm = assertThrows(ResponseStatusException.class, () -> controller.confirm("42", new AdminDeviceRestController.Confirmation(null, "123456"), request));
             var report = assertThrows(ResponseStatusException.class, () -> controller.report("42", request));
-            assertEquals(HttpStatus.NOT_FOUND, confirm.getStatusCode());
-            assertEquals(confirm.getStatusCode(), report.getStatusCode());
-            assertEquals(confirm.getReason(), report.getReason());
+            assertEquals(HttpStatus.BAD_REQUEST, confirm.getStatusCode());
+            assertEquals(HttpStatus.NOT_FOUND, report.getStatusCode());
         }
+    }
+
+    /** The former ID-only endpoint and ambiguous payloads cannot confirm a device. */
+    @Test
+    void rejectsMissingOrAmbiguousProofBeforeCallingService() {
+        var service = mock(AdminDeviceService.class);
+        var controller = new AdminDeviceRestController(service);
+        var request = new MockHttpServletRequest();
+        for (var proof : new AdminDeviceRestController.Confirmation[] { null,
+                new AdminDeviceRestController.Confirmation(null, null),
+                new AdminDeviceRestController.Confirmation("token", "123456") }) {
+            var error = assertThrows(ResponseStatusException.class, () -> controller.confirm("42", proof, request));
+            assertEquals(HttpStatus.BAD_REQUEST, error.getStatusCode());
+        }
+        verifyNoInteractions(service);
     }
 
     @Test
@@ -58,7 +72,7 @@ class AdminDeviceRestControllerTest {
         var controller = new AdminDeviceRestController(service);
         var request = new MockHttpServletRequest();
         try (var users = mockStatic(UsersDB.class)) {
-            assertThrows(AccessDeniedException.class, () -> controller.confirm("autotest-event", request));
+            assertThrows(AccessDeniedException.class, () -> controller.confirm("autotest-event", new AdminDeviceRestController.Confirmation("proof", null), request));
             assertThrows(AccessDeniedException.class, () -> controller.report("autotest-event", request));
         }
     }

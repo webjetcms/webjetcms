@@ -283,7 +283,7 @@ class AdminDeviceServiceTest {
         constants.when(() -> Constants.getBoolean("adminNewDeviceDetectionEnabled")).thenReturn(true);
         when(user.isAdmin()).thenReturn(false);
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
-        assertThrows(AccessDeniedException.class, () -> service.confirm(user, EVENT_ID));
+        assertThrows(AccessDeniedException.class, () -> service.confirm(user, EVENT_ID, TOKEN, false));
         verifyNoInteractions(repository);
         assertEquals(0, response.getCookies().length);
     }
@@ -351,7 +351,7 @@ class AdminDeviceServiceTest {
 
     @Test
     void rejectsMalformedEventIdsBeforeQueryingAndDerivesAccountScope() {
-        assertNull(service.confirm(user, "foreign-or-invalid"));
+        assertNull(service.confirm(user, "foreign-or-invalid", TOKEN, false));
         assertNull(service.report(user, "../event"));
         assertNull(service.findEvent(user, null));
         assertNull(service.findEvent(user, "0"));
@@ -359,10 +359,10 @@ class AdminDeviceServiceTest {
         assertNull(service.findEvent(user, "9223372036854775808"));
         verifyNoInteractions(repository);
         service.findEvent(user, EVENT_ID);
-        service.confirm(user, EVENT_ID);
+        service.confirm(user, EVENT_ID, TOKEN, false);
         service.report(user, EVENT_ID);
         verify(repository).findEvent(7, 42L);
-        verify(repository).confirm(7, 42L, NOW);
+        verify(repository).confirm(7, 42L, AdminDeviceService.confirmationHash(7, 42L, TOKEN, false), NOW, false);
         verify(repository).report(7, 42L, NOW);
     }
 
@@ -375,7 +375,7 @@ class AdminDeviceServiceTest {
 
     @Test
     void preservesAndConsumesTheEmailReturnTarget() {
-        String target = "/admin/v9/?securityEvent=" + EVENT_ID;
+        String target = "/admin/v9/?securityEvent=" + EVENT_ID + "&deviceConfirmation=" + TOKEN;
         request.getSession().setAttribute("adminAfterLogonRedirect", target);
         assertEquals(target, AdminDeviceService.getAfterLoginRedirect(request));
         assertEquals("/admin/v9/", AdminDeviceService.getAfterLoginRedirect(request));
@@ -385,6 +385,7 @@ class AdminDeviceServiceTest {
     @Test
     void queuesEscapedEmailWithMatchingPasswordResetSenderAndReadOnlyLink() {
         doCallRealMethod().when(service).sendNotification(any(), any(), any());
+        when(repository.issueConfirmation(eq(7), eq(42L), anyString(), eq(NOW), eq(false))).thenReturn(true);
         when(user.getFirstName()).thenReturn("<script>Autotest</script>");
         tools.when(() -> Tools.escapeHtml(anyString())).thenCallRealMethod();
         tools.when(() -> Tools.getBaseHref(request)).thenReturn("https://cms.example.test");
@@ -409,7 +410,40 @@ class AdminDeviceServiceTest {
             assertFalse(html.getValue().contains("<script>"));
             assertTrue(html.getValue().contains("https://cms.example.test/admin/v9/?securityEvent=" + EVENT_ID));
             assertFalse(html.getValue().contains("/report"));
+            var matcher = java.util.regex.Pattern.compile("deviceConfirmation=([A-Za-z0-9_-]{43})").matcher(html.getValue());
+            assertTrue(matcher.find());
+            verify(repository).issueConfirmation(7, 42L, AdminDeviceService.confirmationHash(7, 42L, matcher.group(1), false), NOW, false);
         }
+    }
+
+    /** UI requests deliver an unpredictable six-digit proof without confirming the device. */
+    @Test
+    void sendsCodeOnlyToAccountEmailAndEnforcesCooldown() {
+        when(repository.findEvent(7, 42L)).thenReturn(event());
+        when(repository.issueConfirmation(eq(7), eq(42L), anyString(), eq(NOW), eq(true))).thenReturn(true);
+        doReturn(true).when(service).sendVerificationEmail(any(), any(), any(), isNull(), anyString());
+        service.requestCode(user, EVENT_ID, request);
+        ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
+        verify(service).sendVerificationEmail(eq(user), eq(request), any(), isNull(), code.capture());
+        assertTrue(code.getValue().matches("[0-9]{6}"));
+        verify(repository).issueConfirmation(7, 42L, AdminDeviceService.confirmationHash(7, 42L, code.getValue(), true), NOW, true);
+        verify(repository, never()).confirm(anyInt(), anyLong(), anyString(), anyLong(), anyBoolean());
+        when(repository.issueConfirmation(eq(7), eq(42L), anyString(), eq(NOW), eq(true))).thenReturn(false);
+        var error = assertThrows(org.springframework.web.server.ResponseStatusException.class, () -> service.requestCode(user, EVENT_ID, request));
+        assertEquals(429, error.getStatusCode().value());
+        verify(service, times(1)).sendVerificationEmail(any(), any(), any(), isNull(), anyString());
+    }
+
+    /** Missing and malformed proofs cannot reach the persistence service. */
+    @Test
+    void rejectsIdOnlyOrMalformedConfirmation() {
+        assertNull(service.confirm(user, EVENT_ID, null, false));
+        assertNull(service.confirm(user, EVENT_ID, "123456", false));
+        assertNull(service.confirm(user, EVENT_ID, "12345", true));
+        assertNull(service.confirm(user, EVENT_ID, "1234567", true));
+        verifyNoInteractions(repository);
+        service.confirm(user, EVENT_ID, "012345", true);
+        verify(repository).confirm(7, 42L, AdminDeviceService.confirmationHash(7, 42L, "012345", true), NOW, true);
     }
 
     private static DeviceEntity event() {

@@ -1040,6 +1040,8 @@ function overviewFixture(t) {
     const environment = fixture(t);
     const { context, window, controller } = environment;
     Object.assign(context, { HTMLElement: window.HTMLElement, customElements: window.customElements, WJ: window.WJ });
+    const securitySource = fs.readFileSync(path.join(moduleDirectory, 'security-events.js'), 'utf8').replace(/^export /gm, '');
+    vm.runInContext(securitySource, context);
     const noticesSource = fs.readFileSync(path.join(moduleDirectory, 'notices.js'), 'utf8').replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
     vm.runInContext(`{ ${noticesSource}; this.DashboardNotices = DashboardNotices; }`, context);
     const source = fs.readFileSync(path.join(moduleDirectory, '../web-components/webjet-overview-dashboard.js'), 'utf8')
@@ -1811,4 +1813,38 @@ test('The edit toolbar counteracts smooth scrolling and releases its scroll list
     controller.setEditing(false);
     assert.equal(listeners.size, 0);
     assert.equal(controller.toolbar.style.transform, '');
+});
+
+test('Email confirmation consumes the token once and shows a ten-second success toast without a dialog', async t => {
+    const { context, overview, window, notifications } = overviewFixture(t);
+    context.registerDashboardWidgets = () => {};
+    context.getDashboardDefaults = () => [];
+    context.showActiveSessions = () => assert.fail('Successful email confirmation must not open a dialog.');
+    const requests = [];
+    context.fetch = async (url, options) => {
+        requests.push({ url, options });
+        return { ok: true, json: async () => ({ id: 42, confirmedAt: 3000 }) };
+    };
+    window.history.replaceState({}, '', '/admin/v9/?securityEvent=42&deviceConfirmation=email-secret');
+    const securityEvent = { id: 42, createDate: 1000 };
+    overview.configure({ data: { notices: [{ id: 'newDevice:42', kind: 'newDevice', securityEvent }], settings: { configured: true, items: [] },
+        currentSessions: { userSessions: [{ userSessions: [{ deviceId: 42, deviceConfirmed: false }] }] },
+        securityEventRequested: true, requestedSecurityEvent: securityEvent } });
+    overview.render();
+    await overview.dashboardReady;
+    await tick();
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].url, '/admin/rest/security/login-events/42/confirm');
+    assert.equal(requests[0].options.method, 'POST');
+    assert.deepEqual(JSON.parse(requests[0].options.body), { token: 'email-secret' });
+    assert.deepEqual(notifications, [['sessions', 'admin.dashboard.newDevice.confirmed.js', 10000]]);
+    assert.equal(overview.data.notices.length, 0);
+    assert.equal(overview.data.currentSessions.userSessions[0].userSessions[0].deviceConfirmed, true);
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+    assert.equal(window.location.search, '?securityEvent=42');
+    overview.render();
+    await overview.dashboardReady;
+    assert.equal(requests.length, 1);
+    assert.equal(notifications.length, 1);
+    overview.disconnectedCallback();
 });

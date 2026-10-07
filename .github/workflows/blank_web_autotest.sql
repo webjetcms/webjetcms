@@ -4447,6 +4447,11 @@ CREATE TABLE `user_login_devices` (
   `ip_address` varchar(64) DEFAULT NULL,
   `confirmed_at` datetime(3) DEFAULT NULL,
   `reported_at` datetime(3) DEFAULT NULL,
+  `confirmation_hash` char(64) DEFAULT NULL,
+  `confirmation_expires` datetime(3) DEFAULT NULL,
+  `code_hash` char(64) DEFAULT NULL,
+  `code_expires` datetime(3) DEFAULT NULL,
+  `code_attempts` int NOT NULL DEFAULT 0,
   PRIMARY KEY (`device_id`),
   UNIQUE KEY `uq_login_devices_user_token` (`user_id`, `token_hash`),
   KEY `ix_login_devices_seen` (`last_seen`)

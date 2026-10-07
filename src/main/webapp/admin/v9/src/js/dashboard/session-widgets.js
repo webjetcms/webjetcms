@@ -1,7 +1,7 @@
 import { registerWidget } from './registry';
 import { node, text, date, number, icon, containNativeScroll, fetchJson } from './widget-utils';
 import { adminMail, fetchLoggedAdministrators } from './system-widgets';
-import { confirmSecurityEvent } from './security-events';
+import { showDeviceConfirmation } from './security-events';
 
 function sessionButton(label, action, className) {
     const control = node('button', className, label);
@@ -247,7 +247,7 @@ export function showActiveSessions(context, securityEvent) {
             securityDetails.append(reported);
         } else {
             securityDetails.append(node('p', 'mb-2', text(context, 'newDevice.reportAdvice')));
-            const report = sessionButton(text(context, 'newDevice.report'), reportSecurityEvent, 'btn btn-sm btn-outline-secondary text-danger');
+            const report = sessionButton(text(context, 'newDevice.report'), reportSecurityEvent, 'btn btn-sm btn-white text-danger');
             report.classList.add('md-dashboard-sessions__report');
             report.disabled = reporting || busy;
             securityDetails.append(report);
@@ -353,8 +353,8 @@ export function showActiveSessions(context, securityEvent) {
             if (session.pending) action.append(node('span', 'small text-muted', text(context, 'sessionPending')));
             else if (unconfirmed) {
                 const controls = node('div', 'md-dashboard-sessions__device-actions');
-                const confirm = sessionButton(text(context, 'newDevice.confirm'), () => confirmDevice(session),
-                    'btn btn-sm btn-outline-secondary md-dashboard-sessions__confirm-device');
+                const confirm = sessionButton(text(context, 'newDevice.confirm'), () => confirmDevice(session, action),
+                    'btn btn-sm btn-white md-dashboard-sessions__confirm-device');
                 const deny = sessionButton(text(context, 'newDevice.notMe'), () => {
                     if (current) document.forms.namedItem('adminLogoffForm')?.requestSubmit();
                     else remove([session]);
@@ -382,29 +382,23 @@ export function showActiveSessions(context, securityEvent) {
         mine.append(table);
     }
 
-    /** Replaces device confirmation controls only after the server has saved the acknowledgement. */
-    async function confirmDevice(session) {
+    /** Uses the same code entry as dashboard notices, including for this session. */
+    function confirmDevice(session, host) {
         if (busy || reporting) return;
-        busy = true;
-        status.textContent = '';
-        renderMine();
-        try {
-            const updated = await confirmSecurityEvent(context.data, session.deviceId, dialog.signal);
-            if (dialog.signal.aborted) return;
-            if (securityEvent?.id === updated.id) {
-                Object.assign(securityEvent, updated);
-                securityDetails = null;
-            }
-            refreshSessions(context);
-        } catch (error) {
-            if (!dialog.signal.aborted) status.textContent = text(context, 'newDevice.saveError');
-        } finally {
-            busy = false;
-            if (!dialog.signal.aborted) {
-                renderMine();
-                tabButtons[0].focus({ preventScroll: true });
-            }
+        showDeviceConfirmation({ data: context.data, deviceId: session.deviceId, host, signal: dialog.signal,
+            translate: key => text(context, key), onConfirmed: deviceConfirmed });
+    }
+
+    function deviceConfirmed(updated) {
+        status.textContent = text(context, 'newDevice.confirmed');
+        status.classList.replace('text-danger', 'text-success');
+        if (securityEvent?.id === updated.id) {
+            Object.assign(securityEvent, updated);
+            securityDetails = null;
         }
+        refreshSessions(context);
+        renderMine();
+        tabButtons[0].focus({ preventScroll: true });
     }
 
     async function remove(sessions) {

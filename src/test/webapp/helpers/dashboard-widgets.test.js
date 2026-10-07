@@ -2269,14 +2269,21 @@ for (const review of [false, true]) test(`Unconfirmed session devices require sa
     assert.equal(root.querySelectorAll('.md-dashboard-sessions__new').length, 3);
     assert.equal(root.querySelectorAll('.md-dashboard-sessions__confirm-device').length, 3);
     assert.equal(root.querySelectorAll('.md-dashboard-sessions__deny-device').length, 3);
+    root.querySelector('.md-dashboard-sessions__confirm-device').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(requests[0].url, '/admin/rest/security/login-events/42/code');
+    assert.equal(context.data.notices.length, 1);
+    assert.match(root.querySelector('.md-dashboard-device-confirmation').textContent, /newDevice.codeSendError/);
     for (const stage of ['failure', 'mismatched-device', 'success']) {
         fail = stage === 'failure';
         returnedId = stage === 'mismatched-device' ? 99 : 42;
-        root.querySelector('.md-dashboard-sessions__confirm-device').click();
+        const form = root.querySelector('.md-dashboard-device-confirmation');
+        form.querySelector('input').value = '012345';
+        form.dispatchEvent(new window.Event('submit', { cancelable: true }));
         await new Promise(resolve => setImmediate(resolve));
         if (stage !== 'success') {
             assert.equal(root.querySelectorAll('.md-dashboard-sessions__new').length, 3);
-            assert.match(root.querySelector('.md-dashboard-sessions__status').textContent, /newDevice.saveError/);
+            assert.match(root.querySelector('.md-dashboard-device-confirmation').textContent, /newDevice.codeInvalid/);
             assert.equal(context.data.notices.length, 1);
         }
     }
@@ -2286,7 +2293,8 @@ for (const review of [false, true]) test(`Unconfirmed session devices require sa
     assert.equal(context.data.notices.length, 0);
     assert.equal(dialog.refreshed(), 1);
     assert.equal(scope.flattenSessions(context.data.currentSessions).length, 5, 'Confirmation must not end a session.');
-    assert.ok(requests.every(request => request.url === '/admin/rest/security/login-events/42/confirm'));
+    assert.ok(requests.slice(1).every(request => request.url === '/admin/rest/security/login-events/42/confirm'));
+    assert.deepEqual(JSON.parse(requests.at(-1).options.body), { code: '012345' });
     assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
     if (review) assert.equal(root.querySelector('.md-dashboard-sessions__security'), null);
 });

@@ -171,27 +171,68 @@ test('New-device notices ignore dismissals, precede errors and expire from the l
     assert.ok(host.querySelector('[data-severity="error"]'));
 });
 
-test('Login confirmation keeps the notice on failures and removes it only after server acknowledgment', async t => {
+test('Login confirmation sends a code first and changes shared state only after valid verification', async t => {
     const security = securityNotice('autotest/login');
     const { controller, host, requests, fail, respond, window, data, now } = fixture(t, null, [security]);
     data.currentSessions = { userSessions: [{ userSessions: [{ deviceId: security.securityEvent.id, deviceConfirmed: false }] }] };
     window.csrfToken = 'autotest-csrf';
     fail(true);
-    await controller._confirmSecurityEvent(security);
-    assert.ok(host.querySelector('.md-dashboard__notice-confirm'));
-    assert.match(host.querySelector('[role="alert"]').textContent, /newDevice.saveError/);
+    controller._confirmSecurityEvent(security);
+    await tick();
+    const form = host.querySelector('.md-dashboard-device-confirmation');
+    assert.match(form.textContent, /newDevice.codeSendError/);
+    assert.equal(requests[0].url, '/admin/rest/security/login-events/autotest%2Flogin/code');
+    assert.equal(data.currentSessions.userSessions[0].userSessions[0].deviceConfirmed, false);
     fail(false);
+    form.querySelector('[type="button"]').click();
+    await tick();
+    assert.match(form.textContent, /newDevice.codeSent/);
+    const submit = async () => {
+        form.querySelector('input').value = '012345';
+        form.dispatchEvent(new window.Event('submit', { cancelable: true }));
+        await tick();
+    };
     respond({ id: 'another-account', confirmedAt: now() });
-    await controller._confirmSecurityEvent(security);
+    await submit();
     assert.ok(host.querySelector('.md-dashboard__notice-confirm'));
+    assert.match(form.textContent, /newDevice.codeInvalid/);
     data.requestedSecurityEvent = security.securityEvent;
     respond({ ...security.securityEvent, confirmedAt: now() });
-    await controller._confirmSecurityEvent(security);
+    await submit();
     assert.equal(host.querySelector('.md-dashboard__notice-confirm'), null);
     assert.equal(data.requestedSecurityEvent.confirmedAt, now());
     assert.equal(data.currentSessions.userSessions[0].userSessions[0].deviceConfirmed, true);
-    assert.equal(requests[0].url, '/admin/rest/security/login-events/autotest%2Flogin/confirm');
+    assert.equal(requests.at(-1).url, '/admin/rest/security/login-events/autotest%2Flogin/confirm');
+    assert.deepEqual(JSON.parse(requests.at(-1).body), { code: '012345' });
     assert.equal(requests[0].method, 'POST');
     assert.equal(requests[0].headers['X-CSRF-Token'], 'autotest-csrf');
     assert.equal(controller.state.dismissedUntil[security.id], undefined);
+});
+
+test('The current browser has neutral wording and no not-me action, based only on its bound device ID', t => {
+    const security = securityNotice(42);
+    const { controller, host, data } = fixture(t, null, [security]);
+    data.currentSessions = { currentSessionId: 'current', userSessions: [{ userSessions: [{ sessionId: 'current', deviceId: 42 }] }] };
+    controller.render();
+    assert.equal(host.querySelector('[data-notice-id]').dataset.severity, 'info');
+    assert.match(host.textContent, /newDevice.currentTitle/);
+    assert.match(host.textContent, /newDevice.currentDetails/);
+    assert.equal(host.querySelector('.md-dashboard__notice-report'), null);
+    assert.ok(host.querySelector('.md-dashboard__notice-confirm'));
+    data.currentSessions.userSessions[0].userSessions[0].deviceId = 43;
+    controller.render();
+    assert.equal(host.querySelector('[data-notice-id]').dataset.severity, 'warning');
+    assert.ok(host.querySelector('.md-dashboard__notice-report'));
+});
+
+test('Multiple notice code forms remain usable independently and all requests abort on teardown', async t => {
+    const notices = [securityNotice(42), securityNotice(43)];
+    const { controller, host, requests } = fixture(t, null, notices);
+    for (const notice of notices) controller._confirmSecurityEvent(notice);
+    await tick();
+    assert.equal(host.querySelectorAll('.md-dashboard-device-confirmation').length, 2);
+    assert.equal(requests.length, 2);
+    assert.ok(requests.every(request => !request.signal.aborted));
+    controller.destroy();
+    assert.ok(requests.every(request => request.signal.aborted));
 });

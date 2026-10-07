@@ -25,6 +25,11 @@ async function openNotices(I) {
 
 function ready(I) { return I.waitForElement('.md-dashboard__notice-list[aria-busy="false"]', 20); }
 
+async function assertWhiteControl(I, selector, state) {
+    I.assertEqual(await I.grabCssPropertyFrom(selector, 'background-color'), 'rgb(255, 255, 255)', `The ${state} control must have a white background.`);
+    I.assertEqual(await I.grabCssPropertyFrom(selector, 'opacity'), '1', `The ${state} control must not blend with its colored container.`);
+}
+
 Scenario('Notices are ordered by severity and errors cannot be dismissed', async ({ I }) => {
     await openNotices(I);
     await I.assertDeepEqual(await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__notice')].map(row => row.dataset.severity)), ['error', 'warning', 'info']);
@@ -76,6 +81,13 @@ Scenario('New-device notices require an explicit server confirmation and cannot 
     notices.push({ ...notice('security', 'warning'), id: 'newDevice:42', kind: 'newDevice', securityEvent });
     state.dismissedUntil['newDevice:42'] = Date.now() + 30 * 86400000;
     let failConfirm = true;
+    let releaseCode;
+    const codeReady = new Promise(resolve => { releaseCode = resolve; });
+    const codeRoute = '**/admin/rest/security/login-events/*/code';
+    await I.mockRoute(codeRoute, async route => {
+        await codeReady;
+        return route.fulfill({ status: 204, body: '' });
+    });
     const routePattern = '**/admin/rest/security/login-events/*/confirm';
     await I.mockRoute(routePattern, route => {
         if (!failConfirm) securityEvent.confirmedAt = Date.now();
@@ -95,16 +107,56 @@ Scenario('New-device notices require an explicit server confirmation and cannot 
         }), `Security actions must fit a ${width}px viewport.`);
     }
     await I.wjSetDefaultWindowSize();
-    await I.clickCss(`${row} .md-dashboard__notice-confirm`);
-    await I.waitForVisible('.md-dashboard__notice-status:not(:empty)', 10);
+    const confirm = `${row} .md-dashboard__notice-confirm`;
+    const input = `${row} input[name="deviceConfirmationCode"]`;
+    const resend = `${row} .md-dashboard-device-confirmation button[type="button"]`;
+    await assertWhiteControl(I, confirm, 'default');
+    await I.moveCursorTo(confirm);
+    await assertWhiteControl(I, confirm, 'hovered');
+    await I.executeScript(selector => document.querySelector(selector).focus(), confirm);
+    await I.pressKey('Shift+Tab');
+    await I.pressKey('Tab');
+    await assertWhiteControl(I, confirm, 'keyboard-focused');
+    await I.pressKeyDown('Space');
+    await assertWhiteControl(I, confirm, 'pressed');
+    await I.pressKeyUp('Space');
+    await I.waitForElement(`${row} form[aria-busy="true"]`, 10);
+    for (const selector of [confirm, input, resend]) await assertWhiteControl(I, selector, 'disabled while sending');
+    releaseCode();
+    await I.waitForText('Zadajte 6-miestny kód', 10, row);
+    for (const selector of [confirm, input, resend]) await assertWhiteControl(I, selector, 'expanded');
+    await I.moveCursorTo(resend);
+    await assertWhiteControl(I, resend, 'hovered resend');
+    for (const width of [1440, 1100, 390]) {
+        await I.resizeWindow(width, 1100);
+        await I.assertTrue(await I.executeScript(() => {
+            const notice = document.querySelector('[data-notice-id="newDevice:42"]');
+            const form = notice.querySelector('.md-dashboard-device-confirmation');
+            const bounds = notice.getBoundingClientRect();
+            const controls = [form, ...form.querySelectorAll('input, button')];
+            return getComputedStyle(notice).backgroundColor !== 'rgba(0, 0, 0, 0)'
+                && notice.scrollWidth <= notice.clientWidth + 1
+                && controls.every(control => {
+                    const rect = control.getBoundingClientRect();
+                    return rect.left >= bounds.left && rect.right <= bounds.right && rect.bottom <= bounds.bottom;
+                });
+        }), `Code entry must remain inside the colored notice at ${width}px.`);
+    }
+    await I.saveScreenshot('dashboard-notice-code-mobile.png');
+    await I.wjSetDefaultWindowSize();
+    await I.saveScreenshot('dashboard-notice-code.png');
+    await I.fillField(`${row} input[name="deviceConfirmationCode"]`, '012345');
+    await I.clickCss(`${row} .md-dashboard-device-confirmation [type="submit"]`);
+    await I.waitForText('Kód sa nepodarilo overiť', 10, row);
     await I.seeElement(row);
     failConfirm = false;
-    await I.clickCss(`${row} .md-dashboard__notice-confirm`);
+    await I.clickCss(`${row} .md-dashboard-device-confirmation [type="submit"]`);
     await I.waitForInvisible(row, 10);
     await I.refreshPage();
     await ready(I);
     await I.dontSeeElement(row);
     await I.stopMockingRoute(routePattern);
+    await I.stopMockingRoute(codeRoute);
     await I.stopMockingRoute(dashboardPageRoute);
     await I.stopMockingRoute(preferencesRoute);
 });
@@ -196,6 +248,30 @@ Scenario('Keyboard review and reporting an unfamiliar login preserve its warning
     await I.stopMockingRoute(administratorsRoute);
     await I.stopMockingRoute(dashboardPageRoute);
     await I.stopMockingRoute(preferencesRoute);
+});
+
+Scenario('Email confirmation shows a success toast without opening the session dialog', async ({ I }) => {
+    const securityEvent = { id: 45, createDate: Date.now(), browserName: 'Email browser autotest', operatingSystem: 'Linux' };
+    const confirmRoute = '**/admin/rest/security/login-events/45/confirm';
+    const emailPageRoute = '**/admin/v9/?securityEvent=45&deviceConfirmation=autotest-email-secret';
+    const proofs = [];
+    await I.mockRoute(confirmRoute, route => {
+        proofs.push(route.request().postDataJSON());
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ...securityEvent, confirmedAt: Date.now() }) });
+    });
+    await mockDashboardBootstrap(I, () => ({ notices: [{ id: 'newDevice:45', kind: 'newDevice', securityEvent }],
+        currentSessions: { userSessions: [] }, securityEventRequested: true, requestedSecurityEvent: securityEvent }), null, emailPageRoute);
+    I.amOnPage('/admin/v9/?securityEvent=45&deviceConfirmation=autotest-email-secret');
+    I.waitForText('Prihlásenie bolo potvrdené.', 10, '.toast-success');
+    I.see('Moje aktívne prihlásenia', '.toast-success .toast-title');
+    I.dontSeeElement('.md-dashboard-modal--sessions');
+    I.dontSeeElement('[data-notice-id="newDevice:45"]');
+    I.dontSeeInCurrentUrl('deviceConfirmation=');
+    I.assertDeepEqual(proofs, [{ token: 'autotest-email-secret' }]);
+    I.saveScreenshot('dashboard-email-confirmation-toast.png');
+    I.waitForDetached('.toast-success', 15);
+    await I.stopMockingRoute(confirmRoute);
+    await I.stopMockingRoute(emailPageRoute);
 });
 
 Scenario('Email bootstrap opens login details and unavailable links without a mutation', async ({ I }) => {

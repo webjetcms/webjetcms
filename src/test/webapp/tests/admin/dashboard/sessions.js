@@ -42,7 +42,8 @@ Scenario('Real sessions and personal login history are available from the welcom
     I.assertTrue(bootstrap.currentSessions.userSessions.some(cluster => cluster.userSessions.some(session => session.lastActivity > 0)),
         'The real session API must include the last activity timestamp.');
     const current = bootstrap.currentSessions.userSessions.flatMap(cluster => cluster.userSessions).find(session => session.sessionId === bootstrap.currentSessions.currentSessionId);
-    I.assertTrue(current.deviceId > 0 && typeof current.deviceConfirmed === 'boolean', 'A completed login must associate its device and load current confirmation state.');
+    // Standard headless test logins are deliberately excluded from device tracking on local hosts.
+    I.assertTrue(current.deviceId == null || typeof current.deviceConfirmed === 'boolean', 'Tracked sessions must load current device confirmation state.');
     I.assertTrue(Boolean(current?.operatingSystem) && !/\d/.test(current.browserName), 'New sessions must contain a browser family without its version and a separate operating system.');
     I.see(`${current.browserName} · ${current.operatingSystem}`, `${modal} .md-dashboard-sessions__mine`);
     I.assertTrue(!Object.hasOwn(bootstrap, 'loggedAdmins'), 'Administrator summaries must not be injected into the page.');
@@ -183,6 +184,8 @@ Scenario('New session devices can be confirmed or denied from either dialog entr
     };
     let failConfirm = true;
     const confirmed = [], removed = [];
+    const codeRoute = '**/admin/rest/security/login-events/*/code';
+    await I.mockRoute(codeRoute, route => route.fulfill({ status: 204, body: '' }));
     const confirmRoute = '**/admin/rest/security/login-events/*/confirm';
     await mockDashboardBootstrap(I, () => data, () => ({ dismissedUntil: {} }));
     await I.mockRoute(confirmRoute, route => {
@@ -217,8 +220,23 @@ Scenario('New session devices can be confirmed or denied from either dialog entr
     I.saveScreenshot('dashboard-session-device-actions-mobile.png');
     I.wjSetDefaultWindowSize();
     I.saveScreenshot('dashboard-session-device-actions.png');
+    I.assertEqual(await I.grabCssPropertyFrom(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__confirm-device`, 'background-color'), 'rgb(255, 255, 255)', 'Device confirmation must have a white background on the highlighted session row.');
     I.clickCss(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__confirm-device`);
-    I.waitForVisible(`${modal} .md-dashboard-sessions__status:not(:empty)`, 10);
+    I.waitForText('Zadajte 6-miestny kód', 10, modal);
+    for (const selector of ['input[name="deviceConfirmationCode"]', '.md-dashboard-device-confirmation button[type="button"]']) {
+        I.assertEqual(await I.grabCssPropertyFrom(`${modal} ${selector}`, 'background-color'), 'rgb(255, 255, 255)', 'Code entry and resend must remain white in the session dialog.');
+    }
+    I.resizeWindow(390, 1100);
+    I.assertTrue(await I.executeScript(() => {
+        const body = document.querySelector('.md-dashboard-modal--sessions .modal-body');
+        return body.scrollWidth <= body.clientWidth + 1;
+    }), 'Email code entry must fit a mobile viewport.');
+    I.saveScreenshot('dashboard-device-code-mobile.png');
+    I.wjSetDefaultWindowSize();
+    I.saveScreenshot('dashboard-device-code.png');
+    I.fillField(`${modal} input[name="deviceConfirmationCode"]`, '012345');
+    I.clickCss(`${modal} .md-dashboard-device-confirmation [type="submit"]`);
+    I.waitForText('Kód sa nepodarilo overiť', 10, modal);
     I.seeElement(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__new`);
     I.click('Zavrieť', `${modal} .modal-footer`);
     I.waitForDetached(modal, 10);
@@ -228,6 +246,9 @@ Scenario('New session devices can be confirmed or denied from either dialog entr
     I.assertEqual(await I.grabNumberOfVisibleElements(`${modal} .md-dashboard-sessions__new`), 2);
     failConfirm = false;
     I.clickCss(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__confirm-device`);
+    I.waitForText('Zadajte 6-miestny kód', 10, modal);
+    I.fillField(`${modal} input[name="deviceConfirmationCode"]`, '012345');
+    I.clickCss(`${modal} .md-dashboard-device-confirmation [type="submit"]`);
     I.waitForInvisible(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__new`, 10);
     I.see('Odhlásiť', `${modal} tbody tr:nth-child(2)`);
     I.dontSeeElement(`${modal} .md-dashboard-sessions__security`);
@@ -247,6 +268,7 @@ Scenario('New session devices can be confirmed or denied from either dialog entr
     I.click('Zavrieť', `${modal} .modal-footer`);
     I.waitForDetached(modal, 10);
     await I.stopMockingRoute(confirmRoute);
+    await I.stopMockingRoute(codeRoute);
 });
 
 /** Every administrator logout is intercepted before interaction; no real administrator sessions are invalidated. */

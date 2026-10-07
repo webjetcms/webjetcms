@@ -1,5 +1,5 @@
 import { date } from './widget-utils';
-import { confirmSecurityEvent } from './security-events';
+import { isCurrentDevice, showDeviceConfirmation } from './security-events';
 
 const SETTINGS_KEY = "dashboard.notices";
 const WEEK = 7 * 24 * 60 * 60 * 1000;
@@ -81,7 +81,8 @@ export class DashboardNotices {
     _row(notice) {
         const wrapper = node("div", "md-dashboard__notice");
         wrapper.dataset.noticeId = notice.id;
-        wrapper.dataset.severity = notice.severity;
+        const currentDevice = notice.kind === "newDevice" && isCurrentDevice(this.data, notice.securityEvent.id);
+        wrapper.dataset.severity = currentDevice ? "info" : notice.severity;
         const row = node("div", "md-dashboard__notice-row");
         const icon = node("i", `ti ${/^ti-[a-z0-9-]+$/.test(notice.icon) ? notice.icon : "ti-info-circle"}`);
         icon.setAttribute("aria-hidden", "true");
@@ -94,15 +95,17 @@ export class DashboardNotices {
             const event = notice.securityEvent;
             const browser = [event.browserName, event.browserVersion].filter(Boolean).join(" ");
             const device = [browser, event.operatingSystem].filter(Boolean).join(" · ");
-            description = this._t("newDevice.details", device || "—", event.ipAddress || "—", date(event.createDate));
+            description = currentDevice
+                ? this._t("newDevice.currentDetails", device || "—", date(event.createDate))
+                : this._t("newDevice.details", device || "—", event.ipAddress || "—", date(event.createDate));
         }
-        text.append(node("strong", "md-dashboard__notice-title", notice.title),
+        text.append(node("strong", "md-dashboard__notice-title", currentDevice ? this._t("newDevice.currentTitle") : notice.title),
             node("span", "md-dashboard__notice-description", description));
         const actions = node("div", "md-dashboard__notice-actions");
         if (notice.kind === "newDevice") {
             actions.append(button(this._t("newDevice.confirm"), () => this._confirmSecurityEvent(notice),
-                "btn btn-sm btn-outline-secondary md-dashboard__notice-confirm"));
-            actions.append(button(this._t("newDevice.notMe"), () => this.openSecurityEvent?.(notice.securityEvent),
+                "btn btn-sm btn-white md-dashboard__notice-confirm"));
+            if (!currentDevice) actions.append(button(this._t("newDevice.notMe"), () => this.openSecurityEvent?.(notice.securityEvent),
                 "btn btn-sm btn-link text-danger md-dashboard__notice-report"));
         } else if (notice.action) {
             actions.append(button(notice.action.label, event => {
@@ -113,7 +116,7 @@ export class DashboardNotices {
                     event.currentTarget.focus({ preventScroll: true });
                     this.openSessions?.();
                 }
-            }, "btn btn-sm btn-outline-secondary md-dashboard__notice-action"));
+            }, "btn btn-sm btn-white md-dashboard__notice-action"));
         }
         if (notice.kind !== "newDevice" && notice.severity !== "error") {
             if (notice.severity === "warning") actions.append(button(this._t("notice.later"), () => this._dismiss(notice, wrapper)));
@@ -136,25 +139,22 @@ export class DashboardNotices {
         this.container.setAttribute("aria-busy", String(!!busy));
     }
 
-    /** Acknowledges a login on the server without using the ordinary notice-dismissal preferences. */
-    async _confirmSecurityEvent(notice) {
+    /** Requests an email code; trust changes only after the shared form verifies it. */
+    _confirmSecurityEvent(notice) {
         if (this.busy || this.destroyed) return;
-        this.busy = true;
-        this._setBusy(true);
-        this.request = new AbortController();
-        try {
-            await confirmSecurityEvent(this.data, notice.securityEvent.id, this.request.signal);
-            if (this.destroyed) return;
-            this.busy = false;
-            this.render();
-            (this.container.querySelector("button") || this.host.closest("webjet-overview-dashboard")?.querySelector("button"))?.focus({ preventScroll: true });
-            WJ.notifySuccess?.(this._t("newDevice.confirmed"), "", 10000);
-        } catch (error) {
-            if (!this.destroyed) this.status.textContent = this._t("newDevice.saveError");
-        } finally {
-            this.busy = false;
-            if (!this.destroyed) this._setBusy(false);
-        }
+        const row = [...this.container.querySelectorAll('[data-notice-id]')].find(element => element.dataset.noticeId === notice.id);
+        if (!row || row.querySelector('.md-dashboard-device-confirmation')) return;
+        const host = node('div', 'md-dashboard__notice-verification');
+        row.append(host);
+        this.confirmationRequest ||= new AbortController();
+        row.querySelector('.md-dashboard__notice-confirm').disabled = true;
+        showDeviceConfirmation({ data: this.data, deviceId: notice.securityEvent.id, host, signal: this.confirmationRequest.signal,
+            translate: key => this._t(key), onConfirmed: () => {
+                if (this.destroyed) return;
+                this.render();
+                (this.container.querySelector('button') || this.host.closest('webjet-overview-dashboard')?.querySelector('button'))?.focus({ preventScroll: true });
+                WJ.notifySuccess?.(this._t('newDevice.confirmed'), '', 10000);
+            } });
     }
 
     /** Saves just the notice record through the existing administration settings API. */
@@ -260,6 +260,7 @@ export class DashboardNotices {
     destroy() {
         this.destroyed = true;
         this.request?.abort();
+        this.confirmationRequest?.abort();
         this.animation?.cancel();
         window.clearTimeout(this.expiryTimer);
         this._clearToast();

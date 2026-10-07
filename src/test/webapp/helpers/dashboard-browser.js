@@ -45,9 +45,9 @@ async function waitForWidgets(I) {
 const dashboardPageRoute = '**/admin/v9/';
 
 /** Overrides embedded data in the HTML response without changing the account's stored preferences. */
-async function mockDashboardBootstrap(I, readData, readNoticePreferences) {
-    await I.stopMockingRoute(dashboardPageRoute);
-    await I.mockRoute(dashboardPageRoute, async route => {
+async function mockDashboardBootstrap(I, readData, readNoticePreferences, pageRoute = dashboardPageRoute) {
+    await I.stopMockingRoute(pageRoute);
+    await I.mockRoute(pageRoute, async route => {
         const response = await route.fetch();
         const html = await response.text();
         const marker = /window\.webjetOverviewDashboardBootstrapData = JSON\.parse\([^\n]+\);/;

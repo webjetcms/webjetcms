@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,10 +26,23 @@ public class AdminDeviceRestController {
         this.service = service;
     }
 
-    /** Confirms a login using the request's account, never a submitted user identifier. */
+    public record Confirmation(String token, String code) { }
+
+    /** Sends a code to the authenticated account's email, never a client-supplied address. */
+    @PostMapping("/{id}/code")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void requestCode(@PathVariable("id") String id, HttpServletRequest request) {
+        service.requestCode(UsersDB.getCurrentUser(request), id, request);
+    }
+
+    /** Requires exactly one email proof in addition to the authenticated account. */
     @PostMapping("/{id}/confirm")
-    public DeviceEntity confirm(@PathVariable("id") String id, HttpServletRequest request) {
-        return requireEvent(service.confirm(UsersDB.getCurrentUser(request), id));
+    public DeviceEntity confirm(@PathVariable("id") String id, @RequestBody Confirmation proof, HttpServletRequest request) {
+        if (proof == null || (proof.token() == null) == (proof.code() == null)) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        DeviceEntity event = service.confirm(UsersDB.getCurrentUser(request), id,
+            proof.code() == null ? proof.token() : proof.code(), proof.code() != null);
+        if (event == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        return event;
     }
 
     /** Forgets the reported browser without terminating sessions or suppressing the warning. */

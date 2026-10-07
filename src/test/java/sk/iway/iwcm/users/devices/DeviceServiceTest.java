@@ -127,28 +127,75 @@ class DeviceServiceTest {
         verify(devices).save(device);
     }
 
-    /** Confirmation preserves its first timestamp and does not undo a reported browser. */
+    /** Email confirmation is single-use, account-owned and preserves the login timestamp. */
     @Test
-    void confirmingTwiceDoesNotChangeRecognition() {
+    void linkRequiresMatchingUnexpiredProofAndCannotBeReplayed() {
         DeviceEntity device = device(NOW - 100);
-        device.setReportedAt(Instant.ofEpochMilli(NOW - 50));
         ownedDevice(device);
+        assertTrue(service.issueConfirmation(USER_ID, DEVICE_ID, TOKEN_HASH, NOW, false));
+        assertNull(service.confirm(USER_ID, DEVICE_ID, "wrong", NOW, false));
+        assertNull(device.getConfirmedAt());
+        DeviceEntity confirmed = service.confirm(USER_ID, DEVICE_ID, TOKEN_HASH, NOW + 1, false);
+        assertEquals(Instant.ofEpochMilli(NOW + 1), confirmed.getConfirmedAt());
+        assertEquals(Instant.ofEpochMilli(NOW - 100), confirmed.getLastSeen());
+        assertNull(confirmed.getConfirmationHash());
+        assertNull(service.confirm(USER_ID, DEVICE_ID, TOKEN_HASH, NOW + 2, false));
+    }
 
-        DeviceEntity first = service.confirm(USER_ID, DEVICE_ID, NOW);
-        DeviceEntity repeated = service.confirm(USER_ID, DEVICE_ID, NOW + 1);
+    /** Expired links and reported devices cannot establish trust. */
+    @Test
+    void expiresAndRevokesEmailProofs() {
+        DeviceEntity device = device(NOW - 100);
+        ownedDevice(device);
+        service.issueConfirmation(USER_ID, DEVICE_ID, TOKEN_HASH, NOW, false);
+        assertNull(service.confirm(USER_ID, DEVICE_ID, TOKEN_HASH, NOW + DeviceService.LINK_AGE, false));
+        service.report(USER_ID, DEVICE_ID, NOW + 1);
+        assertNull(device.getConfirmationHash());
+        assertFalse(service.issueConfirmation(USER_ID, DEVICE_ID, TOKEN_HASH, NOW + 2, true));
+        assertNull(service.confirm(USER_ID, DEVICE_ID, TOKEN_HASH, NOW + 2, false));
+    }
 
-        assertEquals(Instant.ofEpochMilli(NOW), first.getConfirmedAt());
-        assertEquals(first, repeated);
-        assertEquals(Instant.ofEpochMilli(NOW - 50), first.getReportedAt());
-        assertEquals(Instant.ofEpochMilli(NOW - 100), device.getLastSeen());
-        verify(devices).save(device);
+    /** Codes expire, have five attempts, and resends cannot bypass the per-device cooldown. */
+    @Test
+    void limitsCodeAttemptsAndResendsWithoutInvalidatingTheOriginalEmailLink() {
+        DeviceEntity device = device(NOW - 100);
+        ownedDevice(device);
+        service.issueConfirmation(USER_ID, DEVICE_ID, TOKEN_HASH, NOW, false);
+        assertTrue(service.issueConfirmation(USER_ID, DEVICE_ID, "code", NOW, true));
+        assertFalse(service.issueConfirmation(USER_ID, DEVICE_ID, "replacement", NOW + 59_999, true));
+        for (int attempt = 0; attempt < 5; attempt++) assertNull(service.confirm(USER_ID, DEVICE_ID, "wrong", NOW + 1, true));
+        assertEquals(5, device.getCodeAttempts());
+        assertNull(service.confirm(USER_ID, DEVICE_ID, "code", NOW + 2, true));
+        assertTrue(service.issueConfirmation(USER_ID, DEVICE_ID, "replacement", NOW + 60_000, true));
+        assertNull(service.confirm(USER_ID, DEVICE_ID, "code", NOW + 60_001, true));
+        assertNull(service.confirm(USER_ID, DEVICE_ID, "replacement", NOW + 60_000 + DeviceService.CODE_AGE, true));
+        assertEquals(TOKEN_HASH, device.getConfirmationHash());
+        assertNotNull(service.confirm(USER_ID, DEVICE_ID, TOKEN_HASH, NOW + 60_002, false));
+        assertNull(device.getCodeHash());
+    }
+
+    /** A valid final code attempt consumes both proofs and hides secrets from JSON. */
+    @Test
+    void acceptsFifthCodeAttemptAndInvalidatesEmailLink() throws Exception {
+        DeviceEntity device = device(NOW - 100);
+        ownedDevice(device);
+        service.issueConfirmation(USER_ID, DEVICE_ID, TOKEN_HASH, NOW, false);
+        service.issueConfirmation(USER_ID, DEVICE_ID, "code", NOW, true);
+        String json = sk.iway.iwcm.JsonTools.objectToJSON(device);
+        assertFalse(json.contains("confirmationHash"));
+        assertFalse(json.contains("codeHash"));
+        assertFalse(json.contains("codeAttempts"));
+        for (int attempt = 0; attempt < 4; attempt++) service.confirm(USER_ID, DEVICE_ID, "wrong", NOW + 1, true);
+        assertNotNull(service.confirm(USER_ID, DEVICE_ID, "code", NOW + 2, true));
+        assertNull(service.confirm(USER_ID, DEVICE_ID, "code", NOW + 3, true));
+        assertNull(service.confirm(USER_ID, DEVICE_ID, TOKEN_HASH, NOW + 3, false));
     }
 
     /** Missing and foreign device IDs cannot be read, confirmed or reported. */
     @Test
     void inaccessibleDeviceCannotBeReadOrChanged() {
         assertNull(service.findEvent(USER_ID, DEVICE_ID));
-        assertNull(service.confirm(USER_ID, DEVICE_ID, NOW));
+        assertNull(service.confirm(USER_ID, DEVICE_ID, TOKEN_HASH, NOW, false));
         assertNull(service.report(USER_ID, DEVICE_ID, NOW));
 
         verify(devices, times(3)).findByUserIdAndId(USER_ID, DEVICE_ID);
@@ -173,11 +220,12 @@ class DeviceServiceTest {
     void confirmationSaveFailureIsReported() {
         DeviceEntity device = device(NOW - 100);
         ownedDevice(device);
+        service.issueConfirmation(USER_ID, DEVICE_ID, TOKEN_HASH, NOW, false);
         var failure = new DataAccessResourceFailureException("Database unavailable");
         when(devices.save(device)).thenThrow(failure);
 
         IllegalStateException result = assertThrows(IllegalStateException.class,
-            () -> service.confirm(USER_ID, DEVICE_ID, NOW));
+            () -> service.confirm(USER_ID, DEVICE_ID, TOKEN_HASH, NOW, false));
 
         assertSame(failure, result.getCause());
     }

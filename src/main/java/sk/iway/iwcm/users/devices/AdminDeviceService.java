@@ -23,6 +23,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -151,12 +153,30 @@ public class AdminDeviceService {
         return deviceService.findEvent(user.getUserId(), id);
     }
 
-    /** Confirms an owned event without extending the device's last-login time. */
-    public DeviceEntity confirm(Identity user, String eventId) {
+    /** Confirms an owned event only with the secret delivered to the account's email address. */
+    public DeviceEntity confirm(Identity user, String eventId, String proof, boolean code) {
         requireAdministrator(user);
         long id = deviceId(eventId);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled") || id <= 0) return null;
-        return deviceService.confirm(user.getUserId(), id, clock.millis());
+        if (proof == null || !(code ? proof.matches("[0-9]{6}") : TOKEN_PATTERN.matcher(proof).matches())) return null;
+        return deviceService.confirm(user.getUserId(), id, confirmationHash(user.getUserId(), id, proof, code), clock.millis(), code);
+    }
+
+    /** Sends a new code without exposing it in the response or changing device trust. */
+    public void requestCode(Identity user, String eventId, HttpServletRequest request) {
+        DeviceEntity device = findEvent(user, eventId);
+        if (device == null || device.getConfirmedAt() != null || device.getReportedAt() != null)
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        if (Tools.isEmpty(user.getEmail())) throw new ResponseStatusException(HttpStatus.CONFLICT);
+        String code = String.format(java.util.Locale.ROOT, "%06d", RANDOM.nextInt(1_000_000));
+        if (!deviceService.issueConfirmation(user.getUserId(), device.getId(),
+                confirmationHash(user.getUserId(), device.getId(), code, true), clock.millis(), true))
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS);
+        if (!sendVerificationEmail(user, request, device, null, code)) throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    static String confirmationHash(int userId, long id, String proof, boolean code) {
+        return hashToken((code ? "device-code:" : "device-link:") + userId + ":" + id + ":" + proof);
     }
 
     /** Reports an owned event and forgets only that account's recognition of its browser. */
@@ -262,6 +282,17 @@ public class AdminDeviceService {
             Logger.error(AdminDeviceService.class, "Cannot notify administrator without an email address: " + user.getUserId());
             return;
         }
+        byte[] bytes = new byte[32];
+        RANDOM.nextBytes(bytes);
+        String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        if (!deviceService.issueConfirmation(user.getUserId(), event.getId(),
+                confirmationHash(user.getUserId(), event.getId(), token, false), clock.millis(), false)) return;
+        if (!sendVerificationEmail(user, request, event, token, null))
+            Logger.error(AdminDeviceService.class, "Cannot queue new-device notification for user " + user.getUserId());
+    }
+
+    /** Reuses the notification layout and configured password-reset sender for both email proofs. */
+    boolean sendVerificationEmail(Identity user, HttpServletRequest request, DeviceEntity event, String token, String code) {
         Prop prop = Prop.getInstance(request);
         String baseHref = Tools.getBaseHref(request);
         String link = baseHref + "/admin/v9/?securityEvent=" + event.getId();
@@ -269,6 +300,7 @@ public class AdminDeviceService {
         String environment = Constants.getStringExecuteMacro("dashboardEnvironmentName");
         String fromName = SendMail.getDefaultSenderName("passwordReset", Tools.getRequestAttribute(request, "sendPasswordFromName", user.getFullName()));
         String fromEmail = SendMail.getDefaultSenderEmail("passwordReset", Tools.getRequestAttribute(request, "sendPasswordFromEmail", user.getEmail()));
+        String actionStyle = "display:inline-block;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;padding:12px 16px;border-radius:6px;text-decoration:none;font-weight:bold;line-height:20px;text-align:center;";
         // Declare both schemes so Apple Mail uses our colors instead of automatically recoloring the button.
         String message = "<!doctype html><html><head><meta charset=\"UTF-8\">"
             + "<meta name=\"color-scheme\" content=\"light dark\"><meta name=\"supported-color-schemes\" content=\"light dark\">"
@@ -277,6 +309,7 @@ public class AdminDeviceService {
             + ".email-body{background:#272727!important;color:#f3f3f6!important}"
             + ".email-details{background:#39393b!important;color:#f3f3f6!important}"
             + ".email-action{background:#e00028!important;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important}"
+            + ".email-action-confirm{background:#00856f!important}"
             + "}</style></head><body class=\"email-body\" style=\"font-family:Arial,sans-serif;background:#ffffff;color:#272727\">"
             + "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.greeting", user.getFirstName())) + "</p>"
             + "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.intro")) + "</p>"
@@ -285,12 +318,18 @@ public class AdminDeviceService {
             + emailLine(prop, "ip", event.getIpAddress())
             + emailLine(prop, "time", Tools.formatDateTime(event.getCreateDate().toEpochMilli()))
             + emailLine(prop, "environment", domain + (Tools.isEmpty(environment) ? "" : " (" + environment + ")"))
-            + "</div><p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.instruction")) + "</p>"
-            + "<p><a class=\"email-action\" style=\"display:inline-block;background:#e00028;color:#ffffff!important;-webkit-text-fill-color:#ffffff!important;padding:12px 16px;border-radius:6px;text-decoration:none\" href=\""
-            + Tools.escapeHtml(link) + "\">" + Tools.escapeHtml(prop.getText("admin.newDevice.email.action")) + "</a></p></body></html>";
-        boolean queued = SendMail.sendLater(fromName, fromEmail, user.getEmail(), null, null, null,
-            prop.getText("admin.newDevice.email.subject", domain), message, baseHref, null, null);
-        if (!queued) Logger.error(AdminDeviceService.class, "Cannot queue new-device notification for user " + user.getUserId());
+            + "</div>" + (code == null ? "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.linkExpiry")) + "</p>"
+                : "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.codeIntro")) + "</p><p style=\"font-size:28px;font-weight:bold;letter-spacing:4px\">"
+                + code + "</p><p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.codeExpiry")) + "</p>")
+            + "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.instruction")) + "</p>"
+            + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr>"
+            + (code == null ? "<td style=\"padding-right:8px\"><a class=\"email-action email-action-confirm\" style=\"" + actionStyle
+                + "background:#00BE9F\" href=\"" + Tools.escapeHtml(link + "&deviceConfirmation=" + token) + "\">"
+                + Tools.escapeHtml(prop.getText("admin.newDevice.email.confirm")) + "</a></td>" : "")
+            + "<td><a class=\"email-action\" style=\"" + actionStyle + "background:#E00028\" href=\""
+            + Tools.escapeHtml(link) + "\">" + Tools.escapeHtml(prop.getText("admin.newDevice.email.action")) + "</a></td></tr></table></body></html>";
+        return SendMail.sendLater(fromName, fromEmail, user.getEmail(), null, null, null,
+            prop.getText(code == null ? "admin.newDevice.email.subject" : "admin.newDevice.email.codeSubject", domain), message, baseHref, null, null);
     }
 
     private static String emailLine(Prop prop, String key, String value) {
