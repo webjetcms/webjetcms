@@ -385,28 +385,6 @@ public class MultistepFormsService {
     }
 
     /**
-     * Convert serialized form data into a key/value map.
-     * <p>
-     * Input format is expected as {@code itemFormId~value} pairs separated by {@code |}.
-     * The upload-field suffix {@code -fileNames} is normalized away.
-     *
-     * @param form persisted form entity with serialized data
-     * @return ordered map of field identifiers and their values
-     */
-    public static final Map<String, String> getFormDataAsMap(FormsEntity form) {
-        Map<String, String> formData = new LinkedHashMap<>();
-        for(String fieldData : Tools.getTokens(form.getData(), "|")) {
-            String[] fieldDataArr = Tools.getTokens(fieldData, "~");
-            String fieldId = fieldDataArr[0];
-            if(fieldId.endsWith("-fileNames")) fieldId = fieldId.replace("-fileNames", "");
-            String fieldValue = fieldDataArr.length == 2 ? fieldDataArr[1] : "";
-
-            formData.put(fieldId, fieldValue);
-        }
-        return formData;
-    }
-
-    /**
      * Resolve human-readable field name for validation and UI messages.
      *
      * @param stepItem form item definition
@@ -2063,16 +2041,16 @@ public class MultistepFormsService {
      * Replaces placeholders using prepared values without reading the submission session.
      * HTML entities are normalized before escaping to avoid double-escaping filtered values.
      *
-     * @param notificationValues values keyed by logical field IDs, containing HTML-escaped text,
+     * @param formData values keyed by logical field IDs, containing HTML-escaped text,
      *                           sanitized WYSIWYG HTML, saved filenames and empty answers;
      *                           markup in these values is escaped for placeholder replacement
      * @param formHtml markup containing {@code !fieldId!} placeholders
      * @return updated markup, or {@code null} when {@code formHtml} is {@code null}
      */
-    public static final StringBuilder updateFormValues(Map<String, String> notificationValues, StringBuilder formHtml) {
+    public static final StringBuilder updateFormValues(Map<String, String> formData, StringBuilder formHtml) {
         if (formHtml == null) return null;
 
-        for (Map.Entry<String, String> field : notificationValues.entrySet()) {
+        for (Map.Entry<String, String> field : formData.entrySet()) {
             String replaceValue = field.getValue();
             if (replaceValue == null) replaceValue = "";
 

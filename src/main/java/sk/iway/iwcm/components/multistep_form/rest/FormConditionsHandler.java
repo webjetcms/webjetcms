@@ -125,6 +125,7 @@ public class FormConditionsHandler {
         try {
             Boolean combinedResult = null;
             JoinOperatorType prevJoinOperator = JoinOperatorType.AND;
+            String sessionPrefix = MultistepFormsService.getSessionKey(formName, request) + "_";
 
             for (FormItemsConditionEntity condition : conditions) {
                 String fieldId = condition.getItemFormId();
@@ -137,7 +138,7 @@ public class FormConditionsHandler {
                 // First check current step data (received JSON), then previous steps from session.
                 String actualValue = received.optString(fieldId, null);
                 if (actualValue == null) {
-                    actualValue = getSessionValue(fieldId);
+                    actualValue = getSessionValue(fieldId, sessionPrefix);
                 }
 
                 boolean met = evaluateOperator(operatorType, actualValue, requiredValue, caseInsensitive);
@@ -165,9 +166,8 @@ public class FormConditionsHandler {
 
 
     /** Reads each fallback answer once while keeping current submitted values outside the cache. */
-    private String getSessionValue(String fieldId) {
+    private String getSessionValue(String fieldId, String sessionPrefix) {
         return sessionValues.computeIfAbsent(fieldId, key -> {
-            String sessionPrefix = MultistepFormsService.getSessionKey(formName, request) + "_";
             Object value = request.getSession().getAttribute(sessionPrefix + key);
             return value == null ? "" : value.toString();
         });
@@ -253,6 +253,7 @@ public class FormConditionsHandler {
 
         JSONObject result = new JSONObject();
         Integer domainId = CloudToolsForCore.getDomainId();
+        String sessionPrefix = MultistepFormsService.getSessionKey(formName, request) + "_";
 
         List<FormItemEntity> stepItems = formItemsRepository.getAllStepItems(stepId, domainId);
         Set<String> currentStepFieldIds = new HashSet<>();
@@ -308,7 +309,7 @@ public class FormConditionsHandler {
                         continue;
                     }
 
-                    String storedValue = getSessionValue(fieldId);
+                    String storedValue = getSessionValue(fieldId, sessionPrefix);
 
                     boolean met = evaluateOperator(operatorType, storedValue, requiredValue, caseInsensitive);
 

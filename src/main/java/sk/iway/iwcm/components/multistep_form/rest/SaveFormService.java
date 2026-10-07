@@ -214,7 +214,7 @@ public class SaveFormService {
 
         //data MUST be set sooner than HTML
         FormFiles formFiles = new FormFiles(); // in form files we store all needed files, files names etc.
-        Map<String, String> notificationValues = setFormDataBeforeSave(form, formName, request, formFiles, formSettings);
+        Map<String, String> formData = setFormDataBeforeSave(form, formName, request, formFiles, formSettings);
 
         boolean forceTextPlain = Tools.isTrue(formSettings.getForceTextPlain());
         String emailHtml;
@@ -228,7 +228,7 @@ public class SaveFormService {
             if (mailDoc != null) {
                 String pageHtml = FormMailAction.getCroppedHTML(mailDoc.getData());
                 pageHtml = ShowDoc.updateCodes(null, pageHtml, mailDocId, request, Constants.getServletContext());
-                StringBuilder formHtml = MultistepFormsService.updateFormValues(notificationValues, new StringBuilder(pageHtml));
+                StringBuilder formHtml = MultistepFormsService.updateFormValues(formData, new StringBuilder(pageHtml));
 
                 Pair<String, String> cssPair = FormHtmlHandler.getCssDataLink(mailDocId, forceTextPlain);
                 emailCss = cssPair != null ? cssPair.first : "";
@@ -252,7 +252,7 @@ public class SaveFormService {
                     form.setHtml(htmlWithStyle);
             } else {
                 // fallback to normal rendering if doc not found
-                formHtmlHandler.setFormHtml(form, notificationValues, request, docId);
+                formHtmlHandler.setFormHtml(form, formData, request, docId);
                 emailHtml = formHtmlHandler.getFormHtmlBeforeCss();
                 Pair<String, String> cssFallback = formHtmlHandler.getCssDataPair();
                 emailCss = cssFallback != null ? cssFallback.first : "";
@@ -260,7 +260,7 @@ public class SaveFormService {
             }
         } else {
             // set html using standard multistep form rendering
-            formHtmlHandler.setFormHtml(form, notificationValues, request, docId);
+            formHtmlHandler.setFormHtml(form, formData, request, docId);
             emailHtml = formHtmlHandler.getFormHtmlBeforeCss();
             Pair<String, String> cssStandard = formHtmlHandler.getCssDataPair();
             emailCss = cssStandard != null ? cssStandard.first : "";
@@ -301,7 +301,7 @@ public class SaveFormService {
         }
 
         // SEND MAIL
-        formMailService.sendMail(form, notificationValues, formSettings, recipients, subject, formFiles, attachFiles, emailCss, new StringBuilder(emailHtml), request);
+        formMailService.sendMail(form, formData, formSettings, recipients, subject, formFiles, attachFiles, emailCss, new StringBuilder(emailHtml), request);
 
         return null;
     }
@@ -327,7 +327,7 @@ public class SaveFormService {
     private final Map<String, String> setFormDataBeforeSave(FormsEntity form, String formName, HttpServletRequest request, FormFiles formFiles, FormSettingsEntity formSettings) {
         String prefix = MultistepFormsService.getSessionKey(formName, request) + "_";
         StringBuilder data = new StringBuilder();
-        Map<String, String> notificationValues = new LinkedHashMap<>();
+        Map<String, String> formData = new LinkedHashMap<>();
 
         CryptoFactory cryptoFactory = new CryptoFactory();
 		String publicKey = formSettings.getEncryptKey();
@@ -354,7 +354,7 @@ public class SaveFormService {
                 data.append(stepItem.getItemFormId()).append("-fileNames");
                 data.append("~").append(value).append("|");
 
-                notificationValues.put(stepItem.getItemFormId(), value.trim());
+                formData.put(stepItem.getItemFormId(), value.trim());
 
                 continue;
             }
@@ -365,14 +365,14 @@ public class SaveFormService {
             data.append(value).append("|");
 
             // Keep filtered values available for email and PDF rendering before encryption.
-            notificationValues.put(stepItem.getItemFormId(), sessionValue.trim());
+            formData.put(stepItem.getItemFormId(), sessionValue.trim());
         }
 
         //Remove last "|"
         data.deleteCharAt(data.length() - 1);
 
         form.setData( data.toString() );
-        return notificationValues;
+        return formData;
     }
 
     public static boolean isFilterHtml(String code) {

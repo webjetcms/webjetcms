@@ -61,21 +61,21 @@ public class FormMailService {
 	/**
 	 * Extracts unencrypted notification values for fields whose names match the configured list.
 	 *
-	 * @param notificationValues ordered values keyed by logical field IDs; text is HTML-escaped,
+	 * @param formData ordered values keyed by logical field IDs; text is HTML-escaped,
 	 *        WYSIWYG content is sanitized, and upload values contain saved filenames
 	 * @param constant configuration key whose value is an array of field names
 	 * @return ordered list of matching field values; empty list when none found or no data
 	 */
-    private List<String> getFieldValues(Map<String, String> notificationValues, String constant) {
+    private List<String> getFieldValues(Map<String, String> formData, String constant) {
         List<String> foundValues = new ArrayList<>();
 
-        if(notificationValues.isEmpty()) return foundValues;
+        if(formData.isEmpty()) return foundValues;
 
         List<String> fieldsNames = Arrays.stream( Constants.getArray(constant) )
                                     .map(String::toLowerCase)
                                     .toList();
 
-        for(Map.Entry<String, String> field : notificationValues.entrySet()) {
+        for(Map.Entry<String, String> field : formData.entrySet()) {
             // Match a field name that starts with one of the configured names
             // (e.g. configured "email" matches field "emailova-adresa")
             String fieldName = field.getKey().replaceFirst("-\\d+$", "").toLowerCase(); //NOSONAR
@@ -97,7 +97,7 @@ public class FormMailService {
 	 * either sends immediately or schedules delayed delivery.</p>
 	 *
 	 * @param form       form entity with metadata and serialized field data
-	 * @param notificationValues ordered, unencrypted values keyed by logical field IDs; text is
+	 * @param formData ordered, unencrypted values keyed by logical field IDs; text is
 	 *        HTML-escaped, WYSIWYG content is sanitized, and upload values contain saved filenames
 	 * @param formSettings form settings entity containing configuration for email sending
 	 * @param recipients comma‑separated list of recipient emails
@@ -111,16 +111,15 @@ public class FormMailService {
 	 *         be sent or queued
 	 */
 	@SuppressWarnings("java:S3776")
-	public void sendMail(FormsEntity form, Map<String, String> notificationValues, FormSettingsEntity formSettings, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
+	public void sendMail(FormsEntity form, Map<String, String> formData, FormSettingsEntity formSettings, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
 		Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
-		boolean formDataEncrypted = Tools.isNotEmpty(formSettings.getEncryptKey());
 
         String meno = null;
-        List<String> namesList = getFieldValues(notificationValues, NAME_FIELD_KEY);
+        List<String> namesList = getFieldValues(formData, NAME_FIELD_KEY);
         if(namesList.size() > 0) meno = namesList.stream().map(DB::internationalToEnglish).collect(Collectors.joining(" "));
 
         String email = null;
-        List<String> emailsList = getFieldValues(notificationValues, EMAIL_FIELD_KEY);
+        List<String> emailsList = getFieldValues(formData, EMAIL_FIELD_KEY);
 		//remove invalid emails
 		emailsList = emailsList.stream().filter(Tools::isEmail).toList();
         if(emailsList.size() > 0) email = emailsList.get(0);
@@ -145,8 +144,9 @@ public class FormMailService {
 		// set as attribute so sendUserInfo would know
 		request.setAttribute("doubleOptIn", formSettings.getDoubleOptIn());
 
-		if (sendUserInfoDocId > 0)
-			FormMailAction.sendUserInfo(sendUserInfoDocId, form.getId().intValue(), email, formFiles.getAttachs(), null, request, !formDataEncrypted);
+		if (sendUserInfoDocId > 0) {
+			FormMailAction.sendUserInfo(sendUserInfoDocId, form.getId().intValue(), email, formFiles.getAttachs(), null, request);
+		}
 
 		Logger.println(FormMailService.class,"FormMailService recipients=" + recipients);
 
@@ -204,35 +204,28 @@ public class FormMailService {
 			}
 
 			if ("false".equals(Constants.getString("useSMTPServer"))) {
-				if (formDataEncrypted) {
-					Logger.warn(FormMailService.class, "Email for encrypted form " + form.getFormName() + " cannot be queued for later delivery");
-					sb.append(" queuing encrypted form email to ").append(recipients).append(" DENIED");
+				if(sendMessageAsAttach && messageAsAttachFile!=null) {
+					htmlData = new StringBuilder(prop.getText("form.formmailaction.pozrite_si_prilozeny_subor"));
+					formFiles.getFileNamesSendLater().append(";").append(FormMailAction.FORM_FILE_DIR).append(messageAsAttachFile.getName()).append(";").append(messageAsAttachFile.getName());
+				}
+
+				if(formFiles.getAttachs() != null && !attachFiles) htmlData.append(prop.getText("email.too_large_attachments"));
+
+				String messageBody = htmlData.toString();
+				if (sendMessageAsAttach==false && forceTextPlain==false)
+					messageBody = FormHtmlHandler.appendStyle(htmlData.toString(), cssData, emailEncoding, forceTextPlain);
+
+				//musime kvoli clustru a potencionalnemu zapisu suborov pozdrzat email
+				long sendLaterTime = Tools.getNow();
+				sendLaterTime += (5 * Constants.getInt("clusterRefreshTimeout"));
+
+				boolean queued = SendMail.sendLater(effectiveSenderName, effectiveSenderEmail, recipients, effectiveReplyTo, formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), formFiles.getFileNamesSendLater().toString());
+				if (queued) {
+					Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Email for form " + form.getFormName() + " was queued for later delivery", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
+				} else {
+					sb.append(" queuing email to ").append(recipients).append(" FAILED");
 					RequestBean.addAuditValue("formfail", "emailNotSend");
 					sendFailed = true;
-				} else {
-					if(sendMessageAsAttach && messageAsAttachFile!=null) {
-						htmlData = new StringBuilder(prop.getText("form.formmailaction.pozrite_si_prilozeny_subor"));
-						formFiles.getFileNamesSendLater().append(";").append(FormMailAction.FORM_FILE_DIR).append(messageAsAttachFile.getName()).append(";").append(messageAsAttachFile.getName());
-					}
-
-					if(formFiles.getAttachs() != null && !attachFiles) htmlData.append(prop.getText("email.too_large_attachments"));
-
-					String messageBody = htmlData.toString();
-					if (sendMessageAsAttach==false && forceTextPlain==false)
-						messageBody = FormHtmlHandler.appendStyle(htmlData.toString(), cssData, emailEncoding, forceTextPlain);
-
-					//musime kvoli clustru a potencionalnemu zapisu suborov pozdrzat email
-					long sendLaterTime = Tools.getNow();
-					sendLaterTime += (5 * Constants.getInt("clusterRefreshTimeout"));
-
-					boolean queued = SendMail.sendLater(effectiveSenderName, effectiveSenderEmail, recipients, effectiveReplyTo, formSettings.getCcEmails(), formSettings.getBccEmails(), subject, messageBody, Tools.getBaseHref(request), Tools.formatDate(sendLaterTime), Tools.formatTime(sendLaterTime), formFiles.getFileNamesSendLater().toString());
-					if (queued) {
-						Adminlog.add(Adminlog.TYPE_MULTISTEP_FORM_USERS, "Email for form " + form.getFormName() + " was queued for later delivery", (long)MultistepFormsService.getFormIdStatic(form.getFormName()), form.getId());
-					} else {
-						sb.append(" queuing email to ").append(recipients).append(" FAILED");
-						RequestBean.addAuditValue("formfail", "emailNotSend");
-						sendFailed = true;
-					}
 				}
 			} else {
 				//vygeneruj mail a posli ho
@@ -349,13 +342,9 @@ public class FormMailService {
 					Logger.error(FormMailService.class, ex);
 					sb.append(" sending to email ").append(recipients).append(" FAILED: ").append(ex.getMessage());
 
-					if (formDataEncrypted) {
-						Logger.warn(FormMailService.class, "Failed email for encrypted form " + form.getFormName() + " cannot be queued for later delivery");
-						sb.append("; queuing encrypted form email denied");
-					} else {
-						Logger.warn(FormMailService.class, "Failed email for form " + form.getFormName() + " will not be queued because the delivery result may be partial or the failure may be permanent");
-						sb.append("; email was not queued to avoid an unsafe retry");
-					}
+					Logger.warn(FormMailService.class, "Failed email for form " + form.getFormName() + " will not be queued because the delivery result may be partial or the failure may be permanent");
+					sb.append("; email was not queued to avoid an unsafe retry");
+
 					RequestBean.addAuditValue("formfail", "emailNotSend");
 					sendFailed = true;
 				}
@@ -366,7 +355,6 @@ public class FormMailService {
 
 		// add send parameters
 		sb.append("\n\n form parameters: \n");
-		Map<String, String> formData = MultistepFormsService.getFormDataAsMap(form);
 		formData.forEach((key, value) -> {
 			if (value != null) value = value.replace("\\n", "\\n    ");
 			sb.append("  ").append(key).append(": ").append(value).append("\n");

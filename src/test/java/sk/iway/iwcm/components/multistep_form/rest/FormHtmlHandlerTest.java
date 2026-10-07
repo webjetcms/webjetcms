@@ -63,21 +63,6 @@ class FormHtmlHandlerTest {
         verifyNoInteractions(prop);
     }
 
-    /** Uses prepared answers and filenames in placeholders without double-escaping or changing stored data. */
-    @Test
-    void usesOriginalValuesForEmailPlaceholders() {
-        FormsEntity form = new FormsEntity();
-        form.setData("name-1~ciphertext");
-        Map<String, String> notificationValues = new LinkedHashMap<>();
-        notificationValues.put("name-1", "Alice &amp; Bob");
-        notificationValues.put("upload", "final.pdf");
-        StringBuilder html = MultistepFormsService.updateFormValues(
-            notificationValues, new StringBuilder("<p>!name-1! / !upload!</p>"));
-
-        assertEquals("<p>Alice &amp; Bob / final.pdf</p>", html.toString());
-        assertEquals("ciphertext", MultistepFormsService.getFormDataAsMap(form).get("name-1"));
-    }
-
     /** Resolves exact or legacy selections once per field while retaining choices containing commas. */
     @ParameterizedTest
     @ValueSource(booleans = {true, false})

@@ -401,13 +401,13 @@ public class FormHtmlHandler {
      * data for readable email and PDF variants.
      *
      * @param form  entity whose HTML field receives the rendered email content
-     * @param notificationValues ordered values keyed by logical field IDs, containing HTML-escaped
+     * @param formData ordered form data values keyed by logical field IDs, containing HTML-escaped
      *                           text, sanitized WYSIWYG HTML, saved filenames and empty answers
      * @param request  current HTTP request
      * @param docId  ID of the document used to resolve template and group CSS
      * @throws IllegalStateException if the entity belongs to a different form than this handler
      */
-    public final void setFormHtml(FormsEntity form, Map<String, String> notificationValues, HttpServletRequest request, Integer docId) {
+    public final void setFormHtml(FormsEntity form, Map<String, String> formData, HttpServletRequest request, Integer docId) {
         // Check that provided form has same name as formName provided in constructor
         if(form.getFormName().equals(this.formName) == false) throw new IllegalStateException("Provided form has different name taht provided in constructor.");
         selectedValuesByField.clear();
@@ -423,7 +423,7 @@ public class FormHtmlHandler {
         formHtml.append( getFormStart(-1L, request) );
 
         // prepare data
-        this.formData = notificationValues;
+        this.formData = formData;
 
         for(FormStepEntity formSteps : formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(this.formName, CloudToolsForCore.getDomainId()))
             formHtml.append( getStepHtml(request, formSteps) ).append("<hr>");
