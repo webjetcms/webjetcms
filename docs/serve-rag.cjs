@@ -25,7 +25,13 @@ function createPreview({ backend, docs = 'http://127.0.0.1:3000' }) {
   const config = JSON.stringify({ endpoint: searchPath }).replace(/</g, '\\u003c');
   return http.createServer((req, res) => {
     const origin = `http://${req.headers.host}`;
-    const url = new URL(req.url, origin);
+    let url;
+    try {
+      url = new URL(req.url, origin);
+    } catch {
+      res.writeHead(400);
+      return res.end();
+    }
     if (url.hostname !== webjet.hostname || (req.headers.origin && req.headers.origin !== origin)
         || req.headers['sec-fetch-site'] === 'cross-site') {
       res.writeHead(403);

@@ -36,7 +36,7 @@ Shell naďalej načítava knižnice Docsify a ich doplnky z existujúcich CDN. D
 
 ## Konfigurácia
 
-Použite rovnakú [vektorovú databázu a AI poskytovateľa](semantic-search/README.md) ako pri vyhľadávaní webových stránok. Korene dokumentácie a mapovanie súborových ciest nastavte globálne, bez doménového obmedzenia. Markdown index je spoločný, ale embeddingoví asistenti a štatistiky spotreby patria konkrétnej doméne. Indexovanie používa asistenta `RAG-EMB-INDEX` domény, ktorá požiadavku zaradila do fronty alebo je nastavená v plánovanej úlohe. Vyhľadávanie používa asistenta `RAG-EMB-SEARCH` aktuálnej domény. Asistentov upravíte v bežnom zozname AI asistentov príslušnej domény. Nastavte:
+Použite rovnakú [vektorovú databázu a AI poskytovateľa](semantic-search/README.md) ako pri vyhľadávaní webových stránok. Korene dokumentácie a mapovanie súborových ciest nastavte globálne, bez doménového obmedzenia:
 
 | Premenná | Príklad | Význam |
 | --- | --- | --- |
@@ -46,53 +46,33 @@ Použite rovnakú [vektorovú databázu a AI poskytovateľa](semantic-search/REA
 | `symlinkTranslate` | `/docs/\|/srv/documentation/webjetcms/` | Globálne mapovanie aliasu `/docs/` na absolútny priečinok dokumentácie. Pre `file:/docs` a jeho podpriečinky je povinné. |
 | `ragAnswerAllowed` | `true` | Zapne automatické generovanie RAG odpovede pri vyhľadávaní. Pri hodnote `false` sa zobrazia iba nájdené dokumenty. Vyžaduje nakonfigurovaného asistenta pre odpovede. |
 
-Korene bez prefixu `file:` sú cesty vo webovej aplikácii, **bez kontextovej cesty aplikácie**. Môžu smerovať priamo na požadovanú časť dokumentácie aj hlbšie pod jazykovým priečinkom. Napríklad pri URL `/cms/admin/docs/webjetcms` sa konfiguruje `/admin/docs/webjetcms`. Dokumentácia v tomto prípade musí byť dostupná ako súbory v rozbalenej webovej aplikácii. Cesty `..`, zakódované webové cesty a `WEB-INF`/`META-INF` nie sú povolené.
+Korene bez prefixu `file:` sú cesty v rozbalenej webovej aplikácii **bez kontextovej cesty aplikácie**: pre URL `/cms/admin/docs/webjetcms` nastavte `/admin/docs/webjetcms`. Možno indexovať iba podpriečinok, napríklad `/admin/docs/webjetcms/sk/admin/users`. Backend pre odkazy nájde najbližší nadradený Docsify `index.html` alebo `index.jsp`; ak chýba, použije indexovaný koreň. Cesty `..`, zakódované webové cesty a `WEB-INF`/`META-INF` nie sú povolené.
 
-Indexovaný koreň nemusí obsahovať samotný prehliadač Docsify. Ak je v `ragMarkdownFolders` iba `/admin/docs/webjetcms/sk/admin/users`, ale Docsify je nasadený v `/admin/docs/webjetcms/`, ďalšie nastavenie koreňa v prehliadači nie je potrebné.
+Pre serverové súbory použite absolútnu cestu s prefixom `file:`, napríklad `file:/srv/manuals`. Forma `file:///srv/manuals` sa normalizuje na `file:/srv/manuals`; relatívne cesty a `file://server/...` nie sú podporované. Samotná cesta `/Users/.../docs` označuje webovú cestu. Proces WebJETu musí mať právo čítať priečinok; symbolické odkazy v jeho obsahu sa nespracúvajú.
 
-Vyhľadávanie zostane obmedzené na tento podpriečinok. Výsledok `perm-groups.md` sa otvorí cez `/admin/docs/webjetcms/#/sk/admin/users/perm-groups`. Backend hľadá najbližší nadradený `index.html` alebo `index.jsp` s konfiguráciou Docsify; ak ho v nasadených súboroch nenájde, zachová pôvodnú adresu odvodenú od indexovaného koreňa. Plugin skladá odkazy z úplnej cesty zdroja vzhľadom na aktuálny prehliadač a rešpektuje jeho hash alebo history smerovanie. Kontextová cesta aplikácie, napríklad `/cms`, sa doplní automaticky.
-
-Pre dokumentáciu uloženú na rôznych miestach v jednotlivých prostrediach použite rovnaký alias:
-
-```text
-file:/docs/sk/admin/users
-```
-
-Do globálnej premennej `symlinkTranslate` pridajte mapovanie `/docs/` na fyzické umiestnenie dokumentácie. Napríklad lokálne:
-
-```text
-/docs/|/home/developer/webjetcms/docs/
-```
-
-Na serveri môže ten istý alias smerovať na iný priečinok:
+Alias `file:/docs` a jeho podpriečinky vyžadujú globálne mapovanie `/docs/` v `symlinkTranslate`. Použite mapovanie pre dané prostredie a zachovajte ostatné mapovania na samostatných riadkoch:
 
 ```text
 /docs/|/srv/documentation/webjetcms/
 ```
 
-Použite mapovanie pre dané prostredie; ďalšie existujúce mapovania v `symlinkTranslate` zachovajte na samostatných riadkoch. Cieľ musí byť absolútny existujúci priečinok. WebJET preloží základ `/docs/` pomocou `FileTools.symlinkReplaceToRootPath` a až potom pripojí zvolený podpriečinok, napríklad `sk/admin/users`. Výsledná cesta musí zostať v mapovanom priečinku dokumentácie. Mapovanie sa vždy číta globálne, nezávisle od aktuálnej domény.
+Lokálne môže cieľ smerovať na priečinok `docs` vášho projektu, napríklad `/home/developer/webjetcms/docs/`. Musí to byť existujúci absolútny priečinok. Alias `file:/docs/sk/admin/users` potom označuje jeho podpriečinok `sk/admin/users`; cesta zostáva obmedzená na mapovaný koreň. Bez mapovania skončí alias chybou. Umiestnenie sa neodvodzuje z pracovného adresára ani štruktúry projektu. V konfigurácii, fronte aj chunkoch zostáva logická cesta, napríklad `file:/docs/sk/admin/users/README.md`. Zmena fyzického umiestnenia tej istej dokumentácie nevyžaduje nové indexy. Samostatný `sourceRoot` sa neukladá.
 
-Bez mapovania alias skončí chybou; cesta sa už neodvodzuje z umiestnenia projektu ani z pracovného adresára servera. Možno použiť aj samotné `file:/docs` alebo iný jeho podpriečinok. V konfigurácii, fronte aj chunkoch zostáva logická cesta `file:/docs/...`. Ak mapovanie smeruje na tú istú dokumentáciu ako predtým, existujúce indexy netreba vytvárať znova. Ostatné cesty s prefixom `file:` sa naďalej interpretujú ako absolútne cesty na serveri, napríklad `file:/srv/manuals/sk/admin/users`.
+**Dokumentáciu rozdeľte do jazykových priečinkov**, napríklad `sk`, `en` alebo `cs`. Jazyk sa určuje pre každý súbor z najbližšieho nadradeného priečinka s rozpoznaným názvom v celej ceste vrátane nakonfigurovaného koreňa. Jazyky určuje globálna premenná `languages`; `sk`, `en` a `cs` sú podporované vždy. Názov `sk-manual` sa za jazyk nepovažuje. Súbory bez jazykového priečinka sa pri indexovaní preskočia.
 
-Indexujú sa súbory `.md` priamo v nastavenom priečinku aj v jeho podpriečinkoch. V uvedenom príklade sa súbor `docs/sk/admin/users/README.md` vo fronte aj v chunkoch uloží ako `sourcePath = file:/docs/sk/admin/users/README.md`. Samostatný `sourceRoot` sa neukladá. Susedné časti dokumentácie sa neprehľadávajú.
+Pri koreni `file:/docs/sk/admin/users` dostane priamy súbor `README.md` jazyk `sk`. Pri koreni `file:/docs` sa spracujú všetky jazykové podpriečinky. Indexujú sa aj priame `.md` súbory; susedné časti dokumentácie sa neprehľadávajú. Jazyk sa nevyberá v dialógu a neukladá sa vo fronte, iba v chunkoch.
 
-**Dokumentáciu rozdeľte do jazykových priečinkov**, napríklad `sk`, `en` alebo `cs`. Jazyk sa odvodzuje pre každý súbor z celej cesty tvorenej nakonfigurovaným koreňom a relatívnou cestou súboru. Rozhoduje najbližší nadradený priečinok, ktorého celý názov zodpovedá rozpoznanému jazyku. Rozpoznané jazyky určuje globálna konfiguračná premenná `languages`; kódy `sk`, `en` a `cs` sú podporované aj bez uvedenia v tejto premennej. Kód `cs` sa uloží ako `cs`. Názvy ako `sk-manual` sa za jazyk nepovažujú. Súbory bez rozpoznaného jazykového priečinka sa pri indexovaní preskočia.
+`ragMarkdownSearchRequireLogin` aktuálnej domény predvolene vyžaduje ľubovoľného prihláseného používateľa; hodnota `false` umožní aj anonymné vyhľadávanie vo všetkých nakonfigurovaných koreňoch vrátane `/admin/` a `file:`. Blokované cesty a ochrana jednotlivých webových súborov používateľskými skupinami sa naďalej rešpektujú. Kontrola prihlásenia prebehne pred volaním embeddingov a generovaním odpovede AI.
 
-Pri koreni `file:/docs/sk/admin/users` má aj priamy súbor `README.md` jazyk `sk`. Pri koreni `file:/docs` možno jednou akciou indexovať `sk/admin/users/README.md`, `en/admin/users/README.md` aj `cs/admin/users/README.md`; každý súbor dostane jazyk zo svojej cesty. Jazyk sa v dialógu nevyberá a vo fronte sa neukladá. Odvodená hodnota zostáva uložená v chunkoch, aby bolo možné vyhľadávať podľa jazyka.
+API `/rest/rag/markdown/search` je mimo administrátorskej cesty. Nastavenie prihlásenia nemení ochranu samotného prehliadača Docsify, súborov ani správy indexu. Pre bežných používateľov alebo anonymný prístup nasadzujte obsah na prístupnú webovú cestu, napríklad `/docs/webjetcms/`, alebo na samostatnú dokumentačnú doménu s WebJET backendom na rovnakom origine. Súbory pod `/admin/` naďalej podliehajú ochrane administrácie.
 
-Proces WebJETu musí mať právo čítať nastavený priečinok; symbolické odkazy v jeho obsahu sa nespracúvajú. Priečinky `file:` sa zobrazia aj na karte **Markdown dokumenty** a používajú rovnakú frontu aj plánovanú indexáciu.
+Indexovanie `file:` samo nesprístupní obsah cez HTTP. Výsledky obsahujú názov, úryvok a úplnú cestu `sourcePath`, ale `url` je `null`. Docsify pre `file:/docs/...` vytvorí odkaz do aktuálneho prehliadača, ktorý musí poskytovať obsah mapovaného priečinka `/docs/`. Ostatné súborové korene zobrazujú názov bez odkazu.
 
-Prefix rozlišuje cestu servera od webovej cesty: samotná hodnota `/Users/.../docs` sa stále interpretuje ako cesta vo webovej aplikácii. Akceptovaná je aj lokálna forma `file:///Users/.../docs`; normalizuje sa na `file:/Users/.../docs`. Relatívne cesty a sieťové adresy `file://server/...` nie sú podporované.
+Markdown používa existujúce nastavenia rozdelenia textu, hybridného vyhľadávania, podobnosti výsledkov a RAG odpovedí. Chunky a vektory typu `MARKDOWN` sa ukladajú s `domainId = 0`; identita zdroja sa tiež počíta s doménou `0`. Webové stránky zostávajú typu `DOCUMENT` s ID svojej domény.
 
-Prihlásenie pre API riadi konfiguračná premenná `ragMarkdownSearchRequireLogin` aktuálnej domény. Predvolená hodnota `true` vyžaduje ľubovoľného prihláseného používateľa bez požiadavky na administrátorské oprávnenia. Pri hodnote `false` môžu vyhľadávať aj neprihlásení návštevníci. Nastavenie platí pre všetky korene vrátane `/admin/` a `file:`. Blokované cesty a explicitná ochrana jednotlivých webových súborov pomocou používateľských skupín sa naďalej rešpektujú. Kontrola prihlásenia prebehne pred volaním embeddingov a generovaním odpovede AI.
+Fronta si uchová kladné ID domény, ktorá požiadavku vytvorila. Jej asistent `RAG-EMB-INDEX`, konfigurácia poskytovateľa a štatistiky spotreby sa použijú pri spracovaní. Vyhľadávanie používa asistenta `RAG-EMB-SEARCH` a spotrebu aktuálnej domény, rovnako ako RAG odpoveď. Asistentov upravíte v bežnom zozname AI asistentov príslušnej domény.
 
-Vyhľadávacia služba je dostupná na `/rest/rag/markdown/search`, mimo administrátorskej cesty. Konstanta riadi iba vyhľadávanie, nemení ochranu samotného prehliadača Docsify, Markdown súborov ani správy indexu. Ak má byť dokumentácia dostupná aj bežným používateľom alebo anonymne, nasadzujte prehliadač a obsah na prístupnú webovú cestu, napríklad `/docs/webjetcms/`, alebo použite samostatnú dokumentačnú doménu. Priame otvorenie súborov pod `/admin/` naďalej podlieha ochrane administrácie.
-
-Indexovanie lokálneho priečinka samo nesprístupní súbory cez HTTP. REST výsledky pre `file:` obsahujú názov, úryvok a úplnú cestu `sourcePath`; hodnota `url` zostáva `null`. Pre alias `file:/docs/...` Docsify vytvorí z `sourcePath` odkaz na súbor v aktuálnom prehliadači dokumentácie, ktorý musí poskytovať obsah mapovaného priečinka `/docs/`. Kliknutím na názov sa dokument otvorí v novej karte. Ostatné súborové korene bez verejnej adresy zobrazujú názov bez odkazu.
-
-Používajú sa existujúce nastavenia embeddingov, veľkosti a prekrytia častí textu, hybridného vyhľadávania, podobnosti výsledkov a RAG odpovedí. Markdown má samostatný typ `MARKDOWN`; iba jeho chunky a vektory sa ukladajú s `domainId = 0`, čo označuje spoločné dáta pre všetky domény. Požiadavka vo fronte si uchová kladné ID domény, ktorá ju vytvorila. Jej asistent, konfigurácia AI poskytovateľa a štatistiky spotreby sa použijú aj pri neskoršom spracovaní fronty. Spotreba vyhľadávania sa zaznamená aktuálnej doméne. Identita spoločného Markdown zdroja sa naďalej počíta s doménou `0`, nezávisle od domény vykonávanej operácie. Indexovanie webových stránok ostáva typu `DOCUMENT` s kladným ID príslušnej domény. Asistent pre RAG odpovede a kontrola prístupových práv naďalej používajú kontext domény aktuálnej požiadavky.
-
-Asistent vyhľadávania musí používať rovnakého poskytovateľa a model ako uložené embeddingy; vyhľadávanie nimi filtruje výsledky. Ak viaceré domény používajú tú istú kombináciu, zdieľajú existujúce vektory a samotné prepnutie domény nevyžaduje ďalšiu indexáciu. Pri inej kombinácii poskytovateľa a modelu treba vytvoriť zodpovedajúce embeddingy; dimenzia musí zodpovedať konfigurácii spoločnej vektorovej databázy.
+Vyhľadávací asistent musí používať rovnakého poskytovateľa a model ako uložené embeddingy. Domény s rovnakou kombináciou zdieľajú existujúce vektory. Pri inej kombinácii treba vytvoriť zodpovedajúci index; dimenzia musí zodpovedať spoločnej vektorovej databáze.
 
 Pri nasadení pod kontextovou cestou, napríklad `/cms`, sa kontext pre `/cms/admin/docs/...` odvodí automaticky. Pri inom umiestnení, napríklad `/cms/manual/`, doplňte do `window.$docsify` nastavenie:
 
@@ -163,7 +143,7 @@ Pri viacerých aplikačných uzloch naplánujte úlohu na jednom uzle. Súbežn�
 
 ## Správa indexu v administrácii
 
-V **Nastavenia → Sémantický index → Markdown dokumenty** môžete v strome vybrať jeden z koreňov v `ragMarkdownFolders` alebo jeho podpriečinok, prezerať časti dokumentov a zaradiť indexáciu alebo odstránenie do fronty. Prepínač **Zahrnúť aj podpriečinky** nastavuje rozsah tabuľky aj dialógu; po vypnutí sa použijú iba súbory priamo vo vybranom priečinku. Dialóg prevezme oba výbery a umožní ich upraviť. Jazyk sa pri indexovaní odvodí z cesty súboru a dialóg zobrazuje pravidlo rozdelenia dokumentácie do jazykových priečinkov. Súbory bez rozpoznaného jazykového priečinka sa nezaradia na indexovanie ani do počtov pre túto akciu. Opätovné indexovanie aktualizuje odvodený jazyk chunkov aj pri nezmenenom texte; existujúce embeddingy sa môžu použiť znova. Odstránenie odstráni všetky indexy súborov iba vo vybranom rozsahu bez ohľadu na jazyk, vrátane už odstránených súborov. Výber podpriečinka nemení identitu zdroja ani úplnú cestu uloženú v `sourcePath`. Tlačidlá zobrazia počty dokumentov a požiadaviek vo fronte; samotnú operáciu vykoná `RagIndexCronTask`. Podrobnosti nájdete v [návode na správu sémantického indexu](../../../redactor/apps/semantic-search/embedding-chunks.md).
+V **Nastavenia → Sémantický index → Markdown dokumenty** vyberte nakonfigurovaný koreň alebo podpriečinok a nastavte zahrnutie podpriečinkov. Dialóg prevezme tento rozsah, zobrazí počty a zaradí indexáciu alebo odstránenie do fronty spracovanej úlohou `RagIndexCronTask`. Indexovanie počíta iba súbory s rozpoznaným jazykom; opätovné indexovanie aktualizuje aj jazyk chunkov a môže znovu použiť nezmenené embeddingy. Odstránenie zahŕňa všetky indexy vo vybranom rozsahu bez ohľadu na jazyk aj záznamy už odstránených súborov. Podrobnosti nájdete v [návode na správu sémantického indexu](../../../redactor/apps/semantic-search/embedding-chunks.md).
 
 Pri nasadení musia prebehnúť aktualizácie databázy `autoupdate-webjet9.xml`, ktoré rozšíria identifikátory vo fronte na `BIGINT` a doplnia údaje o zdrojovom súbore. Jazyk sa vo fronte neukladá a zostáva súčasťou chunkov. Prístup k novej karte aj jej REST službám riadi existujúce právo `embeddingChunks`.
 
@@ -171,7 +151,11 @@ Fronta aj chunky používajú iba úplnú logickú cestu `sourcePath`, napríkla
 
 Požiadavky vo fronte sa pre vybraný spoločný zdroj nahrádzajú bez ohľadu na doménu, ktorá ich vytvorila. Nová požiadavka si uloží doménu aktuálneho používateľa. Odstránenie tak zruší aj čakajúcu indexáciu rovnakého zdroja z inej domény.
 
-Pri prechode zo staršej verzie odstráňte čakajúce požiadavky typu `MARKDOWN` s `domainId = 0` a zaraďte ich znova v požadovanej doméne. Nemajú uloženého vlastníka spotreby a nespracujú sa. Znova zaraďte aj staršie požiadavky, ktorých identita zdroja bola vypočítaná s nenulovou doménou. Existujúce spoločné chunky a vektory s `domainId = 0` zostávajú platné; ich identifikátory nemeňte. Markdown chunky s nenulovým `domainId` sa v spoločnom indexe nepoužívajú; dokumentáciu indexujte znova a pôvodné chunky možno následne odstrániť. Nemeňte iba `domainId` pomocou SQL: identita spoločného zdroja musí byť vypočítaná s doménou `0`, zatiaľ čo doména vo fronte určuje vlastníka spotreby. Pred opätovným indexovaním overte jazykové priečinky; predchádzajúci ručne vybraný jazyk sa už nepoužíva. Čakajúce požiadavky spoločného indexu odvodia jazyk pri spracovaní z uloženej cesty. Staršie požiadavky na indexovanie bez rozpoznaného jazykového priečinka skončia chybou a zostanú vo fronte na ďalší pokus; upravte štruktúru dokumentácie a zaraďte správnu cestu alebo požiadavku odstráňte. Úspešná plánovaná indexácia odstráni aj staršie chunky súborov, ktorých cesty nespĺňajú pravidlo jazykových priečinkov.
+Pri prechode zo staršej verzie:
+
+- Znovu zaraďte čakajúce Markdown požiadavky s `domainId = 0` alebo s identitou zdroja vypočítanou s nenulovou doménou. Doména vo fronte musí označovať vlastníka spotreby, identita zdroja sa počíta s doménou `0`.
+- Spoločné chunky a vektory s `domainId = 0` zostávajú platné. Markdown chunky s nenulovou doménou sa nepoužívajú; dokumentáciu indexujte znova a staré chunky potom odstráňte. Samotná zmena `domainId` cez SQL nestačí.
+- Overte jazykové priečinky. Staršie požiadavky na indexovanie bez rozpoznaného jazyka zostanú vo fronte s chybou; upravte cestu a zaraďte ich znova alebo požiadavky odstráňte. Úspešná plánovaná indexácia odstráni aj staršie chunky bez jazykového priečinka.
 
 ## REST vyhľadávanie
 
@@ -210,9 +194,7 @@ Docsify namiesto Google Custom Search zobrazuje vlastné vyhľadávacie pole bez
 
 Náhľad nájdenej časti dokumentu zachováva Markdown formátovanie: nadpisy, tučné písmo, kurzívu, zoznamy, citácie a ukážky kódu. Pole `snippet` obsahuje najviac 350 znakov pôvodného Markdown textu so zachovanými zalomeniami riadkov a pri skrátení znak `…`. Prehliadač ho vykreslí existujúcim parserom Docsify; nadpisy majú v náhľade kompaktnú veľkosť. HTML zo zdroja sa zobrazí ako text, pri odkazoch a obrázkoch sa zachová iba ich textový popis. Zmena zobrazenia nevyžaduje opätovné indexovanie.
 
-Každé nové vyhľadávanie z bočného panela otvorí dialóg s nadpisom **Výsledky vyhľadávania** a menším podnadpisom **V adresári /sk/admin/ a podadresároch**, kde sa cesta odvodí z aktuálnej URL bez názvu súboru a parametrov; `#/sk/admin/README` aj `#/sk/admin/` odošlú `/sk/admin/`. Podadresáre sú zahrnuté vždy.
-
-V podnadpise za čiarkou nasleduje odkaz **vyhľadať vo všetkých adresároch**. Zopakuje rovnakú otázku bez parametra `directory` a zobrazí nové výsledky s rovnakým hlavným nadpisom a podnadpisom **Vo všetkých adresároch**. V tomto zobrazení za čiarkou nasleduje odkaz **vyhľadať v aktuálnom adresári /sk/admin/**, ktorý opäť vyhľadá s adresárovým filtrom. Prepnutie zachová jazyk a otázku, nahradí predchádzajúce výsledky aj odpoveď AI a nemení otvorenú stránku dokumentácie. Odkazy zostávajú dostupné aj pri prázdnych výsledkoch.
+Nové vyhľadávanie sa obmedzí na adresár aktuálnej stránky a všetky jeho podadresáre: `#/sk/admin/README` aj `#/sk/admin/` odošlú `/sk/admin/`. Pod nadpisom **Výsledky vyhľadávania** sa zobrazí použitý rozsah a odkaz **vyhľadať vo všetkých adresároch**. Zopakuje rovnakú otázku bez `directory`; opačný odkaz obnoví adresárový filter. Prepnutie zachová otázku aj jazyk, nahradí výsledky aj odpoveď AI a nemení otvorenú stránku. Odkazy fungujú aj pri prázdnych výsledkoch.
 
 ## Overenie zmien
 
@@ -222,13 +204,13 @@ Backendové regresné testy:
 ./gradlew test --tests 'sk.iway.iwcm.rag.*'
 ```
 
-Test rozhrania so skutočným Docsify a simulovanou REST odpoveďou:
+Test rozhrania so skutočným Docsify a simulovanou REST odpoveďou aj test lokálneho proxy servera:
 
 ```sh
-node docs/tests/semantic-search.test.cjs
+node --test docs/tests/*.test.cjs
 ```
 
-Test potrebuje nainštalované závislosti `docs/` a `src/test/webapp/` vrátane prehliadača Playwright. Pri nasadení overte aj skutočnú indexáciu, poskytovateľa embeddingov a RAG odpovedí na cieľovej databáze.
+Testy potrebujú Node.js 20 alebo novší a nainštalované závislosti `docs/` a `src/test/webapp/` vrátane prehliadača Playwright. Pri nasadení overte aj skutočnú indexáciu, poskytovateľa embeddingov a RAG odpovedí na cieľovej databáze.
 
 Test novej karty a dialógov vo fronte spustite proti lokálnemu WebJETu po načítaní aktuálnych Java tried a prekladov:
 

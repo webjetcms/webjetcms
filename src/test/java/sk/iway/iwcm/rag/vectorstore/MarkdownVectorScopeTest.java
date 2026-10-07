@@ -32,6 +32,23 @@ import sk.iway.iwcm.rag.vectorstore.VectorStoreDataSourceResolver.Resolution;
 /** Verifies database-level isolation of Markdown collections before result limiting. */
 class MarkdownVectorScopeTest {
 
+    /** Both backends ignore missing query vectors and nonpositive limits before running SQL. */
+    @ParameterizedTest
+    @CsvSource({"POSTGRESQL,-1,4", "POSTGRESQL,0,4", "POSTGRESQL,1,0", "POSTGRESQL,1,-1",
+        "MARIADB,-1,4", "MARIADB,0,4", "MARIADB,1,0", "MARIADB,1,-1"})
+    void skipsInvalidVectorInput(VectorStoreType backend, int dimensions, int limit) {
+        try (var pools = mockStatic(DBPool.class);
+             var resolver = mockStatic(VectorStoreDataSourceResolver.class)) {
+            resolver.when(VectorStoreDataSourceResolver::resolve).thenReturn(
+                new Resolution("rag_jpa", backend, backend.name(), "test", null, true));
+            VectorStore store = backend == VectorStoreType.POSTGRESQL ? new PgVectorStore() : new MariaDbVectorStore();
+
+            assertTrue(store.search(dimensions < 0 ? null : new float[dimensions], "openai", "model",
+                RagEntityType.MARKDOWN, 0, "sk", limit, null).isEmpty());
+            pools.verifyNoInteractions();
+        }
+    }
+
     /** Domain zero is an exact shared-domain filter in vector, full-text, and fallback retrieval on both backends. */
     @ParameterizedTest
     @CsvSource({"POSTGRESQL,vector,false", "POSTGRESQL,fulltext,false", "POSTGRESQL,fallback,false",

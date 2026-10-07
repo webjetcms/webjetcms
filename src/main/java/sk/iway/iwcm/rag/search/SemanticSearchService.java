@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,10 +88,10 @@ public class SemanticSearchService {
      * @return document IDs with their best retrieval and rerank scores, ordered by ranking score
      */
     public List<SemanticSearchResult> search(String query, Integer domainId, String language, int maxResults, RagEntityType entityType, HttpServletRequest request) {
-        if (isAvailable() == false) return List.of();
+        if (Tools.isEmpty(query) || maxResults < 1 || isAvailable() == false) return List.of();
 
         Map<String, Object> bonusParams = null;
-        String rootGroupString = String.valueOf(request.getAttribute("rootGroup"));
+        String rootGroupString = Objects.toString(request.getAttribute("rootGroup"), "");
         if(Tools.isNotEmpty(rootGroupString)) {
             GroupsDB groupsDB = GroupsDB.getInstance();
 
@@ -193,6 +194,7 @@ public class SemanticSearchService {
      */
     public List<VectorSearchResult> searchChunks(String query, Integer domainId, String language, int maxResults,
             RagEntityType entityType, Map<String, Object> filters, HttpServletRequest request) {
+        if (Tools.isEmpty(query) || maxResults < 1) return List.of();
         boolean markdown = entityType == RagEntityType.MARKDOWN;
         boolean available;
         try (DomainRequestBeanScope ignored = markdown ? DomainRequestBeanScope.open(null) : null) {
@@ -318,7 +320,7 @@ public class SemanticSearchService {
     boolean shouldUseHybridSearch(String query, List<VectorSearchResult> vectorChunkResults, int minimumResultsForCall, PageParams pageParams) {
         if (RagSettingsService.isHybridSearchEnabled(pageParams) == false) return false;
 
-        String mode = RagSettingsService.getHybridSearchMode(pageParams).toLowerCase();
+        String mode = RagSettingsService.getHybridSearchMode(pageParams).toLowerCase(Locale.ROOT);
         return switch (mode) {
             case HYBRID_MODE_ALWAYS -> true;
             case HYBRID_MODE_SHORT_QUERY_ONLY -> isShortQuery(query, pageParams);
@@ -422,12 +424,7 @@ public class SemanticSearchService {
             int rank = i + 1;
             double scoreIncrement = weight / (rrfK + rank);
 
-            Double currentScore = scoreByChunkKey.get(chunkKey);
-            if (currentScore == null) {
-                scoreByChunkKey.put(chunkKey, scoreIncrement);
-            } else {
-                scoreByChunkKey.put(chunkKey, currentScore.doubleValue() + scoreIncrement);
-            }
+            scoreByChunkKey.merge(chunkKey, scoreIncrement, Double::sum);
             resultByChunkKey.putIfAbsent(chunkKey, result);
         }
     }

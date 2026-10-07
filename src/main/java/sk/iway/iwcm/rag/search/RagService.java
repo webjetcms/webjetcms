@@ -129,7 +129,7 @@ public class RagService {
 
             ragAnswer = ragAnswer.trim();
 
-            if(isCannotAnswerResponse(ragAnswer)) return null;
+            if(ragAnswer.contains(CANNOT_ANSWER_SENTINEL)) return null;
 
             return ragAnswer;
         } catch (Exception e) {
@@ -175,36 +175,6 @@ public class RagService {
             chunksArray.put(chunk);
         }
         return chunksArray;
-    }
-
-    /**
-     * Checks whether the response contains the case-sensitive cannot-answer sentinel.
-     * Trims surrounding quotes, backticks, and trailing periods before checking for the sentinel.
-     *
-     * @param ragAnswer raw assistant response
-     * @return true when the response means the answer is not present in context
-     */
-    private boolean isCannotAnswerResponse(String ragAnswer) {
-        if(Tools.isEmpty(ragAnswer)) return false;
-
-        String normalized = ragAnswer.trim();
-        boolean changed;
-        do {
-            changed = false;
-            if(normalized.endsWith(".")) {
-                normalized = normalized.substring(0, normalized.length() - 1).trim();
-                changed = true;
-            }
-            if(normalized.length() >= 2 && (
-                    (normalized.startsWith("\"") && normalized.endsWith("\"")) ||
-                    (normalized.startsWith("'") && normalized.endsWith("'")) ||
-                    (normalized.startsWith("`") && normalized.endsWith("`")))) {
-                normalized = normalized.substring(1, normalized.length() - 1).trim();
-                changed = true;
-            }
-        } while(changed);
-
-        return normalized.contains(CANNOT_ANSWER_SENTINEL);
     }
 
     /**

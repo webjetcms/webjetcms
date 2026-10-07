@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import com.webjetcms.ai.EmbeddingInputType;
 
@@ -39,6 +42,7 @@ import sk.iway.iwcm.test.TestRequest;
  * Tests assistant-based retrieval, shared Markdown accounting, similarity filtering, and reciprocal rank fusion.
  */
 class SemanticSearchServiceFilterTest extends BaseWebjetTest {
+    private final SemanticSearchService service = new SemanticSearchService(null, null, null, null, null);
 
     /** Uses shared Markdown storage while the requesting domain owns embedding usage. */
     @Test
@@ -157,81 +161,31 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
         }
     }
 
-    /**
-     * Verifies that the highest remaining score fills the minimum result count when the adaptive threshold retains too few results.
-     */
-    @Test
-    void filterResultsBySimilarityAddsFallbackWhenThresholdKeepsTooFew() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null, null, null);
-
+    /** Preserves minimum-result fallback, all strong results, and the configured absolute floor. */
+    @ParameterizedTest
+    @CsvSource({".9,.8,.6,.5,.2,3,3", ".95,.9,.8,.75,.2,2,4", ".25,.2,.15,.1,.4,3,3"})
+    void filtersSimilarityWithMinimumResults(double first, double second, double third, double fourth,
+            double floor, int minimum, int expectedCount) {
         List<SemanticSearchResult> results = List.of(
-            new SemanticSearchResult(1L, 0.90),
-            new SemanticSearchResult(2L, 0.80),
-            new SemanticSearchResult(3L, 0.60),
-            new SemanticSearchResult(4L, 0.50)
+            new SemanticSearchResult(1L, first), new SemanticSearchResult(2L, second),
+            new SemanticSearchResult(3L, third), new SemanticSearchResult(4L, fourth)
         );
-
-        List<SemanticSearchResult> filtered = service.filterResultsBySimilarity(results, 0.2d, 3);
-
-        assertEquals(3, filtered.size());
-        assertEquals(1L, filtered.get(0).getDocId());
-        assertEquals(2L, filtered.get(1).getDocId());
-        assertEquals(3L, filtered.get(2).getDocId());
+        assertEquals(results.subList(0, expectedCount), service.filterResultsBySimilarity(results, floor, minimum));
     }
 
-    /**
-     * Verifies that all results above the adaptive threshold remain even when their count exceeds the configured minimum.
-     */
-    @Test
-    void filterResultsBySimilarityKeepsAllStrongResults() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null, null, null);
-
-        List<SemanticSearchResult> results = List.of(
-            new SemanticSearchResult(1L, 0.95),
-            new SemanticSearchResult(2L, 0.90),
-            new SemanticSearchResult(3L, 0.80),
-            new SemanticSearchResult(4L, 0.75)
-        );
-
-        List<SemanticSearchResult> filtered = service.filterResultsBySimilarity(results, 0.2d, 2);
-
-        assertEquals(4, filtered.size());
-        assertEquals(1L, filtered.get(0).getDocId());
-        assertEquals(4L, filtered.get(3).getDocId());
+    /** Missing retrieval input stays empty regardless of the minimum result count. */
+    @ParameterizedTest
+    @NullAndEmptySource
+    void filterResultsBySimilarityReturnsEmptyForMissingInput(List<SemanticSearchResult> results) {
+        assertEquals(List.of(), service.filterResultsBySimilarity(results, .2, 3));
     }
 
-    /**
-     * Verifies that the best three results are retained as fallback when every score is below the configured floor.
-     */
-    @Test
-    void filterResultsBySimilarityUsesConfiguredFloorWhenTopSimilarityIsLow() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null, null, null);
-
-        List<SemanticSearchResult> results = List.of(
-            new SemanticSearchResult(1L, 0.25),
-            new SemanticSearchResult(2L, 0.20),
-            new SemanticSearchResult(3L, 0.15),
-            new SemanticSearchResult(4L, 0.10)
-        );
-
-        List<SemanticSearchResult> filtered = service.filterResultsBySimilarity(results, 0.4d, 3);
-
-        assertEquals(3, filtered.size());
-        assertEquals(1L, filtered.get(0).getDocId());
-        assertEquals(2L, filtered.get(1).getDocId());
-        assertEquals(3L, filtered.get(2).getDocId());
-    }
-
-    /**
-     * Verifies that empty input produces no results even when a positive minimum count is requested.
-     */
-    @Test
-    void filterResultsBySimilarityReturnsEmptyForEmptyInput() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null, null, null);
-
-        List<SemanticSearchResult> filtered = service.filterResultsBySimilarity(List.of(), 0.2d, 3);
-
-        assertEquals(0, filtered.size());
+    /** Rejects missing questions and empty result requests before accessing a vector store or provider. */
+    @ParameterizedTest
+    @CsvSource(value = {"NULL,10", "'',10", "query,0", "query,-1"}, nullValues = "NULL")
+    void doesNotRetrieveInvalidSearchInput(String query, int maxResults) {
+        assertEquals(List.of(), service.search(query, 1, "sk", maxResults, RagEntityType.DOCUMENT, null));
+        assertEquals(List.of(), service.searchChunks(query, 1, "sk", maxResults, RagEntityType.DOCUMENT, null, null));
     }
 
     /**
@@ -239,8 +193,6 @@ class SemanticSearchServiceFilterTest extends BaseWebjetTest {
      */
     @Test
     void mergeChunkResultsWithRrfBoostsChunksPresentInBothSources() {
-        SemanticSearchService service = new SemanticSearchService(null, null, null, null, null);
-
         List<VectorSearchResult> vectorResults = List.of(
             new VectorSearchResult(1L, "document", 10L, 0, "vector-1", 0.90),
             new VectorSearchResult(2L, "document", 20L, 0, "vector-2", 0.80)

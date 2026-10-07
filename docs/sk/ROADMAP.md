@@ -60,7 +60,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Vylepšiť úvodnú stránku administrácie - dynamické bloky, možnosť vlastného nastavenia čo sa zobrazí, užitočné informácie a bloky.
 - [ ] +Filter v aplikácii novinky neumožňuje zadať DOC ID viacerých stránok keby chceli podľa filtra “DOC_ID rovná sa” zvoliť viacero stránok
 filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadania viacerých hodnôt (#JT-2139).
-- [ ] +AI - upraviť vytváranie `chunk` tak, aby na začiatku/konci neboli nezmyselné slová, orezať od prvej medzery po poslednú medzeru.
+- [x] +AI - upraviť vytváranie `chunk` tak, aby podľa možnosti začínali a končili na hraniciach viet alebo slov (#58778).
 
 ## 2025
 

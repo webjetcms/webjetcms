@@ -278,7 +278,7 @@ public class PgVectorStore implements VectorStore {
     @Override
     public List<VectorSearchResult> search(float[] queryEmbedding, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
         String dsName = getDataSourceName();
-        if (dsName == null) return new ArrayList<>();
+        if (dsName == null || queryEmbedding == null || queryEmbedding.length == 0 || limit <= 0) return new ArrayList<>();
 
         // Apply configured ef_search parameter if not default
         int efSearch = Constants.getInt("ragSearchEfSearch");
@@ -311,18 +311,7 @@ public class PgVectorStore implements VectorStore {
         params.add(vectorToString(queryEmbedding));
         params.add(limit);
 
-        return new ComplexQuery()
-            .setSql(sql.toString())
-            .setParams(params.toArray())
-            .setDatabase(dsName)
-            .list(rs -> new VectorSearchResult(
-                rs.getLong("id"),
-                rs.getString("entity_type"),
-                rs.getLong("entity_id"),
-                rs.getInt("chunk_index"),
-                rs.getString("chunk_text"),
-                rs.getDouble("similarity")
-            ));
+        return executeSearchQuery(dsName, sql.toString(), params);
     }
 
     @Override
@@ -453,8 +442,7 @@ public class PgVectorStore implements VectorStore {
                 sql.append(" AND (1=0");
                 for (Object value : roots) {
                     if (value instanceof String root) {
-                        sql.append(" OR ");
-                        sql.append("source_path LIKE ? ESCAPE '!'");
+                        sql.append(" OR source_path LIKE ? ESCAPE '!'");
                         params.add(root.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "/%");
                     }
                 }

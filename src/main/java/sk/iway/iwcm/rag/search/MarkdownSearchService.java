@@ -178,8 +178,7 @@ public class MarkdownSearchService {
             String root = roots.stream().filter(candidate -> sourceService.getRelativePath(candidate, source.getSourcePath()) != null)
                 .findFirst().orElse(null);
             if (root == null) continue;
-            String relativePath = sourceService.getRelativePath(root, source.getSourcePath());
-            if (relativePath == null) continue;
+            String relativePath = source.getSourcePath().substring(root.length() + 1);
             String sourcePath = source.getSourcePath();
             if (isBlockedPath(sourcePath)) continue;
             if (sourceService.isFileSystemRoot(root) == false) {

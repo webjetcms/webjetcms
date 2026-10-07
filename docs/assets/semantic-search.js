@@ -116,15 +116,32 @@
     /**
      * Resolves a result to a same-origin viewer URL.
      * Uses sourcePath when present, otherwise validates and adapts the legacy URL route.
+     * Derives the section ID from the last heading in the snippet's first-line breadcrumb.
      *
      * @param {Object} result - Search result returned by the backend.
      * @param {string|null} [result.url] - Backend viewer URL to validate when present.
      * @param {string|null} [result.sourcePath] - Markdown source path, including its configured root.
+     * @param {string|null} [result.snippet] - Chunk excerpt beginning with its heading breadcrumb.
      * @returns {string|null} Absolute viewer URL, or null for missing, malformed, or out-of-scope paths.
      */
     function resultUrl(result) {
       const value = result.url;
       try {
+        const breadcrumb = typeof result.snippet === 'string' ? result.snippet.split(/[\r\n]/, 1)[0] : '';
+        const heading = breadcrumb.includes(' > ') && !breadcrumb.endsWith('…') ? breadcrumb.split(' > ').pop() : '';
+        const section = heading.trim().replace(/[A-Z]+/g, text => text.toLowerCase())
+          .replace(/<[^>]+>/g, '').replace(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,./:;<=>?@[\]^`{|}~]/g, '')
+          .replace(/\s/g, '-').replace(/-+/g, '-').replace(/^(\d)/, '_$1');
+        const withSection = target => {
+          if (section) {
+            if (target.hash.startsWith('#/')) {
+              const route = new URL(target.hash.substring(1), window.location.origin);
+              route.searchParams.set('id', section);
+              target.hash = route.pathname + route.search;
+            } else target.searchParams.set('id', section);
+          }
+          return target.href;
+        };
         if (value != null && (typeof value !== 'string' || !value)) return null;
         const url = value == null ? null : new URL(value, window.location.origin);
         if (url && url.origin !== window.location.origin) return null;
@@ -132,13 +149,13 @@
           const path = result.sourcePath;
           if (typeof path !== 'string' || !/\.md$/i.test(path)) return null;
           const viewerRoot = path.startsWith('file:/docs/') ? 'file:/docs/' : collectionPath;
-          if (!path.startsWith(viewerRoot)) return url ? url.href : null;
+          if (!path.startsWith(viewerRoot)) return url ? withSection(url) : null;
           const segments = path.substring(viewerRoot.length).split('/');
           // Validate before URL parsing so traversal is rejected instead of normalized away.
           if (segments.some(segment => !segment || segment === '.' || segment === '..' || /[\\\x00-\x1f\x7f]/.test(segment))) return null;
           const route = segments.join('/').replace(/\.md$/i, '').replace(/(^|\/)README$/, '$1')
             .split('/').map(encodeURIComponent).join('/');
-          return new URL(basePath + (useHashRouter ? '#/' : '') + route, window.location.origin).href;
+          return withSection(new URL(basePath + (useHashRouter ? '#/' : '') + route, window.location.origin));
         }
         if (!url || !url.pathname.startsWith(basePath)) return null;
         // Validate legacy document routes, including the hash, before adapting the router format.
@@ -150,7 +167,7 @@
           url.search = route.search;
           url.hash = '';
         }
-        return url.href;
+        return withSection(url);
       } catch (error) {
         return null;
       }

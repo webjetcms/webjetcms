@@ -567,8 +567,7 @@ public class MariaDbVectorStore implements VectorStore {
                 sql.append(" AND (1=0");
                 for (Object value : roots) {
                     if (value instanceof String root) {
-                        sql.append(" OR ");
-                        sql.append(columnPrefix).append("source_path LIKE BINARY ? ESCAPE '!'");
+                        sql.append(" OR ").append(columnPrefix).append("source_path LIKE BINARY ? ESCAPE '!'");
                         params.add(root.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "/%");
                     }
                 }

@@ -226,61 +226,42 @@ public class RagChunkPostProcessor {
         int endIndex = startIndex;
         double maxSim = getSimilarity(first);
         double sumSim = maxSim;
+        Double rerankScore = first.getRerankScore();
         int count = 1;
 
         for (int i = 1; i < entityChunks.size(); i++) {
             VectorSearchResult current = entityChunks.get(i);
             int currentIndex = getChunkIndex(current);
             int gap = currentIndex - endIndex;
+            String currentText = getChunkText(current);
+            String appended = gap <= maxChunkGap ? removeOverlap(textBuilder.toString(), currentText) : currentText;
 
-            if (gap <= maxChunkGap) {
-                // Merge: append with overlap removal, but respect per-block size limit
-                String currentText = getChunkText(current);
-                String merged = textBuilder.toString();
-                String appended = removeOverlap(merged, currentText);
-
-                if (textBuilder.length() + appended.length() > maxMergedBlockCharacters) {
-                    // Block would exceed size limit: finalize current block and start a new one
-                    blocks.add(buildBlock(first, startIndex, endIndex,
-                            textBuilder.toString(), maxSim, sumSim, count));
-
-                    textBuilder = new StringBuilder(currentText);
-                    startIndex = currentIndex;
-                    endIndex = currentIndex;
-                    maxSim = getSimilarity(current);
-                    sumSim = maxSim;
-                    count = 1;
-                } else {
-                    textBuilder.append(appended);
-                    endIndex = currentIndex;
-                    double sim = getSimilarity(current);
-                    maxSim = Math.max(maxSim, sim);
-                    sumSim += sim;
-                    count++;
-                }
-            } else {
-                // Gap too large: finalize current block and start a new one
+            if (gap > maxChunkGap || textBuilder.length() + appended.length() > maxMergedBlockCharacters) {
                 blocks.add(buildBlock(first, startIndex, endIndex,
-                        textBuilder.toString(), maxSim, sumSim, count));
+                        textBuilder.toString(), maxSim, sumSim, count, rerankScore));
 
-                textBuilder = new StringBuilder(getChunkText(current));
+                textBuilder = new StringBuilder(currentText);
                 startIndex = currentIndex;
                 endIndex = currentIndex;
                 maxSim = getSimilarity(current);
                 sumSim = maxSim;
+                rerankScore = current.getRerankScore();
                 count = 1;
+            } else {
+                textBuilder.append(appended);
+                endIndex = currentIndex;
+                maxSim = Math.max(maxSim, getSimilarity(current));
+                sumSim += getSimilarity(current);
+                if (current.getRerankScore() != null && (rerankScore == null || current.getRerankScore() > rerankScore)) {
+                    rerankScore = current.getRerankScore();
+                }
+                count++;
             }
         }
 
         // Finalize last block
         blocks.add(buildBlock(first, startIndex, endIndex,
-                textBuilder.toString(), maxSim, sumSim, count));
-
-        for (MergedContextBlock block : blocks) {
-            block.setRerankScore(entityChunks.stream()
-                .filter(chunk -> getChunkIndex(chunk) >= block.getStartChunkIndex() && getChunkIndex(chunk) <= block.getEndChunkIndex())
-                .map(VectorSearchResult::getRerankScore).filter(java.util.Objects::nonNull).max(Double::compareTo).orElse(null));
-        }
+                textBuilder.toString(), maxSim, sumSim, count, rerankScore));
 
         return blocks;
     }
@@ -328,16 +309,17 @@ public class RagChunkPostProcessor {
     }
 
     /**
-     * Maps a normalized overlap length back to the original text and skips subsequent whitespace.
+     * Maps a trimmed normalized overlap length back to the original text, retaining the following separator.
      *
      * @param originalText unnormalized next-chunk text
      * @param normalizedLength number of normalized characters in the overlap
-     * @return original-text offset immediately after the overlap and following whitespace
+     * @return original-text offset immediately after the overlap
      */
     private int findOriginalPosition(String originalText, int normalizedLength) {
         int normCount = 0;
         int i = 0;
         boolean lastWasSpace = false;
+        while (i < originalText.length() && Character.isWhitespace(originalText.charAt(i))) i++;
 
         while (i < originalText.length() && normCount < normalizedLength) {
             char c = originalText.charAt(i);
@@ -350,10 +332,6 @@ public class RagChunkPostProcessor {
                 normCount++;
                 lastWasSpace = false;
             }
-            i++;
-        }
-        // Skip any remaining whitespace after the overlap
-        while (i < originalText.length() && Character.isWhitespace(originalText.charAt(i))) {
             i++;
         }
         return i;
@@ -459,11 +437,12 @@ public class RagChunkPostProcessor {
      * @param maxSim highest similarity among merged chunks
      * @param sumSim sum of similarities among merged chunks
      * @param count number of merged chunks
+     * @param rerankScore highest non-null rerank score among merged chunks
      * @return populated merged context block
      */
     private MergedContextBlock buildBlock(VectorSearchResult source, int startIndex, int endIndex,
-                                          String text, double maxSim, double sumSim, int count) {
-        return new MergedContextBlock(
+                                          String text, double maxSim, double sumSim, int count, Double rerankScore) {
+        MergedContextBlock block = new MergedContextBlock(
                 source.getEntityType(),
                 source.getEntityId(),
                 startIndex,
@@ -475,6 +454,8 @@ public class RagChunkPostProcessor {
                 source.getSourceTitle(),
                 source.getSourceUrl()
         );
+        block.setRerankScore(rerankScore);
+        return block;
     }
 
     private String getChunkText(VectorSearchResult chunk) {

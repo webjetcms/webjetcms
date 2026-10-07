@@ -123,12 +123,9 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
                 // If vector store is not available (not allowed or available)
                 if (ragEntityType == null) addNotify(new NotifyBean(getProp().getText("settings.embedding-chunks.title"), getProp().getText("components.ai_assistants.provider.not_configured"), NotifyType.ERROR));
                 return new DatatablePageImpl<>( new ArrayList<>() );
-            } else if (vectorStore.isAvailableAndInitialized() == false) {
-                // Vector store is available but not initialized, we can try to initialize it
-                if(vectorStore.initializeSchema() == false) {
-                    // Inicialization failed, return empty results, error will be logged by vector store
-                    return new DatatablePageImpl<>( new ArrayList<>() );
-                }
+            }
+            if (vectorStore.isAvailableAndInitialized() == false && vectorStore.initializeSchema() == false) {
+                return new DatatablePageImpl<>(List.of());
             }
 
             // Check if entityType is set and valid
@@ -236,13 +233,8 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
             int rootDir = Tools.getIntValue(params.get("searchRootDir"), -1);
             if (rootDir > 0) {
                 boolean includeSubfolders = Tools.getBooleanValue(params.get("includeSubfolders"), false);
-                Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
-
-                List<Integer> entityIds = data != null ? data.getSecond() : new ArrayList<>();
-                if(entityIds.isEmpty()) entityIds.add(-1); // to avoid error with empty list
-                predicates.add( builder.and(
-                    root.get("entityId").in(entityIds)
-                ) );
+                List<Integer> entityIds = getDocIds(rootDir, includeSubfolders).getSecond();
+                predicates.add(entityIds.isEmpty() ? builder.disjunction() : root.get("entityId").in(entityIds));
             }
         }
 
@@ -425,7 +417,7 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
 
         int domainId = CloudToolsForCore.getDomainId();
         Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
-        if(data == null || data.getSecond() == null || data.getSecond().isEmpty()) return 0;
+        if(data.getSecond().isEmpty()) return 0;
 
         try {
             indexQueueService.addToQueue(
@@ -500,41 +492,18 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
         validateDocumentActionRoot(rootDir);
 
         Pair<Integer, List<Integer>> data = getDocIds(rootDir, includeSubfolders);
-        if (data == null) data = new Pair<>(0, new ArrayList<>());
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("totalGroups", data.getFirst());
-        response.put("totalDocuments", data.getSecond() != null ? data.getSecond().size() : 0);
-
+        List<Integer> docIds = data.getSecond();
         RagIndexAction ragAction = RagIndexAction.fromString(action);
-        int indexedCount = 0;
-        if (vectorStore.isAvailableAndInitialized()) {
-            Set<Integer> indexedDocIds = getIndexedDocumentIds(ragAction, CloudToolsForCore.getDomainId());
-            if (data.getSecond() != null) {
-                for (Integer docId : data.getSecond()) {
-                    if (indexedDocIds.contains(docId)) indexedCount++;
-                }
-            }
-        }
-        response.put("indexedDocuments", indexedCount);
-
-        if (ragAction == null) {
-            response.put("queuedDocuments", 0);
-            return response;
-        }
-
-        Set<Integer> queued = indexQueueService.getQueued(RagEntityType.DOCUMENT, ragAction, CloudToolsForCore.getDomainId())
-                .stream().collect(Collectors.toSet());
-
-        int queuedCount = 0;
-        if (data.getSecond() != null) {
-            for (Integer docId : data.getSecond()) {
-                if (queued.contains(docId)) queuedCount++;
-            }
-        }
-        response.put("queuedDocuments", queuedCount);
-
-        return response;
+        int domainId = CloudToolsForCore.getDomainId();
+        Set<Integer> indexed = vectorStore.isAvailableAndInitialized() ? getIndexedDocumentIds(ragAction, domainId) : Set.of();
+        Set<Integer> queued = ragAction == null ? Set.of()
+            : Set.copyOf(indexQueueService.getQueued(RagEntityType.DOCUMENT, ragAction, domainId));
+        return Map.of(
+            "totalGroups", data.getFirst(),
+            "totalDocuments", docIds.size(),
+            "indexedDocuments", (int) docIds.stream().filter(indexed::contains).count(),
+            "queuedDocuments", (int) docIds.stream().filter(queued::contains).count()
+        );
     }
 
     /**
@@ -575,8 +544,7 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
      *
      * @param rootDir the root directory group ID (-1 for all domain documents)
      * @param includeSubfolders whether to include documents from subfolders
-     * @return pair containing the selected group count and searchable document IDs, or {@code null} when the requested
-     *         group scope cannot be resolved
+     * @return selected group count and searchable document IDs, or zero groups and an empty list for an unresolved scope
      */
     private Pair<Integer, List<Integer>> getDocIds(int rootDir, boolean includeSubfolders) {
         DocDB docDB = DocDB.getInstance();
@@ -591,7 +559,7 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
             if(includeSubfolders == false) return new Pair<>(allGroupCount, docIds);
 
             List<Integer> rootGroupsIds = getCurrentDomainRootGroupIds();
-            if(rootGroupsIds.isEmpty()) return null;
+            if(rootGroupsIds.isEmpty()) return new Pair<>(0, List.of());
             String idsJoined = rootGroupsIds.stream().map(String::valueOf).collect(Collectors.joining(","));
             docIds = new SimpleQuery().forListInteger("SELECT doc_id FROM documents WHERE root_group_l1 IN (" + idsJoined + ") AND searchable = "+DB.getBooleanSql(true));
 
@@ -600,11 +568,10 @@ public class EmbeddingChunkRestController extends DatatableRestControllerV2<Embe
             List<GroupDetails> groups = new ArrayList<>();
             if(includeSubfolders == false) {
                 GroupDetails group = groupDB.findGroup(rootDir);
-                if(group == null) return null;
-                else groups.add(group);
+                if(group == null) return new Pair<>(0, List.of());
+                groups.add(group);
             } else {
                 groups = groupDB.getGroupsTree(rootDir, includeSubfolders, false);
-                if(groups.isEmpty()) return null;
             }
 
             for(GroupDetails group : groups) {

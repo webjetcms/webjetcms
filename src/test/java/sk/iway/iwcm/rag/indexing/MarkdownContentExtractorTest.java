@@ -5,12 +5,26 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import sk.iway.iwcm.rag.indexing.SlidingWindowChunker.Chunk;
 
 /** Covers Markdown cleanup, title extraction, and heading context for embeddings. */
 class MarkdownContentExtractorTest {
     private final MarkdownContentExtractor extractor = new MarkdownContentExtractor();
+
+    /** Hidden HTML stays excluded even when nested, unclosed, or inside a table. */
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "<script>private value", "<div hidden>private value",
+        "<div hidden><div>hidden one</div>hidden two</div>",
+        "<script>let example = '<script>';</script>",
+        "<table><tr aria-hidden='true'><td>private value</td></tr></table>", "<input hidden>"
+    })
+    void removesHiddenHtml(String html) {
+        assertEquals("", extractor.extractText(html));
+    }
 
     /** Removes indexing noise while preserving visible structure and literal code examples. */
     @Test

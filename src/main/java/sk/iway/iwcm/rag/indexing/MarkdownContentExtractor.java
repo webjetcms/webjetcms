@@ -1,9 +1,11 @@
 package sk.iway.iwcm.rag.indexing;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.regex.Matcher;
@@ -11,6 +13,7 @@ import java.util.regex.Pattern;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Parser;
 import org.springframework.stereotype.Component;
 
 import sk.iway.iwcm.rag.service.RagEntityType;
@@ -335,6 +338,12 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
      * @return visible prose and existing image descriptions
      */
     private String cleanHtml(String text) {
+        Map<Integer, Element> elements = new HashMap<>();
+        for (Element element : Jsoup.parse(text, "", Parser.htmlParser().setTrackPosition(true)).getAllElements()) {
+            if (element.sourceRange().isTracked() && element.sourceRange().isImplicit() == false) {
+                elements.put(element.sourceRange().startPos(), element);
+            }
+        }
         StringBuilder result = new StringBuilder();
         Matcher tags = HTML_TAG.matcher(text);
         int offset = 0;
@@ -342,12 +351,11 @@ public class MarkdownContentExtractor implements ContentExtractor<String> {
             result.append(text, offset, tags.start());
             String name = tags.group(1).toLowerCase(Locale.ROOT);
             boolean closing = tags.group().startsWith("</");
-            Element element = closing ? null : Jsoup.parseBodyFragment(tags.group()).getElementsByTag(name).first();
+            Element element = closing ? null : elements.get(tags.start());
             offset = tags.end();
             if (closing == false && (HIDDEN_TAGS.contains(name) || (element != null
                     && (element.hasAttr("hidden") || "true".equalsIgnoreCase(element.attr("aria-hidden")))))) {
-                Matcher end = Pattern.compile("(?i)</" + Pattern.quote(name) + "\\s*>").matcher(text);
-                if (end.find(offset)) offset = end.end();
+                if (element != null) offset = Math.max(offset, element.endSourceRange().endPos());
             } else if ("img".equals(name) && element != null) result.append(element.attr("alt"));
             else if (name.matches("h[1-6]")) result.append(closing ? "\n" : "\n" + "#".repeat(name.charAt(1) - '0') + " ");
             else if ("li".equals(name)) result.append(closing ? "\n" : "\n- ");

@@ -31,34 +31,18 @@ function filterFn() {
         return;
     }
 
-    embeddingChunksDataTable.setAjaxUrl(
-        WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "entityType", entityType.toUpperCase())
-    );
+    const markdown = entityType === "markdown";
+    const params = {
+        entityType: entityType.toUpperCase(),
+        sourceRoot: markdown ? $("#markdownFolder").val() || "" : "",
+        directory: markdown ? $("#markdownDirectory").val() || "" : "",
+        includeSubfolders: $(markdown ? "#markdownIncludeSubfolders" : "#includeSubfolders").is(":checked")
+    };
+    if (entityType === "document") params.searchRootDir = $("#rootDir").val();
 
-    if ("document" === entityType) {
-        const rootDirValue = $("#rootDir").val();
-        // The switch keeps id "includeSubfolders" for compatibility with existing chart logic.
-        const includeSubfolders = $("#includeSubfolders").is(":checked");
-
-        embeddingChunksDataTable.setAjaxUrl(
-            WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "searchRootDir", rootDirValue)
-        );
-        embeddingChunksDataTable.setAjaxUrl(
-            WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "includeSubfolders", includeSubfolders)
-        );
-    }
-
-    embeddingChunksDataTable.setAjaxUrl(
-        WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "sourceRoot", entityType === "markdown" ? $("#markdownFolder").val() || "" : "")
-    );
-    embeddingChunksDataTable.setAjaxUrl(
-        WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "directory", entityType === "markdown" ? $("#markdownDirectory").val() || "" : "")
-    );
-    if (entityType === "markdown") {
-        embeddingChunksDataTable.setAjaxUrl(
-            WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "includeSubfolders", $("#markdownIncludeSubfolders").is(":checked"))
-        );
-    }
+    let url = embeddingChunksDataTable.getAjaxUrl();
+    Object.entries(params).forEach(([name, value]) => { url = WJ.urlUpdateParam(url, name, value); });
+    embeddingChunksDataTable.setAjaxUrl(url);
 
     updateIndexButtons();
 
@@ -265,13 +249,8 @@ function getHeaderTabs() {
 
     const actualTab = _getTabFromUrl();
 
-    if (actualTab) {
-        const matched = tabs.some(tab => tab.url === actualTab);
-        if (matched) {
-            tabs.forEach(tab => {
-                tab.active = tab.url === actualTab;
-            });
-        }
+    if (tabs.some(tab => tab.url === actualTab)) {
+        tabs.forEach(tab => { tab.active = tab.url === actualTab; });
     }
 
     return tabs;
@@ -298,66 +277,36 @@ function _addParamsBtnUrl(baseUrl) {
 }
 
 /**
- * Returns configuration for the "add to index" action.
+ * Builds the queue dialog configuration for the active tab's selected scope.
  *
- * @returns {{url: string, title: string, buttonTitleKey: string}|null}
+ * @param {string} action Queue action, "index" or "delete".
+ * @returns {{url: string, title: string, buttonTitleKey: string}|null} Configuration, or null without an available scope.
  * @private
  */
-function _getAddIndexButtonConf() {
+function _getIndexButtonConf(action) {
     const entityType = getActiveTabValue();
-    if ("markdown" === entityType) return _getMarkdownIndexButtonConf("index");
-    if ("document" === entityType) {
-        const url = _addParamsBtnUrl("/admin/v9/settings/doc-chunks/?action=index");
-        return {
-            url: url.pathname + url.search,
-            title: "[[#{settings.doc-chunks.title}]]",
-            buttonTitleKey: "[[#{settings.embedding-chunks.start}]]"
-        };
+    let url;
+    let title;
+    if (entityType === "markdown") {
+        const folder = document.getElementById("markdownFolder")?.value;
+        if (!folder) return null;
+        const params = new URLSearchParams({
+            action,
+            folder,
+            directory: document.getElementById("markdownDirectory")?.value || "",
+            includeSubfolders: String(document.getElementById("markdownIncludeSubfolders")?.checked !== false)
+        });
+        url = new URL("/admin/v9/settings/markdown-chunks/?" + params, window.location.origin);
+        title = "[[#{settings.markdown-chunks.title}]]";
+    } else if (entityType === "document") {
+        url = _addParamsBtnUrl("/admin/v9/settings/doc-chunks/?action=" + action);
+        title = "[[#{settings.doc-chunks.title}]]";
+    } else {
+        return null;
     }
-
-    return null;
-}
-
-/**
- * Returns configuration for the "remove from index" action.
- *
- * @returns {{url: string, title: string, buttonTitleKey: string}|null}
- * @private
- */
-function _getRemoveIndexButtonConf() {
-    const entityType = getActiveTabValue();
-    if ("markdown" === entityType) return _getMarkdownIndexButtonConf("delete");
-    if ("document" === entityType) {
-        const url = _addParamsBtnUrl("/admin/v9/settings/doc-chunks/?action=delete");
-        return {
-            url: url.pathname + url.search,
-            title: "[[#{settings.doc-chunks.title}]]",
-            buttonTitleKey: "[[#{settings.embedding-chunks.start}]]"
-        };
-    }
-
-    return null;
-}
-
-/**
- * Builds the queue action dialog URL for the selected Markdown folder.
- *
- * @param {string} action Queue action to preview and submit.
- * @returns {{url: string, title: string, buttonTitleKey: string}|null} Modal configuration, or null if no folder is selected.
- * @private
- */
-function _getMarkdownIndexButtonConf(action) {
-    const folder = document.getElementById("markdownFolder")?.value;
-    if (!folder) return null;
-    const params = new URLSearchParams({
-        action,
-        folder,
-        directory: document.getElementById("markdownDirectory")?.value || "",
-        includeSubfolders: String(document.getElementById("markdownIncludeSubfolders")?.checked !== false)
-    });
     return {
-        url: "/admin/v9/settings/markdown-chunks/?" + params.toString(),
-        title: "[[#{settings.markdown-chunks.title}]]",
+        url: url.pathname + url.search,
+        title,
         buttonTitleKey: "[[#{settings.embedding-chunks.start}]]"
     };
 }
@@ -397,44 +346,19 @@ function _openIndexModal(conf) {
 }
 
 /**
- * Creates the DataTable button that opens an indexing dialog for the scope selected at click time.
+ * Creates a queue action button using the selected scope at click time.
  *
- * @returns {{text: string, action: function(): void, className: string, attr: Object<string, string>}} Button configuration.
+ * @param {string} action Queue action, "index" or "delete".
+ * @returns {Object} DataTable button configuration.
  */
-function getAddIndexButton() {
+function getIndexButton(action) {
+    const indexing = action === "index";
+    const label = indexing ? "[[#{settings.embedding-chunks.add}]]" : "[[#{settings.embedding-chunks.remove}]]";
     return {
-        text: "<i class=\"ti ti-database-plus\" aria-hidden=\"true\"></i>",
-        action: function () {
-            const clickConf = _getAddIndexButtonConf();
-            _openIndexModal(clickConf);
-        },
-        className: "btn btn-sm btn-success btnAddIndex",
-        attr: {
-            title: "[[#{settings.embedding-chunks.add}]]",
-            "aria-label": "[[#{settings.embedding-chunks.add}]]",
-            "data-toggle": "tooltip"
-        }
-    };
-}
-
-/**
- * Creates the DataTable button that opens an index removal dialog for the scope selected at click time.
- *
- * @returns {{text: string, action: function(): void, className: string, attr: Object<string, string>}} Button configuration.
- */
-function getRemoveIndexButton() {
-    return {
-        text: "<i class=\"ti ti-database-minus\" aria-hidden=\"true\"></i>",
-        action: function () {
-            const clickConf = _getRemoveIndexButtonConf();
-            _openIndexModal(clickConf);
-        },
-        className: "btn btn-sm btn-danger btnRemoveIndex",
-        attr: {
-            title: "[[#{settings.embedding-chunks.remove}]]",
-            "aria-label": "[[#{settings.embedding-chunks.remove}]]",
-            "data-toggle": "tooltip"
-        }
+        text: '<i class="ti ti-database-' + (indexing ? "plus" : "minus") + '" aria-hidden="true"></i>',
+        action: () => _openIndexModal(_getIndexButtonConf(action)),
+        className: "btn btn-sm " + (indexing ? "btn-success btnAddIndex" : "btn-danger btnRemoveIndex"),
+        attr: { title: label, "aria-label": label, "data-toggle": "tooltip" }
     };
 }
 

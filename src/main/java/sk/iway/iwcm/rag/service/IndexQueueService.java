@@ -1,6 +1,5 @@
 package sk.iway.iwcm.rag.service;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -40,21 +39,19 @@ public class IndexQueueService {
      * @throws IllegalArgumentException if any parameter is invalid
      */
     public void addToQueue(List<Integer> entityIds, RagEntityType entityType, RagIndexAction action, int domainId) {
-        if(entityIds == null || entityType != RagEntityType.DOCUMENT || action == null || domainId <= 0 ) {
+        if(entityIds == null || entityIds.stream().anyMatch(id -> id == null || id < 1)
+                || entityType != RagEntityType.DOCUMENT || action == null || domainId <= 0 ) {
             throw new IllegalArgumentException("Invalid parameters for adding to index queue.");
         }
 
-        removeFromQueue(entityIds, entityType, domainId);
+        if(entityIds.isEmpty()) return;
+        entityIds = entityIds.stream().distinct().toList();
+        queueRepository.deleteByEntityTypeAndEntityId(entityType, entityIds.stream().map(Integer::longValue).toList(), domainId);
 
         if(RagIndexAction.DELETE.equals(action)) entityIds = filterIdsForRemove(entityIds, entityType, domainId);
         if(entityIds.isEmpty()) return;
 
-        List<IndexQueueEntity> queueList = new ArrayList<>();
-        for (Integer entityId : entityIds) {
-            queueList.add( prepareEntity(entityId, entityType, action, domainId) );
-        }
-
-        queueRepository.saveAll(queueList);
+        queueRepository.saveAll(entityIds.stream().map(id -> prepareEntity(id, entityType, action, domainId)).toList());
     }
 
     /**
@@ -70,7 +67,7 @@ public class IndexQueueService {
             throw new IllegalArgumentException("Invalid parameters for adding to index queue.");
         }
 
-        removeFromQueue(entityId, entityType, domainId);
+        queueRepository.deleteByEntityTypeAndEntityId(entityType, (long) entityId, domainId);
 
         queueRepository.save( prepareEntity(entityId, entityType, action, domainId) );
     }
@@ -84,7 +81,7 @@ public class IndexQueueService {
      * @throws IllegalArgumentException if any parameter is invalid
      */
     public List<Integer> getQueued(RagEntityType entityType, RagIndexAction action, Integer domainId) {
-        if(entityType != RagEntityType.DOCUMENT || action == null || domainId <= 0 ) {
+        if(entityType != RagEntityType.DOCUMENT || action == null || domainId == null || domainId <= 0 ) {
             throw new IllegalArgumentException("Invalid parameters for getting from index queue.");
         }
 
@@ -104,28 +101,6 @@ public class IndexQueueService {
         return entityIds.stream()
                 .filter(entityIdsThatHaveChunks::contains)
                 .toList();
-    }
-
-    /**
-     * Removes pending actions for one entity in the specified domain.
-     *
-     * @param entityId source ID
-     * @param entityType source entity type
-     * @param domainId accounting domain
-     */
-    private void removeFromQueue(int entityId, RagEntityType entityType, int domainId) {
-        queueRepository.deleteByEntityTypeAndEntityId(entityType, (long) entityId, domainId);
-    }
-
-    /**
-     * Removes pending actions for the selected entities in the specified domain.
-     *
-     * @param entityIds source IDs
-     * @param entityType source entity type
-     * @param domainId accounting domain
-     */
-    private void removeFromQueue(List<Integer> entityIds, RagEntityType entityType, int domainId) {
-        queueRepository.deleteByEntityTypeAndEntityId(entityType, entityIds.stream().map(Integer::longValue).toList(), domainId);
     }
 
     /**

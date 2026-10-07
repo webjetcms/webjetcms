@@ -148,7 +148,7 @@ If an assistant already exists, its `provider` and `model` take precedence over 
 
 Indexes are separated by provider and model combination. Reindexing will only replace data from the current combination, so for example, OpenAI and Gemini indexes of the same page can coexist. Indexing preview only counts indexes from the current assistant; deletion preview and page deletion work with all combinations.
 
-Queue `rag_index_queue` only stores the entity type, ID, and action. The provider and model are retrieved from assistant `RAG-EMB-INDEX` only when the item is processed. If you need to complete indexing with the original combination, let the queue fully process before changing the assistant.
+Queue `rag_index_queue` does not store the provider or model. The provider and model are retrieved from assistant `RAG-EMB-INDEX` only when the item is processed. If you need to complete indexing with the original combination, let the queue fully process before changing the assistant.
 
 !>**Warning:** The indexing and search assistants must use the same provider and model identifier. Search will only load indexes that both values ​​exactly match the `RAG-EMB-SEARCH` assistant.
 

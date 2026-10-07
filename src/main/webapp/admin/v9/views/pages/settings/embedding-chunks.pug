@@ -47,8 +47,8 @@ block content
             embeddingChunksDataTable.hideButtons(["create", "remove", "celledit", "import", "duplicate"]);
 
             var buttonCounter = 2;
-            embeddingChunksDataTable.button().add(buttonCounter++, getAddIndexButton());
-            embeddingChunksDataTable.button().add(buttonCounter++, getRemoveIndexButton());
+            embeddingChunksDataTable.button().add(buttonCounter++, getIndexButton("index"));
+            embeddingChunksDataTable.button().add(buttonCounter++, getIndexButton("delete"));
             embeddingChunksDataTable.on("select.dt.DT deselect.dt.DT draw.dt.DT", updateIndexButtons);
 
             initPage();

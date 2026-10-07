@@ -49,6 +49,14 @@ test('injects preview configuration and preserves proxy authentication and error
   assert.equal((await fetch(url + query)).status, 403);
   assert.equal((await fetch(url + query, { headers: { Origin: 'https://unrelated.example' } })).status, 403);
   assert.equal((await fetch(url + query, { method: 'POST' })).status, 405);
+  const malformed = await new Promise((resolve, reject) => {
+    http.get(url, { headers: { Host: '[' } }, response => {
+      response.resume();
+      resolve(response.statusCode);
+    }).on('error', reject);
+  });
+  assert.equal(malformed, 400);
+  assert.equal((await fetch(url + query, { headers })).status, 200);
   backendServer.closeAllConnections();
   await new Promise(resolve => backendServer.close(resolve));
   assert.equal((await fetch(url + query)).status, 503);

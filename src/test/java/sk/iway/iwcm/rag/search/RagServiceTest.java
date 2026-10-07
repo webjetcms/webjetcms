@@ -15,6 +15,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -135,13 +137,14 @@ class RagServiceTest extends BaseWebjetTest {
     }
 
     /**
-     * Verifies that the current cannot-answer sentinel is mapped to the localized fallback text.
+     * Verifies that the cannot-answer sentinel suppresses the answer even when wrapped in formatting or other text.
      */
-    @Test
-    void answerQuestionMapsCannotAnswerSentinelToLocalizedText() throws Exception {
+    @ParameterizedTest
+    @ValueSource(strings = {"CANNOT_ANSWER_QUESTION", "`CANNOT_ANSWER_QUESTION`.", "\"CANNOT_ANSWER_QUESTION\"", "<p>CANNOT_ANSWER_QUESTION</p>"})
+    void answerQuestionSuppressesCannotAnswerSentinel(String responseText) throws Exception {
         AssistantDefinitionEntity assistant = assistant(10L);
         when(assistantRepository.findFirstByClassNameAndDomainIdOrderByIdAsc(RagService.class.getName(), 1)).thenReturn(Optional.of(assistant));
-        when(aiService.getAiResponse(any(), any(), any(), any())).thenReturn(response("`CANNOT_ANSWER_QUESTION`."));
+        when(aiService.getAiResponse(any(), any(), any(), any())).thenReturn(response(responseText));
 
         String answer = ragService.answerQuestion("Unknown?", 1, List.of(chunk(100L, 0, "Known text.", 0.91d)), request);
 
@@ -149,7 +152,7 @@ class RagServiceTest extends BaseWebjetTest {
     }
 
     /**
-     * Verifies that empty retrieval results return the fallback text without calling AI.
+     * Verifies that empty retrieval results omit the answer without calling AI.
      */
     @Test
     void answerQuestionDoesNotCallAiWhenChunksAreEmpty() throws Exception {

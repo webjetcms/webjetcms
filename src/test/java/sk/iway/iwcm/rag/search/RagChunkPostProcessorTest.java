@@ -7,6 +7,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
 
@@ -71,22 +73,20 @@ class RagChunkPostProcessorTest {
     }
 
     /**
-     * Verifies that adjacent sliding-window chunks are merged without duplicated overlap text.
+     * Verifies that overlap removal preserves word separators and handles whitespace before and inside the overlap.
      */
-    @Test
-    void mergeAdjacentChunksRemovesSlidingWindowOverlap() {
+    @ParameterizedTest
+    @ValueSource(strings = {"Shared overlap phrase for removal", "  Shared overlap phrase for removal", "\nShared  overlap\tphrase for removal"})
+    void mergeAdjacentChunksRemovesSlidingWindowOverlap(String overlap) {
         RagChunkPostProcessor processor = new RagChunkPostProcessor(5, 0.1d, 1, 3, 5000, 2000);
 
         List<MergedContextBlock> blocks = processor.process(List.of(
             chunk(1L, 0, "Intro text before. Shared overlap phrase for removal", 0.90d),
-            chunk(1L, 1, "Shared overlap phrase for removal and unique second.", 0.80d)
+            chunk(1L, 1, overlap + " and unique second.", 0.80d)
         ));
 
         assertEquals(1, blocks.size());
-        String text = blocks.get(0).getText();
-        assertTrue(text.contains("Intro text before."));
-        assertTrue(text.contains("and unique second."));
-        assertEquals(text.indexOf("Shared overlap phrase"), text.lastIndexOf("Shared overlap phrase"));
+        assertEquals("Intro text before. Shared overlap phrase for removal and unique second.", blocks.get(0).getText());
     }
 
     /**
