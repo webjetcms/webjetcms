@@ -2475,6 +2475,22 @@ public class FormMailAction extends HttpServlet
 	 */
 	public static void sendUserInfo(int sendUserInfoDocId, int formId, String email, List<IwcmFile> attachs, Map<String, List<UploadedFile>> formFilesTable, HttpServletRequest request)
 	{
+		sendUserInfo(sendUserInfoDocId, formId, email, attachs, formFilesTable, request, null);
+	}
+
+	/**
+	 * Sends the visitor notification, replacing placeholders with prepared form data or request parameters.
+	 *
+	 * @param sendUserInfoDocId notification page ID
+	 * @param formId saved form ID
+	 * @param email visitor email address
+	 * @param attachs files attached to the notification
+	 * @param formFilesTable uploaded files indexed by form field
+	 * @param request current HTTP request
+	 * @param formData prepared, HTML-safe values keyed by form field ID; null uses request parameters
+	 */
+	public static void sendUserInfo(int sendUserInfoDocId, int formId, String email, List<IwcmFile> attachs, Map<String, List<UploadedFile>> formFilesTable, HttpServletRequest request, Map<String, String> formData)
+	{
 		DocDB docDB = DocDB.getInstance();
 
 		DocDetails doc = docDB.getDoc(sendUserInfoDocId);
@@ -2500,10 +2516,10 @@ public class FormMailAction extends HttpServlet
 				data = Tools.replace(data, "!OPTIN_HASH!", hash);
 			}
 
-			for (Object parameterNameObj: Collections.list(request.getParameterNames()))
+			Collection<String> parameterNames = formData != null ? formData.keySet() : Collections.list(request.getParameterNames());
+			for (String parameterName : parameterNames)
 			{
-				String parameterName = String.valueOf(parameterNameObj);
-				String value = getValue(parameterName, request, formFilesTable);
+				String value = formData != null ? formData.get(parameterName) : getValue(parameterName, request, formFilesTable);
 
 				data = Tools.replace(data, "!" + parameterName.toUpperCase() + "!", value);
 				data = Tools.replace(data, "!" + parameterName + "!", value);

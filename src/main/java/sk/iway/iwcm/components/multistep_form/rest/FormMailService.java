@@ -145,7 +145,7 @@ public class FormMailService {
 		request.setAttribute("doubleOptIn", formSettings.getDoubleOptIn());
 
 		if (sendUserInfoDocId > 0) {
-			FormMailAction.sendUserInfo(sendUserInfoDocId, form.getId().intValue(), email, formFiles.getAttachs(), null, request);
+			FormMailAction.sendUserInfo(sendUserInfoDocId, form.getId().intValue(), email, formFiles.getAttachs(), null, request, formData);
 		}
 
 		Logger.println(FormMailService.class,"FormMailService recipients=" + recipients);

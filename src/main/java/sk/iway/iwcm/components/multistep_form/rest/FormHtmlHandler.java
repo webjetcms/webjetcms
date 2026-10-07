@@ -18,6 +18,7 @@ import sk.iway.iwcm.CryptoFactory;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
@@ -252,9 +253,11 @@ public class FormHtmlHandler {
             stepWrapperStart = DocTools.updateUserCodes(UsersDB.getCurrentUser(request), stepWrapperStart);
 
             // Swap form items values
-            stepWrapperStart = isEmailRender
-                ? MultistepFormsService.updateFormValues(this.formData, stepWrapperStart)
-                : MultistepFormsService.updateFormValues(formName, request, stepWrapperStart);
+            if (isEmailRender && this.formData != null) {
+                stepWrapperStart = MultistepFormsService.updateFormValues(this.formData, stepWrapperStart);
+            } else {
+                stepWrapperStart = MultistepFormsService.updateFormValues(formName, request, stepWrapperStart);
+            }
         }
 
         formStepHtml.append(stepWrapperStart);
@@ -571,7 +574,7 @@ public class FormHtmlHandler {
 
 		try
 		{
-			cssData = "<style type='text/css'>";
+			cssData = "<style type='text/css' media=\"all\">";
 			cssLink = "";
 
 			if (temp != null)
@@ -592,7 +595,7 @@ public class FormHtmlHandler {
 				}
                 for(String baseCssPath : baseCssPaths) {
                     baseCssPath = FormMailAction.checkEmailCssVersion(baseCssPath);
-                    cssStyle.append(FileTools.readFileContent(baseCssPath)).append('\n');
+                    cssStyle.append(FileTools.readFileContent(baseCssPath, SetCharacterEncodingFilter.getEncoding())).append('\n');
                     cssLink += "<link rel='stylesheet' href='" + baseCssPath + "' type='text/css'/>\n";
                 }
 
@@ -607,7 +610,7 @@ public class FormHtmlHandler {
 				}
                 for(String tempCssLink : tempCssLinks) {
                     tempCssLink = FormMailAction.checkEmailCssVersion(tempCssLink);
-                    cssStyle.append(FileTools.readFileContent(tempCssLink)).append('\n');
+                    cssStyle.append(FileTools.readFileContent(tempCssLink, SetCharacterEncodingFilter.getEncoding())).append('\n');
                     cssLink += "<link rel='stylesheet' href='" + tempCssLink + "' type='text/css'/>\n";
                 }
 
@@ -615,7 +618,7 @@ public class FormHtmlHandler {
 				String[] editorEditorCsses = Tools.getTokens(Constants.getString("editorEditorCss"), "\n");
                 for(String editorEditorCss : editorEditorCsses) {
                     editorEditorCss = FormMailAction.checkEmailCssVersion(editorEditorCss);
-                    cssStyle.append(FileTools.readFileContent(editorEditorCss)).append('\n');
+                    cssStyle.append(FileTools.readFileContent(editorEditorCss, SetCharacterEncodingFilter.getEncoding())).append('\n');
                     cssLink += "<link rel='stylesheet' href='" + editorEditorCss + "' type='text/css'/>\n";
                 }
 
@@ -623,7 +626,7 @@ public class FormHtmlHandler {
                 String[] formSpecificCsses = Tools.getTokens(formSpecificCssStr, "\n");
                 for(String formSpecificCss : formSpecificCsses) {
                     formSpecificCss = FormMailAction.checkEmailCssVersion(formSpecificCss);
-                    cssStyle.append(FileTools.readFileContent(formSpecificCss)).append('\n');
+                    cssStyle.append(FileTools.readFileContent(formSpecificCss, SetCharacterEncodingFilter.getEncoding())).append('\n');
                     cssLink += "<link rel='stylesheet' href='" + formSpecificCss + "' type='text/css'/>\n";
                 }
 
@@ -638,7 +641,7 @@ public class FormHtmlHandler {
 					cssLink += "<link rel='stylesheet' href='/css/email.css' type='text/css'/>\n";
 
 				if (is != null) {
-					BufferedReader br = new BufferedReader(new InputStreamReader(is, Constants.FILE_ENCODING));
+					BufferedReader br = new BufferedReader(new InputStreamReader(is, SetCharacterEncodingFilter.getEncoding()));
 					String line;
 					StringBuilder startBuf = new StringBuilder(cssData);
 					while ((line = br.readLine()) != null)
@@ -652,6 +655,8 @@ public class FormHtmlHandler {
 		}
 
 		cssData += "</style>";
+        // A BOM belongs at the start of a file, not inside concatenated inline CSS.
+        cssData = cssData.replace("\uFEFF", "");
 
         if(Tools.isEmpty(cssLink)) cssLink = "";
 

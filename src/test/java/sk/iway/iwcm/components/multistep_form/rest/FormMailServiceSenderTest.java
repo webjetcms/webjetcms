@@ -4,11 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -29,12 +32,14 @@ import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.multistep_form.rest.SaveFormService.FormFiles;
+import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.i18n.Prop;
 
-/** Tests sender selection and audit contents from prepared form data without sending an actual email. */
+/** Tests sender selection, visitor notifications and audit contents from prepared form data without sending an actual email. */
 class FormMailServiceSenderTest {
 
-    /** Uses prepared form data for the sender and audit, ignoring stored values and stale session answers. */
+    /** Uses prepared form data for the sender, visitor notification and audit, ignoring stored values and stale answers. */
     @ParameterizedTest
     @CsvSource({
         "true, true, Jane & Doe, jane@example.com",
@@ -45,6 +50,7 @@ class FormMailServiceSenderTest {
     void resolvesSenderFromAppropriateSubmissionData(boolean encrypted, boolean formDataPresent,
             String expectedName, String expectedEmail) throws Exception {
         FormSettingsEntity settings = new FormSettingsEntity();
+        settings.setFormMailSendUserInfoDocId(123);
         if (encrypted) settings.setEncryptKey("test-public-key");
         FormsEntity form = new FormsEntity();
         form.setId(42L);
@@ -61,12 +67,20 @@ class FormMailServiceSenderTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter("language", "en");
         request.addHeader("X-CSRF-Token", "current-token");
+        request.setParameter("last-name-2", "Request value");
+        DocDetails notification = new DocDetails();
+        notification.setTitle("Confirmation");
+        notification.setData("!first-name-7! !last-name-2! / !LAST-NAME-2!");
+        DocDB docDB = mock(DocDB.class);
+        when(docDB.getDoc(123)).thenReturn(notification);
 
         try (MockedStatic<Adminlog> adminlog = mockStatic(Adminlog.class);
                 MockedStatic<Constants> constants = mockStatic(Constants.class);
                 MockedStatic<Prop> props = mockStatic(Prop.class);
                 MockedStatic<SendMail> mail = mockStatic(SendMail.class);
+                MockedStatic<DocDB> docs = mockStatic(DocDB.class);
                 MockedStatic<MultistepFormsService> forms = mockStatic(MultistepFormsService.class, CALLS_REAL_METHODS)) {
+            docs.when(DocDB::getInstance).thenReturn(docDB);
             constants.when(() -> Constants.getString("useSMTPServer")).thenReturn("true");
             constants.when(() -> Constants.getString("smtpServer")).thenReturn("localhost");
             constants.when(() -> Constants.getArray(FormMailService.NAME_FIELD_KEY)).thenReturn(new String[] {"first-name", "last-name"});
@@ -87,6 +101,11 @@ class FormMailServiceSenderTest {
             InternetAddress sender = (InternetAddress) sent.getValue().getFrom()[0];
             assertEquals(expectedName, sender.getPersonal());
             assertEquals(expectedEmail, sender.getAddress());
+
+            String expectedNotification = formDataPresent
+                ? "Jane &amp; Doe / Doe" : "!first-name-7! !last-name-2! / !LAST-NAME-2!";
+            mail.verify(() -> SendMail.send(any(), any(), any(), isNull(), isNull(), isNull(), eq("Confirmation"),
+                eq("<html><body>" + expectedNotification + "</body></html>"), anyString(), eq("")));
 
             ArgumentCaptor<String> audit = ArgumentCaptor.forClass(String.class);
             adminlog.verify(() -> Adminlog.add(eq(Adminlog.TYPE_MULTISTEP_FORM_USERS), audit.capture(), eq(1L), eq(42L)), atLeastOnce());
