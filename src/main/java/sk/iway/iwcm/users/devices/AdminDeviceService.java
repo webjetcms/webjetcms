@@ -43,6 +43,12 @@ public class AdminDeviceService {
     static final String COOKIE_NAME = "wjdevice";
     private static final Pattern TOKEN_PATTERN = Pattern.compile("[A-Za-z0-9_-]{43}");
     private static final SecureRandom RANDOM = new SecureRandom();
+    // Keep E2E exclusions immutable and outside runtime configuration.
+    private static final Set<String> IGNORED_DEVICE_DOMAINS = Set.of("demo.webjetcms.sk", "*.interway.sk", "localhost");
+    private static final Set<String> IGNORED_DEVICE_USER_AGENTS = Set.of(
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36"
+    );
     private final DeviceService deviceService;
     private final Clock clock;
 
@@ -78,6 +84,7 @@ public class AdminDeviceService {
     /** Applies the account-specific inactivity window and renews the browser cookie. */
     private void saveDataAndCookie(Identity user, HttpServletRequest request, HttpServletResponse response) {
         request.getSession().removeAttribute(SESSION_DEVICE_ID);
+        if (isIgnoredDevice(request)) return;
         String token = readToken(request);
         if (token == null) {
             byte[] bytes = new byte[32];
@@ -103,6 +110,24 @@ public class AdminDeviceService {
         DeviceEntity device = event != null ? event : deviceService.findByTokenHash(user.getUserId(), tokenHash);
         if (device != null) request.getSession().setAttribute(SESSION_DEVICE_ID, device.getId());
         if (event != null) sendNotification(user, request, event);
+    }
+
+    /** Matches a complete User-Agent and login hostname against immutable E2E exclusions. */
+    private static boolean isIgnoredDevice(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent == null || !IGNORED_DEVICE_USER_AGENTS.contains(userAgent)) return false;
+
+        String serverName = Tools.getServerName(request, false);
+        if (serverName == null) return false;
+        for (String domain : IGNORED_DEVICE_DOMAINS) {
+            if (domain.startsWith("*.")) {
+                String suffix = domain.substring(1);
+                if (serverName.length() > suffix.length() && serverName.endsWith(suffix)) return true;
+            } else if (serverName.equals(domain)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Returns the configured inactivity window, bounded to a valid cookie lifetime. */

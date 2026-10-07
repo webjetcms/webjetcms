@@ -17,6 +17,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
@@ -42,6 +43,7 @@ class AdminDeviceServiceTest {
     private static final long NOW = Instant.parse("2026-10-05T10:00:00Z").toEpochMilli();
     private static final String EVENT_ID = "42";
     private static final String TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG";
+    private static final String HEADLESS_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36";
     private final DeviceService repository = mock(DeviceService.class);
     private final AdminDeviceService service = spy(new AdminDeviceService(repository, Clock.fixed(Instant.ofEpochMilli(NOW), ZoneOffset.UTC)));
     private final Identity user = mock(Identity.class);
@@ -158,6 +160,118 @@ class AdminDeviceServiceTest {
         assertEquals(30 * 86400, cookie.getMaxAge());
         assertFalse(cookie.getSecure());
         verify(repository).recordLogin(eq(7), anyString(), eq(NOW), eq(NOW - Duration.ofDays(30).toMillis()), anyString(), anyString(), anyString(), anyString());
+    }
+
+    /** Both lists must match before database writes, browser cookies and notifications are skipped. */
+    @ParameterizedTest
+    @ValueSource(strings = {"demo.webjetcms.sk", "iwcm.interway.sk", "test.cms.interway.sk", "localhost", "localhost:8080"})
+    void skipsExactUserAgentOnlyOnFixedHosts(String host) {
+        prepareHeadlessLogin(host);
+        request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
+        request.getSession().setAttribute(AdminDeviceService.SESSION_DEVICE_ID, 99L);
+
+        LogonTools.afterSuccessLogon(request, response);
+
+        verifyNoInteractions(repository);
+        verify(service, never()).sendNotification(any(), any(), any());
+        assertTrue(browsers.constructed().isEmpty());
+        assertEquals(0, response.getCookies().length);
+        assertNull(request.getSession().getAttribute(AdminDeviceService.SESSION_DEVICE_ID));
+    }
+
+    /** Similar hostnames, parent domains and unrelated environments remain subject to detection. */
+    @ParameterizedTest
+    @ValueSource(strings = {"cms.example.com", "interway.sk", "evilinterway.sk", "iwcm.interway.sk.example.com",
+        "demo.webjetcms.sk.example.com", "other.demo.webjetcms.sk", "localhost.example.com"})
+    void recordsIgnoredUserAgentOutsideFixedHosts(String host) {
+        prepareHeadlessLogin(host);
+
+        assertDeviceRecorded();
+    }
+
+    /** User-Agent entries are literal full headers, including case, whitespace and version. */
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"HeadlessChrome 131.0", "HeadlessChrome/131.0.6778.33", "*HeadlessChrome*", "Autotest Browser", " "})
+    void recordsUserAgentsWithoutAnExactEntry(String userAgent) {
+        prepareHeadlessLogin("localhost");
+        request.removeHeader("User-Agent");
+        if (userAgent != null) request.addHeader("User-Agent", userAgent);
+
+        assertDeviceRecorded();
+    }
+
+    /** A browser update or any other header difference requires an explicit code change. */
+    @ParameterizedTest
+    @ValueSource(strings = {"version", "case", "whitespace", "device-test"})
+    void recordsChangedFullUserAgent(String change) {
+        prepareHeadlessLogin("localhost");
+        String userAgent = switch (change) {
+            case "version" -> HEADLESS_USER_AGENT.replace("131.0.6778.33", "132.0.6778.33");
+            case "case" -> HEADLESS_USER_AGENT.replace("HeadlessChrome", "headlesschrome");
+            case "device-test" -> HEADLESS_USER_AGENT + " WebJET-autotest-new-device";
+            default -> HEADLESS_USER_AGENT + " ";
+        };
+        request.removeHeader("User-Agent");
+        request.addHeader("User-Agent", userAgent);
+
+        assertDeviceRecorded();
+    }
+
+    /** Runtime settings cannot extend the immutable domain exclusions to another environment. */
+    @Test
+    void runtimeConfigurationCannotExcludeAnotherHost() {
+        prepareHeadlessLogin("cms.example.com");
+        constants.when(() -> Constants.getString("adminNewDeviceIgnoredDomains")).thenReturn("cms.example.com");
+        constants.when(() -> Constants.getString("adminNewDeviceIgnoredUserAgents")).thenReturn(HEADLESS_USER_AGENT);
+
+        assertDeviceRecorded();
+    }
+
+    /** Runtime settings cannot add another browser to the immutable User-Agent exclusions. */
+    @Test
+    void runtimeConfigurationCannotExcludeAnotherUserAgent() {
+        prepareHeadlessLogin("localhost");
+        request.removeHeader("User-Agent");
+        request.addHeader("User-Agent", "Autotest configured browser");
+        constants.when(() -> Constants.getString("adminNewDeviceIgnoredDomains")).thenReturn("localhost");
+        constants.when(() -> Constants.getString("adminNewDeviceIgnoredUserAgents")).thenReturn("Autotest configured browser");
+
+        assertDeviceRecorded();
+    }
+
+    /** The locally verified macOS E2E browser is also excluded on the fixed test hosts. */
+    @Test
+    void skipsMacHeadlessUserAgent() {
+        prepareHeadlessLogin("localhost");
+        request.removeHeader("User-Agent");
+        request.addHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36");
+
+        AdminDeviceService.recordSuccessfulLogin(user, request, response);
+
+        verifyNoInteractions(repository);
+        verify(service, never()).sendNotification(any(), any(), any());
+        assertEquals(0, response.getCookies().length);
+    }
+
+    private void prepareHeadlessLogin(String host) {
+        tools.when(() -> Tools.getServerName(request, false)).thenCallRealMethod();
+        request.setServerName(host);
+        request.removeHeader("User-Agent");
+        request.addHeader("User-Agent", HEADLESS_USER_AGENT);
+    }
+
+    private void assertDeviceRecorded() {
+        DeviceEntity event = event();
+        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
+            .thenReturn(event);
+
+        AdminDeviceService.recordSuccessfulLogin(user, request, response);
+
+        verify(repository).recordLogin(eq(7), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
+        verify(service).sendNotification(user, request, event);
+        assertNotNull(response.getCookie(AdminDeviceService.COOKIE_NAME));
+        assertEquals(event.getId(), request.getSession().getAttribute(AdminDeviceService.SESSION_DEVICE_ID));
     }
 
     @Test

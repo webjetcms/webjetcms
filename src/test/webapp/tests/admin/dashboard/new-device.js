@@ -21,6 +21,9 @@ Scenario('New device login sends an email and can be confirmed from its detail',
     await TempMail.login(mailbox);
     await TempMail.destroyInbox();
 
+    // Exercise device detection even when the regular E2E User-Agent is excluded.
+    const userAgent = await I.executeScript(() => navigator.userAgent);
+    I.setPlaywrightRequestHeaders({ 'User-Agent': `${userAgent} WebJET-autotest-new-device` });
     const started = Date.now();
     I.relogin('publishNotification');
     I.waitForElement(dashboard, 30);
@@ -72,6 +75,7 @@ Scenario('New device login sends an email and can be confirmed from its detail',
 });
 
 Scenario('Clean up the new device notice and restore browser recognition', async ({ I }) => {
+    I.setPlaywrightRequestHeaders({});
     if (eventId) {
         I.relogin('publishNotification');
         I.waitForElement(dashboard, 30);
