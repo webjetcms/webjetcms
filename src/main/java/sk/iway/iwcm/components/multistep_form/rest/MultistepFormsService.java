@@ -2041,19 +2041,30 @@ public class MultistepFormsService {
             if (Tools.isEmpty(itemFormId)) continue;
 
             Object value = request.getSession().getAttribute(sessionPrefix + itemFormId);
-            if (value != null) formData.put(itemFormId, value.toString());
+            formData.put(itemFormId, value == null ? "" : ResponseUtils.filter(value.toString()));
         }
 
-        for (FormItemEntity stepItem : stepItems) {
-            if ("captcha".equals(stepItem.getFieldType())) continue;
+        return updateFormValues(formData, formHtml);
+    }
 
-            String itemFormId = stepItem.getItemFormId();
-            if (Tools.isEmpty(itemFormId)) continue;
+    /**
+     * Replaces placeholders using prepared values without reading the submission session.
+     * HTML entities are normalized before escaping to avoid double-escaping filtered values.
+     *
+     * @param notificationValues values keyed by logical field IDs, containing HTML-escaped text,
+     *                           sanitized WYSIWYG HTML, saved filenames and empty answers;
+     *                           markup in these values is escaped for placeholder replacement
+     * @param formHtml markup containing {@code !fieldId!} placeholders
+     * @return updated markup, or {@code null} when {@code formHtml} is {@code null}
+     */
+    public static final StringBuilder updateFormValues(Map<String, String> notificationValues, StringBuilder formHtml) {
+        if (formHtml == null) return null;
 
-            String replaceValue = formData.get(itemFormId);
+        for (Map.Entry<String, String> field : notificationValues.entrySet()) {
+            String replaceValue = field.getValue();
             if (replaceValue == null) replaceValue = "";
 
-            Tools.replace(formHtml, "!" + itemFormId + "!", ResponseUtils.filter(replaceValue));
+            Tools.replace(formHtml, "!" + field.getKey() + "!", ResponseUtils.filter(StringEscapeUtils.unescapeHtml4(replaceValue)));
         }
 
         return formHtml;

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -213,7 +214,7 @@ public class SaveFormService {
 
         //data MUST be set sooner than HTML
         FormFiles formFiles = new FormFiles(); // in form files we store all needed files, files names etc.
-        setFormDataBeforeSave(form, formName, request, formFiles, formSettings);
+        Map<String, String> notificationValues = setFormDataBeforeSave(form, formName, request, formFiles, formSettings);
 
         boolean forceTextPlain = Tools.isTrue(formSettings.getForceTextPlain());
         String emailHtml;
@@ -227,7 +228,7 @@ public class SaveFormService {
             if (mailDoc != null) {
                 String pageHtml = FormMailAction.getCroppedHTML(mailDoc.getData());
                 pageHtml = ShowDoc.updateCodes(null, pageHtml, mailDocId, request, Constants.getServletContext());
-                StringBuilder formHtml = MultistepFormsService.updateFormValues(formName, request, new StringBuilder(pageHtml));
+                StringBuilder formHtml = MultistepFormsService.updateFormValues(notificationValues, new StringBuilder(pageHtml));
 
                 Pair<String, String> cssPair = FormHtmlHandler.getCssDataLink(mailDocId, forceTextPlain);
                 emailCss = cssPair != null ? cssPair.first : "";
@@ -251,7 +252,7 @@ public class SaveFormService {
                     form.setHtml(htmlWithStyle);
             } else {
                 // fallback to normal rendering if doc not found
-                formHtmlHandler.setFormHtml(form, request, docId);
+                formHtmlHandler.setFormHtml(form, notificationValues, request, docId);
                 emailHtml = formHtmlHandler.getFormHtmlBeforeCss();
                 Pair<String, String> cssFallback = formHtmlHandler.getCssDataPair();
                 emailCss = cssFallback != null ? cssFallback.first : "";
@@ -259,7 +260,7 @@ public class SaveFormService {
             }
         } else {
             // set html using standard multistep form rendering
-            formHtmlHandler.setFormHtml(form, request, docId);
+            formHtmlHandler.setFormHtml(form, notificationValues, request, docId);
             emailHtml = formHtmlHandler.getFormHtmlBeforeCss();
             Pair<String, String> cssStandard = formHtmlHandler.getCssDataPair();
             emailCss = cssStandard != null ? cssStandard.first : "";
@@ -300,28 +301,33 @@ public class SaveFormService {
         }
 
         // SEND MAIL
-        formMailService.sendMail(form, formSettings, recipients, subject, formFiles, attachFiles, emailCss, new StringBuilder(emailHtml), request);
+        formMailService.sendMail(form, notificationValues, formSettings, recipients, subject, formFiles, attachFiles, emailCss, new StringBuilder(emailHtml), request);
 
         return null;
     }
 
     /**
-     * Builds and assigns the data payload for the given form before saving.
+     * Builds the stored data payload and prepares values for email and PDF notifications.
      * <p>
      * Iterates over validated form items, reads values from the session using the
-     * multistep prefix, encrypts values when a public key is provided, and assembles
-     * a pipe-delimited key-value string expected by the persistence layer. For multi-upload
-     * items, files are processed and associated file names are recorded.
+     * multistep prefix, filters text or sanitizes WYSIWYG HTML, and encrypts stored
+     * values when a public key is provided. Notification values stay unencrypted
+     * and retain field order. They are trimmed as in the stored-payload parser.
+     * Upload values contain saved filenames keyed by logical
+     * field IDs, without the persistence-only {@code -fileNames} suffix.
      *
      * @param form        persisted {@link FormsEntity} that will receive its data string
      * @param formName    technical name of the form (used for session key prefix)
      * @param request     current HTTP request to access the session
      * @param formFiles   container for associated file names and attachments
      * @param formSettings form configuration containing encryption key and options
+     * @return ordered notification values containing HTML-escaped text, sanitized WYSIWYG HTML,
+     *         saved filenames and empty answers
      */
-    private final void setFormDataBeforeSave(FormsEntity form, String formName, HttpServletRequest request, FormFiles formFiles, FormSettingsEntity formSettings) {
+    private final Map<String, String> setFormDataBeforeSave(FormsEntity form, String formName, HttpServletRequest request, FormFiles formFiles, FormSettingsEntity formSettings) {
         String prefix = MultistepFormsService.getSessionKey(formName, request) + "_";
         StringBuilder data = new StringBuilder();
+        Map<String, String> notificationValues = new LinkedHashMap<>();
 
         CryptoFactory cryptoFactory = new CryptoFactory();
 		String publicKey = formSettings.getEncryptKey();
@@ -331,8 +337,8 @@ public class SaveFormService {
         for(FormItemEntity stepItem : MultistepFormsService.getFormItemsForValidation(formName)) {
             if("captcha".equals(stepItem.getFieldType())) continue;
 
-            String sessionValue = String.valueOf(request.getSession().getAttribute(prefix + stepItem.getItemFormId()));
-            if(sessionValue == null) sessionValue = "";
+            Object storedValue = request.getSession().getAttribute(prefix + stepItem.getItemFormId());
+            String sessionValue = storedValue == null ? "" : storedValue.toString();
 
             //escape HTML code if needed
             String code = prop.getText("components.formsimple.input." + stepItem.getFieldType());
@@ -348,6 +354,8 @@ public class SaveFormService {
                 data.append(stepItem.getItemFormId()).append("-fileNames");
                 data.append("~").append(value).append("|");
 
+                notificationValues.put(stepItem.getItemFormId(), value.trim());
+
                 continue;
             }
 
@@ -355,11 +363,16 @@ public class SaveFormService {
             String value = Tools.isNotEmpty(sessionValue) && Tools.isNotEmpty(publicKey) ? cryptoFactory.encrypt(sessionValue, publicKey) : sessionValue;
             data.append(stepItem.getItemFormId()).append("~");
             data.append(value).append("|");
+
+            // Keep filtered values available for email and PDF rendering before encryption.
+            notificationValues.put(stepItem.getItemFormId(), sessionValue.trim());
         }
 
         //Remove last "|"
         data.deleteCharAt(data.length() - 1);
+
         form.setData( data.toString() );
+        return notificationValues;
     }
 
     public static boolean isFilterHtml(String code) {

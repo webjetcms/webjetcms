@@ -1,11 +1,17 @@
 package sk.iway.iwcm.components.multistep_form.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Properties;
 
 import org.junit.jupiter.params.ParameterizedTest;
@@ -25,17 +31,18 @@ import sk.iway.iwcm.components.forms.FormsEntity;
 import sk.iway.iwcm.components.multistep_form.rest.SaveFormService.FormFiles;
 import sk.iway.iwcm.i18n.Prop;
 
-/** Tests sender selection from encrypted submissions without sending an actual email. */
+/** Tests sender selection from notification values without sending an actual email. */
 class FormMailServiceSenderTest {
 
-    /** Uses only the matching encrypted submission's session values and preserves unencrypted sender lookup. */
+    /** Uses ordered notification values for senders, ignores stale session answers, and audits only stored data. */
     @ParameterizedTest
     @CsvSource({
-        "true, true, Jane Doe, jane@example.com",
+        "true, true, Jane & Doe, jane@example.com",
         "true, false, recipient@example.com, recipient@example.com",
-        "false, true, Stored Name, stored@example.com"
+        "false, true, Jane & Doe, jane@example.com",
+        "false, false, recipient@example.com, recipient@example.com"
     })
-    void resolvesSenderFromAppropriateSubmissionData(boolean encrypted, boolean sessionValuesPresent,
+    void resolvesSenderFromAppropriateSubmissionData(boolean encrypted, boolean notificationValuesPresent,
             String expectedName, String expectedEmail) throws Exception {
         FormSettingsEntity settings = new FormSettingsEntity();
         if (encrypted) settings.setEncryptKey("test-public-key");
@@ -45,6 +52,12 @@ class FormMailServiceSenderTest {
         form.setData(encrypted
             ? "first-name-7~encrypted-first|last-name-2~encrypted-last|email-address-11~encrypted-email"
             : "first-name-7~Stored|last-name-2~Name|email-address-11~stored@example.com");
+        Map<String, String> notificationValues = new LinkedHashMap<>();
+        if (notificationValuesPresent) {
+            notificationValues.put("first-name-7", "Jane &amp;");
+            notificationValues.put("last-name-2", "Doe");
+            notificationValues.put("email-address-11", "jane@example.com");
+        }
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter("language", "en");
         request.addHeader("X-CSRF-Token", "current-token");
@@ -63,18 +76,10 @@ class FormMailServiceSenderTest {
             forms.when(() -> MultistepFormsService.getFormIdStatic("contact")).thenReturn(1);
 
             String sessionPrefix = MultistepFormsService.getSessionKey("contact", request) + "_";
-            if (sessionValuesPresent) {
-                request.getSession().setAttribute(sessionPrefix + "first-name-7", "Jane");
-                request.getSession().setAttribute(sessionPrefix + "last-name-2", "Doe");
-                request.getSession().setAttribute(sessionPrefix + "email-address-11", "jane@example.com");
-            }
-            for (String otherPrefix : new String[] {"MultistepForm_contact_1_other-token_",
-                    "MultistepForm_contact_2_current-token_", "MultistepForm_other-form_1_current-token_"}) {
-                request.getSession().setAttribute(otherPrefix + "first-name-7", "Other");
-                request.getSession().setAttribute(otherPrefix + "email-address-11", "other@example.com");
-            }
+            request.getSession().setAttribute(sessionPrefix + "first-name-7", "Other");
+            request.getSession().setAttribute(sessionPrefix + "email-address-11", "other@example.com");
 
-            new FormMailService().sendMail(form, settings, "recipient@example.com", "Contact",
+            new FormMailService().sendMail(form, notificationValues, settings, "recipient@example.com", "Contact",
                 new FormFiles(), true, "", new StringBuilder("Submitted form"), request);
 
             ArgumentCaptor<Message> sent = ArgumentCaptor.forClass(Message.class);
@@ -82,6 +87,12 @@ class FormMailServiceSenderTest {
             InternetAddress sender = (InternetAddress) sent.getValue().getFrom()[0];
             assertEquals(expectedName, sender.getPersonal());
             assertEquals(expectedEmail, sender.getAddress());
+
+            ArgumentCaptor<String> audit = ArgumentCaptor.forClass(String.class);
+            adminlog.verify(() -> Adminlog.add(eq(Adminlog.TYPE_MULTISTEP_FORM_USERS), audit.capture(), eq(1L), eq(42L)), atLeastOnce());
+            String parameters = audit.getValue().split("form parameters: ")[1].split("formName:")[0];
+            assertTrue(parameters.contains(encrypted ? "encrypted-first" : "Stored"));
+            assertFalse(parameters.contains("Jane"));
         }
     }
 }

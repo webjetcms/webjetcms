@@ -59,7 +59,7 @@ class FormMailServiceDeliveryTest {
 			org.mockito.Mockito.when(prop.getText("checkform.emailNotSend")).thenReturn("Email could not be saved");
 
 			SaveFormException failure = assertThrows(SaveFormException.class, () ->
-				service.sendMail(form, settings, "recipient@example.com", "Contact", new FormFiles(), true, null, new StringBuilder("Submitted form"), request));
+				service.sendMail(form, Map.of(), settings, "recipient@example.com", "Contact", new FormFiles(), true, null, new StringBuilder("Submitted form"), request));
 
 			assertEquals("Email could not be saved", failure.getMessage());
 			mail.verify(() -> SendMail.sendMessage(any(Message.class)));

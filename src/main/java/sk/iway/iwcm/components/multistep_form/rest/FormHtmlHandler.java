@@ -252,7 +252,9 @@ public class FormHtmlHandler {
             stepWrapperStart = DocTools.updateUserCodes(UsersDB.getCurrentUser(request), stepWrapperStart);
 
             // Swap form items values
-            stepWrapperStart = MultistepFormsService.updateFormValues(formName, request, stepWrapperStart);
+            stepWrapperStart = isEmailRender
+                ? MultistepFormsService.updateFormValues(this.formData, stepWrapperStart)
+                : MultistepFormsService.updateFormValues(formName, request, stepWrapperStart);
         }
 
         formStepHtml.append(stepWrapperStart);
@@ -392,16 +394,18 @@ public class FormHtmlHandler {
 
     /**
      * Builds and stores the complete multistep form representation for email delivery.
-     * Uses validated session values for encrypted forms, converts the content to plain
+     * Uses the prepared unencrypted notification values, converts the content to plain
      * text when configured, and encrypts only the stored HTML. Collects stylesheet
      * data for readable email and PDF variants.
      *
      * @param form  entity whose HTML field receives the rendered email content
+     * @param notificationValues ordered values keyed by logical field IDs, containing HTML-escaped
+     *                           text, sanitized WYSIWYG HTML, saved filenames and empty answers
      * @param request  current HTTP request
      * @param docId  ID of the document used to resolve template and group CSS
      * @throws IllegalStateException if the entity belongs to a different form than this handler
      */
-    public final void setFormHtml(FormsEntity form, HttpServletRequest request, Integer docId) {
+    public final void setFormHtml(FormsEntity form, Map<String, String> notificationValues, HttpServletRequest request, Integer docId) {
         // Check that provided form has same name as formName provided in constructor
         if(form.getFormName().equals(this.formName) == false) throw new IllegalStateException("Provided form has different name taht provided in constructor.");
 
@@ -416,18 +420,7 @@ public class FormHtmlHandler {
         formHtml.append( getFormStart(-1L, request) );
 
         // prepare data
-        this.formData = MultistepFormsService.getFormDataAsMap(form);
-        if (Tools.isNotEmpty(this.publicKey)) {
-            String sessionPrefix = MultistepFormsService.getSessionKey(this.formName, request) + "_";
-            for (FormItemEntity stepItem : MultistepFormsService.getFormItemsForValidation(this.formName)) {
-                if ("captcha".equals(stepItem.getFieldType()) || MultistepFormsService.isFileUploadField(stepItem.getFieldType())) continue;
-
-                Object sessionValue = request.getSession().getAttribute(sessionPrefix + stepItem.getItemFormId());
-                String value = sessionValue == null ? "" : sessionValue.toString();
-                String code = prop.getText("components.formsimple.input." + stepItem.getFieldType());
-                this.formData.put(stepItem.getItemFormId(), SaveFormService.filterHtml(code, value));
-            }
-        }
+        this.formData = notificationValues;
 
         for(FormStepEntity formSteps : formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(this.formName, CloudToolsForCore.getDomainId()))
             formHtml.append( getStepHtml(request, formSteps) ).append("<hr>");
@@ -478,7 +471,7 @@ public class FormHtmlHandler {
 
     /**
      * Returns the PDF-oriented form representation,
-     * based on the last {@link #setFormHtml(FormsEntity, HttpServletRequest, Integer)} call.
+     * based on the last {@link #setFormHtml(FormsEntity, Map, HttpServletRequest, Integer)} call.
      *
      * @return HTML with inline CSS, plain text when configured, or an empty string if unavailable
      */

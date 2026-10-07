@@ -19,6 +19,7 @@ import jakarta.mail.internet.MimeMultipart;
 import jakarta.mail.internet.MimeUtility;
 import jakarta.servlet.http.HttpServletRequest;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Adminlog;
@@ -58,40 +59,29 @@ public class FormMailService {
 	public static final String EMAIL_FIELD_KEY = "multistepform_emailFields";
 
 	/**
-	 * Extracts values from the given form for fields whose names match the configured list
-	 * defined by the provided {@code constant} key. For encrypted forms, reads the original
-	 * validated values from the current form session instead of the stored ciphertext.
+	 * Extracts unencrypted notification values for fields whose names match the configured list.
 	 *
-	 * @param form the submitted form entity containing serialized field data
+	 * @param notificationValues ordered values keyed by logical field IDs; text is HTML-escaped,
+	 *        WYSIWYG content is sanitized, and upload values contain saved filenames
 	 * @param constant configuration key whose value is an array of field names
-	 * @param formDataEncrypted whether the stored form values are encrypted
-	 * @param request current request identifying the submitted form session
 	 * @return ordered list of matching field values; empty list when none found or no data
 	 */
-    private List<String> getFieldValues(FormsEntity form, String constant, boolean formDataEncrypted, HttpServletRequest request) {
+    private List<String> getFieldValues(Map<String, String> notificationValues, String constant) {
         List<String> foundValues = new ArrayList<>();
 
-        if(form.getData() == null) return foundValues;
+        if(notificationValues.isEmpty()) return foundValues;
 
         List<String> fieldsNames = Arrays.stream( Constants.getArray(constant) )
                                     .map(String::toLowerCase)
                                     .toList();
 
-        for(String combo : Tools.getTokens(form.getData(), "|")) {
-            String[] comboArr = Tools.getTokens(combo, "~");
-            if(comboArr.length != 2) continue;
-
+        for(Map.Entry<String, String> field : notificationValues.entrySet()) {
             // Match a field name that starts with one of the configured names
             // (e.g. configured "email" matches field "emailova-adresa")
-            String fieldName = comboArr[0].replaceFirst("-\\d+$", "").toLowerCase(); //NOSONAR
+            String fieldName = field.getKey().replaceFirst("-\\d+$", "").toLowerCase(); //NOSONAR
             if(fieldsNames.stream().anyMatch(fieldName::startsWith)) {
-                String value = comboArr[1];
-                if (formDataEncrypted) {
-					//if data is allready encrypted get real value from session, eg. real email address to send notify email
-                    String sessionKey = MultistepFormsService.getSessionKey(form.getFormName(), request) + "_" + comboArr[0];
-                    Object sessionValue = request.getSession().getAttribute(sessionKey);
-                    value = sessionValue == null ? null : sessionValue.toString();
-                }
+                String value = field.getValue();
+                if (value != null) value = StringEscapeUtils.unescapeHtml4(value.trim());
                 if (Tools.isNotEmpty(value)) foundValues.add(value);
             }
         }
@@ -107,6 +97,8 @@ public class FormMailService {
 	 * either sends immediately or schedules delayed delivery.</p>
 	 *
 	 * @param form       form entity with metadata and serialized field data
+	 * @param notificationValues ordered, unencrypted values keyed by logical field IDs; text is
+	 *        HTML-escaped, WYSIWYG content is sanitized, and upload values contain saved filenames
 	 * @param formSettings form settings entity containing configuration for email sending
 	 * @param recipients comma‑separated list of recipient emails
 	 * @param subject    email subject
@@ -119,16 +111,16 @@ public class FormMailService {
 	 *         be sent or queued
 	 */
 	@SuppressWarnings("java:S3776")
-	public void sendMail(FormsEntity form, FormSettingsEntity formSettings, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
+	public void sendMail(FormsEntity form, Map<String, String> notificationValues, FormSettingsEntity formSettings, String recipients, String subject, FormFiles formFiles, boolean attachFiles, String cssData, StringBuilder htmlData, HttpServletRequest request) throws SaveFormException{
 		Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
 		boolean formDataEncrypted = Tools.isNotEmpty(formSettings.getEncryptKey());
 
         String meno = null;
-        List<String> namesList = getFieldValues(form, NAME_FIELD_KEY, formDataEncrypted, request);
+        List<String> namesList = getFieldValues(notificationValues, NAME_FIELD_KEY);
         if(namesList.size() > 0) meno = namesList.stream().map(DB::internationalToEnglish).collect(Collectors.joining(" "));
 
         String email = null;
-        List<String> emailsList = getFieldValues(form, EMAIL_FIELD_KEY, formDataEncrypted, request);
+        List<String> emailsList = getFieldValues(notificationValues, EMAIL_FIELD_KEY);
 		//remove invalid emails
 		emailsList = emailsList.stream().filter(Tools::isEmail).toList();
         if(emailsList.size() > 0) email = emailsList.get(0);
