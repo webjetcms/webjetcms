@@ -935,6 +935,34 @@ Scenario('workbench selection, structure and unchanged canvas geometry', async (
     DTE.cancel();
 });
 
+Scenario('structure typography is isolated from customer list styles', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    I.click('.pb-workbench [data-pb-action=structure]');
+    I.waitForVisible('.pb-structure [role=treeitem]', 10);
+    const typography = await I.executeScript(() => {
+        const read = () => Array.from(document.querySelectorAll('.pb-structure li > div > span > span, .pb-structure li small')).map(element => {
+            const style = getComputedStyle(element);
+            return {tag: element.tagName, size: style.fontSize, lineHeight: style.lineHeight, weight: style.fontWeight};
+        });
+        const before = read();
+        const customerStyles = document.createElement('style');
+        customerStyles.textContent = 'ul, ol { font-size: 18px; line-height: 26px; } small { font-size: 16px; line-height: 24px; }';
+        document.head.append(customerStyles);
+        const after = read();
+        const pageListSize = getComputedStyle(document.querySelector('.pb-workbench-autotest ul')).fontSize;
+        customerStyles.remove();
+        return {before, after, pageListSize};
+    });
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+
+    assert.ok(typography.before.some(item => item.tag === 'SPAN' && item.size === '14px'), 'The structure must contain standard 14px block titles');
+    assert.ok(typography.before.some(item => item.tag === 'SMALL' && item.size === '11px'), 'The structure must contain standard 11px block types');
+    assert.equal(typography.pageListSize, '18px', 'Customer styles must still apply to lists in the authored page');
+    assert.deepStrictEqual(typography.after, typography.before, 'Customer list and small styles must not change structure titles or block types at any nesting depth');
+});
+
 Scenario('workbench structure stays stable until reopened and follows selection in place', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     await I.executeScript((root, selector) => {
@@ -2006,6 +2034,68 @@ Scenario('workbench keeps CKEditor toolbar after deleting the active column', as
     I.switchTo();
     DTE.cancel();
 });
+
+for (const width of [1440, 1100, 740]) {
+    Scenario('workbench preserves empty CKEditor toolbar space at '+width+'px', async ({I, DT, DTE, Document}) => {
+        Document.resetPageBuilderMode();
+        checkNewPageTemplate(34495, false, I, DT, DTE);
+        I.switchTo();
+        I.resizeWindow(width, 1000);
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+        I.click('#wjInline-docdata .column-content p');
+        I.waitForVisible('#wjInlineCkEditorToolbarElement .cke_top', 10);
+
+        // Let layout observers finish before comparing the rendered toolbar geometry.
+        const geometry = () => I.executeScript(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(() => {
+            const rect = selector => document.querySelector(selector).getBoundingClientRect();
+            resolve({
+                contentHeight: rect('#wjInlineCkEditorToolbarOffsetElement').height,
+                hostHeight: rect('#inlineEditorToolbarTop').height,
+                placeholderHeight: rect('#inlineEditorToolbarTopPlaceHolder').height,
+                barTop: rect('.pb-workbench').top,
+                selectorBottom: rect('#DTE_Field_data-editorTypeSelector').bottom,
+                background: getComputedStyle(document.querySelector('#wjInlineCkEditorToolbarOffsetElement')).backgroundColor
+            });
+        }))));
+        const initial = await geometry();
+        I.assertAbove(initial.contentHeight, 50, 'The CKEditor toolbar must be visible before deletion');
+        if (await I.grabNumberOfVisibleElements('.pb-workbench [data-pb-action=ancestors]')) I.click('.pb-workbench [data-pb-action=ancestors]');
+        I.click('.pb-workbench-path [data-type=section]');
+        I.amAcceptingPopups();
+        I.click('.pb-workbench [data-pb-action=more]');
+        I.click('.pb-workbench [data-pb-action=remove]');
+        I.acceptPopup();
+        I.waitForDetached('#wjInline-docdata [data-ckeditor-instance]', 10);
+        I.dontSeeElement('#wjInlineCkEditorToolbarElement .cke_top');
+        const empty = await geometry();
+        I.assertDeepEqual(empty, initial, 'Deleting the last section must preserve the toolbar surface and canvas offset');
+        I.assertTrue(empty.barTop >= empty.selectorBottom, 'The PageBuilder toolbar must stay below the editor selector');
+        I.assertEqual(empty.background, 'rgb(243, 243, 246)', 'The empty toolbar must retain the existing grey surface');
+        I.saveScreenshot('pagebuilder-empty-toolbar-'+width+'.png');
+
+        I.click('.pb-empty-placeholder-wrapper .pb-empty-placeholder__button');
+        I.waitForVisible('.pb-library--section', 10);
+        I.click('.pb-library--section .library-tab-link:nth-child(1)');
+        I.click('.pb-library--section .library-tab-item-button[data-library-item-id="pb-basic-2.4"]');
+        I.waitForVisible('#wjInline-docdata [data-ckeditor-instance]', 10);
+        I.click(locate('#wjInline-docdata .column-content p').first());
+        I.waitForVisible('#wjInlineCkEditorToolbarElement .cke_top', 10);
+        I.assertDeepEqual(await geometry(), initial, 'Inserting an editable section must restore the toolbar without moving the canvas');
+
+        const restoredStyle = await I.executeScript(() => {
+            const builder = window.pageBuilder;
+            const original = builder.ui.oldToolbarContentStyle;
+            builder.destroy_workbench();
+            const restored = $('#wjInlineCkEditorToolbarOffsetElement').attr('style');
+            builder.create_workbench();
+            return {original: original || '', restored: restored || ''};
+        });
+        I.assertEqual(restoredStyle.restored, restoredStyle.original, 'Destroying PageBuilder chrome must restore the original toolbar content style');
+        I.switchTo();
+        DTE.cancel();
+        I.wjSetDefaultWindowSize();
+    });
+}
 
 Scenario('workbench keeps CKEditor toolbar when moving a column in both directions', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
@@ -3173,6 +3263,65 @@ async function rawPbSource(I) {
     const html = await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
     return html.replace(/!INCLUDE\([\s\S]*?\)!/gi, macro => macro.replace(/&quot;/g, '"'));
 }
+
+Scenario('application settings keep the canvas scroll with multiple editors', async ({I, DT, DTE, Document}) => {
+    const source = rawPbApplication + '<section class="pb-section" style="min-height:1800px"><div class="pb-editable"><p>Scroll spacer autotest</p></div></section>' + rawPbApplication.replace('raw-app-autotest', 'raw-app-bottom-autotest');
+    await openRawPbSections(I, DT, DTE, Document, source);
+    for (const id of ['raw-app-autotest', 'raw-app-bottom-autotest']) {
+        I.switchTo('#' + id + ' iframe.wj_component');
+        I.waitForText('Application autotest', 20, '#raw-preview-autotest');
+        I.switchTo();
+        I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    }
+
+    I.executeScript(() => {
+        const top = document.querySelector('#raw-app-autotest [data-ckeditor-instance]');
+        CKEDITOR.instances[top.dataset.ckeditorInstance].focus();
+        document.querySelector('#raw-app-bottom-autotest').scrollIntoView({block: 'center', behavior: 'instant'});
+    });
+    I.switchTo('#raw-app-bottom-autotest iframe.wj_component');
+    I.executeScript(() => {
+        const canvas = window.parent;
+        const probe = {scroll: canvas.scrollY, samples: [], commands: [], done: false};
+        canvas.pbAppScrollProbe = probe;
+        for (const editor of new Set([...Object.values(canvas.CKEDITOR.instances), ...Object.values(canvas.parent.CKEDITOR.instances)])) {
+            editor.on('beforeCommandExec', event => {
+                if (event.data.name === 'webjetcomponentsDialog') probe.commands.push(editor.name);
+            });
+        }
+        document.addEventListener('click', () => {
+            // Observe beyond the former delayed scroll restoration, starting with the actual click.
+            const start = performance.now();
+            const sample = () => {
+                probe.samples.push(canvas.scrollY);
+                if (performance.now() - start < 2500) requestAnimationFrame(sample);
+                else probe.done = true;
+            };
+            requestAnimationFrame(sample);
+        }, {capture: true, once: true});
+    });
+    I.clickCss('.inlineComponentButton:not(.inlineComponentButtonDelete)');
+    I.switchTo();
+    I.waitForFunction(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').contentWindow.pbAppScrollProbe.done, 10);
+    const result = await I.executeScript(() => {
+        const canvas = document.querySelector('#DTE_Field_data-pageBuilderIframe').contentWindow;
+        return {
+            ...canvas.pbAppScrollProbe,
+            expectedEditor: canvas.document.querySelector('#raw-app-bottom-autotest [data-ckeditor-instance]').dataset.ckeditorInstance,
+            dialogEditor: canvas.CKEDITOR.dialog.getCurrent().getParentEditor().name
+        };
+    });
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.clickCss('.cke_dialog_container:visible .cke_dialog_ui_button_cancel');
+    I.switchTo();
+    DTE.cancel();
+    Document.resetPageBuilderMode();
+
+    assert.ok(result.scroll > 1000, 'The lower application must start below the first editor');
+    assert.deepStrictEqual(result.commands, [result.expectedEditor], 'Only the editor owning the clicked application may open its settings');
+    assert.equal(result.dialogEditor, result.expectedEditor, 'The application dialog must belong to the clicked editor');
+    assert.ok(result.samples.every(scroll => Math.abs(scroll - result.scroll) <= 1), 'Opening settings must not jump to another editor, even temporarily: ' + JSON.stringify(result));
+});
 
 Scenario('pb-section preview edges select the section without opening application settings', async ({I, DT, DTE, Document}) => {
     await openRawPbSections(I, DT, DTE, Document);

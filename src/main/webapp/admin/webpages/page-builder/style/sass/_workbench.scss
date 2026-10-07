@@ -329,7 +329,7 @@ html.pb-insertion-open { overflow-anchor: none; }
         font: inherit;
         &:focus-visible { outline: 2px solid $primary; outline-offset: 1px; }
     }
-    ul { list-style: none; margin: 0; padding: 0; }
+    ul { list-style: none; margin: 0; padding: 0; font: inherit; }
     > ul { overflow: auto; flex: 1; min-height: 0; }
     ul ul { margin-left: 13px; padding-left: 6px; border-left: 1px solid $nice-gray-100; }
     li {
@@ -354,7 +354,7 @@ html.pb-insertion-open { overflow-anchor: none; }
             flex: 1;
             min-width: 0;
             > span, small { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-            small { color: $dark-60; font-size: 11px; }
+            small { color: $dark-60; font: inherit; font-size: 11px; }
         }
         [data-pb-expand] { width: 24px; min-width: 24px; height: 28px; padding: 0; font-size: 22px; }
         [data-pb-expand][hidden] { display: block !important; visibility: hidden; }
