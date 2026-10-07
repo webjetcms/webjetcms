@@ -16,7 +16,7 @@ export class JstreeSettings {
         //console.log("JstreeSettings constructor, options=", options);
         this.options = options;
         this.STORAGE_KEY = options.storageKey ? options.storageKey : "jstreeSettings_web-pages-list";
-        window.jstreeCustomizeData = this.jstreeCustomizeData;
+        if (!options.widthOnly) window.jstreeCustomizeData = this.jstreeCustomizeData;
     }
 
     bindEvents() {
@@ -51,12 +51,22 @@ export class JstreeSettings {
             $("#jstree-settings-treeSortOrderAsc").prop("checked", self.isTreeSortOrderAsc());
 
             $("#jstree-settings-showrealname").prop("checked", self.isShowRealName());
+            $("#jstree-settings-showhidden").prop("checked", self.getSettings().showHidden === true);
             self.settingsModal.show();
         });
 
         $("#jstree-settings-submit").on("click", function() {
             //console.log("SAVE JSTREE SETTINGS");
             let settings = self.getSettings();
+            if (self.options.widthOnly) {
+                settings.treeWidth = parseInt($("#jstree-settings-treeWidth").val());
+                if ($("#jstree-settings-showhidden").length) settings.showHidden = $("#jstree-settings-showhidden").is(":checked");
+                self.saveSettings(settings);
+                self.settingsModal.hide();
+                self.setTreeColWidth(settings.treeWidth);
+                somStromcek.trigger("settings_changed.jstree", [settings]);
+                return;
+            }
             settings.showId = $("#jstree-settings-showid").is(":checked");
             settings.showPriority = $("#jstree-settings-showorder").is(":checked");
             settings.showPages = $("#jstree-settings-showpages").is(":checked");
@@ -134,6 +144,7 @@ export class JstreeSettings {
     getTreeWidth() {
         //console.log("treeWidth=", this.getSettings().treeWidth);
         let width = this.getSettings().treeWidth;
+        if (typeof width == "undefined") width = $("#SomStromcek").data("default-tree-width");
         if (typeof width != "undefined") return parseInt(width);
         return 4;
     }
@@ -184,11 +195,16 @@ export class JstreeSettings {
     }
 
     setTreeColWidth(width) {
-        var dtWidth = 12 - width;
-        //console.log("Menim sirku stlpcov, width=", width, "dtWidth=", dtWidth);
         var treeCol = $(".tree-col");
-        treeCol.attr("class", "tree-col col-md-"+width);
         var datatableCol = $(".datatable-col");
-        datatableCol.attr("class", "datatable-col col-md-"+dtWidth);
+        // Values above the 12-column grid represent fixed widths in pixels.
+        if (width > 12) {
+            treeCol.attr("class", "tree-col col-md-auto").css("--wj-tree-width", width + "px");
+            datatableCol.attr("class", "datatable-col col-md");
+        } else {
+            treeCol.attr("class", "tree-col col-md-" + width).css("--wj-tree-width", "");
+            datatableCol.attr("class", "datatable-col col-md-" + (12 - width));
+        }
+        window.dispatchEvent(new Event("resize"));
     }
 }

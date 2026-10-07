@@ -130,6 +130,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Applications
 
+- Enumerations - type selection and management moved to the tree in the left panel with search. More in [Enumerations documentation](redactor/apps/enumeration/README.md) (#58786).
+- Blog - selecting and adding sections are available in the tree in the left panel with search. More in [Blog documentation](redactor/apps/blog/README.md) (#58786).
+- News - folder selection has been moved to the tree in the left search panel, also available in the application editor. Automatic folder search skips blogger roots and their subfolders. More in [News documentation](redactor/apps/news/README.md) (#58786).
 - E-commerce - added optional [price rounding](redactor/apps/basket/rounding.md) to calculate the basket from the displayed price per item. The number of decimal places is determined by `currencyFormat` ; templates with the `iway:curr` tag will automatically adopt the new formatting (#316).
 - Codebooks - for named string fields, the field type, selection options, mandatory, help text, and length restrictions can be set in the new [String Field Types] tab (redactor/apps/enumeration/README.md#karta-typy-ťazcových-polí) just like for optional fields. The menu and configuration names are based on the last saved version of the codebook type. Unnamed fields remain hidden, are not evaluated as mandatory, and fields without a specific configuration are displayed as regular text. Older custom Excel templates and REST API integrations need to be modified from `string1` to `string12` to `fieldA` to `fieldL` (#58641).
 

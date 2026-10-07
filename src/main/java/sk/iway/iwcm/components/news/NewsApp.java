@@ -50,7 +50,7 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
     @DataTableTab(id = "templates", title = "components.news.template"),
     @DataTableTab(id = "perex", title = "components.news.perexGroup"),
     @DataTableTab(id = "filter", title = "editor.tab.filter", content = "<div id='filtersDiv'></div>"),
-    @DataTableTab(id = "news", title = "components.news.title", content = "<div class='statContainer'><iframe id='newsListIframe' src='about:blank' width='100%' height='519'></iframe><div>"),
+    @DataTableTab(id = "news", title = "components.news.title", content = "<div class='statContainer iframeFieldType'><iframe id='newsListIframe' src='about:blank' width='100%' height='519'></iframe></div>"),
 })
 
 @Getter

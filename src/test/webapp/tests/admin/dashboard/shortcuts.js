@@ -473,6 +473,7 @@ Scenario('Shortcut search offers terminal cards and long or unavailable destinat
     I.clickCss(target);
     I.waitForVisible(modal, 10);
     I.see('Odstrániť skratku', modal);
+    I.waitForInvisible('.tooltip', 10);
     I.dontSeeElement('.tooltip');
     I.click('Zrušiť', modal + ' .modal-footer');
     I.waitForInvisible(modal, 10);
