@@ -166,9 +166,25 @@ Hodnota tooltipu sa nahrádza iba raz. Ak samotný text tooltipu obsahuje výraz
 
 V zobrazení do emailu sa hodnota poľa tooltip nahrádza za prázdny znak (aby v emaile nebol zbytočne nefunkčný tooltip).
 
-### HTML tlačidla na predchádzajúci krok
+### HTML kód tlačidiel
 
-Vo [viackrokových formulároch](../multistep-form/README.md#návrat-na-predchádzajúci-krok) môžete upraviť HTML tlačidla **Späť** v sekcii **Nastavenia → Editácia textov** cez kľúč `components.mustistep.form.back_button`. Tlačidlo sa zobrazí od druhého kroku; do emailovej podoby formulára sa nevkladá.
+HTML kód tlačidiel vo [viackrokových formulároch](../multistep-form/README.md) môžete upraviť v sekcii **Nastavenia → Editácia textov**. Zmenou CSS tried alebo pridaním ikony prispôsobíte vzhľad tlačidiel dizajnu webu.
+
+#### Tlačidlo na pokračovanie alebo odoslanie
+
+Kľúč `components.mustistep.form.end` obsahuje HTML kód tlačidla na prechod na ďalší krok a v poslednom kroku na odoslanie formulára. Predvolená časť hodnoty, ktorá určuje vzhľad tlačidla, je:
+
+```html
+<button type="submit" class="btn btn-primary mt-3" name="saveForm">${submitButtonText}</button>
+```
+
+Značka `${submitButtonText}` sa nahradí textom nastaveným v aktuálnom kroku. Ak text nie je zadaný, použije sa preklad `components.mustistep.form.next_step` (**Prejsť na ďalší krok**) alebo v poslednom kroku `components.mustistep.form.save_form` (**Odoslať formulár**).
+
+Pri zmene vzhľadu zachovajte `type="submit"`, `name="saveForm"` a značku `${submitButtonText}`. Kľúč obsahuje aj značku `{tech-info}` pre technické informácie, zatvárací tag `</form>` a skript na inicializáciu tooltipov. Tieto časti ponechajte; pri úprave tlačidla meňte iba jeho HTML kód.
+
+#### Tlačidlo na predchádzajúci krok
+
+HTML kód tlačidla **Späť** sa nastavuje cez kľúč `components.mustistep.form.back_button`. Tlačidlo sa zobrazí od druhého kroku; do emailovej podoby formulára sa nevkladá.
 
 V hodnote kľúča sú dostupné značky:
 

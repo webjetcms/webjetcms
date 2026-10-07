@@ -820,7 +820,7 @@ Frontend implementácia je v súboroch:
 - [field-type-options.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options.js) — definícia typu poľa s dvomi vstupmi (meno a hodnota)
 - [field-type-options-base.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options-base.js) — spoločná logika pre OPTIONS aj OPTIONS_SIMPLE (drag & drop, pridávanie/odoberanie riadkov, allowEmptyOption)
 
-Na strane backendu sa typ `DataTableColumnType.OPTIONS` automaticky nastaví ako `editor.type = "options"` s formátom renderovania `dt-format-text`.
+Na strane backendu sa typ `DataTableColumnType.OPTIONS` automaticky nastaví ako `editor.type = "options"` s formátom `dt-format-text`.
 
 ![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
 

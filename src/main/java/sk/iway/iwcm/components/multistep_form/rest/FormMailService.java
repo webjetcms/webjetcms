@@ -68,7 +68,7 @@ public class FormMailService {
 	 * @param request current request identifying the submitted form session
 	 * @return ordered list of matching field values; empty list when none found or no data
 	 */
-    private List<String> getFieldsValues(FormsEntity form, String constant, boolean formDataEncrypted, HttpServletRequest request) {
+    private List<String> getFieldValues(FormsEntity form, String constant, boolean formDataEncrypted, HttpServletRequest request) {
         List<String> foundValues = new ArrayList<>();
 
         if(form.getData() == null) return foundValues;
@@ -87,6 +87,7 @@ public class FormMailService {
             if(fieldsNames.stream().anyMatch(fieldName::startsWith)) {
                 String value = comboArr[1];
                 if (formDataEncrypted) {
+					//if data is allready encrypted get real value from session, eg. real email address to send notify email
                     String sessionKey = MultistepFormsService.getSessionKey(form.getFormName(), request) + "_" + comboArr[0];
                     Object sessionValue = request.getSession().getAttribute(sessionKey);
                     value = sessionValue == null ? null : sessionValue.toString();
@@ -123,11 +124,11 @@ public class FormMailService {
 		boolean formDataEncrypted = Tools.isNotEmpty(formSettings.getEncryptKey());
 
         String meno = null;
-        List<String> namesList = getFieldsValues(form, NAME_FIELD_KEY, formDataEncrypted, request);
+        List<String> namesList = getFieldValues(form, NAME_FIELD_KEY, formDataEncrypted, request);
         if(namesList.size() > 0) meno = namesList.stream().map(DB::internationalToEnglish).collect(Collectors.joining(" "));
 
         String email = null;
-        List<String> emailsList = getFieldsValues(form, EMAIL_FIELD_KEY, formDataEncrypted, request);
+        List<String> emailsList = getFieldValues(form, EMAIL_FIELD_KEY, formDataEncrypted, request);
 		//remove invalid emails
 		emailsList = emailsList.stream().filter(Tools::isEmail).toList();
         if(emailsList.size() > 0) email = emailsList.get(0);
