@@ -9,9 +9,13 @@ Sekcia konfigurácia slúži na zobrazenie a správu konfiguračných premennýc
 
 Strom je možné prehľadávať. Názvy modulov sú technické názvy a neprekladajú sa. Vo vybranom module je možné existujúcu premennú upraviť, ale nie vytvoriť novú ani spustiť import, pretože vlastná databázová premenná nemá informáciu o zaradení do modulu.
 
+Tlačidlom **Nastavenia** nad stromom môžete zmeniť pomer šírky stromu a tabuľky alebo nastaviť pevnú šírku stromu v pixeloch. Predvolená šírka je 200px. Vlastná voľba sa uloží pre prihláseného používateľa samostatne pre konfiguráciu.
+
 ![](page.png)
 
 V sekcii inštalácia je zoznam [najpoužívanejších konfiguračných premenných](../../../install/config/README.md).
+
+Pozadie a označenie prostredia v administrácii opisuje [Konfigurácia úvodnej obrazovky](dashboard.md).
 
 ## Pridávanie konfiguračných premenných
 

@@ -138,6 +138,9 @@ window.WebjetJsTree = WebjetJsTree;
 window.jsTreeDocumentOpener = new JsTreeDocumentOpener();
 window.jsTreeFolderOpener = new JsTreeFolderOpener();
 
+import { JstreeSettings } from './libs/js-tree-extends/jstreesettings';
+window.JstreeSettings = JstreeSettings;
+
 import * as JSZip from 'jszip';
 window.JSZip = JSZip;
 
@@ -147,7 +150,10 @@ import { CellVisibilityService } from './libs/data-tables-extends/';
 window.dataTableCellVisibilityService = new CellVisibilityService();
 
 /* WEB COMPONENTS */
+import { showFeedbackDialog } from './feedback';
+WJ.showFeedbackDialog = showFeedbackDialog;
 import './web-components/webjet-overview-dashboard';
+import './web-components/webjet-server-monitoring';
 import './web-components/webjet-image-area-selector';
 
 /* DYNAMIC IMPORTS */

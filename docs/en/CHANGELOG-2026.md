@@ -13,6 +13,14 @@
 - Microsoft SQL Server - support for versions older than 2012 has been discontinued and the `mssqlUseOldTopQuery` configuration variable has been removed. WebJET CMS requires Microsoft SQL Server 2012 or later, the old paging method using `TOP` is no longer supported (#293).
 - Easy form and multi-step forms - modified display of `tooltip` from the original `i` element to the standard `button`. This meets the accessibility requirement - the tooltip is available with both the mouse and keyboard (#306).
 
+### Home screen
+
+- We have converted the [Home screen](redactor/admin/welcome.md) into a widget system so that you have the data you need to work in one place without having to navigate through individual parts of the administration. You choose the widgets yourself and set the displayed data, size and order according to your needs (#58806).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ### Websites
 
 - Website Trash - added [automatic deletion of old pages and folders](redactor/apps/gdpr/data-deleting.md) from the trash according to the set retention period. Added the ability to delete pages and folders in the trash and in the [Data deletion](sysadmin/data-deleting/README.md) section according to the selected date range. Unified logic for calculating the number and deleting, fixed permanent deletion of the trash folder and empty folders (#271).
@@ -50,6 +58,7 @@
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
 - Page Builder - elements marked with the CSS class [`pb-duplicable`](frontend/page-builder/settings.md#duplicate-element-orange-color) can be moved, duplicated, and deleted within the same parent. Custom or multiple selectors can be set via `pbCustomSettings` (#58750).
+- Page Builder - added the ability to create a [div.pb-section](frontend/page-builder/settings.md), which will get the normal section control. Additionally, `!INCLUDE(...)!` applications inserted directly in a section, or containers, display a preview even though they are inserted outside the normal column (#osk711).
 - Page Builder - modified [editor control](redactor/webpages/pagebuilder.md). Added fixed top bar with path to selected block, **Structure** panel, quick actions and mode for inserting sections, containers and columns directly into the page. Frames can be hidden or shown for the entire block hierarchy. Block library has a compact window with previews, categories and combined search with tags. Style settings use drop-down property groups and indicate the currently edited block (#308).
 
 <div class="video-container">
@@ -57,6 +66,7 @@
 </div>
 
 - Page Builder - improved detection of changes in the HTML code of the page so that the message "You probably have unsaved text in the editor" is not displayed even if you have not actually changed any text on the page (#317).
+- [Page Builder](redactor/webpages/pagebuilder.md) - after clicking on the + in the yellow line in the **Insert Block** window on the **Basic** tab, the **Image** and **Application** options have been added. They will open the corresponding editor dialog and allow you to insert content at the selected location (#339).
 
 ### Headless mode
 
@@ -74,6 +84,10 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Multi-step forms - after unsuccessfully moving to the next step or submitting, the page will scroll to the first visible error message even when retrying (#58794).
+- Forms - validation of uploaded files distinguishes between an illegal character in the name and an illegal extension. A name error will indicate the specific illegal character or string. File names in error messages are displayed as text to prevent any HTML tags in the name from being executed (#58794).
+- Multi-step forms - when [returning to the previous step](redactor/apps/multistep-form/README.md#returning-to-the-previous-step) both the processed values ​​and the completed uploads are preserved (#58794).
+- Multi-step forms - added [field-abandonment validation] (redactor/apps/multistep-form/README.md#field-abandonment-validation) enabled by default. To disable it, set the configuration variable `multistepform_validateOnBlur` to `false` (#58794).
 - [Forms](redactor/apps/form/README.md#possible-configuration-variables) - both classic and multi-step forms respect `sendMailSaveEmail` and save emails as `.eml` files to `sendMailSaveEmailPath` instead of SMTP sending. If the write fails, the form reports an error.
 - Multi-step forms - added [return to previous step](redactor/apps/multistep-form/README.md#return-to-previous-step) with restoring saved values ​​and files and [CSS template selection](redactor/apps/multistep-form/README.md#css-templates) for each inserted instance and preview in the administration (#58742).
 
@@ -116,6 +130,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Applications
 
+- Enumerations - type selection and management moved to the tree in the left panel with search. More in [Enumerations documentation](redactor/apps/enumeration/README.md) (#58786).
+- Blog - selecting and adding sections are available in the tree in the left panel with search. More in [Blog documentation](redactor/apps/blog/README.md) (#58786).
+- News - folder selection has been moved to the tree in the left search panel, also available in the application editor. Automatic folder search skips blogger roots and their subfolders. More in [News documentation](redactor/apps/news/README.md) (#58786).
 - E-commerce - added optional [price rounding](redactor/apps/basket/rounding.md) to calculate the basket from the displayed price per item. The number of decimal places is determined by `currencyFormat` ; templates with the `iway:curr` tag will automatically adopt the new formatting (#316).
 - Codebooks - for named string fields, the field type, selection options, mandatory, help text, and length restrictions can be set in the new [String Field Types] tab (redactor/apps/enumeration/README.md#karta-typy-ťazcových-polí) just like for optional fields. The menu and configuration names are based on the last saved version of the codebook type. Unnamed fields remain hidden, are not evaluated as mandatory, and fields without a specific configuration are displayed as regular text. Older custom Excel templates and REST API integrations need to be modified from `string1` to `string12` to `fieldA` to `fieldL` (#58641).
 
@@ -212,6 +229,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Multi-step forms - fixed validation of fields with chained visibility conditions (#58794).
 - Forms - fixed archiving of forms (#305).
 - Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
@@ -220,6 +238,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Performance
 
+- Multi-step forms - accelerated repeated field checks during filling (#58794).
 - Optimized loading of template groups when displaying a page and searching for optional fields. The group is cached and reused without having to read it from the database (#311).
 
 ### Safety
@@ -230,10 +249,13 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Documentation
 
+- Datatables - added explanation of [notifications about unsaved changes](redactor/datatables/README.md#notifications-about-unsaved-changes) when refreshing or leaving the page and when closing the editor with the Cancel button (#339).
 - A new section [Overview of new features] (sales/README.md) has been created, which contains descriptions of new features and **functionalities of WebJET CMS in understandable language**, without unnecessarily technical formulations (#58505).
 - Created a [Troubleshooting] section (sysadmin/troubleshooting/README.md) in the operation manual.
 
 ### For the programmer
+
+- Dashboard - added widget registry, responsive grid and REST interface for transactional settings storage to `user_settings_admin`. Existing MySQL/MariaDB table is converted to InnoDB during update. Usage is described in [welcome screen documentation](redactor/admin/welcome.md), background and environment labeling of its [configuration](admin/setup/configuration/dashboard.md). Development rules, contract and reasons for decisions are maintained by project skill `wj-dashboard-widget` in `.agents/skills/wj-dashboard-widget/` (#58806).
 
 - Administration - removed dependency on [Vue.js](https://vuejs.org). Tree fields, start page, image area selection and server monitoring use native [web components](developer/frameworks/web-components.md). The global object `window.VueTools` and packages for Vue are no longer part of the administration. Custom extensions must replace them with web components or compile Vue themselves (#58722).
 - AI Assistants - Provider-independent client logic for OpenAI, Gemini, and OpenRouter, stream processing, request/response types, and prompt protection have been separated into a separate artifact `com.webjetcms:webjet-ai` and an external [webjet-ai repository](https://github.com/webjetcms/webjet-ai). WebJET CMS passes configuration through a typed adapter and continues to provide auditing, persistence, and UI integration. This is an incompatible change: the original CMS SPI for custom providers and its transport and streaming support classes have been removed. Custom providers must be migrated to the `AiProvider` library interface and the CMS adapter `LibrarySupportLogic` (#58670).
@@ -548,6 +570,13 @@ Redesigned application properties settings in the editor from the old code in `J
 ![meme](_media/meme/2026-18.jpg ":no-zoom")
 
 ## 2026.0.x
+
+> A patch version of the original version 2026.0.
+
+- Websites - fixed looping of folder initialization and scheduled publishing check on slow database connection (#337).
+- Cluster - optimized writing of changes in the cluster when starting a new node (#337).
+
+## 2026.0.40
 
 > A patch version of the original version 2026.0.
 

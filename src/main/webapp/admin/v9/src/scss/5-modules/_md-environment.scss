@@ -1,0 +1,46 @@
+.md-environment {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: var(--wj-environment-bg);
+    color: var(--wj-environment-text);
+    font-size: 12px;
+    line-height: 18px;
+    font-weight: 700;
+    white-space: nowrap;
+    vertical-align: middle;
+
+    > .ti { font-size: 14px; }
+    &__tooltip {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1080;
+        width: max-content;
+        max-width: min(360px, calc(100vw - 80px));
+        padding-top: 6px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        font-size: 12px;
+        line-height: 1.5;
+        font-weight: 400;
+        text-align: left;
+        > span {
+            display: block;
+            padding: 6px 8px;
+            border-radius: 4px;
+            background: var(--wj-secondary, #13151B);
+            color: #fff;
+        }
+    }
+    &:is(:hover, :focus):not([data-tooltip-dismissed]) > &__tooltip { display: block; }
+    &:focus-visible {
+        outline: 2px solid var(--wj-primary, #0063FB);
+        outline-offset: 2px;
+    }
+}

@@ -89,7 +89,7 @@ V případě potřeby můžete ve stromové struktuře klepnutím na ikonu<i cla
 - **Pořadí uspořádání** - Za názvem zobrazí pořadí uspořádání ve formě (pořadí).
 - **Web Stránky** - Zobrazí ve stromové struktuře i web stránky. **Upozornění:** snižuje výkon a rychlost načítání údajů. Možnost doporučujeme zapnout jen pokud potřebujete přesouvat web stránky pomocí funkce `Drag&Drop`.
 - **Složky stromové struktury jako tabulku** - Zobrazí kartu Složky v datatabulce. Umožňuje používat funkce datatabulky jako hromadné operace, duplikovat, upravit v zobrazení mřížky atp. se složkami stromové struktury.
-- **Poměr šířky sloupců strom:tabulka** - Nastaví poměr šířky sloupců zobrazené stromové struktury a datatabulky pro lepší využití šířky monitoru. Standardní poměr je 4:8. Upozornění: u některých poměrů a nevhodné velikosti monitoru může dojít k nesprávnému zobrazení nástrojové lišty/tlačítek.
+- **Šířka stromu** - Vyberte poměr šířky stromu a tabulky (standardně 4:8) nebo pevnou šířku stromu 120px, 150px, 200px, 250px, 300px, 400px nebo 500px. Při pevné šířce se strom při zvětšení okna nerozšiřuje a tabulka využije zbývající prostor. Upozornění: u některých šířek a nevhodné velikosti monitoru může dojít k nesprávnému zobrazení nástrojové lišty/tlačítek.
 - **Seřadit strom podle** - Výběr parametru adresáře, podle kterého se má strom složek uspořádat. Výběrové pole podporuje následující parametry
   - **Priorita**
   - **Název**

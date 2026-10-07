@@ -1,4 +1,5 @@
-Feature('apps.file-archive.configurations');
+// These suites share the insertion cron schedule and global archive configuration.
+Feature('apps.file-archive.configurations').tag('@singlethread');
 
 const SL = require("./SL.js");
 

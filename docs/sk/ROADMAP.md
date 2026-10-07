@@ -50,17 +50,23 @@ Vysvetlenie použitých piktogramov:
 - [x] +Číselníky - pridať možnosť definovať typ poľa pre reťazec ako máme vo voliteľných poliach (#58641).
 - [x] +Fotobanka - pridať možnosť nastaviť názov súboru pred stiahnutím z fotobanky, automaticky nastaviť podľa hľadaného výrazu (#58645).
 - [x] +Úlohy na pozadí - možnosť manuálne spustiť úlohu na `node`, ktorý má úloha nastavený, teraz sa spustí na `node` kde je používateľ prihlásený (#58718).
-- [ ] +Číselník, Blog, Novinky - upraviť tak, aby výber typu číselníka alebo priečinka pre novinky bol vľavo podobne ako v galérii/webových stránkach. Nemusia byť potom karty ale všetko naraz zobrazené.
+- [x] +Číselník - presunúť výber a správu typov číselníkov do stromu v ľavom paneli, s vyhľadávaním a zachovaním editora nastavení (#58786).
+- [x] +Blog - presunúť výber priečinka do stromu vľavo, s vyhľadávaním a zachovaním výberu Všetky sekcie aj pridávania sekcií (#58786).
+- [x] +Novinky - presunúť výber priečinka do stromu vľavo podobne ako v galérii/webových stránkach, s výberom podpriečinkov a vyhľadávaním (#58786).
 - [x] +Prekladové kľúče - zobrazovať stromovú štruktúru prekladových kľúčov pre lepšiu orientáciu (#58714).
 - [x] +Konfigurácia - doplniť možnosť nastaviť premennú len pre aktuálny uzol (neuložiť ju do databázy - len nastaviť do Constants objektu), pridať tam zaškrtávacie pole "Nastaviť dočasne" s info ikonou že hodnota sa nastaví len dočasne a pri reštarte sa obnoví hodnota ako je v databáze. (#291)
 - [ ] Prieskumník - opraviť zobrazovanie súborov so špeciálnymi znakmi (napríklad `@`).
 - [ ] Automatický premazávať `temp` súbory, ktoré sa môžu hromadiť.
 - [x] +Administrácia - odstrániť závislosť od `Vue.js` a nahradiť interné komponenty natívnymi web komponentmi (#58722).
 - [ ] +Upraviť načítanie admin časti tak, aby sa vymenilo cez volanie REST služby len vnútro stránky, nie kompletný reload HTML kódu.
-- [ ] +Vylepšiť úvodnú stránku administrácie - dynamické bloky, možnosť vlastného nastavenia čo sa zobrazí, užitočné informácie a bloky.
+- [x] +Vylepšiť úvodnú stránku administrácie - dynamické bloky, možnosť vlastného nastavenia čo sa zobrazí, užitočné informácie a bloky (#332).
 - [ ] +Filter v aplikácii novinky neumožňuje zadať DOC ID viacerých stránok keby chceli podľa filtra “DOC_ID rovná sa” zvoliť viacero stránok
 filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadania viacerých hodnôt (#JT-2139).
 - [x] +AI - upraviť vytváranie `chunk` tak, aby podľa možnosti začínali a končili na hraniciach viet alebo slov (#58778).
+- [ ] +Webové stránky - upraviť predvolené zobrazenie pre nového používateľa - zobrazovať ID, poradie a usporiadať vzostupne.
+- [ ] +Webové stránky - pridať možnosť pridať viacerým stránkam naraz perex skupinu, čiže k existujúcim perex skupinám sa pridá zvolená.
+- [ ] +Webové stránky - pri zmazaní priečinka, ktorý má aj zrkadlenú verziu zobraziť notifikáciu, že boli zmazané aj zrkadlené priečinky XXX,YYY.
+- [ ] +Pridať podporu obrázkov typu AVIF.
 
 ## 2025
 

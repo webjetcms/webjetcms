@@ -2217,8 +2217,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	}
 
 	public void setPerexImage(String perexImage) {
-		if (isEmpty(perexImage)) return;
-		this.perexImage = perexImage;
+		this.perexImage = isEmpty(perexImage) ? "" : perexImage;
 	}
 
 	public void setAuthorName(String authorName) {

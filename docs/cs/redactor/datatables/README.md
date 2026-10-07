@@ -70,6 +70,27 @@ Automatické nastavení počtu řádků tabulky se použije pouze v hlavním okn
 
 Hodnota všechna je limitována nastavením konfigurační proměnné `datatablesExportMaxRows`, tedy při hodnotě Všechny se reálně načte maximální počet řádků definovaný v této konfigurační proměnné. Řádky se zobrazují přímo v prohlížeči a při vysokém počtu dojde k vysokému zatížení procesoru.
 
+## Upozornění na neuložené změny
+
+### Obnovení nebo opuštění stránky
+
+Pokud máte otevřené okno editoru datatabulky a obnovíte stránku klávesou **F5**, přejdete na jinou stránku nebo zavřete kartu prohlížeče, prohlížeč zobrazí upozornění na možné neuložené změny. V tomto případě se kontroluje pouze to, zda je okno editoru otevřené a viditelné. **Nekontroluje se, zda jste v jeho polích skutečně něco změnili.** Upozornění se proto může zobrazit i hned po otevření záznamu bez úprav.
+
+Jedná se o ochranu před ztrátou rozpracovaných údajů při nechtěném obnovení nebo opuštění stránky. Chcete-li změny zachovat, zůstaňte na stránce a uložte je tlačítkem **Uložit**. Potvrzením odchodu nebo obnovení se neuložené údaje zahodí. Přesný text upozornění a názvy tlačítek určuje prohlížeč, proto se například v Chrome a Firefoxu liší.
+
+### Tlačítko Zrušit v okně editoru
+
+Tlačítko **Zrušit** zavírá okno editoru bez uložení rozpracovaných změn. Samotná stránka administrace zůstává otevřená, takže se nevyvolává výše popsané upozornění při odchodu ze stránky.
+
+V **editoru webových stránek** se před zavřením porovnává aktuální obsah stránky s obsahem zaznamenaným po načtení editoru:
+
+- Pokud se obsah nezměnil, okno se zavře bez upozornění.
+- Pokud se obsah změnil, zobrazí se upozornění na neuložený text. Tlačítkem **OK** potvrdíte zavření bez uložení, tlačítkem **Zrušit** v upozornění se vrátíte do editoru.
+
+Tato kontrola se týká **obsahu webové stránky**, ne všech polí formuláře. Samotnou změnu názvu stránky nebo nastavení na jiných kartách tímto způsobem nezjišťuje. Ani ostatní datatabulky nemají všeobecnou kontrolu změn všech polí u tlačítka **Zrušit**. Chcete-li rozpracované údaje zachovat, před zavřením použijte **Uložit**.
+
+Při zjišťování příčiny upozornění můžete v konzoli prohlížeče zobrazit objekt `window.top.lastDirty`. Po zjištění změny obsahuje původní a aktuální HTML kód i první nalezený rozdíl. Čitelný souhrn vypíšete příkazem `console.log(window.top.lastDirty.summary)`. Objekt uchovává poslední zjištěnou změnu a slouží **pouze pro obsah webových stránek**, nikoli pro ostatní pole nebo datatabulky.
+
 ## Klávesové zkratky
 
 Pro efektivnější práci můžete použít následující klávesové zkratky (```Windows/MacOS```):

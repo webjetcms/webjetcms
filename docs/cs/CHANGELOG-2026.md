@@ -13,6 +13,14 @@
 - Microsoft SQL Server - ukončena byla podpora verzí starších než 2012 a odstraněna konfigurační proměnná `mssqlUseOldTopQuery`. WebJET CMS vyžaduje Microsoft SQL Server 2012 nebo novější, starý způsob stránkování pomocí `TOP` již není podporován (#293).
 - Formulář snadno a vícekrokové formuláře - upravené zobrazení `tooltip` z původního `i` elementu na standardní `button`. Je tak splněn požadavek na přístupnost - tooltip je dostupný myší i klávesnicí (#306).
 
+### Úvodní obrazovka
+
+- [Úvodní obrazovku](redactor/admin/welcome.md) jsme předělali na widgetový systém, abyste měli údaje potřebné při práci na jednom místě bez procházení jednotlivých částí administrace. Sami si vyberete widgety a nastavíte zobrazované údaje, velikost a pořadí podle svých potřeb (#58806).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ### Webové stránky
 
 - Koš webových stránek - přidáno [automatické mazání starých stránek a složek](redactor/apps/gdpr/data-deleting.md) z koše podle nastaveného retenčního období. Přidána možnost mazání stránek a složek v koši i v sekci [Mazání dat](sysadmin/data-deleting/README.md) podle zvoleného rozsahu dat. Sjednocená logika výpočtu počtu a mazání, opraveno trvalé odstranění složky koše a prázdných složek (#271).
@@ -50,6 +58,7 @@
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
 - Page Builder - elementy označené CSS třídou [`pb-duplicable`](frontend/page-builder/settings.md#duplikovatelný-element-oranžová-barva) lze v rámci stejného rodiče přesouvat, duplikovat a smazat. Vlastní nebo více selektorů lze nastavit přes `pbCustomSettings` (#58750).
+- Page Builder - přidána možnost vytvořit [div.pb-section](frontend/page-builder/settings.md), který získá běžné ovládání sekce. Navíc aplikace `!INCLUDE(...)!` vložené přímo v sekci, nebo kontejnery, zobrazují náhled i přesto, že jsou vloženy mimo běžný sloupec (#osk711).
 - Page Builder - upraveno [ovládání editoru](redactor/webpages/pagebuilder.md). Přidána pevná horní lišta s cestou k vybranému bloku, panel **Struktura**, rychlé akce a režim vkládání sekcí, kontejnerů a sloupců přímo do stránky. Rámečky lze skrýt nebo zobrazit pro celou hierarchii bloku. Knihovna bloků má kompaktní okno s náhledy, kategoriemi a kombinovaným vyhledáváním se štítky. Nastavení stylu používá rozbalovací skupiny vlastností a označuje právě upravovaný blok (#308).
 
 <div class="video-container">
@@ -57,6 +66,7 @@
 </div>
 
 - Page Builder - zlepšená detekce změn v HTML kódu stránky, aby se nezobrazilo hlášení "V editoru pravděpodobně máte neuložený text" i když jste reálně žádný text ve stránce nezměnili (#317).
+- [Page Builder](redactor/webpages/pagebuilder.md) - po kliknutí na + ve žluté čáře v okně **Vložit blok** na kartě **Základní** přibyly možnosti **Obrázek** a **Aplikace**. Otevřou příslušný dialog editoru a umožní vložit obsah na zvolené místo (#339).
 
 ### Headless režim
 
@@ -74,6 +84,10 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Formuláře
 
+- Vícekrokové formuláře - po neúspěšném přechodu na další krok nebo odeslání se stránka posune na první viditelné chybové hlášení i při opakovaném pokusu (#58794).
+- Formuláře - validace nahraných souborů rozlišuje nepovolený znak v názvu a nepovolenou příponu. Chyba názvu uvede konkrétní zakázaný znak nebo řetězec. Názvy souborů v chybových hlášeních se zobrazují jako text, aby se případné HTML značky v názvu neprovedly (#58794).
+- Vícekrokové formuláře - při [návratu na předchozí krok](redactor/apps/multistep-form/README.md#návrat-na-předchozí-krok) se zachovají rozpracované hodnoty i dokončené nahrávání (#58794).
+- Vícekrokové formuláře - přidána ve výchozím nastavení zapnuta [validace při opuštění pole](redactor/apps/multistep-form/README.md#validace-při-opuštění-pole). Vypnete ji nastavením konfigurační proměnné `multistepform_validateOnBlur` na `false` (#58794).
 - [Formuláře](redactor/apps/form/README.md#možné-konfigurační-proměnné) - klasické i vícekrokové formuláře respektují `sendMailSaveEmail` a ukládají emaily jako soubory `.eml` do `sendMailSaveEmailPath` místo SMTP odeslání. Pokud se zápis nezdaří, formulář oznámí chybu.
 - Vícekrokové formuláře - přidán [návrat na předchozí krok](redactor/apps/multistep-form/README.md#návrat-na-předchozí-krok) s obnovením uložených hodnot a souborů a [výběr CSS šablony](redactor/apps/multistep-form/README.md#css administraci (#58742).
 
@@ -116,6 +130,9 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Aplikace
 
+- Číselníky - výběr a správa typů se přesunuly do stromu v levém panelu s vyhledáváním. Více v [dokumentaci Číselníků](redactor/apps/enumeration/README.md) (#58786).
+- Blog - výběr a přidávání sekcí jsou dostupné ve stromu v levém panelu s vyhledáváním. Více v [dokumentaci Blogu](redactor/apps/blog/README.md) (#58786).
+- Novinky - výběr složky se přesunul do stromu v levém panelu s vyhledáváním, dostupného iv editoru aplikace. Automatické hledání složek vynechává kořeny blogerů i jejich podsložky. Více v [dokumentaci Novinek](redactor/apps/news/README.md) (#58786).
 - Elektronický obchod - přidáno volitelné [zaokrouhlování cen](redactor/apps/basket/rounding.md), aby se košík počítal ze zobrazené ceny za kus. Počet desetinných míst určuje `currencyFormat` ; šablony se značkou `iway:curr` převezmou nové formátování automaticky (#316).
 - Číselníky - pro pojmenovaná řetězcová pole lze v nové kartě [Typy řetězcových polí](redactor/apps/enumeration/README.md#karta-typy-řetězcových-pole) nastavit typ pole, možnosti výběru, povinnost, pomocný text a omezení délky stejně jako u volitelných polí. Nabídka a názvy konfigurací vycházejí z poslední uložené verze typu číselníku. Nepojmenovaná pole zůstávají skrytá, nevyhodnocují se jako povinná a pole bez specifické konfigurace se zobrazí jako běžný text. Starší vlastní Excel šablony a integrace REST API je třeba upravit z atributů `string1` až `string12` na `fieldA` až `fieldL` (#58641).
 
@@ -212,6 +229,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Vícekrokové formuláře - opravena validace polí s řetězenými podmínkami viditelnosti (#58794).
 - Formuláře - opraveno archivování formulářů (#305).
 - Průzkumník - upravené porovnávání souborů s diakritikou při kontrole existence souboru při jeho přepsání - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Webové stránky - opraveno přidávání prázdného `P` elementu na konec stránky (#58317-13).
@@ -220,6 +238,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Výkon
 
+- Vícekrokové formuláře - zrychlené opakované kontroly polí během vyplňování (#58794).
 - Optimalizované načítání skupiny šablon při zobrazení stránky a hledání volitelných polí. Skupina je uložena do cache a znovu použita bez potřeby jejího čtení z databáze (#311).
 
 ### Bezpečnost
@@ -230,10 +249,13 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Dokumentace
 
+- Datatabulky - doplněné vysvětlení [upozornění na neuložené změny](redactor/datatables/README.md#upozornění-na-neuložené-změny) při obnovení nebo opuštění stránky a při zavření editoru tlačítkem Zrušit (#339).
 - Vytvořena nová sekce [Přehled nových vlastností](sales/README.md) která obsahuje popisy nových vlastností a **funkcionalit WebJET CMS srozumitelným jazykem**, bez zbytečně technických formulací (#58505).
 - Vytvořená sekce [Řešení problémů](sysadmin/troubleshooting/README.md) v manuálu pro provoz.
 
 ### Pro programátora
+
+- Dashboard - přidán registr widgetů, responzivní grid a REST rozhraní pro transakční ukládání nastavení do `user_settings_admin`. Stávající tabulka MySQL/MariaDB se při aktualizaci konvertuje na InnoDB. Používání popisuje [dokumentace úvodní obrazovky](redactor/admin/welcome.md), pozadí a označení prostředí její [konfigurace](admin/setup/configuration/dashboard.md). Pravidla vývoje, kontrakt a důvody rozhodnutí udržuje projektový skill `wj-dashboard-widget` v `.agents/skills/wj-dashboard-widget/` (#58806).
 
 - Administrace - odstraněná závislost na [Vue.js](https://vuejs.org). Stromová pole, úvodní stránka, výběr oblasti obrázku a monitorování serveru používají nativní [web komponenty](developer/frameworks/web-components.md). Globální objekt `window.VueTools` ani balíky pro Vue již nejsou součástí administrace. Vlastní rozšíření je musí nahradit web komponenty nebo si Vue sestavit samostatně (#58722).
 - AI asistenti - klientská logika nezávislá na poskytovateli pro OpenAI, Gemini a OpenRouter, zpracování streamů, typy požadavků/odpovědí a ochrana promptů byly vyčleněny do samostatného artefaktu `com.webjetcms:webjet-ai` a externího [repozitáře webjet-ai](https://github.com/webjetcms/webjetcmi/webjetcmi). WebJET CMS předává konfiguraci přes typovaný adaptér a nadále zajišťuje auditování, perzistenci a integraci uživatelského rozhraní. Jedná se o nekompatibilní změnu: původní CMS SPI pro vlastní poskytovatele a jeho transportní a streamovací podpůrné třídy byly odstraněny. Vlastní poskytovatelé je nutné migrovat na rozhraní `AiProvider` knihovny a CMS adaptér `LibrarySupportLogic` (#58670).
@@ -548,6 +570,13 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 ![meme](_media/meme/2026-18.jpg ":no-zoom")
 
 ## 2026.0.x
+
+> Opravná verze původní verze 2026.0.
+
+- Webové stránky - opraveno zacyklení inicializace složek a kontroly plánovaného publikování při pomalém připojení k databázi (#337).
+- Cluster - optimalizované zapisování změny v clusteru při startu nového uzlu (#337).
+
+## 2026.0.40
 
 > Opravná verze původní verze 2026.0.
 

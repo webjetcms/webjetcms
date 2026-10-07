@@ -325,12 +325,20 @@ block content
             });
         });
 
-    div.row.configuration-tree-layout
+    div.row
         div.col-md-4.tree-col
             div.dt-header-row.clearfix
                 div.row
                     div.col-auto
                         div.dt-buttons
+                            button.btn.btn-sm.btn-outline-secondary.buttons-jstree-settings.buttons-right(
+                                type="button"
+                                data-toggle="tooltip"
+                                data-th-title="\#{datatables.button.settings.js}"
+                                data-th-aria-label="\#{datatables.button.settings.js}"
+                            )
+                                span
+                                    i.ti.ti-adjustments-horizontal(aria-hidden="true")
                             button.btn.btn-sm.btn-outline-secondary.buttons-refresh(
                                 type="button"
                                 data-toggle="tooltip"
@@ -343,6 +351,8 @@ block content
 
             p#configuration-tree-description.visually-hidden [[\#{admin.conf_editor.tree.description}]]
             div#SomStromcek.hide-while-loading(
+                data-settings-key="jstreeSettings_configuration"
+                data-default-tree-width="200"
                 data-rest-url="/admin/rest/settings/configuration/tree"
                 data-rest-param-name="id"
                 data-single-select="true"
@@ -363,3 +373,5 @@ block content
                 div.form-check
                     input.form-check-input(type="radio" name="dt-settings-extend" id="dt-settings-import-extend-custom" value="custom" data-hide="#datatableImportModal .file-name,#import-settings")
                     label.form-check-label(for="dt-settings-import-extend-custom") [[\#{admin.conf_editor.custom-xml-export}]]
+
+    div(data-th-include="admin/v9/dist/views/includes/tree-width-settings.html" data-th-remove="tag")

@@ -144,6 +144,8 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
     @Override
     public void afterSave(FormsEntity entity, FormsEntity saved) {
         if (isDuplicate()) {
+            // The duplication service transaction has committed before this hook runs.
+            MultistepFormsService.clearValidationFieldsCache(saved.getFormName(), saved.getDomainId());
             setRedirect("/apps/form/admin/form-steps/?formName=" + Tools.URLEncode(saved.getFormName()));
             return;
         }
@@ -167,6 +169,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
             fse.setMaxPosition(1);
             fse.setDomainId(CloudToolsForCore.getDomainId());
             formStepsRepository.save(fse);
+            MultistepFormsService.clearValidationFieldsCache(fse.getFormName(), fse.getDomainId());
 
             if (FormsService.FORM_TYPE.MULTISTEP.value().equals(entity.getFormType())) {
                 setRedirect("/apps/form/admin/form-steps/?formName=" + Tools.URLEncode(saved.getFormName()));

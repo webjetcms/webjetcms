@@ -18,6 +18,7 @@ import sk.iway.iwcm.CryptoFactory;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
@@ -59,6 +60,7 @@ public class FormHtmlHandler {
 
     private static final String FORM_START_KEY = "components.mustistep.form.start";
     private static final String FORM_END_KEY = "components.mustistep.form.end";
+    private static final String FORM_BACK_BUTTON_KEY = "components.mustistep.form.back_button";
     private static final String FORM_LOADER_KEY = "components.mustistep.form.loader";
 
     private final FormStepsRepository formStepsRepository;
@@ -251,7 +253,11 @@ public class FormHtmlHandler {
             stepWrapperStart = DocTools.updateUserCodes(UsersDB.getCurrentUser(request), stepWrapperStart);
 
             // Swap form items values
-            stepWrapperStart = MultistepFormsService.updateFormValues(formName, request, stepWrapperStart);
+            if (isEmailRender && this.formData != null) {
+                stepWrapperStart = MultistepFormsService.updateFormValues(this.formData, stepWrapperStart);
+            } else {
+                stepWrapperStart = MultistepFormsService.updateFormValues(formName, request, stepWrapperStart);
+            }
         }
 
         formStepHtml.append(stepWrapperStart);
@@ -337,11 +343,9 @@ public class FormHtmlHandler {
         StringBuilder formEndHtml = new StringBuilder();
         FormStepEntity previousStep = MultistepFormsService.getPreviousStep(formName, formStep, formStepsRepository);
         if(isEmailRender == false && previousStep != null) {
-            formEndHtml.append("<button type=\"button\" class=\"btn btn-outline-secondary mt-3 me-2\" data-multistep-back-step=\"")
-                .append(previousStep.getId())
-                .append("\">")
-                .append(StringEscapeUtils.escapeHtml4(buttonsLabels.getFirst()))
-                .append("</button>");
+            formEndHtml.append(prop.getText(FORM_BACK_BUTTON_KEY));
+            Tools.replace(formEndHtml, "${previousStepId}", previousStep.getId().toString());
+            Tools.replace(formEndHtml, "${backButtonText}", StringEscapeUtils.escapeHtml4(buttonsLabels.getFirst()));
         }
         formEndHtml.append(getFormEnd(buttonsLabels.getSecond(), request));
 
@@ -393,15 +397,18 @@ public class FormHtmlHandler {
 
     /**
      * Builds and stores the complete multistep form representation for email delivery.
-     * Converts it to plain text when configured, optionally encrypts it, and collects
-     * stylesheet data for email and PDF variants.
+     * Uses the prepared unencrypted notification values, converts the content to plain
+     * text when configured, and encrypts only the stored HTML. Collects stylesheet
+     * data for readable email and PDF variants.
      *
      * @param form  entity whose HTML field receives the rendered email content
+     * @param formData ordered form data values keyed by logical field IDs, containing HTML-escaped
+     *                           text, sanitized WYSIWYG HTML, saved filenames and empty answers
      * @param request  current HTTP request
      * @param docId  ID of the document used to resolve template and group CSS
      * @throws IllegalStateException if the entity belongs to a different form than this handler
      */
-    public final void setFormHtml(FormsEntity form, HttpServletRequest request, Integer docId) {
+    public final void setFormHtml(FormsEntity form, Map<String, String> formData, HttpServletRequest request, Integer docId) {
         // Check that provided form has same name as formName provided in constructor
         if(form.getFormName().equals(this.formName) == false) throw new IllegalStateException("Provided form has different name taht provided in constructor.");
 
@@ -416,7 +423,7 @@ public class FormHtmlHandler {
         formHtml.append( getFormStart(-1L, request) );
 
         // prepare data
-        this.formData = MultistepFormsService.getFormDataAsMap(form);
+        this.formData = formData;
 
         for(FormStepEntity formSteps : formStepsRepository.findAllByFormNameAndDomainIdOrderBySortPriorityAsc(this.formName, CloudToolsForCore.getDomainId()))
             formHtml.append( getStepHtml(request, formSteps) ).append("<hr>");
@@ -467,7 +474,7 @@ public class FormHtmlHandler {
 
     /**
      * Returns the PDF-oriented form representation,
-     * based on the last {@link #setFormHtml(FormsEntity, HttpServletRequest, Integer)} call.
+     * based on the last {@link #setFormHtml(FormsEntity, Map, HttpServletRequest, Integer)} call.
      *
      * @return HTML with inline CSS, plain text when configured, or an empty string if unavailable
      */
@@ -567,7 +574,7 @@ public class FormHtmlHandler {
 
 		try
 		{
-			cssData = "<style type='text/css'>";
+			cssData = "<style type='text/css' media=\"all\">";
 			cssLink = "";
 
 			if (temp != null)
@@ -588,7 +595,7 @@ public class FormHtmlHandler {
 				}
                 for(String baseCssPath : baseCssPaths) {
                     baseCssPath = FormMailAction.checkEmailCssVersion(baseCssPath);
-                    cssStyle.append(FileTools.readFileContent(baseCssPath)).append('\n');
+                    cssStyle.append(FileTools.readFileContent(baseCssPath, SetCharacterEncodingFilter.getEncoding())).append('\n');
                     cssLink += "<link rel='stylesheet' href='" + baseCssPath + "' type='text/css'/>\n";
                 }
 
@@ -603,7 +610,7 @@ public class FormHtmlHandler {
 				}
                 for(String tempCssLink : tempCssLinks) {
                     tempCssLink = FormMailAction.checkEmailCssVersion(tempCssLink);
-                    cssStyle.append(FileTools.readFileContent(tempCssLink)).append('\n');
+                    cssStyle.append(FileTools.readFileContent(tempCssLink, SetCharacterEncodingFilter.getEncoding())).append('\n');
                     cssLink += "<link rel='stylesheet' href='" + tempCssLink + "' type='text/css'/>\n";
                 }
 
@@ -611,7 +618,7 @@ public class FormHtmlHandler {
 				String[] editorEditorCsses = Tools.getTokens(Constants.getString("editorEditorCss"), "\n");
                 for(String editorEditorCss : editorEditorCsses) {
                     editorEditorCss = FormMailAction.checkEmailCssVersion(editorEditorCss);
-                    cssStyle.append(FileTools.readFileContent(editorEditorCss)).append('\n');
+                    cssStyle.append(FileTools.readFileContent(editorEditorCss, SetCharacterEncodingFilter.getEncoding())).append('\n');
                     cssLink += "<link rel='stylesheet' href='" + editorEditorCss + "' type='text/css'/>\n";
                 }
 
@@ -619,7 +626,7 @@ public class FormHtmlHandler {
                 String[] formSpecificCsses = Tools.getTokens(formSpecificCssStr, "\n");
                 for(String formSpecificCss : formSpecificCsses) {
                     formSpecificCss = FormMailAction.checkEmailCssVersion(formSpecificCss);
-                    cssStyle.append(FileTools.readFileContent(formSpecificCss)).append('\n');
+                    cssStyle.append(FileTools.readFileContent(formSpecificCss, SetCharacterEncodingFilter.getEncoding())).append('\n');
                     cssLink += "<link rel='stylesheet' href='" + formSpecificCss + "' type='text/css'/>\n";
                 }
 
@@ -634,7 +641,7 @@ public class FormHtmlHandler {
 					cssLink += "<link rel='stylesheet' href='/css/email.css' type='text/css'/>\n";
 
 				if (is != null) {
-					BufferedReader br = new BufferedReader(new InputStreamReader(is, Constants.FILE_ENCODING));
+					BufferedReader br = new BufferedReader(new InputStreamReader(is, SetCharacterEncodingFilter.getEncoding()));
 					String line;
 					StringBuilder startBuf = new StringBuilder(cssData);
 					while ((line = br.readLine()) != null)
@@ -648,6 +655,8 @@ public class FormHtmlHandler {
 		}
 
 		cssData += "</style>";
+        // A BOM belongs at the start of a file, not inside concatenated inline CSS.
+        cssData = cssData.replace("\uFEFF", "");
 
         if(Tools.isEmpty(cssLink)) cssLink = "";
 

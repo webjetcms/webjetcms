@@ -50,17 +50,23 @@ Explanation of the pictograms used:
 - [x] +Encoders - add the ability to define the field type for a string like we have in optional fields (#58641).
 - [x] +Photo bank - add the option to set the file name before downloading from the photo bank, automatically set according to the search term (#58645).
 - [x] +Background tasks - option to manually run a task on `node`, which the task is set to, will now run on `node` where the user is logged in (#58718).
-- [ ] + Dialer, Blog, News - adjust so that the dialer or news folder type selection is on the left, similar to the gallery/websites. Then the cards don't have to be displayed all at once.
+- [x] + Dialpad - move selection and management of dialpad types to the tree in the left panel, with search and retention of the settings editor (#58786).
+- [x] +Blog - move folder selection to the tree on the left, with searching and keeping the All sections selection and adding sections (#58786).
+- [x] +News - move folder selection to the tree on the left similar to gallery/websites, with subfolder selection and search (#58786).
 - [x] +Translation keys - display a tree structure of translation keys for better orientation (#58714).
 - [x] +Configuration - add the option to set a variable only for the current node (do not save it to the database - just set it to the Constants object), add a checkbox there "Set temporarily" with an info icon that the value is set only temporarily and on restart the value as in the database will be restored. (#291)
 - [ ] Explorer - fix displaying files with special characters (for example `@`).
 - [ ] Automatically delete `temp` files that may accumulate.
 - [x] +Administration - remove dependency on `Vue.js` and replace internal components with native web components (#58722).
 - [ ] +Modify the loading of the admin section so that only the inside of the page is replaced via a REST service call, not a complete reload of the HTML code.
-- [ ] +Improve the administration homepage - dynamic blocks, the ability to customize what is displayed, useful information and blocks.
+- [x] +Improve the administration homepage - dynamic blocks, ability to customize what is displayed, useful information and blocks (#332).
 - [ ] +Filter in the news application does not allow entering DOC ID of multiple pages if they wanted to select multiple pages according to the filter “DOC_ID equals”
 The filter only takes the first value. So add the `IN` option to allow multiple values ​​(#JT-2139).
 - [ ] +AI - adjust the creation of `chunk` so that there are no nonsense words at the beginning/end, trim from the first space to the last space.
+- [ ] +Websites - edit default view for new user - show ID, rank and sort ascending.
+- [ ] +Websites - add the option to add a perex group to multiple pages at once, meaning the selected one will be added to the existing perex groups.
+- [ ] +Websites - when deleting a folder that also has a mirrored version, display a notification that the mirrored folders XXX,YYY have also been deleted.
+- [ ] +Add support for AVIF images.
 
 ## 2025
 

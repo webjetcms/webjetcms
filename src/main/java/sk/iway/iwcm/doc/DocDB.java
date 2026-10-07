@@ -182,6 +182,18 @@ public class DocDB extends DB
 	}
 
 	/**
+	 * Returns document caches for navbar link generation without checking scheduled publication.
+	 * Called by GroupDetails while GroupsDB is being constructed; a publication check could
+	 * re-enter GroupsDB initialization before its instance is stored in the servlet context.
+	 *
+	 * @return the cached or newly initialized DocDB instance
+	 */
+	static DocDB getInstanceWithoutPublishCheck()
+	{
+		return getInstanceWithoutPublishCheck(false, "iwcm");
+	}
+
+	/**
 	 *  Gets the instance attribute of the DocDB class
 	 *
 	 *@param  servletContext2  Description of the Parameter
@@ -193,14 +205,30 @@ public class DocDB extends DB
 	@Deprecated
 	public static DocDB getInstance(jakarta.servlet.ServletContext servletContext2, boolean force_refresh, String serverName)
 	{
+		DocDB myDocDB = getInstanceWithoutPublishCheck(force_refresh, serverName);
+		// Publication may initialize GroupsDB, so run it outside the DocDB initialization lock.
+		myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
+		return myDocDB;
+	}
+
+	/**
+	 * Retrieves or creates the DocDB instance without running scheduled publication checks.
+	 * Separating cache initialization from publication allows public getInstance methods to
+	 * check publication after this method returns, outside the DocDB initialization lock.
+	 *
+	 * @param force_refresh true to replace the cached instance and request a cluster refresh;
+	 *                      false to reuse it or initialize it without notifying the cluster
+	 * @param serverName database connection name used when creating the instance
+	 * @return the cached or newly initialized DocDB instance stored in the servlet context
+	 */
+	private static DocDB getInstanceWithoutPublishCheck(boolean force_refresh, String serverName)
+	{
 		jakarta.servlet.ServletContext servletContext = Constants.getServletContext();
 		if (!force_refresh)
 		{
 			DocDB myDocDB = (DocDB) servletContext.getAttribute(Constants.A_DOC_DB);
 			if (myDocDB != null && myDocDB.urlsByUrlDomains!=null)
 			{
-				//Set publishable service and call checkPublishable
-				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 		}
@@ -208,11 +236,10 @@ public class DocDB extends DB
 		{
 			if (force_refresh)
 			{
-				DocDB myDocDB = new DocDB(servletContext, serverName);
+				DocDB myDocDB = new DocDB(servletContext, serverName, force_refresh);
 				//save us to server space
 				servletContext.setAttribute(Constants.A_DOC_DB, myDocDB);
 
-				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 			else
@@ -220,14 +247,13 @@ public class DocDB extends DB
 				DocDB myDocDB = (DocDB) servletContext.getAttribute(Constants.A_DOC_DB);
 				if (myDocDB == null)
 				{
-					myDocDB = new DocDB(servletContext, serverName);
+					myDocDB = new DocDB(servletContext, serverName, force_refresh);
 					//	remove
 					//servletContext.removeAttribute(Constants.A_DOC_DB);
 					//save us to server space
 					servletContext.setAttribute(Constants.A_DOC_DB, myDocDB);
 
 				}
-				myDocDB.docPublishService.checkWebpagesToPublish(myDocDB);
 				return myDocDB;
 			}
 		}
@@ -241,7 +267,7 @@ public class DocDB extends DB
 	 * @param serverName
 	 *           Description of the Parameter
 	 */
-	private DocDB(jakarta.servlet.ServletContext servletContext, String serverName)
+	private DocDB(jakarta.servlet.ServletContext servletContext, String serverName, boolean force_refresh)
 	{
 		Logger.println(this,"DocDB: constructor ["+Constants.getInstallName()+"]");
 		Logger.debugMemInfo();
@@ -267,7 +293,7 @@ public class DocDB extends DB
 
 		loadUrls();
 
-		ClusterDB.addRefresh(DocDB.class);
+		if (force_refresh) ClusterDB.addRefresh(DocDB.class);
 
 		Logger.debug(this,"DocDB: constructor ["+Constants.getInstallName()+"] done");
 		Logger.debugMemInfo();
@@ -2459,7 +2485,7 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, show_in_navbar, show_in_sitemap, logged_show_in_menu, logged_show_in_sitemap, logged_show_in_navbar, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents";
+			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, show_in_navbar, show_in_sitemap, logged_show_in_menu, logged_show_in_sitemap, logged_show_in_navbar, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c, perex_image FROM documents";
 
 			ps = db_conn.prepareStatement(sql);
 			rs = ps.executeQuery();
@@ -2493,6 +2519,7 @@ public class DocDB extends DB
 				doc.setFieldA(DB.getDbString(rs, "field_a"));
 				doc.setFieldB(DB.getDbString(rs, "field_b"));
 				doc.setFieldC(DB.getDbString(rs, "field_c"));
+				doc.setPerexImage(DB.getDbString(rs, "perex_image"));
 
 				//POZOR: do fieldT si neskor ulozime DOMENU
 
@@ -2568,10 +2595,10 @@ public class DocDB extends DB
 	}
 
 	/**
-	 * Vrati docDetails s cache, su tam len zakladne info - docId, title, navbar, externalLink, groupId, virtualPath, available, showInMenu, showInSitemap, showInNavbar, loggedShowIn...
-	 * @param docId - id stranky
-	 * @param doNotReturnNull - ak je nastavene na true, tak to vzdy vrati aspon prazdny objekt
-	 * @return
+	 * Returns cached basic page metadata, including its title, URL, visibility and perex image.
+	 * @param docId page ID
+	 * @param doNotReturnNull whether a missing page should return a placeholder instead of null
+	 * @return cached metadata, a placeholder, or null when the page is missing
 	 */
 	public DocDetails getBasicDocDetails(int docId, boolean doNotReturnNull)
 	{
@@ -5034,7 +5061,7 @@ public class DocDB extends DB
 		try
 		{
 			db_conn = DBPool.getConnection();
-			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c FROM documents WHERE doc_id=?";
+			String sql = "SELECT doc_id, title, navbar, external_link, group_id, virtual_path, available, searchable, follow_links, show_in_menu, sort_priority, password_protected, temp_id, date_created, field_a, field_b, field_c, perex_image FROM documents WHERE doc_id=?";
 
 			ps = db_conn.prepareStatement(sql);
 			ps.setInt(1, docId);
@@ -5078,6 +5105,7 @@ public class DocDB extends DB
 				doc.setFieldA(DB.getDbString(rs, "field_a"));
 				doc.setFieldB(DB.getDbString(rs, "field_b"));
 				doc.setFieldC(DB.getDbString(rs, "field_c"));
+				doc.setPerexImage(DB.getDbString(rs, "perex_image"));
 
 				//POZOR: do fieldT si neskor ulozime DOMENU
 				GroupDetails group = GroupsDB.getInstance().getGroup(doc.getGroupId());

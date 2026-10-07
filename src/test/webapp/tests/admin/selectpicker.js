@@ -208,20 +208,47 @@ Scenario('Check contains,startswith,endswith,equals', ({ I, DT }) => {
     I.dontSee("Cenník", "#mediaTable tbody");
 });
 
-Scenario('BUG-zobrazenie selectov vo vnorenej DT',  async({ I, DTE, Document }) => {
-    //pri druhom zobrazeni DT v editore bol bug, kedy sa zle zobrazia selecty
+Scenario('BUG-zobrazenie selectov vo vnorenej DT', async ({ I, DTE }) => {
+    const filter = '#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group';
+    // Reopening the editor used to stretch the nested filter's selectpicker and clip its icon.
+    async function checkNestedFilter() {
+        I.clickCss('#pills-dt-userGroupsDataTable-sites-tab');
+        I.waitForVisible(`${filter} button.dropdown-toggle`, 10);
+        I.waitForFunction(selector => {
+            const group = document.querySelector(selector);
+            const button = group.querySelector('button.dropdown-toggle').getBoundingClientRect();
+            const input = group.querySelector('input.filter-input').getBoundingClientRect();
+            return button.width >= 24 && button.width <= 40 && Math.abs(button.height - input.height) <= 1;
+        }, [filter], 10);
+        I.assertTrue(await I.executeScript(selector => {
+            const group = document.querySelector(selector);
+            const button = group.querySelector('button.dropdown-toggle').getBoundingClientRect();
+            const icon = group.querySelector('button .filter-option i');
+            const bounds = icon.getBoundingClientRect();
+            return !['none', 'normal', '""'].includes(getComputedStyle(icon, '::before').content)
+                && bounds.width > 0 && bounds.left >= button.left && bounds.right <= button.right
+                && bounds.top >= button.top && bounds.bottom <= button.bottom;
+        }, filter), 'The nested filter icon must render completely inside its compact button.');
+        I.clickCss(`${filter} button.dropdown-toggle`);
+        I.waitForVisible('div.dropdown-menu.show', 10);
+        I.click(locate('div.dropdown-menu.show .dropdown-item').withChild('span > i.ti-arrow-right-bar'));
+        I.seeInField(`${filter} select.filter-input-prepend`, 'startwith');
+        I.seeElement(`${filter} button .ti-arrow-right-bar`);
+        I.clickCss(`${filter} button.dropdown-toggle`);
+        I.click(locate('div.dropdown-menu.show .dropdown-item').withChild('span > i.ti-arrows-horizontal'));
+        I.seeInField(`${filter} select.filter-input-prepend`, 'contains');
+        I.seeElement(`${filter} button .ti-arrows-horizontal`);
+    }
+
     I.amOnPage("/admin/v9/users/user-groups/?id=2");
     DTE.waitForEditor("userGroupsDataTable");
-    I.clickCss("#pills-dt-userGroupsDataTable-sites-tab");
-    I.wait(3); //wait for animation to finish
-    await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", null, null, 10);
+    await checkNestedFilter();
 
     DTE.cancel();
     I.click("Obchodní partneri");
     DTE.waitForEditor("userGroupsDataTable");
-    I.clickCss("#pills-dt-userGroupsDataTable-sites-tab");
-    I.wait(4); //wait for animation to finish
-    await Document.compareScreenshotElement("#datatableFieldDTE_Field_docDetailsList_wrapper th.dt-th-title div.input-group div.filter-option", "autotest-bug-zobrazenie-selectov-vo-vnorenej-dt.png", null, null, 11);
+    await checkNestedFilter();
+    DTE.cancel();
 });
 
 Scenario('BUG-set selectpickerbinded after fields visibility change', async ({ I, DT }) => {

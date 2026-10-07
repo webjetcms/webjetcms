@@ -291,7 +291,7 @@ Scenario('open webpage history from URL', ({ I, DTE }) => {
      I.dontSeeInCurrentUrl("history=687");
 });
 
-Scenario('not-publicable history row when saving with same future publish date', async ({ I, DT, DTE }) => {
+Scenario('not-publicable history row when saving with same future publish date @singlethread', async ({ I, DT, DTE }) => {
      const docId = 22956;
      const delete_history_button = locate(historyWrapper).find('.btn.buttons-history-remove');
 
@@ -336,9 +336,11 @@ Scenario('not-publicable history row when saving with same future publish date',
      await I.clickIfVisible(".toast-close-button");
 
      I.clickCss("#pills-dt-datatableInit-history-tab");
+     I.waitForVisible(historyTable, 10);
      DT.waitForLoader(historyProcessing);
 
      // Verify not-publicable row has line-through styling (not-publicable CSS class)
+     I.waitForVisible(historyTable + ' tr.not-publicable', 10);
      I.seeElement(locate(historyTable + ' tr.not-publicable'));
 
      // Select the not-publicable row and verify delete button is disabled

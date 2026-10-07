@@ -1,6 +1,7 @@
 import {Tools} from "./libs/tools/tools";
 import { Base64 } from 'js-base64';
 import {initTextareaLineNumbers} from './textarea-line-numbers';
+import {initSelectPicker} from './select-picker';
 
 const WJ = (() => {
 
@@ -501,7 +502,7 @@ const WJ = (() => {
     }
 
     /**
-     * @param {{title: string: string, message: string, btnCancelText: string, btnOkText: string, success: function, cancel: function}} options
+     * @param {{title?: string, message?: string, btnCancelText?: string, btnOkText?: string, success?: function, cancel?: function, onHidden?: function}} options
      */
     function confirm(options) {
         const title = options.title ? options.title : '';
@@ -629,8 +630,9 @@ const WJ = (() => {
                 },
                 onHidden: () => {
                     toastrInstance.off('.wjConfirmA11y');
+                    if (typeof options.onHidden === 'function') options.onHidden();
                     if (previouslyFocusedElement && document.contains(previouslyFocusedElement)) {
-                        previouslyFocusedElement.focus();
+                        WJ.focusWithoutTooltip(previouslyFocusedElement);
                     }
                 },
                 positionClass: 'toast-container toast-top-right',
@@ -1061,9 +1063,12 @@ const WJ = (() => {
         let $headerTitle = $(".header-title");
         $headerTitle.text(title);
 
-        let pipeIndex = document.title.indexOf("|");
-        if (pipeIndex==-1) document.title = title + " | " + document.title;
-        else document.title = title + " " + document.title.substring(pipeIndex);
+        const environment = document.querySelector(".md-environment")?.dataset.environmentName;
+        const prefix = environment ? `[${environment}] ` : "";
+        $headerTitle.attr("aria-label", prefix + title.trim());
+        const currentTitle = prefix && document.title.startsWith(prefix) ? document.title.substring(prefix.length) : document.title;
+        const pipeIndex = currentTitle.indexOf("|");
+        document.title = prefix + title + (pipeIndex === -1 ? " | " + currentTitle : " " + currentTitle.substring(pipeIndex));
     }
 
     /**
@@ -1707,6 +1712,7 @@ const WJ = (() => {
             return translate(key);
         },
         initTextareaLineNumbers,
+        initSelectPicker,
         openPopupDialog: (url, width, height) => {
             return openPopupDialog(url, width, height);
         },

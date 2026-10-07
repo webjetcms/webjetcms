@@ -107,7 +107,7 @@ Original HTML, CSS classes, custom selectors, and `pbCustomOptions` /`pbCustomSe
 
 ### `SECTION` (blue color)
 
-Initialization when using element: ```<section>```.
+Initialization when using the `<section>` or `<div class="pb-section">` element.
 
 Styling using a class, with prefix: ```pb-style-section-```
 
@@ -117,9 +117,52 @@ Styling using a class, with prefix: ```pb-style-section-```
 
 By setting the CSS class ```pb-not-section```, the element **will not be considered a section* element.
 
+The `pb-section` class will also mark a regular `DIV` as a section - it has the same styling, moving, duplicating and deleting controls in Page Builder. Technically it doesn't have to contain nested `container`, `row` or columns. This is useful for specific cases where you need to have special elements on your page.
+
+Example:
+
+```html
+<div class="pb-section" id="app" data-plugin-type="roaming" data-plugin-customer="b2c"></div>
+```
+
+The DIV is inserted directly between other sections. When saved, its tag, class `pb-section`, `id` and its own attributes are preserved.
+
+The `pb-editable` class will allow the editor to edit the content of the nested DIV directly in `pb-section`, even outside the normal `container` / `row` / column structure:
+
+```html
+<div id="app" class="pb-section" data-plugin-type="roaming" data-plugin-customer="b2c">
+    <p>FIXED CONTENT</p>
+    <div class="pb-editable">
+        <p>Editable content</p>
+    </div>
+</div>
+```
+
+In this example, the editor is initialized only in the nested `div.pb-editable`. The text `Editable content` can be edited by the editor, while `FIXED CONTENT` remains a fixed part of the block.
+
+You can also insert an application into such a block, for example an existing application **Insert HTML code**:
+
+```html
+<div class="pb-section" id="app2">!INCLUDE(/components/app-htmlembed/embed.jsp, html=)!</div>
+```
+
+The application displays a preview and you can set its contents using the application's regular dialog. Clicking on the blue strip above or below the preview will select a section without opening the application's settings. The strips are only displayed during editing. Moving and other operations are performed over the entire `div.pb-section` block.
+
+The `!INCLUDE(...)!` preview also works directly in a section or in a nested `DIV` outside of columns. Page Builder temporarily wraps the directive with an `div.pb-editable.pb-temp-wrapper` element to initialize the editor for it. When you save and switch editors, it removes the wrapper. The original parent, its attributes, and surrounding text are preserved.
+
 ### `CONTAINER` (pink color)
 
 Initialization when using CSS class: ```container``` or ```pb-custom-container```. By setting CSS class ```pb-not-container```, the element **will not be considered a container** even if it has CSS class ```container```.
+
+You can insert the application directly into a container without a row and column:
+
+```html
+<section>
+    <div class="container">!INCLUDE(/components/app-htmlembed/embed.jsp, html=)!</div>
+</section>
+```
+
+Page Builder will not add an empty `row` to the application. Clicking the pink band above or below the preview will highlight the container and allow you to use its normal controls. When saving, the INCLUDE will remain directly in the original container.
 
 Styling using a class, with prefix: ```pb-style-container-```
 

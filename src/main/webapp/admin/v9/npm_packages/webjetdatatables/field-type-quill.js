@@ -52,10 +52,6 @@ export function typeQuill() {
         if (htmlCode == null || htmlCode=="") htmlCode = "<p><br/></p>";
         if (htmlCode.indexOf("<p")==-1 && htmlCode.indexOf("<h")==-1 && htmlCode.indexOf("<div")==-1) htmlCode = "<p>"+htmlCode+"</p>";
 
-        //aktualna verzia pracuje s P elementami namiesto DIV elementov, musime upravit povodny zapis
-        htmlCode = htmlCode.replace(/<div>/gi, "<p>");
-        htmlCode = htmlCode.replace(/<\/div>/gi, "</p>");
-
         //nahrad inline styl za tagy em a strong
         htmlCode = htmlCode.replace(/<span[^<>]+style="font-style:italic">([^<>]+)<\/span>/gi, '<em>$1</em>');
         htmlCode = htmlCode.replace(/<span[^<>]+style="font-weight:bold">([^<>]+)<\/span>/gi, '<strong>$1</strong>');
@@ -66,6 +62,21 @@ export function typeQuill() {
         htmlCode = htmlCode.replace(/color:inherit;color:inherit;/gi, 'color:inherit;');
 
         let $html = $("<section>"+htmlCode+"</section>");
+        const blockSelector = "div, p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, pre, table";
+        // Quill turns top-level indentation between blocks into additional text lines.
+        $html.contents().filter(function () {
+            return this.nodeType === Node.TEXT_NODE && /^[\t\r\n ]*$/.test(this.textContent) &&
+                (!this.previousSibling || !this.nextSibling ||
+                    this.previousSibling.matches?.(blockSelector) || this.nextSibling.matches?.(blockSelector));
+        }).remove();
+
+        // Convert legacy DIV lines without breaking wrappers around block elements.
+        $html.find("div").each(function () {
+            if (this.attributes.length === 0 && $(this).find(blockSelector).length === 0) {
+                $(this).replaceWith($("<p>").append($(this).contents()));
+            }
+        });
+
         //append data-list to LI elements depending on OL or UL parent
         $html.find("li").each(function () {
             let $li = $(this);
@@ -293,6 +304,10 @@ export function typeQuill() {
 
             var html = window.quillToHtmlFormat(htmlCode);
 
+            // Remove trailing empty paragraphs, including those inside closing DIV wrappers.
+            html = html.replace(/(?:<p>[\t\r\n ]*<\/p>\s*|<\/div>\s*)+$/gi,
+                ending => ending.replace(/<p>[\t\r\n ]*<\/p>/gi, ""));
+
             if(isOneLine(conf) === true) {
                 // Remove <p></p> wrapper if present
                 if (typeof html === 'string') {
@@ -308,6 +323,8 @@ export function typeQuill() {
                     }
                 }
             }
+
+            // KOKOS
 
             return html;
         },

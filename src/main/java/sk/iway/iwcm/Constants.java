@@ -10,6 +10,7 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * Konstanty aplikacie
@@ -28,6 +29,13 @@ public class Constants {
 	private static boolean CONSTANTS_ALIAS_SEARCH = false; //NOSONAR
 
 	public static final String NON_BREAKING_SPACE = "\u00A0";
+	private static final Pattern PRODUCTION_SERVER = Pattern.compile("(?:^|[._-])(?<!pre[._-])(?:prod|prd|production|live)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern ACCEPTANCE_SERVER = Pattern.compile("(?:^|[._-])(?:uat|aut|acc|acceptance|stage|staging|pre[._-]?prod(?:uction)?)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern INTEGRATION_SERVER = Pattern.compile("(?:^|[._-])(?:int|integration|sit)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern CUSTOMER_TEST_SERVER = Pattern.compile("(?:^|[._-])cit[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern TEST_SERVER = Pattern.compile("(?:^|[._-])(?:test|testing|qa)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern DEMO_SERVER = Pattern.compile("(?:^|[._-])demo[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern LOCAL_SERVER = Pattern.compile("(?:^|[._-])(?:local|localhost)[0-9]*(?:[._-]|$)|^127(?:\\.[0-9]{1,3}){3}$|^\\[?(?:0:0:0:0:0:0:0:1|::1)\\]?$", Pattern.CASE_INSENSITIVE);
 
 	private static Map<String, Object> constantsMap = new Hashtable<>();
 
@@ -2259,11 +2267,10 @@ public class Constants {
 	}
 
 	/**
-	 * Ziska hodnotu konstanty s vykonanim makra (napr. nahrada {INSTALL_NAME} za
-	 * realnu hodnotu)
+	 * Returns a configuration value with supported macros expanded.
 	 *
-	 * @param constName
-	 * @return
+	 * @param constName configuration key
+	 * @return the expanded value, or an empty string for an undefined key
 	 */
 	public static String getStringExecuteMacro(String constName) {
 		String value = getString(constName);
@@ -2272,8 +2279,7 @@ public class Constants {
 	}
 
 	/**
-	 * V hodnote vykona makra (napr. nahrada {INSTALL_NAME} za
-	 * realnu hodnotu). Je mozne pouzit:
+	 * Expands the following macros in a configuration value:
 	 * - {INSTALL_NAME}
 	 * - {DOMAIN_NAME}
 	 * - {DOMAIN_ALIAS}
@@ -2281,12 +2287,24 @@ public class Constants {
 	 * - {HTTP_PORT}
 	 * - {SERVER_NAME}
 	 * - {ROOT_PATH}
+	 * - {HEADER_ORIGIN}
+	 * - {ENVIRONMENT_NAME}
+	 * - {CLUSTER_NAME} (the current node's clusterMyNodeName)
+	 *
+	 * @param value configuration value, possibly containing macros
+	 * @return the expanded value; null and empty values are preserved
 	 */
 	public static String executeMacro(String value) {
 		if (Tools.isEmpty(value)) return value;
 
 		value = Tools.replace(value, "{INSTALL_NAME}", getInstallName());
 		value = Tools.replace(value, "{ROOT_PATH}", Tools.getRealPath("/"));
+		if (value.contains("{ENVIRONMENT_NAME}")) {
+			value = Tools.replace(value, "{ENVIRONMENT_NAME}", getEnvironmentName());
+		}
+		if (value.contains("{CLUSTER_NAME}")) {
+			value = Tools.replace(value, "{CLUSTER_NAME}", getString("clusterMyNodeName"));
+		}
 
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
 		if (rb != null) {
@@ -2303,6 +2321,29 @@ public class Constants {
 			value = Tools.replace(value, "{HEADER_ORIGIN}", rb.getHeaderOrigin());
 		}
 		return value;
+	}
+
+	/**
+	 * Detects the environment from the current request's server name, independently of its domain.
+	 * Matches complete hostname tokens separated by dots, hyphens or underscores, optionally
+	 * followed by a node number. Precedence is PROD, UAT, CIT, INT, TEST, DEMO, LOCAL, DEV;
+	 * pre-production names belong to acceptance. Unknown hosts and missing requests use DEV.
+	 *
+	 * @return PROD, UAT, CIT, INT, TEST, DEMO, LOCAL or DEV
+	 */
+	public static String getEnvironmentName() {
+		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+		String serverName = rb == null ? null : rb.getServerName();
+		if (serverName != null) {
+			if (PRODUCTION_SERVER.matcher(serverName).find()) return "PROD";
+			if (ACCEPTANCE_SERVER.matcher(serverName).find()) return "UAT";
+			if (CUSTOMER_TEST_SERVER.matcher(serverName).find()) return "CIT";
+			if (INTEGRATION_SERVER.matcher(serverName).find()) return "INT";
+			if (TEST_SERVER.matcher(serverName).find()) return "TEST";
+			if (DEMO_SERVER.matcher(serverName).find()) return "DEMO";
+			if (LOCAL_SERVER.matcher(serverName).find()) return "LOCAL";
+		}
+		return "DEV";
 	}
 
 	public static String getString(String constName, String defaultValue) {

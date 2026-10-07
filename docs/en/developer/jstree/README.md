@@ -133,6 +133,8 @@ script.
 
 The address of the called REST service is configured using the HTML attributes ```data-rest-url``` and ```data-rest-param-name``` (the name of the parameter sent to the REST service).
 
+If the tree uses `JstreeSettings`, the `data-default-tree-width` attribute on the `#SomStromcek` element specifies the default width for the user without a saved custom width. Values ​​1 to 11 represent the ratio in a 12-column grid, for example `4` means 4:8. Higher values ​​specify a fixed width in pixels, for example `data-default-tree-width="200"` sets 200px. The saved user width takes precedence. Without the attribute, the ratio 4:8 is used.
+
 In the ```window.treeInitialJson``` object, it is possible to set the initialization JSON data for the initial display of the tree structure. The first display will therefore be faster, since it is not necessary to call the REST service. Data transfer on the backend is described in the section [thymeleaf](../frameworks/thymeleaf.md#inserting-custom-objects-into-the-model).
 
 ### Creating a new REST controller
