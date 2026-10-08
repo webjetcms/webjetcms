@@ -4,10 +4,16 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.database.JpaDB;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.jpa.JpaTools;
 import sk.iway.iwcm.system.jpa.JpaTools.Condition;
+import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 
 /**
  *  CookieManagerDB.java
@@ -28,6 +34,45 @@ public class CookieManagerDB extends JpaDB<CookieManagerBean>
 	public CookieManagerDB()
 	{
 		super(CookieManagerBean.class);
+	}
+
+	/**
+	 * Builds a cookie description key scoped to the current domain in MultiWeb and alias-enabled installations.
+	 *
+	 * @param cookieName cookie name
+	 * @param property description property: provider, purpouse or validity
+	 * @return translation key for the current domain
+	 */
+	public static String getTranslationKey(String cookieName, String property)
+	{
+		String key = "components.gdpr.cookies." + cookieName + "." + property;
+		if (Constants.isConstantsAliasSearch() || InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir"))
+		{
+			RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
+			if (requestBean != null && Tools.isNotEmpty(requestBean.getDomain()))
+			{
+				String prefix = MultiDomainFilter.getDomainAlias(requestBean.getDomain());
+				if (Tools.isEmpty(prefix)) prefix = requestBean.getDomain();
+				return prefix + "-" + key;
+			}
+		}
+		return key;
+	}
+
+	/**
+	 * Reads a domain-specific cookie description, falling back to the existing shared translation.
+	 *
+	 * @param prop translations in the requested language
+	 * @param cookieName cookie name
+	 * @param property description property: provider, purpouse or validity
+	 * @return translated description
+	 */
+	public static String getCookieText(Prop prop, String cookieName, String property)
+	{
+		String key = getTranslationKey(cookieName, property);
+		String text = prop.getText(key);
+		if (key.equals(text)) return prop.getText("components.gdpr.cookies." + cookieName + "." + property);
+		return text;
 	}
 
 	public List<CookieManagerBean> findByNameAndProvider(String cookieName, String provider)
