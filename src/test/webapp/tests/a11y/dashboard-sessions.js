@@ -3,6 +3,7 @@ const { mockDashboardBootstrap, dashboardPageRoute } = require('../../helpers/da
 Feature('a11y.dashboard-sessions');
 
 const modal = '.md-dashboard-modal--sessions';
+const devicesRoute = '**/admin/rest/security/login-events?page=*';
 const codeRoute = '**/admin/rest/security/login-events/*/code';
 const emailPageRoute = '**/admin/v9/?securityEvent=*';
 const mutationRoutes = ['**/admin/rest/sessions/logout*', '**/admin/rest/security/login-events/*/report', '**/admin/rest/security/login-events/*/confirm'];
@@ -10,7 +11,7 @@ const mutationRoutes = ['**/admin/rest/sessions/logout*', '**/admin/rest/securit
 Before(({ login }) => { login('admin'); });
 
 After(async ({ I }) => {
-    for (const route of [dashboardPageRoute, emailPageRoute, codeRoute, ...mutationRoutes]) await I.stopMockingRoute(route);
+    for (const route of [dashboardPageRoute, emailPageRoute, codeRoute, devicesRoute, ...mutationRoutes]) await I.stopMockingRoute(route);
     I.wjSetDefaultWindowSize();
 });
 
@@ -109,6 +110,10 @@ Scenario('Representative session actions remain readable with pointer and keyboa
             { sessionId: 'autotest-new', browserName: 'Firefox autotest', deviceId: 900043, deviceConfirmed: false, logonTime: now - 2000 }
         ] }] }
     };
+    await I.mockRoute(devicesRoute, route => route.fulfill({ contentType: 'application/json', body: JSON.stringify({
+        content: [{ id: 900043, browserName: 'Firefox autotest', operatingSystem: 'Linux', createDate: now, lastSeen: now }],
+        number: 0, totalElements: 1, totalPages: 1, first: true, last: true
+    }) }));
     await mockDashboardBootstrap(I, () => data, () => ({ dismissedUntil: {} }));
     await I.mockRoute(codeRoute, route => route.fulfill({ status: 204, body: '' }));
     // Fail closed if a pointer-state check accidentally activates an account action.
@@ -128,17 +133,18 @@ Scenario('Representative session actions remain readable with pointer and keyboa
     // Cover each button treatment and the warning/new-device surfaces once.
     await auditButtons(I, [
         `${modal} .btn-close`,
-        `${modal} .md-dashboard-sessions__summary button`,
-        `${modal} .md-dashboard-sessions__confirm-device`,
-        `${modal} .md-dashboard-sessions__deny-device`
+        `${modal} .md-dashboard-sessions__summary button`
     ], failures);
-    I.saveScreenshot('dashboard-sessions-red-device-action.png');
     I.clickCss(`${modal} .md-dashboard-sessions__summary button`);
     I.waitForVisible('.md-dashboard-modal--logout', 10);
     await auditButtons(I, [`${modal} .modal-footer .btn-red`], failures);
     I.saveScreenshot('dashboard-sessions-red-logout-action.png');
     I.clickCss(`${modal} .modal-footer .btn-outline-secondary`);
     I.waitForInvisible('.md-dashboard-modal--logout', 10);
+    I.clickCss(`${modal} [role="tab"][id$="-devices"]`);
+    I.waitForVisible(`${modal} .md-dashboard-sessions__confirm-device`, 10);
+    await auditButtons(I, [`${modal} .md-dashboard-sessions__confirm-device`, `${modal} .md-dashboard-sessions__deny-device`], failures);
+    I.saveScreenshot('dashboard-devices-red-device-action.png');
     I.clickCss(`${modal} .md-dashboard-sessions__confirm-device`);
     I.waitForElement(`${modal} .md-dashboard-device-confirmation[aria-busy="false"]`, 10);
     await auditButtons(I, [`${modal} .md-dashboard-device-confirmation [type="submit"]`], failures);

@@ -12,8 +12,28 @@ import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.users.UsersDB;
 
-/** Verifies that security-event mutations derive ownership from the authenticated request. */
+/** Verifies that device reads and security-event mutations derive ownership from the authenticated request. */
 class AdminDeviceRestControllerTest {
+    /** Client-supplied ownership and pagination settings cannot replace the authenticated account. */
+    @Test
+    void deviceListUsesAuthenticatedAccount() {
+        var request = new MockHttpServletRequest();
+        request.setParameter("userId", "999");
+        request.setParameter("size", "999");
+        request.setParameter("sort", "userId");
+        var user = mock(Identity.class);
+        var service = mock(AdminDeviceService.class);
+        var controller = new AdminDeviceRestController(service);
+        var page = org.springframework.data.domain.Page.<DeviceEntity>empty();
+        when(service.getDevices(user, 2)).thenReturn(page);
+        try (var users = mockStatic(UsersDB.class)) {
+            users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
+            assertSame(page, controller.devices(request, 2));
+            verify(service).getDevices(user, 2);
+            verifyNoMoreInteractions(service);
+        }
+    }
+
     @Test
     void ignoresSubmittedOwnershipAndReturnsTheSavedEvent() {
         var request = new MockHttpServletRequest();
@@ -74,6 +94,7 @@ class AdminDeviceRestControllerTest {
         try (var users = mockStatic(UsersDB.class)) {
             assertThrows(AccessDeniedException.class, () -> controller.confirm("autotest-event", new AdminDeviceRestController.Confirmation("proof", null), request));
             assertThrows(AccessDeniedException.class, () -> controller.report("autotest-event", request));
+            assertThrows(AccessDeniedException.class, () -> controller.devices(request, 0));
         }
     }
 }

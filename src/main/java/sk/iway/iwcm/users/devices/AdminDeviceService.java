@@ -24,6 +24,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -259,6 +262,14 @@ public class AdminDeviceService {
         long id = deviceId(eventId);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled") || id <= 0) return null;
         return deviceService.findEvent(user.getUserId(), id);
+    }
+
+    /** Returns a bounded page of the authenticated administrator's devices, most recently used first. */
+    public Page<DeviceEntity> getDevices(Identity user, int page) {
+        requireAdministrator(user);
+        var pageable = PageRequest.of(Math.max(0, page), 20, Sort.by(Sort.Direction.DESC, "lastSeen", "id"));
+        if (!Constants.getBoolean("adminNewDeviceDetectionEnabled")) return Page.empty(pageable);
+        return deviceService.findDevices(user.getUserId(), pageable);
     }
 
     /** Confirms an owned event only with the secret delivered to the account's email address. */

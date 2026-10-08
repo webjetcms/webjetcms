@@ -1,7 +1,7 @@
 import { registerWidget } from './registry';
 import { node, text, date, number, icon, containNativeScroll, fetchJson } from './widget-utils';
 import { adminMail, fetchLoggedAdministrators } from './system-widgets';
-import { showDeviceConfirmation } from './security-events';
+import { showDeviceConfirmation, isCurrentDevice } from './security-events';
 import { closeAccountDialog, showDeviceSecurity } from './device-security-dialog';
 
 function sessionButton(label, action, className) {
@@ -163,7 +163,7 @@ function sessionList(container, data, context, signal) {
 }
 
 /**
- * Opens the active-session list, administrator summaries and login history.
+ * Opens personal sessions and devices, administrator summaries and login history.
  * @param {import('./registry').WidgetContext} context - Dashboard data and dialog owner.
  */
 export function showActiveSessions(context) {
@@ -176,13 +176,18 @@ export function showActiveSessions(context) {
     tabs.setAttribute('aria-label', text(context, 'activeSessions'));
     dialog.body.before(tabs);
     const mine = node('section', 'md-dashboard-sessions__mine');
+    const devices = node('section', 'md-dashboard-sessions__devices');
     const admins = node('section', 'md-dashboard-sessions__admins');
     const history = node('section', 'md-dashboard-sessions__history');
-    const tabDefinitions = [['mine', 'mySessions', mine]];
+    const tabDefinitions = [['mine', 'mySessions', mine], ['devices', 'myDevices', devices]];
     if (window.WJ.hasPermission('welcomeShowLoggedAdmins')) {
         tabDefinitions.push(['admins', 'sessionAdmins', admins]);
     }
     tabDefinitions.push(['history', 'sessionHistory', history]);
+    let devicesLoaded = false;
+    let devicesLoading = false;
+    let devicesRequest = new AbortController();
+    dialog.signal.addEventListener('abort', () => devicesRequest.abort(), { once: true });
     let historyLoaded = false;
     let adminsLoaded = false;
     let adminsLoading = false;
@@ -217,6 +222,7 @@ export function showActiveSessions(context) {
             tab.tabIndex = i === index ? 0 : -1;
             tabDefinitions[i][2].hidden = i !== index;
         });
+        if (tabDefinitions[index][0] === 'devices' && !devicesLoaded) loadDevices(0);
         if (tabDefinitions[index][0] === 'admins' && !adminsLoaded) loadAdmins();
         if (tabDefinitions[index][0] === 'history' && !historyLoaded) { historyLoaded = true; loadHistory(0); }
     }
@@ -269,27 +275,12 @@ export function showActiveSessions(context) {
             const details = node('div');
             const name = node('div', 'md-dashboard-sessions__device-name', sessionClient(session));
             const current = session.sessionId === data.currentSessionId;
-            const unconfirmed = session.deviceId > 0 && session.deviceConfirmed === false;
-            row.classList.toggle('is-new', unconfirmed);
             if (current) name.append(node('span', 'md-dashboard-sessions__current', text(context, 'currentSession')));
-            if (unconfirmed) name.append(node('span', 'md-dashboard-sessions__new', text(context, 'newDevice.badge')));
             details.append(name, node('small', '', text(context, 'sessionLoggedAt', date(session.logonTime))));
             identity.append(glyph, details); device.append(identity);
             const action = node('td', 'md-dashboard-sessions__action');
             if (session.pending) action.append(node('span', 'small text-muted', text(context, 'sessionPending')));
-            else if (unconfirmed) {
-                const controls = node('div', 'md-dashboard-sessions__device-actions');
-                const confirm = sessionButton(text(context, 'newDevice.confirm'), () => confirmDevice(session, action),
-                    'btn btn-sm btn-white md-dashboard-sessions__confirm-device');
-                const deny = sessionButton(text(context, 'newDevice.notMe'), () => {
-                    const event = (context.data.notices || []).find(notice => notice.securityEvent?.id === session.deviceId)?.securityEvent
-                        || { id: session.deviceId, browserName: session.browserName, operatingSystem: session.operatingSystem, ipAddress: session.remoteAddr };
-                    closeAccountDialog(dialog, () => showDeviceSecurity(context, event, true));
-                }, 'btn btn-sm btn-red md-dashboard-sessions__deny-device');
-                confirm.disabled = deny.disabled = busy;
-                controls.append(confirm, deny);
-                action.append(controls);
-            } else if (current) action.append(node('span', 'text-muted', '—'));
+            else if (current) action.append(node('span', 'text-muted', '—'));
             else {
                 const logout = sessionButton(text(context, 'sessionLogout'), () => remove([session]), 'btn btn-sm btn-link');
                 logout.prepend(icon('ti-logout')); logout.disabled = busy;
@@ -305,19 +296,96 @@ export function showActiveSessions(context) {
         mine.append(table);
     }
 
-    /** Uses the same code entry as dashboard notices, including for this session. */
-    function confirmDevice(session, host) {
-        if (busy) return;
-        showDeviceConfirmation({ data: context.data, deviceId: session.deviceId, host, signal: dialog.signal,
-            translate: key => text(context, key), onConfirmed: deviceConfirmed });
+    /** Fetches the account's retained devices only when their tab is opened or explicitly refreshed. */
+    async function loadDevices(page) {
+        if (devicesLoading || dialog.signal.aborted) return;
+        devicesRequest.abort();
+        const request = devicesRequest = new AbortController();
+        devicesLoading = true;
+        devices.setAttribute('aria-busy', 'true');
+        devices.replaceChildren(node('p', '', text(context, 'loading')));
+        try {
+            const data = await fetchJson(`/admin/rest/security/login-events?page=${page}`, request.signal);
+            if (request.signal.aborted) return;
+            devicesLoaded = true;
+            tabButtons[1].textContent = `${text(context, 'myDevices')} (${number(data.totalElements)})`;
+            renderDevices(data);
+        } catch (error) {
+            if (dialog.signal.aborted) return;
+            const message = node('p', 'text-danger', text(context, 'unavailable'));
+            message.setAttribute('role', 'alert');
+            devices.replaceChildren(message, sessionButton(text(context, 'retry'), () => loadDevices(page), 'btn btn-sm btn-white'));
+        } finally {
+            devicesLoading = false;
+            devices.setAttribute('aria-busy', 'false');
+        }
     }
 
-    function deviceConfirmed() {
-        status.textContent = text(context, 'newDevice.confirmed');
-        status.classList.replace('text-danger', 'text-success');
-        refreshSessions(context);
-        renderMine();
-        tabButtons[0].focus({ preventScroll: true });
+    function renderDevices(data) {
+        devices.replaceChildren();
+        const summary = node('div', 'md-dashboard-sessions__summary');
+        const explanation = node('div');
+        explanation.append(node('strong', '', text(context, 'devicesHeading')), node('p', '', text(context, 'devicesDescription')));
+        const refresh = sessionButton(text(context, 'refresh'), () => loadDevices(data.number), 'btn btn-sm btn-white');
+        refresh.prepend(icon('ti-refresh'));
+        summary.append(explanation, refresh);
+        devices.append(summary);
+        if (!data.content.length) devices.append(node('p', 'text-muted', text(context, 'devicesEmpty')));
+        const table = node('table', 'md-dashboard-sessions__table md-dashboard-devices__table');
+        const head = node('thead'), heading = node('tr');
+        ['sessionBrowser', 'deviceIp', 'deviceLastSeen', 'deviceState', 'sessionActions'].forEach((key, index) => {
+            const cell = node('th'); cell.scope = 'col';
+            cell.append(node('span', index === 4 ? 'visually-hidden' : '', text(context, key))); heading.append(cell);
+        });
+        head.append(heading); table.append(head);
+        const body = node('tbody');
+        data.content.forEach(device => {
+            const row = node('tr'); row.dataset.deviceId = String(device.id);
+            const state = device.reportedAt ? 'Blocked' : device.confirmedAt ? 'Confirmed' : 'Unconfirmed';
+            row.classList.toggle('is-new', state === 'Unconfirmed');
+            const identity = node('td');
+            const wrapper = node('div', 'md-dashboard-sessions__device');
+            const glyph = node('span', 'md-dashboard-sessions__device-icon'); glyph.append(icon(sessionBrowserIcon(device.browserName)));
+            const details = node('div');
+            const name = node('div', 'md-dashboard-sessions__device-name',
+                sessionClient({ ...device, browserName: [device.browserName, device.browserVersion].filter(Boolean).join(' ') }));
+            if (isCurrentDevice(context.data, device.id)) name.append(node('span', 'md-dashboard-sessions__current', text(context, 'currentDevice')));
+            details.append(name, node('small', '', text(context, 'deviceRecordedAt', date(device.createDate))));
+            wrapper.append(glyph, details); identity.append(wrapper);
+            const ip = node('td', 'md-dashboard-sessions__ip', device.ipAddress || '—'); ip.dataset.label = text(context, 'deviceIp');
+            const lastSeen = node('td', 'md-dashboard-devices__last-seen', date(device.lastSeen)); lastSeen.dataset.label = text(context, 'deviceLastSeen');
+            const status = node('td', 'md-dashboard-devices__state');
+            status.append(node('span', `md-dashboard-devices__badge is-${state.toLowerCase()}`, text(context, `device${state}`)));
+            if (device.reportedAt || device.confirmedAt) status.append(node('small', 'd-block mt-1', date(device.reportedAt || device.confirmedAt)));
+            const action = node('td', 'md-dashboard-sessions__action');
+            const controls = node('div', 'md-dashboard-sessions__device-actions');
+            if (state === 'Unconfirmed') controls.append(sessionButton(text(context, 'newDevice.confirm'), () => {
+                showDeviceConfirmation({ data: context.data, deviceId: device.id, host: action, signal: devicesRequest.signal,
+                    translate: key => text(context, key), onConfirmed: updated => {
+                        Object.assign(device, updated);
+                        refreshSessions(context);
+                        renderDevices(data);
+                        const feedback = node('p', 'mt-3 mb-0', text(context, 'newDevice.confirmed'));
+                        feedback.setAttribute('role', 'status'); devices.append(feedback);
+                        devices.querySelector(`[data-device-id="${device.id}"] button`)?.focus({ preventScroll: true });
+                    } });
+            }, 'btn btn-sm btn-white md-dashboard-sessions__confirm-device'));
+            if (state !== 'Blocked') controls.append(sessionButton(text(context, 'newDevice.notMe'), () =>
+                closeAccountDialog(dialog, () => showDeviceSecurity(context, device, true)), 'btn btn-sm btn-red md-dashboard-sessions__deny-device'));
+            if (controls.childElementCount) action.append(controls);
+            else action.append(node('span', 'small text-muted', text(context, 'deviceBlockedAdvice')));
+            row.append(identity, ip, lastSeen, status, action); body.append(row);
+        });
+        table.append(body);
+        if (data.content.length) devices.append(table);
+        if (data.totalPages > 1) {
+            const pagination = node('div', 'md-dashboard-sessions__pagination');
+            const previous = sessionButton(text(context, 'sessionPrevious'), () => loadDevices(data.number - 1), 'btn btn-sm btn-white');
+            const next = sessionButton(text(context, 'sessionNext'), () => loadDevices(data.number + 1), 'btn btn-sm btn-white');
+            previous.disabled = data.first; next.disabled = data.last;
+            pagination.append(previous, node('span', 'small', `${data.number + 1} / ${data.totalPages}`), next);
+            devices.append(pagination);
+        }
     }
 
     /** Temporarily replaces the session detail so confirmation shares its modal focus trap and lifecycle. */

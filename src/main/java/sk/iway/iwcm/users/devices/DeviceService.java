@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import sk.iway.iwcm.Adminlog;
 
@@ -80,6 +82,11 @@ public class DeviceService {
     public List<DeviceEntity> findByIds(int userId, Set<Long> ids) {
         if (ids.isEmpty()) return List.of();
         return execute(() -> devices.findByUserIdAndIdIn(userId, ids));
+    }
+
+    /** Lists owned devices, including confirmed, blocked and notice-expired records. */
+    public Page<DeviceEntity> findDevices(int userId, Pageable pageable) {
+        return execute(() -> devices.findAllByUserId(userId, pageable));
     }
 
     /** Stores an expiring email proof for an unconfirmed device. */

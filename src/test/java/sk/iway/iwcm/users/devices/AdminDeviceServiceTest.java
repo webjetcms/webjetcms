@@ -98,6 +98,24 @@ class AdminDeviceServiceTest {
         constants.close();
     }
 
+    /** Device lists derive ownership, page size and ordering on the server and require an administrator. */
+    @Test
+    void deviceListIsOwnedBoundedAndRequiresAdministrator() {
+        var pageable = org.springframework.data.domain.PageRequest.of(0, 20,
+            org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "lastSeen", "id"));
+        var page = new org.springframework.data.domain.PageImpl<>(List.of(event()), pageable, 1);
+        when(repository.findDevices(7, pageable)).thenReturn(page);
+        assertSame(page, service.getDevices(user, -1));
+        verify(repository).findDevices(7, pageable);
+        assertThrows(AccessDeniedException.class, () -> service.getDevices(null, 0));
+        when(user.isAdmin()).thenReturn(false);
+        assertThrows(AccessDeniedException.class, () -> service.getDevices(user, 0));
+        when(user.isAdmin()).thenReturn(true);
+        constants.when(() -> Constants.getBoolean("adminNewDeviceDetectionEnabled")).thenReturn(false);
+        assertTrue(service.getDevices(user, 0).isEmpty());
+        verifyNoMoreInteractions(repository);
+    }
+
     /** A newly issued browser identifier is opaque, protected and persisted only as a hash. */
     @Test
     void issuesProtectedCookieAndQueuesOnlyNewEvents() {

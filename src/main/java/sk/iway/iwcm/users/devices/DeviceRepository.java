@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
@@ -17,6 +19,8 @@ public interface DeviceRepository extends JpaRepository<DeviceEntity, Long>, Jpa
     Optional<DeviceEntity> findByUserIdAndId(int userId, long id);
 
     List<DeviceEntity> findByUserIdAndIdIn(int userId, Set<Long> ids);
+
+    Page<DeviceEntity> findAllByUserId(int userId, Pageable pageable);
 
     List<DeviceEntity> findByUserIdAndConfirmedAtIsNullAndReportedAtIsNullAndCreateDateAfterOrderByCreateDateDescIdAsc(int userId, Instant cutoff);
 

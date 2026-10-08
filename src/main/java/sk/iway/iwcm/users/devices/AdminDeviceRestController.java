@@ -1,8 +1,11 @@
 package sk.iway.iwcm.users.devices;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,7 +18,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.users.UsersDB;
 
-/** Account-owned security-event actions; reads arrive with the authenticated overview page. */
+/** Account-owned device listing and security actions; notice details also arrive with the overview page. */
 @RestController
 @RequestMapping("/admin/rest/security/login-events")
 @PreAuthorize("@WebjetSecurityService.isAdmin()")
@@ -27,6 +30,12 @@ public class AdminDeviceRestController {
     }
 
     public record Confirmation(String token, String code) { }
+
+    /** Lists only the signed-in account's devices, ignoring client-supplied ownership, size and sorting. */
+    @GetMapping
+    public Page<DeviceEntity> devices(HttpServletRequest request, @RequestParam(value = "page", defaultValue = "0") int page) {
+        return service.getDevices(UsersDB.getCurrentUser(request), page);
+    }
 
     /** Sends a code to the authenticated account's email, never a client-supplied address. */
     @PostMapping("/{id}/code")

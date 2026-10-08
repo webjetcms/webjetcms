@@ -40,8 +40,8 @@ public class DeviceEntity {
     @Column(name = "create_date", nullable = false)
     private Instant createDate;
 
+    /** Latest successful login, independently of the retained notice's browser and IP snapshot. */
     @Column(name = "last_seen", nullable = false)
-    @JsonIgnore
     private Instant lastSeen;
 
     @Column(name = "browser_name", length = 128)

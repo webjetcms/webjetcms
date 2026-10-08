@@ -115,6 +115,7 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
 
             long later = NOW + Duration.ofDays(30).toMillis();
             assertNull(record(service, USER_ID, database.hash, later));
+            first.setLastSeen(Instant.ofEpochMilli(later));
             assertEquals(JsonTools.objectToJSON(first), JsonTools.objectToJSON(service.findEvent(USER_ID, id)),
                 "A normal login must preserve the notice details");
             DeviceEntity device = database.devices.findById(id).orElseThrow();
@@ -172,6 +173,28 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
             assertEquals(1, service.findEvent(USER_ID, id).getCodeAttempts());
             assertNotNull(service.confirm(USER_ID, id, database.hash, NOW + 3, true));
             assertNull(service.confirm(USER_ID, id, database.hash, NOW + 4, true));
+        }
+    }
+
+    /** Retained blocked and confirmed devices remain visible and paged within their owning account. */
+    @Test
+    void deviceListingIncludesAllStatesWithoutOtherAccounts() {
+        try (TestDatabase database = new TestDatabase()) {
+            DeviceService service = database.service;
+            var other = record(service, OTHER_USER_ID, database.hash, NOW + 1000);
+            var own = record(service, USER_ID, database.hash, NOW);
+            var pageable = org.springframework.data.domain.PageRequest.of(0, 1,
+                org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "lastSeen", "id"));
+            for (boolean blocked : new boolean[] { false, true }) {
+                if (blocked) service.report(USER_ID, own.getId(), NOW + 200);
+                else service.confirmAfterSecondFactor(USER_ID, own.getId(), NOW + 100);
+                var page = service.findDevices(USER_ID, pageable);
+                assertEquals(1, page.getTotalElements());
+                assertEquals(own.getId(), page.getContent().get(0).getId());
+                assertNotEquals(other.getId(), page.getContent().get(0).getId());
+                assertEquals(blocked, page.getContent().get(0).getReportedAt() != null);
+                assertTrue(service.findDevices(USER_ID, pageable.next()).isEmpty());
+            }
         }
     }
 

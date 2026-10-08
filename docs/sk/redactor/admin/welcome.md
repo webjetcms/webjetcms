@@ -153,7 +153,7 @@ Prihlásenie môžete potvrdiť aj odkazom **Bol som to ja** v pôvodnom emaile.
 
 #### Ak prihlásenie nepoznáte
 
-Pri upozornení alebo pri relácii v okne **Aktívne prihlásenia** kliknite na **Nebol som to ja**. Zariadenie sa zablokuje a jeho známe relácie sa odhlásia. Malé okno **Zabezpečte svoj účet** zobrazí výsledok a odporúčané ďalšie kroky. Ak zablokujete prehliadač, v ktorom práve pracujete, odhlási aj vás.
+Pri upozornení alebo pri zariadení v karte **Moje zariadenia** v okne **Aktívne prihlásenia** kliknite na **Nebol som to ja**. Zariadenie sa zablokuje a jeho známe relácie sa odhlásia. Malé okno **Zabezpečte svoj účet** zobrazí výsledok a odporúčané ďalšie kroky. Ak zablokujete prehliadač, v ktorom práve pracujete, odhlási aj vás.
 
 Odkaz **Nebol som to ja – zabezpečiť účet** v emaile po prihlásení otvorí rovnaké malé okno, ale zariadenie ešte nezablokuje. Ak prihlásenie nepoznáte, potvrďte akciu tlačidlom **Zablokovať zariadenie**.
 
@@ -207,9 +207,9 @@ V hornej časti prehľadu môžete skontrolovať svoje aktívne prihlásenia a o
 
 Panel **Moje aktívne prihlásenia** zobrazuje všetky vaše aktívne relácie, teda prihlásenia pod vaším kontom, s prehliadačom, časom a IP adresou. Pri dlhšom zozname môžete jeho obsah posúvať. Vaša aktuálna relácia je prvá a má zelenú bodku s popisom **Toto prihlásenie**. Ostatné relácie môžete odhlásiť priamo v zozname, napríklad keď ste sa zabudli odhlásiť na inom počítači. Tento panel je vždy v hornej časti a nemožno ho odstrániť.
 
-Kliknutím na nadpis panela otvoríte okno **Aktívne prihlásenia**. Okrem vlastných relácií ponúka históriu prihlásení za posledných 30 dní a podľa oprávnení aj prihlásených administrátorov. Tlačidlo **Zmeniť heslo** v spodnej časti okna otvorí váš profil na zmenu hesla. Informačná ikona vedľa tlačidla zobrazí pokyny pre zmenu hesla pri firemnom účte.
+Kliknutím na nadpis panela otvoríte okno **Aktívne prihlásenia**. Okrem vlastných relácií ponúka správu vašich zariadení, históriu prihlásení za posledných 30 dní a podľa oprávnení aj prihlásených administrátorov. Tlačidlo **Zmeniť heslo** v spodnej časti okna otvorí váš profil na zmenu hesla. Informačná ikona vedľa tlačidla zobrazí pokyny pre zmenu hesla pri firemnom účte.
 
-V karte **Moje prihlásenia** majú nepotvrdené zariadenia štítok **Nové**. Tlačidlo **Bol som to ja** odošle na email jednorazový kód a zobrazí pole na jeho zadanie priamo v riadku. Až po overení kódu potvrdí zariadenie, odstráni jeho upozornenie a obnoví zoznam s bežnou akciou **Odhlásiť** pri ostatných reláciách. Rovnaké overenie vyžaduje aj riadok so štítkom **Toto prihlásenie**. Potvrdenie platí aj pre ďalšie relácie rovnakého zariadenia. Červené tlačidlo **Nebol som to ja** v riadku zablokuje zariadenie a odhlási všetky jeho známe relácie; ak ide o aktuálny prehliadač, odhlási aj vás. Po zablokovaní iného prehliadača sa zobrazí okno **Zabezpečte svoj účet**, rovnako ako pri akcii **Nebol som to ja** v systémovom upozornení.
+Karta **Moje prihlásenia** zobrazuje iba aktívne relácie. Jeden prehliadač môže mať viac relácií. Aktuálna relácia má štítok **Toto prihlásenie**; pri ostatných môžete použiť akciu **Odhlásiť**.
 
 ![](sessions.png)
 
@@ -218,6 +218,18 @@ Pri inej vlastnej relácii môžete zvoliť **Odhlásiť túto reláciu**. V akt
 Údaje sa aktualizujú po prihlásení používateľa. Ak potrebujete častejšiu aktualizáciu, správca môže pridať [úlohu na pozadí](../../admin/settings/cronjob/README.md) s názvom `sk.iway.iwcm.stat.SessionClusterService` a nastaviť interval, napríklad každých 10 minút.
 
 Úloha na pozadí z databázy zmaže záznamy staršie ako 60 minút. Ak nie je nastavená, pri prihlásení používateľa sa zmažú záznamy staršie ako 24 hodín.
+
+### Moje zariadenia
+
+Karta **Moje zariadenia** zobrazuje uložené prehliadače vášho účtu vrátane tých, ktoré už nemajú aktívnu reláciu. Záznamy sú zoradené od naposledy použitých a stránkované po 20. Tlačidlo **Obnoviť údaje** načíta aktuálne údaje.
+
+Pri každom zariadení vidíte prehliadač a jeho verziu, operačný systém, čas zaznamenania, IP adresu, posledné použitie a stav. **Naposledy použité** znamená posledné úspešné prihlásenie, nie poslednú aktivitu otvorenej relácie. Prehliadač, systém a **IP pri zaznamenaní** pochádzajú z posledného zaznamenania nového alebo opätovne rozpoznaného zariadenia. Aktuálny prehliadač má štítok **Toto zariadenie**.
+
+- **Nepotvrdené** zariadenie môžete potvrdiť tlačidlom **Bol som to ja**. Odošle jednorazový kód na email a otvorí pole priamo v riadku. Až po správnom kóde sa zariadenie potvrdí a jeho systémové upozornenie odstráni. Ak prihlásenie nepoznáte, použite **Nebol som to ja**.
+- **Potvrdené** zariadenie zobrazuje dátum potvrdenia. Tlačidlom **Nebol som to ja** ho môžete dodatočne zablokovať.
+- **Zablokované** zariadenie zobrazuje dátum zablokovania. Odblokovať ho možno až pri ďalšom prihlásení overením kódu z emailu.
+
+Zablokovanie odhlási všetky známe relácie daného zariadenia. Ak ide o aktuálny prehliadač, odhlási aj vás. Po zablokovaní iného prehliadača sa zobrazí malé okno **Zabezpečte svoj účet** s ďalšími krokmi, rovnako ako pri systémovom upozornení.
 
 ### Prihlásení administrátori
 

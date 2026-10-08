@@ -38,7 +38,7 @@ export function isCurrentDevice(data, deviceId) {
 }
 
 /**
- * Mounts the same email-code flow inside a notice or a session row.
+ * Mounts the same email-code flow inside a notice or a device row.
  * @param {Object} options - Shared data, device ID, host, abort signal, translation and success callback.
  */
 export function showDeviceConfirmation({ data, deviceId, host, signal, translate, onConfirmed }) {

@@ -18,10 +18,10 @@ import tools.jackson.databind.json.JsonMapper;
 
 /** Verifies the shared dashboard and REST JSON representation of device notices. */
 class DeviceEntityTest {
-    /** Both serializers omit recognition metadata and expose notice dates as epoch milliseconds. */
+    /** Both serializers omit recognition secrets and expose device dates as epoch milliseconds. */
     @ParameterizedTest
     @ValueSource(booleans = { false, true })
-    void exposesOnlyNoticeFieldsWithMillisecondDates(boolean rest) throws Exception {
+    void exposesOnlySafeDeviceFieldsWithMillisecondDates(boolean rest) throws Exception {
         long now = 1791201600123L;
         DeviceEntity device = new DeviceEntity();
         device.setId(42L);
@@ -43,11 +43,12 @@ class DeviceEntityTest {
         var data = new ObjectMapper().readTree(json);
         Set<String> fields = new HashSet<>();
         data.fieldNames().forEachRemaining(fields::add);
-        assertEquals(Set.of("id", "createDate", "expiresAt", "browserName", "browserVersion",
+        assertEquals(Set.of("id", "createDate", "lastSeen", "expiresAt", "browserName", "browserVersion",
             "operatingSystem", "ipAddress", "confirmedAt", "reportedAt"), fields);
         assertTrue(data.path("id").isIntegralNumber());
         assertEquals(42L, data.path("id").longValue());
         assertEquals(now, data.path("createDate").longValue());
+        assertEquals(now + 100, data.path("lastSeen").longValue());
         assertEquals(now + Duration.ofDays(7).toMillis(), data.path("expiresAt").longValue());
         assertEquals(now + 200, data.path("confirmedAt").longValue());
         assertEquals(now + 300, data.path("reportedAt").longValue());

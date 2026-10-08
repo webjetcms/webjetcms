@@ -8,6 +8,7 @@ const administratorsRoute = '**/admin/rest/sessions/administrators';
 const historyRoute = '**/admin/rest/sessions/login-history*';
 const logoutRoute = '**/admin/rest/sessions/logout';
 const adminLogoutRoute = '**/admin/rest/sessions/logout-administrator';
+const devicesRoute = '**/admin/rest/security/login-events?page=*';
 const reportRoute = '**/admin/rest/security/login-events/*/report';
 const confirmRoute = '**/admin/rest/security/login-events/*/confirm';
 const codeRoute = '**/admin/rest/security/login-events/*/code';
@@ -28,6 +29,7 @@ Before(({ I, login }) => {
 
 After(async ({ I }) => {
     await I.stopMockingRoute(reportRoute);
+    await I.stopMockingRoute(devicesRoute);
     await I.stopMockingRoute(confirmRoute);
     await I.stopMockingRoute(codeRoute);
     await I.stopMockingRoute(dashboardPageRoute);
@@ -65,7 +67,7 @@ Scenario('Real sessions and personal login history are available from the welcom
     I.assertTrue(protectedResult.ok && protectedResult.success === false && protectedResult.pending === false,
         'The session controller must reject the requesting session without invalidation.');
     if (administrators) {
-        I.clickCss(`${modal} [role="tab"]:nth-child(2)`);
+        I.clickCss(`${modal} [role="tab"][id$="-admins"]`);
         I.waitForElement(`${modal} .md-dashboard-sessions__admins[aria-busy="false"]`, 10);
         I.assertEqual(await I.grabNumberOfVisibleElements(`${modal} .md-dashboard-sessions__admins-table tbody tr`), administrators.length,
             'The dialog must reuse the logged-administrator widget source.');
@@ -202,102 +204,136 @@ Scenario('Session widgets and notices open the dialog and update after individua
     I.assertEqual(administratorReads, 0, 'A personal-only dashboard and inactive administrator tab must not load administrator data.');
 });
 
-/** Device decisions use mocked owned records; blocking opens the compact account-security dialog. */
-Scenario('New session devices can be confirmed or denied from the session dialog', async ({ I }) => {
+/** Owned records and all writes are mocked before any security action is activated. */
+Scenario('Device tab separates retained browsers from sessions and supports confirmation and blocking', async ({ I }) => {
     const now = Date.now();
-    const device = { id: 43, createDate: now, expiresAt: now + 7 * 86400000, browserName: 'Firefox autotest', operatingSystem: 'Windows', ipAddress: '192.0.2.2' };
+    const records = [
+        { id: 42, browserName: 'Chrome', browserVersion: '131', operatingSystem: 'macOS', ipAddress: '192.0.2.1', createDate: now - 86400000, lastSeen: now },
+        { id: 43, browserName: 'Firefox autotest', browserVersion: '131', operatingSystem: 'Windows 11', ipAddress: '192.0.2.2', createDate: now - 172800000, lastSeen: now - 3600000 },
+        { id: 45, browserName: 'Safari autotest', browserVersion: '18', operatingSystem: 'iOS', ipAddress: '192.0.2.3', createDate: now - 172800000, lastSeen: now - 86400000, confirmedAt: now - 86400000 },
+        { id: 46, browserName: 'Edge autotest', operatingSystem: 'Windows', ipAddress: '192.0.2.4', createDate: now - 259200000, lastSeen: now - 172800000, reportedAt: now - 86400000 }
+    ];
     const data = {
-        notices: [{ id: 'newDevice:43', kind: 'newDevice', severity: 'warning', icon: 'ti-shield-lock', title: 'New device autotest', securityEvent: device }],
-        currentSessions: { currentSessionId: 'devices-autotest-current', userSessions: [{ userSessions: [
-            { sessionId: 'devices-autotest-current', browserName: 'Chrome', operatingSystem: 'macOS', remoteAddr: '127.0.0.1', logonTime: now, deviceId: 42, deviceConfirmed: true },
-            { sessionId: 'devices-autotest-other', browserName: 'Firefox autotest', operatingSystem: 'Windows', remoteAddr: '192.0.2.2', logonTime: now - 1000, deviceId: 43, deviceConfirmed: false },
-            { sessionId: 'devices-autotest-third', browserName: 'Safari', operatingSystem: 'iOS', remoteAddr: '192.0.2.3', logonTime: now - 2000, deviceId: 44, deviceConfirmed: true },
-            { sessionId: 'devices-autotest-remote', browserName: 'Edge autotest', operatingSystem: 'Windows', remoteAddr: '192.0.2.4', logonTime: now - 3000, deviceId: 45, deviceConfirmed: false }
+        notices: [{ id: 'newDevice:43', kind: 'newDevice', severity: 'warning', title: 'New device autotest', securityEvent: records[1] }],
+        currentSessions: { currentSessionId: 'devices-current', userSessions: [{ userSessions: [
+            { sessionId: 'devices-current', browserName: 'Chrome', operatingSystem: 'macOS', logonTime: now, deviceId: 42, deviceConfirmed: false },
+            { sessionId: 'devices-same-browser', browserName: 'Chrome', operatingSystem: 'macOS', logonTime: now - 1000, deviceId: 42, deviceConfirmed: false },
+            { sessionId: 'devices-other', browserName: 'Firefox', operatingSystem: 'Windows', logonTime: now - 2000, deviceId: 43, deviceConfirmed: false }
         ] }] }
     };
-    let failConfirm = true;
-    const confirmed = [], removed = [];
-    await I.mockRoute(codeRoute, route => route.fulfill({ status: 204, body: '' }));
+    let reads = 0, failLoad = true, failConfirm = true;
+    const confirmed = [], blocked = [];
     await mockDashboardBootstrap(I, () => data, () => ({ dismissedUntil: {} }));
+    await I.mockRoute(devicesRoute, route => {
+        reads++;
+        return route.fulfill({ status: failLoad ? 503 : 200, contentType: 'application/json', body: JSON.stringify(failLoad ? {} : {
+            content: records, totalElements: records.length, number: 0, totalPages: records.length ? 1 : 0, first: true, last: true
+        }) });
+    });
+    await I.mockRoute(codeRoute, route => route.fulfill({ status: 204, body: '' }));
     await I.mockRoute(confirmRoute, route => {
-        confirmed.push(route.request().url().match(/login-events\/(\d+)\/confirm/)[1]);
-        if (!failConfirm) {
-            device.confirmedAt = Date.now();
-            data.currentSessions.userSessions[0].userSessions[1].deviceConfirmed = true;
-            data.notices = [];
-        }
-        return route.fulfill({ status: failConfirm ? 503 : 200, contentType: 'application/json', body: JSON.stringify(failConfirm ? {} : device) });
+        confirmed.push(route.request().postDataJSON());
+        if (!failConfirm) { records[1].confirmedAt = Date.now(); data.notices = []; }
+        return route.fulfill({ status: failConfirm ? 503 : 200, contentType: 'application/json', body: JSON.stringify(failConfirm ? {} : records[1]) });
     });
-    await I.mockRoute(logoutRoute, route => {
-        const sessionId = new URLSearchParams(route.request().postData()).get('sessionId');
-        removed.push(sessionId);
-        data.currentSessions.userSessions[0].userSessions = data.currentSessions.userSessions[0].userSessions.filter(session => session.sessionId !== sessionId);
-        return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ success: true, pending: false }) });
-    });
-    I.refreshPage();
-    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
-    waitForSessionDialog(I);
-    I.assertEqual(await I.grabNumberOfVisibleElements(`${modal} .md-dashboard-sessions__new`), 2);
-    I.see('Nové', `${modal} tbody tr:nth-child(2)`);
-    I.dontSeeElement(`${modal} tbody tr:nth-child(3) .md-dashboard-sessions__confirm-device`);
-    I.clickCss(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__confirm-device`);
-    I.waitForText('Zadajte 6-miestny kód', 10, modal);
-    I.resizeWindow(390, 1100);
-    I.assertTrue(await I.executeScript(() => {
-        const body = document.querySelector('.md-dashboard-modal--sessions .modal-body');
-        return body.scrollWidth <= body.clientWidth + 1;
-    }), 'Email code entry must fit a mobile viewport.');
-    I.wjSetDefaultWindowSize();
-    I.fillField(`${modal} input[name="deviceConfirmationCode"]`, '012345');
-    I.clickCss(`${modal} .md-dashboard-device-confirmation [type="submit"]`);
-    I.waitForText('Kód sa nepodarilo overiť', 10, modal);
-    I.seeElement(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__new`);
-    I.click('Zavrieť', `${modal} .modal-footer`);
-    I.waitForDetached(modal, 10);
-    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
-    waitForSessionDialog(I);
-    I.assertEqual(await I.grabNumberOfVisibleElements(`${modal} .md-dashboard-sessions__new`), 2);
-    failConfirm = false;
-    I.clickCss(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__confirm-device`);
-    I.waitForText('Zadajte 6-miestny kód', 10, modal);
-    I.fillField(`${modal} input[name="deviceConfirmationCode"]`, '012345');
-    I.clickCss(`${modal} .md-dashboard-device-confirmation [type="submit"]`);
-    I.waitForInvisible(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__new`, 10);
-    I.see('Odhlásiť', `${modal} tbody tr:nth-child(2)`);
     await I.mockRoute(reportRoute, route => {
         const id = Number(route.request().url().match(/login-events\/(\d+)\/report/)[1]);
-        const matches = data.currentSessions.userSessions[0].userSessions.filter(session => session.deviceId === id);
-        removed.push(...matches.map(session => session.sessionId));
-        data.currentSessions.userSessions[0].userSessions = data.currentSessions.userSessions[0].userSessions.filter(session => session.deviceId !== id);
-        return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ id, createDate: Date.now(), reportedAt: Date.now() }) });
+        blocked.push(id);
+        const device = records.find(device => device.id === id);
+        device.reportedAt = Date.now(); device.confirmedAt = null;
+        return route.fulfill({ contentType: 'application/json', body: JSON.stringify(device) });
     });
-    I.clickCss(`${modal} tbody tr:nth-child(4) .md-dashboard-sessions__deny-device`);
+    await I.refreshPage();
+    await I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    await I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    waitForSessionDialog(I);
+    const devices = `${modal} .md-dashboard-sessions__devices`;
+    await I.see('Moje prihlásenia (3)', modal);
+    await I.dontSeeElement(`${modal} .md-dashboard-sessions__mine .md-dashboard-sessions__confirm-device`);
+    await I.dontSeeElement(`${modal} .md-dashboard-sessions__mine .md-dashboard-sessions__deny-device`);
+    await I.assertEqual(reads, 0, 'Session views must not load device records.');
+    await I.click('Moje zariadenia', modal);
+    await I.waitForVisible(`${devices} [role="alert"]`, 10);
+    failLoad = false;
+    await I.clickCss(`${devices} button`);
+    await I.waitForText('Moje zariadenia (4)', 10, modal);
+    await I.assertEqual(await I.grabNumberOfVisibleElements(`${devices} tbody tr`), 4);
+    await I.see('Toto zariadenie', `${devices} [data-device-id="42"]`);
+    await I.see('Potvrdené', `${devices} [data-device-id="45"]`);
+    await I.dontSeeElement(`${devices} [data-device-id="45"] .md-dashboard-sessions__confirm-device`);
+    await I.seeElement(`${devices} [data-device-id="45"] .md-dashboard-sessions__deny-device`);
+    await I.see('Zablokované', `${devices} [data-device-id="46"]`);
+    await I.dontSeeElement(`${devices} [data-device-id="46"] button`);
+    await I.saveScreenshot('dashboard-my-devices-desktop.png');
+    await I.resizeWindow(390, 850);
+    await I.assertTrue(await I.executeScript(() => {
+        const content = document.querySelector('.md-dashboard-modal--sessions .modal-content');
+        const bounds = content.getBoundingClientRect();
+        const body = content.querySelector('.modal-body');
+        return bounds.left >= 0 && bounds.right <= innerWidth && body.scrollWidth <= body.clientWidth + 1;
+    }), 'The device table must fit a mobile viewport.');
+    await I.saveScreenshot('dashboard-my-devices-mobile.png');
+    for (const width of [320, 768]) {
+        await I.resizeWindow(width, 850);
+        await I.assertTrue(await I.executeScript(() => {
+            const body = document.querySelector('.md-dashboard-modal--sessions .modal-body');
+            return body.scrollWidth <= body.clientWidth + 1;
+        }), `The device table must fit the ${width}px viewport.`);
+    }
+    await I.resizeWindow(390, 850);
+    await I.clickCss(`${devices} [data-device-id="43"] .md-dashboard-sessions__confirm-device`);
+    await I.waitForText('Zadajte 6-miestny kód', 10, devices);
+    await I.assertTrue(await I.executeScript(() => {
+        const body = document.querySelector('.md-dashboard-modal--sessions .modal-body');
+        return body.scrollWidth <= body.clientWidth + 1;
+    }), 'Device confirmation must fit on mobile.');
+    await I.fillField(`${devices} input[name="deviceConfirmationCode"]`, '012345');
+    await I.clickCss(`${devices} .md-dashboard-device-confirmation [type="submit"]`);
+    await I.waitForText('Kód sa nepodarilo overiť', 10, devices);
+    failConfirm = false;
+    await I.clickCss(`${devices} .md-dashboard-device-confirmation [type="submit"]`);
+    await I.waitForText('Potvrdené', 10, `${devices} [data-device-id="43"]`);
+    await I.dontSeeElement('[data-notice-id="newDevice:43"]');
+    await I.clickCss(`${devices} [data-device-id="45"] .md-dashboard-sessions__deny-device`);
     const securityDialog = '.md-dashboard-modal--device-security';
-    I.waitForText('Zariadenie je zablokované', 10, securityDialog);
-    I.dontSeeElement(modal);
-    I.see('Edge autotest · Windows · 192.0.2.4 sme zablokovali.', securityDialog);
-    I.dontSeeElement(`${securityDialog} .btn-white`);
-    I.click('Neskôr', securityDialog);
-    I.waitForDetached(securityDialog, 10);
-    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    await I.waitForText('Zariadenie je zablokované', 10, securityDialog);
+    await I.dontSeeElement(modal);
+    await I.see('Safari autotest 18 · iOS · 192.0.2.3 sme zablokovali.', securityDialog);
+    await I.click('Neskôr', securityDialog);
+    await I.waitForDetached(securityDialog, 10);
+    await I.wjSetDefaultWindowSize();
+    await I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
     waitForSessionDialog(I);
-    I.waitForText('Odhlásenie bolo prijaté', 10, `${modal} tbody tr:nth-child(4)`);
-    I.dontSeeElement(`${modal} tbody tr:nth-child(4) .md-dashboard-sessions__deny-device`);
-    I.assertDeepEqual(confirmed, ['43', '43']);
-    I.assertDeepEqual(removed, ['devices-autotest-remote']);
-    I.click('Zavrieť', `${modal} .modal-footer`);
-    I.waitForDetached(modal, 10);
-    I.refreshPage();
-    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-    I.dontSeeElement('[data-notice-id="newDevice:43"]');
-    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    await I.see('Moje prihlásenia (3)', modal);
+    await I.click('Moje zariadenia', modal);
+    await I.waitForText('Zablokované', 10, `${devices} [data-device-id="45"]`);
+    await I.dontSeeElement(`${devices} [data-device-id="45"] button`);
+    await I.assertDeepEqual(confirmed, [{ code: '012345' }, { code: '012345' }]);
+    await I.assertDeepEqual(blocked, [45], 'Only the selected retained device may be blocked.');
+    records.splice(0);
+    await I.clickCss(`${devices} .md-dashboard-sessions__summary button`);
+    await I.waitForText('Nemáte žiadne zaznamenané zariadenia.', 10, devices);
+    await I.click('Zavrieť', `${modal} .modal-footer`);
+    await I.waitForDetached(modal, 10);
+});
+
+/** Reads the actual owned list without modifying devices or sessions. */
+Scenario('Device REST listing exposes owned records with bounded pagination and no secrets', async ({ I }) => {
+    const result = await I.executeScript(async () => {
+        const response = await fetch('/admin/rest/security/login-events?page=-1&userId=999&size=999&sort=userId', { headers: { 'X-CSRF-Token': window.csrfToken } });
+        return { status: response.status, data: await response.json() };
+    });
+    await I.assertEqual(result.status, 200);
+    await I.assertEqual(result.data.size, 20);
+    await I.assertEqual(result.data.number, 0);
+    await I.assertTrue(result.data.content.every(device => device.id > 0 && device.lastSeen > 0));
+    await I.assertTrue(result.data.content.every(device => !['userId', 'tokenHash', 'confirmationHash', 'codeHash', 'codeAttempts'].some(key => Object.hasOwn(device, key))));
+    await I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
     waitForSessionDialog(I);
-    I.see('Moje prihlásenia (3)', modal);
-    I.dontSeeElement(`${modal} .md-dashboard-sessions__new`);
-    I.see('Odhlásiť', `${modal} tbody tr:nth-child(2)`);
-    I.click('Zavrieť', `${modal} .modal-footer`);
-    I.waitForDetached(modal, 10);
+    await I.click('Moje zariadenia', modal);
+    await I.waitForElement(`${modal} .md-dashboard-sessions__devices[aria-busy="false"]`, 10);
+    await I.dontSeeElement(`${modal} .md-dashboard-sessions__devices [role="alert"]`);
+    await I.click('Zavrieť', `${modal} .modal-footer`);
 });
 
 /** Every administrator logout is intercepted before interaction; no real administrator sessions are invalidated. */
@@ -336,7 +372,7 @@ Scenario('Administrator session summaries match the design and coordinate author
     I.assertTrue(await I.executeScript(() => WJ.hasPermission('users.edit_admins')), 'This fixture account must have administrator management permission.');
     I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
     waitForSessionDialog(I);
-    I.clickCss(`${modal} [role="tab"]:nth-child(2)`);
+    I.clickCss(`${modal} [role="tab"][id$="-admins"]`);
     I.waitForText('Prihlásení administrátori (3)', 10, modal);
     I.see('autotest-current', `${modal} [data-admin-user-id="900001"]`);
     I.see('Chrome · Windows, Safari · iOS', modal);
@@ -361,7 +397,7 @@ Scenario('Administrator session summaries match the design and coordinate author
     I.wjSetDefaultWindowSize();
     I.click('Moje prihlásenia', `${modal} [data-admin-user-id="900001"]`);
     I.see('Chrome · macOS', `${modal} .md-dashboard-sessions__mine`);
-    I.clickCss(`${modal} [role="tab"]:nth-child(2)`);
+    I.clickCss(`${modal} [role="tab"][id$="-admins"]`);
     I.waitForText('Prihlásení administrátori (3)', 10, modal);
     I.click('Odhlásiť', `${modal} [data-admin-user-id="900002"]`);
     I.waitForText('Prihlásení administrátori (2)', 10, modal);
