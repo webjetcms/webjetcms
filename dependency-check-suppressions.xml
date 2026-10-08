@@ -439,15 +439,17 @@
   <suppress>
     <notes><![CDATA[
     CVE-2026-22732 was reviewed for the 2026.0 hotfix configuration on 2026-10-08.
-    It is treated as not relevant to the reviewed deployment, with exploitation assessed as
-    very unlikely. This is an application-specific accepted-risk suppression, not a library fix
+    This is an application-specific mitigation and accepted-risk suppression, not a library fix
     or proof that every possible execution path is unaffected.
     WebJET writes its own security headers in SetCharacterEncodingFilter.setCommonHeaders(),
     and PathFilter.setStaticContentHeaders()/setCacheHeaders() manage applicable cache policies.
     This Spring defect does not remove headers that WebJET has already written.
-    No concrete request exposing sensitive data through missing Spring cache headers was
-    demonstrated. MultipartFileSender does use the affected Content-Length setter pattern,
-    so paths relying solely on Spring's cache headers remain a theoretical risk.
+    GetProtectedFileServlet calls PathFilter.setNoCacheHeaders() before sending protected files,
+    explicitly setting Cache-Control: no-store, no-cache, must-revalidate, max-age=0, Pragma,
+    and Expires for full, range, and conditional responses, replacing earlier cache policies.
+    MultipartFileSender uses setContentLengthLong() for full and single-range responses so
+    Spring Security tracks the response length and writes its headers before commitment.
+    Other response-writing paths must still be assessed separately.
     Keep default lazy header writing to preserve existing cache and response.reset() behavior.
     Reassess if response-writing code, header ownership, or proxy/CDN cache policies change,
     or if a request demonstrates missing cache protection on a sensitive response.
