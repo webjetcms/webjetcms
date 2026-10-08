@@ -994,6 +994,19 @@ webjet-overview-dashboard a:focus-visible {
     }
 }
 .md-dashboard-modal--sessions .md-dashboard-sessions__action .btn { max-width: 160px; white-space: normal; text-align: right; }
+
+.md-dashboard-modal--logout {
+    .modal-dialog { max-width: 480px; }
+    .modal-title { font-weight: 700; }
+    .md-dashboard-sessions__tabs { display: none; }
+    .modal-body { color: var(--wj-gray-text); font-size: 14px; }
+    .md-dashboard-sessions__logout-list {
+        padding: 12px; border-radius: var(--wj-border-radius); background: var(--wj-nice-gray); color: var(--wj-secondary);
+        li { display: flex; align-items: baseline; gap: 8px; overflow-wrap: anywhere; }
+        li + li { margin-top: 6px; }
+        .ti { flex-shrink: 0; color: var(--wj-gray-text); }
+    }
+}
 @keyframes md-dashboard-welcome-enter {
     from { opacity: 0; translate: 0 -8px; }
     to { opacity: 1; translate: 0 0; }

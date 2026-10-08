@@ -315,7 +315,7 @@ export function showActiveSessions(context, securityEvent) {
         summary.append(explanation);
         const others = sessions.filter(session => session.sessionId !== data.currentSessionId && !session.pending);
         if (others.length) {
-            const all = sessionButton(text(context, 'logoutOtherSessions', number(others.length)), () => remove(others), 'btn btn-sm btn-outline-secondary text-danger');
+            const all = sessionButton(text(context, 'logoutOtherSessions', number(others.length)), () => confirmRemoveOthers(others), 'btn btn-sm btn-outline-secondary text-danger');
             all.prepend(icon('ti-logout'));
             all.disabled = busy;
             summary.append(all);
@@ -351,7 +351,7 @@ export function showActiveSessions(context, securityEvent) {
                 const controls = node('div', 'md-dashboard-sessions__device-actions');
                 const confirm = sessionButton(text(context, 'newDevice.confirm'), () => confirmDevice(session, action),
                     'btn btn-sm btn-white md-dashboard-sessions__confirm-device');
-                const deny = sessionButton(text(context, 'newDevice.notMe'), () => reportSecurityEvent(session.deviceId), 'btn btn-sm btn-danger md-dashboard-sessions__deny-device');
+                const deny = sessionButton(text(context, 'newDevice.notMe'), () => reportSecurityEvent(session.deviceId), 'btn btn-sm btn-red md-dashboard-sessions__deny-device');
                 confirm.disabled = deny.disabled = busy || reporting;
                 controls.append(confirm, deny);
                 action.append(controls);
@@ -390,19 +390,69 @@ export function showActiveSessions(context, securityEvent) {
         tabButtons[0].focus({ preventScroll: true });
     }
 
-    async function remove(sessions) {
+    /** Temporarily replaces the session detail so confirmation shares its modal focus trap and lifecycle. */
+    function confirmRemoveOthers(sessions) {
+        const trigger = document.activeElement;
+        const title = dialog.root.querySelector('.modal-title');
+        const body = [...dialog.body.childNodes];
+        const footer = [...dialog.footer.childNodes];
+        const countKey = sessions.length === 1 ? 'Single' : sessions.length < 5 ? 'Few' : 'Many';
+        const restore = () => {
+            dialog.root.removeEventListener('hide.bs.modal', cancel);
+            dialog.root.removeEventListener('keydown', onKeydown, true);
+            dialog.root.classList.remove('md-dashboard-modal--logout');
+            title.textContent = text(context, 'activeSessions');
+            tabs.hidden = false;
+            dialog.body.replaceChildren(...body);
+            dialog.footer.replaceChildren(...footer);
+            trigger.focus({ preventScroll: true });
+        };
+        const cancel = event => { event?.preventDefault(); restore(); };
+        const onKeydown = event => {
+            if (event.key !== 'Escape') return;
+            event.stopImmediatePropagation();
+            cancel(event);
+        };
+        dialog.root.addEventListener('hide.bs.modal', cancel);
+        dialog.root.addEventListener('keydown', onKeydown, true);
+        dialog.root.classList.add('md-dashboard-modal--logout');
+        title.textContent = text(context, 'logoutOthersTitle');
+        tabs.hidden = true;
+        const list = node('ul', 'md-dashboard-sessions__logout-list list-unstyled');
+        for (const session of sessions) {
+            const row = node('li');
+            row.append(icon(sessionBrowserIcon(session.browserName)), node('span', '', [sessionClient(session), session.remoteAddr].filter(Boolean).join(' · ')));
+            list.append(row);
+        }
+        dialog.body.replaceChildren(node('p', '', text(context, `logoutOthersDescription${countKey}`, number(sessions.length))), list,
+            node('p', 'mb-0', text(context, 'logoutOthersAdvice')));
+        const keep = sessionButton(context.translate('button.cancel'), cancel, 'btn btn-outline-secondary');
+        const confirm = sessionButton(text(context, `logoutOthersSubmit${countKey}`, number(sessions.length)), () => {
+            restore();
+            remove(sessions, true);
+        }, 'btn btn-red');
+        dialog.footer.replaceChildren(keep, confirm);
+        keep.focus({ preventScroll: true });
+    }
+
+    async function remove(sessions, notify = false) {
         if (busy) return;
         busy = true;
+        let completed = true;
         status.textContent = '';
         mine.querySelectorAll('button').forEach(control => { control.disabled = true; });
         for (const session of sessions) {
-            try { await logoutSession(session, context, dialog.signal); }
-            catch (error) { if (!dialog.signal.aborted) status.textContent = text(context, 'sessionError'); }
+            try { if (await logoutSession(session, context, dialog.signal)) completed = false; }
+            catch (error) {
+                completed = false;
+                if (!dialog.signal.aborted) status.textContent = text(context, 'sessionError');
+            }
             if (dialog.signal.aborted) return;
         }
         busy = false;
         refreshSessions(context);
         renderMine();
+        if (notify && completed) window.WJ.notifySuccess(text(context, 'activeSessions'), text(context, 'logoutOthersSuccess', number(sessions.length)), 5000);
         if (adminsLoaded) await loadAdmins();
         tabButtons[0].focus({ preventScroll: true });
     }

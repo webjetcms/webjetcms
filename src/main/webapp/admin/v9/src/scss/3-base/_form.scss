@@ -57,6 +57,16 @@ textarea {}
     --#{$prefix}btn-disabled-opacity: 1;
 }
 
+.btn-red {
+    @include button-variant(
+        $danger, $danger, $white,
+        $hover-color: $white,
+        $active-color: $white,
+        $disabled-background: $gray-text, $disabled-border: $gray-text, $disabled-color: $white
+    );
+    --#{$prefix}btn-disabled-opacity: 1;
+}
+
 .btn:focus-visible,
 .btn-check:focus-visible + .btn,
 .btn-close:focus-visible {

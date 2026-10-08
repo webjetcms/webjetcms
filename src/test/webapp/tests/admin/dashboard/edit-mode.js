@@ -134,7 +134,7 @@ Scenario('Widget removal stays provisional, supports Undo and Ctrl Z, and Cancel
     I.clickCss('.md-dashboard__cancel');
     I.waitForVisible('.md-dashboard-modal--confirm', 10);
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard-modal--confirm .modal-footer .btn-outline-secondary'), 10);
-    I.clickCss('.md-dashboard-modal--confirm .btn-danger');
+    I.clickCss('.md-dashboard-modal--confirm .btn-red');
     I.waitForInvisible('.md-dashboard-modal--confirm', 10);
     I.dontSeeElement('.md-dashboard.is-editing');
     I.seeElement(`[data-instance-id="${formsId}"]`);
@@ -305,7 +305,7 @@ Scenario('The edit toolbar stays below the header while scrolling and keyboard m
         }), 'Editing widgets must stay within the viewport');
         I.clickCss('.md-dashboard__cancel');
         I.waitForVisible('.md-dashboard-modal--confirm', 10);
-        I.clickCss('.md-dashboard-modal--confirm .btn-danger');
+        I.clickCss('.md-dashboard-modal--confirm .btn-red');
         I.waitForInvisible('.md-dashboard-modal--confirm', 10);
     }
     I.wjSetDefaultWindowSize();

@@ -662,7 +662,7 @@ test("A confirmed reset can be cancelled and a failed save retains the draft for
     assert.deepEqual(stored(), original);
     assert.equal(notifications.length, 0);
     controller.cancelEditing();
-    window.document.querySelector('.md-dashboard-modal--confirm .btn-danger').click();
+    window.document.querySelector('.md-dashboard-modal--confirm .btn-red').click();
     assert.deepEqual(copy(controller.settings), original);
     controller.setEditing(true);
     controller.resetButton.click();
@@ -1479,7 +1479,7 @@ test('Widget settings apply to a draft in a centered modal and Cancel keeps the 
     assert.equal(controller._instance('draft').size, '3x3');
     await controller.showSettings('draft');
     controller.cancelEditing();
-    window.document.querySelector('.md-dashboard-modal--confirm .btn-danger').click();
+    window.document.querySelector('.md-dashboard-modal--confirm .btn-red').click();
     assert.equal(controller.editing, false);
     assert.equal(controller._instance('draft').size, '2x2');
     assert.equal(window.document.querySelector('.md-dashboard-modal--settings'), null, 'Exiting editing must dispose open draft settings');
@@ -1508,7 +1508,7 @@ for (const switchToShortcuts of [false, true]) {
         assert.equal(window.document.body.classList.contains('modal-open'), true);
         assert.equal(window.document.body.style.overflow, 'hidden');
         const hidden = new Promise(resolve => dialog.addEventListener('hidden.bs.modal', resolve, { once: true }));
-        const discard = dialog.querySelector('.btn-danger');
+        const discard = dialog.querySelector('.btn-red');
         discard.click();
         discard.click();
         assert.equal(controller.editing, true, 'The editor must remain alive until the hide transition finishes');
@@ -1780,7 +1780,7 @@ test('Independent release preferences never persist widget drafts or disappear w
     assert.equal(stored().acknowledgedNewsVersion, 'autotest-news');
     assert.equal(controller._instance('draft').options.days, 30);
     controller.cancelEditing();
-    window.document.querySelector('.md-dashboard-modal--confirm .btn-danger').click();
+    window.document.querySelector('.md-dashboard-modal--confirm .btn-red').click();
     assert.equal(controller.settings.acknowledgedNewsVersion, 'autotest-news');
     assert.deepEqual(copy(controller._instance('draft').options), {});
 });
@@ -1792,7 +1792,7 @@ test('Entering shortcut editing confirms discarding dirty widgets, then shortcut
     await controller.saveOptions('draft', { options: { days: 30 } });
     controller.editShortcutsButton.click();
     assert.equal(controller.editingShortcuts, false);
-    window.document.querySelector('.md-dashboard-modal--confirm .btn-danger').click();
+    window.document.querySelector('.md-dashboard-modal--confirm .btn-red').click();
     assert.equal(controller.editing, false);
     assert.equal(controller.editingShortcuts, true);
     await controller.saveOptions('link', { options: { source: 'url', href: '/admin/v9/', title: 'autotest shortcut' } });

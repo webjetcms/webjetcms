@@ -1934,7 +1934,7 @@ function sessionDialogFixture(context, window) {
         showDialog: () => {
             const root = window.document.createElement('div');
             root.setAttribute('aria-labelledby', 'sessions-autotest-title');
-            root.innerHTML = '<div class="modal-dialog"><div class="modal-content"><div class="modal-body"></div><div class="modal-footer"></div></div></div>';
+            root.innerHTML = '<div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 class="modal-title"></h2></div><div class="modal-body"></div><div class="modal-footer"></div></div></div>';
             window.document.body.append(root);
             return { root, body: root.querySelector('.modal-body'), footer: root.querySelector('.modal-footer'), signal: lifecycle.signal,
                 close: () => { lifecycle.abort(); root.remove(); } };
@@ -1942,6 +1942,67 @@ function sessionDialogFixture(context, window) {
     };
     return { signal: lifecycle.signal, refreshed: () => refreshed };
 }
+
+test('Bulk logout lists only eligible sessions as text and cancellation restores the dialog and focus', t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+        { sessionId: 'current', browserName: 'Current autotest' },
+        { sessionId: 'other', browserName: '<img src=x> autotest', operatingSystem: 'Linux', remoteAddr: '192.0.2.2' },
+        { sessionId: 'pending', browserName: 'Pending autotest', pending: true }
+    ] }] } };
+    const { scope, context, window, requests } = fixture(t, { data });
+    sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    const trigger = root.querySelector('.md-dashboard-sessions__summary button');
+    for (const action of ['button', 'escape', 'backdrop']) {
+        trigger.click();
+        assert.equal(requests.length, 0, 'Opening confirmation must never submit a logout request.');
+        assert.equal(root.querySelectorAll('.md-dashboard-sessions__logout-list li').length, 1);
+        assert.match(root.querySelector('.md-dashboard-sessions__logout-list').textContent, /<img src=x> autotest · Linux · 192.0.2.2/);
+        assert.equal(root.querySelector('img'), null);
+        assert.match(root.querySelector('.modal-body').textContent, /logoutOthersDescriptionSingle/);
+        const cancel = root.querySelector('.modal-footer .btn-outline-secondary');
+        assert.equal(window.document.activeElement, cancel);
+        if (action === 'button') cancel.click();
+        else if (action === 'escape') cancel.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        else assert.equal(root.dispatchEvent(new window.Event('hide.bs.modal', { cancelable: true })), false);
+        assert.equal(requests.length, 0, 'Canceling confirmation must never submit a logout request.');
+        assert.equal(root.querySelectorAll('tbody tr').length, 3);
+        assert.equal(window.document.activeElement, trigger);
+        assert.equal(root.classList.contains('md-dashboard-modal--logout'), false);
+    }
+});
+
+test('Confirmed bulk logout preserves the current session and notifies for five seconds only after complete success', async t => {
+    for (const outcome of ['success', 'pending', 'failure']) await t.test(outcome, async t => {
+        const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+            { sessionId: 'current', browserName: 'Current autotest' },
+            { sessionId: 'other-1', browserName: 'Firefox autotest' },
+            { sessionId: 'other-2', browserName: 'Safari autotest' }
+        ] }] } };
+        const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async (url, options) => ({
+            ok: true, json: async () => ({ success: outcome !== 'failure' || options.body.get('sessionId') === 'other-1', pending: outcome === 'pending' })
+        }) });
+        const notifications = [];
+        window.WJ.notifySuccess = (...args) => notifications.push(args);
+        sessionDialogFixture(context, window);
+        scope.showActiveSessions(context);
+        const root = window.document.querySelector('.md-dashboard-modal--sessions');
+        root.querySelector('.md-dashboard-sessions__summary button').click();
+        assert.match(root.querySelector('.modal-body').textContent, /logoutOthersDescriptionFew/);
+        root.querySelector('.modal-footer .btn-red').click();
+        await new Promise(resolve => setImmediate(resolve));
+        assert.deepEqual(requests.map(request => request.options.body.get('sessionId')), ['other-1', 'other-2']);
+        assert.ok(root.querySelector('.md-dashboard-sessions__current'));
+        if (outcome === 'success') {
+            assert.equal(root.querySelectorAll('tbody tr').length, 1);
+            assert.deepEqual(notifications, [['admin.dashboard.activeSessions.js', 'admin.dashboard.logoutOthersSuccess.js', 5000]]);
+        } else {
+            assert.equal(notifications.length, 0, 'Incomplete logout must not claim all devices were signed out.');
+            assert.match(root.textContent, outcome === 'pending' ? /sessionPending/ : /sessionError/);
+        }
+    });
+});
 
 test('Personal session widget supports counts and complete scrollable lists without additional reads', async t => {
     const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
@@ -2057,6 +2118,7 @@ test('Session dialog retains pending and failed bulk removals', async t => {
     assert.equal(root.querySelectorAll('script,img').length, 0);
     assert.match(root.querySelector('.md-dashboard-sessions__activity').textContent, /sessionActiveNow/);
     root.querySelector('.md-dashboard-sessions__summary button').click();
+    root.querySelector('.modal-footer .btn-red').click();
     await new Promise(resolve => setImmediate(resolve));
     assert.deepEqual(requests.map(item => item.options.body.get('sessionId')), ['removed', 'pending', 'failed']);
     assert.equal(root.querySelectorAll('tbody tr').length, 3);

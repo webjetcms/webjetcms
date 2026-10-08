@@ -151,11 +151,40 @@ Scenario('Session widgets and notices open the dialog and update after individua
         }), `The session dialog must fit the ${width}px viewport without horizontal scrolling.`);
     }
     I.saveScreenshot('dashboard-active-sessions-mobile.png');
+    I.click('Odhlásiť všetky ostatné (2)', modal);
+    I.waitForText('Odhlásiť všetky ostatné zariadenia?', 10, `${modal} .modal-title`);
+    I.see('Odhlásime 2 zariadenia. Na tomto zariadení zostanete prihlásený.', modal);
+    I.see('Firefox · Windows · 192.0.2.2', `${modal} .md-dashboard-sessions__logout-list`);
+    I.see('Safari · iOS · 192.0.2.3', `${modal} .md-dashboard-sessions__logout-list`);
+    I.dontSee('Chrome', `${modal} .md-dashboard-sessions__logout-list`);
+    I.assertDeepEqual(removed, [], 'Opening confirmation must not submit any logout request.');
+    I.assertTrue(await I.executeScript(() => document.activeElement.matches('.md-dashboard-modal--logout .modal-footer .btn-outline-secondary')),
+        'Confirmation must initially focus the cancel action.');
+    I.assertTrue(await I.executeScript(() => {
+        const body = document.querySelector('.md-dashboard-modal--logout .modal-body');
+        const bounds = body.getBoundingClientRect();
+        return bounds.left >= 0 && bounds.right <= innerWidth && body.scrollWidth <= body.clientWidth + 1;
+    }), 'Bulk confirmation must fit a mobile viewport without horizontal scrolling.');
+    I.saveScreenshot('dashboard-sessions-logout-confirm-mobile.png');
+    I.click('Zrušiť', `${modal} .modal-footer`);
+    I.waitForText('Moje prihlásenia (3)', 10, modal);
+    I.assertDeepEqual(removed, [], 'Canceling confirmation must preserve every session.');
+    I.assertTrue(await I.executeScript(() => document.activeElement.matches('.md-dashboard-sessions__summary button')),
+        'Canceling must restore focus to the bulk logout action.');
     I.wjSetDefaultWindowSize();
+    I.click('Odhlásiť všetky ostatné (2)', modal);
+    I.saveScreenshot('dashboard-sessions-logout-confirm-desktop.png');
+    I.pressKey('Escape');
+    I.waitForText('Moje prihlásenia (3)', 10, modal);
+    I.assertDeepEqual(removed, [], 'Escape must cancel without logging out any session.');
     I.clickCss(`${modal} tbody tr:nth-child(2) button`);
     I.waitForText('Moje prihlásenia (2)', 10, modal);
     I.click('Odhlásiť všetky ostatné (1)', modal);
+    I.waitForText('Odhlásime 1 zariadenie. Na tomto zariadení zostanete prihlásený.', 10, modal);
+    I.click('Odhlásiť 1 zariadenie', `${modal} .modal-footer`);
     I.waitForText('Moje prihlásenia (1)', 10, modal);
+    I.waitForText('Aktívne prihlásenia', 10, '#toast-container-webjet .toast-success .toast-title');
+    I.see('Ostatné zariadenia sú odhlásené (1).', '#toast-container-webjet .toast-success');
     I.assertDeepEqual(removed, ['sessions-autotest-other', 'sessions-autotest-third'], 'Bulk logout must never submit the current session.');
     I.click('Zavrieť', `${modal} .modal-footer`);
     I.waitToHide(modal, 10);

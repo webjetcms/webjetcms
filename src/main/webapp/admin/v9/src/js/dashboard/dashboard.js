@@ -273,7 +273,7 @@ export class DashboardController {
             if (hasBootstrapModal) dialog.root.addEventListener("hidden.bs.modal", cancel, { once: true });
             dialog.close();
             if (!hasBootstrapModal) cancel();
-        }, "btn btn-danger");
+        }, "btn btn-red");
         dialog.footer.append(keep, discard);
         dialog.root.addEventListener("shown.bs.modal", () => keep.focus({ preventScroll: true }), { once: true });
         keep.focus({ preventScroll: true });

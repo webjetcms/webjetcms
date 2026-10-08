@@ -22,6 +22,9 @@ function buttonContrast(selector) {
     const context = canvas.getContext('2d');
     const paint = color => { context.fillStyle = color; context.fillRect(0, 0, 1, 1); };
     const pixel = () => Array.from(context.getImageData(0, 0, 1, 1).data).slice(0, 3);
+    paint(style.backgroundColor);
+    const backgroundOpacity = context.getImageData(0, 0, 1, 1).data[3] / 255;
+    context.clearRect(0, 0, 1, 1);
     const ancestors = [];
     for (let parent = element.parentElement; parent; parent = parent.parentElement) ancestors.unshift(parent);
     paint('#fff');
@@ -44,6 +47,7 @@ function buttonContrast(selector) {
     const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + 0.05) / (Math.min(luminance(a), luminance(b)) + 0.05);
     return {
         name: element.getAttribute('aria-label') || element.textContent.trim(),
+        red: element.classList.contains('btn-red'), opacity: Number(style.opacity), backgroundOpacity,
         foreground, background, textContrast: contrast(foreground, background),
         minimum: element.textContent.trim() ? 4.5 : 3,
         outlineContrast: contrast(outline, surrounding), outlineStyle: style.outlineStyle,
@@ -59,6 +63,11 @@ async function auditButtons(I, selectors, failures) {
             await I.waitForFunction(selector => !document.querySelector(selector).getAnimations().some(animation => animation.playState === 'running'), [selector], 5);
             const colors = await I.executeScript(buttonContrast, selector);
             if (colors.textContrast < colors.minimum) failures.push(`${colors.name} / ${state}: ${colors.textContrast.toFixed(2)}:1 < ${colors.minimum}:1`);
+            if (colors.red) {
+                I.assertDeepEqual(colors.foreground, [255, 255, 255], `Red actions must retain white text in the ${state} state.`);
+                I.assertEqual(colors.opacity, 1, `Red actions must remain opaque in the ${state} state.`);
+                I.assertEqual(colors.backgroundOpacity, 1, `Red actions must retain a solid background in the ${state} state.`);
+            }
             if (state.includes('focus') && (!colors.focusVisible || colors.outlineStyle === 'none' || colors.outlineWidth <= 0 || colors.outlineContrast < 3)) {
                 failures.push(`${colors.name} / ${state}: keyboard focus must remain visible with 3:1 contrast`);
             }
@@ -78,6 +87,11 @@ async function auditButtons(I, selectors, failures) {
         I.pressKey('Tab');
         I.executeScript(selector => document.querySelector(selector).focus(), selector);
         await record('focus');
+        if (await I.executeScript(selector => document.querySelector(selector).classList.contains('btn-red'), selector)) {
+            I.executeScript(selector => { document.querySelector(selector).disabled = true; }, selector);
+            await record('disabled');
+            I.executeScript(selector => { document.querySelector(selector).disabled = false; }, selector);
+        }
     }
     I.moveCursorTo(`${modal} .modal-title`);
     I.executeScript(() => document.activeElement.blur());
@@ -118,6 +132,13 @@ Scenario('Representative session actions remain readable with pointer and keyboa
         `${modal} .md-dashboard-sessions__confirm-device`,
         `${modal} .md-dashboard-sessions__deny-device`
     ], failures);
+    I.saveScreenshot('dashboard-sessions-red-device-action.png');
+    I.clickCss(`${modal} .md-dashboard-sessions__summary button`);
+    I.waitForVisible('.md-dashboard-modal--logout', 10);
+    await auditButtons(I, [`${modal} .modal-footer .btn-red`], failures);
+    I.saveScreenshot('dashboard-sessions-red-logout-action.png');
+    I.clickCss(`${modal} .modal-footer .btn-outline-secondary`);
+    I.waitForInvisible('.md-dashboard-modal--logout', 10);
     I.clickCss(`${modal} .md-dashboard-sessions__confirm-device`);
     I.waitForElement(`${modal} .md-dashboard-device-confirmation[aria-busy="false"]`, 10);
     await auditButtons(I, [`${modal} .md-dashboard-device-confirmation [type="submit"]`], failures);
