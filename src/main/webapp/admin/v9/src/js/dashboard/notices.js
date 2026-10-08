@@ -105,7 +105,10 @@ export class DashboardNotices {
         if (notice.kind === "newDevice") {
             if (!notice.securityEvent.reportedAt) actions.append(button(this._t("newDevice.confirm"), () => this._confirmSecurityEvent(notice),
                 "btn btn-sm btn-white md-dashboard__notice-confirm"));
-            if (!currentDevice) actions.append(button(this._t(notice.securityEvent.reportedAt ? "newDevice.blocked" : "newDevice.notMe"), () => this.openSecurityEvent?.(notice.securityEvent),
+            if (!currentDevice) actions.append(button(this._t(notice.securityEvent.reportedAt ? "newDevice.blocked" : "newDevice.notMe"), event => {
+                event.currentTarget.focus({ preventScroll: true });
+                this.openSecurityEvent?.(notice.securityEvent);
+            },
                 "btn btn-sm btn-link text-danger md-dashboard__notice-report"));
         } else if (notice.action) {
             actions.append(button(notice.action.label, event => {

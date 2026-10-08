@@ -1,7 +1,8 @@
 import { registerWidget } from './registry';
 import { node, text, date, number, icon, containNativeScroll, fetchJson } from './widget-utils';
 import { adminMail, fetchLoggedAdministrators } from './system-widgets';
-import { showDeviceConfirmation, isCurrentDevice } from './security-events';
+import { showDeviceConfirmation } from './security-events';
+import { closeAccountDialog, showDeviceSecurity } from './device-security-dialog';
 
 function sessionButton(label, action, className) {
     const control = node('button', className, label);
@@ -162,20 +163,14 @@ function sessionList(container, data, context, signal) {
 }
 
 /**
- * Opens the session dialog, optionally guiding the user through an unfamiliar login.
+ * Opens the active-session list, administrator summaries and login history.
  * @param {import('./registry').WidgetContext} context - Dashboard data and dialog owner.
- * @param {Object|null} [securityEvent] - Owned login event; null displays an unavailable email link.
  */
-export function showActiveSessions(context, securityEvent) {
+export function showActiveSessions(context) {
     if (document.querySelector('.md-dashboard-modal--sessions')) return;
     const dialog = context.dashboard.showDialog(text(context, 'activeSessions'));
     dialog.root.classList.add('md-dashboard-modal--sessions');
     dialog.root.querySelector('.modal-dialog').classList.add('modal-lg', 'modal-dialog-centered', 'modal-dialog-scrollable');
-    if (securityEvent === null) {
-        dialog.body.append(node('p', '', text(context, 'newDevice.unavailable')));
-        dialog.footer.append(sessionButton(text(context, 'close'), dialog.close, 'btn btn-sm btn-outline-secondary'));
-        return;
-    }
     const tabs = node('div', 'nav nav-tabs md-dashboard-sessions__tabs');
     tabs.setAttribute('role', 'tablist');
     tabs.setAttribute('aria-label', text(context, 'activeSessions'));
@@ -230,76 +225,11 @@ export function showActiveSessions(context, securityEvent) {
     status.setAttribute('role', 'alert');
     let busy = false;
     let adminBusy = false;
-    let reporting = false;
-    let securityDetails = securityEvent ? node('section', 'md-dashboard-sessions__security alert alert-warning') : null;
-
-    function renderSecurityEvent() {
-        if (!securityDetails) return;
-        securityDetails.replaceChildren();
-        const client = [securityEvent.browserName, securityEvent.browserVersion].filter(Boolean).join(' ');
-        const device = [client, securityEvent.operatingSystem].filter(Boolean).join(' · ');
-        securityDetails.append(node('strong', '', text(context, 'newDevice.title')),
-            node('p', 'mb-2', text(context, 'newDevice.details', device || '—', securityEvent.ipAddress || '—', date(securityEvent.createDate))));
-        if (securityEvent.reportedAt) {
-            const reported = node('p', 'mb-0', text(context, 'newDevice.reported'));
-            reported.tabIndex = -1;
-            reported.setAttribute('role', 'status');
-            securityDetails.append(reported);
-        } else {
-            securityDetails.append(node('p', 'mb-2', text(context, 'newDevice.reportAdvice')));
-            const report = sessionButton(text(context, 'newDevice.report'), () => reportSecurityEvent(securityEvent.id), 'btn btn-sm btn-white text-danger');
-            report.classList.add('md-dashboard-sessions__report');
-            report.disabled = reporting || busy;
-            securityDetails.append(report);
-        }
-    }
-
-    async function reportSecurityEvent(deviceId) {
-        if (reporting || busy) return;
-        reporting = true;
-        status.textContent = '';
-        renderMine();
-        try {
-            const response = await fetch(`/admin/rest/security/login-events/${encodeURIComponent(deviceId)}/report`, {
-                method: 'POST', credentials: 'same-origin', signal: dialog.signal,
-                headers: { 'X-CSRF-Token': window.csrfToken || '' }
-            });
-            if (!response.ok) throw new Error('Login reporting failed');
-            const updated = await response.json();
-            if (updated.id !== deviceId || !updated.reportedAt) throw new Error('Login report was not saved');
-            if (dialog.signal.aborted) return;
-            securityEvent = updated;
-            securityDetails ||= node('section', 'md-dashboard-sessions__security alert alert-warning');
-            for (const cluster of context.data.currentSessions?.userSessions || []) {
-                for (const session of cluster.userSessions || []) {
-                    if (session.deviceId === updated.id) { session.deviceConfirmed = false; session.pending = true; }
-                }
-            }
-            context.data.notices = (context.data.notices || []).filter(notice => notice.securityEvent?.id !== updated.id);
-            if (context.data.requestedSecurityEvent?.id === updated.id) context.data.requestedSecurityEvent = updated;
-            context.overview?.noticeController?.render();
-            refreshSessions(context);
-            if (isCurrentDevice(context.data, updated.id)) document.forms.namedItem('adminLogoffForm')?.requestSubmit();
-        } catch (error) {
-            if (!dialog.signal.aborted) status.textContent = text(context, 'newDevice.saveError');
-        } finally {
-            reporting = false;
-            if (!dialog.signal.aborted) {
-                renderMine();
-                securityDetails?.querySelector('button, [role="status"]')?.focus({ preventScroll: true });
-            }
-        }
-    }
-
     function renderMine() {
         const data = context.data.currentSessions;
         const sessions = flattenSessions(data);
         tabButtons[0].textContent = `${text(context, 'mySessions')} (${number(sessions.length)})`;
         mine.replaceChildren();
-        if (securityDetails) {
-            renderSecurityEvent();
-            mine.append(securityDetails);
-        }
         const twoFactor = (context.data.notices || []).find(notice => notice.id === 'twoFactor');
         if (twoFactor) {
             const warning = node('div', 'md-dashboard-sessions__two-factor');
@@ -351,8 +281,12 @@ export function showActiveSessions(context, securityEvent) {
                 const controls = node('div', 'md-dashboard-sessions__device-actions');
                 const confirm = sessionButton(text(context, 'newDevice.confirm'), () => confirmDevice(session, action),
                     'btn btn-sm btn-white md-dashboard-sessions__confirm-device');
-                const deny = sessionButton(text(context, 'newDevice.notMe'), () => reportSecurityEvent(session.deviceId), 'btn btn-sm btn-red md-dashboard-sessions__deny-device');
-                confirm.disabled = deny.disabled = busy || reporting;
+                const deny = sessionButton(text(context, 'newDevice.notMe'), () => {
+                    const event = (context.data.notices || []).find(notice => notice.securityEvent?.id === session.deviceId)?.securityEvent
+                        || { id: session.deviceId, browserName: session.browserName, operatingSystem: session.operatingSystem, ipAddress: session.remoteAddr };
+                    closeAccountDialog(dialog, () => showDeviceSecurity(context, event, true));
+                }, 'btn btn-sm btn-red md-dashboard-sessions__deny-device');
+                confirm.disabled = deny.disabled = busy;
                 controls.append(confirm, deny);
                 action.append(controls);
             } else if (current) action.append(node('span', 'text-muted', '—'));
@@ -373,18 +307,14 @@ export function showActiveSessions(context, securityEvent) {
 
     /** Uses the same code entry as dashboard notices, including for this session. */
     function confirmDevice(session, host) {
-        if (busy || reporting) return;
+        if (busy) return;
         showDeviceConfirmation({ data: context.data, deviceId: session.deviceId, host, signal: dialog.signal,
             translate: key => text(context, key), onConfirmed: deviceConfirmed });
     }
 
-    function deviceConfirmed(updated) {
+    function deviceConfirmed() {
         status.textContent = text(context, 'newDevice.confirmed');
         status.classList.replace('text-danger', 'text-success');
-        if (securityEvent?.id === updated.id) {
-            Object.assign(securityEvent, updated);
-            securityDetails = null;
-        }
         refreshSessions(context);
         renderMine();
         tabButtons[0].focus({ preventScroll: true });
@@ -600,9 +530,7 @@ export function showActiveSessions(context, securityEvent) {
     renderMine();
     const password = sessionButton(text(context, 'newDevice.changePassword'), () => {
         password.disabled = true;
-        // Wait for dialog cleanup before opening the profile to preserve focus and the modal backdrop.
-        dialog.signal.addEventListener('abort', () => window.setTimeout(() => window.openProfileDialog(window.currentUser.userId, true), 0), { once: true });
-        dialog.close();
+        closeAccountDialog(dialog, () => window.openProfileDialog(window.currentUser.userId, true));
     }, 'btn btn-sm btn-outline-secondary md-dashboard-sessions__password');
     const passwordHelp = node('button', 'btn btn-sm btn-link text-secondary md-dashboard-sessions__password-help');
     passwordHelp.type = 'button';

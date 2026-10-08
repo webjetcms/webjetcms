@@ -1,6 +1,7 @@
 import { DashboardController } from '../dashboard/dashboard';
 import { DashboardNotices } from '../dashboard/notices';
 import { showActiveSessions } from '../dashboard/session-widgets';
+import { showDeviceSecurity } from '../dashboard/device-security-dialog';
 import { confirmSecurityEvent } from '../dashboard/security-events';
 import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/widgets';
 import { showFeedbackDialog } from '../feedback';
@@ -118,7 +119,7 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
                     .catch(() => {
                         if (!signal.aborted) WJ.notifyError(sessionContext.translate('sessions'), sessionContext.translate('admin.dashboard.newDevice.linkInvalid.js'), 10000);
                     });
-            } else showActiveSessions(sessionContext, securityEvent);
+            } else showDeviceSecurity(sessionContext, securityEvent);
         }
         this.dataset.ready = "true";
         this.dispatchEvent(new CustomEvent("webjet-component-ready", { bubbles: true }));
@@ -128,7 +129,7 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
     _renderNotices() {
         this.noticeController ||= new DashboardNotices(this.dashboardController.notices, this.data,
             () => showActiveSessions(this.dashboardController._widgetContext()),
-            event => showActiveSessions(this.dashboardController._widgetContext(), event));
+            event => showDeviceSecurity(this.dashboardController._widgetContext(), event, true));
         this.noticeController.render();
     }
 

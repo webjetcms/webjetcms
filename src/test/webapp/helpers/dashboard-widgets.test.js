@@ -51,7 +51,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/node_modules/color-dialog-box/dist/index.js'), 'utf8');
         vm.runInContext(`(function () { ${source} }).call(this);`, scope);
     }
-    for (const file of ['registry.js', 'widget-utils.js', 'security-events.js', 'charts.js', 'monitoring-live.js', 'system-widgets.js', 'session-widgets.js', 'utility-widgets.js', 'data-widgets.js', 'shortcut-widget.js', 'widgets.js']) {
+    for (const file of ['registry.js', 'widget-utils.js', 'security-events.js', 'device-security-dialog.js', 'charts.js', 'monitoring-live.js', 'system-widgets.js', 'session-widgets.js', 'utility-widgets.js', 'data-widgets.js', 'shortcut-widget.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
             .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
         const exports = { 'system-widgets.js': ['registerSystemWidgets', 'renderLoggedAdmins', 'adminMail', 'fetchLoggedAdministrators'], 'monitoring-live.js': ['readMonitoringSnapshot', 'subscribeMonitoring'] }[file];
@@ -1928,16 +1928,17 @@ test('Accepted cluster logout stays pending instead of claiming immediate invali
 
 function sessionDialogFixture(context, window) {
     const lifecycle = new AbortController();
-    let refreshed = 0;
+    let refreshed = 0, opened = 0;
     context.dashboard = {
-        refreshSessions: () => { refreshed++; },
+        refreshSessions: () => { refreshed++; context.overview?.noticeController?.render(); },
         showDialog: () => {
+            const request = opened++ === 0 ? lifecycle : new AbortController();
             const root = window.document.createElement('div');
             root.setAttribute('aria-labelledby', 'sessions-autotest-title');
             root.innerHTML = '<div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 class="modal-title"></h2></div><div class="modal-body"></div><div class="modal-footer"></div></div></div>';
             window.document.body.append(root);
-            return { root, body: root.querySelector('.modal-body'), footer: root.querySelector('.modal-footer'), signal: lifecycle.signal,
-                close: () => { lifecycle.abort(); root.remove(); } };
+            return { root, body: root.querySelector('.modal-body'), footer: root.querySelector('.modal-footer'), signal: request.signal,
+                close: () => { request.abort(); root.remove(); } };
         }
     };
     return { signal: lifecycle.signal, refreshed: () => refreshed };
@@ -2102,7 +2103,6 @@ test('Authorized administrator logout refreshes REST data and retains pending an
 });
 
 test('Session dialog retains pending and failed bulk removals', async t => {
-    const securityEvent = { id: 42, createDate: 1000 };
     const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'autotest', userSessions: [
         { sessionId: 'current', logonTime: 1, lastActivity: Date.now(), browserName: 'Chrome autotest', remoteAddr: '127.0.0.1' },
         ...['removed', 'pending', 'failed'].map(sessionId => ({ sessionId, logonTime: 2, lastActivity: Date.now() - 600000, browserName: '<script>autotest</script>', remoteAddr: '127.0.0.2' }))
@@ -2111,10 +2111,10 @@ test('Session dialog retains pending and failed bulk removals', async t => {
         ok: true, json: async () => ({ success: options.body.get('sessionId') !== 'failed', pending: options.body.get('sessionId') === 'pending' })
     }) });
     const dialog = sessionDialogFixture(context, window);
-    scope.showActiveSessions(context, securityEvent);
+    scope.showActiveSessions(context);
     const root = window.document.querySelector('.md-dashboard-modal--sessions');
     assert.equal(root.querySelectorAll('[role="tab"]').length, 3, 'Tab availability follows permission, independently of bootstrap data.');
-    assert.equal(root.querySelector('tbody tr:first-child button'), null, 'The current session must not offer logout, including during security review.');
+    assert.equal(root.querySelector('tbody tr:first-child button'), null, 'The current session must not offer logout.');
     assert.equal(root.querySelectorAll('script,img').length, 0);
     assert.match(root.querySelector('.md-dashboard-sessions__activity').textContent, /sessionActiveNow/);
     root.querySelector('.md-dashboard-sessions__summary button').click();
@@ -2127,8 +2127,6 @@ test('Session dialog retains pending and failed bulk removals', async t => {
     assert.equal(root.querySelectorAll('tbody tr:not(:first-child) button').length, 1, 'Only the failed session offers retry.');
     assert.equal(dialog.refreshed(), 1);
     assert.equal(scope.flattenSessions(context.data.currentSessions).length, 3);
-    assert.equal(root.querySelector('.md-dashboard-sessions__mine .md-dashboard-sessions__report').disabled, false,
-        'Refreshing sessions must retain an enabled report action in the personal tab.');
 });
 
 test('Administrator tab refreshes, retries, respects permissions and aborts on close', async t => {
@@ -2171,14 +2169,13 @@ test('Administrator tab refreshes, retries, respects permissions and aborts on c
 });
 
 test('History loads on tab activation, pages safely and aborts on close', async t => {
-    const securityEvent = { id: 42, createDate: 1000 };
     const data = { currentSessions: { currentSessionId: 'current', userSessions: [] }, loggedAdmins: [{ fullName: 'Admin autotest', email: 'autotest@example.com' }] };
     const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async () => ({ ok: true, json: async () => ({
         content: [{ createDate: Date.now(), ip: '127.0.0.1', description: '<img src=x> autotest login' }],
         totalElements: 21, totalPages: 2, first: true, last: false
     }) }) });
     const fixtureDialog = sessionDialogFixture(context, window);
-    scope.showActiveSessions(context, securityEvent);
+    scope.showActiveSessions(context);
     const root = window.document.querySelector('.md-dashboard-modal--sessions');
     const tabs = root.querySelectorAll('[role="tab"]');
     assert.equal(tabs.length, 3);
@@ -2186,8 +2183,6 @@ test('History loads on tab activation, pages safely and aborts on close', async 
     tabs[0].dispatchEvent(new window.KeyboardEvent('keydown', { key: 'End', bubbles: true }));
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(tabs[2].getAttribute('aria-selected'), 'true');
-    assert.equal(root.querySelector('.md-dashboard-sessions__security').closest('[role="tabpanel"]').hidden, true,
-        'The warning must belong to the hidden personal tab while history is selected.');
     assert.ok(root.querySelector('.md-dashboard-sessions__password'));
     assert.equal(requests[0].url, '/admin/rest/sessions/login-history?page=0');
     assert.equal(root.querySelector('.md-dashboard-sessions__history img'), null);
@@ -2225,12 +2220,11 @@ test('Expanded release announcements retain headings, lists, emphasis and links 
 });
 
 test('Session dialog does not autofocus a tab or steal child focus', t => {
-    const securityEvent = { id: 'autotest-focus', createDate: 1000 };
     for (const preserveFocus of [false, true]) {
         const { scope, context, window } = fixture(t, { data: { currentSessions: { userSessions: [] } } });
         sessionDialogFixture(context, window);
         const initialFocus = window.document.activeElement;
-        scope.showActiveSessions(context, securityEvent);
+        scope.showActiveSessions(context);
         assert.equal(window.document.activeElement, initialFocus, 'Session rendering must leave initial focus to the shared modal.');
         const root = window.document.querySelector('.md-dashboard-modal--sessions');
         root.tabIndex = -1;
@@ -2252,24 +2246,22 @@ test('Login security dialog removes only the successfully blocked device notice'
     const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async () => ({ ok: !fail, json: async () => ({ ...securityEvent, reportedAt: 3000 }) }) });
     context.translate = (key, ...params) => [key, ...params].join(' ');
     sessionDialogFixture(context, window);
-    scope.showActiveSessions(context, securityEvent);
-    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    scope.showDeviceSecurity(context, securityEvent);
+    const root = window.document.querySelector('.md-dashboard-modal--device-security');
     assert.equal(requests.length, 0, 'Opening the security dialog must be read-only.');
-    assert.equal(root.querySelectorAll('[role="tab"]').length, 3);
-    assert.ok(root.querySelector('.md-dashboard-sessions__summary button'), 'Security review must retain bulk logout.');
-    assert.equal(root.querySelectorAll('tbody button').length, 1, 'Only other sessions offer an explicit logout action.');
+    assert.equal(root.querySelectorAll('[role="tab"], table').length, 0);
     assert.equal(root.querySelector('img'), null);
-    assert.match(root.querySelector('.md-dashboard-sessions__security').textContent, /<img src=x>/);
-    root.querySelector('.md-dashboard-sessions__report').click();
+    assert.match(root.textContent, /<img src=x>/);
+    root.querySelector('.md-dashboard-device-security__report').click();
     await new Promise(resolve => setImmediate(resolve));
-    assert.ok(root.querySelector('.md-dashboard-sessions__report'));
+    assert.ok(root.querySelector('.md-dashboard-device-security__report'));
     assert.match(root.querySelector('[role="alert"]').textContent, /newDevice.saveError/);
     assert.equal(context.data.notices.length, 2, 'A failed block must preserve both notices.');
     fail = false;
-    root.querySelector('.md-dashboard-sessions__report').click();
+    root.querySelector('.md-dashboard-device-security__report').click();
     await new Promise(resolve => setImmediate(resolve));
-    assert.equal(root.querySelector('.md-dashboard-sessions__report'), null);
-    assert.match(root.querySelector('.md-dashboard-sessions__security [role="status"]').textContent, /newDevice.reported/);
+    assert.equal(root.querySelector('.md-dashboard-device-security__report'), null);
+    assert.match(root.textContent, /newDevice.reported/);
     assert.equal(requests[1].url, '/admin/rest/security/login-events/42/report');
     assert.equal(requests[1].options.method, 'POST');
     assert.equal(requests[1].options.headers['X-CSRF-Token'], 'test-csrf-token');
@@ -2284,7 +2276,7 @@ test('Security review omits current-session logout and uses the existing API for
     ] }] } };
     const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async () => ({ ok: true, json: async () => ({ success: true, pending: false }) }) });
     sessionDialogFixture(context, window);
-    scope.showActiveSessions(context, { id: 42, createDate: 1000 });
+    scope.showActiveSessions(context);
     const root = window.document.querySelector('.md-dashboard-modal--sessions');
     assert.equal(root.querySelector('tbody tr:first-child button'), null);
     assert.equal(requests.length, 0, 'Opening the dialog must not log out any sessions.');
@@ -2298,7 +2290,6 @@ test('Security review omits current-session logout and uses the existing API for
 });
 
 test('Session password action closes its dialog before opening the profile', async t => {
-    const securityEvent = { id: 42, createDate: 1000 };
     const { scope, context, window } = fixture(t, { data: { currentSessions: { userSessions: [] } } });
     const dialog = sessionDialogFixture(context, window);
     window.currentUser = { userId: 7 };
@@ -2307,14 +2298,14 @@ test('Session password action closes its dialog before opening the profile', asy
         assert.equal(window.document.querySelector('.md-dashboard-modal--sessions'), null);
         profile = args;
     };
-    scope.showActiveSessions(context, securityEvent);
+    scope.showActiveSessions(context);
     window.document.querySelector('.md-dashboard-sessions__password').click();
     assert.equal(dialog.signal.aborted, true);
     await new Promise(resolve => window.setTimeout(resolve, 0));
     assert.deepEqual(profile, [7, true]);
 });
 
-for (const review of [false, true]) test(`Unconfirmed session devices require saved confirmation before their actions change (security review: ${review})`, async t => {
+test('Unconfirmed session devices require saved confirmation before their actions change', async t => {
     const securityEvent = { id: 42, createDate: 1000 };
     const data = { notices: [{ id: 'newDevice:42', kind: 'newDevice', securityEvent }], currentSessions: {
         currentSessionId: 'current', userSessions: [{ userSessions: [
@@ -2329,7 +2320,7 @@ for (const review of [false, true]) test(`Unconfirmed session devices require sa
     const { scope, context, window, requests } = fixture(t, { data,
         fetchResponse: async () => ({ ok: !fail, json: async () => ({ id: returnedId, confirmedAt: 3000 }) }) });
     const dialog = sessionDialogFixture(context, window);
-    scope.showActiveSessions(context, review ? securityEvent : undefined);
+    scope.showActiveSessions(context);
     const root = window.document.querySelector('.md-dashboard-modal--sessions');
     assert.equal(root.querySelectorAll('.md-dashboard-sessions__new').length, 3);
     assert.equal(root.querySelectorAll('.md-dashboard-sessions__confirm-device').length, 3);
@@ -2361,7 +2352,6 @@ for (const review of [false, true]) test(`Unconfirmed session devices require sa
     assert.ok(requests.slice(1).every(request => request.url === '/admin/rest/security/login-events/42/confirm'));
     assert.deepEqual(JSON.parse(requests.at(-1).options.body), { code: '012345' });
     assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
-    if (review) assert.equal(root.querySelector('.md-dashboard-sessions__security'), null);
 });
 
 test('Denying a device reports it once and marks every matching session pending only after success', async t => {
@@ -2376,18 +2366,19 @@ test('Denying a device reports it once and marks every matching session pending 
     }) });
     const dialog = sessionDialogFixture(context, window);
     scope.showActiveSessions(context);
-    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    let root = window.document.querySelector('.md-dashboard-modal--sessions');
     root.querySelector('tbody tr:nth-child(2) .md-dashboard-sessions__deny-device').click();
+    await new Promise(resolve => window.setTimeout(resolve, 0));
     await new Promise(resolve => setImmediate(resolve));
-    assert.equal(root.querySelectorAll('.md-dashboard-sessions__deny-device').length, 3);
-    assert.match(root.querySelector('.md-dashboard-sessions__status').textContent, /newDevice.saveError/);
+    root = window.document.querySelector('.md-dashboard-modal--device-security');
+    assert.equal(window.document.querySelector('.md-dashboard-modal--sessions'), null);
+    assert.ok(scope.flattenSessions(context.data.currentSessions).every(session => !session.pending));
+    assert.match(root.textContent, /newDevice.saveError/);
     fail = false;
-    root.querySelector('tbody tr:nth-child(2) .md-dashboard-sessions__deny-device').click();
+    root.querySelector('.md-dashboard-device-security__report').click();
     await new Promise(resolve => setImmediate(resolve));
-    assert.equal(root.querySelectorAll('.md-dashboard-sessions__deny-device').length, 1);
-    assert.match(root.querySelector('tbody tr:nth-child(2)').textContent, /sessionPending/);
-    assert.match(root.querySelector('tbody tr:nth-child(3)').textContent, /sessionPending/);
-    assert.match(root.querySelector('.md-dashboard-sessions__security').textContent, /newDevice.reported/);
+    assert.deepEqual(scope.flattenSessions(context.data.currentSessions).map(session => !!session.pending), [false, true, true]);
+    assert.match(root.textContent, /newDevice.reported/);
     assert.equal(dialog.refreshed(), 1);
     assert.ok(requests.every(request => request.url === '/admin/rest/security/login-events/43/report'));
     assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
@@ -2396,8 +2387,8 @@ test('Denying a device reports it once and marks every matching session pending 
 test('Unavailable security links show a neutral message without account actions or reads', t => {
     const { scope, context, window, requests } = fixture(t);
     sessionDialogFixture(context, window);
-    scope.showActiveSessions(context, null);
-    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    scope.showDeviceSecurity(context, null);
+    const root = window.document.querySelector('.md-dashboard-modal--device-security');
     assert.match(root.textContent, /newDevice.unavailable/);
     assert.equal(root.querySelectorAll('button').length, 1);
     assert.equal(root.querySelector('table'), null);
@@ -2414,12 +2405,51 @@ test('Reporting a previously confirmed email event never restores its warning', 
         sessionDialogFixture(context, window);
         let rendered = 0;
         context.overview = { noticeController: { render: () => { rendered++; } } };
-        scope.showActiveSessions(context, securityEvent);
-        window.document.querySelector('.md-dashboard-sessions__report').click();
+        scope.showDeviceSecurity(context, securityEvent);
+        window.document.querySelector('.md-dashboard-device-security__report').click();
         await new Promise(resolve => setImmediate(resolve));
         assert.equal(context.data.notices.length, 0);
         assert.equal(context.data.requestedSecurityEvent.confirmedAt, null);
         assert.equal(context.data.requestedSecurityEvent.reportedAt, 3000);
         assert.equal(rendered, 1);
     }
+});
+
+test('Invalid and aborted block responses never remove notices or update sessions', async t => {
+    for (const mode of ['wrong-id', 'not-reported', 'aborted']) {
+        const event = { id: 42 };
+        const data = { notices: [{ kind: 'newDevice', securityEvent: event }], currentSessions: {
+            userSessions: [{ userSessions: [{ sessionId: 'other', deviceId: 42 }] }]
+        } };
+        let finish;
+        const { scope, context, window } = fixture(t, { data, fetchResponse: () => new Promise(resolve => { finish = resolve; }) });
+        const lifecycle = sessionDialogFixture(context, window);
+        scope.showDeviceSecurity(context, event, true);
+        const root = window.document.querySelector('.md-dashboard-modal--device-security');
+        assert.equal(root.querySelector('.md-dashboard-device-security__report').disabled, true);
+        if (mode === 'aborted') root.querySelector('.modal-footer button').click();
+        finish({ ok: true, json: async () => ({ id: mode === 'wrong-id' ? 99 : 42, reportedAt: mode === 'not-reported' ? null : 3000 }) });
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(context.data.notices.length, 1);
+        assert.equal(context.data.currentSessions.userSessions[0].userSessions[0].pending, undefined);
+        assert.equal(lifecycle.refreshed(), 0);
+        if (mode === 'aborted') assert.equal(root.isConnected, false);
+        else assert.match(root.querySelector('[role="alert"]').textContent, /newDevice.saveError/);
+    }
+});
+
+test('Blocking the current browser retains the existing account logout', async t => {
+    const event = { id: 42 };
+    const { scope, context, window } = fixture(t, { data: { currentSessions: {
+        currentSessionId: 'current', userSessions: [{ userSessions: [{ sessionId: 'current', deviceId: 42 }] }]
+    } }, fetchResponse: async () => ({ ok: true, json: async () => ({ id: 42, reportedAt: 3000 }) }) });
+    const form = window.document.createElement('form');
+    form.name = 'adminLogoffForm';
+    let logouts = 0;
+    form.requestSubmit = () => { logouts++; };
+    window.document.body.append(form);
+    sessionDialogFixture(context, window);
+    scope.showDeviceSecurity(context, event, true);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(logouts, 1);
 });

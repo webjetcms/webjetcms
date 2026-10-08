@@ -115,7 +115,7 @@ Scenario('New-device notices require an explicit server confirmation and cannot 
     await I.assertDeepEqual(proofs, [{ code: '012345' }, { code: '012345' }]);
 });
 
-Scenario('Keyboard review is read-only and only successful blocking removes the selected warning', async ({ I }) => {
+Scenario('Keyboard device reporting opens the compact dialog and removes only a successfully blocked warning', async ({ I }) => {
     await openNotices(I);
     const now = Date.now();
     const securityEvent = { id: 43, createDate: now, expiresAt: now + 7 * 86400000, browserName: 'Firefox autotest', operatingSystem: 'Linux' };
@@ -141,39 +141,36 @@ Scenario('Keyboard review is read-only and only successful blocking removes the 
     await ready(I);
     await I.dontSeeElement('[data-notice-id="newDevice:44"]');
     const trigger = '[data-notice-id="newDevice:43"] .md-dashboard__notice-report';
-    const dialog = '.md-dashboard-modal--sessions';
+    const dialog = '.md-dashboard-modal--device-security';
     await I.executeScript(selector => document.querySelector(selector).focus(), trigger);
     await I.pressKey('Enter');
     await I.waitForVisible(dialog, 10);
-    await I.waitForElement(`${dialog}:focus`, 10);
-    await I.assertEqual(reports, 0, 'Opening the review must not block a device.');
-    await I.assertDeepEqual(reads, [], 'Inactive tabs must not load administrator or history data.');
-    await I.pressKey('Tab');
-    await I.seeElement(`${dialog} .btn-close:focus-visible`);
-    await I.pressKey('Tab');
-    await I.seeElement(`${dialog} [role="tab"][id$="-mine"]:focus-visible`);
-    await I.pressKey('End');
-    await I.waitForElement(`${dialog} [role="tab"][id$="-history"][aria-selected="true"]`, 10);
-    await I.dontSeeElement(`${dialog} .md-dashboard-sessions__security`);
-    await I.pressKey('Home');
-    await I.seeElement(`${dialog} .md-dashboard-sessions__security`);
-    await I.assertEqual(reports, 0, 'Reviewing tabs must not block a device.');
+    await I.waitForText('Zmenu sa nepodarilo uložiť', 10, dialog);
+    await I.waitForFunction(selector => getComputedStyle(document.querySelector(selector)).opacity === '1'
+        && getComputedStyle(document.querySelector(`${selector} .modal-dialog`)).transform === 'none', [dialog], 10);
+    await I.assertTrue(await I.executeScript(selector => document.querySelector(selector).contains(document.activeElement), dialog), 'Focus must remain inside the security dialog after reporting fails.');
+    await I.assertEqual(reports, 1, 'The explicit in-app report must immediately attempt blocking.');
+    await I.assertDeepEqual(reads, [], 'The compact dialog must not load administrator or history data.');
+    await I.dontSeeElement('.md-dashboard-modal--sessions');
+    await I.dontSeeElement(`${dialog} [role="tab"]`);
+    await I.seeElement('[data-notice-id="newDevice:43"]');
     await I.pressKey('Escape');
     await I.waitForDetached(dialog, 10);
     await I.seeElement(`${trigger}:focus`);
     await I.pressKey('Enter');
-    await I.waitForElement(`${dialog}:focus`, 10);
-    for (let step = 0; step < 4; step++) await I.pressKey('Tab');
-    await I.seeElement(`${dialog} .md-dashboard-sessions__report:focus-visible`);
-    await I.pressKey('Space');
     await I.waitForText('Zmenu sa nepodarilo uložiť', 10, dialog);
-    await I.seeElement('[data-notice-id="newDevice:43"]');
+    await I.executeScript(selector => document.querySelector(selector).focus(), `${dialog} .md-dashboard-device-security__report`);
     failReport = false;
-    await I.clickCss(`${dialog} .md-dashboard-sessions__report`);
-    await I.waitForElement(`${dialog} .md-dashboard-sessions__security [role="status"]`, 10);
+    await I.pressKey('Space');
+    await I.waitForElement(`${dialog} .md-dashboard-device-security__result`, 10);
+    await I.see('Zabezpečte svoj účet', dialog);
+    await I.see('Firefox autotest · Linux sme zablokovali.', dialog);
+    await I.see('Zariadenie je zablokované a jeho relácie sa odhlasujú.', dialog);
+    await I.see('Ak ste sa neprihlásili vy, niekto môže poznať vaše heslo.', dialog);
     await I.dontSeeElement('[data-notice-id="newDevice:43"]');
     await I.seeElement('[data-notice-id="notice-autotest-unrelated"]');
-    await I.assertEqual(reports, 2, 'Only explicit block attempts may submit a report.');
-    await I.pressKey('Escape');
+    await I.assertEqual(reports, 3, 'Only explicit block attempts may submit a report.');
+    await I.click('Neskôr', dialog);
     await I.waitForDetached(dialog, 10);
+    await I.assertEqual(reports, 3, 'Later must only close the dialog.');
 });

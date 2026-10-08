@@ -153,15 +153,13 @@ Prihlásenie môžete potvrdiť aj odkazom **Bol som to ja** v pôvodnom emaile.
 
 #### Ak prihlásenie nepoznáte
 
-Pri upozornení na iný prehliadač kliknite na **Nebol som to ja**. Otvorí sa okno **Aktívne prihlásenia** s detailom udalosti a kartami **Moje prihlásenia**, **Prihlásení administrátori** (podľa oprávnení) a **História (30 dní)**. Varovanie sa zobrazuje iba v karte **Moje prihlásenia**. V karte **História (30 dní)** môžete skontrolovať predchádzajúce prihlásenia a ich IP adresy.
+Pri upozornení alebo pri relácii v okne **Aktívne prihlásenia** kliknite na **Nebol som to ja**. Zariadenie sa zablokuje a jeho známe relácie sa odhlásia. Malé okno **Zabezpečte svoj účet** zobrazí výsledok a odporúčané ďalšie kroky. Ak zablokujete prehliadač, v ktorom práve pracujete, odhlási aj vás.
 
-![Detail prihlásenia s možnosťou zablokovať zariadenie](device-block.png)
+Odkaz **Nebol som to ja – zabezpečiť účet** v emaile po prihlásení otvorí rovnaké malé okno, ale zariadenie ešte nezablokuje. Ak prihlásenie nepoznáte, potvrďte akciu tlačidlom **Zablokovať zariadenie**.
 
-Tlačidlom **Zablokovať zariadenie** zablokujete daný prehliadač a odhlásite všetky jeho známe relácie. Ak zablokujete prehliadač, v ktorom práve pracujete, odhlási aj vás. Pri ďalšom prihlásení sa po zadaní správnych prihlasovacích údajov zobrazí [výzva na overenie emailovým kódom](logon.md#overenie-zablokovaného-zariadenia). Až správny kód prehliadač odblokuje.
+Po zablokovaní použite **Zmeniť heslo** a skontrolujte ostatné prihlásenia. Tlačidlo **Zapnúť 2FA** otvorí nastavenie dvojstupňového overovania, ak je pre účet dostupné a ešte nie je zapnuté. **Neskôr** iba zatvorí okno. Pri firemnom účte zmeňte heslo u poskytovateľa prihlásenia alebo kontaktujte správcu.
 
-Použite tiež **Zmeniť heslo** a skontrolujte ostatné prihlásenia. Pri firemnom účte zmeňte heslo u poskytovateľa prihlásenia alebo kontaktujte správcu.
-
-Samotné otvorenie detailu aktívne relácie neodhlási. Odhlásenie nastane až po zablokovaní zariadenia. Rovnaký detail otvoríte aj odkazom **Nebol som to ja – zabezpečiť účet** v emaile, po prihlásení do svojho účtu.
+Pri ďalšom prihlásení zo zablokovaného zariadenia sa po zadaní správnych prihlasovacích údajov zobrazí [výzva na overenie emailovým kódom](logon.md#overenie-zablokovaného-zariadenia). Až správny kód prehliadač odblokuje.
 
 #### Zapamätanie prehliadača a platnosť upozornenia
 
@@ -211,7 +209,7 @@ Panel **Moje aktívne prihlásenia** zobrazuje všetky vaše aktívne relácie, 
 
 Kliknutím na nadpis panela otvoríte okno **Aktívne prihlásenia**. Okrem vlastných relácií ponúka históriu prihlásení za posledných 30 dní a podľa oprávnení aj prihlásených administrátorov. Tlačidlo **Zmeniť heslo** v spodnej časti okna otvorí váš profil na zmenu hesla. Informačná ikona vedľa tlačidla zobrazí pokyny pre zmenu hesla pri firemnom účte.
 
-V karte **Moje prihlásenia** majú nepotvrdené zariadenia štítok **Nové**. Tlačidlo **Bol som to ja** odošle na email jednorazový kód a zobrazí pole na jeho zadanie priamo v riadku. Až po overení kódu potvrdí zariadenie, odstráni jeho upozornenie a obnoví zoznam s bežnou akciou **Odhlásiť** pri ostatných reláciách. Rovnaké overenie vyžaduje aj riadok so štítkom **Toto prihlásenie**. Potvrdenie platí aj pre ďalšie relácie rovnakého zariadenia. Červené tlačidlo **Nebol som to ja** v riadku zablokuje zariadenie a odhlási všetky jeho známe relácie; ak ide o aktuálny prehliadač, odhlási aj vás. Rovnaké akcie sú dostupné pri otvorení okna z nadpisu panela aj zo systémového upozornenia.
+V karte **Moje prihlásenia** majú nepotvrdené zariadenia štítok **Nové**. Tlačidlo **Bol som to ja** odošle na email jednorazový kód a zobrazí pole na jeho zadanie priamo v riadku. Až po overení kódu potvrdí zariadenie, odstráni jeho upozornenie a obnoví zoznam s bežnou akciou **Odhlásiť** pri ostatných reláciách. Rovnaké overenie vyžaduje aj riadok so štítkom **Toto prihlásenie**. Potvrdenie platí aj pre ďalšie relácie rovnakého zariadenia. Červené tlačidlo **Nebol som to ja** v riadku zablokuje zariadenie a odhlási všetky jeho známe relácie; ak ide o aktuálny prehliadač, odhlási aj vás. Po zablokovaní iného prehliadača sa zobrazí okno **Zabezpečte svoj účet**, rovnako ako pri akcii **Nebol som to ja** v systémovom upozornení.
 
 ![](sessions.png)
 

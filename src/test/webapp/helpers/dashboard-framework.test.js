@@ -1076,7 +1076,7 @@ test('Email login details open once from the authenticated bootstrap, including 
         context.registerDashboardWidgets = () => {};
         context.getDashboardDefaults = () => [];
         const opened = [];
-        context.showActiveSessions = (widgetContext, securityEvent) => opened.push(securityEvent);
+        context.showDeviceSecurity = (widgetContext, securityEvent, report) => { assert.equal(report, undefined); opened.push(securityEvent); };
         overview.configure({ data: { notices: [], settings: { configured: true, items: [] }, securityEventRequested: true, requestedSecurityEvent: event } });
         overview.render();
         await overview.dashboardReady;
@@ -1819,7 +1819,7 @@ test('Email confirmation consumes the token once and shows success without a dia
     const { context, overview, window, notifications } = overviewFixture(t);
     context.registerDashboardWidgets = () => {};
     context.getDashboardDefaults = () => [];
-    context.showActiveSessions = () => assert.fail('Successful email confirmation must not open a dialog.');
+    context.showDeviceSecurity = () => assert.fail('Successful email confirmation must not open a dialog.');
     const requests = [];
     context.fetch = async (url, options) => {
         requests.push({ url, options });

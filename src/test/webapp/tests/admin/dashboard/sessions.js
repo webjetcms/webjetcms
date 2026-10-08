@@ -202,8 +202,8 @@ Scenario('Session widgets and notices open the dialog and update after individua
     I.assertEqual(administratorReads, 0, 'A personal-only dashboard and inactive administrator tab must not load administrator data.');
 });
 
-/** Device decisions use mocked owned records; only the selected session is removed when denied. */
-Scenario('New session devices can be confirmed or denied from either dialog entry point', async ({ I }) => {
+/** Device decisions use mocked owned records; blocking opens the compact account-security dialog. */
+Scenario('New session devices can be confirmed or denied from the session dialog', async ({ I }) => {
     const now = Date.now();
     const device = { id: 43, createDate: now, expiresAt: now + 7 * 86400000, browserName: 'Firefox autotest', operatingSystem: 'Windows', ipAddress: '192.0.2.2' };
     const data = {
@@ -255,9 +255,8 @@ Scenario('New session devices can be confirmed or denied from either dialog entr
     I.seeElement(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__new`);
     I.click('Zavrieť', `${modal} .modal-footer`);
     I.waitForDetached(modal, 10);
-    I.clickCss('[data-notice-id="newDevice:43"] .md-dashboard__notice-report');
+    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
     waitForSessionDialog(I);
-    I.seeElement(`${modal} .md-dashboard-sessions__security`);
     I.assertEqual(await I.grabNumberOfVisibleElements(`${modal} .md-dashboard-sessions__new`), 2);
     failConfirm = false;
     I.clickCss(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__confirm-device`);
@@ -266,7 +265,6 @@ Scenario('New session devices can be confirmed or denied from either dialog entr
     I.clickCss(`${modal} .md-dashboard-device-confirmation [type="submit"]`);
     I.waitForInvisible(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__new`, 10);
     I.see('Odhlásiť', `${modal} tbody tr:nth-child(2)`);
-    I.dontSeeElement(`${modal} .md-dashboard-sessions__security`);
     await I.mockRoute(reportRoute, route => {
         const id = Number(route.request().url().match(/login-events\/(\d+)\/report/)[1]);
         const matches = data.currentSessions.userSessions[0].userSessions.filter(session => session.deviceId === id);
@@ -275,6 +273,15 @@ Scenario('New session devices can be confirmed or denied from either dialog entr
         return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ id, createDate: Date.now(), reportedAt: Date.now() }) });
     });
     I.clickCss(`${modal} tbody tr:nth-child(4) .md-dashboard-sessions__deny-device`);
+    const securityDialog = '.md-dashboard-modal--device-security';
+    I.waitForText('Zariadenie je zablokované', 10, securityDialog);
+    I.dontSeeElement(modal);
+    I.see('Edge autotest · Windows · 192.0.2.4 sme zablokovali.', securityDialog);
+    I.dontSeeElement(`${securityDialog} .btn-white`);
+    I.click('Neskôr', securityDialog);
+    I.waitForDetached(securityDialog, 10);
+    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    waitForSessionDialog(I);
     I.waitForText('Odhlásenie bolo prijaté', 10, `${modal} tbody tr:nth-child(4)`);
     I.dontSeeElement(`${modal} tbody tr:nth-child(4) .md-dashboard-sessions__deny-device`);
     I.assertDeepEqual(confirmed, ['43', '43']);

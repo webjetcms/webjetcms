@@ -5,7 +5,7 @@ Feature('admin.dashboard.new-device').tag('@singlethread');
 const cookieName = 'wjdevice';
 const mailbox = 'webjetcmsnotif@fexpost.com';
 const dashboard = '.md-dashboard[data-loaded="true"]';
-const dialog = '.md-dashboard-modal--sessions';
+const dialog = '.md-dashboard-modal--device-security';
 let originalCookie, origin, device;
 
 Before(async ({ I }) => {
@@ -127,13 +127,13 @@ Scenario('The current browser requires the emailed six-digit code and rejects re
 Scenario('A reported browser requires an email code before administration or REST access @screenshot', async ({ I, TempMail, Document, i18n }) => {
     const eventId = device.id;
     await I.amOnPage(`/admin/v9/?securityEvent=${eventId}`);
-    await I.waitForElement(`${dialog} .md-dashboard-sessions__report`, 20);
+    await I.waitForElement(`${dialog} .md-dashboard-device-security__report`, 20);
     await I.waitForFunction(() => {
-        const modal = document.querySelector('.md-dashboard-modal--sessions');
+        const modal = document.querySelector('.md-dashboard-modal--device-security');
         return modal && getComputedStyle(modal).opacity === '1' && getComputedStyle(modal.querySelector('.modal-dialog')).transform === 'none';
     }, 10);
     Document.screenshotElement(`${dialog} .modal-content`, '/redactor/admin/device-block.png');
-    await I.clickCss(`${dialog} .md-dashboard-sessions__report`);
+    await I.clickCss(`${dialog} .md-dashboard-device-security__report`);
     await I.waitForVisible('#username', 15);
 
     if (Document.isScreenshotsEnabled()) await I.resizeWindow(1280, 900);

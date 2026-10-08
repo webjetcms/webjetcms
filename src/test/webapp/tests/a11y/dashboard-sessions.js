@@ -4,12 +4,13 @@ Feature('a11y.dashboard-sessions');
 
 const modal = '.md-dashboard-modal--sessions';
 const codeRoute = '**/admin/rest/security/login-events/*/code';
+const emailPageRoute = '**/admin/v9/?securityEvent=*';
 const mutationRoutes = ['**/admin/rest/sessions/logout*', '**/admin/rest/security/login-events/*/report', '**/admin/rest/security/login-events/*/confirm'];
 
 Before(({ login }) => { login('admin'); });
 
 After(async ({ I }) => {
-    for (const route of [dashboardPageRoute, codeRoute, ...mutationRoutes]) await I.stopMockingRoute(route);
+    for (const route of [dashboardPageRoute, emailPageRoute, codeRoute, ...mutationRoutes]) await I.stopMockingRoute(route);
     I.wjSetDefaultWindowSize();
 });
 
@@ -57,7 +58,7 @@ function buttonContrast(selector) {
 }
 
 /** Exercises real pointer and keyboard states without activating account actions. */
-async function auditButtons(I, selectors, failures) {
+async function auditButtons(I, selectors, failures, dialog = modal) {
     for (const selector of selectors) {
         const record = async state => {
             await I.waitForFunction(selector => !document.querySelector(selector).getAnimations().some(animation => animation.playState === 'running'), [selector], 5);
@@ -74,7 +75,7 @@ async function auditButtons(I, selectors, failures) {
             if (state.includes('hover')) I.assertTrue(colors.hover, 'The hover state must be exercised with the pointer.');
             if (state === 'active') I.assertTrue(colors.active, 'The pressed state must be exercised with a held pointer.');
         };
-        I.moveCursorTo(`${modal} .modal-title`);
+        I.moveCursorTo(`${dialog} .modal-title`);
         I.executeScript(() => document.activeElement.blur());
         await record('normal');
         I.moveCursorTo(selector);
@@ -82,7 +83,7 @@ async function auditButtons(I, selectors, failures) {
         // CodeceptJS has no pointer-down/up steps; release outside the control to avoid activating it.
         await I.usePlaywrightTo('hold the button without activating its action', async ({ page }) => { await page.mouse.down(); });
         await record('active');
-        I.moveCursorTo(`${modal} .modal-title`);
+        I.moveCursorTo(`${dialog} .modal-title`);
         await I.usePlaywrightTo('release outside the button', async ({ page }) => { await page.mouse.up(); });
         I.pressKey('Tab');
         I.executeScript(selector => document.querySelector(selector).focus(), selector);
@@ -93,16 +94,14 @@ async function auditButtons(I, selectors, failures) {
             I.executeScript(selector => { document.querySelector(selector).disabled = false; }, selector);
         }
     }
-    I.moveCursorTo(`${modal} .modal-title`);
+    I.moveCursorTo(`${dialog} .modal-title`);
     I.executeScript(() => document.activeElement.blur());
 }
 
 Scenario('Representative session actions remain readable with pointer and keyboard interaction', async ({ I }) => {
     const now = Date.now();
-    const event = { id: 900043, createDate: now, expiresAt: now + 86400000, browserName: 'Firefox autotest', operatingSystem: 'Linux', ipAddress: '192.0.2.2' };
     const data = {
         settings: { version: 1, configured: true, shortcutsConfigured: true, legacyBookmarksHandled: true, items: [], domainOptions: {} },
-        requestedSecurityEvent: event, securityEventRequested: true,
         notices: [{ id: 'twoFactor', action: { url: '/admin/2factorauth.jsp' } }],
         currentSessions: { currentSessionId: 'autotest-current', userSessions: [{ userSessions: [
             { sessionId: 'autotest-current', browserName: 'Chrome autotest', deviceId: 900042, deviceConfirmed: true, logonTime: now },
@@ -120,6 +119,8 @@ Scenario('Representative session actions remain readable with pointer and keyboa
     });
     I.resizeWindow(1440, 1230);
     I.amOnPage('/admin/v9/');
+    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
     I.waitForVisible(modal, 20);
     I.waitForFunction(selector => getComputedStyle(document.querySelector(selector)).opacity === '1'
         && getComputedStyle(document.querySelector(`${selector} .modal-dialog`)).transform === 'none', [modal], 10);
@@ -128,7 +129,6 @@ Scenario('Representative session actions remain readable with pointer and keyboa
     await auditButtons(I, [
         `${modal} .btn-close`,
         `${modal} .md-dashboard-sessions__summary button`,
-        `${modal} .md-dashboard-sessions__report`,
         `${modal} .md-dashboard-sessions__confirm-device`,
         `${modal} .md-dashboard-sessions__deny-device`
     ], failures);
@@ -146,4 +146,86 @@ Scenario('Representative session actions remain readable with pointer and keyboa
     I.assertDeepEqual(mutations, [], 'Contrast checks must not activate logout, device reporting or confirmation.');
     I.assertDeepEqual(failures, [], 'Representative actions must retain text/icon contrast and visible keyboard focus.');
     I.assertDeepEqual(violations.map(violation => ({ id: violation.id, targets: violation.nodes.map(node => node.target) })), [], 'Session actions and code entry must pass the accessibility audit.');
+});
+
+/** Email navigation is read-only; all subsequent writes and account destinations are intercepted. */
+Scenario('Email device review uses a compact accessible dialog and requires explicit blocking', async ({ I }) => {
+    const now = Date.now();
+    const event = { id: 900043, createDate: now, browserName: 'Firefox 131', operatingSystem: 'Windows 11', ipAddress: '192.0.2.2' };
+    const data = {
+        settings: { version: 1, configured: true, shortcutsConfigured: true, legacyBookmarksHandled: true, items: [], domainOptions: {} },
+        requestedSecurityEvent: event, securityEventRequested: true,
+        notices: [{ id: 'twoFactor', severity: 'warning', title: 'Two-factor autotest', action: { type: 'popup', url: '/admin/2factorauth.jsp' } }],
+        currentSessions: { currentSessionId: 'autotest-current', userSessions: [{ userSessions: [
+            { sessionId: 'autotest-current', browserName: 'Chrome autotest', deviceId: 900042, deviceConfirmed: true, logonTime: now }
+        ] }] }
+    };
+    const dialog = '.md-dashboard-modal--device-security';
+    const report = mutationRoutes[1];
+    let reports = 0;
+    await mockDashboardBootstrap(I, () => data, () => ({ dismissedUntil: {} }), emailPageRoute);
+    await I.mockRoute(report, route => {
+        reports++;
+        event.reportedAt = Date.now();
+        return route.fulfill({ contentType: 'application/json', body: JSON.stringify(event) });
+    });
+    const open = async () => {
+        I.amOnPage(`/admin/v9/?securityEvent=${event.id}`);
+        I.waitForVisible(dialog, 20);
+        I.waitForFunction(selector => getComputedStyle(document.querySelector(selector)).opacity === '1'
+            && getComputedStyle(document.querySelector(`${selector} .modal-dialog`)).transform === 'none', [dialog], 10);
+        I.executeScript(() => {
+            window.autotestSecurityDestination = null;
+            const capture = (...args) => { window.autotestSecurityDestination = {
+                args, modalPresent: !!document.querySelector('.md-dashboard-modal, .modal-backdrop')
+            }; };
+            window.openProfileDialog = capture;
+            window.WJ.openPopupDialog = capture;
+        });
+    };
+    I.resizeWindow(1440, 1100);
+    await open();
+    I.see('Zabezpečte svoj účet', dialog);
+    I.dontSeeElement(modal);
+    I.assertEqual(reports, 0, 'Opening an email link must not block a device.');
+    I.click('Neskôr', dialog);
+    I.waitForDetached(dialog, 10);
+    I.assertEqual(reports, 0, 'Later must not confirm blocking.');
+    await open();
+    const failures = [];
+    await auditButtons(I, [`${dialog} .md-dashboard-device-security__report`], failures, dialog);
+    I.assertEqual(reports, 0, 'Pointer and keyboard state checks must not submit a report.');
+    I.clickCss(`${dialog} .md-dashboard-device-security__report`);
+    I.waitForVisible(`${dialog} .md-dashboard-device-security__result`, 10);
+    I.see('Firefox 131 · Windows 11 · 192.0.2.2 sme zablokovali.', dialog);
+    I.see('Pri ďalšom prihlásení bude po overení prihlasovacích údajov potrebný kód z e-mailu.', dialog);
+    await auditButtons(I, [`${dialog} .btn-close`, `${dialog} .modal-footer .btn-link`, `${dialog} .btn-white`, `${dialog} .btn-primary`], failures, dialog);
+    const violations = await I.runA11yCheck({ context: { include: [dialog] } });
+    I.assertDeepEqual(failures, [], 'Compact dialog actions must retain readable contrast and visible keyboard focus.');
+    I.assertDeepEqual(violations.map(violation => ({ id: violation.id, targets: violation.nodes.map(node => node.target) })), [], 'The compact security dialog must pass the accessibility audit.');
+    I.saveScreenshot('dashboard-device-security-desktop.png');
+    I.resizeWindow(390, 850);
+    I.assertTrue(await I.executeScript(selector => {
+        const content = document.querySelector(`${selector} .modal-content`);
+        const bounds = content.getBoundingClientRect();
+        return bounds.left >= 0 && bounds.right <= innerWidth && content.scrollWidth <= content.clientWidth + 1
+            && [...content.querySelectorAll('button')].every(button => {
+                const rect = button.getBoundingClientRect();
+                return rect.left >= bounds.left && rect.right <= bounds.right;
+            });
+    }, dialog), 'All compact dialog content and actions must fit a mobile viewport.');
+    I.saveScreenshot('dashboard-device-security-mobile.png');
+    I.click('Zapnúť 2FA', dialog);
+    I.waitForFunction(() => window.autotestSecurityDestination !== null, 10);
+    I.assertDeepEqual(await I.executeScript(() => window.autotestSecurityDestination), {
+        args: ['/admin/2factorauth.jsp'], modalPresent: false
+    }, '2FA must reuse its existing destination after the modal and backdrop close.');
+    await open();
+    I.click('Zmeniť heslo', dialog);
+    I.waitForFunction(() => window.autotestSecurityDestination !== null, 10);
+    const userId = await I.executeScript(() => window.currentUser.userId);
+    I.assertDeepEqual(await I.executeScript(() => window.autotestSecurityDestination), {
+        args: [userId, true], modalPresent: false
+    }, 'Password change must open the current profile after the modal and backdrop close.');
+    I.assertEqual(reports, 1, 'Reopening the result must not submit another report.');
 });
