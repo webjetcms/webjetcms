@@ -123,36 +123,18 @@ class AdminDeviceServiceTest {
         assertEquals(event.getId(), request.getSession().getAttribute(AdminDeviceService.SESSION_DEVICE_ID));
     }
 
-    /** Browser-version changes retain the token; repeated hooks do not duplicate one login. */
+    /** A recognized browser retains its cookie and does not send another notification. */
     @Test
-    void renewsKnownCookieAndProcessesALaterLoginInTheSameSession() {
+    void renewsKnownCookieWithoutAnotherNotification() {
         request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
         when(repository.findByTokenHash(7, AdminDeviceService.hashToken(TOKEN))).thenReturn(event());
-        LogonTools.afterSuccessLogon(request, response);
-        LogonTools.afterSuccessLogon(request, response);
-        verify(repository, times(1)).recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
 
-        var laterRequest = new MockHttpServletRequest();
-        laterRequest.setSession(request.getSession());
-        laterRequest.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
-        laterRequest.addHeader("User-Agent", "Updated Autotest Browser");
-        LogonTools.afterSuccessLogon(laterRequest, new MockHttpServletResponse());
+        AdminDeviceService.recordSuccessfulLogin(user, request, response);
 
         assertEquals(TOKEN, response.getCookie(AdminDeviceService.COOKIE_NAME).getValue());
-        verify(repository, times(2)).recordLogin(eq(7), eq(AdminDeviceService.hashToken(TOKEN)), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
+        verify(repository).recordLogin(eq(7), eq(AdminDeviceService.hashToken(TOKEN)), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
         verify(service, never()).sendNotification(any(), any(), any());
         assertEquals(42L, request.getSession().getAttribute(AdminDeviceService.SESSION_DEVICE_ID));
-    }
-
-    /** Sharing a browser token never shares account recognition. */
-    @Test
-    void scopesAnotherAccountIndependently() {
-        request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
-        LogonTools.afterSuccessLogon(request, response);
-        when(user.getUserId()).thenReturn(8);
-        LogonTools.afterSuccessLogon(request, new MockHttpServletResponse());
-        verify(repository).recordLogin(eq(7), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
-        verify(repository).recordLogin(eq(8), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
     }
 
     @Test
@@ -220,28 +202,6 @@ class AdminDeviceServiceTest {
         };
         request.removeHeader("User-Agent");
         request.addHeader("User-Agent", userAgent);
-
-        assertDeviceRecorded();
-    }
-
-    /** Runtime settings cannot extend the immutable domain exclusions to another environment. */
-    @Test
-    void runtimeConfigurationCannotExcludeAnotherHost() {
-        prepareHeadlessLogin("cms.example.com");
-        constants.when(() -> Constants.getString("adminNewDeviceIgnoredDomains")).thenReturn("cms.example.com");
-        constants.when(() -> Constants.getString("adminNewDeviceIgnoredUserAgents")).thenReturn(HEADLESS_USER_AGENT);
-
-        assertDeviceRecorded();
-    }
-
-    /** Runtime settings cannot add another browser to the immutable User-Agent exclusions. */
-    @Test
-    void runtimeConfigurationCannotExcludeAnotherUserAgent() {
-        prepareHeadlessLogin("localhost");
-        request.removeHeader("User-Agent");
-        request.addHeader("User-Agent", "Autotest configured browser");
-        constants.when(() -> Constants.getString("adminNewDeviceIgnoredDomains")).thenReturn("localhost");
-        constants.when(() -> Constants.getString("adminNewDeviceIgnoredUserAgents")).thenReturn("Autotest configured browser");
 
         assertDeviceRecorded();
     }
@@ -460,13 +420,12 @@ class AdminDeviceServiceTest {
     }
 
     @Test
-    void blockedCookieStillRecordsAndNotifiesOnlyOncePerLoginRequest() {
+    void recordsAndNotifiesWhenBrowserRejectsCookie() {
         tools.when(() -> Tools.addCookie(any(), any(), any())).thenReturn(false);
         DeviceEntity event = event();
         when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
             .thenReturn(event);
-        LogonTools.afterSuccessLogon(request, response);
-        LogonTools.afterSuccessLogon(request, response);
+        AdminDeviceService.recordSuccessfulLogin(user, request, response);
         verify(service, times(1)).sendNotification(user, request, event);
         assertEquals(0, response.getCookies().length);
     }

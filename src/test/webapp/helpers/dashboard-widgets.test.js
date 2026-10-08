@@ -2040,7 +2040,8 @@ test('Authorized administrator logout refreshes REST data and retains pending an
     assert.equal(requests.length, 6);
 });
 
-for (const securityEvent of [undefined, { id: 42, createDate: 1000 }]) test(`Session dialog retains pending and failed bulk removals (security event: ${Boolean(securityEvent)})`, async t => {
+test('Session dialog retains pending and failed bulk removals', async t => {
+    const securityEvent = { id: 42, createDate: 1000 };
     const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'autotest', userSessions: [
         { sessionId: 'current', logonTime: 1, lastActivity: Date.now(), browserName: 'Chrome autotest', remoteAddr: '127.0.0.1' },
         ...['removed', 'pending', 'failed'].map(sessionId => ({ sessionId, logonTime: 2, lastActivity: Date.now() - 600000, browserName: '<script>autotest</script>', remoteAddr: '127.0.0.2' }))
@@ -2064,11 +2065,11 @@ for (const securityEvent of [undefined, { id: 42, createDate: 1000 }]) test(`Ses
     assert.equal(root.querySelectorAll('tbody tr:not(:first-child) button').length, 1, 'Only the failed session offers retry.');
     assert.equal(dialog.refreshed(), 1);
     assert.equal(scope.flattenSessions(context.data.currentSessions).length, 3);
-    if (securityEvent) assert.equal(root.querySelector('.md-dashboard-sessions__mine .md-dashboard-sessions__report').disabled, false,
+    assert.equal(root.querySelector('.md-dashboard-sessions__mine .md-dashboard-sessions__report').disabled, false,
         'Refreshing sessions must retain an enabled report action in the personal tab.');
 });
 
-for (const securityEvent of [undefined, { id: 42, createDate: 1000 }]) test(`Administrator tab refreshes, retries, respects permissions and aborts on close (security event: ${Boolean(securityEvent)})`, async t => {
+test('Administrator tab refreshes, retries, respects permissions and aborts on close', async t => {
     let fail = true;
     let users = [];
     const { scope, context, window, requests } = fixture(t, {
@@ -2077,14 +2078,14 @@ for (const securityEvent of [undefined, { id: 42, createDate: 1000 }]) test(`Adm
     });
     window.WJ.hasPermission = permission => permission === 'users.edit_admins';
     const dialog = sessionDialogFixture(context, window);
-    scope.showActiveSessions(context, securityEvent);
+    scope.showActiveSessions(context);
     let root = window.document.querySelector('.md-dashboard-modal--sessions');
     assert.equal(root.querySelectorAll('[role="tab"]').length, 2, 'Edit permission alone must not display the list tab.');
     assert.equal(requests.length, 0);
     root.querySelector('.modal-footer > button:last-child').click();
     window.WJ.hasPermission = permission => permission === 'welcomeShowLoggedAdmins';
     sessionDialogFixture(context, window);
-    scope.showActiveSessions(context, securityEvent);
+    scope.showActiveSessions(context);
     root = window.document.querySelector('.md-dashboard-modal--sessions');
     const adminTab = root.querySelectorAll('[role="tab"]')[1];
     adminTab.click();
@@ -2107,7 +2108,8 @@ for (const securityEvent of [undefined, { id: 42, createDate: 1000 }]) test(`Adm
     assert.equal(dialog.signal.aborted, true);
 });
 
-for (const securityEvent of [undefined, { id: 42, createDate: 1000 }]) test(`History loads on tab activation, pages safely and aborts on close (security event: ${Boolean(securityEvent)})`, async t => {
+test('History loads on tab activation, pages safely and aborts on close', async t => {
+    const securityEvent = { id: 42, createDate: 1000 };
     const data = { currentSessions: { currentSessionId: 'current', userSessions: [] }, loggedAdmins: [{ fullName: 'Admin autotest', email: 'autotest@example.com' }] };
     const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async () => ({ ok: true, json: async () => ({
         content: [{ createDate: Date.now(), ip: '127.0.0.1', description: '<img src=x> autotest login' }],
@@ -2122,8 +2124,7 @@ for (const securityEvent of [undefined, { id: 42, createDate: 1000 }]) test(`His
     tabs[0].dispatchEvent(new window.KeyboardEvent('keydown', { key: 'End', bubbles: true }));
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(tabs[2].getAttribute('aria-selected'), 'true');
-    assert.equal(Boolean(root.querySelector('.md-dashboard-sessions__security')), Boolean(securityEvent));
-    if (securityEvent) assert.equal(root.querySelector('.md-dashboard-sessions__security').closest('[role="tabpanel"]').hidden, true,
+    assert.equal(root.querySelector('.md-dashboard-sessions__security').closest('[role="tabpanel"]').hidden, true,
         'The warning must belong to the hidden personal tab while history is selected.');
     assert.ok(root.querySelector('.md-dashboard-sessions__password'));
     assert.equal(requests[0].url, '/admin/rest/sessions/login-history?page=0');
@@ -2161,7 +2162,8 @@ test('Expanded release announcements retain headings, lists, emphasis and links 
     assert.equal(container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, context.labels.changelog);
 });
 
-for (const securityEvent of [undefined, { id: 'autotest-focus', createDate: 1000 }]) test(`Session dialog does not autofocus a tab or steal child focus (security event: ${Boolean(securityEvent)})`, t => {
+test('Session dialog does not autofocus a tab or steal child focus', t => {
+    const securityEvent = { id: 'autotest-focus', createDate: 1000 };
     for (const preserveFocus of [false, true]) {
         const { scope, context, window } = fixture(t, { data: { currentSessions: { userSessions: [] } } });
         sessionDialogFixture(context, window);
@@ -2211,7 +2213,7 @@ test('Login security dialog removes only the successfully blocked device notice'
     assert.equal(requests[1].options.headers['X-CSRF-Token'], 'test-csrf-token');
     assert.equal(context.data.notices.length, 1, 'Blocking must remove only the resolved warning.');
     assert.equal(context.data.notices[0], otherNotice);
-    assert.equal(scope.flattenSessions(context.data.currentSessions).length, 2, 'Reporting must not terminate sessions.');
+    assert.equal(scope.flattenSessions(context.data.currentSessions).length, 2, 'Unrelated sessions must remain in the dialog.');
 });
 
 test('Security review omits current-session logout and uses the existing API for other sessions', async t => {
@@ -2233,7 +2235,8 @@ test('Security review omits current-session logout and uses the existing API for
     assert.equal(root.querySelector('tbody button'), null);
 });
 
-for (const securityEvent of [undefined, { id: 42, createDate: 1000 }]) test(`Session password action closes its dialog before opening the profile (security event: ${Boolean(securityEvent)})`, async t => {
+test('Session password action closes its dialog before opening the profile', async t => {
+    const securityEvent = { id: 42, createDate: 1000 };
     const { scope, context, window } = fixture(t, { data: { currentSessions: { userSessions: [] } } });
     const dialog = sessionDialogFixture(context, window);
     window.currentUser = { userId: 7 };

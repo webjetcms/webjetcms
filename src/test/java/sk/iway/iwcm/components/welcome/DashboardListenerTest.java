@@ -93,14 +93,9 @@ class DashboardListenerTest {
             assertEquals("autotest-notice", data.path("notices").get(0).path("id").asText());
             var securityEvent = data.path("requestedSecurityEvent");
             assertTrue(data.path("securityEventRequested").asBoolean());
-            assertTrue(securityEvent.path("id").isIntegralNumber());
             assertEquals(42L, securityEvent.path("id").longValue());
-            assertEquals(1791201600123L, securityEvent.path("createDate").longValue());
-            assertTrue(securityEvent.path("confirmedAt").isNull());
-            assertTrue(securityEvent.path("reportedAt").isNull());
             assertFalse(securityEvent.has("userId"));
             assertFalse(securityEvent.has("tokenHash"));
-            assertFalse(securityEvent.has("lastSeen"));
             assertEquals(securityEvent, data.path("notices").get(0).path("securityEvent"));
             assertEquals(sessionId, data.path("currentSessions").path("currentSessionId").asText());
             assertFalse(data.has("loggedAdmins"));

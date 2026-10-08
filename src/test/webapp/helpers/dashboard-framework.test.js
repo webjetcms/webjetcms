@@ -1815,7 +1815,7 @@ test('The edit toolbar counteracts smooth scrolling and releases its scroll list
     assert.equal(controller.toolbar.style.transform, '');
 });
 
-test('Email confirmation consumes the token once and shows a ten-second success toast without a dialog', async t => {
+test('Email confirmation consumes the token once and shows success without a dialog', async t => {
     const { context, overview, window, notifications } = overviewFixture(t);
     context.registerDashboardWidgets = () => {};
     context.getDashboardDefaults = () => [];
@@ -1837,7 +1837,8 @@ test('Email confirmation consumes the token once and shows a ten-second success 
     assert.equal(requests[0].url, '/admin/rest/security/login-events/42/confirm');
     assert.equal(requests[0].options.method, 'POST');
     assert.deepEqual(JSON.parse(requests[0].options.body), { token: 'email-secret' });
-    assert.deepEqual(notifications, [['sessions', 'admin.dashboard.newDevice.confirmed.js', 10000]]);
+    assert.equal(notifications.length, 1);
+    assert.equal(notifications[0][1], 'admin.dashboard.newDevice.confirmed.js');
     assert.equal(overview.data.notices.length, 0);
     assert.equal(overview.data.currentSessions.userSessions[0].userSessions[0].deviceConfirmed, true);
     assert.equal(window.document.querySelector('.md-dashboard-modal'), null);

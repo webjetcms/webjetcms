@@ -645,10 +645,9 @@ class OAuth2UserSuccessHandlerTest extends BaseWebjetTest {
             logon.verify(() -> LogonTools.setUserToSession(eq(session), identity.capture()));
             assertEquals(7, identity.getValue().getUserId());
             assertEquals(administrator, identity.getValue().isAdmin());
-            if (administrator) {
-                if (hasAdminTarget) devices.verify(() -> AdminDeviceService.getAfterLoginRedirect(request));
-                devices.verifyNoMoreInteractions();
-            } else devices.verifyNoInteractions();
+            devices.verify(() -> AdminDeviceService.requireVerification(request));
+            if (administrator && hasAdminTarget) devices.verify(() -> AdminDeviceService.getAfterLoginRedirect(request));
+            devices.verifyNoMoreInteractions();
         }
     }
 

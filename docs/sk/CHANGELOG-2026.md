@@ -15,6 +15,8 @@
 
 ### Úvodná obrazovka
 
+- Prihlásenie z nového prehliadača zobrazí upozornenie a odošle email. Zariadenie môžete potvrdiť emailovým odkazom alebo kódom, prípadne zablokovať a ukončiť jeho aktívne prihlásenia. Pri ďalšom prihlásení zo zablokovaného prehliadača sa vyžaduje emailový kód (#340).
+
 - [Úvodnú obrazovku](redactor/admin/welcome.md) sme prerobili na widgetový systém, aby ste mali údaje potrebné pri práci na jednom mieste bez prechádzania jednotlivých častí administrácie. Sami si vyberiete widgety a nastavíte zobrazované údaje, veľkosť a poradie podľa svojich potrieb (#58806).
 
 <div class="video-container">

@@ -1,7 +1,8 @@
 package sk.iway.iwcm.users.devices;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.jpa.domain.DeleteSpecification;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter;
@@ -85,8 +87,9 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
             assertTrue(service.findActive(USER_ID, NOW + 250).isEmpty(), "Blocking resolves the notice without deleting the device");
 
             assertThrows(IllegalStateException.class, () -> record(service, USER_ID, database.hash, NOW + 300));
-            service.cleanup(NOW + KNOWN_AGE);
+            database.cleanupOwnDevices(NOW + KNOWN_AGE);
             assertNotNull(service.findEvent(USER_ID, id), "Cleanup must retain blocked devices");
+            assertNull(service.findEvent(OTHER_USER_ID, secondUser.getId()), "Cleanup must delete expired unblocked devices");
             assertTrue(service.issueUnblockCode(USER_ID, id, database.hash, NOW + 300));
             assertNotNull(service.unblock(USER_ID, id, database.hash, NOW + 300));
             assertNull(record(service, USER_ID, database.hash, NOW + 301));
@@ -201,6 +204,16 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
 
         int count() {
             return query.forInt("SELECT COUNT(*) FROM user_login_devices WHERE token_hash=?", hash);
+        }
+
+        /** Executes the production cleanup predicate only within this test's records. */
+        void cleanupOwnDevices(long cutoff) {
+            DeviceRepository cleanupRepository = mock(DeviceRepository.class, CALLS_REAL_METHODS);
+            doAnswer(invocation -> {
+                DeleteSpecification<DeviceEntity> expired = invocation.getArgument(0);
+                return devices.delete(expired.and((root, builder) -> builder.equal(root.get("tokenHash"), hash)));
+            }).when(cleanupRepository).delete(any(DeleteSpecification.class));
+            new DeviceService(cleanupRepository).cleanup(cutoff);
         }
 
         @Override
