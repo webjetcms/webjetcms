@@ -100,8 +100,13 @@ Scenario('Eshop invoice tests', async ({I, DT, DTE, Document, TempMail}) => {
 
     I.say("Check notification tab");
         I.clickCss("#pills-dt-basketInvoiceDataTable-notify-tab");
-        const body = await I.grabHTMLFrom("#DTE_Field_editorFields-body > div.editor.ql-container.ql-snow > div.ql-editor");
-        I.assertEqual(body, "<p>Nastala zmena stavu objednávky.</p><p>Vaša objednávka je aktuálne v stave {STATUS}.</p><p><br></p><p>&nbsp;</p><p>Rekapitulácia vašej objednávky:</p><p> </p><p>&nbsp;</p><p> {ORDER_DETAILS}</p>");
+        const body = await I.grabTextFromAll("#DTE_Field_editorFields-body .ql-editor > p");
+        I.assertDeepEqual(body.map(paragraph => paragraph.trim()).filter(Boolean), [
+            "Nastala zmena stavu objednávky.",
+            "Vaša objednávka je aktuálne v stave {STATUS}.",
+            "Rekapitulácia vašej objednávky:",
+            "{ORDER_DETAILS}"
+        ], "The notification must retain its text and replacement tokens after Quill normalizes empty paragraphs.");
 
     I.say("Check payment tab - inner table");
         I.clickCss("#pills-dt-basketInvoiceDataTable-payments-tab");

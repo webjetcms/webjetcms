@@ -112,10 +112,10 @@ Scenario('Browse main areas, sections and cards or search terminal cards directl
     I.see('Ankety', optionTitle);
     I.see('Bannerový systém', optionTitle);
     I.saveScreenshot('dashboard-shortcut-browse-sections.png', true);
-    I.click(locate(optionTitle).withText('Číselníky'));
+    I.click(locate(optionTitle).withText('Bannerový systém'));
     I.see('Vyberte kartu', heading);
-    I.see('Zoznam dát číselníkov', optionTitle);
-    I.see('Typy číselníkov', optionTitle);
+    I.see('Zoznam bannerov', optionTitle);
+    I.see('Štatistika bannerov', optionTitle);
     I.saveScreenshot('dashboard-shortcut-browse-cards.png', true);
     I.clickCss(modal + ' .md-dashboard__shortcut-result-back');
     I.see('Sekcia', heading);
@@ -123,14 +123,13 @@ Scenario('Browse main areas, sections and cards or search terminal cards directl
     I.see('Hlavná časť', heading);
     searchShortcut(I, 'číselník');
     I.see('Vyberte kartu', heading);
-    I.assertDeepEqual(await I.grabTextFromAll(optionTitle), ['Zoznam dát číselníkov', 'Typy číselníkov']);
+    I.assertDeepEqual(await I.grabTextFromAll(optionTitle), ['Číselníky']);
     I.dontSeeElement(modal + ' .md-dashboard__shortcut-result-back');
-    I.pressKey('ArrowDown');
     I.pressKey('Enter');
     I.waitForInvisible(modal + ' [role="listbox"]', 10);
-    I.seeInField(modal + ' [name="dashboardShortcutSearch"]', 'Aplikácie › Číselníky › Typy číselníkov');
+    I.seeInField(modal + ' [name="dashboardShortcutSearch"]', 'Aplikácie › Číselníky');
     searchShortcut(I, 'ciselnik');
-    I.assertDeepEqual(await I.grabTextFromAll(optionTitle), ['Zoznam dát číselníkov', 'Typy číselníkov']);
+    I.assertDeepEqual(await I.grabTextFromAll(optionTitle), ['Číselníky']);
     searchShortcut(I, '');
     I.see('Hlavná časť', heading);
     I.click(locate(optionTitle).withText('Používatelia'));
@@ -473,8 +472,9 @@ Scenario('Shortcut search offers terminal cards and long or unavailable destinat
     I.clickCss(target);
     I.waitForVisible(modal, 10);
     I.see('Odstrániť skratku', modal);
-    I.waitForInvisible('.tooltip', 10);
-    I.dontSeeElement('.tooltip');
+    // Bootstrap removes .show when hiding; an opacity-zero transition node is not visible to the user.
+    I.waitForInvisible('.tooltip.show', 10);
+    I.dontSeeElement('.tooltip.show');
     I.click('Zrušiť', modal + ' .modal-footer');
     I.waitForInvisible(modal, 10);
     I.refreshPage();

@@ -70,7 +70,8 @@ for (const { permission, types } of permissionCases) {
         I.assertFalse(await I.executeScript(permission => WJ.hasPermission(permission), permission));
         if (permission === 'welcomeShowLoggedAdmins') {
             I.assertFalse(Object.prototype.hasOwnProperty.call(await I.executeScript(readDashboardBootstrap), 'loggedAdmins'), 'Administrator data must never be injected.');
-            I.assertEqual(await I.executeScript(async () => (await fetch('/admin/rest/sessions/administrators', { headers: { 'X-CSRF-Token': window.csrfToken } })).status), 403,
+            // Basic authentication reports denied REST access as 401 instead of 403.
+            I.assertTrue([401, 403].includes(await I.executeScript(async () => (await fetch('/admin/rest/sessions/administrators', { headers: { 'X-CSRF-Token': window.csrfToken } })).status)),
                 'The REST service must reject missing list permission even if administrator management remains allowed.');
         }
         for (const type of types) I.dontSeeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);

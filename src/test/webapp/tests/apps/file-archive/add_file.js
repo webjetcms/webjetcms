@@ -9,7 +9,8 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario("Clean fexpost mailbox", async ({ I, TempMail }) => {
+Scenario("Clean test files and fexpost mailbox", async ({ I, TempMail }) => {
+    await SL.deleteTestFiles();
     I.say("Cleaning fexpost mailbox");
     await TempMail.login("webjetarchive");
     await TempMail.destroyInbox();
@@ -41,6 +42,7 @@ Scenario('Add new file to archive and validate upload', async ({ I, DT, DTE }) =
     I.dontSeeElement(locate('.nav-link').withText('Zoznam verzií'));
     I.dontSeeElement(locate('.nav-link').withText('Čakajúce súbory'));
     DTE.save('fileArchiveDataTable');
+    I.waitForInvisible('#fileArchiveDataTable_modal', 10);
 
     // 4. Overenie, že sa súbor nahrá a je na správnom mieste
     I.say("Phase 4 - Check that the file is uploaded and in the right place");
