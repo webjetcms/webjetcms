@@ -14,6 +14,7 @@
       answer: 'Odpoveď AI', error: 'Vyhľadávanie sa nepodarilo. Skúste to znova.',
       loginRequired: 'Na vyhľadávanie sa prihláste.',
       forbidden: 'Nemáte oprávnenie na vyhľadávanie v tejto dokumentácii.',
+      rateLimited: 'Dosiahli ste limit vyhľadávaní. Skúste to znova neskôr.',
       unavailable: 'Vyhľadávanie dokumentácie momentálne nie je dostupné.',
       open: 'Otvoriť dokument v novej karte'
     },
@@ -29,6 +30,7 @@
       answer: 'Odpověď AI', error: 'Vyhledávání se nezdařilo. Zkuste to znovu.',
       loginRequired: 'Pro vyhledávání se přihlaste.',
       forbidden: 'Nemáte oprávnění k vyhledávání v této dokumentaci.',
+      rateLimited: 'Dosáhli jste limitu vyhledávání. Zkuste to znovu později.',
       unavailable: 'Vyhledávání dokumentace momentálně není dostupné.',
       open: 'Otevřít dokument v nové kartě'
     },
@@ -44,6 +46,7 @@
       error: 'Search failed. Please try again.',
       loginRequired: 'Sign in to search documentation.',
       forbidden: 'You do not have permission to search this documentation.',
+      rateLimited: 'Search limit reached. Please try again later.',
       unavailable: 'Documentation search is currently unavailable.',
       open: 'Open document in a new tab'
     }
@@ -257,8 +260,21 @@
           if (currentDirectoryOnly) url.searchParams.set('directory', directory);
           const response = await fetch(url, { credentials: 'same-origin', signal: request.signal });
           if (!response.ok) {
-            const message = response.status === 401 ? labels.loginRequired : response.status === 403 ? labels.forbidden :
-              response.status === 503 ? labels.unavailable : labels.error;
+            let message = labels.error;
+            switch (response.status) {
+              case 401:
+                message = labels.loginRequired;
+                break;
+              case 403:
+                message = labels.forbidden;
+                break;
+              case 429:
+                message = labels.rateLimited;
+                break;
+              case 503:
+                message = labels.unavailable;
+                break;
+            }
             throw new Error(message);
           }
           const contentType = (response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
@@ -293,7 +309,7 @@
           status.textContent = results.children.length ? labels.results + ' ' + results.children.length : labels.empty;
         } catch (error) {
           if (request.signal.aborted) return;
-          const knownMessages = [labels.error, labels.loginRequired, labels.forbidden, labels.unavailable];
+          const knownMessages = [labels.error, labels.loginRequired, labels.forbidden, labels.rateLimited, labels.unavailable];
           status.textContent = knownMessages.includes(error.message) ? error.message : labels.error;
         } finally {
           if (activeRequest === request) {

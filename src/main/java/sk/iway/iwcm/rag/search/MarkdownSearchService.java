@@ -19,6 +19,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.rag.service.MarkdownIndexService;
@@ -60,6 +61,7 @@ public class MarkdownSearchService {
      * Embeddings and answers use the requesting domain's assistants, credentials and usage accounting.
      * Answers are generated automatically when ragAnswerAllowed is enabled and authorized context is available.
      * When ragMarkdownSearchRequireLogin is enabled, any authenticated user can search; administrator access is not required.
+     * The shared search spam protection limits requests before any AI provider call.
      *
      * @param query question or search terms
      * @param language required documentation language
@@ -92,6 +94,9 @@ public class MarkdownSearchService {
 
         List<String> searchPaths = getSearchPaths(roots, directory, normalizedLanguage);
         if (searchPaths.isEmpty()) return new SearchResponse(List.of(), null);
+        if (SpamProtection.canPost("search", "", request) == false) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Search limit reached. Please try again later.");
+        }
         Map<String, Object> filters = searchPaths.size() == 1 ? Map.of("sourceRoot", searchPaths.get(0)) : Map.of("sourceRoots", searchPaths);
         List<VectorSearchResult> chunks = semanticSearchService.searchChunks(normalizedQuery, domainId,
             normalizedLanguage, MAX_RESULTS, RagEntityType.MARKDOWN, filters, request);

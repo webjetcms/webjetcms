@@ -35,7 +35,7 @@ public class MarkdownSearchRestController {
      * @param request request used for access checks and AI provider calls
      * @param response response whose cache policy is set to no-store
      * @return matching sources and an optional plain-text answer
-     * @throws ResponseStatusException if input is invalid or access to the documentation is denied
+     * @throws ResponseStatusException if input is invalid, access is denied, or the search rate limit is exceeded
      */
     @GetMapping("/search")
     public SearchResponse search(@RequestParam("query") String query, @RequestParam("language") String language,

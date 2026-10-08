@@ -21,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PathFilter;
+import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.rag.service.MarkdownSourceService;
 import sk.iway.iwcm.rag.service.RagEntityType;
@@ -45,6 +46,7 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
 
     @BeforeEach
     void configureDocumentation() {
+        SpamProtection.clearAll();
         when(reranker.rerank(anyString(), anyList())).thenAnswer(call -> call.getArgument(1));
         Constants.setString("ragMarkdownFolders", "/docs/webjetcms");
         Constants.setBoolean("ragAnswerAllowed", true);
@@ -53,6 +55,7 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
 
     @AfterEach
     void restoreConfiguration() {
+        SpamProtection.clearAll();
         Constants.setString("ragMarkdownFolders", originalFolders);
         Constants.setBoolean("ragAnswerAllowed", originalAnswerAllowed);
         Constants.setBoolean("ragMarkdownSearchRequireLogin", originalRequireLogin);

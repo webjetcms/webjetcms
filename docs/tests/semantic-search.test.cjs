@@ -135,12 +135,15 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   for (const [failure, message] of [
     [{ status: 401, json: {} }, 'Sign in to search documentation.'],
     [{ status: 403, json: {} }, 'You do not have permission to search this documentation.'],
+    [{ status: 429, json: {} }, 'Search limit reached. Please try again later.'],
     [{ contentType: 'text/html', body: '<html>Unavailable API</html>' }, 'Documentation search is currently unavailable.']
   ]) {
     response = failure;
     await page.locator('.documentation-search button').click();
     await page.waitForFunction(expected => document.querySelector('.documentation-search-status').textContent === expected, message);
     assert.equal(requestUrl.searchParams.get('directory'), '/en/redactor/');
+    assert.equal(await page.locator('#documentation-query').inputValue(), 'Edit a page');
+    assert.equal(await page.locator('.documentation-search button').isEnabled(), true);
     await page.keyboard.press('Escape');
   }
 
