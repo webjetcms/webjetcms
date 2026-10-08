@@ -477,7 +477,9 @@ Zobrazí jednoduchý HTML editor, který umožňuje základní formátování te
 
 Při validační chybě se červeným okrajem zvýrazní nástrojová lišta i editační plocha, aby byl vadný obsah vizuálně označen stejně jako u ostatních typů polí.
 
-Při otevření nebo potvrzení režimu úpravy HTML kódu editor odstraní nadbytečné prázdné odstavce, například `<p><br></p>`. Pokud by odstraněním zůstal obsah zcela prázdný, původní HTML kód zachová.
+Při úpravě HTML kódu editor zachovává vnořené obalové elementy `div` a prázdné odstavce mezi obsahem, například `<p><br></p>`. Jednoduché `div` bez atributů a vnořených bloků převede na odstavce `p` ; odsazení zdrojového kódu mezi bloky nevytváří další prázdné řádky.
+
+Při získání hodnoty pro uložení se odstraní prázdné odstavce na konci obsahu, i když jsou vnořeny do koncových obalových elementů `div`. Prázdné odstavce mezi neprázdnými bloky zůstávají zachovány.
 
 Všimněte si použití konvertoru ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)```, který povolí odeslat pouze [bezpečný HTML kód](../backend/security.md) (bez vložených JavaScript elementů a podobně).
 
@@ -818,7 +820,7 @@ Frontend implementace je v souborech:
 - [field-type-options.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options.js) — Definice typu pole se dvěma vstupy (jméno a hodnota)
 - [field-type-options-base.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options-base.js) — společná logika pro OPTIONS i OPTIONS_SIMPLE (drag & drop, přidává
 
-Na straně backendu se typ `DataTableColumnType.OPTIONS` automaticky nastaví jako `editor.type = "options"` s formátem renderování `dt-format-text`.
+Na straně backendu se typ `DataTableColumnType.OPTIONS` automaticky nastaví jako `editor.type = "options"` s formátem `dt-format-text`.
 
 ![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
 

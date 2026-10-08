@@ -149,8 +149,10 @@
             ui.noResults = $('<p>', { hidden: true }).text(ui.labels.empty).appendTo(ui.drawer);
             ui.toolbarHost = $('#inlineEditorToolbarTop');
             ui.toolbarContent = $('#wjInlineCkEditorToolbarOffsetElement');
+            ui.editorToolbar = $('#wjInlineCkEditorToolbarElement');
             ui.placeholder = $('#inlineEditorToolbarTopPlaceHolder');
             ui.oldHostStyle = ui.toolbarHost.attr('style');
+            ui.oldToolbarContentStyle = ui.toolbarContent.attr('style');
             ui.oldPlaceholderStyle = ui.placeholder.attr('style');
             if (ui.toolbarHost.length) {
                 ui.toolbarHost.append(ui.bar);
@@ -226,6 +228,7 @@
             ui.resizeObserver = new ResizeObserver(ui.layoutHandler);
             ui.resizeObserver.observe(me.$wrapper[0]);
             if (ui.toolbarContent.length) ui.resizeObserver.observe(ui.toolbarContent[0]);
+            if (ui.editorToolbar.length) ui.resizeObserver.observe(ui.editorToolbar[0]);
             ui.resizeObserver.observe(ui.bar[0]);
             // Page scripts may mutate content continuously; only refresh outline geometry here.
             ui.observer = new MutationObserver(ui.layoutHandler);
@@ -964,6 +967,10 @@
                     ui.moveHint.find('[role=status]').text(me.duplicate ? ui.labels.duplicateHint : ui.labels.moveHint);
                     ui.moveHint.find('[data-pb-action=end-move]')[0].focus({ preventScroll: true });
                 }
+                // Reserve the last rendered toolbar height when no inline editor remains.
+                var editorToolbarHeight = ui.editorToolbar.outerHeight();
+                if (editorToolbarHeight > 0) ui.editorToolbarHeight = editorToolbarHeight;
+                ui.toolbarContent.css('min-height', ui.editorToolbarHeight || 90);
                 var contentBottom = ui.toolbarContent.length ? ui.toolbarContent[0].getBoundingClientRect().bottom : 0;
                 if (ui.toolbarHost.length) {
                     var hostTop = ui.toolbarHost[0].getBoundingClientRect().top;
@@ -1030,6 +1037,8 @@
             ui.bar.add(ui.drawer).add(ui.layer).add(ui.insertLayer).remove();
             if (ui.oldHostStyle === undefined) ui.toolbarHost.removeAttr('style');
             else ui.toolbarHost.attr('style', ui.oldHostStyle);
+            if (ui.oldToolbarContentStyle === undefined) ui.toolbarContent.removeAttr('style');
+            else ui.toolbarContent.attr('style', ui.oldToolbarContentStyle);
             if (ui.oldPlaceholderStyle === undefined) ui.placeholder.removeAttr('style');
             else ui.placeholder.attr('style', ui.oldPlaceholderStyle);
             this.ui = null;

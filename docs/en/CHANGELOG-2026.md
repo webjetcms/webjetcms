@@ -84,6 +84,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Multi-step forms - added option to edit [HTML button to previous step](redactor/apps/formsimple/README.md#html-button-code) via translation key `components.mustistep.form.back_button` (#osk782).
 - Multi-step forms - after unsuccessfully moving to the next step or submitting, the page will scroll to the first visible error message even when retrying (#58794).
 - Forms - validation of uploaded files distinguishes between an illegal character in the name and an illegal extension. A name error will indicate the specific illegal character or string. File names in error messages are displayed as text to prevent any HTML tags in the name from being executed (#58794).
 - Multi-step forms - when [returning to the previous step](redactor/apps/multistep-form/README.md#returning-to-the-previous-step) both the processed values ​​and the completed uploads are preserved (#58794).
@@ -235,6 +236,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
 - Websites - fixed loading of `ckeditor_button_sizes` value for button type `A` (#OSK674).
 - SQL Monitoring - fixed lifecycle management of `PreparedStatement` measurements. The record is also deleted when closed before starting the measurement and individual `PreparedStatement` objects are distinguished by identity without JDBC calls `hashCode()` and `equals()`. Concurrent access uses `ConcurrentHashMap` and atomic state without a global `synchronized` block, so threads do not wait for a shared lock and measurements do not merge even when identity hashes collide.
+- Page Builder - fixed unnecessary scrolling up/down the page if you were editing an application on a page (#343).
+- Page Builder - fixed displaying the toolbar if the page does not contain any sections (#343).
+- Page Builder - added option to set [structure window width](frontend/page-builder/settings.md) (#343)
 
 ### Performance
 
@@ -266,6 +270,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Data tables - extended functionality of field type [`OPTIONS`](developer/datatables-editor/standard-fields.md#options) by the ability to add an empty value using `allowEmptyOption` (#osk573).
 - Data tables - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) removes extra blank paragraphs when editing source code (#osk573).
+- Data tables - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) preserves nested wrapper elements `div`. Empty paragraph cleaning is now only performed at the end of the stored value; empty paragraphs between content are preserved (#osk782).
 - Data tables - added a new field type `ENUMERATION` for [connection to enumeration tables](developer/datatables-editor/standard-fields.md#enumeration) in the editor. The field stores the configuration in `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` format and allows you to set the source of values ​​(#58517).
 - Data tables - [folder selection](developer/datatables-editor/field-json.md#options-classname) via the `dt-tree-dir-simple` field with limited rights correctly displays the set root folder and inactive parents of allowed folders and respects the `fbrowserShowOnlyWritableFolders` configuration variable. The added `data-dt-field-writableOnly` attribute allows you to limit the selection only to folders with write rights (#58317-17).
 
