@@ -19,6 +19,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
@@ -53,6 +54,10 @@ public class UsrLogonController extends WebjetComponentAbstract {
 
                 PathFilter.setNginxProxyMode(request, response);
 
+                if (AdminDeviceService.requireVerification(request)) {
+                    response.sendRedirect(AdminDeviceService.VERIFICATION_URL);
+                    return;
+                }
                 LogonTools.afterSuccessLogon(request, response);
 
 

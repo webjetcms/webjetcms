@@ -1,6 +1,7 @@
 package sk.iway.iwcm.users.devices;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mockStatic;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -10,6 +11,9 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.mockito.MockedStatic;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +27,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import jakarta.persistence.EntityManagerFactory;
 
 import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
@@ -38,6 +43,17 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
     /** Negative IDs keep test notices separate from real accounts in the shared test database. */
     private static final int USER_ID = -91001;
     private static final int OTHER_USER_ID = -91002;
+    private MockedStatic<Adminlog> audit;
+
+    @BeforeEach
+    void isolateAuditWrites() {
+        audit = mockStatic(Adminlog.class);
+    }
+
+    @AfterEach
+    void releaseAudit() {
+        audit.close();
+    }
 
     /** Generated device IDs isolate users and keep a single current notice through reporting and expiry. */
     @Test
@@ -66,21 +82,21 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
             DeviceEntity reported = service.report(USER_ID, id, NOW + 200);
             assertNull(reported.getConfirmedAt());
             assertEquals(JsonTools.objectToJSON(reported), JsonTools.objectToJSON(service.report(USER_ID, id, NOW + 250)));
-            assertEquals(1, service.findActive(USER_ID, NOW + 250).size());
+            assertTrue(service.findActive(USER_ID, NOW + 250).isEmpty(), "Blocking resolves the notice without deleting the device");
 
-            DeviceEntity renewed = record(service, USER_ID, database.hash, NOW + 300);
-            assertEquals(first.getId(), renewed.getId());
-            assertEquals(NOW + 300, renewed.getCreateDate().toEpochMilli());
-            assertNull(renewed.getConfirmedAt());
-            assertNull(renewed.getReportedAt());
-            assertEquals(JsonTools.objectToJSON(renewed), JsonTools.objectToJSON(service.findEvent(USER_ID, id)),
-                "Old links must resolve to the device's current notice");
-            assertNull(record(service, OTHER_USER_ID, database.hash, NOW + 300));
+            assertThrows(IllegalStateException.class, () -> record(service, USER_ID, database.hash, NOW + 300));
+            service.cleanup(NOW + KNOWN_AGE);
+            assertNotNull(service.findEvent(USER_ID, id), "Cleanup must retain blocked devices");
+            assertTrue(service.issueUnblockCode(USER_ID, id, database.hash, NOW + 300));
+            assertNotNull(service.unblock(USER_ID, id, database.hash, NOW + 300));
+            assertNull(record(service, USER_ID, database.hash, NOW + 301));
+            assertNull(service.findEvent(USER_ID, id).getReportedAt());
+            assertNotNull(service.findEvent(USER_ID, id).getConfirmedAt());
 
-            DeviceEntity expired = record(service, USER_ID, database.hash, NOW + 300 + KNOWN_AGE);
+            DeviceEntity expired = record(service, USER_ID, database.hash, NOW + 301 + KNOWN_AGE);
             assertEquals(first.getId(), expired.getId());
-            assertEquals(NOW + 300 + KNOWN_AGE, expired.getCreateDate().toEpochMilli());
-            assertEquals(2, database.count(), "Re-detection must update the device rather than insert history");
+            assertEquals(NOW + 301 + KNOWN_AGE, expired.getCreateDate().toEpochMilli());
+            assertEquals(1, database.count(), "Re-detection must update the device rather than insert history");
         }
     }
 
@@ -131,9 +147,13 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
             DeviceEntity reported = firstNode.findEvent(USER_ID, id);
             assertEquals(Instant.ofEpochMilli(NOW + 300), reported.getReportedAt());
             assertNull(reported.getConfirmedAt());
-            assertEquals(first.getId(), record(firstNode, USER_ID, database.hash, NOW + 400).getId());
+            assertTrue(firstNode.findActive(USER_ID, NOW + 300).isEmpty(), "Other nodes must also omit blocked-device notices");
+            assertThrows(IllegalStateException.class, () -> record(firstNode, USER_ID, database.hash, NOW + 400));
+            secondNode.issueUnblockCode(USER_ID, id, database.hash, NOW + 400);
+            assertNotNull(firstNode.unblock(USER_ID, id, database.hash, NOW + 450));
             assertNull(record(secondNode, USER_ID, database.hash, NOW + 500));
-            assertEquals(NOW + 400, secondNode.findEvent(USER_ID, id).getCreateDate().toEpochMilli());
+            assertNull(firstNode.findEvent(USER_ID, id).getReportedAt());
+            assertEquals(NOW + 450, secondNode.findEvent(USER_ID, id).getConfirmedAt().toEpochMilli());
             assertEquals(1, database.count());
         }
     }

@@ -176,6 +176,10 @@ public class NtlmLogonAction
 
 				if (logonSuccess)
 				{
+					if (AdminDeviceService.requireVerification(request)) {
+					    response.sendRedirect(AdminDeviceService.VERIFICATION_URL);
+					    return;
+					}
 					LogonTools.afterSuccessLogon(request, response);
 					if (request.getParameter("origDocId")!=null)
 					{
@@ -378,6 +382,10 @@ public class NtlmLogonAction
 		Identity userLogged = new Identity();
 		BeanUtils.copyProperties(userLogged, user);
 		LogonTools.setUserToSession(request.getSession(), userLogged);
+		if (AdminDeviceService.requireVerification(request)) {
+		    response.sendRedirect(AdminDeviceService.VERIFICATION_URL);
+		    return;
+		}
 		LogonTools.afterSuccessLogon(request, response);
 		String afterLogonUrl = "/";
 		if (request.getParameter("origDocId")!=null)

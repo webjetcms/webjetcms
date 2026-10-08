@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
 
+import sk.iway.iwcm.Adminlog;
+
 /** Recognizes a user's browsers and maintains one current notice per device. */
 @Service
 public class DeviceService {
@@ -34,8 +36,9 @@ public class DeviceService {
         String browserName, String browserVersion, String operatingSystem, String ipAddress) {
         return execute(() -> {
             DeviceEntity device = devices.findByUserIdAndTokenHash(userId, tokenHash).orElse(null);
-            boolean recognized = device != null && device.getReportedAt() == null
-                && device.getLastSeen().toEpochMilli() > knownSinceCutoff;
+            if (device != null && device.getReportedAt() != null)
+                throw new IllegalStateException("Blocked device must be verified before recording login");
+            boolean recognized = device != null && device.getLastSeen().toEpochMilli() > knownSinceCutoff;
             if (device == null) {
                 device = new DeviceEntity();
                 device.setUserId(userId);
@@ -49,17 +52,17 @@ public class DeviceService {
                 device.setOperatingSystem(operatingSystem);
                 device.setIpAddress(ipAddress);
                 device.setConfirmedAt(null);
-                device.setReportedAt(null);
                 clearVerification(device);
             }
             DeviceEntity saved = devices.save(device);
+            if (!recognized) audit(saved, "detected");
             return recognized ? null : saved;
         });
     }
 
-    /** Returns devices with unconfirmed notices within the original seven-day notice period. */
+    /** Returns unresolved device notices within the original seven-day notice period. */
     public List<DeviceEntity> findActive(int userId, long now) {
-        return execute(() -> devices.findByUserIdAndConfirmedAtIsNullAndCreateDateAfterOrderByCreateDateDescIdAsc(
+        return execute(() -> devices.findByUserIdAndConfirmedAtIsNullAndReportedAtIsNullAndCreateDateAfterOrderByCreateDateDescIdAsc(
             userId, Instant.ofEpochMilli(now - NOTICE_AGE)));
     }
 
@@ -81,15 +84,25 @@ public class DeviceService {
 
     /** Stores an expiring email proof for an unconfirmed device. */
     public boolean issueConfirmation(int userId, long id, String hash, long now, boolean code) {
+        return issueProof(userId, id, hash, now, code, false);
+    }
+
+    /** Issues a code for a blocked device, keeping the same resend and attempt limits. */
+    public boolean issueUnblockCode(int userId, long id, String hash, long now) {
+        return issueProof(userId, id, hash, now, true, true);
+    }
+
+    private boolean issueProof(int userId, long id, String hash, long now, boolean code, boolean unblock) {
         return execute(() -> {
             DeviceEntity device = devices.findByUserIdAndId(userId, id).orElse(null);
-            if (device == null || device.getConfirmedAt() != null || device.getReportedAt() != null) return false;
+            if (device == null || device.getConfirmedAt() != null || (device.getReportedAt() != null) != unblock) return false;
             if (code) {
-                if (device.getCodeExpires() != null
-                    && device.getCodeExpires().toEpochMilli() - CODE_AGE + CODE_RESEND_DELAY > now) return false;
+                if (device.getCodeExpires() != null && device.getCodeExpires().toEpochMilli() > now) {
+                    if (device.getCodeAttempts() >= CODE_ATTEMPTS
+                        || device.getCodeExpires().toEpochMilli() - CODE_AGE + CODE_RESEND_DELAY > now) return false;
+                } else device.setCodeAttempts(0);
                 device.setCodeHash(hash);
                 device.setCodeExpires(Instant.ofEpochMilli(now + CODE_AGE));
-                device.setCodeAttempts(0);
             } else {
                 device.setConfirmationHash(hash);
                 device.setConfirmationExpires(Instant.ofEpochMilli(now + LINK_AGE));
@@ -101,9 +114,18 @@ public class DeviceService {
 
     /** Confirms a device using its current email proof and records failed code attempts. */
     public DeviceEntity confirm(int userId, long id, String hash, long now, boolean code) {
+        return verifyProof(userId, id, hash, now, code, false);
+    }
+
+    /** Unblocks and confirms the browser only after its login code succeeds. */
+    public DeviceEntity unblock(int userId, long id, String hash, long now) {
+        return verifyProof(userId, id, hash, now, true, true);
+    }
+
+    private DeviceEntity verifyProof(int userId, long id, String hash, long now, boolean code, boolean unblock) {
         return execute(() -> {
             DeviceEntity device = devices.findByUserIdAndId(userId, id).orElse(null);
-            if (device == null || device.getConfirmedAt() != null || device.getReportedAt() != null || hash == null) return null;
+            if (device == null || device.getConfirmedAt() != null || (device.getReportedAt() != null) != unblock || hash == null) return null;
             String expected = code ? device.getCodeHash() : device.getConfirmationHash();
             Instant expires = code ? device.getCodeExpires() : device.getConfirmationExpires();
             if (expected == null || expires == null || expires.toEpochMilli() <= now) return null;
@@ -116,12 +138,33 @@ public class DeviceService {
                 return null;
             }
             device.setConfirmedAt(Instant.ofEpochMilli(now));
+            if (unblock) {
+                device.setReportedAt(null);
+                device.setLastSeen(Instant.ofEpochMilli(now));
+            }
             clearVerification(device);
-            return devices.save(device);
+            DeviceEntity saved = devices.save(device);
+            audit(saved, unblock ? "confirmed (unblock code)" : code ? "confirmed (email code)" : "confirmed (email link)");
+            return saved;
         });
     }
 
-    /** Reports an event, retaining its notice and revoking only that account's browser recognition. */
+    /** Confirms an unblocked device after a second factor was verified during this login. */
+    public DeviceEntity confirmAfterSecondFactor(int userId, long id, long now) {
+        return execute(() -> {
+            DeviceEntity device = devices.findByUserIdAndId(userId, id).orElse(null);
+            if (device == null || device.getReportedAt() != null) return null;
+            if (device.getConfirmedAt() == null) {
+                device.setConfirmedAt(Instant.ofEpochMilli(now));
+                clearVerification(device);
+                devices.save(device);
+                audit(device, "confirmed (second factor)");
+            }
+            return device;
+        });
+    }
+
+    /** Blocks the account's browser and revokes its outstanding email proofs. */
     public DeviceEntity report(int userId, long id, long now) {
         return execute(() -> {
             DeviceEntity device = devices.findByUserIdAndId(userId, id).orElse(null);
@@ -131,6 +174,7 @@ public class DeviceService {
                 device.setConfirmedAt(null);
                 clearVerification(device);
                 devices.save(device);
+                audit(device, "blocked");
             }
             return device;
         });
@@ -142,6 +186,14 @@ public class DeviceService {
         device.setCodeHash(null);
         device.setCodeExpires(null);
         device.setCodeAttempts(0);
+    }
+
+    /** Audits persisted device transitions without recording recognition tokens or verification proofs. */
+    private static void audit(DeviceEntity device, String action) {
+        Adminlog.add(Adminlog.TYPE_USER_DEVICE, device.getUserId(), "Device " + action
+            + ": userId=" + device.getUserId() + ", deviceId=" + device.getId()
+            + ", browser=" + device.getBrowserName() + " " + device.getBrowserVersion()
+            + ", operatingSystem=" + device.getOperatingSystem() + ", ipAddress=" + device.getIpAddress(), -1, -1);
     }
 
     /** Removes inactive devices and their notices in one bulk delete. */

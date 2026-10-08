@@ -78,6 +78,14 @@ Zaregistrovaný kľúč môžete kedykoľvek odstrániť jeho označením a klik
 
 Možnosť prihlasovania prístupovým kľúčom môžete vypnúť nastavením konfiguračnej premennej `password_passKeyEnabled` na hodnotu `false`.
 
+## Overenie zablokovaného zariadenia
+
+Ak ste prehliadač označili cez **Nebol som to ja** a zablokovali ho, pri ďalšom prihlásení sa zobrazí stránka **Overenie zablokovaného zariadenia**. Najprv zadáte správne prihlasovacie údaje a pri zapnutom 2FA aj kód z autentifikačnej aplikácie. Následne zadáte šesťmiestny kód zaslaný na email vášho účtu.
+
+Kód platí 10 minút a umožňuje najviac 5 pokusov. Nový kód môžete vyžiadať po minúte; opätovné odoslanie neobnoví počet pokusov počas platnosti predchádzajúceho kódu. Celé overenie treba dokončiť do 15 minút, inak sa prihláste znova. Tlačidlo **Zrušiť** ukončí rozpracované prihlásenie.
+
+Po správnom zadaní kódu sa prehliadač odblokuje, potvrdí a otvorí sa administrácia. Pri nasledujúcom prihlásení už toto overenie nepotrebuje. Bez správneho kódu zostáva administrácia neprístupná. Ak email nemáte k dispozícii, obráťte sa na správcu.
+
 ## Odhlásenie
 
 Odkaz na odhlásenie sa nachádza v hlavičke administrácie v pravej hornej časti ako ikona ![](icon-logoff.png ":no-zoom"):

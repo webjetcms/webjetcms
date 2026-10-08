@@ -697,7 +697,7 @@ public class LogonTools {
                     errors.add("passwordsNotMatch");
                     request.setAttribute("passwordsNotMatch", "true");
 
-                    session.removeAttribute(Constants.USER_KEY);
+                    clearUserFromSession(session);
 
                     Adminlog.add(Adminlog.TYPE_USER_CHANGE_PASSWORD, user.getUserId(), "LogonTools - user ("+user.getLogin()+") password to change not match", -1, -1);
 
@@ -740,7 +740,7 @@ public class LogonTools {
             }
             else
             {
-                session.removeAttribute(Constants.USER_KEY);
+                clearUserFromSession(session);
                 session.setAttribute(Constants.USER_KEY+"_changepassword", passUser);
             }
             //END kontrola hesla
@@ -1109,6 +1109,14 @@ public class LogonTools {
         }
 
         return null;
+    }
+
+    /** Removes both authentication contexts while a required login step is pending. */
+    public static void clearUserFromSession(HttpSession session) {
+        session.removeAttribute(Constants.USER_KEY);
+        session.removeAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY);
+        session.removeAttribute(AdminDeviceService.SESSION_DEVICE_ID);
+        SecurityContextHolder.clearContext();
     }
 
     /**

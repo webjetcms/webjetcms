@@ -18,10 +18,11 @@ public interface DeviceRepository extends JpaRepository<DeviceEntity, Long>, Jpa
 
     List<DeviceEntity> findByUserIdAndIdIn(int userId, Set<Long> ids);
 
-    List<DeviceEntity> findByUserIdAndConfirmedAtIsNullAndCreateDateAfterOrderByCreateDateDescIdAsc(int userId, Instant cutoff);
+    List<DeviceEntity> findByUserIdAndConfirmedAtIsNullAndReportedAtIsNullAndCreateDateAfterOrderByCreateDateDescIdAsc(int userId, Instant cutoff);
 
     /** Deletes expired recognition records using the repository's bulk delete operation. */
     default long deleteExpired(Instant cutoff) {
-        return delete((root, builder) -> builder.lessThanOrEqualTo(root.get("lastSeen"), cutoff));
+        return delete((root, builder) -> builder.and(builder.isNull(root.get("reportedAt")),
+            builder.lessThanOrEqualTo(root.get("lastSeen"), cutoff)));
     }
 }

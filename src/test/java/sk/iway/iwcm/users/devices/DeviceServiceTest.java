@@ -9,10 +9,14 @@ import java.time.Instant;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.MockedStatic;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DataAccessResourceFailureException;
+
+import sk.iway.iwcm.Adminlog;
 
 /** Verifies browser recognition and the latest notice stored on the same device. */
 class DeviceServiceTest {
@@ -24,14 +28,21 @@ class DeviceServiceTest {
 
     private final DeviceRepository devices = mock(DeviceRepository.class);
     private final DeviceService service = new DeviceService(devices);
+    private MockedStatic<Adminlog> audit;
 
     @BeforeEach
     void returnSavedDeviceWithGeneratedId() {
+        audit = mockStatic(Adminlog.class);
         when(devices.save(any(DeviceEntity.class))).thenAnswer(invocation -> {
             DeviceEntity device = invocation.getArgument(0);
             if (device.getId() == null) device.setId(DEVICE_ID);
             return device;
         });
+    }
+
+    @AfterEach
+    void releaseAudit() {
+        audit.close();
     }
 
     /** A new browser and its notice are saved together and exposed using the generated device ID. */
@@ -55,6 +66,8 @@ class DeviceServiceTest {
         assertEquals("192.0.2.1", result.getIpAddress());
         assertNull(result.getConfirmedAt());
         assertNull(result.getReportedAt());
+        verifyAudit("detected");
+        audit.verifyNoMoreInteractions();
     }
 
     /** A regular login changes lastSeen without altering the notice or its acknowledgment. */
@@ -72,6 +85,7 @@ class DeviceServiceTest {
         assertEquals(Instant.ofEpochMilli(NOW - 100), device.getConfirmedAt());
         assertEquals("192.0.2.2", device.getIpAddress());
         verify(devices).save(device);
+        audit.verifyNoInteractions();
     }
 
     /** Expiration renews the notice on the existing device instead of adding a history record. */
@@ -88,24 +102,62 @@ class DeviceServiceTest {
         assertNull(result.getConfirmedAt());
         assertNull(result.getReportedAt());
         verify(devices).save(device);
+        verifyAudit("detected");
+        audit.verifyNoMoreInteractions();
     }
 
-    /** A reported browser renews its notice and clears acknowledgment on the next login. */
+    /** Recording a blocked browser cannot silently discard its block or refresh its lifetime. */
     @Test
-    void reportedDeviceRefreshesNoticeOnNextLogin() {
+    void reportedDeviceRemainsBlockedOnNextLogin() {
         DeviceEntity device = device(NOW - 100);
         device.setReportedAt(Instant.ofEpochMilli(NOW - 50));
-        device.setConfirmedAt(Instant.ofEpochMilli(NOW - 25));
         when(devices.findByUserIdAndTokenHash(USER_ID, TOKEN_HASH)).thenReturn(Optional.of(device));
+        assertThrows(IllegalStateException.class, this::recordLogin);
+        assertEquals(Instant.ofEpochMilli(NOW - 50), device.getReportedAt());
+        assertEquals(Instant.ofEpochMilli(NOW - 100), device.getLastSeen());
+        verify(devices, never()).save(any());
+        audit.verifyNoInteractions();
+    }
 
-        DeviceEntity result = recordLogin();
+    /** Only a dedicated unblock code can clear blocking, including after browser recognition expires. */
+    @Test
+    void unblockCodeConfirmsTheDeviceAndPreventsImmediateRedetection() {
+        DeviceEntity device = device(CUTOFF - 1);
+        ownedDevice(device);
+        when(devices.findByUserIdAndTokenHash(USER_ID, TOKEN_HASH)).thenReturn(Optional.of(device));
+        service.report(USER_ID, DEVICE_ID, NOW - 1);
+        assertNull(service.confirmAfterSecondFactor(USER_ID, DEVICE_ID, NOW));
+        assertFalse(service.issueConfirmation(USER_ID, DEVICE_ID, "link", NOW, false));
+        assertTrue(service.issueUnblockCode(USER_ID, DEVICE_ID, "unblock", NOW));
+        assertNull(service.confirm(USER_ID, DEVICE_ID, "unblock", NOW, true));
+        assertNull(service.unblock(USER_ID, DEVICE_ID, "wrong", NOW));
+        assertNotNull(device.getReportedAt());
+        assertNotNull(service.unblock(USER_ID, DEVICE_ID, "unblock", NOW));
+        assertNull(device.getReportedAt());
+        assertEquals(Instant.ofEpochMilli(NOW), device.getConfirmedAt());
+        assertNull(recordLogin());
+        assertNull(service.unblock(USER_ID, DEVICE_ID, "unblock", NOW + 1));
+        verifyAudit("blocked");
+        verifyAudit("confirmed (unblock code)");
+        audit.verifyNoMoreInteractions();
+    }
 
-        assertEquals(DEVICE_ID, result.getId());
-        assertEquals(NOW, result.getCreateDate().toEpochMilli());
-        assertNull(result.getReportedAt());
-        assertNull(result.getConfirmedAt());
-        assertEquals(Instant.ofEpochMilli(NOW), device.getLastSeen());
-        verify(devices).save(device);
+    /** An actual second factor confirms ordinary devices and invalidates obsolete email proofs. */
+    @Test
+    void secondFactorConfirmsOnlyUnblockedDevices() {
+        DeviceEntity device = device(NOW - 100);
+        ownedDevice(device);
+        service.issueConfirmation(USER_ID, DEVICE_ID, "link", NOW, false);
+        assertNotNull(service.confirmAfterSecondFactor(USER_ID, DEVICE_ID, NOW));
+        assertEquals(Instant.ofEpochMilli(NOW), device.getConfirmedAt());
+        assertNull(device.getConfirmationHash());
+        assertNotNull(service.confirmAfterSecondFactor(USER_ID, DEVICE_ID, NOW + 1));
+        service.report(USER_ID, DEVICE_ID, NOW + 1);
+        assertNull(service.confirmAfterSecondFactor(USER_ID, DEVICE_ID, NOW + 2));
+        assertNotNull(device.getReportedAt());
+        verifyAudit("confirmed (second factor)");
+        verifyAudit("blocked");
+        audit.verifyNoMoreInteractions();
     }
 
     /** Reporting clears confirmation and leaves the original notice deadline and lastSeen unchanged. */
@@ -125,6 +177,8 @@ class DeviceServiceTest {
         assertEquals(NOW - 100 + Duration.ofDays(7).toMillis(), first.getExpiresAt());
         assertEquals(Instant.ofEpochMilli(NOW - 100), device.getLastSeen());
         verify(devices).save(device);
+        verifyAudit("blocked");
+        audit.verifyNoMoreInteractions();
     }
 
     /** Email confirmation is single-use, account-owned and preserves the login timestamp. */
@@ -140,6 +194,8 @@ class DeviceServiceTest {
         assertEquals(Instant.ofEpochMilli(NOW - 100), confirmed.getLastSeen());
         assertNull(confirmed.getConfirmationHash());
         assertNull(service.confirm(USER_ID, DEVICE_ID, TOKEN_HASH, NOW + 2, false));
+        verifyAudit("confirmed (email link)");
+        audit.verifyNoMoreInteractions();
     }
 
     /** Expired links and reported devices cannot establish trust. */
@@ -166,9 +222,10 @@ class DeviceServiceTest {
         for (int attempt = 0; attempt < 5; attempt++) assertNull(service.confirm(USER_ID, DEVICE_ID, "wrong", NOW + 1, true));
         assertEquals(5, device.getCodeAttempts());
         assertNull(service.confirm(USER_ID, DEVICE_ID, "code", NOW + 2, true));
-        assertTrue(service.issueConfirmation(USER_ID, DEVICE_ID, "replacement", NOW + 60_000, true));
+        assertFalse(service.issueConfirmation(USER_ID, DEVICE_ID, "replacement", NOW + 60_000, true));
+        assertTrue(service.issueConfirmation(USER_ID, DEVICE_ID, "replacement", NOW + DeviceService.CODE_AGE, true));
         assertNull(service.confirm(USER_ID, DEVICE_ID, "code", NOW + 60_001, true));
-        assertNull(service.confirm(USER_ID, DEVICE_ID, "replacement", NOW + 60_000 + DeviceService.CODE_AGE, true));
+        assertNull(service.confirm(USER_ID, DEVICE_ID, "replacement", NOW + 2 * DeviceService.CODE_AGE, true));
         assertEquals(TOKEN_HASH, device.getConfirmationHash());
         assertNotNull(service.confirm(USER_ID, DEVICE_ID, TOKEN_HASH, NOW + 60_002, false));
         assertNull(device.getCodeHash());
@@ -189,6 +246,8 @@ class DeviceServiceTest {
         assertNotNull(service.confirm(USER_ID, DEVICE_ID, "code", NOW + 2, true));
         assertNull(service.confirm(USER_ID, DEVICE_ID, "code", NOW + 3, true));
         assertNull(service.confirm(USER_ID, DEVICE_ID, TOKEN_HASH, NOW + 3, false));
+        verifyAudit("confirmed (email code)");
+        audit.verifyNoMoreInteractions();
     }
 
     /** Missing and foreign device IDs cannot be read, confirmed or reported. */
@@ -200,6 +259,7 @@ class DeviceServiceTest {
 
         verify(devices, times(3)).findByUserIdAndId(USER_ID, DEVICE_ID);
         verify(devices, never()).save(any());
+        audit.verifyNoInteractions();
     }
 
     /** A duplicate browser insert is reported without retrying the save. */
@@ -213,6 +273,7 @@ class DeviceServiceTest {
         assertSame(failure, result.getCause());
         verify(devices).findByUserIdAndTokenHash(USER_ID, TOKEN_HASH);
         verify(devices).save(any(DeviceEntity.class));
+        audit.verifyNoInteractions();
     }
 
     /** Failed acknowledgment keeps the neutral persistence error contract. */
@@ -228,6 +289,19 @@ class DeviceServiceTest {
             () -> service.confirm(USER_ID, DEVICE_ID, TOKEN_HASH, NOW, false));
 
         assertSame(failure, result.getCause());
+        audit.verifyNoInteractions();
+    }
+
+    /** A failed block cannot be recorded as a successful device transition. */
+    @Test
+    void blockingSaveFailureIsNotAudited() {
+        DeviceEntity device = device(NOW - 100);
+        ownedDevice(device);
+        when(devices.save(device)).thenThrow(new DataAccessResourceFailureException("Database unavailable"));
+
+        assertThrows(IllegalStateException.class, () -> service.report(USER_ID, DEVICE_ID, NOW));
+
+        audit.verifyNoInteractions();
     }
 
     /** Read failures follow the same neutral service contract used by dashboard error handling. */
@@ -246,6 +320,11 @@ class DeviceServiceTest {
     private DeviceEntity recordLogin() {
         return service.recordLogin(USER_ID, TOKEN_HASH, NOW, CUTOFF,
             "Firefox", "131.0", "Windows 11", "192.0.2.1");
+    }
+
+    private void verifyAudit(String action) {
+        audit.verify(() -> Adminlog.add(Adminlog.TYPE_USER_DEVICE, USER_ID,
+            "Device " + action + ": userId=7, deviceId=42, browser=Firefox 131.0, operatingSystem=Windows 11, ipAddress=192.0.2.1", -1, -1));
     }
 
     private void ownedDevice(DeviceEntity device) {

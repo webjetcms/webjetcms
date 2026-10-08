@@ -45,7 +45,7 @@ public class AdminDeviceRestController {
         return event;
     }
 
-    /** Forgets the reported browser without terminating sessions or suppressing the warning. */
+    /** Blocks the reported browser and signs out its known sessions. */
     @PostMapping("/{id}/report")
     public DeviceEntity report(@PathVariable("id") String id, HttpServletRequest request) {
         return requireEvent(service.report(UsersDB.getCurrentUser(request), id));

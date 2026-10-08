@@ -1,5 +1,6 @@
 package sk.iway.iwcm.users.devices;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -37,11 +38,21 @@ import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.BrowserDetector;
+import sk.iway.iwcm.stat.SessionClusterService;
+import sk.iway.iwcm.stat.SessionDetails;
+import sk.iway.iwcm.stat.SessionHolder;
+import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 /** Integrates shared device history with administrator authentication, cookies, notices and email links. */
 @Service
 public class AdminDeviceService {
     public static final String SESSION_DEVICE_ID = "wjdeviceId";
+    public static final String VERIFICATION_URL = "/admin/logon/device/";
+    public static final String PENDING_LOGIN = "adminUser_waitingForDevice";
+    public static final String VERIFICATION_MESSAGE = "adminDeviceVerificationMessage";
+    public static final String SECOND_FACTOR_VERIFIED = "adminDeviceSecondFactorVerified";
     static final String COOKIE_NAME = "wjdevice";
     private static final Pattern TOKEN_PATTERN = Pattern.compile("[A-Za-z0-9_-]{43}");
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -62,6 +73,99 @@ public class AdminDeviceService {
     AdminDeviceService(DeviceService deviceService, Clock clock) {
         this.deviceService = deviceService;
         this.clock = clock;
+    }
+
+    /** Holds the authenticated identity outside both login contexts until the email code succeeds. */
+    public record PendingLogin(Identity user, long deviceId, String tokenHash, String nonce, long expiresAt) implements Serializable { }
+
+    /** Checks browser blocking after credentials/factors and before any successful-login callbacks. */
+    public static boolean requireVerification(HttpServletRequest request) {
+        Identity user = UsersDB.getCurrentUser(request);
+        if (user == null || !user.isAdmin() || user.getUserId() <= 0
+            || !Constants.getBoolean("adminNewDeviceDetectionEnabled")) return false;
+        if (readToken(request) == null) return false;
+        try {
+            return Tools.getSpringBean("adminDeviceService", AdminDeviceService.class).prepareVerification(user, request);
+        } catch (RuntimeException exception) {
+            LogonTools.clearUserFromSession(request.getSession());
+            throw exception;
+        }
+    }
+
+    /** Leaves ordinary browsers alone; test-browser exclusions do not bypass an existing block. */
+    boolean prepareVerification(Identity user, HttpServletRequest request) {
+        String token = readToken(request);
+        if (token == null) return false;
+        String tokenHash = hashToken(token);
+        DeviceEntity device = deviceService.findByTokenHash(user.getUserId(), tokenHash);
+        if (device == null || device.getReportedAt() == null) return false;
+        HttpSession session = request.getSession();
+        PendingLogin pending = getPendingLogin(request);
+        if (pending == null || pending.user().getUserId() != user.getUserId() || pending.deviceId() != device.getId()) {
+            byte[] nonce = new byte[32];
+            RANDOM.nextBytes(nonce);
+            pending = new PendingLogin(user, device.getId(), tokenHash, Base64.getUrlEncoder().withoutPadding().encodeToString(nonce),
+                clock.millis() + Duration.ofMinutes(15).toMillis());
+            session.setAttribute(PENDING_LOGIN, pending);
+        }
+        LogonTools.clearUserFromSession(session);
+        requestUnblockCode(request);
+        return true;
+    }
+
+    /** Returns only a live challenge for the browser which started the login. */
+    public PendingLogin getPendingLogin(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session == null || !(session.getAttribute(PENDING_LOGIN) instanceof PendingLogin pending)) return null;
+        String token = readToken(request);
+        if (pending.expiresAt() <= clock.millis() || token == null || !pending.tokenHash().equals(hashToken(token))) {
+            session.removeAttribute(PENDING_LOGIN);
+            session.removeAttribute(VERIFICATION_MESSAGE);
+            return null;
+        }
+        return pending;
+    }
+
+    /** Sends a login code using the existing device fields, mail layout and limits. */
+    public void requestUnblockCode(HttpServletRequest request) {
+        PendingLogin pending = getPendingLogin(request);
+        if (pending == null) return;
+        String message = "admin.dashboard.newDevice.codeSendError.js";
+        try {
+            DeviceEntity device = deviceService.findEvent(pending.user().getUserId(), pending.deviceId());
+            if (device != null && device.getReportedAt() != null && Tools.isNotEmpty(pending.user().getEmail())) {
+                String code = String.format(java.util.Locale.ROOT, "%06d", RANDOM.nextInt(1_000_000));
+                if (!deviceService.issueUnblockCode(pending.user().getUserId(), pending.deviceId(), unblockHash(pending, code), clock.millis()))
+                    message = "admin.logon.device.codeWait";
+                else if (sendVerificationEmail(pending.user(), request, device, null, code))
+                    message = "admin.dashboard.newDevice.codeSent.js";
+            }
+        } catch (RuntimeException exception) {
+            Logger.error(AdminDeviceService.class, "Cannot send device unblock code", exception);
+        }
+        request.getSession().setAttribute(VERIFICATION_MESSAGE, message);
+    }
+
+    /** Consumes a session-bound code, reloads the account and restores authentication only on success. */
+    public boolean verifyUnblockCode(HttpServletRequest request, String code) {
+        PendingLogin pending = getPendingLogin(request);
+        if (pending == null || code == null || !code.matches("[0-9]{6}")) return false;
+        UserDetails account = UsersDB.getUser(pending.user().getUserId());
+        if (account == null || !account.isAdmin() || !account.isAuthorized()
+            || !java.util.Objects.equals(account.getEmail(), pending.user().getEmail())) return false;
+        if (deviceService.unblock(account.getUserId(), pending.deviceId(), unblockHash(pending, code), clock.millis()) == null) return false;
+        HttpSession session = request.getSession();
+        session.removeAttribute(PENDING_LOGIN);
+        session.removeAttribute(VERIFICATION_MESSAGE);
+        request.changeSessionId();
+        Identity user = new Identity(account);
+        user.setValid(true);
+        LogonTools.logonUserWithAllChecks(user, request);
+        return true;
+    }
+
+    private static String unblockHash(PendingLogin pending, String code) {
+        return hashToken("device-unblock:" + pending.user().getUserId() + ":" + pending.deviceId() + ":" + pending.nonce() + ":" + code);
     }
 
     /**
@@ -110,6 +214,10 @@ public class AdminDeviceService {
         cookie.setMaxAge((int) Duration.ofDays(maxAgeDays).toSeconds());
         Tools.addCookie(cookie, response, request);
         DeviceEntity device = event != null ? event : deviceService.findByTokenHash(user.getUserId(), tokenHash);
+        if (device != null && Boolean.TRUE.equals(request.getAttribute(SECOND_FACTOR_VERIFIED))) {
+            device = deviceService.confirmAfterSecondFactor(user.getUserId(), device.getId(), now);
+            if (event != null) event = device;
+        }
         if (device != null) request.getSession().setAttribute(SESSION_DEVICE_ID, device.getId());
         if (event != null) sendNotification(user, request, event);
     }
@@ -179,12 +287,24 @@ public class AdminDeviceService {
         return hashToken((code ? "device-code:" : "device-link:") + userId + ":" + id + ":" + proof);
     }
 
-    /** Reports an owned event and forgets only that account's recognition of its browser. */
+    /** Blocks the owned browser and signs out its known sessions using the ordinary logout mechanism. */
     public DeviceEntity report(Identity user, String eventId) {
         requireAdministrator(user);
         long id = deviceId(eventId);
         if (!Constants.getBoolean("adminNewDeviceDetectionEnabled") || id <= 0) return null;
-        return deviceService.report(user.getUserId(), id, clock.millis());
+        DeviceEntity device = deviceService.report(user.getUserId(), id, clock.millis());
+        if (device != null) {
+            Set<String> sessionIds = new HashSet<>();
+            for (SessionDetails session : SessionHolder.getInstance().getList()) {
+                if (session.getLoggedUserId() == user.getUserId() && Long.valueOf(id).equals(session.getDeviceId()))
+                    sessionIds.add(session.getSessionId());
+            }
+            for (SessionDetails session : SessionClusterService.getSessionsForUsers(Set.of(user.getUserId()))) {
+                if (Long.valueOf(id).equals(session.getDeviceId())) sessionIds.add(session.getSessionId());
+            }
+            for (String sessionId : sessionIds) SessionHolder.getInstance().invalidateSession(user.getUserId(), sessionId);
+        }
+        return device;
     }
 
     /** Adds fresh, account-owned confirmation state to session bootstrap data without exposing browser tokens. */
@@ -282,6 +402,10 @@ public class AdminDeviceService {
             Logger.error(AdminDeviceService.class, "Cannot notify administrator without an email address: " + user.getUserId());
             return;
         }
+        if (event.getConfirmedAt() != null) {
+            sendVerificationEmail(user, request, event, null, null);
+            return;
+        }
         byte[] bytes = new byte[32];
         RANDOM.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
@@ -312,18 +436,18 @@ public class AdminDeviceService {
             + ".email-action-confirm{background:#00856f!important}"
             + "}</style></head><body class=\"email-body\" style=\"font-family:Arial,sans-serif;background:#ffffff;color:#272727\">"
             + "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.greeting", user.getFirstName())) + "</p>"
-            + "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.intro")) + "</p>"
+            + "<p>" + Tools.escapeHtml(prop.getText(event.getReportedAt() == null ? "admin.newDevice.email.intro" : "admin.logon.device.emailIntro")) + "</p>"
             + "<div class=\"email-details\" style=\"background:#f3f3f6;padding:16px;border-radius:6px\">"
             + emailLine(prop, "device", join(event.getBrowserName(), event.getBrowserVersion()) + " · " + event.getOperatingSystem())
             + emailLine(prop, "ip", event.getIpAddress())
             + emailLine(prop, "time", Tools.formatDateTime(event.getCreateDate().toEpochMilli()))
             + emailLine(prop, "environment", domain + (Tools.isEmpty(environment) ? "" : " (" + environment + ")"))
-            + "</div>" + (code == null ? "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.linkExpiry")) + "</p>"
-                : "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.codeIntro")) + "</p><p style=\"font-size:28px;font-weight:bold;letter-spacing:4px\">"
+            + "</div>" + (code == null ? (token == null ? "" : "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.linkExpiry")) + "</p>")
+                : "<p>" + Tools.escapeHtml(prop.getText(event.getReportedAt() == null ? "admin.newDevice.email.codeIntro" : "admin.logon.device.emailCodeIntro")) + "</p><p style=\"font-size:28px;font-weight:bold;letter-spacing:4px\">"
                 + code + "</p><p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.codeExpiry")) + "</p>")
-            + "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.instruction")) + "</p>"
+            + "<p>" + Tools.escapeHtml(prop.getText(event.getConfirmedAt() == null ? "admin.newDevice.email.instruction" : "admin.newDevice.email.verifiedInstruction")) + "</p>"
             + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr>"
-            + (code == null ? "<td style=\"padding-right:8px\"><a class=\"email-action email-action-confirm\" style=\"" + actionStyle
+            + (token != null ? "<td style=\"padding-right:8px\"><a class=\"email-action email-action-confirm\" style=\"" + actionStyle
                 + "background:#00BE9F\" href=\"" + Tools.escapeHtml(link + "&deviceConfirmation=" + token) + "\">"
                 + Tools.escapeHtml(prop.getText("admin.newDevice.email.confirm")) + "</a></td>" : "")
             + "<td><a class=\"email-action\" style=\"" + actionStyle + "background:#E00028\" href=\""

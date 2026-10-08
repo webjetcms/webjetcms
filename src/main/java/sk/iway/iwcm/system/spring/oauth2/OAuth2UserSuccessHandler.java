@@ -86,6 +86,10 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
             Authentication springAuth = WebjetAuthentificationProvider.authenticate(identity);
             SecurityContextHolder.getContext().setAuthentication(springAuth);
 
+            if (AdminDeviceService.requireVerification(request)) {
+                response.sendRedirect(AdminDeviceService.VERIFICATION_URL);
+                return;
+            }
             LogonTools.afterSuccessLogon(request, response);
 
             // Redirect after login

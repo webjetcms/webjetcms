@@ -54,7 +54,7 @@ export class DashboardNotices {
             action: { type: "sessions", label: this._t("activeSessions") }
         });
         const notices = active.filter(notice => {
-            if (notice.kind === "newDevice") return !notice.securityEvent.confirmedAt && notice.securityEvent.expiresAt > now;
+            if (notice.kind === "newDevice") return !notice.securityEvent.confirmedAt && !notice.securityEvent.reportedAt && notice.securityEvent.expiresAt > now;
             const until = this.state.dismissedUntil[notice.id];
             return notice.severity === "error" || !(until > now || notice.severity === "info" && until === 0);
         }).sort((first, second) => Number(second.kind === "newDevice") - Number(first.kind === "newDevice")
@@ -103,9 +103,9 @@ export class DashboardNotices {
             node("span", "md-dashboard__notice-description", description));
         const actions = node("div", "md-dashboard__notice-actions");
         if (notice.kind === "newDevice") {
-            actions.append(button(this._t("newDevice.confirm"), () => this._confirmSecurityEvent(notice),
+            if (!notice.securityEvent.reportedAt) actions.append(button(this._t("newDevice.confirm"), () => this._confirmSecurityEvent(notice),
                 "btn btn-sm btn-white md-dashboard__notice-confirm"));
-            if (!currentDevice) actions.append(button(this._t("newDevice.notMe"), () => this.openSecurityEvent?.(notice.securityEvent),
+            if (!currentDevice) actions.append(button(this._t(notice.securityEvent.reportedAt ? "newDevice.blocked" : "newDevice.notMe"), () => this.openSecurityEvent?.(notice.securityEvent),
                 "btn btn-sm btn-link text-danger md-dashboard__notice-report"));
         } else if (notice.action) {
             actions.append(button(notice.action.label, event => {

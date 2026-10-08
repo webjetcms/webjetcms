@@ -171,6 +171,21 @@ test('New-device notices ignore dismissals, precede errors and expire from the l
     assert.ok(host.querySelector('[data-severity="error"]'));
 });
 
+test('Blocked device notices stay hidden when loaded or rendered again', t => {
+    const blocked = securityNotice('blocked');
+    blocked.securityEvent.reportedAt = Date.UTC(2026, 9, 2);
+    const pending = securityNotice('pending');
+    const { controller, host, requests } = fixture(t, null, [blocked, pending]);
+    assert.equal(host.querySelector(`[data-notice-id="${blocked.id}"]`), null);
+    assert.ok(host.querySelector(`[data-notice-id="${pending.id}"]`));
+    assert.equal(host.querySelector('.md-dashboard__notice-count').textContent, '1');
+    pending.securityEvent.reportedAt = blocked.securityEvent.reportedAt;
+    controller.render();
+    assert.equal(host.querySelector('[data-notice-id]'), null);
+    assert.equal(host.querySelector('.md-dashboard__notice-list').hidden, true);
+    assert.equal(requests.length, 0);
+});
+
 test('Login confirmation sends a code first and changes shared state only after valid verification', async t => {
     const security = securityNotice('autotest/login');
     const { controller, host, requests, fail, respond, window, data, now } = fixture(t, null, [security]);

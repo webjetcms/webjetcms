@@ -9,6 +9,17 @@ const dialog = '.md-dashboard-modal--sessions';
 let originalCookie;
 let eventId;
 
+async function openDeviceEmail(I, TempMail, id, expectedText) {
+    for (let attempt = 0; attempt < 6; attempt++) {
+        await TempMail.login(mailbox);
+        await TempMail.openLatestEmail();
+        const body = await I.grabTextFrom(TempMail.getContentSelector());
+        const links = await I.grabAttributeFromAll(`${TempMail.getContentSelector()} a`, 'href');
+        if (body.includes(expectedText) && links.some(link => new URL(link).searchParams.get('securityEvent') === String(id))) return body;
+    }
+    throw new Error(`No matching device email arrived for event ${id}.`);
+}
+
 Scenario('New device login sends an email and confirms its link with a success toast', async ({ I, TempMail }) => {
     I.amOnPage('/logoff.do?forward=/admin/logon/');
     I.wjSetDefaultWindowSize();
@@ -17,9 +28,6 @@ Scenario('New device login sends an email and confirms its link with a success t
     // Expire only browser recognition, preserving the login form's session and CSRF cookie.
     I.setCookie({ name: cookieName, value: 'autotest-expired', domain: new URL(origin).hostname, path: '/', expires: 1 });
     I.dontSeeCookie(cookieName);
-
-    await TempMail.login(mailbox);
-    await TempMail.destroyInbox();
 
     // Exercise device detection even when the regular E2E User-Agent is excluded.
     const userAgent = await I.executeScript(() => navigator.userAgent);
@@ -41,8 +49,7 @@ Scenario('New device login sends an email and confirms its link with a success t
     I.dontSeeElement(`${row} .md-dashboard__notice-report`);
 
     I.logout();
-    await TempMail.login(mailbox);
-    TempMail.openLatestEmail();
+    await openDeviceEmail(I, TempMail, eventId, event.browserName);
     I.see('Nové prihlásenie do WebJET CMS', TempMail.getSubjectSelector());
     I.see(event.browserName, TempMail.getContentSelector());
     I.see(event.browserVersion, TempMail.getContentSelector());
@@ -77,8 +84,6 @@ Scenario('The current browser requires the emailed six-digit code and rejects re
     const origin = await I.executeScript(() => location.origin);
     const userAgent = await I.executeScript(() => navigator.userAgent);
     I.setCookie({ name: cookieName, value: 'autotest-expired', domain: new URL(origin).hostname, path: '/', expires: 1 });
-    await TempMail.login(mailbox);
-    await TempMail.destroyInbox();
     I.setPlaywrightRequestHeaders({ 'User-Agent': `${userAgent} WebJET-autotest-new-device` });
     I.relogin('publishNotification');
     I.waitForElement(dashboard, 30);
@@ -93,12 +98,9 @@ Scenario('The current browser requires the emailed six-digit code and rejects re
     I.seeElement(row);
 
     I.openNewTab();
-    await TempMail.login(mailbox);
-    I.waitForText('Kód na potvrdenie prihlásenia do WebJET CMS', 60);
-    TempMail.openLatestEmail();
+    const body = await openDeviceEmail(I, TempMail, eventId, 'Kód');
     I.see('Kód na potvrdenie prihlásenia do WebJET CMS', TempMail.getSubjectSelector());
     I.seeElement(`${TempMail.getContentSelector()} a[href*="/admin/v9/?securityEvent=${eventId}"]`);
-    const body = await I.grabTextFrom(TempMail.getContentSelector());
     const code = body.match(/(?:^|[^0-9])([0-9]{6})(?![0-9])/)?.[1];
     I.assertTrue(Boolean(code), 'The verification email must contain a six-digit code.');
     I.closeCurrentTab();
@@ -116,6 +118,48 @@ Scenario('The current browser requires the emailed six-digit code and rejects re
     I.amOnPage('/admin/v9/');
     I.waitForElement(dashboard, 30);
     I.dontSeeElement(row);
+});
+
+Scenario('A reported browser requires an email code before administration or REST access', async ({ I, TempMail }) => {
+    I.amOnPage(`/admin/v9/?securityEvent=${eventId}`);
+    I.waitForElement(`${dialog} .md-dashboard-sessions__report`, 20);
+    I.clickCss(`${dialog} .md-dashboard-sessions__report`);
+    I.waitForVisible('#username', 15);
+
+    I.relogin('publishNotification', false, false);
+    I.waitForVisible('#deviceCode', 15);
+    I.seeInCurrentUrl('/admin/logon/device/');
+    I.see('Overenie zablokovaného zariadenia');
+    I.saveScreenshot('dashboard-blocked-device-login.png');
+    const access = await I.executeScript(async () => {
+        const response = await fetch('/admin/rest/security/login-events/1');
+        return { status: response.status, redirected: response.redirected, path: new URL(response.url).pathname };
+    });
+    I.assertTrue(access.status === 401 || access.status === 403 || (access.redirected && access.path === '/admin/logon/device/'),
+        'Pending identity must be rejected or redirected to verification instead of accessing administration REST.');
+    I.amOnPage('/admin/v9/');
+    I.waitForVisible('#deviceCode', 15);
+    I.fillField('#deviceCode', '000000');
+    I.clickCss('#deviceVerificationForm [value="verify"]');
+    I.waitForText('Kód sa nepodarilo overiť', 10, '[role="alert"]');
+    I.clickCss('#deviceVerificationForm [value="resend"]');
+    I.waitForText('Nový kód možno poslať najskôr po minúte', 10, '[role="status"]');
+
+    I.openNewTab();
+    const body = await openDeviceEmail(I, TempMail, eventId, 'ktorý ste zablokovali');
+    I.see('ktorý ste zablokovali', TempMail.getContentSelector());
+    const code = body.match(/(?:^|[^0-9])([0-9]{6})(?![0-9])/)?.[1];
+    I.assertTrue(Boolean(code), 'The unblock email must contain a six-digit code.');
+    I.closeCurrentTab();
+    I.fillField('#deviceCode', code);
+    I.clickCss('#deviceVerificationForm [value="verify"]');
+    I.waitForElement(dashboard, 30);
+    const confirmed = await I.executeScript(readDashboardBootstrap, `?securityEvent=${eventId}`);
+    I.assertTrue(confirmed.requestedSecurityEvent.confirmedAt > 0, 'Unblocking must confirm the device.');
+    I.assertEqual(confirmed.requestedSecurityEvent.reportedAt, null, 'Unblocking must clear the device block.');
+    I.relogin('publishNotification');
+    I.waitForElement(dashboard, 30);
+    I.dontSeeElement('#deviceCode');
 });
 
 Scenario('Clean up the new device notice and restore browser recognition', async ({ I }) => {

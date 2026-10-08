@@ -77,6 +77,7 @@ class AdminDeviceLoginCompletionTest {
             request.getSession().setAttribute(Constants.USER_KEY, invocation.getArgument(1));
             return null;
         });
+        logon.when(() -> LogonTools.clearUserFromSession(any())).thenCallRealMethod();
         logon.when(() -> LogonTools.afterSuccessLogon(request, response)).thenCallRealMethod();
         logon.when(() -> LogonTools.logon(eq(form.getUsername()), eq(form.getPassword()), any(Identity.class), any(), eq(request), eq(prop)))
             .thenAnswer(invocation -> {
@@ -207,6 +208,34 @@ class AdminDeviceLoginCompletionTest {
 
         assertEquals("redirect:" + EVENT_TARGET, controller.edit(form, new ModelMap(), request, response, request.getSession()));
         devices.verify(() -> AdminDeviceService.recordSuccessfulLogin(user, request, response));
+    }
+
+    /** A blocked browser must wait for email after the configured second factor succeeds. */
+    @Test
+    void blockedBrowserWaitsForEmailAfterSecondFactor() {
+        Identity user = prepareSecondFactor();
+        request.setParameter("token", "123456");
+        devices.when(() -> AdminDeviceService.requireVerification(request)).thenAnswer(invocation -> {
+            assertEquals(Boolean.TRUE, request.getAttribute(AdminDeviceService.SECOND_FACTOR_VERIFIED));
+            LogonTools.clearUserFromSession(request.getSession());
+            return true;
+        });
+        try (var authenticator = mockConstruction(GoogleAuthenticator.class, (mock, context) ->
+                when(mock.getTotpPassword("existing-secret")).thenReturn(123456));
+             var query = mockConstruction(SimpleQuery.class)) {
+            assertEquals("redirect:" + AdminDeviceService.VERIFICATION_URL, submit());
+            assertNull(request.getSession().getAttribute(Constants.USER_KEY));
+            assertNull(request.getSession().getAttribute("adminUser_waitingForToken"));
+            logon.verify(() -> LogonTools.afterSuccessLogon(request, response), never());
+        }
+    }
+
+    /** Correct credentials still cannot complete a blocked browser login without its email code. */
+    @Test
+    void blockedBrowserWaitsForEmailWithoutSecondFactor() {
+        devices.when(() -> AdminDeviceService.requireVerification(request)).thenReturn(true);
+        assertEquals("redirect:" + AdminDeviceService.VERIFICATION_URL, submit());
+        logon.verify(() -> LogonTools.afterSuccessLogon(request, response), never());
     }
 
     private Identity prepareSecondFactor() {

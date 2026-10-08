@@ -84,6 +84,10 @@ public class OAuth2AdminSuccessHandler extends AbstractOAuth2SuccessHandler {
 
             LogonTools.logonUserWithAllChecks(identity, request);
 
+            if (AdminDeviceService.requireVerification(request)) {
+                response.sendRedirect(AdminDeviceService.VERIFICATION_URL);
+                return;
+            }
             LogonTools.afterSuccessLogon(request, response);
             response.sendRedirect(AdminDeviceService.getAfterLoginRedirect(request));
 

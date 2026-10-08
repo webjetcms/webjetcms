@@ -29,6 +29,12 @@ import org.springframework.security.access.AccessDeniedException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.stat.SessionHolder;
+import sk.iway.iwcm.stat.SessionDetails;
+import sk.iway.iwcm.stat.SessionClusterService;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.SendMail;
@@ -252,6 +258,122 @@ class AdminDeviceServiceTest {
         verifyNoInteractions(repository);
         verify(service, never()).sendNotification(any(), any(), any());
         assertEquals(0, response.getCookies().length);
+    }
+
+    /** A blocked cookie clears both authentication contexts and accepts only this login's emailed code. */
+    @Test
+    void blockedBrowserWaitsOutsideAuthenticationUntilItsOwnEmailCodeSucceeds() {
+        DeviceEntity device = event();
+        device.setReportedAt(Instant.ofEpochMilli(NOW - 1));
+        request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
+        request.getSession().setAttribute(Constants.USER_KEY, user);
+        var context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(new UsernamePasswordAuthenticationToken("admin", "", List.of()));
+        SecurityContextHolder.setContext(context);
+        request.getSession().setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+        when(repository.findByTokenHash(7, AdminDeviceService.hashToken(TOKEN))).thenReturn(device);
+        when(repository.findEvent(7, 42L)).thenReturn(device);
+        when(repository.issueUnblockCode(eq(7), eq(42L), anyString(), eq(NOW))).thenReturn(true);
+        tools.when(() -> Tools.isNotEmpty(user.getEmail())).thenReturn(true);
+        doReturn(true).when(service).sendVerificationEmail(eq(user), eq(request), eq(device), isNull(), anyString());
+
+        assertTrue(AdminDeviceService.requireVerification(request));
+        assertNull(request.getSession().getAttribute(Constants.USER_KEY));
+        assertNull(request.getSession().getAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY));
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        assertNotNull(service.getPendingLogin(request));
+        ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
+        verify(service).sendVerificationEmail(eq(user), eq(request), eq(device), isNull(), code.capture());
+        ArgumentCaptor<String> hash = ArgumentCaptor.forClass(String.class);
+        verify(repository).issueUnblockCode(eq(7), eq(42L), hash.capture(), eq(NOW));
+        assertNotEquals(AdminDeviceService.confirmationHash(7, 42L, code.getValue(), true), hash.getValue());
+
+        users.when(() -> UsersDB.getUser(7)).thenReturn(user);
+        when(user.isAuthorized()).thenReturn(true);
+        when(repository.unblock(7, 42L, hash.getValue(), NOW)).thenReturn(device);
+        try (var logon = mockStatic(LogonTools.class)) {
+            logon.when(() -> LogonTools.logonUserWithAllChecks(any(Identity.class), eq(request))).thenAnswer(invocation -> {
+                request.getSession().setAttribute(Constants.USER_KEY, invocation.getArgument(0));
+                return null;
+            });
+            assertTrue(service.verifyUnblockCode(request, code.getValue()));
+            assertNull(service.getPendingLogin(request));
+            assertNotNull(request.getSession().getAttribute(Constants.USER_KEY));
+            assertFalse(service.verifyUnblockCode(request, code.getValue()), "A completed login must not accept the code again");
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
+
+    /** Cookie replacement and challenge expiration discard the pending identity. */
+    @Test
+    void pendingLoginRequiresTheOriginalBrowserAndHasAFixedDeadline() {
+        request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
+        var pending = new AdminDeviceService.PendingLogin(user, 42L, AdminDeviceService.hashToken(TOKEN), "nonce", NOW + 1);
+        request.getSession().setAttribute(AdminDeviceService.PENDING_LOGIN, pending);
+        assertSame(pending, service.getPendingLogin(request));
+        var later = new AdminDeviceService(repository, Clock.fixed(Instant.ofEpochMilli(NOW + 1), ZoneOffset.UTC));
+        assertNull(later.getPendingLogin(request));
+        request.getSession().setAttribute(AdminDeviceService.PENDING_LOGIN, pending);
+        request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, "x".repeat(43)));
+        assertNull(service.getPendingLogin(request));
+        verifyNoInteractions(repository);
+    }
+
+    /** A failed blocking lookup cannot leave an authenticated identity behind. */
+    @Test
+    void blockingLookupFailureRemovesAuthentication() {
+        request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
+        request.getSession().setAttribute(Constants.USER_KEY, user);
+        when(repository.findByTokenHash(anyInt(), anyString())).thenThrow(new IllegalStateException("Unavailable"));
+        assertThrows(IllegalStateException.class, () -> AdminDeviceService.requireVerification(request));
+        assertNull(request.getSession().getAttribute(Constants.USER_KEY));
+    }
+
+    /** New browsers receive informational mail after the actual second factor confirms them. */
+    @Test
+    void verifiedSecondFactorConfirmsTheRecordedDevice() {
+        DeviceEntity device = event();
+        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString())).thenReturn(device);
+        when(repository.confirmAfterSecondFactor(7, 42L, NOW)).thenAnswer(invocation -> {
+            device.setConfirmedAt(Instant.ofEpochMilli(NOW));
+            return device;
+        });
+        request.setAttribute(AdminDeviceService.SECOND_FACTOR_VERIFIED, Boolean.TRUE);
+        AdminDeviceService.recordSuccessfulLogin(user, request, response);
+        assertNotNull(device.getConfirmedAt());
+        verify(service).sendNotification(user, request, device);
+        doCallRealMethod().when(service).sendNotification(user, request, device);
+        doReturn(true).when(service).sendVerificationEmail(user, request, device, null, null);
+        service.sendNotification(user, request, device);
+        verify(service).sendVerificationEmail(user, request, device, null, null);
+        verify(repository, never()).issueConfirmation(anyInt(), anyLong(), anyString(), anyLong(), anyBoolean());
+    }
+
+    /** Blocking signs out matching local and remote sessions without touching other devices or accounts. */
+    @Test
+    void reportUsesExistingLogoutForAllKnownDeviceSessions() {
+        DeviceEntity device = event();
+        device.setReportedAt(Instant.ofEpochMilli(NOW));
+        when(repository.report(7, 42L, NOW)).thenReturn(device);
+        SessionHolder holder = mock(SessionHolder.class);
+        SessionDetails local = new SessionDetails();
+        local.setSessionId("local"); local.setLoggedUserId(7); local.setDeviceId(42L);
+        SessionDetails otherDevice = new SessionDetails();
+        otherDevice.setSessionId("other"); otherDevice.setLoggedUserId(7); otherDevice.setDeviceId(43L);
+        SessionDetails foreign = new SessionDetails();
+        foreign.setSessionId("foreign"); foreign.setLoggedUserId(8); foreign.setDeviceId(42L);
+        SessionDetails remote = new SessionDetails();
+        remote.setSessionId("remote"); remote.setLoggedUserId(7); remote.setDeviceId(42L);
+        when(holder.getList()).thenReturn(List.of(local, otherDevice, foreign));
+        try (var holders = mockStatic(SessionHolder.class); var cluster = mockStatic(SessionClusterService.class)) {
+            holders.when(SessionHolder::getInstance).thenReturn(holder);
+            cluster.when(() -> SessionClusterService.getSessionsForUsers(Set.of(7))).thenReturn(List.of(local, remote));
+            assertSame(device, service.report(user, EVENT_ID));
+            verify(holder).invalidateSession(7, "local");
+            verify(holder).invalidateSession(7, "remote");
+            verify(holder, times(2)).invalidateSession(anyInt(), anyString());
+        }
     }
 
     private void prepareHeadlessLogin(String host) {

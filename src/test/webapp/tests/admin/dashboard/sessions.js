@@ -8,6 +8,7 @@ const administratorsRoute = '**/admin/rest/sessions/administrators';
 const historyRoute = '**/admin/rest/sessions/login-history*';
 const logoutRoute = '**/admin/rest/sessions/logout';
 const adminLogoutRoute = '**/admin/rest/sessions/logout-administrator';
+const deviceReportRoute = '**/admin/rest/security/login-events/*/report';
 
 function waitForSessionDialog(I) {
     I.waitForVisible(modal, 10);
@@ -29,8 +30,56 @@ After(async ({ I }) => {
     await I.stopMockingRoute(logoutRoute);
     await I.stopMockingRoute(adminLogoutRoute);
     await I.stopMockingRoute(administratorsRoute);
+    await I.stopMockingRoute(deviceReportRoute);
     I.wjSetDefaultWindowSize();
     if (permissionsChanged) { I.logout(); permissionsChanged = false; }
+});
+
+/** Blocking resolves only the selected warning, while failed requests preserve it for retry. */
+Scenario('Blocked device notices disappear immediately and remain absent after reload', async ({ I }) => {
+    const now = Date.now();
+    const device = { id: 43, createDate: now, expiresAt: now + 7 * 86400000,
+        browserName: 'Firefox autotest', operatingSystem: 'Windows', ipAddress: '192.0.2.2' };
+    const securityNotice = event => ({ id: `newDevice:${event.id}`, kind: 'newDevice', severity: 'warning',
+        icon: 'ti-shield-lock', title: 'New device autotest', securityEvent: event });
+    const data = {
+        notices: [securityNotice(device), securityNotice({ ...device, id: 44, reportedAt: now }),
+            { id: 'unrelated-autotest', severity: 'warning', title: 'Unrelated autotest warning', description: '' }],
+        currentSessions: { currentSessionId: 'devices-autotest-current', userSessions: [{ userSessions: [
+            { sessionId: 'devices-autotest-current', browserName: 'Chrome', operatingSystem: 'macOS',
+                remoteAddr: '127.0.0.1', logonTime: now, deviceId: 42, deviceConfirmed: true }
+        ] }] }
+    };
+    let fail = true, requests = 0;
+    await mockDashboardBootstrap(I, () => data, () => ({ dismissedUntil: {} }));
+    await I.mockRoute(deviceReportRoute, route => {
+        requests++;
+        if (fail) return route.fulfill({ status: 503, contentType: 'application/json', body: '{}' });
+        device.reportedAt = Date.now();
+        data.notices = data.notices.filter(notice => notice.securityEvent?.id !== device.id);
+        return route.fulfill({ contentType: 'application/json', body: JSON.stringify(device) });
+    });
+    I.refreshPage();
+    I.waitForElement('[data-notice-id="newDevice:43"]', 10);
+    I.dontSeeElement('[data-notice-id="newDevice:44"]');
+    I.clickCss('[data-notice-id="newDevice:43"] .md-dashboard__notice-report');
+    waitForSessionDialog(I);
+    I.clickCss(`${modal} .md-dashboard-sessions__report`);
+    await I.waitForText('Zmenu sa nepodarilo uložiť', 10, modal);
+    I.seeElement('[data-notice-id="newDevice:43"]');
+    fail = false;
+    I.clickCss(`${modal} .md-dashboard-sessions__report`);
+    I.waitForElement(`${modal} .md-dashboard-sessions__security [role="status"]`, 10);
+    I.dontSeeElement('[data-notice-id="newDevice:43"]');
+    I.click('Zavrieť', `${modal} .modal-footer`);
+    I.waitForDetached(modal, 10);
+    I.seeElement('[data-notice-id="unrelated-autotest"]');
+    I.refreshPage();
+    await I.waitForElement('[data-notice-id="unrelated-autotest"]', 10);
+    I.dontSeeElement('[data-notice-id="newDevice:43"]');
+    I.dontSeeElement('[data-notice-id="newDevice:44"]');
+    I.assertEqual(requests, 2, 'Only explicit block attempts may submit a report.');
+    I.saveScreenshot('dashboard-blocked-device-notice-removed.png');
 });
 
 /** Real bootstrap and audit data expose activity, own records and the same authorized administrators. */
@@ -39,6 +88,8 @@ Scenario('Real sessions and personal login history are available from the welcom
     waitForSessionDialog(I);
     I.waitForText('Aktívne teraz', 10, modal);
     const bootstrap = await I.executeScript(readDashboardBootstrap);
+    I.assertTrue(bootstrap.notices.every(notice => notice.kind !== 'newDevice' || !notice.securityEvent.reportedAt),
+        'The server must omit resolved blocked-device notices.');
     I.assertTrue(bootstrap.currentSessions.userSessions.some(cluster => cluster.userSessions.some(session => session.lastActivity > 0)),
         'The real session API must include the last activity timestamp.');
     const current = bootstrap.currentSessions.userSessions.flatMap(cluster => cluster.userSessions).find(session => session.sessionId === bootstrap.currentSessions.currentSessionId);
@@ -252,8 +303,17 @@ Scenario('New session devices can be confirmed or denied from either dialog entr
     I.waitForInvisible(`${modal} tbody tr:nth-child(2) .md-dashboard-sessions__new`, 10);
     I.see('Odhlásiť', `${modal} tbody tr:nth-child(2)`);
     I.dontSeeElement(`${modal} .md-dashboard-sessions__security`);
+    const reportRoute = '**/admin/rest/security/login-events/*/report';
+    await I.mockRoute(reportRoute, route => {
+        const id = Number(route.request().url().match(/login-events\/(\d+)\/report/)[1]);
+        const matches = data.currentSessions.userSessions[0].userSessions.filter(session => session.deviceId === id);
+        removed.push(...matches.map(session => session.sessionId));
+        data.currentSessions.userSessions[0].userSessions = data.currentSessions.userSessions[0].userSessions.filter(session => session.deviceId !== id);
+        return route.fulfill({ contentType: 'application/json', body: JSON.stringify({ id, createDate: Date.now(), reportedAt: Date.now() }) });
+    });
     I.clickCss(`${modal} tbody tr:nth-child(4) .md-dashboard-sessions__deny-device`);
-    I.waitForText('Moje prihlásenia (3)', 10, modal);
+    I.waitForText('Odhlásenie bolo prijaté', 10, `${modal} tbody tr:nth-child(4)`);
+    I.dontSeeElement(`${modal} tbody tr:nth-child(4) .md-dashboard-sessions__deny-device`);
     I.assertDeepEqual(confirmed, ['43', '43']);
     I.assertDeepEqual(removed, ['devices-autotest-remote']);
     I.click('Zavrieť', `${modal} .modal-footer`);
@@ -263,12 +323,14 @@ Scenario('New session devices can be confirmed or denied from either dialog entr
     I.dontSeeElement('[data-notice-id="newDevice:43"]');
     I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
     waitForSessionDialog(I);
+    I.see('Moje prihlásenia (3)', modal);
     I.dontSeeElement(`${modal} .md-dashboard-sessions__new`);
     I.see('Odhlásiť', `${modal} tbody tr:nth-child(2)`);
     I.click('Zavrieť', `${modal} .modal-footer`);
     I.waitForDetached(modal, 10);
     await I.stopMockingRoute(confirmRoute);
     await I.stopMockingRoute(codeRoute);
+    await I.stopMockingRoute(reportRoute);
 });
 
 /** Every administrator logout is intercepted before interaction; no real administrator sessions are invalidated. */

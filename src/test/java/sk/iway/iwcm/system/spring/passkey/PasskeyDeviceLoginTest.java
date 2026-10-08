@@ -21,6 +21,25 @@ import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 /** Verifies browser recognition and safe redirect handling at the passkey authentication boundary. */
 class PasskeyDeviceLoginTest {
+    /** A valid passkey cannot bypass a browser block or run successful-login callbacks early. */
+    @Test
+    void blockedBrowserWaitsForEmailAfterPasskey() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getName()).thenReturn("passkey-admin");
+        UserDetails user = mock(UserDetails.class);
+        when(user.isAdmin()).thenReturn(true);
+        try (var users = mockStatic(UsersDB.class); var logon = mockStatic(LogonTools.class);
+             var devices = mockStatic(AdminDeviceService.class)) {
+            users.when(() -> UsersDB.getUser("passkey-admin")).thenReturn(user);
+            devices.when(() -> AdminDeviceService.requireVerification(request)).thenReturn(true);
+            new PasskeyAuthSuccessHandler().onAuthenticationSuccess(request, response, authentication);
+            assertEquals(AdminDeviceService.VERIFICATION_URL, response.getRedirectedUrl());
+            logon.verify(() -> LogonTools.afterSuccessLogon(request, response), org.mockito.Mockito.never());
+        }
+    }
+
     /** A verified administrator passkey records a device and uses the shared safe after-login destination. */
     @Test
     void recordsAuthenticatedAdministratorAndPreservesEventDestination() throws Exception {

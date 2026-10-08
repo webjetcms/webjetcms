@@ -1,7 +1,7 @@
 import { registerWidget } from './registry';
 import { node, text, date, number, icon, containNativeScroll, fetchJson } from './widget-utils';
 import { adminMail, fetchLoggedAdministrators } from './system-widgets';
-import { showDeviceConfirmation } from './security-events';
+import { showDeviceConfirmation, isCurrentDevice } from './security-events';
 
 function sessionButton(label, action, className) {
     const control = node('button', className, label);
@@ -247,50 +247,46 @@ export function showActiveSessions(context, securityEvent) {
             securityDetails.append(reported);
         } else {
             securityDetails.append(node('p', 'mb-2', text(context, 'newDevice.reportAdvice')));
-            const report = sessionButton(text(context, 'newDevice.report'), reportSecurityEvent, 'btn btn-sm btn-white text-danger');
+            const report = sessionButton(text(context, 'newDevice.report'), () => reportSecurityEvent(securityEvent.id), 'btn btn-sm btn-white text-danger');
             report.classList.add('md-dashboard-sessions__report');
             report.disabled = reporting || busy;
             securityDetails.append(report);
         }
     }
 
-    async function reportSecurityEvent() {
+    async function reportSecurityEvent(deviceId) {
         if (reporting || busy) return;
         reporting = true;
         status.textContent = '';
         renderMine();
         try {
-            const response = await fetch(`/admin/rest/security/login-events/${encodeURIComponent(securityEvent.id)}/report`, {
+            const response = await fetch(`/admin/rest/security/login-events/${encodeURIComponent(deviceId)}/report`, {
                 method: 'POST', credentials: 'same-origin', signal: dialog.signal,
                 headers: { 'X-CSRF-Token': window.csrfToken || '' }
             });
             if (!response.ok) throw new Error('Login reporting failed');
             const updated = await response.json();
-            if (updated.id !== securityEvent.id || !updated.reportedAt) throw new Error('Login report was not saved');
+            if (updated.id !== deviceId || !updated.reportedAt) throw new Error('Login report was not saved');
             if (dialog.signal.aborted) return;
-            Object.assign(securityEvent, updated);
+            securityEvent = updated;
+            securityDetails ||= node('section', 'md-dashboard-sessions__security alert alert-warning');
             for (const cluster of context.data.currentSessions?.userSessions || []) {
                 for (const session of cluster.userSessions || []) {
-                    if (session.deviceId === updated.id) session.deviceConfirmed = false;
+                    if (session.deviceId === updated.id) { session.deviceConfirmed = false; session.pending = true; }
                 }
             }
-            const notices = context.data.notices ||= [];
-            for (const notice of notices) {
-                if (notice.securityEvent?.id === updated.id) Object.assign(notice.securityEvent, updated);
-            }
-            if (!updated.confirmedAt && updated.expiresAt > Date.now() && !notices.some(notice => notice.securityEvent?.id === updated.id)) {
-                notices.push({ id: `newDevice:${updated.id}`, kind: 'newDevice', severity: 'warning', icon: 'ti-shield-lock',
-                    title: text(context, 'newDevice.title'), description: '', securityEvent: updated });
-            }
+            context.data.notices = (context.data.notices || []).filter(notice => notice.securityEvent?.id !== updated.id);
             if (context.data.requestedSecurityEvent?.id === updated.id) context.data.requestedSecurityEvent = updated;
             context.overview?.noticeController?.render();
+            refreshSessions(context);
+            if (isCurrentDevice(context.data, updated.id)) document.forms.namedItem('adminLogoffForm')?.requestSubmit();
         } catch (error) {
             if (!dialog.signal.aborted) status.textContent = text(context, 'newDevice.saveError');
         } finally {
             reporting = false;
             if (!dialog.signal.aborted) {
                 renderMine();
-                securityDetails.querySelector('button, [role="status"]')?.focus({ preventScroll: true });
+                securityDetails?.querySelector('button, [role="status"]')?.focus({ preventScroll: true });
             }
         }
     }
@@ -355,17 +351,10 @@ export function showActiveSessions(context, securityEvent) {
                 const controls = node('div', 'md-dashboard-sessions__device-actions');
                 const confirm = sessionButton(text(context, 'newDevice.confirm'), () => confirmDevice(session, action),
                     'btn btn-sm btn-white md-dashboard-sessions__confirm-device');
-                const deny = sessionButton(text(context, 'newDevice.notMe'), () => {
-                    if (current) document.forms.namedItem('adminLogoffForm')?.requestSubmit();
-                    else remove([session]);
-                }, 'btn btn-sm btn-danger md-dashboard-sessions__deny-device');
+                const deny = sessionButton(text(context, 'newDevice.notMe'), () => reportSecurityEvent(session.deviceId), 'btn btn-sm btn-danger md-dashboard-sessions__deny-device');
                 confirm.disabled = deny.disabled = busy || reporting;
                 controls.append(confirm, deny);
                 action.append(controls);
-            } else if (current && securityEvent) {
-                const logout = sessionButton(text(context, 'newDevice.logoutCurrent'), () => document.forms.namedItem('adminLogoffForm')?.requestSubmit(), 'btn btn-sm btn-link');
-                logout.disabled = busy;
-                action.append(logout);
             } else if (current) action.append(node('span', 'text-muted', '—'));
             else {
                 const logout = sessionButton(text(context, 'sessionLogout'), () => remove([session]), 'btn btn-sm btn-link');
@@ -577,10 +566,6 @@ export function showActiveSessions(context, securityEvent) {
         sessionButton(text(context, 'close'), dialog.close, 'btn btn-sm btn-outline-secondary'));
     sessionTooltips(dialog.footer, dialog.signal);
     selectTab(0);
-    dialog.root.addEventListener('shown.bs.modal', () => {
-        if (document.activeElement === dialog.root) tabButtons[0].focus({ preventScroll: true });
-    }, { once: true });
-    tabButtons[0].focus({ preventScroll: true });
 }
 
 /** Registers the fixed welcome-panel list and the optional personal session widget. */
