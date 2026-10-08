@@ -198,7 +198,7 @@ dependencies {
 
     implementation("org.eclipse.persistence:eclipselink:2.7.+")
 
-    implementation("org.freemarker:freemarker:2.3.34")
+    implementation("org.freemarker:freemarker:2.3.35")
     implementation("com.google.code.gson:gson:2.13.2") //generate.jsp for pagebuilder, refactor to jackson
 
     implementation("org.hibernate.validator:hibernate-validator:6.2.5.Final")

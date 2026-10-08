@@ -366,4 +366,109 @@
     <cve>CVE-2022-23307</cve>
   </suppress>
 
+  <!-- Reviewed against the 2026-10-08 report and the 2026.0 hotfix configuration. -->
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-41855 requires Jackson JMS message converters processing untrusted JMS messages.
+    The scanned runtime dependencies contain no spring-jms module, and the application does not
+    configure MappingJackson2MessageConverter, JacksonJsonMessageConverter, or JMS listeners.
+    The report matches the generic Spring Framework CPE to the modules listed below.
+    Reassess if a project adds Spring JMS integration.
+    https://spring.io/security/cve-2026-41855/
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework/spring-(aop|beans|context|context-support|core|expression|jcl|jdbc|orm|test|tx|web|webmvc)@5\.3\.39$</packageUrl>
+    <cve>CVE-2026-41855</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-47884 requires XsltView together with a catch-all mapping and an implicit view name.
+    WebjetComponentSpringConfig configures JSP, FreeMarker, and Thymeleaf view resolvers.
+    No XsltView or XsltViewResolver is configured in this application.
+    Reassess if a project adds an XSLT view resolver.
+    https://spring.io/security/cve-2026-47884/
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework/spring-(aop|beans|context|context-support|core|expression|jcl|jdbc|orm|test|tx|web|webmvc)@5\.3\.39$</packageUrl>
+    <cve>CVE-2026-47884</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-47891 requires Spring WebFlux XML input decoding with the Aalto XML processor.
+    This application uses servlet Spring MVC; the scanned runtime dependencies contain neither
+    spring-webflux nor aalto-xml, and no reactive XML decoder is configured.
+    Reassess if a project adds WebFlux XML processing.
+    https://spring.io/security/cve-2026-47891/
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework/spring-(aop|beans|context|context-support|core|expression|jcl|jdbc|orm|test|tx|web|webmvc)@5\.3\.39$</packageUrl>
+    <cve>CVE-2026-47891</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-47892 requires functional web endpoints and their header predicates.
+    This application uses annotated servlet MVC controllers. No RouterFunction or RouterFunctions
+    configuration was found, and spring-webflux is absent from the scanned runtime dependencies.
+    Reassess if a project adds functional web routes.
+    https://spring.io/security/cve-2026-47892/
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework/spring-(aop|beans|context|context-support|core|expression|jcl|jdbc|orm|test|tx|web|webmvc)@5\.3\.39$</packageUrl>
+    <cve>CVE-2026-47892</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-59313 requires Spring MVC functional routes using ServerResponse.sse() to stream
+    attacker-controlled plain text. No MVC functional routes or ServerResponse.sse() calls are
+    present. AssistantController streams through HttpServletResponse and BufferedWriter instead.
+    Reassess if a project adds functional SSE endpoints.
+    https://spring.io/security/cve-2026-59313/
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework/spring-(aop|beans|context|context-support|core|expression|jcl|jdbc|orm|test|tx|web|webmvc)@5\.3\.39$</packageUrl>
+    <cve>CVE-2026-59313</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-59270 requires an embedded LDAP server started through UnboundIdContainer.
+    The scanned runtime dependencies contain neither spring-security-ldap nor the UnboundID SDK,
+    and there is no UnboundIdContainer or spring.ldap.embedded configuration.
+    WebJET LDAP authentication uses JNDI InitialDirContext as a client of an external LDAP server.
+    Reassess if a project adds an embedded LDAP server.
+    https://spring.io/security/cve-2026-59270/
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-(config|core|crypto|web)@5\.8\.16$</packageUrl>
+    <cve>CVE-2026-59270</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-22732 was reviewed for the 2026.0 hotfix configuration on 2026-10-08.
+    It is treated as not relevant to the reviewed deployment, with exploitation assessed as
+    very unlikely. This is an application-specific accepted-risk suppression, not a library fix
+    or proof that every possible execution path is unaffected.
+    WebJET writes its own security headers in SetCharacterEncodingFilter.setCommonHeaders(),
+    and PathFilter.setStaticContentHeaders()/setCacheHeaders() manage applicable cache policies.
+    This Spring defect does not remove headers that WebJET has already written.
+    No concrete request exposing sensitive data through missing Spring cache headers was
+    demonstrated. MultipartFileSender does use the affected Content-Length setter pattern,
+    so paths relying solely on Spring's cache headers remain a theoretical risk.
+    Keep default lazy header writing to preserve existing cache and response.reset() behavior.
+    Reassess if response-writing code, header ownership, or proxy/CDN cache policies change,
+    or if a request demonstrates missing cache protection on a sensitive response.
+    https://spring.io/security/cve-2026-22732/
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework\.security/spring-security-(config|core|crypto|web)@5\.8\.16$</packageUrl>
+    <cve>CVE-2026-22732</cve>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-59283 requires active SpEL expression compilation.
+    WebjetComponentSpringConfig disables the Thymeleaf SpEL compiler. SpringAppInitializer sets
+    spring.expression.compiler.mode=OFF through SpringProperties during class initialization,
+    before creating the application context and default parsers, including Spring Data binding.
+    Reassess if a project enables the Thymeleaf compiler, overrides Spring properties, or constructs
+    a SpelParserConfiguration with IMMEDIATE or MIXED compilation.
+    This is a configuration mitigation, not a patched Spring Framework binary.
+    https://spring.io/security/cve-2026-59283/
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/org\.springframework/spring-(aop|beans|context|context-support|core|expression|jcl|jdbc|orm|test|tx|web|webmvc)@5\.3\.39$</packageUrl>
+    <cve>CVE-2026-59283</cve>
+  </suppress>
+
 </suppressions>

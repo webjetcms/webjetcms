@@ -7,6 +7,10 @@
 - Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#337).
 - Cluster - optimalizované zapisovanie zmeny v clustri pri štarte nového uzla (#337).
 - Redis - zlepšený prenos informácie o nahrávanom súbore v session (#342).
+- Bezpečnosť - aktualizovaná knižnica `FreeMarker` z verzie `2.3.34` na `2.3.35`.
+- Bezpečnosť - aktualizované knižnice administrácie `Lodash` z verzie `4.17.21` na `4.18.1` a `PostCSS` z verzie `8.5.2` na `8.5.12`. V rámci aktualizácie PostCSS bola aktualizovaná aj jeho závislosť `Nano ID` z verzie `3.3.8` na `3.3.20`.
+- Bezpečnosť - vypnutá kompilácia výrazov SpringEL v Thymeleaf šablónach a predvolene aj v Spring ako ochrana pred [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Štandardná syntax šablón a povolené volania metód zostávajú podporované, úprava šablón nie je potrebná. Pri šablónach s veľkým množstvom opakovane vyhodnocovaných výrazov môže vykresľovanie trvať dlhšie.
+- Bezpečnosť - doplnené zdôvodnené výnimky v `dependency-check-suppressions.xml` pre zraniteľnosti nevyužívaných častí Spring a pre zraniteľnosť ošetrenú vyššie uvedeným nastavením SpringEL. [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) bola po analýze vyhodnotená ako nerelevantná pre posudzovanú konfiguráciu s veľmi nízkou pravdepodobnosťou zneužitia; výnimka predstavuje akceptované riziko bez preukázaného scenára zneužitia, nie opravu knižnice. Pôvodný spôsob zapisovania HTTP hlavičiek zostáva zachovaný. Verzie `Spring Framework 5.3.39` a `Spring Security 5.8.16` zostávajú zachované.
 
 ## 2026.0.40
 
