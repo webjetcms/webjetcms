@@ -698,7 +698,7 @@ test('Changed pages and audit render bounded text-only activity with their suppl
 test('Logged administrators load fresh REST data with safe email actions and abort cleanup', async t => {
     const emails = ['valid+autotest@example.com', 'autotest@example.com?bcc=other@example.com', 'autotest@example.com\r\nBcc:other@example.com',
         'autotest@example.com,other@example.com', 'autotest@example.com%0aBcc:other@example.com', ''];
-    const items = emails.map((email, userId) => ({ userId, email, fullName: '<img src=x onerror=alert(1)>' }));
+    const items = emails.map((email, userId) => ({ userId, email, sessionCount: userId + 1, fullName: '<img src=x onerror=alert(1)>' }));
     const data = { loggedAdmins: items };
     const { scope, context, container, window, requests } = fixture(t, { data });
     context.translate = (key, ...values) => `${key}:${values.join(',')}`;
@@ -713,7 +713,9 @@ test('Logged administrators load fresh REST data with safe email actions and abo
         assert.equal(container.querySelectorAll('a').length, 1);
         assert.equal(container.querySelector('a').getAttribute('href'), 'mailto:valid%2Bautotest@example.com');
         assert.match(container.querySelector('a').getAttribute('aria-label'), /<img src=x onerror=alert\(1\)>/);
-        assert.match(container.querySelector('.md-dashboard-widget__footnote').textContent, /:6$/);
+        assert.match(container.querySelector('.md-dashboard-widget__admin-summary small').textContent, /:6$/);
+        assert.equal(container.querySelector('.md-dashboard-widget__admin-total').textContent, '21');
+        assert.deepEqual([...container.querySelectorAll('.md-dashboard-widget__admin-count')].map(node => node.textContent), ['1', '2', '3', '4', '5', '6']);
     }
     const list = container.querySelector('.md-dashboard-widget__admins');
     assert.equal(list.tabIndex, 0);
@@ -2500,4 +2502,50 @@ test('Device pages retry failures, load lazily and cancel replaced or closed cod
     assert.equal(devices.querySelector('.md-dashboard-sessions__pagination button').disabled, false);
     root.querySelector('.modal-footer > button:last-child').click();
     assert.equal(requests.at(-1).options.signal.aborted, true);
+});
+
+
+test('Session widgets distinguish retained device state and reuse bulk confirmation without immediate writes', async t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+        { sessionId: 'current', deviceId: 1, deviceConfirmed: true, browserName: 'Current', logonTime: 1 },
+        { sessionId: 'unconfirmed', deviceId: 2, deviceConfirmed: false, browserName: 'Unconfirmed', logonTime: 2 },
+        { sessionId: 'legacy', deviceConfirmed: false, browserName: 'Legacy', logonTime: 3 },
+        { sessionId: 'pending', deviceId: 3, deviceConfirmed: false, pending: true, browserName: 'Pending', logonTime: 4 }
+    ] }] } };
+    const { scope, context, window, container, requests } = fixture(t, { data });
+    sessionDialogFixture(context, window);
+    const widget = scope.getWidget('my-sessions');
+    widget.render({ container, context, signal: new AbortController().signal, instance: { size: '2x2' } });
+    assert.equal(container.querySelectorAll('li.is-unconfirmed').length, 1);
+    assert.match(container.querySelector('li.is-unconfirmed').textContent, /Unconfirmed.*deviceUnconfirmed/);
+    assert.equal(container.querySelector('.md-dashboard-widget__session-count').textContent, '4');
+    container.querySelector('.md-dashboard-widget__session-bulk').click();
+    const dialog = window.document.querySelector('.md-dashboard-modal--logout');
+    assert.equal(dialog.querySelectorAll('.md-dashboard-sessions__logout-list li').length, 2);
+    assert.equal(requests.length, 0, 'Opening bulk confirmation must not log out any session.');
+    dialog.querySelector('.modal-footer .btn-outline-secondary').click();
+    assert.equal(window.document.activeElement, dialog.querySelector('.md-dashboard-sessions__summary button'));
+    dialog.querySelector('.modal-footer > button:last-child').click();
+    context.data.currentSessions.userSessions[0].userSessions.splice(1);
+    for (const size of widget.sizes) {
+        container.replaceChildren();
+        widget.render({ container, context, signal: new AbortController().signal, instance: { size } });
+        assert.match(container.querySelector('.md-dashboard-widget__session-only').textContent, /sessionsSummarySingle.*Current/);
+        assert.equal(container.querySelector('.md-dashboard-widget__session-bulk'), null);
+    }
+});
+
+test('Administrator widget headings open their authorized tab and personal headings open sessions', async t => {
+    for (const allowed of [true, false]) {
+        const { scope, context, window, requests } = fixture(t, { allowed });
+        sessionDialogFixture(context, window);
+        scope.getWidget('logged-admins').headerAction({}, context);
+        await new Promise(resolve => setImmediate(resolve));
+        const dialog = window.document.querySelector('.md-dashboard-modal--sessions');
+        assert.match(dialog.querySelector('[aria-selected="true"]').id, allowed ? /-admins$/ : /-mine$/);
+        assert.equal(requests.length, allowed ? 1 : 0, 'An unavailable administrator tab must not trigger its REST read.');
+        dialog.querySelector('.modal-footer > button:last-child').click();
+        scope.getWidget('my-sessions').headerAction({}, context);
+        assert.match(window.document.querySelector('[aria-selected="true"]').id, /-mine$/);
+    }
 });

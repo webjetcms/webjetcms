@@ -285,7 +285,7 @@ webjet-overview-dashboard a:focus-visible {
     }
     &__sessions &__widget-header { padding: 16px 56px 0 16px; gap: 6px; > .ti { font-size: 16px; } }
     &__sessions &__widget-title { font-size: 12px; }
-    &__sessions &__title-action { color: var(--wj-dashboard-security-text); &:hover, &:focus-visible { color: var(--wj-dashboard-security-text); text-decoration: underline; } &:focus-visible { outline-color: var(--wj-dashboard-security-text); } }
+    &__sessions &__title-action { color: var(--wj-dashboard-security-text); > .ti { color: inherit; } &:hover, &:focus-visible { color: var(--wj-dashboard-security-text); text-decoration: underline; } &:focus-visible { outline-color: var(--wj-dashboard-security-text); } }
     &__sessions &__widget-body { flex: 0 1 auto; min-height: 0; padding: 4px 16px 4px; }
     &__sessions &__widget-content { flex: 0 1 auto; min-height: 0; }
     &__sessions .md-dashboard-widget__sessions { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; margin-bottom: 0; scrollbar-color: var(--wj-dashboard-security-scrollbar) transparent; }
@@ -930,8 +930,21 @@ webjet-overview-dashboard a:focus-visible {
     min-height: 0;
     .md-dashboard__widget-body, .md-dashboard__widget-content { min-height: 0; }
     .md-dashboard-widget__sessions { flex: 1 1 0; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; touch-action: pan-y; }
+    &:has(.md-dashboard-widget__session-count) .md-dashboard__widget-header { padding-right: 56px; }
+    .md-dashboard-widget__session-count { position: absolute; top: 24px; right: 24px; padding: 3px 6px; color: var(--wj-secondary); background: var(--wj-nice-gray-100); font-size: 12px; }
+    .md-dashboard-widget__session { grid-template-columns: 32px minmax(0, 1fr) 24px; padding: 10px 0; }
+    .md-dashboard-widget__session-device { display: grid; place-items: center; width: 32px; height: 32px; color: var(--wj-gray-text); background: var(--wj-dashboard-surface); border-radius: var(--wj-border-radius); }
+    .md-dashboard-widget__session-name { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-weight: 400; }
+    .md-dashboard-widget__session.is-unconfirmed { padding-inline: 8px; background: var(--wj-dashboard-publishing); border-radius: var(--wj-border-radius); }
+    &[data-size="1x1"] .md-dashboard-widget__session-only { flex-direction: column; gap: 8px; > .ti { width: 28px; height: 28px; } }
+    @media (max-width: ($bp-mobile - .02px)) {
+        .md-dashboard-widget__sessions { flex: 0 1 auto; max-height: 320px; }
+    }
 }
-.md-dashboard__widget[data-widget-type="my-sessions"] .md-dashboard-widget__session { display: grid; grid-template-columns: 20px minmax(0, 1fr) 24px; column-gap: 8px; .md-dashboard-widget__session-device { grid-row: 1 / 3; align-self: center; } .md-dashboard-widget__session-name { grid-column: 2; } .md-dashboard-widget__session-detail { grid-column: 2; } .md-dashboard-widget__session-current, .md-dashboard-widget__session-logout { grid-column: 3; grid-row: 1 / 3; align-self: center; } .md-dashboard-widget__session-feedback { grid-column: 2 / -1; } }
+.md-dashboard__widget[data-widget-type="my-sessions"] .md-dashboard-widget__session { display: grid; column-gap: 8px; .md-dashboard-widget__session-device { grid-row: 1 / 3; align-self: center; } .md-dashboard-widget__session-name { grid-column: 2; } .md-dashboard-widget__session-detail { grid-column: 2; } .md-dashboard-widget__session-current, .md-dashboard-widget__session-logout { grid-column: 3; grid-row: 1 / 3; align-self: center; } .md-dashboard-widget__session-feedback { grid-column: 2 / -1; } }
+.md-dashboard-widget__session-badge { padding: 3px 6px; border-radius: 3px; background: var(--wj-dashboard-amber); color: var(--wj-dashboard-warning-text); font-size: 11px; font-weight: 700; }
+.md-dashboard-widget__session-only { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; > .ti { display: grid; place-items: center; flex-shrink: 0; width: 36px; height: 36px; border-radius: var(--wj-border-radius); background: var(--wj-dashboard-mint); color: var(--wj-dashboard-positive); } strong { display: block; } small { display: block; margin-top: 4px; color: var(--wj-dashboard-muted); overflow-wrap: anywhere; } }
+.md-dashboard-widget__session-bulk { align-self: flex-start; margin-top: auto; padding: 12px 0 0; --bs-btn-color: var(--wj-primary-hover); --bs-btn-hover-color: var(--wj-secondary); --bs-btn-active-color: var(--wj-secondary); text-align: left; }
 .md-dashboard-modal--sessions .btn-link,
 .md-dashboard-modal--sessions .md-dashboard-widget__admin-mail,
 .md-dashboard-modal--device-security .btn-link {
@@ -1298,7 +1311,10 @@ webjet-overview-dashboard a:focus-visible {
     &__activity-detail { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 3px 12px; padding-left: 50px; margin-top: 4px; font-size: 11px; color: var(--wj-dashboard-muted); overflow-wrap: anywhere; }
     &__admins { margin: 0; > li { display: flex; align-items: center; gap: 10px; min-height: 35px; padding-block: 3px; border-bottom: 1px solid var(--wj-dashboard-divider); &:last-child { border-bottom: 0; } > .ti { font-size: 18px; color: var(--wj-dashboard-muted); } } }
     &__admin-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-    &__admin-mail { padding: 3px; color: var(--wj-dashboard-muted); &:hover, &:focus-visible { color: var(--wj-dashboard-link); background: var(--wj-dashboard-surface); } }
+    &__admin-summary { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; > div { min-width: 0; color: var(--wj-dashboard-muted); font-size: 14px; } small { display: block; margin-top: 2px; font-size: 11px; } }
+    &__admin-total { font-size: 32px; line-height: 1.1; }
+    &__admin-count { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+    &__admin-mail { padding: 3px; color: var(--wj-dashboard-muted); > .ti { vertical-align: middle; } &:hover, &:focus-visible { color: var(--wj-dashboard-link); background: var(--wj-dashboard-surface); } }
 
     &__publishing { margin-bottom: 0; }
     &__publication {

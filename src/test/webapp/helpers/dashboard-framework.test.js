@@ -17,6 +17,7 @@ test('Dialog headings retain their button and action when the dashboard reconcil
     await controller.start();
     const heading = host.querySelector('.md-dashboard__title-action');
     assert.equal(heading.tagName, 'BUTTON');
+    assert.equal(heading.querySelector('.ti-arrow-up-right').getAttribute('aria-hidden'), 'true');
     heading.click();
     controller._render();
     assert.equal(host.querySelector('.md-dashboard__title-action'), heading);

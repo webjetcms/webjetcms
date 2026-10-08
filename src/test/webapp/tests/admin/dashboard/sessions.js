@@ -108,7 +108,7 @@ Scenario('Session widgets and notices open the dialog and update after individua
         notices: [],
         currentSessions: { currentSessionId: 'sessions-autotest-current', userSessions: [{ cluster: 'autotest-node', userSessions: [
             { sessionId: 'sessions-autotest-current', logonTime: now - 3600000, lastActivity: now, browserName: 'Chrome', operatingSystem: 'macOS', remoteAddr: '127.0.0.1' },
-            { sessionId: 'sessions-autotest-other', logonTime: now - 7200000, lastActivity: now - 12 * 60000, browserName: 'Firefox', operatingSystem: 'Windows', remoteAddr: '192.0.2.2' },
+            { sessionId: 'sessions-autotest-other', logonTime: now - 7200000, deviceId: 43, deviceConfirmed: false, lastActivity: now - 12 * 60000, browserName: 'Firefox', operatingSystem: 'Windows', remoteAddr: '192.0.2.2' },
             { sessionId: 'sessions-autotest-third', logonTime: now - 86400000, lastActivity: now - 2 * 3600000, browserName: 'Safari', operatingSystem: 'iOS', remoteAddr: '192.0.2.3' }
         ] }] }
     };
@@ -136,7 +136,33 @@ Scenario('Session widgets and notices open the dialog and update after individua
         }
         else I.assertEqual(await I.grabNumberOfVisibleElements(`[data-instance-id="sessions-autotest-${size}"] li`), 3);
     }
+    I.seeElement('[data-instance-id="sessions-autotest-2x3"] .md-dashboard__title-action .ti-arrow-up-right');
+    I.see('Nepotvrdené', '[data-instance-id="sessions-autotest-2x3"] .is-unconfirmed');
+    I.clickCss('[data-instance-id="sessions-autotest-2x3"] .md-dashboard-widget__session-bulk');
+    waitForSessionDialog(I);
+    I.waitForVisible('.md-dashboard-modal--logout', 10);
+    I.assertDeepEqual(removed, [], 'The widget must open confirmation before any logout.');
+    I.click('Zrušiť', `${modal} .modal-footer`);
+    I.waitForText('Moje prihlásenia (3)', 10, modal);
+    I.assertTrue(await I.executeScript(() => document.activeElement.matches('.md-dashboard-sessions__summary button')),
+        'Canceling widget bulk logout must focus the session action inside the dialog.');
+    I.click('Zavrieť', `${modal} .modal-footer`);
+    I.waitForDetached(modal, 10);
     I.saveScreenshot('dashboard-sessions-widgets.png');
+    const widgetViolations = await I.runA11yCheck({ context: { include: ['[data-widget-type="my-sessions"]'] } });
+    I.assertDeepEqual(widgetViolations.map(item => item.id), [], 'Session widget text, status and controls must pass the accessibility audit.');
+    for (const width of [1100, 390]) {
+        await I.resizeWindow(width, 850);
+        await showWidget(I, 'sessions-autotest-2x3');
+        await I.assertTrue(await I.executeScript(() => [...document.querySelectorAll('[data-widget-type="my-sessions"]')].every(card => {
+            const list = card.querySelector('.md-dashboard-widget__sessions');
+            return card.scrollWidth <= card.clientWidth + 1 && (!list || list.clientHeight > 60);
+        })), `Session lists must stay visible and fit their ${width}px layout.`);
+    }
+    await I.saveScreenshot('dashboard-session-widgets-mobile.png');
+    await I.wjSetDefaultWindowSize();
+    await showWidget(I, 'sessions-autotest-2x3');
+
     I.clickCss('[data-instance-id="sessions-autotest-2x3"] .md-dashboard__title-action');
     waitForSessionDialog(I);
     I.see('Moje prihlásenia (3)', modal);
@@ -192,7 +218,8 @@ Scenario('Session widgets and notices open the dialog and update after individua
     I.waitToHide(modal, 10);
     I.dontSeeElement('[data-notice-id="multipleSessions"]');
     await showWidget(I, 'sessions-autotest-1x1');
-    I.see('1', '[data-instance-id="sessions-autotest-1x1"] .md-dashboard-widget__metric');
+    I.see('Ste prihlásený v jednej relácii', '[data-instance-id="sessions-autotest-1x1"] .md-dashboard-widget__session-only');
+    I.saveScreenshot('dashboard-session-only-widget.png');
     I.refreshPage();
     I.waitForElement('[data-notice-id="multipleSessions"]', 10);
     I.click('Aktívne prihlásenia', '[data-notice-id="multipleSessions"]');
@@ -342,7 +369,7 @@ Scenario('Administrator session summaries match the design and coordinate author
     const now = Date.now();
     const data = {
         settings: { version: 1, configured: true, shortcutsConfigured: true, legacyBookmarksHandled: true,
-            items: [{ id: 'admins-autotest-widget', type: 'logged-admins', size: '2x2', options: {} }], domainOptions: {} },
+            items: ['2x2', '2x3'].map(size => ({ id: `admins-autotest-${size}`, type: 'logged-admins', size, options: {} })), domainOptions: {} },
         notices: [],
         currentSessions: { currentSessionId: 'admins-autotest-current', userSessions: [{ userSessions: [
             { sessionId: 'admins-autotest-current', browserName: 'Chrome', operatingSystem: 'macOS', logonTime: now, lastActivity: now }
@@ -370,9 +397,28 @@ Scenario('Administrator session summaries match the design and coordinate author
     I.refreshPage();
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     I.assertTrue(await I.executeScript(() => WJ.hasPermission('users.edit_admins')), 'This fixture account must have administrator management permission.');
-    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    for (const size of ['2x2', '2x3']) {
+        await showWidget(I, `admins-autotest-${size}`);
+        await I.see('4', `[data-instance-id="admins-autotest-${size}"] .md-dashboard-widget__admin-total`);
+        await I.see('Prihlásených administrátorov: 3', `[data-instance-id="admins-autotest-${size}"] .md-dashboard-widget__admin-summary`);
+        await I.seeElement(`[data-instance-id="admins-autotest-${size}"] .md-dashboard__title-action .ti-arrow-up-right`);
+    }
+    await I.saveScreenshot('dashboard-admin-widgets.png');
+    const widgetViolations = await I.runA11yCheck({ context: { include: ['[data-widget-type="logged-admins"]'] } });
+    await I.assertDeepEqual(widgetViolations.map(item => item.id), [], 'Administrator summaries and title controls must pass the accessibility audit.');
+    for (const width of [1100, 390]) {
+        await I.resizeWindow(width, 850);
+        await showWidget(I, 'admins-autotest-2x3');
+        await I.assertTrue(await I.executeScript(() => [...document.querySelectorAll('[data-widget-type="logged-admins"]')].every(card =>
+            card.scrollWidth <= card.clientWidth + 1)), `Administrator widgets must fit their ${width}px layout.`);
+    }
+    await I.saveScreenshot('dashboard-admin-widgets-mobile.png');
+    await I.wjSetDefaultWindowSize();
+    await showWidget(I, 'admins-autotest-2x3');
+
+    await I.clickCss('[data-instance-id="admins-autotest-2x3"] .md-dashboard__title-action');
     waitForSessionDialog(I);
-    I.clickCss(`${modal} [role="tab"][id$="-admins"]`);
+    await I.seeElement(`${modal} [role="tab"][id$="-admins"][aria-selected="true"]`);
     I.waitForText('Prihlásení administrátori (3)', 10, modal);
     I.see('autotest-current', `${modal} [data-admin-user-id="900001"]`);
     I.see('Chrome · Windows, Safari · iOS', modal);
@@ -407,9 +453,9 @@ Scenario('Administrator session summaries match the design and coordinate author
     I.assertDeepEqual(removed, ['900002', '900003'], 'Only the selected fictional administrators may reach the intercepted route.');
     I.click('Zavrieť', `${modal} .modal-footer`);
     I.waitToHide(modal, 10);
-    await showWidget(I, 'admins-autotest-widget');
-    I.dontSee('Autotest Other Administrator', '[data-instance-id="admins-autotest-widget"]');
-    I.see('Autotest Remote Administrator', '[data-instance-id="admins-autotest-widget"]');
+    await showWidget(I, 'admins-autotest-2x2');
+    I.dontSee('Autotest Other Administrator', '[data-instance-id="admins-autotest-2x2"]');
+    I.see('Autotest Remote Administrator', '[data-instance-id="admins-autotest-2x2"]');
     I.assertTrue(reads >= 4, 'Widget and dialog must read fresh summaries after logout.');
 });
 

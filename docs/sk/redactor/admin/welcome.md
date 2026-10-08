@@ -177,7 +177,7 @@ Použite ho, keď chcete nájsť stránku v administrácii alebo návod na prác
 
 ### Moje aktívne prihlásenia
 
-Umožňuje skontrolovať vaše aktívne prihlásenia a odhlásiť sa z iného zariadenia alebo prehliadača, ktorý už nepoužívate. Je vždy v hornej časti prehľadu a nemožno ho odstrániť. Podrobnosti nájdete v časti [Prihlásenia](#prihlásenia).
+Umožňuje skontrolovať vaše aktívne prihlásenia a odhlásiť sa z iného zariadenia alebo prehliadača, ktorý už nepoužívate. Pevný panel je vždy v hornej časti prehľadu a nemožno ho odstrániť. Z katalógu môžete pridať aj jeho samostatný widget do osobného prehľadu. Kliknutím na nadpis so šípkou otvoríte kartu **Moje prihlásenia**. Podrobnosti nájdete v časti [Prihlásenia](#prihlásenia).
 
 ### Prihlásení admini
 
@@ -207,7 +207,9 @@ V hornej časti prehľadu môžete skontrolovať svoje aktívne prihlásenia a o
 
 Panel **Moje aktívne prihlásenia** zobrazuje všetky vaše aktívne relácie, teda prihlásenia pod vaším kontom, s prehliadačom, časom a IP adresou. Pri dlhšom zozname môžete jeho obsah posúvať. Vaša aktuálna relácia je prvá a má zelenú bodku s popisom **Toto prihlásenie**. Ostatné relácie môžete odhlásiť priamo v zozname, napríklad keď ste sa zabudli odhlásiť na inom počítači. Tento panel je vždy v hornej časti a nemožno ho odstrániť.
 
-Kliknutím na nadpis panela otvoríte okno **Aktívne prihlásenia**. Okrem vlastných relácií ponúka správu vašich zariadení, históriu prihlásení za posledných 30 dní a podľa oprávnení aj prihlásených administrátorov. Tlačidlo **Zmeniť heslo** v spodnej časti okna otvorí váš profil na zmenu hesla. Informačná ikona vedľa tlačidla zobrazí pokyny pre zmenu hesla pri firemnom účte.
+Samostatný widget v osobnom prehľade zobrazí pri jedinej aktuálnej relácii informáciu, že ste prihlásený iba tu. Pri viacerých reláciách ukáže ich počet a vo väčších variantoch aj zoznam s poslednou aktivitou. Relácie známeho, ale zatiaľ nepotvrdeného zariadenia zvýrazní oranžovým pozadím a štítkom **Nepotvrdené**. Ak stav zariadenia nepozná, zvýraznenie nepridáva. Tlačidlo **Odhlásiť všetky ostatné** otvorí potvrdzovací dialóg; odhlásenie sa vykoná až po potvrdení.
+
+Kliknutím na nadpis panela alebo widgetu so šípkou otvoríte okno **Aktívne prihlásenia** v karte **Moje prihlásenia**. Okrem vlastných relácií ponúka správu vašich zariadení, históriu prihlásení za posledných 30 dní a podľa oprávnení aj prihlásených administrátorov. Tlačidlo **Zmeniť heslo** v spodnej časti okna otvorí váš profil na zmenu hesla. Informačná ikona vedľa tlačidla zobrazí pokyny pre zmenu hesla pri firemnom účte.
 
 Karta **Moje prihlásenia** zobrazuje iba aktívne relácie. Jeden prehliadač môže mať viac relácií. Aktuálna relácia má štítok **Toto prihlásenie**; pri ostatných môžete použiť akciu **Odhlásiť**.
 
@@ -233,7 +235,7 @@ Zablokovanie odhlási všetky známe relácie daného zariadenia. Ak ide o aktu�
 
 ### Prihlásení administrátori
 
-Ak máte právo "Úvod - zobrazenie prihlásených administrátorov", môžete cez katalóg pridať widget **Prihlásení admini** so zoznamom všetkých prihlásených administrátorov. Máte tak prehľad, koľko používateľov aktuálne pracuje v administrácii.
+Ak máte právo "Úvod - zobrazenie prihlásených administrátorov", môžete cez katalóg pridať widget **Prihlásení admini** so zoznamom všetkých prihlásených administrátorov. V oboch veľkostiach zobrazuje celkový počet aktívnych relácií a počet administrátorov. Pri každom mene je počet jeho relácií. Jeden účet môže mať viac prihlásení, preto sa oba súčty môžu líšiť. Kliknutím na nadpis so šípkou otvoríte okno **Aktívne prihlásenia** priamo v karte **Prihlásení administrátori**.
 
 Kliknutím na ikonu <i class="ti ti-mail fs-6"></i> môžete danému administrátorovi odoslať email.
 

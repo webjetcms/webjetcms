@@ -1,6 +1,6 @@
 import { registerWidget } from './registry';
 import { node, text, date, number, icon, containNativeScroll, fetchJson } from './widget-utils';
-import { adminMail, fetchLoggedAdministrators } from './system-widgets';
+import { adminMail, fetchLoggedAdministrators, renderLoggedAdmins } from './system-widgets';
 import { showDeviceConfirmation, isCurrentDevice } from './security-events';
 import { closeAccountDialog, showDeviceSecurity } from './device-security-dialog';
 
@@ -106,7 +106,7 @@ function refreshSessions(context) {
 }
 
 /** Shares the complete, scrollable session list between the welcome panel and personal widgets. */
-function sessionList(container, data, context, signal) {
+function sessionList(container, data, context, signal, personal = false) {
     const list = node('ul', 'md-dashboard-widget__sessions list-unstyled');
     list.tabIndex = 0;
     list.setAttribute('aria-label', text(context, 'sessions'));
@@ -116,9 +116,17 @@ function sessionList(container, data, context, signal) {
         row.dataset.sessionLogon = String(session.logonTime);
         const device = icon(sessionBrowserIcon(session.browserName));
         device.classList.add('md-dashboard-widget__session-device');
-        row.append(device, node('strong', 'md-dashboard-widget__session-name', sessionClient(session)),
-            node('span', 'md-dashboard-widget__session-detail', `${date(session.logonTime)} · ${session.remoteAddr || ''}`));
-        row.title = [session.domainName, session.cluster].filter(Boolean).join(' · ');
+        const name = node('strong', 'md-dashboard-widget__session-name', sessionClient(session));
+        if (personal && session.deviceId != null && session.deviceConfirmed === false && !session.pending) {
+            row.classList.add('is-unconfirmed');
+            name.append(node('span', 'md-dashboard-widget__session-badge', text(context, 'deviceUnconfirmed')));
+        }
+        const activity = session.lastActivity > 0 || session.sessionId === data.currentSessionId
+            ? sessionActivity(session, data.currentSessionId, context) : date(session.logonTime);
+        const detail = personal ? [session.sessionId === data.currentSessionId ? text(context, 'currentSession') : session.remoteAddr, activity].filter(Boolean).join(' · ')
+            : `${date(session.logonTime)} · ${session.remoteAddr || ''}`;
+        row.append(device, name, node('span', 'md-dashboard-widget__session-detail', detail));
+        row.title = [personal ? date(session.logonTime) : '', personal ? session.remoteAddr : '', session.domainName, session.cluster].filter(Boolean).join(' · ');
         if (session.sessionId === data.currentSessionId) {
             const current = node('span', 'md-dashboard-widget__session-current');
             current.tabIndex = 0;
@@ -165,8 +173,9 @@ function sessionList(container, data, context, signal) {
 /**
  * Opens personal sessions and devices, administrator summaries and login history.
  * @param {import('./registry').WidgetContext} context - Dashboard data and dialog owner.
+ * @param {{tab?: string, logoutOthers?: boolean}} [options] - Initial tab or bulk-logout confirmation.
  */
-export function showActiveSessions(context) {
+export function showActiveSessions(context, options = {}) {
     if (document.querySelector('.md-dashboard-modal--sessions')) return;
     const dialog = context.dashboard.showDialog(text(context, 'activeSessions'));
     dialog.root.classList.add('md-dashboard-modal--sessions');
@@ -390,7 +399,7 @@ export function showActiveSessions(context) {
 
     /** Temporarily replaces the session detail so confirmation shares its modal focus trap and lifecycle. */
     function confirmRemoveOthers(sessions) {
-        const trigger = document.activeElement;
+        const trigger = dialog.root.contains(document.activeElement) ? document.activeElement : mine.querySelector('.md-dashboard-sessions__summary button');
         const title = dialog.root.querySelector('.modal-title');
         const body = [...dialog.body.childNodes];
         const footer = [...dialog.footer.childNodes];
@@ -611,10 +620,14 @@ export function showActiveSessions(context) {
     dialog.footer.append(passwordControls, status,
         sessionButton(text(context, 'close'), dialog.close, 'btn btn-sm btn-outline-secondary'));
     sessionTooltips(dialog.footer, dialog.signal);
-    selectTab(0);
+    selectTab(Math.max(0, tabDefinitions.findIndex(([id]) => id === (options.tab || 'mine'))));
+    if (options.logoutOthers) {
+        const others = flattenSessions(context.data.currentSessions).filter(session => session.sessionId !== context.data.currentSessions.currentSessionId && !session.pending);
+        if (others.length) confirmRemoveOthers(others);
+    }
 }
 
-/** Registers the fixed welcome-panel list and the optional personal session widget. */
+/** Registers the fixed welcome-panel list and optional personal-session and administrator widgets. */
 export function registerSessionWidgets() {
     const headerAction = (instance, context) => showActiveSessions(context);
     registerWidget({
@@ -630,15 +643,34 @@ export function registerSessionWidgets() {
         sizes: ['1x1', '2x2', '2x3'], defaultSize: '2x2', multiple: true, headerAction,
         render({ container, context, signal, instance }) {
             const data = context.data.currentSessions;
-            const count = flattenSessions(data).length;
-            if (instance.size === '1x1') {
+            const sessions = flattenSessions(data);
+            const count = sessions.length;
+            if (count === 1 && sessions[0].sessionId === data.currentSessionId) {
+                const only = node('div', 'md-dashboard-widget__session-only');
+                const details = node('div');
+                details.append(node('strong', '', text(context, 'sessionsSummarySingle')),
+                    node('small', '', [sessionClient(sessions[0]), sessions[0].remoteAddr].filter(Boolean).join(' · ')));
+                only.append(icon('ti-circle-check'), details);
+                container.append(only);
+            } else if (instance.size === '1x1') {
                 const metric = sessionButton(number(count), () => showActiveSessions(context), 'md-dashboard-widget__metric md-dashboard-widget__number md-dashboard-sessions__metric');
                 metric.setAttribute('aria-label', text(context, 'sessionsCount', number(count)));
                 container.append(metric, node('p', 'md-dashboard-widget__footnote small', text(context, 'activeSessions')));
             } else {
-                sessionList(container, data, context, signal);
-                container.append(node('p', 'md-dashboard-widget__footnote small', text(context, 'sessionsCount', number(count))));
+                const badge = node('span', 'badge md-dashboard-widget__session-count', number(count));
+                badge.setAttribute('aria-label', text(context, 'sessionsCount', number(count)));
+                container.append(badge);
+                sessionList(container, data, context, signal, true);
+                const others = sessions.filter(session => session.sessionId !== data.currentSessionId && !session.pending);
+                if (others.length) container.append(sessionButton(text(context, 'logoutOtherSessions', number(others.length)),
+                    () => showActiveSessions(context, { logoutOthers: true }), 'btn btn-sm btn-link md-dashboard-widget__session-bulk'));
             }
         }
+    });
+    registerWidget({
+        type: 'logged-admins', titleKey: 'admin.dashboard.logged-admins.js', descriptionKey: 'admin.dashboard.logged-admins.description.js', icon: 'ti-users',
+        multiple: true, sizes: ['2x2', '2x3'], defaultSize: '2x2', isAvailable: () => window.WJ.hasPermission('welcomeShowLoggedAdmins'),
+        headerAction: (instance, context) => showActiveSessions(context, { tab: 'admins' }),
+        render: renderLoggedAdmins
     });
 }

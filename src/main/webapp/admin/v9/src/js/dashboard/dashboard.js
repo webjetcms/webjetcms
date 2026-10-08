@@ -595,7 +595,7 @@ export class DashboardController {
                 action.focus({ preventScroll: true });
                 definition.headerAction(this._instance(instance.id) || instance, this._widgetContext());
             }, "md-dashboard__title-link md-dashboard__title-action");
-            action.append(titleText);
+            action.append(titleText, icon("ti-arrow-up-right"));
             title.append(action);
         } else title.append(titleText);
         title.id = `dashboard-title-${instance.id}`;
