@@ -40,9 +40,7 @@
                     <div class="form-group">
                         <button type="submit" name="action" value="verify" class="btn btn-primary"><iwcm:text key="admin.dashboard.newDevice.verifyCode.js"/></button>
                         <button type="submit" name="action" value="resend" class="btn btn-secondary" formnovalidate><iwcm:text key="admin.dashboard.newDevice.resendCode.js"/></button>
-                    </div>
-                    <div class="form-group">
-                        <button type="submit" name="action" value="cancel" class="btn btn-secondary btn-as-link" formnovalidate><iwcm:text key="button.cancel"/></button>
+                        <button type="submit" name="action" value="cancel" class="btn btn-secondary btn-as-link pull-right" formnovalidate><iwcm:text key="button.cancel"/></button>
                     </div>
                 </form>
             </div>

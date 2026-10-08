@@ -15,13 +15,21 @@
 
 ### Úvodná obrazovka
 
-- Prihlásenie z nového prehliadača zobrazí upozornenie a odošle email. Zariadenie môžete potvrdiť emailovým odkazom alebo kódom, prípadne zablokovať a ukončiť jeho aktívne prihlásenia. Pri ďalšom prihlásení zo zablokovaného prehliadača sa vyžaduje emailový kód (#340).
-
 - [Úvodnú obrazovku](redactor/admin/welcome.md) sme prerobili na widgetový systém, aby ste mali údaje potrebné pri práci na jednom mieste bez prechádzania jednotlivých častí administrácie. Sami si vyberiete widgety a nastavíte zobrazované údaje, veľkosť a poradie podľa svojich potrieb (#58806).
 
 <div class="video-container">
     <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
+
+### Prihlasovanie a ochrana účtu
+
+- WebJET CMS po novom [eviduje prehliadače, z ktorých sa prihlasujete](redactor/admin/logon.md#prihlásenie-z-nového-zariadenia). Prihlásenie z nového prehliadača zobrazí upozornenie na úvodnej obrazovke a odošle email, aby ste mohli rozpoznať cudzie prihlásenie do svojho účtu. Vlastné zariadenie potvrdíte emailovým odkazom alebo jednorazovým kódom cez **Bol som to ja** (#340).
+
+![Upozornenie na prihlásenie z nového prehliadača](redactor/admin/device-block.png)
+
+- Ak prihlásenie nepoznáte, môžete [zablokovať zariadenie a ukončiť jeho aktívne prihlásenia](redactor/admin/welcome.md#ak-prihlásenie-nepoznáte). Pri ďalšom prihlásení zo zablokovaného prehliadača sa po zadaní správneho mena a hesla zobrazí **Overenie zablokovaného zariadenia**. Na odblokovanie a vstup do administrácie treba zadať šesťmiestny kód z emailu účtu; pri zapnutom 2FA sa toto overenie vykoná až po kóde z autentifikačnej aplikácie. Podrobný postup je v [návode na prihlásenie](redactor/admin/logon.md#overenie-zablokovaného-zariadenia) (#340).
+
+![Overenie zablokovaného zariadenia pred vstupom do administrácie](redactor/admin/logon-device-verification.png)
 
 ### Webové stránky
 

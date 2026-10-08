@@ -48,7 +48,7 @@ async function openDeviceEmail(I, TempMail, id, expectedText) {
     throw new Error(`No matching device email arrived for event ${id}.`);
 }
 
-Scenario('New device login sends an email and confirms its link with a success toast', async ({ I, TempMail }) => {
+Scenario('New device login sends an email and confirms its link with a success toast @screenshot', async ({ I, TempMail, Document }) => {
     const event = device;
     const eventId = event.id;
     const row = `[data-notice-id="newDevice:${eventId}"]`;
@@ -58,6 +58,7 @@ Scenario('New device login sends an email and confirms its link with a success t
     await I.see(event.browserName, row);
     await I.see(event.operatingSystem, row);
     await I.dontSeeElement(`${row} .md-dashboard__notice-report`);
+    Document.screenshotElement(row, '/redactor/admin/device-new-browser.png');
 
     await I.logout();
     await openDeviceEmail(I, TempMail, eventId, event.browserName);
@@ -66,6 +67,7 @@ Scenario('New device login sends an email and confirms its link with a success t
     await I.see(event.browserVersion, TempMail.getContentSelector());
     await I.see(event.operatingSystem, TempMail.getContentSelector());
     await I.see(event.ipAddress, TempMail.getContentSelector());
+    Document.screenshotElement(TempMail.getContentSelector(), '/redactor/admin/device-new-browser-email.png', 1000, 760);
     // Matching the new device ID prevents an older notification from satisfying the test.
     const emailLink = `${TempMail.getContentSelector()} a[href*="/admin/v9/?securityEvent=${eventId}&deviceConfirmation="]`;
     await I.seeElement(emailLink);
@@ -90,12 +92,13 @@ Scenario('New device login sends an email and confirms its link with a success t
     await I.assertTrue(confirmed.requestedSecurityEvent.confirmedAt > 0, 'Confirmation must be persisted for the device from the email.');
 });
 
-Scenario('The current browser requires the emailed six-digit code and rejects replay', async ({ I, TempMail }) => {
+Scenario('The current browser requires the emailed six-digit code and rejects replay @screenshot', async ({ I, TempMail, Document }) => {
     const eventId = device.id;
     const row = `[data-notice-id="newDevice:${eventId}"]`;
     await I.clickCss(`${row} .md-dashboard__notice-confirm`);
     await I.waitForText('Zadajte 6-miestny kód', 10, row);
     await I.seeElement(row);
+    Document.screenshotElement(row, '/redactor/admin/device-confirm-code.png');
 
     await I.openNewTab();
     const body = await openDeviceEmail(I, TempMail, eventId, 'Kód');
@@ -103,6 +106,7 @@ Scenario('The current browser requires the emailed six-digit code and rejects re
     await I.seeElement(`${TempMail.getContentSelector()} a[href*="/admin/v9/?securityEvent=${eventId}"]`);
     const code = body.match(/(?:^|[^0-9])([0-9]{6})(?![0-9])/)?.[1];
     await I.assertTrue(Boolean(code), 'The verification email must contain a six-digit code.');
+    Document.screenshotElement(TempMail.getContentSelector(), '/redactor/admin/device-confirm-code-email.png', 1000, 760);
     await I.closeCurrentTab();
     await I.fillField(`${row} input[name="deviceConfirmationCode"]`, code);
     await I.clickCss(`${row} .md-dashboard-device-confirmation [type="submit"]`);
@@ -120,17 +124,24 @@ Scenario('The current browser requires the emailed six-digit code and rejects re
     await I.dontSeeElement(row);
 });
 
-Scenario('A reported browser requires an email code before administration or REST access', async ({ I, TempMail }) => {
+Scenario('A reported browser requires an email code before administration or REST access @screenshot', async ({ I, TempMail, Document }) => {
     const eventId = device.id;
     await I.amOnPage(`/admin/v9/?securityEvent=${eventId}`);
     await I.waitForElement(`${dialog} .md-dashboard-sessions__report`, 20);
+    await I.waitForFunction(() => {
+        const modal = document.querySelector('.md-dashboard-modal--sessions');
+        return modal && getComputedStyle(modal).opacity === '1' && getComputedStyle(modal.querySelector('.modal-dialog')).transform === 'none';
+    }, 10);
+    Document.screenshotElement(`${dialog} .modal-content`, '/redactor/admin/device-block.png');
     await I.clickCss(`${dialog} .md-dashboard-sessions__report`);
     await I.waitForVisible('#username', 15);
 
+    if (Document.isScreenshotsEnabled()) await I.resizeWindow(1280, 900);
     await I.relogin('publishNotification', false, false);
     await I.waitForVisible('#deviceCode', 15);
     await I.seeInCurrentUrl('/admin/logon/device/');
     await I.see('Overenie zablokovaného zariadenia');
+    Document.screenshot('/redactor/admin/logon-device-verification.png');
     const access = await I.executeScript(async () => {
         const response = await fetch('/admin/rest/security/login-events/1');
         return { status: response.status, redirected: response.redirected, path: new URL(response.url).pathname };
@@ -144,16 +155,20 @@ Scenario('A reported browser requires an email code before administration or RES
     await I.see('ktorý ste zablokovali', TempMail.getContentSelector());
     const code = body.match(/(?:^|[^0-9])([0-9]{6})(?![0-9])/)?.[1];
     await I.assertTrue(Boolean(code), 'The unblock email must contain a six-digit code.');
+    Document.screenshotElement(TempMail.getContentSelector(), '/redactor/admin/logon-device-verification-email.png', 1000, 760);
     await I.closeCurrentTab();
     await I.fillField('#deviceCode', code === '000000' ? '000001' : '000000');
     await I.clickCss('#deviceVerificationForm [value="verify"]');
     await I.waitForText('Kód sa nepodarilo overiť', 10, '[role="alert"]');
+    Document.screenshotElement('[role="alert"]', '/redactor/admin/logon-device-verification-error.png');
     await I.fillField('#deviceCode', code);
+    await I.seeInField('#deviceCode', code);
     await I.clickCss('#deviceVerificationForm [value="verify"]');
     await I.waitForElement(dashboard, 30);
     const confirmed = await I.executeScript(readDashboardBootstrap, `?securityEvent=${eventId}`);
     await I.assertTrue(confirmed.requestedSecurityEvent.confirmedAt > 0, 'Unblocking must confirm the device.');
     await I.assertEqual(confirmed.requestedSecurityEvent.reportedAt, null, 'Unblocking must clear the device block.');
+    await I.wjSetDefaultWindowSize();
     await I.relogin('publishNotification');
     await I.waitForElement(dashboard, 30);
     await I.dontSeeElement('#deviceCode');

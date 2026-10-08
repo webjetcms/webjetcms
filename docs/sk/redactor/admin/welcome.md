@@ -127,13 +127,43 @@ V uvítacom paneli nájdete novinky aktuálnej verzie WebJET CMS. Tlačidlom **Z
 
 V tejto časti skontrolujete problémy vyžadujúce vašu pozornosť. Upozornenie na prihlásenie z neznámeho zariadenia je vždy prvé. Ostatné upozornenia sú zoradené podľa závažnosti: chyby, varovania a informácie. Každý riadok obsahuje vysvetlenie a dostupnú akciu. Chyby zostávajú viditeľné do vyriešenia príčiny. Bežné varovanie môžete odložiť na 7 dní tlačidlom **Pripomenúť neskôr** alebo **×**.
 
-**Nové prihlásenie z neznámeho zariadenia** sa zobrazí po úspešnom prihlásení v prehliadači, ktorý WebJET CMS pre váš účet nerozpozná ako použitý počas posledných 90 dní. Súčasne vám odošle email. Pri aktuálnom prehliadači sa zobrazí informácia **Prihlásili ste sa z nového prehliadača** s časom a označením **Tento prehliadač**. Pri inom zariadení zostáva varovanie s prehliadačom, operačným systémom, IP adresou a časom prihlásenia.
+#### Nové prihlásenie z neznámeho zariadenia
 
-- Ak prihlásenie poznáte, kliknite na **Bol som to ja**. Na váš email sa odošle šesťmiestny kód, ktorý zadáte pri upozornení. Platí 10 minút a umožňuje najviac 5 pokusov; nový kód možno poslať po minúte a nahradí predchádzajúci. Až po overení kódu sa zariadenie potvrdí a upozornenie sa odstráni vo všetkých vašich prehliadačoch po obnovení prehľadu.
-- Prihlásenie môžete potvrdiť aj odkazom **Bol som to ja** v pôvodnom emaile. Odkaz platí 24 hodín, funguje iba po prihlásení do príslušného účtu a možno ho použiť raz. Nový kód tento odkaz nezruší; úspešné potvrdenie zneplatní odkaz aj kód.
-- Ak prihlásenie nepoznáte, kliknite na **Nebol som to ja**. Otvorí sa okno **Aktívne prihlásenia** s detailom udalosti a kartami **Moje prihlásenia**, **Prihlásení administrátori** (podľa oprávnení) a **História (30 dní)**. Varovanie sa zobrazuje iba v karte **Moje prihlásenia**. V karte **História (30 dní)** môžete skontrolovať predchádzajúce prihlásenia a ich IP adresy. Tlačidlom **Zablokovať zariadenie** zablokujete daný prehliadač a odhlásite všetky jeho známe relácie. Pri ďalšom prihlásení bude potrebný aj kód z emailu. Použite tiež **Zmeniť heslo** a skontrolujte ostatné prihlásenia. Pri firemnom účte zmeňte heslo u poskytovateľa prihlásenia alebo kontaktujte správcu.
+Upozornenie sa zobrazí po úspešnom prihlásení v prehliadači, ktorý WebJET CMS pre váš účet nerozpozná ako použitý počas posledných 90 dní. Súčasne vám odošle email. Pri aktuálnom prehliadači sa zobrazí informácia **Prihlásili ste sa z nového prehliadača** s časom a označením **Tento prehliadač**. Pri inom zariadení zostáva varovanie s prehliadačom, operačným systémom, IP adresou a časom prihlásenia. Skontrolujte, či údaje zodpovedajú vášmu prihláseniu.
+
+![Upozornenie po prihlásení z nového prehliadača](device-new-browser.png)
+
+Email **Nové prihlásenie do WebJET CMS** obsahuje údaje o prehliadači, IP adrese, čase a prostredí prihlásenia. Tlačidlami v emaile môžete prihlásenie potvrdiť alebo otvoriť jeho detail na zabezpečenie účtu.
+
+![Email s upozornením na nové prihlásenie a možnosťami potvrdenia alebo zabezpečenia účtu](device-new-browser-email.png)
+
+#### Ak prihlásenie poznáte
+
+Kliknite na **Bol som to ja**. Na váš email sa odošle šesťmiestny kód. Zadajte ho do poľa pod upozornením a kliknite na **Potvrdiť kód**.
+
+![Potvrdenie nového prehliadača kódom z emailu](device-confirm-code.png)
+
+Kód nájdete v emaile **Kód na potvrdenie prihlásenia do WebJET CMS**:
+
+![Email s jednorazovým kódom na potvrdenie nového prehliadača](device-confirm-code-email.png)
+
+Kód platí 10 minút a umožňuje najviac 5 pokusov. Tlačidlom **Poslať nový kód** možno po minúte poslať ďalší kód, ktorý nahradí predchádzajúci. Až po overení kódu sa zariadenie potvrdí a upozornenie sa odstráni vo všetkých vašich prehliadačoch po obnovení prehľadu.
+
+Prihlásenie môžete potvrdiť aj odkazom **Bol som to ja** v pôvodnom emaile. Odkaz platí 24 hodín, funguje iba po prihlásení do príslušného účtu a možno ho použiť raz. Nový kód tento odkaz nezruší; úspešné potvrdenie zneplatní odkaz aj kód.
+
+#### Ak prihlásenie nepoznáte
+
+Pri upozornení na iný prehliadač kliknite na **Nebol som to ja**. Otvorí sa okno **Aktívne prihlásenia** s detailom udalosti a kartami **Moje prihlásenia**, **Prihlásení administrátori** (podľa oprávnení) a **História (30 dní)**. Varovanie sa zobrazuje iba v karte **Moje prihlásenia**. V karte **História (30 dní)** môžete skontrolovať predchádzajúce prihlásenia a ich IP adresy.
+
+![Detail prihlásenia s možnosťou zablokovať zariadenie](device-block.png)
+
+Tlačidlom **Zablokovať zariadenie** zablokujete daný prehliadač a odhlásite všetky jeho známe relácie. Ak zablokujete prehliadač, v ktorom práve pracujete, odhlási aj vás. Pri ďalšom prihlásení sa po zadaní správnych prihlasovacích údajov zobrazí [výzva na overenie emailovým kódom](logon.md#overenie-zablokovaného-zariadenia). Až správny kód prehliadač odblokuje.
+
+Použite tiež **Zmeniť heslo** a skontrolujte ostatné prihlásenia. Pri firemnom účte zmeňte heslo u poskytovateľa prihlásenia alebo kontaktujte správcu.
 
 Samotné otvorenie detailu aktívne relácie neodhlási. Odhlásenie nastane až po zablokovaní zariadenia. Rovnaký detail otvoríte aj odkazom **Nebol som to ja – zabezpečiť účet** v emaile, po prihlásení do svojho účtu.
+
+#### Zapamätanie prehliadača a platnosť upozornenia
 
 Po úspešnom dvojfaktorovom overení sa nezablokovaný prehliadač potvrdí automaticky. O novom zariadení dostanete informačný email s možnosťou **Nebol som to ja**, bez potreby ďalšieho potvrdzovania. Ak ste zariadenie zablokovali, kód z emailu sa vyžaduje až po 2FA. Postup opisuje [Overenie zablokovaného zariadenia](logon.md#overenie-zablokovaného-zariadenia).
 

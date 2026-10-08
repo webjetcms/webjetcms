@@ -78,13 +78,41 @@ Zaregistrovaný kľúč môžete kedykoľvek odstrániť jeho označením a klik
 
 Možnosť prihlasovania prístupovým kľúčom môžete vypnúť nastavením konfiguračnej premennej `password_passKeyEnabled` na hodnotu `false`.
 
+## Prihlásenie z nového zariadenia
+
+WebJET CMS eviduje, z ktorého prehliadača sa prihlasujete do administrácie. Pri novom prehliadači vám odošle email a na [úvodnej obrazovke](welcome.md#systémové-upozornenia) zobrazí upozornenie **Prihlásili ste sa z nového prehliadača**. V administrácii môžete pracovať, upozornenie vám umožňuje skontrolovať, či ste sa prihlásili vy.
+
+![](device-new-browser-email.png)
+
+Zariadením sa tu rozumie konkrétny prehliadač a jeho profil, nie celý počítač. Upozornenie preto môžete dostať aj na svojom bežnom počítači pri prvom prihlásení po zavedení evidencie zariadení, po vymazaní cookies alebo v anonymnom okne. Bežné odhlásenie zapamätanie prehliadača nezruší.
+
+Ak prihlásenie poznáte, potvrďte ho odkazom **Bol som to ja** v emaile alebo rovnakým tlačidlom pri upozornení. Tlačidlo v administrácii odošle emailový kód a zobrazí pole na jeho zadanie. Ak prihlásenie nepoznáte, postupujte podľa [návodu na zablokovanie zariadenia](welcome.md#ak-prihlásenie-nepoznáte).
+
+![](device-confirm-code.png)
+
+Po úspešnom dvojstupňovom overení sa nezablokovaný prehliadač potvrdí automaticky. Dostanete informačný email bez potreby ďalšieho potvrdenia.
+
 ## Overenie zablokovaného zariadenia
 
-Ak ste prehliadač označili cez **Nebol som to ja** a zablokovali ho, pri ďalšom prihlásení sa zobrazí stránka **Overenie zablokovaného zariadenia**. Najprv zadáte správne prihlasovacie údaje a pri zapnutom 2FA aj kód z autentifikačnej aplikácie. Následne zadáte šesťmiestny kód zaslaný na email vášho účtu.
+Ak ste prehliadač označili cez **Nebol som to ja** a zablokovali ho, pri ďalšom prihlásení sa po zadaní správneho mena a hesla zobrazí stránka **Overenie zablokovaného zariadenia**. Ak máte zapnuté [dvojstupňové overovanie](#dvojstupňové-overovanie), najprv zadáte aj kód z autentifikačnej aplikácie. Výzva na emailový kód je ďalší krok na odblokovanie prehliadača - neznamená, že ste zadali nesprávne heslo.
 
-Kód platí 10 minút a umožňuje najviac 5 pokusov. Nový kód môžete vyžiadať po minúte; opätovné odoslanie neobnoví počet pokusov počas platnosti predchádzajúceho kódu. Celé overenie treba dokončiť do 15 minút, inak sa prihláste znova. Tlačidlo **Zrušiť** ukončí rozpracované prihlásenie.
+![Výzva na zadanie emailového kódu pri prihlásení zo zablokovaného prehliadača](logon-device-verification.png)
 
-Po správnom zadaní kódu sa prehliadač odblokuje, potvrdí a otvorí sa administrácia. Pri nasledujúcom prihlásení už toto overenie nepotrebuje. Bez správneho kódu zostáva administrácia neprístupná. Ak email nemáte k dispozícii, obráťte sa na správcu.
+1. Otvorte emailovú schránku účtu uvedeného na obrazovke. WebJET CMS do nej automaticky odošle šesťmiestny kód.
+2. V tom istom prehliadači, v ktorom ste začali prihlásenie, zadajte kód do poľa **Jednorazový kód z e-mailu**. Použite kód z emailu, nie kód z autentifikačnej aplikácie.
+3. Kliknite na **Potvrdiť kód**. Prehliadač sa odblokuje, potvrdí a otvorí sa administrácia. Pri nasledujúcom prihlásení už toto overenie nepotrebuje, pokiaľ ho znova nezablokujete.
+
+Email obsahuje údaje o zablokovanom prehliadači a kód na jeho odblokovanie a dokončenie prihlásenia:
+
+![Email s kódom na odblokovanie zariadenia a dokončenie prihlásenia](logon-device-verification-email.png)
+
+Kód platí **10 minút** a umožňuje najviac **5 pokusov**. Ak email neprišiel, skontrolujte aj nevyžiadanú poštu a adresu zobrazenú na obrazovke. Tlačidlom **Poslať nový kód** môžete po minúte vyžiadať ďalší email. Nový kód nahradí predchádzajúci. Opätovné odoslanie počas platnosti predchádzajúceho kódu neobnoví počet zostávajúcich pokusov. Po piatich neúspešných pokusoch počkajte na vypršanie platnosti kódu.
+
+Pri nesprávnom alebo neplatnom kóde sa zobrazí chybové hlásenie a zostanete na overovacej stránke:
+
+![Hlásenie po zadaní nesprávneho emailového kódu](logon-device-verification-error.png)
+
+Celé overenie treba dokončiť do **15 minút**, inak sa prihláste znova. Tlačidlo **Zrušiť** ukončí rozpracované prihlásenie a prehliadač zostane zablokovaný. Bez správneho kódu zostáva administrácia neprístupná. Ak k emailovej schránke nemáte prístup, obráťte sa na správcu.
 
 ## Odhlásenie
 
