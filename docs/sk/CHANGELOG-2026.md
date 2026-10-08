@@ -580,6 +580,7 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 - Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#337).
 - Cluster - optimalizované zapisovanie zmeny v clustri pri štarte nového uzla (#337).
+- Redis - zlepšený prenos informácie o nahrávanom súbore v session (#342).
 
 ## 2026.0.40
 
