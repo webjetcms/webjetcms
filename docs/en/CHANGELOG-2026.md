@@ -21,6 +21,16 @@
     <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+### Account login and protection
+
+- WebJET CMS now [records the browsers you log in from](redactor/admin/logon.md#login-from-a-new-device). Logging in from a new browser will display a notification on the home screen and send an email so you can recognize someone else logging into your account. You can confirm your own device with an email link or a one-time code via **It was me** (#340).
+
+![New browser login warning](redactor/admin/device-block.png)
+
+- If you do not know the login, you can [block the device and end its active logins](redactor/admin/welcome.md#ak-prihlanie-nepoznáte). The next time you log in from a blocked browser, after entering the correct name and password, **Verification of blocked device** will be displayed. To unblock and enter the administration, you must enter the six-digit code from the account email; if 2FA is enabled, this verification will only be performed after the code from the authentication application. Detailed instructions are in the [login instructions](redactor/admin/logon.md#overenie-zablokovoho-zariadenia) (#340).
+
+![Verify a blocked device before entering the administration](redactor/admin/logon-device-verification.png)
+
 ### Websites
 
 - Website Trash - added [automatic deletion of old pages and folders](redactor/apps/gdpr/data-deleting.md) from the trash according to the set retention period. Added the ability to delete pages and folders in the trash and in the [Data deletion](sysadmin/data-deleting/README.md) section according to the selected date range. Unified logic for calculating the number and deleting, fixed permanent deletion of the trash folder and empty folders (#271).

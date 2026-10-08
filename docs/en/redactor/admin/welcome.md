@@ -123,7 +123,55 @@ When sending, the visible card data is refreshed every 30 seconds. The number of
 
 In the welcome panel you will find news of the current version of WebJET CMS. Click the **Collapse news** button to confirm reading them and leave a brief summary. Click the **More info** button to expand them again.
 
-System alerts are sorted by severity: errors, warnings, and information. Each line contains an explanation and an available action. Errors remain visible until the cause is resolved. You can snooze the alert for 7 days by clicking **Remind me later** or **×**.
+### System notifications
+
+In this section, you will review issues that require your attention. The login from an unknown device alert is always the first. Other alerts are sorted by severity: errors, warnings, and information. Each line contains an explanation and an available action. Errors remain visible until the cause is resolved. You can snooze a regular alert for 7 days by clicking **Remind me later** or **×**.
+
+#### New login from an unknown device
+
+The warning will appear after a successful login in a browser that WebJET CMS does not recognize as being used for your account in the last 90 days. It will also send you an email. For the current browser, the information **You have logged in from a new browser** will be displayed with the time and the label **This browser**. For another device, the warning will remain with the browser, operating system, IP address and login time. Check that the data matches your login.
+
+![Notification after logging in from a new browser](device-new-browser.png)
+
+The email **New login to WebJET CMS** contains data about the browser, IP address, time and login environment. You can use the buttons in the email to confirm the login or open its details to secure your account.
+
+![Email with notification of new login and options to confirm or secure account](device-new-browser-email.png)
+
+#### If you know the login
+
+Click **It was me**. A six-digit code will be sent to your email. Enter it in the field below the notification and click **Confirm code**.
+
+![Confirm new browser with code from email](device-confirm-code.png)
+
+You can find the code in the email **WebJET CMS login confirmation code**:
+
+![Email with one-time code to confirm new browser](device-confirm-code-email.png)
+
+The code is valid for 10 minutes and allows a maximum of 5 attempts. The **Send New Code** button can be used to send another code after a minute, replacing the previous one. Only after the code is verified will the device be confirmed and the warning removed in all your browsers after refreshing the report.
+
+You can also confirm your login using the **It was me** link in the original email. The link is valid for 24 hours, only works when you are logged in to the relevant account, and can be used once. A new code will not cancel this link; successful confirmation will invalidate both the link and the code.
+
+#### If you don't know your login
+
+When you get a warning about another browser, click **It wasn't me**. The **Active Logins** window opens with the event details and the **My Logins**, **Logged in Administrators** (by permissions) and **History (30 days)** tabs. The warning only appears in the **My Logins** tab. In the **History (30 days)** tab, you can review previous logins and their IP addresses.
+
+![Login detail with the option to block the device](device-block.png)
+
+The **Block device** button will block the browser and log out all known sessions of it. If you block the browser you are currently working in, it will also log you out. The next time you log in, after entering the correct login details, you will be prompted to [verify with email code](logon.md#verify-blocked-device). The browser will unblock itself only after entering the correct code.
+
+Also use **Change Password** and check other logins. For a corporate account, change your password with your login provider or contact your administrator.
+
+Opening the detail itself will not log out of active sessions. Logout will occur only after the device is locked. You can also open the same detail by clicking the **It wasn't me - secure account** link in the email, after logging into your account.
+
+#### Browser memory and notification validity
+
+After successful two-factor authentication, the unblocked browser is automatically confirmed. You will receive an information email about the new device with the option **It wasn't me**, without the need for further confirmation. If you have blocked the device, the code from the email is required only after 2FA. The procedure is described in [Verifying a blocked device](logon.md#verifying-a-blocked-device).
+
+This notification does not have a cross or snooze option. It will disappear after confirming **It was me**, after successfully locking the device, or after 7 days from the event. Additional logins do not extend this seven-day period.
+
+A blocked device remains blocked even after the notification is removed. New device detection, confirmation (including 2FA and code unlock), and blocking are logged in the audit trail as type **USER_DEVICE**. The log includes the user, device ID, browser, operating system, and device IP address.
+
+WebJET CMS remembers the browser using a cookie. Each completed login will extend its memory by another 90 days; a regular logout will not delete the cookie. Therefore, you may receive a new notification even after deleting cookies, using a different profile or an anonymous window. After deleting or expiring a cookie, the previous blocking of the browser will not apply. Updating the browser or changing the IP address while the cookie is still present will not trigger a new notification. The administrator can change the period in [configuration](../../admin/setup/configuration/dashboard.md).
 
 ### Search and help
 
@@ -160,6 +208,10 @@ At the top of the overview, you can check your active logins and log out from an
 ### My active logins
 
 The **My Active Logins** panel shows all your active sessions, i.e. logins under your account, with browser, time and IP address. You can scroll through the list if the list is long. Your current session is the first and has a green dot with the description **This login**. You can log out of other sessions directly in the list, for example if you forgot to log out on another computer. This panel is always at the top and cannot be removed.
+
+Clicking on the panel title will open the **Active Logins** window. In addition to your own sessions, it offers a history of logins over the last 30 days and, depending on your permissions, also logged in administrators. The **Change Password** button at the bottom of the window will open your profile to change your password. The information icon next to the button will display instructions for changing the password for a company account.
+
+In the **My Logins** tab, unconfirmed devices are labeled **New**. The **It was me** button sends a one-time code to your email and displays a field for entering it directly in the row. Only after the code is verified will the device be confirmed, its notification removed, and the list restored with the usual **Log out** action for other sessions. The row labeled **This login** also requires the same verification. The confirmation also applies to other sessions of the same device. The red **It wasn't me** button in the row will lock the device and log out all its known sessions; if it's the current browser, it will also log you out. The same actions are available when opening a window from the panel title and from the system notification.
 
 ![](sessions.png)
 

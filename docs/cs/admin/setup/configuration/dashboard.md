@@ -12,6 +12,8 @@ Pozadí uvítacího panelu a označení prostředí nastavíte přes **Nastaven�
 | `dashboardEnvironmentColor` | `auto` | Barva z palety dle prostředí a stylu. Vlastní barva `#RGB` či `#RRGGBB` automaticky obdrží černý nebo bílý text a ikonu s kontrastem alespoň 4,5:1. |
 | `dashboardEnvironmentStyle` | `auto` | `subtle` = jemný, `strong` = výrazný. Hodnota `auto` použije výrazný styl pro PROD, jemný pro ostatní prostředí. |
 | `dashboardEnvironmentDescription` | prázdná | Doplňující popis za celým názvem v tooltipu. Podporuje makra. Tooltip funguje při ukázání myší i při fokusu klávesnicí; Escape ho skryje. |
+| `adminNewDeviceDetectionEnabled` | `true` | Zapne rozpoznávání a blokování prohlížečů administrátora, upozornění na přehledu a emaily o novém zařízení. |
+| `adminNewDeviceMaxAgeDays` | `90` | Počet dní od posledního úspěšného přihlášení, během kterých se prohlížeč považuje za známý pro daný účet. Určuje také platnost cookie. |
 
 Název se přidává také do titulku karty prohlížeče a přístupného názvu hlavičky, například `[TEST] Webové stránky | WebJET CMS`. Ikona je volitelná, text zůstává povinen. Na produkci můžete označení vypnout prázdnou hodnotou `dashboardEnvironmentName`.
 
@@ -43,3 +45,29 @@ Automatický vzhled přednostně použije úvodní označení prostředí v nako
 Například `dashboardEnvironmentName={ENVIRONMENT_NAME}/{CLUSTER_NAME}` doplní název aktuálního uzlu z `clusterMyNodeName`. Celý název, například `UAT/node-1`, je v tooltipu; štítek zobrazí prvních 8 znaků velkými písmeny. Při prázdném názvu uzlu se koncový lomítko odstraní.
 
 Pro krátký štítek a delší popis nastavte `dashboardEnvironmentName=TEST` a `dashboardEnvironmentDescription=Testovacie prostredie, uzol {CLUSTER_NAME}`. Nastavení prostředí používá existující konfiguraci; samostatný dialog na úvodní obrazovce není k dispozici.
+
+## Detekce nových zařízení
+
+Funkce upozorní administrátora na úspěšné přihlášení z prohlížeče, který jeho účet nepoužil v nastavené lhůtě. Při prvním přihlášení po zapnutí funkce obdrží upozornění i email. Uživatelský postup popisují [Systémová upozornění](../../../redactor/admin/welcome.md#systémové-upozornění).
+
+Cookie `wjdevice` obsahuje náhodný identifikátor; tabulka `user_login_devices` uchovává jeho hash a čas posledního přihlášení pro uživatele. Záznam má automaticky generováno `device_id` ; prohlížeč se vyhledává podle `user_id` a hashu cookie. Samostatné `domain_id` se nepoužívá, protože každý uživatel má vlastní `user_id`. Cookie má cestu `/`, atributy `HttpOnly`, `SameSite=Lax` au HTTPS i `Secure`. Každé dokončené přihlášení obnoví cookie a zapamatování účtu na dalších `adminNewDeviceMaxAgeDays` dnů. Běžné požadavky během otevřeného pořadu ani neúspěšné přihlášení lhůtu neprodlužují. Odhlášení cookie zachová. Neplatná nebo nekladná konfigurace použije 90 dní; horní hranice platnosti cookie je 24 855 dní.
+
+Email se zařadí do existující fronty přes `SendMail.sendLater`. Jméno a adresa odesílatele se určí stejně jako u zapomenutého hesla: nejprve `passwordResetDefaultSenderName` a `passwordResetDefaultSenderEmail`, poté `defaultSenderName` a `defaultSenderEmail`, nakonec náhradní údaje uživatele. Email obsahuje prohlížeč, systém, IP adresu, čas, název serveru a označení z `dashboardEnvironmentName`. Chyba odeslání se zaznamená bez zrušení přihlášení nebo upozornění na přehledu.
+
+Zařízení uchovává i poslední upozornění: čas `create_date`, prohlížeč, systém, IP adresu a stav potvrzení nebo nahlášení. Upozornění zanikne po potvrzení nebo po 7 dnech od `create_date`. Běžné přihlášení aktualizuje pouze `last_seen`. Při přihlášení po expiraci se upozornění ve stejném nezablokovaném záznamu obnoví; samostatná historie událostí se neukládá. Odkaz **Nebyl jsem to já** v emailu používá `device_id` a zobrazí aktuální detail zařízení. Odkaz **Byl jsem to já** navíc obsahuje náhodný 256bitový token s platností 24 hodin; potvrzení provede přihlášená administrace přes POST s CSRF ochranou. Samotné otevření GET adresy stav nemění. Úloha `sk.iway.iwcm.users.devices.DeviceCleanup`, přidaná databázovou aktualizací, každý den ve 03:41 odstraní nezablokovaná zařízení nepoužitá během `adminNewDeviceMaxAgeDays` dnů spolu s jejich upozorněními. Potom už detail z emailu není dostupný. Hodnotu `adminNewDeviceMaxAgeDays` nastavujte rovněž pro všechny domény; čištění pokračuje i při vypnuté detekci.
+
+Evidenci zařízení a jejich upozornění spravuje `DeviceService` přes entitu `DeviceEntity` a Spring Data repozitář `DeviceRepository`. Služba vrací přímo entitu; anotace `@JsonIgnore` skrývá interní údaje při odeslání na frontend. Časy se posílají v milisekundách a `expiresAt` se vypočítá z `createDate`, bez dalšího databázového sloupce. Tato vrstva není vázána na administrátora. `AdminDeviceService` zabezpečuje zapojení do administrátorského přihlášení, cookie a emailová upozornění; `AdminDeviceRestController` poskytuje akce dostupné přihlášenému administrátorovi.
+
+Potvrzení z upozornění i ze seznamu aktivních přihlášení vyžaduje šestimístný kód doručený na email účtu. Platí 10 minut a umožňuje 5 pokusů; opětovné odeslání je omezeno na jeden kód za minutu pro zařízení. Databáze uchovává pouze SHA-256 otisky kódu a tokenu, oddělené podle účtu, zařízení a účelu. Ověřovací údaje se neposílají ve veřejném JSON. Potvrzení, nahlášení i obnovení upozornění zneplatní oba ověřovací údaje. Opětovné odeslání kódu neobnoví počet pokusů, dokud předchozí platnost neuplyne. Po úspěšném dvoufaktorovém ověření ve WebJET CMS se nezablokované zařízení potvrdí automaticky. U nového zařízení se odešle informační email s možností nahlášení.
+
+Klepnutí na **Zablokovat zařízení** nastaví existující pole `reported_at`, zneplatní ověřovací údaje a odhlásí známé relace daného zařízení přes běžný mechanismus odhlášení. Zablokované záznamy se při čištění neodstraňují. Odkaz **Nebyl jsem to já** v emailu otevře detail po přihlášení; samotné otevření odkazu zařízení nezablokuje.
+
+Při dalším interaktivním přihlášení zablokovaného prohlížeče se nejprve ověří přihlašovací údaje a případné 2FA. Potom stránka `/admin/logon/device/` vyžádá šestimístný kód z emailu. Čekající identita je v samostatném session atributu `adminUser_waitingForDevice`, mimo `USER_KEY` a Spring Security kontextu. Výzva platí 15 minut, kód 10 minut, platí limit 5 pokusů a minutový odstup odesílání. Kód je vázán také na tuto výzvu a cookie. Správný kód zařízení odblokuje a potvrdí. Starý potvrzovací odkaz jej odblokovat nemůže. Při nedoručení kódu zůstává přístup uzavřen.
+
+Kontrola platí pro administrátorské přihlášení formulářem, přístupovým klíčem, OAuth2 a NTLM, včetně přihlášení administrátora přes uživatelskou zónu. Nevztahuje se na API tokeny, HTTP Basic ani běžné návštěvníky. Nastavení `adminNewDeviceDetectionEnabled=false` vypne i kontrolu blokování. Výjimky testovacích prohlížečů neobcházejí existující blok.
+
+Blokování se váže na cookie `wjdevice`, ne na fyzické zařízení. Po jejím vymazání nebo expiraci se prohlížeč chová jako nový; blokování proto nenahrazuje změnu prozrazeného hesla ani 2FA.
+
+### Výjimky pro automatizované testy
+
+E2E testy často začínají s novým profilem prohlížeče bez cookie `wjdevice`. Každé takové přihlášení proto vytvoří nové zařízení. Výjimky pro testovací prohlížeče jsou uloženy přímo v `AdminDeviceService` v neměnných množinách `IGNORED_DEVICE_DOMAINS` a `IGNORED_DEVICE_USER_AGENTS`. Nelze je měnit přes konfiguraci ani za běhu aplikace, úprava vyžaduje změnu kódu a nové nasazení.

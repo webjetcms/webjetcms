@@ -123,7 +123,55 @@ Při odesílání se údaje viditelné karty obnovují každých 30 sekund. Poč
 
 V uvítacím panelu naleznete novinky aktuální verze WebJET CMS. Tlačítkem **Sbalit novinky** potvrdíte jejich přečtení a ponecháte stručný souhrn. Tlačítkem **Více info** je znovu rozbalíte.
 
-Systémová upozornění jsou seřazena podle závažnosti: chyby, varování a informace. Každý řádek obsahuje vysvětlení a dostupnou akci. Chyby zůstávají viditelné do vyřešení příčiny. Varování můžete odložit na 7 dní tlačítkem **Připomenout později** nebo **×**.
+### Systémová upozornění
+
+V této části zkontrolujete problémy vyžadující vaši pozornost. Upozornění na přihlášení z neznámého zařízení je vždy první. Ostatní upozornění jsou seřazena podle závažnosti: chyby, varování a informace. Každý řádek obsahuje vysvětlení a dostupnou akci. Chyby zůstávají viditelné do vyřešení příčiny. Běžné varování můžete odložit na 7 dní tlačítkem **Připomenout později** nebo **×**.
+
+#### Nové přihlášení z neznámého zařízení
+
+Upozornění se zobrazí po úspěšném přihlášení v prohlížeči, který WebJET CMS pro váš účet nerozpozná jako použitý během posledních 90 dnů. Současně vám odešle email. U aktuálního prohlížeče se zobrazí informace **Přihlásili jste se z nového prohlížeče** s časem a označením **Tento prohlížeč**. U jiného zařízení zůstává varování s prohlížečem, operačním systémem, IP adresou a časem přihlášení. Zkontrolujte, zda údaje odpovídají vašemu přihlášení.
+
+![Upozornění po přihlášení z nového prohlížeče](device-new-browser.png)
+
+Email **Nové přihlášení do WebJET CMS** obsahuje údaje o prohlížeči, IP adrese, čase a prostředí přihlášení. Tlačítky v emailu můžete přihlášení potvrdit nebo otevřít jeho detail pro zabezpečení účtu.
+
+![Email s upozorněním na nové přihlášení a možnostmi potvrzení nebo zabezpečení účtu](device-new-browser-email.png)
+
+#### Pokud přihlášení znáte
+
+Klikněte na **Byl jsem to já**. Na váš email se odešle šestimístný kód. Zadejte jej do pole pod upozorněním a klikněte na **Potvrdit kód**.
+
+![Potvrzení nového prohlížeče kódem z emailu](device-confirm-code.png)
+
+Kód naleznete v emailu **Kód pro potvrzení přihlášení do WebJET CMS**:
+
+![Email s jednorázovým kódem pro potvrzení nového prohlížeče](device-confirm-code-email.png)
+
+Kód platí 10 minut a umožňuje maximálně 5 pokusů. Tlačítkem **Poslat nový kód** lze po minutě poslat další kód, který nahradí předchozí. Teprve po ověření kódu se zařízení potvrdí a upozornění se odstraní ve všech vašich prohlížečích po obnovení přehledu.
+
+Přihlášení můžete potvrdit i odkazem **Byl jsem to já** v původním emailu. Odkaz platí 24 hodin, funguje pouze po přihlášení do příslušného účtu a lze jej použít jednou. Nový kód tento odkaz nezruší; úspěšné potvrzení zneplatní odkaz i kód.
+
+#### Pokud přihlášení neznáte
+
+Při upozornění na jiný prohlížeč klikněte na **Nebyl jsem to já**. Otevře se okno **Aktivní přihlášení** s detailem události a kartami **Moje přihlášení**, **Přihlášení administrátoři** (podle oprávnění) a **Historie (30 dní)**. Varování se zobrazuje pouze v kartě **Moje přihlášení**. V kartě **Historie (30 dní)** můžete zkontrolovat předchozí přihlášení a jejich IP adresy.
+
+![Detail přihlášení s možností zablokovat zařízení](device-block.png)
+
+Tlačítkem **Zablokovat zařízení** zablokujete daný prohlížeč a odhlásíte všechny jeho známé pořady. Pokud zablokujete prohlížeč, ve kterém právě pracujete, odhlásí i vás. Při příštím přihlášení se po zadání správných přihlašovacích údajů zobrazí [výzva k ověření emailovým kódem](logon.md#ověření-zablokovaného-zařízení). Až správný kód prohlížeč odblokuje.
+
+Použijte také **Změnit heslo** a zkontrolujte ostatní přihlášení. U firemního účtu změňte heslo u poskytovatele přihlášení nebo kontaktujte správce.
+
+Samotné otevření detailu aktivní relace neodhlásí. Odhlášení nastane až po zablokování zařízení. Stejný detail otevřete i odkazem **Nebyl jsem to já – zajistit účet** v emailu, po přihlášení do svého účtu.
+
+#### Zapamatování prohlížeče a platnost upozornění
+
+Po úspěšném dvoufaktorovém ověření se nezablokovaný prohlížeč potvrdí automaticky. O novém zařízení obdržíte informační email s možností **Nebyl jsem to já**, bez potřeby dalšího potvrzování. Pokud jste zařízení zablokovali, kód z emailu se vyžaduje až po 2FA. Postup popisuje [Ověření zablokovaného zařízení](logon.md#ověření-zablokovaného-zařízení).
+
+Toto upozornění nemá křížek ani možnost odložení. Zmizí po potvrzení **Byl jsem to já**, po úspěšném zablokování zařízení nebo po 7 dnech od zaznamenání události. Další přihlášení tuto sedmidenní lhůtu neprodlužují.
+
+Zablokované zařízení zůstává blokováno i po odstranění upozornění. Zjištění nového zařízení, jeho potvrzení (včetně 2FA a odblokování kódem) a zablokování se zapisují do auditu jako typ **USER_DEVICE**. Záznam obsahuje uživatele, ID zařízení, prohlížeč, operační systém a IP adresu zařízení.
+
+WebJET CMS si prohlížeč pamatuje pomocí cookie. Každé dokončené přihlášení prodlouží jeho zapamatování o dalších 90 dní; běžné odhlášení cookie neodstraní. Nové upozornění proto můžete obdržet i po vymazání cookies, při použití jiného profilu nebo anonymního okna. Po vymazání nebo expiraci cookie se neuplatní ani předchozí blokování prohlížeče. Aktualizace prohlížeče či změna IP adresy při zachované cookie nové upozornění nevyvolá. Lhůtu může správce změnit v [konfiguraci](../../admin/setup/configuration/dashboard.md).
 
 ### Vyhledávání a pomoc
 
@@ -160,6 +208,10 @@ V horní části přehledu můžete zkontrolovat svá aktivní přihlášení a 
 ### Moje aktivní přihlášení
 
 Panel **Moje aktivní přihlášení** zobrazuje všechny vaše aktivní relace, tedy přihlášení pod vaším účtem, s prohlížečem, časem a IP adresou. Při delším seznamu můžete jeho obsah posouvat. Vaše aktuální relace je první a má zelenou tečku s popisem **Toto přihlášení**. Ostatní relace můžete odhlásit přímo v seznamu, například když jste se zapomněli odhlásit na jiném počítači. Tento panel je vždy v horní části a nelze jej odstranit.
+
+Klepnutím na nadpis panelu otevřete okno **Aktivní přihlášení**. Kromě vlastních pořadů nabízí historii přihlášení za posledních 30 dní a podle oprávnění i přihlášených administrátorů. Tlačítko **Změnit heslo** ve spodní části okna otevře váš profil pro změnu hesla. Informační ikona vedle tlačítka zobrazí pokyny pro změnu hesla u firemního účtu.
+
+V kartě **Moje přihlášení** mají nepotvrzená zařízení štítek **Nová**. Tlačítko **Byl jsem to já** odešle na email jednorázový kód a zobrazí pole pro jeho zadání přímo v řádku. Až po ověření kódu potvrdí zařízení, odstraní jeho upozornění a obnoví seznam s běžnou akcí **Odhlásit** u ostatních relací. Stejné ověření vyžaduje i řádek se štítkem **Toto přihlášení**. Potvrzení platí i pro další relace stejného zařízení. Červené tlačítko **Nebyl jsem to já** v řádku zablokuje zařízení a odhlásí všechny jeho známé pořady; pokud se jedná o aktuální prohlížeč, odhlásí i vás. Stejné akce jsou dostupné při otevření okna z nadpisu panelu i ze systémového upozornění.
 
 ![](sessions.png)
 

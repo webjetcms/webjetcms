@@ -48,13 +48,13 @@ async function openDeviceEmail(I, TempMail, id, expectedText) {
     throw new Error(`No matching device email arrived for event ${id}.`);
 }
 
-Scenario('New device login sends an email and confirms its link with a success toast @screenshot', async ({ I, TempMail, Document }) => {
+Scenario('New device login sends an email and confirms its link with a success toast @screenshot', async ({ I, TempMail, Document, i18n }) => {
     const event = device;
     const eventId = event.id;
     const row = `[data-notice-id="newDevice:${eventId}"]`;
     await I.seeCookie(cookieName);
-    await I.see('Prihlásili ste sa z nového prehliadača', row);
-    await I.see('Tento prehliadač', row);
+    await I.see(i18n.get('You signed in from a new browser'), row);
+    await I.see(i18n.get('This browser'), row);
     await I.see(event.browserName, row);
     await I.see(event.operatingSystem, row);
     await I.dontSeeElement(`${row} .md-dashboard__notice-report`);
@@ -62,7 +62,7 @@ Scenario('New device login sends an email and confirms its link with a success t
 
     await I.logout();
     await openDeviceEmail(I, TempMail, eventId, event.browserName);
-    await I.see('Nové prihlásenie do WebJET CMS', TempMail.getSubjectSelector());
+    await I.see(i18n.get('New sign-in to WebJET CMS'), TempMail.getSubjectSelector());
     await I.see(event.browserName, TempMail.getContentSelector());
     await I.see(event.browserVersion, TempMail.getContentSelector());
     await I.see(event.operatingSystem, TempMail.getContentSelector());
@@ -80,8 +80,8 @@ Scenario('New device login sends an email and confirms its link with a success t
     await I.relogin('publishNotification', false);
     await I.waitForElement(dashboard, 30);
     await I.seeInCurrentUrl(`securityEvent=${eventId}`);
-    await I.waitForText('Prihlásenie bolo potvrdené.', 10, '.toast-success');
-    await I.see('Moje aktívne prihlásenia', '.toast-success .toast-title');
+    await I.waitForText(i18n.get('The sign-in has been confirmed.'), 10, '.toast-success');
+    await I.see(i18n.get('My active sessions'), '.toast-success .toast-title');
     await I.dontSeeElement(dialog);
     await I.dontSeeInCurrentUrl('deviceConfirmation=');
     await I.dontSeeElement(row);
@@ -92,17 +92,17 @@ Scenario('New device login sends an email and confirms its link with a success t
     await I.assertTrue(confirmed.requestedSecurityEvent.confirmedAt > 0, 'Confirmation must be persisted for the device from the email.');
 });
 
-Scenario('The current browser requires the emailed six-digit code and rejects replay @screenshot', async ({ I, TempMail, Document }) => {
+Scenario('The current browser requires the emailed six-digit code and rejects replay @screenshot', async ({ I, TempMail, Document, i18n }) => {
     const eventId = device.id;
     const row = `[data-notice-id="newDevice:${eventId}"]`;
     await I.clickCss(`${row} .md-dashboard__notice-confirm`);
-    await I.waitForText('Zadajte 6-miestny kód', 10, row);
+    await I.waitForText(i18n.get('Enter the 6-digit code we sent you by email. It expires in 10 minutes.'), 10, row);
     await I.seeElement(row);
     Document.screenshotElement(row, '/redactor/admin/device-confirm-code.png');
 
     await I.openNewTab();
-    const body = await openDeviceEmail(I, TempMail, eventId, 'Kód');
-    await I.see('Kód na potvrdenie prihlásenia do WebJET CMS', TempMail.getSubjectSelector());
+    const body = await openDeviceEmail(I, TempMail, eventId, i18n.get('To confirm this sign-in, enter this one-time code in the administration:'));
+    await I.see(i18n.get('WebJET CMS sign-in confirmation code'), TempMail.getSubjectSelector());
     await I.seeElement(`${TempMail.getContentSelector()} a[href*="/admin/v9/?securityEvent=${eventId}"]`);
     const code = body.match(/(?:^|[^0-9])([0-9]{6})(?![0-9])/)?.[1];
     await I.assertTrue(Boolean(code), 'The verification email must contain a six-digit code.');
@@ -124,7 +124,7 @@ Scenario('The current browser requires the emailed six-digit code and rejects re
     await I.dontSeeElement(row);
 });
 
-Scenario('A reported browser requires an email code before administration or REST access @screenshot', async ({ I, TempMail, Document }) => {
+Scenario('A reported browser requires an email code before administration or REST access @screenshot', async ({ I, TempMail, Document, i18n }) => {
     const eventId = device.id;
     await I.amOnPage(`/admin/v9/?securityEvent=${eventId}`);
     await I.waitForElement(`${dialog} .md-dashboard-sessions__report`, 20);
@@ -140,7 +140,7 @@ Scenario('A reported browser requires an email code before administration or RES
     await I.relogin('publishNotification', false, false);
     await I.waitForVisible('#deviceCode', 15);
     await I.seeInCurrentUrl('/admin/logon/device/');
-    await I.see('Overenie zablokovaného zariadenia');
+    await I.see(i18n.get('Verify blocked device'));
     Document.screenshot('/redactor/admin/logon-device-verification.png');
     const access = await I.executeScript(async () => {
         const response = await fetch('/admin/rest/security/login-events/1');
@@ -151,15 +151,16 @@ Scenario('A reported browser requires an email code before administration or RES
     await I.amOnPage('/admin/v9/');
     await I.waitForVisible('#deviceCode', 15);
     await I.openNewTab();
-    const body = await openDeviceEmail(I, TempMail, eventId, 'ktorý ste zablokovali');
-    await I.see('ktorý ste zablokovali', TempMail.getContentSelector());
+    const blockedEmailIntro = i18n.get('someone is trying to sign in to your account from a browser you blocked:');
+    const body = await openDeviceEmail(I, TempMail, eventId, blockedEmailIntro);
+    await I.see(blockedEmailIntro, TempMail.getContentSelector());
     const code = body.match(/(?:^|[^0-9])([0-9]{6})(?![0-9])/)?.[1];
     await I.assertTrue(Boolean(code), 'The unblock email must contain a six-digit code.');
     Document.screenshotElement(TempMail.getContentSelector(), '/redactor/admin/logon-device-verification-email.png', 1000, 760);
     await I.closeCurrentTab();
     await I.fillField('#deviceCode', code === '000000' ? '000001' : '000000');
     await I.clickCss('#deviceVerificationForm [value="verify"]');
-    await I.waitForText('Kód sa nepodarilo overiť', 10, '[role="alert"]');
+    await I.waitForText(i18n.get('The code could not be verified. Check it or request a new one. It expires in 10 minutes and allows up to 5 attempts.'), 10, '[role="alert"]');
     Document.screenshotElement('[role="alert"]', '/redactor/admin/logon-device-verification-error.png');
     await I.fillField('#deviceCode', code);
     await I.seeInField('#deviceCode', code);

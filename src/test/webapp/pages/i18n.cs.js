@@ -77,6 +77,18 @@ module.exports = {
             "PassKey": "Přístupový klíč",
             "Thumbnail": "Miniatura",
             "Submit": "Potvrdit",
+            // Dashboard device verification
+            "You signed in from a new browser": "Přihlásili jste se z nového prohlížeče",
+            "This browser": "Tento prohlížeč",
+            "New sign-in to WebJET CMS": "Nové přihlášení do WebJET CMS",
+            "The sign-in has been confirmed.": "Přihlášení bylo potvrzeno.",
+            "My active sessions": "Moje aktivní přihlášení",
+            "Enter the 6-digit code we sent you by email. It expires in 10 minutes.": "Zadejte 6místný kód, který jsme vám poslali e-mailem. Platí 10 minut.",
+            "To confirm this sign-in, enter this one-time code in the administration:": "Pro potvrzení tohoto přihlášení zadejte v administraci tento jednorázový kód:",
+            "WebJET CMS sign-in confirmation code": "Kód pro potvrzení přihlášení do WebJET CMS",
+            "Verify blocked device": "Ověření zablokovaného zařízení",
+            "someone is trying to sign in to your account from a browser you blocked:": "někdo se pokouší přihlásit do vašeho účtu z prohlížeče, který jste zablokovali:",
+            "The code could not be verified. Check it or request a new one. It expires in 10 minutes and allows up to 5 attempts.": "Kód se nepodařilo ověřit. Zkontrolujte jej nebo si vyžádejte nový. Platí 10 minut a máte nejvýše 5 pokusů.",
         }
     }
 }

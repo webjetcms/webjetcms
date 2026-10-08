@@ -78,6 +78,42 @@ Zaregistrovaný klíč můžete kdykoli odstranit jeho označením a kliknutím 
 
 Možnost přihlašování přístupovým klíčem můžete vypnout nastavením konfigurační proměnné `password_passKeyEnabled` na hodnotu `false`.
 
+## Přihlášení z nového zařízení
+
+WebJET CMS eviduje, ze kterého prohlížeče se přihlašujete do administrace. U nového prohlížeče vám odešle email a na [úvodní obrazovce](welcome.md#systémové-upozornění) zobrazí upozornění **Přihlásili jste se z nového prohlížeče**. V administraci můžete pracovat, upozornění vám umožňuje zkontrolovat, zda jste se přihlásili vy.
+
+![](device-new-browser-email.png)
+
+Zařízením se zde rozumí konkrétní prohlížeč a jeho profil, nikoli celý počítač. Upozornění proto můžete obdržet i na svém běžném počítači při prvním přihlášení po zavedení evidence zařízení, po vymazání cookies nebo v anonymním okně. Běžné odhlášení zapamatování prohlížeče nezruší.
+
+Pokud přihlášení znáte, potvrďte jej odkazem **Byl jsem to já** v emailu nebo stejným tlačítkem při upozornění. Tlačítko v administraci odešle emailový kód a zobrazí pole pro jeho zadání. Pokud přihlášení neznáte, postupujte podle [návodu k zablokování zařízení](welcome.md#ak-přihlášení- neznáte).
+
+![](device-confirm-code.png)
+
+Po úspěšném dvoustupňovém ověření se nezablokovaný prohlížeč potvrdí automaticky. Obdržíte informační email bez potřeby dalšího potvrzení.
+
+## Ověření zablokovaného zařízení
+
+Pokud jste prohlížeč označili přes **Nebyl jsem to já** a zablokovali jej, při dalším přihlášení se po zadání správného jména a hesla zobrazí stránka **Ověření zablokovaného zařízení**. Máte-li zapnuto [dvoustupňové ověřování](#dvoustupňové-ověřování), nejprve zadáte i kód z autentifikační aplikace. Výzva k emailovému kódu je další krok k odblokování prohlížeče - neznamená, že jste zadali nesprávné heslo.
+
+![Výzva k zadání emailového kódu při přihlášení ze zablokovaného prohlížeče](logon-device-verification.png)
+
+1. Otevřete emailovou schránku účtu uvedeného na obrazovce. WebJET CMS do ní automaticky odešle šestimístný kód.
+2. Ve stejném prohlížeči, ve kterém jste zahájili přihlášení, zadejte kód do pole **Jednorázový kód z e-mailu**. Použijte kód z emailu, nikoli kód z autentifikační aplikace.
+3. Klepněte na **Potvrdit kód**. Prohlížeč se odblokuje, potvrdí a otevře se administrace. Při následujícím přihlášení již toto ověření nepotřebuje, pokud jej znovu nezablokujete.
+
+Email obsahuje údaje o zablokovaném prohlížeči a kód pro jeho odblokování a dokončení přihlášení:
+
+![Email s kódem pro odblokování zařízení a dokončení přihlášení](logon-device-verification-email.png)
+
+Kód platí **10 minut** a umožňuje maximálně **5 pokusů**. Pokud email nepřišel, zkontrolujte i nevyžádanou poštu a adresu zobrazenou na obrazovce. Tlačítkem **Poslat nový kód** můžete po minutě vyžádat další email. Nový kód nahradí předchozí. Opětovné odeslání během platnosti předchozího kódu neobnoví počet zbývajících pokusů. Po pěti neúspěšných pokusech počkejte na vypršení platnosti kódu.
+
+Při nesprávném nebo neplatném kódu se zobrazí chybová zpráva a zůstanete na ověřovací stránce:
+
+![Hlášení po zadání nesprávného emailového kódu](logon-device-verification-error.png)
+
+Celé ověření je třeba dokončit do **15 minut**, jinak se přihlaste znovu. Tlačítko **Zrušit** ukončí rozpracované přihlášení a prohlížeč zůstane zablokován. Bez správného kódu zůstává administrace nepřístupná. Pokud k emailové schránce nemáte přístup, obraťte se na správce.
+
 ## Odhlášení
 
 Odkaz na odhlášení se nachází v hlavičce administrace v pravé horní části jako ikona ![](icon-logoff.png ":no-zoom"):
