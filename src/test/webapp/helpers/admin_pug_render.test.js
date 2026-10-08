@@ -3,11 +3,16 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
+const vm = require("node:vm");
 const { JSDOM } = require("jsdom");
-const pugRenderer = require("../../../main/webapp/admin/v9/pug.render.js");
 
 const webappDir = path.resolve(__dirname, "../../../main/webapp");
 const baseDir = path.join(webappDir, "admin/v9");
+// Resolve the renderer's packages from the test project, including on CI without an administration build.
+const rendererModule = { exports: {} };
+const rendererPath = path.join(baseDir, "pug.render.js");
+vm.runInNewContext(fs.readFileSync(rendererPath, "utf8"), { require, module: rendererModule }, { filename: rendererPath });
+const pugRenderer = rendererModule.exports;
 
 test("tree width settings includes resolve from compiled distribution templates", (t) => {
     const distDir = fs.mkdtempSync(path.join(os.tmpdir(), "wj-admin-pug-"));

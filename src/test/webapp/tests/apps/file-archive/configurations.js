@@ -68,13 +68,14 @@ Scenario('Set variable fileArchivCanEdit to default', ({ Document }) => {
 Scenario('Set variable fileArchivFromMail and verify behaviour', async ({ I, Document, DTE, TempMail }) => {
     const scheduledDocFileName = 'archive_file_test.pdf';
     const scheduledDocVirtualFileName = SL.randomName("scheduledfile");
-    const email = SL.randomName("email") + "@interway.sk";
+    const email = SL.randomName("email") + "@balat.sk";
     Document.setConfigValue("fileArchivFromMail", email);
     await SL.setCronjob('*/10', '*');
 
     I.amOnPage(SL.fileArchive);
     SL.uploadFile(scheduledDocVirtualFileName, scheduledDocFileName, null , null, null, SL.getFutureTimestamp(30), "webjetarchive2"+TempMail.getTempMailDomain());
     DTE.save('fileArchiveDataTable');
+    I.waitForInvisible('#fileArchiveDataTable_modal', 10);
     I.wait(30);
 
     await TempMail.login("webjetarchive2");
