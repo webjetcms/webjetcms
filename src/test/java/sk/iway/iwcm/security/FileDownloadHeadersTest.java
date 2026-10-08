@@ -10,10 +10,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletOutputStream;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -114,7 +114,7 @@ class FileDownloadHeadersTest {
                     .with((HttpServletResponse) res)
                     .serveResource();
             } catch (Exception ex) {
-                throw new javax.servlet.ServletException(ex);
+                throw new jakarta.servlet.ServletException(ex);
             }
         });
 
