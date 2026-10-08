@@ -935,6 +935,46 @@ Scenario('workbench selection, structure and unchanged canvas geometry', async (
     DTE.cancel();
 });
 
+Scenario('structure panel follows configured width and fits narrow viewports', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const canvasWidth = await I.executeScript(() => document.querySelector('#wjInline-docdata').getBoundingClientRect().width);
+    const configuredWidth = await I.executeScript(() => getComputedStyle(document.documentElement).getPropertyValue('--pb-structure-width').trim());
+    I.assertTrue(/^\d+px$/.test(configuredWidth), 'The inline editor must expose the configured structure width');
+    I.click('.pb-workbench [data-pb-action=structure]');
+    I.waitForVisible('.pb-structure [role=treeitem]', 10);
+    for (const width of ['initial', '280px', '560px']) {
+        I.executeScript((root, width) => document.documentElement.style.setProperty('--pb-structure-width', width), width);
+        const geometry = await I.executeScript(() => ({
+            panel: document.querySelector('.pb-structure').getBoundingClientRect().width,
+            canvas: document.querySelector('#wjInline-docdata').getBoundingClientRect().width
+        }));
+        I.assertEqual(geometry.panel, width === '560px' ? 560 : 280, 'The structure panel must honor custom width and preserve the default width');
+        I.assertEqual(geometry.canvas, canvasWidth, 'Changing the structure panel width must not reflow the page canvas');
+    }
+    I.saveScreenshot('pagebuilder-structure-width-560.png');
+    I.switchTo();
+    const iframeStyle = await I.grabAttributeFrom('#DTE_Field_data-pageBuilderIframe', 'style');
+    I.executeScript(() => document.querySelector('#DTE_Field_data-pageBuilderIframe').style.maxWidth = '320px');
+    I.waitForFunction(() => {
+        const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe').contentWindow;
+        const rect = frame.document.querySelector('.pb-structure').getBoundingClientRect();
+        return frame.innerWidth <= 320 && rect.left >= 0 && rect.right <= frame.innerWidth && rect.width === frame.innerWidth - 16;
+    }, 10);
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.seeElement('.pb-structure input[type=search]');
+    I.seeElement('.pb-structure [data-pb-action=close-structure]');
+    I.click('.pb-structure [data-pb-action=close-structure]');
+    I.waitForInvisible('.pb-structure', 10);
+    I.switchTo();
+    I.executeScript(style => {
+        const iframe = document.querySelector('#DTE_Field_data-pageBuilderIframe');
+        if (style === null) iframe.removeAttribute('style');
+        else iframe.setAttribute('style', style);
+    }, iframeStyle);
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
+
 Scenario('structure typography is isolated from customer list styles', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     I.click('.pb-workbench [data-pb-action=structure]');
@@ -2853,8 +2893,9 @@ Scenario("filtering and tags", async ({I, DTE, Document}) => {
     I.wjSetDefaultWindowSize();
 });
 
-Scenario('library panel geometry, previews and keyboard dismissal', async ({I, DTE, Document}) => {
+Data([310, 610]).Scenario('library panel geometry, previews and keyboard dismissal', async ({I, DTE, Document, current}) => {
     await openBlockLibrary(I, DTE, Document);
+    I.executeScript((root, width) => document.documentElement.style.setProperty('--pb-image-width', width+'px'), current);
     let favoriteRemovalChecked = false;
     I.amCancellingPopups();
     await I.usePlaywrightTo('verify compact geometry, natural previews, dragging and keyboard controls', async ({page}) => {
@@ -2863,7 +2904,7 @@ Scenario('library panel geometry, previews and keyboard dismissal', async ({I, D
         const library = panel.locator('.library-tab-item--library .library-template-block--section');
         const contact = library.locator('.library-tab-item-button__toggler').filter({has: frame.locator('.library-group-label', {hasText: 'Kontakt'})});
         const results = library.locator('.library-results');
-        assert.equal(Math.round((await panel.boundingBox()).width), 360, 'The desktop library must be 360 pixels wide');
+        assert.equal(Math.round((await panel.boundingBox()).width), current+50, 'The desktop library must follow the configured preview width and preserve the default 360px panel');
         assert.equal(await panel.locator('.pb-library__footer').count(), 0, 'The library must not render a footer');
         await contact.locator('.library-group-toggle').click();
         await frame.waitForFunction(() => {
@@ -2873,9 +2914,10 @@ Scenario('library panel geometry, previews and keyboard dismissal', async ({I, D
         const previews = await contact.locator('.library-full-width-item img').evaluateAll(images => images.map(image => ({width: image.getBoundingClientRect().width, height: image.getBoundingClientRect().height, ratio: image.naturalWidth / image.naturalHeight})));
         assert.ok(new Set(previews.map(image => Math.round(image.height))).size > 1, 'Different preview ratios must retain different heights');
         for (const image of previews) {
+            assert.ok(image.width >= current, 'Preview images must grow with the configured library width');
             assert.ok(Math.abs(image.height - image.width / image.ratio) < 1, 'Preview images must keep their natural aspect ratio');
         }
-        await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path: '../../../build/test/pagebuilder-library-redesign.png'});
+        await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path: '../../../build/test/pagebuilder-library-redesign-'+current+'.png'});
         for (const gutter of ['auto', 'stable']) {
             await results.evaluate((element, value) => element.style.scrollbarGutter = value, gutter);
             const margins = await contact.locator('.library-full-width-item').evaluateAll(cards => cards.map(card => {
@@ -2916,7 +2958,7 @@ Scenario('library panel geometry, previews and keyboard dismissal', async ({I, D
         }
         assert.ok((await results.boundingBox()).height > 0, 'The compact viewport must retain a usable results area');
         await iframe.evaluate((element, value) => value === null ? element.removeAttribute('style') : element.setAttribute('style', value), originalStyle);
-        await frame.waitForFunction(() => document.querySelector('.pb-library').getBoundingClientRect().width === 360);
+        await frame.waitForFunction(width => document.querySelector('.pb-library').getBoundingClientRect().width === width+50, current);
 
         for (const type of ['basic', 'favorite', 'library']) {
             const tab = panel.locator('button.library-tab-link[data-library-type='+type+']');

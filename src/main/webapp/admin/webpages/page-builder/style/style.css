@@ -1636,8 +1636,8 @@ body.is-edit-mode .pb-container .pb-temp-wrapper {
   position: fixed;
   z-index: 102000;
   top: 16px;
-  left: -380px;
-  width: 360px;
+  left: calc(-1 * (var(--pb-image-width, 310px) + 70px));
+  width: calc(var(--pb-image-width, 310px) + 50px);
   max-width: calc(100vw - 32px);
   height: calc(100% - 32px);
   max-height: calc(100vh - 32px);
@@ -3342,7 +3342,7 @@ html.pb-insertion-open {
   position: fixed;
   left: 8px;
   bottom: 8px;
-  width: 280px;
+  width: var(--pb-structure-width, 280px);
   max-width: calc(100vw - 16px);
   z-index: 102001;
   display: flex;

@@ -302,7 +302,7 @@ html.pb-insertion-open { overflow-anchor: none; }
     position: fixed;
     left: 8px;
     bottom: 8px;
-    width: 280px;
+    width: var(--#{$prefix}-structure-width, 280px);
     max-width: calc(100vw - 16px);
     z-index: 102001;
     display: flex;
