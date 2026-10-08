@@ -49,8 +49,9 @@ public class AdminUploadServlet extends HttpServlet
 {
 	private static final long serialVersionUID = 1L;
 	private static final Map<String,PathHolder> temporary = new ConcurrentHashMap<>();
+    private static final String PARTIAL_UPLOAD_FILE_PREFIX = "partialUploadFile-";
 
-	@Override
+    @Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
         String name = request.getParameter("name");
@@ -108,11 +109,11 @@ public class AdminUploadServlet extends HttpServlet
             Part filePart = request.getPart("file");
 
             HttpSession session = request.getSession();
-            PartialUploadHolder holder = (PartialUploadHolder)session.getAttribute("partialUploadFile-"+name);
+            PartialUploadHolder holder = (PartialUploadHolder)session.getAttribute(PARTIAL_UPLOAD_FILE_PREFIX+name);
             if (holder==null || chunk == 0)
             {
                 holder = new PartialUploadHolder(chunks, name);
-                session.setAttribute("partialUploadFile-"+name, holder);
+                session.setAttribute(PARTIAL_UPLOAD_FILE_PREFIX+name, holder);
             }
             boolean isLast = false;
             if (holder.getPartPaths().size()+1 == holder.getChunks() || holder.getChunks()==0)
@@ -140,6 +141,9 @@ public class AdminUploadServlet extends HttpServlet
 
             String filePartName = tempUploadFile.getAbsolutePath();//filePart.get//getName();
             holder.getPartPaths().add(chunk, filePartName);
+            if (!isLast) {
+                session.setAttribute(PARTIAL_UPLOAD_FILE_PREFIX+name, holder); //this update holder also in redis
+            }
             try {
                 output.put("chunk-uploaded", chunk);
                 output.put("size", new File(filePartName).length());
@@ -150,7 +154,7 @@ public class AdminUploadServlet extends HttpServlet
 
             if (isLast)
             {
-                session.removeAttribute("partialUploadFile-"+name);
+                session.removeAttribute(PARTIAL_UPLOAD_FILE_PREFIX+name);
                 // mam posledny, spojim ich do jedneho
 
                 IwcmOutputStream fos = null;
