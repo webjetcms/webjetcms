@@ -238,7 +238,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - SQL Monitoring - fixed lifecycle management of `PreparedStatement` measurements. The record is also deleted when closed before starting the measurement and individual `PreparedStatement` objects are distinguished by identity without JDBC calls `hashCode()` and `equals()`. Concurrent access uses `ConcurrentHashMap` and atomic state without a global `synchronized` block, so threads do not wait for a shared lock and measurements do not merge even when identity hashes collide.
 - Page Builder - fixed unnecessary scrolling up/down the page if you were editing an application on a page (#343).
 - Page Builder - fixed displaying the toolbar if the page does not contain any sections (#343).
-Page Builder - added option to set [structure window width](frontend/page-builder/settings.md) (#343)
+- Page Builder - added option to set [structure window width](frontend/page-builder/settings.md) (#343)
 
 ### Performance
 

@@ -238,7 +238,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Monitorování SQL - opravena správa životního cyklu měření `PreparedStatement`. Záznam se odstraní i při zavření před spuštěním měření a jednotlivé objekty `PreparedStatement` se rozlišují podle identity bez volání JDBC `hashCode()` a `equals()`. Souběžný přístup používá `ConcurrentHashMap` a atomický stav bez globálního `synchronized` bloku, takže vlákna nečekají na společný zámek a měření se nespojí ani při kolizi identitních hashů.
 - Page Builder - opraveno zbytečné posouvání stránky nahoru/dolů pokud jste upravovali aplikaci ve stránce (#343).
 - Page Builder - opraveno zobrazení nástrojové lišty pokud stránka neobsahuje žádnou sekci (#343).
-Page Builder - přidána možnost nastavit [šířku okna struktura](frontend/page-builder/settings.md) (#343)
+- Page Builder - přidána možnost nastavit [šířku okna struktura](frontend/page-builder/settings.md) (#343)
 
 ### Výkon
 
