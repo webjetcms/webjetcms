@@ -130,7 +130,7 @@ Nastavení specifická pro typ pole se ukládají do sloupce `custom_fields.valu
 Používané formáty:
 
 - `text` / `text-120` / `text-120, warningLength-80`
-- `jsoneditor` (přímá editace JSON objektu)
+- `jsoneditor` (přímá editace JSON hodnot)
 - `label1:value1|label2:value2` (`select`)
 - `multiple:label1:value1|label2:value2` (`multiselect`)
 - `autocomplete:Možnosť 1|Možnosť 2`
@@ -142,7 +142,7 @@ Transformaci mezi editor poli a interní hodnotou zajišťují metody `CustomFie
 
 ## JSON Editor
 
-Typ `jsoneditor` umožňuje přímo zadávat JSON objekt. V [nastavení volitelných polí](../../frontend/webpages/customfields/custom-fields-settings.md) vyberte typ **Editor JSON** nebo použijte překladové klíče:
+Typ `jsoneditor` umožňuje přímo zadávat JSON hodnoty. V [nastavení volitelných polí](../../frontend/webpages/customfields/custom-fields-settings.md) vyberte typ **Editor JSON** nebo použijte překladové klíče:
 
 ```properties
 editor.field_a=JSON data
@@ -175,15 +175,15 @@ Příklad platné hodnoty:
 ### Validace a uložení
 
 - Kromě standardního JSON je podporován rozšířený zápis: jednoduché uvozovky (apostrofy), názvy vlastností bez uvozovek a komentáře `//` i `/* … */`. Název bez uvozovek začíná písmenem, `_` nebo `- Kromě standardního JSON je podporován rozšířený zápis: jednoduché uvozovky (apostrofy), názvy vlastností bez uvozovek a komentáře ` //` i `/* … */`. Název bez uvozovek začíná písmenem, `_` nebo , dále může obsahovat i číslice a pomlčky, například `data-toggle`. Pomlčka bez uvozovek je rozšířením tohoto editoru, nikoli standardní syntaxí JavaScriptu.
-- Povolen je právě jeden JSON objekt ve složených závorkách `{}`. Vnořené objekty a pole jsou povoleny; samotné pole `[]`, řetězec, číslo, `true`, `false` a `null` na kořeni se odmítnou.
-- Kontroluje se celý vstup. Koncová čárka, chybějící závorky nebo druhý objekt za prvním jsou neplatné. Funkce, volání JavaScriptu, `undefined`, `NaN` a `Infinity` nejsou povoleny. Parser kód nikdy nespouští.
+- Povolena je právě jedna JSON hodnota: objekt `{}`, pole `[]`, řetězec, číslo, `true`, `false` nebo `null`. Pole může být přímo na nejvyšší úrovni, například `[{"id":12345},{"id":56789}]` ; vnořené objekty a pole jsou také povoleny.
+- Kontroluje se celý vstup. Koncová čárka, chybějící závorky nebo další hodnota za první jsou neplatné. Funkce, volání JavaScriptu, `undefined`, `NaN` a `Infinity` nejsou povoleny. Parser kód nikdy nespouští.
 - Komentář `//` pokračuje až po konec řádku. Uzavírací závorky objektu proto musí být na dalším řádku; v jednořádkovém zápisu použijte komentář `/* … */`.
-- Prázdný vstup včetně samotných mezer je povolen, pokud je vypnuto **Povinné pole**. Při zapnuté povinnosti se musí zadat objekt; prázdný objekt `{}` je platná hodnota.
+- Prázdný vstup včetně samotných mezer je povolen, pokud je vypnuto **Povinné pole**. Při zapnuté povinnosti se musí zadat JSON hodnota; `{}`, `[]`, `""` i `null` jsou platné vyplněné hodnoty.
 - V prohlížeči se vstup kontroluje při opuštění pole i před uložením. Chyba se zobrazí u pole a při pokusu o uložení se otevře jeho karta. Pokud parser poskytne polohu syntaktické chyby, hlášení obsahuje řádek a sloupec.
 - Server provádí stejnou kontrolu nezávisle na JavaScriptu v `DatatableRestControllerV2.validateEditorForCustomFields()` při ukládání přes DataTables Editor a při importu. Konfiguraci typu a povinnosti načte ze serveru podle entity a kontextu volitelných polí; definice pole odeslaná klientem nemůže validaci vypnout. Při částečném importu kontroluje pouze importovaná JSON pole.
 - Po úspěšné validaci se znaky `<` a `>` před uložením zapíší jako JSON Unicode escape sekvence `\u003C` a `\u003E`. K vrácení původní hodnoty můžete na frontendu použít volání `JsonEditorValidator.unescape(String value)`, pozor ale na `XSS injection`.
 
-Validace kontroluje syntaxi a kořenový objekt. Neověřuje přítomnost ani význam konkrétních atributů podle JSON Schema.
+Validace kontroluje syntaxi a přítomnost právě jedné JSON hodnoty. Neověřuje přítomnost ani význam konkrétních atributů podle JSON Schema.
 
 Příklad podporovaného rozšířeného zápisu:
 

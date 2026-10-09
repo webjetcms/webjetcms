@@ -3012,38 +3012,39 @@
             }
 
             if (html.indexOf("pb-split-column-placeholder")!=-1) {
-                var splitElement = $(".pb-split-column-placeholder").first();
+                var splitElement = $(oEditor.element.$).find(".pb-split-column-placeholder").first();
                 if (splitElement.length>0) {
-                    var grid_element = this.get_parent_grid_element(splitElement);
-                    var columnHtmlCode = $(grid_element).prop('outerHTML');
-
-                    //we must wrap it into section because otherwise cleanup will not remove necessary classes
-                    columnHtmlCode = '<section class="'+this.grid.section_default_class+'"><div class="'+this.grid.container_default_class+'"><div class="'+this.grid.row_default_class+'">'+columnHtmlCode+'</div></div></section>';
-
-                    var clone = $(columnHtmlCode);
-                    this.clearEditorAttributes(clone);
-
-                    var cleanHtml = clone.find(this.grid.column).prop("outerHTML");
-                    $(cleanHtml).insertAfter(grid_element);
-
-                    //iterate over elements in splitElement parent and delete all after+including splitElement
-                    var elementsToRemove = splitElement.nextAll().addBack();
-                    elementsToRemove.remove();
-
-                    //find news inserted column
-                    var newElement = $(grid_element).next();
-                    newElement.prop("outerHTML", clone.find("."+this.grid.column_default_class).prop("outerHTML"));
-
-                    //iterate over elements in newElement, find .pb-split-column-placeholder and remove all elements before it + itself
-                    var splitPlaceholder = newElement.find(".pb-split-column-placeholder");
-                    if (splitPlaceholder.length>0) {
-                        var elementsToRemoveBefore = splitPlaceholder.prevAll().addBack();
-                        elementsToRemoveBefore.remove();
+                    var column = splitElement.closest(this.tagc.column);
+                    var columnContent = column.children(this.tagc.column_content).has(splitElement);
+                    if (columnContent.length === 0) {
+                        splitElement.remove();
+                        return;
                     }
 
-                    //mark PB and call ckeditor init
+                    // Keep the column inside a wrapper so cleanup includes its own PB attributes.
+                    var clone = $("<div>").append(column.clone());
+                    var newElement = clone.children().first();
+                    var newContent = newElement.children(this.tagc.column_content);
+                    var splitPlaceholder = newContent.find(".pb-split-column-placeholder").first();
+
+                    // Ranges split across ancestor wrappers and include text nodes, not only element siblings.
+                    var range = document.createRange();
+                    range.selectNodeContents(newContent[0]);
+                    range.setEndAfter(splitPlaceholder[0]);
+                    range.deleteContents();
+                    this.clearEditorAttributes(clone);
+
+                    range.selectNodeContents(columnContent[0]);
+                    range.setStartBefore(splitElement[0]);
+                    range.deleteContents();
+                    newElement.insertAfter(column);
+
+                    // Mark the new column and initialize its editor.
                     this.mark_column(newElement);
+                    this.changedElement = newElement;
                     this.options.onGridChanged();
+                    this.select_workbench_element(newElement[0], true);
+                    this.focus_ckeditor_element(newElement);
                 }
 
             }

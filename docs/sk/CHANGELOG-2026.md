@@ -230,6 +230,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Webové stránky - editor JSON prijíma aj polia a jednoduché hodnoty s komentármi. Opravené rozdelenie stĺpcov a posúvanie v Page Builderi a zatváranie tooltipu pri úprave z histórie (#346).
 - Viackrokové formuláre - opravená validácia polí s reťazenými podmienkami viditeľnosti (#58794).
 - Formuláre - opravené archivovanie formulárov (#305).
 - Prieskumník - upravené porovnávanie súborov s diakritikou pri kontrole existencie súboru pri jeho prepísaní - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
