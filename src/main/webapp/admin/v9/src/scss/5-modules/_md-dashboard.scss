@@ -992,7 +992,9 @@ webjet-overview-dashboard a:focus-visible {
     }
     .md-dashboard-devices__table {
         .md-dashboard-sessions__device { align-items: flex-start; min-width: 160px; }
-        .md-dashboard-devices__badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+        .md-dashboard-sessions__device-actions { flex-wrap: nowrap; > .btn { white-space: nowrap; } }
+        .md-dashboard-devices__badges { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+        .md-dashboard-devices__badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 12px; font-weight: 700; white-space: nowrap; &[tabindex] { cursor: help; } &:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: 2px; } }
         .is-unconfirmed { background: var(--wj-dashboard-amber); color: var(--wj-dashboard-warning-text); }
         .is-confirmed { background: var(--wj-dashboard-mint); color: var(--wj-dashboard-positive); }
         .is-blocked { background: var(--wj-dashboard-widget-pink); color: var(--wj-dashboard-danger); }
@@ -1011,9 +1013,9 @@ webjet-overview-dashboard a:focus-visible {
         :is(.md-dashboard-sessions__mine, .md-dashboard-sessions__devices, .md-dashboard-sessions__admins) .md-dashboard-sessions__table tr + tr { border-top: 1px solid var(--wj-nice-gray-100); }
         :is(.md-dashboard-sessions__mine, .md-dashboard-sessions__devices, .md-dashboard-sessions__admins) .md-dashboard-sessions__table td { border: 0; &:first-child { grid-column: 1 / -1; } }
         .md-dashboard-devices__table {
-            .md-dashboard-sessions__ip, .md-dashboard-devices__last-seen, .md-dashboard-devices__state { grid-column: 1; }
+            .md-dashboard-sessions__ip, .md-dashboard-devices__last-seen { grid-column: 1; }
             [data-label]::before { content: attr(data-label) ": "; color: var(--wj-gray-text); }
-            .md-dashboard-sessions__action { grid-row: 2 / 5; min-width: 0; max-width: 160px; }
+            .md-dashboard-sessions__action { grid-row: 2 / 4; min-width: 0; max-width: 160px; &:empty { display: none; } }
             .md-dashboard-sessions__device-actions { flex-direction: column; align-items: flex-end; }
             .has-device-confirmation { grid-column: 1 / -1; grid-row: auto; max-width: none; }
         }

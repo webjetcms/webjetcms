@@ -207,7 +207,7 @@ V hornej časti prehľadu môžete skontrolovať svoje aktívne prihlásenia a o
 
 Panel **Moje aktívne prihlásenia** zobrazuje všetky vaše aktívne relácie, teda prihlásenia pod vaším kontom, s prehliadačom, časom a IP adresou. Pri dlhšom zozname môžete jeho obsah posúvať. Vaša aktuálna relácia je prvá a má zelenú bodku s popisom **Toto prihlásenie**. Ostatné relácie môžete odhlásiť priamo v zozname, napríklad keď ste sa zabudli odhlásiť na inom počítači. Tento panel je vždy v hornej časti a nemožno ho odstrániť.
 
-Samostatný widget v osobnom prehľade zobrazí pri jedinej aktuálnej relácii informáciu, že ste prihlásený iba tu. Pri viacerých reláciách ukáže ich počet a vo väčších variantoch aj zoznam s poslednou aktivitou. Relácie známeho, ale zatiaľ nepotvrdeného zariadenia zvýrazní oranžovým pozadím a štítkom **Nepotvrdené**. Ak stav zariadenia nepozná, zvýraznenie nepridáva. Tlačidlo **Odhlásiť všetky ostatné** otvorí potvrdzovací dialóg; odhlásenie sa vykoná až po potvrdení.
+Samostatný widget v osobnom prehľade zobrazí pri jedinej aktuálnej relácii informáciu, že ste prihlásený iba tu. Pri viacerých reláciách ukáže ich počet a vo väčších variantoch aj zoznam s poslednou aktivitou. Relácie známeho, ale zatiaľ nepotvrdeného zariadenia zvýrazní oranžovým pozadím a štítkom **Nové**. Ak stav zariadenia nepozná, zvýraznenie nepridáva. Tlačidlo **Odhlásiť všetky ostatné** otvorí potvrdzovací dialóg; odhlásenie sa vykoná až po potvrdení.
 
 Kliknutím na nadpis panela alebo widgetu so šípkou otvoríte okno **Aktívne prihlásenia** v karte **Moje prihlásenia**. Okrem vlastných relácií ponúka správu vašich zariadení, históriu prihlásení za posledných 30 dní a podľa oprávnení aj prihlásených administrátorov. Tlačidlo **Zmeniť heslo** v spodnej časti okna otvorí váš profil na zmenu hesla. Informačná ikona vedľa tlačidla zobrazí pokyny pre zmenu hesla pri firemnom účte.
 
@@ -225,11 +225,11 @@ Pri inej vlastnej relácii môžete zvoliť **Odhlásiť túto reláciu**. V akt
 
 Karta **Moje zariadenia** zobrazuje uložené prehliadače vášho účtu vrátane tých, ktoré už nemajú aktívnu reláciu. Záznamy sú zoradené od naposledy použitých a stránkované po 20. Tlačidlo **Obnoviť údaje** načíta aktuálne údaje.
 
-Pri každom zariadení vidíte prehliadač a jeho verziu, operačný systém, čas zaznamenania, IP adresu, posledné použitie a stav. **Naposledy použité** znamená posledné úspešné prihlásenie, nie poslednú aktivitu otvorenej relácie. Prehliadač, systém a **IP pri zaznamenaní** pochádzajú z posledného zaznamenania nového alebo opätovne rozpoznaného zariadenia. Aktuálny prehliadač má štítok **Toto zariadenie**.
+Pri každom zariadení vidíte prehliadač a jeho verziu, operačný systém, čas zaznamenania, IP adresu a posledné použitie. Stavový štítok je pri názve prehliadača, dátum zaznamenania pod ním. **Naposledy použité** znamená posledné úspešné prihlásenie, nie poslednú aktivitu otvorenej relácie. Prehliadač, systém a **IP pri zaznamenaní** pochádzajú z posledného zaznamenania nového alebo opätovne rozpoznaného zariadenia. Aktuálny prehliadač má navyše štítok **Toto zariadenie**.
 
-- **Nepotvrdené** zariadenie môžete potvrdiť tlačidlom **Bol som to ja**. Odošle jednorazový kód na email a otvorí pole priamo v riadku. Až po správnom kóde sa zariadenie potvrdí a jeho systémové upozornenie odstráni. Ak prihlásenie nepoznáte, použite **Nebol som to ja**.
-- **Potvrdené** zariadenie zobrazuje dátum potvrdenia. Tlačidlom **Nebol som to ja** ho môžete dodatočne zablokovať.
-- **Zablokované** zariadenie zobrazuje dátum zablokovania. Odblokovať ho možno až pri ďalšom prihlásení overením kódu z emailu.
+- **Nové** označuje zatiaľ nepotvrdené zariadenie. Môžete ho potvrdiť tlačidlom **Bol som to ja**. Odošle jednorazový kód na email a otvorí pole priamo v riadku. Až po správnom kóde sa zariadenie potvrdí a jeho systémové upozornenie odstráni. Ak prihlásenie nepoznáte, použite **Nebol som to ja**.
+- **Potvrdené** zariadenie môžete tlačidlom **Nebol som to ja** dodatočne zablokovať. Dátum potvrdenia zobrazí tooltip nad štítkom po prejdení myšou alebo zameraní klávesnicou.
+- **Zablokované** zariadenie má v tooltipe nad štítkom dátum zablokovania aj vysvetlenie odblokovania. Odblokovať ho možno až pri ďalšom prihlásení overením kódu z emailu.
 
 Zablokovanie odhlási všetky známe relácie daného zariadenia. Ak ide o aktuálny prehliadač, odhlási aj vás. Po zablokovaní iného prehliadača sa zobrazí malé okno **Zabezpečte svoj účet** s ďalšími krokmi, rovnako ako pri systémovom upozornení.
 

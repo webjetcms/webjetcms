@@ -137,7 +137,7 @@ Scenario('Session widgets and notices open the dialog and update after individua
         else I.assertEqual(await I.grabNumberOfVisibleElements(`[data-instance-id="sessions-autotest-${size}"] li`), 3);
     }
     I.seeElement('[data-instance-id="sessions-autotest-2x3"] .md-dashboard__title-action .ti-arrow-up-right');
-    I.see('Nepotvrdené', '[data-instance-id="sessions-autotest-2x3"] .is-unconfirmed');
+    I.see('Nové', '[data-instance-id="sessions-autotest-2x3"] .is-unconfirmed');
     I.clickCss('[data-instance-id="sessions-autotest-2x3"] .md-dashboard-widget__session-bulk');
     waitForSessionDialog(I);
     I.waitForVisible('.md-dashboard-modal--logout', 10);
@@ -291,6 +291,31 @@ Scenario('Device tab separates retained browsers from sessions and supports conf
     await I.seeElement(`${devices} [data-device-id="45"] .md-dashboard-sessions__deny-device`);
     await I.see('Zablokované', `${devices} [data-device-id="46"]`);
     await I.dontSeeElement(`${devices} [data-device-id="46"] button`);
+    await I.see('Nové', `${devices} [data-device-id="42"] td:first-child`);
+    await I.assertEqual(await I.grabNumberOfVisibleElements(`${devices} thead th`), 4);
+    const blockedBadge = `${devices} [data-device-id="46"] .is-blocked`;
+    await I.dontSee('Odblokovanie vyžaduje', devices);
+    await I.moveCursorTo(blockedBadge);
+    await I.waitForText('Odblokovanie vyžaduje kód z e-mailu', 10, '.tooltip.show');
+    await I.see('Zablokované:', '.tooltip.show');
+    await I.moveCursorTo(`${modal} .modal-title`);
+    await I.waitForInvisible('.tooltip.show', 10);
+    await I.executeScript(selector => document.querySelector(selector).focus(), blockedBadge);
+    await I.waitForVisible('.tooltip.show', 10);
+    await I.pressKey('Escape');
+    await I.waitForInvisible('.tooltip.show', 10);
+    await I.seeElement(modal);
+    await I.executeScript(selector => document.querySelector(selector).focus(), `${devices} [data-device-id="45"] .is-confirmed`);
+    await I.waitForText('Potvrdené:', 10, '.tooltip.show');
+    await I.clickCss(`${devices} .md-dashboard-sessions__summary button`);
+    await I.waitForInvisible('.tooltip.show', 10);
+    await I.waitForVisible(`${devices} [data-device-id="45"] .is-confirmed`, 10);
+    await I.assertEqual((await I.runA11yCheck({ context: { include: [devices] } })).length, 0, 'Device status badges and their tooltips must be accessible.');
+    await I.assertTrue(await I.executeScript(() => {
+        const buttons = [...document.querySelectorAll('.md-dashboard-devices__table [data-device-id="42"] button')];
+        return buttons.every(button => button.getBoundingClientRect().height < 40)
+            && Math.abs(buttons[0].getBoundingClientRect().top - buttons[1].getBoundingClientRect().top) < 1;
+    }), 'Desktop device actions must share one row without wrapping their labels.');
     await I.saveScreenshot('dashboard-my-devices-desktop.png');
     await I.resizeWindow(390, 850);
     await I.assertTrue(await I.executeScript(() => {
@@ -300,7 +325,7 @@ Scenario('Device tab separates retained browsers from sessions and supports conf
         return bounds.left >= 0 && bounds.right <= innerWidth && body.scrollWidth <= body.clientWidth + 1;
     }), 'The device table must fit a mobile viewport.');
     await I.saveScreenshot('dashboard-my-devices-mobile.png');
-    for (const width of [320, 768]) {
+    for (const width of [320, 768, 1100]) {
         await I.resizeWindow(width, 850);
         await I.assertTrue(await I.executeScript(() => {
             const body = document.querySelector('.md-dashboard-modal--sessions .modal-body');

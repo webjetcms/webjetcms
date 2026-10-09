@@ -2340,7 +2340,14 @@ test('Sessions contain only logouts while the lazy device tab confirms retained 
     assert.equal(devices.querySelector('img'), null);
     assert.match(devices.textContent, /<img src=x>/);
     assert.match(devices.querySelector('[data-device-id="42"]').textContent, /currentDevice/);
-    assert.match(devices.querySelector('[data-device-id="45"]').textContent, /deviceBlockedAdvice/);
+    assert.equal(devices.querySelectorAll('thead th').length, 4);
+    assert.equal(devices.querySelectorAll('[data-device-id="42"] td:first-child .md-dashboard-devices__badges > span').length, 2);
+    assert.match(devices.querySelector('[data-device-id="42"] td:first-child').textContent, /newDevice.badge/);
+    const blockedBadge = devices.querySelector('[data-device-id="45"] td:first-child .is-blocked');
+    assert.equal(blockedBadge.tabIndex, 0);
+    assert.match(blockedBadge.title, /deviceBlocked.*deviceBlockedAdvice/);
+    assert.equal(devices.querySelector('[data-device-id="45"] td:last-child').textContent, '');
+    assert.match(devices.querySelector('[data-device-id="44"] .is-confirmed').title, /deviceConfirmed/);
     devices.querySelector('.md-dashboard-sessions__confirm-device').click();
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(requests[1].url, '/admin/rest/security/login-events/42/code');
@@ -2517,7 +2524,7 @@ test('Session widgets distinguish retained device state and reuse bulk confirmat
     const widget = scope.getWidget('my-sessions');
     widget.render({ container, context, signal: new AbortController().signal, instance: { size: '2x2' } });
     assert.equal(container.querySelectorAll('li.is-unconfirmed').length, 1);
-    assert.match(container.querySelector('li.is-unconfirmed').textContent, /Unconfirmed.*deviceUnconfirmed/);
+    assert.match(container.querySelector('li.is-unconfirmed').textContent, /Unconfirmed.*newDevice.badge/);
     assert.equal(container.querySelector('.md-dashboard-widget__session-count').textContent, '4');
     container.querySelector('.md-dashboard-widget__session-bulk').click();
     const dialog = window.document.querySelector('.md-dashboard-modal--logout');

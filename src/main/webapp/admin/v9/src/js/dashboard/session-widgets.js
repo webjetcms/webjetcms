@@ -119,7 +119,7 @@ function sessionList(container, data, context, signal, personal = false) {
         const name = node('strong', 'md-dashboard-widget__session-name', sessionClient(session));
         if (personal && session.deviceId != null && session.deviceConfirmed === false && !session.pending) {
             row.classList.add('is-unconfirmed');
-            name.append(node('span', 'md-dashboard-widget__session-badge', text(context, 'deviceUnconfirmed')));
+            name.append(node('span', 'md-dashboard-widget__session-badge', text(context, 'newDevice.badge')));
         }
         const activity = session.lastActivity > 0 || session.sessionId === data.currentSessionId
             ? sessionActivity(session, data.currentSessionId, context) : date(session.logonTime);
@@ -196,7 +196,8 @@ export function showActiveSessions(context, options = {}) {
     let devicesLoaded = false;
     let devicesLoading = false;
     let devicesRequest = new AbortController();
-    dialog.signal.addEventListener('abort', () => devicesRequest.abort(), { once: true });
+    let devicesView = new AbortController();
+    dialog.signal.addEventListener('abort', () => { devicesRequest.abort(); devicesView.abort(); }, { once: true });
     let historyLoaded = false;
     let adminsLoaded = false;
     let adminsLoading = false;
@@ -309,6 +310,7 @@ export function showActiveSessions(context, options = {}) {
     async function loadDevices(page) {
         if (devicesLoading || dialog.signal.aborted) return;
         devicesRequest.abort();
+        devicesView.abort();
         const request = devicesRequest = new AbortController();
         devicesLoading = true;
         devices.setAttribute('aria-busy', 'true');
@@ -331,6 +333,8 @@ export function showActiveSessions(context, options = {}) {
     }
 
     function renderDevices(data) {
+        devicesView.abort();
+        devicesView = new AbortController();
         devices.replaceChildren();
         const summary = node('div', 'md-dashboard-sessions__summary');
         const explanation = node('div');
@@ -342,9 +346,9 @@ export function showActiveSessions(context, options = {}) {
         if (!data.content.length) devices.append(node('p', 'text-muted', text(context, 'devicesEmpty')));
         const table = node('table', 'md-dashboard-sessions__table md-dashboard-devices__table');
         const head = node('thead'), heading = node('tr');
-        ['sessionBrowser', 'deviceIp', 'deviceLastSeen', 'deviceState', 'sessionActions'].forEach((key, index) => {
+        ['sessionBrowser', 'deviceIp', 'deviceLastSeen', 'sessionActions'].forEach((key, index) => {
             const cell = node('th'); cell.scope = 'col';
-            cell.append(node('span', index === 4 ? 'visually-hidden' : '', text(context, key))); heading.append(cell);
+            cell.append(node('span', index === 3 ? 'visually-hidden' : '', text(context, key))); heading.append(cell);
         });
         head.append(heading); table.append(head);
         const body = node('tbody');
@@ -358,14 +362,20 @@ export function showActiveSessions(context, options = {}) {
             const details = node('div');
             const name = node('div', 'md-dashboard-sessions__device-name',
                 sessionClient({ ...device, browserName: [device.browserName, device.browserVersion].filter(Boolean).join(' ') }));
-            if (isCurrentDevice(context.data, device.id)) name.append(node('span', 'md-dashboard-sessions__current', text(context, 'currentDevice')));
+            const badges = node('span', 'md-dashboard-devices__badges');
+            if (isCurrentDevice(context.data, device.id)) badges.append(node('span', 'md-dashboard-sessions__current', text(context, 'currentDevice')));
+            const badge = node('span', `md-dashboard-devices__badge is-${state.toLowerCase()}`, text(context, state === 'Unconfirmed' ? 'newDevice.badge' : `device${state}`));
+            if (device.reportedAt || device.confirmedAt) {
+                badge.title = `${text(context, `device${state}`)}: ${date(device.reportedAt || device.confirmedAt)}`;
+                if (state === 'Blocked') badge.title += `. ${text(context, 'deviceBlockedAdvice')}`;
+                badge.setAttribute('data-bs-toggle', 'tooltip');
+                badge.tabIndex = 0;
+            }
+            badges.append(badge); name.append(badges);
             details.append(name, node('small', '', text(context, 'deviceRecordedAt', date(device.createDate))));
             wrapper.append(glyph, details); identity.append(wrapper);
             const ip = node('td', 'md-dashboard-sessions__ip', device.ipAddress || '—'); ip.dataset.label = text(context, 'deviceIp');
             const lastSeen = node('td', 'md-dashboard-devices__last-seen', date(device.lastSeen)); lastSeen.dataset.label = text(context, 'deviceLastSeen');
-            const status = node('td', 'md-dashboard-devices__state');
-            status.append(node('span', `md-dashboard-devices__badge is-${state.toLowerCase()}`, text(context, `device${state}`)));
-            if (device.reportedAt || device.confirmedAt) status.append(node('small', 'd-block mt-1', date(device.reportedAt || device.confirmedAt)));
             const action = node('td', 'md-dashboard-sessions__action');
             const controls = node('div', 'md-dashboard-sessions__device-actions');
             if (state === 'Unconfirmed') controls.append(sessionButton(text(context, 'newDevice.confirm'), () => {
@@ -382,11 +392,11 @@ export function showActiveSessions(context, options = {}) {
             if (state !== 'Blocked') controls.append(sessionButton(text(context, 'newDevice.notMe'), () =>
                 closeAccountDialog(dialog, () => showDeviceSecurity(context, device, true)), 'btn btn-sm btn-red md-dashboard-sessions__deny-device'));
             if (controls.childElementCount) action.append(controls);
-            else action.append(node('span', 'small text-muted', text(context, 'deviceBlockedAdvice')));
-            row.append(identity, ip, lastSeen, status, action); body.append(row);
+            row.append(identity, ip, lastSeen, action); body.append(row);
         });
         table.append(body);
         if (data.content.length) devices.append(table);
+        sessionTooltips(table, devicesView.signal);
         if (data.totalPages > 1) {
             const pagination = node('div', 'md-dashboard-sessions__pagination');
             const previous = sessionButton(text(context, 'sessionPrevious'), () => loadDevices(data.number - 1), 'btn btn-sm btn-white');
