@@ -1929,9 +1929,14 @@ test('Accepted cluster logout stays pending instead of claiming immediate invali
 });
 
 function sessionDialogFixture(context, window) {
+    const overview = window.document.createElement('webjet-overview-dashboard');
+    const host = window.document.createElement('div');
+    overview.append(host);
+    window.document.body.append(overview);
     const lifecycle = new AbortController();
     let refreshed = 0, opened = 0;
     context.dashboard = {
+        host,
         refreshSessions: () => { refreshed++; context.overview?.noticeController?.render(); },
         showDialog: () => {
             const request = opened++ === 0 ? lifecycle : new AbortController();
@@ -1945,6 +1950,58 @@ function sessionDialogFixture(context, window) {
     };
     return { signal: lifecycle.signal, refreshed: () => refreshed };
 }
+
+test('Location updates refresh sessions and devices only while the dialog is active', async t => {
+    const session = { sessionId: 'current', deviceId: 42, browserName: 'Chrome', location: 'Initial location' };
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [session] }] } };
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async () => ({
+        ok: true, json: async () => ({ content: [{ id: 42, confirmedAt: 1000, location: session.location }], number: 0, totalElements: 1, totalPages: 1 })
+    }) });
+    sessionDialogFixture(context, window);
+    const originalShowDialog = context.dashboard.showDialog;
+    let dialog;
+    context.dashboard.showDialog = (...args) => (dialog = originalShowDialog(...args));
+    scope.showActiveSessions(context);
+    const root = dialog.root;
+    const overview = context.dashboard.host.closest('webjet-overview-dashboard');
+    const notifyLocation = location => {
+        session.location = location;
+        overview.dispatchEvent(new window.CustomEvent('webjet-login-location-updated'));
+    };
+    const settle = () => new Promise(resolve => setImmediate(resolve));
+    const mine = root.querySelector('.md-dashboard-sessions__mine');
+    const devices = root.querySelector('.md-dashboard-sessions__devices');
+    const mineTab = root.querySelector('[role="tab"][id$="-mine"]');
+    const devicesTab = root.querySelector('[role="tab"][id$="-devices"]');
+    notifyLocation('Bratislava');
+    assert.match(mine.textContent, /Bratislava/);
+    assert.equal(requests.length, 0, 'A location update must not load a hidden device tab.');
+    devicesTab.click();
+    await settle();
+    assert.equal(requests.length, 1);
+    assert.match(devices.textContent, /Bratislava/);
+    notifyLocation('Prague');
+    await settle();
+    assert.match(mine.textContent, /Prague/);
+    assert.match(devices.textContent, /Prague/);
+    assert.equal(requests.length, 2, 'A visible device tab must reload after a location update.');
+    mineTab.click();
+    notifyLocation('Vienna');
+    await settle();
+    assert.equal(requests.length, 2);
+    assert.match(mine.textContent, /Vienna/);
+    devicesTab.click();
+    await settle();
+    assert.equal(requests.length, 3, 'A previously loaded hidden device tab must reload when reopened.');
+    assert.match(devices.textContent, /Vienna/);
+    assert.ok(requests.every(request => request.url === '/admin/rest/security/login-events?page=0'));
+    dialog.close();
+    const html = mine.innerHTML;
+    notifyLocation('After close');
+    await settle();
+    assert.equal(requests.length, 3, 'A closed dialog must not request device updates.');
+    assert.equal(mine.innerHTML, html, 'A closed dialog must not rerender sessions.');
+});
 
 test('Bulk logout lists only eligible sessions as text and cancellation restores the dialog and focus', t => {
     const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
@@ -2061,7 +2118,8 @@ test('Administrator table uses safe account and session summaries and omits logo
     assert.equal(root.querySelectorAll('script,img,input').length, 0);
     rows[0].querySelector('button').click();
     assert.equal(root.querySelectorAll('[role="tab"]')[0].getAttribute('aria-selected'), 'true');
-    assert.match(root.querySelector('.md-dashboard-sessions__device-name').textContent, /Chrome · macOS/);
+    assert.match(root.querySelector('.md-dashboard-sessions__device-name').textContent, /^Chrome/);
+    assert.equal(root.querySelector('.md-dashboard-sessions__system').textContent, 'macOS');
     root.querySelector('.md-dashboard-sessions__mine tbody tr:nth-child(2) button').click();
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(root.querySelector('.md-dashboard-sessions__admin-connections div').textContent, '1');
@@ -2334,7 +2392,7 @@ test('Sessions contain only logouts while the lazy device tab confirms retained 
     await new Promise(resolve => setImmediate(resolve));
     const devices = root.querySelector('.md-dashboard-sessions__devices');
     assert.equal(requests[0].url, '/admin/rest/security/login-events?page=0');
-    assert.equal(devices.querySelectorAll('tbody tr').length, 4, 'Retained devices are independent of active sessions.');
+    assert.equal(devices.querySelectorAll('tbody tr[data-device-id]').length, 4, 'Retained devices are independent of active sessions.');
     assert.equal(devices.querySelectorAll('.md-dashboard-sessions__confirm-device').length, 2);
     assert.equal(devices.querySelectorAll('.md-dashboard-sessions__deny-device').length, 3);
     assert.equal(devices.querySelector('img'), null);
