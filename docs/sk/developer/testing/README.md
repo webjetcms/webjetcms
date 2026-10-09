@@ -72,7 +72,7 @@ Konkrétny súbor alebo test podľa názvu spustíte priamo cez Node.js:
 
 ```shell
 node --test helpers/jsoneditor.test.js
-node --test --test-name-pattern="rejects every non-object root" helpers/jsoneditor.test.js
+node --test --test-name-pattern="accepts every JSON root type" helpers/jsoneditor.test.js
 ```
 
 Použite Node.js 22 a nainštalujte npm závislosti v `src/test/webapp`. Testy JSON editora používajú vlastné závislosti jQuery a DataTables, takže nepotrebujú `node_modules` v `src/main/webapp/admin/v9`. Pred inštaláciou musí byť dostupný licencovaný archív `src/main/webapp/admin/v9/src/js/plugins/Editor-2.5.2.zip`, rovnaký ako pri zostavení administrácie; inštalačný skript z neho pripraví DataTables Editor aj pre testy. V CI archív skopírujte pred spustením `npm ci` v `src/test/webapp`. Tieto testy nepotrebujú spustený aplikačný server ani databázu. Niektoré otvárajú lokálne komponenty v Chromium cez Playwright, preto musí byť nainštalovaný aj tento prehliadač (`npx playwright install chromium` z priečinka `src/test/webapp`; na Linuxe je možné nainštalovať systémové závislosti pomocou `npx playwright install --with-deps chromium`).

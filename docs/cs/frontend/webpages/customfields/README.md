@@ -234,7 +234,7 @@ Typ pole `color` umožňuje vybrat barvu včetně nastavení průsvitnosti.
 
 ### JSON Editor
 
-Typ pole `jsoneditor` slouží k přímému zadávání a úpravě JSON objektu. Pro pole nastavte v [nastavení volitelných polí](custom-fields-settings.md) typ **Editor JSON**, nebo použijte překladový klíč:
+Typ pole `jsoneditor` slouží k přímému zadávání a úpravě JSON hodnot. Pro pole nastavte v [nastavení volitelných polí](custom-fields-settings.md) typ **Editor JSON**, nebo použijte překladový klíč:
 
 ```properties
 editor.field_g.type=jsoneditor
@@ -246,7 +246,7 @@ Editor zobrazuje čísla řádků a panel s tlačítkem **Formátovat JSON** a d
 
 Při ukládání se znaky `<` a `>` nahradí významově stejnými JSON Unicode escape sekvencemi `\u003C` a `\u003E`. Po opětovném otevření je editor zobrazí v této kanonické podobě. K vrácení původní hodnoty můžete na frontendu použít volání `JsonEditorValidator.unescape(String value)`, pozor ale na `XSS injection`.
 
-Hodnota musí být platný objekt s kořenem `{...}`. Vnořené objekty a pole jsou povoleny, samotné pole `[]`, `null`, číslo nebo řetězec na kořeni se odmítnou. Podporovány jsou také apostrofy, názvy vlastností bez uvozovek včetně pomlček a komentáře `//` nebo `/* ... */`. Příklad:
+Vstup musí obsahovat právě jednu JSON hodnotu: objekt `{...}`, pole `[...]`, řetězec, číslo, `true`, `false` nebo `null`. Můžete vložit také pole objektů, například `[{"id":12345},{"id":56789}]`. Podporovány jsou také apostrofy, názvy vlastností bez uvozovek včetně pomlček a komentáře `//` nebo `/* ... */`. Příklad:
 
 ```js
 {
@@ -259,7 +259,7 @@ Hodnota musí být platný objekt s kořenem `{...}`. Vnořené objekty a pole j
 
 Zápis `{2}` není platná hodnota: pro číslo použijte `2`, pro textový zástupný údaj `'{2}'`. Prázdná hodnota se řídí nastavením **Povinné pole** ; samotné mezery se považují za prázdnou hodnotu.
 
-Validace probíhá při opuštění pole i před uložením. Chyba se zobrazí při poli a zabrání uložení stránky. Kontrola probíhá i na serveru včetně REST a importu. Ověřuje se syntaxe a kořenový objekt, nikoli konkrétní atributy podle JSON Schema.
+Validace probíhá při opuštění pole i před uložením. Chyba se zobrazí při poli a zabrání uložení stránky. Kontrola probíhá i na serveru včetně REST a importu. Ověřuje se syntaxe a přítomnost právě jedné JSON hodnoty, nikoli konkrétní atributy podle JSON Schema.
 
 Typ `jsoneditor` je samostatný typ pro editaci textu. Stávající typy `json_doc` a `json_group` slouží k výběru stránky nebo složky. Podrobnosti jsou v [dokumentaci pro programátora](../../../developer/datatables-editor/customfields.md#editor-json).
 

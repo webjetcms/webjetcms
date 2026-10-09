@@ -167,7 +167,7 @@ public final class JsonEditorValidator {
     }
 
     /**
-     * Checks one complete object, allowing single quotes, unquoted names and Java-style comments.
+     * Checks one complete JSON value, allowing single quotes, unquoted names and Java-style comments.
      * @param value original text, which is never changed
      * @param required whether an empty value is invalid
      * @param prop localized validation messages
@@ -178,8 +178,9 @@ public final class JsonEditorValidator {
             return required ? prop.getText("settings.custom-fields.required-err") : null;
         }
         try (JsonParser parser = JSON_FACTORY.createParser(value)) {
-            if (parser.nextToken() != JsonToken.START_OBJECT) return prop.getText(MESSAGE_PREFIX + "object.js");
-            int depth = 1;
+            JsonToken root = parser.nextToken();
+            if (root == null) return prop.getText(MESSAGE_PREFIX + "invalid.js");
+            int depth = root.isStructStart() ? 1 : 0;
             while (depth > 0) {
                 JsonToken token = parser.nextToken();
                 if (token == null) return prop.getText(MESSAGE_PREFIX + "invalid.js");

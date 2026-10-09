@@ -234,7 +234,7 @@ The field type `color` allows you to select a color, including setting the trans
 
 ### JSON Editor
 
-The field type `jsoneditor` is used for direct input and editing of JSON objects. Set the field type in [custom fields settings](custom-fields-settings.md) to **JSON Editor**, or use the translation key:
+The field type `jsoneditor` is used for direct input and editing of JSON values. Set the field type in [custom fields settings](custom-fields-settings.md) to **JSON Editor**, or use the translation key:
 
 ```properties
 editor.field_g.type=jsoneditor
@@ -246,7 +246,7 @@ The editor displays line numbers and a panel with a **Format JSON** button and a
 
 When saving, the characters `<` and `>` are replaced with the semantically identical JSON Unicode escape sequences `\u003C` and `\u003E`. When reopened, the editor displays them in this canonical form. To restore the original value, you can use the call `JsonEditorValidator.unescape(String value)` on the frontend, but be careful with `XSS injection`.
 
-The value must be a valid object with root `{...}`. Nested objects and arrays are allowed, a single array `[]`, `null`, a number or string at the root are rejected. Apostrophes, unquoted property names including dashes, and comments `//` or `/* ... */` are also supported. Example:
+The input must contain exactly one JSON value: an object `{...}`, array `[...]`, string, number, `true`, `false`, or `null`. You can also enter an array of objects, for example `[{"id":12345},{"id":56789}]`. Apostrophes, unquoted property names including dashes, and comments `//` or `/* ... */` are also supported. Example:
 
 ```js
 {
@@ -259,7 +259,7 @@ The value must be a valid object with root `{...}`. Nested objects and arrays ar
 
 The notation `{2}` is not a valid value: use `2` for a number, `'{2}'` for a text placeholder. An empty value is controlled by the **Required field** setting; spaces alone are considered empty.
 
-Validation occurs when leaving the field and before saving. An error is displayed next to the field and prevents the page from being saved. The check also occurs on the server, including REST and import. The syntax and root object are validated, not specific attributes according to JSON Schema.
+Validation occurs when leaving the field and before saving. An error is displayed next to the field and prevents the page from being saved. The check also occurs on the server, including REST and import. The syntax and presence of exactly one JSON value are validated, not specific attributes according to JSON Schema.
 
 The `jsoneditor` type is a separate type for text editing. The existing types `json_doc` and `json_group` are used for page or folder selection. Details are in the [programmer documentation](../../../developer/datatables-editor/customfields.md#editor-json).
 

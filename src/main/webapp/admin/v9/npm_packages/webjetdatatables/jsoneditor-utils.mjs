@@ -24,11 +24,11 @@ export function escapeJsonForHtml(text) {
  * @param {string} text Original field value.
  * @returns {Array<{raw: string, type: string, position: number}>} Validated source tokens.
  */
-function readObject(text) {
+function readJson(text) {
     const tokens = [];
     let position = 0;
-    const fail = (at = position, kind = "invalid") => {
-        const error = new SyntaxError(kind);
+    const fail = (at = position) => {
+        const error = new SyntaxError("invalid");
         error.position = at;
         throw error;
     };
@@ -101,7 +101,6 @@ function readObject(text) {
     };
     value();
     if (index !== syntax.length) fail(syntax[index].position);
-    if (syntax[0].raw !== "{") fail(syntax[0].position, "object");
     return tokens;
 }
 
@@ -114,10 +113,9 @@ function readObject(text) {
 export function validateJsonObject(text, required = false) {
     if (text.trim().length === 0) return required ? {valid: false, error: "required"} : {valid: true};
     try {
-        readObject(text);
+        readJson(text);
         return {valid: true};
     } catch (error) {
-        if (error.message === "object") return {valid: false, error: "object"};
         const result = {valid: false, error: "invalid"};
         if (error.position != null) {
             const lines = text.slice(0, error.position).split(/\r\n|\r|\n/);
@@ -129,14 +127,14 @@ export function validateJsonObject(text, required = false) {
 }
 
 /**
- * Indents an object using two spaces while preserving strings, comments and numeric spelling.
- * @param {string} text Raw JSON object, optionally using the supported extensions.
+ * Indents a JSON value using two spaces while preserving strings, comments and numeric spelling.
+ * @param {string} text Raw JSON value, optionally using the supported extensions.
  * @returns {string} Formatted text, or unchanged input when empty or invalid.
  */
 export function formatJsonObject(text) {
     if (text.trim().length === 0) return text;
     let tokens;
-    try { tokens = readObject(text); } catch { return text; }
+    try { tokens = readJson(text); } catch { return text; }
     let output = "";
     let depth = 0;
     let lineStart = true;

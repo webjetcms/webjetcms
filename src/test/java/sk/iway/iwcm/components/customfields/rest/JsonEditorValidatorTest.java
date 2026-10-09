@@ -44,7 +44,7 @@ import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
 /**
- * Verifies supported object syntax, authoritative field rules and native validation errors.
+ * Verifies supported JSON syntax, authoritative field rules and native validation errors.
  */
 class JsonEditorValidatorTest {
 
@@ -95,11 +95,11 @@ class JsonEditorValidatorTest {
         }
     }
 
-    /** Verifies other legal JSON root values are not accepted as MHUB objects. */
+    /** Verifies every legal JSON root type also satisfies required fields. */
     @ParameterizedTest
-    @ValueSource(strings = {"[]", "[{}]", "null", "true", "false", "42", "\"text\""})
-    void rejectsNonObjectRoots(String value) {
-        assertEquals("settings.custom-fields.jsoneditor.object.js", JsonEditorValidator.validateValue(value, false, prop));
+    @ValueSource(strings = {"[]", "[{}]", "null", "true", "false", "42", "\"text\"", "\"\""})
+    void acceptsNonObjectRoots(String value) {
+        assertNull(JsonEditorValidator.validateValue(value, true, prop));
     }
 
     /** Verifies empty input follows the custom field's required setting. */
