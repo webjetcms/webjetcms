@@ -59,6 +59,29 @@ class LogonToolsAfterSuccessLogonTest {
         constants.close();
     }
 
+    /** The legacy public API invokes only its callback with the supplied identity, even without a session user. */
+    @Test
+    @SuppressWarnings("removal")
+    void legacyCallbackPreservesItsPublicContractAndOriginalBehavior() throws NoSuchMethodException {
+        LogonTools.class.getMethod("afterLogon", Identity.class, HttpServletRequest.class, HttpServletResponse.class);
+        Identity suppliedUser = new Identity();
+        suppliedUser.setUserId(8);
+
+        LogonTools.afterLogon(suppliedUser, request, response);
+
+        assertEquals(List.of("custom"), calls(request));
+        assertSame(suppliedUser, request.getAttribute("customUser"));
+        assertSame(response, request.getAttribute("customResponse"));
+        assertSame(user, request.getSession().getAttribute(Constants.USER_KEY));
+
+        request.getSession().removeAttribute(Constants.USER_KEY);
+        LogonTools.afterLogon(suppliedUser, request, response);
+
+        assertEquals(List.of("custom", "custom"), calls(request));
+        assertSame(suppliedUser, request.getAttribute("customUser"));
+        devices.verifyNoInteractions();
+    }
+
     /** Repeated hooks without an incoming browser cookie execute every post-login action only once. */
     @Test
     void runsAllActionsOnceUsingTheSessionIdentity() {

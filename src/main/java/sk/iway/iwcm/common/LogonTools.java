@@ -876,7 +876,20 @@ public class LogonTools {
         afterLogon(user, request, response);
     }
 
-    private static void afterLogon(Identity user, HttpServletRequest request, HttpServletResponse response)
+    /**
+     * Invokes only the configured {@code afterLogonMethod} callback for legacy integrations.
+     * Uses the supplied identity independently of the session and preserves repeated callback calls.
+     *
+     * @param user identity passed to the configured callback
+     * @param request login request passed to the configured callback
+     * @param response login response passed to the configured callback
+     * @deprecated Scheduled for removal ú make it PRIVATE in WebJET CMS 2027. For completed browser logins, use
+     *             {@link #afterSuccessLogon(HttpServletRequest, HttpServletResponse)} after establishing
+     *             the session and completing all required authentication steps. That method also runs
+     *             login interceptors and browser recognition once per account and request.
+     */
+    @Deprecated(forRemoval = true)
+    public static void afterLogon(Identity user, HttpServletRequest request, HttpServletResponse response)
 	{
 		String afterLogon = Constants.getString("afterLogonMethod");
 		if (Tools.isNotEmpty(afterLogon))
