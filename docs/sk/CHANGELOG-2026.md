@@ -31,6 +31,8 @@
 
 ![Overenie zablokovaného zariadenia pred vstupom do administrácie](redactor/admin/logon-device-verification.png)
 
+Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `adminNewDeviceDetectionEnabled` na false. Pri prihlásení sa aj zisťuje [približná poloha](admin/setup/configuration/dashboard.md#orientačná-poloha-prihlásenia) podľa IP adresy, vypnúť sa dá nastavením `adminLoginLocationApiKey` na hodnotu `DISABLED`.
+
 ### Webové stránky
 
 - Kôš webových stránok - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Pridaná možnosť mazania stránok a priečinkov v koši aj v sekcii [Mazanie dát](sysadmin/data-deleting/README.md) podľa zvoleného rozsahu dátumov. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov (#271).
