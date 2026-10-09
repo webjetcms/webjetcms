@@ -287,6 +287,69 @@ Scenario('nastavenie sirky stlpcov @singlethread', ({ I }) => {
     I.seeElement(".datatable-col.col-md-6");
 });
 
+Data([
+    "/admin/v9/webpages/web-pages-list/?groupid=0",
+    "/admin/v9/settings/translation-keys/",
+    "/admin/v9/settings/configuration/"
+]).Scenario('fixed tree widths @singlethread', async ({ I, DT, current }) => {
+    I.amOnPage(current);
+    I.waitForVisible("#SomStromcek", 20);
+    DT.waitForLoader();
+    const originalWidth = await I.executeScript(() => window.jstreeSettings.getTreeWidth());
+
+    function setWidth(width) {
+        I.clickCss(".tree-col .buttons-jstree-settings");
+        I.waitForVisible("#jstreeSettingsModal", 5);
+        I.clickCss("#jstreeSettingsModal .DTE_Field_treeWidth button.dropdown-toggle");
+        const label = width > 12 ? width + "px" : width + ":" + (12 - width);
+        I.click(locate("#jstreeSettingsModal .dropdown-menu.show .dropdown-item").withText(label));
+        I.clickCss("#jstree-settings-submit");
+        I.waitForInvisible("#jstreeSettingsModal", 5);
+        I.jstreeWaitForLoader();
+        DT.waitForLoader();
+    }
+
+    for (const width of [120, 150, 200, 250, 300, 400, 500]) {
+        setWidth(width);
+        for (const viewportWidth of [1360, 2560]) {
+            I.resizeWindow(viewportWidth, 900);
+            I.seeCssPropertiesOnElements(".tree-col", { width: width + "px" });
+            I.waitForFunction(() => {
+                const tree = document.querySelector(".tree-col").getBoundingClientRect();
+                const table = document.querySelector(".datatable-col").getBoundingClientRect();
+                const row = document.querySelector(".tree-col").parentElement.getBoundingClientRect();
+                return Math.abs(tree.right - table.left) < 1 && Math.abs(table.right - row.right) < 1;
+            }, 5);
+        }
+    }
+
+    I.refreshPage();
+    I.waitForVisible("#SomStromcek", 20);
+    I.seeCssPropertiesOnElements(".tree-col", { width: "500px" });
+    I.clickCss(".tree-col .buttons-jstree-settings");
+    I.waitForVisible("#jstreeSettingsModal", 5);
+    I.seeInField("#jstree-settings-treeWidth", "500");
+    I.clickCss("#jstreeSettingsModal .btn-close-editor");
+    I.waitForInvisible("#jstreeSettingsModal", 5);
+
+    I.resizeWindow(992, 900);
+    I.seeCssPropertiesOnElements(".tree-col", { width: "500px" });
+    I.resizeWindow(767, 900);
+    I.waitForFunction(() => {
+        const tree = document.querySelector(".tree-col").getBoundingClientRect();
+        const table = document.querySelector(".datatable-col").getBoundingClientRect();
+        const row = document.querySelector(".tree-col").parentElement.getBoundingClientRect();
+        return Math.abs(tree.width - row.width) < 1 && table.top >= tree.bottom;
+    }, 5);
+
+    I.wjSetDefaultWindowSize();
+    setWidth(4);
+    I.seeElement(".tree-col.col-md-4");
+    I.seeElement(".datatable-col.col-md-8");
+    I.assertEqual(await I.executeScript(() => document.querySelector(".tree-col").style.getPropertyValue("--wj-tree-width")), "");
+    setWidth(originalWidth);
+});
+
 Scenario('reset @singlethread', ({ I }) => {
     setSettings(I);
     I.amOnPage("/admin/v9/apps/gallery/");

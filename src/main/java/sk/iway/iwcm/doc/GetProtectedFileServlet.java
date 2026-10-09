@@ -150,6 +150,7 @@ public class GetProtectedFileServlet extends HttpServlet
 
          if (inFile != null && inFile.exists())
          {
+            PathFilter.setNoCacheHeaders(response);
             FilePathTools.writeFileOut(inFile, request, response);
          }
          else

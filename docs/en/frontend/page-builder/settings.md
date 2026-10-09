@@ -20,6 +20,7 @@ To run Page Builder correctly, set:
 Other config variables that can be edited:
 
 - `pagebuilderLibraryImageWidth` - ​​width of preview images in the block library, default 310.
+- `pagebuilderStructureWidth` - ​​width of the Structure panel in pixels, default 280. A higher value will provide more space for nested blocks and longer titles. On a narrow screen, the panel will shrink to fit the available space.
 - `inlineEditingDisabledUrls` - ​​list of URLs for which the inline editor will not be available
 - `pageBuilderPrefix` - ​​prefix used for Page Builder CSS classes (pb by default), can only be changed if you also change the prefixes in Page Builder CSS classes
 

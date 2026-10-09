@@ -77,7 +77,7 @@ Consequences of moving a folder:
 If necessary, you can click the icon in the tree structure<i class="ti ti-adjustments-horizontal"></i> Settings display the settings dialog:
 
 - **Folder name on disk** - displays the folder name on disk, which may be different from the Gallery name specified in the gallery settings.
-- **Tree:Table Column Width Ratio** - Sets the column width ratio of the displayed tree structure and data table to better utilize the monitor width. The default ratio is 4:8. Warning: with some ratios and inappropriate monitor size, the toolbar/buttons may not be displayed correctly.
+- **Tree Width** - Select the ratio of the width of the tree to the table (default 4:8) or a fixed tree width of 120px, 150px, 200px, 250px, 300px, 400px or 500px. With a fixed width, the tree does not expand when the window is enlarged and the table uses the remaining space. Warning: with some widths and inappropriate monitor sizes, the toolbar/buttons may not be displayed correctly.
 - **Sort tree by** - Select the directory parameter by which the folder tree should be sorted. The selection box supports the following parameters
   - **Name**
   - **Date created**

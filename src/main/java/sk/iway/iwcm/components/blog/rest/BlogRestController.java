@@ -7,16 +7,24 @@ import java.util.Map;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.jstree.JsTreeItem;
+import sk.iway.iwcm.admin.jstree.JsTreeItemState;
+import sk.iway.iwcm.admin.jstree.JsTreeMoveItem;
+import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.GroupDetails;
@@ -101,6 +109,7 @@ public class BlogRestController extends WebpagesDatatable {
     @Override
     public DocDetails getOneItem(long id) {
         int groupId = Tools.getIntValue(getRequest().getParameter("groupId"), Constants.getInt("rootGroupId"));
+        if (id < 1 && groupId == 0) throwError(getProp().getText("components.blog.basic_perm_error"));
         int historyId = Tools.getIntValue(getRequest().getParameter("historyId"), -1);
 
         if (groupId < 1 || groupId == Constants.getInt("rootGroupId")) {
@@ -134,13 +143,39 @@ public class BlogRestController extends WebpagesDatatable {
 
     @Override
     public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<DocDetails> root, CriteriaBuilder builder) {
-        BlogService.addSpecSearch(params, predicates, root, builder, getUser());
-
         super.addSpecSearch(params, predicates, root, builder);
+        BlogService.addSpecSearch(params, predicates, root, builder, getUser());
     }
 
     @RequestMapping(value="/blogger-groups")
     public List<LabelValueInteger> getActualBloggerGroups() {
         return BlogService.getActualBloggerGroups(getUser());
+    }
+
+    /** Returns permitted Blog folders and an aggregate entry for all sections. */
+    @PostMapping("/tree")
+    public Map<String, Object> tree(@RequestBody JsTreeMoveItem item,
+            @RequestParam(defaultValue = "-1") int selectedId,
+            @RequestParam(required = false) String treeSearchValue,
+            @RequestParam(defaultValue = "contains") String treeSearchType,
+            HttpServletRequest request) {
+        if (!BloggerService.isUserBloggerOrBloggerAdmin(getUser())) throwError(getProp().getText("components.permsDenied"));
+        List<JsTreeItem> items = new ArrayList<>(BlogService.getFolderTree(getUser(), DocDB.getDomain(request))
+                .getItems(item.getIdInt(), selectedId, treeSearchValue, treeSearchType));
+        if (item.getIdInt() == 0 && Tools.isEmpty(treeSearchValue)) {
+            if (items.stream().noneMatch(node -> !node.getState().isDisabled())) return Map.of("result", true, "items", List.of());
+            boolean selected = items.stream().anyMatch(node -> node.getId().equals(String.valueOf(selectedId)) && node.getState().isSelected());
+            if (!selected) items.forEach(node -> node.getState().setSelected(false));
+            JsTreeItem all = new JsTreeItem();
+            all.setId("-1");
+            all.setParent("#");
+            all.setText(getProp().getText("components.blog.all_groups"));
+            all.setIcon("ti ti-select-all");
+            all.setChildren(false);
+            all.setState(new JsTreeItemState());
+            all.getState().setSelected(!selected);
+            items.add(0, all);
+        }
+        return Map.of("result", true, "items", items);
     }
 }

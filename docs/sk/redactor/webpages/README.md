@@ -89,7 +89,7 @@ V prípade potreby môžete v stromovej štruktúre kliknutím na ikonu <i class
 - **Poradie usporiadania** - Za názvom zobrazí poradie usporiadania vo forme (poradie).
 - **Web Stránky** - Zobrazí v stromovej štruktúre aj web stránky. **Upozornenie:** znižuje výkon a rýchlosť načítania údajov. Možnosť odporúčame zapnúť len ak potrebujete presúvať web stránky pomocou funkcie `Drag&Drop`.
 - **Priečinky stromovej štruktúry ako tabuľku** - Zobrazí kartu Priečinky v datatabuľke. Umožňuje používať funkcie datatabuľky ako hromadné operácie, duplikovať, upraviť v zobrazení mriežky atď. s priečinkami stromovej štruktúry.
-- **Pomer šírky stĺpcov strom:tabuľka** - Nastaví pomer šírky stĺpcov zobrazenej stromovej štruktúry a datatabuľky pre lepšie využitie šírky monitora. Štandardný pomer je 4:8. Upozornenie: pri niektorých pomeroch a nevhodnej veľkosti monitora môže dôjsť k nesprávnemu zobrazeniu nástrojovej lišty/tlačidiel.
+- **Šírka stromu** - Vyberte pomer šírky stromu a tabuľky (štandardne 4:8) alebo pevnú šírku stromu 120px, 150px, 200px, 250px, 300px, 400px alebo 500px. Pri pevnej šírke sa strom pri zväčšení okna nerozširuje a tabuľka využije zvyšný priestor. Upozornenie: pri niektorých šírkach a nevhodnej veľkosti monitora môže dôjsť k nesprávnemu zobrazeniu nástrojovej lišty/tlačidiel.
 - **Zoradiť strom podľa** - Výber parametra adresára, podľa ktorého sa má strom priečinkov usporiadať. Výberové pole podporuje nasledujúce parametre
   - **Priorita**
   - **Názov**

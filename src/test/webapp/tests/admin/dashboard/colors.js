@@ -28,7 +28,10 @@ async function trafficColor(I) {
     await showWidget(I, widgetId);
     I.waitForFunction(id => {
         const host = document.querySelector(`[data-instance-id="${id}"] .md-dashboard-widget__chart`);
-        return window.am5?.registry.rootElements.some(root => root.dom === host);
+        // Bootstrap disposes the settings preview after its closing transition.
+        const roots = window.am5?.registry.rootElements;
+        return !document.querySelector('.md-dashboard-modal--settings')
+            && roots?.length === 1 && roots[0].dom === host;
     }, [widgetId], 20);
     const chart = await I.executeScript(id => {
         const host = document.querySelector(`[data-instance-id="${id}"] .md-dashboard-widget__chart`);
@@ -106,7 +109,7 @@ Scenario('Widget backgrounds keep defaults and persist palette or readable custo
     I.fillField(hex, '#112233');
     I.clickCss(modal + ' color-picker [part="confirm"]');
     I.clickCss(modal + ' .modal-footer .btn-primary');
-    I.see('Pre čitateľný text zvoľte svetlejšiu farbu pozadia.', modal + ' [role="alert"]');
+    I.waitForText('Pre čitateľný text zvoľte svetlejšiu farbu pozadia.', 10, modal + ' [role="alert"]');
     I.clickCss(custom + ' + span');
     I.waitForVisible(hex, 10);
     I.fillField(hex, '#DFF9F180');

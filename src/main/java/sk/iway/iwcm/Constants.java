@@ -1912,6 +1912,8 @@ public class Constants {
 				"Zoznam grid elementov/selectorov pre pageBuilder, pouziva sa ak je potrebne mat specialne selectory, format je section: 'section', container: 'div.container', row: 'div.row', column: 'div[class*=\"col-\"]', column_content: 'div.column-content'");
 		setInt("pagebuilderLibraryImageWidth", 310, MOD_EDITOR,
 				"Maximálna šírka náhľadového obrázka v knižnici obrázkov PageBuildera.");
+		setInt("pagebuilderStructureWidth", 280, MOD_EDITOR,
+				"Width of the Page Builder structure panel in pixels.");
 
 		setString("analyticsTrackerConf", "", MOD_STAT,
 				"Slúži na konfiguráciu trackovania analytics eventov z backendu. Uvádajú sa dvojice vzorUrl:trieda oddelené ;. Napr: '/files/filearchiv/:sk.iway.iwcm.FileArchiveAnalytics;/images/trackovane/:sk.iway.iwcm.TrackujObrazok'");

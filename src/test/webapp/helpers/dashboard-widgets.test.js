@@ -8,7 +8,7 @@ const { JSDOM } = require('jsdom');
 function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWidgets = false, colorPicker = false, data = {}, actual, fetchResponse, now = new Date(2026, 8, 26) } = {}) {
     const dom = new JSDOM('<!doctype html><body><main></main></body>', { url: 'http://localhost/admin/v9/' });
     const window = dom.window;
-    const glyphCss = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/node_modules/@tabler/icons-webfont/dist/tabler-icons.css'), 'utf8');
+    const glyphCss = fs.readFileSync(require.resolve('@tabler/icons-webfont/dist/tabler-icons.css'), 'utf8');
     const glyphs = new Set([...glyphCss.matchAll(/\.ti-([a-z0-9-]+):before/g)].map(match => 'ti-' + match[1]));
     const computedStyle = window.getComputedStyle.bind(window);
     window.getComputedStyle = (element, pseudo) => pseudo === '::before'
@@ -48,7 +48,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
         window.HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); this.dispatchEvent(new window.Event('close')); };
         Object.assign(scope, { HTMLElement: window.HTMLElement, customElements: window.customElements, CustomEvent: window.CustomEvent,
             CSSStyleSheet: class { replaceSync() {} } });
-        const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/node_modules/color-dialog-box/dist/index.js'), 'utf8');
+        const source = fs.readFileSync(require.resolve('color-dialog-box'), 'utf8');
         vm.runInContext(`(function () { ${source} }).call(this);`, scope);
     }
     for (const file of ['registry.js', 'widget-utils.js', 'security-events.js', 'device-security-dialog.js', 'charts.js', 'monitoring-live.js', 'system-widgets.js', 'session-widgets.js', 'utility-widgets.js', 'data-widgets.js', 'shortcut-widget.js', 'widgets.js']) {

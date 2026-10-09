@@ -144,20 +144,6 @@
         return url;
     }
 
-    // Jstree settings modal - inline implementation since JstreeSettings ES module
-    // is not available outside webpack bundle (gallery.js, web-pages-list.js).
-    var JSTREE_SETTINGS_KEY = "jstreeSettings_file-archive";
-
-    function getJstreeSettings() {
-        var storeItem = window.WJ.getAdminSetting(JSTREE_SETTINGS_KEY);
-        if (typeof storeItem != "undefined") return JSON.parse(storeItem);
-        return {};
-    }
-
-    function saveJstreeSettings(settings) {
-        window.WJ.setAdminSetting(JSTREE_SETTINGS_KEY, JSON.stringify(settings));
-    }
-
     function toSearchPathRegex(path) {
         return "^" + path.replace(/^\/+|\/+$/g, "") + "/$";
     }
@@ -192,49 +178,6 @@
         if (!treePath) return treePath;
         return treePath.charAt(treePath.length - 1) === "/" ? treePath : treePath + "/";
     }
-
-    window.domReady.add(function () {
-        var settingsModal = null;
-
-        // Apply saved tree width on page load
-        var savedWidth = getJstreeSettings().treeWidth;
-        if (typeof savedWidth != "undefined" && parseInt(savedWidth) != 4) {
-            var w = parseInt(savedWidth);
-            var dtW = 12 - w;
-            $(".tree-col").attr("class", "tree-col col-md-" + w);
-            $(".datatable-col").attr("class", "datatable-col col-md-" + dtW);
-        }
-
-        $("button.buttons-jstree-settings").on("click", function() {
-            if (settingsModal == null) {
-                settingsModal = new bootstrap.Modal(document.getElementById('jstreeSettingsModal'), {
-                    keyboard: false,
-                    backdrop: 'static'
-                });
-            }
-
-            var settings = getJstreeSettings();
-            $("#jstree-settings-treeWidth").selectpicker("val", "" + (settings.treeWidth || 4));
-            settingsModal.show();
-        });
-
-        $("#jstree-settings-submit").on("click", function() {
-            var settings = getJstreeSettings();
-            var treeWidth = parseInt($("#jstree-settings-treeWidth").val());
-            settings.treeWidth = treeWidth;
-
-            saveJstreeSettings(settings);
-            if (settingsModal) settingsModal.hide();
-
-            // Apply tree width
-            var dtW = 12 - treeWidth;
-            $(".tree-col").attr("class", "tree-col col-md-" + treeWidth);
-            $(".datatable-col").attr("class", "datatable-col col-md-" + dtW);
-
-            // Refresh tree
-            $('#SomStromcek').jstree(true).refresh();
-        });
-    }, 10);
 
     window.domReady.add(function () {
         // Create folder button handler
@@ -635,6 +578,10 @@
 
         //Initialize tree
         var somStromcek = $('#SomStromcek');
+
+        somStromcek.on("settings_changed.jstree", function() {
+            somStromcek.jstree(true).refresh();
+        });
 
         somStromcek.on("changed.jstree", function(e, data) {
             if ("deselect_all" == data.action || "model" == data.action) return;

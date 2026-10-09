@@ -8,9 +8,9 @@ var srcGroupChildName = "Subfolder-autotest";
 var destGroupName = "clone-dest-autotest-";
 var newDocName = "New page-autotest-";
 var doc_a_child_sk = '<p> auto strom </p>';
-var doc_a_child_sk_perex = 'Toto je perex.';
+var doc_a_child_sk_perex = 'Modré auto.';
 var doc_b_sk = '<p> nový starý najstarší </p>';
-var doc_b_sk_perex = 'Aj toto je perex.';
+var doc_b_sk_perex = 'Červené auto.';
 
 var fake_include = "!INCLUDE(Falošná aplikácia, vložená aplikácia sa nemôže prekladať)!";
 var fake_include_html = "<p> Text pred " + fake_include + " text po</p>";
@@ -103,7 +103,7 @@ async function checkBodyEN(I, DT, DTE, Apps, title, values, perex) {
     I.clickCss("#pills-dt-datatableInit-perex-tab");
     const actualPerex = await I.grabValueFrom("#DTE_Field_htmlData");
     const expectedPerexes = Array.isArray(perex) ? perex : [perex];
-    I.assertTrue(expectedPerexes.some(expected => actualPerex.includes(expected)),
+    I.assertTrue(expectedPerexes.some(expected => actualPerex.toLowerCase().includes(expected.toLowerCase())),
         `Expected perex to contain one of ${JSON.stringify(expectedPerexes)}, got ${JSON.stringify(actualPerex)}`);
 
     DTE.cancel();
@@ -218,11 +218,11 @@ Scenario("Structure clonning with translate - classic", async ({ I, DTE, DT, App
         I.click( locate("a.jstree-anchor").withText(destGroupName) );
 
 
-        await checkBodyEN(I, DT, DTE, Apps, "New", ["car", "tree"], "This is the lead");
+        await checkBodyEN(I, DT, DTE, Apps, "New", ["car", "tree"], "blue car");
 
         I.click( locate("a.jstree-anchor").withText("Subfolder") );
 
-        await checkBodyEN(I, DT, DTE, Apps, "Subfolder", ["new", "old", "oldest"], ["This is also a lead", "This, too"]);
+        await checkBodyEN(I, DT, DTE, Apps, "Subfolder", ["new", "old", "oldest"], "red car");
 
         I.say("Check folder optional fields");
         I.jstreeNavigate([destGroupName, srcGroupChildName]);

@@ -77,7 +77,7 @@ Následky premiestnenia priečinku:
 V prípade potreby môžete v stromovej štruktúre kliknutím na ikonu <i class="ti ti-adjustments-horizontal"></i> Nastavenia zobraziť dialógové okno nastavení:
 
 - **Meno priečinka na disku** - zobrazí meno priečinka na disku, ktoré môže byť odlišné od Názvu galérie zadanej v nastavení galérie.
-- **Pomer šírky stĺpcov strom:tabuľka** - Nastaví pomer šírky stĺpcov zobrazenej stromovej štruktúry a datatabuľky pre lepšie využitie šírky monitora. Štandardný pomer je 4:8. Upozornenie: pri niektorých pomeroch a nevhodnej veľkosti monitora môže dôjsť k nesprávnemu zobrazeniu nástrojovej lišty/tlačidiel.
+- **Šírka stromu** - Vyberte pomer šírky stromu a tabuľky (štandardne 4:8) alebo pevnú šírku stromu 120px, 150px, 200px, 250px, 300px, 400px alebo 500px. Pri pevnej šírke sa strom pri zväčšení okna nerozširuje a tabuľka využije zvyšný priestor. Upozornenie: pri niektorých šírkach a nevhodnej veľkosti monitora môže dôjsť k nesprávnemu zobrazeniu nástrojovej lišty/tlačidiel.
 - **Zoradiť strom podľa** - Výber parametra adresára, podľa ktorého sa má strom priečinkov usporiadať. Výberové pole podporuje nasledujúce parametre
   - **Názov**
   - **Dátum vytvorenie**

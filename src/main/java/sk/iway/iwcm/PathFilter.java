@@ -2063,11 +2063,8 @@ public class PathFilter implements Filter
 		//vypnutie cachovania pre obrazky z imageeditora
 		if (path.contains("/_tmp_"))
 		{
-			response.setDateHeader("Expires",0);
+			setNoCacheHeaders(response);
 			response.setDateHeader("Last-Modified", Tools.getNow());
-			response.setHeader("Cache-Control","no-store, no-cache, must-revalidate, max-age=0");
-			//response.setHeader("Cache-Control","post-check=0, pre-check=0");
-			response.setHeader("Pragma","No-Cache");
 			response.setHeader("Etag", "");
 
 			return false;
@@ -2177,6 +2174,17 @@ public class PathFilter implements Filter
 		String ext = FileTools.getFileExtension(fileName);
 
 		return (Tools.isNotEmpty(forceDownloadSuffixes) && forceDownloadSuffixes.contains(ext));
+	}
+
+	/**
+	 * Disables response caching. Call before writing the response body.
+	 * @param response response whose cache headers should be replaced
+	 */
+	public static void setNoCacheHeaders(HttpServletResponse response)
+	{
+		response.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+		response.setHeader("Pragma", "no-cache");
+		response.setDateHeader("Expires", 0);
 	}
 
 	/**

@@ -166,6 +166,39 @@ Hodnota tooltipu se nahrazuje pouze jednou. Pokud samotný text tooltipu obsahuj
 
 V zobrazení do emailu se hodnota pole tooltip nahrazuje za prázdný znak (aby v emailu nebyl zbytečně nefunkční tooltip).
 
+### HTML kód tlačítek
+
+HTML kód tlačítek ve [víceletých formulářích](../multistep-form/README.md) můžete upravit v sekci **Nastavení → Editace textů**. Změnou CSS tříd nebo přidáním ikony přizpůsobíte vzhled tlačítek designu webu.
+
+#### Tlačítko pro pokračování nebo odeslání
+
+Klíč `components.mustistep.form.end` obsahuje HTML kód tlačítka pro přechod na další krok a v posledním kroku pro odeslání formuláře. Výchozí část hodnoty, která určuje vzhled tlačítka, je:
+
+```html
+<button type="submit" class="btn btn-primary mt-3" name="saveForm">${submitButtonText}</button>
+```
+
+Značka `${submitButtonText}` se nahradí textem nastaveným v aktuálním kroku. Pokud text není zadán, použije se překlad `components.mustistep.form.next_step` (**Přejít na další krok**) nebo v posledním kroku `components.mustistep.form.save_form` (**Odeslat formulář**).
+
+Při změně vzhledu zachovejte `type="submit"`, `name="saveForm"` a značku `${submitButtonText}`. Klíč obsahuje také značku `{tech-info}` pro technické informace, zavírací tag `</form>` a skript pro inicializaci tooltipů. Tyto části ponechte; při úpravě tlačítka měňte pouze jeho HTML kód.
+
+#### Tlačítko na předchozí krok
+
+HTML kód tlačítka **Zpět** se nastavuje přes klíč `components.mustistep.form.back_button`. Tlačítko se zobrazí od druhého kroku; do emailové podoby formuláře se nevkládá.
+
+V hodnotě klíče jsou dostupné značky:
+
+- `${previousStepId}` - ​​ID předchozího kroku.
+- `${backButtonText}` - ​​text tlačítka nastavený v aktuálním kroku, případně výchozí překlad `components.mustistep.form.back_step`. Text se před vložením do HTML escapuje.
+
+Výchozí kód:
+
+```properties
+components.mustistep.form.back_button=<button type="button" class="btn btn-outline-secondary mt-3 me-2" data-multistep-back-step="${previousStepId}">${backButtonText}</button>
+```
+
+Při změně vzhledu zachovejte `type="button"` a atribut `data-multistep-back-step="${previousStepId}"`, podle kterého se provádí návrat na předchozí krok.
+
 ### Napojení na číselník
 
 Výběrové pole (`select`) můžete snadno napojit na číselník:

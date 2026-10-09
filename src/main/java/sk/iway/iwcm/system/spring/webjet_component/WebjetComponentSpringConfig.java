@@ -86,7 +86,8 @@ public class WebjetComponentSpringConfig {
         Logger.debug(WebjetComponentParser.class, "thymeleaf: templateEngine");
 
         SpringTemplateEngine templateEngine = new SpringTemplateEngine();
-        templateEngine.setEnableSpringELCompiler(true);
+        // Keep restricted SpEL evaluation interpreted to mitigate CVE-2026-59283.
+        templateEngine.setEnableSpringELCompiler(false);
         templateEngine.addDialect(new IwcmDialect());
         templateEngine.setTemplateResolver(thymeleafTemplateResolver());
         return templateEngine;

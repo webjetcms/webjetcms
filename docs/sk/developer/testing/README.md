@@ -72,7 +72,7 @@ Konkrétny súbor alebo test podľa názvu spustíte priamo cez Node.js:
 
 ```shell
 node --test helpers/jsoneditor.test.js
-node --test --test-name-pattern="rejects every non-object root" helpers/jsoneditor.test.js
+node --test --test-name-pattern="accepts every JSON root type" helpers/jsoneditor.test.js
 ```
 
 Použite Node.js 22 a nainštalujte npm závislosti v `src/test/webapp`. Testy JSON editora používajú vlastné závislosti jQuery a DataTables, takže nepotrebujú `node_modules` v `src/main/webapp/admin/v9`. Pred inštaláciou musí byť dostupný licencovaný archív `src/main/webapp/admin/v9/src/js/plugins/Editor-2.5.2.zip`, rovnaký ako pri zostavení administrácie; inštalačný skript z neho pripraví DataTables Editor aj pre testy. V CI archív skopírujte pred spustením `npm ci` v `src/test/webapp`. Tieto testy nepotrebujú spustený aplikačný server ani databázu. Niektoré otvárajú lokálne komponenty v Chromium cez Playwright, preto musí byť nainštalovaný aj tento prehliadač (`npx playwright install chromium` z priečinka `src/test/webapp`; na Linuxe je možné nainštalovať systémové závislosti pomocou `npx playwright install --with-deps chromium`).
@@ -750,10 +750,14 @@ OPTIMIZE TABLE monitoring;
 DELETE FROM enumeration_data WHERE child_enumeration_type_id IS NOT NULL;
 DELETE FROM enumeration_data WHERE parent_enumeration_data_id IS NOT NULL;
 DELETE FROM enumeration_data WHERE string1 like '%testTest%';
+DELETE FROM enumeration_data WHERE string1 like '%Test Hodnota AA%';
 DELETE FROM enumeration_data WHERE string1 like 'string1%';
+DELETE FROM enumeration_data WHERE enumeration_type_id=2 AND enumeration_data_id>100;
 OPTIMIZE TABLE enumeration_data;
-UPDATE enumeration_type SET child_enumeration_type_id=NULL WHERE name like '%AutoTest%' AND enumeration_type_id>2283;
-DELETE FROM enumeration_type WHERE name like '%AutoTest%' AND enumeration_type_id>2283;
+UPDATE enumeration_type SET child_enumeration_type_id=NULL WHERE name like '%AutoTest%';
+DELETE FROM enumeration_type WHERE name like '%AutoTest%';
+DELETE FROM enumeration_type WHERE name like '%Test_%' AND enumeration_type_id NOT IN (3075, 3076);
+UPDATE enumeration_type SET name='Life_kody' WHERE name='NHP_Life_PU_ID_vs_kody';
 OPTIMIZE TABLE enumeration_type;
 DELETE FROM documents_history WHERE doc_id=22955 AND publicable=0;
 UPDATE groups SET sort_priority=10 WHERE parent_group_id IN (15257, 80578);

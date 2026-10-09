@@ -94,6 +94,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Forms
 
+- Multi-step forms - added option to edit [HTML button to previous step](redactor/apps/formsimple/README.md#html-button-code) via translation key `components.mustistep.form.back_button` (#osk782).
 - Multi-step forms - after unsuccessfully moving to the next step or submitting, the page will scroll to the first visible error message even when retrying (#58794).
 - Forms - validation of uploaded files distinguishes between an illegal character in the name and an illegal extension. A name error will indicate the specific illegal character or string. File names in error messages are displayed as text to prevent any HTML tags in the name from being executed (#58794).
 - Multi-step forms - when [returning to the previous step](redactor/apps/multistep-form/README.md#returning-to-the-previous-step) both the processed values ​​and the completed uploads are preserved (#58794).
@@ -140,6 +141,9 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Applications
 
+- Enumerations - type selection and management moved to the tree in the left panel with search. More in [Enumerations documentation](redactor/apps/enumeration/README.md) (#58786).
+- Blog - selecting and adding sections are available in the tree in the left panel with search. More in [Blog documentation](redactor/apps/blog/README.md) (#58786).
+- News - folder selection has been moved to the tree in the left search panel, also available in the application editor. Automatic folder search skips blogger roots and their subfolders. More in [News documentation](redactor/apps/news/README.md) (#58786).
 - E-commerce - added optional [price rounding](redactor/apps/basket/rounding.md) to calculate the basket from the displayed price per item. The number of decimal places is determined by `currencyFormat` ; templates with the `iway:curr` tag will automatically adopt the new formatting (#316).
 - Codebooks - for named string fields, the field type, selection options, mandatory, help text, and length restrictions can be set in the new [String Field Types] tab (redactor/apps/enumeration/README.md#karta-typy-ťazcových-polí) just like for optional fields. The menu and configuration names are based on the last saved version of the codebook type. Unnamed fields remain hidden, are not evaluated as mandatory, and fields without a specific configuration are displayed as regular text. Older custom Excel templates and REST API integrations need to be modified from `string1` to `string12` to `fieldA` to `fieldL` (#58641).
 
@@ -236,12 +240,16 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Web pages - JSON editor now accepts fields and simple values ​​with comments. Fixed column splitting and scrolling in Page Builder and closing tooltip when editing from history (#346).
 - Multi-step forms - fixed validation of fields with chained visibility conditions (#58794).
 - Forms - fixed archiving of forms (#305).
 - Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Web pages - fixed adding empty `P` element to the end of the page (#58317-13).
 - Websites - fixed loading of `ckeditor_button_sizes` value for button type `A` (#OSK674).
 - SQL Monitoring - fixed lifecycle management of `PreparedStatement` measurements. The record is also deleted when closed before starting the measurement and individual `PreparedStatement` objects are distinguished by identity without JDBC calls `hashCode()` and `equals()`. Concurrent access uses `ConcurrentHashMap` and atomic state without a global `synchronized` block, so threads do not wait for a shared lock and measurements do not merge even when identity hashes collide.
+- Page Builder - fixed unnecessary scrolling up/down the page if you were editing an application on a page (#343).
+- Page Builder - fixed displaying the toolbar if the page does not contain any sections (#343).
+- Page Builder - added option to set [structure window width](frontend/page-builder/settings.md) (#343)
 
 ### Performance
 
@@ -273,6 +281,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 - Data tables - extended functionality of field type [`OPTIONS`](developer/datatables-editor/standard-fields.md#options) by the ability to add an empty value using `allowEmptyOption` (#osk573).
 - Data tables - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) removes extra blank paragraphs when editing source code (#osk573).
+- Data tables - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) preserves nested wrapper elements `div`. Empty paragraph cleaning is now only performed at the end of the stored value; empty paragraphs between content are preserved (#osk782).
 - Data tables - added a new field type `ENUMERATION` for [connection to enumeration tables](developer/datatables-editor/standard-fields.md#enumeration) in the editor. The field stores the configuration in `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` format and allows you to set the source of values ​​(#58517).
 - Data tables - [folder selection](developer/datatables-editor/field-json.md#options-classname) via the `dt-tree-dir-simple` field with limited rights correctly displays the set root folder and inactive parents of allowed folders and respects the `fbrowserShowOnlyWritableFolders` configuration variable. The added `data-dt-field-writableOnly` attribute allows you to limit the selection only to folders with write rights (#58317-17).
 
@@ -582,6 +591,12 @@ Redesigned application properties settings in the editor from the old code in `J
 
 - Websites - fixed looping of folder initialization and scheduled publishing check on slow database connection (#337).
 - Cluster - optimized writing of changes in the cluster when starting a new node (#337).
+- Redis - improved transfer of information about the uploaded file in the session (#342).
+- Security - updated library `FreeMarker` from version `2.3.34` to `2.3.35`.
+- Security - updated administration libraries `Lodash` from version `4.17.21` to `4.18.1` and `PostCSS` from version `8.5.2` to `8.5.12`. As part of the PostCSS update, its dependency `Nano ID` was also updated from version `3.3.8` to `3.3.20`.
+- Security - disabled compilation of SpringEL expressions in Thymeleaf templates and by default in Spring as protection against [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Standard template syntax and allowed method calls remain supported, no template modification is required. Templates with a large number of repeatedly evaluated expressions may take longer to render.
+- Security - disabled saving protected files from `/files/protected/` to browser cache and proxy servers by setting HTTP headers before sending the file. Fixed setting response length when sending the entire file and its scope so that Spring Security writes security headers in time.
+- Security - added reasoned exceptions in `dependency-check-suppressions.xml` for vulnerabilities in unused Spring parts and for the vulnerability addressed by the SpringEL setting above. The exception for [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) takes into account the above protected file protection and file submission fix; it represents application precautions and accepted residual risk, not a library fix or confirmation of the safety of all response submission methods. The default deferred writing of Spring Security headers is retained. Versions `Spring Framework 5.3.39` and `Spring Security 5.8.16` are retained.
 
 ## 2026.0.40
 

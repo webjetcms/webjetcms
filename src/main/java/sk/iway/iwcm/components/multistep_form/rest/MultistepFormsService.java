@@ -385,28 +385,6 @@ public class MultistepFormsService {
     }
 
     /**
-     * Convert serialized form data into a key/value map.
-     * <p>
-     * Input format is expected as {@code itemFormId~value} pairs separated by {@code |}.
-     * The upload-field suffix {@code -fileNames} is normalized away.
-     *
-     * @param form persisted form entity with serialized data
-     * @return ordered map of field identifiers and their values
-     */
-    public static final Map<String, String> getFormDataAsMap(FormsEntity form) {
-        Map<String, String> formData = new LinkedHashMap<>();
-        for(String fieldData : Tools.getTokens(form.getData(), "|")) {
-            String[] fieldDataArr = Tools.getTokens(fieldData, "~");
-            String fieldId = fieldDataArr[0];
-            if(fieldId.endsWith("-fileNames")) fieldId = fieldId.replace("-fileNames", "");
-            String fieldValue = fieldDataArr.length == 2 ? fieldDataArr[1] : "";
-
-            formData.put(fieldId, fieldValue);
-        }
-        return formData;
-    }
-
-    /**
      * Resolve human-readable field name for validation and UI messages.
      *
      * @param stepItem form item definition
@@ -505,16 +483,18 @@ public class MultistepFormsService {
     private Pair<JSONObject, JSONObject> getStepData(String formName, Long stepId, HttpServletRequest request, boolean draft) {
         JSONObject savedValues = new JSONObject();
         JSONObject savedFiles = new JSONObject();
-        String sessionPrefix = getSessionKey(formName, request) + "_";
-        JSONObject draftValues = draft ? getStepDraft(formName, stepId, request) : null;
+        String sessionKey = getSessionKey(formName, request);
+        String sessionPrefix = sessionKey + "_";
+        HttpSession session = request.getSession();
+        JSONObject draftValues = draft ? getStepDraft(formName, stepId, request) : new JSONObject();
         XhrFileUploadService uploadService = XhrFileUploadServlet.getService();
 
         for(FormItemEntity stepItem : getStepItemsForValidation(formName, stepId)) {
             if("captcha".equals(stepItem.getFieldType())) continue;
 
             String itemFormId = stepItem.getItemFormId();
-            Object sessionValueObject = draft ? draftValues.opt(itemFormId) : request.getSession().getAttribute(sessionPrefix + itemFormId);
-            if(sessionValueObject == null) continue;
+            Object sessionValueObject = draft ? draftValues.opt(itemFormId) : session.getAttribute(sessionPrefix + itemFormId);
+            if(sessionValueObject == null || JSONObject.NULL.equals(sessionValueObject)) continue;
 
             String sessionValue = sessionValueObject.toString();
             if(isFileUploadField(stepItem.getFieldType())) {
@@ -553,11 +533,11 @@ public class MultistepFormsService {
                 String validSessionValue = String.join(";", validFileKeys);
                 savedValues.put(itemFormId, validSessionValue);
                 if(draft) draftValues.put(itemFormId, validSessionValue);
-                else request.getSession().setAttribute(sessionPrefix + itemFormId, validSessionValue);
+                else session.setAttribute(sessionPrefix + itemFormId, validSessionValue);
                 // Empty draft metadata must override an older confirmed upload.
                 if(draft || fileMetadata.length() > 0) savedFiles.put(itemFormId, fileMetadata);
             } else {
-                String[] selectedValues = draft ? null : getSavedSelectedValues(formName, itemFormId, request);
+                String[] selectedValues = draft ? null : getSavedSelectedValues(sessionKey, itemFormId, sessionValueObject, session);
                 if(draft) {
                     savedValues.put(itemFormId, sessionValueObject);
                 } else if(selectedValues != null) {
@@ -569,7 +549,7 @@ public class MultistepFormsService {
         }
 
         if(draft && !draftValues.isEmpty()) {
-            request.getSession().setAttribute(getSessionKey(formName, request) + DRAFT_SESSION_KEY_SUFFIX + stepId, draftValues.toString());
+            session.setAttribute(sessionKey + DRAFT_SESSION_KEY_SUFFIX + stepId, draftValues.toString());
         }
         return new Pair<>(savedValues, savedFiles);
     }
@@ -623,14 +603,15 @@ public class MultistepFormsService {
         JSONObject draft = getStepDraft(formName, stepId, request);
         if(draft.isEmpty()) return;
         String sessionKey = getSessionKey(formName, request);
+        HttpSession session = request.getSession();
         for(FormItemEntity item : getStepItemsForValidation(formName, stepId)) {
             String fieldId = item.getItemFormId();
             if("captcha".equals(item.getFieldType()) || hiddenFields.contains(fieldId)) continue;
-            String[] selections = getSavedSelectedValues(formName, fieldId, request);
-            Object value = request.getSession().getAttribute(sessionKey + "_" + fieldId);
+            Object value = session.getAttribute(sessionKey + "_" + fieldId);
+            String[] selections = getSavedSelectedValues(sessionKey, fieldId, value, session);
             draft.put(fieldId, selections == null ? value : new JSONArray(selections));
         }
-        request.getSession().setAttribute(sessionKey + DRAFT_SESSION_KEY_SUFFIX + stepId, draft.toString());
+        session.setAttribute(sessionKey + DRAFT_SESSION_KEY_SUFFIX + stepId, draft.toString());
     }
 
     /**
@@ -643,8 +624,14 @@ public class MultistepFormsService {
      */
     static String[] getSavedSelectedValues(String formName, String itemFormId, HttpServletRequest request) {
         String sessionKey = getSessionKey(formName, request);
-        Object selectedValues = request.getSession().getAttribute(sessionKey + SELECTED_VALUES_SESSION_KEY_SUFFIX + itemFormId);
-        Object sessionValue = request.getSession().getAttribute(sessionKey + "_" + itemFormId);
+        HttpSession session = request.getSession();
+        Object sessionValue = session.getAttribute(sessionKey + "_" + itemFormId);
+        return getSavedSelectedValues(sessionKey, itemFormId, sessionValue, session);
+    }
+
+    /** Checks exact choices against an already loaded answer, including changes made by custom processors. */
+    private static String[] getSavedSelectedValues(String sessionKey, String itemFormId, Object sessionValue, HttpSession session) {
+        Object selectedValues = session.getAttribute(sessionKey + SELECTED_VALUES_SESSION_KEY_SUFFIX + itemFormId);
         if(selectedValues instanceof String[] values && sessionValue != null && sessionValue.toString().equals(Tools.join(values, ","))) {
             return values;
         }
@@ -1020,7 +1007,7 @@ public class MultistepFormsService {
         JSONObject received = new JSONObject().put(fieldId, value);
 
         Map<String, String> errors = new HashMap<>();
-        validateFields(formName, List.of(field), received, false, false, request, errors);
+        validateFields(List.of(field), received, false, null, request, errors);
         if (errors.containsKey(fieldId) && Tools.isNotEmpty(field.getCustomError())) {
             errors.put(fieldId, Prop.getInstance(PageLng.getUserLng(request)).getText(field.getCustomError()));
         }
@@ -1115,7 +1102,7 @@ public class MultistepFormsService {
             .filter(Entry::getValue)
             .map(Entry::getKey)
             .collect(Collectors.toSet());
-        validateFields(formName, stepItems, received, spamProtectionEnabled, true, request, errors);
+        validateFields(stepItems, received, spamProtectionEnabled, formConditions, request, errors);
         // Clear hidden answers after validation so cleanup cannot change dependent field conditions.
         hiddenFields.forEach(fieldId -> received.put(fieldId, ""));
 
@@ -1332,20 +1319,17 @@ public class MultistepFormsService {
      * Eligible text values are trimmed in the submitted payload. When condition evaluation
      * is disabled, only the static required flag is used and visibility rules are ignored.
      *
-     * @param formName              logical form name
      * @param stepItems             field definitions belonging to the current step
      * @param received              mutable submitted field values, updated when trimming is enabled
      * @param spamProtectionEnabled whether CAPTCHA validation is active
-     * @param evaluateConditions    whether visibility and conditional requirement rules are evaluated
+     * @param formConditionsHandler shared evaluator for this validation, or {@code null} to skip conditions
      * @param request               HTTP request with localization/session context
      * @param errors                mutable map collecting field validation errors
      * @throws SaveFormException when anti-spam XSS checks fail
      */
-    private void validateFields(String formName, List<FormItemEntity> stepItems, JSONObject received, boolean spamProtectionEnabled, boolean evaluateConditions, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
+    private void validateFields(List<FormItemEntity> stepItems, JSONObject received, boolean spamProtectionEnabled, FormConditionsHandler formConditionsHandler, HttpServletRequest request, Map<String, String> errors) throws SaveFormException {
         Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
         List<RegExpEntity> allRegExps = FormDB.getInstance().getAllRegularExpressionAsEntity();
-
-        FormConditionsHandler formConditionsHandler = evaluateConditions ? new FormConditionsHandler(formName, request) : null;
 
         for(FormItemEntity stepItem : stepItems) {
             // multiupload fields are validated in method validateFileFields()
@@ -2026,11 +2010,17 @@ public class MultistepFormsService {
     public static final StringBuilder updateFormValues(String formName, HttpServletRequest request, StringBuilder formHtml) {
         if (formHtml == null) return null;
         if (Tools.isEmpty(formName) || request == null) return formHtml;
+        if (formHtml.indexOf("!") == -1) return formHtml;
+
+        List<FormItemEntity> stepItems = getFormItemsForValidation(formName);
+        boolean hasPlaceholder = stepItems.stream().anyMatch(item ->
+            "captcha".equals(item.getFieldType()) == false && Tools.isNotEmpty(item.getItemFormId())
+                && formHtml.indexOf("!" + item.getItemFormId() + "!") != -1);
+        if (hasPlaceholder == false) return formHtml;
 
         String sessionKey = getSessionKey(formName, request);
         String sessionPrefix = sessionKey + "_";
 
-        List<FormItemEntity> stepItems = getFormItemsForValidation(formName);
         Map<String, String> formData = new LinkedHashMap<>();
 
         // Get data from Session, it can be called on step 3 out of 5 so there is not sure if there are all data of form
@@ -2041,19 +2031,30 @@ public class MultistepFormsService {
             if (Tools.isEmpty(itemFormId)) continue;
 
             Object value = request.getSession().getAttribute(sessionPrefix + itemFormId);
-            if (value != null) formData.put(itemFormId, value.toString());
+            formData.put(itemFormId, value == null ? "" : ResponseUtils.filter(value.toString()));
         }
 
-        for (FormItemEntity stepItem : stepItems) {
-            if ("captcha".equals(stepItem.getFieldType())) continue;
+        return updateFormValues(formData, formHtml);
+    }
 
-            String itemFormId = stepItem.getItemFormId();
-            if (Tools.isEmpty(itemFormId)) continue;
+    /**
+     * Replaces placeholders using prepared values without reading the submission session.
+     * HTML entities are normalized before escaping to avoid double-escaping filtered values.
+     *
+     * @param formData values keyed by logical field IDs, containing HTML-escaped text,
+     *                           sanitized WYSIWYG HTML, saved filenames and empty answers;
+     *                           markup in these values is escaped for placeholder replacement
+     * @param formHtml markup containing {@code !fieldId!} placeholders
+     * @return updated markup, or {@code null} when {@code formHtml} is {@code null}
+     */
+    public static final StringBuilder updateFormValues(Map<String, String> formData, StringBuilder formHtml) {
+        if (formHtml == null) return null;
 
-            String replaceValue = formData.get(itemFormId);
+        for (Map.Entry<String, String> field : formData.entrySet()) {
+            String replaceValue = field.getValue();
             if (replaceValue == null) replaceValue = "";
 
-            Tools.replace(formHtml, "!" + itemFormId + "!", ResponseUtils.filter(replaceValue));
+            Tools.replace(formHtml, "!" + field.getKey() + "!", ResponseUtils.filter(StringEscapeUtils.unescapeHtml4(replaceValue)));
         }
 
         return formHtml;

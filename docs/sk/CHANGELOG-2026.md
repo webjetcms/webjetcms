@@ -96,6 +96,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
+- Viackrokové formuláre - pridaná možnosť upraviť [HTML tlačidla na predchádzajúci krok](redactor/apps/formsimple/README.md#html-kód-tlačidiel) cez prekladový kľúč `components.mustistep.form.back_button` (#osk782).
 - Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).
 - Formuláre - validácia nahraných súborov rozlišuje nepovolený znak v názve a nepovolenú príponu. Chyba názvu uvedie konkrétny zakázaný znak alebo reťazec. Názvy súborov v chybových hláseniach sa zobrazujú ako text, aby sa prípadné HTML značky v názve nevykonali (#58794).
 - Viackrokové formuláre - pri [návrate na predchádzajúci krok](redactor/apps/multistep-form/README.md#návrat-na-predchádzajúci-krok) sa zachovajú rozpracované hodnoty aj dokončené nahrávania (#58794).
@@ -142,6 +143,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Aplikácie
 
+- Číselníky - výber a správa typov sa presunuli do stromu v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Číselníkov](redactor/apps/enumeration/README.md) (#58786).
+- Blog - výber a pridávanie sekcií sú dostupné v strome v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Blogu](redactor/apps/blog/README.md) (#58786).
+- Novinky - výber priečinka sa presunul do stromu v ľavom paneli s vyhľadávaním, dostupného aj v editore aplikácie. Automatické hľadanie priečinkov vynecháva korene blogerov aj ich podpriečinky. Viac v [dokumentácii Noviniek](redactor/apps/news/README.md) (#58786).
 - Elektronický obchod - pridané voliteľné [zaokrúhľovanie cien](redactor/apps/basket/rounding.md), aby sa košík počítal zo zobrazenej ceny za kus. Počet desatinných miest určuje `currencyFormat`; šablóny so značkou `iway:curr` prevezmú nové formátovanie automaticky (#316).
 - Číselníky - pre pomenované reťazcové polia je možné v novej karte [Typy reťazcových polí](redactor/apps/enumeration/README.md#karta-typy-reťazcových-polí) nastaviť typ poľa, možnosti výberu, povinnosť, pomocný text a obmedzenia dĺžky rovnako ako pri voliteľných poliach. Ponuka a názvy konfigurácií vychádzajú z poslednej uloženej verzie typu číselníka. Nepomenované polia zostávajú skryté, nevyhodnocujú sa ako povinné a polia bez špecifickej konfigurácie sa zobrazia ako bežný text. Staršie vlastné Excel šablóny a integrácie REST API je potrebné upraviť z atribútov `string1` až `string12` na `fieldA` až `fieldL` (#58641).
 
@@ -238,12 +242,16 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Webové stránky - editor JSON prijíma aj polia a jednoduché hodnoty s komentármi. Opravené rozdelenie stĺpcov a posúvanie v Page Builderi a zatváranie tooltipu pri úprave z histórie (#346).
 - Viackrokové formuláre - opravená validácia polí s reťazenými podmienkami viditeľnosti (#58794).
 - Formuláre - opravené archivovanie formulárov (#305).
 - Prieskumník - upravené porovnávanie súborov s diakritikou pri kontrole existencie súboru pri jeho prepísaní - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Webové stránky - opravené pridávanie prázdneho `P` elementu na koniec stránky (#58317-13).
 - Webové stránky - opravené načítanie hodnoty `ckeditor_button_sizes` pre tlačidlo typu `A` (#OSK674).
 - Monitorovanie SQL - opravená správa životného cyklu meraní `PreparedStatement`. Záznam sa odstráni aj pri zatvorení pred spustením merania a jednotlivé objekty `PreparedStatement` sa rozlišujú podľa identity bez volania JDBC `hashCode()` a `equals()`. Súbežný prístup používa `ConcurrentHashMap` a atomický stav bez globálneho `synchronized` bloku, takže vlákna nečakajú na spoločný zámok a merania sa nespoja ani pri kolízii identitných hashov.
+- Page Builder - opravené zbytočné posúvanie stránky hore/dole ak ste upravovali aplikáciu v stránke (#343).
+- Page Builder - opravené zobrazenie nástrojovej lišty ak stránka neobsahuje žiadnu sekciu (#343).
+- Page Builder - pridaná možnosť nastaviť [šírku okna štruktúra](frontend/page-builder/settings.md) (#343)
 
 ### Výkon
 
@@ -275,6 +283,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Dátové tabuľky - rozšírená funkcionalita poľa typu [`OPTIONS`](developer/datatables-editor/standard-fields.md#options) o možnosť pridať prázdnu hodnotu pomocou `allowEmptyOption` (#osk573).
 - Dátové tabuľky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) pri úprave zdrojového kódu odstraňuje nadbytočné prázdne odseky (#osk573).
+- Dátové tabuľky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) zachováva vnorené obalové elementy `div`. Čistenie prázdnych odsekov sa po novom vykonáva iba na konci ukladanej hodnoty; prázdne odseky medzi obsahom zostávajú zachované (#osk782).
 - Dátové tabuľky - pridaný nový typ poľa `ENUMERATION` pre [napojenie na číselníky](developer/datatables-editor/standard-fields.md#enumeration) v editore. Pole ukladá konfiguráciu vo formáte `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` a umožňuje nastaviť zdroj hodnôt (#58517).
 - Dátové tabuľky - [výber priečinka](developer/datatables-editor/field-json.md#možnosti-classname) cez pole `dt-tree-dir-simple` pri obmedzených právach správne zobrazuje nastavený koreňový priečinok aj neaktívnych rodičov povolených priečinkov a rešpektuje konfiguračnú premennú `fbrowserShowOnlyWritableFolders`. Pridaný atribút `data-dt-field-writableOnly` umožňuje obmedziť výber iba na priečinky s právom na zápis (#58317-17).
 
@@ -584,6 +593,12 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 
 - Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#337).
 - Cluster - optimalizované zapisovanie zmeny v clustri pri štarte nového uzla (#337).
+- Redis - zlepšený prenos informácie o nahrávanom súbore v session (#342).
+- Bezpečnosť - aktualizovaná knižnica `FreeMarker` z verzie `2.3.34` na `2.3.35`.
+- Bezpečnosť - aktualizované knižnice administrácie `Lodash` z verzie `4.17.21` na `4.18.1` a `PostCSS` z verzie `8.5.2` na `8.5.12`. V rámci aktualizácie PostCSS bola aktualizovaná aj jeho závislosť `Nano ID` z verzie `3.3.8` na `3.3.20`.
+- Bezpečnosť - vypnutá kompilácia výrazov SpringEL v Thymeleaf šablónach a predvolene aj v Spring ako ochrana pred [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Štandardná syntax šablón a povolené volania metód zostávajú podporované, úprava šablón nie je potrebná. Pri šablónach s veľkým množstvom opakovane vyhodnocovaných výrazov môže vykresľovanie trvať dlhšie.
+- Bezpečnosť - vypnuté ukladanie chránených súborov z `/files/protected/` do cache prehliadača a proxy serverov nastavením HTTP hlavičiek pred odoslaním súboru. Opravené nastavenie dĺžky odpovede pri odosielaní celého súboru aj jeho rozsahu, aby Spring Security zapísal bezpečnostné hlavičky včas.
+- Bezpečnosť - doplnené zdôvodnené výnimky v `dependency-check-suppressions.xml` pre zraniteľnosti nevyužívaných častí Spring a pre zraniteľnosť ošetrenú vyššie uvedeným nastavením SpringEL. Výnimka pre [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) zohľadňuje vyššie uvedenú ochranu chránených súborov a opravu odosielania súborov; predstavuje aplikačné opatrenia a akceptované zvyškové riziko, nie opravu knižnice ani potvrdenie bezpečnosti všetkých spôsobov odosielania odpovedí. Predvolené odložené zapisovanie hlavičiek Spring Security zostáva zachované. Verzie `Spring Framework 5.3.39` a `Spring Security 5.8.16` zostávajú zachované.
 
 ## 2026.0.40
 

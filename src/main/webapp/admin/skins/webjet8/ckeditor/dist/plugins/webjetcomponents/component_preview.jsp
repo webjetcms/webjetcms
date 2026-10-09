@@ -423,16 +423,13 @@ else
 				if (window.parent.location.href.indexOf("inlineEditorAdmin=true")!=-1) {
 					//ak sa jedna o inline v administracii tak ber editor z iframe, nie celkoveho parenta
 					try {
-						var scrollY = window.parent.scrollY;
-						//console.log("scrollY: ", window.parent, "y=", scrollY);
-
+						// set focus to the owning inline editor.
+						var editable = parentNode.closest("[data-ckeditor-instance]");
+						if (editable != null) {
+							window.parent.ckEditorInstance = window.parent.CKEDITOR.instances[editable.getAttribute("data-ckeditor-instance")];
+						}
 						window.parent.getCkEditorInstance().execCommand("webjetcomponentsDialog");
-
-						setTimeout(function() {
-							//FF ma bug, ze z nejakeho dovodu v PB scroluje uplne dole po kliknuti na editaciu komponenty
-							//console.log("Scrolling to: ", scrollY);
-							window.parent.scrollTo(0, scrollY);
-						}, 2000);
+						return;
 					} catch (e) {
 						console.log(e);
 						//niekedy zblbne urcenie window parent, pokracuj a skus realny ckeitor
