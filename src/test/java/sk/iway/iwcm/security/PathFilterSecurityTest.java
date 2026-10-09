@@ -8,6 +8,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.io.FileHistoryDB;
@@ -16,6 +17,8 @@ import sk.iway.iwcm.test.BaseWebjetTest;
 import java.lang.reflect.Method;
 
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -38,6 +41,7 @@ class PathFilterSecurityTest extends BaseWebjetTest {
     private Method isPathSafeMethod;
     private Method isUploadPathBlockedMethod;
     private Method isUploadRequestBlockedMethod;
+    private Method checkAccessToAdminMethod;
 
     public PathFilterSecurityTest() throws Exception {
         // Get private methods via reflection
@@ -49,6 +53,59 @@ class PathFilterSecurityTest extends BaseWebjetTest {
         isUploadPathBlockedMethod.setAccessible(true);
         isUploadRequestBlockedMethod = PathFilter.class.getDeclaredMethod("isJspFromStaticFiles", String.class, String.class);
         isUploadRequestBlockedMethod.setAccessible(true);
+        checkAccessToAdminMethod = PathFilter.class.getDeclaredMethod("checkAccessToAdmin", String.class,
+            HttpServletRequest.class, HttpServletResponse.class);
+        checkAccessToAdminMethod.setAccessible(true);
+    }
+
+    /** Older custom lists must allow the exact login endpoints while keeping other admin URLs protected. */
+    @Test
+    void loginEndpointsRemainAccessibleWithCustomAllowAdminUrls() throws Exception {
+        String original = Constants.getString("allowAdminUrls");
+        String[] configurations = { original, "^/admin/logon/$", "/admin/logon.do",
+            "^/admin/logon/$,^/admin/logon/device/$", "^/admin/logon/$,^/admin/logon/location/$" };
+        try {
+            for (String configured : configurations) {
+                Constants.setString("allowAdminUrls", configured);
+                for (String method : new String[] { "GET", "POST" }) {
+                    assertTrue(isAdminUrlAccessible("/admin/logon/device/", method, "http://localhost/admin/logon/"), configured);
+                    assertTrue(isAdminUrlAccessible("/admin/logon/location/", method, "http://localhost/admin/logon/"), configured);
+                    assertFalse(isAdminUrlAccessible("/admin/v9/", method, "http://localhost/admin/logon/"));
+                    assertFalse(isAdminUrlAccessible("/admin/rest/security/login-events", method, "http://localhost/admin/logon/"));
+                    assertFalse(isAdminUrlAccessible("/admin/logon/device/extra/", method, "http://localhost/admin/logon/"));
+                    assertFalse(isAdminUrlAccessible("/admin/logon/location/extra/", method, "http://localhost/admin/logon/"));
+                }
+                assertEquals(configured, Constants.getString("allowAdminUrls"), "Compatibility additions must not change the configured value");
+            }
+        } finally {
+            Constants.setString("allowAdminUrls", original);
+        }
+    }
+
+    /** Compatibility additions must still reject login requests from an untrusted referrer. */
+    @Test
+    void loginEndpointCompatibilityRetainsReferrerChecks() throws Exception {
+        String originalUrls = Constants.getString("allowAdminUrls");
+        String originalReferrers = Constants.getString("xsrfReferers");
+        try (MockedStatic<Adminlog> audit = mockStatic(Adminlog.class)) {
+            Constants.setString("allowAdminUrls", "^/admin/logon/$");
+            Constants.setString("xsrfReferers", "localhost");
+            for (String path : new String[] { "/admin/logon/device/", "/admin/logon/location/" }) {
+                assertTrue(isAdminUrlAccessible(path, "POST", "http://localhost/admin/logon/"));
+                assertFalse(isAdminUrlAccessible(path, "POST", "https://untrusted.example/"));
+            }
+        } finally {
+            Constants.setString("allowAdminUrls", originalUrls);
+            Constants.setString("xsrfReferers", originalReferrers);
+        }
+    }
+
+    private boolean isAdminUrlAccessible(String path, String method, String referrer) throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI(path);
+        request.setMethod(method);
+        request.addHeader("Referer", referrer);
+        return (Boolean) checkAccessToAdminMethod.invoke(new PathFilter(), path, request, new MockHttpServletResponse());
     }
 
     // --- Tests for isPathBlocked ---

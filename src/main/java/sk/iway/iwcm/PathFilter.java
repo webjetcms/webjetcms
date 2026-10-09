@@ -1502,6 +1502,9 @@ public class PathFilter implements Filter
 				String allowAdminUrls = Constants.getString("allowAdminUrls");
 				//ak v starom WJ mali customizovanu premennu a nemaju tam springove prihlasenie, pridajme
 				if (allowAdminUrls.contains("/admin/logon.do") && allowAdminUrls.contains("/admin/logon/")==false) allowAdminUrls += ",^/admin/logon$,^/admin/logon/$,^/admin/logon/changePassword$";
+				// Keep the new login endpoints accessible with older custom configurations.
+				if (allowAdminUrls.contains("^/admin/logon/device/$")==false) allowAdminUrls += ",^/admin/logon/device/$";
+				if (allowAdminUrls.contains("^/admin/logon/location/$")==false) allowAdminUrls += ",^/admin/logon/location/$";
 
 				String[] adminUrls = Tools.getTokens(allowAdminUrls, ",", true);
 
