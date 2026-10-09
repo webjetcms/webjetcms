@@ -868,6 +868,8 @@ public class LogonTools {
         if (account.equals(request.getAttribute(AFTER_SUCCESS_LOGON_ALREADY_EXECUTED))) return;
         request.setAttribute(AFTER_SUCCESS_LOGON_ALREADY_EXECUTED, account);
 
+        if (user.isAdmin()) sk.iway.iwcm.users.devices.AdminLoginLocation.beginLogin(request.getSession());
+
         //call all required post-login hooks
         callLogonLogoffInterceptor(user, request);
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
@@ -1006,8 +1008,10 @@ public class LogonTools {
                 if (o != null) preservedSessionObjects.put(name, o);
             }
 
+            Object loginLocation = request.getSession().getAttribute(sk.iway.iwcm.users.devices.AdminLoginLocation.PENDING);
             request.getSession(false).invalidate();
             request.getSession().setAttribute(SESSION_KEY, 1);
+            if (loginLocation != null) request.getSession().setAttribute(sk.iway.iwcm.users.devices.AdminLoginLocation.PENDING, loginLocation);
 
             //preserve atributov
             for (String name : preservedSessionObjectNames)

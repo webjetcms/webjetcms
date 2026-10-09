@@ -123,6 +123,7 @@ public class ConstantsV9 {
 
 		Constants.setString("springSecurityAllowedAuths", "basic,api-token", Constants.MOD_SECURITY, "Allowed auth methods for REST services, after change restart server.");
 		Constants.setBoolean("logoffRequireCsrfToken", false, Constants.MOD_CSRF, "If true, /logoff.do requires CSRF token");
+		Constants.setString("adminLoginLocationApiKey", "", Constants.MOD_SECURITY, "Optional browser IP geolocation: empty uses IPWHOIS Free, DISABLED turns it off. A paid API key is visible to visitors of the login page. The provider receives the public IP and CMS Origin, without Referer or cookies.");
 		Constants.setBoolean("adminNewDeviceDetectionEnabled", true, Constants.MOD_SECURITY, "Notify administrators about successful logins from unrecognized browsers.");
 		Constants.setInt("adminNewDeviceMaxAgeDays", 90, Constants.MOD_SECURITY, "Browser recognition and cookie lifetime in days since the account's last successful login. Positive values only; invalid values use 90 days.");
 		Constants.setString("csrfRequiredUrls", "", Constants.MOD_CSRF, "Comma separated list of URLs that require CSRF token");

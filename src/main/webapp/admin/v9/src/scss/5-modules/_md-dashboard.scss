@@ -990,11 +990,26 @@ webjet-overview-dashboard a:focus-visible {
         &__pagination { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 16px; > span:first-child { margin-right: auto; } }
         &__admins .md-dashboard-widget__admins { max-height: 50vh; overflow-y: auto; }
     }
+    :is(.md-dashboard-sessions__mine, .md-dashboard-sessions__devices) {
+        .md-dashboard-sessions__device { align-items: flex-start; > div { min-width: 0; } }
+        .md-dashboard-sessions__device-name { font-weight: 700; margin-bottom: 0; }
+        .md-dashboard-sessions__system { overflow-wrap: anywhere; }
+    }
     .md-dashboard-devices__table {
-        .md-dashboard-sessions__device { align-items: flex-start; min-width: 160px; }
-        .md-dashboard-sessions__device-actions { flex-wrap: nowrap; > .btn { white-space: nowrap; } }
+        table-layout: fixed;
+        th:nth-child(1) { width: 42%; }
+        th:nth-child(2) { width: 23%; }
+        th:nth-child(3) { width: 18%; white-space: nowrap; }
+        th:nth-child(4) { width: 17%; }
+        .md-dashboard-devices__last-seen { white-space: nowrap; }
+        .md-dashboard-sessions__device-actions { flex-direction: column; align-items: stretch; > .btn { justify-content: center; white-space: nowrap; } }
         .md-dashboard-devices__badges { display: inline-flex; flex-wrap: wrap; gap: 6px; }
         .md-dashboard-devices__badge { display: inline-block; padding: 3px 8px; border-radius: 3px; font-size: 12px; font-weight: 700; white-space: nowrap; &[tabindex] { cursor: help; } &:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: 2px; } }
+        .md-dashboard-devices__confirmation-row {
+            &[hidden] { display: none; }
+            > td { padding-top: 0; border-top: 0; text-align: left; }
+            .md-dashboard-device-confirmation { max-width: none; margin-left: 48px; }
+        }
         .is-unconfirmed { background: var(--wj-dashboard-amber); color: var(--wj-dashboard-warning-text); }
         .is-confirmed { background: var(--wj-dashboard-mint); color: var(--wj-dashboard-positive); }
         .is-blocked { background: var(--wj-dashboard-widget-pink); color: var(--wj-dashboard-danger); }
@@ -1013,15 +1028,22 @@ webjet-overview-dashboard a:focus-visible {
         :is(.md-dashboard-sessions__mine, .md-dashboard-sessions__devices, .md-dashboard-sessions__admins) .md-dashboard-sessions__table tr + tr { border-top: 1px solid var(--wj-nice-gray-100); }
         :is(.md-dashboard-sessions__mine, .md-dashboard-sessions__devices, .md-dashboard-sessions__admins) .md-dashboard-sessions__table td { border: 0; &:first-child { grid-column: 1 / -1; } }
         .md-dashboard-devices__table {
-            .md-dashboard-sessions__ip, .md-dashboard-devices__last-seen { grid-column: 1; }
-            [data-label]::before { content: attr(data-label) ": "; color: var(--wj-gray-text); }
-            .md-dashboard-sessions__action { grid-row: 2 / 4; min-width: 0; max-width: 160px; &:empty { display: none; } }
-            .md-dashboard-sessions__device-actions { flex-direction: column; align-items: flex-end; }
-            .has-device-confirmation { grid-column: 1 / -1; grid-row: auto; max-width: none; }
+            &.md-dashboard-sessions__table tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .md-dashboard-sessions__ip { grid-column: 1; }
+            .md-dashboard-devices__last-seen { grid-column: 2; }
+            [data-label]::before { content: attr(data-label); display: block; margin-bottom: 3px; font-size: 12px; color: var(--wj-gray-text); }
+            .md-dashboard-sessions__action { grid-column: 1 / -1; grid-row: auto; text-align: left; &:empty { display: none; } }
+            .md-dashboard-sessions__device-actions { flex-direction: row; justify-content: flex-start; }
+            &.md-dashboard-sessions__table .md-dashboard-devices__confirmation-row { border-top: 0; padding-top: 0; .md-dashboard-device-confirmation { margin-left: 0; } }
         }
         .md-dashboard-sessions__admin-connections { grid-column: 1; &::before { content: attr(data-label) ": "; } > div { display: inline; } }
         .md-dashboard-sessions__activity { grid-column: 1; padding-top: 0 !important; }
         .md-dashboard-sessions__action { grid-column: 2; grid-row: 2 / 4; align-self: center; }
+    }
+    @media (max-width: ($bp-mobile - .02px)) {
+        .md-dashboard-devices__table {
+            .md-dashboard-sessions__ip, .md-dashboard-devices__last-seen { grid-column: 1 / -1; }
+        }
     }
 }
 .md-dashboard-modal--sessions .md-dashboard-sessions__action .btn { max-width: 160px; white-space: normal; text-align: right; }
@@ -1462,7 +1484,4 @@ webjet-overview-dashboard a:focus-visible {
     > [role="status"]:empty { display: none; }
     .form-label { display: block; margin: 0; font-size: 12px; }
     .form-control { max-width: 160px; background-color: $white; }
-}
-@media (max-width: $bp-mobile) {
-    .md-dashboard-modal--sessions .md-dashboard-sessions__action.has-device-confirmation { grid-column: 1 / -1; grid-row: auto; }
 }

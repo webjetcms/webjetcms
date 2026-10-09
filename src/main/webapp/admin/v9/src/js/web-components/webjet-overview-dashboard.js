@@ -67,6 +67,16 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
      */
     configure({ data = {}, labels = {}, config = {} } = {}) {
         this.data = data;
+        window.webjetLoginLocationRequest?.then(location => {
+            if (!location) return;
+            const sessions = data.currentSessions;
+            for (const cluster of sessions?.userSessions || []) {
+                const current = cluster.userSessions.find(session => session.sessionId === sessions.currentSessionId);
+                if (current) current.location = location;
+            }
+            if (this.isConnected) this.dashboardController?.refreshSessions();
+            this.dispatchEvent(new CustomEvent('webjet-login-location-updated'));
+        });
         this.labels = labels;
         this.config = config;
         this._configured = true;

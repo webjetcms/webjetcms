@@ -3,6 +3,7 @@ const { mockDashboardBootstrap, dashboardPageRoute, showWidget, readDashboardBoo
 Feature('admin.dashboard.sessions').tag('@singlethread');
 
 const modal = '.md-dashboard-modal--sessions';
+const locationRoute = /^https:\/\/(ipwho\.is|ipwhois\.pro)\//;
 let permissionsChanged = false;
 const administratorsRoute = '**/admin/rest/sessions/administrators';
 const historyRoute = '**/admin/rest/sessions/login-history*';
@@ -21,7 +22,8 @@ function waitForSessionDialog(I) {
     }, 10);
 }
 
-Before(({ I, login }) => {
+Before(async ({ I, login }) => {
+    await I.mockRoute(locationRoute, route => route.fulfill({ contentType: 'application/json', body: '{"success":false}' }));
     login('admin');
     I.amOnPage('/admin/v9/');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
@@ -39,6 +41,7 @@ After(async ({ I }) => {
     await I.stopMockingRoute(administratorsRoute);
     I.wjSetDefaultWindowSize();
     if (permissionsChanged) { I.logout(); permissionsChanged = false; }
+    await I.stopMockingRoute(locationRoute);
 });
 
 /** Real bootstrap and audit data expose activity, own records and the same authorized administrators. */
@@ -51,7 +54,10 @@ Scenario('Real sessions and personal login history are available from the welcom
         'The real session API must include the last activity timestamp.');
     const current = bootstrap.currentSessions.userSessions.flatMap(cluster => cluster.userSessions).find(session => session.sessionId === bootstrap.currentSessions.currentSessionId);
     I.assertTrue(Boolean(current?.operatingSystem) && !/\d/.test(current.browserName), 'New sessions must contain a browser family without its version and a separate operating system.');
-    I.see(`${current.browserName} · ${current.operatingSystem}`, `${modal} .md-dashboard-sessions__mine`);
+    I.assertTrue(Boolean(current.browserVersion) && Boolean(current.operatingSystemVersion), 'New sessions must include browser and operating system versions.');
+    I.see(`${current.browserName} ${current.browserVersion.replace(/\.0$/, '')}`, `${modal} .md-dashboard-sessions__mine .md-dashboard-sessions__device-name`);
+    const system = [current.operatingSystem, current.operatingSystemVersion].filter(value => value && !/^unknown$/i.test(value)).join(' ');
+    I.see(system, `${modal} .md-dashboard-sessions__mine .md-dashboard-sessions__system`);
     I.assertTrue(!Object.hasOwn(bootstrap, 'loggedAdmins'), 'Administrator summaries must not be injected into the page.');
     const administrators = await I.executeScript(async () => {
         const response = await fetch('/admin/rest/sessions/administrators', { headers: { 'X-CSRF-Token': window.csrfToken } });
@@ -107,8 +113,8 @@ Scenario('Session widgets and notices open the dialog and update after individua
                 ...['1x1', '2x2', '2x3'].map(size => ({ id: `sessions-autotest-${size}`, type: 'my-sessions', size, options: {} }))], domainOptions: {} },
         notices: [],
         currentSessions: { currentSessionId: 'sessions-autotest-current', userSessions: [{ cluster: 'autotest-node', userSessions: [
-            { sessionId: 'sessions-autotest-current', logonTime: now - 3600000, lastActivity: now, browserName: 'Chrome', operatingSystem: 'macOS', remoteAddr: '127.0.0.1' },
-            { sessionId: 'sessions-autotest-other', logonTime: now - 7200000, deviceId: 43, deviceConfirmed: false, lastActivity: now - 12 * 60000, browserName: 'Firefox', operatingSystem: 'Windows', remoteAddr: '192.0.2.2' },
+            { sessionId: 'sessions-autotest-current', logonTime: now - 3600000, lastActivity: now, browserName: 'Chrome', browserVersion: '154.0', operatingSystem: 'macOS', operatingSystemVersion: '15', remoteAddr: '127.0.0.1' },
+            { sessionId: 'sessions-autotest-other', logonTime: now - 7200000, deviceId: 43, deviceConfirmed: false, lastActivity: now - 12 * 60000, browserName: 'Firefox', browserVersion: '143.1', operatingSystem: 'Windows', operatingSystemVersion: '11 Pro', remoteAddr: '192.0.2.2' },
             { sessionId: 'sessions-autotest-third', logonTime: now - 86400000, lastActivity: now - 2 * 3600000, browserName: 'Safari', operatingSystem: 'iOS', remoteAddr: '192.0.2.3' }
         ] }] }
     };
@@ -166,7 +172,13 @@ Scenario('Session widgets and notices open the dialog and update after individua
     I.clickCss('[data-instance-id="sessions-autotest-2x3"] .md-dashboard__title-action');
     waitForSessionDialog(I);
     I.see('Moje prihlásenia (3)', modal);
-    I.see('Chrome · macOS', modal);
+    I.see('Chrome 154', `${modal} .md-dashboard-sessions__device-name`);
+    I.dontSee('Chrome 154.0', `${modal} .md-dashboard-sessions__device-name`);
+    I.see('Firefox 143.1', `${modal} .md-dashboard-sessions__device-name`);
+    I.see('macOS 15', `${modal} .md-dashboard-sessions__system`);
+    I.see('Windows 11 Pro', `${modal} .md-dashboard-sessions__system`);
+    I.see('Safari', `${modal} .md-dashboard-sessions__device-name`);
+    I.see('iOS', `${modal} .md-dashboard-sessions__system`);
     I.see('pred 12 minútami', modal);
     I.saveScreenshot('dashboard-active-sessions-desktop.png');
     for (const width of [1100, 390]) {
@@ -236,7 +248,7 @@ Scenario('Device tab separates retained browsers from sessions and supports conf
     const now = Date.now();
     const records = [
         { id: 42, browserName: 'Chrome', browserVersion: '131', operatingSystem: 'macOS', ipAddress: '192.0.2.1', createDate: now - 86400000, lastSeen: now },
-        { id: 43, browserName: 'Firefox autotest', browserVersion: '131', operatingSystem: 'Windows 11', ipAddress: '192.0.2.2', createDate: now - 172800000, lastSeen: now - 3600000 },
+        { id: 43, browserName: 'Firefox autotest', browserVersion: '131', operatingSystem: 'Windows 11 Pro', location: 'Liptovská Sielnica, SK', ipAddress: '192.0.2.2', createDate: now - 172800000, lastSeen: now - 3600000 },
         { id: 45, browserName: 'Safari autotest', browserVersion: '18', operatingSystem: 'iOS', ipAddress: '192.0.2.3', createDate: now - 172800000, lastSeen: now - 86400000, confirmedAt: now - 86400000 },
         { id: 46, browserName: 'Edge autotest', operatingSystem: 'Windows', ipAddress: '192.0.2.4', createDate: now - 259200000, lastSeen: now - 172800000, reportedAt: now - 86400000 }
     ];
@@ -295,6 +307,7 @@ Scenario('Device tab separates retained browsers from sessions and supports conf
     await I.assertEqual(await I.grabNumberOfVisibleElements(`${devices} thead th`), 4);
     const blockedBadge = `${devices} [data-device-id="46"] .is-blocked`;
     await I.dontSee('Odblokovanie vyžaduje', devices);
+    await I.scrollTo(blockedBadge);
     await I.moveCursorTo(blockedBadge);
     await I.waitForText('Odblokovanie vyžaduje kód z e-mailu', 10, '.tooltip.show');
     await I.see('Zablokované:', '.tooltip.show');
@@ -314,8 +327,26 @@ Scenario('Device tab separates retained browsers from sessions and supports conf
     await I.assertTrue(await I.executeScript(() => {
         const buttons = [...document.querySelectorAll('.md-dashboard-devices__table [data-device-id="42"] button')];
         return buttons.every(button => button.getBoundingClientRect().height < 40)
-            && Math.abs(buttons[0].getBoundingClientRect().top - buttons[1].getBoundingClientRect().top) < 1;
-    }), 'Desktop device actions must share one row without wrapping their labels.');
+            && buttons[1].getBoundingClientRect().top >= buttons[0].getBoundingClientRect().bottom;
+    }), 'Desktop device actions must stack without wrapping their labels.');
+    await I.assertTrue(await I.executeScript(() => {
+        const row = document.querySelector('.md-dashboard-devices__table [data-device-id="43"]');
+        return ['.md-dashboard-sessions__ip > span', '.md-dashboard-devices__last-seen', '.md-dashboard-sessions__system'].every(selector => {
+            const element = row.querySelector(selector);
+            const range = document.createRange(); range.selectNodeContents(element);
+            return range.getClientRects().length === 1;
+        });
+    }), 'A longer city, Windows edition and the date/time must each fit on one line on desktop.');
+    const columnWidths = await I.executeScript(() => [...document.querySelectorAll('.md-dashboard-devices__table [data-device-id="43"] > td')].map(cell => cell.getBoundingClientRect().width));
+    await I.clickCss(`${devices} [data-device-id="43"] .md-dashboard-sessions__confirm-device`);
+    await I.waitForText('Zadajte 6-miestny kód', 10, devices);
+    await I.assertDeepEqual(await I.executeScript(() => [...document.querySelectorAll('.md-dashboard-devices__table [data-device-id="43"] > td')].map(cell => cell.getBoundingClientRect().width)), columnWidths,
+        'Opening confirmation must not change any device column width.');
+    await I.saveScreenshot('dashboard-my-devices-confirmation-desktop.png');
+    await I.clickCss(`${devices} [data-device-id="43"] .md-dashboard-sessions__confirm-device`);
+    await I.dontSeeElement(`${devices} .md-dashboard-device-confirmation`);
+    await I.assertTrue(await I.executeScript(() => document.activeElement.matches('[data-device-id="43"] .md-dashboard-sessions__confirm-device')),
+        'Closing confirmation must keep focus on its toggle.');
     await I.saveScreenshot('dashboard-my-devices-desktop.png');
     await I.resizeWindow(390, 850);
     await I.assertTrue(await I.executeScript(() => {

@@ -120,7 +120,7 @@ class AdminDeviceServiceTest {
     @Test
     void issuesProtectedCookieAndQueuesOnlyNewEvents() {
         DeviceEntity event = event();
-        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
+        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString(), isNull()))
             .thenReturn(event);
 
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
@@ -136,7 +136,7 @@ class AdminDeviceServiceTest {
         assertNull(cookie.getDomain());
         assertEquals(90 * 86400, cookie.getMaxAge());
         verify(repository).recordLogin(7, AdminDeviceService.hashToken(cookie.getValue()), NOW,
-            NOW - Duration.ofDays(90).toMillis(), "Firefox", "131.0", "Windows 11", "192.0.2.1");
+            NOW - Duration.ofDays(90).toMillis(), "Firefox", "131.0", "Windows 11", "192.0.2.1", null);
         verify(service).sendNotification(user, request, event);
         assertEquals(event.getId(), request.getSession().getAttribute(AdminDeviceService.SESSION_DEVICE_ID));
     }
@@ -150,7 +150,7 @@ class AdminDeviceServiceTest {
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
 
         assertEquals(TOKEN, response.getCookie(AdminDeviceService.COOKIE_NAME).getValue());
-        verify(repository).recordLogin(eq(7), eq(AdminDeviceService.hashToken(TOKEN)), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
+        verify(repository).recordLogin(eq(7), eq(AdminDeviceService.hashToken(TOKEN)), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString(), isNull());
         verify(service, never()).sendNotification(any(), any(), any());
         assertEquals(42L, request.getSession().getAttribute(AdminDeviceService.SESSION_DEVICE_ID));
     }
@@ -165,7 +165,7 @@ class AdminDeviceServiceTest {
         assertNotEquals("malformed", cookie.getValue());
         assertEquals(30 * 86400, cookie.getMaxAge());
         assertFalse(cookie.getSecure());
-        verify(repository).recordLogin(eq(7), anyString(), eq(NOW), eq(NOW - Duration.ofDays(30).toMillis()), anyString(), anyString(), anyString(), anyString());
+        verify(repository).recordLogin(eq(7), anyString(), eq(NOW), eq(NOW - Duration.ofDays(30).toMillis()), anyString(), anyString(), anyString(), anyString(), isNull());
     }
 
     /** Both lists must match before database writes, browser cookies and notifications are skipped. */
@@ -312,7 +312,7 @@ class AdminDeviceServiceTest {
     @Test
     void verifiedSecondFactorConfirmsTheRecordedDevice() {
         DeviceEntity device = event();
-        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString())).thenReturn(device);
+        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString(), isNull())).thenReturn(device);
         when(repository.confirmAfterSecondFactor(7, 42L, NOW)).thenAnswer(invocation -> {
             device.setConfirmedAt(Instant.ofEpochMilli(NOW));
             return device;
@@ -363,12 +363,12 @@ class AdminDeviceServiceTest {
 
     private void assertDeviceRecorded() {
         DeviceEntity event = event();
-        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
+        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString(), isNull()))
             .thenReturn(event);
 
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
 
-        verify(repository).recordLogin(eq(7), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString());
+        verify(repository).recordLogin(eq(7), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString(), isNull());
         verify(service).sendNotification(user, request, event);
         assertNotNull(response.getCookie(AdminDeviceService.COOKIE_NAME));
         assertEquals(event.getId(), request.getSession().getAttribute(AdminDeviceService.SESSION_DEVICE_ID));
@@ -391,7 +391,7 @@ class AdminDeviceServiceTest {
     @Test
     void storageFailureCannotRejectSuccessfulAuthentication() {
         request.getSession().setAttribute(AdminDeviceService.SESSION_DEVICE_ID, 99L);
-        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
+        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString(), isNull()))
             .thenThrow(new IllegalStateException("Autotest storage unavailable"));
         try (var logger = mockStatic(Logger.class)) {
             assertDoesNotThrow(() -> AdminDeviceService.recordSuccessfulLogin(user, request, response));
@@ -441,7 +441,7 @@ class AdminDeviceServiceTest {
     void recordsAndNotifiesWhenBrowserRejectsCookie() {
         tools.when(() -> Tools.addCookie(any(), any(), any())).thenReturn(false);
         DeviceEntity event = event();
-        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString()))
+        when(repository.recordLogin(anyInt(), anyString(), anyLong(), anyLong(), anyString(), anyString(), anyString(), anyString(), isNull()))
             .thenReturn(event);
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
         verify(service, times(1)).sendNotification(user, request, event);
@@ -549,6 +549,7 @@ class AdminDeviceServiceTest {
         DeviceEntity device = new DeviceEntity();
         device.setId(Long.parseLong(EVENT_ID));
         device.setCreateDate(Instant.ofEpochMilli(NOW));
+        device.setLastSeen(Instant.ofEpochMilli(NOW));
         device.setBrowserName("Firefox");
         device.setBrowserVersion("131.0");
         device.setOperatingSystem("Windows 11");

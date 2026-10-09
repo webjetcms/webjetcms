@@ -36,6 +36,12 @@ public class DeviceService {
      */
     public DeviceEntity recordLogin(int userId, String tokenHash, long now, long knownSinceCutoff,
         String browserName, String browserVersion, String operatingSystem, String ipAddress) {
+        return recordLogin(userId, tokenHash, now, knownSinceCutoff, browserName, browserVersion, operatingSystem, ipAddress, null);
+    }
+
+    /** Refreshes the last-login IP and optional location together, even for already recognized browsers. */
+    public DeviceEntity recordLogin(int userId, String tokenHash, long now, long knownSinceCutoff,
+        String browserName, String browserVersion, String operatingSystem, String ipAddress, String location) {
         return execute(() -> {
             DeviceEntity device = devices.findByUserIdAndTokenHash(userId, tokenHash).orElse(null);
             if (device != null && device.getReportedAt() != null)
@@ -47,18 +53,31 @@ public class DeviceService {
                 device.setTokenHash(tokenHash);
             }
             device.setLastSeen(Instant.ofEpochMilli(now));
+            device.setIpAddress(ipAddress);
+            device.setLocation(location);
             if (!recognized) {
                 device.setCreateDate(Instant.ofEpochMilli(now));
                 device.setBrowserName(browserName);
                 device.setBrowserVersion(browserVersion);
                 device.setOperatingSystem(operatingSystem);
-                device.setIpAddress(ipAddress);
                 device.setConfirmedAt(null);
                 clearVerification(device);
             }
             DeviceEntity saved = devices.save(device);
             if (!recognized) audit(saved, "detected");
             return recognized ? null : saved;
+        });
+    }
+
+    /** Fills a missing location only while this login remains the device's latest login. */
+    public void completeLocation(int userId, long deviceId, long loginTime, String location) {
+        execute(() -> {
+            DeviceEntity device = devices.findByUserIdAndId(userId, deviceId).orElse(null);
+            if (device != null && device.getLastSeen().toEpochMilli() == loginTime && device.getLocation() == null) {
+                device.setLocation(location);
+                devices.save(device);
+            }
+            return null;
         });
     }
 

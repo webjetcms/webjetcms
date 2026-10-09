@@ -48,6 +48,8 @@ script.
 script(data-th-inline="javascript").
     window.currentUser = JSON.parse(/*[[${layout.userDto}]]*/ "{}");
 
+script(src="/admin/scripts/login-location.js" data-th-if="${layout.loginLocationUrl != null}" data-th-attr="data-lookup-url=${layout.loginLocationUrl},data-csrf=${layout.csrfToken}" data-save-url="/admin/rest/security/login-location")
+
 // Outpul all script files
 -
     let filename = htmlWebpackPlugin.options.filename;

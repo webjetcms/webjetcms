@@ -40,7 +40,7 @@ public class DeviceEntity {
     @Column(name = "create_date", nullable = false)
     private Instant createDate;
 
-    /** Latest successful login, independently of the retained notice's browser and IP snapshot. */
+    /** Latest successful login, matching the retained IP address and location. */
     @Column(name = "last_seen", nullable = false)
     private Instant lastSeen;
 
@@ -55,6 +55,10 @@ public class DeviceEntity {
 
     @Column(name = "ip_address", length = 64)
     private String ipAddress;
+
+    /** Unverified city and country from the latest successful login. */
+    @Column(name = "location", length = 160)
+    private String location;
 
     @Column(name = "confirmed_at")
     private Instant confirmedAt;

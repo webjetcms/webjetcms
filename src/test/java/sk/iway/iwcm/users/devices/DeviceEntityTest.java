@@ -44,7 +44,7 @@ class DeviceEntityTest {
         Set<String> fields = new HashSet<>();
         data.fieldNames().forEachRemaining(fields::add);
         assertEquals(Set.of("id", "createDate", "lastSeen", "expiresAt", "browserName", "browserVersion",
-            "operatingSystem", "ipAddress", "confirmedAt", "reportedAt"), fields);
+            "operatingSystem", "ipAddress", "location", "confirmedAt", "reportedAt"), fields);
         assertTrue(data.path("id").isIntegralNumber());
         assertEquals(42L, data.path("id").longValue());
         assertEquals(now, data.path("createDate").longValue());

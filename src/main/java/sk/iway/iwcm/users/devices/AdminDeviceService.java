@@ -207,7 +207,7 @@ public class AdminDeviceService {
         String tokenHash = hashToken(token);
         DeviceEntity event = deviceService.recordLogin(user.getUserId(), tokenHash, now,
             now - Duration.ofDays(maxAgeDays).toMillis(), bounded(browser.getBrowserName(), 128), bounded(browser.getBrowserVersion(), 64),
-            bounded(operatingSystem, 128), bounded(Tools.getRemoteIP(request), 64));
+            bounded(operatingSystem, 128), bounded(Tools.getRemoteIP(request), 64), AdminLoginLocation.getLocation(request.getSession()));
 
         Cookie cookie = new Cookie(COOKIE_NAME, token);
         cookie.setPath("/");
@@ -221,7 +221,10 @@ public class AdminDeviceService {
             device = deviceService.confirmAfterSecondFactor(user.getUserId(), device.getId(), now);
             if (event != null) event = device;
         }
-        if (device != null) request.getSession().setAttribute(SESSION_DEVICE_ID, device.getId());
+        if (device != null) {
+            request.getSession().setAttribute(SESSION_DEVICE_ID, device.getId());
+            request.getSession().setAttribute(AdminLoginLocation.DEVICE_LOGIN_TIME, now);
+        }
         if (event != null) sendNotification(user, request, event);
     }
 
@@ -450,8 +453,9 @@ public class AdminDeviceService {
             + "<p>" + Tools.escapeHtml(prop.getText(event.getReportedAt() == null ? "admin.newDevice.email.intro" : "admin.logon.device.emailIntro")) + "</p>"
             + "<div class=\"email-details\" style=\"background:#f3f3f6;padding:16px;border-radius:6px\">"
             + emailLine(prop, "device", join(event.getBrowserName(), event.getBrowserVersion()) + " · " + event.getOperatingSystem())
+            + emailLine(prop, "location", event.getLocation() == null ? prop.getText("admin.dashboard.locationUnknown.js") : event.getLocation())
             + emailLine(prop, "ip", event.getIpAddress())
-            + emailLine(prop, "time", Tools.formatDateTime(event.getCreateDate().toEpochMilli()))
+            + emailLine(prop, "time", Tools.formatDateTime(event.getLastSeen().toEpochMilli()))
             + emailLine(prop, "environment", domain + (Tools.isEmpty(environment) ? "" : " (" + environment + ")"))
             + "</div>" + (code == null ? (token == null ? "" : "<p>" + Tools.escapeHtml(prop.getText("admin.newDevice.email.linkExpiry")) + "</p>")
                 : "<p>" + Tools.escapeHtml(prop.getText(event.getReportedAt() == null ? "admin.newDevice.email.codeIntro" : "admin.logon.device.emailCodeIntro")) + "</p><p style=\"font-size:28px;font-weight:bold;letter-spacing:4px\">"

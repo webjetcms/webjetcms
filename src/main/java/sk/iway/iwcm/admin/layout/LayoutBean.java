@@ -31,6 +31,7 @@ public class LayoutBean {
     private String lng;
     private String lngWebjet;
     private String csrfToken;
+    private String loginLocationUrl;
     private String nopermsCss;
     private String nopermsJavascript;
     //datum poslednej zmeny properties suborov pre efektivnejsie (ne)volanie REST sluzby pre ich aktualizaciu na FE

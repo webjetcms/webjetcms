@@ -167,7 +167,9 @@ public class SessionHolder
 			BrowserDetector bd = BrowserDetector.getInstance(request);
 			if (bd != null) {
 				det.setBrowserName(bd.getBrowserName());
+				det.setBrowserVersion(bd.getBrowserVersion());
 				det.setOperatingSystem(bd.getBrowserPlatform());
+				det.setOperatingSystemVersion(bd.getBrowserSubplatform());
 			}
 			else det.setBrowserName("Unknown");
 		} else {
@@ -223,6 +225,9 @@ public class SessionHolder
 			}
 		}
 
+		String previousLocation = det.getLocation();
+		det.setLocation(user != null && user.isAdmin() ? sk.iway.iwcm.users.devices.AdminLoginLocation.getLocation(request.getSession()) : null);
+
 		Long previousDeviceId = det.getDeviceId();
 		Object deviceId = request.getSession().getAttribute(AdminDeviceService.SESSION_DEVICE_ID);
 		det.setDeviceId(user != null && user.isAdmin() && deviceId instanceof Long id ? id : null);
@@ -232,7 +237,7 @@ public class SessionHolder
 		det.setSessionId(sessionId);
 		data.put(sessionId, det);
 
-		if ((newSession || !Objects.equals(previousDeviceId, det.getDeviceId())) && det.isAdmin()) {
+		if ((newSession || !Objects.equals(previousDeviceId, det.getDeviceId()) || !Objects.equals(previousLocation, det.getLocation())) && det.isAdmin()) {
 			// After new session was added (logon for example) - update session stat data
 			SessionClusterService.updateSessionData();
 		}

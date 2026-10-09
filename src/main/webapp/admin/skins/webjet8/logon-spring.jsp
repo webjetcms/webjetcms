@@ -6,6 +6,8 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 %><%
 
     pageContext.setAttribute("environment", new sk.iway.iwcm.admin.layout.EnvironmentBadge());
+    pageContext.setAttribute("loginLocationUrl", sk.iway.iwcm.users.devices.AdminLoginLocation.getLookupUrl());
+    pageContext.setAttribute("loginLocationCsrf", sk.iway.iwcm.system.stripes.CSRF.getCsrfToken(session, true));
 
     String lng = Prop.getLng(request, false);
     Prop prop = Prop.getInstance(request);
@@ -53,6 +55,10 @@ import="sk.iway.iwcm.*,sk.iway.iwcm.i18n.*"
 
     <link rel="shortcut icon" href="/admin/skins/webjet8/assets/global/img/wj/favicon-cms.ico"/>
 
+    <c:if test="${not empty loginLocationUrl}">
+        <script src="/admin/scripts/login-location.js" data-lookup-url="<c:out value='${loginLocationUrl}'/>"
+            data-save-url="/admin/logon/location/" data-csrf="<c:out value='${loginLocationCsrf}'/>"></script>
+    </c:if>
     <iwcm:combine type="js" set="adminJqueryJs" />
 
     <script type="text/javascript">

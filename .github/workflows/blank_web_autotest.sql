@@ -4445,6 +4445,7 @@ CREATE TABLE `user_login_devices` (
   `browser_version` varchar(64) DEFAULT NULL,
   `operating_system` varchar(128) DEFAULT NULL,
   `ip_address` varchar(64) DEFAULT NULL,
+  `location` varchar(160) DEFAULT NULL,
   `confirmed_at` datetime(3) DEFAULT NULL,
   `reported_at` datetime(3) DEFAULT NULL,
   `confirmation_hash` char(64) DEFAULT NULL,

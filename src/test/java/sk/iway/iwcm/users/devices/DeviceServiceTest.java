@@ -83,7 +83,7 @@ class DeviceServiceTest {
         assertEquals(Instant.ofEpochMilli(NOW), device.getLastSeen());
         assertEquals(Instant.ofEpochMilli(NOW - Duration.ofDays(6).toMillis()), device.getCreateDate());
         assertEquals(Instant.ofEpochMilli(NOW - 100), device.getConfirmedAt());
-        assertEquals("192.0.2.2", device.getIpAddress());
+        assertEquals("192.0.2.1", device.getIpAddress());
         verify(devices).save(device);
         audit.verifyNoInteractions();
     }
