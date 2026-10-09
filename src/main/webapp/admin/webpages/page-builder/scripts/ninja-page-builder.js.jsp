@@ -3043,7 +3043,10 @@
 
                     //mark PB and call ckeditor init
                     this.mark_column(newElement);
+                    this.changedElement = newElement;
                     this.options.onGridChanged();
+                    this.select_workbench_element(newElement[0], true);
+                    this.focus_ckeditor_element(newElement);
                 }
 
             }
