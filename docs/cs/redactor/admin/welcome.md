@@ -153,15 +153,13 @@ Přihlášení můžete potvrdit i odkazem **Byl jsem to já** v původním emai
 
 #### Pokud přihlášení neznáte
 
-Při upozornění na jiný prohlížeč klikněte na **Nebyl jsem to já**. Otevře se okno **Aktivní přihlášení** s detailem události a kartami **Moje přihlášení**, **Přihlášení administrátoři** (podle oprávnění) a **Historie (30 dní)**. Varování se zobrazuje pouze v kartě **Moje přihlášení**. V kartě **Historie (30 dní)** můžete zkontrolovat předchozí přihlášení a jejich IP adresy.
+Při upozornění nebo u zařízení v kartě **Moje zařízení** v okně **Aktivní přihlášení** klikněte na **Nebyl jsem to já**. Zařízení se zablokuje a jeho známé pořady se odhlásí. Malé okno **Zajistěte svůj účet** zobrazí výsledek a doporučené další kroky. Pokud zablokujete prohlížeč, ve kterém právě pracujete, odhlásí i vás.
 
-![Detail přihlášení s možností zablokovat zařízení](device-block.png)
+Odkaz **Nebyl jsem to já – zajistit účet** v emailu po přihlášení otevře stejné malé okno, ale zařízení ještě nezablokuje. Pokud přihlášení neznáte, potvrďte akci tlačítkem **Zablokovat zařízení**.
 
-Tlačítkem **Zablokovat zařízení** zablokujete daný prohlížeč a odhlásíte všechny jeho známé pořady. Pokud zablokujete prohlížeč, ve kterém právě pracujete, odhlásí i vás. Při příštím přihlášení se po zadání správných přihlašovacích údajů zobrazí [výzva k ověření emailovým kódem](logon.md#ověření-zablokovaného-zařízení). Až správný kód prohlížeč odblokuje.
+Po zablokování použijte **Změnit heslo** a zkontrolujte ostatní přihlášení. Tlačítko **Zapnout 2FA** otevře nastavení dvoustupňového ověřování, pokud je pro účet dostupné a ještě není zapnuté. **Později** pouze zavře okno. U firemního účtu změňte heslo u poskytovatele přihlášení nebo kontaktujte správce.
 
-Použijte také **Změnit heslo** a zkontrolujte ostatní přihlášení. U firemního účtu změňte heslo u poskytovatele přihlášení nebo kontaktujte správce.
-
-Samotné otevření detailu aktivní relace neodhlásí. Odhlášení nastane až po zablokování zařízení. Stejný detail otevřete i odkazem **Nebyl jsem to já – zajistit účet** v emailu, po přihlášení do svého účtu.
+Při dalším přihlášení ze zablokovaného zařízení se po zadání správných přihlašovacích údajů zobrazí [výzva k ověření emailovým kódem](logon.md#ověření-zablokovaného-zařízení). Až správný kód prohlížeč odblokuje.
 
 #### Zapamatování prohlížeče a platnost upozornění
 
@@ -179,7 +177,7 @@ Použijte jej, když chcete najít stránku v administraci nebo návod k práci 
 
 ### Moje aktivní přihlášení
 
-Umožňuje zkontrolovat vaše aktivní přihlášení a odhlásit se z jiného zařízení nebo prohlížeče, který již nepoužíváte. Je vždy v horní části přehledu a nelze jej odstranit. Podrobnosti naleznete v části [Přihlášení](#přihlášení).
+Umožňuje zkontrolovat vaše aktivní přihlášení a odhlásit se z jiného zařízení nebo prohlížeče, který již nepoužíváte. Pevný panel je vždy v horní části přehledu a nelze jej odstranit. Z katalogu můžete přidat také jeho samostatný widget do osobního přehledu. Klepnutím na nadpis se šipkou otevřete kartu **Moje přihlášení**. Podrobnosti naleznete v části [Přihlášení](#přihlášení).
 
 ### Přihlášeni admini
 
@@ -207,11 +205,13 @@ V horní části přehledu můžete zkontrolovat svá aktivní přihlášení a 
 
 ### Moje aktivní přihlášení
 
-Panel **Moje aktivní přihlášení** zobrazuje všechny vaše aktivní relace, tedy přihlášení pod vaším účtem, s prohlížečem, časem a IP adresou. Při delším seznamu můžete jeho obsah posouvat. Vaše aktuální relace je první a má zelenou tečku s popisem **Toto přihlášení**. Ostatní relace můžete odhlásit přímo v seznamu, například když jste se zapomněli odhlásit na jiném počítači. Tento panel je vždy v horní části a nelze jej odstranit.
+Panel **Moje aktivní přihlášení** zobrazuje všechny vaše aktivní relace, tedy přihlášení pod vaším účtem, s prohlížečem, časem a IP adresou. V okně aktivních přihlášení sloupec **Poloha** zobrazuje [orientační město a zemi](../../admin/setup/configuration/dashboard.md#orientační-poloha-přihlášení), pod nimi menším písmem IP adresu. Pokud poloha není dostupná, zobrazí se **Neznámá**. Město se odhaduje podle veřejného internetového připojení; IP zjištěná serverem může být interní. Při delším seznamu můžete jeho obsah posouvat. Vaše aktuální relace je první a má zelenou tečku s popisem **Toto přihlášení**. Ostatní relace můžete odhlásit přímo v seznamu, například když jste se zapomněli odhlásit na jiném počítači. Tento panel je vždy v horní části a nelze jej odstranit.
 
-Klepnutím na nadpis panelu otevřete okno **Aktivní přihlášení**. Kromě vlastních pořadů nabízí historii přihlášení za posledních 30 dní a podle oprávnění i přihlášených administrátorů. Tlačítko **Změnit heslo** ve spodní části okna otevře váš profil pro změnu hesla. Informační ikona vedle tlačítka zobrazí pokyny pro změnu hesla u firemního účtu.
+Samostatný widget v osobním přehledu zobrazí při jediném aktuálním pořadu informaci, že jste přihlášeni pouze zde. U více relací ukáže jejich počet a ve větších variantách i seznam s poslední aktivitou. Relace známého, ale dosud nepotvrzeného zařízení zvýrazní oranžovým pozadím a štítkem **Nové**. Pokud stav zařízení nezná, zvýraznění nepřidává. Tlačítko **Odhlásit všechny ostatní** otevře potvrzovací dialog; odhlášení se provede až po potvrzení.
 
-V kartě **Moje přihlášení** mají nepotvrzená zařízení štítek **Nová**. Tlačítko **Byl jsem to já** odešle na email jednorázový kód a zobrazí pole pro jeho zadání přímo v řádku. Až po ověření kódu potvrdí zařízení, odstraní jeho upozornění a obnoví seznam s běžnou akcí **Odhlásit** u ostatních relací. Stejné ověření vyžaduje i řádek se štítkem **Toto přihlášení**. Potvrzení platí i pro další relace stejného zařízení. Červené tlačítko **Nebyl jsem to já** v řádku zablokuje zařízení a odhlásí všechny jeho známé pořady; pokud se jedná o aktuální prohlížeč, odhlásí i vás. Stejné akce jsou dostupné při otevření okna z nadpisu panelu i ze systémového upozornění.
+Klepnutím na nadpis panelu nebo widgetu se šipkou otevřete okno **Aktivní přihlášení** v kartě **Moje přihlášení**. Kromě vlastních pořadů nabízí správu vašich zařízení, historii přihlášení za posledních 30 dní a podle oprávnění i přihlášené administrátory. Tlačítko **Změnit heslo** ve spodní části okna otevře váš profil pro změnu hesla. Informační ikona vedle tlačítka zobrazí pokyny pro změnu hesla u firemního účtu.
+
+Karta **Moje přihlášení** zobrazuje pouze aktivní relace. Jeden prohlížeč může mít více pořadů. Při každé relaci vidíte prohlížeč s verzí, pod ním operační systém s verzí a datum přihlášení. Aktuální relace má při názvu prohlížeče štítek **Toto přihlášení** ; u ostatních můžete použít akci **Odhlásit**.
 
 ![](sessions.png)
 
@@ -221,9 +221,21 @@ Data se aktualizují po přihlášení uživatele. Pokud potřebujete častějš
 
 Úloha na pozadí z databáze smaže záznamy starší 60 minut. Pokud není nastavena, při přihlášení uživatele se smažou záznamy starší 24 hodin.
 
+### Moje zařízení
+
+Karta **Moje zařízení** zobrazuje uložené prohlížeče vašeho účtu včetně těch, které již nemají aktivní relaci. Záznamy jsou seřazeny od naposledy použitých a stránkované po 20. Tlačítko **Obnovit údaje** načte aktuální údaje.
+
+U každého zařízení vidíte prohlížeč a jeho verzi, operační systém, čas zaznamenání, IP adresu a poslední použití. Stavový štítek je u názvu prohlížeče, pod ním je operační systém s verzí a datum zaznamenání. **Poslední aktivita** v této kartě znamená poslední úspěšné přihlášení. Sloupec **Poloha** obsahuje město a zemi, pod nimi IP adresu z posledního úspěšného přihlášení. Při nedostupné poloze se zobrazí **Neznámá**, i když byla při starším přihlášení známa. Prohlížeč a systém pocházejí ze zaznamenání zařízení. Aktuální prohlížeč má navíc štítek **Toto zařízení**.
+
+- **Nové** označuje zatím nepotvrzené zařízení. Můžete ho potvrdit tlačítkem **Byl jsem to já**. Odešle jednorázový kód na email a otevře formulář pod zařízením přes celou šířku seznamu. Tlačítkem **Zrušit** formulář zavřete bez změny stavu zařízení. Teprve po správném kódu se zařízení potvrdí a jeho systémové upozornění odstraní. Pokud přihlášení neznáte, použijte **Nebyl jsem to já**.
+- **Potvrzené** zařízení můžete tlačítkem **Nebyl jsem to já** dodatečně zablokovat. Datum potvrzení zobrazí tooltip nad štítkem po najetí myší nebo zaměření klávesnicí.
+- **Zablokované** zařízení má v tooltipu nad štítkem datum zablokování i vysvětlení odblokování. Odblokovat jej lze až při dalším přihlášení ověřením kódu z emailu.
+
+Zablokování odhlásí všechny známé pořady daného zařízení. Pokud se jedná o aktuální prohlížeč, odhlásí i vás. Po zablokování jiného prohlížeče se zobrazí malé okno **Zabezpečte svůj účet** s dalšími kroky, stejně jako u systémového upozornění.
+
 ### Přihlášení administrátoři
 
-Pokud máte právo "Úvod - zobrazení přihlášených administrátorů", můžete přes katalog přidat widget **Přihlášení admini** se seznamem všech přihlášených administrátorů. Máte tak přehled, kolik uživatelů aktuálně pracuje v administraci.
+Pokud máte právo "Úvod - zobrazení přihlášených administrátorů", můžete přes katalog přidat widget **Přihlášení admini** se seznamem všech přihlášených administrátorů. V obou velikostech zobrazuje celkový počet aktivních relací a počet administrátorů. U každého jména je počet jeho pořadů. Jeden účet může mít více přihlášení, proto se oba součty mohou lišit. Klepnutím na nadpis se šipkou otevřete okno **Aktivní přihlášení** přímo v kartě **Přihlášení administrátoři**.
 
 Klepnutím na ikonu<i class="ti ti-mail fs-6"></i> můžete danému administrátorovi odeslat email.
 
