@@ -196,14 +196,17 @@ public class SessionHolder
 			}
 		}
 		String previousOperatingSystemVersion = det.getOperatingSystemVersion();
-		// Detailed Client Hints can arrive after the session was created.
-		if (newSession || request.getHeader("Sec-CH-UA-Platform-Version") != null) {
+		String platformVersion = request.getHeader("Sec-CH-UA-Platform-Version");
+		String processedVersion = (String) request.getSession().getAttribute("SessionHolder.platformVersion");
+		// Detailed Client Hints can arrive later; process each version only when it changes.
+		if (newSession || (platformVersion != null && !platformVersion.equals(processedVersion))) {
 			BrowserDetector bd = BrowserDetector.getInstance(request);
 			if (bd != null) {
 				det.setBrowserName(bd.getBrowserName());
 				det.setBrowserVersion(bd.getBrowserVersion());
 				det.setOperatingSystem(bd.getBrowserPlatform());
 				det.setOperatingSystemVersion(bd.getBrowserSubplatform());
+				if (platformVersion != null) request.getSession().setAttribute("SessionHolder.platformVersion", platformVersion);
 			}
 			else det.setBrowserName("Unknown");
 		}
