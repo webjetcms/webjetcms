@@ -114,9 +114,22 @@ class JsonEditorValidatorTest {
     /** Verifies parser diagnostics identify the source line without echoing the JSON payload. */
     @Test
     void reportsSyntaxLocation() {
+        String prefix = "settings.custom-fields.jsoneditor.invalid.js settings.custom-fields.jsoneditor.position.js ";
         String error = JsonEditorValidator.validateValue("{\n  \"secret\": ]\n}", false, prop);
-        assertTrue(error.contains("position.js 2:"), "The error must identify the second source line");
+        assertEquals(prefix + "2:13", error, "The error must identify the original source position");
         assertFalse(error.contains("secret"), "Validation messages must not echo field content");
+        assertEquals(prefix + "1:11", JsonEditorValidator.validateValue("{\"secret\":]}", false, prop));
+        assertEquals(prefix + "2:13", JsonEditorValidator.validateValue("{\r\n  \"secret\": ]\r\n}", false, prop));
+        assertEquals(prefix + "1:11", JsonEditorValidator.validateValue("{\"secret\":", false, prop));
+        assertEquals(prefix + "1:2", JsonEditorValidator.validateValue("[", false, prop));
+    }
+
+    /** Verifies the server retains the browser's limit of 1000 nested containers. */
+    @Test
+    void preservesSupportedNestingDepth() {
+        String value = "[".repeat(1000) + "0" + "]".repeat(1000);
+        assertNull(JsonEditorValidator.validateValue(value, true, prop));
+        assertNotNull(JsonEditorValidator.validateValue("[" + value + "]", true, prop));
     }
 
     /** Verifies validation preserves several kilobytes of whitespace, strings and exact numeric tokens. */

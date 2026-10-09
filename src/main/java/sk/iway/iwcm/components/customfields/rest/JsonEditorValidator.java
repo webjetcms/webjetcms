@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.JsonLocation;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 
 import sk.iway.iwcm.Constants;
@@ -39,6 +40,9 @@ public final class JsonEditorValidator {
 
     private static final JsonFactory JSON_FACTORY = JsonFactory.builder()
         .enable(JsonReadFeature.ALLOW_SINGLE_QUOTES, JsonReadFeature.ALLOW_UNQUOTED_FIELD_NAMES, JsonReadFeature.ALLOW_JAVA_COMMENTS)
+        // The validation wrapper adds one container without changing the supported input depth.
+        .streamReadConstraints(StreamReadConstraints.defaults().rebuild()
+            .maxNestingDepth(StreamReadConstraints.defaults().getMaxNestingDepth() + 1).build())
         .build();
     private static final Pattern UNQUOTED_NAME = Pattern.compile("[\\p{L}_$][\\p{L}\\p{N}_$-]*");
     private static final String MESSAGE_PREFIX = "settings.custom-fields.jsoneditor.";
@@ -177,15 +181,17 @@ public final class JsonEditorValidator {
         if (value == null || value.trim().isEmpty()) {
             return required ? prop.getText("settings.custom-fields.required-err") : null;
         }
-        try (JsonParser parser = JSON_FACTORY.createParser(value)) {
+        // An array permits comments directly after numbers; the newline ends trailing line comments.
+        try (JsonParser parser = JSON_FACTORY.createParser("[" + value + "\n]")) {
+            parser.nextToken();
             JsonToken root = parser.nextToken();
-            if (root == null) return prop.getText(MESSAGE_PREFIX + "invalid.js");
+            if (root == null || root == JsonToken.END_ARRAY) return prop.getText(MESSAGE_PREFIX + "invalid.js");
             int depth = root.isStructStart() ? 1 : 0;
             while (depth > 0) {
                 JsonToken token = parser.nextToken();
                 if (token == null) return prop.getText(MESSAGE_PREFIX + "invalid.js");
                 if (token == JsonToken.FIELD_NAME) {
-                    int offset = (int)parser.currentTokenLocation().getCharOffset();
+                    int offset = (int)parser.currentTokenLocation().getCharOffset() - 1;
                     char first = value.charAt(offset);
                     if (first != '\"' && first != '\'' && !UNQUOTED_NAME.matcher(parser.currentName()).matches()) {
                         return prop.getText(MESSAGE_PREFIX + "invalid.js");
@@ -194,13 +200,18 @@ public final class JsonEditorValidator {
                 if (token.isStructStart()) depth++;
                 else if (token.isStructEnd()) depth--;
             }
-            if (parser.nextToken() != null) return prop.getText(MESSAGE_PREFIX + "invalid.js");
+            if (parser.nextToken() != JsonToken.END_ARRAY || parser.nextToken() != null) {
+                return prop.getText(MESSAGE_PREFIX + "invalid.js");
+            }
             return null;
         } catch (JsonProcessingException ex) {
             JsonLocation location = ex.getLocation();
             String message = prop.getText(MESSAGE_PREFIX + "invalid.js");
             if (location != null && location.getLineNr() > 0 && location.getColumnNr() > 0) {
-                message += " " + prop.getText(MESSAGE_PREFIX + "position.js", String.valueOf(location.getLineNr()), String.valueOf(location.getColumnNr()));
+                // Remove the wrapper offset and clamp errors in its suffix to the original end of input.
+                int offset = (int)Math.max(0, Math.min(value.length(), location.getCharOffset() - 1));
+                String[] lines = value.substring(0, offset).split("\\r\\n|\\r|\\n", -1);
+                message += " " + prop.getText(MESSAGE_PREFIX + "position.js", String.valueOf(lines.length), String.valueOf(lines[lines.length - 1].length() + 1));
             }
             return message;
         } catch (IOException ex) {

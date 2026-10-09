@@ -94,7 +94,8 @@ class JsonEditorDatatableTest {
     @ParameterizedTest
     @ValueSource(strings = {
         "{ \"id\": 9007199254740993 }", "[{\"id\":12345},{\"id\":56789}]", "[]",
-        "null", "true", "false", "9007199254740993", "\"text\"", "\"\""
+        "null", "true", "false", "9007199254740993", "\"text\"", "\"\"",
+        "42/* comment */", "42// comment", "/* heading */-1.2500e+42/* footer */"
     })
     void acceptsValidEditorAndImportValues(String value) {
         for (boolean imported : new boolean[] {false, true}) {
