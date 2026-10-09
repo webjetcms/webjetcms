@@ -3,6 +3,7 @@ package sk.iway.iwcm.users.devices;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.AdditionalAnswers.delegatesTo;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -10,10 +11,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -162,17 +169,105 @@ class DeviceServiceIntegrationTest extends BaseWebjetTest {
         }
     }
 
-    /** Email codes reject incorrect input and are cleared after successful confirmation. */
-    @Test
-    void codeConfirmationRejectsWrongAndConsumedProofs() {
+    /** Confirmation and unblock codes allow a correct fifth attempt and reject consumed proofs. */
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void codeConfirmationAcceptsFifthAttemptAndRejectsConsumedProofs(boolean unblock) {
         try (TestDatabase database = new TestDatabase()) {
             DeviceService service = database.service;
             long id = record(service, USER_ID, database.hash, NOW).getId();
-            service.issueConfirmation(USER_ID, id, database.hash, NOW, true);
-            assertNull(service.confirm(USER_ID, id, "wrong", NOW + 1, true));
-            assertEquals(1, service.findEvent(USER_ID, id).getCodeAttempts());
-            assertNotNull(service.confirm(USER_ID, id, database.hash, NOW + 3, true));
-            assertNull(service.confirm(USER_ID, id, database.hash, NOW + 4, true));
+            if (unblock) {
+                service.report(USER_ID, id, NOW);
+                assertTrue(service.issueUnblockCode(USER_ID, id, database.hash, NOW));
+            } else assertTrue(service.issueConfirmation(USER_ID, id, database.hash, NOW, true));
+            for (int attempt = 1; attempt < DeviceService.CODE_ATTEMPTS; attempt++) {
+                assertNull(unblock ? service.unblock(USER_ID, id, "wrong", NOW + 1)
+                    : service.confirm(USER_ID, id, "wrong", NOW + 1, true));
+                assertEquals(attempt, service.findEvent(USER_ID, id).getCodeAttempts());
+            }
+            assertNotNull(unblock ? service.unblock(USER_ID, id, database.hash, NOW + 2)
+                : service.confirm(USER_ID, id, database.hash, NOW + 2, true));
+            assertEquals(0, service.findEvent(USER_ID, id).getCodeAttempts());
+            assertNull(unblock ? service.unblock(USER_ID, id, database.hash, NOW + 3)
+                : service.confirm(USER_ID, id, database.hash, NOW + 3, true));
+        }
+    }
+
+    /** Attempt claims reject foreign accounts, replaced or expired codes and incompatible device states. */
+    @Test
+    void attemptClaimRequiresCurrentOwnedCodeAndDeviceState() {
+        try (TestDatabase database = new TestDatabase()) {
+            DeviceService service = database.service;
+            DeviceRepository repository = database.devices;
+            long id = record(service, USER_ID, database.hash, NOW).getId();
+            assertTrue(service.issueConfirmation(USER_ID, id, database.hash, NOW, true));
+            Instant expires = service.findEvent(USER_ID, id).getCodeExpires();
+            Instant now = Instant.ofEpochMilli(NOW);
+            int limit = DeviceService.CODE_ATTEMPTS;
+
+            assertEquals(0, repository.claimCodeAttempt(OTHER_USER_ID, id, database.hash, expires, now, false, limit));
+            assertEquals(0, repository.claimCodeAttempt(USER_ID, id, "wrong", expires, now, false, limit));
+            assertEquals(0, repository.claimCodeAttempt(USER_ID, id, database.hash, expires.plusMillis(1), now, false, limit));
+            assertEquals(0, repository.claimCodeAttempt(USER_ID, id, database.hash, expires, expires, false, limit));
+            assertEquals(0, repository.claimCodeAttempt(USER_ID, id, database.hash, expires, now, true, limit));
+            assertEquals(0, service.findEvent(USER_ID, id).getCodeAttempts());
+            assertEquals(1, repository.claimCodeAttempt(USER_ID, id, database.hash, expires, now, false, limit));
+
+            assertTrue(service.issueConfirmation(USER_ID, id, database.hash, NOW + DeviceService.CODE_RESEND_DELAY, true));
+            assertEquals(0, repository.claimCodeAttempt(USER_ID, id, database.hash, expires, now, false, limit),
+                "An old request must not count against a reissued code with the same hash");
+            expires = service.findEvent(USER_ID, id).getCodeExpires();
+            service.report(USER_ID, id, NOW + 1);
+            assertEquals(0, repository.claimCodeAttempt(USER_ID, id, database.hash, expires, now, false, limit));
+            assertTrue(service.issueUnblockCode(USER_ID, id, database.hash, NOW + 2));
+            expires = service.findEvent(USER_ID, id).getCodeExpires();
+            assertEquals(0, repository.claimCodeAttempt(USER_ID, id, database.hash, expires, now, false, limit));
+            assertEquals(1, repository.claimCodeAttempt(USER_ID, id, database.hash, expires, now, true, limit));
+            assertNotNull(service.unblock(USER_ID, id, database.hash, NOW + 3));
+            assertEquals(0, repository.claimCodeAttempt(USER_ID, id, database.hash, expires, now, true, limit));
+        }
+    }
+
+    /** Concurrent guesses share the five-attempt limit for confirmation and blocked-device login. */
+    @ParameterizedTest
+    @ValueSource(booleans = { false, true })
+    void concurrentCodeGuessesCannotLoseAttempts(boolean unblock) throws Exception {
+        try (TestDatabase database = new TestDatabase()) {
+            DeviceService service = database.service;
+            long id = record(service, USER_ID, database.hash, NOW).getId();
+            if (unblock) {
+                service.report(USER_ID, id, NOW);
+                assertTrue(service.issueUnblockCode(USER_ID, id, database.hash, NOW));
+            } else assertTrue(service.issueConfirmation(USER_ID, id, database.hash, NOW, true));
+
+            int requests = 12;
+            CountDownLatch loaded = new CountDownLatch(requests);
+            DeviceRepository concurrentRepository = mock(DeviceRepository.class, delegatesTo(database.devices));
+            doAnswer(invocation -> {
+                var snapshot = database.devices.findByUserIdAndId(USER_ID, id);
+                loaded.countDown();
+                assertTrue(loaded.await(10, TimeUnit.SECONDS), "Every request must read before verification begins");
+                return snapshot;
+            }).when(concurrentRepository).findByUserIdAndId(USER_ID, id);
+            DeviceService concurrentService = new DeviceService(concurrentRepository);
+            var executor = Executors.newFixedThreadPool(requests);
+            try {
+                List<Future<DeviceEntity>> results = new ArrayList<>();
+                for (int attempt = 0; attempt < requests; attempt++) {
+                    results.add(executor.submit(() -> unblock
+                        ? concurrentService.unblock(USER_ID, id, "wrong", NOW + 1)
+                        : concurrentService.confirm(USER_ID, id, "wrong", NOW + 1, true)));
+                }
+                for (Future<DeviceEntity> result : results) assertNull(result.get(15, TimeUnit.SECONDS));
+            } finally {
+                executor.shutdownNow();
+                assertTrue(executor.awaitTermination(10, TimeUnit.SECONDS), "Verification requests must finish before cleanup");
+            }
+
+            assertEquals(DeviceService.CODE_ATTEMPTS, service.findEvent(USER_ID, id).getCodeAttempts());
+            assertNull(unblock ? service.unblock(USER_ID, id, database.hash, NOW + 2)
+                : service.confirm(USER_ID, id, database.hash, NOW + 2, true));
+            verify(concurrentRepository, never()).save(any(DeviceEntity.class));
         }
     }
 

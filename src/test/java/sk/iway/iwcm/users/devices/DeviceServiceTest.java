@@ -250,6 +250,24 @@ class DeviceServiceTest {
         audit.verifyNoMoreInteractions();
     }
 
+    /** A stale snapshot cannot accept a correct code when the database refuses another attempt. */
+    @Test
+    void rejectedAttemptCannotConfirmOrSaveStaleDevice() {
+        DeviceEntity device = device(NOW - 100);
+        ownedDevice(device);
+        service.issueConfirmation(USER_ID, DEVICE_ID, "code", NOW, true);
+        doReturn(0).when(devices).claimCodeAttempt(USER_ID, DEVICE_ID, "code", device.getCodeExpires(),
+            Instant.ofEpochMilli(NOW + 1), false, DeviceService.CODE_ATTEMPTS);
+        clearInvocations(devices);
+
+        assertNull(service.confirm(USER_ID, DEVICE_ID, "code", NOW + 1, true));
+
+        assertEquals(0, device.getCodeAttempts(), "The loaded snapshot must remain unchanged");
+        assertNull(device.getConfirmedAt());
+        verify(devices, never()).save(any());
+        audit.verifyNoInteractions();
+    }
+
     /** Missing and foreign device IDs cannot be read, confirmed or reported. */
     @Test
     void inaccessibleDeviceCannotBeReadOrChanged() {
@@ -329,6 +347,12 @@ class DeviceServiceTest {
 
     private void ownedDevice(DeviceEntity device) {
         when(devices.findByUserIdAndId(USER_ID, DEVICE_ID)).thenReturn(Optional.of(device));
+        when(devices.claimCodeAttempt(eq(USER_ID), eq(DEVICE_ID), anyString(), any(Instant.class),
+            any(Instant.class), anyBoolean(), eq(DeviceService.CODE_ATTEMPTS))).thenAnswer(invocation -> {
+                if (device.getCodeAttempts() >= DeviceService.CODE_ATTEMPTS) return 0;
+                device.setCodeAttempts(device.getCodeAttempts() + 1);
+                return 1;
+            });
     }
 
     private static DeviceEntity device(long createdAt) {
