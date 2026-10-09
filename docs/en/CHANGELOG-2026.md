@@ -230,6 +230,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### Bug fixes
 
+- Web pages - JSON editor now accepts fields and simple values ​​with comments. Fixed column splitting and scrolling in Page Builder and closing tooltip when editing from history (#346).
 - Multi-step forms - fixed validation of fields with chained visibility conditions (#58794).
 - Forms - fixed archiving of forms (#305).
 - Explorer - modified comparison of files with diacritics when checking the existence of a file when overwriting it - format `utf-8 NFC vs NFD` (#58317-12, #58698).
@@ -580,6 +581,12 @@ Redesigned application properties settings in the editor from the old code in `J
 
 - Websites - fixed looping of folder initialization and scheduled publishing check on slow database connection (#337).
 - Cluster - optimized writing of changes in the cluster when starting a new node (#337).
+- Redis - improved transfer of information about the uploaded file in the session (#342).
+- Security - updated library `FreeMarker` from version `2.3.34` to `2.3.35`.
+- Security - updated administration libraries `Lodash` from version `4.17.21` to `4.18.1` and `PostCSS` from version `8.5.2` to `8.5.12`. As part of the PostCSS update, its dependency `Nano ID` was also updated from version `3.3.8` to `3.3.20`.
+- Security - disabled compilation of SpringEL expressions in Thymeleaf templates and by default in Spring as protection against [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Standard template syntax and allowed method calls remain supported, no template modification is required. Templates with a large number of repeatedly evaluated expressions may take longer to render.
+- Security - disabled saving protected files from `/files/protected/` to browser cache and proxy servers by setting HTTP headers before sending the file. Fixed setting response length when sending the entire file and its scope so that Spring Security writes security headers in time.
+- Security - added reasoned exceptions in `dependency-check-suppressions.xml` for vulnerabilities in unused Spring parts and for the vulnerability addressed by the SpringEL setting above. The exception for [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) takes into account the above protected file protection and file submission fix; it represents application precautions and accepted residual risk, not a library fix or confirmation of the safety of all response submission methods. The default deferred writing of Spring Security headers is retained. Versions `Spring Framework 5.3.39` and `Spring Security 5.8.16` are retained.
 
 ## 2026.0.40
 

@@ -175,7 +175,7 @@ Příklad platné hodnoty:
 ### Validace a uložení
 
 - Kromě standardního JSON je podporován rozšířený zápis: jednoduché uvozovky (apostrofy), názvy vlastností bez uvozovek a komentáře `//` i `/* … */`. Název bez uvozovek začíná písmenem, `_` nebo `- Kromě standardního JSON je podporován rozšířený zápis: jednoduché uvozovky (apostrofy), názvy vlastností bez uvozovek a komentáře ` //` i `/* … */`. Název bez uvozovek začíná písmenem, `_` nebo , dále může obsahovat i číslice a pomlčky, například `data-toggle`. Pomlčka bez uvozovek je rozšířením tohoto editoru, nikoli standardní syntaxí JavaScriptu.
-- Povolena je právě jedna JSON hodnota: objekt `{}`, pole `[]`, řetězec, číslo, `true`, `false` nebo `null`. Pole může být přímo na nejvyšší úrovni, například `[{"id":12345},{"id":56789}]`; vnořené objekty a pole jsou také povoleny.
+- Povolena je právě jedna JSON hodnota: objekt `{}`, pole `[]`, řetězec, číslo, `true`, `false` nebo `null`. Pole může být přímo na nejvyšší úrovni, například `[{"id":12345},{"id":56789}]` ; vnořené objekty a pole jsou také povoleny.
 - Kontroluje se celý vstup. Koncová čárka, chybějící závorky nebo další hodnota za první jsou neplatné. Funkce, volání JavaScriptu, `undefined`, `NaN` a `Infinity` nejsou povoleny. Parser kód nikdy nespouští.
 - Komentář `//` pokračuje až po konec řádku. Uzavírací závorky objektu proto musí být na dalším řádku; v jednořádkovém zápisu použijte komentář `/* … */`.
 - Prázdný vstup včetně samotných mezer je povolen, pokud je vypnuto **Povinné pole**. Při zapnuté povinnosti se musí zadat JSON hodnota; `{}`, `[]`, `""` i `null` jsou platné vyplněné hodnoty.

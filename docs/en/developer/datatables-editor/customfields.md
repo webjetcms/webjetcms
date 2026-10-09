@@ -175,15 +175,15 @@ Example of a valid value:
 ### Validation and storage
 
 - In addition to standard JSON, extended notation is supported: single quotes (apostrophes), unquoted property names, and `//` and `/* … */` comments. An unquoted name starts with a letter, `_` or `- In addition to standard JSON, extended notation is supported: single quotes (apostrophes), unquoted property names, and ` //` and `/* … */` comments. An unquoted name starts with a letter, `_` or , and can also contain digits and hyphens, for example `data-toggle`. The unquoted hyphen is an extension of this editor, not standard JavaScript syntax.
-- Exactly one JSON value is allowed: an object `{}`, array `[]`, string, number, `true`, `false`, or `null`. Arrays can appear at the root, for example `[{"id":12345},{"id":56789}]`; nested objects and arrays are also supported.
+- Only one JSON value is allowed: object `{}`, array `[]`, string, number, `true`, `false`, or `null`. The array can be directly at the top level, for example `[{"id":12345},{"id":56789}]` ; nested objects and arrays are also allowed.
 - The entire input is checked. A trailing comma, missing parentheses, or another value after the first are invalid. Functions, JavaScript calls, `undefined`, `NaN`, and `Infinity` are not allowed. The parser never executes the code.
 - The comment `//` continues to the end of the line. Therefore, the closing parentheses of the object must be on the next line; in a single-line notation, use the comment `/* … */`.
-- Empty input, including spaces alone, is allowed if **Required field** is disabled. When required, a JSON value must be entered; `{}`, `[]`, `""`, and `null` all count as valid, nonblank input.
+- Empty input, including spaces, is allowed if **Required field** is disabled. When mandatory, a JSON value must be entered; `{}`, `[]`, `""` and `null` are valid filled values.
 - In the browser, input is checked when leaving a field and before saving. An error is displayed next to the field and its tab is opened when you try to save. If the parser provides the location of the syntax error, the message includes the line and column.
 - The server performs the same check independently of JavaScript in `DatatableRestControllerV2.validateEditorForCustomFields()` when saving via DataTables Editor and when importing. It loads the type and obligation configuration from the server according to the entity and context of the optional fields; the field definition sent by the client cannot disable validation. For partial imports, it only checks the imported JSON fields.
 - After successful validation, the characters `<` and `>` are written as JSON Unicode escape sequences `\u003C` and `\u003E` before being saved. To return the original value, you can use the call `JsonEditorValidator.unescape(String value)` on the frontend, but be careful with `XSS injection`.
 
-Validation checks syntax and requires exactly one JSON value. It does not verify the presence or meaning of specific attributes according to JSON Schema.
+Validation checks the syntax and presence of just one JSON value. It does not verify the presence or meaning of specific attributes according to JSON Schema.
 
 Example of supported extended notation:
 

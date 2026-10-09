@@ -230,6 +230,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Oprava chyb
 
+- Webové stránky - editor JSON přijímá také pole a jednoduché hodnoty s komentáři. Opraveno rozdělení sloupců a posouvání v Page Builderu a zavírání tooltipu při úpravě z historie (#346).
 - Vícekrokové formuláře - opravena validace polí s řetězenými podmínkami viditelnosti (#58794).
 - Formuláře - opraveno archivování formulářů (#305).
 - Průzkumník - upravené porovnávání souborů s diakritikou při kontrole existence souboru při jeho přepsání - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
@@ -580,6 +581,12 @@ Předěláno nastavení vlastností aplikací v editoru ze starého kódu v `JSP
 
 - Webové stránky - opraveno zacyklení inicializace složek a kontroly plánovaného publikování při pomalém připojení k databázi (#337).
 - Cluster - optimalizované zapisování změny v clusteru při startu nového uzlu (#337).
+- Redis - zlepšený přenos informace o nahrávaném souboru v session (#342).
+- Bezpečnost - aktualizovaná knihovna `FreeMarker` z verze `2.3.34` na `2.3.35`.
+- Bezpečnost - aktualizované knihovny administrace `Lodash` z verze `4.17.21` na `4.18.1` a `PostCSS` z verze `8.5.2` na `8.5.12`. V rámci aktualizace PostCSS byla aktualizována i jeho závislost `Nano ID` z verze `3.3.8` na `3.3.20`.
+- Bezpečnost - vypnutá kompilace výrazů SpringEL v Thymeleaf šablonách a ve výchozím nastavení i ve Spring jako ochrana před [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Standardní syntax šablon a povolená volání metod zůstávají podporovány, úprava šablon není nutná. U šablon s velkým množstvím opakovaně vyhodnocovaných výrazů může vykreslování trvat déle.
+- Bezpečnost - vypnuté ukládání chráněných souborů z `/files/protected/` do cache prohlížeče a proxy serverů nastavením HTTP hlaviček před odesláním souboru. Opraveno nastavení délky odpovědi při odesílání celého souboru i jeho rozsahu, aby Spring Security zapsal bezpečnostní hlavičky včas.
+- Bezpečnost - doplněné zdůvodněné výjimky v `dependency-check-suppressions.xml` pro zranitelnosti nevyužívaných částí Spring a pro zranitelnost ošetřenou výše uvedeným nastavením SpringEL. Výjimka pro [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) zohledňuje výše uvedenou ochranu chráněných souborů a opravu odesílání souborů; představuje aplikační opatření a akceptované zbytkové riziko, nikoli opravu knihovny ani potvrzení bezpečnosti všech způsobů odesílání odpovědí. Výchozí odložené zapisování hlaviček Spring Security zůstává zachováno. Verze `Spring Framework 5.3.39` a `Spring Security 5.8.16` zůstávají zachovány.
 
 ## 2026.0.40
 

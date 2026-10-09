@@ -246,7 +246,7 @@ Editor zobrazuje čísla řádků a panel s tlačítkem **Formátovat JSON** a d
 
 Při ukládání se znaky `<` a `>` nahradí významově stejnými JSON Unicode escape sekvencemi `\u003C` a `\u003E`. Po opětovném otevření je editor zobrazí v této kanonické podobě. K vrácení původní hodnoty můžete na frontendu použít volání `JsonEditorValidator.unescape(String value)`, pozor ale na `XSS injection`.
 
-Vstup musí obsahovat právě jednu JSON hodnotu: objekt `{...}`, pole `[...]`, řetězec, číslo, `true`, `false` nebo `null`. Můžete vložit také pole objektů, například `[{"id":12345},{"id":56789}]`. Podporovány jsou také apostrofy, názvy vlastností bez uvozovek včetně pomlček a komentáře `//` nebo `/* ... */`. Příklad:
+Vstup musí obsahovat právě jednu JSON hodnotu: objekt `{...}`, pole `[...]`, řetězec, číslo, `true`, `false` nebo `null`. Můžete také vložit pole objektů, například `[{"id":12345},{"id":56789}]`. Podporovány jsou také apostrofy, názvy vlastností bez uvozovek včetně pomlček a komentáře `//` nebo `/* ... */`. Příklad:
 
 ```js
 {

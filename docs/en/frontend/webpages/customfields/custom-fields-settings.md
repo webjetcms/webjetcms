@@ -64,7 +64,7 @@ When changing a field type, additional fields that belong only to that type are 
 
 If **Required field** is disabled for types `select`, `docsIn`, `json_group`, `json_doc`, the editor will automatically offer an empty value. For types `radio` and `checkbox`, disabled required field means that the user does not have to select any option.
 
-For type `jsoneditor`, empty input is governed by the **Required field** setting and nonblank input must contain exactly one JSON value: an object, array, string, number, `true`, `false`, or `null`. The error will block saving in the editor and on the server. The supported syntax, formatting, and database column capacity are described in the [JSON Editor](../../../developer/datatables-editor/customfields.md#json-editor) documentation.
+For type `jsoneditor`, an empty input is governed by the **Required field** setting and a filled input must contain exactly one JSON value: object, field, string, number, `true`, `false` or `null`. The error will block saving in the editor and on the server. The supported syntax, formatting and capacity of database columns are described in the [JSON Editor](../../../developer/datatables-editor/customfields.md#json-editor) documentation.
 
 ### Source of options
 
