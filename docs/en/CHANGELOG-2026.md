@@ -31,6 +31,8 @@
 
 ![Verify a blocked device before entering the administration](redactor/admin/logon-device-verification.png)
 
+- Specific logins via `doFilterLogon` and `wjlogontoken` will be rejected by the blocked browser without an email prompt. To unblock, the regular login form in the same browser must be used (#340).
+
 Device tracking can be disabled by setting the configuration variable `adminNewDeviceDetectionEnabled` to false. When logging in, the [approximate location](admin/setup/configuration/dashboard.md#login-approximate-location) is also determined by the IP address, which can be disabled by setting `adminLoginLocationApiKey` to the value `DISABLED`.
 
 ### Websites

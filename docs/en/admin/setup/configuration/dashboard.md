@@ -67,6 +67,8 @@ The next interactive login of the blocked browser will first verify the login de
 
 The check applies to admin logins via form, access key, OAuth2, and NTLM, including admin logins via the user zone. It does not apply to API tokens, HTTP Basic, or regular visitors. Setting `adminNewDeviceDetectionEnabled=false` also disables blocking checking. Test browser exceptions do not bypass the existing block.
 
+Specific logins via `doFilterLogon=true`, `doFilterLogon=redir` or the `wjlogontoken` header check for existing blocking before creating a logged-in session. A blocked browser will receive an HTTP 403 without an email prompt; if there is an error retrieving the state, it will receive an HTTP 503. To unblock, you must log in using the regular `/admin/logon/` form in the same browser and complete email verification. These specific logins do not register new devices or refresh their cookies. Therefore, a missing, empty or invalid cookie does not trigger this check. The `wjlogontoken` header creates a logged-in session that is valid for subsequent requests and is different from the `x-auth-token` authentication API.
+
 Blocking is tied to the `wjdevice` cookie, not the physical device. After it is deleted or expires, the browser behaves as new; blocking therefore does not replace changing a compromised password or 2FA.
 
 ### Exceptions for automated tests

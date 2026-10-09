@@ -114,6 +114,10 @@ Při nesprávném nebo neplatném kódu se zobrazí chybová zpráva a zůstanet
 
 Celé ověření je třeba dokončit do **15 minut**, jinak se přihlaste znovu. Tlačítko **Zrušit** ukončí rozpracované přihlášení a prohlížeč zůstane zablokován. Bez správného kódu zůstává administrace nepřístupná. Pokud k emailové schránce nemáte přístup, obraťte se na správce.
 
+Při specifickém přihlášení přes `doFilterLogon` nebo hlavičku `wjlogontoken` se zablokovaný prohlížeč nepřihlásí a emailová výzva se nezobrazí. Pro odblokování otevřete ve stejném prohlížeči běžný přihlašovací formulář `/admin/logon/` a dokončete ověření emailovým kódem. Potom můžete znovu použít původní způsob přihlášení.
+
+Rozpoznávání slouží k přehledu o přihlášení a upozornění na neznámý prohlížeč. Blokování se váže na cookie `wjdevice`, ne na fyzické zařízení. Po vymazání cookie se prohlížeč při běžném přihlášení zaeviduje jako nový. Tato funkce proto nenahrazuje silné heslo, změnu prozrazeného hesla ani dvoustupňové ověřování.
+
 ## Odhlášení
 
 Odkaz na odhlášení se nachází v hlavičce administrace v pravé horní části jako ikona ![](icon-logoff.png ":no-zoom"):

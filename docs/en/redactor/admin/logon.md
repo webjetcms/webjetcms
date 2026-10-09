@@ -114,6 +114,10 @@ If the code is incorrect or invalid, an error message will appear and you will b
 
 The entire verification must be completed within **15 minutes**, otherwise log in again. The **Cancel** button will end the login in progress and the browser will remain blocked. Without the correct code, the administration remains inaccessible. If you do not have access to your email box, please contact the administrator.
 
+When specifically logging in via `doFilterLogon` or header `wjlogontoken`, the blocked browser will not log in and the email prompt will not be displayed. To unblock, open the regular login form `/admin/logon/` in the same browser and complete the email code verification. You can then use the original login method again.
+
+Recognition is used to provide an overview of logins and to warn about an unknown browser. The blocking is tied to the `wjdevice` cookie, not to the physical device. After deleting the cookie, the browser is registered as new during normal login. This feature therefore does not replace a strong password, changing a leaked password, or two-step verification.
+
 ## Logout
 
 The logout link is located in the administration header in the upper right as an icon ![](icon-logoff.png ":no-zoom"):
