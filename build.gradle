@@ -93,52 +93,6 @@ def gitIgnoredWebAppPaths = gitIgnoredWebAppPathsOutput.result.zip(
     }.sort()
 }
 
-war {
-    zip64 = true
-
-    //exclude files/folders in .gitignore for /components and /templates
-    inputs.property('gitIgnoredWebAppPaths', gitIgnoredWebAppPaths)
-    exclude { element ->
-        def archivePath = element.relativePath.pathString
-        gitIgnoredWebAppPaths.get().any { ignoredPath ->
-            archivePath == ignoredPath || archivePath.startsWith(ignoredPath + '/')
-        }
-    }
-
-    exclude('**/node_modules/**')
-    exclude('**/node_scripts/**')
-    exclude('**/src/**')
-    exclude('**/tmp/**')
-    exclude('**/*.log')
-    exclude('**/*.map')
-    exclude('**/*.md')
-    exclude('**/*.sh')
-    exclude('**/.npmrc')
-    exclude('**/.editorconfig')
-    exclude('**/gulpfile.js')
-    exclude('**/package-lock.json')
-    exclude('**/package.json')
-    exclude('**/webpack*.js')
-    exclude('**/WEB-INF/imgcache/**')
-    exclude('**/scss/**')
-    exclude('scratchpad*.jsp')
-    exclude('localconf*.jsp')
-    exclude('**/LICENSE')
-    exclude('**/*.psd')
-    exclude('**/*.zip')
-
-    //pug files
-    exclude('**/pug/**')
-    exclude('**/admin/v9/views/**')
-    exclude('**/*.pug')
-    exclude('**/prepros-6.config')
-
-    //templates
-    exclude('templates/firma/**')
-
-    rootSpec.exclude('**/poolman-*.xml')
-}
-
 sourceSets {
     main {
         java {
@@ -242,6 +196,7 @@ dependencies {
     implementation("org.apache.httpcomponents:httpmime:4.5.14")
     implementation("com.fasterxml.jackson.core:jackson-annotations:2.22")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.1")
     implementation("sk.iway:wjjcaptcha:1.0-SNAPSHOT")
     //implementation("net.htmlparser.jericho:jericho-html:3.1")
     //implementation("joda-time:joda-time:2.10.13")
@@ -383,7 +338,50 @@ dependencies {
 }
 
 war {
+    zip64 = true
     classpath = sourceSets.main.output + configurations.distributionRuntimeClasspath - configurations.providedRuntime
+
+    //exclude files/folders in .gitignore for /components and /templates
+    inputs.property('gitIgnoredWebAppPaths', gitIgnoredWebAppPaths)
+    exclude { element ->
+        def archivePath = element.relativePath.pathString
+        gitIgnoredWebAppPaths.get().any { ignoredPath ->
+            archivePath == ignoredPath || archivePath.startsWith(ignoredPath + '/')
+        }
+    }
+
+    exclude('**/node_modules/**')
+    exclude('**/node_scripts/**')
+    exclude('**/src/**')
+    exclude('**/tmp/**')
+    exclude('**/*.log')
+    exclude('**/*.map')
+    exclude('**/*.md')
+    exclude('**/*.sh')
+    exclude('**/.npmrc')
+    exclude('**/.editorconfig')
+    exclude('**/gulpfile.js')
+    exclude('**/package-lock.json')
+    exclude('**/package.json')
+    exclude('**/webpack*.js')
+    exclude('**/WEB-INF/imgcache/**')
+    exclude('**/scss/**')
+    exclude('scratchpad*.jsp')
+    exclude('localconf*.jsp')
+    exclude('**/LICENSE')
+    exclude('**/*.psd')
+    exclude('**/*.zip')
+
+    //pug files
+    exclude('**/pug/**')
+    exclude('**/admin/v9/views/**')
+    exclude('**/*.pug')
+    exclude('**/prepros-6.config')
+
+    //templates
+    exclude('templates/firma/**')
+
+    rootSpec.exclude('**/poolman-*.xml')
 }
 
 // Only the Ant finalwar target uses the development runtime, including local AI.
@@ -588,6 +586,8 @@ gretty {
         // Keep debugging available for appStart as well as appStartDebug.
         "-Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=${debugPort}",
         "-Dwebjet.worktreeId=${worktreeId}",
+        "-Dwebjet.httpServerPort=${httpPort}",
+        "-Dwebjet.httpsServerPort=${httpsPort}",
         //lokalny poolman-local.xml subor
         //'-DwebjetPoolmanPath=/poolman-local.xml',
         //Uprava konfiguracie pre WebJET, tymto sa prepisuju hodnoty z databazy v Ovladaci panel->Konfiguracia

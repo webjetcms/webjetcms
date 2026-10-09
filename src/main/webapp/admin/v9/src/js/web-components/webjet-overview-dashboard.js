@@ -1,6 +1,8 @@
 import { DashboardController } from '../dashboard/dashboard';
 import { DashboardNotices } from '../dashboard/notices';
 import { showActiveSessions } from '../dashboard/session-widgets';
+import { showDeviceSecurity } from '../dashboard/device-security-dialog';
+import { confirmSecurityEvent } from '../dashboard/security-events';
 import { registerDashboardWidgets, getDashboardDefaults } from '../dashboard/widgets';
 import { showFeedbackDialog } from '../feedback';
 
@@ -12,6 +14,8 @@ import { showFeedbackDialog } from '../feedback';
  * @property {Object[]} [data.dashboardMenu=[]] - Authorized administration navigation for shortcut selection.
  * @property {Object} data.settings - Current account's layout and active-domain preferences.
  * @property {Object[]} data.notices - System notices ready for immediate rendering.
+ * @property {boolean} [data.securityEventRequested=false] - Whether an email link requested a login detail.
+ * @property {Object|null} [data.requestedSecurityEvent] - Owned login detail, or null when unavailable.
  * @property {Object} data.currentSessions - Current user sessions, updated after a successful logout.
  * @property {string} [data.userName=""] - Current user's display name.
  * @property {number} data.statRootGroupId - Active domain root folder passed to the shared statistics API.
@@ -49,6 +53,7 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
     }
 
     disconnectedCallback() {
+        this.deviceConfirmationRequest?.abort();
         this.dashboardController?.destroy();
         this.noticeController?.destroy();
         this.noticeController = null;
@@ -62,6 +67,16 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
      */
     configure({ data = {}, labels = {}, config = {} } = {}) {
         this.data = data;
+        window.webjetLoginLocationRequest?.then(location => {
+            if (!location) return;
+            const sessions = data.currentSessions;
+            for (const cluster of sessions?.userSessions || []) {
+                const current = cluster.userSessions.find(session => session.sessionId === sessions.currentSessionId);
+                if (current) current.location = location;
+            }
+            if (this.isConnected) this.dashboardController?.refreshSessions();
+            this.dispatchEvent(new CustomEvent('webjet-login-location-updated'));
+        });
         this.labels = labels;
         this.config = config;
         this._configured = true;
@@ -92,6 +107,30 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         this.dashboardController = new DashboardController(widgets, context);
         this._renderNotices();
         this.dashboardReady = this.dashboardController.start();
+        if (this.data.securityEventRequested && !this.securityEventOpened) {
+            this.securityEventOpened = true;
+            const url = new URL(window.location.href);
+            const confirmationToken = url.searchParams.get('deviceConfirmation');
+            if (confirmationToken) {
+                url.searchParams.delete('deviceConfirmation');
+                window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+            }
+            const sessionContext = this.dashboardController._widgetContext();
+            const securityEvent = this.data.requestedSecurityEvent || null;
+            if (confirmationToken && securityEvent) {
+                const signal = (this.deviceConfirmationRequest = new AbortController()).signal;
+                // Consume the email proof with an authenticated POST without opening the session dialog.
+                confirmSecurityEvent(this.data, securityEvent.id, signal, { token: confirmationToken })
+                    .then(() => {
+                        if (signal.aborted) return;
+                        this.dashboardController.refreshSessions();
+                        WJ.notifySuccess(sessionContext.translate('sessions'), sessionContext.translate('admin.dashboard.newDevice.confirmed.js'), 10000);
+                    })
+                    .catch(() => {
+                        if (!signal.aborted) WJ.notifyError(sessionContext.translate('sessions'), sessionContext.translate('admin.dashboard.newDevice.linkInvalid.js'), 10000);
+                    });
+            } else showDeviceSecurity(sessionContext, securityEvent);
+        }
         this.dataset.ready = "true";
         this.dispatchEvent(new CustomEvent("webjet-component-ready", { bubbles: true }));
     }
@@ -99,7 +138,8 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
     /** Renders the system notices supplied by the dashboard page. */
     _renderNotices() {
         this.noticeController ||= new DashboardNotices(this.dashboardController.notices, this.data,
-            () => showActiveSessions(this.dashboardController._widgetContext()));
+            () => showActiveSessions(this.dashboardController._widgetContext()),
+            event => showDeviceSecurity(this.dashboardController._widgetContext(), event, true));
         this.noticeController.render();
     }
 

@@ -21,7 +21,7 @@ class SessionClusterSummaryTest {
     void filtersClusterRecordsToAuthorizedUsers() throws Exception {
         ResultSet valid = mock(ResultSet.class);
         when(valid.getString("content")).thenReturn("""
-            [{"sessionId":"allowed","loggedUserId":2,"browserName":"Firefox","operatingSystem":"Linux","lastActivity":42},
+            [{"sessionId":"allowed","loggedUserId":2,"browserName":"Firefox","browserVersion":"143.1","operatingSystem":"Linux","operatingSystemVersion":"6.8","lastActivity":42},
              {"sessionId":"foreign","loggedUserId":3},
              {"sessionId":"invalid","loggedUserId":2,"remoteAddr":"INVALIDATE"}]
             """);
@@ -39,6 +39,8 @@ class SessionClusterSummaryTest {
             assertEquals(1, sessions.size());
             assertEquals("allowed", sessions.get(0).getSessionId());
             assertEquals("Linux", sessions.get(0).getOperatingSystem());
+            assertEquals("143.1", sessions.get(0).getBrowserVersion());
+            assertEquals("6.8", sessions.get(0).getOperatingSystemVersion());
             assertEquals(1, queries.constructed().size());
         }
     }

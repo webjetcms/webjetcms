@@ -78,6 +78,46 @@ You can delete a registered key at any time by selecting it and clicking the tra
 
 You can disable the access key login option by setting the configuration variable `password_passKeyEnabled` to the value `false`.
 
+## Signing in from a new device
+
+WebJET CMS records which browser you log in to the administration from. When you log in to a new browser, it sends you an email and displays a notification on the [home screen](welcome.md#system-notifications) **You have logged in from a new browser**. You can work in the administration, the notification allows you to check whether you are the one who logged in.
+
+![](device-new-browser-email.png)
+
+A device here refers to a specific browser and its profile, not the entire computer. You may therefore also receive a notification on your regular computer the first time you log in after device registration is implemented, after deleting cookies, or in an incognito window. A regular logout will not cancel the browser's memory.
+
+If you know the login, confirm it with the **It was me** link in the email or the same button when notified. The button in the administration will send an email code and display a field for entering it. If you do not know the login, follow the [device blocking instructions](welcome.md#if-you-don't-know-the-login).
+
+![](device-confirm-code.png)
+
+After successful two-step verification, the unblocked browser will be confirmed automatically. You will receive an information email without the need for further confirmation.
+
+## Verifying a blocked device
+
+If you marked the browser as **It wasn't me** and blocked it, the next time you log in, you'll see the **Verify blocked device** page after entering the correct name and password. If you have [two-step verification](#two-step-verification) enabled, you'll also enter the code from your authenticator app first. The email code prompt is an additional step to unblocking the browser - it doesn't mean you entered the wrong password.
+
+![Prompt for email code when logging in from a blocked browser](logon-device-verification.png)
+
+1. Open the email account listed on the screen. WebJET CMS will automatically send a six-digit code to it.
+2. In the same browser where you started the login, enter the code in the **One-time code from email** field. Use the code from the email, not the code from the authenticator app.
+3. Click **Confirm Code**. The browser will be unblocked, confirmed, and the administration will open. The next time you log in, it will not need this verification again unless you block it again.
+
+The email contains information about the blocked browser and a code to unblock it and complete the login:
+
+![Email with code to unlock device and complete login](logon-device-verification-email.png)
+
+The code is valid for **10 minutes** and allows a maximum of **5 attempts**. If the email does not arrive, check your spam folder and the address displayed on the screen. You can request another email after a minute by clicking the **Send new code** button. The new code will replace the previous one. Resending the code while the previous code is still valid will not reset the number of remaining attempts. After five unsuccessful attempts, wait for the code to expire.
+
+If the code is incorrect or invalid, an error message will appear and you will be left on the verification page:
+
+![Message after entering incorrect email code](logon-device-verification-error.png)
+
+The entire verification must be completed within **15 minutes**, otherwise log in again. The **Cancel** button will end the login in progress and the browser will remain blocked. Without the correct code, the administration remains inaccessible. If you do not have access to your email box, please contact the administrator.
+
+When specifically logging in via `doFilterLogon` or header `wjlogontoken`, the blocked browser will not log in and the email prompt will not be displayed. To unblock, open the regular login form `/admin/logon/` in the same browser and complete the email code verification. You can then use the original login method again.
+
+Recognition is used to provide an overview of logins and to warn about an unknown browser. The blocking is tied to the `wjdevice` cookie, not to the physical device. After deleting the cookie, the browser is registered as new during normal login. This feature therefore does not replace a strong password, changing a leaked password, or two-step verification.
+
 ## Logout
 
 The logout link is located in the administration header in the upper right as an icon ![](icon-logoff.png ":no-zoom"):

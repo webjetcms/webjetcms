@@ -123,7 +123,53 @@ When sending, the visible card data is refreshed every 30 seconds. The number of
 
 In the welcome panel you will find news of the current version of WebJET CMS. Click the **Collapse news** button to confirm reading them and leave a brief summary. Click the **More info** button to expand them again.
 
-System alerts are sorted by severity: errors, warnings, and information. Each line contains an explanation and an available action. Errors remain visible until the cause is resolved. You can snooze the alert for 7 days by clicking **Remind me later** or **×**.
+### System notifications
+
+In this section, you will review issues that require your attention. The login from an unknown device alert is always the first. Other alerts are sorted by severity: errors, warnings, and information. Each line contains an explanation and an available action. Errors remain visible until the cause is resolved. You can snooze a regular alert for 7 days by clicking **Remind me later** or **×**.
+
+#### New login from an unknown device
+
+The warning will appear after a successful login in a browser that WebJET CMS does not recognize as being used for your account in the last 90 days. It will also send you an email. For the current browser, the information **You have logged in from a new browser** will be displayed with the time and the label **This browser**. For another device, the warning will remain with the browser, operating system, IP address and login time. Check that the data matches your login.
+
+![Notification after logging in from a new browser](device-new-browser.png)
+
+The email **New login to WebJET CMS** contains data about the browser, IP address, time and login environment. You can use the buttons in the email to confirm the login or open its details to secure your account.
+
+![Email with notification of new login and options to confirm or secure account](device-new-browser-email.png)
+
+#### If you know the login
+
+Click **It was me**. A six-digit code will be sent to your email. Enter it in the field below the notification and click **Confirm code**.
+
+![Confirm new browser with code from email](device-confirm-code.png)
+
+You can find the code in the email **WebJET CMS login confirmation code**:
+
+![Email with one-time code to confirm new browser](device-confirm-code-email.png)
+
+The code is valid for 10 minutes and allows a maximum of 5 attempts. The **Send New Code** button can be used to send another code after a minute, replacing the previous one. Only after the code is verified will the device be confirmed and the warning removed in all your browsers after refreshing the report.
+
+You can also confirm your login using the **It was me** link in the original email. The link is valid for 24 hours, only works when you are logged in to the relevant account, and can be used once. A new code will not cancel this link; successful confirmation will invalidate both the link and the code.
+
+#### If you don't know your login
+
+When alerted or on a device in the **My Devices** tab in the **Active Logins** window, click **It wasn't me**. The device will be locked and its known sessions will be signed out. A small **Secure your account** window will display the result and recommended next steps. If you lock the browser you're currently working in, it will also sign you out.
+
+The **It wasn't me - secure account** link in the email after logging in will open the same small window, but it won't lock the device yet. If you don't know the login, confirm the action with the **Lock device** button.
+
+Once locked, use **Change Password** to check your other logins. The **Turn on 2FA** button will open the two-factor authentication settings if it's available for your account and not already enabled. **Later** will just close the window. For a business account, change your password with your login provider or contact your administrator.
+
+The next time you log in from a blocked device, after entering the correct login details, you will be prompted to verify your email code. The browser will unblock the device only after entering the correct code.
+
+#### Browser memory and notification validity
+
+After successful two-factor authentication, the unblocked browser is automatically confirmed. You will receive an information email about the new device with the option **It wasn't me**, without the need for further confirmation. If you have blocked the device, the code from the email is required only after 2FA. The procedure is described in [Verifying a blocked device](logon.md#verifying-a-blocked-device).
+
+This notification does not have a cross or snooze option. It will disappear after confirming **It was me**, after successfully locking the device, or after 7 days from the event. Additional logins do not extend this seven-day period.
+
+A blocked device remains blocked even after the notification is removed. New device detection, confirmation (including 2FA and code unlock), and blocking are logged in the audit trail as type **USER_DEVICE**. The log includes the user, device ID, browser, operating system, and device IP address.
+
+WebJET CMS remembers the browser using a cookie. Each completed login will extend its memory by another 90 days; a regular logout will not delete the cookie. Therefore, you may receive a new notification even after deleting cookies, using a different profile or an anonymous window. After deleting or expiring a cookie, the previous blocking of the browser will not apply. Updating the browser or changing the IP address while the cookie is still present will not trigger a new notification. The administrator can change the period in [configuration](../../admin/setup/configuration/dashboard.md).
 
 ### Search and help
 
@@ -131,7 +177,7 @@ Use it when you want to find a page in the administration or instructions for wo
 
 ### My active logins
 
-It allows you to review your active logins and log out from another device or browser that you no longer use. It is always at the top of the overview and cannot be deleted. For details, see [Logins](#logins).
+It allows you to review your active logins and log out from another device or browser that you no longer use. The fixed panel is always at the top of the dashboard and cannot be removed. You can also add its standalone widget to your personal dashboard from the catalog. Click the arrow heading to open the **My Logins** tab. For details, see [Logins](#logins).
 
 ### Logged in admins
 
@@ -159,7 +205,13 @@ At the top of the overview, you can check your active logins and log out from an
 
 ### My active logins
 
-The **My Active Logins** panel shows all your active sessions, i.e. logins under your account, with browser, time and IP address. You can scroll through the list if the list is long. Your current session is the first and has a green dot with the description **This login**. You can log out of other sessions directly in the list, for example if you forgot to log out on another computer. This panel is always at the top and cannot be removed.
+The **My Active Logins** panel shows all your active sessions, i.e. logins under your account, with browser, time, and IP address. In the active logins window, the **Location** column shows [an approximate city and country](../../admin/setup/configuration/dashboard.md#an-approximate-location-of-logins), with the IP address below in smaller font. If the location is not available, **Unknown** is displayed. The city is estimated based on the public Internet connection; the IP detected by the server may be internal. If the list is long, you can scroll through its contents. Your current session is the first and has a green dot with the description **This login**. You can log out of other sessions directly in the list, for example if you forgot to log out on another computer. This panel is always at the top and cannot be removed.
+
+A separate widget in the personal overview will display information that you are logged in only here for a single current session. For multiple sessions, it will show their number and, in larger variants, a list with the latest activity. Sessions of a known but not yet confirmed device will be highlighted with an orange background and the label **New**. If the device status is unknown, it will not be highlighted. The **Logout all others** button will open a confirmation dialog; the logout will only be performed after confirmation.
+
+Clicking on the title of the panel or widget with an arrow will open the **Active Logins** window in the **My Logins** tab. In addition to your own sessions, it offers management of your devices, login history for the last 30 days, and, depending on your permissions, logged in administrators. The **Change Password** button at the bottom of the window will open your profile to change your password. The information icon next to the button will display instructions for changing the password for a corporate account.
+
+The **My Logins** tab only shows active sessions. A single browser can have multiple sessions. For each session, you see the browser with its version, below it the operating system with its version, and the login date. The current session has the label **This Login** next to the browser name; for others, you can use the action **Log Out**.
 
 ![](sessions.png)
 
@@ -169,9 +221,21 @@ The data is updated after the user logs in. If you need more frequent updates, t
 
 The background job deletes records older than 60 minutes from the database. If not set, records older than 24 hours are deleted when the user logs in.
 
+### My devices
+
+The **My Devices** tab displays your account's saved browsers, including those that no longer have an active session. Entries are sorted by most recently used and paginated by 20. The **Refresh Data** button loads the current data.
+
+For each device, you see the browser and its version, operating system, time of recording, IP address, and last use. The status label is next to the browser name, and below it is the operating system with version and date of recording. **Last activity** in this tab means the last successful login. The **Location** column contains the city and country, and below them the IP address from the last successful login. If the location is unavailable, **Unknown** is displayed, even if it was known from an earlier login. The browser and system come from the device recording. The current browser also has the label **This device**.
+
+- **New** indicates a device that has not yet been confirmed. You can confirm it with the **It was me** button. It will send a one-time code to your email and open a form below the device across the entire width of the list. The **Cancel** button will close the form without changing the device's status. Only after the correct code is entered will the device be confirmed and its system notification removed. If you do not know the login, use **It was not me**.
+- You can additionally block a **Confirmed** device using the **It wasn't me** button. The confirmation date will be displayed in a tooltip above the label after hovering with the mouse or focusing with the keyboard.
+- **A blocked** device has a tooltip above the label with the blocking date and an explanation of how to unblock it. It can only be unblocked the next time you log in by verifying the code from your email.
+
+Blocking will log out all known sessions on that device. If it's the current browser, it will also log you out. After blocking another browser, a small **Secure your account** window will appear with further steps, just like with a system alert.
+
 ### Logged in administrators
 
-If you have the "Home - View logged in administrators" right, you can add the **Logged in admins** widget via the catalog with a list of all logged in administrators. This gives you an overview of how many users are currently working in the administration.
+If you have the "Home - View Logged-In Administrators" right, you can add the **Logged-In Admins** widget through the catalog with a list of all logged-in administrators. In both sizes, it displays the total number of active sessions and the number of administrators. Each name has its own number of sessions. One account can have multiple logins, so the two totals may differ. Clicking on the title with the arrow will open the **Active Logins** window directly in the **Logged-In Administrators** tab.
 
 Click on the icon<i class="ti ti-mail fs-6"></i> you can send an email to the administrator.
 

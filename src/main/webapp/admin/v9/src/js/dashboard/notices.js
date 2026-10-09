@@ -1,3 +1,6 @@
+import { date } from './widget-utils';
+import { isCurrentDevice, showDeviceConfirmation, browserLabel } from './security-events';
+
 const SETTINGS_KEY = "dashboard.notices";
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 
@@ -17,8 +20,9 @@ function button(label, action, className = "btn btn-sm btn-link") {
 
 /** Owns only system-notice rendering and account preferences, independently of the personal grid. */
 export class DashboardNotices {
-    constructor(host, data, openSessions) {
+    constructor(host, data, openSessions, openSecurityEvent) {
         this.openSessions = openSessions;
+        this.openSecurityEvent = openSecurityEvent;
         this.host = host;
         this.data = data;
         this.state = { dismissedUntil: {} };
@@ -50,9 +54,11 @@ export class DashboardNotices {
             action: { type: "sessions", label: this._t("activeSessions") }
         });
         const notices = active.filter(notice => {
+            if (notice.kind === "newDevice") return !notice.securityEvent.confirmedAt && !notice.securityEvent.reportedAt && notice.securityEvent.expiresAt > now;
             const until = this.state.dismissedUntil[notice.id];
             return notice.severity === "error" || !(until > now || notice.severity === "info" && until === 0);
-        }).sort((first, second) => (rank[first.severity] ?? 2) - (rank[second.severity] ?? 2));
+        }).sort((first, second) => Number(second.kind === "newDevice") - Number(first.kind === "newDevice")
+            || (rank[first.severity] ?? 2) - (rank[second.severity] ?? 2));
         this.container.replaceChildren();
         if (notices.length) {
             const heading = node("h2", "md-dashboard__notices-heading", this._t("notices"));
@@ -65,7 +71,9 @@ export class DashboardNotices {
         this.container.append(this.status);
         this.container.hidden = !notices.length;
         this._setBusy(this.busy);
-        const expiry = Object.values(this.state.dismissedUntil).filter(until => until > now).sort((a, b) => a - b)[0];
+        const expiry = [...Object.values(this.state.dismissedUntil),
+            ...notices.filter(notice => notice.kind === "newDevice").map(notice => notice.securityEvent.expiresAt)]
+            .filter(until => until > now).sort((a, b) => a - b)[0];
         if (expiry) this.expiryTimer = window.setTimeout(() => this.render(), Math.min(expiry - now + 1, 2147483647));
         window.scrollbarMain?.update();
     }
@@ -73,7 +81,8 @@ export class DashboardNotices {
     _row(notice) {
         const wrapper = node("div", "md-dashboard__notice");
         wrapper.dataset.noticeId = notice.id;
-        wrapper.dataset.severity = notice.severity;
+        const currentDevice = notice.kind === "newDevice" && isCurrentDevice(this.data, notice.securityEvent.id);
+        wrapper.dataset.severity = currentDevice ? "info" : notice.severity;
         const row = node("div", "md-dashboard__notice-row");
         const icon = node("i", `ti ${/^ti-[a-z0-9-]+$/.test(notice.icon) ? notice.icon : "ti-info-circle"}`);
         icon.setAttribute("aria-hidden", "true");
@@ -81,10 +90,27 @@ export class DashboardNotices {
         const body = document.createElement("div");
         // Older embedded notices can supply trusted HTML; the compact row renders its text only.
         body.innerHTML = notice.bodyHtml || "";
-        text.append(node("strong", "md-dashboard__notice-title", notice.title),
-            node("span", "md-dashboard__notice-description", notice.description || body.textContent));
+        let description = notice.description || body.textContent;
+        if (notice.kind === "newDevice") {
+            const event = notice.securityEvent;
+            const browser = browserLabel(event);
+            const device = [browser, event.operatingSystem].filter(Boolean).join(" · ");
+            description = currentDevice
+                ? this._t("newDevice.currentDetails", device || "—", date(event.createDate))
+                : this._t("newDevice.details", device || "—", event.ipAddress || "—", date(event.createDate));
+        }
+        text.append(node("strong", "md-dashboard__notice-title", currentDevice ? this._t("newDevice.currentTitle") : notice.title),
+            node("span", "md-dashboard__notice-description", description));
         const actions = node("div", "md-dashboard__notice-actions");
-        if (notice.action) {
+        if (notice.kind === "newDevice") {
+            if (!notice.securityEvent.reportedAt) actions.append(button(this._t("newDevice.confirm"), () => this._confirmSecurityEvent(notice),
+                "btn btn-sm btn-white md-dashboard__notice-confirm"));
+            if (!currentDevice) actions.append(button(this._t(notice.securityEvent.reportedAt ? "newDevice.blocked" : "newDevice.notMe"), event => {
+                event.currentTarget.focus({ preventScroll: true });
+                this.openSecurityEvent?.(notice.securityEvent);
+            },
+                "btn btn-sm btn-link text-danger md-dashboard__notice-report"));
+        } else if (notice.action) {
             actions.append(button(notice.action.label, event => {
                 if (notice.action.type === "popup") WJ.openPopupDialog(notice.action.url);
                 else if (notice.action.type === "help") WJ.showHelpWindow(notice.action.url);
@@ -93,9 +119,9 @@ export class DashboardNotices {
                     event.currentTarget.focus({ preventScroll: true });
                     this.openSessions?.();
                 }
-            }, "btn btn-sm btn-outline-secondary md-dashboard__notice-action"));
+            }, "btn btn-sm btn-white md-dashboard__notice-action"));
         }
-        if (notice.severity !== "error") {
+        if (notice.kind !== "newDevice" && notice.severity !== "error") {
             if (notice.severity === "warning") actions.append(button(this._t("notice.later"), () => this._dismiss(notice, wrapper)));
             const close = button("", () => this._dismiss(notice, wrapper), "btn btn-sm btn-link md-dashboard__notice-dismiss");
             const label = this._t(notice.severity === "warning" ? "notice.later" : "notice.hide");
@@ -114,6 +140,24 @@ export class DashboardNotices {
     _setBusy(busy) {
         this.container.querySelectorAll("button").forEach(control => { control.disabled = !!busy; });
         this.container.setAttribute("aria-busy", String(!!busy));
+    }
+
+    /** Requests an email code; trust changes only after the shared form verifies it. */
+    _confirmSecurityEvent(notice) {
+        if (this.busy || this.destroyed) return;
+        const row = [...this.container.querySelectorAll('[data-notice-id]')].find(element => element.dataset.noticeId === notice.id);
+        if (!row || row.querySelector('.md-dashboard-device-confirmation')) return;
+        const host = node('div', 'md-dashboard__notice-verification');
+        row.append(host);
+        this.confirmationRequest ||= new AbortController();
+        row.querySelector('.md-dashboard__notice-confirm').disabled = true;
+        showDeviceConfirmation({ data: this.data, deviceId: notice.securityEvent.id, host, signal: this.confirmationRequest.signal,
+            translate: key => this._t(key), onConfirmed: () => {
+                if (this.destroyed) return;
+                this.render();
+                (this.container.querySelector('button') || this.host.closest('webjet-overview-dashboard')?.querySelector('button'))?.focus({ preventScroll: true });
+                WJ.notifySuccess?.(this._t('newDevice.confirmed'), '', 10000);
+            } });
     }
 
     /** Saves just the notice record through the existing administration settings API. */
@@ -144,7 +188,7 @@ export class DashboardNotices {
     }
 
     async _dismiss(notice, row) {
-        if (notice.severity === "error" || this.busy) return;
+        if (notice.kind === "newDevice" || notice.severity === "error" || this.busy) return;
         const keyboard = row.contains(document.activeElement) && document.activeElement.matches(":focus-visible");
         const previous = this.state.dismissedUntil[notice.id];
         const until = notice.severity === "warning" ? Date.now() + WEEK : 0;
@@ -219,6 +263,7 @@ export class DashboardNotices {
     destroy() {
         this.destroyed = true;
         this.request?.abort();
+        this.confirmationRequest?.abort();
         this.animation?.cancel();
         window.clearTimeout(this.expiryTimer);
         this._clearToast();

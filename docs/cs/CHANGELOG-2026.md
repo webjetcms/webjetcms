@@ -21,6 +21,20 @@
     <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+### Přihlašování a ochrana účtu
+
+- WebJET CMS nově [eviduje prohlížeče, ze kterých se přihlašujete](redactor/admin/logon.md#přihlášení-z-nového-zařízení). Přihlášení z nového prohlížeče zobrazí upozornění na úvodní obrazovce a odešle email, abyste mohli rozpoznat cizí přihlášení do svého účtu. Vlastní zařízení potvrdíte emailovým odkazem nebo jednorázovým kódem přes **Byl jsem to já** (#340).
+
+![Upozornění k přihlášení z nového prohlížeče](redactor/admin/device-block.png)
+
+- Pokud přihlášení neznáte, můžete [zablokovat zařízení a ukončit jeho aktivní přihlášení](redactor/admin/welcome.md#pokud-přihlášení- neznáte). Při dalším přihlášení ze zablokovaného prohlížeče se po zadání správného jména a hesla zobrazí **Ověření zablokovaného zařízení**. Pro odblokování a vstup do administrace je třeba zadat šestimístný kód z emailu účtu; při zapnutém 2FA se toto ověření provede až po kódu z autentifikační aplikace. Podrobný postup je uveden v [návodu k přihlášení](redactor/admin/logon.md#ověření-zablokovaného-zařízení) (#340).
+
+![Ověření zablokovaného zařízení před vstupem do administrace](redactor/admin/logon-device-verification.png)
+
+- Specifická přihlášení přes `doFilterLogon` a `wjlogontoken` odmítnou zablokovaný prohlížeč bez emailové výzvy. K odblokování je třeba použít běžný přihlašovací formulář ve stejném prohlížeči (#340).
+
+Sledování zařízení lze vypnout nastavením konfigurační proměnné `adminNewDeviceDetectionEnabled` na false. Při přihlášení se také zjišťuje [přibližná poloha](admin/setup/configuration/dashboard.md#orientační-poloha-přihlášení) podle IP adresy, vypnout se dá nastavením `adminLoginLocationApiKey` na hodnotu `DISABLED`.
+
 ### Webové stránky
 
 - Koš webových stránek - přidáno [automatické mazání starých stránek a složek](redactor/apps/gdpr/data-deleting.md) z koše podle nastaveného retenčního období. Přidána možnost mazání stránek a složek v koši i v sekci [Mazání dat](sysadmin/data-deleting/README.md) podle zvoleného rozsahu dat. Sjednocená logika výpočtu počtu a mazání, opraveno trvalé odstranění složky koše a prázdných složek (#271).

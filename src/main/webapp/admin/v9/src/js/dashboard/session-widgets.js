@@ -1,6 +1,8 @@
 import { registerWidget } from './registry';
 import { node, text, date, number, icon, containNativeScroll, fetchJson } from './widget-utils';
-import { adminMail, fetchLoggedAdministrators } from './system-widgets';
+import { adminMail, fetchLoggedAdministrators, renderLoggedAdmins } from './system-widgets';
+import { showDeviceConfirmation, isCurrentDevice, browserLabel } from './security-events';
+import { closeAccountDialog, showDeviceSecurity } from './device-security-dialog';
 
 function sessionButton(label, action, className) {
     const control = node('button', className, label);
@@ -36,6 +38,16 @@ function sessionBrowserIcon(browserName) {
     if (/chrome|chromium|crios/i.test(name)) return 'ti-brand-chrome';
     if (/safari/i.test(name)) return 'ti-brand-safari';
     return 'ti-device-desktop';
+}
+
+/** Renders the untrusted location as text above the server-observed IP address. */
+function locationCell(location, ip, context) {
+    const cell = node('td', 'md-dashboard-sessions__ip');
+    cell.dataset.label = text(context, 'sessionLocation');
+    const label = node('span', '', location || text(context, 'locationUnknown'));
+    label.title = text(context, 'locationHint');
+    cell.append(label, node('small', 'd-block text-muted', `IP ${ip || '—'}`));
+    return cell;
 }
 
 /** Formats the API's activity timestamp in the administration language; older cluster records may omit it. */
@@ -104,7 +116,7 @@ function refreshSessions(context) {
 }
 
 /** Shares the complete, scrollable session list between the welcome panel and personal widgets. */
-function sessionList(container, data, context, signal) {
+function sessionList(container, data, context, signal, personal = false) {
     const list = node('ul', 'md-dashboard-widget__sessions list-unstyled');
     list.tabIndex = 0;
     list.setAttribute('aria-label', text(context, 'sessions'));
@@ -114,9 +126,17 @@ function sessionList(container, data, context, signal) {
         row.dataset.sessionLogon = String(session.logonTime);
         const device = icon(sessionBrowserIcon(session.browserName));
         device.classList.add('md-dashboard-widget__session-device');
-        row.append(device, node('strong', 'md-dashboard-widget__session-name', sessionClient(session)),
-            node('span', 'md-dashboard-widget__session-detail', `${date(session.logonTime)} · ${session.remoteAddr || ''}`));
-        row.title = [session.domainName, session.cluster].filter(Boolean).join(' · ');
+        const name = node('strong', 'md-dashboard-widget__session-name', sessionClient(session));
+        if (personal && session.deviceId != null && session.deviceConfirmed === false && !session.pending) {
+            row.classList.add('is-unconfirmed');
+            name.append(node('span', 'md-dashboard-widget__session-badge', text(context, 'newDevice.badge')));
+        }
+        const activity = session.lastActivity > 0 || session.sessionId === data.currentSessionId
+            ? sessionActivity(session, data.currentSessionId, context) : date(session.logonTime);
+        const detail = personal ? [session.sessionId === data.currentSessionId ? text(context, 'currentSession') : session.remoteAddr, activity].filter(Boolean).join(' · ')
+            : `${date(session.logonTime)} · ${session.remoteAddr || ''}`;
+        row.append(device, name, node('span', 'md-dashboard-widget__session-detail', detail));
+        row.title = [personal ? date(session.logonTime) : '', personal ? session.remoteAddr : '', session.domainName, session.cluster].filter(Boolean).join(' · ');
         if (session.sessionId === data.currentSessionId) {
             const current = node('span', 'md-dashboard-widget__session-current');
             current.tabIndex = 0;
@@ -160,8 +180,12 @@ function sessionList(container, data, context, signal) {
     sessionTooltips(list, signal);
 }
 
-/** Opens the shared session dialog from a linked heading or a system notice. */
-export function showActiveSessions(context) {
+/**
+ * Opens personal sessions and devices, administrator summaries and login history.
+ * @param {import('./registry').WidgetContext} context - Dashboard data and dialog owner.
+ * @param {{tab?: string, logoutOthers?: boolean}} [options] - Initial tab or bulk-logout confirmation.
+ */
+export function showActiveSessions(context, options = {}) {
     if (document.querySelector('.md-dashboard-modal--sessions')) return;
     const dialog = context.dashboard.showDialog(text(context, 'activeSessions'));
     dialog.root.classList.add('md-dashboard-modal--sessions');
@@ -171,13 +195,25 @@ export function showActiveSessions(context) {
     tabs.setAttribute('aria-label', text(context, 'activeSessions'));
     dialog.body.before(tabs);
     const mine = node('section', 'md-dashboard-sessions__mine');
+    const devices = node('section', 'md-dashboard-sessions__devices');
     const admins = node('section', 'md-dashboard-sessions__admins');
     const history = node('section', 'md-dashboard-sessions__history');
-    const tabDefinitions = [['mine', 'mySessions', mine]];
+    const tabDefinitions = [['mine', 'mySessions', mine], ['devices', 'myDevices', devices]];
     if (window.WJ.hasPermission('welcomeShowLoggedAdmins')) {
         tabDefinitions.push(['admins', 'sessionAdmins', admins]);
     }
     tabDefinitions.push(['history', 'sessionHistory', history]);
+    context.dashboard.host.closest('webjet-overview-dashboard')?.addEventListener('webjet-login-location-updated', () => {
+        if (dialog.signal.aborted) return;
+        renderMine();
+        devicesLoaded = false;
+        if (!devices.hidden) loadDevices(0);
+    }, { signal: dialog.signal });
+    let devicesLoaded = false;
+    let devicesLoading = false;
+    let devicesRequest = new AbortController();
+    let devicesView = new AbortController();
+    dialog.signal.addEventListener('abort', () => { devicesRequest.abort(); devicesView.abort(); }, { once: true });
     let historyLoaded = false;
     let adminsLoaded = false;
     let adminsLoading = false;
@@ -212,6 +248,7 @@ export function showActiveSessions(context) {
             tab.tabIndex = i === index ? 0 : -1;
             tabDefinitions[i][2].hidden = i !== index;
         });
+        if (tabDefinitions[index][0] === 'devices' && !devicesLoaded) loadDevices(0);
         if (tabDefinitions[index][0] === 'admins' && !adminsLoaded) loadAdmins();
         if (tabDefinitions[index][0] === 'history' && !historyLoaded) { historyLoaded = true; loadHistory(0); }
     }
@@ -240,7 +277,7 @@ export function showActiveSessions(context) {
         summary.append(explanation);
         const others = sessions.filter(session => session.sessionId !== data.currentSessionId && !session.pending);
         if (others.length) {
-            const all = sessionButton(text(context, 'logoutOtherSessions', number(others.length)), () => remove(others), 'btn btn-sm btn-outline-secondary text-danger');
+            const all = sessionButton(text(context, 'logoutOtherSessions', number(others.length)), () => confirmRemoveOthers(others), 'btn btn-sm btn-outline-secondary text-danger');
             all.prepend(icon('ti-logout'));
             all.disabled = busy;
             summary.append(all);
@@ -249,7 +286,7 @@ export function showActiveSessions(context) {
         const table = node('table', 'md-dashboard-sessions__table');
         const head = node('thead');
         const heading = node('tr');
-        ['sessionBrowser', 'sessionIp', 'sessionLastActivity', 'sessionActions'].forEach((key, index) => {
+        ['sessionBrowser', 'sessionLocation', 'sessionLastActivity', 'sessionActions'].forEach((key, index) => {
             const cell = node('th'); cell.scope = 'col';
             cell.append(node('span', index === 3 ? 'visually-hidden' : '', text(context, key)));
             heading.append(cell);
@@ -262,14 +299,17 @@ export function showActiveSessions(context) {
             const identity = node('div', 'md-dashboard-sessions__device');
             const glyph = node('span', 'md-dashboard-sessions__device-icon'); glyph.append(icon(sessionBrowserIcon(session.browserName)));
             const details = node('div');
-            const name = node('div', 'md-dashboard-sessions__device-name', sessionClient(session));
+            const name = node('div', 'md-dashboard-sessions__device-name', browserLabel(session));
             const current = session.sessionId === data.currentSessionId;
             if (current) name.append(node('span', 'md-dashboard-sessions__current', text(context, 'currentSession')));
-            details.append(name, node('small', '', text(context, 'sessionLoggedAt', date(session.logonTime))));
+            details.append(name);
+            const system = [session.operatingSystem, session.operatingSystemVersion].filter(value => value && !/^unknown$/i.test(value)).join(' ');
+            if (system) details.append(node('div', 'md-dashboard-sessions__system', system));
+            details.append(node('small', 'd-block', text(context, 'sessionLoggedAt', date(session.logonTime))));
             identity.append(glyph, details); device.append(identity);
             const action = node('td', 'md-dashboard-sessions__action');
-            if (current) action.append(node('span', 'text-muted', '—'));
-            else if (session.pending) action.append(node('span', 'small text-muted', text(context, 'sessionPending')));
+            if (session.pending) action.append(node('span', 'small text-muted', text(context, 'sessionPending')));
+            else if (current) action.append(node('span', 'text-muted', '—'));
             else {
                 const logout = sessionButton(text(context, 'sessionLogout'), () => remove([session]), 'btn btn-sm btn-link');
                 logout.prepend(icon('ti-logout')); logout.disabled = busy;
@@ -278,26 +318,204 @@ export function showActiveSessions(context) {
             }
             const activity = node('td', current ? 'md-dashboard-sessions__activity is-current' : 'md-dashboard-sessions__activity', sessionActivity(session, data.currentSessionId, context));
             if (session.lastActivity > 0) activity.title = date(session.lastActivity);
-            row.append(device, node('td', 'md-dashboard-sessions__ip', session.remoteAddr || '—'), activity, action);
+            row.append(device, locationCell(session.location, session.remoteAddr, context), activity, action);
             body.append(row);
         });
         table.append(head, body);
         mine.append(table);
     }
 
-    async function remove(sessions) {
+    /** Fetches the account's retained devices only when their tab is opened or explicitly refreshed. */
+    async function loadDevices(page) {
+        if (devicesLoading || dialog.signal.aborted) return;
+        devicesRequest.abort();
+        devicesView.abort();
+        const request = devicesRequest = new AbortController();
+        devicesLoading = true;
+        devices.setAttribute('aria-busy', 'true');
+        devices.replaceChildren(node('p', '', text(context, 'loading')));
+        try {
+            const data = await fetchJson(`/admin/rest/security/login-events?page=${page}`, request.signal);
+            if (request.signal.aborted) return;
+            devicesLoaded = true;
+            tabButtons[1].textContent = `${text(context, 'myDevices')} (${number(data.totalElements)})`;
+            renderDevices(data);
+        } catch (error) {
+            if (dialog.signal.aborted) return;
+            const message = node('p', 'text-danger', text(context, 'unavailable'));
+            message.setAttribute('role', 'alert');
+            devices.replaceChildren(message, sessionButton(text(context, 'retry'), () => loadDevices(page), 'btn btn-sm btn-white'));
+        } finally {
+            devicesLoading = false;
+            devices.setAttribute('aria-busy', 'false');
+        }
+    }
+
+    function renderDevices(data) {
+        devicesView.abort();
+        devicesView = new AbortController();
+        devices.replaceChildren();
+        const summary = node('div', 'md-dashboard-sessions__summary');
+        const explanation = node('div');
+        explanation.append(node('strong', '', text(context, 'devicesHeading')), node('p', '', text(context, 'devicesDescription')));
+        const refresh = sessionButton(text(context, 'refresh'), () => loadDevices(data.number), 'btn btn-sm btn-white');
+        refresh.prepend(icon('ti-refresh'));
+        summary.append(explanation, refresh);
+        devices.append(summary);
+        if (!data.content.length) devices.append(node('p', 'text-muted', text(context, 'devicesEmpty')));
+        const table = node('table', 'md-dashboard-sessions__table md-dashboard-devices__table');
+        const head = node('thead'), heading = node('tr');
+        ['sessionBrowser', 'sessionLocation', 'sessionLastActivity', 'sessionActions'].forEach((key, index) => {
+            const cell = node('th'); cell.scope = 'col';
+            cell.append(node('span', index === 3 ? 'visually-hidden' : '', text(context, key))); heading.append(cell);
+        });
+        head.append(heading); table.append(head);
+        const body = node('tbody');
+        data.content.forEach(device => {
+            const row = node('tr'); row.dataset.deviceId = String(device.id);
+            const state = device.reportedAt ? 'Blocked' : device.confirmedAt ? 'Confirmed' : 'Unconfirmed';
+            row.classList.toggle('is-new', state === 'Unconfirmed');
+            const identity = node('td');
+            const wrapper = node('div', 'md-dashboard-sessions__device');
+            const glyph = node('span', 'md-dashboard-sessions__device-icon'); glyph.append(icon(sessionBrowserIcon(device.browserName)));
+            const details = node('div');
+            const name = node('div', 'md-dashboard-sessions__device-name', browserLabel(device));
+            const badges = node('span', 'md-dashboard-devices__badges');
+            if (isCurrentDevice(context.data, device.id)) badges.append(node('span', 'md-dashboard-sessions__current', text(context, 'currentDevice')));
+            const badge = node('span', `md-dashboard-devices__badge is-${state.toLowerCase()}`, text(context, state === 'Unconfirmed' ? 'newDevice.badge' : `device${state}`));
+            if (device.reportedAt || device.confirmedAt) {
+                badge.title = `${text(context, `device${state}`)}: ${date(device.reportedAt || device.confirmedAt)}`;
+                if (state === 'Blocked') badge.title += `. ${text(context, 'deviceBlockedAdvice')}`;
+                badge.setAttribute('data-bs-toggle', 'tooltip');
+                badge.tabIndex = 0;
+            }
+            badges.append(badge);
+            name.append(badges);
+            details.append(name);
+            if (device.operatingSystem && !/^unknown$/i.test(device.operatingSystem)) details.append(node('div', 'md-dashboard-sessions__system', device.operatingSystem));
+            details.append(node('small', 'd-block', text(context, 'deviceRecordedAt', date(device.createDate))));
+            wrapper.append(glyph, details); identity.append(wrapper);
+            const ip = locationCell(device.location, device.ipAddress, context);
+            const lastSeen = node('td', 'md-dashboard-devices__last-seen', date(device.lastSeen)); lastSeen.dataset.label = text(context, 'sessionLastActivity');
+            const action = node('td', 'md-dashboard-sessions__action');
+            const controls = node('div', 'md-dashboard-sessions__device-actions');
+            if (state === 'Unconfirmed') {
+                const confirmationRow = node('tr', 'md-dashboard-devices__confirmation-row is-new');
+                confirmationRow.hidden = true;
+                const confirmation = node('td'); confirmation.colSpan = 4;
+                confirmation.id = `${devices.id}-confirmation-${device.id}`;
+                confirmationRow.append(confirmation);
+                let confirmationRequest;
+                devicesView.signal.addEventListener('abort', () => confirmationRequest?.abort(), { once: true });
+                const confirm = sessionButton(text(context, 'newDevice.confirm'), () => {
+                    if (!confirmationRow.hidden) {
+                        confirmationRequest.abort();
+                        confirmationRow.hidden = true;
+                        confirmation.replaceChildren();
+                        confirm.textContent = text(context, 'newDevice.confirm');
+                        confirm.setAttribute('aria-expanded', 'false');
+                        return;
+                    }
+                    confirmationRequest = new AbortController();
+                    confirmationRow.hidden = false;
+                    confirm.textContent = context.translate('button.cancel');
+                    confirm.setAttribute('aria-expanded', 'true');
+                    showDeviceConfirmation({ data: context.data, deviceId: device.id, host: confirmation, signal: confirmationRequest.signal,
+                        translate: key => text(context, key), onConfirmed: updated => {
+                            Object.assign(device, updated);
+                            refreshSessions(context);
+                            renderDevices(data);
+                            const feedback = node('p', 'mt-3 mb-0', text(context, 'newDevice.confirmed'));
+                            feedback.setAttribute('role', 'status'); devices.append(feedback);
+                            devices.querySelector(`[data-device-id="${device.id}"] button`)?.focus({ preventScroll: true });
+                        } });
+                }, 'btn btn-sm btn-white md-dashboard-sessions__confirm-device');
+                confirm.setAttribute('aria-expanded', 'false');
+                confirm.setAttribute('aria-controls', confirmation.id);
+                controls.append(confirm);
+                body.append(row, confirmationRow);
+            } else body.append(row);
+            if (state !== 'Blocked') controls.append(sessionButton(text(context, 'newDevice.notMe'), () =>
+                closeAccountDialog(dialog, () => showDeviceSecurity(context, device, true)), 'btn btn-sm btn-red md-dashboard-sessions__deny-device'));
+            if (controls.childElementCount) action.append(controls);
+            row.append(identity, ip, lastSeen, action);
+        });
+        table.append(body);
+        if (data.content.length) devices.append(table);
+        sessionTooltips(table, devicesView.signal);
+        if (data.totalPages > 1) {
+            const pagination = node('div', 'md-dashboard-sessions__pagination');
+            const previous = sessionButton(text(context, 'sessionPrevious'), () => loadDevices(data.number - 1), 'btn btn-sm btn-white');
+            const next = sessionButton(text(context, 'sessionNext'), () => loadDevices(data.number + 1), 'btn btn-sm btn-white');
+            previous.disabled = data.first; next.disabled = data.last;
+            pagination.append(previous, node('span', 'small', `${data.number + 1} / ${data.totalPages}`), next);
+            devices.append(pagination);
+        }
+    }
+
+    /** Temporarily replaces the session detail so confirmation shares its modal focus trap and lifecycle. */
+    function confirmRemoveOthers(sessions) {
+        const trigger = dialog.root.contains(document.activeElement) ? document.activeElement : mine.querySelector('.md-dashboard-sessions__summary button');
+        const title = dialog.root.querySelector('.modal-title');
+        const body = [...dialog.body.childNodes];
+        const footer = [...dialog.footer.childNodes];
+        const countKey = sessions.length === 1 ? 'Single' : sessions.length < 5 ? 'Few' : 'Many';
+        const restore = () => {
+            dialog.root.removeEventListener('hide.bs.modal', cancel);
+            dialog.root.removeEventListener('keydown', onKeydown, true);
+            dialog.root.classList.remove('md-dashboard-modal--logout');
+            title.textContent = text(context, 'activeSessions');
+            tabs.hidden = false;
+            dialog.body.replaceChildren(...body);
+            dialog.footer.replaceChildren(...footer);
+            trigger.focus({ preventScroll: true });
+        };
+        const cancel = event => { event?.preventDefault(); restore(); };
+        const onKeydown = event => {
+            if (event.key !== 'Escape') return;
+            event.stopImmediatePropagation();
+            cancel(event);
+        };
+        dialog.root.addEventListener('hide.bs.modal', cancel);
+        dialog.root.addEventListener('keydown', onKeydown, true);
+        dialog.root.classList.add('md-dashboard-modal--logout');
+        title.textContent = text(context, 'logoutOthersTitle');
+        tabs.hidden = true;
+        const list = node('ul', 'md-dashboard-sessions__logout-list list-unstyled');
+        for (const session of sessions) {
+            const row = node('li');
+            row.append(icon(sessionBrowserIcon(session.browserName)), node('span', '', [sessionClient(session), session.remoteAddr].filter(Boolean).join(' · ')));
+            list.append(row);
+        }
+        dialog.body.replaceChildren(node('p', '', text(context, `logoutOthersDescription${countKey}`, number(sessions.length))), list,
+            node('p', 'mb-0', text(context, 'logoutOthersAdvice')));
+        const keep = sessionButton(context.translate('button.cancel'), cancel, 'btn btn-outline-secondary');
+        const confirm = sessionButton(text(context, `logoutOthersSubmit${countKey}`, number(sessions.length)), () => {
+            restore();
+            remove(sessions, true);
+        }, 'btn btn-red');
+        dialog.footer.replaceChildren(keep, confirm);
+        keep.focus({ preventScroll: true });
+    }
+
+    async function remove(sessions, notify = false) {
         if (busy) return;
         busy = true;
+        let completed = true;
         status.textContent = '';
         mine.querySelectorAll('button').forEach(control => { control.disabled = true; });
         for (const session of sessions) {
-            try { await logoutSession(session, context, dialog.signal); }
-            catch (error) { if (!dialog.signal.aborted) status.textContent = text(context, 'sessionError'); }
+            try { if (await logoutSession(session, context, dialog.signal)) completed = false; }
+            catch (error) {
+                completed = false;
+                if (!dialog.signal.aborted) status.textContent = text(context, 'sessionError');
+            }
             if (dialog.signal.aborted) return;
         }
         busy = false;
         refreshSessions(context);
         renderMine();
+        if (notify && completed) window.WJ.notifySuccess(text(context, 'activeSessions'), text(context, 'logoutOthersSuccess', number(sessions.length)), 5000);
         if (adminsLoaded) await loadAdmins();
         tabButtons[0].focus({ preventScroll: true });
     }
@@ -443,13 +661,29 @@ export function showActiveSessions(context) {
     }
 
     renderMine();
-    dialog.footer.append(node('small', 'text-muted me-auto', text(context, 'sessionsImmediate')), status,
+    const password = sessionButton(text(context, 'newDevice.changePassword'), () => {
+        password.disabled = true;
+        closeAccountDialog(dialog, () => window.openProfileDialog(window.currentUser.userId, true));
+    }, 'btn btn-sm btn-outline-secondary md-dashboard-sessions__password');
+    const passwordHelp = node('button', 'btn btn-sm btn-link text-secondary md-dashboard-sessions__password-help');
+    passwordHelp.type = 'button';
+    passwordHelp.setAttribute('aria-label', text(context, 'newDevice.passwordHelp'));
+    passwordHelp.setAttribute('title', text(context, 'newDevice.externalPassword'));
+    passwordHelp.setAttribute('data-bs-toggle', 'tooltip');
+    passwordHelp.append(icon('ti-info-circle'));
+    const passwordControls = node('div', 'd-flex align-items-center gap-1 me-auto');
+    passwordControls.append(password, passwordHelp);
+    dialog.footer.append(passwordControls, status,
         sessionButton(text(context, 'close'), dialog.close, 'btn btn-sm btn-outline-secondary'));
-    selectTab(0);
-    tabButtons[0].focus({ preventScroll: true });
+    sessionTooltips(dialog.footer, dialog.signal);
+    selectTab(Math.max(0, tabDefinitions.findIndex(([id]) => id === (options.tab || 'mine'))));
+    if (options.logoutOthers) {
+        const others = flattenSessions(context.data.currentSessions).filter(session => session.sessionId !== context.data.currentSessions.currentSessionId && !session.pending);
+        if (others.length) confirmRemoveOthers(others);
+    }
 }
 
-/** Registers the fixed welcome-panel list and the optional personal session widget. */
+/** Registers the fixed welcome-panel list and optional personal-session and administrator widgets. */
 export function registerSessionWidgets() {
     const headerAction = (instance, context) => showActiveSessions(context);
     registerWidget({
@@ -465,15 +699,34 @@ export function registerSessionWidgets() {
         sizes: ['1x1', '2x2', '2x3'], defaultSize: '2x2', multiple: true, headerAction,
         render({ container, context, signal, instance }) {
             const data = context.data.currentSessions;
-            const count = flattenSessions(data).length;
-            if (instance.size === '1x1') {
+            const sessions = flattenSessions(data);
+            const count = sessions.length;
+            if (count === 1 && sessions[0].sessionId === data.currentSessionId) {
+                const only = node('div', 'md-dashboard-widget__session-only');
+                const details = node('div');
+                details.append(node('strong', '', text(context, 'sessionsSummarySingle')),
+                    node('small', '', [sessionClient(sessions[0]), sessions[0].remoteAddr].filter(Boolean).join(' · ')));
+                only.append(icon('ti-circle-check'), details);
+                container.append(only);
+            } else if (instance.size === '1x1') {
                 const metric = sessionButton(number(count), () => showActiveSessions(context), 'md-dashboard-widget__metric md-dashboard-widget__number md-dashboard-sessions__metric');
                 metric.setAttribute('aria-label', text(context, 'sessionsCount', number(count)));
                 container.append(metric, node('p', 'md-dashboard-widget__footnote small', text(context, 'activeSessions')));
             } else {
-                sessionList(container, data, context, signal);
-                container.append(node('p', 'md-dashboard-widget__footnote small', text(context, 'sessionsCount', number(count))));
+                const badge = node('span', 'badge md-dashboard-widget__session-count', number(count));
+                badge.setAttribute('aria-label', text(context, 'sessionsCount', number(count)));
+                container.append(badge);
+                sessionList(container, data, context, signal, true);
+                const others = sessions.filter(session => session.sessionId !== data.currentSessionId && !session.pending);
+                if (others.length) container.append(sessionButton(text(context, 'logoutOtherSessions', number(others.length)),
+                    () => showActiveSessions(context, { logoutOthers: true }), 'btn btn-sm btn-link md-dashboard-widget__session-bulk'));
             }
         }
+    });
+    registerWidget({
+        type: 'logged-admins', titleKey: 'admin.dashboard.logged-admins.js', descriptionKey: 'admin.dashboard.logged-admins.description.js', icon: 'ti-users',
+        multiple: true, sizes: ['2x2', '2x3'], defaultSize: '2x2', isAvailable: () => window.WJ.hasPermission('welcomeShowLoggedAdmins'),
+        headerAction: (instance, context) => showActiveSessions(context, { tab: 'admins' }),
+        render: renderLoggedAdmins
     });
 }

@@ -149,7 +149,7 @@ export class DashboardController {
         this.editButton = button(this._t("editOverview", "Edit overview"), () => this.editing ? this.saveEditing() : this.setEditing(true), "btn btn-sm btn-outline-secondary md-dashboard__control");
         this.editButton.setAttribute("aria-pressed", "false");
         this.editButton.prepend(icon("ti-adjustments-horizontal"));
-        this.addButton = button(this._t("add", "Add widget"), () => this.showCatalogue(), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control");
+        this.addButton = button(this._t("add", "Add widget"), () => this.showCatalogue(), "btn btn-sm btn-white md-dashboard__control md-dashboard__edit-control");
         this.addButton.prepend(icon("ti-plus"));
         this.addButton.hidden = true;
         this.resetButton = button(this._t("resetConfirm", "Restore defaults"), event => this.showReset(event.shiftKey), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control md-dashboard__reset");
@@ -161,7 +161,7 @@ export class DashboardController {
             feedback.prepend(icon("ti-message-2"));
             actions.append(feedback);
         }
-        this.cancelButton = button(this._t("button.cancel", "Cancel"), () => this.cancelEditing(), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control md-dashboard__cancel");
+        this.cancelButton = button(this._t("button.cancel", "Cancel"), () => this.cancelEditing(), "btn btn-sm btn-white md-dashboard__control md-dashboard__edit-control md-dashboard__cancel");
         this.cancelButton.hidden = true;
         actions.append(this.resetButton, this.addButton, this.cancelButton, this.editButton);
         this.toolbar.append(actions);
@@ -273,7 +273,7 @@ export class DashboardController {
             if (hasBootstrapModal) dialog.root.addEventListener("hidden.bs.modal", cancel, { once: true });
             dialog.close();
             if (!hasBootstrapModal) cancel();
-        }, "btn btn-danger");
+        }, "btn btn-red");
         dialog.footer.append(keep, discard);
         dialog.root.addEventListener("shown.bs.modal", () => keep.focus({ preventScroll: true }), { once: true });
         keep.focus({ preventScroll: true });
@@ -595,7 +595,7 @@ export class DashboardController {
                 action.focus({ preventScroll: true });
                 definition.headerAction(this._instance(instance.id) || instance, this._widgetContext());
             }, "md-dashboard__title-link md-dashboard__title-action");
-            action.append(titleText);
+            action.append(titleText, icon("ti-arrow-up-right"));
             title.append(action);
         } else title.append(titleText);
         title.id = `dashboard-title-${instance.id}`;

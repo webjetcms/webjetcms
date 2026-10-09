@@ -19,6 +19,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.LogonTools;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 import sk.iway.iwcm.components.WebjetComponentAbstract;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.system.spring.SpringUrlMapping;
@@ -53,8 +54,11 @@ public class UsrLogonController extends WebjetComponentAbstract {
 
                 PathFilter.setNginxProxyMode(request, response);
 
-                //zavola triedu/metodu z konstanty. (robene kvoli plussport, kde sa namiesto session pouzila cookie)
-		        LogonTools.afterLogon(user, request, response);
+                if (AdminDeviceService.requireVerification(request)) {
+                    response.sendRedirect(AdminDeviceService.VERIFICATION_URL);
+                    return;
+                }
+                LogonTools.afterSuccessLogon(request, response);
 
 
                 if (afterLogonRedirect!=null)
@@ -137,7 +141,7 @@ public class UsrLogonController extends WebjetComponentAbstract {
                         "newPassword".equals(name) || "retypeNewPassword".equals(name) ||
                         "org.apache.struts.taglib.html.TOKEN".equals(name)) continue;
 
-					String values[] = request.getParameterValues(name);
+					String[] values = request.getParameterValues(name);
                     for (int i=0; i<values.length; i++)
                     {
                         if (url.indexOf("?")==-1)

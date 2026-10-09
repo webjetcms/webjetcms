@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import sk.iway.Password;
@@ -49,6 +47,11 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.PasswordSecurity;
 import sk.iway.iwcm.users.UserChangePasswordService;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
+import sk.iway.iwcm.system.stripes.CSRF;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 /**
  * LogonController.java
@@ -167,15 +170,62 @@ public class AdminLogonController {
                 // - with changePasswordActionSuccess parameter
                 return "redirect:/admin/logon/?act=changePasswordActionSuccess";
             } else {
-                String forwardAfterToken = (String)session.getAttribute("adminAfterLogonRedirect");
-                if (Tools.isEmpty(forwardAfterToken))
-                    return "redirect:/admin/v9/";
-                return "redirect:" + forwardAfterToken;
+                String twoFaRedirect = set2FaAuthForm(user, request);
+                if (Tools.isNotEmpty(twoFaRedirect)) return twoFaRedirect;
+                if (AdminDeviceService.requireVerification(request)) return "redirect:" + AdminDeviceService.VERIFICATION_URL;
+                LogonTools.afterSuccessLogon(request, response);
+                return "redirect:" + AdminDeviceService.getAfterLoginRedirect(request);
             }
         } else {
             if (errors.size()>0) model.addAttribute("errorsList", errors);
             return CHANGE_PASSWORD_FORM;
         }
+    }
+
+    /** Displays the pending browser verification without authenticating the session. */
+    @GetMapping("logon/device/")
+    public String showDeviceVerification(ModelMap model, HttpServletRequest request) {
+        AdminDeviceService service = Tools.getSpringBean("adminDeviceService", AdminDeviceService.class);
+        AdminDeviceService.PendingLogin pending = service.getPendingLogin(request);
+        if (pending == null) return "redirect:/admin/logon/";
+        String email = pending.user().getEmail();
+        model.addAttribute("deviceEmail", Tools.isEmpty(email) ? "—" : email.replaceFirst("(^.)[^@]*", "$1***"));
+        Object message = request.getSession().getAttribute(AdminDeviceService.VERIFICATION_MESSAGE);
+        if (message instanceof String key) model.addAttribute("deviceMessage", Prop.getInstance(request).getText(key));
+        return "/admin/skins/webjet8/logon-spring-device";
+    }
+
+    /** Completes or cancels an email challenge using the existing login and CSRF helpers. */
+    @PostMapping("logon/device/")
+    public String verifyDevice(@RequestParam(defaultValue = "verify") String action,
+            @RequestParam(required = false) String code, ModelMap model,
+            HttpServletRequest request, HttpServletResponse response) {
+        if (!CSRF.verifyTokenAjax(request)) throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        AdminDeviceService service = Tools.getSpringBean("adminDeviceService", AdminDeviceService.class);
+        if (service.getPendingLogin(request) == null) return "redirect:/admin/logon/";
+        if ("cancel".equals(action)) {
+            request.getSession().invalidate();
+            return "redirect:/admin/logon/";
+        }
+        if ("resend".equals(action)) service.requestUnblockCode(request);
+        else if ("verify".equals(action)) {
+            try {
+                if (service.verifyUnblockCode(request, code)) {
+                    Identity user = UsersDB.getCurrentUser(request);
+                    determineLanguage(request.getSession(), request, response);
+                    determineDefaultWebPagesDirectory(user, request.getSession());
+                    checkForNewHelp(request.getSession(), user);
+                    StatDB.addAdmin(request);
+                    LogonTools.afterSuccessLogon(request, response);
+                    return "redirect:" + AdminDeviceService.getAfterLoginRedirect(request);
+                }
+                model.addAttribute("deviceError", Prop.getInstance(request).getText("admin.dashboard.newDevice.codeInvalid.js"));
+            } catch (IllegalStateException exception) {
+                Logger.error(AdminLogonController.class, "Device verification is unavailable", exception);
+                model.addAttribute("deviceError", Prop.getInstance(request).getText("admin.logon.device.unavailable"));
+            }
+        } else throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        return showDeviceVerification(model, request);
     }
 
     @GetMapping("logon.struts")
@@ -188,6 +238,7 @@ public class AdminLogonController {
     @GetMapping("logon/")
     public String showForm(UserForm userForm, ModelMap model, HttpServletRequest request, HttpSession session)
     {
+        if (session.getAttribute(AdminDeviceService.PENDING_LOGIN) != null) return "redirect:" + AdminDeviceService.VERIFICATION_URL;
         Identity user = UsersDB.getCurrentUser(session);
         if (user != null && user.isAdmin())
         {
@@ -326,7 +377,7 @@ public class AdminLogonController {
 
         Prop prop = Prop.getInstance(request.getServletContext(), request);
 
-        String twoFaRedirect = verify2FaKey(request);
+        String twoFaRedirect = verify2FaKey(request, response);
         if (Tools.isNotEmpty(twoFaRedirect)) return twoFaRedirect;
 
         if (Tools.isEmpty(userForm.getUsername()) || Tools.isEmpty(userForm.getPassword())) {
@@ -356,7 +407,7 @@ public class AdminLogonController {
 
         if (!(Password.checkPassword(true, userForm.getPassword(), user.isAdmin(), user.getUserId(), session, null))) {
             // ma slabe heslo
-            session.removeAttribute(Constants.USER_KEY);
+            LogonTools.clearUserFromSession(session);
             session.setAttribute(Constants.USER_KEY+"_changepassword", user);
             userForm.setPassword(userForm.getPassword().replace(".", "*")); // bezpecny placeholder
             model.addAttribute("userForm", userForm);
@@ -366,7 +417,7 @@ public class AdminLogonController {
 
 		twoFaRedirect = set2FaAuthForm(user, request);
         if (Tools.isNotEmpty(twoFaRedirect)) return twoFaRedirect;
-
+        if (AdminDeviceService.requireVerification(request)) return "redirect:" + AdminDeviceService.VERIFICATION_URL;
 
         this.determineLanguage(session, request, response);
         this.determineDefaultWebPagesDirectory(user, session);
@@ -374,16 +425,8 @@ public class AdminLogonController {
         determineRootWebPageDirectory(session, user);
         StatDB.addAdmin(request);
 
-        String adminAfterLogonRedirect = (String)session.getAttribute("adminAfterLogonRedirect");
-        if (Tools.isNotEmpty(adminAfterLogonRedirect)) {
-            if (adminAfterLogonRedirect.startsWith("/admin/v9/") || adminAfterLogonRedirect.startsWith("/admin/approve") ||
-                (adminAfterLogonRedirect.startsWith("/apps/") && adminAfterLogonRedirect.contains("/admin/")) ||
-                (adminAfterLogonRedirect.startsWith("/components/") && adminAfterLogonRedirect.contains("/admin"))) {
-                return "redirect:" + adminAfterLogonRedirect;
-            }
-        }
-
-        return "redirect:/admin/v9/";
+        LogonTools.afterSuccessLogon(request, response);
+        return "redirect:" + AdminDeviceService.getAfterLoginRedirect(request);
     }
 
 
@@ -524,12 +567,13 @@ public class AdminLogonController {
     }
 
     /**
-     * Overi odoslanu hodnotu 2FA cisla, ak je nespravna vrati linku na formular, inak presmerovanie do administracie
-     * Vrati NULL ak 2FA nie je aktivovana
-     * @param request
-     * @return
+     * Verifies a pending second factor before completing device recognition and redirecting.
+     *
+     * @param request authentication request containing the submitted code
+     * @param response response receiving the recognized-browser cookie
+     * @return challenge form, successful redirect, or null when no challenge is pending
      */
-    private static String verify2FaKey(HttpServletRequest request) {
+    private static String verify2FaKey(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession();
         //ocakava sa token
         String generatedToken = (String)session.getAttribute("token");
@@ -555,8 +599,6 @@ public class AdminLogonController {
 
         int generatedCode = gAuth.getTotpPassword(generatedToken);
 
-        Logger.debug(AdminLogonController.class,"userToken : " + insertedCode + "\n token : "+gAuth.getTotpPassword(generatedToken)+ "\n code : "+generatedCode );
-
         if (insertedCode != -1 && insertedCode == generatedCode)
         {
             String token = (String)session.getAttribute("token");
@@ -570,11 +612,14 @@ public class AdminLogonController {
                 String currentCode = new SimpleQuery().forString("SELECT mobile_device FROM users WHERE user_id = ?", sessionUserAfterToken.getUserId());
                 if (Tools.isNotEmpty(token) && Tools.isEmpty(currentCode)) {
                     new SimpleQuery().execute("UPDATE users SET mobile_device = ? WHERE user_id = ?", token, sessionUserAfterToken.getUserId());
-                    sessionUserAfterToken.setMobileDevice(currentCode);
+                    sessionUserAfterToken.setMobileDevice(token);
                 }
+                request.setAttribute(AdminDeviceService.SECOND_FACTOR_VERIFIED, Boolean.TRUE);
+                if (AdminDeviceService.requireVerification(request)) return "redirect:" + AdminDeviceService.VERIFICATION_URL;
+                LogonTools.afterSuccessLogon(request, response);
             }
 
-            return "redirect:/admin/v9/";
+            return "redirect:" + AdminDeviceService.getAfterLoginRedirect(request);
         }
 
         //kod je nespravny, zaloguj neuspesny pokus
@@ -613,7 +658,7 @@ public class AdminLogonController {
             //String token = RandomStringUtils.secure().next(4, false, true);
             //sendToken(mobileDevice, token);
             session.setAttribute("adminUser_waitingForToken", user);
-            session.removeAttribute(Constants.USER_KEY);
+            LogonTools.clearUserFromSession(session);
             //Logger.debug(LogonAction.class, "LogonAction dualFactorToken: "+mobileDevice);
             // zobraz naspat admin
             return TWOFA_PASSWORD_FORM;

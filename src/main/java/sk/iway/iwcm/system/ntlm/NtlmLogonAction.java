@@ -50,6 +50,7 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 /**
  *  LogonAction.java - prihlasenie usera do systemu pomocou NTLM filtra
@@ -175,6 +176,11 @@ public class NtlmLogonAction
 
 				if (logonSuccess)
 				{
+					if (AdminDeviceService.requireVerification(request)) {
+					    response.sendRedirect(AdminDeviceService.VERIFICATION_URL);
+					    return;
+					}
+					LogonTools.afterSuccessLogon(request, response);
 					if (request.getParameter("origDocId")!=null)
 					{
 						afterLogonUrl = "/showdoc.do?docid="+request.getParameter("origDocId");
@@ -183,6 +189,9 @@ public class NtlmLogonAction
 					request.getSession().removeAttribute("afterLogonRedirect");
 					request.setAttribute("afterLogonRedirect", afterLogonRedirect);
 					if (Tools.isNotEmpty(afterLogonRedirect)) afterLogonUrl = afterLogonRedirect;
+					if (user.isAdmin() && request.getSession().getAttribute("adminAfterLogonRedirect") != null) {
+						afterLogonUrl = AdminDeviceService.getAfterLoginRedirect(request);
+					}
 
 					response.sendRedirect(Tools.sanitizeHttpHeaderParam(afterLogonUrl));
 					return;
@@ -373,6 +382,11 @@ public class NtlmLogonAction
 		Identity userLogged = new Identity();
 		BeanUtils.copyProperties(userLogged, user);
 		LogonTools.setUserToSession(request.getSession(), userLogged);
+		if (AdminDeviceService.requireVerification(request)) {
+		    response.sendRedirect(AdminDeviceService.VERIFICATION_URL);
+		    return;
+		}
+		LogonTools.afterSuccessLogon(request, response);
 		String afterLogonUrl = "/";
 		if (request.getParameter("origDocId")!=null)
 		{

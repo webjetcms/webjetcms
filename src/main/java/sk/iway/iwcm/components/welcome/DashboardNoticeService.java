@@ -14,20 +14,25 @@ import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.rest.BrowserIdentifierMigrationService;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
+import sk.iway.iwcm.users.devices.DeviceEntity;
 
 /** Builds lightweight system notices for the dashboard template. */
 @Service
 public class DashboardNoticeService {
-    private final UserDetailsRepository users;
+    private final UserDetailsRepository userDetailsRepository;
+    private final AdminDeviceService adminDeviceService;
 
-    public DashboardNoticeService(UserDetailsRepository users) {
-        this.users = users;
+    public DashboardNoticeService(UserDetailsRepository userDetailsRepository, AdminDeviceService adminDeviceService) {
+        this.userDetailsRepository = userDetailsRepository;
+        this.adminDeviceService = adminDeviceService;
     }
 
     /**
@@ -44,10 +49,29 @@ public class DashboardNoticeService {
         Prop prop = Prop.getInstance(request);
         List<Map<String, Object>> notices = new ArrayList<>();
 
+        try {
+            for (DeviceEntity event : adminDeviceService.getActiveEvents(user)) {
+                Map<String, Object> securityNotice = new LinkedHashMap<>();
+                securityNotice.put("id", "newDevice:" + event.getId());
+                securityNotice.put("kind", "newDevice");
+                securityNotice.put("severity", "warning");
+                securityNotice.put("icon", "ti-shield-lock");
+                securityNotice.put("title", prop.getText("admin.dashboard.newDevice.title.js"));
+                securityNotice.put("description", "");
+                securityNotice.put("securityEvent", event);
+                notices.add(securityNotice);
+            }
+        } catch (IllegalStateException exception) {
+            Logger.error(DashboardNoticeService.class, "Cannot load administrator device notices (" + exception.getClass().getSimpleName() + ")");
+            notices.add(Map.of("id", "newDeviceUnavailable", "severity", "error", "icon", "ti-shield-lock",
+                "title", prop.getText("admin.dashboard.newDevice.title.js"),
+                "description", prop.getText("admin.dashboard.newDevice.unavailable.js")));
+        }
+
         if (Constants.getBoolean("2factorAuthEnabled") && Tools.isEmpty(Constants.getString("ldapProviderUrl"))
                 && Tools.isEmpty(Constants.getString("adminLogonMethod")) && !AuthenticationFilter.weTrustIIS()) {
             String message = prop.getText("overview.2fa.warning");
-            if (Tools.isNotEmpty(message) && message.length() > 2 && Tools.isEmpty(users.getMobileDeviceByUserId((long) user.getUserId()))) {
+            if (Tools.isNotEmpty(message) && message.length() > 2 && Tools.isEmpty(userDetailsRepository.getMobileDeviceByUserId((long) user.getUserId()))) {
                 notices.add(notice(prop, "twoFactor", "warning", "ti-shield-lock", message,
                     action(prop, "popup", "/admin/2factorauth.jsp", "button.setup")));
             }

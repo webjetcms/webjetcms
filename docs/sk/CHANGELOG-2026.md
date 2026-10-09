@@ -21,6 +21,20 @@
     <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+### Prihlasovanie a ochrana účtu
+
+- WebJET CMS po novom [eviduje prehliadače, z ktorých sa prihlasujete](redactor/admin/logon.md#prihlásenie-z-nového-zariadenia). Prihlásenie z nového prehliadača zobrazí upozornenie na úvodnej obrazovke a odošle email, aby ste mohli rozpoznať cudzie prihlásenie do svojho účtu. Vlastné zariadenie potvrdíte emailovým odkazom alebo jednorazovým kódom cez **Bol som to ja** (#340).
+
+![Upozornenie na prihlásenie z nového prehliadača](redactor/admin/device-block.png)
+
+- Ak prihlásenie nepoznáte, môžete [zablokovať zariadenie a ukončiť jeho aktívne prihlásenia](redactor/admin/welcome.md#ak-prihlásenie-nepoznáte). Pri ďalšom prihlásení zo zablokovaného prehliadača sa po zadaní správneho mena a hesla zobrazí **Overenie zablokovaného zariadenia**. Na odblokovanie a vstup do administrácie treba zadať šesťmiestny kód z emailu účtu; pri zapnutom 2FA sa toto overenie vykoná až po kóde z autentifikačnej aplikácie. Podrobný postup je v [návode na prihlásenie](redactor/admin/logon.md#overenie-zablokovaného-zariadenia) (#340).
+
+![Overenie zablokovaného zariadenia pred vstupom do administrácie](redactor/admin/logon-device-verification.png)
+
+- Špecifické prihlásenia cez `doFilterLogon` a `wjlogontoken` odmietnu zablokovaný prehliadač bez emailovej výzvy. Na odblokovanie treba použiť bežný prihlasovací formulár v tom istom prehliadači (#340).
+
+Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `adminNewDeviceDetectionEnabled` na false. Pri prihlásení sa aj zisťuje [približná poloha](admin/setup/configuration/dashboard.md#orientačná-poloha-prihlásenia) podľa IP adresy, vypnúť sa dá nastavením `adminLoginLocationApiKey` na hodnotu `DISABLED`.
+
 ### Webové stránky
 
 - Kôš webových stránok - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Pridaná možnosť mazania stránok a priečinkov v koši aj v sekcii [Mazanie dát](sysadmin/data-deleting/README.md) podľa zvoleného rozsahu dátumov. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov (#271).

@@ -17,6 +17,7 @@ test('Dialog headings retain their button and action when the dashboard reconcil
     await controller.start();
     const heading = host.querySelector('.md-dashboard__title-action');
     assert.equal(heading.tagName, 'BUTTON');
+    assert.equal(heading.querySelector('.ti-arrow-up-right').getAttribute('aria-hidden'), 'true');
     heading.click();
     controller._render();
     assert.equal(host.querySelector('.md-dashboard__title-action'), heading);
@@ -662,7 +663,7 @@ test("A confirmed reset can be cancelled and a failed save retains the draft for
     assert.deepEqual(stored(), original);
     assert.equal(notifications.length, 0);
     controller.cancelEditing();
-    window.document.querySelector('.md-dashboard-modal--confirm .btn-danger').click();
+    window.document.querySelector('.md-dashboard-modal--confirm .btn-red').click();
     assert.deepEqual(copy(controller.settings), original);
     controller.setEditing(true);
     controller.resetButton.click();
@@ -1040,7 +1041,9 @@ function overviewFixture(t) {
     const environment = fixture(t);
     const { context, window, controller } = environment;
     Object.assign(context, { HTMLElement: window.HTMLElement, customElements: window.customElements, WJ: window.WJ });
-    const noticesSource = fs.readFileSync(path.join(moduleDirectory, 'notices.js'), 'utf8').replace(/^export /gm, '');
+    const securitySource = fs.readFileSync(path.join(moduleDirectory, 'security-events.js'), 'utf8').replace(/^export /gm, '');
+    vm.runInContext(securitySource, context);
+    const noticesSource = fs.readFileSync(path.join(moduleDirectory, 'notices.js'), 'utf8').replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
     vm.runInContext(`{ ${noticesSource}; this.DashboardNotices = DashboardNotices; }`, context);
     const source = fs.readFileSync(path.join(moduleDirectory, '../web-components/webjet-overview-dashboard.js'), 'utf8')
         .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
@@ -1066,6 +1069,26 @@ test('Rebuilding the overview after a save never reapplies the embedded settings
     assert.equal(requests.length, 1);
     assert.equal(requests[0].method, 'PUT');
     assert.equal(overview.dashboardController.settings.items[0].options.title, 'Updated autotest');
+});
+
+test('Email login details open once from the authenticated bootstrap, including unavailable links', async t => {
+    for (const event of [{ id: 'autotest-event', createDate: 1000 }, null]) {
+        const { context, overview, requests } = overviewFixture(t);
+        context.registerDashboardWidgets = () => {};
+        context.getDashboardDefaults = () => [];
+        const opened = [];
+        context.showDeviceSecurity = (widgetContext, securityEvent, report) => { assert.equal(report, undefined); opened.push(securityEvent); };
+        overview.configure({ data: { notices: [], settings: { configured: true, items: [] }, securityEventRequested: true, requestedSecurityEvent: event } });
+        overview.render();
+        await overview.dashboardReady;
+        assert.equal(opened.length, 1);
+        assert.equal(opened[0], event);
+        overview.render();
+        await overview.dashboardReady;
+        assert.equal(opened.length, 1, 'Dashboard rerenders must not reopen the dismissed dialog.');
+        assert.equal(requests.length, 0, 'Opening an email link must not mutate account data.');
+        overview.disconnectedCallback();
+    }
 });
 
 test('System notice rows invoke authorized actions and survive personal layout rendering', async t => {
@@ -1457,7 +1480,7 @@ test('Widget settings apply to a draft in a centered modal and Cancel keeps the 
     assert.equal(controller._instance('draft').size, '3x3');
     await controller.showSettings('draft');
     controller.cancelEditing();
-    window.document.querySelector('.md-dashboard-modal--confirm .btn-danger').click();
+    window.document.querySelector('.md-dashboard-modal--confirm .btn-red').click();
     assert.equal(controller.editing, false);
     assert.equal(controller._instance('draft').size, '2x2');
     assert.equal(window.document.querySelector('.md-dashboard-modal--settings'), null, 'Exiting editing must dispose open draft settings');
@@ -1486,7 +1509,7 @@ for (const switchToShortcuts of [false, true]) {
         assert.equal(window.document.body.classList.contains('modal-open'), true);
         assert.equal(window.document.body.style.overflow, 'hidden');
         const hidden = new Promise(resolve => dialog.addEventListener('hidden.bs.modal', resolve, { once: true }));
-        const discard = dialog.querySelector('.btn-danger');
+        const discard = dialog.querySelector('.btn-red');
         discard.click();
         discard.click();
         assert.equal(controller.editing, true, 'The editor must remain alive until the hide transition finishes');
@@ -1789,7 +1812,7 @@ test('Independent release preferences never persist widget drafts or disappear w
     assert.equal(stored().acknowledgedNewsVersion, 'autotest-news');
     assert.equal(controller._instance('draft').options.days, 30);
     controller.cancelEditing();
-    window.document.querySelector('.md-dashboard-modal--confirm .btn-danger').click();
+    window.document.querySelector('.md-dashboard-modal--confirm .btn-red').click();
     assert.equal(controller.settings.acknowledgedNewsVersion, 'autotest-news');
     assert.deepEqual(copy(controller._instance('draft').options), {});
 });
@@ -1801,7 +1824,7 @@ test('Entering shortcut editing confirms discarding dirty widgets, then shortcut
     await controller.saveOptions('draft', { options: { days: 30 } });
     controller.editShortcutsButton.click();
     assert.equal(controller.editingShortcuts, false);
-    window.document.querySelector('.md-dashboard-modal--confirm .btn-danger').click();
+    window.document.querySelector('.md-dashboard-modal--confirm .btn-red').click();
     assert.equal(controller.editing, false);
     assert.equal(controller.editingShortcuts, true);
     await controller.saveOptions('link', { options: { source: 'url', href: '/admin/v9/', title: 'autotest shortcut' } });
@@ -1822,4 +1845,39 @@ test('The edit toolbar counteracts smooth scrolling and releases its scroll list
     controller.setEditing(false);
     assert.equal(listeners.size, 0);
     assert.equal(controller.toolbar.style.transform, '');
+});
+
+test('Email confirmation consumes the token once and shows success without a dialog', async t => {
+    const { context, overview, window, notifications } = overviewFixture(t);
+    context.registerDashboardWidgets = () => {};
+    context.getDashboardDefaults = () => [];
+    context.showDeviceSecurity = () => assert.fail('Successful email confirmation must not open a dialog.');
+    const requests = [];
+    context.fetch = async (url, options) => {
+        requests.push({ url, options });
+        return { ok: true, json: async () => ({ id: 42, confirmedAt: 3000 }) };
+    };
+    window.history.replaceState({}, '', '/admin/v9/?securityEvent=42&deviceConfirmation=email-secret');
+    const securityEvent = { id: 42, createDate: 1000 };
+    overview.configure({ data: { notices: [{ id: 'newDevice:42', kind: 'newDevice', securityEvent }], settings: { configured: true, items: [] },
+        currentSessions: { userSessions: [{ userSessions: [{ deviceId: 42, deviceConfirmed: false }] }] },
+        securityEventRequested: true, requestedSecurityEvent: securityEvent } });
+    overview.render();
+    await overview.dashboardReady;
+    await tick();
+    assert.equal(requests.length, 1);
+    assert.equal(requests[0].url, '/admin/rest/security/login-events/42/confirm');
+    assert.equal(requests[0].options.method, 'POST');
+    assert.deepEqual(JSON.parse(requests[0].options.body), { token: 'email-secret' });
+    assert.equal(notifications.length, 1);
+    assert.equal(notifications[0][1], 'admin.dashboard.newDevice.confirmed.js');
+    assert.equal(overview.data.notices.length, 0);
+    assert.equal(overview.data.currentSessions.userSessions[0].userSessions[0].deviceConfirmed, true);
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+    assert.equal(window.location.search, '?securityEvent=42');
+    overview.render();
+    await overview.dashboardReady;
+    assert.equal(requests.length, 1);
+    assert.equal(notifications.length, 1);
+    overview.disconnectedCallback();
 });

@@ -22,7 +22,7 @@ Při vytváření nového typu číselníku musíte zadat jedinečný název. Os
 
 ![](editor_enumType.png)
 
-Příklad: vyplníte-li dvě pole na kartě **Řetězce**
+Příklad: pokud vyplníte dvě pole na kartě **Řetězce**
 
 ![](editor_stringTab.png)
 

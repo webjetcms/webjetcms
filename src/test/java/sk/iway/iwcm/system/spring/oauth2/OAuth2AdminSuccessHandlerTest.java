@@ -29,6 +29,7 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UserGroupDetails;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -100,19 +101,22 @@ class OAuth2AdminSuccessHandlerTest extends BaseWebjetTest {
 
         try (MockedStatic<UsersDB> usersDBMock = mockStatic(UsersDB.class);
              MockedStatic<LogonTools> logonToolsMock = mockStatic(LogonTools.class);
+             MockedStatic<AdminDeviceService> devices = mockStatic(AdminDeviceService.class);
              MockedStatic<WebjetAuthentificationProvider> authProviderMock = mockStatic(WebjetAuthentificationProvider.class)) {
 
             usersDBMock.when(() -> UsersDB.getUserByEmail("test@example.com", 1)).thenReturn(existingUser);
             usersDBMock.when(() -> UsersDB.saveUser(any(UserDetails.class))).thenReturn(true);
             authProviderMock.when(() -> WebjetAuthentificationProvider.authenticate(any(Identity.class)))
                 .thenReturn(authentication);
+            devices.when(() -> AdminDeviceService.getAfterLoginRedirect(request)).thenReturn("/admin/v9/?securityEvent=42");
 
             // Spustenie testu
             handler.onAuthenticationSuccess(request, response, authentication);
 
             // Overenie
-            verify(response).sendRedirect("/admin/");
+            verify(response).sendRedirect("/admin/v9/?securityEvent=42");
             logonToolsMock.verify(() -> LogonTools.logonUserWithAllChecks(any(Identity.class), eq(request)));
+            logonToolsMock.verify(() -> LogonTools.afterSuccessLogon(request, response));
         }
     }
 
@@ -240,7 +244,7 @@ class OAuth2AdminSuccessHandlerTest extends BaseWebjetTest {
                 assertTrue(newUser.isAdmin()); // Admin práva nastavené na základe skupiny
             }
 
-            verify(response).sendRedirect("/admin/");
+            verify(response).sendRedirect("/admin/v9/");
         }
     }
 
@@ -505,7 +509,7 @@ class OAuth2AdminSuccessHandlerTest extends BaseWebjetTest {
             handler.onAuthenticationSuccess(request, response, oauth2AuthToken);
 
             // Overenie
-            verify(response).sendRedirect("/admin/");
+            verify(response).sendRedirect("/admin/v9/");
 
             // Overenie pridania do skupín
             usersDBMock.verify(() -> UsersDB.addUserToPermissionGroup(1, 1));
@@ -632,7 +636,7 @@ class OAuth2AdminSuccessHandlerTest extends BaseWebjetTest {
             assertEquals("NewFirstName", updatedUser.getFirstName());
             assertEquals("NewLastName", updatedUser.getLastName());
 
-            verify(response).sendRedirect("/admin/");
+            verify(response).sendRedirect("/admin/v9/");
         }
     }
 
@@ -671,7 +675,7 @@ class OAuth2AdminSuccessHandlerTest extends BaseWebjetTest {
             handler.onAuthenticationSuccess(request, response, authentication);
 
             // Overenie
-            verify(response).sendRedirect("/admin/");
+            verify(response).sendRedirect("/admin/v9/");
 
             // Overenie, že sa nepokúšalo načítavať skupiny (nie je Keycloak)
             userGroupsDBMock.verify(UserGroupsDB::getInstance, never());

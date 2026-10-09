@@ -9,6 +9,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Vector;
 
@@ -26,6 +27,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 /**
  *  Toto drzi globalne info o session pouzivatelov, pretoze SessionListener pri
@@ -162,12 +164,6 @@ public class SessionHolder
 			det = new SessionDetails();
 			det.setLogonTime(Tools.getNow());
 			det.setRemoteAddr(Tools.getRemoteIP(request));
-			BrowserDetector bd = BrowserDetector.getInstance(request);
-			if (bd != null) {
-				det.setBrowserName(bd.getBrowserName());
-				det.setOperatingSystem(bd.getBrowserPlatform());
-			}
-			else det.setBrowserName("Unknown");
 		} else {
 			Identity sessionUser = UsersDB.getCurrentUser(request);
 
@@ -199,6 +195,21 @@ public class SessionHolder
 				}
 			}
 		}
+		String previousOperatingSystemVersion = det.getOperatingSystemVersion();
+		String platformVersion = request.getHeader("Sec-CH-UA-Platform-Version");
+		String processedVersion = (String) request.getSession().getAttribute("SessionHolder.platformVersion");
+		// Detailed Client Hints can arrive later; process each version only when it changes.
+		if (newSession || (platformVersion != null && !platformVersion.equals(processedVersion))) {
+			BrowserDetector bd = BrowserDetector.getInstance(request);
+			if (bd != null) {
+				det.setBrowserName(bd.getBrowserName());
+				det.setBrowserVersion(bd.getBrowserVersion());
+				det.setOperatingSystem(bd.getBrowserPlatform());
+				det.setOperatingSystemVersion(bd.getBrowserSubplatform());
+				if (platformVersion != null) request.getSession().setAttribute("SessionHolder.platformVersion", platformVersion);
+			}
+			else det.setBrowserName("Unknown");
+		}
 		det.setLastURL(lastURL);
 		det.setDomainId(CloudToolsForCore.getDomainId());
 		det.setDomainName(CloudToolsForCore.getDomainName());
@@ -221,12 +232,20 @@ public class SessionHolder
 			}
 		}
 
+		String previousLocation = det.getLocation();
+		det.setLocation(user != null && user.isAdmin() ? sk.iway.iwcm.users.devices.AdminLoginLocation.getLocation(request.getSession()) : null);
+
+		Long previousDeviceId = det.getDeviceId();
+		Object deviceId = request.getSession().getAttribute(AdminDeviceService.SESSION_DEVICE_ID);
+		det.setDeviceId(user != null && user.isAdmin() && deviceId instanceof Long id ? id : null);
+
 		// ziskaj IP a remoteHost
 		det.setLastActivity(Tools.getNow());
 		det.setSessionId(sessionId);
 		data.put(sessionId, det);
 
-		if(newSession == true && det.isAdmin() == true) {
+		if ((newSession || !Objects.equals(previousDeviceId, det.getDeviceId()) || !Objects.equals(previousLocation, det.getLocation())
+				|| !Objects.equals(previousOperatingSystemVersion, det.getOperatingSystemVersion())) && det.isAdmin()) {
 			// After new session was added (logon for example) - update session stat data
 			SessionClusterService.updateSessionData();
 		}

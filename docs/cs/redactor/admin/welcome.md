@@ -123,7 +123,53 @@ Při odesílání se údaje viditelné karty obnovují každých 30 sekund. Poč
 
 V uvítacím panelu naleznete novinky aktuální verze WebJET CMS. Tlačítkem **Sbalit novinky** potvrdíte jejich přečtení a ponecháte stručný souhrn. Tlačítkem **Více info** je znovu rozbalíte.
 
-Systémová upozornění jsou seřazena podle závažnosti: chyby, varování a informace. Každý řádek obsahuje vysvětlení a dostupnou akci. Chyby zůstávají viditelné do vyřešení příčiny. Varování můžete odložit na 7 dní tlačítkem **Připomenout později** nebo **×**.
+### Systémová upozornění
+
+V této části zkontrolujete problémy vyžadující vaši pozornost. Upozornění na přihlášení z neznámého zařízení je vždy první. Ostatní upozornění jsou seřazena podle závažnosti: chyby, varování a informace. Každý řádek obsahuje vysvětlení a dostupnou akci. Chyby zůstávají viditelné do vyřešení příčiny. Běžné varování můžete odložit na 7 dní tlačítkem **Připomenout později** nebo **×**.
+
+#### Nové přihlášení z neznámého zařízení
+
+Upozornění se zobrazí po úspěšném přihlášení v prohlížeči, který WebJET CMS pro váš účet nerozpozná jako použitý během posledních 90 dnů. Současně vám odešle email. U aktuálního prohlížeče se zobrazí informace **Přihlásili jste se z nového prohlížeče** s časem a označením **Tento prohlížeč**. U jiného zařízení zůstává varování s prohlížečem, operačním systémem, IP adresou a časem přihlášení. Zkontrolujte, zda údaje odpovídají vašemu přihlášení.
+
+![Upozornění po přihlášení z nového prohlížeče](device-new-browser.png)
+
+Email **Nové přihlášení do WebJET CMS** obsahuje údaje o prohlížeči, IP adrese, čase a prostředí přihlášení. Tlačítky v emailu můžete přihlášení potvrdit nebo otevřít jeho detail pro zabezpečení účtu.
+
+![Email s upozorněním na nové přihlášení a možnostmi potvrzení nebo zabezpečení účtu](device-new-browser-email.png)
+
+#### Pokud přihlášení znáte
+
+Klikněte na **Byl jsem to já**. Na váš email se odešle šestimístný kód. Zadejte jej do pole pod upozorněním a klikněte na **Potvrdit kód**.
+
+![Potvrzení nového prohlížeče kódem z emailu](device-confirm-code.png)
+
+Kód naleznete v emailu **Kód pro potvrzení přihlášení do WebJET CMS**:
+
+![Email s jednorázovým kódem pro potvrzení nového prohlížeče](device-confirm-code-email.png)
+
+Kód platí 10 minut a umožňuje maximálně 5 pokusů. Tlačítkem **Poslat nový kód** lze po minutě poslat další kód, který nahradí předchozí. Teprve po ověření kódu se zařízení potvrdí a upozornění se odstraní ve všech vašich prohlížečích po obnovení přehledu.
+
+Přihlášení můžete potvrdit i odkazem **Byl jsem to já** v původním emailu. Odkaz platí 24 hodin, funguje pouze po přihlášení do příslušného účtu a lze jej použít jednou. Nový kód tento odkaz nezruší; úspěšné potvrzení zneplatní odkaz i kód.
+
+#### Pokud přihlášení neznáte
+
+Při upozornění nebo u zařízení v kartě **Moje zařízení** v okně **Aktivní přihlášení** klikněte na **Nebyl jsem to já**. Zařízení se zablokuje a jeho známé pořady se odhlásí. Malé okno **Zajistěte svůj účet** zobrazí výsledek a doporučené další kroky. Pokud zablokujete prohlížeč, ve kterém právě pracujete, odhlásí i vás.
+
+Odkaz **Nebyl jsem to já – zajistit účet** v emailu po přihlášení otevře stejné malé okno, ale zařízení ještě nezablokuje. Pokud přihlášení neznáte, potvrďte akci tlačítkem **Zablokovat zařízení**.
+
+Po zablokování použijte **Změnit heslo** a zkontrolujte ostatní přihlášení. Tlačítko **Zapnout 2FA** otevře nastavení dvoustupňového ověřování, pokud je pro účet dostupné a ještě není zapnuté. **Později** pouze zavře okno. U firemního účtu změňte heslo u poskytovatele přihlášení nebo kontaktujte správce.
+
+Při dalším přihlášení ze zablokovaného zařízení se po zadání správných přihlašovacích údajů zobrazí [výzva k ověření emailovým kódem](logon.md#ověření-zablokovaného-zařízení). Až správný kód prohlížeč odblokuje.
+
+#### Zapamatování prohlížeče a platnost upozornění
+
+Po úspěšném dvoufaktorovém ověření se nezablokovaný prohlížeč potvrdí automaticky. O novém zařízení obdržíte informační email s možností **Nebyl jsem to já**, bez potřeby dalšího potvrzování. Pokud jste zařízení zablokovali, kód z emailu se vyžaduje až po 2FA. Postup popisuje [Ověření zablokovaného zařízení](logon.md#ověření-zablokovaného-zařízení).
+
+Toto upozornění nemá křížek ani možnost odložení. Zmizí po potvrzení **Byl jsem to já**, po úspěšném zablokování zařízení nebo po 7 dnech od zaznamenání události. Další přihlášení tuto sedmidenní lhůtu neprodlužují.
+
+Zablokované zařízení zůstává blokováno i po odstranění upozornění. Zjištění nového zařízení, jeho potvrzení (včetně 2FA a odblokování kódem) a zablokování se zapisují do auditu jako typ **USER_DEVICE**. Záznam obsahuje uživatele, ID zařízení, prohlížeč, operační systém a IP adresu zařízení.
+
+WebJET CMS si prohlížeč pamatuje pomocí cookie. Každé dokončené přihlášení prodlouží jeho zapamatování o dalších 90 dní; běžné odhlášení cookie neodstraní. Nové upozornění proto můžete obdržet i po vymazání cookies, při použití jiného profilu nebo anonymního okna. Po vymazání nebo expiraci cookie se neuplatní ani předchozí blokování prohlížeče. Aktualizace prohlížeče či změna IP adresy při zachované cookie nové upozornění nevyvolá. Lhůtu může správce změnit v [konfiguraci](../../admin/setup/configuration/dashboard.md).
 
 ### Vyhledávání a pomoc
 
@@ -131,7 +177,7 @@ Použijte jej, když chcete najít stránku v administraci nebo návod k práci 
 
 ### Moje aktivní přihlášení
 
-Umožňuje zkontrolovat vaše aktivní přihlášení a odhlásit se z jiného zařízení nebo prohlížeče, který již nepoužíváte. Je vždy v horní části přehledu a nelze jej odstranit. Podrobnosti naleznete v části [Přihlášení](#přihlášení).
+Umožňuje zkontrolovat vaše aktivní přihlášení a odhlásit se z jiného zařízení nebo prohlížeče, který již nepoužíváte. Pevný panel je vždy v horní části přehledu a nelze jej odstranit. Z katalogu můžete přidat také jeho samostatný widget do osobního přehledu. Klepnutím na nadpis se šipkou otevřete kartu **Moje přihlášení**. Podrobnosti naleznete v části [Přihlášení](#přihlášení).
 
 ### Přihlášeni admini
 
@@ -159,7 +205,13 @@ V horní části přehledu můžete zkontrolovat svá aktivní přihlášení a 
 
 ### Moje aktivní přihlášení
 
-Panel **Moje aktivní přihlášení** zobrazuje všechny vaše aktivní relace, tedy přihlášení pod vaším účtem, s prohlížečem, časem a IP adresou. Při delším seznamu můžete jeho obsah posouvat. Vaše aktuální relace je první a má zelenou tečku s popisem **Toto přihlášení**. Ostatní relace můžete odhlásit přímo v seznamu, například když jste se zapomněli odhlásit na jiném počítači. Tento panel je vždy v horní části a nelze jej odstranit.
+Panel **Moje aktivní přihlášení** zobrazuje všechny vaše aktivní relace, tedy přihlášení pod vaším účtem, s prohlížečem, časem a IP adresou. V okně aktivních přihlášení sloupec **Poloha** zobrazuje [orientační město a zemi](../../admin/setup/configuration/dashboard.md#orientační-poloha-přihlášení), pod nimi menším písmem IP adresu. Pokud poloha není dostupná, zobrazí se **Neznámá**. Město se odhaduje podle veřejného internetového připojení; IP zjištěná serverem může být interní. Při delším seznamu můžete jeho obsah posouvat. Vaše aktuální relace je první a má zelenou tečku s popisem **Toto přihlášení**. Ostatní relace můžete odhlásit přímo v seznamu, například když jste se zapomněli odhlásit na jiném počítači. Tento panel je vždy v horní části a nelze jej odstranit.
+
+Samostatný widget v osobním přehledu zobrazí při jediném aktuálním pořadu informaci, že jste přihlášeni pouze zde. U více relací ukáže jejich počet a ve větších variantách i seznam s poslední aktivitou. Relace známého, ale dosud nepotvrzeného zařízení zvýrazní oranžovým pozadím a štítkem **Nové**. Pokud stav zařízení nezná, zvýraznění nepřidává. Tlačítko **Odhlásit všechny ostatní** otevře potvrzovací dialog; odhlášení se provede až po potvrzení.
+
+Klepnutím na nadpis panelu nebo widgetu se šipkou otevřete okno **Aktivní přihlášení** v kartě **Moje přihlášení**. Kromě vlastních pořadů nabízí správu vašich zařízení, historii přihlášení za posledních 30 dní a podle oprávnění i přihlášené administrátory. Tlačítko **Změnit heslo** ve spodní části okna otevře váš profil pro změnu hesla. Informační ikona vedle tlačítka zobrazí pokyny pro změnu hesla u firemního účtu.
+
+Karta **Moje přihlášení** zobrazuje pouze aktivní relace. Jeden prohlížeč může mít více pořadů. Při každé relaci vidíte prohlížeč s verzí, pod ním operační systém s verzí a datum přihlášení. Aktuální relace má při názvu prohlížeče štítek **Toto přihlášení** ; u ostatních můžete použít akci **Odhlásit**.
 
 ![](sessions.png)
 
@@ -169,9 +221,21 @@ Data se aktualizují po přihlášení uživatele. Pokud potřebujete častějš
 
 Úloha na pozadí z databáze smaže záznamy starší 60 minut. Pokud není nastavena, při přihlášení uživatele se smažou záznamy starší 24 hodin.
 
+### Moje zařízení
+
+Karta **Moje zařízení** zobrazuje uložené prohlížeče vašeho účtu včetně těch, které již nemají aktivní relaci. Záznamy jsou seřazeny od naposledy použitých a stránkované po 20. Tlačítko **Obnovit údaje** načte aktuální údaje.
+
+U každého zařízení vidíte prohlížeč a jeho verzi, operační systém, čas zaznamenání, IP adresu a poslední použití. Stavový štítek je u názvu prohlížeče, pod ním je operační systém s verzí a datum zaznamenání. **Poslední aktivita** v této kartě znamená poslední úspěšné přihlášení. Sloupec **Poloha** obsahuje město a zemi, pod nimi IP adresu z posledního úspěšného přihlášení. Při nedostupné poloze se zobrazí **Neznámá**, i když byla při starším přihlášení známa. Prohlížeč a systém pocházejí ze zaznamenání zařízení. Aktuální prohlížeč má navíc štítek **Toto zařízení**.
+
+- **Nové** označuje zatím nepotvrzené zařízení. Můžete ho potvrdit tlačítkem **Byl jsem to já**. Odešle jednorázový kód na email a otevře formulář pod zařízením přes celou šířku seznamu. Tlačítkem **Zrušit** formulář zavřete bez změny stavu zařízení. Teprve po správném kódu se zařízení potvrdí a jeho systémové upozornění odstraní. Pokud přihlášení neznáte, použijte **Nebyl jsem to já**.
+- **Potvrzené** zařízení můžete tlačítkem **Nebyl jsem to já** dodatečně zablokovat. Datum potvrzení zobrazí tooltip nad štítkem po najetí myší nebo zaměření klávesnicí.
+- **Zablokované** zařízení má v tooltipu nad štítkem datum zablokování i vysvětlení odblokování. Odblokovat jej lze až při dalším přihlášení ověřením kódu z emailu.
+
+Zablokování odhlásí všechny známé pořady daného zařízení. Pokud se jedná o aktuální prohlížeč, odhlásí i vás. Po zablokování jiného prohlížeče se zobrazí malé okno **Zabezpečte svůj účet** s dalšími kroky, stejně jako u systémového upozornění.
+
 ### Přihlášení administrátoři
 
-Pokud máte právo "Úvod - zobrazení přihlášených administrátorů", můžete přes katalog přidat widget **Přihlášení admini** se seznamem všech přihlášených administrátorů. Máte tak přehled, kolik uživatelů aktuálně pracuje v administraci.
+Pokud máte právo "Úvod - zobrazení přihlášených administrátorů", můžete přes katalog přidat widget **Přihlášení admini** se seznamem všech přihlášených administrátorů. V obou velikostech zobrazuje celkový počet aktivních relací a počet administrátorů. U každého jména je počet jeho pořadů. Jeden účet může mít více přihlášení, proto se oba součty mohou lišit. Klepnutím na nadpis se šipkou otevřete okno **Aktivní přihlášení** přímo v kartě **Přihlášení administrátoři**.
 
 Klepnutím na ikonu<i class="ti ti-mail fs-6"></i> můžete danému administrátorovi odeslat email.
 

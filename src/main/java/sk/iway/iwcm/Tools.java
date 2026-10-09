@@ -1955,6 +1955,13 @@ public class Tools
 	public static String getBaseHref(HttpServletRequest request)
 	{
 		String httpServerName = Constants.getString("httpServerName");
+		boolean secure = request != null && Tools.isSecure(request);
+		if (Tools.isNotEmpty(httpServerName) && (httpServerName.startsWith("http://") || httpServerName.startsWith("https://")))
+		{
+			secure = httpServerName.startsWith("https://");
+		}
+		int serverPort = Constants.getInt(secure ? "httpsServerPort" : "httpServerPort");
+		int defaultPort = secure ? 443 : 80;
 
 		if (request == null)
 		{
@@ -1969,16 +1976,16 @@ public class Tools
 
 			StringBuilder baseHref = new StringBuilder(httpServerName);
 
-			if (Constants.getInt("httpServerPort") != 80)
+			if (serverPort != defaultPort)
 			{
-				baseHref.append(':').append(Constants.getInt("httpServerPort"));
+				baseHref.append(':').append(serverPort);
 			}
 
 			return baseHref.toString();
 		}
 
 		StringBuilder baseHref = new StringBuilder();
-		if (Tools.isSecure(request)) baseHref.append("https");
+		if (secure) baseHref.append("https");
 		else baseHref.append("http");
 		baseHref.append("://");
 
@@ -1991,17 +1998,13 @@ public class Tools
 			baseHref.append(getServerName(request, false));
 		}
 
-        if (Constants.getInt("httpServerPort") == -1)
-        {
-            //ak je httpServerPort nastavene na -1 pridame do URL priamo jeho hodnotu (pouziva sa, ked server bezi na viacerych portoch a nie je maskovany navonok)
-            if (request.getServerPort()!=80 && request.getServerPort()!=443)
-            {
-                baseHref.append(':').append(request.getServerPort());
-            }
-        }
-		else if (Constants.getInt("httpServerPort") != 80)
+		if (serverPort == -1)
 		{
-			baseHref.append(':').append(Constants.getInt("httpServerPort"));
+			serverPort = request.getServerPort();
+		}
+		if (serverPort != defaultPort)
+		{
+			baseHref.append(':').append(serverPort);
 		}
 
 		if (Tools.isEmpty(httpServerName))
