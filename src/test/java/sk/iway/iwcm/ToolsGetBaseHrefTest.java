@@ -62,6 +62,19 @@ class ToolsGetBaseHrefTest {
         assertEquals(expected, Tools.getBaseHref(request));
     }
 
+    /** Verifies request URL fallback for a null configured server name over HTTP and HTTPS. */
+    @ParameterizedTest
+    @CsvSource({
+        "false, http://cms.example.test:8080/webjet",
+        "true,  https://cms.example.test:8443/webjet"
+    })
+    void usesRequestWhenConfiguredServerNameIsNull(boolean secure, String expected) {
+        constants.when(() -> Constants.getString("httpServerName")).thenReturn(null);
+        request.setSecure(secure);
+
+        assertEquals(expected, Tools.getBaseHref(request));
+    }
+
     @Test
     void usesHttpsPortBehindProxy() {
         constants.when(() -> Constants.getBoolean("serverBeyoundProxy")).thenReturn(true);

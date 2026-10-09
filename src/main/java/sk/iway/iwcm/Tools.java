@@ -1956,7 +1956,7 @@ public class Tools
 	{
 		String httpServerName = Constants.getString("httpServerName");
 		boolean secure = request != null && Tools.isSecure(request);
-		if (httpServerName.startsWith("http://") || httpServerName.startsWith("https://"))
+		if (Tools.isNotEmpty(httpServerName) && (httpServerName.startsWith("http://") || httpServerName.startsWith("https://")))
 		{
 			secure = httpServerName.startsWith("https://");
 		}
