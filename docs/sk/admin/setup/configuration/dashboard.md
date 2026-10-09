@@ -67,6 +67,8 @@ Pri ďalšom interaktívnom prihlásení zablokovaného prehliadača sa najprv o
 
 Kontrola platí pre administrátorské prihlásenie formulárom, prístupovým kľúčom, OAuth2 a NTLM, vrátane prihlásenia administrátora cez používateľskú zónu. Nevzťahuje sa na API tokeny, HTTP Basic ani bežných návštevníkov. Nastavenie `adminNewDeviceDetectionEnabled=false` vypne aj kontrolu blokovania. Výnimky testovacích prehliadačov neobchádzajú existujúci blok.
 
+Špecifické prihlásenia cez `doFilterLogon=true`, `doFilterLogon=redir` alebo hlavičku `wjlogontoken` kontrolujú existujúce blokovanie ešte pred vytvorením prihlásenej session. Zablokovaný prehliadač dostane HTTP 403 bez emailovej výzvy; pri chybe načítania stavu dostane HTTP 503. Na odblokovanie sa treba v tom istom prehliadači prihlásiť cez bežný formulár `/admin/logon/` a dokončiť emailové overenie. Tieto špecifické prihlásenia nové zariadenia neevidujú ani neobnovujú ich cookie. Chýbajúca, prázdna alebo neplatná cookie preto túto kontrolu neaktivuje. Hlavička `wjlogontoken` vytvára prihlásenú session platnú aj pre ďalšie požiadavky a odlišuje sa od API autentifikácie cez `x-auth-token`.
+
 Blokovanie sa viaže na cookie `wjdevice`, nie na fyzické zariadenie. Po jej vymazaní alebo exspirácii sa prehliadač správa ako nový; blokovanie preto nenahrádza zmenu prezradeného hesla ani 2FA.
 
 ### Výnimky pre automatizované testy

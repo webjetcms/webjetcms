@@ -120,9 +120,9 @@ public class DeviceService {
     /**
      * Adds a location obtained after login without replacing a location already stored for that login.
      *
-     * <p>The lookup must still show the same login timestamp and a missing location. Otherwise the
-     * result is ignored, so a delayed lookup does not intentionally update a newer login. This does
-     * not refresh recognition, create another notice or send another notification.
+     * <p>The lookup must still show the same login timestamp and a missing location; otherwise the
+     * result is ignored. This check avoids applying a delayed result to a newer login. Adding the
+     * location does not refresh recognition, create another notice or send another notification.
      *
      * @param userId account that owns the device
      * @param deviceId device associated with the completed login

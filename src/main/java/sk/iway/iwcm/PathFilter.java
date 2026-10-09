@@ -25,6 +25,7 @@ import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
 import sk.iway.iwcm.system.spring.SpringAppInitializer;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.Cookie;
@@ -695,6 +696,18 @@ public class PathFilter implements Filter
 						}
 						else
 						{
+							try {
+								if (AdminDeviceService.isBlocked(user, req)) {
+									LogonTools.clearUserFromSession(req.getSession());
+									res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+									return;
+								}
+							} catch (RuntimeException exception) {
+								Logger.error(PathFilter.class, "Cannot check device blocking for legacy login", exception);
+								LogonTools.clearUserFromSession(req.getSession());
+								res.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+								return;
+							}
 							user.setLoginName(username);
 							user.setPassword(UserTools.PASS_UNCHANGED);
 							user.setValid(true);

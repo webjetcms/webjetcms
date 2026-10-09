@@ -114,6 +114,10 @@ Pri nesprávnom alebo neplatnom kóde sa zobrazí chybové hlásenie a zostanete
 
 Celé overenie treba dokončiť do **15 minút**, inak sa prihláste znova. Tlačidlo **Zrušiť** ukončí rozpracované prihlásenie a prehliadač zostane zablokovaný. Bez správneho kódu zostáva administrácia neprístupná. Ak k emailovej schránke nemáte prístup, obráťte sa na správcu.
 
+Pri špecifickom prihlásení cez `doFilterLogon` alebo hlavičku `wjlogontoken` sa zablokovaný prehliadač neprihlási a emailová výzva sa nezobrazí. Na odblokovanie otvorte v tom istom prehliadači bežný prihlasovací formulár `/admin/logon/` a dokončite overenie emailovým kódom. Potom môžete znova použiť pôvodný spôsob prihlásenia.
+
+Rozpoznávanie slúži na prehľad o prihláseniach a upozornenie na neznámy prehliadač. Blokovanie sa viaže na cookie `wjdevice`, nie na fyzické zariadenie. Po vymazaní cookie sa prehliadač pri bežnom prihlásení zaeviduje ako nový. Táto funkcia preto nenahrádza silné heslo, zmenu prezradeného hesla ani dvojstupňové overovanie.
+
 ## Odhlásenie
 
 Odkaz na odhlásenie sa nachádza v hlavičke administrácie v pravej hornej časti ako ikona ![](icon-logoff.png ":no-zoom"):

@@ -81,6 +81,25 @@ public class AdminDeviceService {
     /** Holds the authenticated identity outside both login contexts until the email code succeeds. */
     public record PendingLogin(Identity user, long deviceId, String tokenHash, String nonce, long expiresAt) implements Serializable { }
 
+    /**
+     * Checks the account's browser block without starting an email challenge or changing device state.
+     * Legacy login paths use this before establishing an authenticated session.
+     *
+     * @param user administrator whose credentials have been verified
+     * @param request request containing the browser recognition cookie
+     * @return true when detection is enabled and the account's browser is blocked
+     * @throws IllegalStateException if the device state cannot be loaded
+     */
+    public static boolean isBlocked(Identity user, HttpServletRequest request) {
+        if (user == null || !user.isAdmin() || user.getUserId() <= 0
+            || !Constants.getBoolean("adminNewDeviceDetectionEnabled")) return false;
+        String token = readToken(request);
+        if (token == null) return false;
+        DeviceEntity device = Tools.getSpringBean("adminDeviceService", AdminDeviceService.class)
+            .deviceService.findByTokenHash(user.getUserId(), hashToken(token));
+        return device != null && device.getReportedAt() != null;
+    }
+
     /** Checks browser blocking after credentials/factors and before any successful-login callbacks. */
     public static boolean requireVerification(HttpServletRequest request) {
         Identity user = UsersDB.getCurrentUser(request);

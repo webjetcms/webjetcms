@@ -239,6 +239,62 @@ class AdminDeviceServiceTest {
         assertEquals(0, response.getCookies().length);
     }
 
+    /** Legacy checks read only the current account's block and never start an email challenge. */
+    @Test
+    void checksExistingBlockWithoutChangingDeviceOrStartingVerification() {
+        DeviceEntity device = event();
+        request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
+        when(repository.findByTokenHash(7, AdminDeviceService.hashToken(TOKEN))).thenReturn(device);
+        assertFalse(AdminDeviceService.isBlocked(user, request));
+
+        device.setReportedAt(Instant.ofEpochMilli(NOW - 1));
+        assertTrue(AdminDeviceService.isBlocked(user, request));
+        when(user.getUserId()).thenReturn(8);
+        assertFalse(AdminDeviceService.isBlocked(user, request), "Another account must not inherit this device's block");
+
+        verify(repository, times(2)).findByTokenHash(7, AdminDeviceService.hashToken(TOKEN));
+        verify(repository).findByTokenHash(8, AdminDeviceService.hashToken(TOKEN));
+        verifyNoMoreInteractions(repository);
+        verify(service, never()).sendVerificationEmail(any(), any(), any(), any(), any());
+        assertNull(request.getSession().getAttribute(AdminDeviceService.PENDING_LOGIN));
+        assertNull(request.getSession().getAttribute(Constants.USER_KEY));
+        assertEquals(0, response.getCookies().length);
+    }
+
+    /** Missing, empty and malformed browser cookies cannot identify a blocked device. */
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {"malformed"})
+    void legacyBlockCheckIgnoresUnrecognizedCookies(String token) {
+        if (token != null) request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, token));
+        assertFalse(AdminDeviceService.isBlocked(user, request));
+        verifyNoInteractions(repository);
+    }
+
+    /** Disabled detection and non-administrator accounts do not query device state. */
+    @Test
+    void legacyBlockCheckHonorsFeatureAndAccountScope() {
+        request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
+        assertFalse(AdminDeviceService.isBlocked(null, request));
+        constants.when(() -> Constants.getBoolean("adminNewDeviceDetectionEnabled")).thenReturn(false);
+        assertFalse(AdminDeviceService.isBlocked(user, request));
+        constants.when(() -> Constants.getBoolean("adminNewDeviceDetectionEnabled")).thenReturn(true);
+        when(user.isAdmin()).thenReturn(false);
+        assertFalse(AdminDeviceService.isBlocked(user, request));
+        when(user.isAdmin()).thenReturn(true);
+        when(user.getUserId()).thenReturn(0);
+        assertFalse(AdminDeviceService.isBlocked(user, request));
+        verifyNoInteractions(repository);
+    }
+
+    /** Lookup failures must reach the legacy caller instead of being treated as an unblocked device. */
+    @Test
+    void legacyBlockCheckPropagatesLookupFailure() {
+        request.setCookies(new Cookie(AdminDeviceService.COOKIE_NAME, TOKEN));
+        when(repository.findByTokenHash(anyInt(), anyString())).thenThrow(new IllegalStateException("Unavailable"));
+        assertThrows(IllegalStateException.class, () -> AdminDeviceService.isBlocked(user, request));
+    }
+
     /** A blocked cookie clears both authentication contexts and accepts only this login's emailed code. */
     @Test
     void blockedBrowserWaitsOutsideAuthenticationUntilItsOwnEmailCodeSucceeds() {
