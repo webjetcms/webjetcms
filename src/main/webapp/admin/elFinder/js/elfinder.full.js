@@ -1,6 +1,6 @@
 /*!
  * elFinder - file manager for web
- * Version 2.1.65 (2026-09-14)
+ * Version 2.1.65 (2026-10-09)
  * http://elfinder.org
  * 
  * Copyright 2009-2026, Studio 42
@@ -4405,7 +4405,8 @@ var elFinder = function(elm, opts, bootCallback) {
 									job.reject();
 								};
 								wk.postMessage({
-									scripts: [self.options.cdns.sparkmd5, self.getWorkerUrl('calcfilehash.js')],
+									// Blob workers need absolute URLs for bundled libraries.
+									scripts: [new URL(self.options.cdns.sparkmd5, self.convAbsUrl(self.baseUrl)).href, self.getWorkerUrl('calcfilehash.js')],
 									data: { type: 'md5', bin: arrayBuffer }
 								});
 								dfd.fail(function() {
@@ -4446,7 +4447,7 @@ var elFinder = function(elm, opts, bootCallback) {
 											job.reject();
 										};
 										wk.postMessage({
-											scripts: [self.options.cdns.jssha, self.getWorkerUrl('calcfilehash.js')],
+											scripts: [new URL(self.options.cdns.jssha, self.convAbsUrl(self.baseUrl)).href, self.getWorkerUrl('calcfilehash.js')],
 											data: { type: v, bin: arrayBuffer, hashOpts: opts }
 										});
 										dfd.fail(function() {
@@ -11275,7 +11276,7 @@ elFinder.prototype.mimeTypes = {"application\/x-executable":"exe","application\/
  */
 elFinder.prototype._options = {
 	/**
-	 * URLs of 3rd party libraries CDN
+	 * URLs of 3rd party libraries
 	 * 
 	 * @type Object
 	 */
@@ -11295,15 +11296,16 @@ elFinder.prototype._options = {
 		dash       : 'https://cdnjs.cloudflare.com/ajax/libs/dashjs/4.7.3/dash.all.min.js',
 		flv        : 'https://cdnjs.cloudflare.com/ajax/libs/flv.js/1.6.2/flv.min.js',
 		videojs    : 'https://cdnjs.cloudflare.com/ajax/libs/video.js/8.8.0',
-		prettify   : 'https://cdn.jsdelivr.net/gh/google/code-prettify@e006587b4a893f0281e9dc9a53001c7ed584d4e7/loader/run_prettify.js',
+		prettify   : 'js/worker/prettify.min.js',
 		psd        : 'https://cdnjs.cloudflare.com/ajax/libs/psd.js/3.4.0/psd.min.js',
 		rar        : 'https://cdn.jsdelivr.net/gh/nao-pon/rar.js@6cef13ec66dd67992fc7f3ea22f132d770ebaf8b/rar.min.js',
-		zlibUnzip  : 'https://cdn.jsdelivr.net/gh/imaya/zlib.js@0.3.1/bin/unzip.min.js', // need check unzipFiles() in quicklook.plugins.js when update
-		zlibGunzip : 'https://cdn.jsdelivr.net/gh/imaya/zlib.js@0.3.1/bin/gunzip.min.js',
+		zlibUnzip  : 'js/worker/unzip.min.js', // need check unzipFiles() in quicklook.plugins.js when update
+		zlibGunzip : 'js/worker/gunzip.min.js',
 		bzip2      : 'https://cdn.jsdelivr.net/gh/nao-pon/bzip2.js@0.8.0/bzip2.js',
 		marked     : 'https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.0/marked.min.js',
-		sparkmd5   : 'https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js',
-		jssha      : 'https://cdnjs.cloudflare.com/ajax/libs/jsSHA/3.3.1/sha.min.js',
+		// Bundled hash libraries; relative paths are resolved against baseUrl.
+		sparkmd5   : 'js/worker/spark-md5.min.js',
+		jssha      : 'js/worker/sha.min.js',
 		amr        : 'https://cdn.jsdelivr.net/gh/yxl/opencore-amr-js@dcf3d2b5f384a1d9ded2a54e4c137a81747b222b/js/amrnb.js',
 		tiff       : 'https://cdn.jsdelivr.net/gh/seikichi/tiff.js@545ede3ee46b5a5bc5f06d65954e775aa2a64017/tiff.min.js'
 	},
@@ -31056,12 +31058,12 @@ elFinder.prototype.commands.quicklook.plugins = [
 										});
 									} else if (file.mime === 'application/zip') {
 										wk.postMessage({
-											scripts: [fm.options.cdns.zlibUnzip, fm.getWorkerUrl('quicklook.unzip.js')],
+											scripts: [new URL(fm.options.cdns.zlibUnzip, fm.convAbsUrl(fm.baseUrl)).href, fm.getWorkerUrl('quicklook.unzip.js')],
 											data: { type: 'zip', bin: data }
 										});
 									} else if (file.mime === 'application/x-gzip') {
 										wk.postMessage({
-											scripts: [fm.options.cdns.zlibGunzip, fm.getWorkerUrl('quicklook.unzip.js')],
+											scripts: [new URL(fm.options.cdns.zlibGunzip, fm.convAbsUrl(fm.baseUrl)).href, fm.getWorkerUrl('quicklook.unzip.js')],
 											data: { type: 'gzip', bin: data }
 										});
 
@@ -31606,6 +31608,7 @@ elFinder.prototype.commands.quicklook.plugins = [
 			},
 			prettify = function(node) {
 				if (fm.options.cdns.prettify) {
+					var url = new URL(fm.options.cdns.prettify, fm.convAbsUrl(fm.baseUrl)).href;
 					prettify = function(node) {
 						setTimeout(function() {
 							PRcheck(node);
@@ -31615,7 +31618,7 @@ elFinder.prototype.commands.quicklook.plugins = [
 					if (window.PR) {
 						_PR = window.PR;
 					}
-					fm.loadScript([fm.options.cdns.prettify + (fm.options.cdns.prettify.match(/\?/)? '&' : '?') + 'autorun=false'], function(wPR) {
+					fm.loadScript([url + (url.match(/\?/)? '&' : '?') + 'autorun=false'], function(wPR) {
 						PR = wPR || window.PR;
 						if (typeof PR === 'object') {
 							prettify = function() { return true; };
@@ -34990,7 +34993,8 @@ elFinder.prototype.commands.selectinvert = function() {
  * @author Naoki Sawada
  **/
 elFinder.prototype.commands.selectnone = function() {
-		var self = this,
+	"use strict";
+	var self = this,
 		fm = this.fm,
 		state = -1;
 	
