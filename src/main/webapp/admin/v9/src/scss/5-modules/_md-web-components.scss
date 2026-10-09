@@ -35,6 +35,12 @@ webjet-dte-jstree {
             top: 8px;
             right: 8px;
             padding: 5px 6px;
+            font-size: 6px;
+
+            .ti {
+                font-size: 18px;
+                vertical-align: middle;
+            }
         }
 
         .jstree {

@@ -244,6 +244,19 @@ public class TranslationKeyService {
         if (PropDB.canEdit(user, entity.getKey()) == false)
             throw new IllegalArgumentException(Prop.getInstance().getText("components.translation_key.cantEditThisKey"));
 
+        return saveTranslation(user, entity, reloadPropDB);
+    }
+
+    /**
+     * Saves an application-generated translation after the caller has authorized the operation.
+     * Values are sanitized according to the user's translation permissions.
+     *
+     * @param user current user
+     * @param entity translation with a key constructed by the application
+     * @param reloadPropDB whether to reload translations after saving
+     * @return saved translation
+     */
+    public TranslationKeyEntity saveTranslation(Identity user, TranslationKeyEntity entity, boolean reloadPropDB) {
         Date updateDate = new Date();
         String key = entity.getKey();
         String lng = entity.getLng();

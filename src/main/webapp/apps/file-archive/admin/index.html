@@ -56,6 +56,10 @@
         }
     }
 
+    function isFilePickerDialog() {
+        return window.parent !== window && typeof window.parent.selectFileArchiveLink === "function";
+    }
+
     function txtUrlOnChange(field) {
         if (field.value.indexOf("http") === 0 || field.value.indexOf("www.") === 0 || field.value.indexOf("/files/") === 0) {
             window.parent.CKEDITOR.dialog.getCurrent().getContentElement("target", "linkTargetType").setValue("_blank");
@@ -63,6 +67,10 @@
     }
 
     function selectArchiveLink(link) {
+        if (isFilePickerDialog()) {
+            window.parent.selectFileArchiveLink(link);
+            return;
+        }
         if (isCkEditorLinkDialog() === false) return;
 
         let urlPath = link;
@@ -247,6 +255,10 @@
 
         window.helpLink = "/redactor/files/file-archive/README";
 
+        if (isFilePickerDialog()) {
+            $("body").addClass("file-archive-picker-dialog");
+        }
+
         if (isCkEditorLinkDialog()) {
             $("body").addClass("file-archive-link-dialog");
             $("#file-archive-link").appendTo("body").show();
@@ -301,7 +313,7 @@
         });
 
         $("#fileArchiveDataTable").on("click", "tbody .dt-row-edit a", function(event) {
-            if (isCkEditorLinkDialog() === false) return;
+            if (isCkEditorLinkDialog() === false && isFilePickerDialog() === false) return;
 
             event.preventDefault();
             event.stopPropagation();

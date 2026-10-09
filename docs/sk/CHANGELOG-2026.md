@@ -192,6 +192,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Pridané zobrazenie zoznamu skupín šablón (#58525).
 - V riadiacej doméne je možné upravovať všetky presmerovania domén.
 - V riadiacej doméne pridaná možnosť zobraziť všetky súbory.
+- GDPR - opravené pridávanie a úprava cookies v ostatných doménach bez oprávnenia na úpravu všetkých prekladových kľúčov. Poskytovateľ, účel a platnosť sa ukladajú a zobrazujú pre aktuálnu doménu (#58798).
 
 ### Iné menšie zmeny
 

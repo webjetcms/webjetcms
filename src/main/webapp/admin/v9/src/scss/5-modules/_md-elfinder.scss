@@ -80,13 +80,21 @@ html.pg-iframe {
         }
     }
     #linkInput.inputs.container-fluid {
-        padding: 0px 10px 2px 10px;
+        padding: 9px 10px;
+        border-top: 1px solid var(--wj-nice-gray-100);
         font-size: 14px;
+        .row {
+            --bs-gutter-x: 0;
+        }
         .elfinder-url-input {
             padding: 1px 4px;
             font-size: 14px;
         }
     }
+}
+
+html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
+    height: 100vh;
 }
 
 /* STATUS BAR */
