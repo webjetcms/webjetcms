@@ -1,5 +1,5 @@
 import { node, text, icon } from './widget-utils';
-import { isCurrentDevice } from './security-events';
+import { isCurrentDevice, browserLabel } from './security-events';
 
 /** Waits for the modal backdrop and focus cleanup before opening another account view. */
 export function closeAccountDialog(dialog, action) {
@@ -39,7 +39,7 @@ export function showDeviceSecurity(context, securityEvent, report = false) {
             dialog.body.append(node('p', 'mb-0', text(context, 'newDevice.unavailable')));
             return;
         }
-        const browser = [securityEvent.browserName, securityEvent.browserVersion].filter(Boolean).join(' ');
+        const browser = browserLabel(securityEvent);
         const device = [browser, securityEvent.operatingSystem, securityEvent.ipAddress].filter(Boolean).join(' · ') || '—';
         if (securityEvent.reportedAt) {
             const result = node('div', 'md-dashboard-device-security__result');

@@ -2238,7 +2238,7 @@ test('Session dialog does not autofocus a tab or steal child focus', t => {
 });
 
 test('Login security dialog removes only the successfully blocked device notice', async t => {
-    const securityEvent = { id: 42, createDate: 1000, browserName: '<img src=x>', browserVersion: '123', operatingSystem: 'Linux', ipAddress: '127.0.0.1' };
+    const securityEvent = { id: 42, createDate: 1000, browserName: '<img src=x>', browserVersion: '123.0', operatingSystem: 'Linux', ipAddress: '127.0.0.1' };
     const otherNotice = { kind: 'newDevice', securityEvent: { id: 43 } };
     const data = { notices: [{ kind: 'newDevice', securityEvent: { ...securityEvent } }, otherNotice], currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
         { sessionId: 'current', browserName: 'Current autotest', logonTime: 1000 },
@@ -2253,7 +2253,7 @@ test('Login security dialog removes only the successfully blocked device notice'
     assert.equal(requests.length, 0, 'Opening the security dialog must be read-only.');
     assert.equal(root.querySelectorAll('[role="tab"], table').length, 0);
     assert.equal(root.querySelector('img'), null);
-    assert.match(root.textContent, /<img src=x>/);
+    assert.match(root.textContent, /<img src=x> 123 · Linux/);
     root.querySelector('.md-dashboard-device-security__report').click();
     await new Promise(resolve => setImmediate(resolve));
     assert.ok(root.querySelector('.md-dashboard-device-security__report'));

@@ -164,14 +164,6 @@ public class SessionHolder
 			det = new SessionDetails();
 			det.setLogonTime(Tools.getNow());
 			det.setRemoteAddr(Tools.getRemoteIP(request));
-			BrowserDetector bd = BrowserDetector.getInstance(request);
-			if (bd != null) {
-				det.setBrowserName(bd.getBrowserName());
-				det.setBrowserVersion(bd.getBrowserVersion());
-				det.setOperatingSystem(bd.getBrowserPlatform());
-				det.setOperatingSystemVersion(bd.getBrowserSubplatform());
-			}
-			else det.setBrowserName("Unknown");
 		} else {
 			Identity sessionUser = UsersDB.getCurrentUser(request);
 
@@ -202,6 +194,18 @@ public class SessionHolder
 					return false;
 				}
 			}
+		}
+		String previousOperatingSystemVersion = det.getOperatingSystemVersion();
+		// Detailed Client Hints can arrive after the session was created.
+		if (newSession || request.getHeader("Sec-CH-UA-Platform-Version") != null) {
+			BrowserDetector bd = BrowserDetector.getInstance(request);
+			if (bd != null) {
+				det.setBrowserName(bd.getBrowserName());
+				det.setBrowserVersion(bd.getBrowserVersion());
+				det.setOperatingSystem(bd.getBrowserPlatform());
+				det.setOperatingSystemVersion(bd.getBrowserSubplatform());
+			}
+			else det.setBrowserName("Unknown");
 		}
 		det.setLastURL(lastURL);
 		det.setDomainId(CloudToolsForCore.getDomainId());
@@ -237,7 +241,8 @@ public class SessionHolder
 		det.setSessionId(sessionId);
 		data.put(sessionId, det);
 
-		if ((newSession || !Objects.equals(previousDeviceId, det.getDeviceId()) || !Objects.equals(previousLocation, det.getLocation())) && det.isAdmin()) {
+		if ((newSession || !Objects.equals(previousDeviceId, det.getDeviceId()) || !Objects.equals(previousLocation, det.getLocation())
+				|| !Objects.equals(previousOperatingSystemVersion, det.getOperatingSystemVersion())) && det.isAdmin()) {
 			// After new session was added (logon for example) - update session stat data
 			SessionClusterService.updateSessionData();
 		}

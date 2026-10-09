@@ -1,7 +1,7 @@
 import { registerWidget } from './registry';
 import { node, text, date, number, icon, containNativeScroll, fetchJson } from './widget-utils';
 import { adminMail, fetchLoggedAdministrators, renderLoggedAdmins } from './system-widgets';
-import { showDeviceConfirmation, isCurrentDevice } from './security-events';
+import { showDeviceConfirmation, isCurrentDevice, browserLabel } from './security-events';
 import { closeAccountDialog, showDeviceSecurity } from './device-security-dialog';
 
 function sessionButton(label, action, className) {
@@ -28,12 +28,6 @@ export function flattenSessions(data) {
 function sessionClient(session) {
     const system = /^unknown$/i.test(session.operatingSystem || '') ? '' : session.operatingSystem;
     return [session.browserName, system].filter(Boolean).join(' · ');
-}
-
-/** Formats the browser and version consistently in both account tabs. */
-function browserLabel(client) {
-    const version = (client.browserVersion || '').replace(/\.0$/, '');
-    return [client.browserName, version].filter(Boolean).join(' ');
 }
 
 /** Resolves only known browser glyphs, never a CSS class supplied by session data. */

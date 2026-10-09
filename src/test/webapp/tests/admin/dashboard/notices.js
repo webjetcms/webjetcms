@@ -8,13 +8,17 @@ const confirmRoute = '**/admin/rest/security/login-events/*/confirm';
 const reportRoute = '**/admin/rest/security/login-events/*/report';
 const historyRoute = '**/admin/rest/sessions/login-history*';
 const administratorsRoute = '**/admin/rest/sessions/administrators';
+const locationRoute = /^https:\/\/(ipwho\.is|ipwhois\.pro)\//;
 const notice = (id, severity) => ({ id: `notice-autotest-${id}`, severity, icon: 'ti-info-circle', title: `${severity} notice autotest`, description: 'Notice explanation autotest', action: { type: 'link', url: '/admin/v9/', label: 'Open autotest' } });
 let state, notices, currentSessions, failSave;
 
-Before(({ login }) => { login('admin'); });
+Before(async ({ I, login }) => {
+    await I.mockRoute(locationRoute, route => route.fulfill({ contentType: 'application/json', body: '{"success":false}' }));
+    login('admin');
+});
 
 After(async ({ I }) => {
-    for (const route of [dashboardPageRoute, preferencesRoute, codeRoute, confirmRoute, reportRoute, historyRoute, administratorsRoute]) {
+    for (const route of [dashboardPageRoute, preferencesRoute, codeRoute, confirmRoute, reportRoute, historyRoute, administratorsRoute, locationRoute]) {
         await I.stopMockingRoute(route);
     }
     I.wjSetDefaultWindowSize();
@@ -118,7 +122,7 @@ Scenario('New-device notices require an explicit server confirmation and cannot 
 Scenario('Keyboard device reporting opens the compact dialog and removes only a successfully blocked warning', async ({ I }) => {
     await openNotices(I);
     const now = Date.now();
-    const securityEvent = { id: 43, createDate: now, expiresAt: now + 7 * 86400000, browserName: 'Firefox autotest', operatingSystem: 'Linux' };
+    const securityEvent = { id: 43, createDate: now, expiresAt: now + 7 * 86400000, browserName: 'Firefox autotest', browserVersion: '155.0', operatingSystem: 'Linux' };
     notices = [
         { ...notice('security', 'warning'), id: 'newDevice:43', kind: 'newDevice', securityEvent },
         { ...notice('blocked', 'warning'), id: 'newDevice:44', kind: 'newDevice', securityEvent: { ...securityEvent, id: 44, reportedAt: now } },
@@ -140,12 +144,14 @@ Scenario('Keyboard device reporting opens the compact dialog and removes only a 
     await I.refreshPage();
     await ready(I);
     await I.dontSeeElement('[data-notice-id="newDevice:44"]');
+    await I.see('Firefox autotest 155 · Linux', '[data-notice-id="newDevice:43"]');
     const trigger = '[data-notice-id="newDevice:43"] .md-dashboard__notice-report';
     const dialog = '.md-dashboard-modal--device-security';
     await I.executeScript(selector => document.querySelector(selector).focus(), trigger);
     await I.pressKey('Enter');
     await I.waitForVisible(dialog, 10);
     await I.waitForText('Zmenu sa nepodarilo uložiť', 10, dialog);
+    await I.see('Firefox autotest 155 · Linux', `${dialog} .md-dashboard-device-security__device`);
     await I.waitForFunction(selector => getComputedStyle(document.querySelector(selector)).opacity === '1'
         && getComputedStyle(document.querySelector(`${selector} .modal-dialog`)).transform === 'none', [dialog], 10);
     await I.assertTrue(await I.executeScript(selector => document.querySelector(selector).contains(document.activeElement), dialog), 'Focus must remain inside the security dialog after reporting fails.');
@@ -164,7 +170,7 @@ Scenario('Keyboard device reporting opens the compact dialog and removes only a 
     await I.pressKey('Space');
     await I.waitForElement(`${dialog} .md-dashboard-device-security__result`, 10);
     await I.see('Zabezpečte svoj účet', dialog);
-    await I.see('Firefox autotest · Linux sme zablokovali.', dialog);
+    await I.see('Firefox autotest 155 · Linux sme zablokovali.', dialog);
     await I.see('Zariadenie je zablokované a jeho relácie sa odhlasujú.', dialog);
     await I.see('Ak ste sa neprihlásili vy, niekto môže poznať vaše heslo.', dialog);
     await I.dontSeeElement('[data-notice-id="newDevice:43"]');

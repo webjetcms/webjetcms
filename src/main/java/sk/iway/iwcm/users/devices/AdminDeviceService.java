@@ -203,6 +203,7 @@ public class AdminDeviceService {
         long now = clock.millis();
         int maxAgeDays = maxAgeDays();
         BrowserDetector browser = new BrowserDetector(request.getHeader("User-Agent"));
+        browser.parse(request);
         String operatingSystem = join(browser.getBrowserPlatform(), browser.getBrowserSubplatform());
         String tokenHash = hashToken(token);
         DeviceEntity event = deviceService.recordLogin(user.getUserId(), tokenHash, now,

@@ -1,3 +1,9 @@
+/** Formats the browser and version consistently across session and device views. */
+export function browserLabel(client) {
+    const version = (client.browserVersion || '').replace(/\.0$/, '');
+    return [client.browserName, version].filter(Boolean).join(' ');
+}
+
 /**
  * Confirms an owned device and applies the server result to notices and all sessions of that device.
  * @param {Object} data - Shared dashboard bootstrap.

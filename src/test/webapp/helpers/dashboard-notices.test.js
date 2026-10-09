@@ -141,7 +141,7 @@ function securityNotice(id = 42) {
     const createDate = Date.UTC(2026, 9, 2);
     return { ...notice(`newDevice:${id}`, 'warning'), kind: 'newDevice', securityEvent: {
         id, createDate, expiresAt: createDate + week, confirmedAt: null, reportedAt: null,
-        browserName: '<img src=x> Firefox', browserVersion: '123', operatingSystem: 'Linux', ipAddress: '127.0.0.1'
+        browserName: '<img src=x> Firefox', browserVersion: '123.0', operatingSystem: 'Linux', ipAddress: '127.0.0.1'
     } };
 }
 

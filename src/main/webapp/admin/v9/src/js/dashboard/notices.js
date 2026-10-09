@@ -1,5 +1,5 @@
 import { date } from './widget-utils';
-import { isCurrentDevice, showDeviceConfirmation } from './security-events';
+import { isCurrentDevice, showDeviceConfirmation, browserLabel } from './security-events';
 
 const SETTINGS_KEY = "dashboard.notices";
 const WEEK = 7 * 24 * 60 * 60 * 1000;
@@ -93,7 +93,7 @@ export class DashboardNotices {
         let description = notice.description || body.textContent;
         if (notice.kind === "newDevice") {
             const event = notice.securityEvent;
-            const browser = [event.browserName, event.browserVersion].filter(Boolean).join(" ");
+            const browser = browserLabel(event);
             const device = [browser, event.operatingSystem].filter(Boolean).join(" · ");
             description = currentDevice
                 ? this._t("newDevice.currentDetails", device || "—", date(event.createDate))

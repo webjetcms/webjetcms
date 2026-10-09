@@ -626,6 +626,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		if (Tools.isSecure(req))
 		{
 			PathFilter.setHeader(res, "Strict-Transport-Security", "strictTransportSecurity");
+			res.addHeader("Accept-CH", "Sec-CH-UA-Platform-Version");
 		}
 		PathFilter.setHeader(res, "X-Content-Type-Options", "xContentTypeOptions");
 		if (path != null && path.toLowerCase().endsWith(".svg")) {

@@ -126,6 +126,7 @@ class AdminDeviceServiceTest {
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
 
         Cookie cookie = response.getCookie(AdminDeviceService.COOKIE_NAME);
+        verify(browsers.constructed().get(0)).parse(request);
         assertNotNull(cookie);
         assertTrue(cookie.getValue().matches("[A-Za-z0-9_-]{43}"));
         assertEquals(32, java.util.Base64.getUrlDecoder().decode(cookie.getValue()).length);
