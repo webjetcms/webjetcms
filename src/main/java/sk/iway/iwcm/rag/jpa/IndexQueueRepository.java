@@ -21,7 +21,11 @@ public interface IndexQueueRepository extends DomainIdRepository<IndexQueueEntit
 
     List<IndexQueueEntity> findTop500ByOrderByCreateDateAsc();
 
-    /** @return highest queue ID present at the start of a cron run, or {@code null} for an empty queue */
+    /**
+     * Returns the highest queue ID for establishing a processing snapshot.
+     *
+     * @return highest current queue ID, or {@code null} for an empty queue
+     */
     @Query("SELECT MAX(q.id) FROM IndexQueueEntity q")
     Long findMaxId();
 
@@ -36,16 +40,47 @@ public interface IndexQueueRepository extends DomainIdRepository<IndexQueueEntit
      */
     List<IndexQueueEntity> findTop500ByIdGreaterThanAndIdLessThanEqualOrderByIdAsc(Long afterId, Long maxId);
 
+    /**
+     * Deletes pending actions for one source in the specified accounting domain.
+     *
+     * @param entityType source entity type
+     * @param entityId source identifier
+     * @param domainId accounting domain whose entries are removed
+     */
     @Modifying
     @Transactional
     @Query("DELETE FROM IndexQueueEntity q WHERE q.entityType = :entityType AND q.entityId = :entityId AND q.domainId = :domainId")
-    void deleteByEntityTypeAndEntityId(@Param("entityType") RagEntityType entityType, @Param("entityId") Integer entityId, @Param("domainId") Integer domainId);
+    void deleteByEntityTypeAndEntityId(@Param("entityType") RagEntityType entityType, @Param("entityId") Long entityId, @Param("domainId") Integer domainId);
 
+    /**
+     * Deletes pending actions for selected sources in the specified accounting domain.
+     *
+     * @param entityType source entity type
+     * @param entityIds source identifiers
+     * @param domainId accounting domain whose entries are removed
+     */
     @Modifying
     @Transactional
     @Query("DELETE FROM IndexQueueEntity q WHERE q.entityType = :entityType AND q.entityId IN :entityIds AND q.domainId = :domainId")
-    void deleteByEntityTypeAndEntityId(@Param("entityType") RagEntityType entityType, @Param("entityIds") List<Integer> entityIds, @Param("domainId") Integer domainId);
+    void deleteByEntityTypeAndEntityId(@Param("entityType") RagEntityType entityType, @Param("entityIds") List<Long> entityIds, @Param("domainId") Integer domainId);
 
+    /**
+     * Returns entity IDs queued for the specified action in one accounting domain.
+     *
+     * @param entityType source entity type
+     * @param action queued action
+     * @param domainId accounting domain to filter by
+     * @return matching queued entity IDs
+     */
     @Query("SELECT q.entityId FROM IndexQueueEntity q WHERE q.entityType = :entityType AND q.action = :action AND q.domainId = :domainId")
-    List<Integer> findExistingEntityIds(@Param("entityType") RagEntityType entityType, @Param("action") RagIndexAction action, @Param("domainId") Integer domainId);
+    List<Long> findExistingEntityIds(@Param("entityType") RagEntityType entityType, @Param("action") RagIndexAction action, @Param("domainId") Integer domainId);
+
+    /**
+     * Finds pending source actions across submitting domains by logical path prefix.
+     *
+     * @param entityType source entity type
+     * @param sourcePath logical path prefix, normally the root followed by a slash
+     * @return matching queue entries from all domains
+     */
+    List<IndexQueueEntity> findByEntityTypeAndSourcePathStartingWith(RagEntityType entityType, String sourcePath);
 }

@@ -49,8 +49,40 @@ import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkRepository;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.vectorstore.VectorStore;
 
+/**
+ * Tests queue snapshots, retries, source routing, and domain ownership during document indexing.
+ */
 class SemanticIndexServiceTest {
 
+    /**
+     * Verifies that Markdown IDs beyond the integer range reach the Markdown handler and only successful queue entries are removed.
+     */
+    @Test
+    void processesMarkdownLongIdsAndRetainsOnlyFailedFilesForRetry() {
+        TestContext context = new TestContext();
+        IndexQueueEntity succeeded = queueItem(21L, 1, 2);
+        succeeded.setEntityType(RagEntityType.MARKDOWN);
+        succeeded.setEntityId(Long.MAX_VALUE - 1);
+        IndexQueueEntity failed = queueItem(22L, 2, 3);
+        failed.setEntityType(RagEntityType.MARKDOWN);
+        failed.setEntityId(Long.MAX_VALUE);
+        when(context.queueRepository.findTop500ByIdGreaterThanAndIdLessThanEqualOrderByIdAsc(0L, Long.MAX_VALUE))
+            .thenReturn(List.of(succeeded, failed));
+        doThrow(new IllegalStateException("Temporary provider failure")).when(context.markdownIndexService).processQueueItem(failed);
+        try (MockedStatic<Cache> cacheStatic = mockStatic(Cache.class);
+             MockedStatic<Logger> ignored = mockStatic(Logger.class)) {
+            cacheStatic.when(Cache::getInstance).thenReturn(context.cache);
+            context.service.processQueue();
+        }
+        verify(context.markdownIndexService).processQueueItem(succeeded);
+        verify(context.markdownIndexService).processQueueItem(failed);
+        verify(context.queueRepository).deleteAllByIdInBatch(List.of(21L));
+        verify(context.embeddingChunkRepository, never()).deleteByEntityTypeAndEntityIdAndDomainId(eq(RagEntityType.DOCUMENT), anyLong(), org.mockito.ArgumentMatchers.anyInt());
+    }
+
+    /**
+     * Verifies that document deletion uses the queued domain instead of the ambient domain and removes the processed entry.
+     */
     @Test
     void deletesDocumentEmbeddingsUsingQueuedDomain() {
         TestContext context = new TestContext();
@@ -73,6 +105,9 @@ class SemanticIndexServiceTest {
         verify(context.queueRepository).deleteAllByIdInBatch(List.of(11L));
     }
 
+    /**
+     * Verifies that an unmapped document domain leaves the queue item pending without preparing the vector store or saving chunks.
+     */
     @Test
     void rejectsUnmappedDocumentDomainInMultidomainMode() {
         TestContext context = new TestContext();
@@ -104,6 +139,9 @@ class SemanticIndexServiceTest {
         verify(context.embeddingChunkRepository, never()).saveAllAndFlush(anyList());
     }
 
+    /**
+     * Verifies that a full batch of invalid entries does not prevent a later valid entry in the initial snapshot from being processed.
+     */
     @Test
     void failedFullBatchDoesNotStarveLaterItems() {
         TestContext context = new TestContext();
@@ -134,6 +172,9 @@ class SemanticIndexServiceTest {
         );
     }
 
+    /**
+     * Verifies that a failed deletion stays queued and is removed after succeeding on the next run.
+     */
     @Test
     void keepsFailedItemAndProcessesItOnNextRun() {
         TestContext context = new TestContext();
@@ -161,6 +202,9 @@ class SemanticIndexServiceTest {
         verify(context.queueRepository).deleteAllByIdInBatch(List.of(12L));
     }
 
+    /**
+     * Verifies that document indexing uses its owning domain and assistant, initializes shared schema globally, and restores the caller context.
+     */
     @Test
     void indexesDocumentUsingQueuedDomainAndRestoresRequestContext() throws Exception {
         String domainName = "tenant-two.example";
@@ -302,6 +346,9 @@ class SemanticIndexServiceTest {
         return item;
     }
 
+    /**
+     * Provides isolated mocked collaborators and default vector-store readiness for queue-processing tests.
+     */
     private static class TestContext {
         private final DocDetailsContentExtractor contentExtractor = mock(DocDetailsContentExtractor.class);
         private final SlidingWindowChunker chunker = mock(SlidingWindowChunker.class);
@@ -310,6 +357,7 @@ class SemanticIndexServiceTest {
         private final IndexQueueRepository queueRepository = mock(IndexQueueRepository.class);
         private final RagEmbeddingStatService ragEmbeddingStatService = mock(RagEmbeddingStatService.class);
         private final EmbeddingChunkRepository embeddingChunkRepository = mock(EmbeddingChunkRepository.class);
+        private final MarkdownIndexService markdownIndexService = mock(MarkdownIndexService.class);
         private final Cache cache = mock(Cache.class);
         private final SemanticIndexService service;
 
@@ -324,7 +372,8 @@ class SemanticIndexServiceTest {
                 vectorStore,
                 queueRepository,
                 ragEmbeddingStatService,
-                embeddingChunkRepository
+                embeddingChunkRepository,
+                markdownIndexService
             );
         }
     }

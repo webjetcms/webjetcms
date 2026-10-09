@@ -148,7 +148,7 @@ Pokud asistent již existuje, jeho `provider` a `model` mají přednost před ko
 
 Indexy jsou odděleny kombinací poskytovatele a modelu. Opětovné indexování nahradí pouze data aktuální kombinace, takže například OpenAI a Gemini index téže stránky mohou existovat současně. Náhled indexování počítá pouze indexy aktuálního asistenta; náhled odstranění a odstranění stránky pracují se všemi kombinacemi.
 
-Fronta `rag_index_queue` ukládá pouze typ entity, ID a akci. Poskytovatel a model se načtou z asistenta `RAG-EMB-INDEX` až při zpracování položky. Pokud potřebujete dokončit indexování původní kombinací, nechte před změnou asistenta fronty zcela zpracovat.
+Fronta `rag_index_queue` neukládá poskytovatele ani model. Poskytovatel a model se načtou z asistenta `RAG-EMB-INDEX` až při zpracování položky. Pokud potřebujete dokončit indexování původní kombinací, nechte před změnou asistenta fronty zcela zpracovat.
 
 !>**Upozornění:** Indexovací a vyhledávací asistent musí používat stejný identifikátor poskytovatele a modelu. Vyhledávání načte pouze indexy, jejichž obě hodnoty se přesně shodují s asistentem `RAG-EMB-SEARCH`.
 

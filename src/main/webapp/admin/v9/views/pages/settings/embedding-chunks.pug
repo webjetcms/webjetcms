@@ -3,6 +3,7 @@ extends ../../partials/layout
 block content
 
     script
+        include markdown-folder-selector.js
         include embedding-logic.js
 
     script.
@@ -26,9 +27,11 @@ block content
 
         document.querySelectorAll('#pills-embedding-chunks .nav-link').forEach(tab => {
             tab.addEventListener('click', function () {
-                // Wait a tick so the "active" class updates
+                if (this.classList.contains('active')) return;
+                // The header updates the active tab after the click bubbles.
                 setTimeout(() => {
                     initPage();
+                    loadCurrentEmbeddingConfiguration();
                 }, 0);
             });
         });
@@ -44,15 +47,16 @@ block content
             embeddingChunksDataTable.hideButtons(["create", "remove", "celledit", "import", "duplicate"]);
 
             var buttonCounter = 2;
-            embeddingChunksDataTable.button().add(buttonCounter++, getAddIndexButton());
-            embeddingChunksDataTable.button().add(buttonCounter++, getRemoveIndexButton());
+            embeddingChunksDataTable.button().add(buttonCounter++, getIndexButton("index"));
+            embeddingChunksDataTable.button().add(buttonCounter++, getIndexButton("delete"));
+            embeddingChunksDataTable.on("select.dt.DT deselect.dt.DT draw.dt.DT", updateIndexButtons);
 
             initPage();
             loadCurrentEmbeddingConfiguration();
         });
 
         function loadCurrentEmbeddingConfiguration() {
-            fetch(url + "/current-embedding-configuration", {
+            fetch(url + "/current-embedding-configuration?entityType=" + (getActiveTabValue() || "document").toUpperCase(), {
                 method: "GET",
                 headers: { "X-CSRF-Token": window.csrfToken }
             })
@@ -79,7 +83,8 @@ block content
         }
 
     style.
-        label[for=includeSubfolders]::after {
+        label[for=includeSubfolders]::after,
+        label[for=markdownIncludeSubfolders]::after {
             content: "\ec9f" !important;
             font-size: 18px !important;
         }

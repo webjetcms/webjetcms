@@ -15,6 +15,7 @@ function getActiveTabValue() {
 
 /**
  * Rebuilds DataTable URL query based on selected external filters.
+ * Updates index action availability and reloads the table when its API is available.
  *
  * @private
  */
@@ -30,22 +31,20 @@ function filterFn() {
         return;
     }
 
-    embeddingChunksDataTable.setAjaxUrl(
-        WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "entityType", entityType.toUpperCase())
-    );
+    const markdown = entityType === "markdown";
+    const params = {
+        entityType: entityType.toUpperCase(),
+        sourceRoot: markdown ? $("#markdownFolder").val() || "" : "",
+        directory: markdown ? $("#markdownDirectory").val() || "" : "",
+        includeSubfolders: $(markdown ? "#markdownIncludeSubfolders" : "#includeSubfolders").is(":checked")
+    };
+    if (entityType === "document") params.searchRootDir = $("#rootDir").val();
 
-    if ("document" === entityType) {
-        const rootDirValue = $("#rootDir").val();
-        // The switch keeps id "includeSubfolders" for compatibility with existing chart logic.
-        const includeSubfolders = $("#includeSubfolders").is(":checked");
+    let url = embeddingChunksDataTable.getAjaxUrl();
+    Object.entries(params).forEach(([name, value]) => { url = WJ.urlUpdateParam(url, name, value); });
+    embeddingChunksDataTable.setAjaxUrl(url);
 
-        embeddingChunksDataTable.setAjaxUrl(
-            WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "searchRootDir", rootDirValue)
-        );
-        embeddingChunksDataTable.setAjaxUrl(
-            WJ.urlUpdateParam(embeddingChunksDataTable.getAjaxUrl(), "includeSubfolders", includeSubfolders)
-        );
-    }
+    updateIndexButtons();
 
     if (embeddingChunksDataTable.ajax && typeof embeddingChunksDataTable.ajax.reload === "function") {
         embeddingChunksDataTable.ajax.reload();
@@ -119,10 +118,11 @@ async function _getRootDirDiv() {
 /**
  * Creates include-subfolders switch element for external filters.
  *
+ * @param {string} [id="includeSubfolders"] Identifier of the tab-specific switch.
  * @returns {HTMLDivElement}
  * @private
  */
-function _getSubFolderCheck() {
+function _getSubFolderCheck(id = "includeSubfolders") {
     const colDiv = document.createElement("div");
     colDiv.className = "col-auto";
 
@@ -132,14 +132,18 @@ function _getSubFolderCheck() {
     innerDiv.setAttribute("title", "[[#{settings.embedding-chunks.sub-folder}]]");
 
     const input = document.createElement("input");
-    input.id = "includeSubfolders";
+    input.id = id;
     input.type = "checkbox";
     input.className = "form-check-input";
     input.value = "true";
     input.checked = true;
+    input.setAttribute("aria-label", "[[#{settings.embedding-chunks.sub-folder}]]");
+    if (id === "markdownIncludeSubfolders") {
+        input.checked = new URLSearchParams(window.location.search).get("includeSubfolders") !== "false";
+    }
 
     const label = document.createElement("label");
-    label.setAttribute("for", "includeSubfolders");
+    label.setAttribute("for", id);
     label.className = "form-check-label is-icon-subfolders";
 
     innerDiv.appendChild(input);
@@ -149,13 +153,17 @@ function _getSubFolderCheck() {
     return colDiv;
 }
 
+/**
+ * Creates filters for the active tab once and toggles their visibility while preserving selections.
+ * Initializes folder pickers, filter change handlers, and tooltips.
+ *
+ * @returns {Promise<void>} Resolves after filters are ready, or immediately if the filter tab is absent.
+ */
 async function addFilterBasedOnTab() {
     const bonusFilterTab = document.getElementById("pills-bonusFilter-tab");
     if (!bonusFilterTab) {
         return;
     }
-
-    bonusFilterTab.innerHTML = "";
 
     const entityType = getActiveTabValue();
 
@@ -163,31 +171,55 @@ async function addFilterBasedOnTab() {
     if (!extFilter) {
         extFilter = document.createElement("div");
         extFilter.id = "embeddingChunksDataTable_extfilter";
+        bonusFilterTab.replaceChildren(extFilter);
+    }
 
+    if (!extFilter.querySelector('[data-entity-type="' + entityType + '"]')) {
         const wrapper = document.createElement("div");
         wrapper.className = "row datatableInit";
+        wrapper.dataset.entityType = entityType;
+        extFilter.appendChild(wrapper);
 
         if ("document" === entityType) {
             wrapper.appendChild(await _getRootDirDiv());
             wrapper.appendChild(_getSubFolderCheck());
-        }
-
-        extFilter.appendChild(wrapper);
-    }
-
-    bonusFilterTab.appendChild(extFilter);
-
-    setTimeout(() => {
-        if ("document" === entityType) {
             ChartTools.initGroupIdSelect();
             ChartTools.bindFilter(filterFn);
             $("#includeSubfolders").on("change", filterFn);
+        } else if ("markdown" === entityType) {
+            wrapper.appendChild(await _getMarkdownFolderDiv());
+            wrapper.appendChild(_getSubFolderCheck("markdownIncludeSubfolders"));
+            $("#markdownIncludeSubfolders").on("change", filterFn);
         }
+    }
 
-        // Init tooltips
-        WJ.initTooltip($('#embeddingChunksDataTable_extfilter [data-toggle*="tooltip"]'));
-        WJ.initTooltip($('#embeddingChunksDataTable_extfilter [data-bs-toggle*="tooltip"]'));
-    }, 0);
+    extFilter.querySelectorAll("[data-entity-type]").forEach(filter => {
+        filter.classList.toggle("d-none", filter.dataset.entityType !== getActiveTabValue());
+    });
+
+    WJ.initTooltip($('#embeddingChunksDataTable_extfilter [data-toggle*="tooltip"]'));
+    WJ.initTooltip($('#embeddingChunksDataTable_extfilter [data-bs-toggle*="tooltip"]'));
+}
+
+/**
+ * Creates the tree selector for configured Markdown roots and their subdirectories.
+ *
+ * @returns {Promise<HTMLDivElement>}
+ * @private
+ */
+async function _getMarkdownFolderDiv() {
+    const wrapper = document.createElement("div");
+    wrapper.className = "rootDirDiv col-auto";
+    const selector = new MarkdownFolderSelector(wrapper, filterFn);
+
+    const message = document.createElement("span");
+    message.className = "small text-muted";
+    message.setAttribute("role", "status");
+    wrapper.appendChild(message);
+
+    const params = new URLSearchParams(window.location.search);
+    await selector.initialize(params.get("sourceRoot"), params.get("directory"), message);
+    return wrapper;
 }
 
 /**
@@ -204,25 +236,32 @@ function _getTabFromUrl() {
     return null;
 }
 
+/**
+ * Builds embedding tabs with the URL hash selecting the initial tab when it matches.
+ *
+ * @returns {{url: string, title: string, active: boolean}[]} Tab definitions, defaulting to the web-page tab.
+ */
 function getHeaderTabs() {
     const tabs = [
-        { url: "#document", title: "[[#{menu.web_sites}]]", active: true }
+        { url: "#document", title: "[[#{menu.web_sites}]]", active: true },
+        { url: "#markdown", title: "[[#{settings.markdown-chunks.tab}]]", active: false }
     ];
 
     const actualTab = _getTabFromUrl();
 
-    if (actualTab) {
-        const matched = tabs.some(tab => tab.url === actualTab);
-        if (matched) {
-            tabs.forEach(tab => {
-                tab.active = tab.url === actualTab;
-            });
-        }
+    if (tabs.some(tab => tab.url === actualTab)) {
+        tabs.forEach(tab => { tab.active = tab.url === actualTab; });
     }
 
     return tabs;
 }
 
+/**
+ * Copies the current web-page folder selection and recursion flag into a dialog URL.
+ *
+ * @param {string} baseUrl - Dialog URL resolved against the current origin.
+ * @returns {URL} URL with available folder filter values applied.
+ */
 function _addParamsBtnUrl(baseUrl) {
     const rootDir = document.getElementById("rootDir");
     const includeSubfolders = document.getElementById("includeSubfolders");
@@ -238,51 +277,54 @@ function _addParamsBtnUrl(baseUrl) {
 }
 
 /**
- * Returns configuration for the "add to index" action.
+ * Builds the queue dialog configuration for the active tab's selected scope.
  *
- * @returns {{url: string, buttonTitleKey: string, tooltip: string}|null}
+ * @param {string} action Queue action, "index" or "delete".
+ * @returns {{url: string, title: string, buttonTitleKey: string}|null} Configuration, or null without an available scope.
  * @private
  */
-function _getAddIndexButtonConf() {
+function _getIndexButtonConf(action) {
     const entityType = getActiveTabValue();
-    if ("document" === entityType) {
-        const url = _addParamsBtnUrl("/admin/v9/settings/doc-chunks/?action=index");
-        return {
-            url: url.pathname + url.search,
-            title: "[[#{settings.doc-chunks.title}]]",
-            buttonTitleKey: "[[#{settings.embedding-chunks.start}]]",
-            tooltip: "[[#{settings.embedding-chunks.add}]]"
-        };
+    let url;
+    let title;
+    if (entityType === "markdown") {
+        const folder = document.getElementById("markdownFolder")?.value;
+        if (!folder) return null;
+        const params = new URLSearchParams({
+            action,
+            folder,
+            directory: document.getElementById("markdownDirectory")?.value || "",
+            includeSubfolders: String(document.getElementById("markdownIncludeSubfolders")?.checked !== false)
+        });
+        url = new URL("/admin/v9/settings/markdown-chunks/?" + params, window.location.origin);
+        title = "[[#{settings.markdown-chunks.title}]]";
+    } else if (entityType === "document") {
+        url = _addParamsBtnUrl("/admin/v9/settings/doc-chunks/?action=" + action);
+        title = "[[#{settings.doc-chunks.title}]]";
+    } else {
+        return null;
     }
-
-    return null;
+    return {
+        url: url.pathname + url.search,
+        title,
+        buttonTitleKey: "[[#{settings.embedding-chunks.start}]]"
+    };
 }
 
 /**
- * Returns configuration for the "remove from index" action.
- *
- * @returns {{url: string, buttonTitleKey: string, tooltip: string}|null}
- * @private
+ * Enables bulk index actions when no rows are selected, requiring a selected root on the Markdown tab.
+ * Requires the embedding DataTable to be initialized.
  */
-function _getRemoveIndexButtonConf() {
-    const entityType = getActiveTabValue();
-    if ("document" === entityType) {
-        const url = _addParamsBtnUrl("/admin/v9/settings/doc-chunks/?action=delete");
-        return {
-            url: url.pathname + url.search,
-            title: "[[#{settings.doc-chunks.title}]]",
-            buttonTitleKey: "[[#{settings.embedding-chunks.start}]]",
-            tooltip: "[[#{settings.embedding-chunks.remove}]]"
-        };
-    }
-
-    return null;
+function updateIndexButtons() {
+    const disabled = embeddingChunksDataTable.rows({ selected: true }).any() ||
+        (getActiveTabValue() === "markdown" && !document.getElementById("markdownFolder")?.value);
+    embeddingChunksDataTable.buttons(".btnAddIndex, .btnRemoveIndex").enable(!disabled);
 }
 
 /**
  * Opens an iframe modal for indexing actions.
  *
- * @param {{url: string, buttonTitleKey: string}|null} conf
+ * @param {{url: string, title: string, buttonTitleKey: string}|null} conf Modal configuration; null leaves the modal closed.
  * @private
  */
 function _openIndexModal(conf) {
@@ -304,68 +346,42 @@ function _openIndexModal(conf) {
 }
 
 /**
- * Applies row-selection visibility rule when DataTables helper exists.
+ * Creates a queue action button using the selected scope at click time.
  *
- * @param {object} buttonContext
- * @param {object} dt
- * @private
+ * @param {string} action Queue action, "index" or "delete".
+ * @returns {Object} DataTable button configuration.
  */
-function _initRowUnselectedVisibility(buttonContext, dt) {
-    if (
-        typeof $ === "function" &&
-        $.fn &&
-        $.fn.dataTable &&
-        $.fn.dataTable.Buttons &&
-        typeof $.fn.dataTable.Buttons.showIfRowUnselected === "function"
-    ) {
-        $.fn.dataTable.Buttons.showIfRowUnselected(buttonContext, dt);
-    }
-}
-
-function getAddIndexButton() {
-    const conf = _getAddIndexButtonConf();
-
+function getIndexButton(action) {
+    const indexing = action === "index";
+    const label = indexing ? "[[#{settings.embedding-chunks.add}]]" : "[[#{settings.embedding-chunks.remove}]]";
     return {
-        text: "<i class=\"ti ti-database-plus\"></i>",
-        action: function () {
-            const clickConf = _getAddIndexButtonConf();
-            _openIndexModal(clickConf);
-        },
-        init: function (dt) {
-            _initRowUnselectedVisibility(this, dt);
-        },
-        className: "btn btn-sm btn-success btnAddIndex",
-        attr: {
-            title: conf ? conf.tooltip : "",
-            "data-toggle": "tooltip"
-        }
+        text: '<i class="ti ti-database-' + (indexing ? "plus" : "minus") + '" aria-hidden="true"></i>',
+        action: () => _openIndexModal(_getIndexButtonConf(action)),
+        className: "btn btn-sm " + (indexing ? "btn-success btnAddIndex" : "btn-danger btnRemoveIndex"),
+        attr: { title: label, "aria-label": label, "data-toggle": "tooltip" }
     };
 }
 
-function getRemoveIndexButton() {
-    const conf = _getRemoveIndexButtonConf();
-
-    return {
-        text: "<i class=\"ti ti-database-minus\"></i>",
-        action: function () {
-            const clickConf = _getRemoveIndexButtonConf();
-            _openIndexModal(clickConf);
-        },
-        init: function (dt) {
-            _initRowUnselectedVisibility(this, dt);
-        },
-        className: "btn btn-sm btn-danger btnRemoveIndex",
-        attr: {
-            title: conf ? conf.tooltip : "",
-            "data-toggle": "tooltip"
-        }
-    };
-}
-
+/**
+ * Applies the active tab's filters, action availability, table columns, and editor fields.
+ * Requires the embedding DataTable to be initialized and starts reloading it after setup.
+ *
+ * @returns {Promise<void>} Resolves after tab setup; does not wait for the table reload.
+ */
 async function initPage() {
+    updateIndexButtons();
     // First set filter
     await addFilterBasedOnTab();
 
-    // Tehn call filter
+    const markdown = getActiveTabValue() === "markdown";
+    ["sourcePath", "sourceTitle"].forEach(name => {
+        embeddingChunksDataTable.column(name + ":name").visible(markdown, false);
+        if (markdown) embeddingChunksDataTable.EDITOR.show(name);
+        else embeddingChunksDataTable.EDITOR.hide(name);
+    });
+    embeddingChunksDataTable.column("entityId:name").visible(!markdown, false);
+    if (markdown) embeddingChunksDataTable.EDITOR.hide("entityId");
+    else embeddingChunksDataTable.EDITOR.show("entityId");
+
     filterFn();
 }

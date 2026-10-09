@@ -12,13 +12,13 @@ import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
  * Post-processing pipeline for RAG retrieved chunks.
  *
  * Steps:
- * 1. Select top-K chunks by similarity, then apply soft minimum similarity filter
+ * 1. Select distinct top-K chunks by ranking score, then apply soft minimum similarity filter
  * 2. Sort by entityId, then chunkIndex
- * 3. Group by entityId
+ * 3. Group by entity type and entity ID
  * 4. Merge adjacent chunks within each group (removing sliding-window overlap)
  * 5. Limit output to maxBlocks / maxCharacters
  *
- * Similarity is used for ranking and soft filtering, never as hard truth.
+ * Local ranking controls order; original similarity controls soft filtering, never as hard truth.
  * The pipeline never returns zero chunks when decent top results exist.
  */
 public class RagChunkPostProcessor {
@@ -31,6 +31,8 @@ public class RagChunkPostProcessor {
     private final int maxMergedBlockCharacters;
 
     /**
+     * Configures context ranking, merging, and output limits.
+     *
      * @param topK                      number of top chunks considered for context before adaptive thresholding is applied
      * @param minSimilarity             soft similarity threshold; chunks below this are dropped only if enough top chunks remain
      * @param maxChunkGap               maximum gap between chunkIndex values to still merge (1 = adjacent only)
@@ -58,7 +60,7 @@ public class RagChunkPostProcessor {
             return List.of();
         }
 
-        // 1. Select top-K by similarity, then apply soft similarity filter
+        // 1. Select distinct top-K by ranking score, then apply soft similarity filter
         List<VectorSearchResult> filtered = selectAndFilter(chunks);
         if (filtered.isEmpty()) {
             return List.of();
@@ -76,35 +78,57 @@ public class RagChunkPostProcessor {
             merged.addAll(mergeAdjacentChunks(entityChunks));
         }
 
-        // 5. Sort by maxSimilarity descending, then limit
-        merged.sort(Comparator.comparingDouble(MergedContextBlock::getMaxSimilarity).reversed());
+        // 5. Preserve the selected ranking when enforcing the context budget.
+        merged.sort(Comparator.comparingDouble(MergedContextBlock::getRankingScore).reversed());
 
         return limitBlocks(merged);
     }
 
     /**
-     * Select top-K chunks by similarity first, then apply an adaptive similarity threshold.
+     * Select distinct top-K chunks by ranking score, then apply an adaptive retrieval similarity threshold.
      *
      * Strategy:
-     * 1. Sort all chunks by similarity descending and take top K.
+     * 1. Sort all chunks by ranking score, skip fully repeated passages from the same source, and take top K.
      * 2. Compute an adaptive threshold based on the number of available chunks:
      *    - Many chunks available → tighter threshold (be selective, less noise)
      *    - Few chunks available → looser threshold (keep more info)
      *    The threshold scales linearly between minSimilarity * 0.6 (for 1 chunk)
      *    and minSimilarity * 1.2 (for topK or more chunks).
      * 3. Never return zero — always keep at least the single best result.
+     * Local reranking does not bypass the original similarity threshold.
+     *
+     * @param chunks raw chunks to rank, possibly null or empty
+     * @return top-ranked chunks above the adaptive threshold, retaining the best nonempty candidate
      */
     List<VectorSearchResult> selectAndFilter(List<VectorSearchResult> chunks) {
         if (chunks == null || chunks.isEmpty()) {
             return List.of();
         }
 
-        // Sort by similarity descending and take top K
+        // Sort by the effective ranking score and take top K.
         List<VectorSearchResult> ranked = new ArrayList<>(chunks);
-        ranked.sort(Comparator.comparingDouble(this::getSimilarity).reversed());
+        ranked.sort(Comparator.comparingDouble(VectorSearchResult::getRankingScore).reversed());
 
-        int limit = Math.min(topK, ranked.size());
-        List<VectorSearchResult> topChunks = new ArrayList<>(ranked.subList(0, limit));
+        List<VectorSearchResult> topChunks = new ArrayList<>();
+        List<String> selectedTexts = new ArrayList<>();
+        for (VectorSearchResult candidate : ranked) {
+            String text = normalizeWhitespace(candidate.getChunkText());
+            boolean repeated = false;
+            for (int i = 0; i < topChunks.size() && text.isEmpty() == false; i++) {
+                VectorSearchResult selected = topChunks.get(i);
+                if (candidate.getEntityId() != null && java.util.Objects.equals(selected.getEntityId(), candidate.getEntityId())
+                        && java.util.Objects.equals(selected.getEntityType(), candidate.getEntityType())
+                        && getSimilarity(selected) >= getSimilarity(candidate)
+                        && (" " + selectedTexts.get(i) + " ").contains(" " + text + " ")) {
+                    repeated = true;
+                    break;
+                }
+            }
+            if (repeated) continue;
+            topChunks.add(candidate);
+            selectedTexts.add(text);
+            if (topChunks.size() == topK) break;
+        }
 
         // Adaptive threshold: scale based on how many chunks we have
         double adaptiveThreshold = computeAdaptiveThreshold(topChunks.size());
@@ -153,7 +177,10 @@ public class RagChunkPostProcessor {
     }
 
     /**
-     * Sort chunks by entityId ascending, then chunkIndex ascending.
+     * Sorts a copy of the chunks by entity ID and then chunk index, treating missing values as zero.
+     *
+     * @param chunks chunks to sort
+     * @return sorted copy of the input list
      */
     List<VectorSearchResult> sortChunks(List<VectorSearchResult> chunks) {
         List<VectorSearchResult> sorted = new ArrayList<>(chunks);
@@ -199,65 +226,54 @@ public class RagChunkPostProcessor {
         int endIndex = startIndex;
         double maxSim = getSimilarity(first);
         double sumSim = maxSim;
+        Double rerankScore = first.getRerankScore();
         int count = 1;
 
         for (int i = 1; i < entityChunks.size(); i++) {
             VectorSearchResult current = entityChunks.get(i);
             int currentIndex = getChunkIndex(current);
             int gap = currentIndex - endIndex;
+            String currentText = getChunkText(current);
+            String appended = gap <= maxChunkGap ? removeOverlap(textBuilder.toString(), currentText) : currentText;
 
-            if (gap <= maxChunkGap) {
-                // Merge: append with overlap removal, but respect per-block size limit
-                String currentText = getChunkText(current);
-                String merged = textBuilder.toString();
-                String appended = removeOverlap(merged, currentText);
+            if (gap > maxChunkGap || textBuilder.length() + appended.length() > maxMergedBlockCharacters) {
+                blocks.add(buildBlock(first, startIndex, endIndex,
+                        textBuilder.toString(), maxSim, sumSim, count, rerankScore));
 
-                if (textBuilder.length() + appended.length() > maxMergedBlockCharacters) {
-                    // Block would exceed size limit: finalize current block and start a new one
-                    blocks.add(buildBlock(first.getEntityType(), first.getEntityId(), startIndex, endIndex,
-                            textBuilder.toString(), maxSim, sumSim, count));
-
-                    textBuilder = new StringBuilder(currentText);
-                    startIndex = currentIndex;
-                    endIndex = currentIndex;
-                    maxSim = getSimilarity(current);
-                    sumSim = maxSim;
-                    count = 1;
-                } else {
-                    textBuilder.append(appended);
-                    endIndex = currentIndex;
-                    double sim = getSimilarity(current);
-                    maxSim = Math.max(maxSim, sim);
-                    sumSim += sim;
-                    count++;
-                }
-            } else {
-                // Gap too large: finalize current block and start a new one
-                blocks.add(buildBlock(first.getEntityType(), first.getEntityId(), startIndex, endIndex,
-                        textBuilder.toString(), maxSim, sumSim, count));
-
-                textBuilder = new StringBuilder(getChunkText(current));
+                textBuilder = new StringBuilder(currentText);
                 startIndex = currentIndex;
                 endIndex = currentIndex;
                 maxSim = getSimilarity(current);
                 sumSim = maxSim;
+                rerankScore = current.getRerankScore();
                 count = 1;
+            } else {
+                textBuilder.append(appended);
+                endIndex = currentIndex;
+                maxSim = Math.max(maxSim, getSimilarity(current));
+                sumSim += getSimilarity(current);
+                if (current.getRerankScore() != null && (rerankScore == null || current.getRerankScore() > rerankScore)) {
+                    rerankScore = current.getRerankScore();
+                }
+                count++;
             }
         }
 
         // Finalize last block
-        blocks.add(buildBlock(first.getEntityType(), first.getEntityId(), startIndex, endIndex,
-                textBuilder.toString(), maxSim, sumSim, count));
+        blocks.add(buildBlock(first, startIndex, endIndex,
+                textBuilder.toString(), maxSim, sumSim, count, rerankScore));
 
         return blocks;
     }
 
     /**
-     * Remove overlapping text between the end of 'existing' and the beginning of 'next'.
-     * Sliding-window chunking produces overlap, so the tail of 'existing' may match
-     * the head of 'next'. This method finds and removes that duplication.
+     * Returns the text to append after removing a matching sliding-window overlap.
+     * Whitespace is normalized for comparison; overlaps shorter than 20 normalized characters
+     * are ignored. When no overlap is found, the next text is prefixed with a newline.
      *
-     * Falls back to newline-separated concatenation if no overlap is found.
+     * @param existing text already accumulated
+     * @param next next chunk text
+     * @return unmatched suffix of the next chunk, its newline-prefixed text, or an empty string for null next text
      */
     String removeOverlap(String existing, String next) {
         if (existing == null || existing.isEmpty() || next == null || next.isEmpty()) {
@@ -293,13 +309,17 @@ public class RagChunkPostProcessor {
     }
 
     /**
-     * Find the position in originalText that corresponds to 'normalizedLength' characters
-     * of normalized text from the beginning.
+     * Maps a trimmed normalized overlap length back to the original text, retaining the following separator.
+     *
+     * @param originalText unnormalized next-chunk text
+     * @param normalizedLength number of normalized characters in the overlap
+     * @return original-text offset immediately after the overlap
      */
     private int findOriginalPosition(String originalText, int normalizedLength) {
         int normCount = 0;
         int i = 0;
         boolean lastWasSpace = false;
+        while (i < originalText.length() && Character.isWhitespace(originalText.charAt(i))) i++;
 
         while (i < originalText.length() && normCount < normalizedLength) {
             char c = originalText.charAt(i);
@@ -314,15 +334,14 @@ public class RagChunkPostProcessor {
             }
             i++;
         }
-        // Skip any remaining whitespace after the overlap
-        while (i < originalText.length() && Character.isWhitespace(originalText.charAt(i))) {
-            i++;
-        }
         return i;
     }
 
     /**
-     * Collapse all whitespace sequences into a single space and trim.
+     * Collapses whitespace sequences to single spaces and trims the result.
+     *
+     * @param text text to normalize, possibly null
+     * @return normalized text, or an empty string for null input
      */
     String normalizeWhitespace(String text) {
         if (text == null) return "";
@@ -330,7 +349,11 @@ public class RagChunkPostProcessor {
     }
 
     /**
-     * Limit the result to maxBlocks and maxCharacters.
+     * Limits context to the configured block and total-character budgets.
+     * Only the first block may be truncated when it alone exceeds the character budget.
+     *
+     * @param blocks ranked context blocks
+     * @return blocks that fit the budgets, with a truncated first block when necessary
      */
     List<MergedContextBlock> limitBlocks(List<MergedContextBlock> blocks) {
         List<MergedContextBlock> result = new ArrayList<>();
@@ -388,7 +411,7 @@ public class RagChunkPostProcessor {
      * @return copied block with the supplied text
      */
     private MergedContextBlock copyWithText(MergedContextBlock source, String text) {
-        return new MergedContextBlock(
+        MergedContextBlock copy = new MergedContextBlock(
             source.getEntityType(),
             source.getEntityId(),
             source.getStartChunkIndex(),
@@ -400,35 +423,39 @@ public class RagChunkPostProcessor {
             source.getSourceTitle(),
             source.getSourceUrl()
         );
+        copy.setRerankScore(source.getRerankScore());
+        return copy;
     }
 
     /**
      * Builds a merged context block and computes its average similarity.
      *
-     * @param entityType type of the source entity
-     * @param entityId ID of the source entity
+     * @param source source chunk supplying entity identity and citation metadata
      * @param startIndex first chunk index included in the block
      * @param endIndex last chunk index included in the block
      * @param text merged chunk text
      * @param maxSim highest similarity among merged chunks
      * @param sumSim sum of similarities among merged chunks
      * @param count number of merged chunks
+     * @param rerankScore highest non-null rerank score among merged chunks
      * @return populated merged context block
      */
-    private MergedContextBlock buildBlock(String entityType, Long entityId, int startIndex, int endIndex,
-                                          String text, double maxSim, double sumSim, int count) {
-        return new MergedContextBlock(
-                entityType,
-                entityId,
+    private MergedContextBlock buildBlock(VectorSearchResult source, int startIndex, int endIndex,
+                                          String text, double maxSim, double sumSim, int count, Double rerankScore) {
+        MergedContextBlock block = new MergedContextBlock(
+                source.getEntityType(),
+                source.getEntityId(),
                 startIndex,
                 endIndex,
                 text,
                 maxSim,
                 count > 0 ? sumSim / count : 0.0,
                 count,
-                null,
-                null
+                source.getSourceTitle(),
+                source.getSourceUrl()
         );
+        block.setRerankScore(rerankScore);
+        return block;
     }
 
     private String getChunkText(VectorSearchResult chunk) {

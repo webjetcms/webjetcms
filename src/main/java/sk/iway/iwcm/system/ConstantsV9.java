@@ -41,7 +41,7 @@ public class ConstantsV9 {
 		Constants.setString("passwordHashAlgorithm", "bcrypt", Constants.MOD_PASSWORD, "Meno algoritmu pre hashovanie, možné hodnoty bcrypt alebo sha-512");
 		Constants.setInt("bcryptSaltRounds", 12, Constants.MOD_PASSWORD, "log2 počtu opakovaní saltovania pri bcrypt algoritme hashovania hesiel");
 
-		//domena a priecinok s novinkami pre dashboard
+		// Domain and folder containing dashboard news
 		Constants.setString("overviewJsonUrl", "https://docs.webjetcms.sk/json/", Constants.MOD_SYSTEM_ADMIN, "Zakladna URL adresa pre nacitanie zoznamu noviniek na administracnom dashboarde.");
 		Constants.setString("languages", "sk,cz,en,de,pl,hu,cho,ru,esp", Constants.MOD_LOCALIZATION, "Zoznam jazykov pre webjet cms");
 
@@ -125,7 +125,7 @@ public class ConstantsV9 {
 		Constants.setBoolean("logoffRequireCsrfToken", false, Constants.MOD_CSRF, "If true, /logoff.do requires CSRF token");
 		Constants.setString("csrfRequiredUrls", "", Constants.MOD_CSRF, "Comma separated list of URLs that require CSRF token");
 
-		// OAuth2 konfiguračné premenné
+		// OAuth2 configuration settings
 		Constants.setString("oauth2_clients", "", Constants.MOD_OAUTH2, "Čiarkou oddelený zoznam OAuth2 poskytovateľov (napr. google,facebook,keycloak)");
 		Constants.setString("oauth2_clientsWithPermissions", "keycloak", Constants.MOD_OAUTH2, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí poskytujú práva na synchronizáciu skupín a admin práv (napr. keycloak,okta)");
 		Constants.setString("oauth2_adminLogonAutoRedirect", "", Constants.MOD_OAUTH2, "Ak je nastavené na názov poskytovateľa, automaticky presmeruje na OAuth2 prihlásenie namiesto zobrazenia prihlasovacieho formulára");
@@ -283,6 +283,8 @@ public class ConstantsV9 {
 		/* ***** ***** ***** RAG SECTION ***** ***** ***** */
 
 		Constants.setBoolean("ragSemanticSearchEnabled", false, Constants.MOD_RAG, "Povolí sémantické vyhľadávanie nad vektorovým úložiskom PostgreSQL/pgvector alebo MariaDB Vector.");
+		Constants.setString("ragMarkdownFolders", "", Constants.MOD_RAG, "Global comma-separated Markdown roots shared by all domains: application-relative paths (/admin/docs/webjetcms) or absolute filesystem paths (file:/srv/manuals). The file:/docs alias requires a global symlinkTranslate mapping, for example /docs/|/srv/documentation/webjetcms/. Indexing includes subfolders. The nearest language folder in the root and source path determines the language; files without one are skipped. Languages come from the global languages setting, with sk, en and cs always supported. Search access is controlled by ragMarkdownSearchRequireLogin.");
+		Constants.setBoolean("ragMarkdownSearchRequireLogin", true, Constants.MOD_RAG, "Require a logged-in user for /rest/rag/markdown/search. Any authenticated user is accepted without administrator access. Set to false to allow anonymous searches of configured Markdown roots, including file: and /admin/ roots. Explicit file permissions and blocked paths still apply. This setting does not change access to the documentation viewer or index administration.");
 
 		/* RAG - VECTOR STORE */
 		Constants.setInt("ragSearchEfSearch", 40, Constants.MOD_RAG, "HNSW parameter ef_search — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie datasety zvážte zvýšenie na 100 alebo viac.");
@@ -292,12 +294,13 @@ public class ConstantsV9 {
 		Constants.setString("ragEmbeddingProvider", "openai", Constants.MOD_RAG, "Predvolený poskytovateľ použitý pri vytvorení chýbajúceho RAG embedding asistenta. Vstavané hodnoty sú openai, gemini a openrouter; použiť možno aj identifikátor zaregistrovaného vlastného poskytovateľa.");
 		Constants.setString("ragEmbeddingModel", "text-embedding-3-small", Constants.MOD_RAG, "Predvolený model použitý pri vytvorení chýbajúceho RAG embedding asistenta.");
 		Constants.setInt("ragEmbeddingDimensions", 1536, Constants.MOD_RAG, "Počet dimenzií embedding vektora generovaného pre RAG. Hodnota musí zodpovedať použitému modelu a definícii stĺpca vo vektorovej databáze.");
-		Constants.setInt("ragEmbeddingChunkSize", 1000, Constants.MOD_RAG, "Maximálna veľkosť jedného textového chunku v znakoch pri rozdeľovaní dokumentov pre RAG indexovanie.");
-		Constants.setInt("ragEmbeddingChunkOverlap", 200, Constants.MOD_RAG, "Počet znakov, ktoré sa majú prekrývať medzi susednými chunkmi pri rozdeľovaní textu pre RAG indexovanie.");
+		Constants.setInt("ragEmbeddingChunkSize", 1000, Constants.MOD_RAG, "Približná cieľová veľkosť textového chunku v znakoch pri RAG indexovaní. Maximum je o 50 % vyššie (predvolene 1500 znakov). Hranice viet a odsekov sa podľa možnosti zachovajú; príliš dlhé časti sa rozdelia medzi slovami alebo uprostred príliš dlhého slova. Hodnota menšia alebo rovná nule vypne rozdeľovanie.");
+		Constants.setInt("ragEmbeddingChunkOverlap", 200, Constants.MOD_RAG, "Približné prekrytie v znakoch medzi susednými chunkmi pri RAG indexovaní. Prispôsobuje sa celým vetám alebo odsekom tak, aby každý ďalší chunk pridal nový obsah.");
 
 		/* RAG - SEMANTIC SEARCH */
 		Constants.setString("ragSemanticSearchMinSimilarity", "0.2", Constants.MOD_RAG, "Minimálna hodnota similarity pre výsledky sémantického vyhľadávania. Ak je hodnota mimo intervalu 0-1, použije sa najbližšia hranica.");
 		Constants.setInt("ragSemanticSearchMinResults", 3, Constants.MOD_RAG, "Minimálny počet výsledkov sémantického vyhľadávania. Ak ich je po filtrovaní menej, doplnia sa podľa najvyššej similarity.");
+		Constants.setString("ragRerankLexicalWeight", "0.15", Constants.MOD_RAG, "Váha textovej zhody pri lokálnom preusporiadaní výsledkov. Váha pôvodného skóre vyhľadávania je 1 mínus táto hodnota: 0.15 nastaví pomer 85/15. Hodnoty sa obmedzia na interval 0-1; pri neplatných hodnotách, NaN alebo nekonečne sa použije 0.15. Nula zachová iba pôvodné skóre vyhľadávania. Nastavenie ovplyvňuje výsledky vyhľadávania aj RAG kontext bez potreby opätovného indexovania.");
 
 		/* RAG - HYBRID */
 		Constants.setBoolean("ragHybridSearchEnabled", true, Constants.MOD_RAG, "Zapne hybridné vyhľadávanie nad rag_embedding_chunks kombinujúce vektorové a fulltext výsledky.");

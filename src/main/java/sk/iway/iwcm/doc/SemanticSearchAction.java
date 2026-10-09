@@ -18,6 +18,9 @@ import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.users.UsersDB;
 
+/**
+ * Adapts semantic document search to the search action's result, pagination, and request attributes.
+ */
 public class SemanticSearchAction {
 
     private SemanticSearchAction() {
@@ -25,8 +28,12 @@ public class SemanticSearchAction {
     }
 
 	/**
-	 * Standalone semantic search using pgvector embeddings.
-	 * Same pagination and request attributes as DB search, but results come purely from semantic search.
+	 * Runs semantic or hybrid document retrieval through the configured vector store.
+	 * Populates search results and pagination attributes after applying spam protection and document visibility checks.
+	 *
+	 * @param request request supplying search terms and options and receiving results and status attributes
+	 * @param response current HTTP response, retained for compatibility with the search action signature
+	 * @return {@code "success"} for handled searches, including empty or rejected requests, or {@code "error"} on failure
 	 */
 	protected static String search(HttpServletRequest request, HttpServletResponse response) {
 		Identity user = UsersDB.getCurrentUser(request);
@@ -140,7 +147,7 @@ public class SemanticSearchAction {
 				sd.setDocId(loaded.getDocId());
 				sd.setTitle(loaded.getTitle());
 				sd.setVirtualPath(loaded.getVirtualPath());
-				sd.setSimilarity(sr.getSimilarity());
+				sd.setSimilarity(sr.getRankingScore());
 
 				if (group != null) {
 					sd.setLink(groupsDB.getNavbar(group.getGroupId()));

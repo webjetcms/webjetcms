@@ -3965,5 +3965,46 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>28.09.2026</string></void>
+                <void property="desc"><string>rag_index_queue - support Markdown source identifiers and domain context</string></void>
+                <void property="mysql"><string>
+                    ALTER TABLE rag_index_queue MODIFY COLUMN entity_id BIGINT NOT NULL;
+                </string></void>
+                <void property="mssql"><string>
+                    DROP INDEX uq_rag_queue ON rag_index_queue;
+                    ALTER TABLE rag_index_queue ALTER COLUMN entity_id BIGINT NOT NULL;
+                    CREATE UNIQUE INDEX uq_rag_queue ON rag_index_queue (entity_type, entity_id, action, domain_id);
+                </string></void>
+                <!-- Oracle INTEGER already supports 38 decimal digits, including all Java long identifiers. -->
+                <void property="oracle"><string></string></void>
+                <void property="pgsql"><string>
+                    ALTER TABLE rag_index_queue ALTER COLUMN entity_id TYPE BIGINT;
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>28.09.2026</string></void>
+                <void property="desc"><string>rag_index_queue - add Markdown source_path columns</string></void>
+                <void property="mysql"><string>
+                    ALTER TABLE rag_index_queue ADD COLUMN source_path TEXT NULL;
+                </string></void>
+                <void property="mssql"><string>
+                    ALTER TABLE rag_index_queue ADD source_path NTEXT NULL;
+                </string></void>
+                <void property="oracle"><string>
+                    ALTER TABLE rag_index_queue ADD (source_path CLOB NULL);
+                </string></void>
+                <void property="pgsql"><string>
+                    ALTER TABLE rag_index_queue ADD COLUMN source_path TEXT;
+                </string></void>
+            </object>
+        </void>
+
     </object>
 </java>

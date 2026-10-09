@@ -9,6 +9,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import lombok.Getter;
@@ -44,15 +45,30 @@ public class IndexQueueEntity {
     private RagEntityType entityType;
 
     @Column(name = "entity_id")
-    private Integer entityId;
+    private Long entityId;
+
+    /** Full logical Markdown path, stored as large text to include both the root and relative path. */
+    @Lob
+    @Column(name = "source_path")
+    private String sourcePath;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "action")
     private RagIndexAction action;
 
+    /** Domain responsible for the operation and its token usage; Markdown chunks remain shared in domain zero. */
     @Column(name = "domain_id")
     private Integer domainId;
 
     @Column(name = "create_date")
     private Date createDate;
+
+    /**
+     * Accepts document integer IDs and Markdown long IDs without narrowing either identifier.
+     *
+     * @param entityId source entity identifier
+     */
+    public void setEntityId(long entityId) {
+        this.entityId = entityId;
+    }
 }
