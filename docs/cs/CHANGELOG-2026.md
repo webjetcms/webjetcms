@@ -25,7 +25,7 @@
 
 - WebJET CMS nově [eviduje prohlížeče, ze kterých se přihlašujete](redactor/admin/logon.md#přihlášení-z-nového-zařízení). Přihlášení z nového prohlížeče zobrazí upozornění na úvodní obrazovce a odešle email, abyste mohli rozpoznat cizí přihlášení do svého účtu. Vlastní zařízení potvrdíte emailovým odkazem nebo jednorázovým kódem přes **Byl jsem to já** (#340).
 
-![Upozornění k přihlášení z nového prohlížeče](redactor/admin/device-block.png)
+![Přehled zařízení účtu na kartě Moje zařízení](redactor/admin/device-my-devices.png)
 
 - Pokud přihlášení neznáte, můžete [zablokovat zařízení a ukončit jeho aktivní přihlášení](redactor/admin/welcome.md#pokud-přihlášení- neznáte). Při dalším přihlášení ze zablokovaného prohlížeče se po zadání správného jména a hesla zobrazí **Ověření zablokovaného zařízení**. Pro odblokování a vstup do administrace je třeba zadat šestimístný kód z emailu účtu; při zapnutém 2FA se toto ověření provede až po kódu z autentifikační aplikace. Podrobný postup je uveden v [návodu k přihlášení](redactor/admin/logon.md#ověření-zablokovaného-zařízení) (#340).
 

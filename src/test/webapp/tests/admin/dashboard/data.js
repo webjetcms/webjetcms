@@ -20,7 +20,7 @@ Scenario('Initial settings, notices and sessions render from HTML without REST r
     try {
         I.refreshPage();
         I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-        I.waitForElement('.md-dashboard__sessions .md-dashboard-widget__session-current', 20);
+        I.waitForFunction(() => document.querySelector('webjet-overview-dashboard').data.currentSessions?.userSessions?.length > 0, 20);
         await I.waitForFunction(() => document.querySelector('.md-dashboard__notice-list')?.getAttribute('aria-busy') === 'false', 20);
         I.assertEqual(requests.length, 0, 'The initial dashboard must render even when the removed read endpoints are unavailable.');
         I.assertTrue(await I.executeScript(() => {

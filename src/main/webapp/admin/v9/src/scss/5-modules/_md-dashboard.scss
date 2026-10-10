@@ -90,7 +90,7 @@ webjet-overview-dashboard a:focus-visible {
     [hidden] { display: none !important; }
 
     &__hero {
-        // WebJET blue with the login image. Keep the image subtle to preserve text contrast.
+        // Gradient values from the Figma welcome-panel component.
         --wj-dashboard-hero-start: #031d46;
         --wj-dashboard-hero-end: #073780;
         --wj-dashboard-hero-text: #fff;
@@ -103,86 +103,15 @@ webjet-overview-dashboard a:focus-visible {
         --wj-dashboard-hero-control-border: #7895ba;
         --wj-dashboard-hero-control-hover-bg: #f2f6ff;
         --wj-dashboard-hero-control-hover-text: #173b70;
-        --wj-dashboard-hero-image-opacity: .16;
-
-        // Clear blue glass: blur and saturation reveal the hero colors without a milky overlay.
-        --wj-dashboard-security: transparent;
-        --wj-dashboard-security-border: rgba(188, 216, 255, .3);
-        // A cool edge glow and a downward shadow lift the glass without a hard outline.
-        //--wj-dashboard-security-shadow: inset 0 1px 1px rgba(230, 241, 255, .2), 0 0 18px rgba(100, 176, 255, .16), 0 12px 24px -6px rgba(0, 12, 38, .48);
-        --wj-dashboard-security-shadow: inset 1px 1px 1px 0px rgba(230, 241, 255, .2), 0 0 14px 3px rgba(100, 176, 255, .16), 0 3px 12px -6px rgba(0, 12, 38, .48);
-        --wj-dashboard-security-filter: blur(18px) saturate(115%);
-        --wj-dashboard-security-text: #edf4ff;
-        --wj-dashboard-security-muted: #bed2ef;
-        --wj-dashboard-security-divider: rgba(188, 216, 255, .15);
-        --wj-dashboard-security-positive: #42ddba;
-        --wj-dashboard-security-error: var(--wj-dashboard-hero-error);
-        --wj-dashboard-security-hover: rgba(209, 229, 255, .16);
-        --wj-dashboard-security-scrollbar: #6d8caf;
-
-        // Uncomment ONE alternative below and rebuild the admin CSS. It overrides the defaults above.
-        // Pure WebJET blue: no image, with the original light session card.
-        /*
-        --wj-dashboard-hero-image-opacity: 0;
-        --wj-dashboard-security: #f8faff;
-        --wj-dashboard-security-border: rgba(54, 85, 91, .12);
-        --wj-dashboard-security-shadow: 0 7px 24px #00143226;
-        --wj-dashboard-security-filter: none;
-        --wj-dashboard-security-text: var(--wj-secondary);
-        --wj-dashboard-security-muted: #{$dashboard-muted};
-        --wj-dashboard-security-divider: #{$dashboard-divider};
-        --wj-dashboard-security-positive: #{$dashboard-positive};
-        --wj-dashboard-security-error: #{$dashboard-danger-text};
-        --wj-dashboard-security-hover: rgba(19, 21, 27, .06);
-        --wj-dashboard-security-scrollbar: var(--wj-nice-gray-300);
-        */
-
-        // Mint porcelain: light surfaces, dark text, matching controls and no background image.
-        /*
-        --wj-dashboard-hero-start: #e6f1ed;
-        --wj-dashboard-hero-end: #d5eae7;
-        --wj-dashboard-hero-text: #173d3a;
-        --wj-dashboard-hero-body: #435d5b;
-        --wj-dashboard-hero-muted: #506b67;
-        --wj-dashboard-hero-link: #0058c9;
-        --wj-dashboard-hero-error: #b21b39;
-        --wj-dashboard-hero-divider: #bfd8d2;
-        --wj-dashboard-hero-control-bg: rgba(255, 255, 255, .32);
-        --wj-dashboard-hero-control-border: #6b8982;
-        --wj-dashboard-hero-control-hover-bg: #fafffd;
-        --wj-dashboard-hero-control-hover-text: #173d3a;
-        --wj-dashboard-security: #fbfdfc;
-        --wj-dashboard-security-border: rgba(54, 85, 91, .12);
-        --wj-dashboard-security-shadow: 0 6px 20px #224b4110;
-        --wj-dashboard-security-filter: none;
-        --wj-dashboard-security-text: #173d3a;
-        --wj-dashboard-security-muted: #506b67;
-        --wj-dashboard-security-divider: #bfd8d2;
-        --wj-dashboard-security-positive: #{$dashboard-positive};
-        --wj-dashboard-security-hover: rgba(23, 61, 58, .06);
-        --wj-dashboard-security-scrollbar: #6b8982;
-        --wj-dashboard-hero-image-opacity: 0;
-        */
 
         display: grid;
-        grid-template-columns: minmax(0, 1fr) 300px;
+        grid-template-columns: minmax(0, 1fr) 380px;
         align-items: stretch;
         position: relative;
         isolation: isolate;
         margin-bottom: 16px;
         border-radius: var(--wj-border-radius);
-        background: linear-gradient(112deg, var(--wj-dashboard-hero-start), var(--wj-dashboard-hero-end));
-
-        &::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            z-index: -1;
-            pointer-events: none;
-            border-radius: inherit;
-            background: var(--wj-dashboard-hero-image, none) center bottom / cover no-repeat;
-            opacity: var(--wj-dashboard-hero-image-opacity);
-        }
+        background: var(--wj-dashboard-hero-start) linear-gradient(111.7deg, var(--wj-dashboard-hero-start) 0%, var(--wj-dashboard-hero-end) 76.92%) center bottom / cover no-repeat;
     }
 
     &__welcome {
@@ -190,7 +119,7 @@ webjet-overview-dashboard a:focus-visible {
         --wj-dashboard-link: var(--wj-dashboard-hero-link);
         --wj-dashboard-divider: var(--wj-dashboard-hero-divider);
         min-width: 0;
-        min-height: 244px;
+        min-height: 190px;
         padding: 24px 24px 18px;
         color: var(--wj-dashboard-hero-body);
     }
@@ -231,80 +160,23 @@ webjet-overview-dashboard a:focus-visible {
             &:hover, &:focus-visible { background: rgba($white, .16); color: $white; }
         }
     }
-    &__welcome .md-dashboard-widget__news-highlights, &__welcome .md-dashboard-widget__news-summary { color: var(--wj-dashboard-hero-body); }
-    &__welcome .md-dashboard-widget__news-toggle {
-        --bs-btn-hover-color: var(--wj-dashboard-hero-link);
-        --bs-btn-active-color: var(--wj-dashboard-hero-link);
-        &:hover { text-decoration: underline; }
-    }
-    &__welcome .md-dashboard-widget__news-more:hover { color: var(--wj-dashboard-hero-link); text-decoration: underline; }
-    &__welcome .md-dashboard-widget__news-highlights a:focus-visible, &__welcome .md-dashboard-widget__news-more:focus-visible {
-        outline-color: var(--wj-dashboard-hero-text);
-    }
     // Shortcut cards keep neutral surfaces and their own dark controls inside the hero.
     &__shortcut-list > &__widget { --wj-dashboard-muted: #{$dashboard-muted}; --wj-dashboard-divider: #{$dashboard-divider}; --wj-dashboard-link: #{$primary-hover}; }
     &__shortcuts > &__status .text-danger { color: var(--wj-dashboard-hero-error) !important; }
     &__eyebrow { color: var(--wj-dashboard-muted); font-size: 12px; margin: 0; &::first-letter { text-transform: uppercase; } }
-    &__news, &__sessions, &__search { min-width: 0; }
-    &__news { width: 100%; }
-
-    &__sessions {
-        --wj-dashboard-muted: var(--wj-dashboard-security-muted);
-        --wj-dashboard-divider: var(--wj-dashboard-security-divider);
-        --wj-dashboard-positive: var(--wj-dashboard-security-positive);
-        position: relative;
-        min-height: 0;
-        color: var(--wj-dashboard-security-text);
-
-        .text-danger { color: var(--wj-dashboard-security-error) !important; }
-        :is(.md-dashboard__widget, .md-dashboard-widget__sessions, .md-dashboard-widget__session-current, .btn):focus-visible {
-            outline-color: var(--wj-dashboard-security-text) !important;
-        }
-        .btn-outline-secondary {
-            --bs-btn-color: var(--wj-dashboard-security-text);
-            --bs-btn-border-color: var(--wj-dashboard-security-muted);
-            --bs-btn-hover-color: var(--wj-dashboard-security-text);
-            --bs-btn-hover-bg: var(--wj-dashboard-security-hover);
-            --bs-btn-active-color: var(--wj-dashboard-security-text);
-            --bs-btn-active-bg: var(--wj-dashboard-security-hover);
-            --bs-btn-disabled-color: var(--wj-dashboard-security-muted);
-            border-color: var(--wj-dashboard-security-muted);
-        }
+    &__news, &__search { min-width: 0; }
+    &__news {
+        --wj-dashboard-muted: var(--wj-dashboard-hero-muted);
+        --wj-dashboard-link: var(--wj-dashboard-hero-link);
+        padding: 20px 20px 20px 0;
+        align-self: center;
+        color: var(--wj-dashboard-hero-body);
+        :is(a, button):focus-visible { outline: 2px solid $white; outline-offset: 2px; }
     }
-    // Short lists keep their natural height; longer lists scroll within the welcome panel's height.
-    &__sessions &__widget {
-        position: absolute;
-        inset: 18px 18px auto 0;
-        max-height: calc(100% - 36px);
-        // border: 1px solid var(--wj-dashboard-security-border);
-        background: var(--wj-dashboard-security);
-        box-shadow: var(--wj-dashboard-security-shadow);
-        -webkit-backdrop-filter: var(--wj-dashboard-security-filter);
-        backdrop-filter: var(--wj-dashboard-security-filter);
-        min-height: 0;
+    &__hero.is-news-expanded {
+        grid-template-columns: minmax(0, 1fr);
+        .md-dashboard__news { padding-left: 24px; }
     }
-    &__sessions &__widget-header { padding: 16px 56px 0 16px; gap: 6px; > .ti { font-size: 16px; } }
-    &__sessions &__widget-title { font-size: 12px; }
-    &__sessions &__title-action { color: var(--wj-dashboard-security-text); > .ti { color: inherit; } &:hover, &:focus-visible { color: var(--wj-dashboard-security-text); text-decoration: underline; } &:focus-visible { outline-color: var(--wj-dashboard-security-text); } }
-    &__sessions &__widget-body { flex: 0 1 auto; min-height: 0; padding: 4px 16px 4px; }
-    &__sessions &__widget-content { flex: 0 1 auto; min-height: 0; }
-    &__sessions .md-dashboard-widget__sessions { flex: 0 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior-y: contain; margin-bottom: 0; scrollbar-color: var(--wj-dashboard-security-scrollbar) transparent; }
-    &__sessions .md-dashboard-widget__session-logout {
-        &:hover, &:focus-visible, &:active { color: var(--wj-dashboard-security-text); background: var(--wj-dashboard-security-hover); }
-    }
-    &__sessions .md-dashboard-widget__session {
-        display: grid;
-        grid-template-columns: 20px minmax(0, 1fr) 24px;
-        column-gap: 8px;
-        padding-block: 12px;
-        min-height: 60px;
-        .md-dashboard-widget__session-device { grid-column: 1; grid-row: 1 / 3; align-self: center; font-size: 18px; color: var(--wj-dashboard-muted); }
-        .md-dashboard-widget__session-name { grid-column: 2; grid-row: 1; font-size: 12px; font-weight: 400; }
-        .md-dashboard-widget__session-detail { grid-column: 2; grid-row: 2; }
-        .md-dashboard-widget__session-current, .md-dashboard-widget__session-logout { grid-column: 3; grid-row: 1 / 3; align-self: center; }
-        .md-dashboard-widget__session-feedback { grid-column: 2 / -1; margin: 0; }
-    }
-    &__sessions .md-dashboard-widget__session-count { position: absolute; right: 16px; top: 16px; padding: 2px 6px; font-size: 11px; font-weight: 400; color: var(--wj-dashboard-security-text); background: var(--wj-dashboard-divider); }
     &__widget-content .text-muted { color: var(--wj-dashboard-muted) !important; }
 
     &__news &__widget, &__search &__widget {
@@ -314,7 +186,14 @@ webjet-overview-dashboard a:focus-visible {
         box-shadow: none;
     }
 
-    &__news &__widget-body { padding: 0; }
+    &__news &__widget {
+        border: 1px solid rgba($white, .2);
+        border-radius: var(--wj-border-radius);
+        background: rgba($white, .08);
+        color: inherit;
+    }
+    &__news &__widget-body { padding: 14px 16px; }
+    &__news &__widget-content { height: auto; }
     &__search { margin-block: 18px 20px; }
     &__search &__widget-body { padding: 8px 12px; background: var(--wj-nice-gray); border-radius: var(--wj-border-radius); }
 
@@ -572,9 +451,7 @@ webjet-overview-dashboard a:focus-visible {
     &__loading { font-size: 14px; color: var(--wj-dashboard-muted); }
 
     &__shortcuts {
-        margin: 0 0 12px;
-        padding-bottom: 14px;
-        border-bottom: 1px solid var(--wj-dashboard-divider);
+        margin: 0;
         > .md-dashboard__status, > .md-dashboard__undo { margin: 12px 0 0; flex-wrap: wrap; font-size: 12px; }
     }
     &__shortcuts-empty { font-size: 12px; color: var(--wj-dashboard-muted); margin: 0; }
@@ -637,9 +514,8 @@ webjet-overview-dashboard a:focus-visible {
     @media (max-width: ($bp-mobile - .02px)) {
         &__hero { grid-template-columns: minmax(0, 1fr); }
         &__welcome { min-height: 0; padding: 20px; }
-        &__sessions { padding: 0 18px 18px; }
-        &__sessions &__widget { position: relative; inset: auto; max-height: none; }
-        &__sessions .md-dashboard-widget__sessions { flex: 0 1 auto; max-height: 200px; }
+        &__news { padding: 0 20px 20px; }
+        &__hero.is-news-expanded .md-dashboard__news { padding: 20px; }
         &__greeting { font-size: 26px; }
         &__grid { grid-auto-rows: auto; }
         &__widget { grid-row: auto; min-height: var(--dashboard-row-height); }
@@ -1254,30 +1130,33 @@ webjet-overview-dashboard a:focus-visible {
         &:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }
     }
     &__session-logout { display: inline-grid; place-items: center; width: 24px; height: 24px; min-height: 24px; padding: 0; margin: 0 !important; font-size: 16px; color: var(--wj-dashboard-muted); &:hover, &:focus-visible { background: var(--wj-dashboard-surface); color: var(--wj-dashboard-danger); } }
-    &__news-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-        margin-bottom: 7px;
-        > button { margin-left: auto; flex-shrink: 0; }
-    }
-    &__news-summary { margin: 0; color: var(--wj-dashboard-muted); white-space: nowrap; text-overflow: ellipsis; overflow: hidden; min-width: 0; }
+    &__news-header { display: flex; align-items: center; gap: 8px; min-height: 24px; margin-bottom: 6px; }
+    &__news-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 7px; border-radius: 4px; color: $secondary; background: $success; font-size: 12px; font-weight: 700; &::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; } }
+    &__news-version { color: var(--wj-dashboard-hero-muted); font-size: 12px; text-decoration: none; &:hover, &:focus-visible { color: $white; text-decoration: underline; } }
+    &__news-close { margin-left: auto; }
+    &__news-preview { display: block; width: 100%; height: 66px; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; overflow: hidden; cursor: pointer; &:hover .md-dashboard-widget__news-title, &:focus-visible .md-dashboard-widget__news-title { text-decoration: underline; } }
+    &__news-title { display: block; margin: 0 0 4px; font-size: 14px; line-height: 20px; font-weight: 700; color: $white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    &__news-description { margin: 0; font-size: 14px; line-height: 20px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+    &__news-navigation { display: flex; align-items: center; justify-content: center; gap: 2px; margin-block: 4px; }
+    &__news-control { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; padding: 0; border: 0; color: var(--wj-dashboard-hero-body); > .ti { margin: 0; font-size: 16px; } &:hover, &:focus-visible { color: $white; background: rgba($white, .14); } }
+    &__news-playback { margin-left: auto; }
+    &__news-dots { display: flex; flex-wrap: wrap; justify-content: center; }
+    &__news-dot { display: inline-grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; background: transparent; color: var(--wj-dashboard-hero-muted); &::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; } &[aria-current="true"] { color: $white; &::before { width: 8px; height: 8px; } } &:hover { background: rgba($white, .14); border-radius: 4px; } }
     &__news-highlights {
-        color: var(--wj-dashboard-muted);
-        font-size: 13px;
+        color: var(--wj-dashboard-hero-body);
+        font-size: 14px;
         line-height: 1.6;
+        h1, h2, h3 { color: $white; font-size: 18px; margin: 0 0 16px; }
+        ul { padding-left: 20px; margin-bottom: 16px; }
+        li { margin-bottom: 12px; }
         > p { margin-bottom: 8px; }
         a { color: var(--wj-dashboard-link); }
         img { max-width: 100%; height: auto; }
         pre { white-space: pre-wrap; }
         overflow-wrap: anywhere;
     }
-    &__news-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; margin-top: 12px; }
-    &__news-more, &__news-toggle { color: var(--wj-dashboard-link); }
-    &__news-more { font-size: 12px; font-weight: 400; text-decoration: none; }
-    &__news-toggle { display: inline-flex; align-items: center; gap: 5px; padding: 3px; font-size: 12px; }
-    &__news-summary { font-size: 12px; }
+    &__news-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin-top: 4px; }
+    &__news-more, &__news-toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--wj-dashboard-link); padding: 2px 0; font-size: 14px; line-height: 20px; font-weight: 400; text-decoration: none; border: 0; > .ti { margin: 0; font-size: 16px; } &:hover, &:focus-visible { color: $white; text-decoration: none; > span { text-decoration: underline; } } }
     &__search { display: flex; align-items: center; gap: 12px; }
     &__search-scope { display: flex; flex: 0 0 auto; gap: 4px; margin: 0; }
     &__search fieldset { min-width: 0; flex-wrap: wrap; }

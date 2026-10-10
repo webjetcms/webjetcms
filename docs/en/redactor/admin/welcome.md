@@ -155,7 +155,11 @@ You can also confirm your login using the **It was me** link in the original ema
 
 When alerted or on a device in the **My Devices** tab in the **Active Logins** window, click **It wasn't me**. The device will be locked and its known sessions will be signed out. A small **Secure your account** window will display the result and recommended next steps. If you lock the browser you're currently working in, it will also sign you out.
 
+![](device-my-devices.png)
+
 The **It wasn't me - secure account** link in the email after logging in will open the same small window, but it won't lock the device yet. If you don't know the login, confirm the action with the **Lock device** button.
+
+![](device-block.png)
 
 Once locked, use **Change Password** to check your other logins. The **Turn on 2FA** button will open the two-factor authentication settings if it's available for your account and not already enabled. **Later** will just close the window. For a business account, change your password with your login provider or contact your administrator.
 

@@ -4,7 +4,7 @@ These maintained notes explain the current dashboard design. Read them before ch
 
 ## Keep essential information available during personalization
 
-Users have mixed responsibilities, so widget availability follows permissions rather than predefined job roles. Session management and unresolved system notices remain outside the personal grid: removing or rearranging content must not hide security information. News keeps a version-specific acknowledgement and a visible summary so users can return to the announcement. Shortcuts have their own editing and reset controls because changing the dashboard's reports should preserve navigation choices.
+Users have mixed responsibilities, so widget availability follows permissions rather than predefined job roles. Session management and unresolved system notices remain outside the personal grid: removing or rearranging content must not hide security information. News occupies the right side of the welcome panel. It cycles through release highlights and expands across the hero for reading without rebuilding the welcome or shortcuts. The New badge lasts thirty days from each account’s first encounter with the localized text, so late sign-ins still see updates; a content fingerprint detects edits within the same release. Shortcuts have their own editing and reset controls because changing the dashboard's reports should preserve navigation choices.
 
 ## Preserve a portable personal layout
 

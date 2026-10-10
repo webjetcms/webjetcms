@@ -11,7 +11,6 @@ const searchTermsRoute = '**/admin/rest/stat/search-engines/search/findByColumns
 const topPagesRoute = '**/admin/rest/stat/top/search/findByColumns?*';
 const missingThumbnailRoute = '**/thumb/images/autotest-dashboard-missing.jpg?*';
 const editButton = '.md-dashboard__toolbar-actions > button[aria-pressed]';
-const newsToggle = '.md-dashboard-widget__news-toggle';
 
 async function waitForOverview(I) {
     await waitForWidgets(I);
@@ -29,7 +28,7 @@ Before(({ I, login }) => {
 });
 
 /**
- * Checks that active sessions stay in the welcome area, notice actions stay visible, and
+ * Checks that release news stays in the welcome area, notice actions stay visible, and
  * arrangement controls appear only in edit mode. Cancelling keyboard movement must return focus without
  * hiding notice actions.
  */
@@ -59,8 +58,8 @@ Scenario('Pinned security, inline notices and edit mode keep the dashboard reada
     await mockDashboardBootstrap(I, () => ({ settings: previewSettings, notices }));
     I.refreshPage();
     await waitForOverview(I);
-    I.seeElement('.md-dashboard__sessions [data-widget-type="sessions"] .md-dashboard-widget__session');
-    I.seeElement('.md-dashboard__sessions span.md-dashboard-widget__session-count');
+    I.seeElement('.md-dashboard__news [data-widget-type="news"]');
+    I.dontSeeElementInDOM('.md-dashboard__sessions');
     I.dontSeeElement('.md-dashboard__layout [data-widget-type="sessions"]');
     I.dontSeeElement('.md-dashboard__sessions .md-dashboard__widget-controls');
     I.dontSeeElement('.md-dashboard__edit-control');
@@ -80,7 +79,7 @@ Scenario('Pinned security, inline notices and edit mode keep the dashboard reada
     I.waitForElement('.md-dashboard.is-editing', 10);
     I.seeElement('.md-dashboard__toolbar .md-dashboard__edit-control');
     I.seeElement('[data-instance-id="design-autotest-pages"] .md-dashboard__drag');
-    I.seeElement('.md-dashboard__sessions .md-dashboard-widget__session');
+    I.seeElement('.md-dashboard__news [data-widget-type="news"]');
     const handle = '[data-instance-id="design-autotest-pages"] .md-dashboard__drag';
     I.executeScript(selector => document.querySelector(selector).focus(), handle);
     I.pressKey('Enter');
@@ -305,100 +304,6 @@ Scenario('Ranked cards link to their modules and handle missing thumbnails', asy
     I.resizeWindow(1337, 1052);
 });
 
-/**
- * Checks that every active session remains reachable as the welcome area changes height and on mobile.
- * Scrolling stays inside the session list, and keyboard users can read and dismiss the current-session and
- * logout hints.
- */
-Scenario('Session scrolling stays inside its list and compact controls expose accessible tooltips', async ({ I }) => {
-    I.resizeWindow(1337, 1052);
-    const sessionSettings = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings);
-    sessionSettings.configured = true;
-    sessionSettings.acknowledgedNewsVersion = null;
-    // Keep collapse/expand mutations isolated even when this scenario runs without the earlier design fixtures.
-    await I.mockRoute(settingsRoute, route => {
-        if (route.request().method() === 'PUT') Object.assign(sessionSettings, route.request().postDataJSON());
-        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(sessionSettings) });
-    });
-    const currentSessions = {
-        currentSessionId: 'session-autotest-0', userSessions: [{ cluster: 'autotest', userSessions: Array.from({ length: 9 }, (_, index) => ({
-            sessionId: `session-autotest-${index}`, browserName: ['Chrome 153', 'Safari 18', 'Firefox 131'][index % 3],
-            logonTime: Date.now() - index * 60000, remoteAddr: '127.0.0.1'
-        })) }]
-    };
-    await mockDashboardBootstrap(I, () => ({ settings: sessionSettings, currentSessions }));
-    I.refreshPage();
-    await waitForOverview(I);
-    I.executeScript(() => {
-        const dashboard = document.querySelector('webjet-overview-dashboard');
-        dashboard.configure({ data: dashboard.data,
-            config: { ...dashboard.config, heroBackgroundImage: '/admin/skins/webjet8/assets/global/img/wj/wj9_bg.jpg' },
-            labels: { ...dashboard.labels, changelog:
-            '<p>WebJET CMS 2026.18 autotest release includes approval workflows for folders and accessibility checks for published content.</p>'
-            + '<p>Autotest editors can maximize application dialogs, configure accessible labels and continue editing their pages with the latest administration tools.</p>'
-            + '<p>Autotest security updates include additional authentication providers, passkeys and improvements for installations running on several cluster nodes.</p>'
-        } });
-    });
-    await waitForOverview(I);
-    const list = '.md-dashboard__sessions .md-dashboard-widget__sessions';
-    I.seeNumberOfElements(`${list} > li`, 9);
-    I.seeElement(`${list} .ti-brand-chrome`);
-    I.seeElement(`${list} .ti-brand-safari`);
-    I.seeElement(`${list} .ti-brand-firefox`);
-    I.seeElement(`${list} > li:first-child .md-dashboard-widget__session-current[aria-label]`);
-    I.dontSeeElement(`${list} > li:first-child button`);
-    I.seeNumberOfElements(`${list} .md-dashboard-widget__session-logout`, 8);
-    I.clickCss(newsToggle);
-    waitForSave(I);
-    I.waitForVisible('.is-news-collapsed .md-dashboard-widget__news-summary', 10);
-    I.seeNumberOfElements(`${list} > li`, 9);
-    I.clickCss(newsToggle);
-    waitForSave(I);
-    I.waitForVisible('.md-dashboard-widget__news-highlights', 10);
-    // Save notifications overlap the session list's pointer target until dismissed.
-    I.toastrClose();
-    I.waitForInvisible('#toast-container-webjet .toast-success', 15);
-    I.executeScript(() => { window.scrollbarMain.setMomentum(0, 0); window.scrollbarMain.setPosition(0, 0); });
-    // Standard scroll helpers do not generate wheel events, which trigger the smooth-scrollbar regression.
-    await I.usePlaywrightTo('wheel over the native session list', async ({ page }) => {
-        const bounds = await page.locator(list).boundingBox();
-        await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + 30);
-        await page.mouse.wheel(0, 130);
-    });
-    I.waitForFunction(selector => document.querySelector(selector).scrollTop > 0, [list], 10);
-    I.assertEqual(await I.executeScript(() => window.scrollbarMain.offset.y), 0, 'Wheel input must not scroll the dashboard behind the session list.');
-    I.executeScript(selector => { const node = document.querySelector(selector); node.focus({ preventScroll: true }); node.scrollTop = 0; }, list);
-    I.pressKey('PageDown');
-    I.waitForFunction(selector => document.querySelector(selector).scrollTop > 0, [list], 10);
-    I.assertEqual(await I.executeScript(() => window.scrollbarMain.offset.y), 0, 'Keyboard scrolling must stay inside the focused list.');
-    const current = `${list} .md-dashboard-widget__session-current`;
-    I.executeScript(selector => { const node = document.querySelector(selector); node.closest('ul').scrollTop = 0; node.focus({ preventScroll: true }); }, current);
-    I.waitForVisible('.tooltip.show', 10);
-    I.see(await I.grabAttributeFrom(current, 'aria-label'), '.tooltip.show');
-    I.pressKey('Escape');
-    I.waitForInvisible('.tooltip.show', 10);
-    const logout = `${list} .md-dashboard-widget__session-logout`;
-    I.executeScript(selector => document.querySelector(selector).focus({ preventScroll: true }), logout);
-    I.waitForVisible('.tooltip.show', 10);
-    I.see(await I.grabAttributeFrom(`${list} > li:nth-child(2) .md-dashboard-widget__session-logout`, 'aria-label'), '.tooltip.show');
-    I.pressKey('Escape');
-    I.waitForInvisible('.tooltip.show', 10);
-    I.resizeWindow(390, 1052);
-    if (await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) I.clickCss('.js-sidebar-toggler');
-    I.waitForFunction(() => document.querySelector('.ly-sidebar').getBoundingClientRect().right <= 1, 10);
-    I.seeNumberOfElements(`${list} > li`, 9);
-    I.executeScript(selector => document.querySelector(selector).focus(), list);
-    I.pressKey('End');
-    I.waitForFunction(selector => document.querySelector(selector).scrollTop > 0, [list], 10);
-    const lastLogout = `${list} > li:last-child .md-dashboard-widget__session-logout`;
-    I.executeScript(selector => document.querySelector(selector).focus(), lastLogout);
-    I.waitForVisible('.tooltip.show', 10);
-    I.see(await I.grabAttributeFrom(lastLogout, 'aria-label'), '.tooltip.show');
-    I.pressKey('Escape');
-    I.waitForInvisible('.tooltip.show', 10);
-    await I.stopMockingRoute(settingsRoute);
-    await I.stopMockingRoute(dashboardPageRoute);
-});
 
 /**
  * Checks that releasing a dragged widget over its original position does not save a layout change.

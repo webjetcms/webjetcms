@@ -161,23 +161,25 @@ test('Embedded unconfigured settings apply defaults without reading REST prefere
     assert.equal(requests.length, 0);
 });
 
-test('Header image configuration binds local and HTTP URLs without accepting executable CSS or URL schemes', t => {
+test('Header background configuration binds image URLs and preserves the default for invalid values', t => {
     const fallback = fixture(t);
-    assert.equal(fallback.controller.hero.style.getPropertyValue('--wj-dashboard-hero-image'), '', 'An omitted setting must preserve the stylesheet image default');
+    assert.equal(fallback.controller.hero.style.backgroundImage, '', 'An omitted setting must preserve the stylesheet gradient');
     for (const [value, expected] of [
-        ['/images/company/header.jpg', 'url("/images/company/header.jpg")'],
-        ['/images/company/header wide.jpg', 'url("/images/company/header%20wide.jpg")'],
-        ['https://cdn.example.test/header.jpg?theme=blue', 'url("https://cdn.example.test/header.jpg?theme=blue")'],
-        ['/images/header");color:red;/*', 'url("/images/header%22);color:red;/*")']
+        ['/images/company/header.jpg', 'url(/images/company/header.jpg)'],
+        ['/images/company/header wide.jpg', 'url(/images/company/header%20wide.jpg)'],
+        ['https://cdn.example.test/header.jpg?theme=blue', 'url(https://cdn.example.test/header.jpg?theme=blue)']
     ]) {
         const { controller } = fixture(t, { config: { heroBackgroundImage: value } });
-        assert.equal(controller.hero.style.getPropertyValue('--wj-dashboard-hero-image'), expected);
+        assert.equal(controller.hero.style.backgroundImage, expected);
         assert.equal(controller.hero.style.color, '', 'A configured image must not inject a separate CSS declaration');
     }
-    for (const value of ['', '   ', null, 'javascript:alert(1)', 'data:image/svg+xml,<svg/>', '//example.test/header.jpg', 'https://user:secret@example.test/header.jpg', '/images/hero\\image.jpg', '/images/hero\nimage.jpg']) {
+    for (const value of ['', '   ', null, 'javascript:alert(1)', 'data:image/svg+xml,<svg/>', '//example.test/header.jpg', 'https://user:secret@example.test/header.jpg', '/images/hero\\image.jpg', '/images/hero\nimage.jpg',
+        'linear-gradient(red, blue); color:red', 'linear-gradient(red, blue), url(https://example.test/image.jpg)', 'linear-gradient(var(--image), blue)']) {
         const { controller } = fixture(t, { config: { heroBackgroundImage: value } });
-        assert.equal(controller.hero.style.getPropertyValue('--wj-dashboard-hero-image'), 'none', 'Empty or invalid configuration must disable the image');
+        assert.equal(controller.hero.style.backgroundImage, '', 'Empty or invalid configuration must preserve the stylesheet gradient');
     }
+    const escaped = fixture(t, { config: { heroBackgroundImage: '/images/header");color:red;/*' } });
+    assert.equal(escaped.controller.hero.style.color, '', 'URL punctuation must not inject another CSS declaration');
 });
 
 test("Grid widgets wait for viewport entry while fixed utilities render immediately", async t => {
@@ -186,29 +188,29 @@ test("Grid widgets wait for viewport entry while fixed utilities render immediat
         items: [item("first", "lazy"), item("second", "lazy")],
         definitions: [
             { type: "lazy", titleKey: "Lazy", sizes: ["2x2"], multiple: true, render: ({ instance }) => renders.push(instance.id) },
-            { type: "sessions", titleKey: "Sessions", sizes: ["2x3"], render: () => renders.push("sessions") }
+            { type: "news", titleKey: "News", sizes: ["2x3"], render: () => renders.push("news") }
         ]
     });
     await controller.start();
-    assert.deepEqual(renders, ["sessions"]);
+    assert.deepEqual(renders, ["news"]);
     assert.equal(targets.size, 2);
     const first = controller.views.get("first");
     intersect(first.card, false);
     await tick();
-    assert.deepEqual(renders, ["sessions"], "Offscreen cards must not invoke their data renderers");
+    assert.deepEqual(renders, ["news"], "Offscreen cards must not invoke their data renderers");
     intersect(first.card);
     await tick();
-    assert.deepEqual(renders, ["sessions", "first"]);
+    assert.deepEqual(renders, ["news", "first"]);
     assert.equal(first.body.getAttribute("aria-busy"), "false");
     assert.equal(targets.has(first.card), false);
     intersect(first.card, false);
     intersect(first.card);
     await controller.moveBefore("first", null);
-    assert.deepEqual(renders, ["sessions", "first"], "Scrolling or moving loaded cards must not reload their data");
+    assert.deepEqual(renders, ["news", "first"], "Scrolling or moving loaded cards must not reload their data");
     const refresh = controller.refresh("first");
     intersect(first.card);
     await refresh;
-    assert.deepEqual(renders, ["sessions", "first", "first"], "Explicit refresh still loads once visible");
+    assert.deepEqual(renders, ["news", "first", "first"], "Explicit refresh still loads once visible");
     assert.equal(targets.size, 1, "The other card must remain deferred");
 });
 
@@ -410,7 +412,6 @@ test("Reset clears personal preferences and disposes replaced widgets only after
     await controller.start();
     await tick();
     await controller.saveOptions("custom", { domainOptions: { formName: "Custom form" } });
-    await controller.acknowledgeNews("2026.18");
     await controller.remove("removable");
     const previousDisposals = disposed;
     const alerts = window.document.querySelector("#alerts");
@@ -435,11 +436,10 @@ test("Reset clears personal preferences and disposes replaced widgets only after
     assert.equal(controller.settings.items[0].options.days, 30);
 });
 
-test("A failed reset preserves the layout, filters, acknowledged news and removal undo", async t => {
+test("A failed reset preserves the layout, filters and removal undo", async t => {
     const { controller, host } = fixture(t, { items: [item("kept"), item("removed")], defaults: [{ type: "test" }], failReset: true });
     await controller.start();
     await controller.saveOptions("kept", { domainOptions: { formName: "Contact" } });
-    await controller.acknowledgeNews("2026.18");
     await controller.remove("removed");
     const settings = copy(controller.settings);
     const card = host.querySelector('[data-instance-id="kept"]');
@@ -469,7 +469,7 @@ test("The editing toolbar delegates the full reset scope to standard confirmatio
     assert.equal(options.title, 'Restore defaults');
     assert.equal(options.btnOkText, 'Restore defaults');
     assert.match(options.message, /all domains/);
-    assert.match(options.message, /read news/);
+    assert.doesNotMatch(options.message, /read news/);
     assert.equal(requests.some(request => request.method === "DELETE"), false);
     assert.equal(await options.success(), true);
     closeConfirmation();
@@ -814,7 +814,7 @@ test("Unavailable types remain persisted while authorized instances render", asy
     assert.equal(stored().items.length, 2, "A changed permission must not erase the user's preferences");
 });
 
-test("Sessions remain in the permanent header without arrangement controls", async t => {
+test("Legacy fixed sessions remain stored but do not render in the hero", async t => {
     let renders = 0;
     const session = item("sessions", "sessions", "2x3");
     const { controller, host, requests, stored } = fixture(t, {
@@ -825,7 +825,7 @@ test("Sessions remain in the permanent header without arrangement controls", asy
         }]
     });
     await controller.start();
-    assert.match(host.querySelector(".md-dashboard__sessions").textContent, /Active session details/);
+    assert.equal(host.querySelector(".md-dashboard__sessions"), null);
     assert.equal(host.querySelector(".md-dashboard__layout [data-widget-type='sessions']"), null);
     assert.equal(host.querySelector(".md-dashboard__sessions .md-dashboard__widget-controls"), null);
     const count = requests.length;
@@ -834,7 +834,7 @@ test("Sessions remain in the permanent header without arrangement controls", asy
     assert.equal(requests.length, count);
     await controller.saveOptions("ordinary", { options: { days: 30 } });
     assert.deepEqual(stored().items[0], session, "Editing another card must preserve session preferences");
-    assert.equal(renders, 1, "Unrelated edits must not reload security data");
+    assert.equal(renders, 0, "The legacy fixed-session card must never render");
 });
 
 test("Late asynchronous rendering is cleaned up after removal even if it ignores abort", async t => {
@@ -964,28 +964,19 @@ test("Finishing the opening transition preserves focus in an already edited fiel
     assert.equal(input.value, "autotest title");
 });
 
-test("Acknowledged news stays in the header and refreshes only its own content", async t => {
+test("News remains in the header without restarting when another widget changes", async t => {
     let newsRenders = 0;
-    let otherRenders = 0;
-    const { controller, host, window, stored } = fixture(t, {
-        items: [item("news", "news"), item("ordinary", "counted")],
-        definitions: [{
-            type: "news", titleKey: "News",
-            render: ({ container, context }) => { newsRenders++; container.textContent = context.settings.acknowledgedNewsVersion ? "Release summary" : "Release news"; }
-        }, { type: "counted", titleKey: "Counted", render: () => { otherRenders++; } }]
+    const { controller, host, window } = fixture(t, {
+        items: [item("news", "news"), item("ordinary")],
+        definitions: [{ type: "news", titleKey: "News", render: ({ container }) => { newsRenders++; container.textContent = "Release news"; } }]
     });
     await controller.start();
     const card = host.querySelector('[data-instance-id="news"]');
-    await controller.acknowledgeNews("2026.18");
+    await controller.saveOptions("ordinary", { options: { days: 30 } });
     assert.equal(host.querySelector('.md-dashboard__news [data-instance-id="news"]'), card);
-    assert.equal(stored().items[0].id, "news");
-    assert.match(card.textContent, /Release summary/);
-    assert.equal(newsRenders, 2);
-    assert.equal(otherRenders, 1);
+    assert.equal(newsRenders, 1);
     controller.showCatalogue();
     assert.equal(window.document.querySelector('.md-dashboard__catalogue-item[data-widget-type="news"]'), null);
-    await controller.acknowledgeNews(null);
-    assert.match(card.textContent, /Release news/);
 });
 
 test("Edit mode reveals arrangement controls without a settings mutation", async t => {
@@ -1126,48 +1117,6 @@ test('Embedded notices, including an empty list, render without a REST request',
     assert.equal(requests.length, 0);
 });
 
-test('Release note persistence restores the replacement toggle without stealing focus from another control', async t => {
-    const { context, window, host } = fixture(t);
-    Object.assign(context, { DOMParser: window.DOMParser });
-    const source = fs.readFileSync(path.join(moduleDirectory, 'utility-widgets.js'), 'utf8')
-        .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
-    vm.runInContext(source, context, { filename: 'utility-widgets.js' });
-    context.registerSessionWidgets = () => {};
-    context.registerUtilityWidgets();
-    const news = context.getWidget('news');
-    const region = window.document.createElement('section');
-    region.dataset.widgetType = 'news';
-    const otherControl = window.document.createElement('input');
-    host.append(region, otherControl);
-    let finishSave;
-    const widgetContext = {
-        translate: key => key,
-        labels: { changelog: '<p>WebJET CMS 2026.18</p><p>Release highlights</p>' },
-        config: { releaseVersion: '2026.18' }, settings: { acknowledgedNewsVersion: null },
-        dashboard: { acknowledgeNews: () => new Promise(resolve => { finishSave = resolve; }) }
-    };
-    const render = () => {
-        const container = window.document.createElement('div');
-        region.replaceChildren(container);
-        news.render({ container, context: widgetContext });
-        return region.querySelector('.md-dashboard-widget__news-toggle');
-    };
-    for (const moveFocusElsewhere of [false, true]) {
-        const toggle = render();
-        toggle.focus();
-        toggle.click();
-        assert.equal(toggle.disabled, true);
-        toggle.blur(); // Browsers blur a focused button when persistence disables it.
-        if (moveFocusElsewhere) otherControl.focus();
-        const replacement = render();
-        finishSave(true);
-        await tick();
-        assert.equal(window.document.activeElement, moveFocusElsewhere ? otherControl : replacement,
-            'Saving must restore lost toggle focus while respecting a deliberate focus change.');
-    }
-});
-
-
 const shortcutDefinition = { type: "shortcut", titleKey: "Shortcut", sizes: ["1x1"], multiple: true,
     render: ({ container, options }) => { const link = container.ownerDocument.createElement("a"); link.href = options.href; link.textContent = options.title || options.href; container.append(link); } };
 
@@ -1212,9 +1161,7 @@ test("Widget reset preserves shortcuts and intentionally empty shortcuts survive
     const { controller, stored } = fixture(t, { items: [item("grid"), item("link", "shortcut", "1x1", { href: "/custom/?a=1#anchor", title: "Custom" })], definitions: [shortcutDefinition], defaults: [{ type: "test" }, { type: "shortcut", options: { href: "/default/" } }], legacyBookmarksHandled: true });
     await controller.start();
     await controller.saveOptions("grid", { domainOptions: { formName: "Contact" } });
-    await controller.acknowledgeNews("2026.18");
     assert.deepEqual(stored().domainOptions.grid, { formName: "Contact" });
-    assert.equal(stored().acknowledgedNewsVersion, "2026.18");
     assert.equal(stored().items[0].id, "grid");
     const linkId = stored().items.find(item => item.type === "shortcut").id;
     assert.equal(await controller.reset(), true);
@@ -1233,7 +1180,6 @@ test("Legacy bookmarks automatically replace shortcuts in original order and cle
     const { controller, window, stored, requests, host } = fixture(t, { items: [item("grid"), item("existing", "shortcut", "1x1", { href: "/apps/form/admin/", title: "New label" }), item("extra", "shortcut", "1x1", { href: "/extra/", title: "My extra" })], definitions: [shortcutDefinition] });
     await controller.start();
     await controller.saveOptions("grid", { domainOptions: { formName: "Contact" } });
-    await controller.acknowledgeNews("2026.18");
     await controller.saveOptions("existing", { domainOptions: {} });
     const previous = stored();
     window.localStorage.setItem("unrelated", "preserve");
@@ -1802,20 +1748,6 @@ test('Browser departure warns only for a dirty draft and edit-session cleanup re
     assert.equal(leave(), false);
 });
 
-test('Independent release preferences never persist widget drafts or disappear when the draft is cancelled', async t => {
-    const { controller, window, stored } = fixture(t, { items: [item('draft')] });
-    await controller.start();
-    controller.setEditing(true);
-    await controller.saveOptions('draft', { options: { days: 30 } });
-    await controller.acknowledgeNews('autotest-news');
-    assert.deepEqual(stored().items[0].options, {});
-    assert.equal(stored().acknowledgedNewsVersion, 'autotest-news');
-    assert.equal(controller._instance('draft').options.days, 30);
-    controller.cancelEditing();
-    window.document.querySelector('.md-dashboard-modal--confirm .btn-red').click();
-    assert.equal(controller.settings.acknowledgedNewsVersion, 'autotest-news');
-    assert.deepEqual(copy(controller._instance('draft').options), {});
-});
 
 test('Entering shortcut editing confirms discarding dirty widgets, then shortcut edits still save immediately', async t => {
     const { controller, window, stored } = fixture(t, { items: [item('draft'), item('link', 'shortcut', '1x1')], definitions: [shortcutDefinition] });

@@ -86,9 +86,15 @@ WebJET CMS records which browser you log in to the administration from. When you
 
 A device here refers to a specific browser and its profile, not the entire computer. You may therefore also receive a notification on your regular computer the first time you log in after device registration is implemented, after deleting cookies, or in an incognito window. A regular logout will not cancel the browser's memory.
 
-If you know the login, confirm it with the **It was me** link in the email or the same button when notified. The button in the administration will send an email code and display a field for entering it. If you do not know the login, follow the [device blocking instructions](welcome.md#if-you-don't-know-the-login).
+![](device-my-devices.png)
+
+If you know the login, confirm it with the **It was me** link in the email or the same button when notified. The button in the administration will send an email code and display a field for entering it.
 
 ![](device-confirm-code.png)
+
+If you don't know the login, follow the [device blocking instructions](welcome.md#if-you-don't-know-the-login).
+
+![](device-block.png)
 
 After successful two-step verification, the unblocked browser will be confirmed automatically. You will receive an information email without the need for further confirmation.
 
