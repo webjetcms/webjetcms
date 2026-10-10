@@ -25,7 +25,7 @@
 
 - WebJET CMS now [records the browsers you log in from](redactor/admin/logon.md#login-from-a-new-device). Logging in from a new browser will display a notification on the home screen and send an email so you can recognize someone else logging into your account. You can confirm your own device with an email link or a one-time code via **It was me** (#340).
 
-![New browser login warning](redactor/admin/device-block.png)
+![Account devices overview on the My Devices tab](redactor/admin/device-my-devices.png)
 
 - If you do not know the login, you can [block the device and end its active logins](redactor/admin/welcome.md#ak-prihlanie-nepoznáte). The next time you log in from a blocked browser, after entering the correct name and password, **Verification of blocked device** will be displayed. To unblock and enter the administration, you must enter the six-digit code from the account email; if 2FA is enabled, this verification will only be performed after the code from the authentication application. Detailed instructions are in the [login instructions](redactor/admin/logon.md#overenie-zablokovoho-zariadenia) (#340).
 

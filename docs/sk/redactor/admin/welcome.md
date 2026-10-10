@@ -155,7 +155,11 @@ Prihlásenie môžete potvrdiť aj odkazom **Bol som to ja** v pôvodnom emaile.
 
 Pri upozornení alebo pri zariadení v karte **Moje zariadenia** v okne **Aktívne prihlásenia** kliknite na **Nebol som to ja**. Zariadenie sa zablokuje a jeho známe relácie sa odhlásia. Malé okno **Zabezpečte svoj účet** zobrazí výsledok a odporúčané ďalšie kroky. Ak zablokujete prehliadač, v ktorom práve pracujete, odhlási aj vás.
 
+![](device-my-devices.png)
+
 Odkaz **Nebol som to ja – zabezpečiť účet** v emaile po prihlásení otvorí rovnaké malé okno, ale zariadenie ešte nezablokuje. Ak prihlásenie nepoznáte, potvrďte akciu tlačidlom **Zablokovať zariadenie**.
+
+![](device-block.png)
 
 Po zablokovaní použite **Zmeniť heslo** a skontrolujte ostatné prihlásenia. Tlačidlo **Zapnúť 2FA** otvorí nastavenie dvojstupňového overovania, ak je pre účet dostupné a ešte nie je zapnuté. **Neskôr** iba zatvorí okno. Pri firemnom účte zmeňte heslo u poskytovateľa prihlásenia alebo kontaktujte správcu.
 
