@@ -63,10 +63,12 @@ function createGroup(I, DTE, DT, groupName, language, isRootGroup) {
 async function fillDocBody(I, DTE, DT, body, perex) {
     I.clickCss("#datatableInit_wrapper > div:nth-child(2) > div > div > div.dt-scroll > div.dt-scroll-head > div > table > thead > tr:nth-child(2) > th.dt-format-selector.dt-th-id > form > div > button.buttons-select-all.btn.btn-sm.btn-outline-secondary.dt-filter-id");
     I.click(DT.btn.edit_button);
+    DTE.waitForEditor();
 
     I.say("Filling perex");
     I.clickCss("#pills-dt-datatableInit-perex-tab");
     I.fillField("#DTE_Field_htmlData", perex);
+    I.seeInField("#DTE_Field_htmlData", perex);
 
     I.say("Filling body");
     I.clickCss("#pills-dt-datatableInit-content-tab");

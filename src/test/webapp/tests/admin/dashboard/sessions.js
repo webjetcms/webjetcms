@@ -498,7 +498,8 @@ Scenario('Administrator session summaries match the design and coordinate author
     I.saveScreenshot('dashboard-active-admins-mobile.png');
     I.wjSetDefaultWindowSize();
     I.click('Moje prihlásenia', `${modal} [data-admin-user-id="900001"]`);
-    I.see('Chrome · macOS', `${modal} .md-dashboard-sessions__mine`);
+    I.see('Chrome', `${modal} .md-dashboard-sessions__mine .md-dashboard-sessions__device-name`);
+    I.see('macOS', `${modal} .md-dashboard-sessions__mine .md-dashboard-sessions__system`);
     I.clickCss(`${modal} [role="tab"][id$="-admins"]`);
     I.waitForText('Prihlásení administrátori (3)', 10, modal);
     I.click('Odhlásiť', `${modal} [data-admin-user-id="900002"]`);
