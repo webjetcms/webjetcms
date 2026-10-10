@@ -25,7 +25,7 @@ import { showFeedbackDialog } from '../feedback';
  * @property {string} config.recentPagesGroupId - Configured systemPagesRecentPages ID used by the Web pages module.
  * @property {string} [config.statMode] - Statistics mode; `"none"` hides statistics cards.
  * @property {string} [config.overviewJsonUrl=""] - Base URL used to load localized WebJET news.
- * @property {string} [config.heroBackgroundImage] - Root-relative or HTTP(S) header image URL; an empty value hides it and omission retains the stylesheet default.
+ * @property {string} [config.heroBackgroundImage] - CSS gradient or root-relative/HTTP(S) header image URL; empty, invalid or omitted values retain the default gradient.
  */
 
 function element(tag, className, text) {

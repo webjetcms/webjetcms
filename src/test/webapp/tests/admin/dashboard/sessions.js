@@ -1,4 +1,4 @@
-const { mockDashboardBootstrap, dashboardPageRoute, showWidget, readDashboardBootstrap } = require('../../../helpers/dashboard-browser');
+const { openDashboardSessions, mockDashboardBootstrap, dashboardPageRoute, showWidget, readDashboardBootstrap } = require('../../../helpers/dashboard-browser');
 
 Feature('admin.dashboard.sessions').tag('@singlethread');
 
@@ -45,8 +45,8 @@ After(async ({ I }) => {
 });
 
 /** Real bootstrap and audit data expose activity, own records and the same authorized administrators. */
-Scenario('Real sessions and personal login history are available from the welcome panel', async ({ I }) => {
-    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+Scenario('Real sessions and personal login history are available from the personal widget', async ({ I }) => {
+    await openDashboardSessions(I);
     waitForSessionDialog(I);
     I.waitForText('Aktívne teraz', 10, modal);
     const bootstrap = await I.executeScript(readDashboardBootstrap);
@@ -98,8 +98,8 @@ Scenario('Real sessions and personal login history are available from the welcom
     I.saveScreenshot('dashboard-sessions-real-history.png');
     I.click('Zavrieť', `${modal} .modal-footer`);
     I.waitToHide(modal, 10);
-    I.waitForFunction(() => document.activeElement.matches('[data-widget-type="sessions"] .md-dashboard__title-action'), 10);
-    I.assertTrue(await I.executeScript(() => document.activeElement.matches('[data-widget-type="sessions"] .md-dashboard__title-action')),
+    I.waitForFunction(() => document.activeElement.matches('[data-instance-id="autotest-session-dialog"] .md-dashboard__title-action'), 10);
+    I.assertTrue(await I.executeScript(() => document.activeElement.matches('[data-instance-id="autotest-session-dialog"] .md-dashboard__title-action')),
         'Closing must restore focus to the invoking heading.');
 });
 
@@ -284,7 +284,7 @@ Scenario('Device tab separates retained browsers from sessions and supports conf
     });
     await I.refreshPage();
     await I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-    await I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    await openDashboardSessions(I);
     waitForSessionDialog(I);
     const devices = `${modal} .md-dashboard-sessions__devices`;
     await I.see('Moje prihlásenia (3)', modal);
@@ -385,7 +385,7 @@ Scenario('Device tab separates retained browsers from sessions and supports conf
     await I.click('Neskôr', securityDialog);
     await I.waitForDetached(securityDialog, 10);
     await I.wjSetDefaultWindowSize();
-    await I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    await openDashboardSessions(I);
     waitForSessionDialog(I);
     await I.see('Moje prihlásenia (3)', modal);
     await I.click('Moje zariadenia', modal);
@@ -411,7 +411,7 @@ Scenario('Device REST listing exposes owned records with bounded pagination and 
     await I.assertEqual(result.data.number, 0);
     await I.assertTrue(result.data.content.every(device => device.id > 0 && device.lastSeen > 0));
     await I.assertTrue(result.data.content.every(device => !['userId', 'tokenHash', 'confirmationHash', 'codeHash', 'codeAttempts'].some(key => Object.hasOwn(device, key))));
-    await I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    await openDashboardSessions(I);
     waitForSessionDialog(I);
     await I.click('Moje zariadenia', modal);
     await I.waitForElement(`${modal} .md-dashboard-sessions__devices[aria-busy="false"]`, 10);
@@ -532,7 +532,7 @@ Scenario('Administrator list and logout enforce independent permissions through 
     // Basic authentication reports denied REST access as 401 instead of 403.
     I.assertTrue([401, 403].includes(result.list), 'Management alone must not expose the administrator list.');
     I.assertEqual(result.logout, 400, 'An own-account logout must still be rejected.');
-    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    await openDashboardSessions(I);
     waitForSessionDialog(I);
     I.dontSeeElement(`${modal} .md-dashboard-sessions__admins`);
     I.click('Zavrieť', `${modal} .modal-footer`);

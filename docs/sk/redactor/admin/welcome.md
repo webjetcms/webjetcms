@@ -8,7 +8,7 @@ Na úvodnej obrazovke môžete rýchlo skontrolovať návštevnosť, odoslané f
 
 Prehľad tvoria **widgety**, teda karty s konkrétnymi údajmi, napríklad grafom návštevnosti alebo zoznamom požiadaviek na schválenie. Vyberte si tie, ktoré využívate, a usporiadajte ich podľa toho, čo chcete sledovať ako prvé. Pomocou [skratiek](#vaše-skratky) si otvoríte často používanú časť administrácie alebo konkrétny priečinok bez hľadania v menu.
 
-Pri prvom otvorení sa podľa vašich oprávnení zobrazia predvolené widgety **Návštevnosť**, **Formuláre**, **Na schválenie**, **Chyby 404**, **Pokračujte v práci**, **Odkiaľ návštevníci prišli**, **Najbližšie publikovanie** a **Newsletter**. Ďalšie widgety si môžete sami pridať. V hornej časti je privítanie so skratkami a novinkami, aktívne prihlásenia a vyhľadávanie.
+Pri prvom otvorení sa podľa vašich oprávnení zobrazia predvolené widgety **Návštevnosť**, **Formuláre**, **Na schválenie**, **Chyby 404**, **Pokračujte v práci**, **Odkiaľ návštevníci prišli**, **Najbližšie publikovanie** a **Newsletter**. Ďalšie widgety si môžete sami pridať. V hornej časti je privítanie so skratkami a kartou noviniek. Pod ním nájdete systémové upozornenia a vyhľadávanie.
 
 Ponuka widgetov zodpovedá vašim oprávneniam. Rozloženie sa ukladá na vaše konto a je spoločné pre všetky domény a prehliadače. Výber konkrétneho formulára alebo kampane sa pamätá osobitne pre každú doménu.
 
@@ -49,7 +49,7 @@ Tlačidlo **Zrušiť** pri neuložených zmenách otvorí potvrdenie s možnosť
 
 Na menšej obrazovke sa karty automaticky usporiadajú pod seba pri zachovaní poradia. Rozloženie môže obsahovať najviac 48 položiek vrátane skratiek, prihlásení, noviniek a vyhľadávania.
 
-Tlačidlo **Obnoviť predvolené** nájdete v lište úprav pred tlačidlom **Pridať widget**. Po potvrdení v dialógu sa pripraví predvolený výber widgetov, ich veľkosti, poradie a nastavenia. Až tlačidlom **Uložiť** sa zmena uloží a vymažú sa aj filtre widgetov vo všetkých doménach a potvrdenie prečítania noviniek. Vaše skratky a ostatné nastavenia účtu zostanú zachované.
+Tlačidlo **Obnoviť predvolené** nájdete v lište úprav pred tlačidlom **Pridať widget**. Po potvrdení v dialógu sa pripraví predvolený výber widgetov, ich veľkosti, poradie a nastavenia. Až tlačidlom **Uložiť** sa zmena uloží a vymažú sa aj filtre widgetov vo všetkých doménach. Vaše skratky a ostatné nastavenia účtu zostanú zachované.
 
 Ak pri kliknutí na **Obnoviť predvolené** podržíte kláves **Shift**, po potvrdení sa pripraví prehľad so všetkými dostupnými widgetmi v každej podporovanej veľkosti. Nepotrebné varianty môžete odstrániť a výsledok potvrdiť tlačidlom **Uložiť**.
 
@@ -121,7 +121,11 @@ Pri odosielaní sa údaje viditeľnej karty obnovujú každých 30 sekúnd. Poč
 
 ### Čo je nové
 
-V uvítacom paneli nájdete novinky aktuálnej verzie WebJET CMS. Tlačidlom **Zbaliť novinky** potvrdíte ich prečítanie a ponecháte stručný súhrn. Tlačidlom **Viac info** ich znova rozbalíte.
+Vpravo v modrom uvítacom paneli nájdete novinky aktuálnej verzie. Pri načítaní stránky sa vyberie náhodná novinka a každých 8 sekúnd sa zobrazí ďalšia. Novinky môžete prepínať aj šípkami alebo bodkami; veľkosť karty sa pritom nemení. Prepínanie pozastavíte tlačidlom pauzy. Pri ukázaní myšou sa dočasne zastaví, pri ovládaní klávesnicou sa zastaví až do opätovného spustenia. Pri obmedzených animáciách v nastavení systému sa automaticky nespúšťa.
+
+Kliknutie na nadpis alebo text novinky aj tlačidlo **Čo je nové (5)** rozbalí všetky body cez celú šírku modrého panela. Číslo zodpovedá počtu noviniek. Privítanie a skratky sa dočasne skryjú; tlačidlo **Zbaliť novinky**, ikona vpravo hore alebo kláves **Esc** ich znova zobrazia. Odkaz **Zoznam zmien** aj číslo verzie pri štítku **Nové** otvoria úplnú históriu vydaní v dokumentácii.
+
+Štítok **Nové** sa zobrazuje 30 dní od prvého zobrazenia daného textu pod vaším kontom. Zmena textu spustí nových 30 dní aj v rovnakej verzii. Stav sa ukladá do vašich nastavení administrácie, preto platí aj na inom zariadení. Rozbalenie ani zbalenie noviniek štítok nezruší.
 
 ### Systémové upozornenia
 
@@ -205,15 +209,15 @@ Zobrazuje graf a číselné hodnoty zaťaženia procesora servera. Správca mô�
 
 ## Prihlásenia
 
-V hornej časti prehľadu môžete skontrolovať svoje aktívne prihlásenia a odhlásiť sa z iného zariadenia alebo prehliadača. Zoznam ostatných prihlásených administrátorov je samostatný widget **Prihlásení admini**, dostupný podľa oprávnení.
+Pri viacerých aktívnych reláciách nájdete v systémových upozorneniach odkaz **Aktívne prihlásenia**. Zoznam si môžete pridať aj ako widget **Moje aktívne prihlásenia**. Zoznam ostatných prihlásených administrátorov je samostatný widget **Prihlásení admini**, dostupný podľa oprávnení.
 
 ### Moje aktívne prihlásenia
 
-Panel **Moje aktívne prihlásenia** zobrazuje všetky vaše aktívne relácie, teda prihlásenia pod vaším kontom, s prehliadačom, časom a IP adresou. V okne aktívnych prihlásení stĺpec **Poloha** zobrazuje [orientačné mesto a krajinu](../../admin/setup/configuration/dashboard.md#orientačná-poloha-prihlásenia), pod nimi menším písmom IP adresu. Ak poloha nie je dostupná, zobrazí sa **Neznáma**. Mesto sa odhaduje podľa verejného internetového pripojenia; IP zistená serverom môže byť interná. Pri dlhšom zozname môžete jeho obsah posúvať. Vaša aktuálna relácia je prvá a má zelenú bodku s popisom **Toto prihlásenie**. Ostatné relácie môžete odhlásiť priamo v zozname, napríklad keď ste sa zabudli odhlásiť na inom počítači. Tento panel je vždy v hornej časti a nemožno ho odstrániť.
+Widget **Moje aktívne prihlásenia** zobrazuje všetky vaše aktívne relácie, teda prihlásenia pod vaším kontom, s prehliadačom, časom a IP adresou. V okne aktívnych prihlásení stĺpec **Poloha** zobrazuje [orientačné mesto a krajinu](../../admin/setup/configuration/dashboard.md#orientačná-poloha-prihlásenia), pod nimi menším písmom IP adresu. Ak poloha nie je dostupná, zobrazí sa **Neznáma**. Mesto sa odhaduje podľa verejného internetového pripojenia; IP zistená serverom môže byť interná. Pri dlhšom zozname môžete jeho obsah posúvať. Vaša aktuálna relácia je prvá a má zelenú bodku s popisom **Toto prihlásenie**. Ostatné relácie môžete odhlásiť priamo v zozname, napríklad keď ste sa zabudli odhlásiť na inom počítači.
 
 Samostatný widget v osobnom prehľade zobrazí pri jedinej aktuálnej relácii informáciu, že ste prihlásený iba tu. Pri viacerých reláciách ukáže ich počet a vo väčších variantoch aj zoznam s poslednou aktivitou. Relácie známeho, ale zatiaľ nepotvrdeného zariadenia zvýrazní oranžovým pozadím a štítkom **Nové**. Ak stav zariadenia nepozná, zvýraznenie nepridáva. Tlačidlo **Odhlásiť všetky ostatné** otvorí potvrdzovací dialóg; odhlásenie sa vykoná až po potvrdení.
 
-Kliknutím na nadpis panela alebo widgetu so šípkou otvoríte okno **Aktívne prihlásenia** v karte **Moje prihlásenia**. Okrem vlastných relácií ponúka správu vašich zariadení, históriu prihlásení za posledných 30 dní a podľa oprávnení aj prihlásených administrátorov. Tlačidlo **Zmeniť heslo** v spodnej časti okna otvorí váš profil na zmenu hesla. Informačná ikona vedľa tlačidla zobrazí pokyny pre zmenu hesla pri firemnom účte.
+Kliknutím na nadpis widgetu so šípkou otvoríte okno **Aktívne prihlásenia** v karte **Moje prihlásenia**. Okrem vlastných relácií ponúka správu vašich zariadení, históriu prihlásení za posledných 30 dní a podľa oprávnení aj prihlásených administrátorov. Tlačidlo **Zmeniť heslo** v spodnej časti okna otvorí váš profil na zmenu hesla. Informačná ikona vedľa tlačidla zobrazí pokyny pre zmenu hesla pri firemnom účte.
 
 Karta **Moje prihlásenia** zobrazuje iba aktívne relácie. Jeden prehliadač môže mať viac relácií. Pri každej relácii vidíte prehliadač s verziou, pod ním operačný systém s verziou a dátum prihlásenia. Aktuálna relácia má pri názve prehliadača štítok **Toto prihlásenie**; pri ostatných môžete použiť akciu **Odhlásiť**.
 

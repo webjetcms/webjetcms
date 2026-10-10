@@ -120,8 +120,7 @@ Scenario('Render the complete widget catalogue on desktop and mobile', async ({ 
     I.seeNumberOfElements('#toast-container-overview', 1);
     I.dontSeeElementInDOM('.md-dashboard__legacy');
     I.dontSeeElementInDOM('#webjet-overview-dashboard .bookmark');
-    I.seeElement('[data-widget-type="sessions"] .md-dashboard__title-action');
-    I.seeElement('[data-widget-type="sessions"] .md-dashboard-widget__session-current');
+    I.dontSeeElementInDOM('[data-widget-type="sessions"]');
     I.seeElement('[data-widget-type="recent-pages"] .md-dashboard__widget-header .md-dashboard__title-link[href="/admin/v9/webpages/web-pages-list/"]');
     I.dontSeeElement('[data-widget-type="recent-pages"] .md-dashboard-widget__more');
     I.assertEqual(await I.grabTextFrom('[data-widget-type="traffic"] .md-dashboard-widget__metric-label'),

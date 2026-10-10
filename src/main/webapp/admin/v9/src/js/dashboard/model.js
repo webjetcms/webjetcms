@@ -16,7 +16,7 @@
  * @property {boolean} legacyBookmarksHandled - Whether browser bookmarks have already been imported.
  * @property {WidgetInstance[]} items - Ordered widget instances, including unavailable types.
  * @property {Object<string, Object>} domainOptions - Active-domain preferences keyed by instance ID.
- * @property {string|null} acknowledgedNewsVersion - Collapsed release announcement version, or null.
+ * @property {string|null} acknowledgedNewsVersion - Legacy announcement preference retained for compatibility with stored profiles.
  */
 
 export const MAX_WIDGETS = 48;

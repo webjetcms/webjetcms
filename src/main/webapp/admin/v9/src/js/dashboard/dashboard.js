@@ -119,9 +119,13 @@ export class DashboardController {
     _build() {
         this.host.classList.add("md-dashboard");
         this.hero = node("div", "md-dashboard__hero");
-        if (this.context.config?.heroBackgroundImage !== undefined) {
-            const backgroundImage = shortcutUrl(this.context.config.heroBackgroundImage);
-            this.hero.style.setProperty("--wj-dashboard-hero-image", backgroundImage ? `url(${JSON.stringify(backgroundImage)})` : "none");
+        const background = this.context.config?.heroBackgroundImage;
+        const backgroundUrl = shortcutUrl(background);
+        if (backgroundUrl) this.hero.style.backgroundImage = `url(${JSON.stringify(backgroundUrl)})`;
+        else if (typeof background === "string" && /^\s*(?:repeating-)?(?:linear|radial|conic)-gradient\(/i.test(background)
+            && !/[\\;]|(?:url|var|image-set)\s*\(/i.test(background)) {
+            // The browser rejects invalid gradient syntax and retains the stylesheet default.
+            this.hero.style.backgroundImage = background;
         }
         const welcome = node("div", "md-dashboard__welcome");
         const language = window.userLng === "cz" ? "cs" : window.userLng || "sk";
@@ -132,9 +136,7 @@ export class DashboardController {
         welcomeHeading.append(node("h1", "md-dashboard__greeting", `${this._t("welcomeBack", "Welcome back,")} ${this.context.data?.userName || ""}`.trim()));
         welcome.append(welcomeHeading);
         this.news = node("div", "md-dashboard__news");
-        welcome.append(this.news);
-        this.sessions = node("div", "md-dashboard__sessions");
-        this.hero.append(welcome, this.sessions);
+        this.hero.append(welcome, this.news);
         this.notices = node("div", "md-dashboard__notices");
         this.notices.id = "toast-container-overview";
         this.search = node("div", "md-dashboard__search");
@@ -200,7 +202,7 @@ export class DashboardController {
         moveHint.id = `dashboard-shortcut-move-${createInstanceId()}`;
         this.shortcutMoveHint = moveHint;
         this.shortcuts.append(moveHint);
-        welcome.insertBefore(this.shortcuts, this.news);
+        welcome.append(this.shortcuts);
         this.host.replaceChildren(this.hero, this.notices, this.search, this.toolbar, this.overviewStatus, this.undoContainer, this.layout, this.widgetMoveHint, this.widgetMoveStatus);
         if (window.jQuery && window.WJ?.initTooltip) {
             for (const control of [this.resetButton, this.editShortcutsButton]) window.WJ.initTooltip(window.jQuery(control));
@@ -333,13 +335,13 @@ export class DashboardController {
      */
     _displayItems() {
         const items = [...this.settings.items];
-        for (const type of ["sessions", "news", "search"]) {
+        for (const type of ["news", "search"]) {
             const definition = getWidget(type);
             if (definition && !items.some(item => item.type === type)) items.push({ ...this._newInstance(definition), id: `dashboard-fixed-${type}` });
         }
         return items.filter(instance => {
             const definition = getWidget(instance.type);
-            return definition && this._available(definition) && (this._region(instance) !== "grid" || this._visible(definition, instance));
+            return instance.type !== "sessions" && definition && this._available(definition) && (this._region(instance) !== "grid" || this._visible(definition, instance));
         });
     }
 
@@ -527,7 +529,7 @@ export class DashboardController {
             }
             view.card.dataset.size = instance.size;
             if (this._region(instance) === "grid") view.card.style.backgroundColor = widgetBackground(instance.options?.backgroundColor);
-            const signature = JSON.stringify([instance.type, instance.size, instance.options, this.settings.domainOptions[instance.id], this._contextVersion, instance.type === "news" ? this.settings.acknowledgedNewsVersion : null]);
+            const signature = JSON.stringify([instance.type, instance.size, instance.options, this.settings.domainOptions[instance.id], this._contextVersion]);
             if (view.signature !== signature) {
                 view.signature = signature;
                 refreshIds.push(instance.id);
@@ -540,7 +542,7 @@ export class DashboardController {
             segment.items.forEach(instance => grid.append(updateView(instance)));
             fragment.append(grid);
         }
-        for (const region of ["sessions", "news", "search", "shortcut"]) {
+        for (const region of ["news", "search", "shortcut"]) {
             const container = region === "shortcut" ? this.shortcutList : this[region];
             container.replaceChildren(...visible.filter(instance => this._region(instance) === region).map(updateView));
         }
@@ -949,17 +951,6 @@ export class DashboardController {
         (view && this._isEditing(view.instance) ? view.card.querySelector(".md-dashboard__drag") : view?.card)?.focus({ preventScroll: true });
     }
 
-    /**
-     * Persists the release version whose announcement should be collapsed.
-     * @param {string|null} version - Release version to acknowledge, or null to expand the announcement.
-     * @returns {Promise<boolean>} Whether the acknowledgement was saved and applied.
-     */
-    async acknowledgeNews(version) {
-        const next = cloneSettings(this.settings);
-        next.acknowledgedNewsVersion = version;
-        return this._commit(next, this.status, { draft: false });
-    }
-
     /** Makes shortcut activation open settings instead of navigating while its section is being edited. */
     _updateShortcutLink(view) {
         for (const target of view.body.querySelectorAll("a")) {
@@ -1362,7 +1353,7 @@ export class DashboardController {
         this.resetButton.focus({ preventScroll: true });
         window.WJ.confirm({
             title: allSizes ? this._t("resetAllConfirm", "Show all") : this._t("resetConfirm", "Restore defaults"),
-            message: (allSizes ? this._t("resetAllDescription", "Replace the overview with all available widgets in every supported size? You can then remove the variants you do not want. Widget filters in all domains and read news will also be reset. Your shortcuts and other account settings will be kept.") : this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains and read news will also be reset. Your shortcuts and other account settings will be kept.")) + (this.editor ? ` ${this._t("draftResetHint", "Changes will be saved only when you select Save in the edit toolbar.")}` : ""),
+            message: (allSizes ? this._t("resetAllDescription", "Replace the overview with all available widgets in every supported size? You can then remove the variants you do not want. Widget filters in all domains will also be reset. Your shortcuts and other account settings will be kept.") : this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains will also be reset. Your shortcuts and other account settings will be kept.")) + (this.editor ? ` ${this._t("draftResetHint", "Changes will be saved only when you select Save in the edit toolbar.")}` : ""),
             btnOkText: allSizes ? this._t("resetAllConfirm", "Show all") : this._t("resetConfirm", "Restore defaults"),
             success: () => this.reset(allSizes),
             onHidden: () => window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.enable()

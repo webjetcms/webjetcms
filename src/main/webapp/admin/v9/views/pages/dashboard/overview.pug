@@ -29,12 +29,11 @@ block content
                     statMode: window.statMode,
                     recentPagesGroupId: /*[[${layout.getConstant('systemPagesRecentPages')}]]*/ "",
                     overviewJsonUrl: /*[[${layout.getConstant('overviewJsonUrl')}]]*/ "",
-                    heroBackgroundImage: /*[[${layout.getConstant('dashboardHeroBackgroundImage')}]]*/ "/admin/skins/webjet8/assets/global/img/wj/wj9_bg.jpg"
+                    heroBackgroundImage: /*[[${layout.getConstant('dashboardHeroBackgroundImage')}]]*/ "linear-gradient(111.7deg, #031D46 0%, #073780 76.92%)"
                 },
                 labels: {
                     newsletterActive: /*[[\#{components.dmail.campaings.status.enabled}]]*/ "",
-                    changelog: WJ.parseMarkdown(announcement.replace(/\\n/g, "\n"), { link: true, imgSrcPrefix: "" }),
-                    seeCompleteChangelog: /*[[\#{admin.overview.seeCompleteChangelog}]]*/ ""
+                    changelog: WJ.parseMarkdown("\n" + announcement.replace(/\\n/g, "\n") + "\n\n", { link: true, imgSrcPrefix: "" }),
                 }
             });
 

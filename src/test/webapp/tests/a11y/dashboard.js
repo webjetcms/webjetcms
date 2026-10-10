@@ -148,11 +148,12 @@ Scenario('Dashboard controls support Space and keyboard search scope', async ({ 
     const newsToggle = '.md-dashboard-widget__news-toggle';
     focusControl(I, newsToggle);
     I.pressKey('Space');
+    I.waitForElement(`${newsToggle}[aria-expanded="true"]`, 10);
+    I.waitForFunction(() => document.activeElement.classList.contains('md-dashboard-widget__news-close'), 10);
+    await audit(I, a11y, '.md-dashboard__hero');
+    I.pressKey('Escape');
     I.waitForElement(`${newsToggle}[aria-expanded="false"]`, 10);
     I.waitForFunction(selector => document.activeElement === document.querySelector(selector), [newsToggle], 10);
-    await audit(I, a11y, '.md-dashboard__hero');
-    I.pressKey('Space');
-    I.waitForElement(`${newsToggle}[aria-expanded="true"]`, 10);
     focusControl(I, '.md-dashboard__search input[type="radio"]:checked');
     I.pressKey('ArrowRight');
     I.waitForFunction(() => document.querySelector('.md-dashboard__search input[value="docs"]').checked, 5);

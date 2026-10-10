@@ -41,7 +41,7 @@ Before(({ I, login }) => {
 Scenario('The authenticated dashboard initializes its controls and notices', async ({ I }) => {
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     I.seeNumberOfElements('#toast-container-overview', 1);
-    I.seeElement('.md-dashboard__sessions [data-widget-type="sessions"]');
+    I.seeElement('.md-dashboard__news [data-widget-type="news"]');
     I.dontSeeElement('.md-dashboard__edit-control');
 });
 
