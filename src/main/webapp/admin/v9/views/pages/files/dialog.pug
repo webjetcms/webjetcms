@@ -478,6 +478,7 @@ block content
                     input#file.form-control.elfinder-url-input.ai-field(name='file' data-ai-java-class="sk.iway.iwcm.system.elfinder.ElfinderServlet" data-ai-render-format="dt-format-image")
 
     script.
+        window.helpLink = "/redactor/files/fbrowser/README";
         let tabs = $(".tabbable > .md-tabs > ul.nav");
         if( [(${pixabayEnabled})] == true) {
             tabs.append( '<li class=\"nav-item\"><a class=\"nav-link\" onclick=\"elfinderTabClick(\'tools\')\" style\=\'cursor:pointer\' data-bs-toggle=\"tab\">[[\#{editor_dir.tools}]]</a></li>' );
