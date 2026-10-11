@@ -122,24 +122,6 @@
 
   <suppress>
     <notes><![CDATA[
-    CVE-2026-75140 describes quadratic copying of in-scope XML namespace maps
-    in XmlTreeBuilder. The resolved jsoup 1.17.2 source does not implement that
-    namespace-map tracking/copying algorithm. CMS does parse uploaded SVG through
-    ImageTools.sanitizeSvgFile; this exception is based on the exact library code,
-    not on an assumption that XML input is trusted or unreachable.
-    This is a false-positive version match for this specific mechanism. It does
-    not suppress other XML resource-exhaustion findings. Reassess on any jsoup
-    version/content change or revision of the advisory's affected mechanism.
-    Verified on 2026-10-11. References:
-    https://github.com/jhy/jsoup/blob/jsoup-1.17.2/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
-    https://github.com/jhy/jsoup/pull/2556
-    ]]></notes>
-    <packageUrl>pkg:maven/org.jsoup/jsoup@1.17.2</packageUrl>
-    <cve>CVE-2026-75140</cve>
-  </suppress>
-
-  <suppress>
-    <notes><![CDATA[
     CVE-2026-93748 / GHSA-ch52-4w7c-c8xp requires a shared HTTP cache.
     This dependency is used by make-fetch-happen in the admin build dependency
     chain, whose lib/cache/policy.js passes shared: false to CacheSemantics.
@@ -213,6 +195,45 @@
     <vulnerabilityName>GHSA-23hp-3jrh-7fpw</vulnerabilityName>
     <vulnerabilityName>GHSA-8x88-c5mf-7j5w</vulnerabilityName>
     <vulnerabilityName>GHSA-r292-9mhp-454m</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-44311 / GHSA-w22m-hvvm-xmwx requires attacker-controlled gradient
+    colors to be serialized with Fabric toSVG() and the resulting SVG to be
+    rendered as active markup. The CMS integration imports @webjetcms/tui-image-editor
+    3.15.304 in admin/v9/src/js/image-editor.js and saves raster PNG via toDataURL()
+    in getImageBlob(). Neither the integration nor the editor source calls toSVG().
+    The npm dependency resolves to Fabric 5.5.2; the editor distribution embeds
+    Fabric 5.2.4. Both copies were reviewed. This is non-applicability in this
+    integration, not a patched library or accepted residual risk.
+    Reassess if SVG export/rendering, untrusted gradient input, custom editor
+    integrations, or the editor/Fabric version changes.
+    Verified on 2026-10-11. Reference:
+    https://github.com/fabricjs/fabric.js/security/advisories/GHSA-w22m-hvvm-xmwx
+    ]]></notes>
+    <packageUrl regex="true">^pkg:npm/fabric@5\.(2\.4|5\.2)$</packageUrl>
+    <cve>CVE-2026-44311</cve>
+    <vulnerabilityName>GHSA-w22m-hvvm-xmwx</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-19504 concerns server-side resource requests when Fabric loadFromJSON()
+    processes untrusted URLs. CMS uses Fabric only in the browser image editor:
+    admin/v9/src/js/app.js lazy-loads image-editor.js, and the image-editor page
+    loads image URLs. Neither the integration nor the editor source imports
+    attacker-supplied Fabric JSON with loadFromJSON(); there is no server-side
+    Fabric rendering in this reviewed integration.
+    The npm dependency is Fabric 5.5.2 and @webjetcms/tui-image-editor 3.15.304
+    embeds Fabric 5.2.4. This is non-applicability, not a library fix.
+    Reassess if server-side rendering, Fabric JSON import, custom integrations,
+    or the editor/Fabric version changes. Verified on 2026-10-11. References:
+    https://www.zerodayinitiative.com/advisories/ZDI-26-588/
+    https://github.com/fabricjs/fabric.js/pull/11064
+    ]]></notes>
+    <packageUrl regex="true">^pkg:npm/fabric@5\.(2\.4|5\.2)$</packageUrl>
+    <cve>CVE-2026-19504</cve>
   </suppress>
 
 </suppressions>
