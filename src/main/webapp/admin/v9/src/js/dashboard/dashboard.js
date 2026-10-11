@@ -347,13 +347,14 @@ export class DashboardController {
 
     /**
      * Renders the current account's layout and active-domain filters supplied by the page.
-     * Applies defaults for an unconfigured profile, ensures mandatory types and attempts legacy bookmark import.
+     * Applies defaults for an unconfigured profile, restores empty shortcuts, ensures mandatory types and attempts legacy bookmark import.
      * @returns {Promise<void>} Resolves after bookmark import finishes; individual widget renders may still be pending.
      */
     async start() {
         this._request?.abort();
         this.settings = normalizeSettings(this.context.data.settings);
         if (!this.settings.configured) this._addDefaults();
+        if (!this.settings.items.some(item => item.type === "shortcut")) this._addDefaults(true);
         this._ensureMandatory();
         this.status.textContent = "";
         this.shortcutStatus.textContent = "";
@@ -374,10 +375,14 @@ export class DashboardController {
         return { id: createInstanceId(), type: definition.type, size: values.size || definition.defaultSize, options: { ...cloneSettings(definition.defaultOptions), ...values.options } };
     }
 
-    /** Adds available configured presets up to the instance limit, preserving configured shortcuts and singleton instances. */
-    _addDefaults() {
+    /**
+     * Adds available presets up to the instance limit, preserving configured shortcuts and singleton instances.
+     * @param {boolean} [shortcutsOnly=false] - Restores only shortcut defaults on load, including an explicitly saved empty strip.
+     */
+    _addDefaults(shortcutsOnly = false) {
         for (const preset of this.context.config?.dashboardDefaults || []) {
-            if (preset.type === "shortcut" && this.settings.shortcutsConfigured) continue;
+            if (shortcutsOnly && preset.type !== "shortcut") continue;
+            if (!shortcutsOnly && preset.type === "shortcut" && this.settings.shortcutsConfigured) continue;
             const definition = getWidget(preset.type);
             if (!definition || !this._available(definition) || this.settings.items.length >= MAX_WIDGETS) continue;
             if (!definition.multiple && this.settings.items.some(item => item.type === definition.type)) continue;

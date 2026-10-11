@@ -1157,7 +1157,7 @@ test("Welcome shortcuts and overview have independent edit controls and catalogu
     assert.equal(host.ownerDocument.querySelector('.md-dashboard__catalogue [data-widget-type="shortcut"]'), null);
 });
 
-test("Widget reset preserves shortcuts and intentionally empty shortcuts survive reload", async t => {
+test("Widget reset preserves shortcuts and an empty strip restores defaults only on reload", async t => {
     const { controller, stored } = fixture(t, { items: [item("grid"), item("link", "shortcut", "1x1", { href: "/custom/?a=1#anchor", title: "Custom" })], definitions: [shortcutDefinition], defaults: [{ type: "test" }, { type: "shortcut", options: { href: "/default/" } }], legacyBookmarksHandled: true });
     await controller.start();
     await controller.saveOptions("grid", { domainOptions: { formName: "Contact" } });
@@ -1168,12 +1168,33 @@ test("Widget reset preserves shortcuts and intentionally empty shortcuts survive
     assert.equal(controller.settings.items.find(item => item.type === "shortcut").id, linkId);
     assert.equal(controller.settings.legacyBookmarksHandled, true);
     await controller.remove(linkId);
-    await controller.start();
     assert.equal(controller.settings.items.some(item => item.type === "shortcut"), false);
     await controller.reset();
-    await controller.start();
     assert.equal(controller.settings.items.some(item => item.type === "shortcut"), false);
     assert.equal(stored().items.filter(item => item.type === "shortcut").length, 0);
+    await controller.start();
+    assert.deepEqual(copy(controller.settings.items.filter(item => item.type === "shortcut").map(item => item.options.href)), ["/default/"]);
+});
+
+test("Loading an empty shortcut section restores all defaults without replacing a saved widget layout", async t => {
+    for (const configured of [false, true]) {
+        const { controller, host, requests } = fixture(t, { configured, shortcutsConfigured: true, legacyBookmarksHandled: true,
+            items: configured ? [item("custom-autotest", "test", "3x2", { title: "Custom autotest" })] : [],
+            definitions: [shortcutDefinition], defaults: [{ type: "test", size: "2x2" },
+                { type: "shortcut", options: { href: "/admin/v9/webpages/web-pages-list/" } },
+                { type: "shortcut", options: { href: "/apps/form/admin/" } }] });
+        await controller.start();
+        const shortcuts = () => copy(controller.settings.items.filter(item => item.type === "shortcut"));
+        assert.deepEqual(shortcuts().map(item => item.options.href), ["/admin/v9/webpages/web-pages-list/", "/apps/form/admin/"]);
+        assert.equal(host.querySelector(".md-dashboard__shortcuts-empty"), null);
+        const widgets = copy(controller.settings.items.filter(item => item.type !== "shortcut"));
+        assert.equal(widgets.length, 1);
+        if (configured) assert.deepEqual(widgets, [item("custom-autotest", "test", "3x2", { title: "Custom autotest" })]);
+        assert.equal(controller.settings.legacyBookmarksHandled, true);
+        assert.equal(requests.length, 0, "Restoring defaults must not require an extra settings request");
+        await controller.start();
+        assert.equal(shortcuts().length, 2, "Reloading must not duplicate default shortcuts");
+    }
 });
 
 test("Legacy bookmarks automatically replace shortcuts in original order and clear only the migrated source", async t => {

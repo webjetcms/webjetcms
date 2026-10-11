@@ -275,7 +275,7 @@ Ak chcete skratku na konkrétny priečinok, otvorte ho vo Web stránkach a skop�
 
 Adresa môže mať napríklad tvar `/admin/v9/webpages/web-pages-list/?groupid=123`, kde `123` je ID požadovaného priečinka. Použite ID zo svojej skopírovanej adresy. Kliknutím na takúto skratku otvoríte priamo daný priečinok, aj keď je vnorený hlbšie v štruktúre webu.
 
-Krížik **×** odstráni skratku bez potvrdenia. Oznámenie ponúkne **Späť** na 8 sekúnd. Odstrániť môžete aj poslednú skratku; zobrazí sa **Žiadna skratka** a tlačidlo na pridanie. Widgety, ich filtre aj stav noviniek zostávajú zachované.
+Krížik **×** odstráni skratku bez potvrdenia. Oznámenie ponúkne **Späť** na 8 sekúnd. Odstrániť môžete aj poslednú skratku; zobrazí sa **Žiadna skratka** a tlačidlo na pridanie. Ak stránku s prázdnym zoznamom znova načítate, doplnia sa predvolené skratky **Webové stránky** a **Formuláre** podľa vašich oprávnení. Ak nemáte prístup ani k jednej z týchto častí, použije sa prvá dostupná položka menu. Widgety, ich filtre aj stav noviniek zostávajú zachované.
 
 ## Zmenené stránky, audit a monitorovanie
 
