@@ -8,7 +8,7 @@ Na úvodní obrazovce můžete rychle zkontrolovat návštěvnost, odeslané for
 
 Přehled tvoří **widgety**, tedy karty s konkrétními údaji, například grafem návštěvnosti nebo seznamem požadavků na schválení. Vyberte si ty, které využíváte, a uspořádejte je podle toho, co chcete sledovat jako první. Pomocí [zkratek](#vaše-zkratky) si otevřete často používanou část administrace nebo konkrétní složku bez hledání v menu.
 
-Při prvním otevření se podle vašich oprávnění zobrazí výchozí widgety **Návštěvnost**, **Formuláře**, **Ke schválení**, **Chyby 404**, **Pokračujte v práci**, **Odkud návštěvníci přišli**, **Nejbližší publikování** a **Newsletter**. Další widgety si můžete sami přidat. V horní části je přivítání se zkratkami a kartou novinek. Pod ním najdete systémová upozornění a vyhledávání.
+Při prvním otevření se podle vašich oprávnění zobrazí výchozí widgety **Návštěvnost**, **Formuláře**, **Ke schválení**, **Chyby 404**, **Pokračujte v práci**, **Odkud návštěvníci přišli**, **Nejbližší publikování** a **Newsletter**. Další widgety si můžete sami přidat. V horní části je přivítání se zkratkami a kartou novinek. Pod ním najdete systémová upozornění. Vyhledávání je dostupné přes tlačítko v hlavičce ze všech částí administrace.
 
 Nabídka widgetů odpovídá vašim oprávněním. Rozložení se ukládá na váš účet a je společné pro všechny domény a prohlížeče. Výběr konkrétního formuláře nebo kampaně se pamatuje zvlášť pro každou doménu.
 
@@ -181,7 +181,7 @@ WebJET CMS si prohlížeč pamatuje pomocí cookie. Každé dokončené přihlá
 
 ### Vyhledávání a pomoc
 
-Použijte jej, když chcete najít stránku v administraci nebo návod k práci s WebJET CMS. Zvolte **V administraci** nebo **V dokumentaci** a zadejte hledaný výraz. Hledání v dokumentaci otevře nové okno se zadaným výrazem. Pomoc k právě otevřené části administrace naleznete i přes kontextového nápovědy v hlavičce.
+Klepněte na tlačítko **Hledat…** v hlavičce nebo stiskněte **Ctrl+K** ve Windows, případně **⌘K** na Macu. [Rychlé vyhledávání](search/README.md) najde stránky podle názvu nebo URL a nabídne také výsledky ze souborů, položek administrace, uživatelů a textových klíčů podle vašich oprávnění. Rozsah **Dokumentace** otevře návod se zadaným výrazem v nové kartě. Pomoc k právě otevřené části administrace naleznete i přes nápovědu v hlavičce.
 
 ### Moje aktivní přihlášení
 

@@ -22,6 +22,10 @@
     <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+- [Rychlé vyhledávání](redactor/admin/search/README.md) je dostupné z hlavičky celé administrace tlačítkem **Hledat…** nebo zkratkou **Ctrl+K / ⌘K**. Nabízí návrhy stránek podle názvu a URL, výsledky z obsahu stránek, souborů, uživatelů, textových klíčů a položek menu. Vybraný výraz můžete přenést do příslušné sekce s dalšími filtry (#348).
+
+![](redactor/admin/search/quick-search.png)
+
 ### Přihlašování a ochrana účtu
 
 - WebJET CMS nově [eviduje prohlížeče, ze kterých se přihlašujete](redactor/admin/logon.md#přihlášení-z-nového-zařízení). Přihlášení z nového prohlížeče zobrazí upozornění na úvodní obrazovce a odešle email, abyste mohli rozpoznat cizí přihlášení do svého účtu. Vlastní zařízení potvrdíte emailovým odkazem nebo jednorázovým kódem přes **Byl jsem to já** (#340).

@@ -164,7 +164,7 @@ webjet-overview-dashboard a:focus-visible {
     &__shortcut-list > &__widget { --wj-dashboard-muted: #{$dashboard-muted}; --wj-dashboard-divider: #{$dashboard-divider}; --wj-dashboard-link: #{$primary-hover}; }
     &__shortcuts > &__status .text-danger { color: var(--wj-dashboard-hero-error) !important; }
     &__eyebrow { color: var(--wj-dashboard-muted); font-size: 12px; margin: 0; &::first-letter { text-transform: uppercase; } }
-    &__news, &__search { min-width: 0; }
+    &__news { min-width: 0; }
     &__news {
         --wj-dashboard-muted: var(--wj-dashboard-hero-muted);
         --wj-dashboard-link: var(--wj-dashboard-hero-link);
@@ -179,7 +179,7 @@ webjet-overview-dashboard a:focus-visible {
     }
     &__widget-content .text-muted { color: var(--wj-dashboard-muted) !important; }
 
-    &__news &__widget, &__search &__widget {
+    &__news &__widget {
         background: transparent;
         min-height: 0;
         border: 0;
@@ -194,8 +194,6 @@ webjet-overview-dashboard a:focus-visible {
     }
     &__news &__widget-body { padding: 14px 16px; }
     &__news &__widget-content { height: auto; }
-    &__search { margin-block: 18px 20px; }
-    &__search &__widget-body { padding: 8px 12px; background: var(--wj-nice-gray); border-radius: var(--wj-border-radius); }
 
     &__notices { margin-block: 0 20px; }
     &__notice-list:empty { display: none; }
@@ -1158,30 +1156,6 @@ webjet-overview-dashboard a:focus-visible {
     }
     &__news-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin-top: 4px; }
     &__news-more, &__news-toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--wj-dashboard-link); padding: 2px 0; font-size: 14px; line-height: 20px; font-weight: 400; text-decoration: none; border: 0; > .ti { margin: 0; font-size: 16px; } &:hover, &:focus-visible { color: $white; text-decoration: none; > span { text-decoration: underline; } } }
-    &__search { display: flex; align-items: center; gap: 12px; }
-    &__search-scope { display: flex; flex: 0 0 auto; gap: 4px; margin: 0; }
-    &__search fieldset { min-width: 0; flex-wrap: wrap; }
-    &__search label { cursor: pointer; }
-    &__search-input {
-        position: relative;
-        flex: 1;
-        min-width: 0;
-        .form-control { background: var(--wj-dashboard-surface); border-color: var(--wj-nice-gray-300); border-radius: var(--wj-border-radius); font-size: 13px; box-shadow: none; min-height: 36px; padding: 6px 10px 6px 38px; }
-        .form-control:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: 1px; border-radius: var(--wj-border-radius); }
-    }
-    &__search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--wj-dashboard-muted); font-size: 18px; pointer-events: none; }
-    &__search-label { display: block; padding: 6px 8px; font-size: 12px; color: var(--wj-dashboard-muted); border-radius: var(--wj-border-radius); }
-    &__search-option input:checked + &__search-label { background: var(--wj-dashboard-surface); color: var(--wj-primary); box-shadow: 0 1px 4px var(--wj-dashboard-shadow); }
-    &__search-option input:focus-visible + &__search-label { outline: 2px solid var(--wj-secondary); outline-offset: 2px; }
-    &__search-results.ui-autocomplete.ui-menu {
-        max-height: 280px;
-        max-width: 100%;
-        @include show-scrollbar;
-        li { width: 100%; white-space: normal; overflow-wrap: anywhere; }
-        li + li { border-top: 1px solid var(--wj-dashboard-divider); }
-        li > .ui-menu-item-wrapper { display: flex; padding-block: 12px; }
-    }
-
     &__pages { display: flex; flex-direction: column; list-style: none; padding: 0; margin: 0; > li + li { border-top: 1px solid var(--wj-dashboard-divider); } }
     &__page, &__page-preview {
         display: flex;
@@ -1302,7 +1276,6 @@ webjet-overview-dashboard a:focus-visible {
     }
 
     @media (max-width: ($bp-mobile - .02px)) {
-        &__search { flex-direction: column; align-items: stretch; gap: 10px; }
         &__page { gap: 10px; flex-wrap: wrap; }
         &__page-date { padding-left: 48px; width: 100%; text-align: left; }
     }

@@ -47,6 +47,23 @@ public class DashboardRecentPagesService {
      * @throws IllegalStateException if preview data cannot be loaded from the database
      */
     public Map<Integer, DocDetailsDto> getPagePreviews(Identity user, String domain, List<Integer> docIds) {
+        return getPagePreviews(user, domain, docIds, false);
+    }
+
+    /**
+     * Loads authorized previews, optionally using only cached page metadata for autocomplete.
+     * Cached previews omit the latest save date, which requires a database query.
+     *
+     * @param user user whose web page access and editing permissions are checked
+     * @param domain active domain name used to filter the pages
+     * @param docIds non-null list of at most twenty page IDs in the requested order
+     * @param cacheOnly whether to skip database enrichment of thumbnails and save dates
+     * @return previews keyed by page ID in request order, excluding inaccessible or missing pages
+     * @throws IllegalArgumentException if more than twenty page IDs are requested
+     * @throws org.springframework.security.access.AccessDeniedException if the user lacks web page access
+     * @throws IllegalStateException if requested database enrichment fails
+     */
+    public Map<Integer, DocDetailsDto> getPagePreviews(Identity user, String domain, List<Integer> docIds, boolean cacheOnly) {
         if (docIds.size() > 20) throw new IllegalArgumentException("Page preview count must not exceed 20");
         if (user == null || !user.isEnabledItem("menuWebpages")) throw new org.springframework.security.access.AccessDeniedException("Web page access is required");
         Map<Integer, DocDetailsDto> pages = new LinkedHashMap<>();
@@ -56,9 +73,13 @@ public class DashboardRecentPagesService {
             DocDetailsDto page = new DocDetailsDto();
             page.setDocId(docId);
             page.setFullPath(current.getFullPath());
+            if (cacheOnly) {
+                page.setPerexImage(previewImage(current.getPerexImage()));
+                page.setSaveDate("");
+            }
             pages.put(docId, page);
         }
-        if (pages.isEmpty()) return pages;
+        if (pages.isEmpty() || cacheOnly) return pages;
         String placeholders = String.join(",", Collections.nCopies(pages.size(), "?"));
         String sql = "SELECT d.doc_id, d.perex_image, d.date_created,"
             + " (SELECT MAX(h.save_date) FROM documents_history h WHERE h.doc_id=d.doc_id) AS save_date"

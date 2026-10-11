@@ -22,6 +22,10 @@
     <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
+- [Quick search](redactor/admin/search/README.md) is available from the header of the entire administration by the **Search…** button or the shortcut **Ctrl+K / ⌘K**. It offers page suggestions by name and URL, results from page content, files, users, text keys and menu items. You can transfer the selected term to the appropriate section with additional filters (#348).
+
+![](redactor/admin/search/quick-search.png)
+
 ### Account login and protection
 
 - WebJET CMS now [records the browsers you log in from](redactor/admin/logon.md#login-from-a-new-device). Logging in from a new browser will display a notification on the home screen and send an email so you can recognize someone else logging into your account. You can confirm your own device with an email link or a one-time code via **It was me** (#340).

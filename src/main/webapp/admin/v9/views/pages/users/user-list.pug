@@ -98,6 +98,12 @@ block content
         window.domReady.add(function () {
 
             var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.users.userdetail.UserDetailsEntity')})];
+            const searchParams = new URLSearchParams(window.location.search);
+            const searchForm = document.getElementById("usersQuickSearchFilter");
+            const searchInput = document.getElementById("usersQuickSearchText");
+            let searchText = (searchParams.get("searchText") || "").trim();
+            searchInput.value = searchText;
+            searchForm.hidden = !searchParams.has("searchText");
 
             usersDatatable = WJ.DataTable({
                 url: "/admin/rest/users",
@@ -105,7 +111,33 @@ block content
                 tabs: tabs,
                 fetchOnEdit: true,
                 fetchOnCreate: true,
-                serverSide: true
+                serverSide: true,
+                onPreXhr: function(TABLE, e, settings, data) {
+                    if (searchText) data.fixed_searchText = searchText;
+                }
+            });
+
+            function applySearchFilter() {
+                searchText = searchInput.value.trim();
+                searchInput.value = searchText;
+                const url = new URL(window.location.href);
+                if (searchText) url.searchParams.set("searchText", searchText);
+                else url.searchParams.delete("searchText");
+                window.history.replaceState(window.history.state, "", url);
+                usersDatatable.ajax.reload();
+            }
+
+            searchForm.addEventListener("submit", event => {
+                event.preventDefault();
+                applySearchFilter();
+            });
+            document.getElementById("usersQuickSearchClear").addEventListener("click", () => {
+                searchInput.value = "";
+                applySearchFilter();
+                searchInput.focus();
+            });
+            searchInput.addEventListener("search", () => {
+                if (!searchInput.value && searchText) applySearchFilter();
             });
 
             let buttonCounter = 4;
@@ -250,5 +282,14 @@ block content
             //usersDatatable.hideButton("import");
 
         });
+
+    form#usersQuickSearchFilter.mb-3(hidden)
+        label.form-label(for="usersQuickSearchText" data-th-text="\#{admin.quickSearch.usersFilter.js}")
+        .input-group
+            input#usersQuickSearchText.form-control.form-control-sm(type="search" maxlength="500" autocomplete="off")
+            button.btn.btn-sm.btn-outline-secondary(type="submit" data-th-title="\#{admin.quickSearch.search.js}" data-th-aria-label="\#{admin.quickSearch.search.js}")
+                i.ti.ti-search(aria-hidden="true")
+            button#usersQuickSearchClear.btn.btn-sm.btn-outline-secondary(type="button" data-th-title="\#{admin.quickSearch.clear.js}" data-th-aria-label="\#{admin.quickSearch.clear.js}")
+                i.ti.ti-x(aria-hidden="true")
 
     <table class="datatableInit table"></table>

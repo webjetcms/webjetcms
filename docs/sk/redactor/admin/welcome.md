@@ -8,7 +8,7 @@ Na úvodnej obrazovke môžete rýchlo skontrolovať návštevnosť, odoslané f
 
 Prehľad tvoria **widgety**, teda karty s konkrétnymi údajmi, napríklad grafom návštevnosti alebo zoznamom požiadaviek na schválenie. Vyberte si tie, ktoré využívate, a usporiadajte ich podľa toho, čo chcete sledovať ako prvé. Pomocou [skratiek](#vaše-skratky) si otvoríte často používanú časť administrácie alebo konkrétny priečinok bez hľadania v menu.
 
-Pri prvom otvorení sa podľa vašich oprávnení zobrazia predvolené widgety **Návštevnosť**, **Formuláre**, **Na schválenie**, **Chyby 404**, **Pokračujte v práci**, **Odkiaľ návštevníci prišli**, **Najbližšie publikovanie** a **Newsletter**. Ďalšie widgety si môžete sami pridať. V hornej časti je privítanie so skratkami a kartou noviniek. Pod ním nájdete systémové upozornenia a vyhľadávanie.
+Pri prvom otvorení sa podľa vašich oprávnení zobrazia predvolené widgety **Návštevnosť**, **Formuláre**, **Na schválenie**, **Chyby 404**, **Pokračujte v práci**, **Odkiaľ návštevníci prišli**, **Najbližšie publikovanie** a **Newsletter**. Ďalšie widgety si môžete sami pridať. V hornej časti je privítanie so skratkami a kartou noviniek. Pod ním nájdete systémové upozornenia. Vyhľadávanie je dostupné cez tlačidlo v hlavičke zo všetkých častí administrácie.
 
 Ponuka widgetov zodpovedá vašim oprávneniam. Rozloženie sa ukladá na vaše konto a je spoločné pre všetky domény a prehliadače. Výber konkrétneho formulára alebo kampane sa pamätá osobitne pre každú doménu.
 
@@ -181,7 +181,7 @@ WebJET CMS si prehliadač pamätá pomocou cookie. Každé dokončené prihláse
 
 ### Vyhľadávanie a pomoc
 
-Použite ho, keď chcete nájsť stránku v administrácii alebo návod na prácu s WebJET CMS. Zvoľte **V administrácii** alebo **V dokumentácii** a zadajte hľadaný výraz. Hľadanie v dokumentácii otvorí nové okno so zadaným výrazom. Pomoc k práve otvorenej časti administrácie nájdete aj cez kontextového Pomocníka v hlavičke.
+Kliknite na tlačidlo **Hľadať…** v hlavičke alebo stlačte **Ctrl+K** vo Windows, prípadne **⌘K** na Macu. [Rýchle vyhľadávanie](search/README.md) nájde stránky podľa názvu alebo URL a ponúkne aj výsledky zo súborov, položiek administrácie, používateľov a textových kľúčov podľa vašich oprávnení. Rozsah **Dokumentácia** otvorí návod so zadaným výrazom v novej karte. Pomoc k práve otvorenej časti administrácie nájdete aj cez Pomocníka v hlavičke.
 
 ### Moje aktívne prihlásenia
 

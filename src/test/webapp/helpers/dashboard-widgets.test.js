@@ -51,7 +51,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
         const source = fs.readFileSync(require.resolve('color-dialog-box'), 'utf8');
         vm.runInContext(`(function () { ${source} }).call(this);`, scope);
     }
-    for (const file of ['registry.js', 'widget-utils.js', 'security-events.js', 'device-security-dialog.js', 'charts.js', 'monitoring-live.js', 'system-widgets.js', 'session-widgets.js', 'news-widget.js', 'utility-widgets.js', 'data-widgets.js', 'shortcut-widget.js', 'widgets.js']) {
+    for (const file of ['registry.js', 'widget-utils.js', '../admin-menu.js', 'security-events.js', 'device-security-dialog.js', 'charts.js', 'monitoring-live.js', 'system-widgets.js', 'session-widgets.js', 'news-widget.js', 'utility-widgets.js', 'data-widgets.js', 'shortcut-widget.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
             .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
         const exports = { 'system-widgets.js': ['registerSystemWidgets', 'renderLoggedAdmins', 'adminMail', 'fetchLoggedAdministrators'], 'monitoring-live.js': ['readMonitoringSnapshot', 'subscribeMonitoring'] }[file];
@@ -590,7 +590,7 @@ test('Recent pages distinguish empty content from DataTable errors', async t => 
 
 test('Default widgets follow permissions and authorized menu destinations', t => {
     const { scope, context } = fixture(t, { allowed: false, menu: [] });
-    assert.deepEqual(JSON.parse(JSON.stringify(scope.getDashboardDefaults(context))).map(item => item.type), ['search', 'news']);
+    assert.deepEqual(JSON.parse(JSON.stringify(scope.getDashboardDefaults(context))).map(item => item.type), ['news']);
     assert.equal(scope.getWidget('recent-pages').isAvailable(context), false);
     assert.equal(scope.getWidget('shortcut').isAvailable(context), true);
 });
@@ -603,7 +603,7 @@ test('New profiles include only curated widgets and no more than two authorized 
     const { scope, context } = fixture(t, { menu });
     const defaults = JSON.parse(JSON.stringify(scope.getDashboardDefaults(context)));
     assert.deepEqual(defaults.map(item => item.type), [
-        'search', 'news', 'traffic', 'forms', 'approvals', 'errors',
+        'news', 'traffic', 'forms', 'approvals', 'errors',
         'recent-pages', 'referrers', 'publishing', 'newsletter', 'shortcut', 'shortcut'
     ]);
     assert.deepEqual(defaults.filter(item => item.type === 'shortcut').map(item => item.options.href), menu.slice(0, 2).map(item => item.href));
@@ -625,7 +625,7 @@ test('Default shortcuts fall back to the first authorized module when pages and 
 test('Default content previews complete the traffic row and use an even three-card second row', t => {
     const { scope, context } = fixture(t);
     const defaults = JSON.parse(JSON.stringify(scope.getDashboardDefaults(context)));
-    const grid = defaults.filter(item => !['search', 'sessions', 'news', 'shortcut'].includes(item.type));
+    const grid = defaults.filter(item => !['sessions', 'news', 'shortcut'].includes(item.type));
     assert.deepEqual(grid, [
         { type: 'traffic', size: '3x3' }, { type: 'forms', size: '1x1' },
         { type: 'approvals', size: '1x1' }, { type: 'errors', size: '1x1' },
@@ -1724,49 +1724,6 @@ test('Sessions reuse embedded data and update the snapshot and count after remov
     assert.equal(requests[0].options.method, 'POST');
     assert.equal(container.querySelector('.md-dashboard-widget__session-count').textContent, '0');
 });
-
-test('Search exposes separate scopes and changes its accessible hint', t => {
-    const { scope, context, container, window } = fixture(t, { extraWidgets: true });
-    scope.getWidget('search').render({ container, context, options: { scope: 'admin' }, instance: { id: 'search-one' } });
-    const radios = container.querySelectorAll('[type=radio]');
-    assert.equal(radios.length, 2);
-    assert.ok([...radios].every(radio => radio.closest('label')?.textContent.trim()), 'Native search scopes retain their visible accessible labels.');
-    assert.equal(container.querySelector('[type=submit]'), null);
-    assert.equal(container.querySelector('.md-dashboard-widget__search-icon').getAttribute('aria-hidden'), 'true');
-    assert.match(container.querySelector('[type=search]').getAttribute('aria-label'), /searchAdminHint/);
-    radios[1].checked = true;
-    radios[1].dispatchEvent(new window.Event('change'));
-    assert.match(container.querySelector('[type=search]').getAttribute('aria-label'), /searchDocsHint/);
-});
-
-test('Search scope clicks submit trimmed text even when selected, but empty clicks only change scope', t => {
-    const { scope, context, container, window } = fixture(t, { extraWidgets: true });
-    const opened = [];
-    window.open = (...args) => opened.push(args);
-    scope.getWidget('search').render({ container, context, options: {}, instance: { id: 'search-one' } });
-    const input = container.querySelector('[type=search]');
-    const docs = container.querySelector('[value=docs]');
-    const admin = container.querySelector('[value=admin]');
-    let submissions = 0;
-    container.querySelector('form').addEventListener('submit', () => submissions++);
-    for (const query of ['', '   ']) {
-        input.value = query;
-        docs.click();
-        assert.equal(docs.checked, true);
-        admin.click();
-        assert.equal(admin.checked, true);
-    }
-    assert.equal(submissions, 0);
-    input.value = '  title & URL  ';
-    docs.click();
-    docs.click();
-    assert.equal(submissions, 2);
-    assert.equal(opened.length, 2);
-    assert.equal(new URL(opened[0][0]).searchParams.get('q'), 'title & URL');
-    assert.equal(opened[0][1], '_blank');
-    assert.equal(opened[0][2], 'noopener');
-});
-
 
 test('An HTTP 200 session-removal rejection leaves the session visible and reports failure', async t => {
     const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [
