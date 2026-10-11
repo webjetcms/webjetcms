@@ -111,18 +111,16 @@ public class DashboardSettingsService {
 
     /**
      * Validates and replaces the shared layout and current-domain options in one transaction.
-     * The layout must include the session management widget.
      *
      * @param userId ID of the account that owns the settings
      * @param domainKey decimal root group ID identifying the active domain
      * @param settings settings to validate and persist; missing widget options are initialized in place
      * @return the supplied settings with the layout and shortcuts marked as configured
-     * @throws IllegalArgumentException if the settings are invalid or the session management widget is missing
+     * @throws IllegalArgumentException if the settings are invalid
      * @throws IllegalStateException if the settings cannot be persisted
      */
     public DashboardSettingsDto save(int userId, String domainKey, DashboardSettingsDto settings) {
         Map<String, String> records = validateAndSerialize(settings, domainKey);
-        require(settings.getItems().stream().anyMatch(item -> "sessions".equals(item.getType())), "The session management widget is required");
         Set<String> ids = new HashSet<>();
         settings.getItems().forEach(item -> ids.add(item.getId()));
         repository.replace(userId, domainKey, records, ids);
@@ -160,7 +158,6 @@ public class DashboardSettingsService {
     public DashboardSettingsDto reset(int userId, String domainKey, DashboardSettingsDto layout) {
         if (layout != null) {
             validateAndSerialize(layout, domainKey);
-            require(layout.getItems().stream().anyMatch(item -> "sessions".equals(item.getType())), "The session management widget is required");
         }
         Map<String, String> retained = repository.reset(userId, previous -> {
             DashboardSettingsDto settings = readSettings(previous, domainKey);
@@ -189,8 +186,7 @@ public class DashboardSettingsService {
 
     /**
      * Validates the settings structure and serializes it into records within the storage size limit.
-     * Missing widget option maps are initialized in place. This validation permits layouts without
-     * session management so that stored reset states can be read; save operations enforce its presence.
+     * Missing widget option maps are initialized in place. Legacy session cards remain valid but optional.
      *
      * @param settings settings to validate and serialize
      * @param domainKey decimal root group ID used to namespace domain option records

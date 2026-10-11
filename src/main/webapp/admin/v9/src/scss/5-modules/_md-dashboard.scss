@@ -236,6 +236,7 @@ webjet-overview-dashboard a:focus-visible {
     &__notice-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
     &__notice-actions > .btn { font-size: 12px; white-space: nowrap; }
     &__notice-actions > .btn-link { color: var(--wj-secondary); text-decoration: none; padding-inline: 4px; }
+    &__notice-actions > .md-dashboard__notice-report { color: var(--wj-dashboard-danger); }
     &__notice-dismiss { min-width: 24px; min-height: 24px; }
     &__notice-status { font-size: 12px; }
     &__notice-status:empty { display: none; }
