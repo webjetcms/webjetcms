@@ -47,6 +47,7 @@ Scenario('Shortcuts and widgets have independent editing modes', async ({ I }) =
     I.assertTrue(await I.executeScript(async () => {
         const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
         const next = JSON.parse(JSON.stringify(controller.settings));
+        for (const item of next.items.filter(item => item.type === 'shortcut')) delete next.domainOptions[item.id];
         next.items = [...next.items.filter(item => item.type !== 'shortcut'), {
             id: 'shortcut-editing-autotest', type: 'shortcut', size: '1x1',
             options: { source: 'url', href: '/admin/v9/', title: 'autotest' }
@@ -536,9 +537,9 @@ Scenario('Automatically import old bookmarks on load with failure recovery and s
 
 /**
  * Checks that removing shortcuts leaves widget settings and release-news choices intact. After the user
- * removes every shortcut, undo can restore the last one and an empty section survives reloading.
+ * removes every shortcut, undo can restore the last one and reloading restores the default shortcuts.
  */
-Scenario('Removing every shortcut preserves widgets and the empty section survives reload', async ({ I }) => {
+Scenario('Removing every shortcut preserves widgets and reload restores default shortcuts', async ({ I }) => {
     const before = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
     I.clickCss(`${actions} button[aria-pressed="false"]`);
     I.dontSee('Obnoviť', actions);
@@ -558,10 +559,22 @@ Scenario('Removing every shortcut preserves widgets and the empty section surviv
     I.clickCss(`${links} .md-dashboard__shortcut-remove`);
     saved(I);
     I.waitForInvisible('.md-dashboard__shortcut-toast', 10);
+    I.see('Žiadna skratka', links);
+    I.click('Hotovo', '.md-dashboard__welcome-heading');
+    I.see('Žiadna skratka', links);
     I.refreshPage();
     loaded(I);
-    I.seeElement('.md-dashboard__shortcuts-empty');
-    I.dontSeeElement(`${links} a`);
+    I.dontSeeElement('.md-dashboard__shortcuts-empty');
+    I.seeElement(`${links} a[href="/admin/v9/webpages/web-pages-list/"]`);
+    I.seeElement(`${links} a[href="/apps/form/admin/"]`);
+    const restored = await I.executeScript(() => JSON.parse(JSON.stringify(document.querySelector('webjet-overview-dashboard').dashboardController.settings)));
+    I.assertDeepEqual(restored.items.filter(item => item.type !== 'shortcut'), after.items);
+    I.assertEqual(restored.acknowledgedNewsVersion, after.acknowledgedNewsVersion);
+    I.assertEqual(restored.legacyBookmarksHandled, after.legacyBookmarksHandled);
+    for (const item of after.items) I.assertDeepEqual(restored.domainOptions[item.id], after.domainOptions[item.id]);
+    I.refreshPage();
+    loaded(I);
+    I.seeNumberOfElements(`${links} [data-instance-id]`, 2);
 });
 
 /**

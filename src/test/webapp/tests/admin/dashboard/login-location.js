@@ -1,4 +1,4 @@
-const { readDashboardBootstrap, showWidget } = require('../../../helpers/dashboard-browser');
+const { readDashboardBootstrap, openDashboardSessions } = require('../../../helpers/dashboard-browser');
 
 Feature('admin.dashboard.login-location').tag('@singlethread');
 
@@ -25,9 +25,7 @@ Scenario('Browser location appears above the backend IP in sessions and devices'
             .find(session => session.sessionId === data.currentSessions.currentSessionId);
         await I.assertEqual(current.location, 'Bratislava, SK');
         await I.assertTrue(current.deviceId > 0, 'The login must record a browser device.');
-        const widgetId = await I.grabAttributeFrom('[data-widget-type="sessions"]', 'data-instance-id');
-        await showWidget(I, widgetId);
-        await I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+        await openDashboardSessions(I);
         const sessionCell = '.md-dashboard-sessions__mine tr:has(.md-dashboard-sessions__current) .md-dashboard-sessions__ip';
         await I.see('Bratislava, SK', `${sessionCell} > span`);
         await I.see(current.remoteAddr, `${sessionCell} > small.text-muted`);

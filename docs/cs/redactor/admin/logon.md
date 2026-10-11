@@ -86,9 +86,15 @@ WebJET CMS eviduje, ze kterého prohlížeče se přihlašujete do administrace.
 
 Zařízením se zde rozumí konkrétní prohlížeč a jeho profil, nikoli celý počítač. Upozornění proto můžete obdržet i na svém běžném počítači při prvním přihlášení po zavedení evidence zařízení, po vymazání cookies nebo v anonymním okně. Běžné odhlášení zapamatování prohlížeče nezruší.
 
-Pokud přihlášení znáte, potvrďte jej odkazem **Byl jsem to já** v emailu nebo stejným tlačítkem při upozornění. Tlačítko v administraci odešle emailový kód a zobrazí pole pro jeho zadání. Pokud přihlášení neznáte, postupujte podle [návodu k zablokování zařízení](welcome.md#ak-přihlášení- neznáte).
+![](device-my-devices.png)
+
+Pokud přihlášení znáte, potvrďte jej odkazem **Byl jsem to já** v emailu nebo stejným tlačítkem při upozornění. Tlačítko v administraci odešle emailový kód a zobrazí pole pro jeho zadání.
 
 ![](device-confirm-code.png)
+
+Pokud přihlášení neznáte, postupujte podle [návodu k zablokování zařízení](welcome.md#ak-přihlášení- neznáte).
+
+![](device-block.png)
 
 Po úspěšném dvoustupňovém ověření se nezablokovaný prohlížeč potvrdí automaticky. Obdržíte informační email bez potřeby dalšího potvrzení.
 

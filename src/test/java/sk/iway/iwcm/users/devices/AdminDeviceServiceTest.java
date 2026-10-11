@@ -50,6 +50,7 @@ class AdminDeviceServiceTest {
     private static final String EVENT_ID = "42";
     private static final String TOKEN = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFG";
     private static final String HEADLESS_USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36";
+    private static final String MAC_HEADED_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
     private final DeviceService repository = mock(DeviceService.class);
     private final AdminDeviceService service = spy(new AdminDeviceService(repository, Clock.fixed(Instant.ofEpochMilli(NOW), ZoneOffset.UTC)));
     private final Identity user = mock(Identity.class);
@@ -225,18 +226,32 @@ class AdminDeviceServiceTest {
         assertDeviceRecorded();
     }
 
-    /** The locally verified macOS E2E browser is also excluded on the fixed test hosts. */
-    @Test
-    void skipsMacHeadlessUserAgent() {
+    /** Both locally verified macOS E2E browser modes skip device recording on a fixed test host. */
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36",
+        MAC_HEADED_USER_AGENT
+    })
+    void skipsMacTestUserAgents(String userAgent) {
         prepareHeadlessLogin("localhost");
         request.removeHeader("User-Agent");
-        request.addHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/131.0.6778.33 Safari/537.36");
+        request.addHeader("User-Agent", userAgent);
 
         AdminDeviceService.recordSuccessfulLogin(user, request, response);
 
         verifyNoInteractions(repository);
         verify(service, never()).sendNotification(any(), any(), any());
         assertEquals(0, response.getCookies().length);
+    }
+
+    /** The headed macOS E2E browser remains subject to detection outside the fixed test hosts. */
+    @Test
+    void recordsMacHeadedUserAgentOutsideFixedHosts() {
+        prepareHeadlessLogin("cms.example.com");
+        request.removeHeader("User-Agent");
+        request.addHeader("User-Agent", MAC_HEADED_USER_AGENT);
+
+        assertDeviceRecorded();
     }
 
     /** Legacy checks read only the current account's block and never start an email challenge. */

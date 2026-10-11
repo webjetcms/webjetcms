@@ -38,13 +38,7 @@ function closeDialog(I) {
     I.waitForDetached(dialog, 10);
 }
 
-Scenario('Overview, catalogue and widget settings', async ({ I, Document }) => {
-    I.clickCss('.md-dashboard-widget__news-toggle');
-    I.waitForVisible('.is-news-collapsed .md-dashboard-widget__news-summary', 10);
-    I.waitForVisible('div.toast-container .toast-close-button', 10);
-    Document.notifyClose();
-    I.waitForInvisible('div.toast-container .toast', 10);
-    I.moveCursorTo('.ly-header');
+Scenario('Overview, catalogue and widget settings @current', async ({ I, Document }) => {
     Document.screenshot('/redactor/admin/dashboard.png');
 
     showOverview(I);

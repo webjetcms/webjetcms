@@ -6,7 +6,7 @@ Pozadie uvítacieho panelu a označenie prostredia nastavíte cez **Nastavenia �
 
 | Premenná | Predvolená hodnota | Význam |
 | --- | --- | --- |
-| `dashboardHeroBackgroundImage` | `/admin/skins/webjet8/assets/global/img/wj/wj9_bg.jpg` | Obrázok pozadia uvítacieho panelu. Prázdna alebo neplatná hodnota obrázok skryje. |
+| `dashboardHeroBackgroundImage` | `linear-gradient(111.7deg, #031D46 0%, #073780 76.92%)` | Pozadie uvítacieho panela: CSS gradient alebo cesta k obrázku. Prázdna alebo neplatná hodnota použije predvolený modrý prechod. |
 | `dashboardEnvironmentName` | `{ENVIRONMENT_NAME}` | Text označenia. Podporuje makrá aj vlastný text. Zobrazuje najviac 8 znakov veľkými písmenami; celý názov zostane v tooltipe. Prázdna hodnota označenie skryje aj z titulku karty. |
 | `dashboardEnvironmentIcon` | `auto` | Ikona podľa prostredia alebo názov ikony Tabler, napr. `rocket` alebo `ti-database`. Hodnota `none` alebo prázdna hodnota ikonu skryje. Pri neexistujúcom názve sa ikona nezobrazí. |
 | `dashboardEnvironmentColor` | `auto` | Farba z palety podľa prostredia a štýlu. Vlastná farba `#RGB` či `#RRGGBB` automaticky dostane čierny alebo biely text a ikonu s kontrastom aspoň 4,5 : 1. |
@@ -18,7 +18,13 @@ Pozadie uvítacieho panelu a označenie prostredia nastavíte cez **Nastavenia �
 
 Názov sa pridáva aj do titulku karty prehliadača a prístupného názvu hlavičky, napríklad `[TEST] Webové stránky | WebJET CMS`. Ikona je voliteľná, text zostáva povinný. Na produkcii môžete označenie vypnúť prázdnou hodnotou `dashboardEnvironmentName`.
 
-Obrázok pozadia môže používať lokálnu cestu začínajúcu `/` alebo úplnú HTTP(S) URL bez prihlasovacích údajov. Adresy začínajúce `//`, adresy so spätnými lomkami alebo riadiacimi znakmi a iné protokoly nie sú povolené. Maximálna dĺžka adresy je 1024 znakov.
+Pozadie zmeníte priamo hodnotou `dashboardHeroBackgroundImage`, napríklad:
+
+- `linear-gradient(135deg, #102A43 0%, #486581 100%)` – vlastné farby a smer prechodu. Podporované sú aj radiálne, kužeľové a opakované CSS gradienty.
+- `/images/company/header.jpg` – obrázok z webového sídla.
+- `https://cdn.example.com/header.jpg` – obrázok z úplnej HTTP(S) adresy.
+
+Obrázok nahradí gradient a pokryje celý panel so zachovaním pomeru strán (`cover`), zarovnaný na stred a spodný okraj. Cestu zadávajte priamo, bez obalu `url(...)`. HTTP(S) adresa nesmie obsahovať prihlasovacie údaje. Adresy začínajúce `//`, adresy so spätnými lomkami alebo riadiacimi znakmi a iné protokoly nie sú povolené. Maximálna dĺžka adresy je 1024 znakov.
 
 ## Automatické označenie prostredia
 
@@ -90,3 +96,16 @@ Tabuľka `user_login_devices` uchováva v stĺpci `location` iba text mesta a kr
 Prehliadač volá API priamo, aby služba videla verejnú IP jeho pripojenia aj pri prístupe do CMS cez LAN. Mesto môže patriť firemnej centrále, proxy alebo VPN bráne. IP zobrazená pod mestom naďalej pochádza z požiadavky prijatej CMS a môže byť interná.
 
 Volanie používa HTTPS, `referrerPolicy: "no-referrer"` a `credentials: "omit"`. Neposiela prihlasovacie údaje, identifikátory používateľa či relácie ani internú IP. Poskytovateľ však vidí verejnú IP, [hlavičku `Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Origin) s doménou a portom CMS a bežné hlavičky prehliadača. Jeho [zásady súkromia](https://ipwhois.io/privacy) pripúšťajú logovanie prevádzkových údajov, využitie Cloudflare a spracovanie v rôznych krajinách; neuvádzajú presnú dobu uchovávania API logov ani záruku spracovania iba v EÚ. Ak to pravidlá organizácie neumožňujú, nastavte `DISABLED`. Pri obmedzenej CSP povoľte v `connect-src` len používaný endpoint `https://ipwho.is` alebo `https://ipwhois.pro`.
+
+### Novinky vydania
+
+Text `admin.overview.changelog` zapisujte ako Markdown nadpis s verziou a zoznam bodov. Každý bod začína tučným názvom, za ktorým nasleduje pomlčka a opis. V súbore `.properties` používajte oddeľovač `\\n`; editor prekladových kľúčov môže obsahovať bežné konce riadkov.
+
+```markdown
+## WebJET CMS 2026.18
+
+- **Schvaľovanie zmien priečinkov** – Zmeny priečinkov môžu prejsť viacúrovňovým schvaľovaním.
+- **Testovanie prístupnosti** – Kontroly sú súčasťou automatizovaných testov.
+```
+
+Počet pri odkaze **Čo je nové** sa odvodí zo zoznamu. Starší text v odsekoch zostáva čitateľný. V `user_settings_admin` sa pre každého používateľa a jazyk uchováva záznam `dashboard.news.<jazyk>` s odtlačkom textu a dátumom prvého zobrazenia (`firstSeen`). Zmena textu obnoví štítok **Nové** na 30 dní. Uloženie ani reset rozloženia dashboardu tento záznam nemení.

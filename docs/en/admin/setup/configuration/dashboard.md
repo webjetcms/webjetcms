@@ -6,7 +6,7 @@ You can set the welcome panel background and environment label via **Settings �
 
 | Variable | Default value | Meaning |
 | --- | --- | --- |
-| `dashboardHeroBackgroundImage` | `/admin/skins/webjet8/assets/global/img/wj/wj9_bg.jpg` | The background image for the welcome panel. An empty or invalid value will hide the image. |
+| `dashboardHeroBackgroundImage` | `linear-gradient(111.7deg, #031D46 0%, #073780 76.92%)` | Welcome bar background: CSS gradient or image path. Empty or invalid value will use the default blue gradient. |
 | `dashboardEnvironmentName` | `{ENVIRONMENT_NAME}` | Label text. Supports macros and custom text. Displays up to 8 characters in uppercase; the full name remains in the tooltip. An empty value will also hide the label from the tab title. |
 | `dashboardEnvironmentIcon` | `car` | Icon by environment or name of the Tabler icon, e.g. `rocket` or `ti-database`. A value of `none` or an empty value hides the icon. If the name does not exist, the icon will not be displayed. |
 | `dashboardEnvironmentColor` | `car` | Color from the palette according to the environment and style. Custom color `#RGB` or `#RRGGBB` automatically gets black or white text and icon with a contrast of at least 4.5:1. |
@@ -18,7 +18,13 @@ You can set the welcome panel background and environment label via **Settings �
 
 The name is also added to the browser tab title and accessible header name, for example `[TEST] Webové stránky | WebJET CMS`. The icon is optional, the text remains mandatory. In production, you can disable the label with an empty value of `dashboardEnvironmentName`.
 
-The background image can use a local path starting with `/` or a full HTTP(S) URL without credentials. Addresses starting with `//`, addresses with backslashes or control characters, and other protocols are not allowed. The maximum length of an address is 1024 characters.
+You can change the background directly with the value `dashboardHeroBackgroundImage`, for example:
+
+- `linear-gradient(135deg, #102A43 0%, #486581 100%)` – custom colors and gradient direction. Radial, tapered, and repeating CSS gradients are also supported.
+- `/images/company/header.jpg` – image from the website.
+- `https://cdn.example.com/header.jpg` – image from full HTTP(S) address.
+
+The image will replace the gradient and cover the entire panel, maintaining the aspect ratio (`cover`), aligned to the center and bottom edge. Enter the path directly, without the `url(...)` wrapper. The HTTP(S) address must not contain login information. Addresses starting with `//`, addresses with backslashes or control characters, and other protocols are not allowed. The maximum length of the address is 1024 characters.
 
 ## Automatic environment labeling
 
@@ -90,3 +96,16 @@ The `user_login_devices` table stores only the city and country text in the `loc
 The browser calls the API directly so that the service can see the public IP of its connection even when accessing the CMS via LAN. The city may belong to the corporate headquarters, a proxy or a VPN gateway. The IP displayed under the city still comes from the request received by the CMS and may be internal.
 
 The call uses HTTPS, `referrerPolicy: "no-referrer"` and `credentials: "omit"`. It does not send login credentials, user or session identifiers, or internal IP. However, the provider sees the public IP, [header `Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Origin) with the CMS domain and port, and normal browser headers. Its [privacy policy](https://ipwhois.io/privacy) allows for traffic logging, Cloudflare usage, and processing in different countries; it does not specify the exact retention period for API logs or guarantee processing only in the EU. If your organization's policies do not allow this, set `DISABLED`. For a restricted CSP, only allow the endpoint `https://ipwho.is` or `https://ipwhois.pro` in `connect-src`.
+
+### Release news
+
+Write the text `admin.overview.changelog` as a Markdown title with a version and a list of points. Each point begins with a bold title, followed by a dash and a description. In the file `.properties`, use the separator `\\n` ; the translation key editor can include regular line breaks.
+
+```markdown
+## WebJET CMS 2026.18
+
+- **Schvaľovanie zmien priečinkov** – Zmeny priečinkov môžu prejsť viacúrovňovým schvaľovaním.
+- **Testovanie prístupnosti** – Kontroly sú súčasťou automatizovaných testov.
+```
+
+The number in the **What's New** link is derived from the list. Older text in paragraphs remains readable. A record `user_settings_admin` is kept for each user and language in `dashboard.news.<jazyk>` with a text fingerprint and the date of first view (`firstSeen`). Changing the text will reset the **New** label for 30 days. Saving or resetting the dashboard layout does not change this record.

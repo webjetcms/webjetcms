@@ -683,17 +683,9 @@ export function showActiveSessions(context, options = {}) {
     }
 }
 
-/** Registers the fixed welcome-panel list and optional personal-session and administrator widgets. */
+/** Registers optional personal-session and administrator widgets. */
 export function registerSessionWidgets() {
     const headerAction = (instance, context) => showActiveSessions(context);
-    registerWidget({
-        type: 'sessions', titleKey: 'admin.dashboard.sessions.js', icon: 'ti-devices', sizes: ['2x3'], mandatory: true, headerAction,
-        render({ container, context, signal }) {
-            const data = context.data.currentSessions;
-            container.append(node('span', 'badge md-dashboard-widget__session-count', number(flattenSessions(data).length)));
-            sessionList(container, data, context, signal);
-        }
-    });
     registerWidget({
         type: 'my-sessions', titleKey: 'admin.dashboard.sessions.js', descriptionKey: 'admin.dashboard.my-sessions.description.js', icon: 'ti-devices',
         sizes: ['1x1', '2x2', '2x3'], defaultSize: '2x2', multiple: true, headerAction,
