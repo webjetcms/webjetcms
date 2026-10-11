@@ -790,7 +790,9 @@ task writePom() {
                 if (artifactVersion == null) {
                     throw new GradleException("Cannot resolve version for ${groupId}:${artifactName}")
                 }
-                it.appendNode("version", artifactVersion)
+                Node addedVersion = it.appendNode("version", artifactVersion)
+                it.children().remove(addedVersion)
+                it.children().add(it.children().indexOf(artifactId) + 1, addedVersion)
             }
             Node versionNode = it.get("version").first()
             def version = versionNode.text()
