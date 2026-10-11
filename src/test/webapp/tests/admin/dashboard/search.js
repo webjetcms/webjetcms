@@ -57,6 +57,7 @@ Scenario('Header search opens from the dashboard and app pages and restores keyb
     I.pressKey('Escape');
 
     I.amOnPage('/apps/form/admin/');
+    I.executeScript(() => window.adminSearchContext.documentationSearchUrl = '');
     I.waitForVisible('button.js-search-toggler', 10);
     const modifier = await I.executeScript(() => {
         document.querySelector('button.js-search-toggler').focus();
@@ -148,6 +149,59 @@ Scenario('Documentation waits for Enter for short queries including a single cha
     I.stopMockingRoute(documentationRoute);
 });
 
+/** Documentation keeps one in-flight request, its results and its expanded AI answer across scopes. */
+Scenario('Documentation reuses pending and completed results when changing scopes', async ({ I }) => {
+    const answer = Array.from({ length: 8 }, (_, index) => `Paragraph ${index + 1}: **Banner campaigns** group advertising content and let editors set publication dates.`).join('\n\n');
+    I.mockRoute(documentationRoute, route => route.fulfill({ status: 200, contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ answer,
+            results: Array.from({ length: 5 }, (_, index) => ({ title: `autotest cached documentation ${index}`,
+                url: `/latest/#/sk/redactor/apps/banner/?result=${index}`, snippet: 'A reusable documentation result.' })) }) }));
+    I.executeScript(endpoint => {
+        window.adminSearchContext.documentationSearchUrl = endpoint;
+        const originalFetch = window.fetch;
+        window.autotestDocumentationRequests = 0;
+        window.autotestDocumentationAborted = false;
+        window.fetch = (url, options) => {
+            if (!String(url).startsWith(endpoint)) return originalFetch(url, options);
+            window.autotestDocumentationRequests++;
+            return new Promise((resolve, reject) => {
+                window.autotestReleaseDocumentation = () => resolve(originalFetch(url, options));
+                options.signal.addEventListener('abort', () => {
+                    window.autotestDocumentationAborted = true;
+                    reject(new DOMException('Aborted', 'AbortError'));
+                }, { once: true });
+            });
+        };
+    }, documentationEndpoint);
+    I.fillField(input, 'banner campaigns autotest');
+    I.pressKey('Enter');
+    I.waitForFunction(() => typeof window.autotestReleaseDocumentation === 'function', 15);
+    I.seeElement(`${scopes} [data-scope="documentation"][aria-busy="true"] .md-quick-search__spinner`);
+    I.clickCss(`${scopes} [data-scope="documentation"]`);
+    I.clickCss(`${scopes} [data-scope="all"]`);
+    I.clickCss(`${scopes} [data-scope="documentation"]`);
+    I.assertEqual(await I.executeScript(() => window.autotestDocumentationRequests), 1,
+        'Changing scopes must reuse the documentation request already in flight.');
+    I.assertFalse(await I.executeScript(() => window.autotestDocumentationAborted),
+        'Changing scopes must not abort the documentation request.');
+    I.executeScript(() => window.autotestReleaseDocumentation());
+    I.waitForVisible(documentationResult, 10);
+    I.seeNumberOfElements(documentationResult, 5);
+    I.seeElement(`${scopes} [data-scope="documentation"][aria-busy="false"] .md-quick-search__count`);
+    I.dontSeeElement(`${scopes} [data-scope="documentation"] .md-quick-search__spinner`);
+    I.clickCss(`${documentation} .md-quick-search__answer button[aria-expanded="false"]`);
+    I.see('Paragraph 8:', `${documentation} .md-quick-search__answer`);
+    I.clickCss(`${scopes} [data-scope="all"]`);
+    I.seeNumberOfElements(documentationResult, 3);
+    I.seeElement(`${documentation} .md-quick-search__answer button[aria-expanded="true"]`);
+    I.clickCss(`${scopes} [data-scope="documentation"]`);
+    I.seeNumberOfElements(documentationResult, 5);
+    I.see('Paragraph 8:', `${documentation} .md-quick-search__answer`);
+    I.assertEqual(await I.executeScript(() => window.autotestDocumentationRequests), 1,
+        'Completed documentation results and the AI answer must be reused without another request.');
+    I.stopMockingRoute(documentationRoute);
+});
+
 /** The entire endpoint is configurable and each supported locale narrows both API filters. */
 Scenario('Documentation sends localized filters to the configured endpoint without requiring an AI answer', async ({ I }) => {
     const requests = [];
@@ -182,6 +236,7 @@ Scenario('Documentation sends localized filters to the configured endpoint witho
 Scenario('Documentation formats Markdown and expandable AI answers without horizontal overflow', async ({ I }) => {
     I.executeScript(() => localStorage.removeItem('translate'));
     I.amOnPage('/admin/v9/?userlngr=true');
+    I.executeScript(() => window.adminSearchContext.documentationSearchUrl = '');
     openSearch(I);
     const answer = Array.from({ length: 12 }, (_, index) => `Paragraph ${index + 1}: **Banner campaigns** group related advertising content and let editors set publication dates.`).join('\n\n');
     const snippet = '## Campaign setup\n\nChoose **banner campaigns** and follow these steps:\n\n- Add a campaign\n- Set its publication dates\n\n'
@@ -296,6 +351,7 @@ Scenario('Translation key results open and filter the translation table from any
     I.seeNumberOfElements('#datatableInit tbody tr', 1);
     I.dontSeeElement(modal);
 
+    I.executeScript(() => window.adminSearchContext.documentationSearchUrl = '');
     openSearch(I);
     I.fillField(input, secondKey);
     I.seeElement(`${scopes} [data-scope="translationKeys"][aria-pressed="true"]`);
@@ -371,7 +427,7 @@ Scenario('All scopes show a short preview and scoped pagination preserves keyboa
     I.mockRoute(fulltext, route => {
         const request = new URL(route.request().url());
         const files = request.searchParams.get('searchType') === 'files';
-        const size = Number(request.searchParams.get('size') || 20);
+        const size = Number(request.searchParams.get('size') || 10);
         const page = Number(request.searchParams.get('page') || 0);
         const rows = files ? Array.from({ length: 25 }, (_, index) => ({ id: index + 1, docId: index + 1,
             title: `autotest-file-${index}.txt`, externalLink: `/files/autotest-file-${index}.txt`, dateCreated: 1700000000000 }))
@@ -382,11 +438,14 @@ Scenario('All scopes show a short preview and scoped pagination preserves keyboa
     });
     I.executeScript(() => {
         const originalFetch = window.fetch;
+        window.autotestFileRequests = [];
         window.fetch = (url, options) => {
             if (!String(url).includes('/admin/rest/search/all?') || !String(url).includes('searchType=files')) return originalFetch(url, options);
+            const request = new URL(url, location.href);
+            window.autotestFileRequests.push({ size: Number(request.searchParams.get('size')), page: Number(request.searchParams.get('page')) });
+            if (window.autotestFileRequests.length > 1) return originalFetch(url, options);
             return new Promise(resolve => {
                 window.autotestReleaseFiles = () => {
-                    window.fetch = originalFetch;
                     resolve(originalFetch(url, options));
                 };
             });
@@ -394,6 +453,13 @@ Scenario('All scopes show a short preview and scoped pagination preserves keyboa
     });
     I.fillField(input, 'autotest-file');
     I.waitForFunction(() => typeof window.autotestReleaseFiles === 'function', 10);
+    for (const source of ['files', 'users']) {
+        I.seeElement(`${scopes} [data-scope="${source}"][aria-busy="true"] .md-quick-search__spinner`);
+    }
+    I.saveScreenshot('quick-search-loading-desktop.png');
+    I.resizeWindow(390, 844);
+    I.saveScreenshot('quick-search-loading-mobile.png');
+    I.wjSetDefaultWindowSize();
     const loadingPosition = await I.executeScript(searchPosition);
     I.executeScript(() => window.autotestReleaseFiles());
     const group = '.md-quick-search__group[data-source="files"]';
@@ -401,18 +467,33 @@ Scenario('All scopes show a short preview and scoped pagination preserves keyboa
     const resultPosition = await I.executeScript(searchPosition);
     I.assertEqual(await I.grabNumberOfVisibleElements(`${group} .md-quick-search__result`), 3);
     I.clickCss(`${group} .md-quick-search__group-heading button`);
-    I.waitForFunction(() => document.querySelectorAll('.md-quick-search__group[data-source="files"] .md-quick-search__result').length === 20, 10);
+    I.waitForFunction(() => document.querySelectorAll('.md-quick-search__group[data-source="files"] .md-quick-search__result').length === 10, 10);
+    I.assertDeepEqual(await I.executeScript(() => window.autotestFileRequests), [{ size: 10, page: 0 }],
+        'Opening a scope must reveal the ten cached rows without another request.');
     const expandedPosition = await I.executeScript(searchPosition);
     for (const [phase, position] of [['loading', loadingPosition], ['results', resultPosition], ['expanded scope', expandedPosition]]) {
         I.assertTrue(Math.abs(position.panel - emptyPosition.panel) <= 1, `The panel must keep its opening position during ${phase}.`);
         I.assertTrue(Math.abs(position.input - emptyPosition.input) <= 1, `The search input must remain stationary during ${phase}.`);
     }
     I.seeElement(`${scopes} [data-scope="files"][aria-pressed="true"]`);
+    I.seeElement(`${scopes} [data-scope="files"][aria-busy="false"] .md-quick-search__count`);
+    I.dontSeeElement(`${scopes} [data-scope="files"] .md-quick-search__spinner`);
+    I.waitForVisible(`${group} .md-quick-search__more[aria-disabled="false"]`, 10);
+    I.clickCss(`${group} .md-quick-search__more`);
+    I.waitForFunction(() => document.querySelectorAll('.md-quick-search__group[data-source="files"] .md-quick-search__result').length === 20, 10);
+    I.waitForFunction(() => document.activeElement.getAttribute('href') === '/files/autotest-file-10.txt', 10);
     I.waitForVisible(`${group} .md-quick-search__more[aria-disabled="false"]`, 10);
     I.clickCss(`${group} .md-quick-search__more`);
     I.waitForFunction(() => document.querySelectorAll('.md-quick-search__group[data-source="files"] .md-quick-search__result').length === 25, 10);
     I.waitForFunction(() => document.activeElement.getAttribute('href') === '/files/autotest-file-20.txt', 10);
     I.dontSeeElement(`${group} .md-quick-search__more`);
+    I.clickCss(`${scopes} [data-scope="all"]`);
+    I.seeNumberOfElements(`${group} .md-quick-search__result`, 3);
+    I.clickCss(`${scopes} [data-scope="files"]`);
+    I.seeNumberOfElements(`${group} .md-quick-search__result`, 25);
+    I.assertDeepEqual(await I.executeScript(() => window.autotestFileRequests), [
+        { size: 10, page: 0 }, { size: 10, page: 1 }, { size: 10, page: 2 }
+    ], 'Pagination must request ten rows at a time and preserve loaded pages across scope changes.');
 
     // A late source response must preserve which group owns a focused duplicate page.
     I.mockRoute(lookup, route => route.fulfill({ status: 200, contentType: 'application/json',
@@ -428,6 +509,7 @@ Scenario('All scopes show a short preview and scoped pagination preserves keyboa
         };
     });
     I.clickCss(`${scopes} [data-scope="docs"]`);
+    I.fillField(input, 'autotest-duplicate');
     I.waitForVisible(`${suggestions} .md-quick-search__result`, 10);
     I.waitForVisible('.md-quick-search__group[data-source="docs"] .md-quick-search__result', 10);
     I.waitForFunction(() => typeof window.autotestResolveUsers === 'function', 10);
@@ -469,8 +551,8 @@ Scenario('Failed file search can be retried without losing the query', async ({ 
     I.stopMockingRoute(fulltext);
 });
 
-/** Prevents executable result text and verifies in-flight suggestions are cancelled when leaving their scope. */
-Scenario('Suggestions render as text and leaving the page scope aborts pending lookup', async ({ I }) => {
+/** Prevents executable result text and preserves in-flight suggestions until the dialog closes. */
+Scenario('Suggestions render as text and scope changes reuse pending lookup', async ({ I }) => {
     I.mockRoute(lookup, route => route.fulfill({ status: 200, contentType: 'application/json',
         body: JSON.stringify([{ doc_id: 13, value: 13, title: '<img src=x onerror=alert(1)>', label: '/autotest.html' }]) }));
     I.clickCss(`${scopes} [data-scope="docs"]`);
@@ -481,10 +563,10 @@ Scenario('Suggestions render as text and leaving the page scope aborts pending l
     I.executeScript(() => {
         const originalFetch = window.fetch;
         window.autotestLookupAborted = false;
-        window.autotestLookupStarted = false;
+        window.autotestLookupRequests = 0;
         window.fetch = (url, options) => {
             if (!String(url).includes('/_doc_autocomplete.jsp')) return originalFetch(url, options);
-            window.autotestLookupStarted = true;
+            window.autotestLookupRequests++;
             return new Promise((resolve, reject) => options.signal.addEventListener('abort', () => {
                 window.autotestLookupAborted = true;
                 reject(new DOMException('Aborted', 'AbortError'));
@@ -492,12 +574,15 @@ Scenario('Suggestions render as text and leaving the page scope aborts pending l
         };
     });
     I.fillField(input, 'pending-autotest');
-    I.waitForFunction(() => window.autotestLookupStarted, 10);
+    I.waitForFunction(() => window.autotestLookupRequests === 1, 10);
     I.clickCss(`${scopes} [data-scope="documentation"]`);
-    I.waitForFunction(() => window.autotestLookupAborted, 10);
     I.dontSeeElement(suggestions);
+    I.assertFalse(await I.executeScript(() => window.autotestLookupAborted), 'Changing scopes must keep the pending lookup alive.');
+    I.clickCss(`${scopes} [data-scope="docs"]`);
+    I.assertEqual(await I.executeScript(() => window.autotestLookupRequests), 1, 'Returning to pages must reuse the pending lookup.');
     I.pressKey('Escape');
     I.waitForInvisible(modal, 10);
+    I.waitForFunction(() => window.autotestLookupAborted, 10);
     openSearch(I);
     I.seeElement(`${scopes} [data-scope="all"][aria-pressed="true"]`);
 });
@@ -552,6 +637,7 @@ Scenario('Logout after removing translation permission', ({ I }) => {
 /** Search remains available for menu/docs while page scopes and their endpoint enforce permission. */
 Scenario('Content permissions hide unavailable sources without hiding global search', async ({ I }) => {
     I.amOnPage('/admin/v9/?removePerm=menuWebpages,users.edit_admins,users.edit_public_users');
+    I.executeScript(() => window.adminSearchContext.documentationSearchUrl = '');
     openSearch(I);
     I.dontSeeElement(`${scopes} [data-scope="docs"]`);
     I.dontSeeElement(`${scopes} [data-scope="files"]`);

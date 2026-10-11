@@ -146,7 +146,7 @@ class QuickSearch {
 
     changed() {
         this.query = this.input.value.trim();
-        if (this.query.length > 0) this.search(true);
+        if (this.query.length > 0) this.search();
         else {
             this.cancel();
             this.states = {};
@@ -157,13 +157,13 @@ class QuickSearch {
     selectScope(scope) {
         if (scope === this.scope) return;
         this.scope = scope;
-        if (this.query.length > 0) this.search();
-        else this.render();
+        if (this.query.length > 0) this.prepareScopeSources();
+        this.render();
         this.input.focus();
     }
 
     /** Debounces autocomplete by 300 ms, REST by 1000 ms and eligible documentation queries by 2000 ms. */
-    search(debounce = false) {
+    search() {
         this.cancel();
         this.controller = new AbortController();
         this.states = {};
@@ -172,25 +172,26 @@ class QuickSearch {
             .sort((a, b) => Number(words.every(word => normalize(b.title).includes(word))) - Number(words.every(word => normalize(a.title).includes(word))));
         if (this.query.length >= 2) this.states.admin = { items: entries, total: entries.length };
         const sources = this.query.length >= 2 ? this.scopes.filter(scope => ['docs', 'files', 'users', 'translationKeys'].includes(scope)) : [];
-        if (window.adminSearchContext?.documentationSearchUrl && ['all', 'documentation'].includes(this.scope)) {
-            if (this.scope === 'documentation') sources.unshift('documentation');
-            else sources.push('documentation');
-        }
-        if (this.query.length >= 2 && this.scopes.includes('docs') && ['all', 'docs'].includes(this.scope)) sources.unshift('suggestions');
         sources.forEach(source => { this.states[source] = { items: [], loading: true, pending: true }; });
-        if (this.states.documentation) {
-            this.states.documentation.ready = false;
-            this.states.documentation.waiting = this.query.length < 8;
-            this.states.documentation.loading = !this.states.documentation.waiting;
-            if (!this.states.documentation.waiting) this.documentationTimer = setTimeout(() => this.loadRest(true), 2000);
-        }
+        this.prepareScopeSources(true);
         this.render();
-        if (sources.includes('suggestions')) {
+        this.timer = setTimeout(() => this.loadRest(), 1000);
+    }
+
+    /** Adds optional sources once per query, preserving cached results and active requests across scopes. */
+    prepareScopeSources(debounce = false) {
+        if (!this.states.documentation && window.adminSearchContext?.documentationSearchUrl && ['all', 'documentation'].includes(this.scope)) {
+            const waiting = this.query.length < 8;
+            const state = { items: [], pending: true, ready: false, waiting, loading: !waiting };
+            if (this.scope === 'documentation') this.states = { documentation: state, ...this.states };
+            else this.states.documentation = state;
+            if (!waiting) this.documentationTimer = setTimeout(() => this.loadRest(true), 2000);
+        }
+        if (!this.states.suggestions && this.query.length >= 2 && this.scopes.includes('docs') && ['all', 'docs'].includes(this.scope)) {
+            this.states.suggestions = { items: [], loading: true, pending: true };
             if (debounce) this.suggestionsTimer = setTimeout(() => this.load('suggestions'), 300);
             else this.load('suggestions');
         }
-        if (debounce) this.timer = setTimeout(() => this.loadRest(), 1000);
-        else this.loadRest();
     }
 
     /** Drains ready sources sequentially; Enter or the documentation timer releases the AI request. */
@@ -226,7 +227,7 @@ class QuickSearch {
             url.searchParams.set('directory', `/${language}/`);
             return url.href;
         }
-        const params = new URLSearchParams({ searchText: this.query, size: this.scope === source ? '20' : '3', page: String(page), sort: 'id,asc' });
+        const params = new URLSearchParams({ searchText: this.query, size: '10', page: String(page), sort: 'id,asc' });
         if (source === 'suggestions') return `/admin/skins/webjet6/_doc_autocomplete.jsp?${new URLSearchParams({ editable: 'true', cacheOnly: 'true', url: this.query })}`;
         if (source === 'users') return `/admin/rest/users/all?${params}`;
         if (source === 'translationKeys') { params.set('isSearchVersion', 'true'); return `/admin/v9/settings/translation-keys/all?${params}`; }
@@ -235,7 +236,7 @@ class QuickSearch {
         return `/admin/rest/search/all?${params}`;
     }
 
-    /** Ignores responses from prior queries, scopes or closed dialogs, including failed requests. */
+    /** Ignores responses from prior queries or closed dialogs, including failed requests. */
     async load(source, page = 0) {
         const generation = this.generation;
         const state = this.states[source];
@@ -282,15 +283,22 @@ class QuickSearch {
         this.clear.hidden = !this.input.value;
         for (const [scope, chip] of this.chips) {
             const state = this.states[scope];
+            const loading = scope === 'all' ? Object.values(this.states).some(result => result.loading)
+                : Boolean(state?.loading || (scope === 'docs' && this.states.suggestions?.loading));
             chip.replaceChildren(node('span', '', text(scope)));
-            if (state?.total != null && !state.error) chip.append(node('span', 'md-quick-search__count', state.total));
+            if (loading) {
+                const spinner = node('span', 'spinner-border md-quick-search__spinner');
+                spinner.setAttribute('aria-hidden', 'true');
+                chip.append(spinner, node('span', 'visually-hidden', text('loading')));
+            } else if (state?.total != null && !state.error) chip.append(node('span', 'md-quick-search__count', state.total));
+            chip.setAttribute('aria-busy', String(loading));
             chip.setAttribute('aria-pressed', String(scope === this.scope));
-            chip.classList.toggle('md-quick-search__scope--empty', state?.total === 0 && !state.error && !state.answer);
+            chip.classList.toggle('md-quick-search__scope--empty', state?.total === 0 && !state.error && !state.answer && !loading);
             if (scope === 'docs') chip.title = text('countsHint');
         }
         this.results.replaceChildren();
         if (!this.query) this.renderHistory();
-        else if (this.query.length < 2 && !this.states.documentation) this.results.append(node('p', 'md-quick-search__empty', text('minLength')));
+        else if (this.query.length < 2 && (!this.states.documentation || !['all', 'documentation'].includes(this.scope))) this.results.append(node('p', 'md-quick-search__empty', text('minLength')));
         else {
             const sources = this.query.length < 2 ? ['documentation'] : this.scope === 'all' ? ['suggestions', ...this.scopes.filter(scope => scope !== 'all')] : this.scope === 'docs' ? ['suggestions', 'docs'] : [this.scope];
             let hasResults = false;
@@ -561,7 +569,7 @@ class QuickSearch {
             else rows[next].focus();
         } else if (event.target === this.input && event.key === 'Enter') {
             event.preventDefault();
-            if (!event.repeat && this.query.length > 0) this.loadRest(true);
+            if (!event.repeat && this.query.length > 0) this.loadRest(['all', 'documentation'].includes(this.scope));
         }
     }
 }

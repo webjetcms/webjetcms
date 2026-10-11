@@ -59,6 +59,14 @@
         &--empty:not([aria-pressed="true"]) { color: var(--wj-gray-text); background: $white; }
     }
     &__count { font-size: 11px; }
+    &__spinner {
+        width: 12px;
+        height: 12px;
+        flex-shrink: 0;
+        border-width: 2px;
+
+        @media (prefers-reduced-motion: reduce) { animation: none; }
+    }
     &__results { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 6px 12px 12px; }
     &__group { margin: 4px 0 12px; }
     &__group-heading {
