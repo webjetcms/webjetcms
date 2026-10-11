@@ -785,11 +785,17 @@ task writePom() {
             Node artifactId = it.get("artifactId").first()
             def groupId = it.get("groupId").first().value().first()
             def artifactName = artifactId.value().first()
-            def version = it.get("version").first().value().first()
+            def artifactVersion = resolvedVersionMap.get(groupId + ":" + artifactName)
+            if (it.get("version").isEmpty()) {
+                if (artifactVersion == null) {
+                    throw new GradleException("Cannot resolve version for ${groupId}:${artifactName}")
+                }
+                it.appendNode("version", artifactVersion)
+            }
+            Node versionNode = it.get("version").first()
+            def version = versionNode.text()
             //println "Checking: groupId: "+groupId+" artifactId:"+artifactName+" version="+version+" scope="+it.get("scope")
 
-            def artifactVersion = resolvedVersionMap.get(groupId + ":" + artifactName)
-            Node versionNode = it.get("version").first()
             if (artifactVersion!=null) {
                 def mostRecent = mostRecentVersion([artifactVersion, version]);
                 //println "artifact version=" + artifactVersion + " mostRecent=" + mostRecent
