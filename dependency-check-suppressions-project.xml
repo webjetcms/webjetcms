@@ -53,9 +53,12 @@
   </suppress>
   <suppress>
     <notes><![CDATA[
-    file name: jquery.min.js
+    Applies only to the bundled jQuery 3.3.1 in the eshop template.
+    Templates are excluded from Ant client distributions, but remain present
+    in the development WAR. This is a distribution-scope exception, not a
+    false positive or a patched library. Reassess if this template is distributed.
     ]]></notes>
-    <packageUrl regex="true">^pkg:javascript/jquery@.*$</packageUrl>
+    <filePath regex="true">.*[\\/]src[\\/]main[\\/]webapp[\\/]templates[\\/]eshop[\\/]shop[\\/]assets[\\/]js[\\/]plugins[\\/]jquery\.min\.js$</filePath>
     <cve>CVE-2019-11358</cve>
   </suppress>
 
