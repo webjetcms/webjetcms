@@ -259,6 +259,7 @@ Scenario('All scopes show a short preview and scoped pagination preserves keyboa
         I.assertTrue(Math.abs(position.input - emptyPosition.input) <= 1, `The search input must remain stationary during ${phase}.`);
     }
     I.seeElement(`${scopes} [data-scope="files"][aria-pressed="true"]`);
+    I.waitForVisible(`${group} .md-quick-search__more[aria-disabled="false"]`, 10);
     I.clickCss(`${group} .md-quick-search__more`);
     I.waitForFunction(() => document.querySelectorAll('.md-quick-search__group[data-source="files"] .md-quick-search__result').length === 25, 10);
     I.waitForFunction(() => document.activeElement.getAttribute('href') === '/files/autotest-file-20.txt', 10);
@@ -300,6 +301,7 @@ Scenario('Failed file search can be retried without losing the query', async ({ 
     I.waitForVisible(`${modal} .md-quick-search__retry`, 10);
     I.see('Vyhľadávanie je dočasne nedostupné', modal);
     I.stopMockingRoute(fulltext);
+    I.waitForVisible(`${modal} .md-quick-search__retry[aria-disabled="false"]`, 10);
     I.clickCss(`${modal} .md-quick-search__retry`);
     I.waitForVisible('.md-quick-search__group[data-source="files"] .md-quick-search__result', 15);
     I.see('for-bankers.txt', modal);
@@ -349,6 +351,52 @@ Scenario('Suggestions render as text and leaving the page scope aborts pending l
     I.waitForInvisible(modal, 10);
     openSearch(I);
     I.seeElement(`${scopes} [data-scope="all"][aria-pressed="true"]`);
+});
+
+/** Skips the denied source while the remaining real REST searches finish one after another. */
+Scenario('Sequential search completes allowed sources without translation permission', async ({ I }) => {
+    I.amOnPage('/admin/v9/?removePerm=edit_text');
+    openSearch(I);
+    I.assertFalse(await I.executeScript(() => WJ.hasPermission('edit_text')),
+        'The translation permission must be removed for this scenario.');
+    I.dontSeeElement(`${scopes} [data-scope="translationKeys"]`);
+    I.executeScript(() => {
+        const originalFetch = window.fetch;
+        window.autotestSearchRequests = [];
+        window.fetch = (url, options) => {
+            const request = new URL(url, location.href);
+            const source = request.pathname === '/admin/rest/search/all' ? request.searchParams.get('searchType')
+                : request.pathname === '/admin/rest/users/all' ? 'users'
+                : request.pathname === '/admin/v9/settings/translation-keys/all' ? 'translationKeys' : null;
+            if (!source) return originalFetch(url, options);
+            window.autotestSearchRequests.push({ source, event: 'start' });
+            return originalFetch(url, options).then(response => {
+                window.autotestSearchRequests.push({ source, event: 'complete', status: response.status });
+                return response;
+            });
+        };
+    });
+    I.fillField(input, 'banner');
+    I.pressKey('Enter');
+    I.waitForVisible('.md-quick-search__group[data-source="docs"] .md-quick-search__result', 20);
+    I.waitForFunction(() => document.querySelector('#admin-quick-search-results').getAttribute('aria-busy') === 'false', 20);
+    I.assertDeepEqual(await I.executeScript(() => window.autotestSearchRequests), [
+        { source: 'docs', event: 'start' },
+        { source: 'docs', event: 'complete', status: 200 },
+        { source: 'files', event: 'start' },
+        { source: 'files', event: 'complete', status: 200 },
+        { source: 'users', event: 'start' },
+        { source: 'users', event: 'complete', status: 200 }
+    ], 'Allowed REST sources must complete in order without requesting translation keys.');
+    for (const source of ['docs', 'files', 'users']) {
+        I.seeElement(`${scopes} [data-scope="${source}"] .md-quick-search__count`);
+    }
+    I.dontSeeElement(`${modal} .md-quick-search__retry`);
+    I.seeCurrentUrlEquals('/admin/v9/?removePerm=edit_text');
+});
+
+Scenario('Logout after removing translation permission', ({ I }) => {
+    I.logout();
 });
 
 /** Search remains available for menu/docs while page scopes and their endpoint enforce permission. */

@@ -181,12 +181,16 @@ class QuickSearch {
         else this.loadRest();
     }
 
-    /** Flushes pending REST requests without restarting autocomplete or already requested sources. */
-    loadRest() {
+    /** Loads permitted REST sources sequentially without restarting an active query or autocomplete. */
+    async loadRest() {
         clearTimeout(this.timer);
-        Object.entries(this.states).forEach(([source, state]) => {
-            if (source !== 'suggestions' && state.pending) this.load(source);
-        });
+        const generation = this.generation;
+        if (this.restGeneration === generation) return;
+        this.restGeneration = generation;
+        for (const [source, state] of Object.entries(this.states)) {
+            if (generation !== this.generation) return;
+            if (source !== 'suggestions' && state.pending) await this.load(source);
+        }
     }
 
     requestUrl(source, page) {
@@ -294,6 +298,8 @@ class QuickSearch {
 
     renderGroup(source, state) {
         const section = this.group(source, text(source === 'docs' ? 'contentResults' : source));
+        const loading = source === 'suggestions' ? state.loading
+            : Object.entries(this.states).some(([name, result]) => name !== 'suggestions' && result.loading);
         if (this.scope === 'all' && state.total > 3) {
             const all = button(text('allResults', state.total), 'btn-link', () => this.selectScope(source));
             all.dataset.focusKey = `scope-${source}`;
@@ -312,16 +318,16 @@ class QuickSearch {
                 error.setAttribute('role', 'alert');
                 error.append(icon('ti-alert-circle'), node('span', '', text('unavailable')));
             }
-            const retry = button(text('retry'), 'btn-outline-secondary btn-sm md-quick-search__retry', () => { if (!state.loading) this.load(source, state.requestedPage); });
+            const retry = button(text('retry'), 'btn-outline-secondary btn-sm md-quick-search__retry', () => { if (!loading) this.load(source, state.requestedPage); });
             retry.dataset.focusKey = `retry-${source}`;
-            retry.setAttribute('aria-disabled', String(state.loading));
+            retry.setAttribute('aria-disabled', String(loading));
             error.append(retry);
             section.append(error);
         }
         if (this.scope === source && !state.last && !state.error && !state.retrying && state.page != null) {
-            const more = button(text('more'), 'btn-link md-quick-search__more', () => { if (!state.loading) this.load(source, state.page + 1); });
+            const more = button(text('more'), 'btn-link md-quick-search__more', () => { if (!loading) this.load(source, state.page + 1); });
             more.dataset.focusKey = `more-${source}`;
-            more.setAttribute('aria-disabled', String(state.loading));
+            more.setAttribute('aria-disabled', String(loading));
             section.append(more);
         }
     }
