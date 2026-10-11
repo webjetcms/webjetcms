@@ -372,10 +372,23 @@ class QuickSearch {
                 error.setAttribute('role', 'alert');
                 error.append(icon('ti-alert-circle'), node('span', '', text('unavailable')));
             }
-            const retry = button(text('retry'), 'btn-outline-secondary btn-sm md-quick-search__retry', () => { if (!loading) this.load(source, state.requestedPage); });
-            retry.dataset.focusKey = `retry-${source}`;
-            retry.setAttribute('aria-disabled', String(loading));
-            error.append(retry);
+            if (source === 'documentation') {
+                let href;
+                try {
+                    const endpoint = new URL(window.adminSearchContext.documentationSearchUrl, window.location.origin);
+                    href = documentationUrl('/', endpoint.href);
+                } catch (error) { /* An invalid endpoint has no documentation origin to open. */ }
+                if (href) {
+                    const link = this.resultLink(text('documentationAll'), href, 'btn btn-outline-secondary btn-sm md-quick-search__documentation-link', true);
+                    link.append(node('span', 'visually-hidden', text('newTab')));
+                    error.append(link);
+                }
+            } else {
+                const retry = button(text('retry'), 'btn-outline-secondary btn-sm md-quick-search__retry', () => { if (!loading) this.load(source, state.requestedPage); });
+                retry.dataset.focusKey = `retry-${source}`;
+                retry.setAttribute('aria-disabled', String(loading));
+                error.append(retry);
+            }
             section.append(error);
         }
         if (this.scope === source && !state.last && !state.error && !state.retrying && state.page != null) {

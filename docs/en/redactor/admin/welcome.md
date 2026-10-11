@@ -8,7 +8,7 @@ From the home screen, you can quickly check traffic, submitted forms, or pages a
 
 The overview is made up of **widgets**, i.e. cards with specific data, such as a traffic graph or a list of approval requests. Choose the ones you use and organize them according to what you want to monitor first. Use [shortcuts](#your-shortcuts) to open a frequently used part of the administration or a specific folder without searching in the menu.
 
-When you first open it, the default widgets **Visit**, **Forms**, **For Approval**, **404 Errors**, **Continue Working**, **Where Visitors Came From**, **Upcoming Publish**, and **Newsletter** will be displayed based on your permissions. You can add additional widgets yourself. At the top is a welcome with shortcuts and a news tab. Below it, you will find system notifications and search.
+When you first open it, the default widgets **Visit**, **Forms**, **For Approval**, **404 Errors**, **Continue working**, **Where visitors came from**, **Next publication** and **Newsletter** will be displayed according to your permissions. You can add other widgets yourself. At the top is a welcome with shortcuts and a news tab. Below it you will find system notifications. Search is available via the button in the header from all parts of the administration.
 
 The widget menu corresponds to your permissions. The layout is saved to your account and is common across all domains and browsers. The selection of a specific form or campaign is remembered separately for each domain.
 
@@ -181,7 +181,7 @@ WebJET CMS remembers the browser using a cookie. Each completed login will exten
 
 ### Search and help
 
-Use it when you want to find a page in the administration or instructions for working with WebJET CMS. Select **In administration** or **In documentation** and enter the search term. Searching in documentation will open a new window with the entered term. You can also find help for the currently opened part of the administration via the context-sensitive Help in the header.
+Click the **Search…** button in the header or press **Ctrl+K** on Windows or **⌘K** on Mac. [Quick Search](search/README.md) finds pages by name or URL and also offers results from files, administration items, users, and text keys according to your permissions. The **Documentation** scope opens the manual with the entered term in a new tab. You can also find help for the currently opened administration section via Help in the header.
 
 ### My active logins
 

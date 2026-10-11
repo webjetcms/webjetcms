@@ -13,7 +13,7 @@ At the top is the header:
 contains the following options:
 
 - Link to open help.
-- ![](icon-search.png ":no-zoom") Icon to open the [Search](search/README.md) page
+- **Search…** button to open [quick search](search/README.md). You can also open the dialog with the shortcut **Ctrl+K** on Windows or **⌘K** on Mac.
 - Name of the currently logged in user, click on the name to display the following options:
   - Profile - edit your own profile (name, email... - after changing your profile, you need to log out and log in again).
   - Two-step verification - the ability to activate two-step verification using the ```Google Authenticate``` application when logging into the administration. This increases the security of your account, because in addition to the password, you also need to enter a code from your mobile device to log in. We recommend setting it for all accounts through which user accounts and rights can be managed. If you use authentication against the `ActiveDirectory/SSO` server, you can disable the menu item by setting the conf. variable `2factorAuthEnabled` to the value `false`.

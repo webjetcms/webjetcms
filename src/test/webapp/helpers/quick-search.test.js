@@ -593,7 +593,7 @@ test('Shortening the query or closing cancels scheduled documentation', async t 
     }
 });
 
-test('Documentation keeps its active request, retry state and completed answer across scope switches', async t => {
+test('Documentation keeps its active request, error fallback and completed answer across scope switches', async t => {
     const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
     const select = scope => f.controller.scopeBar.querySelector(`[data-scope="${scope}"]`).click();
     f.type('banner setup');
@@ -606,10 +606,12 @@ test('Documentation keeps its active request, retry state and completed answer a
     await f.respond(request, { error: 'Service unavailable' }, 503);
     select('all');
     select('documentation');
-    const retry = f.controller.results.querySelector('[data-source="documentation"] .md-quick-search__retry');
-    assert.ok(retry, 'The cached error must remain available for explicit retry.');
+    const fallback = f.controller.results.querySelector('[data-source="documentation"] .md-quick-search__documentation-link');
+    assert.equal(fallback.href, 'https://manual.example.com/', 'The cached error must retain its documentation fallback.');
+    assert.equal(f.controller.results.querySelector('.md-quick-search__retry'), null);
     assert.equal(f.rest().length, 1, 'Switching scopes must not retry failed AI requests automatically.');
-    retry.click();
+    f.type('new banner setup');
+    f.enter();
     await f.respond(f.rest()[1], { results: [documentationResult], answer: 'Cached documentation answer.' });
     select('admin');
     assert.equal(f.controller.results.querySelector('.md-quick-search__answer'), null);
@@ -774,7 +776,7 @@ test('WebJET Markdown output strips injected attributes and entity-obfuscated de
     }
 });
 
-test('Documentation request failures and invalid responses can be retried, including answer-only results', async t => {
+test('Documentation failures link to the configured origin instead of retrying, and new queries can succeed', async t => {
     for (const [label, response, status] of [
         ['HTTP failure', {}, 503], ['Invalid results', { results: {} }, 200], ['Null result', { results: [null] }, 200]
     ]) {
@@ -784,35 +786,40 @@ test('Documentation request failures and invalid responses can be retried, inclu
             f.type('banner');
             f.enter();
             await f.respond(f.rest()[0], response, status);
-            const retry = f.controller.results.querySelector('[data-source="documentation"] .md-quick-search__retry');
-            assert.ok(retry);
-            assert.equal(retry.getAttribute('aria-disabled'), 'false');
-            retry.click();
+            const fallback = f.controller.results.querySelector('[data-source="documentation"] .md-quick-search__documentation-link');
+            assert.equal(fallback.href, 'https://manual.example.com/', 'The fallback must discard the configured endpoint path and query.');
+            assert.equal(fallback.target, '_blank');
+            assert.ok(fallback.rel.split(' ').includes('noopener'));
+            assert.equal(f.controller.results.querySelector('.md-quick-search__retry'), null);
+            fallback.click();
+            f.enter();
+            f.advance(3000);
+            assert.equal(f.rest().length, 1, 'The documentation fallback and repeated Enter must not retry the failed request.');
+            f.type('another banner');
+            f.enter();
             assert.equal(f.rest().length, 2);
             await f.respond(f.rest()[1], { results: [], answer: 'A useful **answer** without source chunks.' });
-            assert.equal(f.controller.results.querySelector('.md-quick-search__retry'), null);
+            assert.equal(f.controller.results.querySelector('.md-quick-search__documentation-link'), null);
             assert.match(f.controller.results.querySelector('.md-quick-search__answer').textContent, /A useful answer/);
             assert.equal(f.controller.results.querySelector('.md-quick-search__empty'), null);
         });
     }
 });
 
-test('A malformed documentation endpoint displays a recoverable error without sending a request', async t => {
-    const adminSearchContext = { documentationSearchUrl: 'http://[' };
-    const f = fixture(t, deniedRestPermissions, { adminSearchContext });
-    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
-    f.type('banner');
-    f.enter();
-    assert.equal(f.requests.length, 0);
-    const retry = f.controller.results.querySelector('[data-source="documentation"] .md-quick-search__retry');
-    assert.ok(retry);
-    assert.equal(retry.getAttribute('aria-disabled'), 'false');
-    adminSearchContext.documentationSearchUrl = documentationSearchUrl;
-    retry.click();
-    assert.equal(f.requests.length, 1);
-    await f.respond(f.rest()[0], { results: [documentationResult] });
-    assert.equal(f.controller.results.querySelector('.md-quick-search__retry'), null);
-    assert.match(f.controller.results.textContent, /Banner guide/);
+test('Malformed and non-HTTP documentation endpoints display inert errors without requests or fallback links', async t => {
+    for (const endpoint of ['http://[', 'javascript:alert(1)', 'data:text/html,unsafe']) {
+        await t.test(endpoint, t => {
+            const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl: endpoint } });
+            f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+            f.type('banner');
+            f.enter();
+            assert.equal(f.requests.length, 0);
+            const error = f.controller.results.querySelector('[data-source="documentation"] [role="alert"]');
+            assert.ok(error);
+            assert.equal(error.querySelector('a, button'), null, 'An invalid endpoint must not produce a retry or unsafe destination.');
+            assert.equal(f.controller.results.querySelector('.md-quick-search__documentation-link'), null);
+        });
+    }
 });
 
 test('Long AI answers expand and collapse while retaining keyboard focus on the toggle', async t => {
