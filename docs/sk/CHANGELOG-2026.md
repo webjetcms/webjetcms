@@ -263,6 +263,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- Dependency Check - aktualizované Swagger UI z `5.32.8` na `5.32.15` (DOMPurify `3.4.13`), `@tootallnate/once` z `2.0.0` na `2.0.1` a statická kópia Moment.js pre výber dátumov z `2.29.4` na `2.31.0`. Ikona kopírovania cesty API sa zobrazuje pri prejdení myšou alebo ovládaní klávesnicou a neprekrýva názov operácie.
 - Dependency Check - aktualizované `logback-core/classic 1.6.5` (s tranzitívnou závislosťou `slf4j-api 2.0.19`), `mariadb-java-client 3.5.10` a `postgresql 42.7.14`. PostgreSQL ovládač po novom odmietne chybné nastavenie `requireAuth`, ktoré zakazuje všetky autentifikačné metódy alebo neobsahuje žiadnu metódu; pri vlastnom nastavení použite zoznam povolených metód.
 
 - Dependency Check - aktualizované knižnice Jackson na vetvy `2.22.3` a `3.2.3` so zjednotením verzií modulov cez BOM. V administrácii aktualizované `moment 2.31.0`, `@xmldom/xmldom 0.9.12`, `brace-expansion 1.1.21/2.1.7/5.0.12`, `ip-address 10.7.1`, `http-cache-semantics 4.3.0`, `source-map-js 1.2.2`, `svgo 3.3.5`, `tar 7.5.21` a `undici 6.28.1`. Knižnica `brace-expansion 5.0.12` vyžaduje pri zostavení Node.js 20 alebo 22 a novší; Node.js 18 už nepodporuje.
