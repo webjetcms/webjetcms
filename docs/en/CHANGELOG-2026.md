@@ -22,7 +22,7 @@
     <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-- [Quick search](redactor/admin/search/README.md) is available from the header of the entire administration by clicking the **Search…** button or by pressing **Ctrl+K / ⌘K**. It offers page suggestions by name and URL, results from page content, files, users, text keys and menu items. You can transfer the selected term to the appropriate section with additional filters (#348).
+- [Quick search](redactor/admin/search/README.md) is available from the header of the entire administration by the **Search…** button or the shortcut **Ctrl+K / ⌘K**. It offers page suggestions by name and URL, results from page content, files, users, text keys and menu items. You can transfer the selected term to the appropriate section with additional filters (#348).
 
 ![](redactor/admin/search/quick-search.png)
 
