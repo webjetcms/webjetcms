@@ -112,12 +112,54 @@ Scenario('Cached suggestions match accented titles and keyboard selection opens 
     I.fillField(input, 'obchodny uder');
     I.waitForVisible(`${suggestions} .md-quick-search__result`, 10);
     I.clickCss(input);
+    I.pressKey('Enter');
+    I.seeCurrentUrlEquals('/admin/v9/');
+    I.seeElement(modal);
+    I.assertEqual(await I.executeScript(() => document.activeElement.id), 'admin-quick-search-input',
+        'Enter in the search input must keep focus without opening a result.');
     I.pressKey('ArrowDown');
     I.seeInField(input, 'obchodny uder');
     I.pressKey('Enter');
     I.seeInCurrentUrl('/admin/v9/webpages/web-pages-list/?docid=13');
     DTE.waitForEditor();
     DTE.cancel();
+});
+
+/** Opens translation results in their native table and reapplies the key filter from that page. */
+Scenario('Translation key results open and filter the translation table from any admin page', ({ I, DT }) => {
+    const firstKey = 'admin.dashboard.notice.browserMigration.description.js';
+    const secondKey = 'admin.dashboard.shortcutIcon.chart.js';
+    const translationPage = '/admin/v9/settings/translation-keys/';
+    const group = '.md-quick-search__group[data-source="translationKeys"]';
+    const keyFilter = '#datatableInit_wrapper .dt-scroll-headInner input.dt-filter-key';
+    const firstUrl = `${translationPage}?key=${encodeURIComponent(firstKey)}`;
+    const secondUrl = `${translationPage}?key=${encodeURIComponent(secondKey)}`;
+
+    I.fillField(input, 'štatistika');
+    I.clickCss(`${scopes} [data-scope="translationKeys"]`);
+    I.waitForVisible(`${group} a[href="${firstUrl}"]`, 15);
+    I.clickCss(`${group} a[href="${firstUrl}"]`);
+    I.waitUrlEquals(firstUrl, 10);
+    I.waitForValue(keyFilter, firstKey, 10);
+    DT.waitForLoader();
+    I.waitForText(firstKey, 10, '#datatableInit tbody');
+    I.seeInField(keyFilter, firstKey);
+    I.seeNumberOfElements('#datatableInit tbody tr', 1);
+    I.dontSeeElement(modal);
+
+    openSearch(I);
+    I.fillField(input, secondKey);
+    I.seeElement(`${scopes} [data-scope="translationKeys"][aria-pressed="true"]`);
+    I.waitForVisible(`${group} a[href="${secondUrl}"]`, 15);
+    I.clickCss(`${group} a[href="${secondUrl}"]`);
+    I.waitUrlEquals(secondUrl, 10);
+    I.waitForValue(keyFilter, secondKey, 10);
+    DT.waitForLoader();
+    I.waitForText(secondKey, 10, '#datatableInit tbody');
+    I.seeInField(keyFilter, secondKey);
+    I.seeNumberOfElements('#datatableInit tbody tr', 1);
+    I.dontSee(firstKey, '#datatableInit tbody');
+    I.dontSeeElement(modal);
 });
 
 /** Checks cache-only lookup responses still enforce their JSON response contract. */

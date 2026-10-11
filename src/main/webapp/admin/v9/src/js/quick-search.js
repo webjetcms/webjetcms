@@ -137,16 +137,19 @@ class QuickSearch {
 
     cancel() {
         clearTimeout(this.timer);
+        clearTimeout(this.suggestionsTimer);
         this.controller?.abort();
         this.generation++;
     }
 
     changed() {
-        this.cancel();
         this.query = this.input.value.trim();
-        this.states = {};
-        this.render();
-        if (this.query.length >= 2) this.timer = setTimeout(() => this.search(), 300);
+        if (this.query.length >= 2) this.search(true);
+        else {
+            this.cancel();
+            this.states = {};
+            this.render();
+        }
     }
 
     selectScope(scope) {
@@ -157,8 +160,8 @@ class QuickSearch {
         this.input.focus();
     }
 
-    /** Fetches independent sources in parallel; each retains its own loading/error state. */
-    search() {
+    /** Starts a query, optionally delaying autocomplete by 300 ms and REST sources by 1000 ms. */
+    search(debounce = false) {
         this.cancel();
         this.controller = new AbortController();
         this.states = {};
@@ -168,9 +171,22 @@ class QuickSearch {
         this.states.admin = { items: entries, total: entries.length };
         const sources = this.scopes.filter(scope => ['docs', 'files', 'users', 'translationKeys'].includes(scope));
         if (this.scopes.includes('docs') && ['all', 'docs'].includes(this.scope)) sources.unshift('suggestions');
-        sources.forEach(source => { this.states[source] = { items: [], loading: true }; });
+        sources.forEach(source => { this.states[source] = { items: [], loading: true, pending: true }; });
         this.render();
-        sources.forEach(source => this.load(source));
+        if (sources.includes('suggestions')) {
+            if (debounce) this.suggestionsTimer = setTimeout(() => this.load('suggestions'), 300);
+            else this.load('suggestions');
+        }
+        if (debounce) this.timer = setTimeout(() => this.loadRest(), 1000);
+        else this.loadRest();
+    }
+
+    /** Flushes pending REST requests without restarting autocomplete or already requested sources. */
+    loadRest() {
+        clearTimeout(this.timer);
+        Object.entries(this.states).forEach(([source, state]) => {
+            if (source !== 'suggestions' && state.pending) this.load(source);
+        });
     }
 
     requestUrl(source, page) {
@@ -187,6 +203,7 @@ class QuickSearch {
     async load(source, page = 0) {
         const generation = this.generation;
         const state = this.states[source];
+        state.pending = false;
         const controlKey = state.error ? `retry-${source}` : page ? `more-${source}` : null;
         const firstNewRow = page ? this.results.querySelector(`[data-source="${source}"]`)?.querySelectorAll('.md-quick-search__result').length || 0 : 0;
         state.retrying = state.error;
@@ -337,7 +354,7 @@ class QuickSearch {
         } else if (source === 'translationKeys') {
             title = item.key;
             detail = item.fieldA || item.originalValueA || '';
-            href = advancedLink(source, item.key);
+            href = `/admin/v9/settings/translation-keys/?key=${encodeURIComponent(item.key)}`;
         } else {
             title = item.title;
             detail = item.path;
@@ -445,8 +462,7 @@ class QuickSearch {
             else rows[next].focus();
         } else if (event.target === this.input && event.key === 'Enter') {
             event.preventDefault();
-            const rows = [...this.results.querySelectorAll('.md-quick-search__result')];
-            rows.find(row => this.scope === 'documentation' || !row.closest('[data-source="documentation"]'))?.click();
+            if (!event.repeat && this.query.length >= 2) this.loadRest();
         }
     }
 }
