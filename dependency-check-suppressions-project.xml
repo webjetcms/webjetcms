@@ -61,4 +61,41 @@
     <cpe>cpe:/a:jquery:jquery</cpe>
   </suppress>
 
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-53914 affects unsafe deserialization of KAPT incremental build cache
+    metadata. kotlin-stdlib 2.4.0, included through webp-imageio 0.11.0, contains
+    none of the affected KAPT classes. This checkout has no KAPT tasks or
+    configurations; the Kotlin Gradle plugin API used by AspectJ does not enable KAPT.
+    The generic jetbrains:kotlin CPE incorrectly associates this CVE with the stdlib.
+    This is a false-positive suppression, not a mitigation or accepted residual risk.
+    Reassess when the artifact version/content changes or KAPT is introduced, and
+    evaluate any Kotlin build tooling separately from this standard-library artifact.
+    Verified on 2026-10-11 against the resolved JAR and Gradle dependency/task graph.
+    References:
+    https://github.com/advisories/GHSA-r937-wjx7-w2jp
+    https://github.com/JetBrains/kotlin/commit/bf51df665b458fda7c3eaf436c4d88dc119d7ec6
+    ]]></notes>
+    <packageUrl>pkg:maven/org.jetbrains.kotlin/kotlin-stdlib@2.4.0</packageUrl>
+    <cve>CVE-2026-53914</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2022-37830 affects stored XSS in the media editor of WebJET CMS before
+    8.6.896. WebJET AI and WebJET AI Local are separate Java AI libraries, not
+    WebJET CMS releases. Their resolved 2.0.4 JARs do not contain the CMS media
+    editor or MediaDataController. The webjet:webjet_cms CPE is a product mismatch.
+    This rule suppresses only this CVE on these two AI artifacts; it does not
+    suppress findings on WebJET CMS or assert that the CMS media editor is safe.
+    Reassess when the artifact version/content changes or the advisory scope changes.
+    Verified on 2026-10-11 against both resolved JARs and their Maven metadata.
+    References:
+    https://citadelo.com/download/CVE-2022-37830.pdf
+    https://github.com/webjetcms/webjet-ai
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/com\.webjetcms/webjet-ai(-local)?@2\.0\.4$</packageUrl>
+    <cve>CVE-2022-37830</cve>
+  </suppress>
+
 </suppressions>

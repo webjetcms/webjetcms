@@ -262,6 +262,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- Dependency Check - doplnené výnimky pre nesprávne priradené zraniteľnosti: `CVE-2026-53914` v `kotlin-stdlib 2.4.0` sa týka zostavovania cez KAPT a `CVE-2022-37830` v `webjet-ai 2.0.4` a `webjet-ai-local 2.0.4` sa týka odlišného produktu WebJET CMS. Výnimky platia iba pre uvedené balíky, verzie a CVE; pri zmene verzie alebo spôsobu použitia ich treba prehodnotiť. Verzie knižníc a správanie aplikácie sa nemenia.
 - Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
 - AI asistenti - pridaná ochrana pred `prompt injection` útokmi s oddelením systémových inštrukcií od používateľského obsahu a detekciou kódovaných vstupov (#58549).
 - HTML sanitizácia - `AllowSafeHtmlAttributeConverter` zachováva na všetkých doteraz povolených HTML elementoch atribúty `role`, `aria-*`, `data-*`, `id`, `title`, `lang`, `dir` (`ltr`, `rtl`, `auto`) a `tabindex` (`-1`, `0`). Umožňuje tak používať atribúty prístupnosti a vlastné dátové atribúty (#317).
