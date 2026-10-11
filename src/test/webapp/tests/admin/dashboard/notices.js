@@ -5,6 +5,7 @@ Feature('admin.dashboard.notices').tag('@singlethread');
 const preferencesRoute = '**/admin/rest/admin-settings/';
 const codeRoute = '**/admin/rest/security/login-events/*/code';
 const confirmRoute = '**/admin/rest/security/login-events/*/confirm';
+const emailPageRoute = '**/admin/v9/?*';
 const reportRoute = '**/admin/rest/security/login-events/*/report';
 const historyRoute = '**/admin/rest/sessions/login-history*';
 const administratorsRoute = '**/admin/rest/sessions/administrators';
@@ -18,7 +19,7 @@ Before(async ({ I, login }) => {
 });
 
 After(async ({ I }) => {
-    for (const route of [dashboardPageRoute, preferencesRoute, codeRoute, confirmRoute, reportRoute, historyRoute, administratorsRoute, locationRoute]) {
+    for (const route of [dashboardPageRoute, emailPageRoute, preferencesRoute, codeRoute, confirmRoute, reportRoute, historyRoute, administratorsRoute, locationRoute]) {
         await I.stopMockingRoute(route);
     }
     I.wjSetDefaultWindowSize();
@@ -117,6 +118,65 @@ Scenario('New-device notices require an explicit server confirmation and cannot 
     await I.clickCss(`${row} .md-dashboard-device-confirmation [type="submit"]`);
     await I.waitForInvisible(row, 10);
     await I.assertDeepEqual(proofs, [{ code: '012345' }, { code: '012345' }]);
+});
+
+/** Confirms a simulated email link and reloads its resulting URL without changing a real device. */
+Scenario('Email confirmation clears its URL parameters and reload never opens the security dialog', async ({ I, i18n }) => {
+    const securityEvent = { id: 42, createDate: Date.now(), browserName: 'Firefox autotest', operatingSystem: 'Linux' };
+    const proofs = [];
+    await mockDashboardBootstrap(I, () => ({ notices: [], securityEventRequested: true, requestedSecurityEvent: securityEvent }), undefined, emailPageRoute);
+    await mockDashboardBootstrap(I, () => ({ notices: [], securityEventRequested: false, requestedSecurityEvent: null }));
+    await I.mockRoute(confirmRoute, route => {
+        proofs.push(route.request().postDataJSON());
+        securityEvent.confirmedAt = Date.now();
+        return route.fulfill({ contentType: 'application/json', body: JSON.stringify(securityEvent) });
+    });
+    await I.amOnPage('/admin/v9/?securityEvent=42&deviceConfirmation=autotest-email-secret#overview');
+    await ready(I);
+    await I.waitForText(i18n.get('The sign-in has been confirmed.'), 10, '.toast-success');
+    await I.dontSeeInCurrentUrl('deviceConfirmation=');
+    await I.dontSeeInCurrentUrl('securityEvent=');
+    await I.seeInCurrentUrl('#overview');
+    await I.dontSeeElement('.md-dashboard-modal--device-security');
+    await I.refreshPage();
+    await ready(I);
+    await I.dontSeeElement('.md-dashboard-modal--device-security');
+    await I.dontSeeElement('.md-dashboard-modal--sessions');
+    await I.assertDeepEqual(proofs, [{ token: 'autotest-email-secret' }], 'Reloading must not submit the email proof again.');
+});
+
+/** Consumes the email detail link without blocking automatically or reopening it after a reload. */
+Scenario('Email security details clear their URL before dismissal or explicit blocking', async ({ I }) => {
+    const securityEvent = { id: 42, createDate: Date.now(), browserName: 'Firefox autotest', operatingSystem: 'Linux' };
+    const dialog = '.md-dashboard-modal--device-security';
+    let reports = 0;
+    await mockDashboardBootstrap(I, () => ({ notices: [], currentSessions: { userSessions: [] },
+        securityEventRequested: true, requestedSecurityEvent: securityEvent }), undefined, emailPageRoute);
+    await mockDashboardBootstrap(I, () => ({ notices: [], securityEventRequested: false, requestedSecurityEvent: null }));
+    await I.mockRoute(reportRoute, route => {
+        reports++;
+        securityEvent.reportedAt = Date.now();
+        return route.fulfill({ contentType: 'application/json', body: JSON.stringify(securityEvent) });
+    });
+    for (const block of [false, true]) {
+        await I.amOnPage('/admin/v9/?securityEvent=42#overview');
+        await ready(I);
+        await I.waitForVisible(`${dialog} .md-dashboard-device-security__report`, 10);
+        await I.dontSeeInCurrentUrl('securityEvent=');
+        await I.seeInCurrentUrl('#overview');
+        await I.assertEqual(reports, 0, 'Opening the email detail must not block a device.');
+        if (block) {
+            await I.clickCss(`${dialog} .md-dashboard-device-security__report`);
+            await I.waitForVisible(`${dialog} .md-dashboard-device-security__result`, 10);
+        } else {
+            await I.click('Neskôr', dialog);
+            await I.waitForDetached(dialog, 10);
+        }
+        await I.refreshPage();
+        await ready(I);
+        await I.dontSeeElement(dialog);
+        await I.assertEqual(reports, block ? 1 : 0, 'Reloading must not submit a device report.');
+    }
 });
 
 Scenario('Keyboard device reporting opens the compact dialog and removes only a successfully blocked warning', async ({ I }) => {

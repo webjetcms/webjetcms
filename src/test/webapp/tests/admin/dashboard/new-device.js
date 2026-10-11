@@ -79,14 +79,15 @@ Scenario('New device login sends an email and confirms its link with a success t
     await I.waitForVisible('#username', 10);
     await I.relogin('publishNotification', false);
     await I.waitForElement(dashboard, 30);
-    await I.seeInCurrentUrl(`securityEvent=${eventId}`);
     await I.waitForText(i18n.get('The sign-in has been confirmed.'), 10, '.toast-success');
     await I.see(i18n.get('My active sessions'), '.toast-success .toast-title');
     await I.dontSeeElement(dialog);
     await I.dontSeeInCurrentUrl('deviceConfirmation=');
+    await I.dontSeeInCurrentUrl('securityEvent=');
     await I.dontSeeElement(row);
-    await I.amOnPage('/admin/v9/');
+    await I.refreshPage();
     await I.waitForElement(dashboard, 30);
+    await I.dontSeeElement(dialog);
     await I.dontSeeElement(row);
     const confirmed = await I.executeScript(readDashboardBootstrap, `?securityEvent=${eventId}`);
     await I.assertTrue(confirmed.requestedSecurityEvent.confirmedAt > 0, 'Confirmation must be persisted for the device from the email.');

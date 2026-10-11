@@ -1064,16 +1064,20 @@ test('Rebuilding the overview after a save never reapplies the embedded settings
 
 test('Email login details open once from the authenticated bootstrap, including unavailable links', async t => {
     for (const event of [{ id: 'autotest-event', createDate: 1000 }, null]) {
-        const { context, overview, requests } = overviewFixture(t);
+        const { context, overview, requests, window } = overviewFixture(t);
         context.registerDashboardWidgets = () => {};
         context.getDashboardDefaults = () => [];
         const opened = [];
         context.showDeviceSecurity = (widgetContext, securityEvent, report) => { assert.equal(report, undefined); opened.push(securityEvent); };
+        window.history.replaceState({ autotest: true }, '', '/admin/v9/?securityEvent=42&keep=autotest#overview');
         overview.configure({ data: { notices: [], settings: { configured: true, items: [] }, securityEventRequested: true, requestedSecurityEvent: event } });
         overview.render();
         await overview.dashboardReady;
         assert.equal(opened.length, 1);
         assert.equal(opened[0], event);
+        assert.equal(window.location.search, '?keep=autotest', 'Opening the detail must consume its URL parameter so reloading cannot reopen it.');
+        assert.equal(window.location.hash, '#overview');
+        assert.deepEqual(window.history.state, { autotest: true });
         overview.render();
         await overview.dashboardReady;
         assert.equal(opened.length, 1, 'Dashboard rerenders must not reopen the dismissed dialog.');
@@ -1810,12 +1814,13 @@ test('Email confirmation consumes the token once and shows success without a dia
         requests.push({ url, options });
         return { ok: true, json: async () => ({ id: 42, confirmedAt: 3000 }) };
     };
-    window.history.replaceState({}, '', '/admin/v9/?securityEvent=42&deviceConfirmation=email-secret');
+    window.history.replaceState({ autotest: true }, '', '/admin/v9/?securityEvent=42&deviceConfirmation=email-secret&keep=autotest#overview');
     const securityEvent = { id: 42, createDate: 1000 };
     overview.configure({ data: { notices: [{ id: 'newDevice:42', kind: 'newDevice', securityEvent }], settings: { configured: true, items: [] },
         currentSessions: { userSessions: [{ userSessions: [{ deviceId: 42, deviceConfirmed: false }] }] },
         securityEventRequested: true, requestedSecurityEvent: securityEvent } });
     overview.render();
+    assert.equal(window.location.search, '?securityEvent=42&keep=autotest', 'The event detail remains available until confirmation succeeds.');
     await overview.dashboardReady;
     await tick();
     assert.equal(requests.length, 1);
@@ -1827,10 +1832,34 @@ test('Email confirmation consumes the token once and shows success without a dia
     assert.equal(overview.data.notices.length, 0);
     assert.equal(overview.data.currentSessions.userSessions[0].userSessions[0].deviceConfirmed, true);
     assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
-    assert.equal(window.location.search, '?securityEvent=42');
+    assert.equal(window.location.search, '?keep=autotest');
+    assert.equal(window.location.hash, '#overview');
+    assert.deepEqual(window.history.state, { autotest: true });
     overview.render();
     await overview.dashboardReady;
     assert.equal(requests.length, 1);
     assert.equal(notifications.length, 1);
+    overview.disconnectedCallback();
+});
+
+test('Failed email confirmation removes the secret but preserves the event detail URL', async t => {
+    const { context, overview, window, notifications } = overviewFixture(t);
+    context.registerDashboardWidgets = () => {};
+    context.getDashboardDefaults = () => [];
+    context.showDeviceSecurity = () => assert.fail('A failed email confirmation must report its error without opening a dialog.');
+    const errors = [];
+    window.WJ.notifyError = (...args) => errors.push(args);
+    context.fetch = async () => ({ ok: false });
+    window.history.replaceState({}, '', '/admin/v9/?securityEvent=42&deviceConfirmation=invalid-autotest&keep=autotest#overview');
+    overview.configure({ data: { notices: [], settings: { configured: true, items: [] },
+        securityEventRequested: true, requestedSecurityEvent: { id: 42 } } });
+    overview.render();
+    await overview.dashboardReady;
+    await tick();
+    assert.equal(window.location.search, '?securityEvent=42&keep=autotest');
+    assert.equal(window.location.hash, '#overview');
+    assert.equal(notifications.length, 0);
+    assert.equal(errors.length, 1);
+    assert.equal(errors[0][1], 'admin.dashboard.newDevice.linkInvalid.js');
     overview.disconnectedCallback();
 });
