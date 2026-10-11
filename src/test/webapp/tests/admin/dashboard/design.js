@@ -43,7 +43,6 @@ Scenario('Pinned security, inline notices and edit mode keep the dashboard reada
             { id: 'design-autotest-publishing', type: 'publishing', size: '2x3', options: {} },
             { id: 'design-autotest-session', type: 'sessions', size: '2x3', options: {} },
             { id: 'design-autotest-news', type: 'news', size: '3x2', options: {} },
-            { id: 'design-autotest-search', type: 'search', size: 'fullauto', options: { scope: 'admin' } },
             { id: 'design-autotest-shortcut', type: 'shortcut', size: '1x1', options: { href: '/admin/v9/webpages/web-pages-list/', title: 'Web pages autotest' } }
         ]
     };
@@ -107,7 +106,7 @@ Scenario('Dashboard header, notices, widgets and shortcuts fit the responsive vi
         const overflow = await I.executeScript(() => {
             const dashboard = document.querySelector('.md-dashboard');
             const boundary = dashboard.getBoundingClientRect();
-            return [...dashboard.querySelectorAll('.md-dashboard__hero, .md-dashboard__search, .md-dashboard__notice-list, .md-dashboard__layout, .md-dashboard__shortcuts')]
+            return [...dashboard.querySelectorAll('.md-dashboard__hero, .md-dashboard__notice-list, .md-dashboard__layout, .md-dashboard__shortcuts')]
                 .map(element => ({ className: element.className, left: element.getBoundingClientRect().left, right: element.getBoundingClientRect().right, width: element.clientWidth, contentWidth: element.scrollWidth }))
                 .filter(element => element.left < boundary.left - 1 || element.right > boundary.right + 1 || element.contentWidth > element.width + 1);
         });

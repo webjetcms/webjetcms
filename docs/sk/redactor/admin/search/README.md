@@ -1,14 +1,31 @@
 # Vyhľadávanie
 
-## Prehľad
-Sekcia **Vyhľadávanie** v administrácii umožňuje používateľom vyhľadávať obsah vo viacerých oblastiach, ako sú webové stránky, súbory a textové kľúče. Vyhľadávanie poskytuje nástroje na filtrovanie výsledkov a na zúženie rozsahu vyhľadávania, čo zlepšuje efektivitu práce s obsahom.
+## Rýchle vyhľadávanie v hlavičke
+
+Tlačidlo **Hľadať…** v hlavičke otvorí vyhľadávanie ponad aktuálnu stránku. Je dostupné v celej administrácii. Otvoríte ho aj klávesmi **Ctrl+K** vo Windows alebo **⌘K** na Macu; po otvorení môžete hneď písať. Skratka nepreberá príkazy pri písaní v inom textovom poli alebo editore.
+
+Pred zadaním výrazu uvidíte posledné hľadania a odkazy na dostupné sekcie. Históriu si prehliadač pamätá osobitne pre prihláseného používateľa a doménu. Jednotlivé záznamy aj celú históriu môžete odstrániť.
+
+Rozsah **Všetko** zobrazuje najviac tri výsledky z každej oblasti. Kliknutím na rozsah alebo odkaz **Všetky** zobrazíte výsledky iba z vybratej oblasti. Ponuka sa riadi vašimi oprávneniami:
+
+- **Web stránky** – návrhy podľa názvu alebo URL stránky a hľadanie v obsahu. Návrh stránky otvorí jej editor.
+- **Súbory** – hľadanie v názvoch a indexovanom obsahu súborov.
+- **Administrácia** – odkazy na dostupné položky menu vrátane ich kariet.
+- **Používatelia** – hľadanie podľa mena, priezviska, celého mena, emailu alebo prihlasovacieho mena.
+- **Textové kľúče** – hľadanie kľúčov a ich prekladov.
+- **Dokumentácia** – odkaz na vyhľadanie výrazu na docs.webjetcms.sk v novej karte. Výsledky dokumentácie sa zatiaľ nenačítavajú priamo do dialógu.
+
+Na úvodnej stránke sa predvolí **Všetko**. Pri otvorení z podporovanej sekcie sa predvolí jej rozsah. Zmena rozsahu platí do zatvorenia dialógu. V poli ho prepnete aj pomocou **Alt+šípka vľavo/vpravo**. **Tab** a **Shift+Tab** presúvajú fokus medzi ovládacími prvkami, šípky hore/dole vyberajú výsledok a **Enter** ho otvorí.
+
+Odkaz **Otvoriť výsledky v sekcii…** prenesie hľadaný výraz do príslušnej sekcie, kde môžete použiť ďalšie filtre. Ak sa nič nenašlo, pri zúženom rozsahu môžete zvoliť **Hľadať všade**. Chyba spojenia zobrazí správu **Vyhľadávanie je dočasne nedostupné** a tlačidlo **Skúsiť znova**.
+
+Dialóg zavriete klávesom **Esc**, tlačidlom zatvorenia alebo kliknutím mimo neho. Fokus sa vráti na tlačidlo v hlavičke; hľadaný výraz sa do tlačidla neprepisuje.
+
+## Pokročilé vyhľadávanie
+
+Sekcia **Vyhľadávanie** poskytuje tabuľky pre webové stránky, súbory a textové kľúče. Otvoríte ju odkazom **Otvoriť výsledky v sekcii…** z príslušného rozsahu rýchleho vyhľadávania. Zachová hľadaný výraz a zvolí zodpovedajúcu kartu.
 
 ![](search.png)
-
-## Prístup do sekcie:
-Do sekcie **Vyhľadávanie** sa dostaneme v administrácii pomocou ikony lupy ![](../icon-search.png ":no-zoom") v hlavičke.
-
-Pozrite tiež [Hlavička](../README#hlavička) pre ďalšie informácie.
 
 ## Kľúčové funkcie:
 1. **Fulltextové vyhľadávanie**:

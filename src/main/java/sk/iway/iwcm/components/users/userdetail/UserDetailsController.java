@@ -3,6 +3,7 @@ package sk.iway.iwcm.components.users.userdetail;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.Password;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.DB;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -218,6 +220,25 @@ public class UserDetailsController extends DatatableRestControllerV2<UserDetails
             //If user doesnt have admin and public perm in same time
             predicates.add(builder.isFalse(colAdmin));
             predicates.add(builder.isTrue(colAdmin));
+        }
+
+        String searchText = params.get("searchText");
+        if (Tools.isNotEmpty(searchText) && !searchText.isBlank()) {
+            String value = searchText.trim();
+            if (Constants.DB_TYPE == Constants.DB_PGSQL) value = DB.internationalToEnglish(value);
+            if (Constants.DB_TYPE == Constants.DB_PGSQL || Constants.DB_TYPE == Constants.DB_ORACLE) value = value.toLowerCase(Locale.ROOT);
+            value = "%" + value.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+            if (Constants.DB_TYPE == Constants.DB_MSSQL) value = value.replace("[", "![");
+
+            Expression<String> fullName = builder.concat(builder.concat(builder.coalesce(root.get("firstName"), ""), " "), builder.coalesce(root.get("lastName"), ""));
+            List<Expression<String>> fields = List.of(root.get("firstName"), root.get("lastName"), fullName, root.get("email"), root.get("login"));
+            List<Predicate> matches = new ArrayList<>();
+            for (Expression<String> field : fields) {
+                if (Constants.DB_TYPE == Constants.DB_PGSQL) field = builder.function("unaccent", String.class, field);
+                if (Constants.DB_TYPE == Constants.DB_PGSQL || Constants.DB_TYPE == Constants.DB_ORACLE) field = builder.lower(field);
+                matches.add(builder.like(field, value, '!'));
+            }
+            predicates.add(builder.or(matches.toArray(new Predicate[0])));
         }
 
         SpecSearch<UserDetailsEntity> specSearch = new SpecSearch<>();

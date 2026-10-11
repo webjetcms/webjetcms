@@ -85,6 +85,22 @@ Scenario('Verify Tabs and Data Table Headers in Admin Search', ({ I, DT }) => {
     );
 });
 
+/** The quick-search handoff must open the correct advanced tab and retain its query. */
+Scenario('Quick search opens filtered file results in the existing advanced section', ({ I, DT }) => {
+    I.clickCss('button.js-search-toggler');
+    I.waitForVisible('#admin-quick-search', 10);
+    I.clickCss('.md-quick-search__scopes [data-scope="files"]');
+    I.fillField('#admin-quick-search-input', 'for-bankers.txt');
+    I.waitForVisible('.md-quick-search__handoff', 10);
+    I.clickCss('.md-quick-search__handoff');
+    I.seeInCurrentUrl('/admin/v9/search/index/');
+    I.seeInCurrentUrl('scope=files');
+    I.seeInField('#searchText', 'for-bankers.txt');
+    DT.waitForLoader('filesDataTable');
+    I.seeElement('#pills-files-tab.active');
+    I.waitForText('for-bankers.txt', 10, '#filesDataTable_wrapper');
+});
+
 Scenario('SearchAll - webpages tab tests', async ({ I, DT }) => {
     I.amOnPage('/admin/v9/search/index/');
     I.clickCss(TabIds.WEB_PAGES);
@@ -253,7 +269,14 @@ Scenario('Searchall - permissions', async ({ I, DT, DTE }) => {
     DTE.save();
 
     I.relogin('ftester');
-    I.dontSeeElement('.btn.btn-sm.btn-outline-secondary.js-search-toggler');
+    I.seeElement('button.js-search-toggler');
+    I.clickCss('button.js-search-toggler');
+    I.waitForVisible('#admin-quick-search', 10);
+    I.dontSeeElement('.md-quick-search__scopes [data-scope="docs"]');
+    I.dontSeeElement('.md-quick-search__scopes [data-scope="translationKeys"]');
+    I.seeElement('.md-quick-search__scopes [data-scope="admin"]');
+    I.seeElement('.md-quick-search__scopes [data-scope="documentation"]');
+    I.pressKey('Escape');
 
     I.relogin('admin');
     openUserPermissions(I, DT, DTE, 'ftester');
@@ -262,7 +285,7 @@ Scenario('Searchall - permissions', async ({ I, DT, DTE }) => {
     DTE.save();
 
     I.relogin('ftester');
-    I.seeElement('.btn.btn-sm.btn-outline-secondary.js-search-toggler');
+    I.seeElement('button.js-search-toggler');
     I.amOnPage('/admin/v9/search/index/');
     I.seeElement('#pills-webPages-tab');
     I.seeElement('#pills-files-tab');
@@ -275,11 +298,22 @@ Scenario('Searchall - permissions', async ({ I, DT, DTE }) => {
     DTE.save();
 
     I.relogin('ftester');
-    I.seeElement('.btn.btn-sm.btn-outline-secondary.js-search-toggler');
+    I.seeElement('button.js-search-toggler');
     I.amOnPage('/admin/v9/search/index/');
     I.dontSeeElement('#pills-webPages-tab');
     I.dontSeeElement('#pills-files-tab');
     I.seeElement('#pills-translationKeys-tab');
+
+    I.clickCss('button.js-search-toggler');
+    I.waitForVisible('#admin-quick-search', 10);
+    I.clickCss('.md-quick-search__scopes [data-scope="translationKeys"]');
+    I.fillField('#admin-quick-search-input', 'Toto je bežne používané heslo.');
+    I.waitForVisible('.md-quick-search__handoff', 10);
+    I.clickCss('.md-quick-search__handoff');
+    DT.waitForLoader('translationKeysDataTable');
+    I.seeInField('#searchText', 'Toto je bežne používané heslo.');
+    I.seeElement('#pills-translationKeys-tab.active');
+    I.waitForText('wj-password-strength.warnings.common.js', 10, '#translationKeysDataTable_wrapper');
 
 });
 

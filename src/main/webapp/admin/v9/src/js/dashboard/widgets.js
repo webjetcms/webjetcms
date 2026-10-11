@@ -2,7 +2,8 @@ import { getWidget, registerWidget } from './registry';
 import { registerUtilityWidgets } from './utility-widgets';
 import { registerDataWidgets } from './data-widgets';
 import { registerSystemWidgets } from './system-widgets';
-import { menuEntries, registerShortcutWidget } from './shortcut-widget';
+import { menuEntries } from '../admin-menu';
+import { registerShortcutWidget } from './shortcut-widget';
 import { node, text, empty, date, containNativeScroll, pagePreview, fetchJson } from './widget-utils';
 
 /**
@@ -14,7 +15,6 @@ import { node, text, empty, date, containNativeScroll, pagePreview, fetchJson } 
  */
 export function getDashboardDefaults(context) {
     const items = [
-        { type: "search" },
         { type: "news", size: "3x2" },
         { type: "traffic", size: "3x3" }, { type: "forms", size: "1x1" },
         { type: "approvals", size: "1x1" }, { type: "errors", size: "1x1" },

@@ -114,7 +114,7 @@ for (const width of [1337, 320]) {
             I.dontSeeElement(`${card} .md-dashboard__widget-content > .text-danger`);
             await audit(I, a11y, card);
         }
-        I.assertDeepEqual(await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__hero, .md-dashboard__search, .md-dashboard__toolbar, .md-dashboard__widget')]
+        I.assertDeepEqual(await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__hero, .md-dashboard__toolbar, .md-dashboard__widget')]
             .filter(element => {
                 const bounds = element.getBoundingClientRect();
                 return bounds.left < -1 || bounds.right > window.innerWidth + 1 || element.scrollWidth > element.clientWidth + 1;
@@ -159,14 +159,20 @@ Scenario('Dashboard controls support Space and keyboard search scope', async ({ 
     I.pressKey('Escape');
     I.waitForElement(`${newsToggle}[aria-expanded="false"]`, 10);
     I.waitForFunction(selector => document.activeElement === document.querySelector(selector), [newsToggle], 10);
-    focusControl(I, '.md-dashboard__search input[type="radio"]:checked');
-    I.pressKey('ArrowRight');
-    I.waitForFunction(() => document.querySelector('.md-dashboard__search input[value="docs"]').checked, 5);
+    focusControl(I, '.js-search-toggler');
+    I.pressKey('Enter');
+    I.waitForVisible('#admin-quick-search', 10);
+    I.waitForFunction(() => document.activeElement.id === 'admin-quick-search-input', 10);
+    I.pressKey(['Alt', 'ArrowRight']);
+    I.waitForFunction(() => document.activeElement.id === 'admin-quick-search-input', 5);
     I.assertTrue(await I.executeScript(() => {
-        const search = document.querySelector('.md-dashboard__search input[type="search"]');
-        return search.getAttribute('aria-label') === search.placeholder && search.placeholder.length > 0;
-    }), 'The search field must retain an accessible name when switching scope.');
-    await audit(I, a11y, '.md-dashboard__search');
+        const input = document.querySelector('#admin-quick-search-input');
+        return Boolean(input.labels?.length || input.getAttribute('aria-label') || input.getAttribute('aria-labelledby'));
+    }), 'The global search input must have an accessible name.');
+    await audit(I, a11y, '#admin-quick-search');
+    I.pressKey('Escape');
+    I.waitForInvisible('#admin-quick-search', 10);
+    I.waitForFunction(() => document.activeElement.classList.contains('js-search-toggler'), 5);
 });
 
 Scenario('Shortcut settings, color choices and keyboard movement are accessible', async ({ I, a11y }) => {

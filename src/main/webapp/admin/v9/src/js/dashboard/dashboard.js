@@ -139,7 +139,6 @@ export class DashboardController {
         this.hero.append(welcome, this.news);
         this.notices = node("div", "md-dashboard__notices");
         this.notices.id = "toast-container-overview";
-        this.search = node("div", "md-dashboard__search");
         this.toolbar = node("div", "md-dashboard__toolbar");
         const toolbarHeading = node("div", "md-dashboard__toolbar-heading");
         this.toolbarTitle = node("h2", "md-dashboard__title", this._t("title", "My overview"));
@@ -203,7 +202,7 @@ export class DashboardController {
         this.shortcutMoveHint = moveHint;
         this.shortcuts.append(moveHint);
         welcome.append(this.shortcuts);
-        this.host.replaceChildren(this.hero, this.notices, this.search, this.toolbar, this.overviewStatus, this.undoContainer, this.layout, this.widgetMoveHint, this.widgetMoveStatus);
+        this.host.replaceChildren(this.hero, this.notices, this.toolbar, this.overviewStatus, this.undoContainer, this.layout, this.widgetMoveHint, this.widgetMoveStatus);
         if (window.jQuery && window.WJ?.initTooltip) {
             for (const control of [this.resetButton, this.editShortcutsButton]) window.WJ.initTooltip(window.jQuery(control));
         }
@@ -326,7 +325,7 @@ export class DashboardController {
     }
 
     _region(instance) {
-        return ["sessions", "news", "search"].includes(instance.type) ? instance.type : instance.type === "shortcut" ? "shortcut" : "grid";
+        return ["sessions", "news"].includes(instance.type) ? instance.type : instance.type === "shortcut" ? "shortcut" : "grid";
     }
 
     /**
@@ -335,10 +334,8 @@ export class DashboardController {
      */
     _displayItems() {
         const items = [...this.settings.items];
-        for (const type of ["news", "search"]) {
-            const definition = getWidget(type);
-            if (definition && !items.some(item => item.type === type)) items.push({ ...this._newInstance(definition), id: `dashboard-fixed-${type}` });
-        }
+        const news = getWidget("news");
+        if (news && !items.some(item => item.type === "news")) items.push({ ...this._newInstance(news), id: "dashboard-fixed-news" });
         return items.filter(instance => {
             const definition = getWidget(instance.type);
             return instance.type !== "sessions" && definition && this._available(definition) && (this._region(instance) !== "grid" || this._visible(definition, instance));
@@ -547,7 +544,7 @@ export class DashboardController {
             segment.items.forEach(instance => grid.append(updateView(instance)));
             fragment.append(grid);
         }
-        for (const region of ["news", "search", "shortcut"]) {
+        for (const region of ["news", "shortcut"]) {
             const container = region === "shortcut" ? this.shortcutList : this[region];
             container.replaceChildren(...visible.filter(instance => this._region(instance) === region).map(updateView));
         }
@@ -580,7 +577,7 @@ export class DashboardController {
         card.dataset.instanceId = instance.id;
         card.dataset.widgetType = instance.type;
         card.tabIndex = -1;
-        const fixed = ["sessions", "news", "search"].includes(this._region(instance));
+        const fixed = ["sessions", "news"].includes(this._region(instance));
         card.classList.toggle("is-fixed", fixed);
         if (!fixed && !preview) {
             if (this.host.dataset.loaded === "true") card.dataset.motion = "added";
@@ -715,7 +712,7 @@ export class DashboardController {
                 if (window.jQuery && window.WJ?.initTooltip) window.WJ.initTooltip(window.jQuery(target));
             }
         }
-        if (["news", "search"].includes(instance.type)) header.hidden = true;
+        if (instance.type === "news") header.hidden = true;
         const body = node("div", "md-dashboard__widget-body");
         body.id = `dashboard-body-${instance.id}`;
         card.append(header, body);
@@ -884,7 +881,7 @@ export class DashboardController {
      */
     async remove(id) {
         const instance = this._instance(id);
-        if (!instance || getWidget(instance.type)?.mandatory || ["sessions", "news", "search"].includes(this._region(instance))) return false;
+        if (!instance || getWidget(instance.type)?.mandatory || ["sessions", "news"].includes(this._region(instance))) return false;
         const previous = { instance: cloneSettings(instance), index: this.settings.items.indexOf(instance), domainOptions: cloneSettings(this.settings.domainOptions[id] || {}) };
         const next = cloneSettings(this.settings);
         next.items = next.items.filter(item => item.id !== id);
@@ -1378,7 +1375,7 @@ export class DashboardController {
         search.placeholder = this._t("searchWidgets", "Search widgets");
         searchField.append(icon("ti-search"), search);
         const categories = { all: this._t("catalogueAll", "All"), content: this._t("catalogueContent", "Content"), traffic: this._t("catalogueTraffic", "Traffic"), system: this._t("catalogueSystem", "System") };
-        const definitions = listWidgets().filter(definition => this._available(definition) && !["sessions", "news", "search", "shortcut"].includes(definition.type));
+        const definitions = listWidgets().filter(definition => this._available(definition) && !["sessions", "news", "shortcut"].includes(definition.type));
         const filters = node("div", "md-dashboard__catalogue-filters");
         filters.setAttribute("role", "group");
         filters.setAttribute("aria-label", this._t("catalogueCategories", "Widget categories"));
