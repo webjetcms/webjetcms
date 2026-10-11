@@ -8,7 +8,7 @@ Na úvodní obrazovce můžete rychle zkontrolovat návštěvnost, odeslané for
 
 Přehled tvoří **widgety**, tedy karty s konkrétními údaji, například grafem návštěvnosti nebo seznamem požadavků na schválení. Vyberte si ty, které využíváte, a uspořádejte je podle toho, co chcete sledovat jako první. Pomocí [zkratek](#vaše-zkratky) si otevřete často používanou část administrace nebo konkrétní složku bez hledání v menu.
 
-Při prvním otevření se podle vašich oprávnění zobrazí výchozí widgety **Návštěvnost**, **Formuláře**, **Ke schválení**, **Chyby 404**, **Pokračujte v práci**, **Odkud návštěvníci přišli**, **Nejbližší publikování** a **Newsletter**. Další widgety si můžete sami přidat. V horní části je přivítání se zkratkami a novinkami, aktivní přihlášení a vyhledávání.
+Při prvním otevření se podle vašich oprávnění zobrazí výchozí widgety **Návštěvnost**, **Formuláře**, **Ke schválení**, **Chyby 404**, **Pokračujte v práci**, **Odkud návštěvníci přišli**, **Nejbližší publikování** a **Newsletter**. Další widgety si můžete sami přidat. V horní části je přivítání se zkratkami a kartou novinek. Pod ním najdete systémová upozornění a vyhledávání.
 
 Nabídka widgetů odpovídá vašim oprávněním. Rozložení se ukládá na váš účet a je společné pro všechny domény a prohlížeče. Výběr konkrétního formuláře nebo kampaně se pamatuje zvlášť pro každou doménu.
 
@@ -49,7 +49,7 @@ Tlačítko **Zrušit** při neuložených změnách otevře potvrzení s možnos
 
 Na menší obrazovce se karty automaticky uspořádají pod sebe při zachování pořadí. Rozložení může obsahovat nejvýše 48 položek včetně zkratek, přihlášení, novinek a vyhledávání.
 
-Tlačítko **Obnovit výchozí** naleznete v liště úprav před tlačítkem **Přidat widget**. Po potvrzení v dialogu se připraví výchozí výběr widgetů, jejich velikosti, pořadí a nastavení. Až tlačítkem **Uložit** se změna uloží a vymažou se i filtry widgetů ve všech doménách a potvrzení přečtení novinek. Vaše zkratky a ostatní nastavení účtu zůstanou zachovány.
+Tlačítko **Obnovit výchozí** naleznete v liště úprav před tlačítkem **Přidat widget**. Po potvrzení v dialogu se připraví výchozí výběr widgetů, jejich velikosti, pořadí a nastavení. Až tlačítkem **Uložit** se změna uloží a vymažou se i filtry widgetů ve všech doménách. Vaše zkratky a ostatní nastavení účtu zůstanou zachovány.
 
 Pokud při klepnutí na **Obnovit výchozí** podržíte klávesu **Shift**, po potvrzení se připraví přehled se všemi dostupnými widgety v každé podporované velikosti. Nepotřebné varianty můžete odstranit a výsledek potvrdit tlačítkem **Uložit**.
 
@@ -121,7 +121,11 @@ Při odesílání se údaje viditelné karty obnovují každých 30 sekund. Poč
 
 ### Co je nového
 
-V uvítacím panelu naleznete novinky aktuální verze WebJET CMS. Tlačítkem **Sbalit novinky** potvrdíte jejich přečtení a ponecháte stručný souhrn. Tlačítkem **Více info** je znovu rozbalíte.
+Vpravo v modrém uvítacím panelu naleznete novinky aktuální verze. Při načtení stránky se vybere náhodná novinka a každých 8 sekund se zobrazí další. Novinky můžete přepínat také šipkami nebo tečkami; velikost karty se přitom nemění. Přepínání pozastavíte tlačítkem pauzy. Při ukázání myší se dočasně zastaví, při ovládání klávesnicí se zastaví až do opětovného spuštění. Při omezených animacích v nastavení systému se automaticky nespouští.
+
+Klepnutí na nadpis nebo text novinky i tlačítko **Co je nového (5)** rozbalí všechny body přes celou šířku modrého panelu. Číslo odpovídá počtu novinek. Přivítání a zkratky se dočasně skryjí; tlačítko **Sbalit novinky**, ikona vpravo nahoře nebo klávesa **Esc** je znovu zobrazí. Odkaz **Seznam změn** i číslo verze u štítku **Nové** otevřou úplnou historii vydání v dokumentaci.
+
+Štítek **Nové** se zobrazuje 30 dní od prvního zobrazení daného textu pod vaším účtem. Změna textu spustí nových 30 dní i ve stejné verzi. Stav se ukládá do vašich nastavení administrace, proto platí i na jiném zařízení. Rozbalení ani sbalení novinek štítek nezruší.
 
 ### Systémová upozornění
 
@@ -155,7 +159,11 @@ Přihlášení můžete potvrdit i odkazem **Byl jsem to já** v původním emai
 
 Při upozornění nebo u zařízení v kartě **Moje zařízení** v okně **Aktivní přihlášení** klikněte na **Nebyl jsem to já**. Zařízení se zablokuje a jeho známé pořady se odhlásí. Malé okno **Zajistěte svůj účet** zobrazí výsledek a doporučené další kroky. Pokud zablokujete prohlížeč, ve kterém právě pracujete, odhlásí i vás.
 
+![](device-my-devices.png)
+
 Odkaz **Nebyl jsem to já – zajistit účet** v emailu po přihlášení otevře stejné malé okno, ale zařízení ještě nezablokuje. Pokud přihlášení neznáte, potvrďte akci tlačítkem **Zablokovat zařízení**.
+
+![](device-block.png)
 
 Po zablokování použijte **Změnit heslo** a zkontrolujte ostatní přihlášení. Tlačítko **Zapnout 2FA** otevře nastavení dvoustupňového ověřování, pokud je pro účet dostupné a ještě není zapnuté. **Později** pouze zavře okno. U firemního účtu změňte heslo u poskytovatele přihlášení nebo kontaktujte správce.
 
@@ -201,15 +209,15 @@ Zobrazuje graf a číselné hodnoty zatížení procesoru serveru. Správce mů�
 
 ## Přihlášení
 
-V horní části přehledu můžete zkontrolovat svá aktivní přihlášení a odhlásit se z jiného zařízení nebo prohlížeče. Seznam ostatních přihlášených administrátorů je samostatný widget **Přihlášení admini**, dostupný podle oprávnění.
+U více aktivních relací naleznete v systémových upozorněních odkaz **Aktivní přihlášení**. Seznam si můžete přidat také jako widget **Moje aktivní přihlášení**. Seznam ostatních přihlášených administrátorů je samostatný widget **Přihlášení admini**, dostupný podle oprávnění.
 
 ### Moje aktivní přihlášení
 
-Panel **Moje aktivní přihlášení** zobrazuje všechny vaše aktivní relace, tedy přihlášení pod vaším účtem, s prohlížečem, časem a IP adresou. V okně aktivních přihlášení sloupec **Poloha** zobrazuje [orientační město a zemi](../../admin/setup/configuration/dashboard.md#orientační-poloha-přihlášení), pod nimi menším písmem IP adresu. Pokud poloha není dostupná, zobrazí se **Neznámá**. Město se odhaduje podle veřejného internetového připojení; IP zjištěná serverem může být interní. Při delším seznamu můžete jeho obsah posouvat. Vaše aktuální relace je první a má zelenou tečku s popisem **Toto přihlášení**. Ostatní relace můžete odhlásit přímo v seznamu, například když jste se zapomněli odhlásit na jiném počítači. Tento panel je vždy v horní části a nelze jej odstranit.
+Widget **Moje aktivní přihlášení** zobrazuje všechny vaše aktivní relace, tedy přihlášení pod vaším účtem, s prohlížečem, časem a IP adresou. V okně aktivních přihlášení sloupec **Poloha** zobrazuje [orientační město a zemi](../../admin/setup/configuration/dashboard.md#orientační-poloha-přihlášení), pod nimi menším písmem IP adresu. Pokud poloha není dostupná, zobrazí se **Neznámá**. Město se odhaduje podle veřejného internetového připojení; IP zjištěná serverem může být interní. Při delším seznamu můžete jeho obsah posouvat. Vaše aktuální relace je první a má zelenou tečku s popisem **Toto přihlášení**. Ostatní relace můžete odhlásit přímo v seznamu, například když jste se zapomněli odhlásit na jiném počítači.
 
 Samostatný widget v osobním přehledu zobrazí při jediném aktuálním pořadu informaci, že jste přihlášeni pouze zde. U více relací ukáže jejich počet a ve větších variantách i seznam s poslední aktivitou. Relace známého, ale dosud nepotvrzeného zařízení zvýrazní oranžovým pozadím a štítkem **Nové**. Pokud stav zařízení nezná, zvýraznění nepřidává. Tlačítko **Odhlásit všechny ostatní** otevře potvrzovací dialog; odhlášení se provede až po potvrzení.
 
-Klepnutím na nadpis panelu nebo widgetu se šipkou otevřete okno **Aktivní přihlášení** v kartě **Moje přihlášení**. Kromě vlastních pořadů nabízí správu vašich zařízení, historii přihlášení za posledních 30 dní a podle oprávnění i přihlášené administrátory. Tlačítko **Změnit heslo** ve spodní části okna otevře váš profil pro změnu hesla. Informační ikona vedle tlačítka zobrazí pokyny pro změnu hesla u firemního účtu.
+Klepnutím na nadpis widgetu se šipkou otevřete okno **Aktivní přihlášení** v kartě **Moje přihlášení**. Kromě vlastních pořadů nabízí správu vašich zařízení, historii přihlášení za posledních 30 dní a podle oprávnění i přihlášené administrátory. Tlačítko **Změnit heslo** ve spodní části okna otevře váš profil pro změnu hesla. Informační ikona vedle tlačítka zobrazí pokyny pro změnu hesla u firemního účtu.
 
 Karta **Moje přihlášení** zobrazuje pouze aktivní relace. Jeden prohlížeč může mít více pořadů. Při každé relaci vidíte prohlížeč s verzí, pod ním operační systém s verzí a datum přihlášení. Aktuální relace má při názvu prohlížeče štítek **Toto přihlášení** ; u ostatních můžete použít akci **Odhlásit**.
 
@@ -267,7 +275,7 @@ Chcete-li zkratku na konkrétní složku, otevřete ji ve Web stránkách a zkop
 
 Adresa může mít například tvar `/admin/v9/webpages/web-pages-list/?groupid=123`, kde `123` je ID požadované složky. Použijte ID ze své zkopírované adresy. Klepnutím na takovou zkratku otevřete přímo danou složku, i když je vnořená hlouběji ve struktuře webu.
 
-Křížek **×** odstraní zkratku bez potvrzení. Oznámení nabídne **Zpět** na 8 sekund. Odstranit můžete i poslední zkratku; zobrazí se **Žádná zkratka** a tlačítko pro přidání. Widgety, jejich filtry i stav novinek zůstávají zachovány.
+Křížek **×** odstraní zkratku bez potvrzení. Oznámení nabídne **Zpět** na 8 sekund. Odstranit můžete i poslední zkratku; zobrazí se **Žádná zkratka** a tlačítko pro přidání. Pokud stránku s prázdným seznamem znovu načtete, doplní se výchozí zkratky **Webové stránky** a **Formuláře** podle vašich oprávnění. Pokud nemáte přístup ani k jedné z těchto částí, použije se první dostupná položka menu. Widgety, jejich filtry i stav novinek zůstávají zachovány.
 
 ## Změněné stránky, audit a monitorování
 

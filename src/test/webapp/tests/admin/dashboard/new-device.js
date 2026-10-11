@@ -79,14 +79,15 @@ Scenario('New device login sends an email and confirms its link with a success t
     await I.waitForVisible('#username', 10);
     await I.relogin('publishNotification', false);
     await I.waitForElement(dashboard, 30);
-    await I.seeInCurrentUrl(`securityEvent=${eventId}`);
     await I.waitForText(i18n.get('The sign-in has been confirmed.'), 10, '.toast-success');
     await I.see(i18n.get('My active sessions'), '.toast-success .toast-title');
     await I.dontSeeElement(dialog);
     await I.dontSeeInCurrentUrl('deviceConfirmation=');
+    await I.dontSeeInCurrentUrl('securityEvent=');
     await I.dontSeeElement(row);
-    await I.amOnPage('/admin/v9/');
+    await I.refreshPage();
     await I.waitForElement(dashboard, 30);
+    await I.dontSeeElement(dialog);
     await I.dontSeeElement(row);
     const confirmed = await I.executeScript(readDashboardBootstrap, `?securityEvent=${eventId}`);
     await I.assertTrue(confirmed.requestedSecurityEvent.confirmedAt > 0, 'Confirmation must be persisted for the device from the email.');
@@ -173,4 +174,41 @@ Scenario('A reported browser requires an email code before administration or RES
     await I.relogin('publishNotification');
     await I.waitForElement(dashboard, 30);
     await I.dontSeeElement('#deviceCode');
+});
+
+
+Scenario('My devices dialog on the full administration screen @screenshot @current', async ({ I, Document }) => {
+    await I.relogin("admin");
+    await I.waitForElement(dashboard, 30);
+    const modal = '.md-dashboard-modal--sessions';
+    const devices = `${modal} .md-dashboard-sessions__devices`;
+    // Open the shared dialog independently of the user's dashboard layout.
+    await I.executeScript(() => document.querySelector('webjet-overview-dashboard').noticeController.openSessions());
+    await I.waitForVisible(modal, 10);
+    await I.waitForFunction(() => {
+        const modal = document.querySelector('.md-dashboard-modal--sessions');
+        return modal && getComputedStyle(modal).opacity === '1' && getComputedStyle(modal.querySelector('.modal-dialog')).transform === 'none';
+    }, 10);
+    await I.clickCss(`${modal} .md-dashboard-sessions__tabs [id$="-devices"]`);
+    await I.waitForElement(`${devices}[aria-busy="false"]`, 10);
+    await I.seeElement(`${devices} .md-dashboard-sessions__current`);
+    await I.dontSeeElement(`${devices} [role="alert"]`);
+    if (Document.isScreenshotsEnabled()) {
+        // Exclude automated browsers from documentation without changing stored devices.
+        await I.executeScript(selector => {
+            const panel = document.querySelector(selector);
+            let removed = 0;
+            panel.querySelectorAll('tr[data-device-id]').forEach(row => {
+                if (!row.querySelector('.md-dashboard-sessions__device-name').textContent.includes('HeadlessChrome')) return;
+                if (row.nextElementSibling?.classList.contains('md-dashboard-devices__confirmation-row')) row.nextElementSibling.remove();
+                row.remove();
+                removed++;
+            });
+            const tab = document.getElementById(panel.getAttribute('aria-labelledby'));
+            tab.textContent = tab.textContent.replace(/\((\d+)\)$/, (_, count) => `(${Number(count) - removed})`);
+        }, devices);
+    }
+    Document.screenshot('/redactor/admin/device-my-devices.png');
+    await I.clickCss(`${modal} .modal-footer > button`);
+    await I.waitForDetached(modal, 10);
 });

@@ -8,7 +8,7 @@ From the home screen, you can quickly check traffic, submitted forms, or pages a
 
 The overview is made up of **widgets**, i.e. cards with specific data, such as a traffic graph or a list of approval requests. Choose the ones you use and organize them according to what you want to monitor first. Use [shortcuts](#your-shortcuts) to open a frequently used part of the administration or a specific folder without searching in the menu.
 
-When you first open it, the default widgets **Visit**, **Forms**, **For Approval**, **404 Errors**, **Continue Working**, **Where Visitors Came From**, **Upcoming Publish** and **Newsletter** will be displayed based on your permissions. You can add additional widgets yourself. At the top is a welcome with shortcuts and news, active logins and search.
+When you first open it, the default widgets **Visit**, **Forms**, **For Approval**, **404 Errors**, **Continue Working**, **Where Visitors Came From**, **Upcoming Publish**, and **Newsletter** will be displayed based on your permissions. You can add additional widgets yourself. At the top is a welcome with shortcuts and a news tab. Below it, you will find system notifications and search.
 
 The widget menu corresponds to your permissions. The layout is saved to your account and is common across all domains and browsers. The selection of a specific form or campaign is remembered separately for each domain.
 
@@ -49,7 +49,7 @@ The **Cancel** button opens a confirmation with the options **Continue editing**
 
 On a smaller screen, tabs automatically stack under each other, preserving their order. A layout can contain up to 48 items, including shortcuts, logins, news, and search.
 
-The **Restore defaults** button can be found in the edit bar before the **Add widget** button. After confirming in the dialog, a default selection of widgets, their sizes, order and settings will be prepared. Only by clicking the **Save** button will the change be saved and the widget filters in all domains and the confirmation of reading the news will be deleted. Your shortcuts and other account settings will be preserved.
+The **Restore Defaults** button can be found in the edit bar before the **Add Widget** button. After confirming in the dialog, a default selection of widgets, their sizes, order, and settings will be prepared. Only by clicking the **Save** button will the change be saved and the widget filters in all domains will be deleted. Your shortcuts and other account settings will be preserved.
 
 If you hold down the **Shift** key while clicking **Restore Defaults**, a summary of all available widgets in each supported size will be prepared after confirmation. You can remove unnecessary variants and confirm the result with the **Save** button.
 
@@ -121,7 +121,11 @@ When sending, the visible card data is refreshed every 30 seconds. The number of
 
 ### What's new
 
-In the welcome panel you will find news of the current version of WebJET CMS. Click the **Collapse news** button to confirm reading them and leave a brief summary. Click the **More info** button to expand them again.
+On the right in the blue welcome panel you will find the news of the current version. When the page loads, a random news item is selected and the next one is displayed every 8 seconds. You can also switch between news items using the arrows or dots; the size of the card does not change. You can pause the switching by pressing the pause button. When pointing with the mouse, it stops temporarily, when controlling with the keyboard, it stops until restarting. It does not start automatically if animations are limited in the system settings.
+
+Clicking on the title or text of a news item and the **What's new (5)** button will expand all items across the full width of the blue panel. The number corresponds to the number of news items. The welcome and shortcuts will be temporarily hidden; the **Collapse news** button, the icon in the top right, or the **Esc** key will show them again. The **Changelog** link and the version number next to the **New** label will open the full release history in the documentation.
+
+The **New** label is displayed for 30 days from the first time the given text was displayed under your account. Changing the text will trigger a new 30 days even in the same version. The status is saved in your administration settings, so it also applies on another device. Expanding or collapsing the news does not remove the label.
 
 ### System notifications
 
@@ -155,7 +159,11 @@ You can also confirm your login using the **It was me** link in the original ema
 
 When alerted or on a device in the **My Devices** tab in the **Active Logins** window, click **It wasn't me**. The device will be locked and its known sessions will be signed out. A small **Secure your account** window will display the result and recommended next steps. If you lock the browser you're currently working in, it will also sign you out.
 
+![](device-my-devices.png)
+
 The **It wasn't me - secure account** link in the email after logging in will open the same small window, but it won't lock the device yet. If you don't know the login, confirm the action with the **Lock device** button.
+
+![](device-block.png)
 
 Once locked, use **Change Password** to check your other logins. The **Turn on 2FA** button will open the two-factor authentication settings if it's available for your account and not already enabled. **Later** will just close the window. For a business account, change your password with your login provider or contact your administrator.
 
@@ -201,15 +209,15 @@ Displays a graph and numerical values ​​of the server's CPU load. The admini
 
 ## Logins
 
-At the top of the overview, you can check your active logins and log out from another device or browser. The list of other logged in administrators is a separate **Logged in admins** widget, available by permissions.
+If you have multiple active sessions, you will find a link in the system notifications to **Active Logins**. You can also add the list as a **My Active Logins** widget. The list of other logged in administrators is a separate widget **Logged in Admins**, available according to permissions.
 
 ### My active logins
 
-The **My Active Logins** panel shows all your active sessions, i.e. logins under your account, with browser, time, and IP address. In the active logins window, the **Location** column shows [an approximate city and country](../../admin/setup/configuration/dashboard.md#an-approximate-location-of-logins), with the IP address below in smaller font. If the location is not available, **Unknown** is displayed. The city is estimated based on the public Internet connection; the IP detected by the server may be internal. If the list is long, you can scroll through its contents. Your current session is the first and has a green dot with the description **This login**. You can log out of other sessions directly in the list, for example if you forgot to log out on another computer. This panel is always at the top and cannot be removed.
+The **My Active Logins** widget shows all your active sessions, i.e. logins under your account, with browser, time, and IP address. In the active logins window, the **Location** column shows [an approximate city and country](../../admin/setup/configuration/dashboard.md#an-approximate-location-of-logins), with the IP address below in smaller font. If the location is not available, **Unknown** is displayed. The city is estimated based on the public Internet connection; the IP detected by the server may be internal. If the list is long, you can scroll through its contents. Your current session is the first and has a green dot with the description **This login**. You can log out of other sessions directly in the list, for example if you forgot to log out on another computer.
 
 A separate widget in the personal overview will display information that you are logged in only here for a single current session. For multiple sessions, it will show their number and, in larger variants, a list with the latest activity. Sessions of a known but not yet confirmed device will be highlighted with an orange background and the label **New**. If the device status is unknown, it will not be highlighted. The **Logout all others** button will open a confirmation dialog; the logout will only be performed after confirmation.
 
-Clicking on the title of the panel or widget with an arrow will open the **Active Logins** window in the **My Logins** tab. In addition to your own sessions, it offers management of your devices, login history for the last 30 days, and, depending on your permissions, logged in administrators. The **Change Password** button at the bottom of the window will open your profile to change your password. The information icon next to the button will display instructions for changing the password for a corporate account.
+Clicking on the widget title with an arrow will open the **Active Logins** window in the **My Logins** tab. In addition to your own sessions, it offers management of your devices, login history for the last 30 days, and, depending on your permissions, logged in administrators. The **Change Password** button at the bottom of the window will open your profile to change your password. The information icon next to the button will display instructions for changing the password for a corporate account.
 
 The **My Logins** tab only shows active sessions. A single browser can have multiple sessions. For each session, you see the browser with its version, below it the operating system with its version, and the login date. The current session has the label **This Login** next to the browser name; for others, you can use the action **Log Out**.
 
@@ -267,7 +275,7 @@ If you want a shortcut to a specific folder, open it in Web Pages and copy the a
 
 For example, the address may be in the form `/admin/v9/webpages/web-pages-list/?groupid=123`, where `123` is the ID of the desired folder. Use the ID from your copied address. Clicking on such a shortcut will open the folder directly, even if it is nested deeper in the website structure.
 
-The cross **×** will remove the shortcut without confirmation. The notification will offer **Back** for 8 seconds. You can also remove the last shortcut; **No shortcut** and an add button will be displayed. Widgets, their filters, and news status will be preserved.
+The cross **×** will remove the shortcut without confirmation. The notification will offer **Back** for 8 seconds. You can also remove the last shortcut; **No Shortcut** and an add button will be displayed. If you reload the page with an empty list, the default shortcuts **Websites** and **Forms** will be added according to your permissions. If you do not have access to either of these sections, the first available menu item will be used. Widgets, their filters, and news status will be preserved.
 
 ## Changed pages, auditing and monitoring
 

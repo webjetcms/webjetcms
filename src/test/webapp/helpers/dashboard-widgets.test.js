@@ -51,7 +51,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
         const source = fs.readFileSync(require.resolve('color-dialog-box'), 'utf8');
         vm.runInContext(`(function () { ${source} }).call(this);`, scope);
     }
-    for (const file of ['registry.js', 'widget-utils.js', 'security-events.js', 'device-security-dialog.js', 'charts.js', 'monitoring-live.js', 'system-widgets.js', 'session-widgets.js', 'utility-widgets.js', 'data-widgets.js', 'shortcut-widget.js', 'widgets.js']) {
+    for (const file of ['registry.js', 'widget-utils.js', 'security-events.js', 'device-security-dialog.js', 'charts.js', 'monitoring-live.js', 'system-widgets.js', 'session-widgets.js', 'news-widget.js', 'utility-widgets.js', 'data-widgets.js', 'shortcut-widget.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
             .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
         const exports = { 'system-widgets.js': ['registerSystemWidgets', 'renderLoggedAdmins', 'adminMail', 'fetchLoggedAdministrators'], 'monitoring-live.js': ['readMonitoringSnapshot', 'subscribeMonitoring'] }[file];
@@ -59,7 +59,7 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
         vm.runInContext(script, scope, { filename: file });
     }
     scope.registerDashboardWidgets();
-    if (extraWidgets && !scope.getWidget('sessions')) { scope.registerUtilityWidgets(); scope.registerDataWidgets(); }
+    if (extraWidgets && !scope.getWidget('news')) { scope.registerUtilityWidgets(); scope.registerDataWidgets(); }
     const context = { data: { statRootGroupId: 1, ...data, dashboardMenu: menu }, labels: { newsletterActive: 'Active' }, settings: {}, config: { recentPagesGroupId: '99999997' }, translate: key => key };
     t.after(() => window.close());
     return { scope, context, container: window.document.querySelector('main'), requests, window };
@@ -590,7 +590,7 @@ test('Recent pages distinguish empty content from DataTable errors', async t => 
 
 test('Default widgets follow permissions and authorized menu destinations', t => {
     const { scope, context } = fixture(t, { allowed: false, menu: [] });
-    assert.deepEqual(JSON.parse(JSON.stringify(scope.getDashboardDefaults(context))).map(item => item.type), ['search', 'sessions', 'news']);
+    assert.deepEqual(JSON.parse(JSON.stringify(scope.getDashboardDefaults(context))).map(item => item.type), ['search', 'news']);
     assert.equal(scope.getWidget('recent-pages').isAvailable(context), false);
     assert.equal(scope.getWidget('shortcut').isAvailable(context), true);
 });
@@ -603,7 +603,7 @@ test('New profiles include only curated widgets and no more than two authorized 
     const { scope, context } = fixture(t, { menu });
     const defaults = JSON.parse(JSON.stringify(scope.getDashboardDefaults(context)));
     assert.deepEqual(defaults.map(item => item.type), [
-        'search', 'sessions', 'news', 'traffic', 'forms', 'approvals', 'errors',
+        'search', 'news', 'traffic', 'forms', 'approvals', 'errors',
         'recent-pages', 'referrers', 'publishing', 'newsletter', 'shortcut', 'shortcut'
     ]);
     assert.deepEqual(defaults.filter(item => item.type === 'shortcut').map(item => item.options.href), menu.slice(0, 2).map(item => item.href));
@@ -1692,48 +1692,12 @@ test('Forms keep the selected form in domain options and preserve unavailable se
     assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
 });
 
-test('Release acknowledgement folds the matching release into a visible summary that can be expanded again', async t => {
-    const { scope, context, container } = fixture(t, { extraWidgets: true });
-    context.labels.changelog = '<p>WebJET CMS <strong>2026.18</strong> release.</p><p>Second feature.</p>';
-    context.settings.acknowledgedNewsVersion = '2026.18';
-    let acknowledged;
-    context.dashboard = { acknowledgeNews: async version => { acknowledged = version; return true; } };
-    const widget = scope.getWidget('news');
-    widget.render({ container, context });
-    assert.match(container.querySelector('.md-dashboard-widget__news-summary').textContent, /2026.18/);
-    assert.equal(container.querySelector('.md-dashboard-widget__news-highlights'), null);
-    assert.equal(container.querySelector('button').getAttribute('aria-expanded'), 'false');
-    container.querySelector('button').click();
-    await new Promise(resolve => setImmediate(resolve));
-    assert.equal(acknowledged, null);
-    container.replaceChildren();
-    context.labels.changelog = '<p>WebJET CMS <strong>2026.19</strong> release.</p>';
-    widget.render({ container, context });
-    assert.equal(container.querySelector('button').getAttribute('aria-expanded'), 'true');
-    assert.match(container.querySelector('.md-dashboard-widget__news-highlights').textContent, /2026.19/);
-    container.querySelector('button').click();
-    await new Promise(resolve => setImmediate(resolve));
-    assert.equal(acknowledged, '2026.19');
-});
-
 test('Visitor comparisons do not fabricate percentage growth from a zero baseline', t => {
     const { scope } = fixture(t, { extraWidgets: true });
     assert.equal(scope.change(20, 0), null);
     assert.equal(scope.change(20, undefined), null);
     assert.equal(scope.change(20, 10), '+100 %');
     assert.equal(scope.change(5, 10), '-50 %');
-});
-
-test('The mandatory sessions widget retains active login details and a static count', async t => {
-    const { scope, context, container } = fixture(t, { extraWidgets: true, data: { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [
-        { sessionId: 'current', logonTime: 1000, browserName: 'Browser', remoteAddr: '127.0.0.1' }
-    ] }] } } });
-    const widget = scope.getWidget('sessions');
-    assert.equal(widget.mandatory, true);
-    await widget.render({ container, context, signal: new AbortController().signal });
-    assert.equal(container.querySelector('span.md-dashboard-widget__session-count').textContent, '1');
-    assert.equal(container.querySelector('button'), null);
-    assert.match(container.querySelector('li').textContent, /Browser.*127.0.0.1/);
 });
 
 test('Sessions reuse embedded data and update the snapshot and count after removal', async t => {
@@ -1743,13 +1707,13 @@ test('Sessions reuse embedded data and update the snapshot and count after remov
     context.data.currentSessions = { currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [
         { sessionId: 'other', logonTime: 1000, browserName: 'Autotest browser', remoteAddr: '127.0.0.1' }
     ] }] };
-    const widget = scope.getWidget('sessions');
+    const widget = scope.getWidget('my-sessions');
     context.settings.items = [];
     context.dashboard = { refreshSessions: () => {
         container.replaceChildren();
-        return widget.render({ container, context, signal: new AbortController().signal });
+        return widget.render({ container, context, instance: { size: '2x3' }, signal: new AbortController().signal });
     } };
-    const ready = widget.render({ container, context, signal: new AbortController().signal });
+    const ready = widget.render({ container, context, instance: { size: '2x3' }, signal: new AbortController().signal });
     assert.equal(container.querySelector('.md-dashboard-widget__session-count').textContent, '1');
     assert.equal(requests.length, 0);
     await ready;
@@ -1813,7 +1777,7 @@ test('An HTTP 200 session-removal rejection leaves the session visible and repor
     }) });
     let refreshed = false;
     context.dashboard = { refreshSessions: () => { refreshed = true; } };
-    await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
+    await scope.getWidget('my-sessions').render({ container, context, instance: { size: '2x3' }, signal: new AbortController().signal });
     const logout = container.querySelector('li button');
     logout.click();
     await new Promise(resolve => setImmediate(resolve));
@@ -1856,7 +1820,7 @@ test('Every active login stays visible with the current session first even when 
             { sessionId: 'other-3', logonTime: 3000 }, { sessionId: 'current', logonTime: 1000, browserName: 'Current browser' }
         ] }]
     } } });
-    await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
+    await scope.getWidget('my-sessions').render({ container, context, instance: { size: '2x3' }, signal: new AbortController().signal });
     const rows = container.querySelectorAll('li');
     assert.equal(rows.length, 4);
     assert.match(rows[0].textContent, /Current browser/);
@@ -1869,7 +1833,7 @@ test('Session rows use installed browser icons and labeled compact status and lo
     const { scope, context, container } = fixture(t, { extraWidgets: true, data: { currentSessions: {
         currentSessionId: 'browser-0', userSessions: [{ userSessions: names.map((browserName, index) => ({ sessionId: `browser-${index}`, browserName, logonTime: 6000 - index })) }]
     } } });
-    await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
+    await scope.getWidget('my-sessions').render({ container, context, instance: { size: '2x3' }, signal: new AbortController().signal });
     assert.deepEqual([...container.querySelectorAll('.md-dashboard-widget__session-device')].map(icon => icon.classList[1]),
         ['ti-brand-chrome', 'ti-brand-chrome', 'ti-brand-safari', 'ti-brand-firefox', 'ti-brand-edge', 'ti-device-desktop']);
     const status = container.querySelector('.md-dashboard-widget__session-current');
@@ -1886,7 +1850,7 @@ test('Native session scrolling contains wheel, touch and keyboard events and rel
         currentSessionId: 'current', userSessions: [{ userSessions: [{ sessionId: 'other', browserName: 'Chrome' }] }]
     } } });
     const controller = new AbortController();
-    await scope.getWidget('sessions').render({ container, context, signal: controller.signal });
+    await scope.getWidget('my-sessions').render({ container, context, instance: { size: '2x3' }, signal: controller.signal });
     const list = container.querySelector('ul');
     let overflow = true, bubbled = 0;
     Object.defineProperty(list, 'scrollHeight', { get: () => overflow ? 300 : 100 });
@@ -1920,7 +1884,7 @@ test('Accepted cluster logout stays pending instead of claiming immediate invali
     }) });
     let refreshed = false;
     context.dashboard = { refreshSessions: () => { refreshed = true; } };
-    await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
+    await scope.getWidget('my-sessions').render({ container, context, instance: { size: '2x3' }, signal: new AbortController().signal });
     container.querySelector('li button').click();
     await new Promise(resolve => setImmediate(resolve));
     assert.match(container.querySelector('li').textContent, /sessionPending/);
@@ -2254,30 +2218,6 @@ test('History loads on tab activation, pages safely and aborts on close', async 
     assert.equal(requests[0].options.signal.aborted, true);
 });
 
-
-test('Release announcements preserve every Markdown-rendered feature and place collapse beside the changelog link', t => {
-    const { scope, context, container } = fixture(t, { extraWidgets: true });
-    context.labels.changelog = 'WebJET CMS <strong>2026.18</strong> first feature.<br><br>Second feature.<br><br>Third feature.';
-    const news = scope.releaseNews(context);
-    assert.equal(news.paragraphs.length, 3);
-    assert.equal(news.paragraphs[1], 'Second feature.');
-    scope.getWidget('news').render({ container, context });
-    assert.equal(container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, context.labels.changelog);
-    assert.equal(container.querySelector('.md-dashboard-widget__news-header'), null, 'Expanded news must not add a duplicate release heading or empty header.');
-    const actions = container.querySelector('.md-dashboard-widget__news-actions');
-    assert.equal(actions.children.length, 2);
-    assert.equal(actions.querySelector('button').textContent, 'admin.dashboard.newsCollapse.js');
-    assert.equal(actions.querySelector('button i').getAttribute('aria-hidden'), 'true');
-    assert.equal(container.querySelector('.md-dashboard-widget__news-more').getAttribute('href'), 'https://docs.webjetcms.sk/latest/en/CHANGELOG');
-});
-
-test('Expanded release announcements retain headings, lists, emphasis and links from the Markdown renderer', t => {
-    const { scope, context, container } = fixture(t, { extraWidgets: true });
-    context.labels.changelog = '<h2>WebJET CMS 2026.18</h2><p>A <strong>complete</strong> announcement.</p><ul><li>First feature</li><li>Second <em>feature</em></li></ul><p>Read <a href="/release-details/">the details</a>.</p>';
-    assert.equal(scope.releaseNews(context).version, '2026.18');
-    scope.getWidget('news').render({ container, context });
-    assert.equal(container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, context.labels.changelog);
-});
 
 test('Session dialog does not autofocus a tab or steal child focus', t => {
     for (const preserveFocus of [false, true]) {

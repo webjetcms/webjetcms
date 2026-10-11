@@ -108,4 +108,17 @@ async function restoreDefaultDashboard(I) {
     I.assertDeepEqual(await I.executeScript(readLayout), defaults, 'The default overview must remain saved after reloading.');
 }
 
-module.exports = { showWidget, waitForWidgets, mockDashboardBootstrap, dashboardPageRoute, readDashboardBootstrap, restoreDefaultDashboard };
+/** Opens sessions from a temporary personal widget without persisting a layout change. */
+async function openDashboardSessions(I) {
+    await I.executeScript(() => {
+        const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
+        if (!controller.settings.items.some(item => item.id === 'autotest-session-dialog')) {
+            controller.settings.items.unshift({ id: 'autotest-session-dialog', type: 'my-sessions', size: '2x3', options: {} });
+            controller._render();
+        }
+    });
+    await showWidget(I, 'autotest-session-dialog');
+    I.clickCss('[data-instance-id="autotest-session-dialog"] .md-dashboard__title-action');
+}
+
+module.exports = { showWidget, waitForWidgets, mockDashboardBootstrap, dashboardPageRoute, readDashboardBootstrap, restoreDefaultDashboard, openDashboardSessions };

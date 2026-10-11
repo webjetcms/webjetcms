@@ -109,7 +109,7 @@ export class DashboardNotices {
                 event.currentTarget.focus({ preventScroll: true });
                 this.openSecurityEvent?.(notice.securityEvent);
             },
-                "btn btn-sm btn-link text-danger md-dashboard__notice-report"));
+                "btn btn-sm btn-link md-dashboard__notice-report"));
         } else if (notice.action) {
             actions.append(button(notice.action.label, event => {
                 if (notice.action.type === "popup") WJ.openPopupDialog(notice.action.url);

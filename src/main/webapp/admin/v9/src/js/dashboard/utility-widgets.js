@@ -1,24 +1,7 @@
 import { registerWidget } from './registry';
 import { registerSessionWidgets } from './session-widgets';
-import { node, text, field, empty, containNativeScroll, pagePreview } from './widget-utils';
-
-/**
- * Uses the announcement's release number, so development rebuilds do not reset acknowledgement.
- * Preserves the original HTML and extracts plain-text paragraphs for the collapsed summary.
- *
- * @param {import('./registry').WidgetContext} context - Supplies changelog HTML and the configured release-version fallback.
- * @returns {{version: string, paragraphs: string[], html: string}} Announcement content and its acknowledgement key, which may be empty.
- */
-export function releaseNews(context) {
-    const html = context.labels.changelog || '';
-    const document = new DOMParser().parseFromString(html, 'text/html');
-    document.body.querySelectorAll('br').forEach(br => br.replaceWith(document.createTextNode('\n')));
-    document.body.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote').forEach(block => block.append(document.createTextNode('\n\n')));
-    const content = document.body.textContent || '';
-    const paragraphs = content.replace(/\\n/g, '\n').split(/\n\s*\n/).map(value => value.trim()).filter(Boolean);
-    const version = paragraphs.join(' ').match(/\b20\d{2}\.\d+(?:\.\d+)?\b/)?.[0] || context.config.releaseVersion || '';
-    return { version, paragraphs, html };
-}
+import { registerNewsWidget } from './news-widget';
+import { node, text, field, containNativeScroll, pagePreview } from './widget-utils';
 
 /**
  * Builds a documentation URL using a supported administration language, falling back to English.
@@ -90,48 +73,10 @@ function pageAutocomplete(input, group, signal) {
     return enabled => { cancel(); $input.autocomplete('option', 'disabled', !enabled); };
 }
 
-/** Registers mandatory security and optional release/help widgets. */
+/** Registers session widgets and the fixed release/search utilities. */
 export function registerUtilityWidgets() {
     registerSessionWidgets();
-    registerWidget({
-        type: 'news', titleKey: 'admin.dashboard.news.js', icon: 'ti-sparkles', sizes: ['3x2'],
-        render({ container, context }) {
-            const { version, paragraphs, html } = releaseNews(context);
-            if (!html.trim()) { empty(container, context); return; }
-            const collapsed = Boolean(version && context.settings.acknowledgedNewsVersion === version);
-            const toggle = node('button', 'btn btn-sm md-dashboard-widget__news-toggle', text(context, collapsed ? 'newsMore' : 'newsCollapse'));
-            toggle.type = 'button';
-            toggle.setAttribute('aria-expanded', String(!collapsed));
-            const toggleIcon = node('i', `ti ti-chevron-${collapsed ? 'down' : 'up'}`);
-            toggleIcon.setAttribute('aria-hidden', 'true');
-            toggle.prepend(toggleIcon);
-            toggle.addEventListener('click', async () => {
-                const hadFocus = document.activeElement === toggle;
-                const region = container.closest('[data-widget-type="news"]') || container;
-                toggle.disabled = true;
-                if (!await context.dashboard.acknowledgeNews(collapsed ? null : version)) toggle.disabled = false;
-                if (hadFocus && (document.activeElement === document.body || document.activeElement === toggle)) {
-                    region.querySelector('.md-dashboard-widget__news-toggle')?.focus({ preventScroll: true });
-                }
-            });
-            container.classList.toggle('is-news-collapsed', collapsed);
-            if (collapsed) {
-                const header = node('div', 'md-dashboard-widget__news-header');
-                header.append(node('p', 'md-dashboard-widget__news-summary', paragraphs[0]), toggle);
-                container.append(header);
-            } else {
-                const highlights = node('div', 'md-dashboard-widget__news-highlights');
-                // The translated announcement has already passed through WJ.parseMarkdown in overview.pug.
-                highlights.innerHTML = html;
-                container.append(highlights);
-                const actions = node('div', 'md-dashboard-widget__news-actions');
-                const details = node('a', 'md-dashboard-widget__news-more', context.labels.seeCompleteChangelog || text(context, 'all'));
-                details.href = docsUrl('CHANGELOG'); details.target = '_blank'; details.rel = 'noopener';
-                actions.append(details, toggle);
-                container.append(actions);
-            }
-        }
-    });
+    registerNewsWidget();
     registerWidget({
         type: 'search', titleKey: 'admin.dashboard.search.js', icon: 'ti-search', sizes: ['fullauto'], defaultOptions: { scope: 'admin' },
         configure({ container, options, context }) {

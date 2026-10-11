@@ -25,7 +25,7 @@ import { showFeedbackDialog } from '../feedback';
  * @property {string} config.recentPagesGroupId - Configured systemPagesRecentPages ID used by the Web pages module.
  * @property {string} [config.statMode] - Statistics mode; `"none"` hides statistics cards.
  * @property {string} [config.overviewJsonUrl=""] - Base URL used to load localized WebJET news.
- * @property {string} [config.heroBackgroundImage] - Root-relative or HTTP(S) header image URL; an empty value hides it and omission retains the stylesheet default.
+ * @property {string} [config.heroBackgroundImage] - CSS gradient or root-relative/HTTP(S) header image URL; empty, invalid or omitted values retain the default gradient.
  */
 
 function element(tag, className, text) {
@@ -123,13 +123,20 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
                 confirmSecurityEvent(this.data, securityEvent.id, signal, { token: confirmationToken })
                     .then(() => {
                         if (signal.aborted) return;
+                        const confirmedUrl = new URL(window.location.href);
+                        confirmedUrl.searchParams.delete('securityEvent');
+                        window.history.replaceState(window.history.state, '', confirmedUrl.pathname + confirmedUrl.search + confirmedUrl.hash);
                         this.dashboardController.refreshSessions();
                         WJ.notifySuccess(sessionContext.translate('sessions'), sessionContext.translate('admin.dashboard.newDevice.confirmed.js'), 10000);
                     })
                     .catch(() => {
                         if (!signal.aborted) WJ.notifyError(sessionContext.translate('sessions'), sessionContext.translate('admin.dashboard.newDevice.linkInvalid.js'), 10000);
                     });
-            } else showDeviceSecurity(sessionContext, securityEvent);
+            } else {
+                url.searchParams.delete('securityEvent');
+                window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+                showDeviceSecurity(sessionContext, securityEvent);
+            }
         }
         this.dataset.ready = "true";
         this.dispatchEvent(new CustomEvent("webjet-component-ready", { bubbles: true }));
