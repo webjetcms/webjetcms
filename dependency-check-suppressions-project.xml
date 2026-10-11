@@ -51,6 +51,13 @@
         <filePath regex="true">.*\/templates\/el.*</filePath>
         <vulnerabilityName regex="true">.*</vulnerabilityName>
   </suppress>
+  <suppress>
+    <notes><![CDATA[
+    file name: jquery.min.js
+    ]]></notes>
+    <packageUrl regex="true">^pkg:javascript/jquery@.*$</packageUrl>
+    <cve>CVE-2019-11358</cve>
+  </suppress>
 
   <!-- zly warning na jquery 3.0.0 ktory je len minimal dependency -->
   <suppress>

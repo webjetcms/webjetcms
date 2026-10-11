@@ -25,6 +25,8 @@ $wj-dependencycheck severity=HIGH and above report=existing
 
 Read the current branch, repository instructions, and working-tree status. Resolve all project paths against the current worktree root, obtained with `git rev-parse --show-toplevel`. If invoked outside a repository, locate or ask for the intended checkout. Never reuse an absolute path or another worktree's report from an earlier conversation or an ambient browser tab.
 
+Exclude findings confined to `src/main/webapp/templates/` in the current worktree: these are internal test design templates and are not included in the shipped product. Do not investigate, remediate, propose suppressions for, or mention these findings in commentary, decision tables, remaining-findings summaries, or reported counts, even if the report contains no matching suppression. This exclusion is path-based; copies of the same library outside this directory remain in scope.
+
 During initial analysis, leave source files, dependency manifests, lockfiles, suppression XML, and changelogs unchanged. Generating the requested report and normal tool caches is permitted. Do not install or upgrade dependencies merely to inspect them. Preserve unrelated local changes and never create commits.
 
 ## Select and verify the report
@@ -62,6 +64,8 @@ The helper reads the relative report path and returns matching dependency rows, 
 
 Read the detailed sections referenced by the selected anchors, including installed versions, dependency paths, CVE/GHSA identifiers, scores, and suppression status. Filter by the summary column, not filenames, raw occurrences of severity words, or numeric sort attributes. In particular, suppressed CRITICAL entries can remain in the HTML even when there are no active CRITICAL rows.
 
+Apply the scope exclusion using dependency file paths, including bundled copies, before assessing or counting findings. The helper returns raw report counts; recompute dependency-row and distinct-vulnerability counts for the remaining scope. If a row combines excluded and in-scope copies, retain only the in-scope copies for assessment and reporting.
+
 Focus the assessment on vulnerabilities responsible for the selected severity levels. Mention lower-severity issues only when relevant to the same proposed remediation, and label them as context. Group repeated findings across modules or duplicate bundled files when they share a vulnerability and remedy, while preserving the affected artifacts and versions. Do not confuse dependency-row counts with distinct vulnerability counts.
 
 Inspect the actual scanner configuration for runtime versus test/build coverage, disabled analyzers, local npm packages, and excluded paths. A package missing from a report is not proof that it is absent or safe. Cross-check relevant Gradle declarations/resolution, `package.json`, lockfiles, and bundled JavaScript when needed.
@@ -89,7 +93,7 @@ Do not carry CVE-specific conclusions, accepted risks, or upgrade versions from 
 
 ## Present the decision table
 
-Start with the worktree/branch, report source and generation time, severity matching rule, number of matched dependency rows, and deduplicated vulnerability count. Note material report limitations or version mismatches.
+Start with the worktree/branch, report source and generation time, severity matching rule, number of matched dependency rows in scope, and deduplicated vulnerability count in scope. Note material report limitations or version mismatches.
 
 Present one row per distinct vulnerability/remediation group, using stable row numbers so the user can select actions. Use this shape, adapting the language to the conversation:
 
