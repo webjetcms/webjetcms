@@ -262,6 +262,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Bezpečnosť
 
+- Dependency Check - aktualizované knižnice Jackson na vetvy `2.22.3` a `3.2.3` so zjednotením verzií modulov cez BOM. V administrácii aktualizované `moment 2.31.0`, `@xmldom/xmldom 0.9.12`, `brace-expansion 1.1.20/2.1.6/5.0.11`, `ip-address 10.3.1`, `source-map-js 1.2.2`, `svgo 3.3.5`, `tar 7.5.21` a `undici 6.28.1`. Knižnica `brace-expansion 5.0.11` vyžaduje pri zostavení Node.js 20 alebo 22 a novší; Node.js 18 už nepodporuje.
+- Dependency Check - doplnené úzke výnimky pre neuplatniteľné nálezy v `spring-security-crypto 7.1.1`, `jsoup 1.17.2` a `http-cache-semantics 4.2.0`. Výnimky pre HIGH nálezy v `ai.djl:api 0.36.0` a `tar 6.2.1` sú označené ako schválené prijatie zvyškového rizika, nie ako oprava knižnice. Aktualizácia natívnych DJL modulov a migrácia inštalačnej závislosti `tar 6` zostávajú otvorené; dôvody a podmienky prehodnotenia sú uvedené pri konkrétnych verziách a CVE/GHSA vo výnimkách.
 - Dependency Check - doplnené výnimky pre nesprávne priradené zraniteľnosti: `CVE-2026-53914` v `kotlin-stdlib 2.4.0` sa týka zostavovania cez KAPT a `CVE-2022-37830` v `webjet-ai 2.0.4` a `webjet-ai-local 2.0.4` sa týka odlišného produktu WebJET CMS. Výnimky platia iba pre uvedené balíky, verzie a CVE; pri zmene verzie alebo spôsobu použitia ich treba prehodnotiť. Verzie knižníc a správanie aplikácie sa nemenia.
 - Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
 - AI asistenti - pridaná ochrana pred `prompt injection` útokmi s oddelením systémových inštrukcií od používateľského obsahu a detekciou kódovaných vstupov (#58549).

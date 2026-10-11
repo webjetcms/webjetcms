@@ -98,4 +98,114 @@
     <cve>CVE-2022-37830</cve>
   </suppress>
 
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-47842: the vendor lists Spring Security Crypto 7.1.1 as the fixed
+    OSS release. The reviewed CMS source and resolved application dependencies
+    do not use AesBytesEncryptor or the deprecated Encryptors factories.
+    This is a version/applicability mismatch, not a claim that upgrading migrates
+    ciphertext written with a legacy encryptor. Reassess if legacy encryption
+    APIs, custom integrations, or previously encrypted data are introduced.
+    Verified on 2026-10-11. Reference:
+    https://spring.io/security/cve-2026-47842
+    ]]></notes>
+    <packageUrl>pkg:maven/org.springframework.security/spring-security-crypto@7.1.1</packageUrl>
+    <cve>CVE-2026-47842</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-75140 describes quadratic copying of in-scope XML namespace maps
+    in XmlTreeBuilder. The resolved jsoup 1.17.2 source does not implement that
+    namespace-map tracking/copying algorithm. CMS does parse uploaded SVG through
+    ImageTools.sanitizeSvgFile; this exception is based on the exact library code,
+    not on an assumption that XML input is trusted or unreachable.
+    This is a false-positive version match for this specific mechanism. It does
+    not suppress other XML resource-exhaustion findings. Reassess on any jsoup
+    version/content change or revision of the advisory's affected mechanism.
+    Verified on 2026-10-11. References:
+    https://github.com/jhy/jsoup/blob/jsoup-1.17.2/src/main/java/org/jsoup/parser/XmlTreeBuilder.java
+    https://github.com/jhy/jsoup/pull/2556
+    ]]></notes>
+    <packageUrl>pkg:maven/org.jsoup/jsoup@1.17.2</packageUrl>
+    <cve>CVE-2026-75140</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-93748 / GHSA-ch52-4w7c-c8xp requires a shared HTTP cache.
+    This dependency is used by make-fetch-happen in the admin build dependency
+    chain, whose lib/cache/policy.js passes shared: false to CacheSemantics.
+    The shared-cache prerequisite is absent in this reviewed use. The maintainer
+    also disputes the advisory, but that dispute alone is not the justification.
+    Reassess if the consumer/configuration changes or a shared proxy cache is added.
+    Verified on 2026-10-11. Reference:
+    https://github.com/kornelski/http-cache-semantics/issues/56
+    ]]></notes>
+    <packageUrl>pkg:npm/http-cache-semantics@4.2.0</packageUrl>
+    <cve>CVE-2026-93748</cve>
+    <vulnerabilityName>GHSA-ch52-4w7c-c8xp</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    Accepted residual risk, explicitly approved by the project owner on 2026-10-11
+    after review of CVE-2026-85228; exploitability in this checkout is unconfirmed.
+    DJL 0.36.0 is affected by integer overflow in tensor-buffer size validation.
+    It is pulled in by webjet-ai-local 2.0.4, which is excluded from the standard
+    client distribution. The reviewed local provider uses DJL tokenizers and
+    creates tensors through ONNX Runtime; no attacker-controlled raw DJL tensor
+    endpoint was established. This does not prove the affected code is safe.
+    A coordinated API/tokenizers/SentencePiece upgrade to 0.37.0 remains pending
+    native-runtime compatibility verification. Reassess if local AI is distributed,
+    tensor input or inference engines change, or a reachable DJL tensor path is added.
+    Reference: https://aws.amazon.com/security/security-bulletins/2026-106-aws/
+    ]]></notes>
+    <packageUrl>pkg:maven/ai.djl/api@0.36.0</packageUrl>
+    <cve>CVE-2026-85228</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    Accepted residual risk, explicitly approved by the project owner on 2026-10-11
+    for the listed HIGH findings whose exploitability here is unconfirmed.
+    tar 6.2.1 is installed through @webjetcms/tui-image-editor -> fabric -> canvas
+    -> @mapbox/node-pre-gyp 1.0.11. Archive extraction occurs during native-addon
+    installation, not in the CMS request handler or browser image editor.
+    A malicious/compromised installation archive could still cause path traversal,
+    arbitrary file writes or denial of service on the developer/CI machine.
+    CVE-2026-73566 additionally requires a non-empty member-selection list; the
+    reviewed node-pre-gyp extract call passes only cwd, strip and onentry options.
+    This is not a false positive or a security fix. Migration of the parent to
+    node-pre-gyp 2.x and tar 7.5.21 needs native-install compatibility verification;
+    it is deliberately separate from compatible tar 7 patch updates.
+    Reassess when the dependency chain, archive sources, installation environment,
+    or tar usage changes, and remove this exception after the migration.
+    References:
+    https://github.com/isaacs/node-tar/security/advisories
+    https://github.com/mapbox/node-pre-gyp/blob/v2.0.3/package.json
+    ]]></notes>
+    <packageUrl>pkg:npm/tar@6.2.1</packageUrl>
+    <cve>CVE-2026-23745</cve>
+    <cve>CVE-2026-23950</cve>
+    <cve>CVE-2026-24842</cve>
+    <cve>CVE-2026-26960</cve>
+    <cve>CVE-2026-29786</cve>
+    <cve>CVE-2026-31802</cve>
+    <cve>CVE-2026-59871</cve>
+    <cve>CVE-2026-59873</cve>
+    <cve>CVE-2026-59874</cve>
+    <cve>CVE-2026-73566</cve>
+    <vulnerabilityName>GHSA-8qq5-rm4j-mr97</vulnerabilityName>
+    <vulnerabilityName>GHSA-r6q2-hw4h-h46w</vulnerabilityName>
+    <vulnerabilityName>GHSA-34x7-hfp2-rc4v</vulnerabilityName>
+    <vulnerabilityName>GHSA-83g3-92jg-28cx</vulnerabilityName>
+    <vulnerabilityName>GHSA-qffp-2rhf-9h96</vulnerabilityName>
+    <vulnerabilityName>GHSA-9ppj-qmqm-q256</vulnerabilityName>
+    <vulnerabilityName>GHSA-w8wr-v893-vjvp</vulnerabilityName>
+    <vulnerabilityName>GHSA-23hp-3jrh-7fpw</vulnerabilityName>
+    <vulnerabilityName>GHSA-8x88-c5mf-7j5w</vulnerabilityName>
+    <vulnerabilityName>GHSA-r292-9mhp-454m</vulnerabilityName>
+  </suppress>
+
 </suppressions>

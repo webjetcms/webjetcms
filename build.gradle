@@ -194,9 +194,11 @@ dependencies {
     implementation("org.apache.httpcomponents:httpclient:4.5.14")
     implementation("org.apache.httpcomponents:fluent-hc:4.5.14")
     implementation("org.apache.httpcomponents:httpmime:4.5.14")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.22")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.22.1")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.22.1")
+    implementation platform("com.fasterxml.jackson:jackson-bom:2.22.3")
+    implementation platform("tools.jackson:jackson-bom:3.2.3")
+    implementation("com.fasterxml.jackson.core:jackson-annotations")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("sk.iway:wjjcaptcha:1.0-SNAPSHOT")
     //implementation("net.htmlparser.jericho:jericho-html:3.1")
     //implementation("joda-time:joda-time:2.10.13")
@@ -234,7 +236,7 @@ dependencies {
     //WebAuthn/PassKey support - separated module in Spring Security 7
     implementation("org.springframework.security:spring-security-webauthn:${springSecurityVersion}")
         //update webauthn version
-        implementation("tools.jackson.core:jackson-databind:3.2.0")
+        implementation("tools.jackson.core:jackson-databind")
     implementation("org.springframework:spring-webmvc:${springVersion}")
     implementation("org.springframework:spring-context-support:${springVersion}")
     implementation("org.springframework:spring-test:${springVersion}")
@@ -331,9 +333,8 @@ dependencies {
     // https://mvnrepository.com/artifact/org.apache.velocity/velocity-engine-core
     implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
 
-    // CVE-2026-29062
-    // Source: https://mvnrepository.com/artifact/tools.jackson.core/jackson-core
-    implementation("tools.jackson.core:jackson-core:3.1.2")
+    // The Jackson BOM above aligns this module with the security-patched databind release.
+    implementation("tools.jackson.core:jackson-core")
 
 }
 
