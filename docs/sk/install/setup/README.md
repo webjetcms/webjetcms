@@ -12,13 +12,17 @@ Návod na zriadenie novej inštalácie/čistej databázy pre nový projekt vo We
 ## Základné požiadavky na server
 
 - Server s minimálne 8 GB pamäte (pre aplikácie s väčšou záťažou minimálne 12GB), procesor aspoň `Dual Core 2 GHz` (pre servery s väčšou záťažou Quad core), miesto na disku aspoň 40GB.
-- Databáza `MySQL/MariaDB verzie 5.0+` (s kódovaním UTF-8), alebo databáza `Microsoft SQL 2012+` alebo databáza `Oracle 11g+` alebo `PostgreSQL 16+`.
+- Databáza `MariaDB 10.11+` alebo `MySQL 8.4+` (s kódovaním UTF-8), alebo databáza `Microsoft SQL 2012+` alebo databáza `Oracle 11g+` alebo `PostgreSQL 16+`.
 - [Open JDK](https://adoptium.net/temurin/releases/) verzie 17 a aplikačný server [Tomcat](https://tomcat.apache.org/download-90.cgi) 9.
 - Pripojenie na SMTP server pre posielanie emailov.
 - Funkčný DNS server.
 - Pre urýchlenie generovania náhľadových obrázkov odporúčame nainštalovanú knižnicu [ImageMagick](https://imagemagick.org/script/download.php).
 
 !>**Microsoft SQL Server:** podporovaná je verzia 2012 alebo novšia. Staršie verzie nie sú podporované.
+
+!>**MariaDB a MySQL:** od verzie WebJET CMS 2026.0 sú minimálne podporované verzie MariaDB 10.11 LTS a MySQL 8.4 LTS. Pred aktualizáciou WebJET CMS na staršom databázovom serveri najprv aktualizujte databázu podľa migračného postupu jej výrobcu. Používajte aktuálne opravné vydanie podporovaného radu. Požiadavky na databázu pre [sémantické vyhľadávanie](../../custom-apps/apps/rag/semantic-search/README.md) posudzujte samostatne.
+
+Spojenie cez MariaDB Connector/J musí používať kódovanie `utf8`, `utf8mb3` alebo `utf8mb4`; odporúčame `utf8mb4`. Ovládač 3.5.10 odmieta prepnutie spojenia na iné kódovanie a pri autentifikácii PAM vyžaduje TLS alebo lokálny Unix socket. Pri vlastnej konfigurácii overte aj TLS certifikáty a prístup cez spojenie nastavené iba na čítanie.
 
 Pre inštalácie produktov ako je `NET, LMS, DSK` sú uvedené minimálne požiadavky vhodné pre inštalácie do 50 používateľov (súčasne pracujúcich 25). Pre vyšší počet používateľov je potrebné vhodne navýšiť pamäť RAM aj CPU - pre každých ďalších súčasne pracujúcich 50 používateľov +4GB pamäte a 1CPU. Pre viac ako 200 používateľov odporúčame clustrové riešenie.
 

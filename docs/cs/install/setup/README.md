@@ -12,13 +12,17 @@ Návod na zřízení nové instalace/čisté databáze pro nový projekt ve WebJ
 ## Základní požadavky na server
 
 - Server s minimálně 8 GB paměti (pro aplikace s větší zátěží minimálně 12GB), procesor alespoň `Dual Core 2 GHz` (pro servery s větší zátěží Quad core), místo na disku alespoň 40GB.
-- Databáze `MySQL/MariaDB verzie 5.0+` (s kódováním UTF-8), nebo databáze `Microsoft SQL 2012+` nebo databáze `Oracle 11g+` nebo `PostgreSQL 16+`.
+- Databáze `MariaDB 10.11+` nebo `MySQL 8.4+` (s kódováním UTF-8), nebo databáze `Microsoft SQL 2012+` nebo databáze `Oracle 11g+` nebo `PostgreSQL 16+`.
 - [Open JDK](https://adoptium.net/temurin/releases/) verze 17 a aplikační server [Tomcat](https://tomcat.apache.org/download-90.cgi) 9.
 - Připojení na SMTP server pro posílání emailů.
 - Funkční DNS server.
 - Pro urychlení generování náhledových obrázků doporučujeme nainstalovanou knihovnu [ImageMagick](https://imagemagick.org/script/download.php).
 
 !>**Microsoft SQL Server:** podporována je verze 2012 nebo novější. Starší verze nejsou podporovány.
+
+!>**MariaDB a MySQL:** od verze WebJET CMS 2026.0 jsou minimální podporované verze MariaDB 10.11 LTS a MySQL 8.4 LTS. Před aktualizací WebJET CMS na starším databázovém serveru nejprve aktualizujte databázi podle migračního postupu jejího výrobce. Používejte aktuální opravné vydání podporované řady. Požadavky na databázi pro [sémantické vyhledávání](../../custom-apps/apps/rag/semantic-search/README.md) posuzujte samostatně.
+
+Spojení přes MariaDB Connector/J musí používat kódování `utf8`, `utf8mb3` nebo `utf8mb4`; doporučujeme `utf8mb4`. Ovladač 3.5.10 odmítá přepnutí spojení na jiné kódování a při autentifikaci PAM vyžaduje TLS nebo lokální Unix socket. U vlastní konfigurace ověřte také TLS certifikáty a přístup přes spojení nastavené pouze pro čtení.
 
 Pro instalace produktů jako je `NET, LMS, DSK` jsou uvedeny minimální požadavky vhodné pro instalace do 50 uživatelů (současně pracujících 25). Pro vyšší počet uživatelů je třeba vhodně navýšit paměť RAM i CPU – pro každých dalších současně pracujících 50 uživatelů +4GB paměti a 1CPU. Pro více než 200 uživatelů doporučujeme clusterové řešení.
 
