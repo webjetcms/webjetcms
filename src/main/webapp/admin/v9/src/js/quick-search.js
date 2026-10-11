@@ -232,7 +232,7 @@ class QuickSearch {
         if (source === 'users') return `/admin/rest/users/all?${params}`;
         if (source === 'translationKeys') { params.set('isSearchVersion', 'true'); return `/admin/v9/settings/translation-keys/all?${params}`; }
         params.set('searchType', source);
-        if (source === 'docs') params.set('searchRootGroupId', '-1');
+        if (source === 'docs') params.set('searchAllGroups', 'true');
         return `/admin/rest/search/all?${params}`;
     }
 

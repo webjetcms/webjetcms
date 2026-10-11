@@ -208,6 +208,8 @@ test('REST sources run one at a time in order and repeated Enter cannot start an
     f.advance(1000);
     for (let index = 0; index < expected.length; index++) {
         assert.deepEqual(f.rest().map(source), expected.slice(0, index + 1));
+        assert.equal(f.rest()[index].url.searchParams.get('searchAllGroups'), expected[index] === 'docs' ? 'true' : null,
+            'Only full-text page search must request all permitted folders.');
         assert.deepEqual(f.activeRest().map(source), [expected[index]], 'Only the current REST source may be in flight.');
         f.enter();
         f.enter({ repeat: true });

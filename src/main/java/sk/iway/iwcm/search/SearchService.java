@@ -1,6 +1,7 @@
 package sk.iway.iwcm.search;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -30,16 +31,17 @@ public class SearchService {
 
     /**
      * Search for term in all webpages
-     * @param params search term
+     * @param params search parameters; searchAllGroups=true searches all editable folders and pages in the current domain for docs
      * @param user user
      * @param predicates
      */
     public static void getWebPagesData(Map<String, String> params, Identity user, List<Predicate> predicates, CriteriaBuilder builder, Root<DocDetails> root) {
         String searchText = Tools.getStringValue(params.get("searchText"), null);
         String searchType = Tools.getStringValue(params.get("searchType"), "docs");
+        boolean searchAllGroups = "docs".equals(searchType) && "true".equals(params.get("searchAllGroups"));
         int rootGroupId = Tools.getIntValue(params.get("searchRootGroupId"), -1);
-        int rootGroupIdFinal = GroupsTreeService.getDefaultGroupTreeOptionForUser(rootGroupId, user).getGroupId();
-        fillPredicates(searchText, searchType, rootGroupIdFinal, user, predicates, root, builder);
+        int rootGroupIdFinal = searchAllGroups ? -1 : GroupsTreeService.getDefaultGroupTreeOptionForUser(rootGroupId, user).getGroupId();
+        fillPredicates(searchText, searchType, rootGroupIdFinal, searchAllGroups, user, predicates, root, builder);
     }
 
     public static List<DocDetails> searchTextAll(String searchText, String searchType, int rootGroupId, Identity user) {
@@ -49,7 +51,7 @@ public class SearchService {
         @SuppressWarnings("java:S1602")
         Specification<DocDetails> spec = (Specification<DocDetails>) (root, query, builder) -> {
             final List<Predicate> predicates = new ArrayList<>();
-            fillPredicates(searchText, searchType, rootGroupIdFinal, user, predicates, root, builder);
+            fillPredicates(searchText, searchType, rootGroupIdFinal, false, user, predicates, root, builder);
             return builder.and(predicates.toArray(new Predicate[predicates.size()]));
         };
 
@@ -57,7 +59,7 @@ public class SearchService {
         return repo.findAll(spec);
     }
 
-    private static void fillPredicates(String searchText, String searchType, int rootGroupId, Identity user, List<Predicate> predicates, Root<DocDetails> root, CriteriaBuilder builder) {
+    private static void fillPredicates(String searchText, String searchType, int rootGroupId, boolean searchAllGroups, Identity user, List<Predicate> predicates, Root<DocDetails> root, CriteriaBuilder builder) {
 
         if ("tatrabanka".equals(Constants.getInstallName())) {
             //fix na TB, ale inak rozumne som to nevedel spravit
@@ -72,7 +74,7 @@ public class SearchService {
         String searchTextFinal = searchText.toLowerCase();
 
         //filter by current domain
-        if(InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true)
+        if(searchAllGroups || InitServlet.isTypeCloud() || Constants.getBoolean("enableStaticFilesExternalDir")==true)
         {
             Integer[] rootGroupIds = Tools.getTokensInteger(CloudToolsForCore.getRootGroupIds(), ",");
             predicates.add(root.get("rootGroupL1").in((Object[])rootGroupIds));
@@ -82,19 +84,22 @@ public class SearchService {
         if("docs".equals(searchType)) {
             // Prepare filtering by user rights to folders or pages
             Integer[] editablePagesIds = Tools.getTokensInteger(user.getEditablePages(), ",");
-            if(rootGroupId > 0) {
+            if(rootGroupId > 0 || (searchAllGroups && Tools.isNotEmpty(user.getEditableGroups(true)))) {
                 GroupsDB groupsDB = GroupsDB.getInstance();
-                Integer[] groupsTreeIds = groupsDB.getGroupsTree(rootGroupId, true, true).stream().map(GroupDetails::getGroupId).toArray(Integer[]::new);
+                Integer[] groupsTreeIds = searchAllGroups
+                    ? Arrays.stream(groupsDB.expandGroupIdsToChilds(Tools.getTokensInt(user.getEditableGroups(true), ","), true)).boxed().toArray(Integer[]::new)
+                    : groupsDB.getGroupsTree(rootGroupId, true, true).stream().map(GroupDetails::getGroupId).toArray(Integer[]::new);
+                Predicate groupsPredicate = groupsTreeIds.length == 0 ? builder.disjunction() : root.get("groupId").in((Object[]) groupsTreeIds);
 
                 if(editablePagesIds.length > 0) {
                     // Right for pages in whole tree from given id + right for pages in editablePages
                     predicates.add(builder.or(
-                        root.get("groupId").in((Object[]) groupsTreeIds),
+                        groupsPredicate,
                         root.get("id").in((Object[]) editablePagesIds)
                     ));
                 } else {
                     // Right for pages in whole tree from given id
-                    predicates.add(root.get("groupId").in((Object[]) groupsTreeIds));
+                    predicates.add(groupsPredicate);
                 }
             } else if(editablePagesIds.length > 0) {
                 // Right for pages in editablePages
