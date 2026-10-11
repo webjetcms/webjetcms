@@ -288,21 +288,41 @@ Scenario('Documentation formats Markdown and expandable AI answers without horiz
     I.stopMockingRoute(documentationRoute);
 });
 
-/** Clearing the optional endpoint retains the original documentation search link. */
+/** Clearing the optional endpoint retains localized search on the configured documentation server. */
 Scenario('Documentation offers the external search fallback when its endpoint is empty', async ({ I }) => {
     const query = 'banner & accessibility autotest';
+    const expectedHome = await I.executeScript(() => WJ.getDocumentationUrl('/'));
     I.clickCss(`${scopes} [data-scope="documentation"]`);
     I.fillField(input, query);
-    const link = `${documentation} a[href^="https://docs.webjetcms.sk/"]`;
+    const link = `${documentation} a.md-quick-search__result`;
     I.waitForVisible(link, 10);
     const target = await I.executeScript(selector => {
         const anchor = document.querySelector(selector);
         return { href: anchor.href, target: anchor.target, rel: anchor.rel };
     }, link);
+    I.assertEqual(target.href.split('?')[0], expectedHome);
     I.assertEqual(new URL(target.href).searchParams.get('q'), query);
     I.assertEqual(target.target, '_blank');
     I.assertContain(target.rel, 'noopener');
     I.dontSeeElement(documentationResult);
+});
+
+/** A failed semantic endpoint retains the same localized documentation destination as Help. */
+Scenario('Documentation failures open the localized configured documentation home', async ({ I }) => {
+    I.mockRoute(documentationRoute, route => route.fulfill({ status: 503, headers: { 'Access-Control-Allow-Origin': '*' }, body: 'Unavailable' }));
+    I.executeScript(endpoint => {
+        window.adminSearchContext.documentationSearchUrl = endpoint;
+        window.adminHelpContext.documentationBaseUrl = new URL(endpoint).origin;
+    }, documentationEndpoint);
+    I.clickCss(`${scopes} [data-scope="documentation"]`);
+    I.fillField(input, 'banner autotest');
+    I.pressKey('Enter');
+    const link = `${documentation} .md-quick-search__documentation-link`;
+    I.waitForVisible(link, 10);
+    I.assertEqual(await I.grabAttributeFrom(link, 'href'), 'https://documentation.autotest.invalid/latest/sk/');
+    I.seeAttributesOnElements(link, { target: '_blank' });
+    I.dontSeeElement(`${documentation} .md-quick-search__retry`);
+    I.stopMockingRoute(documentationRoute);
 });
 
 /** Preserves the frequent title/URL lookup and its keyboard route to the page editor. */

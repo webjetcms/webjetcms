@@ -373,16 +373,9 @@ class QuickSearch {
                 error.append(icon('ti-alert-circle'), node('span', '', text('unavailable')));
             }
             if (source === 'documentation') {
-                let href;
-                try {
-                    const endpoint = new URL(window.adminSearchContext.documentationSearchUrl, window.location.origin);
-                    href = documentationUrl('/', endpoint.href);
-                } catch (error) { /* An invalid endpoint has no documentation origin to open. */ }
-                if (href) {
-                    const link = this.resultLink(text('documentationAll'), href, 'btn btn-outline-secondary btn-sm md-quick-search__documentation-link', true);
-                    link.append(node('span', 'visually-hidden', text('newTab')));
-                    error.append(link);
-                }
+                const link = this.resultLink(text('documentationAll'), WJ.getDocumentationUrl('/'), 'btn btn-outline-secondary btn-sm md-quick-search__documentation-link', true);
+                link.append(node('span', 'visually-hidden', text('newTab')));
+                error.append(link);
             } else {
                 const retry = button(text('retry'), 'btn-outline-secondary btn-sm md-quick-search__retry', () => { if (!loading) this.load(source, state.requestedPage); });
                 retry.dataset.focusKey = `retry-${source}`;
@@ -465,8 +458,7 @@ class QuickSearch {
 
     renderDocumentation() {
         const section = this.group('documentation', `${text('documentation')} · ${text('newTab')}`);
-        const lng = window.userLng === 'cz' ? 'cs' : ['sk', 'cs', 'en'].includes(window.userLng) ? window.userLng : 'en';
-        const link = this.resultLink(text('documentationSearch'), `https://docs.webjetcms.sk/latest/${lng}/?q=${encodeURIComponent(this.query)}`, 'md-quick-search__result', true);
+        const link = this.resultLink(text('documentationSearch'), WJ.getDocumentationUrl(`/?q=${encodeURIComponent(this.query)}`), 'md-quick-search__result', true);
         link.prepend(icon('ti-book'));
         section.append(link);
     }

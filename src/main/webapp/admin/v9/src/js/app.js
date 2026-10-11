@@ -152,6 +152,10 @@ window.dataTableCellVisibilityService = new CellVisibilityService();
 /* WEB COMPONENTS */
 import { showFeedbackDialog } from './feedback';
 WJ.showFeedbackDialog = showFeedbackDialog;
+import { getReleaseNews } from './release-news';
+WJ.getReleaseNews = getReleaseNews;
+import { initHelpMenu } from './help-menu';
+WJ.initHelpMenu = initHelpMenu;
 import './web-components/webjet-overview-dashboard';
 import './web-components/webjet-server-monitoring';
 import './web-components/webjet-image-area-selector';

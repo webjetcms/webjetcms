@@ -12,7 +12,7 @@ V hornej časti sa nachádza hlavička:
 
 obsahuje nasledovné možnosti:
 
-- Odkaz na otvorenie pomocníka.
+- Menu **Pomocník** s pomocou k aktuálnej stránke, dokumentáciou, novinkami a kontaktmi.
 - Tlačidlo **Hľadať…** na otvorenie [rýchleho vyhľadávania](search/README.md). Dialóg otvoríte aj skratkou **Ctrl+K** vo Windows alebo **⌘K** na Macu.
 - Meno aktuálne prihláseného používateľa, kliknutím na meno zobrazíte nasledovné možnosti:
   - Profil - upraviť vlastný profil (meno, email... - po zmene profilu je potrebné sa odhlásiť a znova prihlásiť).
@@ -22,6 +22,22 @@ obsahuje nasledovné možnosti:
 - ![](icon-logoff.png ":no-zoom") Ikonu na odhlásenie z administrácie.
 
 V hlavičke sa môžu zobrazovať karty na prechod do tretej úrovne menu.
+
+## Pomocník
+
+Menu **Pomocník** je dostupné v hlavičke na všetkých stránkach administrácie. Ponúka:
+
+- **Pomoc k tejto stránke** – návod k otvorenej časti administrácie. Pod odkazom je názov aktuálnej stránky. Ak stránka nemá priradený návod, položka sa nezobrazí.
+- **Dokumentácia WebJET CMS** – úvodná stránka dokumentácie v jazyku prihláseného používateľa.
+- **Klávesové skratky** – [prehľad skratiek](keyboard-shortcuts.md) a miest, kde fungujú.
+- **Čo je nové vo verzii…** – konkrétna verzia v dokumentácii. Počet noviniek a označenie **Nové** zodpovedajú karte na úvodnej obrazovke. Označenie zostáva 30 dní od prvého zobrazenia daného obsahu v menu alebo na úvode; úprava obsahu začne nové obdobie.
+- **Zoznam všetkých zmien** – kompletný changelog.
+- **Poslať spätnú väzbu** – dialóg pre nápad, problém alebo pochvalu. Funguje aj mimo úvodnej obrazovky. Šípka späť vás vráti do menu; zatvorenie krížikom zachová rozpísanú správu počas otvorenia tejto stránky.
+- **Kontaktovať podporu** – stránka podpory nastavená pre jazyk používateľa.
+
+Odkazy na dokumentáciu a podporu sa otvárajú v novej karte. V spodnej časti menu je edícia, verzia a server WebJET CMS. Ikonou kopírovania skopírujete informácie pre podporu.
+
+Menu možno ovládať klávesnicou: **Enter** alebo medzerník ho otvorí, šípky prechádzajú položky a **Esc** ho zatvorí a vráti fokus na tlačidlo **Pomocník**.
 
 ## Menu
 

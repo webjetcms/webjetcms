@@ -10,6 +10,8 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.PageLng;
+import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.DocumentationTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 import sk.iway.iwcm.system.stripes.CSRF;
@@ -39,6 +41,23 @@ public class LayoutBean {
 
     private String customAdminCss = null;
     private String customAdminJavascript = null;
+
+    public String getDocumentationBaseUrl() {
+        return DocumentationTools.getBaseUrl();
+    }
+
+    public String getProductEdition() {
+        return InitServlet.getProductEdition();
+    }
+
+    public String getProductVersion() {
+        return InitServlet.getActualVersion();
+    }
+
+    public String getProductServer() {
+        String server = System.getProperty("iway.tomcat");
+        return Tools.isNotEmpty(server) ? server : Constants.getString("clusterMyNodeName");
+    }
 
     public String getConstant(String name)
     {

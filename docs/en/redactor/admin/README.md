@@ -12,7 +12,7 @@ At the top is the header:
 
 contains the following options:
 
-- Link to open help.
+- The **Help** menu with help for the current page, documentation, release news and contacts.
 - **Search…** button to open [quick search](search/README.md). You can also open the dialog with the shortcut **Ctrl+K** on Windows or **⌘K** on Mac.
 - Name of the currently logged in user, click on the name to display the following options:
   - Profile - edit your own profile (name, email... - after changing your profile, you need to log out and log in again).
@@ -22,6 +22,22 @@ contains the following options:
 - ![](icon-logoff.png ":no-zoom") Icon for logging out of the administration.
 
 Tabs to navigate to the third menu level can be displayed in the header.
+
+## Help
+
+The **Help** menu is available in the header throughout the administration. It offers:
+
+- **Help for this page** – instructions for the current administration page, with its name below the link. This item is hidden when the page has no assigned help article.
+- **WebJET CMS documentation** – the documentation home page in the signed-in user's language.
+- **Keyboard shortcuts** – an [overview of shortcuts](keyboard-shortcuts.md) and where they work.
+- **What’s new in version…** – the specific release in the documentation. The highlight count and **New** badge match the home-page card. The badge lasts 30 days from the first time this content appears in the menu or on the home page; changes to the content start a new period.
+- **All changes** – the complete changelog.
+- **Send feedback** – a dialog for an idea, problem or praise, available from any administration page. The back arrow returns to the menu; closing with the cross retains the draft while this page remains open.
+- **Contact support** – the support page configured for the user's language.
+
+Documentation and support links open in a new tab. The menu footer shows the WebJET CMS edition, version and server. Use the copy icon to copy this information for support.
+
+Use **Enter** or Space to open the menu, arrow keys to move between items, and **Esc** to close it and return focus to the **Help** button.
 
 ## Menu
 

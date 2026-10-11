@@ -31,6 +31,8 @@ To close the dialog, press the **Esc** key, the close button, or click outside t
 
 In **Settings → Configuration**, set the variable `adminDocumentationSearchUrl` to the full URL of the search service. The default value is `https://docs.webjetcms.sk/rest/rag/markdown/search`. When changing the domain or path, just edit this variable and refresh the administration. If the value is empty, the link to the external search in the documentation will remain available.
 
+This variable also selects the server for the **Help** menu, `WJ.showHelpWindow` and changelog links. These links use only the protocol, host and port; the search-service path is ignored. For example, `https://manual.example:8443/rest/rag/markdown/search` opens documentation at `https://manual.example:8443/latest/en/`. An empty or invalid value sends links to the public documentation. An empty value still disables the search service. Documentation is available in Slovak, Czech and English; other administration languages open the English version.
+
 The administration will complete the parameter `query` with the search term and send `language` and `directory` depending on the interface language:
 
 | Administration language | `language` | `directory` |

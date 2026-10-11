@@ -4,13 +4,15 @@ WebJET includes an intelligent web page editor that shows you as faithfully as p
 
 ![](editor_preview.png)
 
+See [Keyboard shortcuts](../../admin/keyboard-shortcuts.md) for text editor shortcuts and other administration controls. On a Mac, use **Command (⌘)** instead of **Ctrl** to copy, cut, paste and edit links.
+
 ## Working with text (typing/pasting/copying)
 
 When working with text, you must first be aware of the difference between a paragraph and a text break, i.e. dividing a sentence into the next line. You create individual paragraphs by pressing ```ENTER```, while you create a text break using the key combination ```SHIFT + ENTER```.
 
 The difference between them is mainly due to the greater indentation between paragraphs (as opposed to text wrapping). Another important difference is that many text adjustments (such as creating a heading) are applied to the entire paragraph. If such a paragraph contains a line break, the change is also applied to the broken line.
 
-If you want the text not to wrap after typing a space, you can insert a **fixed space** in addition to the normal space. This can happen, for example, when typing dates ```10. 2. 2009``` or various other texts that should not be divided into two lines, such as file sizes ```123 kB``` or phone numbers ```0905 123 456```. A fixed space is inserted with the key combination CTRL+Space. It does not differ in appearance, the only difference is its behavior towards the surrounding text at the end of the line.
+If you want the text not to wrap after typing a space, you can insert a **fixed space** in addition to the normal space. This can happen, for example, when typing dates ```10. 2. 2009``` or various other texts that should not be divided into two lines, such as file sizes ```123 kB``` or phone numbers ```0905 123 456```. A fixed space is inserted with the key combination **Shift + Space**. It does not differ in appearance, the only difference is its behavior towards the surrounding text at the end of the line.
 
 **You can edit text in the WebJET editor in the following ways**:
 
@@ -23,12 +25,11 @@ If you want the text not to wrap after typing a space, you can insert a **fixed 
 
 ![](paste.png)
 
-**Insert unformatted text** from the toolbar using the ![](paste_text.png ":no-zoom" ) icon or the ```CTRL + t``` or ```CTRL + SHIFT + v``` key combination.
+**Insert unformatted text** from the toolbar using the ![](paste_text.png ":no-zoom") icon. You can also use your browser’s shortcut for pasting without formatting; the keys depend on your browser and operating system.
 This method of inserting text inserts text without any formatting, so it is most suitable for inserting regular text.
 
-**Inserting text from ```Word``` / ```Excel``` file** from the toolbar using the ![](paste_from_word.png ":no-zoom" ) icon or the ```CTRL + w``` key combination.
-This option will insert text with paragraphs and tables preserved, but stripped of all styles from the original document. Unfortunately, some browsers have this shortcut reserved for closing a window/tab, so in
-In this case, it is better to insert text by clicking on the icon in the toolbar rather than using a keyboard shortcut.
+**Inserting text from ```Word``` / ```Excel``` file** from the toolbar using the ![](paste_from_word.png ":no-zoom") icon.
+This option will insert text with paragraphs and tables preserved, but stripped of all styles from the original document.
 
 ### Copying text
 
@@ -278,7 +279,7 @@ Here you can set the number of columns and rows. If you want the table to fit th
 
 When inserting a table from other applications or documents via the keyboard shortcut ```CTRL + v```, the system automatically asks you if you want to clean the table. If you click ```OK```, the editor will clean the table from unwanted formatting characters from the original document, but will leave the table structure in its original form.
 
-The table will remain in the page content even if you use the text insertion tool from the ```Word``` / ```Excel``` file (```CTRL + w```) ![](paste_from_word.png ":no-zoom").
+The table will remain in the page content even if you use the text insertion tool from the ```Word``` / ```Excel``` file ![](paste_from_word.png ":no-zoom").
 
 ### Editing an existing table
 

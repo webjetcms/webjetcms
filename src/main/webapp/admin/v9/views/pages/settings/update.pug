@@ -136,7 +136,7 @@ block content
                         let options = {badge : true};
                         let versionYear= getYearFromVersion(element.version);
                         if(versionYear != null) {
-                            options.imgSrcPrefix = "https://docs.webjetcms.sk/v" + versionYear + "/";
+                            options.imgSrcPrefix = window.adminHelpContext.documentationBaseUrl + "/v" + versionYear + "/";
                         } else {
                             options.imgSrcPrefix = null;
                         }
@@ -163,6 +163,7 @@ block content
                     links.each(function() {
                         var href = $(this).attr("href");
                         if(href != undefined && href != null && href.indexOf("docs.webjetcms") != -1) {
+                            href = href.replace(/^https?:\/\/docs\.webjetcms\.(sk|com)(?=\/|$)/, window.adminHelpContext.documentationBaseUrl);
                             //remove .md extension
                             href = href.replace(".md", "");
                             //change # to ?id=
