@@ -199,6 +199,37 @@
 
   <suppress>
     <notes><![CDATA[
+    Accepted residual risk, explicitly approved by the project owner on 2026-10-11
+    for these two MEDIUM findings. The owner confirms that customers consume
+    builds prepared by the CMS vendor and do not run this installation path.
+    tar 6.2.1 is used by @webjetcms/tui-image-editor -> fabric -> canvas 2.11.2
+    -> @mapbox/node-pre-gyp 1.0.11 to extract native-addon installation archives.
+    It is not used to extract CMS uploads or by the browser image editor.
+    CVE-2026-59875 / GHSA-gvwx-54wh-qm9j can terminate the installation Node
+    process through a NUL-containing PAX path. This was reproduced in isolation
+    with tar 6.2.1 using the consumer's cwd, strip: 1 and onentry options.
+    GHSA-vmf3-w455-68vh causes inconsistent archive interpretation through PAX
+    size overrides on metadata headers. The parser defect was verified; a
+    scanner/extractor mismatch in the actual build pipeline is unconfirmed.
+    Exploitation requires control of an installation archive. A compromised
+    upstream release, configured mirror, or build environment remains a risk
+    to developer/CI machines even though customers receive prepared builds.
+    This is accepted installation risk, not non-applicability or a library fix.
+    Reassess if customers install these npm dependencies, archive sources or the
+    dependency chain change, or tar starts processing application input. Remove
+    this exception after a verified migration to a fixed parent/dependency chain.
+    References:
+    https://github.com/isaacs/node-tar/security/advisories/GHSA-gvwx-54wh-qm9j
+    https://github.com/isaacs/node-tar/security/advisories/GHSA-vmf3-w455-68vh
+    ]]></notes>
+    <packageUrl>pkg:npm/tar@6.2.1</packageUrl>
+    <cve>CVE-2026-59875</cve>
+    <vulnerabilityName>GHSA-gvwx-54wh-qm9j</vulnerabilityName>
+    <vulnerabilityName>GHSA-vmf3-w455-68vh</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
     CVE-2026-44311 / GHSA-w22m-hvvm-xmwx requires attacker-controlled gradient
     colors to be serialized with Fabric toSVG() and the resulting SVG to be
     rendered as active markup. The CMS integration imports @webjetcms/tui-image-editor
