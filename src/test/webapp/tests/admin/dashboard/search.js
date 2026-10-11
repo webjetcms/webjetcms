@@ -15,6 +15,14 @@ function openSearch(I) {
     I.waitForFunction(() => document.activeElement.id === 'admin-quick-search-input', 10);
 }
 
+/** Measures the visible panel and its input independently of the modal wrapper. */
+function searchPosition() {
+    return {
+        panel: document.querySelector('#admin-quick-search .modal-content').getBoundingClientRect().top,
+        input: document.querySelector('#admin-quick-search-input').getBoundingClientRect().top
+    };
+}
+
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage('/admin/v9/');
@@ -133,8 +141,10 @@ Scenario('Cached autocomplete is JSON and retains title and URL matching', async
 
 /** Checks the modal and a long URL result remain usable on a narrow viewport. */
 Scenario('URL suggestions open the page editor on mobile without horizontal overflow', async ({ I, DTE }) => {
-    I.pressKey('Escape');
+    I.see('Esc', `${modal} .md-quick-search__close`);
+    I.clickCss(`${modal} .md-quick-search__close`);
     I.waitForInvisible(modal, 10);
+    I.waitForFunction(() => document.activeElement.classList.contains('js-search-toggler'), 5);
     I.resizeWindow(390, 844);
     const triggerVisible = await I.executeScript(() => {
         const bounds = document.querySelector('button.js-search-toggler').getBoundingClientRect();
@@ -163,8 +173,10 @@ Scenario('URL suggestions open the page editor on mobile without horizontal over
     I.wjSetDefaultWindowSize();
 });
 
-/** A summary is capped at three rows, while choosing its scope reveals further matches. */
+/** Keeps the input stationary as results load and scopes expand, while preserving keyboard focus. */
 Scenario('All scopes show a short preview and scoped pagination preserves keyboard focus', async ({ I }) => {
+    const emptyPosition = await I.executeScript(searchPosition);
+    I.saveScreenshot('quick-search-palette.png');
     I.mockRoute(fulltext, route => {
         const request = new URL(route.request().url());
         const files = request.searchParams.get('searchType') === 'files';
@@ -177,12 +189,33 @@ Scenario('All scopes show a short preview and scoped pagination preserves keyboa
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ content,
             totalElements: rows.length, number: page, size, totalPages: Math.ceil(rows.length / size), last: (page + 1) * size >= rows.length }) });
     });
+    I.executeScript(() => {
+        const originalFetch = window.fetch;
+        window.fetch = (url, options) => {
+            if (!String(url).includes('/admin/rest/search/all?') || !String(url).includes('searchType=files')) return originalFetch(url, options);
+            return new Promise(resolve => {
+                window.autotestReleaseFiles = () => {
+                    window.fetch = originalFetch;
+                    resolve(originalFetch(url, options));
+                };
+            });
+        };
+    });
     I.fillField(input, 'autotest-file');
+    I.waitForFunction(() => typeof window.autotestReleaseFiles === 'function', 10);
+    const loadingPosition = await I.executeScript(searchPosition);
+    I.executeScript(() => window.autotestReleaseFiles());
     const group = '.md-quick-search__group[data-source="files"]';
     I.waitForVisible(`${group} .md-quick-search__result`, 10);
+    const resultPosition = await I.executeScript(searchPosition);
     I.assertEqual(await I.grabNumberOfVisibleElements(`${group} .md-quick-search__result`), 3);
     I.clickCss(`${group} .md-quick-search__group-heading button`);
     I.waitForFunction(() => document.querySelectorAll('.md-quick-search__group[data-source="files"] .md-quick-search__result').length === 20, 10);
+    const expandedPosition = await I.executeScript(searchPosition);
+    for (const [phase, position] of [['loading', loadingPosition], ['results', resultPosition], ['expanded scope', expandedPosition]]) {
+        I.assertTrue(Math.abs(position.panel - emptyPosition.panel) <= 1, `The panel must keep its opening position during ${phase}.`);
+        I.assertTrue(Math.abs(position.input - emptyPosition.input) <= 1, `The search input must remain stationary during ${phase}.`);
+    }
     I.seeElement(`${scopes} [data-scope="files"][aria-pressed="true"]`);
     I.clickCss(`${group} .md-quick-search__more`);
     I.waitForFunction(() => document.querySelectorAll('.md-quick-search__group[data-source="files"] .md-quick-search__result').length === 25, 10);

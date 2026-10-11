@@ -63,7 +63,7 @@ class QuickSearch {
         this.root.id = 'admin-quick-search';
         this.root.tabIndex = -1;
         this.root.setAttribute('aria-labelledby', 'admin-quick-search-title');
-        const dialog = node('div', 'modal-dialog modal-dialog-centered');
+        const dialog = node('div', 'modal-dialog');
         const content = node('div', 'modal-content');
         content.append(node('h2', 'visually-hidden', text('title')));
         content.firstChild.id = 'admin-quick-search-title';
@@ -80,7 +80,8 @@ class QuickSearch {
         this.clear = button(text('clear'), 'btn-link md-quick-search__clear', () => { this.input.value = ''; this.changed(); this.input.focus(); });
         const close = button('', 'md-quick-search__close', () => this.modal.hide());
         close.setAttribute('aria-label', text('close'));
-        close.append(icon('ti-x'));
+        close.setAttribute('aria-keyshortcuts', 'Escape');
+        close.append(node('kbd', '', 'Esc'));
         search.append(icon('ti-search'), this.input, this.clear, close);
         this.scopeBar = node('div', 'md-quick-search__scopes');
         this.scopeBar.setAttribute('role', 'group');
