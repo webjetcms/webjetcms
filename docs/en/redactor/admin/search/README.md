@@ -1,5 +1,13 @@
 # Search
 
+## Documentation in quick search
+
+Open quick search from **Search…** in the administration header, then choose **Documentation**. Semantic search shows matching pages and formatted Markdown excerpts in the dialog. When the service also returns an AI answer, it appears above the results and can be expanded. Result links open the documentation in a new tab.
+
+In **Settings → Configuration**, set `adminDocumentationSearchUrl` to the complete search endpoint URL. Its default is `https://docs.tau11.iway.sk/rest/rag/markdown/search`. After changing the host or path, refresh the administration page. An empty value retains the external documentation search link. The interface language determines both request parameters: Slovak uses `language=sk&directory=/sk/`, Czech uses `language=cs&directory=/cs/`, and English uses `language=en&directory=/en/`.
+
+For cross-origin requests, configure CORS on the documentation server. `accessControlAllowOriginUrls` must cover `/rest/rag/markdown/search` (the default `/rest/` prefix already does), and `accessControlAllowOriginValue` must be the administration origin, for example `http://iwcm.interway.sk`, without a trailing slash. If `accessControlAllowedOrigins` is configured, add the same origin there. Keep `GET` in `accessControlAllowMethods`. A public documentation API may return `Access-Control-Allow-Origin: *`; requests send no cookies or credentials. The HTTPS endpoint must also have a valid certificate.
+
 ## Overview
 
 The **Search** section in the administration allows users to search for content across multiple areas, such as web pages, files, and text keywords. Search provides tools to filter results and narrow the scope of the search, improving the efficiency of working with content.

@@ -10,12 +10,22 @@ const readAdmin = file => fs.readFileSync(path.resolve(__dirname, '../../../main
     .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
 const suggestion = title => [{ doc_id: 42, title, label: '/banner.html' }];
 const emptyPage = { content: [], totalElements: 0, last: true };
-const source = request => request.url.searchParams.get('searchType') || (request.url.pathname.includes('/users/') ? 'users' : 'translationKeys');
+const source = request => request.url.searchParams.has('directory') ? 'documentation'
+    : request.url.searchParams.get('searchType') || (request.url.pathname.includes('/users/') ? 'users' : 'translationKeys');
+const documentationSearchUrl = 'https://manual.example.com/custom/search?collection=manual';
+const deniedRestPermissions = ['menuWebpages', 'users_edit_admins', 'users_edit_public_users', 'edit_text'];
+const documentationResult = {
+    title: 'Banner guide', url: '/latest/#/en/editor/banner/', sourcePath: '/latest/en/editor/banner/README.md',
+    snippet: 'Use **banners** to display announcements.', score: 0.95
+};
 
 /** Runs the production search, DOM rendering and request parsing with a deterministic clock. */
-function fixture(t, denied = []) {
+function fixture(t, denied = [], options = {}) {
     const dom = new JSDOM('<!doctype html><button id="trigger">Search</button>', { url: 'http://localhost/admin/v9/' });
     const { window } = dom;
+    window.adminSearchContext = options.adminSearchContext;
+    window.userLng = options.language;
+    window.csrfToken = 'private-admin-csrf-token';
     let now = 0, nextId = 0, clicks = 0;
     const timers = new Map(), requests = [];
     const setTimeout = (fn, delay) => { timers.set(++nextId, { fn, at: now + delay }); return nextId; };
@@ -28,10 +38,14 @@ function fixture(t, denied = []) {
             show() { this.root.classList.add('show'); this.root.dispatchEvent(new window.Event('shown.bs.modal')); }
             hide() { this.root.dispatchEvent(new window.Event('hide.bs.modal')); this.root.classList.remove('show'); }
         } },
-        fetch: (url, options) => new Promise(resolve => requests.push({ url: new URL(url, window.location.origin), signal: options.signal, resolve }))
+        fetch: (url, options) => new Promise(resolve => requests.push({ url: new URL(url, window.location.origin), options, signal: options.signal, resolve }))
     });
+    const webjet = readAdmin('webjet.js');
+    const markdownStart = webjet.indexOf('    function parseMarkdown(');
+    vm.runInContext(`${webjet.slice(markdownStart, webjet.indexOf('    function initTooltip(', markdownStart))}\nWJ.parseMarkdown = parseMarkdown;`, context);
     vm.runInContext(`{ ${readAdmin('dashboard/widget-utils.js')}; Object.assign(this, { node, icon, localUrl, containNativeScroll, fetchJson }); }`, context);
     vm.runInContext(readAdmin('admin-menu.js'), context);
+    vm.runInContext(`{ ${readAdmin('documentation-search.js')}; Object.assign(this, { documentationUrl, documentationMarkdown }); }`, context);
     vm.runInContext(`${readAdmin('quick-search.js')}\nthis.QuickSearch = QuickSearch;`, context);
     const controller = new context.QuickSearch(window.document.querySelector('#trigger'));
     controller.root.addEventListener('click', event => {
@@ -306,4 +320,278 @@ test('A late response from an old query neither advances its queue nor unlocks a
     assert.deepEqual(f.rest().slice(1).map(source), ['docs', 'files', 'users', 'translationKeys']);
     assert.ok(f.rest().slice(1).every(request => request.url.searchParams.get('searchText') === 'news'));
     assert.equal(f.activeRest().length, 0);
+});
+
+test('Documentation uses the configured endpoint, matching language and directory without admin credentials', async t => {
+    for (const [language, expected] of [['sk', 'sk'], ['en', 'en'], ['cz', 'cs'], ['cs', 'cs'], ['de', 'en']]) {
+        await t.test(`Administration language: ${language}`, t => {
+            const f = fixture(t, deniedRestPermissions, {
+                language, adminSearchContext: { documentationSearchUrl: `${documentationSearchUrl}&language=old&directory=/old/&query=old` }
+            });
+            f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+            f.type('banners & announcements + examples');
+            f.advance(999);
+            assert.equal(f.requests.length, 0);
+            f.advance(1);
+            assert.equal(f.requests.length, 1);
+            const request = f.requests[0];
+            assert.equal(request.url.origin, 'https://manual.example.com');
+            assert.equal(request.url.pathname, '/custom/search');
+            assert.equal(request.url.searchParams.get('collection'), 'manual');
+            assert.equal(request.url.searchParams.get('query'), 'banners & announcements + examples');
+            assert.equal(request.url.searchParams.get('language'), expected);
+            assert.equal(request.url.searchParams.get('directory'), `/${expected}/`);
+            assert.equal(request.options.credentials, 'omit', 'Documentation must not receive administration cookies.');
+            assert.doesNotMatch(JSON.stringify(request.options), /private-admin-csrf-token|csrf|authorization/i);
+            assert.equal(request.url.searchParams.has('searchText'), false);
+        });
+    }
+});
+
+test('Documentation joins the sequential queue only in all or documentation scope and its own scope loads first', async t => {
+    const f = fixture(t, [], { adminSearchContext: { documentationSearchUrl } });
+    f.type('banner');
+    f.enter();
+    const expected = ['docs', 'files', 'users', 'translationKeys', 'documentation'];
+    for (let index = 0; index < expected.length; index++) {
+        assert.deepEqual(f.activeRest().map(source), [expected[index]]);
+        await f.respond(f.rest()[index], expected[index] === 'documentation' ? { results: [] } : emptyPage);
+    }
+    assert.deepEqual(f.rest().map(source), expected);
+    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+    assert.deepEqual(f.activeRest().map(source), ['documentation']);
+    await f.respond(f.rest()[5], { results: [] });
+    assert.deepEqual(f.activeRest().map(source), ['docs'], 'The existing permitted sources must continue after documentation.');
+    f.controller.scopeBar.querySelector('[data-scope="files"]').click();
+    for (let index = 7; index < 11; index++) await f.respond(f.rest()[index]);
+    assert.deepEqual(f.rest().slice(7).map(source), expected.slice(0, 4));
+    assert.equal(f.activeRest().length, 0);
+});
+
+test('Documentation uses WebJET Markdown for optional AI answers, chunk lists and code with usable result links', async t => {
+    const f = fixture(t, deniedRestPermissions, { language: 'en', adminSearchContext: { documentationSearchUrl } });
+    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+    f.type('banner');
+    f.enter();
+    await f.respond(f.rest()[0], {
+        answer: 'Choose **Banner management** to start.',
+        results: [{ ...documentationResult, snippet: '## Settings\n\n- First option\n- Second option\n\n| Name | Value |\n| --- | --- |\n| Width | 300 |\n\n```js\nconst width = 300;\n```\n\n[Details](settings.md) [Section](settings.md?id=old#základné-nastavenia) [Query section](settings.md?id=advanced-settings)' }]
+    });
+    const answer = f.controller.results.querySelector('.md-quick-search__answer');
+    assert.equal(answer.querySelector('strong').textContent, 'Banner management');
+    const card = f.controller.results.querySelector('.md-quick-search__documentation-result');
+    assert.equal(card.querySelectorAll('li').length, 2);
+    assert.equal(card.querySelector('table'), null, 'Pipe tables remain readable text in the shared WebJET renderer.');
+    assert.match(card.textContent, /\| Name \| Value \|/);
+    assert.match(card.textContent, /\| Width \| 300 \|/);
+    assert.match(card.querySelector('pre code').textContent, /const width = 300;/);
+    const resultLink = card.querySelector('.md-quick-search__result');
+    assert.equal(resultLink.href, 'https://manual.example.com/latest/en/editor/banner/');
+    assert.equal(resultLink.target, '_blank');
+    const detailLink = [...card.querySelectorAll('a')].find(link => link.textContent.startsWith('Details'));
+    assert.equal(detailLink.href, 'https://manual.example.com/latest/en/editor/banner/settings');
+    assert.equal(detailLink.target, '_blank');
+    assert.ok(detailLink.rel.split(' ').includes('noopener'));
+    const sectionLink = [...card.querySelectorAll('a')].find(link => link.textContent.startsWith('Section'));
+    const sectionUrl = new URL(sectionLink.href);
+    assert.equal(sectionUrl.hash, '');
+    assert.equal(sectionUrl.pathname, '/latest/en/editor/banner/settings');
+    assert.equal(sectionUrl.searchParams.get('id'), 'základné-nastavenia', 'Unicode heading anchors must decode correctly after one pass.');
+    const queryLink = [...card.querySelectorAll('a')].find(link => link.textContent.startsWith('Query section'));
+    const queryUrl = new URL(queryLink.href);
+    assert.equal(queryUrl.hash, '');
+    assert.equal(queryUrl.pathname, '/latest/en/editor/banner/settings');
+    assert.equal(queryUrl.searchParams.get('id'), 'advanced-settings');
+    f.type('another banner');
+    f.enter();
+    await f.respond(f.rest()[1], { results: [documentationResult] });
+    assert.equal(f.controller.results.querySelector('.md-quick-search__answer'), null, 'An omitted answer must not preserve the prior AI response.');
+    assert.match(f.controller.results.textContent, /Banner guide/);
+});
+
+test('Documentation upgrades versioned hash routes while preserving custom documentation routes', async t => {
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+    f.type('banner');
+    f.enter();
+    await f.respond(f.rest()[0], { results: ['v202618', 'manual'].map(prefix => ({
+        ...documentationResult, url: `/${prefix}/index.html#/en/editor/banner/`, sourcePath: `/${prefix}/en/editor/banner/README.md`,
+        snippet: '[Section](settings.md?id=advanced-settings)'
+    })) });
+    const cards = [...f.controller.results.querySelectorAll('.md-quick-search__documentation-result')];
+    assert.equal(cards[0].querySelector('.md-quick-search__result').href, 'https://manual.example.com/v202618/en/editor/banner/');
+    assert.equal(cards[0].querySelector('.md-quick-search__markdown a').href, 'https://manual.example.com/v202618/en/editor/banner/settings?id=advanced-settings');
+    assert.equal(cards[1].querySelector('.md-quick-search__result').href, 'https://manual.example.com/manual/index.html#/en/editor/banner/');
+    assert.equal(cards[1].querySelector('.md-quick-search__markdown a').href, 'https://manual.example.com/manual/#/en/editor/banner/settings?id=advanced-settings');
+});
+
+test('Untrusted documentation Markdown cannot create active HTML, images or unsafe destinations', async t => {
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+    f.type('banner');
+    f.enter();
+    const markdown = '<script>alert(1)</script>\n\n<img src="x" onerror="alert(1)">\n\n'
+        + '[Unsafe](javascript:alert(1)) [Foreign](https://foreign.example.com/path) [Protocol relative](//foreign.example.com/path) '
+        + '[Safe](/en/guide/) ![Tracker](https://foreign.example.com/tracker.png)';
+    await f.respond(f.rest()[0], {
+        answer: markdown,
+        results: [
+            { ...documentationResult, title: '<img src=x onerror=alert(1)>', snippet: markdown },
+            { ...documentationResult, title: 'Unsafe result URL', url: 'javascript:alert(1)' },
+            { ...documentationResult, title: 'Foreign result URL', url: 'https://foreign.example.com/path' }
+        ]
+    });
+    const section = f.controller.results.querySelector('[data-source="documentation"]');
+    assert.equal(section.querySelector('script, img, iframe, object, [onerror], [onclick]'), null);
+    assert.match(section.textContent, /<script>alert\(1\)<\/script>/, 'Raw HTML must remain inert text.');
+    assert.match(section.textContent, /Foreign/, 'Rejected Markdown links must retain readable link labels.');
+    for (const link of section.querySelectorAll('a[href]')) {
+        const url = new URL(link.href);
+        assert.equal(url.origin, 'https://manual.example.com');
+        assert.equal(url.protocol, 'https:');
+        assert.equal(link.target, '_blank');
+        assert.ok(link.rel.split(' ').includes('noopener'));
+    }
+    assert.ok([...section.querySelectorAll('a')].some(link => link.href === 'https://manual.example.com/en/guide/'));
+});
+
+test('WebJET Markdown output strips injected attributes and entity-obfuscated destinations', async t => {
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+    f.type('banner');
+    f.enter();
+    const markdown = '[Attribute breakout](/en/guide/" onclick="alert(1)" style="color:red)\n\n'
+        + "![Image alt' onerror='alert(1)](/image.png)\n\n"
+        + '[Entity script](java&#x73;cript:alert(1)) [Control script](java&#x09;script:alert(1))\n\n'
+        + '<svg onload="alert(1)"><a href="javascript:alert(1)">SVG content</a></svg>\n\n'
+        + '&lt;svg onload="alert(1)"&gt;Encoded SVG&lt;/svg&gt; &amp; readable entity\n\n'
+        + 'Use *emphasis* and `inline code`.\n\n```js\nconst value = "<safe>";\nconst other = 2;\n```';
+    await f.respond(f.rest()[0], { answer: markdown, results: [{ ...documentationResult, snippet: markdown }] });
+    for (const content of f.controller.results.querySelectorAll('.md-quick-search__markdown')) {
+        assert.equal(content.querySelector('img, script, svg, iframe, object, [onclick], [onerror], [onload], [style]'), null);
+        assert.match(content.textContent, /Image alt/, 'Suppressed images must retain their alternative text.');
+        assert.match(content.textContent, /Encoded SVG/);
+        assert.match(content.textContent, /& readable entity/);
+        assert.equal(content.querySelector('em').textContent, 'emphasis');
+        assert.equal(content.querySelector('code').textContent, 'inline code');
+        assert.match(content.querySelector('pre code').textContent, /const value = "<safe>";\nconst other = 2;/);
+        assert.equal([...content.querySelectorAll('a')].some(link => /script$/.test(link.textContent)), false,
+            'Decoded JavaScript schemes must never become links.');
+        for (const link of content.querySelectorAll('a[href]')) {
+            assert.equal(new URL(link.href).origin, 'https://manual.example.com');
+            assert.ok([...link.attributes].every(attribute => ['href', 'target', 'rel', 'data-focus-key'].includes(attribute.name)),
+                'Links may only retain the rebuilt safe navigation attributes.');
+        }
+    }
+});
+
+test('Documentation request failures and invalid responses can be retried, including answer-only results', async t => {
+    for (const [label, response, status] of [
+        ['HTTP failure', {}, 503], ['Invalid results', { results: {} }, 200], ['Null result', { results: [null] }, 200]
+    ]) {
+        await t.test(label, async t => {
+            const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+            f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+            f.type('banner');
+            f.enter();
+            await f.respond(f.rest()[0], response, status);
+            const retry = f.controller.results.querySelector('[data-source="documentation"] .md-quick-search__retry');
+            assert.ok(retry);
+            assert.equal(retry.getAttribute('aria-disabled'), 'false');
+            retry.click();
+            assert.equal(f.rest().length, 2);
+            await f.respond(f.rest()[1], { results: [], answer: 'A useful **answer** without source chunks.' });
+            assert.equal(f.controller.results.querySelector('.md-quick-search__retry'), null);
+            assert.match(f.controller.results.querySelector('.md-quick-search__answer').textContent, /A useful answer/);
+            assert.equal(f.controller.results.querySelector('.md-quick-search__empty'), null);
+        });
+    }
+});
+
+test('A malformed documentation endpoint displays a recoverable error without sending a request', async t => {
+    const adminSearchContext = { documentationSearchUrl: 'http://[' };
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext });
+    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+    f.type('banner');
+    f.enter();
+    assert.equal(f.requests.length, 0);
+    const retry = f.controller.results.querySelector('[data-source="documentation"] .md-quick-search__retry');
+    assert.ok(retry);
+    assert.equal(retry.getAttribute('aria-disabled'), 'false');
+    adminSearchContext.documentationSearchUrl = documentationSearchUrl;
+    retry.click();
+    assert.equal(f.requests.length, 1);
+    await f.respond(f.rest()[0], { results: [documentationResult] });
+    assert.equal(f.controller.results.querySelector('.md-quick-search__retry'), null);
+    assert.match(f.controller.results.textContent, /Banner guide/);
+});
+
+test('Long AI answers expand and collapse while retaining keyboard focus on the toggle', async t => {
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+    f.type('banner');
+    f.enter();
+    await f.respond(f.rest()[0], { results: [], answer: `${'Useful documentation. '.repeat(40)}**Final details.**` });
+    const toggle = () => f.controller.results.querySelector('.md-quick-search__answer-toggle');
+    assert.equal(toggle().getAttribute('aria-expanded'), 'false');
+    assert.doesNotMatch(f.controller.results.textContent, /Final details/);
+    toggle().focus();
+    toggle().click();
+    assert.equal(toggle().getAttribute('aria-expanded'), 'true');
+    assert.equal(f.controller.root.ownerDocument.activeElement, toggle());
+    assert.equal(f.controller.results.querySelector('.md-quick-search__answer strong').textContent, 'Final details.');
+    toggle().click();
+    assert.equal(toggle().getAttribute('aria-expanded'), 'false');
+    assert.equal(f.controller.root.ownerDocument.activeElement, toggle());
+    assert.doesNotMatch(f.controller.results.textContent, /Final details/);
+});
+
+test('Keyboard navigation skips documentation titles that have no safe result URL', async t => {
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+    f.type('banner');
+    f.enter();
+    await f.respond(f.rest()[0], { results: [
+        { ...documentationResult, title: 'Unsafe title', url: 'javascript:alert(1)' },
+        documentationResult
+    ] });
+    const { document, KeyboardEvent } = f.controller.root.ownerDocument.defaultView;
+    f.controller.input.focus();
+    f.controller.input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+    assert.equal(document.activeElement.tagName, 'A');
+    assert.match(document.activeElement.textContent, /Banner guide/);
+    document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+    assert.equal(document.activeElement, f.controller.input);
+});
+
+test('Documentation ignores stale answers after query changes and closing the dialog', async t => {
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+    f.type('old query');
+    f.enter();
+    const oldRequest = f.rest()[0];
+    f.type('new query');
+    f.enter();
+    assert.equal(oldRequest.signal.aborted, true);
+    await f.respond(oldRequest, { results: [documentationResult], answer: 'Stale AI answer' });
+    assert.doesNotMatch(f.controller.results.textContent, /Stale AI answer|Banner guide/);
+    assert.deepEqual(f.activeRest().map(source), ['documentation']);
+    f.controller.modal.hide();
+    assert.equal(f.rest()[1].signal.aborted, true);
+    f.controller.open();
+    await f.respond(f.rest()[1], { results: [documentationResult], answer: 'Closed dialog answer' });
+    assert.equal(f.controller.input.value, '');
+    assert.equal(f.controller.results.querySelector('.md-quick-search__answer'), null);
+    assert.equal(f.controller.results.querySelector('.md-quick-search__documentation-result'), null);
+});
+
+test('An unconfigured documentation endpoint preserves the external documentation search', t => {
+    const f = fixture(t, deniedRestPermissions, { language: 'cz' });
+    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+    f.type('banner');
+    f.advance(1000);
+    assert.equal(f.requests.length, 0);
+    const link = f.controller.results.querySelector('[data-source="documentation"] a');
+    assert.equal(link.href, 'https://docs.webjetcms.sk/latest/cs/?q=banner');
+    assert.equal(link.target, '_blank');
 });

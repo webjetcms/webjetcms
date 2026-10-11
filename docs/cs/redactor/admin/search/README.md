@@ -1,5 +1,13 @@
 # Vyhledávání
 
+## Dokumentace v rychlém vyhledávání
+
+Otevřete rychlé vyhledávání tlačítkem **Hledat…** v hlavičce administrace a zvolte **Dokumentace**. Sémantické vyhledávání zobrazí nalezené stránky a formátované Markdown ukázky přímo v dialogu. Pokud služba vrátí také AI odpověď, zobrazí se nad výsledky a můžete ji rozbalit. Odkazy na výsledky otevřou dokumentaci na nové kartě.
+
+V **Nastavení → Konfigurace** nastavte `adminDocumentationSearchUrl` na celou URL vyhledávacího endpointu. Výchozí hodnota je `https://docs.tau11.iway.sk/rest/rag/markdown/search`. Po změně domény nebo cesty obnovte administraci. Při prázdné hodnotě zůstane dostupný odkaz na externí vyhledávání v dokumentaci. Jazyk rozhraní určuje oba parametry požadavku: slovenština použije `language=sk&directory=/sk/`, čeština `language=cs&directory=/cs/` a angličtina `language=en&directory=/en/`.
+
+Pokud dokumentace běží na jiné doméně, nastavte CORS na serveru dokumentace. `accessControlAllowOriginUrls` musí zahrnovat `/rest/rag/markdown/search` (výchozí prefix `/rest/` již cestu pokrývá) a `accessControlAllowOriginValue` musí obsahovat origin administrace, například `http://iwcm.interway.sk`, bez koncového lomítka. Pokud používáte `accessControlAllowedOrigins`, přidejte stejný origin také tam. V `accessControlAllowMethods` ponechte `GET`. Veřejné dokumentační API může vracet `Access-Control-Allow-Origin: *`; požadavky neposílají cookies ani přihlašovací údaje. HTTPS endpoint musí mít také platný certifikát.
+
 ## Přehled
 
 Sekce **Vyhledávání** v administraci umožňuje uživatelům vyhledávat obsah ve více oblastech, jako jsou webové stránky, soubory a textové klíče. Vyhledávání poskytuje nástroje na filtrování výsledků a na zúžení rozsahu vyhledávání, což zlepšuje efektivitu práce s obsahem.

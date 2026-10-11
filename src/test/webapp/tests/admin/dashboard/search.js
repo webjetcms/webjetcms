@@ -6,6 +6,10 @@ const scopes = '.md-quick-search__scopes';
 const suggestions = '.md-quick-search__group[data-source="suggestions"]';
 const lookup = '**/admin/skins/webjet6/_doc_autocomplete.jsp?*';
 const fulltext = '**/admin/rest/search/all?*';
+const documentationEndpoint = 'https://documentation.autotest.invalid/custom/semantic-search?collection=autotest';
+const documentationRoute = 'https://documentation.autotest.invalid/custom/semantic-search?*';
+const documentation = '.md-quick-search__group[data-source="documentation"]';
+const documentationResult = `${documentation} .md-quick-search__documentation-result`;
 
 /** Opens the global control through its public header button. */
 function openSearch(I) {
@@ -26,6 +30,8 @@ function searchPosition() {
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage('/admin/v9/');
+    // Each documentation scenario opts into a page-local endpoint with a mocked response.
+    I.executeScript(() => window.adminSearchContext.documentationSearchUrl = '');
     openSearch(I);
 });
 
@@ -64,18 +70,23 @@ Scenario('Header search opens from the dashboard and app pages and restores keyb
     I.waitForFunction(() => document.activeElement.classList.contains('js-search-toggler'), 5);
 });
 
-/** Documentation stays an explicit external action with the encoded query and no invented count. */
-Scenario('Documentation offers an external link and history stores only confirmed searches', async ({ I }) => {
+/** Semantic results open the configured documentation site and remember only confirmed queries. */
+Scenario('Documentation shows semantic results and history stores only confirmed searches', async ({ I }) => {
     const query = 'formulár & prístupnosť autotest ' + I.getRandomText();
+    I.mockRoute(documentationRoute, route => route.fulfill({ status: 200, contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ results: [{ title: 'autotest documentation result',
+            url: '/latest/#/sk/redactor/apps/banner/', sourcePath: '/latest/sk/redactor/apps/banner/README.md',
+            snippet: 'Use **banner campaigns** to publish your content.', score: 0.9 }] }) }));
+    I.executeScript(endpoint => window.adminSearchContext.documentationSearchUrl = endpoint, documentationEndpoint);
     I.clickCss(`${scopes} [data-scope="documentation"]`);
     I.fillField(input, `  ${query}  `);
-    const link = `${modal} a[href^="https://docs.webjetcms.sk/"]`;
+    const link = `${documentationResult} .md-quick-search__result`;
     I.waitForVisible(link, 10);
     const target = await I.executeScript(selector => {
         const anchor = document.querySelector(selector);
         return { href: anchor.href, target: anchor.target, rel: anchor.rel };
     }, link);
-    I.assertEqual(new URL(target.href).searchParams.get('q'), query);
+    I.assertEqual(target.href, 'https://documentation.autotest.invalid/latest/sk/redactor/apps/banner/');
     I.assertEqual(target.target, '_blank');
     I.assertContain(target.rel, 'noopener');
     I.seeInField(input, `  ${query}  `);
@@ -99,6 +110,109 @@ Scenario('Documentation offers an external link and history stores only confirme
     I.waitForVisible(recent, 10);
     I.click(recent.find('.md-quick-search__remove-history'));
     I.dontSeeElement(recent);
+    I.stopMockingRoute(documentationRoute);
+});
+
+/** The entire endpoint is configurable and each supported locale narrows both API filters. */
+Scenario('Documentation sends localized filters to the configured endpoint without requiring an AI answer', async ({ I }) => {
+    const requests = [];
+    I.mockRoute(documentationRoute, route => {
+        const request = new URL(route.request().url());
+        requests.push({ query: request.searchParams.get('query'), language: request.searchParams.get('language'),
+            directory: request.searchParams.get('directory'), collection: request.searchParams.get('collection') });
+        return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
+            body: JSON.stringify({ results: [{ title: `autotest ${request.searchParams.get('query')}`,
+                url: `/latest/#/${request.searchParams.get('language')}/redactor/apps/banner/`, snippet: '**Localized** documentation.' }] }) });
+    });
+    I.executeScript(endpoint => window.adminSearchContext.documentationSearchUrl = endpoint, documentationEndpoint);
+    I.clickCss(`${scopes} [data-scope="documentation"]`);
+    for (const [adminLanguage, language] of [['sk', 'sk'], ['en', 'en'], ['cs', 'cs'], ['cz', 'cs']]) {
+        const query = `banner & accessibility autotest ${adminLanguage}`;
+        I.executeScript(value => window.userLng = value, adminLanguage);
+        I.fillField(input, query);
+        await I.waitForText(`autotest ${query}`, 10, documentationResult);
+        I.assertDeepEqual(requests[requests.length - 1], { query, language, directory: `/${language}/`, collection: 'autotest' });
+        I.dontSeeElement(`${documentation} .md-quick-search__answer`);
+        I.seeElement(`${documentationResult} strong`);
+    }
+    const requestCount = requests.length;
+    I.clickCss(`${scopes} [data-scope="admin"]`);
+    I.fillField(input, 'administration autotest');
+    await I.waitForFunction(() => document.querySelector('#admin-quick-search-results').getAttribute('aria-busy') === 'false', 10);
+    I.assertEqual(requests.length, requestCount, 'Unrelated scopes must not send queries to the documentation service.');
+    I.stopMockingRoute(documentationRoute);
+});
+
+/** Rich external Markdown remains safe, readable and contained on desktop and mobile. */
+Scenario('Documentation formats Markdown and expandable AI answers without horizontal overflow', async ({ I }) => {
+    I.executeScript(() => localStorage.removeItem('translate'));
+    I.amOnPage('/admin/v9/?userlngr=true');
+    openSearch(I);
+    const answer = Array.from({ length: 12 }, (_, index) => `Paragraph ${index + 1}: **Banner campaigns** group related advertising content and let editors set publication dates.`).join('\n\n');
+    const snippet = '## Campaign setup\n\nChoose **banner campaigns** and follow these steps:\n\n- Add a campaign\n- Set its publication dates\n\n'
+        + '| Setting | Value |\n| --- | --- |\n| Campaign | autotest |\n\n```json\n{"campaign": "' + 'autotest-'.repeat(20) + '"}\n```\n\n'
+        + '[Documentation link](/latest/#/sk/redactor/apps/banner/)\n\n<script>window.autotestDocumentationUnsafe = true</script>'
+        + '<img src=x onerror="window.autotestDocumentationUnsafe = true">\n\n[Unsafe link](javascript:alert(1))\n\n'
+        + '[Injected attributes](/latest/sk/redactor/apps/banner/" onclick="window.autotestDocumentationUnsafe = true" style="color:red)\n\n'
+        + '[Encoded script](java&#x73;cript:alert(1))\n\n![Campaign preview](/autotest-preview.png)';
+    I.mockRoute(documentationRoute, route => route.fulfill({ status: 200, contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ answer, results: [{ title: 'autotest banner campaign setup',
+            url: '/latest/#/sk/redactor/apps/banner/', sourcePath: '/latest/sk/redactor/apps/banner/README.md', snippet, score: 0.9 }] }) }));
+    I.executeScript(endpoint => window.adminSearchContext.documentationSearchUrl = endpoint, documentationEndpoint);
+    I.clickCss(`${scopes} [data-scope="documentation"]`);
+    I.fillField(input, 'banner campaigns autotest');
+    I.waitForVisible(`${documentationResult} .md-quick-search__markdown strong`, 10);
+    for (const element of ['h2', 'ul', 'pre code']) I.seeElement(`${documentationResult} .md-quick-search__markdown ${element}`);
+    I.see('| Setting | Value |', `${documentationResult} .md-quick-search__markdown`);
+    I.see('| Campaign | autotest |', `${documentationResult} .md-quick-search__markdown`);
+    I.see('Campaign preview', `${documentationResult} .md-quick-search__markdown`);
+    I.seeElement(`${documentation} .md-quick-search__answer strong`);
+    I.see('Odpoveď AI', `${documentation} .md-quick-search__answer h4`);
+    I.dontSee('**', `${documentation} .md-quick-search__answer`);
+    I.dontSeeElement(`${documentation} script`);
+    I.dontSeeElement(`${documentation} img`);
+    I.dontSeeElement(`${documentation} [onclick], ${documentation} [onerror], ${documentation} [style]`);
+    I.dontSeeElement(`${documentation} a[href^="javascript:"]`);
+    I.assertFalse(await I.executeScript(() => window.autotestDocumentationUnsafe === true), 'External Markdown must not execute HTML.');
+    const expand = `${documentation} .md-quick-search__answer button[aria-expanded="false"]`;
+    I.waitForVisible(expand, 10);
+    I.clickCss(expand);
+    I.seeElement(`${documentation} .md-quick-search__answer button[aria-expanded="true"]`);
+    I.see('Paragraph 12:', `${documentation} .md-quick-search__answer`);
+    I.clickCss(`${documentation} .md-quick-search__answer button[aria-expanded="true"]`);
+
+    for (const [width, height, screenshot] of [[1280, 900, 'quick-search-documentation-desktop.png'], [390, 844, 'quick-search-documentation-mobile.png']]) {
+        I.resizeWindow(width, height);
+        const bounds = await I.executeScript(() => {
+            const dialog = document.querySelector('#admin-quick-search .modal-dialog');
+            const rectangle = dialog.getBoundingClientRect();
+            return { left: rectangle.left, right: rectangle.right, viewport: innerWidth,
+                containers: [...document.querySelectorAll('#admin-quick-search .modal-content, #admin-quick-search-results, .md-quick-search__documentation-result')]
+                    .map(element => ({ width: element.clientWidth, content: element.scrollWidth })) };
+        });
+        I.assertTrue(bounds.left >= 0 && bounds.right <= bounds.viewport, 'The documentation dialog must fit the viewport.');
+        I.assertTrue(bounds.containers.every(container => container.content <= container.width + 1), 'Markdown must not overflow the documentation cards or dialog.');
+        I.saveScreenshot(screenshot);
+    }
+    I.wjSetDefaultWindowSize();
+    I.stopMockingRoute(documentationRoute);
+});
+
+/** Clearing the optional endpoint retains the original documentation search link. */
+Scenario('Documentation offers the external search fallback when its endpoint is empty', async ({ I }) => {
+    const query = 'banner & accessibility autotest';
+    I.clickCss(`${scopes} [data-scope="documentation"]`);
+    I.fillField(input, query);
+    const link = `${documentation} a[href^="https://docs.webjetcms.sk/"]`;
+    I.waitForVisible(link, 10);
+    const target = await I.executeScript(selector => {
+        const anchor = document.querySelector(selector);
+        return { href: anchor.href, target: anchor.target, rel: anchor.rel };
+    }, link);
+    I.assertEqual(new URL(target.href).searchParams.get('q'), query);
+    I.assertEqual(target.target, '_blank');
+    I.assertContain(target.rel, 'noopener');
+    I.dontSeeElement(documentationResult);
 });
 
 /** Preserves the frequent title/URL lookup and its keyboard route to the page editor. */

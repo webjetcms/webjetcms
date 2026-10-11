@@ -1,5 +1,6 @@
 import { menuEntries } from './admin-menu';
 import { node, icon, localUrl, containNativeScroll, fetchJson } from './dashboard/widget-utils';
+import { documentationUrl, documentationMarkdown } from './documentation-search';
 
 const text = (key, ...params) => WJ.translate(`admin.quickSearch.${key}.js`, ...params);
 const normalize = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase();
@@ -170,6 +171,10 @@ class QuickSearch {
             .sort((a, b) => Number(words.every(word => normalize(b.title).includes(word))) - Number(words.every(word => normalize(a.title).includes(word))));
         this.states.admin = { items: entries, total: entries.length };
         const sources = this.scopes.filter(scope => ['docs', 'files', 'users', 'translationKeys'].includes(scope));
+        if (window.adminSearchContext?.documentationSearchUrl && ['all', 'documentation'].includes(this.scope)) {
+            if (this.scope === 'documentation') sources.unshift('documentation');
+            else sources.push('documentation');
+        }
         if (this.scopes.includes('docs') && ['all', 'docs'].includes(this.scope)) sources.unshift('suggestions');
         sources.forEach(source => { this.states[source] = { items: [], loading: true, pending: true }; });
         this.render();
@@ -194,6 +199,15 @@ class QuickSearch {
     }
 
     requestUrl(source, page) {
+        if (source === 'documentation') {
+            const url = new URL(window.adminSearchContext.documentationSearchUrl, window.location.origin);
+            if (!documentationUrl(url.href, url.href)) throw new Error('Invalid documentation search URL');
+            const language = window.userLng === 'cz' ? 'cs' : ['sk', 'cs', 'en'].includes(window.userLng) ? window.userLng : 'en';
+            url.searchParams.set('query', this.query);
+            url.searchParams.set('language', language);
+            url.searchParams.set('directory', `/${language}/`);
+            return url.href;
+        }
         const params = new URLSearchParams({ searchText: this.query, size: this.scope === source ? '20' : '3', page: String(page), sort: 'id,asc' });
         if (source === 'suggestions') return `/admin/skins/webjet6/_doc_autocomplete.jsp?${new URLSearchParams({ editable: 'true', cacheOnly: 'true', url: this.query })}`;
         if (source === 'users') return `/admin/rest/users/all?${params}`;
@@ -216,14 +230,23 @@ class QuickSearch {
         state.requestedPage = page;
         this.render();
         try {
-            const data = await fetchJson(this.requestUrl(source, page), this.controller.signal);
-            const items = source === 'suggestions' ? data : data.content;
+            let data;
+            if (source === 'documentation') {
+                // Public documentation must not receive administration credentials or trigger a CSRF preflight.
+                const response = await fetch(this.requestUrl(source, page), { signal: this.controller.signal, credentials: 'omit', headers: { Accept: 'application/json' } });
+                if (!response.ok) throw new Error('Documentation search failed');
+                data = await response.json();
+                if (data.error) throw new Error('Documentation search failed');
+            } else data = await fetchJson(this.requestUrl(source, page), this.controller.signal);
+            const items = source === 'suggestions' ? data : source === 'documentation' ? data.results : data.content;
             if (!Array.isArray(items)) throw new Error('Invalid search response');
+            if (source === 'documentation' && items.some(item => !item || typeof item !== 'object')) throw new Error('Invalid documentation result');
             if (generation !== this.generation) return;
             state.items = page ? [...state.items, ...items] : items;
-            state.total = source === 'suggestions' ? null : data.totalElements;
+            state.total = source === 'suggestions' ? null : source === 'documentation' ? items.length : data.totalElements;
+            if (source === 'documentation') state.answer = typeof data.answer === 'string' ? data.answer.trim() : '';
             state.page = page;
-            state.last = source === 'suggestions' || data.last === true || state.items.length >= state.total || items.length === 0;
+            state.last = ['suggestions', 'documentation'].includes(source) || data.last === true || state.items.length >= state.total || items.length === 0;
         } catch (error) {
             if (generation !== this.generation || error.name === 'AbortError') return;
             state.error = true;
@@ -243,7 +266,7 @@ class QuickSearch {
             chip.replaceChildren(node('span', '', text(scope)));
             if (state?.total != null && !state.error) chip.append(node('span', 'md-quick-search__count', state.total));
             chip.setAttribute('aria-pressed', String(scope === this.scope));
-            chip.classList.toggle('md-quick-search__scope--empty', state?.total === 0 && !state.error);
+            chip.classList.toggle('md-quick-search__scope--empty', state?.total === 0 && !state.error && !state.answer);
             if (scope === 'docs') chip.title = text('countsHint');
         }
         this.results.replaceChildren();
@@ -254,16 +277,16 @@ class QuickSearch {
             let hasResults = false;
             let unsettled = false;
             sources.forEach(source => {
-                if (source === 'documentation') return;
+                if (source === 'documentation' && !window.adminSearchContext?.documentationSearchUrl) return;
                 const state = this.states[source];
                 if (!state) { if (this.scopes.includes(source)) unsettled = true; return; }
-                hasResults ||= state.items.length > 0;
+                hasResults ||= state.items.length > 0 || Boolean(state.answer);
                 unsettled ||= state.loading || state.error;
-                if (state.items.length || state.loading || state.error) this.renderGroup(source, state);
+                if (state.items.length || state.answer || state.loading || state.error) this.renderGroup(source, state);
             });
-            if (!hasResults && !unsettled && this.scope !== 'documentation') this.renderEmpty();
+            if (!hasResults && !unsettled && (this.scope !== 'documentation' || window.adminSearchContext?.documentationSearchUrl)) this.renderEmpty();
             if (!Object.keys(this.states).length && this.scope !== 'documentation') this.results.append(node('p', 'md-quick-search__empty', text('loading')));
-            if (sources.includes('documentation')) this.renderDocumentation();
+            if (sources.includes('documentation') && !window.adminSearchContext?.documentationSearchUrl) this.renderDocumentation();
             if (['docs', 'files', 'users', 'translationKeys'].includes(this.scope)) {
                 const href = this.scope === 'users' ? `/admin/v9/users/user-list/?${new URLSearchParams({ searchText: this.query })}` : advancedLink(this.scope, this.query);
                 const link = this.resultLink(text('handoff', text(this.scope)), href, 'md-quick-search__handoff');
@@ -306,7 +329,8 @@ class QuickSearch {
             section.firstChild.append(all);
         }
         const items = this.scope === 'all' ? state.items.slice(0, 3) : state.items;
-        items.forEach(item => {
+        if (source === 'documentation') this.renderDocumentationResults(section, state, items);
+        else items.forEach(item => {
             const row = this.row(source, item);
             if (row) section.append(row);
         });
@@ -402,6 +426,55 @@ class QuickSearch {
         const link = this.resultLink(text('documentationSearch'), `https://docs.webjetcms.sk/latest/${lng}/?q=${encodeURIComponent(this.query)}`, 'md-quick-search__result', true);
         link.prepend(icon('ti-book'));
         section.append(link);
+    }
+
+    /** Displays the optional AI answer and Markdown excerpts without nesting interactive links. */
+    renderDocumentationResults(section, state, items) {
+        if (!state.answer && !items.length) return;
+        const endpoint = new URL(window.adminSearchContext.documentationSearchUrl, window.location.origin).href;
+        if (state.answer) {
+            const answer = node('div', 'md-quick-search__answer');
+            const heading = node('h4', '');
+            heading.append(icon('ti-sparkles'), document.createTextNode(text('documentationAnswer')));
+            const previewLength = 450;
+            const collapsed = state.answer.length > previewLength && !state.answerExpanded;
+            const paragraphEnd = state.answer.lastIndexOf('\n\n', previewLength);
+            const preview = collapsed && paragraphEnd > 0 ? `${state.answer.slice(0, paragraphEnd)}\n\n…` : state.answer;
+            const content = documentationMarkdown(preview, endpoint);
+            // A single long paragraph uses a text preview so truncation cannot expose unfinished Markdown.
+            if (collapsed && paragraphEnd <= 0) content.replaceChildren(node('p', '', `${content.textContent.slice(0, previewLength)}…`));
+            answer.append(heading, content);
+            if (state.answer.length > previewLength) {
+                const toggle = button(text(state.answerExpanded ? 'documentationHideAnswer' : 'documentationShowAnswer'), 'btn-link md-quick-search__answer-toggle', () => {
+                    state.answerExpanded = !state.answerExpanded;
+                    this.render();
+                });
+                toggle.setAttribute('aria-expanded', String(Boolean(state.answerExpanded)));
+                toggle.dataset.focusKey = 'documentation-answer';
+                answer.append(toggle);
+            }
+            section.append(answer);
+        }
+        items.forEach((item, index) => {
+            const href = documentationUrl(item.url, endpoint);
+            const card = node('article', 'md-quick-search__documentation-result');
+            const heading = node('h4');
+            const title = typeof item.title === 'string' && item.title.trim() ? item.title : text('documentation');
+            if (href) {
+                const link = this.resultLink(title, href, 'md-quick-search__result', true);
+                link.dataset.focusKey = `documentation:${index}:${href}`;
+                link.prepend(icon('ti-book'));
+                link.append(icon('ti-external-link'), node('span', 'visually-hidden', text('newTab')));
+                heading.append(link);
+            } else heading.append(node('span', 'md-quick-search__documentation-title', title));
+            card.append(heading, documentationMarkdown(item.snippet, documentationUrl(item.sourcePath, endpoint) || href || endpoint));
+            section.append(card);
+        });
+        section.querySelectorAll('.md-quick-search__markdown a').forEach((link, index) => {
+            link.dataset.focusKey = `documentation-markdown:${index}:${link.href}`;
+            link.addEventListener('click', () => this.remember());
+            link.append(node('span', 'visually-hidden', text('newTab')));
+        });
     }
 
     renderEmpty() {

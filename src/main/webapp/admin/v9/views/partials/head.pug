@@ -49,7 +49,8 @@ script(data-th-inline="javascript").
     window.currentUser = JSON.parse(/*[[${layout.userDto}]]*/ "{}");
     window.adminSearchContext = {
         menu: /*[[${layout.menu}]]*/ [],
-        currentDomain: /*[[${layout.header.currentDomain}]]*/ ""
+        currentDomain: /*[[${layout.header.currentDomain}]]*/ "",
+        documentationSearchUrl: /*[[${layout.getConstant('adminDocumentationSearchUrl')}]]*/ ""
     };
 
 script(src="/admin/scripts/login-location.js" data-th-if="${layout.loginLocationUrl != null}" data-th-attr="data-lookup-url=${layout.loginLocationUrl},data-csrf=${layout.csrfToken}" data-save-url="/admin/rest/security/login-location")
