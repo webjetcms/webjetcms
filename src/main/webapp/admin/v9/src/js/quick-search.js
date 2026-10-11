@@ -285,12 +285,14 @@ class QuickSearch {
             const state = this.states[scope];
             const loading = scope === 'all' ? Object.values(this.states).some(result => result.loading)
                 : Boolean(state?.loading || (scope === 'docs' && this.states.suggestions?.loading));
-            chip.replaceChildren(node('span', '', text(scope)));
-            if (loading) {
-                const spinner = node('span', 'spinner-border md-quick-search__spinner');
-                spinner.setAttribute('aria-hidden', 'true');
-                chip.append(spinner, node('span', 'visually-hidden', text('loading')));
-            } else if (state?.total != null && !state.error) chip.append(node('span', 'md-quick-search__count', state.total));
+            if (!loading || !chip.querySelector('.md-quick-search__spinner')) {
+                chip.replaceChildren(node('span', '', text(scope)));
+                if (loading) {
+                    const spinner = node('span', 'spinner-border md-quick-search__spinner');
+                    spinner.setAttribute('aria-hidden', 'true');
+                    chip.append(spinner, node('span', 'visually-hidden', text('loading')));
+                } else if (state?.total != null && !state.error) chip.append(node('span', 'md-quick-search__count', state.total));
+            }
             chip.setAttribute('aria-busy', String(loading));
             chip.setAttribute('aria-pressed', String(scope === this.scope));
             chip.classList.toggle('md-quick-search__scope--empty', state?.total === 0 && !state.error && !state.answer && !loading);
