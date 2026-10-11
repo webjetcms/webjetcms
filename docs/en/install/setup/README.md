@@ -20,9 +20,9 @@ Instructions for setting up a new installation/clean database for a new project 
 
 !>**Microsoft SQL Server:** Version 2012 or later is supported. Older versions are not supported.
 
-!>**MariaDB and MySQL:** starting with WebJET CMS 2026.0, the minimum supported versions are MariaDB 10.11 LTS and MySQL 8.4 LTS. Before updating WebJET CMS on an older database server, upgrade the database following its vendor's migration instructions. Use the latest patch release of a supported series. Check the database requirements for [semantic search](../../custom-apps/apps/rag/semantic-search/README.md) separately.
+!>**MariaDB and MySQL:** As of WebJET CMS 2026.0, the minimum supported versions are MariaDB 10.11 LTS and MySQL 8.4 LTS. Before upgrading WebJET CMS on an older database server, first upgrade the database according to the database vendor's migration procedure. Use the current patch release of the supported series. Review the database requirements for [semantic search](../../custom-apps/apps/rag/semantic-search/README.md) separately.
 
-Connections through MariaDB Connector/J must use `utf8`, `utf8mb3` or `utf8mb4`; we recommend `utf8mb4`. Driver 3.5.10 rejects changes to other connection character sets and requires TLS or a local Unix socket for PAM authentication. For custom configurations, also verify TLS certificates and access through read-only connections.
+Connections via MariaDB Connector/J must use `utf8`, `utf8mb3`, or `utf8mb4` encoding; `utf8mb4` is recommended. The 3.5.10 driver refuses to switch the connection to a different encoding and requires TLS or a local Unix socket for PAM authentication. When configuring your own, also verify TLS certificates and access over a read-only connection.
 
 For installations of products such as `NET, LMS, DSK`, the minimum requirements are suitable for installations up to 50 users (25 working simultaneously). For a higher number of users, it is necessary to increase the RAM and CPU memory appropriately - for every additional 50 users working simultaneously +4GB of memory and 1CPU. For more than 200 users, we recommend a cluster solution.
 

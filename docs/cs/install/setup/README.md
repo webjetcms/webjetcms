@@ -20,9 +20,9 @@ Návod na zřízení nové instalace/čisté databáze pro nový projekt ve WebJ
 
 !>**Microsoft SQL Server:** podporována je verze 2012 nebo novější. Starší verze nejsou podporovány.
 
-!>**MariaDB a MySQL:** od verze WebJET CMS 2026.0 jsou minimální podporované verze MariaDB 10.11 LTS a MySQL 8.4 LTS. Před aktualizací WebJET CMS na starším databázovém serveru nejprve aktualizujte databázi podle migračního postupu jejího výrobce. Používejte aktuální opravné vydání podporované řady. Požadavky na databázi pro [sémantické vyhledávání](../../custom-apps/apps/rag/semantic-search/README.md) posuzujte samostatně.
+!>**MariaDB a MySQL:** od verze WebJET CMS 2026.0 jsou minimálně podporovány verze MariaDB 10.11 LTS a MySQL 8.4 LTS. Před aktualizací WebJET CMS na starším databázovém serveru nejprve aktualizujte databázi podle migračního postupu jejího výrobce. Používejte aktuální opravné vydání podporované řady. Požadavky na databázi pro [sémantické vyhledávání](../../custom-apps/apps/rag/semantic-search/README.md) posuzujte samostatně.
 
-Spojení přes MariaDB Connector/J musí používat kódování `utf8`, `utf8mb3` nebo `utf8mb4`; doporučujeme `utf8mb4`. Ovladač 3.5.10 odmítá přepnutí spojení na jiné kódování a při autentifikaci PAM vyžaduje TLS nebo lokální Unix socket. U vlastní konfigurace ověřte také TLS certifikáty a přístup přes spojení nastavené pouze pro čtení.
+Spojení přes MariaDB Connector/J musí používat kódování `utf8`, `utf8mb3` nebo `utf8mb4` ; doporučujeme `utf8mb4`. Ovladač 3.5.10 odmítá přepnutí spojení na jiné kódování a při autentizaci PAM vyžaduje TLS nebo lokální Unix socket. Při vlastní konfiguraci ověřte také TLS certifikáty a přístup přes spojení nastavené pouze pro čtení.
 
 Pro instalace produktů jako je `NET, LMS, DSK` jsou uvedeny minimální požadavky vhodné pro instalace do 50 uživatelů (současně pracujících 25). Pro vyšší počet uživatelů je třeba vhodně navýšit paměť RAM i CPU – pro každých dalších současně pracujících 50 uživatelů +4GB paměti a 1CPU. Pro více než 200 uživatelů doporučujeme clusterové řešení.
 
