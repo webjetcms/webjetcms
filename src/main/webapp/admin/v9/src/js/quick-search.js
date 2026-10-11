@@ -139,13 +139,14 @@ class QuickSearch {
     cancel() {
         clearTimeout(this.timer);
         clearTimeout(this.suggestionsTimer);
+        clearTimeout(this.documentationTimer);
         this.controller?.abort();
         this.generation++;
     }
 
     changed() {
         this.query = this.input.value.trim();
-        if (this.query.length >= 2) this.search(true);
+        if (this.query.length > 0) this.search(true);
         else {
             this.cancel();
             this.states = {};
@@ -156,12 +157,12 @@ class QuickSearch {
     selectScope(scope) {
         if (scope === this.scope) return;
         this.scope = scope;
-        if (this.query.length >= 2) this.search();
+        if (this.query.length > 0) this.search();
         else this.render();
         this.input.focus();
     }
 
-    /** Starts a query, optionally delaying autocomplete by 300 ms and REST sources by 1000 ms. */
+    /** Debounces autocomplete by 300 ms, REST by 1000 ms and eligible documentation queries by 2000 ms. */
     search(debounce = false) {
         this.cancel();
         this.controller = new AbortController();
@@ -169,14 +170,20 @@ class QuickSearch {
         const words = normalize(this.query).split(/\s+/);
         const entries = this.menu.filter(item => words.every(word => normalize(`${item.title} ${item.path}`).includes(word)))
             .sort((a, b) => Number(words.every(word => normalize(b.title).includes(word))) - Number(words.every(word => normalize(a.title).includes(word))));
-        this.states.admin = { items: entries, total: entries.length };
-        const sources = this.scopes.filter(scope => ['docs', 'files', 'users', 'translationKeys'].includes(scope));
+        if (this.query.length >= 2) this.states.admin = { items: entries, total: entries.length };
+        const sources = this.query.length >= 2 ? this.scopes.filter(scope => ['docs', 'files', 'users', 'translationKeys'].includes(scope)) : [];
         if (window.adminSearchContext?.documentationSearchUrl && ['all', 'documentation'].includes(this.scope)) {
             if (this.scope === 'documentation') sources.unshift('documentation');
             else sources.push('documentation');
         }
-        if (this.scopes.includes('docs') && ['all', 'docs'].includes(this.scope)) sources.unshift('suggestions');
+        if (this.query.length >= 2 && this.scopes.includes('docs') && ['all', 'docs'].includes(this.scope)) sources.unshift('suggestions');
         sources.forEach(source => { this.states[source] = { items: [], loading: true, pending: true }; });
+        if (this.states.documentation) {
+            this.states.documentation.ready = false;
+            this.states.documentation.waiting = this.query.length < 8;
+            this.states.documentation.loading = !this.states.documentation.waiting;
+            if (!this.states.documentation.waiting) this.documentationTimer = setTimeout(() => this.loadRest(true), 2000);
+        }
         this.render();
         if (sources.includes('suggestions')) {
             if (debounce) this.suggestionsTimer = setTimeout(() => this.load('suggestions'), 300);
@@ -186,15 +193,26 @@ class QuickSearch {
         else this.loadRest();
     }
 
-    /** Loads permitted REST sources sequentially without restarting an active query or autocomplete. */
-    async loadRest() {
+    /** Drains ready sources sequentially; Enter or the documentation timer releases the AI request. */
+    async loadRest(includeDocumentation = false) {
         clearTimeout(this.timer);
+        if (includeDocumentation && this.states.documentation?.pending) {
+            clearTimeout(this.documentationTimer);
+            Object.assign(this.states.documentation, { ready: true, waiting: false, loading: true });
+            this.render();
+        }
         const generation = this.generation;
-        if (this.restGeneration === generation) return;
+        if (this.restGeneration === generation || Object.entries(this.states).some(([source, state]) => source !== 'suggestions' && state.loading && !state.pending)) return;
         this.restGeneration = generation;
-        for (const [source, state] of Object.entries(this.states)) {
-            if (generation !== this.generation) return;
-            if (source !== 'suggestions' && state.pending) await this.load(source);
+        try {
+            while (generation === this.generation) {
+                const next = Object.entries(this.states).find(([source, state]) => source !== 'suggestions' && state.pending
+                    && (source !== 'documentation' || state.ready));
+                if (!next) break;
+                await this.load(next[0]);
+            }
+        } finally {
+            if (this.restGeneration === generation) this.restGeneration = null;
         }
     }
 
@@ -256,6 +274,7 @@ class QuickSearch {
         state.loading = false;
         state.retrying = false;
         this.render(keepControlFocus ? { source, index: firstNewRow } : null);
+        if (source !== 'suggestions') this.loadRest();
     }
 
     render(focusResult) {
@@ -271,9 +290,9 @@ class QuickSearch {
         }
         this.results.replaceChildren();
         if (!this.query) this.renderHistory();
-        else if (this.query.length < 2) this.results.append(node('p', 'md-quick-search__empty', text('minLength')));
+        else if (this.query.length < 2 && !this.states.documentation) this.results.append(node('p', 'md-quick-search__empty', text('minLength')));
         else {
-            const sources = this.scope === 'all' ? ['suggestions', ...this.scopes.filter(scope => scope !== 'all')] : this.scope === 'docs' ? ['suggestions', 'docs'] : [this.scope];
+            const sources = this.query.length < 2 ? ['documentation'] : this.scope === 'all' ? ['suggestions', ...this.scopes.filter(scope => scope !== 'all')] : this.scope === 'docs' ? ['suggestions', 'docs'] : [this.scope];
             let hasResults = false;
             let unsettled = false;
             sources.forEach(source => {
@@ -281,8 +300,8 @@ class QuickSearch {
                 const state = this.states[source];
                 if (!state) { if (this.scopes.includes(source)) unsettled = true; return; }
                 hasResults ||= state.items.length > 0 || Boolean(state.answer);
-                unsettled ||= state.loading || state.error;
-                if (state.items.length || state.answer || state.loading || state.error) this.renderGroup(source, state);
+                unsettled ||= state.loading || state.error || state.waiting;
+                if (state.items.length || state.answer || state.loading || state.error || state.waiting) this.renderGroup(source, state);
             });
             if (!hasResults && !unsettled && (this.scope !== 'documentation' || window.adminSearchContext?.documentationSearchUrl)) this.renderEmpty();
             if (!Object.keys(this.states).length && this.scope !== 'documentation') this.results.append(node('p', 'md-quick-search__empty', text('loading')));
@@ -336,6 +355,7 @@ class QuickSearch {
         });
         if (source === 'suggestions' && this.scope === 'docs' && state.items.length === 20) section.append(node('p', 'md-quick-search__note', text('suggestionsLimit')));
         if (state.loading) section.append(node('p', 'md-quick-search__note', text('loading')));
+        if (state.waiting) section.append(node('p', 'md-quick-search__note', text('documentationMinLength')));
         if (state.error || state.retrying) {
             const error = node('div', 'md-quick-search__error');
             if (state.error) {
@@ -541,7 +561,7 @@ class QuickSearch {
             else rows[next].focus();
         } else if (event.target === this.input && event.key === 'Enter') {
             event.preventDefault();
-            if (!event.repeat && this.query.length >= 2) this.loadRest();
+            if (!event.repeat && this.query.length > 0) this.loadRest(true);
         }
     }
 }

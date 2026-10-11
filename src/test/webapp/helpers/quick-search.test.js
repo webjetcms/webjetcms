@@ -330,7 +330,7 @@ test('Documentation uses the configured endpoint, matching language and director
             });
             f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
             f.type('banners & announcements + examples');
-            f.advance(999);
+            f.advance(1999);
             assert.equal(f.requests.length, 0);
             f.advance(1);
             assert.equal(f.requests.length, 1);
@@ -348,7 +348,7 @@ test('Documentation uses the configured endpoint, matching language and director
     }
 });
 
-test('Documentation joins the sequential queue only in all or documentation scope and its own scope loads first', async t => {
+test('Confirmed documentation shares the permitted REST queue and is excluded from unrelated scopes', async t => {
     const f = fixture(t, [], { adminSearchContext: { documentationSearchUrl } });
     f.type('banner');
     f.enter();
@@ -358,14 +358,144 @@ test('Documentation joins the sequential queue only in all or documentation scop
         await f.respond(f.rest()[index], expected[index] === 'documentation' ? { results: [] } : emptyPage);
     }
     assert.deepEqual(f.rest().map(source), expected);
-    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+    f.controller.scopeBar.querySelector('[data-scope="files"]').click();
+    f.enter();
+    f.advance(2000);
+    for (let index = 5; index < 9; index++) await f.respond(f.rest()[index]);
+    assert.deepEqual(f.rest().slice(5).map(source), expected.slice(0, 4));
+    assert.equal(f.activeRest().length, 0);
+});
+
+test('Automatic documentation requires eight trimmed characters and a two-second pause', t => {
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+    f.type(' 1234567 ');
+    f.advance(5000);
+    assert.equal(f.requests.length, 0, 'Whitespace must not make a short query eligible for automatic AI search.');
+    f.type(' 12345678 ');
+    f.advance(1999);
+    assert.equal(f.requests.length, 0);
+    f.advance(1);
+    assert.deepEqual(f.activeRest().map(source), ['documentation']);
+    assert.equal(f.rest()[0].url.searchParams.get('query'), '12345678');
+});
+
+test('Typing or changing to documentation scope restarts its delay and cancels the previous timer', async t => {
+    for (const action of ['typing', 'scope change']) {
+        await t.test(action, t => {
+            const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+            f.type('original query');
+            f.advance(1500);
+            if (action === 'typing') f.type('updated query');
+            else f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+            f.advance(1999);
+            assert.equal(f.requests.length, 0);
+            f.advance(1);
+            assert.equal(f.requests.length, 1);
+            assert.equal(f.rest()[0].url.searchParams.get('query'), action === 'typing' ? 'updated query' : 'original query');
+        });
+    }
+});
+
+test('Enter permits a nonempty one-character documentation query without lowering other source limits', async t => {
+    for (const scope of ['all', 'documentation']) {
+        await t.test(`Scope: ${scope}`, async t => {
+            const f = fixture(t, [], { adminSearchContext: { documentationSearchUrl } });
+            f.controller.scopeBar.querySelector(`[data-scope="${scope}"]`).click();
+            f.type('   ');
+            f.enter();
+            f.advance(2500);
+            assert.equal(f.requests.length, 0, 'Enter must never send an empty query.');
+            f.type(' q ');
+            f.enter();
+            assert.deepEqual(f.rest().map(source), ['documentation']);
+            assert.equal(f.rest()[0].url.searchParams.get('query'), 'q');
+            f.enter();
+            f.enter({ repeat: true });
+            f.advance(2500);
+            assert.equal(f.requests.length, 1, 'One-character queries must not start autocomplete or other REST sources.');
+            await f.respond(f.rest()[0], { results: [], answer: 'A one-character query answer.' });
+            assert.match(f.controller.results.querySelector('.md-quick-search__answer').textContent, /one-character query answer/);
+            f.enter();
+            assert.equal(f.requests.length, 1, 'Repeated Enter must not restart completed documentation requests.');
+            assert.equal(f.clicks(), 0);
+        });
+    }
+});
+
+test('Documentation starts at two seconds after the permitted REST queue has already completed', async t => {
+    const f = fixture(t, ['edit_text'], { adminSearchContext: { documentationSearchUrl } });
+    f.type('banner setup');
+    f.advance(1000);
+    const expected = ['docs', 'files', 'users'];
+    for (let index = 0; index < expected.length; index++) {
+        assert.deepEqual(f.activeRest().map(source), [expected[index]]);
+        await f.respond(f.rest()[index]);
+    }
+    assert.equal(f.activeRest().length, 0, 'Documentation must not block or join the first-second queue early.');
+    f.advance(999);
+    assert.deepEqual(f.rest().map(source), expected);
+    f.advance(1);
+    assert.deepEqual(f.rest().map(source), [...expected, 'documentation']);
+    assert.deepEqual(f.activeRest().map(source), ['documentation']);
+    f.enter();
+    f.advance(2000);
+    assert.equal(f.rest().length, 4);
+    assert.equal(f.autocomplete().length, 1);
+});
+
+test('Documentation becoming eligible during a slow REST queue waits without overlapping or duplicating requests', async t => {
+    const f = fixture(t, [], { adminSearchContext: { documentationSearchUrl } });
+    f.type('banner setup');
+    f.advance(1000);
+    f.advance(1000);
+    assert.deepEqual(f.rest().map(source), ['docs']);
+    f.enter();
+    f.enter({ repeat: true });
+    const expected = ['docs', 'files', 'users', 'translationKeys', 'documentation'];
+    for (let index = 0; index < expected.length; index++) {
+        assert.deepEqual(f.activeRest().map(source), [expected[index]], 'Documentation must use the same serial REST queue.');
+        await f.respond(f.rest()[index], expected[index] === 'documentation' ? { results: [] } : emptyPage);
+    }
+    f.advance(2000);
+    f.enter();
+    assert.deepEqual(f.rest().map(source), expected);
+    assert.equal(f.activeRest().length, 0);
+});
+
+test('Enter during a manual retry starts documentation only after that retry finishes', async t => {
+    const f = fixture(t, [], { adminSearchContext: { documentationSearchUrl } });
+    f.type('banner');
+    f.advance(1000);
+    await f.respond(f.rest()[0], { error: 'Service unavailable' }, 503);
+    for (let index = 1; index <= 3; index++) await f.respond(f.rest()[index]);
+    const retry = f.controller.results.querySelector('[data-source="docs"] .md-quick-search__retry');
+    assert.equal(retry.getAttribute('aria-disabled'), 'false');
+    retry.click();
+    assert.deepEqual(f.activeRest().map(source), ['docs']);
+    f.enter();
+    f.enter();
+    assert.equal(f.rest().length, 5, 'Confirming documentation must not overlap the manual retry.');
+    await f.respond(f.rest()[4]);
     assert.deepEqual(f.activeRest().map(source), ['documentation']);
     await f.respond(f.rest()[5], { results: [] });
-    assert.deepEqual(f.activeRest().map(source), ['docs'], 'The existing permitted sources must continue after documentation.');
-    f.controller.scopeBar.querySelector('[data-scope="files"]').click();
-    for (let index = 7; index < 11; index++) await f.respond(f.rest()[index]);
-    assert.deepEqual(f.rest().slice(7).map(source), expected.slice(0, 4));
+    f.advance(2000);
+    assert.equal(f.rest().length, 6);
     assert.equal(f.activeRest().length, 0);
+});
+
+test('Shortening the query, changing scope or closing cancels scheduled documentation', async t => {
+    for (const action of ['short query', 'scope change', 'close']) {
+        await t.test(action, t => {
+            const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+            f.type('original query');
+            f.advance(1999);
+            if (action === 'short query') f.type('q');
+            else if (action === 'scope change') f.controller.scopeBar.querySelector('[data-scope="admin"]').click();
+            else f.controller.modal.hide();
+            f.advance(2000);
+            assert.equal(f.requests.length, 0, 'The obsolete documentation timer must not send a request.');
+        });
+    }
 });
 
 test('Documentation uses WebJET Markdown for optional AI answers, chunk lists and code with usable result links', async t => {

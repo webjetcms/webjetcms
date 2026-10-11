@@ -113,6 +113,41 @@ Scenario('Documentation shows semantic results and history stores only confirmed
     I.stopMockingRoute(documentationRoute);
 });
 
+/** Short trimmed queries require Enter, including a single character, without opening a result. */
+Scenario('Documentation waits for Enter for short queries including a single character', async ({ I }) => {
+    const requests = [];
+    I.mockRoute(documentationRoute, route => {
+        const query = new URL(route.request().url()).searchParams.get('query');
+        requests.push(query);
+        return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
+            body: JSON.stringify({ results: [{ title: `autotest documentation ${query}`,
+                url: '/latest/#/sk/redactor/apps/banner/', snippet: 'Documentation for the confirmed query.' }] }) });
+    });
+    I.executeScript(endpoint => window.adminSearchContext.documentationSearchUrl = endpoint, documentationEndpoint);
+    I.fillField(input, '  banner  ');
+    I.waitForVisible(`${scopes} [data-scope="users"] .md-quick-search__count`, 15);
+    await I.waitForFunction(() => document.querySelector('#admin-quick-search-results').getAttribute('aria-busy') === 'false', 15);
+    I.seeElement(`${documentation} .md-quick-search__note`);
+    I.dontSeeElement(documentationResult);
+    I.assertDeepEqual([...requests], [], 'A query shorter than eight trimmed characters must not automatically request documentation.');
+
+    I.pressKey('Enter');
+    await I.waitForText('autotest documentation banner', 10, documentationResult);
+    I.assertDeepEqual([...requests], ['banner'], 'Enter must request documentation once using the trimmed query.');
+    I.seeCurrentUrlEquals('/admin/v9/');
+    I.seeElement(modal);
+
+    I.fillField(input, ' b ');
+    I.waitForVisible(`${documentation} .md-quick-search__note`, 10);
+    I.pressKey('Enter');
+    await I.waitForText('autotest documentation b', 10, documentationResult);
+    I.assertDeepEqual([...requests], ['banner', 'b'], 'Enter must also search documentation for a single nonempty character.');
+    I.assertEqual(await I.executeScript(() => document.activeElement.id), 'admin-quick-search-input',
+        'Confirming a documentation search must preserve input focus.');
+    I.seeCurrentUrlEquals('/admin/v9/');
+    I.stopMockingRoute(documentationRoute);
+});
+
 /** The entire endpoint is configurable and each supported locale narrows both API filters. */
 Scenario('Documentation sends localized filters to the configured endpoint without requiring an AI answer', async ({ I }) => {
     const requests = [];
@@ -470,6 +505,7 @@ Scenario('Suggestions render as text and leaving the page scope aborts pending l
 /** Skips the denied source while the remaining real REST searches finish one after another. */
 Scenario('Sequential search completes allowed sources without translation permission', async ({ I }) => {
     I.amOnPage('/admin/v9/?removePerm=edit_text');
+    I.executeScript(() => window.adminSearchContext.documentationSearchUrl = '');
     openSearch(I);
     I.assertFalse(await I.executeScript(() => WJ.hasPermission('edit_text')),
         'The translation permission must be removed for this scenario.');
