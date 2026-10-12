@@ -161,7 +161,7 @@
       form.querySelector('.deepwiki-badge > span').textContent = labels.alternative;
       form.querySelector('.deepwiki-badge a span').textContent = labels.deepWiki;
       input.placeholder = labels.placeholder;
-      submit.textContent = labels.search;
+      submit.setAttribute('aria-label', labels.search);
       dialog.setAttribute('aria-label', labels.label);
       dialogSubmit.setAttribute('aria-label', labels.search);
       dialog.querySelector('.documentation-search-query-label').textContent = labels.question;
@@ -243,7 +243,7 @@
     form.setAttribute('role', 'search');
     form.innerHTML = '<label for="documentation-query"></label>' +
       '<div class="documentation-search-input"><input id="documentation-query" type="search" maxlength="1000" required autocomplete="off">' +
-      '<button type="submit"></button></div>' +
+      '<button type="submit" class="documentation-search-submit"><i class="ti ti-search" aria-hidden="true"></i></button></div>' +
       '<div class="deepwiki-badge"><span></span>' +
       '<a href="https://deepwiki.com/webjetcms/webjetcms" target="_blank" rel="noopener noreferrer">' +
       '<span></span><i class="ti ti-arrow-up-right" aria-hidden="true"></i></a></div>';

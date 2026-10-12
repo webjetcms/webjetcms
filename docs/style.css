@@ -109,8 +109,10 @@ div.mermaid {
   border-radius: var(--code-block-border-radius);
 }
 .documentation-search {
-  margin-top: 16px;
+  margin: 0 -25px 16px;
+  padding: 16px 25px 12px;
   border-bottom: 1px solid var(--search-border);
+  background: color-mix(in srgb, var(--sidebar-background) 65%, var(--base-background-color));
   font-size: 14px;
   color: var(--search-color);
 
@@ -120,49 +122,35 @@ div.mermaid {
 
   .deepwiki-badge {
     display: flex;
-    flex-direction: column;
-    gap: 14px;
-    margin: 14px 0 24px;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin: 4px 0 0;
     color: var(--search-muted);
-    font-size: 13px;
-
-    & > span {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 12px;
-
-      &::before,
-      &::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: var(--search-border);
-      }
-    }
+    font-size: 12px;
 
     a {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
-      min-height: 36px;
+      min-height: 24px;
       box-sizing: border-box;
-      gap: 6px;
-      padding: 6px 10px;
-      border: 1px solid var(--search-border);
+      gap: 4px;
+      padding: 2px 0;
       border-radius: 6px;
       color: var(--search-color);
-      background: var(--base-background-color);
-      text-decoration: none;
+      font-size: 13px;
+      text-decoration: underline;
+      text-decoration-color: var(--search-border);
+      text-underline-offset: 3px;
       white-space: nowrap;
 
-      &:hover {
-        background: var(--search-soft);
+      &:hover,
+      &:focus-visible {
+        text-decoration-color: currentColor;
       }
 
       @media (pointer: coarse) {
         min-height: 44px;
-        box-sizing: border-box;
       }
     }
   }
@@ -172,7 +160,8 @@ div.mermaid {
     width: 100%;
     padding: 8px;
     border: 1px solid var(--search-muted);
-    border-radius: 6px;
+    border-right: 0;
+    border-radius: 6px 0 0 6px;
     color: var(--search-color);
     background: var(--search-soft);
     font: inherit;
@@ -181,23 +170,15 @@ div.mermaid {
     &::placeholder {
       color: var(--search-muted);
     }
-  }
 
-  button {
-    padding: 8px 12px;
-    border: 1px solid #868ea5;
-    border-radius: 6px;
-    background: #0063fb;
-    color: white;
-    font: inherit;
-    cursor: pointer;
-
-    &:hover {
-      background: #0054d5;
+    &:focus-visible {
+      outline: none;
+      box-shadow: none;
     }
   }
 
-  :focus-visible {
+  :focus-visible,
+  .documentation-search-input:has(input:focus-visible) {
     outline: 2px solid white;
     outline-offset: 3px;
     box-shadow: 0 0 0 3px #13151b;
@@ -205,8 +186,9 @@ div.mermaid {
 }
 .documentation-search-input {
   display: flex;
-  gap: 8px;
   margin: 8px 0;
+  border-radius: 6px;
+  font-size: 16px;
 }
 .documentation-search button:disabled,
 .documentation-search-dialog-submit:disabled,
@@ -298,6 +280,7 @@ div.mermaid {
     }
   }
 }
+.documentation-search-submit,
 .documentation-search-dialog-submit {
   flex-shrink: 0;
   display: inline-flex;
@@ -759,11 +742,13 @@ div.mermaid {
 }
 @media (pointer: coarse) {
   .documentation-search-close,
+  .documentation-search-submit,
   .documentation-search-dialog-submit {
     min-width: 44px;
   }
   .documentation-search-close,
   .documentation-search-scope,
+  .documentation-search-submit,
   .documentation-search-dialog-submit,
   .documentation-search-dialog-form input {
     min-height: 44px;
