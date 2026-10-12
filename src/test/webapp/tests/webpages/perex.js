@@ -343,9 +343,10 @@ Scenario('Web Page Import and Perex validation', async ({ I, DT, DTE }) => {
     I.forceClick(`//tr[td[contains(text(), "${webPageName}")]]//input[@type="checkbox"]`);
 
     I.clickCss('#btnOk');
+    I.waitForElement('#webPageSyncCount', 60);
     I.waitForVisible('#btnCancel', 60);
-    I.clickCss('#btnCancel');
-    I.switchToNextTab()
+    // Switch back before closing the popup so later steps cannot reuse its closed page.
+    I.closeCurrentTab();
 
     I.say("Verify that perex was created");
     I.amOnPage('/admin/v9/webpages/perex/');

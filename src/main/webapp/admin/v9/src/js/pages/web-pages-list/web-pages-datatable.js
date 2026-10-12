@@ -356,6 +356,11 @@ export class WebPagesDatatable {
                 // it is different function as webpagesDatatable.EDITOR.field("data").setJson(json)
                 self.webpagesDatatable.EDITOR.setJson(json);
 
+                // Clear the visible tooltip and pending hover/focus timers before hiding History.
+                const historyEditButton = $("#pills-dt-datatableInit-history .buttons-history-edit");
+                historyEditButton.tooltip("dispose").removeAttr("aria-describedby");
+                WJ.initTooltip(historyEditButton);
+
                 //show content tab
                 $("#pills-dt-datatableInit-content-tab").trigger("click");
 

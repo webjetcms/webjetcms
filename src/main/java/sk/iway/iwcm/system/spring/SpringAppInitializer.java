@@ -1,5 +1,6 @@
 package sk.iway.iwcm.system.spring;
 
+import org.springframework.core.SpringProperties;
 import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.request.RequestContextListener;
@@ -21,6 +22,11 @@ import java.util.List;
 
 public class SpringAppInitializer implements WebApplicationInitializer
 {
+	static {
+		// Set this before Spring creates any SpEL parsers; their default compiler mode is cached statically.
+		SpringProperties.setProperty("spring.expression.compiler.mode", "OFF");
+	}
+
 	private static DebugTimer dtGlobal = null;
 
 	@Override

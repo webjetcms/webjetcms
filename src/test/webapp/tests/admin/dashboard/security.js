@@ -75,7 +75,7 @@ for (const { permission, types } of permissionCases) {
                 'The REST service must reject missing list permission even if administrator management remains allowed.');
         }
         for (const type of types) I.dontSeeElementInDOM(`${dashboard} [data-widget-type="${type}"]`);
-        I.seeElementInDOM(`${dashboard} [data-widget-type="sessions"]`);
+        I.dontSeeElementInDOM(`${dashboard} [data-widget-type="sessions"]`);
         I.assertTrue(await I.executeScript(types => types.every(type => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.some(item => item.type === type)), types), 'Revoking access must retain the hidden preferences.');
 
         I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="false"]');

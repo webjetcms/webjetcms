@@ -1,6 +1,7 @@
 import Scrollbar from 'smooth-scrollbar';
 import Ninja from '../js/global-functions.js';
 import WJ from './webjet.js';
+import { initQuickSearch } from './quick-search';
 import {EditorAi} from '../../npm_packages/webjetdatatables/editor-ai'
 
 window.domReady.add(initClosure, 1, true);
@@ -55,6 +56,7 @@ window.initSubmenuTabsClick = function() {
 }
 
 function initClosure() {
+    initQuickSearch();
 
     // =======================
     // In iframe dialog view

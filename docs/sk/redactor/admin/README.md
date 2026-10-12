@@ -13,7 +13,7 @@ V hornej časti sa nachádza hlavička:
 obsahuje nasledovné možnosti:
 
 - Odkaz na otvorenie pomocníka.
-- ![](icon-search.png ":no-zoom") Ikonu na otvorenie stránky [Vyhľadávanie](search/README.md)
+- Tlačidlo **Hľadať…** na otvorenie [rýchleho vyhľadávania](search/README.md). Dialóg otvoríte aj skratkou **Ctrl+K** vo Windows alebo **⌘K** na Macu.
 - Meno aktuálne prihláseného používateľa, kliknutím na meno zobrazíte nasledovné možnosti:
   - Profil - upraviť vlastný profil (meno, email... - po zmene profilu je potrebné sa odhlásiť a znova prihlásiť).
   - Dvojstupňové overovanie - možnosť aktivovať dvoj stupňové overovanie pomocou aplikácie ```Google Authenticate``` pri prihlasovaní do administrácie. Zvyšuje sa tak bezpečnosť vášho konta, pretože okrem hesla je pre prihlásenie potrebné zadať aj kód z vášho mobilného zariadenia. Odporúčame nastaviť na všetky kontá, cez ktoré je možné spravovať používateľské účty a práva. Ak používate overovanie voči `ActiveDirectory/SSO` serveru môžete menu položku vypnúť nastavením konf. premennej `2factorAuthEnabled` na hodnotu `false`.

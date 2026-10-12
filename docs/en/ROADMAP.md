@@ -51,7 +51,7 @@ Explanation of the pictograms used:
 - [x] +Photo bank - add the option to set the file name before downloading from the photo bank, automatically set according to the search term (#58645).
 - [x] +Background tasks - option to manually run a task on `node`, which the task is set to, will now run on `node` where the user is logged in (#58718).
 - [x] + Dialpad - move selection and management of dialpad types to the tree in the left panel, with search and retention of the settings editor (#58786).
-- [x] +Blog - move folder selection to the tree on the left, with searching and keeping the All sections selection and adding sections (#58786).
+- [x] +Blog - move folder selection to the tree on the left, with searching and preserving the All Sections selection and adding sections (#58786).
 - [x] +News - move folder selection to the tree on the left similar to gallery/websites, with subfolder selection and search (#58786).
 - [x] +Translation keys - display a tree structure of translation keys for better orientation (#58714).
 - [x] +Configuration - add the option to set a variable only for the current node (do not save it to the database - just set it to the Constants object), add a checkbox there "Set temporarily" with an info icon that the value is set only temporarily and on restart the value as in the database will be restored. (#291)

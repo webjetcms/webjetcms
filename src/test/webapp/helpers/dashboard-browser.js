@@ -45,9 +45,9 @@ async function waitForWidgets(I) {
 const dashboardPageRoute = '**/admin/v9/';
 
 /** Overrides embedded data in the HTML response without changing the account's stored preferences. */
-async function mockDashboardBootstrap(I, readData, readNoticePreferences) {
-    await I.stopMockingRoute(dashboardPageRoute);
-    await I.mockRoute(dashboardPageRoute, async route => {
+async function mockDashboardBootstrap(I, readData, readNoticePreferences, pageRoute = dashboardPageRoute) {
+    await I.stopMockingRoute(pageRoute);
+    await I.mockRoute(pageRoute, async route => {
         const response = await route.fetch();
         const html = await response.text();
         const marker = /window\.webjetOverviewDashboardBootstrapData = JSON\.parse\([^\n]+\);/;
@@ -81,7 +81,8 @@ async function restoreDefaultDashboard(I) {
     const dialog = '#toast-container-webjet .toast[role="dialog"]';
     const readLayout = () => {
         const settings = document.querySelector('webjet-overview-dashboard').dashboardController.settings;
-        return settings.items.map(({ id, type, size, options }) => ({ type, size, options, domainOptions: settings.domainOptions[id] || {} }));
+        const items = settings.items.map(({ id, type, size, options }) => ({ type, size, options, domainOptions: settings.domainOptions[id] || {} }));
+        return { widgets: items.filter(item => item.type !== 'shortcut'), shortcuts: items.filter(item => item.type === 'shortcut') };
     };
 
     I.amOnPage('/admin/v9/');
@@ -108,4 +109,22 @@ async function restoreDefaultDashboard(I) {
     I.assertDeepEqual(await I.executeScript(readLayout), defaults, 'The default overview must remain saved after reloading.');
 }
 
-module.exports = { showWidget, waitForWidgets, mockDashboardBootstrap, dashboardPageRoute, readDashboardBootstrap, restoreDefaultDashboard };
+/** Shows a temporary personal sessions widget without persisting a layout change. */
+async function showDashboardSessions(I) {
+    await I.executeScript(() => {
+        const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
+        if (!controller.settings.items.some(item => item.id === 'autotest-session-dialog')) {
+            controller.settings.items.unshift({ id: 'autotest-session-dialog', type: 'my-sessions', size: '2x3', options: {} });
+            controller._render();
+        }
+    });
+    await showWidget(I, 'autotest-session-dialog');
+}
+
+/** Opens sessions from a temporary personal widget without persisting a layout change. */
+async function openDashboardSessions(I) {
+    await showDashboardSessions(I);
+    I.clickCss('[data-instance-id="autotest-session-dialog"] .md-dashboard__title-action');
+}
+
+module.exports = { showWidget, waitForWidgets, mockDashboardBootstrap, dashboardPageRoute, readDashboardBootstrap, restoreDefaultDashboard, showDashboardSessions, openDashboardSessions };

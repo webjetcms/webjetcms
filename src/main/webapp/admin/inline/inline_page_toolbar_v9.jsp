@@ -32,6 +32,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
     <style>
         :root {
             --<%=Constants.getString("pageBuilderPrefix", "pb")%>-image-width: <%=Constants.getInt("pagebuilderLibraryImageWidth")%>px;
+            --<%=Constants.getString("pageBuilderPrefix", "pb")%>-structure-width: <%=Constants.getInt("pagebuilderStructureWidth", 280)%>px;
         }
         p.text-right { text-align: right; }
         p.text-center { text-align: center; }

@@ -6,8 +6,8 @@ let originalSettings;
 const catalogue = [
     ['shortcut', '1x1'], ['recent-pages', '3x3'], ['approvals', '3x3'], ['publishing', '2x3'],
     ['forms', '3x3'], ['traffic', '3x3'], ['top-pages', '3x3'], ['search-terms', '2x3'],
-    ['referrers', '3x3'], ['newsletter', '3x3'], ['errors', '3x3'], ['sessions', '2x3'],
-    ['news', '3x2'], ['search', 'fullauto'], ['changed-pages', '3x3'], ['audit', '3x3'],
+    ['referrers', '3x3'], ['newsletter', '3x3'], ['errors', '3x3'], ['my-sessions', '2x3'],
+    ['news', '3x2'], ['changed-pages', '3x3'], ['audit', '3x3'],
     ['logged-admins', '2x2'], ['server-memory', '3x2'], ['server-cpu', '3x2']
 ];
 
@@ -96,7 +96,7 @@ Scenario('Render the complete widget catalogue on desktop and mobile', async ({ 
             }
             item.size = size;
             item.options = type === 'shortcut' ? { href: '/admin/v9/webpages/web-pages-list/', title: 'catalogue-autotest shortcut' }
-                : type === 'traffic' ? { days: 7, metric: 'sessions' } : type === 'search' ? { scope: 'admin' }
+                : type === 'traffic' ? { days: 7, metric: 'sessions' }
                     : ['forms', 'top-pages', 'search-terms', 'referrers', 'errors'].includes(type) ? { days: 7 } : {};
             next.domainOptions[item.id] = {};
             chosen.push(item);
@@ -120,8 +120,7 @@ Scenario('Render the complete widget catalogue on desktop and mobile', async ({ 
     I.seeNumberOfElements('#toast-container-overview', 1);
     I.dontSeeElementInDOM('.md-dashboard__legacy');
     I.dontSeeElementInDOM('#webjet-overview-dashboard .bookmark');
-    I.seeElement('[data-widget-type="sessions"] .md-dashboard__title-action');
-    I.seeElement('[data-widget-type="sessions"] .md-dashboard-widget__session-current');
+    I.dontSeeElementInDOM('[data-widget-type="sessions"]');
     I.seeElement('[data-widget-type="recent-pages"] .md-dashboard__widget-header .md-dashboard__title-link[href="/admin/v9/webpages/web-pages-list/"]');
     I.dontSeeElement('[data-widget-type="recent-pages"] .md-dashboard-widget__more');
     I.assertEqual(await I.grabTextFrom('[data-widget-type="traffic"] .md-dashboard-widget__metric-label'),
@@ -208,65 +207,43 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
 });
 
 /**
- * Collapses the release announcement, reloads the page and checks that the choice is remembered. Expanding
- * it again must restore the announcement text and links, while collapsing it preserves keyboard focus.
+ * Expands the localized announcement without changing layout preferences. Collapse restores keyboard focus,
+ * and a reload starts in the compact carousel with the complete text still available.
  */
-Scenario('Collapse release news across reload and expand it from the compact summary', async ({ I }) => {
+Scenario('Release news expands its full content and returns to the carousel after reload', async ({ I }) => {
     await waitForWidgets(I);
-    I.waitForVisible('[data-widget-type="news"] .md-dashboard__widget-content button', 10);
+    const toggle = '[data-widget-type="news"] .md-dashboard-widget__news-toggle';
+    const preview = '[data-widget-type="news"] .md-dashboard-widget__news-preview';
+    const full = '[data-widget-type="news"] .md-dashboard-widget__news-highlights';
+    I.waitForVisible(`${toggle}[aria-expanded="false"]`, 10);
+    I.seeElement(preview);
+    I.dontSeeElement(full);
+    const acknowledged = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.acknowledgedNewsVersion);
     const announcement = await I.executeScript(readAnnouncement, true);
     I.assertTrue(announcement.text.length > 0, 'The release announcement must contain text.');
     I.assertNotContain(announcement.text, '\\n', 'Translation paragraph escapes must not appear as literal text.');
+    I.clickCss(toggle);
+    I.waitForVisible(full, 10);
     I.assertDeepEqual(await I.executeScript(readAnnouncement), announcement, 'The full announcement text and links must render.');
-    I.clickCss('[data-widget-type="news"] .md-dashboard__widget-content button');
-    waitForSave(I);
-    I.waitForVisible('[data-widget-type="news"] .md-dashboard-widget__news-toggle[aria-expanded="false"]', 10);
-    I.seeElement('[data-widget-type="news"] .md-dashboard-widget__news-summary');
-    I.dontSeeElement('[data-widget-type="news"] .md-dashboard-widget__news-highlights');
+    I.clickCss('[data-widget-type="news"] .md-dashboard-widget__news-close');
+    I.waitForVisible(`${toggle}[aria-expanded="false"]`, 10);
+    I.seeElement(preview);
+    I.dontSeeElement(full);
     I.assertTrue(await I.executeScript(() => document.activeElement.matches('.md-dashboard-widget__news-toggle')),
         'Collapsing release notes must keep focus on their toggle.');
-    const acknowledged = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.acknowledgedNewsVersion);
-    I.assertTrue(typeof acknowledged === 'string' && acknowledged.length > 0);
+    I.assertEqual(await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.acknowledgedNewsVersion), acknowledged,
+        'Expanding and collapsing news must not change legacy layout preferences.');
+    I.clickCss(toggle);
+    I.waitForVisible(full, 10);
     I.refreshPage();
     await waitForWidgets(I);
-    I.seeElement('[data-widget-type="news"] .md-dashboard-widget__news-summary');
-    I.clickCss('[data-widget-type="news"] .md-dashboard-widget__news-toggle');
-    waitForSave(I);
-    I.waitForVisible('[data-widget-type="news"]', 10);
-    I.waitForVisible('[data-widget-type="news"] .md-dashboard-widget__news-highlights', 10);
+    I.seeElement(`${toggle}[aria-expanded="false"]`);
+    I.seeElement(preview);
+    I.dontSeeElement(full);
+    I.clickCss(toggle);
+    I.waitForVisible(full, 10);
     I.assertDeepEqual(await I.executeScript(readAnnouncement), announcement,
         'Expanding release notes must restore their content and links.');
-});
-
-/**
- * Checks that documentation search keeps the entered text, including accents and special characters, and
- * requests a separate tab. The test captures the destination without opening the external documentation
- * site.
- */
-Scenario('Documentation search switches scope and opens the encoded query without an external request', async ({ I }) => {
-    await waitForWidgets(I);
-    const scope = '[data-widget-type="search"]';
-    const query = 'formulár & prístupnosť autotest';
-    I.clickCss(`${scope} label:has(input[value="docs"])`);
-    I.fillField(`${scope} input[type="search"]`, query);
-    await I.executeScript(() => {
-        window.autotestOriginalOpen = window.open;
-        window.autotestSearchPopup = null;
-        window.open = (url, target, features) => { window.autotestSearchPopup = { url, target, features }; return null; };
-    });
-    I.pressKey('Enter');
-    const popup = await I.executeScript(() => {
-        try { return window.autotestSearchPopup; }
-        finally { window.open = window.autotestOriginalOpen; delete window.autotestOriginalOpen; }
-    });
-    I.assertTrue(Boolean(popup));
-    I.assertEqual(new URL(popup.url).origin, 'https://docs.webjetcms.sk');
-    I.assertEqual(new URL(popup.url).searchParams.get('q'), query);
-    I.assertEqual(popup.target, '_blank');
-    I.assertContain(popup.features, 'noopener');
-    I.fillField(`${scope} input[type="search"]`, '');
-    I.clickCss(`${scope} label:has(input[value="admin"])`);
-    I.seeElement(`${scope} input[type="radio"][value="admin"]:checked`);
 });
 
 /**

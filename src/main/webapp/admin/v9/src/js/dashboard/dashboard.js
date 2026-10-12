@@ -119,9 +119,13 @@ export class DashboardController {
     _build() {
         this.host.classList.add("md-dashboard");
         this.hero = node("div", "md-dashboard__hero");
-        if (this.context.config?.heroBackgroundImage !== undefined) {
-            const backgroundImage = shortcutUrl(this.context.config.heroBackgroundImage);
-            this.hero.style.setProperty("--wj-dashboard-hero-image", backgroundImage ? `url(${JSON.stringify(backgroundImage)})` : "none");
+        const background = this.context.config?.heroBackgroundImage;
+        const backgroundUrl = shortcutUrl(background);
+        if (backgroundUrl) this.hero.style.backgroundImage = `url(${JSON.stringify(backgroundUrl)})`;
+        else if (typeof background === "string" && /^\s*(?:repeating-)?(?:linear|radial|conic)-gradient\(/i.test(background)
+            && !/[\\;]|(?:url|var|image-set)\s*\(/i.test(background)) {
+            // The browser rejects invalid gradient syntax and retains the stylesheet default.
+            this.hero.style.backgroundImage = background;
         }
         const welcome = node("div", "md-dashboard__welcome");
         const language = window.userLng === "cz" ? "cs" : window.userLng || "sk";
@@ -132,12 +136,9 @@ export class DashboardController {
         welcomeHeading.append(node("h1", "md-dashboard__greeting", `${this._t("welcomeBack", "Welcome back,")} ${this.context.data?.userName || ""}`.trim()));
         welcome.append(welcomeHeading);
         this.news = node("div", "md-dashboard__news");
-        welcome.append(this.news);
-        this.sessions = node("div", "md-dashboard__sessions");
-        this.hero.append(welcome, this.sessions);
+        this.hero.append(welcome, this.news);
         this.notices = node("div", "md-dashboard__notices");
         this.notices.id = "toast-container-overview";
-        this.search = node("div", "md-dashboard__search");
         this.toolbar = node("div", "md-dashboard__toolbar");
         const toolbarHeading = node("div", "md-dashboard__toolbar-heading");
         this.toolbarTitle = node("h2", "md-dashboard__title", this._t("title", "My overview"));
@@ -149,7 +150,7 @@ export class DashboardController {
         this.editButton = button(this._t("editOverview", "Edit overview"), () => this.editing ? this.saveEditing() : this.setEditing(true), "btn btn-sm btn-outline-secondary md-dashboard__control");
         this.editButton.setAttribute("aria-pressed", "false");
         this.editButton.prepend(icon("ti-adjustments-horizontal"));
-        this.addButton = button(this._t("add", "Add widget"), () => this.showCatalogue(), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control");
+        this.addButton = button(this._t("add", "Add widget"), () => this.showCatalogue(), "btn btn-sm btn-white md-dashboard__control md-dashboard__edit-control");
         this.addButton.prepend(icon("ti-plus"));
         this.addButton.hidden = true;
         this.resetButton = button(this._t("resetConfirm", "Restore defaults"), event => this.showReset(event.shiftKey), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control md-dashboard__reset");
@@ -161,7 +162,7 @@ export class DashboardController {
             feedback.prepend(icon("ti-message-2"));
             actions.append(feedback);
         }
-        this.cancelButton = button(this._t("button.cancel", "Cancel"), () => this.cancelEditing(), "btn btn-sm btn-outline-secondary md-dashboard__control md-dashboard__edit-control md-dashboard__cancel");
+        this.cancelButton = button(this._t("button.cancel", "Cancel"), () => this.cancelEditing(), "btn btn-sm btn-white md-dashboard__control md-dashboard__edit-control md-dashboard__cancel");
         this.cancelButton.hidden = true;
         actions.append(this.resetButton, this.addButton, this.cancelButton, this.editButton);
         this.toolbar.append(actions);
@@ -200,8 +201,8 @@ export class DashboardController {
         moveHint.id = `dashboard-shortcut-move-${createInstanceId()}`;
         this.shortcutMoveHint = moveHint;
         this.shortcuts.append(moveHint);
-        welcome.insertBefore(this.shortcuts, this.news);
-        this.host.replaceChildren(this.hero, this.notices, this.search, this.toolbar, this.overviewStatus, this.undoContainer, this.layout, this.widgetMoveHint, this.widgetMoveStatus);
+        welcome.append(this.shortcuts);
+        this.host.replaceChildren(this.hero, this.notices, this.toolbar, this.overviewStatus, this.undoContainer, this.layout, this.widgetMoveHint, this.widgetMoveStatus);
         if (window.jQuery && window.WJ?.initTooltip) {
             for (const control of [this.resetButton, this.editShortcutsButton]) window.WJ.initTooltip(window.jQuery(control));
         }
@@ -273,7 +274,7 @@ export class DashboardController {
             if (hasBootstrapModal) dialog.root.addEventListener("hidden.bs.modal", cancel, { once: true });
             dialog.close();
             if (!hasBootstrapModal) cancel();
-        }, "btn btn-danger");
+        }, "btn btn-red");
         dialog.footer.append(keep, discard);
         dialog.root.addEventListener("shown.bs.modal", () => keep.focus({ preventScroll: true }), { once: true });
         keep.focus({ preventScroll: true });
@@ -324,7 +325,7 @@ export class DashboardController {
     }
 
     _region(instance) {
-        return ["sessions", "news", "search"].includes(instance.type) ? instance.type : instance.type === "shortcut" ? "shortcut" : "grid";
+        return ["sessions", "news"].includes(instance.type) ? instance.type : instance.type === "shortcut" ? "shortcut" : "grid";
     }
 
     /**
@@ -333,25 +334,24 @@ export class DashboardController {
      */
     _displayItems() {
         const items = [...this.settings.items];
-        for (const type of ["sessions", "news", "search"]) {
-            const definition = getWidget(type);
-            if (definition && !items.some(item => item.type === type)) items.push({ ...this._newInstance(definition), id: `dashboard-fixed-${type}` });
-        }
+        const news = getWidget("news");
+        if (news && !items.some(item => item.type === "news")) items.push({ ...this._newInstance(news), id: "dashboard-fixed-news" });
         return items.filter(instance => {
             const definition = getWidget(instance.type);
-            return definition && this._available(definition) && (this._region(instance) !== "grid" || this._visible(definition, instance));
+            return instance.type !== "sessions" && definition && this._available(definition) && (this._region(instance) !== "grid" || this._visible(definition, instance));
         });
     }
 
     /**
      * Renders the current account's layout and active-domain filters supplied by the page.
-     * Applies defaults for an unconfigured profile, ensures mandatory types and attempts legacy bookmark import.
+     * Applies defaults for an unconfigured profile, restores empty shortcuts, ensures mandatory types and attempts legacy bookmark import.
      * @returns {Promise<void>} Resolves after bookmark import finishes; individual widget renders may still be pending.
      */
     async start() {
         this._request?.abort();
         this.settings = normalizeSettings(this.context.data.settings);
         if (!this.settings.configured) this._addDefaults();
+        if (!this.settings.items.some(item => item.type === "shortcut")) this._addDefaults(true);
         this._ensureMandatory();
         this.status.textContent = "";
         this.shortcutStatus.textContent = "";
@@ -372,10 +372,14 @@ export class DashboardController {
         return { id: createInstanceId(), type: definition.type, size: values.size || definition.defaultSize, options: { ...cloneSettings(definition.defaultOptions), ...values.options } };
     }
 
-    /** Adds available configured presets up to the instance limit, preserving configured shortcuts and singleton instances. */
-    _addDefaults() {
+    /**
+     * Adds available presets up to the instance limit, preserving configured shortcuts and singleton instances.
+     * @param {boolean} [shortcutsOnly=false] - Restores only shortcut defaults on load, including an explicitly saved empty strip.
+     */
+    _addDefaults(shortcutsOnly = false) {
         for (const preset of this.context.config?.dashboardDefaults || []) {
-            if (preset.type === "shortcut" && this.settings.shortcutsConfigured) continue;
+            if (shortcutsOnly && preset.type !== "shortcut") continue;
+            if (!shortcutsOnly && preset.type === "shortcut" && this.settings.shortcutsConfigured) continue;
             const definition = getWidget(preset.type);
             if (!definition || !this._available(definition) || this.settings.items.length >= MAX_WIDGETS) continue;
             if (!definition.multiple && this.settings.items.some(item => item.type === definition.type)) continue;
@@ -527,7 +531,7 @@ export class DashboardController {
             }
             view.card.dataset.size = instance.size;
             if (this._region(instance) === "grid") view.card.style.backgroundColor = widgetBackground(instance.options?.backgroundColor);
-            const signature = JSON.stringify([instance.type, instance.size, instance.options, this.settings.domainOptions[instance.id], this._contextVersion, instance.type === "news" ? this.settings.acknowledgedNewsVersion : null]);
+            const signature = JSON.stringify([instance.type, instance.size, instance.options, this.settings.domainOptions[instance.id], this._contextVersion]);
             if (view.signature !== signature) {
                 view.signature = signature;
                 refreshIds.push(instance.id);
@@ -540,7 +544,7 @@ export class DashboardController {
             segment.items.forEach(instance => grid.append(updateView(instance)));
             fragment.append(grid);
         }
-        for (const region of ["sessions", "news", "search", "shortcut"]) {
+        for (const region of ["news", "shortcut"]) {
             const container = region === "shortcut" ? this.shortcutList : this[region];
             container.replaceChildren(...visible.filter(instance => this._region(instance) === region).map(updateView));
         }
@@ -573,7 +577,7 @@ export class DashboardController {
         card.dataset.instanceId = instance.id;
         card.dataset.widgetType = instance.type;
         card.tabIndex = -1;
-        const fixed = ["sessions", "news", "search"].includes(this._region(instance));
+        const fixed = ["sessions", "news"].includes(this._region(instance));
         card.classList.toggle("is-fixed", fixed);
         if (!fixed && !preview) {
             if (this.host.dataset.loaded === "true") card.dataset.motion = "added";
@@ -595,7 +599,7 @@ export class DashboardController {
                 action.focus({ preventScroll: true });
                 definition.headerAction(this._instance(instance.id) || instance, this._widgetContext());
             }, "md-dashboard__title-link md-dashboard__title-action");
-            action.append(titleText);
+            action.append(titleText, icon("ti-arrow-up-right"));
             title.append(action);
         } else title.append(titleText);
         title.id = `dashboard-title-${instance.id}`;
@@ -708,7 +712,7 @@ export class DashboardController {
                 if (window.jQuery && window.WJ?.initTooltip) window.WJ.initTooltip(window.jQuery(target));
             }
         }
-        if (["news", "search"].includes(instance.type)) header.hidden = true;
+        if (instance.type === "news") header.hidden = true;
         const body = node("div", "md-dashboard__widget-body");
         body.id = `dashboard-body-${instance.id}`;
         card.append(header, body);
@@ -877,7 +881,7 @@ export class DashboardController {
      */
     async remove(id) {
         const instance = this._instance(id);
-        if (!instance || getWidget(instance.type)?.mandatory || ["sessions", "news", "search"].includes(this._region(instance))) return false;
+        if (!instance || getWidget(instance.type)?.mandatory || ["sessions", "news"].includes(this._region(instance))) return false;
         const previous = { instance: cloneSettings(instance), index: this.settings.items.indexOf(instance), domainOptions: cloneSettings(this.settings.domainOptions[id] || {}) };
         const next = cloneSettings(this.settings);
         next.items = next.items.filter(item => item.id !== id);
@@ -947,17 +951,6 @@ export class DashboardController {
     _focusInstance(id) {
         const view = this.views.get(id);
         (view && this._isEditing(view.instance) ? view.card.querySelector(".md-dashboard__drag") : view?.card)?.focus({ preventScroll: true });
-    }
-
-    /**
-     * Persists the release version whose announcement should be collapsed.
-     * @param {string|null} version - Release version to acknowledge, or null to expand the announcement.
-     * @returns {Promise<boolean>} Whether the acknowledgement was saved and applied.
-     */
-    async acknowledgeNews(version) {
-        const next = cloneSettings(this.settings);
-        next.acknowledgedNewsVersion = version;
-        return this._commit(next, this.status, { draft: false });
     }
 
     /** Makes shortcut activation open settings instead of navigating while its section is being edited. */
@@ -1362,7 +1355,7 @@ export class DashboardController {
         this.resetButton.focus({ preventScroll: true });
         window.WJ.confirm({
             title: allSizes ? this._t("resetAllConfirm", "Show all") : this._t("resetConfirm", "Restore defaults"),
-            message: (allSizes ? this._t("resetAllDescription", "Replace the overview with all available widgets in every supported size? You can then remove the variants you do not want. Widget filters in all domains and read news will also be reset. Your shortcuts and other account settings will be kept.") : this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains and read news will also be reset. Your shortcuts and other account settings will be kept.")) + (this.editor ? ` ${this._t("draftResetHint", "Changes will be saved only when you select Save in the edit toolbar.")}` : ""),
+            message: (allSizes ? this._t("resetAllDescription", "Replace the overview with all available widgets in every supported size? You can then remove the variants you do not want. Widget filters in all domains will also be reset. Your shortcuts and other account settings will be kept.") : this._t("resetDescription", "Restore the default widgets, sizes and order? Widget filters in all domains will also be reset. Your shortcuts and other account settings will be kept.")) + (this.editor ? ` ${this._t("draftResetHint", "Changes will be saved only when you select Save in the edit toolbar.")}` : ""),
             btnOkText: allSizes ? this._t("resetAllConfirm", "Show all") : this._t("resetConfirm", "Restore defaults"),
             success: () => this.reset(allSizes),
             onHidden: () => window.bootstrap?.Tooltip?.getInstance(this.resetButton)?.enable()
@@ -1382,7 +1375,7 @@ export class DashboardController {
         search.placeholder = this._t("searchWidgets", "Search widgets");
         searchField.append(icon("ti-search"), search);
         const categories = { all: this._t("catalogueAll", "All"), content: this._t("catalogueContent", "Content"), traffic: this._t("catalogueTraffic", "Traffic"), system: this._t("catalogueSystem", "System") };
-        const definitions = listWidgets().filter(definition => this._available(definition) && !["sessions", "news", "search", "shortcut"].includes(definition.type));
+        const definitions = listWidgets().filter(definition => this._available(definition) && !["sessions", "news", "shortcut"].includes(definition.type));
         const filters = node("div", "md-dashboard__catalogue-filters");
         filters.setAttribute("role", "group");
         filters.setAttribute("aria-label", this._t("catalogueCategories", "Widget categories"));

@@ -51,6 +51,16 @@
         <filePath regex="true">.*\/templates\/el.*</filePath>
         <vulnerabilityName regex="true">.*</vulnerabilityName>
   </suppress>
+  <suppress>
+    <notes><![CDATA[
+    Applies only to the bundled jQuery 3.3.1 in the eshop template.
+    Templates are excluded from Ant client distributions, but remain present
+    in the development WAR. This is a distribution-scope exception, not a
+    false positive or a patched library. Reassess if this template is distributed.
+    ]]></notes>
+    <filePath regex="true">.*[\\/]src[\\/]main[\\/]webapp[\\/]templates[\\/]eshop[\\/]shop[\\/]assets[\\/]js[\\/]plugins[\\/]jquery\.min\.js$</filePath>
+    <cve>CVE-2019-11358</cve>
+  </suppress>
 
   <!-- zly warning na jquery 3.0.0 ktory je len minimal dependency -->
   <suppress>
@@ -59,6 +69,205 @@
     ]]></notes>
     <packageUrl regex="true">^pkg:nuget/bootstrap-select@.*$</packageUrl>
     <cpe>cpe:/a:jquery:jquery</cpe>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-53914 affects unsafe deserialization of KAPT incremental build cache
+    metadata. kotlin-stdlib 2.4.0, included through webp-imageio 0.11.0, contains
+    none of the affected KAPT classes. This checkout has no KAPT tasks or
+    configurations; the Kotlin Gradle plugin API used by AspectJ does not enable KAPT.
+    The generic jetbrains:kotlin CPE incorrectly associates this CVE with the stdlib.
+    This is a false-positive suppression, not a mitigation or accepted residual risk.
+    Reassess when the artifact version/content changes or KAPT is introduced, and
+    evaluate any Kotlin build tooling separately from this standard-library artifact.
+    Verified on 2026-10-11 against the resolved JAR and Gradle dependency/task graph.
+    References:
+    https://github.com/advisories/GHSA-r937-wjx7-w2jp
+    https://github.com/JetBrains/kotlin/commit/bf51df665b458fda7c3eaf436c4d88dc119d7ec6
+    ]]></notes>
+    <packageUrl>pkg:maven/org.jetbrains.kotlin/kotlin-stdlib@2.4.0</packageUrl>
+    <cve>CVE-2026-53914</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2022-37830 affects stored XSS in the media editor of WebJET CMS before
+    8.6.896. WebJET AI and WebJET AI Local are separate Java AI libraries, not
+    WebJET CMS releases. Their resolved 2.0.4 JARs do not contain the CMS media
+    editor or MediaDataController. The webjet:webjet_cms CPE is a product mismatch.
+    This rule suppresses only this CVE on these two AI artifacts; it does not
+    suppress findings on WebJET CMS or assert that the CMS media editor is safe.
+    Reassess when the artifact version/content changes or the advisory scope changes.
+    Verified on 2026-10-11 against both resolved JARs and their Maven metadata.
+    References:
+    https://citadelo.com/download/CVE-2022-37830.pdf
+    https://github.com/webjetcms/webjet-ai
+    ]]></notes>
+    <packageUrl regex="true">^pkg:maven/com\.webjetcms/webjet-ai(-local)?@2\.0\.4$</packageUrl>
+    <cve>CVE-2022-37830</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-47842: the vendor lists Spring Security Crypto 7.1.1 as the fixed
+    OSS release. The reviewed CMS source and resolved application dependencies
+    do not use AesBytesEncryptor or the deprecated Encryptors factories.
+    This is a version/applicability mismatch, not a claim that upgrading migrates
+    ciphertext written with a legacy encryptor. Reassess if legacy encryption
+    APIs, custom integrations, or previously encrypted data are introduced.
+    Verified on 2026-10-11. Reference:
+    https://spring.io/security/cve-2026-47842
+    ]]></notes>
+    <packageUrl>pkg:maven/org.springframework.security/spring-security-crypto@7.1.1</packageUrl>
+    <cve>CVE-2026-47842</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-93748 / GHSA-ch52-4w7c-c8xp requires a shared HTTP cache.
+    This dependency is used by make-fetch-happen in the admin build dependency
+    chain, whose lib/cache/policy.js passes shared: false to CacheSemantics.
+    The shared-cache prerequisite is absent in this reviewed use. The maintainer
+    also disputes the advisory, but that dispute alone is not the justification.
+    Reassess if the consumer/configuration changes or a shared proxy cache is added.
+    Verified on 2026-10-11. Reference:
+    https://github.com/kornelski/http-cache-semantics/issues/56
+    ]]></notes>
+    <packageUrl>pkg:npm/http-cache-semantics@4.2.0</packageUrl>
+    <cve>CVE-2026-93748</cve>
+    <vulnerabilityName>GHSA-ch52-4w7c-c8xp</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    Accepted residual risk, explicitly approved by the project owner on 2026-10-11
+    after review of CVE-2026-85228; exploitability in this checkout is unconfirmed.
+    DJL 0.36.0 is affected by integer overflow in tensor-buffer size validation.
+    It is pulled in by webjet-ai-local 2.0.4, which is excluded from the standard
+    client distribution. The reviewed local provider uses DJL tokenizers and
+    creates tensors through ONNX Runtime; no attacker-controlled raw DJL tensor
+    endpoint was established. This does not prove the affected code is safe.
+    A coordinated API/tokenizers/SentencePiece upgrade to 0.37.0 remains pending
+    native-runtime compatibility verification. Reassess if local AI is distributed,
+    tensor input or inference engines change, or a reachable DJL tensor path is added.
+    Reference: https://aws.amazon.com/security/security-bulletins/2026-106-aws/
+    ]]></notes>
+    <packageUrl>pkg:maven/ai.djl/api@0.36.0</packageUrl>
+    <cve>CVE-2026-85228</cve>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    Accepted residual risk, explicitly approved by the project owner on 2026-10-11
+    for the listed HIGH findings whose exploitability here is unconfirmed.
+    tar 6.2.1 is installed through @webjetcms/tui-image-editor -> fabric -> canvas
+    -> @mapbox/node-pre-gyp 1.0.11. Archive extraction occurs during native-addon
+    installation, not in the CMS request handler or browser image editor.
+    A malicious/compromised installation archive could still cause path traversal,
+    arbitrary file writes or denial of service on the developer/CI machine.
+    CVE-2026-73566 additionally requires a non-empty member-selection list; the
+    reviewed node-pre-gyp extract call passes only cwd, strip and onentry options.
+    This is not a false positive or a security fix. Migration of the parent to
+    node-pre-gyp 2.x and tar 7.5.21 needs native-install compatibility verification;
+    it is deliberately separate from compatible tar 7 patch updates.
+    Reassess when the dependency chain, archive sources, installation environment,
+    or tar usage changes, and remove this exception after the migration.
+    References:
+    https://github.com/isaacs/node-tar/security/advisories
+    https://github.com/mapbox/node-pre-gyp/blob/v2.0.3/package.json
+    ]]></notes>
+    <packageUrl>pkg:npm/tar@6.2.1</packageUrl>
+    <cve>CVE-2026-23745</cve>
+    <cve>CVE-2026-23950</cve>
+    <cve>CVE-2026-24842</cve>
+    <cve>CVE-2026-26960</cve>
+    <cve>CVE-2026-29786</cve>
+    <cve>CVE-2026-31802</cve>
+    <cve>CVE-2026-59871</cve>
+    <cve>CVE-2026-59873</cve>
+    <cve>CVE-2026-59874</cve>
+    <cve>CVE-2026-73566</cve>
+    <vulnerabilityName>GHSA-8qq5-rm4j-mr97</vulnerabilityName>
+    <vulnerabilityName>GHSA-r6q2-hw4h-h46w</vulnerabilityName>
+    <vulnerabilityName>GHSA-34x7-hfp2-rc4v</vulnerabilityName>
+    <vulnerabilityName>GHSA-83g3-92jg-28cx</vulnerabilityName>
+    <vulnerabilityName>GHSA-qffp-2rhf-9h96</vulnerabilityName>
+    <vulnerabilityName>GHSA-9ppj-qmqm-q256</vulnerabilityName>
+    <vulnerabilityName>GHSA-w8wr-v893-vjvp</vulnerabilityName>
+    <vulnerabilityName>GHSA-23hp-3jrh-7fpw</vulnerabilityName>
+    <vulnerabilityName>GHSA-8x88-c5mf-7j5w</vulnerabilityName>
+    <vulnerabilityName>GHSA-r292-9mhp-454m</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    Accepted residual risk, explicitly approved by the project owner on 2026-10-11
+    for these two MEDIUM findings. The owner confirms that customers consume
+    builds prepared by the CMS vendor and do not run this installation path.
+    tar 6.2.1 is used by @webjetcms/tui-image-editor -> fabric -> canvas 2.11.2
+    -> @mapbox/node-pre-gyp 1.0.11 to extract native-addon installation archives.
+    It is not used to extract CMS uploads or by the browser image editor.
+    CVE-2026-59875 / GHSA-gvwx-54wh-qm9j can terminate the installation Node
+    process through a NUL-containing PAX path. This was reproduced in isolation
+    with tar 6.2.1 using the consumer's cwd, strip: 1 and onentry options.
+    GHSA-vmf3-w455-68vh causes inconsistent archive interpretation through PAX
+    size overrides on metadata headers. The parser defect was verified; a
+    scanner/extractor mismatch in the actual build pipeline is unconfirmed.
+    Exploitation requires control of an installation archive. A compromised
+    upstream release, configured mirror, or build environment remains a risk
+    to developer/CI machines even though customers receive prepared builds.
+    This is accepted installation risk, not non-applicability or a library fix.
+    Reassess if customers install these npm dependencies, archive sources or the
+    dependency chain change, or tar starts processing application input. Remove
+    this exception after a verified migration to a fixed parent/dependency chain.
+    References:
+    https://github.com/isaacs/node-tar/security/advisories/GHSA-gvwx-54wh-qm9j
+    https://github.com/isaacs/node-tar/security/advisories/GHSA-vmf3-w455-68vh
+    ]]></notes>
+    <packageUrl>pkg:npm/tar@6.2.1</packageUrl>
+    <cve>CVE-2026-59875</cve>
+    <vulnerabilityName>GHSA-gvwx-54wh-qm9j</vulnerabilityName>
+    <vulnerabilityName>GHSA-vmf3-w455-68vh</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-44311 / GHSA-w22m-hvvm-xmwx requires attacker-controlled gradient
+    colors to be serialized with Fabric toSVG() and the resulting SVG to be
+    rendered as active markup. The CMS integration imports @webjetcms/tui-image-editor
+    3.15.304 in admin/v9/src/js/image-editor.js and saves raster PNG via toDataURL()
+    in getImageBlob(). Neither the integration nor the editor source calls toSVG().
+    The npm dependency resolves to Fabric 5.5.2; the editor distribution embeds
+    Fabric 5.2.4. Both copies were reviewed. This is non-applicability in this
+    integration, not a patched library or accepted residual risk.
+    Reassess if SVG export/rendering, untrusted gradient input, custom editor
+    integrations, or the editor/Fabric version changes.
+    Verified on 2026-10-11. Reference:
+    https://github.com/fabricjs/fabric.js/security/advisories/GHSA-w22m-hvvm-xmwx
+    ]]></notes>
+    <packageUrl regex="true">^pkg:npm/fabric@5\.(2\.4|5\.2)$</packageUrl>
+    <cve>CVE-2026-44311</cve>
+    <vulnerabilityName>GHSA-w22m-hvvm-xmwx</vulnerabilityName>
+  </suppress>
+
+  <suppress>
+    <notes><![CDATA[
+    CVE-2026-19504 concerns server-side resource requests when Fabric loadFromJSON()
+    processes untrusted URLs. CMS uses Fabric only in the browser image editor:
+    admin/v9/src/js/app.js lazy-loads image-editor.js, and the image-editor page
+    loads image URLs. Neither the integration nor the editor source imports
+    attacker-supplied Fabric JSON with loadFromJSON(); there is no server-side
+    Fabric rendering in this reviewed integration.
+    The npm dependency is Fabric 5.5.2 and @webjetcms/tui-image-editor 3.15.304
+    embeds Fabric 5.2.4. This is non-applicability, not a library fix.
+    Reassess if server-side rendering, Fabric JSON import, custom integrations,
+    or the editor/Fabric version changes. Verified on 2026-10-11. References:
+    https://www.zerodayinitiative.com/advisories/ZDI-26-588/
+    https://github.com/fabricjs/fabric.js/pull/11064
+    ]]></notes>
+    <packageUrl regex="true">^pkg:npm/fabric@5\.(2\.4|5\.2)$</packageUrl>
+    <cve>CVE-2026-19504</cve>
   </suppress>
 
 </suppressions>

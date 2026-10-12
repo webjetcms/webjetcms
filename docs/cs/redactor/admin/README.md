@@ -13,7 +13,7 @@ V horní části se nachází hlavička:
 obsahuje následující možnosti:
 
 - Odkaz na otevření nápovědy.
-- ![](icon-search.png ":no-zoom") Ikonu pro otevření stránky [Vyhledávání](search/README.md)
+- Tlačítko **Hledat…** pro otevření [rychlého vyhledávání](search/README.md). Dialog otevřete také zkratkou **Ctrl+K** ve Windows nebo **⌘K** na Macu.
 - Jméno aktuálně přihlášeného uživatele, kliknutím na jméno zobrazíte následující možnosti:
   - Profil - upravit vlastní profil (jméno, email... - po změně profilu je třeba se odhlásit a znovu přihlásit).
   - Dvoustupňové ověřování - možnost aktivovat dvoustupňové ověřování pomocí aplikace ```Google Authenticate``` při přihlašování do administrace. Zvyšuje se tak bezpečnost vašeho účtu, protože kromě hesla je pro přihlášení třeba zadat také kód z vašeho mobilního zařízení. Doporučujeme nastavit na všechny účty, přes které lze spravovat uživatelské účty a práva. Pokud používáte ověřování vůči `ActiveDirectory/SSO` serveru můžete menu položku vypnout nastavením konf. proměnné `2factorAuthEnabled` na hodnotu `false`.

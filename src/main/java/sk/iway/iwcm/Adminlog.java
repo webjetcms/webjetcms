@@ -77,6 +77,7 @@ public class Adminlog
 	public static final int TYPE_DATA_DELETING = 220;
 	public static final int TYPE_CRON = 230;
 	public static final int TYPE_USER_CHANGE_PASSWORD = 94;
+	public static final int TYPE_USER_DEVICE = 96;
 	/*
 	public static final int TYPE_COMPONENT_CREATE = 500;
 	public static final int TYPE_COMPONENT_DELETE = 510;

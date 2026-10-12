@@ -41,6 +41,18 @@ block content
                         }
                     });
 
+                    const searchKey = new URLSearchParams(window.location.search).get("key");
+                    if (searchKey) {
+                        translationKeysTable.one('init.dt', function() {
+                            // Wait for the header rebuild after language column visibility changes.
+                            setTimeout(function() {
+                                const input = $("#datatableInit_wrapper .dt-scroll-headInner input.dt-filter-key");
+                                input.val(searchKey);
+                                input.parent().find("button.filtrujem").trigger("click");
+                            }, 500);
+                        });
+                    }
+
                     translationKeysTable.button().add(4, {
                         extends: 'remove',
                         editor: translationKeysTable.EDITOR,

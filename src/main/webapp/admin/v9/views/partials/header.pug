@@ -15,14 +15,16 @@ div.ly-container.container
 
         div.header-link-group
 
-            a.btn.btn-sm.btn-outline-secondary.js-help-toggler(onclick="WJ.showHelpWindow();" tabindex="0" role="button")
-                i.ti.ti-help(aria-hidden="true")
-                |   <span data-th-text="\#{menu.top.help}">Pomocnik</span>
+            button.btn.btn-sm.md-quick-search-trigger.js-search-toggler(type="button" data-th-aria-label="\#{admin.quickSearch.title.js}" aria-haspopup="dialog" aria-controls="admin-quick-search")
+                i.ti.ti-search(aria-hidden="true")
+                span.md-quick-search-trigger__label(data-th-text="\#{admin.quickSearch.trigger.js}") Hľadať…
+                kbd.md-quick-search-trigger__shortcut(aria-hidden="true") Ctrl K
 
         div.header-link-group
 
-            a.btn.btn-sm.btn-outline-secondary.js-search-toggler(data-th-if="${layout.hasPermission('menuWebpages|edit_text')}" href="/admin/v9/search/index/" data-th-title="\#{components.search.title}" data-th-aria-label="\#{components.search.title}" data-bs-toggle="tooltip")
-                i.ti.ti-search.notext(aria-hidden="true")
+            a.btn.btn-sm.btn-outline-secondary.js-help-toggler(onclick="WJ.showHelpWindow();" tabindex="0" role="button")
+                i.ti.ti-help(aria-hidden="true")
+                |   <span data-th-text="\#{menu.top.help}">Pomocnik</span>
 
         div.header-link-group
 
