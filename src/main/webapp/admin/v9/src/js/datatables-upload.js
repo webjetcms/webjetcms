@@ -144,7 +144,7 @@ function adminUploadInit(options) {
         },
 
         init: function () {
-            console.log("datatables-upload.init");
+            //console.log("datatables-upload.init");
 
 
             // Set aria-label on the generated dz-button
@@ -164,7 +164,7 @@ function adminUploadInit(options) {
             // If Dropzone changes how it manages this property, this may break.
             var identifierSource = (this.element && this.element.id) ? this.element.id : (uploadType + '-' + destinationFolder);
             var hiddenInputClass = String(identifierSource).replace(/[^a-zA-Z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');
-            console.log("hiddenInputClass=", hiddenInputClass);
+            //console.log("hiddenInputClass=", hiddenInputClass);
             if (hiddenInputClass) {
                 hiddenInputClass = 'dz-hidden-input-' + hiddenInputClass;
                 var applyHiddenInputClass = function (input) {

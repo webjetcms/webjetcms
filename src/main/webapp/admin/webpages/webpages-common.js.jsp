@@ -1624,9 +1624,6 @@ function fillFields(jsonEditorForm) {
 		else if (v.type == 'link') {
 			template += '<span class="input-group-addon btn green"><i onclick="openLinkDialogWindow(\'editorForm\', \'field' + keyUpper + '\')" class="ti ti-link"></i></span>';
 		}
-        else if (v.type == 'file_archiv_link_insert_new') {
-            template += '<span class="input-group-addon btn green"><i onclick=" WJDialog.OpenDialog( \'editorForm\' , \'Image\',\'/components/file_archiv/file_archiv_upload.jsp?form=editorForm&amp;field=field' + keyUpper + '\')" class="ti ti-link"></i></span>';
-        }
         // LPA
         else if (v.type == 'none') {
 			$('#fieldTr' + keyUpper).hide();

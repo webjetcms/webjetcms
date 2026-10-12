@@ -807,10 +807,7 @@ const WJ = (() => {
         //console.log('originalCallback=', originalCallback);
         options.okclick = () => {
             /** @type {string} */
-            let link = $('#modalIframeIframeElement').contents().find('div.inputs').find('.row:not(.template)').find('input').val();
-            if (typeof link == "undefined") {
-                link = $('#modalIframeIframeElement').contents().find('div.inputs').find('input.elfinder-url-input').val();
-            }
+            let link = $('#modalIframeIframeElement').contents().find('#file').val();
             //console.log('elfinder ok click link=', link, 'callback=', originalCallback);
             if (typeof originalCallback === 'function') {
                 originalCallback(link);

@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
-import sk.iway.iwcm.RequestBean;
-import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.gdpr.CookieManagerBean;
@@ -26,7 +24,6 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
-import sk.iway.iwcm.system.multidomain.MultiDomainFilter;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -89,7 +86,7 @@ public class CookieManagerRestController extends DatatableRestControllerV2<Cooki
         if(id != -1) {
             entity = cookieMangerDB.getById((int) id);
             int domainId = CloudToolsForCore.getDomainId();
-            if(entity.getDomainId() != domainId) {
+            if(entity == null || entity.getDomainId() != domainId) {
                 return null;
             }
             setTranslationKeysIntoEntity(entity, prop);
@@ -98,6 +95,22 @@ public class CookieManagerRestController extends DatatableRestControllerV2<Cooki
         }
 
         return entity;
+    }
+
+    /**
+     * Checks the stored domain before allowing access to an existing cookie.
+     *
+     * @param entity submitted cookie
+     * @param id cookie ID, or -1 for a new cookie
+     * @return whether the cookie belongs to the current domain or is new
+     */
+    @Override
+    public boolean checkItemPerms(CookieManagerBean entity, Long id) {
+        if (id == null || entity == null) return false;
+        if (id == -1) return entity.getId() < 1;
+        if (id < 1 || entity.getId() != id.longValue()) return false;
+        CookieManagerBean stored = new CookieManagerDB().getById(id);
+        return stored != null && stored.getDomainId() == CloudToolsForCore.getDomainId();
     }
 
     /**
@@ -169,67 +182,38 @@ public class CookieManagerRestController extends DatatableRestControllerV2<Cooki
     }
 
     void setTranslationKeysIntoEntity(CookieManagerBean entity, Prop prop) {
-        String providerKey = "components.gdpr.cookies." + entity.getCookieName() + ".provider";
-        String purpouseKey = "components.gdpr.cookies." + entity.getCookieName() + ".purpouse";
-        String validityKey = "components.gdpr.cookies." + entity.getCookieName() + ".validity";
-
-        String text = prop.getText(providerKey, false);
-        entity.setProvider(text);
-
-        text = prop.getText(purpouseKey, false);
-        entity.setPurpouse(text);
-
-        text = prop.getText(validityKey, false);
-        entity.setValidity(text);
+        entity.setProvider(CookieManagerDB.getCookieText(prop, entity.getCookieName(), "provider"));
+        entity.setPurpouse(CookieManagerDB.getCookieText(prop, entity.getCookieName(), "purpouse"));
+        entity.setValidity(CookieManagerDB.getCookieText(prop, entity.getCookieName(), "validity"));
     }
 
     void createEditTranslationKeysFromEntity(CookieManagerBean entity) {
 
         Identity user = UsersDB.getCurrentUser(getRequest());
         TranslationKeyEntity translationKeyEntity = new TranslationKeyEntity();
-        String prefix = null;
 
         String language = getRequest().getParameter("breadcrumbLanguage");
         translationKeyEntity.setLng(language);
 
-        String providerKey;
-        String purpouseKey;
-        String validityKey;
+        String providerKey = CookieManagerDB.getTranslationKey(entity.getCookieName(), "provider");
+        String purpouseKey = CookieManagerDB.getTranslationKey(entity.getCookieName(), "purpouse");
+        String validityKey = CookieManagerDB.getTranslationKey(entity.getCookieName(), "validity");
 
-        if(Constants.getBoolean("constantsAliasSearch")) {
-
-            RequestBean requestBean = SetCharacterEncodingFilter.getCurrentRequestBean();
-
-            if(requestBean!=null && Tools.isNotEmpty(requestBean.getDomain())) {
-
-                prefix = MultiDomainFilter.getDomainAlias(requestBean.getDomain());
-            }
-        }
-
-        if(Tools.isNotEmpty(prefix)) {
-            providerKey = prefix + "-" + "components.gdpr.cookies." + entity.getCookieName() + ".provider";
-            purpouseKey = prefix + "-" + "components.gdpr.cookies." + entity.getCookieName() + ".purpouse";
-            validityKey = prefix + "-" + "components.gdpr.cookies." + entity.getCookieName() + ".validity";
-        } else {
-            providerKey = "components.gdpr.cookies." + entity.getCookieName() + ".provider";
-            purpouseKey = "components.gdpr.cookies." + entity.getCookieName() + ".purpouse";
-            validityKey = "components.gdpr.cookies." + entity.getCookieName() + ".validity";
-        }
-
+        // The controller authorizes cookie management; these keys are generated for the current domain.
         //Provider Key
         translationKeyEntity.setKey(providerKey);
         translationKeyEntity.setValue(entity.getProvider());
-        translationKeyService.createOrEditTranslationKeySingleLanguage(user, translationKeyEntity, false);
+        translationKeyService.saveTranslation(user, translationKeyEntity, false);
 
         //Purpouse key
         translationKeyEntity.setKey(purpouseKey);
         translationKeyEntity.setValue(entity.getPurpouse());
-        translationKeyService.createOrEditTranslationKeySingleLanguage(user, translationKeyEntity, false);
+        translationKeyService.saveTranslation(user, translationKeyEntity, false);
 
         //Validity key
         translationKeyEntity.setKey(validityKey);
         translationKeyEntity.setValue(entity.getValidity());
-        translationKeyService.createOrEditTranslationKeySingleLanguage(user, translationKeyEntity, true);
+        translationKeyService.saveTranslation(user, translationKeyEntity, true);
     }
 
     @Override

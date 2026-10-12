@@ -95,6 +95,35 @@ function fixture(t, denied = [], options = {}) {
     return { controller, requests, type, enter, advance, respond, autocomplete, rest, activeRest, clicks: () => clicks };
 }
 
+for (const [platform, modifier] of [['Win32', 'ctrlKey'], ['MacIntel', 'metaKey']]) {
+    test(`Quick search ignores keydown events without a key and preserves the shortcut on ${platform}`, t => {
+        const { window } = new JSDOM('<!doctype html><button class="js-search-toggler">Search <kbd></kbd></button>');
+        t.after(() => window.close());
+        const errors = [];
+        let opened = 0;
+        window.addEventListener('error', event => { errors.push(event.error); event.preventDefault(); });
+        const context = vm.createContext({
+            window, document: window.document, navigator: { platform }, onOpen: () => opened++
+        });
+        vm.runInContext(`${readAdmin('quick-search.js')}\nsearchDialog = { open: onOpen }; initQuickSearch();`, context);
+
+        const incomplete = new window.Event('keydown', { bubbles: true, cancelable: true });
+        Object.assign(incomplete, { [modifier]: true });
+        window.document.body.dispatchEvent(incomplete);
+        assert.deepEqual(errors, [], 'Synthetic keydown events without a key must not throw.');
+        assert.equal(opened, 0);
+        assert.equal(incomplete.defaultPrevented, false);
+
+        for (const key of ['k', 'K']) {
+            const shortcut = new window.KeyboardEvent('keydown', { key, [modifier]: true, bubbles: true, cancelable: true });
+            window.document.body.dispatchEvent(shortcut);
+            assert.equal(shortcut.defaultPrevented, true);
+        }
+        assert.equal(opened, 2, 'The platform shortcut must still open quick search.');
+        assert.deepEqual(errors, []);
+    });
+}
+
 test('Autocomplete keeps its 300 ms delay while REST waits one second and preserves pending autocomplete', async t => {
     const f = fixture(t);
     f.type('banner');

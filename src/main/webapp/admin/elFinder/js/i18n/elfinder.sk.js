@@ -582,7 +582,6 @@
             'cmdresize'    : 'Editovať',
 			'wjSearchRecursive': 'V podpriečinkoch',
 			'cmdwjeditswitch': 'Upraviť',
-			'cmdwjfilearchive': 'Manažér dokumentov',
 			'cmdwjdirprops'  : 'Nastavenie priečinka',
 			'cmdwjfileprops' : 'Nastavenie súboru',
 			'cmdwjmetadata' : 'Bezpečnostné nastavenia def',

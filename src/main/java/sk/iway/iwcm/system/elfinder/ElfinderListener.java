@@ -64,7 +64,7 @@ public class ElfinderListener {
         model.addAttribute("callback", Tools.getStringValue(Tools.getRequestParameter(request, "callback"), ""));
         model.addAttribute("volumes", Tools.getStringValue(Tools.getRequestParameter(request, "volumes"), "link"));
 
-        // file, directory, fileDirectory, files, directories, filesDirectories
+        // Supported selection modes: file, directory, fileDirectory.
         String selectMode = Tools.getStringValue(Tools.getRequestParameter(request, "selectMode"), "file");
         model.addAttribute("selectMode", selectMode);
 

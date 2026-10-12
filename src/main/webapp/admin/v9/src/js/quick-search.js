@@ -38,7 +38,7 @@ export function initQuickSearch() {
         trigger.addEventListener('click', open);
     }
     document.addEventListener('keydown', event => {
-        if (event.defaultPrevented || event.isComposing || event.repeat || event.altKey || event.shiftKey || event.key.toLowerCase() !== 'k') return;
+        if (event.defaultPrevented || event.isComposing || event.repeat || event.altKey || event.shiftKey || event.key?.toLowerCase() !== 'k') return;
         if (isMac ? !event.metaKey || event.ctrlKey : !event.ctrlKey || event.metaKey) return;
         if (event.target.closest('[role="dialog"]:not(#admin-quick-search), .modal.show:not(#admin-quick-search)')) return;
         if (window === window.top && !trigger) return;
