@@ -105,6 +105,40 @@ Scenario('Header help shares release news and supplies documentation links', asy
     I.saveElementScreenshot('.ly-header', 'header-refinement.png');
 });
 
+Scenario('System diagnostics copy all context and confirm success for two seconds', async ({ I }) => {
+    I.amOnPage('/admin/v9/search/?autotest=diagnostics#details');
+    openHelp(I);
+    I.executeScript(() => {
+        Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
+            writeText: async value => { window.copiedHelpDiagnostics = value; }
+        } });
+    });
+    I.assertEqual(await I.grabNumberOfVisibleElements('.md-help-menu__system > div'), 4,
+        'System administrators must see the build date and time on a separate diagnostic row.');
+    I.assertTrue(await I.executeScript(() => {
+        const version = document.querySelector('.md-help-menu__version');
+        const buildDate = document.querySelector('.md-help-menu__version-date');
+        return buildDate.getBoundingClientRect().top >= version.getBoundingClientRect().bottom
+            && /\d{2}:\d{2}:\d{2}$/.test(buildDate.textContent.trim());
+    }), 'The build timestamp must include seconds and appear below the version.');
+    I.assertFalse(await I.executeScript(() => document.querySelector('.md-help-menu__system').textContent.includes('DEV')),
+        'The footer must not repeat the environment badge.');
+    I.clickCss('.md-help-menu__copy');
+    I.waitForElement('.md-help-menu__copy.is-copied .ti-check', 5);
+    I.seeAttributesOnElements('.md-help-menu__copy', { 'aria-label': 'Skopírované', 'data-bs-original-title': 'Skopírované' });
+    I.assertEqual(await I.executeScript(() => window.copiedHelpDiagnostics), await I.executeScript(() =>
+        window.adminHelpContext.systemInfo
+        + (location.hostname.toLowerCase() === window.adminHelpContext.currentDomain.toLowerCase() ? '' : '\nCMS doména: ' + location.origin)
+        + '\nStránka: ' + location.pathname + location.search + location.hash + '\nPrehliadač: ' + window.adminHelpContext.browser));
+    I.assertTrue(await I.executeScript(() => document.querySelector('#admin-help-menu').classList.contains('show')),
+        'Copying must keep Help open.');
+    I.saveElementScreenshot('.md-help-menu__system', 'help-menu-system-info-copied.png');
+    I.waitForElement('.md-help-menu__copy:not(.is-copied) .ti-copy', 5);
+    I.seeAttributesOnElements('.md-help-menu__copy', { 'aria-label': 'Kopírovať informácie o WebJET CMS' });
+    I.saveElementScreenshot('.md-help-menu__system', 'help-menu-system-info.png');
+    I.pressKey('Escape');
+});
+
 Scenario('Page help is refreshed on each opening and omitted without a route', async ({ I }) => {
     I.amOnPage('/admin/v9/search/');
     I.waitForElement(`${trigger}[data-help-initialized="true"]`, 15);

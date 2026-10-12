@@ -39,6 +39,7 @@ public class LayoutService
 
             setGlobalData();
             setHeaderData();
+            layout.setSystemInfo(new SystemInfo(request, layout.getHeader().getCurrentDomain()));
             setMenuData();
 
         }
