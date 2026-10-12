@@ -56,6 +56,10 @@
         color: var(--wj-secondary);
         font-size: 12px;
         font-weight: 700;
+        &.md-user-menu__session-count {
+            background: mix(mix($warning, $danger-btn-bg, 90%), $white, 35%);
+            color: mix($warning, $secondary, 35%);
+        }
         &.is-disabled { background: rgba($warning, .32); }
         &.is-enabled { background: rgba($success, .16); }
     }
