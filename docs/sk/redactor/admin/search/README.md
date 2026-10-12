@@ -29,7 +29,9 @@ Dialóg zavriete klávesom **Esc**, tlačidlom zatvorenia alebo kliknutím mimo 
 
 ### Nastavenie vyhľadávania v dokumentácii
 
-V **Nastavenia → Konfigurácia** nastavte premennú `adminDocumentationSearchUrl` na celú URL vyhľadávacej služby. Predvolená hodnota je `https://docs.webjetcms.sk/rest/rag/markdown/search`. Pri zmene domény alebo cesty stačí upraviť túto premennú a obnoviť administráciu. Pri prázdnej hodnote zostane dostupný odkaz na externé vyhľadávanie v dokumentácii.
+V **Nastavenia → Konfigurácia** nastavte premennú `adminDocumentationSearchUrl` na platnú celú URL vyhľadávacej služby vrátane cesty. Predvolená hodnota je `https://docs.webjetcms.sk/rest/rag/markdown/search`. Pri zmene domény alebo cesty stačí upraviť túto premennú a obnoviť administráciu.
+
+Táto premenná zároveň určuje server pre odkazy v menu **Pomocník**, `WJ.showHelpWindow` a changelog. Z URL sa pre tieto odkazy použije iba protokol, doména a port; cesta vyhľadávacej služby sa ignoruje. Napríklad `https://manual.example:8443/rest/rag/markdown/search` otvorí dokumentáciu na `https://manual.example:8443/latest/sk/`. Dokumentácia je dostupná po slovensky, česky a anglicky; pre ostatné jazyky administrácie sa otvorí anglická verzia.
 
 Administrácia doplní parameter `query` s hľadaným výrazom a podľa jazyka rozhrania odošle `language` a `directory`:
 

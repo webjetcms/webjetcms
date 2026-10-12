@@ -3,6 +3,7 @@ extends ../../partials/dialog
 block content
 
     script.
+        window.helpLink = "/redactor/admin/logon";
         var passkeyDataTable;
         let url = "/admin/rest/passkey";
         let columns = [(${layout.getDataTableColumns('sk.iway.iwcm.system.spring.passkey.PasskeyCredentialEntity')})];

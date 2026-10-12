@@ -117,7 +117,7 @@ webjet-image-area-selector {
 
 #feedback_modal.md-feedback {
     .modal-dialog { max-width: 640px; }
-    .modal-header { display: flex; align-items: center; gap: 8px; padding: 16px 20px; }
+    .modal-header { display: flex; align-items: center; gap: 8px; padding: 12px 20px; background-color: $white; border-bottom: 0; }
     .modal-title { flex: 1; margin: 0; font-weight: 700; }
     .md-feedback__close, .md-feedback__back { padding: 2px 4px; color: var(--wj-gray-text); }
     form { display: flex; flex-direction: column; min-height: 0; }

@@ -43,7 +43,7 @@ public class ConstantsV9 {
 
 		//domena a priecinok s novinkami pre dashboard
 		Constants.setString("overviewJsonUrl", "https://docs.webjetcms.sk/json/", Constants.MOD_SYSTEM_ADMIN, "Zakladna URL adresa pre nacitanie zoznamu noviniek na administracnom dashboarde.");
-		Constants.setString("adminDocumentationSearchUrl", "https://docs.webjetcms.sk/rest/rag/markdown/search", Constants.MOD_SYSTEM_ADMIN, "Full URL of the documentation search endpoint used by administration quick search. Query, language and directory parameters are added automatically. Empty retains the external documentation search link.");
+		Constants.setString("adminDocumentationSearchUrl", "https://docs.webjetcms.sk/rest/rag/markdown/search", Constants.MOD_SYSTEM_ADMIN, "Valid full HTTP(S) URL of the documentation search endpoint, including its path, used by administration quick search. Query, language and directory parameters are added automatically. Its protocol, host and port are also used for documentation and help links.");
 		Constants.setString("languages", "sk,cz,en,de,pl,hu,cho,ru,esp", Constants.MOD_LOCALIZATION, "Zoznam jazykov pre webjet cms");
 
 		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name", Constants.MOD_DATABASE, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");

@@ -57,6 +57,7 @@ window.initSubmenuTabsClick = function() {
 
 function initClosure() {
     initQuickSearch();
+    WJ.initHelpMenu();
 
     // =======================
     // In iframe dialog view

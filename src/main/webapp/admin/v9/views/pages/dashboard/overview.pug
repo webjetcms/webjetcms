@@ -2,6 +2,9 @@ extends ../../partials/layout
 
 block content
 
+    script.
+        window.helpLink = "/redactor/admin/welcome";
+
     style.
         .ly-content-wrapper { padding-top: 34px; }
         .ly-content { height: calc(100vh - 34px); }
@@ -22,7 +25,6 @@ block content
             const dashboard = document.querySelector("webjet-overview-dashboard");
             const dashboardData = window.webjetOverviewDashboardBootstrapData;
             delete window.webjetOverviewDashboardBootstrapData;
-            const announcement = /*[[\#{admin.overview.changelog}]]*/ "";
             dashboard.configure({
                 data: dashboardData,
                 config: {
@@ -33,7 +35,7 @@ block content
                 },
                 labels: {
                     newsletterActive: /*[[\#{components.dmail.campaings.status.enabled}]]*/ "",
-                    changelog: WJ.parseMarkdown("\n" + announcement.replace(/\\n/g, "\n") + "\n\n", { link: true, imgSrcPrefix: "" }),
+                    changelog: WJ.getReleaseNews().html,
                 }
             });
 

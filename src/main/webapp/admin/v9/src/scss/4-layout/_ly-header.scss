@@ -50,13 +50,9 @@
         margin-left: 50px;
         height: 31px;
 
-        a.dropdown-item, button.btn {
+        .dropdown-item, button.btn {
             font-size: 14px;
             cursor: pointer;
-        }
-
-        button.btn:focus {
-            outline: none !important;
         }
     }
 
@@ -73,10 +69,16 @@
 
         &:hover,
         &:focus,
-        &:active {
+        &:active,
+        &.show {
             background-color: $nice-gray !important;
             color: $secondary !important;
             border-color: transparent !important;
+        }
+
+        &:focus-visible {
+            outline: 2px solid var(--wj-primary) !important;
+            outline-offset: 0;
         }
     }
 
@@ -93,19 +95,13 @@
     }
     .js-profile-toggler {
         max-width: 200px;
-        padding-right: 26px;
-        background-position-x: calc(100% - 7px);
+        padding-right: 25px;
+        background-position-x: calc(100% - 6px);
         span {
             max-width: 147px;
             overflow: hidden;
             display: inline-flex;
         }
-    }
-    .btn-outline-secondary.dropdown-toggle.show {
-        background-color: $nice-gray;
-    }
-    div.dropdown ul.dropdown-menu li a {
-        color: $secondary !important;
     }
 
     .header-title {

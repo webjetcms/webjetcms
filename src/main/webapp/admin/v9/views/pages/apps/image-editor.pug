@@ -7,6 +7,7 @@ block content
     table.datatableInit.table(id="galleryTable")
 
     script.
+        window.helpLink = "/redactor/image-editor/README";
         var galleryTable = null;
         var url = "/admin/rest/components/gallery";
         var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.gallery.GalleryEntity')})];

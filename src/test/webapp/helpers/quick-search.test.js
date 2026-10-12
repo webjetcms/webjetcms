@@ -32,6 +32,7 @@ function fixture(t, denied = [], options = {}) {
     const dom = new JSDOM('<!doctype html><button id="trigger">Search</button>', { url: 'http://localhost/admin/v9/' });
     const { window } = dom;
     window.adminSearchContext = options.adminSearchContext;
+    window.adminHelpContext = { documentationBaseUrl: options.documentationBaseUrl || 'https://docs.webjetcms.sk' };
     window.userLng = options.language;
     window.csrfToken = 'private-admin-csrf-token';
     let now = 0, nextId = 0, clicks = 0;
@@ -51,6 +52,7 @@ function fixture(t, denied = [], options = {}) {
     const webjet = readAdmin('webjet.js');
     const markdownStart = webjet.indexOf('    function parseMarkdown(');
     vm.runInContext(`${webjet.slice(markdownStart, webjet.indexOf('    function initTooltip(', markdownStart))}\nWJ.parseMarkdown = parseMarkdown;`, context);
+    vm.runInContext(`${readAdmin('documentation-links.js')}\nWJ.getDocumentationUrl = getDocumentationUrl;`, context);
     vm.runInContext(`{ ${readAdmin('dashboard/widget-utils.js')}; Object.assign(this, { node, icon, localUrl, containNativeScroll, fetchJson }); }`, context);
     vm.runInContext(readAdmin('admin-menu.js'), context);
     vm.runInContext(`{ ${readAdmin('documentation-search.js')}; Object.assign(this, { documentationUrl, documentationMarkdown }); }`, context);
@@ -625,7 +627,7 @@ test('Shortening the query or closing cancels scheduled documentation', async t 
 });
 
 test('Documentation keeps its active request, error fallback and completed answer across scope switches', async t => {
-    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl }, documentationBaseUrl: 'https://manual.example.com' });
     const select = scope => f.controller.scopeBar.querySelector(`[data-scope="${scope}"]`).click();
     f.type('banner setup');
     f.advance(2000);
@@ -638,7 +640,7 @@ test('Documentation keeps its active request, error fallback and completed answe
     select('all');
     select('documentation');
     const fallback = f.controller.results.querySelector('[data-source="documentation"] .md-quick-search__documentation-link');
-    assert.equal(fallback.href, 'https://manual.example.com/', 'The cached error must retain its documentation fallback.');
+    assert.equal(fallback.href, 'https://manual.example.com/latest/en/', 'The cached error must retain its localized documentation fallback.');
     assert.equal(f.controller.results.querySelector('.md-quick-search__retry'), null);
     assert.equal(f.rest().length, 1, 'Switching scopes must not retry failed AI requests automatically.');
     f.type('new banner setup');
@@ -807,18 +809,18 @@ test('WebJET Markdown output strips injected attributes and entity-obfuscated de
     }
 });
 
-test('Documentation failures link to the configured origin instead of retrying, and new queries can succeed', async t => {
+test('Documentation failures link to the localized configured origin instead of retrying, and new queries can succeed', async t => {
     for (const [label, response, status] of [
         ['HTTP failure', {}, 503], ['Invalid results', { results: {} }, 200], ['Null result', { results: [null] }, 200]
     ]) {
         await t.test(label, async t => {
-            const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+            const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl }, documentationBaseUrl: 'https://manual.example.com', language: 'cz' });
             f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
             f.type('banner');
             f.enter();
             await f.respond(f.rest()[0], response, status);
             const fallback = f.controller.results.querySelector('[data-source="documentation"] .md-quick-search__documentation-link');
-            assert.equal(fallback.href, 'https://manual.example.com/', 'The fallback must discard the configured endpoint path and query.');
+            assert.equal(fallback.href, 'https://manual.example.com/latest/cs/', 'The fallback must use the documentation language without the endpoint path and query.');
             assert.equal(fallback.target, '_blank');
             assert.ok(fallback.rel.split(' ').includes('noopener'));
             assert.equal(f.controller.results.querySelector('.md-quick-search__retry'), null);
@@ -837,18 +839,21 @@ test('Documentation failures link to the configured origin instead of retrying, 
     }
 });
 
-test('Malformed and non-HTTP documentation endpoints display inert errors without requests or fallback links', async t => {
+test('Malformed and non-HTTP documentation endpoints retain safe localized public navigation without requests', async t => {
     for (const endpoint of ['http://[', 'javascript:alert(1)', 'data:text/html,unsafe']) {
         await t.test(endpoint, t => {
-            const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl: endpoint } });
+            const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl: endpoint }, language: 'sk' });
             f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
             f.type('banner');
             f.enter();
             assert.equal(f.requests.length, 0);
             const error = f.controller.results.querySelector('[data-source="documentation"] [role="alert"]');
             assert.ok(error);
-            assert.equal(error.querySelector('a, button'), null, 'An invalid endpoint must not produce a retry or unsafe destination.');
-            assert.equal(f.controller.results.querySelector('.md-quick-search__documentation-link'), null);
+            const fallback = error.querySelector('.md-quick-search__documentation-link');
+            assert.equal(fallback.href, 'https://docs.webjetcms.sk/latest/sk/');
+            assert.equal(fallback.target, '_blank');
+            assert.ok(fallback.rel.split(' ').includes('noopener'));
+            assert.equal(error.querySelector('button'), null, 'An invalid endpoint must not produce a retry.');
         });
     }
 });
@@ -920,5 +925,16 @@ test('An unconfigured documentation endpoint preserves the external documentatio
     assert.equal(f.requests.length, 0);
     const link = f.controller.results.querySelector('[data-source="documentation"] a');
     assert.equal(link.href, 'https://docs.webjetcms.sk/latest/cs/?q=banner');
+    assert.equal(link.target, '_blank');
+});
+
+test('External documentation search follows the shared configured origin and safely encodes its query', t => {
+    const f = fixture(t, deniedRestPermissions, { language: 'sk', documentationBaseUrl: 'http://manual.intranet:8080' });
+    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
+    f.type('banner & images');
+    f.advance(1000);
+    assert.equal(f.requests.length, 0);
+    const link = f.controller.results.querySelector('[data-source="documentation"] a');
+    assert.equal(link.href, 'http://manual.intranet:8080/latest/sk/?q=banner%20%26%20images');
     assert.equal(link.target, '_blank');
 });

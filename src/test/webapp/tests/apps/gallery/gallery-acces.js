@@ -32,7 +32,7 @@ Before(({ I }) => {
 // pridanie prav uzivatelovi - zaklad
 function openUserSettingsDialog(I) {
      I.click(locate('.btn.btn-sm.btn-outline-secondary.js-profile-toggler').withText(userName));
-     I.click(locate("a.dropdown-item").withText('Profil'));
+     I.click(locate(".dropdown-item").withText('Profil'));
      I.switchTo("#modalIframeIframeElement");
      I.waitForText(userLogin, 60);
      I.waitForElement("#pills-dt-datatableInit-rightsTab-tab", 10);

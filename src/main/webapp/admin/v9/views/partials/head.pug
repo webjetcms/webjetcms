@@ -47,6 +47,12 @@ script.
 // Serialize user settings as a JavaScript string so stored text cannot close the script element.
 script(data-th-inline="javascript").
     window.currentUser = JSON.parse(/*[[${layout.userDto}]]*/ "{}");
+    window.adminHelpContext = {
+        documentationBaseUrl: /*[[${layout.documentationBaseUrl}]]*/ "",
+        announcement: /*[[\#{admin.overview.changelog}]]*/ "",
+        supportUrl: /*[[\#{welcome.info_url}]]*/ "",
+        version: /*[[${layout.version}]]*/ ""
+    };
     window.adminSearchContext = {
         menu: /*[[${layout.menu}]]*/ [],
         currentDomain: /*[[${layout.header.currentDomain}]]*/ "",
