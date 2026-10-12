@@ -26,7 +26,13 @@
 
   <link rel="icon" type="image/x-icon" href="assets/images/favicon-cms.ico">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-  <link rel="stylesheet" href="style.css">
+  <script>
+    // Resolve local assets after basePath is known; preloading can use the initial <base>.
+    var documentationStyles = document.createElement('link');
+    documentationStyles.rel = 'stylesheet';
+    documentationStyles.href = basePath + 'style.css?v=1';
+    document.head.appendChild(documentationStyles);
+  </script>
 
 </head>
 <body>
@@ -60,6 +66,24 @@
         '/': '/_404.md'
       },
       relativePath: useHashRouter,
+      // Register lifecycle hooks before Docsify starts and forward them to the async semantic-search.js script.
+      plugins: [function (hook) {
+        // Runs once when the page structure, including .sidebar, exists.
+        // Search can attach its form without waiting for Markdown or sidebar content to finish loading.
+        // If the search script loads after this event, it detects .sidebar and initializes directly.
+        hook.mounted(function () {
+          document.dispatchEvent(new Event('documentation-mounted'));
+        });
+        // Runs after the initial document render and each subsequent document navigation.
+        // Submitting a search opens the results dialog via runSearch() in semantic-search.js.
+        // If the user then navigates (e.g. browser Back/Forward), the listener closes any open dialog
+        // so results from the previous document do not remain visible over the new document.
+        // On the initial render the dialog is normally closed already, so there is nothing to close.
+        // The listener also refreshes search labels for the current route language on every render.
+        hook.doneEach(function () {
+          document.dispatchEvent(new Event('documentation-rendered'));
+        });
+      }],
       tabs: {
         persist: false,
         sync: false,
@@ -69,7 +93,13 @@
       }
     }
   </script>
-  <script src="assets/semantic-search.js"></script>
+  <script>
+    // A slow or failed search download must not block Docsify.
+    var documentationSearch = document.createElement('script');
+    documentationSearch.src = basePath + 'assets/semantic-search.js?v=1';
+    documentationSearch.async = true;
+    document.head.appendChild(documentationSearch);
+  </script>
   <!-- Docsify v4 -->
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
   <!-- docsify-themeable -->

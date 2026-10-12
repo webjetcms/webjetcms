@@ -23,14 +23,24 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   t.after(() => browser.close());
   const context = await browser.newContext({ locale: 'en-US' });
   const errors = [];
+  const scriptRequests = [];
+  let releaseSearchScript;
+  const pendingSearchScript = new Promise(resolve => { releaseSearchScript = resolve; });
+  t.after(() => releaseSearchScript());
+  let searchScriptMode = 'pending';
   context.on('page', page => page.on('pageerror', error => errors.push(error.message)));
   const page = await context.newPage();
   const base = 'http://docs.test';
 
   // Serve the actual shell and Markdown locally; only optional CDN plugins are stubbed.
-  await context.route('**/*', route => {
+  await context.route('**/*', async route => {
     const url = new URL(route.request().url());
     if (url.origin === base) {
+      if (url.pathname.endsWith('/semantic-search.js')) {
+        scriptRequests.push(url.pathname);
+        if (searchScriptMode === 'pending') await pendingSearchScript;
+        if (searchScriptMode === 'failed') return route.abort('failed');
+      }
       const root = [deployment, '/latest/', '/'].find(prefix => url.pathname.startsWith(prefix));
       let relative = decodeURIComponent(url.pathname.substring(root.length)) || 'index.html';
       if (!path.extname(relative)) relative = 'index.html';
@@ -44,6 +54,8 @@ test('Docsify navigation, scoped search, safe results and request errors', async
       return route.fulfill({ contentType: 'text/javascript', body: 'export default { initialize() {} };' });
     }
     if (url.pathname.endsWith('theme-simple-dark.css')) {
+      // Let the preload scanner reach scripts before the stylesheet-blocked base-path setup runs.
+      await new Promise(resolve => setTimeout(resolve, 100));
       return route.fulfill({ path: path.join(docs, 'node_modules/docsify/lib/themes/dark.css') });
     }
     return route.fulfill({ body: '', contentType: url.pathname.endsWith('.css') ? 'text/css' : 'text/javascript' });
@@ -68,10 +80,13 @@ test('Docsify navigation, scoped search, safe results and request errors', async
     return route.fulfill(response);
   });
 
-  await page.goto(base + deployment + '#/en/');
+  await page.goto(base + deployment + '#/en/', { waitUntil: 'domcontentloaded' });
   await page.locator('.sidebar-nav a[href$="/redactor/README"]').click();
   await waitForDocument(page, 'en/redactor/README.md');
   assert.equal(new URL(page.url()).hash, '#/en/redactor/README');
+  assert.equal(await page.locator('#documentation-query').count(), 0);
+  searchScriptMode = 'normal';
+  releaseSearchScript();
   await page.locator('#documentation-query').fill('Edit a page');
   await page.locator('.documentation-search button').click();
   await page.waitForFunction(() => document.querySelector('.documentation-search-results').children.length === 1);
@@ -215,7 +230,7 @@ test('Docsify navigation, scoped search, safe results and request errors', async
     await waitForDocument(page, language + '/admin/users/README.md');
     assert.equal(page.url(), documentUrl);
     assert.equal(await page.evaluate(() => window.$docsify.routerMode), 'history');
-    assert.equal(await page.locator('link[href="style.css"]').evaluate(link => link.href), base + '/style.css');
+    assert.equal(await page.locator('link[href="/style.css?v=1"]').evaluate(link => link.href), base + '/style.css?v=1');
     await page.locator('.sidebar-nav a[href$="/admin/users/user-groups"]').click();
     await waitForDocument(page, language + '/admin/users/user-groups.md');
     assert.equal(page.url(), base + '/' + language + '/admin/users/user-groups');
@@ -224,7 +239,10 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   }
 
   // Keep one legacy-router smoke check without repeating the deployment/language matrix.
+  scriptRequests.length = 0;
   await page.goto(base + '/latest/en/');
+  await page.locator('#documentation-query').waitFor();
+  assert.deepEqual(scriptRequests, ['/latest/assets/semantic-search.js']);
   await page.locator('.sidebar-nav a[href$="/redactor/README"]').click();
   await waitForDocument(page, 'en/redactor/README.md');
   assert.equal(new URL(page.url()).pathname, '/latest/en/redactor/README');
@@ -234,5 +252,42 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   await page.waitForFunction(() => document.querySelector('.documentation-search-results').children.length === 1);
   assert.equal(requestUrl.searchParams.get('directory'), '/en/redactor/');
   assert.equal(await result.getAttribute('href'), base + '/latest/en/redactor/');
+
+  // Load search before Docsify and hold the sidebar to verify initialization at mount.
+  let releaseDocsify, releaseSidebar;
+  const pendingDocsify = new Promise(resolve => { releaseDocsify = resolve; });
+  const pendingSidebar = new Promise(resolve => { releaseSidebar = resolve; });
+  t.after(() => { releaseDocsify(); releaseSidebar(); });
+  await page.route('**/npm/docsify@4', async route => {
+    await pendingDocsify;
+    return route.fallback();
+  });
+  await page.route('**/_sidebar.md', async route => {
+    await pendingSidebar;
+    return route.fallback();
+  });
+  await page.addInitScript(() => {
+    document.addEventListener('load', event => {
+      if (event.target.src?.includes('/assets/semantic-search.js')) window.searchScriptLoaded = true;
+    }, true);
+  });
+  await page.goto(base + '/latest/en/redactor/README', { waitUntil: 'commit' });
+  await page.waitForFunction(() => window.searchScriptLoaded === true);
+  assert.equal(await page.locator('.sidebar').count(), 0);
+  releaseDocsify();
+  await waitForDocument(page, 'en/redactor/README.md');
+  assert.equal(await page.locator('#documentation-query').count(), 1);
+  assert.equal(await page.locator('.documentation-search-dialog').count(), 1);
+  releaseSidebar();
+  await page.locator('.sidebar-nav a').first().waitFor();
+  assert.equal(await page.locator('#documentation-query').count(), 1);
+  assert.equal(await page.locator('.documentation-search-dialog').count(), 1);
+
+  // A failed search download must not prevent reading or navigating documentation.
+  searchScriptMode = 'failed';
+  await page.goto(base + '/latest/en/');
+  await page.locator('.sidebar-nav a[href$="/redactor/README"]').click();
+  await waitForDocument(page, 'en/redactor/README.md');
+  assert.equal(await page.locator('#documentation-query').count(), 0);
   assert.deepEqual(errors, []);
 });
