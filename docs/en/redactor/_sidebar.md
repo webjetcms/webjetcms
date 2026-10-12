@@ -9,7 +9,7 @@
   - [Welcome screen](/redactor/admin/welcome.md)
   - [Send message](/redactor/admin/send-message.md)
   - [Search](/redactor/admin/search/README.md)
-  - [Keyboard shortcuts](/redactor/admin/keyboard-shortcuts.md)
+  - [Keyboard Shortcuts](/redactor/admin/keyboard-shortcuts.md)
 - Data tables
   - [Basics of working with data tables](/redactor/datatables/README.md)
   - [Export and import](/redactor/datatables/export-import.md)

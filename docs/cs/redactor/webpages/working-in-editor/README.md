@@ -4,7 +4,7 @@ WebJET obsahuje inteligentní editor web stránek, který vám co nejvěrněji z
 
 ![](editor_preview.png)
 
-Přehled zkratek pro textový editor i další části administrace najdete na stránce [Klávesové zkratky](../../admin/keyboard-shortcuts.md). Na Macu se při kopírování, vyjímání, vkládání a úpravě odkazů používá **Command (⌘)** místo **Ctrl**.
+Přehled zkratek pro textový editor i další části administrace naleznete na stránce [Klávesové zkratky](../../admin/keyboard-shortcuts.md). Na Macu se při kopírování, vystřihování, vkládání a úpravě odkazů používá **Command (⌘)** místo **Ctrl**.
 
 ## Práce s textem (psaní/vkládání/kopírování)
 

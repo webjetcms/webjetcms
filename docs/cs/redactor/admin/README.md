@@ -12,7 +12,7 @@ V horní části se nachází hlavička:
 
 obsahuje následující možnosti:
 
-- Menu **Nápověda** s pomocí k aktuální stránce, dokumentací, novinkami a kontakty.
+- Menu **Pomocník** s pomocí k aktuální stránce, dokumentací, novinkami a kontakty.
 - Tlačítko **Hledat…** pro otevření [rychlého vyhledávání](search/README.md). Dialog otevřete také zkratkou **Ctrl+K** ve Windows nebo **⌘K** na Macu.
 - Jméno aktuálně přihlášeného uživatele, kliknutím na jméno zobrazíte následující možnosti:
   - Profil - upravit vlastní profil (jméno, email... - po změně profilu je třeba se odhlásit a znovu přihlásit).
@@ -25,9 +25,9 @@ V hlavičce se mohou zobrazovat karty pro přechod do třetí úrovně menu.
 
 ## Nápověda
 
-Menu **Nápověda** je dostupné v hlavičce na všech stránkách administrace. Nabízí:
+Menu **Pomocník** je dostupné v hlavičce na všech stránkách administrace. Nabízí:
 
-- **Nápověda k této stránce** – návod k otevřené části administrace. Pod odkazem je název aktuální stránky. Pokud stránka nemá přiřazený návod, položka se nezobrazí.
+- **Pomoc k této stránce** – návod k otevřené části administrace. Pod odkazem je název aktuální stránky. Pokud stránka nemá přiřazený návod, položka se nezobrazí.
 - **Dokumentace WebJET CMS** – úvodní stránka dokumentace v jazyce přihlášeného uživatele.
 - **Klávesové zkratky** – [přehled zkratek](keyboard-shortcuts.md) a míst, kde fungují.
 - **Co je nového ve verzi…** – konkrétní verze v dokumentaci. Počet novinek a označení **Nové** odpovídají kartě na úvodní obrazovce. Označení zůstává 30 dní od prvního zobrazení daného obsahu v menu nebo na úvodu; úprava obsahu začne nové období.
@@ -35,9 +35,9 @@ Menu **Nápověda** je dostupné v hlavičce na všech stránkách administrace.
 - **Poslat zpětnou vazbu** – dialog pro nápad, problém nebo pochvalu. Funguje i mimo úvodní obrazovku. Šipka zpět vás vrátí do menu; zavření křížkem zachová rozepsanou zprávu během otevření této stránky.
 - **Kontaktovat podporu** – stránka podpory nastavená pro jazyk uživatele.
 
-Odkazy na dokumentaci a podporu se otevírají v nové kartě. V dolní části menu je edice, verze a server WebJET CMS. Ikonou kopírování zkopírujete informace pro podporu.
+Odkazy na dokumentaci a podporu se otevírají v nové kartě. Ve spodní části menu je edice, verze a server WebJET CMS. Ikonou kopírování zkopírujete informace pro podporu.
 
-Menu lze ovládat klávesnicí: **Enter** nebo mezerník ho otevře, šipky procházejí položky a **Esc** ho zavře a vrátí fokus na tlačítko **Nápověda**.
+Menu lze ovládat klávesnicí: **Enter** nebo mezerník jej otevře, šipky procházejí položky a **Esc** jej zavře a vrátí fokus na tlačítko **Nápověda**.
 
 ## Menu
 

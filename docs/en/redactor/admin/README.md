@@ -12,7 +12,7 @@ At the top is the header:
 
 contains the following options:
 
-- The **Help** menu with help for the current page, documentation, release news and contacts.
+- **Help** menu with help for the current page, documentation, news and contacts.
 - **Search…** button to open [quick search](search/README.md). You can also open the dialog with the shortcut **Ctrl+K** on Windows or **⌘K** on Mac.
 - Name of the currently logged in user, click on the name to display the following options:
   - Profile - edit your own profile (name, email... - after changing your profile, you need to log out and log in again).
@@ -23,21 +23,21 @@ contains the following options:
 
 Tabs to navigate to the third menu level can be displayed in the header.
 
-## Help
+## Helper
 
-The **Help** menu is available in the header throughout the administration. It offers:
+The **Help** menu is available in the header on all administration pages. It offers:
 
-- **Help for this page** – instructions for the current administration page, with its name below the link. This item is hidden when the page has no assigned help article.
-- **WebJET CMS documentation** – the documentation home page in the signed-in user's language.
-- **Keyboard shortcuts** – an [overview of shortcuts](keyboard-shortcuts.md) and where they work.
-- **What’s new in version…** – the specific release in the documentation. The highlight count and **New** badge match the home-page card. The badge lasts 30 days from the first time this content appears in the menu or on the home page; changes to the content start a new period.
-- **All changes** – the complete changelog.
-- **Send feedback** – a dialog for an idea, problem or praise, available from any administration page. The back arrow returns to the menu; closing with the cross retains the draft while this page remains open.
-- **Contact support** – the support page configured for the user's language.
+- **Help for this page** – instructions for the open part of the administration. Below the link is the name of the current page. If the page does not have instructions associated with it, the item will not be displayed.
+- **WebJET CMS Documentation** – the home page of the documentation in the language of the logged-in user.
+- **Keyboard shortcuts** – [overview of shortcuts](keyboard-shortcuts.md) and where they work.
+- **What's new in version…** – a specific version in the documentation. The number of new features and the **New** label correspond to the tab on the home screen. The label remains for 30 days from the first time the given content is displayed in the menu or on the home screen; editing the content starts a new period.
+- **List of all changes** – complete changelog.
+- **Send Feedback** – a dialog for an idea, problem or compliment. It also works outside the home screen. The back arrow will take you back to the menu; closing with the cross will keep the written message while this page is open.
+- **Contact Support** – support page set for the user's language.
 
-Documentation and support links open in a new tab. The menu footer shows the WebJET CMS edition, version and server. Use the copy icon to copy this information for support.
+Links to documentation and support open in a new tab. At the bottom of the menu is the edition, version, and server of WebJET CMS. Use the copy icon to copy the information for support.
 
-Use **Enter** or Space to open the menu, arrow keys to move between items, and **Esc** to close it and return focus to the **Help** button.
+The menu can be controlled with the keyboard: **Enter** or the spacebar opens it, the arrows scroll through the items, and **Esc** closes it and returns focus to the **Help** button.
 
 ## Menu
 

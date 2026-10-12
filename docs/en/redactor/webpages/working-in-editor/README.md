@@ -4,7 +4,7 @@ WebJET includes an intelligent web page editor that shows you as faithfully as p
 
 ![](editor_preview.png)
 
-See [Keyboard shortcuts](../../admin/keyboard-shortcuts.md) for text editor shortcuts and other administration controls. On a Mac, use **Command (⌘)** instead of **Ctrl** to copy, cut, paste and edit links.
+An overview of shortcuts for the text editor and other parts of the administration can be found on the [Keyboard Shortcuts](../../admin/keyboard-shortcuts.md) page. On Mac, **Command (⌘)** is used instead of **Ctrl** when copying, cutting, pasting, and editing links.
 
 ## Working with text (typing/pasting/copying)
 
@@ -12,7 +12,7 @@ When working with text, you must first be aware of the difference between a para
 
 The difference between them is mainly due to the greater indentation between paragraphs (as opposed to text wrapping). Another important difference is that many text adjustments (such as creating a heading) are applied to the entire paragraph. If such a paragraph contains a line break, the change is also applied to the broken line.
 
-If you want the text not to wrap after typing a space, you can insert a **fixed space** in addition to the normal space. This can happen, for example, when typing dates ```10. 2. 2009``` or various other texts that should not be divided into two lines, such as file sizes ```123 kB``` or phone numbers ```0905 123 456```. A fixed space is inserted with the key combination **Shift + Space**. It does not differ in appearance, the only difference is its behavior towards the surrounding text at the end of the line.
+If you want the text not to wrap after typing a space, you can insert a **fixed space** in addition to the normal space. This can happen, for example, when typing dates ```10. 2. 2009``` or various other texts that should not be divided into two lines, such as file sizes ```123 kB``` or phone numbers ```0905 123 456```. A fixed space is inserted with the key combination **Shift + spacebar**. It does not differ in appearance, the only difference is its behavior towards the surrounding text at the end of the line.
 
 **You can edit text in the WebJET editor in the following ways**:
 
@@ -25,11 +25,11 @@ If you want the text not to wrap after typing a space, you can insert a **fixed 
 
 ![](paste.png)
 
-**Insert unformatted text** from the toolbar using the ![](paste_text.png ":no-zoom") icon. You can also use your browser’s shortcut for pasting without formatting; the keys depend on your browser and operating system.
+**Paste unformatted text** from the toolbar using the ![](paste_text.png ":no-zoom" icon). You can also use the paste without formatting shortcut provided by your browser; its appearance depends on the browser and operating system.
 This method of inserting text inserts text without any formatting, so it is most suitable for inserting regular text.
 
-**Inserting text from ```Word``` / ```Excel``` file** from the toolbar using the ![](paste_from_word.png ":no-zoom") icon.
-This option will insert text with paragraphs and tables preserved, but stripped of all styles from the original document.
+**Pasting text from ```Word``` / ```Excel``` file** from the toolbar using the ![](paste_from_word.png ":no-zoom") icon.
+This option inserts text with paragraphs and tables preserved, but stripped of all styles from the original document.
 
 ### Copying text
 
