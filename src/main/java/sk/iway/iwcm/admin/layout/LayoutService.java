@@ -57,6 +57,7 @@ public class LayoutService
         if ("cs".equals(lngWebjet)) lngWebjet = "cz";
         layout.setLngWebjet(lngWebjet);
         layout.setCsrfToken(CSRF.getCsrfToken(request.getSession(), true));
+        if (user.isAdmin()) layout.setLoginLocationUrl(sk.iway.iwcm.users.devices.AdminLoginLocation.takeRetryUrl(request.getSession()));
         layout.setPropertiesLastModified(AdminPropRestController.getLastModified(layout.getLngWebjet()));
         setNopermsCss();
 

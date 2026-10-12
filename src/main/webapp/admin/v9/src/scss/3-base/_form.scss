@@ -47,6 +47,26 @@ textarea {}
     border-color: $input-border-color;
 }
 
+.btn-white {
+    @include button-variant(
+        $white, $input-border-color, $secondary,
+        $hover-background: $white, $hover-border: $secondary, $hover-color: $secondary,
+        $active-background: $white, $active-border: $secondary, $active-color: $secondary,
+        $disabled-background: $white, $disabled-border: $input-border-color, $disabled-color: $gray-text
+    );
+    --#{$prefix}btn-disabled-opacity: 1;
+}
+
+.btn-red {
+    @include button-variant(
+        $danger, $danger, $white,
+        $hover-color: $white,
+        $active-color: $white,
+        $disabled-background: $gray-text, $disabled-border: $gray-text, $disabled-color: $white
+    );
+    --#{$prefix}btn-disabled-opacity: 1;
+}
+
 .btn:focus-visible,
 .btn-check:focus-visible + .btn,
 .btn-close:focus-visible {

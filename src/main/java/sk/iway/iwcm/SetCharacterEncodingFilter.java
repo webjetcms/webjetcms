@@ -22,6 +22,7 @@ import sk.iway.iwcm.system.context.ContextFilter;
 import sk.iway.iwcm.system.monitoring.ExecutionTimeMonitor;
 import sk.iway.iwcm.system.monitoring.MemoryMeasurement;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 import sk.iway.iwcm.system.ntlm.NtlmLogonAction;
 import sk.iway.iwcm.system.ntlm.RedirectedException;
 import sk.iway.iwcm.users.UserDetails;
@@ -402,7 +403,9 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 			}
 
 			Identity user = (Identity)request.getSession().getAttribute(Constants.USER_KEY);
-			if (AuthenticationFilter.weTrustIIS() && Tools.getUserPrincipal(request) != null &&
+			if (request.getSession().getAttribute(AdminDeviceService.PENDING_LOGIN) == null
+                && request.getSession().getAttribute("adminUser_waitingForToken") == null
+                && AuthenticationFilter.weTrustIIS() && Tools.getUserPrincipal(request) != null &&
 						Tools.isNotEmpty(Tools.getUserPrincipal(request).getName()))
 			{
 				if (isLoggedAsSomeoneElse(request, user))
@@ -623,6 +626,7 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		if (Tools.isSecure(req))
 		{
 			PathFilter.setHeader(res, "Strict-Transport-Security", "strictTransportSecurity");
+			res.addHeader("Accept-CH", "Sec-CH-UA-Platform-Version");
 		}
 		PathFilter.setHeader(res, "X-Content-Type-Options", "xContentTypeOptions");
 		if (path != null && path.toLowerCase().endsWith(".svg")) {
@@ -988,6 +992,15 @@ public class SetCharacterEncodingFilter extends OncePerRequestFilter
 		}
 
 		Identity loggedUser = UsersDB.getCurrentUser(request);
+        if (AdminDeviceService.requireVerification(request)) {
+            try {
+                response.sendRedirect(AdminDeviceService.VERIFICATION_URL);
+            } catch (java.io.IOException exception) {
+                Logger.error(SetCharacterEncodingFilter.class, "Cannot redirect to device verification", exception);
+            }
+            throw new RedirectedException();
+        }
+		LogonTools.afterSuccessLogon(request, response);
 
 		Logger.debug(SetCharacterEncodingFilter.class, "logUserInViaNtlm() END, user="+loggedUser);
 

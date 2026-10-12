@@ -17,6 +17,8 @@ import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.validation.BeanPropertyBindingResult;
 
@@ -88,15 +90,25 @@ class JsonEditorDatatableTest {
         assertTrue(validate(request, entity).getAllErrors().isEmpty());
     }
 
-    /** Verifies valid JSON passes without changing its source text. */
-    @Test
-    void acceptsValidEditorValue() {
-        TestEntity entity = new TestEntity();
-        String value = "{ \"id\": 9007199254740993 }";
-        entity.setFieldA(value);
-
-        assertTrue(validate(request("edit", entity), entity).getAllErrors().isEmpty());
-        assertEquals(value, entity.getFieldA());
+    /** Verifies all JSON root types pass editor and import validation without changing source text. */
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "{ \"id\": 9007199254740993 }", "[{\"id\":12345},{\"id\":56789}]", "[]",
+        "null", "true", "false", "9007199254740993", "\"text\"", "\"\"",
+        "42/* comment */", "42// comment", "/* heading */-1.2500e+42/* footer */"
+    })
+    void acceptsValidEditorAndImportValues(String value) {
+        for (boolean imported : new boolean[] {false, true}) {
+            TestEntity entity = new TestEntity();
+            entity.setFieldA(value);
+            DatatableRequest<Long, TestEntity> request = request("edit", entity);
+            if (imported) {
+                request.setDztotalchunkcount(1);
+                request.setImportedColumns(Set.of("fieldA"));
+            }
+            assertFalse(validate(request, entity).hasErrors());
+            assertEquals(value, entity.getFieldA());
+        }
     }
 
     /** Verifies valid JSON is stored in a form that remains unchanged by the JPA XSS filter. */

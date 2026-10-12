@@ -24,7 +24,7 @@ public class ConstantsV9 {
 	public static void clearValuesWebJet9() {
 		Constants.setString("chunksQuantity", "25", Constants.MOD_PERFORMANCE, "Pocet zaznamov spracovanych v jednej davke pri importe cez DataTable.");
 		Constants.setString("propertiesAdminKeys",
-			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage,menu.forms,datatables.quill.toolbar.*,editor.form.sl.name,editor.form.sl.value,components.file_archiv.name,admin.dragDropFiles.*",
+			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage,menu.forms,datatables.quill.toolbar.*,editor.form.sl.name,editor.form.sl.value,components.file_archiv.name,admin.dragDropFiles.*,components.search.rag_answer",
 			  Constants.MOD_PROPERTIES, "Zoznam prekladovych klucov dostupnych cez administracne REST API, oddelenych novym riadkom alebo ciarkou; znak * na konci znamena prefix.");
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2, Constants.mods(Constants.MOD_EDITOR, Constants.MOD_WEBPAGES), "Maximalny pocet korenovych priecinkov, pri ktorom sa strom webovych stranok automaticky otvori.");
 		Constants.setString("deepl_auth_key", "", Constants.MOD_TRANSLATIONS, "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
@@ -43,6 +43,7 @@ public class ConstantsV9 {
 
 		// Domain and folder containing dashboard news
 		Constants.setString("overviewJsonUrl", "https://docs.webjetcms.sk/json/", Constants.MOD_SYSTEM_ADMIN, "Zakladna URL adresa pre nacitanie zoznamu noviniek na administracnom dashboarde.");
+		Constants.setString("adminDocumentationSearchUrl", "https://docs.webjetcms.sk/rest/rag/markdown/search", Constants.MOD_SYSTEM_ADMIN, "Full URL of the documentation search endpoint used by administration quick search. Query, language and directory parameters are added automatically. Empty retains the external documentation search link.");
 		Constants.setString("languages", "sk,cz,en,de,pl,hu,cho,ru,esp", Constants.MOD_LOCALIZATION, "Zoznam jazykov pre webjet cms");
 
 		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name", Constants.MOD_DATABASE, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");
@@ -105,7 +106,7 @@ public class ConstantsV9 {
 		Constants.setString("changePasswordPageUrlAdmin", "/admin/logon/changePassword", Constants.MOD_PASSWORD, "cesta k suboru (alebo stranke) na zmenu hesla z admin sekcie");
 
 		Constants.setInt("dashboardRecentSize", 8, Constants.MOD_SYSTEM_ADMIN, "Pocet zaznamov v zozname poslednych stranok/auditu na uvodnej obrazovke");
-		Constants.setString("dashboardHeroBackgroundImage", "/admin/skins/webjet8/assets/global/img/wj/wj9_bg.jpg", Constants.MOD_SYSTEM_ADMIN, "Background image in the administration dashboard header. Use a root-relative path or an HTTP(S) URL. An empty value hides the image.");
+		Constants.setString("dashboardHeroBackgroundImage", "linear-gradient(111.7deg, #031D46 0%, #073780 76.92%)", Constants.MOD_SYSTEM_ADMIN, "Administration dashboard header background. Use a CSS gradient, a root-relative image path or an HTTP(S) image URL. Empty or invalid values use the default blue gradient.");
 		Constants.setString("dashboardEnvironmentName", "{ENVIRONMENT_NAME}", Constants.MOD_SYSTEM_ADMIN, "Environment badge in the v9 header and login page. Supports macros; empty hides it (also on PROD). Displays at most 8 uppercase characters, with the full name in the tooltip.");
 		Constants.setString("dashboardEnvironmentIcon", "auto", Constants.MOD_SYSTEM_ADMIN, "Tabler icon name or ti-* class, auto for the environment default, none or empty to hide the icon. Defaults: PROD=alert-triangle, TEST=test-pipe, DEMO=eye, DEV=code, UAT=none, INT=plug-connected, CIT=user-check, LOCAL=device-laptop.");
 		Constants.setString("dashboardEnvironmentColor", "auto", Constants.MOD_SYSTEM_ADMIN, "Environment badge background: auto uses the UX palette (PROD red, TEST orange, DEMO yellow, DEV green, UAT cyan, INT blue, CIT purple, LOCAL gray). Custom #RGB/#RRGGBB colors use black or white text with at least 4.5:1 contrast.");
@@ -123,6 +124,9 @@ public class ConstantsV9 {
 
 		Constants.setString("springSecurityAllowedAuths", "basic,api-token", Constants.MOD_SECURITY, "Allowed auth methods for REST services, after change restart server.");
 		Constants.setBoolean("logoffRequireCsrfToken", false, Constants.MOD_CSRF, "If true, /logoff.do requires CSRF token");
+		Constants.setString("adminLoginLocationApiKey", "", Constants.MOD_SECURITY, "Optional browser IP geolocation: empty uses IPWHOIS Free, DISABLED turns it off. A paid API key is visible to visitors of the login page. The provider receives the public IP and CMS Origin, without Referer or cookies.");
+		Constants.setBoolean("adminNewDeviceDetectionEnabled", true, Constants.MOD_SECURITY, "Notify administrators about successful logins from unrecognized browsers.");
+		Constants.setInt("adminNewDeviceMaxAgeDays", 90, Constants.MOD_SECURITY, "Browser recognition and cookie lifetime in days since the account's last successful login. Positive values only; invalid values use 90 days.");
 		Constants.setString("csrfRequiredUrls", "", Constants.MOD_CSRF, "Comma separated list of URLs that require CSRF token");
 
 		// OAuth2 configuration settings

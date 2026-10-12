@@ -1,18 +1,64 @@
 # Search
 
-## Overview
+## Quick search in the header
 
-The **Search** section in the administration allows users to search for content across multiple areas, such as web pages, files, and text keywords. Search provides tools to filter results and narrow the scope of the search, improving the efficiency of working with content.
+The **Search…** button in the header opens the search above the current page. It is available throughout the administration. You can also open it with the keys **Ctrl+K** on Windows or **⌘K** on Mac; after opening, you can write immediately. The shortcut does not take over commands when writing in another text field or editor.
+
+![Search button in the administration header](quick-search-trigger.png)
+
+Before you enter a term, you will see recent searches and links to available sections. The browser remembers the history separately for the logged-in user and domain. You can delete individual entries or the entire history.
+
+The **All** range shows up to three results from each area. Clicking the **All** range or link will display results from the selected area only. The menu is governed by your permissions:
+
+- **Websites** – suggestions by page name or URL and search in content. The page design will open in its editor.
+- **Files** – search in file names and indexed content.
+- **Administration** – links to available menu items including their tabs.
+- **Users** – search by first name, last name, full name, email or login name.
+- **Text keys** – search for keys and their translations.
+- **Documentation** – semantic search with documentation previews right in the dialog. If the service also returns an AI answer, it will be displayed above the results and you can expand it. Headings, lists, and other Markdown formatting will remain readable. Clicking on a result will open the corresponding documentation page in a new tab.
+
+**All** is selected by default on the initial page. When opening from a supported section, its scope is selected by default. The scope change is valid until the dialog is closed. You can also switch it in a field using **Alt+left/right arrow**. **Tab** and **Shift+Tab** move the focus between controls, the up/down arrows select the result, and **Enter** opens it.
+
+![Search results for the term banner system in the scope All](quick-search.png)
+
+The **Open results in section…** link will take your search term to the appropriate section, where you can apply additional filters. If nothing is found, you can select **Search everywhere** to narrow down your search. A connection error will display the message **Search is temporarily unavailable** and a **Try again** button.
+
+To close the dialog, press the **Esc** key, the close button, or click outside the dialog. The focus returns to the button in the header; the search term is not written to the button.
+
+![Search results for banner system in AI response documentation](quick-search-documentation.png)
+
+### Setting up documentation search
+
+In **Settings → Configuration**, set the variable `adminDocumentationSearchUrl` to the full URL of the search service. The default value is `https://docs.webjetcms.sk/rest/rag/markdown/search`. When changing the domain or path, just edit this variable and refresh the administration. If the value is empty, the link to the external search in the documentation will remain available.
+
+The administration will complete the parameter `query` with the search term and send `language` and `directory` depending on the interface language:
+
+| Administration language | `language` | `directory` |
+| --- | --- | --- |
+| Slovak | `en` | `/sk/` |
+| Czech | `en` | `/en/` |
+| English | `en` | `/en/` |
+
+The endpoint returns JSON with a field `results`. Each result contains `title`, `url`, and a Markdown sample `snippet`. An optional AI summary is in the `answer` element in Markdown format. Relative links in the results open on the documentation server.
+
+If the documentation runs on a different domain, its server must enable CORS. The setting belongs **to the documentation server**. For the administration opened on `http://iwcm.interway.sk`, set:
+
+- `accessControlAllowOriginUrls` must contain `/rest/rag/markdown/search`. The default list `/rest/,/private/rest/,/admin/rest/` already covers this path, keep the other necessary paths.
+- Set `accessControlAllowOriginValue` to the required domain or `*`. This is the administration address, not the documentation address. For a different protocol or port, use the exact value from the `Origin` request header.
+- `accessControlAllowMethods` must enable `GET`, the default value includes it.
+- If you are using the `accessControlAllowedOrigins` restriction, add the same administration origin to it.
+
+Search sends a public request without cookies or credentials. For the public documentation API intended for arbitrary installations, you can return `Access-Control-Allow-Origin: *`. If the header is set by a reverse proxy server, ensure that it is not sent twice. Configuration details are in [HTTP headers](../../../sysadmin/pentests/README.md#http-headers).
+
+The HTTPS endpoint must have a valid certificate. In the event of a certificate or CORS error, the browser will not provide a response to the administration and will display the option to repeat the search.
+
+## Advanced search
+
+The **Search** section provides tables for web pages, files, and text keys. You can open it by clicking the **Open results in section…** link from the relevant quick search scope. It will save your search term and select the corresponding tab.
 
 ![](search.png)
 
-## Access to the section:
-
-We can access the **Search** section in the administration using the magnifying glass icon ![](../icon-search.png ":no-zoom") in the header.
-
-See also [Header](../README#header) for more information.
-
-## Key features:
+## Key features
 
 1. **Full-text search**:
    - The search is performed not only in the titles of the pages, but also in their text content.
@@ -29,7 +75,7 @@ See also [Header](../README#header) for more information.
 
 ## Using the Search section
 
-### Search Interface:
+### Search Interface
 
 The section is divided into several tabs. Each tab allows for specific searching and filtering:
 
@@ -54,7 +100,7 @@ The section is divided into several tabs. Each tab allows for specific searching
 - **Full-text search:** Find text keys by content in all available languages.
 - **Filtering:** Use columns like `Kľúč` or `Jazyk` for more precise searches.
 
-## Usage examples:
+## Usage examples
 
 - **Website search:**
   - You are searching for the phrase `naštartoval obchodnú stránku`.
@@ -67,4 +113,3 @@ The section is divided into several tabs. Each tab allows for specific searching
 - **Text key search:**
   - You are looking for `Pridať adresár`.
   - The results contain keys with Slovak text `Pridať adresár`. You can then use the filter `addGroup` in the column `Kľúč` to narrow down the results.
-

@@ -27,6 +27,7 @@ Low-level, wide-use utility classes available across all packages.
 ### HTML / JSON Safety
 
 - `JsonTools.prepare4Json` strips includes, normalizes image/link tags adding thumbnail attributes for admin previews.
+- `JsonTools.objectToJSON` registers Jackson's `JavaTimeModule`; `Instant` values are serialized as epoch milliseconds, matching the REST timestamp configuration.
 
 ### Collation / Localization
 

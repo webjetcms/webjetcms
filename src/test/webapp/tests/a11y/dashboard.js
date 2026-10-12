@@ -35,13 +35,18 @@ async function openAuditDashboard(I, items = widgetItems) {
         settings = { ...route.request().postDataJSON(), configured: true };
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(settings) });
     });
-    await mockDashboardBootstrap(I, () => ({ settings, notices: ['info', 'warning', 'error'].map(severity => ({
+    await mockDashboardBootstrap(I, () => ({ settings, notices: [...['info', 'warning', 'error'].map(severity => ({
         id: `a11y-autotest-${severity}`, severity, icon: 'ti-info-circle', title: `${severity} notice autotest`,
         bodyHtml: '<p>Expanded notice details autotest.</p>', action: { type: 'link', url: '/admin/v9/', label: 'Notice action autotest' }
-    })) }));
+    })), {
+        id: 'newDevice:42', kind: 'newDevice', severity: 'warning', icon: 'ti-device-desktop', title: 'New device autotest',
+        securityEvent: { id: 42, createDate: Date.now(), expiresAt: Date.now() + 7 * 86400000,
+            browserName: 'Firefox autotest', operatingSystem: 'Linux', ipAddress: '127.0.0.1' }
+    }] }));
     I.amOnPage('/admin/v9/');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     I.waitForElement('.md-dashboard__notice-list[aria-busy="false"]', 20);
+    I.seeElement('[data-notice-id="newDevice:42"] .md-dashboard__notice-report');
 }
 
 /** Enters a control by keyboard after positioning it in the transformed administration scroller. */
@@ -109,7 +114,7 @@ for (const width of [1337, 320]) {
             I.dontSeeElement(`${card} .md-dashboard__widget-content > .text-danger`);
             await audit(I, a11y, card);
         }
-        I.assertDeepEqual(await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__hero, .md-dashboard__search, .md-dashboard__toolbar, .md-dashboard__widget')]
+        I.assertDeepEqual(await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__hero, .md-dashboard__toolbar, .md-dashboard__widget')]
             .filter(element => {
                 const bounds = element.getBoundingClientRect();
                 return bounds.left < -1 || bounds.right > window.innerWidth + 1 || element.scrollWidth > element.clientWidth + 1;
@@ -148,19 +153,26 @@ Scenario('Dashboard controls support Space and keyboard search scope', async ({ 
     const newsToggle = '.md-dashboard-widget__news-toggle';
     focusControl(I, newsToggle);
     I.pressKey('Space');
+    I.waitForElement(`${newsToggle}[aria-expanded="true"]`, 10);
+    I.waitForFunction(() => document.activeElement.classList.contains('md-dashboard-widget__news-close'), 10);
+    await audit(I, a11y, '.md-dashboard__hero');
+    I.pressKey('Escape');
     I.waitForElement(`${newsToggle}[aria-expanded="false"]`, 10);
     I.waitForFunction(selector => document.activeElement === document.querySelector(selector), [newsToggle], 10);
-    await audit(I, a11y, '.md-dashboard__hero');
-    I.pressKey('Space');
-    I.waitForElement(`${newsToggle}[aria-expanded="true"]`, 10);
-    focusControl(I, '.md-dashboard__search input[type="radio"]:checked');
-    I.pressKey('ArrowRight');
-    I.waitForFunction(() => document.querySelector('.md-dashboard__search input[value="docs"]').checked, 5);
+    focusControl(I, '.js-search-toggler');
+    I.pressKey('Enter');
+    I.waitForVisible('#admin-quick-search', 10);
+    I.waitForFunction(() => document.activeElement.id === 'admin-quick-search-input', 10);
+    I.pressKey(['Alt', 'ArrowRight']);
+    I.waitForFunction(() => document.activeElement.id === 'admin-quick-search-input', 5);
     I.assertTrue(await I.executeScript(() => {
-        const search = document.querySelector('.md-dashboard__search input[type="search"]');
-        return search.getAttribute('aria-label') === search.placeholder && search.placeholder.length > 0;
-    }), 'The search field must retain an accessible name when switching scope.');
-    await audit(I, a11y, '.md-dashboard__search');
+        const input = document.querySelector('#admin-quick-search-input');
+        return Boolean(input.labels?.length || input.getAttribute('aria-label') || input.getAttribute('aria-labelledby'));
+    }), 'The global search input must have an accessible name.');
+    await audit(I, a11y, '#admin-quick-search');
+    I.pressKey('Escape');
+    I.waitForInvisible('#admin-quick-search', 10);
+    I.waitForFunction(() => document.activeElement.classList.contains('js-search-toggler'), 5);
 });
 
 Scenario('Shortcut settings, color choices and keyboard movement are accessible', async ({ I, a11y }) => {

@@ -44,6 +44,8 @@ You can fill in the **Introductory text** that will appear at the beginning of t
 
 From the second step onwards, the **Go to previous step** button is displayed. The visitor can use it to return to the data already filled in and correct it. You can set the text of the button in the editor of the given step in the **Advanced** tab, in the **Previous step** field, for example to **Back**. If you leave the field empty, the default text will be used.
 
+A web designer can also edit the [HTML button code](../formsimple/README.md#html-button-code), for example its CSS classes or adding an icon.
+
 <div class="video-container">
     <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>

@@ -253,11 +253,11 @@ itemKey=cmp_contact
 userItem=true
 #linka v menu
 leftMenuLink=/apps/contact/admin/
-#ikona v menu (https://fontawesome.com/v5/search?s=solid%2Cbrands)
+#Tabler icon name without the "ti ti-" prefix
 icon=address-book
-#ak je true bude po pridani aplikacie zakazana pre vsetkych pouzivatelov a musi sa implicitne povolit
+#Disable the new permission for existing administrators on its first initialization
 defaultDisabled=true
-#ak je true, bude v zozname aplikacii na zaciatku (je to zakaznicka aplikacia)
+#Custom module flag; it does not change the order in the current administration menu
 custom=true
 
 #submenu
@@ -334,3 +334,147 @@ Scenario('contact-zakladne testy', async ({ I, DataTables, DTE }) => {
     });
 });
 ```
+
+## modinfo.properties file reference
+
+The file `modinfo.properties` registers the module, its items in the administration menu, user rights, and additional applications for embedding into the page. It is loaded by the class `sk.iway.iwcm.system.Modules`, the menu display is provided by `MenuService`, and the list of applications in the AppStore is prepared by `AppManager`.
+
+### Location and loading
+
+Place the file in `/components/MENO_APLIKACIE/` or `/apps/MENO_APLIKACIE/`. `Modules` only traverses the immediate subdirectories of these two folders. In each, it reads `modinfo.properties` and possibly `modinfo1.properties` to `modinfo29.properties`. The numbering does not have to be consecutive.
+
+Each file represents a separate module definition. Numbered files do not inherit settings from the base file, so give them their own `itemKey`. The matching identifier will usually replace the earlier definition. The exception is an automatically created module from `/apps/` without its own reference, which will not overwrite an already loaded module.
+
+The basic module will also be created for a folder without a file `modinfo.properties`. It will automatically receive the identifier `cmp_MENO_APLIKACIE`, the path to the folder, and the translation key `components.MENO_APLIKACIE.title`, or `apps.MENO_APLIKACIE.title`. However, the mere existence of the folder will not create an item in the left menu or adjustable user rights.
+
+Write the values ​​`true` and `false` in lowercase without trailing spaces. The parser compares the exact string for some attributes. The default encoding is `ISO-8859-1`, for a file in UTF-8 add the directive `#encoding=utf-8` at the beginning.
+
+Definitions are stored in memory. After changing the file, the modules need to be reloaded, for example by restarting WebJET CMS. The AppStore also has its own cache of the list of applications by language.
+
+### Complete example
+
+The example for `/components/example/modinfo.properties` includes all the attributes that `Modules` reads, including the alias `custom` and legacy flags. The paths, translation keys, and permission names are sample. Before use, modify or omit the constraints `installName`, `requireConstantsKey`, and `domainName`. In this example, the configuration variable `exampleEnabled` must be set to, for example, `true`.
+
+```properties
+#encoding=utf-8
+
+#Module identity and administration menu
+leftMenuNameKey=components.example.title
+itemKey=cmp_example
+leftMenuLink=/apps/example/admin/
+group=components
+icon=address-book
+menuOrder=120
+
+#Permissions and availability
+userItem=true
+defaultDisabled=true
+requireConstantsKey=exampleEnabled
+installName=customer,customer-test
+domainName=www.example.sk,www.example.cz
+
+#AppStore registration and custom module flag
+app=true
+isCustom=true
+#Alias used only when isCustom is missing or empty
+custom=true
+
+#Legacy flags - see the reference below
+showSubcategories=false
+hideSubmenu=false
+
+#Submenu with its own permission
+leftSubmenu1NameKey=components.example.records.title
+leftSubmenu1Link=/apps/example/admin/records/
+leftSubmenu1ItemKey=cmp_example_records
+leftSubmenu1UserItem=true
+leftSubmenu1DefaultDisabled=false
+leftSubmenu1Icon=list
+
+#Standalone permission without a visible menu link
+leftSubmenu2NameKey=components.example.export.title
+leftSubmenu2Link=javascript:void();
+leftSubmenu2ItemKey=cmp_example_export
+leftSubmenu2UserItem=true
+leftSubmenu2DefaultDisabled=true
+leftSubmenu2Icon=download
+
+#Additional application in the page editor
+component1NameKey=components.example.card.title
+component1Link=/components/example/editor_card.jsp
+component1Icon=/components/example/editoricon.png
+```
+
+### Identification and menu
+
+- `leftMenuNameKey` - ​​translation key of the module name in the menu and in the current rights tree. If missing, `components.MENO_APLIKACIE.title` or `apps.MENO_APLIKACIE.title` will be used depending on the folder. It does not change the internal `nameKey`, which is used by a regular JSP application in the AppStore.
+- `itemKey` - ​​a unique module identifier and also the name of the right, for example `cmp_contact`. The default value is `cmp_MENO_APLIKACIE`. Use the same identifier when checking rights in the REST controller, JSP or Java code. For a separately configurable right, use a key with at least three characters.
+- `leftMenuLink` - ​​URL address or JavaScript action of the main menu item. A non-empty value also enables the module to be displayed in the left menu; an empty or omitted value does not enable it. Example: `/apps/contact/admin/`. The link `javascript:void();` can serve as a container for sub-items.
+- `group` - ​​section of the administration menu and rights tree. The default value is `components`. The current menu knows the values ​​`welcome`, `website`, `news`, `components`, `files`, `templates`, `users`, `config` ; the new value itself does not create a new section. For some standard modules, the mapping in `MenuService` takes precedence. This attribute does not determine the category of the application in the AppStore.
+- `icon` - ​​the name of the Tabler icon without the prefix `ti ti-`, for example `address-book`. The `MenuService` prefix will be added when creating the menu and the rights tree. By default, the value is empty; for standard modules, internal icon mapping may take precedence. The card icon in the AppStore is set by a different mechanism, described below.
+- `menuOrder` - ​​integer for ascending order of modules, defaults to `1000`. An invalid non-empty value is converted to `0` ; if it matches, the internal `nameKey` is compared. In the current menu, some standard modules have a hard-mapped order, and the `components` section is then sorted by translated names. Therefore, in this section, `menuOrder` does not determine the final order. It does not determine the order of the cards in the AppStore either.
+
+### Rights and accessibility
+
+- `userItem` - ​​with `true`, the module's right to be set in user and group rights is available. The default value is `false`. The flag itself does not grant the user the right, and the value `false` does not mean that the application is prohibited.
+- `defaultDisabled` - ​​default `false`. With `true`, the initialization of the newly detected right adds a one-time ban to existing administrators. `UpdateDatabase` records the execution under the label `NEW MODULE: itemKey`. The right can then be enabled in the user settings or via a rights group. This is not a permanent shutdown of the module or a default setting for every future user. Changing back to `false` will not remove the already registered bans.
+- `requireConstantsKey` - ​​the name of one configuration variable on which the module's availability depends. Its value in `Constants` must be non-empty and different from the exact string `false`. For example, `requireConstantsKey=exampleEnabled` checks for variable `exampleEnabled`, does not set it. An empty or omitted attribute disables this condition.
+- `installName` - ​​restricts loading of the entire definition to specific installations according to `Constants.getInstallName()`. Separate multiple values ​​with a comma without spaces, for example `customer,customer-test`. The comparison is case-sensitive. In case of a mismatch, the definition including sub-items is skipped. An empty or omitted value does not restrict loading.
+- `domainName` - ​​display restriction by current domain, for example `www.example.sk,www.example.cz`. An empty or omitted value does not restrict display. It is used when creating the current administration menu and when filtering applications in `appstore.jsp`. The exact comparison and restrictions on transfer to the AppStore are described in the section [AppStore and filtering by domain](#appstore-and-filtering-by-domain).
+
+Rights are set in the rights tree of a user or rights group; its creation is described in the [user list] documentation (../../developer/apps/users/README.md). WebJET CMS stores user bans, with permission via a rights group taking precedence over a user ban. Module availability according to license and configuration is checked separately, so user permission will not make an unavailable module available.
+
+The definition in `modinfo.properties` does not replace the rights check in the application code. The Thymeleaf administrative controller checks the rights derived from the menu item URL, but protect the REST interface separately, for example with the `@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_contact')")` annotation from the example above.
+
+### Menu sub-items and separate rights
+
+Instead of `N`, use a number from **1 to 24**. Numbers can be omitted. The sub-item is only created if both `leftSubmenuNNameKey` and `leftSubmenuNLink` are non-empty.
+
+- `leftSubmenuNNameKey` - ​​translation key for the name of a sub-item in a menu or the name of a separate right.
+- `leftSubmenuNLink` - ​​URL address or JavaScript action of the subitem. The value `javascript:void();` allows you to register a right without a visible link in the menu; even with such a right, the attribute must be filled in.
+- `leftSubmenuNItemKey` - ​​the subitem's own right identifier. Without it, the right of the parent module will be used when displaying and checking the URL. When entered, this right is checked separately, the parent right is not automatically added to it as an additional condition.
+- `leftSubmenuNUserItem` - ​​with `true`, it displays the sub-item as a separately configurable right. By default, `false`, independent of the parent `userItem`. For a separate right, also set your own `leftSubmenuNItemKey` with at least three characters.
+- `leftSubmenuNDefaultDisabled` - ​​same one-time disablement as `defaultDisabled`, but for the subitem right. If missing, it takes the value of the parent `defaultDisabled`. Explicit `false` disables this inheritance, `true` enables disabling regardless of the parent.
+- `leftSubmenuNIcon` - ​​Tabler icon name without the prefix `ti ti-`. Currently used in the rights tree; the third level of the left menu does not render this icon. It is not set by default.
+
+If a user has a subitem with its own right enabled, it can be displayed even if the parent module's right is disabled. The parent will remain in the menu as a container and its link will change to the first enabled subitem.
+
+To condition a reference on existing rights, you can use `leftSubmenuNItemKey=pravoA&pravoB` to satisfy both rights simultaneously, or `leftSubmenuNItemKey=pravoA|pravoB` to satisfy at least one. Such a subitem usually does not have `leftSubmenuNUserItem=true` because it does not define a new, separate right. Do not combine both operators in a single expression; `WebjetSecurityService.hasPermission` rejects such a notation.
+
+### AppStore and additional applications
+
+- `app` - ​​default `true`. The value `false` excludes this module definition from application creation in `AppManager`, including its items `componentN...`. This does not disable the menu or user rights. It is used, for example, with another `modinfo2.properties`, which adds an administration screen to an already existing module.
+- `componentNNameKey` - ​​translation key for the name of the add-on application in the page editor.
+- `componentNLink` - ​​a link to the add-on editor, passed as an action when selecting an application. In `appstore.jsp`, a path starting with `/` is opened directly; for a simple name, `/components/NAZOV/editor_component.jsp` is built. In an installation named `cloud`, `AppManager` has special handling of legacy paths containing `cloud/`.
+- `componentNIcon` - ​​image of the additional application, for example `/components/example/editoricon.png`. `appstore.jsp` also supports the entire notation of Tabler icon classes, for example `ti ti-address-book`. Unlike `icon`, the prefix is ​​not automatically filled in here. The attribute is optional when loading, but you must fill it in to render the card; the existence of the file is not checked for this branch of registration.
+
+For `componentN...` use the numbers **1 to 14**, again with spaces in the numbering. The record will only be created if `componentNNameKey` and `componentNLink` are not empty. These items create additional applications to insert into the page, not additional links in the administration menu. They will only take over the rights of the parent module if `userItem=true` ; otherwise they will receive an empty rights identifier.
+
+For a regular JSP application, `AppManager` looks in the module folder for `editor_component.jsp` and `editoricon.png`, or `editoricon.gif`. The basic card requires an editor and at least one of these images. If the editor exists but both images are missing, the entire module, including its items `componentN...`, is skipped. Its name is based on the automatic `nameKey`, not `leftMenuNameKey`. The list is also populated by custom folders and annotations `@WebjetAppStore`, which have their own settings; therefore, `app=true` alone is not a complete card definition, and `app=false` does not disable separate registration via annotation.
+
+#### AppStore and filtering by domain
+
+`appstore.jsp` gets the list via `AppManager.getAppsList(request, true)`. The list already respects the rights of the logged in user and omits applications marked with `hideInAppstore`. The domain is filtered only by the JSP, because the common list of applications is cached by language.
+
+The current domain is obtained via `DocDB.getDomain(request)` and converted to lowercase. If `domainName` is not empty, it is tested whether its value **contains the current domain as a substring**. The same comparison method is used by `Modules.filterDomain()` for the administration menu. Therefore, write the values ​​in lowercase, without the protocol and path. The comma is only used as a practical separator: the filter does not split the value into exact domain names and does not support masks or regular expressions. For example, `domainName=www.example.sk` will also match the current domain `example.sk`, because it contains it.
+
+When creating a basic JSP application, `domainName` is transferred from the module to `AppBean`. For additional items, `componentN...` it is **not transferred**, so filtering by parent `domainName` cannot be expected for them. Restricting the display does not replace permission control or data separation by domain.
+
+An annotation `@WebjetAppStore` with the same non-empty `itemKey` and the same variant can replace an already created card. The new card will use `domainName` from the annotation; it will not inherit the constraint from the `modinfo.properties` file. So if your application uses the annotation, set the required domains in it as well.
+
+`appstore.jsp` additionally omits items with names `components.user.title` and `components.form.title`. The highlighted applications are selected by the configuration variable `appstorePromo`. These rules are not attributes of the `modinfo.properties` file.
+
+### Customer and senior symptoms
+
+- `isCustom` - ​​customer module designation, default `false`. In the current `MenuService` the flag is not transferred to the menu item and `AppManager` it is not copied from `ModuleInfo` to the application. Therefore, the setting itself does not change the order or classification among customer applications in these interfaces.
+- `custom` - ​​alias for `isCustom`, used only when `isCustom` is missing or empty. For example, `isCustom=false` takes precedence over `custom=true`. In a regular file, it is enough to use one of these attributes.
+- `showSubcategories` - ​​older flag intended for selecting groups or categories in module rights, defaults to `false`. `Modules` still loads it, but the current WebJET 9 menu and rights tree do not use it. Does not enable display of `leftSubmenuN...` items. Attribute name contains lowercase `c` in `categories`.
+- `hideSubmenu` - ​​default `false`. Hiding subitems uses the old `admin/skins/webjet8/layout_sidebar.jsp` file; the current WebJET 9 menu does not evaluate this flag. To create a separate right without a navigation link, use `leftSubmenuNLink=javascript:void();`.
+- `#encoding=utf-8` - ​​directive `IwayProperties` for file encoding. It is not a module attribute, despite the initial `#` it has an effect on file loading.
+
+### Specialties in existing files
+
+- `components/file_archiv/modinfo.properties` also defines rights without a reference in the menu using `javascript:void();`, for example `menuFileArchivExportFiles`.
+- `components/adminlog/modinfo.properties` uses the combination of rights `cmp_adminlog&menuWebpages` ; `components/stat/modinfo.properties` uses `users.edit_admins|users.edit_public_users`.
+
+The properties of the object `ModuleInfo` are not automatically valid file attributes. `Modules` does not read, for example, `nameKey`, `path`, `wjVersions`, `showInLeftMenu` or `hideInAppstore` from the file. It derives the path and the basic translation key from the folder, and turns on the display in the menu via `leftMenuLink`.

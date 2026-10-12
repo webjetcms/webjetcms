@@ -117,7 +117,8 @@ taglib prefix="iwcm" uri="/WEB-INF/iwcm.tld" %>
 		if (hints.length()>50) break;
 	}
 	if (editableOnly && !previewIds.isEmpty()) {
-		Map<Integer, DocDetailsDto> previews = new DashboardRecentPagesService().getPagePreviews(user, currentDomain, previewIds);
+		boolean cacheOnly = "true".equals(Tools.getRequestParameter(request, "cacheOnly"));
+		Map<Integer, DocDetailsDto> previews = new DashboardRecentPagesService().getPagePreviews(user, currentDomain, previewIds, cacheOnly);
 		for (int i = hints.length() - 1; i >= 0; i--) {
 			JSONObject hint = hints.getJSONObject(i);
 			DocDetailsDto preview = previews.get(hint.getInt("doc_id"));

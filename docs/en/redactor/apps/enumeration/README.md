@@ -120,4 +120,4 @@ You can restore a codebook type in the user interface: in the tree settings, ena
 
 When a type is deleted, its data records are also marked as deleted. If the **Show deleted types** option is disabled, the type disappears from all branches of the tree, but existing links from other types remain; they are displayed in their editor with the prefix **`(!deleted)_`**. If you delete a parent type, its child type is not deleted: it remains under other active parents or is displayed at the top level of the tree if it no longer has an active parent.
 
-When displaying deleted types, the tree also preserves their links to parents and children. After restoring the type, it will be displayed again in the regular tree based on the preserved links.
+When displaying deleted types, the tree also preserves their links to parents and children. When the type is restored, it is displayed again in the regular tree based on the preserved links.

@@ -149,8 +149,10 @@
             ui.noResults = $('<p>', { hidden: true }).text(ui.labels.empty).appendTo(ui.drawer);
             ui.toolbarHost = $('#inlineEditorToolbarTop');
             ui.toolbarContent = $('#wjInlineCkEditorToolbarOffsetElement');
+            ui.editorToolbar = $('#wjInlineCkEditorToolbarElement');
             ui.placeholder = $('#inlineEditorToolbarTopPlaceHolder');
             ui.oldHostStyle = ui.toolbarHost.attr('style');
+            ui.oldToolbarContentStyle = ui.toolbarContent.attr('style');
             ui.oldPlaceholderStyle = ui.placeholder.attr('style');
             if (ui.toolbarHost.length) {
                 ui.toolbarHost.append(ui.bar);
@@ -226,6 +228,7 @@
             ui.resizeObserver = new ResizeObserver(ui.layoutHandler);
             ui.resizeObserver.observe(me.$wrapper[0]);
             if (ui.toolbarContent.length) ui.resizeObserver.observe(ui.toolbarContent[0]);
+            if (ui.editorToolbar.length) ui.resizeObserver.observe(ui.editorToolbar[0]);
             ui.resizeObserver.observe(ui.bar[0]);
             // Page scripts may mutate content continuously; only refresh outline geometry here.
             ui.observer = new MutationObserver(ui.layoutHandler);
@@ -964,6 +967,10 @@
                     ui.moveHint.find('[role=status]').text(me.duplicate ? ui.labels.duplicateHint : ui.labels.moveHint);
                     ui.moveHint.find('[data-pb-action=end-move]')[0].focus({ preventScroll: true });
                 }
+                // Reserve the last rendered toolbar height when no inline editor remains.
+                var editorToolbarHeight = ui.editorToolbar.outerHeight();
+                if (editorToolbarHeight > 0) ui.editorToolbarHeight = editorToolbarHeight;
+                ui.toolbarContent.css('min-height', ui.editorToolbarHeight || 90);
                 var contentBottom = ui.toolbarContent.length ? ui.toolbarContent[0].getBoundingClientRect().bottom : 0;
                 if (ui.toolbarHost.length) {
                     var hostTop = ui.toolbarHost[0].getBoundingClientRect().top;
@@ -1030,6 +1037,8 @@
             ui.bar.add(ui.drawer).add(ui.layer).add(ui.insertLayer).remove();
             if (ui.oldHostStyle === undefined) ui.toolbarHost.removeAttr('style');
             else ui.toolbarHost.attr('style', ui.oldHostStyle);
+            if (ui.oldToolbarContentStyle === undefined) ui.toolbarContent.removeAttr('style');
+            else ui.toolbarContent.attr('style', ui.oldToolbarContentStyle);
             if (ui.oldPlaceholderStyle === undefined) ui.placeholder.removeAttr('style');
             else ui.placeholder.attr('style', ui.oldPlaceholderStyle);
             this.ui = null;
@@ -3003,38 +3012,39 @@
             }
 
             if (html.indexOf("pb-split-column-placeholder")!=-1) {
-                var splitElement = $(".pb-split-column-placeholder").first();
+                var splitElement = $(oEditor.element.$).find(".pb-split-column-placeholder").first();
                 if (splitElement.length>0) {
-                    var grid_element = this.get_parent_grid_element(splitElement);
-                    var columnHtmlCode = $(grid_element).prop('outerHTML');
-
-                    //we must wrap it into section because otherwise cleanup will not remove necessary classes
-                    columnHtmlCode = '<section class="'+this.grid.section_default_class+'"><div class="'+this.grid.container_default_class+'"><div class="'+this.grid.row_default_class+'">'+columnHtmlCode+'</div></div></section>';
-
-                    var clone = $(columnHtmlCode);
-                    this.clearEditorAttributes(clone);
-
-                    var cleanHtml = clone.find(this.grid.column).prop("outerHTML");
-                    $(cleanHtml).insertAfter(grid_element);
-
-                    //iterate over elements in splitElement parent and delete all after+including splitElement
-                    var elementsToRemove = splitElement.nextAll().addBack();
-                    elementsToRemove.remove();
-
-                    //find news inserted column
-                    var newElement = $(grid_element).next();
-                    newElement.prop("outerHTML", clone.find("."+this.grid.column_default_class).prop("outerHTML"));
-
-                    //iterate over elements in newElement, find .pb-split-column-placeholder and remove all elements before it + itself
-                    var splitPlaceholder = newElement.find(".pb-split-column-placeholder");
-                    if (splitPlaceholder.length>0) {
-                        var elementsToRemoveBefore = splitPlaceholder.prevAll().addBack();
-                        elementsToRemoveBefore.remove();
+                    var column = splitElement.closest(this.tagc.column);
+                    var columnContent = column.children(this.tagc.column_content).has(splitElement);
+                    if (columnContent.length === 0) {
+                        splitElement.remove();
+                        return;
                     }
 
-                    //mark PB and call ckeditor init
+                    // Keep the column inside a wrapper so cleanup includes its own PB attributes.
+                    var clone = $("<div>").append(column.clone());
+                    var newElement = clone.children().first();
+                    var newContent = newElement.children(this.tagc.column_content);
+                    var splitPlaceholder = newContent.find(".pb-split-column-placeholder").first();
+
+                    // Ranges split across ancestor wrappers and include text nodes, not only element siblings.
+                    var range = document.createRange();
+                    range.selectNodeContents(newContent[0]);
+                    range.setEndAfter(splitPlaceholder[0]);
+                    range.deleteContents();
+                    this.clearEditorAttributes(clone);
+
+                    range.selectNodeContents(columnContent[0]);
+                    range.setStartBefore(splitElement[0]);
+                    range.deleteContents();
+                    newElement.insertAfter(column);
+
+                    // Mark the new column and initialize its editor.
                     this.mark_column(newElement);
+                    this.changedElement = newElement;
                     this.options.onGridChanged();
+                    this.select_workbench_element(newElement[0], true);
+                    this.focus_ckeditor_element(newElement);
                 }
 
             }

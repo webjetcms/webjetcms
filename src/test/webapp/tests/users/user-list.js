@@ -39,6 +39,66 @@ Scenario('user-list-zakladne testy @baseTest', async ({ I, DataTables, DTE }) =>
      });
 });
 
+/** Verifies the global query searches each identity field through the real users endpoint. */
+Scenario('Quick search matches name, surname, email and login with OR semantics', async ({ I, DT }) => {
+     DT.waitForLoader();
+     const originalCount = await I.executeScript(() => window.usersDatatable.page.info().recordsDisplay);
+     const searches = await I.executeScript(async () => {
+          const user = window.currentUser;
+          const queries = ['firstName', 'lastName', 'email', 'login'].map(field => ({ field, value: user[field] }));
+          if (queries.some(query => !query.value)) throw new Error('The administrator fixture must have all four identity fields.');
+          queries.push({ field: 'fullName', value: user.firstName + ' ' + user.lastName });
+          const results = [];
+          for (const query of queries) {
+               const params = new URLSearchParams({ searchText: query.value, size: 100, page: 0, sort: 'id,asc' });
+               const response = await fetch('/admin/rest/users/all?' + params, { headers: { 'X-CSRF-Token': window.csrfToken } });
+               if (!response.ok) throw new Error('User search failed: ' + response.status);
+               const json = await response.json();
+               results.push({ field: query.field, total: json.totalElements, found: json.content.some(row => Number(row.id) === user.userId) });
+          }
+          const params = new URLSearchParams({ searchText: user.login, searchLogin: '^missing-login-autotest-quick-search$', size: 100, page: 0 });
+          const response = await fetch('/admin/rest/users/all?' + params, { headers: { 'X-CSRF-Token': window.csrfToken } });
+          if (!response.ok) throw new Error('Combined user search failed: ' + response.status);
+          return { results, login: user.login, combinedTotal: (await response.json()).totalElements };
+     });
+     for (const search of searches.results) I.assertTrue(search.found, 'The OR query must match the current administrator by ' + search.field + '.');
+     I.assertEqual(searches.combinedTotal, 0, 'Global search must remain ANDed with column filters.');
+     I.clickCss('button.js-search-toggler');
+     I.waitForVisible('#admin-quick-search', 10);
+     I.clickCss('.md-quick-search__scopes [data-scope="users"]');
+     I.fillField('#admin-quick-search-input', searches.login);
+     I.waitForVisible('.md-quick-search__handoff', 10);
+     I.clickCss('.md-quick-search__handoff');
+     I.seeInCurrentUrl('searchText=' + encodeURIComponent(searches.login));
+     I.seeInField('#usersQuickSearchText', searches.login);
+     const filteredCount = searches.results.find(search => search.field === 'login').total;
+     I.waitForFunction(([expected]) => window.usersDatatable?.page.info().recordsDisplay === expected, [filteredCount], 10);
+     I.see(searches.login, '#datatableInit tbody');
+     I.assertTrue(filteredCount < originalCount, 'The user-list handoff must apply its visible search filter.');
+     I.clickCss('#usersQuickSearchClear');
+     I.seeInField('#usersQuickSearchText', '');
+     I.dontSeeInCurrentUrl('searchText=');
+     I.waitForFunction(([expected]) => window.usersDatatable?.page.info().recordsDisplay === expected, [originalCount], 10);
+});
+
+/** The optional query must remain inside the existing administrator visibility restriction. */
+Scenario('Quick search cannot reveal administrators without administrator-edit permission', async ({ I, DT }) => {
+     I.amOnPage(url + '?removePerm=' + permEditAdminUser);
+     DT.waitForLoader();
+     const visible = await I.executeScript(async () => {
+          const params = new URLSearchParams({ searchText: window.currentUser.login, size: 100, page: 0 });
+          const response = await fetch('/admin/rest/users/all?' + params, { headers: { 'X-CSRF-Token': window.csrfToken } });
+          if (!response.ok) throw new Error('User search failed: ' + response.status);
+          const json = await response.json();
+          return json.content.some(row => Number(row.id) === window.currentUser.userId);
+     });
+     I.assertFalse(visible, 'The search query must not bypass administrator visibility.');
+});
+
+Scenario('Restore administrator permissions after quick-search checks', ({ I }) => {
+     I.logout();
+});
+
 Scenario('user-list-email-validacia', ({ I, DTE }) => {
      I.click("button.buttons-create");
      DTE.waitForEditor();

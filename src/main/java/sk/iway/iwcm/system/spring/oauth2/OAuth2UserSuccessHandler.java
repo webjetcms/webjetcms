@@ -17,6 +17,7 @@ import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.users.UserGroupsDB;
 import sk.iway.iwcm.users.UserGroupDetails;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -85,8 +86,16 @@ public class OAuth2UserSuccessHandler extends AbstractOAuth2SuccessHandler {
             Authentication springAuth = WebjetAuthentificationProvider.authenticate(identity);
             SecurityContextHolder.getContext().setAuthentication(springAuth);
 
+            if (AdminDeviceService.requireVerification(request)) {
+                response.sendRedirect(AdminDeviceService.VERIFICATION_URL);
+                return;
+            }
+            LogonTools.afterSuccessLogon(request, response);
+
             // Redirect after login
-            if (afterLogonRedirect != null) {
+            if (identity.isAdmin() && session.getAttribute("adminAfterLogonRedirect") != null) {
+                response.sendRedirect(AdminDeviceService.getAfterLoginRedirect(request));
+            } else if (afterLogonRedirect != null) {
                 response.sendRedirect(afterLogonRedirect);
             } else {
                 response.sendRedirect("/");

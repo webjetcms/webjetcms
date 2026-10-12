@@ -83,6 +83,7 @@ Tokens are defined at the top of `ninja.scss`. Shared runtime CSS properties are
 - Build controls from Bootstrap classes and existing WebJET variants before adding custom styles: `btn-primary`, `btn-outline-secondary`, `btn-success`, `btn-warning`, and `btn-danger`.
 - Primary blue is reserved for the main action or selected state. Secondary actions normally use the outlined dark variant.
 - Success, warning, and danger buttons intentionally use the dark `$secondary` foreground for readable contrast.
+- Use `btn-red` for solid red actions with white text and `btn-white` for opaque white actions. Both shared variants in `3-base/_form.scss` define hover, active and disabled colors through Bootstrap's `button-variant` mixin and retain the shared keyboard focus outline. Replace the variant class rather than combining it with `btn-danger` or adding local color overrides.
 - DataTables and DataTables Editor are shared application infrastructure. Their stable project overrides belong primarily in `3-base/_table.scss` and `3-base/_modal.scss`.
 - Forms and shared focus behavior belong in `3-base/_form.scss`. Keep labels, validation, required-state semantics, input groups, and buttons aligned with existing DataTables Editor forms.
 - Use `ly-` for layout, `md-` for reusable modules, and `pg-` for page-only rules. Preserve existing BEM-like names within those namespaces.

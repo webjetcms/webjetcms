@@ -12,8 +12,8 @@ async function createTree(t, nodes) {
     const dom = new JSDOM('<!doctype html><div id="SomStromcek"></div>', {runScripts: "outside-only"});
     const {window} = dom;
     t.after(() => window.close());
-    window.eval(readAdmin("node_modules/jquery/dist/jquery.js"));
-    window.eval(readAdmin("node_modules/jstree/dist/jstree.js"));
+    window.eval(fs.readFileSync(require.resolve("jquery/dist/jquery.js"), "utf8"));
+    window.eval(fs.readFileSync(require.resolve("jstree/dist/jstree.js"), "utf8"));
     window.eval(readAdmin("src/js/libs/tools/tools.js").replace("export class Tools", "window.Tools = class Tools"));
 
     const webjet = readAdmin("src/js/webjet.js");

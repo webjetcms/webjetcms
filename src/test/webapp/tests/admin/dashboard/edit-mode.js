@@ -22,7 +22,7 @@ async function openFixture(I, longLayout = false, additionalItems = []) {
                 { id: 'edit-autotest-extra-pages-2', type: 'recent-pages', size: '3x3', options: {} }
             ] : []),
             ...additionalItems,
-            { id: 'edit-autotest-sessions', type: 'sessions', size: '2x3', options: {} }
+            { id: 'edit-autotest-sessions', type: 'my-sessions', size: '2x3', options: {} }
         ]
     };
     mutations = [];
@@ -134,7 +134,7 @@ Scenario('Widget removal stays provisional, supports Undo and Ctrl Z, and Cancel
     I.clickCss('.md-dashboard__cancel');
     I.waitForVisible('.md-dashboard-modal--confirm', 10);
     I.waitForFunction(() => document.activeElement === document.querySelector('.md-dashboard-modal--confirm .modal-footer .btn-outline-secondary'), 10);
-    I.clickCss('.md-dashboard-modal--confirm .btn-danger');
+    I.clickCss('.md-dashboard-modal--confirm .btn-red');
     I.waitForInvisible('.md-dashboard-modal--confirm', 10);
     I.dontSeeElement('.md-dashboard.is-editing');
     I.seeElement(`[data-instance-id="${formsId}"]`);
@@ -181,6 +181,7 @@ Scenario('Settings preview size changes in a centered modal and a rejected Save 
 
 Scenario('Catalogue configures a widget before adding and closes after confirmation', async ({ I, a11y }) => {
     await openFixture(I);
+    const originalItems = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items);
     const addButton = '.md-dashboard__toolbar-actions > button:has(.ti-plus)';
     const catalogueAdd = '.md-dashboard__catalogue-item[data-widget-type="forms"] button';
     I.clickCss(addButton);
@@ -189,7 +190,7 @@ Scenario('Catalogue configures a widget before adding and closes after confirmat
     I.waitForVisible('.md-dashboard-modal--settings', 10);
     I.waitForEnabled('.md-dashboard-modal--settings .btn-primary', 20);
     I.dontSeeElementInDOM('.md-dashboard-modal--catalogue');
-    I.assertEqual(await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.length), saved.items.length, 'Choosing a type must not add the widget');
+    I.assertDeepEqual(await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items), originalItems, 'Choosing a type must not add the widget');
     I.see('Pridať widget', '.md-dashboard-modal--settings .modal-footer .btn-primary');
     I.waitForFunction(() => getComputedStyle(document.querySelector('.md-dashboard-modal--settings')).opacity === '1', 10);
     await a11y.check('.md-dashboard-modal--settings');
@@ -305,7 +306,7 @@ Scenario('The edit toolbar stays below the header while scrolling and keyboard m
         }), 'Editing widgets must stay within the viewport');
         I.clickCss('.md-dashboard__cancel');
         I.waitForVisible('.md-dashboard-modal--confirm', 10);
-        I.clickCss('.md-dashboard-modal--confirm .btn-danger');
+        I.clickCss('.md-dashboard-modal--confirm .btn-red');
         I.waitForInvisible('.md-dashboard-modal--confirm', 10);
     }
     I.wjSetDefaultWindowSize();

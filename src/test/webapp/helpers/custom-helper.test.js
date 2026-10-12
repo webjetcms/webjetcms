@@ -39,3 +39,34 @@ test('clickIfVisible skips an absent element without starting a click', async ()
     });
     assert.equal(await helper.clickIfVisible('.toast-close-button'), false);
 });
+
+test('screenshots after a failed named session ignore closed pages from the previous test', async t => {
+    const Playwright = require('codeceptjs/lib/helper/Playwright');
+    const outputDirectory = Object.getOwnPropertyDescriptor(global, 'output_dir');
+    global.output_dir = __dirname;
+    t.after(() => {
+        if (outputDirectory) Object.defineProperty(global, 'output_dir', outputDirectory);
+        else delete global.output_dir;
+    });
+    let screenshots = 0;
+    const page = { screenshot: async () => { screenshots++; } };
+    const playwright = {
+        page, options: {}, debug() {},
+        activeSessionName: 'failed session',
+        sessionPages: { 'failed session': { screenshot: async () => { throw new Error('Target page has been closed'); } } }
+    };
+    const screenshot = () => Playwright.prototype.saveScreenshot.call(playwright, 'autotest-session.png');
+    await assert.rejects(screenshot, /Target page has been closed/);
+
+    fixture(playwright)._before();
+    await screenshot();
+    assert.equal(screenshots, 2, 'The live page must still be captured after clearing previous sessions');
+    assert.equal(playwright.page, page, 'The active Playwright page must remain unchanged');
+
+    playwright.activeSessionName = 'new session';
+    playwright.sessionPages['new session'] = page;
+    await screenshot();
+    assert.equal(screenshots, 4, 'Named sessions created in the current test must still be captured');
+    page.screenshot = async () => { throw new Error('Current page has been closed'); };
+    await assert.rejects(screenshot, /Current page has been closed/, 'A real failure in the current page must remain visible');
+});

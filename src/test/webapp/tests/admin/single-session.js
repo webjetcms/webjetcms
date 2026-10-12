@@ -1,3 +1,5 @@
+const { showDashboardSessions } = require('../../helpers/dashboard-browser');
+
 Feature("admin.single-session");
 
 var logoffLocator = "#toast-container-logoff";
@@ -93,7 +95,9 @@ Scenario("active session list on dashboard @singlethread", async ({ I }) => {
         I.see(introText, ".md-dashboard__greeting");
 
         // Remove only the session created by the first test context.
-        const target = `.md-dashboard__sessions [data-session-logon="${createdLogonTime}"] .md-dashboard-widget__session-logout`;
+        I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+        await showDashboardSessions(I);
+        const target = `[data-instance-id="autotest-session-dialog"] [data-session-logon="${createdLogonTime}"] .md-dashboard-widget__session-logout`;
         I.waitForVisible(target, 20);
         I.assertEqual(await I.grabNumberOfVisibleElements(target), 1, 'The session action must target only the context created by this test.');
         I.clickCss(target);

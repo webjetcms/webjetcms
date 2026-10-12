@@ -20,6 +20,7 @@ Pre správne spustenie Page Builder nastavte:
 Ďalšie konf. premenné, ktoré je možné upraviť:
 
 - `pagebuilderLibraryImageWidth` - šírka náhľadových obrázkov v knižnici blokov, predvolene 310.
+- `pagebuilderStructureWidth` - šírka panela Štruktúra v pixeloch, predvolene 280. Vyššia hodnota poskytne viac miesta pre vnorené bloky a dlhšie názvy. Na úzkej obrazovke sa panel zmenší podľa dostupného priestoru.
 - `inlineEditingDisabledUrls` - zoznam URL adries, pre ktoré nebude dostupný inline editor
 - `pageBuilderPrefix` - prefix, ktorý sa používa pre CSS triedy Page Builder (predvolene pb), zmeniť je možné len ak zmeníte aj prefixy v CSS triedach Page Builder
 

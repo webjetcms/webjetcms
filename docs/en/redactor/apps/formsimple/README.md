@@ -166,6 +166,39 @@ The tooltip value is only substituted once. If the tooltip text itself contains 
 
 In the email view, the value of the tooltip field is replaced with a blank character (so that there is no unnecessary non-functional tooltip in the email).
 
+### HTML code for buttons
+
+You can edit the HTML code of the buttons in [multistep forms](../multistep-form/README.md) in the **Settings → Text Editing** section. You can customize the appearance of the buttons to your website design by changing the CSS classes or adding an icon.
+
+#### Continue or submit button
+
+The key `components.mustistep.form.end` contains the HTML code for the button to go to the next step and, in the last step, to submit the form. The default part of the value that determines the appearance of the button is:
+
+```html
+<button type="submit" class="btn btn-primary mt-3" name="saveForm">${submitButtonText}</button>
+```
+
+The `${submitButtonText}` tag will be replaced with the text set in the current step. If no text is specified, the `components.mustistep.form.next_step` translation will be used (**Go to next step**) or in the last step `components.mustistep.form.save_form` (**Submit form**).
+
+When changing the appearance, keep the `type="submit"`, `name="saveForm"`, and `${submitButtonText}` tags. The key also contains the `{tech-info}` tag for technical information, the `</form>` closing tag, and the script to initialize the tooltips. Leave these parts; when editing the button, change only its HTML code.
+
+#### Previous step button
+
+The HTML code for the **Back** button is set via the `components.mustistep.form.back_button` key. The button appears from the second step; it is not inserted into the email form.
+
+The following tags are available in the key value:
+
+- `${previousStepId}` - ​​ID of the previous step.
+- `${backButtonText}` - ​​button text set in the current step, or default translation `components.mustistep.form.back_step`. The text is escaped before being inserted into HTML.
+
+Default code:
+
+```properties
+components.mustistep.form.back_button=<button type="button" class="btn btn-outline-secondary mt-3 me-2" data-multistep-back-step="${previousStepId}">${backButtonText}</button>
+```
+
+When changing the appearance, keep `type="button"` and the `data-multistep-back-step="${previousStepId}"` attribute, which is used to return to the previous step.
+
 ### Dial connection
 
 You can easily connect a selection field (`select`) to a dial pad:

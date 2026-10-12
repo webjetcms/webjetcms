@@ -9,7 +9,7 @@ let originalAdminPreferences;
 const resetDialog = '#toast-container-webjet .toast[role="dialog"]';
 const confirmation = `${resetDialog} button[id^="confirmationYes"]`;
 const expectedSizes = {
-    search: 'fullauto', 'recent-pages': '3x2', forms: '1x1', sessions: '2x3', publishing: '2x2',
+    'recent-pages': '3x2', forms: '1x1', publishing: '2x2',
     traffic: '3x3', referrers: '2x2', newsletter: '2x2',
     news: '3x2', approvals: '1x1', errors: '1x1', shortcut: '1x1'
 };
@@ -27,7 +27,8 @@ async function settings(I) {
 }
 
 function effectiveDefaults(profile) {
-    return profile.items.map(({ type, size, options, id }) => ({ type, size, options, domainOptions: profile.domainOptions[id] || {} }));
+    const items = profile.items.map(({ type, size, options, id }) => ({ type, size, options, domainOptions: profile.domainOptions[id] || {} }));
+    return { widgets: items.filter(item => item.type !== 'shortcut'), shortcuts: items.filter(item => item.type === 'shortcut') };
 }
 
 function saveOverview(I) {
@@ -125,7 +126,7 @@ Scenario('Reset confirms changes, retains a failed draft and saves only the cura
         const saved = await I.executeScript(async () => {
             const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
             const next = JSON.parse(JSON.stringify(controller.settings));
-            next.items = next.items.filter(item => ['sessions', 'shortcut', 'forms'].includes(item.type));
+            next.items = next.items.filter(item => ['shortcut', 'forms'].includes(item.type));
             next.items.find(item => item.type === 'shortcut').options.title = 'dashboard-reset-autotest custom';
             next.domainOptions = { [next.items.find(item => item.type === 'forms').id]: { formName: 'dashboard-reset-autotest filter' } };
             next.acknowledgedNewsVersion = 'dashboard-reset-autotest acknowledged';
@@ -162,10 +163,10 @@ Scenario('Reset confirms changes, retains a failed draft and saves only the cura
             assert.equal(item.size, expectedSizes[item.type], `Default footprint for ${item.type}`);
         }
         assert.deepEqual(defaults.items.filter(item => item.type !== 'shortcut').map(item => item.type), [
-            'search', 'sessions', 'news', 'traffic', 'forms', 'approvals',
+            'news', 'traffic', 'forms', 'approvals',
             'errors', 'recent-pages', 'referrers', 'publishing', 'newsletter'
         ], 'The overview must retain its curated default order');
-        assert.equal(defaults.items.filter(item => item.type === 'sessions').length, 1);
+        assert.equal(defaults.items.filter(item => item.type === 'sessions').length, 0);
         I.assertEqual(await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__grid .md-dashboard__widget')].at(-1)?.dataset.widgetType),
             'newsletter', 'The reset grid must end with Newsletter');
         I.dontSeeElementInDOM('.md-dashboard__legacy');
@@ -236,7 +237,7 @@ Scenario('Shift reset persists every size and allows individual variants to be r
             'recent-pages': ['2x3', '3x2', '3x3'], approvals: ['1x1', '3x3'], publishing: ['2x2', '2x3'],
             forms: ['1x1', '3x3'], traffic: ['1x1', '3x3'], 'top-pages': ['2x3', '3x3'],
             'search-terms': ['2x3', '3x3'], referrers: ['2x2', '2x3', '3x3'], newsletter: ['2x2', '3x3'],
-            errors: ['1x1', '3x3'], sessions: ['2x3'], news: ['3x2'], search: ['fullauto'],
+            errors: ['1x1', '3x3'], 'my-sessions': ['1x1', '2x2', '2x3'], news: ['3x2'],
             'changed-pages': ['3x2', '3x3'], audit: ['3x2', '3x3'], 'logged-admins': ['2x2', '2x3'],
             'server-memory': ['3x2', '3x3'], 'server-cpu': ['3x2', '3x3']
         };
