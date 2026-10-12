@@ -34,12 +34,13 @@ export function initQuickSearch() {
     if (trigger) {
         trigger.querySelector('kbd').textContent = isMac ? '⌘ K' : 'Ctrl K';
         trigger.setAttribute('aria-keyshortcuts', isMac ? 'Meta+K' : 'Control+K');
+        trigger.setAttribute('aria-expanded', 'false');
         trigger.addEventListener('click', open);
     }
     document.addEventListener('keydown', event => {
         if (event.defaultPrevented || event.isComposing || event.repeat || event.altKey || event.shiftKey || event.key.toLowerCase() !== 'k') return;
         if (isMac ? !event.metaKey || event.ctrlKey : !event.ctrlKey || event.metaKey) return;
-        if (event.target.closest('input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="textbox"], [role="dialog"], .modal.show')) return;
+        if (event.target.closest('[role="dialog"]:not(#admin-quick-search), .modal.show:not(#admin-quick-search)')) return;
         if (window === window.top && !trigger) return;
         event.preventDefault();
         open();
@@ -110,9 +111,13 @@ class QuickSearch {
         containNativeScroll(this.results, new AbortController().signal);
         this.input.addEventListener('input', () => this.changed());
         this.root.addEventListener('keydown', event => this.keydown(event), true);
+        this.root.addEventListener('show.bs.modal', () => this.trigger.setAttribute('aria-expanded', 'true'));
         this.root.addEventListener('shown.bs.modal', () => this.input.focus());
         this.root.addEventListener('hide.bs.modal', () => this.cancel());
-        this.root.addEventListener('hidden.bs.modal', () => this.trigger.focus());
+        this.root.addEventListener('hidden.bs.modal', () => {
+            this.trigger.setAttribute('aria-expanded', 'false');
+            this.trigger.focus();
+        });
     }
 
     /** Starts each visit with the section's scope and an empty query. */

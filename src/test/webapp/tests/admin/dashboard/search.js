@@ -35,8 +35,10 @@ Before(({ I, login }) => {
     openSearch(I);
 });
 
-/** Checks global availability, native tab order, scope shortcuts and focus restoration. */
+/** Checks header states, native activation, global shortcuts and focus restoration. */
 Scenario('Header search opens from the dashboard and app pages and restores keyboard focus', async ({ I }) => {
+    const trigger = 'button.js-search-toggler';
+    const label = await I.grabTextFrom(`${trigger} .md-quick-search-trigger__label`);
     I.dontSeeElement('[data-widget-type="search"]');
     I.seeElement(`${scopes} [data-scope="all"][aria-pressed="true"]`);
     I.pressKey(['Alt', 'ArrowRight']);
@@ -52,17 +54,55 @@ Scenario('Header search opens from the dashboard and app pages and restores keyb
     I.pressKey('Escape');
     I.waitForInvisible(modal, 10);
     I.waitForFunction(() => document.activeElement.classList.contains('js-search-toggler'), 5);
+    I.moveCursorTo('.header-title');
+    I.pressKey(macWebKit ? ['Alt', 'Tab'] : 'Tab');
+    I.pressKey(macWebKit ? ['Alt', 'Shift', 'Tab'] : ['Shift', 'Tab']);
+    I.waitForElement(`${trigger}:focus-visible[aria-expanded="false"]`, 5);
+    I.dontSeeElement(modal);
+    I.waitForFunction(() => getComputedStyle(document.querySelector('button.js-search-toggler')).backgroundColor === 'rgb(243, 243, 246)', 5);
+    const appearance = await I.executeScript(() => {
+        const button = document.querySelector('button.js-search-toggler');
+        const style = getComputedStyle(button);
+        const labelStyle = getComputedStyle(button.querySelector('.md-quick-search-trigger__label'));
+        const bounds = button.getBoundingClientRect();
+        return { type: button.type, width: bounds.width, height: bounds.height, radius: style.borderRadius,
+            cursor: style.cursor, color: labelStyle.color, fontSize: labelStyle.fontSize, lineHeight: labelStyle.lineHeight,
+            iconSize: getComputedStyle(button.querySelector('.ti')).fontSize,
+            outline: [style.outlineWidth, style.outlineStyle, style.outlineColor] };
+    });
+    I.assertDeepEqual(appearance, { type: 'button', width: 300, height: 31, radius: '6px', cursor: 'pointer',
+        color: 'rgb(77, 82, 98)', fontSize: '14px', lineHeight: '20px', iconSize: '16px',
+        outline: ['2px', 'solid', 'rgb(0, 99, 251)'] });
+    I.moveCursorTo(trigger);
+    I.waitForFunction(() => getComputedStyle(document.querySelector('button.js-search-toggler')).backgroundColor === 'rgb(233, 234, 239)', 5);
+    I.moveCursorTo('.header-title');
+    I.pressKeyDown('Space');
+    I.waitForFunction(() => {
+        const style = getComputedStyle(document.querySelector('button.js-search-toggler'));
+        return style.backgroundColor === 'rgb(228, 230, 236)' && style.color === 'rgb(77, 82, 98)';
+    }, 5);
+    I.dontSeeElement(modal);
+    I.pressKeyUp('Space');
+    I.waitForVisible(modal, 10);
+    I.waitForFunction(() => document.activeElement.id === 'admin-quick-search-input', 10);
+    I.seeElement(`${trigger}[aria-expanded="true"]`);
+    I.waitForFunction(() => getComputedStyle(document.querySelector('button.js-search-toggler')).backgroundColor === 'rgb(233, 234, 239)', 5);
+    I.fillField(input, 'autotest-trigger-label');
+    I.assertEqual(await I.grabTextFrom(`${trigger} .md-quick-search-trigger__label`), label);
+    I.click({ css: modal }, null, { position: { x: 5, y: 5 } });
+    I.waitForInvisible(modal, 10);
+    I.waitForElement(`${trigger}:focus[aria-expanded="false"]`, 5);
+    I.assertEqual(await I.grabTextFrom(`${trigger} .md-quick-search-trigger__label`), label);
     I.pressKey('Enter');
     I.waitForVisible(modal, 10);
+    I.waitForFunction(() => document.activeElement.id === 'admin-quick-search-input', 10);
     I.pressKey('Escape');
 
     I.amOnPage('/apps/form/admin/');
     I.executeScript(() => window.adminSearchContext.documentationSearchUrl = '');
-    I.waitForVisible('button.js-search-toggler', 10);
-    const modifier = await I.executeScript(() => {
-        document.querySelector('button.js-search-toggler').focus();
-        return /Mac/i.test(navigator.platform) ? 'Meta' : 'Control';
-    });
+    I.waitForVisible('.dt-scroll-head input.dt-filter-formName', 10);
+    I.clickCss('.dt-scroll-head input.dt-filter-formName');
+    const modifier = await I.executeScript(() => /Mac/i.test(navigator.platform) ? 'Meta' : 'Control');
     I.pressKey([modifier, 'k']);
     I.waitForVisible(modal, 10);
     I.waitForFunction(() => document.activeElement.id === 'admin-quick-search-input', 10);
