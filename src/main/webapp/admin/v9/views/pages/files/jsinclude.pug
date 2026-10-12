@@ -57,6 +57,7 @@ script.
 
     function elfinderTabClick(name)
     {
+        $('#fileArchive').hide();
         var elfToolbar = $(".elfinder-toolbar div.elfinder-buttonset");
         var i = 0;
         for (i=0; i<elfToolbar.length; i++)
@@ -87,6 +88,12 @@ script.
         {
             $("#finder").hide();
             $("#pixabay").show();
+        }
+        else if ("fileArchive"==name)
+        {
+            $("#finder, #pixabay").hide();
+            $("#fileArchive").show();
+            openFileArchive();
         }
     }
 
@@ -323,6 +330,7 @@ script.
 
         //Set height of elfinder
         setElfinderHeight();
+        $(window).on('resize', setElfinderHeight);
 
         const search =  window.location.href;
         const urlParams = new URLSearchParams(window.location.search);
@@ -335,6 +343,9 @@ script.
     }
 
     function setElfinderHeight() {
+        if ($('#fileArchive').is(':visible')) {
+            $('#fileArchiveIframe').height(computeAvailableSpaceHeight() - 1);
+        }
         let elfinder = $('#finder');
         if (elfinder.is(":visible") == false) {
             //console.log("Elfinder is not visible, skipping height setting");
@@ -375,7 +386,7 @@ script.
                 }
 
                 if(url.includes("/dialog")) {
-                     return ( availableSpace - parseInt( linkInput.innerHeight() ) );
+                     return ( availableSpace - parseInt( linkInput.outerHeight() ) );
                 }
             }
 

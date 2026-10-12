@@ -66,8 +66,8 @@
 
 .md-breadcrumb .nav-link  { font-size: 15px !important; }
 
-#linkInput.inputs.container-fluid {
-    background: #fff; padding-top: 10px; padding-bottom: 10px; height: auto; overflow: auto;
+#linkInput.inputs {
+    background: #fff; height: auto; overflow: auto;
 }
 
 html.pg-iframe {
@@ -79,14 +79,13 @@ html.pg-iframe {
             padding-left: 28px !important;
         }
     }
-    #linkInput.inputs.container-fluid {
-        padding: 0px 10px 2px 10px;
-        font-size: 14px;
-        .elfinder-url-input {
-            padding: 1px 4px;
-            font-size: 14px;
-        }
+    #linkInput.inputs {
+        border-top: 1px solid var(--wj-nice-gray-100);
     }
+}
+
+html.in-iframe-show-table body.file-archive-picker-dialog .ly-content {
+    height: 100vh;
 }
 
 /* STATUS BAR */
