@@ -24,6 +24,12 @@ Scenario('Header help shares release news and supplies documentation links', asy
     I.amOnPage('/admin/v9/');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     openHelp(I);
+    I.assertDeepEqual(await I.executeScript(() => {
+        const button = document.querySelector('#admin-help-toggle');
+        const label = button.querySelector('span').getBoundingClientRect();
+        const arrow = button.querySelector('.md-help-menu__chevron').getBoundingClientRect();
+        return [button.getBoundingClientRect().height, arrow.left - label.right, button.getBoundingClientRect().right - arrow.right];
+    }), [31, 3, 7], 'The Help trigger must keep its compact height and the specified arrow spacing.');
     const origin = await I.executeScript(() => window.adminHelpContext.documentationBaseUrl);
     I.see('Pomoc k tejto stránke', panel);
     I.see('Úvod', '.md-help-menu__page-title');
@@ -52,6 +58,10 @@ Scenario('Header help shares release news and supplies documentation links', asy
     I.pressKey('Escape');
     I.waitForInvisible(panel, 5);
     I.assertEqual(await I.executeScript(() => document.activeElement.id), 'admin-help-toggle');
+    I.assertDeepEqual(await I.executeScript(() => {
+        const style = getComputedStyle(document.querySelector('#admin-help-toggle'));
+        return [style.outlineWidth, style.outlineStyle, style.outlineColor];
+    }), ['2px', 'solid', 'rgb(0, 99, 251)'], 'The Help trigger must have a blue keyboard focus outline.');
 
     const userMenu = 'ul[aria-labelledby="dropdownMenuUser"]';
     const profile = `${userMenu} .dropdown-item[data-userid]`;
@@ -73,18 +83,26 @@ Scenario('Header help shares release news and supplies documentation links', asy
     I.pressKey(['Shift', 'Tab']);
     I.pressKey('Tab');
     I.assertEqual(await I.executeScript(() => document.activeElement.id), 'dropdownMenuUser');
+    I.assertDeepEqual(await I.executeScript(() => {
+        const style = getComputedStyle(document.querySelector('#dropdownMenuUser'));
+        return [style.outlineWidth, style.outlineStyle, style.outlineColor];
+    }), ['2px', 'solid', 'rgb(0, 99, 251)'], 'The user trigger must have the same blue keyboard focus outline.');
     I.pressKey('ArrowDown');
     I.waitForVisible(`${userMenu}.show`, 5);
-    I.waitForFunction(() => getComputedStyle(document.querySelector('#dropdownMenuUser')).color === 'rgb(255, 255, 255)', [], 5);
+    I.waitForFunction(() => getComputedStyle(document.querySelector('#dropdownMenuUser')).backgroundColor === 'rgb(243, 243, 246)', [], 5);
     I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), profile));
     I.assertDeepEqual(await menuItemStyle(I, '#dropdownMenuUser'), {
-        background: 'rgb(19, 21, 27)', text: 'rgb(255, 255, 255)', icon: 'rgb(255, 255, 255)'
+        background: 'rgb(243, 243, 246)', text: 'rgb(19, 21, 27)', icon: 'rgb(19, 21, 27)'
     }, 'The open user trigger must remain readable after keyboard focus moves into its menu.');
-    I.assertContain(await I.grabCssPropertyFrom('#dropdownMenuUser', 'background-image'), '%23fff');
+    I.moveCursorTo(trigger);
+    I.waitForFunction(() => getComputedStyle(document.querySelector('#admin-help-toggle')).backgroundColor === 'rgb(243, 243, 246)', [], 5);
+    I.assertDeepEqual(await menuItemStyle(I, '#dropdownMenuUser'), await menuItemStyle(I, '#admin-help-toggle'),
+        'The open user trigger and hovered Help trigger must have the same neutral appearance.');
     I.saveScreenshot('user-menu-keyboard.png');
     I.pressKey('Escape');
     I.waitForInvisible(userMenu, 5);
     I.assertEqual(await I.executeScript(() => document.activeElement.id), 'dropdownMenuUser');
+    I.saveElementScreenshot('.ly-header', 'header-refinement.png');
 });
 
 Scenario('Page help is refreshed on each opening and omitted without a route', async ({ I }) => {
