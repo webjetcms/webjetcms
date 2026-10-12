@@ -260,6 +260,9 @@ public class RagService {
                     "Do not cite sources unless source.title or source.url is present in an INPUT_TEXT context block.",
                     "Answer in the same language as the USER_PROMPT question.",
                     "Format bullets with each item on a new line.",
+                    "For instructions, use a short introduction, a short localized heading and an ordered HTML list of steps. Use strong for exact menu paths and field names.",
+                    "When explaining several configuration fields, use a compact two-column HTML table with field names in th and descriptions in td. Keep procedures as ordered steps, not tables.",
+                    "Put short code or parameter examples in pre with code. Keep only longer optional examples in details with a short, localized summary. Keep required steps, warnings and conditions outside details.",
                     "Do not add follow-up offers, suggestions, or questions at the end. Just answer the USER_PROMPT question."
                 ],
                 "output_format": "html"

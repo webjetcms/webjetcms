@@ -3,15 +3,19 @@
 
   const translations = {
     sk: {
-      search: 'Vyhľadať', label: 'Hľadať v dokumentácii',
-      title: 'Výsledky vyhľadávania',
+      search: 'Vyhľadať', label: 'Hľadať v dokumentácii', alternative: 'alebo',
+      placeholder: 'Zadajte otázku…', deepWiki: 'Opýtať sa DeepWiki',
+      question: 'Vaša otázka', languageName: 'Slovenčina',
       directoryTitle: 'V adresári {directory} a podadresároch',
-      allDirectoriesTitle: 'Vo všetkých adresároch',
+      allDirectoriesTitle: 'Celá dokumentácia',
       searchAllDirectories: 'vyhľadať vo všetkých adresároch',
       searchCurrentDirectory: 'vyhľadať v aktuálnom adresári {directory}',
-      close: 'Zavrieť', loading: 'Vyhľadávam…',
-      empty: 'Neboli nájdené žiadne výsledky.', results: 'Počet výsledkov:',
-      answer: 'Odpoveď AI', error: 'Vyhľadávanie sa nepodarilo. Skúste to znova.',
+      close: 'Zavrieť', closeHint: 'Esc na zatvorenie', loading: 'Vyhľadávam v dokumentácii…',
+      loadingHint: 'Hľadám relevantné dokumenty. Môže to chvíľu trvať.',
+      emptyHint: 'Skúste otázku preformulovať alebo použiť všeobecnejší výraz.',
+      expandSearch: 'Prehľadať celú dokumentáciu',
+      empty: 'Neboli nájdené žiadne výsledky.', results: 'Nájdené dokumenty',
+      answer: 'Odpoveď AI', codeExample: 'Ukážka kódu', error: 'Vyhľadávanie sa nepodarilo. Skúste to znova.',
       loginRequired: 'Na vyhľadávanie sa prihláste.',
       forbidden: 'Nemáte oprávnenie na vyhľadávanie v tejto dokumentácii.',
       rateLimited: 'Dosiahli ste limit vyhľadávaní. Skúste to znova neskôr.',
@@ -19,15 +23,19 @@
       open: 'Otvoriť dokument v novej karte'
     },
     cs: {
-      search: 'Vyhledat', label: 'Hledat v dokumentaci',
-      title: 'Výsledky vyhledávání',
+      search: 'Vyhledat', label: 'Hledat v dokumentaci', alternative: 'nebo',
+      placeholder: 'Zadejte otázku…', deepWiki: 'Zeptat se DeepWiki',
+      question: 'Vaše otázka', languageName: 'Čeština',
       directoryTitle: 'V adresáři {directory} a podadresářích',
-      allDirectoriesTitle: 'Ve všech adresářích',
+      allDirectoriesTitle: 'Celá dokumentace',
       searchAllDirectories: 'vyhledat ve všech adresářích',
       searchCurrentDirectory: 'vyhledat v aktuálním adresáři {directory}',
-      close: 'Zavřít', loading: 'Vyhledávám…',
-      empty: 'Nebyly nalezeny žádné výsledky.', results: 'Počet výsledků:',
-      answer: 'Odpověď AI', error: 'Vyhledávání se nezdařilo. Zkuste to znovu.',
+      close: 'Zavřít', closeHint: 'Esc pro zavření', loading: 'Vyhledávám v dokumentaci…',
+      loadingHint: 'Hledám relevantní dokumenty. Může to chvíli trvat.',
+      emptyHint: 'Zkuste otázku přeformulovat nebo použít obecnější výraz.',
+      expandSearch: 'Prohledat celou dokumentaci',
+      empty: 'Nebyly nalezeny žádné výsledky.', results: 'Nalezené dokumenty',
+      answer: 'Odpověď AI', codeExample: 'Ukázka kódu', error: 'Vyhledávání se nezdařilo. Zkuste to znovu.',
       loginRequired: 'Pro vyhledávání se přihlaste.',
       forbidden: 'Nemáte oprávnění k vyhledávání v této dokumentaci.',
       rateLimited: 'Dosáhli jste limitu vyhledávání. Zkuste to znovu později.',
@@ -35,14 +43,18 @@
       open: 'Otevřít dokument v nové kartě'
     },
     en: {
-      search: 'Search', label: 'Search documentation',
-      title: 'Search results',
+      search: 'Search', label: 'Search documentation', alternative: 'or',
+      placeholder: 'Enter your question…', deepWiki: 'Ask DeepWiki',
+      question: 'Your question', languageName: 'English',
       directoryTitle: 'In {directory} and its subdirectories',
-      allDirectoriesTitle: 'In all directories',
+      allDirectoriesTitle: 'All documentation',
       searchAllDirectories: 'search all directories',
       searchCurrentDirectory: 'search the current directory {directory}',
-      close: 'Close', loading: 'Searching…',
-      empty: 'No results found.', results: 'Results:', answer: 'AI answer',
+      close: 'Close', closeHint: 'Esc to close', loading: 'Searching documentation…',
+      loadingHint: 'Looking for relevant documents. This may take a moment.',
+      emptyHint: 'Try rephrasing your question or using a broader term.',
+      expandSearch: 'Search all documentation',
+      empty: 'No results found.', results: 'Documents found', answer: 'AI answer', codeExample: 'Code example',
       error: 'Search failed. Please try again.',
       loginRequired: 'Sign in to search documentation.',
       forbidden: 'You do not have permission to search this documentation.',
@@ -73,6 +85,51 @@
   }
 
   /**
+   * Appends a safe preview, moving heading context above the excerpt and removing duplicate leading titles.
+   * Leaves the original snippet intact for section-link resolution.
+   *
+   * @param {HTMLElement} item - Result content receiving the preview.
+   * @param {Object} result - Search result to display.
+   * @param {string} result.title - Document title already shown in the result link.
+   * @param {string} [result.snippet] - Markdown excerpt, optionally prefixed with heading context.
+   * @param {string} [result.sourcePath] - Source path used as a fallback breadcrumb.
+   * @param {string} language - Current documentation language.
+   */
+  function appendPreview(item, result, language) {
+    const snippet = document.createElement('div');
+    snippet.className = 'documentation-search-snippet';
+    snippet.innerHTML = renderSnippet(result.snippet || '');
+    const first = snippet.firstElementChild;
+    const prefix = first ? first.textContent.trim() : '';
+    const headings = [result.title];
+    let breadcrumbText = '';
+    if (first && first.tagName === 'P' && !/[\r\n]/.test(prefix) &&
+        (prefix === result.title || prefix.startsWith(result.title + ' > '))) {
+      first.remove();
+      if (prefix !== result.title) {
+        headings.push(...prefix.split(' > '));
+        breadcrumbText = prefix.split(' > ').join(' / ');
+      }
+    }
+    while (snippet.firstElementChild && /^H[1-6]$/.test(snippet.firstElementChild.tagName) &&
+           headings.includes(snippet.firstElementChild.textContent.trim())) {
+      snippet.firstElementChild.remove();
+    }
+    if (!breadcrumbText && typeof result.sourcePath === 'string') {
+      const languageRoot = '/' + language + '/';
+      const start = result.sourcePath.indexOf(languageRoot);
+      if (start >= 0) breadcrumbText = result.sourcePath.substring(start + languageRoot.length).split('/').slice(0, -1).join(' / ');
+    }
+    if (breadcrumbText) {
+      const breadcrumb = document.createElement('p');
+      breadcrumb.className = 'documentation-search-breadcrumb';
+      breadcrumb.textContent = breadcrumbText;
+      item.appendChild(breadcrumb);
+    }
+    item.appendChild(snippet);
+  }
+
+  /**
    * Registers a localized search form and results dialog with the Docsify lifecycle.
    * Requires the viewer's basePath and useHashRouter globals to be initialized.
    *
@@ -94,7 +151,7 @@
     const endpoint = config.endpoint || contextPath + '/rest/rag/markdown/search';
     let language = 'en';
     let labels = translations.en;
-    let form, dialog, input, submit, status, answer, results, scopeLink;
+    let form, dialog, input, submit, dialogInput, dialogSubmit, status, answer, results, scopeLink;
     let searchCurrentDirectory = true;
     let activeRequest;
 
@@ -109,11 +166,16 @@
       document.documentElement.lang = language;
       if (!form) return;
       form.querySelector('[for="documentation-query"]').textContent = labels.label;
-      input.placeholder = labels.label;
+      form.querySelector('.deepwiki-badge > span').textContent = labels.alternative;
+      form.querySelector('.deepwiki-badge a span').textContent = labels.deepWiki;
+      input.placeholder = labels.placeholder;
       submit.textContent = labels.search;
-      dialog.querySelector('h2').textContent = labels.title;
-      dialog.querySelector('.documentation-search-close').textContent = labels.close;
-      answer.querySelector('h3').textContent = labels.answer;
+      dialog.setAttribute('aria-label', labels.label);
+      dialogSubmit.setAttribute('aria-label', labels.search);
+      dialog.querySelector('.documentation-search-query-label').textContent = labels.question;
+      dialog.querySelector('.documentation-search-close').setAttribute('aria-label', labels.close);
+      dialog.querySelector('.documentation-search-footer').textContent = labels.closeHint;
+      answer.querySelector('h3 span').textContent = labels.answer;
     }
 
     /**
@@ -182,7 +244,10 @@
       form.setAttribute('role', 'search');
       form.innerHTML = '<label for="documentation-query"></label>' +
         '<div class="documentation-search-input"><input id="documentation-query" type="search" maxlength="1000" required autocomplete="off">' +
-        '<button type="submit"></button></div>';
+        '<button type="submit"></button></div>' +
+        '<div class="deepwiki-badge"><span></span>' +
+        '<a href="https://deepwiki.com/webjetcms/webjetcms" target="_blank" rel="noopener noreferrer">' +
+        '<span></span><i class="ti ti-arrow-up-right" aria-hidden="true"></i></a></div>';
       input = form.querySelector('input[type="search"]');
       submit = form.querySelector('button');
       const sidebar = document.querySelector('.sidebar');
@@ -191,15 +256,24 @@
 
       dialog = document.createElement('dialog');
       dialog.className = 'documentation-search-dialog';
-      dialog.setAttribute('aria-labelledby', 'documentation-search-title');
-      dialog.innerHTML = '<div class="documentation-search-header"><h2 id="documentation-search-title"></h2>' +
-        '<button type="button" class="documentation-search-close" autofocus></button></div>' +
-        '<h3 class="documentation-search-subtitle"><span></span>, ' +
-        '<a href="#" class="documentation-search-scope"></a></h3>' +
-        '<p class="documentation-search-status" role="status" aria-live="polite"></p>' +
-        '<section class="documentation-search-answer" hidden><h3></h3><div></div></section>' +
-        '<ol class="documentation-search-results"></ol>';
+      dialog.innerHTML = '<div class="documentation-search-header">' +
+        '<label for="documentation-dialog-query" class="documentation-search-query-label"></label>' +
+        '<button type="button" class="documentation-search-close">' +
+        '<i class="ti ti-x" aria-hidden="true"></i></button>' +
+        '<form class="documentation-search-dialog-form" role="search">' +
+        '<input id="documentation-dialog-query" type="text" enterkeyhint="search" maxlength="1000" required autocomplete="off" autofocus>' +
+        '<button type="submit" class="documentation-search-dialog-submit"><i class="ti ti-search" aria-hidden="true"></i></button></form></div>' +
+        '<div class="documentation-search-body"><p class="documentation-search-subtitle">' +
+        '<i class="ti ti-folder-search" aria-hidden="true"></i><span class="documentation-search-scope-label"></span>' +
+        '<a href="#" class="documentation-search-scope" hidden></a></p>' +
+        '<section class="documentation-search-answer" hidden>' +
+        '<h3><i class="ti ti-sparkles" aria-hidden="true"></i><span></span></h3><div></div></section>' +
+        '<div class="documentation-search-status" role="status" aria-live="polite"></div>' +
+        '<ol class="documentation-search-results" role="list"></ol>' +
+        '<p class="documentation-search-footer"></p></div>';
       document.body.appendChild(dialog);
+      dialogInput = dialog.querySelector('#documentation-dialog-query');
+      dialogSubmit = dialog.querySelector('.documentation-search-dialog-submit');
       status = dialog.querySelector('.documentation-search-status');
       answer = dialog.querySelector('.documentation-search-answer');
       results = dialog.querySelector('ol');
@@ -207,9 +281,9 @@
       scopeLink.addEventListener('click', function (event) {
         event.preventDefault();
         event.stopPropagation();
-        runSearch(!searchCurrentDirectory);
+        runSearch(!searchCurrentDirectory, dialogInput.value);
       });
-      dialog.querySelector('button').addEventListener('click', function () { dialog.close(); });
+      dialog.querySelector('.documentation-search-close').addEventListener('click', function () { dialog.close(); });
       dialog.addEventListener('close', function () {
         if (activeRequest) activeRequest.abort();
         input.focus();
@@ -222,42 +296,78 @@
 
       form.addEventListener('submit', function (event) {
         event.preventDefault();
-        runSearch(true);
+        runSearch(true, input.value);
       });
+      dialog.querySelector('form').addEventListener('submit', function (event) {
+        event.preventDefault();
+        runSearch(searchCurrentDirectory, dialogInput.value);
+      });
+
+      /**
+       * Displays search progress or an empty result with an action to broaden its scope.
+       *
+       * @param {boolean} loading - Whether a search is running.
+       */
+      function showSearchState(loading) {
+        status.classList.add('documentation-search-state');
+        status.innerHTML = '<i class="ti ti-' + (loading ? 'sparkles' : 'search') + '" aria-hidden="true"></i>' +
+          '<div class="documentation-search-state-content"><strong></strong><p></p>' + (loading
+            ? '<div class="documentation-search-progress" aria-hidden="true"></div>' +
+              '<div class="documentation-search-skeleton" aria-hidden="true"><span></span><span></span><span></span></div>'
+            : '<button type="button" class="documentation-search-expand" hidden></button>') + '</div>';
+        status.querySelector('strong').textContent = loading ? labels.loading : labels.empty;
+        status.querySelector('p').textContent = loading ? labels.loadingHint : labels.emptyHint;
+        if (loading) return;
+        const expand = status.querySelector('.documentation-search-expand');
+        expand.textContent = labels.expandSearch;
+        expand.hidden = !searchCurrentDirectory;
+        if (searchCurrentDirectory) scopeLink.hidden = true;
+        expand.addEventListener('click', function () { runSearch(false, dialogInput.value); });
+      }
 
       /**
        * Opens a fresh result view for the current query in the selected scope.
        * Cancels previous requests so results cannot cross between the two views.
        *
        * @param {boolean} currentDirectoryOnly - Whether to include the current directory filter and all its descendants.
+       * @param {string} value - Question entered in the sidebar or dialog.
        * @returns {Promise<void>} Resolves after rendering results or a localized error.
        */
-      async function runSearch(currentDirectoryOnly) {
-        const query = input.value.trim();
+      async function runSearch(currentDirectoryOnly, value) {
+        const query = value.trim();
         if (!query) return;
         searchCurrentDirectory = currentDirectoryOnly;
         if (activeRequest) activeRequest.abort();
         const request = new AbortController();
         activeRequest = request;
         submit.disabled = true;
+        dialogSubmit.disabled = true;
+        dialogInput.disabled = true;
         results.replaceChildren();
+        input.value = query;
+        dialogInput.value = query;
         answer.hidden = true;
         answer.querySelector('div').textContent = '';
-        status.textContent = labels.loading;
+        showSearchState(true);
         if (!dialog.open) dialog.showModal();
 
         try {
           const route = (useHashRouter ? window.location.hash.substring(1) :
             window.location.pathname.substring(basePath.length - 1)).split(/[?#]/)[0];
           const directory = decodeURIComponent(route.substring(0, route.lastIndexOf('/') + 1));
-          dialog.querySelector('.documentation-search-subtitle span').textContent = currentDirectoryOnly
-            ? labels.directoryTitle.replace('{directory}', directory) : labels.allDirectoriesTitle;
-          scopeLink.textContent = currentDirectoryOnly
+          const isRoot = !directory || directory === '/' || directory.toLowerCase() === '/' + language + '/';
+          searchCurrentDirectory = currentDirectoryOnly && !isRoot;
+          dialog.querySelector('.documentation-search-scope-label').textContent = (searchCurrentDirectory
+            ? labels.directoryTitle.replace('{directory}', directory) : labels.allDirectoriesTitle) +
+            ' · ' + (translations[language] ? labels.languageName : language);
+          scopeLink.hidden = isRoot;
+          scopeLink.textContent = searchCurrentDirectory
             ? labels.searchAllDirectories : labels.searchCurrentDirectory.replace('{directory}', directory);
           dialog.scrollTop = 0;
+          dialog.querySelector('.documentation-search-header').scrollTop = 0;
           const url = new URL(endpoint, window.location.origin);
           url.search = new URLSearchParams({ query: query, language: language });
-          if (currentDirectoryOnly) url.searchParams.set('directory', directory);
+          if (searchCurrentDirectory) url.searchParams.set('directory', directory);
           const response = await fetch(url, { credentials: 'same-origin', signal: request.signal });
           if (!response.ok) {
             let message = labels.error;
@@ -296,25 +406,56 @@
               link.title = labels.open;
             }
             link.textContent = result.title;
-            const snippet = document.createElement('div');
-            snippet.className = 'documentation-search-snippet';
-            snippet.innerHTML = renderSnippet(result.snippet || '');
-            item.append(link, snippet);
+            if (href) {
+              const icon = document.createElement('i');
+              icon.className = 'ti ti-arrow-up-right';
+              icon.setAttribute('aria-hidden', 'true');
+              link.appendChild(icon);
+            }
+            item.innerHTML = '<i class="ti ti-file-text documentation-search-document-icon" aria-hidden="true"></i><div></div>';
+            const content = item.querySelector('div');
+            content.appendChild(link);
+            appendPreview(content, result, language);
             results.appendChild(item);
           });
           if (typeof data.answer === 'string' && data.answer.trim()) {
-            answer.querySelector('div').textContent = data.answer;
+            const content = answer.querySelector('div');
+            const formatted = typeof data.answerHtml === 'string' && !!data.answerHtml.trim();
+            content.classList.toggle('documentation-search-answer-formatted', formatted);
+            if (formatted) {
+              // The endpoint allows only formatting tags without attributes, links or images.
+              content.innerHTML = data.answerHtml;
+              content.querySelectorAll(':scope > ol').forEach(list => list.setAttribute('role', 'list'));
+              content.querySelectorAll('pre').forEach(function (example) {
+                const panel = document.createElement('div');
+                panel.className = 'documentation-search-example';
+                const title = document.createElement('strong');
+                title.textContent = labels.codeExample;
+                example.replaceWith(panel);
+                panel.append(title, example);
+              });
+            } else content.textContent = data.answer;
             answer.hidden = false;
           }
-          status.textContent = results.children.length ? labels.results + ' ' + results.children.length : labels.empty;
+          status.classList.remove('documentation-search-state');
+          status.textContent = results.children.length ? labels.results + ' ' : labels.empty;
+          if (results.children.length) {
+            const count = document.createElement('span');
+            count.className = 'documentation-search-count';
+            count.textContent = results.children.length;
+            status.appendChild(count);
+          } else if (answer.hidden) showSearchState(false);
         } catch (error) {
           if (request.signal.aborted) return;
           const knownMessages = [labels.error, labels.loginRequired, labels.forbidden, labels.rateLimited, labels.unavailable];
+          status.classList.remove('documentation-search-state');
           status.textContent = knownMessages.includes(error.message) ? error.message : labels.error;
         } finally {
           if (activeRequest === request) {
             activeRequest = null;
             submit.disabled = false;
+            dialogSubmit.disabled = false;
+            dialogInput.disabled = false;
           }
         }
       }

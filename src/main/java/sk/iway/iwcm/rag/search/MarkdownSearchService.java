@@ -1,5 +1,6 @@
 package sk.iway.iwcm.rag.search;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -9,13 +10,17 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
+import org.apache.commons.codec.digest.DigestUtils;
+import org.json.JSONArray;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.safety.Safelist;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import jakarta.servlet.http.HttpServletRequest;
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PathFilter;
@@ -30,7 +35,6 @@ import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkEntity;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkRepository;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkStatus;
 import sk.iway.iwcm.rag.vectorstore.VectorSearchResult;
-import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -41,6 +45,8 @@ public class MarkdownSearchService {
     private static final int MAX_RESULTS = 10;
     private static final int MAX_QUERY_LENGTH = 2000;
     private static final int MAX_SNIPPET_LENGTH = 350;
+    private static final int CACHE_SECONDS = 30 * 60;
+    private static final String CACHE_PREFIX = "MarkdownSearchService.";
 
     private final MarkdownSourceService sourceService;
     private final SemanticSearchService semanticSearchService;
@@ -62,13 +68,16 @@ public class MarkdownSearchService {
      * Answers are generated automatically when ragAnswerAllowed is enabled and authorized context is available.
      * When ragMarkdownSearchRequireLogin is enabled, any authenticated user can search; administrator access is not required.
      * The shared search spam protection limits requests before any AI provider call.
+     * Retrieval and answers are cached for 30 minutes using a lowercase, accent-free question key.
+     * Cached chunks are authorized again and the current answer setting is checked on every request.
+     * Missing cached chunk IDs trigger fresh retrieval after reindexing or deletion.
      *
      * @param query question or search terms
      * @param language required documentation language
      * @param directory optional viewer directory including its language and leading/trailing slashes; descendants are always included
      * @param domainId current request domain used for assistants and usage, not Markdown storage
      * @param request current HTTP request used for access checks and AI providers
-     * @return unique source results with an optional plain-text answer
+     * @return unique source results with optional plain-text and safe HTML answers
      */
     public SearchResponse search(String query, String language, String directory, Integer domainId,
             HttpServletRequest request) {
@@ -88,19 +97,40 @@ public class MarkdownSearchService {
         }
         List<String> roots = configuredRoots.stream().filter(root -> isBlockedPath(root) == false).toList();
         if (roots.isEmpty()) {
-            if (configuredRoots.isEmpty()) return new SearchResponse(List.of(), null);
+            if (configuredRoots.isEmpty()) return new SearchResponse(List.of(), null, null);
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Documentation is not accessible");
         }
 
         List<String> searchPaths = getSearchPaths(roots, directory, normalizedLanguage);
-        if (searchPaths.isEmpty()) return new SearchResponse(List.of(), null);
+        if (searchPaths.isEmpty()) return new SearchResponse(List.of(), null, null);
         if (SpamProtection.canPost("search", "", request) == false) {
             throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Search limit reached. Please try again later.");
         }
-        Map<String, Object> filters = searchPaths.size() == 1 ? Map.of("sourceRoot", searchPaths.get(0)) : Map.of("sourceRoots", searchPaths);
-        List<VectorSearchResult> chunks = semanticSearchService.searchChunks(normalizedQuery, domainId,
-            normalizedLanguage, MAX_RESULTS, RagEntityType.MARKDOWN, filters, request);
-        List<VectorSearchResult> authorized = authorizeSources(chunks, roots, searchPaths, normalizedLanguage, user, request);
+        Cache cache = Cache.getInstance();
+        String cacheQuery = Normalizer.normalize(normalizedQuery, Normalizer.Form.NFD)
+            .replaceAll("\\p{M}+", "").toLowerCase(Locale.ROOT);
+        String cacheKey = CACHE_PREFIX + DigestUtils.sha256Hex(new JSONArray(List.of(domainId, normalizedLanguage,
+            searchPaths, request.getContextPath(), cacheQuery)).toString());
+        CachedSearch cached = cache.getObject(cacheKey, CachedSearch.class);
+        Map<Long, EmbeddingChunkEntity> metadata = cached == null ? Map.of() : loadSourceMetadata(cached.chunks());
+        if (cached != null && metadata.keySet().containsAll(cached.chunks().stream().map(VectorSearchResult::getChunkId).toList()) == false) {
+            cache.removeObject(cacheKey);
+            cached = null;
+        }
+        List<VectorSearchResult> chunks;
+        if (cached == null) {
+            Map<String, Object> filters = searchPaths.size() == 1 ? Map.of("sourceRoot", searchPaths.get(0)) : Map.of("sourceRoots", searchPaths);
+            chunks = semanticSearchService.searchChunks(normalizedQuery, domainId,
+                normalizedLanguage, MAX_RESULTS, RagEntityType.MARKDOWN, filters, request);
+            // Empty retrieval can also signal a temporary provider or vector store failure.
+            if (chunks.isEmpty()) return new SearchResponse(List.of(), null, null);
+            cached = new CachedSearch(copyChunks(chunks), Tools.getNow() + CACHE_SECONDS * 1000L, null, null);
+            cache.setObjectByExpiry(cacheKey, cached, cached.expiresAt(), false);
+            metadata = loadSourceMetadata(chunks);
+        } else {
+            chunks = copyChunks(cached.chunks());
+        }
+        List<VectorSearchResult> authorized = authorizeSources(chunks, metadata, roots, searchPaths, normalizedLanguage, user, request);
         authorized = semanticSearchService.rerankChunks(normalizedQuery, authorized);
         List<SearchResult> results;
         try (DomainRequestBeanScope ignored = DomainRequestBeanScope.open(null)) {
@@ -109,10 +139,28 @@ public class MarkdownSearchService {
 
         String generatedAnswer = null;
         if (authorized.isEmpty() == false && RagSettingsService.isAnswerAllowed(null)) {
-            generatedAnswer = toPlainText(ragService.answerQuestion(normalizedQuery, domainId, authorized, request));
+            List<Long> answerChunkIds = authorized.stream().map(VectorSearchResult::getChunkId).toList();
+            if (answerChunkIds.equals(cached.answerChunkIds())) {
+                generatedAnswer = cached.answer();
+            } else {
+                generatedAnswer = ragService.answerQuestion(normalizedQuery, domainId, authorized, request);
+                if (Tools.isNotEmpty(generatedAnswer)) {
+                    cached = new CachedSearch(cached.chunks(), cached.expiresAt(), answerChunkIds, generatedAnswer);
+                    cache.setObjectByExpiry(cacheKey, cached, cached.expiresAt(), false);
+                }
+            }
         }
-        return new SearchResponse(results, generatedAnswer);
+        return new SearchResponse(results, toPlainText(generatedAnswer), toSafeAnswerHtml(generatedAnswer));
     }
+
+    /** Copies retrieval fields so authorization and reranking cannot mutate shared cache entries. */
+    private List<VectorSearchResult> copyChunks(List<VectorSearchResult> chunks) {
+        return chunks.stream().map(chunk -> new VectorSearchResult(chunk.getChunkId(), chunk.getEntityType(),
+            chunk.getEntityId(), chunk.getChunkIndex(), chunk.getChunkText(), chunk.getSimilarity())).toList();
+    }
+
+    /** Keeps the original expiry when adding an answer generated from the currently authorized chunks. */
+    private record CachedSearch(List<VectorSearchResult> chunks, long expiresAt, List<Long> answerChunkIds, String answer) { }
 
     /**
      * Intersects a viewer directory with accessible index roots before vector or full-text retrieval.
@@ -151,10 +199,19 @@ public class MarkdownSearchService {
         return paths.stream().distinct().toList();
     }
 
+    /** Loads current chunk metadata for cache validation and source authorization. */
+    private Map<Long, EmbeddingChunkEntity> loadSourceMetadata(List<VectorSearchResult> chunks) {
+        Map<Long, EmbeddingChunkEntity> metadata = new HashMap<>();
+        chunkRepository.findAllById(chunks.stream().map(VectorSearchResult::getChunkId).filter(Objects::nonNull).toList())
+            .forEach(chunk -> metadata.put(chunk.getId(), chunk));
+        return metadata;
+    }
+
     /**
      * Filters retrieved chunks against stored metadata and source permissions, then adds citation metadata.
      *
      * @param chunks retrieved chunks to validate and enrich
+     * @param metadata current stored metadata for the retrieved chunk IDs
      * @param roots accessible configured documentation roots
      * @param searchPaths permitted source path prefixes after applying the directory filter
      * @param language required source language
@@ -162,13 +219,9 @@ public class MarkdownSearchService {
      * @param request request used for path protection and context-relative URLs
      * @return authorized chunks with titles, logical paths, and available viewer URLs
      */
-    private List<VectorSearchResult> authorizeSources(List<VectorSearchResult> chunks, List<String> roots, List<String> searchPaths, String language,
-            Identity user, HttpServletRequest request) {
+    private List<VectorSearchResult> authorizeSources(List<VectorSearchResult> chunks, Map<Long, EmbeddingChunkEntity> metadata,
+            List<String> roots, List<String> searchPaths, String language, Identity user, HttpServletRequest request) {
         if (chunks.isEmpty()) return List.of();
-
-        Map<Long, EmbeddingChunkEntity> metadata = new HashMap<>();
-        chunkRepository.findAllById(chunks.stream().map(VectorSearchResult::getChunkId).filter(Objects::nonNull).toList())
-            .forEach(chunk -> metadata.put(chunk.getId(), chunk));
 
         List<VectorSearchResult> authorized = new ArrayList<>();
         for (VectorSearchResult chunk : chunks) {
@@ -231,18 +284,34 @@ public class MarkdownSearchService {
     }
 
     /**
-     * Converts sanitized answer HTML into text while retaining paragraph and list boundaries.
+     * Converts sanitized answer HTML into text while retaining paragraph, list and table boundaries.
      *
      * @param answer generated HTML answer, possibly null or empty
      * @return plain text, or {@code null} when no text remains
      */
     static String toPlainText(String answer) {
         if (Tools.isEmpty(answer)) return null;
-        Document document = Jsoup.parse(AllowSafeHtmlAttributeConverter.sanitize(answer));
+        Document document = Jsoup.parse(toSafeAnswerHtml(answer));
         document.select("br").before("\n").remove();
         document.select("p,div,li,h1,h2,h3,h4,h5,h6,blockquote,pre").after("\n\n");
+        document.select("th,td").after("\t");
+        document.select("tr").after("\n");
         String text = document.body().wholeText().replaceAll("\\n{3,}", "\n\n").trim();
         return text.isEmpty() ? null : text;
+    }
+
+    /**
+     * Keeps answer formatting without links, images, attributes or executable content.
+     *
+     * @param answer generated HTML answer, possibly null or empty
+     * @return safe HTML, or {@code null} when no answer is available
+     */
+    static String toSafeAnswerHtml(String answer) {
+        if (Tools.isEmpty(answer)) return null;
+        return Jsoup.clean(answer, "", new Safelist().addTags("p", "div", "br", "strong", "b", "em", "i",
+            "ul", "ol", "li", "code", "pre", "blockquote", "h1", "h2", "h3", "h4", "h5", "h6", "details", "summary",
+            "table", "caption", "thead", "tbody", "tfoot", "tr", "th", "td"),
+            new Document.OutputSettings().prettyPrint(false));
     }
 
     /**
@@ -261,6 +330,7 @@ public class MarkdownSearchService {
      *
      * @param results unique authorized source results
      * @param answer plain-text answer, or {@code null} when none is available
+     * @param answerHtml answer with safe formatting only, or {@code null} when none is available
      */
-    public record SearchResponse(List<SearchResult> results, String answer) {}
+    public record SearchResponse(List<SearchResult> results, String answer, String answerHtml) {}
 }

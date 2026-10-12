@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -18,10 +19,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.server.ResponseStatusException;
 
+import sk.iway.iwcm.Cache;
+import sk.iway.iwcm.CacheBean;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.SpamProtection;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.rag.service.MarkdownSourceService;
 import sk.iway.iwcm.rag.service.RagEntityType;
@@ -47,6 +51,7 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
     @BeforeEach
     void configureDocumentation() {
         SpamProtection.clearAll();
+        Cache.getInstance().removeObjectStartsWithName("MarkdownSearchService.");
         when(reranker.rerank(anyString(), anyList())).thenAnswer(call -> call.getArgument(1));
         Constants.setString("ragMarkdownFolders", "/docs/webjetcms");
         Constants.setBoolean("ragAnswerAllowed", true);
@@ -56,15 +61,14 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
     @AfterEach
     void restoreConfiguration() {
         SpamProtection.clearAll();
+        Cache.getInstance().removeObjectStartsWithName("MarkdownSearchService.");
         Constants.setString("ragMarkdownFolders", originalFolders);
         Constants.setBoolean("ragAnswerAllowed", originalAnswerAllowed);
         Constants.setBoolean("ragMarkdownSearchRequireLogin", originalRequireLogin);
         Constants.setString("pathFilterBlockedPaths", originalBlockedPaths);
     }
 
-    /**
-     * Verifies that authorized sources retain citations and receive an answer only when ragAnswerAllowed is enabled.
-     */
+    /** Checks citations, normalized cache reuse, AI toggling and the 30-minute expiry. */
     @ParameterizedTest
     @ValueSource(booleans = {true, false})
     void returnsAuthorizedSourceAndAnswerAccordingToConfiguration(boolean answerAllowed) {
@@ -75,16 +79,61 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
         doReturn(List.of(hit)).when(semanticSearch).searchChunks("query", 7, "sk", 10,
             RagEntityType.MARKDOWN, Map.of("sourceRoot", "/docs/webjetcms"), request);
         when(repository.findAllById(any())).thenReturn(List.of(source));
-        when(ragService.answerQuestion("query", 7, List.of(hit), request)).thenReturn("<p>Guide answer.</p>");
+        when(ragService.answerQuestion(anyString(), eq(7), anyList(), eq(request))).thenReturn("<p><strong>Guide</strong> answer.</p>");
 
+        long startedAt = Tools.getNow();
         MarkdownSearchService.SearchResponse response = service.search("query", "sk", null, 7, request);
 
         assertEquals(List.of(new MarkdownSearchService.SearchResult("Guide", "/docs/webjetcms/#/sk/guide",
             "/docs/webjetcms/sk/guide.md", "Guide snippet", .95)), response.results());
         assertEquals(answerAllowed ? "Guide answer." : null, response.answer());
+        assertEquals(answerAllowed ? "<p><strong>Guide</strong> answer.</p>" : null, response.answerHtml());
         assertEquals("Guide", hit.getSourceTitle());
         assertEquals("/docs/webjetcms/#/sk/guide", hit.getSourceUrl());
         verify(ragService, times(answerAllowed ? 1 : 0)).answerQuestion("query", 7, List.of(hit), request);
+
+        Constants.setBoolean("ragAnswerAllowed", true);
+        var enabled = search("QUÉRY");
+        assertEquals(response.results(), enabled.results());
+        assertEquals("Guide answer.", enabled.answer());
+        assertEquals(enabled, search("query"));
+        Constants.setBoolean("ragAnswerAllowed", false);
+        var disabled = search("query");
+        assertNull(disabled.answer());
+        assertNull(disabled.answerHtml());
+        verify(semanticSearch).searchChunks(anyString(), eq(7), eq("sk"), eq(10), eq(RagEntityType.MARKDOWN), anyMap(), eq(request));
+        verify(ragService).answerQuestion(anyString(), eq(7), anyList(), eq(request));
+
+        Cache cache = Cache.getInstance();
+        CacheBean entry = Collections.list(cache.getAllElements()).stream()
+            .filter(bean -> bean.getName().startsWith("MarkdownSearchService.")).findFirst().orElseThrow();
+        assertTrue(entry.getExpiryTime() >= startedAt + 30 * 60_000L && entry.getExpiryTime() <= Tools.getNow() + 30 * 60_000L);
+        cache.setObjectExpiryTime(entry.getName(), Tools.getNow() - 1);
+        Constants.setBoolean("ragAnswerAllowed", true);
+        assertEquals(enabled, search("query"));
+        verify(semanticSearch, times(2)).searchChunks(anyString(), eq(7), eq("sk"), eq(10), eq(RagEntityType.MARKDOWN), anyMap(), eq(request));
+        verify(ragService, times(2)).answerQuestion(anyString(), eq(7), anyList(), eq(request));
+    }
+
+    /** Allows repeated requests without the independent spam timeout affecting cache assertions. */
+    private MarkdownSearchService.SearchResponse search(String query) {
+        SpamProtection.clearAll();
+        return service.search(query, "sk", null, 7, request);
+    }
+
+    /** Retains answer structure while removing executable content, media, links and styling. */
+    @Test
+    void answerHtmlAllowsOnlyFormatting() {
+        assertEquals("<p><strong>Guide</strong></p><ol><li>Step</li></ol><details><summary>Example</summary>"
+            + "<pre><code>&lt;script&gt;</code></pre></details>Link",
+            MarkdownSearchService.toSafeAnswerHtml("<p style='position:fixed' onclick='alert(1)'><strong>Guide</strong></p>"
+                + "<ol><li>Step</li></ol><details open><summary>Example</summary><pre><code>&lt;script&gt;</code></pre></details>"
+                + "<a href='javascript:alert(1)'>Link</a><img src='https://example.com/image.png' onerror='alert(1)'>"
+                + "<script>alert(1)</script><iframe src='https://example.com'></iframe>"));
+        assertNull(MarkdownSearchService.toSafeAnswerHtml(null));
+        String table = "<table><tbody><tr><th>Name</th><td>Task label</td></tr></tbody></table>";
+        assertEquals(table, MarkdownSearchService.toSafeAnswerHtml(table.replace("<table>", "<table onclick='alert(1)'>")));
+        assertEquals("Name\tTask label", MarkdownSearchService.toPlainText(table));
     }
 
     /** Keeps Markdown structure in previews while retaining the existing excerpt length limit. */
@@ -207,7 +256,7 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
         verifyNoInteractions(semanticSearch, repository, ragService);
     }
 
-    /** Preserves explicit file permissions for both anonymous searches and ordinary logged-in users. */
+    /** Rechecks file permissions on cache hits for anonymous searches and ordinary logged-in users. */
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void inaccessibleFilesAreExcludedFromResultsAndAnswers(boolean requireLogin) {
@@ -220,16 +269,22 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
         doReturn(List.of(hit)).when(semanticSearch).searchChunks("query", 7, "sk", 10,
             RagEntityType.MARKDOWN, Map.of("sourceRoot", "/files/documentation"), request);
         when(repository.findAllById(any())).thenReturn(List.of(source(1L, sourcePath, "sk")));
+        when(ragService.answerQuestion(anyString(), eq(7), anyList(), eq(request))).thenReturn("Private answer");
         EditForm protection = mock(EditForm.class);
         try (var paths = mockStatic(PathFilter.class)) {
             paths.when(() -> PathFilter.isPasswordProtected(sourcePath, request)).thenReturn(protection);
+            when(protection.isAccessibleFor(user)).thenReturn(true);
+            assertEquals("Private answer", search("query").answer());
+            when(protection.isAccessibleFor(user)).thenReturn(false);
 
-            MarkdownSearchService.SearchResponse response = service.search("query", "sk", null, 7, request);
+            MarkdownSearchService.SearchResponse response = search("query");
 
             assertTrue(response.results().isEmpty());
             assertNull(response.answer());
-            verify(protection).isAccessibleFor(user);
-            verifyNoInteractions(ragService);
+            verify(protection, times(2)).isAccessibleFor(user);
+            verify(ragService).answerQuestion(anyString(), eq(7), anyList(), eq(request));
+            verify(semanticSearch).searchChunks("query", 7, "sk", 10, RagEntityType.MARKDOWN,
+                Map.of("sourceRoot", "/files/documentation"), request);
         }
     }
 

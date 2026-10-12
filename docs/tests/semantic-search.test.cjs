@@ -61,8 +61,10 @@ test('Docsify navigation, scoped search, safe results and request errors', async
     { title: 'External result', url: 'https://example.com/', snippet: 'Excluded' },
     { title: 'Other collection', url: '/cms/admin/docs/other/#/en/', snippet: 'Excluded' }
   ], answer: 'Answer with <script> text.' } };
-  await page.route('**/rest/rag/markdown/search?**', route => {
+  await page.route('**/rest/rag/markdown/search?**', async route => {
     requestUrl = new URL(route.request().url());
+    assert.equal(await page.locator('#documentation-dialog-query').isDisabled(), true);
+    assert.equal(await page.locator('.documentation-search-progress').isVisible(), true);
     return route.fulfill(response);
   });
 
@@ -78,8 +80,10 @@ test('Docsify navigation, scoped search, safe results and request errors', async
     query: 'Edit a page', language: 'en', directory: '/en/redactor/'
   });
   assert.equal(await page.locator('.documentation-search input[type="checkbox"], dialog input[type="checkbox"]').count(), 0);
-  assert.equal(await page.locator('.documentation-search-header h2').textContent(), 'Search results');
-  assert.equal(await page.locator('.documentation-search-subtitle').textContent(), 'In /en/redactor/ and its subdirectories, search all directories');
+  const dialogQuery = page.locator('#documentation-dialog-query');
+  assert.equal(await dialogQuery.isEnabled(), true);
+  assert.equal(await dialogQuery.inputValue(), 'Edit a page');
+  assert.equal(await page.locator('.documentation-search-scope-label').textContent(), 'In /en/redactor/ and its subdirectories · English');
   const result = page.locator('.documentation-search-results a');
   assert.equal(await result.textContent(), '<img src=x onerror=alert(1)>');
   const snippet = page.locator('.documentation-search-snippet');
@@ -109,24 +113,46 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   assert.equal(await page.locator('dialog').isVisible(), true);
   await popup.close();
 
-  // Scope links open fresh results for the same query without changing the documentation route.
+  // Editing the dialog question preserves the current scope and synchronizes the sidebar.
+  await dialogQuery.fill('Update a page');
+  await dialogQuery.press('Enter');
+  await page.waitForFunction(() => !document.querySelector('.documentation-search-dialog-submit').disabled);
+  assert.deepEqual(Object.fromEntries(requestUrl.searchParams), { query: 'Update a page', language: 'en', directory: '/en/redactor/' });
+  assert.equal(await page.locator('#documentation-query').inputValue(), 'Update a page');
+  await dialogQuery.fill('Edit a page');
+
+  // Scope links use the edited question without changing the documentation route.
+  response.json.answerHtml = '<p>Open <strong>Settings</strong>.</p><ol><li>Create a task.</li></ol>' +
+    '<table><tr><th>Name</th><td>Task label</td></tr></table><pre><code>example|parameter</code></pre>';
   await page.getByRole('link', { name: 'search all directories', exact: true }).click();
   await page.waitForFunction(() => !document.querySelector('.documentation-search button').disabled);
+  assert.equal(await page.locator('.documentation-search-answer p > strong').textContent(), 'Settings');
+  assert.equal(await page.locator('.documentation-search-answer ol > li').textContent(), 'Create a task.');
+  assert.equal(await page.locator('.documentation-search-answer pre').isVisible(), true);
+  assert.equal(await page.locator('.documentation-search-answer td').textContent(), 'Task label');
   assert.deepEqual(Object.fromEntries(requestUrl.searchParams), { query: 'Edit a page', language: 'en' });
-  assert.equal(await page.locator('.documentation-search-subtitle').textContent(), 'In all directories, search the current directory /en/redactor/');
+  assert.equal(await page.locator('.documentation-search-scope-label').textContent(), 'All documentation · English');
   assert.equal(new URL(page.url()).hash, '#/en/redactor/README');
+  await dialogQuery.fill('Find a page');
+  await page.locator('.documentation-search-dialog-submit').click();
+  await page.waitForFunction(() => !document.querySelector('.documentation-search-dialog-submit').disabled);
+  assert.deepEqual(Object.fromEntries(requestUrl.searchParams), { query: 'Find a page', language: 'en' });
+  assert.equal(await page.locator('dialog[open]').count(), 1);
+  await dialogQuery.fill('Edit a page');
   response = { json: { results: [], answer: null } };
   await page.getByRole('link', { name: 'search the current directory /en/redactor/', exact: true }).focus();
   await page.keyboard.press('Enter');
-  await page.waitForFunction(() => document.querySelector('.documentation-search-status').textContent === 'No results found.');
+  await page.waitForFunction(() => document.querySelector('.documentation-search-state strong')?.textContent === 'No results found.');
   assert.deepEqual(Object.fromEntries(requestUrl.searchParams), {
     query: 'Edit a page', language: 'en', directory: '/en/redactor/'
   });
   assert.equal(await page.locator('.documentation-search-results > li').count(), 0);
   assert.equal(await page.locator('.documentation-search-answer').isVisible(), false);
   assert.equal(await page.locator('dialog[open]').count(), 1);
-  await page.getByRole('link', { name: 'search all directories', exact: true }).click();
+  await page.getByRole('button', { name: 'Search all documentation', exact: true }).click();
   await page.waitForFunction(() => !document.querySelector('.documentation-search button').disabled);
+  assert.equal(requestUrl.searchParams.has('directory'), false);
+  assert.equal(await page.locator('.documentation-search-expand').isVisible(), false);
   await page.keyboard.press('Escape');
   await page.waitForFunction(() => document.activeElement.id === 'documentation-query');
   assert.equal(await page.locator('dialog').isVisible(), false);
@@ -144,10 +170,12 @@ test('Docsify navigation, scoped search, safe results and request errors', async
     assert.equal(requestUrl.searchParams.get('directory'), '/en/redactor/');
     assert.equal(await page.locator('#documentation-query').inputValue(), 'Edit a page');
     assert.equal(await page.locator('.documentation-search button').isEnabled(), true);
+    assert.equal(await dialogQuery.isEnabled(), true);
+    assert.equal(await page.locator('.documentation-search-state').count(), 0);
     await page.keyboard.press('Escape');
   }
 
-  // New searches default to the current directory after changing language.
+  // Language-root searches omit the directory filter and scope action.
   await page.goto(base + deployment + '#/sk/');
   response = { json: { results: [
     { title: 'Admin', url: null, sourcePath: 'file:/docs/sk/admin/README.md', snippet: 'Admin guide' },
@@ -157,10 +185,16 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   await page.locator('#documentation-query').fill('Documentation');
   await page.locator('.documentation-search button').click();
   await page.waitForFunction(() => document.querySelector('.documentation-search-results').children.length === 3);
-  assert.deepEqual(Object.fromEntries(requestUrl.searchParams), { query: 'Documentation', language: 'sk', directory: '/sk/' });
+  assert.deepEqual(Object.fromEntries(requestUrl.searchParams), { query: 'Documentation', language: 'sk' });
+  assert.equal(await page.locator('.documentation-search-scope').isVisible(), false);
   assert.deepEqual(await page.locator('.documentation-search-results a').evaluateAll(links => links.map(link => link.href)), [
     base + deployment + '#/sk/admin/', base + deployment + '#/sk/redactor/', base + '/cms/admin/docs/other/#/sk/guide'
   ]);
+  response = { json: { results: [], answer: null } };
+  await page.locator('.documentation-search-dialog-submit').click();
+  await page.waitForFunction(() => !document.querySelector('.documentation-search-dialog-submit').disabled);
+  assert.equal(await page.locator('.documentation-search-state').isVisible(), true);
+  assert.equal(await page.locator('.documentation-search-expand, .documentation-search-scope').evaluateAll(items => items.every(item => item.hidden)), true);
   await page.keyboard.press('Escape');
 
   // The local preview derives its directory from the route, including README and heading URLs.
