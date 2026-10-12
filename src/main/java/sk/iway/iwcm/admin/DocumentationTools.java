@@ -9,7 +9,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.system.ConstantsV9;
+import sk.iway.iwcm.system.ConfDetails;
 
 /** Resolves the documentation server shared by administration navigation and help links. */
 public final class DocumentationTools {
@@ -20,7 +20,7 @@ public final class DocumentationTools {
     /**
      * Returns the configured documentation origin, using the current request for a root-relative endpoint.
      *
-     * @return HTTP(S) origin without a trailing slash, or the public documentation origin for invalid configuration
+     * @return HTTP(S) origin without a trailing slash, using the registered default endpoint for invalid configuration
      */
     public static String getBaseUrl() {
         RequestBean request = SetCharacterEncodingFilter.getCurrentRequestBean();
@@ -40,7 +40,25 @@ public final class DocumentationTools {
     }
 
     static String resolveBaseUrl(String endpoint, String requestBaseUrl) {
-        if (endpoint == null || endpoint.isBlank()) return ConstantsV9.DEFAULT_DOCUMENTATION_BASE_URL;
+        String baseUrl = extractBaseUrl(endpoint, requestBaseUrl);
+        if (!baseUrl.isEmpty()) return baseUrl;
+        for (ConfDetails conf : Constants.getAllValues()) {
+            if ("adminDocumentationSearchUrl".equals(conf.getName())) {
+                return extractBaseUrl(conf.getValue(), requestBaseUrl);
+            }
+        }
+        return "";
+    }
+
+    /**
+     * Extracts an HTTP(S) origin without retaining endpoint paths, credentials, query parameters or fragments.
+     *
+     * @param endpoint documentation search endpoint
+     * @param requestBaseUrl request origin used to resolve root-relative endpoints
+     * @return HTTP(S) origin without a trailing slash, or an empty string for invalid endpoints
+     */
+    private static String extractBaseUrl(String endpoint, String requestBaseUrl) {
+        if (endpoint == null || endpoint.isBlank()) return "";
         try {
             URI uri = new URI(endpoint.trim());
             if (isRootRelative(endpoint) && requestBaseUrl != null) uri = new URI(requestBaseUrl).resolve(uri);
@@ -50,9 +68,9 @@ public final class DocumentationTools {
                 return new URI(scheme.toLowerCase(Locale.ROOT), null, uri.getHost(), uri.getPort(), null, null, null).toASCIIString();
             }
         } catch (URISyntaxException ex) {
-            // Invalid configuration keeps navigation available through the public documentation server.
+            // Invalid configuration falls back to the registered default search endpoint.
         }
-        return ConstantsV9.DEFAULT_DOCUMENTATION_BASE_URL;
+        return "";
     }
 
     private static boolean isRootRelative(String endpoint) {

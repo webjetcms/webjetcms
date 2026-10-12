@@ -25,7 +25,7 @@ Pokiaľ chcete, aby sa text po napísaní medzery nezalomil, môžete okrem norm
 
 ![](paste.png)
 
-**Vloženie neformátovaného textu** z panelu nástrojov pomocou ikony ![](paste_text.png ":no-zoom"). Môžete použiť aj skratku pre vloženie bez formátovania, ktorú poskytuje váš prehliadač; jej podoba závisí od prehliadača a operačného systému.
+**Vloženie neformátovaného textu** z panelu nástrojov pomocou ikony ![](paste_text.png ":no-zoom"). Môžete použiť aj skratku pre vloženie bez formátovania, ktorú poskytuje váš prehliadač. Jej podoba závisí od prehliadača a operačného systému, napríklad ```CTRL + t``` či ```CTRL + SHIFT + v```
 Tento spôsob vkladania textu vám text vloží bez akéhokoľvek formátovania, pre vkladanie bežného textu je preto najvhodnejší.
 
 **Vloženie textu z ```Word``` / ```Excel``` súboru** z panelu nástrojov pomocou ikony ![](paste_from_word.png ":no-zoom").
