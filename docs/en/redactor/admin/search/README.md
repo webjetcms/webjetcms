@@ -29,9 +29,9 @@ To close the dialog, press the **Esc** key, the close button, or click outside t
 
 ### Setting up documentation search
 
-In **Settings → Configuration**, set the variable `adminDocumentationSearchUrl` to the full URL of the search service. The default value is `https://docs.webjetcms.sk/rest/rag/markdown/search`. When changing the domain or path, just edit this variable and refresh the administration. If the value is empty, the link to the external search in the documentation will remain available.
+In **Settings → Configuration**, set the variable `adminDocumentationSearchUrl` to a valid full URL of the search service, including its path. The default value is `https://docs.webjetcms.sk/rest/rag/markdown/search`. When changing the domain or path, just edit this variable and refresh the administration.
 
-This variable also specifies the server for links in the **Help**, `WJ.showHelpWindow` and changelog menus. From the URL, only the protocol, domain and port are used for these links; the search service path is ignored. For example, `https://manual.example:8443/rest/rag/markdown/search` opens the documentation at `https://manual.example:8443/latest/sk/`. With an empty or invalid value, links are directed to the public documentation. An empty value still disables the search service. The documentation is available in Slovak, Czech and English; for other administration languages, the English version opens.
+This variable also specifies the server for links in the **Help**, `WJ.showHelpWindow` and changelog menus. From the URL, only the protocol, domain and port are used for these links; the search service path is ignored. For example, `https://manual.example:8443/rest/rag/markdown/search` opens the documentation at `https://manual.example:8443/latest/sk/`. The documentation is available in Slovak, Czech and English; for other administration languages, the English version opens.
 
 The administration will complete the parameter `query` with the search term and send `language` and `directory` depending on the interface language:
 

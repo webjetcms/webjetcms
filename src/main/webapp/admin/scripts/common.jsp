@@ -1013,7 +1013,7 @@ function showHelpWindow(helpLink)
 		if (typeof window.userLng != "undefined" && window.userLng != null && window.userLng != "") lng = window.userLng;
 		if (lng === "cz") lng = "cs";
 		if (lng !== "sk" && lng !== "cs" && lng !== "en") lng = "en";
-		var url = <%=org.json.JSONObject.quote(sk.iway.iwcm.admin.DocumentationTools.getBaseUrl(request))%> + "/latest/" + lng;
+		var url = <%=org.json.JSONObject.quote(sk.iway.iwcm.admin.DocumentationTools.getBaseUrl())%> + "/latest/" + lng;
 		if (helpLink == null) helpLink = "/";
 		else if (helpLink.indexOf("/") != 0) helpLink = "/" + helpLink;
         url += helpLink;

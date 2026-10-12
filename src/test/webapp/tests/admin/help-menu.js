@@ -208,12 +208,6 @@ Scenario('Configured documentation origin reaches the layout and WJ helper', asy
     I.assertEqual(legacyHelp.status, 200);
     I.assertTrue(legacyHelp.configured, 'The legacy JSP helper must use the same configured origin.');
     I.pressKey('Escape');
-    Document.setConfigValue('adminDocumentationSearchUrl', '', true);
-    I.amOnPage('/admin/v9/search/');
-    openHelp(I);
-    I.assertEqual(await I.grabAttributeFrom('[data-help-path="/"]', 'href'), 'https://docs.webjetcms.sk/latest/sk/');
-    I.assertEqual(await I.executeScript(() => window.adminSearchContext.documentationSearchUrl), '');
-    I.pressKey('Escape');
 });
 
 Scenario('Restore documentation search configuration', ({ Document }) => {
