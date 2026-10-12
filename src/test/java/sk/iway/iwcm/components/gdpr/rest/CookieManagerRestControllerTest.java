@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.gdpr.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.same;
@@ -84,9 +85,10 @@ class CookieManagerRestControllerTest {
         }
     }
 
-    /** Verifies domain overrides, shared descriptions, and default-language fallback during cookie loading. */
-    @Test
-    void readsDescriptionsWithSharedAndLanguageFallback() {
+    /** Verifies domain and language fallbacks without recording missing cookie translations. */
+    @ParameterizedTest
+    @CsvSource({ "sk, sk", "de, de", "de, sk" })
+    void readsDescriptionsWithSharedAndLanguageFallback(String defaultLanguage, String fallbackLanguage) {
         String baseKey = "components.gdpr.cookies.regression-language.";
         RequestBean requestBean = new RequestBean();
         requestBean.setDomain("tenant.example");
@@ -101,13 +103,15 @@ class CookieManagerRestControllerTest {
         Prop prop = mock(Prop.class, CALLS_REAL_METHODS);
         ReflectionTestUtils.setField(prop, "properties", translations);
         ReflectionTestUtils.setField(prop, "language", "en");
-        doReturn(defaults).when(prop).getRes("sk");
+        doReturn(new IwayProperties()).when(prop).getRes("de");
+        doReturn(new IwayProperties()).when(prop).getRes("sk");
+        doReturn(defaults).when(prop).getRes(fallbackLanguage);
 
         try (MockedStatic<Constants> constants = mockStatic(Constants.class);
                 MockedStatic<SetCharacterEncodingFilter> requests = mockStatic(SetCharacterEncodingFilter.class);
                 MockedStatic<MultiDomainFilter> domains = mockStatic(MultiDomainFilter.class)) {
             constants.when(Constants::isConstantsAliasSearch).thenReturn(true);
-            constants.when(() -> Constants.getString("defaultLanguage")).thenReturn("sk");
+            constants.when(() -> Constants.getString("defaultLanguage")).thenReturn(defaultLanguage);
             requests.when(SetCharacterEncodingFilter::getCurrentRequestBean).thenReturn(requestBean);
             domains.when(() -> MultiDomainFilter.getDomainAlias("tenant.example")).thenReturn("tenant");
             CookieManagerRestController controller = new CookieManagerRestController(mock(TranslationKeyService.class));
@@ -119,10 +123,43 @@ class CookieManagerRestControllerTest {
             assertEquals("Current domain provider", cookie.getProvider());
             assertEquals("Shared purpose", cookie.getPurpouse());
             assertEquals("Current domain default-language validity", cookie.getValidity());
+            if (Prop.getMissingTexts("en") != null) {
+                assertFalse(Prop.getMissingTexts("en").stream()
+                        .anyMatch(text -> text.getKey().contains(baseKey)),
+                        "Cookie translations must not be recorded as missing.");
+            }
         } finally {
             if (Prop.getMissingTexts("en") != null) {
                 Prop.getMissingTexts("en").removeIf(text -> text.getKey().endsWith(baseKey + "purpouse")
                         || text.getKey().endsWith(baseKey + "validity"));
+            }
+        }
+    }
+
+    /** Verifies quiet shared-language fallback when no domain override is used. */
+    @Test
+    void readsSharedLanguageFallbackWithoutRecordingMissingTranslation() {
+        String key = "components.gdpr.cookies.regression-shared.provider";
+        IwayProperties defaults = new IwayProperties();
+        defaults.setProperty(key, "Shared default-language provider");
+        Prop prop = mock(Prop.class, CALLS_REAL_METHODS);
+        ReflectionTestUtils.setField(prop, "properties", new IwayProperties());
+        ReflectionTestUtils.setField(prop, "language", "en");
+        doReturn(defaults).when(prop).getRes("sk");
+
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
+                MockedStatic<SetCharacterEncodingFilter> requests = mockStatic(SetCharacterEncodingFilter.class)) {
+            constants.when(() -> Constants.getString("defaultLanguage")).thenReturn("sk");
+
+            assertEquals("Shared default-language provider",
+                    CookieManagerDB.getCookieText(prop, "regression-shared", "provider"));
+            if (Prop.getMissingTexts("en") != null) {
+                assertFalse(Prop.getMissingTexts("en").stream().anyMatch(text -> text.getKey().equals(key)),
+                        "Shared cookie translations must not be recorded as missing.");
+            }
+        } finally {
+            if (Prop.getMissingTexts("en") != null) {
+                Prop.getMissingTexts("en").removeIf(text -> text.getKey().equals(key));
             }
         }
     }
