@@ -50,7 +50,7 @@
         margin-left: 50px;
         height: 31px;
 
-        a.dropdown-item, button.btn {
+        .dropdown-item, button.btn {
             font-size: 14px;
             cursor: pointer;
         }
@@ -100,12 +100,14 @@
             overflow: hidden;
             display: inline-flex;
         }
+        &.show {
+            background-color: var(--wj-secondary) !important;
+            color: $white !important;
+            --#{$prefix}form-select-bg-img: #{escape-svg(str-replace($form-select-indicator, "#{$form-select-indicator-color}", "#{$white}"))};
+        }
     }
     .btn-outline-secondary.dropdown-toggle.show {
         background-color: $nice-gray;
-    }
-    div.dropdown ul.dropdown-menu li a {
-        color: $secondary !important;
     }
 
     .header-title {

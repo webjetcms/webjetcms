@@ -96,7 +96,7 @@
         text-decoration: none;
         overflow-wrap: anywhere;
 
-        &:hover, &:focus { background: mix($primary, $white, 5%); color: var(--wj-secondary); text-decoration: none; }
+        &:hover, &:focus { background: var(--wj-nice-gray); color: var(--wj-secondary); text-decoration: none; }
         &:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: -2px; }
         > .ti { margin: 0 7px; flex-shrink: 0; }
     }

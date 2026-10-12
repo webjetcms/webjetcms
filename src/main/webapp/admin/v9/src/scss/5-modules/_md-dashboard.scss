@@ -1034,7 +1034,7 @@ webjet-overview-dashboard a:focus-visible {
         cursor: pointer;
         font-size: 14px;
         > .ti { display: grid; place-items: center; width: 32px; height: 32px; flex-shrink: 0; background: var(--wj-nice-gray); border-radius: 6px; color: var(--wj-gray-text); font-size: 16px; }
-        &[aria-selected="true"], &:hover { background: var(--wj-dashboard-search-surface); }
+        &[aria-selected="true"], &:hover, &:focus { background: var(--wj-nice-gray); }
         &-text { display: flex; flex: 1; flex-direction: column; min-width: 0; line-height: 20px; > span, > small { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; } > small { font-size: 12px; line-height: 16px; color: var(--wj-gray-text); } }
         .md-dashboard__shortcut-enter { visibility: hidden; color: var(--wj-primary); font-size: 12px; }
         &[aria-selected="true"] .md-dashboard__shortcut-enter { visibility: visible; }

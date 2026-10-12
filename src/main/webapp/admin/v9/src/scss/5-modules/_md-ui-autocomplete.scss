@@ -14,6 +14,7 @@ ul.ui-autocomplete.ui-menu {
 
     &.dt-autocomplete-select {
         max-height: min(255px, var(--wj-autocomplete-max-height, 100vh));
+        .ui-menu-item-wrapper { position: relative; padding-right: 40px; }
 
         @include show-scrollbar;
     }
@@ -40,12 +41,13 @@ ul.ui-autocomplete.ui-menu {
             > .ui-menu-item-wrapper:hover,
             > .ui-menu-item-wrapper.ui-state-active {
                 background-color: $nice-gray;
-                color: $dropdown-link-hover-color;
+                color: $dropdown-link-color;
             }
 
             &.dt-autocomplete-selected > .ui-menu-item-wrapper {
-                background-color: $dropdown-link-active-bg;
-                color: $dropdown-link-active-color;
+                background-color: $menu-selected-bg;
+                color: $menu-selected-color;
+                &::after { content: $ti-icon-check; position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font: 16px tabler-icons; }
             }
         }
     }

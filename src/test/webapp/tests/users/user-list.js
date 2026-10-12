@@ -315,7 +315,7 @@ function userEditDialog(I, login, isSelf) {
      if ("tester"!==login) I.relogin(login);
 
      I.clickCss("button.js-profile-toggler");
-     I.click("Profil", "a.dropdown-item");
+     I.click("Profil", "button.dropdown-item");
      I.waitForElement("#modalIframe");
 
      I.switchTo("#modalIframeIframeElement");
@@ -375,7 +375,7 @@ function userEditDialog(I, login, isSelf) {
      I.say("Check data");
 
      I.clickCss("button.js-profile-toggler");
-     I.click("Profil", "a.dropdown-item");
+     I.click("Profil", "button.dropdown-item");
      I.waitForElement("#modalIframe");
 
      I.switchTo("#modalIframeIframeElement");

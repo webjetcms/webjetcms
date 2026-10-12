@@ -126,6 +126,11 @@ $.fn.tooltip = bootstrap.Tooltip.jQueryInterface;
 //require('bootstrap-select/js/bootstrap-select');
 //https://gist.github.com/mattymatty76/c996d3b77f298b2ec133be59992df9d4/revisions
 require('./plugins/bootstrap-select-v1.14.0-gamma1')
+Object.assign($.fn.selectpicker.Constructor.DEFAULTS, {
+    showTick: true,
+    iconBase: 'ti',
+    tickIcon: 'ti-check',
+});
 import 'bootstrap-select/dist/css/bootstrap-select.css';
 
 //not used anymore

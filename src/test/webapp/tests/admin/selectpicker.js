@@ -11,6 +11,35 @@ Before(({ I, login }) => {
     login('admin');
 });
 
+Scenario('Selected values and keyboard focus use distinct menu states', async ({ I }) => {
+    I.amOnPage('/admin/v9/webpages/web-pages-list/');
+    I.clickCss('#jstreeSearchTable button.dropdown-toggle');
+    I.waitForVisible('.bs-container .dropdown-menu.show', 10);
+    const menu = '.bs-container .dropdown-menu.show';
+    const selected = `${menu} .dropdown-item.selected`;
+    const itemStyle = selector => I.executeScript(selector => {
+        const item = document.querySelector(selector);
+        return {
+            background: getComputedStyle(item).backgroundColor,
+            text: getComputedStyle(item.querySelector('small')).color,
+            icon: getComputedStyle(item.querySelector('i')).color,
+            tick: getComputedStyle(item.querySelector('.check-mark')).display
+        };
+    }, selector);
+    const selectedStyle = { background: 'rgb(241, 243, 255)', text: 'rgb(0, 73, 190)', icon: 'rgb(0, 73, 190)', tick: 'block' };
+    I.assertDeepEqual(await itemStyle(selected), selectedStyle, 'The selected value must use blue text, a pale background and a checkmark.');
+    const next = `${menu} li:nth-child(2) .dropdown-item`;
+    const defaultStyle = await itemStyle(next);
+    I.pressKey('ArrowDown');
+    I.assertDeepEqual(await itemStyle(next), { ...defaultStyle, background: 'rgb(243, 243, 246)' },
+        'Arrow focus must preserve the item text and icon colors.');
+    I.assertDeepEqual(await itemStyle(selected), selectedStyle, 'Arrow navigation must preserve the committed selection.');
+    I.seeInField('#tree-folder-search-type', 'contains');
+    I.saveScreenshot('selectpicker-menu-states.png');
+    I.pressKey('Escape');
+    I.waitForInvisible('.bs-container .dropdown-menu.show', 5);
+});
+
 function clearFilter(I, name) {
     I.clickCss("#dt-filter-labels-link-"+name);
     I.wait(2);

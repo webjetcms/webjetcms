@@ -42,12 +42,6 @@
             &:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: -2px; }
             &:active { background-color: var(--wj-nice-gray); color: var(--wj-secondary); }
         }
-        a.md-help-menu__page {
-            color: var(--wj-primary) !important;
-            background: rgba($primary, .06);
-            > .ti:first-child { color: inherit; }
-            &:hover, &:focus { background: rgba($primary, .12); }
-        }
         .md-help-menu__external { font-size: 14px; }
     }
 

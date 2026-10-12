@@ -12,6 +12,14 @@ function openHelp(I) {
     I.waitForVisible(`${panel}.show`, 5);
 }
 
+function menuItemStyle(I, selector) {
+    return I.executeScript(selector => {
+        const item = document.querySelector(selector);
+        const style = getComputedStyle(item);
+        return { background: style.backgroundColor, text: style.color, icon: getComputedStyle(item.querySelector('.ti')).color };
+    }, selector);
+}
+
 Scenario('Header help shares release news and supplies documentation links', async ({ I }) => {
     I.amOnPage('/admin/v9/');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
@@ -29,10 +37,54 @@ Scenario('Header help shares release news and supplies documentation links', asy
     I.see('Enterprise', '.md-help-menu__system');
     I.assertEqual(await I.grabAttributeFrom('.md-help-menu__support', 'href'), 'https://www.webjetcms.sk/');
     I.dontSeeElement(`${panel} kbd`);
+    const pageHelpStyle = await menuItemStyle(I, '.md-help-menu__page');
+    I.assertDeepEqual(pageHelpStyle, { background: 'rgba(0, 0, 0, 0)', text: 'rgb(19, 21, 27)', icon: 'rgb(104, 111, 131)' },
+        'Page help is an action and must have no selected-value highlight.');
     I.saveScreenshot('help-menu-desktop.png');
+    I.moveCursorTo('.md-help-menu__page');
+    I.assertDeepEqual(await menuItemStyle(I, '.md-help-menu__page'), { ...pageHelpStyle, background: 'rgb(243, 243, 246)' },
+        'Hover must change only the action background.');
+    I.moveCursorTo(trigger);
+    I.pressKey('ArrowDown');
+    I.assertTrue(await I.executeScript(() => document.activeElement.classList.contains('md-help-menu__page')));
+    I.assertDeepEqual(await menuItemStyle(I, '.md-help-menu__page'), { ...pageHelpStyle, background: 'rgb(243, 243, 246)' },
+        'Arrow-key focus must use the same neutral action background.');
     I.pressKey('Escape');
     I.waitForInvisible(panel, 5);
     I.assertEqual(await I.executeScript(() => document.activeElement.id), 'admin-help-toggle');
+
+    const userMenu = 'ul[aria-labelledby="dropdownMenuUser"]';
+    const profile = `${userMenu} .dropdown-item[data-userid]`;
+    I.clickCss('#dropdownMenuUser');
+    I.waitForVisible(`${userMenu}.show`, 5);
+    const profileStyle = await menuItemStyle(I, profile);
+    I.assertEqual(profileStyle.background, 'rgba(0, 0, 0, 0)');
+    I.pressKey('ArrowDown');
+    I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), profile),
+        'ArrowDown must focus the profile action.');
+    I.assertDeepEqual(await menuItemStyle(I, profile), { ...profileStyle, background: 'rgb(243, 243, 246)' });
+    I.pressKey('ArrowDown');
+    I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelectorAll(`${selector} .dropdown-item`)[1], userMenu),
+        'ArrowDown must continue to the next user action without activating it.');
+    I.pressKey('Escape');
+    I.waitForInvisible(userMenu, 5);
+    I.assertEqual(await I.executeScript(() => document.activeElement.id), 'dropdownMenuUser');
+
+    I.pressKey(['Shift', 'Tab']);
+    I.pressKey('Tab');
+    I.assertEqual(await I.executeScript(() => document.activeElement.id), 'dropdownMenuUser');
+    I.pressKey('ArrowDown');
+    I.waitForVisible(`${userMenu}.show`, 5);
+    I.waitForFunction(() => getComputedStyle(document.querySelector('#dropdownMenuUser')).color === 'rgb(255, 255, 255)', [], 5);
+    I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), profile));
+    I.assertDeepEqual(await menuItemStyle(I, '#dropdownMenuUser'), {
+        background: 'rgb(19, 21, 27)', text: 'rgb(255, 255, 255)', icon: 'rgb(255, 255, 255)'
+    }, 'The open user trigger must remain readable after keyboard focus moves into its menu.');
+    I.assertContain(await I.grabCssPropertyFrom('#dropdownMenuUser', 'background-image'), '%23fff');
+    I.saveScreenshot('user-menu-keyboard.png');
+    I.pressKey('Escape');
+    I.waitForInvisible(userMenu, 5);
+    I.assertEqual(await I.executeScript(() => document.activeElement.id), 'dropdownMenuUser');
 });
 
 Scenario('Page help is refreshed on each opening and omitted without a route', async ({ I }) => {
