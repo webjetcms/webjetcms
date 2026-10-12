@@ -20,12 +20,13 @@ import sk.iway.iwcm.common.LogonTools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.stripes.CSRF;
+import sk.iway.iwcm.users.TwoFactorStatusService;
 import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 /** Verifies the unauthenticated email form's CSRF, cancellation and unsuccessful submission boundaries. */
 class AdminDeviceVerificationControllerTest {
     private static final String FORM = "/admin/skins/webjet8/logon-spring-device";
-    private final AdminLogonController controller = new AdminLogonController(mock(UserDetailsRepository.class));
+    private final AdminLogonController controller = new AdminLogonController(mock(UserDetailsRepository.class), mock(TwoFactorStatusService.class));
     private final AdminDeviceService service = mock(AdminDeviceService.class);
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private final MockHttpServletResponse response = new MockHttpServletResponse();

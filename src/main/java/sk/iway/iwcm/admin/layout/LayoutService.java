@@ -13,7 +13,10 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.WriteTagToolsForCore;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.stat.SessionHolder;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.stripes.CSRF;
+import sk.iway.iwcm.users.TwoFactorStatusService;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
@@ -25,6 +28,8 @@ public class LayoutService
     private HttpServletRequest request;
     private Identity user;
     LayoutBean layout;
+    private Boolean twoFactorEnabled;
+    private Integer activeSessionCount;
 
     public LayoutService(HttpServletRequest request) {
         this.request = request;
@@ -44,6 +49,40 @@ public class LayoutService
 
         }
         return layout;
+    }
+
+    /** Returns the display-only cached status, evaluated only when the template requests it. */
+    public boolean isTwoFactorEnabled() {
+        if (user == null || !user.isAdmin()) return false;
+        if (twoFactorEnabled == null) {
+            twoFactorEnabled = Tools.getSpringBean("twoFactorStatusService", TwoFactorStatusService.class).isEnabled(user.getUserId());
+        }
+        return twoFactorEnabled;
+    }
+
+    /** Counts the signed-in account's local administrator sessions without reading the database. */
+    public int getActiveSessionCount() {
+        if (user == null || !user.isAdmin()) return 0;
+        if (activeSessionCount == null) activeSessionCount = SessionHolder.getInstance().getAdminSessionCount(user.getUserId());
+        return activeSessionCount;
+    }
+
+    /** Identifies installations where the local session count excludes other cluster nodes. */
+    public boolean isSessionCountLocal() {
+        return ClusterDB.isServerRunningInClusterMode();
+    }
+
+    /** Derives avatar initials from the identity already available in the HTTP session. */
+    public String getUserInitials() {
+        if (user == null) return "";
+        String initials = initial(user.getFirstName()) + initial(user.getLastName());
+        return initials.isEmpty() ? initial(user.getLogin()) : initials;
+    }
+
+    private static String initial(String value) {
+        if (value == null || value.isBlank()) return "";
+        String name = value.strip();
+        return name.substring(0, name.offsetByCodePoints(0, 1)).toUpperCase(Locale.ROOT);
     }
 
     public LayoutService setGlobalData() {

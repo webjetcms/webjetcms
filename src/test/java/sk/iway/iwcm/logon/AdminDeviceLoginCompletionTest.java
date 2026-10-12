@@ -3,15 +3,20 @@ package sk.iway.iwcm.logon;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -41,6 +46,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.StatDB;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticator;
+import sk.iway.iwcm.users.TwoFactorStatusService;
 import sk.iway.iwcm.users.devices.AdminDeviceService;
 
 /** Verifies that administrator device recognition waits for all required authentication steps. */
@@ -51,7 +57,8 @@ class AdminDeviceLoginCompletionTest {
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private final MockHttpServletResponse response = new MockHttpServletResponse();
     private final UserDetailsRepository repository = mock(UserDetailsRepository.class);
-    private final AdminLogonController controller = new AdminLogonController(repository);
+    private final TwoFactorStatusService twoFactor = mock(TwoFactorStatusService.class);
+    private final AdminLogonController controller = new AdminLogonController(repository, twoFactor);
     private final UserForm form = new UserForm();
     private final List<MockedStatic<?>> staticMocks = new ArrayList<>();
     private MockedStatic<LogonTools> logon;
@@ -132,6 +139,8 @@ class AdminDeviceLoginCompletionTest {
         when(repository.getMobileDeviceByUserId(7L)).thenReturn("existing-secret");
         assertEquals(TWO_FACTOR_FORM, submit());
         assertNotNull(request.getSession().getAttribute("adminUser_waitingForToken"));
+        verify(repository).getMobileDeviceByUserId(7L);
+        verifyNoInteractions(twoFactor);
         devices.verifyNoInteractions();
         logon.verify(() -> LogonTools.afterSuccessLogon(request, response), never());
     }
@@ -162,6 +171,38 @@ class AdminDeviceLoginCompletionTest {
             assertEquals("redirect:" + EVENT_TARGET, submit());
             assertNull(request.getSession().getAttribute("adminUser_waitingForToken"));
             devices.verify(() -> AdminDeviceService.recordSuccessfulLogin(user, request, response));
+            verifyNoInteractions(twoFactor);
+        }
+    }
+
+    /** Forced second-factor enrollment invalidates display status only after saving its new key. */
+    @Test
+    void invalidatesDisplayStatusAfterForcedSecondFactorEnrollment() {
+        prepareSecondFactor();
+        request.setParameter("token", "222222");
+        try (var authenticators = mockConstruction(GoogleAuthenticator.class,
+                (authenticator, context) -> when(authenticator.getTotpPassword("existing-secret")).thenReturn(222222));
+             var queries = mockConstruction(SimpleQuery.class)) {
+            assertEquals("redirect:" + EVENT_TARGET, submit());
+            assertEquals(2, queries.constructed().size());
+            var order = inOrder(queries.constructed().get(1), twoFactor);
+            order.verify(queries.constructed().get(1)).execute("UPDATE users SET mobile_device = ? WHERE user_id = ?", "existing-secret", 7);
+            order.verify(twoFactor).invalidate(7);
+        }
+    }
+
+    /** Failed forced enrollment cannot invalidate status or complete administrator login. */
+    @Test
+    void doesNotInvalidateWhenForcedSecondFactorEnrollmentFails() {
+        prepareSecondFactor();
+        request.setParameter("token", "222222");
+        try (var authenticators = mockConstruction(GoogleAuthenticator.class,
+                (authenticator, context) -> when(authenticator.getTotpPassword("existing-secret")).thenReturn(222222));
+             var queries = mockConstruction(SimpleQuery.class, (query, context) ->
+                doThrow(new IllegalStateException("Unavailable")).when(query).execute(anyString(), any(), any()))) {
+            assertThrows(IllegalStateException.class, this::submit);
+            verifyNoInteractions(twoFactor);
+            logon.verify(() -> LogonTools.afterSuccessLogon(request, response), never());
         }
     }
 

@@ -94,6 +94,29 @@ public class SessionHolder
    }
 
    /**
+    * Counts the account's active administrator sessions on this server across domains without querying the database.
+    *
+    * @param userId account whose local sessions should be counted
+    * @return active administrator session count, or zero for an invalid account ID
+    */
+   public int getAdminSessionCount(int userId)
+   {
+      if (userId <= 0) return 0;
+      long removeTime = Tools.getNow() - Constants.getInt("sessionRemoveTimeout") * 60_000L;
+      int count = 0;
+      synchronized (data)
+      {
+         for (SessionDetails session : data.values())
+         {
+            if (session.getLoggedUserId() == userId && session.isAdmin()
+                  && !INVALIDATE_SESSION_ADDR.equals(session.getRemoteAddr()) && session.getLastActivity() >= removeTime)
+               count++;
+         }
+      }
+      return count;
+   }
+
+   /**
     * Vrati aktualny zoznam ludi v session
     * @return
     */

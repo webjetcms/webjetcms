@@ -1,0 +1,62 @@
+.ly-header .md-user-menu {
+    .md-user-menu__panel {
+        width: 320px;
+        max-width: calc(100vw - 24px);
+        max-height: calc(100dvh - 64px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 0 0 6px;
+        border: 1px solid $nice-gray-100;
+        border-radius: $border-radius;
+        box-shadow: 0 12px 24px rgba($secondary, .18);
+        text-align: left;
+        white-space: normal;
+        font-size: 14px;
+
+        .dropdown-header { padding: 4px 16px; color: var(--wj-gray-text); font-size: 12px; }
+        .dropdown-divider { margin: 6px 0; border-color: $nice-gray-100; }
+        > li:not(.md-user-menu__identity, .dropdown-header) { padding: 0 6px; }
+        > li:has(.dropdown-divider) { padding: 0; }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 9px 10px;
+            border-radius: $border-radius;
+            white-space: normal;
+            font-size: 14px;
+            line-height: 1.4;
+            .ti { flex-shrink: 0; margin: 0; padding: 0; color: var(--wj-gray-text); font-size: 16px; }
+            &:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: -2px; }
+            &:active { background-color: var(--wj-nice-gray); color: var(--wj-secondary); }
+        }
+    }
+
+    .md-user-menu__identity { display: flex; align-items: center; gap: 12px; padding: 16px 16px 10px; }
+    .md-user-menu__avatar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba($primary, .12);
+        color: var(--wj-primary);
+        font-weight: 700;
+    }
+    .md-user-menu__account { min-width: 0; overflow-wrap: anywhere; color: var(--wj-secondary); }
+    .md-user-menu__content { display: flex; flex: 1; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+    small { display: block; margin-top: 2px; font-size: 12px; color: var(--wj-gray-text); }
+    .md-user-menu__badge {
+        flex-shrink: 0;
+        padding: 3px 6px;
+        border-radius: 4px;
+        background: var(--wj-nice-gray);
+        color: var(--wj-secondary);
+        font-size: 12px;
+        font-weight: 700;
+        &.is-disabled { background: rgba($warning, .32); }
+        &.is-enabled { background: rgba($success, .16); }
+    }
+}

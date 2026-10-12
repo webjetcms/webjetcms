@@ -86,6 +86,7 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
 
     /**
      * Rebuilds the dashboard shell and its independently loaded widgets.
+     * Consumes activeSessions=true to open personal sessions unless a security event was requested.
      *
      * Emits a bubbling, non-cancelable `webjet-component-ready` event without detail
      * after the dashboard is rendered.
@@ -107,6 +108,12 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         this.dashboardController = new DashboardController(widgets, context);
         this._renderNotices();
         this.dashboardReady = this.dashboardController.start();
+        const sessionsUrl = new URL(window.location.href);
+        const sessionsRequested = sessionsUrl.searchParams.get('activeSessions') === 'true';
+        if (sessionsRequested) {
+            sessionsUrl.searchParams.delete('activeSessions');
+            window.history.replaceState(window.history.state, '', sessionsUrl.pathname + sessionsUrl.search + sessionsUrl.hash);
+        }
         if (this.data.securityEventRequested && !this.securityEventOpened) {
             this.securityEventOpened = true;
             const url = new URL(window.location.href);
@@ -137,6 +144,10 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
                 window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
                 showDeviceSecurity(sessionContext, securityEvent);
             }
+        }
+        if (sessionsRequested && !this.data.securityEventRequested) {
+            document.getElementById('dropdownMenuUser')?.focus({ preventScroll: true });
+            showActiveSessions(this.dashboardController._widgetContext());
         }
         this.dataset.ready = "true";
         this.dispatchEvent(new CustomEvent("webjet-component-ready", { bubbles: true }));

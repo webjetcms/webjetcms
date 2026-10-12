@@ -16,22 +16,22 @@ import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.rest.BrowserIdentifierMigrationService;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
+import sk.iway.iwcm.users.TwoFactorStatusService;
 import sk.iway.iwcm.users.devices.AdminDeviceService;
 import sk.iway.iwcm.users.devices.DeviceEntity;
 
 /** Builds lightweight system notices for the dashboard template. */
 @Service
 public class DashboardNoticeService {
-    private final UserDetailsRepository userDetailsRepository;
+    private final TwoFactorStatusService twoFactorStatusService;
     private final AdminDeviceService adminDeviceService;
 
-    public DashboardNoticeService(UserDetailsRepository userDetailsRepository, AdminDeviceService adminDeviceService) {
-        this.userDetailsRepository = userDetailsRepository;
+    public DashboardNoticeService(TwoFactorStatusService twoFactorStatusService, AdminDeviceService adminDeviceService) {
+        this.twoFactorStatusService = twoFactorStatusService;
         this.adminDeviceService = adminDeviceService;
     }
 
@@ -71,7 +71,7 @@ public class DashboardNoticeService {
         if (Constants.getBoolean("2factorAuthEnabled") && Tools.isEmpty(Constants.getString("ldapProviderUrl"))
                 && Tools.isEmpty(Constants.getString("adminLogonMethod")) && !AuthenticationFilter.weTrustIIS()) {
             String message = prop.getText("overview.2fa.warning");
-            if (Tools.isNotEmpty(message) && message.length() > 2 && Tools.isEmpty(userDetailsRepository.getMobileDeviceByUserId((long) user.getUserId()))) {
+            if (Tools.isNotEmpty(message) && message.length() > 2 && !twoFactorStatusService.isEnabled(user.getUserId())) {
                 notices.add(notice(prop, "twoFactor", "warning", "ti-shield-lock", message,
                     action(prop, "popup", "/admin/2factorauth.jsp", "button.setup")));
             }

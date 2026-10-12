@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
-import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticator;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorKey;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorQRGenerator;
@@ -23,10 +22,12 @@ import sk.iway.iwcm.system.stripes.CSRF;
 public class UsersRestServiceController {
 
     private final UserDetailsRepository userDetailsRepository;
+    private final TwoFactorStatusService twoFactorStatusService;
 
     @Autowired
-    public UsersRestServiceController(UserDetailsRepository userDetailsRepository) {
+    public UsersRestServiceController(UserDetailsRepository userDetailsRepository, TwoFactorStatusService twoFactorStatusService) {
         this.userDetailsRepository = userDetailsRepository;
+        this.twoFactorStatusService = twoFactorStatusService;
     }
 
     /* Vrati Key voci ktoremu sa overi token zadany uzivatelom*/
@@ -56,8 +57,7 @@ public class UsersRestServiceController {
     public String getGauth( HttpServletRequest request )
     {
         UserDetails user = UsersDB.getCurrentUser(request.getSession());
-        String currentCode = new SimpleQuery().forString("SELECT mobile_device FROM users WHERE user_id = ?", user.getUserId());
-        if (Tools.isNotEmpty(currentCode)) return "true";
+        if (twoFactorStatusService.isEnabled(user.getUserId())) return "true";
         return "";
     }
 
@@ -73,6 +73,7 @@ public class UsersRestServiceController {
         }
 
         userDetailsRepository.updateMobileDeviceByUserId((long)user.getUserId(), secret);
+        twoFactorStatusService.invalidate(user.getUserId());
 
         return "";
     }

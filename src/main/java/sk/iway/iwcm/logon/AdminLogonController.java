@@ -47,6 +47,7 @@ import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.PasswordSecurity;
 import sk.iway.iwcm.users.UserChangePasswordService;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.TwoFactorStatusService;
 import sk.iway.iwcm.users.devices.AdminDeviceService;
 import sk.iway.iwcm.system.stripes.CSRF;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -78,10 +79,12 @@ public class AdminLogonController {
     private static final String LICENSE = "/wjerrorpages/setup/license";
 
     private final UserDetailsRepository userDetailsRepository;
+    private final TwoFactorStatusService twoFactorStatusService;
 
     @Autowired
-    public AdminLogonController(UserDetailsRepository userDetailsRepository) {
+    public AdminLogonController(UserDetailsRepository userDetailsRepository, TwoFactorStatusService twoFactorStatusService) {
         this.userDetailsRepository = userDetailsRepository;
+        this.twoFactorStatusService = twoFactorStatusService;
     }
 
     /**
@@ -573,7 +576,7 @@ public class AdminLogonController {
      * @param response response receiving the recognized-browser cookie
      * @return challenge form, successful redirect, or null when no challenge is pending
      */
-    private static String verify2FaKey(HttpServletRequest request, HttpServletResponse response) {
+    private String verify2FaKey(HttpServletRequest request, HttpServletResponse response) {
         HttpSession session = request.getSession();
         //ocakava sa token
         String generatedToken = (String)session.getAttribute("token");
@@ -612,6 +615,7 @@ public class AdminLogonController {
                 String currentCode = new SimpleQuery().forString("SELECT mobile_device FROM users WHERE user_id = ?", sessionUserAfterToken.getUserId());
                 if (Tools.isNotEmpty(token) && Tools.isEmpty(currentCode)) {
                     new SimpleQuery().execute("UPDATE users SET mobile_device = ? WHERE user_id = ?", token, sessionUserAfterToken.getUserId());
+                    twoFactorStatusService.invalidate(sessionUserAfterToken.getUserId());
                     sessionUserAfterToken.setMobileDevice(token);
                 }
                 request.setAttribute(AdminDeviceService.SECOND_FACTOR_VERIFIED, Boolean.TRUE);

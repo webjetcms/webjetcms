@@ -17,7 +17,7 @@ import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
+import sk.iway.iwcm.users.TwoFactorStatusService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.rest.BrowserIdentifierMigrationService;
@@ -29,7 +29,7 @@ import sk.iway.iwcm.users.devices.DeviceEntity;
 class DashboardNoticeServiceTest {
     @Test
     void includesAllWarningsAndEscapesDynamicHtmlValues() {
-        UserDetailsRepository users = mock(UserDetailsRepository.class);
+        TwoFactorStatusService twoFactor = mock(TwoFactorStatusService.class);
         Identity user = mock(Identity.class);
         when(user.isAdmin()).thenReturn(true);
         when(user.getUserId()).thenReturn(7);
@@ -59,7 +59,7 @@ class DashboardNoticeServiceTest {
             constants.when(() -> Constants.getInt("javaMinimalVersion")).thenReturn(17);
             constants.when(() -> Constants.getLong("licenseExpiryDate")).thenReturn(System.currentTimeMillis());
 
-            List<Map<String, Object>> result = new DashboardNoticeService(users, mock(AdminDeviceService.class)).load(user, request);
+            List<Map<String, Object>> result = new DashboardNoticeService(twoFactor, mock(AdminDeviceService.class)).load(user, request);
 
             assertEquals(List.of("twoFactor", "database", "browserMigration", "update", "java", "license", "amazonSes"), result.stream().map(notice -> notice.get("id")).toList());
             assertEquals("8.&lt;script&gt;alert(1)&lt;/script&gt;", result.get(4).get("bodyHtml"));
@@ -73,14 +73,14 @@ class DashboardNoticeServiceTest {
             assertEquals("popup", ((Map<?, ?>) result.get(0).get("action")).get("type"));
             assertEquals("/admin/v9/settings/stat-browser-migration/", ((Map<?, ?>) result.get(2).get("action")).get("url"));
             assertTrue(result.stream().noneMatch(notice -> notice.containsKey("onclick")));
-            verify(users).getMobileDeviceByUserId(7L);
+            verify(twoFactor).isEnabled(7L);
         }
     }
 
     /** A restricted administrator must not trigger migration or disabled 2FA lookups. */
     @Test
     void permissionChecksSkipRestrictedNoticeSources() {
-        UserDetailsRepository users = mock(UserDetailsRepository.class);
+        TwoFactorStatusService twoFactor = mock(TwoFactorStatusService.class);
         Identity user = mock(Identity.class);
         when(user.isAdmin()).thenReturn(true);
         Prop prop = mock(Prop.class);
@@ -94,17 +94,44 @@ class DashboardNoticeServiceTest {
             tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
             constants.when(() -> Constants.getBoolean("statWebJET7Converted")).thenReturn(true);
 
-            assertTrue(new DashboardNoticeService(users, mock(AdminDeviceService.class)).load(user, request).isEmpty());
-            verifyNoInteractions(users);
+            assertTrue(new DashboardNoticeService(twoFactor, mock(AdminDeviceService.class)).load(user, request).isEmpty());
+            verifyNoInteractions(twoFactor);
             migration.verifyNoInteractions();
+        }
+    }
+
+    /** An enabled cached second factor suppresses the setup warning without reading its secret. */
+    @Test
+    void enabledSecondFactorSuppressesSetupWarning() {
+        TwoFactorStatusService twoFactor = mock(TwoFactorStatusService.class);
+        when(twoFactor.isEnabled(7)).thenReturn(true);
+        Identity user = mock(Identity.class);
+        when(user.isAdmin()).thenReturn(true);
+        when(user.getUserId()).thenReturn(7);
+        Prop prop = mock(Prop.class);
+        when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
+             MockedStatic<Prop> properties = mockStatic(Prop.class);
+             MockedStatic<Tools> tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
+             MockedStatic<AuthenticationFilter> authentication = mockStatic(AuthenticationFilter.class);
+             MockedStatic<BrowserIdentifierMigrationService> migration = mockStatic(BrowserIdentifierMigrationService.class);
+             MockedConstruction<IwcmFile> paths = mockConstruction(IwcmFile.class)) {
+            properties.when(() -> Prop.getInstance(request)).thenReturn(prop);
+            tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+            constants.when(() -> Constants.getBoolean("2factorAuthEnabled")).thenReturn(true);
+            constants.when(() -> Constants.getBoolean("statWebJET7Converted")).thenReturn(true);
+
+            assertTrue(new DashboardNoticeService(twoFactor, mock(AdminDeviceService.class)).load(user, request).isEmpty());
+            verify(twoFactor).isEnabled(7);
         }
     }
 
     @Test
     void deniedRequestsDoNotCheckUserSecurityOrDatabaseState() {
-        UserDetailsRepository users = mock(UserDetailsRepository.class);
-        assertThrows(AccessDeniedException.class, () -> new DashboardNoticeService(users, mock(AdminDeviceService.class)).load(mock(Identity.class), new MockHttpServletRequest()));
-        verifyNoInteractions(users);
+        TwoFactorStatusService twoFactor = mock(TwoFactorStatusService.class);
+        assertThrows(AccessDeniedException.class, () -> new DashboardNoticeService(twoFactor, mock(AdminDeviceService.class)).load(mock(Identity.class), new MockHttpServletRequest()));
+        verifyNoInteractions(twoFactor);
     }
 
     @Test
@@ -119,7 +146,7 @@ class DashboardNoticeServiceTest {
     /** Security events remain account-owned data and precede ordinary system warnings. */
     @Test
     void embedsAccountSecurityEventsWithoutGenericDismissalActions() {
-        var users = mock(UserDetailsRepository.class);
+        var twoFactor = mock(TwoFactorStatusService.class);
         var devices = mock(AdminDeviceService.class);
         var user = mock(Identity.class);
         when(user.isAdmin()).thenReturn(true);
@@ -136,7 +163,7 @@ class DashboardNoticeServiceTest {
             constants.when(() -> Constants.getBoolean("statWebJET7Converted")).thenReturn(true);
             properties.when(() -> Prop.getInstance(request)).thenReturn(prop);
             tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
-            var notices = new DashboardNoticeService(users, devices).load(user, request);
+            var notices = new DashboardNoticeService(twoFactor, devices).load(user, request);
             assertEquals(1, notices.size());
             assertEquals("newDevice:42", notices.get(0).get("id"));
             assertEquals("newDevice", notices.get(0).get("kind"));
@@ -150,7 +177,7 @@ class DashboardNoticeServiceTest {
     /** Device-storage failures leave other notices visible and add an error that cannot be dismissed. */
     @Test
     void retainsOrdinaryNoticesWhenDeviceStorageFails() {
-        var users = mock(UserDetailsRepository.class);
+        var twoFactor = mock(TwoFactorStatusService.class);
         var devices = mock(AdminDeviceService.class);
         var user = mock(Identity.class);
         when(user.isAdmin()).thenReturn(true);
@@ -165,7 +192,7 @@ class DashboardNoticeServiceTest {
             properties.when(() -> Prop.getInstance(request)).thenReturn(prop);
             tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
 
-            var notices = new DashboardNoticeService(users, devices).load(user, request);
+            var notices = new DashboardNoticeService(twoFactor, devices).load(user, request);
 
             assertEquals(List.of("newDeviceUnavailable", "database"), notices.stream().map(notice -> notice.get("id")).toList());
             assertEquals("error", notices.get(0).get("severity"));
