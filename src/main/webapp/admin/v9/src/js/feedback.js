@@ -31,7 +31,7 @@ class FeedbackDialog {
             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable"><div class="modal-content">
                 <div class="modal-header">
                     <button type="button" class="btn md-feedback__back" aria-label="${html('back')}" hidden><i class="ti ti-arrow-back-up" aria-hidden="true"></i></button>
-                    <h2 id="feedback-modal-title" class="modal-title fs-5">${WJ.escapeHtml(WJ.translate('admin.welcome.feedback.title.js'))}</h2>
+                    <h2 id="feedback-modal-title" class="modal-title fs-6">${WJ.escapeHtml(WJ.translate('admin.welcome.feedback.title.js'))}</h2>
                     <button type="button" class="btn md-feedback__close" aria-label="${WJ.escapeHtml(WJ.translate('button.close'))}"><i class="ti ti-x" aria-hidden="true"></i></button>
                 </div>
                 <form>

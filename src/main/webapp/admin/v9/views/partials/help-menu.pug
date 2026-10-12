@@ -50,9 +50,10 @@ div.dropdown.md-help-menu
             div.md-help-menu__product
                 strong WebJET CMS
                 span(data-th-text="${' · ' + layout.productEdition}")
-            div
+            div(data-th-with="version=${layout.productVersion}, separator=${#strings.indexOf(version, ' ')}")
                 span(data-th-text="\#{admin.help.version.js}") Verzia
-                span(data-th-text="${layout.productVersion}")
+                span(data-th-text="${separator < 0 ? version : #strings.substring(version, 0, separator)}")
+                span.d-block(data-th-if="${separator >= 0}" data-th-text="${#strings.substring(version, separator + 1)}")
             div(data-th-if="${!#strings.isEmpty(layout.productServer)}")
                 span(data-th-text="\#{admin.help.server.js}") Server
                 span(data-th-text="${layout.productServer}")

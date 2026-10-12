@@ -71,10 +71,6 @@ export function initHelpMenu() {
             saveNewsSeen(state);
         }
     });
-    trigger.addEventListener('shown.bs.dropdown', () => {
-        const first = [...panel.querySelectorAll('.dropdown-item')].find(item => !item.closest('[hidden]'));
-        first?.focus({ preventScroll: true });
-    });
     feedback.addEventListener('click', () => {
         dropdown.hide();
         trigger.focus({ preventScroll: true });
@@ -84,7 +80,7 @@ export function initHelpMenu() {
         event.stopPropagation();
         try {
             await copySystemInfo(`WebJET CMS ${window.adminHelpContext.version}`);
-            WJ.notifySuccess(text('copied'));
+            WJ.notifySuccess(text('copied'), '', 5000);
         } catch (error) {
             WJ.notifyError(text('copyError'));
         }

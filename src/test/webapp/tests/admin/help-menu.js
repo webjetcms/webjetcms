@@ -42,6 +42,21 @@ Scenario('Page help is refreshed on each opening and omitted without a route', a
     I.executeScript(() => { window.helpLink = ''; });
     openHelp(I);
     I.dontSeeElement('.md-help-menu__page');
+    const mouseState = await I.executeScript(() => {
+        const menu = document.querySelector('#admin-help-menu');
+        const documentation = menu.querySelector('[data-help-path="/"]');
+        return {
+            focusedId: document.activeElement.id,
+            menuItemFocused: menu.contains(document.activeElement),
+            documentationBackground: getComputedStyle(documentation).backgroundColor
+        };
+    });
+    I.assertEqual(mouseState.focusedId, 'admin-help-toggle');
+    I.assertFalse(mouseState.menuItemFocused, 'Opening Help with the mouse must not focus or highlight its first item.');
+    I.assertEqual(mouseState.documentationBackground, 'rgba(0, 0, 0, 0)');
+    I.saveScreenshot('help-menu-without-page-help.png');
+    I.pressKey('ArrowDown');
+    I.assertEqual(await I.executeScript(() => document.activeElement.dataset.helpPath), '/');
     I.pressKey('Escape');
     I.executeScript(() => { window.helpLink = '/redactor/admin/keyboard-shortcuts'; WJ.setTitle('autotest help title'); });
     openHelp(I);
@@ -95,6 +110,8 @@ Scenario('Keyboard access and accessibility of the Help menu', async ({ I, a11y 
     I.executeScript(() => document.querySelector('#admin-help-toggle').focus());
     I.pressKey('Enter');
     I.waitForVisible(`${panel}.show`, 5);
+    I.assertEqual(await I.executeScript(() => document.activeElement.id), 'admin-help-toggle');
+    I.pressKey('ArrowDown');
     I.assertTrue(await I.executeScript(() => document.activeElement.classList.contains('md-help-menu__page')));
     I.pressKey('ArrowDown');
     I.assertEqual(await I.executeScript(() => document.activeElement.dataset.helpPath), '/');

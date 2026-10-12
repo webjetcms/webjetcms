@@ -40,6 +40,7 @@ function fixture(t, { language = 'sk', base = 'http://manual.intranet:8080', rel
         show() {
             this.shows++;
             trigger.dispatchEvent(new window.Event('show.bs.dropdown'));
+            trigger.focus();
             trigger.setAttribute('aria-expanded', 'true');
             panel.classList.add('show');
             trigger.dispatchEvent(new window.Event('shown.bs.dropdown'));
@@ -68,8 +69,8 @@ function fixture(t, { language = 'sk', base = 'http://manual.intranet:8080', rel
     return { scope, window, trigger, panel, dropdown, feedbackCalls, requests, successes, errors };
 }
 
-test('Contextual Help follows the current page value and never shows an absent or non-string link', t => {
-    const { window, panel, dropdown } = fixture(t, { release: '' });
+test('Contextual Help follows the current page value without focusing an item when opened', t => {
+    const { window, trigger, panel, dropdown } = fixture(t, { release: '' });
     const row = panel.querySelector('.md-help-menu__page-row');
     const link = panel.querySelector('.md-help-menu__page');
     const subtitle = panel.querySelector('.md-help-menu__page-title');
@@ -77,14 +78,14 @@ test('Contextual Help follows the current page value and never shows an absent o
         window.helpLink = value;
         dropdown.show();
         assert.equal(row.hidden, true);
-        assert.equal(window.document.activeElement, panel.querySelector('[data-help-path="/"]'));
+        assert.equal(window.document.activeElement, trigger);
     }
     window.helpLink = ' /redactor/admin/welcome ';
     dropdown.show();
     assert.equal(row.hidden, false);
     assert.equal(link.href, 'http://manual.intranet:8080/latest/sk/redactor/admin/welcome');
     assert.equal(subtitle.textContent, 'Current page');
-    assert.equal(window.document.activeElement, link);
+    assert.equal(window.document.activeElement, trigger);
     window.helpLink = '/redactor/apps/gallery';
     window.document.querySelector('.header-title').textContent = ' Gallery ';
     dropdown.show();
@@ -241,7 +242,7 @@ test('Copy uses the Clipboard API when available and keeps the Help menu open', 
     assert.equal(panel.classList.contains('show'), true);
     assert.equal(dropdown.hides, 0);
     assert.equal(window.document.activeElement, copy);
-    assert.deepEqual(successes, [['admin.help.copied.js']]);
+    assert.deepEqual(successes, [['admin.help.copied.js', '', 5000]]);
     assert.equal(errors.length, 0);
     assert.equal(window.document.querySelector('textarea'), null);
 });
