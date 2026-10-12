@@ -25,7 +25,7 @@ If you want the text not to wrap after typing a space, you can insert a **fixed 
 
 ![](paste.png)
 
-**Paste unformatted text** from the toolbar using the ![](paste_text.png ":no-zoom" icon). You can also use the paste without formatting shortcut provided by your browser; its appearance depends on the browser and operating system.
+**Paste unformatted text** from the toolbar using the ![](paste_text.png ":no-zoom" icon). You can also use the shortcut for pasting without formatting provided by your browser. Its appearance depends on the browser and operating system, for example ```CTRL + t``` or ```CTRL + SHIFT + v```
 This method of inserting text inserts text without any formatting, so it is most suitable for inserting regular text.
 
 **Pasting text from ```Word``` / ```Excel``` file** from the toolbar using the ![](paste_from_word.png ":no-zoom") icon.
