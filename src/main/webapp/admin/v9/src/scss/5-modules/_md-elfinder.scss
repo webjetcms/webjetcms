@@ -66,8 +66,8 @@
 
 .md-breadcrumb .nav-link  { font-size: 15px !important; }
 
-#linkInput.inputs.container-fluid {
-    background: #fff; padding-top: 10px; padding-bottom: 10px; height: auto; overflow: auto;
+#linkInput.inputs {
+    background: #fff; height: auto; overflow: auto;
 }
 
 html.pg-iframe {
@@ -79,17 +79,8 @@ html.pg-iframe {
             padding-left: 28px !important;
         }
     }
-    #linkInput.inputs.container-fluid {
-        padding: 9px 10px;
+    #linkInput.inputs {
         border-top: 1px solid var(--wj-nice-gray-100);
-        font-size: 14px;
-        .row {
-            --bs-gutter-x: 0;
-        }
-        .elfinder-url-input {
-            padding: 1px 4px;
-            font-size: 14px;
-        }
     }
 }
 

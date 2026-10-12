@@ -150,12 +150,9 @@ block content
                     handlers: {
                         select: function(event, elfinderInstance) {
                             if ($('#fileArchive').is(':visible')) return;
-                            // file, directory, fileDirectory, files, directories, filesDirectories
+                            // Supported selection modes: file, directory, fileDirectory.
                             var selectMode = "[(${selectMode})]";
                             var selected = event.data.selected;
-                            var inputs = $('div.inputs');
-                            var rows = [];
-                            var completed = 0;
 
                             if ((selectMode == 'file' || selectMode == 'directory' || selectMode == 'fileDirectory') && selected.length > 0)
                             {
@@ -163,78 +160,15 @@ block content
                                 //v nazve musi byt znak bodka - prevencia pred vybratim adresara klikanim v strome
                                 if (files.length == 1 && (files[0].hash.indexOf("_doc_group")!=-1 || files[0].virtualPath.indexOf(".")!=-1))
                                 {
-                                    var row = inputs.find('.row.template');
-                                    var input = row.find('input');
+                                    var input = $('#file');
                                     var val = files[0].virtualPath;
                                     //remove multiple slashes
                                     val = val.replace(/\/+/g, '/')
                                     input.val(val);
-                                    htmlCompleted();
                                 }
-                            }
-                            else if ((selectMode == 'files' || selectMode == 'directories' || selectMode == 'filesDirectories') && selected.length > 0) {
-                                $.each(selected, function(i, v){
-                                    getData(v, function(data){
-                                        completed++;
-                                        if (isDataOk(data)) {
-                                            var row = inputs.find('.row.template');
-                                            var input = row.find('input');
-                                            var val = data.cwd.virtualPath;
-                                            val = val.replace("////", "/");
-                                            val = val.replace("///", "/");
-                                            val = val.replace("//", "/");
-                                            input.val(val);
-                                        }
-                                        if (completed == selected.length) {
-                                            htmlCompleted();
-                                        }
-                                    });
-                                });
                             }
                             else if (selected.length > 0) {
                                 console.warn('SelectMode ' + selectMode + ' not defined');
-                            }
-
-                            function htmlCompleted() {
-                                if (rows.length > 0) {
-                                    $.each(rows, function(i, v){
-                                        var label = v.find('label');
-                                        var input = v.find('input');
-                                        if (rows.length > 1) {
-                                            label.attr('for', 'file' + i).text(label.text() + ' ' + (i + 1));
-                                            input.attr('id', 'file' + i);
-                                        }
-                                    })
-                                }
-                            }
-
-                            function isDataOk(data) {
-                                if (data.cwd == null || data.cwd.mime == null) {
-                                    return false;
-                                }
-                                if ((selectMode == 'file' || selectMode == 'files') && data.cwd.mime == 'directory') {
-                                    return false;
-                                }
-                                if ((selectMode == 'directory' || selectMode == 'directories') && data.cwd.mime != 'directory') {
-                                    return false;
-                                }
-                                return true;
-                            }
-
-                            function getData(target, callback) {
-                                var data = {
-                                    cmd: 'open',
-                                    target: target,
-                                    '_': new Date().getTime()
-                                }
-                                $.ajax({
-                                    url: '/admin/elfinder-connector/',
-                                    data: data,
-                                    dataType: 'json',
-                                    success: function(data){
-                                        callback(data);
-                                    }
-                                });
                             }
                         },
                         upload: function (event) {
@@ -439,25 +373,16 @@ block content
                 var result = false;
                 if (callback != '') {
                     if (typeof window.parent.opener[callback] != 'undefined') {
-                        var inputs = $('div.inputs');
                         var results = [];
-                        $.each(inputs.find('.row:not(.template)'), function(i,v){
-                            results.push($(this).find('input').val());
-                        });
-                        if (results.length==0)
-                        {
-                            var val = $("#file").val();
-                            if ("" != val) results.push(val);
-                        }
+                        var val = $("#file").val();
+                        if ("" != val) results.push(val);
                         window.parent.opener[callback](results);
                         result = true;
                     }
                 }
                 if (form != "" && elementName != "")
                 {
-                    var val = $('div.inputs').find('.row:not(.template)').find('input').val();
-                    //aby bolo mozne do inputu priamo napisat www.webjet.sk
-                    if (typeof val == "undefined") val = $("#file").val();
+                    var val = $("#file").val();
                     if ("ckEditorDialog"==form)
                     {
                         var dialog = null;
@@ -508,11 +433,16 @@ block content
                 iframe#wjImagePixabayIframeElement(style='width: 100%; height: 480px; border: 0px;' src='/admin/skins/webjet8/ckeditor/dist/plugins/webjet/wj_pixabay.jsp' border='0')
             #fileArchive(style='display: none;' role='tabpanel' aria-labelledby='fileArchiveTab' data-th-if="${layout.hasPermission('cmp_file_archiv') && (volumes == 'link' || volumes == 'files' || volumes == 'all') && selectMode != 'directory' && selectMode != 'directories'}")
                 iframe#fileArchiveIframe(style='display: block; width: 100%; border: 0;' data-th-title='\#{components.file_archiv.name}')
-        #linkInput.inputs.container-fluid
-            .row.template
-                .form-group.col-sm-12.cke_dialog_ui_input_text
-                    label.control-label.block(for='file') [[\#{editor.media.link}]]
-                    input#file.form-control.elfinder-url-input.ai-field(name='file' data-ai-java-class="sk.iway.iwcm.system.elfinder.ElfinderServlet" data-ai-render-format="dt-format-image")
+        #linkInput.innerPadding.inputs
+            style(type='text/css').
+                table.urlFormTable { width: 100%; }
+            table.urlFormTable
+                tr
+                    td(style='width: 80px;' data-th-title='\#{elfinder.image.urlTitle}').cke_dialog_ui_vbox_child
+                        label.cke_dialog_ui_labeled_label(for='file') [[\#{components.groupEdit.url_info}]]:
+                    td.cke_dialog_ui_vbox_child
+                        div.cke_dialog_ui_input_text
+                            input#file.form-control.cke_dialog_ui_input_text.elfinder-url-input.ai-field(name='file' data-ai-java-class="sk.iway.iwcm.system.elfinder.ElfinderServlet" data-ai-render-format="dt-format-image")
 
     script.
         let tabs = $(".tabbable > .md-tabs > ul.nav");
