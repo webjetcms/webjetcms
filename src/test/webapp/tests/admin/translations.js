@@ -18,7 +18,7 @@ Scenario("CZ verzia preklady", ({ I, DTE }) => {
     I.see("Zaslat zpětnou vazbu");
     I.see("Vítejte zpět, Tester Playwright");
     I.see("Pokračujte v práci");
-    I.see("Úplný seznam změn");
+    I.waitForText("Seznam změn", 20, ".md-dashboard-widget__news-more");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=141");
     DTE.waitForEditor();
@@ -48,7 +48,7 @@ Scenario("EN verzia preklady", ({ I, DTE }) => {
     I.see("Send feedback");
     I.see("Welcome back, Tester Playwright");
     I.see("Continue your work");
-    I.see("Complete changelog");
+    I.waitForText("Changelog", 20, ".md-dashboard-widget__news-more");
 
     I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=141");
     DTE.waitForEditor();

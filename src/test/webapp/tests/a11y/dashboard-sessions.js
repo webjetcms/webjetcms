@@ -1,4 +1,4 @@
-const { mockDashboardBootstrap, dashboardPageRoute } = require('../../helpers/dashboard-browser');
+const { mockDashboardBootstrap, dashboardPageRoute, openDashboardSessions } = require('../../helpers/dashboard-browser');
 
 Feature('a11y.dashboard-sessions');
 
@@ -125,7 +125,7 @@ Scenario('Representative session actions remain readable with pointer and keyboa
     I.resizeWindow(1440, 1230);
     I.amOnPage('/admin/v9/');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-    I.clickCss('[data-widget-type="sessions"] .md-dashboard__title-action');
+    await openDashboardSessions(I);
     I.waitForVisible(modal, 20);
     I.waitForFunction(selector => getComputedStyle(document.querySelector(selector)).opacity === '1'
         && getComputedStyle(document.querySelector(`${selector} .modal-dialog`)).transform === 'none', [modal], 10);

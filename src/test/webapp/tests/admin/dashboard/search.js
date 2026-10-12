@@ -257,7 +257,7 @@ Scenario('Documentation formats Markdown and expandable AI answers without horiz
     I.see('| Campaign | autotest |', `${documentationResult} .md-quick-search__markdown`);
     I.see('Campaign preview', `${documentationResult} .md-quick-search__markdown`);
     I.seeElement(`${documentation} .md-quick-search__answer strong`);
-    I.see('Odpoveď AI', `${documentation} .md-quick-search__answer h4`);
+    I.see('Prehľad od AI', `${documentation} .md-quick-search__answer h4`);
     I.dontSee('**', `${documentation} .md-quick-search__answer`);
     I.dontSeeElement(`${documentation} script`);
     I.dontSeeElement(`${documentation} img`);

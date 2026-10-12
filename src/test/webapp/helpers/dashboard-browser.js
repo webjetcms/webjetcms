@@ -81,7 +81,8 @@ async function restoreDefaultDashboard(I) {
     const dialog = '#toast-container-webjet .toast[role="dialog"]';
     const readLayout = () => {
         const settings = document.querySelector('webjet-overview-dashboard').dashboardController.settings;
-        return settings.items.map(({ id, type, size, options }) => ({ type, size, options, domainOptions: settings.domainOptions[id] || {} }));
+        const items = settings.items.map(({ id, type, size, options }) => ({ type, size, options, domainOptions: settings.domainOptions[id] || {} }));
+        return { widgets: items.filter(item => item.type !== 'shortcut'), shortcuts: items.filter(item => item.type === 'shortcut') };
     };
 
     I.amOnPage('/admin/v9/');
@@ -108,8 +109,8 @@ async function restoreDefaultDashboard(I) {
     I.assertDeepEqual(await I.executeScript(readLayout), defaults, 'The default overview must remain saved after reloading.');
 }
 
-/** Opens sessions from a temporary personal widget without persisting a layout change. */
-async function openDashboardSessions(I) {
+/** Shows a temporary personal sessions widget without persisting a layout change. */
+async function showDashboardSessions(I) {
     await I.executeScript(() => {
         const controller = document.querySelector('webjet-overview-dashboard').dashboardController;
         if (!controller.settings.items.some(item => item.id === 'autotest-session-dialog')) {
@@ -118,7 +119,12 @@ async function openDashboardSessions(I) {
         }
     });
     await showWidget(I, 'autotest-session-dialog');
+}
+
+/** Opens sessions from a temporary personal widget without persisting a layout change. */
+async function openDashboardSessions(I) {
+    await showDashboardSessions(I);
     I.clickCss('[data-instance-id="autotest-session-dialog"] .md-dashboard__title-action');
 }
 
-module.exports = { showWidget, waitForWidgets, mockDashboardBootstrap, dashboardPageRoute, readDashboardBootstrap, restoreDefaultDashboard, openDashboardSessions };
+module.exports = { showWidget, waitForWidgets, mockDashboardBootstrap, dashboardPageRoute, readDashboardBootstrap, restoreDefaultDashboard, showDashboardSessions, openDashboardSessions };

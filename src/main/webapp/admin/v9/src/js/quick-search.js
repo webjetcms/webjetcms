@@ -478,7 +478,7 @@ class QuickSearch {
         if (state.answer) {
             const answer = node('div', 'md-quick-search__answer');
             const heading = node('h4', '');
-            heading.append(icon('ti-sparkles'), document.createTextNode(text('documentationAnswer')));
+            heading.append(icon('ti-sparkles'), document.createTextNode(WJ.translate('components.search.rag_answer')));
             const previewLength = 450;
             const collapsed = state.answer.length > previewLength && !state.answerExpanded;
             const paragraphEnd = state.answer.lastIndexOf('\n\n', previewLength);

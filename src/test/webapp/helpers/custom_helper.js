@@ -2,6 +2,13 @@ const { Helper } = codeceptjs;
 
 class CustomWebjetHelper extends Helper {
 
+  _before() {
+    // CodeceptJS 3.6 retains failed named sessions after their contexts are closed.
+    const playwright = this.helpers['Playwright'];
+    playwright.activeSessionName = '';
+    playwright.sessionPages = {};
+  }
+
   /**
    * Metoda vrati stlpce vo formate .json
    * @param {string} dataTable objekt pre datatabulku
