@@ -253,11 +253,11 @@ itemKey=cmp_contact
 userItem=true
 #linka v menu
 leftMenuLink=/apps/contact/admin/
-#ikona v menu (https://fontawesome.com/v5/search?s=solid%2Cbrands)
+#Tabler icon name without the "ti ti-" prefix
 icon=address-book
-#ak je true bude po pridani aplikacie zakazana pre vsetkych pouzivatelov a musi sa implicitne povolit
+#Disable the new permission for existing administrators on its first initialization
 defaultDisabled=true
-#ak je true, bude v zozname aplikacii na zaciatku (je to zakaznicka aplikacia)
+#Custom module flag; it does not change the order in the current administration menu
 custom=true
 
 #submenu
@@ -334,3 +334,147 @@ Scenario('contact-zakladne testy', async ({ I, DataTables, DTE }) => {
     });
 });
 ```
+
+## Reference souboru modinfo.properties
+
+Soubor `modinfo.properties` registruje modul, jeho položky v administračním menu, uživatelská práva a doplňkové aplikace pro vkládání do stránky. Načítá ho třída `sk.iway.iwcm.system.Modules`, zobrazení menu zabezpečuje `MenuService` a seznam aplikací v AppStore připravuje `AppManager`.
+
+### Umístění a načítání
+
+Soubor umístěte do `/components/MENO_APLIKACIE/` nebo `/apps/MENO_APLIKACIE/`. `Modules` prochází pouze bezprostřední podadresáře těchto dvou složek. V každém načte `modinfo.properties` a případné `modinfo1.properties` až `modinfo29.properties`. Číslování nemusí být souvislé.
+
+Každý soubor představuje samostatnou definici modulu. Číslované soubory nepřebírají nastavení ze základního souboru, proto jim zadejte vlastní `itemKey`. Shodný identifikátor zpravidla nahradí dřívější definici. Výjimkou je automaticky vytvořený modul z `/apps/` bez vlastního odkazu, který nepřepíše již načtený modul.
+
+Základní modul vznikne také pro složku bez souboru `modinfo.properties`. Automaticky dostane identifikátor `cmp_MENO_APLIKACIE`, cestu ke složce a překladový klíč `components.MENO_APLIKACIE.title`, případně `apps.MENO_APLIKACIE.title`. Samotná existence složky však nevytvoří položku v levém menu ani nastavitelné uživatelské právo.
+
+Hodnoty `true` a `false` zapisujte malými písmeny bez koncových mezer. Parser u některých atributů porovnává přesný řetězec. Výchozí kódování je `ISO-8859-1`, pro soubor v UTF-8 přidejte na začátek direktivu `#encoding=utf-8`.
+
+Definice se uchovávají v paměti. Po změně souboru je třeba opětovné načtení modulů, například restartem WebJET CMS. AppStore má také vlastní vyrovnávací paměť seznamu aplikací podle jazyka.
+
+### Kompletní příklad
+
+Příklad pro `/components/example/modinfo.properties` obsahuje všechny atributy, které `Modules` čte, včetně aliasu `custom` a starších příznaků. Silnice, překladové klíče a názvy práv jsou ukázkové. Před použitím upravte nebo vynechejte omezení `installName`, `requireConstantsKey` a `domainName`. V tomto příkladu musí být konfigurační proměnná `exampleEnabled` nastavena například na `true`.
+
+```properties
+#encoding=utf-8
+
+#Module identity and administration menu
+leftMenuNameKey=components.example.title
+itemKey=cmp_example
+leftMenuLink=/apps/example/admin/
+group=components
+icon=address-book
+menuOrder=120
+
+#Permissions and availability
+userItem=true
+defaultDisabled=true
+requireConstantsKey=exampleEnabled
+installName=customer,customer-test
+domainName=www.example.sk,www.example.cz
+
+#AppStore registration and custom module flag
+app=true
+isCustom=true
+#Alias used only when isCustom is missing or empty
+custom=true
+
+#Legacy flags - see the reference below
+showSubcategories=false
+hideSubmenu=false
+
+#Submenu with its own permission
+leftSubmenu1NameKey=components.example.records.title
+leftSubmenu1Link=/apps/example/admin/records/
+leftSubmenu1ItemKey=cmp_example_records
+leftSubmenu1UserItem=true
+leftSubmenu1DefaultDisabled=false
+leftSubmenu1Icon=list
+
+#Standalone permission without a visible menu link
+leftSubmenu2NameKey=components.example.export.title
+leftSubmenu2Link=javascript:void();
+leftSubmenu2ItemKey=cmp_example_export
+leftSubmenu2UserItem=true
+leftSubmenu2DefaultDisabled=true
+leftSubmenu2Icon=download
+
+#Additional application in the page editor
+component1NameKey=components.example.card.title
+component1Link=/components/example/editor_card.jsp
+component1Icon=/components/example/editoricon.png
+```
+
+### Identifikace a menu
+
+- `leftMenuNameKey` - ​​překladový klíč názvu modulu v menu a v aktuálním stromu práv. Pokud chybí, použije se `components.MENO_APLIKACIE.title` nebo `apps.MENO_APLIKACIE.title` podle složky. Nemění interní `nameKey`, které používá běžná JSP aplikace v AppStore.
+- `itemKey` - ​​jednoznačný identifikátor modulu a zároveň název práva, například `cmp_contact`. Výchozí hodnota je `cmp_MENO_APLIKACIE`. Stejný identifikátor použijte při kontrole práv v REST controlleru, JSP nebo Java kódu. Pro samostatně nastavitelné právo používejte klíč s alespoň třemi znaky.
+- `leftMenuLink` - ​​URL adresa nebo JavaScript akce hlavní položky menu. Neprázdná hodnota zároveň zapne zobrazování modulu v levém menu; prázdná nebo vynechaná hodnota jej nezapne. Příklad: `/apps/contact/admin/`. Odkaz `javascript:void();` může sloužit jako kontejner podpoložek.
+- `group` - ​​sekce administračního menu a stromu práv. Výchozí hodnota je `components`. Aktuální menu zná hodnoty `welcome`, `website`, `news`, `components`, `files`, `templates`, `users`, `config` ; nová hodnota sama nevytvoří novou sekci. Pro některé standardní moduly má přednost mapování v `MenuService`. Tento atribut neurčuje kategorii aplikace v AppStore.
+- `icon` - ​​název Tabler ikony bez prefixu `ti ti-`, například `address-book`. `MenuService` prefix doplní při tvorbě menu a stromu práv. Ve výchozím nastavení je hodnota prázdná; pro standardní moduly může mít přednost interní mapování ikon. Ikonu karty v AppStore nastavuje jiný mechanismus, popsaný níže.
+- `menuOrder` - ​​celé číslo pro vzestupné řazení modulů, ve výchozím nastavení `1000`. Neplatná neprázdná hodnota se převede na `0` ; při shodě se porovná interní `nameKey`. V aktuálním menu mají některé standardní moduly pevně mapované pořadí a sekce `components` se následně seřadí podle přeložených názvů. V této sekci proto `menuOrder` neurčuje konečné pořadí. Neurčuje ani pořadí karet v AppStore.
+
+### Práva a dostupnost
+
+- `userItem` - ​​při `true` zpřístupní právo modulu na nastavování v právech uživatelů a skupin práv. Výchozí hodnota je `false`. Samotný příznak právo uživateli neuděluje a hodnota `false` neznamená zákaz aplikace.
+- `defaultDisabled` - ​​ve výchozím nastavení `false`. Při `true` inicializace nově zjištěného práva jednorázově přidá zákaz stávajícím administrátorům. `UpdateDatabase` provedení zaznamená pod označením `NEW MODULE: itemKey`. Právo pak lze povolit v nastavení uživatele nebo přes skupinu práv. Nejedná se o trvalé vypnutí modulu ani o výchozí nastavení pro každého budoucího uživatele. Změna zpět na `false` již zapsané zákazy neodstraní.
+- `requireConstantsKey` - ​​název jedné konfigurační proměnné, na které závisí dostupnost modulu. Její hodnota v `Constants` musí být neprázdná a odlišná od přesného řetězce `false`. Například `requireConstantsKey=exampleEnabled` kontroluje proměnnou `exampleEnabled`, nenastavuje ji. Prázdný nebo vynechaný atribut tuto podmínku vypne.
+- `installName` - ​​omezí načtení celé definice na konkrétní instalace podle `Constants.getInstallName()`. Více hodnot oddělte čárkou bez mezer, například `customer,customer-test`. Porovnání rozlišuje velká a malá písmena. Při neshodě se definice včetně pod položek přeskočí. Prázdná nebo vynechaná hodnota načtení neomezuje.
+- `domainName` - ​​omezení zobrazení podle aktuální domény, například `www.example.sk,www.example.cz`. Prázdná nebo vynechaná hodnota zobrazení neomezuje. Používá se při tvorbě aktuálního administračního menu a při filtrování aplikací v `appstore.jsp`. Přesné porovnávání a omezení přenosu do AppStore jsou popsány v části [AppStore a filtrování podle domény](#appstore-a-filtrování-dle-domény).
+
+Práva se nastavují ve stromu práv uživatele nebo skupiny práv; jeho tvorbu popisuje dokumentace [seznamu uživatelů](../../developer/apps/users/README.md). WebJET CMS ukládá uživatelské zákazy, přičemž povolení přes skupinu práv má přednost před uživatelským zákazem. Dostupnost modulu podle licence a konfigurace se kontroluje zvlášť, takže uživatelské povolení nezpřístupní nedostupný modul.
+
+Definice v `modinfo.properties` nenahrazuje kontrolu práv v aplikačním kódu. Administrační Thymeleaf controller kontroluje právo odvozené z URL položky menu, ale REST rozhraní chraňte samostatně, například anotací `@PreAuthorize("@WebjetSecurityService.hasPermission('cmp_contact')")` z ukázky výše.
+
+### Podpoložky menu a samostatná práva
+
+Namísto `N` použijte číslo **1 až 24**. Čísla mohou být vynechána. Podpoložka se vytvoří pouze tehdy, jsou-li oba atributy `leftSubmenuNNameKey` a `leftSubmenuNLink` neprázdné.
+
+- `leftSubmenuNNameKey` - ​​překladový klíč názvu podpoložky v menu nebo názvu samostatného práva.
+- `leftSubmenuNLink` - ​​URL adresa nebo JavaScript akce podpoložky. Hodnota `javascript:void();` umožňuje zaregistrovat právo bez viditelného odkazu v menu; i při takovém právu musí být atribut vyplněn.
+- `leftSubmenuNItemKey` - ​​vlastní identifikátor práva podpoložky. Bez něj se při zobrazení a kontrole URL použije právo nadřazeného modulu. Při zadání se kontroluje toto právo samostatně, nadřazené právo se k němu automaticky nepřidává jako další podmínka.
+- `leftSubmenuNUserItem` - ​​u `true` zobrazí podpoložku jako samostatně nastavitelné právo. Ve výchozím nastavení `false`, nezávisle na rodičovském `userItem`. Pro samostatné právo nastavte i vlastní `leftSubmenuNItemKey` s alespoň třemi znaky.
+- `leftSubmenuNDefaultDisabled` - ​​stejné jednorázové zakázání jako u `defaultDisabled`, ale pro právo podpoložky. Pokud chybí, přebírá hodnotu rodičovského `defaultDisabled`. Výslovné `false` toto dědění vypne, `true` zapne zakázání bez ohledu na rodiče.
+- `leftSubmenuNIcon` - ​​název Tabler ikony bez prefixu `ti ti-`. Aktuálně se používá ve stromu práv; třetí úroveň levého menu tuto ikonu nevykresluje. Ve výchozím nastavení není nastavena.
+
+Pokud má uživatel povolenou podpoložku s vlastním právem, může se mu zobrazit i při zakázaném právě nadřazeného modulu. Rodič zůstane v menu jako kontejner a jeho odkaz se změní na první povolenou podpoložku.
+
+Pro podmínění odkazu existujícími právy lze použít `leftSubmenuNItemKey=pravoA&pravoB` pro současné splnění obou práv nebo `leftSubmenuNItemKey=pravoA|pravoB` pro splnění alespoň jednoho. Taková podpoložka zpravidla nemá `leftSubmenuNUserItem=true`, protože nedefinuje nové samostatné právo. V jednom výrazu nekombinujte oba operátory; `WebjetSecurityService.hasPermission` takový zápis odmítá.
+
+### AppStore a doplňkové aplikace
+
+- `app` - ​​ve výchozím nastavení `true`. Hodnota `false` vyřadí tuto definici modulu z tvorby aplikací v `AppManager`, včetně jejích položek `componentN...`. Menu ani uživatelská práva tím nevypne. Používá se například při dalším `modinfo2.properties`, který přidává administrační obrazovku do již existujícího modulu.
+- `componentNNameKey` - ​​překladový klíč názvu doplňkové aplikace v editoru stránky.
+- `componentNLink` - ​​odkaz na editor doplňkové aplikace, předaný jako akce při výběru aplikace. V `appstore.jsp` se cesta začínající `/` otevře přímo; při jednoduchém názvu se sestaví `/components/NAZOV/editor_component.jsp`. Při instalaci s názvem `cloud` má `AppManager` zvláštní zpracování starších cest obsahujících `cloud/`.
+- `componentNIcon` - ​​obrázek doplňkové aplikace, například `/components/example/editoricon.png`. `appstore.jsp` podporuje také celý zápis tříd Tabler ikony, například `ti ti-address-book`. Na rozdíl od `icon` se zde prefix automaticky nedoplňuje. Atribut je při načtení volitelný, pro vykreslení karty jej však vyplňte; existence souboru se u této větve registrace nekontroluje.
+
+Pro `componentN...` použijte čísla **1 až 14**, opět is mezerami v číslování. Záznam vznikne pouze u neprázdných `componentNNameKey` a `componentNLink`. Tyto položky vytvářejí další aplikace pro vkládání do stránky, ne další odkazy v administračním menu. Právo nadřazeného modulu převezmou pouze u `userItem=true` ; jinak obdrží prázdný identifikátor práva.
+
+Pro běžnou JSP aplikaci `AppManager` hledá ve složce modulu `editor_component.jsp` a `editoricon.png`, případně `editoricon.gif`. Základní karta vyžaduje editor a alespoň jeden z těchto obrázků. Pokud editor existuje, ale chybí oba obrázky, přeskočí se celý modul včetně jeho položek `componentN...`. Její název vychází z automatického `nameKey`, ne z `leftMenuNameKey`. Seznam se doplňuje také ze zákaznických složek a anotací `@WebjetAppStore`, které mají vlastní nastavení; samotné `app=true` proto není úplnou definicí karty a `app=false` nevypíná samostatnou registraci přes anotaci.
+
+#### AppStore a filtrování podle domény
+
+`appstore.jsp` získává seznam přes `AppManager.getAppsList(request, true)`. Seznam již respektuje práva přihlášeného uživatele a vynechává aplikace označené `hideInAppstore`. Doménu filtruje až JSP, protože společný seznam aplikací je uložen ve vyrovnávací paměti podle jazyka.
+
+Aktuální doména se získá přes `DocDB.getDomain(request)` a převede na malá písmena. Při neprázdném `domainName` se testuje, zda jeho hodnota **obsahuje aktuální doménu jako podřetězec**. Stejný způsob porovnávání používá `Modules.filterDomain()` pro administrační menu. Hodnoty proto zapisujte malými písmeny, bez protokolu a cesty. Čárka slouží pouze jako praktický oddělovač: filtr nerozděluje hodnotu na přesné názvy domén a nepodporuje masky ani regulární výrazy. Například `domainName=www.example.sk` vyhoví i aktuální doméně `example.sk`, protože ji obsahuje.
+
+Při tvorbě základní JSP aplikace se `domainName` přenese z modulu do `AppBean`. U doplňkových položek `componentN...` se **nepřenáší**, takže u nich nelze očekávat filtrování podle rodičovského `domainName`. Omezení zobrazení zároveň nenahrazuje kontrolu oprávnění ani oddělení dat podle domén.
+
+Anotace `@WebjetAppStore` se stejnou neprázdnou `itemKey` a stejnou variantou může nahradit již vytvořenou kartu. Nová karta použije `domainName` z anotace; omezení ze souboru `modinfo.properties` nepřebírá. Pokud tedy aplikace používá anotaci, nastavte požadované domény iv ní.
+
+`appstore.jsp` navíc vynechává položky s názvy `components.user.title` a `components.form.title`. Zvýrazněné aplikace vybírá konfigurační proměnná `appstorePromo`. Tato pravidla nejsou atributy souboru `modinfo.properties`.
+
+### Zákaznické a starší příznaky
+
+- `isCustom` - ​​označení zákaznického modulu, ve výchozím nastavení `false`. V aktuálním `MenuService` se příznak nepřenáší do položky menu a `AppManager` jej z `ModuleInfo` nekopíruje do aplikace. Samotné nastavení proto nemění pořadí ani zařazení mezi zákaznické aplikace v těchto rozhraních.
+- `custom` - ​​alias pro `isCustom`, použitý pouze tehdy, když `isCustom` chybí nebo je prázdné. Například `isCustom=false` má přednost před `custom=true`. V běžném souboru stačí použít jeden z těchto atributů.
+- `showSubcategories` - ​​starší příznak určený pro výběr skupin nebo kategorií v právech modulu, ve výchozím nastavení `false`. `Modules` jej stále načítá, ale aktuální menu a strom práv WebJET 9 jej nepoužívají. Nezapíná zobrazení položek `leftSubmenuN...`. Název atributu obsahuje malé `c` v části `categories`.
+- `hideSubmenu` - ​​ve výchozím nastavení `false`. Skrytí podpoložek používá starý soubor `admin/skins/webjet8/layout_sidebar.jsp` ; aktuální menu WebJET 9 tento příznak nevyhodnocuje. K vytvoření samostatného práva bez navigačního odkazu použijte `leftSubmenuNLink=javascript:void();`.
+- `#encoding=utf-8` - ​​direktiva `IwayProperties` pro kódování souboru. Není to atribut modulu, navzdory úvodnímu `#` má na načtení souboru vliv.
+
+### Speciality ve stávajících souborech
+
+- `components/file_archiv/modinfo.properties` definuje i práva bez odkazu v menu pomocí `javascript:void();`, například `menuFileArchivExportFiles`.
+- `components/adminlog/modinfo.properties` používá kombinaci práv `cmp_adminlog&menuWebpages` ; `components/stat/modinfo.properties` používá `users.edit_admins|users.edit_public_users`.
+
+Vlastnosti objektu `ModuleInfo` nejsou automaticky platnými atributy souboru. `Modules` ze souboru nečte například `nameKey`, `path`, `wjVersions`, `showInLeftMenu` ani `hideInAppstore`. Cestu a základní překladový klíč odvozuje ze složky, zobrazování v menu zapíná přes `leftMenuLink`.

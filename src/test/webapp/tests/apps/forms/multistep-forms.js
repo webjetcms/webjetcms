@@ -1376,9 +1376,7 @@ Scenario("check special form options usage @screenshot", async ({ I, DT, DTE, Ap
         <label for="country-autocomplete-autotest-1">Country autocomplete autotest</label><span class="form-control emailInput-text">CZ</span>
         </div><div class="form-group mb-3">
         <label class="form-label" for="upload-cv-autotest-1-dropzone">Upload CV autotest</label>
-        <div class="form-text mb-2">
-        Please use a PDF file - autotest
-        </div><span class="form-control emailInput-text">archive_file_test.pdf</span>
+        <div class="form-text mb-2">Please use a PDF file - autotest</div><span class="form-control emailInput-text">archive_file_test.pdf</span>
         </div></div>
         <hr><div class="form-step mt-3"><div class="step-header"><p>autotest confirmation</p></div></div>
     `;

@@ -38,7 +38,7 @@ function closeDialog(I) {
     I.waitForDetached(dialog, 10);
 }
 
-Scenario('Overview, catalogue and widget settings @current', async ({ I, Document }) => {
+Scenario('Overview, catalogue and widget settings', async ({ I, Document }) => {
     Document.screenshot('/redactor/admin/dashboard.png');
 
     showOverview(I);
