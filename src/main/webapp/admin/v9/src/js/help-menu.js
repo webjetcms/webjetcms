@@ -35,6 +35,14 @@ export async function copySystemInfo(value) {
     }
 }
 
+/** Adds the administration domain, full page address and browser to the installation diagnostics. */
+export function getSystemInfo() {
+    const { hostname, origin, pathname, search, hash } = window.location;
+    const cmsDomain = hostname.toLowerCase() === window.adminHelpContext.currentDomain.toLowerCase()
+        ? '' : `\n${text('cmsDomain')}: ${origin}`;
+    return `${window.adminHelpContext.systemInfo}${cmsDomain}\n${text('pagePath')}: ${pathname}${search}${hash}\n${text('browser')}: ${window.adminHelpContext.browser}`;
+}
+
 /** Installs the header menu without loading dashboard data or creating another feedback dialog. */
 export function initHelpMenu() {
     const trigger = document.querySelector('#admin-help-toggle');
@@ -76,11 +84,37 @@ export function initHelpMenu() {
         trigger.focus({ preventScroll: true });
         WJ.showFeedbackDialog({ onBack: () => { dropdown.show(); feedback.focus({ preventScroll: true }); } });
     });
-    panel.querySelector('.md-help-menu__copy').addEventListener('click', async event => {
+    const copy = panel.querySelector('.md-help-menu__copy');
+    const icon = copy.querySelector('.ti');
+    const copyStatus = panel.querySelector('.md-help-menu__copy-status');
+    WJ.initTooltip($(copy));
+    const tooltip = bootstrap.Tooltip.getOrCreateInstance(copy);
+    let copyTimeout;
+    const copyLabel = text('copy');
+    const setCopyLabel = label => {
+        copy.setAttribute('aria-label', label);
+        copy.setAttribute('data-bs-original-title', label);
+        tooltip.setContent({ '.tooltip-inner': label });
+    };
+    trigger.addEventListener('hide.bs.dropdown', () => tooltip.hide());
+    copy.addEventListener('keydown', event => {
+        if (event.key === 'Escape') tooltip.hide();
+    });
+    copy.addEventListener('click', async event => {
         event.stopPropagation();
         try {
-            await copySystemInfo(`WebJET CMS ${window.adminHelpContext.version}`);
-            WJ.notifySuccess(text('copied'), '', 5000);
+            await copySystemInfo(getSystemInfo());
+            window.clearTimeout(copyTimeout);
+            copy.classList.add('is-copied');
+            icon.classList.replace('ti-copy', 'ti-check');
+            setCopyLabel(text('copied'));
+            copyStatus.textContent = text('copied');
+            copyTimeout = window.setTimeout(() => {
+                copy.classList.remove('is-copied');
+                icon.classList.replace('ti-check', 'ti-copy');
+                setCopyLabel(copyLabel);
+                copyStatus.textContent = '';
+            }, 2000);
         } catch (error) {
             WJ.notifyError(text('copyError'));
         }

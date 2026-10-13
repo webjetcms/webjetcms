@@ -28,6 +28,8 @@
 
 ### Přihlašování a ochrana účtu
 
+- [Uživatelské menu v hlavičce](redactor/admin/README.md#uživatelské-menu) zobrazuje údaje účtu, počet aktivních relací a stav dvoustupňového ověřování. Položka **Aktivní přihlášení** otevře správu vlastních přihlášení z kterékoliv stránky administrace. Dokumentace obsahuje aktuální screenshot a popis všech položek menu (#351).
+
 - WebJET CMS nově [eviduje prohlížeče, ze kterých se přihlašujete](redactor/admin/logon.md#přihlášení-z-nového-zařízení). Přihlášení z nového prohlížeče zobrazí upozornění na úvodní obrazovce a odešle email, abyste mohli rozpoznat cizí přihlášení do svého účtu. Vlastní zařízení potvrdíte emailovým odkazem nebo jednorázovým kódem přes **Byl jsem to já** (#340).
 
 ![Přehled zařízení účtu na kartě Moje zařízení](redactor/admin/device-my-devices.png)
@@ -211,6 +213,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 - Přidáno zobrazení seznamu skupin šablon (#58525).
 - V řídící doméně je možné upravovat všechna přesměrování domén.
 - V řídicí doméně přidána možnost zobrazit všechny soubory.
+- GDPR - opraveno přidávání a úprava cookies v ostatních doménách bez oprávnění k úpravě všech překladových klíčů. Poskytovatel, účel a platnost se ukládají a zobrazují pro aktuální doménu (#344).
 
 ### Jiné menší změny
 

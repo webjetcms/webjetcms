@@ -17,6 +17,7 @@ import { showFeedbackDialog } from '../feedback';
  * @property {boolean} [data.securityEventRequested=false] - Whether an email link requested a login detail.
  * @property {Object|null} [data.requestedSecurityEvent] - Owned login detail, or null when unavailable.
  * @property {Object} data.currentSessions - Current user sessions, updated after a successful logout.
+ * @property {boolean} [data.clusterMode=false] - Whether session rows display their cluster node names.
  * @property {string} [data.userName=""] - Current user's display name.
  * @property {number} data.statRootGroupId - Active domain root folder passed to the shared statistics API.
  * @property {string} [data.currentDomain=""] - Active domain's display name.
@@ -86,6 +87,7 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
 
     /**
      * Rebuilds the dashboard shell and its independently loaded widgets.
+     * Consumes activeSessions=true or devices to open the requested personal tab unless a security event was requested.
      *
      * Emits a bubbling, non-cancelable `webjet-component-ready` event without detail
      * after the dashboard is rendered.
@@ -107,6 +109,13 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
         this.dashboardController = new DashboardController(widgets, context);
         this._renderNotices();
         this.dashboardReady = this.dashboardController.start();
+        const sessionsUrl = new URL(window.location.href);
+        const sessionsTab = sessionsUrl.searchParams.get('activeSessions');
+        const sessionsRequested = sessionsTab === 'true' || sessionsTab === 'devices';
+        if (sessionsRequested) {
+            sessionsUrl.searchParams.delete('activeSessions');
+            window.history.replaceState(window.history.state, '', sessionsUrl.pathname + sessionsUrl.search + sessionsUrl.hash);
+        }
         if (this.data.securityEventRequested && !this.securityEventOpened) {
             this.securityEventOpened = true;
             const url = new URL(window.location.href);
@@ -137,6 +146,10 @@ export class WebjetOverviewDashboardElement extends HTMLElement {
                 window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
                 showDeviceSecurity(sessionContext, securityEvent);
             }
+        }
+        if (sessionsRequested && !this.data.securityEventRequested) {
+            document.getElementById('dropdownMenuUser')?.focus({ preventScroll: true });
+            showActiveSessions(this.dashboardController._widgetContext(), { tab: sessionsTab === 'devices' ? 'devices' : 'mine' });
         }
         this.dataset.ready = "true";
         this.dispatchEvent(new CustomEvent("webjet-component-ready", { bubbles: true }));

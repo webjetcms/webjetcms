@@ -51,12 +51,16 @@ script(data-th-inline="javascript").
         documentationBaseUrl: /*[[${layout.documentationBaseUrl}]]*/ "",
         announcement: /*[[\#{admin.overview.changelog}]]*/ "",
         supportUrl: /*[[\#{welcome.info_url}]]*/ "",
-        version: /*[[${layout.version}]]*/ ""
+        version: /*[[${layout.version}]]*/ "",
+        systemInfo: /*[[${layout.systemInfo.summary}]]*/ "",
+        currentDomain: /*[[${layout.header.currentDomain}]]*/ "",
+        browser: /*[[${layout.systemInfo.browser}]]*/ ""
     };
     window.adminSearchContext = {
         menu: /*[[${layout.menu}]]*/ [],
         currentDomain: /*[[${layout.header.currentDomain}]]*/ "",
-        documentationSearchUrl: /*[[${layout.getConstant('adminDocumentationSearchUrl')}]]*/ ""
+        documentationSearchUrl: /*[[${layout.getConstant('adminDocumentationSearchUrl')}]]*/ "",
+        documentationAlwaysSearch: /*[[${layout.getConstantBoolean('adminDocumentationAlwaysSearch')}]]*/ false
     };
 
 script(src="/admin/scripts/login-location.js" data-th-if="${layout.loginLocationUrl != null}" data-th-attr="data-lookup-url=${layout.loginLocationUrl},data-csrf=${layout.csrfToken}" data-save-url="/admin/rest/security/login-location")

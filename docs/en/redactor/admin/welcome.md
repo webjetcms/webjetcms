@@ -209,6 +209,8 @@ Displays a graph and numerical values ​​of the server's CPU load. The admini
 
 ## Logins
 
+You can open the **Active Logins** window from any administration page via the [user menu in the header](README.md#user-menu): click on your name and select **Active Logins**. You will be taken to the home page, where the **My Logins** tab will open.
+
 If you have multiple active sessions, you will find a link in the system notifications to **Active Logins**. You can also add the list as a **My Active Logins** widget. The list of other logged in administrators is a separate widget **Logged in Admins**, available according to permissions.
 
 ### My active logins
@@ -220,6 +222,8 @@ A separate widget in the personal overview will display information that you are
 Clicking on the widget title with an arrow will open the **Active Logins** window in the **My Logins** tab. In addition to your own sessions, it offers management of your devices, login history for the last 30 days, and, depending on your permissions, logged in administrators. The **Change Password** button at the bottom of the window will open your profile to change your password. The information icon next to the button will display instructions for changing the password for a corporate account.
 
 The **My Logins** tab only shows active sessions. A single browser can have multiple sessions. For each session, you see the browser with its version, below it the operating system with its version, and the login date. The current session has the label **This Login** next to the browser name; for others, you can use the action **Log Out**.
+
+If WebJET CMS is running in cluster mode, in the **My Logins** tab, **Server server name** is displayed under the IP address. This is the name of the cluster server (node) on which the given login is active. Individual logins can be on different cluster servers. This information is not displayed outside of cluster mode.
 
 ![](sessions.png)
 

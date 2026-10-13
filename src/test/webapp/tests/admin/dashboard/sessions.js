@@ -58,6 +58,11 @@ Scenario('Real sessions and personal login history are available from the person
     I.see(`${current.browserName} ${current.browserVersion.replace(/\.0$/, '')}`, `${modal} .md-dashboard-sessions__mine .md-dashboard-sessions__device-name`);
     const system = [current.operatingSystem, current.operatingSystemVersion].filter(value => value && !/^unknown$/i.test(value)).join(' ');
     I.see(system, `${modal} .md-dashboard-sessions__mine .md-dashboard-sessions__system`);
+    const currentNode = bootstrap.currentSessions.userSessions.find(cluster => cluster.userSessions.some(session => session.sessionId === current.sessionId)).cluster;
+    const locationDetails = await I.grabTextFrom(`${modal} .md-dashboard-sessions__mine tbody tr:first-child .md-dashboard-sessions__ip`);
+    if (bootstrap.clusterMode && currentNode) I.assertContain(locationDetails, `Server ${currentNode}`, 'Cluster sessions must identify their source node below the IP.');
+    else I.assertEqual(await I.grabNumberOfVisibleElements(`${modal} .md-dashboard-sessions__mine tbody tr:first-child .md-dashboard-sessions__ip small`), 1);
+    I.saveScreenshot('dashboard-session-node.png');
     I.assertTrue(!Object.hasOwn(bootstrap, 'loggedAdmins'), 'Administrator summaries must not be injected into the page.');
     const administrators = await I.executeScript(async () => {
         const response = await fetch('/admin/rest/sessions/administrators', { headers: { 'X-CSRF-Token': window.csrfToken } });

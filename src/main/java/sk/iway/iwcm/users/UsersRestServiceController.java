@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
-import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticator;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorKey;
 import sk.iway.iwcm.system.googleauth.GoogleAuthenticatorQRGenerator;
@@ -56,8 +55,7 @@ public class UsersRestServiceController {
     public String getGauth( HttpServletRequest request )
     {
         UserDetails user = UsersDB.getCurrentUser(request.getSession());
-        String currentCode = new SimpleQuery().forString("SELECT mobile_device FROM users WHERE user_id = ?", user.getUserId());
-        if (Tools.isNotEmpty(currentCode)) return "true";
+        if (Tools.isNotEmpty(userDetailsRepository.getMobileDeviceByUserId((long) user.getUserId()))) return "true";
         return "";
     }
 

@@ -1068,13 +1068,16 @@ test('Email login details open once from the authenticated bootstrap, including 
         context.registerDashboardWidgets = () => {};
         context.getDashboardDefaults = () => [];
         const opened = [];
+        let sessionsOpened = 0;
+        context.showActiveSessions = () => sessionsOpened++;
         context.showDeviceSecurity = (widgetContext, securityEvent, report) => { assert.equal(report, undefined); opened.push(securityEvent); };
-        window.history.replaceState({ autotest: true }, '', '/admin/v9/?securityEvent=42&keep=autotest#overview');
+        window.history.replaceState({ autotest: true }, '', '/admin/v9/?securityEvent=42&activeSessions=true&keep=autotest#overview');
         overview.configure({ data: { notices: [], settings: { configured: true, items: [] }, securityEventRequested: true, requestedSecurityEvent: event } });
         overview.render();
         await overview.dashboardReady;
         assert.equal(opened.length, 1);
         assert.equal(opened[0], event);
+        assert.equal(sessionsOpened, 0, 'The requested security detail takes priority over the ordinary sessions dialog.');
         assert.equal(window.location.search, '?keep=autotest', 'Opening the detail must consume its URL parameter so reloading cannot reopen it.');
         assert.equal(window.location.hash, '#overview');
         assert.deepEqual(window.history.state, { autotest: true });
@@ -1082,6 +1085,87 @@ test('Email login details open once from the authenticated bootstrap, including 
         await overview.dashboardReady;
         assert.equal(opened.length, 1, 'Dashboard rerenders must not reopen the dismissed dialog.');
         assert.equal(requests.length, 0, 'Opening an email link must not mutate account data.');
+        overview.disconnectedCallback();
+    }
+});
+
+test('The user menu link opens sessions once and restores focus after dashboard navigation', async t => {
+    const { context, overview, requests, window } = overviewFixture(t);
+    context.registerDashboardWidgets = () => {};
+    context.getDashboardDefaults = () => [];
+    const trigger = window.document.createElement('button');
+    trigger.id = 'dropdownMenuUser';
+    window.document.body.append(trigger);
+    const dialogs = [];
+    context.showActiveSessions = widgetContext => {
+        assert.equal(window.document.activeElement, trigger, 'The new page must supply a connected focus restoration target.');
+        dialogs.push(widgetContext.dashboard.showDialog('Active sessions autotest'));
+    };
+    window.history.replaceState({ autotest: true }, '', '/admin/v9/?activeSessions=true&keep=autotest#overview');
+    overview.configure({ data: { notices: [], settings: { configured: true, items: [] } } });
+    t.after(() => overview.disconnectedCallback());
+    overview.render();
+    await overview.dashboardReady;
+
+    assert.equal(dialogs.length, 1);
+    assert.equal(window.location.search, '?keep=autotest');
+    assert.equal(window.location.hash, '#overview');
+    assert.deepEqual(window.history.state, { autotest: true });
+    dialogs[0].root.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    assert.equal(window.document.activeElement, trigger, 'Closing sessions must restore focus to the user menu trigger.');
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+
+    overview.render();
+    await overview.dashboardReady;
+    assert.equal(dialogs.length, 1, 'Rerendering must not reopen the consumed sessions request.');
+    assert.equal(requests.length, 0, 'Opening the sessions link must not issue dashboard settings requests.');
+});
+
+test('The review link selects devices once and consumes its navigation parameter', async t => {
+    const { context, overview, requests, window } = overviewFixture(t);
+    context.registerDashboardWidgets = () => {};
+    context.getDashboardDefaults = () => [];
+    const trigger = window.document.createElement('button');
+    trigger.id = 'dropdownMenuUser';
+    window.document.body.append(trigger);
+    const dialogs = [];
+    context.showActiveSessions = (widgetContext, options) => {
+        assert.equal(options.tab, 'devices');
+        assert.equal(window.document.activeElement, trigger, 'The new page must supply a connected focus restoration target.');
+        dialogs.push(widgetContext.dashboard.showDialog('Active sessions autotest'));
+    };
+    window.history.replaceState({ autotest: true }, '', '/admin/v9/?activeSessions=devices&keep=autotest#overview');
+    overview.configure({ data: { notices: [], settings: { configured: true, items: [] } } });
+    t.after(() => overview.disconnectedCallback());
+    overview.render();
+    await overview.dashboardReady;
+
+    assert.equal(dialogs.length, 1);
+    assert.equal(window.location.search, '?keep=autotest');
+    assert.equal(window.location.hash, '#overview');
+    assert.deepEqual(window.history.state, { autotest: true });
+    dialogs[0].root.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    assert.equal(window.document.activeElement, trigger, 'Closing sessions must restore focus to the user menu trigger.');
+    assert.equal(window.document.querySelector('.md-dashboard-modal'), null);
+
+    overview.render();
+    await overview.dashboardReady;
+    assert.equal(dialogs.length, 1, 'Rerendering must not reopen the consumed sessions request.');
+    assert.equal(requests.length, 0, 'Opening the sessions link must not issue dashboard settings requests.');
+});
+
+test('Ordinary dashboard visits do not automatically open the sessions dialog', async t => {
+    for (const query of ['', '?activeSessions=false']) {
+        const { context, overview, window } = overviewFixture(t);
+        context.registerDashboardWidgets = () => {};
+        context.getDashboardDefaults = () => [];
+        let opened = 0;
+        context.showActiveSessions = () => opened++;
+        window.history.replaceState(null, '', `/admin/v9/${query}`);
+        overview.configure({ data: { notices: [], settings: { configured: true, items: [] } } });
+        overview.render();
+        await overview.dashboardReady;
+        assert.equal(opened, 0);
         overview.disconnectedCallback();
     }
 });

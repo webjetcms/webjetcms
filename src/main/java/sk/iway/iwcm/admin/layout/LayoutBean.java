@@ -10,7 +10,6 @@ import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.JsonTools;
 import sk.iway.iwcm.PageLng;
-import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.DocumentationTools;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
@@ -25,6 +24,7 @@ public class LayoutBean {
 
     private Identity user;
     private HeaderBean header;
+    private SystemInfo systemInfo;
     //brand: cms, net, lms
     private String brand;
     //plna verzia WebJETu: Web JET admin verzia 8.7.979 18.03.2020 13:06:59 Enterprise
@@ -55,8 +55,7 @@ public class LayoutBean {
     }
 
     public String getProductServer() {
-        String server = System.getProperty("iway.tomcat");
-        return Tools.isNotEmpty(server) ? server : Constants.getString("clusterMyNodeName");
+        return SystemInfo.getServer(user);
     }
 
     public String getConstant(String name)

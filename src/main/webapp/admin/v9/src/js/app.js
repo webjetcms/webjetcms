@@ -161,6 +161,8 @@ import { getReleaseNews } from './release-news';
 WJ.getReleaseNews = getReleaseNews;
 import { initHelpMenu } from './help-menu';
 WJ.initHelpMenu = initHelpMenu;
+import { initUserMenu } from './user-menu';
+WJ.initUserMenu = initUserMenu;
 import './web-components/webjet-overview-dashboard';
 import './web-components/webjet-server-monitoring';
 import './web-components/webjet-image-area-selector';
