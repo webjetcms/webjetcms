@@ -3,6 +3,8 @@ package sk.iway.iwcm.components.ai.stat.rest;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -51,6 +53,32 @@ import sk.iway.iwcm.utils.Pair;
 public class AiStatService {
 
     private static final int PIE_CHART_TOP_N = 5;
+
+    /**
+     * Totals an assistant's tokens by server-local day for the last 14 days,
+     * including today and days without usage, in the current domain.
+     *
+     * @param assistantId assistant whose usage is requested
+     * @param statRepo statistics repository
+     * @return daily totals in chronological order, keyed by the server-local start of day in epoch milliseconds
+     */
+    public static Map<Long, Long> getAssistantDailyTokens(Long assistantId, AiStatRepository statRepo) {
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDate today = LocalDate.now(zone);
+        LocalDate firstDay = today.minusDays(13);
+        Map<Long, Long> totals = new LinkedHashMap<>();
+        for (LocalDate day = firstDay; !day.isAfter(today); day = day.plusDays(1)) {
+            totals.put(day.atStartOfDay(zone).toInstant().toEpochMilli(), 0L);
+        }
+
+        Date from = Date.from(firstDay.atStartOfDay(zone).toInstant());
+        Date to = Date.from(today.plusDays(1).atStartOfDay(zone).toInstant());
+        for (AiStatEntity stat : statRepo.findAllByAssistantIdAndDomainIdAndCreatedGreaterThanEqualAndCreatedLessThan(assistantId, CloudToolsForCore.getDomainId(), from, to)) {
+            LocalDate day = stat.getCreated().toInstant().atZone(zone).toLocalDate();
+            totals.merge(day.atStartOfDay(zone).toInstant().toEpochMilli(), stat.getUsedTokens() == null ? 0L : stat.getUsedTokens().longValue(), Long::sum);
+        }
+        return totals;
+    }
 
     public static final void addRecord(Long assistantId, Integer usedTokens, AiStatRepository statRepo, HttpServletRequest request) {
         addRecord(assistantId, usedTokens, statRepo, request, CloudToolsForCore.getDomainId());

@@ -26,6 +26,8 @@ import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEditorFields;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.jpa.SupportedActions;
+import sk.iway.iwcm.components.ai.stat.jpa.AiStatRepository;
+import sk.iway.iwcm.components.ai.stat.rest.AiStatService;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
@@ -46,14 +48,16 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     private final AssistantDefinitionRepository repo;
     private final AiService aiService;
     private final AiAssistantsService aiAssistantsService;
+    private final AiStatRepository aiStatRepository;
     public static final String GROUPS_PREFIX = "components.ai_assistants.groups.";
 
     @Autowired
-    public AssistantDefinitionRestController(AssistantDefinitionRepository repo, AiService aiService, AiAssistantsService aiAssistantsService) {
+    public AssistantDefinitionRestController(AssistantDefinitionRepository repo, AiService aiService, AiAssistantsService aiAssistantsService, AiStatRepository aiStatRepository) {
         super(repo);
         this.repo = repo;
         this.aiService = aiService;
         this.aiAssistantsService = aiAssistantsService;
+        this.aiStatRepository = aiStatRepository;
     }
 
     @Override
@@ -205,6 +209,18 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @Override
     public void afterSave(AssistantDefinitionEntity entity, AssistantDefinitionEntity saved) {
         AiAssistantsService.clearCache();
+    }
+
+    /**
+     * Returns recent daily usage for an assistant belonging to the current domain.
+     *
+     * @param assistantId assistant being edited
+     * @return daily token totals keyed by epoch milliseconds, or an empty map when the assistant is unavailable
+     */
+    @GetMapping("/token-usage")
+    public Map<Long, Long> getTokenUsage(@RequestParam("assistantId") Long assistantId) {
+        if (repo.findFirstByIdAndDomainId(assistantId, CloudToolsForCore.getDomainId()).isEmpty()) return Map.of();
+        return AiStatService.getAssistantDailyTokens(assistantId, aiStatRepository);
     }
 
     @GetMapping("/autocomplete-class")

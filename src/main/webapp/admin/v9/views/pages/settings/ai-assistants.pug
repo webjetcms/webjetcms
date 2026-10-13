@@ -14,6 +14,8 @@ block content
 
         window.domReady.add(function () {
 
+            let tokenUsageChart;
+
             var tabs = [
                 {id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true},
                 {id: 'action', title: '[[\#{editor.form.action}]]'},
@@ -124,9 +126,17 @@ block content
 
                     eventsBinded = true;
                 }
+                clearTokenUsageChart();
+                if (action === "edit" && aiAssistantsDataTable.EDITOR.ids().length === 1) {
+                    $("#tokenUsageTemplate").contents().clone().insertAfter(aiAssistantsDataTable.EDITOR.field("tokenLimit").node());
+                }
                 updateTokenLimitsVisibility();
                 initInstructionsEnhancements();
             });
+
+            aiAssistantsDataTable.EDITOR.on("opened", loadTokenUsageChart);
+            aiAssistantsDataTable.EDITOR.on("close", clearTokenUsageChart);
+            $(document).on("shown.bs.tab", "#pills-dt-datatableInit-tokenLimits-tab", loadTokenUsageChart);
 
             function updateTokenLimitsVisibility() {
                 var enabled = $("#DTE_Field_useTokenLimits_0").is(":checked");
@@ -140,6 +150,63 @@ block content
                     editor.field("tokenLimit").error("");
                 }
                 $("#DTE_Field_tokenLimit").prop("required", enabled);
+                $("#tokenUsagePanel").toggleClass("d-none", !enabled);
+                if (enabled) loadTokenUsageChart();
+            }
+
+            function clearTokenUsageChart() {
+                if ($("#tokenUsagePanel").data("loading")) WJ.hideLoader();
+                if (tokenUsageChart) ChartTools.destroyChart(tokenUsageChart);
+                tokenUsageChart = null;
+                $("#tokenUsagePanel").remove();
+            }
+
+            async function loadTokenUsageChart() {
+                const panel = $("#tokenUsagePanel");
+                if (!panel.is(":visible") || tokenUsageChart || panel.data("loading")) return;
+                panel.data("loading", true);
+                const chartContainer = panel.find(".amcharts");
+                WJ.showLoader(null, "#tokenUsagePanel #graphsDiv");
+                try {
+                    const [, result] = await Promise.all([
+                        window.initAmcharts(),
+                        $.getJSON(url + "token-usage", {assistantId: aiAssistantsDataTable.EDITOR.currentJson.id})
+                    ]);
+                    if (!panel[0].isConnected) return;
+                    const chartData = Object.entries(result).map(([day, tokens]) => ({
+                        day: WJ.formatDate(Number(day)),
+                        tokens
+                    }));
+
+                    chartContainer.show();
+                    tokenUsageChart = new ChartTools.BarChartForm({
+                        yAxeName: "day",
+                        xAxeName: "tokens",
+                        chartTitle: '[[\#{components.ai_assistants.token_usage.title}]]',
+                        chartDivId: "ai-assistant-token-usage",
+                        chartData,
+                        horizontal: false,
+                        colorScheme: "set_red",
+                        colorByValue: true
+                    });
+
+                    await ChartTools.createAmchart(tokenUsageChart, true);
+                    const chart = tokenUsageChart.chart;
+                    chart.xAxes.getIndex(0).get("renderer").set("minGridDistance", 90);
+                    chart.yAxes.getIndex(0).set("maxPrecision", 0);
+                    chart.series.getIndex(0).columns.template.setAll({
+                        focusable: true,
+                        ariaLabel: "{day}: {tokens} [[\#{components.ai_assistants.stats.used_tokens}]]"
+                    });
+                } catch {
+                    if (!panel[0].isConnected) return;
+                    if (tokenUsageChart) ChartTools.destroyChart(tokenUsageChart);
+                    tokenUsageChart = null;
+                    chartContainer.hide();
+                } finally {
+                    panel.data("loading", false);
+                    if (panel[0].isConnected) WJ.hideLoader();
+                }
             }
 
             function initInstructionsEnhancements() {
@@ -215,6 +282,8 @@ block content
         });
 
     style.
+        .pg-ai-token-usage div.amcharts { isolation: isolate; }
+
         div.DTE_Field_Name_instructions label { display: none; }
         div.DTE_Field_Name_instructions .md-textarea-editor { height: 502px; }
         .DTE .DTE_Field .instructions-editor-wrapped > textarea { white-space: break-spaces; overflow-wrap: normal; }
@@ -245,5 +314,10 @@ block content
     div#tokenResetInfo.alert.alert-info.mb-3.mt-3.d-none(role="status")
         i.ti.ti-info-circle.me-2(aria-hidden="true")
         span
+
+    template#tokenUsageTemplate
+        section#tokenUsagePanel.pg-ai-token-usage.mt-3.mx-3.d-none
+            div#graphsDiv.hide-while-loading
+                div#ai-assistant-token-usage.amcharts
 
     table.datatableInit.table
