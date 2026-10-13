@@ -1,5 +1,7 @@
 package sk.iway.iwcm.admin.layout;
 
+import java.util.List;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.CacheControl;
@@ -30,7 +32,7 @@ public class UserMenuRestController {
     }
 
     /**
-     * Uses the same cluster records and device page totals as the personal sessions dialog.
+     * Uses the same cluster records and outstanding device notices as the dashboard.
      *
      * @param request request identifying the signed-in administrator
      * @return uncached counts and second-factor status without session IDs or credentials
@@ -46,16 +48,17 @@ public class UserMenuRestController {
         }
         boolean twoFactorEnabled = Constants.getBoolean("2factorAuthEnabled")
             && Tools.isNotEmpty(userDetailsRepository.getMobileDeviceByUserId((long) user.getUserId()));
-        Long deviceCount = null;
-        int newLoginCount = 0;
-        if (Constants.getBoolean("adminNewDeviceDetectionEnabled")) {
-            deviceCount = deviceService.getDevices(user, 0).getTotalElements();
-            newLoginCount = deviceService.getActiveEvents(user).size();
-        }
+        List<LoginNotice> newLogins = !Constants.getBoolean("adminNewDeviceDetectionEnabled") ? List.of() : deviceService.getActiveEvents(user).stream()
+            .map(device -> new LoginNotice(device.getBrowserName(), device.getBrowserVersion(), device.getOperatingSystem(),
+                device.getLocation(), device.getLastSeen().toEpochMilli()))
+            .toList();
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
-            .body(new Status(sessionCount, deviceCount, twoFactorEnabled, newLoginCount));
+            .body(new Status(sessionCount, twoFactorEnabled, newLogins));
     }
 
-    /** Account summary; device count is absent when browser recognition is disabled. */
-    public record Status(int sessionCount, Long deviceCount, boolean twoFactorEnabled, int newLoginCount) { }
+    /** Account summary containing only display data for outstanding login notices. */
+    public record Status(int sessionCount, boolean twoFactorEnabled, List<LoginNotice> newLogins) { }
+
+    /** Latest successful login details, excluding recognition and verification secrets. */
+    public record LoginNotice(String browserName, String browserVersion, String operatingSystem, String location, long lastSeen) { }
 }

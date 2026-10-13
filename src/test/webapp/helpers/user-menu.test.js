@@ -7,6 +7,10 @@ const pug = require('pug');
 const { JSDOM } = require('jsdom');
 
 const root = path.resolve(__dirname, '../../../main/webapp/admin/v9');
+const notices = [
+    { browserName: 'Firefox', browserVersion: '131.0', operatingSystem: 'Windows 11', location: 'Košice, SK', lastSeen: Date.now() },
+    { browserName: '<img src=x onerror=alert(1)>', browserVersion: '', operatingSystem: '', location: null, lastSeen: Date.now() }
+];
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 /** Runs the production menu against the real template with only popup and HTTP boundaries mocked. */
@@ -21,7 +25,7 @@ function fixture(t, { withTwoFactor = true } = {}) {
     const badge = panel.querySelector('.md-user-menu__two-factor-badge');
     if (!withTwoFactor) action.parentElement.remove();
     const calls = [], requests = [];
-    let response = { ok: true, json: async () => ({ sessionCount: 3, deviceCount: 25, twoFactorEnabled: true, newLoginCount: 2 }) };
+    let response = { ok: true, json: async () => ({ sessionCount: 3, twoFactorEnabled: true, newLogins: notices }) };
     let fail = false;
     const dropdown = { hide: () => trigger.dispatchEvent(new window.Event('hide.bs.dropdown')) };
     const scope = vm.createContext({
@@ -54,8 +58,14 @@ test('Rendering makes no requests; each opening refreshes all account data', asy
     assert.deepEqual(view.requests, ['/admin/rest/user-menu']);
     assert.equal(view.badge.dataset.enabled, 'true');
     assert.equal(view.panel.querySelector('.md-user-menu__session-count').textContent, '3');
-    assert.equal(view.panel.querySelector('.md-user-menu__session-hint').textContent, 'admin.userMenu.devices.js:25');
-    assert.equal(view.panel.querySelector('.md-user-menu__new-logins').textContent, 'admin.userMenu.newLogins.js:2');
+    assert.equal(view.panel.querySelector('.md-user-menu__session-hint').textContent, 'admin.userMenu.otherSessions.few.js:2 · admin.userMenu.newCount.few.js:2');
+    assert.equal(view.panel.querySelector('.md-user-menu__notice-container').hidden, false);
+    const rows = view.panel.querySelectorAll('.md-user-menu__notice-list li');
+    assert.equal(rows.length, 2);
+    assert.match(rows[0].textContent, /Firefox 131 · Windows 11 · Košice, SK · admin.userMenu.today.js:/);
+    assert.match(rows[1].textContent, /<img src=x onerror=alert\(1\)>/);
+    assert.equal(view.panel.querySelector('img'), null);
+    assert.equal(view.panel.querySelector('.md-user-menu__review').getAttribute('href'), '/admin/v9/?activeSessions=devices');
     view.open();
     await tick();
     assert.equal(view.requests.length, 2);
@@ -74,12 +84,12 @@ test('Slow requests leave empty placeholders and do not cancel opening or duplic
     assert.equal(view.badge.textContent, '');
     assert.equal(view.badge.classList.contains('is-disabled'), false);
     assert.equal(view.requests.length, 1);
-    resolve({ sessionCount: 2, deviceCount: null, twoFactorEnabled: false, newLoginCount: 0 });
+    resolve({ sessionCount: 2, twoFactorEnabled: false, newLogins: [] });
     await tick();
     assert.equal(view.panel.getAttribute('aria-busy'), 'false');
     assert.equal(view.badge.textContent, 'Disabled');
-    assert.equal(view.panel.querySelector('.md-user-menu__session-hint').textContent, 'admin.userMenu.sessionsHint.js:');
-    assert.equal(view.panel.querySelector('.md-user-menu__new-logins').textContent, '');
+    assert.equal(view.panel.querySelector('.md-user-menu__session-hint').textContent, 'admin.userMenu.otherSessions.one.js:1');
+    assert.equal(view.panel.querySelector('.md-user-menu__notice-container').hidden, true);
 });
 
 test('Settings popup keeps focus behavior and reopening reads the newly saved status', async t => {
@@ -90,10 +100,13 @@ test('Settings popup keeps focus behavior and reopening reads the newly saved st
     view.action.click();
     assert.deepEqual(view.calls, ['/admin/2factorauth.jsp']);
     assert.equal(view.window.document.activeElement, view.trigger);
-    view.respond({ ok: true, json: async () => ({ sessionCount: 1, deviceCount: 1, twoFactorEnabled: false, newLoginCount: 0 }) });
+    view.respond({ ok: true, json: async () => ({ sessionCount: 1, twoFactorEnabled: false, newLogins: [] }) });
     view.open();
     await tick();
     assert.equal(view.requests.length, 2);
+    assert.equal(view.panel.querySelector('.md-user-menu__session-hint').textContent, 'admin.userMenu.thisDevice.js:0');
+    assert.equal(view.panel.querySelector('.md-user-menu__notice-container').hidden, true);
+    assert.equal(view.panel.querySelector('.md-user-menu__notice-list').children.length, 0);
     assert.equal(view.badge.dataset.enabled, 'false');
     assert.equal(view.badge.classList.contains('is-enabled'), false);
     assert.equal(view.badge.classList.contains('is-disabled'), true);
@@ -129,7 +142,7 @@ test('HTTP errors and a login HTML response never imply disabled verification', 
     }
 });
 
-test('Installations without two-factor authentication still refresh session and device counts', async t => {
+test('Installations without two-factor authentication still refresh sessions and login notices', async t => {
     const view = fixture(t, { withTwoFactor: false });
     view.open();
     await tick();

@@ -11,6 +11,13 @@ div.dropdown.md-user-menu
                 small
                     span(data-th-text="${layout.user.login}") admin
                     span(data-th-if="${!#strings.isEmpty(layout.user.email)}" data-th-text="${' · ' + layout.user.email}")
+        li.md-user-menu__notice-container(hidden)
+            div.md-user-menu__notice
+                strong.md-user-menu__notice-title
+                    i.ti.ti-alert-triangle(aria-hidden="true")
+                    span(data-th-text="\#{admin.userMenu.newLoginTitle.js}") New login to your account
+                ul.md-user-menu__notice-list
+                a.dropdown-item.btn.btn-white.md-user-menu__review(href="/admin/v9/?activeSessions=devices" data-th-text="\#{admin.userMenu.review.js}") Review
         li: hr.dropdown-divider
         li
             button.dropdown-item.md-user-menu__profile(type="button" data-th-data-userid="${layout.user.userId}" data-th-data-onlyself="${!layout.hasPermission('users.edit_admins')}" onclick="window.openProfileDialog($(this).data('userid'), $(this).data('onlyself'))")
@@ -26,7 +33,6 @@ div.dropdown.md-user-menu
                 span.md-user-menu__content
                     span(data-th-text="\#{admin.dashboard.activeSessions.js}") Active sessions
                     small.md-user-menu__session-hint(aria-live="polite")
-                    small.md-user-menu__new-logins(aria-live="polite")
                 span.md-user-menu__badge.md-user-menu__session-count.is-loading(aria-live="polite")
         li(data-th-if="${layout.getConstantBoolean('2factorAuthEnabled')}")
             button.dropdown-item.md-user-menu__two-factor(type="button")

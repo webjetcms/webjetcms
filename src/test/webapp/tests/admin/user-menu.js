@@ -56,9 +56,9 @@ Scenario('User menu loads account data only when opened', async ({ I, Document }
     I.assertEqual(await I.executeScript(() => document.activeElement.id), 'dropdownMenuUser');
     I.pressKey('ArrowDown');
     I.waitForVisible(`${panel}.show`, 5);
-    I.assertTrue(await I.executeScript(() => document.activeElement.matches('.md-user-menu__profile')), 'ArrowDown must focus the profile action.');
+    I.assertTrue(await I.executeScript(() => document.activeElement.matches('.md-user-menu__profile')), 'Opening by keyboard must focus the profile before the notice loads.');
     I.pressKey('ArrowDown');
-    I.assertTrue(await I.executeScript(() => document.activeElement.matches('.md-user-menu__sessions')), 'ArrowDown must reach the sessions link without navigating.');
+    I.assertTrue(await I.executeScript(() => document.activeElement.matches('.md-user-menu__sessions')), 'Loading the notice must not move focus away from the profile.');
     closeMenu(I);
 
     for (const width of [1280, 375]) {
@@ -94,7 +94,10 @@ Scenario('Menu opens before its response and refreshes on every opening', async 
         reads++;
         await pending;
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
-            sessionCount: 4, deviceCount: 25, twoFactorEnabled: enabled, newLoginCount: 2
+            sessionCount: 4, twoFactorEnabled: enabled, newLogins: [
+                { browserName: 'Firefox', browserVersion: '131.0', operatingSystem: 'Windows 11', location: 'Košice, SK', lastSeen: Date.now() },
+                { browserName: 'Chrome', browserVersion: '130.0', operatingSystem: 'Linux', location: 'Bratislava, SK', lastSeen: Date.now() }
+            ]
         }) });
     });
     I.amOnPage('/admin/v9/search/');
@@ -105,8 +108,11 @@ Scenario('Menu opens before its response and refreshes on every opening', async 
     release();
     await I.waitForElement(`${badge}[data-enabled="true"]`, 10);
     I.see('4', '.md-user-menu__session-count');
-    I.see('25', '.md-user-menu__session-hint');
-    I.see('2', '.md-user-menu__new-logins');
+    I.see('3', '.md-user-menu__session-hint');
+    I.see('2', '.md-user-menu__session-hint');
+    I.see('Firefox 131 · Windows 11 · Košice, SK', '.md-user-menu__notice-list li:first-child');
+    I.see('Chrome 130 · Linux · Bratislava, SK', '.md-user-menu__notice-list li:last-child');
+    I.seeElement('.md-user-menu__review');
     I.assertEqual(reads, 1);
     closeMenu(I);
     enabled = false;
@@ -132,19 +138,16 @@ Scenario('Unavailable status leaves the menu usable and retries on reopening', a
     closeMenu(I);
 });
 
-Scenario('Menu counts match both personal dashboard tabs', async ({ I }) => {
+Scenario('Menu session count matches the personal dashboard tab', async ({ I }) => {
     I.amOnPage('/admin/v9/');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     openMenu(I);
     I.waitForElement(`${badge}[data-enabled]`, 10);
     const sessions = (await I.grabTextFrom('.md-user-menu__session-count')).trim();
-    const devices = (await I.grabTextFrom('.md-user-menu__session-hint')).match(/\d+/)?.[0];
     I.clickCss('.md-user-menu__sessions');
     const modal = '.md-dashboard-modal--sessions';
     I.waitForVisible(modal, 20);
     I.see(`(${sessions})`, `${modal} [role="tab"][id$="-mine"]`);
-    I.clickCss(`${modal} [role="tab"][id$="-devices"]`);
-    I.waitForText(`(${devices})`, 10, `${modal} [role="tab"][id$="-devices"]`);
     I.clickCss(`${modal} .modal-footer > button`);
     I.waitForInvisible(modal, 10);
 });
@@ -172,6 +175,29 @@ Scenario('Sessions link opens the personal dashboard tab and consumes the URL pa
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     I.dontSeeElement(modal);
     await I.stopMockingRoute(devicesRoute);
+});
+
+Scenario('Review link opens devices directly and consumes the navigation parameter', async ({ I }) => {
+    await I.mockRoute(statusRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+        sessionCount: 1, twoFactorEnabled: false, newLogins: [
+            { browserName: 'Firefox', browserVersion: '131', operatingSystem: 'Windows 11', location: 'Košice, SK', lastSeen: Date.now() }
+        ]
+    }) }));
+    I.amOnPage('/admin/v9/search/');
+    openMenu(I);
+    I.waitForVisible('.md-user-menu__review', 10);
+    I.clickCss('.md-user-menu__review');
+    const modal = '.md-dashboard-modal--sessions';
+    I.waitForVisible(modal, 20);
+    I.seeElement(`${modal} [role="tab"][id$="-devices"][aria-selected="true"]`);
+    I.seeElement(`${modal} .md-dashboard-sessions__devices`);
+    I.assertFalse(await I.executeScript(() => new URL(location.href).searchParams.has('activeSessions')));
+    I.clickCss(`${modal} .modal-footer > button`);
+    I.waitForInvisible(modal, 10);
+    I.refreshPage();
+    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    I.dontSeeElement(modal);
+    await I.stopMockingRoute(statusRoute);
 });
 
 Scenario('Profile and encryption-key actions keep their permission rules', async ({ I }) => {

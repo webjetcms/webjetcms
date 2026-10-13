@@ -1,3 +1,14 @@
+/** Formats a login using the administration language and the browser's local time zone. */
+function loginDescription(login, locale) {
+    const browser = [login.browserName, (login.browserVersion || '').replace(/\.0$/, '')].filter(Boolean).join(' ');
+    const timestamp = new Date(login.lastSeen);
+    const time = timestamp.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
+    const when = timestamp.toDateString() === new Date().toDateString()
+        ? WJ.translate('admin.userMenu.today.js', time)
+        : `${timestamp.toLocaleDateString(locale)} ${time}`;
+    return [browser, login.operatingSystem, login.location, when].filter(Boolean).join(' · ');
+}
+
 /** Refreshes account status on each opening without delaying the Bootstrap dropdown. */
 export function initUserMenu() {
     const trigger = document.querySelector('#dropdownMenuUser');
@@ -8,7 +19,10 @@ export function initUserMenu() {
     const badge = panel.querySelector('.md-user-menu__two-factor-badge');
     const sessions = panel.querySelector('.md-user-menu__session-count');
     const hint = panel.querySelector('.md-user-menu__session-hint');
-    const newLogins = panel.querySelector('.md-user-menu__new-logins');
+    const notice = panel.querySelector('.md-user-menu__notice-container');
+    const noticeList = panel.querySelector('.md-user-menu__notice-list');
+    const locale = (window.userLng === 'cz' ? 'cs' : window.userLng) || 'sk';
+    const plurals = new Intl.PluralRules(locale);
     const badges = [sessions, badge].filter(Boolean);
     let refreshing = false;
 
@@ -22,7 +36,8 @@ export function initUserMenu() {
         refreshing = true;
         panel.setAttribute('aria-busy', 'true');
         hint.textContent = '';
-        newLogins.textContent = '';
+        notice.hidden = true;
+        noticeList.replaceChildren();
         for (const item of badges) {
             item.textContent = '';
             item.classList.remove('is-enabled', 'is-disabled');
@@ -37,10 +52,18 @@ export function initUserMenu() {
             if (!response.ok) throw new Error('Account status unavailable');
             const status = await response.json();
             sessions.textContent = status.sessionCount;
-            hint.textContent = status.deviceCount == null
-                ? WJ.translate('admin.userMenu.sessionsHint.js')
-                : WJ.translate('admin.userMenu.devices.js', status.deviceCount);
-            if (status.newLoginCount > 0) newLogins.textContent = WJ.translate('admin.userMenu.newLogins.js', status.newLoginCount);
+            const others = Math.max(0, status.sessionCount - 1);
+            hint.textContent = WJ.translate(status.sessionCount === 0 ? 'admin.userMenu.sessionsHint.js' : others === 0
+                ? 'admin.userMenu.thisDevice.js' : `admin.userMenu.otherSessions.${plurals.select(others)}.js`, others);
+            if (status.newLogins.length > 0) {
+                hint.textContent += ` · ${WJ.translate(`admin.userMenu.newCount.${plurals.select(status.newLogins.length)}.js`, status.newLogins.length)}`;
+                for (const login of status.newLogins) {
+                    const item = document.createElement('li');
+                    item.textContent = loginDescription(login, locale);
+                    noticeList.append(item);
+                }
+                notice.hidden = false;
+            }
             if (badge) {
                 badge.dataset.enabled = String(status.twoFactorEnabled);
                 badge.classList.toggle('is-enabled', status.twoFactorEnabled);

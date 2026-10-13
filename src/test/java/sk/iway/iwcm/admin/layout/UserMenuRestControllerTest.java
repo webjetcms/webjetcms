@@ -4,11 +4,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
+import java.time.Instant;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -28,9 +27,9 @@ class UserMenuRestControllerTest {
     private final UserMenuRestController controller = new UserMenuRestController(repository, devices);
     private final MockHttpServletRequest request = new MockHttpServletRequest();
 
-    /** Remote-node sessions and device totals beyond the first page are included for the current account. */
+    /** Remote sessions and outstanding login descriptions are scoped to the account and exclude secrets. */
     @Test
-    void usesAllClusterNodesAndFullDevicePageTotal() throws Exception {
+    void usesAllClusterNodesAndSafeLoginNotices() throws Exception {
         Identity user = new Identity();
         user.setUserId(7);
         user.setAdmin(true);
@@ -40,8 +39,15 @@ class UserMenuRestControllerTest {
         nodes.addObject().put("cluster", "webjet1").putArray("userSessions").addObject().put("sessionId", "autotest-local");
         nodes.addObject().put("cluster", "webjet2b").putArray("userSessions").addObject().put("sessionId", "autotest-remote");
         when(repository.getMobileDeviceByUserId(7L)).thenReturn("autotest-secret");
-        when(devices.getDevices(user, 0)).thenReturn(new PageImpl<>(List.of(new DeviceEntity()), PageRequest.of(0, 20), 35));
-        when(devices.getActiveEvents(user)).thenReturn(List.of(new DeviceEntity()));
+        var device = new DeviceEntity();
+        device.setBrowserName("Firefox");
+        device.setBrowserVersion("131.0");
+        device.setOperatingSystem("Windows 11");
+        device.setLocation("Košice, SK");
+        device.setLastSeen(Instant.parse("2026-10-13T19:14:00Z"));
+        device.setTokenHash("autotest-token");
+        device.setCodeHash("autotest-code");
+        when(devices.getActiveEvents(user)).thenReturn(List.of(device, device));
         try (var users = mockStatic(UsersDB.class); var constants = mockStatic(Constants.class);
              var tools = mockStatic(Tools.class, CALLS_REAL_METHODS); var cluster = mockStatic(SessionClusterService.class)) {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
@@ -53,14 +59,17 @@ class UserMenuRestControllerTest {
             var status = response.getBody();
             assertEquals("no-store", response.getHeaders().getCacheControl());
             assertEquals(2, status.sessionCount());
-            assertEquals(35L, status.deviceCount());
             assertTrue(status.twoFactorEnabled());
-            assertEquals(1, status.newLoginCount());
+            assertEquals(2, status.newLogins().size());
+            assertEquals("Firefox", status.newLogins().get(0).browserName());
+            assertEquals(device.getLastSeen().toEpochMilli(), status.newLogins().get(0).lastSeen());
             var json = mapper.valueToTree(status);
-            assertEquals(4, json.size());
+            assertEquals(3, json.size());
+            assertEquals(5, json.path("newLogins").get(0).size());
             assertFalse(json.toString().contains("autotest"));
             verify(repository).getMobileDeviceByUserId(7L);
-            verify(devices).getDevices(user, 0);
+            verify(devices).getActiveEvents(user);
+            verifyNoMoreInteractions(devices);
             cluster.verify(() -> SessionClusterService.getUserSessionsAllNodes(7));
             cluster.verifyNoMoreInteractions();
 
@@ -69,7 +78,7 @@ class UserMenuRestControllerTest {
         }
     }
 
-    /** Disabled features have no storage lookups and do not present a misleading device count. */
+    /** Disabled features have no storage lookups and return no login notices. */
     @Test
     void skipsDisabledFeatures() {
         Identity user = new Identity();
@@ -80,8 +89,7 @@ class UserMenuRestControllerTest {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
             cluster.when(() -> SessionClusterService.getUserSessionsAllNodes(7)).thenReturn(new ObjectMapper().createArrayNode());
             var status = controller.status(request).getBody();
-            assertNull(status.deviceCount());
-            assertEquals(0, status.newLoginCount());
+            assertTrue(status.newLogins().isEmpty());
             verifyNoInteractions(repository, devices);
         }
     }
