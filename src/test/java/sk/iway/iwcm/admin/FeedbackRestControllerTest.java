@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-import java.util.HashMap;
-
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedConstruction;
@@ -14,16 +12,18 @@ import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.SpamProtection;
-import sk.iway.iwcm.admin.layout.SystemInfo;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.helpers.MailHelper;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.BrowserDetector;
-import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.iwcm.users.UsersDB;
 
 /** Verifies feedback formatting, empty-message validation, and HTML sanitization. */
-class FeedbackRestControllerTest extends BaseWebjetTest {
+class FeedbackRestControllerTest {
 
     @Test
     void preservesEditorFormatting() {
@@ -47,13 +47,14 @@ class FeedbackRestControllerTest extends BaseWebjetTest {
         assertTrue(result.contains("href=\"https://example.com\""));
     }
 
-    /** Verifies clipboard diagnostics and the generated email HTML without delivering any email. */
+    /** Verifies diagnostic context, HTML escaping and permission filtering in the generated email. */
     @Test
     void attachesSharedDiagnosticsWithPermissionFiltering() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter("data[text]", "<p>Feedback diagnostics autotest</p>");
-        Identity user = new Identity();
-        user.setDisabledItemsTable(new HashMap<>());
+        Identity user = mock(Identity.class);
+        Prop prop = mock(Prop.class);
+        when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         BrowserDetector detector = mock(BrowserDetector.class);
         when(detector.getBrowserName()).thenReturn("Firefox");
         when(detector.getBrowserVersionShort()).thenReturn("143");
@@ -62,22 +63,28 @@ class FeedbackRestControllerTest extends BaseWebjetTest {
              MockedStatic<CloudToolsForCore> domains = mockStatic(CloudToolsForCore.class);
              MockedStatic<BrowserDetector> browsers = mockStatic(BrowserDetector.class);
              MockedStatic<SpamProtection> spam = mockStatic(SpamProtection.class);
+             MockedStatic<Constants> constants = mockStatic(Constants.class);
+             MockedStatic<InitServlet> versions = mockStatic(InitServlet.class);
+             MockedStatic<Prop> properties = mockStatic(Prop.class);
+             MockedStatic<Tools> tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
              MockedConstruction<MailHelper> mail = mockConstruction(MailHelper.class,
                  withSettings().defaultAnswer(RETURNS_SELF), (helper, context) -> when(helper.send()).thenReturn(true))) {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
             domains.when(CloudToolsForCore::getDomainName).thenReturn("content.example.com");
             browsers.when(() -> BrowserDetector.getInstance(request)).thenReturn(detector);
             spam.when(() -> SpamProtection.canPost(eq("form"), anyString(), eq(request))).thenReturn(true);
+            constants.when(() -> Constants.getString(anyString())).thenReturn("");
+            constants.when(() -> Constants.getStringExecuteMacro(anyString())).thenReturn("");
+            constants.when(() -> Constants.getString("clusterMyNodeName")).thenReturn("autotest-node");
+            constants.when(Constants::getEnvironmentName).thenReturn("DEV");
+            versions.when(InitServlet::getActualVersion).thenReturn("2026.18.28");
+            versions.when(InitServlet::getProductEdition).thenReturn("Enterprise");
+            properties.when(() -> Prop.getInstance(request)).thenReturn(prop);
+            tools.when(() -> Tools.getServerName(request)).thenReturn("admin.example.com");
+            tools.when(() -> Tools.getRemoteIP(request)).thenReturn("127.0.0.1");
+            tools.when(() -> Tools.formatDateTimeSeconds(anyLong())).thenReturn("2026-10-13 12:00:00");
             for (boolean permitted : new boolean[] { true, false }) {
-                request.setParameter("data[pageUrl]", "https://admin.example.com:8443/admin/v9/web-pages/?docid=123#editor");
-                if (!permitted) user.addDisabledItem("menuConfig");
-                String diagnostics = FeedbackRestController.prepareSystemInfo(request);
-                assertEquals(new SystemInfo(request, "content.example.com").getText(request.getParameter("data[pageUrl]")), diagnostics);
-                assertTrue(diagnostics.contains("content.example.com"));
-                assertTrue(diagnostics.contains("CMS doména: https://admin.example.com:8443"));
-                assertTrue(diagnostics.contains("Firefox 143 · Windows"));
-                assertTrue(diagnostics.contains("/admin/v9/web-pages/?docid=123#editor"));
-                if (!permitted) assertFalse(diagnostics.contains("Server:"));
+                when(user.isEnabledItem("menuConfig")).thenReturn(permitted);
                 for (String origin : new String[] { "http://iwcm.interway.sk", "https://admin.example.com:8443" }) {
                     request.setParameter("data[pageUrl]", origin + "/admin/v9/web-pages/?docid=123&view=all#editor");
                     assertEquals("OK", new FeedbackRestController().sendFeedback(request));
@@ -85,9 +92,11 @@ class FeedbackRestControllerTest extends BaseWebjetTest {
                     ArgumentCaptor<String> message = ArgumentCaptor.forClass(String.class);
                     verify(helper).setMessage(message.capture());
                     verify(helper).send();
-                    assertTrue(message.getValue().contains("CMS doména: " + origin + "<br/>"));
+                    assertTrue(message.getValue().contains("admin.help.domain.js: content.example.com<br/>"));
+                    assertTrue(message.getValue().contains("admin.help.cmsDomain.js: " + origin + "<br/>"));
+                    assertTrue(message.getValue().contains("Firefox 143 · Windows<br/>"));
                     assertTrue(message.getValue().contains("/admin/v9/web-pages/?docid=123&amp;view=all#editor<br/>"));
-                    if (!permitted) assertFalse(message.getValue().contains("Server:"));
+                    assertEquals(permitted, message.getValue().contains("admin.help.server.js:"));
                 }
             }
         }

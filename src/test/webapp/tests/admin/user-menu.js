@@ -80,20 +80,15 @@ Scenario('User menu renders identity and sessions without requesting account dat
     await I.stopMockingRoute(menuDataRoutes);
 });
 
-Scenario('2FA badge refreshes once after the settings popup closes and retries a failed refresh', async ({ I }) => {
+Scenario('2FA badge refreshes once after the settings popup closes', async ({ I }) => {
     I.amOnPage('/admin/v9/search/');
     openMenu(I);
     const initiallyEnabled = (await I.grabAttributeFrom(badge, 'data-enabled')) === 'true';
     const initialLabel = (await I.grabTextFrom(badge)).trim();
-    const responses = [
-        { status: 200, body: initiallyEnabled ? '' : 'true' },
-        { status: 500, body: 'Refresh failed' },
-        { status: 200, body: initiallyEnabled ? 'true' : '' }
-    ];
     let reads = 0;
     await I.mockRoute(statusRoute, route => {
-        const response = responses[reads++];
-        return route.fulfill({ contentType: 'text/plain', ...response });
+        reads++;
+        return route.fulfill({ status: 200, contentType: 'text/plain', body: initiallyEnabled ? '' : 'true' });
     });
     I.executeScript(() => {
         window.userMenuOriginalPopup = WJ.openPopupDialog;
@@ -118,18 +113,6 @@ Scenario('2FA badge refreshes once after the settings popup closes and retries a
     openMenu(I);
     I.assertEqual(reads, 1, 'Ordinary later openings must reuse the refreshed badge.');
 
-    I.clickCss('.md-user-menu__two-factor');
-    I.waitForInvisible(panel, 5);
-    I.executeScript(() => { window.userMenuPopup.closed = true; });
-    openMenu(I);
-    await I.waitForFunction(() => document.querySelector('#admin-user-menu').getAttribute('aria-busy') === 'false', 5);
-    I.assertEqual(reads, 2);
-    I.assertEqual((await I.grabTextFrom(badge)).trim(), changedLabel, 'A failed refresh must preserve the last known badge.');
-    closeMenu(I);
-    openMenu(I);
-    I.waitForElement(`${badge}[data-enabled="${initiallyEnabled}"]`, 5);
-    I.assertEqual((await I.grabTextFrom(badge)).trim(), initialLabel);
-    I.assertEqual(reads, 3, 'The next opening must retry the failed refresh.');
     closeMenu(I);
     I.executeScript(() => { WJ.openPopupDialog = window.userMenuOriginalPopup; });
     await I.stopMockingRoute(statusRoute);

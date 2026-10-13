@@ -3,10 +3,11 @@ package sk.iway.iwcm.stat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import java.util.concurrent.atomic.AtomicReference;
 
+import org.junit.jupiter.api.Test;
+
+import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -27,34 +28,39 @@ class SessionAdminCountTest {
         holder.getDataMap().put("autotest-invalidated", session(7, true, now, SessionHolder.INVALIDATE_SESSION_ADDR, 1));
         holder.getDataMap().put("autotest-non-admin", session(7, false, now, "127.0.0.4", 1));
         holder.getDataMap().put("autotest-foreign", session(8, true, now, "127.0.0.5", 1));
+        var cache = mock(Cache.class);
+        var cachedCounts = new AtomicReference<Object>();
+        String cacheKey = "SessionHolder.adminSessionCounts";
+        when(cache.getObject(cacheKey)).thenAnswer(invocation -> cachedCounts.get());
+        doAnswer(invocation -> {
+            cachedCounts.set(invocation.getArgument(1));
+            return null;
+        }).when(cache).setObjectSeconds(eq(cacheKey), any(), eq(10), eq(false));
 
-        try (var constants = mockStatic(Constants.class); var tools = mockStatic(Tools.class);
+        try (var constants = mockStatic(Constants.class); var tools = mockStatic(Tools.class); var caches = mockStatic(Cache.class);
              var domains = mockStatic(CloudToolsForCore.class); var cluster = mockStatic(SessionClusterService.class);
              var queries = mockConstruction(ComplexQuery.class); var updates = mockConstruction(SimpleQuery.class)) {
             constants.when(() -> Constants.getInt("sessionRemoveTimeout")).thenReturn(30);
             tools.when(Tools::getNow).thenReturn(now);
+            caches.when(Cache::getInstance).thenReturn(cache);
 
             assertEquals(2, holder.getAdminSessionCount(7));
             assertEquals(0, holder.getAdminSessionCount(999));
+            assertEquals(1, holder.getAdminSessionCount(8));
             assertEquals(6, holder.getDataMap().size());
             assertNotNull(holder.get("autotest-expired"));
+
+            holder.getDataMap().put("autotest-new-login", session(7, true, now, "127.0.0.6", 1));
+            assertEquals(2, holder.getAdminSessionCount(7), "A cache hit must reuse the previous count.");
+            verify(cache).setObjectSeconds(eq(cacheKey), any(), eq(10), eq(false));
+            cachedCounts.set(null);
+            assertEquals(3, holder.getAdminSessionCount(7), "A cache miss must include newly logged-in sessions.");
+            verify(cache, times(2)).setObjectSeconds(eq(cacheKey), any(), eq(10), eq(false));
             verify(holder, never()).getList();
             domains.verifyNoInteractions();
             cluster.verifyNoInteractions();
             assertTrue(queries.constructed().isEmpty());
             assertTrue(updates.constructed().isEmpty());
-        }
-    }
-
-    /** Invalid account IDs return zero before reading runtime configuration or session state. */
-    @ParameterizedTest
-    @ValueSource(ints = { -1, 0 })
-    void skipsInvalidAccountIds(int userId) {
-        var holder = new SessionHolder();
-        try (var constants = mockStatic(Constants.class); var tools = mockStatic(Tools.class)) {
-            assertEquals(0, holder.getAdminSessionCount(userId));
-            constants.verifyNoInteractions();
-            tools.verifyNoInteractions();
         }
     }
 

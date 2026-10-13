@@ -105,7 +105,7 @@ Scenario('Header help shares release news and supplies documentation links', asy
     I.saveElementScreenshot('.ly-header', 'header-refinement.png');
 });
 
-Scenario('System diagnostics copy all context and confirm success for two seconds', async ({ I }) => {
+Scenario('System diagnostics copy all context and restore the copy action after confirmation', async ({ I }) => {
     I.amOnPage('/admin/v9/search/');
     I.executeScript(() => {
         history.replaceState(null, '', '?autotest=diagnostics#details');
@@ -116,8 +116,9 @@ Scenario('System diagnostics copy all context and confirm success for two second
             writeText: async value => { window.copiedHelpDiagnostics = value; }
         } });
     });
-    I.assertEqual(await I.grabNumberOfVisibleElements('.md-help-menu__system > div'), 4,
-        'System administrators must see the build date and time on a separate diagnostic row.');
+    I.seeElement('.md-help-menu__version-number');
+    I.seeElement('.md-help-menu__version-date');
+    I.seeElement('.md-help-menu__server');
     I.assertTrue(await I.executeScript(() => {
         const version = document.querySelector('.md-help-menu__version');
         const buildDate = document.querySelector('.md-help-menu__version-date');

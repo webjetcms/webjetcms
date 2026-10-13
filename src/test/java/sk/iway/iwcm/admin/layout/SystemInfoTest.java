@@ -3,9 +3,6 @@ package sk.iway.iwcm.admin.layout;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,31 +12,36 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.stat.BrowserDetector;
-import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.iwcm.users.UsersDB;
 
 /** Verifies diagnostic formatting and server disclosure for the Help menu and feedback. */
-class SystemInfoTest extends BaseWebjetTest {
+class SystemInfoTest {
     private final MockHttpServletRequest request = new MockHttpServletRequest();
-    private final Identity user = new Identity();
-    private final Map<String, String> original = new HashMap<>();
+    private final Identity user = mock(Identity.class);
     private String originalTomcat;
     private MockedStatic<InitServlet> versions;
     private MockedStatic<UsersDB> users;
     private MockedStatic<BrowserDetector> browsers;
+    private MockedStatic<Constants> constants;
+    private MockedStatic<Prop> properties;
 
     @BeforeEach
     void setUp() {
-        for (String key : new String[] { "dashboardEnvironmentName", "clusterMyNodeName" }) {
-            original.put(key, Constants.getString(key));
-        }
+        constants = mockStatic(Constants.class);
+        constants.when(() -> Constants.getString(anyString())).thenReturn("");
+        constants.when(() -> Constants.getStringExecuteMacro(anyString())).thenReturn("");
+        constants.when(() -> Constants.getStringExecuteMacro("dashboardEnvironmentName")).thenReturn("DEV");
+        constants.when(() -> Constants.getString("clusterMyNodeName")).thenReturn("autotest-node");
+        constants.when(Constants::getEnvironmentName).thenReturn("DEV");
+        Prop prop = mock(Prop.class);
+        when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        properties = mockStatic(Prop.class);
+        properties.when(() -> Prop.getInstance(request)).thenReturn(prop);
         originalTomcat = System.getProperty("iway.tomcat");
         System.setProperty("iway.tomcat", "pinboy3.tomcat_au4");
-        Constants.setString("dashboardEnvironmentName", "DEV");
-        Constants.setString("clusterMyNodeName", "autotest-node");
-        request.setParameter("language", "sk");
-        user.setDisabledItemsTable(new HashMap<>());
+        when(user.isEnabledItem("menuConfig")).thenReturn(true);
         versions = mockStatic(InitServlet.class);
         versions.when(InitServlet::getActualVersion).thenReturn("2026.18.28-jakarta.026 23.09.2026 14:16:41");
         versions.when(InitServlet::getProductEdition).thenReturn("Enterprise");
@@ -58,7 +60,8 @@ class SystemInfoTest extends BaseWebjetTest {
         browsers.close();
         users.close();
         versions.close();
-        original.forEach(Constants::setString);
+        properties.close();
+        constants.close();
         if (originalTomcat == null) System.clearProperty("iway.tomcat");
         else System.setProperty("iway.tomcat", originalTomcat);
     }
@@ -70,11 +73,11 @@ class SystemInfoTest extends BaseWebjetTest {
         assertEquals("2026.18.28-jakarta.026", info.getVersionNumber());
         assertEquals("23. 9. 2026 14:16:41", info.getBuildDate());
         assertEquals("WebJET CMS (Enterprise)\n"
-            + "Verzia: 2026.18.28-jakarta.026, 23. 9. 2026 14:16:41\n"
-            + "Server: pinboy3.tomcat_au4\n"
-            + "Doména: demo.webjetcms.sk (DEV)\n"
-            + "Stránka: /admin/v9/\n"
-            + "Prehliadač: Chrome 153 · macOS", info.getText("/admin/v9/"));
+            + "admin.help.version.js: 2026.18.28-jakarta.026, 23. 9. 2026 14:16:41\n"
+            + "admin.help.server.js: pinboy3.tomcat_au4\n"
+            + "admin.help.domain.js: demo.webjetcms.sk (DEV)\n"
+            + "admin.help.pagePath.js: /admin/v9/\n"
+            + "admin.help.browser.js: Chrome 153 · macOS", info.getText("/admin/v9/"));
     }
 
     /** Keeps both domains when different and preserves encoded query and fragment values. */
@@ -82,8 +85,8 @@ class SystemInfoTest extends BaseWebjetTest {
     void addsCmsDomainAndCompletePageAddress() {
         SystemInfo info = new SystemInfo(request, "demo.webjetcms.sk");
         String diagnostics = info.getText("http://iwcm.interway.sk/admin/v9/?docid=123&value=a%2Fb#editor%23tab");
-        assertTrue(diagnostics.contains("Doména: demo.webjetcms.sk (DEV)\nCMS doména: http://iwcm.interway.sk\n"));
-        assertTrue(diagnostics.contains("Stránka: /admin/v9/?docid=123&value=a%2Fb#editor%23tab\n"));
+        assertTrue(diagnostics.contains("admin.help.domain.js: demo.webjetcms.sk (DEV)\nadmin.help.cmsDomain.js: http://iwcm.interway.sk\n"));
+        assertTrue(diagnostics.contains("admin.help.pagePath.js: /admin/v9/?docid=123&value=a%2Fb#editor%23tab\n"));
     }
 
     /** Matches the browser origin, including non-default ports for both HTTP and HTTPS. */
@@ -98,7 +101,7 @@ class SystemInfoTest extends BaseWebjetTest {
             { "http://iwcm.interway.sk:80", "http://iwcm.interway.sk" },
             { "https://iwcm.interway.sk:443", "https://iwcm.interway.sk" }
         }) {
-            assertTrue(info.getText(origin[0] + "/admin/v9/").contains("\nCMS doména: " + origin[1] + "\n"));
+            assertTrue(info.getText(origin[0] + "/admin/v9/").contains("\nadmin.help.cmsDomain.js: " + origin[1] + "\n"));
         }
     }
 
@@ -106,19 +109,19 @@ class SystemInfoTest extends BaseWebjetTest {
     @Test
     void omitsMatchingCmsDomain() {
         SystemInfo info = new SystemInfo(request, "demo.webjetcms.sk");
-        assertFalse(info.getText("http://DEMO.webjetcms.sk:8080/admin/v9/").contains("CMS doména:"));
+        assertFalse(info.getText("http://DEMO.webjetcms.sk:8080/admin/v9/").contains("admin.help.cmsDomain.js:"));
     }
 
     /** Prevents node disclosure in both the visible footer getter and diagnostic text. */
     @Test
     void omitsServerWithoutSystemPermission() {
-        user.addDisabledItem("menuConfig");
+        when(user.isEnabledItem("menuConfig")).thenReturn(false);
         SystemInfo info = new SystemInfo(request, "demo.webjetcms.sk");
         LayoutBean layout = new LayoutBean();
         layout.setUser(user);
         assertEquals("", layout.getProductServer());
         assertEquals("", info.getServer());
-        assertFalse(info.getText("/admin/v9/").contains("Server:"));
+        assertFalse(info.getText("/admin/v9/").contains("admin.help.server.js:"));
         assertFalse(info.getSummary().contains("pinboy3"));
         assertEquals("", SystemInfo.getServer(null));
     }
@@ -127,10 +130,10 @@ class SystemInfoTest extends BaseWebjetTest {
     @Test
     void supportsClusterFallbackAndHiddenEnvironment() {
         System.clearProperty("iway.tomcat");
-        Constants.setString("dashboardEnvironmentName", "");
+        constants.when(() -> Constants.getStringExecuteMacro("dashboardEnvironmentName")).thenReturn("");
         SystemInfo info = new SystemInfo(request, "demo.webjetcms.sk");
         assertEquals("autotest-node", info.getServer());
-        assertTrue(info.getSummary().endsWith("Doména: demo.webjetcms.sk"));
+        assertTrue(info.getSummary().endsWith("admin.help.domain.js: demo.webjetcms.sk"));
     }
 
     /** Retains versions without build metadata, including development placeholders. */

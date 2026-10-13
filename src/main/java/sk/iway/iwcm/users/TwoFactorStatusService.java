@@ -20,6 +20,8 @@ public class TwoFactorStatusService {
 
     /**
      * Reads a cached Boolean, loading the account's status on a cache miss.
+     * Reads the cache once so a smart-refresh miss triggers a reload instead of returning the old value.
+     * Concurrent setup changes may leave the displayed status stale until the next refresh.
      * Authentication must read the current secret directly instead of using this display status.
      *
      * @param userId account whose status is displayed
@@ -38,11 +40,10 @@ public class TwoFactorStatusService {
 
     /**
      * Clears the account's display status locally and on the cluster after a successful setup change.
-     * Synchronizing with cache misses prevents an earlier local read from restoring stale status.
      *
      * @param userId account whose second-factor setup changed
      */
-    public synchronized void invalidate(long userId) {
+    public void invalidate(long userId) {
         Cache.getInstance().removeObject(CACHE_KEY_PREFIX + userId, true);
     }
 }

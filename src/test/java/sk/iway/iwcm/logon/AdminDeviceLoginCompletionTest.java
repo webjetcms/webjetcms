@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.AdditionalAnswers.delegatesTo;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -18,6 +19,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -180,13 +182,13 @@ class AdminDeviceLoginCompletionTest {
     void invalidatesDisplayStatusAfterForcedSecondFactorEnrollment() {
         prepareSecondFactor();
         request.setParameter("token", "222222");
+        var query = mock(SimpleQuery.class);
         try (var authenticators = mockConstruction(GoogleAuthenticator.class,
                 (authenticator, context) -> when(authenticator.getTotpPassword("existing-secret")).thenReturn(222222));
-             var queries = mockConstruction(SimpleQuery.class)) {
+             var queries = mockConstruction(SimpleQuery.class, withSettings().defaultAnswer(delegatesTo(query)))) {
             assertEquals("redirect:" + EVENT_TARGET, submit());
-            assertEquals(2, queries.constructed().size());
-            var order = inOrder(queries.constructed().get(1), twoFactor);
-            order.verify(queries.constructed().get(1)).execute("UPDATE users SET mobile_device = ? WHERE user_id = ?", "existing-secret", 7);
+            var order = inOrder(query, twoFactor);
+            order.verify(query).execute("UPDATE users SET mobile_device = ? WHERE user_id = ?", "existing-secret", 7);
             order.verify(twoFactor).invalidate(7);
         }
     }

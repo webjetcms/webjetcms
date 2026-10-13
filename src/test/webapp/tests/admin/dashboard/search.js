@@ -182,27 +182,12 @@ Scenario('Documentation searches only after explicit selection and resets its un
     I.see('Načítať výsledky aj z externej dokumentácie', documentation);
     I.see('Výsledky sa zobrazia priamo tu. Dotaz sa odošle na documentation.autotest.invalid.', documentation);
     I.dontSeeElement(documentationResult);
-    const isMac = await I.executeScript(() => /Mac|iPhone|iPad/.test(navigator.platform));
-    const action = `${documentation} .md-quick-search__documentation-search`;
-    I.see(isMac ? '⌘ Enter' : 'Ctrl + Enter', `${action} kbd`);
-    I.seeAttributesOnElements(action, { 'aria-keyshortcuts': isMac ? 'Meta+Enter' : 'Control+Enter' });
-    I.saveScreenshot('quick-search-external-documentation-manual.png');
-    I.resizeWindow(390, 844);
-    const mobileLayout = await I.executeScript(() => {
-        const results = document.querySelector('#admin-quick-search-results');
-        const shortcut = results.querySelector('.md-quick-search__documentation-search kbd').getBoundingClientRect();
-        return { width: results.clientWidth, contentWidth: results.scrollWidth, shortcutRight: shortcut.right, viewportWidth: innerWidth };
-    });
-    I.assertTrue(mobileLayout.contentWidth <= mobileLayout.width + 1 && mobileLayout.shortcutRight <= mobileLayout.viewportWidth,
-        'The documentation action and shortcut must fit the mobile dialog without horizontal overflow.');
-    I.saveScreenshot('quick-search-external-documentation-shortcut-mobile.png');
-    I.wjSetDefaultWindowSize();
     I.pressKey('Enter');
     I.assertDeepEqual([...requests], [], 'Typing and Enter in All must not request external documentation.');
 
-    I.pressKey([isMac ? 'Meta' : 'Control', 'Enter']);
+    I.clickCss(`${documentation} .md-quick-search__documentation-search`);
     await I.waitForText('autotest documentation confidential query autotest', 10, documentationResult);
-    I.assertDeepEqual([...requests], ['confidential query autotest'], 'The documentation shortcut must immediately search the existing trimmed query.');
+    I.assertDeepEqual([...requests], ['confidential query autotest'], 'The documentation action must immediately search the existing trimmed query.');
     I.see('1', `${scopes} [data-scope="documentation"] .md-quick-search__count`);
     I.seeCurrentUrlEquals('/admin/v9/');
 
@@ -216,14 +201,46 @@ Scenario('Documentation searches only after explicit selection and resets its un
     I.assertEqual(await I.executeScript(() => document.activeElement.id), 'admin-quick-search-input',
         'Confirming a documentation search must preserve input focus.');
 
-    I.clickCss(`${scopes} [data-scope="all"]`);
-    I.fillField(input, 'banner');
-    I.clickCss(`${documentation} .md-quick-search__documentation-search`);
-    await I.waitForText('autotest documentation banner', 10, documentationResult);
-    I.seeElement(`${scopes} [data-scope="documentation"][aria-pressed="true"]`);
-    I.assertDeepEqual([...requests], ['confidential query autotest', 'b', 'banner']);
-    I.seeCurrentUrlEquals('/admin/v9/');
     I.stopMockingRoute(documentationRoute);
+});
+
+/** The advertised platform shortcut must work through the browser's actual keyboard handling. */
+Scenario('Documentation shortcut searches the current query without navigating', async ({ I }) => {
+    const requests = [];
+    I.mockRoute(documentationRoute, route => {
+        requests.push(new URL(route.request().url()).searchParams.get('query'));
+        return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'Access-Control-Allow-Origin': '*' },
+            body: JSON.stringify({ results: [{ title: 'autotest shortcut result',
+                url: '/latest/sk/redactor/apps/banner/', snippet: 'Documentation shortcut result.' }] }) });
+    });
+    I.fillField(input, ' shortcut autotest ');
+    const action = `${documentation} .md-quick-search__documentation-search`;
+    I.waitForVisible(action, 10);
+    const isMac = await I.executeScript(() => /Mac|iPhone|iPad/.test(navigator.platform));
+    I.see(isMac ? '⌘ Enter' : 'Ctrl + Enter', `${action} kbd`);
+    I.seeAttributesOnElements(action, { 'aria-keyshortcuts': isMac ? 'Meta+Enter' : 'Control+Enter' });
+    I.pressKey([isMac ? 'Meta' : 'Control', 'Enter']);
+    I.waitForText('autotest shortcut result', 10, documentationResult);
+    I.assertDeepEqual(requests, ['shortcut autotest']);
+    I.seeCurrentUrlEquals('/admin/v9/');
+    I.assertEqual(await I.executeScript(() => document.activeElement.id), 'admin-quick-search-input');
+    I.stopMockingRoute(documentationRoute);
+});
+
+/** The external-search action and its keyboard hint must fit narrow screens. */
+Scenario('Documentation action fits the mobile dialog', async ({ I }) => {
+    I.fillField(input, 'mobile documentation autotest');
+    I.waitForVisible(`${documentation} .md-quick-search__documentation-search`, 10);
+    I.resizeWindow(390, 844);
+    const mobileLayout = await I.executeScript(() => {
+        const results = document.querySelector('#admin-quick-search-results');
+        const shortcut = results.querySelector('.md-quick-search__documentation-search kbd').getBoundingClientRect();
+        return { width: results.clientWidth, contentWidth: results.scrollWidth, shortcutRight: shortcut.right, viewportWidth: innerWidth };
+    });
+    I.assertTrue(mobileLayout.contentWidth <= mobileLayout.width + 1 && mobileLayout.shortcutRight <= mobileLayout.viewportWidth,
+        'The documentation action and shortcut must fit the mobile dialog without horizontal overflow.');
+    I.saveScreenshot('quick-search-external-documentation-shortcut-mobile.png');
+    I.wjSetDefaultWindowSize();
 });
 
 /** The deployment opt-in retains automatic search, the minimum length and explicit Enter in All. */

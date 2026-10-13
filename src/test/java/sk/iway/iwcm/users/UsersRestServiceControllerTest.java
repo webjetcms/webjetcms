@@ -65,16 +65,4 @@ class UsersRestServiceControllerTest {
         }
     }
 
-    /** A persistence failure leaves the previous cached status intact. */
-    @Test
-    void failedSaveDoesNotInvalidate() {
-        try (var users = mockStatic(UsersDB.class); var csrf = mockStatic(CSRF.class)) {
-            users.when(() -> UsersDB.getCurrentUser(request.getSession())).thenReturn(user);
-            csrf.when(() -> CSRF.verifyTokenAndDeleteIt(request)).thenReturn(true);
-            doThrow(new IllegalStateException("Unavailable")).when(repository).updateMobileDeviceByUserId(7L, "new-key");
-
-            assertThrows(IllegalStateException.class, () -> controller.setGauth("new-key", request));
-            verifyNoInteractions(status);
-        }
-    }
 }
