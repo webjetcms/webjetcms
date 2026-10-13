@@ -28,6 +28,8 @@
 
 ### Prihlasovanie a ochrana účtu
 
+- [Používateľské menu v hlavičke](redactor/admin/README.md#používateľské-menu) zobrazuje údaje účtu, počet aktívnych relácií a stav dvojstupňového overovania. Položka **Aktívne prihlásenia** otvorí správu vlastných prihlásení z ktorejkoľvek stránky administrácie. Dokumentácia obsahuje aktuálny screenshot a opis všetkých položiek menu (#351).
+
 - WebJET CMS po novom [eviduje prehliadače, z ktorých sa prihlasujete](redactor/admin/logon.md#prihlásenie-z-nového-zariadenia). Prihlásenie z nového prehliadača zobrazí upozornenie na úvodnej obrazovke a odošle email, aby ste mohli rozpoznať cudzie prihlásenie do svojho účtu. Vlastné zariadenie potvrdíte emailovým odkazom alebo jednorazovým kódom cez **Bol som to ja** (#340).
 
 ![Prehľad zariadení účtu na karte Moje zariadenia](redactor/admin/device-my-devices.png)

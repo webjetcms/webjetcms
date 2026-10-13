@@ -318,7 +318,9 @@ export function showActiveSessions(context, options = {}) {
             }
             const activity = node('td', current ? 'md-dashboard-sessions__activity is-current' : 'md-dashboard-sessions__activity', sessionActivity(session, data.currentSessionId, context));
             if (session.lastActivity > 0) activity.title = date(session.lastActivity);
-            row.append(device, locationCell(session.location, session.remoteAddr, context), activity, action);
+            const location = locationCell(session.location, session.remoteAddr, context);
+            if (context.data.clusterMode && session.cluster) location.append(node('small', 'd-block text-muted', `${context.translate('admin.help.server.js')} ${session.cluster}`));
+            row.append(device, location, activity, action);
             body.append(row);
         });
         table.append(head, body);

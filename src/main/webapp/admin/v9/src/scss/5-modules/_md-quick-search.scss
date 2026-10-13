@@ -141,6 +141,18 @@
         > .md-quick-search__markdown { padding: 0 12px 12px; }
     }
     &__documentation-title { display: block; padding: 8px 12px; }
+    &__documentation-search {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 8px;
+        font-size: 13px;
+        text-align: left;
+        text-decoration: none;
+
+        > span { text-decoration: underline; }
+        > kbd { flex-shrink: 0; padding: 2px 5px; border: 1px solid $nice-gray-200; border-radius: $border-radius-sm; background: $white; color: var(--wj-gray-text); font: inherit; font-size: 11px; white-space: nowrap; }
+    }
     &__markdown {
         font-size: 14px;
         line-height: 1.5;

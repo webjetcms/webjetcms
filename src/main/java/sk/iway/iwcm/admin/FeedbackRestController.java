@@ -10,10 +10,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
-import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.layout.SystemInfo;
 import sk.iway.iwcm.admin.upload.AdminUploadServlet;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
@@ -49,13 +50,11 @@ public class FeedbackRestController {
         StringBuilder feedbackText = new StringBuilder();
         feedbackText.append(message).append("\n<p>");
 
-        feedbackText.append("Version: " + ResponseUtils.filter(InitServlet.getActualVersionLong()) + "<br/>");
+        feedbackText.append(ResponseUtils.filter(prepareSystemInfo(request)).replace("\n", "<br/>")).append("<br/>");
         String type = request.getParameter("data[type]");
         if ("idea".equals(type) || "problem".equals(type) || "praise".equals(type)) {
             feedbackText.append("Type: ").append(type).append("<br/>");
         }
-        String pageUrl = request.getParameter("data[pageUrl]");
-        if (Tools.isNotEmpty(pageUrl)) feedbackText.append("Page: ").append(ResponseUtils.filter(pageUrl)).append("<br/>");
         feedbackText.append("User-Agent: ").append(ResponseUtils.filter(request.getHeader("User-Agent"))).append("<br/>");
 
         //Handle isAnonymous
@@ -77,7 +76,6 @@ public class FeedbackRestController {
         }
 
         //Add more info
-        feedbackText.append("Domain: ").append(ResponseUtils.filter(Tools.getServerName(request))).append("<br/>");
         feedbackText.append("IP: ").append(ResponseUtils.filter(Tools.getRemoteIP(request))).append("<br/>");
         feedbackText.append("Date: ").append(ResponseUtils.filter(Tools.formatDateTimeSeconds(Tools.getNow()))).append("<br/>");
 
@@ -114,6 +112,12 @@ public class FeedbackRestController {
         }
 
         return "OK";
+    }
+
+    /** Builds the same diagnostics copied from Help, using the page where the draft was started. */
+    static String prepareSystemInfo(HttpServletRequest request) {
+        String pageUrl = request.getParameter("data[pageUrl]");
+        return new SystemInfo(request, CloudToolsForCore.getDomainName()).getText(pageUrl == null ? "" : pageUrl);
     }
 
     /**

@@ -50,12 +50,13 @@ div.dropdown.md-help-menu
             div.md-help-menu__product
                 strong WebJET CMS
                 span(data-th-text="${' · ' + layout.productEdition}")
-            div(data-th-with="version=${layout.productVersion}, separator=${#strings.indexOf(version, ' ')}")
+            div.md-help-menu__version
                 span(data-th-text="\#{admin.help.version.js}") Verzia
-                span(data-th-text="${separator < 0 ? version : #strings.substring(version, 0, separator)}")
-                span.d-block(data-th-if="${separator >= 0}" data-th-text="${#strings.substring(version, separator + 1)}")
-            div(data-th-if="${!#strings.isEmpty(layout.productServer)}")
+                span.md-help-menu__version-number(data-th-text="${layout.systemInfo.versionNumber}" data-th-title="${layout.systemInfo.versionNumber}")
+            div.md-help-menu__version-date(data-th-if="${!#strings.isEmpty(layout.systemInfo.buildDate)}" data-th-text="${layout.systemInfo.buildDate}")
+            div.md-help-menu__server(data-th-if="${!#strings.isEmpty(layout.productServer)}")
                 span(data-th-text="\#{admin.help.server.js}") Server
                 span(data-th-text="${layout.productServer}")
             button.dropdown-item.md-help-menu__copy(type="button" data-th-aria-label="\#{admin.help.copy.js}" data-th-title="\#{admin.help.copy.js}")
                 i.ti.ti-copy(aria-hidden="true")
+            span.md-help-menu__copy-status.visually-hidden(role="status")

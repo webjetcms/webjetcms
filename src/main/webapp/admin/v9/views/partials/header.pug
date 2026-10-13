@@ -26,33 +26,7 @@ div.ly-container.container
 
         div.header-link-group
 
-            div.dropdown
-                button.btn.btn-sm.btn-outline-secondary.js-profile-toggler.form-select(id="dropdownMenuUser" data-bs-toggle="dropdown" aria-expanded="false")
-                    i.ti.ti-user(aria-hidden="true")
-                    <span data-th-text="${layout.user.fullName}" style="padding-left: 3px;">WebJET User</span>
-
-                ul.dropdown-menu(aria-labelledby="dropdownMenuUser")
-                    li
-                        button.dropdown-item(type="button" data-th-data-userid="${layout.user.userId}" data-th-data-onlyself="${!layout.hasPermission('users.edit_admins')}" onclick="window.openProfileDialog($(this).data('userid'), $(this).data('onlyself'))")
-                            i.ti.ti-user(aria-hidden="true")
-                            <span data-th-text="\#{components.forum.bb.profile}" data-th-remove="tag">Profil</span>
-                    li(data-th-if="${layout.getConstantBoolean('2factorAuthEnabled')}")
-                        button.dropdown-item(type="button" onclick="WJ.openPopupDialog('/admin/2factorauth.jsp')")
-                            i.ti.ti-device-mobile-message(aria-hidden="true")
-                            <span data-th-text="\#{user.gauth.title}" data-th-remove="tag">2 stupnove overovanie</span>
-                    li(data-th-if="${layout.getConstantBoolean('password_passKeyEnabled')}")
-                        button.dropdown-item.passkey(type="button" onclick="WJ.openModal({url: '/admin/v9/users/passkey/', title: this.textContent.trim()})")
-                            i.ti.ti-fingerprint(aria-hidden="true")
-                            <span data-th-text="\#{passkey.manage.title}" data-th-remove="tag">PassKey</span>
-                    li(data-th-if="${layout.hasPermission('cmp_form')}")
-                        button.dropdown-item(type="button" onclick="WJ.openPopupDialog('/components/crypto/admin/keymanagement')")
-                            i.ti.ti-key(aria-hidden="true")
-                            <span data-th-text="\#{admin.keymanagement.title}" data-th-remove="tag">Sprava sifrovacich klucov</span>
-                    li
-                        a.dropdown-item(href="javascript:document.adminLogoffForm.submit()")
-                            i.ti.ti-logout(aria-hidden="true")
-                            <span data-th-text="\#{menu.logout}" data-th-remove="tag">Odhlasenie</span>
-                |
+            include ./user-menu
 
         div.header-link-group(style="margin-left: 4px;")
 

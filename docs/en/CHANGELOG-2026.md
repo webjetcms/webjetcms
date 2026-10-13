@@ -28,6 +28,8 @@
 
 ### Account login and protection
 
+- [User menu in the header](redactor/admin/README.md#user-menu) displays account information, number of active sessions, and two-factor authentication status. The **Active logins** item opens the custom logins management from any administration page. The documentation contains a current screenshot and description of all menu items (#351).
+
 - WebJET CMS now [records the browsers you log in from](redactor/admin/logon.md#login-from-a-new-device). Logging in from a new browser will display a notification on the home screen and send an email so you can recognize someone else logging into your account. You can confirm your own device with an email link or a one-time code via **It was me** (#340).
 
 ![Account devices overview on the My Devices tab](redactor/admin/device-my-devices.png)
@@ -211,6 +213,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Added template group list view (#58525).
 - All domain redirects can be edited in the control domain.
 - Added option to view all files in the management domain.
+- GDPR - fixed adding and editing cookies in other domains without permission to edit all translation keys. Provider, purpose and validity are stored and displayed for the current domain (#344).
 
 ### Other minor changes
 

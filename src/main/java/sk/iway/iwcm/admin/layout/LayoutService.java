@@ -39,10 +39,24 @@ public class LayoutService
 
             setGlobalData();
             setHeaderData();
+            layout.setSystemInfo(new SystemInfo(request, layout.getHeader().getCurrentDomain()));
             setMenuData();
 
         }
         return layout;
+    }
+
+    /** Derives avatar initials from the identity already available in the HTTP session. */
+    public String getUserInitials() {
+        if (user == null) return "";
+        String initials = initial(user.getFirstName()) + initial(user.getLastName());
+        return initials.isEmpty() ? initial(user.getLogin()) : initials;
+    }
+
+    private static String initial(String value) {
+        if (value == null || value.isBlank()) return "";
+        String name = value.strip();
+        return name.substring(0, name.offsetByCodePoints(0, 1)).toUpperCase(Locale.ROOT);
     }
 
     public LayoutService setGlobalData() {

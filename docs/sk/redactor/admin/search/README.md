@@ -25,13 +25,21 @@ Odkaz **Otvoriť výsledky v sekcii…** prenesie hľadaný výraz do príslušn
 
 Dialóg zavriete klávesom **Esc**, tlačidlom zatvorenia alebo kliknutím mimo neho. Fokus sa vráti na tlačidlo v hlavičke; hľadaný výraz sa do tlačidla neprepisuje.
 
+Dokumentácia sa predvolene neprehľadáva automaticky. Karta zobrazuje pomlčku, ktorá znamená **zatiaľ neprehľadané**, nie nulový počet výsledkov. V rozsahu **Všetko** nájdete vysvetlenie, na ktorý server sa výraz odošle, a odkaz **Načítať výsledky aj z externej dokumentácie**. Kliknutie na tento odkaz alebo na kartu **Dokumentácia** vyhľadá už zadaný výraz a zobrazí výsledky v dialógu. Tooltip karty vysvetľuje odoslanie výrazu na externý server. Klávesová skratka **Ctrl+Enter** vo Windows/Linux alebo **⌘+Enter** na Macu načíta výsledky dokumentácie v ľubovoľnom rozsahu otvoreného dialógu. Príslušná skratka sa zobrazuje pri odkaze.
+
+Po zmene výrazu sa výsledky dokumentácie vymažú a karta znova zobrazí pomlčku. Nové vyhľadávanie spustíte kliknutím na kartu alebo odkaz, prípadne klávesom **Enter** v rozsahu **Dokumentácia**. Enter v rozsahu **Všetko** predvolene prehľadáva iba interné zdroje. Prepínanie rozsahov pomocou **Alt+šípka** samo externý dotaz neodošle.
+
 ![Výsledky hľadania výrazu bannerový systém v dokumentácii s odpoveďou AI](quick-search-documentation.png)
 
 ### Nastavenie vyhľadávania v dokumentácii
 
 V **Nastavenia → Konfigurácia** nastavte premennú `adminDocumentationSearchUrl` na platnú celú URL vyhľadávacej služby vrátane cesty. Predvolená hodnota je `https://docs.webjetcms.sk/rest/rag/markdown/search`. Pri zmene domény alebo cesty stačí upraviť túto premennú a obnoviť administráciu.
 
-Táto premenná zároveň určuje server pre odkazy v menu **Pomocník**, `WJ.showHelpWindow` a changelog. Z URL sa pre tieto odkazy použije iba protokol, doména a port; cesta vyhľadávacej služby sa ignoruje. Napríklad `https://manual.example:8443/rest/rag/markdown/search` otvorí dokumentáciu na `https://manual.example:8443/latest/sk/`. Dokumentácia je dostupná po slovensky, česky a anglicky; pre ostatné jazyky administrácie sa otvorí anglická verzia.
+Prázdna hodnota `adminDocumentationSearchUrl` vypne vyhľadávanie v dokumentácii a skryje jeho kartu aj tlačidlo vo výsledkoch.
+
+Premenná `adminDocumentationAlwaysSearch` má predvolenú hodnotu `false`. Nastavenie `true` zapne automatické vyhľadávanie v rozsahoch **Všetko** a **Dokumentácia** po dvoj sekundovej pauze pri aspoň 8 znakoch po odstránení okrajových medzier. Enter v týchto rozsahoch vyhľadá aj kratší neprázdny výraz. Zapnite ho iba v nasadení, kde dokumentačná služba môže prijímať interné dotazy, napríklad na schválenom vlastnom serveri. Prázdna URL vypne dokumentáciu aj pri hodnote `true`. Po zmene konfigurácie obnovte administráciu.
+
+Premenná `adminDocumentationSearchUrl` zároveň určuje server pre odkazy v menu **Pomocník**, `WJ.showHelpWindow` a changelog. Z URL sa pre tieto odkazy použije iba protokol, doména a port; cesta vyhľadávacej služby sa ignoruje. Napríklad `https://manual.example:8443/rest/rag/markdown/search` otvorí dokumentáciu na `https://manual.example:8443/latest/sk/`. Dokumentácia je dostupná po slovensky, česky a anglicky; pre ostatné jazyky administrácie sa otvorí anglická verzia.
 
 Administrácia doplní parameter `query` s hľadaným výrazom a podľa jazyka rozhrania odošle `language` a `directory`:
 

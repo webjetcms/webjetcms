@@ -34,14 +34,15 @@ function fixture(t, denied = [], options = {}) {
     window.adminSearchContext = options.adminSearchContext;
     window.adminHelpContext = { documentationBaseUrl: options.documentationBaseUrl || 'https://docs.webjetcms.sk' };
     window.userLng = options.language;
+    window.jQuery = element => element;
     window.csrfToken = 'private-admin-csrf-token';
     let now = 0, nextId = 0, clicks = 0;
     const timers = new Map(), requests = [];
     const setTimeout = (fn, delay) => { timers.set(++nextId, { fn, at: now + delay }); return nextId; };
     const clearTimeout = id => timers.delete(id);
     const context = vm.createContext({
-        window, document: window.document, URL, URLSearchParams, AbortController, setTimeout, clearTimeout,
-        WJ: { translate: key => key, hasPermission: permission => !denied.includes(permission) },
+        window, document: window.document, navigator: { platform: options.platform || 'Win32' }, URL, URLSearchParams, AbortController, setTimeout, clearTimeout,
+        WJ: { translate: (key, params = []) => [key, ...params].join(' '), initTooltip: () => {}, hasPermission: permission => !denied.includes(permission) },
         bootstrap: { Modal: class {
             constructor(root) { this.root = root; }
             show() { this.root.classList.add('show'); this.root.dispatchEvent(new window.Event('shown.bs.modal')); }
@@ -50,6 +51,10 @@ function fixture(t, denied = [], options = {}) {
         fetch: (url, options) => new Promise(resolve => requests.push({ url: new URL(url, window.location.origin), options, signal: options.signal, resolve }))
     });
     const webjet = readAdmin('webjet.js');
+    window.webjetTranslationService = { translate: key => key.endsWith('.documentationExternalNotice.js') ? `${key} {1}`
+        : key.endsWith('.resultCount.js') ? `${key} {1}: {2}` : key };
+    const translateStart = webjet.indexOf('    function translate(');
+    vm.runInContext(`{ ${webjet.slice(translateStart, webjet.indexOf('    function showHelpWindow(', translateStart))}\nWJ.translate = (key, ...params) => translate(key, params); }`, context);
     const markdownStart = webjet.indexOf('    function parseMarkdown(');
     vm.runInContext(`${webjet.slice(markdownStart, webjet.indexOf('    function initTooltip(', markdownStart))}\nWJ.parseMarkdown = parseMarkdown;`, context);
     vm.runInContext(`${readAdmin('documentation-links.js')}\nWJ.getDocumentationUrl = getDocumentationUrl;`, context);
@@ -371,7 +376,7 @@ test('Scope switches preserve active requests, cache ten rows per source and app
 });
 
 test('Scope chips expose pending loads and autocomplete without spinning for documentation awaiting Enter', async t => {
-    const f = fixture(t, [], { adminSearchContext: { documentationSearchUrl } });
+    const f = fixture(t, [], { adminSearchContext: { documentationAlwaysSearch: true, documentationSearchUrl } });
     const busy = (scope, expected) => {
         const chip = f.controller.scopeBar.querySelector(`[data-scope="${scope}"]`);
         assert.equal(chip.getAttribute('aria-busy'), String(expected), `${scope} must expose its loading state.`);
@@ -451,7 +456,7 @@ test('Documentation uses the configured endpoint, matching language and director
     for (const [language, expected] of [['sk', 'sk'], ['en', 'en'], ['cz', 'cs'], ['cs', 'cs'], ['de', 'en']]) {
         await t.test(`Administration language: ${language}`, t => {
             const f = fixture(t, deniedRestPermissions, {
-                language, adminSearchContext: { documentationSearchUrl: `${documentationSearchUrl}&language=old&directory=/old/&query=old` }
+                language, adminSearchContext: { documentationAlwaysSearch: true, documentationSearchUrl: `${documentationSearchUrl}&language=old&directory=/old/&query=old` }
             });
             f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
             f.type('banners & announcements + examples');
@@ -474,7 +479,7 @@ test('Documentation uses the configured endpoint, matching language and director
 });
 
 test('Confirmed documentation shares the permitted REST queue and stays cached in unrelated scopes', async t => {
-    const f = fixture(t, [], { adminSearchContext: { documentationSearchUrl } });
+    const f = fixture(t, [], { adminSearchContext: { documentationAlwaysSearch: true, documentationSearchUrl } });
     f.type('banner');
     f.enter();
     const expected = ['docs', 'files', 'users', 'translationKeys', 'documentation'];
@@ -494,7 +499,7 @@ test('Confirmed documentation shares the permitted REST queue and stays cached i
 });
 
 test('Automatic documentation requires eight trimmed characters and a two-second pause', t => {
-    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationAlwaysSearch: true, documentationSearchUrl } });
     f.type(' 1234567 ');
     f.advance(5000);
     assert.equal(f.requests.length, 0, 'Whitespace must not make a short query eligible for automatic AI search.');
@@ -506,24 +511,24 @@ test('Automatic documentation requires eight trimmed characters and a two-second
     assert.equal(f.rest()[0].url.searchParams.get('query'), '12345678');
 });
 
-test('Typing restarts the documentation delay while scope switches preserve its existing timer', t => {
-    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+test('Typing restarts the automatic documentation delay and explicit selection starts it immediately', t => {
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationAlwaysSearch: true, documentationSearchUrl } });
     f.type('original query');
     f.advance(1500);
     f.type('updated query');
     f.advance(1500);
-    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
-    f.advance(499);
     assert.equal(f.requests.length, 0);
-    f.advance(1);
+    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
     assert.equal(f.requests.length, 1);
+    f.advance(2000);
+    assert.equal(f.requests.length, 1, 'Explicit search must cancel the automatic documentation timer.');
     assert.equal(f.rest()[0].url.searchParams.get('query'), 'updated query');
 });
 
 test('Enter permits a nonempty one-character documentation query without lowering other source limits', async t => {
     for (const scope of ['all', 'documentation']) {
         await t.test(`Scope: ${scope}`, async t => {
-            const f = fixture(t, [], { adminSearchContext: { documentationSearchUrl } });
+            const f = fixture(t, [], { adminSearchContext: { documentationAlwaysSearch: true, documentationSearchUrl } });
             f.controller.scopeBar.querySelector(`[data-scope="${scope}"]`).click();
             f.type('   ');
             f.enter();
@@ -552,7 +557,7 @@ test('Enter permits a nonempty one-character documentation query without lowerin
 });
 
 test('Documentation starts at two seconds after the permitted REST queue has already completed', async t => {
-    const f = fixture(t, ['edit_text'], { adminSearchContext: { documentationSearchUrl } });
+    const f = fixture(t, ['edit_text'], { adminSearchContext: { documentationAlwaysSearch: true, documentationSearchUrl } });
     f.type('banner setup');
     f.advance(1000);
     const expected = ['docs', 'files', 'users'];
@@ -573,7 +578,7 @@ test('Documentation starts at two seconds after the permitted REST queue has alr
 });
 
 test('Documentation becoming eligible during a slow REST queue waits without overlapping or duplicating requests', async t => {
-    const f = fixture(t, [], { adminSearchContext: { documentationSearchUrl } });
+    const f = fixture(t, [], { adminSearchContext: { documentationAlwaysSearch: true, documentationSearchUrl } });
     f.type('banner setup');
     f.advance(1000);
     f.advance(1000);
@@ -592,7 +597,7 @@ test('Documentation becoming eligible during a slow REST queue waits without ove
 });
 
 test('Enter during a manual retry starts documentation only after that retry finishes', async t => {
-    const f = fixture(t, [], { adminSearchContext: { documentationSearchUrl } });
+    const f = fixture(t, [], { adminSearchContext: { documentationAlwaysSearch: true, documentationSearchUrl } });
     f.type('banner');
     f.advance(1000);
     await f.respond(f.rest()[0], { error: 'Service unavailable' }, 503);
@@ -615,7 +620,7 @@ test('Enter during a manual retry starts documentation only after that retry fin
 test('Shortening the query or closing cancels scheduled documentation', async t => {
     for (const action of ['short query', 'close']) {
         await t.test(action, t => {
-            const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+            const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationAlwaysSearch: true, documentationSearchUrl } });
             f.type('original query');
             f.advance(1999);
             if (action === 'short query') f.type('q');
@@ -627,7 +632,7 @@ test('Shortening the query or closing cancels scheduled documentation', async t 
 });
 
 test('Documentation keeps its active request, error fallback and completed answer across scope switches', async t => {
-    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl }, documentationBaseUrl: 'https://manual.example.com' });
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationAlwaysSearch: true, documentationSearchUrl }, documentationBaseUrl: 'https://manual.example.com' });
     const select = scope => f.controller.scopeBar.querySelector(`[data-scope="${scope}"]`).click();
     f.type('banner setup');
     f.advance(2000);
@@ -655,8 +660,8 @@ test('Documentation keeps its active request, error fallback and completed answe
     assert.equal(f.rest().length, 2, 'Returning to a completed AI answer must not repeat its request.');
 });
 
-test('Introducing documentation from another scope preserves its minimum length and two-second delay', async t => {
-    for (const query of ['banner', 'banner setup']) {
+test('Selecting documentation from another scope immediately searches short and long queries', async t => {
+    for (const query of ['q', 'banner', 'banner setup']) {
         await t.test(query, t => {
             const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
             f.controller.scopeBar.querySelector('[data-scope="admin"]').click();
@@ -664,15 +669,10 @@ test('Introducing documentation from another scope preserves its minimum length 
             f.advance(5000);
             assert.equal(f.requests.length, 0);
             f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
-            f.advance(1999);
-            assert.equal(f.requests.length, 0);
-            f.advance(1);
-            if (query.length < 8) {
-                assert.equal(f.requests.length, 0);
-                f.enter();
-            }
             assert.deepEqual(f.rest().map(source), ['documentation']);
             assert.equal(f.rest()[0].url.searchParams.get('query'), query);
+            f.advance(5000);
+            assert.equal(f.requests.length, 1);
         });
     }
 });
@@ -917,24 +917,170 @@ test('Documentation ignores stale answers after query changes and closing the di
     assert.equal(f.controller.results.querySelector('.md-quick-search__documentation-result'), null);
 });
 
-test('An unconfigured documentation endpoint preserves the external documentation search', t => {
-    const f = fixture(t, deniedRestPermissions, { language: 'cz' });
-    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
-    f.type('banner');
-    f.advance(1000);
-    assert.equal(f.requests.length, 0);
-    const link = f.controller.results.querySelector('[data-source="documentation"] a');
-    assert.equal(link.href, 'https://docs.webjetcms.sk/latest/cs/?q=banner');
-    assert.equal(link.target, '_blank');
+test('An empty documentation endpoint hides its scope and every search action even in automatic mode', async t => {
+    for (const endpoint of [undefined, '', '   ']) {
+        await t.test(`Endpoint: ${JSON.stringify(endpoint)}`, t => {
+            const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl: endpoint, documentationAlwaysSearch: true } });
+            assert.equal(f.controller.scopeBar.querySelector('[data-scope="documentation"]'), null);
+            f.type('private intranet information');
+            f.enter();
+            f.advance(5000);
+            assert.equal(f.requests.length, 0);
+            assert.equal(f.controller.results.querySelector('[data-source="documentation"]'), null);
+            assert.equal(f.controller.results.querySelector('.md-quick-search__documentation-search'), null);
+        });
+    }
 });
 
-test('External documentation search follows the shared configured origin and safely encodes its query', t => {
-    const f = fixture(t, deniedRestPermissions, { language: 'sk', documentationBaseUrl: 'http://manual.intranet:8080' });
-    f.controller.scopeBar.querySelector('[data-scope="documentation"]').click();
-    f.type('banner & images');
-    f.advance(1000);
+test('Default and false modes never send documentation queries from All, including Enter', async t => {
+    for (const automatic of [undefined, false]) {
+        await t.test(`Automatic: ${automatic}`, t => {
+            const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl, documentationAlwaysSearch: automatic } });
+            f.type('confidential client information');
+            f.advance(5000);
+            f.enter();
+            assert.equal(f.requests.length, 0);
+            const chip = f.controller.chips.get('documentation');
+            assert.equal(chip.getAttribute('aria-busy'), 'false');
+            assert.equal(chip.querySelector('.md-quick-search__count').textContent, '—');
+            assert.match(chip.textContent, /documentationNotSearched/);
+            assert.equal(chip.querySelector('.ti-world'), null);
+            assert.equal(chip.querySelector('.ti-external-link'), null);
+            assert.match(chip.title, /documentationExternalHint/);
+            const prompt = f.controller.results.querySelector('[data-source="documentation"]');
+            assert.match(prompt.textContent, /documentationExternalSearch/);
+            assert.match(prompt.textContent, /manual.example.com/);
+            assert.equal(prompt.querySelector('a'), null, 'The prompt must search inside the dialog without navigating.');
+            assert.equal(f.controller.results.getAttribute('aria-busy'), 'false');
+        });
+    }
+});
+
+test('The external documentation action searches once and exposes real counts without navigation', async t => {
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+    f.type('q');
+    f.controller.results.querySelector('.md-quick-search__documentation-search').click();
+    assert.equal(f.controller.scope, 'documentation');
+    assert.deepEqual(f.rest().map(source), ['documentation']);
+    assert.equal(f.rest()[0].url.searchParams.get('query'), 'q');
+    assert.equal(f.controller.chips.get('documentation').getAttribute('aria-busy'), 'true');
+    assert.equal(f.controller.chips.get('documentation').querySelector('.md-quick-search__count'), null);
+    f.controller.chips.get('documentation').click();
+    f.enter();
+    await f.respond(f.rest()[0], { results: [documentationResult] });
+    assert.equal(f.controller.chips.get('documentation').querySelector('.md-quick-search__count').textContent, '1');
+    assert.match(f.controller.chips.get('documentation').getAttribute('aria-label'), /resultCount.js admin.quickSearch.documentation.js: 1/);
+    f.controller.chips.get('all').click();
+    f.controller.chips.get('documentation').click();
+    assert.equal(f.requests.length, 1, 'Returning to completed results must reuse the query cache.');
+    assert.equal(f.clicks(), 0);
+});
+
+test('Changed documentation queries await a new explicit action and reset zero and error states', async t => {
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+    f.type('initial query');
+    f.controller.chips.get('documentation').click();
+    await f.respond(f.rest()[0], { results: [] });
+    assert.equal(f.controller.chips.get('documentation').querySelector('.md-quick-search__count').textContent, '0');
+    f.type('new confidential query');
+    f.advance(5000);
+    assert.equal(f.requests.length, 1, 'Selecting documentation once must not authorize later queries.');
+    assert.equal(f.controller.chips.get('documentation').querySelector('.md-quick-search__count').textContent, '—');
+    assert.ok(f.controller.results.querySelector('.md-quick-search__documentation-search'));
+    f.controller.chips.get('documentation').click();
+    assert.equal(f.requests.length, 2, 'Clicking the already selected scope must search the new query.');
+    await f.respond(f.rest()[1], {}, 503);
+    assert.equal(f.controller.chips.get('documentation').querySelector('.md-quick-search__count'), null, 'A failed request must not be displayed as zero results.');
+    f.type('another query');
+    f.advance(5000);
+    assert.equal(f.requests.length, 2);
+    f.enter();
+    assert.equal(f.requests.length, 3, 'Enter in documentation explicitly authorizes the current query.');
+});
+
+test('Keyboard scope navigation waits for Enter instead of silently sending an external query', t => {
+    const f = fixture(t, deniedRestPermissions, { adminSearchContext: { documentationSearchUrl } });
+    f.type('private query');
+    const { KeyboardEvent } = f.controller.root.ownerDocument.defaultView;
+    f.controller.input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', altKey: true, bubbles: true, cancelable: true }));
+    assert.equal(f.controller.scope, 'documentation');
+    f.advance(5000);
     assert.equal(f.requests.length, 0);
-    const link = f.controller.results.querySelector('[data-source="documentation"] a');
-    assert.equal(link.href, 'http://manual.intranet:8080/latest/sk/?q=banner%20%26%20images');
-    assert.equal(link.target, '_blank');
+    f.enter();
+    assert.equal(f.requests.length, 1);
+});
+
+for (const [platform, modifier, label, shortcut] of [
+    ['Win32', 'ctrlKey', 'Ctrl + Enter', 'Control+Enter'],
+    ['Linux x86_64', 'ctrlKey', 'Ctrl + Enter', 'Control+Enter'],
+    ['MacIntel', 'metaKey', '⌘ Enter', 'Meta+Enter']
+]) {
+    test(`Documentation shortcut explicitly searches the current query on ${platform}`, async t => {
+        const f = fixture(t, deniedRestPermissions, { platform, adminSearchContext: { documentationSearchUrl } });
+        f.enter({ [modifier]: true });
+        assert.equal(f.requests.length, 0, 'An empty query must never be sent.');
+        f.type(' q ');
+        const action = f.controller.results.querySelector('.md-quick-search__documentation-search');
+        assert.equal(action.querySelector('kbd').textContent, label);
+        assert.equal(action.getAttribute('aria-keyshortcuts'), shortcut);
+        f.advance(5000);
+        f.enter();
+        assert.equal(f.requests.length, 0, 'Plain Enter in All must not authorize an external search.');
+        f.enter({ [modifier]: true });
+        assert.equal(f.controller.scope, 'documentation');
+        assert.equal(f.requests.length, 1);
+        assert.equal(f.requests[0].url.searchParams.get('query'), 'q');
+        f.enter({ [modifier]: true, repeat: true });
+        f.enter({ [modifier]: true });
+        await f.respond(f.requests[0], { results: [] });
+        f.enter({ [modifier]: true });
+        assert.equal(f.requests.length, 1, 'Repeated shortcuts must reuse pending and completed results.');
+        f.controller.chips.get('all').click();
+        f.type('new query');
+        f.advance(5000);
+        assert.equal(f.requests.length, 1, 'Typing a new query must require a new explicit action.');
+        const { KeyboardEvent } = f.controller.root.ownerDocument.defaultView;
+        const event = new KeyboardEvent('keydown', { key: 'Enter', [modifier]: true, bubbles: true, cancelable: true });
+        f.controller.chips.get('admin').dispatchEvent(event);
+        assert.equal(event.defaultPrevented, true, 'The shortcut must also work when another dialog control has focus.');
+        assert.equal(f.requests.length, 2);
+        assert.equal(f.requests[1].url.searchParams.get('query'), 'new query');
+        assert.equal(f.controller.root.ownerDocument.activeElement, f.controller.input);
+        assert.equal(f.clicks(), 0, 'The shortcut must load results in the dialog without navigation.');
+    });
+}
+
+test('Documentation shortcuts ignore composition and unrelated modifiers', async t => {
+    for (const [platform, modifiers] of [
+        ['Win32', { metaKey: true }], ['MacIntel', { ctrlKey: true }],
+        ['Win32', { ctrlKey: true, altKey: true }], ['MacIntel', { metaKey: true, shiftKey: true }],
+        ['Win32', { ctrlKey: true, metaKey: true }], ['Win32', { ctrlKey: true, isComposing: true }]
+    ]) {
+        await t.test(`${platform}: ${JSON.stringify(modifiers)}`, t => {
+            const f = fixture(t, deniedRestPermissions, { platform, adminSearchContext: { documentationSearchUrl } });
+            f.type('private query');
+            f.controller.chips.get('documentation').click();
+            f.type('another private query');
+            const { KeyboardEvent } = f.controller.root.ownerDocument.defaultView;
+            const event = new KeyboardEvent('keydown', { key: 'Enter', ...modifiers, bubbles: true, cancelable: true });
+            f.controller.input.dispatchEvent(event);
+            assert.equal(event.defaultPrevented, false);
+            assert.equal(f.requests.length, 1, 'Unrelated key combinations must not send the changed query.');
+        });
+    }
+});
+
+test('Documentation shortcuts remain inactive when documentation is disabled', async t => {
+    for (const [platform, modifier] of [['Win32', 'ctrlKey'], ['MacIntel', 'metaKey']]) {
+        await t.test(platform, t => {
+            const f = fixture(t, deniedRestPermissions, { platform, adminSearchContext: { documentationSearchUrl: '' } });
+            f.type('private query');
+            const { KeyboardEvent } = f.controller.root.ownerDocument.defaultView;
+            const event = new KeyboardEvent('keydown', { key: 'Enter', [modifier]: true, bubbles: true, cancelable: true });
+            f.controller.input.dispatchEvent(event);
+            assert.equal(event.defaultPrevented, false);
+            assert.equal(f.controller.scope, 'all');
+            assert.equal(f.requests.length, 0);
+        });
+    }
 });
