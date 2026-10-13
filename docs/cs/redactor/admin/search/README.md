@@ -25,7 +25,7 @@ Odkaz **Otevřít výsledky v sekci…** přenese hledaný výraz do příslušn
 
 Dialog zavřete klávesou **Esc**, tlačítkem zavření nebo kliknutím mimo něj. Fokus se vrátí na tlačítko v hlavičce; hledaný výraz se do tlačítka nepřepisuje.
 
-Dokumentace se ve výchozím nastavení neprohledává automaticky. Karta zobrazuje pomlčku, která znamená **zatím neprohledáno**, nikoli nulový počet výsledků. V rozsahu **Vše** najdete vysvětlení, na který server se výraz odešle, a odkaz **Načíst výsledky i z externí dokumentace**. Kliknutí na tento odkaz nebo na kartu **Dokumentace** vyhledá již zadaný výraz a zobrazí výsledky v dialogu. Tooltip karty vysvětluje odeslání výrazu na externí server.
+Dokumentace se ve výchozím nastavení neprohledává automaticky. Karta zobrazuje pomlčku, která znamená **zatím nepřehledané**, nikoli nulový počet výsledků. V rozsahu **Vše** naleznete vysvětlení, na který server se výraz odešle, a odkaz **Načíst výsledky iz externí dokumentace**. Klepnutí na tento odkaz nebo na kartu **Dokumentace** vyhledá již zadaný výraz a zobrazí výsledky v dialogu. Tooltip karty vysvětluje odeslání výrazu na externí server.
 
 Po změně výrazu se výsledky dokumentace vymažou a karta znovu zobrazí pomlčku. Nové vyhledávání spustíte kliknutím na kartu nebo odkaz, případně klávesou **Enter** v rozsahu **Dokumentace**. Enter v rozsahu **Vše** ve výchozím nastavení prohledává pouze interní zdroje. Přepínání rozsahů pomocí **Alt+šipka** samo externí dotaz neodešle.
 
@@ -37,7 +37,7 @@ V **Nastavení → Konfigurace** nastavte proměnnou `adminDocumentationSearchUr
 
 Prázdná hodnota `adminDocumentationSearchUrl` vypne vyhledávání v dokumentaci a skryje jeho kartu i tlačítko ve výsledcích.
 
-Proměnná `adminDocumentationAlwaysSearch` má výchozí hodnotu `false`. Nastavení `true` zapne automatické vyhledávání v rozsazích **Vše** a **Dokumentace** po dvousekundové pauze při alespoň 8 znacích po odstranění okrajových mezer. Enter v těchto rozsazích vyhledá i kratší neprázdný výraz. Zapněte ho pouze v nasazení, kde dokumentační služba může přijímat interní dotazy, například na schváleném vlastním serveru. Prázdná URL vypne dokumentaci i při hodnotě `true`. Po změně konfigurace obnovte administraci.
+Proměnná `adminDocumentationAlwaysSearch` má výchozí hodnotu `false`. Nastavení `true` zapne automatické vyhledávání v rozmezí **Vše** a **Dokumentace** po dvou sekundové pauze při alespoň 8 znacích po odstranění okrajových mezer. Enter v těchto rozmezích vyhledá i kratší neprázdný výraz. Zapněte jej pouze v nasazení, kde dokumentační služba může přijímat interní dotazy, například na schváleném vlastním serveru. Prázdná URL vypne dokumentaci i při hodnotě `true`. Po změně konfigurace obnovte administraci.
 
 Proměnná `adminDocumentationSearchUrl` zároveň určuje server pro odkazy v menu **Nápověda**, `WJ.showHelpWindow` a changelog. Z URL se pro tyto odkazy použije pouze protokol, doména a port; cesta vyhledávací služby se ignoruje. Například `https://manual.example:8443/rest/rag/markdown/search` otevře dokumentaci na `https://manual.example:8443/latest/sk/`. Dokumentace je dostupná slovensky, česky a anglicky; pro ostatní jazyky administrace se otevře anglická verze.
 

@@ -12,18 +12,22 @@ V horní části se nachází hlavička:
 
 obsahuje následující možnosti:
 
-- Menu **Pomocník** s pomocí k aktuální stránce, dokumentací, novinkami a kontakty.
+- **Označení prostředí** – barevný štítek před názvem stránky, například **DEV**, **TEST** nebo **PROD**, který pomáhá rozlišit, ve kterém prostředí pracujete. Jeho text, barvu a ikonu nastavíte podle návodu [Konfigurace úvodní obrazovky a označení prostředí](../../admin/setup/configuration/dashboard.md).
+- **Název aktuální stránky** – například **Statistika návštěvnosti**, zobrazený za označením prostředí.
 - Tlačítko **Hledat…** pro otevření [rychlého vyhledávání](search/README.md). Dialog otevřete také zkratkou **Ctrl+K** ve Windows nebo **⌘K** na Macu.
-- Jméno aktuálně přihlášeného uživatele, kliknutím na jméno zobrazíte následující možnosti:
-  - Profil - upravit vlastní profil (jméno, email... - po změně profilu je třeba se odhlásit a znovu přihlásit).
-  - Dvoustupňové ověřování - možnost aktivovat dvoustupňové ověřování pomocí aplikace ```Google Authenticate``` při přihlašování do administrace. Zvyšuje se tak bezpečnost vašeho účtu, protože kromě hesla je pro přihlášení třeba zadat také kód z vašeho mobilního zařízení. Doporučujeme nastavit na všechny účty, přes které lze spravovat uživatelské účty a práva. Pokud používáte ověřování vůči `ActiveDirectory/SSO` serveru můžete menu položku vypnout nastavením konf. proměnné `2factorAuthEnabled` na hodnotu `false`.
-  - Správa šifrovacích klíčů - umožňuje vytvořit nový šifrovací klíč pro šifrování formulářů a zadat stávající klíč pro jejich dešifrování. Vyžaduje právo Formuláře.
-  - Odhlášení - odhlášení z administrace.
+- Menu **Pomocník** s pomocí k aktuální stránce, dokumentací, novinkami a kontakty.
+- Jméno aktuálně přihlášeného uživatele, kterým otevřete [uživatelské menu](#uživatelské-menu) s profilem, zabezpečením účtu a odhlášením.
 - ![](icon-logoff.png ":no-zoom") Ikonu pro odhlášení z administrace.
 
 V hlavičce se mohou zobrazovat karty pro přechod do třetí úrovně menu.
 
-## Nápověda
+### Vyhledávání
+
+Tlačítko **Hledat…** v hlavičce otevře rychlé vyhledávání přes aktuální stránku. Podle vašich oprávnění můžete hledat webové stránky, soubory, uživatele, textové klíče a položky menu administrace; dostupné je i vyhledávání v dokumentaci. Podrobný popis možností a ovládání naleznete v části [Vyhledávání](search/README.md).
+
+![](search/quick-search.png)
+
+### Nápověda
 
 Menu **Pomocník** je dostupné v hlavičce na všech stránkách administrace. Nabízí:
 
@@ -38,6 +42,23 @@ Menu **Pomocník** je dostupné v hlavičce na všech stránkách administrace. 
 Odkazy na dokumentaci a podporu se otevírají v nové kartě. Ve spodní části menu je edice, verze a server WebJET CMS. Ikonou kopírování zkopírujete informace pro podporu.
 
 Menu lze ovládat klávesnicí: **Enter** nebo mezerník jej otevře, šipky procházejí položky a **Esc** jej zavře a vrátí fokus na tlačítko **Nápověda**.
+
+### Uživatelské menu
+
+Klepnutím na své jméno v pravé horní části hlavičky otevřete uživatelské menu. V jeho horní části jsou iniciály, celé jméno, přihlašovací jméno a email, pokud jej máte vyplněn v profilu.
+
+![Uživatelské menu s profilem, aktivními přihlášeními a možnostmi zabezpečení účtu](user-menu.png)
+
+Menu nabízí:
+
+- **Profil** – úprava vlastních osobních a kontaktních údajů a hesla. Po uložení systém doporučuje odhlásit se a znovu přihlásit, aby se projevily všechny změny.
+- **Aktivní přihlášení** – přejde na úvodní stránku a otevře okno **Aktivní přihlášení** na kartě **Moje přihlášení**. Můžete zkontrolovat vlastní relace, odhlásit ostatní přihlášení, spravovat zařízení a prohlížet historii přihlášení; dle oprávnění je dostupná i karta přihlášených administrátorů. Podrobný popis naleznete v části [Přihlášení na úvodní stránce](welcome.md#přihlášení). Číslo u položky udává počet aktivních relací vašeho účtu v době načítání stránky. Při provozu na více serverech se zobrazuje text **Na tomto serveru** a počet zahrnuje pouze relace na aktuálním serveru.
+- **Dvoustupňové ověřování** – nastavení ověřování kódem z aplikace, například `Google Authenticator` nebo `Microsoft Authenticator`. Štítek **Zapnuto** nebo **Vypnuto** ukazuje stav pro váš účet. Po zavření okna s nastavením se stav obnoví při dalším otevření menu. Postup zapnutí popisuje [Dvoustupňové ověřování](logon.md#dvoustupňové-ověřování). Položka se zobrazuje, pokud je konfigurační proměnná `2factorAuthEnabled` nastavena na `true`.
+- **Přístupový klíč** – správa přístupových klíčů pro přihlašování pomocí biometrie nebo PIN zařízení. Umožňuje přidat nový klíč a odstranit zaregistrovaný klíč. Postup naleznete v části [Přidání nového přístupového klíče](logon.md#přidání-nového-přístupového-klíče). Položka se zobrazuje, pokud je konfigurační proměnná `password_passKeyEnabled` nastavena na `true`.
+- **Správa šifrovacích klíčů** – vytvoření nového klíče pro šifrování formulářů nebo zadání stávajícího klíče pro jejich dešifrování. Položka se zobrazuje uživatelům s právem **Formuláře**.
+- **Odhlášení** – odhlášení z administrace. Stejnou funkci má samostatná ikona odhlášení vedle vašeho jména v hlavičce.
+
+Menu je dostupné na všech stránkách administrace. Klávesou **Enter** nebo mezerníkem jej otevřete, šipkami nahoru a dolů procházíte položky a klávesou **Esc** jej zavřete a vrátíte fokus na své jméno.
 
 ## Menu
 

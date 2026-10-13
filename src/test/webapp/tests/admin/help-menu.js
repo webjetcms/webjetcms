@@ -106,7 +106,10 @@ Scenario('Header help shares release news and supplies documentation links', asy
 });
 
 Scenario('System diagnostics copy all context and confirm success for two seconds', async ({ I }) => {
-    I.amOnPage('/admin/v9/search/?autotest=diagnostics#details');
+    I.amOnPage('/admin/v9/search/');
+    I.executeScript(() => {
+        history.replaceState(null, '', '?autotest=diagnostics#details');
+    });
     openHelp(I);
     I.executeScript(() => {
         Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {

@@ -525,6 +525,20 @@ Scenario('layout-menu', async ({ I, DT, Document, i18n }) => {
     Document.screenshot("/redactor/admin/editor-phone.png");
 
     I.wjSetDefaultWindowSize();
+
+    I.amOnPage('/apps/stat/admin/');
+    I.resizeWindow(1360, 850);
+    I.waitForElement('#dropdownMenuUser[data-user-initialized="true"]', 15);
+    Document.screenshotElement('.ly-header', '/redactor/admin/header.png');
+
+    I.clickCss('#dropdownMenuUser');
+    I.waitForVisible('#admin-user-menu.show', 5);
+    I.moveCursorTo('.md-user-menu__avatar');
+    Document.screenshotElement('#admin-user-menu', '/redactor/admin/user-menu.png');
+
+    I.pressKey('Escape');
+    I.waitForInvisible('#admin-user-menu', 5);
+    I.wjSetDefaultWindowSize();
 });
 
 Scenario('editor-virtualPath', ({ I, DTE, Document }) => {

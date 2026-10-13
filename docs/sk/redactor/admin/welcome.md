@@ -209,6 +209,8 @@ Zobrazuje graf a číselné hodnoty zaťaženia procesora servera. Správca mô�
 
 ## Prihlásenia
 
+Okno **Aktívne prihlásenia** otvoríte z ktorejkoľvek stránky administrácie cez [používateľské menu v hlavičke](README.md#používateľské-menu): kliknite na svoje meno a vyberte **Aktívne prihlásenia**. Prejdete na úvodnú stránku, kde sa otvorí karta **Moje prihlásenia**.
+
 Pri viacerých aktívnych reláciách nájdete v systémových upozorneniach odkaz **Aktívne prihlásenia**. Zoznam si môžete pridať aj ako widget **Moje aktívne prihlásenia**. Zoznam ostatných prihlásených administrátorov je samostatný widget **Prihlásení admini**, dostupný podľa oprávnení.
 
 ### Moje aktívne prihlásenia

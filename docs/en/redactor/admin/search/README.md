@@ -25,21 +25,21 @@ The **Open results in section…** link will take your search term to the approp
 
 To close the dialog, press the **Esc** key, the close button, or click outside the dialog. The focus returns to the button in the header; the search term is not written to the button.
 
-Documentation is not searched automatically by default. Its scope shows a dash meaning **not searched yet**, rather than zero results. In **All**, a notice identifies the server that will receive the query, followed by an **Also load results from external documentation** link. Clicking this link or the **Documentation** scope searches the existing query and displays results in the dialog. The scope tooltip explains that the query will be sent to an external server.
+The documentation is not automatically searched by default. The card displays a dash, which means **not searched yet**, not zero results. In the **All** range, you will find an explanation of which server the expression will be sent to, and a link **Get results from external documentation as well**. Clicking this link or the **Documentation** tab will search for the expression you have already entered and display the results in a dialog. The card's tooltip explains sending the expression to an external server.
 
-Changing the query clears documentation results and restores the dash. Start another search by clicking the scope or link, or pressing **Enter** in **Documentation**. By default, Enter in **All** searches only internal sources. Switching scopes with **Alt+arrow** does not itself send an external query.
+After changing the expression, the documentation results are cleared and the tab displays a dash again. To start a new search, click the tab or link, or press **Enter** in the **Documentation** scope. Enter in the **All** scope searches only internal sources by default. Switching scopes with **Alt+arrow** does not send an external query by itself.
 
 ![Search results for banner system in AI response documentation](quick-search-documentation.png)
 
 ### Setting up documentation search
 
-In **Settings → Configuration**, set the variable `adminDocumentationSearchUrl` to a valid full URL of the search service, including its path. The default value is `https://docs.webjetcms.sk/rest/rag/markdown/search`. When changing the domain or path, just edit this variable and refresh the administration.
+In **Settings → Configuration**, set the variable `adminDocumentationSearchUrl` to a valid full URL of the search service, including the path. The default value is `https://docs.webjetcms.sk/rest/rag/markdown/search`. When changing the domain or path, just edit this variable and refresh the administration.
 
-An empty `adminDocumentationSearchUrl` disables documentation search and hides both its scope and its search button.
+The empty value `adminDocumentationSearchUrl` disables documentation search and hides its tab and button in the results.
 
-`adminDocumentationAlwaysSearch` defaults to `false`. Setting it to `true` enables automatic search in **All** and **Documentation** after a two-second pause for queries with at least 8 trimmed characters. Enter in these scopes also searches shorter nonempty queries. Enable this only for deployments whose documentation service is approved to receive internal queries, such as an approved customer-hosted server. An empty URL disables documentation even when this setting is `true`. Refresh the administration after changing configuration.
+The `adminDocumentationAlwaysSearch` variable has a default value of `false`. Setting `true` turns on automatic searching in the **All** and **Documentation** ranges after a two-second pause at least 8 characters after removing trailing spaces. Enter will also search for a shorter non-empty expression in these ranges. Turn it on only in deployments where the documentation service can accept internal queries, such as on an approved custom server. An empty URL turns off documentation even with a value of `true`. After changing the configuration, refresh the administration.
 
-`adminDocumentationSearchUrl` also specifies the server for links in the **Help**, `WJ.showHelpWindow` and changelog menus. From the URL, only the protocol, domain and port are used for these links; the search service path is ignored. For example, `https://manual.example:8443/rest/rag/markdown/search` opens the documentation at `https://manual.example:8443/latest/sk/`. The documentation is available in Slovak, Czech and English; for other administration languages, the English version opens.
+The `adminDocumentationSearchUrl` variable also specifies the server for links in the **Help**, `WJ.showHelpWindow` and changelog menus. From the URL, only the protocol, domain and port are used for these links; the search service path is ignored. For example, `https://manual.example:8443/rest/rag/markdown/search` opens the documentation at `https://manual.example:8443/latest/sk/`. The documentation is available in Slovak, Czech and English; for other administration languages, the English version opens.
 
 The administration will complete the parameter `query` with the search term and send `language` and `directory` depending on the interface language:
 

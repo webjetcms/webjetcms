@@ -209,6 +209,8 @@ Displays a graph and numerical values ​​of the server's CPU load. The admini
 
 ## Logins
 
+You can open the **Active Logins** window from any administration page via the [user menu in the header](README.md#user-menu): click on your name and select **Active Logins**. You will be taken to the home page, where the **My Logins** tab will open.
+
 If you have multiple active sessions, you will find a link in the system notifications to **Active Logins**. You can also add the list as a **My Active Logins** widget. The list of other logged in administrators is a separate widget **Logged in Admins**, available according to permissions.
 
 ### My active logins

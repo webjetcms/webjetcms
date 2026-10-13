@@ -209,6 +209,8 @@ Zobrazuje graf a číselné hodnoty zatížení procesoru serveru. Správce mů�
 
 ## Přihlášení
 
+Okno **Aktivní přihlášení** otevřete z kterékoli stránky administrace přes [uživatelské menu v hlavičce](README.md#uživatelské-menu): klikněte na své jméno a vyberte **Aktivní přihlášení**. Přejdete na úvodní stránku, kde se otevře karta **Moje přihlášení**.
+
 U více aktivních relací naleznete v systémových upozorněních odkaz **Aktivní přihlášení**. Seznam si můžete přidat také jako widget **Moje aktivní přihlášení**. Seznam ostatních přihlášených administrátorů je samostatný widget **Přihlášení admini**, dostupný podle oprávnění.
 
 ### Moje aktivní přihlášení
