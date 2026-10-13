@@ -156,9 +156,10 @@ div.mermaid {
   }
 
   input[type="search"] {
+    color-scheme: dark;
     min-width: 0;
     width: 100%;
-    padding: 8px;
+    padding: 4px 8px;
     border: 1px solid var(--search-muted);
     border-right: 0;
     border-radius: 6px 0 0 6px;
@@ -169,6 +170,14 @@ div.mermaid {
 
     &::placeholder {
       color: var(--search-muted);
+    }
+
+    &::-webkit-search-cancel-button {
+      cursor: pointer;
+    }
+
+    &::-webkit-search-cancel-button:hover {
+      filter: brightness(1.3);
     }
 
     &:focus-visible {
@@ -212,11 +221,18 @@ div.mermaid {
   box-sizing: border-box;
   border: 1px solid var(--search-border);
   border-radius: 6px;
+  box-shadow: 0 20px 72px rgb(11 20 43 / 53%), 0 0 0 1px rgb(255 255 255 / 25%);
   background: var(--base-background-color);
   color: var(--search-color);
   font-size: 16px;
   line-height: 1.55;
   overflow: auto;
+  opacity: 0;
+  transition: opacity 220ms ease, display 220ms allow-discrete, overlay 220ms allow-discrete;
+
+  &[open] {
+    opacity: 1;
+  }
 
   [hidden] {
     display: none;
@@ -230,7 +246,26 @@ div.mermaid {
   }
 
   &::backdrop {
-    background: rgb(0 0 0 / 65%);
+    background: rgb(230 237 247 / 53%);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    transition: opacity 220ms ease, display 220ms allow-discrete, overlay 220ms allow-discrete;
+  }
+
+  &[open]::backdrop {
+    opacity: 1;
+  }
+}
+@starting-style {
+  .documentation-search-dialog[open],
+  .documentation-search-dialog[open]::backdrop {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .documentation-search-dialog,
+  .documentation-search-dialog::backdrop {
+    transition: none;
   }
 }
 .documentation-search-header {
@@ -266,7 +301,7 @@ div.mermaid {
   input {
     min-width: 0;
     width: 100%;
-    padding: 10px 12px;
+    padding: 4px 8px;
     border: 1px solid var(--search-muted);
     border-right: 0;
     border-radius: 6px 0 0 6px;

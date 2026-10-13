@@ -1,5 +1,6 @@
 const assert = require('node:assert/strict');
 const http = require('node:http');
+const https = require('node:https');
 const test = require('node:test');
 const { createPreview } = require('../serve-rag.cjs');
 
@@ -59,6 +60,37 @@ test('injects preview configuration and preserves proxy authentication and error
   });
   assert.equal(malformed, 400);
   assert.equal((await fetch(url + query, { headers })).status, 200);
+
+  let httpsOptions;
+  t.mock.method(https, 'request', (options, callback) => {
+    httpsOptions = options;
+    return http.request({ ...options, hostname: '127.0.0.1', port: backendServer.address().port }, callback);
+  });
+  const productionPreview = await listen(createPreview({ backend: 'https://docs.example/cms', docs }));
+  assert.equal((await fetch(productionPreview)).status, 200);
+  assert.equal(httpsOptions, undefined);
+  const productionResponse = await fetch(productionPreview + query, { headers });
+  assert.equal(productionResponse.status, 200);
+  assert.equal((await productionResponse.json()).answer, 'AI answer');
+  assert.equal(httpsOptions.hostname, 'docs.example');
+  assert.equal(httpsOptions.port, 443);
+  assert.equal(httpsOptions.headers.host, 'docs.example');
+  assert.deepEqual(searchRequest, { url: query, cookie: headers.Cookie });
+  for (const path of ['/', query]) {
+    const aliasStatus = await new Promise((resolve, reject) => {
+      http.get(productionPreview + path, {
+        headers: { ...headers, Host: 'docs.interway.sk:3001', Origin: 'http://docs.interway.sk:3001' }
+      }, response => {
+        response.resume();
+        response.on('end', () => resolve(response.statusCode));
+      }).on('error', reject);
+    });
+    assert.equal(aliasStatus, 200);
+  }
+  assert.equal(httpsOptions.hostname, 'docs.example');
+  assert.equal(httpsOptions.headers.host, 'docs.example');
+  assert.equal((await fetch(productionPreview + query, { headers: { Origin: 'https://unrelated.example' } })).status, 403);
+
   backendServer.closeAllConnections();
   await new Promise(resolve => backendServer.close(resolve));
   assert.equal((await fetch(url + query)).status, 503);

@@ -38,7 +38,7 @@ Before(({ I }) => {
 
 /**
  * Verifies the complete search flow from the language root: trimming a question,
- * finding the user guide, opening it in a new tab, and refining the question in the dialog.
+ * finding the user guide, opening it in the current tab, and refining the question in the dialog.
  * Accepts links to matching sections and checks that Escape restores focus to the sidebar.
  */
 Scenario('Search finds relevant documents, opens a result and accepts a new question in the dialog', async ({ I }) => {
@@ -51,15 +51,15 @@ Scenario('Search finds relevant documents, opens a result and accepts a new ques
     const userUrl = links.find(url => new URL(url).pathname === '/latest/sk/admin/users/');
     I.assertTrue(Boolean(userUrl), 'A question about creating a user must find the user guide.');
     const link = locate(resultLinks).withAttr({ href: userUrl });
-    I.seeAttributesOnElements(link, { target: '_blank', rel: 'noopener noreferrer' });
     const tabs = await I.grabNumberOfOpenTabs();
     I.click(link);
-    I.waitForNumberOfTabs(tabs + 1, 10);
-    I.switchToNextTab();
     I.waitForText('Zoznam používateľov', 30, '.markdown-section h1');
-    I.closeCurrentTab();
-    I.seeElement(dialog + '[open]');
-    I.seeCurrentUrlEquals(documentationUrl);
+    I.assertEqual(await I.grabNumberOfOpenTabs(), tabs, 'Opening a result must keep the current tab.');
+    I.dontSeeElement(dialog + '[open]');
+    I.amOnPage(documentationUrl);
+    I.waitForVisible(input, 30);
+    await search(I, userQuestion);
+    await checkResults(I, userQuestion);
 
     const question = 'Ako vytvorím skupinu používateľov?';
     await search(I, question, true);

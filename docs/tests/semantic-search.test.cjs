@@ -37,7 +37,7 @@ test('Docsify navigation, scoped search, safe results and request errors', async
     const url = new URL(route.request().url());
     if (url.origin === base || url.origin === latestBase) {
       if (url.pathname.endsWith('/semantic-search.js')) {
-        scriptRequests.push(url.pathname);
+        scriptRequests.push(url.pathname + url.search);
         if (searchScriptMode === 'pending') await pendingSearchScript;
         if (searchScriptMode === 'failed') return route.abort('failed');
       }
@@ -122,13 +122,24 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   assert.equal(await page.locator('.documentation-search-answer').isVisible(), true);
 
   const popupEvent = page.waitForEvent('popup');
-  await result.click();
+  await result.click({ modifiers: [process.platform === 'darwin' ? 'Meta' : 'Control'] });
   const popup = await popupEvent;
   await popup.waitForURL(base + '/en/redactor/');
   await waitForDocument(popup, 'en/redactor/README.md');
-  assert.equal(await popup.evaluate(() => window.opener), null);
   assert.equal(await page.locator('dialog').isVisible(), true);
   await popup.close();
+
+  await result.click();
+  await page.waitForURL(base + '/en/redactor/');
+  await waitForDocument(page, 'en/redactor/README.md');
+  assert.equal(context.pages().length, 1);
+  assert.equal(await page.locator('dialog[open]').count(), 0);
+  await page.goBack();
+  await page.waitForURL(base + '/en/redactor/README');
+  await waitForDocument(page, 'en/redactor/README.md');
+  await page.locator('#documentation-query').fill('Edit a page');
+  await page.locator('.documentation-search button').click();
+  await page.waitForFunction(() => !document.querySelector('.documentation-search-dialog-submit').disabled);
 
   // Editing the dialog question preserves the current scope and synchronizes the sidebar.
   await dialogQuery.fill('Update a page');
@@ -241,7 +252,9 @@ test('Docsify navigation, scoped search, safe results and request errors', async
     await waitForDocument(page, language + '/admin/users/README.md');
     assert.equal(page.url(), documentUrl);
     assert.equal(await page.evaluate(() => window.$docsify.routerMode), 'history');
-    assert.equal(await page.locator('link[href="/style.css"]').evaluate(link => link.href), base + '/style.css');
+    const version = await page.evaluate(() => window.version);
+    assert.equal(await page.locator('link[href*="style.css?v="]').evaluate(link => link.href), base + '/style.css?v=' + version);
+    assert.equal(await page.locator('script[src*="assets/semantic-search.js"]').getAttribute('src'), '/assets/semantic-search.js?v=' + version);
     await page.locator('.sidebar-nav a[href$="/admin/users/user-groups"]').click();
     await waitForDocument(page, language + '/admin/users/user-groups.md');
     assert.equal(page.url(), base + '/' + language + '/admin/users/user-groups');
@@ -253,7 +266,9 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   scriptRequests.length = 0;
   await page.goto(latestBase + '/latest/en/');
   await page.locator('#documentation-query').waitFor();
-  assert.deepEqual(scriptRequests, ['/latest/assets/semantic-search.js']);
+  const version = await page.evaluate(() => window.version);
+  assert.deepEqual(scriptRequests, ['/latest/assets/semantic-search.js?v=' + version]);
+  assert.equal(await page.locator('link[href*="style.css?v="]').evaluate(link => link.href), latestBase + '/latest/style.css?v=' + version);
   await page.locator('.sidebar-nav a[href$="/redactor/README"]').click();
   await waitForDocument(page, 'en/redactor/README.md');
   assert.equal(new URL(page.url()).pathname, '/latest/en/redactor/README');

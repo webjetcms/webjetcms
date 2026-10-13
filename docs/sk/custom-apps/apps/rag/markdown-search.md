@@ -102,6 +102,16 @@ npm run docs:rag -- --backend http://iwcm.interway.sk
 
 Otvorte `http://iwcm.interway.sk:3001/sk/`. Ak je `ragMarkdownSearchRequireLogin=true`, najprv sa prihláste cez prihlasovaciu stránku webu na `http://iwcm.interway.sk` v rovnakom prehliadači aj profile; postačuje bežný používateľský účet. Administrátori môžu použiť aj `/admin/`. Rovnaký názov hostiteľa umožní použiť existujúcu prihlasovaciu cookie aj na inom porte. Pri hodnote `false` prihlásenie netreba. Vstavaný prehliadač VS Code má samostatnú reláciu a prihlásenie z bežného prehliadača neprevezme.
 
+Pre predvolenú produkčnú REST službu `https://docs.webjetcms.sk` stačí:
+
+```sh
+npm run docs:rag
+```
+
+Otvorte `http://127.0.0.1:3001/sk/`. Dokumentácia sa načíta z lokálneho statického servera a vyhľadávanie použije `https://docs.webjetcms.sk/rest/rag/markdown/search`. Lokálny náhľad nezdieľa prihlasovacie cookies produkčnej domény, preto tento spôsob vyžaduje povolené anonymné vyhľadávanie na backende (`ragMarkdownSearchRequireLogin=false`).
+
+Náhľad môžete otvoriť aj cez vlastný názov hostiteľa smerujúci na `127.0.0.1`, napríklad `http://docs.interway.sk:3001/sk/`. Cieľ REST volaní určuje parameter `--backend` s predvolenou hodnotou `https://docs.webjetcms.sk`. Parameter `--docs` má predvolenú hodnotu `http://127.0.0.1:3000` a `--port` hodnotu `3001`.
+
 Proxy počúva iba na lokálnom rozhraní, zobrazuje náhľad zo statického servera a požiadavky na vyhľadávanie posiela do WebJETu. V HTML náhľadu nastaví koreň dokumentácie na `/`, takže aj pri inom názve backendového hostiteľa používate history adresy `/sk/...`. Koreň dokumentácie sa pri spustení nezadáva. Nové vyhľadávanie v podadresári sa obmedzí na adresár aktuálnej stránky a jeho podadresáre. Napríklad z adresy `http://iwcm.interway.sk:3001/sk/admin/README` sa odošle `directory=/sk/admin/`. Odkaz **vyhľadať vo všetkých adresároch** v dialógu zopakuje otázku bez tohto filtra. V koreňovom adresári jazyka, napríklad `/sk/`, sa filter neposiela a odkaz sa nezobrazuje. Súbory dokumentácie, nastavenia CORS ani overovanie prihlásenia sa nemenia.
 
 ## Plánovaná indexácia

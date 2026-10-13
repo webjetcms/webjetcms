@@ -12,13 +12,13 @@
 
   <link rel="icon" type="image/x-icon" href="/assets/images/favicon-cms.ico">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-  <link rel="stylesheet" href="/style.css">
 
 </head>
 <body>
   <div id="app">Loading...</div>
 
   <script>
+    var version = 7;
     var basePath = "/latest/";
         if (
             window.location.href.indexOf("127.0.0.1") > -1
@@ -102,6 +102,10 @@
         pathNamespaces: ['/sk', '/en'],
       },*/
     }
+    var stylesheet = document.createElement("link");
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = basePath + "style.css?v=" + version;
+    document.head.appendChild(stylesheet);
   </script>
   <!-- Docsify v4 -->
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
@@ -228,11 +232,12 @@
 
     // Load semantic search without blocking documentation rendering.
     var tag = document.createElement("script");
-    tag.src = basePath + "assets/semantic-search.js?v=2";
+    tag.src = basePath + "assets/semantic-search.js?v=" + version;
     tag.async = "async";
     document.getElementsByTagName("body")[0].appendChild(tag);
 
-    if (window.location.pathname==basePath) {
+    //detect language and redirect accordingly
+    if (window.location.pathname==basePath || window.location.pathname==basePath+"index.html") {
       try {
           var language = navigator.languages
               ? navigator.languages[0]

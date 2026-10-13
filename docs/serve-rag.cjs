@@ -1,22 +1,23 @@
 const http = require('node:http');
+const https = require('node:https');
 const { parseArgs } = require('node:util');
 
 /**
  * Proxies the local Docsify preview and its search endpoint without changing backend authentication.
  * Sets the preview root and search configuration in HTML and forwards cookies only to the backend search endpoint.
- * Accepts GET and HEAD requests for the backend hostname and rejects cross-origin requests.
+ * Accepts GET and HEAD requests on any hostname and rejects cross-origin requests.
  *
  * @param {Object} options - Local preview configuration.
- * @param {string} options.backend - HTTP backend URL, optionally including its application context path.
+ * @param {string} options.backend - HTTP or HTTPS backend URL, optionally including its application context path.
  * @param {string} [options.docs="http://127.0.0.1:3000"] - HTTP Docsify development server URL.
  * @returns {import('node:http').Server} Configured server; the caller must start listening.
- * @throws {Error} If either server uses a non-HTTP protocol or either URL contains credentials.
+ * @throws {Error} If a server uses an unsupported protocol or either URL contains credentials.
  */
 function createPreview({ backend, docs = 'http://127.0.0.1:3000' }) {
   const webjet = new URL(backend);
   const preview = new URL(docs);
-  if (webjet.protocol !== 'http:' || preview.protocol !== 'http:') {
-    throw new Error('The local preview requires HTTP development servers.');
+  if (!['http:', 'https:'].includes(webjet.protocol) || preview.protocol !== 'http:') {
+    throw new Error('The backend requires HTTP or HTTPS; the Docsify development server requires HTTP.');
   }
   if (webjet.username || webjet.password || preview.username || preview.password) {
     throw new Error('Provide server URLs without credentials.');
@@ -32,7 +33,7 @@ function createPreview({ backend, docs = 'http://127.0.0.1:3000' }) {
       res.writeHead(400);
       return res.end();
     }
-    if (url.hostname !== webjet.hostname || (req.headers.origin && req.headers.origin !== origin)
+    if ((req.headers.origin && req.headers.origin !== origin)
         || req.headers['sec-fetch-site'] === 'cross-site') {
       res.writeHead(403);
       return res.end();
@@ -48,8 +49,9 @@ function createPreview({ backend, docs = 'http://127.0.0.1:3000' }) {
       if (req.headers[name]) headers[name] = req.headers[name];
     }
     if (search && req.headers.cookie) headers.cookie = req.headers.cookie;
-    const upstream = http.request({
-      hostname: target.hostname, port: target.port || 80, method: req.method,
+    const transport = target.protocol === 'https:' ? https : http;
+    const upstream = transport.request({
+      hostname: target.hostname, port: target.port || (target.protocol === 'https:' ? 443 : 80), method: req.method,
       path: (search ? '' : target.pathname.replace(/\/$/, '')) + url.pathname + url.search,
       headers
     }, response => {
@@ -84,19 +86,18 @@ function createPreview({ backend, docs = 'http://127.0.0.1:3000' }) {
 
 if (require.main === module) {
   const { values } = parseArgs({ options: {
-    backend: { type: 'string' },
+    backend: { type: 'string', default: 'https://docs.webjetcms.sk' },
     docs: { type: 'string' }, port: { type: 'string' }
   } });
-  if (!values.backend) {
-    console.error('Usage: npm run docs:rag -- --backend http://webjet.local');
-    process.exit(1);
-  }
   const server = createPreview(values);
   server.on('error', error => { console.error(error.message); process.exitCode = 1; });
   server.listen(Number(values.port || 3001), '127.0.0.1', () => {
     const backend = new URL(values.backend);
-    console.log(`Preview: http://${backend.hostname}:${server.address().port}/sk/`);
-    console.log(`If ragMarkdownSearchRequireLogin is enabled, sign in at ${backend.href} using the same browser; any user account is sufficient.`);
+    console.log(`Preview: http://127.0.0.1:${server.address().port}/sk/`);
+    if (backend.protocol === 'http:') {
+      console.log(`For a backend requiring login, use http://${backend.hostname}:${server.address().port}/sk/ with the backend hostname resolving to loopback and sign in at ${backend.href} in the same browser.`);
+    }
+    console.log('The loopback preview does not share production login cookies; the backend must allow anonymous search.');
   });
 }
 

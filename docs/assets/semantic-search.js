@@ -20,7 +20,7 @@
       forbidden: 'Nemáte oprávnenie na vyhľadávanie v tejto dokumentácii.',
       rateLimited: 'Dosiahli ste limit vyhľadávaní. Skúste to znova neskôr.',
       unavailable: 'Vyhľadávanie dokumentácie momentálne nie je dostupné.',
-      open: 'Otvoriť dokument v novej karte'
+      open: 'Otvoriť dokument'
     },
     cs: {
       search: 'Vyhledat', label: 'Hledat v dokumentaci', alternative: 'nebo',
@@ -40,7 +40,7 @@
       forbidden: 'Nemáte oprávnění k vyhledávání v této dokumentaci.',
       rateLimited: 'Dosáhli jste limitu vyhledávání. Zkuste to znovu později.',
       unavailable: 'Vyhledávání dokumentace momentálně není dostupné.',
-      open: 'Otevřít dokument v nové kartě'
+      open: 'Otevřít dokument'
     },
     en: {
       search: 'Search', label: 'Search documentation', alternative: 'or',
@@ -60,7 +60,7 @@
       forbidden: 'You do not have permission to search this documentation.',
       rateLimited: 'Search limit reached. Please try again later.',
       unavailable: 'Documentation search is currently unavailable.',
-      open: 'Open document in a new tab'
+      open: 'Open document'
     }
   };
 
@@ -282,7 +282,7 @@
       input.focus();
     });
     results.addEventListener('click', function (event) {
-      // Docsify's history router otherwise handles same-origin links in the current tab.
+      // Keep native link navigation, including Ctrl/Cmd-click, instead of Docsify routing.
       if (event.target.closest('a')) event.stopPropagation();
     });
     localize();
@@ -394,17 +394,9 @@
           const link = document.createElement(href ? 'a' : 'span');
           if (href) {
             link.href = href;
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
             link.title = labels.open;
           }
           link.textContent = result.title;
-          if (href) {
-            const icon = document.createElement('i');
-            icon.className = 'ti ti-arrow-up-right';
-            icon.setAttribute('aria-hidden', 'true');
-            link.appendChild(icon);
-          }
           item.innerHTML = '<i class="ti ti-file-text documentation-search-document-icon" aria-hidden="true"></i><div></div>';
           const content = item.querySelector('div');
           content.appendChild(link);
@@ -449,6 +441,7 @@
           submit.disabled = false;
           dialogSubmit.disabled = false;
           dialogInput.disabled = false;
+          if (dialog.open && !request.signal.aborted) dialogInput.focus({ preventScroll: true });
         }
       }
     }
