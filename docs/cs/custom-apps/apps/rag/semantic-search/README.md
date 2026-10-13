@@ -1,10 +1,13 @@
 # Sémantické vyhledávání (RAG)
 
+Pro vyhledávání v samostatných souborech dokumentace viz [Vyhledávání v Markdown dokumentaci](../markdown-search.md).
+
 Sémantické vyhledávání umožňuje návštěvníkům nalézt relevantní stránky podle **významu otázky**, nejen podle shody klíčových slov. Embedding vektory ukládá do PostgreSQL s [pgvector](https://github.com/pgvector/pgvector) nebo do vestavěného úložiště [MariaDB Vector](https://mariadb.com/docs/server/reference/sql-structure/vectors/vector-overview). Vektory generují poskytovatelé podporovaní knihovnou `webjet-ai`.
 
 Nad stejným indexem lze použít také:
 
 - **hybridní vyhledávání** - kombinaci vektorového vyhledávání a fulltextu nad textem chunků,
+- **reranking** - dodatečné seřazení nalezených chunků podle jejich relevance pro otázku,
 - **RAG odpověď** - AI odpověď vygenerovanou pouze z nalezeného kontextu.
 
 ## Jak to funguje
@@ -23,7 +26,18 @@ Proces indexování:
 4. **Generování embeddingů** - nové nebo změněné chunky zpracuje [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) podle poskytovatele a modelu nastaveného v .
 5. **Uložení do databáze** - metadata chunků se ukládají přes JPA repozitář [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorjpa/EmbeddingChunkRepository. Zvolená implementace [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java) uloží vektory pomocí nativního SQL pro konkrétní databázi.
 
-Chunking preferuje přirozené hranice textu: odstavec, řádek, větu, mezeru a teprve potom tvrdé rozdělení podle limitu. U desetinných čísel se tečka nepovažuje za konec věty.
+Velikost chunku je přibližná cílová hodnota. Maximální velikost je cílová hodnota zvýšena o 50 %, tedy při výchozím nastavení nejvíce `1500` znaků. Začátek i konec chunku se podle možnosti přizpůsobují nejbližší rozpoznané hranici věty nebo odstavce, a to i při překrytí. Věty včetně zalomení řádků zůstávají celé, pokud se vejdou do maxima. Delší věty nebo odstavce se rozdělí mezi slovy; slovo delší než maximum se rozdělí i uprostřed. Překrytí se může zmenšit, aby každý další chunk přidal nový obsah a dodržel maximální velikost. Hodnota `ragEmbeddingChunkSize` menší nebo rovná nule vypne rozdělování textu. Nové hranice se na stávající obsah použijí po opětovném indexování.
+
+Při Markdown dokumentaci se před text chunku doplní název dokumentu a společná hierarchie nadpisů, například `Používateľská príručka > Registrácia > Schválenie`. Při spojení podsekcí prefix obsahuje jejich společného rodiče; původní nadpisy zůstávají v textu. Název se přebírá z prvního nadpisu první úrovně nebo z relativní cesty k souboru. Podporovány jsou nadpisy ATX (`#`) i Setext (podtrženo), kromě nadpisů v ukázkách kódu. Prefix se nezapočítává do velikosti chunku, ale je součástí embeddingu i uloženého textu pro náhled, fulltext a RAG odpovědi.
+
+Opětovné použití Markdown vektorů vychází z hash hodnoty celého vstupu včetně názvu a nadpisů. Změna nadřazeného nadpisu proto obnoví příslušné embeddingy i tehdy, když se samotný text části nezměnil. Po aktualizaci spusťte Markdown indexování znovu: vektory bez kontextu se vygenerují nově. Pokud již vektor kontext obsahuje, ale uložený text chunku ještě nemá prefix, aktualizuje se pouze uložený text a vektor se použije znovu. Další indexování nezměněných souborů se přeskočí. Index není třeba ručně mazat.
+
+Markdown dokumentaci rozděluje [MarkdownChunker](../../../../../../src/main/java/sk/iway/iwcm/rag/indexing/MarkdownChunker.java) podle sekcí a bloků:
+
+- Sekce včetně podsekcí, odstavce, položky seznamů, tabulky a bloky kódu zůstávají celé, pokud se vejdou do maxima. Nadpisy se podle možnosti ponechají s obsahem.
+- Sousední krátké sekce se mohou spojit. Nadpisy první úrovně (`#`) zůstávají hranicemi.
+- Překrytí používá celé bloky v rámci sekce, proto může přesáhnout nastavenou hodnotu. Mezi nesloučenými sekcemi se nepoužívá. Každý chunk musí dodržet maximum a přidat nový obsah.
+- Bloky větší než maximum se rozdělí podle vět a slov, bez opakování hlaviček tabulek nebo doplňování značek kódu.
 
 ### 2. Vyhledávání
 
@@ -34,8 +48,9 @@ Když návštěvník zadá vyhledávací dotaz:
 3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) vygeneruje embedding dotazu podle asistenta `RAG-EMB-SEARCH` s typem vstupu `QUERY` a vyhledá nejblíže . Při indexování se používá typ `DOCUMENT` ; poskytovatel tak může pro oba typy aplikovat rozdílné prefixy požadované modelem.
 4. Výsledky se omezí podle domény, jazyka, typu entity a podle složek zvolených v aplikaci **Vyhledávání**.
 5. Pokud je povolen hybridní režim, spustí se i fulltext nad `rag_embedding_chunks.chunk_text` a výsledky se spojí přes `RRF` (Reciprocal Rank Fusion).
-6. Výsledné chunky se agregují na dokumenty a dokumenty se zobrazí stejným způsobem jako při standardním vyhledávání.
-7. Pokud je povolena RAG odpověď, z nalezených chunků se ještě připraví kontext pro AI odpověď.
+6. Vyloučí se nedostupné, neprohledatelné a interní stránky i zdroje bez oprávnění uživatele.
+7. Lokální reranker podle textové shody upraví pořadí výsledků i výběr kontextu pro RAG odpověď.
+8. Dokumenty se zobrazí stejným způsobem jako při standardním vyhledávání. Pokud je povolena RAG odpověď, z vybraných chunků se připraví kontext pro AI odpověď.
 
 ### Rozdělení odpovědností mezi WebJET CMS a `webjet-ai`
 
@@ -136,8 +151,8 @@ Aktivace a nastavení se provádí v [Konfiguraci](../../../../admin/setup/confi
 | `ragEmbeddingModel` | `text-embedding-3-small` | Model použitý pouze při automatickém vytvoření chybějícího embedding asistenta. |
 | `ragEmbeddingDimensions` | `1536` | Globální počet dimenzí vektoru pro celou instalaci. Musí odpovídat použitému modelu a databázové tabulce. |
 | `ai_localEmbeddingModelBundlePath` | prázdná hodnota | Cesta ke globálnímu schválenému ZIP balíku lokálního modelu `intfloat/multilingual-e5-base`: absolutní cesta na serveru nebo cesta začínající `/WEB-INF/` vůči kořenu nasazené aplikace. Po změně je zapotřebí restart. |
-| `ragEmbeddingChunkSize` | `1000` | Maximální velikost jedné části textu ve znacích. |
-| `ragEmbeddingChunkOverlap` | `200` | Počet znaků, o které se sousední chunky překrývají. |
+| `ragEmbeddingChunkSize` | `1000` | Přibližná cílová velikost chunku ve znacích. Maximum je o 50 % výše; při výchozí hodnotě je to `1500` znaků. Hodnota menší nebo rovná nule vypne rozdělování. |
+| `ragEmbeddingChunkOverlap` | `200` | Přibližné překrytí ve znacích, pokud možno přizpůsobené celým větám nebo odstavcům. Může se zmenšit, aby každý další chunk přidal nový obsah a dodržel maximální velikost. |
 
 Systém podle potřeby automaticky vytvoří dva systémové AI asistenty:
 
@@ -210,9 +225,25 @@ flowchart TD
 	FR --> RRF
 
 	RRF --> S[Zoradenie chunkov podľa výsledného skóre]
-	S --> D[Agregácia na dokumenty]
+	S --> A[Kontrola prístupu k zdrojom]
+	A --> R[Lokálny reranking podľa textu]
+	R --> D[Agregácia na dokumenty]
 	D --> O[Finálny zoznam výsledkov]
 ```
+
+### Reranking výsledků
+
+[RerankerService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/RerankerService.java) upraví pořadí výsledků i výběr kontextu pro RAG podle shody otázky s názvem, Markdown hierarchií a textem. Zohledňuje shodu slov, jejich blízkost a vyšší váhu méně běžných slov. Nevyžaduje další AI volání ani opětovné indexování.
+
+Ve výchozím nastavení kombinuje **85 % původního skóre a 15 % textové shody**:
+
+| Proměnná | Výchozí hodnota | Popis |
+| --- | --- | --- |
+| `ragRerankLexicalWeight` | `0.15` | Váha textové shody v rozsahu `0` -`1`. Hodnota `0` použije pouze původní skóre, `1` pouze textovou shodu. Změna se projeví bez restartu. |
+
+Nadpisový bonus používá pouze název zdroje a uložený prefix Markdown hierarchie. Nadpisy v těle chunku se hodnotí jako běžný text, aby se za nadpisy nepovažovaly komentáře v rozdělených ukázkách kódu.
+
+Prahy similarity a minimální počet výsledků zůstávají zachovány; filtrování používá původní skóre. Při přípravě RAG kontextu se navíc vynechají plně opakované pasáže stejného zdroje.
 
 ## RAG odpověď ve vyhledávání
 
@@ -237,11 +268,11 @@ V aplikaci **Vyhledávání** lze tyto hodnoty přepsat lokálně. Prázdná č�
 
 [RagChunkPostProcessor](../../../../../../src/main/java/sk/iway/iwcm/rag/search/RagChunkPostProcessor.java) připravuje kontext pro model:
 
-1. seřadí chunky podle similarity a vybere top K,
-2. použije adaptivní práh similarity, ale nikdy nevyhodí všechno, pokud existuje alespoň jeden použitelný výsledek,
+1. seřadí chunky podle lokálního rerank skóre, pokud je dostupné, jinak podle similarity, vynechá plně opakované pasáže stejného zdroje a vybere top K,
+2. použije adaptivní práh původní similarity a ponechá alespoň nejlepší výsledek,
 3. seskupí chunky podle entity,
 4. sloučí sousední chunky a odstraní duplicitní text z překrytí,
-5. omezí počet bloků a celkový počet znaků.
+5. seřadí bloky podle nejlepšího rerank skóre nebo similarity a omezí počet bloků a celkový počet znaků.
 
 Výsledkem jsou objekty [MergedContextBlock](../../../../../../src/main/java/sk/iway/iwcm/rag/search/MergedContextBlock.java), které se odesílají modelu jako JSON.
 

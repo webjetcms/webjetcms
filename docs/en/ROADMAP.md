@@ -62,7 +62,7 @@ Explanation of the pictograms used:
 - [x] +Improve the administration homepage - dynamic blocks, ability to customize what is displayed, useful information and blocks (#332).
 - [ ] +Filter in the news application does not allow entering DOC ID of multiple pages if they wanted to select multiple pages according to the filter “DOC_ID equals”
 The filter only takes the first value. So add the `IN` option to allow multiple values ​​(#JT-2139).
-- [ ] +AI - adjust the creation of `chunk` so that there are no nonsense words at the beginning/end, trim from the first space to the last space.
+- [x] +AI - adjust `chunk` generation so that they start and end at sentence or word boundaries where possible (#58778).
 - [ ] +Websites - edit default view for new user - show ID, rank and sort ascending.
 - [ ] +Websites - add the option to add a perex group to multiple pages at once, meaning the selected one will be added to the existing perex groups.
 - [ ] +Websites - when deleting a folder that also has a mirrored version, display a notification that the mirrored folders XXX,YYY have also been deleted.
