@@ -189,6 +189,7 @@ Scenario('Feedback outside the dashboard returns to Help and preserves its draft
     I.see('autotest help feedback draft', '#feedback-group-text');
     I.clickCss('#feedback_modal .md-feedback__cancel');
     I.waitForInvisible('#feedback_modal', 10);
+    I.waitForFunction(() => document.activeElement.id === 'admin-help-toggle', [], 5);
     I.assertEqual(await I.executeScript(() => document.activeElement.id), 'admin-help-toggle');
 });
 

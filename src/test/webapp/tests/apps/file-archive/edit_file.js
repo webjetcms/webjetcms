@@ -47,6 +47,7 @@ Scenario('Add new file and edit', async ({ I, DT, DTE }) => {
     // 5. Overenie, že sa súbor premenoval a funguje a obsah sa nezmenil
     I.say("Phase5 - Verifying that the file was renamed, is functioning, and its content remains unchanged");
     I.amOnPage(SL.elfinder);
+    I.waitForVisible(`.elfinder-cwd-filename[title='${renamedPdfFileName}']`, 20);
     I.seeElement(`.elfinder-cwd-filename[title='${renamedPdfFileName}']`);
     I.dontSeeElement(`.elfinder-cwd-filename[title='${editablePdfFileName}']`);
     await SL.checkFileContent(renamedPdfFileName);
