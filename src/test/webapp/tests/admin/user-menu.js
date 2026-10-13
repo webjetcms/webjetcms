@@ -3,8 +3,8 @@ Feature('admin.user-menu').tag('@singlethread');
 const trigger = '#dropdownMenuUser';
 const panel = '#admin-user-menu';
 const badge = '.md-user-menu__two-factor-badge';
-const statusRoute = '**/admin/users/2factorauth';
-const menuDataRoutes = /\/admin\/(users\/2factorauth|rest\/(sessions|security\/login-events))(?:[/?]|$)/;
+const statusRoute = '**/admin/rest/user-menu';
+const menuDataRoutes = /\/admin\/(users\/2factorauth|rest\/(user-menu|sessions|security\/login-events))(?:[/?]|$)/;
 
 Before(({ login }) => login('admin'));
 
@@ -19,7 +19,7 @@ function closeMenu(I) {
     I.waitForInvisible(panel, 5);
 }
 
-Scenario('User menu renders identity and sessions without requesting account data', async ({ I }) => {
+Scenario('User menu loads account data only when opened', async ({ I, Document }) => {
     const requests = [];
     await I.mockRoute(menuDataRoutes, route => {
         requests.push(new URL(route.request().url()).pathname);
@@ -27,7 +27,10 @@ Scenario('User menu renders identity and sessions without requesting account dat
     });
     I.amOnPage('/admin/v9/search/');
     I.resizeWindow(1280, 850);
+    I.waitForElement(`${trigger}[data-user-initialized="true"]`, 15);
+    I.assertDeepEqual(requests, [], 'Rendering the page must not fetch menu data.');
     openMenu(I);
+    I.waitForElement(`${badge}[data-enabled]`, 10);
     const user = await I.executeScript(() => ({
         fullName: window.currentUser.fullName, login: window.currentUser.login,
         email: window.currentUser.email, userId: window.currentUser.userId
@@ -44,8 +47,10 @@ Scenario('User menu renders identity and sessions without requesting account dat
     I.seeElement('.md-user-menu__logout');
     I.seeElement('.ly-header .js-logout-toggler');
     const menuText = await I.grabTextFrom(panel);
-    I.assertFalse(/Nové prihlásenie do vášho účtu|zariaden/i.test(menuText), 'The menu must omit new-login actions and device counts.');
+    I.assertFalse(/Bol som to ja|Nebol som to ja/.test(menuText), 'Account verification actions must remain in the dashboard.');
     I.assertTrue(['true', 'false'].includes(await I.grabAttributeFrom(badge, 'data-enabled')), 'The 2FA badge must expose its rendered boolean state.');
+    I.moveCursorTo('.md-user-menu__avatar');
+    Document.screenshotElement(panel, '/redactor/admin/user-menu.png');
 
     closeMenu(I);
     I.assertEqual(await I.executeScript(() => document.activeElement.id), 'dropdownMenuUser');
@@ -75,47 +80,73 @@ Scenario('User menu renders identity and sessions without requesting account dat
             I.waitForInvisible('.ly-page-wrapper.active', 5);
         }
     }
-    I.assertDeepEqual(requests, [], 'Rendering and repeatedly opening the menu must not fetch 2FA, sessions or devices.');
+    I.assertTrue(requests.length > 0 && requests.every(url => url === '/admin/rest/user-menu'), 'Menu openings must fetch only the account summary.');
     I.wjSetDefaultWindowSize();
     await I.stopMockingRoute(menuDataRoutes);
 });
 
-Scenario('2FA badge refreshes once after the settings popup closes', async ({ I }) => {
+Scenario('Menu opens before its response and refreshes on every opening', async ({ I }) => {
+    let release;
+    const pending = new Promise(resolve => { release = resolve; });
+    let reads = 0;
+    let enabled = true;
+    await I.mockRoute(statusRoute, async route => {
+        reads++;
+        await pending;
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+            sessionCount: 4, deviceCount: 25, twoFactorEnabled: enabled, newLoginCount: 2
+        }) });
+    });
     I.amOnPage('/admin/v9/search/');
     openMenu(I);
-    const initiallyEnabled = (await I.grabAttributeFrom(badge, 'data-enabled')) === 'true';
-    const initialLabel = (await I.grabTextFrom(badge)).trim();
-    let reads = 0;
-    await I.mockRoute(statusRoute, route => {
-        reads++;
-        return route.fulfill({ status: 200, contentType: 'text/plain', body: initiallyEnabled ? '' : 'true' });
-    });
-    I.executeScript(() => {
-        window.userMenuOriginalPopup = WJ.openPopupDialog;
-        WJ.openPopupDialog = url => {
-            window.userMenuPopup = { url, closed: false };
-            return window.userMenuPopup;
-        };
-    });
-    I.clickCss('.md-user-menu__two-factor');
-    I.waitForInvisible(panel, 5);
-    I.assertEqual(await I.executeScript(() => window.userMenuPopup.url), '/admin/2factorauth.jsp');
-    openMenu(I);
-    I.assertEqual(reads, 0, 'Opening the menu while the settings popup is open must not refresh its status.');
+    I.seeElement(`${panel}[aria-busy="true"]`);
+    I.assertEqual(await I.executeScript(() => document.querySelector('.md-user-menu__two-factor-badge').textContent.trim()), '', 'Pending status must not suggest disabled 2FA.');
+    I.assertEqual(await I.executeScript(() => document.querySelector('.md-user-menu__session-count').textContent.trim()), '');
+    release();
+    await I.waitForElement(`${badge}[data-enabled="true"]`, 10);
+    I.see('4', '.md-user-menu__session-count');
+    I.see('25', '.md-user-menu__session-hint');
+    I.see('2', '.md-user-menu__new-logins');
+    I.assertEqual(reads, 1);
     closeMenu(I);
-    I.executeScript(() => { window.userMenuPopup.closed = true; });
+    enabled = false;
     openMenu(I);
-    I.waitForElement(`${badge}[data-enabled="${!initiallyEnabled}"]`, 5);
-    const changedLabel = (await I.grabTextFrom(badge)).trim();
-    I.assertNotEqual(changedLabel, initialLabel, 'Refreshing 2FA must update the visible state label.');
-    I.assertEqual(reads, 1, 'Closing the settings popup must cause one refresh at the next menu opening.');
+    await I.waitForElement(`${badge}[data-enabled="false"]`, 10);
+    I.assertEqual(reads, 2, 'Every opening must refresh status without tracking a popup.');
     closeMenu(I);
-    openMenu(I);
-    I.assertEqual(reads, 1, 'Ordinary later openings must reuse the refreshed badge.');
-
-    closeMenu(I);
-    I.executeScript(() => { WJ.openPopupDialog = window.userMenuOriginalPopup; });
     await I.stopMockingRoute(statusRoute);
+});
+
+Scenario('Unavailable status leaves the menu usable and retries on reopening', async ({ I }) => {
+    await I.mockRoute(statusRoute, route => route.fulfill({ status: 503 }));
+    I.amOnPage('/admin/v9/search/');
+    openMenu(I);
+    I.waitForText('—', 5, '.md-user-menu__session-count');
+    I.seeElement('.md-user-menu__profile');
+    I.seeElement('.md-user-menu__logout');
+    I.dontSeeElement(`${badge}.is-disabled`);
+    closeMenu(I);
+    await I.stopMockingRoute(statusRoute);
+    openMenu(I);
+    I.waitForElement(`${badge}[data-enabled]`, 10);
+    closeMenu(I);
+});
+
+Scenario('Menu counts match both personal dashboard tabs', async ({ I }) => {
+    I.amOnPage('/admin/v9/');
+    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    openMenu(I);
+    I.waitForElement(`${badge}[data-enabled]`, 10);
+    const sessions = (await I.grabTextFrom('.md-user-menu__session-count')).trim();
+    const devices = (await I.grabTextFrom('.md-user-menu__session-hint')).match(/\d+/)?.[0];
+    I.clickCss('.md-user-menu__sessions');
+    const modal = '.md-dashboard-modal--sessions';
+    I.waitForVisible(modal, 20);
+    I.see(`(${sessions})`, `${modal} [role="tab"][id$="-mine"]`);
+    I.clickCss(`${modal} [role="tab"][id$="-devices"]`);
+    I.waitForText(`(${devices})`, 10, `${modal} [role="tab"][id$="-devices"]`);
+    I.clickCss(`${modal} .modal-footer > button`);
+    I.waitForInvisible(modal, 10);
 });
 
 Scenario('Sessions link opens the personal dashboard tab and consumes the URL parameter', async ({ I }) => {

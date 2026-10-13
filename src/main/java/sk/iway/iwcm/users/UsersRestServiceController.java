@@ -22,12 +22,10 @@ import sk.iway.iwcm.system.stripes.CSRF;
 public class UsersRestServiceController {
 
     private final UserDetailsRepository userDetailsRepository;
-    private final TwoFactorStatusService twoFactorStatusService;
 
     @Autowired
-    public UsersRestServiceController(UserDetailsRepository userDetailsRepository, TwoFactorStatusService twoFactorStatusService) {
+    public UsersRestServiceController(UserDetailsRepository userDetailsRepository) {
         this.userDetailsRepository = userDetailsRepository;
-        this.twoFactorStatusService = twoFactorStatusService;
     }
 
     /* Vrati Key voci ktoremu sa overi token zadany uzivatelom*/
@@ -57,7 +55,7 @@ public class UsersRestServiceController {
     public String getGauth( HttpServletRequest request )
     {
         UserDetails user = UsersDB.getCurrentUser(request.getSession());
-        if (twoFactorStatusService.isEnabled(user.getUserId())) return "true";
+        if (Tools.isNotEmpty(userDetailsRepository.getMobileDeviceByUserId((long) user.getUserId()))) return "true";
         return "";
     }
 
@@ -73,7 +71,6 @@ public class UsersRestServiceController {
         }
 
         userDetailsRepository.updateMobileDeviceByUserId((long)user.getUserId(), secret);
-        twoFactorStatusService.invalidate(user.getUserId());
 
         return "";
     }

@@ -533,6 +533,7 @@ Scenario('layout-menu', async ({ I, DT, Document, i18n }) => {
 
     I.clickCss('#dropdownMenuUser');
     I.waitForVisible('#admin-user-menu.show', 5);
+    I.waitForElement('#admin-user-menu[aria-busy="false"] .md-user-menu__two-factor-badge[data-enabled]', 10);
     I.moveCursorTo('.md-user-menu__avatar');
     Document.screenshotElement('#admin-user-menu', '/redactor/admin/user-menu.png');
 

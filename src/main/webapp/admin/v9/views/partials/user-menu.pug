@@ -25,13 +25,14 @@ div.dropdown.md-user-menu
                 i.ti.ti-devices(aria-hidden="true")
                 span.md-user-menu__content
                     span(data-th-text="\#{admin.dashboard.activeSessions.js}") Active sessions
-                    small(data-th-text="${layoutService.sessionCountLocal} ? \#{admin.userMenu.localSessions.js} : \#{admin.userMenu.sessionsHint.js}") Your account's sessions
-                span.md-user-menu__badge.md-user-menu__session-count(data-th-text="${layoutService.activeSessionCount}") 1
+                    small.md-user-menu__session-hint(aria-live="polite")
+                    small.md-user-menu__new-logins(aria-live="polite")
+                span.md-user-menu__badge.md-user-menu__session-count.is-loading(aria-live="polite")
         li(data-th-if="${layout.getConstantBoolean('2factorAuthEnabled')}")
             button.dropdown-item.md-user-menu__two-factor(type="button")
                 i.ti.ti-shield-lock(aria-hidden="true")
                 span.md-user-menu__content(data-th-text="\#{user.gauth.title}") Two-factor authentication
-                span.md-user-menu__badge.md-user-menu__two-factor-badge(data-th-data-enabled="${layoutService.twoFactorEnabled}" data-th-classappend="${layoutService.twoFactorEnabled} ? 'is-enabled' : 'is-disabled'" data-th-text="${layoutService.twoFactorEnabled} ? \#{admin.userMenu.enabled.js} : \#{admin.userMenu.disabled.js}") Disabled
+                span.md-user-menu__badge.md-user-menu__two-factor-badge.is-loading(aria-live="polite")
         li(data-th-if="${layout.getConstantBoolean('password_passKeyEnabled')}")
             button.dropdown-item.passkey(type="button" onclick="WJ.openModal({url: '/admin/v9/users/passkey/', title: this.textContent.trim()})")
                 i.ti.ti-fingerprint(aria-hidden="true")

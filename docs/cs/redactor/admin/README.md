@@ -52,13 +52,15 @@ Klepnutím na své jméno v pravé horní části hlavičky otevřete uživatels
 Menu nabízí:
 
 - **Profil** – úprava vlastních osobních a kontaktních údajů a hesla. Po uložení systém doporučuje odhlásit se a znovu přihlásit, aby se projevily všechny změny.
-- **Aktivní přihlášení** – přejde na úvodní stránku a otevře okno **Aktivní přihlášení** na kartě **Moje přihlášení**. Můžete zkontrolovat vlastní relace, odhlásit ostatní přihlášení, spravovat zařízení a prohlížet historii přihlášení; dle oprávnění je dostupná i karta přihlášených administrátorů. Podrobný popis naleznete v části [Přihlášení na úvodní stránce](welcome.md#přihlášení). Číslo u položky udává počet aktivních relací vašeho účtu v době načítání stránky. Při provozu na více serverech se zobrazuje text **Na tomto serveru** a počet zahrnuje pouze relace na aktuálním serveru.
-- **Dvoustupňové ověřování** – nastavení ověřování kódem z aplikace, například `Google Authenticator` nebo `Microsoft Authenticator`. Štítek **Zapnuto** nebo **Vypnuto** ukazuje stav pro váš účet. Po zavření okna s nastavením se stav obnoví při dalším otevření menu. Postup zapnutí popisuje [Dvoustupňové ověřování](logon.md#dvoustupňové-ověřování). Položka se zobrazuje, pokud je konfigurační proměnná `2factorAuthEnabled` nastavena na `true`.
+- **Aktivní přihlášení** – přejde na úvodní stránku a otevře okno **Aktivní přihlášení** na kartě **Moje přihlášení**. Můžete zkontrolovat vlastní relace, odhlásit ostatní přihlášení, spravovat zařízení a prohlížet historii přihlášení; dle oprávnění je dostupná i karta přihlášených administrátorů. Podrobný popis naleznete v části [Přihlášení na úvodní stránce](welcome.md#přihlášení). Číslo u položky udává počet relací vašeho účtu ze všech serverů clusteru, stejně jako karta **Moje přihlášení**. Počet evidovaných zařízení odpovídá celkovému počtu záznamů na kartě **Moje zařízení**, včetně zařízení bez aktivní relace. U nových přihlášení ke kontrole se zobrazí také jejich počet; kliknutím přejdete do správy přihlášení na úvodní stránce.
+- **Dvoustupňové ověřování** – nastavení ověřování kódem z aplikace, například `Google Authenticator` nebo `Microsoft Authenticator`. Štítek **Zapnuto** nebo **Vypnuto** ukazuje stav pro váš účet. Stav se načte při každém otevření menu. Postup zapnutí popisuje [Dvoustupňové ověřování](logon.md#dvoustupňové-ověřování). Položka se zobrazuje, pokud je konfigurační proměnná `2factorAuthEnabled` nastavena na `true`.
 - **Přístupový klíč** – správa přístupových klíčů pro přihlašování pomocí biometrie nebo PIN zařízení. Umožňuje přidat nový klíč a odstranit zaregistrovaný klíč. Postup naleznete v části [Přidání nového přístupového klíče](logon.md#přidání-nového-přístupového-klíče). Položka se zobrazuje, pokud je konfigurační proměnná `password_passKeyEnabled` nastavena na `true`.
 - **Správa šifrovacích klíčů** – vytvoření nového klíče pro šifrování formulářů nebo zadání stávajícího klíče pro jejich dešifrování. Položka se zobrazuje uživatelům s právem **Formuláře**.
 - **Odhlášení** – odhlášení z administrace. Stejnou funkci má samostatná ikona odhlášení vedle vašeho jména v hlavičce.
 
 Menu je dostupné na všech stránkách administrace. Klávesou **Enter** nebo mezerníkem jej otevřete, šipkami nahoru a dolů procházíte položky a klávesou **Esc** jej zavřete a vrátíte fokus na své jméno.
+
+Menu se otevře ihned. Počty a stav ověřování se načtou následně; do té doby je na jejich místě prázdný prostor. Pokud načítání selže, zobrazí se informace o nedostupnosti údajů a odkazy v menu zůstávají funkční.
 
 ## Menu
 
