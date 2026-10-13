@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -95,25 +96,41 @@ public class SessionHolder
 
    /**
     * Counts the account's active administrator sessions on this server across domains without querying the database.
+    * Counts for all accounts are cached locally for ten seconds, so displayed values may briefly lag behind changes.
     *
     * @param userId account whose local sessions should be counted
     * @return active administrator session count, or zero for an invalid account ID
     */
+   @SuppressWarnings("unchecked")
    public int getAdminSessionCount(int userId)
    {
       if (userId <= 0) return 0;
-      long removeTime = Tools.getNow() - Constants.getInt("sessionRemoveTimeout") * 60_000L;
-      int count = 0;
-      synchronized (data)
+      Cache cache = Cache.getInstance();
+      String cacheKey = "SessionHolder.adminSessionCounts";
+      Map<Integer, Integer> counts = (Map<Integer, Integer>) cache.getObject(cacheKey);
+      if (counts != null) return counts.getOrDefault(userId, 0);
+
+      synchronized (this)
       {
-         for (SessionDetails session : data.values())
+         counts = (Map<Integer, Integer>) cache.getObject(cacheKey);
+         if (counts == null)
          {
-            if (session.getLoggedUserId() == userId && session.isAdmin()
-                  && !INVALIDATE_SESSION_ADDR.equals(session.getRemoteAddr()) && session.getLastActivity() >= removeTime)
-               count++;
+            counts = new HashMap<>();
+            long removeTime = Tools.getNow() - Constants.getInt("sessionRemoveTimeout") * 60_000L;
+            synchronized (data)
+            {
+               for (SessionDetails session : data.values())
+               {
+                  int sessionUserId = session.getLoggedUserId();
+                  if (sessionUserId > 0 && session.isAdmin()
+                        && !INVALIDATE_SESSION_ADDR.equals(session.getRemoteAddr()) && session.getLastActivity() >= removeTime)
+                     counts.merge(sessionUserId, 1, Integer::sum);
+               }
+            }
+            cache.setObjectSeconds(cacheKey, counts, 10, false);
          }
+         return counts.getOrDefault(userId, 0);
       }
-      return count;
    }
 
    /**

@@ -50,6 +50,7 @@ export function initQuickSearch() {
 class QuickSearch {
     constructor(trigger) {
         this.trigger = trigger;
+        this.isMac = /Mac|iPhone|iPad/.test(navigator.platform);
         this.scopes = ['all'];
         if (WJ.hasPermission('menuWebpages')) this.scopes.push('docs', 'files');
         this.scopes.push('admin');
@@ -490,6 +491,8 @@ class QuickSearch {
         catch (error) { server = text('documentation'); }
         const search = button(text('documentationExternalSearch'), 'btn-link md-quick-search__documentation-search', () => this.selectScope('documentation'));
         search.dataset.focusKey = 'documentation-search';
+        search.setAttribute('aria-keyshortcuts', this.isMac ? 'Meta+Enter' : 'Control+Enter');
+        search.replaceChildren(node('span', '', text('documentationExternalSearch')), node('kbd', '', this.isMac ? '⌘ Enter' : 'Ctrl + Enter'));
         section.append(search, node('p', 'md-quick-search__note', text('documentationExternalNotice', server)));
     }
 
@@ -592,7 +595,12 @@ class QuickSearch {
 
     keydown(event) {
         if (event.isComposing) return;
-        if (event.target === this.input && event.altKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
+        if (event.key === 'Enter' && !event.altKey && !event.shiftKey && this.scopes.includes('documentation')
+            && (this.isMac ? event.metaKey && !event.ctrlKey : event.ctrlKey && !event.metaKey)) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!event.repeat && this.query.length > 0) this.selectScope('documentation');
+        } else if (event.target === this.input && event.altKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
             event.preventDefault();
             const offset = event.key === 'ArrowRight' ? 1 : -1;
             this.selectScope(this.scopes[(this.scopes.indexOf(this.scope) + offset + this.scopes.length) % this.scopes.length], false);
@@ -604,7 +612,7 @@ class QuickSearch {
             const next = event.key === 'ArrowDown' ? index + 1 : index < 0 ? rows.length - 1 : index - 1;
             if (next < 0 || next >= rows.length) this.input.focus();
             else rows[next].focus();
-        } else if (event.target === this.input && event.key === 'Enter') {
+        } else if (event.target === this.input && event.key === 'Enter' && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
             event.preventDefault();
             if (!event.repeat && this.query.length > 0) this.loadRest(this.scope === 'documentation' || (this.scope === 'all' && this.documentationAlwaysSearch));
         }

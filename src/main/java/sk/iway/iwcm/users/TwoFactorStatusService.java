@@ -31,14 +31,9 @@ public class TwoFactorStatusService {
         Boolean enabled = cache.getObject(key, Boolean.class);
         if (enabled != null) return enabled;
 
-        synchronized (this) {
-            enabled = cache.getObject(key, Boolean.class);
-            if (enabled == null) {
-                enabled = Tools.isNotEmpty(userDetailsRepository.getMobileDeviceByUserId(userId));
-                cache.setObjectSeconds(key, enabled, CACHE_SECONDS, false);
-            }
-            return enabled;
-        }
+        enabled = Tools.isNotEmpty(userDetailsRepository.getMobileDeviceByUserId(userId));
+        cache.setObjectSeconds(key, enabled, CACHE_SECONDS, true);
+        return enabled;
     }
 
     /**

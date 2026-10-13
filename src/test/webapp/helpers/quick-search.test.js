@@ -41,7 +41,7 @@ function fixture(t, denied = [], options = {}) {
     const setTimeout = (fn, delay) => { timers.set(++nextId, { fn, at: now + delay }); return nextId; };
     const clearTimeout = id => timers.delete(id);
     const context = vm.createContext({
-        window, document: window.document, URL, URLSearchParams, AbortController, setTimeout, clearTimeout,
+        window, document: window.document, navigator: { platform: options.platform || 'Win32' }, URL, URLSearchParams, AbortController, setTimeout, clearTimeout,
         WJ: { translate: (key, params = []) => [key, ...params].join(' '), initTooltip: () => {}, hasPermission: permission => !denied.includes(permission) },
         bootstrap: { Modal: class {
             constructor(root) { this.root = root; }
@@ -1008,4 +1008,79 @@ test('Keyboard scope navigation waits for Enter instead of silently sending an e
     assert.equal(f.requests.length, 0);
     f.enter();
     assert.equal(f.requests.length, 1);
+});
+
+for (const [platform, modifier, label, shortcut] of [
+    ['Win32', 'ctrlKey', 'Ctrl + Enter', 'Control+Enter'],
+    ['Linux x86_64', 'ctrlKey', 'Ctrl + Enter', 'Control+Enter'],
+    ['MacIntel', 'metaKey', '⌘ Enter', 'Meta+Enter']
+]) {
+    test(`Documentation shortcut explicitly searches the current query on ${platform}`, async t => {
+        const f = fixture(t, deniedRestPermissions, { platform, adminSearchContext: { documentationSearchUrl } });
+        f.enter({ [modifier]: true });
+        assert.equal(f.requests.length, 0, 'An empty query must never be sent.');
+        f.type(' q ');
+        const action = f.controller.results.querySelector('.md-quick-search__documentation-search');
+        assert.equal(action.querySelector('kbd').textContent, label);
+        assert.equal(action.getAttribute('aria-keyshortcuts'), shortcut);
+        f.advance(5000);
+        f.enter();
+        assert.equal(f.requests.length, 0, 'Plain Enter in All must not authorize an external search.');
+        f.enter({ [modifier]: true });
+        assert.equal(f.controller.scope, 'documentation');
+        assert.equal(f.requests.length, 1);
+        assert.equal(f.requests[0].url.searchParams.get('query'), 'q');
+        f.enter({ [modifier]: true, repeat: true });
+        f.enter({ [modifier]: true });
+        await f.respond(f.requests[0], { results: [] });
+        f.enter({ [modifier]: true });
+        assert.equal(f.requests.length, 1, 'Repeated shortcuts must reuse pending and completed results.');
+        f.controller.chips.get('all').click();
+        f.type('new query');
+        f.advance(5000);
+        assert.equal(f.requests.length, 1, 'Typing a new query must require a new explicit action.');
+        const { KeyboardEvent } = f.controller.root.ownerDocument.defaultView;
+        const event = new KeyboardEvent('keydown', { key: 'Enter', [modifier]: true, bubbles: true, cancelable: true });
+        f.controller.chips.get('admin').dispatchEvent(event);
+        assert.equal(event.defaultPrevented, true, 'The shortcut must also work when another dialog control has focus.');
+        assert.equal(f.requests.length, 2);
+        assert.equal(f.requests[1].url.searchParams.get('query'), 'new query');
+        assert.equal(f.controller.root.ownerDocument.activeElement, f.controller.input);
+        assert.equal(f.clicks(), 0, 'The shortcut must load results in the dialog without navigation.');
+    });
+}
+
+test('Documentation shortcuts ignore composition and unrelated modifiers', async t => {
+    for (const [platform, modifiers] of [
+        ['Win32', { metaKey: true }], ['MacIntel', { ctrlKey: true }],
+        ['Win32', { ctrlKey: true, altKey: true }], ['MacIntel', { metaKey: true, shiftKey: true }],
+        ['Win32', { ctrlKey: true, metaKey: true }], ['Win32', { ctrlKey: true, isComposing: true }]
+    ]) {
+        await t.test(`${platform}: ${JSON.stringify(modifiers)}`, t => {
+            const f = fixture(t, deniedRestPermissions, { platform, adminSearchContext: { documentationSearchUrl } });
+            f.type('private query');
+            f.controller.chips.get('documentation').click();
+            f.type('another private query');
+            const { KeyboardEvent } = f.controller.root.ownerDocument.defaultView;
+            const event = new KeyboardEvent('keydown', { key: 'Enter', ...modifiers, bubbles: true, cancelable: true });
+            f.controller.input.dispatchEvent(event);
+            assert.equal(event.defaultPrevented, false);
+            assert.equal(f.requests.length, 1, 'Unrelated key combinations must not send the changed query.');
+        });
+    }
+});
+
+test('Documentation shortcuts remain inactive when documentation is disabled', async t => {
+    for (const [platform, modifier] of [['Win32', 'ctrlKey'], ['MacIntel', 'metaKey']]) {
+        await t.test(platform, t => {
+            const f = fixture(t, deniedRestPermissions, { platform, adminSearchContext: { documentationSearchUrl: '' } });
+            f.type('private query');
+            const { KeyboardEvent } = f.controller.root.ownerDocument.defaultView;
+            const event = new KeyboardEvent('keydown', { key: 'Enter', [modifier]: true, bubbles: true, cancelable: true });
+            f.controller.input.dispatchEvent(event);
+            assert.equal(event.defaultPrevented, false);
+            assert.equal(f.controller.scope, 'all');
+            assert.equal(f.requests.length, 0);
+        });
+    }
 });

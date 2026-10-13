@@ -25,7 +25,7 @@ Odkaz **Otevřít výsledky v sekci…** přenese hledaný výraz do příslušn
 
 Dialog zavřete klávesou **Esc**, tlačítkem zavření nebo kliknutím mimo něj. Fokus se vrátí na tlačítko v hlavičce; hledaný výraz se do tlačítka nepřepisuje.
 
-Dokumentace se ve výchozím nastavení neprohledává automaticky. Karta zobrazuje pomlčku, která znamená **zatím nepřehledané**, nikoli nulový počet výsledků. V rozsahu **Vše** naleznete vysvětlení, na který server se výraz odešle, a odkaz **Načíst výsledky iz externí dokumentace**. Klepnutí na tento odkaz nebo na kartu **Dokumentace** vyhledá již zadaný výraz a zobrazí výsledky v dialogu. Tooltip karty vysvětluje odeslání výrazu na externí server.
+Dokumentace se ve výchozím nastavení neprohledává automaticky. Karta zobrazuje pomlčku, která znamená **zatím nepřehledané**, ne nulový počet výsledků. V rozsahu **Vše** naleznete vysvětlení, na který server se výraz odešle, a odkaz **Načíst výsledky iz externí dokumentace**. Klepnutí na tento odkaz nebo na kartu **Dokumentace** vyhledá již zadaný výraz a zobrazí výsledky v dialogu. Tooltip karty vysvětluje odeslání výrazu na externí server. Klávesová zkratka **Ctrl+Enter** ve Windows/Linux nebo **⌘+Enter** na Macu načte výsledky dokumentace v libovolném rozsahu otevřeného dialogu. Příslušná zkratka se zobrazuje při odkazu.
 
 Po změně výrazu se výsledky dokumentace vymažou a karta znovu zobrazí pomlčku. Nové vyhledávání spustíte kliknutím na kartu nebo odkaz, případně klávesou **Enter** v rozsahu **Dokumentace**. Enter v rozsahu **Vše** ve výchozím nastavení prohledává pouze interní zdroje. Přepínání rozsahů pomocí **Alt+šipka** samo externí dotaz neodešle.
 
