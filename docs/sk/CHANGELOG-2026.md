@@ -65,6 +65,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 ![](frontend/templates/templates-edit-advanced.png)
 
 - V dialógu vkladania obrázkov pridaná karta **Miniatúra** pre nastavenie parametrov [generovania zmenšených obrázkov](redactor/webpages/working-in-editor/README.md#karta-miniatúra) `thumbnail`. Podporovaný je voľný režim nastavenia rozmerov, ale aj režim [presne definovaných rozmerov](frontend/thumb-servlet/README.md#obmedzenia) výberom z možností (#58317,#58758).
+- Miniatúra - výber rozmeru zobrazuje názov režimu aj číslo `ip`. Režimy `learn/check/allow` ponúkajú aj vlastný rozmer, `strict` vyžaduje povolenú kombináciu a pri `deny` je karta skrytá. Existujúca nepovolená miniatúra sa v režime `strict` označí a vyžaduje výber náhrady (#osk806).
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 

@@ -46,9 +46,19 @@ Image generation is server-side-loaded, so it is protected by SPAM protection. T
   - `check` - ​​allows only specified values, if an administrator is logged in, automatically adds a new dimension to the list
   - `strict` - ​​allows generating an image only for the specified values ​​(checks the list of allowed values)
 
-In `strict` mode, the **Thumbnail** tab in the image properties displays a single selection of allowed dimensions instead of separate fields. The options are read from the `thumbServletAllowedSizes` configuration variable (separated by a comma or newline) and are ordered numerically by width and then height. For example, `159x159ip1` is displayed as `159 x 159 (1 - Fixná šírka)`, the value without `ip` as the maximum dimensions. When specifying color, disabling POI, or quality, this information is also displayed.
+The **Thumbnail** tab in image properties follows `thumbServletAllowedSizeMode`:
 
-When confirmed, the selected combination is also saved in the image URL with the CSS class `fixedSize`. If it contains quality, the class has an additional suffix `-q90` (for example `fixedSize-730-401-5-ff00ff-true-q90`). When reopened, the corresponding enabled option is selected. The empty option uses the image in its original size: it removes the prefix `/thumb/`, the thumbnail parameters, and the class `fixedSize`, just like in other modes. If the original size is not enabled, you can select an enabled size or leave the option empty to use the original image. In other modes, the separate fields remain available.
+| Mode | Allowed sizes configured | Empty list |
+| --- | --- | --- |
+| `strict` | Choose a preset or **Do not use a thumbnail** | Only **Do not use a thumbnail** |
+| `learn`, `check`, `allow` | Choose a preset, **Do not use a thumbnail**, or **Enter a custom size…** | Original size fields |
+| `deny` | Tab hidden | Tab hidden |
+
+Options are read from `thumbServletAllowedSizes` (comma or newline separated), deduplicated and sorted numerically by width and height. For example, `96x96ip2` shows **96 px – Fixed height (ip2)**. The mode name reuses the translation from the **Mode** field. A value without `ip` shows maximum dimensions `(ip0)`. Background color is shown as a hex value; disabling the point of interest and quality are appended to the label.
+
+The selected combination is saved in both the image URL and the `fixedSize` CSS class. Quality adds a `-q90` suffix, for example `fixedSize-730-401-5-ff00ff-true-q90`. Reopening the dialog selects the matching option. If an existing size is missing from the list, `strict` displays a warning and requires choosing an allowed size or **Do not use a thumbnail**. Other modes open the custom fields with the existing values. In `deny`, confirming the dialog preserves the existing thumbnail.
+
+**Do not use a thumbnail** has an empty value and uses the original image: it removes the `/thumb/` prefix, thumbnail parameters and the `fixedSize` class.
 
 First set the `learn` mode to learn existing values ​​and then set the `check` mode in which the values ​​are checked, but if the administrator is logged in, the new value is automatically added to the list of allowed values. WebJET automatically sets the `learn` mode during an update and then after at least a month and another restart it switches to the `check` mode.
 
