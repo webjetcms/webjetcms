@@ -41,6 +41,7 @@ Použite rovnakú [vektorovú databázu a AI poskytovateľa](semantic-search/REA
 | Premenná | Príklad | Význam |
 | --- | --- | --- |
 | `ragSemanticSearchEnabled` | `true` | Zapne sémantické vyhľadávanie. |
+| `restAllowedIpAddresses-MarkdownSearchRestController` | `*` | Povolí volanie Markdown REST služby zo všetkých IP adries. Možno zadať aj IP adresy alebo ich prefixy oddelené čiarkou. Pri predvolenej prázdnej hodnote sa použije globálne `restAllowedIpAddresses` (predvolene `127.0.0.1`). |
 | `ragMarkdownFolders` | `/admin/docs/client,file:/docs/sk/admin/users` | Globálny zoznam koreňov dokumentácie pre všetky domény, oddelených čiarkou alebo novým riadkom. Predvolene je prázdny. Prefix `file:` označuje priečinok na serveri; `file:/docs` je alias dokumentácie nastavený cez `symlinkTranslate`. |
 | `ragMarkdownSearchRequireLogin` | `true` | Predvolene vyžaduje prihláseného používateľa; nemusí byť administrátor. Hodnota `false` umožní anonymné vyhľadávanie aj v nakonfigurovaných koreňoch `file:` a `/admin/`. |
 | `symlinkTranslate` | `/docs/\|/srv/documentation/webjetcms/` | Globálne mapovanie aliasu `/docs/` na absolútny priečinok dokumentácie. Pre `file:/docs` a jeho podpriečinky je povinné. |
@@ -62,7 +63,9 @@ Lokálne môže cieľ smerovať na priečinok `docs` vášho projektu, napríkla
 
 Pri koreni `file:/docs/sk/admin/users` dostane priamy súbor `README.md` jazyk `sk`. Pri koreni `file:/docs` sa spracujú všetky jazykové podpriečinky. Indexujú sa aj priame `.md` súbory; susedné časti dokumentácie sa neprehľadávajú. Jazyk sa nevyberá v dialógu a neukladá sa vo fronte, iba v chunkoch.
 
-`ragMarkdownSearchRequireLogin` aktuálnej domény predvolene vyžaduje ľubovoľného prihláseného používateľa; hodnota `false` umožní aj anonymné vyhľadávanie vo všetkých nakonfigurovaných koreňoch vrátane `/admin/` a `file:`. Blokované cesty a ochrana jednotlivých webových súborov používateľskými skupinami sa naďalej rešpektujú. Kontrola prihlásenia prebehne pred volaním embeddingov a generovaním odpovede AI.
+REST služba predvolene povoľuje IP adresu `127.0.0.1` podľa globálneho `restAllowedIpAddresses`. V **Nastavenia → Konfigurácia** nastavte `restAllowedIpAddresses-MarkdownSearchRestController` na `*` pre všetky IP adresy alebo napríklad na `192.168.,203.0.113.7` pre vybrané adresy. Používa rovnakú kontrolu IP ako [verejné REST služby](../../spring/public-services.md): neprázdne nastavenie controllera má prednosť, pri prázdnom sa použije globálne `restAllowedIpAddresses`. Globálna hodnota `*` tak povolí aj túto službu, ak nemá vlastné obmedzenie. Nepovolené volanie vráti HTTP `401` ešte pred vyhľadávaním a volaním AI.
+
+Po povolení IP adresy `ragMarkdownSearchRequireLogin` aktuálnej domény predvolene vyžaduje ľubovoľného prihláseného používateľa; hodnota `false` umožní aj anonymné vyhľadávanie vo všetkých nakonfigurovaných koreňoch vrátane `/admin/` a `file:`. Blokované cesty a ochrana jednotlivých webových súborov používateľskými skupinami sa naďalej rešpektujú. Kontrola prihlásenia prebehne pred volaním embeddingov a generovaním odpovede AI.
 
 API `/rest/rag/markdown/search` je mimo administrátorskej cesty. Nastavenie prihlásenia nemení ochranu samotného prehliadača Docsify, súborov ani správy indexu. Pre bežných používateľov alebo anonymný prístup nasadzujte obsah na prístupnú webovú cestu, napríklad `/docs/webjetcms/`, alebo na samostatnú dokumentačnú doménu s WebJET backendom na rovnakom origine. Súbory pod `/admin/` naďalej podliehajú ochrane administrácie.
 
@@ -168,6 +171,8 @@ Pri prechode zo staršej verzie:
 - Overte jazykové priečinky. Staršie požiadavky na indexovanie bez rozpoznaného jazyka zostanú vo fronte s chybou; upravte cestu a zaraďte ich znova alebo požiadavky odstráňte. Úspešná plánovaná indexácia odstráni aj staršie chunky bez jazykového priečinka.
 
 ## REST vyhľadávanie
+
+Po IP kontrole sa ako prvá overí dostupnosť sémantického vyhľadávania. Ak nie je dostupné, API vráti HTTP `503` pred validáciou parametrov, načítaním koreňov, kontrolou cache a volaním AI. Kontrola platí aj pre požiadavky, ktorých výsledky sú uložené v cache.
 
 ```http
 GET /rest/rag/markdown/search?query=How%20to%20edit%20a%20page&language=en

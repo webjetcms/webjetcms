@@ -16,7 +16,7 @@ import sk.iway.iwcm.rag.search.MarkdownSearchService.SearchResponse;
 /** Read-only search API shared by public and authenticated Docsify documentation. */
 @RestController
 @RequestMapping("/rest/rag/markdown")
-public class MarkdownSearchRestController {
+public class MarkdownSearchRestController extends sk.iway.iwcm.rest.RestController {
 
     private final MarkdownSearchService searchService;
 
@@ -27,6 +27,7 @@ public class MarkdownSearchRestController {
     /**
      * Searches authorized documentation roots, generates an answer when ragAnswerAllowed is enabled,
      * and disables caching of the response.
+     * Access uses restAllowedIpAddresses-MarkdownSearchRestController, falling back to restAllowedIpAddresses.
      * Login is controlled by ragMarkdownSearchRequireLogin and does not require an administrator role.
      *
      * @param query question or search terms
@@ -41,8 +42,13 @@ public class MarkdownSearchRestController {
     public SearchResponse search(@RequestParam("query") String query, @RequestParam("language") String language,
             @RequestParam(value = "directory", required = false) String directory,
             HttpServletRequest request, HttpServletResponse response) {
-        response.setHeader("Cache-Control", "no-store");
+
+        if(isIpAddressAllowed(request)==false) {
+            return null;
+        }
+
         try {
+            response.setHeader("Cache-Control", "no-store");
             return searchService.search(query, language, directory, CloudToolsForCore.getDomainId(), request);
         } catch (IllegalArgumentException exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, exception.getMessage(), exception);

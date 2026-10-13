@@ -51,6 +51,8 @@ The administration will complete the parameter `query` with the search term and 
 
 The endpoint returns JSON with a field `results`. Each result contains `title`, `url`, and a Markdown sample `snippet`. An optional AI summary is in the `answer` element in Markdown format. Relative links in the results open on the documentation server.
 
+On the documentation server, enable the service by setting `restAllowedIpAddresses-MarkdownSearchRestController` to `*` or to allowed IP addresses or their prefixes separated by a comma. If the default value is empty, the global `restAllowedIpAddresses` will be used (default value is `127.0.0.1`). A non-empty controller setting takes precedence. For public search without logging in to the documentation server, also set `ragMarkdownSearchRequireLogin=false`.
+
 If the documentation runs on a different domain, its server must enable CORS. The setting belongs **to the documentation server**. For the administration opened on `http://iwcm.interway.sk`, set:
 
 - `accessControlAllowOriginUrls` must contain `/rest/rag/markdown/search`. The default list `/rest/,/private/rest/,/admin/rest/` already covers this path, keep the other necessary paths.

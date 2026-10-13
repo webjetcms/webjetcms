@@ -63,6 +63,7 @@ public class MarkdownSearchService {
 
     /**
      * Searches accessible globally configured roots in the selected language in the shared Markdown domain zero.
+     * Search availability is checked before validation, source access and cache lookup.
      * Access checks run before embeddings and again for individual sources before answer generation.
      * Embeddings and answers use the requesting domain's assistants, credentials and usage accounting.
      * Answers are generated automatically when ragAnswerAllowed is enabled and authorized context is available.
@@ -81,6 +82,9 @@ public class MarkdownSearchService {
      */
     public SearchResponse search(String query, String language, String directory, Integer domainId,
             HttpServletRequest request) {
+        if (semanticSearchService.isAvailable() == false) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Semantic search is not available");
+        }
         if (domainId == null || domainId < 1) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Documentation domain is not available");
         }

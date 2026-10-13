@@ -41,10 +41,11 @@ Use the same [vector database and AI provider](semantic-search/README.md) as for
 | Variable | Example | Meaning |
 | --- | --- | --- |
 | `ragSemanticSearchEnabled` | `true` | Turns on semantic search. |
-| `ragMarkdownFolders` | `/admin/docs/client,file:/docs/sk/admin/users` | A global list of documentation roots for all domains, separated by commas or newlines. Defaults to empty. The `file:` prefix indicates a folder on the server; `file:/docs` is the documentation alias set via `symlinkTranslate`. |
-| `ragMarkdownSearchRequireLogin` | `true` | By default, it requires a logged in user; it does not have to be an administrator. A value of `false` will allow anonymous searching even in the configured `file:` and `/admin/` roots. |
-| `symlinkTranslate` | `/docs/\|/srv/documentation/webjetcms/` | Global mapping of the `/docs/` alias to the absolute documentation folder. Required for `file:/docs` and its subfolders. |
-| `ragAnswerAllowed` | `true` | Enables automatic generation of RAG answers when searching. If set to `false`, only found documents will be displayed. Requires configured answer assistant. |
+| `restAllowedIpAddresses-MarkdownSearchRestController` | Allows Markdown REST service calls from all IP addresses. You can also specify IP addresses or their prefixes separated by a comma. If left empty, the global `restAllowedIpAddresses` will be used (default is `127.0.0.1`). | `ragMarkdownFolders` |
+| `/admin/docs/client,file:/docs/sk/admin/users` | A global list of documentation roots for all domains, separated by commas or newlines. Defaults to empty. The `file:` prefix indicates a folder on the server; `file:/docs` is the documentation alias set via `symlinkTranslate`. | `ragMarkdownSearchRequireLogin` |
+| `true` | By default, it requires a logged in user; it does not have to be an administrator. A value of `false` will allow anonymous searching even in the configured `file:` and `/admin/` roots. | `symlinkTranslate` |
+| `/docs/\|/srv/documentation/webjetcms/` | Global mapping of the `/docs/` alias to the absolute documentation folder. Required for `file:/docs` and its subfolders. | `ragAnswerAllowed` |
+| `true` | Enables automatic generation of RAG answers when searching. If set to `false`, only found documents will be displayed. Requires configured answer assistant. | Zapne automatické generovanie RAG odpovede pri vyhľadávaní. Pri hodnote `false` sa zobrazia iba nájdené dokumenty. Vyžaduje nakonfigurovaného asistenta pre odpovede. |
 
 Roots without the prefix `file:` are paths in the expanded web application **without the application context path**: for URL `/cms/admin/docs/webjetcms` set to `/admin/docs/webjetcms`. Only a subfolder can be indexed, for example `/admin/docs/webjetcms/sk/admin/users`. The backend for links finds the nearest parent Docsify `index.html` or `index.jsp` ; if missing, it uses the indexed root. Paths `..`, encoded web paths, and `WEB-INF` /`META-INF` are not allowed.
 
@@ -62,7 +63,9 @@ Locally, the target can point to the `docs` folder of your project, for example 
 
 At root `file:/docs/sk/admin/users`, the direct file `README.md` is given the language `sk`. At root `file:/docs`, all language subfolders are processed. Direct `.md` files are also indexed; adjacent parts of the documentation are not searched. The language is not selected in the dialog and is not stored in the queue, only in chunks.
 
-`ragMarkdownSearchRequireLogin` of the current domain requires any logged in user by default; a value of `false` will also allow anonymous searches in all configured roots, including `/admin/` and `file:`. Blocked paths and protection of individual web files by user groups are still respected. Login checks are performed before calling embeds and generating an AI response.
+The REST service by default allows the IP address `127.0.0.1` according to the global `restAllowedIpAddresses`. In **Settings → Configuration** set `restAllowedIpAddresses-MarkdownSearchRestController` to `*` for all IP addresses or for example to `192.168.,203.0.113.7` for selected addresses. It uses the same IP checking as [public REST services](../../spring/public-services.md): a non-empty controller setting takes precedence, if empty the global `restAllowedIpAddresses` is used. The global value `*` will also allow this service if it does not have its own restriction. An unauthorized call will return HTTP `401` before the AI ​​is looked up and called.
+
+When enabled, the IP address `ragMarkdownSearchRequireLogin` of the current domain requires any logged in user by default; a value of `false` also allows anonymous searching in all configured roots, including `/admin/` and `file:`. Blocked paths and protection of individual web files by user groups are still respected. Login checks are performed before calling embeds and generating the AI ​​response.
 
 The `/rest/rag/markdown/search` API is outside the admin path. Setting up a login does not change the protection of the Docsify browser itself, files, or index management. For regular users or anonymous access, deploy content to an accessible web path, such as `/docs/webjetcms/`, or to a separate documentation domain with a WebJET backend on the same origin. Files under `/admin/` are still subject to admin protection.
 
@@ -168,6 +171,8 @@ When migrating from an older version:
 - Verify language folders. Older indexing requests without a recognized language will remain in the queue with an error; either edit the path and requeue them or delete the requests. A successful scheduled index will also remove older chunks without a language folder.
 
 ## REST search
+
+After the IP check, the availability of semantic search is checked first. If it is not available, the API returns HTTP `503` before validating parameters, loading roots, checking cache, and calling AI. The check also applies to requests whose results are cached.
 
 ```http
 GET /rest/rag/markdown/search?query=How%20to%20edit%20a%20page&language=en

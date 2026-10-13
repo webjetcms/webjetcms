@@ -41,10 +41,11 @@ Použijte stejnou [vektorovou databázi a AI poskytovatele](semantic-search/READ
 | Proměnná | Příklad | Význam |
 | --- | --- | --- |
 | `ragSemanticSearchEnabled` | `true` | Zapne sémantické vyhledávání. |
-| `ragMarkdownFolders` | `/admin/docs/client,file:/docs/cs/admin/users` | Globální seznam kořenů dokumentace pro všechny domény, oddělených čárkou nebo novým řádkem. Ve výchozím nastavení je prázdný. Prefix `file:` označuje složku na serveru; `file:/docs` je alias dokumentace nastaven přes `symlinkTranslate`. |
-| `ragMarkdownSearchRequireLogin` | `true` | Ve výchozím nastavení vyžaduje přihlášeného uživatele; nemusí být administrátor. Hodnota `false` umožní anonymní vyhledávání iv nakonfigurovaných kořenech `file:` a `/admin/`. |
-| `symlinkTranslate` | `/docs/\|/srv/documentation/webjetcms/` | Globální mapování aliasu `/docs/` na absolutní složku dokumentace. Pro `file:/docs` a jeho podsložky je povinné. |
-| `ragAnswerAllowed` | `true` | Zapne automatické generování RAG odpovědi při vyhledávání. Při hodnotě `false` se zobrazí pouze nalezené dokumenty. Vyžaduje nakonfigurovaného asistenta pro odpovědi. |
+| `restAllowedIpAddresses-MarkdownSearchRestController` | Povolí volání Markdown REST služby ze všech IP adres. Lze zadat i IP adresy nebo jejich prefixy oddělené čárkou. Při výchozí prázdné hodnotě se použije globální `restAllowedIpAddresses` (výchozí `127.0.0.1`). | `ragMarkdownFolders` |
+| `/admin/docs/client,file:/docs/cs/admin/users` | Globální seznam kořenů dokumentace pro všechny domény, oddělených čárkou nebo novým řádkem. Ve výchozím nastavení je prázdný. Prefix `file:` označuje složku na serveru; `file:/docs` je alias dokumentace nastaven přes `symlinkTranslate`. | `ragMarkdownSearchRequireLogin` |
+| `true` | Ve výchozím nastavení vyžaduje přihlášeného uživatele; nemusí být administrátor. Hodnota `false` umožní anonymní vyhledávání iv nakonfigurovaných kořenech `file:` a `/admin/`. | `symlinkTranslate` |
+| `/docs/\|/srv/documentation/webjetcms/` | Globální mapování aliasu `/docs/` na absolutní složku dokumentace. Pro `file:/docs` a jeho podsložky je povinné. | `ragAnswerAllowed` |
+| `true` | Zapne automatické generování RAG odpovědi při vyhledávání. Při hodnotě `false` se zobrazí pouze nalezené dokumenty. Vyžaduje nakonfigurovaného asistenta pro odpovědi. | Zapne automatické generovanie RAG odpovede pri vyhľadávaní. Pri hodnote `false` sa zobrazia iba nájdené dokumenty. Vyžaduje nakonfigurovaného asistenta pre odpovede. |
 
 Kořeny bez prefixu `file:` jsou cesty v rozbalené webové aplikaci **bez kontextové cesty aplikace**: pro URL `/cms/admin/docs/webjetcms` nastavte `/admin/docs/webjetcms`. Lze indexovat pouze podsložku, například `/admin/docs/webjetcms/sk/admin/users`. Backend pro odkazy najde nejbližší nadřazený Docsify `index.html` nebo `index.jsp` ; pokud chybí, použije indexovaný kořen. Cesty `..`, zakódované webové cesty a `WEB-INF` /`META-INF` nejsou povoleny.
 
@@ -62,7 +63,9 @@ Lokálně může cíl směřovat na složku `docs` vašeho projektu, například
 
 U kořene `file:/docs/sk/admin/users` dostane přímý soubor `README.md` jazyk `sk`. U kořene `file:/docs` se zpracují všechny jazykové podsložky. Indexují se i přímé `.md` soubory; sousední části dokumentace se neprohledávají. Jazyk se nevybírá v dialogu a neukládá se ve frontě, pouze v chuncích.
 
-`ragMarkdownSearchRequireLogin` aktuální domény ve výchozím nastavení vyžaduje libovolného přihlášeného uživatele; hodnota `false` umožní také anonymní vyhledávání ve všech nakonfigurovaných kořenech včetně `/admin/` a `file:`. Blokované cesty a ochrana jednotlivých webových souborů uživatelskými skupinami se nadále respektují. Kontrola přihlášení proběhne před voláním embeddingů a generováním odpovědi AI.
+REST služba ve výchozím nastavení povoluje IP adresu `127.0.0.1` podle globálního `restAllowedIpAddresses`. V **Nastavení → Konfigurace** nastavte `restAllowedIpAddresses-MarkdownSearchRestController` na `*` pro všechny IP adresy nebo například na `192.168.,203.0.113.7` pro vybrané adresy. Používá stejnou kontrolu IP jako [veřejné REST služby](../../spring/public-services.md): neprázdné nastavení controlleru má přednost, při prázdném se použije globálně `restAllowedIpAddresses`. Globální hodnota `*` tak povolí i tuto službu, pokud nemá vlastní omezení. Nepovolené volání vrátí HTTP `401` ještě před vyhledáváním a voláním AI.
+
+Po povolení IP adresy `ragMarkdownSearchRequireLogin` aktuální domény ve výchozím nastavení vyžaduje libovolného přihlášeného uživatele; hodnota `false` umožní také anonymní vyhledávání ve všech nakonfigurovaných kořenech včetně `/admin/` a `file:`. Blokované cesty a ochrana jednotlivých webových souborů uživatelskými skupinami se nadále respektují. Kontrola přihlášení proběhne před voláním embeddingů a generováním odpovědi AI.
 
 API `/rest/rag/markdown/search` je mimo administrátorskou cestu. Nastavení přihlášení nemění ochranu samotného prohlížeče Docsify, souborů ani zprávy indexu. Pro běžné uživatele nebo anonymní přístup nasazujte obsah na přístupnou webovou cestu, například `/docs/webjetcms/`, nebo na samostatnou dokumentační doménu s WebJET backendem na stejném originu. Soubory pod `/admin/` nadále podléhají ochraně administrace.
 
@@ -168,6 +171,8 @@ Při přechodu ze starší verze:
 - Ověřte jazykové složky. Starší požadavky na indexování bez rozpoznaného jazyka zůstanou ve frontě s chybou; upravte cestu a zařaďte je znovu nebo požadavky odstraňte. Úspěšná plánovaná indexace odstraní i starší chunky bez jazykové složky.
 
 ## REST vyhledávání
+
+Po IP kontrole se jako první ověří dostupnost sémantického vyhledávání. Pokud není dostupné, API vrátí HTTP `503` před validací parametrů, načtením kořenů, kontrolou cache a voláním AI. Kontrola platí i pro požadavky, jejichž výsledky jsou uloženy v cache.
 
 ```http
 GET /rest/rag/markdown/search?query=How%20to%20edit%20a%20page&language=en

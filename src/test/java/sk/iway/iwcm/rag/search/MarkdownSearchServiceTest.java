@@ -50,6 +50,7 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
 
     @BeforeEach
     void configureDocumentation() {
+        doReturn(true).when(semanticSearch).isAvailable();
         SpamProtection.clearAll();
         Cache.getInstance().removeObjectStartsWithName("MarkdownSearchService.");
         when(reranker.rerank(anyString(), anyList())).thenAnswer(call -> call.getArgument(1));
@@ -66,6 +67,21 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
         Constants.setBoolean("ragAnswerAllowed", originalAnswerAllowed);
         Constants.setBoolean("ragMarkdownSearchRequireLogin", originalRequireLogin);
         Constants.setString("pathFilterBlockedPaths", originalBlockedPaths);
+    }
+
+    /** Stops unavailable searches before validating input or accessing any source or provider. */
+    @Test
+    void rejectsUnavailableSearchBeforeFurtherProcessing() {
+        doReturn(false).when(semanticSearch).isAvailable();
+        MarkdownSourceService sources = mock(MarkdownSourceService.class);
+        MarkdownSearchService unavailable = new MarkdownSearchService(sources, semanticSearch, repository, ragService);
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, assertThrows(ResponseStatusException.class,
+            () -> unavailable.search(null, null, null, null, request)).getStatusCode());
+
+        verify(semanticSearch).isAvailable();
+        verifyNoMoreInteractions(semanticSearch);
+        verifyNoInteractions(sources, repository, ragService);
     }
 
     /** Checks citations, normalized cache reuse, AI toggling and the 30-minute expiry. */
@@ -189,7 +205,9 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
         Constants.setString("pathFilterBlockedPaths", "/docs");
         assertEquals(HttpStatus.FORBIDDEN, assertThrows(ResponseStatusException.class,
             () -> service.search("query", "sk", null, 1, request)).getStatusCode());
-        verifyNoInteractions(semanticSearch, repository, ragService);
+        verify(semanticSearch, times(2)).isAvailable();
+        verifyNoMoreInteractions(semanticSearch);
+        verifyNoInteractions(repository, ragService);
     }
 
     /** Resolves viewer directories for anonymous searches inside application, filesystem, and narrowed language roots. */
@@ -214,7 +232,8 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
 
         assertTrue(response.results().isEmpty());
         assertNull(response.answer());
-        if (expectedPath == null) verifyNoInteractions(semanticSearch);
+        verify(semanticSearch).isAvailable();
+        if (expectedPath == null) verifyNoMoreInteractions(semanticSearch);
         else verify(semanticSearch).searchChunks("query", 7, "sk", 10,
             RagEntityType.MARKDOWN, Map.of("sourceRoot", expectedPath), request);
         verifyNoInteractions(repository, ragService);
@@ -253,7 +272,9 @@ class MarkdownSearchServiceTest extends BaseWebjetTest {
     void rejectsInvalidDirectory(String directory) {
         assertThrows(IllegalArgumentException.class,
             () -> service.search("query", "sk", directory, 7, request));
-        verifyNoInteractions(semanticSearch, repository, ragService);
+        verify(semanticSearch).isAvailable();
+        verifyNoMoreInteractions(semanticSearch);
+        verifyNoInteractions(repository, ragService);
     }
 
     /** Rechecks file permissions on cache hits for anonymous searches and ordinary logged-in users. */

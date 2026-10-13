@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,7 +30,7 @@ import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.rag.vectorjpa.EmbeddingChunkRepository;
 import sk.iway.iwcm.test.BaseWebjetTest;
 
-/** Verifies authentication and request throttling on the public Markdown search endpoint. */
+/** Verifies IP restrictions, authentication and request throttling on the public Markdown search endpoint. */
 class MarkdownSearchRestControllerTest extends BaseWebjetTest {
 
     private final SemanticSearchService semanticSearch = mock(SemanticSearchService.class);
@@ -38,6 +39,8 @@ class MarkdownSearchRestControllerTest extends BaseWebjetTest {
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new MarkdownSearchRestController(
         new MarkdownSearchService(new MarkdownSourceService(), semanticSearch, repository, ragService))).build();
     private final String originalFolders = Constants.getString("ragMarkdownFolders");
+    private final String originalAllowedIps = Constants.getString("restAllowedIpAddresses-MarkdownSearchRestController");
+    private final String originalGlobalAllowedIps = Constants.getString("restAllowedIpAddresses");
     private final boolean originalRequireLogin = Constants.getBoolean("ragMarkdownSearchRequireLogin");
     private final String originalDisabledIps = Constants.getString("spamProtectionDisabledIPs");
     private final Map<String, Integer> originalSpamLimits = Map.of(
@@ -48,7 +51,9 @@ class MarkdownSearchRestControllerTest extends BaseWebjetTest {
 
     @BeforeEach
     void configureSearchLimits() {
+        when(semanticSearch.isAvailable()).thenReturn(true);
         SpamProtection.clearAll();
+        Constants.setString("restAllowedIpAddresses-MarkdownSearchRestController", "*");
         Constants.setInt("spamProtectionTimeout-search", 10);
         Constants.setInt("spamProtectionHourlyLimit-search", 200);
         Constants.setInt("spamProtectionIgnoreFirstRequests-search", 0);
@@ -59,9 +64,69 @@ class MarkdownSearchRestControllerTest extends BaseWebjetTest {
     void restoreConfiguration() {
         SpamProtection.clearAll();
         Constants.setString("ragMarkdownFolders", originalFolders);
+        Constants.setString("restAllowedIpAddresses-MarkdownSearchRestController", originalAllowedIps);
+        Constants.setString("restAllowedIpAddresses", originalGlobalAllowedIps);
         Constants.setBoolean("ragMarkdownSearchRequireLogin", originalRequireLogin);
         Constants.setString("spamProtectionDisabledIPs", originalDisabledIps);
         originalSpamLimits.forEach(Constants::setInt);
+    }
+
+    /** Reports unavailable search before validating the query or calling AI providers. */
+    @Test
+    void returnsServiceUnavailable() throws Exception {
+        when(semanticSearch.isAvailable()).thenReturn(false);
+        try (var domains = mockStatic(CloudToolsForCore.class)) {
+            domains.when(CloudToolsForCore::getDomainId).thenReturn(7);
+            mvc.perform(get("/rest/rag/markdown/search").param("query", "").param("language", "sk"))
+                .andExpect(status().isServiceUnavailable())
+                .andExpect(header().string("Cache-Control", "no-store"));
+            verify(semanticSearch).isAvailable();
+            verifyNoMoreInteractions(semanticSearch);
+            verifyNoInteractions(repository, ragService);
+        }
+    }
+
+    /** Uses global IP access for an empty controller setting and gives explicit controller rules precedence. */
+    @ParameterizedTest
+    @CsvSource({
+        "'',127.0.0.1,127.0.0.1,false,200",
+        "'',127.0.0.1,203.0.113.7,false,401",
+        "'',127.0.0.1,203.0.113.7,true,401",
+        "'',*,203.0.113.7,false,200",
+        "'   ',*,203.0.113.7,false,200",
+        "'',203.0.113.,203.0.113.7,false,200",
+        "'','',127.0.0.1,true,401",
+        "192.168.,*,203.0.113.7,true,401",
+        "203.0.113.7,127.0.0.1,203.0.113.7,false,200",
+        "'192.168.,203.0.113.',127.0.0.1,203.0.113.7,false,200",
+        "*,127.0.0.1,203.0.113.7,false,200"
+    })
+    void appliesControllerOrGlobalAllowedIps(String allowedIps, String globalAllowedIps, String remoteIp,
+            boolean loggedIn, int expectedStatus) throws Exception {
+        Constants.setString("restAllowedIpAddresses-MarkdownSearchRestController", allowedIps);
+        Constants.setString("restAllowedIpAddresses", globalAllowedIps);
+        Constants.setBoolean("ragMarkdownSearchRequireLogin", false);
+        Constants.setString("ragMarkdownFolders", "/docs/public");
+        var request = get("/rest/rag/markdown/search").param("query", "users").param("language", "sk")
+            .with(httpRequest -> {
+                httpRequest.setRemoteAddr(remoteIp);
+                return httpRequest;
+            });
+        if (loggedIn) request.sessionAttr(Constants.USER_KEY, new Identity());
+
+        try (var domains = mockStatic(CloudToolsForCore.class)) {
+            domains.when(CloudToolsForCore::getDomainId).thenReturn(7);
+            var response = mvc.perform(request).andExpect(status().is(expectedStatus));
+            if (expectedStatus == 200) {
+                response.andExpect(header().string("Cache-Control", "no-store"));
+                verify(semanticSearch).searchChunks(eq("users"), eq(7), eq("sk"), eq(10),
+                    eq(RagEntityType.MARKDOWN), eq(Map.of("sourceRoot", "/docs/public")), any());
+            } else {
+                verifyNoInteractions(semanticSearch);
+                domains.verifyNoInteractions();
+            }
+            verifyNoInteractions(repository, ragService);
+        }
     }
 
     /** Allows ordinary users and optionally anonymous visitors to search all configured root types. */
@@ -90,7 +155,8 @@ class MarkdownSearchRestControllerTest extends BaseWebjetTest {
                 verify(semanticSearch).searchChunks(eq("users"), eq(7), eq("sk"), eq(10),
                     eq(RagEntityType.MARKDOWN), eq(filters), any());
             } else {
-                verifyNoInteractions(semanticSearch);
+                verify(semanticSearch).isAvailable();
+                verifyNoMoreInteractions(semanticSearch);
             }
             verifyNoInteractions(repository, ragService);
         }
@@ -113,7 +179,9 @@ class MarkdownSearchRestControllerTest extends BaseWebjetTest {
                 .andExpect(status().isBadRequest());
             Constants.setBoolean("ragMarkdownSearchRequireLogin", true);
             mvc.perform(request).andExpect(status().isUnauthorized());
-            verifyNoInteractions(semanticSearch, repository, ragService);
+            verify(semanticSearch, times(2)).isAvailable();
+            verifyNoMoreInteractions(semanticSearch);
+            verifyNoInteractions(repository, ragService);
 
             Constants.setBoolean("ragMarkdownSearchRequireLogin", loggedIn);
             if (loggedIn) request.sessionAttr(Constants.USER_KEY, new Identity());
@@ -126,7 +194,9 @@ class MarkdownSearchRestControllerTest extends BaseWebjetTest {
                 .andExpect(status().isTooManyRequests())
                 .andExpect(header().string("Cache-Control", "no-store"));
 
-            verifyNoInteractions(semanticSearch, repository, ragService);
+            verify(semanticSearch).isAvailable();
+            verifyNoMoreInteractions(semanticSearch);
+            verifyNoInteractions(repository, ragService);
         }
     }
 
