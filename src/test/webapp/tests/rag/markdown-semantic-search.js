@@ -1,7 +1,7 @@
 Feature('rag.markdown-semantic-search @singlethread');
 
 // The Markdown index is currently available only on tau11. All scenarios use public, read-only search.
-const documentationUrl = 'https://docs.tau11.iway.sk/latest/sk/';
+const documentationUrl = 'https://docs.webjetcms.sk/latest/sk/';
 const searchRoute = '**/rest/rag/markdown/search?*';
 const input = '#documentation-query';
 const dialogInput = '#documentation-dialog-query';
