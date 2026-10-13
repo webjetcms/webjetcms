@@ -110,6 +110,7 @@ export class BarChartForm {
             chartDivId: config.chartDivId,
             chartData: config.chartData,
             horizontal: config.horizontal == null ? true : config.horizontal,
+            colorByValue: config.colorByValue === true,
             colorScheme: config.colorScheme
         });
     }
@@ -1262,6 +1263,36 @@ function createBarChartVertical(root, chart, chartForm) {
 }
 
 /**
+ * Set bar data and recalculate the color scale from the nonzero values.
+ * Zero values remain in the chart without affecting the colors of visible bars.
+ *
+ * @param {am5xy.ColumnSeries} series bar series to update
+ * @param {BarChartForm} chartForm chart configuration and current data
+ */
+function setBarChartData(series, chartForm) {
+    if (chartForm.colorByValue) {
+        const colors = getColorScheme(chartForm.colorScheme);
+        const values = chartForm.chartData
+            .map(item => item[chartForm.xAxeName])
+            .filter(value => Number.isFinite(value) && value !== 0);
+        const minValue = values.length > 0 ? Math.min(...values) : 0;
+        const maxValue = values.length > 0 ? Math.max(...values) : 0;
+
+        series.set("heatRules", ["fill", "stroke"].map(key => ({
+            target: series.columns.template,
+            dataField: chartForm.horizontal === false ? "valueY" : "valueX",
+            key: key,
+            min: colors[0],
+            max: colors[colors.length - 1],
+            minValue: minValue,
+            maxValue: maxValue
+        })));
+    }
+
+    series.data.setAll(chartForm.chartData);
+}
+
+/**
  * Create BAR type chart and set all setting around chart. The created chart is set in BarChartForm.chart param.
  * Supports horizontal (default) and vertical bar orientations via chartForm.horizontal flag.
  *
@@ -1323,15 +1354,17 @@ async function createBarChart(root, chartForm) {
     });
     series.set("tooltip", tooltip);
 
-    // Make each column to be of a different color
-    series.columns.template.adapters.add("fill", function(fill, target) {
-        return chart.get("colors").getIndex(series.columns.indexOf(target));
-    });
-    series.columns.template.adapters.add("stroke", function(stroke, target) {
-        return chart.get("colors").getIndex(series.columns.indexOf(target));
-    });
+    if (!chartForm.colorByValue) {
+        // Make each column to be of a different color
+        series.columns.template.adapters.add("fill", function(fill, target) {
+            return chart.get("colors").getIndex(series.columns.indexOf(target));
+        });
+        series.columns.template.adapters.add("stroke", function(stroke, target) {
+            return chart.get("colors").getIndex(series.columns.indexOf(target));
+        });
+    }
 
-    series.data.setAll(chartForm.chartData);
+    setBarChartData(series, chartForm);
 
     //Add cursor
     var cursor = chart.set("cursor", am5xy.XYCursor.new(root, {}));
@@ -1664,10 +1697,11 @@ export async function updateChart(chartForm) {
     if(chartForm instanceof BarChartForm) {
         //BAR chart dont need remove series, just set new data to series
         //our bar chart always support only 1 series
-        chartForm.chart.series.values[0].data.setAll(chartForm.chartData);
+        setBarChartData(chartForm.chart.series.values[0], chartForm);
 
         //!! its also MUST to set new data into CategoryAxis
-        chartForm.chart.yAxes.values[0].data.setAll(chartForm.chartData);
+        const categoryAxis = chartForm.horizontal === false ? chartForm.chart.xAxes.values[0] : chartForm.chart.yAxes.values[0];
+        categoryAxis.data.setAll(chartForm.chartData);
     } else if(chartForm instanceof PieChartForm) {
         updatePieSumLabels(chartForm);
 
