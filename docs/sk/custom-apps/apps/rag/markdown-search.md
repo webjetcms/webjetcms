@@ -4,7 +4,7 @@ Sémantické vyhľadávanie a RAG môžu pracovať aj so súbormi Markdown nasad
 
 ## Nasadenie Docsify
 
-Do rozbalenej WAR aplikácie skopírujte Docsify shell z priečinka `docs`: `index.jsp`, `index.html`, `style.css` a `assets/`. Do rovnakého koreňa pridajte jazykové priečinky s obsahom, napríklad:
+Do rozbalenej WAR aplikácie skopírujte Docsify shell z priečinka `docs`: `index.jsp`, `index.html`, `style.css` a `assets/`. Shell používa pôvodné history smerovanie; vnorené umiestnenie vyžaduje úpravu konfigurácie opísanú nižšie. Do rovnakého koreňa pridajte jazykové priečinky s obsahom, napríklad:
 
 ```text
 /admin/docs/webjetcms/
@@ -26,11 +26,11 @@ Do rozbalenej WAR aplikácie skopírujte Docsify shell z priečinka `docs`: `ind
     sk/...
 ```
 
-Po otvorení `/admin/docs/webjetcms` Tomcat použije existujúci welcome-file `index.jsp`. Docsify prejde na jazyk prehliadača (`sk`, `cs`, inak `en`). Ak nasadzujete iba slovenský obsah, používajte priamy odkaz `/admin/docs/webjetcms/#/sk/`. Ďalšie jazyky sú dostupné priamym odkazom, napríklad `#/de/`; texty vyhľadávania majú v takom prípade anglický náhradný preklad.
+Pôvodný shell je nastavený pre verejnú dokumentáciu pod `/latest/`. V tomto nasadení otvárajte napríklad `/latest/sk/`; prechod z koreňa dokumentácie vyberá jazyk prehliadača (`sk`, `cs`, inak `en`). Vyhľadávacie pole má slovenské, české a anglické texty; pri inom jazykovom kóde použije anglický preklad.
 
-Vnorené nasadenie používa odkazy s `#/`, napríklad `/admin/docs/webjetcms/#/sk/redactor/`. Nevyžaduje vlastný 404 handler. Existujúce verejné adresy `/latest/...` a `/v2026/...` používajú pôvodné history smerovanie a existujúci `404.jsp`. Pri samostatnej dokumentačnej doméne musí byť REST služba dostupná na rovnakom origine; samotný statický server alebo Tomcat bez WebJET backendu vyhľadávanie neposkytuje.
+Pri vnorenom nasadení, napríklad `/admin/docs/webjetcms/`, nestačí súbory iba skopírovať. V kópii `index.html` nastavte `basePath`, `<base href>` a cesty k statickým súborom podľa umiestnenia dokumentácie. Zachovajte `routerMode: 'history'` a na serveri nastavte prepis dokumentových adries, napríklad `/admin/docs/webjetcms/sk/redactor/`, na príslušný `index.html`. Samotný welcome-file `index.jsp` túto obsluhu nenahrádza. Existujúce verejné adresy `/latest/...` a verziované adresy naďalej obsluhuje pôvodný `404.jsp`. Pri samostatnej dokumentačnej doméne musí byť REST služba dostupná na rovnakom origine; samotný statický server alebo Tomcat bez WebJET backendu vyhľadávanie neposkytuje.
 
-Pri nasadení dokumentácie v koreňovom priečinku zostávajú podporované aj pôvodné adresy `/sk/...`, `/en/...` a `/cs/...` bez `#/`. Používajú history smerovanie a načítavajú súbory prehliadača z koreňa `/`. Server musí pri otvorení takejto adresy vrátiť `index.html`, napríklad pomocou fallbacku v `docsify serve`. Existujúci `404.jsp` túto obsluhu nezabezpečuje pre adresy bez verzie.
+Pôvodná konfigurácia používa koreň `/` pre `127.0.0.1`, `localhost`, `iwcm.interway.sk` a `docs.interway.sk`. Na týchto adresách zostávajú odkazy `/sk/...`, `/en/...` a `/cs/...`. Server musí pri otvorení dokumentovej adresy vrátiť `index.html`, napríklad pomocou fallbacku v `docsify serve`. Existujúci `404.jsp` túto obsluhu nezabezpečuje pre adresy bez verzie. Pri inom hostiteľovi alebo umiestnení upravte konfiguráciu shellu; cesta sa neurčuje automaticky z otvorenej adresy.
 
 Shell naďalej načítava knižnice Docsify a ich doplnky z existujúcich CDN. Do WAR nemusíte kopírovať `node_modules`, testy ani nástroje na generovanie dokumentácie.
 
@@ -74,7 +74,7 @@ Fronta si uchová kladné ID domény, ktorá požiadavku vytvorila. Jej asistent
 
 Vyhľadávací asistent musí používať rovnakého poskytovateľa a model ako uložené embeddingy. Domény s rovnakou kombináciou zdieľajú existujúce vektory. Pri inej kombinácii treba vytvoriť zodpovedajúci index; dimenzia musí zodpovedať spoločnej vektorovej databáze.
 
-Pri nasadení pod kontextovou cestou, napríklad `/cms`, sa kontext pre `/cms/admin/docs/...` odvodí automaticky. Pri inom umiestnení, napríklad `/cms/manual/`, doplňte do `window.$docsify` nastavenie:
+Po nastavení shellu pre vnorené nasadenie sa kontext vyhľadávania odvodí z jeho `basePath`: pri `/cms/admin/docs/...` sa použije `/cms`. Pri inom umiestnení, napríklad `/cms/manual/`, doplňte do `window.$docsify` nastavenie:
 
 ```javascript
 markdownSearch: {
@@ -82,7 +82,7 @@ markdownSearch: {
 }
 ```
 
-Plugin umožňuje nastaviť aj `endpoint`; štandardné nasadenie pod `/admin/docs/` ho nepotrebuje. Korene vyhľadávania určuje výhradne backend podľa `ragMarkdownFolders` a prístupových práv. Prehliadač odosiela jazyk aktuálnej stránky Docsify a voliteľné obmedzenie na aktuálny adresár podľa zvoleného odkazu v dialógu.
+Plugin umožňuje nastaviť aj `endpoint`; pri správnom `basePath` pod `/admin/docs/` ho netreba zadávať. Toto nastavenie vyhľadávania nenahrádza konfiguráciu shellu a serverového prepisu adries. Korene vyhľadávania určuje výhradne backend podľa `ragMarkdownFolders` a prístupových práv. Prehliadač odosiela jazyk aktuálnej stránky Docsify a voliteľné obmedzenie na aktuálny adresár podľa zvoleného odkazu v dialógu.
 
 ### Lokálny náhľad Docsify
 
@@ -100,9 +100,9 @@ Pre vyhľadávanie aj odpovede AI nastavte globálne mapovanie `/docs/` v `symli
 npm run docs:rag -- --backend http://iwcm.interway.sk
 ```
 
-Otvorte `http://iwcm.interway.sk:3001/#/sk/`. Ak je `ragMarkdownSearchRequireLogin=true`, najprv sa prihláste cez prihlasovaciu stránku webu na `http://iwcm.interway.sk` v rovnakom prehliadači aj profile; postačuje bežný používateľský účet. Administrátori môžu použiť aj `/admin/`. Rovnaký názov hostiteľa umožní použiť existujúcu prihlasovaciu cookie aj na inom porte. Pri hodnote `false` prihlásenie netreba. Vstavaný prehliadač VS Code má samostatnú reláciu a prihlásenie z bežného prehliadača neprevezme.
+Otvorte `http://iwcm.interway.sk:3001/sk/`. Ak je `ragMarkdownSearchRequireLogin=true`, najprv sa prihláste cez prihlasovaciu stránku webu na `http://iwcm.interway.sk` v rovnakom prehliadači aj profile; postačuje bežný používateľský účet. Administrátori môžu použiť aj `/admin/`. Rovnaký názov hostiteľa umožní použiť existujúcu prihlasovaciu cookie aj na inom porte. Pri hodnote `false` prihlásenie netreba. Vstavaný prehliadač VS Code má samostatnú reláciu a prihlásenie z bežného prehliadača neprevezme.
 
-Proxy počúva iba na lokálnom rozhraní, zobrazuje náhľad zo statického servera a požiadavky na vyhľadávanie posiela do WebJETu. Koreň dokumentácie sa pri spustení nezadáva. Nové vyhľadávanie v podadresári sa obmedzí na adresár aktuálnej stránky a jeho podadresáre. Napríklad z adresy `http://iwcm.interway.sk:3001/#/sk/admin/README` sa odošle `directory=/sk/admin/`. Odkaz **vyhľadať vo všetkých adresároch** v dialógu zopakuje otázku bez tohto filtra. V koreňovom adresári jazyka, napríklad `#/sk/`, sa filter neposiela a odkaz sa nezobrazuje. Súbory dokumentácie, nastavenia CORS ani overovanie prihlásenia sa nemenia.
+Proxy počúva iba na lokálnom rozhraní, zobrazuje náhľad zo statického servera a požiadavky na vyhľadávanie posiela do WebJETu. V HTML náhľadu nastaví koreň dokumentácie na `/`, takže aj pri inom názve backendového hostiteľa používate history adresy `/sk/...`. Koreň dokumentácie sa pri spustení nezadáva. Nové vyhľadávanie v podadresári sa obmedzí na adresár aktuálnej stránky a jeho podadresáre. Napríklad z adresy `http://iwcm.interway.sk:3001/sk/admin/README` sa odošle `directory=/sk/admin/`. Odkaz **vyhľadať vo všetkých adresároch** v dialógu zopakuje otázku bez tohto filtra. V koreňovom adresári jazyka, napríklad `/sk/`, sa filter neposiela a odkaz sa nezobrazuje. Súbory dokumentácie, nastavenia CORS ani overovanie prihlásenia sa nemenia.
 
 ## Plánovaná indexácia
 
@@ -198,7 +198,7 @@ Náhľad nájdenej časti dokumentu zachováva Markdown formátovanie: nadpisy, 
 
 V záhlaví dialógu je otázka v upraviteľnom poli. Po úprave spustíte nové vyhľadávanie klávesom Enter alebo ikonou lupy na konci poľa, bez zatvorenia dialógu. Zachová sa aktuálny rozsah aj jazyk a otázka sa aktualizuje aj v bočnom paneli. Pod poľom je rozsah vyhľadávania a jazyk. Odpoveď AI je v jemne fialovej karte nad zoznamom **Nájdené dokumenty** s počtom zobrazených výsledkov. Zachováva formátovanie asistenta: postupy majú zvýraznené čísla krokov, polia môžu byť v kompaktnej tabuľke a ukážky kódu sú v samostatných paneloch. Dlhšie voliteľné príklady môže asistent vložiť do rozbaľovacích detailov. Ak chýba `answerHtml`, zobrazí sa pôvodný text. Nový predvolený asistent používa pre postupy číslované kroky, zvýraznené názvy polí, tabuľky s popisom polí a krátke ukážky kódu. Existujúci asistenti si zachovajú uložené inštrukcie; rovnaký štýl možno nastaviť ich úpravou. Dokumenty sú v samostatných kartách s ikonou, náhľadom a cestou k sekcii alebo zdrojovému adresáru. Ak odpoveď nie je dostupná, karta AI sa nezobrazuje. Otázka zostáva viditeľná aj počas načítania, pri prázdnych výsledkoch a pri chybe. Pri posúvaní výsledkov zostáva záhlavie s otázkou a tlačidlom na zatvorenie na mieste.
 
-Nové vyhľadávanie v podadresári sa obmedzí na adresár aktuálnej stránky a všetky jeho podadresáre: `#/sk/admin/README` aj `#/sk/admin/` odošlú `/sk/admin/`. Odkaz **vyhľadať vo všetkých adresároch** zopakuje rovnakú otázku bez `directory`; opačný odkaz obnoví adresárový filter. V koreňovom adresári jazyka, napríklad `#/sk/` alebo `#/sk/README`, sa zobrazí **Celá dokumentácia · Slovenčina**, filter `directory` sa neposiela a odkaz na rozšírenie rozsahu sa nezobrazuje. Vyhľadávanie zostáva obmedzené na vybraný jazyk a prístupné korene. Prepnutie rozsahu zachová otázku aj jazyk, nahradí výsledky aj odpoveď AI a nemení otvorenú stránku. Odkazy fungujú aj pri prázdnych výsledkoch.
+Nové vyhľadávanie v podadresári sa obmedzí na adresár aktuálnej stránky a všetky jeho podadresáre: `/latest/sk/admin/README` aj `/latest/sk/admin/` odošlú `/sk/admin/`. Odkaz **vyhľadať vo všetkých adresároch** zopakuje rovnakú otázku bez `directory`; opačný odkaz obnoví adresárový filter. V koreňovom adresári jazyka, napríklad `/latest/sk/` alebo `/latest/sk/README`, sa zobrazí **Celá dokumentácia · Slovenčina**, filter `directory` sa neposiela a odkaz na rozšírenie rozsahu sa nezobrazuje. Vyhľadávanie zostáva obmedzené na vybraný jazyk a prístupné korene. Prepnutie rozsahu zachová otázku aj jazyk, nahradí výsledky aj odpoveď AI a nemení otvorenú stránku. Odkazy fungujú aj pri prázdnych výsledkoch.
 
 ### Serverová cache vyhľadávania
 

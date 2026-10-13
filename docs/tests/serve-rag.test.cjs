@@ -36,7 +36,9 @@ test('injects preview configuration and preserves proxy authentication and error
   const headers = { Cookie: 'JSESSIONID=autotest' };
 
   const shell = await fetch(url, { headers });
-  assert.match(await shell.text(), /markdownSearch: \{"endpoint":"\/cms\/rest\/rag\/markdown\/search"\}/);
+  const html = await shell.text();
+  assert.match(html, /basePath = '\/'; window\.\$docsify = \{/);
+  assert.match(html, /markdownSearch: \{"endpoint":"\/cms\/rest\/rag\/markdown\/search"\}/);
   assert.equal(docsCookie, undefined);
 
   const query = '/cms/rest/rag/markdown/search?query=upload&language=sk';

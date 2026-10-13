@@ -131,7 +131,7 @@
 
   /**
    * Creates a localized search form and results dialog for a mounted Docsify viewer.
-   * Requires the viewer's basePath and useHashRouter globals to be initialized.
+   * Requires the viewer's basePath global and $docsify configuration to be initialized.
    * Reads optional contextPath and endpoint overrides from $docsify.markdownSearch.
    */
   function initializeSearch() {
@@ -152,7 +152,7 @@
      * Uses English labels for unsupported languages and refreshes existing controls.
      */
     function localize() {
-      const route = useHashRouter ? window.location.hash.substring(1) : window.location.pathname.substring(basePath.length - 1);
+      const route = window.location.pathname.substring(basePath.length - 1);
       language = (route.match(/^\/([a-z]{2,3}(?:-[a-z0-9]{2,6})?)(?:\/|$)/i) || [null, 'en'])[1].toLowerCase();
       labels = translations[language] || translations.en;
       document.documentElement.lang = language;
@@ -192,19 +192,19 @@
           .replace(/<[^>]+>/g, '').replace(/[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,./:;<=>?@[\]^`{|}~]/g, '')
           .replace(/\s/g, '-').replace(/-+/g, '-').replace(/^(\d)/, '_$1');
         /**
-         * Applies the derived section ID to the URL's hash route or query string when available.
+         * Converts legacy hash URLs to history routes and applies the derived section ID.
          *
          * @param {URL} target - Viewer URL to update in place.
-         * @returns {string} Absolute URL, unchanged when no section ID was derived.
+         * @returns {string} Absolute history URL with the section ID when available.
          */
         const withSection = target => {
-          if (section) {
-            if (target.hash.startsWith('#/')) {
-              const route = new URL(target.hash.substring(1), window.location.origin);
-              route.searchParams.set('id', section);
-              target.hash = route.pathname + route.search;
-            } else target.searchParams.set('id', section);
+          if (target.hash.startsWith('#/')) {
+            const route = new URL(target.hash.substring(1), window.location.origin);
+            target.pathname += route.pathname.substring(1);
+            target.search = route.search;
+            target.hash = '';
           }
+          if (section) target.searchParams.set('id', section);
           return target.href;
         };
         if (value != null && (typeof value !== 'string' || !value)) return null;
@@ -220,18 +220,12 @@
           if (segments.some(segment => !segment || segment === '.' || segment === '..' || /[\\\x00-\x1f\x7f]/.test(segment))) return null;
           const route = segments.join('/').replace(/\.md$/i, '').replace(/(^|\/)README$/, '$1')
             .split('/').map(encodeURIComponent).join('/');
-          return withSection(new URL(basePath + (useHashRouter ? '#/' : '') + route, window.location.origin));
+          return withSection(new URL(basePath + route, window.location.origin));
         }
         if (!url || !url.pathname.startsWith(basePath)) return null;
         // Validate legacy document routes, including the hash, before adapting the router format.
         const documentPath = decodeURIComponent(url.pathname + (url.hash.startsWith('#/') ? url.hash.substring(2).split('?')[0] : ''));
         if (!documentPath.startsWith(contextPath + '/') || documentPath.split('/').some(segment => segment === '.' || segment === '..' || /[\\\x00-\x1f\x7f]/.test(segment))) return null;
-        if (!useHashRouter && url.hash.startsWith('#/')) {
-          const route = new URL(url.hash.substring(1), window.location.origin);
-          url.pathname += route.pathname.substring(1);
-          url.search = route.search;
-          url.hash = '';
-        }
         return withSection(url);
       } catch (error) {
         return null;
@@ -352,8 +346,7 @@
       if (!dialog.open) dialog.showModal();
 
       try {
-        const route = (useHashRouter ? window.location.hash.substring(1) :
-          window.location.pathname.substring(basePath.length - 1)).split(/[?#]/)[0];
+        const route = window.location.pathname.substring(basePath.length - 1);
         const directory = decodeURIComponent(route.substring(0, route.lastIndexOf('/') + 1));
         const isRoot = !directory || directory === '/' || directory.toLowerCase() === '/' + language + '/';
         searchCurrentDirectory = currentDirectoryOnly && !isRoot;

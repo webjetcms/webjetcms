@@ -4,7 +4,6 @@ const path = require('node:path');
 const test = require('node:test');
 const { chromium } = require('../../src/test/webapp/node_modules/playwright');
 const docs = path.resolve(__dirname, '..');
-const deployment = '/cms/admin/docs/webjetcms/';
 
 /**
  * Waits until Docsify renders the heading from the requested local Markdown document.
@@ -30,18 +29,19 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   let searchScriptMode = 'pending';
   context.on('page', page => page.on('pageerror', error => errors.push(error.message)));
   const page = await context.newPage();
-  const base = 'http://docs.test';
+  const base = 'http://iwcm.interway.sk';
+  const latestBase = 'http://docs.test';
 
   // Serve the actual shell and Markdown locally; only optional CDN plugins are stubbed.
   await context.route('**/*', async route => {
     const url = new URL(route.request().url());
-    if (url.origin === base) {
+    if (url.origin === base || url.origin === latestBase) {
       if (url.pathname.endsWith('/semantic-search.js')) {
         scriptRequests.push(url.pathname);
         if (searchScriptMode === 'pending') await pendingSearchScript;
         if (searchScriptMode === 'failed') return route.abort('failed');
       }
-      const root = [deployment, '/latest/', '/'].find(prefix => url.pathname.startsWith(prefix));
+      const root = url.pathname.startsWith('/latest/') ? '/latest/' : '/';
       let relative = decodeURIComponent(url.pathname.substring(root.length)) || 'index.html';
       if (!path.extname(relative)) relative = 'index.html';
       const file = path.join(docs, relative);
@@ -50,12 +50,14 @@ test('Docsify navigation, scoped search, safe results and request errors', async
     if (url.href === 'https://cdn.jsdelivr.net/npm/docsify@4' || url.href === 'http://cdn.jsdelivr.net/npm/docsify@4') {
       return route.fulfill({ path: path.join(docs, 'node_modules/docsify/lib/docsify.js') });
     }
+    if (url.pathname.endsWith('docsify-themeable.min.js')) {
+      // The theme initializes the Markdown configuration used by the viewer's link renderer.
+      return route.fulfill({ contentType: 'text/javascript', body: 'window.$docsify.plugins.unshift(function (hook) { hook.init(function () { window.$docsify.markdown = { renderer: {} }; }); });' });
+    }
     if (url.pathname.endsWith('mermaid.esm.min.mjs')) {
       return route.fulfill({ contentType: 'text/javascript', body: 'export default { initialize() {} };' });
     }
     if (url.pathname.endsWith('theme-simple-dark.css')) {
-      // Let the preload scanner reach scripts before the stylesheet-blocked base-path setup runs.
-      await new Promise(resolve => setTimeout(resolve, 100));
       return route.fulfill({ path: path.join(docs, 'node_modules/docsify/lib/themes/dark.css') });
     }
     return route.fulfill({ body: '', contentType: url.pathname.endsWith('.css') ? 'text/css' : 'text/javascript' });
@@ -63,15 +65,15 @@ test('Docsify navigation, scoped search, safe results and request errors', async
 
   let requestUrl;
   let response = { json: { results: [
-    { title: '<img src=x onerror=alert(1)>', url: deployment + '#/en/redactor/',
-      sourcePath: '/admin/docs/webjetcms/en/redactor/README.md', snippet: [
+    { title: '<img src=x onerror=alert(1)>', url: '/#/en/redactor/',
+      sourcePath: 'file:/docs/en/redactor/README.md', snippet: [
         '## Editor', 'Read **bold**, *italic* and `<code>`.', '- First\n- Second', '> Quote',
         '```html\n<img src=x onerror=alert(1)>\n```',
         '[Link](javascript:alert(1)) ![Image](https://example.com/image.png)',
         '<script>alert(1)</script>', 'Inline <code><img src=x onerror=alert(1)></code>'
       ].join('\n\n') },
     { title: 'External result', url: 'https://example.com/', snippet: 'Excluded' },
-    { title: 'Other collection', url: '/cms/admin/docs/other/#/en/', snippet: 'Excluded' }
+    { title: 'Invalid path', url: '/%00/en/', snippet: 'Excluded' }
   ], answer: 'Answer with <script> text.' } };
   await page.route('**/rest/rag/markdown/search?**', async route => {
     requestUrl = new URL(route.request().url());
@@ -80,17 +82,17 @@ test('Docsify navigation, scoped search, safe results and request errors', async
     return route.fulfill(response);
   });
 
-  await page.goto(base + deployment + '#/en/', { waitUntil: 'domcontentloaded' });
+  await page.goto(base + '/en/', { waitUntil: 'domcontentloaded' });
   await page.locator('.sidebar-nav a[href$="/redactor/README"]').click();
   await waitForDocument(page, 'en/redactor/README.md');
-  assert.equal(new URL(page.url()).hash, '#/en/redactor/README');
+  assert.equal(new URL(page.url()).pathname, '/en/redactor/README');
   assert.equal(await page.locator('#documentation-query').count(), 0);
   searchScriptMode = 'normal';
   releaseSearchScript();
   await page.locator('#documentation-query').fill('Edit a page');
   await page.locator('.documentation-search button').click();
   await page.waitForFunction(() => document.querySelector('.documentation-search-results').children.length === 1);
-  assert.equal(requestUrl.pathname, '/cms/rest/rag/markdown/search');
+  assert.equal(requestUrl.pathname, '/rest/rag/markdown/search');
   assert.deepEqual(Object.fromEntries(requestUrl.searchParams), {
     query: 'Edit a page', language: 'en', directory: '/en/redactor/'
   });
@@ -122,7 +124,7 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   const popupEvent = page.waitForEvent('popup');
   await result.click();
   const popup = await popupEvent;
-  await popup.waitForURL(base + deployment + '#/en/redactor/');
+  await popup.waitForURL(base + '/en/redactor/');
   await waitForDocument(popup, 'en/redactor/README.md');
   assert.equal(await popup.evaluate(() => window.opener), null);
   assert.equal(await page.locator('dialog').isVisible(), true);
@@ -147,7 +149,7 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   assert.equal(await page.locator('.documentation-search-answer td').textContent(), 'Task label');
   assert.deepEqual(Object.fromEntries(requestUrl.searchParams), { query: 'Edit a page', language: 'en' });
   assert.equal(await page.locator('.documentation-search-scope-label').textContent(), 'All documentation · English');
-  assert.equal(new URL(page.url()).hash, '#/en/redactor/README');
+  assert.equal(new URL(page.url()).pathname, '/en/redactor/README');
   await dialogQuery.fill('Find a page');
   await page.locator('.documentation-search-dialog-submit').click();
   await page.waitForFunction(() => !document.querySelector('.documentation-search-dialog-submit').disabled);
@@ -191,29 +193,38 @@ test('Docsify navigation, scoped search, safe results and request errors', async
   }
 
   // Language-root searches omit the directory filter and scope action.
-  await page.goto(base + deployment + '#/sk/');
+  const searchForm = await page.locator('.documentation-search').elementHandle();
+  await page.locator('.app-nav a[href="/sk/"]').evaluate(link => link.click());
+  await waitForDocument(page, 'sk/README.md');
+  assert.equal(await searchForm.evaluate(form => form === document.querySelector('.documentation-search')), true);
+  assert.equal(await page.locator('html').getAttribute('lang'), 'sk');
   response = { json: { results: [
     { title: 'Admin', url: null, sourcePath: 'file:/docs/sk/admin/README.md', snippet: 'Admin guide' },
-    { title: 'Editor', url: null, sourcePath: 'file:/docs/sk/redactor/README.md', snippet: 'Editor guide' },
-    { title: 'Other collection', url: '/cms/admin/docs/other/#/sk/guide', sourcePath: '/admin/docs/other/sk/guide.md', snippet: 'Other guide' }
+    { title: 'Editor', url: null, sourcePath: 'file:/docs/sk/redactor/README.md', snippet: 'Editor guide' }
   ] } };
   await page.locator('#documentation-query').fill('Documentation');
   await page.locator('.documentation-search button').click();
-  await page.waitForFunction(() => document.querySelector('.documentation-search-results').children.length === 3);
+  await page.waitForFunction(() => document.querySelector('.documentation-search-results').children.length === 2);
   assert.deepEqual(Object.fromEntries(requestUrl.searchParams), { query: 'Documentation', language: 'sk' });
   assert.equal(await page.locator('.documentation-search-scope').isVisible(), false);
   assert.deepEqual(await page.locator('.documentation-search-results a').evaluateAll(links => links.map(link => link.href)), [
-    base + deployment + '#/sk/admin/', base + deployment + '#/sk/redactor/', base + '/cms/admin/docs/other/#/sk/guide'
+    base + '/sk/admin/', base + '/sk/redactor/'
   ]);
   response = { json: { results: [], answer: null } };
   await page.locator('.documentation-search-dialog-submit').click();
   await page.waitForFunction(() => !document.querySelector('.documentation-search-dialog-submit').disabled);
   assert.equal(await page.locator('.documentation-search-state').isVisible(), true);
   assert.equal(await page.locator('.documentation-search-expand, .documentation-search-scope').evaluateAll(items => items.every(item => item.hidden)), true);
-  await page.keyboard.press('Escape');
 
-  // The local preview derives its directory from the route, including README and heading URLs.
-  for (const route of ['/#/sk/admin/README?id=users', '/#/sk/admin/']) {
+  // Returning to the previous route closes and relocalizes the existing search controls.
+  await page.goBack();
+  await waitForDocument(page, 'en/redactor/README.md');
+  assert.equal(await page.locator('dialog').isVisible(), false);
+  assert.equal(await page.locator('#documentation-query').getAttribute('placeholder'), 'Enter your question…');
+  assert.equal(await searchForm.evaluate(form => form === document.querySelector('.documentation-search')), true);
+
+  // History routes derive the directory from README and heading URLs.
+  for (const route of ['/sk/admin/README?id=users', '/sk/admin/']) {
     await page.goto(base + route);
     await waitForDocument(page, 'sk/admin/README.md');
     await page.locator('#documentation-query').fill('Users');
@@ -230,7 +241,7 @@ test('Docsify navigation, scoped search, safe results and request errors', async
     await waitForDocument(page, language + '/admin/users/README.md');
     assert.equal(page.url(), documentUrl);
     assert.equal(await page.evaluate(() => window.$docsify.routerMode), 'history');
-    assert.equal(await page.locator('link[href="/style.css?v=1"]').evaluate(link => link.href), base + '/style.css?v=1');
+    assert.equal(await page.locator('link[href="/style.css"]').evaluate(link => link.href), base + '/style.css');
     await page.locator('.sidebar-nav a[href$="/admin/users/user-groups"]').click();
     await waitForDocument(page, language + '/admin/users/user-groups.md');
     assert.equal(page.url(), base + '/' + language + '/admin/users/user-groups');
@@ -238,28 +249,33 @@ test('Docsify navigation, scoped search, safe results and request errors', async
     await waitForDocument(page, language + '/admin/users/user-groups.md');
   }
 
-  // Keep one legacy-router smoke check without repeating the deployment/language matrix.
+  // The published viewer retains its /latest/ history routes and search asset location.
   scriptRequests.length = 0;
-  await page.goto(base + '/latest/en/');
+  await page.goto(latestBase + '/latest/en/');
   await page.locator('#documentation-query').waitFor();
   assert.deepEqual(scriptRequests, ['/latest/assets/semantic-search.js']);
   await page.locator('.sidebar-nav a[href$="/redactor/README"]').click();
   await waitForDocument(page, 'en/redactor/README.md');
   assert.equal(new URL(page.url()).pathname, '/latest/en/redactor/README');
-  response = { json: { results: [{ title: 'Editor guide', url: '/latest/#/en/redactor/', snippet: 'Guide' }], answer: null } };
+  response = { json: { results: [
+    { title: 'Editor guide', url: '/latest/#/en/redactor/', snippet: 'Guide > Editing pages\n\nEdit a page.' },
+    { title: 'Other collection', url: '/cms/admin/docs/other/#/en/guide', sourcePath: '/admin/docs/other/en/guide.md', snippet: 'Other guide' }
+  ], answer: null } };
   await page.locator('#documentation-query').fill('Editor guide');
   await page.locator('.documentation-search button').click();
-  await page.waitForFunction(() => document.querySelector('.documentation-search-results').children.length === 1);
+  await page.waitForFunction(() => document.querySelector('.documentation-search-results').children.length === 2);
   assert.equal(requestUrl.searchParams.get('directory'), '/en/redactor/');
-  assert.equal(await result.getAttribute('href'), base + '/latest/en/redactor/');
+  assert.deepEqual(await result.evaluateAll(links => links.map(link => link.href)), [
+    latestBase + '/latest/en/redactor/?id=editing-pages', latestBase + '/cms/admin/docs/other/en/guide'
+  ]);
 
-  // Load search before Docsify and hold the sidebar to verify initialization at mount.
-  let releaseDocsify, releaseSidebar;
-  const pendingDocsify = new Promise(resolve => { releaseDocsify = resolve; });
+  // Delay the module and sidebar to verify initialization before Docsify mounts.
+  let releaseModule, releaseSidebar;
+  const pendingModule = new Promise(resolve => { releaseModule = resolve; });
   const pendingSidebar = new Promise(resolve => { releaseSidebar = resolve; });
-  t.after(() => { releaseDocsify(); releaseSidebar(); });
-  await page.route('**/npm/docsify@4', async route => {
-    await pendingDocsify;
+  t.after(() => { releaseModule(); releaseSidebar(); });
+  await page.route('**/mermaid.esm.min.mjs', async route => {
+    await pendingModule;
     return route.fallback();
   });
   await page.route('**/_sidebar.md', async route => {
@@ -271,10 +287,10 @@ test('Docsify navigation, scoped search, safe results and request errors', async
       if (event.target.src?.includes('/assets/semantic-search.js')) window.searchScriptLoaded = true;
     }, true);
   });
-  await page.goto(base + '/latest/en/redactor/README', { waitUntil: 'commit' });
+  await page.goto(latestBase + '/latest/en/redactor/README', { waitUntil: 'commit' });
   await page.waitForFunction(() => window.searchScriptLoaded === true);
   assert.equal(await page.locator('.sidebar').count(), 0);
-  releaseDocsify();
+  releaseModule();
   await waitForDocument(page, 'en/redactor/README.md');
   assert.equal(await page.locator('#documentation-query').count(), 1);
   assert.equal(await page.locator('.documentation-search-dialog').count(), 1);
@@ -285,7 +301,7 @@ test('Docsify navigation, scoped search, safe results and request errors', async
 
   // A failed search download must not prevent reading or navigating documentation.
   searchScriptMode = 'failed';
-  await page.goto(base + '/latest/en/');
+  await page.goto(latestBase + '/latest/en/');
   await page.locator('.sidebar-nav a[href$="/redactor/README"]').click();
   await waitForDocument(page, 'en/redactor/README.md');
   assert.equal(await page.locator('#documentation-query').count(), 0);

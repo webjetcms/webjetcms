@@ -3,7 +3,7 @@ const { parseArgs } = require('node:util');
 
 /**
  * Proxies the local Docsify preview and its search endpoint without changing backend authentication.
- * Injects search configuration into HTML and forwards cookies only to the backend search endpoint.
+ * Sets the preview root and search configuration in HTML and forwards cookies only to the backend search endpoint.
  * Accepts GET and HEAD requests for the backend hostname and rejects cross-origin requests.
  *
  * @param {Object} options - Local preview configuration.
@@ -68,7 +68,7 @@ function createPreview({ backend, docs = 'http://127.0.0.1:3000' }) {
       response.on('data', chunk => { body += chunk; });
       response.on('end', () => {
         res.writeHead(response.statusCode, responseHeaders);
-        res.end(body.replace('window.$docsify = {', `window.$docsify = { markdownSearch: ${config},`));
+        res.end(body.replace('window.$docsify = {', `basePath = '/'; window.$docsify = { markdownSearch: ${config},`));
       });
     });
     upstream.setTimeout(120000, () => upstream.destroy(new Error('Upstream request timed out')));
@@ -95,7 +95,7 @@ if (require.main === module) {
   server.on('error', error => { console.error(error.message); process.exitCode = 1; });
   server.listen(Number(values.port || 3001), '127.0.0.1', () => {
     const backend = new URL(values.backend);
-    console.log(`Preview: http://${backend.hostname}:${server.address().port}/#/sk/`);
+    console.log(`Preview: http://${backend.hostname}:${server.address().port}/sk/`);
     console.log(`If ragMarkdownSearchRequireLogin is enabled, sign in at ${backend.href} using the same browser; any user account is sufficient.`);
   });
 }
