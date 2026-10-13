@@ -62,7 +62,7 @@ Vysvetlenie použitých piktogramov:
 - [x] +Vylepšiť úvodnú stránku administrácie - dynamické bloky, možnosť vlastného nastavenia čo sa zobrazí, užitočné informácie a bloky (#332).
 - [ ] +Filter v aplikácii novinky neumožňuje zadať DOC ID viacerých stránok keby chceli podľa filtra “DOC_ID rovná sa” zvoliť viacero stránok
 filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadania viacerých hodnôt (#JT-2139).
-- [ ] +AI - upraviť vytváranie `chunk` tak, aby na začiatku/konci neboli nezmyselné slová, orezať od prvej medzery po poslednú medzeru.
+- [x] +AI - upraviť vytváranie `chunk` tak, aby podľa možnosti začínali a končili na hraniciach viet alebo slov (#58778).
 - [ ] +Webové stránky - upraviť predvolené zobrazenie pre nového používateľa - zobrazovať ID, poradie a usporiadať vzostupne.
 - [ ] +Webové stránky - pridať možnosť pridať viacerým stránkam naraz perex skupinu, čiže k existujúcim perex skupinám sa pridá zvolená.
 - [ ] +Webové stránky - pri zmazaní priečinka, ktorý má aj zrkadlenú verziu zobraziť notifikáciu, že boli zmazané aj zrkadlené priečinky XXX,YYY.

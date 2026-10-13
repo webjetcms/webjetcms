@@ -21,10 +21,9 @@ import sk.iway.iwcm.rag.service.RagEntityType;
 import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
 /**
- * PgVector implementation of VectorStore.
- * Handles ONLY the embedding (vector) column via native SQL using pgvector operators.
- * Entity CRUD operations are handled by EmbeddingChunkRepository (JPA).
- * Connects to the RAG datasource (primary PgSQL or secondary rag_jpa).
+ * Stores and searches embeddings in PostgreSQL using pgvector and native full-text queries.
+ * Manages vector updates and schema initialization while normal chunk persistence uses the JPA repository.
+ * Connects to the resolved RAG datasource, either the primary PostgreSQL database or {@code rag_jpa}.
  */
 @Service
 public class PgVectorStore implements VectorStore {
@@ -47,6 +46,9 @@ public class PgVectorStore implements VectorStore {
             chunk_index     INT NOT NULL,
             chunk_text      TEXT NOT NULL,
             content_hash    VARCHAR(64) NOT NULL,
+            source_path     TEXT,
+            source_title    VARCHAR(512),
+            source_hash     VARCHAR(64),
             embedding       vector(%s),
             embedding_provider VARCHAR(100) NOT NULL,
             embedding_model VARCHAR(100) NOT NULL,
@@ -85,8 +87,10 @@ public class PgVectorStore implements VectorStore {
         "', error_message = ? WHERE id = ?";
 
     /**
-     * Builds SEARCH_SQL dynamically based on configured distance metric.
-     * Supports: cosine (1 - <=>), inner_product (negated <#>), l2 (normalized <->)
+     * Builds the vector-search query prefix for the configured distance metric.
+     * Supports cosine distance, negated inner product, and normalized L2 distance.
+     *
+     * @return SQL prefix requiring vector, provider, and model parameters
      */
     private static String buildSearchSql() {
         String metric = Constants.getString("ragSearchDistanceMetric");
@@ -139,6 +143,14 @@ public class PgVectorStore implements VectorStore {
         updateEmbeddingRow(dsName, id, embedding);
     }
 
+    /**
+     * Stores one vector and marks its chunk completed, recording an error status when the update fails.
+     *
+     * @param dsName resolved RAG datasource name
+     * @param id existing chunk ID
+     * @param embedding nonempty embedding vector
+     * @return {@code true} when the vector and completed status were stored successfully
+     */
     private boolean updateEmbeddingRow(String dsName, Long id, float[] embedding) {
         try {
             int updatedRows = executeUpdate(
@@ -206,6 +218,12 @@ public class PgVectorStore implements VectorStore {
         }
     }
 
+    /**
+     * Builds a CASE-based batch update that stores vectors and clears chunk error statuses.
+     *
+     * @param rowCount number of chunk-vector pairs to update
+     * @return SQL requiring ID/vector pairs followed by all IDs for the final selection
+     */
     private String buildBatchUpdateEmbeddingSql(int rowCount) {
         StringBuilder sql = new StringBuilder("UPDATE rag_embedding_chunks SET embedding = CASE id ");
 
@@ -232,6 +250,13 @@ public class PgVectorStore implements VectorStore {
         }
     }
 
+    /**
+     * Marks a failed vector update with a bounded error message and logs status-update failures.
+     *
+     * @param dsName resolved RAG datasource name
+     * @param id chunk ID to mark as failed
+     * @param errorMessage failure message, or empty for the default message
+     */
     private void markEmbeddingError(String dsName, Long id, String errorMessage) {
         String message = Tools.isEmpty(errorMessage) ? "Embedding vector update failed" : errorMessage;
         if (message.length() > 500) {
@@ -253,7 +278,7 @@ public class PgVectorStore implements VectorStore {
     @Override
     public List<VectorSearchResult> search(float[] queryEmbedding, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
         String dsName = getDataSourceName();
-        if (dsName == null) return new ArrayList<>();
+        if (dsName == null || queryEmbedding == null || queryEmbedding.length == 0 || limit <= 0) return new ArrayList<>();
 
         // Apply configured ef_search parameter if not default
         int efSearch = Constants.getInt("ragSearchEfSearch");
@@ -280,24 +305,13 @@ public class PgVectorStore implements VectorStore {
 
         addScopeFilters(sql, params, entityType, domainId, language);
 
-        addEntityTypeSpecificConditions(sql, entityType, bonusParams);
+        addEntityTypeSpecificConditions(sql, params, entityType, bonusParams);
 
         sql.append(" ORDER BY embedding ").append(orderOperator).append(" ?::vector LIMIT ?");
         params.add(vectorToString(queryEmbedding));
         params.add(limit);
 
-        return new ComplexQuery()
-            .setSql(sql.toString())
-            .setParams(params.toArray())
-            .setDatabase(dsName)
-            .list(rs -> new VectorSearchResult(
-                rs.getLong("id"),
-                rs.getString("entity_type"),
-                rs.getLong("entity_id"),
-                rs.getInt("chunk_index"),
-                rs.getString("chunk_text"),
-                rs.getDouble("similarity")
-            ));
+        return executeSearchQuery(dsName, sql.toString(), params);
     }
 
     @Override
@@ -322,6 +336,20 @@ public class PgVectorStore implements VectorStore {
         return ftsResults;
     }
 
+    /**
+     * Retrieves completed chunks ranked by native full-text relevance within the requested scope.
+     *
+     * @param dsName resolved RAG datasource name
+     * @param query textual full-text query
+     * @param embeddingProvider provider required on matching chunks
+     * @param embeddingModel model required on matching chunks
+     * @param entityType optional source entity type
+     * @param domainId optional exact storage domain, including zero for shared Markdown
+     * @param language optional language filter
+     * @param limit maximum chunks to return
+     * @param bonusParams optional source-root or document-group constraints
+     * @return matching chunks in descending relevance order
+     */
     private List<VectorSearchResult> executeFulltextSearch(String dsName, String query, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
         StringBuilder sql = new StringBuilder(FTS_SEARCH_SQL_PREFIX);
         List<Object> params = new ArrayList<>();
@@ -332,7 +360,7 @@ public class PgVectorStore implements VectorStore {
 
         addScopeFilters(sql, params, entityType, domainId, language);
 
-        addEntityTypeSpecificConditions(sql, entityType, bonusParams);
+        addEntityTypeSpecificConditions(sql, params, entityType, bonusParams);
 
         sql.append(" ORDER BY similarity DESC LIMIT ?");
         params.add(limit);
@@ -340,6 +368,20 @@ public class PgVectorStore implements VectorStore {
         return executeSearchQuery(dsName, sql.toString(), params);
     }
 
+    /**
+     * Retrieves completed chunks using a case-insensitive pattern fallback within the requested scope.
+     *
+     * @param dsName resolved RAG datasource name
+     * @param query query text; SQL pattern wildcards remain active in fallback searches
+     * @param embeddingProvider provider required on matching chunks
+     * @param embeddingModel model required on matching chunks
+     * @param entityType optional source entity type
+     * @param domainId optional exact storage domain, including zero for shared Markdown
+     * @param language optional language filter
+     * @param limit maximum chunks to return
+     * @param bonusParams optional source-root or document-group constraints
+     * @return matching chunks in descending relevance order
+     */
     private List<VectorSearchResult> executeIlikeSearch(String dsName, String query, String embeddingProvider, String embeddingModel, RagEntityType entityType, Integer domainId, String language, int limit, Map<String, Object> bonusParams) {
         StringBuilder sql = new StringBuilder(FTS_ILIKE_SQL_PREFIX);
         List<Object> params = new ArrayList<>();
@@ -350,7 +392,7 @@ public class PgVectorStore implements VectorStore {
 
         addScopeFilters(sql, params, entityType, domainId, language);
 
-        addEntityTypeSpecificConditions(sql, entityType, bonusParams);
+        addEntityTypeSpecificConditions(sql, params, entityType, bonusParams);
 
         sql.append(" ORDER BY similarity DESC, id ASC LIMIT ?");
         params.add(limit);
@@ -358,6 +400,15 @@ public class PgVectorStore implements VectorStore {
         return executeSearchQuery(dsName, sql.toString(), params);
     }
 
+    /**
+     * Appends optional entity, domain, and language conditions and their bound values.
+     *
+     * @param sql query builder to extend
+     * @param params ordered parameters to extend
+     * @param entityType source type, or {@code null} for all types
+     * @param domainId exact storage domain, including zero, or {@code null} for all domains
+     * @param language language code, or null or empty to omit the filter
+     */
     private void addScopeFilters(StringBuilder sql, List<Object> params, RagEntityType entityType, Integer domainId, String language) {
         if (entityType != null) {
             sql.append(" AND entity_type = ?");
@@ -373,7 +424,31 @@ public class PgVectorStore implements VectorStore {
         }
     }
 
-    private void addEntityTypeSpecificConditions(StringBuilder sql, RagEntityType entityType, Map<String, Object> bonusParams) {
+    /**
+     * Appends a Markdown root-prefix filter or document-group constraints before result limiting.
+     * Markdown root wildcards are escaped; document group conditions are combined with OR.
+     *
+     * @param sql query builder to extend
+     * @param params ordered parameters to extend
+     * @param entityType source type that selects the applicable filters
+     * @param bonusParams optional {@code sourceRoot}, {@code sourceRoots}, or document root-group collections
+     */
+    private void addEntityTypeSpecificConditions(StringBuilder sql, List<Object> params, RagEntityType entityType, Map<String, Object> bonusParams) {
+
+        if (bonusParams != null && RagEntityType.MARKDOWN == entityType) {
+            List<?> roots = bonusParams.get("sourceRoot") instanceof String sourceRoot ? List.of(sourceRoot) :
+                bonusParams.get("sourceRoots") instanceof List<?> sourceRoots ? sourceRoots : null;
+            if (roots != null) {
+                sql.append(" AND (1=0");
+                for (Object value : roots) {
+                    if (value instanceof String root) {
+                        sql.append(" OR source_path LIKE ? ESCAPE '!'");
+                        params.add(root.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "/%");
+                    }
+                }
+                sql.append(")");
+            }
+        }
 
         // Document searches can be narrowed to the search app's selected root groups.
         if(bonusParams != null && RagEntityType.DOCUMENT == entityType) {
@@ -413,6 +488,12 @@ public class PgVectorStore implements VectorStore {
         }
     }
 
+    /**
+     * Extracts integer values from a collection while ignoring elements of other types.
+     *
+     * @param value candidate collection
+     * @return integer values, or {@code null} when the input is not a collection or is empty
+     */
     private List<Integer> asIntegerList(Object value) {
         if (!(value instanceof Collection<?>)) return null;
 
@@ -429,6 +510,14 @@ public class PgVectorStore implements VectorStore {
         return result;
     }
 
+    /**
+     * Executes a parameterized chunk search and maps source identity, text, and score.
+     *
+     * @param dsName resolved RAG datasource name
+     * @param sql search query with result columns expected by the mapper
+     * @param params ordered query parameters
+     * @return mapped search results
+     */
     private List<VectorSearchResult> executeSearchQuery(String dsName, String sql, List<Object> params) {
         return new ComplexQuery()
             .setSql(sql)
@@ -455,8 +544,13 @@ public class PgVectorStore implements VectorStore {
         if (isAvailable() == false) return false;
 
         try {
-            new SimpleQuery(getDataSourceName()).forInt("SELECT 1 FROM rag_embedding_chunks WHERE embedding_provider IS NOT NULL LIMIT 1");
-            return true;
+            SimpleQuery sq = new SimpleQuery(getDataSourceName());
+            sq.forInt("SELECT 1, source_path, source_title, source_hash FROM rag_embedding_chunks WHERE embedding_provider IS NOT NULL LIMIT 1");
+            return sq.forInt("""
+                SELECT COUNT(*) FROM information_schema.columns
+                WHERE table_schema = current_schema() AND table_name = 'rag_embedding_chunks'
+                  AND column_name = 'source_path' AND LOWER(data_type) = 'text'
+                """) == 1;
         } catch (Exception e) {
             return false;
         }
@@ -492,6 +586,10 @@ public class PgVectorStore implements VectorStore {
             sq.execute("ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS root_group_l1 INT");
             sq.execute("ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS root_group_l2 INT");
             sq.execute("ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS root_group_l3 INT");
+            sq.execute("ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS source_path TEXT");
+            sq.execute("ALTER TABLE rag_embedding_chunks ALTER COLUMN source_path TYPE TEXT");
+            sq.execute("ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS source_title VARCHAR(512)");
+            sq.execute("ALTER TABLE rag_embedding_chunks ADD COLUMN IF NOT EXISTS source_hash VARCHAR(64)");
 
             Logger.println(PgVectorStore.class, "RAG pgvector schema initialized successfully");
             return true;
@@ -501,6 +599,11 @@ public class PgVectorStore implements VectorStore {
         }
     }
 
+    /**
+     * Backfills missing provider identifiers and makes chunk uniqueness provider-aware.
+     *
+     * @param sq query executor connected to the RAG datasource
+     */
     private void migrateEmbeddingProviderColumn(SimpleQuery sq) {
         String defaultProvider = Constants.getString("ragEmbeddingProvider");
         if (Tools.isEmpty(defaultProvider)) defaultProvider = "openai";
@@ -554,7 +657,10 @@ public class PgVectorStore implements VectorStore {
     }
 
     /**
-     * Convert a float array to the pgvector string format: [0.1,0.2,0.3]
+     * Serializes an embedding in bracketed pgvector text format.
+     *
+     * @param embedding vector components in dimension order
+     * @return comma-separated vector enclosed in brackets
      */
     private String vectorToString(float[] embedding) {
         StringBuilder sb = new StringBuilder("[");
@@ -567,7 +673,10 @@ public class PgVectorStore implements VectorStore {
     }
 
     /**
-     * Parse pgvector text format "[0.1,0.2,0.3]" back to float[].
+     * Parses bracketed pgvector text into vector components.
+     *
+     * @param vectorStr vector text, possibly null
+     * @return parsed vector, or an empty array for null or text shorter than two characters
      */
     private float[] parseVector(String vectorStr) {
         if (vectorStr == null || vectorStr.length() < 2) return new float[0];
@@ -582,8 +691,14 @@ public class PgVectorStore implements VectorStore {
     }
 
     /**
-     * Fetches existing content hashes and embedding vectors for an entity and domain,
-     * allowing the indexer to skip re-embedding unchanged chunks.
+     * Fetches completed embeddings for content reuse within one source, provider, model, and domain.
+     *
+     * @param entityType stored source entity type
+     * @param entityId source identifier
+     * @param embeddingProvider provider that generated the vectors
+     * @param embeddingModel model that generated the vectors
+     * @param domainId storage domain, including zero for shared Markdown
+     * @return vectors keyed by content hash, or an empty map when the datasource or query is unavailable
      */
     @Override
     public Map<String, float[]> getExistingEmbeddingsByHash(String entityType, long entityId, String embeddingProvider, String embeddingModel, int domainId) {

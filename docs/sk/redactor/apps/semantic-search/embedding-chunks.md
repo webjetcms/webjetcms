@@ -6,11 +6,29 @@ Pre presnejšie výsledky sa obsah rozdeľuje na menšie časti - **chunky**. Ka
 
 Správu vektorov nájdete v sekcii **Nastavenia → Sémantický index**.
 
-Aktuálne je podporované indexovanie **webových stránok**. Ďalšie typy môžu pribudnúť v budúcnosti.
+Index je rozdelený na karty **Webové stránky** a **Markdown dokumenty**.
 
 !>**Upozornenie:** Indexovanie **neprebieha okamžite**. Každá požiadavka (pridanie, úprava, vymazanie) sa zaradí do **fronty** a spracuje sa v pravidelných intervaloch pomocou cron úlohy.
 
 Na zobrazenie zoznamu indexovaných objektov je potrebné mať právo Sémantický index.
+
+## Indexovanie Markdown dokumentácie
+
+Markdown dokumentácia a jej index sú spoločné pre všetky domény. Korene nastavuje správca globálne v `ragMarkdownFolders`. Indexovanie používa asistenta `RAG-EMB-INDEX` domény, ktorá požiadavku zaradila do fronty; tejto doméne sa zaznamená aj spotreba. Vyhľadávanie používa asistenta aktuálnej domény. Poskytovateľ a model vyhľadávania musia zodpovedať indexu.
+
+Na karte **Markdown dokumenty** vyberte nakonfigurovaný koreň alebo jeho podpriečinok v strome. Prepínač **Zobraziť aj z podpriečinkov** nastavuje rozsah tabuľky aj akčných dialógov; po vypnutí sa použijú iba súbory priamo vo vybranom priečinku. Tabuľka obsahuje údaje **Cesta dokumentu** a **Názov dokumentu**, ktoré slúžia len na čítanie. Výber a nastavenie prepínača sa zachovajú pri prepnutí kariet.
+
+Správca môže použiť aj serverové priečinky, napríklad `file:/srv/manuals`. Alias `file:/docs` vyžaduje globálne mapovanie v `symlinkTranslate`, napríklad `/docs/|/srv/documentation/webjetcms/`. Lokálne indexovanie samo nesprístupní súbory cez web.
+
+**Dokumentácia musí používať jazykové priečinky**, napríklad `sk`, `en` alebo `cs`. Jazyk sa určí z najbližšieho rozpoznaného priečinka v celej ceste vrátane koreňa: súbory pod `file:/docs/sk/admin/users` dostanú jazyk `sk`. Rozpoznané jazyky vychádzajú z globálnej premennej `languages`; `sk`, `en` a `cs` sú podporované vždy. Súbory bez jazykového priečinka sa pri indexovaní preskočia.
+
+Tlačidlá **Pridať indexovanie** a **Odstrániť indexovanie** otvoria dialóg, v ktorom môžete zmeniť priečinok aj zahrnutie podpriečinkov. Dialóg zobrazuje celkový počet dokumentov, počet indexovaných dokumentov a počet vo fronte pre zvolenú akciu. Pri indexovaní sa počítajú súbory s rozpoznaným jazykom a indexom aktuálneho poskytovateľa, modelu a odvodeného jazyka. Pri odstránení sa zahrnú všetky indexy vo vybranom rozsahu vrátane záznamov už neexistujúcich súborov.
+
+Po potvrdení sa požiadavky zaradia do fronty. Spracuje ich `sk.iway.iwcm.rag.service.RagIndexCronTask`; chyby zostávajú vo fronte na ďalší pokus. Odstránenie zruší aj čakajúcu indexáciu rovnakého zdroja z inej domény. Požiadavky ostatných priečinkov zostanú zachované. Ak nie sú nastavené žiadne korene, zobrazí sa informácia o potrebnej konfigurácii a akčné tlačidlá sú vypnuté.
+
+Pri prechode zo staršej verzie postupujte podľa [technickej dokumentácie](../../../custom-apps/apps/rag/markdown-search.md#správa-indexu-v-administrácii), najmä pri relatívnych cestách a starších doménových indexoch. Spoločné indexy s `domainId = 0` zostávajú platné; doména vo fronte určuje vlastníka spotreby.
+
+!>Odstránenie indexu nemaže Markdown súbory ani nevypína ich automatickú indexáciu. Úloha `MarkdownIndexCronTask` pri ďalšom prehľadaní vytvorí index znova.
 
 ## Indexovanie webových stránok
 
@@ -48,16 +66,12 @@ Položka vo fronte neobsahuje poskytovateľa ani model; tieto hodnoty sa načít
 
 Veľkosť chunkov sa nastavuje konfiguračnými premennými:
 
-- `ragEmbeddingChunkSize` - maximálna veľkosť jednej časti textu v znakoch, predvolene `1000`.
-- `ragEmbeddingChunkOverlap` - počet znakov prekrytia medzi susednými časťami, predvolene `200`.
+- `ragEmbeddingChunkSize` - približná cieľová veľkosť chunku v znakoch, predvolene `1000`. Maximálna veľkosť je o 50 % vyššia, teda predvolene `1500` znakov. Hodnota menšia alebo rovná nule vypne rozdeľovanie textu.
+- `ragEmbeddingChunkOverlap` - približné prekrytie medzi susednými chunkmi v znakoch, predvolene `200`.
 
-Pri delení textu sa systém snaží zachovať prirodzený kontext. Koniec chunku sa vyberá v tomto poradí:
+Chunky podľa možnosti začínajú a končia na rozpoznanej hranici vety alebo odseku, ktorá je najbližšie k cieľovej veľkosti. Veta zalomená do viacerých riadkov zostane spolu, pokiaľ sa zmestí do maximálnej veľkosti. Dlhšie vety alebo odseky sa rozdelia medzi slovami. Ak aj samotné slovo prekročí maximum, rozdelí sa uprostred.
 
-1. koniec odseku,
-2. koniec riadku,
-3. koniec vety alebo podobná interpunkcia,
-4. medzera medzi slovami,
-5. tvrdé rozdelenie podľa maximálnej veľkosti.
+Prekrytie sa podľa možnosti prispôsobuje celým vetám alebo odsekom, preto sa jeho skutočná veľkosť mení a môže byť aj nulová, ak je to potrebné na pokračovanie v texte alebo dodržanie maximálnej veľkosti. Každý ďalší chunk pridá nový obsah. Nové hranice sa na existujúce dokumenty použijú po opätovnom indexovaní.
 
 Prekrytie sa používa na zachovanie kontextu medzi susednými časťami. Pri RAG odpovedi sa susedné chunky jednej stránky môžu znovu zlúčiť, pričom sa odstráni duplicitný text vzniknutý prekrytím.
 

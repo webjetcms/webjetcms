@@ -51,6 +51,8 @@ Administrace doplní parametr `query` s hledaným výrazem a podle jazyka rozhra
 
 Endpoint vrací JSON s polem `results`. Každý výsledek obsahuje `title`, `url` a Markdown ukázku `snippet`. Volitelné AI shrnutí je v elementu `answer` v Markdown formátu. Relativní odkazy ve výsledcích se otevírají na serveru dokumentace.
 
+Na serveru dokumentace povolte službu nastavením `restAllowedIpAddresses-MarkdownSearchRestController` na `*` nebo na povolené IP adresy či jejich prefixy oddělené čárkou. Při výchozí prázdné hodnotě se použije globálně `restAllowedIpAddresses` (výchozí `127.0.0.1`). Neprázdné nastavení controlleru má přednost. Pro veřejné vyhledávání bez přihlášení na server dokumentace nastavte také `ragMarkdownSearchRequireLogin=false`.
+
 Pokud dokumentace běží na jiné doméně, její server musí povolit CORS. Nastavení patří **na server dokumentace**. Pro administraci otevřenou na `http://iwcm.interway.sk` nastavte:
 
 - `accessControlAllowOriginUrls` musí obsahovat `/rest/rag/markdown/search`. Výchozí seznam `/rest/,/private/rest/,/admin/rest/` již tuto cestu pokrývá, zachovejte ostatní potřebné cesty.

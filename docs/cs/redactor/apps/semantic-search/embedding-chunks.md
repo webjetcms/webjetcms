@@ -6,11 +6,29 @@ Pro přesnější výsledky se obsah rozděluje na menší části - **chunky**.
 
 Zprávu vektorů naleznete v sekci **Nastavení → Sémantický index**.
 
-Aktuálně je podporováno indexování **webových stránek**. Další typy mohou přibýt v budoucnosti.
+Index je rozdělen na karty **Webové stránky** a **Markdown dokumenty**.
 
 !>**Upozornění:** Indexování **neprobíhá okamžitě**. Každý požadavek (přidání, úprava, vymazání) se zařadí do **fronty** a zpracuje se v pravidelných intervalech pomocí cron úlohy.
 
 Pro zobrazení seznamu indexovaných objektů je třeba mít právo Sémantický index.
+
+## Indexování Markdown dokumentace
+
+Markdown dokumentace a její index jsou společné pro všechny domény. Kořeny nastavuje správce globálně v `ragMarkdownFolders`. Indexování používá asistenta `RAG-EMB-INDEX` domény, která požadavek zařadila do fronty; této doméně se zaznamená i spotřeba. Vyhledávání používá asistenta aktuální domény. Poskytovatel a model vyhledávání musí odpovídat indexu.
+
+Na kartě **Markdown dokumenty** vyberte nakonfigurovaný kořen nebo jeho podsložku ve stromu. Přepínač **Zobrazit iz podsložek** nastavuje rozsah tabulky i akčních dialogů; po vypnutí se použijí pouze soubory přímo ve vybrané složce. Tabulka obsahuje údaje **Cesta dokumentu** a **Název dokumentu**, které slouží pouze ke čtení. Výběr a nastavení přepínače se zachovají při přepnutí karet.
+
+Správce může použít také serverové složky, například `file:/srv/manuals`. Alias ​​`file:/docs` vyžaduje globální mapování v `symlinkTranslate`, například `/docs/|/srv/documentation/webjetcms/`. Lokální indexování samo nezpřístupní soubory přes web.
+
+**Dokumentace musí používat jazykové složky**, například `sk`, `en` nebo `cs`. Jazyk se určí z nejbližší rozpoznané složky v celé cestě včetně kořene: soubory pod `file:/docs/sk/admin/users` dostanou jazyk `sk`. Rozpoznané jazyky vycházejí z globální proměnné `languages` ; `sk`, `en` a `cs` jsou podporovány vždy. Soubory bez jazykové složky se při indexování přeskočí.
+
+Tlačítka **Přidat indexování** a **Odstranit indexování** otevřou dialog, ve kterém můžete změnit složku i zahrnutí podsložek. Dialog zobrazuje celkový počet dokumentů, počet indexovaných dokumentů a počet ve frontě pro zvolenou akci. Při indexování se počítají soubory s rozpoznaným jazykem a indexem aktuálního poskytovatele, modelu a odvozeného jazyka. Při odstranění se zahrnou všechny indexy ve vybraném rozsahu včetně záznamů již neexistujících souborů.
+
+Po potvrzení se požadavky zařadí do fronty. Zpracuje je `sk.iway.iwcm.rag.service.RagIndexCronTask` ; chyby zůstávají ve frontě na další pokus. Odstranění zruší i čekající indexaci stejného zdroje z jiné domény. Požadavky ostatních složek zůstanou zachovány. Pokud nejsou nastaveny žádné kořeny, zobrazí se informace o potřebné konfiguraci a akční tlačítka jsou vypnuta.
+
+Při přechodu ze starší verze postupujte podle [technické dokumentace](../../../custom-apps/apps/rag/markdown-search.md#zpráva-indexu-v-administraci), zejména u relativních cest a starších doménových indexů. Společné indexy s `domainId = 0` zůstávají platné; doména ve frontě určuje vlastníka spotřeby.
+
+!>Odstranění indexu nemaže Markdown soubory ani nevypíná jejich automatickou indexaci. Úloha `MarkdownIndexCronTask` při dalším prohledání vytvoří index znovu.
 
 ## Indexování webových stránek
 
@@ -48,16 +66,12 @@ Položka ve frontě neobsahuje poskytovatele ani model; tyto hodnoty se načtou 
 
 Velikost chunků se nastavuje konfiguračními proměnnými:
 
-- `ragEmbeddingChunkSize` - ​​maximální velikost jedné části textu ve znacích, ve výchozím nastavení `1000`.
-- `ragEmbeddingChunkOverlap` - ​​počet znaků překrytí mezi sousedními částmi, ve výchozím nastavení `200`.
+- `ragEmbeddingChunkSize` - ​​přibližná cílová velikost chunku ve znacích, ve výchozím nastavení `1000`. Maximální velikost je o 50 % vyšší, tedy ve výchozím nastavení `1500` znaků. Hodnota menší nebo rovná nule vypne rozdělování textu.
+- `ragEmbeddingChunkOverlap` - ​​přibližné překrytí mezi sousedními chunky ve znacích, ve výchozím nastavení `200`.
 
-Při dělení textu se systém snaží zachovat přirozený kontext. Konec chunku se vybírá v tomto pořadí:
+Chunky podle možnosti začínají a končí na rozpoznané hranici věty nebo odstavce, která je nejblíže cílové velikosti. Věta zalomená do více řádků zůstane spolu, pokud se vejde do maximální velikosti. Delší věty nebo odstavce se rozdělí mezi slovy. Pokud i samotné slovo překročí maximum, rozdělí se uprostřed.
 
-1. konec odstavce,
-2. konec řádku,
-3. konec věty nebo podobná interpunkce,
-4. mezera mezi slovy,
-5. tvrdé rozdělení podle maximální velikosti.
+Překrytí se podle možnosti přizpůsobuje celým větám nebo odstavcům, proto se jeho skutečná velikost mění a může být i nulová, pokud je to nutné pro pokračování v textu nebo dodržení maximální velikosti. Každý další chunk přidá nový obsah. Nové hranice se na stávající dokumenty použijí po opětovném indexování.
 
 Překrytí se používá k zachování kontextu mezi sousedními částmi. Při RAG odpovědi se sousední chunky jedné stránky mohou znovu sloučit, přičemž se odstraní duplicitní text vzniklý překrytím.
 
