@@ -2,6 +2,7 @@ import {Tools} from "./libs/tools/tools";
 import { Base64 } from 'js-base64';
 import {initTextareaLineNumbers} from './textarea-line-numbers';
 import {initSelectPicker} from './select-picker';
+import {getDocumentationUrl} from './documentation-links';
 
 const WJ = (() => {
 
@@ -41,11 +42,7 @@ const WJ = (() => {
     }
 
     function showHelpWindow(link=null) {
-        var url = "http://docs.webjetcms.sk/latest/"+window.userLng;
-        if (typeof link != "undefined" && link != null) url += link;
-        else if (typeof window.helpLink != "undefined") url += window.helpLink;
-        else url += "/";
-        window.open(url, '_blank');
+        window.open(getDocumentationUrl(link ?? window.helpLink ?? '/'), '_blank', 'noopener');
     }
 
     function changeDomainImpl(domainName) {
@@ -810,10 +807,7 @@ const WJ = (() => {
         //console.log('originalCallback=', originalCallback);
         options.okclick = () => {
             /** @type {string} */
-            let link = $('#modalIframeIframeElement').contents().find('div.inputs').find('.row:not(.template)').find('input').val();
-            if (typeof link == "undefined") {
-                link = $('#modalIframeIframeElement').contents().find('div.inputs').find('input.elfinder-url-input').val();
-            }
+            let link = $('#modalIframeIframeElement').contents().find('#file').val();
             //console.log('elfinder ok click link=', link, 'callback=', originalCallback);
             if (typeof originalCallback === 'function') {
                 originalCallback(link);
@@ -1693,6 +1687,7 @@ const WJ = (() => {
     }
 
     return {
+        getDocumentationUrl,
         showHelpWindow: (link) => {
             return showHelpWindow(link);
         },

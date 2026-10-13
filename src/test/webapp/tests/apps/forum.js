@@ -55,13 +55,12 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
     I.waitForInvisible(locate('td .ti.ti-trash'), 10);
 
     //Delete forum (soft delete)
-    I.clickCss(".buttons-select-all");
-    I.clickCss("button.buttons-remove");
+    I.clickCss("#forumDataTable_wrapper .buttons-select-all");
+    I.waitForElement("#forumDataTable tbody tr.selected", 10);
+    I.clickCss("#forumDataTable_wrapper button.buttons-remove");
     DTE.waitForEditor("forumDataTable");
-    I.waitForElement("div.DTE_Action_Remove");
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    I.click("Zmazať", "#forumDataTable_modal div.DTE_Action_Remove");
     DTE.waitForModalClose("forumDataTable_modal");
-    I.wait(0.2);
     DT.waitForLoader();
 
     //See forum, BUT see allso recover button
@@ -71,7 +70,6 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
     //Recover deleted forum
     I.forceClick(locate('td .ti.ti-trash'));
     DT.waitForLoader();
-    I.wait(1);
 
     //Check, we see forum but dont see button to recover, because forum was recored succefull
     I.see(subject + "_1");
@@ -86,14 +84,13 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
 
         //
         I.say("Delete forum (soft delete)");
-        I.wait(1);
-        I.clickCss(".buttons-select-all");
-        I.wait(1);
-        I.clickCss("button.buttons-remove");
-        I.waitForElement("div.DTE_Action_Remove");
-        I.click("Zmazať", "div.DTE_Action_Remove");
+        I.clickCss("#forumDataTable_wrapper .buttons-select-all");
+        I.waitForElement("#forumDataTable tbody tr.selected", 10);
+        I.clickCss("#forumDataTable_wrapper button.buttons-remove");
+        DTE.waitForEditor("forumDataTable");
+        I.click("Zmazať", "#forumDataTable_modal div.DTE_Action_Remove");
         DTE.waitForModalClose("forumDataTable_modal");
-        I.wait(1);
+        DT.waitForLoader();
 
         I.see(subject + "_2");
         I.waitForVisible(locate('td .ti.ti-trash'), 10);
@@ -102,7 +99,7 @@ Scenario('Test soft delete and then recover of entity', async ({I, DT, DTE}) => 
         I.say("Use other recover button");
         //I.clickCss(".buttons-select-all");
         I.clickCss("#forumDataTable_wrapper > div.dt-header-row.clearfix > div > div.col-auto > div > button:nth-child(6)");
-        I.wait(1);
+        DT.waitForLoader();
 
         I.see(subject + "_2");
         I.waitForInvisible(locate('td .ti.ti-trash'), 10);

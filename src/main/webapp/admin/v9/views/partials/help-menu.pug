@@ -1,0 +1,61 @@
+div.dropdown.md-help-menu
+    button#admin-help-toggle.btn.btn-sm.btn-outline-secondary.js-help-toggler(type="button" data-bs-toggle="dropdown" data-bs-offset="0,8" aria-expanded="false" aria-controls="admin-help-menu" data-th-aria-label="\#{menu.top.help}")
+        i.ti.ti-help(aria-hidden="true")
+        span(data-th-text="\#{menu.top.help}") Pomocník
+        i.ti.ti-chevron-down.md-help-menu__chevron(aria-hidden="true")
+    ul#admin-help-menu.dropdown-menu.dropdown-menu-end.md-help-menu__panel(aria-labelledby="admin-help-toggle")
+        li.dropdown-header(data-th-text="\#{admin.help.guides.js}") Návody
+        li.md-help-menu__page-row(hidden)
+            a.dropdown-item.md-help-menu__page(target="_blank" rel="noopener")
+                i.ti.ti-book(aria-hidden="true")
+                span.md-help-menu__content
+                    span(data-th-text="\#{admin.help.page.js}") Pomoc k tejto stránke
+                    small.md-help-menu__page-title
+                i.ti.ti-external-link.md-help-menu__external(aria-hidden="true")
+        li
+            a.dropdown-item(data-help-path="/" target="_blank" rel="noopener")
+                i.ti.ti-file-text(aria-hidden="true")
+                span.md-help-menu__content(data-th-text="\#{admin.help.documentation.js}") Dokumentácia WebJET CMS
+                i.ti.ti-external-link.md-help-menu__external(aria-hidden="true")
+        li
+            a.dropdown-item(data-help-path="/redactor/admin/keyboard-shortcuts" target="_blank" rel="noopener")
+                i.ti.ti-keyboard(aria-hidden="true")
+                span.md-help-menu__content(data-th-text="\#{admin.help.shortcuts.js}") Klávesové skratky
+                i.ti.ti-external-link.md-help-menu__external(aria-hidden="true")
+        li: hr.dropdown-divider
+        li.md-help-menu__release-row(hidden)
+            a.dropdown-item.md-help-menu__release(target="_blank" rel="noopener")
+                i.ti.ti-speakerphone(aria-hidden="true")
+                span.md-help-menu__content
+                    span.md-help-menu__release-title
+                    small.md-help-menu__release-count
+                span.md-help-menu__new(hidden data-th-text="\#{admin.dashboard.newsNew.js}") Nové
+        li
+            a.dropdown-item(data-help-path="/CHANGELOG" target="_blank" rel="noopener")
+                i.ti.ti-history(aria-hidden="true")
+                span.md-help-menu__content(data-th-text="\#{admin.help.changelog.js}") Zoznam všetkých zmien
+        li: hr.dropdown-divider
+        li
+            button.dropdown-item.md-help-menu__feedback(type="button")
+                i.ti.ti-message-report(aria-hidden="true")
+                span.md-help-menu__content
+                    span(data-th-text="\#{admin.help.feedback.js}") Poslať spätnú väzbu
+                    small(data-th-text="\#{admin.help.feedbackHint.js}") Nápad, problém alebo pochvala
+        li
+            a.dropdown-item.md-help-menu__support(target="_blank" rel="noopener")
+                i.ti.ti-lifebuoy(aria-hidden="true")
+                span.md-help-menu__content(data-th-text="\#{admin.help.support.js}") Kontaktovať podporu
+                i.ti.ti-external-link.md-help-menu__external(aria-hidden="true")
+        li.md-help-menu__system
+            div.md-help-menu__product
+                strong WebJET CMS
+                span(data-th-text="${' · ' + layout.productEdition}")
+            div(data-th-with="version=${layout.productVersion}, separator=${#strings.indexOf(version, ' ')}")
+                span(data-th-text="\#{admin.help.version.js}") Verzia
+                span(data-th-text="${separator < 0 ? version : #strings.substring(version, 0, separator)}")
+                span.d-block(data-th-if="${separator >= 0}" data-th-text="${#strings.substring(version, separator + 1)}")
+            div(data-th-if="${!#strings.isEmpty(layout.productServer)}")
+                span(data-th-text="\#{admin.help.server.js}") Server
+                span(data-th-text="${layout.productServer}")
+            button.dropdown-item.md-help-menu__copy(type="button" data-th-aria-label="\#{admin.help.copy.js}" data-th-title="\#{admin.help.copy.js}")
+                i.ti.ti-copy(aria-hidden="true")

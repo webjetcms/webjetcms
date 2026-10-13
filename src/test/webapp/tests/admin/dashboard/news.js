@@ -82,7 +82,8 @@ Scenario('Release carousel keeps its size and expands over the unchanged welcome
     I.waitForVisible('.md-dashboard__welcome', 10);
     I.assertEqual(await I.executeScript(() => document.querySelector('.md-dashboard__welcome').innerHTML), original.welcome);
     I.assertTrue(await I.executeScript(() => document.activeElement.classList.contains('md-dashboard-widget__news-toggle')));
-    I.assertEqual(await I.grabAttributeFrom('.md-dashboard-widget__news-more', 'href'), 'https://docs.webjetcms.sk/latest/sk/CHANGELOG');
+    const documentationOrigin = await I.executeScript(() => window.adminHelpContext.documentationBaseUrl);
+    I.assertEqual(await I.grabAttributeFrom('.md-dashboard-widget__news-more', 'href'), `${documentationOrigin}/latest/sk/CHANGELOG`);
 });
 
 Scenario('News rotates automatically and remains within the hero on tablet and mobile', async ({ I }) => {

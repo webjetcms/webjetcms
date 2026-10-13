@@ -2,21 +2,23 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    width: 230px;
+    width: 300px;
     height: 31px;
-    padding: 4px 9px;
-    border: 1px solid $nice-gray-100;
+    padding: 4px 5px 4px 9px;
+    border: 1px solid transparent;
     border-radius: $border-radius;
     background: var(--wj-nice-gray);
-    color: var(--wj-gray-text);
+    color: #4D5262;
+    line-height: 20px;
     text-align: left;
 
-    &:hover { border-color: $nice-gray-300; color: var(--wj-secondary); }
-    &:focus-visible { outline: 2px solid var(--wj-secondary) !important; outline-offset: 2px; }
-    .ti { margin: 0; padding: 0; }
+    &:hover, &[aria-expanded="true"] { background: #E9EAEF; }
+    &:active { background: #E4E6EC; color: #4D5262; border-color: transparent; }
+    &.btn:focus:focus-visible { outline: 2px solid var(--wj-primary) !important; outline-offset: 0; }
+    .ti { margin: 0; padding: 0; font-size: 16px; }
 
     &__label { flex: 1; }
-    &__shortcut { padding: 1px 4px; background: $white; border: 1px solid $nice-gray-100; color: var(--wj-gray-text); font: inherit; font-size: 11px; white-space: nowrap; }
+    &__shortcut { padding: 1px 6px; background: $white; border: 1px solid $nice-gray-400; color: inherit; font: inherit; font-size: 12px; line-height: 16px; white-space: nowrap; }
 }
 
 .md-quick-search {
@@ -94,7 +96,7 @@
         text-decoration: none;
         overflow-wrap: anywhere;
 
-        &:hover, &:focus { background: mix($primary, $white, 5%); color: var(--wj-secondary); text-decoration: none; }
+        &:hover, &:focus { background: var(--wj-nice-gray); color: var(--wj-secondary); text-decoration: none; }
         &:focus-visible { outline: 2px solid var(--wj-secondary); outline-offset: -2px; }
         > .ti { margin: 0 7px; flex-shrink: 0; }
     }
@@ -184,6 +186,7 @@
         top: 48px;
         right: 15px;
         width: 36px;
+        padding: 4px 9px;
         justify-content: center;
         &__label, &__shortcut { display: none; }
     }

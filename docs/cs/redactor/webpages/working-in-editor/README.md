@@ -4,13 +4,15 @@ WebJET obsahuje inteligentní editor web stránek, který vám co nejvěrněji z
 
 ![](editor_preview.png)
 
+Přehled zkratek pro textový editor i další části administrace naleznete na stránce [Klávesové zkratky](../../admin/keyboard-shortcuts.md). Na Macu se při kopírování, vystřihování, vkládání a úpravě odkazů používá **Command (⌘)** místo **Ctrl**.
+
 ## Práce s textem (psaní/vkládání/kopírování)
 
 Při práci s textem si musíte v první řadě uvědomit rozdíl mezi odstavcem a zalomeným textem, čili rozdělením věty do dalšího řádku. Jednotlivé odstavce vytvoříte běžným stisknutím ```ENTER```, zatímco zalomení textu pomocí klávesové kombinace ```SHIFT + ENTER```.
 
 Rozdíl mezi nimi je zřetelný hlavně kvůli většímu odsazení mezi odstavci (oproti zalomení textu). Další důležitý rozdíl je v tom, že několik úprav textu (jako například vytvoření nadpisu) se aplikuje na celý odstavec. Pokud takový odstavec obsahuje zalomení řádku, tak se tato změna aplikuje i na zalomený řádek.
 
-Pokud chcete, aby se text po napsání mezery nezalomil, můžete kromě normální mezery vložit **pevnou mezeru**. Takový případ se může vyskytnout například při psaní dat ```10. 2. 2009``` nebo různých jiných textů, které by neměly být rozděleny na dva řádky, například. velikost souborů ```123 kB``` nebo telefonní číslo ```0905 123 456```. Pevná mezera se vkládá klávesovou kombinací CTRL+Mezera. Vzhledově se nijak neliší, rozdílné je jen její chování vůči okolnímu textu na konci řádku.
+Pokud chcete, aby se text po napsání mezery nezalomil, můžete kromě normální mezery vložit **pevnou mezeru**. Takový případ se může vyskytnout například při psaní dat ```10. 2. 2009``` nebo různých jiných textů, které by neměly být rozděleny na dva řádky, například. velikost souborů ```123 kB``` nebo telefonní číslo ```0905 123 456```. Pevná mezera se vkládá klávesovou kombinací **Shift + mezerník**. Vzhledově se nijak neliší, rozdílné je jen její chování vůči okolnímu textu na konci řádku.
 
 **Text ve WebJET editoru můžete upravovat následujícími způsoby**:
 
@@ -23,12 +25,11 @@ Pokud chcete, aby se text po napsání mezery nezalomil, můžete kromě normál
 
 ![](paste.png)
 
-**Vložení neformátovaného textu** z panelu nástrojů pomocí ikony![](paste_text.png ":no-zoom" ) nebo kombinací kláves ```CTRL + t``` či ```CTRL + SHIFT + v```.
+**Vložení neformátovaného textu** z panelu nástrojů pomocí ikony ![](paste_text.png ":no-zoom"). Můžete použít také zkratku pro vložení bez formátování, kterou poskytuje váš prohlížeč. Její podoba závisí na prohlížeči a operačním systému, například ```CTRL + t``` či ```CTRL + SHIFT + v```
 Tento způsob vkládání textu vám text vloží bez jakéhokoli formátování, pro vkládání běžného textu je proto nejvhodnější.
 
-**Vložení textu z ```Word``` / ```Excel``` souboru** z panelu nástrojů pomocí ikony ![](paste_from_word.png ":no-zoom" ) nebo kombinací kláves ```CTRL + w```.
-Tato možnost vloží text se zachovanými odstavci a tabulkami, ale očištěný od všech stylů z původního dokumentu. Bohužel některé prohlížeče mají tuto klávesovou zkratku vyhrazenou pro zavření okna/záložky, takže v
-takovém případě je lepší vkládat text přes kliknutí na ikonku v panelu nástrojů a ne přes klávesovou zkratku.
+**Vložení textu z ```Word``` / ```Excel``` souboru** z panelu nástrojů pomocí ikony ![](paste_from_word.png ":no-zoom").
+Tato možnost vloží text se zachovanými odstavci a tabulkami, ale očištěný od všech stylů z původního dokumentu.
 
 ### Kopírování textu
 
@@ -278,7 +279,7 @@ Zde můžete nastavit počet sloupců a řádků. Pokud chcete, aby se tabulka �
 
 Při vkládání tabulky z jiných aplikací, resp. dokumentů přes klávesovou zkratku ```CTRL + v``` se vás systém automaticky zeptá, zda chcete tabulku vyčistit. Pokud kliknete ```OK```, tak editor očistí tabulku od nechtěných formátovacích znaků původního dokumentu, ale ponechá strukturu tabulky v původní formě.
 
-Tabulka zůstane v obsahu stránky zachována i tehdy, použijete-li ke vkládání textu nástroj pro vkládání textu z ```Word``` / ```Excel``` souboru (```CTRL + w```) ![](paste_from_word.png ":no-zoom").
+Tabulka zůstane v obsahu stránky zachována i tehdy, použijete-li ke vkládání textu nástroj pro vkládání textu z ```Word``` / ```Excel``` souboru ![](paste_from_word.png ":no-zoom").
 
 ### Úprava stávající tabulky
 

@@ -1695,21 +1695,42 @@ export const dataTableInit = options => {
 
         if (DATA.fetchOnCreate) {
             //ak je zapnute volanie servera pre novy zaznam zavolame ajax a pockame na data pre novy zaznam (napr. pre web stranku)
-            EDITOR.on('initCreate', function (e) {
-                return new Promise(function (resolve, reject) {
+            EDITOR.on('initCreate', function () {
+                return new Promise(function (resolve) {
                     let url = TABLE.getAjaxUrl();
                     const q = url.indexOf("?");
                     if (q === -1) url = url + "/-1";
                     else url = url.substring(0, q) + "/-1" + url.substring(q);
 
+                    const onError = (xhr, status, error) => {
+                        console.error("Error loading editor defaults:", xhr?.status, error || status || xhr);
+                        const resetCancellation = () => {
+                            EDITOR.off('preOpen', cancelOpen);
+                            EDITOR.off('initCreate initEdit initRemove', resetCancellation);
+                        };
+                        const cancelOpen = () => {
+                            resetCancellation();
+                            return false;
+                        };
+                        // A hidden create does not fire preOpen; clear cancellation on the next initialization.
+                        EDITOR.one('preOpen', cancelOpen);
+                        EDITOR.one('initCreate initEdit initRemove', resetCancellation);
+                        WJ.notifyError(WJ.translate("datatables.error.title.js"), WJ.translate("datatables.error.network.js"));
+                        // Editor only handles fulfilled initialization promises; preOpen cancels this failed attempt.
+                        resolve();
+                    };
+
                     $.ajax({
                         url: url,
                         success: function (json) {
-                            //console.log("EDITOR=", EDITOR, " json=", json);
-                            //EDITOR.vals( json );
-                            EDITOR.setJson(json);
-                            resolve(); // Editor continues after this
-                        }
+                            try {
+                                EDITOR.setJson(json);
+                                resolve();
+                            } catch (error) {
+                                onError(error);
+                            }
+                        },
+                        error: onError
                     });
                 });
             });

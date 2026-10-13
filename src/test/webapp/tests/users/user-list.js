@@ -315,7 +315,7 @@ function userEditDialog(I, login, isSelf) {
      if ("tester"!==login) I.relogin(login);
 
      I.clickCss("button.js-profile-toggler");
-     I.click("Profil", "a.dropdown-item");
+     I.click(locate("button.dropdown-item").withText("Profil"));
      I.waitForElement("#modalIframe");
 
      I.switchTo("#modalIframeIframeElement");
@@ -375,7 +375,7 @@ function userEditDialog(I, login, isSelf) {
      I.say("Check data");
 
      I.clickCss("button.js-profile-toggler");
-     I.click("Profil", "a.dropdown-item");
+     I.click(locate("button.dropdown-item").withText("Profil"));
      I.waitForElement("#modalIframe");
 
      I.switchTo("#modalIframeIframeElement");
@@ -390,7 +390,7 @@ function userEditDialog(I, login, isSelf) {
      I.clickCss("#modalIframe div.modal-header button.btn-close");
 }
 
-Scenario("Useredit-dialog", ({I}) => {
+Scenario("Useredit-dialog @current", ({I}) => {
 
      I.say("Checking standard user with all perms");
      userEditDialog(I, "tester", false);

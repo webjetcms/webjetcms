@@ -10,7 +10,7 @@ const announcement = '<h2>WebJET CMS 2026.18</h2><ul><li><b>First update</b> –
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 /** Runs the real release widget with deterministic timers, randomness and account storage. */
-function fixture(t, { reduced = false, saved, response = true, random = 0.75 } = {}) {
+function fixture(t, { reduced = false, saved, response = true, random = 0.75, fetchResponse } = {}) {
     const dom = new JSDOM('<div class="md-dashboard__hero"><div class="md-dashboard__welcome"><h1>Welcome back</h1><a href="/pages">Pages</a></div><div class="md-dashboard__news"></div></div>');
     const { window } = dom;
     const container = window.document.querySelector('.md-dashboard__news');
@@ -18,7 +18,11 @@ function fixture(t, { reduced = false, saved, response = true, random = 0.75 } =
     window.csrfToken = 'autotest-csrf';
     window.currentUser = { adminSettings: saved || {} };
     const errors = [];
-    window.WJ = { notifyError: (...args) => errors.push(args) };
+    window.WJ = {
+        notifyError: (...args) => errors.push(args),
+        translate: key => key,
+        getDocumentationUrl: path => `https://customer.example/manual/latest/en${path}`
+    };
     const media = { matches: reduced, addEventListener() {}, removeEventListener() {} };
     window.matchMedia = () => media;
     const timers = new Map();
@@ -29,9 +33,9 @@ function fixture(t, { reduced = false, saved, response = true, random = 0.75 } =
     const requests = [];
     const math = Object.create(Math); math.random = () => random;
     const scope = vm.createContext({ window, document: window.document, DOMParser: window.DOMParser, Math: math,
-        fetch: async (url, options) => { requests.push({ url, options }); return { ok: true, json: async () => response }; } });
-    for (const file of ['registry.js', 'widget-utils.js', 'news-widget.js']) {
-        vm.runInContext(fs.readFileSync(path.join(sourceRoot, 'dashboard', file), 'utf8').replace(/^import .+;\r?$/gm, '').replace(/^export /gm, ''), scope);
+        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse() : { ok: true, json: async () => response }; } });
+    for (const file of ['dashboard/registry.js', 'dashboard/widget-utils.js', 'release-news.js', 'dashboard/news-widget.js']) {
+        vm.runInContext(fs.readFileSync(path.join(sourceRoot, file), 'utf8').replace(/^import .+;\r?$/gm, '').replace(/^export /gm, ''), scope);
     }
     scope.registerNewsWidget();
     const context = { labels: { changelog: announcement }, config: {}, translate: (key, ...params) => [key, ...params].join(' ') };
@@ -52,7 +56,7 @@ test('Every shipped translation parses as five titled updates through the real M
         const properties = fs.readFileSync(path.resolve(sourceRoot, `../../../../WEB-INF/classes/text${locale}-webjet9.properties`), 'utf8');
         const raw = properties.split('\n').find(line => line.startsWith('admin.overview.changelog=')).split('=').slice(1).join('=');
         context.labels.changelog = scope.parseMarkdown('\n' + raw.replace(/\\\\n/g, '\n') + '\n\n', { link: true, imgSrcPrefix: '' });
-        const news = scope.releaseNews(context);
+        const news = scope.releaseNews(context.labels.changelog);
         assert.equal(news.version, '2026.18');
         assert.equal(news.items.length, 5);
         assert.ok(news.items.every(item => item.title && item.description));
@@ -62,10 +66,31 @@ test('Every shipped translation parses as five titled updates through the real M
 test('Older paragraphs remain available without losing formatting in the full release', t => {
     const { scope, context } = fixture(t);
     context.labels.changelog = 'WebJET CMS <b>2026.18</b> first feature.<br><br>Second <i>feature</i>.';
-    const news = scope.releaseNews(context);
+    const news = scope.releaseNews(context.labels.changelog);
     assert.equal(news.items.length, 2);
     assert.equal(news.items[1].description, 'Second feature.');
     assert.equal(news.html, context.labels.changelog);
+});
+
+test('Shared layout announcements are rendered once and refreshed when the localized text changes', t => {
+    const { scope, window } = fixture(t);
+    const webjet = fs.readFileSync(path.join(sourceRoot, 'webjet.js'), 'utf8');
+    const start = webjet.indexOf('    function parseMarkdown(');
+    vm.runInContext(webjet.slice(start, webjet.indexOf('    function initTooltip(', start)), scope);
+    let renders = 0;
+    window.WJ.parseMarkdown = (...args) => { renders++; return scope.parseMarkdown(...args); };
+    window.adminHelpContext = { announcement: '## WebJET CMS 2026.18\\n\\n- **First update** – First description.' };
+    const first = scope.getReleaseNews();
+    assert.equal(first.version, '2026.18');
+    assert.equal(first.items.length, 1);
+    assert.equal(first.items[0].title, 'First update');
+    assert.equal(scope.getReleaseNews(), first);
+    assert.equal(renders, 1);
+    window.adminHelpContext.announcement += '\\n- **Second update** – Second description.';
+    const updated = scope.getReleaseNews();
+    assert.equal(updated.items.length, 2);
+    assert.notEqual(scope.newsFingerprint(updated.html), scope.newsFingerprint(first.html));
+    assert.equal(renders, 2);
 });
 
 test('Each account gets thirty days from its first view, and changed text resets the window', t => {
@@ -117,6 +142,63 @@ test('An unchanged persisted announcement does not write on subsequent renders',
     window.currentUser.adminSettings[state.key] = state.value;
     render();
     assert.equal(requests.length, 0);
+});
+
+test('Help and dashboard share one pending save even when their first-seen timestamps differ', async t => {
+    let finish;
+    const { scope, requests, window } = fixture(t, { fetchResponse: () => new Promise(resolve => { finish = resolve; }) });
+    const now = Date.UTC(2026, 9, 10);
+    const dashboardState = scope.newsSeenState(announcement, now);
+    const dashboardSave = scope.saveNewsSeen(dashboardState);
+    const helpState = scope.newsSeenState(announcement, now + 500);
+    const helpSave = scope.saveNewsSeen(helpState);
+    assert.equal(helpSave, dashboardSave);
+    assert.equal(requests.length, 1);
+    finish({ ok: true, json: async () => true });
+    assert.equal(await helpSave, true);
+    assert.equal(window.currentUser.adminSettings[dashboardState.key], dashboardState.value);
+    assert.equal(await scope.saveNewsSeen(helpState), true);
+    assert.equal(requests.length, 1, 'A stale caller must not overwrite a successfully saved reading window.');
+});
+
+test('Shared failures notify once, retain confirmed settings and allow a later retry', async t => {
+    let finish;
+    const { scope, requests, window, errors } = fixture(t, { fetchResponse: () => new Promise(resolve => { finish = resolve; }) });
+    const state = scope.newsSeenState(announcement);
+    const firstSave = scope.saveNewsSeen(state);
+    assert.equal(scope.saveNewsSeen(state), firstSave);
+    finish({ ok: true, json: async () => false });
+    assert.equal(await firstSave, false);
+    assert.equal(errors.length, 1);
+    assert.equal(window.currentUser.adminSettings[state.key], undefined);
+    const retry = scope.saveNewsSeen(state);
+    assert.equal(requests.length, 2);
+    finish({ ok: true, json: async () => true });
+    assert.equal(await retry, true);
+    assert.equal(window.currentUser.adminSettings[state.key], state.value);
+    assert.equal(errors.length, 1);
+});
+
+test('Removing the dashboard does not cancel the reading record shared with Help', async t => {
+    let finish;
+    const { scope, render, controller, cleanup, requests, window } = fixture(t, { fetchResponse: () => new Promise(resolve => { finish = resolve; }) });
+    render();
+    controller.abort();
+    cleanup();
+    const state = scope.newsSeenState(announcement);
+    const helpSave = scope.saveNewsSeen(state);
+    assert.equal(requests.length, 1);
+    finish({ ok: true, json: async () => true });
+    assert.equal(await helpSave, true);
+    assert.equal(JSON.parse(window.currentUser.adminSettings[state.key]).fingerprint, scope.newsFingerprint(announcement));
+});
+
+test('Both dashboard changelog links use the configured documentation URL', t => {
+    const { render, container } = fixture(t);
+    render();
+    for (const selector of ['.md-dashboard-widget__news-version', '.md-dashboard-widget__news-more']) {
+        assert.equal(container.querySelector(selector).href, 'https://customer.example/manual/latest/en/CHANGELOG');
+    }
 });
 
 test('Random initial item, wrapping arrows, dots and eight-second automatic rotation share the same state', t => {

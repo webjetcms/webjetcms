@@ -3,6 +3,7 @@ extends ../../partials/layout
 block content
 
     script.
+        window.helpLink = "/redactor/files/fbrowser/folder-settings/README";
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
         const urlDirPath = urlParams.get('dirPath');

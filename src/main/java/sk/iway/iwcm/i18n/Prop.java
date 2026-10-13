@@ -350,12 +350,27 @@ public class Prop
 	}
 
 	/**
-	 * Gets the text attribute of the Prop object, if checkMissing is true, it will check if the value is missing and log it, if false, it will return the value without checking if it's missing
-	 * @param key
-	 * @param checkMissing
-	 * @return
+	 * Resolves a translation with missing-key reporting and language fallback enabled or disabled together.
+	 *
+	 * @param key translation key
+	 * @param checkMissing whether to report missing translations and try the default language, then Slovak
+	 * @return translated text, or the key if no translation exists
 	 */
 	public String getText(String key, boolean checkMissing)
+	{
+		return getText(key, checkMissing, checkMissing);
+	}
+
+	/**
+	 * Resolves a translation with independent control over missing-key reporting and language fallback.
+	 * The usual exclusions for missing keys apply to both options.
+	 *
+	 * @param key translation key
+	 * @param checkMissing whether to register and log missing translations
+	 * @param tryDefaultLanguage whether to try the configured default language, then Slovak, when the key is missing
+	 * @return translated text, or the key if no translation exists
+	 */
+	public String getText(String key, boolean checkMissing, boolean tryDefaultLanguage)
 	{
 		if (properties == null)
 		{
@@ -372,64 +387,70 @@ public class Prop
 		//vyhladaj kluc podla domenoveho prefixu (podobne ako konf. premennu)
 		value = checkDomainAlias(key, value);
 
-		if (checkMissing && value.equals(key) && key.endsWith(".tooltip")==false && key.startsWith("displaytag.")==false && key.startsWith("[[#{")==false &&
+		if ((checkMissing || tryDefaultLanguage) && value.equals(key) && key.endsWith(".tooltip")==false && key.startsWith("displaytag.")==false && key.startsWith("[[#{")==false &&
 			key.startsWith("components.translation_key.")==false && "&nbsp;".equals(key)==false && "ID".equals(key)==false && key.endsWith(".id")==false && key.contains("autotest")==false)
 		{
-			//chybajuci string, pridaj ho do chybajucich
-			missingTexts.putIfAbsent(language, Collections.synchronizedSet(new HashSet<MissingKeysDto>()));
+			if (checkMissing)
+			{
+				// Register the missing translation.
+				missingTexts.putIfAbsent(language, Collections.synchronizedSet(new HashSet<MissingKeysDto>()));
 
-			String urlAddress = "";
-			RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-			if (rb != null) {
-				String baseHref = rb.getBaseHref();
-				if (baseHref == null) baseHref = "";
-				urlAddress = baseHref + rb.getUrl();
-				if (Tools.isNotEmpty(rb.getQueryString())) urlAddress += "?" + rb.getQueryString();
+				String urlAddress = "";
+				RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+				if (rb != null) {
+					String baseHref = rb.getBaseHref();
+					if (baseHref == null) baseHref = "";
+					urlAddress = baseHref + rb.getUrl();
+					if (Tools.isNotEmpty(rb.getQueryString())) urlAddress += "?" + rb.getQueryString();
+				}
+
+				//check if key was allready set as missing, if yes -> just update lastMissing date value
+				try {
+					boolean present = false;
+					for(MissingKeysDto missingKey : missingTexts.get(language)) {
+						if(missingKey.getKey().equals(key)) {
+							present = true;
+							missingKey.setLastMissing(new Date());
+							if (Tools.isNotEmpty(urlAddress)) missingKey.setUrlAddress(urlAddress);
+							break;
+						}
+					}
+
+					//if key is missing first time, add new MissingKeysDto variable into set of missing keys
+					if(!present) {
+						missingTexts.get(language).add(new MissingKeysDto(key, new Date(), language, urlAddress));
+						//only log actual i18n keys (those containing a dot) to avoid logging plain text values
+						if (key.contains(".")) {
+							Logger.warn(Prop.class, "Missing text for key: [" + key + "] in language: [" + language + "]");
+						}
+					}
+				} catch (Exception ex) {
+					//do nothing not important if we fail to add missing key, just log it, probably java.util.ConcurrentModificationException
+				}
 			}
 
-			//check if key was allready set as missing, if yes -> just update lastMissing date value
-			try {
-				boolean present = false;
-				for(MissingKeysDto missingKey : missingTexts.get(language)) {
-					if(missingKey.getKey().equals(key)) {
-						present = true;
-						missingKey.setLastMissing(new Date());
-						if (Tools.isNotEmpty(urlAddress)) missingKey.setUrlAddress(urlAddress);
-						break;
+			if (tryDefaultLanguage)
+			{
+				// Try the configured default language first.
+				String defaultLanguage = Constants.getString("defaultLanguage");
+				if (Tools.isNotEmpty(defaultLanguage) && "sk".equalsIgnoreCase(defaultLanguage)==false)
+				{
+					IwayProperties defaultProp = getRes(defaultLanguage);
+					if (defaultProp != null)
+					{
+						value = checkPrefixedValues(prefixes, key, defaultProp.getProperty(key, key));
 					}
 				}
 
-				//if key is missing first time, add new MissingKeysDto variable into set of missing keys
-				if(!present) {
-					missingTexts.get(language).add(new MissingKeysDto(key, new Date(), language, urlAddress));
-					//only log actual i18n keys (those containing a dot) to avoid logging plain text values
-					if (key.contains(".")) {
-						Logger.warn(Prop.class, "Missing text for key: [" + key + "] in language: [" + language + "]");
+				if (value.equals(key))
+				{
+					// Fall back to Slovak if the configured default language has no translation.
+					IwayProperties skProp = getRes("sk");
+					if (skProp != null) {
+						value = checkPrefixedValues(prefixes, key, skProp.getProperty(key, key));
 					}
 				}
-			} catch (Exception ex) {
-				//do nothing not important if we fail to add missing key, just log it, probably java.util.ConcurrentModificationException
 			}
-
-			//try defaultLanguage property
-            String defaultLanguage = Constants.getString("defaultLanguage");
-            if (Tools.isNotEmpty(defaultLanguage) && "sk".equalsIgnoreCase(defaultLanguage)==false)
-            {
-                IwayProperties defaultProp = getRes(defaultLanguage);
-                if (defaultProp != null)
-                {
-                    value = checkPrefixedValues(prefixes, key, defaultProp.getProperty(key, key));
-                }
-            }
-
-            if (value.equals(key))
-            {
-                //try default properties
-                IwayProperties skProp = getRes("sk");
-                if (skProp != null) {
-                    value = checkPrefixedValues(prefixes, key, skProp.getProperty(key, key));
-                }
-            }
 		}
 		if (value.startsWith("docid:") && value.length()<20)
 		{
