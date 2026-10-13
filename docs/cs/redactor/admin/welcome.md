@@ -223,6 +223,8 @@ Klepnutím na nadpis widgetu se šipkou otevřete okno **Aktivní přihlášení
 
 Karta **Moje přihlášení** zobrazuje pouze aktivní relace. Jeden prohlížeč může mít více pořadů. Při každé relaci vidíte prohlížeč s verzí, pod ním operační systém s verzí a datum přihlášení. Aktuální relace má při názvu prohlížeče štítek **Toto přihlášení** ; u ostatních můžete použít akci **Odhlásit**.
 
+Pokud WebJET CMS běží v režimu clusteru, v kartě **Moje přihlášení** se pod IP adresou zobrazuje **Server název serveru**. Jedná se o jméno serveru (uzlu) clusteru, na kterém je dané přihlášení aktivní. Jednotlivá přihlášení mohou být na různých serverech clusteru. Mimo režim clusteru se tento údaj nezobrazuje.
+
 ![](sessions.png)
 
 U jiné vlastní relace můžete zvolit **Odhlásit tuto relaci**. V aktuálním uzlu clusteru se ukončí okamžitě, v jiném uzlu se zobrazí informace o čekání na synchronizaci mezi uzly (typicky do minuty). Doména a uzel jsou uvedeny v pomocném textu po podržení kurzoru nad záznamem.

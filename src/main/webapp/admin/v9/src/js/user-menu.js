@@ -1,12 +1,19 @@
-/** Formats a login using the administration language and the browser's local time zone. */
-function loginDescription(login, locale) {
+/** Renders a login with its localized date and time kept together on one line. */
+function loginNotice(login, locale) {
     const browser = [login.browserName, (login.browserVersion || '').replace(/\.0$/, '')].filter(Boolean).join(' ');
     const timestamp = new Date(login.lastSeen);
     const time = timestamp.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
     const when = timestamp.toDateString() === new Date().toDateString()
         ? WJ.translate('admin.userMenu.today.js', time)
         : `${timestamp.toLocaleDateString(locale)} ${time}`;
-    return [browser, login.operatingSystem, login.location, when].filter(Boolean).join(' · ');
+    const item = document.createElement('li');
+    const description = [browser, login.operatingSystem, login.location].filter(Boolean).join(' · ');
+    item.textContent = description ? `${description} · ` : '';
+    const date = document.createElement('span');
+    date.className = 'text-nowrap';
+    date.textContent = when;
+    item.append(date);
+    return item;
 }
 
 /** Refreshes account status on each opening without delaying the Bootstrap dropdown. */
@@ -58,9 +65,7 @@ export function initUserMenu() {
             if (status.newLogins.length > 0) {
                 hint.textContent += ` · ${WJ.translate(`admin.userMenu.newCount.${plurals.select(status.newLogins.length)}.js`, status.newLogins.length)}`;
                 for (const login of status.newLogins) {
-                    const item = document.createElement('li');
-                    item.textContent = loginDescription(login, locale);
-                    noticeList.append(item);
+                    noticeList.append(loginNotice(login, locale));
                 }
                 notice.hidden = false;
             }

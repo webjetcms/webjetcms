@@ -21,6 +21,7 @@ import sk.iway.iwcm.admin.layout.MenuService;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.stat.SessionClusterService;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.users.devices.AdminDeviceService;
@@ -49,6 +50,7 @@ public class DashboardListener {
             data.put("dashboardMenu", new MenuService(request).getMenu());
             data.put("userName", user.getFullName());
             data.put("currentDomain", DocDB.getDomain(request));
+            data.put("clusterMode", ClusterDB.isServerRunningInClusterMode());
 
             //use rootGroup only in multiweb, because its hard to use all groupIds in a whole domain, we need to update stat tables to use domain_id sometimes
             if (InitServlet.isTypeCloud()) data.put("statRootGroupId", CloudToolsForCore.getRootGroupId(request));

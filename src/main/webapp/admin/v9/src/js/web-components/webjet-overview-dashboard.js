@@ -17,6 +17,7 @@ import { showFeedbackDialog } from '../feedback';
  * @property {boolean} [data.securityEventRequested=false] - Whether an email link requested a login detail.
  * @property {Object|null} [data.requestedSecurityEvent] - Owned login detail, or null when unavailable.
  * @property {Object} data.currentSessions - Current user sessions, updated after a successful logout.
+ * @property {boolean} [data.clusterMode=false] - Whether session rows display their cluster node names.
  * @property {string} [data.userName=""] - Current user's display name.
  * @property {number} data.statRootGroupId - Active domain root folder passed to the shared statistics API.
  * @property {string} [data.currentDomain=""] - Active domain's display name.

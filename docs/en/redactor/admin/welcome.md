@@ -223,6 +223,8 @@ Clicking on the widget title with an arrow will open the **Active Logins** windo
 
 The **My Logins** tab only shows active sessions. A single browser can have multiple sessions. For each session, you see the browser with its version, below it the operating system with its version, and the login date. The current session has the label **This Login** next to the browser name; for others, you can use the action **Log Out**.
 
+If WebJET CMS is running in cluster mode, in the **My Logins** tab, **Server server name** is displayed under the IP address. This is the name of the cluster server (node) on which the given login is active. Individual logins can be on different cluster servers. This information is not displayed outside of cluster mode.
+
 ![](sessions.png)
 
 For another custom session, you can select **Logout this session**. The cluster will be terminated immediately on the current node, while on another node, information about waiting for synchronization between nodes will be displayed (typically within a minute). The domain and node are listed in the help text when you hover over the entry.

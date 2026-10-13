@@ -24,6 +24,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.stat.SessionClusterService;
 import sk.iway.iwcm.stat.SessionHolder;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.users.devices.AdminDeviceService;
@@ -34,12 +35,12 @@ class DashboardListenerTest {
     /** Embeds account/domain data in both cloud modes without loading administrator summaries, regardless of list permission. */
     @ParameterizedTest
     @CsvSource({
-        "false, false, -1",
-        "false, true, 42",
-        "true, false, -1",
-        "true, true, 42"
+        "false, false, -1, true",
+        "false, true, 42, false",
+        "true, false, -1, false",
+        "true, true, 42, true"
     })
-    void embedsInitialDataForCurrentAccountAndDomain(boolean showLoggedAdmins, boolean cloudMode, int expectedStatRootGroupId) throws Exception {
+    void embedsInitialDataForCurrentAccountAndDomain(boolean showLoggedAdmins, boolean cloudMode, int expectedStatRootGroupId, boolean clusterMode) throws Exception {
         var settings = mock(DashboardSettingsService.class);
         var notices = mock(DashboardNoticeService.class);
         var devices = mock(AdminDeviceService.class);
@@ -69,6 +70,7 @@ class DashboardListenerTest {
         var model = new ModelMap();
         try (var users = mockStatic(UsersDB.class);
              var installation = mockStatic(InitServlet.class);
+             var cluster = mockStatic(ClusterDB.class);
              var domains = mockStatic(CloudToolsForCore.class);
              var docs = mockStatic(DocDB.class);
              var sessions = mockStatic(SessionClusterService.class);
@@ -76,6 +78,7 @@ class DashboardListenerTest {
              var menus = mockConstruction(MenuService.class, (menu, context) -> when(menu.getMenu()).thenReturn(List.of()))) {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
             installation.when(InitServlet::isTypeCloud).thenReturn(cloudMode);
+            cluster.when(ClusterDB::isServerRunningInClusterMode).thenReturn(clusterMode);
             domains.when(() -> CloudToolsForCore.getRootGroupId(request)).thenReturn(42);
             docs.when(() -> DocDB.getDomain(request)).thenReturn("current.example");
 
@@ -87,6 +90,7 @@ class DashboardListenerTest {
             assertEquals("Autotest Administrator", data.path("userName").asText());
             assertEquals("current.example", data.path("currentDomain").asText());
             assertEquals(expectedStatRootGroupId, data.path("statRootGroupId").asInt());
+            assertEquals(clusterMode, data.path("clusterMode").asBoolean());
             assertTrue(data.path("dashboardMenu").isArray());
             assertTrue(data.path("settings").path("configured").asBoolean());
             assertEquals("Contact", data.path("settings").path("domainOptions").path("autotest-form").path("formName").asText());

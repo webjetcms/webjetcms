@@ -223,6 +223,8 @@ Kliknutím na nadpis widgetu so šípkou otvoríte okno **Aktívne prihlásenia*
 
 Karta **Moje prihlásenia** zobrazuje iba aktívne relácie. Jeden prehliadač môže mať viac relácií. Pri každej relácii vidíte prehliadač s verziou, pod ním operačný systém s verziou a dátum prihlásenia. Aktuálna relácia má pri názve prehliadača štítok **Toto prihlásenie**; pri ostatných môžete použiť akciu **Odhlásiť**.
 
+Ak WebJET CMS beží v režime clustra, v karte **Moje prihlásenia** sa pod IP adresou zobrazuje **Server názov servera**. Ide o meno servera (uzla) clustra, na ktorom je dané prihlásenie aktívne. Jednotlivé prihlásenia môžu byť na rôznych serveroch clustra. Mimo režimu clustra sa tento údaj nezobrazuje.
+
 ![](sessions.png)
 
 Pri inej vlastnej relácii môžete zvoliť **Odhlásiť túto reláciu**. V aktuálnom uzle clustra sa ukončí okamžite, v inom uzle sa zobrazí informácia o čakaní na synchronizáciu medzi uzlami (typicky do minúty). Doména a uzol sú uvedené v pomocnom texte po podržaní kurzora nad záznamom.

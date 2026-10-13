@@ -1874,7 +1874,7 @@ function sessionDialogFixture(context, window) {
 
 test('Location updates refresh sessions and devices only while the dialog is active', async t => {
     const session = { sessionId: 'current', deviceId: 42, browserName: 'Chrome', location: 'Initial location' };
-    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [session] }] } };
+    const data = { clusterMode: true, currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: '<img src=x> node-1', userSessions: [session] }] } };
     const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async () => ({
         ok: true, json: async () => ({ content: [{ id: 42, confirmedAt: 1000, location: session.location }], number: 0, totalElements: 1, totalPages: 1 })
     }) });
@@ -1896,6 +1896,11 @@ test('Location updates refresh sessions and devices only while the dialog is act
     const devicesTab = root.querySelector('[role="tab"][id$="-devices"]');
     notifyLocation('Bratislava');
     assert.match(mine.textContent, /Bratislava/);
+    assert.equal(mine.querySelector('.md-dashboard-sessions__ip small:last-child').textContent, 'admin.help.server.js <img src=x> node-1');
+    assert.equal(mine.querySelector('img'), null, 'Node names must be rendered as text.');
+    context.data.clusterMode = false;
+    notifyLocation('Bratislava');
+    assert.equal(mine.querySelectorAll('.md-dashboard-sessions__ip small').length, 1, 'Standalone installations must show only the IP below the location.');
     assert.equal(requests.length, 0, 'A location update must not load a hidden device tab.');
     devicesTab.click();
     await settle();
