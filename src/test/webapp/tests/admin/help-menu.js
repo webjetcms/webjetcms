@@ -65,16 +65,23 @@ Scenario('Header help shares release news and supplies documentation links', asy
 
     const userMenu = 'ul[aria-labelledby="dropdownMenuUser"]';
     const profile = `${userMenu} .dropdown-item[data-userid]`;
+    const review = `${userMenu} .md-user-menu__review`;
     I.clickCss('#dropdownMenuUser');
     I.waitForVisible(`${userMenu}.show`, 5);
+    I.waitForElement(`${userMenu}[aria-busy="false"]`, 10);
     const profileStyle = await menuItemStyle(I, profile);
     I.assertEqual(profileStyle.background, 'rgba(0, 0, 0, 0)');
     I.pressKey('ArrowDown');
+    if (await I.grabNumberOfVisibleElements(review) > 0) {
+        I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), review),
+            'ArrowDown must focus the visible login review action before the profile.');
+        I.pressKey('ArrowDown');
+    }
     I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), profile),
         'ArrowDown must focus the profile action.');
     I.assertDeepEqual(await menuItemStyle(I, profile), { ...profileStyle, background: 'rgb(243, 243, 246)' });
     I.pressKey('ArrowDown');
-    I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelectorAll(`${selector} .dropdown-item`)[1], userMenu),
+    I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), `${userMenu} .md-user-menu__sessions`),
         'ArrowDown must continue to the next user action without activating it.');
     I.pressKey('Escape');
     I.waitForInvisible(userMenu, 5);

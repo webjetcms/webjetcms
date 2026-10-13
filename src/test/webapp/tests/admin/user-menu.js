@@ -110,8 +110,10 @@ Scenario('Menu opens before its response and refreshes on every opening', async 
     I.see('4', '.md-user-menu__session-count');
     I.see('3', '.md-user-menu__session-hint');
     I.see('2', '.md-user-menu__session-hint');
-    I.see('Firefox 131 · Windows 11 · Košice, SK', '.md-user-menu__notice-list li:first-child');
-    I.see('Chrome 130 · Linux · Bratislava, SK', '.md-user-menu__notice-list li:last-child');
+    I.see('Firefox 131 · Windows 11', '.md-user-menu__notice-list li:first-child .md-user-menu__notice-client');
+    I.see('Košice, SK', '.md-user-menu__notice-list li:first-child .md-user-menu__notice-detail');
+    I.see('Chrome 130 · Linux', '.md-user-menu__notice-list li:last-child .md-user-menu__notice-client');
+    I.see('Bratislava, SK', '.md-user-menu__notice-list li:last-child .md-user-menu__notice-detail');
     I.seeElement('.md-user-menu__review');
     I.assertEqual(reads, 1);
     closeMenu(I);

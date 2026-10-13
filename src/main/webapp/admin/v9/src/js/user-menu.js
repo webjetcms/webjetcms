@@ -1,4 +1,4 @@
-/** Renders a login with its localized date and time kept together on one line. */
+/** Separates device details from location and time, keeping the localized date together. */
 function loginNotice(login, locale) {
     const browser = [login.browserName, (login.browserVersion || '').replace(/\.0$/, '')].filter(Boolean).join(' ');
     const timestamp = new Date(login.lastSeen);
@@ -7,12 +7,17 @@ function loginNotice(login, locale) {
         ? WJ.translate('admin.userMenu.today.js', time)
         : `${timestamp.toLocaleDateString(locale)} ${time}`;
     const item = document.createElement('li');
-    const description = [browser, login.operatingSystem, login.location].filter(Boolean).join(' · ');
-    item.textContent = description ? `${description} · ` : '';
+    const client = document.createElement('div');
+    client.className = 'md-user-menu__notice-client';
+    client.textContent = [browser, login.operatingSystem].filter(Boolean).join(' · ');
+    const detail = document.createElement('div');
+    detail.className = 'md-user-menu__notice-detail';
+    detail.textContent = login.location ? `${login.location} · ` : '';
     const date = document.createElement('span');
     date.className = 'text-nowrap';
     date.textContent = when;
-    item.append(date);
+    detail.append(date);
+    item.append(client, detail);
     return item;
 }
 

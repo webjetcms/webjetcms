@@ -62,7 +62,8 @@ test('Rendering makes no requests; each opening refreshes all account data', asy
     assert.equal(view.panel.querySelector('.md-user-menu__notice-container').hidden, false);
     const rows = view.panel.querySelectorAll('.md-user-menu__notice-list li');
     assert.equal(rows.length, 2);
-    assert.match(rows[0].textContent, /Firefox 131 · Windows 11 · Košice, SK · admin.userMenu.today.js:/);
+    assert.equal(rows[0].querySelector('.md-user-menu__notice-client').textContent, 'Firefox 131 · Windows 11');
+    assert.match(rows[0].querySelector('.md-user-menu__notice-detail').textContent, /Košice, SK · admin.userMenu.today.js:/);
     assert.match(rows[1].textContent, /<img src=x onerror=alert\(1\)>/);
     assert.equal(view.panel.querySelector('img'), null);
     assert.equal(view.panel.querySelector('.md-user-menu__review').getAttribute('href'), '/admin/v9/?activeSessions=devices');

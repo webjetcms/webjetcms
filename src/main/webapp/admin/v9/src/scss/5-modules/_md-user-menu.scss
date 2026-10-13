@@ -56,27 +56,28 @@
     .md-user-menu__session-hint { min-height: 1.4em; }
     .md-user-menu__notice {
         margin: 0 4px 10px;
-        padding: 12px;
-        border: 1px solid $warning;
+        padding: 10px 12px 12px;
+        border: 1px solid #f6be3f;
         border-radius: $border-radius;
-        background: mix($warning, $white, 12%);
+        background: #fff2e1;
         color: var(--wj-secondary);
         .md-user-menu__notice-title {
             display: flex;
             align-items: baseline;
             gap: 8px;
             font-size: 14px;
-            .ti { color: mix($warning, $secondary, 45%); }
+            .ti { color: var(--wj-yellow-60); font-size: 16px; }
         }
         .md-user-menu__notice-list {
             list-style: none;
             padding: 0;
-            margin: 8px 0;
-            color: var(--wj-gray-text);
+            margin: 6px 0;
+            color: #4d5262;
             font-size: 12px;
             line-height: 1.5;
             overflow-wrap: anywhere;
-            li + li { margin-top: 4px; }
+            li + li { margin-top: 6px; }
+            .md-user-menu__notice-client { color: var(--wj-secondary); font-weight: 500; }
         }
         .md-user-menu__review {
             display: inline-block;
