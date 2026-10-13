@@ -209,6 +209,7 @@ public class RagChunkPostProcessor {
     /**
      * Merge adjacent chunks (within maxChunkGap) from the same entity.
      * Removes sliding-window overlap when appending chunk text.
+     * Markdown heading prefixes are retained in the output but excluded from overlap matching.
      *
      * @param entityChunks chunks from a single entity, sorted by chunkIndex
      * @return list of merged context blocks
@@ -222,6 +223,8 @@ public class RagChunkPostProcessor {
 
         VectorSearchResult first = entityChunks.get(0);
         StringBuilder textBuilder = new StringBuilder(getChunkText(first));
+        String headingContext = getHeadingContext(first);
+        StringBuilder bodyBuilder = new StringBuilder(getChunkText(first).substring(headingContext.length()));
         int startIndex = getChunkIndex(first);
         int endIndex = startIndex;
         double maxSim = getSimilarity(first);
@@ -234,13 +237,22 @@ public class RagChunkPostProcessor {
             int currentIndex = getChunkIndex(current);
             int gap = currentIndex - endIndex;
             String currentText = getChunkText(current);
-            String appended = gap <= maxChunkGap ? removeOverlap(textBuilder.toString(), currentText) : currentText;
+            String currentHeadingContext = getHeadingContext(current);
+            String currentBody = currentText.substring(currentHeadingContext.length());
+            String appendedBody = gap <= maxChunkGap ? removeOverlap(bodyBuilder.toString(), currentBody) : currentBody;
+            String appended = appendedBody;
+            if (currentHeadingContext.isEmpty() == false && currentHeadingContext.equals(headingContext) == false
+                    && appendedBody.isBlank() == false) {
+                appended = "\n\n" + currentHeadingContext + appendedBody.replaceFirst("^\\n+", "");
+            }
 
             if (gap > maxChunkGap || textBuilder.length() + appended.length() > maxMergedBlockCharacters) {
                 blocks.add(buildBlock(first, startIndex, endIndex,
                         textBuilder.toString(), maxSim, sumSim, count, rerankScore));
 
                 textBuilder = new StringBuilder(currentText);
+                bodyBuilder = new StringBuilder(currentBody);
+                headingContext = currentHeadingContext;
                 startIndex = currentIndex;
                 endIndex = currentIndex;
                 maxSim = getSimilarity(current);
@@ -249,6 +261,8 @@ public class RagChunkPostProcessor {
                 count = 1;
             } else {
                 textBuilder.append(appended);
+                bodyBuilder.append(appendedBody);
+                if (appendedBody.isBlank() == false) headingContext = currentHeadingContext;
                 endIndex = currentIndex;
                 maxSim = Math.max(maxSim, getSimilarity(current));
                 sumSim += getSimilarity(current);
@@ -264,6 +278,20 @@ public class RagChunkPostProcessor {
                 textBuilder.toString(), maxSim, sumSim, count, rerankScore));
 
         return blocks;
+    }
+
+    /**
+     * Reads the heading prefix prepended by Markdown indexing, including its blank-line separator.
+     * Other entity types and texts without the separator retain their full body.
+     *
+     * @param chunk retrieved chunk with its stored contextual text
+     * @return heading prefix, or an empty string when none is present
+     */
+    private String getHeadingContext(VectorSearchResult chunk) {
+        if ("MARKDOWN".equalsIgnoreCase(chunk.getEntityType()) == false) return "";
+        String text = getChunkText(chunk);
+        int separator = text.indexOf("\n\n");
+        return separator > 0 ? text.substring(0, separator + 2) : "";
     }
 
     /**
