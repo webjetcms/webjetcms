@@ -78,6 +78,11 @@ public class AiStatService {
         }
         newStatRecord.setDomainId(domainId);
         statRepo.save(newStatRecord);
+
+        if (usedTokens != null && usedTokens > 0) {
+            AssistantDefinitionRepository assistantsRepo = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
+            assistantsRepo.incrementUsedTokens(assistantId, domainId, usedTokens.longValue());
+        }
     }
 
     public static final List<LabelValueInteger> getPieChartDataMostUsed(String created, String provider, String action, String groupName, AiStatRepository statRepo, AssistantDefinitionRepository assistantsRepo, Prop prop) {

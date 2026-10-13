@@ -2,7 +2,11 @@ package sk.iway.iwcm.components.ai.rest;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEditorFields;
@@ -24,6 +30,8 @@ import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.NotifyBean;
+import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 /**
@@ -57,6 +65,10 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
                 errors.rejectValue("action", "", getProp().getText("jakarta.validation.constraints.NotNull.message"));
             }
 
+            if(Boolean.TRUE.equals(entity.getUseTokenLimits()) && (entity.getTokenLimit() == null || entity.getTokenLimit() <= 0)) {
+                errors.rejectValue("errorField.tokenLimit", "", getProp().getText("components.ai_assistants.token_limit.invalid"));
+            }
+
             if(sameEntities != null && sameEntities.size() > 0) {
                 if("create".equals(target.getAction())) {
                     //This combination already exist
@@ -80,9 +92,9 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
     @Override
     public AssistantDefinitionEntity getOneItem(long id) {
         if(id < 1) {
-
             AssistantDefinitionEntity newOne = new AssistantDefinitionEntity();
             newOne.setActive(true);
+            newOne.setUseTokenLimits(false);
             return newOne;
         }
 
@@ -103,12 +115,52 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public void getOptions(DatatablePageImpl<AssistantDefinitionEntity> page) {
+        Long nextTokenReset = aiAssistantsService.getNextTokenReset();
+        page.addSummary("nextTokenReset", nextTokenReset == null ? 0L : nextTokenReset);
         page.addOptions("provider", aiService.getProviders(getProp()), "label", "value", false);
         page.addOptions("action", SupportedActions.getSupportedActions(getProp()), "label", "value", false);
         page.addOptions("groupName", aiService.getGroupsOptions(getProp()), "label", "value", false);
+        page.addOptions("editorFields.statusIcons", aiAssistantsService.getStatusIconOptions(getProp()), "label", "value", false);
 
         //Every assistant should set their specific selects
         aiAssistantsService.getProviderSpecificOptions(page, getProp());
+    }
+
+    @Override
+    public void addSpecSearch(Map<String, String> params, List<Predicate> predicates, Root<AssistantDefinitionEntity> root, CriteriaBuilder builder) {
+        super.addSpecSearch(params, predicates, root, builder);
+        aiAssistantsService.addStatusFilter(params.get("searchEditorFields.statusIcons"), predicates, root, builder);
+    }
+
+    @Override
+    public boolean processAction(AssistantDefinitionEntity entity, String action) {
+        boolean resetSelected = "resetTokenUsage".equals(action);
+        if (!resetSelected && !"resetAllTokenUsage".equals(action)) return super.processAction(entity, action);
+
+        int domainId = CloudToolsForCore.getDomainId();
+        String message = getProp().getText("components.ai_assistants.token_reset.error");
+        NotifyType notifyType = NotifyType.ERROR;
+        try {
+            if (resetSelected && entity != null && entity.getId() != null) {
+                int updated = repo.resetUsedTokensByIdAndDomainId(entity.getId(), domainId);
+                if (updated > 0) {
+                    Adminlog.add(Adminlog.TYPE_AI, "Reset token usage for AI assistant " + entity.getId() + " in domain " + domainId + ".", entity.getId(), Long.valueOf(domainId));
+                    message = getProp().getText("components.ai_assistants.token_reset.selected.success", String.valueOf(entity.getId()));
+                    notifyType = NotifyType.SUCCESS;
+                }
+            } else if (!resetSelected && entity == null) {
+                int updated = repo.resetUsedTokensByDomainId(domainId);
+                Adminlog.add(Adminlog.TYPE_AI, "Reset token usage for all AI assistants in domain " + domainId + ". Updated assistants: " + updated + ".", -1, domainId);
+                message = getProp().getText("components.ai_assistants.token_reset.all.success", String.valueOf(updated));
+                notifyType = NotifyType.SUCCESS;
+            }
+        } catch (Exception e) {
+            Logger.error(AssistantDefinitionRestController.class, e);
+        }
+
+        addNotify(new NotifyBean(getProp().getText("components.ai_assistants.token_reset.title"), message, notifyType, 15000));
+        // Return the notification without a generic action error that would hide it.
+        return true;
     }
 
     @Override
@@ -121,12 +173,17 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
         //Default logic
         if(entity.getKeepHtml() == null) entity.setKeepHtml(false);
         if(entity.getUseStreaming() == null) entity.setUseStreaming(false);
+        if(Boolean.FALSE.equals(entity.getUseTokenLimits())) {
+            entity.setTokenLimit(0L);
+            entity.setUsedTokens(0L);
+        }
     }
 
     @Override
     public AssistantDefinitionEntity processFromEntity(AssistantDefinitionEntity entity, ProcessItemAction action) {
 
         if(entity != null ) {
+            entity.setUseTokenLimits(entity.getTokenLimit() != null && entity.getTokenLimit() > 0);
             AssistantDefinitionEditorFields adef = entity.getEditorFields();
             if(adef == null) adef = new AssistantDefinitionEditorFields();
             adef.fromAssistantDefinition(entity, aiAssistantsService.getAssistantStatus(entity.getProvider()),  getProp());

@@ -4081,5 +4081,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>13.10.2026</string></void>
+                <void property="desc"><string>ai_assistants - add used_tokens and token_limit columns</string></void>
+                <void property="mysql"><string>ALTER TABLE ai_assistants ADD COLUMN used_tokens BIGINT DEFAULT 0, ADD COLUMN token_limit BIGINT DEFAULT 0</string></void>
+                <void property="mssql"><string>ALTER TABLE ai_assistants ADD used_tokens BIGINT DEFAULT 0 WITH VALUES, token_limit BIGINT DEFAULT 0 WITH VALUES</string></void>
+                <void property="oracle"><string>ALTER TABLE ai_assistants ADD (used_tokens NUMBER(19) DEFAULT 0, token_limit NUMBER(19) DEFAULT 0)</string></void>
+                <void property="pgsql"><string>ALTER TABLE ai_assistants ADD COLUMN used_tokens BIGINT DEFAULT 0, ADD COLUMN token_limit BIGINT DEFAULT 0</string></void>
+            </object>
+        </void>
+
     </object>
 </java>
