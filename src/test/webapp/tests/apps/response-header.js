@@ -157,9 +157,9 @@ Scenario('test-odpovede', ({I, DT, DTE}) => {
 const robotsTestDocId = 166410;
 const robotsTestPage = "/apps/http-hlavicky/index_folow_behaviour.html";
 const followLinksOptions = {
-    searchable: "Podľa nastavenia Prehľadávať",
-    follow: "Povoliť nasledovanie odkazov",
-    nofollow: "Zakázať nasledovanie odkazov"
+    searchable: "Podľa nastavenia Prehľadávať (áno = follow, nie = nofollow)",
+    follow: "Povoliť nasledovanie odkazov (follow)",
+    nofollow: "Zakázať nasledovanie odkazov (nofollow)"
 };
 
 async function setRobotsSettings(I, DTE, searchable, followLinks) {
@@ -167,6 +167,10 @@ async function setRobotsSettings(I, DTE, searchable, followLinks) {
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.waitForVisible("#DTE_Field_searchable_0", 10);
+    I.see("Prehľadávať (X-Robots-Tag)", ".DTE_Field_Name_searchable");
+    I.dontSeeElement('.DTE_Field_Name_searchable [data-dte-e="msg-info"]:not(:empty)');
+    I.see("Nasledovanie odkazov vyhľadávačmi (X-Robots-Tag)", ".DTE_Field_Name_followLinks");
+    I.dontSeeElement('.DTE_Field_Name_followLinks [data-dte-e="msg-info"]:not(:empty)');
 
     if(searchable === true) {
         I.checkOption('#DTE_Field_searchable_0');

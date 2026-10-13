@@ -44,6 +44,8 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
+- SEO - nastavenia prehľadávania a nasledovania odkazov uvádzajú v názve `X-Robots-Tag` a v tooltipoche vysvetľujú účinok na interné vyhľadávanie, indexovanie a nasledovanie odkazov. Predvolená možnosť nasledovania odkazov vysvetľuje väzbu na prehľadávanie: áno = `follow`, nie = `nofollow` (#OSK806).
+
 - Kôš webových stránok - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Pridaná možnosť mazania stránok a priečinkov v koši aj v sekcii [Mazanie dát](sysadmin/data-deleting/README.md) podľa zvoleného rozsahu dátumov. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov (#271).
 
 ![](sysadmin/data-deleting/database-delete.png)
