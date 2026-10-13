@@ -81,8 +81,17 @@ table.sort_table td { vertical-align: top;}
 
 //var tabPaneUsers = new WebFXTabPane(document.getElementById("tab-pane-useredit") ,true);
 
+var settingsChanged = false;
+var settingsLoading = true;
+
 function Ok()
 {
+    if (settingsLoading) return;
+    if (!settingsChanged) {
+        window.close();
+        return;
+    }
+
     $.ajax({
         url: "/admin/users/2factorauth",
 		method : "POST",
@@ -108,26 +117,30 @@ $(document).ready(function()
 {
     $("#scratchCodeCell").hide();
     $("#secret").hide();
+    $("#gauthCheckbox, #btnOk").prop("disabled", true);
     $.ajax({
         url: "/admin/users/2factorauth",
     }).done(function(msg) {
         if (msg == ""){
             $("#gauthCheckbox").prop( "checked", false );
         }else{
-            $("#secret").text(msg);
             $("#gauthCheckbox").prop( "checked", true );
         }
+        settingsLoading = false;
+        $("#gauthCheckbox, #btnOk").prop("disabled", false);
     });
 
    $("#gauthCheckbox").change(function() {
 
-       if($("#secret").text() == ""){
+       if($("#gauthCheckbox").prop("checked")){
 
+           settingsLoading = true;
+           $("#gauthCheckbox, #btnOk").prop("disabled", true);
            $.ajax({
                url: "/admin/users/2factorauthNew",
                method: "GET",
            }).done(function(msg) {
-			   data = jQuery.parseJSON(msg);
+               var data = jQuery.parseJSON(msg);
 
 			   $("#qrImage").show();
                var qrcode = new QRCode(document.getElementById("qrImage"), {
@@ -147,8 +160,16 @@ $(document).ready(function()
                $("#instructions").html("<iwcm:text key='user.gauth.instructions2'/> "+data.secret);
 
                $("#okToConfirm").show();
+               settingsChanged = true;
+           }).fail(function(xhr) {
+               $("#gauthCheckbox").prop("checked", false);
+               alert(xhr.status);
+           }).always(function() {
+               settingsLoading = false;
+               $("#gauthCheckbox, #btnOk").prop("disabled", false);
            });
 	   }else{
+           settingsChanged = true;
            $("#gauthCheckbox").prop( "checked", false );
            $("#qrImage").html("");
            $("#qrImage").hide();
