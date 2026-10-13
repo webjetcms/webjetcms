@@ -55,7 +55,8 @@ class QuickSearch {
         this.scopes.push('admin');
         if (WJ.hasPermission('users_edit_admins') || WJ.hasPermission('users_edit_public_users')) this.scopes.push('users');
         if (WJ.hasPermission('edit_text')) this.scopes.push('translationKeys');
-        this.scopes.push('documentation');
+        if (window.adminSearchContext?.documentationSearchUrl?.trim()) this.scopes.push('documentation');
+        this.documentationAlwaysSearch = window.adminSearchContext?.documentationAlwaysSearch === true;
         this.menu = menuEntries({ data: { dashboardMenu: window.adminSearchContext?.menu || [] } });
         const userId = window.currentUser?.userId;
         const domain = window.adminSearchContext?.currentDomain;
@@ -107,6 +108,13 @@ class QuickSearch {
         dialog.append(content);
         this.root.append(dialog);
         document.body.append(this.root);
+        const documentationChip = this.chips.get('documentation');
+        if (documentationChip) {
+            documentationChip.setAttribute('aria-label', text('documentation'));
+            documentationChip.title = text('documentationExternalHint');
+            documentationChip.setAttribute('data-bs-container', '#admin-quick-search');
+            WJ.initTooltip(window.jQuery(documentationChip));
+        }
         this.modal = new bootstrap.Modal(this.root, { keyboard: true, backdrop: true });
         containNativeScroll(this.results, new AbortController().signal);
         this.input.addEventListener('input', () => this.changed());
@@ -159,15 +167,18 @@ class QuickSearch {
         }
     }
 
-    selectScope(scope) {
-        if (scope === this.scope) return;
-        this.scope = scope;
-        if (this.query.length > 0) this.prepareScopeSources();
+    selectScope(scope, searchDocumentation = true) {
+        if (!this.scopes.includes(scope)) return;
+        if (scope !== this.scope) {
+            this.scope = scope;
+            if (this.query.length > 0) this.prepareScopeSources();
+        }
+        if (scope === 'documentation' && searchDocumentation && this.query.length > 0) this.loadRest(true);
         this.render();
         this.input.focus();
     }
 
-    /** Debounces autocomplete by 300 ms, REST by 1000 ms and eligible documentation queries by 2000 ms. */
+    /** Debounces local searches and, when explicitly enabled, automatic documentation searches. */
     search() {
         this.cancel();
         this.controller = new AbortController();
@@ -185,8 +196,8 @@ class QuickSearch {
 
     /** Adds optional sources once per query, preserving cached results and active requests across scopes. */
     prepareScopeSources(debounce = false) {
-        if (!this.states.documentation && window.adminSearchContext?.documentationSearchUrl && ['all', 'documentation'].includes(this.scope)) {
-            const waiting = this.query.length < 8;
+        if (!this.states.documentation && this.scopes.includes('documentation') && ['all', 'documentation'].includes(this.scope)) {
+            const waiting = !this.documentationAlwaysSearch || this.query.length < 8;
             const state = { items: [], pending: true, ready: false, waiting, loading: !waiting };
             if (this.scope === 'documentation') this.states = { documentation: state, ...this.states };
             else this.states.documentation = state;
@@ -297,11 +308,21 @@ class QuickSearch {
                     spinner.setAttribute('aria-hidden', 'true');
                     chip.append(spinner, node('span', 'visually-hidden', text('loading')));
                 } else if (state?.total != null && !state.error) chip.append(node('span', 'md-quick-search__count', state.total));
+                else if (scope === 'documentation' && !state?.error) {
+                    const unknown = node('span', 'md-quick-search__count', '—');
+                    unknown.setAttribute('aria-hidden', 'true');
+                    chip.append(unknown, node('span', 'visually-hidden', text('documentationNotSearched')));
+                }
             }
             chip.setAttribute('aria-busy', String(loading));
             chip.setAttribute('aria-pressed', String(scope === this.scope));
             chip.classList.toggle('md-quick-search__scope--empty', state?.total === 0 && !state.error && !state.answer && !loading);
             if (scope === 'docs') chip.title = text('countsHint');
+            if (scope === 'documentation') {
+                const status = loading ? text('loading') : state?.error ? text('unavailable')
+                    : state?.total != null ? text('resultCount', text(scope), state.total) : text('documentationNotSearched');
+                chip.setAttribute('aria-label', `${text(scope)}. ${status}`);
+            }
         }
         this.results.replaceChildren();
         if (!this.query) this.renderHistory();
@@ -311,16 +332,14 @@ class QuickSearch {
             let hasResults = false;
             let unsettled = false;
             sources.forEach(source => {
-                if (source === 'documentation' && !window.adminSearchContext?.documentationSearchUrl) return;
                 const state = this.states[source];
                 if (!state) { if (this.scopes.includes(source)) unsettled = true; return; }
                 hasResults ||= state.items.length > 0 || Boolean(state.answer);
                 unsettled ||= state.loading || state.error || state.waiting;
                 if (state.items.length || state.answer || state.loading || state.error || state.waiting) this.renderGroup(source, state);
             });
-            if (!hasResults && !unsettled && (this.scope !== 'documentation' || window.adminSearchContext?.documentationSearchUrl)) this.renderEmpty();
+            if (!hasResults && !unsettled) this.renderEmpty();
             if (!Object.keys(this.states).length && this.scope !== 'documentation') this.results.append(node('p', 'md-quick-search__empty', text('loading')));
-            if (sources.includes('documentation') && !window.adminSearchContext?.documentationSearchUrl) this.renderDocumentation();
             if (['docs', 'files', 'users', 'translationKeys'].includes(this.scope)) {
                 const href = this.scope === 'users' ? `/admin/v9/users/user-list/?${new URLSearchParams({ searchText: this.query })}` : advancedLink(this.scope, this.query);
                 const link = this.resultLink(text('handoff', text(this.scope)), href, 'md-quick-search__handoff');
@@ -370,7 +389,10 @@ class QuickSearch {
         });
         if (source === 'suggestions' && this.scope === 'docs' && state.items.length === 20) section.append(node('p', 'md-quick-search__note', text('suggestionsLimit')));
         if (state.loading) section.append(node('p', 'md-quick-search__note', text('loading')));
-        if (state.waiting) section.append(node('p', 'md-quick-search__note', text('documentationMinLength')));
+        if (source === 'documentation' && state.waiting) {
+            this.renderDocumentation(section);
+            if (this.documentationAlwaysSearch) section.append(node('p', 'md-quick-search__note', text('documentationMinLength')));
+        }
         if (state.error || state.retrying) {
             const error = node('div', 'md-quick-search__error');
             if (state.error) {
@@ -461,11 +483,14 @@ class QuickSearch {
         return link;
     }
 
-    renderDocumentation() {
-        const section = this.group('documentation', `${text('documentation')} · ${text('newTab')}`);
-        const link = this.resultLink(text('documentationSearch'), WJ.getDocumentationUrl(`/?q=${encodeURIComponent(this.query)}`), 'md-quick-search__result', true);
-        link.prepend(icon('ti-book'));
-        section.append(link);
+    /** Offers external results in this dialog with a brief notice about the query transfer. */
+    renderDocumentation(section) {
+        let server;
+        try { server = new URL(window.adminSearchContext.documentationSearchUrl, window.location.origin).host; }
+        catch (error) { server = text('documentation'); }
+        const search = button(text('documentationExternalSearch'), 'btn-link md-quick-search__documentation-search', () => this.selectScope('documentation'));
+        search.dataset.focusKey = 'documentation-search';
+        section.append(search, node('p', 'md-quick-search__note', text('documentationExternalNotice', server)));
     }
 
     /** Displays the optional AI answer and Markdown excerpts without nesting interactive links. */
@@ -570,7 +595,7 @@ class QuickSearch {
         if (event.target === this.input && event.altKey && ['ArrowLeft', 'ArrowRight'].includes(event.key)) {
             event.preventDefault();
             const offset = event.key === 'ArrowRight' ? 1 : -1;
-            this.selectScope(this.scopes[(this.scopes.indexOf(this.scope) + offset + this.scopes.length) % this.scopes.length]);
+            this.selectScope(this.scopes[(this.scopes.indexOf(this.scope) + offset + this.scopes.length) % this.scopes.length], false);
         } else if (!event.altKey && !event.ctrlKey && !event.metaKey && ['ArrowDown', 'ArrowUp'].includes(event.key) && (event.target === this.input || event.target.matches('.md-quick-search__result'))) {
             const rows = [...this.results.querySelectorAll('.md-quick-search__result')];
             if (!rows.length) return;
@@ -581,7 +606,7 @@ class QuickSearch {
             else rows[next].focus();
         } else if (event.target === this.input && event.key === 'Enter') {
             event.preventDefault();
-            if (!event.repeat && this.query.length > 0) this.loadRest(['all', 'documentation'].includes(this.scope));
+            if (!event.repeat && this.query.length > 0) this.loadRest(this.scope === 'documentation' || (this.scope === 'all' && this.documentationAlwaysSearch));
         }
     }
 }
