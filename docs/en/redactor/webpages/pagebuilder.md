@@ -54,6 +54,20 @@ In the **More actions** menu, you can find, depending on the type of block selec
 
 The menu contains only the operations supported by the selected type. The regular line is for orientation; the duplicable line and item support moving, duplicating, and deleting. Stand-alone editable text does not have tools for modifying the structure. Moving duplicable elements remains limited to compatible siblings of the same parent.
 
+## Copying blocks between pages
+
+You can transfer a section, container or column to another page together with its content and custom styles:
+
+1. Select the block and choose **More actions → Copy** to store it in the internal PageBuilder clipboard. Unsaved text changes are included.
+2. Open the destination page in the same or another browser tab and choose **More actions → Paste**. On an empty page, **Paste** is available directly in the top toolbar.
+3. Click a destination. PageBuilder shows only locations compatible with the copied block type. A section cannot be pasted into a column; the current selection on the destination page does not change the pasted type.
+
+The pasted block is selected and ready to edit. Its content and custom styles are independent of the original block and other pasted copies. Press **Escape** to cancel destination selection. Save the destination page using the main **Save** button.
+
+The clipboard holds one block and supports repeated pasting. Copying another block replaces it. The clipboard is shared between tabs of the same administration in the same browser profile. The block is available for 30 minutes after copying, including after reloading the page or closing the browser. Repeated pasting does not extend this period. Once expired, the clipboard is cleared automatically in an open editor or when PageBuilder is next loaded. Copying again starts a new 30-minute period. The system clipboard is unchanged. **Paste** is disabled until a block has been copied.
+
+Individual duplicable rows and items cannot be copied with this feature; they are transferred as part of a section, container or column. Template CSS and JavaScript files are not transferred, so the resulting appearance and behavior also depend on the destination template.
+
 ## Style settings
 
 **More Actions → Style** opens a compact properties window. The name, for example **Column Style**, and the text below it indicate the block being edited. The **Find on Page** button will move the content to that block and briefly highlight it. You can move the window by dragging the header.

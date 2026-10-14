@@ -54,6 +54,20 @@ V ponuke **Ďalšie akcie** nájdete podľa typu vybraného bloku:
 
 Ponuka obsahuje iba operácie podporované vybraným typom. Bežný riadok slúži na orientáciu; duplikovateľný riadok a položka podporujú presun, duplikovanie a zmazanie. Samostatný editovateľný text nemá nástroje na úpravu štruktúry. Presun duplikovateľných prvkov zostáva obmedzený na kompatibilných súrodencov toho istého rodiča.
 
+## Kopírovanie blokov medzi stránkami
+
+Sekciu, kontajner alebo stĺpec môžete preniesť na inú stránku aj s jeho obsahom a vlastnými štýlmi:
+
+1. Označte blok a v ponuke **Ďalšie akcie → Skopírovať** ho uložte do internej schránky Page Builder. Skopírujú sa aj zatiaľ neuložené úpravy textu.
+2. Otvorte cieľovú stránku v tej istej alebo inej karte prehliadača a vyberte **Ďalšie akcie → Vložiť**. Na prázdnej stránke je tlačidlo **Vložiť** priamo v hornej lište.
+3. Kliknite na ponúknuté miesto. PageBuilder zobrazí iba miesta vhodné pre typ skopírovaného bloku. Sekciu nemožno vložiť do stĺpca; aktuálny výber na cieľovej stránke typ vkladaného bloku nemení.
+
+Vložený blok sa označí a môžete ho upravovať. Jeho obsah a vlastné štýly sú nezávislé od pôvodného bloku aj ostatných vložených kópií. Výber miesta zrušíte klávesom **Escape**. Zmeny cieľovej stránky uložíte hlavným tlačidlom **Uložiť**.
+
+Schránka obsahuje jeden blok, ktorý môžete vložiť opakovane. Ďalšie kopírovanie ho nahradí. Schránka sa zdieľa medzi kartami tej istej administrácie v rovnakom profile prehliadača. Blok je dostupný 30 minút od skopírovania, aj po obnovení stránky či zatvorení prehliadača. Opakované vloženie platnosť nepredlžuje. Po vypršaní sa schránka pri najbližšom načítaní Page Builder alebo automaticky v otvorenom editore vyprázdni; nové kopírovanie spustí ďalších 30 minút. Systémová schránka sa nemení. Kým nie je skopírovaný žiadny blok, **Vložiť** je neaktívne.
+
+Samostatné duplikovateľné riadky a položky nemožno kopírovať touto funkciou; prenesú sa ako súčasť sekcie, kontajnera alebo stĺpca. Súbory CSS a JavaScript šablóny sa neprenášajú, preto výsledný vzhľad a správanie závisia aj od šablóny cieľovej stránky.
+
 ## Nastavenie štýlu
 
 Cez **Ďalšie akcie → Štýl** otvoríte kompaktné okno vlastností. Názov, napríklad **Štýl stĺpca**, a text pod ním označujú upravovaný blok. Tlačidlo **Nájsť na stránke** posunie obsah k tomuto bloku a krátko ho zvýrazní. Okno môžete presunúť ťahaním za hlavičku.

@@ -2906,6 +2906,14 @@ div.exit-inline-editor a[aria-pressed=true] {
   outline-offset: 2px;
   box-shadow: 0 0 0 4px white;
 }
+.pb-workbench button i.ti,
+.pb-structure button i.ti,
+.pb-insert-layer button i.ti {
+  flex: 0 0 18px;
+  pointer-events: none;
+  font-size: 18px;
+  line-height: 1;
+}
 .pb-workbench button svg,
 .pb-structure button svg,
 .pb-insert-layer button svg {

@@ -54,6 +54,20 @@ V nabídce **Další akce** naleznete podle typu vybraného bloku:
 
 Nabídka obsahuje pouze operace podporované vybraným typem. Běžný řádek slouží k orientaci; duplikovatelný řádek a položka podporují přesun, duplikování a smazání. Samostatný editovatelný text nemá nástroje pro úpravu struktury. Přesun duplikovatelných prvků zůstává omezen na kompatibilní sourozence téhož rodiče.
 
+## Kopírování bloků mezi stránkami
+
+Sekci, kontejner nebo sloupec můžete přenést na jinou stránku i s jeho obsahem a vlastními styly:
+
+1. Označte blok a v nabídce **Další akce → Zkopírovat** ho uložte do interní schránky PageBuilderu. Zkopírují se i dosud neuložené úpravy textu.
+2. Otevřete cílovou stránku ve stejné nebo jiné kartě prohlížeče a vyberte **Další akce → Vložit**. Na prázdné stránce je tlačítko **Vložit** přímo v horní liště.
+3. Klikněte na nabídnuté místo. PageBuilder zobrazí pouze místa vhodná pro typ zkopírovaného bloku. Sekci nelze vložit do sloupce; aktuální výběr na cílové stránce typ vkládaného bloku nemění.
+
+Vložený blok se označí a můžete ho upravovat. Jeho obsah a vlastní styly jsou nezávislé na původním bloku i ostatních vložených kopiích. Výběr místa zrušíte klávesou **Escape**. Změny cílové stránky uložíte hlavním tlačítkem **Uložit**.
+
+Schránka obsahuje jeden blok, který můžete vložit opakovaně. Další kopírování ho nahradí. Schránka se sdílí mezi kartami téže administrace ve stejném profilu prohlížeče. Blok je dostupný 30 minut od zkopírování, i po obnovení stránky či zavření prohlížeče. Opakované vložení platnost neprodlužuje. Po vypršení se schránka při příštím načtení PageBuilderu nebo automaticky v otevřeném editoru vyprázdní; nové kopírování spustí dalších 30 minut. Systémová schránka se nemění. Dokud není zkopírovaný žádný blok, **Vložit** je neaktivní.
+
+Samostatné duplikovatelné řádky a položky nelze kopírovat touto funkcí; přenesou se jako součást sekce, kontejneru nebo sloupce. Soubory CSS a JavaScript šablony se nepřenášejí, proto výsledný vzhled a chování závisejí také na šabloně cílové stránky.
+
 ## Nastavení stylu
 
 Přes **Další akce → Styl** otevřete kompaktní okno vlastností. Název, například **Styl sloupce**, a text pod ním označují upravovaný blok. Tlačítko **Najít na stránce** posune obsah k tomuto bloku a krátce jej zvýrazní. Okno můžete přesunout tažením za hlavičku.
