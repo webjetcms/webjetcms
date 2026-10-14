@@ -1,9 +1,9 @@
 const { readDashboardBootstrap } = require('../../../helpers/dashboard-browser');
+const { openDeviceEmail, confirmDeviceFromEmail } = require('../../../helpers/device-email');
 
 Feature('admin.dashboard.new-device').tag('@singlethread');
 
 const cookieName = 'wjdevice';
-const mailbox = 'webjetcmsnotif@fexpost.com';
 const dashboard = '.md-dashboard[data-loaded="true"]';
 const dialog = '.md-dashboard-modal--device-security';
 let originalCookie, origin, device;
@@ -36,17 +36,6 @@ After(({ I }) => {
     else I.setCookie({ name: cookieName, value: 'autotest-expired', domain: new URL(origin).hostname, path: '/', expires: 1 });
     I.closeOtherTabs();
 });
-
-async function openDeviceEmail(I, TempMail, id, expectedText) {
-    for (let attempt = 0; attempt < 6; attempt++) {
-        await TempMail.login(mailbox);
-        await TempMail.openLatestEmail();
-        const body = await I.grabTextFrom(TempMail.getContentSelector());
-        const links = await I.grabAttributeFromAll(`${TempMail.getContentSelector()} a`, 'href');
-        if (body.includes(expectedText) && links.some(link => new URL(link).searchParams.get('securityEvent') === String(id))) return body;
-    }
-    throw new Error(`No matching device email arrived for event ${id}.`);
-}
 
 Scenario('New device login sends an email and confirms its link with a success toast @screenshot', async ({ I, TempMail, Document, i18n }) => {
     const event = device;
@@ -177,8 +166,8 @@ Scenario('A reported browser requires an email code before administration or RES
 });
 
 
-Scenario('My devices dialog on the full administration screen @screenshot @current', async ({ I, Document }) => {
-    await I.relogin("admin");
+Scenario('My devices dialog on the full administration screen @screenshot @current', async ({ I, Document, TempMail }) => {
+    // Keep the notification account from Before: switching accounts would create another unconfirmed device.
     await I.waitForElement(dashboard, 30);
     const modal = '.md-dashboard-modal--sessions';
     const devices = `${modal} .md-dashboard-sessions__devices`;
@@ -211,4 +200,5 @@ Scenario('My devices dialog on the full administration screen @screenshot @curre
     Document.screenshot('/redactor/admin/device-my-devices.png');
     await I.clickCss(`${modal} .modal-footer > button`);
     await I.waitForDetached(modal, 10);
+    await confirmDeviceFromEmail(I, TempMail, device);
 });

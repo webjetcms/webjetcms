@@ -1,8 +1,9 @@
 const { readDashboardBootstrap, openDashboardSessions } = require('../../../helpers/dashboard-browser');
+const { confirmDeviceFromEmail } = require('../../../helpers/device-email');
 
 Feature('admin.dashboard.login-location').tag('@singlethread');
 
-Scenario('Browser location appears above the backend IP in sessions and devices', async ({ I }) => {
+Scenario('Browser location appears above the backend IP in sessions and devices', async ({ I, TempMail }) => {
     const provider = /^https:\/\/(ipwho\.is|ipwhois\.pro)\//;
     await I.mockRoute(provider, route => route.fulfill({
         contentType: 'application/json',
@@ -18,7 +19,8 @@ Scenario('Browser location appears above the backend IP in sessions and devices'
         await I.waitForElement('script[data-save-url="/admin/logon/location/"]', 10);
         // Complete the staged hint before submitting, so this also verifies session replacement during login.
         await I.executeScript(() => window.webjetLoginLocationRequest);
-        await I.relogin('admin', false);
+        // Use the account whose test mailbox can confirm the deliberately recorded device.
+        await I.relogin('publishNotification', false);
         await I.waitForElement('.md-dashboard[data-loaded="true"]', 30);
         const data = await I.executeScript(readDashboardBootstrap);
         const current = data.currentSessions.userSessions.flatMap(cluster => cluster.userSessions)
@@ -34,6 +36,7 @@ Scenario('Browser location appears above the backend IP in sessions and devices'
         await I.waitForElement(deviceCell, 10);
         await I.see('Bratislava, SK', `${deviceCell} > span`);
         await I.see(current.remoteAddr, `${deviceCell} > small.text-muted`);
+        await confirmDeviceFromEmail(I, TempMail, { id: current.deviceId, browserName: current.browserName });
     } finally {
         await I.setPlaywrightRequestHeaders({});
         await I.amOnPage('/logoff.do?forward=/');
