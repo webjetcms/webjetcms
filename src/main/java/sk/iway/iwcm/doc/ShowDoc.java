@@ -99,11 +99,13 @@ public class ShowDoc extends HttpServlet {
         while (parameters.hasMoreElements())
         {
            String name = parameters.nextElement();
-           if (testXss(name) || name.indexOf('"')!=-1 || name.indexOf('\'')!=-1)
+           boolean hasControlCharacter = name.chars().anyMatch(Character::isISOControl);
+           if (hasControlCharacter || testXss(name) || name.indexOf('"')!=-1 || name.indexOf('\'')!=-1)
            {
                hasXss = true;
                continue;
            }
+           String encodedName = Tools.URLEncode(name);
            String[] values = request.getParameterValues(name);
             for (String s : values) {
                 String value = s;
@@ -122,7 +124,7 @@ public class ShowDoc extends HttpServlet {
                 if (redirectUrl.isEmpty() == false) redirectUrl.append('&');
                 if (valueHasXss) {
                     //hodnotu parametra vyhodime
-                    redirectUrl.append(name).append('=');
+                    redirectUrl.append(encodedName).append('=');
                 } else {
                     //vyhadzujeme niektore value, napr. password a podobne, musi to byt contains, lebo v regforme to moze byt usr.password a podobne
                     //nechceme, aby to bolo potom vidno v access logoch a podobne
@@ -131,7 +133,7 @@ public class ShowDoc extends HttpServlet {
                     }
 
                     //pridame celu hodnotu parametra
-                    redirectUrl.append(name).append('=').append(Tools.URLEncode(value));
+                    redirectUrl.append(encodedName).append('=').append(Tools.URLEncode(value));
                 }
             }
         }
