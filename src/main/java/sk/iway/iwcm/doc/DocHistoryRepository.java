@@ -91,4 +91,16 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
 
     @Query(value = "SELECT dh FROM DocHistory dh WHERE dh.publicable = true AND ( dh.awaitingApprove IS NULL OR dh.awaitingApprove = '' ) AND dh.publishStartDate IS NOT NULL")
     public Optional<List<DocHistory>> getPublicableThatAreNotAwaitingToApprove();
+
+    /** Returns scheduled versions, approval requests and the latest unapproved draft, excluding deleted versions. */
+    @Query("SELECT dh FROM DocHistory dh WHERE dh.groupId = :groupId AND (dh.isDelete IS NULL OR dh.isDelete = false) "
+        + "AND (dh.publicable = true OR (dh.awaitingApprove IS NOT NULL AND dh.awaitingApprove <> '') "
+        + "OR (dh.actual = false AND dh.approvedBy = -1 AND (dh.disapprovedBy IS NULL OR dh.disapprovedBy <= 0) "
+        + "AND dh.id = (SELECT MAX(latest.id) FROM DocHistory latest WHERE latest.docId = dh.docId)))")
+    List<DocHistory> findPendingByGroupId(@Param("groupId") int groupId);
+
+    @Transactional
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("UPDATE DocHistory SET virtualPath = :virtualPath, syncStatus = 1 WHERE id = :historyId")
+    void updateVirtualPath(@Param("historyId") Long historyId, @Param("virtualPath") String virtualPath);
 }
