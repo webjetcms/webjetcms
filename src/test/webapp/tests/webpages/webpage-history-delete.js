@@ -28,6 +28,15 @@ async function getVersions(I) {
     return I.executeScript(selector => $(selector).DataTable().rows().data().toArray(), historyTable);
 }
 
+async function checkRemoveTitle(I) {
+    const modal = historyTable + '_modal';
+    I.waitForElement(modal + ' .DTE_Header_Content h5.modal-title[id]', 10);
+    I.seeNumberOfVisibleElements(modal + ' .DTE_Header_Content h5.modal-title', 1);
+    I.assertEqual((await I.grabTextFrom(modal + ' .DTE_Header_Content')).trim(), 'Zmazať', 'The removal dialog must not include the parent editor title');
+    const titleId = await I.grabAttributeFrom(modal, 'aria-labelledby');
+    I.assertEqual(await I.grabTextFrom('#' + titleId), 'Zmazať', 'The accessible dialog name must identify the removal action');
+}
+
 async function requestDeletion(I, row) {
     return I.executeScript(async data => {
         const response = await fetch('/admin/rest/web-pages/history/' + data.id, {
@@ -84,6 +93,7 @@ Scenario('ordinary editor can cancel publication but cannot delete historical ve
     I.seeElement(deleteButton + ':not(.disabled)');
     I.clickCss(deleteButton);
     I.waitForText('Vybrané verzie budú trvalo odstránené z histórie.', 10, 'div.DTE_Action_Remove');
+    await checkRemoveTitle(I);
     I.click('Zmazať', 'div.DTE_Action_Remove');
     DTE.waitForLoader();
     DT.waitForLoader(historyTable.substring(1));
@@ -112,6 +122,14 @@ Scenario('cleanup permission enables bulk deletion while protecting the current 
     I.seeElement(deleteButton + ':not(.disabled)');
     I.clickCss(deleteButton);
     I.waitForText('Po odstránení ich nebude možné obnoviť ani porovnať.', 10, 'div.DTE_Action_Remove');
+    await checkRemoveTitle(I);
+    I.clickCss(historyTable + '_modal .btn-close-editor');
+    I.waitForInvisible(historyTable + '_modal');
+    I.seeElement('#datatableInit_modal.show');
+    I.see('Upraviť:', '#datatableInit_modal .DTE_Header_Content');
+    I.clickCss(deleteButton);
+    I.waitForVisible(historyTable + '_modal');
+    await checkRemoveTitle(I);
     I.click('Zmazať', 'div.DTE_Action_Remove');
     DTE.waitForLoader();
     DT.waitForLoader(historyTable.substring(1));
