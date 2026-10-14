@@ -46,7 +46,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 - Zmena URL priečinka s aplikovaním na podpriečinky a podstránky aktualizuje aj nezobrazované stránky, naplánované verzie, verzie čakajúce na schválenie a poslednú pracovnú verziu. Zachováva ich obsah, stav a termín publikovania; naplánované publikovanie už nevráti pôvodnú URL (#OSK806).
 
-- SEO - nastavenia prehľadávania a nasledovania odkazov uvádzajú v názve `X-Robots-Tag` a v tooltipoche vysvetľujú účinok na interné vyhľadávanie, indexovanie a nasledovanie odkazov. Predvolená možnosť nasledovania odkazov vysvetľuje väzbu na prehľadávanie: áno = `follow`, nie = `nofollow` (#OSK806).
+- SEO - nastavenie **Prehľadávať** ponúka samostatné voľby povoliť (`index`) a zakázať (`noindex`). Sekcia **HTTP hlavičky** na karte Základné zobrazuje aktuálny náhľad `X-Robots-Tag`, `Referrer-Policy` a pri nastavenom presmerovaní aj `Location` podľa neuložených nastavení stránky a konfigurácie servera (#OSK806).
 
 - Kôš webových stránok - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Pridaná možnosť mazania stránok a priečinkov v koši aj v sekcii [Mazanie dát](sysadmin/data-deleting/README.md) podľa zvoleného rozsahu dátumov. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov (#271).
 

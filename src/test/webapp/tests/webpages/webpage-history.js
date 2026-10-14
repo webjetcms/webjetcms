@@ -123,7 +123,7 @@ Scenario('Historia webstranok', ({ I, DTE }) => {
      // Aktivovat - Zobrazenie web stranky a vyhladanie cez vyhladavace a pridanie poznamky redaktora
      I.say('1.Aktivovat - Zobrazenie web stranky a vyhladanie cez vyhladavace a pridanie poznamky redaktora');
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_available_0').find('.form-check-label'));
-     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_searchable_0').find('.form-check-label'));
+     I.checkOption('#DTE_Field_searchable_0');
      I.fillField('#DTE_Field_editorFields-redactorNote', 'webpages history autotest');
 
      // Pridanie textu do obsahu a ulozenie udajov
