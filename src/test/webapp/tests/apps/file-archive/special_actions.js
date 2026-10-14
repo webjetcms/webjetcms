@@ -192,6 +192,10 @@ Scenario('Import', async ({ I, DT, DTE}) => {
     await SL.importFile("tests/apps/file-archive/docs/special_action_import.zip");
 });
 
+Scenario('Import existing files without replacing them', async () => {
+    await SL.importFile("tests/apps/file-archive/docs/special_action_import.zip");
+});
+
 Scenario('Special file upload - Add to version history', async ({ I, DT, DTE }) => {
     const addToHistoryFileName = 'archive_file_test.pdf';
     const addToHistoryFourthVersionFileName = 'archive_file_test_fourth.pdf';

@@ -254,6 +254,69 @@ Scenario('Zmaz strukturu', ({ I }) => {
      I.deleteFolderStructure(randomNumber);
 });
 
+Scenario('WYSIWYG content survives saving, reopening and history restoration', async ({ I, DT, DTE, Document }) => {
+     const suffix = randomNumber + '-wysiwyg';
+     const title = 'webPage-autotest-' + suffix;
+     const original = 'Autotest original rich-text content';
+     const updated = 'Autotest updated rich-text content';
+     Document.resetPageBuilderMode();
+     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
+     I.createFolderStructure(suffix, false);
+     I.click(DT.btn.add_button);
+     DTE.waitForEditor();
+     I.clickCss('#pills-dt-datatableInit-basic-tab');
+     DTE.fillField('title', title);
+     DTE.fillField('navbar', title);
+     I.clickCss('#pills-dt-datatableInit-content-tab');
+     await DTE.fillCkeditor('<p>' + original + '</p>');
+     DTE.save();
+
+     I.click(title);
+     DTE.waitForEditor();
+     I.clickCss('#pills-dt-datatableInit-content-tab');
+     I.switchTo('.cke_wysiwyg_frame');
+     I.waitForText(original, 10);
+     I.switchTo();
+     await DTE.fillCkeditor('<p>' + updated + '</p>');
+     DTE.save();
+
+     I.click(title);
+     DTE.waitForEditor();
+     I.clickCss('#pills-dt-datatableInit-content-tab');
+     I.switchTo('.cke_wysiwyg_frame');
+     I.waitForText(updated, 10);
+     I.dontSee(original);
+     I.switchTo();
+     I.clickCss('#pills-dt-datatableInit-history-tab');
+     DT.waitForLoader(historyProcessing);
+     I.seeNumberOfElements(historyTable + ' tbody tr', 2);
+     // History is ordered newest first; restore the initial saved version.
+     I.clickCss(historyTable + ' tbody tr:last-child td.dt-select-td');
+     I.clickCss(historyWrapper + ' button.buttons-history-edit');
+     I.waitForElement('#pills-dt-datatableInit-content-tab.active', 10);
+     I.switchTo('.cke_wysiwyg_frame');
+     I.waitForText(original, 10);
+     I.dontSee(updated);
+     I.switchTo();
+     DTE.save();
+
+     I.click(title);
+     DTE.waitForEditor();
+     I.clickCss('#pills-dt-datatableInit-content-tab');
+     I.switchTo('.cke_wysiwyg_frame');
+     I.waitForText(original, 10);
+     I.dontSee(updated);
+     I.switchTo();
+     DTE.cancel();
+});
+
+Scenario('Cleanup WYSIWYG history restoration fixture', ({ I }) => {
+     const suffix = randomNumber + '-wysiwyg';
+     I.amOnPage('/admin/v9/webpages/web-pages-list/');
+     I.jstreeNavigate(['name-autotest-' + suffix]);
+     I.deleteFolderStructure(suffix);
+});
+
 Scenario('history from multigroup mapping', ({ I, DT, DTE }) => {
      //open slave page and load history version
      I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=143');
