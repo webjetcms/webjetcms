@@ -109,6 +109,9 @@ Na karte **Limity tokenov** môžete obmedziť spotrebu konkrétneho asistenta. 
 - **Použiť limity tokenov** - zapne kontrolu spotreby a zobrazí ďalšie polia. Po vypnutí a uložení sa limit aj počítadlo použitých tokenov vynulujú.
 - **Použité tokeny** - počet tokenov spotrebovaných počas zapnutého obmedzenia od posledného vynulovania. Pole je iba na čítanie, hodnota sa aktualizuje po zaznamenaní spotreby asistenta.
 - **Limit tokenov** - povinné celé číslo väčšie ako `0`, ak je obmedzenie zapnuté.
+- **Notifikačný e-mail** - voliteľná e-mailová adresa, na ktorú sa odošle upozornenie pri dosiahnutí **75 %** a **100 %** limitu. Ak pole ponecháte prázdne, upozornenia sa neodosielajú.
+
+Upozornenie sa vyhodnotí po zaznamenaní spotreby asistenta. E-mail obsahuje názov asistenta, doménu, počet použitých tokenov a nastavený limit. Každé upozornenie sa odošle raz do vynulovania spotreby. Ak jedna požiadavka zvýši spotrebu z hodnoty pod 75 % rovno na 100 % alebo viac, odošle sa iba upozornenie o dosiahnutí celého limitu.
 
 !> Upozornenie: Pred spustením požiadavky sa overí aktuálna spotreba. Ak je počet použitých tokenov rovný limitu alebo vyšší, asistent požiadavku odmietne. Už spustená požiadavka môže limit prekročiť, pretože jej spotreba sa pripočíta až po spracovaní. Asistenta môžete znova používať po vynulovaní spotreby alebo po zvýšení limitu nad aktuálnu spotrebu.
 
@@ -123,7 +126,7 @@ Na konci nástrojovej lišty sú dve tlačidlá <button class="btn btn-sm btn-wa
 - **Vynulovať použité tokeny vybraných asistentov** - prvé tlačidlo je dostupné po označení jedného alebo viacerých asistentov.
 - **Vynulovať použité tokeny všetkých asistentov v aktuálnej doméne** - druhé tlačidlo je dostupné, keď nie je označený žiadny asistent. Vynuluje spotrebu celej aktuálnej domény, aj keď je zoznam filtrovaný.
 
-Obe akcie vyžadujú potvrdenie a výsledok zobrazia v notifikácii. Menia iba počítadlo **Použité tokeny**; nastavené limity aj história štatistík a grafu zostanú zachované.
+Obe akcie vyžadujú potvrdenie a výsledok zobrazia v notifikácii. Vynulujú počítadlo **Použité tokeny** a umožnia opätovné odoslanie e-mailových upozornení pri dosiahnutí 75 % a 100 % limitu. Nastavené limity, notifikačný e-mail aj história štatistík a grafu zostanú zachované. To isté platí pri automatickom vynulovaní.
 
 ### Automatické vynulovanie tokenov
 

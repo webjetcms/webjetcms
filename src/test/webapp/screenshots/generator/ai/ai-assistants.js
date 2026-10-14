@@ -64,6 +64,7 @@ Scenario('ai-assistants token limits screenshot', async ({ I, DT, DTE, Document 
     I.clickCss("#pills-dt-datatableInit-tokenLimits-tab");
     I.checkOption("#DTE_Field_useTokenLimits_0");
     I.fillField("#DTE_Field_tokenLimit", "10000");
+    I.fillField("#DTE_Field_notifEmail", "spravca@example.com");
     I.clickCss("#datatableInit_modal .modal-title");
     I.waitForVisible("#tokenUsagePanel #graphsDiv", 30);
     I.waitForVisible("#ai-assistant-token-usage canvas", 30);
