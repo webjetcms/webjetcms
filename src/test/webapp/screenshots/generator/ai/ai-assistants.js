@@ -16,6 +16,7 @@ Before(({ login, i18n }) => {
 
 Scenario('ai-assistants table screenshots', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/admin/v9/settings/ai-assistants/");
+    DT.waitForLoader();
 
     Document.screenshot("/redactor/ai/settings/datatable.png");
 
@@ -36,6 +37,39 @@ Scenario('ai-assistants table screenshots', ({ I, DT, DTE, Document }) => {
 
     I.clickCss("#pills-dt-datatableInit-advanced-tab");
     Document.screenshotElement("#datatableInit_modal > div > div.DTE_Action_Edit", "/redactor/ai/settings/datatable-advanced-tab.png");
+    DTE.cancel();
+});
+
+Scenario('ai-assistants token limits screenshot', async ({ I, DT, DTE, Document }) => {
+    I.amOnPage("/admin/v9/settings/ai-assistants/");
+    DT.waitForLoader();
+    DT.filterEquals("name", "DOC-SEO-01 Generate Keywords");
+    I.click(locate("a").withText("DOC-SEO-01 Generate Keywords").first());
+    DTE.waitForEditor();
+
+    // Provide repeatable chart examples without modifying stored statistics.
+    const usageRoute = "**/admin/rest/ai/assistant-definition/token-usage?*";
+    const dailyTokens = [540, 720, 0, 1280, 830, 460, 0, 910, 650, 1500, 1080, 0, 720, 360];
+    const usage = Object.fromEntries(dailyTokens.map((tokens, index) => {
+        const day = new Date();
+        day.setHours(0, 0, 0, 0);
+        day.setDate(day.getDate() - 13 + index);
+        return [day.getTime(), tokens];
+    }));
+    await I.mockRoute(usageRoute, route => route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(usage)
+    }));
+    I.clickCss("#pills-dt-datatableInit-tokenLimits-tab");
+    I.checkOption("#DTE_Field_useTokenLimits_0");
+    I.fillField("#DTE_Field_tokenLimit", "10000");
+    I.clickCss("#datatableInit_modal .modal-title");
+    I.waitForVisible("#tokenUsagePanel #graphsDiv", 30);
+    I.waitForVisible("#ai-assistant-token-usage canvas", 30);
+    Document.screenshotElement("#datatableInit_modal > div > div.DTE_Action_Edit", "/redactor/ai/settings/datatable-token-limits-tab.png", 1280, 1000);
+    DTE.cancel();
+    I.stopMockingRoute(usageRoute);
 });
 
 Scenario('ai-assistants usage - TEXT', async ({ I, DTE, Document, i18n }) => {
