@@ -303,7 +303,7 @@ public class AiAssistantsService {
         return List.of(
             new LabelValue("<i class=\"ti ti-ban text-danger\" aria-hidden=\"true\"></i> " + prop.getText("components.ai_assistants.status.not_active.label"), "not-active"),
             new LabelValue("<i class=\"ti ti-alert-triangle text-warning\" aria-hidden=\"true\"></i> " + prop.getText("components.ai_assistants.status.not_init.label"), "not-init"),
-            new LabelValue("<i class=\"ti ti-battery-exclamation text-warning\" aria-hidden=\"true\"></i> " + prop.getText("components.ai_assistants.status.out_of_tokens.label"), "out-of-tokens")
+            new LabelValue("<i class=\"ti ti-gauge-off text-warning\" aria-hidden=\"true\"></i> " + prop.getText("components.ai_assistants.status.out_of_tokens.label"), "out-of-tokens")
         );
     }
 

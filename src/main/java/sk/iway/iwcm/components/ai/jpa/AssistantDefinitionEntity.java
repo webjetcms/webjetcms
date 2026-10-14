@@ -206,7 +206,7 @@ public class AssistantDefinitionEntity implements Serializable {
     private Boolean useTokenLimits;
 
     @Column(name = "used_tokens")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.ai_assistants.stats.used_tokens", tab = "tokenLimits", visible = false,
+    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "components.ai_assistants.used_tokens", tab = "tokenLimits", visible = false,
         editor = {
             @DataTableColumnEditor(attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") })
         }

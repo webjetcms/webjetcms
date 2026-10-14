@@ -68,7 +68,7 @@ public class AssistantDefinitionEditorFields extends BaseEditorFields {
         } else if(assistant.getTokenLimit() != null && assistant.getTokenLimit() > 0
             && assistant.getUsedTokens() != null && assistant.getUsedTokens() >= assistant.getTokenLimit()) {
             addRowClass("out-of-tokens");
-            addStatusIcon("ti ti-battery-exclamation");
+            addStatusIcon("ti ti-gauge-off");
             statusLabel = prop.getText("components.ai_assistants.token_limit.reached");
         }
 
