@@ -45,9 +45,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 ### Webové stránky
 
 - Zmena URL priečinka s aplikovaním na podpriečinky a podstránky aktualizuje aj nezobrazované stránky, naplánované verzie, verzie čakajúce na schválenie a poslednú pracovnú verziu. Zachováva ich obsah, stav a termín publikovania; naplánované publikovanie už nevráti pôvodnú URL (#OSK806).
-
 - SEO - nastavenie **Prehľadávať** ponúka samostatné voľby povoliť (`index`) a zakázať (`noindex`). Sekcia **HTTP hlavičky** na karte Základné zobrazuje aktuálny náhľad `X-Robots-Tag`, `Referrer-Policy` a pri nastavenom presmerovaní aj `Location` podľa neuložených nastavení stránky a konfigurácie servera (#OSK806).
-
 - Kôš webových stránok - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Pridaná možnosť mazania stránok a priečinkov v koši aj v sekcii [Mazanie dát](sysadmin/data-deleting/README.md) podľa zvoleného rozsahu dátumov. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov (#271).
 
 ![](sysadmin/data-deleting/database-delete.png)
@@ -86,6 +84,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 - Page Builder - elementy označené CSS triedou [`pb-duplicable`](frontend/page-builder/settings.md#duplikovateľný-element-oranžová-farba) je možné v rámci rovnakého rodiča presúvať, duplikovať a zmazať. Vlastné alebo viaceré selektory je možné nastaviť cez `pbCustomSettings` (#58750).
 - Page Builder - pridaná možnosť vytvoriť [div.pb-section](frontend/page-builder/settings.md), ktorý získa bežné ovládanie sekcie. Naviac aplikácie `!INCLUDE(...)!` vložené priamo v sekcii, alebo kontajnery, zobrazujú náhľad aj napriek tomu, že sú vložené mimo bežného stĺpca (#osk711).
 - Page Builder - upravené [ovládanie editora](redactor/webpages/pagebuilder.md). Pridaná pevná horná lišta s cestou k vybranému bloku, panel **Štruktúra**, rýchle akcie a režim vkladania sekcií, kontajnerov a stĺpcov priamo do stránky. Rámiky je možné skryť alebo zobraziť pre celú hierarchiu bloku. Knižnica blokov má kompaktné okno s náhľadmi, kategóriami a kombinovaným vyhľadávaním so štítkami. Nastavenie štýlu používa rozbaľovacie skupiny vlastností a označuje práve upravovaný blok (#308).
+- História - používatelia s oprávnením **Čistenie databázy** môžu [mazať historické verzie](redactor/webpages/history.md) priamo v editore stránky, aj hromadným výberom. Aktuálne publikovaná verzia a verzie čakajúce na schválenie sú chránené. Bez tohto oprávnenia zostáva dostupné rušenie budúceho naplánovaného publikovania (#353).
 
 <div class="video-container">
     <iframe width="790" height="444" src="https://www.youtube.com/embed/B_m_vPPel80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>

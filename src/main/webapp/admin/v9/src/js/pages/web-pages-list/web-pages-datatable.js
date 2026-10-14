@@ -211,6 +211,10 @@ export class WebPagesDatatable {
                     extend: "remove",
                     text: "<i class='ti ti-trash'></i>",
                     editor: historyTable.EDITOR,
+                    formMessage: function (editor, dt) {
+                        return $.fn.dataTable.ext.buttons.remove.formMessage(editor, dt)
+                            + "<p>" + WJ.translate("editor.history.delete.confirm.js") + "</p>";
+                    },
                     init: function ( dt, node, config ) {
                         var button = this;
                         dt.on('select.dt.DT deselect.dt.DT', function () {
@@ -218,8 +222,7 @@ export class WebPagesDatatable {
                             let count = 0;
                             dt.rows({selected: true}).every( function ( rowIdx, tableLoop, rowLoop ) {
                                 var data = this.data();
-                                if (data.publishStartStringExtra==null) show = false;
-                                if (data.publicable !== true) show = false;
+                                if (data.deleteAllowed !== true) show = false;
                                 count ++;
                             });
                             //console.log("show=", show, "count=", count);

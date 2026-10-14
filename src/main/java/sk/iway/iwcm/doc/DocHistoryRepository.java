@@ -32,6 +32,15 @@ public interface DocHistoryRepository extends JpaRepository<DocHistory, Long>, J
     @Query(value = "DELETE FROM DocHistory WHERE id = :historyIds AND publicable = :publicable")
     public void deleteByIdPublicable(@Param("historyIds")Long historyId, @Param("publicable")boolean publicable);
 
+    /** Rechecks publication and approval state when deleting a version of the authorized page. */
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM DocHistory dh WHERE dh.id = :historyId AND dh.docId = :docId "
+        + "AND (dh.actual IS NULL OR dh.actual = false) AND (dh.awaitingApprove IS NULL OR dh.awaitingApprove = '') "
+        + "AND (:cleanup = true OR (dh.publicable = true AND dh.publishStartDate > :now))")
+    int deleteDeletableById(@Param("historyId") Long historyId, @Param("docId") int docId,
+        @Param("cleanup") boolean cleanup, @Param("now") Date now);
+
     //
     @Query(value = "SELECT history_id FROM documents_history WHERE doc_id = ?1 AND history_id < ?2", nativeQuery=true)
     public List<Integer> findOldHistoryIds(int docId, int historyId);
