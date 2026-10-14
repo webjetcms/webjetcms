@@ -209,6 +209,8 @@ Zobrazuje graf a číselné hodnoty zatížení procesoru serveru. Správce mů�
 
 ## Přihlášení
 
+Okno **Aktivní přihlášení** otevřete z kterékoli stránky administrace přes [uživatelské menu v hlavičce](README.md#uživatelské-menu): klikněte na své jméno a vyberte **Aktivní přihlášení**. Přejdete na úvodní stránku, kde se otevře karta **Moje přihlášení**.
+
 U více aktivních relací naleznete v systémových upozorněních odkaz **Aktivní přihlášení**. Seznam si můžete přidat také jako widget **Moje aktivní přihlášení**. Seznam ostatních přihlášených administrátorů je samostatný widget **Přihlášení admini**, dostupný podle oprávnění.
 
 ### Moje aktivní přihlášení
@@ -220,6 +222,8 @@ Samostatný widget v osobním přehledu zobrazí při jediném aktuálním pořa
 Klepnutím na nadpis widgetu se šipkou otevřete okno **Aktivní přihlášení** v kartě **Moje přihlášení**. Kromě vlastních pořadů nabízí správu vašich zařízení, historii přihlášení za posledních 30 dní a podle oprávnění i přihlášené administrátory. Tlačítko **Změnit heslo** ve spodní části okna otevře váš profil pro změnu hesla. Informační ikona vedle tlačítka zobrazí pokyny pro změnu hesla u firemního účtu.
 
 Karta **Moje přihlášení** zobrazuje pouze aktivní relace. Jeden prohlížeč může mít více pořadů. Při každé relaci vidíte prohlížeč s verzí, pod ním operační systém s verzí a datum přihlášení. Aktuální relace má při názvu prohlížeče štítek **Toto přihlášení** ; u ostatních můžete použít akci **Odhlásit**.
+
+Pokud WebJET CMS běží v režimu clusteru, v kartě **Moje přihlášení** se pod IP adresou zobrazuje **Server název serveru**. Jedná se o jméno serveru (uzlu) clusteru, na kterém je dané přihlášení aktivní. Jednotlivá přihlášení mohou být na různých serverech clusteru. Mimo režim clusteru se tento údaj nezobrazuje.
 
 ![](sessions.png)
 

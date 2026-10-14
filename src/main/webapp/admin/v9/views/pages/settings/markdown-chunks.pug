@@ -1,0 +1,38 @@
+extends ../../partials/iframe
+
+block content
+    .container-fluid.py-3
+        .card.mb-3
+            .card-body
+                p#action-title-index.d-none(data-th-utext="#{settings.doc-chunks.group}")
+                p#action-title-delete.d-none(data-th-utext="#{settings.doc-chunks.group.delete}")
+                label.form-label(for="markdownFolderSelection" data-th-text="#{settings.embedding-chunks.sourceRoot}")
+                #markdown-folder-selector
+                p#folder-message.text-muted.small.mt-2.mb-0(role="status")
+                .custom-control.form-switch.mt-3.d-flex.align-items-center
+                    input#markdownIncludeSubfolders.form-check-input.mt-0.me-2(type="checkbox" value="true" checked)
+                    label.form-check-label(for="markdownIncludeSubfolders" data-th-text="#{settings.doc-chunks.include_subfolders}")
+                p#markdown-language-help.text-muted.small.mt-3.mb-0.d-none(data-th-text="#{settings.markdown-chunks.languageFolders}")
+                button#submitBtn.d-none(type="button" disabled) [[\#{settings.embedding-chunks.start}]]
+
+        .card.mb-3
+            .card-body
+                h5.card-title.mb-3 [[\#{settings.doc-chunks.stat.title}]]
+                dl.row.mb-0
+                    dt.col-10.fw-normal [[\#{settings.markdown-chunks.stat.allDocuments}]]
+                    dd#allDoc.col-2.text-end —
+                    dt.col-10.fw-normal [[\#{settings.markdown-chunks.stat.indexedDocuments}]]
+                    dd#indexedDoc.col-2.text-end —
+                    dt#queued-label-index.col-10.fw-normal.d-none(data-th-utext="#{settings.markdown-chunks.stat.queuedDocuments}")
+                    dt#queued-label-delete.col-10.fw-normal.d-none(data-th-utext="#{settings.markdown-chunks.stat.queuedDocuments.delete}")
+                    dd#queuedDoc.col-2.text-end.mb-0 —
+
+        p#wait-msg.alert.alert-info.d-none(role="status" data-th-text="#{settings.embedding-chunks.wait_please}")
+        p#succ-msg-index.alert.alert-success.d-none(role="status" data-th-text="#{settings.markdown-chunks.success}")
+        p#succ-msg-delete.alert.alert-success.d-none(role="status" data-th-text="#{settings.markdown-chunks.delete.success}")
+        p#fail-msg.alert.alert-danger.d-none(role="alert" data-th-text="#{settings.markdown-chunks.failed}")
+        p#stats-failed.alert.alert-danger.d-none(role="alert" data-th-text="#{settings.markdown-chunks.statsFailed}")
+
+    script
+        include markdown-folder-selector.js
+        include markdown-chunks.js

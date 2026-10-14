@@ -1,13 +1,16 @@
 Feature('webpages.webpage-content');
 
-const { event } = require('codeceptjs');
+const { event, container } = require('codeceptjs');
 const tracedScenario = 'Nastavenie editorAutoFillPublishStart @singlethread';
+const failedCreateRoute = /\/admin\/rest\/web-pages\/-1(?:\?|$)/;
 
 // Execution events run when queued steps actually start and finish, including steps in Before.
 event.dispatcher.on(event.test.before, (test) => {
      if (test?.file !== __filename || test.title !== tracedScenario) return;
 
      const steps = new Map();
+     const observedPages = new WeakSet();
+     const pageListeners = [];
      let stepNumber = 0;
      const log = (message) => console.log(`[editorAutoFillPublishStart] ${new Date().toISOString()} ${message}`);
      const onBodyStarted = () => log('BODY START');
@@ -20,13 +23,48 @@ event.dispatcher.on(event.test.before, (test) => {
           steps.set(step, entry);
           log(`START #${entry.number} ${entry.description} ${step.line()}`);
      };
-     const onStepFinished = (step) => {
+     const onStepFinished = async (step) => {
           const entry = steps.get(step);
           if (!entry) return;
 
           const status = step.status === 'failed' ? 'FAILED' : 'DONE';
           log(`${status} #${entry.number} ${Date.now() - entry.startedAt}ms ${entry.description}`);
           steps.delete(step);
+
+          try {
+               const page = container.helpers('Playwright').page;
+               if (step.name === 'amOnPage' && entry.description.includes('/admin/v9/webpages/web-pages-list/') && !observedPages.has(page)) {
+                    observedPages.add(page);
+                    const response = response => {
+                         if (response.url().includes('/admin/rest/web-pages/-1')) log(`INITIALIZATION RESPONSE ${response.status()} ${response.url()}`);
+                    };
+                    const pageError = error => log(`PAGE ERROR ${error.stack || error.message}`);
+                    const dialog = dialog => log(`NATIVE DIALOG ${dialog.type()} ${dialog.message()}`);
+                    page.on('response', response);
+                    page.on('pageerror', pageError);
+                    page.on('dialog', dialog);
+                    pageListeners.push({ page, response, pageError, dialog });
+               }
+               if (step.status === 'failed') {
+                    // The failed recorder cannot queue I.* steps, so inspect the page directly for diagnostics.
+                    const state = await Promise.race([page.evaluate(() => {
+                         const modal = document.querySelector('#datatableInit_modal');
+                         return {
+                              url: location.href,
+                              modal: modal && {
+                                   classes: modal.className,
+                                   focusState: modal.dataset.dteFocusState,
+                                   closeState: modal.dataset.dteCloseState,
+                                   display: getComputedStyle(modal).display
+                              },
+                              focusedElement: document.activeElement?.id
+                         };
+                    }), new Promise(resolve => setTimeout(() => resolve({ unavailable: 'Page inspection timed out' }), 5000))]);
+                    log(`FAILED EDITOR STATE ${JSON.stringify(state)}`);
+               }
+          } catch (error) {
+               log(`DIAGNOSTICS UNAVAILABLE ${error.message}`);
+          }
      };
 
      log('SCENARIO START (including Before hook)');
@@ -37,6 +75,11 @@ event.dispatcher.on(event.test.before, (test) => {
           event.dispatcher.removeListener(event.test.started, onBodyStarted);
           event.dispatcher.removeListener(event.step.started, onStepStarted);
           event.dispatcher.removeListener(event.step.finished, onStepFinished);
+          for (const { page, response, pageError, dialog } of pageListeners) {
+               page.removeListener('response', response);
+               page.removeListener('pageerror', pageError);
+               page.removeListener('dialog', dialog);
+          }
           log('SCENARIO AFTER');
      });
 });
@@ -596,7 +639,7 @@ Scenario(tracedScenario, ({ I, DT, DTE, Document }) => {
 
      //
      I.say("Vypinam nastavenie editorAutoFillPublishStart");
-     Document.setConfigValue("editorAutoFillPublishStart", "false");
+     Document.setConfigValue("editorAutoFillPublishStart", "false", true);
 
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=40273");
      DT.waitForLoader();
@@ -605,7 +648,7 @@ Scenario(tracedScenario, ({ I, DT, DTE, Document }) => {
      I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.dontSeeInField("#DTE_Field_publishStartDate", date);
 
-     DTE.cancel();
+     DTE.cancel('datatableInit');
 
      I.click(DT.btn.add_button);
      DTE.waitForEditor();
@@ -614,11 +657,11 @@ Scenario(tracedScenario, ({ I, DT, DTE, Document }) => {
      I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.dontSeeInField("#DTE_Field_publishStartDate", date);
 
-     DTE.cancel();
+     DTE.cancel('datatableInit');
 
      //
      I.say("Zapinam nastavenie editorAutoFillPublishStart");
-     Document.setConfigValue("editorAutoFillPublishStart", "true");
+     Document.setConfigValue("editorAutoFillPublishStart", "true", true);
 
      I.amOnPage("/admin/v9/webpages/web-pages-list/?docid=40273");
      DT.waitForLoader();
@@ -628,7 +671,7 @@ Scenario(tracedScenario, ({ I, DT, DTE, Document }) => {
      I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.seeInField("#DTE_Field_publishStartDate", date);
 
-     DTE.cancel();
+     DTE.cancel('datatableInit');
 
      I.click(DT.btn.add_button);
      DTE.waitForEditor();
@@ -637,7 +680,32 @@ Scenario(tracedScenario, ({ I, DT, DTE, Document }) => {
      I.clickCss("#pills-dt-datatableInit-perex-tab");
      I.seeInField("#DTE_Field_publishStartDate", date);
 
+     DTE.cancel('datatableInit');
+});
+
+Scenario('Restore editorAutoFillPublishStart configuration @singlethread', ({ Document }) => {
+     Document.setConfigValue('editorAutoFillPublishStart', 'true');
+});
+
+Scenario('New page initialization can be retried after a failed request', async ({ I, DT, DTE }) => {
+     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=67');
+     DT.waitForLoader();
+     const errorText = await I.executeScript(() => WJ.translate('datatables.error.network.js'));
+     await I.mockRoute(failedCreateRoute, route => route.fulfill({ status: 503, body: 'Autotest initialization failure' }));
+
+     I.click(DT.btn.add_button);
+     I.waitForText(errorText, 10, '#toast-container-webjet');
+     I.dontSeeElement('#datatableInit_modal');
+
+     await I.stopMockingRoute(failedCreateRoute);
+     I.click(DT.btn.add_button);
+     DTE.waitForEditor();
+     I.waitForVisible('#datatableInit_modal[data-action="create"]', 10);
      DTE.cancel();
+});
+
+Scenario('Cleanup new-page initialization interception', async ({ I }) => {
+     await I.stopMockingRoute(failedCreateRoute);
 });
 
 async function testLink(link, fixedLink, I, DT, DTE) {

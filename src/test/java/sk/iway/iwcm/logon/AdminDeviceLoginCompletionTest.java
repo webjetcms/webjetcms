@@ -3,16 +3,21 @@ package sk.iway.iwcm.logon;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.AdditionalAnswers.delegatesTo;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -132,6 +137,7 @@ class AdminDeviceLoginCompletionTest {
         when(repository.getMobileDeviceByUserId(7L)).thenReturn("existing-secret");
         assertEquals(TWO_FACTOR_FORM, submit());
         assertNotNull(request.getSession().getAttribute("adminUser_waitingForToken"));
+        verify(repository).getMobileDeviceByUserId(7L);
         devices.verifyNoInteractions();
         logon.verify(() -> LogonTools.afterSuccessLogon(request, response), never());
     }
@@ -162,6 +168,34 @@ class AdminDeviceLoginCompletionTest {
             assertEquals("redirect:" + EVENT_TARGET, submit());
             assertNull(request.getSession().getAttribute("adminUser_waitingForToken"));
             devices.verify(() -> AdminDeviceService.recordSuccessfulLogin(user, request, response));
+        }
+    }
+
+    /** Forced second-factor enrollment saves its new key before completing login. */
+    @Test
+    void savesForcedSecondFactorEnrollment() {
+        prepareSecondFactor();
+        request.setParameter("token", "222222");
+        var query = mock(SimpleQuery.class);
+        try (var authenticators = mockConstruction(GoogleAuthenticator.class,
+                (authenticator, context) -> when(authenticator.getTotpPassword("existing-secret")).thenReturn(222222));
+             var queries = mockConstruction(SimpleQuery.class, withSettings().defaultAnswer(delegatesTo(query)))) {
+            assertEquals("redirect:" + EVENT_TARGET, submit());
+            verify(query).execute("UPDATE users SET mobile_device = ? WHERE user_id = ?", "existing-secret", 7);
+        }
+    }
+
+    /** Failed forced enrollment cannot complete administrator login. */
+    @Test
+    void doesNotCompleteWhenForcedSecondFactorEnrollmentFails() {
+        prepareSecondFactor();
+        request.setParameter("token", "222222");
+        try (var authenticators = mockConstruction(GoogleAuthenticator.class,
+                (authenticator, context) -> when(authenticator.getTotpPassword("existing-secret")).thenReturn(222222));
+             var queries = mockConstruction(SimpleQuery.class, (query, context) ->
+                doThrow(new IllegalStateException("Unavailable")).when(query).execute(anyString(), any(), any()))) {
+            assertThrows(IllegalStateException.class, this::submit);
+            logon.verify(() -> LogonTools.afterSuccessLogon(request, response), never());
         }
     }
 

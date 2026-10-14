@@ -25,13 +25,21 @@ The **Open results in section…** link will take your search term to the approp
 
 To close the dialog, press the **Esc** key, the close button, or click outside the dialog. The focus returns to the button in the header; the search term is not written to the button.
 
+The documentation is not automatically searched by default. The tab displays a dash, which means **not searched yet**, not zero results. In the **All** scope, you will find an explanation of which server the expression will be sent to, and a link **Load results from external documentation as well**. Clicking this link or the **Documentation** tab will search for the expression you have already entered and display the results in the dialog. The tab's tooltip explains sending the expression to an external server. The keyboard shortcut **Ctrl+Enter** on Windows/Linux or **⌘+Enter** on Mac will load the documentation results in any scope of the open dialog. The corresponding shortcut is displayed next to the link.
+
+After changing the expression, the documentation results are cleared and the tab displays a dash again. To start a new search, click the tab or link, or press **Enter** in the **Documentation** scope. Enter in the **All** scope searches only internal sources by default. Switching scopes with **Alt+arrow** does not send an external query by itself.
+
 ![Search results for banner system in AI response documentation](quick-search-documentation.png)
 
 ### Setting up documentation search
 
-In **Settings → Configuration**, set the variable `adminDocumentationSearchUrl` to a valid full URL of the search service, including its path. The default value is `https://docs.webjetcms.sk/rest/rag/markdown/search`. When changing the domain or path, just edit this variable and refresh the administration.
+In **Settings → Configuration**, set the variable `adminDocumentationSearchUrl` to a valid full URL of the search service, including the path. The default value is `https://docs.webjetcms.sk/rest/rag/markdown/search`. When changing the domain or path, just edit this variable and refresh the administration.
 
-This variable also specifies the server for links in the **Help**, `WJ.showHelpWindow` and changelog menus. From the URL, only the protocol, domain and port are used for these links; the search service path is ignored. For example, `https://manual.example:8443/rest/rag/markdown/search` opens the documentation at `https://manual.example:8443/latest/sk/`. The documentation is available in Slovak, Czech and English; for other administration languages, the English version opens.
+The empty value `adminDocumentationSearchUrl` disables documentation search and hides its tab and button in the results.
+
+The `adminDocumentationAlwaysSearch` variable has a default value of `false`. Setting `true` turns on automatic searching in the **All** and **Documentation** ranges after a two-second pause at least 8 characters after removing trailing spaces. Enter will also search for a shorter non-empty expression in these ranges. Turn it on only in deployments where the documentation service can accept internal queries, such as on an approved custom server. An empty URL turns off documentation even with a value of `true`. After changing the configuration, refresh the administration.
+
+The `adminDocumentationSearchUrl` variable also specifies the server for links in the **Help**, `WJ.showHelpWindow` and changelog menus. From the URL, only the protocol, domain and port are used for these links; the search service path is ignored. For example, `https://manual.example:8443/rest/rag/markdown/search` opens the documentation at `https://manual.example:8443/latest/sk/`. The documentation is available in Slovak, Czech and English; for other administration languages, the English version opens.
 
 The administration will complete the parameter `query` with the search term and send `language` and `directory` depending on the interface language:
 
@@ -42,6 +50,8 @@ The administration will complete the parameter `query` with the search term and 
 | English | `en` | `/en/` |
 
 The endpoint returns JSON with a field `results`. Each result contains `title`, `url`, and a Markdown sample `snippet`. An optional AI summary is in the `answer` element in Markdown format. Relative links in the results open on the documentation server.
+
+On the documentation server, enable the service by setting `restAllowedIpAddresses-MarkdownSearchRestController` to `*` or to allowed IP addresses or their prefixes separated by a comma. If the default value is empty, the global `restAllowedIpAddresses` will be used (default value is `127.0.0.1`). A non-empty controller setting takes precedence. For public search without logging in to the documentation server, also set `ragMarkdownSearchRequireLogin=false`.
 
 If the documentation runs on a different domain, its server must enable CORS. The setting belongs **to the documentation server**. For the administration opened on `http://iwcm.interway.sk`, set:
 

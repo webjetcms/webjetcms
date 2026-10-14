@@ -25,13 +25,21 @@ Odkaz **Otevřít výsledky v sekci…** přenese hledaný výraz do příslušn
 
 Dialog zavřete klávesou **Esc**, tlačítkem zavření nebo kliknutím mimo něj. Fokus se vrátí na tlačítko v hlavičce; hledaný výraz se do tlačítka nepřepisuje.
 
+Dokumentace se ve výchozím nastavení neprohledává automaticky. Karta zobrazuje pomlčku, která znamená **zatím nepřehledané**, ne nulový počet výsledků. V rozsahu **Vše** naleznete vysvětlení, na který server se výraz odešle, a odkaz **Načíst výsledky iz externí dokumentace**. Klepnutí na tento odkaz nebo na kartu **Dokumentace** vyhledá již zadaný výraz a zobrazí výsledky v dialogu. Tooltip karty vysvětluje odeslání výrazu na externí server. Klávesová zkratka **Ctrl+Enter** ve Windows/Linux nebo **⌘+Enter** na Macu načte výsledky dokumentace v libovolném rozsahu otevřeného dialogu. Příslušná zkratka se zobrazuje při odkazu.
+
+Po změně výrazu se výsledky dokumentace vymažou a karta znovu zobrazí pomlčku. Nové vyhledávání spustíte kliknutím na kartu nebo odkaz, případně klávesou **Enter** v rozsahu **Dokumentace**. Enter v rozsahu **Vše** ve výchozím nastavení prohledává pouze interní zdroje. Přepínání rozsahů pomocí **Alt+šipka** samo externí dotaz neodešle.
+
 ![Výsledky hledání výrazu bannerový systém v dokumentaci s odpovědí AI](quick-search-documentation.png)
 
 ### Nastavení vyhledávání v dokumentaci
 
 V **Nastavení → Konfigurace** nastavte proměnnou `adminDocumentationSearchUrl` na platnou celou URL vyhledávací služby včetně cesty. Výchozí hodnota je `https://docs.webjetcms.sk/rest/rag/markdown/search`. Při změně domény nebo cesty stačí upravit tuto proměnnou a obnovit administraci.
 
-Tato proměnná zároveň určuje server pro odkazy v menu **Nápověda**, `WJ.showHelpWindow` a changelog. Z URL se pro tyto odkazy použije pouze protokol, doména a port; cesta vyhledávací služby se ignoruje. Například `https://manual.example:8443/rest/rag/markdown/search` otevře dokumentaci na `https://manual.example:8443/latest/sk/`. Dokumentace je dostupná slovensky, česky a anglicky; pro ostatní jazyky administrace se otevře anglická verze.
+Prázdná hodnota `adminDocumentationSearchUrl` vypne vyhledávání v dokumentaci a skryje jeho kartu i tlačítko ve výsledcích.
+
+Proměnná `adminDocumentationAlwaysSearch` má výchozí hodnotu `false`. Nastavení `true` zapne automatické vyhledávání v rozmezí **Vše** a **Dokumentace** po dvou sekundové pauze při alespoň 8 znacích po odstranění okrajových mezer. Enter v těchto rozmezích vyhledá i kratší neprázdný výraz. Zapněte jej pouze v nasazení, kde dokumentační služba může přijímat interní dotazy, například na schváleném vlastním serveru. Prázdná URL vypne dokumentaci i při hodnotě `true`. Po změně konfigurace obnovte administraci.
+
+Proměnná `adminDocumentationSearchUrl` zároveň určuje server pro odkazy v menu **Nápověda**, `WJ.showHelpWindow` a changelog. Z URL se pro tyto odkazy použije pouze protokol, doména a port; cesta vyhledávací služby se ignoruje. Například `https://manual.example:8443/rest/rag/markdown/search` otevře dokumentaci na `https://manual.example:8443/latest/sk/`. Dokumentace je dostupná slovensky, česky a anglicky; pro ostatní jazyky administrace se otevře anglická verze.
 
 Administrace doplní parametr `query` s hledaným výrazem a podle jazyka rozhraní odešle `language` a `directory`:
 
@@ -42,6 +50,8 @@ Administrace doplní parametr `query` s hledaným výrazem a podle jazyka rozhra
 | Anglický | `en` | `/en/` |
 
 Endpoint vrací JSON s polem `results`. Každý výsledek obsahuje `title`, `url` a Markdown ukázku `snippet`. Volitelné AI shrnutí je v elementu `answer` v Markdown formátu. Relativní odkazy ve výsledcích se otevírají na serveru dokumentace.
+
+Na serveru dokumentace povolte službu nastavením `restAllowedIpAddresses-MarkdownSearchRestController` na `*` nebo na povolené IP adresy či jejich prefixy oddělené čárkou. Při výchozí prázdné hodnotě se použije globálně `restAllowedIpAddresses` (výchozí `127.0.0.1`). Neprázdné nastavení controlleru má přednost. Pro veřejné vyhledávání bez přihlášení na server dokumentace nastavte také `ragMarkdownSearchRequireLogin=false`.
 
 Pokud dokumentace běží na jiné doméně, její server musí povolit CORS. Nastavení patří **na server dokumentace**. Pro administraci otevřenou na `http://iwcm.interway.sk` nastavte:
 

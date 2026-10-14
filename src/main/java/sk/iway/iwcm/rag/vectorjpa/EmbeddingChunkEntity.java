@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.util.Date;
 
@@ -47,7 +48,8 @@ public class EmbeddingChunkEntity extends BaseEditorFields {
             @DataTableColumnEditor(
                 attr = { @DataTableColumnEditorAttr(key = "disabled", value = "disabled") },
                 options = {
-                    @DataTableColumnEditorAttr(key = "DOCUMENT", value = "DOCUMENT")
+                    @DataTableColumnEditorAttr(key = "DOCUMENT", value = "DOCUMENT"),
+                    @DataTableColumnEditorAttr(key = "MARKDOWN", value = "MARKDOWN")
                 }
             )
         }
@@ -70,7 +72,8 @@ public class EmbeddingChunkEntity extends BaseEditorFields {
     )
     private Integer chunkIndex;
 
-    @Column(name = "chunk_text", nullable = false, columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "chunk_text", nullable = false)
     @DataTableColumn(
         inputType = DataTableColumnType.OPEN_EDITOR,
         renderFormat = "dt-format-text-wrap",
@@ -93,6 +96,19 @@ public class EmbeddingChunkEntity extends BaseEditorFields {
         tab = "main"
     )
     private String contentHash;
+
+    /** Full logical Markdown path, including its configured documentation root. */
+    @Lob
+    @Column(name = "source_path")
+    @DataTableColumn(inputType = DataTableColumnType.DISABLED, title = "settings.embedding-chunks.sourcePath", tab = "main", visible = false, renderFormat = "dt-format-text")
+    private String sourcePath;
+
+    @Column(name = "source_title", length = 512)
+    @DataTableColumn(inputType = DataTableColumnType.DISABLED, title = "settings.embedding-chunks.sourceTitle", tab = "main", visible = false, renderFormat = "dt-format-text")
+    private String sourceTitle;
+
+    @Column(name = "source_hash", length = 64)
+    private String sourceHash;
 
     // Native vector storage is not mapped as a JPA field.
     // Vector storage is managed through the database-specific VectorStore implementation.

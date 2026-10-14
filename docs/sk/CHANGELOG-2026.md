@@ -28,6 +28,8 @@
 
 ### Prihlasovanie a ochrana účtu
 
+- [Používateľské menu v hlavičke](redactor/admin/README.md#používateľské-menu) zobrazuje údaje účtu, počet aktívnych relácií a stav dvojstupňového overovania. Položka **Aktívne prihlásenia** otvorí správu vlastných prihlásení z ktorejkoľvek stránky administrácie. Dokumentácia obsahuje aktuálny screenshot a opis všetkých položiek menu (#351).
+
 - WebJET CMS po novom [eviduje prehliadače, z ktorých sa prihlasujete](redactor/admin/logon.md#prihlásenie-z-nového-zariadenia). Prihlásenie z nového prehliadača zobrazí upozornenie na úvodnej obrazovke a odošle email, aby ste mohli rozpoznať cudzie prihlásenie do svojho účtu. Vlastné zariadenie potvrdíte emailovým odkazom alebo jednorazovým kódom cez **Bol som to ja** (#340).
 
 ![Prehľad zariadení účtu na karte Moje zariadenia](redactor/admin/device-my-devices.png)
@@ -147,6 +149,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Embedding indexovanie a vyhľadávanie používa poskytovateľa a model nastavený v systémovom AI asistentovi. Indexy rôznych poskytovateľov a modelov môžu existovať súčasne; stránka **Sémantický index** zobrazuje aktuálne nastavenie a pri opätovnom indexovaní zachová ostatné kombinácie. Jadro embedding požiadaviek, odpovedí a komunikácie s poskytovateľmi bolo vyčlenené do knižnice `webjet-ai`; WebJET CMS naďalej zabezpečuje výber asistenta, indexovanie a uloženie vektorov (#58694).
 - AI asistenti a **sémantické vyhľadávanie** - pridaná podpora [lokálnych modelov](redactor/ai/settings/README.md#lokálne-modely) na generovanie textu, preklad a tvorbu embeddingov priamo na serveri bez odosielania obsahu externej AI službe. Tieto modely je možné **spustiť na bežnom hardvéri** (CPU), **nevyžadujú špeciálne grafické karty** (#58561).
+- Sémantické vyhľadávanie - lokálny [reranking výsledkov](custom-apps/apps/rag/semantic-search/README.md#reranking-výsledkov) zlepšuje poradie výsledkov aj výber RAG kontextu podľa textovej zhody s otázkou. Nevyžaduje ďalšie AI volanie ani opätovné indexovanie (#58778).
+- Sémantické vyhľadávanie - textové chunky majú maximum o 50 % vyššie než cieľová veľkosť (predvolene `1500` znakov). Markdown zachováva celé sekcie a bloky, ktoré sa zmestia do maxima, a spája krátke sekcie so spoločným kontextom nadpisov. Väčší obsah sa rozdelí podľa viet a slov. Zmeny sa použijú po opätovnom indexovaní. Viac v [popise indexovania](custom-apps/apps/rag/semantic-search/README.md#1-indexovanie) (#58778).
+- Sémantické vyhľadávanie - pridaná [podpora Markdown dokumentácie](custom-apps/apps/rag/markdown-search.md) z webových aj lokálnych priečinkov (`file:`), plánovaná indexácia zmien, vyhľadávanie Docsify podľa jazyka a adresára a voliteľná RAG odpoveď. Nová karta **Markdown dokumenty** umožňuje indexáciu a odstránenie cez stromový výber priečinka. Jazyk sa odvodzuje z cesty súboru. Index je spoločný pre všetky domény; AI asistenti a spotreba patria doméne vykonávanej operácie. Vyhľadávanie rešpektuje limity ochrany pred SPAMom ešte pred volaním AI a pri ich prekročení zobrazí správu. Nastavenie aliasu `file:/docs`, parametre úlohy `koreň|doména` a migrácia starších indexov sú opísané v návode (#58778).
 
 ### Aplikácie
 

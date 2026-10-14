@@ -65,6 +65,14 @@
         > div:not(.md-help-menu__product) > span:first-child { margin-right: 4px; }
     }
     .md-help-menu__product { padding-right: 24px; }
+    .md-help-menu__version {
+        display: flex;
+        align-items: baseline;
+        > span:first-child { flex-shrink: 0; }
+        .md-help-menu__version-number { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    }
+    .md-help-menu__version-date { white-space: nowrap; }
+    .md-help-menu__server { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .md-help-menu__panel .md-help-menu__copy {
         position: absolute;
         right: 8px;
@@ -73,6 +81,10 @@
         height: 32px;
         padding: 8px;
         .ti { color: var(--wj-secondary); }
+        &.is-copied {
+            background: rgba($success, .12);
+            .ti { color: darken($success, 15%); }
+        }
     }
 }
 

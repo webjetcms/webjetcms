@@ -13,10 +13,11 @@ const readSource = file => fs.readFileSync(path.join(adminRoot, 'src/js', file),
     .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
 
 /** Runs the real menu template, URL builder and release state with browser-only boundaries supplied. */
-function fixture(t, { language = 'sk', base = 'http://manual.intranet:8080', release = announcement } = {}) {
+function fixture(t, { language = 'sk', base = 'http://manual.intranet:8080', release = announcement, realTooltip = false, url = 'http://localhost/admin/v9/search/' } = {}) {
     const markup = pug.renderFile(path.join(adminRoot, 'views/partials/help-menu.pug'));
-    const dom = new JSDOM(`<!doctype html><body><div class="header-title">Current page</div>${markup}</body>`, { url: 'http://localhost/admin/v9/search/' });
+    const dom = new JSDOM(`<!doctype html><body><div class="header-title">Current page</div>${markup}</body>`, { url, runScripts: 'outside-only' });
     const { window } = dom;
+    if (realTooltip) window.eval(fs.readFileSync(require.resolve('bootstrap/dist/js/bootstrap.bundle.js'), 'utf8'));
     window.userLng = language;
     window.currentUser = { adminSettings: {} };
     window.csrfToken = 'help-autotest-csrf';
@@ -24,17 +25,22 @@ function fixture(t, { language = 'sk', base = 'http://manual.intranet:8080', rel
         documentationBaseUrl: base,
         announcement: release,
         supportUrl: 'www.webjetcms.sk',
-        version: '2026.0-jakarta-SNAPSHOT.048 09.10.2026 11:18:54 Enterprise (node / full) server: tomcat_a4'
+        version: '2026.0-jakarta-SNAPSHOT.048 09.10.2026 11:18:54 Enterprise (node / full) server: tomcat_a4',
+        systemInfo: 'WebJET CMS (Enterprise)\nVersion: 2026.18.28-jakarta.026, 23. 9. 2026 14:16:41\nServer: tomcat_a4\nDomain: demo.webjetcms.sk (DEV)',
+        currentDomain: 'demo.webjetcms.sk',
+        browser: 'Chrome 153 · macOS'
     };
     const feedbackCalls = [], requests = [], successes = [], errors = [];
     window.WJ = {
         translate: (key, ...params) => [key, ...params].join(' '),
         showFeedbackDialog: options => feedbackCalls.push({ options, focused: window.document.activeElement }),
         notifySuccess: (...args) => successes.push(args),
-        notifyError: (...args) => errors.push(args)
+        notifyError: (...args) => errors.push(args),
+        initTooltip() {}
     };
     const trigger = window.document.querySelector('#admin-help-toggle');
     const panel = window.document.querySelector('#admin-help-menu');
+    panel.querySelector('.md-help-menu__copy').title = 'Copy WebJET CMS information';
     const dropdown = {
         shows: 0, hides: 0,
         show() {
@@ -54,7 +60,11 @@ function fixture(t, { language = 'sk', base = 'http://manual.intranet:8080', rel
     const scope = vm.createContext({
         window, document: window.document, navigator: window.navigator, DOMParser: window.DOMParser, URL,
         WJ: window.WJ,
-        bootstrap: { Dropdown: { getOrCreateInstance: () => dropdown } },
+        $: element => element,
+        bootstrap: {
+            Dropdown: { getOrCreateInstance: () => dropdown },
+            Tooltip: realTooltip ? window.bootstrap.Tooltip : { getOrCreateInstance: () => ({ setContent() {}, hide() {} }) }
+        },
         fetch: async (url, options) => {
             requests.push({ url, options });
             return { ok: true, json: async () => true };
@@ -235,16 +245,97 @@ test('Copy uses the Clipboard API when available and keeps the Help menu open', 
     window.document.execCommand = () => { throw new Error('The fallback must not run after Clipboard API success.'); };
     dropdown.show();
     const copy = panel.querySelector('.md-help-menu__copy');
+    let reset, delay;
+    window.setTimeout = (callback, milliseconds) => { reset = callback; delay = milliseconds; };
     copy.focus();
     copy.click();
     await tick();
-    assert.deepEqual(copied, [`WebJET CMS ${window.adminHelpContext.version}`]);
+    assert.deepEqual(copied, [window.adminHelpContext.systemInfo + '\nadmin.help.cmsDomain.js: http://localhost\nadmin.help.pagePath.js: /admin/v9/search/\nadmin.help.browser.js: Chrome 153 · macOS']);
     assert.equal(panel.classList.contains('show'), true);
     assert.equal(dropdown.hides, 0);
     assert.equal(window.document.activeElement, copy);
-    assert.deepEqual(successes, [['admin.help.copied.js', '', 5000]]);
+    assert.equal(copy.classList.contains('is-copied'), true);
+    assert.equal(copy.querySelector('.ti').classList.contains('ti-check'), true);
+    assert.equal(copy.getAttribute('aria-label'), 'admin.help.copied.js');
+    assert.equal(copy.getAttribute('data-bs-original-title'), 'admin.help.copied.js');
+    assert.equal(panel.querySelector('[role="status"]').textContent, 'admin.help.copied.js');
+    assert.equal(delay, 2000);
+    reset();
+    assert.equal(copy.classList.contains('is-copied'), false);
+    assert.equal(copy.querySelector('.ti').classList.contains('ti-copy'), true);
+    assert.equal(copy.getAttribute('data-bs-original-title'), 'admin.help.copy.js');
+    assert.equal(panel.querySelector('[role="status"]').textContent, '');
+    assert.equal(successes.length, 0);
     assert.equal(errors.length, 0);
     assert.equal(window.document.querySelector('textarea'), null);
+});
+
+test('Diagnostics refresh the page address and preserve query parameters and fragments', t => {
+    const { scope, window } = fixture(t, { release: '' });
+    window.history.replaceState({}, '', '/admin/v9/webpages/?docid=123&value=a%2Fb#editor%23tab');
+    const result = scope.getSystemInfo();
+    assert.ok(result.includes('\nadmin.help.pagePath.js: /admin/v9/webpages/?docid=123&value=a%2Fb#editor%23tab\n'));
+    assert.ok(result.includes('Domain: demo.webjetcms.sk (DEV)\nadmin.help.cmsDomain.js: http://localhost\n'));
+});
+
+test('CMS diagnostics include the browser protocol and non-default port', t => {
+    const { scope } = fixture(t, { release: '', url: 'https://localhost:8443/admin/v9/search/' });
+    assert.ok(scope.getSystemInfo().includes('\nadmin.help.cmsDomain.js: https://localhost:8443\n'));
+});
+
+test('Diagnostics omit the CMS domain when the browser and content domains match', t => {
+    const { scope, window } = fixture(t, { release: '' });
+    for (const domain of ['localhost', 'LOCALHOST']) {
+        window.adminHelpContext.currentDomain = domain;
+        assert.ok(!scope.getSystemInfo().includes('admin.help.cmsDomain.js'));
+    }
+});
+
+test('The real Bootstrap tooltip updates after copying and restores its original label', async t => {
+    const { window, panel } = fixture(t, { release: '', realTooltip: true });
+    Object.defineProperty(window.navigator, 'clipboard', { value: { writeText: async () => {} } });
+    const copy = panel.querySelector('.md-help-menu__copy');
+    const tooltip = window.bootstrap.Tooltip.getInstance(copy);
+    const setTimeout = window.setTimeout.bind(window);
+    let reset;
+    window.setTimeout = (callback, delay, ...args) => {
+        if (delay === 2000) { reset = callback; return; }
+        return setTimeout(callback, delay, ...args);
+    };
+    tooltip.show();
+    assert.equal(window.document.querySelector('.tooltip-inner').textContent, 'Copy WebJET CMS information');
+    copy.click();
+    await tick();
+    assert.equal(window.document.querySelector('.tooltip-inner').textContent, 'admin.help.copied.js');
+    reset();
+    assert.equal(window.document.querySelector('.tooltip-inner').textContent, 'admin.help.copy.js');
+    tooltip.dispose();
+});
+
+test('Repeated copies restart the confirmation timeout', async t => {
+    const { window, panel } = fixture(t, { release: '' });
+    Object.defineProperty(window.navigator, 'clipboard', { value: { writeText: async () => {} } });
+    const scheduled = new Map();
+    let now = 0, nextId = 0;
+    window.setTimeout = (callback, delay) => { scheduled.set(++nextId, { callback, at: now + delay }); return nextId; };
+    window.clearTimeout = id => scheduled.delete(id);
+    const advance = milliseconds => {
+        now += milliseconds;
+        for (const [id, timer] of scheduled) if (timer.at <= now) {
+            scheduled.delete(id);
+            timer.callback();
+        }
+    };
+    const copy = panel.querySelector('.md-help-menu__copy');
+    copy.click();
+    await tick();
+    advance(1000);
+    copy.click();
+    await tick();
+    advance(1000);
+    assert.equal(copy.classList.contains('is-copied'), true);
+    advance(1000);
+    assert.equal(copy.classList.contains('is-copied'), false);
 });
 
 test('HTTP and denied clipboard access use a selected textarea, clean it up and preserve focus', async t => {
@@ -280,6 +371,8 @@ test('Clipboard fallback failures clean temporary controls and report an error w
         assert.equal(window.document.querySelector('textarea'), null);
         assert.equal(window.document.activeElement, copy);
         assert.equal(successes.length, 0);
+        assert.equal(copy.classList.contains('is-copied'), false);
+        assert.equal(copy.querySelector('.ti').classList.contains('ti-copy'), true);
         assert.deepEqual(errors, [['admin.help.copyError.js']]);
     }
 });

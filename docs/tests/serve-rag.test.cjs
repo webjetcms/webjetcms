@@ -1,0 +1,97 @@
+const assert = require('node:assert/strict');
+const http = require('node:http');
+const https = require('node:https');
+const test = require('node:test');
+const { createPreview } = require('../serve-rag.cjs');
+
+test('injects preview configuration and preserves proxy authentication and errors', async t => {
+  /**
+   * Starts a test server on an available loopback port and registers cleanup with the current test.
+   *
+   * @param {import('node:http').Server} server - Server to start and close after the test.
+   * @returns {Promise<string>} HTTP origin of the listening server.
+   */
+  async function listen(server) {
+    t.after(() => {
+      server.closeAllConnections();
+      return new Promise(resolve => server.close(resolve));
+    });
+    await new Promise((resolve, reject) => server.once('error', reject).listen(0, '127.0.0.1', resolve));
+    return `http://127.0.0.1:${server.address().port}`;
+  }
+
+  let searchRequest;
+  let docsCookie;
+  const backendServer = http.createServer((req, res) => {
+    searchRequest = { url: req.url, cookie: req.headers.cookie };
+    res.writeHead(req.headers.cookie ? 200 : 403, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ answer: 'AI answer' }));
+  });
+  const backend = await listen(backendServer);
+  const docs = await listen(http.createServer((req, res) => {
+    docsCookie = req.headers.cookie;
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end('<script>window.$docsify = {};</script>');
+  }));
+  const url = await listen(createPreview({ backend: backend + '/cms', docs }));
+  const headers = { Cookie: 'JSESSIONID=autotest' };
+
+  const shell = await fetch(url, { headers });
+  const html = await shell.text();
+  assert.match(html, /basePath = '\/'; window\.\$docsify = \{/);
+  assert.match(html, /markdownSearch: \{"endpoint":"\/cms\/rest\/rag\/markdown\/search"\}/);
+  assert.equal(docsCookie, undefined);
+
+  const query = '/cms/rest/rag/markdown/search?query=upload&language=sk';
+  for (const scope of ['', '&directory=%2Fsk%2Fadmin%2F']) {
+    const response = await fetch(url + query + scope, { headers });
+    assert.equal(response.status, 200);
+    assert.equal((await response.json()).answer, 'AI answer');
+    assert.deepEqual(searchRequest, { url: query + scope, cookie: headers.Cookie });
+  }
+  assert.equal((await fetch(url + query)).status, 403);
+  assert.equal((await fetch(url + query, { headers: { Origin: 'https://unrelated.example' } })).status, 403);
+  assert.equal((await fetch(url + query, { method: 'POST' })).status, 405);
+  const malformed = await new Promise((resolve, reject) => {
+    http.get(url, { headers: { Host: '[' } }, response => {
+      response.resume();
+      resolve(response.statusCode);
+    }).on('error', reject);
+  });
+  assert.equal(malformed, 400);
+  assert.equal((await fetch(url + query, { headers })).status, 200);
+
+  let httpsOptions;
+  t.mock.method(https, 'request', (options, callback) => {
+    httpsOptions = options;
+    return http.request({ ...options, hostname: '127.0.0.1', port: backendServer.address().port }, callback);
+  });
+  const productionPreview = await listen(createPreview({ backend: 'https://docs.example/cms', docs }));
+  assert.equal((await fetch(productionPreview)).status, 200);
+  assert.equal(httpsOptions, undefined);
+  const productionResponse = await fetch(productionPreview + query, { headers });
+  assert.equal(productionResponse.status, 200);
+  assert.equal((await productionResponse.json()).answer, 'AI answer');
+  assert.equal(httpsOptions.hostname, 'docs.example');
+  assert.equal(httpsOptions.port, 443);
+  assert.equal(httpsOptions.headers.host, 'docs.example');
+  assert.deepEqual(searchRequest, { url: query, cookie: headers.Cookie });
+  for (const path of ['/', query]) {
+    const aliasStatus = await new Promise((resolve, reject) => {
+      http.get(productionPreview + path, {
+        headers: { ...headers, Host: 'docs.interway.sk:3001', Origin: 'http://docs.interway.sk:3001' }
+      }, response => {
+        response.resume();
+        response.on('end', () => resolve(response.statusCode));
+      }).on('error', reject);
+    });
+    assert.equal(aliasStatus, 200);
+  }
+  assert.equal(httpsOptions.hostname, 'docs.example');
+  assert.equal(httpsOptions.headers.host, 'docs.example');
+  assert.equal((await fetch(productionPreview + query, { headers: { Origin: 'https://unrelated.example' } })).status, 403);
+
+  backendServer.closeAllConnections();
+  await new Promise(resolve => backendServer.close(resolve));
+  assert.equal((await fetch(url + query)).status, 503);
+});

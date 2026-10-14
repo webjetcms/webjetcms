@@ -41,7 +41,8 @@ import sk.iway.iwcm.system.multidomain.DomainRequestBeanScope;
 
 /**
  * Core service for semantic indexing of documents.
- * Orchestrates: content extraction -> chunking -> embedding -> vector storage.
+ * Orchestrates content extraction, chunking, embedding, and vector storage.
+ * Processes the shared queue and delegates Markdown items to {@link MarkdownIndexService}.
  */
 @Service
 public class SemanticIndexService {
@@ -52,6 +53,7 @@ public class SemanticIndexService {
     private final VectorStore vectorStore;
     private final RagEmbeddingStatService ragEmbeddingStatService;
     private final EmbeddingChunkRepository embeddingChunkRepository;
+    private final MarkdownIndexService markdownIndexService;
 
     private final IndexQueueRepository queueRepository;
 
@@ -64,7 +66,8 @@ public class SemanticIndexService {
                                 VectorStore vectorStore,
                                 IndexQueueRepository queueRepository,
                                 RagEmbeddingStatService ragEmbeddingStatService,
-                                EmbeddingChunkRepository embeddingChunkRepository) {
+                                EmbeddingChunkRepository embeddingChunkRepository,
+                                MarkdownIndexService markdownIndexService) {
         this.contentExtractor = contentExtractor;
         this.chunker = chunker;
         this.embeddingService = embeddingService;
@@ -73,11 +76,13 @@ public class SemanticIndexService {
         this.queueRepository = queueRepository;
         this.ragEmbeddingStatService = ragEmbeddingStatService;
         this.embeddingChunkRepository = embeddingChunkRepository;
+        this.markdownIndexService = markdownIndexService;
     }
 
     /**
-     * Process all pending items in the RAG indexing queue.
-     * Items are fetched in batches of 500 and processed sequentially.
+     * Processes queue items up to the highest ID captured at the start of the run.
+     * Items are fetched in ascending-ID batches of 500 and attempted once per run.
+     * Entries added after the snapshot are deferred to the next run.
      * Uses a cache-based flag to prevent concurrent execution.
      * Failed items remain in the queue and are retried on the next run.
      */
@@ -149,7 +154,7 @@ public class SemanticIndexService {
     /**
      * Routes a queue item to the handler for its entity type and action.
      *
-     * The queue item's domain is authoritative for indexing and deletion.
+     * The queue item's domain owns the operation and its token usage, including shared Markdown indexing.
      *
      * @param item queue item to process
      * @param readyDomains domains whose vector-store readiness was already verified in this run
@@ -162,12 +167,16 @@ public class SemanticIndexService {
         if (item.getEntityId() == null || item.getEntityId() < 1) {
             throw new IllegalArgumentException("RAG queue item has invalid entityId");
         }
+        if (item.getEntityType() == RagEntityType.MARKDOWN) {
+            markdownIndexService.processQueueItem(item);
+            return;
+        }
         if (item.getEntityType() != RagEntityType.DOCUMENT) {
             throw new IllegalArgumentException("Unsupported RAG entity type: " + item.getEntityType());
         }
 
         int domainId = item.getDomainId();
-        int entityId = item.getEntityId();
+        int entityId = Math.toIntExact(item.getEntityId());
         if (item.getAction() == RagIndexAction.DELETE) {
             embeddingChunkRepository.deleteByEntityTypeAndEntityIdAndDomainId(
                 DocDetailsContentExtractor.ENTITY_TYPE,

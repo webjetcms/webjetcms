@@ -209,6 +209,8 @@ Zobrazuje graf a číselné hodnoty zaťaženia procesora servera. Správca mô�
 
 ## Prihlásenia
 
+Okno **Aktívne prihlásenia** otvoríte z ktorejkoľvek stránky administrácie cez [používateľské menu v hlavičke](README.md#používateľské-menu): kliknite na svoje meno a vyberte **Aktívne prihlásenia**. Prejdete na úvodnú stránku, kde sa otvorí karta **Moje prihlásenia**.
+
 Pri viacerých aktívnych reláciách nájdete v systémových upozorneniach odkaz **Aktívne prihlásenia**. Zoznam si môžete pridať aj ako widget **Moje aktívne prihlásenia**. Zoznam ostatných prihlásených administrátorov je samostatný widget **Prihlásení admini**, dostupný podľa oprávnení.
 
 ### Moje aktívne prihlásenia
@@ -220,6 +222,8 @@ Samostatný widget v osobnom prehľade zobrazí pri jedinej aktuálnej relácii 
 Kliknutím na nadpis widgetu so šípkou otvoríte okno **Aktívne prihlásenia** v karte **Moje prihlásenia**. Okrem vlastných relácií ponúka správu vašich zariadení, históriu prihlásení za posledných 30 dní a podľa oprávnení aj prihlásených administrátorov. Tlačidlo **Zmeniť heslo** v spodnej časti okna otvorí váš profil na zmenu hesla. Informačná ikona vedľa tlačidla zobrazí pokyny pre zmenu hesla pri firemnom účte.
 
 Karta **Moje prihlásenia** zobrazuje iba aktívne relácie. Jeden prehliadač môže mať viac relácií. Pri každej relácii vidíte prehliadač s verziou, pod ním operačný systém s verziou a dátum prihlásenia. Aktuálna relácia má pri názve prehliadača štítok **Toto prihlásenie**; pri ostatných môžete použiť akciu **Odhlásiť**.
+
+Ak WebJET CMS beží v režime clustra, v karte **Moje prihlásenia** sa pod IP adresou zobrazuje **Server názov servera**. Ide o meno servera (uzla) clustra, na ktorom je dané prihlásenie aktívne. Jednotlivé prihlásenia môžu byť na rôznych serveroch clustra. Mimo režimu clustra sa tento údaj nezobrazuje.
 
 ![](sessions.png)
 

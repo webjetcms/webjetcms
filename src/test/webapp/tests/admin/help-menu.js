@@ -65,16 +65,23 @@ Scenario('Header help shares release news and supplies documentation links', asy
 
     const userMenu = 'ul[aria-labelledby="dropdownMenuUser"]';
     const profile = `${userMenu} .dropdown-item[data-userid]`;
+    const review = `${userMenu} .md-user-menu__review`;
     I.clickCss('#dropdownMenuUser');
     I.waitForVisible(`${userMenu}.show`, 5);
+    I.waitForElement(`${userMenu}[aria-busy="false"]`, 10);
     const profileStyle = await menuItemStyle(I, profile);
     I.assertEqual(profileStyle.background, 'rgba(0, 0, 0, 0)');
     I.pressKey('ArrowDown');
+    if (await I.grabNumberOfVisibleElements(review) > 0) {
+        I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), review),
+            'ArrowDown must focus the visible login review action before the profile.');
+        I.pressKey('ArrowDown');
+    }
     I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), profile),
         'ArrowDown must focus the profile action.');
     I.assertDeepEqual(await menuItemStyle(I, profile), { ...profileStyle, background: 'rgb(243, 243, 246)' });
     I.pressKey('ArrowDown');
-    I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelectorAll(`${selector} .dropdown-item`)[1], userMenu),
+    I.assertTrue(await I.executeScript(selector => document.activeElement === document.querySelector(selector), `${userMenu} .md-user-menu__sessions`),
         'ArrowDown must continue to the next user action without activating it.');
     I.pressKey('Escape');
     I.waitForInvisible(userMenu, 5);
@@ -103,6 +110,44 @@ Scenario('Header help shares release news and supplies documentation links', asy
     I.waitForInvisible(userMenu, 5);
     I.assertEqual(await I.executeScript(() => document.activeElement.id), 'dropdownMenuUser');
     I.saveElementScreenshot('.ly-header', 'header-refinement.png');
+});
+
+Scenario('System diagnostics copy all context and restore the copy action after confirmation', async ({ I }) => {
+    I.amOnPage('/admin/v9/search/');
+    I.executeScript(() => {
+        history.replaceState(null, '', '?autotest=diagnostics#details');
+    });
+    openHelp(I);
+    I.executeScript(() => {
+        Object.defineProperty(navigator, 'clipboard', { configurable: true, value: {
+            writeText: async value => { window.copiedHelpDiagnostics = value; }
+        } });
+    });
+    I.seeElement('.md-help-menu__version-number');
+    I.seeElement('.md-help-menu__version-date');
+    I.seeElement('.md-help-menu__server');
+    I.assertTrue(await I.executeScript(() => {
+        const version = document.querySelector('.md-help-menu__version');
+        const buildDate = document.querySelector('.md-help-menu__version-date');
+        return buildDate.getBoundingClientRect().top >= version.getBoundingClientRect().bottom
+            && /\d{2}:\d{2}:\d{2}$/.test(buildDate.textContent.trim());
+    }), 'The build timestamp must include seconds and appear below the version.');
+    I.assertFalse(await I.executeScript(() => document.querySelector('.md-help-menu__system').textContent.includes('DEV')),
+        'The footer must not repeat the environment badge.');
+    I.clickCss('.md-help-menu__copy');
+    I.waitForElement('.md-help-menu__copy.is-copied .ti-check', 5);
+    I.seeAttributesOnElements('.md-help-menu__copy', { 'aria-label': 'Skopírované', 'data-bs-original-title': 'Skopírované' });
+    I.assertEqual(await I.executeScript(() => window.copiedHelpDiagnostics), await I.executeScript(() =>
+        window.adminHelpContext.systemInfo
+        + (location.hostname.toLowerCase() === window.adminHelpContext.currentDomain.toLowerCase() ? '' : '\nCMS doména: ' + location.origin)
+        + '\nStránka: ' + location.pathname + location.search + location.hash + '\nPrehliadač: ' + window.adminHelpContext.browser));
+    I.assertTrue(await I.executeScript(() => document.querySelector('#admin-help-menu').classList.contains('show')),
+        'Copying must keep Help open.');
+    I.saveElementScreenshot('.md-help-menu__system', 'help-menu-system-info-copied.png');
+    I.waitForElement('.md-help-menu__copy:not(.is-copied) .ti-copy', 5);
+    I.seeAttributesOnElements('.md-help-menu__copy', { 'aria-label': 'Kopírovať informácie o WebJET CMS' });
+    I.saveElementScreenshot('.md-help-menu__system', 'help-menu-system-info.png');
+    I.pressKey('Escape');
 });
 
 Scenario('Page help is refreshed on each opening and omitted without a route', async ({ I }) => {
@@ -151,6 +196,7 @@ Scenario('Feedback outside the dashboard returns to Help and preserves its draft
     I.see('autotest help feedback draft', '#feedback-group-text');
     I.clickCss('#feedback_modal .md-feedback__cancel');
     I.waitForInvisible('#feedback_modal', 10);
+    I.waitForFunction(() => document.activeElement.id === 'admin-help-toggle', [], 5);
     I.assertEqual(await I.executeScript(() => document.activeElement.id), 'admin-help-toggle');
 });
 
