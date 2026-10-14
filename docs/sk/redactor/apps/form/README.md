@@ -46,6 +46,7 @@ Formuláru je možné nastaviť ďalšie nepovinné parametre, ktoré ovplyvnia 
 ![](edit-tab-settings-basic.png)
 
 - **Presmerovanie po vyplnení** - url adresa, na ktorú sa má vykonať presmerovanie po uložení formuláru. Ak nie je zadané presmeruje sa na pôvodnú stránku.
+- **Zobraziť obsah bez presmerovania** - pri viackrokovom formulári zobrazí po úspešnom odoslaní obsah webstránky z poľa **Presmerovanie po vyplnení** namiesto prednastavenej hlášky. Návštevník zostane na rovnakej URL adrese. Ak nemá oprávnenie na zobrazenie tejto webstránky, formulár sa odošle a zobrazí sa prednastavená hláška o úspešnom odoslaní. Predvolene je vypnuté. Pri zapnutí je pole **Presmerovanie po vyplnení** povinné.
 - **Presmerovanie po chybe** - url adresa, na ktorú sa má vykonať presmerovanie, ak sa formulár nepodarí odoslať. Ak nie je zadané, použije sa rovnaká hodnota ako má ```forward```.
 - **Ulož kópiu ako PDF** - ak je nastavené na `true`, tak systém po uložení formuláru vygeneruje aj jeho PDF verziu do adresára ```/WEB-INF/formfiles/ID_FORMULARU_pdf.pdf```, pričom hodnota ```ID_FORMULARU``` je ```id``` formuláru v databáze.
 - **Umožni iba jedno odoslanie** - ak je prihlásený používateľ a toto pole je nastavené na hodnotu ```true```, tak ak už daný používateľ formulár odoslal, systém mu nedovolí ďalšie odoslanie. Formulár sa takto bude v databáza od jedného používateľa nachádzať len raz.

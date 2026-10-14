@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.multistep_form.rest;
 
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Enumeration;
@@ -31,11 +32,13 @@ import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DB;
 import sk.iway.iwcm.FileTools;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.common.DocTools;
+import sk.iway.iwcm.common.EditorToolsForCore;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsEntity;
 import sk.iway.iwcm.components.form_settings.jpa.FormSettingsRepository;
 import sk.iway.iwcm.components.form_settings.rest.FormSettingsService;
@@ -56,6 +59,8 @@ import sk.iway.iwcm.components.upload.XhrFileUploadServlet;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
 import sk.iway.iwcm.form.FormDB;
@@ -72,6 +77,7 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.system.stripes.CSRF;
 import sk.iway.iwcm.tags.support.ResponseUtils;
+import sk.iway.iwcm.users.UsersDB;
 import sk.iway.iwcm.utils.Pair;
 
 /**
@@ -367,6 +373,7 @@ public class MultistepFormsService {
      * @param currentStep current step entity
      * @param repo repository used to fetch ordered steps
      * @return previous step entity or {@code null} if current step is the first
+     * @throws IllegalStateException when the expected previous step does not exist in the current domain
      */
     public static final FormStepEntity getPreviousStep(String formName, FormStepEntity currentStep, FormStepsRepository repo) {
         if(currentStep.getCurrentPosition() == null || currentStep.getCurrentPosition() <= 1) return null;
@@ -479,7 +486,15 @@ public class MultistepFormsService {
         return value instanceof String json ? new JSONObject(json) : new JSONObject();
     }
 
-    /** Prepares either confirmed or draft values using the same temporary-file restoration rules. */
+    /**
+     * Prepares confirmed or draft values and removes unavailable uploads from the stored values.
+     *
+     * @param formName logical form name
+     * @param stepId step identifier
+     * @param request request identifying the form instance and its session
+     * @param draft whether to read draft values instead of confirmed answers
+     * @return field values and metadata for available temporary uploads
+     */
     private Pair<JSONObject, JSONObject> getStepData(String formName, Long stepId, HttpServletRequest request, boolean draft) {
         JSONObject savedValues = new JSONObject();
         JSONObject savedFiles = new JSONObject();
@@ -555,7 +570,7 @@ public class MultistepFormsService {
     }
 
     /**
-     * Stores a complete draft of the current step without validation or submission side effects.
+     * Stores a complete draft of the current step without field validation or submission side effects.
      * Only configured fields are accepted; CAPTCHA responses and widget metadata are not retained.
      * Plain strings are restored through control values; rich text is sanitized before editor restoration.
      *
@@ -564,6 +579,8 @@ public class MultistepFormsService {
      * @param request request containing field values and the form session
      * @throws SaveFormException when cookie or CSRF checks fail
      * @throws IOException when reading the JSON body fails
+     * @throws IllegalStateException when the form or step is not permitted, the form counter is invalid,
+     *         or the request body is empty
      * @throws IllegalArgumentException when a configured field contains unsupported JSON values
      */
     public final void saveStepDraft(String formName, Long stepId, HttpServletRequest request) throws SaveFormException, IOException {
@@ -591,14 +608,27 @@ public class MultistepFormsService {
         request.getSession().setAttribute(getSessionKey(formName, request) + DRAFT_SESSION_KEY_SUFFIX + stepId, draft.toString());
     }
 
-    /** Removes all drafts for the completed or definitively terminated form instance. */
+    /**
+     * Removes all drafts for the completed or definitively terminated form instance.
+     *
+     * @param formName logical form name
+     * @param request request identifying the form instance and its session
+     */
     public final void clearStepDrafts(String formName, HttpServletRequest request) {
         String prefix = getSessionKey(formName, request) + DRAFT_SESSION_KEY_SUFFIX;
         List<String> keys = java.util.Collections.list(request.getSession().getAttributeNames());
         keys.stream().filter(key -> key.startsWith(prefix)).forEach(request.getSession()::removeAttribute);
     }
 
-    /** Replaces visible draft answers with their normalized, processor-adjusted confirmed values. */
+    /**
+     * Replaces visible draft answers with their normalized, processor-adjusted confirmed values.
+     * Retains drafts for hidden fields and does nothing when no draft exists.
+     *
+     * @param formName logical form name
+     * @param stepId step whose confirmed values should update the draft
+     * @param hiddenFields logical identifiers of fields whose draft values must be retained
+     * @param request request containing confirmed answers and drafts for the form instance
+     */
     private void updateDraftAfterSave(String formName, Long stepId, Set<String> hiddenFields, HttpServletRequest request) {
         JSONObject draft = getStepDraft(formName, stepId, request);
         if(draft.isEmpty()) return;
@@ -629,7 +659,15 @@ public class MultistepFormsService {
         return getSavedSelectedValues(sessionKey, itemFormId, sessionValue, session);
     }
 
-    /** Checks exact choices against an already loaded answer, including changes made by custom processors. */
+    /**
+     * Checks exact choices against an already loaded answer, including changes made by custom processors.
+     *
+     * @param sessionKey key identifying the form instance
+     * @param itemFormId logical field identifier
+     * @param sessionValue current confirmed answer, which may be {@code null}
+     * @param session session containing the saved choice array
+     * @return stored choices when their joined value matches the answer, otherwise {@code null}
+     */
     private static String[] getSavedSelectedValues(String sessionKey, String itemFormId, Object sessionValue, HttpSession session) {
         Object selectedValues = session.getAttribute(sessionKey + SELECTED_VALUES_SESSION_KEY_SUFFIX + itemFormId);
         if(selectedValues instanceof String[] values && sessionValue != null && sessionValue.toString().equals(Tools.join(values, ","))) {
@@ -810,7 +848,7 @@ public class MultistepFormsService {
      * @param stepPositions map of step id to step position
      * @param stepNames     map of step id to localized step title
      * @param prop          localization provider
-     * @return deduplicated options ordered by step position and sort priority
+     * @return options ordered by step position and sort priority, with consecutive duplicate field IDs omitted
      */
     private final List<LabelValue> sortFields(List<FormItemEntity> fields, Map<Long, Integer> stepPositions, Map<Long, String> stepNames, Prop prop) {
         List<FormItemEntity> sortedFields = fields
@@ -1058,11 +1096,13 @@ public class MultistepFormsService {
      * Omitted current-step values are cleared before condition evaluation, and hidden answers
      * are excluded from confirmed data while their drafts are retained. Field validation
      * errors are returned through {@code response} without saving the submitted step.
+     * On completion, adds the configured redirect or rendered thank-you page content to the response;
+     * unavailable inline content leaves the client to display its standard success message.
      *
      * @param formName logical form name
      * @param stepId   current step identifier
      * @param request  HTTP request containing JSON body of field values
-     * @param response JSON response to be enriched with errors, next step or forward
+     * @param response JSON response to be enriched with errors, next step, forward or thank-you content
      * @throws SaveFormException when validation or processing fails in a controlled way
      * @throws IOException       when reading request body fails
      */
@@ -1126,11 +1166,8 @@ public class MultistepFormsService {
             // Validation success
             FormStepEntity nextStep = getNextStep(formName, validStepEntity, formStepsRepository);
 
-            String forwardOk = null;
             if(nextStep == null) {
-                // Set ok forward
-                if (Tools.isNotEmpty(formSettings.getForward())) forwardOk = formSettings.getForward();
-
+                String forwardOk = formSettings.getForward();
                 // Because we are going save form for real now, add count to attempts of form submission
                 formSettingsRepository.incrementResponseAttempts(formName, CloudToolsForCore.getDomainId());
 
@@ -1142,9 +1179,15 @@ public class MultistepFormsService {
                     saveFormService.saveFormAnswers(formName, formSettings, iLastDocId, request);
                 }
                 clearStepDrafts(formName, request);
+
+                if (Tools.isTrue(formSettings.getForwardAsContent())) {
+                    String thankYouHtml = getThankYouHtml(forwardOk, request);
+                    if (Tools.isNotEmpty(thankYouHtml)) response.put("thankYouHtml", thankYouHtml);
+                } else if (Tools.isNotEmpty(forwardOk)) {
+                    response.put("forward", forwardOk);
+                }
             }
 
-            if(Tools.isNotEmpty(forwardOk)) response.put("forward", forwardOk);
             response.put("form-name", formName);
             response.put("step-id", nextStep == null ? -1L : nextStep.getId()); // -1L means that form ends, there is no more steps
 
@@ -1169,6 +1212,65 @@ public class MultistepFormsService {
     }
 
     /* ********** PRIVATE - main logic methods ********** */
+
+    /**
+     * Renders the published thank-you page body for the current visitor without its layout.
+     * An unavailable or forbidden page, or a rendering failure, uses the standard success message.
+     *
+     * @param forward configured URL of a page on the current website
+     * @param request current visitor request used for permissions and embedded applications
+     * @return rendered body HTML, or {@code null} to use the standard success message
+     */
+    private String getThankYouHtml(String forward, HttpServletRequest request) {
+        // The form is already saved. Returning null makes the frontend show the default success message.
+        if (Tools.isEmpty(forward)) return null;
+        try {
+            // Accept page references on this website; reject credentials and non-HTTP(S) schemes.
+            URI target = new URI(forward.trim()).normalize();
+            String scheme = target.getScheme();
+            if (scheme != null && !"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) return null;
+            if (target.getUserInfo() != null) return null;
+
+            String domain = DocDB.getDomain(request);
+            String host = target.getHost();
+            if (target.getRawAuthority() != null && (host == null ||
+                    (!host.equalsIgnoreCase(domain) && !host.equalsIgnoreCase(Tools.getServerName(request, false))))) return null;
+
+            // Resolve the URL through the CMS instead of fetching it over HTTP.
+            String path = target.getPath();
+            if (Tools.isEmpty(path) || !path.startsWith("/")) return null;
+            DocDB docDB = DocDB.getInstance();
+            int docId = "/showdoc.do".equals(path)
+                ? Tools.getIntValue(UriComponentsBuilder.fromUri(target).build().getQueryParams().getFirst("docid"), -1)
+                : docDB.getDocIdFromURLImpl(path, domain);
+            if (docId < 1) return null;
+            // Read published content without the shared cache because permission inheritance below modifies the document.
+            DocDetails doc = docDB.getDoc(docId, -1, false);
+            if (doc == null || !doc.isAvailable() || !CloudToolsForCore.isGroupFromMyDomain(doc.getGroupId())) return null;
+            if (Constants.getBoolean("showOnlyActualPublishedDoc") && !docDB.canBeShown(doc)) return null;
+
+            Identity user = UsersDB.getCurrentUser(request);
+            GroupDetails group = GroupsDB.getInstance().getGroup(doc.getGroupId());
+            if (group == null) return null;
+            // DocDB.canAccess does not enforce internal-folder visibility. Match ShowDoc's
+            // exceptions for administrators, publicly enabled internal pages and 404 pages.
+            if (!Constants.getBoolean("webpagesAvailableInInternalFolders") && (user == null || !user.isAdmin())
+                    && group.isInternal() && (doc.getVirtualPath() == null || !doc.getVirtualPath().contains("404.html"))) return null;
+
+            // DocDB.canAccess also omits passwordProtectedAutoId. Resolve protection as ShowDoc does:
+            // page first, then folder, then global. Do not merge groups, since any matching group grants access.
+            if (Tools.isEmpty(doc.getPasswordProtected())) doc.setPasswordProtected(group.getPasswordProtected());
+            if (Tools.isEmpty(doc.getPasswordProtected())) doc.setPasswordProtected(Constants.getString("passwordProtectedAutoId"));
+            if (!DocDB.canAccess(doc, user) || Tools.isEmpty(doc.getData())) return null;
+
+            // Execute embedded applications only after the page passes all visibility and permission checks above.
+            return EditorToolsForCore.renderIncludes(doc, false, request);
+        } catch (Exception e) {
+            // A confirmation lookup or rendering failure must not turn a saved form into a submission error.
+            Logger.error(MultistepFormsService.class, "Unable to render inline form confirmation", e);
+            return null;
+        }
+    }
 
     /**
      * Instantiate optional custom form processor configured in form settings.
@@ -1619,8 +1721,7 @@ public class MultistepFormsService {
     private final Integer getiLastDocId(String formName, HttpServletRequest request, FormSettingsEntity formSettings) {
         Integer iLastDocId = (Integer) request.getSession().getAttribute( getSessionKey(formName, request) + MultistepFormApp.DOC_ID );
 
-        //niekedy je formular napr v pravom menu, potom sa neparsuje docid podla requestu, ale
-        //sa mu musi presne povedat, kde sa ten formular nachadza
+        // Forms embedded outside the main content, such as in a sidebar, may need an explicit document ID.
         if (formSettings.getUseFormDocId() != null && formSettings.getUseFormDocId() > 0)
             iLastDocId = formSettings.getUseFormDocId();
 
@@ -1826,7 +1927,7 @@ public class MultistepFormsService {
     private void beforeStepSaveCheck(boolean spamProtectionEnabled, HttpServletRequest request) throws SaveFormException {
         Prop prop = Prop.getInstance( PageLng.getUserLng(request) );
 
-        //test na cookies (spameri zvycajne nemaju nastavene)
+        // Check for cookies, which spam bots often omit.
 		if (request.getCookies() == null || request.getCookies().length == 0) {
             throw new SaveFormException(prop.getText("checkform.fail_probablySpamBot"), "probablySpamBot", false, null);
         }
@@ -1849,7 +1950,7 @@ public class MultistepFormsService {
 		if (Tools.isEmpty(captchaType)) captchaType = "none";
 
 		if ("internal".equals(captchaType) == false) {
-			//nie su nastavene premenne, takze nemozeme validovat
+			// Validation is unavailable when the required configuration is missing.
 			if(!Constants.getBoolean("reCaptchaEnabled") || Tools.isEmpty(Constants.getString("reCaptchaSiteKey")) || Tools.isEmpty(Constants.getString("reCaptchaSecret")))
 				captchaType = "none";
 		}
@@ -1869,7 +1970,7 @@ public class MultistepFormsService {
     private boolean checkCsrf(HttpServletRequest request) {
 		String spamProtectionJavascript = Constants.getString("spamProtectionJavascript");
 	    if (spamProtectionJavascript.contains("formmailCsrf") == false) {
-			//csrf token sa nepouziva
+			// CSRF tokens are not enabled.
 			return true;
 		}
 		//return if is correct

@@ -15,23 +15,38 @@ let autocompleteAssetsPromise;
  */
 
 /**
+ * A field comparison shared by visibility and requirement rules.
+ *
+ * @typedef {Object} MultistepFormCondition
+ * @property {string} fieldId - Logical identifier of the field whose value is compared.
+ * @property {string} [operator="equals"] - Comparison operator accepted by `_evaluateOperator`.
+ * @property {string} [value=""] - Value to compare against.
+ * @property {boolean} [caseInsensitive=false] - Whether text comparison ignores case.
+ * @property {string} [joinOperator="AND"] - Connects this result to the next condition; `OR` selects disjunction.
+ */
+
+/**
  * Multistep Form application controller.
  *
  * Renders the shell, loads individual steps from server, submits data,
  * and handles success/error UI states. After rendering each step it dispatches
- * `WJ.multistepForm.stepShown` as a non-cancelable `CustomEvent` on `window`.
+ * `WJ.multistepForm.stepShown` as a non-bubbling, non-cancelable `CustomEvent` on `window`,
+ * with a {@link MultistepFormStepShownDetail} object in `detail`.
  */
 export class MultistepForm {
 
     /**
-     * Create a new MultistepForm instance.
-     * @param {Object} [options] - Initialization options.
-     * @param {string} [options.container] - CSS selector of the mount container (preferred).
-     * @param {string} [options.mountSelector] - Alternative mount selector; defaults to Bootstrap container/body.
+     * Initialize form state and append alerts and a step holder to the existing CSRF-specific wrapper.
+     * The page must contain an element with ID `multistep-form-wrapper-` followed by the CSRF token.
+     * @param {Object} [options={}] - Initialization options.
+     * @param {string} [options.container] - Legacy selector stored as `mountSelector`; does not select the wrapper.
+     * @param {string} [options.mountSelector] - Alternative stored selector when `container` is empty.
      * @param {string} [options.formName] - Form identifier used by the backend.
      * @param {string|number} [options.stepId] - Initial step identifier to load.
      * @param {string} [options.csrf] - CSRF token added to POST requests.
      * @param {string} [options.language] - Language code appended to backend requests.
+     * @param {string} [options.successMessage] - Success message; defaults to "Operation completed successfully." when empty.
+     * @param {string} [options.errorMessage] - Error message; defaults to "An error occurred while saving the step." when empty.
      */
     constructor(options = {}) {
         // Preferred container selector; defaults to body > article > div.container
@@ -93,7 +108,7 @@ export class MultistepForm {
     }
 
     /**
-     * Render the application shell (alerts + content holder) and mount it.
+     * Append alerts and a content holder to the existing CSRF-specific wrapper.
      * Creates `this.wrapper` for subsequent DOM operations.
      */
     _renderShell() {
@@ -138,7 +153,8 @@ export class MultistepForm {
      * @param {string} formName - The form name to query.
      * @param {string|number} stepId - The step identifier to load.
      * @param {boolean} [scrollToForm=false] - Whether to scroll to the newly rendered form.
-     * @returns {Promise<void>} Resolves when the step content is injected and the step-shown event is dispatched.
+     * @returns {Promise<void>} Resolves after rendering and dispatching the step-shown event, reporting a load error,
+     * or skipping a load with a missing form name or step ID. Widget initialization may finish later.
      */
     async loadStep(formName, stepId, scrollToForm = false) {
         if (!formName || !stepId) {
@@ -323,7 +339,7 @@ export class MultistepForm {
 
     /**
      * Convert the session representation of a radio/checkbox value back to selected options.
-     * @param {*} rawValue - Saved scalar value.
+     * @param {string|string[]|null|undefined} rawValue - Saved scalar value or exact selected options.
      * @param {HTMLInputElement[]} controls - Controls belonging to the group.
      * @returns {string[]} selected option values.
      */
@@ -360,6 +376,7 @@ export class MultistepForm {
     /**
      * Bind remote autocomplete inputs using the standard data-ac-* attributes.
      * The jQuery UI JavaScript dependency is loaded only when the current step contains such a field.
+     * @returns {Promise<void>} Resolves after initialization, or after skipping absent inputs or a failed dependency load.
      */
     async _initAutocompleteFields() {
         const inputs = Array.from(this.wrapper.querySelectorAll('input.form-control[data-ac-url]'));
@@ -420,7 +437,7 @@ export class MultistepForm {
 
     /**
      * Load jQuery UI autocomplete once per page.
-     * @returns {Promise<void>} resolves when autocomplete is available
+     * @returns {Promise<void>} Resolves when autocomplete is available; rejects when jQuery is missing or loading fails.
      */
     _ensureAutocompleteAssets() {
         if (window.$ && typeof $.fn?.autocomplete === 'function') return Promise.resolve();
@@ -570,7 +587,7 @@ export class MultistepForm {
      * Collect step values, synchronizing rich text and retaining empty draft selections.
      * @param {HTMLFormElement} form - Current step form.
      * @param {boolean} [includeHidden=false] - Include hidden fields for draft preservation.
-     * @returns {{result: Object, stepFieldIds: Set<string>}} Values and all current-step identifiers.
+     * @returns {{result: Object<string, string|string[]>, stepFieldIds: Set<string>}} Values and all current-step identifiers.
      */
     _collectStepValues(form, includeHidden = false) {
         form.querySelectorAll('textarea.formsimple-wysiwyg').forEach(area => {
@@ -712,7 +729,7 @@ export class MultistepForm {
 
     /**
      * Show a global success alert with a message.
-     * @param {string} [message] - Message to display; default is a generic text.
+     * @param {string} [message] - Message to display as HTML; defaults to the configured success message when empty.
      * @returns {Promise<void>} Resolves after the UI is updated.
      */
     async showGlobalSuccess(message) {
@@ -811,8 +828,8 @@ export class MultistepForm {
      * Uses the server-provided visibilityConditions map (itemFormId -> {conditions, hidden})
      * instead of parsing from DOM attributes.
      * Attaches change listeners to referenced fields on the same step.
-     * Conditions are AND logic - all must be met for the field to be visible.
-     * @param {Object} visibilityConditionsMap - Map of itemFormId to {conditions: [{fieldId, operator, value}], hidden: boolean}
+     * Conditions are evaluated in order using the preceding condition's AND/OR join operator.
+     * @param {Object<string, {conditions: MultistepFormCondition[], hidden: boolean}>} visibilityConditionsMap - Conditions and initial hidden state keyed by logical field ID.
      */
     _initConditionalVisibility(visibilityConditionsMap) {
         // Clear conditions from any previous step
@@ -865,8 +882,8 @@ export class MultistepForm {
 
     /**
      * Evaluate all conditions for a conditional field and show/hide it.
-     * @param {HTMLElement} field - The field wrapper element with data-visibility-condition.
-     * @param {Array} conditions - Array of condition objects [{fieldId, operator, value, joinOperator}].
+     * @param {HTMLElement} field - The field wrapper element controlled by the conditions.
+     * @param {MultistepFormCondition[]} conditions - Ordered comparisons joined by the preceding condition's AND/OR operator.
      */
     _evaluateConditions(field, conditions) {
         let combinedResult = null;
@@ -907,7 +924,7 @@ export class MultistepForm {
     /**
      * Initialize conditional requirement for fields in the current step.
      * Uses the server-provided requirementConditions map (itemFormId -> {conditions, required}).
-     * @param {Object} requirementConditionsMap - Map of itemFormId to {conditions: [{fieldId, operator, value}], required: boolean}
+     * @param {Object<string, {conditions: MultistepFormCondition[], required: boolean}>} requirementConditionsMap - Conditions and initial required state keyed by logical field ID.
      */
     _initConditionalRequirement(requirementConditionsMap) {
         // Clear conditions from any previous step
@@ -955,7 +972,7 @@ export class MultistepForm {
     /**
      * Evaluate all requirement conditions for a field and toggle its required state.
      * @param {HTMLElement} field - The field wrapper element.
-     * @param {Array} conditions - Array of condition objects [{fieldId, operator, value, joinOperator}].
+     * @param {MultistepFormCondition[]} conditions - Ordered comparisons joined by the preceding condition's AND/OR operator.
      */
     _evaluateRequirementConditions(field, conditions) {
         let combinedResult = null;
@@ -1091,8 +1108,8 @@ export class MultistepForm {
 
     /**
      * Determine whether a field should be treated as hidden.
-     * @param {HTMLElement} field - The field wrapper element.
-     * @returns {boolean} true if hidden or in hide transition.
+     * @param {HTMLElement|null} field - The field wrapper element, if present.
+     * @returns {boolean} true if missing, hidden, or in a collapsed transition state.
      */
     _isFieldHidden(field) {
         if (!field) return true;
@@ -1137,7 +1154,7 @@ export class MultistepForm {
 
     /**
      * Evaluate a single condition operator.
-     * @param {string} operator - The operator (equals, not_equals, contains, not_contains, empty, not_empty).
+     * @param {string} operator - The operator (equals, not_equals, contains, not_contains, empty, not_empty, starts_with, ends_with).
      * @param {string} actualValue - The actual field value.
      * @param {string} requiredValue - The expected/required value.
      * @param {boolean} [caseInsensitive=false] - Whether text comparison should ignore case.
@@ -1213,9 +1230,12 @@ export class MultistepForm {
 
     /**
      * Handle server response after a successful POST.
-     * Can redirect, render field errors, or load the next step.
+     * Redirects, displays field errors, loads the next step, or replaces the completed form with confirmation content.
+     * Inline confirmation content receives focus and is scrolled into view; embedded scripts run when jQuery is available.
+     * Missing or blank confirmation content uses the configured success message.
      * @param {Object} response - Parsed JSON from the server.
      * @param {string} [response.forward] - URL to redirect to on success.
+     * @param {string} [response.thankYouHtml] - Managed page content to display when the form is complete.
      * @param {Object<string,string>} [response.fieldErrors] - Map of fieldName to error message(s).
      * @param {string} [response['form-name']] - Current form name.
      * @param {string|number} [response['step-id']] - Next step id; -1 means finished.
@@ -1248,7 +1268,22 @@ export class MultistepForm {
                     this._disposeStep(holder);
                     holder.remove();
                 }
-                await this.showGlobalSuccess();
+                if (typeof response.thankYouHtml === 'string' && response.thankYouHtml.trim() !== '') {
+                    const thankYou = document.createElement('div');
+                    thankYou.className = 'multistepThankYouContent';
+                    thankYou.tabIndex = -1;
+                    // jQuery executes embedded scripts only after the container is attached.
+                    this.wrapper.appendChild(thankYou);
+                    if (window.$) {
+                        $(thankYou).html(response.thankYouHtml);
+                    } else {
+                        thankYou.innerHTML = response.thankYouHtml;
+                    }
+                    thankYou.focus({ preventScroll: true });
+                    thankYou.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+                } else {
+                    await this.showGlobalSuccess();
+                }
             } else {
                 const danger = this.wrapper.querySelector('div.alert.alert-danger');
                 if (danger) danger.style.display = 'none';
@@ -1274,6 +1309,9 @@ export class FormTooltip {
         delay: { show: 0, hide: 150 }
     };
 
+    /**
+     * Initialize per-trigger tooltip state and bind the instance's Escape-key handler for later registration.
+     */
     constructor() {
         this.adapters = new WeakMap();
         this.tooltipElements = new WeakMap();
@@ -1296,7 +1334,7 @@ export class FormTooltip {
 
     /**
      * Return jQuery when its Bootstrap tooltip plugin is available.
-     * @returns {jQuery|null} jQuery instance or null when the legacy plugin is unavailable.
+     * @returns {Function|null} jQuery factory function, or null when the legacy plugin is unavailable.
      */
     _getLegacyTooltipJQuery() {
         const jQueryInstance = window.jQuery || window.$;

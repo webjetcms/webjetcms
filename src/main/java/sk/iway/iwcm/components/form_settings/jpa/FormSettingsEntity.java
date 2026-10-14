@@ -19,6 +19,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
+/**
+ * Stores domain-specific form delivery, upload, and presentation settings.
+ * Transient page selections and processor fields support editing these settings in administration.
+ */
 @Entity
 @Table(name = "form_settings")
 @Getter
@@ -100,6 +104,10 @@ public class FormSettingsEntity {
     @DataTableColumn(inputType = DataTableColumnType.ELFINDER, title="editor.form.forward", className="dt-tree-page-null")
     @Size(max = 255)
     private String forward;
+
+    @Column(name = "forward_as_content")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title="editor.form.forward_as_content", className="not-formsimple not-form")
+    private Boolean forwardAsContent = false;
 
     @Column(name = "forward_fail")
     @DataTableColumn(inputType = DataTableColumnType.ELFINDER, title="editor.form.forward_fail", className="dt-tree-page-null")
@@ -260,9 +268,10 @@ public class FormSettingsEntity {
     private Integer domainId;
 
     /**
-     * Converts snake_case to camelCase (pascalCase with lowercase first letter)
-     * @param input
-     * @return
+     * Converts a snake_case name to camelCase, or lowercases the first character of an unsplit name.
+     *
+     * @param input name to convert, which may be {@code null} or blank
+     * @return converted name, or an empty string for {@code null} or blank input
      */
     public static String toPascalCase(String input) {
         if(Tools.isEmpty(input)) return "";
@@ -285,9 +294,10 @@ public class FormSettingsEntity {
     }
 
     /**
-     * Converts camelCase to snake_case
-     * @param input
-     * @return
+     * Converts camelCase to snake_case by separating lowercase-to-uppercase transitions.
+     *
+     * @param input name to convert, which may be {@code null}
+     * @return lowercase name with separators, preserving {@code null} and empty input
      */
     public static String toSnakeCase(String input) {
         if (input == null || input.isEmpty()) return input;

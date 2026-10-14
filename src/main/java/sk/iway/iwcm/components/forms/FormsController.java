@@ -97,6 +97,12 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, FormsEntity> target, Identity user, Errors errors, Long id, FormsEntity entity) {
         if("remove".equals(target.getAction()) == false) {
+            FormSettingsEntity formSettings = entity.getFormSettings();
+            if (FormsService.FORM_TYPE.MULTISTEP.value().equals(entity.getFormType()) && formSettings != null
+                    && Tools.isTrue(formSettings.getForwardAsContent()) && Tools.isEmpty(formSettings.getForward())) {
+                errors.rejectValue("errorField.formSettings.forward", null, getProp().getText("media.doc_tree_select.required"));
+            }
+
             // Check if form is trying save as rowView == false but got rowView items
             String formName = entity.getFormName();
             if(Tools.isEmpty(formName)) return;
