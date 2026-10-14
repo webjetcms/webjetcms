@@ -7,10 +7,14 @@ const resetAll = '#datatableInit_wrapper button.buttons-reset-all-token-usage';
 const confirmation = '#toast-container-webjet';
 const aiContent = '#toast-container-ai-content';
 let assistantName;
+let notificationEmail;
 
-Before(({ I, login }) => {
+Before(({ I, login, TempMail }) => {
     login('admin');
-    if (!assistantName) assistantName = 'token-limit-autotest-' + I.getRandomText();
+    if (!assistantName) {
+        assistantName = 'token-limit-autotest-' + I.getRandomText();
+        notificationEmail = assistantName.replace(/-/g, '.') + TempMail.getTempMailDomain();
+    }
 });
 
 /**
@@ -26,9 +30,11 @@ Scenario('token limits require AI tools permission', ({ DT }) => {
  * then blocks another call even with the assistant definition cached on the page.
  * Checks reset button states and both confirmation dialogs, cancels the domain-wide
  * reset, and resets the selected assistant. Confirms that another call succeeds
- * after the reset while historical chart data remains intact.
+ * after the reset while historical chart data remains intact. Verifies the 100%
+ * notification email before and after the reset through the configured TempMail provider.
  */
-Scenario('limit blocks further calls and selected reset restores usage', async ({ I, DT, DTE }) => {
+Scenario('limit blocks further calls and selected reset restores usage', async ({ I, DT, DTE, TempMail }) => {
+    await TempMail.destroyInbox(notificationEmail);
     I.amOnPage(assistantsUrl);
     DT.waitForLoader();
     I.clickCss('#datatableInit_wrapper button.buttons-create');
@@ -57,9 +63,12 @@ Scenario('limit blocks further calls and selected reset restores usage', async (
     I.dontSeeCheckboxIsChecked('#DTE_Field_useTokenLimits_0');
     I.dontSeeElement('#DTE_Field_tokenLimit');
     I.dontSeeElement('#DTE_Field_usedTokens');
+    I.dontSeeElement('#DTE_Field_notifEmail');
     I.checkOption('#DTE_Field_useTokenLimits_0');
     I.seeElement('#DTE_Field_usedTokens:disabled');
     I.seeElement('#DTE_Field_tokenLimit[required]');
+    I.seeElement('#DTE_Field_notifEmail');
+    I.fillField('#DTE_Field_notifEmail', notificationEmail);
     I.fillField('#DTE_Field_tokenLimit', '0');
     DTE.save();
     I.waitForText('Zadajte limit tokenov väčší ako 0.', 10, '#datatableInit_modal');
@@ -70,6 +79,7 @@ Scenario('limit blocks further calls and selected reset restores usage', async (
     openAssistant(I, DT, DTE);
     I.seeCheckboxIsChecked('#DTE_Field_useTokenLimits_0');
     I.seeInField('#DTE_Field_tokenLimit', '1');
+    I.seeInField('#DTE_Field_notifEmail', notificationEmail);
     await checkUsageChart(I, 0);
     DTE.cancel();
 
@@ -84,6 +94,8 @@ Scenario('limit blocks further calls and selected reset restores usage', async (
     I.dontSeeElement(aiContent + ' button.btn-ai-undo');
     closeAssistantToast(I);
     DTE.cancel();
+
+    await checkLimitEmail(I, TempMail, spentTokens);
 
     openAssistant(I, DT, DTE);
     I.seeInField('#DTE_Field_usedTokens', String(spentTokens));
@@ -121,6 +133,7 @@ Scenario('limit blocks further calls and selected reset restores usage', async (
     openAssistant(I, DT, DTE);
     I.seeInField('#DTE_Field_usedTokens', '0');
     I.seeInField('#DTE_Field_tokenLimit', '1');
+    I.seeInField('#DTE_Field_notifEmail', notificationEmail);
     I.seeCheckboxIsChecked('#DTE_Field_useTokenLimits_0');
     // Resetting the counter must preserve historical statistics.
     await checkUsageChart(I, spentTokens);
@@ -136,6 +149,9 @@ Scenario('limit blocks further calls and selected reset restores usage', async (
     I.seeInField('#DTE_Field_usedTokens', String(tokensAfterReset));
     await checkUsageChart(I, spentTokens + tokensAfterReset);
     DTE.cancel();
+
+    // The first email was removed, so this must be a new notification after the reset.
+    await checkLimitEmail(I, TempMail, tokensAfterReset);
 });
 
 /**
@@ -153,6 +169,17 @@ Scenario('cleanup token-limit assistant', async ({ I, DT }) => {
     I.dontSee(assistantName, '#datatableInit tbody');
 });
 
+/**
+ * Removes notification emails even if the functional scenario fails before reading them.
+ */
+Scenario('cleanup token-limit notification inbox', async ({ TempMail }) => {
+    await TempMail.destroyInbox(notificationEmail);
+});
+
+/**
+ * Opens the temporary assistant selected by assistantName on its Token limits tab.
+ * Leaves the editor open for the caller's assertions.
+ */
 function openAssistant(I, DT, DTE) {
     I.amOnPage(assistantsUrl);
     DT.waitForLoader();
@@ -203,6 +230,28 @@ async function runAssistant(I) {
 function closeAssistantToast(I) {
     I.clickCss('#toast-container-ai .toast-close-button');
     I.waitForInvisible('#toast-container-ai', 10);
+}
+
+/**
+ * Verifies the limit notification and clears the inbox before another usage cycle.
+ *
+ * @param {CodeceptJS.I} I - CodeceptJS actor.
+ * @param {typeof import('../../pages/TempMail.js')} TempMail - Temporary mailbox helper.
+ * @param {number} usedTokens - Expected token usage reported in the email.
+ * @returns {Promise<void>} Resolves after awaiting the inbox cleanup following the notification checks.
+ */
+async function checkLimitEmail(I, TempMail, usedTokens) {
+    await TempMail.login(notificationEmail);
+    TempMail.openLatestEmail();
+    I.waitForText('AI asistent dosiahol limit tokenov', 20, TempMail.getSubjectSelector());
+    const content = TempMail.getContentSelector();
+    I.see(assistantName, content);
+    I.see('dosiahol alebo prekročil limit tokenov.', content);
+    I.see('Použité tokeny: ' + usedTokens, content);
+    I.see('Limit tokenov: 1', content);
+    I.see('Ďalšie požiadavky sú zablokované.', content);
+    TempMail.closeEmail();
+    await TempMail.destroyInbox();
 }
 
 /**

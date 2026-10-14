@@ -208,6 +208,9 @@ public class AssistantDefinitionRestController extends DatatableRestControllerV2
 
     @Override
     public void afterSave(AssistantDefinitionEntity entity, AssistantDefinitionEntity saved) {
+        if (saved != null && saved.getTokenLimit() != null && saved.getTokenLimit() <= 0L) {
+            repo.resetDisabledTokenUsage(saved.getId(), CloudToolsForCore.getDomainId());
+        }
         AiAssistantsService.clearCache();
     }
 

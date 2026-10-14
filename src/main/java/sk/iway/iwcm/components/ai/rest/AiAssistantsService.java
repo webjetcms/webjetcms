@@ -8,11 +8,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -23,10 +18,15 @@ import com.webjetcms.ai.AiPromptTemplate;
 
 import it.sauronsoftware.cron4j.InvalidPatternException;
 import it.sauronsoftware.cron4j.SchedulingPattern;
+import jakarta.persistence.Entity;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
+import sk.iway.iwcm.SendMail;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
@@ -34,6 +34,7 @@ import sk.iway.iwcm.components.ai.dto.InputDataDTO;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionEntity;
 import sk.iway.iwcm.components.ai.jpa.AssistantDefinitionRepository;
 import sk.iway.iwcm.components.ai.providers.AiAssitantsInterface;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
@@ -522,5 +523,45 @@ public class AiAssistantsService {
             }
         }
         return null;
+    }
+
+        /**
+     * Locks the assistant to prevent concurrent notifications for the same threshold.
+     * Usage must already be committed so a notification failure cannot roll back token accounting.
+     *
+     * @param assistantId assistant whose usage changed
+     * @param domainId domain owning the assistant
+     * @param prop translations for the request language
+     */
+    public static void notifyUsage(Long assistantId, Integer domainId, Prop prop) {
+        AssistantDefinitionRepository assistants = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
+        AssistantDefinitionEntity assistant = assistants.findForTokenNotification(assistantId, domainId).orElse(null);
+        if (assistant == null || Tools.isEmpty(assistant.getNotifEmail())) return;
+
+        long limit = assistant.getTokenLimit() == null ? 0 : assistant.getTokenLimit();
+        long used = assistant.getUsedTokens() == null ? 0 : assistant.getUsedTokens();
+        if (limit <= 0) return;
+
+        // ceil(limit * 0.75), without floating-point rounding or multiplication overflow.
+        int level = used >= limit ? 100 : used >= limit - limit / 4 ? 75 : 0;
+        int previousLevel = assistant.getNotifLevel() == null ? 0 : assistant.getNotifLevel();
+        if (level <= previousLevel) return;
+
+        String domain = GroupsDB.getInstance().getDomain(domainId);
+        String key = "components.ai_assistants.token_notification." + level;
+        String senderName = SendMail.getDefaultSenderName("ai", "WebJET CMS");
+        String senderEmail = SendMail.getDefaultSenderEmail("ai", Tools.isEmpty(domain) ? null : "no-reply@" + domain);
+        String body = prop.getText(key + ".body", Tools.escapeHtml(assistant.getName()),
+            Tools.escapeHtml(domain), Long.toString(used), Long.toString(limit));
+
+        String subject = prop.getText(key + ".subject");
+        // Handle fallback explicitly so only a confirmed send or queue advances the marker.
+        boolean sentOrQueued = SendMail.sendCapturingException(senderName, senderEmail, assistant.getNotifEmail(),
+            null, null, null, subject, body, null, null, false).getFirst();
+        if (sentOrQueued == false) {
+            sentOrQueued = SendMail.sendLater(senderName, senderEmail, assistant.getNotifEmail(),
+                null, null, null, subject, body, null, null, null);
+        }
+        if (sentOrQueued) assistants.updateNotificationLevel(assistantId, domainId, level);
     }
 }

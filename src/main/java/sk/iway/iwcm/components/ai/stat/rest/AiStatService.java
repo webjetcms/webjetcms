@@ -15,16 +15,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import jakarta.persistence.criteria.Predicate;
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import jakarta.persistence.criteria.Predicate;
+import jakarta.servlet.http.HttpServletRequest;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.DateTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
@@ -109,7 +109,13 @@ public class AiStatService {
 
         if (usedTokens != null && usedTokens > 0) {
             AssistantDefinitionRepository assistantsRepo = Tools.getSpringBean("assistantDefinitionRepository", AssistantDefinitionRepository.class);
-            assistantsRepo.incrementUsedTokens(assistantId, domainId, usedTokens.longValue());
+            if (assistantsRepo.incrementUsedTokens(assistantId, domainId, usedTokens.longValue()) > 0) {
+                try {
+                    AiAssistantsService.notifyUsage(assistantId, domainId, Prop.getInstance(request));
+                } catch (Exception e) {
+                    Logger.error(AiStatService.class, "Cannot send token usage notification for assistant " + assistantId + " in domain " + domainId, e);
+                }
+            }
         }
     }
 

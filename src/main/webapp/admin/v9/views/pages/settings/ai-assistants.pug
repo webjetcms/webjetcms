@@ -128,7 +128,7 @@ block content
                 }
                 clearTokenUsageChart();
                 if (action === "edit" && aiAssistantsDataTable.EDITOR.ids().length === 1) {
-                    $("#tokenUsageTemplate").contents().clone().insertAfter(aiAssistantsDataTable.EDITOR.field("tokenLimit").node());
+                    $("#tokenUsageTemplate").contents().clone().insertAfter(aiAssistantsDataTable.EDITOR.field("notifEmail").node());
                 }
                 updateTokenLimitsVisibility();
                 initInstructionsEnhancements();
@@ -144,9 +144,11 @@ block content
                 if (enabled) {
                     editor.field("usedTokens").show();
                     editor.field("tokenLimit").show();
+                    editor.field("notifEmail").show();
                 } else {
                     editor.field("usedTokens").hide();
                     editor.field("tokenLimit").hide();
+                    editor.field("notifEmail").hide();
                     editor.field("tokenLimit").error("");
                 }
                 $("#DTE_Field_tokenLimit").prop("required", enabled);

@@ -3,6 +3,8 @@ package sk.iway.iwcm.components.ai.jpa;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -12,9 +14,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import jakarta.persistence.Transient;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
 import lombok.Getter;
 import lombok.Setter;
 import sk.iway.iwcm.system.adminlog.EntityListenersType;
@@ -220,6 +222,17 @@ public class AssistantDefinitionEntity implements Serializable {
         }
     )
     private Long tokenLimit;
+
+    @Column(name = "notif_email")
+    @Email
+    @Size(max = 128)
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "components.ai_assistants.notif_email", tab = "tokenLimits", hidden = true)
+    private String notifEmail;
+
+    // Only notification and reset queries may update this marker; editor saves must preserve it.
+    @JsonIgnore
+    @Column(name = "notif_level", insertable = false, updatable = false)
+    private Integer notifLevel;
 
     @Transient
 	@DataTableColumnNested
