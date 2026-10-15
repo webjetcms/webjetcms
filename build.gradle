@@ -697,6 +697,9 @@ bootRun {
     // Migrated from gretty JVM args (old build.gradle before Spring Boot migration)
     // These preserve the exact runtime behavior from the gretty/Tomcat setup
     def webjetDbname = System.env.webjetDbname ?: '/poolman-local.xml'
+    def httpPort = (project.findProperty('httpPort') ?: '80') as int
+    def httpsPort = (project.findProperty('httpsPort') ?: '443') as int
+
     jvmArgs = [
         // Recommended system properties for Tomcat (from old gretty config)
         '-Dsun.net.client.defaultConnectTimeout=300000',
