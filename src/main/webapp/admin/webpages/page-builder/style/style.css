@@ -3294,6 +3294,10 @@ html.pb-insertion-open {
 .pb-wrapper.pb-is-inserting .pb-empty-placeholder, .pb-wrapper.pb-is-inserting .pb-empty-placeholder-wrapper {
   display: none !important;
 }
+.pb-wrapper.pb-is-inserting .pb-plus-button {
+  visibility: hidden !important;
+  pointer-events: none;
+}
 
 @media (pointer: coarse) {
   .pb-insert-layer .pb-insert-point button {

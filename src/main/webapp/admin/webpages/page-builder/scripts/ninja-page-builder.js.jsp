@@ -209,11 +209,7 @@
                 }
             }).on('pointermove.workbench', function(e) {
                 ui.quiet = false;
-                if (me.$wrapper.hasClass(me.state.is_moving_child)) {
-                    var target = me.workbench_target(e.target);
-                    // The existing controller visibility already encodes valid drop destinations.
-                    ui.hovered = target && $(target).children(me.tagc.append+', '+me.tagc.prepend).is(':visible') ? target : null;
-                } else ui.hovered = e.originalEvent.pointerType === 'touch' ? null : me.workbench_target(e.target);
+                ui.hovered = ui.inserting || e.originalEvent.pointerType === 'touch' ? null : me.workbench_target(e.target);
                 ui.resizeActive = me.workbench_resize_column(ui.hovered) || me.workbench_resize_column($(document.activeElement).closest(me.tagc.size_changer));
                 me.schedule_workbench();
             }).on('pointerleave.workbench', function() {
@@ -733,6 +729,7 @@
         /** Opens a temporary insertion mode without changing authored column widths or saved outline preferences. */
         set_workbench_insertion: function(open, anchor) {
             var me = this, ui = me.ui;
+            var moving = me.$wrapper.hasClass(me.state.is_moving_child);
             if (!anchor) {
                 var viewportTop = ui.bar[0].getBoundingClientRect().bottom;
                 anchor = me.$wrapper.find(me.tagc.column+':visible').get().find(element => element.getBoundingClientRect().bottom > viewportTop) || ui.selected;
@@ -743,7 +740,7 @@
             ui.inserting = open;
             if (!open) ui.pasting = null;
             ui.insertHint.children('[role=status]').text(ui.pasting ? ui.labels.pasteHints[ui.pasting.type] : ui.labels.insertHint);
-            ui.bar.toggleClass('is-inserting', open);
+            ui.bar.toggleClass('is-inserting', open && !moving);
             if (open) {
                 ui.path.removeClass('is-expanded').find('[data-pb-action=ancestors]').attr('aria-expanded', 'false');
                 ui.menu.prop('hidden', true);
@@ -751,7 +748,7 @@
             }
             document.documentElement.classList.toggle('pb-insertion-open', open);
             me.$wrapper.toggleClass(me.options.prefix+'-is-inserting', open);
-            ui.insertHint.prop('hidden', !open);
+            ui.insertHint.prop('hidden', !open || moving);
             ui.insertLayer.prop('hidden', !open);
             me.toggle_workbench_structure(false);
             me.refresh_workbench_selection();
@@ -837,34 +834,44 @@
             });
         },
 
-        /** Makes one destination per sibling boundary, backed by the existing library insertion controller. */
+        /** Shares sibling-boundary destinations between library insertion, paste, move and duplication. */
         build_workbench_insertion: function() {
             var me = this, ui = me.ui, prefix = me.options.prefix, groups = [];
+            var moving = me.$wrapper.find(me.tagc._grid_element+me.statec.is_moving).first();
+            var movingType = moving.length ? me.workbench_type(moving[0]) : null;
+            var duplicable = moving.hasClass(me.tag.duplicable);
             function group(parent, type) {
                 if (ui.pasting && ui.pasting.type !== type) return;
+                if (moving.length && (type !== movingType || moving[0] === parent || moving[0].contains(parent))) return;
                 if (groups.some(item => item.parent === parent && item.type === type)) return;
                 groups.push({ parent: parent, type: type });
             }
-            group(me.$wrapper[0], 'section');
-            me.$wrapper.find(me.tagc.section+', '+me.tagc.container+', '+me.tagc.column+', '+me.tagc.row).filter(':visible').each(function() {
-                if ($(this).closest('[data-ckeditor-instance]').length || $(this).hasClass(me.tag.duplicable)) return;
-                var type = me.workbench_type(this);
-                if (type === 'container' || type === 'column') group(this.parentElement, type);
-                if (type === 'section' && !$(this).find(me.tagc.container).length) group(this, 'container');
-                if (type === 'row' && !$(this).children(me.tagc.column).length) group(this, 'column');
-            });
+            if (duplicable) group(moving.parent()[0], movingType);
+            else {
+                group(me.$wrapper[0], 'section');
+                me.$wrapper.find(me.tagc.section+', '+me.tagc.container+', '+me.tagc.column+', '+me.tagc.row).filter(':visible').each(function() {
+                    if ($(this).closest('[data-ckeditor-instance]').length || $(this).hasClass(me.tag.duplicable)) return;
+                    var type = me.workbench_type(this);
+                    if (type === 'container' || type === 'column') group(this.parentElement, type);
+                    if (type === 'section' && !$(this).find(me.tagc.container).length) group(this, 'container');
+                    if (type === 'row' && !$(this).children(me.tagc.column).length) group(this, 'column');
+                });
+            }
             groups.forEach(function(item) {
-                var nodes = $(item.parent).children(me.tagc[item.type]).filter(':visible').get();
+                var nodes = $(item.parent).children(duplicable ? me.tagc.duplicable : me.tagc[item.type]).filter(':visible').filter(function() {
+                    return !duplicable || (this.tagName === moving[0].tagName && me.workbench_type(this) === movingType);
+                }).get();
                 var points = [];
                 for (var i = 0; i <= nodes.length; i++) {
                     var next = nodes[i], previous = nodes[i-1];
+                    if (moving.length && !me.duplicate && (next === moving[0] || previous === moving[0])) continue;
                     var source = next ? $(next).children(me.tagc.prepend) : previous ? $(previous).children(me.tagc.append) :
                         $(item.parent).children(me.tagc.empty_placeholder).find(me.tagc.empty_placeholder_button);
                     if (!nodes.length && item.type === 'section') source = me.$wrapper.find(me.tagc.empty_placeholder_wrapper+' '+me.tagc.empty_placeholder_button);
                     if (!source.length) continue;
                     var position = next ? ui.labels.insertBefore+' “'+me.workbench_name(next)+'”' :
                         previous ? ui.labels.insertAfter+' “'+me.workbench_name(previous)+'”' : ui.labels.insertStart;
-                    var label = ui.labels.insertTypes[item.type]+' '+position.charAt(0).toLocaleLowerCase()+position.slice(1);
+                    var label = (ui.labels.insertTypes[item.type] || ui.labels[item.type])+' '+position.charAt(0).toLocaleLowerCase()+position.slice(1);
                     var point = { type: item.type, parent: item.parent, next: next, previous: previous, source: source.first(), label: label, position: position };
                     point.element = $('<div>', { 'class': prefix+'-insert-point', 'data-type': item.type }).appendTo(ui.insertLayer);
                     point.button = me.workbench_button('insert-here', label, 'plus').appendTo(point.element);
@@ -879,7 +886,9 @@
                     }; }(point));
                     points.push(point);
                     ui.insertPoints.push(point);
-                    if (item.type !== 'column' || !nodes.length) me.create_workbench_insert_space(point);
+                    // Duplicable items can live inside CKEditor; never add layout helpers to their editable content.
+                    if (duplicable) point.element.addClass('is-horizontal');
+                    else if (item.type !== 'column' || !nodes.length) me.create_workbench_insert_space(point);
                 }
                 if (item.type === 'column' && nodes.length) me.prepare_workbench_column_points(points, nodes);
             });
@@ -921,9 +930,10 @@
 
         position_workbench_insertion: function(top) {
             var me = this, ui = me.ui;
-            ui.insertLayer.css('top', top).prop('hidden', !ui.inserting || me.workbench_busy() || document.body.classList.contains('is-view-mode'));
+            var available = me.workbench_structure_available();
+            ui.insertLayer.css('top', top).prop('hidden', !ui.inserting || !available || document.body.classList.contains('is-view-mode'));
             if (!ui.inserting) return;
-            if (ui.insertWidth !== window.innerWidth && !me.workbench_busy() && !ui.insertClosing) {
+            if (ui.insertWidth !== window.innerWidth && available && !ui.insertClosing) {
                 me.clear_workbench_insertion();
                 me.build_workbench_insertion();
             }
@@ -934,6 +944,11 @@
                 if (point.space) {
                     var rect = point.space[0].getBoundingClientRect();
                     point.element.css({ left: Math.max(8, rect.left), top: rect.top-top, width: Math.min(window.innerWidth-8, rect.right)-Math.max(8, rect.left), height: rect.height });
+                } else if (point.element.hasClass('is-horizontal')) {
+                    var rect = anchor.getBoundingClientRect();
+                    var y = point.next ? rect.top : rect.bottom;
+                    if (point.next && point.previous) y = (point.previous.getBoundingClientRect().bottom+rect.top)/2;
+                    point.element.css({ left: Math.max(8, rect.left), top: y-top, width: Math.min(window.innerWidth-8, rect.right)-Math.max(8, rect.left), height: 0 });
                 } else {
                     var rect = anchor.getBoundingClientRect();
                     var x = point.next ? rect.left : rect.right;
@@ -953,7 +968,11 @@
 
         open_workbench_insertion: function(point) {
             var ui = this.ui;
-            if (!ui.inserting || ui.insertClosing || this.workbench_busy() || !point.source[0].isConnected) return;
+            if (!ui.inserting || ui.insertClosing || !this.workbench_structure_available() || !point.source[0].isConnected) return;
+            if (this.$wrapper.hasClass(this.state.is_moving_child)) {
+                this.move_grid_element_here(point.source);
+                return;
+            }
             if (ui.pasting) {
                 this.paste_workbench_block(point);
                 return;
@@ -2911,7 +2930,7 @@
             else if($(grid_element).hasClass(this.tag.section)) {
                 $(this.$wrapper).addClass(this.state.is_moving_type(this.tag.section));
             }
-
+            if (this.ui) this.set_workbench_insertion(true, $(grid_element)[0]);
         },
 
         move_grid_element_here: function (el) {
@@ -2935,6 +2954,7 @@
                 return;
             }
 
+            if (this.ui && this.ui.inserting) this.set_workbench_insertion(false, moving[0]);
             var clone = moving.clone().addClass(this.state.is_special_helper),
                 moving_parent = is_duplicable ? moving.parent() : this.get_parent_grid_element(moving);
 
@@ -3017,6 +3037,7 @@
         },
 
         cancel_move_grid_element: function () {
+            if (this.ui && this.ui.inserting && this.$wrapper.hasClass(this.state.is_moving_child)) this.set_workbench_insertion(false);
             this.removeClassStartingWith($(this.$wrapper),this.state.is_moving);
             $(this.$wrapper).removeClass(this.state.is_duplicating);
             if (this.ui) {
