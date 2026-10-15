@@ -174,17 +174,20 @@ Scenario('Product list currency select', ({I, Document}) => {
 
     Document.setConfigValue("supportedCurrencies", "eur,usd");
     I.amOnPage(SL.PRODUCTS_ADMIN);
+    waitForProductFilters(I);
     I.say("Check currency options");
         SL.validateCurrencyOptions(I, ["eur", "usd"], ["czk", "gbp"]);
 
     Document.setConfigValue("supportedCurrencies", "eur,czk,usd,gbp");
     I.amOnPage(SL.PRODUCTS_ADMIN);
+    waitForProductFilters(I);
     I.say("Check currency options");
         SL.validateCurrencyOptions(I, ["eur", "usd", "czk", "gbp"], []);
 });
 
 Scenario('Product list currency convertion', ({I, DT}) => {
     I.amOnPage(SL.PRODUCTS_ADMIN);
+    waitForProductFilters(I);
 
     SL.selectCurrency(I, "eur");
     DT.checkTableRow("productListDataTable", 1, ["", "", "Tričko", "Tester Playwright", "", "12,30", "10,00", "23"]);
@@ -216,12 +219,22 @@ async function changeDomain(I, Document, url) {
         I.say("Switching domain to shop.tau27.iway.sk")
         Document.switchDomain("shop.tau27.iway.sk");
     }
+    if (url === SL.PRODUCTS_ADMIN) waitForProductFilters(I);
+}
+
+function waitForProductFilters(I) {
+    I.waitForFunction(() => ["groupSelect", "currencySelect"].every(id => {
+        const select = document.getElementById(id);
+        return select && !select.disabled && select.value !== "";
+    }), [], 15);
+    I.dtWaitForLoader("#productListDataTable_processing");
 }
 
 function changeFolder(I, folderName) {
     I.clickCss("#groupSelect_wrapper button.dropdown-toggle");
     I.waitForElement("#groupSelect_wrapper > div.dropdown.bootstrap-select > div.dropdown-menu", 5);
     I.click( locate("#groupSelect_wrapper a.dropdown-item > span").withText(folderName) );
+    I.dtWaitForLoader("#productListDataTable_processing");
 }
 
 function checkToaster(I, success) {

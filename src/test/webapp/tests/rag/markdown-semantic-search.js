@@ -1,4 +1,5 @@
-Feature('rag.markdown-semantic-search @singlethread');
+// Readiness is checked on the documentation UI; background requests need not become idle.
+Feature('rag.markdown-semantic-search @singlethread').config('Playwright', { waitForNavigation: 'domcontentloaded' });
 
 // The Markdown index is currently available only on tau11. All scenarios use public, read-only search.
 const documentationUrl = 'https://docs.webjetcms.sk/latest/sk/';
