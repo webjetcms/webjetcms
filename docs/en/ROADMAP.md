@@ -67,6 +67,7 @@ The filter only takes the first value. So add the `IN` option to allow multiple 
 - [ ] +Websites - add the option to add a perex group to multiple pages at once, meaning the selected one will be added to the existing perex groups.
 - [ ] +Websites - when deleting a folder that also has a mirrored version, display a notification that the mirrored folders XXX,YYY have also been deleted.
 - [ ] +Add support for AVIF images.
+- [ ] + Possibility to change the order of fields in the datatables editor, the tab in which the field is located, or even create a new tab in which the fields are inserted. That is, to configure and adjust the values ​​that are currently set for annotations.
 
 ## 2025
 

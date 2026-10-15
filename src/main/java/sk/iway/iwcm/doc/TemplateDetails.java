@@ -331,6 +331,21 @@ public class TemplateDetails {
     private boolean disableSpamProtection = false;
 
     @DataTableColumn(
+        inputType = DataTableColumnType.SELECT,
+        title = "templates.url_remove_spojky",
+        tab = "advanced",
+        defaultValue = "0",
+        editor = {
+            @DataTableColumnEditor(options = {
+                @DataTableColumnEditorAttr(key = "templates.url_remove_spojky_0", value = "0"),
+                @DataTableColumnEditorAttr(key = "templates.url_remove_spojky_1", value = "1"),
+                @DataTableColumnEditorAttr(key = "templates.url_remove_spojky_2", value = "2")
+            })
+        }
+    )
+    private Integer urlRemoveSpojkyMode = 0;
+
+    @DataTableColumn(
         inputType = DataTableColumnType.DISABLED,
         title = "admin.temps_list.pocet_pouziti",
         renderFormat = "dt-format-number", //v DT to chceme ako cislo
@@ -669,6 +684,14 @@ public class TemplateDetails {
 
     public void setDisableSpamProtection(boolean disableSpamProtection) {
         this.disableSpamProtection = disableSpamProtection;
+    }
+
+    public Integer getUrlRemoveSpojkyMode() {
+        return urlRemoveSpojkyMode;
+    }
+
+    public void setUrlRemoveSpojkyMode(Integer urlRemoveSpojkyMode) {
+        this.urlRemoveSpojkyMode = urlRemoveSpojkyMode;
     }
 
     public Integer getMoveStyleToHead() {

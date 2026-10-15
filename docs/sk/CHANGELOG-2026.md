@@ -63,6 +63,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 ![](frontend/templates/templates-edit-advanced.png)
 
 - V dialógu vkladania obrázkov pridaná karta **Miniatúra** pre nastavenie parametrov [generovania zmenšených obrázkov](redactor/webpages/working-in-editor/README.md#karta-miniatúra) `thumbnail`. Podporovaný je voľný režim nastavenia rozmerov, ale aj režim [presne definovaných rozmerov](frontend/thumb-servlet/README.md#obmedzenia) výberom z možností (#58317,#58758).
+- Výber rozmeru zobrazuje názov režimu aj číslo `ip`. Režimy `learn/check/allow` ponúkajú aj vlastný rozmer, `strict` vyžaduje povolenú kombináciu a pri `deny` je karta skrytá. Existujúca nepovolená miniatúra sa v režime `strict` označí a vyžaduje výber náhrady (#353).
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
@@ -88,6 +89,11 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 - Page Builder - zlepšená detekcia zmien v HTML kóde stránky, aby sa nezobrazilo hlásenie "V editore pravdepodobne máte neuložený text" aj keď ste reálne žiaden text v stránke nezmenili (#317).
 - [Page Builder](redactor/webpages/pagebuilder.md) - po kliknutí na + v žltej čiare v okne **Vložiť blok** na karte **Základné** pribudli možnosti **Obrázok** a **Aplikácia**. Otvoria príslušný dialóg editora a umožnia vložiť obsah na zvolené miesto (#339).
+- Page Builder - pridané [kopírovanie blokov medzi stránkami](redactor/webpages/pagebuilder.md#kopírovanie-blokov-medzi-stránkami). Voľby **Skopírovať** a **Vložiť** prenášajú sekcie, kontajnery a stĺpce aj s obsahom a vlastnými štýlmi. Editor ponúkne iba miesta vhodné pre typ bloku. Schránka má platnosť 30 minút od skopírovania (#353).
+- Šablóny - na karte Pokročilé môžete nastaviť [odstraňovanie spojok z URL stránky](frontend/templates/templates.md#karta-pokročilé): podľa `urlRemoveSpojky`, vždy odstrániť alebo ponechať. Blog tak môže ponechať spojky aj pri zapnutom odstraňovaní pre zvyšok webu (#353).
+- Zmena URL priečinka s aplikovaním na podpriečinky a podstránky aktualizuje aj nezobrazované stránky, naplánované verzie, verzie čakajúce na schválenie a poslednú pracovnú verziu. Zachováva ich obsah, stav a termín publikovania; naplánované publikovanie už nevráti pôvodnú URL (#353).
+- SEO - nastavenie **Prehľadávať** ponúka samostatné voľby povoliť (`index`) a zakázať (`noindex`). Sekcia **HTTP hlavičky** na karte Základné zobrazuje aktuálny náhľad `X-Robots-Tag`, `Referrer-Policy` a pri nastavenom presmerovaní aj `Location` podľa neuložených nastavení stránky a konfigurácie servera (#353).
+- História - používatelia s oprávnením **Čistenie databázy** môžu [mazať historické verzie](redactor/webpages/history.md) priamo v editore stránky, aj hromadným výberom. Aktuálne publikovaná verzia a verzie čakajúce na schválenie sú chránené. Bez tohto oprávnenia zostáva dostupné rušenie budúceho naplánovaného publikovania (#353).
 
 ### Headless režim
 

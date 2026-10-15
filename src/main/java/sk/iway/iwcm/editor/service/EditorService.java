@@ -773,6 +773,7 @@ public class EditorService {
 		doc.setNavbar(DB.prepareString(editedDoc.getNavbar(), 128));
 		doc.setVirtualPath(editedDoc.getVirtualPath());
 		doc.setGroupId(editedDoc.getGroupId());
+		doc.setTempId(editedDoc.getTempId());
 		String virtualPath = DocDB.getURL(doc, groupDiskPath);
 		String ending = virtualPath.endsWith("/") ? "/" : DOT_HTML_EXT;
 		String editorPageExtension = Constants.getString("editorPageExtension");

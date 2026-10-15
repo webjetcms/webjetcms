@@ -1516,7 +1516,7 @@ export const dataTableInit = options => {
                 },
                 remove: {
                     button: WJ.translate('button.delete'),
-                    title: '<clas="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.delete') + '</h5></div><div class="col-sm-8"></div></div>',
+                    title: '<div class="row"><div class="col-sm-4"><h5 class="modal-title">' + WJ.translate('button.delete') + '</h5></div><div class="col-sm-8"></div></div>',
                     submit: '<i class="ti ti-trash"></i> ' + WJ.translate('button.delete'),
                     confirm: {
                         _: '<div class="form-group row"><div class="col-sm-7 offset-sm-4"><h5>' + WJ.translate('datatables.prompt.delete.files.js') + '</h5></div></div>',
@@ -4098,6 +4098,8 @@ export const dataTableInit = options => {
             }
         }
         if ("remove"===action) {
+            // WebJET uses separate modals; omit parent titles from the removal dialog.
+            $("#"+TABLE.DATA.id+"_modal div.DTE_Header_Content").html(EDITOR.title());
             var selectedRows = TABLE.rows({ selected: true }).data();
             var titles = $("<ul>");
             if (selectedRows.length>0) {

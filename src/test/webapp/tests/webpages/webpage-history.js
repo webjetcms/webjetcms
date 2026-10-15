@@ -123,7 +123,7 @@ Scenario('Historia webstranok', ({ I, DTE }) => {
      // Aktivovat - Zobrazenie web stranky a vyhladanie cez vyhladavace a pridanie poznamky redaktora
      I.say('1.Aktivovat - Zobrazenie web stranky a vyhladanie cez vyhladavace a pridanie poznamky redaktora');
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_available_0').find('.form-check-label'));
-     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_searchable_0').find('.form-check-label'));
+     I.checkOption('#DTE_Field_searchable_0');
      I.fillField('#DTE_Field_editorFields-redactorNote', 'webpages history autotest');
 
      // Pridanie textu do obsahu a ulozenie udajov
@@ -358,9 +358,9 @@ Scenario('not-publicable history row when saving with same future publish date @
      const docId = 22956;
      const delete_history_button = locate(historyWrapper).find('.btn.buttons-history-remove');
 
-     // Set future publish date for the page
+     // Verify the original scheduling behavior without database cleanup permission.
      I.say('Set future publish date for the page');
-     I.amOnPage(`/admin/v9/webpages/web-pages-list/?docid=${docId}`);
+     I.amOnPage(`/admin/v9/webpages/web-pages-list/?docid=${docId}&removePerm=cmp_data_deleting`);
      DTE.waitForEditor();
 
      const tomorrow = new Date();
@@ -425,4 +425,5 @@ Scenario('not-publicable history row when saving with same future publish date @
      DTE.fillField("publishStartDate", "");
      I.uncheckOption("#DTE_Field_editorFields-publishAfterStart_0");
      DTE.save();
+     I.logout();
 });
