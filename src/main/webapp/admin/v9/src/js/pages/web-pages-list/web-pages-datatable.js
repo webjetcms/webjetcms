@@ -561,6 +561,7 @@ export class WebPagesDatatable {
             $(this.webpagesDatatable.EDITOR.field("cacheable").node()).after(section);
             WJ.initTooltip(section.find("button"));
         }
+        basic.find(".webpage-http-headers pre").text(WJ.translate("editor.http_headers.loading.js"));
         modal.find("[id$='-basic-tab']").off("shown.bs.tab.httpHeaders").on("shown.bs.tab.httpHeaders", () => this.#updateHttpHeaders());
         basic.off("change.httpHeaders").on("change.httpHeaders", "input, select", () => this.#updateHttpHeaders());
         this.webpagesDatatable.EDITOR.off("close.httpHeaders").on("close.httpHeaders", () => this.#httpHeadersRequest?.abort());
@@ -572,7 +573,7 @@ export class WebPagesDatatable {
         const output = $("#" + this.webpagesDatatable.DATA.id + "_modal .webpage-http-headers pre");
         if (!output.is(":visible")) return;
         this.#httpHeadersRequest?.abort();
-        output.text(WJ.translate("editor.http_headers.loading.js"));
+        output.attr("aria-busy", "true");
         const editor = this.webpagesDatatable.EDITOR;
         const values = editor.get(["title", "navbar", "tempId", "virtualPath", "editorVirtualPath", "generateUrlFromTitle", "urlInheritGroup", "searchable", "followLinks", "externalLink"]);
         values.groupId = editor.get("editorFields.groupDetails").groupId;
@@ -582,13 +583,15 @@ export class WebPagesDatatable {
             return value;
         });
         this.#httpHeadersRequest = $.ajax({
-            url: "/admin/rest/web-pages/http-headers", method: "POST", contentType: "application/json", data: json
+            url: WJ.urlAddPath(this.webpagesDatatable.DATA.url, "/http-headers"), method: "POST", contentType: "application/json", data: json
         }).done(headers => {
             const names = ["X-Robots-Tag", "Referrer-Policy"];
             if (headers.Location != null) names.push("Location");
             output.text(names.map(name => name + ": " + (headers[name] ?? WJ.translate("editor.http_headers.not_sent.js"))).join("\n"));
         }).fail((xhr, status) => {
             if (status !== "abort") output.text(WJ.translate("editor.http_headers.error.js"));
+        }).always(() => {
+            output.removeAttr("aria-busy");
         });
     }
 

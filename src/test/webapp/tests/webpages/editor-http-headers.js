@@ -128,3 +128,54 @@ Scenario('restore configuration and remove header preview fixtures', ({ I, DT, D
     DT.filterContains('tempName', 'autotest-http-headers-' + suffix);
     DT.deleteAll();
 });
+
+Scenario('News header preview works without menuWebpages permission', async ({ I, DT, DTE }) => {
+    const newsOutput = '#newsDataTable_modal .webpage-http-headers pre';
+    I.amOnPage('/apps/news/admin/?removePerm=menuWebpages#24');
+    I.waitForElement('#SomStromcek [id="24_anchor"].jstree-clicked');
+    DT.waitForLoader('newsDataTable');
+    I.waitForText('Trhy sú naďalej vydesené', 10, '#newsDataTable');
+    I.click('Trhy sú naďalej vydesené');
+    DTE.waitForEditor('newsDataTable');
+    I.clickCss('#pills-dt-newsDataTable-basic-tab');
+    I.checkOption('#DTE_Field_searchable_0');
+    I.selectOption('#DTE_Field_followLinks', 'Podľa nastavenia Prehľadávať (áno = follow, nie = nofollow)');
+    I.waitForText('X-Robots-Tag: all', 10, newsOutput);
+    const previousText = await I.grabTextFrom(newsOutput);
+    const previousHeight = await I.executeScript(selector => document.querySelector(selector).getBoundingClientRect().height, newsOutput);
+    let releaseHeaders;
+    const pendingHeaders = new Promise(resolve => { releaseHeaders = resolve; });
+    const headersRoute = '**/news-list/http-headers?*';
+    await I.mockRoute(headersRoute, async route => {
+        await pendingHeaders;
+        await route.continue();
+    });
+    try {
+        I.checkOption('#DTE_Field_searchable_1');
+        I.waitForElement(newsOutput + '[aria-busy="true"]');
+        I.assertEqual(await I.grabTextFrom(newsOutput), previousText, 'Loading must keep the previous headers visible');
+        I.assertEqual(await I.executeScript(selector => document.querySelector(selector).getBoundingClientRect().height, newsOutput), previousHeight,
+            'Loading must preserve the preview height');
+        await I.saveScreenshot('autotest-http-headers-loading.png');
+    } finally {
+        releaseHeaders();
+        await I.stopMockingRoute(headersRoute);
+    }
+    I.waitForText('X-Robots-Tag: noindex, nofollow', 10, newsOutput);
+    I.waitForInvisible(newsOutput + '[aria-busy="true"]');
+
+    const requests = await I.executeScript(() => performance.getEntriesByType('resource')
+        .filter(item => item.name.includes('/http-headers')).map(item => item.name));
+    I.assertAbove(requests.length, 0, 'The News editor must request a header preview');
+    for (const request of requests) {
+        const url = new URL(request);
+        I.assertEqual(url.pathname, '/admin/rest/news/news-list/http-headers', 'The preview must use the News REST controller');
+        I.assertEqual(url.searchParams.get('groupId'), '24', 'The preview must retain the current folder');
+    }
+    I.amAcceptingPopups();
+    DTE.cancel('newsDataTable');
+});
+
+Scenario('restore permissions after News header preview', ({ I }) => {
+    I.logout();
+});
