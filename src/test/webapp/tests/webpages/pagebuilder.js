@@ -2533,6 +2533,11 @@ async function validateThumb(I, elementText, checkData, setData = null) {
     var ipLocator = locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find(".cke_dialog_ui_vbox.cke_dialog_page_contents").withText("Režim").find(".cke_dialog_ui_select").withText("Režim").find("select.cke_dialog_ui_input_select");
     var colorLocator = locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find(".cke_dialog_ui_vbox.cke_dialog_page_contents").withText("Režim").find(".cke_dialog_ui_text").withText("Farba pozadia").find("input.cke_dialog_ui_input_text");
     var noIpLocator = locate(".cke_dialog_container").withAttr({style: "display: flex; z-index: 10010;"}).find(".cke_dialog_ui_vbox.cke_dialog_page_contents").withText("Režim").find(".cke_dialog_ui_checkbox").withText("Vypnúť bod záujmu").find("input.cke_dialog_ui_checkbox_input");
+    const sizeLocator = locate('.cke_dialog_container').withAttr({style: "display: flex; z-index: 10010;"}).find('.cke_dialog_ui_select').withText('Rozmer miniatúry').find('select');
+    if (await I.grabNumberOfVisibleElements(sizeLocator)) {
+        I.selectOption(sizeLocator, 'Zadať vlastný rozmer…');
+    }
+    I.waitForVisible(ipLocator, 10);
     if (checkData.width) I.seeInField(widthLocator, checkData.width);
     if (checkData.height) I.seeInField(heightLocator, checkData.height);
     if (checkData.ipMode) I.seeInField(ipLocator, checkData.ipMode);
