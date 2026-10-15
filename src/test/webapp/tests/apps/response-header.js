@@ -167,15 +167,15 @@ async function setRobotsSettings(I, DTE, searchable, followLinks) {
     DTE.waitForEditor();
     I.clickCss("#pills-dt-datatableInit-basic-tab");
     I.waitForVisible("#DTE_Field_searchable_0", 10);
-    I.see("Prehľadávať (X-Robots-Tag)", ".DTE_Field_Name_searchable");
+    I.see("Prehľadávať", ".DTE_Field_Name_searchable");
     I.dontSeeElement('.DTE_Field_Name_searchable [data-dte-e="msg-info"]:not(:empty)');
-    I.see("Nasledovanie odkazov vyhľadávačmi (X-Robots-Tag)", ".DTE_Field_Name_followLinks");
+    I.see("Nasledovanie odkazov vyhľadávačmi", ".DTE_Field_Name_followLinks");
     I.dontSeeElement('.DTE_Field_Name_followLinks [data-dte-e="msg-info"]:not(:empty)');
 
     if(searchable === true) {
         I.checkOption('#DTE_Field_searchable_0');
     } else {
-        I.uncheckOption('#DTE_Field_searchable_0');
+        I.checkOption('#DTE_Field_searchable_1');
     }
 
     DTE.selectOption("followLinks", followLinks);
