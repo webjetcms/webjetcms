@@ -1181,7 +1181,7 @@ public class MultistepFormsService {
                 clearStepDrafts(formName, request);
 
                 if (Tools.isTrue(formSettings.getForwardAsContent())) {
-                    String thankYouHtml = getThankYouHtml(forwardOk, request);
+                    String thankYouHtml = getForwardHtml(forwardOk, request);
                     if (Tools.isNotEmpty(thankYouHtml)) response.put("thankYouHtml", thankYouHtml);
                 } else if (Tools.isNotEmpty(forwardOk)) {
                     response.put("forward", forwardOk);
@@ -1211,18 +1211,37 @@ public class MultistepFormsService {
         }
     }
 
+    /**
+     * Adds the configured error redirect or its page content to a failed submission response.
+     * Unavailable inline content leaves the original error message as the fallback.
+     *
+     * @param formName logical form name
+     * @param forward error target supplied by the failed submission
+     * @param request current visitor request
+     * @param response error response to enrich
+     */
+    void addErrorForward(String formName, String forward, HttpServletRequest request, JSONObject response) {
+        if (Tools.isEmpty(forward)) return;
+        FormSettingsEntity formSettings = formSettingsRepository.findByFormNameAndDomainId(formName, CloudToolsForCore.getDomainId());
+        if (formSettings != null && Tools.isTrue(formSettings.getForwardAsContent())) {
+            String errorHtml = getForwardHtml(forward, request);
+            if (Tools.isNotEmpty(errorHtml)) response.put("errorHtml", errorHtml);
+        } else {
+            response.put("err_redirect", forward);
+        }
+    }
+
     /* ********** PRIVATE - main logic methods ********** */
 
     /**
-     * Renders the published thank-you page body for the current visitor without its layout.
-     * An unavailable or forbidden page, or a rendering failure, uses the standard success message.
+     * Renders the published success or error page body for the current visitor without its layout.
+     * An unavailable or forbidden page, or a rendering failure, uses the standard result message.
      *
      * @param forward configured URL of a page on the current website
      * @param request current visitor request used for permissions and embedded applications
-     * @return rendered body HTML, or {@code null} to use the standard success message
+     * @return rendered body HTML, or {@code null} to use the standard result message
      */
-    private String getThankYouHtml(String forward, HttpServletRequest request) {
-        // The form is already saved. Returning null makes the frontend show the default success message.
+    private String getForwardHtml(String forward, HttpServletRequest request) {
         if (Tools.isEmpty(forward)) return null;
         try {
             // Accept page references on this website; reject credentials and non-HTTP(S) schemes.
@@ -1266,8 +1285,8 @@ public class MultistepFormsService {
             // Execute embedded applications only after the page passes all visibility and permission checks above.
             return EditorToolsForCore.renderIncludes(doc, false, request);
         } catch (Exception e) {
-            // A confirmation lookup or rendering failure must not turn a saved form into a submission error.
-            Logger.error(MultistepFormsService.class, "Unable to render inline form confirmation", e);
+            // A result page lookup or rendering failure must not change the submission outcome.
+            Logger.error(MultistepFormsService.class, "Unable to render inline form result", e);
             return null;
         }
     }

@@ -70,20 +70,20 @@ The second column contains form items (or form step items) that are only visible
 
 ![](form-item-editor.png)
 
-### Copying fields between forms
+### Copy fields between forms
 
-To reuse a configured field in another form or step:
+You can use a configured field in another form or step without re-filling its settings:
 
-1. Select one saved field in **Form items** and click <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-clipboard" aria-hidden="true"></i></span></button> to copy it.
-2. Open the destination form in the same or another browser tab and select a step.
-3. Click <button class="btn btn-sm btn-outline-secondary buttons-paste-field" type="button"><span><i class="ti ti-clipboard-plus" aria-hidden="true"></i></span></button> to paste the copied field. The new-field editor opens with the copied settings and the selected destination step. The suggested order places the field at the end of the step.
-4. Adjust the settings if needed and save. Closing the editor without saving creates nothing.
+1. In the **Form Items** table, select one saved field and click <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-clipboard" aria-hidden="true"></i></span></button> for copying.
+2. Open the target form in the same or a different browser tab and select a step.
+3. Click on <button class="btn btn-sm btn-outline-secondary buttons-paste-field" type="button"><span><i class="ti ti-clipboard-plus" aria-hidden="true"></i></span></button> to paste the copied field. The new field editor opens with the original settings and the target step selected. The order is pre-populated to the end of the step.
+4. Adjust the settings as needed and save. Closing the editor without saving will not create a new field.
 
-The clipboard copies the saved field configuration, including texts, options or enumeration links, validation, the **Required field** setting and statistics settings. **Visibility and requirement conditions are omitted** because they reference fields in the source form. Error counters are also omitted. The source field and its conditions remain unchanged.
+The saved state of the field is copied, including texts, options or a link to a code list, validations, **Required field** settings, and statistics settings. **Display conditions and obligations are not copied** because they refer to fields in the original form. Error counters are not copied either. The original field and its conditions are preserved.
 
-The internal clipboard holds one field for **30 minutes** and supports repeated pasting. Copying another field replaces it; pasting does not extend its lifetime. It survives page reloads and is shared between tabs using the same administration origin, browser profile, user and domain. The system clipboard is unchanged. **Paste field** becomes available when a step is selected and the clipboard contains a valid field of a supported type. Empty steps are valid destinations too.
+The internal clipboard stores one field for **30 minutes** and allows repeated insertion. Copying another field will replace its contents; insertion does not extend the validity. The clipboard works even after page refresh and between tabs of the same administration address in the same browser profile, for the same user and domain. The system clipboard does not change. The **Insert Field** button is available after selecting a step if the clipboard contains a valid field of a supported type. You can also insert into an empty step.
 
-Each copy is independent of later changes to the source. CSS templates and step scripts are not transferred, so the resulting appearance depends on the destination form.
+The copy is self-contained: subsequent edits to the original field will not change it. CSS templates and step scripts are not carried over, so the resulting appearance depends on the target form.
 
 ### Adding and editing items
 

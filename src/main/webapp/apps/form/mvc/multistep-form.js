@@ -707,6 +707,7 @@ export class MultistepForm {
                 }
                 await this.postSaveAction(parsed);
             } else {
+                if (this._showForwardContent(parsed.errorHtml, 'multistep-error-container')) return;
                 const errRedirect = parsed.err_redirect || null;
                 if (errRedirect) {
                     window.location.href = errRedirect;
@@ -1229,6 +1230,36 @@ export class MultistepForm {
     }
 
     /**
+     * Replace the form with a managed result page and move focus to its content.
+     * Embedded scripts run when jQuery is available.
+     * @param {string|undefined} html - Rendered success or error page body.
+     * @param {string} className - CSS class for the result container.
+     * @returns {boolean} Whether non-blank content was displayed.
+     */
+    _showForwardContent(html, className) {
+        if (typeof html !== 'string' || html.trim() === '') return false;
+        this.hideErrors();
+        const holder = this.wrapper.querySelector('.multistepStepContent');
+        if (holder) {
+            this._disposeStep(holder);
+            holder.remove();
+        }
+        const content = document.createElement('div');
+        content.className = className;
+        content.tabIndex = -1;
+        // jQuery executes embedded scripts only after the container is attached.
+        this.wrapper.appendChild(content);
+        if (window.$) {
+            $(content).html(html);
+        } else {
+            content.innerHTML = html;
+        }
+        content.focus({ preventScroll: true });
+        content.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+        return true;
+    }
+
+    /**
      * Handle server response after a successful POST.
      * Redirects, displays field errors, loads the next step, or replaces the completed form with confirmation content.
      * Inline confirmation content receives focus and is scrolled into view; embedded scripts run when jQuery is available.
@@ -1263,27 +1294,13 @@ export class MultistepForm {
         const stepId = response['step-id'];
         if (formName && (stepId !== undefined && stepId !== null)) {
             if (stepId === -1 || stepId === '-1') {
+                if (this._showForwardContent(response.thankYouHtml, 'multistep-thankyou-container')) return;
                 const holder = this.wrapper.querySelector('.multistepStepContent');
                 if (holder) {
                     this._disposeStep(holder);
                     holder.remove();
                 }
-                if (typeof response.thankYouHtml === 'string' && response.thankYouHtml.trim() !== '') {
-                    const thankYou = document.createElement('div');
-                    thankYou.className = 'multistep-thankyou-container';
-                    thankYou.tabIndex = -1;
-                    // jQuery executes embedded scripts only after the container is attached.
-                    this.wrapper.appendChild(thankYou);
-                    if (window.$) {
-                        $(thankYou).html(response.thankYouHtml);
-                    } else {
-                        thankYou.innerHTML = response.thankYouHtml;
-                    }
-                    thankYou.focus({ preventScroll: true });
-                    thankYou.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
-                } else {
-                    await this.showGlobalSuccess();
-                }
+                await this.showGlobalSuccess();
             } else {
                 const danger = this.wrapper.querySelector('div.alert.alert-danger');
                 if (danger) danger.style.display = 'none';
