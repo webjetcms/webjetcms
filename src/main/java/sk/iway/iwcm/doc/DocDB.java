@@ -2905,7 +2905,10 @@ public class DocDB extends DB
 			}
 			else
 			{
-				fileName.append(DocTools.removeChars(DB.internationalToEnglish(htmlFileName).toLowerCase())).append(Constants.getString("editorPageExtension"));
+				String pageFileName = DocTools.removeChars(DB.internationalToEnglish(htmlFileName).toLowerCase()) + Constants.getString("editorPageExtension");
+				// URL caches are initialized before the JPA-backed template cache during startup.
+				TemplateDetails template = InitServlet.isWebjetInitialized() ? TemplatesDB.getInstance().getTemplate(doc.getTempId()) : null;
+				fileName.append(DocTools.removeCharsDir(pageFileName, template));
 			}
 			return (normalizeVirtualPath(fixURL(fileName.toString())));
 		}
@@ -2919,7 +2922,8 @@ public class DocDB extends DB
 	{
 		if (url==null) return("");
 
-		url = DocTools.removeCharsDir(url).toLowerCase();
+		// Folder and page segments have already applied their respective stop-word settings.
+		url = DocTools.removeCharsDir(url, false).toLowerCase();
 
 		url = Tools.replace(url, "//", "/");
 		url = Tools.replace(url, "_-_", "_");

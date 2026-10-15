@@ -24,10 +24,18 @@ Stĺpec počet použití zobrazuje počet stránok, ktoré danú šablónu použ
 
 - Meno inštalácie - pri zobrazení šablóny je možné zmeniť meno inštalácie, čo ovplyvňuje použité verzie aplikácií. Umožňuje pre šablónu použiť špecificky upravenú aplikáciu v priečinku `/components/MENO_INSTALACIE/aplikacia/`.
 - Vypnúť spam ochranu - spam ochranu vypnite, ak sa stránka v tejto šablóne načítava pomocou REST služby, prípadne ak sa jedná o stránku použitú pre hromadný email.
+- Spojky v URL adrese - určuje, či sa pri generovaní časti URL z názvu stránky odstránia slová uvedené v konfiguračnej premennej `urlRemoveSpojkyList`:
+  - Podľa konfiguračnej premennej `urlRemoveSpojky` - predvolená možnosť, ktorá zachováva globálne nastavenie.
+  - Odstrániť - odstráni spojky aj pri globálnom nastavení `false`.
+  - Ponechať - ponechá spojky aj pri globálnom nastavení `true`.
 - Presunúť štýly do `head` - určuje spracovanie `<style>` a `<link rel="stylesheet">` značiek, ktoré sa môžu vygenerovať v tele stránky (napr. z komponentov):
   - Podľa konfiguračnej premennej - použije globálne nastavenie konfiguračnej premennej `showDocMoveStyleToHead`.
   - Zapnuté - pre túto šablónu vynúti presun štýlov do `<head>` bez ohľadu na globálne nastavenie.
   - Vypnuté - pre túto šablónu presun štýlov vypne bez ohľadu na globálne nastavenie.
+
+Napríklad pre názov stránky „Novinky a články“ vznikne `novinky-clanky.html` alebo `novinky-a-clanky.html`. Nastavenie spojok v šablóne nemení predponu URL z priečinka. Zmena nastavenia šablóny nespustí hromadný prepočet existujúcich adries, prejaví sa pri ďalšom generovaní URL, napríklad pri vytvorení stránky alebo uložení stránky so zapnutým automatickým generovaním URL. Už odstránené spojky sa obnovia až novým vygenerovaním z názvu.
+
+Pre blog môžete nastaviť možnosť **Ponechať** a pre zvyšok webu používať globálne `urlRemoveSpojky=true`. Ak blog používa rovnakú šablónu ako ostatné stránky, vytvorte preň samostatný záznam šablóny s rovnakým HTML/JSP súborom.
 
 Konfiguračná premenná `showDocMoveStyleToHead` slúži ako predvolená hodnota pre celé riešenie. Nastavenie v šablóne ju môže prepísať pre konkrétny layout.
 
