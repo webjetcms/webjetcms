@@ -231,6 +231,7 @@ By selecting [point of interest mode](../../../frontend/thumb-servlet/interest-p
 | `3` | Preserves width and height + adds background color |
 | `4` | Preserves width and height + adds background color |
 | `5` | Preserves both width and height without adding background |
+| `6` | Preserves the entire point of interest by expanding the viewport to the desired aspect ratio |
 
 **Dynamic display of fields**
 
@@ -238,12 +239,14 @@ The fields on the Thumbnail tab are dynamically shown/hidden based on the select
 
 - `1` and `2` modes: Only one dimensional field (width or height) is displayed.
 - `3` and `4` modes: Both dimensional fields + a field for the background color are displayed. Enter the color in the format `#rrggbb`
-- `5` mode: Both dimensional fields are displayed without a color field.
-- The **Disable POI** field is displayed for all modes except the empty value. This sets whether the set POI is also applied during generation, or the entire image is used.
+- `5` and `6` modes: Both dimensional fields are displayed without a color field.
+- The **Disable POI** field is displayed for all modes except the empty value and the `0` mode. This sets whether the set POI is also applied during generation, or the entire image is used.
 
-**Strict mode**
+**Selecting the allowed size**
 
-In [precisely defined dimensions](../../../frontend/thumb-servlet/README.md#restrictions) mode, a selection box of options is displayed from which the dimension can be selected, it is not possible to set an arbitrary value:
+If [allowed dimensions](../../../frontend/thumb-servlet/README.md#restrictions) are set, the tab will offer their selection with the mode name and the number `ip`, for example **96 px – Fixed height (ip2)**. The **Do not use thumbnail** option will use the original image.
+
+In `strict` mode, only a permitted combination can be selected. An existing disallowed dimension must be replaced with a permitted one or the original image must be used. `learn`, `check` and `allow` modes also offer **Enter custom dimension…**, which displays the fields described above; if the list is empty, these fields are displayed directly. In `deny` mode, the tab is hidden.
 
 ![](image_dialog-thumb-strict.png)
 

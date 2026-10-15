@@ -19,6 +19,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
+import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
 import sk.iway.iwcm.system.spring.events.WebjetEventType;
@@ -223,6 +224,29 @@ public class DocTools {
 
     public static String removeCharsDir(String ret, boolean removeSpojky)
     {
+        return removeCharsDirImpl(ret, removeSpojky && Constants.getBoolean("urlRemoveSpojky"));
+    }
+
+    /**
+     * Sanitizes a page URL segment using the template's stop-word removal mode.
+     *
+     * @param ret page URL segment, including its extension or trailing slash
+     * @param template page template; null or mode 0 uses the global configuration
+     * @return sanitized segment without changing its case
+     */
+    public static String removeCharsDir(String ret, TemplateDetails template)
+    {
+        boolean removeSpojky = Constants.getBoolean("urlRemoveSpojky");
+        if (template != null)
+        {
+            if (Integer.valueOf(1).equals(template.getUrlRemoveSpojkyMode())) removeSpojky = true;
+            else if (Integer.valueOf(2).equals(template.getUrlRemoveSpojkyMode())) removeSpojky = false;
+        }
+        return removeCharsDirImpl(ret, removeSpojky);
+    }
+
+    private static String removeCharsDirImpl(String ret, boolean removeSpojky)
+    {
         //palarikovske_luky-pr .pdf
         ret = Tools.replace(ret, " .", ".");
 
@@ -245,7 +269,7 @@ public class DocTools {
         ret=ret.replaceAll("\\-+", "-");
         ret=ret.replaceAll(Constants.getString("DocTools.removeCharsDir"),"");
 
-        if (removeSpojky && Constants.getBoolean("urlRemoveSpojky"))
+        if (removeSpojky)
         {
             String[] spojky = Tools.getTokens(Constants.getString("urlRemoveSpojkyList"), ",");
             for (String spojka : spojky)

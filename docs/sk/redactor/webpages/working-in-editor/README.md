@@ -231,6 +231,7 @@ Výberom [režimu bodu záujmu](../../../frontend/thumb-servlet/interest-point.m
 | `3` | Zachováva šírku aj výšku + doplnenie pozadia farbou |
 | `4` | Zachováva šírku aj výšku + doplnenie pozadia farbou |
 | `5` | Zachováva šírku aj výšku bez doplnenia pozadia |
+| `6` | Zachováva celý bod záujmu rozšírením výrezu na požadovaný pomer strán |
 
 **Dynamické zobrazenie polí**
 
@@ -238,12 +239,14 @@ Polia na karte Miniatúra sa dynamicky zobrazujú/skrývajú podľa vybraného r
 
 - Režimy `1` a `2`: Zobrazí sa iba jedno rozmerné pole (šírka alebo výška).
 - Režimy `3` a `4`: Zobrazia sa obe rozmerné polia + pole pre farbu pozadia. Farbu zadajte vo formáte `#rrggbb`
-- Režim `5`: Zobrazia sa obe rozmerné polia bez poľa pre farbu.
-- Pole **Vypnúť bod záujmu** sa zobrazí pre všetky režimy okrem prázdnej hodnoty. To nastavuje, či sa pri generovaní aplikuje aj nastavený bod záujmu, alebo sa použije celý obrázok.
+- Režimy `5` a `6`: Zobrazia sa obe rozmerné polia bez poľa pre farbu.
+- Pole **Vypnúť bod záujmu** sa zobrazí pre všetky režimy okrem prázdnej hodnoty a režimu `0`. To nastavuje, či sa pri generovaní aplikuje aj nastavený bod záujmu, alebo sa použije celý obrázok.
 
-**Striktný režim**
+**Výber povoleného rozmeru**
 
-V režime [presne definovaných rozmerov](../../../frontend/thumb-servlet/README.md#obmedzenia) je zobrazené výberové pole možností, z ktorých sa rozmer dá zvoliť, nie je možné nastaviť ľubovoľnú hodnotu:
+Ak sú nastavené [povolené rozmery](../../../frontend/thumb-servlet/README.md#obmedzenia), karta ponúkne ich výber s názvom režimu a číslom `ip`, napríklad **96 px – Fixná výška (ip2)**. Voľba **Nepoužiť miniatúru** použije pôvodný obrázok.
+
+V režime `strict` sa dá vybrať len povolená kombinácia. Existujúci nepovolený rozmer treba nahradiť povoleným alebo použiť pôvodný obrázok. Režimy `learn`, `check` a `allow` ponúkajú aj **Zadať vlastný rozmer…**, čo zobrazí polia opísané vyššie; pri prázdnom zozname sa tieto polia zobrazia priamo. V režime `deny` je karta skrytá.
 
 ![](image_dialog-thumb-strict.png)
 

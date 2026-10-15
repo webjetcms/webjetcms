@@ -231,6 +231,7 @@ Výběrem [režimu bodu zájmu](../../../frontend/thumb-servlet/interest-point.m
 | `3` | Zachovává šířku i výšku + doplnění pozadí barvou |
 | `4` | Zachovává šířku i výšku + doplnění pozadí barvou |
 | `5` | Zachovává šířku i výšku bez doplnění pozadí |
+| `6` | Zachovává celý bod zájmu rozšířením výřezu na požadovaný poměr stran |
 
 **Dynamické zobrazení polí**
 
@@ -238,12 +239,14 @@ Pole na kartě Miniatura se dynamicky zobrazují/skrývají podle vybraného re�
 
 - Režimy `1` a `2`: Zobrazí se pouze jedno rozměrné pole (šířka nebo výška).
 - Režimy `3` a `4`: Zobrazí se obě rozměrná pole + pole pro barvu pozadí. Barvu zadejte ve formátu `#rrggbb`
-- Režim `5`: Zobrazí se obě rozměrná pole bez pole pro barvu.
-- Pole **Vypnout bod zájmu** se zobrazí pro všechny režimy kromě prázdné hodnoty. To nastavuje, zda se při generování aplikuje i nastavený bod zájmu, nebo se použije celý obrázek.
+- Režimy `5` a `6`: Zobrazí se obě rozměrná pole bez pole pro barvu.
+- Pole **Vypnout bod zájmu** se zobrazí pro všechny režimy kromě prázdné hodnoty a režimu `0`. To nastavuje, zda se při generování aplikuje i nastavený bod zájmu, nebo se použije celý obrázek.
 
-**Striktní režim**
+**Výběr povoleného rozměru**
 
-V režimu [přesně definovaných rozměrů](../../../frontend/thumb-servlet/README.md#omezení) je zobrazeno výběrové pole možností, ze kterých lze rozměr zvolit, nelze nastavit libovolnou hodnotu:
+Jsou-li nastaveny [povolené rozměry](../../../frontend/thumb-servlet/README.md#omezení), karta nabídne jejich výběr s názvem režimu a číslem `ip`, například **96 px – Fixní výška (ip2)**. Volba **Nepoužít miniaturu** použije původní obrázek.
+
+V režimu `strict` lze vybrat pouze povolenou kombinaci. Stávající nepovolený rozměr je třeba nahradit povoleným nebo použít původní obrázek. Režimy `learn`, `check` a `allow` nabízejí také **Zadat vlastní rozměr…**, což zobrazí pole popsaná výše; při prázdném seznamu se tato pole zobrazí přímo. V režimu `deny` je karta skrytá.
 
 ![](image_dialog-thumb-strict.png)
 

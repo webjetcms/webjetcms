@@ -124,6 +124,7 @@ public class HistoryDB extends DB
 					doc.setHistorySaveDate(getDbDateTime(rs, "save_date", serverName));
 					doc.setHistoryApprovedBy(rs.getInt("approved_by"));
 					doc.setHistoryActual(rs.getBoolean("actual"));
+					doc.setHistoryAwaitingApprove(Tools.isNotEmpty(getDbString(rs, "awaiting_approve")));
 					doc.setHistoryApproveDate(getDbDateTime(rs, "approve_date", serverName));
 					doc.setHistoryDisapprovedBy(rs.getInt("disapproved_by"));
 
@@ -247,6 +248,7 @@ public class HistoryDB extends DB
 					doc.setHistoryApprovedBy(rs.getInt("approved_by"));
 					doc.setHistoryDisapprovedBy(rs.getInt("disapproved_by"));
 					doc.setHistoryActual(rs.getBoolean("actual"));
+					doc.setHistoryAwaitingApprove(Tools.isNotEmpty(getDbString(rs, "awaiting_approve")));
 					doc.setHistoryApproveDate(getDbDateTime(rs, "approve_date", serverName));
 
 					doc.setPublicable(rs.getBoolean("publicable"));
