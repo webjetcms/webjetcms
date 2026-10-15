@@ -70,6 +70,21 @@ The second column contains form items (or form step items) that are only visible
 
 ![](form-item-editor.png)
 
+### Copying fields between forms
+
+To reuse a configured field in another form or step:
+
+1. Select one saved field in **Form items** and click <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-clipboard" aria-hidden="true"></i></span></button> to copy it.
+2. Open the destination form in the same or another browser tab and select a step.
+3. Click <button class="btn btn-sm btn-outline-secondary buttons-paste-field" type="button"><span><i class="ti ti-clipboard-plus" aria-hidden="true"></i></span></button> to paste the copied field. The new-field editor opens with the copied settings and the selected destination step. The suggested order places the field at the end of the step.
+4. Adjust the settings if needed and save. Closing the editor without saving creates nothing.
+
+The clipboard copies the saved field configuration, including texts, options or enumeration links, validation, the **Required field** setting and statistics settings. **Visibility and requirement conditions are omitted** because they reference fields in the source form. Error counters are also omitted. The source field and its conditions remain unchanged.
+
+The internal clipboard holds one field for **30 minutes** and supports repeated pasting. Copying another field replaces it; pasting does not extend its lifetime. It survives page reloads and is shared between tabs using the same administration origin, browser profile, user and domain. The system clipboard is unchanged. **Paste field** becomes available when a step is selected and the clipboard contains a valid field of a supported type. Empty steps are valid destinations too.
+
+Each copy is independent of later changes to the source. CSS templates and step scripts are not transferred, so the resulting appearance depends on the destination form.
+
 ### Adding and editing items
 
 The editor for adding and editing items is special in that it changes its content according to the selected field type (item). This means that for each item type (e.g. First Name, Last Name, etc.) different settings and configuration options will be displayed. Depending on the selected item type, you can set parameters such as:

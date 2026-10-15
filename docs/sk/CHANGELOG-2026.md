@@ -105,6 +105,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
+- Viackrokové formuláre - pridané [kopírovanie polí medzi formulármi a krokmi](redactor/apps/multistep-form/README.md#kopírovanie-polí-medzi-formulármi). Vloženie otvorí editor s uloženými nastaveniami poľa; podmienky zobrazenia a povinnosti sa neprenášajú. Interná schránka funguje medzi kartami prehliadača a umožňuje opakované vloženie počas 30 minút (#58826).
 - Viackrokové formuláre - pridaná možnosť [Zobraziť obsah bez presmerovania](redactor/apps/form/README.md#karta---nastavenia). Prepínač  použije webstránku z poľa **Presmerovanie po vyplnení** a po úspešnom odoslaní nahradí prednastavenu hlášku jej obsahom bez zmeny URL adresy. Ak návštevník nemá oprávnenie na zobrazenie webstránky, zobrazí sa prednastavená hláška o úspešnom odoslaní (#58826).
 - Viackrokové formuláre - pridaná možnosť upraviť [HTML tlačidla na predchádzajúci krok](redactor/apps/formsimple/README.md#html-kód-tlačidiel) cez prekladový kľúč `components.mustistep.form.back_button` (#osk782).
 - Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).
