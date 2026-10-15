@@ -110,6 +110,7 @@ export class BarChartForm {
             chartDivId: config.chartDivId,
             chartData: config.chartData,
             horizontal: config.horizontal == null ? true : config.horizontal,
+            colorByValue: config.colorByValue === true,
             colorScheme: config.colorScheme
         });
     }
@@ -275,9 +276,6 @@ export class TableChartForm {
     }
 }
 
-// Tooltip label color, used in all charts (line, bar, pie)
-const tooltipLabelColor = "#1f2022"; //nice black
-
 // All charts
 const lightTheme_labelColor = "#1f2022";
 const darkTheme_labelColor = "#ffffff";
@@ -332,6 +330,32 @@ const setBlue = [blue40, blue50, blue60, blue70, blue80];
 const setGreen = [green30, green40, green50, green60, green70];
 const setRed = [red40, red50, red60, red70, red80];
 const setYellow = [yellow30, yellow40, yellow50, yellow60, yellow70];
+
+/**
+ * Creates a tooltip whose text uses whichever of black or white has higher contrast.
+ * Recalculates the text color whenever the tooltip background changes.
+ * @param {am5.Root} root chart root
+ * @param {Object} settings tooltip settings
+ * @returns {am5.Tooltip} tooltip with adaptive text color
+ */
+function createChartTooltip(root, settings) {
+    const tooltip = am5.Tooltip.new(root, { ...settings, autoTextColor: false });
+    const background = tooltip.get("background");
+    const updateTextColor = (color) => {
+        if (!color) return;
+        const channels = [color.r, color.g, color.b].map(value => {
+            const channel = value / 255;
+            return channel <= 0.04045 ? channel / 12.92 : Math.pow((channel + 0.055) / 1.055, 2.4);
+        });
+        const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+        const blackContrast = (luminance + 0.05) / 0.05;
+        const whiteContrast = 1.05 / (luminance + 0.05);
+        tooltip.label.set("fill", am5.color(blackContrast >= whiteContrast ? 0x000000 : 0xffffff));
+    };
+    background.on("fill", updateTextColor);
+    updateTextColor(background.get("fill"));
+    return tooltip;
+}
 
 /**
  * Object to store chart date axe configuration values 'timeUnit' & 'count'
@@ -963,14 +987,12 @@ async function createLineChart(root, chartForm) {
             });
 
             //Add tooltip
-            var tooltip = am5.Tooltip.new(root, {
+            var tooltip = createChartTooltip(root, {
                 pointerOrientation: "horizontal",
                 labelText: "{name}: [bold]{valueY}[/]",
-                autoTextColor: false,
                 tooltipIntervalOffset: 0
             });
             tooltip.label.setAll({
-                fill: am5.color(tooltipLabelColor),
                 textAlign: "center",
                 textValign: "middle"
             });
@@ -1241,6 +1263,36 @@ function createBarChartVertical(root, chart, chartForm) {
 }
 
 /**
+ * Set bar data and recalculate the color scale from the nonzero values.
+ * Zero values remain in the chart without affecting the colors of visible bars.
+ *
+ * @param {am5xy.ColumnSeries} series bar series to update
+ * @param {BarChartForm} chartForm chart configuration and current data
+ */
+function setBarChartData(series, chartForm) {
+    if (chartForm.colorByValue) {
+        const colors = getColorScheme(chartForm.colorScheme);
+        const values = chartForm.chartData
+            .map(item => item[chartForm.xAxeName])
+            .filter(value => Number.isFinite(value) && value !== 0);
+        const minValue = values.length > 0 ? Math.min(...values) : 0;
+        const maxValue = values.length > 0 ? Math.max(...values) : 0;
+
+        series.set("heatRules", ["fill", "stroke"].map(key => ({
+            target: series.columns.template,
+            dataField: chartForm.horizontal === false ? "valueY" : "valueX",
+            key: key,
+            min: colors[0],
+            max: colors[colors.length - 1],
+            minValue: minValue,
+            maxValue: maxValue
+        })));
+    }
+
+    series.data.setAll(chartForm.chartData);
+}
+
+/**
  * Create BAR type chart and set all setting around chart. The created chart is set in BarChartForm.chart param.
  * Supports horizontal (default) and vertical bar orientations via chartForm.horizontal flag.
  *
@@ -1293,26 +1345,26 @@ async function createBarChart(root, chartForm) {
     var series = barConfig.series;
 
     //Create tooltip
-    var tooltip = am5.Tooltip.new(root, {
-        labelText: "{" + chartForm.yAxeName + "}: {" + chartForm.xAxeName + "}",
-        autoTextColor: false
+    var tooltip = createChartTooltip(root, {
+        labelText: "{" + chartForm.yAxeName + "}: {" + chartForm.xAxeName + "}"
     })
     tooltip.label.setAll({
-        fill: am5.color(tooltipLabelColor),
         textAlign: "center",
         textValign: "middle"
     });
     series.set("tooltip", tooltip);
 
-    // Make each column to be of a different color
-    series.columns.template.adapters.add("fill", function(fill, target) {
-        return chart.get("colors").getIndex(series.columns.indexOf(target));
-    });
-    series.columns.template.adapters.add("stroke", function(stroke, target) {
-        return chart.get("colors").getIndex(series.columns.indexOf(target));
-    });
+    if (!chartForm.colorByValue) {
+        // Make each column to be of a different color
+        series.columns.template.adapters.add("fill", function(fill, target) {
+            return chart.get("colors").getIndex(series.columns.indexOf(target));
+        });
+        series.columns.template.adapters.add("stroke", function(stroke, target) {
+            return chart.get("colors").getIndex(series.columns.indexOf(target));
+        });
+    }
 
-    series.data.setAll(chartForm.chartData);
+    setBarChartData(series, chartForm);
 
     //Add cursor
     var cursor = chart.set("cursor", am5xy.XYCursor.new(root, {}));
@@ -1429,12 +1481,8 @@ async function createPieChart(root, chartForm) {
     setPieSumLabel(chartForm);
 
     //Create and format tooltip
-    var tooltip = am5.Tooltip.new(root, {
-        labelText: "{valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName + "})",
-        autoTextColor: false
-    });
-    tooltip.label.setAll({
-        fill: am5.color(tooltipLabelColor)
+    var tooltip = createChartTooltip(root, {
+        labelText: "{valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName + "})"
     });
     series.set("tooltip", tooltip);
 
@@ -1523,18 +1571,14 @@ async function createDoublePieChart(root, chartForm) {
     series_inner.labels.template.setAll({ forceHidden: true });
 
     //Create and format tooltip's
-    var tooltip_inner = am5.Tooltip.new(root, {
-        labelText: "{" + chartForm.xAxeName + "}: {valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName_inner + "})",
-        autoTextColor: false
+    var tooltip_inner = createChartTooltip(root, {
+        labelText: "{" + chartForm.xAxeName + "}: {valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName_inner + "})"
     })
-    tooltip_inner.label.setAll({ fill: am5.color(lightTheme_labelColor) });
     series_inner.set("tooltip", tooltip_inner);
 
-    var tooltip_outer = am5.Tooltip.new(root, {
-        labelText: "{" + chartForm.xAxeName + "}: {valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName_outer + "})",
-        autoTextColor: false
+    var tooltip_outer = createChartTooltip(root, {
+        labelText: "{" + chartForm.xAxeName + "}: {valuePercentTotal.formatNumber('#.#')}% ({" + chartForm.yAxeName_outer + "})"
     })
-    tooltip_outer.label.setAll({ fill: am5.color(lightTheme_labelColor) });
     series_outer.set("tooltip", tooltip_outer);
 }
 
@@ -1653,10 +1697,11 @@ export async function updateChart(chartForm) {
     if(chartForm instanceof BarChartForm) {
         //BAR chart dont need remove series, just set new data to series
         //our bar chart always support only 1 series
-        chartForm.chart.series.values[0].data.setAll(chartForm.chartData);
+        setBarChartData(chartForm.chart.series.values[0], chartForm);
 
         //!! its also MUST to set new data into CategoryAxis
-        chartForm.chart.yAxes.values[0].data.setAll(chartForm.chartData);
+        const categoryAxis = chartForm.horizontal === false ? chartForm.chart.xAxes.values[0] : chartForm.chart.yAxes.values[0];
+        categoryAxis.data.setAll(chartForm.chartData);
     } else if(chartForm instanceof PieChartForm) {
         updatePieSumLabels(chartForm);
 
