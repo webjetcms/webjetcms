@@ -46,6 +46,7 @@ public class BrowserDetector implements Serializable {
 	private String browserPlatform = "unknown";
 
 	private String browserSubplatform = "";
+	private String windowsVersionClientHint;
 
 	private boolean phone = false;
 	private boolean tablet = false;
@@ -110,19 +111,23 @@ public class BrowserDetector implements Serializable {
 		if (request.getParameter("forceBrowserDetector") != null)
 			request.getSession().removeAttribute(StatDB.BROWSER_DETECTOR);
 
+		String windowsVersion = getWindowsVersionClientHint(request);
 		BrowserDetector browser = (BrowserDetector) request.getSession().getAttribute(StatDB.BROWSER_DETECTOR);
-		if (browser != null) {
+		if (browser != null && (windowsVersion == null || windowsVersion.equals(browser.windowsVersionClientHint))) {
 			return browser;
 		}
 
 		// double check cez Cache objekt (kvoli botom)
 		String KEY = null;
 		Cache c = null;
-		if (request.getParameter("forceBrowserDetector") == null) {
+		if (request.getParameter("forceBrowserDetector") == null
+				&& request.getSession().getAttribute("BrowserDetector.forceBrowserDetector") == null) {
 			c = Cache.getInstance();
 			KEY = "browserDetector-" + Tools.getRemoteIP(request) + "-" + request.getHeader("User-Agent");
+			if (windowsVersion != null) KEY += "-Windows" + windowsVersion;
 			browser = (BrowserDetector) c.getObject(KEY);
 			if (browser != null) {
+				request.getSession().setAttribute(StatDB.BROWSER_DETECTOR, browser);
 				return browser;
 			}
 		}
@@ -235,6 +240,7 @@ public class BrowserDetector implements Serializable {
 	 */
 	public void parse(HttpServletRequest request) {
 		try {
+			windowsVersionClientHint = getWindowsVersionClientHint(request);
 			if (userAgentString == null)
 				return;
 
@@ -253,6 +259,9 @@ public class BrowserDetector implements Serializable {
 			if (uaClient.userAgent.major!=null) browserVersion = uaClient.userAgent.major+"."+uaClient.userAgent.minor;
 			browserPlatform = uaClient.os.family;
 			browserSubplatform = uaClient.os.major;
+			if (WINDOWS.equals(browserPlatform) && "10".equals(browserSubplatform) && windowsVersionClientHint != null) {
+				browserSubplatform = windowsVersionClientHint;
+			}
 
 			String forceBrowserDetector = forceBrowserTypeIfRequested(request);
 			detectBrowserDeviceType();
@@ -279,6 +288,24 @@ public class BrowserDetector implements Serializable {
 			Logger.error(BrowserDetector.class, "BD PARSE: ua=" + userAgentString);
 			sk.iway.iwcm.Logger.error(e);
 		}
+	}
+
+	/**
+	 * Maps the Windows UniversalApiContract version to the operating system version.
+	 * Windows 10 and 11 share the same legacy User-Agent token; Client Hints 13+ identify Windows 11.
+	 * See https://learn.microsoft.com/en-us/microsoft-edge/web-platform/how-to-detect-win11.
+	 *
+	 * @param request request containing optional User-Agent Client Hints
+	 * @return Windows version, or null when the hints cannot refine the legacy detection
+	 */
+	private static String getWindowsVersionClientHint(HttpServletRequest request) {
+		if (request == null || !"\"Windows\"".equals(request.getHeader("Sec-CH-UA-Platform"))) return null;
+		String version = request.getHeader("Sec-CH-UA-Platform-Version");
+		if (version == null || !version.matches("\"[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\"")) return null;
+		int major = Integer.parseInt(version.substring(1, version.indexOf('.')));
+		if (major >= 13) return "11";
+		if (major > 0) return "10";
+		return null;
 	}
 
 	private String forceBrowserTypeIfRequested(HttpServletRequest request) {

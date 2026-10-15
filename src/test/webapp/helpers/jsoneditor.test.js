@@ -10,10 +10,10 @@ test("JSON editor accepts nested objects and handles optional whitespace", async
     assert.deepEqual(validateJsonObject(" \n\t ", true), {valid: false, error: "required"});
 });
 
-test("JSON editor rejects every non-object root", async () => {
+test("JSON editor accepts every JSON root type even in required fields", async () => {
     const {validateJsonObject} = await utilities;
-    for (const text of ["null", "[]", "true", "false", "42", '"text"']) {
-        assert.deepEqual(validateJsonObject(text), {valid: false, error: "object"});
+    for (const text of ["{}", "null", "[]", "[{}]", "true", "false", "42", '"text"', '""']) {
+        assert.deepEqual(validateJsonObject(text, true), {valid: true}, text);
     }
 });
 
@@ -26,7 +26,7 @@ test("JSON editor rejects incomplete and concatenated objects", async () => {
     }
 });
 
-test("Browser and server share the supported extended object syntax", async () => {
+test("Browser and server share the supported JSON syntax and root values", async () => {
     const {validateJsonObject, formatJsonObject} = await utilities;
     const fixtures = require("../../resources/sk/iway/iwcm/components/customfields/jsoneditor-syntax.json");
     for (const text of fixtures.valid) {
@@ -106,6 +106,16 @@ test("JSON formatting preserves numeric spelling, duplicate keys and order", asy
     assert.equal(formatJsonObject(text), '{\n  "id": 9007199254740993,\n  "id": 1.2300e+42,\n  "negative": -0,\n  "empty": {},\n  "items": [\n    1,\n    []\n  ]\n}');
 });
 
+test("JSON formatting preserves array and scalar root values without rounding numbers", async () => {
+    const {formatJsonObject} = await utilities;
+    const source = '[{"id":9007199254740993,"available":true},{"id":56789,"items":[null,false,[]]}]';
+    const expected = '[\n  {\n    "id": 9007199254740993,\n    "available": true\n  },\n  {\n    "id": 56789,\n    "items": [\n      null,\n      false,\n      []\n    ]\n  }\n]';
+    assert.equal(formatJsonObject(source), expected);
+    for (const text of ["null", "true", "false", "9007199254740993", "1.2300e+42", "-0", '"  text  "', '""']) {
+        assert.equal(formatJsonObject(" \n" + text + "\t "), text);
+    }
+});
+
 test("JSON formatting preserves string escapes, whitespace and HTML as literal text", async () => {
     const {formatJsonObject} = await utilities;
     const value = String.raw`"  </textarea>&quot; 😀 \u0061 \n \" \\ , : {} []  "`;
@@ -114,7 +124,7 @@ test("JSON formatting preserves string escapes, whitespace and HTML as literal t
     assert.equal(formatJsonObject(formatJsonObject(text)), formatJsonObject(text));
 });
 
-test("JSON formatting leaves empty, invalid and non-object values untouched", async () => {
+test("JSON formatting leaves empty and invalid input untouched", async () => {
     const {formatJsonObject} = await utilities;
-    for (const text of [" \n", '{"a":}', "null", "[]", '"text"']) assert.equal(formatJsonObject(text), text);
+    for (const text of [" \n", '{"a":}', "[1,]", "true false", '"unterminated']) assert.equal(formatJsonObject(text), text);
 });

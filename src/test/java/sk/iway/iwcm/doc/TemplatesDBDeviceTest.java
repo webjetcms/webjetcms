@@ -34,9 +34,9 @@ class TemplatesDBDeviceTest extends BaseWebjetTest {
 
 		// Use reflection to create TemplatesDB instance without DB access
 		// The constructor catches exceptions from reload(), so it should succeed even without DB
-		Constructor<TemplatesDB> constructor = TemplatesDB.class.getDeclaredConstructor();
+		Constructor<TemplatesDB> constructor = TemplatesDB.class.getDeclaredConstructor(boolean.class);
 		constructor.setAccessible(true);
-		templatesDB = constructor.newInstance();
+		templatesDB = constructor.newInstance(false);
 
 		// Set the temps field via reflection
 		Field tempsField = TemplatesDB.class.getDeclaredField("temps");

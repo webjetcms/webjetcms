@@ -137,12 +137,12 @@ export function link(title, href, className = "") {
 }
 
 /**
- * Selects the first valid Tabler class and creates a decorative icon, defaulting to ti-link.
+ * Selects the first valid Tabler class, ignoring a duplicated ti prefix, and defaults to ti-link.
  * @param {string} [name] - Icon class or whitespace-separated class list.
  * @returns {HTMLElement} An icon hidden from assistive technology.
  */
 export function icon(name) {
-    const className = String(name || '').split(/\s+/).find(value => /^ti-[a-z0-9-]+$/.test(value)) || 'ti-link';
+    const className = String(name || '').split(/\s+/).find(value => value !== 'ti-ti' && /^ti-[a-z0-9-]+$/.test(value)) || 'ti-link';
     const result = node("i", `ti ${className}`);
     result.setAttribute("aria-hidden", "true");
     return result;

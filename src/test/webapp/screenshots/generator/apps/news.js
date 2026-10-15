@@ -4,21 +4,19 @@ Before(({ login }) => {
     login('admin');
 });
 
-Scenario('novinky', ({ I, DT, DTE, Document }) => {
+Scenario('novinky', ({ I, DT, DTE, Document, i18n }) => {
     I.amOnPage("/apps/news/admin/");
-    DT.waitForLoader();
+    DT.waitForLoader("newsDataTable");
 
-    I.clickCss("#groupSelect_wrapper > div > button");
-    I.waitForElement(".dropdown-menu.show .dropdown-menu.inner.show");
-    I.click( locate("a.dropdown-item > span").withText("/English/News") );
-    DT.waitForLoader();
+    I.waitForElement("#SomStromcek .jstree-anchor");
+    I.clickCss('#SomStromcek a[title="/English/News"]');
+    DT.waitForLoader("newsDataTable");
 
     Document.screenshot("/redactor/apps/news/admin-dt.png");
 
-    I.click("McGregor sales force");
+    I.click("Trhy sú naďalej vydesené");
     DTE.waitForEditor("newsDataTable");
     I.wait(10);
-    I.toastrClose();
     Document.screenshot("/redactor/apps/news/admin-edit.png");
 
     //editor
@@ -34,7 +32,7 @@ Scenario('novinky', ({ I, DT, DTE, Document }) => {
         I.clickCss("#pills-dt-component-datatable-filter-tab");
         addFilter(I, "AUTHOR_ID", "<=", "123");
         addFilter(I, "DATE_CREATED", "=", "01.10.2025");
-        addFilter(I, "DATA", "Začína na", "This is first ");
+        addFilter(I, "DATA", i18n.get("Starting at"), "This is first ");
         addFilter(I, "AVAILABLE", "=", "false");
         I.clickCss("td.valueTd > input");
         Document.screenshot("/redactor/apps/news/editor-dialog-filter.png");

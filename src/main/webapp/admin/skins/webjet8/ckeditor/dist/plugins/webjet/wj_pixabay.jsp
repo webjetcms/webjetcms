@@ -267,7 +267,7 @@ div.no_results { color: red; font-weight: bold; text-align: center; }
 									if (window.parent.CKEDITOR === undefined)
 									{
 										//sme v dialogu pre perex obrazok
-										var inputElement = window.parent.$(".row:not(.template) input.elfinder-url-input");
+										var inputElement = window.parent.$("#file");
 										//console.log("FILE: ", inputElement);
 										inputElement.val(data.virtualPath + "?v=" + new Date().getTime());
 										window.parent.$(".md-tabs ul.nav li:first a").trigger("click");

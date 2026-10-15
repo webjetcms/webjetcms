@@ -9,6 +9,8 @@ Sekce konfigurace slouží k zobrazení a správě konfiguračních proměnných
 
 Strom lze prohledávat. Názvy modulů jsou technické názvy a nepřekládají se. Ve vybraném modulu lze stávající proměnnou upravit, ale ne vytvořit novou ani spustit import, protože vlastní databázová proměnná nemá informaci o zařazení do modulu.
 
+Tlačítkem **Nastavení** nad stromem můžete změnit poměr šířky stromu a tabulky nebo nastavit pevnou šířku stromu v pixelech. Výchozí šířka je 200px. Vlastní volba se uloží pro přihlášeného uživatele samostatně pro konfiguraci.
+
 ![](page.png)
 
 V sekci instalace je seznam [nejpoužívanějších konfiguračních proměnných](../../../install/config/README.md).

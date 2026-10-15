@@ -477,7 +477,9 @@ Displays a simple HTML editor that allows basic text formatting such as bold/ita
 
 In the event of a validation error, the toolbar and editing area are highlighted with a red border to visually mark the incorrect content, just like with other types of fields.
 
-When you open or confirm HTML editing mode, the editor removes extra blank paragraphs, such as `<p><br></p>`. If the deletion would leave the content completely blank, the original HTML code is preserved.
+When editing HTML code, the editor preserves nested wrapper elements `div` and empty paragraphs between content, such as `<p><br></p>`. A simple `div` without attributes and nested blocks will be converted to paragraphs `p` ; indenting the source code between blocks does not create additional empty lines.
+
+When retrieving a value to store, empty paragraphs at the end of the content are removed, even if they are nested in end wrapping `div` elements. Empty paragraphs between non-empty blocks are preserved.
 
 Note the use of the ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)``` converter, which will allow only [secure HTML code](../backend/security.md) to be sent (without embedded JavaScript elements and the like).
 
@@ -818,7 +820,7 @@ The frontend implementation is in the files:
 - [field-type-options.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options.js) — field type definition with two inputs (name and value)
 - [field-type-options-base.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options-base.js) — common logic for both OPTIONS and OPTIONS_SIMPLE (drag & drop, adding/removing rows, allowEmptyOption)
 
-On the backend side, the type `DataTableColumnType.OPTIONS` is automatically set to `editor.type = "options"` with the rendering format `dt-format-text`.
+On the backend side, the type `DataTableColumnType.OPTIONS` is automatically set to `editor.type = "options"` with the format `dt-format-text`.
 
 ![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
 

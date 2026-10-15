@@ -195,7 +195,7 @@ Scenario("Monitoring server documents @singlethread", ({I, DT}) => {
   phase3(I, DT);
 });
 
-Scenario("Monitoring server sql", ({I, DT}) => {
+Scenario("Monitoring server sql @singlethread", ({I, DT}) => {
   I.amOnPage("/apps/server_monitoring/admin/sql/");
 
   phase1(I, DT);

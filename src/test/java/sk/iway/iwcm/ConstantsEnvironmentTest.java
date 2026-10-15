@@ -45,13 +45,19 @@ class ConstantsEnvironmentTest extends BaseWebjetTest {
         "web-uat.example.com, UAT", "uat-web.example.com, UAT", "web-aut-02.example.com, UAT",
         "uat01.example.com, UAT", "web_UAT_02.example.com, UAT", "acc.example.com, UAT",
         "acceptance.example.com, UAT", "stage.example.com, UAT", "staging.example.com, UAT",
-        "test.example.com, UAT", "testing.example.com, UAT", "qa01.example.com, UAT",
+        "test.example.com, TEST", "testing.example.com, TEST", "qa01.example.com, TEST",
         "preprod.example.com, UAT", "preproduction.example.com, UAT", "pre-prod.example.com, UAT",
         "web-pre-production-01.example.com, UAT", "pre_prod.example.com, UAT", "pre.prod.example.com, UAT",
         "int.example.com, INT", "web-int-01.example.com, INT", "integration.example.com, INT", "sit01.example.com, INT",
         "dev-uat-int-prod.example.com, PROD", "dev-int-uat.example.com, UAT", "dev-int.example.com, INT",
-        "prod-pre-prod.example.com, PROD", "dev.example.com, DEV", "localhost, DEV",
-        "127.0.0.1, DEV", "iwcm.interway.sk, DEV", "product.example.com, DEV", "livechat.example.com, DEV",
+        "prod-pre-prod.example.com, PROD", "dev.example.com, DEV", "localhost, LOCAL",
+        "127.0.0.1, LOCAL", "iwcm.interway.sk, DEV", "product.example.com, DEV", "livechat.example.com, DEV",
+        "cit.example.com, CIT", "web-cit02.example.com, CIT", "demo.example.com, DEMO",
+        "web-demo-01.example.com, DEMO", "web-local.example.com, LOCAL", "localhost.localdomain, LOCAL",
+        "127.0.1.1, LOCAL", "::1, LOCAL", "[::1], LOCAL", "0:0:0:0:0:0:0:1, LOCAL",
+        "cit-int-test-demo-local.example.com, CIT", "prod-cit-demo.example.com, PROD",
+        "uat-cit.example.com, UAT", "test-demo.example.com, TEST", "192.168.1.10, DEV",
+        "city.example.com, DEV", "demography.example.com, DEV", "localization.example.com, DEV",
         "contest.example.com, DEV", "situation.example.com, DEV", "productional.example.com, DEV", "'', DEV"
     })
     void detectsEnvironmentFromServerName(String serverName, String expected) {

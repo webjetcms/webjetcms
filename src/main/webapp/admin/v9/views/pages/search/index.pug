@@ -3,6 +3,7 @@ extends ../../partials/layout
 block content
 
     script.
+        window.helpLink = "/redactor/admin/search/README";
         WJ.setTitle('[[\#{components.search.title}]]');
 
         WJ.headerTabs({
@@ -53,28 +54,39 @@ block content
         }
 
         function afterLoadInitialize() {
-            if(webPageHasPerm && translationKeysHasPerm) {
-                $("#translationKeysDataTable_wrapper").hide();
-                $("#filesDataTable_wrapper").hide();
-
-            } else if(webPageHasPerm) {
-                $("#translationKeysDataTable").hide();
-                $("#filesDataTable_wrapper").hide();
-
-                $("#pills-translationKeys-tab").hide();
-            } else if(translationKeysHasPerm) {
-                $("#filesDataTable").hide();
-                $("#webPagesDataTable").hide();
-
-                $("#pills-translationKeys-tab")[0].click();
-                $("#pills-files-tab").hide();
-                $("#pills-webPages-tab").hide();
+            $("#pills-webPages-tab, #pills-files-tab").toggle(webPageHasPerm);
+            $("#pills-translationKeys-tab").toggle(translationKeysHasPerm);
+            for (const tab of ["webPages", "files", "translationKeys"]) {
+                const visible = $("#pills-" + tab + "-tab").hasClass("active") && (tab === "translationKeys" ? translationKeysHasPerm : webPageHasPerm);
+                $("#" + tab + "DataTable_wrapper, #" + tab + "DataTable").toggle(visible);
             }
+            $(".rootDirDiv").toggle($("#pills-webPages-tab").hasClass("active"));
         }
 
         window.domReady.add(function () {
 
             WJ.selectMenuItem("/admin/v9/");
+
+            const searchParams = new URLSearchParams(window.location.search);
+            const searchTabs = { docs: "webPages", files: "files", translationKeys: "translationKeys" };
+            const requestedScope = searchParams.get("scope");
+            const requestedTab = Object.hasOwn(searchTabs, requestedScope) ? searchTabs[requestedScope] : null;
+            const requestedTabAllowed = requestedTab && (requestedTab === "translationKeys" ? translationKeysHasPerm : webPageHasPerm);
+            const initialTab = requestedTabAllowed ? requestedTab : webPageHasPerm ? "webPages" : "translationKeys";
+            let initialSearchPending = searchParams.has("text") || requestedTabAllowed || (!webPageHasPerm && translationKeysHasPerm);
+            $("#pills-tabsFilter a.nav-link").removeClass("active");
+            $("#pills-" + initialTab + "-tab").addClass("active");
+            if (searchParams.has("text")) $("#searchText").val(searchParams.get("text"));
+
+            function initializeSearch(table) {
+                table.ready(() => {
+                    afterLoadInitialize();
+                    const initialTable = initialTab === "webPages" ? webPagesDataTable : initialTab === "files" ? filesDataTable : translationKeysDataTable;
+                    if (!initialSearchPending || table !== initialTable) return;
+                    initialSearchPending = false;
+                    getData();
+                });
+            }
 
             afterLoadInitialize();
 
@@ -123,15 +135,7 @@ block content
                     });
                     webPagesDataTable = wpdInstance.createDatatable();
 
-                    afterLoadInitialize();
-
-                    setTimeout(() => {
-                        var searchParam = WJ.urlGetParam("text");
-                        if(typeof searchParam != "undefined" && searchParam !== null) {
-                            $("#searchText").val(searchParam);
-                            getData();
-                        }
-                    }, 500);
+                    initializeSearch(webPagesDataTable);
                 });
             }
 
@@ -151,6 +155,7 @@ block content
                     customFieldsUpdateColumnsPreserveVisibility: true,
                     initialData: dtWJ.getEmptyData(true)
                 });
+                initializeSearch(translationKeysDataTable);
             }
 
             // ************* Files ****************
@@ -224,7 +229,7 @@ block content
                         }
                     });
 
-                    afterLoadInitialize();
+                    initializeSearch(filesDataTable);
                 });
             }
 
@@ -260,20 +265,20 @@ block content
             }
 
             function getData() {
-                if( $("#pills-webPages-tab").hasClass("active") && webPageHasPerm) {
+                if( $("#pills-webPages-tab").hasClass("active") && webPageHasPerm && webPagesDataTable) {
                     webPagesDataTable.setAjaxUrl(WJ.urlUpdateParam(webPageUrl, "searchText", $('#searchText').val()));
                     webPagesDataTable.setAjaxUrl(WJ.urlUpdateParam(webPagesDataTable.getAjaxUrl(), "searchRootGroupId", $('#rootDir').val()));
                     webPagesDataTable.setAjaxUrl(WJ.urlUpdateParam(webPagesDataTable.getAjaxUrl(), "searchType", "docs"));
 
                     //reload table values
                     webPagesDataTable.ajax.reload();
-                } else if( $("#pills-files-tab").hasClass("active") && webPageHasPerm) {
+                } else if( $("#pills-files-tab").hasClass("active") && webPageHasPerm && filesDataTable) {
                     filesDataTable.setAjaxUrl(WJ.urlUpdateParam(filesUrl, "searchText", $('#searchText').val()));
                     filesDataTable.setAjaxUrl(WJ.urlUpdateParam(filesDataTable.getAjaxUrl(), "searchType", "files"));
 
                     //reload table values
                     filesDataTable.ajax.reload();
-                } else if( $("#pills-translationKeys-tab").hasClass("active") && translationKeysHasPerm) {
+                } else if( $("#pills-translationKeys-tab").hasClass("active") && translationKeysHasPerm && translationKeysDataTable) {
                     translationKeysDataTable.setAjaxUrl(WJ.urlUpdateParam(translationKeysUrl, "searchText", $('#searchText').val()));
 
                     //reload table values

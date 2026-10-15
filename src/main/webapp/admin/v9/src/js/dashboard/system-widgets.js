@@ -71,7 +71,7 @@ function activityList(container, items, type, size) {
  * @param {import('./registry').WidgetContext} context - Supplies the accessible action label.
  * @returns {HTMLAnchorElement|null} A detached mail action, or null when the address fails validation.
  */
-function adminMail(user, context) {
+export function adminMail(user, context) {
     const email = typeof user.email === 'string' ? user.email.trim() : '';
     if (!email || /[\s<>,;?&#%\\]/.test(email) || !/^[^@]+@[^@]+$/.test(email)) return null;
     const action = node('a', 'btn btn-sm md-dashboard-widget__admin-mail');
@@ -80,6 +80,39 @@ function adminMail(user, context) {
     action.setAttribute('aria-label', action.title);
     action.append(icon('ti-mail'));
     return action;
+}
+
+/** Reads a fresh, server-authorized administrator summary for a visible widget or active dialog tab. */
+export function fetchLoggedAdministrators(signal) {
+    return fetchJson('/admin/rest/sessions/administrators', signal);
+}
+
+/** Loads the administrator list when the shared widget lifecycle starts or refreshes this render. */
+export async function renderLoggedAdmins({ container, context, signal }) {
+    const admins = await fetchLoggedAdministrators(signal);
+    if (signal.aborted) return;
+    const summary = node('div', 'md-dashboard-widget__admin-summary');
+    const total = admins.reduce((count, user) => count + user.sessionCount, 0);
+    const description = node('div');
+    description.append(node('span', '', text(context, 'sessionActiveSessions')),
+        node('small', '', text(context, 'adminsCount', number(admins.length))));
+    summary.append(node('strong', 'md-dashboard-widget__admin-total', number(total)), description);
+    container.append(summary);
+    if (!admins.length) { empty(container, context); return; }
+    const list = node('ul', 'md-dashboard-widget__admins list-unstyled');
+    list.tabIndex = 0;
+    list.setAttribute('aria-label', text(context, 'logged-admins'));
+    containNativeScroll(list, signal);
+    admins.forEach(user => {
+        const row = node('li');
+        const count = node('strong', 'md-dashboard-widget__admin-count', number(user.sessionCount));
+        count.setAttribute('aria-label', text(context, 'sessionsCount', number(user.sessionCount)));
+        row.append(node('span', 'md-dashboard-widget__admin-name', user.fullName), count);
+        const mail = adminMail(user, context);
+        if (mail) row.append(mail);
+        list.append(row);
+    });
+    container.append(list);
 }
 
 function monitoringMetrics(type) {
@@ -231,36 +264,16 @@ function liveMonitoring(container, type, context, signal, update) {
     });
 }
 
-/** Registers the activity, online-administrator and monitoring cards that replace the legacy section. */
+/** Registers the activity and monitoring cards that replace the legacy section. */
 export function registerSystemWidgets() {
     for (const [type, permission, widgetIcon] of [['changed-pages', 'menuWebpages', 'ti-pencil'], ['audit', 'cmp_adminlog', 'ti-shield-search']]) registerWidget({
-        type, titleKey: `admin.dashboard.${type}.js`, descriptionKey: `admin.dashboard.${type}.description.js`, icon: widgetIcon,
+        type, titleKey: `admin.dashboard.${type}.js`, descriptionKey: `admin.dashboard.${type}.description.js`, category: type === 'changed-pages' ? 'content' : 'system', icon: widgetIcon,
         multiple: true, sizes: ['3x2', '3x3'], defaultSize: '3x3', headerLink: { href: moduleLinks[type], labelKey: 'admin.dashboard.allShort.js' },
         isAvailable: () => window.WJ.hasPermission(permission) && window.WJ.hasPermission('cmp_adminlog'),
         async render({ container, instance, context, signal }) {
             const data = type === 'changed-pages' ? await fetchChangedPages(signal) : await fetchAudit(signal); if (signal.aborted) return;
             if (!data.items.length) empty(container, context);
             else activityList(container, data.items, type, instance.size);
-        }
-    });
-    registerWidget({
-        type: 'logged-admins', titleKey: 'admin.dashboard.logged-admins.js', descriptionKey: 'admin.dashboard.logged-admins.description.js', icon: 'ti-users',
-        multiple: true, sizes: ['2x2', '2x3'], defaultSize: '2x2', isAvailable: () => window.WJ.hasPermission('welcomeShowLoggedAdmins'),
-        render({ container, context, signal }) {
-            const admins = context.data.loggedAdmins;
-            if (!admins.length) { empty(container, context); return; }
-            const list = node('ul', 'md-dashboard-widget__admins list-unstyled');
-            list.tabIndex = 0;
-            list.setAttribute('aria-label', text(context, 'logged-admins'));
-            containNativeScroll(list, signal);
-            admins.forEach(user => {
-                const row = node('li');
-                row.append(icon('ti-user'), node('span', 'md-dashboard-widget__admin-name', user.fullName));
-                const mail = adminMail(user, context);
-                if (mail) row.append(mail);
-                list.append(row);
-            });
-            container.append(list, node('p', 'md-dashboard-widget__footnote small', text(context, 'adminsCount', number(admins.length))));
         }
     });
     for (const type of ['server-memory', 'server-cpu']) registerWidget({

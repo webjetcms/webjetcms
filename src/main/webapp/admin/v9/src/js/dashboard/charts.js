@@ -24,6 +24,31 @@ export function chartHost(container, label, bars = false) {
 }
 
 /**
+ * Preserves a light RGB surface's hue while giving current and comparison lines distinct saturation/lightness.
+ * Transparent surfaces are composited over the white page; near-neutral surfaces produce gray lines.
+ * @param {string} background - Computed RGB/RGBA card background.
+ * @returns {{primary: string, comparison: string, surface: string}|undefined} HEX colors, or undefined for unsupported input.
+ */
+function deriveChartColors(background) {
+    const values = background.match(/^rgba?\(([^)]+)\)$/)?.[1].match(/[\d.]+/g)?.map(Number);
+    if (!values || values.length < 3) return;
+    const alpha = values[3] ?? 1;
+    const rgb = values.slice(0, 3).map(channel => (channel * alpha + 255 * (1 - alpha)) / 255);
+    const max = Math.max(...rgb), min = Math.min(...rgb), delta = max - min;
+    const [r, g, b] = rgb;
+    const hue = delta === 0 ? 0 : ((max === r ? (g - b) / delta : max === g ? (b - r) / delta + 2 : (r - g) / delta + 4) * 60 + 360) % 360;
+    const hex = channels => '#' + channels.map(channel => Math.round(channel).toString(16).padStart(2, '0')).join('');
+    const line = (saturation, lightness) => {
+        const a = (delta < 0.03 ? 0 : saturation) * Math.min(lightness, 1 - lightness);
+        return hex([0, 8, 4].map(n => {
+            const k = (n + hue / 30) % 12;
+            return (lightness - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))) * 255;
+        }));
+    };
+    return { primary: line(0.8, 0.28), comparison: line(0.3, 0.36), surface: hex(rgb.map(channel => channel * 255)) };
+}
+
+/**
  * Keeps preview charts compact; the module link provides the full interactive report.
  * Applies host color tokens, removes report controls and configures traffic, monitoring or referrer variants.
  *
@@ -34,9 +59,12 @@ function compactChart(form, host) {
     const chart = form.chart;
     const traffic = host.classList.contains('md-dashboard-widget__chart--traffic');
     const monitoring = host.classList.contains('md-dashboard-widget__chart--monitoring');
+    const card = host.closest('.md-dashboard__widget');
+    const palette = traffic && card ? deriveChartColors(window.getComputedStyle(card).backgroundColor) : undefined;
+    if (palette) Object.entries(palette).forEach(([name, value]) => card.style.setProperty(`--wj-dashboard-chart-${name}`, value));
     const styles = window.getComputedStyle(host);
     const color = (name, fallback) => {
-        const value = styles.getPropertyValue(`--wj-dashboard-chart-${name}`).trim() || styles.getPropertyValue(fallback).trim();
+        const value = palette?.[name] || styles.getPropertyValue(`--wj-dashboard-chart-${name}`).trim() || styles.getPropertyValue(fallback).trim();
         // Sass mix() can emit fractional RGB channels; AmCharts only parses integer RGB strings.
         const rgb = value.match(/^rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/i);
         return value ? window.am5.color(rgb ? `rgb(${rgb.slice(1).map(channel => Math.round(Number(channel))).join(',')})` : value) : undefined;
@@ -46,6 +74,16 @@ function compactChart(form, host) {
     const grid = color('grid', '--wj-nice-gray-100');
     const label = color('label', '--wj-gray-text');
     const surface = color('surface', '--wj-dashboard-mint');
+    const tooltipSurface = color('tooltip-surface', '--wj-dashboard-surface');
+    const tooltipText = color('tooltip-text', '--wj-secondary');
+    const styleTooltip = tooltip => {
+        if (!tooltip) return;
+        // Series colors can be dark; keep tooltip contrast independent of the widget palette.
+        tooltip.setAll({ getFillFromSprite: false, getStrokeFromSprite: false, autoTextColor: false, animationDuration: 0,
+            paddingTop: 4, paddingBottom: 4, paddingLeft: 8, paddingRight: 8 });
+        tooltip.get('background').setAll({ fill: tooltipSurface, fillOpacity: 0.90, stroke: label, strokeOpacity: 0.3 });
+        tooltip.label.set('fill', tooltipText);
+    };
     chart.root.setThemes([window.WebjetTheme.new(chart.root)]);
     chart.setAll({ height: window.am5.percent(100), paddingTop: 5, paddingBottom: 0, paddingLeft: 0, paddingRight: 5,
         interpolationDuration: 0, stateAnimationDuration: 0 });
@@ -64,6 +102,7 @@ function compactChart(form, host) {
         const renderer = axis.get('renderer');
         renderer.labels.template.setAll({ fontSize: 11, ...(label ? { fill: label } : {}) });
         renderer.grid?.template.setAll({ strokeOpacity: 0.45, ...(grid ? { stroke: grid } : {}) });
+        styleTooltip(axis.get('tooltip'));
     });
     if (traffic || monitoring) {
         // Axis tooltips default to unbounded space below the axis, outside this compact canvas.
@@ -111,7 +150,7 @@ function compactChart(form, host) {
         series.fills?.template.setAll({ visible: index === 0, fillOpacity: 0.08 });
         series.columns?.template.setAll({ height: 12, cornerRadiusTL: 4, cornerRadiusBL: 4, cornerRadiusTR: 4, cornerRadiusBR: 4 });
         series.setAll({ interpolationDuration: 0, stateAnimationDuration: 0 });
-        series.get('tooltip')?.set('animationDuration', 0);
+        styleTooltip(series.get('tooltip'));
         if (traffic && index === 0) {
             series.set('maskBullets', false);
             series.bullets.push((root, line, dataItem) => {

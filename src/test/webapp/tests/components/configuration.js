@@ -43,6 +43,48 @@ Scenario('zoznam konfiguracnych premennych', ({ I }) => {
     I.dontSeeElement("#configurationDatatable.dt-hide-id tbody td.dt-select-td > .datatable-column-width");
 });
 
+Scenario('configuration default tree width @singlethread', async ({ I, DT }) => {
+    I.waitForVisible("#SomStromcek", 20);
+    const originalSettings = await I.executeScript(() => {
+        const settings = window.jstreeSettings;
+        const original = WJ.getAdminSetting(settings.STORAGE_KEY) || "{}";
+        settings.saveSettings({});
+        return original;
+    });
+    I.waitForFunction(() => jQuery.active === 0, 10);
+    I.refreshPage();
+    I.waitForVisible("#SomStromcek", 20);
+    I.seeCssPropertiesOnElements(".tree-col", { width: "200px" });
+
+    I.clickCss(".tree-col .buttons-jstree-settings");
+    I.waitForVisible("#jstreeSettingsModal", 5);
+    I.seeInField("#jstree-settings-treeWidth", "200");
+    I.clickCss("#jstreeSettingsModal .DTE_Field_treeWidth button.dropdown-toggle");
+    I.click(locate("#jstreeSettingsModal .dropdown-menu.show .dropdown-item").withText("4:8"));
+    I.clickCss("#jstree-settings-submit");
+    I.waitForInvisible("#jstreeSettingsModal", 5);
+    I.waitForFunction(() => jQuery.active === 0, 10);
+    I.refreshPage();
+    I.waitForVisible("#SomStromcek", 20);
+    DT.waitForLoader(datatableName);
+    I.waitForFunction(() => {
+        const tree = document.querySelector(".tree-col").getBoundingClientRect();
+        const row = document.querySelector(".tree-col").parentElement.getBoundingClientRect();
+        return Math.abs(tree.width - row.width / 3) < 1;
+    }, 5);
+
+    I.clickCss(".tree-col .buttons-jstree-settings");
+    I.waitForVisible("#jstreeSettingsModal", 5);
+    I.seeInField("#jstree-settings-treeWidth", "4");
+    I.clickCss("#jstreeSettingsModal .btn-close-editor");
+    I.waitForInvisible("#jstreeSettingsModal", 5);
+
+    I.executeScript((settings) => WJ.setAdminSetting(window.jstreeSettings.STORAGE_KEY, settings), originalSettings);
+    I.waitForFunction(() => jQuery.active === 0, 10);
+    I.refreshPage();
+    I.waitForVisible("#SomStromcek", 20);
+});
+
 Scenario('module view hides all creation actions', ({ I, DT }) => {
     const treeSelector = "#SomStromcek";
     const tableWrapper = "#configurationDatatable_wrapper";

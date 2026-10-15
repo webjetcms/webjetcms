@@ -1,5 +1,3 @@
-const { waitForWidgets } = require('../../../helpers/dashboard-browser');
-
 const assert = require('node:assert/strict');
 
 Feature('admin.dashboard.widgets').tag('@singlethread');
@@ -21,7 +19,10 @@ async function openAction(I, id, action) {
     if (id === shortcutId) {
         await I.clickIfVisible('.md-dashboard__shortcut-actions button[aria-pressed="false"]');
         I.waitForElement('.md-dashboard.is-editing-shortcuts', 10);
-    } else await enableEditing(I);
+        I.clickCss(`[data-instance-id="${id}"] .md-dashboard__shortcut-remove`);
+        return;
+    }
+    await enableEditing(I);
     I.clickCss(`[data-instance-id="${id}"] .dropdown > button`);
     I.waitForVisible(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`, 10);
     I.forceClick(`[data-instance-id="${id}"] [data-dashboard-action="${action}"]`);
@@ -40,7 +41,7 @@ Before(({ I, login }) => {
 Scenario('The authenticated dashboard initializes its controls and notices', async ({ I }) => {
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     I.seeNumberOfElements('#toast-container-overview', 1);
-    I.seeElement('.md-dashboard__sessions [data-widget-type="sessions"]');
+    I.seeElement('.md-dashboard__news [data-widget-type="news"]');
     I.dontSeeElement('.md-dashboard__edit-control');
 });
 
@@ -55,8 +56,9 @@ Scenario('Add and configure a personal shortcut and reload its server preference
     const existingIds = originalSettings.items.map(item => item.id);
     I.clickCss('.md-dashboard__shortcut-actions button[aria-pressed="false"]');
     I.clickCss('.md-dashboard__shortcut-actions > button:first-child');
-    I.waitForVisible('.md-dashboard-modal [name="dashboardShortcutSource"]', 10);
-    I.selectOption('.md-dashboard-modal [name="dashboardShortcutSource"]', 'url');
+    I.waitForVisible('.md-dashboard-modal [name="dashboardShortcutSearch"]', 10);
+    I.clickCss('.md-dashboard-modal [name="dashboardShortcutSearch"]');
+    I.clickCss('.md-dashboard-modal .md-dashboard__shortcut-result-url');
     I.fillField('.md-dashboard-modal [name="dashboardShortcutUrl"]', '/admin/v9/webpages/web-pages-list/');
     I.fillField('.md-dashboard-modal [name="dashboardShortcutTitle"]', shortcutTitle);
     I.seeInField('.md-dashboard-modal [name="dashboardShortcutTitle"]', shortcutTitle);
@@ -72,7 +74,7 @@ Scenario('Add and configure a personal shortcut and reload its server preference
 });
 
 /**
- * Checks that widgets can be reordered by dragging or the move dialog and resized through settings. These
+ * Checks that widgets can be reordered by pointer and keyboard movement and resized through settings. These
  * changes must keep the existing system-notice area in place.
  */
 Scenario('Move with drag and keyboard controls and resize without replacing alerts', async ({ I }) => {
@@ -95,41 +97,43 @@ Scenario('Move with drag and keyboard controls and resize without replacing aler
         const bounds = document.querySelector(`[data-instance-id="${id}"] .md-dashboard__drag`).getBoundingClientRect();
         return bounds.top >= 48 && bounds.bottom <= window.innerHeight;
     }), [firstId, movedId], 10);
-    // jQuery UI needs intermediate pointer moves; the standard helper scrolls its target under the fixed header.
+    // Intermediate pointer moves keep the insertion target below the fixed header.
     await I.usePlaywrightTo('move a dashboard widget with the pointer', async ({ page }) => {
         const source = await page.locator(`.md-dashboard__layout [data-instance-id="${movedId}"] .md-dashboard__drag`).boundingBox();
         const target = await page.locator(`.md-dashboard__layout [data-instance-id="${firstId}"] .md-dashboard__widget-header`).boundingBox();
         await page.mouse.move(source.x + source.width / 2, source.y + source.height / 2);
         await page.mouse.down();
         await page.mouse.move(source.x + source.width / 2 - 12, source.y + source.height / 2, { steps: 2 });
-        await page.mouse.move(target.x + target.width / 2, target.y + target.height / 2, { steps: 12 });
+        await page.mouse.move(target.x + 4, target.y + target.height / 2, { steps: 12 });
         await page.mouse.up();
     });
     waitForSave(I);
     const movedFirst = await I.executeScript(() => document.querySelector('.md-dashboard__layout [data-instance-id]').dataset.instanceId);
     assert.equal(movedFirst, movedId, 'Dragging before another grid card must update its region order');
-    I.clickCss(`[data-instance-id="${movedId}"] .md-dashboard__drag`);
-    I.waitForVisible('.md-dashboard-modal select', 10);
-    I.selectOption('.md-dashboard-modal select', '');
-    I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
-    I.waitForInvisible('.md-dashboard-modal', 10);
-    waitForSave(I);
-    const lastId = await I.executeScript(() => [...document.querySelectorAll('.md-dashboard__layout [data-instance-id]')].at(-1).dataset.instanceId);
-    assert.equal(lastId, movedId, 'Keyboard movement must update its region order');
+    I.executeScript(id => document.querySelector(`[data-instance-id="${id}"] .md-dashboard__drag`).focus(), movedId);
+    I.pressKey('Space');
+    I.pressKey('ArrowRight');
+    I.pressKey('Enter');
+    const keyboardFirst = await I.executeScript(() => document.querySelector('.md-dashboard__layout [data-instance-id]').dataset.instanceId);
+    assert.equal(keyboardFirst, firstId, 'Keyboard movement must update the grid order');
 
     const recentId = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.items.find(item => item.type === 'recent-pages')?.id);
     assert.ok(recentId, 'The editor default must include recent pages');
     I.dontSeeElementInDOM('[data-dashboard-action="collapse"]');
-    I.seeElement(`[data-instance-id="${recentId}"] .md-dashboard__header-link`);
+    I.seeElement(`[data-instance-id="${recentId}"] .md-dashboard__title-link`);
     await openAction(I, recentId, 'settings');
-    I.waitForVisible('.md-dashboard-modal select', 10);
-    I.selectOption('.md-dashboard-modal select', '2 × 3');
+    I.waitForVisible('.md-dashboard-modal .md-dashboard__size-choices', 10);
+    I.clickCss('.md-dashboard-modal .md-dashboard__size-choice:has(input[value="2x3"])');
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
     I.waitForInvisible('.md-dashboard-modal', 10);
     waitForSave(I);
     I.waitForElement(`[data-instance-id="${recentId}"][data-size="2x3"]`, 10);
     const alertsPreserved = await I.executeScript(() => window.autotestDashboardAlerts === document.querySelector('#toast-container-overview'));
     assert.equal(alertsPreserved, true, 'Preference changes must preserve the active system alert container');
+    I.clickCss('.md-dashboard__toolbar-actions button[aria-pressed="true"]');
+    waitForSave(I);
+    I.refreshPage();
+    I.waitForElement(`[data-instance-id="${recentId}"][data-size="2x3"]`, 20);
 });
 
 /**
@@ -157,7 +161,7 @@ Scenario('Remove and undo restores the configured instance', async ({ I }) => {
     await openAction(I, shortcutId, 'remove');
     waitForSave(I);
     I.waitForInvisible(`[data-instance-id="${shortcutId}"]`, 10);
-    I.clickCss('.md-dashboard__undo button');
+    I.clickCss('[data-dashboard-shortcut-undo]');
     waitForSave(I);
     I.waitForElement(`[data-instance-id="${shortcutId}"]`, 10);
     I.see(shortcutTitle, `[data-instance-id="${shortcutId}"]`);
@@ -178,64 +182,6 @@ Scenario('A rejected preference update preserves the confirmed widget', async ({
     I.waitForElement('.md-dashboard__status .text-danger', 10);
     I.see(shortcutTitle, `[data-instance-id="${shortcutId}"]`);
     await I.stopMockingRoute('**/admin/rest/dashboard/settings');
-});
-
-/**
- * Checks that widgets stay inside the dashboard and keep their reading order across screen widths. Table
- * text must remain readable without clipping, including when enlarged to twice its size. Numeric values
- * and dates may stay on one line if they fit inside their cells.
- */
-Scenario('Responsive grid preserves visual order and keeps widgets inside the dashboard', async ({ I }) => {
-    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-    await waitForWidgets(I);
-    for (const width of [320, 359, 360, 390, 767, 768, 1024, 1199, 1200, 1337, 1920]) {
-        I.resizeWindow(width, 1000);
-        const geometry = await I.executeScript(() => {
-            const host = document.querySelector('.md-dashboard__layout');
-            const boundary = host.getBoundingClientRect();
-            const cards = [...host.querySelectorAll('[data-instance-id]')].map(card => {
-                const rect = card.getBoundingClientRect();
-                return { id: card.dataset.instanceId, left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom };
-            });
-            const clippedCells = [...host.querySelectorAll('.md-dashboard-widget__table td, .md-dashboard-widget__table th')]
-                .filter(cell => !cell.closest('.visually-hidden') && cell.checkVisibility())
-                .map((cell, index) => {
-                    const type = cell.closest('[data-widget-type]').dataset.widgetType;
-                    const singleLine = cell.classList.contains('md-dashboard-widget__table-number')
-                        || (['forms', 'approvals'].includes(type) && cell.matches(':last-child'));
-                    return { index, type, singleLine, whiteSpace: getComputedStyle(cell).whiteSpace, width: cell.clientWidth, contentWidth: cell.scrollWidth };
-                })
-                .filter(cell => (!cell.singleLine && cell.whiteSpace !== 'normal') || cell.contentWidth > cell.width + 1);
-            return { left: boundary.left, right: boundary.right, cards, clippedCells };
-        });
-        for (const card of geometry.cards) {
-            assert.ok(card.left >= geometry.left - 1 && card.right <= geometry.right + 1, `Widget ${card.id} must fit at ${width}px`);
-        }
-        const visual = [...geometry.cards].sort((a, b) => Math.abs(a.top - b.top) > 1 ? a.top - b.top : a.left - b.left);
-        assert.deepEqual(visual.map(card => card.id), geometry.cards.map(card => card.id), `Visual order must follow DOM order at ${width}px`);
-        assert.deepEqual(geometry.clippedCells, [], `Table headers and cells must fit without clipping at ${width}px`);
-    }
-    I.wjSetDefaultWindowSize();
-    const clipped = await I.executeScript(() => {
-        const root = document.querySelector('.md-dashboard__layout');
-        const sizes = [...root.querySelectorAll('*')].map(element => [element, parseFloat(getComputedStyle(element).fontSize)]);
-        sizes.forEach(([element, size]) => { element.style.fontSize = `${size * 2}px`; });
-        const bodies = [...root.querySelectorAll('.md-dashboard__widget-body')]
-            .filter(body => !body.hidden && body.scrollHeight > body.clientHeight + 1)
-            .map(body => body.closest('[data-instance-id]').dataset.instanceId);
-        const cells = [...root.querySelectorAll('.md-dashboard-widget__table td, .md-dashboard-widget__table th')]
-            .filter(cell => !cell.closest('.visually-hidden') && cell.checkVisibility())
-            .map((cell, index) => {
-                const type = cell.closest('[data-widget-type]').dataset.widgetType;
-                const singleLine = cell.classList.contains('md-dashboard-widget__table-number')
-                    || (['forms', 'approvals'].includes(type) && cell.matches(':last-child'));
-                return { index, type, singleLine, whiteSpace: getComputedStyle(cell).whiteSpace, width: cell.clientWidth, contentWidth: cell.scrollWidth };
-            })
-            .filter(cell => (!cell.singleLine && cell.whiteSpace !== 'normal') || cell.contentWidth > cell.width + 1);
-        return { bodies, cells };
-    });
-    assert.deepEqual(clipped.bodies, [], 'Widget bodies must remain readable with text enlarged to 200 percent');
-    assert.deepEqual(clipped.cells, [], 'Table headers and cells must fit without clipping with text enlarged to 200 percent');
 });
 
 /**

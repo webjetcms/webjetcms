@@ -7,8 +7,8 @@ const {JSDOM} = require("jsdom");
 const moment = require("moment");
 
 const adminDirectory = path.resolve(__dirname, "../../../main/webapp/admin/v9");
-const xlsx = require(path.join(adminDirectory, "node_modules/xlsx"));
-const jquery = require(path.join(adminDirectory, "node_modules/jquery"));
+const xlsx = require("xlsx");
+const jquery = require("jquery");
 
 /**
  * Runs the complete import dialog handler with a real XLSX file and browser FileReader.

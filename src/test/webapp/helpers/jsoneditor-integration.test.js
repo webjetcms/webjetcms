@@ -112,6 +112,30 @@ test("JSON field preserves literal HTML entities through the Editor API and rest
     }
 });
 
+test("JSON editor validates and formats array and scalar roots before submission", async t => {
+    const {window, field, textarea, editor, context} = await createFixture(t, {required: true});
+    field.val("[1,]");
+    textarea.dispatchEvent(new window.Event("blur"));
+    assert.equal(field.inError(), true);
+    assert.equal(context.validateJsonEditors(editor), false);
+
+    const source = '[{"id":12345,"available":true},{"id":56789,"available":true}]';
+    field.val(source);
+    textarea.dispatchEvent(new window.Event("input", {bubbles: true}));
+    assert.equal(field.inError(), false, "Replacing invalid input with an array must clear the error");
+    field.node().querySelector(".md-jsoneditor-format").click();
+    assert.equal(textarea.value, '[\n  {\n    "id": 12345,\n    "available": true\n  },\n  {\n    "id": 56789,\n    "available": true\n  }\n]');
+    assert.equal(context.validateJsonEditors(editor), true);
+
+    for (const value of ["[]", "null", "true", "false", "42", '"text"', '""']) {
+        field.val(value);
+        textarea.dispatchEvent(new window.Event("blur"));
+        assert.equal(textarea.getAttribute("aria-invalid"), "false", value);
+        assert.equal(context.validateJsonEditors(editor), true, value);
+        assert.equal(field.val(), value);
+    }
+});
+
 test("Restoring distinct bulk values clears invalid hidden JSON input without changing submitted originals", async t => {
     const {window, field, textarea, editor, context} = await createFixture(t, {required: true});
     const originals = {"1": '{"value":1}', "2": '{"value":2}'};

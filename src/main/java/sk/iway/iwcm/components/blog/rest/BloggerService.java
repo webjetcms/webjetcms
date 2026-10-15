@@ -333,13 +333,15 @@ public class BloggerService {
      */
     private static GroupDetails createGroup(String userLogin, int userId, GroupDetails parentGroup, String groupName) {
         //Check if group allready exist
-        GroupDetails newGroup = GroupsDB.getInstance().getGroup(userLogin, parentGroup.getGroupId());
+        if (parentGroup == null) return null;
+        String name = Tools.isEmpty(groupName) ? userLogin : groupName;
+        GroupDetails newGroup = GroupsDB.getInstance().getGroup(name, parentGroup.getGroupId());
         if(newGroup != null) return null;
 
         //Create new root group
         newGroup = new GroupDetails();
 		newGroup.setParentGroupId( parentGroup.getGroupId() );
-		newGroup.setGroupName( Tools.isEmpty(groupName) ? userLogin : groupName );
+		newGroup.setGroupName(name);
 		newGroup.setTempId( parentGroup.getTempId() );
 		newGroup.setFieldA( String.valueOf(userId) );
 		GroupsDB.getInstance().setGroup(newGroup);
@@ -525,12 +527,6 @@ public class BloggerService {
      * @return
      */
     public static boolean addNewBloggerGroup(EditorFacade editorFacade, Identity currentUser, String customData) {
-        boolean isBloggerAdmin = BloggerService.isUserBloggerAdmin( currentUser );
-        boolean isBlogger = BloggerService.isUserBlogger( currentUser );
-
-        //Check perms
-        if(isBloggerAdmin==false && isBlogger==false) return false;
-
         int groupId = -1;
         String newGroupName = "";
         if(customData != null && !customData.isEmpty()) {
@@ -544,21 +540,31 @@ public class BloggerService {
             }
         }
 
-        if(Tools.isEmpty(newGroupName)) return false;
+        return addNewBloggerGroup(editorFacade, currentUser, groupId, newGroupName) != null;
+    }
+
+    /** Creates a permitted Blog section and its article-list page. */
+    public static GroupDetails addNewBloggerGroup(EditorFacade editorFacade, Identity currentUser, int groupId, String newGroupName) {
+        boolean isBloggerAdmin = isUserBloggerAdmin(currentUser);
+        boolean isBlogger = isUserBlogger(currentUser);
+        if (!isBloggerAdmin && !isBlogger) return null;
+        newGroupName = GroupsDB.sanitizeGroupName(newGroupName, true);
+        if (Tools.isEmpty(newGroupName) || newGroupName.length() > 255) return null;
 
         if(groupId < 1) {
-            if(isBlogger) groupId = Tools.getTokensInt(currentUser.getEditableGroups(), ",")[0];
-            else return false; //It's admin not casual blogger
+            int[] editableGroups = Tools.getTokensInt(currentUser.getEditableGroups(), ",");
+            if(isBlogger && editableGroups.length > 0) groupId = editableGroups[0];
+            else return null; //It's admin not casual blogger
         } else {
             //Check perms
 
             //If user is blogger admin, check if group is blogger group
             if(isBloggerAdmin) {
-                List<Integer> allBloggersGroupIds = BloggerService.getAllBloggersRootGroupIds();
-                if(Boolean.FALSE.equals( allBloggersGroupIds.contains(groupId) )) return false;
+                List<Integer> allBloggersGroupIds = BloggerService.getAllBloggersGroupIds();
+                if(Boolean.FALSE.equals( allBloggersGroupIds.contains(groupId) )) return null;
             } //If user is blogger, check if he has perm to selected group
             else if(GroupsDB.isGroupEditable(currentUser, groupId)==false) {
-                return false;
+                return null;
             }
         }
 
@@ -566,8 +572,8 @@ public class BloggerService {
         GroupDetails newGroup = createGroup(currentUser.getLogin(), currentUser.getUserId(), GroupsDB.getInstance().getGroup(groupId), newGroupName);
         if (newGroup != null) {
             createGroupNewsDoc(editorFacade, newGroup.getGroupId(), newGroup.getGroupName(), currentUser.getUserId(), currentUser.getUserId());
-            return true;
+            return newGroup;
         }
-        return false;
+        return null;
     }
 }

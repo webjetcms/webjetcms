@@ -88,6 +88,8 @@ Knihovnu můžete otevřít i pro označený blok přes **Další akce → Vlož
 
 Knihovna se otevírá jako úzké okno nad stránkou. Hlavička uvádí například **Vložit sekci** a pod ní místo vložení. Tažením za hlavičku můžete okno přesunout. Zavřete jej křížkem vpravo nahoře nebo klávesou **Escape**.
 
+Při vkládání obsahu přes `+` ve žluté čáře nebo tlačítko **Bloky** v liště editoru naleznete na kartě **Základní** i možnosti **Obrázek** a **Aplikace**. Otevřou stejné dialogy jako příslušná tlačítka v liště. Po potvrzení se obrázek nebo aplikace vloží na zvolené místo; pomocný odstavec nemusíte vkládat ručně.
+
 V kartě **Knihovna** jsou bloky seskupeny do kategorií s počtem bloků. Klepnutím kategorii rozbalíte; otevřená zůstává vždy pouze jedna. Karty zobrazují název a náhled v původním poměru stran. Klepnutím na náhled nebo název vložíte blok do stránky.
 
 Pole **Hledat blok…** filtruje podle názvu a lze jej kombinovat s jedním štítkem. Při filtrování se ponechá otevřená vyhovující kategorie nebo se otevře první s výsledkem. Počty u kategorií zohledňují filtr, počty u štítků označují celkový počet bloků s daným štítkem. **Všechny** zruší jen štítek a ponechá hledaný text. Pokud se nic nenajde, tlačítko **Vyčistit filtry** zruší text i štítek. Při posouvání výsledků zůstávají vyhledávání a štítky dostupné.
@@ -104,7 +106,7 @@ Při zapnutí režimu vkládání se plynule rozbalí dočasné mezery bez odsun
 
 Zavřením knihovny se vrátíte na vybrané plus. Režim vkládání ukončíte tlačítkem **Ukončit · Esc** v nápovědě nebo klávesou **Escape**. Mezery se plynule sbalí, obnoví se běžná lišta a fokus se vrátí na `+`. Klepnutí do obsahu ukončí režim a vybere daný blok. Pokud máte v systému nastaveno omezení animací, zobrazení i skrytí proběhne okamžitě. Pomocné pásy se neukládají ani nezobrazují v náhledu.
 
-## Struktura stránky a klidné zobrazení
+## Struktura stránky
 
 Tlačítko **Struktura** otevře strom bloků s názvy odvozenými z jejich obsahu. Bloky můžete vyhledat podle názvu nebo typu. Klepnutí na položku označí příslušný blok, posune stránku na jeho místo a rozbalí zavřenou větev. Opakované kliknutí na položku nechá větev otevřenou; šipkou vedle názvu ji můžete rozbalit nebo sbalit beze změny výběru.
 

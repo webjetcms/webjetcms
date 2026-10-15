@@ -5,9 +5,15 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { JSDOM } = require('jsdom');
 
-function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWidgets = false, data = {}, actual, fetchResponse, now = new Date(2026, 8, 26) } = {}) {
+function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWidgets = false, colorPicker = false, data = {}, actual, fetchResponse, now = new Date(2026, 8, 26) } = {}) {
     const dom = new JSDOM('<!doctype html><body><main></main></body>', { url: 'http://localhost/admin/v9/' });
     const window = dom.window;
+    const glyphCss = fs.readFileSync(require.resolve('@tabler/icons-webfont/dist/tabler-icons.css'), 'utf8');
+    const glyphs = new Set([...glyphCss.matchAll(/\.ti-([a-z0-9-]+):before/g)].map(match => 'ti-' + match[1]));
+    const computedStyle = window.getComputedStyle.bind(window);
+    window.getComputedStyle = (element, pseudo) => pseudo === '::before'
+        ? { content: [...element.classList].some(name => glyphs.has(name)) ? '"glyph"' : 'none' }
+        : computedStyle(element);
     window.userLng = 'en';
     window.csrfToken = 'test-csrf-token';
     window.WJ = { hasPermission: () => allowed };
@@ -34,17 +40,26 @@ function fixture(t, { pages = [], menu = [], allowed = true, ok = true, extraWid
     };
     const scope = vm.createContext({ Date: ClockDate, window, document: window.document, Node: window.Node, DOMParser: window.DOMParser, DOMException: window.DOMException, URL, URLSearchParams, AbortController, console,
         IntersectionObserver: class { observe() {} disconnect() {} },
-        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url.includes('/stat/') ? statResponse(url) : url.includes('/monitoring/actual') ? snapshot : url.includes('/forms-list/') || url.includes('/dmail/') || url.includes('/web-pages/history/all?') ? data : url.includes('/audit/log/all?') ? { content: (data.items || []).map((item, index) => ({ id: index + 1, logType: 20, description: item.description, userFullName: item.userFullName, createDate: item.date })), options: { logType: [{ value: '20', label: data.items?.[0]?.type || 'Changed' }] } } : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
+        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse(url, options) : { ok, status: ok ? 200 : 403, json: async () => url === '/admin/rest/sessions/administrators' ? (data.loggedAdmins || []) : url.includes('/stat/') ? statResponse(url) : url.includes('/monitoring/actual') ? snapshot : url.includes('/forms-list/') || url.includes('/dmail/') || url.includes('/web-pages/history/all?') ? data : url.includes('/audit/log/all?') ? { content: (data.items || []).map((item, index) => ({ id: index + 1, logType: 20, description: item.description, userFullName: item.userFullName, createDate: item.date })), options: { logType: [{ value: '20', label: data.items?.[0]?.type || 'Changed' }] } } : url.includes('/web-pages/all?') ? { content: pages } : pages }; }
     });
-    for (const file of ['registry.js', 'widget-utils.js', 'charts.js', 'utility-widgets.js', 'data-widgets.js', 'monitoring-live.js', 'system-widgets.js', 'widgets.js']) {
+    if (colorPicker) {
+        // Load the installed component with browser dialog and adopted-style APIs supplied for JSDOM.
+        window.HTMLDialogElement.prototype.showModal = function () { this.setAttribute('open', ''); };
+        window.HTMLDialogElement.prototype.close = function () { this.removeAttribute('open'); this.dispatchEvent(new window.Event('close')); };
+        Object.assign(scope, { HTMLElement: window.HTMLElement, customElements: window.customElements, CustomEvent: window.CustomEvent,
+            CSSStyleSheet: class { replaceSync() {} } });
+        const source = fs.readFileSync(require.resolve('color-dialog-box'), 'utf8');
+        vm.runInContext(`(function () { ${source} }).call(this);`, scope);
+    }
+    for (const file of ['registry.js', 'widget-utils.js', '../admin-menu.js', 'security-events.js', 'device-security-dialog.js', 'charts.js', 'monitoring-live.js', 'system-widgets.js', 'session-widgets.js', '../release-news.js', 'news-widget.js', 'utility-widgets.js', 'data-widgets.js', 'shortcut-widget.js', 'widgets.js']) {
         const source = fs.readFileSync(path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/dashboard', file), 'utf8')
             .replace(/^import .+;\r?$/gm, '').replace(/^export /gm, '');
-        const exports = { 'system-widgets.js': ['registerSystemWidgets'], 'monitoring-live.js': ['readMonitoringSnapshot', 'subscribeMonitoring'] }[file];
+        const exports = { 'system-widgets.js': ['registerSystemWidgets', 'renderLoggedAdmins', 'adminMail', 'fetchLoggedAdministrators'], 'monitoring-live.js': ['readMonitoringSnapshot', 'subscribeMonitoring'] }[file];
         const script = exports ? `(function () { ${source}\n${exports.map(name => `this.${name} = ${name};`).join('\n')} }).call(this);` : source;
         vm.runInContext(script, scope, { filename: file });
     }
     scope.registerDashboardWidgets();
-    if (extraWidgets && !scope.getWidget('sessions')) { scope.registerUtilityWidgets(); scope.registerDataWidgets(); }
+    if (extraWidgets && !scope.getWidget('news')) { scope.registerUtilityWidgets(); scope.registerDataWidgets(); }
     const context = { data: { statRootGroupId: 1, ...data, dashboardMenu: menu }, labels: { newsletterActive: 'Active' }, settings: {}, config: { recentPagesGroupId: '99999997' }, translate: key => key };
     t.after(() => window.close());
     return { scope, context, container: window.document.querySelector('main'), requests, window };
@@ -63,7 +78,47 @@ test('Shortcuts resolve authorized submenu targets and never execute user-contro
     assert.match(container.textContent, /<script>bad\(\)<\/script>/);
     container.replaceChildren();
     widget.render({ container, context, options: { href: 'javascript:alert(1)' } });
-    assert.equal(container.querySelector('a'), null);
+    assert.equal(container.querySelector('a[href]'), null);
+});
+
+test('Shortcut tooltips show truncated names as plain text without repeating fully visible labels', t => {
+    const { scope, context, container, window } = fixture(t);
+    const configs = [];
+    window.jQuery = element => ({ off() {} });
+    window.bootstrap = { Tooltip: class { constructor(element, config) { configs.push(config); } } };
+    const title = '<img src=x> **autotest**';
+    scope.getWidget('shortcut').render({ container, context, options: { source: 'url', href: 'https://example.com', title } });
+    assert.equal(configs[0].html, false);
+    assert.equal(configs[0].title, title);
+    assert.equal(container.querySelector('img'), null);
+    const link = container.querySelector('a');
+    assert.equal(link.hasAttribute('title'), false, 'A visible name must not create a native tooltip.');
+    const show = () => link.dispatchEvent(new window.Event('show.bs.tooltip', { cancelable: true }));
+    assert.equal(show(), false, 'Do not repeat a fully visible name.');
+    const label = link.querySelector('span');
+    Object.defineProperty(label, 'scrollWidth', { value: 250 });
+    assert.equal(show(), true, 'A truncated name must still be readable through its tooltip.');
+});
+
+test('Shortcut menu icons ignore duplicate Tabler prefixes in suggestions, previews and saved links', t => {
+    const { scope, context, container, window } = fixture(t, { menu: [{ text: 'Users', icon: 'ti ti-users', children: [
+        { text: 'Users', href: '/admin/v9/users/user-list/', icon: 'ti ti-ti ti-users' }
+    ] }] });
+    const widget = scope.getWidget('shortcut');
+    const settings = widget.configure({ container, context, options: {} });
+    searchShortcut(container, window, '');
+    pickShortcut(container, 'Users');
+    assert.equal(container.querySelector('.md-dashboard__shortcut-result:not(.md-dashboard__shortcut-result-back) > i').className, 'ti ti-users');
+    assert.notEqual(window.getComputedStyle(container.querySelector('.md-dashboard__shortcut-result:not(.md-dashboard__shortcut-result-back) > i'), '::before').content, 'none');
+    pickShortcut(container, 'Users');
+    assert.equal(container.querySelector('.md-dashboard__shortcut-preview > i').className, 'ti ti-users');
+    assert.equal(container.querySelector('[name="dashboardShortcutIcon"]').value, 'users');
+    assert.equal(settings.read().options.icon, 'ti-users');
+    settings.dispose();
+    container.replaceChildren();
+    widget.render({ container, context, options: { href: '/admin/v9/users/user-list/' } });
+    assert.equal(container.querySelector('a > i').className, 'ti ti-users');
+    assert.equal(scope.icon('ti ti-ti').className, 'ti ti-link', 'A duplicated prefix alone must use the safe fallback');
 });
 
 test('Local links retain their origin when normalized paths start with two slashes', t => {
@@ -89,34 +144,14 @@ test('Custom shortcuts require explicit URL mode and reject ambiguous or executa
         assert.equal(scope.shortcutUrl(href), null, href);
         widget.render({ container, context, options: { source: 'url', href, title: 'Unsafe' } });
     }
-    assert.equal(container.querySelector('a'), null);
+    assert.equal(container.querySelector('a[href]'), null);
     widget.render({ container, context, options: { href: 'https://other.test/', title: 'Legacy' } });
-    assert.equal(container.querySelector('a'), null);
+    assert.equal(container.querySelector('a[href]'), null);
     for (const href of ['https://other.test/path?x=1#section', '/apps/form/admin/']) {
         widget.render({ container, context, options: { source: 'url', href, title: '<img src=x>' } });
         assert.equal(container.lastElementChild.getAttribute('href'), href);
     }
     assert.equal(container.querySelector('img'), null);
-});
-
-test('Shortcut settings toggle authorized menu and explicit URL fields and validate before persistence', t => {
-    const { scope, context, container, window } = fixture(t, { menu: [{ text: 'Forms', href: '/apps/form/admin/' }] });
-    const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
-    const source = container.querySelector('[name="dashboardShortcutSource"]');
-    const module = container.querySelector('[name="dashboardShortcutMenu"]');
-    const [url, title] = container.querySelectorAll('input');
-    assert.equal(url.parentElement.hidden, true);
-    assert.equal(settings.read().options.href, '/apps/form/admin/');
-    source.value = 'url';
-    source.dispatchEvent(new window.Event('change'));
-    assert.equal(module.parentElement.hidden, true);
-    assert.equal(url.parentElement.hidden, false);
-    url.value = '//other.test/';
-    assert.throws(() => settings.read(), /shortcutUrlInvalid/);
-    url.value = 'https://other.test';
-    assert.throws(() => settings.read(), /shortcutTitleRequired/);
-    title.value = ' My site ';
-    assert.deepEqual(JSON.parse(JSON.stringify(settings.read())), { options: { source: 'url', href: 'https://other.test/', title: 'My site', icon: 'ti-link', color: 'default' } });
 });
 
 const groupedShortcutMenu = [
@@ -127,118 +162,334 @@ const groupedShortcutMenu = [
         { text: 'Banner system', href: '/apps/banner/admin/', icon: 'ti ti-ad', childrens: [
             { text: 'Banner list', href: '/apps/banner/admin/' }, { text: 'Banner statistics', href: '/apps/banner/admin/banner-stat/' }
         ] },
-        { text: 'Forms', href: '/apps/form/admin/' },
+        { text: 'Formuláre', href: '/apps/form/admin/', icon: 'ti-forms' },
         { text: 'Unsafe', href: 'javascript:alert(1)' }
-    ] }
+    ] },
+    { text: 'Settings', children: [{ text: 'Číselníky', href: '/apps/enumeration/admin/', icon: 'ti-table', children: [
+        { text: 'Zoznam dát číselníkov', href: '/apps/enumeration/admin/' },
+        { text: 'Typy číselníkov', href: '/apps/enumeration/admin/enumeration-type/' }
+    ] }] }
 ];
 
-test('Shortcut selection follows main areas, sections and tabs without duplicate parent destinations', t => {
+function searchShortcut(container, window, value) {
+    const search = container.querySelector('[name="dashboardShortcutSearch"]');
+    search.value = value;
+    search.dispatchEvent(new window.Event('input', { bubbles: true }));
+    return search;
+}
+
+function pickShortcut(container, title) {
+    const row = [...container.querySelectorAll('[role="option"]')].find(row => row.querySelector('.md-dashboard__shortcut-result-text > span')?.textContent === title);
+    assert.ok(row, 'An authorized destination must be offered');
+    row.click();
+}
+
+test('Shortcut browsing follows main areas, sections and cards without selecting a parent URL', t => {
     const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
     const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
-    const group = container.querySelector('[name="dashboardShortcutGroup"]');
-    const section = container.querySelector('[name="dashboardShortcutSection"]');
-    const tab = container.querySelector('[name="dashboardShortcutMenu"]');
-    const select = (field, value) => { field.value = value; field.dispatchEvent(new window.Event('change')); };
-    assert.deepEqual([...group.options].slice(1).map(option => option.textContent), ['Overviews', 'Applications']);
-    assert.equal(group.value, '', 'Do not silently choose the first administration destination');
-    assert.equal(section.disabled, true);
-    assert.equal(tab.disabled, true);
+    const search = container.querySelector('[name="dashboardShortcutSearch"]');
+    search.click();
+    const heading = () => container.querySelector('.md-dashboard__shortcut-result-heading').textContent;
+    const titles = () => [...container.querySelectorAll('.md-dashboard__shortcut-result-text > span')].map(row => row.textContent);
+    assert.match(heading(), /shortcutGroup/);
+    assert.deepEqual(titles(), ['Overviews', 'Applications', 'Settings']);
+    pickShortcut(container, 'Applications');
+    assert.equal(search.getAttribute('aria-expanded'), 'true', 'Replacing a clicked row must keep the list open');
+    assert.equal(window.document.activeElement, search);
+    assert.match(heading(), /shortcutSection/);
+    assert.deepEqual(titles(), ['button.back', 'Banner system', 'Formuláre']);
     assert.throws(() => settings.read(), /shortcutChooseTarget/);
-    select(group, '1');
-    assert.deepEqual([...section.options].slice(1).map(option => option.textContent), ['Banner system', 'Forms']);
-    select(section, '0');
-    assert.deepEqual([...tab.options].slice(1).map(option => option.textContent), ['Banner list', 'Banner statistics']);
-    assert.equal(tab.value, '');
-    select(tab, '/apps/banner/admin/banner-stat/');
+    pickShortcut(container, 'Banner system');
+    assert.match(heading(), /shortcutChooseTab/);
+    assert.deepEqual(titles(), ['button.back', 'Banner list', 'Banner statistics']);
+    assert.throws(() => settings.read(), /shortcutChooseTarget/, 'A section URL must not be selected before its card');
+    pickShortcut(container, 'Banner statistics');
     assert.equal(settings.read().options.href, '/apps/banner/admin/banner-stat/');
-    select(group, '0');
-    assert.equal(section.value, '0', 'A sole authorized section needs no extra choice');
-    assert.equal(tab.value, '', 'Changing the main area must discard the old tab');
+    assert.equal(search.getAttribute('aria-expanded'), 'false');
+    search.click();
+    assert.match(heading(), /shortcutChooseTab/);
+    container.querySelector('.md-dashboard__shortcut-result-back').click();
+    assert.match(heading(), /shortcutSection/);
+    assert.throws(() => settings.read(), /shortcutChooseTarget/, 'Browsing invalidates an earlier destination');
+    pickShortcut(container, 'Formuláre');
+    assert.equal(settings.read().options.href, '/apps/form/admin/', 'A section without tabs is selectable directly');
+    settings.dispose();
+    assert.equal(container.querySelector('[role="listbox"]').hidden, true);
+});
+
+test('Shortcut keyboard browsing can return to the root and search terminal cards across all areas', t => {
+    const { scope, context, container, window, requests } = fixture(t, { menu: groupedShortcutMenu });
+    const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
+    const search = container.querySelector('[name="dashboardShortcutSearch"]');
+    const key = value => search.dispatchEvent(new window.KeyboardEvent('keydown', { key: value, bubbles: true }));
+    search.focus();
+    key('Enter');
+    assert.match(container.querySelector('.md-dashboard__shortcut-result-heading').textContent, /shortcutSection/);
+    key('Enter');
+    assert.match(container.querySelector('.md-dashboard__shortcut-result-heading').textContent, /shortcutChooseTab/);
+    key('ArrowUp');
+    key('Enter');
+    key('ArrowUp');
+    key('Enter');
+    assert.match(container.querySelector('.md-dashboard__shortcut-result-heading').textContent, /shortcutGroup/);
+    pickShortcut(container, 'Applications');
+    searchShortcut(container, window, 'číselník');
+    assert.match(container.querySelector('.md-dashboard__shortcut-result-heading').textContent, /shortcutChooseTab/);
+    assert.deepEqual([...container.querySelectorAll('.md-dashboard__shortcut-result-text > span')].map(row => row.textContent), ['Zoznam dát číselníkov', 'Typy číselníkov']);
+    assert.equal(container.querySelector('.md-dashboard__shortcut-result-back'), null);
+    assert.equal(requests.length, 0, 'Searching only terminal menu cards must not request web-page suggestions');
+    pickShortcut(container, 'Typy číselníkov');
+    assert.equal(settings.read().options.href, '/apps/enumeration/admin/enumeration-type/');
+    assert.equal(settings.read().options.icon, 'ti-table');
+    searchShortcut(container, window, 'ciselnik');
+    assert.equal(container.querySelectorAll('.md-dashboard__shortcut-result-text > span').length, 2);
+    searchShortcut(container, window, '');
+    assert.match(container.querySelector('.md-dashboard__shortcut-result-heading').textContent, /shortcutGroup/);
+    key('Tab');
+    assert.equal(search.getAttribute('aria-expanded'), 'false');
+});
+
+test('Shortcut autocomplete searches authorized breadcrumbs, deduplicates tabs and requires explicit selection', t => {
+    const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
+    const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
     assert.throws(() => settings.read(), /shortcutChooseTarget/);
-    select(group, '1');
-    select(section, '1');
-    assert.equal(tab.parentElement.hidden, true, 'A direct section link needs no redundant tab choice');
+    const search = searchShortcut(container, window, 'applications banner');
+    assert.deepEqual([...container.querySelectorAll('.md-dashboard__shortcut-result-text > span')].map(row => row.textContent), ['Banner list', 'Banner statistics']);
+    assert.equal(search.getAttribute('aria-expanded'), 'true');
+    search.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    assert.equal(container.querySelector('[aria-selected="true"] .md-dashboard__shortcut-result-text > span').textContent, 'Banner statistics');
+    search.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    assert.equal(search.value, 'Applications › Banner system › Banner statistics');
+    assert.equal(settings.read().options.href, '/apps/banner/admin/banner-stat/');
+    assert.equal(search.getAttribute('aria-expanded'), 'false');
+    assert.equal(search.hasAttribute('aria-activedescendant'), false);
+    searchShortcut(container, window, 'formulare');
+    pickShortcut(container, 'Formuláre');
     assert.equal(settings.read().options.href, '/apps/form/admin/');
+    assert.equal(settings.read().options.title, '', 'A menu name remains inherited when the optional title is empty');
+    searchShortcut(container, window, 'unmatched');
+    assert.throws(() => settings.read(), /shortcutChooseTarget/, 'Typing must invalidate a previously chosen target');
+    search.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    assert.equal(search.getAttribute('aria-expanded'), 'false');
 });
 
-test('Editing preselects the stored hierarchy and unavailable targets cannot silently change', t => {
+test('Shortcut custom URL mode preserves choices and validates safe destinations and required titles', t => {
     const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
+    const settings = scope.getWidget('shortcut').configure({ container, context, options: {} });
+    searchShortcut(container, window, 'banner');
+    pickShortcut(container, 'Banner list');
+    searchShortcut(container, window, 'banner');
+    pickShortcut(container, 'Banner list');
+    container.querySelector('[name="dashboardShortcutSearch"]').click();
+    container.querySelector('.md-dashboard__shortcut-result-url').click();
+    const url = container.querySelector('[name="dashboardShortcutUrl"]');
+    const title = container.querySelector('[name="dashboardShortcutTitle"]');
+    assert.equal(url.parentElement.hidden, false);
+    url.value = '//other.test/';
+    assert.throws(() => settings.read(), /shortcutUrlInvalid/);
+    url.value = 'https://other.test';
+    assert.throws(() => settings.read(), /shortcutTitleRequired/);
+    title.value = ' My site ';
+    assert.equal(settings.read().options.href, 'https://other.test/');
+    assert.equal(settings.read().options.title, 'My site');
+    assert.equal(settings.read().options.source, 'url');
+    container.querySelector('.md-dashboard__shortcut-back').click();
+    assert.equal(url.parentElement.hidden, true);
+    assert.equal(settings.read().options.href, '/apps/banner/admin/');
+});
+
+test('Editing restores the selected breadcrumb and an unavailable target remains editable without navigation', t => {
+    const { scope, context, container } = fixture(t, { menu: groupedShortcutMenu });
     const original = { source: 'menu', href: '/apps/banner/admin/banner-stat/', title: 'Autotest banners', icon: 'ti-ad', color: 'default' };
-    const settings = scope.getWidget('shortcut').configure({ container, context, options: original });
-    assert.equal(container.querySelector('[name="dashboardShortcutGroup"]').selectedOptions[0].textContent, 'Applications');
-    assert.equal(container.querySelector('[name="dashboardShortcutSection"]').selectedOptions[0].textContent, 'Banner system');
-    assert.equal(container.querySelector('[name="dashboardShortcutMenu"]').selectedOptions[0].textContent, 'Banner statistics');
-    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), original);
-    const source = container.querySelector('[name="dashboardShortcutSource"]');
-    source.value = 'url';
-    source.dispatchEvent(new window.Event('change'));
-    for (const name of ['Group', 'Section', 'Menu']) assert.equal(container.querySelector(`[name="dashboardShortcut${name}"]`).parentElement.hidden, true);
-    source.value = 'menu';
-    source.dispatchEvent(new window.Event('change'));
-    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), original);
-    container.replaceChildren();
-    const unavailable = scope.getWidget('shortcut').configure({ container, context, options: { ...original, href: '/no-longer-authorized/' } });
-    assert.equal(container.querySelector('[name="dashboardShortcutGroup"]').value, '');
-    assert.throws(() => unavailable.read(), /shortcutChooseTarget/);
-});
-
-test('Empty or unsafe-only menu groups offer explicit URLs instead of empty navigation choices', t => {
-    const { scope, context, container } = fixture(t, { menu: [{ text: 'Empty', childrens: [] }, { text: 'Unsafe', childrens: [{ text: 'Script', href: 'javascript:alert(1)' }] }] });
-    scope.getWidget('shortcut').configure({ container, context, options: {} });
-    const source = container.querySelector('[name="dashboardShortcutSource"]');
-    assert.equal(source.value, 'url');
-    assert.equal(source.options[0].disabled, true);
-    assert.equal(container.querySelector('[name="dashboardShortcutGroup"]').parentElement.hidden, true);
-});
-
-test('Shortcut icons inherit section icons, allow overrides and follow a newly selected destination', t => {
-    const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
     const widget = scope.getWidget('shortcut');
-    const options = { source: 'menu', href: '/apps/banner/admin/banner-stat/', title: 'Autotest', icon: 'ti-star', color: 'mint' };
-    const settings = widget.configure({ container, context, options });
-    const iconInput = container.querySelector('[name="dashboardShortcutIcon"]');
-    const tab = container.querySelector('[name="dashboardShortcutMenu"]');
-    assert.equal(iconInput.value, 'star', 'Editing preserves the personal icon');
-    assert.equal(container.querySelector('.md-dashboard__shortcut-preview i').className, 'ti ti-star');
-    assert.equal(container.querySelector('input[type="radio"]:checked').value, 'mint');
-    tab.value = '/apps/banner/admin/';
-    tab.dispatchEvent(new window.Event('change'));
-    assert.equal(iconInput.value, 'ad', 'Tabs without their own icon inherit the section icon');
-    iconInput.value = 'chart-bar';
-    iconInput.dispatchEvent(new window.Event('input'));
-    assert.equal(settings.read().options.icon, 'ti-chart-bar');
-    assert.equal(settings.read().options.color, 'mint');
+    const settings = widget.configure({ container, context, options: original });
+    assert.equal(container.querySelector('[name="dashboardShortcutSearch"]').value, 'Applications › Banner system › Banner statistics');
+    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), original);
     container.replaceChildren();
-    widget.render({ container, context, options: { href: '/apps/banner/admin/banner-stat/' } });
-    assert.equal(container.querySelector('i').className, 'ti ti-ad', 'Existing shortcuts also inherit the menu icon');
+    const options = { ...original, href: '/no-longer-authorized/' };
+    const unavailable = widget.configure({ container, context, options });
+    assert.throws(() => unavailable.read(), /shortcutChooseTarget/);
     container.replaceChildren();
     widget.render({ container, context, options });
-    assert.equal(container.querySelector('i').className, 'ti ti-star');
-    assert.equal(container.querySelector('a').style.getPropertyValue('--wj-dashboard-shortcut-bg'), 'var(--wj-dashboard-mint)');
+    assert.equal(container.querySelector('a').hasAttribute('href'), false);
+    assert.equal(container.querySelector('a').getAttribute('aria-disabled'), 'true');
+    assert.equal(container.querySelector('a').tabIndex, 0, 'The explanation remains reachable from the keyboard');
+    assert.match(container.querySelector('a').title, /shortcutUnavailable/);
+    assert.equal(container.querySelector('a span').textContent, original.title);
 });
 
-test('URL shortcuts validate icon input and use only predefined background colors', t => {
-    const { scope, context, container, window } = fixture(t);
-    const options = { source: 'url', href: 'https://example.com', title: 'Autotest', icon: 'ti-heart', color: 'rose' };
-    const widget = scope.getWidget('shortcut');
-    const settings = widget.configure({ container, context, options });
+test('Editing an explicit local URL never silently converts it into an authorized menu shortcut', t => {
+    const { scope, context, container } = fixture(t, { menu: groupedShortcutMenu });
+    const options = { source: 'url', href: '/apps/banner/admin/', title: 'Autotest explicit URL', icon: 'ti-link', color: 'default' };
+    const settings = scope.getWidget('shortcut').configure({ container, context, options });
+    assert.equal(container.querySelector('[name="dashboardShortcutUrl"]').parentElement.hidden, false);
+    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), options);
+});
+
+test('Empty or unsafe menus still offer a custom URL and never offer an unsafe destination', t => {
+    const { scope, context, container, window } = fixture(t, { menu: [{ text: 'Unsafe', href: 'javascript:alert(1)' }] });
+    scope.getWidget('shortcut').configure({ container, context, options: {} });
+    searchShortcut(container, window, '');
+    assert.equal(container.querySelectorAll('[role="option"]').length, 1);
+    container.querySelector('.md-dashboard__shortcut-result-url').click();
+    assert.equal(container.querySelector('[name="dashboardShortcutUrl"]').parentElement.hidden, false);
+});
+
+test('Shortcut browsing retains all authorized sections and omits branches without safe cards', t => {
+    const sections = Array.from({ length: 12 }, (_, index) => ({ text: `Section ${index}`, href: `/apps/autotest-${index}/` }));
+    const { scope, context, container, window } = fixture(t, { menu: [
+        { text: 'Applications', children: sections },
+        { text: 'Empty area', href: '/apps/parent/', children: [{ text: 'Unsafe', href: 'javascript:alert(1)' }] }
+    ] });
+    scope.getWidget('shortcut').configure({ container, context, options: {} });
+    searchShortcut(container, window, '');
+    assert.deepEqual([...container.querySelectorAll('.md-dashboard__shortcut-result-text > span')].map(row => row.textContent), ['Applications']);
+    pickShortcut(container, 'Applications');
+    assert.equal(container.querySelectorAll('.md-dashboard__shortcut-result-text > span').length, 13, 'Browsing must include every section plus the back action');
+    assert.match(container.textContent, /Section 11/);
+});
+
+test('Shortcut icon presets inherit the destination and custom names must exist in the installed font', t => {
+    const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
+    const settings = scope.getWidget('shortcut').configure({ container, context, options: { href: '/apps/banner/admin/', icon: 'ti-star', color: 'mint' } });
     const iconInput = container.querySelector('[name="dashboardShortcutIcon"]');
-    const color = container.querySelector('input[value="lavender"]');
-    color.checked = true;
-    color.dispatchEvent(new window.Event('change', { bubbles: true }));
-    assert.equal(settings.read().options.color, 'lavender');
-    assert.equal(container.querySelector('.md-dashboard__shortcut-preview').style.getPropertyValue('--wj-dashboard-shortcut-bg'), 'var(--wj-dashboard-lavender)');
-    for (const invalid of ['ti-star other-class', '<img src=x>', 'url(evil)', 'a'.repeat(81)]) {
+    assert.equal(iconInput.value, 'star');
+    assert.equal(container.querySelector('.md-dashboard__shortcut-preview > i').className, 'ti ti-star');
+    searchShortcut(container, window, 'formulare');
+    pickShortcut(container, 'Formuláre');
+    assert.equal(settings.read().options.icon, 'ti-forms');
+    const custom = container.querySelector('.md-dashboard__shortcut-icon-choices input[value="custom"]');
+    custom.checked = true;
+    custom.dispatchEvent(new window.Event('change', { bubbles: true }));
+    for (const invalid of ['', 'not-a-real-shortcut-icon', 'ti-star other-class', '<img src=x>', 'url(evil)', 'a'.repeat(81)]) {
         iconInput.value = invalid;
+        iconInput.dispatchEvent(new window.Event('input'));
         assert.throws(() => settings.read(), /shortcutIconInvalid/);
+        assert.equal(iconInput.getAttribute('aria-invalid'), 'true');
     }
-    iconInput.value = '';
-    assert.equal(settings.read().options.icon, '', 'An empty icon restores the automatic fallback');
+    iconInput.value = 'rocket';
+    iconInput.dispatchEvent(new window.Event('input'));
+    assert.equal(settings.read().options.icon, 'ti-rocket');
+    assert.equal(iconInput.getAttribute('aria-invalid'), 'false');
+    const preset = container.querySelector('.md-dashboard__shortcut-icon-choices input[value="ti-photo"]');
+    preset.checked = true;
+    preset.dispatchEvent(new window.Event('change', { bubbles: true }));
+    assert.equal(settings.read().options.icon, 'ti-photo');
+    assert.equal(iconInput.closest('.md-dashboard__field').hidden, true);
+});
+
+test('Shortcut autofocus never interrupts typing started during the modal opening animation', t => {
+    const { scope, context, container, window } = fixture(t, { menu: groupedShortcutMenu });
+    const modal = window.document.createElement('div');
+    modal.className = 'modal';
+    modal.tabIndex = -1;
+    container.before(modal);
+    modal.append(container);
+    scope.getWidget('shortcut').configure({ container, context, options: { href: '/apps/banner/admin/' } });
+    const title = container.querySelector('[name="dashboardShortcutTitle"]');
+    title.focus();
+    title.value = 'Autotest while opening';
+    modal.dispatchEvent(new window.Event('shown.bs.modal'));
+    assert.equal(window.document.activeElement, title);
+    assert.equal(title.value, 'Autotest while opening');
+});
+
+test('Shortcut colors share the preview palette and keep unsupported values out of CSS', t => {
+    const { scope, context, container, window } = fixture(t);
+    const widget = scope.getWidget('shortcut');
+    const options = { source: 'url', href: 'https://example.com', title: 'Autotest', icon: 'ti-heart', color: 'rose' };
+    const settings = widget.configure({ container, context, options });
+    const colors = container.querySelector('.md-dashboard__shortcut-colors');
+    assert.equal(colors.querySelectorAll('input').length, 10);
+    assert.equal(colors.querySelector('input:checked').value, 'red');
+    for (const value of ['cyan', 'gray', 'red', 'amber', 'default']) {
+        colors.querySelector('input[value="' + value + '"]').checked = true;
+        colors.dispatchEvent(new window.Event('change'));
+        assert.equal(settings.read().options.color, value);
+        assert.equal(container.querySelector('.md-dashboard__shortcut-preview').style.getPropertyValue('--wj-dashboard-shortcut-bg'), 'var(--wj-dashboard-shortcut-' + value + ')');
+    }
+    assert.equal(container.querySelector('.md-dashboard__shortcut-preview').style.getPropertyValue('--wj-dashboard-shortcut-color'), 'var(--wj-secondary)');
     container.replaceChildren();
     widget.render({ container, context, options: { ...options, icon: '<img src=x>', color: 'url(evil)' } });
     assert.equal(container.querySelector('img'), null);
     assert.equal(container.querySelector('i').className, 'ti ti-link');
-    assert.equal(container.querySelector('a').style.getPropertyValue('--wj-dashboard-shortcut-bg'), 'var(--wj-dashboard-surface)');
+    assert.equal(container.querySelector('a').style.getPropertyValue('--wj-dashboard-shortcut-bg'), 'var(--wj-dashboard-shortcut-default)');
+});
+
+test('Custom shortcut colors use the existing picker and preserve selection, cancellation and dialog cleanup', t => {
+    const { scope, context, container, window } = fixture(t, { colorPicker: true });
+    const widget = scope.getWidget('shortcut');
+    const options = { source: 'url', href: 'https://example.com', title: 'Autotest', color: 'amber' };
+    const lifecycle = new AbortController();
+    const settings = widget.configure({ container, context, options, signal: lifecycle.signal });
+    const picker = container.querySelector('color-picker');
+    const dialog = picker.shadowRoot.querySelector('dialog');
+    const input = dialog.querySelector('[part="hex-input"]');
+    const custom = container.querySelector('.md-dashboard__shortcut-custom-color input');
+    const preview = container.querySelector('.md-dashboard__shortcut-preview');
+    const change = value => { input.value = value; input.dispatchEvent(new window.Event('input', { bubbles: true })); };
+    assert.equal(dialog.querySelector('h3').textContent, 'datatables.field.color.title.js');
+    assert.equal(custom.getAttribute('aria-label'), context.translate('admin.dashboard.shortcutIconCustom.js'));
+    custom.click();
+    assert.equal(dialog.open, true);
+    assert.equal(picker.shadowRoot.activeElement, input);
+    change('#12345680');
+    assert.equal(settings.read().options.color, '#12345680');
+    assert.equal(preview.style.getPropertyValue('--wj-dashboard-shortcut-bg'), '#12345680');
+    assert.equal(preview.style.getPropertyValue('--wj-dashboard-shortcut-color'), 'var(--wj-secondary)');
+    dialog.querySelector('[part="cancel"]').click();
+    assert.equal(settings.read().options.color, 'amber', 'Cancel restores the preset selected before opening.');
+    assert.equal(dialog.open, false);
+    custom.click();
+    change('#123456');
+    dialog.querySelector('[part="confirm"]').click();
+    assert.equal(settings.read().options.color, '#123456ff');
+    assert.equal(preview.style.getPropertyValue('--wj-dashboard-shortcut-color'), '#fff');
+    assert.equal(window.document.activeElement, custom);
+    custom.click();
+    change('#FFFFFF');
+    dialog.dispatchEvent(new window.Event('cancel'));
+    dialog.close();
+    assert.equal(settings.read().options.color, '#123456ff', 'Escape restores the custom color selected before opening.');
+    lifecycle.abort();
+    container.replaceChildren();
+    const reopened = widget.configure({ container, context, options: { ...options, color: '#ABCDEF80' } });
+    settings.dispose();
+    assert.equal(container.querySelector('color-picker'), picker, 'Reopening reuses the component without attaching stale listeners.');
+    assert.equal(container.querySelector('.md-dashboard__shortcut-custom-color input').checked, true);
+    assert.equal(reopened.read().options.color, '#abcdef80');
+    container.querySelector('.md-dashboard__shortcut-custom-color input').click();
+    change('#00000000');
+    assert.equal(reopened.read().options.color, '#00000000');
+    assert.equal(settings.read().options.color, '#123456ff', 'Disposed settings must not receive updates from the next dialog.');
+    assert.equal(container.querySelector('.md-dashboard__shortcut-preview').style.getPropertyValue('--wj-dashboard-shortcut-color'), 'var(--wj-secondary)');
+    reopened.dispose();
+    assert.equal(dialog.open, false);
+    assert.equal(picker.isConnected, false);
+});
+
+test('Saved custom shortcut colors use readable foregrounds and reject malformed CSS', t => {
+    const { scope, context, container } = fixture(t);
+    const widget = scope.getWidget('shortcut');
+    for (const [color, foreground] of [['#000000', '#fff'], ['#FFFFFF', 'var(--wj-secondary)'], ['#00000000', 'var(--wj-secondary)']]) {
+        container.replaceChildren();
+        widget.render({ container, context, options: { source: 'url', href: 'https://example.com', title: 'Autotest', color } });
+        assert.equal(container.querySelector('a').style.getPropertyValue('--wj-dashboard-shortcut-bg'), color.toLowerCase());
+        assert.equal(container.querySelector('a').style.getPropertyValue('--wj-dashboard-shortcut-color'), foreground);
+    }
+    for (const color of ['#fff', '#1234567', '#gg0000', '#123456; color: red', null, 123]) {
+        container.replaceChildren();
+        widget.render({ container, context, options: { color } });
+        assert.equal(container.querySelector('a').style.getPropertyValue('--wj-dashboard-shortcut-bg'), 'var(--wj-dashboard-shortcut-default)');
+    }
+});
+
+test('Previously saved page shortcuts remain editable after menu search stops suggesting web pages', t => {
+    const { scope, context, container } = fixture(t, { menu: groupedShortcutMenu });
+    const options = { source: 'url', href: '/admin/v9/webpages/web-pages-list/?docid=42', title: 'Contact autotest', icon: 'ti-file-text', color: 'default' };
+    const settings = scope.getWidget('shortcut').configure({ container, context, options });
+    assert.equal(container.querySelector('[name="dashboardShortcutSearch"]').value, 'Contact autotest');
+    assert.deepEqual(JSON.parse(JSON.stringify(settings.read().options)), options);
 });
 
 test('Recent pages retain six server-filtered rows safely in every supported size', async t => {
@@ -339,7 +590,7 @@ test('Recent pages distinguish empty content from DataTable errors', async t => 
 
 test('Default widgets follow permissions and authorized menu destinations', t => {
     const { scope, context } = fixture(t, { allowed: false, menu: [] });
-    assert.deepEqual(JSON.parse(JSON.stringify(scope.getDashboardDefaults(context))).map(item => item.type), ['search', 'sessions', 'news']);
+    assert.deepEqual(JSON.parse(JSON.stringify(scope.getDashboardDefaults(context))).map(item => item.type), ['news']);
     assert.equal(scope.getWidget('recent-pages').isAvailable(context), false);
     assert.equal(scope.getWidget('shortcut').isAvailable(context), true);
 });
@@ -352,7 +603,7 @@ test('New profiles include only curated widgets and no more than two authorized 
     const { scope, context } = fixture(t, { menu });
     const defaults = JSON.parse(JSON.stringify(scope.getDashboardDefaults(context)));
     assert.deepEqual(defaults.map(item => item.type), [
-        'search', 'sessions', 'news', 'traffic', 'forms', 'approvals', 'errors',
+        'news', 'traffic', 'forms', 'approvals', 'errors',
         'recent-pages', 'referrers', 'publishing', 'newsletter', 'shortcut', 'shortcut'
     ]);
     assert.deepEqual(defaults.filter(item => item.type === 'shortcut').map(item => item.options.href), menu.slice(0, 2).map(item => item.href));
@@ -374,7 +625,7 @@ test('Default shortcuts fall back to the first authorized module when pages and 
 test('Default content previews complete the traffic row and use an even three-card second row', t => {
     const { scope, context } = fixture(t);
     const defaults = JSON.parse(JSON.stringify(scope.getDashboardDefaults(context)));
-    const grid = defaults.filter(item => !['search', 'sessions', 'news', 'shortcut'].includes(item.type));
+    const grid = defaults.filter(item => !['sessions', 'news', 'shortcut'].includes(item.type));
     assert.deepEqual(grid, [
         { type: 'traffic', size: '3x3' }, { type: 'forms', size: '1x1' },
         { type: 'approvals', size: '1x1' }, { type: 'errors', size: '1x1' },
@@ -444,24 +695,27 @@ test('Changed pages and audit render bounded text-only activity with their suppl
     }
 });
 
-test('Injected logged administrators render synchronously with safe email actions and no REST calls', t => {
+test('Logged administrators load fresh REST data with safe email actions and abort cleanup', async t => {
     const emails = ['valid+autotest@example.com', 'autotest@example.com?bcc=other@example.com', 'autotest@example.com\r\nBcc:other@example.com',
         'autotest@example.com,other@example.com', 'autotest@example.com%0aBcc:other@example.com', ''];
-    const items = emails.map((email, userId) => ({ userId, email, fullName: '<img src=x onerror=alert(1)>' }));
-    const { scope, context, container, window, requests } = fixture(t, { data: { loggedAdmins: items } });
+    const items = emails.map((email, userId) => ({ userId, email, sessionCount: userId + 1, fullName: '<img src=x onerror=alert(1)>' }));
+    const data = { loggedAdmins: items };
+    const { scope, context, container, window, requests } = fixture(t, { data });
     context.translate = (key, ...values) => `${key}:${values.join(',')}`;
     const widget = scope.getWidget('logged-admins');
     const controller = new AbortController();
     const args = { container, context, signal: controller.signal };
     for (const size of ['2x2', '2x3']) {
         container.replaceChildren();
-        widget.render({ ...args, instance: { size } });
+        await widget.render({ ...args, instance: { size } });
         assert.equal(container.querySelectorAll('.md-dashboard-widget__admins > li').length, items.length);
         assert.equal(container.querySelector('img'), null);
         assert.equal(container.querySelectorAll('a').length, 1);
         assert.equal(container.querySelector('a').getAttribute('href'), 'mailto:valid%2Bautotest@example.com');
         assert.match(container.querySelector('a').getAttribute('aria-label'), /<img src=x onerror=alert\(1\)>/);
-        assert.match(container.querySelector('.md-dashboard-widget__footnote').textContent, /:6$/);
+        assert.match(container.querySelector('.md-dashboard-widget__admin-summary small').textContent, /:6$/);
+        assert.equal(container.querySelector('.md-dashboard-widget__admin-total').textContent, '21');
+        assert.deepEqual([...container.querySelectorAll('.md-dashboard-widget__admin-count')].map(node => node.textContent), ['1', '2', '3', '4', '5', '6']);
     }
     const list = container.querySelector('.md-dashboard-widget__admins');
     assert.equal(list.tabIndex, 0);
@@ -475,15 +729,17 @@ test('Injected logged administrators render synchronously with safe email action
     controller.abort();
     list.dispatchEvent(new window.WheelEvent('wheel', { bubbles: true }));
     assert.equal(bubbled, 1, 'Removed administrator cards must release their native-scroll listeners.');
-    context.data.loggedAdmins = [];
+    data.loggedAdmins = [];
     container.replaceChildren();
-    widget.render(args);
+    const nextController = new AbortController();
+    await widget.render({ ...args, signal: nextController.signal });
     assert.match(container.textContent, /empty/);
-    assert.equal(requests.length, 0, 'Administrator cards must always use the injected list.');
+    assert.equal(requests.length, 3, 'Every render must read fresh administrator data.');
+    assert.ok(requests.every(request => request.url === '/admin/rest/sessions/administrators'));
 });
 
 test('Migrated provider failures stay errors and aborted responses do not append stale content', async t => {
-    for (const type of Object.keys(migratedPermissions).filter(type => type !== 'logged-admins')) {
+    for (const type of Object.keys(migratedPermissions)) {
         const denied = fixture(t, { ok: false });
         const args = { container: denied.container, context: denied.context, signal: new AbortController().signal, instance: { size: '3x3' } };
         await assert.rejects(denied.scope.getWidget(type).render(args), /403/, type);
@@ -699,13 +955,13 @@ function chartRuntime(window, { load = async () => {}, create } = {}) {
         appear(duration) { this.appearanceDuration = duration; }
     });
     const list = values => ({ values, getIndex: index => values[index], each: callback => values.forEach(callback), unshift: value => { values.unshift(value); return value; } });
-    const axis = () => settings({ tooltip: settings(), renderer: Object.assign(settings(), { labels: { template: settings() }, grid: { template: settings() } }) });
+    const tooltip = () => Object.assign(settings({ background: settings() }), { label: settings() });
+    const axis = () => settings({ tooltip: tooltip(), renderer: Object.assign(settings(), { labels: { template: settings() }, grid: { template: settings() } }) });
     class LineChartForm { constructor(config) { Object.assign(this, config); } }
     class BarChartForm { constructor(config) { Object.assign(this, config); } }
     const makeChart = form => {
         const series = Array.from({ length: form instanceof LineChartForm ? form.chartData.size : 1 }, (_, index) => {
-            const tooltip = Object.assign(settings(), { label: settings() });
-            return Object.assign(settings({ tooltip }), { strokes: { template: settings() }, fills: { template: settings() }, columns: { template: settings() }, bullets: [], data: {
+            return Object.assign(settings({ tooltip: tooltip() }), { strokes: { template: settings() }, fills: { template: settings() }, columns: { template: settings() }, bullets: [], data: {
                 values: form instanceof LineChartForm ? Array.from(form.chartData.values())[index] : form.chartData,
                 setAll(values) { this.values = values; }
             } });
@@ -987,6 +1243,58 @@ test('Chart colors come from runtime CSS properties while data and lifecycle sta
     assert.equal(runtime.roots.size, 0);
 });
 
+test('Traffic line colors retain readable contrast across the palette and composite transparent custom surfaces', t => {
+    const { scope } = fixture(t);
+    const luminance = hex => hex.slice(1).match(/.{2}/g).reduce((sum, channel, index) => {
+        const value = parseInt(channel, 16) / 255;
+        return sum + (value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4) * [0.2126, 0.7152, 0.0722][index];
+    }, 0);
+    for (const hex of ['#e3f8f4', '#ffffff', '#f3f3f6', '#fef2cc', '#fff2e1', '#fff1ec', '#fff0f1',
+        '#f5f2ff', '#f1f3ff', '#f2f7ff', '#e1f7ff', '#dff9f1', '#e4fbd2']) {
+        const colors = scope.deriveChartColors(`rgb(${hex.slice(1).match(/.{2}/g).map(channel => parseInt(channel, 16)).join(',')})`);
+        assert.notEqual(colors.primary, colors.comparison, 'Current and comparison lines must remain distinct.');
+        for (const color of [colors.primary, colors.comparison]) {
+            assert.ok((luminance(hex) + 0.05) / (luminance(color) + 0.05) >= 3, `Line ${color} must contrast with ${hex}.`);
+        }
+    }
+    const transparent = scope.deriveChartColors('rgba(0, 0, 0, 0)');
+    assert.deepEqual(JSON.parse(JSON.stringify(transparent)), { primary: '#474747', comparison: '#5c5c5c', surface: '#ffffff' });
+    const translucent = scope.deriveChartColors('rgba(241, 243, 255, 0.5)');
+    assert.equal(translucent.surface, '#f8f9ff');
+    assert.equal(translucent.primary, '#474747', 'A nearly white composited surface must use neutral lines.');
+    const translucentMint = scope.deriveChartColors('rgba(223, 249, 241, 0.5)');
+    assert.equal(translucentMint.surface, '#effcf8');
+    assert.equal(translucentMint.primary, '#0e815d');
+});
+
+test('Traffic chart strokes, fills, last-point rings and legend tokens follow each rendered background', async t => {
+    const { scope, context, container, window } = fixture(t, { data: trafficData });
+    container.classList.add('md-dashboard__widget');
+    const runtime = chartRuntime(window);
+    window.am5.Circle = { new: (root, settings) => settings };
+    window.am5.Bullet = { new: (root, settings) => settings };
+    for (const background of ['#e3f8f4', '#f1f3ff']) {
+        container.style.backgroundColor = background;
+        const { primary, comparison } = scope.deriveChartColors(container.style.backgroundColor);
+        const cleanup = await scope.getWidget('traffic').render({ container, context, options: {}, instance: { size: '3x3' }, signal: new AbortController().signal });
+        const series = runtime.forms.at(-1).chart.series;
+        assert.equal(series.getIndex(0).get('stroke'), primary);
+        assert.equal(series.getIndex(0).get('fill'), primary);
+        assert.equal(series.getIndex(1).get('stroke'), comparison);
+        assert.equal(container.style.getPropertyValue('--wj-dashboard-chart-primary'), primary);
+        assert.equal(container.style.getPropertyValue('--wj-dashboard-chart-comparison'), comparison);
+        assert.deepEqual(Array.from(series.getIndex(1).strokes.template.get('strokeDasharray')), [5, 4]);
+        const current = series.getIndex(0);
+        current.dataItems = current.data.values.map(() => ({}));
+        const bullet = current.bullets.at(-1)(null, current, current.dataItems.at(-1));
+        assert.equal(bullet.sprite.fill, primary);
+        assert.equal(bullet.sprite.stroke, background, 'The last-point ring must blend into the selected surface.');
+        cleanup();
+        container.replaceChildren();
+        assert.equal(runtime.roots.size, 0);
+    }
+});
+
 test('Detailed referrers use horizontal AmCharts and retain literal labels and shares of the full total', async t => {
     const data = { total: 100, items: Array.from({ length: 8 }, (_, index) => ({ title: index ? `Source ${index}` : '<img src=x>[bold]', value: 10 - index })) };
     const { scope, context, container, window } = fixture(t, { data });
@@ -1085,7 +1393,12 @@ test('Newsletter reuses recent campaigns and retrieves an older saved selection 
     const signal = new AbortController().signal;
     const newest = await scope.fetchNewsletter('', context, signal);
     assert.equal(requests.length, 1);
-    assert.equal(requests[0].url, '/admin/rest/dmail/campaings/all?size=14&page=0&sort=id%2Cdesc');
+    const url = new URL(requests[0].url, 'https://dashboard-autotest.invalid');
+    assert.equal(url.pathname, '/admin/rest/dmail/campaings/all');
+    assert.equal(url.searchParams.get('page'), '0');
+    assert.equal(url.searchParams.get('sort'), 'id,desc');
+    assert.ok(Number(url.searchParams.get('size')) >= recent.length && Number(url.searchParams.get('size')) <= 100,
+        'Campaign retrieval must cover the recent selection with a bounded request.');
     assert.equal(newest.items[0].title, 'Campaign 30');
     assert.equal(newest.items.length, 3);
     assert.equal(newest.options.length, 14);
@@ -1379,30 +1692,6 @@ test('Forms keep the selected form in domain options and preserve unavailable se
     assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
 });
 
-test('Release acknowledgement folds the matching release into a visible summary that can be expanded again', async t => {
-    const { scope, context, container } = fixture(t, { extraWidgets: true });
-    context.labels.changelog = '<p>WebJET CMS <strong>2026.18</strong> release.</p><p>Second feature.</p>';
-    context.settings.acknowledgedNewsVersion = '2026.18';
-    let acknowledged;
-    context.dashboard = { acknowledgeNews: async version => { acknowledged = version; return true; } };
-    const widget = scope.getWidget('news');
-    widget.render({ container, context });
-    assert.match(container.querySelector('.md-dashboard-widget__news-summary').textContent, /2026.18/);
-    assert.equal(container.querySelector('.md-dashboard-widget__news-highlights'), null);
-    assert.equal(container.querySelector('button').getAttribute('aria-expanded'), 'false');
-    container.querySelector('button').click();
-    await new Promise(resolve => setImmediate(resolve));
-    assert.equal(acknowledged, null);
-    container.replaceChildren();
-    context.labels.changelog = '<p>WebJET CMS <strong>2026.19</strong> release.</p>';
-    widget.render({ container, context });
-    assert.equal(container.querySelector('button').getAttribute('aria-expanded'), 'true');
-    assert.match(container.querySelector('.md-dashboard-widget__news-highlights').textContent, /2026.19/);
-    container.querySelector('button').click();
-    await new Promise(resolve => setImmediate(resolve));
-    assert.equal(acknowledged, '2026.19');
-});
-
 test('Visitor comparisons do not fabricate percentage growth from a zero baseline', t => {
     const { scope } = fixture(t, { extraWidgets: true });
     assert.equal(scope.change(20, 0), null);
@@ -1411,84 +1700,30 @@ test('Visitor comparisons do not fabricate percentage growth from a zero baselin
     assert.equal(scope.change(5, 10), '-50 %');
 });
 
-test('The mandatory sessions widget retains active login details and a static count', async t => {
-    const { scope, context, container } = fixture(t, { extraWidgets: true, data: { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [
-        { sessionId: 'current', logonTime: 1000, browserName: 'Browser', remoteAddr: '127.0.0.1' }
-    ] }] } } });
-    const widget = scope.getWidget('sessions');
-    assert.equal(widget.mandatory, true);
-    await widget.render({ container, context, signal: new AbortController().signal });
-    assert.equal(container.querySelector('span.md-dashboard-widget__session-count').textContent, '1');
-    assert.equal(container.querySelector('button'), null);
-    assert.match(container.querySelector('li').textContent, /Browser.*127.0.0.1/);
-});
-
 test('Sessions reuse embedded data and update the snapshot and count after removal', async t => {
     const { scope, context, container, requests } = fixture(t, { extraWidgets: true, fetchResponse: async () => ({
-        ok: true, text: async () => '{success: true}'
+        ok: true, json: async () => ({ success: true, pending: false })
     }) });
     context.data.currentSessions = { currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [
         { sessionId: 'other', logonTime: 1000, browserName: 'Autotest browser', remoteAddr: '127.0.0.1' }
     ] }] };
-    const widget = scope.getWidget('sessions');
+    const widget = scope.getWidget('my-sessions');
     context.settings.items = [];
-    context.dashboard = { refresh: () => {
+    context.dashboard = { refreshSessions: () => {
         container.replaceChildren();
-        return widget.render({ container, context, signal: new AbortController().signal });
+        return widget.render({ container, context, instance: { size: '2x3' }, signal: new AbortController().signal });
     } };
-    const ready = widget.render({ container, context, signal: new AbortController().signal });
+    const ready = widget.render({ container, context, instance: { size: '2x3' }, signal: new AbortController().signal });
     assert.equal(container.querySelector('.md-dashboard-widget__session-count').textContent, '1');
     assert.equal(requests.length, 0);
     await ready;
     container.querySelector('li button').click();
     await new Promise(resolve => setImmediate(resolve));
     assert.equal(requests.length, 1);
-    assert.equal(requests[0].url, '/admin/rest/removeSession');
+    assert.equal(requests[0].url, '/admin/rest/sessions/logout');
     assert.equal(requests[0].options.method, 'POST');
     assert.equal(container.querySelector('.md-dashboard-widget__session-count').textContent, '0');
 });
-
-test('Search exposes separate scopes and changes its accessible hint', t => {
-    const { scope, context, container, window } = fixture(t, { extraWidgets: true });
-    scope.getWidget('search').render({ container, context, options: { scope: 'admin' }, instance: { id: 'search-one' } });
-    const radios = container.querySelectorAll('[type=radio]');
-    assert.equal(radios.length, 2);
-    assert.ok([...radios].every(radio => radio.closest('label')?.textContent.trim()), 'Native search scopes retain their visible accessible labels.');
-    assert.match(container.querySelector('[type=submit]').getAttribute('aria-label'), /searchButton/);
-    assert.match(container.querySelector('[type=search]').getAttribute('aria-label'), /searchAdminHint/);
-    radios[1].checked = true;
-    radios[1].dispatchEvent(new window.Event('change'));
-    assert.match(container.querySelector('[type=search]').getAttribute('aria-label'), /searchDocsHint/);
-});
-
-test('Search scope clicks submit trimmed text even when selected, but empty clicks only change scope', t => {
-    const { scope, context, container, window } = fixture(t, { extraWidgets: true });
-    const opened = [];
-    window.open = (...args) => opened.push(args);
-    scope.getWidget('search').render({ container, context, options: {}, instance: { id: 'search-one' } });
-    const input = container.querySelector('[type=search]');
-    const docs = container.querySelector('[value=docs]');
-    const admin = container.querySelector('[value=admin]');
-    let submissions = 0;
-    container.querySelector('form').addEventListener('submit', () => submissions++);
-    for (const query of ['', '   ']) {
-        input.value = query;
-        docs.click();
-        assert.equal(docs.checked, true);
-        admin.click();
-        assert.equal(admin.checked, true);
-    }
-    assert.equal(submissions, 0);
-    input.value = '  title & URL  ';
-    docs.click();
-    docs.click();
-    assert.equal(submissions, 2);
-    assert.equal(opened.length, 2);
-    assert.equal(new URL(opened[0][0]).searchParams.get('q'), 'title & URL');
-    assert.equal(opened[0][1], '_blank');
-    assert.equal(opened[0][2], 'noopener');
-});
-
 
 test('An HTTP 200 session-removal rejection leaves the session visible and reports failure', async t => {
     const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'node1', userSessions: [
@@ -1498,8 +1733,8 @@ test('An HTTP 200 session-removal rejection leaves the session visible and repor
         ok: true, status: 200, json: async () => data, text: async () => '{success: false}'
     }) });
     let refreshed = false;
-    context.dashboard = { refresh: () => { refreshed = true; } };
-    await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
+    context.dashboard = { refreshSessions: () => { refreshed = true; } };
+    await scope.getWidget('my-sessions').render({ container, context, instance: { size: '2x3' }, signal: new AbortController().signal });
     const logout = container.querySelector('li button');
     logout.click();
     await new Promise(resolve => setImmediate(resolve));
@@ -1542,7 +1777,7 @@ test('Every active login stays visible with the current session first even when 
             { sessionId: 'other-3', logonTime: 3000 }, { sessionId: 'current', logonTime: 1000, browserName: 'Current browser' }
         ] }]
     } } });
-    await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
+    await scope.getWidget('my-sessions').render({ container, context, instance: { size: '2x3' }, signal: new AbortController().signal });
     const rows = container.querySelectorAll('li');
     assert.equal(rows.length, 4);
     assert.match(rows[0].textContent, /Current browser/);
@@ -1555,7 +1790,7 @@ test('Session rows use installed browser icons and labeled compact status and lo
     const { scope, context, container } = fixture(t, { extraWidgets: true, data: { currentSessions: {
         currentSessionId: 'browser-0', userSessions: [{ userSessions: names.map((browserName, index) => ({ sessionId: `browser-${index}`, browserName, logonTime: 6000 - index })) }]
     } } });
-    await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
+    await scope.getWidget('my-sessions').render({ container, context, instance: { size: '2x3' }, signal: new AbortController().signal });
     assert.deepEqual([...container.querySelectorAll('.md-dashboard-widget__session-device')].map(icon => icon.classList[1]),
         ['ti-brand-chrome', 'ti-brand-chrome', 'ti-brand-safari', 'ti-brand-firefox', 'ti-brand-edge', 'ti-device-desktop']);
     const status = container.querySelector('.md-dashboard-widget__session-current');
@@ -1572,7 +1807,7 @@ test('Native session scrolling contains wheel, touch and keyboard events and rel
         currentSessionId: 'current', userSessions: [{ userSessions: [{ sessionId: 'other', browserName: 'Chrome' }] }]
     } } });
     const controller = new AbortController();
-    await scope.getWidget('sessions').render({ container, context, signal: controller.signal });
+    await scope.getWidget('my-sessions').render({ container, context, instance: { size: '2x3' }, signal: controller.signal });
     const list = container.querySelector('ul');
     let overflow = true, bubbled = 0;
     Object.defineProperty(list, 'scrollHeight', { get: () => overflow ? 300 : 100 });
@@ -1602,39 +1837,682 @@ test('Accepted cluster logout stays pending instead of claiming immediate invali
         { sessionId: 'remote-own', logonTime: 1000, browserName: 'Remote browser' }
     ] }] } };
     const { scope, context, container } = fixture(t, { extraWidgets: true, data, fetchResponse: async () => ({
-        ok: true, status: 200, json: async () => data, text: async () => '{"success":true,"pending":true}'
+        ok: true, status: 200, json: async () => ({ success: true, pending: true }), text: async () => '{"success":true,"pending":true}'
     }) });
     let refreshed = false;
-    context.dashboard = { refresh: () => { refreshed = true; } };
-    await scope.getWidget('sessions').render({ container, context, signal: new AbortController().signal });
+    context.dashboard = { refreshSessions: () => { refreshed = true; } };
+    await scope.getWidget('my-sessions').render({ container, context, instance: { size: '2x3' }, signal: new AbortController().signal });
     container.querySelector('li button').click();
     await new Promise(resolve => setImmediate(resolve));
     assert.match(container.querySelector('li').textContent, /sessionPending/);
     assert.equal(container.querySelector('li button'), null);
-    assert.equal(refreshed, false);
+    assert.equal(refreshed, true, 'Pending state must propagate to every session view.');
+});
+
+function sessionDialogFixture(context, window) {
+    const overview = window.document.createElement('webjet-overview-dashboard');
+    const host = window.document.createElement('div');
+    overview.append(host);
+    window.document.body.append(overview);
+    const lifecycle = new AbortController();
+    let refreshed = 0, opened = 0;
+    context.dashboard = {
+        host,
+        refreshSessions: () => { refreshed++; context.overview?.noticeController?.render(); },
+        showDialog: () => {
+            const request = opened++ === 0 ? lifecycle : new AbortController();
+            const root = window.document.createElement('div');
+            root.setAttribute('aria-labelledby', 'sessions-autotest-title');
+            root.innerHTML = '<div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 class="modal-title"></h2></div><div class="modal-body"></div><div class="modal-footer"></div></div></div>';
+            window.document.body.append(root);
+            return { root, body: root.querySelector('.modal-body'), footer: root.querySelector('.modal-footer'), signal: request.signal,
+                close: () => { request.abort(); root.remove(); } };
+        }
+    };
+    return { signal: lifecycle.signal, refreshed: () => refreshed };
+}
+
+test('Location updates refresh sessions and devices only while the dialog is active', async t => {
+    const session = { sessionId: 'current', deviceId: 42, browserName: 'Chrome', location: 'Initial location' };
+    const data = { clusterMode: true, currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: '<img src=x> node-1', userSessions: [session] }] } };
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async () => ({
+        ok: true, json: async () => ({ content: [{ id: 42, confirmedAt: 1000, location: session.location }], number: 0, totalElements: 1, totalPages: 1 })
+    }) });
+    sessionDialogFixture(context, window);
+    const originalShowDialog = context.dashboard.showDialog;
+    let dialog;
+    context.dashboard.showDialog = (...args) => (dialog = originalShowDialog(...args));
+    scope.showActiveSessions(context);
+    const root = dialog.root;
+    const overview = context.dashboard.host.closest('webjet-overview-dashboard');
+    const notifyLocation = location => {
+        session.location = location;
+        overview.dispatchEvent(new window.CustomEvent('webjet-login-location-updated'));
+    };
+    const settle = () => new Promise(resolve => setImmediate(resolve));
+    const mine = root.querySelector('.md-dashboard-sessions__mine');
+    const devices = root.querySelector('.md-dashboard-sessions__devices');
+    const mineTab = root.querySelector('[role="tab"][id$="-mine"]');
+    const devicesTab = root.querySelector('[role="tab"][id$="-devices"]');
+    notifyLocation('Bratislava');
+    assert.match(mine.textContent, /Bratislava/);
+    assert.equal(mine.querySelector('.md-dashboard-sessions__ip small:last-child').textContent, 'admin.help.server.js <img src=x> node-1');
+    assert.equal(mine.querySelector('img'), null, 'Node names must be rendered as text.');
+    context.data.clusterMode = false;
+    notifyLocation('Bratislava');
+    assert.equal(mine.querySelectorAll('.md-dashboard-sessions__ip small').length, 1, 'Standalone installations must show only the IP below the location.');
+    assert.equal(requests.length, 0, 'A location update must not load a hidden device tab.');
+    devicesTab.click();
+    await settle();
+    assert.equal(requests.length, 1);
+    assert.match(devices.textContent, /Bratislava/);
+    notifyLocation('Prague');
+    await settle();
+    assert.match(mine.textContent, /Prague/);
+    assert.match(devices.textContent, /Prague/);
+    assert.equal(requests.length, 2, 'A visible device tab must reload after a location update.');
+    mineTab.click();
+    notifyLocation('Vienna');
+    await settle();
+    assert.equal(requests.length, 2);
+    assert.match(mine.textContent, /Vienna/);
+    devicesTab.click();
+    await settle();
+    assert.equal(requests.length, 3, 'A previously loaded hidden device tab must reload when reopened.');
+    assert.match(devices.textContent, /Vienna/);
+    assert.ok(requests.every(request => request.url === '/admin/rest/security/login-events?page=0'));
+    dialog.close();
+    const html = mine.innerHTML;
+    notifyLocation('After close');
+    await settle();
+    assert.equal(requests.length, 3, 'A closed dialog must not request device updates.');
+    assert.equal(mine.innerHTML, html, 'A closed dialog must not rerender sessions.');
+});
+
+test('Bulk logout lists only eligible sessions as text and cancellation restores the dialog and focus', t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+        { sessionId: 'current', browserName: 'Current autotest' },
+        { sessionId: 'other', browserName: '<img src=x> autotest', operatingSystem: 'Linux', remoteAddr: '192.0.2.2' },
+        { sessionId: 'pending', browserName: 'Pending autotest', pending: true }
+    ] }] } };
+    const { scope, context, window, requests } = fixture(t, { data });
+    sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    const trigger = root.querySelector('.md-dashboard-sessions__summary button');
+    for (const action of ['button', 'escape', 'backdrop']) {
+        trigger.click();
+        assert.equal(requests.length, 0, 'Opening confirmation must never submit a logout request.');
+        assert.equal(root.querySelectorAll('.md-dashboard-sessions__logout-list li').length, 1);
+        assert.match(root.querySelector('.md-dashboard-sessions__logout-list').textContent, /<img src=x> autotest · Linux · 192.0.2.2/);
+        assert.equal(root.querySelector('img'), null);
+        assert.match(root.querySelector('.modal-body').textContent, /logoutOthersDescriptionSingle/);
+        const cancel = root.querySelector('.modal-footer .btn-outline-secondary');
+        assert.equal(window.document.activeElement, cancel);
+        if (action === 'button') cancel.click();
+        else if (action === 'escape') cancel.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+        else assert.equal(root.dispatchEvent(new window.Event('hide.bs.modal', { cancelable: true })), false);
+        assert.equal(requests.length, 0, 'Canceling confirmation must never submit a logout request.');
+        assert.equal(root.querySelectorAll('tbody tr').length, 3);
+        assert.equal(window.document.activeElement, trigger);
+        assert.equal(root.classList.contains('md-dashboard-modal--logout'), false);
+    }
+});
+
+test('Confirmed bulk logout preserves the current session and notifies for five seconds only after complete success', async t => {
+    for (const outcome of ['success', 'pending', 'failure']) await t.test(outcome, async t => {
+        const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+            { sessionId: 'current', browserName: 'Current autotest' },
+            { sessionId: 'other-1', browserName: 'Firefox autotest' },
+            { sessionId: 'other-2', browserName: 'Safari autotest' }
+        ] }] } };
+        const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async (url, options) => ({
+            ok: true, json: async () => ({ success: outcome !== 'failure' || options.body.get('sessionId') === 'other-1', pending: outcome === 'pending' })
+        }) });
+        const notifications = [];
+        window.WJ.notifySuccess = (...args) => notifications.push(args);
+        sessionDialogFixture(context, window);
+        scope.showActiveSessions(context);
+        const root = window.document.querySelector('.md-dashboard-modal--sessions');
+        root.querySelector('.md-dashboard-sessions__summary button').click();
+        assert.match(root.querySelector('.modal-body').textContent, /logoutOthersDescriptionFew/);
+        root.querySelector('.modal-footer .btn-red').click();
+        await new Promise(resolve => setImmediate(resolve));
+        assert.deepEqual(requests.map(request => request.options.body.get('sessionId')), ['other-1', 'other-2']);
+        assert.ok(root.querySelector('.md-dashboard-sessions__current'));
+        if (outcome === 'success') {
+            assert.equal(root.querySelectorAll('tbody tr').length, 1);
+            assert.deepEqual(notifications, [['admin.dashboard.activeSessions.js', 'admin.dashboard.logoutOthersSuccess.js', 5000]]);
+        } else {
+            assert.equal(notifications.length, 0, 'Incomplete logout must not claim all devices were signed out.');
+            assert.match(root.textContent, outcome === 'pending' ? /sessionPending/ : /sessionError/);
+        }
+    });
+});
+
+test('Personal session widget supports counts and complete scrollable lists without additional reads', async t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+        { sessionId: 'current', logonTime: 1, browserName: 'Chrome', operatingSystem: 'macOS' },
+        { sessionId: 'other', logonTime: 2, browserName: '<img src=x> autotest', operatingSystem: '<img src=unsafe>', remoteAddr: '127.0.0.2' }
+    ] }] } };
+    const { scope, context, container, requests } = fixture(t, { data });
+    const widget = scope.getWidget('my-sessions');
+    assert.deepEqual(Array.from(widget.sizes), ['1x1', '2x2', '2x3']);
+    for (const size of widget.sizes) {
+        container.replaceChildren();
+        await widget.render({ container, instance: { size }, context, signal: new AbortController().signal });
+        if (size === '1x1') assert.equal(container.querySelector('.md-dashboard-widget__metric').textContent, '2');
+        else {
+            assert.equal(container.querySelectorAll('li').length, 2);
+            assert.equal(container.querySelectorAll('li button').length, 1);
+            assert.equal(container.querySelector('img'), null);
+            assert.equal(container.querySelector('.md-dashboard-widget__session-name').textContent, 'Chrome · macOS');
+        }
+    }
+    assert.equal(requests.length, 0);
+});
+
+test('Administrator table uses safe account and session summaries and omits logout without management permission', async t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+        { sessionId: 'current', browserName: 'Chrome', operatingSystem: 'macOS', logonTime: 1 },
+        { sessionId: 'other', browserName: 'Firefox', operatingSystem: 'Linux', logonTime: 2 }
+    ] }] }, loggedAdmins: [
+        { userId: 8, fullName: '<img src=x> Admin', login: '<script>login</script>', email: 'other@example.test', sessionCount: 3, clients: ['Chrome · <img src=x>'], lastActivity: Date.now() - 600000 },
+        { userId: 7, fullName: 'Autotest User', login: 'autotest', current: true, sessionCount: 2, clients: ['Chrome · macOS', 'Firefox · Linux'] }
+    ] };
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async url => {
+        if (url === '/admin/rest/sessions/administrators') return { ok: true, json: async () => data.loggedAdmins };
+        data.loggedAdmins[1].sessionCount = 1;
+        data.loggedAdmins[1].clients = ['Chrome · macOS'];
+        return { ok: true, json: async () => ({ success: true }) };
+    } });
+    window.WJ.hasPermission = permission => permission !== 'users.edit_admins';
+    sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    assert.equal(requests.length, 0, 'The administrator list must wait for tab activation.');
+    root.querySelector('[role="tab"][id$="-admins"]').click();
+    await new Promise(resolve => setImmediate(resolve));
+    const rows = root.querySelectorAll('.md-dashboard-sessions__admins-table tbody tr');
+    assert.equal(rows.length, 2);
+    assert.equal(rows[0].dataset.adminUserId, '7');
+    assert.equal(rows[0].querySelector('.md-dashboard-sessions__admin-connections div').textContent, '2');
+    assert.match(rows[0].querySelector('small').textContent, /autotest/);
+    assert.match(rows[0].querySelector('.md-dashboard-sessions__admin-connections small').textContent, /Chrome · macOS, Firefox · Linux/);
+    assert.equal(rows[1].querySelector('button'), null);
+    assert.match(rows[1].querySelector('a').href, /mailto:other@example.test/);
+    assert.equal(root.querySelectorAll('script,img,input').length, 0);
+    rows[0].querySelector('button').click();
+    assert.equal(root.querySelectorAll('[role="tab"]')[0].getAttribute('aria-selected'), 'true');
+    assert.match(root.querySelector('.md-dashboard-sessions__device-name').textContent, /^Chrome/);
+    assert.equal(root.querySelector('.md-dashboard-sessions__system').textContent, 'macOS');
+    root.querySelector('.md-dashboard-sessions__mine tbody tr:nth-child(2) button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(root.querySelector('.md-dashboard-sessions__admin-connections div').textContent, '1');
+    assert.equal(requests.length, 3);
+});
+
+test('Authorized administrator logout refreshes REST data and retains pending and failed feedback', async t => {
+    let administrators = [{ userId: 7, fullName: 'Own Account', current: true },
+        ...[8, 9, 10].map(userId => ({ userId, fullName: `Administrator ${userId}`, sessionCount: 2, clients: ['Firefox · Linux'] }))];
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [] } };
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async (url, options) => {
+        if (url === '/admin/rest/sessions/administrators') return { ok: true, json: async () => administrators };
+        const userId = options.body.get('userId');
+        if (userId === '8') administrators = administrators.filter(user => user.userId !== 8);
+        return { ok: true, json: async () => ({ success: userId !== '10', pending: userId === '9' }) };
+    } });
+    sessionDialogFixture(context, window);
+    let refreshed = 0;
+    context.dashboard.refreshLoggedAdmins = () => { refreshed++; };
+    scope.showActiveSessions(context);
+    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    root.querySelector('[role="tab"][id$="-admins"]').click();
+    await new Promise(resolve => setImmediate(resolve));
+    for (const id of [8, 9, 10]) {
+        root.querySelector(`[data-admin-user-id="${id}"] button`).click();
+        await new Promise(resolve => setImmediate(resolve));
+    }
+    const posts = requests.filter(request => request.options.method === 'POST');
+    assert.deepEqual(posts.map(request => request.url), Array(3).fill('/admin/rest/sessions/logout-administrator'));
+    assert.deepEqual(posts.map(request => request.options.body.get('userId')), ['8', '9', '10']);
+    assert.equal(requests.filter(request => !request.options.method).length, 3);
+    assert.equal(root.querySelector('[data-admin-user-id="8"]'), null);
+    assert.equal(root.querySelector('[data-admin-user-id="9"] button'), null);
+    assert.match(root.querySelector('[data-admin-user-id="9"]').textContent, /sessionPending/);
+    assert.ok(root.querySelector('[data-admin-user-id="10"] button'));
+    assert.match(root.querySelector('.md-dashboard-sessions__status').textContent, /sessionAdminLogoutError/);
+    assert.equal(refreshed, 2);
+    window.WJ.hasPermission = () => false;
+    root.querySelector('[data-admin-user-id="10"] button').click();
+    assert.equal(requests.length, 6);
+});
+
+test('Session dialog retains pending and failed bulk removals', async t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ cluster: 'autotest', userSessions: [
+        { sessionId: 'current', logonTime: 1, lastActivity: Date.now(), browserName: 'Chrome autotest', remoteAddr: '127.0.0.1' },
+        ...['removed', 'pending', 'failed'].map(sessionId => ({ sessionId, logonTime: 2, lastActivity: Date.now() - 600000, browserName: '<script>autotest</script>', remoteAddr: '127.0.0.2' }))
+    ] }] } };
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async (url, options) => ({
+        ok: true, json: async () => ({ success: options.body.get('sessionId') !== 'failed', pending: options.body.get('sessionId') === 'pending' })
+    }) });
+    const dialog = sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    assert.equal(root.querySelectorAll('[role="tab"]').length, 4, 'Tab availability follows permission, independently of bootstrap data.');
+    assert.equal(root.querySelector('tbody tr:first-child button'), null, 'The current session must not offer logout.');
+    assert.equal(root.querySelectorAll('script,img').length, 0);
+    assert.match(root.querySelector('.md-dashboard-sessions__activity').textContent, /sessionActiveNow/);
+    root.querySelector('.md-dashboard-sessions__summary button').click();
+    root.querySelector('.modal-footer .btn-red').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(requests.map(item => item.options.body.get('sessionId')), ['removed', 'pending', 'failed']);
+    assert.equal(root.querySelectorAll('tbody tr').length, 3);
+    assert.match(root.querySelector('.md-dashboard-sessions__status').textContent, /sessionError/);
+    assert.match(root.querySelector('.md-dashboard-sessions__mine').textContent, /sessionPending/);
+    assert.equal(root.querySelectorAll('tbody tr:not(:first-child) button').length, 1, 'Only the failed session offers retry.');
+    assert.equal(dialog.refreshed(), 1);
+    assert.equal(scope.flattenSessions(context.data.currentSessions).length, 3);
+});
+
+test('Administrator tab refreshes, retries, respects permissions and aborts on close', async t => {
+    let fail = true;
+    let users = [];
+    const { scope, context, window, requests } = fixture(t, {
+        data: { currentSessions: { currentSessionId: 'current', userSessions: [] } },
+        fetchResponse: async () => ({ ok: !fail, status: fail ? 403 : 200, json: async () => fail ? {} : users })
+    });
+    window.WJ.hasPermission = permission => permission === 'users.edit_admins';
+    const dialog = sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    let root = window.document.querySelector('.md-dashboard-modal--sessions');
+    assert.equal(root.querySelectorAll('[role="tab"]').length, 3, 'Edit permission alone must not display the list tab.');
+    assert.equal(requests.length, 0);
+    root.querySelector('.modal-footer > button:last-child').click();
+    window.WJ.hasPermission = permission => permission === 'welcomeShowLoggedAdmins';
+    sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    root = window.document.querySelector('.md-dashboard-modal--sessions');
+    const adminTab = root.querySelector('[role="tab"][id$="-admins"]');
+    adminTab.click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.match(root.querySelector('.md-dashboard-sessions__admins [role="alert"]').textContent, /unavailable/);
+    assert.equal(root.querySelector('.md-dashboard-sessions__admins-table'), null, 'A failed load must not claim an empty list.');
+    fail = false;
+    root.querySelector('.md-dashboard-sessions__admins button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.match(root.querySelector('.md-dashboard-sessions__admins').textContent, /empty/);
+    users = [{ userId: 8, fullName: 'Autotest Refreshed', sessionCount: 1 }];
+    root.querySelector('.md-dashboard-sessions__admins .md-dashboard-sessions__summary button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.match(root.querySelector('.md-dashboard-sessions__admins').textContent, /Autotest Refreshed/);
+    assert.equal(root.querySelector('[data-admin-user-id="8"] button'), null);
+    adminTab.click();
+    assert.equal(requests.length, 3, 'Revisiting a loaded tab must not implicitly fetch again.');
+    root.querySelector('.modal-footer > button:last-child').click();
+    assert.equal(requests[0].options.signal.aborted, true);
+    assert.equal(dialog.signal.aborted, true);
+});
+
+test('History loads on tab activation, pages safely and aborts on close', async t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [] }, loggedAdmins: [{ fullName: 'Admin autotest', email: 'autotest@example.com' }] };
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async () => ({ ok: true, json: async () => ({
+        content: [{ createDate: Date.now(), ip: '127.0.0.1', description: '<img src=x> autotest login' }],
+        totalElements: 21, totalPages: 2, first: true, last: false
+    }) }) });
+    const fixtureDialog = sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    const tabs = root.querySelectorAll('[role="tab"]');
+    assert.equal(tabs.length, 4);
+    assert.equal(requests.length, 0);
+    tabs[0].dispatchEvent(new window.KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(tabs[3].getAttribute('aria-selected'), 'true');
+    assert.ok(root.querySelector('.md-dashboard-sessions__password'));
+    assert.equal(requests[0].url, '/admin/rest/sessions/login-history?page=0');
+    assert.equal(root.querySelector('.md-dashboard-sessions__history img'), null);
+    root.querySelector('.md-dashboard-sessions__pagination button:last-child').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(requests[1].url, '/admin/rest/sessions/login-history?page=1');
+    root.querySelector('.modal-footer > button:last-child').click();
+    assert.equal(fixtureDialog.signal.aborted, true);
+    assert.equal(requests[0].options.signal.aborted, true);
 });
 
 
-test('Release announcements preserve every Markdown-rendered feature and place collapse beside the changelog link', t => {
-    const { scope, context, container } = fixture(t, { extraWidgets: true });
-    context.labels.changelog = 'WebJET CMS <strong>2026.18</strong> first feature.<br><br>Second feature.<br><br>Third feature.';
-    const news = scope.releaseNews(context);
-    assert.equal(news.paragraphs.length, 3);
-    assert.equal(news.paragraphs[1], 'Second feature.');
-    scope.getWidget('news').render({ container, context });
-    assert.equal(container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, context.labels.changelog);
-    assert.equal(container.querySelector('.md-dashboard-widget__news-header'), null, 'Expanded news must not add a duplicate release heading or empty header.');
-    const actions = container.querySelector('.md-dashboard-widget__news-actions');
-    assert.equal(actions.children.length, 2);
-    assert.equal(actions.querySelector('button').textContent, 'admin.dashboard.newsCollapse.js');
-    assert.equal(actions.querySelector('button i').getAttribute('aria-hidden'), 'true');
-    assert.equal(container.querySelector('.md-dashboard-widget__news-more').getAttribute('href'), 'https://docs.webjetcms.sk/latest/en/CHANGELOG');
+test('Session dialog does not autofocus a tab or steal child focus', t => {
+    for (const preserveFocus of [false, true]) {
+        const { scope, context, window } = fixture(t, { data: { currentSessions: { userSessions: [] } } });
+        sessionDialogFixture(context, window);
+        const initialFocus = window.document.activeElement;
+        scope.showActiveSessions(context);
+        assert.equal(window.document.activeElement, initialFocus, 'Session rendering must leave initial focus to the shared modal.');
+        const root = window.document.querySelector('.md-dashboard-modal--sessions');
+        root.tabIndex = -1;
+        const expected = preserveFocus ? root.querySelector('[role="tab"]') : root;
+        expected.focus();
+        root.dispatchEvent(new window.Event('shown.bs.modal'));
+        assert.equal(window.document.activeElement, expected);
+    }
 });
 
-test('Expanded release announcements retain headings, lists, emphasis and links from the Markdown renderer', t => {
-    const { scope, context, container } = fixture(t, { extraWidgets: true });
-    context.labels.changelog = '<h2>WebJET CMS 2026.18</h2><p>A <strong>complete</strong> announcement.</p><ul><li>First feature</li><li>Second <em>feature</em></li></ul><p>Read <a href="/release-details/">the details</a>.</p>';
-    assert.equal(scope.releaseNews(context).version, '2026.18');
-    scope.getWidget('news').render({ container, context });
-    assert.equal(container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, context.labels.changelog);
+test('Login security dialog removes only the successfully blocked device notice', async t => {
+    const securityEvent = { id: 42, createDate: 1000, browserName: '<img src=x>', browserVersion: '123.0', operatingSystem: 'Linux', ipAddress: '127.0.0.1' };
+    const otherNotice = { kind: 'newDevice', securityEvent: { id: 43 } };
+    const data = { notices: [{ kind: 'newDevice', securityEvent: { ...securityEvent } }, otherNotice], currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+        { sessionId: 'current', browserName: 'Current autotest', logonTime: 1000 },
+        { sessionId: 'other', browserName: 'Other autotest', logonTime: 2000 }
+    ] }] } };
+    let fail = true;
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async () => ({ ok: !fail, json: async () => ({ ...securityEvent, reportedAt: 3000 }) }) });
+    context.translate = (key, ...params) => [key, ...params].join(' ');
+    sessionDialogFixture(context, window);
+    scope.showDeviceSecurity(context, securityEvent);
+    const root = window.document.querySelector('.md-dashboard-modal--device-security');
+    assert.equal(requests.length, 0, 'Opening the security dialog must be read-only.');
+    assert.equal(root.querySelectorAll('[role="tab"], table').length, 0);
+    assert.equal(root.querySelector('img'), null);
+    assert.match(root.textContent, /<img src=x> 123 · Linux/);
+    root.querySelector('.md-dashboard-device-security__report').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.ok(root.querySelector('.md-dashboard-device-security__report'));
+    assert.match(root.querySelector('[role="alert"]').textContent, /newDevice.saveError/);
+    assert.equal(context.data.notices.length, 2, 'A failed block must preserve both notices.');
+    fail = false;
+    root.querySelector('.md-dashboard-device-security__report').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(root.querySelector('.md-dashboard-device-security__report'), null);
+    assert.match(root.textContent, /newDevice.reported/);
+    assert.equal(requests[1].url, '/admin/rest/security/login-events/42/report');
+    assert.equal(requests[1].options.method, 'POST');
+    assert.equal(requests[1].options.headers['X-CSRF-Token'], 'test-csrf-token');
+    assert.equal(context.data.notices.length, 1, 'Blocking must remove only the resolved warning.');
+    assert.equal(context.data.notices[0], otherNotice);
+    assert.equal(scope.flattenSessions(context.data.currentSessions).length, 2, 'Unrelated sessions must remain in the dialog.');
+});
+
+test('Security review omits current-session logout and uses the existing API for other sessions', async t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+        { sessionId: 'current', browserName: 'Current autotest' }, { sessionId: 'other', browserName: 'Other autotest' }
+    ] }] } };
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async () => ({ ok: true, json: async () => ({ success: true, pending: false }) }) });
+    sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    assert.equal(root.querySelector('tbody tr:first-child button'), null);
+    assert.equal(requests.length, 0, 'Opening the dialog must not log out any sessions.');
+    root.querySelector('tbody tr:nth-child(2) button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(requests[0].url, '/admin/rest/sessions/logout');
+    assert.equal(requests[0].options.body.get('sessionId'), 'other');
+    assert.equal(root.querySelectorAll('tbody tr').length, 1);
+    assert.ok(root.querySelector('tbody .md-dashboard-sessions__current'));
+    assert.equal(root.querySelector('tbody button'), null);
+});
+
+test('Session password action closes its dialog before opening the profile', async t => {
+    const { scope, context, window } = fixture(t, { data: { currentSessions: { userSessions: [] } } });
+    const dialog = sessionDialogFixture(context, window);
+    window.currentUser = { userId: 7 };
+    let profile;
+    window.openProfileDialog = (...args) => {
+        assert.equal(window.document.querySelector('.md-dashboard-modal--sessions'), null);
+        profile = args;
+    };
+    scope.showActiveSessions(context);
+    window.document.querySelector('.md-dashboard-sessions__password').click();
+    assert.equal(dialog.signal.aborted, true);
+    await new Promise(resolve => window.setTimeout(resolve, 0));
+    assert.deepEqual(profile, [7, true]);
+});
+
+test('Sessions contain only logouts while the lazy device tab confirms retained devices through email proofs', async t => {
+    const securityEvent = { id: 42, createDate: 1000, lastSeen: 2000, browserName: '<img src=x>', ipAddress: '192.0.2.1' };
+    const data = { notices: [{ id: 'newDevice:42', kind: 'newDevice', securityEvent }], currentSessions: {
+        currentSessionId: 'current', userSessions: [{ userSessions: [
+            { sessionId: 'current', deviceId: 42, deviceConfirmed: false },
+            { sessionId: 'same-device', deviceId: 42, deviceConfirmed: false },
+            { sessionId: 'another-device', deviceId: 43, deviceConfirmed: false }
+        ] }]
+    } };
+    const records = [securityEvent, { id: 43 }, { id: 44, confirmedAt: 1000 }, { id: 45, reportedAt: 2000 }];
+    let fail = true, returnedId = 42;
+    const { scope, context, window, requests } = fixture(t, { data,
+        fetchResponse: async url => url.includes('?page=') ? { ok: true, json: async () => ({ content: records, totalElements: 4, number: 0, totalPages: 1 }) }
+            : { ok: !fail, json: async () => ({ id: returnedId, confirmedAt: 3000 }) } });
+    context.translate = (key, ...params) => [key, ...params].join(' ');
+    const dialog = sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    assert.equal(requests.length, 0);
+    assert.equal(root.querySelectorAll('.md-dashboard-sessions__mine tbody tr').length, 3);
+    assert.equal(root.querySelector('.md-dashboard-sessions__mine tbody tr:first-child button'), null);
+    assert.equal(root.querySelectorAll('.md-dashboard-sessions__mine tbody button').length, 2);
+    assert.equal(root.querySelector('.md-dashboard-sessions__confirm-device'), null);
+    root.querySelector('[id$="-devices"][role="tab"]').click();
+    await new Promise(resolve => setImmediate(resolve));
+    const devices = root.querySelector('.md-dashboard-sessions__devices');
+    assert.equal(requests[0].url, '/admin/rest/security/login-events?page=0');
+    assert.equal(devices.querySelectorAll('tbody tr[data-device-id]').length, 4, 'Retained devices are independent of active sessions.');
+    assert.equal(devices.querySelectorAll('.md-dashboard-sessions__confirm-device').length, 2);
+    assert.equal(devices.querySelectorAll('.md-dashboard-sessions__deny-device').length, 3);
+    assert.equal(devices.querySelector('img'), null);
+    assert.match(devices.textContent, /<img src=x>/);
+    assert.match(devices.querySelector('[data-device-id="42"]').textContent, /currentDevice/);
+    assert.equal(devices.querySelectorAll('thead th').length, 4);
+    assert.equal(devices.querySelectorAll('[data-device-id="42"] td:first-child .md-dashboard-devices__badges > span').length, 2);
+    assert.match(devices.querySelector('[data-device-id="42"] td:first-child').textContent, /newDevice.badge/);
+    const blockedBadge = devices.querySelector('[data-device-id="45"] td:first-child .is-blocked');
+    assert.equal(blockedBadge.tabIndex, 0);
+    assert.match(blockedBadge.title, /deviceBlocked.*deviceBlockedAdvice/);
+    assert.equal(devices.querySelector('[data-device-id="45"] td:last-child').textContent, '');
+    assert.match(devices.querySelector('[data-device-id="44"] .is-confirmed').title, /deviceConfirmed/);
+    devices.querySelector('.md-dashboard-sessions__confirm-device').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(requests[1].url, '/admin/rest/security/login-events/42/code');
+    assert.match(devices.querySelector('.md-dashboard-device-confirmation').textContent, /newDevice.codeSendError/);
+    for (const stage of ['failure', 'mismatched-device', 'success']) {
+        fail = stage === 'failure';
+        returnedId = stage === 'mismatched-device' ? 99 : 42;
+        const form = devices.querySelector('.md-dashboard-device-confirmation');
+        form.querySelector('input').value = '012345';
+        form.dispatchEvent(new window.Event('submit', { cancelable: true }));
+        await new Promise(resolve => setImmediate(resolve));
+        if (stage !== 'success') {
+            assert.match(devices.querySelector('.md-dashboard-device-confirmation').textContent, /newDevice.codeInvalid/);
+            assert.equal(context.data.notices.length, 1);
+        }
+    }
+    assert.equal(devices.querySelectorAll('.md-dashboard-sessions__confirm-device').length, 1);
+    assert.match(devices.querySelector('[data-device-id="42"]').textContent, /deviceConfirmed/);
+    assert.equal(records[0].lastSeen, 2000);
+    assert.equal(context.data.notices.length, 0);
+    assert.equal(dialog.refreshed(), 1);
+    assert.equal(scope.flattenSessions(context.data.currentSessions).length, 3);
+    assert.ok(requests.slice(2).every(request => request.url === '/admin/rest/security/login-events/42/confirm'));
+    assert.deepEqual(JSON.parse(requests.at(-1).options.body), { code: '012345' });
+});
+
+test('Denying a device reports it once and marks every matching session pending only after success', async t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+        { sessionId: 'current', deviceId: 42, deviceConfirmed: false },
+        { sessionId: 'other', deviceId: 43, deviceConfirmed: false },
+        { sessionId: 'remote', deviceId: 43, deviceConfirmed: false }
+    ] }] } };
+    let fail = true;
+    const { scope, context, window, requests } = fixture(t, { data, fetchResponse: async url => url.includes('?page=') ? { ok: true, json: async () => ({ content: [{ id: 43, confirmedAt: 1000 }], number: 0, totalElements: 1, totalPages: 1 }) } : ({
+        ok: !fail, json: async () => ({ id: 43, reportedAt: 3000, createDate: 1000 })
+    }) });
+    const dialog = sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    let root = window.document.querySelector('.md-dashboard-modal--sessions');
+    root.querySelector('[id$="-devices"][role="tab"]').click();
+    await new Promise(resolve => setImmediate(resolve));
+    root.querySelector('.md-dashboard-sessions__deny-device').click();
+    await new Promise(resolve => window.setTimeout(resolve, 0));
+    await new Promise(resolve => setImmediate(resolve));
+    root = window.document.querySelector('.md-dashboard-modal--device-security');
+    assert.equal(window.document.querySelector('.md-dashboard-modal--sessions'), null);
+    assert.ok(scope.flattenSessions(context.data.currentSessions).every(session => !session.pending));
+    assert.match(root.textContent, /newDevice.saveError/);
+    fail = false;
+    root.querySelector('.md-dashboard-device-security__report').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.deepEqual(scope.flattenSessions(context.data.currentSessions).map(session => !!session.pending), [false, true, true]);
+    assert.match(root.textContent, /newDevice.reported/);
+    assert.equal(dialog.refreshed(), 1);
+    assert.ok(requests.slice(1).every(request => request.url === '/admin/rest/security/login-events/43/report'));
+    assert.equal(requests[0].options.headers['X-CSRF-Token'], 'test-csrf-token');
+});
+
+test('Unavailable security links show a neutral message without account actions or reads', t => {
+    const { scope, context, window, requests } = fixture(t);
+    sessionDialogFixture(context, window);
+    scope.showDeviceSecurity(context, null);
+    const root = window.document.querySelector('.md-dashboard-modal--device-security');
+    assert.match(root.textContent, /newDevice.unavailable/);
+    assert.equal(root.querySelectorAll('button').length, 1);
+    assert.equal(root.querySelector('table'), null);
+    assert.equal(requests.length, 0);
+});
+
+test('Reporting a previously confirmed email event never restores its warning', async t => {
+    for (const active of [true, false]) {
+        const securityEvent = { id: 'autotest-confirmed', createDate: 1000, confirmedAt: 2000, expiresAt: Date.now() + (active ? 60000 : -60000) };
+        const { scope, context, window } = fixture(t, {
+            data: { notices: [], currentSessions: { userSessions: [] }, requestedSecurityEvent: securityEvent },
+            fetchResponse: async () => ({ ok: true, json: async () => ({ ...securityEvent, confirmedAt: null, reportedAt: 3000 }) })
+        });
+        sessionDialogFixture(context, window);
+        let rendered = 0;
+        context.overview = { noticeController: { render: () => { rendered++; } } };
+        scope.showDeviceSecurity(context, securityEvent);
+        window.document.querySelector('.md-dashboard-device-security__report').click();
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(context.data.notices.length, 0);
+        assert.equal(context.data.requestedSecurityEvent.confirmedAt, null);
+        assert.equal(context.data.requestedSecurityEvent.reportedAt, 3000);
+        assert.equal(rendered, 1);
+    }
+});
+
+test('Invalid and aborted block responses never remove notices or update sessions', async t => {
+    for (const mode of ['wrong-id', 'not-reported', 'aborted']) {
+        const event = { id: 42 };
+        const data = { notices: [{ kind: 'newDevice', securityEvent: event }], currentSessions: {
+            userSessions: [{ userSessions: [{ sessionId: 'other', deviceId: 42 }] }]
+        } };
+        let finish;
+        const { scope, context, window } = fixture(t, { data, fetchResponse: () => new Promise(resolve => { finish = resolve; }) });
+        const lifecycle = sessionDialogFixture(context, window);
+        scope.showDeviceSecurity(context, event, true);
+        const root = window.document.querySelector('.md-dashboard-modal--device-security');
+        assert.equal(root.querySelector('.md-dashboard-device-security__report').disabled, true);
+        if (mode === 'aborted') root.querySelector('.modal-footer button').click();
+        finish({ ok: true, json: async () => ({ id: mode === 'wrong-id' ? 99 : 42, reportedAt: mode === 'not-reported' ? null : 3000 }) });
+        await new Promise(resolve => setImmediate(resolve));
+        assert.equal(context.data.notices.length, 1);
+        assert.equal(context.data.currentSessions.userSessions[0].userSessions[0].pending, undefined);
+        assert.equal(lifecycle.refreshed(), 0);
+        if (mode === 'aborted') assert.equal(root.isConnected, false);
+        else assert.match(root.querySelector('[role="alert"]').textContent, /newDevice.saveError/);
+    }
+});
+
+test('Blocking the current browser retains the existing account logout', async t => {
+    const event = { id: 42 };
+    const { scope, context, window } = fixture(t, { data: { currentSessions: {
+        currentSessionId: 'current', userSessions: [{ userSessions: [{ sessionId: 'current', deviceId: 42 }] }]
+    } }, fetchResponse: async () => ({ ok: true, json: async () => ({ id: 42, reportedAt: 3000 }) }) });
+    const form = window.document.createElement('form');
+    form.name = 'adminLogoffForm';
+    let logouts = 0;
+    form.requestSubmit = () => { logouts++; };
+    window.document.body.append(form);
+    sessionDialogFixture(context, window);
+    scope.showDeviceSecurity(context, event, true);
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(logouts, 1);
+});
+
+test('Device pages retry failures, load lazily and cancel replaced or closed code entry', async t => {
+    let fail = true;
+    const { scope, context, window, requests } = fixture(t, { fetchResponse: async url => ({ ok: !fail,
+        json: async () => ({ content: url.endsWith('page=1') ? [] : [{ id: 42 }], number: url.endsWith('page=1') ? 1 : 0,
+            totalElements: 21, totalPages: 2, first: !url.endsWith('page=1'), last: url.endsWith('page=1') }) }) });
+    sessionDialogFixture(context, window);
+    scope.showActiveSessions(context);
+    const root = window.document.querySelector('.md-dashboard-modal--sessions');
+    const tab = root.querySelector('[role="tab"][id$="-devices"]');
+    const devices = root.querySelector('.md-dashboard-sessions__devices');
+    tab.click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.ok(devices.querySelector('[role="alert"]'));
+    fail = false;
+    devices.querySelector('button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    devices.querySelector('.md-dashboard-sessions__confirm-device').click();
+    await new Promise(resolve => setImmediate(resolve));
+    const codeRequest = requests.at(-1);
+    devices.querySelector('.md-dashboard-sessions__summary button').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(codeRequest.options.signal.aborted, true, 'Refreshing a device page must cancel its code-entry lifecycle.');
+    root.querySelector('[role="tab"][id$="-mine"]').click();
+    tab.click();
+    assert.equal(requests.length, 4, 'Revisiting the loaded device tab must reuse its page.');
+    devices.querySelector('.md-dashboard-sessions__pagination button:last-child').click();
+    await new Promise(resolve => setImmediate(resolve));
+    assert.equal(requests.at(-1).url, '/admin/rest/security/login-events?page=1');
+    assert.match(devices.textContent, /devicesEmpty/);
+    assert.equal(devices.querySelector('table'), null);
+    assert.equal(devices.querySelector('.md-dashboard-sessions__pagination button').disabled, false);
+    root.querySelector('.modal-footer > button:last-child').click();
+    assert.equal(requests.at(-1).options.signal.aborted, true);
+});
+
+
+test('Session widgets distinguish retained device state and reuse bulk confirmation without immediate writes', async t => {
+    const data = { currentSessions: { currentSessionId: 'current', userSessions: [{ userSessions: [
+        { sessionId: 'current', deviceId: 1, deviceConfirmed: true, browserName: 'Current', logonTime: 1 },
+        { sessionId: 'unconfirmed', deviceId: 2, deviceConfirmed: false, browserName: 'Unconfirmed', logonTime: 2 },
+        { sessionId: 'legacy', deviceConfirmed: false, browserName: 'Legacy', logonTime: 3 },
+        { sessionId: 'pending', deviceId: 3, deviceConfirmed: false, pending: true, browserName: 'Pending', logonTime: 4 }
+    ] }] } };
+    const { scope, context, window, container, requests } = fixture(t, { data });
+    sessionDialogFixture(context, window);
+    const widget = scope.getWidget('my-sessions');
+    widget.render({ container, context, signal: new AbortController().signal, instance: { size: '2x2' } });
+    assert.equal(container.querySelectorAll('li.is-unconfirmed').length, 1);
+    assert.match(container.querySelector('li.is-unconfirmed').textContent, /Unconfirmed.*newDevice.badge/);
+    assert.equal(container.querySelector('.md-dashboard-widget__session-count').textContent, '4');
+    container.querySelector('.md-dashboard-widget__session-bulk').click();
+    const dialog = window.document.querySelector('.md-dashboard-modal--logout');
+    assert.equal(dialog.querySelectorAll('.md-dashboard-sessions__logout-list li').length, 2);
+    assert.equal(requests.length, 0, 'Opening bulk confirmation must not log out any session.');
+    dialog.querySelector('.modal-footer .btn-outline-secondary').click();
+    assert.equal(window.document.activeElement, dialog.querySelector('.md-dashboard-sessions__summary button'));
+    dialog.querySelector('.modal-footer > button:last-child').click();
+    context.data.currentSessions.userSessions[0].userSessions.splice(1);
+    for (const size of widget.sizes) {
+        container.replaceChildren();
+        widget.render({ container, context, signal: new AbortController().signal, instance: { size } });
+        assert.match(container.querySelector('.md-dashboard-widget__session-only').textContent, /sessionsSummarySingle.*Current/);
+        assert.equal(container.querySelector('.md-dashboard-widget__session-bulk'), null);
+    }
+});
+
+test('Administrator widget headings open their authorized tab and personal headings open sessions', async t => {
+    for (const allowed of [true, false]) {
+        const { scope, context, window, requests } = fixture(t, { allowed });
+        sessionDialogFixture(context, window);
+        scope.getWidget('logged-admins').headerAction({}, context);
+        await new Promise(resolve => setImmediate(resolve));
+        const dialog = window.document.querySelector('.md-dashboard-modal--sessions');
+        assert.match(dialog.querySelector('[aria-selected="true"]').id, allowed ? /-admins$/ : /-mine$/);
+        assert.equal(requests.length, allowed ? 1 : 0, 'An unavailable administrator tab must not trigger its REST read.');
+        dialog.querySelector('.modal-footer > button:last-child').click();
+        scope.getWidget('my-sessions').headerAction({}, context);
+        assert.match(window.document.querySelector('[aria-selected="true"]').id, /-mine$/);
+    }
 });

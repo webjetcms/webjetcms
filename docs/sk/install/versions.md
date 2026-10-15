@@ -14,6 +14,7 @@ ext {
 
 Pričom aktuálne existujú nasledovné verzie WebJET:
 
+- `2026.0-boot-SNAPSHOT` - vývojová verzia so Spring Boot 4. Prechod z `jakarta` verzie vyžaduje [úpravy zákazníckeho projektu](#zmeny-pri-prechode-na-spring-boot).
 - `2026.18.28-jakarta` - stabilizovaná verzia 2026.18 s opravami z verzie 2026.0.28, nepribúdajú do nej denné zmeny.
 - `2026.0.28-jakarta` - stabilizovaná verzia 2026.0.28 s opravami chýb voči verzii 2026.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - `2026.0.28` - stabilizovaná verzia 2026.0.28 s opravami chýb voči verzii 2026.0 (bez pridania vylepšení zo SNAPSHOT verzie).
@@ -79,6 +80,221 @@ Verzia `YEAR.0.x` sa teda zásadne nemení, obsahuje opravy chýb (ak oprava nev
 Zároveň ale nemusí byť verzia `YEAR.0.x` najbezpečnejšia. Ak je potrebné aktualizovať použitú knižnicu vo WebJETe a tá obsahuje zásadnejšie zmeny nemôžeme túto zmenu vykonať v `YEAR.0.x` verzii, pretože by sa porušila kompatibilita.
 
 Platí teda, že `YEAR.0.x` je **najstabilnejšia** z pohľadu zmien a `YEAR.0-SNAPSHOT` je **najbezpečnejšia** z pohľadu zraniteľností.
+
+## Zmeny pri prechode na Spring Boot
+
+Prechod zo samostatnej konfigurácie Spring Framework 7 na Spring Boot 4 mení spúšťanie aplikácie, správu závislostí a vytváranie WAR archívov. Nestačí preto zmeniť iba `webjetVersion`. Postup vychádza z [migračného pull requestu basecms](https://github.com/webjetcms/basecms/pull/2/files); súbory na skopírovanie nájdete vo vetve [release/webjet-2026-boot](https://github.com/webjetcms/basecms/tree/release/webjet-2026-boot).
+
+Predpokladom je projekt, ktorý už používa Jakarta verziu so Spring 7. Java zostáva vo verzii 17 alebo novšej. Referenčný projekt používa Spring Boot `4.1.1`, Gradle `8.14` a Tomcat `11.0.25`. Ak prechádzate zo staršej verzie s `javax` balíkmi, najskôr vykonajte aj [prechod na Jakarta verziu](#zmeny-pri-prechode-na-jakarta-verziu).
+
+### Gradle a závislosti
+
+Ešte pred úpravou `build.gradle` aktualizujte Gradle wrapper na verziu `8.14`. V koreňovom priečinku projektu spustite:
+
+```sh
+./gradlew wrapper --gradle-version 8.14 --distribution-type bin
+./gradlew wrapper --gradle-version 8.14 --distribution-type bin
+./gradlew --version
+```
+
+Prvé spustenie nastaví požadovanú verziu v `gradle-wrapper.properties`. Druhé už použije Gradle `8.14` a aktualizuje aj `gradle-wrapper.jar` a spúšťacie skripty `gradlew` a `gradlew.bat`. Tento dvojkrokový postup odporúča aj [dokumentácia Gradle](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:upgrading_wrapper). Posledným príkazom overíte použitú verziu. Vo Windows nahraďte `./gradlew` za `gradlew.bat`.
+
+V `build.gradle` odstráňte plugin `org.gretty`, celý blok `gretty { ... }` aj konfigurácie `grettyRunnerTomcat10` a `grettyRunnerTomcat11`, ak ich projekt obsahuje. Odstráňte aj väzby na pôvodné Gretty úlohy, napríklad konfiguráciu JaCoCo pre `appStart`, `appStartDebug` a `appAfterIntegrationTest`. Do existujúcich blokov zapracujte tieto nastavenia; ostatné projektové pluginy a vlastné úlohy zachovajte:
+
+```gradle
+plugins {
+    id 'java'
+    id 'war'
+    id 'org.springframework.boot' version '4.1.1'
+    id 'io.freefair.lombok' version '8.14'
+}
+
+ext {
+    webjetVersion = '2026.0-boot-SNAPSHOT'
+    tomcatMinimumVersion = '11.0.25'
+}
+
+springBoot {
+    mainClass = 'sk.iway.iwcm.system.spring.SpringBootStarter'
+}
+
+tasks.named('bootJar') { enabled = false }
+tasks.named('jar') { enabled = false }
+```
+
+Vlastnú spúšťaciu triedu s `main()` netreba pridávať. WebJET ju poskytuje v knižnici a kvôli JSP stránkam sa aplikácia naďalej balí do WAR archívu.
+
+Odstráňte premennú `springVersion` a ručné verzie Spring závislostí, ktoré nahrádza správa verzií Spring Boot. V `dependencies` pridajte Boot BOM, ktorý zjednotí verzie knižníc, a závislosti pre vstavaný Tomcat a JSP:
+
+```gradle
+dependencies {
+    implementation platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+    providedCompile platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+    providedRuntime platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat-runtime'
+    providedRuntime('org.apache.tomcat.embed:tomcat-embed-jasper') {
+        exclude group: 'org.apache.tomcat', module: 'tomcat-annotations-api'
+    }
+    constraints {
+        ['implementation', 'providedRuntime'].each { configurationName ->
+            ['core', 'el', 'jasper', 'websocket'].each { moduleName ->
+                add(configurationName, "org.apache.tomcat.embed:tomcat-embed-${moduleName}") {
+                    version {
+                        require("[${tomcatMinimumVersion},12.0.0)")
+                        prefer(tomcatMinimumVersion)
+                    }
+                }
+            }
+        }
+    }
+
+    implementation("com.webjetcms:webjetcms:${webjetVersion}")
+    implementation("com.webjetcms:webjetcms:${webjetVersion}:admin")
+    implementation("com.webjetcms:webjetcms:${webjetVersion}:components")
+    implementation("com.webjetcms:webjetcms:${webjetVersion}:libs")
+
+    providedCompile 'jakarta.servlet:jakarta.servlet-api'
+    providedCompile 'jakarta.servlet.jsp:jakarta.servlet.jsp-api:4.0.0'
+    providedCompile 'jakarta.el:jakarta.el-api:6.0.0'
+    providedCompile 'jakarta.annotation:jakarta.annotation-api'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+```
+
+Pôvodné samostatné testovacie závislosti na Spring, JUnit BOM, JUnit Jupiter, Hamcrest, Mockito a testovacej implementácii Jakarta EL nahraďte uvedeným `spring-boot-starter-test` a JUnit launcherom. Vlastné knižnice potrebné pre zákaznícke testy zachovajte. Ponechajte aj nastavenie kompilátora `options.compilerArgs += ['-parameters']`.
+
+Pre oba repozitáre nastavte prihlasovacie údaje s prístupom na čítanie balíkov cez `GPR_USER` a `GPR_API_KEY`, prípadne `gpr.user` a `gpr.api-key` v lokálnom `gradle.properties`.
+
+Z [referenčného build.gradle](https://github.com/webjetcms/basecms/blob/release/webjet-2026-boot/build.gradle) prevezmite aj tieto časti:
+
+- `bootRun`, výpočet `worktreeId`, úlohu `generateCertificate` a väzbu `bootRun.dependsOn generateCertificate`. Zabezpečujú lokálne spustenie, ladenie na porte `5005`, výber databázového spojenia a vytvorenie vývojového HTTPS certifikátu. V `jvmArgs` upravte zákaznícke hodnoty, najmä `webjet.smtpServer` a prípadné ďalšie `webjet.*` nastavenia.
+- Spoločné nastavenie WAR archívov cez `tasks.withType(org.gradle.api.tasks.bundling.War).configureEach { ... }` namiesto pôvodného bloku `war { ... }`. Tak sa pravidlá balenia použijú na `war` aj `bootWar`. Zachovajte vlastné pravidlá projektu a vylúčenie lokálnych `poolman-*.xml`; pravidlá určené na vyradenie ukážkových súborov basecms neprenášajte na zákaznícke súbory.
+- Blok `processResources` s vylúčením `certificates/https-keystore.p12`. Vývojový certifikát sa generuje do `build/certificates` a nepatrí do distribučného archívu.
+- Úlohu `verifyBootWar`, ktorá vytvorí a skontroluje oba WAR archívy vrátane WebJET knižníc, konfigurácie logovania a oddelenia knižníc `Tomcat`.
+
+Pri balení tiež zmeňte vylúčenie `**/logback-*.xml` na `**/logback-local*.xml`, ako je opísané nižšie. Ak používate úlohy `prepareDataForPublicWar`, `explodeWar` alebo vlastné nasadzovacie skripty, upravte ich tak, aby pracovali s výstupom úlohy `war`. V Gradle získate jeho cestu cez:
+
+```gradle
+tasks.named('war').get().archiveFile.get().asFile
+```
+
+Tým sa vyhnete odkazu na pôvodný názov archívu, ktorý po migrácii patrí výstupu `bootWar`.
+
+### Triedy JpaDBConfig a SpringConfig
+
+V zákazníckej triede `JpaDBConfig` nastavte vlastný, jedinečný názov persistence unit. Do triedy pridajte konštantu, napríklad:
+
+```java
+private static final String PERSISTENCE_UNIT_NAME = "basecms";
+```
+
+V metóde `entityManagerFactory()` ju nastavte na vytváranom `LocalContainerEntityManagerFactoryBean`, za nastavením JPA adaptéra:
+
+```java
+emf.setJpaVendorAdapter(new EclipseLinkJpaVendorAdapter());
+emf.setPersistenceUnitName(PERSISTENCE_UNIT_NAME);
+```
+
+Hodnotu `basecms` nahraďte názvom vlastného projektu. Ak máte viac JPA konfigurácií, každej dajte odlišný názov persistence unit. Zachovajte vlastné balíky v `@EnableJpaRepositories.basePackages` a `emf.setPackagesToScan(...)`. Názvy `entityManagerFactoryRef` a `transactionManagerRef` musia zodpovedať príslušným anotáciám `@Bean` a byť jedinečné v aplikácii. V ukážke sú to `basecmsEntityManager` a `basecmsTransactionManager`, samotná konfigurácia má názov `@Configuration("basecms:JpaDBConfig")`.
+
+Do výberu databázovej platformy doplňte vetvu pre PostgreSQL pred predvolenou vetvou pre MySQL:
+
+```java
+} else if (Constants.DB_TYPE == Constants.DB_PGSQL) {
+    properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.PostgreSQL);
+} else {
+    properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.MySQL);
+}
+```
+
+Vlastné nastavenia `WebJETPersistenceProvider`, databázového spojenia a EclipseLink ponechajte. Kompletnú ukážku nájdete v [JpaDBConfig.java](https://github.com/webjetcms/basecms/blob/release/webjet-2026-boot/src/main/java/sk/iway/basecms/JpaDBConfig.java).
+
+V triede `SpringConfig` doplňte explicitný názov konfigurácie, aby sa nezhodoval s konfiguráciou WebJET CMS. Namiesto samotného `@Configuration` použite napríklad:
+
+```java
+@Configuration("basecmsSpringConfig")
+@ComponentScan({
+    "sk.iway.basecms",
+    "sk.iway.basecms.contact"
+})
+public class SpringConfig {
+}
+```
+
+Názov beanu aj skenované balíky prispôsobte projektu. Existujúce zákaznícke metódy a beany v triede zachovajte.
+
+### Konfigurácia aplikácie a web.xml
+
+Do `src/main/resources` skopírujte [application.properties](https://github.com/webjetcms/basecms/blob/release/webjet-2026-boot/src/main/resources/application.properties). Ak ho už máte, zlúčte nastavenia. Súbor obsahuje konfiguráciu vstavaného Tomcatu, JSP, kódovania, chybových stránok a ukladania relácií. Pre lokálne spúšťanie si skontrolujte najmä:
+
+| Nastavenie | Význam a úprava v projekte |
+| --- | --- |
+| `server.port=443` | HTTPS port vstavaného Tomcatu. |
+| `webjet.server.http-redirect.enabled=true`, `webjet.server.http-redirect.port=80` | Zapnutie a port súbežného HTTP konektora. Napriek názvu nejde o plošné presmerovanie na HTTPS; presmerovania aplikácie naďalej riadia nastavenia WebJET CMS, napríklad `adminRequireSSL`. |
+| `server.ssl.key-store=${WEBJET_KEYSTORE_PATH}` | Cesta k certifikátu; pri `bootRun` ju nastavuje Gradle na súbor v `build/certificates`. |
+| `server.ssl.key-store-password=${WEBJET_HTTPS_KEYSTORE_PASSWORD:changeit}` | Heslo vývojového certifikátu. Premennú používa aj úloha `generateCertificate`. |
+| `server.tomcat.max-part-count=1000` | Limit počtu častí multipart požiadavky, napríklad pri odosielaní formulárov a súborov. |
+| `server.servlet.session.store-dir=${user.dir}/work/sessions` | Priečinok na uloženie relácií pri korektnom vypnutí vstavaného Tomcatu; každá inštancia má mať vlastný priečinok. |
+
+Porty a TLS externého Tomcatu sa naďalej nastavujú v jeho `conf/server.xml`. Do `.gitignore` doplňte `/work/` a `/logs/`, aby sa prevádzkové súbory neukladali do Gitu.
+
+Z mapovania `StripesFilter` odstráňte `<dispatcher>ERROR</dispatcher>` a ponechajte `REQUEST`. Doplňte aj MIME mapovanie prípony `properties` na `text/plain`. Ostatné zákaznícke filtre, servlety a mapovania zachovajte; konkrétne zmeny sú v [web.xml referenčného projektu](https://github.com/webjetcms/basecms/blob/release/webjet-2026-boot/src/main/webapp/WEB-INF/web.xml).
+
+### Logovanie
+
+Premenujte `src/main/resources/logback.xml` na `src/main/resources/logback-spring.xml`. Obsah sa v referenčnom projekte nemení, takže ponechajte vlastné appendery, formát správ aj nastavené úrovne logovania. Názov s príponou `-spring` umožní, aby načítanie konfigurácie riadil Spring Boot; tento variant odporúča aj [dokumentácia Spring Boot](https://docs.spring.io/spring-boot/reference/features/logging.html#features.logging.custom-log-configuration).
+
+V spoločnom nastavení WAR archívov nahraďte pôvodné pravidlo `rootSpec.exclude('**/logback-*.xml')` týmto:
+
+```gradle
+rootSpec.exclude('**/logback-local*.xml')
+```
+
+Pôvodné pravidlo by vyradilo aj nový `logback-spring.xml` a nasadená aplikácia by tak prišla o zákaznícku konfiguráciu logovania. Ak máte ďalšie lokálne alebo testovacie konfigurácie, napríklad `logback-test.xml`, vylúčte ich osobitne. Výsledný WAR musí obsahovať `WEB-INF/classes/logback-spring.xml`.
+
+### Spustenie a vytvorenie distribúcie
+
+Lokálne databázové spojenie nastavte v `src/main/resources/poolman-local.xml` a aplikáciu spustite:
+
+```sh
+./gradlew bootRun
+```
+
+Predvolený súbor spojenia je `/poolman-local.xml`; iný vyberiete premennou prostredia `webjetDbname`. Server štandardne počúva na HTTP porte `80`, HTTPS porte `443` a ladiacom porte `5005`. Zastavíte ho cez `Ctrl+C` alebo skriptom `app-stop.sh`, ktorý skopírujte do koreňa projektu. Na macOS/Linux zachovajte právo spúšťania skriptov. Vo Windows používajte `gradlew.bat`.
+
+Na vytvorenie a kontrolu distribúcie spustite:
+
+```sh
+./gradlew clean verifyBootWar
+```
+
+Pri názve projektu `basecms` vzniknú v `build/libs` tieto archívy:
+
+| Archív | Použitie |
+| --- | --- |
+| `basecms-plain.war` | Výstup úlohy `war`, určený na nasadenie do externého Tomcatu 11. Neobsahuje knižnice vstavaného Tomcatu. |
+| `basecms.war` | Výstup úlohy `bootWar`, ktorý má knižnice vstavaného Tomcatu oddelené v `WEB-INF/lib-provided`. Možno ho nasadiť aj do externého Tomcatu. |
+| `basecms-public.war` | Verejná časť bez administrácie, vytváraná osobitne príkazom `./gradlew buildAllArtifacts` spolu s `basecms-plain.war`. |
+
+Názvy vychádzajú z `rootProject.name` v `settings.gradle`; ak projekt nastavuje vlastné názvy archívov alebo verziu, zohľadnite ich v nasadzovacích skriptoch. Pre bežné nasadenie použite `-plain.war` a zachovajte doterajší kontext aplikácie, napríklad nasadením ako `ROOT.war`. Databázové spojenie nastavte existujúcim spôsobom na serveri, keďže lokálne `poolman-*.xml` sa do WAR nebalia.
+
+!> V tejto verzii zatiaľ nie je podporované priame spustenie zabaleného WAR cez `java -jar`. WebJET CMS potrebuje rozbalený webový priečinok pre prácu so súbormi. Používajte `bootRun` pri vývoji a WAR nasadený do externého Tomcatu.
+
+Po migrácii overte štart bez chýb v logu, prihlásenie do administrácie, zobrazenie JSP stránok, zákaznícke REST služby, prácu s databázou a nahrávanie súborov. Úloha `verifyBootWar` kontroluje obsah archívov, nenahrádza funkčné overenie aplikácie.
+
+### Voliteľné súbory pre VS Code a Docker
+
+Tieto súbory prevezmite podľa toho, ako projekt vyvíjate a nasadzujete:
+
+- **VS Code:** zlúčte `.vscode/tasks.json` a `.vscode/launch.json` z referenčného projektu. Spúšťacie úlohy používajú `bootRun` namiesto `appStartDebug`, zastavenie na macOS/Linux používa `app-stop.sh`. Skontrolujte hodnoty `projectName` podľa Java projektu vo VS Code a zachovajte vlastné ladiace konfigurácie.
+- **Lokálny Tomcat v Dockeri:** skopírujte celý priečinok `.devcontainer/tomcat/`. V `start-tomcat.sh` upravte `container_name`, `image_name` a `war_file`, ktorý štandardne ukazuje na `build/libs/basecms-plain.war`. Skontrolujte aj `poolman_file` a zákaznícke hodnoty v `tomcat_jvm_args`, najmä SMTP server. Rovnaký názov kontajnera nastavte v úlohe `Docker Tomcat 11 Stop` v `.vscode/tasks.json`. Skript zostaví archívy a image, vloží databázovú konfiguráciu a vývojový certifikát a spustí Tomcat na portoch `80` a `443`. Ak databáza beží na hostiteľskom počítači, v `poolman-local.xml` použite namiesto `localhost` adresu `host.docker.internal`.
+- **Databázy na vývoj:** podľa používanej databázy prevezmite príslušné súbory z `.devcontainer/db/` a nastavte `WEBJET_DB_PASS`. Postup je v tamojšom [README](https://github.com/webjetcms/basecms/blob/release/webjet-2026-boot/.devcontainer/db/README.md). Samostatný `docker-compose-rag-pgsql.yml` potrebujete iba pri použití oddelenej PostgreSQL databázy pre RAG. Tieto kontajnery nie sú podmienkou migrácie existujúceho databázového servera.
+- **Docker image aplikácie:** ak používate existujúce riešenie z priečinka `docker/`, prevezmite zmeny v `docker/Dockerfile` a `docker/docker-compose.yml`. Dockerfile používa Tomcat 11, zodpovedajúci adaptér Redisson a rozbaľuje `-plain.war` a `-public.war`. Nastavte `ARTIFACT_NAME` podľa názvu Gradle projektu v oboch častiach Dockerfile alebo cez `build.args.ARTIFACT_NAME` v Compose. Upravte názov image a hodnoty z `docker/.env.example`, najmä `PROJECT_NAME`, databázové údaje, porty a časové pásmo. Pri prvom prevzatí tohto riešenia skopírujte celý priečinok `docker/`, pretože Dockerfile používa aj jeho konfiguráciu Tomcatu a databázového spojenia.
+
+Pre existujúcu databázu používajte bežný štart. Pri inštalácii do novej prázdnej databázy je vo VS Code pripravené `Run SETUP`, prípadne `Docker Tomcat 11 SETUP Start`. Nastavujú režim inštalácie a vyžiadajú token s dĺžkou aspoň 16 znakov. Pri ručnom spustení použite premenné `WEBJET_SETUP_ENABLED=true` a `WEBJET_SETUP_TOKEN`. Na `/wjerrorpages/setup/setup` sa prihláste menom `setup` a tokenom ako heslom. Po dokončení aplikáciu zastavte, vypnite režim SETUP a spustite ju bežným spôsobom.
 
 ## Zmeny pri prechode na Tomcat 9.0.104+
 

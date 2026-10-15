@@ -87,10 +87,10 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE, Docume
     Document.screenshot("/redactor/admin/2fa_part_1.png", 1280, 450, "#dropdownMenuUser");
 
     I.clickCss("#dropdownMenuUser");
-    I.waitForVisible( locate("a.dropdown-item").withText(i18n.get("Two-Step Verification")), 10);
+    I.waitForVisible( locate(".dropdown-item").withText(i18n.get("Two-Step Verification")), 10);
 
     let path = '/admin/2factorauth.jsp';
-    Document.screenshot("/redactor/admin/2fa_part_2.png", 1280, 450, 'a[onclick*="WJ.openPopupDialog(\'' + path + '\')"]');
+    Document.screenshot("/redactor/admin/2fa_part_2.png", 1280, 450, '.dropdown-item[onclick*="WJ.openPopupDialog(\'' + path + '\')"]');
 
     I.amOnPage(path);
     I.waitForElement('#gauthCheckbox', 10);

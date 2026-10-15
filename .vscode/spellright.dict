@@ -210,6 +210,7 @@ Deployment
 deploymentom
 DeppL
 depth
+deserializácii
 deserializovaných
 detegované
 detegovaného
@@ -248,11 +249,13 @@ duplikovateľnú
 duplikovateľný
 duplikovateľných
 Dvojfaktorová
+dvojfaktorovom
 EclipseLink
 editácie
 editácii
 editáciou
 editáciu
+editačná
 editačné
 editačného
 editačný
@@ -271,6 +274,7 @@ enkódera
 entitné
 escapingu
 escapovať
+eshopu
 example
 exceli
 Excelu
@@ -309,6 +313,7 @@ fulltextom
 fulltextu
 Fun
 GDPR
+GHSA
 gigabajtov
 Gitlab
 Gitlabu
@@ -327,6 +332,7 @@ handler
 hashov
 hashovania
 hashovanie
+hashu
 Helper
 hide
 HikariCP
@@ -366,6 +372,7 @@ IntelliJ
 interaktivitu
 InterWay
 invalidovaná
+IPWHOIS
 issues
 iway
 iwcm
@@ -389,6 +396,7 @@ JSP
 jstree
 jsTreeDocumentOpener
 JTB
+KAPT
 Keycloak
 klastra
 klastrovom
@@ -490,6 +498,7 @@ naštýlovaný
 naštýlovať
 neaktivity
 neanotovanú
+neaplikovateľnosť
 nekonzistencii
 nekonzistentnosť
 nepoužívajúce
@@ -578,6 +587,11 @@ podkategóriu
 podnadpis
 podnadpise
 podnadpisu
+podpoložiek
+Podpoložka
+podpoložku
+Podpoložky
+podreťazec
 podstránkam
 podstránky
 podstránok
@@ -592,7 +606,9 @@ practices
 predpripravené
 Predpripravené
 Predpripravený
+Predprodukcia
 predvolene
+predvolí
 Predvyplnená
 predvyplnené
 Predvyplnenie
@@ -793,6 +809,7 @@ tokeny
 Tomcat
 Tools
 Tooltip
+tooltipe
 tooltipu
 transition
 Translate
@@ -899,12 +916,14 @@ zip
 Zmigrovaný
 zmigrovať
 zneplatní
+zneplatnia
 zobraziteľná
 zobraziteľný
 zobraziteľných
 zozipovať
 zrkadlené
 zrkadlenej
+zrkadlenú
 zrkadlený
 zrkadlených
 zrkadlenými

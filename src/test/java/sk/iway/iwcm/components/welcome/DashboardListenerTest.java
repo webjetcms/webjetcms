@@ -3,13 +3,14 @@ package sk.iway.iwcm.components.welcome;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.util.ArrayList;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -22,29 +23,32 @@ import sk.iway.iwcm.admin.layout.MenuService;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.stat.SessionClusterService;
-import sk.iway.iwcm.stat.SessionDetails;
 import sk.iway.iwcm.stat.SessionHolder;
+import sk.iway.iwcm.system.cluster.ClusterDB;
 import sk.iway.iwcm.system.spring.events.WebjetEvent;
-import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
+import sk.iway.iwcm.users.devices.DeviceEntity;
 
 /** Verifies authenticated bootstrap ownership and complete initial data. */
 class DashboardListenerTest {
-    /** Injects account/domain data in both cloud modes and distinct administrator names only with the required permission. */
+    /** Embeds account/domain data in both cloud modes without loading administrator summaries, regardless of list permission. */
     @ParameterizedTest
     @CsvSource({
-        "false, false, -1",
-        "false, true, 42",
-        "true, false, -1",
-        "true, true, 42"
+        "false, false, -1, true",
+        "false, true, 42, false",
+        "true, false, -1, false",
+        "true, true, 42, true"
     })
-    void embedsInitialDataForCurrentAccountAndDomain(boolean showLoggedAdmins, boolean cloudMode, int expectedStatRootGroupId) throws Exception {
+    void embedsInitialDataForCurrentAccountAndDomain(boolean showLoggedAdmins, boolean cloudMode, int expectedStatRootGroupId, boolean clusterMode) throws Exception {
         var settings = mock(DashboardSettingsService.class);
         var notices = mock(DashboardNoticeService.class);
-        var listener = new DashboardListener(settings, notices);
+        var devices = mock(AdminDeviceService.class);
+        var listener = new DashboardListener(settings, notices, devices);
         var request = new MockHttpServletRequest();
         request.setParameter("userId", "999");
         request.setParameter("domainId", "999");
+        request.setParameter("securityEvent", "42");
         var user = mock(Identity.class);
         when(user.isAdmin()).thenReturn(true);
         when(user.isEnabledItem("welcomeShowLoggedAdmins")).thenReturn(showLoggedAdmins);
@@ -54,20 +58,19 @@ class DashboardListenerTest {
         preferences.setConfigured(true);
         preferences.getDomainOptions().put("autotest-form", Map.of("formName", "Contact"));
         when(settings.load(7, "42")).thenReturn(preferences);
-        when(notices.load(user, request)).thenReturn(List.of(Map.of("id", "autotest-notice", "bodyHtml", "<p>Warning</p>")));
+        var device = new DeviceEntity();
+        device.setId(42L);
+        device.setUserId(7);
+        device.setTokenHash("a".repeat(64));
+        device.setCreateDate(Instant.ofEpochMilli(1791201600123L));
+        device.setLastSeen(Instant.ofEpochMilli(1791201600223L));
+        when(devices.findEvent(user, "42")).thenReturn(device);
+        when(notices.load(user, request)).thenReturn(List.of(Map.of("id", "autotest-notice", "securityEvent", device)));
         String sessionId = request.getSession().getId();
-        SessionHolder holder = mock(SessionHolder.class);
-        List<SessionDetails> adminSessions = new ArrayList<>();
-        for (int id : List.of(1, 1, 2, 3, 4, 5, 6, 7, 8)) {
-            SessionDetails session = mock(SessionDetails.class);
-            when(session.getLoggedUserId()).thenReturn(id);
-            when(session.isAdmin()).thenReturn(id != 8);
-            adminSessions.add(session);
-        }
-        when(holder.getList()).thenReturn(adminSessions);
         var model = new ModelMap();
         try (var users = mockStatic(UsersDB.class);
              var installation = mockStatic(InitServlet.class);
+             var cluster = mockStatic(ClusterDB.class);
              var domains = mockStatic(CloudToolsForCore.class);
              var docs = mockStatic(DocDB.class);
              var sessions = mockStatic(SessionClusterService.class);
@@ -75,48 +78,40 @@ class DashboardListenerTest {
              var menus = mockConstruction(MenuService.class, (menu, context) -> when(menu.getMenu()).thenReturn(List.of()))) {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
             installation.when(InitServlet::isTypeCloud).thenReturn(cloudMode);
-            holders.when(SessionHolder::getInstance).thenReturn(holder);
-            for (int id = 1; id <= 7; id++) {
-                UserDetails active = mock(UserDetails.class);
-                when(active.isAdmin()).thenReturn(true);
-                when(active.getFullName()).thenReturn("Administrator " + id);
-                when(active.getEmail()).thenReturn("admin" + id + "@example.test");
-                int userId = id;
-                users.when(() -> UsersDB.getUserCached(userId)).thenReturn(active);
-            }
+            cluster.when(ClusterDB::isServerRunningInClusterMode).thenReturn(clusterMode);
             domains.when(() -> CloudToolsForCore.getRootGroupId(request)).thenReturn(42);
             docs.when(() -> DocDB.getDomain(request)).thenReturn("current.example");
 
             sessions.when(() -> SessionClusterService.getSessionInfo(sessionId, 7))
                 .thenReturn("{\"currentSessionId\":\"" + sessionId + "\",\"userSessions\":[]}");
-
             listener.setOverviewData(new WebjetEvent<>(new ThymeleafEvent("dashboard", null, model, null, request), null));
 
             var data = new ObjectMapper().readTree((String) model.get("overviewData"));
             assertEquals("Autotest Administrator", data.path("userName").asText());
             assertEquals("current.example", data.path("currentDomain").asText());
             assertEquals(expectedStatRootGroupId, data.path("statRootGroupId").asInt());
+            assertEquals(clusterMode, data.path("clusterMode").asBoolean());
             assertTrue(data.path("dashboardMenu").isArray());
             assertTrue(data.path("settings").path("configured").asBoolean());
             assertEquals("Contact", data.path("settings").path("domainOptions").path("autotest-form").path("formName").asText());
             assertEquals("autotest-notice", data.path("notices").get(0).path("id").asText());
+            var securityEvent = data.path("requestedSecurityEvent");
+            assertTrue(data.path("securityEventRequested").asBoolean());
+            assertEquals(42L, securityEvent.path("id").longValue());
+            assertFalse(securityEvent.has("userId"));
+            assertFalse(securityEvent.has("tokenHash"));
+            assertEquals(securityEvent, data.path("notices").get(0).path("securityEvent"));
             assertEquals(sessionId, data.path("currentSessions").path("currentSessionId").asText());
-            if (showLoggedAdmins) {
-                var admins = data.path("loggedAdmins");
-                assertEquals(7, admins.size());
-                assertEquals(new ObjectMapper().valueToTree(Map.of("userId", 1, "fullName", "Administrator 1", "email", "admin1@example.test")), admins.get(0));
-                users.verify(() -> UsersDB.getUserCached(1), times(1));
-                users.verify(() -> UsersDB.getUserCached(8), never());
-            } else {
-                assertFalse(data.has("loggedAdmins"));
-                holders.verifyNoInteractions();
-                verifyNoInteractions(holder);
-                users.verify(() -> UsersDB.getUserCached(anyInt()), never());
-            }
+            assertFalse(data.has("loggedAdmins"));
+            holders.verifyNoInteractions();
+            users.verify(() -> UsersDB.getUserCached(anyInt()), never());
+            sessions.verify(() -> SessionClusterService.getSessionsForUsers(anySet()), never());
             verify(settings).load(7, "42");
             verify(notices).load(user, request);
+            verify(devices).findEvent(user, "42");
+            verify(devices).addSessionDeviceStatus(eq(user), any());
             sessions.verify(() -> SessionClusterService.getSessionInfo(sessionId, 7));
-            verifyNoMoreInteractions(settings, notices);
+            verifyNoMoreInteractions(settings, notices, devices);
         }
     }
 
@@ -130,11 +125,50 @@ class DashboardListenerTest {
         var model = new ModelMap();
         try (var users = mockStatic(UsersDB.class)) {
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(authenticated ? mock(Identity.class) : null);
-            new DashboardListener(settings, notices).setOverviewData(
+            new DashboardListener(settings, notices, mock(AdminDeviceService.class)).setOverviewData(
                 new WebjetEvent<>(new ThymeleafEvent("dashboard", null, model, null, request), null));
             assertFalse(model.containsKey("overviewData"));
             verifyNoInteractions(settings, notices);
             assertNull(request.getSession(false));
+        }
+    }
+
+    /** A failed email-link lookup still renders the overview and exposes only the unavailable-event state. */
+    @Test
+    void preservesDashboardWhenRequestedSecurityEventLookupFails() throws Exception {
+        var settings = mock(DashboardSettingsService.class);
+        var notices = mock(DashboardNoticeService.class);
+        var devices = mock(AdminDeviceService.class);
+        var request = new MockHttpServletRequest();
+        request.setParameter("securityEvent", "autotest-event");
+        var user = mock(Identity.class);
+        when(user.isAdmin()).thenReturn(true);
+        when(user.getUserId()).thenReturn(7);
+        when(settings.load(eq(7), anyString())).thenReturn(new DashboardSettingsDto());
+        when(notices.load(user, request)).thenReturn(List.of(Map.of("id", "existing-notice")));
+        when(devices.findEvent(user, "autotest-event")).thenThrow(new IllegalStateException("Sensitive database details"));
+        var model = new ModelMap();
+        String sessionId = request.getSession().getId();
+        try (var users = mockStatic(UsersDB.class);
+             var installation = mockStatic(InitServlet.class);
+             var domains = mockStatic(CloudToolsForCore.class);
+             var docs = mockStatic(DocDB.class);
+             var sessions = mockStatic(SessionClusterService.class);
+             var menus = mockConstruction(MenuService.class, (menu, context) -> when(menu.getMenu()).thenReturn(List.of()))) {
+            users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(user);
+            sessions.when(() -> SessionClusterService.getSessionInfo(sessionId, 7)).thenReturn("{\"userSessions\":[]}");
+
+            new DashboardListener(settings, notices, devices).setOverviewData(
+                new WebjetEvent<>(new ThymeleafEvent("dashboard", null, model, null, request), null));
+
+            String json = (String) model.get("overviewData");
+            var data = new ObjectMapper().readTree(json);
+            assertTrue(data.path("securityEventRequested").asBoolean());
+            assertTrue(data.path("requestedSecurityEvent").isNull());
+            assertEquals("existing-notice", data.path("notices").get(0).path("id").asText());
+            assertTrue(data.path("settings").isObject());
+            assertTrue(data.path("currentSessions").path("userSessions").isArray());
+            assertFalse(json.contains("Sensitive database details"));
         }
     }
 }

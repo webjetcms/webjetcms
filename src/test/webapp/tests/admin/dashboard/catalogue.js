@@ -6,8 +6,8 @@ let originalSettings;
 const catalogue = [
     ['shortcut', '1x1'], ['recent-pages', '3x3'], ['approvals', '3x3'], ['publishing', '2x3'],
     ['forms', '3x3'], ['traffic', '3x3'], ['top-pages', '3x3'], ['search-terms', '2x3'],
-    ['referrers', '3x3'], ['newsletter', '3x3'], ['errors', '3x3'], ['sessions', '2x3'],
-    ['news', '3x2'], ['search', 'fullauto'], ['changed-pages', '3x3'], ['audit', '3x3'],
+    ['referrers', '3x3'], ['newsletter', '3x3'], ['errors', '3x3'], ['my-sessions', '2x3'],
+    ['news', '3x2'], ['changed-pages', '3x3'], ['audit', '3x3'],
     ['logged-admins', '2x2'], ['server-memory', '3x2'], ['server-cpu', '3x2']
 ];
 
@@ -59,6 +59,17 @@ async function assertDisposedChart(I) {
         && !window.am5.registry.rootElements.includes(window.autotestDashboardChart)), 'Replaced charts must release their AmCharts root.');
 }
 
+/** Reads release text and destinations in the browser without depending on its HTML wrappers. */
+function readAnnouncement(fromLabels = false) {
+    const content = fromLabels
+        ? new DOMParser().parseFromString(document.querySelector('webjet-overview-dashboard').labels.changelog, 'text/html').body
+        : document.querySelector('.md-dashboard-widget__news-highlights');
+    return {
+        text: content.textContent.replace(/\s+/g, ' ').trim(),
+        links: [...content.querySelectorAll('a')].map(link => link.getAttribute('href'))
+    };
+}
+
 Before(({ I, login }) => {
     login('admin');
     I.amOnPage('/admin/v9/');
@@ -85,7 +96,7 @@ Scenario('Render the complete widget catalogue on desktop and mobile', async ({ 
             }
             item.size = size;
             item.options = type === 'shortcut' ? { href: '/admin/v9/webpages/web-pages-list/', title: 'catalogue-autotest shortcut' }
-                : type === 'traffic' ? { days: 7, metric: 'sessions' } : type === 'search' ? { scope: 'admin' }
+                : type === 'traffic' ? { days: 7, metric: 'sessions' }
                     : ['forms', 'top-pages', 'search-terms', 'referrers', 'errors'].includes(type) ? { days: 7 } : {};
             next.domainOptions[item.id] = {};
             chosen.push(item);
@@ -109,15 +120,11 @@ Scenario('Render the complete widget catalogue on desktop and mobile', async ({ 
     I.seeNumberOfElements('#toast-container-overview', 1);
     I.dontSeeElementInDOM('.md-dashboard__legacy');
     I.dontSeeElementInDOM('#webjet-overview-dashboard .bookmark');
-    I.seeElement('[data-widget-type="sessions"] .md-dashboard__widget-content button');
-    I.seeElement('[data-widget-type="recent-pages"] .md-dashboard__widget-header .md-dashboard__header-link[href="/admin/v9/webpages/web-pages-list/"]');
+    I.dontSeeElementInDOM('[data-widget-type="sessions"]');
+    I.seeElement('[data-widget-type="recent-pages"] .md-dashboard__widget-header .md-dashboard__title-link[href="/admin/v9/webpages/web-pages-list/"]');
     I.dontSeeElement('[data-widget-type="recent-pages"] .md-dashboard-widget__more');
     I.assertEqual(await I.grabTextFrom('[data-widget-type="traffic"] .md-dashboard-widget__metric-label'),
         await I.executeScript(() => WJ.translate('admin.dashboard.trafficSessions.js', 7)), 'Traffic descriptions must include the selected number of days.');
-    I.assertTrue(await I.executeScript(() => {
-        const source = new DOMParser().parseFromString(document.querySelector('webjet-overview-dashboard').labels.changelog, 'text/html');
-        return document.querySelector('.md-dashboard-widget__news-highlights').innerHTML === source.body.innerHTML;
-    }), 'Release notes must preserve the entire rendered Markdown announcement.');
     I.resizeWindow(1337, 1052);
     I.saveScreenshot('dashboard-catalogue-desktop.png', true);
     showWidget(I, 'traffic');
@@ -149,13 +156,11 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
             I.dontSeeElement('[data-widget-type="traffic"] details.md-dashboard-widget__chart-data');
             I.seeElementInDOM('[data-widget-type="traffic"] .visually-hidden .md-dashboard-widget__table');
             I.seeElement('[data-widget-type="traffic"] .md-dashboard__title-link[href="/apps/stat/admin/"]');
-            I.dontSeeElement('[data-widget-type="traffic"] .md-dashboard-widget__more');
             continue;
         }
         I.dontSeeElement(`[data-widget-type="${type}"] details.md-dashboard-widget__chart-data`);
         I.seeElementInDOM(`[data-widget-type="${type}"] .visually-hidden .md-dashboard-widget__table`);
         I.seeElement(`[data-widget-type="${type}"] .md-dashboard__title-link`);
-        I.dontSeeElement(`[data-widget-type="${type}"] .md-dashboard-widget__more`);
     }
     const firstTraffic = await rememberChart(I, 'traffic');
     await widgetAction(I, ids.traffic, 'refresh');
@@ -166,8 +171,8 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
 
     await rememberChart(I, 'traffic');
     await widgetAction(I, ids.traffic, 'settings');
-    I.waitForVisible('.md-dashboard-modal select', 10);
-    I.selectOption('.md-dashboard-modal select[id^="dashboard-size-"]', '1 × 1');
+    I.waitForVisible('.md-dashboard-modal .md-dashboard__size-choices', 10);
+    I.clickCss('.md-dashboard-modal .md-dashboard__size-choice:has(input[value="1x1"])');
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
     I.waitForInvisible('.md-dashboard-modal', 10);
     waitForSave(I);
@@ -175,8 +180,8 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
     await assertDisposedChart(I);
     I.dontSeeElement(`[data-instance-id="${ids.traffic}"] .md-dashboard-widget__chart`);
     await widgetAction(I, ids.traffic, 'settings');
-    I.waitForVisible('.md-dashboard-modal select', 10);
-    I.selectOption('.md-dashboard-modal select[id^="dashboard-size-"]', '3 × 3');
+    I.waitForVisible('.md-dashboard-modal .md-dashboard__size-choices', 10);
+    I.clickCss('.md-dashboard-modal .md-dashboard__size-choice:has(input[value="3x3"])');
     I.clickCss('.md-dashboard-modal .modal-footer .btn-primary');
     I.waitForInvisible('.md-dashboard-modal', 10);
     waitForSave(I);
@@ -187,7 +192,7 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
     waitForSave(I);
     I.waitForInvisible(`[data-instance-id="${ids.referrers}"]`, 10);
     await assertDisposedChart(I);
-    I.clickCss('.md-dashboard__undo button');
+    I.clickCss('[data-dashboard-widget-undo]');
     waitForSave(I);
     await waitForChart(I, 'referrers');
     const rootsMatchHosts = await I.executeScript(() => {
@@ -202,60 +207,43 @@ Scenario('AmCharts renders accessible data and disposes roots on refresh, resize
 });
 
 /**
- * Collapses the release announcement, reloads the page and checks that the choice is remembered. Expanding
- * it again must restore the complete announcement and its formatting.
+ * Expands the localized announcement without changing layout preferences. Collapse restores keyboard focus,
+ * and a reload starts in the compact carousel with the complete text still available.
  */
-Scenario('Collapse release news across reload and expand it from the compact summary', async ({ I }) => {
+Scenario('Release news expands its full content and returns to the carousel after reload', async ({ I }) => {
     await waitForWidgets(I);
-    I.waitForVisible('[data-widget-type="news"] .md-dashboard__widget-content button', 10);
-    I.clickCss('[data-widget-type="news"] .md-dashboard__widget-content button');
-    waitForSave(I);
-    I.waitForVisible('[data-widget-type="news"] .md-dashboard-widget__news-toggle[aria-expanded="false"]', 10);
-    I.seeElement('[data-widget-type="news"] .md-dashboard-widget__news-summary');
-    I.dontSeeElement('[data-widget-type="news"] .md-dashboard-widget__news-highlights');
+    const toggle = '[data-widget-type="news"] .md-dashboard-widget__news-toggle';
+    const preview = '[data-widget-type="news"] .md-dashboard-widget__news-preview';
+    const full = '[data-widget-type="news"] .md-dashboard-widget__news-highlights';
+    I.waitForVisible(`${toggle}[aria-expanded="false"]`, 10);
+    I.seeElement(preview);
+    I.dontSeeElement(full);
     const acknowledged = await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.acknowledgedNewsVersion);
-    I.assertTrue(typeof acknowledged === 'string' && acknowledged.length > 0);
+    const announcement = await I.executeScript(readAnnouncement, true);
+    I.assertTrue(announcement.text.length > 0, 'The release announcement must contain text.');
+    I.assertNotContain(announcement.text, '\\n', 'Translation paragraph escapes must not appear as literal text.');
+    I.clickCss(toggle);
+    I.waitForVisible(full, 10);
+    I.assertDeepEqual(await I.executeScript(readAnnouncement), announcement, 'The full announcement text and links must render.');
+    I.clickCss('[data-widget-type="news"] .md-dashboard-widget__news-close');
+    I.waitForVisible(`${toggle}[aria-expanded="false"]`, 10);
+    I.seeElement(preview);
+    I.dontSeeElement(full);
+    I.assertTrue(await I.executeScript(() => document.activeElement.matches('.md-dashboard-widget__news-toggle')),
+        'Collapsing release notes must keep focus on their toggle.');
+    I.assertEqual(await I.executeScript(() => document.querySelector('webjet-overview-dashboard').dashboardController.settings.acknowledgedNewsVersion), acknowledged,
+        'Expanding and collapsing news must not change legacy layout preferences.');
+    I.clickCss(toggle);
+    I.waitForVisible(full, 10);
     I.refreshPage();
     await waitForWidgets(I);
-    I.seeElement('[data-widget-type="news"] .md-dashboard-widget__news-summary');
-    I.clickCss('[data-widget-type="news"] .md-dashboard-widget__news-toggle');
-    waitForSave(I);
-    I.waitForVisible('[data-widget-type="news"]', 10);
-    I.assertTrue(await I.executeScript(() => {
-        const source = new DOMParser().parseFromString(document.querySelector('webjet-overview-dashboard').labels.changelog, 'text/html');
-        return document.querySelector('.md-dashboard-widget__news-highlights').innerHTML === source.body.innerHTML;
-    }), 'Expanding release notes must restore all original Markdown formatting.');
-});
-
-/**
- * Checks that documentation search keeps the entered text, including accents and special characters, and
- * requests a separate tab. The test captures the destination without opening the external documentation
- * site.
- */
-Scenario('Documentation search switches scope and opens the encoded query without an external request', async ({ I }) => {
-    await waitForWidgets(I);
-    const scope = '[data-widget-type="search"]';
-    const query = 'formulár & prístupnosť autotest';
-    I.clickCss(`${scope} label:has(input[value="docs"])`);
-    I.fillField(`${scope} input[type="search"]`, query);
-    await I.executeScript(() => {
-        window.autotestOriginalOpen = window.open;
-        window.autotestSearchPopup = null;
-        window.open = (url, target, features) => { window.autotestSearchPopup = { url, target, features }; return null; };
-    });
-    I.clickCss(`${scope} button[type="submit"]`);
-    const popup = await I.executeScript(() => {
-        try { return window.autotestSearchPopup; }
-        finally { window.open = window.autotestOriginalOpen; delete window.autotestOriginalOpen; }
-    });
-    I.assertTrue(Boolean(popup));
-    I.assertEqual(new URL(popup.url).origin, 'https://docs.webjetcms.sk');
-    I.assertEqual(new URL(popup.url).searchParams.get('q'), query);
-    I.assertEqual(popup.target, '_blank');
-    I.assertContain(popup.features, 'noopener');
-    I.fillField(`${scope} input[type="search"]`, '');
-    I.clickCss(`${scope} label:has(input[value="admin"])`);
-    I.seeElement(`${scope} input[type="radio"][value="admin"]:checked`);
+    I.seeElement(`${toggle}[aria-expanded="false"]`);
+    I.seeElement(preview);
+    I.dontSeeElement(full);
+    I.clickCss(toggle);
+    I.waitForVisible(full, 10);
+    I.assertDeepEqual(await I.executeScript(readAnnouncement), announcement,
+        'Expanding release notes must restore their content and links.');
 });
 
 /**

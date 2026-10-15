@@ -1,0 +1,67 @@
+script.
+    window.jstreeSettings = new window.JstreeSettings({
+        storageKey: $("#SomStromcek").data("settings-key"),
+        widthOnly: true
+    });
+    window.domReady.add(function () {
+        window.jstreeSettings.bindEvents();
+    }, 10);
+
+div#jstreeSettingsModal.modal.DTED.fade(tabindex="-1" role="dialog" aria-labelledby="jstreeSettingsModalLabel" aria-hidden="true")
+    div.modal-dialog.modal-dialog-scrollable.modal-lg(role="document")
+        div.DTE_Action_Edit.modal-content
+            div.modal-header
+                div.row
+                    div.col-sm-4
+                        h5#jstreeSettingsModalLabel.modal-title.ui-draggable-handle(data-th-text="\#{datatables.button.settings.js}")
+            div.DTE_Body.modal-body.modal-body-notabs
+                div.modal-body-bg
+                    div#pills-jstreesettingsData.DTE_Action_Edit.tab-content
+                        div#pills-jstreesetting-basic.tab-pane.fade.show.active
+                            div.form-group.row.DTE_Field_Type_checkbox(data-th-if="${showDeletedTypes == true}")
+                                label.col-sm-4.col-form-label(for="jstree-settings-showhidden" data-th-text="\#{components.enumerations.showHidden}")
+                                div.col-sm-7
+                                    div.DTE_Field_InputControl.custom-control.form-switch
+                                        input#jstree-settings-showhidden.form-check-input(type="checkbox" value="true")
+                                        label.form-check-label(for="jstree-settings-showhidden" data-th-text="\#{button.yes}")
+                            div.form-group.row.DTE_Field_Type_select.DTE_Field_treeWidth
+                                label.col-sm-4.col-form-label(for="jstree-settings-treeWidth" data-th-text="\#{webpages.jstree.treeWidth}")
+                                div.col-sm-7
+                                    div.DTE_Field_InputControl
+                                        select#jstree-settings-treeWidth.form-control.form-select.col-12
+                                            option(value="1") 1:11
+                                            option(value="2") 2:10
+                                            option(value="3") 3:9
+                                            option(value="4") 4:8
+                                            option(value="5") 5:7
+                                            option(value="6") 6:6
+                                            option(value="7") 7:5
+                                            option(value="8") 8:4
+                                            option(value="9") 9:3
+                                            option(value="10") 10:2
+                                            option(value="11") 11:1
+                                            option(value="120") 120px
+                                            option(value="150") 150px
+                                            option(value="200") 200px
+                                            option(value="250") 250px
+                                            option(value="300") 300px
+                                            option(value="400") 400px
+                                            option(value="500") 500px
+                                div.col-sm-1.form-group-tooltip
+                                    button.btn.btn-link(type="button" data-toggle="tooltip" data-th-title="\#{webpages.jstree.treeWidth.tooltip}" data-th-aria-label="\#{webpages.jstree.treeWidth}")
+                                        i.ti.ti-info-circle(aria-hidden="true")
+            div.modal-footer.DTE_Footer
+                div.DTE_Form_Error
+                span.buttons-footer-left
+                    button.btn.btn-link(type="button" onclick="WJ.showHelpWindow()")
+                        i.ti.ti-help(aria-hidden="true")
+                        = " "
+                        span(data-th-text="\#{button.help}")
+                button.btn.btn-outline-secondary.btn-close-editor(type="button" data-bs-dismiss="modal")
+                    i.ti.ti-x(aria-hidden="true")
+                    = " "
+                    span(data-th-text="\#{button.cancel}")
+                button#jstree-settings-submit.btn.btn-primary(type="button")
+                    i.ti.ti-check(aria-hidden="true")
+                    = " "
+                    span(data-th-text="\#{button.submit}")

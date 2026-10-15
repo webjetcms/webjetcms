@@ -221,7 +221,7 @@ Scenario('Custom fields required logic test - AFTER @screenshot', async ({ I, DT
     await deleteCustomFieldSettingsByTooltip(I, DT, DTE);
 });
 
-Scenario('JSON editor validates objects and canonicalizes HTML-sensitive characters', async ({ I, DT, DTE }) => {
+Scenario('JSON editor validates JSON values and canonicalizes HTML-sensitive characters', async ({ I, DT, DTE }) => {
     const fieldA = "#datatableInit_modal #DTE_Field_fieldA";
     const fieldB = "#datatableInit_modal #DTE_Field_fieldB";
     const escapedString = String.raw`"\u0061\n\""`;
@@ -251,7 +251,7 @@ Scenario('JSON editor validates objects and canonicalizes HTML-sensitive charact
     I.dontSeeElementInDOM(fieldA + "[maxlength='255']");
     I.fillField(fieldB, "");
 
-    for (const invalid of [" ", "null", "[]", '"text"', '{"a":1,}', "{} {}"]) {
+    for (const invalid of [" ", "[1,]", "null true", '"unterminated', '{"a":1,}', "{} {}"]) {
         I.fillField(fieldA, invalid);
         I.clickCss("#pills-dt-datatableInit-basic-tab");
         DTE.save();
@@ -259,8 +259,17 @@ Scenario('JSON editor validates objects and canonicalizes HTML-sensitive charact
         I.seeElement("#datatableInit_modal .DTE_Field_Name_fieldA .form-text.text-danger");
     }
 
+    for (const valid of ['[{"id":12345,"available":true},{"id":56789,"available":true}]', "[]", "null", "true", "false", "42", '"autotest-json"', '""']) {
+        I.fillField(fieldA, valid);
+        DTE.save();
+        I.dontSeeElement("#datatableInit_modal .DTE_Field_Name_fieldA .form-text.text-danger");
+        DTE.waitForModalClose();
+        openDocFieldsTab(I, DT, DTE, docId_2);
+        I.assertEqual(valid, await I.grabValueFrom(fieldA), "Each JSON root type must survive saving and reopening");
+    }
+
     I.fillField(fieldA, source);
-    I.fillField(fieldB, "[]");
+    I.fillField(fieldB, "[}");
     DTE.save();
     I.waitForVisible(fieldB + "[aria-invalid='true']", 10);
     I.fillField(fieldB, "{title:'test' // closing brace is part of the comment }");

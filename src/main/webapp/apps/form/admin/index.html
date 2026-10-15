@@ -1,4 +1,5 @@
 <script data-th-inline="javascript">
+    window.helpLink = "/redactor/apps/form/README";
     let url = "/admin/rest/forms-list";
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
     const formColumnsToKeep = ["id", "formName", "recipients", "count", "createDate", "formType", "savedb"];

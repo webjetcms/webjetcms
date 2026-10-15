@@ -676,6 +676,7 @@ public class FormsService<R extends FormsRepositoryInterface<E>, E extends Forms
                 // Ak ma, zmaz aj steps/items (multistep forms)
                 formStepsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
                 formItemsRepository.deleteAllByFormNameAndDomainId(formName, domainId);
+                MultistepFormsService.clearValidationFieldsCache(formName, domainId);
                 // DO NOT DELETE maybe form is still in webpage and we just deleted form records
                 // formSettingsRepository.deleteByFormNameAndDomainId(formName, domainId);
             } else {

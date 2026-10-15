@@ -6,6 +6,7 @@
 
 ### Prelomové zmeny
 
+- Databázy - minimálna podporovaná verzia je MariaDB 10.11 LTS alebo MySQL 8.4 LTS. Pred aktualizáciou WebJET CMS na staršom serveri aktualizujte databázu podľa postupu jej výrobcu. Podrobnosti a požiadavky aktualizovaného JDBC ovládača sú v [návode na inštaláciu](install/setup/README.md#základné-požiadavky-na-server) (#349).
 - Štatistika - prehliadače sa po aktualizácii ukladajú bez čísla verzie, ktoré sa v dnešnej dobe veľmi často menia. Po nasadení tejto verzie je potrebné spustiť migráciu historických štatistík na URL `/admin/v9/settings/stat-browser-migration/`, bez jej dokončenia zostanú historické údaje rozdelené podľa čísla verzie prehliadačov (#303).
 - Z administrácie bola odstránená závislosť na knižnici [Vue.js](https://vuejs.org). Pred aktualizáciou odporúčame overiť kompatibilitu vlastných aplikácií. Veľkosť JavaScript súborov sa zmenšila o cca 170kB, čo má dopad aj na rýchlosť inicializácie administrácie. Viac v [sekcii pre programátora](#pre-programátora).
 - AspectJ - z distribúcie bola odstránená podpora `load-time weavingu` (`aspectjweaver` a `META-INF/aop-ajc.xml`); vstavané aspekty sa spracujú už pri kompilácii, viac v [sekcii pre programátora](#pre-programátora). Pri použití v MultiWeb inštalácii môžete odstrániť `-javaagent:/www/tomcat/.../aspectjweaver.jar` nastavenie z `JAVA_OPTS` v aplikačnom serveri (#290).
@@ -17,7 +18,29 @@
 
 - [Úvodnú obrazovku](redactor/admin/welcome.md) sme prerobili na widgetový systém, aby ste mali údaje potrebné pri práci na jednom mieste bez prechádzania jednotlivých častí administrácie. Sami si vyberiete widgety a nastavíte zobrazované údaje, veľkosť a poradie podľa svojich potrieb (#58806).
 
-![](redactor/admin/dashboard.png)
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
+- [Rýchle vyhľadávanie](redactor/admin/search/README.md) je dostupné z hlavičky celej administrácie tlačidlom **Hľadať…** alebo skratkou **Ctrl+K / ⌘K**. Ponúka návrhy stránok podľa názvu a URL, výsledky z obsahu stránok, súborov, používateľov, textových kľúčov a položiek menu. Vybraný výraz môžete preniesť do príslušnej sekcie s ďalšími filtrami (#348).
+
+![](redactor/admin/search/quick-search.png)
+
+### Prihlasovanie a ochrana účtu
+
+- [Používateľské menu v hlavičke](redactor/admin/README.md#používateľské-menu) zobrazuje údaje účtu, počet aktívnych relácií a stav dvojstupňového overovania. Položka **Aktívne prihlásenia** otvorí správu vlastných prihlásení z ktorejkoľvek stránky administrácie. Dokumentácia obsahuje aktuálny screenshot a opis všetkých položiek menu (#351).
+
+- WebJET CMS po novom [eviduje prehliadače, z ktorých sa prihlasujete](redactor/admin/logon.md#prihlásenie-z-nového-zariadenia). Prihlásenie z nového prehliadača zobrazí upozornenie na úvodnej obrazovke a odošle email, aby ste mohli rozpoznať cudzie prihlásenie do svojho účtu. Vlastné zariadenie potvrdíte emailovým odkazom alebo jednorazovým kódom cez **Bol som to ja** (#340).
+
+![Prehľad zariadení účtu na karte Moje zariadenia](redactor/admin/device-my-devices.png)
+
+- Ak prihlásenie nepoznáte, môžete [zablokovať zariadenie a ukončiť jeho aktívne prihlásenia](redactor/admin/welcome.md#ak-prihlásenie-nepoznáte). Pri ďalšom prihlásení zo zablokovaného prehliadača sa po zadaní správneho mena a hesla zobrazí **Overenie zablokovaného zariadenia**. Na odblokovanie a vstup do administrácie treba zadať šesťmiestny kód z emailu účtu; pri zapnutom 2FA sa toto overenie vykoná až po kóde z autentifikačnej aplikácie. Podrobný postup je v [návode na prihlásenie](redactor/admin/logon.md#overenie-zablokovaného-zariadenia) (#340).
+
+![Overenie zablokovaného zariadenia pred vstupom do administrácie](redactor/admin/logon-device-verification.png)
+
+- Špecifické prihlásenia cez `doFilterLogon` a `wjlogontoken` odmietnu zablokovaný prehliadač bez emailovej výzvy. Na odblokovanie treba použiť bežný prihlasovací formulár v tom istom prehliadači (#340).
+
+Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `adminNewDeviceDetectionEnabled` na false. Pri prihlásení sa aj zisťuje [približná poloha](admin/setup/configuration/dashboard.md#orientačná-poloha-prihlásenia) podľa IP adresy, vypnúť sa dá nastavením `adminLoginLocationApiKey` na hodnotu `DISABLED`.
 
 ### Webové stránky
 
@@ -56,6 +79,7 @@
 ![](redactor/webpages/working-in-editor/image_dialog-pixabay.png)
 
 - Page Builder - elementy označené CSS triedou [`pb-duplicable`](frontend/page-builder/settings.md#duplikovateľný-element-oranžová-farba) je možné v rámci rovnakého rodiča presúvať, duplikovať a zmazať. Vlastné alebo viaceré selektory je možné nastaviť cez `pbCustomSettings` (#58750).
+- Page Builder - pridaná možnosť vytvoriť [div.pb-section](frontend/page-builder/settings.md), ktorý získa bežné ovládanie sekcie. Naviac aplikácie `!INCLUDE(...)!` vložené priamo v sekcii, alebo kontajnery, zobrazujú náhľad aj napriek tomu, že sú vložené mimo bežného stĺpca (#osk711).
 - Page Builder - upravené [ovládanie editora](redactor/webpages/pagebuilder.md). Pridaná pevná horná lišta s cestou k vybranému bloku, panel **Štruktúra**, rýchle akcie a režim vkladania sekcií, kontajnerov a stĺpcov priamo do stránky. Rámiky je možné skryť alebo zobraziť pre celú hierarchiu bloku. Knižnica blokov má kompaktné okno s náhľadmi, kategóriami a kombinovaným vyhľadávaním so štítkami. Nastavenie štýlu používa rozbaľovacie skupiny vlastností a označuje práve upravovaný blok (#308).
 
 <div class="video-container">
@@ -63,6 +87,7 @@
 </div>
 
 - Page Builder - zlepšená detekcia zmien v HTML kóde stránky, aby sa nezobrazilo hlásenie "V editore pravdepodobne máte neuložený text" aj keď ste reálne žiaden text v stránke nezmenili (#317).
+- [Page Builder](redactor/webpages/pagebuilder.md) - po kliknutí na + v žltej čiare v okne **Vložiť blok** na karte **Základné** pribudli možnosti **Obrázok** a **Aplikácia**. Otvoria príslušný dialóg editora a umožnia vložiť obsah na zvolené miesto (#339).
 
 ### Headless režim
 
@@ -80,6 +105,11 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
+- Viackrokové formuláre - pridaná možnosť upraviť [HTML tlačidla na predchádzajúci krok](redactor/apps/formsimple/README.md#html-kód-tlačidiel) cez prekladový kľúč `components.mustistep.form.back_button` (#osk782).
+- Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).
+- Formuláre - validácia nahraných súborov rozlišuje nepovolený znak v názve a nepovolenú príponu. Chyba názvu uvedie konkrétny zakázaný znak alebo reťazec. Názvy súborov v chybových hláseniach sa zobrazujú ako text, aby sa prípadné HTML značky v názve nevykonali (#58794).
+- Viackrokové formuláre - pri [návrate na predchádzajúci krok](redactor/apps/multistep-form/README.md#návrat-na-predchádzajúci-krok) sa zachovajú rozpracované hodnoty aj dokončené nahrávania (#58794).
+- Viackrokové formuláre - pridaná predvolene zapnutá [validácia pri opustení poľa](redactor/apps/multistep-form/README.md#validácia-pri-opustení-poľa). Vypnete ju nastavením konfiguračnej premennej `multistepform_validateOnBlur` na `false` (#58794).
 - [Formuláre](redactor/apps/form/README.md#možné-konfiguračné-premenné) - klasické aj viackrokové formuláre rešpektujú `sendMailSaveEmail` a ukladajú emaily ako súbory `.eml` do `sendMailSaveEmailPath` namiesto SMTP odoslania. Ak sa zápis nepodarí, formulár oznámi chybu.
 - Viackrokové formuláre - pridaný [návrat na predchádzajúci krok](redactor/apps/multistep-form/README.md#návrat-na-predchádzajúci-krok) s obnovením uložených hodnôt a súborov a [výber CSS šablóny](redactor/apps/multistep-form/README.md#css-šablóny) pre každú vloženú inštanciu a náhľad v administrácii (#58742).
 
@@ -119,9 +149,15 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Embedding indexovanie a vyhľadávanie používa poskytovateľa a model nastavený v systémovom AI asistentovi. Indexy rôznych poskytovateľov a modelov môžu existovať súčasne; stránka **Sémantický index** zobrazuje aktuálne nastavenie a pri opätovnom indexovaní zachová ostatné kombinácie. Jadro embedding požiadaviek, odpovedí a komunikácie s poskytovateľmi bolo vyčlenené do knižnice `webjet-ai`; WebJET CMS naďalej zabezpečuje výber asistenta, indexovanie a uloženie vektorov (#58694).
 - AI asistenti a **sémantické vyhľadávanie** - pridaná podpora [lokálnych modelov](redactor/ai/settings/README.md#lokálne-modely) na generovanie textu, preklad a tvorbu embeddingov priamo na serveri bez odosielania obsahu externej AI službe. Tieto modely je možné **spustiť na bežnom hardvéri** (CPU), **nevyžadujú špeciálne grafické karty** (#58561).
+- Sémantické vyhľadávanie - lokálny [reranking výsledkov](custom-apps/apps/rag/semantic-search/README.md#reranking-výsledkov) zlepšuje poradie výsledkov aj výber RAG kontextu podľa textovej zhody s otázkou. Nevyžaduje ďalšie AI volanie ani opätovné indexovanie (#58778).
+- Sémantické vyhľadávanie - textové chunky majú maximum o 50 % vyššie než cieľová veľkosť (predvolene `1500` znakov). Markdown zachováva celé sekcie a bloky, ktoré sa zmestia do maxima, a spája krátke sekcie so spoločným kontextom nadpisov. Väčší obsah sa rozdelí podľa viet a slov. Zmeny sa použijú po opätovnom indexovaní. Viac v [popise indexovania](custom-apps/apps/rag/semantic-search/README.md#1-indexovanie) (#58778).
+- Sémantické vyhľadávanie - pridaná [podpora Markdown dokumentácie](custom-apps/apps/rag/markdown-search.md) z webových aj lokálnych priečinkov (`file:`), plánovaná indexácia zmien, vyhľadávanie Docsify podľa jazyka a adresára a voliteľná RAG odpoveď. Nová karta **Markdown dokumenty** umožňuje indexáciu a odstránenie cez stromový výber priečinka. Jazyk sa odvodzuje z cesty súboru. Index je spoločný pre všetky domény; AI asistenti a spotreba patria doméne vykonávanej operácie. Vyhľadávanie rešpektuje limity ochrany pred SPAMom ešte pred volaním AI a pri ich prekročení zobrazí správu. Nastavenie aliasu `file:/docs`, parametre úlohy `koreň|doména` a migrácia starších indexov sú opísané v návode (#58778).
 
 ### Aplikácie
 
+- Číselníky - výber a správa typov sa presunuli do stromu v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Číselníkov](redactor/apps/enumeration/README.md) (#58786).
+- Blog - výber a pridávanie sekcií sú dostupné v strome v ľavom paneli s vyhľadávaním. Viac v [dokumentácii Blogu](redactor/apps/blog/README.md) (#58786).
+- Novinky - výber priečinka sa presunul do stromu v ľavom paneli s vyhľadávaním, dostupného aj v editore aplikácie. Automatické hľadanie priečinkov vynecháva korene blogerov aj ich podpriečinky. Viac v [dokumentácii Noviniek](redactor/apps/news/README.md) (#58786).
 - Elektronický obchod - pridané voliteľné [zaokrúhľovanie cien](redactor/apps/basket/rounding.md), aby sa košík počítal zo zobrazenej ceny za kus. Počet desatinných miest určuje `currencyFormat`; šablóny so značkou `iway:curr` prevezmú nové formátovanie automaticky (#316).
 - Číselníky - pre pomenované reťazcové polia je možné v novej karte [Typy reťazcových polí](redactor/apps/enumeration/README.md#karta-typy-reťazcových-polí) nastaviť typ poľa, možnosti výberu, povinnosť, pomocný text a obmedzenia dĺžky rovnako ako pri voliteľných poliach. Ponuka a názvy konfigurácií vychádzajú z poslednej uloženej verzie typu číselníka. Nepomenované polia zostávajú skryté, nevyhodnocujú sa ako povinné a polia bez špecifickej konfigurácie sa zobrazia ako bežný text. Staršie vlastné Excel šablóny a integrácie REST API je potrebné upraviť z atribútov `string1` až `string12` na `fieldA` až `fieldL` (#58641).
 
@@ -180,6 +216,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Pridané zobrazenie zoznamu skupín šablón (#58525).
 - V riadiacej doméne je možné upravovať všetky presmerovania domén.
 - V riadiacej doméne pridaná možnosť zobraziť všetky súbory.
+- GDPR - opravené pridávanie a úprava cookies v ostatných doménach bez oprávnenia na úpravu všetkých prekladových kľúčov. Poskytovateľ, účel a platnosť sa ukladajú a zobrazujú pre aktuálnu doménu (#344).
 
 ### Iné menšie zmeny
 
@@ -218,25 +255,34 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Webové stránky - editor JSON prijíma aj polia a jednoduché hodnoty s komentármi. Opravené rozdelenie stĺpcov a posúvanie v Page Builderi a zatváranie tooltipu pri úprave z histórie (#346).
+- Viackrokové formuláre - opravená validácia polí s reťazenými podmienkami viditeľnosti (#58794).
 - Formuláre - opravené archivovanie formulárov (#305).
 - Prieskumník - upravené porovnávanie súborov s diakritikou pri kontrole existencie súboru pri jeho prepísaní - formát `utf-8 NFC vs NFD` (#58317-12, #58698).
 - Webové stránky - opravené pridávanie prázdneho `P` elementu na koniec stránky (#58317-13).
 - Webové stránky - opravené načítanie hodnoty `ckeditor_button_sizes` pre tlačidlo typu `A` (#OSK674).
 - Monitorovanie SQL - opravená správa životného cyklu meraní `PreparedStatement`. Záznam sa odstráni aj pri zatvorení pred spustením merania a jednotlivé objekty `PreparedStatement` sa rozlišujú podľa identity bez volania JDBC `hashCode()` a `equals()`. Súbežný prístup používa `ConcurrentHashMap` a atomický stav bez globálneho `synchronized` bloku, takže vlákna nečakajú na spoločný zámok a merania sa nespoja ani pri kolízii identitných hashov.
+- Page Builder - opravené zbytočné posúvanie stránky hore/dole ak ste upravovali aplikáciu v stránke (#343).
+- Page Builder - opravené zobrazenie nástrojovej lišty ak stránka neobsahuje žiadnu sekciu (#343).
+- Page Builder - pridaná možnosť nastaviť [šírku okna štruktúra](frontend/page-builder/settings.md) (#343)
 
 ### Výkon
 
+- Viackrokové formuláre - zrýchlené opakované kontroly polí počas vypĺňania (#58794).
 - Optimalizované načítanie skupiny šablón pri zobrazení stránky a hľadaní voliteľných polí. Skupina je uložená do cache a znova použitá bez potreby jej čítania z databázy (#311).
 
 ### Bezpečnosť
 
 - Inštalácia - [setup režim](install/setup/README.md#aktivácia-setup-režimu) sa aktivuje iba explicitne a je chránený samostatným tokenom. Výpadok databázy už aplikáciu neprepne do setup režimu; po dokončení je potrebné setup vypnúť a reštartovať aplikačný server (#58569).
+- Dependency Check - aktualizované knižnice `Jackson 2.22.3/3.2.3`, `jsoup 1.23.2`, `logback-core/classic 1.6.5`, `slf4j-api 2.0.19`, `mariadb-java-client 3.5.10`, `postgresql 42.7.14`, `Swagger UI 5.32.15` (s `DOMPurify 3.4.13`), `moment 2.31.0` vrátane statickej kópie, `@tootallnate/once 2.0.1`, `@xmldom/xmldom 0.9.12`, `brace-expansion 1.1.21/2.1.7/5.0.12`, `ip-address 10.7.1`, `http-cache-semantics 4.3.0`, `source-map-js 1.2.2`, `svgo 3.3.5`, `tar 7.5.21` a `undici 6.28.1`. Zostavenie vyžaduje Node.js 20 alebo 22 a novší (#349).
+- Dependency Check - pridané výnimky pre `kotlin-stdlib 2.4.0`, `webjet-ai/webjet-ai-local 2.0.4`, `spring-security-crypto 7.1.1`, `http-cache-semantics 4.2.0`, `fabric 5.2.4/5.5.2` a `jQuery 3.3.1` v testovacej šablóne eshopu. Výnimky pre `ai.djl:api 0.36.0` a `tar 6.2.1` predstavujú schválené prijatie zvyškového rizika. Podrobnosti sú v `dependency-check-suppressions-project.xml` (#349).
 - Pridaná podpora generovania `nonce` pre [Content-Security-Policy](sysadmin/pentests/README.md#content-security-policy-csp) hlavičku (#58533).
 - AI asistenti - pridaná ochrana pred `prompt injection` útokmi s oddelením systémových inštrukcií od používateľského obsahu a detekciou kódovaných vstupov (#58549).
 - HTML sanitizácia - `AllowSafeHtmlAttributeConverter` zachováva na všetkých doteraz povolených HTML elementoch atribúty `role`, `aria-*`, `data-*`, `id`, `title`, `lang`, `dir` (`ltr`, `rtl`, `auto`) a `tabindex` (`-1`, `0`). Umožňuje tak používať atribúty prístupnosti a vlastné dátové atribúty (#317).
 
 ### Dokumentácia
 
+- Datatabuľky - doplnené vysvetlenie [upozornení na neuložené zmeny](redactor/datatables/README.md#upozornenia-na-neuložené-zmeny) pri obnovení alebo opustení stránky a pri zatvorení editora tlačidlom Zrušiť (#339).
 - Vytvorená nová sekcia [Prehľad nových vlastností](sales/README.md) ktorá obsahuje opisy nových vlastností a **funkcionalít WebJET CMS zrozumiteľným jazykom**, bez zbytočne technických formulácií (#58505).
 - Vytvorená sekcia [Riešenie problémov](sysadmin/troubleshooting/README.md) v manuáli pre prevádzku.
 
@@ -254,6 +300,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Dátové tabuľky - rozšírená funkcionalita poľa typu [`OPTIONS`](developer/datatables-editor/standard-fields.md#options) o možnosť pridať prázdnu hodnotu pomocou `allowEmptyOption` (#osk573).
 - Dátové tabuľky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) pri úprave zdrojového kódu odstraňuje nadbytočné prázdne odseky (#osk573).
+- Dátové tabuľky - HTML editor [`QUILL`](developer/datatables-editor/standard-fields.md#quill) zachováva vnorené obalové elementy `div`. Čistenie prázdnych odsekov sa po novom vykonáva iba na konci ukladanej hodnoty; prázdne odseky medzi obsahom zostávajú zachované (#osk782).
 - Dátové tabuľky - pridaný nový typ poľa `ENUMERATION` pre [napojenie na číselníky](developer/datatables-editor/standard-fields.md#enumeration) v editore. Pole ukladá konfiguráciu vo formáte `enumeration-options|ID_CISELNIKA|MENO_STLPCA_TEXTU|MENO_STLPCA_HODNOTY` a umožňuje nastaviť zdroj hodnôt (#58517).
 - Dátové tabuľky - [výber priečinka](developer/datatables-editor/field-json.md#možnosti-classname) cez pole `dt-tree-dir-simple` pri obmedzených právach správne zobrazuje nastavený koreňový priečinok aj neaktívnych rodičov povolených priečinkov a rešpektuje konfiguračnú premennú `fbrowserShowOnlyWritableFolders`. Pridaný atribút `data-dt-field-writableOnly` umožňuje obmedziť výber iba na priečinky s právom na zápis (#58317-17).
 
@@ -558,6 +605,19 @@ Prerobené nastavenie vlastností aplikácií v editore zo starého kódu v `JSP
 ![meme](_media/meme/2026-18.jpg ":no-zoom")
 
 ## 2026.0.x
+
+> Opravná verzia pôvodnej verzie 2026.0.
+
+- Webové stránky - opravené zacyklenie inicializácie priečinkov a kontroly plánovaného publikovania pri pomalom pripojení k databáze (#337).
+- Cluster - optimalizované zapisovanie zmeny v clustri pri štarte nového uzla (#337).
+- Redis - zlepšený prenos informácie o nahrávanom súbore v session (#342).
+- Bezpečnosť - aktualizovaná knižnica `FreeMarker` z verzie `2.3.34` na `2.3.35`.
+- Bezpečnosť - aktualizované knižnice administrácie `Lodash` z verzie `4.17.21` na `4.18.1` a `PostCSS` z verzie `8.5.2` na `8.5.12`. V rámci aktualizácie PostCSS bola aktualizovaná aj jeho závislosť `Nano ID` z verzie `3.3.8` na `3.3.20`.
+- Bezpečnosť - vypnutá kompilácia výrazov SpringEL v Thymeleaf šablónach a predvolene aj v Spring ako ochrana pred [CVE-2026-59283](https://spring.io/security/cve-2026-59283/). Štandardná syntax šablón a povolené volania metód zostávajú podporované, úprava šablón nie je potrebná. Pri šablónach s veľkým množstvom opakovane vyhodnocovaných výrazov môže vykresľovanie trvať dlhšie.
+- Bezpečnosť - vypnuté ukladanie chránených súborov z `/files/protected/` do cache prehliadača a proxy serverov nastavením HTTP hlavičiek pred odoslaním súboru. Opravené nastavenie dĺžky odpovede pri odosielaní celého súboru aj jeho rozsahu, aby Spring Security zapísal bezpečnostné hlavičky včas.
+- Bezpečnosť - doplnené zdôvodnené výnimky v `dependency-check-suppressions.xml` pre zraniteľnosti nevyužívaných častí Spring a pre zraniteľnosť ošetrenú vyššie uvedeným nastavením SpringEL. Výnimka pre [CVE-2026-22732](https://spring.io/security/cve-2026-22732/) zohľadňuje vyššie uvedenú ochranu chránených súborov a opravu odosielania súborov; predstavuje aplikačné opatrenia a akceptované zvyškové riziko, nie opravu knižnice ani potvrdenie bezpečnosti všetkých spôsobov odosielania odpovedí. Predvolené odložené zapisovanie hlavičiek Spring Security zostáva zachované. Verzie `Spring Framework 5.3.39` a `Spring Security 5.8.16` zostávajú zachované.
+
+## 2026.0.40
 
 > Opravná verzia pôvodnej verzie 2026.0.
 

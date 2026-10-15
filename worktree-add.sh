@@ -214,8 +214,8 @@ if (!fs.existsSync(workspaceFile)) {
         tasks: {
             version: '2.0.0',
             tasks: [
-                ['Admin v9', 'src/main/webapp/admin/v9'],
-                ['Webapp', 'src/main/webapp']
+                ['admin v9', 'src/main/webapp/admin/v9'],
+                ['e2e test', 'src/test/webapp']
             ].map(([label, directory]) => ({
                 label,
                 type: 'process',

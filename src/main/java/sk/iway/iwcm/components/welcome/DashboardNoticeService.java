@@ -14,20 +14,25 @@ import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.FileTools;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.components.users.userdetail.UserDetailsRepository;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.rest.BrowserIdentifierMigrationService;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
+import sk.iway.iwcm.users.devices.DeviceEntity;
 
 /** Builds lightweight system notices for the dashboard template. */
 @Service
 public class DashboardNoticeService {
-    private final UserDetailsRepository users;
+    private final UserDetailsRepository userDetailsRepository;
+    private final AdminDeviceService adminDeviceService;
 
-    public DashboardNoticeService(UserDetailsRepository users) {
-        this.users = users;
+    public DashboardNoticeService(UserDetailsRepository userDetailsRepository, AdminDeviceService adminDeviceService) {
+        this.userDetailsRepository = userDetailsRepository;
+        this.adminDeviceService = adminDeviceService;
     }
 
     /**
@@ -44,11 +49,30 @@ public class DashboardNoticeService {
         Prop prop = Prop.getInstance(request);
         List<Map<String, Object>> notices = new ArrayList<>();
 
+        try {
+            for (DeviceEntity event : adminDeviceService.getActiveEvents(user)) {
+                Map<String, Object> securityNotice = new LinkedHashMap<>();
+                securityNotice.put("id", "newDevice:" + event.getId());
+                securityNotice.put("kind", "newDevice");
+                securityNotice.put("severity", "warning");
+                securityNotice.put("icon", "ti-shield-lock");
+                securityNotice.put("title", prop.getText("admin.dashboard.newDevice.title.js"));
+                securityNotice.put("description", "");
+                securityNotice.put("securityEvent", event);
+                notices.add(securityNotice);
+            }
+        } catch (IllegalStateException exception) {
+            Logger.error(DashboardNoticeService.class, "Cannot load administrator device notices (" + exception.getClass().getSimpleName() + ")");
+            notices.add(Map.of("id", "newDeviceUnavailable", "severity", "error", "icon", "ti-shield-lock",
+                "title", prop.getText("admin.dashboard.newDevice.title.js"),
+                "description", prop.getText("admin.dashboard.newDevice.unavailable.js")));
+        }
+
         if (Constants.getBoolean("2factorAuthEnabled") && Tools.isEmpty(Constants.getString("ldapProviderUrl"))
                 && Tools.isEmpty(Constants.getString("adminLogonMethod")) && !AuthenticationFilter.weTrustIIS()) {
             String message = prop.getText("overview.2fa.warning");
-            if (Tools.isNotEmpty(message) && message.length() > 2 && Tools.isEmpty(users.getMobileDeviceByUserId((long) user.getUserId()))) {
-                notices.add(notice(prop, "twoFactor", "info", "ti-shield-lock", message,
+            if (Tools.isNotEmpty(message) && message.length() > 2 && Tools.isEmpty(userDetailsRepository.getMobileDeviceByUserId((long) user.getUserId()))) {
+                notices.add(notice(prop, "twoFactor", "warning", "ti-shield-lock", message,
                     action(prop, "popup", "/admin/2factorauth.jsp", "button.setup")));
             }
         }
@@ -65,7 +89,7 @@ public class DashboardNoticeService {
         if (logFile.exists()) {
             FileTools.copyFile(logFile, new IwcmFile(Tools.getRealPath("/files/protected/admin/error-log.txt")));
             notices.add(notice(prop, "update", "error", "ti-alert-circle", prop.getText("overview.update.showErrors"),
-                action(prop, "link", "/files/protected/admin/error-log.txt", "button.show")));
+                action(prop, "link", "/files/protected/admin/error-log.txt", "admin.dashboard.notice.details.js")));
         }
 
         int requiredJavaVersion = Constants.getInt("javaMinimalVersion");
@@ -73,7 +97,10 @@ public class DashboardNoticeService {
         if ("tester".equals(user.getLogin()) && request.getParameter("javaVersion") != null) currentJavaVersion = request.getParameter("javaVersion");
         if (requiredJavaVersion > 0 && javaMajorVersion(currentJavaVersion) > 0 && javaMajorVersion(currentJavaVersion) < requiredJavaVersion) {
             notices.add(notice(prop, "java", "warning", "ti-server", prop.getText("system.javaVersionWarningText",
-                Integer.toString(requiredJavaVersion), Tools.escapeHtml(currentJavaVersion)), null));
+                Integer.toString(requiredJavaVersion), Tools.escapeHtml(currentJavaVersion)),
+                action(prop, "help", "/install/versions", "admin.dashboard.notice.requirements.js")));
+            notices.get(notices.size() - 1).put("description", prop.getText("admin.dashboard.notice.java.description.js",
+                Integer.toString(requiredJavaVersion), currentJavaVersion));
         }
 
         long expiry = Constants.getLong("licenseExpiryDate");
@@ -81,7 +108,9 @@ public class DashboardNoticeService {
         warningDate.add(Calendar.MONTH, 2);
         if (expiry > 0 && warningDate.getTimeInMillis() >= expiry) {
             notices.add(notice(prop, "license", "warning", "ti-license", prop.getText("overview.license.expirationWarning",
-                Tools.escapeHtml(Tools.formatDate(expiry))), null));
+                Tools.escapeHtml(Tools.formatDate(expiry))),
+                action(prop, "link", "https://www.webjetcms.com", "admin.dashboard.notice.license.action.js")));
+            notices.get(notices.size() - 1).put("description", prop.getText("admin.dashboard.notice.license.description.js", Tools.formatDate(expiry)));
         }
         if (Constants.getBoolean("useAmazonSES")) {
             notices.add(notice(prop, "amazonSes", "error", "ti-mail", prop.getText("overview.useAmazonSES.deprecated"),
@@ -96,6 +125,7 @@ public class DashboardNoticeService {
         notice.put("severity", severity);
         notice.put("icon", icon);
         notice.put("title", prop.getText("admin.dashboard.notice." + id + ".js"));
+        notice.put("description", prop.getText("admin.dashboard.notice." + id + ".description.js"));
         notice.put("bodyHtml", bodyHtml);
         if (action != null) notice.put("action", action);
         return notice;

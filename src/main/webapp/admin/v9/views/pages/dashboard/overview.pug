@@ -2,6 +2,9 @@ extends ../../partials/layout
 
 block content
 
+    script.
+        window.helpLink = "/redactor/admin/welcome";
+
     style.
         .ly-content-wrapper { padding-top: 34px; }
         .ly-content { height: calc(100vh - 34px); }
@@ -22,23 +25,17 @@ block content
             const dashboard = document.querySelector("webjet-overview-dashboard");
             const dashboardData = window.webjetOverviewDashboardBootstrapData;
             delete window.webjetOverviewDashboardBootstrapData;
-            const announcement = /*[[\#{admin.overview.changelog}]]*/ "";
             dashboard.configure({
                 data: dashboardData,
                 config: {
                     statMode: window.statMode,
                     recentPagesGroupId: /*[[${layout.getConstant('systemPagesRecentPages')}]]*/ "",
                     overviewJsonUrl: /*[[${layout.getConstant('overviewJsonUrl')}]]*/ "",
-                    heroBackgroundImage: /*[[${layout.getConstant('dashboardHeroBackgroundImage')}]]*/ "/admin/skins/webjet8/assets/global/img/wj/wj9_bg.jpg",
-                    environmentName: /*[[${layout.getConstantExecuteMacro('dashboardEnvironmentName')}]]*/ "DEV",
-                    environmentType: /*[[${layout.environmentName}]]*/ "DEV",
-                    environmentIcon: /*[[${layout.getConstant('dashboardEnvironmentIcon')}]]*/ "auto",
-                    environmentColor: /*[[${layout.getConstant('dashboardEnvironmentColor')}]]*/ "auto"
+                    heroBackgroundImage: /*[[${layout.getConstant('dashboardHeroBackgroundImage')}]]*/ "linear-gradient(111.7deg, #031D46 0%, #073780 76.92%)"
                 },
                 labels: {
                     newsletterActive: /*[[\#{components.dmail.campaings.status.enabled}]]*/ "",
-                    changelog: WJ.parseMarkdown(announcement.replace(/\\n/g, "\n"), { link: true, imgSrcPrefix: "" }),
-                    seeCompleteChangelog: /*[[\#{admin.overview.seeCompleteChangelog}]]*/ ""
+                    changelog: WJ.getReleaseNews().html,
                 }
             });
 

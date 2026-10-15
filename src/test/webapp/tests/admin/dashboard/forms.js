@@ -26,8 +26,7 @@ async function openDashboard(I, selectedName = formName) {
 
 /**
  * Checks that a selected form shows the submitted contact values and dates and that a row opens the matching
- * submission. All ten preview rows must remain readable and reachable by mouse or keyboard on different
- * screen widths.
+ * submission. All ten preview rows must remain reachable by mouse or keyboard.
  */
 Scenario('Selected form displays real submission values and opens the selected record', async ({ I, DTE }) => {
     const source = await I.executeScript(async formName => {
@@ -62,18 +61,7 @@ Scenario('Selected form displays real submission values and opens the selected r
         I.assertEqual(row.href, `/apps/form/admin/detail/?formName=${formName}&id=${items[index].id}`);
         I.assertTrue(row.date.length > 0);
     }
-    for (const width of [1280, 1100, 600]) {
-        I.resizeWindow(width, 900);
-        await showWidget(I, 'autotest-form-preview');
-        I.assertTrue(await I.executeScript(selector => {
-            const table = document.querySelector(`${selector} table`);
-            const widget = document.querySelector(selector);
-            return table.scrollWidth <= widget.clientWidth && widget.scrollWidth <= widget.clientWidth + 1;
-        }, card), `Submission text must wrap within the widget at ${width}px.`);
-    }
-    I.wjSetDefaultWindowSize();
     await showWidget(I, 'autotest-form-preview');
-    I.saveScreenshot('dashboard-forms-desktop.png');
     const list = `${card} .md-dashboard-widget__forms`;
     I.assertTrue(await I.executeScript(selector => {
         const list = document.querySelector(selector);

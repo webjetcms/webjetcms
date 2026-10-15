@@ -14,6 +14,7 @@ ext {
 
 Currently, the following versions of WebJET exist:
 
+- `2026.0-boot-SNAPSHOT` - ​​development version with Spring Boot 4. Transitioning from `jakarta` version requires [customer project modifications](#changes-when-transitioning-to-spring-boot).
 - `2026.18.28-jakarta` - ​​stabilized version 2026.18 with fixes from version 2026.0.28, no daily changes added.
 - `2026.0.28-jakarta` - ​​stabilized version 2026.0.28 with bug fixes compared to version 2026.0 (without adding improvements from the SNAPSHOT version).
 - `2026.0.28` - ​​stabilized version 2026.0.28 with bug fixes compared to version 2026.0 (without adding improvements from the SNAPSHOT version).
@@ -79,6 +80,221 @@ The `YEAR.0.x` version is therefore not fundamentally changed, it contains bug f
 At the same time, the `YEAR.0.x` version may not be the most secure. If it is necessary to update a library used in WebJET and it contains major changes, we cannot make this change in the `YEAR.0.x` version, because compatibility would be broken.
 
 So `YEAR.0.x` is **the most stable** in terms of changes and `YEAR.0-SNAPSHOT` is **the most secure** in terms of vulnerabilities.
+
+## Changes when switching to Spring Boot
+
+Moving from a standalone Spring Framework 7 configuration to Spring Boot 4 changes how you run your application, manage dependencies, and create WAR archives. It's not enough to just change `webjetVersion`. The steps are based on the [basecms migration pull request](https://github.com/webjetcms/basecms/pull/2/files) ; you can find the files to copy in the [release/webjet-2026-boot](https://github.com/webjetcms/basecms/tree/release/webjet-2026-boot) branch.
+
+The prerequisite is a project that is already using the Jakarta version with Spring 7. Java remains at version 17 or later. The reference project uses Spring Boot `4.1.1`, Gradle `8.14` and Tomcat `11.0.25`. If you are migrating from an older version with `javax` packages, also [migrate to the Jakarta version](#changes-when-migrating-to-jakarta-version) first.
+
+### Gradle and dependencies
+
+Before editing `build.gradle`, update the Gradle wrapper to version `8.14`. In the root folder of your project, run:
+
+```sh
+./gradlew wrapper --gradle-version 8.14 --distribution-type bin
+./gradlew wrapper --gradle-version 8.14 --distribution-type bin
+./gradlew --version
+```
+
+The first run will set the desired version in `gradle-wrapper.properties`. The second will use Gradle `8.14` and will also update `gradle-wrapper.jar` and the `gradlew` and `gradlew.bat` startup scripts. This two-step procedure is also recommended by the [Gradle documentation](https://docs.gradle.org/current/userguide/gradle_wrapper.html#sec:upgrading_wrapper). The last command will verify the version used. On Windows, replace `./gradlew` with `gradlew.bat`.
+
+In `build.gradle`, remove the plugin `org.gretty`, the entire block `gretty { ... }`, and the configurations `grettyRunnerTomcat10` and `grettyRunnerTomcat11`, if the project contains them. Also remove the links to the original Gretty tasks, for example the JaCoCo configuration for `appStart`, `appStartDebug`, and `appAfterIntegrationTest`. Incorporate these settings into the existing blocks; keep the other project plugins and custom tasks:
+
+```gradle
+plugins {
+    id 'java'
+    id 'war'
+    id 'org.springframework.boot' version '4.1.1'
+    id 'io.freefair.lombok' version '8.14'
+}
+
+ext {
+    webjetVersion = '2026.0-boot-SNAPSHOT'
+    tomcatMinimumVersion = '11.0.25'
+}
+
+springBoot {
+    mainClass = 'sk.iway.iwcm.system.spring.SpringBootStarter'
+}
+
+tasks.named('bootJar') { enabled = false }
+tasks.named('jar') { enabled = false }
+```
+
+There is no need to add a custom startup class with `main()`. WebJET provides it in the library and for the JSP pages the application is still packaged in a WAR archive.
+
+Remove the `springVersion` variable and the manual Spring dependency versions, which are replaced by Spring Boot version management. In `dependencies` add the Boot BOM, which unifies the library versions, and the dependencies for the built-in Tomcat and JSP:
+
+```gradle
+dependencies {
+    implementation platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+    providedCompile platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+    providedRuntime platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES)
+
+    providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat-runtime'
+    providedRuntime('org.apache.tomcat.embed:tomcat-embed-jasper') {
+        exclude group: 'org.apache.tomcat', module: 'tomcat-annotations-api'
+    }
+    constraints {
+        ['implementation', 'providedRuntime'].each { configurationName ->
+            ['core', 'el', 'jasper', 'websocket'].each { moduleName ->
+                add(configurationName, "org.apache.tomcat.embed:tomcat-embed-${moduleName}") {
+                    version {
+                        require("[${tomcatMinimumVersion},12.0.0)")
+                        prefer(tomcatMinimumVersion)
+                    }
+                }
+            }
+        }
+    }
+
+    implementation("com.webjetcms:webjetcms:${webjetVersion}")
+    implementation("com.webjetcms:webjetcms:${webjetVersion}:admin")
+    implementation("com.webjetcms:webjetcms:${webjetVersion}:components")
+    implementation("com.webjetcms:webjetcms:${webjetVersion}:libs")
+
+    providedCompile 'jakarta.servlet:jakarta.servlet-api'
+    providedCompile 'jakarta.servlet.jsp:jakarta.servlet.jsp-api:4.0.0'
+    providedCompile 'jakarta.el:jakarta.el-api:6.0.0'
+    providedCompile 'jakarta.annotation:jakarta.annotation-api'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+```
+
+Replace the original separate test dependencies on Spring, JUnit BOM, JUnit Jupiter, Hamcrest, Mockito, and the Jakarta EL test implementation with the `spring-boot-starter-test` and JUnit launcher listed above. Keep the custom libraries needed for customer tests. Also keep the compiler setting `options.compilerArgs += ['-parameters']`.
+
+For both repositories, set up logins with read access to packages via `GPR_USER` and `GPR_API_KEY`, or `gpr.user` and `gpr.api-key` in local `gradle.properties`.
+
+Also download the following parts from the [reference build.gradle](https://github.com/webjetcms/basecms/blob/release/webjet-2026-boot/build.gradle):
+
+- `bootRun`, calculation `worktreeId`, task `generateCertificate` and binding `bootRun.dependsOn generateCertificate`. They provide local execution, debugging on port `5005`, database connection selection and creation of development HTTPS certificate. In `jvmArgs`, adjust customer values, especially `webjet.smtpServer` and any other `webjet.*` settings.
+- Common setup of WAR archives via `tasks.withType(org.gradle.api.tasks.bundling.War).configureEach { ... }` instead of the original `war { ... }` block. This way the packaging rules will be applied to both `war` and `bootWar`. Keep your own project rules and exclude local `poolman-*.xml` ; do not transfer the rules intended to exclude sample basecms files to customer files.
+- Block `processResources` excluding `certificates/https-keystore.p12`. The development certificate is generated in `build/certificates` and does not belong to the distribution archive.
+- Task `verifyBootWar`, which will create and check both WAR archives including WebJET libraries, logging configuration and library separation `Tomcat`.
+
+Also, when packaging, change the exclusion `**/logback-*.xml` to `**/logback-local*.xml` as described below. If you are using tasks `prepareDataForPublicWar`, `explodeWar` or your own deployment scripts, modify them to work with the output of task `war`. In Gradle, you can get its path via:
+
+```gradle
+tasks.named('war').get().archiveFile.get().asFile
+```
+
+This avoids referring to the original archive name, which after migration belongs to the `bootWar` output.
+
+### JpaDBConfig and SpringConfig classes
+
+In the customer class `JpaDBConfig`, set your own, unique persistence unit name. Add a constant to the class, for example:
+
+```java
+private static final String PERSISTENCE_UNIT_NAME = "basecms";
+```
+
+In the `entityManagerFactory()` method, set it on the `LocalContainerEntityManagerFactoryBean` being created, after setting up the JPA adapter:
+
+```java
+emf.setJpaVendorAdapter(new EclipseLinkJpaVendorAdapter());
+emf.setPersistenceUnitName(PERSISTENCE_UNIT_NAME);
+```
+
+Replace the value `basecms` with the name of your own project. If you have multiple JPA configurations, give each one a different persistence unit name. Keep your own packages in `@EnableJpaRepositories.basePackages` and `emf.setPackagesToScan(...)`. The names `entityManagerFactoryRef` and `transactionManagerRef` must match the corresponding annotations `@Bean` and be unique in the application. In the example, they are `basecmsEntityManager` and `basecmsTransactionManager`, the configuration itself is named `@Configuration("basecms:JpaDBConfig")`.
+
+In the database platform selection, add the branch for PostgreSQL before the default branch for MySQL:
+
+```java
+} else if (Constants.DB_TYPE == Constants.DB_PGSQL) {
+    properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.PostgreSQL);
+} else {
+    properties.setProperty(PersistenceUnitProperties.TARGET_DATABASE, TargetDatabase.MySQL);
+}
+```
+
+Leave your `WebJETPersistenceProvider`, database connection, and EclipseLink settings as they are. A complete example can be found in [JpaDBConfig.java](https://github.com/webjetcms/basecms/blob/release/webjet-2026-boot/src/main/java/sk/iway/basecms/JpaDBConfig.java).
+
+In the `SpringConfig` class, add an explicit configuration name so that it does not match the WebJET CMS configuration. Instead of `@Configuration` itself, use, for example:
+
+```java
+@Configuration("basecmsSpringConfig")
+@ComponentScan({
+    "sk.iway.basecms",
+    "sk.iway.basecms.contact"
+})
+public class SpringConfig {
+}
+```
+
+Customize the bean name and scanned packages to your project. Keep existing customer methods and beans in the class.
+
+### Application and web.xml configuration
+
+Copy [application.properties](https://github.com/webjetcms/basecms/blob/release/webjet-2026-boot/src/main/resources/application.properties) into `src/main/resources`. If you already have it, merge the settings. The file contains the configuration for the embedded Tomcat, JSP, encoding, error pages, and session storage. For local execution, check in particular:
+
+| Setting | Meaning and adjustment in the project |
+| --- | --- |
+| `server.port=443` | HTTPS port of the embedded Tomcat. |
+| `webjet.server.http-redirect.enabled=true`, `webjet.server.http-redirect.port=80` | Enable and port for the concurrent HTTP connector. Despite the name, this is not a blanket redirect to HTTPS; application redirects are still controlled by WebJET CMS settings, such as `adminRequireSSL`. |
+| `server.ssl.key-store=${WEBJET_KEYSTORE_PATH}` | The path to the certificate; on `bootRun`, Gradle sets it to a file in `build/certificates`. |
+| `server.ssl.key-store-password=${WEBJET_HTTPS_KEYSTORE_PASSWORD:changeit}` | The password for the development certificate. This variable is also used by the `generateCertificate` task. |
+| `server.tomcat.max-part-count=1000` | Limit the number of parts in a multipart request, for example when submitting forms and files. |
+| `server.servlet.session.store-dir=${user.dir}/work/sessions` | Folder to save sessions when the embedded Tomcat is shut down properly; each instance should have its own folder. |
+
+The ports and TLS of the external Tomcat are still set in its `conf/server.xml`. Add `/work/` and `/logs/` to `.gitignore` so that the operational files are not stored in Git.
+
+Remove `<dispatcher>ERROR</dispatcher>` from the `StripesFilter` mapping and keep `REQUEST`. Also add the MIME mapping of the extension `properties` to `text/plain`. Keep the other custom filters, servlets and mappings; specific changes are in the [web.xml of the reference project](https://github.com/webjetcms/basecms/blob/release/webjet-2026-boot/src/main/webapp/WEB-INF/web.xml).
+
+### Logging
+
+Rename `src/main/resources/logback.xml` to `src/main/resources/logback-spring.xml`. The content is unchanged in the reference project, so leave your custom appenders, message format, and logging levels as they are. A name with a `-spring` suffix will allow Spring Boot to handle configuration loading; this is also recommended by the [Spring Boot documentation](https://docs.spring.io/spring-boot/reference/features/logging.html#features.logging.custom-log-configuration).
+
+In the common WAR archive settings, replace the original rule `rootSpec.exclude('**/logback-*.xml')` with this:
+
+```gradle
+rootSpec.exclude('**/logback-local*.xml')
+```
+
+The original rule would also exclude the new `logback-spring.xml` and the deployed application would lose the customer logging configuration. If you have other local or test configurations, such as `logback-test.xml`, exclude them separately. The resulting WAR must contain `WEB-INF/classes/logback-spring.xml`.
+
+### Starting and creating a distribution
+
+Set up a local database connection in `src/main/resources/poolman-local.xml` and run the application:
+
+```sh
+./gradlew bootRun
+```
+
+The default connection file is `/poolman-local.xml` ; you can select a different one with the environment variable `webjetDbname`. By default, the server listens on HTTP port `80`, HTTPS port `443`, and debug port `5005`. You can stop it via `Ctrl+C` or with a script `app-stop.sh` that you copy to the root of your project. On macOS/Linux, keep the script execution permission. On Windows, use `gradlew.bat`.
+
+To create and check the distribution, run:
+
+```sh
+./gradlew clean verifyBootWar
+```
+
+With the project name `basecms`, the following archives will be created in `build/libs`:
+
+| Archive | Use |
+| --- | --- |
+| `basecms-plain.war` | Output of the `war` task, intended for deployment to an external Tomcat 11. Does not contain the built-in Tomcat libraries. |
+| `basecms.war` | The output of the `bootWar` task, which has the built-in Tomcat libraries separated in `WEB-INF/lib-provided`. It can also be deployed to an external Tomcat. |
+| `basecms-public.war` | Public part without administration, created separately with the command `./gradlew buildAllArtifacts` together with `basecms-plain.war`. |
+
+The names are based on `rootProject.name` in `settings.gradle` ; if the project sets its own archive names or version, consider them in the deployment scripts. For normal deployment, use `-plain.war` and keep the existing application context, for example by deploying as `ROOT.war`. Set up the database connection as it exists on the server, as local `poolman-*.xml` are not packaged into the WAR.
+
+!> Direct execution of a packaged WAR via `java -jar` is not supported in this version yet. WebJET CMS needs an unzipped web folder to work with files. Use `bootRun` for development and WAR deployed to an external Tomcat.
+
+After migration, verify error-free startup in the log, administration login, display of JSP pages, customer REST services, database work, and file uploads. The `verifyBootWar` task checks the contents of the archives, it does not replace functional verification of the application.
+
+### Optional files for VS Code and Docker
+
+Download these files based on how you are developing and deploying your project:
+
+- **VS Code:** merge `.vscode/tasks.json` and `.vscode/launch.json` from the reference project. Start tasks use `bootRun` instead of `appStartDebug`, stop on macOS/Linux uses `app-stop.sh`. Check the values ​​of `projectName` according to the Java project in VS Code and keep your own debug configurations.
+- **Local Tomcat in Docker:** copy the entire folder `.devcontainer/tomcat/`. In `start-tomcat.sh`, edit `container_name`, `image_name` and `war_file`, which by default points to `build/libs/basecms-plain.war`. Also check `poolman_file` and the customer values ​​in `tomcat_jvm_args`, especially the SMTP server. Set the same container name in the `Docker Tomcat 11 Stop` task in `.vscode/tasks.json`. The script will build the archives and images, insert the database configuration and development certificate, and start Tomcat on ports `80` and `443`. If the database is running on the host machine, use the address `host.docker.internal` in `poolman-local.xml` instead of `localhost`.
+- **Development databases:** depending on the database you are using, download the appropriate files from `.devcontainer/db/` and set `WEBJET_DB_PASS`. The procedure is in the [README](https://github.com/webjetcms/basecms/blob/release/webjet-2026-boot/.devcontainer/db/README.md) there. You only need a separate `docker-compose-rag-pgsql.yml` if you are using a separate PostgreSQL database for RAG. These containers are not a prerequisite for migrating an existing database server.
+- **Docker image application:** if you are using an existing solution from the `docker/` folder, download the changes in `docker/Dockerfile` and `docker/docker-compose.yml`. The Dockerfile uses Tomcat 11, the corresponding Redisson adapter, and unpacks `-plain.war` and `-public.war`. Set `ARTIFACT_NAME` to the Gradle project name in both parts of the Dockerfile or via `build.args.ARTIFACT_NAME` in Compose. Edit the image name and the values ​​from `docker/.env.example`, especially `PROJECT_NAME`, database data, ports, and timezone. When downloading this solution for the first time, copy the entire `docker/` folder, as the Dockerfile also uses its Tomcat and database connection configuration.
+
+For an existing database, use a normal start. When installing to a new empty database, `Run SETUP` or `Docker Tomcat 11 SETUP Start` is ready in VS Code. They set the installation mode and require a token with a length of at least 16 characters. When starting manually, use the variables `WEBJET_SETUP_ENABLED=true` and `WEBJET_SETUP_TOKEN`. On `/wjerrorpages/setup/setup`, log in with the name `setup` and the token as the password. When finished, stop the application, turn off SETUP mode, and start it normally.
 
 ## Changes when migrating to Tomcat 9.0.104+
 

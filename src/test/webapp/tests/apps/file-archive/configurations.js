@@ -1,4 +1,5 @@
-Feature('apps.file-archive.configurations');
+// These suites share the insertion cron schedule and global archive configuration.
+Feature('apps.file-archive.configurations').tag('@singlethread');
 
 const SL = require("./SL.js");
 
@@ -67,21 +68,18 @@ Scenario('Set variable fileArchivCanEdit to default', ({ Document }) => {
 Scenario('Set variable fileArchivFromMail and verify behaviour', async ({ I, Document, DTE, TempMail }) => {
     const scheduledDocFileName = 'archive_file_test.pdf';
     const scheduledDocVirtualFileName = SL.randomName("scheduledfile");
-    const email = SL.randomName("email") + "@interway.sk";
+    const email = SL.randomName("email") + "@balat.sk";
     Document.setConfigValue("fileArchivFromMail", email);
     await SL.setCronjob('*/10', '*');
 
     I.amOnPage(SL.fileArchive);
     SL.uploadFile(scheduledDocVirtualFileName, scheduledDocFileName);
-    DTE.clickSwitch('editorFields-saveLater_0');
-    await I.fillField("#DTE_Field_editorFields-emails", "webjetarchive2"+TempMail.getTempMailDomain());
-
-    // Calculate the deadline after the queued navigation and upload steps have finished.
-    const dateUploadLater = SL.getFutureTimestamp(30);
-    DTE.fillField('editorFields-dateUploadLater', dateUploadLater);
-    I.say("Scheduled document will be uploaded at: " + dateUploadLater);
-    DTE.save('fileArchiveDataTable', true);
-    I.wait(30);
+    // Finish the upload before calculating the scheduled time; queued steps can take longer than 30 seconds.
+    await I.click({ css: '#DTE_Field_editorFields-saveLater_0' });
+    DTE.fillField('editorFields-dateUploadLater', SL.getFutureTimestamp(30));
+    I.fillField('#DTE_Field_editorFields-emails', "webjetarchive2"+TempMail.getTempMailDomain());
+    DTE.save('fileArchiveDataTable');
+    I.waitForInvisible('#fileArchiveDataTable_modal', 10);
 
     await TempMail.login("webjetarchive2");
     TempMail.openLatestEmail();

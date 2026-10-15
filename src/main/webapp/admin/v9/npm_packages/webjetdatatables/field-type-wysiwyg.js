@@ -22,18 +22,27 @@ export function typeWysiwyg() {
     }
 
     /**
-     * Adds an asynchronous CKEditor write to the single readiness chain used by default focus.
-     * The DTE open lifecycle queues these writes before focusWhenReady reads the chain.
+     * Serializes CKEditor operations and skips queued work from a closed editor session.
      *
      * @param {Object} conf DataTables Editor field configuration.
-     * @param {Promise} operation CKEditor operation that must finish before focus is safe.
+     * @param {Function} operation Starts the next asynchronous CKEditor operation.
+     * @param {boolean} [isModeChange=false] Allows a new template to recover from a failed mode change.
      * @returns {void}
      */
-    function trackEditorOperation(conf, operation) {
-        conf.wjeditorReadyPromise = Promise.all([
-            conf.wjeditorReadyPromise,
-            operation
-        ]);
+    function queueEditorOperation(conf, operation, isModeChange = false) {
+        const session = conf.editorSession;
+        const modeReady = conf.wjeditorModeReadyPromise;
+        const run = async () => {
+            if (!conf.editorOpen || conf.editorSession !== session) return;
+            // Content requires its template to succeed, even when recovering from a previous error.
+            if (!isModeChange) await modeReady;
+            if (conf.editorOpen && conf.editorSession === session) return operation();
+        };
+        // A failed write must not poison subsequent requests or a newly opened editor.
+        conf.wjeditorReadyPromise = conf.wjeditorReadyPromise.then(run, run);
+        if (isModeChange) conf.wjeditorModeReadyPromise = conf.wjeditorReadyPromise;
+        // Report the failure without changing the rejected readiness promise used by focus and dirty tracking.
+        conf.wjeditorReadyPromise.catch(error => console.error("Error updating WYSIWYG editor:", error));
     }
 
     function wait(delay) {
@@ -122,6 +131,12 @@ export function typeWysiwyg() {
                 }
 
                 conf.editorOpen = true;
+                conf.editorSession = {};
+                const json = EDITOR.currentJson;
+                const data = conf._input.val();
+                // The form is attached now. Finish the mode change before writing to its iframe.
+                queueEditorOperation(conf, () => conf.wjeditor.setJson(json), true);
+                queueEditorOperation(conf, () => conf.wjeditor.setData(data));
 
                 //console.log("data field: ", EDITOR.field( 'data' ).val());
                 if (conf.wjeditor==null) {
@@ -145,11 +160,7 @@ export function typeWysiwyg() {
                                 //instancia ckeditora, potrebuju to rozne pluginy a podobne, takze zatial takto kvoli spatnej kompatibilite
                                 window.ckEditorInstance = conf.wjeditor.ckEditorInstance;
 
-                                // Set data after JSON on first initialization so CKEditor loads the correct page styles.
-                                resolveInitialEditorReady(Promise.all([
-                                    conf.wjeditor.setJson(EDITOR.currentJson),
-                                    conf.wjeditor.setData(EDITOR.currentJson.data)
-                                ]));
+                                resolveInitialEditorReady();
 
                                 //nastav otvorene docid do inputu
                                 if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != "undefined" && EDITOR.currentJson != null) window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
@@ -174,8 +185,6 @@ export function typeWysiwyg() {
                     $("div.modal.DTED > div.modal-dialog").addClass("modal-xl");
                 } else {
                     //console.log("Setting json, json=", EDITOR.currentJson);
-                    trackEditorOperation(conf, conf.wjeditor.setJson(EDITOR.currentJson));
-
                     //nastav otvorene docid do inputu
                     if (typeof window.jsTreeDocumentOpener != "undefined" && typeof EDITOR.currentJson != "undefined") window.jsTreeDocumentOpener.setInputValue(EDITOR.currentJson.docId);
                 }
@@ -192,6 +201,7 @@ export function typeWysiwyg() {
             EDITOR.on( 'close', function ( e, type ) {
                 //console.log("EDITOR.onClose");
                 conf.editorOpen = false;
+                conf.editorSession = null;
                 conf.dirtyResetRequest = null;
                 conf.dirtyDataOriginal = undefined;
                 const iframe = $("#"+id+"-pageBuilderIframe");
@@ -241,7 +251,7 @@ export function typeWysiwyg() {
 
         get: function ( conf ) {
             //console.log("WYSIWYG get, conf=", conf, "wjeditor=", conf.wjeditor);
-            if (conf.wjeditor != null) {
+            if (conf.editorOpen && conf.wjeditor != null) {
                 var htmlCode = conf.wjeditor.getData();
                 //console.log("WYSIWYG get, htmlCode=", htmlCode);
                 //set htmlCode to input element, because it can be PageBuilder instance
@@ -282,17 +292,17 @@ export function typeWysiwyg() {
         },
 
         /**
-         * Set value to CKEditor, if editor is initialized setData, otherwise wait for EDITOR.on('open') event and set value from JSON
+         * Stores the value immediately and writes to CKEditor only while its form is open.
          * @param {*} conf
          * @param {*} val
          */
         set: function ( conf, val ) {
             //console.log("WYSIWYG set, val=", val, "conf=", conf, "wjeditor=", conf.wjeditor);
-            if (conf.wjeditor != null) {
-                trackEditorOperation(conf, conf.wjeditor.setData(val));
+            if (conf.editorOpen) {
+                queueEditorOperation(conf, () => conf.wjeditor.setData(val));
             }
             // set directly as value to not propagate change events
-            conf._input.value = val;
+            conf._input.val(val);
 
             // reset dirty status
             getThisField(conf).resetDirty(conf);
@@ -319,7 +329,70 @@ export function typeWysiwyg() {
                 }
                 var currentData = getThisField(conf).get(conf);
                 if (currentData != conf.dirtyDataOriginal) {
-                    //console.log("isDirty check, currentData=", currentData, "dirtyDataOriginal=", conf.dirtyDataOriginal);
+                    try {
+                        // Keep carriage returns so changes in line endings remain visible.
+                        const originalLines = String(conf.dirtyDataOriginal).split("\n");
+                        const currentLines = String(currentData).split("\n");
+                        let firstChangedLine = 0;
+                        while (firstChangedLine < Math.min(originalLines.length, currentLines.length) &&
+                            originalLines[firstChangedLine] === currentLines[firstChangedLine]) {
+                            firstChangedLine++;
+                        }
+                        const contextStart = Math.max(0, firstChangedLine - 1);
+                        const originalContext = originalLines.slice(contextStart, firstChangedLine + 2).join("\n");
+                        const currentContext = currentLines.slice(contextStart, firstChangedLine + 2).join("\n");
+                        const originalLine = originalLines[firstChangedLine] ?? "";
+                        const currentLine = currentLines[firstChangedLine] ?? "";
+                        let firstChangedCharacter = 0;
+                        while (firstChangedCharacter < Math.min(originalLine.length, currentLine.length) &&
+                            originalLine[firstChangedCharacter] === currentLine[firstChangedCharacter]) {
+                            firstChangedCharacter++;
+                        }
+                        const previewStart = Math.max(0, firstChangedCharacter - 15);
+                        const previewEnd = firstChangedCharacter + 20;
+                        // Quote snippets so spaces, tabs and carriage returns can be inspected in the console heading.
+                        const originalPreview = originalLines[firstChangedLine] === undefined ? "(end of content)" : JSON.stringify(originalLine.slice(previewStart, previewEnd));
+                        const currentPreview = currentLines[firstChangedLine] === undefined ? "(end of content)" : JSON.stringify(currentLine.slice(previewStart, previewEnd));
+                        const differencePreview = `${originalPreview} VS ${currentPreview}`;
+
+                        window.top.lastDirty = {
+                            field: conf.data,
+                            original: conf.dirtyDataOriginal,
+                            current: currentData,
+                            summary: `Found difference on line ${firstChangedLine + 1}: ${differencePreview}\n\nOriginal (from line ${contextStart + 1}):\n${originalContext}\n\nChanged (from line ${contextStart + 1}):\n${currentContext}`,
+                            firstDifference: {
+                                line: firstChangedLine + 1,
+                                contextStartLine: contextStart + 1,
+                                original: originalContext,
+                                current: currentContext
+                            }
+                        };
+
+                        // TEMPORARY: customer diagnostics. Log each new difference without flooding the console.
+                        const rows = [];
+                        const contextEnd = Math.min(firstChangedLine + 2, Math.max(originalLines.length, currentLines.length));
+                        for (let index = contextStart; index < contextEnd; index++) {
+                            rows.push({
+                                Line: index + 1,
+                                Change: index === firstChangedLine ? ">>> FIRST DIFFERENCE" : "",
+                                Original: originalLines[index] ?? "(end of content)",
+                                Changed: currentLines[index] ?? "(end of content)"
+                            });
+                        }
+
+                        console.groupCollapsed("%c[WebJET isDirty]%c %s: first difference on line %d: %s",
+                            "background: #fff3cd; color: #664d03; padding: 2px 6px; border-radius: 3px; font-weight: bold;",
+                            "font-weight: bold;", conf.data, firstChangedLine + 1, differencePreview);
+                        console.table(rows);
+                        console.groupCollapsed("Full HTML");
+                        console.log("%cOriginal HTML", "color: #b42318; font-weight: bold;", conf.dirtyDataOriginal);
+                        console.log("%cChanged HTML", "color: #067647; font-weight: bold;", currentData);
+                        console.groupEnd();
+                        console.log("Debug snapshot (window.top.lastDirty):", window.top.lastDirty);
+                        console.groupEnd();
+                    } catch (e) {
+                        // Debug recording must not affect dirty detection when the top window is inaccessible.
+                    }
                     return true;
                 }
             }
@@ -385,7 +458,9 @@ export function typeWysiwyg() {
 
         setJson: function(conf, json) {
             //console.log("field-type-wysiwyg setJson, json=", json, "conf=", conf);
-            trackEditorOperation(conf, conf.wjeditor.setJson(json));
+            if (conf.editorOpen) {
+                queueEditorOperation(conf, () => conf.wjeditor.setJson(json), true);
+            }
         }
 
     }

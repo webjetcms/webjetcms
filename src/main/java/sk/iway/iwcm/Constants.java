@@ -30,8 +30,12 @@ public class Constants {
 
 	public static final String NON_BREAKING_SPACE = "\u00A0";
 	private static final Pattern PRODUCTION_SERVER = Pattern.compile("(?:^|[._-])(?<!pre[._-])(?:prod|prd|production|live)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
-	private static final Pattern ACCEPTANCE_SERVER = Pattern.compile("(?:^|[._-])(?:uat|aut|acc|acceptance|stage|staging|test|testing|qa|pre[._-]?prod(?:uction)?)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern ACCEPTANCE_SERVER = Pattern.compile("(?:^|[._-])(?:uat|aut|acc|acceptance|stage|staging|pre[._-]?prod(?:uction)?)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
 	private static final Pattern INTEGRATION_SERVER = Pattern.compile("(?:^|[._-])(?:int|integration|sit)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern CUSTOMER_TEST_SERVER = Pattern.compile("(?:^|[._-])cit[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern TEST_SERVER = Pattern.compile("(?:^|[._-])(?:test|testing|qa)[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern DEMO_SERVER = Pattern.compile("(?:^|[._-])demo[0-9]*(?:[._-]|$)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern LOCAL_SERVER = Pattern.compile("(?:^|[._-])(?:local|localhost)[0-9]*(?:[._-]|$)|^127(?:\\.[0-9]{1,3}){3}$|^\\[?(?:0:0:0:0:0:0:0:1|::1)\\]?$", Pattern.CASE_INSENSITIVE);
 
 	private static Map<String, Object> constantsMap = new Hashtable<>();
 
@@ -1032,7 +1036,7 @@ public class Constants {
 		// /admin/FCKeditor/editor/skins/webjet/fck_dialog.css,
 		// /admin/css/tabpane-luna.css je tam kvoli zalozkam na frontende (docman)
 		setString("allowAdminUrls",
-				"^/admin/$, /admin/images/, /admin/m/images/, /admin/logon.jsp, ^/admin/m/$, /admin/m/logon.jsp, /admin/m/content/logon_body.jsp, /admin/index.jsp, /admin/logon.do, /admin/approve.jsp, /admin/skins/webjet6/css/, /admin/skins/webjet6/images/, /admin/skins/webjet6/logon, /admin/css/, /admin/m/css/, /admin/scripts/, /admin/m/jscripts/, /admin/license.jsp, /admin/licence.do, /admin/setup, /admin/FCKeditor/editor_set_user.jsp, /components/messages/refresher-ac.jsp, /admin/multiplefileupload.do, /admin/mem, /admin/FCKeditor/editor/skins/webjet/fck_dialog.css, /admin/css/tabpane-luna.css, /admin/imageeditor/load_image.jsp, /admin/skins/webjet8/assets/, /admin/mobile-api/,/components/_common/fulltext_preview.jsp,^/admin/logon$,^/admin/logon/$,^/admin/logon/changePassword$,^/admin/logon/setadmin/$,/admin/scripts/qrcode.js,/admin/v9/dist/fonts/,/admin/v9/dist/images/logo-",
+				"^/admin/$, /admin/images/, /admin/m/images/, /admin/logon.jsp, ^/admin/m/$, /admin/m/logon.jsp, /admin/m/content/logon_body.jsp, /admin/index.jsp, /admin/logon.do, /admin/approve.jsp, /admin/skins/webjet6/css/, /admin/skins/webjet6/images/, /admin/skins/webjet6/logon, /admin/css/, /admin/m/css/, /admin/scripts/, /admin/m/jscripts/, /admin/license.jsp, /admin/licence.do, /admin/setup, /admin/FCKeditor/editor_set_user.jsp, /components/messages/refresher-ac.jsp, /admin/multiplefileupload.do, /admin/mem, /admin/FCKeditor/editor/skins/webjet/fck_dialog.css, /admin/css/tabpane-luna.css, /admin/imageeditor/load_image.jsp, /admin/skins/webjet8/assets/, /admin/mobile-api/,/components/_common/fulltext_preview.jsp,^/admin/logon$,^/admin/logon/$,^/admin/logon/changePassword$,^/admin/logon/setadmin/$,/admin/scripts/qrcode.js,/admin/v9/dist/fonts/,/admin/v9/dist/images/logo-,^/admin/logon/device/$,^/admin/logon/location/$",
 				mods(MOD_SYSTEM_ADMIN, MOD_SECURITY),
 				"URL prefixy stranok a suborov v admin casti, ktore budu pristupne aj pre neprihlaseneho pouzivatela.");
 
@@ -1809,7 +1813,7 @@ public class Constants {
 
 		setString("xsrfUrlException", "", MOD_CSRF, "Zoznam povolenych URL pre ktore sa nekontroluje referer");
 		setString("xsrfParamNameExceptionSystem",
-				"docid,historyid,_logLevel,combineEnabled,combineEnabledRequest,groupid,forward,forceBrowserDetector,_writePerfStat,_disableCache,printTrace,isPopup,isDmail,NO_WJTOOLBAR,userlngr,page,words,datumOd,datumDo,btnSubmit,search,language,__lng,lng,userid,userId,webjetDmsp,formId,hash,invoiceId,auth,loginName,t,f,v,forum,NO_WJTOOLBAR,isPdfVersion,fbclid,utm_source,utm_medium,utm_campaign,utm_term,utm_content,formName,showTextKeys,extURL,id,removePerm,showBanner,tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId,rootDir",
+				"docid,historyid,_logLevel,combineEnabled,combineEnabledRequest,groupid,forward,forceBrowserDetector,_writePerfStat,_disableCache,printTrace,isPopup,isDmail,NO_WJTOOLBAR,userlngr,page,words,datumOd,datumDo,btnSubmit,search,language,__lng,lng,userid,userId,webjetDmsp,formId,hash,invoiceId,auth,loginName,t,f,v,forum,NO_WJTOOLBAR,isPdfVersion,fbclid,utm_source,utm_medium,utm_campaign,utm_term,utm_content,formName,showTextKeys,extURL,id,removePerm,showBanner,tempId,redirectId,dir,bid,actualDir,pId,origUrl,week,w,h,ip,c,noip,rnd,login,auth,reservationDate,iID,name,act,datum,basketAct,invoicePaymentId,email,save,scheduleId,rootDir,securityEvent,deviceConfirmation",
 				MOD_CSRF,
 				"Zoznam systemovych povolenych parametrov, ktore sa preskakuju pri GET poziadavke na kontrolu existencie parametra (bez ohladu na velkost pismen)");
 		setString("xsrfParamNameException", "", MOD_CSRF,
@@ -1908,6 +1912,8 @@ public class Constants {
 				"Zoznam grid elementov/selectorov pre pageBuilder, pouziva sa ak je potrebne mat specialne selectory, format je section: 'section', container: 'div.container', row: 'div.row', column: 'div[class*=\"col-\"]', column_content: 'div.column-content'");
 		setInt("pagebuilderLibraryImageWidth", 310, MOD_EDITOR,
 				"Maximálna šírka náhľadového obrázka v knižnici obrázkov PageBuildera.");
+		setInt("pagebuilderStructureWidth", 280, MOD_EDITOR,
+				"Width of the Page Builder structure panel in pixels.");
 
 		setString("analyticsTrackerConf", "", MOD_STAT,
 				"Slúži na konfiguráciu trackovania analytics eventov z backendu. Uvádajú sa dvojice vzorUrl:trieda oddelené ;. Napr: '/files/filearchiv/:sk.iway.iwcm.FileArchiveAnalytics;/images/trackovane/:sk.iway.iwcm.TrackujObrazok'");
@@ -2322,10 +2328,10 @@ public class Constants {
 	/**
 	 * Detects the environment from the current request's server name, independently of its domain.
 	 * Matches complete hostname tokens separated by dots, hyphens or underscores, optionally
-	 * followed by a node number. Production takes precedence over acceptance and integration;
+	 * followed by a node number. Precedence is PROD, UAT, CIT, INT, TEST, DEMO, LOCAL, DEV;
 	 * pre-production names belong to acceptance. Unknown hosts and missing requests use DEV.
 	 *
-	 * @return PROD, UAT, INT or DEV
+	 * @return PROD, UAT, CIT, INT, TEST, DEMO, LOCAL or DEV
 	 */
 	public static String getEnvironmentName() {
 		RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
@@ -2333,7 +2339,11 @@ public class Constants {
 		if (serverName != null) {
 			if (PRODUCTION_SERVER.matcher(serverName).find()) return "PROD";
 			if (ACCEPTANCE_SERVER.matcher(serverName).find()) return "UAT";
+			if (CUSTOMER_TEST_SERVER.matcher(serverName).find()) return "CIT";
 			if (INTEGRATION_SERVER.matcher(serverName).find()) return "INT";
+			if (TEST_SERVER.matcher(serverName).find()) return "TEST";
+			if (DEMO_SERVER.matcher(serverName).find()) return "DEMO";
+			if (LOCAL_SERVER.matcher(serverName).find()) return "LOCAL";
 		}
 		return "DEV";
 	}

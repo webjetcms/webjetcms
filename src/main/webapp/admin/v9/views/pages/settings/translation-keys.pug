@@ -2,12 +2,18 @@ extends ../../partials/layout
 
 block content
 
+    script.
+        window.helpLink = "/admin/settings/translation-keys/README";
+
     div.row
         div.col-md-4.tree-col
             <div class="dt-header-row clearfix">
                 <div class="row">
                     <div class="col-auto">
                         <div class="dt-buttons">
+                            <button class="btn btn-sm btn-outline-secondary buttons-jstree-settings buttons-right" type="button" data-toggle="tooltip" data-th-title="\#{datatables.button.settings.js}" data-th-aria-label="\#{datatables.button.settings.js}">
+                                <span><i class="ti ti-adjustments-horizontal" aria-hidden="true"></i></span>
+                            </button>
                             <button class="btn btn-sm btn-outline-secondary buttons-refresh" data-toggle="tooltip" data-th-title="\#{datatables.button.reload.js}">
                                 <span><i class="ti ti-refresh"></i></span>
                             </button>
@@ -16,7 +22,7 @@ block content
                 </div>
             </div>
 
-            <div id="SomStromcek" class="hide-while-loading" data-rest-url="/admin/rest/settings/translation-keys/tree" data-rest-param-name="id" data-search-restore-state="false" data-th-data-search-label="\#{components.translation_key.key}"></div>
+            <div id="SomStromcek" class="hide-while-loading" data-settings-key="jstreeSettings_translation-keys" data-rest-url="/admin/rest/settings/translation-keys/tree" data-rest-param-name="id" data-search-restore-state="false" data-th-data-search-label="\#{components.translation_key.key}"></div>
 
         div.col-md-8.datatable-col
             script.
@@ -37,6 +43,18 @@ block content
                             if (translationKeyPrefix !== "") data.fixed_keyPrefix = translationKeyPrefix;
                         }
                     });
+
+                    const searchKey = new URLSearchParams(window.location.search).get("key");
+                    if (searchKey) {
+                        translationKeysTable.one('init.dt', function() {
+                            // Wait for the header rebuild after language column visibility changes.
+                            setTimeout(function() {
+                                const input = $("#datatableInit_wrapper .dt-scroll-headInner input.dt-filter-key");
+                                input.val(searchKey);
+                                input.parent().find("button.filtrujem").trigger("click");
+                            }, 500);
+                        });
+                    }
 
                     translationKeysTable.button().add(4, {
                         extends: 'remove',
@@ -89,3 +107,5 @@ block content
                 });
 
             <table class="datatableInit table"></table>
+
+    div(data-th-include="admin/v9/dist/views/includes/tree-width-settings.html" data-th-remove="tag")

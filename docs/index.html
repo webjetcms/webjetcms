@@ -12,24 +12,13 @@
 
   <link rel="icon" type="image/x-icon" href="/assets/images/favicon-cms.ico">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
-  <link rel="stylesheet" href="/style.css">
 
 </head>
 <body>
   <div id="app">Loading...</div>
 
-  <div id="search" style="display: none;">
-    <div class="search">
-      <div class="input-wrap">
-        <div class="gcse-search"></div>
-        <div class="deepwiki-badge">
-          <span id="ai-search-alternate">Alebo</span> <a href="https://deepwiki.com/webjetcms/webjetcms" target="_blank"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki"></a>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
+    var version = 7;
     var basePath = "/latest/";
         if (
             window.location.href.indexOf("127.0.0.1") > -1
@@ -63,6 +52,15 @@
         '/': '/_404.md'
       },
       relativePath: false, //otherwise history routing will not work
+      // Forward Docsify lifecycle events to the asynchronously loaded search.
+      plugins: [function (hook) {
+        hook.mounted(function () {
+          document.dispatchEvent(new Event('documentation-mounted'));
+        });
+        hook.doneEach(function () {
+          document.dispatchEvent(new Event('documentation-rendered'));
+        });
+      }],
       tabs: {
         persist: false,
         sync: false,
@@ -104,6 +102,10 @@
         pathNamespaces: ['/sk', '/en'],
       },*/
     }
+    var stylesheet = document.createElement("link");
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = basePath + "style.css?v=" + version;
+    document.head.appendChild(stylesheet);
   </script>
   <!-- Docsify v4 -->
   <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
@@ -220,20 +222,6 @@
           return link;
       }
 
-      //move #search element into aside.sidebar after h1 element
-      var search = document.getElementById("search");
-      var sidebar = document.getElementsByClassName("sidebar")[0];
-      var h1 = sidebar.getElementsByTagName("h1")[0];
-      if (h1) {
-        h1.parentNode.insertBefore(search, h1.nextSibling);
-      }
-      search.style.display = "block";
-
-      if (window.location.href.indexOf("/en/")!=-1) {
-        document.getElementById("ai-search-alternate").innerText = "Or";
-      } else if (window.location.href.indexOf("/cs/")!=-1) {
-        document.getElementById("ai-search-alternate").innerText = "Nebo";
-      }
     });
     function handleExternalClick(link, event) {
       event.preventDefault();
@@ -242,17 +230,14 @@
       window.open(link.href, '_blank');
     }
 
-    var cx = "340da4568aa0d44ca";
-    if (window.location.href.indexOf("/en/")!=-1) cx = "44ede7df6984c4a20";
-    else if (window.location.href.indexOf("/cs/")!=-1) cx = "250b24ddabe5640e4";
-
-    //append this before body end '<script async src="">
+    // Load semantic search without blocking documentation rendering.
     var tag = document.createElement("script");
-    tag.src = "https://cse.google.com/cse.js?cx="+cx;
+    tag.src = basePath + "assets/semantic-search.js?v=" + version;
     tag.async = "async";
     document.getElementsByTagName("body")[0].appendChild(tag);
 
-    if (window.location.pathname==basePath) {
+    //detect language and redirect accordingly
+    if (window.location.pathname==basePath || window.location.pathname==basePath+"index.html") {
       try {
           var language = navigator.languages
               ? navigator.languages[0]

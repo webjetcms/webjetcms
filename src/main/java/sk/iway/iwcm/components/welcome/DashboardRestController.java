@@ -23,7 +23,7 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
- * Exposes dashboard settings and menu destinations for the authenticated administrator.
+ * Exposes dashboard settings and menu destinations.
  * The settings owner and active domain are resolved from the request.
  */
 @RestController

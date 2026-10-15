@@ -29,6 +29,8 @@ $nice-gray-200: #B2B8C8;
 $nice-gray-300: #868EA5;
 $nice-gray-400: #C2C6D2;
 $gray-text: #686F83; // Dark-60 WCAG AA on white background (5.01:1)
+$menu-selected-bg: #F1F3FF;
+$menu-selected-color: #0049BE;
 
 $nice-black: #1f2022;
 
@@ -178,6 +180,9 @@ $ai-color-hover: #E3DBFF;
 @import "5-modules/md-color-picker";
 @import "5-modules/md-debug-info";
 @import "5-modules/md-search";
+@import "5-modules/md-quick-search";
+@import "5-modules/md-help-menu";
+@import "5-modules/md-user-menu";
 @import "5-modules/md-sitemap";
 @import "5-modules/md-tabs";
 
@@ -203,6 +208,7 @@ $ai-color-hover: #E3DBFF;
 @import "5-modules/md-stats-by-charts";
 
 //PAGES
+@import "5-modules/md-environment";
 @import "5-modules/md-dashboard";
 @import "6-pages/pg-homepage";
 @import "6-pages/pg-subpage";

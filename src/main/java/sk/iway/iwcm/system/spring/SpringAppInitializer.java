@@ -1,5 +1,9 @@
 package sk.iway.iwcm.system.spring;
 
+import org.springframework.core.SpringProperties;
+
+import sk.iway.iwcm.doc.DebugTimer;
+
 import jakarta.servlet.ServletContext;
 import jakarta.servlet.ServletException;
 
@@ -13,7 +17,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 
 import sk.iway.iwcm.Logger;
-import sk.iway.iwcm.doc.DebugTimer;
 
 /**
  * Spring Boot lifecycle configuration for WebJET CMS startup.
@@ -40,6 +43,11 @@ public class SpringAppInitializer
 		  URL path: /wjerrorpages/setup/license
 		  Enter a valid WebJET administrator username, password, and the new license number.
 		  After updating the license, fully restart the application server.""";
+
+	static {
+		// Set this before Spring creates any SpEL parsers; their default compiler mode is cached statically.
+		SpringProperties.setProperty("spring.expression.compiler.mode", "OFF");
+	}
 
 	private static volatile DebugTimer dtGlobal = null;
 

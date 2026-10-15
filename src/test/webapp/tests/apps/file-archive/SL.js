@@ -258,13 +258,18 @@ module.exports = {
         I.attachFile("#xmlFile", filePath);
         I.clickCss("#saveFileForm");
 
-        I.say("Uncheck all and chose file for replace");
-        await I.executeScript(() => {
-            $( 'tbody input[type="checkbox"]' ).removeAttr( 'checked');
-        });
-
-        I.clickCss("#btnOk");
-        I.waitForText("Import ukončený", 10);
+        // Imports without duplicates skip the confirmation page automatically.
+        I.waitForFunction(() => document.body?.textContent.includes("Import ukončený") ||
+            document.querySelector('tbody input[name^="fab_"]') !== null, 30);
+        const importCompleted = await I.executeScript(() => document.body?.textContent.includes("Import ukončený"));
+        if (!importCompleted) {
+            I.say("Keep existing files when importing duplicates");
+            await I.executeScript(() => {
+                document.querySelectorAll('tbody input[name^="fab_"]').forEach(input => input.checked = false);
+            });
+            I.clickCss("#btnOk");
+        }
+        I.waitForText("Import ukončený", 30);
         I.clickCss("#btnCancel");
         I.switchToPreviousTab();
         I.closeOtherTabs();

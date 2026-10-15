@@ -24,7 +24,7 @@ public class ConstantsV9 {
 	public static void clearValuesWebJet9() {
 		Constants.setString("chunksQuantity", "25", Constants.MOD_PERFORMANCE, "Pocet zaznamov spracovanych v jednej davke pri importe cez DataTable.");
 		Constants.setString("propertiesAdminKeys",
-			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage,menu.forms,datatables.quill.toolbar.*,editor.form.sl.name,editor.form.sl.value,components.file_archiv.name,admin.dragDropFiles.*",
+			  "button.*\ncomponent.calendar.month.*\ndayfull.*\ncomponents.forms.alert.gdpr\ngroupslist.docid_url\nwebstranky.folder_id\ndefault.project.name\neditor.paragraph\neditor.h1\neditor.h2\neditor.h3\neditor.h4\neditor.h5\neditor.h6,admin.conf_editor.do_you_really_want_to_restart,admin.conf_editor.restarted\neditor.preview\neditor.tab.*,components.import_web_pages.menu,editor.newDocumentName,history.editPage,history.showPage,groupslist.compare,groupslist.edit_dir,editor.save_as_abtest.confirm.title,editor.save_as_abtest.confirm.text,editor.save_as_abtest,stat_doc.pageStat,web_pages_list.link_check_button,menu.logout,pagebuilder.modal.tab.size,pagebuilder.modal.visibility.*,datatable.tab.*,text.warning,text.info,editor.directory_name,editor.confirmExitMessage,menu.forms,datatables.quill.toolbar.*,editor.form.sl.name,editor.form.sl.value,components.file_archiv.name,admin.dragDropFiles.*,components.search.rag_answer",
 			  Constants.MOD_PROPERTIES, "Zoznam prekladovych klucov dostupnych cez administracne REST API, oddelenych novym riadkom alebo ciarkou; znak * na konci znamena prefix.");
 		Constants.setInt("webpagesTreeAutoOpenLimit", 2, Constants.mods(Constants.MOD_EDITOR, Constants.MOD_WEBPAGES), "Maximalny pocet korenovych priecinkov, pri ktorom sa strom webovych stranok automaticky otvori.");
 		Constants.setString("deepl_auth_key", "", Constants.MOD_TRANSLATIONS, "Preklady - authentifikacny kluc k sluzbe deepl.com pre preklad textov");
@@ -41,8 +41,10 @@ public class ConstantsV9 {
 		Constants.setString("passwordHashAlgorithm", "bcrypt", Constants.MOD_PASSWORD, "Meno algoritmu pre hashovanie, možné hodnoty bcrypt alebo sha-512");
 		Constants.setInt("bcryptSaltRounds", 12, Constants.MOD_PASSWORD, "log2 počtu opakovaní saltovania pri bcrypt algoritme hashovania hesiel");
 
-		//domena a priecinok s novinkami pre dashboard
+		// Domain and folder containing dashboard news
 		Constants.setString("overviewJsonUrl", "https://docs.webjetcms.sk/json/", Constants.MOD_SYSTEM_ADMIN, "Zakladna URL adresa pre nacitanie zoznamu noviniek na administracnom dashboarde.");
+		Constants.setString("adminDocumentationSearchUrl", "https://docs.webjetcms.sk/rest/rag/markdown/search", Constants.MOD_SYSTEM_ADMIN, "Valid full HTTP(S) URL of the documentation search endpoint, including its path, used by administration quick search. An empty value disables documentation search and hides its scope. Query, language and directory parameters are added automatically. Its protocol, host and port are also used for documentation and help links.");
+		Constants.setBoolean("adminDocumentationAlwaysSearch", false, Constants.MOD_SYSTEM_ADMIN, "Automatically send administration search queries to the configured documentation service after a two-second pause for at least eight characters. Enable only when the documentation service is approved to receive internal queries. Otherwise documentation is searched only on explicit request.");
 		Constants.setString("languages", "sk,cz,en,de,pl,hu,cho,ru,esp", Constants.MOD_LOCALIZATION, "Zoznam jazykov pre webjet cms");
 
 		Constants.setString("jpaToLowerFields", "description,questionText,notifyIntrotext,question,data,dataAsc,htmlHead,htmlData,attachments,message,files,html,note,descriptionLong*,answer,afterBodyData,value,mediaInfo*,userNote,messageText,htmlCode,purpose,content,propValue,defaultValue,dataResult,descriptionText,scriptBody,relatedPages,name", Constants.MOD_DATABASE, "Zoznam nazvov CLOB stlpcov pre ktore sa v pripade Oracle pouzije LOWER funkcia pri vyhladavani");
@@ -66,7 +68,7 @@ public class ConstantsV9 {
 
 		Constants.setString("DocTools.removeCharsDir", "[^a-zA-Z/_0-9\\-\\.=]", Constants.mods(Constants.MOD_SECURITY, Constants.MOD_FILES, Constants.MOD_WEBPAGES), "Regex pre znaky, ktore sa maju odstranit z nazvu suboru/adresara. Pouziva sa v metode DocTools.removeCharsDir(). Hodnota premennej sa reloadne za behu.");
 
-		Constants.setString("FileBrowserTools.forbiddenSymbols", "@,#,+,(,),{,},=", Constants.mods(Constants.MOD_SECURITY, Constants.MOD_FILES), "Zoznam zakazanych znakov v nazve suboru/adresara. Okrem defaultne zakazanych znakov sa pomocou konfiguracnej premennej definuju dalsie zakazane znaky. Oddelujeme ich ciarkou. Pouziva sa v metode FileBrowserTools.hasForbiddenSymbol(). Hodnota premennej sa reloadne iba pri starte.");
+		Constants.setString("FileBrowserTools.forbiddenSymbols", "@,#,+,{,},=", Constants.mods(Constants.MOD_SECURITY, Constants.MOD_FILES), "Zoznam zakazanych znakov v nazve suboru/adresara. Okrem defaultne zakazanych znakov sa pomocou konfiguracnej premennej definuju dalsie zakazane znaky. Oddelujeme ich ciarkou. Pouziva sa v metode FileBrowserTools.hasForbiddenSymbol(). Hodnota premennej sa reloadne iba pri starte.");
 
 		Constants.setBoolean("structureMirroringDisabledOnCreate", true, Constants.MOD_STRUCTURE_MIRRORING, "Pri hodnote true budu novo vytvorene zrkadlene stranky mat vypnute zobrazenie aby sa nezacali ihned zobrazovat");
 
@@ -105,10 +107,12 @@ public class ConstantsV9 {
 		Constants.setString("changePasswordPageUrlAdmin", "/admin/logon/changePassword", Constants.MOD_PASSWORD, "cesta k suboru (alebo stranke) na zmenu hesla z admin sekcie");
 
 		Constants.setInt("dashboardRecentSize", 8, Constants.MOD_SYSTEM_ADMIN, "Pocet zaznamov v zozname poslednych stranok/auditu na uvodnej obrazovke");
-		Constants.setString("dashboardHeroBackgroundImage", "/admin/skins/webjet8/assets/global/img/wj/wj9_bg.jpg", Constants.MOD_SYSTEM_ADMIN, "Background image in the administration dashboard header. Use a root-relative path or an HTTP(S) URL. An empty value hides the image.");
-		Constants.setString("dashboardEnvironmentName", "{ENVIRONMENT_NAME}", Constants.MOD_SYSTEM_ADMIN, "Environment label in the administration dashboard. {ENVIRONMENT_NAME} detects RequestBean.serverName, fixed label can also be used.");
-		Constants.setString("dashboardEnvironmentIcon", "auto", Constants.MOD_SYSTEM_ADMIN, "Tabler icon class for the dashboard environment label. auto uses PROD=ti-server, UAT=ti-clipboard-check, INT=ti-git-merge, DEV=ti-code. A fixed ti-* class can also be used, for example ti-database. Automatic styling uses the label's leading PROD/UAT/INT/DEV token, or the detected server environment for custom labels.");
-		Constants.setString("dashboardEnvironmentColor", "auto", Constants.MOD_SYSTEM_ADMIN, "Background color of the dashboard environment label. auto uses PROD=#D6F5EF (green), UAT=#FFF2C9 (yellow), INT=#FFE0B2 (orange), DEV=#FFD9DE (red). These colors or another #RGB/#RRGGBB value can also be set directly. Border and text colors are derived automatically. Automatic styling uses the label's leading PROD/UAT/INT/DEV token, or the detected server environment for custom labels.");
+		Constants.setString("dashboardHeroBackgroundImage", "linear-gradient(111.7deg, #031D46 0%, #073780 76.92%)", Constants.MOD_SYSTEM_ADMIN, "Administration dashboard header background. Use a CSS gradient, a root-relative image path or an HTTP(S) image URL. Empty or invalid values use the default blue gradient.");
+		Constants.setString("dashboardEnvironmentName", "{ENVIRONMENT_NAME}", Constants.MOD_SYSTEM_ADMIN, "Environment badge in the v9 header and login page. Supports macros; empty hides it (also on PROD). Displays at most 8 uppercase characters, with the full name in the tooltip.");
+		Constants.setString("dashboardEnvironmentIcon", "auto", Constants.MOD_SYSTEM_ADMIN, "Tabler icon name or ti-* class, auto for the environment default, none or empty to hide the icon. Defaults: PROD=alert-triangle, TEST=test-pipe, DEMO=eye, DEV=code, UAT=none, INT=plug-connected, CIT=user-check, LOCAL=device-laptop.");
+		Constants.setString("dashboardEnvironmentColor", "auto", Constants.MOD_SYSTEM_ADMIN, "Environment badge background: auto uses the UX palette (PROD red, TEST orange, DEMO yellow, DEV green, UAT cyan, INT blue, CIT purple, LOCAL gray). Custom #RGB/#RRGGBB colors use black or white text with at least 4.5:1 contrast.");
+		Constants.setString("dashboardEnvironmentStyle", "auto", Constants.MOD_SYSTEM_ADMIN, "Environment badge style: subtle, strong, or auto (strong for PROD, subtle elsewhere). Custom background colors are used as supplied.");
+		Constants.setString("dashboardEnvironmentDescription", "", Constants.MOD_SYSTEM_ADMIN, "Optional environment description appended to the full configured name in the hover and keyboard-focus tooltip. Supports configuration macros.");
 
 		Constants.setInt("contentBlockTypeCount", 5, Constants.MOD_EDITOR, "Pocet dostupnych typov blokov pre obsah");
 
@@ -121,9 +125,12 @@ public class ConstantsV9 {
 
 		Constants.setString("springSecurityAllowedAuths", "basic,api-token", Constants.MOD_SECURITY, "Allowed auth methods for REST services, after change restart server.");
 		Constants.setBoolean("logoffRequireCsrfToken", false, Constants.MOD_CSRF, "If true, /logoff.do requires CSRF token");
+		Constants.setString("adminLoginLocationApiKey", "", Constants.MOD_SECURITY, "Optional browser IP geolocation: empty uses IPWHOIS Free, DISABLED turns it off. A paid API key is visible to visitors of the login page. The provider receives the public IP and CMS Origin, without Referer or cookies.");
+		Constants.setBoolean("adminNewDeviceDetectionEnabled", true, Constants.MOD_SECURITY, "Notify administrators about successful logins from unrecognized browsers.");
+		Constants.setInt("adminNewDeviceMaxAgeDays", 90, Constants.MOD_SECURITY, "Browser recognition and cookie lifetime in days since the account's last successful login. Positive values only; invalid values use 90 days.");
 		Constants.setString("csrfRequiredUrls", "", Constants.MOD_CSRF, "Comma separated list of URLs that require CSRF token");
 
-		// OAuth2 konfiguračné premenné
+		// OAuth2 configuration settings
 		Constants.setString("oauth2_clients", "", Constants.MOD_OAUTH2, "Čiarkou oddelený zoznam OAuth2 poskytovateľov (napr. google,facebook,keycloak)");
 		Constants.setString("oauth2_clientsWithPermissions", "keycloak", Constants.MOD_OAUTH2, "Čiarkou oddelený zoznam OAuth2 poskytovateľov, ktorí poskytujú práva na synchronizáciu skupín a admin práv (napr. keycloak,okta)");
 		Constants.setString("oauth2_adminLogonAutoRedirect", "", Constants.MOD_OAUTH2, "Ak je nastavené na názov poskytovateľa, automaticky presmeruje na OAuth2 prihlásenie namiesto zobrazenia prihlasovacieho formulára");
@@ -256,6 +263,7 @@ public class ConstantsV9 {
 		Constants.setString("multistepform_emailFields", "email,e-mail", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_attachmentDefaultName", "prilohy.html", Constants.MOD_FORMMAIL, "");
 		Constants.setString("multistepform_subjectDefaultValue", "components.form.default_subject", Constants.MOD_FORMMAIL, "");
+		Constants.setBoolean("multistepform_validateOnBlur", true, Constants.MOD_FORMMAIL, "Validate multistep form text inputs and plain textareas on the server when they lose focus.");
 
 		Constants.setBoolean("password_passKeyEnabled", true, Constants.MOD_PASSWORD, "Povoli prihlasovanie pomocou PassKey/WebAuthN technológie. Tá zabezpečuje prihlasovanie pomocou biometrických údajov alebo bezpečnostných kľúčov. Vyžaduje HTTPS komunikáciu.");
 		Constants.setString("password_passKeyRpId", "", Constants.MOD_PASSWORD, "Relying Party ID pre PassKey/WebAuthN. Obvykle sa jedná o doménu bez subdomén (napr. example.com). Ak nie je nastavená, použije sa základná doména z URL adresy.");
@@ -280,6 +288,9 @@ public class ConstantsV9 {
 		/* ***** ***** ***** RAG SECTION ***** ***** ***** */
 
 		Constants.setBoolean("ragSemanticSearchEnabled", false, Constants.MOD_RAG, "Povolí sémantické vyhľadávanie nad vektorovým úložiskom PostgreSQL/pgvector alebo MariaDB Vector.");
+		Constants.setString("ragMarkdownFolders", "", Constants.MOD_RAG, "Global comma-separated Markdown roots shared by all domains: application-relative paths (/admin/docs/webjetcms) or absolute filesystem paths (file:/srv/manuals). The file:/docs alias requires a global symlinkTranslate mapping, for example /docs/|/srv/documentation/webjetcms/. Indexing includes subfolders. The nearest language folder in the root and source path determines the language; files without one are skipped. Languages come from the global languages setting, with sk, en and cs always supported. Search access is controlled by ragMarkdownSearchRequireLogin.");
+		Constants.setString("restAllowedIpAddresses-MarkdownSearchRestController", "", Constants.MOD_RAG, "Allowed IP addresses or comma-separated IP prefixes for /rest/rag/markdown/search. Empty uses the global restAllowedIpAddresses setting (127.0.0.1 by default). Set to * to allow all IP addresses. The ragMarkdownSearchRequireLogin setting still applies.");
+		Constants.setBoolean("ragMarkdownSearchRequireLogin", true, Constants.MOD_RAG, "Require a logged-in user for /rest/rag/markdown/search. Any authenticated user is accepted without administrator access. Set to false to allow anonymous searches of configured Markdown roots, including file: and /admin/ roots. Explicit file permissions and blocked paths still apply. This setting does not change access to the documentation viewer or index administration.");
 
 		/* RAG - VECTOR STORE */
 		Constants.setInt("ragSearchEfSearch", 40, Constants.MOD_RAG, "HNSW parameter ef_search — čím vyššia hodnota, tým lepší recall ale pomalšie vyhľadávanie. Default je 40, pre väčšie datasety zvážte zvýšenie na 100 alebo viac.");
@@ -289,12 +300,13 @@ public class ConstantsV9 {
 		Constants.setString("ragEmbeddingProvider", "openai", Constants.MOD_RAG, "Predvolený poskytovateľ použitý pri vytvorení chýbajúceho RAG embedding asistenta. Vstavané hodnoty sú openai, gemini a openrouter; použiť možno aj identifikátor zaregistrovaného vlastného poskytovateľa.");
 		Constants.setString("ragEmbeddingModel", "text-embedding-3-small", Constants.MOD_RAG, "Predvolený model použitý pri vytvorení chýbajúceho RAG embedding asistenta.");
 		Constants.setInt("ragEmbeddingDimensions", 1536, Constants.MOD_RAG, "Počet dimenzií embedding vektora generovaného pre RAG. Hodnota musí zodpovedať použitému modelu a definícii stĺpca vo vektorovej databáze.");
-		Constants.setInt("ragEmbeddingChunkSize", 1000, Constants.MOD_RAG, "Maximálna veľkosť jedného textového chunku v znakoch pri rozdeľovaní dokumentov pre RAG indexovanie.");
-		Constants.setInt("ragEmbeddingChunkOverlap", 200, Constants.MOD_RAG, "Počet znakov, ktoré sa majú prekrývať medzi susednými chunkmi pri rozdeľovaní textu pre RAG indexovanie.");
+		Constants.setInt("ragEmbeddingChunkSize", 1000, Constants.MOD_RAG, "Približná cieľová veľkosť textového chunku v znakoch pri RAG indexovaní. Maximum je o 50 % vyššie (predvolene 1500 znakov). Hranice viet a odsekov sa podľa možnosti zachovajú; príliš dlhé časti sa rozdelia medzi slovami alebo uprostred príliš dlhého slova. Hodnota menšia alebo rovná nule vypne rozdeľovanie.");
+		Constants.setInt("ragEmbeddingChunkOverlap", 200, Constants.MOD_RAG, "Približné prekrytie v znakoch medzi susednými chunkmi pri RAG indexovaní. Prispôsobuje sa celým vetám alebo odsekom tak, aby každý ďalší chunk pridal nový obsah.");
 
 		/* RAG - SEMANTIC SEARCH */
 		Constants.setString("ragSemanticSearchMinSimilarity", "0.2", Constants.MOD_RAG, "Minimálna hodnota similarity pre výsledky sémantického vyhľadávania. Ak je hodnota mimo intervalu 0-1, použije sa najbližšia hranica.");
 		Constants.setInt("ragSemanticSearchMinResults", 3, Constants.MOD_RAG, "Minimálny počet výsledkov sémantického vyhľadávania. Ak ich je po filtrovaní menej, doplnia sa podľa najvyššej similarity.");
+		Constants.setString("ragRerankLexicalWeight", "0.15", Constants.MOD_RAG, "Váha textovej zhody pri lokálnom preusporiadaní výsledkov. Váha pôvodného skóre vyhľadávania je 1 mínus táto hodnota: 0.15 nastaví pomer 85/15. Hodnoty sa obmedzia na interval 0-1; pri neplatných hodnotách, NaN alebo nekonečne sa použije 0.15. Nula zachová iba pôvodné skóre vyhľadávania. Nastavenie ovplyvňuje výsledky vyhľadávania aj RAG kontext bez potreby opätovného indexovania.");
 
 		/* RAG - HYBRID */
 		Constants.setBoolean("ragHybridSearchEnabled", true, Constants.MOD_RAG, "Zapne hybridné vyhľadávanie nad rag_embedding_chunks kombinujúce vektorové a fulltext výsledky.");

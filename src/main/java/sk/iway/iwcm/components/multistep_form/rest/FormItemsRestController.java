@@ -14,9 +14,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,6 +50,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.NotifyBean;
 import sk.iway.iwcm.system.datatable.NotifyBean.NotifyType;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
+import sk.iway.iwcm.system.datatable.RowReorderDto;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 import sk.iway.iwcm.utils.Pair;
 
@@ -349,7 +353,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     }
 
     /**
-     * Regenerates the stored form pattern after a standard item save.
+     * Clears cached validation fields and regenerates the form pattern after a standard item save.
      *
      * @param entity  submitted form item
      * @param saved  persisted form item
@@ -359,6 +363,7 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
         //
         if(MultistepFormsService.getChartStatInfo(getRequest()) != null) return;
 
+        MultistepFormsService.clearValidationFieldsCache(saved.getFormName(), saved.getDomainId());
         // After save ensure that form pattern is updated
         multistepFormsService.updateFormPattern(entity.getFormName());
     }
@@ -378,15 +383,33 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
     }
 
     /**
-     * Regenerates the stored form pattern after an item is deleted.
+     * Clears cached validation fields and regenerates the form pattern after an item is deleted.
      *
      * @param entity  deleted form item
      * @param id  identifier of the deleted item
      */
     @Override
     public void afterDelete(FormItemEntity entity, long id) {
+        MultistepFormsService.clearValidationFieldsCache(entity.getFormName(), CloudToolsForCore.getDomainId());
         // After save ensure that form pattern is updated
         multistepFormsService.updateFormPattern(entity.getFormName());
+    }
+
+    /**
+     * Clears cached field ordering after a successful row reorder, which bypasses the save hooks.
+     *
+     * @param request request identifying the form and step
+     * @param rowReorderDto requested item order
+     * @return result of the data-table reorder operation
+     */
+    @Override
+    @PostMapping(value = "/row-reorder", consumes = org.springframework.http.MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Boolean> rowReorder(HttpServletRequest request, @RequestBody RowReorderDto rowReorderDto) {
+        ResponseEntity<Boolean> response = super.rowReorder(request, rowReorderDto);
+        if(response.getStatusCode().is2xxSuccessful() && response.getBody() == Boolean.TRUE) {
+            MultistepFormsService.clearValidationFieldsCache(MultistepFormsService.getFormName(request), CloudToolsForCore.getDomainId());
+        }
+        return response;
     }
 
     /**

@@ -2,46 +2,56 @@
 
 Na úvodní obrazovce můžete rychle zkontrolovat návštěvnost, odeslané formuláře či stránky čekající na schválení a vrátit se k rozpracovaným stránkám.
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/X2GNFn8IpCI" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Přehled tvoří **widgety**, tedy karty s konkrétními údaji, například grafem návštěvnosti nebo seznamem požadavků na schválení. Vyberte si ty, které využíváte, a uspořádejte je podle toho, co chcete sledovat jako první. Pomocí [zkratek](#vaše-zkratky) si otevřete často používanou část administrace nebo konkrétní složku bez hledání v menu.
 
-Při prvním otevření se podle vašich oprávnění zobrazí výchozí widgety **Návštěvnost**, **Formuláře**, **Ke schválení**, **Chyby 404**, **Pokračujte v práci**, **Odkud návštěvníci přišli**, **Nejbližší publikování** a **Newsletter**. Další widgety si můžete sami přidat. V horní části je přivítání se zkratkami a novinkami, aktivní přihlášení a vyhledávání.
+Při prvním otevření se podle vašich oprávnění zobrazí výchozí widgety **Návštěvnost**, **Formuláře**, **Ke schválení**, **Chyby 404**, **Pokračujte v práci**, **Odkud návštěvníci přišli**, **Nejbližší publikování** a **Newsletter**. Další widgety si můžete sami přidat. V horní části je přivítání se zkratkami a kartou novinek. Pod ním najdete systémová upozornění. Vyhledávání je dostupné přes tlačítko v hlavičce ze všech částí administrace.
 
 Nabídka widgetů odpovídá vašim oprávněním. Rozložení se ukládá na váš účet a je společné pro všechny domény a prohlížeče. Výběr konkrétního formuláře nebo kampaně se pamatuje zvlášť pro každou doménu.
 
 ![](dashboard.png)
 
-Při přivítání se zobrazuje i označení prostředí, například **PROD**, **UAT**, **INT** nebo **DEV**. Pomáhá vám rozlišit, zda pracujete s produkčním webem nebo v testovacím prostředí. Správce může upravit jeho text, ikonu, barvu a obrázek pozadí podle [konfigurace úvodní obrazovky](../../admin/setup/configuration/dashboard.md).
+Před názvem stránky v hlavičce celé administrace a na přihlašovací stránce se zobrazuje označení prostředí: **PROD**, **TEST**, **CIT**, **INT**, **UAT**, **DEMO**, **LOCAL** nebo **DEV**. Je také v titulku karty prohlížeče, abyste rozlišili otevřená prostředí. Správce může upravit text, ikonu, barvu, styl a popis označení podle [konfigurace prostředí](../../admin/setup/configuration/dashboard.md).
 
 ## Přizpůsobení přehledu
 
 Na začátek přehledu umístěte widgety s údaji, které kontrolujete nejčastěji. Pokud například zpracováváte formuláře a schvalujete obsah, vyberte widgety **Formuláře** a **Ke schválení**. Widgety, které nepotřebujete, můžete odstranit.
 
-Klepněte na **Upravit přehled**. Zobrazí se možnosti **Přidat widget**, **Obnovit** a **Hotovo**.
+Klepněte na **Upravit přehled**. Zobrazí se panel s možnostmi **Obnovit výchozí**, **Přidat widget**, **Zrušit** a **Uložit**. Při posouvání zůstává pod hlavičkou. Widgety mají přerušovaný obrys, úchyt pro přesun a tlačítko **Možnosti widgetu**. Doplňkové ikony a odkazy v hlavičkách se během úprav skryjí. Systémová upozornění zůstávají aktivní.
 
 ![](dashboard-edit.png)
 
-Tlačítkem **Přidat widget** otevřete katalog. Vyhledejte požadovaný widget podle názvu a při něm klikněte na **Přidat widget**.
+Tlačítkem **Přidat widget** otevřete katalog. Vyhledejte požadovaný widget podle názvu a při něm klikněte na **Přidat** nebo **Přidat další**. Otevře se nastavení s náhledem. Vyberte velikost a další možnosti a potvrďte je tlačítkem **Přidat widget**. Widget přibude na konec rozpracovaného přehledu a dialog se zavře. Pokud nastavení zrušíte, widget se nepřidá. Pro další widget znovu otevřete katalog z lišty úprav.
 
 ![](dashboard-catalogue.png)
 
-Při widgetu použijte menu se třemi tečkami:
+Při widgetu použijte tlačítko **Možnosti widgetu**:
 
-- **Nastavení widgetu**: zvolte dostupnou velikost a další nastavení, například období nebo formulář. Ne každý widget nabízí více velikostí.
-- **Přesunout widget**: vyberte, před kterou kartu se má přesunout, nebo jej přesuňte na konec přehledu. Na počítači můžete použít také rukojeť k tahání.
-- **Odstranit widget**: odstraní kartu z vašeho přehledu. Data v aplikaci zůstávají zachována. Bezprostředně po odstranění je dostupná možnost **Vrátit zpět**. Po další úspěšně uložené úpravě tato možnost zanikne. Widget můžete kdykoli přidat znovu.
+- **Nastavení widgetu**: v dialogovém okně zvolte dostupnou velikost a další nastavení, například období nebo formulář. Velikost vyberte kartičkou s ilustrací rozměru a označením, například **1x1** nebo **3x3**. Ne každý widget nabízí více velikostí.
+- **Přesunout klávesnicí**: widget se zvedne, šipky změní jeho pozici, **Enter** jej položí a **Esc** vrátí. Stejný přesun spustíte mezerníkem na úchytu. Při tažení myší přerušovaný cíl označuje místo vložení; **Esc** přesun zruší.
+- **Odstranit z přehledu**: odstraní kartu bez potvrzení. Data v aplikaci zůstávají zachována. Oznámení nabídne **Zpět** na 8 sekund; při podržení myši nebo zaměření klávesnicí se odpočet zastaví. **Ctrl Z** vrátí poslední úpravu i po zmizení oznámení. Widget můžete přidat znovu z katalogu.
 - **Obnovit údaje**: načte aktuální údaje dané karty.
 
-V dialogu **Nastavení widgetu** upravte dostupné možnosti a potvrďte je tlačítkem **Uložit**. Větší kartu zvolte, když chcete vidět podrobnější graf nebo seznam. Menší karta zabere v přehledu méně místa.
+V dialogovém okně **Nastavení widgetu** je vlevo náhled widgetu se skutečnými údaji a vpravo jeho nastavení. Náhled se mění dle zvolené velikosti, barvy i dalších možností. Na menší obrazovce se nastavení zobrazí pod náhledem. Úpravy potvrďte tlačítkem **Použít**. Změní se rozpracovaný přehled. Větší kartu zvolte, když chcete vidět podrobnější graf nebo seznam. Menší karta zabere v přehledu méně místa.
+
+V části **Barva pozadí** vyberte jemný odstín z palety nebo **Vlastní barvu**, kterou můžete zadat i kódem HEX. Vybraná barva se hned zobrazí v náhledu widgetu. Při příliš tmavé vlastní barvě vás nastavení vyzve zvolit světlejší odstín. Volba **Výchozí** obnoví původní pozadí konkrétního widgetu; nové widgety používají tuto barvu automaticky.
+
+Ve widgetu **Návštěvnost** se barvy čar grafu, bodů a legendy přizpůsobí odstínu pozadí automaticky. U bílého nebo šedého pozadí jsou čáry šedé. Předchozí období zůstává odlišeno přerušovanou čarou.
 
 ![](dashboard-widget-settings.png)
 
-Po dokončení úprav klikněte na **Hotovo**.
+Po dokončení úprav klikněte na **Uložit** v liště. Až tímto krokem se uloží pozice, velikosti, nastavení i přidání či odstranění widgetů. Zobrazí se oznámení **Přehled byl uložen** a režim úprav se zavře. Při chybě zůstanou rozpracované změny dostupné pro opětovné uložení.
+
+Tlačítko **Zrušit** při neuložených změnách otevře potvrzení s možnostmi **Pokračovat v úpravách** a **Zahodit změny**. Při odchodu ze stránky upozorní prohlížeč. Zkratky mají vlastní režim úprav přes tužku v horním panelu a ukládají se samostatně.
 
 Na menší obrazovce se karty automaticky uspořádají pod sebe při zachování pořadí. Rozložení může obsahovat nejvýše 48 položek včetně zkratek, přihlášení, novinek a vyhledávání.
 
-Tlačítko **Obnovit** naleznete v liště úprav za tlačítkem **Přidat widget**. Po potvrzení v dialogu se obnoví výchozí výběr widgetů, jejich velikosti, pořadí a nastavení. Vymažou se i filtry widgetů ve všech doménách a potvrzení přečtení novinek. Vaše zkratky a ostatní nastavení účtu zůstanou zachovány.
+Tlačítko **Obnovit výchozí** naleznete v liště úprav před tlačítkem **Přidat widget**. Po potvrzení v dialogu se připraví výchozí výběr widgetů, jejich velikosti, pořadí a nastavení. Až tlačítkem **Uložit** se změna uloží a vymažou se i filtry widgetů ve všech doménách. Vaše zkratky a ostatní nastavení účtu zůstanou zachovány.
 
-Pokud při klepnutí na **Obnovit** podržíte klávesu **Shift**, po potvrzení se přehled nahradí všemi dostupnými widgety v každé podporované velikosti. Nepotřebné varianty můžete následně odstranit.
+Pokud při klepnutí na **Obnovit výchozí** podržíte klávesu **Shift**, po potvrzení se připraví přehled se všemi dostupnými widgety v každé podporované velikosti. Nepotřebné varianty můžete odstranit a výsledek potvrdit tlačítkem **Uložit**.
 
 ## Dostupné informace
 
@@ -55,7 +65,7 @@ Statistické widgety ve výchozím nastavení používají posledních sedm ukon
 
 ### Pokračujte v práci
 
-K rozpracované stránce se vrátíte bez hledání její složky. Widget zobrazuje maximálně šest vašich naposledy upravovaných stránek s náhledem obrázku, umístěním a datem úpravy. Klepnutím otevřete editor stránky. Při menší velikosti karty můžete seznam rolovat.
+K rozpracované stránce se vrátíte bez hledání její složky. Widget zobrazuje maximálně šest vašich naposledy upravovaných stránek s náhledem obrázku, umístěním a datem úpravy. Klepnutím otevřete editor stránky. Nadpis widgetu otevře celý seznam webových stránek. Při menší velikosti karty můžete seznam rolovat.
 
 ### Ke schválení
 
@@ -111,17 +121,71 @@ Při odesílání se údaje viditelné karty obnovují každých 30 sekund. Poč
 
 ### Co je nového
 
-V uvítacím panelu naleznete novinky aktuální verze WebJET CMS. Tlačítkem **Sbalit novinky** potvrdíte jejich přečtení a ponecháte stručný souhrn. Tlačítkem **Více info** je znovu rozbalíte.
+Vpravo v modrém uvítacím panelu naleznete novinky aktuální verze. Při načtení stránky se vybere náhodná novinka a každých 8 sekund se zobrazí další. Novinky můžete přepínat také šipkami nebo tečkami; velikost karty se přitom nemění. Přepínání pozastavíte tlačítkem pauzy. Při ukázání myší se dočasně zastaví, při ovládání klávesnicí se zastaví až do opětovného spuštění. Při omezených animacích v nastavení systému se automaticky nespouští.
 
-Systémová upozornění informují o stavu, který vyžaduje pozornost, a zůstávají viditelné do vyřešení příčiny. Klepnutím na nadpis upozornění rozbalíte jeho vysvětlení a dostupnou nápravnou akci.
+Klepnutí na nadpis nebo text novinky i tlačítko **Co je nového (5)** rozbalí všechny body přes celou šířku modrého panelu. Číslo odpovídá počtu novinek. Přivítání a zkratky se dočasně skryjí; tlačítko **Sbalit novinky**, ikona vpravo nahoře nebo klávesa **Esc** je znovu zobrazí. Odkaz **Seznam změn** i číslo verze u štítku **Nové** otevřou úplnou historii vydání v dokumentaci.
+
+Štítek **Nové** se zobrazuje 30 dní od prvního zobrazení daného textu pod vaším účtem. Změna textu spustí nových 30 dní i ve stejné verzi. Stav se ukládá do vašich nastavení administrace, proto platí i na jiném zařízení. Rozbalení ani sbalení novinek štítek nezruší.
+
+### Systémová upozornění
+
+V této části zkontrolujete problémy vyžadující vaši pozornost. Upozornění na přihlášení z neznámého zařízení je vždy první. Ostatní upozornění jsou seřazena podle závažnosti: chyby, varování a informace. Každý řádek obsahuje vysvětlení a dostupnou akci. Chyby zůstávají viditelné do vyřešení příčiny. Běžné varování můžete odložit na 7 dní tlačítkem **Připomenout později** nebo **×**.
+
+#### Nové přihlášení z neznámého zařízení
+
+Upozornění se zobrazí po úspěšném přihlášení v prohlížeči, který WebJET CMS pro váš účet nerozpozná jako použitý během posledních 90 dnů. Současně vám odešle email. U aktuálního prohlížeče se zobrazí informace **Přihlásili jste se z nového prohlížeče** s časem a označením **Tento prohlížeč**. U jiného zařízení zůstává varování s prohlížečem, operačním systémem, IP adresou a časem přihlášení. Zkontrolujte, zda údaje odpovídají vašemu přihlášení.
+
+![Upozornění po přihlášení z nového prohlížeče](device-new-browser.png)
+
+Email **Nové přihlášení do WebJET CMS** obsahuje údaje o prohlížeči, IP adrese, čase a prostředí přihlášení. Tlačítky v emailu můžete přihlášení potvrdit nebo otevřít jeho detail pro zabezpečení účtu.
+
+![Email s upozorněním na nové přihlášení a možnostmi potvrzení nebo zabezpečení účtu](device-new-browser-email.png)
+
+#### Pokud přihlášení znáte
+
+Klikněte na **Byl jsem to já**. Na váš email se odešle šestimístný kód. Zadejte jej do pole pod upozorněním a klikněte na **Potvrdit kód**.
+
+![Potvrzení nového prohlížeče kódem z emailu](device-confirm-code.png)
+
+Kód naleznete v emailu **Kód pro potvrzení přihlášení do WebJET CMS**:
+
+![Email s jednorázovým kódem pro potvrzení nového prohlížeče](device-confirm-code-email.png)
+
+Kód platí 10 minut a umožňuje maximálně 5 pokusů. Tlačítkem **Poslat nový kód** lze po minutě poslat další kód, který nahradí předchozí. Teprve po ověření kódu se zařízení potvrdí a upozornění se odstraní ve všech vašich prohlížečích po obnovení přehledu.
+
+Přihlášení můžete potvrdit i odkazem **Byl jsem to já** v původním emailu. Odkaz platí 24 hodin, funguje pouze po přihlášení do příslušného účtu a lze jej použít jednou. Nový kód tento odkaz nezruší; úspěšné potvrzení zneplatní odkaz i kód.
+
+#### Pokud přihlášení neznáte
+
+Při upozornění nebo u zařízení v kartě **Moje zařízení** v okně **Aktivní přihlášení** klikněte na **Nebyl jsem to já**. Zařízení se zablokuje a jeho známé pořady se odhlásí. Malé okno **Zajistěte svůj účet** zobrazí výsledek a doporučené další kroky. Pokud zablokujete prohlížeč, ve kterém právě pracujete, odhlásí i vás.
+
+![](device-my-devices.png)
+
+Odkaz **Nebyl jsem to já – zajistit účet** v emailu po přihlášení otevře stejné malé okno, ale zařízení ještě nezablokuje. Pokud přihlášení neznáte, potvrďte akci tlačítkem **Zablokovat zařízení**.
+
+![](device-block.png)
+
+Po zablokování použijte **Změnit heslo** a zkontrolujte ostatní přihlášení. Tlačítko **Zapnout 2FA** otevře nastavení dvoustupňového ověřování, pokud je pro účet dostupné a ještě není zapnuté. **Později** pouze zavře okno. U firemního účtu změňte heslo u poskytovatele přihlášení nebo kontaktujte správce.
+
+Při dalším přihlášení ze zablokovaného zařízení se po zadání správných přihlašovacích údajů zobrazí [výzva k ověření emailovým kódem](logon.md#ověření-zablokovaného-zařízení). Až správný kód prohlížeč odblokuje.
+
+#### Zapamatování prohlížeče a platnost upozornění
+
+Po úspěšném dvoufaktorovém ověření se nezablokovaný prohlížeč potvrdí automaticky. O novém zařízení obdržíte informační email s možností **Nebyl jsem to já**, bez potřeby dalšího potvrzování. Pokud jste zařízení zablokovali, kód z emailu se vyžaduje až po 2FA. Postup popisuje [Ověření zablokovaného zařízení](logon.md#ověření-zablokovaného-zařízení).
+
+Toto upozornění nemá křížek ani možnost odložení. Zmizí po potvrzení **Byl jsem to já**, po úspěšném zablokování zařízení nebo po 7 dnech od zaznamenání události. Další přihlášení tuto sedmidenní lhůtu neprodlužují.
+
+Zablokované zařízení zůstává blokováno i po odstranění upozornění. Zjištění nového zařízení, jeho potvrzení (včetně 2FA a odblokování kódem) a zablokování se zapisují do auditu jako typ **USER_DEVICE**. Záznam obsahuje uživatele, ID zařízení, prohlížeč, operační systém a IP adresu zařízení.
+
+WebJET CMS si prohlížeč pamatuje pomocí cookie. Každé dokončené přihlášení prodlouží jeho zapamatování o dalších 90 dní; běžné odhlášení cookie neodstraní. Nové upozornění proto můžete obdržet i po vymazání cookies, při použití jiného profilu nebo anonymního okna. Po vymazání nebo expiraci cookie se neuplatní ani předchozí blokování prohlížeče. Aktualizace prohlížeče či změna IP adresy při zachované cookie nové upozornění nevyvolá. Lhůtu může správce změnit v [konfiguraci](../../admin/setup/configuration/dashboard.md).
 
 ### Vyhledávání a pomoc
 
-Použijte jej, když chcete najít stránku v administraci nebo návod k práci s WebJET CMS. Zvolte **V administraci** nebo **V dokumentaci** a zadejte hledaný výraz. Hledání v dokumentaci otevře nové okno se zadaným výrazem. Pomoc k právě otevřené části administrace naleznete i přes kontextového nápovědy v hlavičce.
+Klepněte na tlačítko **Hledat…** v hlavičce nebo stiskněte **Ctrl+K** ve Windows, případně **⌘K** na Macu. [Rychlé vyhledávání](search/README.md) najde stránky podle názvu nebo URL a nabídne také výsledky ze souborů, položek administrace, uživatelů a textových klíčů podle vašich oprávnění. Rozsah **Dokumentace** otevře návod se zadaným výrazem v nové kartě. Pomoc k právě otevřené části administrace naleznete i přes nápovědu v hlavičce.
 
 ### Moje aktivní přihlášení
 
-Umožňuje zkontrolovat vaše aktivní přihlášení a odhlásit se z jiného zařízení nebo prohlížeče, který již nepoužíváte. Je vždy v horní části přehledu a nelze jej odstranit. Podrobnosti naleznete v části [Přihlášení](#přihlášení).
+Umožňuje zkontrolovat vaše aktivní přihlášení a odhlásit se z jiného zařízení nebo prohlížeče, který již nepoužíváte. Pevný panel je vždy v horní části přehledu a nelze jej odstranit. Z katalogu můžete přidat také jeho samostatný widget do osobního přehledu. Klepnutím na nadpis se šipkou otevřete kartu **Moje přihlášení**. Podrobnosti naleznete v části [Přihlášení](#přihlášení).
 
 ### Přihlášeni admini
 
@@ -145,11 +209,21 @@ Zobrazuje graf a číselné hodnoty zatížení procesoru serveru. Správce mů�
 
 ## Přihlášení
 
-V horní části přehledu můžete zkontrolovat svá aktivní přihlášení a odhlásit se z jiného zařízení nebo prohlížeče. Seznam ostatních přihlášených administrátorů je samostatný widget **Přihlášení admini**, dostupný podle oprávnění.
+Okno **Aktivní přihlášení** otevřete z kterékoli stránky administrace přes [uživatelské menu v hlavičce](README.md#uživatelské-menu): klikněte na své jméno a vyberte **Aktivní přihlášení**. Přejdete na úvodní stránku, kde se otevře karta **Moje přihlášení**.
+
+U více aktivních relací naleznete v systémových upozorněních odkaz **Aktivní přihlášení**. Seznam si můžete přidat také jako widget **Moje aktivní přihlášení**. Seznam ostatních přihlášených administrátorů je samostatný widget **Přihlášení admini**, dostupný podle oprávnění.
 
 ### Moje aktivní přihlášení
 
-Panel **Moje aktivní přihlášení** zobrazuje všechny vaše aktivní relace, tedy přihlášení pod vaším účtem, s prohlížečem, časem a IP adresou. Při delším seznamu můžete jeho obsah posouvat. Vaše aktuální relace je první a má zelenou tečku s popisem **Toto přihlášení**. Ostatní relace můžete odhlásit přímo v seznamu, například když jste se zapomněli odhlásit na jiném počítači. Tento panel je vždy v horní části a nelze jej odstranit.
+Widget **Moje aktivní přihlášení** zobrazuje všechny vaše aktivní relace, tedy přihlášení pod vaším účtem, s prohlížečem, časem a IP adresou. V okně aktivních přihlášení sloupec **Poloha** zobrazuje [orientační město a zemi](../../admin/setup/configuration/dashboard.md#orientační-poloha-přihlášení), pod nimi menším písmem IP adresu. Pokud poloha není dostupná, zobrazí se **Neznámá**. Město se odhaduje podle veřejného internetového připojení; IP zjištěná serverem může být interní. Při delším seznamu můžete jeho obsah posouvat. Vaše aktuální relace je první a má zelenou tečku s popisem **Toto přihlášení**. Ostatní relace můžete odhlásit přímo v seznamu, například když jste se zapomněli odhlásit na jiném počítači.
+
+Samostatný widget v osobním přehledu zobrazí při jediném aktuálním pořadu informaci, že jste přihlášeni pouze zde. U více relací ukáže jejich počet a ve větších variantách i seznam s poslední aktivitou. Relace známého, ale dosud nepotvrzeného zařízení zvýrazní oranžovým pozadím a štítkem **Nové**. Pokud stav zařízení nezná, zvýraznění nepřidává. Tlačítko **Odhlásit všechny ostatní** otevře potvrzovací dialog; odhlášení se provede až po potvrzení.
+
+Klepnutím na nadpis widgetu se šipkou otevřete okno **Aktivní přihlášení** v kartě **Moje přihlášení**. Kromě vlastních pořadů nabízí správu vašich zařízení, historii přihlášení za posledních 30 dní a podle oprávnění i přihlášené administrátory. Tlačítko **Změnit heslo** ve spodní části okna otevře váš profil pro změnu hesla. Informační ikona vedle tlačítka zobrazí pokyny pro změnu hesla u firemního účtu.
+
+Karta **Moje přihlášení** zobrazuje pouze aktivní relace. Jeden prohlížeč může mít více pořadů. Při každé relaci vidíte prohlížeč s verzí, pod ním operační systém s verzí a datum přihlášení. Aktuální relace má při názvu prohlížeče štítek **Toto přihlášení** ; u ostatních můžete použít akci **Odhlásit**.
+
+Pokud WebJET CMS běží v režimu clusteru, v kartě **Moje přihlášení** se pod IP adresou zobrazuje **Server název serveru**. Jedná se o jméno serveru (uzlu) clusteru, na kterém je dané přihlášení aktivní. Jednotlivá přihlášení mohou být na různých serverech clusteru. Mimo režim clusteru se tento údaj nezobrazuje.
 
 ![](sessions.png)
 
@@ -159,9 +233,21 @@ Data se aktualizují po přihlášení uživatele. Pokud potřebujete častějš
 
 Úloha na pozadí z databáze smaže záznamy starší 60 minut. Pokud není nastavena, při přihlášení uživatele se smažou záznamy starší 24 hodin.
 
+### Moje zařízení
+
+Karta **Moje zařízení** zobrazuje uložené prohlížeče vašeho účtu včetně těch, které již nemají aktivní relaci. Záznamy jsou seřazeny od naposledy použitých a stránkované po 20. Tlačítko **Obnovit údaje** načte aktuální údaje.
+
+U každého zařízení vidíte prohlížeč a jeho verzi, operační systém, čas zaznamenání, IP adresu a poslední použití. Stavový štítek je u názvu prohlížeče, pod ním je operační systém s verzí a datum zaznamenání. **Poslední aktivita** v této kartě znamená poslední úspěšné přihlášení. Sloupec **Poloha** obsahuje město a zemi, pod nimi IP adresu z posledního úspěšného přihlášení. Při nedostupné poloze se zobrazí **Neznámá**, i když byla při starším přihlášení známa. Prohlížeč a systém pocházejí ze zaznamenání zařízení. Aktuální prohlížeč má navíc štítek **Toto zařízení**.
+
+- **Nové** označuje zatím nepotvrzené zařízení. Můžete ho potvrdit tlačítkem **Byl jsem to já**. Odešle jednorázový kód na email a otevře formulář pod zařízením přes celou šířku seznamu. Tlačítkem **Zrušit** formulář zavřete bez změny stavu zařízení. Teprve po správném kódu se zařízení potvrdí a jeho systémové upozornění odstraní. Pokud přihlášení neznáte, použijte **Nebyl jsem to já**.
+- **Potvrzené** zařízení můžete tlačítkem **Nebyl jsem to já** dodatečně zablokovat. Datum potvrzení zobrazí tooltip nad štítkem po najetí myší nebo zaměření klávesnicí.
+- **Zablokované** zařízení má v tooltipu nad štítkem datum zablokování i vysvětlení odblokování. Odblokovat jej lze až při dalším přihlášení ověřením kódu z emailu.
+
+Zablokování odhlásí všechny známé pořady daného zařízení. Pokud se jedná o aktuální prohlížeč, odhlásí i vás. Po zablokování jiného prohlížeče se zobrazí malé okno **Zabezpečte svůj účet** s dalšími kroky, stejně jako u systémového upozornění.
+
 ### Přihlášení administrátoři
 
-Pokud máte právo "Úvod - zobrazení přihlášených administrátorů", můžete přes katalog přidat widget **Přihlášení admini** se seznamem všech přihlášených administrátorů. Máte tak přehled, kolik uživatelů aktuálně pracuje v administraci.
+Pokud máte právo "Úvod - zobrazení přihlášených administrátorů", můžete přes katalog přidat widget **Přihlášení admini** se seznamem všech přihlášených administrátorů. V obou velikostech zobrazuje celkový počet aktivních relací a počet administrátorů. U každého jména je počet jeho pořadů. Jeden účet může mít více přihlášení, proto se oba součty mohou lišit. Klepnutím na nadpis se šipkou otevřete okno **Aktivní přihlášení** přímo v kartě **Přihlášení administrátoři**.
 
 Klepnutím na ikonu<i class="ti ti-mail fs-6"></i> můžete danému administrátorovi odeslat email.
 
@@ -175,19 +261,25 @@ Ve výchozím nastavení jsou zkratky směřovány na webové stránky a formul�
 
 Novou zkratku přidáte takto:
 
-1. Klepněte na **Upravit zkratky** a poté na **Přidat zkratku**.
-2. V poli **Cíl zkratky** vyberte **Stránka v administraci** nebo **Vlastní URL adresa**. U stránky v administraci vyberte hlavní část, sekci a případně kartu. U vlastní adresy vyplňte pole **URL adresa**.
-3. Vyplňte **Vlastní název**, podle kterého zkratku poznáte. U vlastní URL adresy je název povinen.
-4. Podle potřeby nastavte **Ikonu** a **Barvu pozadí**, abyste zkratku v seznamu snáze našli.
-5. Klepněte na **Uložit**. Po dokončení úprav zkratek klikněte na **Hotovo**.
+1. Klepněte na **Přidat zkratku** přímo za seznamem zkratek.
+2. V poli **Kam má zkratka vést?** postupně vyberte **Hlavní část**, **Sekci** a kartu pod nadpisem **Vyberte kartu**. Sekci bez dalších karet vyberete přímo. Volba **Zpět** vrátí seznam o úroveň výše. Můžete také napsat název cíle: vyhledávání nabídne koncové karty ze všech částí menu, například po zadání „číselník“ obě karty Číselníků. Cíl vyberte klepnutím nebo šipkami a klávesou **Enter**. Pro vlastní odkaz klikněte na **Použít vlastní adresu URL…** a vyplňte **URL adresu**.
+3. Podle potřeby vyplňte **Název zkratky**. Pokud zůstane prázdný, použije se název vybraného cíle. U vlastní URL adresy je název povinen.
+4. Vyberte **Ikonu** a **Barvu**. První ikona vychází z vybraného cíle. Volba **Vlastní…** u ikony umožňuje zadat název z knihovny Tabler; náhled se změní hned a neexistující název nelze uložit. U barvy otevře **Vlastní…** výběr barvy s nastavením průhlednosti a zadáním HEX hodnoty. Barva se použije pouze na pozadí ikony, jejíž světlost se přizpůsobí zvolenému pozadí. Paleta obsahuje také možnost **Bez barvy**.
+5. Zkontrolujte náhled a klikněte na **Přidat zkratku**.
+
+Dlouhé názvy se zkrátí trojtečkou. Celý název se zobrazí při podržení myši nebo při zaměření klávesnicí. Zkratka na nedostupnou položku menu zůstává zobrazena s vysvětlením; v režimu úprav ji můžete opravit nebo odstranit.
+
+Režim úprav zapnete tlačítkem s tužkou **Upravit zkratky** za seznamem. Tužku nahradí tlačítko **Hotovo** napravo od přivítání, nad zkratkami. Klepnutí na zkratku pak otevře její nastavení. Po změně cíle, názvu, ikony nebo barvy klikněte na **Uložit změny**. Oznámení nabídne **Zpět** na 8 sekund. Stejný formulář obsahuje i tlačítko **Odstranit zkratku**. Po dokončení úprav klikněte na **Hotovo**.
+
+Zkratku přesunete úchytem před ikonou. Během přesunu zůstává na původním místě přerušovaný obrys a bílá čára označuje místo vložení. Při ovládání klávesnicí přesuňte fokus na úchyt: **mezerník** zkratku zvedne, **šipky vlevo/vpravo** změní pozici, **Enter** potvrdí přesun a **Esc** jej zruší. Klepnutím na úchyt můžete pozici vybrat také v dialogovém okně.
 
 ![](dashboard-shortcut-settings.png)
 
-Chcete-li zkratku na konkrétní složku, otevřete ji ve Web stránkách a zkopírujte adresu z adresního řádku prohlížeče is parametrem `groupid`. Při přidávání zkratky zvolte **Vlastní URL adresa**, vložte zkopírovanou adresu a zadejte název, například **Aktuality**.
+Chcete-li zkratku na konkrétní složku, otevřete ji ve Web stránkách a zkopírujte adresu z adresního řádku prohlížeče is parametrem `groupid`. Při přidávání zkratky zvolte **Použít vlastní adresu URL…**, vložte zkopírovanou adresu a zadejte název, například **Aktuality**.
 
 Adresa může mít například tvar `/admin/v9/webpages/web-pages-list/?groupid=123`, kde `123` je ID požadované složky. Použijte ID ze své zkopírované adresy. Klepnutím na takovou zkratku otevřete přímo danou složku, i když je vnořená hlouběji ve struktuře webu.
 
-Tlačítko **Obnovit** v úpravě zkratek obnoví výchozí odkazy a zachová widgety, jejich filtry i stav novinek. Po odstranění všech zkratek zůstane seznam prázdný až do přidání nové zkratky nebo obnovy výchozích odkazů.
+Křížek **×** odstraní zkratku bez potvrzení. Oznámení nabídne **Zpět** na 8 sekund. Odstranit můžete i poslední zkratku; zobrazí se **Žádná zkratka** a tlačítko pro přidání. Pokud stránku s prázdným seznamem znovu načtete, doplní se výchozí zkratky **Webové stránky** a **Formuláře** podle vašich oprávnění. Pokud nemáte přístup ani k jedné z těchto částí, použije se první dostupná položka menu. Widgety, jejich filtry i stav novinek zůstávají zachovány.
 
 ## Změněné stránky, audit a monitorování
 

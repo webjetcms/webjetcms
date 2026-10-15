@@ -176,7 +176,7 @@ public class FormSettingsEntity {
     private String formProcessor;
 
     @Column(name = "encryption_key")
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title= "components.form.encryptionKey")
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA_WRAP, title= "components.form.encryptionKey")
     @Size(max = 1024)
     private String encryptKey;
 

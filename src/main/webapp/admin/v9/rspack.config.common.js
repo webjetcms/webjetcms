@@ -197,6 +197,11 @@ const config = {
 
         new rspack.CopyRspackPlugin({
             patterns:[
+                {
+                    from: 'src/scss/5-modules/_md-environment.scss',
+                    to: 'css/environment.css',
+                    transform: content => sassImplementation.compileString(content.toString()).css
+                },
                 { from: 'src/images/logo-cms.png', to: 'images/' },
                 { from: 'src/images/logo-cms.svg', to: 'images/' },
                 { from: 'src/images/logo-dms.png', to: 'images/' },

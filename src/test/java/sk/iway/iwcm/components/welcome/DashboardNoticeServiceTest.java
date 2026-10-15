@@ -22,12 +22,14 @@ import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.stat.rest.BrowserIdentifierMigrationService;
 import sk.iway.iwcm.system.ntlm.AuthenticationFilter;
+import sk.iway.iwcm.users.devices.AdminDeviceService;
+import sk.iway.iwcm.users.devices.DeviceEntity;
 
 /** Verifies that security notices retain their conditions and use data-only action descriptors. */
 class DashboardNoticeServiceTest {
     @Test
     void includesAllWarningsAndEscapesDynamicHtmlValues() {
-        UserDetailsRepository users = mock(UserDetailsRepository.class);
+        UserDetailsRepository repository = mock(UserDetailsRepository.class);
         Identity user = mock(Identity.class);
         when(user.isAdmin()).thenReturn(true);
         when(user.getUserId()).thenReturn(7);
@@ -35,6 +37,8 @@ class DashboardNoticeServiceTest {
         when(user.isEnabledItem("modUpdate|users.edit_admins")).thenReturn(true);
         Prop prop = mock(Prop.class);
         when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(prop.getText(anyString(), anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(prop.getText(anyString(), anyString(), anyString())).thenAnswer(invocation -> invocation.getArgument(0));
         when(prop.getText(eq("system.javaVersionWarningText"), anyString(), anyString()))
             .thenAnswer(invocation -> invocation.getArgument(2));
         when(prop.getText(eq("overview.license.expirationWarning"), anyString())).thenReturn("<a href=\"https://www.webjetcms.sk\">License</a>");
@@ -55,22 +59,28 @@ class DashboardNoticeServiceTest {
             constants.when(() -> Constants.getInt("javaMinimalVersion")).thenReturn(17);
             constants.when(() -> Constants.getLong("licenseExpiryDate")).thenReturn(System.currentTimeMillis());
 
-            List<Map<String, Object>> result = new DashboardNoticeService(users).load(user, request);
+            List<Map<String, Object>> result = new DashboardNoticeService(repository, mock(AdminDeviceService.class)).load(user, request);
 
             assertEquals(List.of("twoFactor", "database", "browserMigration", "update", "java", "license", "amazonSes"), result.stream().map(notice -> notice.get("id")).toList());
             assertEquals("8.&lt;script&gt;alert(1)&lt;/script&gt;", result.get(4).get("bodyHtml"));
             assertTrue(result.get(5).get("bodyHtml").toString().startsWith("<a href="));
+            assertEquals("warning", result.get(0).get("severity"));
+            for (Map<String, Object> notice : result) {
+                assertNotNull(notice.get("description"), "Each notice must contain an explanation");
+                assertFalse(notice.get("description").toString().isBlank(), "The explanation must not be empty");
+                assertNotNull(notice.get("action"), "Each notice must provide an action");
+            }
             assertEquals("popup", ((Map<?, ?>) result.get(0).get("action")).get("type"));
             assertEquals("/admin/v9/settings/stat-browser-migration/", ((Map<?, ?>) result.get(2).get("action")).get("url"));
             assertTrue(result.stream().noneMatch(notice -> notice.containsKey("onclick")));
-            verify(users).getMobileDeviceByUserId(7L);
+            verify(repository).getMobileDeviceByUserId(7L);
         }
     }
 
     /** A restricted administrator must not trigger migration or disabled 2FA lookups. */
     @Test
     void permissionChecksSkipRestrictedNoticeSources() {
-        UserDetailsRepository users = mock(UserDetailsRepository.class);
+        UserDetailsRepository repository = mock(UserDetailsRepository.class);
         Identity user = mock(Identity.class);
         when(user.isAdmin()).thenReturn(true);
         Prop prop = mock(Prop.class);
@@ -84,17 +94,44 @@ class DashboardNoticeServiceTest {
             tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
             constants.when(() -> Constants.getBoolean("statWebJET7Converted")).thenReturn(true);
 
-            assertTrue(new DashboardNoticeService(users).load(user, request).isEmpty());
-            verifyNoInteractions(users);
+            assertTrue(new DashboardNoticeService(repository, mock(AdminDeviceService.class)).load(user, request).isEmpty());
+            verifyNoInteractions(repository);
             migration.verifyNoInteractions();
+        }
+    }
+
+    /** A configured second factor suppresses the setup warning. */
+    @Test
+    void enabledSecondFactorSuppressesSetupWarning() {
+        UserDetailsRepository repository = mock(UserDetailsRepository.class);
+        when(repository.getMobileDeviceByUserId(7L)).thenReturn("autotest-secret");
+        Identity user = mock(Identity.class);
+        when(user.isAdmin()).thenReturn(true);
+        when(user.getUserId()).thenReturn(7);
+        Prop prop = mock(Prop.class);
+        when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        try (MockedStatic<Constants> constants = mockStatic(Constants.class);
+             MockedStatic<Prop> properties = mockStatic(Prop.class);
+             MockedStatic<Tools> tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
+             MockedStatic<AuthenticationFilter> authentication = mockStatic(AuthenticationFilter.class);
+             MockedStatic<BrowserIdentifierMigrationService> migration = mockStatic(BrowserIdentifierMigrationService.class);
+             MockedConstruction<IwcmFile> paths = mockConstruction(IwcmFile.class)) {
+            properties.when(() -> Prop.getInstance(request)).thenReturn(prop);
+            tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+            constants.when(() -> Constants.getBoolean("2factorAuthEnabled")).thenReturn(true);
+            constants.when(() -> Constants.getBoolean("statWebJET7Converted")).thenReturn(true);
+
+            assertTrue(new DashboardNoticeService(repository, mock(AdminDeviceService.class)).load(user, request).isEmpty());
+            verify(repository).getMobileDeviceByUserId(7L);
         }
     }
 
     @Test
     void deniedRequestsDoNotCheckUserSecurityOrDatabaseState() {
-        UserDetailsRepository users = mock(UserDetailsRepository.class);
-        assertThrows(AccessDeniedException.class, () -> new DashboardNoticeService(users).load(mock(Identity.class), new MockHttpServletRequest()));
-        verifyNoInteractions(users);
+        UserDetailsRepository repository = mock(UserDetailsRepository.class);
+        assertThrows(AccessDeniedException.class, () -> new DashboardNoticeService(repository, mock(AdminDeviceService.class)).load(mock(Identity.class), new MockHttpServletRequest()));
+        verifyNoInteractions(repository);
     }
 
     @Test
@@ -104,5 +141,64 @@ class DashboardNoticeServiceTest {
         assertEquals(8, DashboardNoticeService.javaMajorVersion("1.8.0_202"));
         assertEquals(-1, DashboardNoticeService.javaMajorVersion("unknown"));
         assertEquals(-1, DashboardNoticeService.javaMajorVersion(null));
+    }
+
+    /** Security events remain account-owned data and precede ordinary system warnings. */
+    @Test
+    void embedsAccountSecurityEventsWithoutGenericDismissalActions() {
+        var repository = mock(UserDetailsRepository.class);
+        var devices = mock(AdminDeviceService.class);
+        var user = mock(Identity.class);
+        when(user.isAdmin()).thenReturn(true);
+        var request = new MockHttpServletRequest();
+        var prop = mock(Prop.class);
+        when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        var event = new DeviceEntity();
+        event.setId(42L);
+        when(devices.getActiveEvents(user)).thenReturn(List.of(event));
+        try (var constants = mockStatic(Constants.class);
+             var properties = mockStatic(Prop.class);
+             var tools = mockStatic(Tools.class);
+             var files = mockConstruction(IwcmFile.class)) {
+            constants.when(() -> Constants.getBoolean("statWebJET7Converted")).thenReturn(true);
+            properties.when(() -> Prop.getInstance(request)).thenReturn(prop);
+            tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+            var notices = new DashboardNoticeService(repository, devices).load(user, request);
+            assertEquals(1, notices.size());
+            assertEquals("newDevice:42", notices.get(0).get("id"));
+            assertEquals("newDevice", notices.get(0).get("kind"));
+            assertSame(event, notices.get(0).get("securityEvent"));
+            assertFalse(notices.get(0).containsKey("action"));
+            assertFalse(notices.get(0).containsKey("bodyHtml"));
+            verify(devices).getActiveEvents(user);
+        }
+    }
+
+    /** Device-storage failures leave other notices visible and add an error that cannot be dismissed. */
+    @Test
+    void retainsOrdinaryNoticesWhenDeviceStorageFails() {
+        var repository = mock(UserDetailsRepository.class);
+        var devices = mock(AdminDeviceService.class);
+        var user = mock(Identity.class);
+        when(user.isAdmin()).thenReturn(true);
+        var request = new MockHttpServletRequest();
+        var prop = mock(Prop.class);
+        when(prop.getText(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(devices.getActiveEvents(user)).thenThrow(new IllegalStateException("Sensitive database details"));
+        try (var constants = mockStatic(Constants.class);
+             var properties = mockStatic(Prop.class);
+             var tools = mockStatic(Tools.class);
+             var files = mockConstruction(IwcmFile.class)) {
+            properties.when(() -> Prop.getInstance(request)).thenReturn(prop);
+            tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(invocation -> invocation.getArgument(0));
+
+            var notices = new DashboardNoticeService(repository, devices).load(user, request);
+
+            assertEquals(List.of("newDeviceUnavailable", "database"), notices.stream().map(notice -> notice.get("id")).toList());
+            assertEquals("error", notices.get(0).get("severity"));
+            assertEquals("admin.dashboard.newDevice.unavailable.js", notices.get(0).get("description"));
+            assertFalse(notices.get(0).containsKey("kind"));
+            assertFalse(notices.toString().contains("Sensitive database details"));
+        }
     }
 }

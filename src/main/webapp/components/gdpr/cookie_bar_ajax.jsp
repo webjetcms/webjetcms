@@ -70,7 +70,6 @@
     String className = "";
     String key = "";
     String classActive = "active";
-    String textKey = "";
 
     String cookeCategories = "_"+Tools.getCookieValue(request.getCookies(), "enableCookieCategory", "")+"_";
 
@@ -175,24 +174,23 @@
                                 <td title="<%=cmb.getCookieName()%>"><%=cmb.getCookieName()%>
                                 </td>
                                 <td><%
-                                    textKey = "components.gdpr.cookies." + cmb.getCookieName() + ".provider";
-                                    if (prop.getText(textKey).contains("!ACTUAL_DOMAIN!")) {
-                                        textKey = Tools.getBaseHref(request);
-                                        textKey = Tools.replace(textKey, "http://", "");
-                                        textKey = Tools.replace(textKey, "https://", "");
+                                    String provider = CookieManagerDB.getCookieText(prop, cmb.getCookieName(), "provider");
+                                    if (provider.contains("!ACTUAL_DOMAIN!")) {
+                                        provider = Tools.getBaseHref(request);
+                                        provider = Tools.replace(provider, "http://", "");
+                                        provider = Tools.replace(provider, "https://", "");
                                     }
-                                    out.print(prop.getText(textKey));
+                                    out.print(provider);
                                 %>
                                 </td>
                                 <td>
                                     <%
-                                        textKey = "components.gdpr.cookies." + cmb.getCookieName() + ".purpouse";
-                                        out.print(prop.getText(textKey));
+                                        out.print(CookieManagerDB.getCookieText(prop, cmb.getCookieName(), "purpouse"));
                                     %>
                                 </td>
-                                <%textKey = "components.gdpr.cookies." + cmb.getCookieName() + ".validity"; %>
-                                <td title="<%=prop.getText(textKey) %>">
-                                    <%out.print(prop.getText(textKey));%>
+                                <%String validity = CookieManagerDB.getCookieText(prop, cmb.getCookieName(), "validity"); %>
+                                <td title="<%=validity %>">
+                                    <%out.print(validity);%>
                                 </td>
                                 <td title="<%=cmb.getType() %>"><%=cmb.getType() %>
                                 </td>

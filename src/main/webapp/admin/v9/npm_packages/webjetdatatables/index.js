@@ -1695,21 +1695,42 @@ export const dataTableInit = options => {
 
         if (DATA.fetchOnCreate) {
             //ak je zapnute volanie servera pre novy zaznam zavolame ajax a pockame na data pre novy zaznam (napr. pre web stranku)
-            EDITOR.on('initCreate', function (e) {
-                return new Promise(function (resolve, reject) {
+            EDITOR.on('initCreate', function () {
+                return new Promise(function (resolve) {
                     let url = TABLE.getAjaxUrl();
                     const q = url.indexOf("?");
                     if (q === -1) url = url + "/-1";
                     else url = url.substring(0, q) + "/-1" + url.substring(q);
 
+                    const onError = (xhr, status, error) => {
+                        console.error("Error loading editor defaults:", xhr?.status, error || status || xhr);
+                        const resetCancellation = () => {
+                            EDITOR.off('preOpen', cancelOpen);
+                            EDITOR.off('initCreate initEdit initRemove', resetCancellation);
+                        };
+                        const cancelOpen = () => {
+                            resetCancellation();
+                            return false;
+                        };
+                        // A hidden create does not fire preOpen; clear cancellation on the next initialization.
+                        EDITOR.one('preOpen', cancelOpen);
+                        EDITOR.one('initCreate initEdit initRemove', resetCancellation);
+                        WJ.notifyError(WJ.translate("datatables.error.title.js"), WJ.translate("datatables.error.network.js"));
+                        // Editor only handles fulfilled initialization promises; preOpen cancels this failed attempt.
+                        resolve();
+                    };
+
                     $.ajax({
                         url: url,
                         success: function (json) {
-                            //console.log("EDITOR=", EDITOR, " json=", json);
-                            //EDITOR.vals( json );
-                            EDITOR.setJson(json);
-                            resolve(); // Editor continues after this
-                        }
+                            try {
+                                EDITOR.setJson(json);
+                                resolve();
+                            } catch (error) {
+                                onError(error);
+                            }
+                        },
+                        error: onError
                     });
                 });
             });
@@ -3030,15 +3051,15 @@ export const dataTableInit = options => {
             //we must construct filters before DT initialization to move it to extfilters, because the column could be hidden after initialization
             dtWJ.initializeHeaderFilters(dataTableSelector, true, DATA, null);
         }
+        let ajaxRequestNumber = 0;
         runDataTables();
         dtWJ.initializeHeaderFilters(dataTableSelector+"_wrapper div.dt-scroll-head table ", false, DATA, TABLE);
 
-        function notifyAccessDenied() {
-            WJ.notifyError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
-        }
-
         function datatable2SpringData(data, fnCallback, oSettings) {
 
+            const requestDraw = data.draw;
+            const requestNumber = ++ajaxRequestNumber;
+            const isCurrentRequest = () => requestNumber === ajaxRequestNumber && !oSettings.bDestroying;
             var sSource = DATA.url;
 
             //console.log("datatable2SpringData, data:", data, "\nfnCallback:", fnCallback, "\noSettings:", oSettings, "\nTABLE:", TABLE, "\nsSource:", sSource);
@@ -3235,7 +3256,7 @@ export const dataTableInit = options => {
 
                 var sourceData = DATA.initialData;
                 var totalElements = sourceData.totalElements;
-                var data = {};
+                var data = { draw: requestDraw };
                 data.data = sourceData.content;
 
                 data.recordsTotal = totalElements;
@@ -3246,11 +3267,13 @@ export const dataTableInit = options => {
                 DATA.initialData = null;
 
                 setTimeout(()=> {
-                    //console.log("initialData: ", data);
+                    // Reject obsolete initial data before DataTables updates JSON, options or application callbacks.
+                    if (!isCurrentRequest()) return;
                     fnCallback(data);
                 }, 10);
 
                 setTimeout(()=> {
+                    if (!isCurrentRequest()) return;
                     //porovnaj sortovanie, ak nesedi voci inicialnemu, musis reloadnut
                     //console.log("sort=", TABLE.order(), "init=", TABLE.DATA.order);
                     if (JSON.stringify(TABLE.order())!=JSON.stringify(TABLE.DATA.order)) {
@@ -3262,6 +3285,18 @@ export const dataTableInit = options => {
             else {
                 //console.log(DATA.id+" url=", url, "data=", restParams);
 
+                // Preserve the last successful rows, metadata and totals without emitting success events.
+                function finishWithError(title, message, notify = true) {
+                    if (!isCurrentRequest()) return;
+                    if (!oSettings._bInitComplete) {
+                        $(oSettings.nTBody).find("td.dt-empty").text(message);
+                    }
+                    // DataTables 2.x keeps bDrawing set while awaiting server data and otherwise ignores processing(false).
+                    oSettings.bDrawing = false;
+                    new $.fn.dataTable.Api(oSettings).processing(false);
+                    if (notify) WJ.notifyError(title, message);
+                }
+
                 //finally, make the request
                 return $.ajax({
                     "dataType": 'json',
@@ -3269,23 +3304,30 @@ export const dataTableInit = options => {
                     "url": url,
                     "data": restParams,
                     "statusCode": {
-                        403: notifyAccessDenied
+                        403: function() {
+                            finishWithError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
+                        }
                     },
                     "success": function (sourceData) {
-                        //console.log("sourceData=", sourceData);
+                        // DataTables emits xhr and replaces its JSON before checking draw, so filter obsolete responses here.
+                        if (!isCurrentRequest()) return;
+                        if (sourceData == null) {
+                            finishWithError(WJ.translate("datatables.error.title.js"), WJ.translate("datatables.error.network.js"));
+                            return;
+                        }
 
                         if (sourceData.hasOwnProperty("error") && sourceData.error !== null && sourceData.error !== "") {
                             if ("Access is denied" === sourceData.error || "Access Denied" === sourceData.error || "exception: Access is denied" === sourceData.error) {
-                                notifyAccessDenied();
+                                finishWithError(WJ.translate("datatables.accessDenied.title.js"), WJ.translate("datatables.accessDenied.desc.js"));
                                 return;
                             } else {
-                                WJ.notifyError(WJ.translate("datatables.error.title.js"), sourceData.error);
+                                finishWithError(WJ.translate("datatables.error.title.js"), sourceData.error);
                                 return;
                             }
                         }
 
                         var totalElements = sourceData.totalElements;
-                        var data = {};
+                        var data = { draw: requestDraw };
                         data.data = sourceData.content;
 
                         data.recordsTotal = totalElements;
@@ -3296,6 +3338,12 @@ export const dataTableInit = options => {
 
                         //WJ.log("fnCallback2, data=", data);
                         fnCallback(data);
+                    },
+                    "error": function (xhr, textStatus) {
+                        // DataTables aborts the previous client-side request when starting a new reload.
+                        if (textStatus === "abort") return;
+                        // Global Ajax status handlers already display login and CSRF messages for these statuses.
+                        finishWithError(WJ.translate("datatables.error.title.js"), WJ.translate("datatables.error.network.js"), xhr.status !== 401 && xhr.status !== 403);
                     }
                 });
             }
