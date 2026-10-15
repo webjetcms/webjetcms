@@ -3238,6 +3238,9 @@
                 oEditor.wjInsertHtml(html);
             }
 
+            // Content insertion keeps the existing editor, so initialize new duplicable items in its column.
+            this.mark_duplicable_elements($(oEditor.element.$).closest(this.tagc.column));
+
             if (html.indexOf("pb-split-column-placeholder")!=-1) {
                 var splitElement = $(oEditor.element.$).find(".pb-split-column-placeholder").first();
                 if (splitElement.length>0) {

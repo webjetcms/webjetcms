@@ -3242,6 +3242,68 @@ Scenario('library direct leaf blocks remain searchable and insertable', async ({
     I.wjSetDefaultWindowSize();
 });
 
+Scenario('library content initializes duplicable elements immediately', async ({I, DTE, Document}) => {
+    await openWorkbenchFixture(I, DTE, Document);
+    const paragraph = workbenchFixture+' .pb-workbench-copy';
+    const editorName = await I.executeScript((root, selector) => {
+        const pb = window.pageBuilder;
+        const groups = pb.template.library.find(item => item.textKey === 'content').groups;
+        for (const type of ['leaf', 'grouped']) {
+            const block = {id: 'autotest-duplicable-'+type, textKey: 'autotest duplicable '+type,
+                content: '<ul class="autotest-duplicable-'+type+'"><li class="pb-duplicable">First inserted autotest item</li><li class="pb-duplicable">Second inserted autotest item</li></ul>'};
+            groups.push(type === 'leaf' ? block : {id: 'autotest-duplicable-group', textKey: 'autotest duplicable group', blocks: [block]});
+        }
+        pb.$wrapper.find('.library-tab-item--library').html(pb.create_library_content_template('library'));
+        return document.querySelector(selector).closest('[data-ckeditor-instance]').dataset.ckeditorInstance;
+    }, paragraph);
+
+    for (const type of ['leaf', 'grouped']) {
+        I.click(paragraph);
+        await assertWorkbenchEditorFocused(I, paragraph);
+        I.executeScript((root, name) => {
+            const editor = CKEDITOR.instances[name];
+            const range = editor.createRange();
+            range.moveToElementEditEnd(new CKEDITOR.dom.element(editor.element.$.querySelector('.pb-workbench-copy')));
+            editor.getSelection().selectRanges([range]);
+        }, editorName);
+        I.clickCss('.cke_button__htmlbox');
+        I.waitForVisible('.pb-library--content', 10);
+        I.clickCss('.pb-library--content [data-library-type=library]');
+        I.fillField('.pb-library--content .library-template-block--content .library-filter-input', 'autotest duplicable '+type);
+        I.clickCss('.pb-library--content button[data-library-item-id=autotest-duplicable-'+type+']');
+        I.waitForInvisible('.pb-library', 10);
+        const list = workbenchFixture+' ul.autotest-duplicable-'+type;
+        I.waitForElement(list+' > li.pb-duplicable', 10);
+        I.seeNumberOfElements(list+' > li.pb-duplicable-element', 2);
+        const state = await I.executeScript((root, selector) => {
+            const list = document.querySelector(selector);
+            return {
+                editorName: list.closest('[data-ckeditor-instance]').dataset.ckeditorInstance,
+                followsCaret: list.previousElementSibling.matches('.pb-workbench-copy'),
+                oneToolbarPerItem: Array.from(list.closest('.pb-column__content').querySelectorAll('li.pb-duplicable'))
+                    .every(item => item.querySelectorAll(':scope > .pb-toolbar').length === 1)
+            };
+        }, list);
+        I.assertEqual(state.editorName, editorName, 'Insertion must retain the existing CKEditor instance');
+        I.assertTrue(state.followsCaret, 'The list must be inserted after the original caret');
+        I.assertTrue(state.oneToolbarPerItem, 'Repeated insertion must initialize new items without duplicating existing controls');
+        I.click(list+' > li:first-child');
+        I.waitForVisible('.pb-outline[data-type=item]:not([hidden])', 10);
+        I.click('.pb-workbench [data-pb-action=more]');
+        I.click('.pb-workbench [data-pb-action=duplicate]');
+        I.waitForVisible('.pb-move-hint', 10);
+        await chooseWorkbenchInsertion(I, 'item', list, 2, false);
+        I.waitForInvisible('.pb-move-hint', 10);
+        I.seeNumberOfElements(list+' > li.pb-duplicable-element', 3);
+    }
+    const saved = await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data);
+    I.assertNotContain(saved, 'pb-duplicable-element', 'Saving must remove runtime markers from newly inserted items');
+    I.assertNotContain(saved, 'pb-toolbar', 'Saving must remove inserted controls');
+    I.switchTo();
+    I.amAcceptingPopups();
+    DTE.cancel();
+});
+
 Scenario('library content insertion preserves the CKEditor selection', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     await assertWorkbenchEditorFocused(I, workbenchFixture+' .pb-workbench-copy');
