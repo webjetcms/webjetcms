@@ -166,7 +166,7 @@ Scenario('A reported browser requires an email code before administration or RES
 });
 
 
-Scenario('My devices dialog on the full administration screen @screenshot @current', async ({ I, Document, TempMail }) => {
+Scenario('My devices dialog on the full administration screen @screenshot', async ({ I, Document, TempMail }) => {
     // Keep the notification account from Before: switching accounts would create another unconfirmed device.
     await I.waitForElement(dashboard, 30);
     const modal = '.md-dashboard-modal--sessions';

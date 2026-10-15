@@ -259,9 +259,9 @@ module.exports = {
         I.clickCss("#saveFileForm");
 
         // Imports without duplicates skip the confirmation page automatically.
-        I.waitForFunction(() => document.body.textContent.includes("Import ukončený") ||
+        I.waitForFunction(() => document.body?.textContent.includes("Import ukončený") ||
             document.querySelector('tbody input[name^="fab_"]') !== null, 30);
-        const importCompleted = await I.executeScript(() => document.body.textContent.includes("Import ukončený"));
+        const importCompleted = await I.executeScript(() => document.body?.textContent.includes("Import ukončený"));
         if (!importCompleted) {
             I.say("Keep existing files when importing duplicates");
             await I.executeScript(() => {

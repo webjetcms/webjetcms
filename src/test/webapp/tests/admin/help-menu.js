@@ -129,9 +129,11 @@ Scenario('System diagnostics copy all context and restore the copy action after 
     I.assertTrue(await I.executeScript(() => {
         const version = document.querySelector('.md-help-menu__version');
         const buildDate = document.querySelector('.md-help-menu__version-date');
-        return buildDate.getBoundingClientRect().top >= version.getBoundingClientRect().bottom
-            && /\d{2}:\d{2}:\d{2}$/.test(buildDate.textContent.trim());
-    }), 'The build timestamp must include seconds and appear below the version.');
+        return buildDate.getBoundingClientRect().top >= version.getBoundingClientRect().bottom;
+    }), 'The build timestamp must appear below the version.');
+    const buildTimestamp = (await I.grabTextFrom('.md-help-menu__version-date')).trim();
+    I.assertTrue(/(?:^|\s)(?:[01]?\d|2[0-3]):[0-5]\d:[0-5]\d$/.test(buildTimestamp),
+        `The build timestamp must include hours, minutes and seconds: ${buildTimestamp}`);
     I.assertFalse(await I.executeScript(() => document.querySelector('.md-help-menu__system').textContent.includes('DEV')),
         'The footer must not repeat the environment badge.');
     I.clickCss('.md-help-menu__copy');
