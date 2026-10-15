@@ -788,8 +788,8 @@ function initClosure() {
     // =======================
     window.addEventListener('beforeunload', (event) => {
         try {
-            // Nezobraziť varovanie pre image-editor iFrame
-            if (window.location.pathname.indexOf('/apps/image-editor') >= 0) {
+            // Nezobraziť varovanie pre image-editor a app component
+            if (window.location.pathname.indexOf('/apps/image-editor') >= 0 || window.location.pathname.indexOf('/admin/v9/webpages/component/') >= 0) {
                 return;
             }
 
