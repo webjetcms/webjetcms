@@ -198,7 +198,7 @@
         table.button().add(4, {
             name: 'pasteField',
             text: '<i class="ti ti-clipboard-plus" aria-hidden="true"></i>',
-            className: 'btn btn-outline-secondary buttons-paste-field buttons-divider',
+            className: 'btn btn-outline-secondary buttons-paste-field',
             attr: { title: WJ.translate('components.form_items.clipboard.paste.js'), 'aria-label': WJ.translate('components.form_items.clipboard.paste.js'), 'data-toggle': 'tooltip' },
             enabled: false,
             action: function() {
@@ -378,7 +378,7 @@
                 loadingStepItems = false;
             }
         });
-        formItemsDataTable.hideButtons(["import", "export", "celledit"]);
+        formItemsDataTable.hideButtons(["import", "export", "celledit", "reload"]);
 
         initFormItemClipboard(formClipboardUserId, formClipboardDomain);
 
