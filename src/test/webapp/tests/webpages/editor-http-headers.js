@@ -1,7 +1,14 @@
-Feature('webpages.editor-http-headers');
+Feature('webpages.editor-http-headers @singlethread');
 
 const output = '#datatableInit_modal .webpage-http-headers pre';
-Before(({ login }) => login('admin'));
+let suffix;
+let originalRemove;
+let folderCreated = false;
+
+Before(({ I, login }) => {
+    login('admin');
+    if (!suffix) suffix = I.getRandomText();
+});
 
 Scenario('preview loads on Basic and follows unsaved settings', async ({ I, DTE }) => {
     I.resizeWindow(1400, 1200);
@@ -51,4 +58,73 @@ Scenario('preview loads on Basic and follows unsaved settings', async ({ I, DTE 
     I.dontSee('Location:', output);
     I.amAcceptingPopups();
     DTE.cancel();
+});
+
+Scenario('create template and exact-path header fixtures', async ({ I, DT, DTE }) => {
+    I.amOnPage('/admin/v9/templates/temps-list/');
+    DT.waitForLoader();
+    originalRemove = await I.executeScript(() => window.Constants.urlRemoveSpojky);
+    for (const [name, mode] of [['keep', 'Ponechať'], ['remove', 'Odstrániť']]) {
+        I.clickCss('#datatableInit_wrapper button.buttons-create');
+        DTE.waitForEditor();
+        DTE.fillField('tempName', 'autotest-http-headers-' + suffix + '-' + name);
+        DTE.fillField('forward', 'default/homepage.jsp');
+        I.clickCss('#pills-dt-datatableInit-advanced-tab');
+        DTE.selectOption('urlRemoveSpojkyMode', mode);
+        DTE.save();
+    }
+
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
+    I.createFolderStructure(suffix, false);
+    folderCreated = true;
+
+    I.amOnPage('/apps/response-header/admin/');
+    DT.waitForLoader('responseHeadersDataTable');
+    const path = '/name-autotest-' + suffix + '/autotest-http-headers-' + suffix;
+    for (const [ending, policy] of [['-news-a-events.html', 'no-referrer'], ['-news-events.html', 'same-origin']]) {
+        I.clickCss('#responseHeadersDataTable_wrapper button.buttons-create');
+        DTE.waitForEditor('responseHeadersDataTable');
+        DTE.fillField('url', '^' + path + ending + '$');
+        DTE.fillField('headerName', 'Referrer-Policy');
+        DTE.fillField('headerValue', policy);
+        DTE.save('responseHeadersDataTable');
+    }
+});
+
+for (const globalRemove of [true, false]) {
+    Scenario('preview uses unsaved template with global removal ' + globalRemove, ({ I, DTE, Document }) => {
+        Document.setConfigValue('urlRemoveSpojky', String(globalRemove), true);
+        I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
+        I.jstreeNavigate(['name-autotest-' + suffix]);
+        I.clickCss('#datatableInit_wrapper button.buttons-create');
+        DTE.waitForEditor();
+        DTE.waitForCkeditor();
+        I.clickCss('#pills-dt-datatableInit-basic-tab');
+        const title = 'autotest-http-headers-' + suffix + ' news a events';
+        DTE.fillField('title', title);
+        DTE.fillField('navbar', title);
+        I.checkOption('#DTE_Field_generateUrlFromTitle_0');
+
+        for (const [name, policy] of [['remove', 'same-origin'], ['keep', 'no-referrer'], ['remove', 'same-origin']]) {
+            I.clickCss('#pills-dt-datatableInit-template-tab');
+            DTE.selectOption('tempId', 'autotest-http-headers-' + suffix + '-' + name);
+            I.clickCss('#pills-dt-datatableInit-basic-tab');
+            I.waitForText('Referrer-Policy: ' + policy, 10, output);
+        }
+        I.amAcceptingPopups();
+        DTE.cancel();
+    });
+}
+
+Scenario('restore configuration and remove header preview fixtures', ({ I, DT, Document }) => {
+    if (originalRemove !== undefined) Document.setConfigValue('urlRemoveSpojky', String(originalRemove), true);
+    if (folderCreated) I.deleteFolderStructure(suffix);
+    I.amOnPage('/apps/response-header/admin/');
+    DT.waitForLoader('responseHeadersDataTable');
+    DT.filterContains('url', 'autotest-http-headers-' + suffix);
+    DT.deleteAll('responseHeadersDataTable');
+    I.amOnPage('/admin/v9/templates/temps-list/');
+    DT.waitForLoader();
+    DT.filterContains('tempName', 'autotest-http-headers-' + suffix);
+    DT.deleteAll();
 });

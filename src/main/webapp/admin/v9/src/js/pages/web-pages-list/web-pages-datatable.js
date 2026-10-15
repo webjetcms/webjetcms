@@ -574,7 +574,7 @@ export class WebPagesDatatable {
         this.#httpHeadersRequest?.abort();
         output.text(WJ.translate("editor.http_headers.loading.js"));
         const editor = this.webpagesDatatable.EDITOR;
-        const values = editor.get(["title", "navbar", "virtualPath", "editorVirtualPath", "generateUrlFromTitle", "urlInheritGroup", "searchable", "followLinks", "externalLink"]);
+        const values = editor.get(["title", "navbar", "tempId", "virtualPath", "editorVirtualPath", "generateUrlFromTitle", "urlInheritGroup", "searchable", "followLinks", "externalLink"]);
         values.groupId = editor.get("editorFields.groupDetails").groupId;
         values.docId = editor.currentJson?.docId ?? -1;
         const json = JSON.stringify(values, (key, value) => {
