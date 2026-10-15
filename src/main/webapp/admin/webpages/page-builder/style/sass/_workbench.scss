@@ -84,9 +84,25 @@
             border-top: 0;
         }
     }
-    &.is-inserting > :not(.#{$prefix}-insert-hint),
+    &.is-inserting, &.is-moving {
+        flex-wrap: nowrap;
+        padding: 6px 10px;
+        gap: 6px;
+        > [data-pb-action=structure] {
+            flex-shrink: 0;
+            &:hover, &[aria-expanded=true] { background: rgba($primary, .08); color: $primary; }
+        }
+        > .#{$prefix}-mode-hint {
+            flex: 1;
+            min-width: 0;
+            padding: 0 0 0 10px;
+            border-left: 1px solid $nice-gray-200;
+            > [role=status] { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        }
+    }
+    &.is-inserting > :not(.#{$prefix}-insert-hint):not([data-pb-action=structure]),
     &.is-resizing > :not(.#{$prefix}-resize-hint),
-    &.is-moving > :not(.#{$prefix}-move-hint) { display: none !important; }
+    &.is-moving > :not(.#{$prefix}-move-hint):not([data-pb-action=structure]) { display: none !important; }
     &-standalone { position: fixed; top: 0; z-index: 102000; }
     &-path {
         display: flex;
@@ -402,6 +418,11 @@ body.is-view-mode {
         padding: 6px;
         gap: 3px;
         .#{$prefix}-mode-hint { flex-basis: calc(100% + 12px); margin-inline: -6px; padding-inline: 6px; }
+        &.is-inserting, &.is-moving {
+            padding: 6px;
+            gap: 3px;
+            > .#{$prefix}-mode-hint { flex-basis: 0; margin: 0; padding: 0 0 0 6px; }
+        }
         > [data-pb-action=structure] span, [data-pb-action=style] span { display: none; }
         &-path {
             > button:not(:last-child):not([data-pb-action=ancestors]) { display: none; }

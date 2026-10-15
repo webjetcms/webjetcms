@@ -1228,16 +1228,16 @@ Scenario('workbench insertion expands without scrolling away from the first sect
     DTE.cancel();
 });
 
-/** Checks that insertion replaces the normal toolbar controls with one hint row. */
+/** Checks that insertion keeps structure navigation beside its single hint row. */
 async function assertWorkbenchInsertionRow(frame, inserting) {
     const bar = frame.locator('.pb-workbench');
     await frame.waitForFunction(inserting => document.querySelector('.pb-workbench').classList.contains('is-inserting') === inserting, inserting);
     assert.equal(await bar.locator('.pb-insert-hint').isVisible(), inserting, 'The insertion hint must only appear while choosing a destination');
     assert.equal(await bar.locator('.pb-resize-hint').isVisible(), false, 'Insertion must not show a second resize hint');
     if (inserting) {
-        assert.deepStrictEqual(await bar.locator('button:visible').evaluateAll(buttons => buttons.map(button => button.dataset.pbAction)), ['end-insert'], 'The active insertion toolbar must expose only the Exit button');
+        assert.deepStrictEqual(await bar.locator('button:visible').evaluateAll(buttons => buttons.map(button => button.dataset.pbAction)), ['structure', 'end-insert'], 'Insertion must expose structure navigation and Exit');
         const children = await bar.evaluate(element => Array.from(element.children).filter(child => child.getBoundingClientRect().height > 0 && getComputedStyle(child).display !== 'none').map(child => child.classList.contains('pb-insert-hint')));
-        assert.deepStrictEqual(children, [true], 'The hint must replace every normal toolbar child without leaving a second row');
+        assert.deepStrictEqual(children, [false, true], 'Structure and the hint must share the toolbar without leaving a second row');
     } else {
         for (const selector of ['.pb-workbench-path', '.pb-workbench-actions', '[data-pb-action=structure]', '[data-pb-action=insert]', '[data-pb-action=guides]']) {
             assert.equal(await bar.locator(selector).isVisible(), true, 'Leaving insertion must restore the normal toolbar controls');
@@ -1935,7 +1935,101 @@ Scenario('workbench outline modes, offsets and remembered preference', async ({I
     DTE.cancel();
 });
 
-Scenario('workbench move and duplicate hints replace the toolbar and restore focus', async ({I, DTE, Document}) => {
+for (const action of ['duplicate', 'move', 'insert', 'paste']) {
+    Scenario('structure navigation preserves the '+action+' operation', async ({I, DTE, Document}) => {
+        await openWorkbenchFixture(I, DTE, Document);
+        const original = await I.executeScript(() => {
+            const destination = document.querySelector('#wjInline-docdata > section:last-of-type .pb-column');
+            destination.classList.add('pb-navigation-destination-autotest');
+            destination.querySelector('h3').textContent = 'Destination autotest';
+            return {
+                html: window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data,
+                height: document.querySelector('.pb-workbench').getBoundingClientRect().height
+            };
+        });
+        const toolbar = '.pb-workbench';
+        if (action === 'paste') {
+            I.click(toolbar+' [data-pb-action=more]');
+            I.click(toolbar+' [data-pb-action=copy]');
+        }
+        if (action !== 'insert') I.click(toolbar+' [data-pb-action=more]');
+        I.click(toolbar+' [data-pb-action='+action+']');
+        const mode = action === 'insert' || action === 'paste' ? 'inserting' : 'moving';
+        I.waitForVisible(toolbar+'.is-'+mode, 10);
+        I.seeElement(toolbar+' [data-pb-action=structure]:enabled');
+        const state = await I.executeScript(() => ({
+            height: document.querySelector('.pb-workbench').getBoundingClientRect().height,
+            paste: window.pageBuilder.ui.pasting
+        }));
+        I.assertEqual(state.height, original.height, 'The mode toolbar must keep its original height');
+        I.click(toolbar+' [data-pb-action=structure]');
+        I.waitForVisible('.pb-structure [role=treeitem]', 10);
+        const branch = '.pb-structure > ul > li:first-child';
+        I.click(branch+' > div [data-pb-expand]');
+        I.seeElement(branch+'[aria-expanded=false]');
+        I.pressKey('ArrowRight');
+        I.seeElement(branch+'[aria-expanded=true]');
+        I.fillField('.pb-structure input[type=search]', 'Destination autotest');
+        const destination = locate('.pb-structure [role=treeitem][data-type=column] > div').withText('Destination autotest');
+        I.waitForVisible(destination, 10);
+        if (action === 'move' || action === 'paste') {
+            I.pressKey('Tab');
+            I.pressKey('End');
+            I.pressKey('Enter');
+        } else I.click(destination);
+        I.waitForInvisible('.pb-structure', 10);
+        I.seeElement(toolbar+'.is-'+mode);
+        const navigation = await I.executeScript(() => {
+            const pb = window.pageBuilder, target = document.querySelector('.pb-navigation-destination-autotest');
+            const top = document.querySelector('.pb-workbench').getBoundingClientRect().bottom;
+            return {
+                selectedSource: pb.ui.selected === document.querySelector('.pb-workbench-copy').closest('.pb-column'),
+                treeTarget: pb.ui.treeTarget === target,
+                offset: target.getBoundingClientRect().top - top,
+                visible: target.getBoundingClientRect().top < innerHeight,
+                atBottom: Math.abs(scrollY + innerHeight - document.scrollingElement.scrollHeight) < 2,
+                paste: pb.ui.pasting,
+                html: window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data,
+                focus: document.activeElement.dataset.pbAction
+            };
+        });
+        I.assertTrue(navigation.selectedSource, 'Tree navigation must preserve the source block');
+        I.assertTrue(navigation.treeTarget, 'Tree navigation must remember the destination independently');
+        I.assertTrue(navigation.visible && navigation.offset >= 19 && (navigation.offset <= 21 || navigation.atBottom), 'The destination must be revealed below the toolbar, allowing the document bottom to limit scrolling');
+        I.assertEqual(navigation.focus, 'structure', 'Closing the tree must restore keyboard focus without scrolling back');
+        I.assertDeepEqual(navigation.paste, state.paste, 'Navigation must preserve the active clipboard snapshot');
+        I.assertEqual(navigation.html, original.html, 'Navigation must not edit content or complete the operation');
+        I.click(toolbar+' [data-pb-action=structure]');
+        I.waitForVisible('.pb-structure', 10);
+        I.seeInField('.pb-structure input[type=search]', 'Destination autotest');
+        I.seeElement('.pb-structure [role=treeitem][data-type=column][aria-selected=true]');
+        I.saveScreenshot('pagebuilder-structure-'+action+'.png');
+        I.pressKey('Escape');
+        I.waitForInvisible('.pb-structure', 10);
+        I.seeElement(toolbar+'.is-'+mode);
+        I.pressKey('Escape');
+        I.waitForInvisible(toolbar+'.is-'+mode, 10);
+        I.assertEqual(await I.executeScript(() => window.getSaveData().editable.find(item => item.wjAppField === 'doc_data').data), original.html, 'A second Escape must cancel without changing content');
+
+        if (action === 'duplicate' || action === 'move') {
+            I.click(toolbar+' [data-pb-action=more]');
+            I.click(toolbar+' [data-pb-action='+action+']');
+            I.click(toolbar+' [data-pb-action=structure]');
+            I.waitForVisible(destination, 10);
+            I.click(destination);
+            I.waitForInvisible('.pb-structure', 10);
+            I.click('.pb-navigation-destination-autotest > aside.pb-append');
+            I.waitForElement('.pb-navigation-destination-autotest + .pb-column .pb-workbench-copy', 10);
+            I.assertEqual(await I.grabNumberOfVisibleElements('.pb-workbench-copy'), action === 'duplicate' ? 2 : 1, 'Completing the operation must use the original source at the navigated destination');
+        }
+        if (action === 'paste') I.executeScript(() => localStorage.removeItem('webjet.pagebuilder.clipboard'));
+        I.switchTo();
+        I.amAcceptingPopups();
+        DTE.cancel();
+    });
+}
+
+Scenario('workbench move and duplicate hints share the toolbar with structure and restore focus', async ({I, DTE, Document}) => {
     await openWorkbenchFixture(I, DTE, Document);
     const before = await workbenchGeometry(I);
     await I.usePlaywrightTo('verify destination hints, cancellation and completed duplication', async ({page}) => {
@@ -1945,10 +2039,12 @@ Scenario('workbench move and duplicate hints replace the toolbar and restore foc
         for (const width of [1440, 1057, 720]) {
             await page.setViewportSize({width, height: 1052});
             for (const action of ['duplicate', 'move']) {
+                const normalHeight = await bar.evaluate(element => element.getBoundingClientRect().height);
                 await bar.locator('[data-pb-action=more]').click();
                 await bar.locator('[data-pb-action='+action+']').click();
                 await bar.locator('.pb-move-hint').waitFor({state: 'visible'});
-                assert.deepStrictEqual(await bar.locator('button:visible').evaluateAll(buttons => buttons.map(button => button.dataset.pbAction)), ['end-move'], 'The destination hint must replace the structure toolbar');
+                assert.deepStrictEqual(await bar.locator('button:visible').evaluateAll(buttons => buttons.map(button => button.dataset.pbAction)), ['structure', 'end-move'], 'The destination hint must retain structure navigation');
+                assert.equal(await bar.evaluate(element => element.getBoundingClientRect().height), normalHeight, 'Starting an operation must preserve the toolbar height');
                 assert.equal(await frame.locator('.pb-notify').isVisible(), false, 'Choosing a destination must not show the old notification popup');
                 assert.equal(await bar.locator('.pb-move-hint [role=status]').textContent(), action === 'duplicate' ? 'Vyberte miesto, kam chcete blok duplikovať.' : 'Vyberte miesto, kam chcete blok presunúť.', 'Each operation must explain which destination to choose');
                 assert.ok((await bar.locator('[data-pb-action=end-move]').textContent()).includes('Esc'), 'The Exit action must advertise the Escape shortcut');
@@ -1956,7 +2052,8 @@ Scenario('workbench move and duplicate hints replace the toolbar and restore foc
                 const layout = await bar.evaluate(element => {
                     const hint = element.querySelector('.pb-move-hint'), button = hint.querySelector('button');
                     const barRect = element.getBoundingClientRect(), hintRect = hint.getBoundingClientRect(), buttonRect = button.getBoundingClientRect();
-                    return {singleRow: Math.abs(barRect.height - hintRect.height) <= 2, fits: hint.scrollWidth <= hint.clientWidth, exitRight: buttonRect.right <= barRect.right && buttonRect.right >= barRect.right - 12};
+                    const structureRect = element.querySelector('[data-pb-action=structure]').getBoundingClientRect();
+                    return {singleRow: Math.abs(structureRect.top - hintRect.top) <= 1 && hintRect.left >= structureRect.right, fits: hint.scrollWidth <= hint.clientWidth, exitRight: buttonRect.right <= barRect.right && buttonRect.right >= barRect.right - 12};
                 });
                 assert.deepStrictEqual(layout, {singleRow: true, fits: true, exitRight: true}, 'The hint must fit one toolbar row with Exit aligned to the right');
                 if (width === 1057 && action === 'duplicate') await page.locator('#DTE_Field_data-pageBuilderIframe').screenshot({path:'../../../build/test/pagebuilder-duplicate-hint.png'});

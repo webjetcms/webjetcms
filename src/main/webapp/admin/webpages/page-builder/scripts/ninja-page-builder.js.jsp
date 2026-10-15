@@ -183,14 +183,11 @@
             ui.search.on('input', function() { ui.treeDirty = true; me.schedule_workbench(); });
             ui.tree.on('click', '[role=treeitem]', function(e) {
                 e.stopPropagation();
-                if (me.workbench_busy()) return;
+                if (!me.workbench_structure_available()) return;
                 if ($(e.target).closest('[data-pb-expand]').length) {
                     me.toggle_workbench_branch(this);
                 } else {
-                    me.toggle_workbench_branch(this, true);
-                    me.select_workbench_element($(this).data('element'), true);
-                    this.focus({ preventScroll: true });
-                    if (window.innerWidth < 768) me.toggle_workbench_structure(false);
+                    me.activate_workbench_tree_item(this);
                 }
             }).on('keydown', function(e) { me.workbench_tree_key(e); });
             ui.bar.on('keydown', function(e) {
@@ -262,15 +259,15 @@
                     me.close_modal();
                 } else if (me.$wrapper.hasClass(me.state.is_library_active)) {
                     me.hide_library();
+                } else if (!ui.drawer.prop('hidden')) {
+                    me.toggle_workbench_structure(false);
+                    ui.bar.find('[data-pb-action=structure]')[0].focus({ preventScroll: true });
                 } else if (me.workbench_busy()) {
                     me.disable_after_esc_pressed(true);
                     me.restore_workbench_focus();
                 } else if (ui.inserting) {
                     me.close_workbench_insertion();
                     if (!ui.insertClosing) me.restore_workbench_insertion_focus();
-                } else if (!ui.drawer.prop('hidden')) {
-                    me.toggle_workbench_structure(false);
-                    ui.bar.find('[data-pb-action=structure]').trigger('focus');
                 } else if (ui.selected) {
                     me.select_workbench_element(null);
                 } else handled = false;
@@ -353,6 +350,12 @@
                 .some(state => this.$wrapper.hasClass(state) || this.$wrapper.find('.'+state).length > 0);
         },
 
+        /** Allows destination navigation while retaining modal and column-sizing restrictions. */
+        workbench_structure_available: function() {
+            return ![this.state.is_modal_open, this.state.is_library_active, this.state.is_resize_columns]
+                .some(state => this.$wrapper.hasClass(state) || this.$wrapper.find('.'+state).length > 0);
+        },
+
         /** Resolves only elements recognized by the existing grid/editor initialization. */
         workbench_target: function(target) {
             if ($(target).closest(this.tagc.empty_placeholder_wrapper+', '+this.tagc.modal+', '+this.tagc.library+', '+this.tagc.notify).length) return null;
@@ -406,13 +409,17 @@
             if (element) {
                 ui.resizeObserver.observe(element);
                 $(element).parentsUntil(this.$wrapper).each(function() { ui.expanded.add(this); });
-                if (scroll && $(element).is(':visible')) {
-                    var rect = element.getBoundingClientRect(), top = ui.bar[0].getBoundingClientRect().bottom;
-                    window.scrollBy({ top: rect.top - top - 20, behavior: 'instant' });
-                }
+                if (scroll) this.scroll_workbench_element(element);
             }
             this.refresh_workbench_selection();
             this.schedule_workbench();
+        },
+
+        /** Reveals a block below the fixed toolbar without changing the active editing operation. */
+        scroll_workbench_element: function(element) {
+            if (!$(element).is(':visible')) return;
+            var rect = element.getBoundingClientRect(), top = this.ui.bar[0].getBoundingClientRect().bottom;
+            window.scrollBy({ top: rect.top - top - 20, behavior: 'instant' });
         },
 
         /** Mirrors the existing local controller capabilities into the shared toolbar. */
@@ -661,15 +668,16 @@
                 }
                 return;
             }
+            if (action === 'structure' || action === 'close-structure') {
+                if (!me.workbench_structure_available()) return;
+                me.toggle_workbench_structure(action === 'structure' && ui.drawer.prop('hidden'));
+                if (action === 'close-structure') ui.bar.find('[data-pb-action=structure]')[0].focus({ preventScroll: true });
+                return;
+            }
             if (ui.inserting) return;
             if (action === 'ancestors') {
                 ui.path.toggleClass('is-expanded');
                 $(invoker).attr('aria-expanded', String(ui.path.hasClass('is-expanded')));
-                return;
-            }
-            if (action === 'structure' || action === 'close-structure') {
-                me.toggle_workbench_structure(action === 'structure' && ui.drawer.prop('hidden'));
-                if (action === 'close-structure') ui.bar.find('[data-pb-action=structure]').trigger('focus');
                 return;
             }
             if (action === 'guides') {
@@ -968,6 +976,21 @@
             }
         },
 
+        /** Navigates to a destination in operation modes and selects normally outside them. */
+        activate_workbench_tree_item: function(item) {
+            var ui = this.ui, element = $(item).data('element');
+            var navigating = ui.inserting || this.$wrapper.hasClass(this.state.is_moving_child);
+            this.toggle_workbench_branch(item, true);
+            if (navigating) {
+                ui.treeTarget = element;
+                this.scroll_workbench_element(element);
+            } else this.select_workbench_element(element, true);
+            if (navigating || window.innerWidth < 768) {
+                this.toggle_workbench_structure(false);
+                ui.bar.find('[data-pb-action=structure]')[0].focus({ preventScroll: true });
+            } else item.focus({ preventScroll: true });
+        },
+
         /** Builds the structure on opening or searching, preserving expansion and manual scrolling. */
         render_workbench_tree: function() {
             var me = this, ui = me.ui, query = ui.search.val().trim().toLocaleLowerCase();
@@ -996,7 +1019,7 @@
                     parentItem.find('[data-pb-expand]').first().prop('hidden', false);
                     list = $('<ul>', { role: 'group', hidden: !expanded }).appendTo(parentItem);
                 }
-                var item = $('<li>', { role: 'treeitem', tabindex: -1, 'aria-selected': String(element === ui.selected), 'data-type': type }).data('element', element);
+                var item = $('<li>', { role: 'treeitem', tabindex: -1, 'aria-selected': String(element === (ui.treeTarget || ui.selected)), 'data-type': type }).data('element', element);
                 var row = $('<div>').appendTo(item);
                 $('<button>', { type: 'button', tabindex: -1, 'data-pb-expand': '', hidden: true, 'aria-label': ui.labels[type] }).text('›').appendTo(row);
                 $('<span>', { 'class': me.options.prefix+'-structure-dot', 'aria-hidden': 'true' }).appendTo(row);
@@ -1006,7 +1029,7 @@
                 ui.treeNodes.set(element, item);
             });
             ui.noResults.prop('hidden', visible.size > 0);
-            var active = ui.treeNodes.get(focused) || ui.treeNodes.get(ui.selected) || ui.tree.children().first();
+            var active = ui.treeNodes.get(focused) || ui.treeNodes.get(ui.treeTarget || ui.selected) || ui.tree.children().first();
             if (active && !active.is(':visible')) active = ui.tree.find('[role=treeitem]:visible').first();
             if (active && active.length) {
                 active.attr('tabindex', 0);
@@ -1021,7 +1044,7 @@
         refresh_workbench_tree_selection: function() {
             var me = this, ui = me.ui, tree = ui.tree[0];
             ui.tree.find('[aria-selected=true]').attr('aria-selected', 'false');
-            var selected = ui.treeNodes.get(ui.selected);
+            var selected = ui.treeNodes.get(ui.treeTarget || ui.selected);
             if (selected) {
                 selected.attr('aria-selected', 'true');
                 selected.parentsUntil(ui.tree, '[role=treeitem]').each(function() { me.toggle_workbench_branch(this, true); });
@@ -1047,6 +1070,7 @@
         },
 
         workbench_tree_key: function(e) {
+            if (!this.workbench_structure_available()) return;
             var item = $(e.target).closest('[role=treeitem]'), nodes = this.ui.tree.find('[role=treeitem]:visible');
             if (!item.length) return;
             var index = nodes.index(item), next;
@@ -1061,8 +1085,7 @@
                 if (item.attr('aria-expanded') === 'true') this.toggle_workbench_branch(item, false);
                 else next = item.parent().closest('[role=treeitem]')[0];
             } else if (e.key === 'Enter' || e.key === ' ') {
-                this.toggle_workbench_branch(item, true);
-                this.select_workbench_element(item.data('element'), true);
+                this.activate_workbench_tree_item(item[0]);
             } else return;
             e.preventDefault();
             e.stopPropagation();
@@ -1137,6 +1160,7 @@
                     ui.resizeHint.find('[data-pb-action=end-resize]')[0].focus({ preventScroll: true });
                 }
                 var moving = me.$wrapper.hasClass(me.state.is_moving_child);
+                if (!moving && !ui.inserting) ui.treeTarget = null;
                 var moveStarted = moving && !ui.bar.hasClass('is-moving');
                 ui.bar.toggleClass('is-moving', moving);
                 ui.moveHint.prop('hidden', !moving);
@@ -1180,12 +1204,14 @@
                 var busy = me.workbench_busy();
                 me.position_workbench_insertion(top);
                 ui.path.find('button').prop('disabled', busy || ui.inserting);
-                if (busy) me.toggle_workbench_structure(false);
+                var structureAvailable = me.workbench_structure_available();
+                if (!structureAvailable) me.toggle_workbench_structure(false);
                 ui.actions.find('button').each(function() {
                     var action = this.getAttribute('data-pb-action');
                     this.disabled = (busy && !(resizing && action === 'resize')) || (ui.inserting && action !== 'insert') || (['previous', 'next'].includes(action) && !me.workbench_sibling(action)) || (action === 'paste' && !me.read_workbench_clipboard());
                 });
-                ui.bar.find('[data-pb-action=structure], [data-pb-action=guides]').prop('disabled', busy || ui.inserting);
+                ui.bar.find('[data-pb-action=structure]').prop('disabled', !structureAvailable);
+                ui.bar.find('[data-pb-action=guides]').prop('disabled', busy || ui.inserting);
                 ui.bar.find('[data-pb-action=end-insert]').prop('disabled', busy);
                 ui.bar.find('[data-pb-action=resize]').attr('aria-pressed', String(resizing)).find('span').text(ui.selected ? me.get_actual_column_size($(ui.selected))+' / '+me.options.max_col_size : '');
                 var width = window.innerWidth, size = width < 768 ? 'phone' : width < 1200 ? 'tablet' : 'desktop';
@@ -2996,6 +3022,7 @@
             if (this.ui) {
                 this.ui.bar.removeClass('is-moving');
                 this.ui.moveHint.prop('hidden', true);
+                this.toggle_workbench_structure(false);
                 this.schedule_workbench();
             }
 
