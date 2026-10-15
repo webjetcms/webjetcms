@@ -105,8 +105,6 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Formuláre
 
-- Viackrokové formuláre - pridané [kopírovanie polí medzi formulármi a krokmi](redactor/apps/multistep-form/README.md#kopírovanie-polí-medzi-formulármi). Vloženie otvorí editor s uloženými nastaveniami poľa; podmienky zobrazenia a povinnosti sa neprenášajú. Interná schránka funguje medzi kartami prehliadača a umožňuje opakované vloženie počas 30 minút (#58826).
-- Viackrokové formuláre - pridaná možnosť [Zobraziť obsah bez presmerovania](redactor/apps/form/README.md#karta---nastavenia). Prepínač  použije webstránku z poľa **Presmerovanie po vyplnení** a po úspešnom odoslaní nahradí prednastavenu hlášku jej obsahom bez zmeny URL adresy. Ak návštevník nemá oprávnenie na zobrazenie webstránky, zobrazí sa prednastavená hláška o úspešnom odoslaní (#58826).
 - Viackrokové formuláre - pridaná možnosť upraviť [HTML tlačidla na predchádzajúci krok](redactor/apps/formsimple/README.md#html-kód-tlačidiel) cez prekladový kľúč `components.mustistep.form.back_button` (#osk782).
 - Viackrokové formuláre - po neúspešnom prechode na ďalší krok alebo odoslaní sa stránka posunie na prvé viditeľné chybové hlásenie aj pri opakovanom pokuse (#58794).
 - Formuláre - validácia nahraných súborov rozlišuje nepovolený znak v názve a nepovolenú príponu. Chyba názvu uvedie konkrétny zakázaný znak alebo reťazec. Názvy súborov v chybových hláseniach sa zobrazujú ako text, aby sa prípadné HTML značky v názve nevykonali (#58794).
@@ -138,6 +136,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - pridaná možnosť zadať vlastnú chybovú správu a orezať medzery na začiatku a konci textu zadaného návštevníkom (#osk573).
 - Formulár ľahko a viackrokové formuláre - [vlastný HTML kód tooltipu](redactor/apps/formsimple/README.md#vlastný-html-kód-tooltipu) v prekladovom kľúči `components.formsimple.tooltipCode` podporuje značky s identifikátormi poľa, položky a kroku vrátane unikátneho `${tooltipId}`. Ovládací prvok je tak možné pomocou `aria-describedby` jednoznačne prepojiť s obsahom tooltipu aj pri opakovanom vložení formulára na stránku. Viackrokový formulár po každom zobrazení kroku publikuje na objekte `window` [udalosť `WJ.multistepForm.stepShown`](redactor/apps/multistep-form/README.md#javascript-udalosť-po-zobrazení-kroku) s odkazmi na jeho HTML elementy a identifikátormi formulára a kroku (#306).
 - Formulár ľahko a viackrokové formuláre - predvolený tooltip je po novom dostupný myšou aj klávesnicou, poskytuje stabilný kontextový názov a opis, zostáva zobrazený pri presune kurzora na jeho obsah a je možné ho zatvoriť klávesom `Escape` (#306).
+- Viackrokové formuláre - pridané [kopírovanie polí medzi formulármi a krokmi](redactor/apps/multistep-form/README.md#kopírovanie-polí-medzi-formulármi). Vloženie otvorí editor s uloženými nastaveniami poľa; podmienky zobrazenia a povinnosti sa neprenášajú. Interná schránka funguje medzi kartami prehliadača a umožňuje opakované vloženie počas 30 minút (#58826).
+- Viackrokové formuláre - pridaná možnosť [Zobraziť obsah bez presmerovania](redactor/apps/form/README.md#karta---nastavenia). Prepínač  použije webovú stránku z poľa **Presmerovanie po vyplnení** a po úspešnom odoslaní nahradí prednastavenu hlášku jej obsahom bez zmeny URL adresy. Ak návštevník nemá oprávnenie na zobrazenie webovej stránky, zobrazí sa prednastavená hláška o úspešnom odoslaní (#58826).
 
 ### Sémantické vyhľadávanie
 
