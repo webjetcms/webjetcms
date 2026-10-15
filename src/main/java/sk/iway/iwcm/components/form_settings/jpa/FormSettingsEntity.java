@@ -105,14 +105,18 @@ public class FormSettingsEntity {
     @Size(max = 255)
     private String forward;
 
-    @Column(name = "forward_as_content")
-    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title="editor.form.forward_as_content", className="not-formsimple not-form")
-    private Boolean forwardAsContent = false;
-
     @Column(name = "forward_fail")
     @DataTableColumn(inputType = DataTableColumnType.ELFINDER, title="editor.form.forward_fail", className="dt-tree-page-null")
     @Size(max = 255)
     private String forwardFail;
+
+    @Column(name = "forward_as_content")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title="editor.form.forward_as_content", className="not-formsimple not-form",
+        editor = @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+        })
+    )
+    private Boolean forwardAsContent = false;
 
     /* Old forms used selection of forward types, because they wanted for example add all params to request we do NOT do this */
     @Column(name = "forward_type")
@@ -184,7 +188,9 @@ public class FormSettingsEntity {
     private String formProcessor;
 
     @Column(name = "encryption_key")
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA_WRAP, title= "components.form.encryptionKey")
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA_WRAP, title= "components.form.encryptionKey", editor = @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before"),
+    }))
     @Size(max = 1024)
     private String encryptKey;
 
@@ -205,7 +211,9 @@ public class FormSettingsEntity {
     private String fieldsEmailHeader;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, title = "components.form.encryptionKey.tooltip", className = "allow-html")
+    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, title = "components.form.encryptionKey.tooltip", className = "allow-html", editor = @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after"),
+    }))
     private transient String encrypKeyInfo;
 
     @Transient

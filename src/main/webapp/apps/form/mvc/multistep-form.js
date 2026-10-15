@@ -1270,7 +1270,7 @@ export class MultistepForm {
                 }
                 if (typeof response.thankYouHtml === 'string' && response.thankYouHtml.trim() !== '') {
                     const thankYou = document.createElement('div');
-                    thankYou.className = 'multistepThankYouContent';
+                    thankYou.className = 'multistep-thankyou-container';
                     thankYou.tabIndex = -1;
                     // jQuery executes embedded scripts only after the container is attached.
                     this.wrapper.appendChild(thankYou);
