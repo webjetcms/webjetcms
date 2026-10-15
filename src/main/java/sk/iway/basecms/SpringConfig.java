@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
  * http://docs.webjetcms.sk/v2022/#/custom-apps/spring-config/
  */
 
-@Configuration
+@Configuration("basecmsSpringConfig")
 @ComponentScan({
     "sk.iway.basecms",
     "sk.iway.basecms.contact",
