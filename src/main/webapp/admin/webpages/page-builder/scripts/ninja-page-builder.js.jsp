@@ -426,7 +426,8 @@
             ui.actions.append(me.workbench_button('insert', ui.labels.insert, 'plus').attr('aria-pressed', String(ui.inserting)));
             if (!ui.selected) {
                 $('<span>').text(ui.labels.select).appendTo(ui.path);
-                ui.actions.append(me.workbench_paste_button());
+                ui.actions.append(me.workbench_button('more', ui.labels.more, 'more').attr('aria-expanded', 'false'));
+                ui.menu.append(me.workbench_paste_button());
                 return;
             }
             var ancestors = node.parentsUntil(me.$wrapper, me.tagc._grid_element).get().reverse().concat(ui.selected);

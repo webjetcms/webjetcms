@@ -43,30 +43,33 @@ The tools for the selected block are in a fixed toolbar below CKEditor. A clicka
 - More actions (`…`) - opens a menu of other operations with the selected block.
 - Frames (eye or layers icon) - toggles the range of frames displayed.
 
-In the **More actions** menu, you can find, depending on the type of block selected:
+In the **More actions** menu, you can find according to the type of selected block
+
+![](pagebuilder-more-actions.png)
 
 - Style - setting the background image, colors, alignment, padding and other properties.
 - Insert Block Before / Insert Block After - opens the library for the same block type on the selected side of the selection.
 - Move Up / Move Down - moves the block one position in the sequence.
 - Move / Duplicate - displays available target locations on the page; click to select where to move the block or paste a copy of it. You can cancel the location selection by pressing the **Escape** key.
+- Copy / Paste - allows you to copy a block between pages.
 - Add to Favorites - saves the block among your favorite blocks in the library.
 - Delete - deletes the selected block.
 
 The menu contains only the operations supported by the selected type. The regular line is for orientation; the duplicable line and item support moving, duplicating, and deleting. Stand-alone editable text does not have tools for modifying the structure. Moving duplicable elements remains limited to compatible siblings of the same parent.
 
-## Copying blocks between pages
+## Copy blocks between pages
 
-You can transfer a section, container or column to another page together with its content and custom styles:
+You can move a section, container, or column to another page, along with its content and custom styles:
 
-1. Select the block and choose **More actions → Copy** to store it in the internal PageBuilder clipboard. Unsaved text changes are included.
-2. Open the destination page in the same or another browser tab and choose **More actions → Paste**. On an empty page, **Paste** is available directly in the top toolbar.
-3. Click a destination. PageBuilder shows only locations compatible with the copied block type. A section cannot be pasted into a column; the current selection on the destination page does not change the pasted type.
+1. Select the block and save it to the internal Page Builder clipboard using the **More actions → Copy** menu. Any unsaved text edits will also be copied.
+2. Open the target page in the same or another browser tab and select **More actions → Paste**. On a blank page, there is an **Paste** button right in the top bar.
+3. Click on the suggested location. PageBuilder will only display locations that are appropriate for the type of block you are copying. A section cannot be inserted into a column; the current selection on the target page does not change the type of block you are inserting.
 
-The pasted block is selected and ready to edit. Its content and custom styles are independent of the original block and other pasted copies. Press **Escape** to cancel destination selection. Save the destination page using the main **Save** button.
+The inserted block is selected and you can edit it. Its content and custom styles are independent of the original block and other inserted copies. Press **Escape** to deselect the location. Press the main **Save** button to save the changes to the target page.
 
-The clipboard holds one block and supports repeated pasting. Copying another block replaces it. The clipboard is shared between tabs of the same administration in the same browser profile. The block is available for 30 minutes after copying, including after reloading the page or closing the browser. Repeated pasting does not extend this period. Once expired, the clipboard is cleared automatically in an open editor or when PageBuilder is next loaded. Copying again starts a new 30-minute period. The system clipboard is unchanged. **Paste** is disabled until a block has been copied.
+The clipboard contains one block that you can paste repeatedly. Further copying will replace it. The clipboard is shared between tabs of the same administration in the same browser profile. The block is available for 30 minutes after copying, even after refreshing the page or closing the browser. Repeated pasting does not extend the validity. After expiration, the clipboard is emptied the next time Page Builder is loaded or automatically in an open editor; new copying will start another 30 minutes. The system clipboard is not changed. As long as no block is copied, **Paste** is inactive.
 
-Individual duplicable rows and items cannot be copied with this feature; they are transferred as part of a section, container or column. Template CSS and JavaScript files are not transferred, so the resulting appearance and behavior also depend on the destination template.
+Individual duplicate rows and items cannot be copied with this feature; they are transferred as part of a section, container, or column. Template CSS and JavaScript files are not transferred, so the resulting appearance and behavior also depend on the target page template.
 
 ## Style settings
 

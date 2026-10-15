@@ -43,12 +43,15 @@ Nástroje vybraného bloku jsou v pevné liště pod CKEditorem. Klikatelná ces
 - Další akce (`…`) - otevře nabídku dalších operací s vybraným blokem.
 - Rámečky (ikona oka nebo vrstev) - přepíná rozsah zobrazených rámečků.
 
-V nabídce **Další akce** naleznete podle typu vybraného bloku:
+V nabídce **Další akce** naleznete podle typu vybraného bloku
+
+![](pagebuilder-more-actions.png)
 
 - Styl - nastavení obrázku pozadí, barev, zarovnání, odsazení a dalších vlastností.
 - Vložit blok před / Vložit blok za - otevře knihovnu pro stejný typ bloku na zvolené straně výběru.
 - Posunout výše / Posunout níže - posune blok o jednu pozici v pořadí.
 - Přesunout / Duplikovat - zobrazí dostupná cílová místa ve stránce; kliknutím vyberete, kam blok přesunout nebo vložit jeho kopii. Výběr místa můžete zrušit klávesou **Escape**.
+- Zkopírovat / Vložit - umožní kopírovat blok mezi stránkami.
 - Přidat do oblíbených - uloží blok mezi vaše oblíbené bloky v knihovně.
 - Smazat - smaže označený blok.
 
@@ -56,17 +59,17 @@ Nabídka obsahuje pouze operace podporované vybraným typem. Běžný řádek s
 
 ## Kopírování bloků mezi stránkami
 
-Sekci, kontejner nebo sloupec můžete přenést na jinou stránku i s jeho obsahem a vlastními styly:
+Sekci, kontejner nebo sloupec můžete přenést na jinou stránku is jeho obsahem a vlastními styly:
 
-1. Označte blok a v nabídce **Další akce → Zkopírovat** ho uložte do interní schránky PageBuilderu. Zkopírují se i dosud neuložené úpravy textu.
+1. Označte blok a v nabídce **Další akce → Zkopírovat** jej uložte do interní schránky Page Builder. Zkopírují se i zatím neuložené úpravy textu.
 2. Otevřete cílovou stránku ve stejné nebo jiné kartě prohlížeče a vyberte **Další akce → Vložit**. Na prázdné stránce je tlačítko **Vložit** přímo v horní liště.
-3. Klikněte na nabídnuté místo. PageBuilder zobrazí pouze místa vhodná pro typ zkopírovaného bloku. Sekci nelze vložit do sloupce; aktuální výběr na cílové stránce typ vkládaného bloku nemění.
+3. Klepněte na nabídnuté místo. PageBuilder zobrazí pouze místa vhodná pro typ zkopírovaného bloku. Sekci nelze vložit do sloupce; aktuální výběr na cílové stránce typ vkládaného bloku nemění.
 
-Vložený blok se označí a můžete ho upravovat. Jeho obsah a vlastní styly jsou nezávislé na původním bloku i ostatních vložených kopiích. Výběr místa zrušíte klávesou **Escape**. Změny cílové stránky uložíte hlavním tlačítkem **Uložit**.
+Vložený blok se označí a můžete jej upravovat. Jeho obsah a vlastní styly jsou nezávislé na původním bloku i ostatních vložených kopií. Výběr místa zrušíte klávesou **Escape**. Změny cílové stránky uložíte hlavním tlačítkem **Uložit**.
 
-Schránka obsahuje jeden blok, který můžete vložit opakovaně. Další kopírování ho nahradí. Schránka se sdílí mezi kartami téže administrace ve stejném profilu prohlížeče. Blok je dostupný 30 minut od zkopírování, i po obnovení stránky či zavření prohlížeče. Opakované vložení platnost neprodlužuje. Po vypršení se schránka při příštím načtení PageBuilderu nebo automaticky v otevřeném editoru vyprázdní; nové kopírování spustí dalších 30 minut. Systémová schránka se nemění. Dokud není zkopírovaný žádný blok, **Vložit** je neaktivní.
+Schránka obsahuje jeden blok, který můžete vložit opakovaně. Další kopírování jej nahradí. Schránka se sdílí mezi kartami téže administrace ve stejném profilu prohlížeče. Blok je dostupný 30 minut od zkopírování i po obnovení stránky či zavření prohlížeče. Opakované vložení platnost neprodlužuje. Po vypršení se schránka při nejbližším načtení Page Builder nebo automaticky v otevřeném editoru vyprázdní; nové kopírování spustí dalších 30 minut. Systémová schránka se nemění. Dokud není zkopírován žádný blok, **Vložit** je neaktivní.
 
-Samostatné duplikovatelné řádky a položky nelze kopírovat touto funkcí; přenesou se jako součást sekce, kontejneru nebo sloupce. Soubory CSS a JavaScript šablony se nepřenášejí, proto výsledný vzhled a chování závisejí také na šabloně cílové stránky.
+Samostatné duplikovatelné řádky a položky nelze kopírovat touto funkcí; přenesou se jako součást sekce, kontejneru nebo sloupce. Soubory CSS a JavaScript šablony se nepřenášejí, proto výsledný vzhled a chování závisí i na šabloně cílové stránky.
 
 ## Nastavení stylu
 

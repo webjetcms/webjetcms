@@ -63,6 +63,7 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 ![](frontend/templates/templates-edit-advanced.png)
 
 - Added **Thumbnail** tab in the image insertion dialog for setting parameters for [generating thumbnail images](redactor/webpages/working-in-editor/README.md#thumbnail-tab) `thumbnail`. Free size setting mode is supported, as well as [precisely defined size](frontend/thumb-servlet/README.md#constraints) mode by selecting from the options (#58317,#58758).
+- Size selection shows both the mode name and the `ip` number. `learn/check/allow` modes also offer a custom size, `strict` requires an allowed combination, and `deny` the card is hidden. An existing disallowed thumbnail is flagged in `strict` mode and requires a replacement (#353).
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
@@ -88,6 +89,11 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 
 - Page Builder - improved detection of changes in the HTML code of the page so that the message "You probably have unsaved text in the editor" is not displayed even if you have not actually changed any text on the page (#317).
 - [Page Builder](redactor/webpages/pagebuilder.md) - after clicking on the + in the yellow line in the **Insert Block** window on the **Basic** tab, the **Image** and **Application** options have been added. They will open the corresponding editor dialog and allow you to insert content at the selected location (#339).
+- Page Builder - added [block copying between pages](redactor/webpages/pagebuilder.md#block-copying-between-pages). The **Copy** and **Paste** options transfer sections, containers, and columns with content and custom styles. The editor will only offer locations suitable for the block type. The clipboard is valid for 30 minutes from the time of copying (#353).
+- Templates - on the Advanced tab you can set [removing links from page URL](frontend/templates/templates.md#advanced-tab): according to `urlRemoveSpojky`, always remove or keep. This way, the blog can keep links even when removal is enabled for the rest of the site (#353).
+- Changing the folder URL with application to subfolders and subpages also updates non-displayed pages, scheduled versions, versions awaiting approval, and the last working version. It preserves their content, status, and publish date; scheduled publishing no longer reverts to the original URL (#353).
+- SEO - **Browse** settings offer separate options to enable (`index`) and disable (`noindex`). **HTTP Headers** section on the Basic tab shows the current preview `X-Robots-Tag`, `Referrer-Policy` and, if redirect is set, `Location` according to unsaved page settings and server configuration (#353).
+- History - users with the **Clean database** permission can [delete historical versions](redactor/webpages/history.md) directly in the page editor, also by mass selection. The currently published version and versions awaiting approval are protected. Without this permission, canceling future scheduled publishing remains available (#353).
 
 ### Headless mode
 

@@ -163,6 +163,8 @@ Scenario('clipboard copies current content across pages and saves independent re
 
 Scenario('clipboard restricts container and column targets and supports an empty page', async ({I, DT, DTE, Document}) => {
     await openPage(I, DT, DTE, Document, source);
+    I.dontSeeElement(toolbar+'-actions [data-pb-action=paste]');
+    I.seeElement(toolbar+' [data-pb-action=more]');
     for (const type of ['container', 'column']) {
         copyBlock(I, type);
         startPaste(I);
@@ -174,8 +176,8 @@ Scenario('clipboard restricts container and column targets and supports an empty
     }
     copyBlock(I, 'section');
     removeOnlySection(I);
-    I.click(toolbar+' [data-pb-action=paste]');
-    I.waitForVisible('.pb-insert-layer', 10);
+    I.dontSeeElement(toolbar+'-actions [data-pb-action=paste]');
+    startPaste(I);
     I.click('.pb-insert-point[data-type=section] button');
     waitForEditors(I);
     I.seeElement('#wjInline-docdata > .clipboard-section-autotest');
@@ -308,6 +310,7 @@ Scenario('clipboard rejects unavailable destinations and invalid storage without
     await openPage(I, DT, DTE, Document, source);
     copyBlock(I, 'column');
     removeOnlySection(I);
+    I.click(toolbar+' [data-pb-action=more]');
     I.click(toolbar+' [data-pb-action=paste]');
     I.dontSeeElement('.pb-insert-layer');
     I.dontSeeElement('#wjInline-docdata > section');

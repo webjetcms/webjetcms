@@ -46,19 +46,19 @@ Image generation is server-side-loaded, so it is protected by SPAM protection. T
   - `check` - ​​allows only specified values, if an administrator is logged in, automatically adds a new dimension to the list
   - `strict` - ​​allows generating an image only for the specified values ​​(checks the list of allowed values)
 
-The **Thumbnail** tab in image properties follows `thumbServletAllowedSizeMode`:
+The **Thumbnail** tab in the image properties is controlled by the `thumbServletAllowedSizeMode` setting:
 
-| Mode | Allowed sizes configured | Empty list |
+| Mode | Specified permitted dimensions | Empty list |
 | --- | --- | --- |
-| `strict` | Choose a preset or **Do not use a thumbnail** | Only **Do not use a thumbnail** |
-| `learn`, `check`, `allow` | Choose a preset, **Do not use a thumbnail**, or **Enter a custom size…** | Original size fields |
-| `deny` | Tab hidden | Tab hidden |
+| `strict` | Select an allowed size or **Do not use thumbnail** | Just **Do not use thumbnail** |
+| `learn`, `check`, `allow` | Select a size, **Do not use thumbnail** or **Enter custom size…** | Original fields for entering dimensions |
+| `deny` | The card is hidden. | The card is hidden. |
 
-Options are read from `thumbServletAllowedSizes` (comma or newline separated), deduplicated and sorted numerically by width and height. For example, `96x96ip2` shows **96 px – Fixed height (ip2)**. The mode name reuses the translation from the **Mode** field. A value without `ip` shows maximum dimensions `(ip0)`. Background color is shown as a hex value; disabling the point of interest and quality are appended to the label.
+The options are read from `thumbServletAllowedSizes` (separated by a comma or newline), duplicates are removed, and sorted numerically by width and height. For example, `96x96ip2` is displayed as **96px - Fixed Height (ip2)**. The mode name uses the same translation as the **Mode** field. A value without `ip` is displayed as maximum dimensions `(ip0)`. The background color is displayed in hexadecimal; POI off and quality are added to the description.
 
-The selected combination is saved in both the image URL and the `fixedSize` CSS class. Quality adds a `-q90` suffix, for example `fixedSize-730-401-5-ff00ff-true-q90`. Reopening the dialog selects the matching option. If an existing size is missing from the list, `strict` displays a warning and requires choosing an allowed size or **Do not use a thumbnail**. Other modes open the custom fields with the existing values. In `deny`, confirming the dialog preserves the existing thumbnail.
+The selected combination is saved in the image URL and CSS class `fixedSize`. The quality is written with the suffix `-q90`, for example `fixedSize-730-401-5-ff00ff-true-q90`. When reopened, the corresponding option is selected. If the existing size is not in the list, in `strict` mode, a warning is displayed and an allowed size or **Do not use thumbnail** must be selected. In other modes, the custom setting with the original values ​​is opened. In `deny` mode, confirming the dialog will keep the original thumbnail.
 
-**Do not use a thumbnail** has an empty value and uses the original image: it removes the `/thumb/` prefix, thumbnail parameters and the `fixedSize` class.
+The **Do not use thumbnail** option has an empty value and uses the original image: it removes the `/thumb/` prefix, thumbnail parameters, and `fixedSize` class.
 
 First set the `learn` mode to learn existing values ​​and then set the `check` mode in which the values ​​are checked, but if the administrator is logged in, the new value is automatically added to the list of allowed values. WebJET automatically sets the `learn` mode during an update and then after at least a month and another restart it switches to the `check` mode.
 

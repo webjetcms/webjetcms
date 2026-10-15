@@ -50,9 +50,9 @@ Karta **Miniatura** ve vlastnostech obrázku se řídí nastavením `thumbServle
 
 | Režim | Zadané povolené rozměry | Prázdný seznam |
 | --- | --- | --- |
-| `strict` | Výběr povoleného rozměru nebo **Nepoužít miniaturu** | Pouze **Nepoužít miniaturu** |
+| `strict` | Výběr povoleného rozměru nebo **Nepoužít miniaturu** | Jen **Nepoužít miniaturu** |
 | `learn`, `check`, `allow` | Výběr rozměru, **Nepoužít miniaturu** nebo **Zadat vlastní rozměr…** | Původní pole pro zadání rozměrů |
-| `deny` | Karta je skrytá | Karta je skrytá |
+| `deny` | Karta je skryta | Karta je skryta |
 
 Možnosti se načtou z `thumbServletAllowedSizes` (oddělené čárkou nebo novým řádkem), odstraní se duplicity a seřadí se číselně podle šířky a výšky. Například `96x96ip2` se zobrazí jako **96 px – Fixní výška (ip2)**. Název režimu používá stejný překlad jako pole **Režim**. Hodnota bez `ip` se zobrazí jako maximální rozměry `(ip0)`. Barva pozadí se zobrazí hexadecimálně; vypnutí bodu zájmu a kvalita se doplní do popisu.
 
