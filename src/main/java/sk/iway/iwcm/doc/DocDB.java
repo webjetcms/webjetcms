@@ -842,7 +842,6 @@ public class DocDB extends DB
 			String onlyAvailableAppend = "";
 			if (onlyAvailable) {
 				onlyAvailableAppend = "available="+DB.getBooleanSql(true)+" AND";
-				if (Constants.DB_TYPE == Constants.DB_ORACLE) onlyAvailableAppend = "AND available="+DB.getBooleanSql(true)+" AND";
 			}
 
 			if (Constants.DB_TYPE == Constants.DB_MSSQL)
@@ -857,7 +856,7 @@ public class DocDB extends DB
 			else if (Constants.DB_TYPE == Constants.DB_ORACLE)
 			{
 				//POZOR: ORA tu chyba limit!
-				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d,  users u WHERE d.author_id=u.user_id(+) "+onlyAvailableAppend+" group_id=" + groupId + " ORDER BY " + order.toString();
+				sql = "SELECT u.title as u_title, u.first_name, u.last_name, u.email, u.photo, d.* FROM documents d,  users u WHERE d.author_id=u.user_id(+) AND "+onlyAvailableAppend+" group_id=" + groupId + " ORDER BY " + order.toString();
 			}
 			else
 			{
