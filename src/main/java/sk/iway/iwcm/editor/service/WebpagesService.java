@@ -600,6 +600,7 @@ public class WebpagesService {
 		EditorForm form = new EditorForm();
 		form.setDocId(doc.getDocId());
 		form.setGroupId(doc.getGroupId());
+		form.setTempId(doc.getTempId());
 		form.setTitle(doc.getTitle());
 		form.setNavbar(doc.getNavbar());
 		form.setVirtualPath(Boolean.TRUE.equals(doc.getUrlInheritGroup()) && Tools.isNotEmpty(doc.getEditorVirtualPath()) ? doc.getEditorVirtualPath() : "");
