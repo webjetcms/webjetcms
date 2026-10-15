@@ -633,6 +633,29 @@ Scenario('Zmena linky btn', async ({ I, DT, DTE }) => {
 
 });
 
+Scenario('Repeated new page initialization after closing the editor', async ({ I, DT, DTE, Document }) => {
+     Document.resetPageBuilderMode();
+     I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=40273');
+     DT.waitForLoader();
+     DTE.waitForEditor();
+     await I.executeScript(() => {
+          window.autotestEditorErrors = [];
+          window.addEventListener('error', event => window.autotestEditorErrors.push(event.message));
+     });
+
+     for (let attempt = 0; attempt < 5; attempt++) {
+          DTE.cancel('datatableInit');
+          I.click(DT.btn.add_button);
+          DTE.waitForEditor();
+          I.waitForFunction(() => {
+               const field = window.webpagesDatatable.EDITOR.field('data').s.opts;
+               return field.dirtyDataOriginal !== undefined;
+          }, 30);
+          I.assertDeepEqual(await I.executeScript(() => window.autotestEditorErrors), [], 'Reopening the editor must not raise JavaScript errors');
+     }
+     DTE.cancel('datatableInit');
+});
+
 Scenario(tracedScenario, ({ I, DT, DTE, Document }) => {
      I.relogin("admin");
      var date = I.formatDate((new Date()).getTime());

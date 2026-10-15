@@ -1301,7 +1301,7 @@ Scenario('Jstree filtering', async ({ I }) => {
     I.jstreeFilter('sveta');
     I.seeElement(locate('.jstree-anchor').withText('Jet portal 4'));
     I.clickCss('#tree-folder-search-clear-button');
-    I.waitForInvisible("div.dt-processing", 40);
+    I.jstreeWaitForLoader();
     I.dontSeeInField('#tree-folder-search-input', pageName);
     I.seeElement(locate('.jstree-node.jstree-open').withText("Jet portal 4"));
 
@@ -1353,7 +1353,7 @@ Scenario('Jstree filtering', async ({ I }) => {
     I.jstreeFilter('test');
     I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('Kôš'));
     I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('System'));
-    I.seeElement(locate('.jstree-anchor.jstree-search').withText('subone-autotest'));
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('subone-autotest').first());
 });
 Scenario('Set default ordering setting before', ({ I }) => {
     I.amOnPage('/admin/v9/webpages/web-pages-list/');

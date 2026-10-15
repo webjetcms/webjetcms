@@ -390,7 +390,7 @@ function userEditDialog(I, login, isSelf) {
      I.clickCss("#modalIframe div.modal-header button.btn-close");
 }
 
-Scenario("Useredit-dialog @current", ({I}) => {
+Scenario("Useredit-dialog", ({I}) => {
 
      I.say("Checking standard user with all perms");
      userEditDialog(I, "tester", false);

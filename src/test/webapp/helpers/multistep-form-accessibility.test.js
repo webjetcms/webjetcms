@@ -213,10 +213,19 @@ for (const [buttonName, instance, width, motion] of [
             await wrapper.getByRole("button", { name: buttonName }).click();
             await page.waitForFunction(name => !window[`${name}Form`]._isNavigating, instance);
             assert.equal(submissions, attempt);
-            await page.waitForFunction(selector => {
+            // Wait until the smooth scroll has settled before the next submission can scroll away.
+            const scrollState = await page.evaluateHandle(() => ({ top: null, bottom: null, stableFrames: 0 }));
+            await page.waitForFunction(({ selector, state }) => {
                 const rect = document.querySelector(selector).getBoundingClientRect();
-                return rect.top >= 80 && rect.bottom <= innerHeight;
-            }, `#multistep-form-wrapper-${instance} .cs-error-${instance === "first" ? "f1" : "f2"}-email`, { timeout: 1500 });
+                state.stableFrames = rect.top === state.top && rect.bottom === state.bottom ? state.stableFrames + 1 : 0;
+                state.top = rect.top;
+                state.bottom = rect.bottom;
+                return state.stableFrames >= 3 && rect.top >= 80 && rect.bottom <= innerHeight;
+            }, {
+                selector: `#multistep-form-wrapper-${instance} .cs-error-${instance === "first" ? "f1" : "f2"}-email`,
+                state: scrollState
+            }, { timeout: 5000, polling: "raf" });
+            await scrollState.dispose();
             assert.equal(await error.evaluate(element => element === document.activeElement), true);
         }
     });
