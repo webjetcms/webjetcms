@@ -70,6 +70,21 @@ Druhý sloupec obsahuje položky formuláře (nebo položky kroku formuláře), 
 
 ![](form-item-editor.png)
 
+### Kopírování polí mezi formuláři
+
+Nastavené pole můžete použít v jiném formuláři nebo kroku bez opětovného vyplňování jeho nastavení:
+
+1. V tabulce **Položky formuláře** označte jedno uložené pole a klikněte na <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-clipboard" aria-hidden="true"></i></span></button> pro zkopírování.
+2. Otevřete cílový formulář ve stejné nebo jiné kartě prohlížeče a vyberte krok.
+3. Klepněte na <button class="btn btn-sm btn-outline-secondary buttons-paste-field" type="button"><span><i class="ti ti-clipboard-plus" aria-hidden="true"></i></span></button> pro vložení zkopírovaného pole. Otevře se editor nového pole s původním nastavením a vybraným cílovým krokem. Pořadí je předvyplněno na konec kroku.
+4. Podle potřeby upravte nastavení a uložte. Zavřením editoru bez uložení nevznikne nové pole.
+
+Kopíruje se uložený stav pole včetně textů, možností nebo odkazů na číselník, validaci, nastavení **Povinné pole** a nastavení statistiky. **Podmínky zobrazení a povinnosti se nekopírují**, protože odkazují na pole původního formuláře. Nekopírují se ani počítadla chyb. Původní pole i jeho podmínky zůstanou zachovány.
+
+Interní schránka uchovává jedno pole **30 minut** a umožňuje opakované vložení. Kopírování dalšího pole nahradí její obsah; vložení platnost neprodlužuje. Schránka funguje i po obnovení stránky a mezi kartami stejné adresy administrace ve stejném profilu prohlížeče, pro stejného uživatele a doménu. Systémová schránka se nemění. Tlačítko **Vložit pole** je dostupné po výběru kroku, pokud schránka obsahuje platné pole podporovaného typu. Můžete také vkládat do prázdného kroku.
+
+Kopie je samostatná: následné úpravy původního pole ji nezmění. CSS šablony a skripty kroku se nepřenášejí, proto výsledný vzhled závisí na cílovém formuláři.
+
 ### Přidávání a úprava položek
 
 Editor pro přidávání a úpravu položek je speciální tím, že mění svůj obsah podle zvoleného typu pole (položky). To znamená, že pro každý typ položky (např. Jméno, Příjmení atd.) se zobrazí různá nastavení a možnosti konfigurace. Podle zvoleného typu položky můžete nastavit parametry jako:

@@ -70,6 +70,21 @@ Druhý stĺpec obsahuje položky formuláru (alebo položky kroku formuláru), k
 
 ![](form-item-editor.png)
 
+### Kopírovanie polí medzi formulármi
+
+Nastavené pole môžete použiť v inom formulári alebo kroku bez opätovného vypĺňania jeho nastavení:
+
+1. V tabuľke **Položky formuláru** označte jedno uložené pole a kliknite na <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-clipboard" aria-hidden="true"></i></span></button> pre skopírovanie.
+2. Otvorte cieľový formulár v rovnakej alebo inej karte prehliadača a vyberte krok.
+3. Kliknite na <button class="btn btn-sm btn-outline-secondary buttons-paste-field" type="button"><span><i class="ti ti-clipboard-plus" aria-hidden="true"></i></span></button> pre vloženie skopírovaného poľa. Otvorí sa editor nového poľa s pôvodnými nastaveniami a vybraným cieľovým krokom. Poradie je predvyplnené na koniec kroku.
+4. Podľa potreby upravte nastavenia a uložte. Zatvorením editora bez uloženia nevznikne nové pole.
+
+Kopíruje sa uložený stav poľa vrátane textov, možností alebo prepojenia na číselník, validácií, nastavenia **Povinné pole** a nastavení štatistiky. **Podmienky zobrazenia a povinnosti sa nekopírujú**, pretože odkazujú na polia pôvodného formulára. Nekopírujú sa ani počítadlá chýb. Pôvodné pole aj jeho podmienky zostanú zachované.
+
+Interná schránka uchováva jedno pole **30 minút** a umožňuje opakované vloženie. Kopírovanie ďalšieho poľa nahradí jej obsah; vloženie platnosť nepredlžuje. Schránka funguje aj po obnovení stránky a medzi kartami rovnakej adresy administrácie v rovnakom profile prehliadača, pre rovnakého používateľa a doménu. Systémová schránka sa nemení. Tlačidlo **Vložiť pole** je dostupné po výbere kroku, ak schránka obsahuje platné pole podporovaného typu. Vkladať môžete aj do prázdneho kroku.
+
+Kópia je samostatná: následné úpravy pôvodného poľa ju nezmenia. CSS šablóny a skripty kroku sa neprenášajú, preto výsledný vzhľad závisí od cieľového formulára.
+
 ### Pridávanie a úprava položiek
 
 Editor pre pridávanie a úpravu položiek je špeciálny tým, že mení svoj obsah podľa zvoleného typu poľa (položky). To znamená, že pre každý typ položky (napr. Meno, Priezvisko atď.) sa zobrazia rôzne nastavenia a možnosti konfigurácie. Podľa zvoleného typu položky môžete nastaviť parametre ako:

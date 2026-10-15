@@ -4134,5 +4134,17 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>14.10.2026</string></void>
+                <void property="desc"><string>form_settings - add forward_as_content for inline multistep form confirmation</string></void>
+                <void property="mysql"><string>ALTER TABLE form_settings ADD COLUMN forward_as_content TINYINT(1) NOT NULL DEFAULT 0</string></void>
+                <void property="mssql"><string>ALTER TABLE form_settings ADD forward_as_content BIT NOT NULL DEFAULT 0</string></void>
+                <void property="oracle"><string>ALTER TABLE form_settings ADD (forward_as_content NUMBER(1) DEFAULT 0 NOT NULL)</string></void>
+                <void property="pgsql"><string>ALTER TABLE form_settings ADD COLUMN forward_as_content BOOLEAN NOT NULL DEFAULT FALSE</string></void>
+            </object>
+        </void>
+
     </object>
 </java>

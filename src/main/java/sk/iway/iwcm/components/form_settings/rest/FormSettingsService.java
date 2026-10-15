@@ -21,6 +21,10 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.form.FormFileRestriction;
 
+/**
+ * Prepares form settings for administration and bridges persisted settings with legacy attribute maps.
+ * Also resolves available custom processors and upload restrictions for forms in the current domain.
+ */
 @Service
 public class FormSettingsService {
 
@@ -42,6 +46,7 @@ public class FormSettingsService {
         "useFormMailDoc",
         "encrypKeyInfo",
         "useFormDoc",
+        "forwardAsContent",
         "formmailSendUserInfoDoc",
         "domainId"
     );
@@ -52,6 +57,14 @@ public class FormSettingsService {
         prepareSettingsForSave(formSettings, formType, formSettingsRepository);
     }
 
+    /**
+     * Updates settings in place with the existing record ID, processor configuration, and selected page IDs.
+     * Assigns the current domain when none is set; does not persist the entity.
+     *
+     * @param formSettings settings to prepare, or {@code null} to do nothing
+     * @param formType form type used to map the multistep processor field
+     * @param formSettingsRepository repository used to find the existing settings ID in the current domain
+     */
     public static void prepareSettingsForSave(FormSettingsEntity formSettings, String formType, FormSettingsRepository formSettingsRepository) {
         if(formSettings == null) return;
 
@@ -82,6 +95,12 @@ public class FormSettingsService {
         if(formSettings.getDomainId() == null) formSettings.setDomainId(CloudToolsForCore.getDomainId());
     }
 
+    /**
+     * Populates transient page selections and the multistep processor field for the settings editor.
+     *
+     * @param formSettings settings to update in place, or {@code null} to do nothing
+     * @param formType form type determining whether the processor autocomplete is populated
+     */
     public static void prepareSettingsForEdit(FormSettingsEntity formSettings, String formType) {
         if(formSettings == null) return;
 
@@ -108,6 +127,12 @@ public class FormSettingsService {
         }
     }
 
+    /**
+     * Finds registered processor class names matching a case-insensitive substring.
+     *
+     * @param term search text; {@code null}, blank, or {@code %} includes all registered processors
+     * @return matching fully qualified class names
+     */
     public List<String> getFormProcessorOptions(String term) {
         List<String> ac = new ArrayList<>();
 
@@ -123,6 +148,12 @@ public class FormSettingsService {
 
     /* FUNCTIONS AS replacement for old ATTRIBUTE's logic */
 
+    /**
+     * Loads settings for the current domain as legacy form attributes, excluding technical and editor-only fields.
+     *
+     * @param formName logical form name
+     * @return attributes with nullable string values, or an empty map when the repository or settings are unavailable
+     */
     public static Map<String, String> load(String formName) {
         FormSettingsRepository formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
         if(formSettingsRepository == null) return new HashMap<>();
@@ -133,6 +164,14 @@ public class FormSettingsService {
         return toAttributeMap(formSettings);
     }
 
+    /**
+     * Creates or updates settings selected by form name and current domain using entity field names as keys.
+     * Converts string, integer, long, and boolean fields; logs individual mapping failures and continues.
+     * Does nothing when the repository bean is unavailable.
+     *
+     * @param formName logical form name used to locate or initialize the settings
+     * @param parameters field values to apply, leaving unspecified fields unchanged
+     */
     public static void save(String formName, Map<String, String> parameters) {
         FormSettingsRepository formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
         if(formSettingsRepository == null) return;
@@ -183,6 +222,13 @@ public class FormSettingsService {
         return Tools.getBooleanValue(value, false);
     }
 
+    /**
+     * Converts declared entity fields to legacy attributes, omitting the configured excluded fields.
+     *
+     * @param entity settings entity to read, or {@code null} for an empty map
+     * @return field names mapped to string values, retaining {@code null} values
+     * @throws RuntimeException when a field cannot be read after making it accessible
+     */
     private static Map<String, String> toAttributeMap(Object entity) {
         Map<String, String> attributes = new HashMap<>();
 
@@ -205,6 +251,12 @@ public class FormSettingsService {
         return attributes;
     }
 
+    /**
+     * Extracts the first value of each request parameter whose name starts with {@code attribute_}.
+     *
+     * @param parameters request parameters with at least one value per matching name
+     * @return selected values keyed by names with {@code attribute_} removed
+     */
     public static Map<String, String> filterAttributes(Map<String, String[]> parameters)
 	{
 		Map<String, String> filtered = new HashMap<String, String>();
@@ -217,6 +269,13 @@ public class FormSettingsService {
 		return filtered;
 	}
 
+    /**
+     * Loads upload restrictions for a form in the current domain through the repository bean.
+     *
+     * @param formName logical form name
+     * @return configured restrictions, defaults when settings are missing, or an empty restriction object
+     *         when the repository bean is unavailable
+     */
     public static FormFileRestriction getFileRestriction(String formName) {
         FormSettingsRepository formSettingsRepository = Tools.getSpringBean("formSettingsRepository", FormSettingsRepository.class);
         if(formSettingsRepository == null) {
@@ -231,6 +290,15 @@ public class FormSettingsService {
         return getFileRestriction(formName, formSettings);
     }
 
+    /**
+     * Builds upload restrictions from settings, treating unset numeric limits as zero.
+     * Without settings, uses a 5000 KB per-file limit and 3000 by 2000 pixel image limits,
+     * with no extension filter or combined-size limit.
+     *
+     * @param formName logical form name attached to the restrictions
+     * @param formSettings settings to read, or {@code null} to use the default limits
+     * @return a new restriction object for the form
+     */
     public static FormFileRestriction getFileRestriction(String formName, FormSettingsEntity formSettings) {
         if(formSettings == null) {
             FormFileRestriction restriction = new FormFileRestriction();
