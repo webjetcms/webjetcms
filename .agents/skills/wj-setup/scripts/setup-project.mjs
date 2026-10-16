@@ -107,7 +107,7 @@ export async function setupProject({ project, scope = 'project', dryRun = false 
     return changes.map(({ name }) => name);
 }
 
-if (process.argv[1] && await realpath(resolve(process.argv[1])) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && await realpath(resolve(process.argv[1])) === await realpath(fileURLToPath(import.meta.url))) {
     try {
         const { values } = parseArgs({ options: {
             project: { type: 'string' }, scope: { type: 'string', default: 'project' },
