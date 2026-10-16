@@ -102,8 +102,7 @@ CKEDITOR.editorConfig = function( config )
 
 	if (Constants.getBoolean("ckeditor_styleComboEnabled")) {
 		extraPlugins.add("wjstylescombo");
-		String styleButtons = toolbar.contains("'Format'") ? "'WJStyles'" : "'Format', 'WJStyles'";
-		toolbar = Tools.replace(toolbar, "'Styles'", styleButtons);
+		toolbar = Tools.replace(toolbar, "'Styles'", "'WJStyles'");
 	}
 
 	String editorFontAwesomeCssPath = Constants.getString("editorFontAwesomeCssPath");
