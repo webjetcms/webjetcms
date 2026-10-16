@@ -10,6 +10,36 @@ Before(async ({ I, login }) => {
 });
 
 for (const mode of ['classic', 'inline']) {
+    Scenario(`${mode}: reopen the panel after closing`, async ({ I }) => {
+        I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
+        I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+        // Keep the content click target beside the open panel rather than underneath it.
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one" style="width:80px">Autotest text</p>', resolve)));
+        I.executeScript(() => autotestSelect('one'));
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles', 5);
+        I.click('.wj-styles__close');
+        I.waitToHide('.wj-styles');
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles', 5);
+        I.pressKey('Escape');
+        I.waitToHide('.wj-styles');
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles', 5);
+        I.click('.cke_button__wjstyles');
+        I.waitToHide('.wj-styles');
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles', 5);
+        if (mode === 'classic') I.switchTo('.cke_wysiwyg_frame');
+        I.click('#one');
+        if (mode === 'classic') I.switchTo();
+        I.waitToHide('.wj-styles');
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles', 5);
+        I.assertEqual(await I.grabAttributeFrom('.cke_button__wjstyles', 'aria-expanded'), 'true');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Reopening the picker must not produce browser errors');
+    });
+
     Scenario(`${mode}: compose, replace, toggle, mixed selection and undo`, async ({ I }) => {
         I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
         I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
@@ -65,6 +95,7 @@ for (const mode of ['classic', 'inline']) {
         for (const width of [1405,1100,767]) {
             I.resizeWindow(width,900);
             I.click('.cke_button__wjstyles');
+            I.waitForVisible('.wj-styles');
             I.assertTrue(await I.executeScript(() => {
                 const r=document.querySelector('.wj-styles').getBoundingClientRect();
                 return r.left>=0 && r.right<=innerWidth && r.bottom<=innerHeight;
