@@ -9,4 +9,10 @@ public class CssDto {
     private String tag;
     private String className;
     private String title;
+    private String category;
+    private String group;
+    private String targets;
+    private String base;
+    private String members;
+    private String requires;
 }

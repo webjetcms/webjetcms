@@ -1371,6 +1371,8 @@ public class Constants {
 		// WebJET 8 konfiguracia
 		setString("elfinderLibraryFolders", "/images,/images/gallery,/images/video,/files", MOD_ELFINDER,
 				"Zoznam adresarov, ktore sa zobrazia v suboroch v Kniznici");
+		setBoolean("ckeditor_styleComboEnabled", true, MOD_EDITOR,
+				"Enable the searchable style picker. Disable to use the legacy Styles combo.");
 		setString("ckeditor_toolbar",
 				"{ name: 'clipboard', items: ['Paste', '|', 'Cut', 'Copy', ';' , 'PasteText', 'PasteFromWord']},\n" +
 						"\t\t\t\t{ name: 'fontAndStyle', items: ['Styles', 'RemoveFormat', ';', 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', 'TextColor', 'BGColor']},\n"

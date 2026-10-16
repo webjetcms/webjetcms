@@ -2800,6 +2800,8 @@ export class DatatablesCkEditor {
 				result.name = name;
 				result.element = v.tag == "*" ? allElements : v.tag;
 				result.attributes = { 'class': v.class };
+				result.wj = { tag: v.tag, category: v.category, group: v.group,
+					targets: v.targets, base: v.base, members: v.members, requires: v.requires };
 
 				cssData.push(result);
 			});
@@ -2808,7 +2810,7 @@ export class DatatablesCkEditor {
 			//console.log(cssData);
 
 			if (JSON.stringify(instance.config.stylesSet) != JSON.stringify(cssData)) {
-				instance.ui.get("Styles").reset();
+				if (instance.ui.get("Styles")) instance.ui.get("Styles").reset();
 				instance.config.stylesCombo_stylesSet = cssData;
 				instance.config.stylesSet = cssData;
 				instance._.stylesDefinitions = cssData;

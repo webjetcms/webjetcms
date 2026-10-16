@@ -209,6 +209,44 @@ Ak sa kurzor nachádza v tabuľke zobrazia sa vo výberovom poli Štýl aj možn
 
 Pri použití viacerých CSS štýlov naraz (napr. ```btn btn-primary```) sa aplikujú na aktuálne zvolený element všetky. Štýly, ktoré sa aplikujú len na element sa vo výberovom poli nezobrazia, pokiaľ nie je daný element označený, alebo sa v ňom nenachádza kurzor.
 
+#### Vyhľadávanie a skupiny štýlov
+
+Nová roletka **Štýly** zostáva po výbere otvorená. V hlavičke zobrazuje aktívne štýly a umožňuje ich odobrať. Vyhľadáva podľa názvu, CSS triedy aj kategórie bez rozlišovania diakritiky. HTML značku odseku alebo nadpisu mení samostatná roletka **Formát**.
+
+Správanie položiek nastavíte komentármi v zdrojovom `editor.scss` (po zostavení v `editor.css`):
+
+```css
+div.alert.warning {
+    /* editor title: Warning */
+    /* editor category: Alerts */
+    /* editor group: Tone */
+    /* editor base: alert */
+    /* editor members: info success error */
+}
+.hero {
+    /* editor title: Hero heading */
+    /* editor category: Typography */
+    /* editor group: Heading size */
+    /* editor targets: h1 h2 h3 h4 h5 h6 */
+}
+```
+
+| Komentár | Význam |
+| --- | --- |
+| `editor title:` | Názov položky. HTML sa v novom ovládači zmení na čistý text. |
+| `editor category:` | Kategória na usporiadanie a vyhľadávanie. |
+| `editor group:` | Voľby tej istej vlastnosti sa na rovnakom elemente nahrádzajú. Kategória sama o sebe nič nevylučuje. |
+| `editor targets:` | Zoznam povolených HTML značiek; zužuje typ zo selektora. Pri selektore bez značky umožňuje jednu položku pre viac typov. |
+| `editor base:` | Konštrukčné triedy, ktoré sa pri vypnutí a obnovení vzhľadu neodoberú. Štandardne musia byť na cieľovom elemente. |
+| `editor requires:` | Voliteľný samostatný zoznam vyžadovaných tried, ak sa líši od `base`. |
+| `editor members:` | Ďalšie konkrétne triedy z rovnakej skupiny, napríklad variant používaný iba v HTML bloku. |
+
+Názvy skupín používajte jednoznačne pre danú vlastnosť. Farba, veľkosť a odsadenie patria do rôznych skupín. Zložená predvoľba, napríklad Perex, môže zostať bez skupiny. Triedy, ktoré nie sú vo voľbách ani v `members`, roletka pri výmene variantu zachová.
+
+V poli **Upraviť** sa dá vybrať nadradený element, napríklad sekcia alebo tabuľka. Jeho štýly sú pri úprave textu označené samostatne. Platí to v Štandardnom editore aj v Page Builderi. Zmena má jeden krok Späť; bežný výber CSS nemení HTML značku. Pri označení časti textu môže vzniknúť element `span`.
+
+Nový ovládač zabezpečuje plugin `wjstylescombo`. Konfiguračná premenná `ckeditor_styleComboEnabled=false` ponechá pôvodný `stylescombo`; štandardná hodnota je `true`. Konfigurácia v `config.jsp` pri zapnutí nahrádza položku `Styles` položkou `WJStyles` a dopĺňa `Format`, ak ešte nie je na lište. Existujúce šablóny nemusia doplniť metadáta: ich položky zostanú v kategórii Ostatné bez automatického vylučovania tried.
+
 Pokiaľ ```editor.css``` nevkladáte aj do dizajnu šablóny, tak sa jeho štýly pri zobrazení web stránky neaplikujú. Štandardne sa teda používa len ako zoznam definícií štýlov.
 
 Ak chcete, môžete definovať štýl zobrazený vo výberovom poli v editore aj priamo v ostatných súboroch. Takto definovaný štýl ale musí obsahovať ako prvý komentár ```/* editor */```. Príklad je v súbore ```src/scss/3-base/_link.scss```:

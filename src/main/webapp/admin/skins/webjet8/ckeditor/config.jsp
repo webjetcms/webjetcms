@@ -66,6 +66,10 @@ CKEDITOR.editorConfig = function( config )
 	config.thumbServletAllowedSizeMode = <%=JsonTools.objectToJSON(Constants.getString("thumbServletAllowedSizeMode"))%>;
 	config.thumbServletAllowedSizes = <%=JsonTools.objectToJSON(Constants.getString("thumbServletAllowedSizes"))%>;
 
+	<% if (Constants.getBoolean("ckeditor_styleComboEnabled")) { %>
+	config.format_tags = 'p;h1;h2;h3;h4;h5;h6';
+	<% } %>
+
 	config.stylesSet = [
 		{ name: 'Paragraph',		element: 'p' },
 		{ name: 'Heading 1',		element: 'h1' },
@@ -94,6 +98,12 @@ CKEDITOR.editorConfig = function( config )
 	if (Tools.isNotEmpty(Constants.getString("ckeditor_extraPlugins")))
 	{
 		extraPlugins.addAll(java.util.Arrays.asList(Constants.getArray("ckeditor_extraPlugins")));
+	}
+
+	if (Constants.getBoolean("ckeditor_styleComboEnabled")) {
+		extraPlugins.add("wjstylescombo");
+		String styleButtons = toolbar.contains("'Format'") ? "'WJStyles'" : "'Format', 'WJStyles'";
+		toolbar = Tools.replace(toolbar, "'Styles'", styleButtons);
 	}
 
 	String editorFontAwesomeCssPath = Constants.getString("editorFontAwesomeCssPath");

@@ -1232,6 +1232,12 @@ public class EditorService {
 					map.put("tag", element.getTag());
 					map.put("class", element.getClassName());
 					map.put("title", element.getTitle());
+					map.put("category", element.getCategory());
+					map.put("group", element.getGroup());
+					map.put("targets", element.getTargets());
+					map.put("base", element.getBase());
+					map.put("members", element.getMembers());
+					map.put("requires", element.getRequires());
 					sessionCssParsed.add(map);
 				}
 			}
