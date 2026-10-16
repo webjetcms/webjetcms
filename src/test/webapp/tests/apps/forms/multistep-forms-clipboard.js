@@ -121,5 +121,12 @@ Scenario('Cleanup clipboard and pasted fields', async ({ I, DT }) => {
 });
 
 Scenario('Clipboard requires form permissions', ({ I, DT }) => {
-    DT.checkPerms('cmp_form', '/apps/form/admin/form-steps/?formName=' + targetForm, 'formItemsDataTable');
+    DT.checkPerms('cmp_form', '/apps/form/admin/form-steps/?formName=' + targetForm, 'formItemsDataTable', () => {
+        I.executeScript(() => { formItemsDataTable.ajax.reload(); });
+    });
+});
+
+Scenario('Restore form permissions', ({ I }) => {
+    // A failed permission assertion must not leave subsequent files using a restricted session.
+    I.logout();
 });
