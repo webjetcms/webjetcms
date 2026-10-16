@@ -1,8 +1,8 @@
 /* The picker lives outside editable content in both classic and inline editors. */
-.cke a.cke_button__wjstyles { width: 240px; max-width: calc(100vw - 60px); height: 24px; padding: 3px 8px; border: 1px solid #868ea5; border-radius: 6px; background: #fff; box-sizing: content-box; }
+.cke a.cke_button__wjstyles { width: 240px; max-width: calc(100vw - 60px); height: 26px; padding: 0 8px; margin: 0 0 5px; margin-inline-end: 6px; border: 1px solid #868ea5; border-radius: 6px; background: #fff; box-sizing: content-box; }
 .cke .cke_button__wjstyles_icon { display: none !important; }
-.cke .cke_button__wjstyles_label { display: block; width: calc(100% - 18px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 24px; padding: 0; font-family: Asap, sans-serif; font-size: 14px; }
-.cke .cke_button__wjstyles .cke_button_arrow { margin-top: 11px; }
+.cke .cke_button__wjstyles_label { display: block; width: calc(100% - 18px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 26px; padding: 0; font-family: Asap, sans-serif; font-size: 14px; }
+.cke .cke_button__wjstyles .cke_button_arrow { margin-top: 12px; }
 .wj-styles { --wj-styles-blue: var(--wj-primary, #0063fb); --wj-styles-text: var(--wj-secondary, #13151b); --wj-styles-muted: var(--wj-gray-text, #686f83); --wj-styles-border: var(--wj-nice-gray-100, #dddfe6); --wj-styles-input-border: var(--wj-nice-gray-300, #868ea5); --wj-styles-surface: var(--wj-nice-gray, #f3f3f6); --wj-styles-selected: #edf4ff; position: fixed; z-index: 101100; display: flex; flex-direction: column; box-sizing: border-box; border: 1px solid var(--wj-styles-border); border-radius: 6px; box-shadow: 0 8px 32px #13151b2e; background: #fff; color: var(--wj-styles-text); font: 14px/1.5 Asap, sans-serif; text-align: start; overflow: hidden; }
 .wj-styles[hidden], .wj-styles [hidden] { display: none !important; }
 .wj-styles *, .wj-styles *::before, .wj-styles *::after { box-sizing: border-box; }
@@ -30,9 +30,13 @@
 .wj-styles__search-box { position: relative; margin-bottom: 8px; }
 .wj-styles__search-box > .ti { position: absolute; inset-inline-start: 10px; top: 9px; color: var(--wj-styles-muted); pointer-events: none; }
 .wj-styles .wj-styles__search { width: 100%; margin: 0; min-height: 36px; padding-inline-start: 34px; }
-.wj-styles__filters { display: flex; align-items: center; gap: 10px; }
-.wj-styles__filters select { flex: 1; min-width: 0; width: 0; }
-.wj-styles__filters label { display: flex; align-items: center; gap: 6px; margin: 0; white-space: nowrap; font-size: 12px; }
+.wj-styles__filters { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px; }
+.wj-styles .wj-styles__toggle-all { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 3px 0; border: 0; border-radius: 4px; background: transparent; color: var(--wj-styles-muted); font-size: 12px; }
+.wj-styles .wj-styles__toggle-all .ti { font-size: 16px; }
+.wj-styles .wj-styles__toggle-all:hover:not(:disabled) { color: var(--wj-styles-blue); }
+.wj-styles .wj-styles__toggle-all:hover:not(:disabled) span { text-decoration: underline; }
+.wj-styles .wj-styles__toggle-all:disabled { opacity: .5; cursor: default; }
+.wj-styles__filters label { display: flex; align-items: center; gap: 6px; min-height: 28px; margin: 0; white-space: nowrap; font-size: 12px; cursor: pointer; }
 .wj-styles__filters input { width: 16px; height: 16px; margin: 0; accent-color: var(--wj-styles-blue); }
 .wj-styles__list { overflow-y: auto; overscroll-behavior: contain; min-height: 80px; flex: 1 1 0; padding: 0; }
 /* Keep CKEditor's global section markers from adding gaps between accordion headers. */

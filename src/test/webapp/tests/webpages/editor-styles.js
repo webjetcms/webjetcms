@@ -10,6 +10,39 @@ Before(async ({ I, login }) => {
 });
 
 for (const mode of ['classic', 'inline']) {
+    Scenario(`${mode}: non-interactive panel content keeps the picker open`, async ({ I }) => {
+        I.amOnPage(`/wjstyles-autotest.html?mode=${mode}${mode === 'classic' ? '&modal=1' : ''}`);
+        I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one" class="custom" style="width:80px">Autotest text</p>', resolve)));
+        I.executeScript(() => autotestSelect('one'));
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles', 5);
+        for (const target of ['.wj-styles__chips .wj-styles__empty', '.wj-styles__top strong', '.wj-styles__status']) {
+            I.click(target);
+            I.seeElement('.wj-styles:not([hidden])');
+            I.assertTrue(await I.executeScript(() => document.querySelector('.wj-styles').contains(document.activeElement)), 'Clicking panel text must keep focus inside the picker');
+        }
+        I.click('.wj-styles__toggle-all');
+        // With categories collapsed, the list's center is empty panel space.
+        I.click('.wj-styles__list');
+        I.seeElement('.wj-styles:not([hidden])');
+        I.assertTrue(await I.executeScript(() => document.querySelector('.wj-styles').contains(document.activeElement)), 'Clicking empty panel space must keep focus inside the picker');
+        I.click('All styles', '.wj-styles__filters');
+        I.seeCheckboxIsChecked('.wj-styles__filters input');
+        I.fillField('.wj-styles__search', 'large');
+        I.click('.wj-styles__item[data-style-id="1"]');
+        I.assertEqual(await I.executeScript(() => autotestEditor.document.getById('one').getAttribute('class')), 'custom large', 'Panel background clicks must preserve the target selection');
+        I.click('.wj-styles__close');
+        I.waitToHide('.wj-styles');
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles', 5);
+        if (mode === 'classic') I.switchTo('.cke_wysiwyg_frame');
+        I.click('#one');
+        if (mode === 'classic') I.switchTo();
+        I.waitToHide('.wj-styles');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Panel background clicks must not produce browser errors');
+    });
+
     Scenario(`${mode}: category accordions preserve selection and reveal search results`, async ({ I }) => {
         I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
         I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
@@ -17,6 +50,8 @@ for (const mode of ['classic', 'inline']) {
         I.executeScript(() => autotestSelect('one'));
         I.click('.cke_button__wjstyles');
         I.waitForVisible('.wj-styles');
+        I.dontSeeElement('.wj-styles__filters select');
+        I.see('Collapse all', '.wj-styles__toggle-all');
         I.dontSeeElement('.wj-styles__group-toggle[aria-expanded="false"]');
         I.seeElementInDOM('.wj-styles__group:first-child .wj-styles__group-toggle > .ti-chevron-down:first-child');
         I.seeElementInDOM('.wj-styles__group:first-child .ti-typography');
@@ -25,6 +60,7 @@ for (const mode of ['classic', 'inline']) {
         I.click('.wj-styles__item[data-style-id="0"]');
         const typography = '.wj-styles__group:first-child .wj-styles__group-toggle';
         I.click(typography);
+        I.see('Expand all', '.wj-styles__toggle-all');
         I.dontSeeElement('.wj-styles__item[data-style-id="0"]');
         I.assertTrue(await I.executeScript(() => {
             const groups = document.querySelectorAll('.wj-styles__group');
@@ -38,11 +74,32 @@ for (const mode of ['classic', 'inline']) {
         I.fillField('.wj-styles__search', 'small');
         I.seeElement('.wj-styles__item[data-style-id="0"]');
         I.assertEqual(await I.grabAttributeFrom('.wj-styles__item[data-style-id="0"]', 'aria-pressed'), 'true', 'Searching must preserve the active choice');
+        I.click('.wj-styles__toggle-all');
+        I.dontSeeElement('.wj-styles__item[data-style-id="0"]');
+        I.checkOption('.wj-styles__filters input');
+        I.dontSeeElement('.wj-styles__item[data-style-id="0"]');
+        I.click('.wj-styles__toggle-all');
+        I.seeElement('.wj-styles__item[data-style-id="0"]');
+        I.uncheckOption('.wj-styles__filters input');
         I.fillField('.wj-styles__search', '');
         I.assertEqual(await I.grabAttributeFrom(typography, 'aria-expanded'), 'false', 'Clearing search must restore collapsed categories');
-        I.selectOption('.wj-styles__filters select', 'Typography');
+        const content = await I.executeScript(() => autotestEditor.getData());
+        I.click('.wj-styles__toggle-all');
+        I.dontSeeElement('.wj-styles__group-toggle[aria-expanded="false"]');
         I.seeElement('.wj-styles__item[data-style-id="0"]');
-        I.selectOption('.wj-styles__filters select', 'All categories');
+        I.see('Collapse all', '.wj-styles__toggle-all');
+        I.pressKey('Enter');
+        I.dontSeeElement('.wj-styles__group-toggle[aria-expanded="true"]');
+        I.dontSeeElement('.wj-styles__item');
+        I.click(typography);
+        I.see('Expand all', '.wj-styles__toggle-all');
+        I.click('.wj-styles__toggle-all');
+        I.dontSeeElement('.wj-styles__group-toggle[aria-expanded="false"]');
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), content, 'Accordion controls must not change editor content');
+        I.fillField('.wj-styles__search', 'autotest-no-matching-style');
+        I.seeElement('.wj-styles__toggle-all:disabled');
+        I.fillField('.wj-styles__search', '');
+        I.seeElement('.wj-styles__toggle-all:not(:disabled)');
         I.checkOption('.wj-styles__filters input');
         I.seeElement('.wj-styles__item[data-style-id="10"]:not(.wj-styles__item--exclusive)');
         I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Accordion interactions must not produce browser errors');
@@ -52,20 +109,31 @@ for (const mode of ['classic', 'inline']) {
         I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
         I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
         // Keep the content click target beside the open panel rather than underneath it.
-        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one" style="width:80px">Autotest text</p>', resolve)));
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one" class="small" style="width:80px">Autotest text</p>', resolve)));
         I.executeScript(() => autotestSelect('one'));
         I.click('.cke_button__wjstyles');
         I.waitForVisible('.wj-styles', 5);
         I.click('.wj-styles__close');
         I.waitToHide('.wj-styles');
+        I.dontSeeElement('.wj-styles-summary');
+        I.assertTrue(await I.executeScript(() => document.activeElement.classList.contains('cke_button__wjstyles')), 'Closing must retain toolbar focus without displaying its tooltip');
+        I.pressKey('ArrowLeft');
+        I.pressKey('ArrowRight');
+        I.see('Small', '.wj-styles-summary');
+        I.pressKey('ArrowLeft');
+        I.dontSeeElement('.wj-styles-summary');
         I.click('.cke_button__wjstyles');
         I.waitForVisible('.wj-styles', 5);
         I.pressKey('Escape');
         I.waitToHide('.wj-styles');
+        I.dontSeeElement('.wj-styles-summary');
         I.click('.cke_button__wjstyles');
         I.waitForVisible('.wj-styles', 5);
         I.click('.cke_button__wjstyles');
         I.waitToHide('.wj-styles');
+        I.dontSeeElement('.wj-styles-summary');
+        I.moveCursorTo('.cke_combo__format');
+        I.dontSeeElement('.wj-styles-summary');
         I.click('.cke_button__wjstyles');
         I.waitForVisible('.wj-styles', 5);
         if (mode === 'classic') I.switchTo('.cke_wysiwyg_frame');
