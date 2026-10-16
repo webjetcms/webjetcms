@@ -45,6 +45,27 @@ WebJET CMS is the key to effortless, reliable, and speedy web content management
 
 ![](docs/en/redactor/apps/stat/stats-page.png)
 
+## Development Setup
+
+After cloning the repository, run the setup script to enable the shared git hooks:
+
+```sh
+sh scripts/setup-hooks.sh
+```
+
+This configures a `pre-commit` hook that uses [detect-secrets](https://github.com/Yelp/detect-secrets) to prevent accidentally committing passwords, API keys, or other secrets. Install `detect-secrets` with:
+
+```sh
+pip install detect-secrets
+```
+
+To update the secrets baseline after a verified false positive, run:
+
+```sh
+detect-secrets scan > .secrets.baseline
+git add .secrets.baseline
+```
+
 ## Technology Stack
 
 WebJET CMS is built on a robust technology stack, including:
