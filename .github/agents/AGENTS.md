@@ -9,6 +9,10 @@ Based on [agents.md](https://agents.md) and [Prompting Your Prompt's Prompt](htt
 
 For frontend and interface work, read and follow the project [Design Context](AGENTS-design.md).
 
+## Customer Projects and Distributed Skills
+
+These references also ship through the `wj-project-context` skill. In a customer/basecms project, its own instructions override these shared defaults. Verify the installed CMS version and available APIs before applying current-core examples. Framework source paths describe the core checkout and need not exist in a customer project. Resolve application packages, language bundles, SQL migrations and test commands from the target project. Core release workflows, changelog/roadmap requirements and internal test-template exclusions do not automatically apply to customers. Keep these files canonical here; the skills export generates their distributable copies.
+
 ## Agent Working Principles
 
 ### 1. Think Before Coding

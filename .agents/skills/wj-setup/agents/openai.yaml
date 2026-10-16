@@ -1,0 +1,4 @@
+interface:
+  display_name: "WJ Setup"
+  short_description: "Connect WebJET skills to project instructions"
+  default_prompt: "Use $wj-setup to connect the installed WebJET CMS skills to this project's instructions while preserving its existing rules."

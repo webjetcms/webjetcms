@@ -7,6 +7,8 @@ description: 'Locate and rerun existing WebJET CMS CodeceptJS E2E tests from pas
 
 Map failed Allure feature identifiers to existing CodeceptJS files, run each resolved file once against the user-selected target, and report the current result. This is a verification workflow: do not edit test files, add tags, install dependencies, or attempt fixes unless the user separately requests that work.
 
+The paths and `all`/`all:prod` commands below describe the WebJET core harness. Verify them in the target project's package and CodeceptJS configuration first. For a customer project with a different layout, use its equivalent existing test directory and commands while retaining exact feature matching and explicit target selection. If the harness or a requested command is absent, report it and stop; installing this skill does not provide test infrastructure.
+
 ## Choose the Target Before Running Tests
 
 If the current request does not already explicitly choose a target, ask in the user's language whether to run:

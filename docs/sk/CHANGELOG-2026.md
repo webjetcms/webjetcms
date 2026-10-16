@@ -295,6 +295,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Pre programátora
 
+- AI agenti - pripravená distribúcia WebJET CMS skills cez `npx skills`, vrátane spoločných konvencií a nastavenia projektových pokynov pre Codex, GitHub Copilot a Claude Code. [Návod](custom-apps/skills/README.md) opisuje inštaláciu, aktualizáciu a použitie v starších klientskych projektoch.
+
 - Dashboard - pridaný register widgetov, responzívny grid a REST rozhranie na transakčné ukladanie nastavení do `user_settings_admin`. Existujúca tabuľka MySQL/MariaDB sa pri aktualizácii konvertuje na InnoDB. Používanie opisuje [dokumentácia úvodnej obrazovky](redactor/admin/welcome.md), pozadie a označenie prostredia jej [konfigurácia](admin/setup/configuration/dashboard.md). Pravidlá vývoja, kontrakt a dôvody rozhodnutí udržiava projektový skill `wj-dashboard-widget` v `.agents/skills/wj-dashboard-widget/` (#58806).
 
 - Administrácia - odstránená závislosť od [Vue.js](https://vuejs.org). Stromové polia, úvodná stránka, výber oblasti obrázka a monitorovanie servera používajú natívne [web komponenty](developer/frameworks/web-components.md). Globálny objekt `window.VueTools` ani balíky pre Vue už nie sú súčasťou administrácie. Vlastné rozšírenia ich musia nahradiť web komponentmi alebo si Vue zostaviť samostatne (#58722).

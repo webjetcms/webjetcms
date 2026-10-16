@@ -26,7 +26,7 @@ Performs a read-only code review of changes in the repository — either all com
 
 Based on the answer, use one of the two modes:
 
-When running branch-level review commands in this skill, resolve the comparison base as follows:
+Resolve the actual PR base first. In customer repositories without a PR, use their remote default branch or ask when the base is ambiguous. Do not assume `main` or a core hotfix branch. The following fallback applies only to the WebJET core repository:
 
 - Branches starting with `hotfix/` -> `origin/hotfix/2026.0-main`
 - All other branches -> `origin/main`
@@ -135,7 +135,7 @@ Code quality improvements, better patterns, or minor issues that are not blockin
 Good patterns, clean code, or improvements worth acknowledging.
 
 #### Missing CHANGELOG / ROADMAP Entries
-Flag if the CHANGELOG entry in `/docs/sk/CHANGELOG-2026.md` is missing for this branch's ticket number, or if a matching ROADMAP item is not checked off.
+Check changelog and roadmap entries only when the target project's conventions require them. In WebJET core, use the current release's changelog and an existing matching roadmap item. Missing core documentation directories are not findings in customer projects.
 
 For each finding, include:
 - **File and location** (line numbers or method names)
@@ -153,9 +153,9 @@ git rev-parse --abbrev-ref HEAD
 
 The branch has the format `feature/XXXX-description` or `hotfix/XXXX-description` — the ticket number is `XXXX` (the digits between `/` and the first `-`).
 
-Check if `/docs/sk/CHANGELOG-2026.md` contains an entry with `(#XXXX)` in the `## 2026.0-SNAPSHOT` section. If not, report it as a missing CHANGELOG entry.
+Identify the project's actual changelog and release section. For core changes, check for an entry with the known ticket number. Do not assume the year, release name or branch naming convention in a customer project, and do not invent a ticket number.
 
-Also check `/docs/sk/ROADMAP.md` — if the change matches a planned item, verify it is checked off with `(#XXXX)`.
+Check a roadmap only if the project maintains one and the change matches a planned item. If changelog checks are not applicable, omit them from the findings.
 
 ### 9. Final Summary
 
@@ -169,7 +169,7 @@ Provide a brief overall assessment:
 
 - NEVER modify any files — this is a read-only review
 - Write all findings in the language the user used (Slovak if the user wrote in Slovak, English otherwise)
-- Follow the project's coding standards from copilot-instructions.md and AGENTS.md
+- Follow the project's existing instruction files. For WebJET conventions, use the installed `wj-project-context` skill when available and verify API compatibility against the target project's CMS version. Do not assume core source paths exist in a customer checkout.
 - Focus on real issues, not style nitpicks (unless they violate project conventions)
 - Be specific — always reference exact files, line numbers, and code snippets
 - Consider the broader impact of changes on the rest of the system
