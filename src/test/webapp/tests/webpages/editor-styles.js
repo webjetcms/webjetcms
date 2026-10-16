@@ -10,6 +10,44 @@ Before(async ({ I, login }) => {
 });
 
 for (const mode of ['classic', 'inline']) {
+    Scenario(`${mode}: category accordions preserve selection and reveal search results`, async ({ I }) => {
+        I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
+        I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one">Autotest text</p>', resolve)));
+        I.executeScript(() => autotestSelect('one'));
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        I.dontSeeElement('.wj-styles__group-toggle[aria-expanded="false"]');
+        I.seeElementInDOM('.wj-styles__group:first-child .wj-styles__group-toggle > .ti-chevron-down:first-child');
+        I.seeElementInDOM('.wj-styles__group:first-child .ti-typography');
+        I.seeElementInDOM('.wj-styles__group:nth-child(2) .ti-palette');
+        I.seeElement('.wj-styles__item--exclusive[data-style-id="0"]');
+        I.click('.wj-styles__item[data-style-id="0"]');
+        const typography = '.wj-styles__group:first-child .wj-styles__group-toggle';
+        I.click(typography);
+        I.dontSeeElement('.wj-styles__item[data-style-id="0"]');
+        I.assertTrue(await I.executeScript(() => {
+            const groups = document.querySelectorAll('.wj-styles__group');
+            return Math.abs(groups[0].getBoundingClientRect().bottom - groups[1].getBoundingClientRect().top) < 1;
+        }), 'Editor section markers must not add gaps between accordion headers');
+        I.pressKey('ArrowDown');
+        I.assertTrue(await I.executeScript(() => document.activeElement === document.querySelector('.wj-styles__group:nth-child(2) .wj-styles__group-toggle')), 'Arrow navigation must skip collapsed choices');
+        I.click('.wj-styles__item[data-style-id="4"]');
+        I.assertEqual(await I.grabAttributeFrom(typography, 'aria-expanded'), 'false', 'Applying another style must preserve collapsed categories');
+        I.see('Small', '.wj-styles__chips');
+        I.fillField('.wj-styles__search', 'small');
+        I.seeElement('.wj-styles__item[data-style-id="0"]');
+        I.assertEqual(await I.grabAttributeFrom('.wj-styles__item[data-style-id="0"]', 'aria-pressed'), 'true', 'Searching must preserve the active choice');
+        I.fillField('.wj-styles__search', '');
+        I.assertEqual(await I.grabAttributeFrom(typography, 'aria-expanded'), 'false', 'Clearing search must restore collapsed categories');
+        I.selectOption('.wj-styles__filters select', 'Typography');
+        I.seeElement('.wj-styles__item[data-style-id="0"]');
+        I.selectOption('.wj-styles__filters select', 'All categories');
+        I.checkOption('.wj-styles__filters input');
+        I.seeElement('.wj-styles__item[data-style-id="10"]:not(.wj-styles__item--exclusive)');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Accordion interactions must not produce browser errors');
+    });
+
     Scenario(`${mode}: reopen the panel after closing`, async ({ I }) => {
         I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
         I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
