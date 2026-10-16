@@ -1,10 +1,25 @@
 <!doctype html><html lang="en"><meta charset="utf-8"><title>Style picker autotest</title>
-<style>body {margin:24px;font:16px sans-serif;} body.is-edit-mode section {margin-top:8px;margin-bottom:8px} #autotest-inline{min-height:140px;border:1px solid #999;padding:12px} .red {color:#b00} .blue {color:#00b} .bg-dark{background:#222;color:white} .bg-light{background:#eee;color:black}</style>
+<style>body {margin:24px;font:16px sans-serif;} body.is-edit-mode section {margin-top:8px;margin-bottom:8px} #autotest-inline{min-height:140px;border:1px solid #999;padding:12px}</style>
+<style id="autotest-preview-css">
+p.small {font-size:14px}
+p.large {font-size:40px;font-weight:700;font-style:italic;letter-spacing:2px;text-transform:uppercase;text-decoration:underline}
+p.bold {font-weight:700}
+.red {color:#b00}
+.blue {color:#00b}
+.bg-dark {background:#222;color:white}
+.bg-light {background:#eee;color:black}
+div.alert {padding:16px;border:2px solid transparent;border-radius:8px}
+div.alert.info {color:rgb(20,20,20);background:rgb(224,239,255);border-color:rgb(16,53,110)}
+.autotest-theme div.alert.info {color:rgb(17,59,25);background:rgb(221,246,225);border-color:rgb(33,90,45)}
+p.gap-small {margin-bottom:8px}
+p.gap-large {margin-bottom:40px}
+</style>
 <script src="/admin/skins/webjet8/ckeditor/dist/ckeditor.js"></script>
 <div id="autotest-toolbar"></div><section id="autotest-section" class="structural bg-light"><div id="autotest-inline" contenteditable="true"><p>Autotest inline content</p></div></section>
 <div id="autotest-modal"><textarea id="autotest-classic"></textarea></div>
 <script>
 CKEDITOR.disableAutoInline = true;
+CKEDITOR.addCss(document.getElementById('autotest-preview-css').textContent);
 window.autotestErrors = [];
 window.addEventListener('error', function(event) { autotestErrors.push(event.message); });
 const styles = [
@@ -21,10 +36,13 @@ const styles = [
  {name:'Alert warning',element:'div',attributes:{class:'alert warning'},wj:{tag:'div',category:'Alerts',group:'Tone',base:'alert'}},
  {name:'Link',element:'a',attributes:{class:'link-style'},wj:{tag:'a',category:'Links'}},
  {name:'Cell',element:'td',attributes:{class:'cell-style'},wj:{tag:'td',category:'Tables'}},
- {name:'Image',element:'img',attributes:{class:'image-style'},wj:{tag:'img',category:'Images'}}
+ {name:'Image',element:'img',attributes:{class:'image-style'},wj:{tag:'img',category:'Images'}},
+ {name:'Gap small',element:'p',attributes:{class:'gap-small'},wj:{tag:'p',category:'Spacing',group:'Bottom spacing'}},
+ {name:'Gap large',element:'p',attributes:{class:'gap-large'},wj:{tag:'p',category:'Spacing',group:'Bottom spacing'}}
 ];
-const mode = new URLSearchParams(location.search).get('mode') || 'classic';
-if (new URLSearchParams(location.search).has('modal')) {
+const query = new URLSearchParams(location.search);
+const mode = query.get('mode') || 'classic';
+if (query.has('modal')) {
  const modal = document.getElementById('autotest-modal');
  modal.className = 'modal';
  modal.setAttribute('role', 'dialog');
@@ -33,10 +51,18 @@ if (new URLSearchParams(location.search).has('modal')) {
   if (!modal.contains(event.target)) modal.focus();
  });
 }
-const config = {customConfig:'',plugins:'wysiwygarea,toolbar,button,undo,format,sharedspace,wjstylescombo',language:'en',skin:'moono',allowedContent:true,toolbar:[['Format','WJStyles','Undo','Redo']],stylesSet:styles,height:300,contentsCss:[]};
+const config = {customConfig:'',plugins:'wysiwygarea,toolbar,button,undo,format,sharedspace,wjstylescombo',language:'en',skin:'moono',allowedContent:true,toolbar:[['Format','WJStyles','Undo','Redo']],stylesSet:styles,format_tags:'p;h1;h2;h3;h4;h5;h6',height:300,contentsCss:[]};
+if (query.has('restricted')) config.allowedContent = 'p h2 strong em[id](*)';
+if (query.has('automatic')) {
+ delete config.allowedContent;
+ config.toolbar = [['WJStyles','Undo','Redo']];
+ config.stylesSet = [];
+ document.getElementById('autotest-classic').value = '<h2>Autotest initial heading</h2>';
+}
 if (mode === 'inline') {
  document.body.classList.add('is-edit-mode');
  document.getElementById('autotest-classic').remove();
+ if (query.has('blockless')) document.getElementById('autotest-inline').outerHTML = '<p id="autotest-inline" contenteditable="true">Autotest fixed paragraph</p>';
  config.sharedSpaces = {top:'autotest-toolbar'};
  config.wjstylescombo_scope = function() {return document.getElementById('autotest-section');};
  window.autotestEditor = CKEDITOR.inline('autotest-inline',config);

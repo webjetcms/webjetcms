@@ -10,6 +10,158 @@ Before(async ({ I, login }) => {
 });
 
 for (const mode of ['classic', 'inline']) {
+    Scenario(`${mode}: dragging the picker preserves selection and stays inside the viewport`, async ({ I }) => {
+        I.amOnPage(`/wjstyles-autotest.html?mode=${mode}${mode === 'classic' ? '&modal=1' : ''}`);
+        I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+        I.resizeWindow(1200, 900);
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one"><span id="selected" class="red custom">Before selected after</span></p>', resolve)));
+        I.executeScript(() => autotestSelect('selected', null, 7, 15));
+        const original = await I.executeScript(() => ({ html: autotestEditor.getData(), undo: autotestEditor.undoManager.index }));
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        I.seeElement('.wj-styles__drag');
+        I.seeElementInDOM('.wj-styles__drag .ti-grip-vertical');
+        const readPosition = () => {
+            const rect = document.querySelector('.wj-styles').getBoundingClientRect();
+            return { left: Math.round(rect.left), top: Math.round(rect.top) };
+        };
+        const anchored = await I.executeScript(readPosition);
+        // Pointer capture must be exercised outside the handle; dragAndDrop requires a destination element.
+        await I.usePlaywrightTo('drag the picker by its handle', async ({ page }) => {
+            const handle = await page.locator('.wj-styles__drag').boundingBox();
+            const x = handle.x + handle.width / 2, y = handle.y + handle.height / 2;
+            await page.mouse.move(x, y);
+            await page.mouse.down();
+            await page.mouse.move(x + 160, y + 60, { steps: 8 });
+            await page.mouse.up();
+        });
+        const moved = { left: anchored.left + 160, top: anchored.top + 60 };
+        I.assertDeepEqual(await I.executeScript(readPosition), moved, 'Dragging must move the panel by the pointer distance');
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), original.html, 'Dragging must not alter editor content');
+        I.assertEqual(await I.executeScript(() => autotestEditor.undoManager.index), original.undo, 'Dragging must not create undo operations');
+        I.fillField('.wj-styles__search', 'Blue');
+        I.assertDeepEqual(await I.executeScript(readPosition), moved, 'Searching must retain the chosen panel position');
+        I.click('.wj-styles__item[data-style-id="5"]');
+        I.seeElement('.wj-styles:not([hidden])');
+        I.assertDeepEqual(await I.executeScript(readPosition), moved, 'Applying a style must retain the chosen panel position');
+        I.assertDeepEqual(await I.executeScript(() => {
+            const paragraph = autotestEditor.document.getById('one').$;
+            return { text: paragraph.textContent, blue: paragraph.querySelector('.blue')?.textContent, surrounding: Array.from(paragraph.querySelectorAll('.red')).map(element => element.textContent).join('|') };
+        }), { text: 'Before selected after', blue: 'selected', surrounding: 'Before | after' }, 'Dragging must preserve the exact original text selection');
+        I.click('.wj-styles__drag');
+        I.pressKey('ArrowRight');
+        I.pressKey(['Shift', 'ArrowDown']);
+        const nudged = { left: moved.left + 10, top: moved.top + 1 };
+        I.assertDeepEqual(await I.executeScript(readPosition), nudged, 'The handle must support ten-pixel arrow movement and one-pixel Shift movement');
+        I.resizeWindow(1300, 1000);
+        I.assertDeepEqual(await I.executeScript(readPosition), nudged, 'A larger viewport must retain the chosen panel position');
+        for (const corner of ['top-left', 'bottom-right']) {
+            // Use real captured pointer events even when the pointer moves beyond the panel bounds.
+            await I.usePlaywrightTo(`drag the picker to the ${corner} viewport corner`, async ({ page }) => {
+                const handle = await page.locator('.wj-styles__drag').boundingBox();
+                const viewport = page.viewportSize();
+                await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2);
+                await page.mouse.down();
+                await page.mouse.move(corner === 'top-left' ? 1 : viewport.width - 1, corner === 'top-left' ? 1 : viewport.height - 1, { steps: 8 });
+                await page.mouse.up();
+            });
+            I.assertTrue(await I.executeScript(() => {
+                const rect = document.querySelector('.wj-styles').getBoundingClientRect();
+                return rect.left >= 0 && rect.top >= 0 && rect.right <= innerWidth && rect.bottom <= innerHeight;
+            }), 'Dragging toward a viewport corner must keep the whole panel visible');
+        }
+        I.resizeWindow(767, 700);
+        I.waitForFunction(() => {
+            const rect = document.querySelector('.wj-styles').getBoundingClientRect();
+            return rect.left >= 0 && rect.top >= 0 && rect.right <= innerWidth && rect.bottom <= innerHeight;
+        }, [], 5);
+        I.resizeWindow(1200, 900);
+        I.pressKey('Escape');
+        I.waitToHide('.wj-styles');
+        I.executeScript(() => autotestEditor.execCommand('undo'));
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), original.html, 'One undo must restore the text style applied after dragging');
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        I.assertDeepEqual(await I.executeScript(readPosition), anchored, 'Reopening must restore the default toolbar anchor');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Dragging must not produce browser errors');
+    });
+
+    Scenario(`${mode}: previews show typography, spacing and contextual alert appearance`, async ({ I }) => {
+        I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
+        I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<div class="autotest-theme"><div id="alert" class="alert info custom">Autotest alert</div><p id="one">Autotest preview</p></div><div id="plain-alert" class="alert info">Autotest plain alert</div>', resolve)));
+        I.executeScript(() => { autotestSelect('one'); autotestEditor.resetDirty(); });
+        const baseline = await I.executeScript(() => ({ html: autotestEditor.getData(), undo: autotestEditor.undoManager.index }));
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        I.assertTrue(await I.executeScript(() => document.activeElement.matches('.wj-styles__search')), 'Opening must focus the search field');
+        I.assertDeepEqual(await I.executeScript(() => {
+            const css = getComputedStyle(document.querySelector('.wj-styles__search'));
+            return { outline: css.outlineStyle, border: css.borderTopColor, inset: css.boxShadow.includes('inset') };
+        }), { outline: 'none', border: 'rgb(0, 99, 251)', inset: true }, 'Search focus must highlight the input border without an outer outline');
+        I.fillField('.wj-styles__search', 'large');
+        I.assertDeepEqual(await I.executeScript(() => {
+            const css = getComputedStyle(document.querySelector('.wj-styles__item[data-style-id="1"] .wj-styles__sample-preview'));
+            return { size: css.fontSize, weight: css.fontWeight, style: css.fontStyle, spacing: css.letterSpacing, transform: css.textTransform, decoration: css.textDecorationLine };
+        }), { size: '40px', weight: '700', style: 'italic', spacing: '2px', transform: 'uppercase', decoration: 'underline' }, 'Typography previews must retain the actual CSS values instead of clamping font size');
+        I.see('40 px', '.wj-styles__item[data-style-id="1"] .wj-styles__sample-value');
+        I.fillField('.wj-styles__search', 'gap');
+        I.seeElement('.wj-styles__item[data-style-id="13"] .wj-styles__sample--spacing');
+        I.seeElement('.wj-styles__item[data-style-id="14"] .wj-styles__sample--spacing');
+        I.see('8 px', '.wj-styles__item[data-style-id="13"] .wj-styles__sample-value');
+        I.see('40 px', '.wj-styles__item[data-style-id="14"] .wj-styles__sample-value');
+        I.dontSee('Aa', '.wj-styles__item[data-style-id="13"] .wj-styles__sample');
+        I.pressKey('Escape');
+        I.executeScript(() => autotestSelect('alert'));
+        I.click('.cke_button__wjstyles');
+        I.fillField('.wj-styles__search', 'Alert info');
+        const readAlertPreview = () => {
+            const css = getComputedStyle(document.querySelector('.wj-styles__item[data-style-id="8"] .wj-styles__sample-preview'));
+            return { color: css.color, background: css.backgroundColor, border: css.borderTopColor, borderWidth: css.borderTopWidth, borderStyle: css.borderTopStyle, radius: css.borderTopLeftRadius };
+        };
+        I.assertDeepEqual(await I.executeScript(readAlertPreview), { color: 'rgb(17, 59, 25)', background: 'rgb(221, 246, 225)', border: 'rgb(33, 90, 45)', borderWidth: '2px', borderStyle: 'solid', radius: '8px' }, 'Alert previews must show text, fill and border from their actual ancestor context');
+        I.pressKey('Escape');
+        I.executeScript(() => autotestSelect('plain-alert'));
+        I.click('.cke_button__wjstyles');
+        I.assertDeepEqual(await I.executeScript(readAlertPreview), { color: 'rgb(20, 20, 20)', background: 'rgb(224, 239, 255)', border: 'rgb(16, 53, 110)', borderWidth: '2px', borderStyle: 'solid', radius: '8px' }, 'Moving to another context must refresh the preview instead of reusing cached colors');
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), baseline.html, 'Rendering previews must not change the editor content');
+        I.assertFalse(await I.executeScript(() => autotestEditor.checkDirty()), 'Rendering previews must not mark the page as changed');
+        I.assertEqual(await I.executeScript(() => autotestEditor.undoManager.index), baseline.undo, 'Rendering previews must not create undo operations');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Preview rendering must not produce browser errors');
+    });
+
+    Scenario(`${mode}: paragraph formats preserve CSS, markup and one-step undo`, async ({ I }) => {
+        I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
+        I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one" class="custom small"><strong id="selected">Autotest first</strong> tail</p><h2 id="two" class="large">Autotest second</h2>', resolve)));
+        I.executeScript(() => autotestSelect('selected', 'two'));
+        const original = await I.executeScript(() => autotestEditor.getData());
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        I.seeElement('.wj-styles__format[data-format="h2"][aria-pressed="mixed"]');
+        I.click('.wj-styles__format[data-format="h2"]');
+        I.seeElement('.wj-styles:not([hidden])');
+        I.seeElement('.wj-styles__format[data-format="h2"][aria-pressed="true"]');
+        I.assertDeepEqual(await I.executeScript(() => ['one', 'two'].map(id => {
+            const element = autotestEditor.document.getById(id);
+            return { tag: element.getName(), classes: element.getAttribute('class'), text: element.getText() };
+        })), [
+            { tag: 'h2', classes: 'custom small', text: 'Autotest first tail' },
+            { tag: 'h2', classes: 'large', text: 'Autotest second' }
+        ], 'Semantic formatting must convert every selected block while preserving CSS and text');
+        I.assertEqual(await I.executeScript(() => autotestEditor.document.getById('selected').getName()), 'strong', 'Inline emphasis must survive block conversion');
+        const formatted = await I.executeScript(() => autotestEditor.getData());
+        I.click('.wj-styles__format[data-format="h2"]');
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), formatted, 'Selecting the current format must not remove it');
+        I.pressKey('Escape');
+        I.executeScript(() => autotestEditor.execCommand('undo'));
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), original, 'One undo must restore the complete mixed block selection');
+        I.executeScript(() => autotestEditor.execCommand('redo'));
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), formatted, 'Redo must restore semantic formatting and all CSS classes');
+        I.assertNotContain(formatted, 'wjstyles:', 'Picker state must not be serialized into document content');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Semantic formatting must not produce browser errors');
+    });
+
     Scenario(`${mode}: non-interactive panel content keeps the picker open`, async ({ I }) => {
         I.amOnPage(`/wjstyles-autotest.html?mode=${mode}${mode === 'classic' ? '&modal=1' : ''}`);
         I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
@@ -216,10 +368,23 @@ Scenario('inline: explicit ancestor target preserves content and supports undo',
         I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
     I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one" class="small">Autotest text</p>', resolve)));
     I.executeScript(() => { autotestSelect('one'); autotestEditor.wjstylescombo.open(); });
-    I.selectOption('.wj-styles__target select', 'Section (section).structural.bg-light');
+    I.waitForVisible('.wj-styles');
+    I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__target-option'), ['Section (section)', 'Paragraph (p)'], 'Targets must follow the outer-to-inner content hierarchy');
+    I.seeElement('.wj-styles__target-option[data-target=""][aria-pressed="true"]');
+    I.click('Section (section)', '.wj-styles__target');
+    I.seeElement('.wj-styles__target-option[data-target="0"][aria-pressed="true"]');
+    I.seeElement('.wj-styles__target-option[data-target=""][aria-pressed="false"]');
+    I.see('Light', '.wj-styles__chips');
+    I.seeElement('.wj-styles__format[data-format="h2"]:disabled');
     I.click('.wj-styles__item[data-style-id="7"]');
     I.assertEqual(await I.executeScript(() => document.getElementById('autotest-section').className), 'structural bg-dark', 'Background replacement must preserve structural classes');
     I.assertEqual(await I.executeScript(() => autotestEditor.document.getById('one').getAttribute('class')), 'small');
+    I.click('Paragraph (p)', '.wj-styles__target');
+    I.seeElement('.wj-styles__target-option[data-target=""][aria-pressed="true"]');
+    I.seeElement('.wj-styles__target-option[data-target="0"][aria-pressed="false"]');
+    I.see('Small', '.wj-styles__chips');
+    I.seeElement('.wj-styles__format[data-format="h2"]:not(:disabled)');
+    I.dontSee('Dark', '.wj-styles__chips');
     I.pressKey('Escape');
     I.executeScript(() => autotestEditor.execCommand('undo'));
     I.assertEqual(await I.executeScript(() => document.getElementById('autotest-section').className), 'structural bg-light', 'Undo must restore the ancestor background');
@@ -279,4 +444,63 @@ Scenario('classic: host modal retains panel focus after opening and applying', a
     I.assertEqual(await I.executeScript(() => autotestEditor.document.getById('one').getAttribute('class')), 'large');
     I.pressKey('Escape');
     I.assertTrue(await I.executeScript(() => document.activeElement.classList.contains('cke_button__wjstyles')));
+});
+
+Scenario('paragraph formats respect the configured allowed-content filter', async ({ I }) => {
+    I.amOnPage('/wjstyles-autotest.html?mode=classic&restricted=1');
+    I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+    I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one" class="custom small">Autotest restricted content</p>', resolve)));
+    I.executeScript(() => autotestSelect('one'));
+    I.click('.cke_button__wjstyles');
+    I.waitForVisible('.wj-styles');
+    I.assertDeepEqual(await I.executeScript(() => Array.from(document.querySelectorAll('.wj-styles__format')).map(button => button.dataset.format)), ['p', 'h2'], 'Only formats accepted by the active content filter may be offered');
+    I.click('.wj-styles__format[data-format="h2"]');
+    I.assertEqual(await I.executeScript(() => autotestEditor.document.getById('one').getName()), 'h2', 'An allowed heading must be applied');
+    I.assertEqual(await I.executeScript(() => autotestEditor.document.getById('one').getAttribute('class')), 'custom small', 'Allowed appearance classes must survive semantic formatting');
+    I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Filtered semantic formatting must not produce browser errors');
+});
+
+Scenario('inline: fixed editable roots explain why paragraph formats are unavailable', async ({ I }) => {
+    I.amOnPage('/wjstyles-autotest.html?mode=inline&blockless=1');
+    I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+    I.executeScript(() => autotestSelect('autotest-inline'));
+    const original = await I.executeScript(() => {
+        window.autotestFixedRoot = autotestEditor.editable().$;
+        return autotestEditor.getData();
+    });
+    I.click('.cke_button__wjstyles');
+    I.waitForVisible('.wj-styles');
+    I.see('The element type is fixed by this editable block.', '.wj-styles__format-hint');
+    I.dontSeeElement('.wj-styles__format:not(:disabled)');
+    I.seeElement('.wj-styles__format[data-format="h2"]:disabled');
+    I.executeScript(() => {
+        const picker = autotestEditor.wjstylescombo;
+        picker.applyFormat(picker.formats().find(format => format.name === 'h2'));
+    });
+    I.assertTrue(await I.executeScript(() => autotestEditor.editable().$ === window.autotestFixedRoot && autotestEditor.editable().getName() === 'p'), 'Formatting must not replace a fixed editable root');
+    I.assertEqual(await I.executeScript(() => autotestEditor.getData()), original, 'Formatting must not add nested block elements to a fixed editable root');
+    I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Fixed editable roots must not produce browser errors');
+});
+
+Scenario('paragraph formats register before initial automatic filtering without a Format toolbar', async ({ I }) => {
+    I.amOnPage('/wjstyles-autotest.html?mode=classic&automatic=1');
+    I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+    I.dontSeeElement('.cke_combo__format');
+    I.assertContain(await I.executeScript(() => autotestEditor.getData()), '<h2>Autotest initial heading</h2>', 'Initial heading markup must survive automatic filtering when only WJStyles exposes paragraph formats');
+    I.executeScript(() => {
+        const editor = autotestEditor;
+        editor.focus();
+        const range = editor.createRange();
+        range.selectNodeContents(editor.editable().findOne('h2'));
+        editor.getSelection().selectRanges([range]);
+        editor.wjstylescombo.capture();
+    });
+    I.click('.cke_button__wjstyles');
+    I.waitForVisible('.wj-styles');
+    I.seeElement('.wj-styles__format[data-format="h2"][aria-pressed="true"]');
+    I.click('.wj-styles__format[data-format="p"]');
+    I.assertContain(await I.executeScript(() => autotestEditor.getData()), '<p>Autotest initial heading</p>', 'Registered formats must allow a paragraph conversion');
+    I.click('.wj-styles__format[data-format="h2"]');
+    I.assertContain(await I.executeScript(() => autotestEditor.getData()), '<h2>Autotest initial heading</h2>', 'Registered formats must allow the heading to be restored');
+    I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Automatic filtering must not produce browser errors');
 });
