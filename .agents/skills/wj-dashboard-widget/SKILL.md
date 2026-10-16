@@ -5,7 +5,7 @@ description: Create or modify widgets on the WebJET CMS administration home dash
 
 # Dashboard Widgets
 
-Build widgets through the shared dashboard framework. The [user guide](../../../docs/sk/redactor/admin/welcome.md) describes the dashboard's user-facing behavior. Follow the repository [design guidance](../../../.github/agents/AGENTS-design.md) before changing presentation.
+Build widgets through the shared dashboard framework. The [user guide](../../../docs/sk/redactor/admin/welcome.md) describes the dashboard's user-facing behavior. Before implementation, use `wj-project-context` when available to read the design guidance and verify that the target CMS version exposes the documented widget framework. These references describe current core interfaces, not a guarantee that older versions support widgets. Report missing APIs rather than modifying dependency internals or upgrading CMS. Resolve project paths from the target checkout and bundled references from this skill's directory.
 
 ## Workflow
 

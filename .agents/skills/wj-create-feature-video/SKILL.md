@@ -9,6 +9,8 @@ Prepare a customer-focused product story and repeatable browser footage. Keep
 shot metadata, localized narration, preparation and browser steps in one
 JavaScript object; derive the narration, shot plan and walkthrough from it.
 
+Before creating executable scenarios, inspect the target project's video npm scripts, `recordVideoPlan` helper, test configuration and outro asset. The workflow below describes the core recording harness, which may be absent from a customer project. Also verify availability of ElevenLabs access and the Tesseract video tools before the steps that require them. If a prerequisite is absent, report it and keep the deliverable to the feasible story/shot plan; do not silently install plugins, copy the core harness or change CMS dependencies. Resolve project paths from the target checkout and references from this skill's own directory.
+
 Read [references/production-reference.md](references/production-reference.md)
 before implementing or changing a video scenario. It contains the exact schema,
 scenario template, recording defaults and validation commands. Use
