@@ -315,6 +315,153 @@ for (const mode of ['classic', 'inline']) {
         I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'The picker must not produce browser errors');
     });
 
+    Scenario(`${mode}: inline styles require selected text at a plain caret`, async ({ I }) => {
+        I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
+        I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one" class="custom">Autotest plain text</p><h2 id="heading">Autotest heading</h2><p><span class="red"><img id="image" alt="Autotest" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></span></p>', resolve)));
+        const original = await I.executeScript(() => autotestEditor.getData());
+        for (const id of ['one', 'heading', 'image']) {
+            I.executeScript(id => autotestSelect(id, null, 4, 4), id);
+            I.click('.cke_button__wjstyles');
+            I.waitForVisible('.wj-styles');
+            I.dontSeeElement('.wj-styles__item[data-style-id="4"]');
+            I.dontSeeElement('.wj-styles__item[data-style-id="5"]');
+            I.checkOption('.wj-styles__filters input');
+            I.seeElement('.wj-styles__item[data-style-id="4"]:disabled');
+            I.seeElement('.wj-styles__item[data-style-id="5"]:disabled');
+            const undo = await I.executeScript(() => autotestEditor.undoManager.index);
+            I.executeScript(() => autotestApply('Blue'));
+            I.assertEqual(await I.executeScript(() => autotestEditor.getData()), original, 'A plain caret or selected image must not create an inline style or filler');
+            I.assertEqual(await I.executeScript(() => autotestEditor.undoManager.index), undo, 'An inapplicable inline style must not create an undo operation');
+            I.uncheckOption('.wj-styles__filters input');
+            I.pressKey('Escape');
+        }
+        I.executeScript(() => autotestSelect('one', null, 9, 14));
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles__item[data-style-id="5"]:not(:disabled)');
+        I.click('.wj-styles__item[data-style-id="5"]');
+        I.assertDeepEqual(await I.executeScript(() => {
+            const paragraph = autotestEditor.document.getById('one').$;
+            return { tag: paragraph.tagName.toLowerCase(), classes: paragraph.className, text: paragraph.textContent, selected: paragraph.querySelector('span.blue')?.textContent, spans: paragraph.querySelectorAll('span').length };
+        }), { tag: 'p', classes: 'custom', text: 'Autotest plain text', selected: 'plain', spans: 1 }, 'A text selection must wrap only the selected text while preserving its paragraph');
+        I.pressKey('Escape');
+        I.executeScript(() => autotestEditor.execCommand('undo'));
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), original, 'One undo must remove the selected text wrapper');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Inline style eligibility must not produce browser errors');
+    });
+
+    Scenario(`${mode}: inline styles at a caret update the existing span`, async ({ I }) => {
+        I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
+        I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<h2 id="heading">Before <span id="colored" class="red custom" title="Autotest span" data-autotest="keep"><strong id="inside">Autotest nested</strong> tail</span> after</h2><p><span id="outer" class="red"><span id="inner" class="custom"><em id="nested">Autotest child</em></span></span></p>', resolve)));
+        I.executeScript(() => autotestSelect('inside', null, 4, 4));
+        const original = await I.executeScript(() => {
+            const span = autotestEditor.document.getById('colored').$;
+            return { html: autotestEditor.getData(), spanHtml: span.innerHTML, attributes: Array.from(span.attributes).filter(attribute => attribute.name !== 'class').map(attribute => [attribute.name, attribute.value]).sort() };
+        });
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        I.seeElement('.wj-styles__item[data-style-id="4"][aria-pressed="true"]');
+        I.seeElement('.wj-styles__item[data-style-id="5"]:not(:disabled)');
+        I.click('.wj-styles__item[data-style-id="5"]');
+        I.assertDeepEqual(await I.executeScript(() => {
+            const span = autotestEditor.document.getById('colored').$;
+            const heading = autotestEditor.document.getById('heading').$;
+            return {
+                classes: Array.from(span.classList).sort(),
+                spanHtml: span.innerHTML,
+                attributes: Array.from(span.attributes).filter(attribute => attribute.name !== 'class').map(attribute => [attribute.name, attribute.value]).sort(),
+                spans: heading.querySelectorAll('span').length,
+                tag: heading.tagName.toLowerCase(),
+                text: heading.textContent
+            };
+        }), { classes: ['blue', 'custom'], spanHtml: original.spanHtml, attributes: original.attributes, spans: 1, tag: 'h2', text: 'Before Autotest nested tail after' }, 'A nested caret must update the enclosing span while preserving unknown classes, attributes and markup');
+        I.pressKey('Escape');
+        I.executeScript(() => autotestEditor.execCommand('undo'));
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), original.html, 'One undo must restore the existing span and its original color');
+        I.executeScript(() => autotestSelect('nested', null, 4, 4));
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        I.seeElement('.wj-styles__item[data-style-id="4"][aria-pressed="false"]');
+        I.dontSee('Červená', '.wj-styles__chips');
+        I.click('.wj-styles__item[data-style-id="5"]');
+        I.assertDeepEqual(await I.executeScript(() => {
+            const outer = autotestEditor.document.getById('outer').$;
+            const inner = autotestEditor.document.getById('inner').$;
+            return { outer: outer.className, inner: Array.from(inner.classList).sort(), text: inner.textContent, nestedSpans: outer.querySelectorAll('span').length, emphasis: inner.querySelector('em')?.id };
+        }), { outer: 'red', inner: ['blue', 'custom'], text: 'Autotest child', nestedSpans: 1, emphasis: 'nested' }, 'A caret must change only its nearest span without treating an outer color as removable');
+        I.pressKey('Escape');
+        I.executeScript(() => autotestEditor.execCommand('undo'));
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), original.html, 'One undo must restore a nested span without changing its outer color');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Styling an existing span must not produce browser errors');
+    });
+
+    Scenario(`${mode}: span caret target separates paragraph and text styles`, async ({ I }) => {
+        I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
+        I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one" class="custom small"><strong id="emphasis"><span id="colored" class="red">Autotest text</span></strong></p>', resolve)));
+        I.executeScript(() => autotestSelect('colored', null, 4, 4));
+        const original = await I.executeScript(() => autotestEditor.getData());
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        const targets = mode === 'inline' ? ['Section (section)', 'Paragraph (p)', 'Text (span)'] : ['Paragraph (p)', 'Text (span)'];
+        I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__target-option'), targets, 'The target path must end with the span containing the caret');
+        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Text (span)');
+        I.see('Červená', '.wj-styles__chips');
+        I.dontSee('Small', '.wj-styles__chips');
+        I.dontSeeElement('.wj-styles__item[data-style-id="1"]');
+        I.dontSeeElement('.wj-styles__formats');
+        I.checkOption('.wj-styles__filters input');
+        I.seeElement('.wj-styles__item[data-style-id="1"]:disabled');
+        I.seeElement('.wj-styles__format[data-format="h2"]:disabled');
+        I.uncheckOption('.wj-styles__filters input');
+        I.click('.wj-styles__item[data-style-id="5"]');
+        I.assertDeepEqual(await I.executeScript(() => ['one', 'colored'].map(id => autotestEditor.document.getById(id).getAttribute('class'))), ['custom small', 'blue'], 'A text style must change only the selected span');
+        const spanStyled = await I.executeScript(() => autotestEditor.getData());
+        I.click('Paragraph (p)', '.wj-styles__target');
+        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Paragraph (p)');
+        I.see('Small', '.wj-styles__chips');
+        I.dontSee('Blue', '.wj-styles__chips');
+        I.seeElement('.wj-styles__item[data-style-id="1"]:not(:disabled)');
+        I.seeElement('.wj-styles__format[data-format="h2"]:not(:disabled)');
+        I.dontSeeElement('.wj-styles__item[data-style-id="5"]');
+        I.click('.wj-styles__item[data-style-id="1"]');
+        I.assertDeepEqual(await I.executeScript(() => ['one', 'colored'].map(id => autotestEditor.document.getById(id).getAttribute('class'))), ['custom large', 'blue'], 'A paragraph style must leave the span appearance unchanged');
+        const paragraphStyled = await I.executeScript(() => autotestEditor.getData());
+        I.click('.wj-styles__format[data-format="h2"]');
+        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Heading 2 (h2)', 'Semantic formatting must retain the explicitly selected parent target');
+        I.assertDeepEqual(await I.executeScript(() => {
+            const block = autotestEditor.document.getById('one');
+            const span = autotestEditor.document.getById('colored');
+            return { tag: block.getName(), classes: block.getAttribute('class'), span: span.getAttribute('class'), parent: span.getParent().getName(), text: block.getText() };
+        }), { tag: 'h2', classes: 'custom large', span: 'blue', parent: 'strong', text: 'Autotest text' }, 'Parent formatting must preserve the styled span and emphasis');
+        I.click('Text (span)', '.wj-styles__target');
+        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Text (span)');
+        I.see('Blue', '.wj-styles__chips');
+        I.dontSee('Large', '.wj-styles__chips');
+        I.dontSeeElement('.wj-styles__item[data-style-id="1"]');
+        I.dontSeeElement('.wj-styles__formats');
+        I.pressKey('Escape');
+        I.executeScript(() => autotestEditor.execCommand('undo'));
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), paragraphStyled, 'One undo must restore the parent paragraph after semantic formatting');
+        I.executeScript(() => autotestEditor.execCommand('undo'));
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), spanStyled, 'The next undo must restore only the paragraph appearance');
+        I.executeScript(() => autotestEditor.execCommand('undo'));
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), original, 'The final undo must restore the original span appearance');
+        I.executeScript(() => {
+            const picker = autotestEditor.wjstylescombo;
+            picker.items = picker.items.filter(item => !item.tags.includes('p'));
+            autotestSelect('colored', null, 4, 4);
+        });
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__target-option'), targets, 'The parent paragraph must remain available without explicit paragraph CSS definitions');
+        I.click('Paragraph (p)', '.wj-styles__target');
+        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Paragraph (p)');
+        I.seeElement('.wj-styles__format[data-format="h2"]:not(:disabled)');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Switching between text and paragraph targets must not produce browser errors');
+    });
+
     Scenario(`${mode}: inline selection preserves surrounding text and markup`, async ({ I }) => {
         I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
         I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
@@ -416,15 +563,6 @@ Scenario('mixed state, selected objects and read-only mode', async ({ I }) => {
     I.executeScript(() => { autotestSelect('one'); autotestEditor.setReadOnly(true); autotestApply('Large'); });
     I.assertEqual(await I.executeScript(() => autotestEditor.document.getById('one').getAttribute('class')), 'small');
     I.assertDeepEqual(await I.executeScript(() => autotestErrors), []);
-});
-
-Scenario('a caret style applies to subsequent typing without storing a filler', async ({ I }) => {
-    I.amOnPage('/wjstyles-autotest.html?mode=classic');
-    I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
-    I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one">Autotest</p>', resolve)));
-    I.executeScript(() => { autotestSelect('one',null,4,4); autotestApply('Blue'); autotestEditor.insertText('typed'); });
-    I.assertEqual(await I.executeScript(() => autotestEditor.document.getById('one').$.querySelector('.blue')?.textContent.replace(/\u200b/g,'')), 'typed');
-    I.assertNotContain(await I.executeScript(() => autotestEditor.getData()), '\u200b');
 });
 
 Scenario('classic: host modal retains panel focus after opening and applying', async ({ I }) => {

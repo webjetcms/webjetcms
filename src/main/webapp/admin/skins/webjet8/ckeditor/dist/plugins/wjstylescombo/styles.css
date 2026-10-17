@@ -32,7 +32,6 @@
 .wj-styles__search { background-color: #fff; border: 1px solid var(--wj-styles-input-border); border-radius: 6px; min-height: 32px; padding: 4px 10px; color: var(--wj-styles-text); font-size: 14px; }
 .wj-styles__chips { display: flex; flex-wrap: wrap; gap: 5px; max-height: 112px; overflow-y: auto; margin-bottom: 10px; padding: 2px; font-size: 12px; }
 .wj-styles__chip { border: 1px solid #b7d3ff; border-radius: 4px; background: #edf4ff; color: #0048b9 !important; padding: 3px 7px; text-align: start; max-width: 100%; overflow-wrap: anywhere; }
-.wj-styles__inherited button { display: block; border: 0; background: none; padding: 0 0 6px; font-size: 12px; color: #686f83; text-align: start; text-decoration: underline; }
 .wj-styles__search-box { position: relative; margin-bottom: 8px; }
 .wj-styles__search-box > .ti { position: absolute; inset-inline-start: 10px; top: 9px; color: var(--wj-styles-muted); pointer-events: none; }
 .wj-styles .wj-styles__search { width: 100%; margin: 0; min-height: 36px; padding-inline-start: 34px; }
