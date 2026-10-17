@@ -2,6 +2,7 @@
 <%@ page pageEncoding="utf-8" contentType="text/javascript" %>
 <%@ page import="sk.iway.iwcm.i18n.Prop"%>
 <%@ page import="sk.iway.iwcm.PageLng"%>
+<%@ page import="sk.iway.iwcm.Constants,sk.iway.iwcm.JsonTools"%>
 <%
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");
 	sk.iway.iwcm.PathFilter.setStaticContentHeaders("/cache/admin/webpages/page-builder/scripts/ninja-page-builder.js", null, request, response);
@@ -1577,13 +1578,13 @@
             me.statec = {};
 
             me.grid = me.options.grid || {
-                section:                        'section:not(.pb-not-section), div.pb-section',
+                section:                        <%=JsonTools.objectToJSON(Constants.getString("pageBuilderGridSectionSelector"))%>,
                 section_default_class:          '',
-                container:                      'div[class^="container"]:not(.pb-not-container), div[class*="pb-custom-container"]',
+                container:                      <%=JsonTools.objectToJSON(Constants.getString("pageBuilderGridContainerSelector"))%>,
                 container_default_class:        'container',
-                row:                            'div.row',
+                row:                            <%=JsonTools.objectToJSON(Constants.getString("pageBuilderGridRowSelector"))%>,
                 row_default_class:              'row',
-                column:                         'div[class*="col-"]:not(.pb-not-column), div[class*="pb-col"]',
+                column:                         <%=JsonTools.objectToJSON(Constants.getString("pageBuilderGridColumnSelector"))%>,
                 column_default_class:           'col col-md-12',
                 column_content:                 'div.column-content',
                 duplicable:                     '.'+prefix+'duplicable'

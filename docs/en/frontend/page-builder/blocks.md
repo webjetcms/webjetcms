@@ -510,11 +510,28 @@ Complete HTML code sample of the website with sample sections:
 </section>
 ```
 
+## Structure selectors
+
+Page Builder and the **Styles** picker in both classic and Page Builder editors share four configuration variables for identifying sections, containers, rows, and columns. Set the CSS selectors for a custom grid directly in these variables:
+
+| Configuration variable | Default value |
+| --- | --- |
+| `pageBuilderGridSectionSelector` | `section:not(.pb-not-section), div.pb-section` |
+| `pageBuilderGridContainerSelector` | `div[class^="container"]:not(.pb-not-container), div[class*="pb-custom-container"]` |
+| `pageBuilderGridRowSelector` | `div.row` |
+| `pageBuilderGridColumnSelector` | `div[class*="col-"]:not(.pb-not-column), div[class*="pb-col"]:not(.pb-not-column):not(.pb-column__content)` |
+
+The **Styles** picker reads selectors only from these four variables in both editor modes. The existing `pageBuilderGrid`, `pbCustomOptions`, and `pbCustomSettings` settings remain available for customizing Page Builder, but the **Styles** picker does not read them automatically. If you use them to change selectors, keep those selectors aligned with the configuration variables above.
+
+A custom column selector must also exclude its content wrapper (`.pb-column__content` by default); use the corresponding class when configuring a custom prefix.
+
+These four variables only change element identification. Continue to configure classes added when inserting new blocks (`section_default_class`, `container_default_class`, `row_default_class`, `column_default_class`) and column width prefixes (`me.column.valid_prefixes`) in `pbCustomSettings`, as shown in the following example.
+
 ## Supporting JavaScript code
 
 If you need your own JavaScript support file (see `pagesupport.js` mentioned above), you can create a file `/components/INSTALL_NAME/admin/pagesupport-custom.js`, which if it exists will be loaded after the file `pagesupport.js`. You can add your own functions, or modify the standard existing functions from [pagesupport.js](../../../../src/main/webapp/admin/webpages/page-builder/scripts/pagesupport.js).
 
-You can also edit some settings, such as the color list, edit CSS selectors, set width for different devices, etc. The following code is just a sample, paste it into the `pagesupport-custom.js` file:
+You can customize the color list, classes for new blocks, or widths for different devices. Configure row and column selectors for a custom grid through `pageBuilderGridRowSelector` and `pageBuilderGridColumnSelector`. Paste the following sample code into `pagesupport-custom.js`:
 
 ```JavaScript
 window.pbCustomOptions = function(options) {
@@ -534,11 +551,10 @@ window.pbCustomOptions = function(options) {
 };
 
 window.pbCustomSettings = function(me) {
-    //redefine grid column content selector
+    // Configure row and column selectors through pageBuilderGridRowSelector and pageBuilderGridColumnSelector.
+    // Set classes for newly inserted blocks and column width prefixes.
     me.grid.section_default_class = 'section';
-    me.grid.row = 'div.grid, div[class*="pb-grid"]';
     me.grid.row_default_class = 'grid';
-    me.grid.column = 'div[class*="grid__col"]:not(.pb-not-column), div[class*="pb-col"]';
     me.grid.column_default_class = 'grid__col grid__col--12';
 
     me.column.valid_prefixes = ['grid__col--', 'grid__col--sm-', 'grid__col--md-', 'grid__col--lg-', 'grid__col--xl-']

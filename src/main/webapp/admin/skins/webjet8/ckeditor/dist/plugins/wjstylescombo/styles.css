@@ -23,12 +23,18 @@
 .wj-styles__top strong { flex: 1; font-size: 18px; line-height: 1.4; }
 .wj-styles .wj-styles__close { display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; background: #fff; color: var(--wj-styles-muted); width: 28px; height: 28px; padding: 0; border-radius: 6px; }
 .wj-styles .wj-styles__close:hover { background: var(--wj-styles-surface); color: var(--wj-styles-text); }
-.wj-styles__target { display: flex; align-items: baseline; gap: 12px; margin: 0 0 10px; color: var(--wj-styles-muted); font-size: 12px; }
-.wj-styles__target-path { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; min-width: 0; }
-.wj-styles__target-part { display: inline-flex; align-items: baseline; gap: 6px; min-width: 0; }
-.wj-styles .wj-styles__target-option { border: 0; border-radius: 4px; background: transparent; padding: 3px 0; min-height: 28px; color: var(--wj-styles-muted); font-size: 14px; text-align: start; text-decoration: underline; text-decoration-color: var(--wj-styles-input-border); text-underline-offset: 3px; }
-.wj-styles .wj-styles__target-option[aria-pressed="true"] { color: var(--wj-styles-text); font-weight: 700; text-decoration: none; }
-.wj-styles .wj-styles__target-option:hover { color: var(--wj-styles-blue); text-decoration: underline; text-decoration-color: currentColor; }
+.wj-styles__target { margin: 0 0 10px; }
+.wj-styles__target-path { display: flex; flex-wrap: wrap; align-items: center; gap: 3px; min-width: 0; }
+.wj-styles__target-part { display: inline-flex; align-items: center; gap: 3px; min-width: 0; max-width: 100%; }
+.wj-styles__target-separator { color: var(--wj-styles-muted); font-size: 12px; }
+.wj-styles .wj-styles__target-option { display: inline-flex; align-items: center; gap: 6px; min-width: 0; min-height: 31px; border: 1px solid transparent; border-radius: 6px; background: transparent; padding: 0 8px; color: var(--wj-styles-text); font-size: 12px; line-height: 1.2; text-align: start; overflow-wrap: anywhere; }
+.wj-styles .wj-styles__target-option[aria-pressed="true"] { font-weight: 700; background: var(--wj-styles-surface); }
+.wj-styles .wj-styles__target-option:hover { background: var(--wj-styles-surface); }
+.wj-styles__target-option[data-type]::before { content: ''; flex: 0 0 7px; width: 7px; height: 7px; border-radius: 2px; background: var(--wj-styles-structure-color); }
+.wj-styles__target-option[data-type="section"] { --wj-styles-structure-color: #6486ff; }
+.wj-styles__target-option[data-type="container"] { --wj-styles-structure-color: #f64d91; }
+.wj-styles__target-option[data-type="row"] { --wj-styles-structure-color: var(--wj-styles-muted); }
+.wj-styles__target-option[data-type="column"] { --wj-styles-structure-color: #00a186; }
 /* Page Builder has client tooltip CSS instead of Bootstrap's administration theme. */
 .wj-styles-tooltip.tooltip { --bs-tooltip-bg: var(--wj-secondary, #13151b); --bs-tooltip-arrow-width: 6.4px; --bs-tooltip-arrow-height: 3.2px; position: absolute; display: block; margin: 0; padding: 0; border: 0; background: transparent; font: 14px/1.5 Asap, sans-serif; text-align: start; opacity: 0; pointer-events: none; transition: none; }
 .wj-styles-tooltip.tooltip.show { opacity: 1; }

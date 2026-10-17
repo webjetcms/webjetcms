@@ -10,6 +10,83 @@ Before(async ({ I, login }) => {
 });
 
 for (const mode of ['classic', 'inline']) {
+    Scenario(`${mode}: structural breadcrumb roles follow configured selectors`, async ({ I }) => {
+        I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
+        I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<section id="structure"><div id="container" class="container"><div id="row" class="row"><div id="column" class="col-12"><div id="generic" class="alert info"><p id="one" class="small"><span id="colored" class="red">Autotest structure</span></p></div></div></div></div></section>', resolve)));
+        I.executeScript(() => {
+            autotestEditor.config.wjstylescombo_structure = { section: '#structure', container: '.container', row: '.row', column: '.col-12' };
+            autotestEditor.config.wjstylescombo_scope = editor => editor.editable().$;
+            autotestEditor.wjstylescombo.items = autotestEditor.wjstylescombo.items.filter(item => !item.tags.includes('section'));
+            autotestSelect('colored', null, 4, 4);
+        });
+        const original = await I.executeScript(() => autotestEditor.getData());
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        const labels = ['Section', 'Container', 'Row', 'Column', 'Block', 'Paragraph', 'Text'];
+        I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__target-option'), labels, 'Structural ancestors must remain navigable without matching catalog styles');
+        I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__target-part > span[aria-hidden="true"]'), Array(6).fill('›'), 'Breadcrumb separators must not become part of accessible button names');
+        I.dontSee('Apply to', '.wj-styles__target');
+        I.seeElement('.wj-styles__target-path[role="group"][aria-label="Apply to"]');
+        I.assertDeepEqual(await I.executeScript(() => Array.from(document.querySelectorAll('.wj-styles__target-option[data-type]')).map(button => {
+            const square = getComputedStyle(button, '::before');
+            return { type: button.dataset.type, color: square.backgroundColor, width: square.width, height: square.height };
+        })), [
+            { type: 'section', color: 'rgb(100, 134, 255)', width: '7px', height: '7px' },
+            { type: 'container', color: 'rgb(246, 77, 145)', width: '7px', height: '7px' },
+            { type: 'row', color: 'rgb(104, 111, 131)', width: '7px', height: '7px' },
+            { type: 'column', color: 'rgb(0, 161, 134)', width: '7px', height: '7px' }
+        ], 'Structural breadcrumb squares must match the Page Builder role colors');
+        I.assertTrue(await I.executeScript(() => Array.from(document.querySelectorAll('.wj-styles__target-option:not([data-type])')).every(button => {
+            const square = getComputedStyle(button, '::before');
+            return square.content === 'none' || square.display === 'none';
+        })), 'Generic blocks, paragraphs and text must not display a structural square');
+        I.assertEqual(await I.grabAttributeFrom('.wj-styles__target-option[data-target=""]', 'title'), 'span#colored.red', 'Short labels must retain the full element details in the tooltip');
+        for (const type of ['section', 'container', 'row', 'column']) {
+            I.click(`.wj-styles__target-option[data-type="${type}"]`);
+            I.seeElement(`.wj-styles__target-option[data-type="${type}"][aria-pressed="true"]`);
+        }
+        I.click('Text', '.wj-styles__target');
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), original, 'Navigating structural targets must not change the content');
+        I.click('.wj-styles__search');
+        I.executeScript(() => {
+            autotestEditor.config.wjstylescombo_structure = { section: '#structure', container: '.configured-container', row: '.configured-row', column: '.configured-column' };
+            for (const type of ['container', 'row', 'column']) autotestEditor.document.getById(type).setAttribute('class', `configured-${type}`);
+            autotestEditor.document.getById('generic').setAttribute('class', 'alert info container row col-12');
+            autotestEditor.wjstylescombo.render();
+        });
+        I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__target-option'), labels, 'Both editor modes must use only the configured structural selectors');
+        I.assertDeepEqual(await I.executeScript(() => Array.from(document.querySelectorAll('.wj-styles__target-option[data-type]')).map(button => [button.dataset.type, button.title])), [
+            ['section', 'section#structure'], ['container', 'div#container.configured-container'], ['row', 'div#row.configured-row'], ['column', 'div#column.configured-column']
+        ], 'Updated roles must keep accurate element tooltips and ignore old selector matches');
+        I.executeScript(() => {
+            autotestEditor.config.wjstylescombo_structure.column = 'div[class*="col-"]:not(.pb-not-column), div[class*="pb-col"]:not(.pb-not-column):not(.pb-column__content)';
+            autotestEditor.document.getById('column').setAttribute('class', 'pb-col12');
+        });
+        for (const classes of ['pb-column__content', 'col-12 pb-col12 pb-not-column']) {
+            I.executeScript(classes => {
+                autotestEditor.document.getById('generic').setAttribute('class', `alert info ${classes}`);
+                autotestEditor.wjstylescombo.render();
+            }, classes);
+            I.seeElement('.wj-styles__target-option[title="div#column.pb-col12"][data-type="column"]');
+            I.seeElement('.wj-styles__target-option[title^="div#generic."]:not([data-type])');
+        }
+        I.pressKey('Escape');
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<main id="layout" class="autotest-layout">Autotest direct text</main>', resolve)));
+        I.executeScript(() => {
+            autotestEditor.config.wjstylescombo_structure = { section: '.autotest-layout' };
+            autotestSelect('layout', null, 4, 4);
+        });
+        const directText = await I.executeScript(() => autotestEditor.getData());
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__target-option'), ['Section'], 'A custom structural tag containing direct text must remain the current target');
+        I.seeElement('.wj-styles__target-option[data-target=""][data-type="section"][aria-pressed="true"]');
+        I.assertEqual(await I.grabAttributeFrom('.wj-styles__target-option[data-target=""]', 'title'), 'main#layout.autotest-layout');
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), directText, 'Resolving a custom structural target must preserve its direct text');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Structural breadcrumb classification must not produce browser errors');
+    });
+
     Scenario(`${mode}: breadcrumb Bootstrap tooltips follow target changes and clean up`, async ({ I }) => {
         I.amOnPage('/admin/');
         I.waitForFunction(() => typeof window.bootstrap?.Tooltip === 'function', [], 10);
@@ -459,9 +536,9 @@ for (const mode of ['classic', 'inline']) {
         const original = await I.executeScript(() => autotestEditor.getData());
         I.click('.cke_button__wjstyles');
         I.waitForVisible('.wj-styles');
-        const targets = mode === 'inline' ? ['Section (section)', 'Paragraph (p)', 'Text (span)'] : ['Paragraph (p)', 'Text (span)'];
+        const targets = mode === 'inline' ? ['Section', 'Paragraph', 'Text'] : ['Paragraph', 'Text'];
         I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__target-option'), targets, 'The target path must end with the span containing the caret');
-        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Text (span)');
+        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Text');
         I.see('Červená', '.wj-styles__chips');
         I.dontSee('Small', '.wj-styles__chips');
         I.dontSeeElement('.wj-styles__item[data-style-id="1"]');
@@ -473,8 +550,8 @@ for (const mode of ['classic', 'inline']) {
         I.click('.wj-styles__item[data-style-id="5"]');
         I.assertDeepEqual(await I.executeScript(() => ['one', 'colored'].map(id => autotestEditor.document.getById(id).getAttribute('class'))), ['custom small', 'blue'], 'A text style must change only the selected span');
         const spanStyled = await I.executeScript(() => autotestEditor.getData());
-        I.click('Paragraph (p)', '.wj-styles__target');
-        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Paragraph (p)');
+        I.click('Paragraph', '.wj-styles__target');
+        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Paragraph');
         I.see('Small', '.wj-styles__chips');
         I.dontSee('Blue', '.wj-styles__chips');
         I.seeElement('.wj-styles__item[data-style-id="1"]:not(:disabled)');
@@ -484,14 +561,14 @@ for (const mode of ['classic', 'inline']) {
         I.assertDeepEqual(await I.executeScript(() => ['one', 'colored'].map(id => autotestEditor.document.getById(id).getAttribute('class'))), ['custom large', 'blue'], 'A paragraph style must leave the span appearance unchanged');
         const paragraphStyled = await I.executeScript(() => autotestEditor.getData());
         I.click('.wj-styles__format[data-format="h2"]');
-        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Heading 2 (h2)', 'Semantic formatting must retain the explicitly selected parent target');
+        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Heading 2', 'Semantic formatting must retain the explicitly selected parent target');
         I.assertDeepEqual(await I.executeScript(() => {
             const block = autotestEditor.document.getById('one');
             const span = autotestEditor.document.getById('colored');
             return { tag: block.getName(), classes: block.getAttribute('class'), span: span.getAttribute('class'), parent: span.getParent().getName(), text: block.getText() };
         }), { tag: 'h2', classes: 'custom large', span: 'blue', parent: 'strong', text: 'Autotest text' }, 'Parent formatting must preserve the styled span and emphasis');
-        I.click('Text (span)', '.wj-styles__target');
-        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Text (span)');
+        I.click('Text', '.wj-styles__target');
+        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Text');
         I.see('Blue', '.wj-styles__chips');
         I.dontSee('Large', '.wj-styles__chips');
         I.dontSeeElement('.wj-styles__item[data-style-id="1"]');
@@ -511,8 +588,8 @@ for (const mode of ['classic', 'inline']) {
         I.click('.cke_button__wjstyles');
         I.waitForVisible('.wj-styles');
         I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__target-option'), targets, 'The parent paragraph must remain available without explicit paragraph CSS definitions');
-        I.click('Paragraph (p)', '.wj-styles__target');
-        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Paragraph (p)');
+        I.click('Paragraph', '.wj-styles__target');
+        I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Paragraph');
         I.seeElement('.wj-styles__format[data-format="h2"]:not(:disabled)');
         I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Switching between text and paragraph targets must not produce browser errors');
     });
@@ -571,9 +648,9 @@ Scenario('inline: explicit ancestor target preserves content and supports undo',
     I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one" class="small">Autotest text</p>', resolve)));
     I.executeScript(() => { autotestSelect('one'); autotestEditor.wjstylescombo.open(); });
     I.waitForVisible('.wj-styles');
-    I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__target-option'), ['Section (section)', 'Paragraph (p)'], 'Targets must follow the outer-to-inner content hierarchy');
+    I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__target-option'), ['Section', 'Paragraph'], 'Targets must follow the outer-to-inner content hierarchy');
     I.seeElement('.wj-styles__target-option[data-target=""][aria-pressed="true"]');
-    I.click('Section (section)', '.wj-styles__target');
+    I.click('Section', '.wj-styles__target');
     I.seeElement('.wj-styles__target-option[data-target="0"][aria-pressed="true"]');
     I.seeElement('.wj-styles__target-option[data-target=""][aria-pressed="false"]');
     I.see('Light', '.wj-styles__chips');
@@ -581,7 +658,7 @@ Scenario('inline: explicit ancestor target preserves content and supports undo',
     I.click('.wj-styles__item[data-style-id="7"]');
     I.assertEqual(await I.executeScript(() => document.getElementById('autotest-section').className), 'structural bg-dark', 'Background replacement must preserve structural classes');
     I.assertEqual(await I.executeScript(() => autotestEditor.document.getById('one').getAttribute('class')), 'small');
-    I.click('Paragraph (p)', '.wj-styles__target');
+    I.click('Paragraph', '.wj-styles__target');
     I.seeElement('.wj-styles__target-option[data-target=""][aria-pressed="true"]');
     I.seeElement('.wj-styles__target-option[data-target="0"][aria-pressed="false"]');
     I.see('Small', '.wj-styles__chips');
