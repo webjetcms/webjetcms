@@ -211,7 +211,7 @@ Pri použití viacerých CSS štýlov naraz (napr. ```btn btn-primary```) sa apl
 
 #### Vyhľadávanie a skupiny štýlov
 
-Nová roletka **Štýly** zostáva po výbere otvorená. V hlavičke zobrazuje aktívne štýly a umožňuje ich odobrať. Vyhľadáva podľa názvu, CSS triedy aj kategórie bez rozlišovania diakritiky. HTML značku odseku alebo nadpisu mení samostatná roletka **Formát**.
+Roletka **Štýly** zostáva po výbere otvorená. V hlavičke zobrazuje aktívne štýly a umožňuje ich odobrať. Vyhľadáva podľa názvu, CSS triedy, kategórie aj skupiny bez rozlišovania diakritiky. HTML značku odseku alebo nadpisu mení samostatná kategória **Formát odseku** v spodnej časti roletky.
 
 Správanie položiek nastavíte komentármi v zdrojovom `editor.scss` (po zostavení v `editor.css`):
 
@@ -233,7 +233,7 @@ div.alert.warning {
 
 | Komentár | Význam |
 | --- | --- |
-| `editor title:` | Názov položky. HTML sa v novom ovládači zmení na čistý text. |
+| `editor title:` | Názov položky. HTML sa v ovládači zmení na čistý text. |
 | `editor category:` | Kategória na usporiadanie a vyhľadávanie. |
 | `editor category-icon:` | Voliteľná ikona kategórie z Tabler Icons, napríklad `ti-border-none`. |
 | `editor group:` | Voľby tej istej vlastnosti sa na rovnakom elemente nahrádzajú. Kategória sama o sebe nič nevylučuje. |
@@ -244,9 +244,9 @@ div.alert.warning {
 
 Názvy skupín používajte jednoznačne pre danú vlastnosť. Farba, veľkosť a odsadenie patria do rôznych skupín. Zložená predvoľba, napríklad Perex, môže zostať bez skupiny. Triedy, ktoré nie sú vo voľbách ani v `members`, roletka pri výmene variantu zachová.
 
-V poli **Upraviť** sa dá vybrať nadradený element, napríklad sekcia alebo tabuľka. Jeho štýly sú pri úprave textu označené samostatne. Platí to v Štandardnom editore aj v Page Builderi. Zmena má jeden krok Späť; bežný výber CSS nemení HTML značku. Pri označení časti textu môže vzniknúť element `span`.
+Cesta elementov v hlavičke umožňuje vybrať nadradený element, napríklad sekciu alebo tabuľku. Aktívne štýly a dostupné položky potom zodpovedajú tomuto elementu. Platí to v Štandardnom editore aj v Page Builderi. Zmena má jeden krok Späť; bežný výber CSS nemení HTML značku. Pri označení časti textu môže vzniknúť element `span`.
 
-Nový ovládač zabezpečuje plugin `wjstylescombo`. Konfiguračná premenná `ckeditor_styleComboEnabled=false` ponechá pôvodný `stylescombo`; štandardná hodnota je `true`. Konfigurácia v `config.jsp` pri zapnutí nahrádza položku `Styles` položkou `WJStyles` a dopĺňa `Format`, ak ešte nie je na lište. Existujúce šablóny nemusia doplniť metadáta: ich položky zostanú v kategórii Ostatné bez automatického vylučovania tried.
+Ovládač zabezpečuje predvolene zapnutý plugin `wjstylescombo` (`ckeditor_styleComboEnabled=true`). Konfigurácia v `config.jsp` nahrádza položku nástrojovej lišty `Styles` položkou `WJStyles`. Položky bez metadát zostanú v kategórii Ostatné bez automatického vylučovania tried.
 
 Voliteľný komentár `editor category-icon:` nastaví ikonu celej kategórie. Použite úplný názov triedy Tabler Icons s prefixom `ti-`, napríklad `ti-border-none`:
 
@@ -260,6 +260,35 @@ Voliteľný komentár `editor category-icon:` nastaví ikonu celej kategórie. P
 ```
 
 Pre rovnakú kategóriu sa použije prvá explicitne uvedená ikona v poradí pravidiel v CSS. Ďalšie komentáre `editor category-icon:` v tejto kategórii sa ignorujú. Kategórie bez tohto komentára si ponechajú automaticky vybranú ikonu.
+
+#### Obnovenie základného vzhľadu
+
+Odkaz **Obnoviť základný vzhľad** sa zobrazí pri jednom vybranom elemente, pre ktorý existuje použiteľná definícia štýlu s neprázdnym `editor base`. Pracuje s elementom vybraným v ceste v hlavičke; pri výbere kontajnera upraví iba tento kontajner.
+
+Z celého katalógu sa vyberú definície použiteľné pre daný element podľa značky, `targets` a požadovaných tried (`requires`, prípadne `base`). Vyhľadávanie, zbalenie kategórií ani zapnutie **Všetky štýly** tento výber neobmedzujú. Reset potom:
+
+- odstráni triedy zo selektorov týchto definícií a triedy uvedené v ich `members`,
+- zachová všetky triedy uvedené v `base` použiteľných definícií, aj keby sa v inej definícii vyskytovali medzi odstraňovanými triedami,
+- zachová ostatné triedy, ktoré takto zostavený zoznam nepozná.
+
+Napríklad pri definíciách:
+
+```css
+div.container.border-red {
+    /* editor title: Red border */
+    /* editor base: container */
+}
+div.container.bg-blue {
+    /* editor title: Blue background */
+    /* editor base: container */
+}
+```
+
+sa `class="container border-red bg-blue custom-layout"` zmení na `class="container custom-layout"`. Trieda `container` je chránená cez `base` a `custom-layout` katalóg nepozná. Triedy `members` sa môžu odstrániť aj vtedy, keď nemajú vlastnú položku v ponuke.
+
+Reset nemení HTML značku, obsah, atribút `style` ani ostatné atribúty elementu. Neupravuje triedy jeho potomkov ani rodičov; vzhľad potomkov však môže ovplyvniť dedenie alebo CSS selektory závislé od rodiča. Výsledok určí CSS šablóny po odstránení variantov. Operáciu možno vrátiť jedným krokom **Späť**, aj pri úprave rodiča mimo editovateľného bloku Page Buildera.
+
+#### Štýly v ďalších súboroch šablóny
 
 Pokiaľ ```editor.css``` nevkladáte aj do dizajnu šablóny, tak sa jeho štýly pri zobrazení web stránky neaplikujú. Štandardne sa teda používa len ako zoznam definícií štýlov.
 
