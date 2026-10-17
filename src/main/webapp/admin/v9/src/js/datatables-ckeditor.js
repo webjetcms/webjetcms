@@ -2800,7 +2800,7 @@ export class DatatablesCkEditor {
 				result.name = name;
 				result.element = v.tag == "*" ? allElements : v.tag;
 				result.attributes = { 'class': v.class };
-				result.wj = { tag: v.tag, category: v.category, group: v.group,
+				result.wj = { tag: v.tag, category: v.category, categoryIcon: v.categoryIcon, group: v.group,
 					targets: v.targets, base: v.base, members: v.members, requires: v.requires };
 
 				cssData.push(result);

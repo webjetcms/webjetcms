@@ -29,6 +29,7 @@ The initial parser scan stops at `@media`, `/** Editor end **/`, or `.cssParserE
 | --- | --- |
 | `title` | Readable display name. An explicit title takes precedence over a legacy inline comment. Preserve existing labels in fill-missing mode; generate a localized description of the appearance when absent. |
 | `category` | Display/search category only. Choose by actual effect or component purpose. Missing categories appear under the plugin's localized Other category. |
+| `category-icon` | Optional Tabler icon for the entire category, e.g. `ti-border-none`. Use a single full `ti-*` class; the first valid explicit value for that category in CSS catalog order wins. |
 | `group` | Mutually exclusive alternatives on compatible targets. Names are compared across the catalog, **not scoped by category**. Reuse exactly the same name for the same behavior; use different names for unrelated properties. |
 | `targets` | Optional HTML tags separated by spaces or commas. Intersects the selector's tag restriction; it cannot widen `p.foo` to headings. With `.foo`, it can narrow applicability to several tags. Infer from intended usage, not a generic copied tag list. |
 | `base` | Structural classes preserved during toggle/reset. They are also required on the existing target unless a nonempty `requires` overrides that requirement. Use only justified structural classes, not every class in a compound preset. |
@@ -42,6 +43,24 @@ The picker computes removable classes as the selector's classes minus `base`. Wh
 A base-only choice has no removable variant. Do not mark a standalone utility as its own base merely to make reset preserve it: this can make the choice unavailable until the class already exists. For component modifiers, confirming the required base is intentional; a modifier is not a command to create a new component.
 
 `span.foo` with no `targets` is the plugin's special inline-text style. `.foo` with `targets: span` does not establish that same inline behavior. Do not change selectors or add redundant targets to span entries during metadata annotation. Existing element tags remain unchanged when a CSS choice is applied.
+
+## Category icons
+
+Write the icon comment inside a rule with the intended category:
+
+```css
+.border-none {
+    /* editor title: No border */
+    /* editor category: Borders */
+    /* editor category-icon: ti-border-none */
+}
+```
+
+Use one existing Tabler icon class from the project's loaded icon set, matching `^ti-[a-z0-9-]+$`. Do not add the separate `ti` class, extra classes, HTML, or a bare name such as `border-none`. Icon names are not translated.
+
+The first nonempty, valid value for each exact category name in CSS catalog order is used; subsequent declarations for that category are ignored. The choice is resolved before content restrictions, target filtering, and search, so it stays stable even when the defining style is hidden. If no valid explicit value exists, the picker keeps its automatic category icon. This setting changes the category header icon only, not the individual style previews.
+
+Prefer one explicit icon declaration per category and check the generated CSS order for nested or loop-generated SCSS. Preserve existing declarations in fill-missing mode; report conflicting later values instead of silently replacing them.
 
 ## Examples based on known declarations
 

@@ -10,6 +10,54 @@ Before(async ({ I, login }) => {
 });
 
 for (const mode of ['classic', 'inline']) {
+    Scenario(`${mode}: category icon metadata survives filtering and resets on catalog reload`, async ({ I }) => {
+        I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
+        I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one">Autotest icons</p>', resolve)));
+        I.executeScript(() => {
+            window.autotestIconStyles = [
+                { name: 'Autotest invalid border', element: 'p', attributes: { class: 'autotest-invalid-border' }, wj: { category: 'Borders', categoryIcon: 'ti-border-all extra' } },
+                { name: 'Autotest hidden border', element: 'section', attributes: { class: 'autotest-hidden-border' }, wj: { category: 'Borders', categoryIcon: 'ti-border-none' } },
+                { name: 'Autotest visible border', element: 'p', attributes: { class: 'autotest-visible-border' }, wj: { category: 'Borders', categoryIcon: 'ti-border-all' } },
+                { name: 'Autotest plain spacing', element: 'p', attributes: { class: 'autotest-spacing' }, wj: { category: 'Spacing' } },
+                { name: 'Autotest hidden spacing', element: 'section', attributes: { class: 'autotest-hidden-spacing' }, wj: { category: 'Spacing', categoryIcon: 'ti-box-padding' } },
+                { name: 'Autotest color', element: 'p', attributes: { class: 'autotest-color' }, wj: { category: 'Text color' } },
+                { name: 'Autotest distinct category', element: 'p', attributes: { class: 'autotest-distinct' }, wj: { category: 'borders' } }
+            ];
+            autotestEditor.fire('stylesSet', { styles: autotestIconStyles });
+            autotestSelect('one');
+        });
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__group:not(.wj-styles__formats) .wj-styles__group-name'), ['Borders', 'Spacing', 'Text color', 'borders'], 'Category icons must keep exact category names independent');
+        I.seeElementInDOM('.wj-styles__group:nth-child(1) .wj-styles__group-toggle .ti-border-none');
+        I.seeElementInDOM('.wj-styles__group:nth-child(2) .wj-styles__group-toggle .ti-box-padding');
+        I.seeElementInDOM('.wj-styles__group:nth-child(3) .wj-styles__group-toggle .ti-palette');
+        I.seeElementInDOM('.wj-styles__group:nth-child(4) .wj-styles__group-toggle .ti-adjustments');
+        I.dontSee('Autotest hidden border', '.wj-styles__list');
+        I.dontSee('Autotest hidden spacing', '.wj-styles__list');
+        I.fillField('.wj-styles__search', 'Autotest visible border');
+        I.checkOption('.wj-styles__filters input');
+        I.see('Autotest visible border', '.wj-styles__list');
+        I.dontSee('Autotest hidden border', '.wj-styles__list');
+        I.seeElementInDOM('.wj-styles__group-toggle .ti-border-none');
+        I.dontSeeElementInDOM('.wj-styles__group-toggle .ti-border-all');
+        I.pressKey('Escape');
+        I.executeScript(() => {
+            const definitions = autotestIconStyles.map(definition => ({ ...definition, wj: { category: definition.wj.category } }));
+            autotestEditor.fire('stylesSet', { styles: definitions });
+            autotestSelect('one');
+        });
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        I.seeElementInDOM('.wj-styles__group-toggle .ti-adjustments');
+        I.dontSeeElementInDOM('.wj-styles__group-toggle .ti-border-none');
+        I.fillField('.wj-styles__search', '');
+        I.seeElementInDOM('.wj-styles__group:nth-child(2) .wj-styles__group-toggle .ti-spacing-vertical');
+        I.seeElementInDOM('.wj-styles__group:nth-child(3) .wj-styles__group-toggle .ti-palette');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Category icon metadata and reloads must not produce browser errors');
+    });
+
     Scenario(`${mode}: structural breadcrumb roles follow configured selectors`, async ({ I }) => {
         I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
         I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);

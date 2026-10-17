@@ -8,8 +8,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,6 +20,7 @@ import java.util.regex.Pattern;
 public class CssParser {
 
 	List<CssDto> elements = new LinkedList<CssDto>();
+	private final Map<CssDto, Integer> sourceOrder = new HashMap<>();
 
 	public CssParser(IwcmFile css)
 	{
@@ -62,8 +66,10 @@ public class CssParser {
 
 	private boolean parse(Scanner scanner)
 	{
+		int ruleIndex = 0;
 		while (scanner.hasNext()) {
 			String line = scanner.next();
+			int order = ruleIndex++;
 			String text = cleanText(line);
 
 			if (text.contains("@media") || text.contains("/** Editor end **/") || text.contains(".cssParserEnd")) {
@@ -80,6 +86,7 @@ public class CssParser {
 			dto.setTitle(parseTitle(line));
 			readMetadata(dto, line);
 			elements.add(dto);
+			sourceOrder.put(dto, order);
         }
 
 		return true;
@@ -96,8 +103,10 @@ public class CssParser {
 
     private void parseEditorComments(Scanner scanner) {
         scanner.useDelimiter("}");
+        int ruleIndex = 0;
         while (scanner.hasNext()) {
             String rule = scanner.next();
+            int order = ruleIndex++;
             int open = rule.lastIndexOf('{');
             if (open < 0 || !rule.substring(open).contains("/* editor")) continue;
             String selector = rule.substring(0, open);
@@ -107,19 +116,28 @@ public class CssParser {
             if (!selector.matches("[a-zA-Z0-9*-]*(?:\\.[a-zA-Z0-9_-]+)+")) continue;
             String tag = parseTag(selector);
             String classes = parseClass(selector);
-            if (elements.stream().anyMatch(item -> tag.equals(item.getTag()) && classes.equals(item.getClassName()))) continue;
+            CssDto existing = elements.stream().filter(item -> tag.equals(item.getTag()) && classes.equals(item.getClassName()))
+                    .min(Comparator.comparingInt(sourceOrder::get)).orElse(null);
+            if (existing != null) {
+                if (sourceOrder.get(existing) <= order) continue;
+                elements.remove(existing);
+                sourceOrder.remove(existing);
+            }
             CssDto dto = new CssDto();
             dto.setTag(tag);
             dto.setClassName(classes);
             dto.setTitle(parseTitle(rule));
             readMetadata(dto, rule);
             elements.add(dto);
+            sourceOrder.put(dto, order);
         }
+        elements.sort(Comparator.comparingInt(sourceOrder::get));
     }
 
     /** Reads optional style behavior without interpreting CSS declarations or title markup. */
     private void readMetadata(CssDto dto, String rule) {
         dto.setCategory(metadata(rule, "category"));
+        dto.setCategoryIcon(metadata(rule, "category-icon"));
         dto.setGroup(metadata(rule, "group"));
         dto.setTargets(metadata(rule, "targets"));
         dto.setBase(metadata(rule, "base"));

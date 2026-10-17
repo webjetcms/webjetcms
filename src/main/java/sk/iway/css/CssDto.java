@@ -10,6 +10,7 @@ public class CssDto {
     private String className;
     private String title;
     private String category;
+    private String categoryIcon;
     private String group;
     private String targets;
     private String base;

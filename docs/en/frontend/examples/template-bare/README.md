@@ -209,6 +209,19 @@ If the cursor is in a table, the Style selection box also displays the table sty
 
 When using multiple CSS styles at once (e.g. ```btn btn-primary```), all of them are applied to the currently selected element. Styles that apply only to an element will not appear in the selection box unless the element is selected or the cursor is in it.
 
+The optional `editor category-icon:` comment sets the icon for the entire category in the **Styles** picker. Use the full Tabler Icons class name with the `ti-` prefix, such as `ti-border-none`. Add the comments to the source `editor.scss`, which compiles to `editor.css`:
+
+```css
+.border-none {
+    /* editor title: No border */
+    /* editor category: Borders */
+    /* editor category-icon: ti-border-none */
+    border: 0;
+}
+```
+
+For each category, the first explicitly defined icon in CSS rule order wins. Further `editor category-icon:` comments in that category are ignored. Categories without this comment keep their automatically selected icon.
+
 Unless you include ```editor.css``` in the template design, its styles are not applied when the web page is displayed. By default, it is only used as a list of style definitions.
 
 If you want, you can define the style displayed in the editor's selection box directly in other files. However, the style defined in this way must contain the first comment ```/* editor */```. An example is in the file ```src/scss/3-base/_link.scss```:

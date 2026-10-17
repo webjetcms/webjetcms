@@ -235,6 +235,7 @@ div.alert.warning {
 | --- | --- |
 | `editor title:` | Názov položky. HTML sa v novom ovládači zmení na čistý text. |
 | `editor category:` | Kategória na usporiadanie a vyhľadávanie. |
+| `editor category-icon:` | Voliteľná ikona kategórie z Tabler Icons, napríklad `ti-border-none`. |
 | `editor group:` | Voľby tej istej vlastnosti sa na rovnakom elemente nahrádzajú. Kategória sama o sebe nič nevylučuje. |
 | `editor targets:` | Zoznam povolených HTML značiek; zužuje typ zo selektora. Pri selektore bez značky umožňuje jednu položku pre viac typov. |
 | `editor base:` | Konštrukčné triedy, ktoré sa pri vypnutí a obnovení vzhľadu neodoberú. Štandardne musia byť na cieľovom elemente. |
@@ -246,6 +247,19 @@ Názvy skupín používajte jednoznačne pre danú vlastnosť. Farba, veľkosť 
 V poli **Upraviť** sa dá vybrať nadradený element, napríklad sekcia alebo tabuľka. Jeho štýly sú pri úprave textu označené samostatne. Platí to v Štandardnom editore aj v Page Builderi. Zmena má jeden krok Späť; bežný výber CSS nemení HTML značku. Pri označení časti textu môže vzniknúť element `span`.
 
 Nový ovládač zabezpečuje plugin `wjstylescombo`. Konfiguračná premenná `ckeditor_styleComboEnabled=false` ponechá pôvodný `stylescombo`; štandardná hodnota je `true`. Konfigurácia v `config.jsp` pri zapnutí nahrádza položku `Styles` položkou `WJStyles` a dopĺňa `Format`, ak ešte nie je na lište. Existujúce šablóny nemusia doplniť metadáta: ich položky zostanú v kategórii Ostatné bez automatického vylučovania tried.
+
+Voliteľný komentár `editor category-icon:` nastaví ikonu celej kategórie. Použite úplný názov triedy Tabler Icons s prefixom `ti-`, napríklad `ti-border-none`:
+
+```css
+.border-none {
+    /* editor title: No border */
+    /* editor category: Borders */
+    /* editor category-icon: ti-border-none */
+    border: 0;
+}
+```
+
+Pre rovnakú kategóriu sa použije prvá explicitne uvedená ikona v poradí pravidiel v CSS. Ďalšie komentáre `editor category-icon:` v tejto kategórii sa ignorujú. Kategórie bez tohto komentára si ponechajú automaticky vybranú ikonu.
 
 Pokiaľ ```editor.css``` nevkladáte aj do dizajnu šablóny, tak sa jeho štýly pri zobrazení web stránky neaplikujú. Štandardne sa teda používa len ako zoznam definícií štýlov.
 

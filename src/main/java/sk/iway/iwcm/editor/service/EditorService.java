@@ -1233,6 +1233,7 @@ public class EditorService {
 					map.put("class", element.getClassName());
 					map.put("title", element.getTitle());
 					map.put("category", element.getCategory());
+					map.put("categoryIcon", element.getCategoryIcon());
 					map.put("group", element.getGroup());
 					map.put("targets", element.getTargets());
 					map.put("base", element.getBase());
