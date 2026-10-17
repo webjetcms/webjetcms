@@ -510,11 +510,28 @@ Kompletní ukázka HTML kódu web stránky s ukázkovými sekcemi:
 </section>
 ```
 
+## Selektory struktury
+
+Page Builder a nabídka **Styly** v klasickém i Page Builder editoru používají čtyři společné konfigurační proměnné pro rozpoznání sekce, kontejneru, řádku a sloupce. Pro vlastní grid nastavte příslušné CSS selektory přímo v těchto proměnných:
+
+| Konfigurační proměnná | Výchozí hodnota |
+| --- | --- |
+| `pageBuilderGridSectionSelector` | `section:not(.pb-not-section), div.pb-section` |
+| `pageBuilderGridContainerSelector` | `div[class^="container"]:not(.pb-not-container), div[class*="pb-custom-container"]` |
+| `pageBuilderGridRowSelector` | `div.row` |
+| `pageBuilderGridColumnSelector` | `div[class*="col-"]:not(.pb-not-column), div[class*="pb-col"]:not(.pb-not-column):not(.pb-column__content)` |
+
+Nabídka **Styly** v obou režimech čte selektory pouze z těchto čtyř proměnných. Stávající nastavení `pageBuilderGrid`, `pbCustomOptions` a `pbCustomSettings` zůstávají dostupná pro úpravu Page Builderu, ale nabídka **Styly** je automaticky nepřebírá. Pokud jimi měníte selektory, udržujte je shodné s uvedenými konfiguračními proměnnými.
+
+Vlastní selektor sloupce musí vyloučit také obal jeho obsahu (výchozí `.pb-column__content`); při vlastním prefixu použijte příslušnou třídu.
+
+Tyto čtyři proměnné mění pouze rozpoznávání elementů. Třídy přidávané při vložení nových bloků (`section_default_class`, `container_default_class`, `row_default_class`, `column_default_class`) a prefixy šířek sloupců (`me.column.valid_prefixes`) nastavujte nadále v `pbCustomSettings`, jako v následujícím příkladu.
+
 ## Podpůrný JavaScript kód
 
 Pokud potřebujete vlastní podpůrný JavaScript soubor (viz výše zmíněný `pagesupport.js`), můžete vytvořit soubor `/components/INSTALL_NAME/admin/pagesupport-custom.js`, který pokud existuje načte se po souboru `pagesupport.js`. Můžete tak doplnit vlastní funkce, nebo upravit standardní stávající funkce z [pagesupport.js](../../../../src/main/webapp/admin/webpages/page-builder/scripts/pagesupport.js).
 
-Můžete také upravit některá nastavení, jako například seznam barev, upravit CSS selektory, nastavit šířku pro různá zařízení a podobně. Následující kód je pouze ukázkový, vložte jej do souboru `pagesupport-custom.js`:
+Můžete upravit například seznam barev, třídy nových bloků nebo šířku pro různá zařízení. Selektory řádků a sloupců pro vlastní grid nastavte pomocí `pageBuilderGridRowSelector` a `pageBuilderGridColumnSelector`. Následující kód je ukázkový, vložte jej do souboru `pagesupport-custom.js`:
 
 ```JavaScript
 window.pbCustomOptions = function(options) {
@@ -534,11 +551,10 @@ window.pbCustomOptions = function(options) {
 };
 
 window.pbCustomSettings = function(me) {
-    //redefine grid column content selector
+    // Configure row and column selectors through pageBuilderGridRowSelector and pageBuilderGridColumnSelector.
+    // Set classes for newly inserted blocks and column width prefixes.
     me.grid.section_default_class = 'section';
-    me.grid.row = 'div.grid, div[class*="pb-grid"]';
     me.grid.row_default_class = 'grid';
-    me.grid.column = 'div[class*="grid__col"]:not(.pb-not-column), div[class*="pb-col"]';
     me.grid.column_default_class = 'grid__col grid__col--12';
 
     me.column.valid_prefixes = ['grid__col--', 'grid__col--sm-', 'grid__col--md-', 'grid__col--lg-', 'grid__col--xl-']

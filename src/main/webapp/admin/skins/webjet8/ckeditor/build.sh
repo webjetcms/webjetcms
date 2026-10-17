@@ -1,20 +1,23 @@
 #!/bin/bash
 #Build CKEditor dist folder from WebJET github version
+set -e
+# Sprite generation must not initialize the macOS graphical toolkit.
+export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:+$JAVA_TOOL_OPTIONS }-Djava.awt.headless=true"
 WJ_PATH=$PWD
 
 echo "System JAVA version:"
 java -version
 
-source "$HOME/.sdkman/bin/sdkman-init.sh"
-
-#NASTAV NA ZACIATKU:
-sdk use java 11.0.30-tem
+# CKBuilder requires JDK 15 or older. Use the same SDKMAN installation without shell initialization.
+export JAVA_HOME="$HOME/.sdkman/candidates/java/11.0.30-tem"
+test -x "$JAVA_HOME/bin/java"
+export PATH="$JAVA_HOME/bin:$PATH"
 
 echo "Switched to JAVA version:"
 java -version
 
 cd ../../../../../../../../libs-ckeditor4/dev/builder
-build.sh
+./build.sh
 
 #Zmaz nepotrebne subory
 rm -rf release/ckeditor/.github

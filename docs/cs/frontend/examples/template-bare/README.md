@@ -209,6 +209,19 @@ Pokud se kurzor nachází v tabulce zobrazí se ve výběrovém poli Styl i mož
 
 Při použití více CSS stylů najednou (např. ```btn btn-primary```) se aplikují na aktuálně zvolený element všechny. Styly, které se aplikují pouze na element, se ve výběrovém poli nezobrazí, pokud není daný element označen, nebo se v něm nenachází kurzor.
 
+Volitelný komentář `editor category-icon:` nastaví ikonu celé kategorie v nabídce **Styly**. Použijte úplný název třídy Tabler Icons s prefixem `ti-`, například `ti-border-none`. Komentáře zapište do zdrojového `editor.scss`, ze kterého vzniká `editor.css`:
+
+```css
+.border-none {
+    /* editor title: No border */
+    /* editor category: Borders */
+    /* editor category-icon: ti-border-none */
+    border: 0;
+}
+```
+
+Pro stejnou kategorii se použije první explicitně uvedená ikona v pořadí pravidel v CSS. Další komentáře `editor category-icon:` v této kategorii se ignorují. Kategorie bez tohoto komentáře si ponechají automaticky vybranou ikonu.
+
 Pokud ```editor.css``` nevkládáte i do designu šablony, tak se jeho styly při zobrazení web stránky neaplikují. Standardně se tedy používá jen jako seznam definic stylů.
 
 Pokud chcete, můžete definovat styl zobrazený ve výběrovém poli v editoru i přímo v ostatních souborech. Takto definovaný styl ale musí obsahovat jako první komentář ```/* editor */```. Příklad je v souboru ```src/scss/3-base/_link.scss```:

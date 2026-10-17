@@ -185,6 +185,8 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
                 onReady: function(instance) {
                     //console.log("onReady, instance=", instance, "wjeditor=", wjeditor);
                     //setStylesDef(window.editorStyles, ckEditorInstanceInitialized);
+                    // Structural styles require explicitly selecting their target in the picker.
+                    instance.config.wjstylescombo_scope = function() { return pageDiv[0]; };
                     WJ.dispatchEvent("WJ.PageBuilder.instanceReady", {ckinstance: instance});
                     //setTimeout(()=> {
                         wjeditor.setStyleComboList(window.editorStyles);

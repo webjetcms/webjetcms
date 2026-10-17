@@ -220,6 +220,11 @@ public class ConstantsV9 {
 		Constants.setBoolean("sessionSingleLogon", false, Constants.MOD_SECURITY, "Ak je nastavené na true, používateľ bude odhlásený z ostatných sessions pri novom prihlásení.");
 		Constants.setString("ckeditor_pictureDialogBreakpoints", "", Constants.MOD_EDITOR, "Zoznam breakpointov pre dialóg vloženia obrázku v CKEditor. Formát JSON poľa objektov [{name:'Mobile',width:320},{name:'Desktop',width:640,fallback:true}]");
 
+		Constants.setString("pageBuilderGridSectionSelector", "section:not(.pb-not-section), div.pb-section", Constants.MOD_EDITOR, "CSS selector for Page Builder sections, also used by the CKEditor style picker.");
+		Constants.setString("pageBuilderGridContainerSelector", "div[class^=\"container\"]:not(.pb-not-container), div[class*=\"pb-custom-container\"]", Constants.MOD_EDITOR, "CSS selector for Page Builder containers, also used by the CKEditor style picker.");
+		Constants.setString("pageBuilderGridRowSelector", "div.row", Constants.MOD_EDITOR, "CSS selector for Page Builder rows, also used by the CKEditor style picker.");
+		Constants.setString("pageBuilderGridColumnSelector", "div[class*=\"col-\"]:not(.pb-not-column), div[class*=\"pb-col\"]:not(.pb-not-column):not(.pb-column__content)", Constants.MOD_EDITOR, "CSS selector for Page Builder columns, also used by the CKEditor style picker.");
+
 		Constants.setString("smtpAuthMechanism", "", Constants.mods(Constants.MOD_SYSTEM_EMAIL, Constants.MOD_SECURITY), "SMTP autentifikacny mechanizmus. Ak je prazdne, pouzije sa defaultny mechanizmus kniznice JavaMail.");
 
 		Constants.setString("ckeditor_svgIcon_path", "", Constants.MOD_EDITOR, "Cesta k SVG sprite suboru s ikonami pre CKEditor");
