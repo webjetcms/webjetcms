@@ -10,6 +10,61 @@ Before(async ({ I, login }) => {
 });
 
 for (const mode of ['classic', 'inline']) {
+    Scenario(`${mode}: breadcrumb Bootstrap tooltips follow target changes and clean up`, async ({ I }) => {
+        I.amOnPage('/admin/');
+        I.waitForFunction(() => typeof window.bootstrap?.Tooltip === 'function', [], 10);
+        // Keep the real administration Bootstrap in the parent, as Page Builder does.
+        I.executeScript(mode => {
+            const frame = document.createElement('iframe');
+            frame.id = 'autotest-tooltip-frame';
+            frame.title = 'Autotest breadcrumb tooltips';
+            frame.style.cssText = 'position:fixed;inset:0;width:100%;height:100%;border:0;z-index:2147483647;background:white';
+            frame.src = `/wjstyles-autotest.html?mode=${mode}`;
+            document.body.appendChild(frame);
+        }, mode);
+        I.waitForFunction(() => document.getElementById('autotest-tooltip-frame').contentWindow.autotestEditor?.status === 'ready', [], 10);
+        I.switchTo('#autotest-tooltip-frame');
+        I.assertTrue(await I.executeScript(() => !window.bootstrap && typeof parent.bootstrap?.Tooltip === 'function'), 'The fixture must reuse its parent Bootstrap without loading Bootstrap CSS or JavaScript locally');
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one" class="custom small">Autotest tooltip</p>', resolve)));
+        I.executeScript(() => autotestSelect('one'));
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        const target = '.wj-styles__target-option[data-target=""]';
+        I.moveCursorTo(target);
+        I.waitForVisible('.wj-styles-tooltip.show');
+        I.see('p#one.custom.small', '.wj-styles-tooltip .tooltip-inner');
+        I.assertTrue(await I.executeScript(() => {
+            const tip = window.autotestOldTooltip = document.querySelector('.wj-styles-tooltip');
+            const inner = getComputedStyle(tip.querySelector('.tooltip-inner'));
+            return tip.parentElement === document.body && getComputedStyle(tip).opacity === '1' &&
+                Number(getComputedStyle(tip).zIndex) > Number(getComputedStyle(document.querySelector('.wj-styles')).zIndex) &&
+                inner.color === 'rgb(255, 255, 255)' && inner.backgroundColor === 'rgb(19, 21, 27)' && inner.borderRadius === '6px';
+        }), 'The tooltip must use the scoped administration theme above the panel in its own document');
+        I.click('.wj-styles__item[data-style-id="1"]');
+        I.assertFalse(await I.executeScript(() => autotestOldTooltip.isConnected), 'Rebuilding targets must remove the previous tooltip');
+        I.dontSeeElement('.wj-styles-tooltip');
+        I.moveCursorTo(target);
+        I.waitForVisible('.wj-styles-tooltip.show');
+        I.see('p#one.custom.large', '.wj-styles-tooltip .tooltip-inner');
+        I.pressKey('Escape');
+        I.waitToHide('.wj-styles');
+        I.dontSeeElement('.wj-styles-tooltip');
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        I.moveCursorTo('.wj-styles__search');
+        I.pressKey(['Shift', 'Tab']);
+        I.pressKey(['Shift', 'Tab']);
+        I.assertTrue(await I.executeScript(() => document.activeElement.matches('.wj-styles__target-option[data-target=""]')), 'Keyboard traversal must reach the current breadcrumb target');
+        I.waitForVisible('.wj-styles-tooltip.show');
+        I.see('p#one.custom.large', '.wj-styles-tooltip .tooltip-inner');
+        I.executeScript(() => autotestEditor.destroy());
+        I.dontSeeElement('.wj-styles-tooltip');
+        I.dontSeeElement('.wj-styles');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Tooltip hover, focus and disposal must not produce browser errors');
+        I.switchTo();
+        I.executeScript(() => document.getElementById('autotest-tooltip-frame').remove());
+    });
+
     Scenario(`${mode}: dragging the picker preserves selection and stays inside the viewport`, async ({ I }) => {
         I.amOnPage(`/wjstyles-autotest.html?mode=${mode}${mode === 'classic' ? '&modal=1' : ''}`);
         I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
