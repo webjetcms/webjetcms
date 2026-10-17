@@ -428,13 +428,13 @@ Scenario('Overenie vyhladavania podla boolean a password_protected', ({ I, DT })
     //prehladavat
     I.see("Newsletter", container);
     I.see("Testovaci newsletter", container);
-    //prepni prehladavat na ano
-    DT.filterSelect("searchable", "Áno");
+    // Show pages that allow indexing.
+    DT.filterSelect("searchable", "Povoliť vyhľadávanie cez vyhľadávače (index)");
     DT.waitForLoader();
     I.see("Newsletter", container);
     I.dontSee("Testovaci newsletter", container);
-    //prepni na nie
-    DT.filterSelect("searchable", "Nie");
+    // Show pages that disallow indexing.
+    DT.filterSelect("searchable", "Zakázať vyhľadávanie (noindex)");
     DT.waitForLoader();
     I.dontSee("Produktová stránka - B verzia", container);
     I.see("Testovaci newsletter", container);

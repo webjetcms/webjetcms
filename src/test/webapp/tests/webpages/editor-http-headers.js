@@ -46,7 +46,8 @@ Scenario('preview loads on Basic and follows unsaved settings', async ({ I, DTE 
     I.dontSee('Location:', output);
     I.fillField('#DTE_Field_externalLink', '/autotest-redirect?source=test#section');
     I.clickCss('#DTE_Field_navbar');
-    I.waitForText('Location: http://demo.webjetcms.sk/autotest-redirect?source=test#section', 10, output);
+    const protocol = new URL(await I.grabCurrentUrl()).protocol;
+    I.waitForText('Location: ' + protocol + '//demo.webjetcms.sk/autotest-redirect?source=test#section', 10, output);
     I.fillField('#DTE_Field_externalLink', 'https://example.com/autotest-redirect');
     I.clickCss('#DTE_Field_navbar');
     I.waitForText('Location: https://example.com/autotest-redirect', 10, output);

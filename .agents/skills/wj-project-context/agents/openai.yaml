@@ -1,0 +1,4 @@
+interface:
+  display_name: "WJ Project Context"
+  short_description: "Apply WebJET conventions to core and customer projects"
+  default_prompt: "Use $wj-project-context to inspect this WebJET project's version and apply the relevant architecture and conventions."
