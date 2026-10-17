@@ -10,6 +10,28 @@ Before(async ({ I, login }) => {
 });
 
 for (const mode of ['classic', 'inline']) {
+    Scenario(`${mode}: toolbar summary identifies the current element and active styles`, async ({ I }) => {
+        I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
+        I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one">Autotest paragraph</p><h2 id="two">Autotest heading</h2><p id="styled" class="small bold">Autotest styled paragraph</p><h2 id="styled-heading" class="hero">Autotest styled heading</h2>', resolve)));
+        for (const [id, expected] of [['one', 'Paragraph'], ['two', 'Heading 2'], ['styled', 'P + Small, Bold'], ['styled-heading', 'H2 + Heading appearance']]) {
+            I.executeScript(id => autotestSelect(id), id);
+            I.assertEqual(await I.grabTextFrom('.cke_button__wjstyles_label'), expected, 'The summary must identify the selected tag without replacing style names with a count');
+            I.assertEqual(await I.grabAttributeFrom('.cke_button__wjstyles', 'title'), expected, 'The tooltip must retain the full summary');
+            I.assertEqual(await I.grabAttributeFrom('.cke_button__wjstyles', 'aria-label'), `Styles: ${expected}`, 'The accessible name must include the current element');
+        }
+        I.executeScript(() => autotestSelect('one', 'two'));
+        I.assertEqual(await I.grabTextFrom('.cke_button__wjstyles_label'), 'Selection', 'A mixed selection must not claim a single paragraph format');
+        I.executeScript(() => autotestSelect('two'));
+        I.click('.cke_button__wjstyles');
+        I.click('.wj-styles__format[data-format="p"]');
+        I.assertEqual(await I.grabTextFrom('.cke_button__wjstyles_label'), 'Paragraph', 'Changing the paragraph format must refresh the summary immediately');
+        I.pressKey('Escape');
+        I.executeScript(() => autotestEditor.execCommand('undo'));
+        I.waitForText('Heading 2', 5, '.cke_button__wjstyles_label');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Summary updates must not produce browser errors');
+    });
+
     Scenario(`${mode}: category icon metadata survives filtering and resets on catalog reload`, async ({ I }) => {
         I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
         I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
@@ -30,10 +52,10 @@ for (const mode of ['classic', 'inline']) {
         I.click('.cke_button__wjstyles');
         I.waitForVisible('.wj-styles');
         I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__group:not(.wj-styles__formats) .wj-styles__group-name'), ['Borders', 'Spacing', 'Text color', 'borders'], 'Category icons must keep exact category names independent');
-        I.seeElementInDOM('.wj-styles__group:nth-child(1) .wj-styles__group-toggle .ti-border-none');
-        I.seeElementInDOM('.wj-styles__group:nth-child(2) .wj-styles__group-toggle .ti-box-padding');
-        I.seeElementInDOM('.wj-styles__group:nth-child(3) .wj-styles__group-toggle .ti-palette');
-        I.seeElementInDOM('.wj-styles__group:nth-child(4) .wj-styles__group-toggle .ti-adjustments');
+        I.seeElementInDOM('.wj-styles__group-toggle[aria-controls$="-category-0"] .ti-border-none');
+        I.seeElementInDOM('.wj-styles__group-toggle[aria-controls$="-category-1"] .ti-box-padding');
+        I.seeElementInDOM('.wj-styles__group-toggle[aria-controls$="-category-2"] .ti-palette');
+        I.seeElementInDOM('.wj-styles__group-toggle[aria-controls$="-category-3"] .ti-adjustments');
         I.dontSee('Autotest hidden border', '.wj-styles__list');
         I.dontSee('Autotest hidden spacing', '.wj-styles__list');
         I.fillField('.wj-styles__search', 'Autotest visible border');
@@ -53,8 +75,8 @@ for (const mode of ['classic', 'inline']) {
         I.seeElementInDOM('.wj-styles__group-toggle .ti-adjustments');
         I.dontSeeElementInDOM('.wj-styles__group-toggle .ti-border-none');
         I.fillField('.wj-styles__search', '');
-        I.seeElementInDOM('.wj-styles__group:nth-child(2) .wj-styles__group-toggle .ti-spacing-vertical');
-        I.seeElementInDOM('.wj-styles__group:nth-child(3) .wj-styles__group-toggle .ti-palette');
+        I.seeElementInDOM('.wj-styles__group-toggle[aria-controls$="-category-1"] .ti-spacing-vertical');
+        I.seeElementInDOM('.wj-styles__group-toggle[aria-controls$="-category-2"] .ti-palette');
         I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Category icon metadata and reloads must not produce browser errors');
     });
 
@@ -135,7 +157,7 @@ for (const mode of ['classic', 'inline']) {
         I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Structural breadcrumb classification must not produce browser errors');
     });
 
-    Scenario(`${mode}: breadcrumb Bootstrap tooltips follow target changes and clean up`, async ({ I }) => {
+    Scenario(`${mode}: Bootstrap tooltips follow target changes and clean up`, async ({ I }) => {
         I.amOnPage('/admin/');
         I.waitForFunction(() => typeof window.bootstrap?.Tooltip === 'function', [], 10);
         // Keep the real administration Bootstrap in the parent, as Page Builder does.
@@ -171,12 +193,27 @@ for (const mode of ['classic', 'inline']) {
         I.moveCursorTo(target);
         I.waitForVisible('.wj-styles-tooltip.show');
         I.see('p#one.custom.large', '.wj-styles-tooltip .tooltip-inner');
+        I.moveCursorTo('.wj-styles__chip');
+        I.waitForElement('.wj-styles__chip[aria-describedby]');
+        const chipTooltip = await I.grabAttributeFrom('.wj-styles__chip', 'aria-describedby');
+        I.waitForText('large', 5, `#${chipTooltip} .tooltip-inner`);
+        I.assertEqual(await I.grabAttributeFrom('.wj-styles__chip', 'aria-label'), 'Remove: Large', 'CSS tooltips must preserve the accessible removal action');
+        I.moveCursorTo('.wj-styles__filters label span');
+        I.waitForText('Show styles that cannot be applied to the current selection as well.', 5, '.wj-styles-tooltip.show .tooltip-inner');
+        I.seeElementInDOM('.wj-styles__group-line button .ti-restore[aria-hidden="true"]');
+        I.see('Remove', '.wj-styles__group-line button');
         I.pressKey('Escape');
         I.waitToHide('.wj-styles');
         I.dontSeeElement('.wj-styles-tooltip');
         I.click('.cke_button__wjstyles');
         I.waitForVisible('.wj-styles');
         I.moveCursorTo('.wj-styles__search');
+        I.pressKey('Tab');
+        I.pressKey('Tab');
+        I.assertTrue(await I.executeScript(() => document.activeElement.matches('.wj-styles__filters input')), 'Keyboard traversal must reach the all-styles checkbox');
+        I.waitForText('Show styles that cannot be applied to the current selection as well.', 5, '.wj-styles-tooltip.show .tooltip-inner');
+        I.pressKey(['Shift', 'Tab']);
+        I.pressKey(['Shift', 'Tab']);
         I.pressKey(['Shift', 'Tab']);
         I.pressKey(['Shift', 'Tab']);
         I.assertTrue(await I.executeScript(() => document.activeElement.matches('.wj-styles__target-option[data-target=""]')), 'Keyboard traversal must reach the current breadcrumb target');
@@ -386,20 +423,20 @@ for (const mode of ['classic', 'inline']) {
         I.see('Collapse all', '.wj-styles__toggle-all');
         I.dontSeeElement('.wj-styles__group-toggle[aria-expanded="false"]');
         I.seeElementInDOM('.wj-styles__group:first-child .wj-styles__group-toggle > .ti-chevron-down:first-child');
-        I.seeElementInDOM('.wj-styles__group:first-child .ti-typography');
-        I.seeElementInDOM('.wj-styles__group:nth-child(2) .ti-palette');
+        I.seeElementInDOM('.wj-styles__group-toggle[aria-controls$="-category-0"] .ti-typography');
+        I.seeElementInDOM('.wj-styles__group-toggle[aria-controls$="-category-1"] .ti-palette');
         I.seeElement('.wj-styles__item--exclusive[data-style-id="0"]');
         I.click('.wj-styles__item[data-style-id="0"]');
-        const typography = '.wj-styles__group:first-child .wj-styles__group-toggle';
+        const typography = '.wj-styles__group-toggle[aria-controls$="-category-0"]';
         I.click(typography);
         I.see('Expand all', '.wj-styles__toggle-all');
         I.dontSeeElement('.wj-styles__item[data-style-id="0"]');
         I.assertTrue(await I.executeScript(() => {
-            const groups = document.querySelectorAll('.wj-styles__group');
+            const groups = document.querySelectorAll('.wj-styles__group:not(.wj-styles__formats)');
             return Math.abs(groups[0].getBoundingClientRect().bottom - groups[1].getBoundingClientRect().top) < 1;
         }), 'Editor section markers must not add gaps between accordion headers');
         I.pressKey('ArrowDown');
-        I.assertTrue(await I.executeScript(() => document.activeElement === document.querySelector('.wj-styles__group:nth-child(2) .wj-styles__group-toggle')), 'Arrow navigation must skip collapsed choices');
+        I.assertTrue(await I.executeScript(() => document.activeElement === document.querySelector('.wj-styles__group-toggle[aria-controls$="-category-1"]')), 'Arrow navigation must skip collapsed choices');
         I.click('.wj-styles__item[data-style-id="4"]');
         I.assertEqual(await I.grabAttributeFrom(typography, 'aria-expanded'), 'false', 'Applying another style must preserve collapsed categories');
         I.see('Small', '.wj-styles__chips');
@@ -445,6 +482,15 @@ for (const mode of ['classic', 'inline']) {
         I.executeScript(() => autotestSelect('one'));
         I.click('.cke_button__wjstyles');
         I.waitForVisible('.wj-styles', 5);
+        I.seeElement('.wj-styles__list > .wj-styles__formats:first-child');
+        I.assertTrue(await I.executeScript(() => {
+            const picker = autotestEditor.wjstylescombo;
+            picker.list.scrollTop = picker.list.scrollHeight;
+            return picker.list.scrollTop > 0;
+        }), 'The list must be scrolled before testing reopening');
+        const scroll = await I.executeScript(() => autotestEditor.wjstylescombo.list.scrollTop);
+        I.executeScript(() => autotestApply('Gap small'));
+        I.assertEqual(await I.executeScript(() => autotestEditor.wjstylescombo.list.scrollTop), scroll, 'Applying a style must preserve scrolling during the current opening');
         I.click('.wj-styles__close');
         I.waitToHide('.wj-styles');
         I.dontSeeElement('.wj-styles-summary');
@@ -456,6 +502,8 @@ for (const mode of ['classic', 'inline']) {
         I.dontSeeElement('.wj-styles-summary');
         I.click('.cke_button__wjstyles');
         I.waitForVisible('.wj-styles', 5);
+        I.assertEqual(await I.executeScript(() => autotestEditor.wjstylescombo.list.scrollTop), 0, 'Reopening must start at the top of the list');
+        I.seeElement('.wj-styles__formats .wj-styles__format[data-format="h2"]');
         I.pressKey('Escape');
         I.waitToHide('.wj-styles');
         I.dontSeeElement('.wj-styles-summary');
@@ -587,6 +635,7 @@ for (const mode of ['classic', 'inline']) {
         const targets = mode === 'inline' ? ['Section', 'Paragraph', 'Text'] : ['Paragraph', 'Text'];
         I.assertDeepEqual(await I.grabTextFromAll('.wj-styles__target-option'), targets, 'The target path must end with the span containing the caret');
         I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Text');
+        I.assertEqual(await I.grabTextFrom('.cke_button__wjstyles_label'), 'SPAN + Červená', 'A span caret must describe the text target rather than its parent paragraph');
         I.see('Červená', '.wj-styles__chips');
         I.dontSee('Small', '.wj-styles__chips');
         I.dontSeeElement('.wj-styles__item[data-style-id="1"]');
@@ -600,6 +649,7 @@ for (const mode of ['classic', 'inline']) {
         const spanStyled = await I.executeScript(() => autotestEditor.getData());
         I.click('Paragraph', '.wj-styles__target');
         I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Paragraph');
+        I.assertEqual(await I.grabTextFrom('.cke_button__wjstyles_label'), 'P + Small', 'Selecting a parent must update the summary to that target');
         I.see('Small', '.wj-styles__chips');
         I.dontSee('Blue', '.wj-styles__chips');
         I.seeElement('.wj-styles__item[data-style-id="1"]:not(:disabled)');

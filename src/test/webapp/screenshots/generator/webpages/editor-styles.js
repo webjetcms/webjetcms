@@ -36,11 +36,7 @@ Scenario('style picker and paragraph formats', async ({ I, Document }) => {
         I.waitForVisible('.wj-styles:not([hidden])');
         I.click('.wj-styles__toggle-all');
         I.click(locate('.wj-styles__group-toggle').withText(category));
-        I.executeScript(category => {
-            const picker = CKEDITOR.instances.data.wjstylescombo;
-            const group = Array.from(picker.list.querySelectorAll('.wj-styles__group')).find(group => group.querySelector('.wj-styles__group-name').textContent === category);
-            picker.list.scrollTop += group.getBoundingClientRect().top - picker.list.getBoundingClientRect().top;
-        }, category);
+        I.executeScript(() => { CKEDITOR.instances.data.wjstylescombo.list.scrollTop = 0; });
         I.executeScript(() => document.fonts.ready.then(() => true));
         I.moveCursorTo('.wj-styles__top');
         Document.screenshotElement('.wj-styles:not([hidden])', '/redactor/webpages/working-in-editor/roletka.png');
@@ -49,7 +45,7 @@ Scenario('style picker and paragraph formats', async ({ I, Document }) => {
         I.click('.wj-styles__formats .wj-styles__group-toggle');
         I.executeScript(() => {
             const picker = CKEDITOR.instances.data.wjstylescombo;
-            picker.list.scrollTop = picker.list.scrollHeight;
+            picker.list.scrollTop = 0;
         });
         I.seeElement('.wj-styles__format[data-format="p"][aria-pressed="true"]');
         I.seeElement('.wj-styles__format[data-format="h6"]:not(:disabled)');

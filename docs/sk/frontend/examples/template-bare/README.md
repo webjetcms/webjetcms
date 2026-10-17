@@ -211,7 +211,7 @@ Pri použití viacerých CSS štýlov naraz (napr. ```btn btn-primary```) sa apl
 
 #### Vyhľadávanie a skupiny štýlov
 
-Roletka **Štýly** zostáva po výbere otvorená. V hlavičke zobrazuje aktívne štýly a umožňuje ich odobrať. Vyhľadáva podľa názvu, CSS triedy, kategórie aj skupiny bez rozlišovania diakritiky. HTML značku odseku alebo nadpisu mení samostatná kategória **Formát odseku** v spodnej časti roletky.
+Roletka **Štýly** zostáva po výbere otvorená. V hlavičke zobrazuje aktívne štýly a umožňuje ich odobrať. Vyhľadáva podľa názvu, CSS triedy, kategórie aj skupiny bez rozlišovania diakritiky. HTML značku odseku alebo nadpisu mení samostatná kategória **Formát odseku** na začiatku roletky.
 
 Správanie položiek nastavíte komentármi v zdrojovom `editor.scss` (po zostavení v `editor.css`):
 

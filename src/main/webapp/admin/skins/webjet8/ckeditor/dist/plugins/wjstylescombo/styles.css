@@ -1,8 +1,8 @@
 /* The picker lives outside editable content in both classic and inline editors. */
-.cke a.cke_button__wjstyles { width: 240px; max-width: calc(100vw - 60px); height: 26px; padding: 0 8px; margin: 0 0 5px; margin-inline-end: 6px; border: 1px solid #868ea5; border-radius: 6px; background: #fff; box-sizing: content-box; }
+.cke a.cke_button__wjstyles { position: relative; width: 186px; max-width: calc(100vw - 60px); height: 26px; padding: 0 4px; margin: 0 0 5px; margin-inline-end: 6px; border: 1px solid #868ea5; border-radius: 6px; background: #fff; box-sizing: content-box; }
 .cke .cke_button__wjstyles_icon { display: none !important; }
-.cke .cke_button__wjstyles_label { display: block; width: calc(100% - 18px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 26px; padding: 0; font-family: Asap, sans-serif; font-size: 14px; }
-.cke .cke_button__wjstyles .cke_button_arrow { margin-top: 12px; }
+.cke .cke_button__wjstyles_label { display: block; width: calc(100% - 12px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 26px; padding: 0; font-family: Asap, sans-serif; font-size: 14px; }
+.cke .cke_button__wjstyles .cke_button_arrow { position: absolute; inset-inline-end: 4px; top: 12px; margin: 0; }
 .wj-styles { --wj-styles-blue: var(--wj-primary, #0063fb); --wj-styles-text: var(--wj-secondary, #13151b); --wj-styles-muted: var(--wj-gray-text, #686f83); --wj-styles-border: var(--wj-nice-gray-100, #dddfe6); --wj-styles-input-border: var(--wj-nice-gray-300, #868ea5); --wj-styles-surface: var(--wj-nice-gray, #f3f3f6); --wj-styles-selected: #edf4ff; position: fixed; z-index: 101100; display: flex; flex-direction: column; box-sizing: border-box; border: 1px solid var(--wj-styles-border); border-radius: 6px; box-shadow: 0 8px 32px #13151b2e; background: #fff; color: var(--wj-styles-text); font: 14px/1.5 Asap, sans-serif; text-align: start; overflow: hidden; }
 .wj-styles[hidden], .wj-styles [hidden] { display: none !important; }
 .wj-styles *, .wj-styles *::before, .wj-styles *::after { box-sizing: border-box; }
@@ -81,7 +81,9 @@
 .wj-styles__group-content { padding: 8px; }
 .wj-styles__choices + .wj-styles__choices { margin-top: 8px; padding-top: 4px; border-top: 1px solid var(--wj-styles-border); }
 .wj-styles__group-line { display: flex; align-items: center; justify-content: space-between; margin: 0 8px 2px; color: var(--wj-styles-muted); font-size: 12px; gap: 8px; }
-.wj-styles__group-line button { border: 0; background: none; padding: 4px 0; text-decoration: underline; font-size: 12px; }
+.wj-styles__group-line button { display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; border: 0; background: none; padding: 4px 0; font-size: 12px; }
+.wj-styles__group-line button span { text-decoration: underline; }
+.wj-styles__group-line button .ti { font-size: 14px; }
 .wj-styles__group-line button:hover { color: var(--wj-styles-blue); }
 .wj-styles__item { display: flex; align-items: center; gap: 10px; width: 100%; border: 1px solid transparent; border-radius: 6px; padding: 2px 7px; padding-inline-end: 2px; min-height: 50px; background: #fff; text-align: start; }
 .wj-styles__item:hover { background: #f3f3f6; }

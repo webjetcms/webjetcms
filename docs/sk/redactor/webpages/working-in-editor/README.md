@@ -43,6 +43,8 @@ Vystrihnutie textu je možné označením textu a kliknutím na ikonku ![](cut.p
 
 Ponuka **Štýly** obsahuje predvoľby pripravené pre dizajn vašej stránky, napríklad farby textu, odsadenie, pozadia alebo orámovanie. Dostupné štýly a ich názvy závisia od šablóny. Ovládanie je rovnaké v Štandardnom editore aj v Page Builderi.
 
+Tlačidlo v paneli nástrojov zobrazuje aktuálny element, napríklad **Odsek** alebo **Nadpis 2**. Ak má nastavené štýly, uvedie skrátenú HTML značku a ich názvy, napríklad **H2 + Spodné odsadenie xs**. Dlhý zoznam sa oreže podľa šírky tlačidla; celý text zobrazíte podržaním kurzora nad ním. Pri výbere viacerých typov elementov sa zobrazí **Výber**.
+
 Kliknite do textu alebo označte jeho časť a otvorte **Štýly** v paneli nástrojov. Vybraný štýl sa použije ihneď a okno zostane otvorené, takže môžete nastaviť viac vlastností za sebou. Na web sa zmeny prenesú až uložením stránky.
 
 ![Ponuka Štýly s výberom elementu, aktívnymi štýlmi a náhľadmi](roletka.png)
@@ -61,11 +63,11 @@ V hornej časti okna je cesta k aktuálnemu elementu, napríklad **Sekcia › Ko
 
 Vpravo pri každej položke vidíte náhľad jej vzhľadu: farbu textu, pozadie, rámik alebo podobu písma. Veľké písmo sa prispôsobí priestoru náhľadu; údaj v pixeloch ukazuje skutočnú veľkosť. Pri odsadení náhľad znázorňuje medzeru a jej hodnotu. Výsledok vždy vidíte aj priamo v obsahu stránky.
 
-Vlastnosti môžete kombinovať, napríklad farbu textu s odsadením. Voľby s krúžkom v rovnakej skupine sa nahrádzajú: výber inej farby odoberie predchádzajúcu farbu z tejto skupiny. Samostatné štýly so štvorcovým políčkom sa dajú zapínať nezávisle. **Bez nastavenia** zruší voľbu danej skupiny. Opakovaným kliknutím na aktívny štýl ho odoberiete; rovnako funguje **×** pri jeho názve v hornej časti okna.
+Vlastnosti môžete kombinovať, napríklad farbu textu s odsadením. Voľby s krúžkom v rovnakej skupine sa nahrádzajú: výber inej farby odoberie predchádzajúcu farbu z tejto skupiny. Samostatné štýly so štvorcovým políčkom sa dajú zapínať nezávisle. **Odstrániť** pri názve skupiny zruší voľbu danej skupiny. Opakovaným kliknutím na aktívny štýl ho odoberiete; rovnako funguje **×** pri jeho názve v hornej časti okna.
 
 Ponuka zobrazuje štýly použiteľné pre aktuálny výber. Po zapnutí **Všetky štýly** uvidíte aj ostatné položky, ale tie, ktoré na vybraný element nemožno použiť, zostanú neaktívne.
 
-Ak okno prekrýva upravovaný obsah, presuňte ho za bodkovanú rukoväť vedľa názvu **Štýly**. Po zatvorení a opätovnom otvorení sa vráti k tlačidlu v paneli nástrojov. Zatvoríte ho krížikom, klávesom **Escape** alebo kliknutím mimo okna. Zmenu štýlu môžete vrátiť príkazom **Späť**.
+Ak okno prekrýva upravovaný obsah, presuňte ho za bodkovanú rukoväť vedľa názvu **Štýly**. Po zatvorení a opätovnom otvorení sa vráti k tlačidlu v paneli nástrojov a zoznam sa posunie na začiatok. Zatvoríte ho krížikom, klávesom **Escape** alebo kliknutím mimo okna. Zmenu štýlu môžete vrátiť príkazom **Späť**.
 
 ### Obnovenie základného vzhľadu
 
@@ -75,7 +77,7 @@ Ak máte vybraný **Kontajner**, obnoví vzhľad kontajnera; vnorené odseky ani
 
 ### Formát odseku a nadpisy
 
-V spodnej časti ponuky je kategória **Formát odseku** s voľbami **Odsek** a **Nadpis 1–6**. Kliknite do odseku a vyberte požadovanú úroveň nadpisu. Táto voľba mení typ celého odseku a jeho význam v štruktúre dokumentu. Samotný CSS štýl, ktorý zväčší písmo, z odseku nadpis nevytvorí.
+Na začiatku ponuky je kategória **Formát odseku** s voľbami **Odsek** a **Nadpis 1–6**. Kliknite do odseku a vyberte požadovanú úroveň nadpisu. Táto voľba mení typ celého odseku a jeho význam v štruktúre dokumentu. Samotný CSS štýl, ktorý zväčší písmo, z odseku nadpis nevytvorí.
 
 ![Formát odseku s výberom odseku a úrovní nadpisov](format-odseku.png)
 
