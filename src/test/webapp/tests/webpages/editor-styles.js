@@ -637,6 +637,35 @@ for (const mode of ['classic', 'inline']) {
         I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Styling an existing span must not produce browser errors');
     });
 
+    Scenario(`${mode}: paragraph formats hide for a DIV target and return for its paragraph`, async ({ I }) => {
+        I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
+        I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
+        I.executeScript(() => new Promise(resolve => autotestEditor.setData('<div id="autotest-container" class="alert info"><p id="one">Autotest paragraph</p></div>', resolve)));
+        I.executeScript(() => autotestSelect('one'));
+        const original = await I.executeScript(() => autotestEditor.getData());
+        I.click('.cke_button__wjstyles');
+        I.waitForVisible('.wj-styles');
+        I.seeElement('.wj-styles__format[data-format="h2"]:not(:disabled)');
+        I.click('Block', '.wj-styles__target');
+        I.dontSeeElement('.wj-styles__formats');
+        I.see('Alert info', '.wj-styles__list');
+        I.checkOption('.wj-styles__filters input');
+        I.dontSeeElement('.wj-styles__formats');
+        I.fillField('.wj-styles__search', 'Paragraph format');
+        I.dontSeeElement('.wj-styles__formats');
+        I.seeElement('.wj-styles__no-results');
+        I.seeElement('.wj-styles__toggle-all:disabled');
+        I.click('.wj-styles__search-clear');
+        I.click('Paragraph', '.wj-styles__target');
+        I.seeElement('.wj-styles__format[data-format="h2"]:not(:disabled)');
+        I.uncheckOption('.wj-styles__filters input');
+        I.seeElement('.wj-styles__format[data-format="h2"]:not(:disabled)');
+        I.click('Block', '.wj-styles__target');
+        I.dontSeeElement('.wj-styles__formats');
+        I.assertEqual(await I.executeScript(() => autotestEditor.getData()), original, 'Switching format availability must not change document content');
+        I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Switching format availability must not produce browser errors');
+    });
+
     Scenario(`${mode}: span caret target separates paragraph and text styles`, async ({ I }) => {
         I.amOnPage(`/wjstyles-autotest.html?mode=${mode}`);
         I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
@@ -655,7 +684,7 @@ for (const mode of ['classic', 'inline']) {
         I.dontSeeElement('.wj-styles__formats');
         I.checkOption('.wj-styles__filters input');
         I.seeElement('.wj-styles__item[data-style-id="1"]:disabled');
-        I.seeElement('.wj-styles__format[data-format="h2"]:disabled');
+        I.dontSeeElement('.wj-styles__formats');
         I.uncheckOption('.wj-styles__filters input');
         I.click('.wj-styles__item[data-style-id="5"]');
         I.assertDeepEqual(await I.executeScript(() => ['one', 'colored'].map(id => autotestEditor.document.getById(id).getAttribute('class'))), ['custom small', 'blue'], 'A text style must change only the selected span');
@@ -766,7 +795,7 @@ Scenario('inline: explicit ancestor target preserves content and supports undo',
     I.seeElement('.wj-styles__target-option[data-target="0"][aria-pressed="true"]');
     I.seeElement('.wj-styles__target-option[data-target=""][aria-pressed="false"]');
     I.see('Light', '.wj-styles__chips');
-    I.seeElement('.wj-styles__format[data-format="h2"]:disabled');
+    I.dontSeeElement('.wj-styles__formats');
     I.click('.wj-styles__item[data-style-id="7"]');
     I.assertEqual(await I.executeScript(() => document.getElementById('autotest-section').className), 'structural bg-dark', 'Background replacement must preserve structural classes');
     I.assertEqual(await I.executeScript(() => autotestEditor.document.getById('one').getAttribute('class')), 'small');
@@ -871,7 +900,7 @@ Scenario('paragraph formats respect the configured allowed-content filter', asyn
     I.assertDeepEqual(await I.executeScript(() => autotestErrors), [], 'Filtered semantic formatting must not produce browser errors');
 });
 
-Scenario('inline: fixed editable roots explain why paragraph formats are unavailable', async ({ I }) => {
+Scenario('inline: fixed editable roots hide unavailable paragraph formats', async ({ I }) => {
     I.amOnPage('/wjstyles-autotest.html?mode=inline&blockless=1');
     I.waitForFunction(() => window.autotestEditor?.status === 'ready', [], 10);
     I.executeScript(() => autotestSelect('autotest-inline'));
@@ -881,9 +910,9 @@ Scenario('inline: fixed editable roots explain why paragraph formats are unavail
     });
     I.click('.cke_button__wjstyles');
     I.waitForVisible('.wj-styles');
-    I.see('The element type is fixed by this editable block.', '.wj-styles__format-hint');
-    I.dontSeeElement('.wj-styles__format:not(:disabled)');
-    I.seeElement('.wj-styles__format[data-format="h2"]:disabled');
+    I.dontSeeElement('.wj-styles__formats');
+    I.checkOption('.wj-styles__filters input');
+    I.dontSeeElement('.wj-styles__formats');
     I.executeScript(() => {
         const picker = autotestEditor.wjstylescombo;
         picker.applyFormat(picker.formats().find(format => format.name === 'h2'));

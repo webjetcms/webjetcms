@@ -211,7 +211,7 @@ Pri použití viacerých CSS štýlov naraz (napr. ```btn btn-primary```) sa apl
 
 #### Vyhľadávanie a skupiny štýlov
 
-Roletka **Štýly** zostáva po výbere otvorená. V hlavičke zobrazuje aktívne štýly a umožňuje ich odobrať. Vyhľadáva podľa názvu, CSS triedy, kategórie aj skupiny bez rozlišovania diakritiky. HTML značku odseku alebo nadpisu mení samostatná kategória **Formát odseku** na začiatku roletky.
+Roletka **Štýly** zostáva po výbere otvorená. V hlavičke zobrazuje aktívne štýly a umožňuje ich odobrať. Vyhľadáva podľa názvu, CSS triedy, kategórie aj skupiny bez rozlišovania diakritiky. HTML značku odseku alebo nadpisu mení samostatná kategória **Formát odseku** na začiatku roletky. Zobrazí sa len vtedy, keď možno použiť aspoň jednu z jej volieb. Pri výbere kontajnera alebo iného prvku bez dostupných formátov zostane skrytá aj po zapnutí **Všetky štýly**.
 
 Tlačidlo **Vymazať hľadanie** v poli vyhľadávania zruší filter a obnoví pôvodné rozbalenie kategórií. Vybraný prvok v ceste nad zoznamom má sivé pozadie a tučné písmo rovnako ako v lište Page Buildera. Voľba **Odstrániť** pri skupine odoberie jej štýl; krížik pri aktívnom štýle odoberie iba daný štýl.
 
