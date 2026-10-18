@@ -1163,6 +1163,7 @@ webjet-overview-dashboard a:focus-visible {
     }
     &__news-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
     &__news-card {
+        --news-summary-min-lines: 3;
         display: flex;
         flex-direction: column;
         min-width: 0;
@@ -1183,8 +1184,10 @@ webjet-overview-dashboard a:focus-visible {
         gap: 10px;
         overflow-wrap: anywhere;
         h4 { margin: 0; color: $secondary; font-size: 16px; line-height: 1.4; }
-        p { margin: 0 0 4px; color: $gray-text; font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+        p { margin: 0; color: $gray-text; font-size: 14px; line-height: 1.5; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--news-summary-lines, var(--news-summary-min-lines)); overflow: hidden; }
     }
+    &__news-card-summary { flex: 1; contain: size; min-height: calc(var(--news-summary-min-lines) * 1.5em); margin-bottom: 4px; font-size: 14px; line-height: 1.5; }
+    &__news-card.is-text-only { --news-summary-min-lines: 8; }
     &__news-card-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; color: $gray-text; font-size: 12px; time { margin-left: auto; } }
     &__news-card-action { display: flex; align-items: center; gap: 6px; margin-top: auto; color: $primary; font-size: 14px; }
     &__news-channels { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 24px 0 16px; padding-top: 16px; border-top: 1px solid rgba($white, .2); }

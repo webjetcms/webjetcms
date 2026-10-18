@@ -92,6 +92,49 @@ test('Legacy releases and enriched entries normalize safely without changing tit
     assert.deepEqual(plain(scope.normalizeFeed({ news: [] }, feedUrl)), []);
 });
 
+test('Extended summaries remain plain text, preserve the short summary and respect Unicode limits', t => {
+    const { scope, window } = fixture(t);
+    const records = scope.normalizeFeed({ news: [
+        item('rich', { perex: 'Short text', perexLong: '**Long** [text](https://example.test/) <img src=x> &lt;safe&gt; &amp;amp;' }),
+        item('unicode', { perexLong: '🚀'.repeat(1001) })
+    ] }, feedUrl);
+    assert.equal(records[0].description, 'Short text');
+    assert.equal(records[0].descriptionLong, 'Long text <safe> &amp;');
+    assert.equal(Array.from(records[1].descriptionLong).length, 1000);
+    assert.equal(records[1].descriptionLong, '🚀'.repeat(1000));
+    assert.equal(window.document.querySelector('img'), null);
+    for (const perexLong of [undefined, null, {}, 42, '', ' \n ', '<br>', '&nbsp;']) {
+        const record = scope.normalizeFeed({ news: [item('legacy', { perex: 'Legacy text', perexLong })] }, feedUrl)[0];
+        assert.equal(record.descriptionLong, '');
+        assert.equal(record.description, 'Legacy text');
+    }
+});
+
+test('Extended summaries roundtrip cache without double decoding and old cached records keep their reading identity', async t => {
+    const first = fixture(t);
+    first.respond(async () => ({ ok: true, json: async () => ({ news: [item('cached-rich', { perexLong: 'Long &amp;amp; &lt;tag&gt;' })] }) }));
+    const reader = first.client();
+    const records = await reader.refresh();
+    assert.equal(reader.readCache()[0].descriptionLong, 'Long &amp; <tag>');
+    const cacheKey = first.window.localStorage.key(0);
+    const cached = first.window.localStorage.getItem(cacheKey);
+    const second = fixture(t);
+    second.window.localStorage.setItem(cacheKey, cached);
+    assert.equal(second.client().readCache()[0].descriptionLong, 'Long &amp; <tag>');
+    const legacyCache = JSON.parse(cached);
+    delete legacyCache.items[0].descriptionLong;
+    const legacy = fixture(t);
+    legacy.window.localStorage.setItem(cacheKey, JSON.stringify(legacyCache));
+    const oldRecords = legacy.client().readCache();
+    assert.equal(oldRecords[0].descriptionLong, '');
+    assert.equal(oldRecords[0].description, 'A useful description');
+    const seen = first.scope.getExternalNewsState(records, feedUrl);
+    first.window.currentUser.adminSettings[seen.key] = seen.value;
+    const changed = first.scope.normalizeFeed({ news: [item('cached-rich', { perexLong: 'Changed extended text' })] }, feedUrl);
+    assert.equal(first.scope.getExternalNewsState(changed, feedUrl).isNew, false);
+    assert.equal(first.scope.getExternalNewsState(oldRecords, feedUrl).isNew, false);
+});
+
 test('Relative thumbnails follow the configured feed directory without changing link validation', async t => {
     const { scope, client, respond, requests } = fixture(t);
     const relative = 'social-media/images/autotest-thumbnail.jpg';

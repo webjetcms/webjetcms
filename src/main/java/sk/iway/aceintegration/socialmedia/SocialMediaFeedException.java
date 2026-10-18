@@ -9,7 +9,8 @@ final class SocialMediaFeedException extends IOException {
 
     /** Only field names requested by this integration may appear in diagnostics. */
     enum FacebookField {
-        ID, MESSAGE, CREATED_TIME, PERMALINK_URL, FULL_PICTURE, ATTACHMENTS, TITLE, DESCRIPTION, PUBLISHED_POSTS;
+        ID, MESSAGE, CREATED_TIME, PERMALINK_URL, FULL_PICTURE, ATTACHMENTS, TITLE, DESCRIPTION,
+        MEDIA_TYPE, TYPE, URL, UNSHIMMED_URL, SUBATTACHMENTS, PUBLISHED_POSTS;
 
         String apiName() {
             return name().toLowerCase(Locale.ROOT);

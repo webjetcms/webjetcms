@@ -39,12 +39,13 @@ Texty sa považujú za slovenské. Preklady do češtiny a angličtiny používa
 
 ## Formát a priebeh generovania
 
-Koreň JSON zostáva objekt s poľom `news`. Každá položka má textové polia `title`, `perex` a `link`. Nové voliteľné polia sú `id`, `source`, `publishedAt` a `image`. Ukážka jednej položky:
+Koreň JSON zostáva objekt s poľom `news`. Každá položka má textové polia `title`, `perex` a `link`. Nové voliteľné polia sú `id`, `source`, `publishedAt`, `image` a `perexLong`. Ukážka jednej položky:
 
 ```json
 {
   "title": "Nové možnosti štýlov v editore",
   "perex": "Pozrite si ukážku práce so štýlmi.",
+  "perexLong": "Pozrite si ukážku práce so štýlmi. Vo videu nastavíme vzhľad nadpisov a odsekov priamo v editore stránky.",
   "link": "https://www.youtube.com/watch?v=VIDEO_ID",
   "id": "youtube:VIDEO_ID",
   "source": "youtube",
@@ -53,11 +54,15 @@ Koreň JSON zostáva objekt s poľom `news`. Každá položka má textové polia
 }
 ```
 
-Generátor zaradí najviac tri posledné položky z každej siete, spoločne zoradené od najnovšej. Ak nie je dostupný žiadny Facebook príspevok, zaradí štyri YouTube videá, pokiaľ ich kanál ponúka. Verejný súbor obsahuje iba sociálne príspevky; novinky vydaní ani obsah starého verejného JSON sa doň nepridávajú.
+Generátor zaradí najviac tri posledné položky z každej siete, spoločne zoradené od najnovšej. Z dvanástich načítaných Facebook príspevkov najprv vylúči videá, Reels a zdieľané odkazy na YouTube videá, až potom vyberie najviac tri položky. Ďalšie stránky výsledkov nenačítava. Ak po filtrovaní nezostane žiadny Facebook príspevok, zaradí štyri YouTube videá, pokiaľ ich kanál ponúka. Verejný súbor obsahuje iba sociálne príspevky; novinky vydaní ani obsah starého verejného JSON sa doň nepridávajú.
 
-`perex` je krátky textový výňatok s najviac 180 zobrazenými znakmi, aby sa zmestil aj do starého zobrazenia noviniek. Generátor použije prvú úplnú vetu, ak sa do limitu zmestí; inak text skráti na hranici slova a pridá výpustku. Odstráni URL, hashtagy a značky odrážok, riadky spojí do súvislého textu. Obsah zoznamu môže zostať ako obyčajný text. Rovnaké obmedzenie platí aj pre preklady; bezpečné kódovanie znakov môže predĺžiť zápis v JSON.
+Videá rozpoznáva podľa [údajov o prílohách z Graph API](https://developers.facebook.com/docs/graph-api/reference/story-attachment/) vrátane vnorených príloh a podľa známych adries videí. Textové a fotografické príspevky zostávajú aj vtedy, keď ich text spomína video; podobnosť názvov či obrázkov sa neposudzuje. Z cache možno vyradiť video s rozpoznateľným odkazom aj bez spojenia. Starší uložený príspevok bez údajov o prílohách a s bežným odkazom `/posts/id` sa dá odfiltrovať až po úspešnom obnovení Facebooku. Pri úplnom výpadku bez použiteľných položiek zostane verejný súbor nezmenený až do úspešného obnovenia.
 
-Ak text začína zopakovaným názvom príspevku, generátor ho zo začiatku `perex` odstráni. Kontrola prebehne aj po preklade. Príspevok obsahujúci iba názov má prázdny `perex`, aby sa rovnaký text nezobrazil dvakrát.
+`perex` je krátky textový výňatok s najviac 180 zobrazenými znakmi, aby sa zmestil aj do starého zobrazenia noviniek. Generátor použije prvú úplnú vetu, ak sa do limitu zmestí; inak text skráti na hranici slova a pridá výpustku.
+
+`perexLong` poskytuje aktuálnemu dashboardu dlhší výňatok s najviac 1 000 znakmi (Unicode code points), bez obmedzenia na prvú vetu. Pri skrátení sa ukončí na hranici slova s výpustkou. Karty uprednostnia tento text; ak chýba alebo je prázdny, použijú `perex`. Počet zobrazených riadkov sa prispôsobuje dostupnej výške karty: kratší názov uvoľní miesto ďalšiemu textu a odkaz zostane zarovnaný dole. Karta rezervuje priestor aspoň na tri riadky výňatku s obrázkom a osem bez neho; pri zlyhaní obrázka sa priestor pre text zväčší. Samotný text skracuje CSS s výpustkou, počet riadkov sa prepočíta pri zmene rozmerov. Starší klient nové pole ignoruje.
+
+Z oboch výňatkov generátor odstráni URL, hashtagy a značky odrážok či iných blokov, riadky spojí do súvislého textu. Obsah zoznamu môže zostať ako obyčajný text. Ak text začína zopakovaným názvom príspevku, odstráni ho. Kontrola prebehne aj po preklade; rovnaké dĺžkové limity platia pre všetky jazyky. Príspevok obsahujúci iba názov má prázdny výňatok, aby sa rovnaký text nezobrazil dvakrát. Bezpečné kódovanie znakov môže predĺžiť zápis v JSON.
 
 `image` obsahuje cestu relatívnu k priečinku s JSON, napríklad `social-media/images/1d26cf12a6e34c59a10f82d9139af543.jpg`. Dashboard ju doplní podľa adresy načítaného súboru vytvorenej z `overviewJsonUrl`. Pri hodnote `https://docs.webjetcms.sk/json/new/` sa teda obrázok načíta z `/json/new/social-media/images/`. Pri presune výstupného priečinka preneste aj jeho podpriečinok s obrázkami. Samostatná premenná `socialMediaFeedPublicBaseUrl` sa už nepoužíva. Generátor prevedie aj vlastné uložené absolútne odkazy z cache na relatívne cesty; dashboard naďalej podporuje absolútne HTTPS odkazy v starších zoznamoch.
 

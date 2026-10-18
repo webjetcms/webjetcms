@@ -9,9 +9,13 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -86,6 +90,209 @@ class SocialMediaFeedGeneratorTest {
         assertThrows(IOException.class, () -> SocialMediaFeedGenerator.parseFacebook(bytes("{\"data\":[{\"id\":\"bad\"}]}"), PAGE));
     }
 
+    /** Video metadata excludes a post even when only its second attachment or a nested attachment identifies the video. */
+    @Test
+    void excludesVideoAttachmentMetadataAtEveryLevel() throws Exception {
+        for (String[] metadata : List.of(new String[] { "media_type", "video" }, new String[] { "type", "video" },
+            new String[] { "type", "video_inline" }, new String[] { "type", "video_autoplay" }, new String[] { "type", "reel" })) {
+            for (boolean nested : List.of(false, true)) {
+                ObjectNode video = facebookPost("2", "Video post", "2026-10-06T09:00:00Z");
+                ArrayNode attachments = video.putObject("attachments").putArray("data");
+                attachments.addObject().put("media_type", "photo").put("type", "photo");
+                ObjectNode candidate = attachments.addObject();
+                if (nested) {
+                    candidate.put("media_type", "album");
+                    ArrayNode children = candidate.putObject("subattachments").putArray("data");
+                    children.addObject().put("media_type", "photo");
+                    candidate = children.addObject();
+                }
+                candidate.put(metadata[0], metadata[1]);
+                List<SocialMediaFeedGenerator.Post> posts = SocialMediaFeedGenerator.parseFacebook(facebookRecords(video,
+                    facebookPost("1", "Text post", "2026-10-05T09:00:00Z")), PAGE);
+                assertEquals(List.of("facebook:" + PAGE + "_1"), posts.stream().map(SocialMediaFeedGenerator.Post::id).toList(),
+                    metadata[0] + "=" + metadata[1] + ", nested=" + nested);
+            }
+        }
+    }
+
+    /** Facebook video permalinks and Facebook or YouTube attachment URLs are excluded without relying on attachment types. */
+    @Test
+    void excludesVideoUrlsFromPermalinksAndAttachments() throws Exception {
+        List<String> facebookVideos = List.of("https://www.facebook.com/" + PAGE + "/videos/123/",
+            "https://www.facebook.com/videos/123/", "https://www.facebook.com/reel/123/", "https://www.facebook.com/reels/123/",
+            "https://www.facebook.com/watch/?v=123", "https://www.facebook.com/video.php?v=123");
+        for (String link : facebookVideos) {
+            ObjectNode video = facebookPost("2", "Video post", "2026-10-06T09:00:00Z").put("permalink_url", link);
+            assertTrue(SocialMediaFeedGenerator.parseFacebook(facebookRecords(video), PAGE).isEmpty(), link);
+        }
+        List<String> videoLinks = new ArrayList<>(facebookVideos);
+        videoLinks.addAll(List.of("https://www.youtube.com/watch?v=video000001", "https://youtube.com/watch?v=video000001",
+            "https://www.youtube.com/shorts/video000001", "https://www.youtube.com/embed/video000001", "https://youtu.be/video000001",
+            "https://fb.watch/autotest-video/", "https://l.facebook.com/l.php?u="
+                + URLEncoder.encode("https://www.youtube.com/watch?v=video000001", StandardCharsets.UTF_8) + "&h=autotest"));
+        for (String link : videoLinks) {
+            for (String field : List.of("url", "unshimmed_url")) {
+                for (boolean nested : List.of(false, true)) {
+                    ObjectNode video = facebookPost("2", "Shared video", "2026-10-06T09:00:00Z");
+                    ArrayNode attachments = video.putObject("attachments").putArray("data");
+                    attachments.addObject().put("type", "photo");
+                    ObjectNode candidate = attachments.addObject().put("type", "share");
+                    if (nested) candidate = candidate.putObject("subattachments").putArray("data").addObject();
+                    candidate.put(field, link);
+                    assertTrue(SocialMediaFeedGenerator.parseFacebook(facebookRecords(video), PAGE).isEmpty(),
+                        field + "=" + link + ", nested=" + nested);
+                }
+            }
+        }
+    }
+
+    /** Non-video destinations and malformed attachments do not hide an otherwise valid text post or fail the feed. */
+    @Test
+    void keepsNonVideoAndMalformedAttachments() throws Exception {
+        String encodedVideo = URLEncoder.encode("https://www.youtube.com/watch?v=video000001", StandardCharsets.UTF_8);
+        List<String> links = List.of("javascript:alert(1)", "plain text", "", "https://www.youtube.com/",
+            "https://www.youtube.com/channel/" + CHANNEL, "https://www.youtube.com/@webjet-od-interway",
+            "https://www.youtube.com/watch", "https://www.youtube.com/watch?feature=share", "https://www.youtube.com/watch?v=",
+            "https://www.facebook.com/watch/", "https://www.facebook.com/video.php?story=123", "https://youtu.be/", "https://fb.watch/",
+            "https://youtube.com.evil.invalid/watch?v=video000001", "https://facebook.com.evil.invalid/reel/123",
+            "https://l.facebook.com/l.php?u=plain%20text", "https://l.facebook.com/l.php?u=",
+            "https://l.facebook.com/l.php?u=%ZZ", "javascript://l.facebook.com/l.php?u=" + encodedVideo,
+            "https://user@l.facebook.com/l.php?u=" + encodedVideo);
+        for (String link : links) {
+            for (String field : List.of("url", "unshimmed_url")) {
+                ObjectNode post = facebookPost("1", "Text post", "2026-10-05T09:00:00Z");
+                post.putObject("attachments").putArray("data").addObject().put("type", "share").put(field, link);
+                assertEquals(1, SocialMediaFeedGenerator.parseFacebook(facebookRecords(post), PAGE).size(), field + "=" + link);
+            }
+        }
+        for (String malformed : List.of("null", "\"plain text\"", "{}", "{\"data\":null}",
+            "{\"data\":[null,\"plain text\",42,{\"subattachments\":null}]}")) {
+            ObjectNode post = facebookPost("1", "Text post", "2026-10-05T09:00:00Z");
+            post.set("attachments", MAPPER.readTree(malformed));
+            assertEquals(1, SocialMediaFeedGenerator.parseFacebook(facebookRecords(post), PAGE).size(), malformed);
+        }
+    }
+
+    /** Newer videos do not consume the three-post quota, and text, photos and ordinary external links remain eligible. */
+    @Test
+    void keepsOrdinaryPostsAndAppliesLimitAfterVideoFiltering() throws Exception {
+        ObjectNode feed = MAPPER.createObjectNode();
+        ArrayNode data = feed.putArray("data");
+        for (int index = 1; index <= 4; index++) {
+            ObjectNode video = facebookPost(Integer.toString(100 + index), "Video " + index, "2026-10-" + (20 - index) + "T09:00:00Z");
+            video.putObject("attachments").putArray("data").addObject().put("media_type", "video");
+            data.add(video);
+        }
+        data.add(facebookPost("1", "Text mentioning a video", "2026-10-15T09:00:00Z"));
+        ObjectNode photo = facebookPost("2", "Photo", "2026-10-14T09:00:00Z");
+        photo.putObject("attachments").putArray("data").addObject().put("media_type", "photo").put("type", "photo")
+            .put("url", "https://www.facebook.com/photo.php?fbid=123");
+        data.add(photo);
+        ObjectNode link = facebookPost("3", "Article", "2026-10-13T09:00:00Z");
+        link.putObject("attachments").putArray("data").addObject().put("media_type", "link").put("type", "share")
+            .put("url", "https://example.org/videos/article-about-editing");
+        data.add(link);
+        data.add(facebookPost("4", "Older text", "2026-10-12T09:00:00Z"));
+        List<SocialMediaFeedGenerator.Post> posts = SocialMediaFeedGenerator.parseFacebook(MAPPER.writeValueAsBytes(feed), PAGE);
+        assertEquals(List.of("facebook:" + PAGE + "_1", "facebook:" + PAGE + "_2", "facebook:" + PAGE + "_3"),
+            posts.stream().map(SocialMediaFeedGenerator.Post::id).toList());
+    }
+
+    /** A valid response containing only videos is a successful empty source even if YouTube is unavailable. */
+    @Test
+    void treatsOnlyVideoResponsesAsSuccessfulEmptyFeeds() throws Exception {
+        ObjectNode video = facebookPost("1", "Video", "2026-10-05T09:00:00Z");
+        video.putObject("attachments").putArray("data").addObject().put("type", "reel");
+        byte[] response = facebookRecords(video, facebookPost("2", "Invalid ignored record", "invalid-date"));
+        assertTrue(SocialMediaFeedGenerator.parseFacebook(response, PAGE).isEmpty());
+        generator(new AtomicReference<>(null), new AtomicReference<>(response), (text, language) -> text).generate();
+        for (String language : List.of("sk", "cs", "en")) assertTrue(output(language).path("news").isEmpty());
+        assertTrue(MAPPER.readTree(Files.readString(directory.resolve("private/feed-cache.json")))
+            .path("sources").path("facebook").isEmpty());
+    }
+
+    /** Invalid IDs, dates and hosts still fail when the malformed records contain video-looking metadata or links. */
+    @Test
+    void rejectsInvalidRecordsEvenWhenTheyLookLikeVideos() {
+        for (ObjectNode invalid : List.of(
+            facebookPost("1", "Wrong Page", "2026-10-05T09:00:00Z").put("id", "123_1")
+                .put("permalink_url", "https://www.facebook.com/reel/123"),
+            facebookPost("2", "Invalid date", "invalid-date"),
+            facebookPost("3", "Invalid host", "2026-10-05T09:00:00Z")
+                .put("permalink_url", "https://facebook.com.evil.invalid/videos/123"))) {
+            invalid.putObject("attachments").putArray("data").addObject().put("media_type", "video");
+            assertThrows(IOException.class, () -> SocialMediaFeedGenerator.parseFacebook(facebookRecords(invalid), PAGE));
+        }
+    }
+
+    /** Previously cached Facebook video permalinks are removed during an outage while ordinary cached posts survive. */
+    @Test
+    void prunesKnownVideoPermalinksFromPrivateCache() throws Exception {
+        List<SocialMediaFeedGenerator.Post> posts = List.of(
+            new SocialMediaFeedGenerator.Post("facebook:" + PAGE + "_1", "facebook", "Text", "Details",
+                "https://www.facebook.com/" + PAGE + "/posts/1", "2026-10-05T09:00:00Z", "", null),
+            new SocialMediaFeedGenerator.Post("facebook:" + PAGE + "_2", "facebook", "Old Reel", "Details",
+                "https://www.facebook.com/reel/123", "2026-10-06T09:00:00Z", "", null),
+            new SocialMediaFeedGenerator.Post("facebook:" + PAGE + "_3", "facebook", "Old video", "Details",
+                "https://www.facebook.com/" + PAGE + "/videos/123", "2026-10-07T09:00:00Z", "", null));
+        Path cache = directory.resolve("private/feed-cache.json");
+        Files.createDirectories(cache.getParent());
+        Files.write(cache, MAPPER.writeValueAsBytes(new SocialMediaFeedGenerator.FeedCache(Map.of("facebook", posts), Map.of())));
+        generator(new AtomicReference<>(null), new AtomicReference<>(null), (text, language) -> text).generate();
+        for (String language : List.of("sk", "cs", "en")) {
+            assertEquals(1, output(language).path("news").size());
+            assertEquals("facebook:" + PAGE + "_1", output(language).path("news").get(0).path("id").asText());
+        }
+        assertEquals(1, MAPPER.readTree(Files.readString(cache)).path("sources").path("facebook").size());
+    }
+
+    /** A successful video-only refresh removes old metadata-less Facebook cache and restores the fourth YouTube fallback video. */
+    @Test
+    void replacesMetadataLessVideoCacheAfterSuccessfulRefresh() throws Exception {
+        AtomicReference<byte[]> youtube = new AtomicReference<>(youtube(4, "Video", "Description", ""));
+        AtomicReference<byte[]> facebook = new AtomicReference<>(facebook(1, "Old video without metadata"));
+        SocialMediaFeedGenerator generator = generator(youtube, facebook, (text, language) -> text);
+        generator.generate();
+        assertTrue(output("sk").path("news").toString().contains("facebook:" + PAGE + "_1"));
+        ObjectNode video = facebookPost("1", "Old video without metadata", "2026-10-05T09:00:00Z");
+        video.putObject("attachments").putArray("data").addObject().put("media_type", "video");
+        facebook.set(facebookRecords(video));
+        generator.generate();
+        for (String language : List.of("sk", "cs", "en")) {
+            assertEquals(4, output(language).path("news").size());
+            for (JsonNode post : output(language).path("news")) assertEquals("youtube", post.path("source").asText());
+        }
+        JsonNode cache = MAPPER.readTree(Files.readString(directory.resolve("private/feed-cache.json")));
+        assertTrue(cache.path("sources").path("facebook").isEmpty());
+        assertFalse(cache.path("translations").toString().contains("facebook:" + PAGE + "_1"));
+    }
+
+    /** Graph requests include video-identifying fields for both attachments and their children. */
+    @Test
+    void requestsAttachmentMetadataForVideoFiltering() throws Exception {
+        AtomicReference<String> requested = new AtomicReference<>();
+        new SocialMediaFeedGenerator(settings(), (uri, token, limit) -> {
+            if (uri.getHost().equals("www.youtube.com")) return youtube(0, "", "", "");
+            requested.set(URLDecoder.decode(uri.getRawQuery(), StandardCharsets.UTF_8));
+            assertEquals("secret-token", token);
+            assertFalse(uri.toString().contains("secret-token"));
+            return bytes("{\"data\":[]}");
+        }, (text, language) -> text).generate();
+        String query = requested.get();
+        assertTrue(query.contains("attachments{"));
+        assertTrue(query.contains("subattachments{"));
+        String attachments = query.substring(query.indexOf("attachments{") + "attachments{".length());
+        String parentFields = "," + attachments.substring(0, attachments.indexOf("subattachments{")) + ",";
+        String children = attachments.substring(attachments.indexOf("subattachments{") + "subattachments{".length());
+        String childFields = "," + children.substring(0, children.indexOf('}')) + ",";
+        for (String field : List.of("media_type", "type", "url", "unshimmed_url")) {
+            assertTrue(parentFields.contains("," + field + ","), "Missing parent field: " + field);
+            assertTrue(childFields.contains("," + field + ","), "Missing child field: " + field);
+        }
+        assertTrue(parentFields.contains(",title,"));
+        assertTrue(parentFields.contains(",description,"));
+    }
+
     /** Facebook message titles take precedence over attachments, and image-only posts have localized fallback titles. */
     @Test
     void choosesFacebookTitlesAndLocalizesTheFallback() throws Exception {
@@ -121,6 +328,7 @@ class SocialMediaFeedGeneratorTest {
         generator(new AtomicReference<>(youtube(0, "", "", "")), new AtomicReference<>(facebook(1, title)),
             (text, language) -> text).generate();
         assertEquals("", output("sk").path("news").get(0).path("perex").asText());
+        assertFalse(output("sk").path("news").get(0).has("perexLong"));
 
         String longFirstLine = "🚀 " + "Nové možnosti nastavenia textu a kontajnera vo WebJET CMS ".repeat(5).stripTrailing();
         String truncatedTitle = longFirstLine.substring(0, longFirstLine.offsetByCodePoints(0, 119)).stripTrailing() + "…";
@@ -132,6 +340,7 @@ class SocialMediaFeedGeneratorTest {
         post = output("sk").path("news").get(0);
         assertEquals(truncatedTitle, post.path("title").asText());
         assertEquals("Nastavte si vlastný vzhľad stránky.", post.path("perex").asText());
+        assertEquals("Nastavte si vlastný vzhľad stránky. Podrobnosti nájdete vo videu.", post.path("perexLong").asText());
         generator(new AtomicReference<>(youtube(0, "", "", "")), new AtomicReference<>(facebook(1, longFirstLine)),
             (text, language) -> text).generate();
         assertEquals("", output("sk").path("news").get(0).path("perex").asText());
@@ -152,26 +361,72 @@ class SocialMediaFeedGeneratorTest {
         assertFalse(wordSummary.contains("\n"));
     }
 
-    /** Translation receives a concise description and cannot reintroduce a repeated title or links into the published summary. */
+    /** Expanded descriptions retain multiple sentences and share the Unicode-safe word limit and social-text cleanup. */
+    @Test
+    void boundsLongDescriptionsWithoutDiscardingLaterSentences() {
+        String source = "🚀 Nadpis\n## Prvá veta.\n- Druhá veta s detailmi. https://example.com #WebJET";
+        assertEquals("Prvá veta. Druhá veta s detailmi.", SocialMediaFeedGenerator.longSummary(source, "🚀 Nadpis"));
+        assertEquals("x".repeat(1000), SocialMediaFeedGenerator.longSummary("x".repeat(1000), ""));
+        String emoji = SocialMediaFeedGenerator.longSummary("🚀".repeat(1100), "");
+        assertEquals(1000, emoji.codePointCount(0, emoji.length()));
+        assertTrue(emoji.endsWith("…"));
+        assertTrue(emoji.codePoints().noneMatch(value -> value >= 0xD800 && value <= 0xDFFF));
+        String words = "Bezpečná aktualizácia systému ".repeat(50);
+        String excerpt = SocialMediaFeedGenerator.longSummary(words, "");
+        assertTrue(excerpt.codePointCount(0, excerpt.length()) <= 1000);
+        assertTrue(excerpt.endsWith("…"));
+        assertTrue(words.startsWith(excerpt.substring(0, excerpt.length() - 1).stripTrailing() + " "));
+    }
+
+    /** Both providers retain enough source text for a full expanded card while the original perex remains one short sentence. */
+    @Test
+    void capturesDescriptionsBeyondSixHundredCharacters() throws Exception {
+        String description = "Prvá veta. " + "Rozšírené informácie o nastaveniach. ".repeat(45);
+        byte[] youtube = youtube(1, "YouTube title", description, "");
+        byte[] facebook = facebook(1, "Facebook title\n" + description);
+        assertTrue(SocialMediaFeedGenerator.parseYoutube(youtube, CHANNEL).get(0).perex().length() > 1000);
+        assertTrue(SocialMediaFeedGenerator.parseFacebook(facebook, PAGE).get(0).perex().length() > 1000);
+        generator(new AtomicReference<>(youtube), new AtomicReference<>(facebook), (text, language) -> text).generate();
+        for (JsonNode post : output("sk").path("news")) {
+            assertEquals("Prvá veta.", post.path("perex").asText());
+            String expanded = post.path("perexLong").asText();
+            assertTrue(expanded.startsWith("Prvá veta. Rozšírené informácie o nastaveniach."));
+            assertTrue(expanded.codePointCount(0, expanded.length()) > 600);
+            assertTrue(expanded.codePointCount(0, expanded.length()) <= 1000);
+            assertTrue(expanded.endsWith("…"));
+            assertFalse(expanded.contains("title"));
+        }
+        SocialMediaFeedGenerator.Post bounded = SocialMediaFeedGenerator.parseYoutube(youtube(1, "Title", "🚀".repeat(5000), ""), CHANNEL).get(0);
+        assertEquals(4000, bounded.perex().codePointCount(0, bounded.perex().length()));
+    }
+
+    /** Each language translates the expanded description once and derives both bounded output lengths from that translation. */
     @Test
     void summarizesBeforeAndAfterTranslationWithoutRepeatingTranslationCalls() throws Exception {
         String title = "🚀 Nové možnosti";
         AtomicInteger calls = new AtomicInteger();
         SocialMediaFeedGenerator generator = generator(new AtomicReference<>(youtube(0, "", "", "")),
-            new AtomicReference<>(facebook(1, title + "\nEditor teraz podporuje zmeny. https://example.com #WebJET")),
+            new AtomicReference<>(facebook(1, title + "\nEditor teraz podporuje zmeny. Druhá veta s detailmi. https://example.com #WebJET")),
             (text, language) -> {
                 calls.incrementAndGet();
                 String translatedTitle = language + " translated title";
                 if (text.equals(title)) return translatedTitle;
-                assertEquals("Editor teraz podporuje zmeny.", text);
-                return translatedTitle + "\nThe editor now supports changes. See https://example.com #WebJET";
+                assertEquals("Editor teraz podporuje zmeny. Druhá veta s detailmi.", text);
+                return translatedTitle + "\nThe editor now supports changes. " + "More details follow. ".repeat(80) + "https://example.com #WebJET";
             });
         generator.generate();
         assertEquals(4, calls.get());
         assertEquals("The editor now supports changes.", output("en").path("news").get(0).path("perex").asText());
+        String expanded = output("en").path("news").get(0).path("perexLong").asText();
+        assertTrue(expanded.startsWith("The editor now supports changes. More details follow."));
+        assertTrue(expanded.codePointCount(0, expanded.length()) <= 1000);
+        assertTrue(expanded.endsWith("…"));
+        assertFalse(expanded.contains("translated title"));
+        assertFalse(expanded.contains("https://"));
         generator.generate();
         assertEquals(4, calls.get());
         assertEquals("The editor now supports changes.", output("en").path("news").get(0).path("perex").asText());
+        assertEquals(expanded, output("en").path("news").get(0).path("perexLong").asText());
     }
 
     /** Old cached source and translated fallback descriptions are shortened even when both providers and translation are offline. */
@@ -195,6 +450,69 @@ class SocialMediaFeedGeneratorTest {
         assertEquals("The changes are available.", output("en").path("news").get(0).path("perex").asText());
         generator.generate();
         assertEquals("The changes are available.", output("en").path("news").get(0).path("perex").asText());
+    }
+
+    /** A legacy short-description translation is reused under perexLong when its source text has not changed. */
+    @Test
+    void migratesLegacyTranslationsWithoutRetranslatingIdenticalText() throws Exception {
+        String title = "Nadpis";
+        String description = "Prvá veta.";
+        SocialMediaFeedGenerator.Post post = new SocialMediaFeedGenerator.Post("youtube:video000001", "youtube", title, description,
+            "https://www.youtube.com/watch?v=video000001", "2026-10-01T10:00:00Z", "", null);
+        Map<String, SocialMediaFeedGenerator.Translation> legacy = new LinkedHashMap<>();
+        for (String language : List.of("cs", "en")) {
+            legacy.put(post.id() + ":" + language + ":title", new SocialMediaFeedGenerator.Translation(sourceHash(title), language + " translated title"));
+            legacy.put(post.id() + ":" + language + ":perex", new SocialMediaFeedGenerator.Translation(sourceHash(description), language + " translated description."));
+        }
+        writeCache(post, legacy);
+        SocialMediaFeedGenerator generator = generator(new AtomicReference<>(null), new AtomicReference<>(null),
+            (text, language) -> { throw new AssertionError("Unchanged cached text must not be translated again"); });
+        generator.generate();
+        generator.generate();
+        assertEquals("en translated description.", output("en").path("news").get(0).path("perexLong").asText());
+        JsonNode translations = MAPPER.readTree(Files.readString(directory.resolve("private/feed-cache.json"))).path("translations");
+        for (String language : List.of("cs", "en")) {
+            assertFalse(translations.has(post.id() + ":" + language + ":perex"));
+            assertEquals(sourceHash(description), translations.path(post.id() + ":" + language + ":perexLong").path("sourceHash").asText());
+        }
+    }
+
+    /** Expanded source text retries translation while a failed attempt preserves the old short translation and its original hash. */
+    @Test
+    void retriesMigratedShortTranslationsForExpandedSource() throws Exception {
+        String title = "Nadpis";
+        String firstSentence = "Prvá veta.";
+        String description = firstSentence + " Druhá veta s detailmi.";
+        SocialMediaFeedGenerator.Post post = new SocialMediaFeedGenerator.Post("youtube:video000001", "youtube", title, description,
+            "https://www.youtube.com/watch?v=video000001", "2026-10-01T10:00:00Z", "", null);
+        Map<String, SocialMediaFeedGenerator.Translation> legacy = new LinkedHashMap<>();
+        for (String language : List.of("cs", "en")) {
+            legacy.put(post.id() + ":" + language + ":title", new SocialMediaFeedGenerator.Translation(sourceHash(title), language + " translated title"));
+            legacy.put(post.id() + ":" + language + ":perex", new SocialMediaFeedGenerator.Translation(sourceHash(firstSentence), language + " old short description."));
+        }
+        writeCache(post, legacy);
+        AtomicInteger calls = new AtomicInteger();
+        generator(new AtomicReference<>(null), new AtomicReference<>(null), (text, language) -> {
+            calls.incrementAndGet();
+            assertEquals(description, text);
+            throw new IllegalStateException("translation offline");
+        }).generate();
+        assertEquals(2, calls.get());
+        assertEquals("en old short description.", output("en").path("news").get(0).path("perexLong").asText());
+        JsonNode failedCache = MAPPER.readTree(Files.readString(directory.resolve("private/feed-cache.json"))).path("translations");
+        assertEquals(sourceHash(firstSentence), failedCache.path(post.id() + ":en:perexLong").path("sourceHash").asText());
+        SocialMediaFeedGenerator successful = generator(new AtomicReference<>(null), new AtomicReference<>(null), (text, language) -> {
+            calls.incrementAndGet();
+            assertEquals(description, text);
+            return language + " expanded description. Second sentence with details.";
+        });
+        successful.generate();
+        successful.generate();
+        assertEquals(4, calls.get());
+        assertEquals("en expanded description.", output("en").path("news").get(0).path("perex").asText());
+        assertEquals("en expanded description. Second sentence with details.", output("en").path("news").get(0).path("perexLong").asText());
+        JsonNode successfulCache = MAPPER.readTree(Files.readString(directory.resolve("private/feed-cache.json"))).path("translations");
+        assertEquals(sourceHash(description), successfulCache.path(post.id() + ":en:perexLong").path("sourceHash").asText());
     }
 
     /** Localized output contains only social posts, replaces old release feeds and reuses persistent translations. */
@@ -290,6 +608,16 @@ class SocialMediaFeedGeneratorTest {
             new AtomicReference<>(bytes("{\"data\":[]}")), (text, language) -> text).generate();
         assertEquals("Title <safe> 1", output("sk").path("news").get(0).path("title").asText());
         assertEquals("&lt;img/&gt;", output("sk").path("news").get(0).path("perex").asText());
+        assertEquals("&lt;img/&gt;", output("sk").path("news").get(0).path("perexLong").asText());
+        generator(new AtomicReference<>(youtube(0, "", "", "")),
+            new AtomicReference<>(facebook(1, "Title\nFirst sentence. <img onerror='x'> [unpaired] & \"quoted\"")), (text, language) -> text).generate();
+        String longText = output("sk").path("news").get(0).path("perexLong").asText();
+        assertFalse(longText.contains("<"));
+        assertFalse(longText.contains("["));
+        assertFalse(longText.contains("'"));
+        assertFalse(longText.contains("\""));
+        assertEquals("First sentence. <img onerror='x'> [unpaired] & \"quoted\"", org.jsoup.parser.Parser.unescapeEntities(longText, false));
+        assertEquals("First sentence.", output("sk").path("news").get(0).path("perex").asText());
     }
 
     /** Preview bytes are re-encoded and published through portable relative paths instead of exposing CDN URLs. */
@@ -429,6 +757,8 @@ class SocialMediaFeedGeneratorTest {
         assertEquals(3, youtubeCount);
         assertEquals(3, facebookCount);
         assertEquals(28, calls.get());
+        assertTrue(MAPPER.readTree(Files.readString(directory.resolve("private/feed-cache.json")))
+            .path("translations").has("youtube:video000002:en:perexLong"));
         facebook.set(bytes("{\"data\":[]}"));
         generator.generate();
         assertEquals(4, output("sk").path("news").size());
@@ -547,7 +877,18 @@ class SocialMediaFeedGeneratorTest {
             .put("permalink_url", "https://www.facebook.com/" + PAGE + "/posts/" + id);
     }
 
+    private static byte[] facebookRecords(ObjectNode... posts) throws IOException {
+        ObjectNode feed = MAPPER.createObjectNode();
+        ArrayNode data = feed.putArray("data");
+        for (ObjectNode post : posts) data.add(post);
+        return MAPPER.writeValueAsBytes(feed);
+    }
+
     private static byte[] bytes(String value) {
         return value.getBytes(StandardCharsets.UTF_8);
+    }
+
+    private static String sourceHash(String value) throws Exception {
+        return java.util.HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes(value)));
     }
 }

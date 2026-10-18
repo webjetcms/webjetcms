@@ -7,6 +7,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -71,6 +72,8 @@ public final class SocialMediaFeedGenerator {
     private static final int MAX_PUBLIC_FEED_BYTES = 256 * 1024;
     private static final int MAX_IMAGE_BYTES = 3 * 1024 * 1024;
     private static final int MAX_PEREX_LENGTH = 180;
+    private static final int MAX_LONG_PEREX_LENGTH = 1000;
+    private static final int MAX_DESCRIPTION_CAPTURE_LENGTH = 4000;
     private static final int MAX_FACEBOOK_TITLE_LENGTH = 120;
     private static final AtomicBoolean RUNNING = new AtomicBoolean();
     private final Settings settings;
@@ -155,7 +158,7 @@ public final class SocialMediaFeedGenerator {
     private static Map<String, Translation> retainTranslations(Map<String, List<Post>> sources, Map<String, Translation> previous) {
         Map<String, Translation> retained = new LinkedHashMap<>();
         for (Post post : sources.values().stream().flatMap(List::stream).toList()) {
-            for (String suffix : List.of(":cs:title", ":cs:perex", ":en:title", ":en:perex")) {
+            for (String suffix : List.of(":cs:title", ":cs:perexLong", ":en:title", ":en:perexLong")) {
                 String key = post.id() + suffix;
                 Translation translation = previous.get(key);
                 if (translation != null) retained.put(key, translation);
@@ -179,9 +182,18 @@ public final class SocialMediaFeedGenerator {
                     || post.title() == null || post.perex() == null || !isPostLink(post.link(), source)
                     || parseDate(post.publishedAt()) == null) throw new IOException("Invalid cached post");
             }
-            sources.put(source, posts.stream().map(post -> withImage(post, ownImage(post.image()))).toList());
+            sources.put(source, posts.stream()
+                .filter(post -> !"facebook".equals(source) || !isVideoLink(post.link()))
+                .map(post -> withImage(post, ownImage(post.image()))).toList());
         }
-        return new FeedCache(sources, cache.translations());
+        Map<String, Translation> translations = new LinkedHashMap<>(cache.translations());
+        for (Map.Entry<String, Translation> entry : cache.translations().entrySet()) {
+            if (entry.getKey().endsWith(":perex")) {
+                translations.putIfAbsent(entry.getKey() + "Long", entry.getValue());
+                translations.remove(entry.getKey());
+            }
+        }
+        return new FeedCache(sources, translations);
     }
 
     private List<Post> fetchYoutube() throws Exception {
@@ -191,7 +203,8 @@ public final class SocialMediaFeedGenerator {
 
     private List<Post> fetchFacebook() throws IOException {
         if (settings.facebookToken().isBlank()) throw new SocialMediaFeedException(SocialMediaFeedException.Reason.MISSING_FACEBOOK_TOKEN);
-        String fields = URLEncoder.encode("id,message,created_time,permalink_url,full_picture,attachments{title,description}", StandardCharsets.UTF_8);
+        String fields = URLEncoder.encode("id,message,created_time,permalink_url,full_picture,"
+            + "attachments{title,description,media_type,type,url,unshimmed_url,subattachments{media_type,type,url,unshimmed_url}}", StandardCharsets.UTF_8);
         URI uri = URI.create("https://graph.facebook.com/" + settings.facebookApiVersion() + "/"
             + settings.facebookPageId() + "/published_posts?fields=" + fields + "&limit=12");
         return parseFacebook(downloader.download(uri, settings.facebookToken(), MAX_FEED_BYTES), settings.facebookPageId());
@@ -234,34 +247,92 @@ public final class SocialMediaFeedGenerator {
             NodeList thumbnails = entry.getElementsByTagNameNS(MEDIA, "thumbnail");
             String image = thumbnails.getLength() == 0 ? "" : ((Element) thumbnails.item(0)).getAttribute("url");
             posts.add(new Post("youtube:" + id, "youtube", title,
-                cleanText(xmlText(entry, MEDIA, "description"), 600), "https://www.youtube.com/watch?v=" + id, published, image, null));
+                cleanText(xmlText(entry, MEDIA, "description"), MAX_DESCRIPTION_CAPTURE_LENGTH), "https://www.youtube.com/watch?v=" + id, published, image, null));
         }
         if (entries.getLength() > 0 && posts.isEmpty()) throw new IOException("Atom feed contains no valid entries");
         return latest(posts, YOUTUBE_FALLBACK_ITEMS);
     }
 
-    /** Parses published Page-authored posts and rejects invalid IDs, links and dates. */
+    /** Parses valid Page-authored posts, excluding videos before selecting the latest announcements. */
     static List<Post> parseFacebook(byte[] bytes, String pageId) throws IOException {
         if (bytes.length > MAX_FEED_BYTES) throw new IOException("Feed exceeds size limit");
         JsonNode root = MAPPER.readTree(bytes);
         if (root == null || root.has("error") || !root.path("data").isArray()) throw new IOException("Invalid Facebook feed");
         List<Post> posts = new ArrayList<>();
+        int validEntries = 0;
         for (JsonNode entry : root.get("data")) {
             String id = entry.path("id").asText("");
             String link = entry.path("permalink_url").asText("");
             String published = parseDate(entry.path("created_time").asText(""));
             if (!id.matches(java.util.regex.Pattern.quote(pageId) + "_[0-9]+") || !isPostLink(link, "facebook") || published == null) continue;
+            validEntries++;
+            if (isVideoLink(link) || hasVideoAttachment(entry.path("attachments"))) continue;
             JsonNode attachment = entry.path("attachments").path("data").path(0);
-            String message = cleanText(entry.path("message").asText(""), 600);
+            String message = cleanText(entry.path("message").asText(""), MAX_DESCRIPTION_CAPTURE_LENGTH);
             String title = message.isBlank() ? cleanText(attachment.path("title").asText(""), 180)
                 : cleanText(message.split("\\R", 2)[0], MAX_FACEBOOK_TITLE_LENGTH);
             if (title.isBlank()) title = "Nový príspevok na Facebooku";
-            if (message.isBlank()) message = cleanText(attachment.path("description").asText(""), 600);
+            if (message.isBlank()) message = cleanText(attachment.path("description").asText(""), MAX_DESCRIPTION_CAPTURE_LENGTH);
             posts.add(new Post("facebook:" + id, "facebook", title, message, link, published,
                 entry.path("full_picture").asText(""), null));
         }
-        if (!root.get("data").isEmpty() && posts.isEmpty()) throw new IOException("Facebook feed contains no valid entries");
+        if (!root.get("data").isEmpty() && validEntries == 0) throw new IOException("Facebook feed contains no valid entries");
         return latest(posts, ITEMS_PER_SOURCE);
+    }
+
+    /** Uses Graph attachment metadata, including mixed albums, without guessing from titles or thumbnails. */
+    private static boolean hasVideoAttachment(JsonNode attachments) {
+        for (JsonNode attachment : attachments.path("data")) {
+            String type = attachment.path("type").asText("").toLowerCase(Locale.ROOT);
+            if ("video".equalsIgnoreCase(attachment.path("media_type").asText(""))
+                || "video".equals(type) || type.startsWith("video_")
+                || "reel".equals(type) || "reels".equals(type) || type.startsWith("reel_")
+                || isVideoLink(attachment.path("url").asText(""))
+                || isVideoLink(attachment.path("unshimmed_url").asText(""))
+                || hasVideoAttachment(attachment.path("subattachments"))) return true;
+        }
+        return false;
+    }
+
+    /** Recognizes known video destinations; URLs are inspected only and never followed. */
+    private static boolean isVideoLink(String value) {
+        if (value == null || value.isBlank()) return false;
+        try {
+            URI uri = URI.create(value);
+            if (uri.getHost() == null || uri.getUserInfo() != null
+                || !("https".equalsIgnoreCase(uri.getScheme()) || "http".equalsIgnoreCase(uri.getScheme()))) return false;
+            if (Set.of("l.facebook.com", "lm.facebook.com", "www.facebook.com", "facebook.com").contains(uri.getHost().toLowerCase(Locale.ROOT))
+                && "/l.php".equals(uri.getPath())) {
+                uri = URI.create(queryParameter(uri, "u"));
+            }
+            if (uri.getHost() == null || uri.getUserInfo() != null
+                || !("https".equalsIgnoreCase(uri.getScheme()) || "http".equalsIgnoreCase(uri.getScheme()))) return false;
+            String host = uri.getHost().toLowerCase(Locale.ROOT);
+            String path = uri.getPath();
+            if ("youtu.be".equals(host)) return path.matches("/[A-Za-z0-9_-]{11}/?");
+            if (Set.of("youtube.com", "www.youtube.com", "m.youtube.com").contains(host)) {
+                return ("/watch".equals(path) && queryParameter(uri, "v").matches("[A-Za-z0-9_-]{11}"))
+                    || path.matches("/(?:shorts|embed|live)/[A-Za-z0-9_-]{11}/?");
+            }
+            if ("fb.watch".equals(host)) return path.length() > 1;
+            if (!Set.of("facebook.com", "www.facebook.com", "m.facebook.com", "web.facebook.com").contains(host)) return false;
+            return path.matches("/(?:[^/]+/)?videos/.+") || path.matches("/(?:reel|reels)/[^/]+/?")
+                || (("/watch".equals(path) || "/watch/".equals(path) || "/watch/live/".equals(path) || "/video.php".equals(path))
+                    && !queryParameter(uri, "v").isBlank());
+        } catch (IllegalArgumentException exception) {
+            return false;
+        }
+    }
+
+    private static String queryParameter(URI uri, String name) {
+        if (uri.getRawQuery() == null) return "";
+        for (String parameter : uri.getRawQuery().split("&")) {
+            int separator = parameter.indexOf('=');
+            if (separator > 0 && name.equals(parameter.substring(0, separator))) {
+                return URLDecoder.decode(parameter.substring(separator + 1), StandardCharsets.UTF_8);
+            }
+        }
+        return "";
     }
 
     private static List<Post> latest(List<Post> posts, int limit) {
@@ -351,9 +422,11 @@ public final class SocialMediaFeedGenerator {
     private ObjectNode toNews(Post post, String language, Map<String, Translation> previous, Map<String, Translation> current) {
         ObjectNode news = MAPPER.createObjectNode();
         String title = translate(post, "title", post.title(), language, previous, current);
-        String perex = summarize(post.perex(), post.title());
+        String source = longSummary(post.perex(), post.title());
+        String perexLong = longSummary(translate(post, "perexLong", source, language, previous, current), title);
         news.put("title", title);
-        news.put("perex", escapePerex(summarize(translate(post, "perex", perex, language, previous, current), title)));
+        news.put("perex", escapePerex(summarize(perexLong, "")));
+        if (!perexLong.isEmpty()) news.put("perexLong", escapePerex(perexLong));
         news.put("link", post.link());
         news.put("id", post.id());
         news.put("source", post.source());
@@ -376,7 +449,7 @@ public final class SocialMediaFeedGenerator {
             return old.text();
         }
         try {
-            String translated = cleanText(translator.translate(text, language), "title".equals(field) ? 180 : 600);
+            String translated = cleanText(translator.translate(text, language), "title".equals(field) ? 180 : MAX_DESCRIPTION_CAPTURE_LENGTH);
             if (!translated.isBlank() && !translated.equals(text)) {
                 current.put(key, new Translation(sourceHash, translated));
                 return translated;
@@ -399,6 +472,20 @@ public final class SocialMediaFeedGenerator {
 
     /** Produces a short plain-text excerpt without repeating the title or exposing long social links. */
     static String summarize(String text, String title) {
+        String summary = summaryBody(text, title);
+        if (summary.isEmpty()) return "";
+        BreakIterator sentences = BreakIterator.getSentenceInstance(Locale.ROOT);
+        sentences.setText(summary);
+        return boundWords(summary.substring(0, sentences.next()).stripTrailing(), MAX_PEREX_LENGTH);
+    }
+
+    /** Preserves multiple sentences for expanded cards while keeping the cleaned description within 1000 code points. */
+    static String longSummary(String text, String title) {
+        return boundWords(summaryBody(text, title), MAX_LONG_PEREX_LENGTH);
+    }
+
+    /** Removes the repeated source heading before applying the shared social-text cleanup. */
+    private static String summaryBody(String text, String title) {
         if (text != null && title != null && title.endsWith("…")) {
             String body = text.stripLeading();
             String firstLine = body.split("\\R", 2)[0];
@@ -410,13 +497,13 @@ public final class SocialMediaFeedGenerator {
             && (summary.length() == heading.length() || !Character.isLetterOrDigit(summary.codePointAt(heading.length())))) {
             summary = summary.substring(heading.length()).stripLeading();
         }
-        if (summary.isEmpty()) return "";
-        BreakIterator sentences = BreakIterator.getSentenceInstance(Locale.ROOT);
-        sentences.setText(summary);
-        int boundary = sentences.next();
-        String firstSentence = summary.substring(0, boundary).stripTrailing();
-        if (firstSentence.codePointCount(0, firstSentence.length()) <= MAX_PEREX_LENGTH) return firstSentence;
-        int end = summary.offsetByCodePoints(0, MAX_PEREX_LENGTH - 1);
+        return summary;
+    }
+
+    /** Truncates at a complete word where possible, preserving supplementary Unicode characters. */
+    private static String boundWords(String summary, int limit) {
+        if (summary.codePointCount(0, summary.length()) <= limit) return summary;
+        int end = summary.offsetByCodePoints(0, limit - 1);
         if (!Character.isWhitespace(summary.codePointAt(end))) {
             int lastSpace = summary.lastIndexOf(' ', end - 1);
             if (lastSpace > 0) end = lastSpace;

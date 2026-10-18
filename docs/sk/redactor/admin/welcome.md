@@ -125,7 +125,9 @@ Vpravo v modrom uvítacom paneli nájdete novinky nainštalovanej verzie WebJET 
 
 Kliknutie na nadpis alebo text novinky aj tlačidlo **Čo je nové** rozbalí zoznam cez celú šírku modrého panela. Najprv sa zobrazia všetky novinky nainštalovanej verzie, pod nimi najviac šesť ďalších položiek. Karty obsahujú názov, krátky text, odkaz a podľa dostupnosti obrázok, zdroj a dátum. Kliknutím na odkaz otvoríte video, príspevok alebo článok. Na mobile sa karty zobrazia pod sebou. Dole nájdete aj priame odkazy na YouTube kanál a Facebook stránku WebJET CMS.
 
-Text sociálneho príspevku je skrátený na najviac 180 znakov bez vložených URL, hashtagov a zalomení riadkov. Zopakovaný názov sa zo začiatku textu odstráni; ak príspevok obsahuje iba názov, karta nezobrazuje ďalší text. Celý obsah si prečítate po otvorení príspevku.
+Centrálny zoznam preberá videá z YouTube a textové či fotografické príspevky z Facebooku. Facebook videá, Reels a zdieľané odkazy na YouTube videá vynecháva, aby sa videá v prehľade neopakovali.
+
+Text príspevku využije dostupné miesto v karte. Pri kratšom názve, chýbajúcom obrázku alebo chybe jeho načítania sa zobrazí viac textu; odkaz zostane dole. Dlhší text sa ukončí výpustkou. Výňatok neobsahuje vložené URL, hashtagy ani zopakovaný názov na začiatku; ak príspevok obsahuje iba názov, karta nezobrazuje ďalší text. Celý obsah si prečítate po otvorení príspevku.
 
 Privítanie a skratky sa počas rozbalenia skryjú; tlačidlo **Zbaliť novinky**, ikona vpravo hore alebo kláves **Esc** ich znova zobrazia. Odkaz **Zoznam zmien** aj číslo verzie pri štítku **Nové** otvoria úplnú históriu vydaní v dokumentácii.
 

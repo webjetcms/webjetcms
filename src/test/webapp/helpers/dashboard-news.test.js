@@ -302,6 +302,34 @@ test('Social cards supplement local release HTML, rotate without images, and ack
     assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-card').length, 2, 'Image failure keeps the text card.');
 });
 
+test('Expanded cards prefer extended text while the carousel stays short and missing images use the text-only layout', async t => {
+    const feed = { news: [
+        { ...socialFeed.news[0], perex: 'Short video summary', perexLong: '**Long video text** &lt;img src=x&gt;' },
+        { ...socialFeed.news[1], image: null, perexLong: 'Long Facebook text' },
+        { ...socialFeed.news[0], id: 'youtube:old', perex: 'Old format text', perexLong: undefined },
+        { ...socialFeed.news[1], id: 'facebook:malformed', perex: 'Fallback text', perexLong: { text: 'Must not render' } }
+    ] };
+    const f = fixture(t, { config: socialConfig, fetchResponse: async (url, options) => ({ ok: true, json: async () => options?.method === 'POST' ? true : feed }) });
+    expireRelease(f);
+    f.render(); await tick();
+    f.container.querySelectorAll('.md-dashboard-widget__news-dot')[2].click();
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-description').textContent, 'Short video summary');
+    f.container.querySelector('.md-dashboard-widget__news-toggle').click(); await tick();
+    const cards = [...f.container.querySelectorAll('.md-dashboard-widget__news-card')];
+    assert.equal(cards[0].querySelector('p').textContent, 'Long video text <img src=x>');
+    assert.equal(cards[0].querySelector('p img'), null);
+    assert.equal(cards[0].classList.contains('is-text-only'), false);
+    assert.equal(cards[1].querySelector('p').textContent, 'Long Facebook text');
+    assert.equal(cards[1].classList.contains('is-text-only'), true);
+    assert.equal(cards[2].querySelector('p').textContent, 'Old format text');
+    assert.equal(cards[3].querySelector('p').textContent, 'Fallback text');
+    cards[0].querySelector('img').dispatchEvent(new f.window.Event('error'));
+    assert.equal(cards[0].classList.contains('is-text-only'), true);
+    assert.equal(cards[0].querySelector('img'), null);
+    assert.equal(cards[0].querySelector('p').textContent, 'Long video text <img src=x>');
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-badge').hidden, true);
+});
+
 test('A response arriving after collapse remains unread and never creates hidden image requests', async t => {
     let finish;
     const f = fixture(t, { config: socialConfig, fetchResponse: () => new Promise(resolve => { finish = resolve; }) });

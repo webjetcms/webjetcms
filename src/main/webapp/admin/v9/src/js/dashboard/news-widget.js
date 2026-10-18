@@ -31,6 +31,17 @@ export function registerNewsWidget() {
             let hovering = false;
             let timer;
             let disposed = false;
+            // Size containment keeps the CSS-clamped text from changing the measured card height.
+            const summaryObserver = window.ResizeObserver ? new window.ResizeObserver(entries => {
+                if (disposed || signal.aborted || !expanded) return;
+                for (const { target, contentRect } of entries) {
+                    const lineHeight = parseFloat(window.getComputedStyle(target).lineHeight);
+                    if (contentRect.height > 0 && lineHeight > 0) {
+                        const lines = Math.max(1, Math.floor((contentRect.height + 0.1) / lineHeight));
+                        target.style.setProperty('--news-summary-lines', String(lines));
+                    }
+                }
+            }) : null;
 
             const externalLink = (label, href, className) => {
                 const link = node('a', className, label);
@@ -171,12 +182,14 @@ export function registerNewsWidget() {
             function renderCards() {
                 const focusedCard = cards.contains(document.activeElement) ? document.activeElement.closest('.md-dashboard-widget__news-card') : null;
                 const focusedId = focusedCard?.dataset.newsId;
+                summaryObserver?.disconnect();
                 cards.replaceChildren();
                 external.hidden = !client || !externalItems.length;
                 if (!expanded || !client) return;
                 for (const item of externalItems) {
                     const card = externalLink('', item.link, 'md-dashboard-widget__news-card');
                     card.dataset.newsId = item.id;
+                    card.classList.toggle('is-text-only', !item.image);
                     if (item.image) {
                         const image = node('img', 'md-dashboard-widget__news-image');
                         image.alt = '';
@@ -185,7 +198,7 @@ export function registerNewsWidget() {
                         image.referrerPolicy = 'no-referrer';
                         image.width = 480;
                         image.height = 270;
-                        image.addEventListener('error', () => image.remove(), { once: true });
+                        image.addEventListener('error', () => { image.remove(); card.classList.add('is-text-only'); }, { once: true });
                         image.src = item.image;
                         card.append(image);
                     }
@@ -199,7 +212,13 @@ export function registerNewsWidget() {
                         meta.append(date);
                     }
                     content.append(meta, node('h4', '', item.title));
-                    if (item.description) content.append(node('p', '', item.description));
+                    const summary = item.descriptionLong || item.description;
+                    if (summary) {
+                        const summaryBox = node('div', 'md-dashboard-widget__news-card-summary');
+                        summaryBox.append(node('p', '', summary));
+                        content.append(summaryBox);
+                        summaryObserver?.observe(summaryBox);
+                    }
                     const action = node('span', 'md-dashboard-widget__news-card-action', text(context, item.source === 'youtube' ? 'newsWatchVideo' : 'newsOpenPost'));
                     action.append(icon('ti-external-link'));
                     content.append(action);
@@ -265,7 +284,7 @@ export function registerNewsWidget() {
                     renderCards();
                     markRead();
                     refreshFeed(true);
-                }
+                } else summaryObserver?.disconnect();
                 (value ? close : expandTrigger || details).focus({ preventScroll: true });
                 schedule();
             }
@@ -292,6 +311,7 @@ export function registerNewsWidget() {
             }
             return () => {
                 disposed = true;
+                summaryObserver?.disconnect();
                 window.clearTimeout(timer);
                 container.removeEventListener('mouseenter', pointerEnter);
                 container.removeEventListener('mouseleave', pointerLeave);

@@ -180,6 +180,87 @@ Scenario('Relative thumbnails follow nested configured feed directories and keep
     await I.wjSetDefaultWindowSize();
 });
 
+Scenario('Extended summaries fill available card height while the carousel stays short', async ({ I }) => {
+    const longText = 'WebJET CMS prináša novinky pre redaktorov aj správcov. Podrobný popis vysvetľuje možnosti úpravy stránok, správu obsahu a nastavenie aplikácií. '.repeat(6).trim();
+    await I.resizeWindow(1440, 1600);
+    await openFixture(I, [
+        socialItem('youtube', 1, { perex: 'autotest short preview', perexLong: longText }),
+        socialItem('facebook', 1, { title: 'autotest Dlhší názov novinky opisuje nové možnosti správy obsahu, úpravy stránok a nastavenia aplikácií vo WebJET CMS.', perexLong: longText }),
+        socialItem('youtube', 2, { perexLong: longText }),
+        socialItem('facebook', 2, { image: null, perexLong: longText }),
+        socialItem('youtube', 3, { image: 'https://news.example/images/missing.png', perexLong: longText }),
+        socialItem('facebook', 3, { perexLong: longText })
+    ]);
+    await I.clickCss('.md-dashboard-widget__news-dot:nth-child(6)');
+    await I.see('autotest short preview', '.md-dashboard-widget__news-description');
+    await I.dontSee(longText, '.md-dashboard-widget__news-description');
+    await I.clickCss(toggle);
+    await I.waitForElement(`${external}[aria-busy="false"]`, 10);
+    await I.seeNumberOfVisibleElements(cards, 6);
+    await I.waitForFunction(() => {
+        const cards = document.querySelectorAll('.md-dashboard-widget__news-card');
+        const firstImage = cards[0]?.querySelector('img');
+        return firstImage?.complete && firstImage.naturalWidth > 0 && cards[4]?.classList.contains('is-text-only');
+    }, 10);
+
+    for (const width of [1440, 1202, 1024, 390, 1440]) {
+        await I.resizeWindow(width, 1600);
+        if (width < 768) {
+            if (await I.executeScript(() => document.querySelector('.ly-sidebar')?.classList.contains('active'))) await I.clickCss('.js-sidebar-toggler');
+            await I.waitForFunction(() => document.querySelector('.ly-sidebar').getBoundingClientRect().right <= 1, 10);
+        }
+        await I.waitForFunction(() => [...document.querySelectorAll('.md-dashboard-widget__news-card p')].every(paragraph => {
+            const style = getComputedStyle(paragraph);
+            return Number(style.webkitLineClamp) === Math.floor((paragraph.parentElement.getBoundingClientRect().height + 0.1) / parseFloat(style.lineHeight));
+        }), 10);
+        const layout = await I.executeScript(() => {
+            const hero = document.querySelector('.md-dashboard__hero').getBoundingClientRect();
+            const cards = [...document.querySelectorAll('.md-dashboard-widget__news-card')];
+            const paragraphs = cards.map(card => card.querySelector('p'));
+            return {
+                text: paragraphs.map(paragraph => paragraph.textContent),
+                clamps: paragraphs.map(paragraph => Number(getComputedStyle(paragraph).webkitLineClamp)),
+                spareLines: paragraphs.map(paragraph => {
+                    const style = getComputedStyle(paragraph);
+                    return paragraph.parentElement.getBoundingClientRect().height / parseFloat(style.lineHeight) - Number(style.webkitLineClamp);
+                }),
+                actionGaps: cards.filter(card => card.querySelector('p').scrollHeight > card.querySelector('p').clientHeight + 1)
+                    .map(card => card.querySelector('.md-dashboard-widget__news-card-action').getBoundingClientRect().top - card.querySelector('p').getBoundingClientRect().bottom),
+                actions: cards.map(card => card.querySelector('.md-dashboard-widget__news-card-action').getBoundingClientRect().bottom),
+                wholeLines: paragraphs.every(paragraph => {
+                    const style = getComputedStyle(paragraph);
+                    const lines = paragraph.getBoundingClientRect().height / parseFloat(style.lineHeight);
+                    return Math.abs(lines - Math.round(lines)) < 0.01 && lines <= Number(style.webkitLineClamp);
+                }),
+                textOnly: cards.map(card => card.classList.contains('is-text-only')),
+                fits: document.documentElement.scrollWidth <= window.innerWidth && cards.every(card => {
+                    const bounds = card.getBoundingClientRect();
+                    return bounds.left >= hero.left && bounds.right <= hero.right;
+                })
+            };
+        });
+        await I.assertDeepEqual(layout.text, Array(6).fill(longText));
+        await I.assertDeepEqual(layout.textOnly, [false, false, false, true, true, false]);
+        await I.assertTrue(layout.spareLines.every(lines => lines >= -0.01 && lines < 1), 'Every card must use all available complete lines.');
+        await I.assertTrue(layout.wholeLines, 'The final line must not reveal clipped fragments of the following line.');
+        await I.assertTrue(layout.actionGaps.every(gap => gap >= 10 && gap < 36), 'Text must reach the action spacing without a large empty gap.');
+        if (width >= 1200) {
+            await I.assertTrue(layout.clamps[0] > layout.clamps[1] && layout.clamps[0] > 3, 'A shorter title must release more space for its description.');
+            await I.assertTrue(Math.abs(layout.actions[0] - layout.actions[1]) < 1, 'Actions must stay aligned in the same row.');
+        }
+        await I.assertTrue(layout.clamps[3] >= 8 && layout.clamps[4] >= 8, 'Missing or failed images must give more room to text.');
+        await I.assertTrue(layout.fits, `Extended summaries must fit at ${width}px.`);
+        await I.executeScript(() => {
+            const scrollbar = window.scrollbarMain;
+            scrollbar.setMomentum(0, 0);
+            scrollbar.update();
+            scrollbar.setPosition(0, scrollbar.offset.y + document.querySelector('.md-dashboard-widget__news-external').getBoundingClientRect().top - 80);
+        });
+        if (width === 390 || width === 1202) await I.saveScreenshot(`dashboard-social-news-adaptive-${width === 390 ? 'mobile' : 'desktop'}.png`, true);
+    }
+    await I.wjSetDefaultWindowSize();
+});
+
 Scenario('Fresh cache avoids background requests while expansion refreshes and records account reading', async ({ I }) => {
     await openFixture(I, [socialItem('youtube', 1), socialItem('facebook', 1)]);
     await I.seeElement(badge);

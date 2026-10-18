@@ -16,6 +16,7 @@ const pendingReadingWrites = new WeakMap();
  * @property {string} id - Stable identity shared across translations.
  * @property {string} title - Plain title.
  * @property {string} description - Plain summary.
+ * @property {string} descriptionLong - Optional longer plain summary for expanded cards, empty when unavailable.
  * @property {string} link - HTTP(S) destination.
  * @property {'webjet'|'youtube'|'facebook'} source - Origin of the announcement.
  * @property {string|null} publishedAt - ISO publication date when supplied.
@@ -120,7 +121,9 @@ function normalizeRecords(payload, url, summary) {
         if (identities.has(id)) continue;
         identities.add(id);
         const date = typeof record.publishedAt === 'string' ? Date.parse(record.publishedAt) : NaN;
-        items.push({ id, title, description: summary(record.perex).slice(0, 1200), link, source,
+        const descriptionLong = typeof record.perexLong === 'string' ? summary(record.perexLong).trim() : '';
+        items.push({ id, title, description: summary(record.perex).slice(0, 1200),
+            descriptionLong: Array.from(descriptionLong).slice(0, 1000).join(''), link, source,
             publishedAt: Number.isFinite(date) ? new Date(date).toISOString() : null,
             image: safeImageUrl(record.image, url) });
     }
@@ -151,7 +154,7 @@ function cachedFeed(url) {
     try {
         const cache = feedMemory.get(url) || JSON.parse(window.localStorage.getItem(key) || 'null');
         if (cache?.version !== CACHE_VERSION || !Number.isFinite(cache.fetchedAt) || cache.fetchedAt <= 0 || cache.fetchedAt > Date.now() + 60000 || !Array.isArray(cache.items)) return null;
-        const items = normalizeRecords({ news: cache.items.map(item => ({ ...item, perex: item.description })) }, url, value => value);
+        const items = normalizeRecords({ news: cache.items.map(item => ({ ...item, perex: item.description, perexLong: item.descriptionLong })) }, url, value => value);
         return { ...cache, items };
     } catch (error) { return null; }
 }
