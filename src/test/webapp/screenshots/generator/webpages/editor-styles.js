@@ -2,7 +2,7 @@ Feature('webpages.editor-styles');
 
 Before(({ login }) => login('admin'));
 
-Scenario('style picker and paragraph formats @current', async ({ I, Document }) => {
+Scenario('style picker and paragraph formats', async ({ I, Document }) => {
     if (!Document.isScreenshotsEnabled()) return;
 
     // Use a page whose template provides typography, spacing and alert metadata.

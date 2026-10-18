@@ -523,7 +523,7 @@ Page Builder and the **Styles** menu in both the classic and Page Builder editor
 
 The **Styles** menu in both modes reads selectors from these four variables only. The existing `pageBuilderGrid`, `pbCustomOptions`, and `pbCustomSettings` settings remain available for Page Builder editing, but the **Styles** menu does not automatically pick them up. If you change selectors with them, keep them consistent with the configuration variables listed.
 
-A custom column selector must also exclude the wrapper of its content (by default `.pb-column__content`); use the appropriate class for the custom prefix.
+The custom column selector must also exclude the wrapper of its content (by default `.pb-column__content`), use the appropriate class for the custom prefix.
 
 These four variables only change the recognition of elements. The classes added when inserting new blocks (`section_default_class`, `container_default_class`, `row_default_class`, `column_default_class`) and column width prefixes (`me.column.valid_prefixes`) continue to be set in `pbCustomSettings`, as in the following example.
 

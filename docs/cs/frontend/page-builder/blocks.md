@@ -523,7 +523,7 @@ Page Builder a nabídka **Styly** v klasickém i Page Builder editoru používaj
 
 Nabídka **Styly** v obou režimech čte selektory pouze z těchto čtyř proměnných. Stávající nastavení `pageBuilderGrid`, `pbCustomOptions` a `pbCustomSettings` zůstávají dostupná pro úpravu Page Buildera, ale nabídka **Styly** je automaticky nepřebírá. Pokud jimi měníte selektory, udržujte je shodné s uvedenými konfiguračními proměnnými.
 
-Vlastní selektor sloupce musí vyloučit i obal jeho obsahu (výchozí `.pb-column__content`); při vlastním prefixu použijte příslušnou třídu.
+Vlastní selektor sloupce musí vyloučit i obal jeho obsahu (výchozí `.pb-column__content`), při vlastním prefixu použijte příslušnou třídu.
 
 Tyto čtyři proměnné mění pouze rozpoznávání prvků. Třídy přidávané při vložení nových bloků (`section_default_class`, `container_default_class`, `row_default_class`, `column_default_class`) a prefixy šířek sloupců (`me.column.valid_prefixes`) nastavujte nadále v `pbCustomSettings`, jako v následujícím příkladu.
 
