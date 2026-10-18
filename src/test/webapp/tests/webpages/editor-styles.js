@@ -465,9 +465,19 @@ for (const mode of ['classic', 'inline']) {
         I.click('.wj-styles__toggle-all');
         I.dontSeeElement('.wj-styles__group-toggle[aria-expanded="false"]');
         I.assertEqual(await I.executeScript(() => autotestEditor.getData()), content, 'Accordion controls must not change editor content');
+        I.click(typography);
+        const beforeSearch = await I.executeScript(() => ({ html: autotestEditor.getData(), undo: autotestEditor.undoManager.index }));
         I.fillField('.wj-styles__search', 'autotest-no-matching-style');
         I.seeElement('.wj-styles__toggle-all:disabled');
-        I.fillField('.wj-styles__search', '');
+        I.see('No styles match your search.', '.wj-styles__no-results[role="status"]');
+        I.seeElement('.wj-styles__search-clear');
+        I.click('.wj-styles__search-clear');
+        I.seeInField('.wj-styles__search', '');
+        I.dontSeeElement('.wj-styles__search-clear');
+        I.dontSeeElement('.wj-styles__no-results');
+        I.assertTrue(await I.executeScript(() => document.activeElement.matches('.wj-styles__search')), 'Clearing search must return focus to the search input');
+        I.assertEqual(await I.grabAttributeFrom(typography, 'aria-expanded'), 'false', 'Clearing search with its button must restore collapsed categories');
+        I.assertDeepEqual(await I.executeScript(() => ({ html: autotestEditor.getData(), undo: autotestEditor.undoManager.index })), beforeSearch, 'Search recovery must preserve content and undo history');
         I.seeElement('.wj-styles__toggle-all:not(:disabled)');
         I.checkOption('.wj-styles__filters input');
         I.seeElement('.wj-styles__item[data-style-id="10"]:not(.wj-styles__item--exclusive)');
@@ -490,6 +500,7 @@ for (const mode of ['classic', 'inline']) {
         }), 'The list must be scrolled before testing reopening');
         const scroll = await I.executeScript(() => autotestEditor.wjstylescombo.list.scrollTop);
         I.executeScript(() => autotestApply('Gap small'));
+        I.see('Gap small: applied', '.wj-styles__status');
         I.assertEqual(await I.executeScript(() => autotestEditor.wjstylescombo.list.scrollTop), scroll, 'Applying a style must preserve scrolling during the current opening');
         I.click('.wj-styles__close');
         I.waitToHide('.wj-styles');
@@ -503,6 +514,8 @@ for (const mode of ['classic', 'inline']) {
         I.click('.cke_button__wjstyles');
         I.waitForVisible('.wj-styles', 5);
         I.assertEqual(await I.executeScript(() => autotestEditor.wjstylescombo.list.scrollTop), 0, 'Reopening must start at the top of the list');
+        I.see('Changes apply immediately.', '.wj-styles__status');
+        I.dontSee('Gap small: applied', '.wj-styles__status');
         I.seeElement('.wj-styles__formats .wj-styles__format[data-format="h2"]');
         I.pressKey('Escape');
         I.waitToHide('.wj-styles');
@@ -648,6 +661,7 @@ for (const mode of ['classic', 'inline']) {
         I.assertDeepEqual(await I.executeScript(() => ['one', 'colored'].map(id => autotestEditor.document.getById(id).getAttribute('class'))), ['custom small', 'blue'], 'A text style must change only the selected span');
         const spanStyled = await I.executeScript(() => autotestEditor.getData());
         I.click('Paragraph', '.wj-styles__target');
+        I.see('Changes apply immediately.', '.wj-styles__status');
         I.assertEqual(await I.grabTextFrom('.wj-styles__target-option[aria-pressed="true"]'), 'Paragraph');
         I.assertEqual(await I.grabTextFrom('.cke_button__wjstyles_label'), 'P + Small', 'Selecting a parent must update the summary to that target');
         I.see('Small', '.wj-styles__chips');
@@ -793,6 +807,35 @@ Scenario('mixed state, selected objects and read-only mode', async ({ I }) => {
     I.executeScript(() => { autotestSelect('one'); autotestEditor.setReadOnly(true); autotestApply('Large'); });
     I.assertEqual(await I.executeScript(() => autotestEditor.document.getById('one').getAttribute('class')), 'small');
     I.assertDeepEqual(await I.executeScript(() => autotestErrors), []);
+});
+
+Scenario('inline: picker fits a host viewport narrower than its iframe', async ({ I }) => {
+    await I.mockRoute('**/wjstyles-host-autotest.html', route => route.fulfill({
+        contentType: 'text/html',
+        body: '<!doctype html><html><head><style>body{margin:0}iframe{width:500px;height:600px;border:0;margin-left:-14px}</style></head><body><iframe title="Autotest editor" src="/wjstyles-autotest.html?mode=inline"></iframe></body></html>'
+    }));
+    I.resizeWindow(390, 700);
+    I.amOnPage('/wjstyles-host-autotest.html');
+    I.waitForFunction(() => document.querySelector('iframe')?.contentWindow.autotestEditor?.status === 'ready', [], 10);
+    I.switchTo('iframe');
+    I.executeScript(() => new Promise(resolve => autotestEditor.setData('<p id="one">Autotest narrow host</p>', resolve)));
+    I.executeScript(() => autotestSelect('one'));
+    I.click('.cke_button__wjstyles');
+    I.switchTo();
+    // CodeceptJS 3.6 cannot waitForFunction on its FrameLocator; observe the same-origin frame from the host.
+    const fitsHost = () => {
+        const frame = document.querySelector('iframe');
+        const panel = frame.contentDocument.querySelector('.wj-styles').getBoundingClientRect();
+        const frameLeft = frame.getBoundingClientRect().left;
+        return panel.left + frameLeft >= 8 && panel.right + frameLeft <= window.innerWidth - 8;
+    };
+    I.waitForFunction(fitsHost, [], 5);
+    I.assertEqual(await I.executeScript(() => document.querySelector('iframe').contentWindow.innerWidth), 500, 'The iframe must remain wider than its host');
+    I.resizeWindow(360, 700);
+    I.waitForFunction(fitsHost, [], 5);
+    I.assertEqual(await I.executeScript(() => document.querySelector('iframe').contentWindow.innerWidth), 500, 'Only the parent viewport must resize');
+    I.assertDeepEqual(await I.executeScript(() => document.querySelector('iframe').contentWindow.autotestErrors), [], 'Host resizing must not produce browser errors');
+    I.wjSetDefaultWindowSize();
 });
 
 Scenario('classic: host modal retains panel focus after opening and applying', async ({ I }) => {
