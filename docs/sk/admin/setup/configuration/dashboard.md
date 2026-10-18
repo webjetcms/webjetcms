@@ -36,7 +36,7 @@ JSON musí byť verejne dostupný bez prihlásenia, aj pri vlastnej lokálnej ce
 
 Relatívna cesta obrázka v poli `image` sa doplní podľa priečinka s JSON. Pri `overviewJsonUrl=https://docs.webjetcms.sk/json/new/` sa napríklad `social-media/images/obrazok.jpg` načíta z `https://docs.webjetcms.sk/json/new/social-media/images/obrazok.jpg`. Pri presune zoznamu preto preneste aj podpriečinok s obrázkami. Absolútne HTTPS adresy obrázkov zo starších zoznamov zostávajú podporované.
 
-Pri otvorení úvodnej obrazovky sa použije zoznam uložený v `localStorage`. Ak chýba alebo je starší ako `dashboardSocialRefreshDays`, obnoví sa na pozadí. Pri každom rozbalení sa zoznam overí aj pred uplynutím tejto lehoty. Cache je oddelená podľa URL a jazyka; česká administrácia používa súbor `wjnews.cs.json`. Obrázky sa začnú načítavať až po rozbalení panela.
+Pri otvorení úvodnej obrazovky sa použije zoznam uložený v `localStorage`. Ak chýba alebo je starší ako `dashboardSocialRefreshDays`, obnoví sa na pozadí. Pri každom rozbalení sa zoznam overí aj pred uplynutím tejto lehoty. Cache je oddelená podľa URL a jazyka; česká administrácia používa súbor `wjnews.cs.json`. V zbalenej rotácii sa načíta len náhľad práve zobrazenej novinky; ostatné obrázky sa vopred nenačítavajú. Obrázky kariet sa začnú načítavať po rozbalení panela. Náhľad v rotácii nemení stav prečítania.
 
 Pri chybe načítania sa externé karty, položky rotácie a ich upozornenie skryjú aj vtedy, keď prehliadač má uložené staršie údaje. Panel nezobrazuje hlásenie o načítavaní ani chybe; zostanú lokálne novinky verzie a odkazy na sociálne siete. Uložená cache sa chybou nevymaže.
 

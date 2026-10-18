@@ -31,6 +31,8 @@ export function registerNewsWidget() {
             let hovering = false;
             let timer;
             let disposed = false;
+            let previewImage;
+            const failedPreviewImages = new Set();
             // Size containment keeps the CSS-clamped text from changing the measured card height.
             const summaryObserver = window.ResizeObserver ? new window.ResizeObserver(entries => {
                 if (disposed || signal.aborted || !expanded) return;
@@ -63,9 +65,11 @@ export function registerNewsWidget() {
             const badge = node('span', 'md-dashboard-widget__news-badge', text(context, 'newsNew'));
             const versionLink = externalLink(release.version ? text(context, 'newsVersion', release.version) : text(context, 'news'),
                 window.WJ.getDocumentationUrl('/CHANGELOG'), 'md-dashboard-widget__news-version');
+            const sourceLabel = node('span', 'md-dashboard-widget__news-source');
+            sourceLabel.hidden = true;
             const close = control(text(context, 'newsCollapse'), 'ti-arrows-minimize', () => setExpanded(false), 'md-dashboard-widget__news-close');
             close.hidden = true;
-            header.append(badge, versionLink, close);
+            header.append(badge, versionLink, sourceLabel, close);
 
             const preview = node('button', 'md-dashboard-widget__news-preview');
             preview.type = 'button';
@@ -73,7 +77,9 @@ export function registerNewsWidget() {
             preview.addEventListener('click', () => setExpanded(true, preview));
             const title = node('span', 'md-dashboard-widget__news-title');
             const description = node('span', 'md-dashboard-widget__news-description');
-            preview.append(title, description);
+            const previewText = node('span', 'md-dashboard-widget__news-preview-text');
+            previewText.append(title, description);
+            preview.append(previewText);
             const full = node('div', 'md-dashboard-widget__news-detail');
             full.id = 'dashboard-news-detail';
             preview.setAttribute('aria-controls', full.id);
@@ -140,14 +146,44 @@ export function registerNewsWidget() {
                 const item = items[index];
                 const channel = SOCIAL_CHANNELS.find(entry => entry.source === item?.source);
                 const heading = channel ? `${channel.title}: ${item.title}` : item?.title || '';
-                title.textContent = heading || (item ? '' : text(context, 'newsFollow'));
+                title.textContent = item?.title || (item ? '' : text(context, 'newsFollow'));
                 title.title = title.textContent;
                 title.hidden = Boolean(item && !heading);
                 description.textContent = item?.description || '';
+                updatePreviewMedia();
                 if (!reducedMotion.matches) preview.animate?.([{ opacity: 0 }, { opacity: 1 }], { duration: 220 });
                 dotButtons.forEach((dot, position) => dot.setAttribute('aria-current', String(position === index)));
                 if (!automatic && item) status.textContent = `${text(context, 'newsItem', index + 1, items.length)}: ${heading} ${item.description}`;
                 schedule();
+            }
+
+            /** Loads only the selected collapsed thumbnail and restores release metadata in the expanded panel. */
+            function updatePreviewMedia() {
+                const item = items[index];
+                const channel = !expanded && SOCIAL_CHANNELS.find(entry => entry.source === item?.source);
+                versionLink.hidden = Boolean(channel);
+                sourceLabel.hidden = !channel;
+                sourceLabel.replaceChildren(...(channel ? [icon(channel.icon), node('span', '', channel.title)] : []));
+                const imageUrl = !expanded ? item?.image : null;
+                if (imageUrl && previewImage?.getAttribute('src') === imageUrl) return;
+                previewImage?.remove();
+                previewImage = null;
+                if (!imageUrl || failedPreviewImages.has(imageUrl)) return;
+                const image = node('img', 'md-dashboard-widget__news-preview-image');
+                image.alt = '';
+                image.crossOrigin = 'anonymous';
+                image.referrerPolicy = 'no-referrer';
+                image.decoding = 'async';
+                image.width = 160;
+                image.height = 90;
+                image.addEventListener('error', () => {
+                    failedPreviewImages.add(imageUrl);
+                    image.remove();
+                    if (previewImage === image) previewImage = null;
+                }, { once: true });
+                image.src = imageUrl;
+                previewImage = image;
+                preview.prepend(image);
             }
 
             /** Reconciles the carousel without resetting the selected local release item. */
@@ -155,11 +191,8 @@ export function registerNewsWidget() {
                 const selectedId = items[index]?.id;
                 const focusedPosition = dotButtons.indexOf(document.activeElement);
                 const focusedId = items[focusedPosition]?.id;
-                items = [...releaseItems];
-                for (const channel of SOCIAL_CHANNELS) {
-                    const latest = externalItems.find(item => item.source === channel.source);
-                    if (latest) items.push(latest);
-                }
+                const socialItems = externalItems.filter(item => SOCIAL_CHANNELS.some(channel => channel.source === item.source)).slice(0, 5);
+                items = [...releaseItems, ...socialItems];
                 dots.replaceChildren();
                 dotButtons = items.map((item, itemIndex) => {
                     const dot = node('button', 'md-dashboard-widget__news-dot');
@@ -280,6 +313,7 @@ export function registerNewsWidget() {
                 details.setAttribute('aria-expanded', String(value));
                 preview.setAttribute('aria-expanded', String(value));
                 updateControls();
+                updatePreviewMedia();
                 if (value) {
                     renderCards();
                     markRead();

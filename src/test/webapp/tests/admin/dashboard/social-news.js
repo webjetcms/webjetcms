@@ -97,17 +97,22 @@ Scenario('Local highlights and six safe social cards combine with lazy images an
         { title: 'autotest unsafe link', perex: 'Invalid link.', link: 'javascript:alert(1)' },
         { title: 'autotest seventh item', perex: 'Must not fit.', link: 'https://docs.webjetcms.sk/latest/sk/CHANGELOG-2025?id=_202518' }
     ]);
-    await I.seeNumberOfVisibleElements('.md-dashboard-widget__news-dot', 7);
+    await I.seeNumberOfVisibleElements('.md-dashboard-widget__news-dot', 10);
     await I.dontSeeElementInDOM(images);
     await I.assertEqual(fixture.requests.length, 1);
-    await I.assertEqual(fixture.imageRequests.length, 0, 'Collapsed news must not contact image servers.');
+    await I.assertEqual(fixture.imageRequests.length, 0, 'Local release slides must not preload social thumbnails.');
     await I.assertEqual(fixture.requests[0].headers.referer, undefined);
     await I.assertEqual(fixture.requests[0].headers.cookie, undefined);
     await I.seeElement(badge);
     await I.clickCss('.md-dashboard-widget__news-dot:nth-child(6)');
-    await I.see('YouTube: autotest youtube 1', '.md-dashboard-widget__news-title');
+    await I.see('autotest youtube 1', '.md-dashboard-widget__news-title');
+    await I.see('YouTube', '.md-dashboard-widget__news-source');
+    await I.waitForFunction(() => !document.querySelector('.md-dashboard-widget__news-preview-image'), 10);
     await I.clickCss('.md-dashboard-widget__news-dot:nth-child(7)');
-    await I.see('Facebook: autotest facebook 1', '.md-dashboard-widget__news-title');
+    await I.see('autotest facebook 1', '.md-dashboard-widget__news-title');
+    await I.see('Facebook', '.md-dashboard-widget__news-source');
+    await I.clickCss('.md-dashboard-widget__news-dot:nth-child(10)');
+    await I.see('autotest youtube 3', '.md-dashboard-widget__news-title');
     await I.clickCss(toggle);
     await I.waitForVisible('.md-dashboard__hero.is-news-expanded', 10);
     await I.seeNumberOfVisibleElements('.md-dashboard-widget__news-highlights li', 5);
@@ -158,6 +163,79 @@ Scenario('Local highlights and six safe social cards combine with lazy images an
             await I.saveScreenshot('dashboard-social-news-mobile-cards.png', true);
         }
     }
+    await I.wjSetDefaultWindowSize();
+});
+
+Scenario('Collapsed social previews keep the layout, load only the current image and distinguish the source', async ({ I, a11y }) => {
+    const preview = '.md-dashboard-widget__news-preview';
+    const thumbnail = '.md-dashboard-widget__news-preview-image';
+    const source = '.md-dashboard-widget__news-source';
+    const version = '.md-dashboard-widget__news-version';
+    await I.resizeWindow(1202, 900);
+    const videoTitle = 'autotest Ako nastaviť štýly textu a kontajnera | WebJET CMS';
+    await openFixture(I, [socialItem('youtube', 1, { image: 'social-media/images/video.png', title: videoTitle,
+        perex: 'Nastavte vzhľad textu a jednotlivých častí stránky pomocou ponuky Štýly v editore WebJET CMS.' }),
+        socialItem('facebook', 1), socialItem('youtube', 2), socialItem('facebook', 2), socialItem('youtube', 3), socialItem('facebook', 3)]);
+    await I.seeNumberOfVisibleElements('.md-dashboard-widget__news-dot', 10);
+    await I.clickCss('.md-dashboard-widget__news-dot:first-child');
+    await I.seeElement(version);
+    await I.dontSeeElement(source);
+    await I.dontSeeElementInDOM(thumbnail);
+    await I.assertEqual(fixture.imageRequests.length, 0);
+    const initialHeight = await I.executeScript(() => document.querySelector('.md-dashboard-widget__news-preview').getBoundingClientRect().height);
+    await I.clickCss('.md-dashboard-widget__news-dot:nth-child(6)');
+    await I.waitForFunction(() => {
+        const image = document.querySelector('.md-dashboard-widget__news-preview-image');
+        return image?.complete && image.naturalWidth > 0;
+    }, 10);
+    await I.see('YouTube', source);
+    await I.seeElement(`${source} .ti-brand-youtube`);
+    await I.dontSeeElement(version);
+    await I.assertEqual(await I.grabTextFrom('.md-dashboard-widget__news-title'), videoTitle);
+    await I.assertEqual(await I.grabAttributeFrom(thumbnail, 'src'), `${fixture.baseUrl}social-media/images/video.png`);
+    await I.assertTrue(fixture.imageRequests.every(request => request.url.endsWith('/social-media/images/video.png')));
+    await I.assertEqual(preferenceWrites.filter(write => write.label.startsWith('dashboard.externalNews.')).length, 0);
+    await I.seeElement(badge);
+    for (const width of [1202, 390]) {
+        await I.resizeWindow(width, 900);
+        if (width < 768) await I.waitForFunction(() => document.querySelector('.ly-sidebar').getBoundingClientRect().right <= 1, 10);
+        const layout = await I.executeScript(() => {
+            const preview = document.querySelector('.md-dashboard-widget__news-preview').getBoundingClientRect();
+            const image = document.querySelector('.md-dashboard-widget__news-preview-image').getBoundingClientRect();
+            const title = document.querySelector('.md-dashboard-widget__news-title').getBoundingClientRect();
+            const description = document.querySelector('.md-dashboard-widget__news-description').getBoundingClientRect();
+            const navigation = document.querySelector('.md-dashboard-widget__news-navigation').getBoundingClientRect();
+            const dots = [...document.querySelectorAll('.md-dashboard-widget__news-dot')].map(dot => dot.getBoundingClientRect());
+            return { height: preview.height, imageHeight: image.height,
+                navigationFits: navigation.height === 24 && dots.every(dot => dot.left >= preview.left && dot.right <= preview.right),
+                fits: image.left >= preview.left && image.right < title.left && title.right <= preview.right
+                && image.height <= preview.height && description.top >= title.bottom
+                && description.bottom <= preview.bottom && description.right <= preview.right && document.documentElement.scrollWidth <= window.innerWidth };
+        });
+        await I.assertEqual(layout.height, initialHeight, 'A thumbnail must not change the preview height.');
+        await I.assertEqual(layout.imageHeight, 64, 'The thumbnail must fill the height of three text lines.');
+        await I.assertTrue(layout.navigationFits, `Ten navigation dots must fit on one row at ${width}px.`);
+        await I.assertTrue(layout.fits, `The thumbnail must sit to the left of the title and description at ${width}px.`);
+        await a11y.check(news);
+        await I.saveScreenshot(`dashboard-social-preview-${width === 390 ? 'mobile' : 'desktop'}.png`, true);
+    }
+    await I.clickCss('.md-dashboard-widget__news-dot:nth-child(7)');
+    await I.see('Facebook', source);
+    await I.seeElement(`${source} .ti-brand-facebook`);
+    await I.assertEqual(await I.grabAttributeFrom(thumbnail, 'src'), 'https://news.example/images/facebook-1.png');
+    await I.assertTrue(fixture.imageRequests.every(request => !request.headers.referer && !request.headers.cookie));
+    await I.clickCss(preview);
+    await I.waitForVisible('.md-dashboard__hero.is-news-expanded', 10);
+    await I.seeElement(version);
+    await I.dontSeeElement(source);
+    await I.dontSeeElementInDOM(thumbnail);
+    await I.pressKey('Escape');
+    await I.see('Facebook', source);
+    await I.seeElement(thumbnail);
+    await I.clickCss('.md-dashboard-widget__news-dot:first-child');
+    await I.seeElement(version);
+    await I.dontSeeElement(source);
+    await I.dontSeeElementInDOM(thumbnail);
     await I.wjSetDefaultWindowSize();
 });
 

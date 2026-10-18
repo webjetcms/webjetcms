@@ -282,7 +282,7 @@ function expireRelease(f) {
     f.window.currentUser.adminSettings[state.key] = JSON.stringify({ ...JSON.parse(state.value), firstSeen: Date.now() - 31 * 86400000 });
 }
 
-test('Social cards supplement local release HTML, rotate without images, and acknowledge only expanded content', async t => {
+test('Social cards supplement local release HTML, defer unselected images, and acknowledge only expanded content', async t => {
     const f = fixture(t, { config: socialConfig, fetchResponse: async (url, options) => ({ ok: true, json: async () => options?.method === 'POST' ? true : socialFeed }) });
     expireRelease(f);
     f.render(); await tick();
@@ -300,6 +300,62 @@ test('Social cards supplement local release HTML, rotate without images, and ack
     image.dispatchEvent(new f.window.Event('error'));
     assert.equal(f.container.querySelectorAll('img').length, 1);
     assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-card').length, 2, 'Image failure keeps the text card.');
+});
+
+test('Collapsed social slides show their source and only their selected thumbnail without acknowledging the feed', async t => {
+    const f = fixture(t, { config: socialConfig, fetchResponse: async (url, options) => ({ ok: true, json: async () => options?.method === 'POST' ? true : socialFeed }) });
+    expireRelease(f);
+    f.render(); await tick();
+    const version = f.container.querySelector('.md-dashboard-widget__news-version');
+    const source = f.container.querySelector('.md-dashboard-widget__news-source');
+    const thumbnail = () => f.container.querySelector('.md-dashboard-widget__news-preview-image');
+    assert.equal(version.hidden, false);
+    assert.equal(source.hidden, true);
+    f.advance();
+    assert.equal(source.textContent, 'YouTube');
+    assert.ok(source.querySelector('.ti-brand-youtube'));
+    assert.equal(version.hidden, true);
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-title').textContent, 'New video');
+    assert.equal(thumbnail().src, socialFeed.news[0].image);
+    assert.equal(thumbnail().alt, '');
+    assert.equal(thumbnail().crossOrigin, 'anonymous');
+    assert.equal(thumbnail().referrerPolicy, 'no-referrer');
+    assert.equal(f.container.querySelectorAll('img').length, 1);
+    f.advance();
+    assert.equal(source.textContent, 'Facebook');
+    assert.ok(source.querySelector('.ti-brand-facebook'));
+    assert.equal(thumbnail().src, socialFeed.news[1].image);
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-badge').hidden, false);
+    assert.equal(f.requests.filter(request => request.options?.method === 'POST').length, 0);
+    f.container.querySelector('.md-dashboard-widget__news-toggle').click(); await tick();
+    assert.equal(source.hidden, true);
+    assert.equal(version.hidden, false);
+    assert.equal(thumbnail(), null);
+    f.container.querySelector('.md-dashboard-widget__news-close').click();
+    assert.equal(source.hidden, false);
+    assert.equal(version.hidden, true);
+    assert.equal(thumbnail().src, socialFeed.news[1].image);
+    f.container.querySelector('.md-dashboard-widget__news-dot').click();
+    assert.equal(source.hidden, true);
+    assert.equal(version.hidden, false);
+    assert.equal(thumbnail(), null);
+});
+
+test('Broken or absent preview images keep the text and a late image error cannot remove the next slide', async t => {
+    const feed = { news: [socialFeed.news[0], { ...socialFeed.news[1], image: null }] };
+    const f = fixture(t, { config: socialConfig, fetchResponse: async () => ({ ok: true, json: async () => feed }) });
+    f.render(); await tick();
+    const dots = f.container.querySelectorAll('.md-dashboard-widget__news-dot');
+    dots[2].click();
+    const failed = f.container.querySelector('.md-dashboard-widget__news-preview-image');
+    dots[3].click();
+    failed.dispatchEvent(new f.window.Event('error'));
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-title').textContent, 'New post');
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-source').textContent, 'Facebook');
+    assert.equal(f.container.querySelectorAll('img').length, 0);
+    dots[2].click();
+    assert.equal(f.container.querySelectorAll('img').length, 0, 'Failed previews must not be requested on every rotation.');
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-description').textContent, 'Video summary');
 });
 
 test('Expanded cards prefer extended text while the carousel stays short and missing images use the text-only layout', async t => {
