@@ -41,19 +41,55 @@ You can cut text by selecting the text and clicking the ![](cut.png ":no-zoom" )
 
 ## Working with styles and text formatting
 
-WebJET provides a number of predefined styles for headings and fonts that are used to style a page in an acceptable way. Correctly defining headings is also of great importance for search engine optimization (```SEO```) and the internal structure of the document.
+The **Styles** menu contains presets ready for your page design, such as text colors, padding, backgrounds, or borders. The available styles and their names depend on the template. The controls are the same in the Standard Editor and in the Page Builder.
 
-Predefined headings always apply to the entire paragraph. To create a heading, click in the desired paragraph that you want to make a heading from and select the desired heading level from the drop-down menu.
+A button in the toolbar displays the current element, such as **Paragraph** or **Heading 2**. If it has styles set, it lists the abbreviated HTML tag and their names, such as **H2 + Bottom padding xs**. A long list is clipped to the width of the button; hover over it to see the full text. **Selection** appears when multiple element types are selected.
 
-![](roller.png)
+Click in the text or select a section of it and open **Styles** in the toolbar. The selected style is applied immediately and the window remains open so you can set multiple properties in a row. The changes are not transferred to the web until you save the page.
 
-There should always be only one main Heading 1 on each web page, which should be the starting point of the text. Since this heading is automatically generated from the page title on the standard page (if the template defines it), it is not necessary to insert it into the body of the page. Sections within a page are separated by Heading 2, their sub-sections by Heading 3, etc.
+![Styles menu with element selection, active styles and previews](roller.png)
 
-There are also other predefined styles in this menu, but their use is based on their name, for example, styles containing the text "table" are used only for tables and the like. By clicking on any text on the page in the editor, the Style field will automatically set the style used at the given cursor position. The currently used style is highlighted by highlighting its name. Selecting an already set style again will remove this style. More information is available in the [Web Designer Manual](../../../frontend/examples/template-bare/README.md#zoznam-štýlov-pre-editor).
+For proper functionality, it is necessary to have correctly set [CSS selectors](../../../frontend/page-builder/blocks.md#structure-selectors) and created [additional comments](../../../frontend/examples/template-bare/README.md#searching-and-style-groups) in the website's CSS file.
 
-If you want to change the style of such text within a paragraph, you must not select the text. Simply click into the text on the page, the color style will automatically be preset in the **Style** drop-down menu, and you can then change it to a different style.
+### Selecting the part of the page to edit
 
-You can also highlight text on the page using predefined styles. The selection includes, for example, different types of headings, color highlighting. Using styles ensures a uniform appearance of the pages.
+At the top of the window is the path to the current element, for example **Section › Container › Column › Paragraph › Text**. The highlighted item determines what you are currently editing. By clicking on a different item, you can set, for example, the background of the entire section instead of the paragraph color. Colored squares indicate the same parts of the page as in Page Builder. Hover over an item to view details about the element.
+
+- **Entire paragraph:** place the cursor in it. Paragraph styles will be applied to the entire paragraph.
+- **Part of text:** First, select the words you want to edit. The menu will also make styles available for the selected text, such as its color.
+- **Already edited section of text:** click inside the section. If it is separately marked as **Text**, the menu edits this section. To set the entire paragraph, switch to **Paragraph** in the top path.
+
+### Search, preview, and combine styles
+
+The styles are divided into categories that you can expand or collapse individually. The **Expand All / Collapse All** link controls all displayed categories. The search field searches in names, CSS classes, categories, and groups without case or diacritics.
+
+On the right of each item, you can see a preview of its appearance: text color, background, frame, or font style. Large fonts will fit the preview area; the pixel value shows the actual size. When indenting, the preview shows the spacing and its value. You can always see the result directly in the page content.
+
+You can combine properties, such as text color with indentation. Options with a circle in the same group are replaced: selecting a different color removes the previous color from that group. Individual styles with a square box can be enabled independently. **Remove** on a group name deselects that group. Clicking the active style again will remove it; the **×** on its name at the top of the window also works.
+
+The menu displays the styles applicable to the current selection. When you turn on **All Styles**, you will also see the other items, but those that cannot be applied to the selected element will remain inactive.
+
+If the window overlaps the content you are editing, drag it by the dotted handle next to the **Styles** name. When closed and reopened, it returns to the toolbar button and the list moves to the beginning. You can close it with the cross, the **Escape** key, or by clicking outside the window. You can undo the style change with the **Undo** command.
+
+### Restoring the basic look
+
+The **Restore Basic Appearance** link removes all removable CSS classes known to the style menu from the currently selected element. It preserves its basic structural classes and other classes not known to the menu. It appears next to an element for which the template defines basic classes.
+
+If you have **Container** selected, it will reset the appearance of the container; it will not modify nested paragraphs or text sections. However, their appearance may be affected by, for example, the color inherited from the container. The content and type of the element will be preserved. The reset also includes styles hidden by search or a collapsed category and can be undone with a single **Undo** step.
+
+### Paragraph format and headings
+
+At the top of the menu is the **Paragraph Format** category with the options **Paragraph** and **Heading 1–6**. Click in the paragraph and select the desired heading level. This option changes the type of the entire paragraph and its meaning in the document structure. The CSS style alone, which makes the font larger, does not make the paragraph a heading.
+
+![Paragraph format with paragraph selection and heading levels](paragraph-format.png)
+
+Choose heading levels according to the structure of your content: main heading, section titles, then their subsections. If your template already displays the main heading from the page title, you don't need to add it again in the content. Selecting **Paragraph** will change the heading back to a regular paragraph; any separately set CSS styles will be preserved.
+
+When editing **Text** or the entire container, first select the relevant paragraph to change the format. In some Page Builder blocks, the template itself determines the element type; in such cases, changing the format is unavailable and the menu displays an explanation.
+
+Defining the available styles is described in the [web designer manual](../../../frontend/examples/template-bare/README.md#list-of-styles-for-editor).
+
+### Other formatting tools
 
 Another way to format text is by using the following standard tools (they are applied by selecting the text you want to edit):
 
@@ -68,7 +104,7 @@ We recommend not using text formatting using the text color change tool ![](bcg_
 
 ## Removing formatting
 
-To remove a heading style, click in the heading text and select the first item **Paragraph** from the drop-down menu. The heading style should then be removed from the text (applies to all styles from the drop-down menu).
+To change a heading to a regular paragraph, click inside it and select **Paragraph** from the **Styles → Paragraph Format** menu. Remove CSS styles individually by clicking on the active item or the **×** next to its name.
 
 If you want to remove common formatting from text, such as bold or italics, you can do this in two ways. Either select the text and click on the formatting tool again until the formatting is removed, or use the universal formatting removal tool ![](remove_format.png ":no-zoom")
 

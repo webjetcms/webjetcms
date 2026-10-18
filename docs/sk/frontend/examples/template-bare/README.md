@@ -263,6 +263,8 @@ Voliteľný komentár `editor category-icon:` nastaví ikonu celej kategórie. P
 
 Pre rovnakú kategóriu sa použije prvá explicitne uvedená ikona v poradí pravidiel v CSS. Ďalšie komentáre `editor category-icon:` v tejto kategórii sa ignorujú. Kategórie bez tohto komentára si ponechajú automaticky vybranú ikonu.
 
+Na vygenerovanie komentára `/* editor title: No border */` a ďalších metadát štýlov v súboroch `editor.scss` alebo `editor.css` môžete použiť skill `wj-stylescombo`. Pri generovaní vychádza z kompletných CSS/SCSS súborov šablóny. Tento aj ďalšie skills pre WebJET CMS si môžete nainštalovať z [repozitára webjetcms/skills](https://github.com/webjetcms/skills).
+
 #### Obnovenie základného vzhľadu
 
 Odkaz **Obnoviť základný vzhľad** sa zobrazí pri jednom vybranom elemente, pre ktorý existuje použiteľná definícia štýlu s neprázdnym `editor base`. Pracuje s elementom vybraným v ceste v hlavičke; pri výbere kontajnera upraví iba tento kontajner.

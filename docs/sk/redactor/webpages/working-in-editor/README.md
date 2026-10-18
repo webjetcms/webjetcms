@@ -49,6 +49,8 @@ Kliknite do textu alebo označte jeho časť a otvorte **Štýly** v paneli nás
 
 ![Ponuka Štýly s výberom elementu, aktívnymi štýlmi a náhľadmi](roletka.png)
 
+Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](../../../frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](../../../frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky.
+
 ### Výber upravovanej časti stránky
 
 V hornej časti okna je cesta k aktuálnemu elementu, napríklad **Sekcia › Kontajner › Stĺpec › Odsek › Text**. Zvýraznená položka určuje, čo práve upravujete. Kliknutím na inú položku môžete nastaviť napríklad pozadie celej sekcie namiesto farby odseku. Farebné štvorčeky označujú rovnaké časti stránky ako v Page Builderi. Podržaním kurzora nad položkou zobrazíte podrobnosti o elemente.

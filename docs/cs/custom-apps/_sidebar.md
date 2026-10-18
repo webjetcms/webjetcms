@@ -2,6 +2,8 @@
 
 - [:point_left: Zpět na Úvod](/?back)
 
+- [Skills pro AI agenty](/custom-apps/skills/README.md)
+
 - Spring
   - [Konfigurace Spring](/custom-apps/spring-config/)
   - [Autorizace tokenem](/custom-apps/spring/api-auth.md)

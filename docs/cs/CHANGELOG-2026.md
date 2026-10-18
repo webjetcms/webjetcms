@@ -44,6 +44,10 @@ Sledování zařízení lze vypnout nastavením konfigurační proměnné `admin
 
 ### Webové stránky
 
+- Editor stránek - nová nabídka [Styly](redactor/webpages/working-in-editor/README.md#práce-se-styly-a-formátování-textu). Zobrazuje aktivní styly s možností jejich odebrání a umožňuje vybrat upravovaný odstavec, sloupec či celou sekci. Pro správnou funkčnost je třeba mít správně nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-struktury) a vytvořené [doplňkové komentáře](frontend/examples/template-bare/README.md#vyhledávání-a-skupiny-stylů) v CSS soubor (#356).
+
+![Nová nabídka Styly s výběrem elementu, aktivními styly, vyhledáváním a náhledy](redactor/webpages/working-in-editor/roletka.png)
+
 - Koš webových stránek - přidáno [automatické mazání starých stránek a složek](redactor/apps/gdpr/data-deleting.md) z koše podle nastaveného retenčního období. Přidána možnost mazání stránek a složek v koši i v sekci [Mazání dat](sysadmin/data-deleting/README.md) podle zvoleného rozsahu dat. Sjednocená logika výpočtu počtu a mazání, opraveno trvalé odstranění složky koše a prázdných složek (#271).
 
 ![](sysadmin/data-deleting/database-delete.png)
@@ -295,8 +299,9 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Pro programátora
 
+- Editor stránek - [nastavení nabídky Styly](frontend/examples/template-bare/README.md#vyhledávání-a-skupiny-stylů) podporuje metadata v komentářích `editor.scss` / `editor.css` pro kategorie a jejich ikony, vzájemně se nahrazující skupiny, povolené elementy a základní třídy zachovány. Nová nabídka je ve výchozím nastavení zapnuta; nastavením `ckeditor_styleComboEnabled=false` se obnoví původní výběr stylů (#OSK764).
+- AI agenti - připravená distribuce WebJET CMS skills přes `npx skills`, včetně společných konvencí a nastavení projektových pokynů pro Codex, GitHub Copilot a Claude Code. [Návod](custom-apps/skills/README.md) popisuje instalaci, aktualizaci a použití ve starších klientských projektech. Pokyny v `AGENTS.md` a tematické reference v `.github/agents/` byly ověřeny podle aktuálního kódu; popisují používané frameworky, postupy vývoje a testování i rozdíly mezi jádrem CMS a klientskými projekty (#357).
 - Dashboard - přidán registr widgetů, responzivní grid a REST rozhraní pro transakční ukládání nastavení do `user_settings_admin`. Stávající tabulka MySQL/MariaDB se při aktualizaci konvertuje na InnoDB. Používání popisuje [dokumentace úvodní obrazovky](redactor/admin/welcome.md), pozadí a označení prostředí její [konfigurace](admin/setup/configuration/dashboard.md). Pravidla vývoje, kontrakt a důvody rozhodnutí udržuje projektový skill `wj-dashboard-widget` v `.agents/skills/wj-dashboard-widget/` (#58806).
-
 - Administrace - odstraněná závislost na [Vue.js](https://vuejs.org). Stromová pole, úvodní stránka, výběr oblasti obrázku a monitorování serveru používají nativní [web komponenty](developer/frameworks/web-components.md). Globální objekt `window.VueTools` ani balíky pro Vue již nejsou součástí administrace. Vlastní rozšíření je musí nahradit web komponenty nebo si Vue sestavit samostatně (#58722).
 - AI asistenti - klientská logika nezávislá na poskytovateli pro OpenAI, Gemini a OpenRouter, zpracování streamů, typy požadavků/odpovědí a ochrana promptů byly vyčleněny do samostatného artefaktu `com.webjetcms:webjet-ai` a externího [repozitáře webjet-ai](https://github.com/webjetcms/webjetcmi/webjetcmi). WebJET CMS předává konfiguraci přes typovaný adaptér a nadále zajišťuje auditování, perzistenci a integraci uživatelského rozhraní. Jedná se o nekompatibilní změnu: původní CMS SPI pro vlastní poskytovatele a jeho transportní a streamovací podpůrné třídy byly odstraněny. Vlastní poskytovatelé je nutné migrovat na rozhraní `AiProvider` knihovny a CMS adaptér `LibrarySupportLogic` (#58670).
 - AI poskytovatelé - vlastní implementaci lze [přidat do projektu](custom-apps/apps/ai/assistants/README.md) jako Spring bean `AiProvider` ; CMS ji automaticky spojí s vestavěnými poskytovateli. Konfigurace a pole editoru jsou soustředěny v jednom adaptéru `LibrarySupportLogic` /`AiAssitantsInterface`. Možnosti generování obrázků se načítají podle poskytovatele, modelu a operace z knihovny `webjet-ai`, takže se dynamicky zobrazí pouze podporovaný počet, rozměr, kvalita a poměr stran (#58694).

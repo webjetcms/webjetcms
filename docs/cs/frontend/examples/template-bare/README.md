@@ -209,7 +209,48 @@ Pokud se kurzor nachází v tabulce zobrazí se ve výběrovém poli Styl i mož
 
 Při použití více CSS stylů najednou (např. ```btn btn-primary```) se aplikují na aktuálně zvolený element všechny. Styly, které se aplikují pouze na element, se ve výběrovém poli nezobrazí, pokud není daný element označen, nebo se v něm nenachází kurzor.
 
-Volitelný komentář `editor category-icon:` nastaví ikonu celé kategorie v nabídce **Styly**. Použijte úplný název třídy Tabler Icons s prefixem `ti-`, například `ti-border-none`. Komentáře zapište do zdrojového `editor.scss`, ze kterého vzniká `editor.css`:
+#### Vyhledávání a skupiny stylů
+
+Roletka **Styly** zůstává po výběru otevřená. V hlavičce zobrazuje aktivní styly a umožňuje je odebrat. Vyhledává podle názvu, CSS třídy, kategorie i skupiny bez rozlišování diakritiky. HTML značku odstavce nebo nadpisu mění samostatná kategorie **Formát odstavce** na začátku roletky. Zobrazí se jen tehdy, když lze použít alespoň jednu z jejích voleb. Při výběru kontejneru nebo jiného prvku bez dostupných formátů zůstane skryta i po zapnutí **Všechny styly**.
+
+Tlačítko **Vymazat hledání** v poli vyhledávání zruší filtr a obnoví původní rozbalení kategorií. Vybraný prvek v cestě nad seznamem má šedé pozadí a tučné písmo stejně jako v liště Page Buildera. Volba **Odstranit** u skupiny odebere její styl; křížek při aktivním stylu odebere pouze daný styl.
+
+Chování položek nastavíte komentáři ve zdrojovém `editor.scss` (po sestavení v `editor.css`):
+
+```css
+div.alert.warning {
+    /* editor title: Warning */
+    /* editor category: Alerts */
+    /* editor group: Tone */
+    /* editor base: alert */
+    /* editor members: info success error */
+}
+.hero {
+    /* editor title: Hero heading */
+    /* editor category: Typography */
+    /* editor group: Heading size */
+    /* editor targets: h1 h2 h3 h4 h5 h6 */
+}
+```
+
+| Komentář | Význam |
+| --- | --- |
+| `editor title:` | Název položky. HTML se v ovladači změní na čistý text. |
+| `editor category:` | Kategorie pro uspořádání a vyhledávání. |
+| `editor category-icon:` | Volitelná ikona kategorie z Tabler Icons, například `ti-border-none`. |
+| `editor group:` | Volby téže vlastnosti se na stejném elementu nahrazují. Kategorie sama o sobě nic nevylučuje. |
+| `editor targets:` | Seznam povolených HTML značek; zužuje typ ze selektoru. U selektoru bez značky umožňuje jednu položku pro více typů. |
+| `editor base:` | Konstrukční třídy, které se při vypnutí a obnovení vzhledu neodeberou. Standardně musí být na cílovém elementu. |
+| `editor requires:` | Volitelný samostatný seznam vyžadovaných tříd, pokud se liší od `base`. |
+| `editor members:` | Další konkrétní třídy ze stejné skupiny, například varianta používaná pouze v HTML bloku. |
+
+Názvy skupin používejte jednoznačně pro danou vlastnost. Barva, velikost a odsazení patří do různých skupin. Složená předvolba, například Perex, může zůstat bez skupiny. Třídy, které nejsou ve volbách ani v `members`, roletka při výměně varianty zachová.
+
+Cesta elementů v hlavičce umožňuje vybrat nadřazený element, například sekci nebo tabulku. Aktivní styly a dostupné položky pak odpovídají tomuto prvku. Platí to ve Standardním editoru i v Page Builderu. Změna má jeden krok Zpět; běžný výběr CSS nemění HTML značku. Při označení části textu může vzniknout element `span`.
+
+Ovladač zajišťuje ve výchozím nastavení zapnutý plugin `wjstylescombo` (`ckeditor_styleComboEnabled=true`). Konfigurace v `config.jsp` nahrazuje položku nástrojové lišty `Styles` položkou `WJStyles`. Položky bez metadat zůstanou v kategorii Ostatní bez automatického vylučování tříd.
+
+Volitelný komentář `editor category-icon:` nastaví ikonu celé kategorie. Použijte úplný název třídy Tabler Icons s prefixem `ti-`, například `ti-border-none`:
 
 ```css
 .border-none {
@@ -220,7 +261,38 @@ Volitelný komentář `editor category-icon:` nastaví ikonu celé kategorie v n
 }
 ```
 
-Pro stejnou kategorii se použije první explicitně uvedená ikona v pořadí pravidel v CSS. Další komentáře `editor category-icon:` v této kategorii se ignorují. Kategorie bez tohoto komentáře si ponechají automaticky vybranou ikonu.
+Pro stejnou kategorii se použije první explicitně uvedená ikona v pořadí pravidel v CSS. Další komentáře `editor category-icon:` v této kategorii jsou ignorovány. Kategorie bez tohoto komentáře si ponechají automaticky vybranou ikonu.
+
+K vygenerování komentáře `/* editor title: No border */` a dalších metadat stylů v souborech `editor.scss` nebo `editor.css` můžete použít skill `wj-stylescombo`. Při generování vychází z kompletních CSS/SCSS souborů šablony. Tento i další skills pro WebJET CMS si můžete nainstalovat z [repozitáře webjetcms/skills](https://github.com/webjetcms/skills).
+
+#### Obnovení základního vzhledu
+
+Odkaz **Obnovit základní vzhled** se zobrazí u jednoho vybraného elementu, pro který existuje použitelná definice stylu s neprázdným `editor base`. Pracuje s elementem vybraným v cestě v hlavičce; při výběru kontejneru upraví pouze tento kontejner.
+
+Z celého katalogu se vyberou definice použitelné pro daný element podle značky, `targets` a požadovaných tříd (`requires`, případně `base`). Vyhledávání, sbalení kategorií ani zapnutí **Všechny styly** tento výběr neomezují. Reset poté:
+
+- odstraní třídy ze selektorů těchto definic a třídy uvedené v jejich `members`,
+- zachová všechny třídy uvedené v `base` použitelných definic, i kdyby se v jiné definici vyskytovaly mezi odstraňovanými třídami,
+- zachová ostatní třídy, které takto sestavený seznam nezná.
+
+Například při definicích:
+
+```css
+div.container.border-red {
+    /* editor title: Red border */
+    /* editor base: container */
+}
+div.container.bg-blue {
+    /* editor title: Blue background */
+    /* editor base: container */
+}
+```
+
+se `class="container border-red bg-blue custom-layout"` změní na `class="container custom-layout"`. Třída `container` je chráněna přes `base` a `custom-layout` katalog nezná. Třídy `members` se mohou odstranit i tehdy, když nemají vlastní položku v nabídce.
+
+Reset nemění HTML značku, obsah, atribut `style` ani ostatní atributy elementu. Neupravuje třídy jeho potomků ani rodičů; vzhled potomků však může ovlivnit dědění nebo CSS selektory závislé na rodiči. Výsledek určí CSS šablony po odstranění variant. Operaci lze vrátit jedním krokem **Zpět**, i při úpravě rodiče mimo editovatelný blok Page Buildera.
+
+#### Styly v dalších souborech šablony
 
 Pokud ```editor.css``` nevkládáte i do designu šablony, tak se jeho styly při zobrazení web stránky neaplikují. Standardně se tedy používá jen jako seznam definic stylů.
 
