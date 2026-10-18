@@ -8,25 +8,62 @@ import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Locale;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.config.ConnectionConfig;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.ManagedHttpClientConnection;
+import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.DefaultManagedHttpClientConnection;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+
+import sk.iway.aceintegration.socialmedia.SocialMediaFeedException.Reason;
+import sk.iway.aceintegration.socialmedia.SocialMediaFeedException.FacebookField;
 
 /** Downloads bounded public feed data and images without forwarding credentials to other hosts. */
 final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader, AutoCloseable {
     private static final Set<String> FEED_HOSTS = Set.of("www.youtube.com", "graph.facebook.com");
-    private final CloseableHttpClient client = HttpClients.custom()
-        .useSystemProperties()
-        .disableRedirectHandling()
-        .disableAutomaticRetries()
-        .setDnsResolver(SocialMediaHttpClient::resolvePublicAddresses)
-        .setDefaultRequestConfig(RequestConfig.custom()
-            .setConnectTimeout(10_000).setConnectionRequestTimeout(10_000).setSocketTimeout(20_000).build())
-        .build();
+    private static final int MAX_ERROR_BYTES = 16 * 1024;
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final AtomicLong CONNECTION_IDS = new AtomicLong();
+    private final CloseableHttpClient client;
+
+    SocialMediaHttpClient() {
+        this(HttpClients.custom()
+            .useSystemProperties()
+            .disableRedirectHandling()
+            .disableAutomaticRetries()
+            .setConnectionManager(new PoolingHttpClientConnectionManager(
+                RegistryBuilder.<ConnectionSocketFactory>create()
+                    .register("http", PlainConnectionSocketFactory.getSocketFactory())
+                    .register("https", SSLConnectionSocketFactory.getSystemSocketFactory()).build(),
+                SocialMediaHttpClient::createConnection, SocialMediaHttpClient::resolvePublicAddresses))
+            .setDefaultRequestConfig(RequestConfig.custom()
+                .setConnectTimeout(10_000).setConnectionRequestTimeout(10_000).setSocketTimeout(20_000).build())
+            .build());
+    }
+
+    SocialMediaHttpClient(CloseableHttpClient client) {
+        this.client = client;
+    }
+
+    /** Keeps bearer tokens and response bodies out of Apache HTTP header and wire debug logs. */
+    static ManagedHttpClientConnection createConnection(HttpRoute route, ConnectionConfig config) {
+        ConnectionConfig settings = config == null ? ConnectionConfig.DEFAULT : config;
+        return new DefaultManagedHttpClientConnection("social-media-" + CONNECTION_IDS.incrementAndGet(), settings.getBufferSize());
+    }
 
     /**
      * Downloads an allowed HTTPS resource, limiting redirects and uncompressed response bytes.
@@ -42,10 +79,10 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
         boolean image = isImageUrl(uri);
         for (int redirects = 0; redirects <= 3; redirects++) {
             if (!isHttps(uri) || !(image ? isImageUrl(uri) : FEED_HOSTS.contains(uri.getHost().toLowerCase(Locale.ROOT)))) {
-                throw new IOException("Unapproved feed resource host");
+                throw new SocialMediaFeedException(Reason.UNAPPROVED_RESOURCE);
             }
             if (token != null && !"graph.facebook.com".equalsIgnoreCase(uri.getHost())) {
-                throw new IOException("Refusing to send a Page token to another host");
+                throw new SocialMediaFeedException(Reason.TOKEN_HOST_MISMATCH);
             }
             HttpGet request = new HttpGet(uri);
             request.setHeader("User-Agent", "WebJET-SocialMediaFeed/1.0");
@@ -56,21 +93,100 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
                     uri = uri.resolve(response.getFirstHeader("Location").getValue());
                     continue;
                 }
-                if (status != 200) throw new IOException("Upstream HTTP status " + status);
                 HttpEntity entity = response.getEntity();
-                if (entity == null || entity.getContentLength() > limit) throw new IOException("Invalid response size");
-                try (InputStream input = entity.getContent(); ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
-                    byte[] buffer = new byte[8192];
-                    int count;
-                    while ((count = input.read(buffer)) != -1) {
-                        if (bytes.size() + count > limit) throw new IOException("Response exceeds size limit");
-                        bytes.write(buffer, 0, count);
-                    }
-                    return bytes.toByteArray();
+                boolean facebook = "graph.facebook.com".equalsIgnoreCase(uri.getHost());
+                if (status != 200) {
+                    throw facebook ? facebookFailure(entity, status)
+                        : new SocialMediaFeedException(Reason.HTTP_ERROR, status, null, null);
                 }
+                byte[] bytes = readResponse(entity, limit);
+                if (facebook) {
+                    SocialMediaFeedException failure = facebookFailure(bytes, status);
+                    if (failure != null) throw failure;
+                }
+                return bytes;
             }
         }
-        throw new IOException("Too many image redirects");
+        throw new SocialMediaFeedException(Reason.TOO_MANY_REDIRECTS);
+    }
+
+    /** Reads only a small diagnostic body; the enclosing response closes any unread connection. */
+    private static SocialMediaFeedException facebookFailure(HttpEntity entity, int status) {
+        if (entity != null && entity.getContentLength() <= MAX_ERROR_BYTES) {
+            try {
+                byte[] bytes = entity.getContent().readNBytes(MAX_ERROR_BYTES);
+                if (bytes.length < MAX_ERROR_BYTES) {
+                    SocialMediaFeedException failure = facebookFailure(bytes, status);
+                    if (failure != null) return failure;
+                }
+            } catch (IOException exception) {
+                // The HTTP status is still useful when the optional error body cannot be read.
+            }
+        }
+        return new SocialMediaFeedException(Reason.HTTP_ERROR, status, null, null);
+    }
+
+    /** Extracts numeric Graph identifiers without retaining its message, trace ID or other response data. */
+    private static SocialMediaFeedException facebookFailure(byte[] bytes, int status) {
+        try {
+            JsonNode root = MAPPER.readTree(bytes);
+            JsonNode error = root == null ? null : root.get("error");
+            if (error != null && error.isObject()) {
+                return new SocialMediaFeedException(facebookReason(error), status,
+                    errorNumber(error.get("code")), errorNumber(error.get("error_subcode")), missingFacebookField(error));
+            }
+        } catch (IOException exception) {
+            // The feed parser reports malformed successful responses without exposing their contents.
+        }
+        return null;
+    }
+
+    /** Maps recognized Graph errors to fixed guidance without including any upstream text. */
+    private static Reason facebookReason(JsonNode error) {
+        JsonNode message = error.get("message");
+        if (!Integer.valueOf(100).equals(errorNumber(error.get("code"))) || message == null || !message.isTextual()) {
+            return Reason.FACEBOOK_API_ERROR;
+        }
+        String value = message.textValue();
+        if (value.contains("Tried accessing nonexisting field")) {
+            if (value.contains("(published_posts)") && value.contains("node type (User)")) {
+                return Reason.FACEBOOK_OBJECT_IS_USER;
+            }
+            return Reason.NONEXISTENT_FACEBOOK_FIELD;
+        }
+        if (value.contains("Unsupported get request")) return Reason.FACEBOOK_OBJECT_UNAVAILABLE;
+        return Reason.FACEBOOK_API_ERROR;
+    }
+
+    /** Returns a locally defined field name, never text copied from the response. */
+    private static FacebookField missingFacebookField(JsonNode error) {
+        if (!Integer.valueOf(100).equals(errorNumber(error.get("code")))) return null;
+        String message = error.path("message").asText("");
+        for (FacebookField field : FacebookField.values()) {
+            if (message.contains("Tried accessing nonexisting field (" + field.apiName() + ")")) return field;
+        }
+        return null;
+    }
+
+    private static Integer errorNumber(JsonNode value) {
+        return value != null && value.isIntegralNumber() && value.canConvertToInt() ? value.intValue() : null;
+    }
+
+    /** Bounds decompressed content while leaving stream ownership to the enclosing HTTP response. */
+    private static byte[] readResponse(HttpEntity entity, int limit) throws IOException {
+        if (entity == null || limit < 0 || entity.getContentLength() > limit) {
+            throw new SocialMediaFeedException(Reason.INVALID_RESPONSE_SIZE);
+        }
+        InputStream input = entity.getContent();
+        try (ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer, 0, (int) Math.min(buffer.length, (long) limit - bytes.size() + 1))) != -1) {
+                if (bytes.size() + count > limit) throw new SocialMediaFeedException(Reason.RESPONSE_TOO_LARGE);
+                bytes.write(buffer, 0, count);
+            }
+            return bytes.toByteArray();
+        }
     }
 
     static boolean isImageUrl(URI uri) {

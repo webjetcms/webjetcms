@@ -17,7 +17,7 @@ Cesty v konfigurácii sú relatívne ku koreňu webovej aplikácie. Súkromná c
 | `socialMediaFeedOutputDirectory` | `/json/` | Verejný výstupný priečinok. |
 | `socialMediaFeedPublicBaseUrl` | `https://docs.webjetcms.sk` | Verejná HTTPS adresa servera pre odkazy na uložené obrázky. |
 | `socialMediaYoutubeChannelId` | `UCtS48g2dGJ5WVeh89PAOeLA` | YouTube kanál, z ktorého sa číta verejný Atom feed. Nevyžaduje API kľúč. |
-| `socialMediaFacebookPageId` | `100066653358802` | Facebook stránka spravovaná vydavateľom WebJET CMS. |
+| `socialMediaFacebookPageId` | `237316516345904` | ID stránky WebJET CMS pre Graph API, overené cez `GET /me?fields=id,name` s Page tokenom. |
 | `socialMediaFacebookAccessToken` | prázdna | Page access token. Pri ukladaní zapnite **Šifrovať**. Token sa zadáva iba na docs serveri. |
 | `socialMediaFacebookApiVersion` | `v26.0` | Verzia Graph API použitá pri čítaní príspevkov. |
 
@@ -28,8 +28,8 @@ Tieto premenné riadia iba centrálny generátor. Interval obnovovania a vypnuti
 Pre vlastnú stránku pripravte Meta aplikáciu a **Page access token** s oprávnením `pages_read_engagement`. Získanie tokenu a výber spravovanej stránky vyžaduje aj `pages_show_list`; skontrolujte dostupnosť oprávnení pre konkrétnu aplikáciu a účet správcu podľa [referencie oprávnení Meta](https://developers.facebook.com/docs/permissions/). Generátor nič nepublikuje a nevyžaduje oprávnenie na zápis.
 
 1. V [Meta for Developers](https://developers.facebook.com/apps/) vytvorte alebo vyberte aplikáciu určenú na prístup k vlastnej Facebook stránke. Účet, ktorým prístup pripravujete, musí mať prístup k aplikácii aj oprávnenie spravovať danú stránku.
-2. Podľa [postupu získania Page access tokenu](https://developers.facebook.com/docs/pages/access-tokens/) povoľte čítanie stránky a vyberte stránku `100066653358802`. Použite token stránky; samotný App access token alebo User access token do generátora nepatrí. Rozsah oprávnení a požadované schválenie aplikácie závisia od spôsobu nasadenia a rolí účtu.
-3. Overte, že získaný token dokáže čítať `/{page-id}/published_posts`. Pri príprave trvalej prevádzky skontrolujte jeho platnosť a postup obnovy podľa dokumentácie Meta. Zmena oprávnení účtu alebo aplikácie môže platnosť prístupu zrušiť.
+2. Podľa [postupu získania Page access tokenu](https://developers.facebook.com/docs/pages/access-tokens/) povoľte čítanie stránky a vyberte stránku WebJET CMS. Použite token stránky; samotný App access token alebo User access token do generátora nepatrí. Rozsah oprávnení a požadované schválenie aplikácie závisia od spôsobu nasadenia a rolí účtu.
+3. S vybraným Page tokenom overte v Graph API Exploreri `GET /me?fields=id,name`. Odpoveď musí označovať správnu stránku. Jej `id` nastavte do `socialMediaFacebookPageId`; ID z verejnej adresy `profile.php` nepovažujte automaticky za overené ID pre Graph API. Potom overte čítanie `/{page-id}/published_posts`. Pri príprave trvalej prevádzky skontrolujte platnosť tokenu a postup obnovy podľa dokumentácie Meta. Zmena oprávnení účtu alebo aplikácie môže platnosť prístupu zrušiť.
 4. Token uložte do šifrovanej konfigurácie docs servera podľa nasledujúceho odseku a spustite generátor manuálne. Overte, že verejný JSON obsahuje položky so `source: "facebook"`; samotné úspešné spustenie úlohy neznamená úspech Facebooku, pretože pri jeho výpadku môže úloha aktualizovať ostatné zdroje.
 
 Príspevky číta cez `GET /v26.0/{page-id}/published_posts` podľa [oficiálnej referencie](https://developers.facebook.com/docs/graph-api/reference/page/published_posts/). Token posiela v autorizačnej hlavičke. Nevkladajte ho do parametrov úlohy, URL, zdrojových súborov ani verejného JSON. Uložte ho do `socialMediaFacebookAccessToken` so zapnutou voľbou **Šifrovať**; nepoužívajte dočasné nastavenie. Generátor token uložený bez šifrovania nepoužije. Po získaní alebo obnovení tokenu overte skutočné načítanie vlastnej stránky.
@@ -70,3 +70,11 @@ Pri výpadku jednej siete sa zachovajú jej posledné úspešné údaje a druhá
 - V aktuálnom WebJET CMS rozbaľte **Čo je nové** a overte, že lokálne novinky verzie sú prvé a pod nimi sú externé karty. Na staršej verzii overte textový zoznam z rovnakej URL.
 - Po nastavení Facebook tokenu overte živé načítanie príspevkov. Pri opakovanom behu skontrolujte, že sa príspevky nezdvojujú a nezmenené texty sa znova neprekladajú.
 - Skontrolujte audit vykonania automatizovanej úlohy a log pri chybe zdroja alebo prekladu. Verejné výstupy nesmú obsahovať token, súkromnú cache ani neúplný JSON.
+
+## Diagnostika načítania
+
+Záznam auditu o spustení úlohy potvrdzuje iba jej vyvolanie. Výsledok hľadajte v logu triedy `SocialMediaFeedGenerator`. Pri odmietnutí požiadavky log obsahuje HTTP stav a pri chybe Facebook Graph API aj číselné `code` a `error_subcode`, ak ich odpoveď poskytuje. Token, autorizačné hlavičky ani text odpovede sa do diagnostiky nezapisujú. Kódy overte podľa [spracovania chýb Graph API](https://developers.facebook.com/docs/graph-api/guides/error-handling/).
+
+Pri chybe neexistujúceho poľa log doplní jeho názov, ak ide o pole požadované generátorom. Ak odmieta už `published_posts`, overte Page token a ID stránky podľa predchádzajúceho postupu. Prípadnú nezhodu opravte v konfigurácii; generátor automaticky neprepína na inú stránku.
+
+Hlásenie o chýbajúcom Facebook tokene znamená, že treba skontrolovať konfiguráciu `socialMediaFacebookAccessToken` a jej šifrovanie. Pri chybe jedného zdroja úloha pokračuje s druhým a použije uložené príspevky z posledného úspešného behu. Ak zlyhajú oba zdroje a cache je prázdna, verejné súbory nevytvorí ani neprepíše.

@@ -32,7 +32,7 @@ import org.junit.jupiter.api.io.TempDir;
 class SocialMediaFeedGeneratorTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final String CHANNEL = "UCtS48g2dGJ5WVeh89PAOeLA";
-    private static final String PAGE = "100066653358802";
+    private static final String PAGE = "237316516345904";
     @TempDir
     Path directory;
 
@@ -45,6 +45,20 @@ class SocialMediaFeedGeneratorTest {
         assertEquals("2026-10-05T10:00:00Z", posts.get(0).publishedAt());
         assertEquals("https://www.youtube.com/watch?v=video000005", posts.get(0).link());
         assertThrows(IOException.class, () -> SocialMediaFeedGenerator.parseYoutube(youtube(1, "Video", "Text", ""), "UCanotherChannel"));
+    }
+
+    /** YouTube omits the UC prefix on its feed-level channel ID while entries still require the full configured ID. */
+    @Test
+    void acceptsUnprefixedFeedChannelIdButRequiresFullEntryIds() throws Exception {
+        String fullId = "<yt:channelId>" + CHANNEL + "</yt:channelId>";
+        String feedId = "<yt:channelId>" + CHANNEL.substring(2) + "</yt:channelId>";
+        String feed = new String(youtube(1, "Video", "Text", ""), StandardCharsets.UTF_8).replaceFirst(fullId, feedId);
+        List<SocialMediaFeedGenerator.Post> posts = SocialMediaFeedGenerator.parseYoutube(bytes(feed), CHANNEL);
+        assertEquals(1, posts.size());
+        assertEquals("youtube:video000001", posts.get(0).id());
+        assertThrows(IOException.class, () -> SocialMediaFeedGenerator.parseYoutube(bytes(feed.replace(feedId,
+            "<yt:channelId>another-channel</yt:channelId>")), CHANNEL));
+        assertThrows(IOException.class, () -> SocialMediaFeedGenerator.parseYoutube(bytes(feed.replace(fullId, feedId)), CHANNEL));
     }
 
     /** External entities and feeds with an unexpected root cannot be read as trusted social content. */

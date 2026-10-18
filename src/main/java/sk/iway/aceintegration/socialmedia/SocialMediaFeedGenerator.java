@@ -48,7 +48,6 @@ import org.xml.sax.helpers.DefaultHandler;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.translation.TranslationService;
 
@@ -100,7 +99,7 @@ public final class SocialMediaFeedGenerator {
             Logger.println(SocialMediaFeedGenerator.class, "Social media news feeds generated successfully");
         } catch (Exception exception) {
             Logger.error(SocialMediaFeedGenerator.class, "Social media feed generation failed ("
-                + exception.getClass().getSimpleName() + "); existing published files remain valid");
+                + SocialMediaFeedException.safeSummary(exception) + "); existing published files remain valid");
         } finally {
             RUNNING.set(false);
         }
@@ -125,14 +124,14 @@ public final class SocialMediaFeedGenerator {
             } catch (Exception exception) {
                 sources.put(source, oldPosts);
                 Logger.warn(SocialMediaFeedGenerator.class, "Unable to refresh " + source
-                    + "; retaining " + oldPosts.size() + " cached posts (" + exception.getClass().getSimpleName() + ")");
+                    + "; retaining " + oldPosts.size() + " cached posts (" + SocialMediaFeedException.safeSummary(exception) + ")");
             }
         }
         int youtubeLimit = sources.get("facebook").isEmpty() ? YOUTUBE_FALLBACK_ITEMS : ITEMS_PER_SOURCE;
         List<Post> posts = sources.entrySet().stream()
             .flatMap(source -> source.getValue().stream().limit("youtube".equals(source.getKey()) ? youtubeLimit : ITEMS_PER_SOURCE))
             .sorted(Comparator.comparing((Post post) -> Instant.parse(post.publishedAt())).reversed().thenComparing(Post::id)).toList();
-        if (!refreshed && posts.isEmpty()) throw new IOException("No social provider could be read and no cached posts are available");
+        if (!refreshed && posts.isEmpty()) throw new SocialMediaFeedException(SocialMediaFeedException.Reason.NO_AVAILABLE_POSTS);
         Map<String, Translation> translations = retainTranslations(sources, previous.translations());
         Map<Path, byte[]> files = new LinkedHashMap<>();
         for (String language : LANGUAGES) {
@@ -185,7 +184,7 @@ public final class SocialMediaFeedGenerator {
     }
 
     private List<Post> fetchFacebook() throws IOException {
-        if (settings.facebookToken().isBlank()) throw new IOException("Facebook Page token is not configured");
+        if (settings.facebookToken().isBlank()) throw new SocialMediaFeedException(SocialMediaFeedException.Reason.MISSING_FACEBOOK_TOKEN);
         String fields = URLEncoder.encode("id,message,created_time,permalink_url,full_picture,attachments{title,description}", StandardCharsets.UTF_8);
         URI uri = URI.create("https://graph.facebook.com/" + settings.facebookApiVersion() + "/"
             + settings.facebookPageId() + "/published_posts?fields=" + fields + "&limit=12");
@@ -213,7 +212,10 @@ public final class SocialMediaFeedGenerator {
         });
         Element root = builder.parse(new ByteArrayInputStream(bytes)).getDocumentElement();
         if (!ATOM.equals(root.getNamespaceURI()) || !"feed".equals(root.getLocalName())) throw new IOException("Invalid Atom feed");
-        if (!channelId.equals(xmlText(root, YOUTUBE, "channelId"))) throw new IOException("Unexpected YouTube channel");
+        String feedChannelId = xmlText(root, YOUTUBE, "channelId");
+        if (!channelId.equals(feedChannelId) && !(channelId.startsWith("UC") && channelId.substring(2).equals(feedChannelId))) {
+            throw new IOException("Unexpected YouTube channel");
+        }
         NodeList entries = root.getElementsByTagNameNS(ATOM, "entry");
         List<Post> posts = new ArrayList<>();
         for (int index = 0; index < entries.getLength(); index++) {
@@ -471,17 +473,14 @@ public final class SocialMediaFeedGenerator {
         String youtubeChannelId, String facebookPageId, String facebookToken, String facebookApiVersion) {
 
         static Settings fromConfiguration() throws IOException {
-            String output = virtualDirectory(Constants.getString("socialMediaFeedOutputDirectory", "/json/"));
+            String output = Constants.getString("socialMediaFeedOutputDirectory", "/json/");
             String cache = "/WEB-INF/social-media/feed-cache.json";
-            if (IwcmFsDB.useDBStorage(output) || IwcmFsDB.useDBStorage(cache)) {
-                throw new IOException("Local output and cache directories are required");
-            }
             URI base = URI.create(Constants.getString("socialMediaFeedPublicBaseUrl", "https://docs.webjetcms.sk"));
             if (!SocialMediaHttpClient.isHttps(base) || base.getRawQuery() != null || !(base.getPath().isEmpty() || "/".equals(base.getPath()))) {
                 throw new IOException("Public base URL must be an HTTPS origin");
             }
             String youtube = Constants.getString("socialMediaYoutubeChannelId", "UCtS48g2dGJ5WVeh89PAOeLA");
-            String facebook = Constants.getString("socialMediaFacebookPageId", "100066653358802");
+            String facebook = Constants.getString("socialMediaFacebookPageId", "237316516345904");
             String version = Constants.getString("socialMediaFacebookApiVersion", "v26.0");
             if (!youtube.matches("UC[A-Za-z0-9_-]{22}") || !facebook.matches("[0-9]+") || !version.matches("v[0-9]+\\.[0-9]+")) {
                 throw new IOException("Invalid social account configuration");
@@ -512,10 +511,5 @@ public final class SocialMediaFeedGenerator {
             return "SocialMediaFeedGenerator.Settings[outputDirectory=" + outputDirectory + ", facebookToken=REDACTED]";
         }
 
-        private static String virtualDirectory(String value) throws IOException {
-            if (!value.startsWith("/") || value.startsWith("//") || value.contains("\\") || value.contains("..")
-                || value.contains("?") || value.contains("#")) throw new IOException("Invalid virtual directory");
-            return value.endsWith("/") ? value : value + "/";
-        }
     }
 }
