@@ -9,7 +9,6 @@ Pred vytvorením buildu je potrebné manuálne vykonať/skontrolovať nasledovn�
 - pripraviť popis zmien v súbore ```docs/CHANGELOG.md```
 - upraviť súbor ```docs/README.md``` - pridať na vrch najnovšiu verziu z changelogu
 - upraviť prekladový kľúč ```admin.overview.changelog``` so sumárom zmien aktuálnej verzie zobrazený pod uvítacím textom na úvodnej obrazovke
-- upraviť ```src/main/webapp/admin/v9/json/wjnews.LANG.json``` - doplniť sumár a odkaz na changelog najnovšej verzie
 
 Ak sa mení verzia, aktualizujte ju v:
 
@@ -60,6 +59,14 @@ ant prepareAllJars createUpdateZipJar
 ## Kompilácia Java a AspectJ
 
 Zdrojové kódy Java sa počas úlohy ```setup``` kompilujú cez Gradle. Plugin ```io.freefair.aspectj.post-compile-weaving``` najskôr nechá ```javac``` a anotačné procesory ako Lombok a MapStruct vygenerovať triedy a následne ich pred vytvorením WAR archívu spracuje pomocou `AspectJ weaving`. Samostatná kompilácia cez Ant/AJC už nie je potrebná.
+
+## Zoznam noviniek na docs serveri
+
+Verejné súbory `wjnews.sk.json`, `wjnews.cs.json` a `wjnews.en.json` vytvára [centrálny generátor](social-media-feed.md) priamo na docs serveri. Cieľ `rsyncToLicenseServer` prenáša iba aktualizačné archívy na licenčný server; žiadne JSON súbory z `admin/v9/json/` na docs server nekopíruje. Nasadenie WebJET CMS tak neprepisuje generované novinky.
+
+Generátor spustite cez automatizovanú úlohu na docs serveri. Zachovaná verejná URL je `https://docs.webjetcms.sk/json/wjnews.sk.json`, pre ostatné jazyky sa mení iba jazykový kód na `cs` alebo `en`. Novinky nainštalovanej verzie zostávajú súčasťou prekladového kľúča `admin.overview.changelog` a dashboard ich kombinuje s týmto zoznamom.
+
+Balík `sk.iway.aceintegration.socialmedia` je vylúčený zo štandardného Gradle WAR a JAR aj z dopĺňania ukážkových tried v Ant `finalwar`. Ant JAR a aktualizačné ZIP archívy ho tiež nezahŕňajú. Na docs server ho nasaďte osobitne podľa návodu generátora.
 
 ## Použitie v klientských projektoch
 

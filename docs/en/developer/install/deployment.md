@@ -9,7 +9,6 @@ Before creating a build, the following steps need to be manually performed/check
 - prepare a description of the changes in the file ```docs/CHANGELOG.md```
 - edit file ```docs/README.md``` - ​​add the latest version from the changelog to the top
 - edit translation key ```admin.overview.changelog``` with the summary of changes of the current version displayed under the welcome text on the start screen
-- edit ```src/main/webapp/admin/v9/json/wjnews.LANG.json``` - ​​add summary and link to changelog of latest version
 
 If the version changes, update it in:
 

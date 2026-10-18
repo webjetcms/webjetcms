@@ -8,8 +8,10 @@ const toggle = '.md-dashboard-widget__news-toggle';
 const title = '.md-dashboard-widget__news-title';
 const preferenceRoute = '**/admin/rest/admin-settings/';
 
-Before(({ I, login }) => {
+Before(async ({ I, login }) => {
     login('admin');
+    await I.mockRoute('**/wjnews.*.json', route => route.fulfill({ status: 200, contentType: 'application/json',
+        headers: { 'Access-Control-Allow-Origin': '*' }, body: '{"news":[]}' }));
     I.amOnPage('/admin/v9/');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     I.waitForText('Čo je nové (5)', 10, news);

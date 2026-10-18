@@ -9,7 +9,6 @@ Před vytvořením buildu je třeba manuálně provést/zkontrolovat následují
 - připravit popis změn v souboru ```docs/CHANGELOG.md```
 - upravit soubor ```docs/README.md``` - ​​přidat na vrch nejnovější verzi z changelogu
 - upravit překladový klíč ```admin.overview.changelog``` se sumárem změn aktuální verze zobrazený pod uvítacím textem na úvodní obrazovce
-- upravit ```src/main/webapp/admin/v9/json/wjnews.LANG.json``` - ​​doplnit sumář a odkaz na changelog nejnovější verze
 
 Pokud se mění verze, aktualizujte ji v:
 

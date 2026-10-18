@@ -338,6 +338,7 @@
         <copy todir="${finalwar}/WEB-INF/classes/sk/iway/" overwrite="true">
             <fileset dir="${root}/../../build/classes/java/main/sk/iway">
                 <include name="aceintegration/**"/>
+                <exclude name="aceintegration/socialmedia/**"/>
                 <include name="basecms/**"/>
                 <include name="demo8/**"/>
             </fileset>
@@ -455,8 +456,6 @@
     <target name="rsyncToLicenseServer" depends="define-artifact-properties">
         <echo message="License Server: ${env.LICENSE_SERVER}"/>
         <echo message="License Path: ${env.LICENSE_PATH}"/>
-        <echo message="Docs Server: ${env.DOCS_SERVER}"/>
-        <echo message="Docs Path: ${env.DOCS_PATH}"/>
 
         <exec executable="rsync">
             <arg value="-av"/>
@@ -469,12 +468,6 @@
             <arg value="-av"/>
             <arg value="${artifact.dir}/archive-jar.zip"/>
             <arg value="${env.LICENSE_SERVER}:${env.LICENSE_PATH}${artifact.version}/"/>
-        </exec>
-
-        <exec executable="rsync">
-            <arg value="-av"/>
-            <arg value="${outdir}admin/v9/json/"/>
-            <arg value="${env.DOCS_SERVER}:${env.DOCS_PATH}json/"/>
         </exec>
     </target>
 

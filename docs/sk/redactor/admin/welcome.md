@@ -121,11 +121,15 @@ Pri odosielaní sa údaje viditeľnej karty obnovujú každých 30 sekúnd. Poč
 
 ### Čo je nové
 
-Vpravo v modrom uvítacom paneli nájdete novinky aktuálnej verzie. Pri načítaní stránky sa vyberie náhodná novinka a každých 8 sekúnd sa zobrazí ďalšia. Novinky môžete prepínať aj šípkami alebo bodkami; veľkosť karty sa pritom nemení. Prepínanie pozastavíte tlačidlom pauzy. Pri ukázaní myšou sa dočasne zastaví, pri ovládaní klávesnicou sa zastaví až do opätovného spustenia. Pri obmedzených animáciách v nastavení systému sa automaticky nespúšťa.
+Vpravo v modrom uvítacom paneli nájdete novinky nainštalovanej verzie WebJET CMS. Dopĺňajú ich najnovšie video z YouTube a príspevok z Facebooku, aby ste sa dozvedeli aj o nových návodoch a ďalších vydaniach. Pri načítaní stránky sa vyberie náhodná novinka a každých 8 sekúnd sa zobrazí ďalšia. Novinky môžete prepínať aj šípkami alebo bodkami; veľkosť karty sa pritom nemení. Prepínanie pozastavíte tlačidlom pauzy. Pri ukázaní myšou sa dočasne zastaví, pri ovládaní klávesnicou sa zastaví až do opätovného spustenia. Pri obmedzených animáciách v nastavení systému sa automaticky nespúšťa.
 
-Kliknutie na nadpis alebo text novinky aj tlačidlo **Čo je nové (5)** rozbalí všetky body cez celú šírku modrého panela. Číslo zodpovedá počtu noviniek. Privítanie a skratky sa dočasne skryjú; tlačidlo **Zbaliť novinky**, ikona vpravo hore alebo kláves **Esc** ich znova zobrazia. Odkaz **Zoznam zmien** aj číslo verzie pri štítku **Nové** otvoria úplnú históriu vydaní v dokumentácii.
+Kliknutie na nadpis alebo text novinky aj tlačidlo **Čo je nové** rozbalí zoznam cez celú šírku modrého panela. Najprv sa zobrazia všetky novinky nainštalovanej verzie, pod nimi najviac šesť ďalších položiek. Karty obsahujú názov, krátky text, odkaz a podľa dostupnosti obrázok, zdroj a dátum. Kliknutím na odkaz otvoríte video, príspevok alebo článok. Na mobile sa karty zobrazia pod sebou. Dole nájdete aj priame odkazy na YouTube kanál a Facebook stránku WebJET CMS.
 
-Štítok **Nové** sa zobrazuje 30 dní od prvého zobrazenia daného textu pod vaším kontom. Zmena textu spustí nových 30 dní aj v rovnakej verzii. Stav sa ukladá do vašich nastavení administrácie, preto platí aj na inom zariadení. Rozbalenie ani zbalenie noviniek štítok nezruší.
+Privítanie a skratky sa počas rozbalenia skryjú; tlačidlo **Zbaliť novinky**, ikona vpravo hore alebo kláves **Esc** ich znova zobrazia. Odkaz **Zoznam zmien** aj číslo verzie pri štítku **Nové** otvoria úplnú históriu vydaní v dokumentácii.
+
+Štítok **Nové** upozorní na novinky verzie alebo na neprečítané externé položky. Pri novinkách verzie sa zobrazuje 30 dní od prvého zobrazenia daného textu pod vaším kontom. Zmena textu spustí nových 30 dní aj v rovnakej verzii; rozbalenie túto lehotu neskráti. Externé položky sa označia za prečítané po zobrazení v rozbalenom paneli. Stav sa ukladá do vašich nastavení administrácie, preto platí aj na inom zariadení a pri prepnutí jazyka.
+
+Zoznam zo sociálnych sietí sa predvolene kontroluje na pozadí každé tri dni a pri každom rozbalení panela. Pri výpadku spojenia sa externé položky skryjú bez chybového hlásenia. Správca môže načítavanie [vypnúť v konfigurácii](../../admin/setup/configuration/dashboard.md#novinky-zo-sociálnych-sietí). V oboch prípadoch zostanú novinky nainštalovanej verzie a oba priame odkazy.
 
 ### Systémové upozornenia
 

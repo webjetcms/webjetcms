@@ -16,6 +16,8 @@
 
 ### Úvodná obrazovka
 
+- [Čo je nové](redactor/admin/welcome.md#čo-je-nové) spája novinky nainštalovanej verzie s videami z YouTube a príspevkami z Facebooku WebJET CMS. Rozbalený panel zobrazuje karty s obrázkami, najnovšie položky dopĺňajú rotáciu a štítok **Nové** upozorní na neprečítaný obsah. [Konfigurácia](admin/setup/configuration/dashboard.md#novinky-zo-sociálnych-sietí) umožňuje zmeniť interval obnovovania alebo externé načítavanie vypnúť. Spoločný JSON zachováva pôvodný formát pre staršie verzie WebJET CMS.
+
 - [Úvodnú obrazovku](redactor/admin/welcome.md) sme prerobili na widgetový systém, aby ste mali údaje potrebné pri práci na jednom mieste bez prechádzania jednotlivých častí administrácie. Sami si vyberiete widgety a nastavíte zobrazované údaje, veľkosť a poradie podľa svojich potrieb (#58806).
 
 <div class="video-container">

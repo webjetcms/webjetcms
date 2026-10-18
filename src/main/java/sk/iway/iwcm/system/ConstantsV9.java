@@ -43,6 +43,7 @@ public class ConstantsV9 {
 
 		// Domain and folder containing dashboard news
 		Constants.setString("overviewJsonUrl", "https://docs.webjetcms.sk/json/", Constants.MOD_SYSTEM_ADMIN, "Zakladna URL adresa pre nacitanie zoznamu noviniek na administracnom dashboarde.");
+		Constants.setInt("dashboardSocialRefreshDays", 3, Constants.MOD_SYSTEM_ADMIN, "Počet dní medzi kontrolami externých noviniek na dashboarde. Rozbalenie noviniek vždy overí aktuálny JSON. Hodnota 0 alebo záporná vypne načítavanie aj zobrazenie externých noviniek a obrázkov; odkazy na sociálne siete zostanú.");
 		Constants.setString("adminDocumentationSearchUrl", "https://docs.webjetcms.sk/rest/rag/markdown/search", Constants.MOD_SYSTEM_ADMIN, "Valid full HTTP(S) URL of the documentation search endpoint, including its path, used by administration quick search. An empty value disables documentation search and hides its scope. Query, language and directory parameters are added automatically. Its protocol, host and port are also used for documentation and help links.");
 		Constants.setBoolean("adminDocumentationAlwaysSearch", false, Constants.MOD_SYSTEM_ADMIN, "Automatically send administration search queries to the configured documentation service after a two-second pause for at least eight characters. Enable only when the documentation service is approved to receive internal queries. Otherwise documentation is searched only on explicit request.");
 		Constants.setString("languages", "sk,cz,en,de,pl,hu,cho,ru,esp", Constants.MOD_LOCALIZATION, "Zoznam jazykov pre webjet cms");

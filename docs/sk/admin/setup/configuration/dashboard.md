@@ -7,6 +7,8 @@ Pozadie uvítacieho panelu a označenie prostredia nastavíte cez **Nastavenia �
 | Premenná | Predvolená hodnota | Význam |
 | --- | --- | --- |
 | `dashboardHeroBackgroundImage` | `linear-gradient(111.7deg, #031D46 0%, #073780 76.92%)` | Pozadie uvítacieho panela: CSS gradient alebo cesta k obrázku. Prázdna alebo neplatná hodnota použije predvolený modrý prechod. |
+| `dashboardSocialRefreshDays` | `3` | Počet dní platnosti uloženého zoznamu externých noviniek. Hodnota `0` alebo záporná hodnota vypne jeho načítavanie aj zobrazovanie uložených položiek. Rozbalenie panela pri zapnutej funkcii vždy overí aktuálny zoznam. |
+| `overviewJsonUrl` | `https://docs.webjetcms.sk/json/` | Základná URL súborov `wjnews.sk.json`, `wjnews.cs.json` a `wjnews.en.json`. Možno nastaviť vlastný HTTP(S) server alebo lokálnu cestu k priečinku s týmito súbormi. |
 | `dashboardEnvironmentName` | `{ENVIRONMENT_NAME}` | Text označenia. Podporuje makrá aj vlastný text. Zobrazuje najviac 8 znakov veľkými písmenami; celý názov zostane v tooltipe. Prázdna hodnota označenie skryje aj z titulku karty. |
 | `dashboardEnvironmentIcon` | `auto` | Ikona podľa prostredia alebo názov ikony Tabler, napr. `rocket` alebo `ti-database`. Hodnota `none` alebo prázdna hodnota ikonu skryje. Pri neexistujúcom názve sa ikona nezobrazí. |
 | `dashboardEnvironmentColor` | `auto` | Farba z palety podľa prostredia a štýlu. Vlastná farba `#RGB` či `#RRGGBB` automaticky dostane čierny alebo biely text a ikonu s kontrastom aspoň 4,5 : 1. |
@@ -25,6 +27,20 @@ Pozadie zmeníte priamo hodnotou `dashboardHeroBackgroundImage`, napríklad:
 - `https://cdn.example.com/header.jpg` – obrázok z úplnej HTTP(S) adresy.
 
 Obrázok nahradí gradient a pokryje celý panel so zachovaním pomeru strán (`cover`), zarovnaný na stred a spodný okraj. Cestu zadávajte priamo, bez obalu `url(...)`. HTTP(S) adresa nesmie obsahovať prihlasovacie údaje. Adresy začínajúce `//`, adresy so spätnými lomkami alebo riadiacimi znakmi a iné protokoly nie sú povolené. Maximálna dĺžka adresy je 1024 znakov.
+
+## Novinky zo sociálnych sietí
+
+Panel **Čo je nové** spája novinky nainštalovanej verzie s príspevkami z YouTube a Facebooku WebJET CMS. Prehliadač číta spoločný JSON zo servera nastaveného v `overviewJsonUrl`; zákaznícky server sociálne siete nekontaktuje. Generovanie údajov na docs serveri opisuje [Centrálny zoznam noviniek](../../../developer/install/social-media-feed.md).
+
+JSON musí byť verejne dostupný bez prihlásenia, aj pri vlastnej lokálnej ceste: požiadavka neposiela prihlasovacie cookies ani hlavičku `Referer`.
+
+Pri otvorení úvodnej obrazovky sa použije zoznam uložený v `localStorage`. Ak chýba alebo je starší ako `dashboardSocialRefreshDays`, obnoví sa na pozadí. Pri každom rozbalení sa zoznam overí aj pred uplynutím tejto lehoty. Cache je oddelená podľa URL a jazyka; česká administrácia používa súbor `wjnews.cs.json`. Obrázky sa začnú načítavať až po rozbalení panela.
+
+Pri chybe načítania sa externé karty, položky rotácie a ich upozornenie skryjú aj vtedy, keď prehliadač má uložené staršie údaje. Panel nezobrazuje hlásenie o načítavaní ani chybe; zostanú lokálne novinky verzie a odkazy na sociálne siete. Uložená cache sa chybou nevymaže.
+
+Hodnota `dashboardSocialRefreshDays=0` vypne požiadavky na JSON a obrázky, externé karty, ich rotáciu aj upozornenie na neprečítané položky. Platí to aj pre dáta, ktoré už prehliadač uložil. Novinky nainštalovanej verzie a odkazy na oba sociálne kanály zostanú dostupné. Po zmene konfigurácie obnovte stránku administrácie.
+
+Stav prečítania externých noviniek sa ukladá k používateľskému účtu po ich zobrazení v rozbalenom paneli. Prepnutie jazyka ich znova neoznačí ako nové. Tento stav je nezávislý od 30-dňového označenia noviniek nainštalovanej verzie, ktoré sa naďalej zdieľa s menu **Pomocník**.
 
 ## Automatické označenie prostredia
 

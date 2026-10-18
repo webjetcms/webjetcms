@@ -338,6 +338,11 @@ dependencies {
 
 }
 
+jar {
+    // Keep docs-server integration out of the Java component publication as well.
+    exclude('sk/iway/aceintegration/socialmedia/**')
+}
+
 war {
     zip64 = true
     classpath = sourceSets.main.output + configurations.distributionRuntimeClasspath - configurations.providedRuntime
@@ -383,6 +388,8 @@ war {
     exclude('templates/firma/**')
 
     rootSpec.exclude('**/poolman-*.xml')
+    // The social feed generator is deployed separately on the documentation server.
+    rootSpec.exclude('**/sk/iway/aceintegration/socialmedia/**')
 }
 
 // Only the Ant finalwar target uses the development runtime, including local AI.

@@ -10,8 +10,8 @@ const announcement = '<h2>WebJET CMS 2026.18</h2><ul><li><b>First update</b> –
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 /** Runs the real release widget with deterministic timers, randomness and account storage. */
-function fixture(t, { reduced = false, saved, response = true, random = 0.75, fetchResponse } = {}) {
-    const dom = new JSDOM('<div class="md-dashboard__hero"><div class="md-dashboard__welcome"><h1>Welcome back</h1><a href="/pages">Pages</a></div><div class="md-dashboard__news"></div></div>');
+function fixture(t, { reduced = false, saved, response = true, random = 0.75, fetchResponse, config = {} } = {}) {
+    const dom = new JSDOM('<div class="md-dashboard__hero"><div class="md-dashboard__welcome"><h1>Welcome back</h1><a href="/pages">Pages</a></div><div class="md-dashboard__news"></div></div>', { url: 'http://cms.example/admin/v9/' });
     const { window } = dom;
     const container = window.document.querySelector('.md-dashboard__news');
     window.userLng = 'en';
@@ -32,13 +32,18 @@ function fixture(t, { reduced = false, saved, response = true, random = 0.75, fe
     Object.defineProperty(window.document, 'hidden', { configurable: true, value: false });
     const requests = [];
     const math = Object.create(Math); math.random = () => random;
-    const scope = vm.createContext({ window, document: window.document, DOMParser: window.DOMParser, Math: math,
-        fetch: async (url, options) => { requests.push({ url, options }); return fetchResponse ? fetchResponse() : { ok: true, json: async () => response }; } });
-    for (const file of ['dashboard/registry.js', 'dashboard/widget-utils.js', 'release-news.js', 'dashboard/news-widget.js']) {
+    const scope = vm.createContext({ window, document: window.document, DOMParser: window.DOMParser, URL, TextEncoder, TextDecoder, Math: math,
+        fetch: async (url, options) => {
+            requests.push({ url, options });
+            const result = fetchResponse ? await fetchResponse(url, options) : { ok: true, json: async () => response };
+            if (!result.text) result.text = async () => JSON.stringify(await result.json());
+            return result;
+        } });
+    for (const file of ['dashboard/registry.js', 'dashboard/widget-utils.js', 'release-news.js', 'dashboard/social-news.js', 'dashboard/news-widget.js']) {
         vm.runInContext(fs.readFileSync(path.join(sourceRoot, file), 'utf8').replace(/^import .+;\r?$/gm, '').replace(/^export /gm, ''), scope);
     }
     scope.registerNewsWidget();
-    const context = { labels: { changelog: announcement }, config: {}, translate: (key, ...params) => [key, ...params].join(' ') };
+    const context = { labels: { changelog: announcement }, config, translate: (key, ...params) => [key, ...params].join(' ') };
     const controller = new window.AbortController();
     let cleanup;
     const render = () => { cleanup = scope.getWidget('news').render({ container, context, signal: controller.signal }); };
@@ -262,5 +267,182 @@ test('One or zero updates never schedule automatic rotation', t => {
         assert.equal(timers.size, 0);
         const navigation = container.querySelector('.md-dashboard-widget__news-navigation');
         assert.ok(!navigation || navigation.hidden);
+    }
+});
+
+const socialFeed = { news: [
+    { id: 'youtube:video', source: 'youtube', title: 'New video', perex: 'Video summary', link: 'https://www.youtube.com/watch?v=video', image: 'https://news.example/video.jpg', publishedAt: '2026-10-18T09:00:00Z' },
+    { id: 'facebook:post', source: 'facebook', title: 'New post', perex: 'Post summary', link: 'https://www.facebook.com/posts/post', image: 'https://news.example/post.jpg' }
+] };
+const socialConfig = { overviewJsonUrl: 'https://news.example/json/', socialRefreshDays: 3 };
+
+/** Keeps the local release badge expired so tests exercise only external unread content. */
+function expireRelease(f) {
+    const state = f.scope.newsSeenState(announcement);
+    f.window.currentUser.adminSettings[state.key] = JSON.stringify({ ...JSON.parse(state.value), firstSeen: Date.now() - 31 * 86400000 });
+}
+
+test('Social cards supplement local release HTML, rotate without images, and acknowledge only expanded content', async t => {
+    const f = fixture(t, { config: socialConfig, fetchResponse: async (url, options) => ({ ok: true, json: async () => options?.method === 'POST' ? true : socialFeed }) });
+    expireRelease(f);
+    f.render(); await tick();
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, announcement);
+    assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-dot').length, 4);
+    assert.equal(f.container.querySelectorAll('img').length, 0);
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-badge').hidden, false);
+    assert.equal(f.requests.filter(request => request.options?.method === 'POST').length, 0);
+    f.container.querySelector('.md-dashboard-widget__news-toggle').click(); await tick();
+    assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-card').length, 2);
+    assert.equal(f.container.querySelectorAll('img').length, 2);
+    assert.equal(f.requests.filter(request => request.url.startsWith('https://news.example')).length, 2, 'Expansion revalidates even a fresh feed.');
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-badge').hidden, true);
+    const image = f.container.querySelector('img');
+    image.dispatchEvent(new f.window.Event('error'));
+    assert.equal(f.container.querySelectorAll('img').length, 1);
+    assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-card').length, 2, 'Image failure keeps the text card.');
+});
+
+test('A response arriving after collapse remains unread and never creates hidden image requests', async t => {
+    let finish;
+    const f = fixture(t, { config: socialConfig, fetchResponse: () => new Promise(resolve => { finish = resolve; }) });
+    expireRelease(f);
+    f.render();
+    f.container.querySelector('.md-dashboard-widget__news-toggle').click();
+    f.container.querySelector('.md-dashboard-widget__news-close').click();
+    assert.equal(f.requests.length, 1, 'Background and expansion share the pending request.');
+    finish({ ok: true, json: async () => socialFeed }); await tick();
+    assert.equal(f.container.querySelectorAll('img').length, 0);
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-badge').hidden, false);
+    assert.equal(f.requests.length, 1, 'Unseen content is not acknowledged.');
+});
+
+test('Disabling social news ignores populated cache and retains channel links even without release content', async t => {
+    const f = fixture(t, { config: { ...socialConfig, socialRefreshDays: 0 }, fetchResponse: async () => ({ ok: true, json: async () => socialFeed }) });
+    await f.scope.createSocialNewsClient({ url: 'https://news.example/json/wjnews.en.json', refreshDays: 3, signal: f.controller.signal }).refresh();
+    const count = f.requests.length;
+    f.context.labels.changelog = '';
+    f.render();
+    f.container.querySelector('.md-dashboard-widget__news-toggle').click(); await tick();
+    assert.equal(f.requests.length, count);
+    assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-card, img').length, 0);
+    assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-channel').length, 2);
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-badge').hidden, true);
+});
+
+test('A failed refresh leaves only local news and channel links while preserving cache for a successful retry', async t => {
+    let unavailable = false;
+    const f = fixture(t, { config: socialConfig, fetchResponse: async (url, options) => {
+        if (options?.method === 'POST') return { ok: true, json: async () => true };
+        if (unavailable) throw new Error('Offline');
+        return { ok: true, json: async () => socialFeed };
+    } });
+    expireRelease(f);
+    f.render(); await tick();
+    const cacheKey = f.window.localStorage.key(0);
+    const cached = f.window.localStorage.getItem(cacheKey);
+    unavailable = true;
+    f.container.querySelector('.md-dashboard-widget__news-toggle').click(); await tick();
+    assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-card, img').length, 0);
+    assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-channel').length, 2);
+    assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-dot').length, 2);
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-badge').hidden, true);
+    const external = f.container.querySelector('.md-dashboard-widget__news-external');
+    assert.equal(external.hidden, true);
+    assert.equal(external.getAttribute('aria-busy'), 'false');
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-feed-status'), null);
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, announcement);
+    assert.equal(f.window.localStorage.getItem(cacheKey), cached, 'Failure preserves the cache and successful-fetch timestamp.');
+    unavailable = false;
+    f.container.querySelector('.md-dashboard-widget__news-close').click();
+    f.container.querySelector('.md-dashboard-widget__news-toggle').click(); await tick();
+    assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-card').length, 2);
+    assert.equal(external.hidden, false);
+    assert.equal(external.getAttribute('aria-busy'), 'false');
+});
+
+test('Loading and empty feeds show no external heading or status text', async t => {
+    let finish;
+    const f = fixture(t, { config: socialConfig, fetchResponse: (url, options) => {
+        if (options?.method === 'POST') return Promise.resolve({ ok: true, json: async () => true });
+        return new Promise(resolve => { finish = resolve; });
+    } });
+    expireRelease(f);
+    f.render();
+    f.container.querySelector('.md-dashboard-widget__news-toggle').click();
+    const external = f.container.querySelector('.md-dashboard-widget__news-external');
+    assert.equal(external.hidden, true);
+    assert.equal(external.getAttribute('aria-busy'), 'true');
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-feed-status'), null);
+    assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-channel').length, 2);
+    finish({ ok: true, json: async () => ({ news: [] }) }); await tick();
+    assert.equal(external.hidden, true);
+    assert.equal(external.getAttribute('aria-busy'), 'false');
+    assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-card').length, 0);
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, announcement);
+});
+
+test('A refresh failure after collapse removes previously rendered cards and images', async t => {
+    let fail;
+    let calls = 0;
+    const f = fixture(t, { config: socialConfig, fetchResponse: (url, options) => {
+        if (options?.method === 'POST') return Promise.resolve({ ok: true, json: async () => true });
+        if (++calls === 1) return Promise.resolve({ ok: true, json: async () => socialFeed });
+        return new Promise((resolve, reject) => { fail = reject; });
+    } });
+    expireRelease(f);
+    f.render(); await tick();
+    f.container.querySelector('.md-dashboard-widget__news-toggle').click();
+    assert.equal(f.container.querySelectorAll('img').length, 2);
+    f.container.querySelector('.md-dashboard-widget__news-close').click();
+    fail(new Error('Offline')); await tick();
+    assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-card, img').length, 0);
+    assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-dot').length, 2);
+    const external = f.container.querySelector('.md-dashboard-widget__news-external');
+    assert.equal(external.hidden, true);
+    assert.equal(external.getAttribute('aria-busy'), 'false');
+});
+
+test('Background carousel updates preserve the focused release dot and fall back when a social dot disappears', async t => {
+    let finish;
+    const f = fixture(t, { config: socialConfig, fetchResponse: (url, options) => {
+        if (options?.method === 'POST') return Promise.resolve({ ok: true, json: async () => true });
+        return new Promise(resolve => { finish = resolve; });
+    } });
+    expireRelease(f);
+    f.render();
+    const originalDot = f.container.querySelector('.md-dashboard-widget__news-dot');
+    originalDot.focus();
+    finish({ ok: true, json: async () => socialFeed }); await tick();
+    const updatedDot = f.container.querySelector('.md-dashboard-widget__news-dot');
+    assert.notEqual(updatedDot, originalDot);
+    assert.equal(f.window.document.activeElement, updatedDot);
+    f.container.querySelector('.md-dashboard-widget__news-toggle').click();
+    f.container.querySelector('.md-dashboard-widget__news-close').click();
+    f.container.querySelectorAll('.md-dashboard-widget__news-dot')[2].focus();
+    finish({ ok: true, json: async () => ({ news: [socialFeed.news[1]] }) }); await tick();
+    assert.equal(f.window.document.activeElement, f.container.querySelector('.md-dashboard-widget__news-preview'));
+    assert.equal(f.window.document.activeElement.hidden, false);
+});
+
+test('Expanded updates restore the focused card by identity or the visible close control when removed', async t => {
+    for (const removed of [false, true]) {
+        let finish;
+        let calls = 0;
+        const f = fixture(t, { config: socialConfig, fetchResponse: (url, options) => {
+            if (options?.method === 'POST') return Promise.resolve({ ok: true, json: async () => true });
+            if (++calls === 1) return Promise.resolve({ ok: true, json: async () => socialFeed });
+            return new Promise(resolve => { finish = resolve; });
+        } });
+        expireRelease(f);
+        f.render(); await tick();
+        f.container.querySelector('.md-dashboard-widget__news-toggle').click();
+        const original = f.container.querySelector('[data-news-id="youtube:video"]');
+        original.focus();
+        const news = removed ? [socialFeed.news[1]] : [socialFeed.news[1], { ...socialFeed.news[0], title: 'Updated video' }];
+        finish({ ok: true, json: async () => ({ news }) }); await tick();
+        const target = f.container.querySelector(removed ? '.md-dashboard-widget__news-close' : '[data-news-id="youtube:video"]');
+        assert.equal(f.window.document.activeElement, target);
+        assert.notEqual(target, original);
+        assert.equal(target.hidden, false);
     }
 });
