@@ -105,6 +105,10 @@ Na odinštalovanie použite `npx skills remove` pre zvolené WebJET skills a ods
 
 Skills upravujte v `.agents/skills` hlavného repozitára WebJET CMS, agentové podklady v `.github/agents`. Distribučné kópie sa neupravujú ručne.
 
+Skills určené iba pre vývoj jadra vylúčte v súbore `.github/skills-distribution/excluded-skills.txt`. Na každý riadok zadajte presný názov adresára z `.agents/skills`, napríklad `wj-cke-stylescombo`, ktorý je už v zozname. Prázdne riadky a riadky začínajúce `#` sa ignorujú; vzory ako `wj-*` nie sú podporované. Export vynechá celý adresár skillu vrátane referencií, skriptov a ďalších súborov aj jeho položku v manifeste. Zdrojový skill zostáva v hlavnom repozitári. Neznámy názov alebo vylúčenie povinných skills `wj-project-context` a `wj-setup` zastaví export s chybou.
+
+Zmena zoznamu výnimiek automaticky spustí existujúci workflow. Pri najbližšom publikovaní odstráni synchronizácia vylúčený skill aj z distribučného repozitára, ak tam už bol publikovaný.
+
 Export spustíte z hlavného repozitára do nového priečinka:
 
 ```sh
