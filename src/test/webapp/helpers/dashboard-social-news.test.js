@@ -92,6 +92,45 @@ test('Legacy releases and enriched entries normalize safely without changing tit
     assert.deepEqual(plain(scope.normalizeFeed({ news: [] }, feedUrl)), []);
 });
 
+test('Relative thumbnails follow the configured feed directory without changing link validation', async t => {
+    const { scope, client, respond, requests } = fixture(t);
+    const relative = 'social-media/images/autotest-thumbnail.jpg';
+    for (const overviewJsonUrl of ['https://docs.webjetcms.sk/json/new/', '/custom/json/new/', 'http://news.intranet.test:8080/json/new/']) {
+        const options = scope.socialNewsOptions({ overviewJsonUrl }, 'sk');
+        const expected = new URL(relative, options.url).href;
+        respond(async () => ({ ok: true, json: async () => ({ news: [item('relative', { image: relative })] }) }));
+        const reader = client(options);
+        assert.equal((await reader.refresh())[0].image, expected);
+        assert.equal(requests.at(-1).url, options.url);
+        assert.equal(reader.readCache()[0].image, expected, 'Cached absolute URLs retain the same validated image origin.');
+        assert.equal((await reader.refresh())[0].image, expected);
+        const normalized = scope.normalizeFeed({ news: [
+            item('absolute', { image: 'https://legacy.example/image.jpg' }),
+            item('root', { image: '/images/root.jpg' }),
+            item('legacy'),
+            item('relative-link', { link: 'articles/page.html', image: relative })
+        ] }, options.url);
+        assert.equal(normalized.length, 3, 'Image support must not allow previously invalid relative article links.');
+        assert.equal(normalized[0].image, 'https://legacy.example/image.jpg');
+        assert.equal(normalized[1].image, new URL('/images/root.jpg', options.url).href);
+        assert.equal(normalized[2].image, null);
+    }
+});
+
+test('Thumbnail resolution rejects ambiguous URLs and remote HTTP without discarding the text card', t => {
+    const { scope } = fixture(t);
+    for (const url of [feedUrl, 'http://news.intranet.test:8080/json/new/wjnews.sk.json']) {
+        for (const image of ['javascript:alert(1)', 'data:image/png;base64,aaa', 'blob:https://docs.webjetcms.sk/image',
+            '//evil.test/image.jpg', 'https://user:password@evil.test/image.jpg', 'https:evil.test/image.jpg',
+            'social-media\\images\\image.jpg', 'social-media/images/\nimage.jpg', 'social-media/images/\u0000image.jpg',
+            'http://unsafe.test/image.jpg', '', '?image.jpg', '#image.jpg']) {
+            const records = scope.normalizeFeed({ news: [item('unsafe-image', { image })] }, url);
+            assert.equal(records.length, 1);
+            assert.equal(records[0].image, null, image);
+        }
+    }
+});
+
 test('Customer legacy feeds without optional fields remain readable and omit the installed release', t => {
     const { scope } = fixture(t);
     for (const locale of ['sk', 'cs', 'en']) {

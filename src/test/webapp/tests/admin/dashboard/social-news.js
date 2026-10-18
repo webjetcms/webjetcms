@@ -11,7 +11,7 @@ const badge = '.md-dashboard-widget__news-badge';
 const external = '.md-dashboard-widget__news-external';
 const preferenceRoute = '**/admin/rest/admin-settings/';
 const feedRoute = '**/wjnews.*.json';
-const imageRoute = 'https://news.example/images/**';
+const imageRoutes = ['https://news.example/images/**', '**/social-media/images/**'];
 const thumbnail = fs.readFileSync(path.join(__dirname, '../../../../../../docs/sk/redactor/admin/dashboard.png'));
 let fixture;
 let preferenceWrites;
@@ -74,13 +74,15 @@ Before(async ({ I, login }) => {
         return route.fulfill({ status: current.status, contentType: 'application/json',
             headers: { 'Access-Control-Allow-Origin': '*' }, body: JSON.stringify({ news: items }) });
     });
-    await I.mockRoute(imageRoute, route => {
-        fixture?.imageRequests.push({ url: route.request().url(), headers: route.request().headers() });
-        if (route.request().url().includes('missing')) return route.fulfill({ status: 404,
-            headers: { 'Access-Control-Allow-Origin': '*' }, contentType: 'text/plain', body: 'Missing autotest image' });
-        return route.fulfill({ status: 200,
-            headers: { 'Access-Control-Allow-Origin': '*' }, contentType: 'image/png', body: thumbnail });
-    });
+    for (const imageRoute of imageRoutes) {
+        await I.mockRoute(imageRoute, route => {
+            fixture?.imageRequests.push({ url: route.request().url(), headers: route.request().headers() });
+            if (route.request().url().includes('missing')) return route.fulfill({ status: 404,
+                headers: { 'Access-Control-Allow-Origin': '*' }, contentType: 'text/plain', body: 'Missing autotest image' });
+            return route.fulfill({ status: 200,
+                headers: { 'Access-Control-Allow-Origin': '*' }, contentType: 'image/png', body: thumbnail });
+        });
+    }
     login('admin');
 });
 
@@ -155,6 +157,25 @@ Scenario('Local highlights and six safe social cards combine with lazy images an
             });
             await I.saveScreenshot('dashboard-social-news-mobile-cards.png', true);
         }
+    }
+    await I.wjSetDefaultWindowSize();
+});
+
+Scenario('Relative thumbnails follow nested configured feed directories and keep legacy HTTPS images', async ({ I }) => {
+    await I.resizeWindow(1440, 1600);
+    for (const origin of ['https://news.example', 'http://news.intranet.test:8080']) {
+        const baseUrl = `${origin}/json/new/autotest-${Date.now()}-${++sequence}/`;
+        const relativeImage = 'social-media/images/autotest-relative.png';
+        await openFixture(I, [socialItem('youtube', 1, { image: relativeImage }), socialItem('facebook', 1)], 200, baseUrl);
+        await I.assertEqual(fixture.imageRequests.length, 0);
+        await I.clickCss(toggle);
+        await I.waitForVisible(`${cards}:first-child ${images}`, 10);
+        await I.waitForFunction(() => [...document.querySelectorAll('.md-dashboard-widget__news-image')]
+            .every(image => image.complete && image.naturalWidth > 0), 10);
+        await I.assertEqual(await I.grabAttributeFrom(`${cards}:first-child ${images}`, 'src'), `${baseUrl}${relativeImage}`);
+        await I.assertEqual(await I.grabAttributeFrom(`${cards}:nth-child(2) ${images}`, 'src'), 'https://news.example/images/facebook-1.png');
+        await I.assertTrue(fixture.imageRequests.some(request => request.url === `${baseUrl}${relativeImage}`));
+        await I.assertTrue(fixture.imageRequests.every(request => !request.headers.referer && !request.headers.cookie));
     }
     await I.wjSetDefaultWindowSize();
 });

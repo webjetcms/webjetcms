@@ -104,6 +104,99 @@ class SocialMediaFeedGeneratorTest {
         assertEquals("New Facebook post", output("en").path("news").get(0).path("title").asText());
     }
 
+    /** Summaries remove a repeated emoji title, social links and markup without discarding the useful next sentence. */
+    @Test
+    void summarizesSocialTextWithoutRepeatingItsTitle() throws Exception {
+        String title = "🚀 Novinky vo WebJET CMS";
+        String body = title + "\n\n## Editor prináša nové možnosti.\n- Pozrite si https://example.com/video a www.example.com. #WebJET #CMS";
+        assertEquals("Editor prináša nové možnosti.", SocialMediaFeedGenerator.summarize(body, title));
+        assertEquals("", SocialMediaFeedGenerator.summarize("  🚀 Novinky\tvo WebJET CMS  ", title));
+        assertEquals("JavaScript changes are ready.", SocialMediaFeedGenerator.summarize("JavaScript changes are ready.", "Java"));
+        assertEquals("Súbory nájdete", SocialMediaFeedGenerator.summarize("Súbory nájdete ftp://example.com/file https://example.com www.example.com #CMS", "Iný názov"));
+        generator(new AtomicReference<>(youtube(0, "", "", "")), new AtomicReference<>(facebook(1, body)),
+            (text, language) -> text).generate();
+        JsonNode post = output("sk").path("news").get(0);
+        assertEquals(title, post.path("title").asText());
+        assertEquals("Editor prináša nové možnosti.", post.path("perex").asText());
+        generator(new AtomicReference<>(youtube(0, "", "", "")), new AtomicReference<>(facebook(1, title)),
+            (text, language) -> text).generate();
+        assertEquals("", output("sk").path("news").get(0).path("perex").asText());
+
+        String longFirstLine = "🚀 " + "Nové možnosti nastavenia textu a kontajnera vo WebJET CMS ".repeat(5).stripTrailing();
+        String truncatedTitle = longFirstLine.substring(0, longFirstLine.offsetByCodePoints(0, 119)).stripTrailing() + "…";
+        String longBody = longFirstLine + "\n\nNastavte si vlastný vzhľad stránky. Podrobnosti nájdete vo videu.";
+        assertEquals("Nastavte si vlastný vzhľad stránky.", SocialMediaFeedGenerator.summarize(longBody, truncatedTitle));
+        assertEquals("", SocialMediaFeedGenerator.summarize(longFirstLine, truncatedTitle));
+        generator(new AtomicReference<>(youtube(0, "", "", "")), new AtomicReference<>(facebook(1, longBody)),
+            (text, language) -> text).generate();
+        post = output("sk").path("news").get(0);
+        assertEquals(truncatedTitle, post.path("title").asText());
+        assertEquals("Nastavte si vlastný vzhľad stránky.", post.path("perex").asText());
+        generator(new AtomicReference<>(youtube(0, "", "", "")), new AtomicReference<>(facebook(1, longFirstLine)),
+            (text, language) -> text).generate();
+        assertEquals("", output("sk").path("news").get(0).path("perex").asText());
+    }
+
+    /** Long summaries preserve Unicode code points and end at a word boundary when one is available. */
+    @Test
+    void boundsSummariesWithoutSplittingUnicodeOrWords() {
+        String emojiSummary = SocialMediaFeedGenerator.summarize("🚀".repeat(200), "Unrelated title");
+        assertEquals(180, emojiSummary.codePointCount(0, emojiSummary.length()));
+        assertTrue(emojiSummary.endsWith("…"));
+        assertTrue(emojiSummary.codePoints().noneMatch(value -> value >= 0xD800 && value <= 0xDFFF));
+        String longText = "Bezpečná aktualizácia systému ".repeat(15);
+        String wordSummary = SocialMediaFeedGenerator.summarize(longText, "Unrelated title");
+        assertTrue(wordSummary.codePointCount(0, wordSummary.length()) <= 180);
+        assertTrue(wordSummary.endsWith("…"));
+        assertTrue(longText.startsWith(wordSummary.substring(0, wordSummary.length() - 1).stripTrailing() + " "));
+        assertFalse(wordSummary.contains("\n"));
+    }
+
+    /** Translation receives a concise description and cannot reintroduce a repeated title or links into the published summary. */
+    @Test
+    void summarizesBeforeAndAfterTranslationWithoutRepeatingTranslationCalls() throws Exception {
+        String title = "🚀 Nové možnosti";
+        AtomicInteger calls = new AtomicInteger();
+        SocialMediaFeedGenerator generator = generator(new AtomicReference<>(youtube(0, "", "", "")),
+            new AtomicReference<>(facebook(1, title + "\nEditor teraz podporuje zmeny. https://example.com #WebJET")),
+            (text, language) -> {
+                calls.incrementAndGet();
+                String translatedTitle = language + " translated title";
+                if (text.equals(title)) return translatedTitle;
+                assertEquals("Editor teraz podporuje zmeny.", text);
+                return translatedTitle + "\nThe editor now supports changes. See https://example.com #WebJET";
+            });
+        generator.generate();
+        assertEquals(4, calls.get());
+        assertEquals("The editor now supports changes.", output("en").path("news").get(0).path("perex").asText());
+        generator.generate();
+        assertEquals(4, calls.get());
+        assertEquals("The editor now supports changes.", output("en").path("news").get(0).path("perex").asText());
+    }
+
+    /** Old cached source and translated fallback descriptions are shortened even when both providers and translation are offline. */
+    @Test
+    void summarizesOldCachedDescriptionsAndTranslationFallbacks() throws Exception {
+        String title = "🚀 Aktualizácia WebJET";
+        SocialMediaFeedGenerator.Post post = new SocialMediaFeedGenerator.Post("facebook:" + PAGE + "_1", "facebook", title,
+            title + "\nZmeny sú už dostupné. " + "Dlhý text ".repeat(100) + "https://example.com #WebJET",
+            "https://www.facebook.com/" + PAGE + "/posts/1", "2026-10-05T09:00:00Z", "", null);
+        String translatedTitle = "🚀 WebJET update";
+        Map<String, SocialMediaFeedGenerator.Translation> translations = Map.of(
+            post.id() + ":en:title", new SocialMediaFeedGenerator.Translation("old-source-hash", translatedTitle),
+            post.id() + ":en:perex", new SocialMediaFeedGenerator.Translation("old-source-hash",
+                translatedTitle + "\nThe changes are available. " + "More details ".repeat(100) + "https://example.com"));
+        writeCache(post, translations);
+        SocialMediaFeedGenerator generator = generator(new AtomicReference<>(null), new AtomicReference<>(null),
+            (text, language) -> { throw new IllegalStateException("translation offline"); });
+        generator.generate();
+        assertEquals("Zmeny sú už dostupné.", output("sk").path("news").get(0).path("perex").asText());
+        assertEquals(translatedTitle, output("en").path("news").get(0).path("title").asText());
+        assertEquals("The changes are available.", output("en").path("news").get(0).path("perex").asText());
+        generator.generate();
+        assertEquals("The changes are available.", output("en").path("news").get(0).path("perex").asText());
+    }
+
     /** Localized output contains only social posts, replaces old release feeds and reuses persistent translations. */
     @Test
     void mergesLocalizedFeedsAndReusesPersistentTranslations() throws Exception {
@@ -199,7 +292,7 @@ class SocialMediaFeedGeneratorTest {
         assertEquals("&lt;img/&gt;", output("sk").path("news").get(0).path("perex").asText());
     }
 
-    /** Preview bytes are re-encoded and published under the central origin instead of exposing CDN URLs. */
+    /** Preview bytes are re-encoded and published through portable relative paths instead of exposing CDN URLs. */
     @Test
     void cachesThumbnailsOnTheCentralHost() throws Exception {
         ByteArrayOutputStream png = new ByteArrayOutputStream();
@@ -214,15 +307,48 @@ class SocialMediaFeedGeneratorTest {
         }, (text, language) -> text);
         generator.generate();
         String image = output("sk").path("news").get(0).path("image").asText();
-        assertTrue(image.startsWith("https://docs.webjetcms.sk/json/social-media/images/"));
-        assertTrue(image.endsWith(".jpg"));
-        Path imageFile = directory.resolve("output/social-media/images/" + image.substring(image.lastIndexOf('/') + 1));
+        assertTrue(image.matches("social-media/images/[a-f0-9]{32}\\.jpg"));
+        Path imageFile = directory.resolve("output").resolve(image);
         BufferedImage decoded = ImageIO.read(imageFile.toFile());
         assertEquals(640, decoded.getWidth());
         assertEquals(480, decoded.getHeight());
         generator.generate();
         assertEquals(1, imageRequests.get());
         assertThrows(IOException.class, () -> SocialMediaFeedGenerator.thumbnail(bytes("<svg onload='x'/>")));
+    }
+
+    /** Existing owned absolute image paths migrate without downloads while traversal and unrelated cached paths are omitted. */
+    @Test
+    void normalizesOwnedCachedImagesAndRejectsUnrelatedPaths() throws Exception {
+        String remoteImage = "https://i2.ytimg.com/vi/video000001/hqdefault.jpg";
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        ImageIO.write(new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB), "png", png);
+        SocialMediaFeedGenerator initial = new SocialMediaFeedGenerator(settings(), (uri, token, limit) -> {
+            if (uri.getHost().equals("www.youtube.com")) return youtube(1, "Video", "Popis", remoteImage);
+            if (uri.getHost().equals("graph.facebook.com")) return bytes("{\"data\":[]}");
+            return png.toByteArray();
+        }, (text, language) -> text);
+        initial.generate();
+        String relativeImage = output("sk").path("news").get(0).path("image").asText();
+        assertTrue(relativeImage.matches("social-media/images/[a-f0-9]{32}\\.jpg"));
+        SocialMediaFeedGenerator.Post post = new SocialMediaFeedGenerator.Post("youtube:video000001", "youtube", "Video 1", "Popis",
+            "https://www.youtube.com/watch?v=video000001", "2026-10-01T10:00:00Z", remoteImage,
+            "https://docs.webjetcms.sk/json/" + relativeImage);
+        writeCache(post, Map.of());
+        SocialMediaFeedGenerator offline = generator(new AtomicReference<>(null), new AtomicReference<>(null), (text, language) -> text);
+        offline.generate();
+        assertEquals(relativeImage, output("sk").path("news").get(0).path("image").asText());
+        assertEquals(relativeImage, MAPPER.readTree(Files.readString(directory.resolve("private/feed-cache.json")))
+            .path("sources").path("youtube").get(0).path("image").asText());
+        offline.generate();
+        assertEquals(relativeImage, output("sk").path("news").get(0).path("image").asText());
+        for (String invalid : List.of("social-media/images/../" + relativeImage.substring(relativeImage.lastIndexOf('/') + 1),
+            "https://external.example/other-image.jpg", "social-media/images/" + "0".repeat(32) + ".jpg")) {
+            writeCache(new SocialMediaFeedGenerator.Post(post.id(), post.source(), post.title(), post.perex(), post.link(),
+                post.publishedAt(), post.remoteImage(), invalid), Map.of());
+            offline.generate();
+            assertFalse(output("sk").path("news").get(0).has("image"), invalid);
+        }
     }
 
     /** Unsafe upstream image URLs cannot redirect the generator to arbitrary or local services. */
@@ -289,7 +415,7 @@ class SocialMediaFeedGeneratorTest {
         assertEquals(4, output("sk").path("news").size());
         assertEquals("youtube:video000002", output("sk").path("news").get(3).path("id").asText());
         assertEquals(16, calls.get());
-        facebook.set(facebook(4, "Facebook"));
+        facebook.set(facebook(4, "Facebook\nDetaily príspevku."));
         generator.generate();
         JsonNode news = output("sk").path("news");
         assertEquals(6, news.size());
@@ -318,8 +444,8 @@ class SocialMediaFeedGeneratorTest {
     @Test
     void rejectsPublicFeedsAboveTheBrowserLimit() throws Exception {
         String previous = "{\"news\":[]}";
-        SocialMediaFeedGenerator.Post oversized = new SocialMediaFeedGenerator.Post("youtube:video000001", "youtube", "Video",
-            "x".repeat(256 * 1024), "https://www.youtube.com/watch?v=video000001", "2026-10-05T09:00:00Z", "", null);
+        SocialMediaFeedGenerator.Post oversized = new SocialMediaFeedGenerator.Post("youtube:video000001", "youtube", "x".repeat(256 * 1024),
+            "Popis", "https://www.youtube.com/watch?v=video000001", "2026-10-05T09:00:00Z", "", null);
         Path cacheFile = directory.resolve("private/feed-cache.json");
         Files.createDirectories(cacheFile.getParent());
         byte[] cache = MAPPER.writeValueAsBytes(new SocialMediaFeedGenerator.FeedCache(Map.of("youtube", List.of(oversized)), Map.of()));
@@ -383,7 +509,13 @@ class SocialMediaFeedGeneratorTest {
 
     private SocialMediaFeedGenerator.Settings settings() {
         return new SocialMediaFeedGenerator.Settings(directory.resolve("output"),
-            directory.resolve("private/feed-cache.json"), URI.create("https://docs.webjetcms.sk/json/"), CHANNEL, PAGE, "secret-token", "v26.0");
+            directory.resolve("private/feed-cache.json"), CHANNEL, PAGE, "secret-token", "v26.0");
+    }
+
+    private void writeCache(SocialMediaFeedGenerator.Post post, Map<String, SocialMediaFeedGenerator.Translation> translations) throws IOException {
+        Path cache = directory.resolve("private/feed-cache.json");
+        Files.createDirectories(cache.getParent());
+        Files.write(cache, MAPPER.writeValueAsBytes(new SocialMediaFeedGenerator.FeedCache(Map.of(post.source(), List.of(post)), translations)));
     }
 
     private JsonNode output(String language) throws IOException {

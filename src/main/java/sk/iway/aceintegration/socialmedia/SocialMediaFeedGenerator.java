@@ -14,6 +14,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.BreakIterator;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -24,6 +25,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -68,6 +70,8 @@ public final class SocialMediaFeedGenerator {
     private static final int MAX_FEED_BYTES = 2 * 1024 * 1024;
     private static final int MAX_PUBLIC_FEED_BYTES = 256 * 1024;
     private static final int MAX_IMAGE_BYTES = 3 * 1024 * 1024;
+    private static final int MAX_PEREX_LENGTH = 180;
+    private static final int MAX_FACEBOOK_TITLE_LENGTH = 120;
     private static final AtomicBoolean RUNNING = new AtomicBoolean();
     private final Settings settings;
     private final Downloader downloader;
@@ -164,6 +168,7 @@ public final class SocialMediaFeedGenerator {
         if (!Files.exists(settings.cacheFile())) return new FeedCache(Map.of(), Map.of());
         FeedCache cache = MAPPER.treeToValue(readJson(settings.cacheFile()), FeedCache.class);
         if (cache == null || cache.sources() == null || cache.translations() == null) throw new IOException("Invalid feed cache");
+        Map<String, List<Post>> sources = new LinkedHashMap<>();
         for (String source : SOURCES) {
             List<Post> posts = cache.sources().getOrDefault(source, List.of());
             if (posts == null || posts.size() > ("youtube".equals(source) ? YOUTUBE_FALLBACK_ITEMS : ITEMS_PER_SOURCE)) {
@@ -174,8 +179,9 @@ public final class SocialMediaFeedGenerator {
                     || post.title() == null || post.perex() == null || !isPostLink(post.link(), source)
                     || parseDate(post.publishedAt()) == null) throw new IOException("Invalid cached post");
             }
+            sources.put(source, posts.stream().map(post -> withImage(post, ownImage(post.image()))).toList());
         }
-        return cache;
+        return new FeedCache(sources, cache.translations());
     }
 
     private List<Post> fetchYoutube() throws Exception {
@@ -248,7 +254,7 @@ public final class SocialMediaFeedGenerator {
             JsonNode attachment = entry.path("attachments").path("data").path(0);
             String message = cleanText(entry.path("message").asText(""), 600);
             String title = message.isBlank() ? cleanText(attachment.path("title").asText(""), 180)
-                : cleanText(message.split("\\R", 2)[0], 120);
+                : cleanText(message.split("\\R", 2)[0], MAX_FACEBOOK_TITLE_LENGTH);
             if (title.isBlank()) title = "Nový príspevok na Facebooku";
             if (message.isBlank()) message = cleanText(attachment.path("description").asText(""), 600);
             posts.add(new Post("facebook:" + id, "facebook", title, message, link, published,
@@ -276,24 +282,31 @@ public final class SocialMediaFeedGenerator {
                 byte[] jpeg = thumbnail(downloader.download(remote, null, MAX_IMAGE_BYTES));
                 publishFiles(Map.of(path, jpeg));
             }
-            cached = settings.publicOutputUrl().resolve("social-media/images/" + fileName).toString();
+            cached = "social-media/images/" + fileName;
         } catch (Exception exception) {
-            if (previous != null && previous.image() != null && isOwnImage(previous.image())) cached = previous.image();
+            if (previous != null) cached = ownImage(previous.image());
             Logger.warn(SocialMediaFeedGenerator.class, "Unable to cache preview for " + post.id() + "; using text or the previous preview");
         }
         return withImage(post, cached);
     }
 
-    private boolean isOwnImage(String image) {
+    /** Normalizes previous absolute preview URLs to portable paths, accepting only existing local previews. */
+    private String ownImage(String image) {
+        if (image == null) return null;
         try {
-            URI base = settings.publicOutputUrl().resolve("social-media/images/");
             URI uri = URI.create(image);
-            if (!SocialMediaHttpClient.isHttps(uri) || !uri.toString().startsWith(base.toString())) return false;
-            String filename = uri.toString().substring(base.toString().length());
-            return filename.matches("[a-f0-9]{32}\\.jpg")
-                && Files.isRegularFile(settings.outputDirectory().resolve("social-media/images").resolve(filename));
+            String relative = image;
+            if (uri.isAbsolute()) {
+                if (!SocialMediaHttpClient.isHttps(uri) || uri.getRawQuery() != null || uri.getRawFragment() != null
+                    || !uri.normalize().equals(uri) || uri.getRawPath().contains("%")) return null;
+                int index = uri.getRawPath().lastIndexOf("/social-media/images/");
+                if (index < 0) return null;
+                relative = uri.getRawPath().substring(index + 1);
+            }
+            return relative.matches("social-media/images/[a-f0-9]{32}\\.jpg")
+                && Files.isRegularFile(settings.outputDirectory().resolve(relative)) ? relative : null;
         } catch (IllegalArgumentException exception) {
-            return false;
+            return null;
         }
     }
 
@@ -337,13 +350,16 @@ public final class SocialMediaFeedGenerator {
 
     private ObjectNode toNews(Post post, String language, Map<String, Translation> previous, Map<String, Translation> current) {
         ObjectNode news = MAPPER.createObjectNode();
-        news.put("title", translate(post, "title", post.title(), language, previous, current));
-        news.put("perex", escapePerex(translate(post, "perex", post.perex(), language, previous, current)));
+        String title = translate(post, "title", post.title(), language, previous, current);
+        String perex = summarize(post.perex(), post.title());
+        news.put("title", title);
+        news.put("perex", escapePerex(summarize(translate(post, "perex", perex, language, previous, current), title)));
         news.put("link", post.link());
         news.put("id", post.id());
         news.put("source", post.source());
         news.put("publishedAt", post.publishedAt());
-        if (post.image() != null && isOwnImage(post.image())) news.put("image", post.image());
+        String image = ownImage(post.image());
+        if (image != null) news.put("image", image);
         return news;
     }
 
@@ -379,6 +395,44 @@ public final class SocialMediaFeedGenerator {
     static String escapePerex(String text) {
         return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
             .replace("\"", "&quot;").replace("'", "&#39;").replace("[", "&#91;").replace("]", "&#93;");
+    }
+
+    /** Produces a short plain-text excerpt without repeating the title or exposing long social links. */
+    static String summarize(String text, String title) {
+        if (text != null && title != null && title.endsWith("…")) {
+            String body = text.stripLeading();
+            String firstLine = body.split("\\R", 2)[0];
+            if (cleanText(firstLine, MAX_FACEBOOK_TITLE_LENGTH).equals(title)) text = body.substring(firstLine.length());
+        }
+        String summary = summaryText(text);
+        String heading = summaryText(title);
+        if (!heading.isEmpty() && summary.startsWith(heading)
+            && (summary.length() == heading.length() || !Character.isLetterOrDigit(summary.codePointAt(heading.length())))) {
+            summary = summary.substring(heading.length()).stripLeading();
+        }
+        if (summary.isEmpty()) return "";
+        BreakIterator sentences = BreakIterator.getSentenceInstance(Locale.ROOT);
+        sentences.setText(summary);
+        int boundary = sentences.next();
+        String firstSentence = summary.substring(0, boundary).stripTrailing();
+        if (firstSentence.codePointCount(0, firstSentence.length()) <= MAX_PEREX_LENGTH) return firstSentence;
+        int end = summary.offsetByCodePoints(0, MAX_PEREX_LENGTH - 1);
+        if (!Character.isWhitespace(summary.codePointAt(end))) {
+            int lastSpace = summary.lastIndexOf(' ', end - 1);
+            if (lastSpace > 0) end = lastSpace;
+        }
+        return summary.substring(0, end).stripTrailing() + "…";
+    }
+
+    private static String summaryText(String value) {
+        if (value == null) return "";
+        return value.replaceAll("[\\p{Cntrl}&&[^\\r\\n\\t]]", "")
+            .replace("\\n", "\n")
+            .replaceAll("!?\\[([^\\]\\r\\n]+)\\]\\([^)]*\\)", "$1")
+            .replaceAll("(?i)\\b(?:https?://|ftp://|www\\.)[^\\s<>]+", "")
+            .replaceAll("(?U)(?<!\\S)#[\\p{L}\\p{N}_]+", "")
+            .replaceAll("(?m)^\\h*(?:[-*+•]\\h+|[0-9]+[.)]\\h+|#{1,6}\\h+)", "")
+            .replaceAll("(?U)\\s+", " ").trim();
     }
 
     private static String cleanText(String value, int limit) {
@@ -469,16 +523,12 @@ public final class SocialMediaFeedGenerator {
         String translate(String text, String language);
     }
 
-    record Settings(Path outputDirectory, Path cacheFile, URI publicOutputUrl,
+    record Settings(Path outputDirectory, Path cacheFile,
         String youtubeChannelId, String facebookPageId, String facebookToken, String facebookApiVersion) {
 
         static Settings fromConfiguration() throws IOException {
             String output = Constants.getString("socialMediaFeedOutputDirectory", "/json/");
             String cache = "/WEB-INF/social-media/feed-cache.json";
-            URI base = URI.create(Constants.getString("socialMediaFeedPublicBaseUrl", "https://docs.webjetcms.sk"));
-            if (!SocialMediaHttpClient.isHttps(base) || base.getRawQuery() != null || !(base.getPath().isEmpty() || "/".equals(base.getPath()))) {
-                throw new IOException("Public base URL must be an HTTPS origin");
-            }
             String youtube = Constants.getString("socialMediaYoutubeChannelId", "UCtS48g2dGJ5WVeh89PAOeLA");
             String facebook = Constants.getString("socialMediaFacebookPageId", "237316516345904");
             String version = Constants.getString("socialMediaFacebookApiVersion", "v26.0");
@@ -486,7 +536,7 @@ public final class SocialMediaFeedGenerator {
                 throw new IOException("Invalid social account configuration");
             }
             return new Settings(Path.of(Tools.getRealPath(output)), Path.of(Tools.getRealPath(cache)),
-                base.resolve(output), youtube, facebook, readFacebookToken(), version);
+                youtube, facebook, readFacebookToken(), version);
         }
 
         private static String readFacebookToken() {

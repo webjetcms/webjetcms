@@ -15,7 +15,6 @@ Cesty v konfigurácii sú relatívne ku koreňu webovej aplikácie. Súkromná c
 | Premenná | Predvolená hodnota | Význam |
 | --- | --- | --- |
 | `socialMediaFeedOutputDirectory` | `/json/` | Verejný výstupný priečinok. |
-| `socialMediaFeedPublicBaseUrl` | `https://docs.webjetcms.sk` | Verejná HTTPS adresa servera pre odkazy na uložené obrázky. |
 | `socialMediaYoutubeChannelId` | `UCtS48g2dGJ5WVeh89PAOeLA` | YouTube kanál, z ktorého sa číta verejný Atom feed. Nevyžaduje API kľúč. |
 | `socialMediaFacebookPageId` | `237316516345904` | ID stránky WebJET CMS pre Graph API, overené cez `GET /me?fields=id,name` s Page tokenom. |
 | `socialMediaFacebookAccessToken` | prázdna | Page access token. Pri ukladaní zapnite **Šifrovať**. Token sa zadáva iba na docs serveri. |
@@ -50,11 +49,17 @@ Koreň JSON zostáva objekt s poľom `news`. Každá položka má textové polia
   "id": "youtube:VIDEO_ID",
   "source": "youtube",
   "publishedAt": "2026-10-18T09:00:00Z",
-  "image": "https://docs.webjetcms.sk/json/social-media/images/VIDEO_ID.jpg"
+  "image": "social-media/images/1d26cf12a6e34c59a10f82d9139af543.jpg"
 }
 ```
 
 Generátor zaradí najviac tri posledné položky z každej siete, spoločne zoradené od najnovšej. Ak nie je dostupný žiadny Facebook príspevok, zaradí štyri YouTube videá, pokiaľ ich kanál ponúka. Verejný súbor obsahuje iba sociálne príspevky; novinky vydaní ani obsah starého verejného JSON sa doň nepridávajú.
+
+`perex` je krátky textový výňatok s najviac 180 zobrazenými znakmi, aby sa zmestil aj do starého zobrazenia noviniek. Generátor použije prvú úplnú vetu, ak sa do limitu zmestí; inak text skráti na hranici slova a pridá výpustku. Odstráni URL, hashtagy a značky odrážok, riadky spojí do súvislého textu. Obsah zoznamu môže zostať ako obyčajný text. Rovnaké obmedzenie platí aj pre preklady; bezpečné kódovanie znakov môže predĺžiť zápis v JSON.
+
+Ak text začína zopakovaným názvom príspevku, generátor ho zo začiatku `perex` odstráni. Kontrola prebehne aj po preklade. Príspevok obsahujúci iba názov má prázdny `perex`, aby sa rovnaký text nezobrazil dvakrát.
+
+`image` obsahuje cestu relatívnu k priečinku s JSON, napríklad `social-media/images/1d26cf12a6e34c59a10f82d9139af543.jpg`. Dashboard ju doplní podľa adresy načítaného súboru vytvorenej z `overviewJsonUrl`. Pri hodnote `https://docs.webjetcms.sk/json/new/` sa teda obrázok načíta z `/json/new/social-media/images/`. Pri presune výstupného priečinka preneste aj jeho podpriečinok s obrázkami. Samostatná premenná `socialMediaFeedPublicBaseUrl` sa už nepoužíva. Generátor prevedie aj vlastné uložené absolútne odkazy z cache na relatívne cesty; dashboard naďalej podporuje absolútne HTTPS odkazy v starších zoznamoch.
 
 Starší klient zobrazí zoznam až pri **aspoň štyroch položkách**. Ak zdroje poskytujú menej, generátor uloží skutočný počet bez dopĺňania náhradných záznamov. Aktuálny dashboard zobrazí aj kratší zoznam; v starom klientovi sa v takom prípade externé novinky nezobrazia. Súkromná cache uchováva aj štvrté YouTube video pre beh bez Facebook príspevkov.
 
@@ -65,7 +70,7 @@ Pri výpadku jednej siete sa zachovajú jej posledné úspešné údaje a druhá
 ## Overenie
 
 - Otvorte verejné `https://docs.webjetcms.sk/json/wjnews.sk.json`, `wjnews.cs.json` a `wjnews.en.json`. Overte platný JSON, skutočný počet sociálnych položiek, poradie a nezmenené polia `title`, `perex`, `link`. Overte rovnaké ID a odkazy vo všetkých jazykoch a pri behu bez Facebooku štyri YouTube videá, ak sú dostupné.
-- Overte dostupnosť odkazov `image` cez HTTPS z administrácie na inej doméne a zablokovanie verejného prístupu k `/WEB-INF/social-media/`.
+- Overte, že relatívne cesty `image` smerujú do priečinka s načítaným JSON a obrázky sú dostupné cez HTTPS z administrácie na inej doméne. Skontrolujte aj vlastný podpriečinok nastavený v `overviewJsonUrl` a zablokovanie verejného prístupu k `/WEB-INF/social-media/`.
 - Pre verejné JSON odpovede aj obrázky pod `/json/social-media/images/` nastavte CORS tak, aby ich mohla čítať administrácia zákazníka. Pri verejných údajoch bez prihlasovacích údajov možno použiť `Access-Control-Allow-Origin: *`. Obrázky sa načítavajú v režime `crossorigin="anonymous"`, preto potrebujú túto hlavičku tiež. Skontrolujte aj povolenie zdroja v CSP zákazníckej administrácie (`connect-src` pre JSON a `img-src` pre náhľady).
 - V aktuálnom WebJET CMS rozbaľte **Čo je nové** a overte, že lokálne novinky verzie sú prvé a pod nimi sú externé karty. Na staršej verzii overte textový zoznam z rovnakej URL.
 - Po nastavení Facebook tokenu overte živé načítanie príspevkov. Pri opakovanom behu skontrolujte, že sa príspevky nezdvojujú a nezmenené texty sa znova neprekladajú.

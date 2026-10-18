@@ -19,18 +19,32 @@ const pendingReadingWrites = new WeakMap();
  * @property {string} link - HTTP(S) destination.
  * @property {'webjet'|'youtube'|'facebook'} source - Origin of the announcement.
  * @property {string|null} publishedAt - ISO publication date when supplied.
- * @property {string|null} image - Optional HTTPS thumbnail URL.
+ * @property {string|null} image - Optional HTTPS thumbnail or image on an explicitly configured HTTP feed origin.
  */
 
 /** Accepts explicit HTTP(S) or root-relative URLs without credentials or ambiguous separators. */
-function safeUrl(value, base, image = false) {
+function safeUrl(value, base) {
     if (typeof value !== 'string' || value.length > 2048 || /[\\\u0000-\u001f\u007f]/.test(value)) return null;
     const trimmed = value.trim();
     if (!/^(?:https?:\/\/[^/]|\/(?!\/))/i.test(trimmed)) return null;
     try {
         const url = new URL(trimmed, base);
         if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return null;
-        if (image && url.protocol !== 'https:') return null;
+        return url.href;
+    } catch (error) { return null; }
+}
+
+/** Resolves thumbnails against the feed directory while preserving legacy absolute HTTPS images. */
+function safeImageUrl(value, base) {
+    if (typeof value !== 'string' || value.length > 2048 || /[\\\u0000-\u001f\u007f]/.test(value)) return null;
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.startsWith('//') || /^[?#]/.test(trimmed)) return null;
+    if (/^[a-z][a-z\d+.-]*:/i.test(trimmed) && !/^https?:\/\/[^/]/i.test(trimmed)) return null;
+    try {
+        const feed = new URL(base, window.location.origin);
+        const url = new URL(trimmed, feed);
+        if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password) return null;
+        if (url.protocol === 'http:' && (feed.protocol !== 'http:' || url.origin !== feed.origin)) return null;
         return url.href;
     } catch (error) { return null; }
 }
@@ -81,7 +95,7 @@ function releaseIdentity(link) {
 /**
  * Validates old and enriched news records while preserving publisher order.
  * @param {Object} payload - Existing {news:[{title,perex,link,...}]} feed.
- * @param {string} url - Feed URL used to resolve root-relative links.
+ * @param {string} url - Feed URL used to resolve root-relative links and relative thumbnails.
  * @returns {ExternalNewsItem[]} Bounded, deduplicated announcements.
  * @throws {Error} If the envelope is malformed or every supplied record is invalid.
  */
@@ -108,7 +122,7 @@ function normalizeRecords(payload, url, summary) {
         const date = typeof record.publishedAt === 'string' ? Date.parse(record.publishedAt) : NaN;
         items.push({ id, title, description: summary(record.perex).slice(0, 1200), link, source,
             publishedAt: Number.isFinite(date) ? new Date(date).toISOString() : null,
-            image: safeUrl(record.image, url, true) });
+            image: safeImageUrl(record.image, url) });
     }
     if (payload.news.length && !items.length) throw new Error('News feed contains no valid records');
     return items;
