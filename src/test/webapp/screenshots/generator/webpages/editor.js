@@ -55,9 +55,6 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
     let settingDialogA = ".cke.cke_reset_all.cke_1.cke_panel.cke_panel.cke_menu_panel.cke_ltr";
 
     Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content','/redactor/webpages/working-in-editor/editor_preview.png')
-    I.clickCss('#cke_11');
-    Document.screenshotElement('#cke_118','/redactor/webpages/working-in-editor/roletka.png');
-    I.clickCss('#cke_11');
 
     const selectorsAndPaths = [
         ['#cke_13', '/redactor/webpages/working-in-editor/paste.png'],

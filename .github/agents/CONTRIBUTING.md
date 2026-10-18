@@ -78,6 +78,8 @@ Choose a new output directory; the exporter refuses an existing destination. It 
 
 The exporter rewrites relative links to bundled references and tracked core files. Keep links relative in the maintained source; use code-formatted core paths for locations that may not exist in customer checkouts. Do not edit generated reference copies.
 
+To keep a skill only in the core repository, add its exact directory name to `.github/skills-distribution/excluded-skills.txt`, one name per line. Blank lines and lines starting with `#` are ignored; glob patterns and unknown skill names are rejected. The exporter omits the entire skill directory and its manifest entry. Required skills `wj-project-context` and `wj-setup` cannot be excluded. The existing workflow watches this file and removes previously published excluded skills during synchronization.
+
 ## Documentation and completion
 
 - Update relevant product/developer documentation for behavior changes. Core Slovak documentation is in `docs/sk/`; follow the existing translation workflow for the other languages.

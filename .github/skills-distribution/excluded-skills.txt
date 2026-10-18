@@ -1,0 +1,6 @@
+# Skills kept in the CMS source repository but excluded from webjetcms/skills.
+# One exact directory name from .agents/skills per line; no glob patterns.
+# Blank lines and lines starting with # are ignored.
+
+# CKEditor plugin development requires the core and libs-ckeditor4 repositories.
+wj-cke-stylescombo

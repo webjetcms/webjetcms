@@ -31,6 +31,7 @@ async function sourceFixture(t) {
         '.github/agents/AGENTS.md': '[System](AGENTS-system.md)\n',
         '.github/agents/AGENTS-system.md': '# System\n',
         '.github/skills-distribution/README.md': '# Distribution\n[License](LICENSE.md)\n',
+        '.github/skills-distribution/excluded-skills.txt': '# No excluded skills\n',
         'LICENSE.md': 'Original licensing and attribution\n',
         'src/example.java': 'class Example {}\n'
     };
@@ -68,6 +69,37 @@ test('export is reproducible, content hashes ignore source-only revisions, and r
     const removed = await exportSkills({ root, output: join(root, 'removed'), revision: 'b'.repeat(40) });
     assert.deepEqual(removed.skills, ['wj-project-context', 'wj-setup']);
     await assert.rejects(exportSkills({ root, output: join(root, 'removed'), revision: 'b'.repeat(40) }), { code: 'EEXIST' });
+});
+
+test('configured exclusions omit whole skills and manifest entries while preserving similarly named skills and source links', async (t) => {
+    const root = await sourceFixture(t);
+    await put(root, '.agents/skills/wj-core-only/SKILL.md', '---\nname: wj-core-only\ndescription: Core workflow.\n---\n');
+    await put(root, '.agents/skills/wj-example-extra/SKILL.md', '---\nname: wj-example-extra\ndescription: Related workflow.\n---\n[Core guide](../wj-example/references/guide.md)\n');
+    execFileSync('git', ['-C', root, 'add', '.agents/skills']);
+    const first = await exportSkills({ root, output: join(root, 'first'), revision: 'a'.repeat(40) });
+    await put(root, '.github/skills-distribution/excluded-skills.txt', '# Core-only skills\r\n\r\n  wj-example  \r\nwj-core-only\r\n');
+    const output = join(root, 'excluded');
+    const result = await exportSkills({ root, output, revision: 'a'.repeat(40) });
+    assert.deepEqual(result.skills, ['wj-example-extra', 'wj-project-context', 'wj-setup']);
+    assert.deepEqual((await readdir(join(output, 'skills'))).sort(), result.skills);
+    assert.deepEqual(JSON.parse(await readFile(join(output, 'source.json'), 'utf8')), result);
+    assert.notEqual(result.contentHash, first.contentHash);
+    const skill = await readFile(join(output, 'skills/wj-example-extra/SKILL.md'), 'utf8');
+    assert.ok(skill.includes(`https://github.com/webjetcms/webjetcms/blob/${'a'.repeat(40)}/.agents/skills/wj-example/references/guide.md`));
+    assert.equal(await readFile(join(root, '.agents/skills/wj-example/assets/example.txt'), 'utf8'), 'Asset\n');
+    await put(root, '.agents/skills/wj-example/assets/example.txt', 'Updated excluded asset\n');
+    const changed = await exportSkills({ root, output: join(root, 'changed'), revision: 'b'.repeat(40) });
+    assert.equal(changed.contentHash, result.contentHash);
+});
+
+test('invalid exclusions and exclusions of required skills fail before producing a distribution', async (t) => {
+    const root = await sourceFixture(t);
+    const output = join(root, 'invalid');
+    for (const name of ['wj-missing', 'wj-*', '../wj-example', 'wj-project-context', 'wj-setup']) {
+        await put(root, '.github/skills-distribution/excluded-skills.txt', `${name}\n`);
+        await assert.rejects(exportSkills({ root, output, revision: 'a'.repeat(40) }), /Invalid or unknown excluded skill|Missing required tracked skill/);
+        await assert.rejects(readdir(output), { code: 'ENOENT' });
+    }
 });
 
 test('invalid metadata and broken links fail before producing a distribution', async (t) => {

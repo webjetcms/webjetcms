@@ -9,6 +9,7 @@ const SOURCE = 'https://github.com/webjetcms/webjetcms';
 const SKILLS = '.agents/skills/';
 const KNOWLEDGE = '.github/agents/';
 const README = '.github/skills-distribution/README.md';
+const EXCLUDED_SKILLS = '.github/skills-distribution/excluded-skills.txt';
 
 function git(root, args) {
     return execFileSync('git', ['-C', root, ...args], { encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 });
@@ -68,9 +69,19 @@ export async function exportSkills({ root, output, revision }) {
     revision ??= git(root, ['rev-parse', 'HEAD']).trim();
     if (!/^[a-f0-9]{40}$/.test(revision)) throw new Error('Source revision must be a full Git commit SHA.');
     const tracked = new Set(git(root, ['ls-files', '-z']).split('\0').filter(Boolean));
+    const excluded = new Set((await readFile(join(root, EXCLUDED_SKILLS), 'utf8'))
+        .split(/\r?\n/).map((line) => line.trim()).filter((line) => line && !line.startsWith('#')));
+    for (const name of excluded) {
+        if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name) || !tracked.has(`${SKILLS}${name}/SKILL.md`)) {
+            throw new Error(`Invalid or unknown excluded skill in ${EXCLUDED_SKILLS}: ${name}`);
+        }
+    }
     const mappings = new Map();
     for (const path of [...tracked].sort()) {
-        if (path.startsWith(SKILLS)) mappings.set(path, `skills/${path.slice(SKILLS.length)}`);
+        if (path.startsWith(SKILLS)) {
+            const resource = path.slice(SKILLS.length);
+            if (!excluded.has(resource.split('/')[0])) mappings.set(path, `skills/${resource}`);
+        }
         else if (path.startsWith(KNOWLEDGE)) mappings.set(path, `skills/wj-project-context/references/${path.slice(KNOWLEDGE.length)}`);
     }
     mappings.set(README, 'README.md');

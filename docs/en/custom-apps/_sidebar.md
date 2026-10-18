@@ -2,6 +2,8 @@
 
 - [:point_left: Back to Home](/?back)
 
+- [Skills for AI agents](/custom-apps/skills/README.md)
+
 - Spring
   - [Spring Configuration](/custom-apps/spring-config/)
   - [Token Authorization](/custom-apps/spring/api-auth.md)
