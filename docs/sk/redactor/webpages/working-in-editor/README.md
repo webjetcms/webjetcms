@@ -43,6 +43,10 @@ Vystrihnutie textu je možné označením textu a kliknutím na ikonku ![](cut.p
 
 Ponuka **Štýly** obsahuje predvoľby pripravené pre dizajn vašej stránky, napríklad farby textu, odsadenie, pozadia alebo orámovanie. Dostupné štýly a ich názvy závisia od šablóny. Ovládanie je rovnaké v Štandardnom editore aj v Page Builderi.
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/IomtyBHpx64" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 Tlačidlo v paneli nástrojov zobrazuje aktuálny element, napríklad **Odsek** alebo **Nadpis 2**. Ak má nastavené štýly, uvedie skrátenú HTML značku a ich názvy, napríklad **H2 + Spodné odsadenie xs**. Dlhý zoznam sa oreže podľa šírky tlačidla; celý text zobrazíte podržaním kurzora nad ním. Pri výbere viacerých typov elementov sa zobrazí **Výber**.
 
 Kliknite do textu alebo označte jeho časť a otvorte **Štýly** v paneli nástrojov. Vybraný štýl sa použije ihneď a okno zostane otvorené, takže môžete nastaviť viac vlastností za sebou. Na web sa zmeny prenesú až uložením stránky.

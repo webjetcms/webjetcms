@@ -46,7 +46,9 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 
 - Page editor - new menu [Styles](redactor/webpages/working-in-editor/README.md#working-with-styles-and-text-formatting). It displays active styles with the option to remove them and allows you to select the edited paragraph, column or entire section. For proper functionality, it is necessary to have correctly set [CSS selectors](frontend/page-builder/blocks.md#structure-selectors) and created [additional comments](frontend/examples/template-bare/README.md#searching-and-style-groups) in the CSS file of the website. (#356).
 
-![New Styles menu with element selection, active styles, search and previews](redactor/webpages/working-in-editor/roletka.png)
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/IomtyBHpx64" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 - Website Trash - added [automatic deletion of old pages and folders](redactor/apps/gdpr/data-deleting.md) from the trash according to the set retention period. Added the ability to delete pages and folders in the trash and in the [Data deletion](sysadmin/data-deleting/README.md) section according to the selected date range. Unified logic for calculating the number and deleting, fixed permanent deletion of the trash folder and empty folders (#271).
 

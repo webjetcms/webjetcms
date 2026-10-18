@@ -43,6 +43,10 @@ You can cut text by selecting the text and clicking the ![](cut.png ":no-zoom" )
 
 The **Styles** menu contains presets ready for your page design, such as text colors, padding, backgrounds, or borders. The available styles and their names depend on the template. The controls are the same in the Standard Editor and in the Page Builder.
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/IomtyBHpx64" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 A button in the toolbar displays the current element, such as **Paragraph** or **Heading 2**. If it has styles set, it lists the abbreviated HTML tag and their names, such as **H2 + Bottom padding xs**. A long list is clipped to the width of the button; hover over it to see the full text. **Selection** appears when multiple element types are selected.
 
 Click in the text or select a section of it and open **Styles** in the toolbar. The selected style is applied immediately and the window remains open so you can set multiple properties in a row. The changes are not transferred to the web until you save the page.
