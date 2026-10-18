@@ -301,7 +301,7 @@ export function getExternalNewsState(items, feedUrl) {
     const hashes = items.map(item => newsFingerprint(item.id));
     const isNew = hashes.some(hash => !saved.includes(hash));
     const seen = [...new Set([...saved.filter(hash => !hashes.includes(hash)), ...hashes])].slice(-MAX_ITEMS);
-    return { key, value: JSON.stringify({ seen }), isNew, changed: isNew };
+    return { key, value: JSON.stringify({ seen, readAt: Date.now() }), isNew, changed: isNew };
 }
 
 /**

@@ -38,11 +38,11 @@ Relatívna cesta obrázka v poli `image` sa doplní podľa priečinka s JSON. Pr
 
 Pri otvorení úvodnej obrazovky sa použije zoznam uložený v `localStorage`. Ak chýba alebo je starší ako `dashboardSocialRefreshDays`, obnoví sa na pozadí. Pri každom rozbalení sa zoznam overí aj pred uplynutím tejto lehoty. Cache je oddelená podľa URL a jazyka; česká administrácia používa súbor `wjnews.cs.json`. V zbalenej rotácii sa načíta len náhľad práve zobrazenej novinky; ostatné obrázky sa vopred nenačítavajú. Obrázky kariet sa začnú načítavať po rozbalení panela. Náhľad v rotácii nemení stav prečítania.
 
+Štítok **Nové** zostáva zobrazený, kým používateľ nerozbalí neprečítaný obsah. Rozbalenie potvrdí lokálne novinky aj práve zobrazené sociálne položky. Úspešné uloženie do nastavení účtu obsahuje dátum prečítania `readAt`; pre sociálne príspevky sa uchovávajú aj odtlačky ich ID pod kľúčom `dashboard.externalNews.<odtlačok základnej URL>`. Prepnutie jazyka ani úprava prekladu toho istého príspevku nevytvoria nové upozornenie. Nové ID ho vytvorí bez ohľadu na dátum publikovania. Dáta prijaté až po zbalení alebo v skrytej karte prehliadača sa neoznačia za prečítané; ak je panel stále rozbalený, označia sa pri návrate do karty.
+
 Pri chybe načítania sa externé karty, položky rotácie a ich upozornenie skryjú aj vtedy, keď prehliadač má uložené staršie údaje. Panel nezobrazuje hlásenie o načítavaní ani chybe; zostanú lokálne novinky verzie a odkazy na sociálne siete. Uložená cache sa chybou nevymaže.
 
 Hodnota `dashboardSocialRefreshDays=0` vypne požiadavky na JSON a obrázky, externé karty, ich rotáciu aj upozornenie na neprečítané položky. Platí to aj pre dáta, ktoré už prehliadač uložil. Novinky nainštalovanej verzie a odkazy na oba sociálne kanály zostanú dostupné. Po zmene konfigurácie obnovte stránku administrácie.
-
-Stav prečítania externých noviniek sa ukladá k používateľskému účtu po ich zobrazení v rozbalenom paneli. Prepnutie jazyka ich znova neoznačí ako nové. Tento stav je nezávislý od 30-dňového označenia noviniek nainštalovanej verzie, ktoré sa naďalej zdieľa s menu **Pomocník**.
 
 ## Automatické označenie prostredia
 
@@ -126,4 +126,6 @@ Text `admin.overview.changelog` zapisujte ako Markdown nadpis s verziou a zoznam
 - **Testovanie prístupnosti** – Kontroly sú súčasťou automatizovaných testov.
 ```
 
-Počet pri odkaze **Čo je nové** sa odvodí zo zoznamu. Starší text v odsekoch zostáva čitateľný. V `user_settings_admin` sa pre každého používateľa a jazyk uchováva záznam `dashboard.news.<jazyk>` s odtlačkom textu a dátumom prvého zobrazenia (`firstSeen`). Zmena textu obnoví štítok **Nové** na 30 dní. Uloženie ani reset rozloženia dashboardu tento záznam nemení.
+Počet pri odkaze **Čo je nové** sa odvodí zo zoznamu. Starší text v odsekoch zostáva čitateľný. V `user_settings_admin` sa pre každého používateľa a jazyk uchováva záznam `dashboard.news.<jazyk>` s odtlačkom prečítaného textu (`fingerprint`) a dátumom prečítania (`readAt`). Ukladá sa po rozbalení viditeľného panela. Zmena textu obnoví štítok **Nové** aj v rovnakej verzii; upozornenie nevyprší po uplynutí času. Menu Pomocník číta rovnaký stav lokálnych noviniek, ale jeho otvorenie ho nemení. Uloženie ani reset rozloženia dashboardu tento záznam nemení.
+
+Starší záznam s `firstSeen` znamenal iba prvé zobrazenie a nemal informáciu o prečítaní. Po aktualizácii sa preto lokálne novinky zobrazia ako neprečítané, kým ich používateľ raz nerozbalí. Existujúce uložené ID prečítaných sociálnych príspevkov zostávajú platné.

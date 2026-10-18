@@ -98,24 +98,26 @@ test('Shared layout announcements are rendered once and refreshed when the local
     assert.equal(renders, 2);
 });
 
-test('Each account gets thirty days from its first view, and changed text resets the window', t => {
+test('Release news stays unread until acknowledged and changed text becomes unread again without a time limit', t => {
     const { scope, window } = fixture(t);
     const now = Date.UTC(2026, 9, 10);
     const first = scope.newsSeenState(announcement, now);
     assert.equal(first.isNew, true);
+    assert.equal(scope.newsSeenState(announcement, now + 365 * 86400000).isNew, true);
+    window.currentUser.adminSettings[first.key] = JSON.stringify({ fingerprint: scope.newsFingerprint(announcement), firstSeen: now - 31 * 86400000 });
+    assert.equal(scope.newsSeenState(announcement, now).isNew, true, 'Legacy exposure is not proof of reading the full text.');
     window.currentUser.adminSettings[first.key] = first.value;
-    assert.equal(scope.newsSeenState(announcement, now + 30 * 86400000 - 1).isNew, true);
-    const expired = scope.newsSeenState(announcement, now + 30 * 86400000);
-    assert.equal(expired.isNew, false);
-    assert.equal(expired.changed, false);
+    const read = scope.newsSeenState(announcement, now + 365 * 86400000);
+    assert.equal(read.isNew, false);
+    assert.equal(read.changed, false);
     assert.equal(scope.newsSeenState(announcement + 'Updated', now + 40 * 86400000).isNew, true);
     window.currentUser = { adminSettings: {} };
     const lateUser = scope.newsSeenState(announcement, now + 50 * 86400000);
     assert.equal(lateUser.isNew, true);
-    assert.equal(JSON.parse(lateUser.value).firstSeen, now + 50 * 86400000);
+    assert.equal(JSON.parse(lateUser.value).readAt, now + 50 * 86400000);
 });
 
-test('Language changes and invalid records cannot corrupt another language reading window', t => {
+test('Language changes and invalid records cannot corrupt another language acknowledgement', t => {
     const { scope, window } = fixture(t);
     const first = scope.newsSeenState(announcement);
     window.currentUser.adminSettings[first.key] = first.value;
@@ -127,43 +129,49 @@ test('Language changes and invalid records cannot corrupt another language readi
     assert.equal(scope.newsSeenState(announcement).changed, false);
 });
 
-test('New text saves only its account record; failed saves never update the cached preference', async t => {
+test('Only expansion acknowledges local news and a failed save keeps the badge unread', async t => {
     for (const response of [true, false]) {
-        const { render, requests, window, errors } = fixture(t, { response });
+        const { render, requests, window, errors, container } = fixture(t, { response });
         render(); await tick();
+        assert.equal(requests.length, 0, 'Collapsed previews must not acknowledge local news.');
+        assert.equal(container.querySelector('.md-dashboard-widget__news-badge').hidden, false);
+        container.querySelector('.md-dashboard-widget__news-toggle').click(); await tick();
         assert.equal(requests.length, 1);
         assert.equal(requests[0].url, '/admin/rest/admin-settings/');
         const body = JSON.parse(requests[0].options.body);
         assert.equal(body.label, 'dashboard.news.en');
         assert.equal(requests[0].options.headers['X-CSRF-Token'], 'autotest-csrf');
         assert.equal(Boolean(window.currentUser.adminSettings[body.label]), response);
+        assert.ok(JSON.parse(body.value).readAt > Date.now() - 60000);
+        assert.equal(container.querySelector('.md-dashboard-widget__news-badge').hidden, response);
         assert.equal(errors.length, response ? 0 : 1);
     }
 });
 
-test('An unchanged persisted announcement does not write on subsequent renders', t => {
-    const { scope, window, render, requests } = fixture(t);
+test('An unchanged acknowledged announcement does not write on subsequent renders or expansions', async t => {
+    const { scope, window, render, requests, container } = fixture(t);
     const state = scope.newsSeenState(announcement);
     window.currentUser.adminSettings[state.key] = state.value;
     render();
+    container.querySelector('.md-dashboard-widget__news-toggle').click(); await tick();
     assert.equal(requests.length, 0);
 });
 
-test('Help and dashboard share one pending save even when their first-seen timestamps differ', async t => {
+test('Repeated expansion shares one pending save even when acknowledgement timestamps differ', async t => {
     let finish;
     const { scope, requests, window } = fixture(t, { fetchResponse: () => new Promise(resolve => { finish = resolve; }) });
     const now = Date.UTC(2026, 9, 10);
     const dashboardState = scope.newsSeenState(announcement, now);
     const dashboardSave = scope.saveNewsSeen(dashboardState);
-    const helpState = scope.newsSeenState(announcement, now + 500);
-    const helpSave = scope.saveNewsSeen(helpState);
-    assert.equal(helpSave, dashboardSave);
+    const repeatedState = scope.newsSeenState(announcement, now + 500);
+    const repeatedSave = scope.saveNewsSeen(repeatedState);
+    assert.equal(repeatedSave, dashboardSave);
     assert.equal(requests.length, 1);
     finish({ ok: true, json: async () => true });
-    assert.equal(await helpSave, true);
+    assert.equal(await repeatedSave, true);
     assert.equal(window.currentUser.adminSettings[dashboardState.key], dashboardState.value);
-    assert.equal(await scope.saveNewsSeen(helpState), true);
-    assert.equal(requests.length, 1, 'A stale caller must not overwrite a successfully saved reading window.');
+    assert.equal(await scope.saveNewsSeen(repeatedState), true);
+    assert.equal(requests.length, 1, 'A stale caller must not overwrite a successfully saved acknowledgement.');
 });
 
 test('Shared failures notify once, retain confirmed settings and allow a later retry', async t => {
@@ -184,10 +192,11 @@ test('Shared failures notify once, retain confirmed settings and allow a later r
     assert.equal(errors.length, 1);
 });
 
-test('Removing the dashboard does not cancel the reading record shared with Help', async t => {
+test('Removing the dashboard after expansion does not cancel its explicit acknowledgement', async t => {
     let finish;
-    const { scope, render, controller, cleanup, requests, window } = fixture(t, { fetchResponse: () => new Promise(resolve => { finish = resolve; }) });
+    const { scope, render, container, controller, cleanup, requests, window } = fixture(t, { fetchResponse: () => new Promise(resolve => { finish = resolve; }) });
     render();
+    container.querySelector('.md-dashboard-widget__news-toggle').click();
     controller.abort();
     cleanup();
     const state = scope.newsSeenState(announcement);
@@ -204,6 +213,43 @@ test('Both dashboard changelog links use the configured documentation URL', t =>
     for (const selector of ['.md-dashboard-widget__news-version', '.md-dashboard-widget__news-more']) {
         assert.equal(container.querySelector(selector).href, 'https://customer.example/manual/latest/en/CHANGELOG');
     }
+});
+
+test('A hidden expanded dashboard acknowledges the release only when it becomes visible', async t => {
+    const f = fixture(t);
+    Object.defineProperty(f.window.document, 'hidden', { configurable: true, value: true });
+    f.render();
+    f.container.querySelector('.md-dashboard-widget__news-toggle').click(); await tick();
+    assert.equal(f.requests.length, 0);
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-badge').hidden, false);
+    Object.defineProperty(f.window.document, 'hidden', { configurable: true, value: false });
+    f.window.document.dispatchEvent(new f.window.Event('visibilitychange')); await tick();
+    assert.equal(f.requests.length, 1);
+    assert.equal(f.container.querySelector('.md-dashboard-widget__news-badge').hidden, true);
+});
+
+test('Pending release acknowledgements serialize changed text and remain isolated between accounts', async t => {
+    const finishes = [];
+    const { scope, requests, window } = fixture(t, { fetchResponse: () => new Promise(resolve => finishes.push(resolve)) });
+    const firstUser = window.currentUser;
+    const first = scope.saveNewsSeen(scope.newsSeenState(announcement));
+    const changed = scope.newsSeenState(announcement + 'Changed');
+    const second = scope.saveNewsSeen(changed);
+    assert.equal(requests.length, 1, 'A newer acknowledgement must wait for the older write.');
+    finishes.shift()({ ok: true, json: async () => true });
+    await first; await tick();
+    assert.equal(requests.length, 2);
+    window.currentUser = { adminSettings: {} };
+    const secondUser = window.currentUser;
+    const other = scope.saveNewsSeen(scope.newsSeenState(announcement + 'Changed'));
+    assert.equal(requests.length, 3, 'Another account must not reuse an in-flight acknowledgement.');
+    finishes.shift()({ ok: true, json: async () => true });
+    await second;
+    assert.equal(firstUser.adminSettings[changed.key], changed.value);
+    assert.equal(secondUser.adminSettings[changed.key], undefined);
+    finishes.shift()({ ok: true, json: async () => true });
+    await other;
+    assert.equal(scope.newsSeenState(announcement + 'Changed').isNew, false);
 });
 
 test('Random initial item, wrapping arrows, dots and eight-second automatic rotation share the same state', t => {
@@ -276,15 +322,15 @@ const socialFeed = { news: [
 ] };
 const socialConfig = { overviewJsonUrl: 'https://news.example/json/', socialRefreshDays: 3 };
 
-/** Keeps the local release badge expired so tests exercise only external unread content. */
-function expireRelease(f) {
+/** Acknowledges the local release so tests exercise only external unread content. */
+function acknowledgeRelease(f) {
     const state = f.scope.newsSeenState(announcement);
-    f.window.currentUser.adminSettings[state.key] = JSON.stringify({ ...JSON.parse(state.value), firstSeen: Date.now() - 31 * 86400000 });
+    f.window.currentUser.adminSettings[state.key] = state.value;
 }
 
 test('Social cards supplement local release HTML, defer unselected images, and acknowledge only expanded content', async t => {
     const f = fixture(t, { config: socialConfig, fetchResponse: async (url, options) => ({ ok: true, json: async () => options?.method === 'POST' ? true : socialFeed }) });
-    expireRelease(f);
+    acknowledgeRelease(f);
     f.render(); await tick();
     assert.equal(f.container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, announcement);
     assert.equal(f.container.querySelectorAll('.md-dashboard-widget__news-dot').length, 4);
@@ -304,7 +350,7 @@ test('Social cards supplement local release HTML, defer unselected images, and a
 
 test('Collapsed social slides show their source and only their selected thumbnail without acknowledging the feed', async t => {
     const f = fixture(t, { config: socialConfig, fetchResponse: async (url, options) => ({ ok: true, json: async () => options?.method === 'POST' ? true : socialFeed }) });
-    expireRelease(f);
+    acknowledgeRelease(f);
     f.render(); await tick();
     const version = f.container.querySelector('.md-dashboard-widget__news-version');
     const source = f.container.querySelector('.md-dashboard-widget__news-source');
@@ -366,7 +412,7 @@ test('Expanded cards prefer extended text while the carousel stays short and mis
         { ...socialFeed.news[1], id: 'facebook:malformed', perex: 'Fallback text', perexLong: { text: 'Must not render' } }
     ] };
     const f = fixture(t, { config: socialConfig, fetchResponse: async (url, options) => ({ ok: true, json: async () => options?.method === 'POST' ? true : feed }) });
-    expireRelease(f);
+    acknowledgeRelease(f);
     f.render(); await tick();
     f.container.querySelectorAll('.md-dashboard-widget__news-dot')[2].click();
     assert.equal(f.container.querySelector('.md-dashboard-widget__news-description').textContent, 'Short video summary');
@@ -389,7 +435,7 @@ test('Expanded cards prefer extended text while the carousel stays short and mis
 test('A response arriving after collapse remains unread and never creates hidden image requests', async t => {
     let finish;
     const f = fixture(t, { config: socialConfig, fetchResponse: () => new Promise(resolve => { finish = resolve; }) });
-    expireRelease(f);
+    acknowledgeRelease(f);
     f.render();
     f.container.querySelector('.md-dashboard-widget__news-toggle').click();
     f.container.querySelector('.md-dashboard-widget__news-close').click();
@@ -420,7 +466,7 @@ test('A failed refresh leaves only local news and channel links while preserving
         if (unavailable) throw new Error('Offline');
         return { ok: true, json: async () => socialFeed };
     } });
-    expireRelease(f);
+    acknowledgeRelease(f);
     f.render(); await tick();
     const cacheKey = f.window.localStorage.key(0);
     const cached = f.window.localStorage.getItem(cacheKey);
@@ -450,7 +496,7 @@ test('Loading and empty feeds show no external heading or status text', async t 
         if (options?.method === 'POST') return Promise.resolve({ ok: true, json: async () => true });
         return new Promise(resolve => { finish = resolve; });
     } });
-    expireRelease(f);
+    acknowledgeRelease(f);
     f.render();
     f.container.querySelector('.md-dashboard-widget__news-toggle').click();
     const external = f.container.querySelector('.md-dashboard-widget__news-external');
@@ -473,7 +519,7 @@ test('A refresh failure after collapse removes previously rendered cards and ima
         if (++calls === 1) return Promise.resolve({ ok: true, json: async () => socialFeed });
         return new Promise((resolve, reject) => { fail = reject; });
     } });
-    expireRelease(f);
+    acknowledgeRelease(f);
     f.render(); await tick();
     f.container.querySelector('.md-dashboard-widget__news-toggle').click();
     assert.equal(f.container.querySelectorAll('img').length, 2);
@@ -492,7 +538,7 @@ test('Background carousel updates preserve the focused release dot and fall back
         if (options?.method === 'POST') return Promise.resolve({ ok: true, json: async () => true });
         return new Promise(resolve => { finish = resolve; });
     } });
-    expireRelease(f);
+    acknowledgeRelease(f);
     f.render();
     const originalDot = f.container.querySelector('.md-dashboard-widget__news-dot');
     originalDot.focus();
@@ -517,7 +563,7 @@ test('Expanded updates restore the focused card by identity or the visible close
             if (++calls === 1) return Promise.resolve({ ok: true, json: async () => socialFeed });
             return new Promise(resolve => { finish = resolve; });
         } });
-        expireRelease(f);
+        acknowledgeRelease(f);
         f.render(); await tick();
         f.container.querySelector('.md-dashboard-widget__news-toggle').click();
         const original = f.container.querySelector('[data-news-id="youtube:video"]');

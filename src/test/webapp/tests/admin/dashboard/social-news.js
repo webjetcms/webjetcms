@@ -39,19 +39,15 @@ async function configureFeed(I, refreshDays = 3) {
     await I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
 }
 
-/** Keeps the release badge expired so assertions isolate external unread announcements. */
+/** Acknowledges the local release before configuring the feed so assertions isolate external unread announcements. */
 async function openFixture(I, items, status = 200, baseUrl) {
     fixture = { baseUrl: baseUrl || `https://news.example/autotest-${Date.now()}-${++sequence}/`, items,
         requests: [], imageRequests: [], status, pending: null };
     await I.amOnPage('/admin/v9/');
     await I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-    await I.waitForFunction(() => Boolean(window.currentUser.adminSettings[`dashboard.news.${window.userLng}`]), 10);
-    await I.executeScript(() => {
-        const key = `dashboard.news.${window.userLng}`;
-        const state = JSON.parse(window.currentUser.adminSettings[key]);
-        state.firstSeen = Date.now() - 31 * 86400000;
-        window.currentUser.adminSettings[key] = JSON.stringify(state);
-    });
+    await I.clickCss(toggle);
+    await I.waitForFunction(() => JSON.parse(window.currentUser.adminSettings[`dashboard.news.${window.userLng}`] || 'null')?.readAt > 0, 10);
+    await I.clickCss('.md-dashboard-widget__news-close');
     await configureFeed(I);
     await I.waitForElement(`${external}[aria-busy="false"]`, 10);
 }
@@ -359,8 +355,10 @@ Scenario('Fresh cache avoids background requests while expansion refreshes and r
     await I.waitForElement(`${badge}[hidden]`, 10);
     await I.assertEqual(fixture.requests.length, 2);
     await I.assertTrue(preferenceWrites.some(write => write.label.startsWith('dashboard.externalNews.')));
-    await I.assertTrue(await I.executeScript(() => JSON.parse(window.currentUser.adminSettings[`dashboard.news.${window.userLng}`]).firstSeen < Date.now() - 30 * 86400000),
-        'Reading social cards must not change the existing release window.');
+    await I.assertTrue(await I.executeScript(() => JSON.parse(window.currentUser.adminSettings[`dashboard.news.${window.userLng}`]).readAt > 0),
+        'The expanded panel must keep the local release acknowledged.');
+    await I.assertTrue(preferenceWrites.filter(write => write.label.startsWith('dashboard.externalNews.'))
+        .every(write => JSON.parse(write.value).readAt > Date.now() - 60000), 'Social acknowledgements must record their reading date.');
 
     await I.pressKey('Escape');
     await I.waitForVisible('.md-dashboard__welcome', 10);

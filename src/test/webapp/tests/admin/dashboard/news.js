@@ -10,11 +10,16 @@ const preferenceRoute = '**/admin/rest/admin-settings/';
 
 Before(async ({ I, login }) => {
     login('admin');
+    await I.mockRoute(preferenceRoute, route => route.fulfill({ status: 200, contentType: 'application/json', body: 'true' }));
     await I.mockRoute('**/wjnews.*.json', route => route.fulfill({ status: 200, contentType: 'application/json',
         headers: { 'Access-Control-Allow-Origin': '*' }, body: '{"news":[]}' }));
-    I.amOnPage('/admin/v9/');
-    I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
-    I.waitForText('Čo je nové (5)', 10, news);
+    await I.amOnPage('/admin/v9/');
+    await I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    await I.executeScript(() => {
+        const dashboard = document.querySelector('webjet-overview-dashboard');
+        dashboard.configure({ data: dashboard.data, labels: dashboard.labels, config: { ...dashboard.config, socialRefreshDays: 0 } });
+    });
+    await I.waitForText('Čo je nové (5)', 10, news);
 });
 
 Scenario('Header configuration accepts CSS gradients and image paths and falls back for invalid values', async ({ I }) => {
@@ -112,31 +117,54 @@ Scenario('News rotates automatically and remains within the hero on tablet and m
     I.wjSetDefaultWindowSize();
 });
 
-Scenario('Expired account badge returns when the announcement text changes within the same version', async ({ I }) => {
+Scenario('Expansion acknowledges release news in both dashboard and Help until its text changes', async ({ I }) => {
     const writes = [];
     await I.mockRoute(preferenceRoute, route => {
         writes.push(route.request().postDataJSON());
         return route.fulfill({ status: 200, contentType: 'application/json', body: 'true' });
     });
-    I.executeScript(() => {
+    await I.executeScript(() => {
         const dashboard = document.querySelector('webjet-overview-dashboard');
         const key = `dashboard.news.${window.userLng}`;
-        const state = JSON.parse(window.currentUser.adminSettings[key]);
-        state.firstSeen = Date.now() - 31 * 86400000;
-        window.currentUser.adminSettings[key] = JSON.stringify(state);
+        delete window.currentUser.adminSettings[key];
         dashboard.configure({ data: dashboard.data, config: dashboard.config, labels: dashboard.labels });
     });
-    I.waitForElement(`${news} .md-dashboard-widget__news-badge[hidden]`, 10);
-    I.executeScript(() => {
+    await I.waitForVisible('.md-dashboard-widget__news-badge', 10);
+    await I.clickCss('#admin-help-toggle');
+    await I.waitForVisible('#admin-help-menu.show', 5);
+    await I.seeElement('.md-help-menu__new');
+    await I.assertEqual(writes.length, 0, 'Opening Help or the collapsed dashboard must not acknowledge news.');
+    await I.pressKey('Escape');
+    await I.clickCss(toggle);
+    await I.waitForElement(`${news} .md-dashboard-widget__news-badge[hidden]`, 10);
+    await I.assertEqual(writes.length, 1);
+    await I.assertEqual(writes[0].label, 'dashboard.news.sk');
+    await I.assertTrue(JSON.parse(writes[0].value).readAt > Date.now() - 60000);
+    await I.pressKey('Escape');
+    await I.clickCss('#admin-help-toggle');
+    await I.waitForVisible('#admin-help-menu.show', 5);
+    await I.dontSeeElement('.md-help-menu__new');
+    await I.pressKey('Escape');
+    await I.clickCss(toggle);
+    await I.waitForElement(`${news} .md-dashboard-widget__news-badge[hidden]`, 10);
+    await I.assertEqual(writes.length, 1, 'Opening the same news again must not write another acknowledgement.');
+    await I.pressKey('Escape');
+    await I.executeScript(() => {
         const dashboard = document.querySelector('webjet-overview-dashboard');
+        window.adminHelpContext.announcement += '\\n- **autotest updated release** – Changed text in the same version.';
         dashboard.configure({ data: dashboard.data, config: dashboard.config,
-            labels: { ...dashboard.labels, changelog: dashboard.labels.changelog + '<p>autotest updated release</p>' } });
+            labels: { ...dashboard.labels, changelog: WJ.getReleaseNews().html } });
     });
-    I.waitForVisible('.md-dashboard-widget__news-badge', 10);
-    await I.waitForFunction(() => JSON.parse(window.currentUser.adminSettings[`dashboard.news.${window.userLng}`]).firstSeen > Date.now() - 60000, 10);
-    I.assertEqual(writes.length, 1);
-    I.assertEqual(writes[0].label, 'dashboard.news.sk');
-    I.assertTrue(JSON.parse(writes[0].value).firstSeen > Date.now() - 60000);
-    await I.stopMockingRoute(preferenceRoute);
-    I.refreshPage();
+    await I.waitForVisible('.md-dashboard-widget__news-badge', 10);
+    await I.assertEqual(writes.length, 1);
+    await I.clickCss('#admin-help-toggle');
+    await I.waitForVisible('#admin-help-menu.show', 5);
+    await I.seeElement('.md-help-menu__new');
+    await I.pressKey('Escape');
+    await I.clickCss(toggle);
+    await I.waitForElement(`${news} .md-dashboard-widget__news-badge[hidden]`, 10);
+    await I.see('autotest updated release', '.md-dashboard-widget__news-highlights');
+    await I.assertEqual(writes.length, 2);
+    await I.assertTrue(JSON.parse(writes[0].value).fingerprint !== JSON.parse(writes[1].value).fingerprint);
+    await I.refreshPage();
 });

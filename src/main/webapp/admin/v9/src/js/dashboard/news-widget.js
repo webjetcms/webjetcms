@@ -19,7 +19,6 @@ export function registerNewsWidget() {
             const client = socialOptions.enabled ? createSocialNewsClient({ ...socialOptions, signal }) : null;
             const hero = container.closest('.md-dashboard__hero');
             const welcome = hero?.querySelector('.md-dashboard__welcome');
-            const state = newsSeenState(release.html);
             const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
             let items = [...releaseItems];
             let externalItems = [];
@@ -124,13 +123,16 @@ export function registerNewsWidget() {
 
             function updateBadge() {
                 if (disposed || signal.aborted) return;
-                badge.hidden = !(releaseItems.length && state.isNew) && !(client && getExternalNewsState(externalItems, socialOptions.url).isNew);
+                badge.hidden = !(releaseItems.length && newsSeenState(release.html).isNew) && !(client && getExternalNewsState(externalItems, socialOptions.url).isNew);
             }
 
             /** A response received after collapse must not acknowledge unseen cards. */
             function markRead() {
-                if (!client || !expanded || document.hidden || disposed || signal.aborted || !externalItems.length) return;
-                saveExternalNewsSeen([...externalItems], socialOptions.url).then(updateBadge);
+                if (!expanded || document.hidden || disposed || signal.aborted) return;
+                const saves = [];
+                if (releaseItems.length) saves.push(saveNewsSeen(newsSeenState(release.html)));
+                if (client && externalItems.length) saves.push(saveExternalNewsSeen([...externalItems], socialOptions.url));
+                Promise.all(saves).then(updateBadge);
             }
 
             function updateControls() {
@@ -337,7 +339,6 @@ export function registerNewsWidget() {
             reducedMotion.addEventListener('change', motionChanged);
             rebuildCarousel();
             updateBadge();
-            if (releaseItems.length) saveNewsSeen(state);
             if (client) {
                 const cached = client.readCache();
                 if (cached) applyFeed(cached);

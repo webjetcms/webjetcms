@@ -133,7 +133,9 @@ Text príspevku využije dostupné miesto v karte. Pri kratšom názve, chýbaj�
 
 Privítanie a skratky sa počas rozbalenia skryjú; tlačidlo **Zbaliť novinky**, ikona vpravo hore alebo kláves **Esc** ich znova zobrazia. Odkaz **Zoznam zmien** aj číslo verzie pri štítku **Nové** otvoria úplnú históriu vydaní v dokumentácii.
 
-Štítok **Nové** upozorní na novinky verzie alebo na neprečítané externé položky. Pri novinkách verzie sa zobrazuje 30 dní od prvého zobrazenia daného textu pod vaším kontom. Zmena textu spustí nových 30 dní aj v rovnakej verzii; rozbalenie túto lehotu neskráti. Externé položky sa označia za prečítané po zobrazení v rozbalenom paneli. Stav sa ukladá do vašich nastavení administrácie, preto platí aj na inom zariadení a pri prepnutí jazyka.
+Štítok **Nové** znamená, že v prehľade máte neprečítaný obsah. Po rozbalení sa zobrazené novinky verzie aj sociálne príspevky označia za prečítané a štítok zhasne. Znova sa objaví, keď pribudne príspevok alebo sa zmení text noviniek nainštalovanej verzie, aj bez zmeny čísla verzie. Časový limit nemá: pri dlhodobo nezmenenej verzii upozorňuje už len na nové príspevky. Samotná rotácia, otvorenie úvodnej obrazovky ani menu Pomocník obsah neoznačujú za prečítaný. Príspevok načítaný až po zbalení zostáva neprečítaný.
+
+Stav a dátum prečítania sa ukladajú do nastavení vášho účtu, takže platia aj na inom zariadení. Sociálne príspevky sa rozpoznávajú podľa ID bez ohľadu na jazyk; novinky verzie majú samostatný záznam pre každý jazyk. Po aktualizácii zo staršieho správania s 30-dňovým štítkom treba lokálne novinky raz rozbaliť, pretože starý dátum prvého zobrazenia nepotvrdzuje ich prečítanie.
 
 Zoznam zo sociálnych sietí sa predvolene kontroluje na pozadí každé tri dni a pri každom rozbalení panela. Pri výpadku spojenia sa externé položky skryjú bez chybového hlásenia. Správca môže načítavanie [vypnúť v konfigurácii](../../admin/setup/configuration/dashboard.md#novinky-zo-sociálnych-sietí). V oboch prípadoch zostanú novinky nainštalovanej verzie a oba priame odkazy.
 
