@@ -89,6 +89,7 @@
 - Řešení problémů
   - [Možné chyby](/developer/troubles/README.md)
 - Požadavky na vývoj
+    - [Použití AI skills](/developer/guidelines/ai-skills.md)
     - [Práce s Git/Gitlab](/developer/guidelines/gitlab.md)
     - [Definice hotového - Definition of Done](/developer/guidelines/definition-of-done.md)
     - [Názvosloví termínů/výrazů](/developer/guidelines/terms.md)

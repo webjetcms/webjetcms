@@ -89,6 +89,7 @@
 - Troubleshooting
   - [Possible errors](/developer/troubles/README.md)
 - Development requirements
+    - [Using AI skills](/developer/guidelines/ai-skills.md)
     - [Working with Git/Gitlab](/developer/guidelines/gitlab.md)
     - [Definition of Done](/developer/guidelines/definition-of-done.md)
     - [Nomenclature of terms/expressions](/developer/guidelines/terms.md)
