@@ -190,15 +190,12 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 long olderId = older.getId();
                 DocHistory withFiles = revision(page);
                 withFiles.setPerexImage(privateRoot + "/images/photo.webp");
-                withFiles.setData("<img srcset='" + privateRoot + "/images/photo.webp 1x, " + privateRoot + "/images/photo.webp?v=1634319328 2x'>");
+                withFiles.setData("<img srcset='" + privateRoot + "/images/photo.webp 1x, " + privateRoot + "/images/photo.webp?v=1634319328 2x'>!INCLUDE(component.jsp, image=" + privateRoot + "/images/missing.webp)!");
                 withFiles = history.saveAndFlush(withFiles);
                 long withFilesId = withFiles.getId();
                 try (var filesystem = mockStatic(sk.iway.iwcm.io.IwcmFsDB.class); var cache = mockStatic(sk.iway.iwcm.Cache.class)) {
                     sk.iway.iwcm.Cache cacheInstance = mock(sk.iway.iwcm.Cache.class);
                     cache.when(sk.iway.iwcm.Cache::getInstance).thenReturn(cacheInstance);
-                    assertThrows(IllegalArgumentException.class, () -> service.publish(withFilesId));
-                    assertEquals("old image", java.nio.file.Files.readString(target));
-                    assertTrue(history.findById(withFilesId).orElseThrow().getPublicable());
                     java.nio.file.Path pdfSource = assets.resolve(privateRoot.substring(1) + "/files/spec.pdf");
                     java.nio.file.Files.createDirectories(pdfSource.getParent());
                     java.nio.file.Files.writeString(pdfSource, "future PDF");
@@ -221,7 +218,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                     DocDetails published = service.publish(withFilesId);
                     assertNotNull(published);
                     assertFalse(published.getData().contains(PlannedAssetPaths.ROOT));
-                    assertEquals("<img srcset='/images/photo.webp 1x, /images/photo.webp?v=1634319328 2x'>", published.getData());
+                    assertEquals("<img srcset='/images/photo.webp 1x, /images/photo.webp?v=1634319328 2x'>!INCLUDE(component.jsp, image=/images/missing.webp)!", published.getData());
                     assertEquals("/images/photo.webp", published.getPerexImage());
                     assertEquals("/files/spec.pdf", media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), "documents", 1).get(0).getMediaLink());
                     assertEquals("future image", java.nio.file.Files.readString(target));

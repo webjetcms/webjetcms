@@ -5,11 +5,18 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
-/** Validates the private staging namespace and its corresponding public paths. */
+import sk.iway.iwcm.Tools;
+
+/** Maps and validates private staging paths and their corresponding public paths. */
 public final class PlannedAssetPaths {
     public static final String ROOT = "/files/protected/planned-changes/";
 
     private PlannedAssetPaths() { }
+
+    /** Rewrites the page's planned asset prefix without changing the surrounding content. */
+    public static String rewrite(String value, int docId) {
+        return Tools.replace(value, ROOT + docId + "/", "/");
+    }
 
     public static boolean containsPlannedPath(String value) {
         if (value == null) return false;

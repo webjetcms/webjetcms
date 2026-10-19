@@ -64,11 +64,8 @@ public class PlannedChangesService {
 
     public void validateMedia(Media item, int docId, Identity user) {
         DocDetails doc = requirePlannedMedia(docId, user);
-        PlannedAssetReferences references = new PlannedAssetReferences(doc.getDocId(), GroupsDB.getInstance().getGroup(doc.getGroupId()).getDomainName());
-        rewriteProperties(item, references, false, "mediaLink", "mediaThumbLink", "mediaInfoSk", "mediaInfoCz", "mediaInfoEn", "mediaInfoDe", "fieldA", "fieldB", "fieldC", "fieldD", "fieldE", "fieldF");
         rejectFields(item, "mediaTitleSk", "mediaTitleCz", "mediaTitleEn", "mediaTitleDe", "mediaGroup");
         Map<String, String> files = plannedFiles(doc.getDocId());
-        files.putAll(references.getFiles());
         preflight(files, user);
         checkConflicts(doc.getDocId(), files);
     }
@@ -135,9 +132,8 @@ public class PlannedChangesService {
         doc.setVirtualPath(live.getVirtualPath());
         doc.setGroupId(live.getGroupId());
         List<Media> planned = plannedMedia(doc.getDocId());
-        PlannedAssetReferences references = references(doc, planned, false);
+        validateReferenceFields(doc, planned);
         Map<String, String> files = plannedFiles(doc.getDocId());
-        files.putAll(references.getFiles());
         preflight(files, user);
         checkConflicts(doc.getDocId(), files);
     }
@@ -156,22 +152,22 @@ public class PlannedChangesService {
         return media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(id, MEDIA_TABLE, CloudToolsForCore.getDomainId());
     }
 
-    private PlannedAssetReferences references(DocDetails doc, List<Media> planned, boolean transform) {
-        String domain = GroupsDB.getInstance().getGroup(doc.getGroupId()).getDomainName();
-        PlannedAssetReferences references = new PlannedAssetReferences(doc.getDocId(), domain);
-        rewriteContent(doc, references, transform);
-        for (Media item : planned) {
-            rewriteProperties(item, references, transform, "mediaLink", "mediaThumbLink", "mediaInfoSk", "mediaInfoCz", "mediaInfoEn", "mediaInfoDe");
-            for (char field = 'A'; field <= 'F'; field++) rewriteProperties(item, references, transform, "field" + field);
-        }
+    private void validateReferenceFields(DocDetails doc, List<Media> planned) {
         rejectFields(doc, "title", "navbar", "externalLink", "virtualPath", "editorVirtualPath", "fileName");
         for (Media item : planned) rejectFields(item, "mediaTitleSk", "mediaTitleCz", "mediaTitleEn", "mediaTitleDe", "mediaGroup");
-        return references;
     }
 
-    private void rewriteContent(DocBasic doc, PlannedAssetReferences references, boolean transform) {
-        rewriteProperties(doc, references, transform, "data", "dataAsc", "htmlData", "htmlHead", "perexImage", "perexPlace");
-        for (char field = 'A'; field <= 'T'; field++) rewriteProperties(doc, references, transform, "field" + field);
+    private void rewriteReferences(DocDetails doc, List<Media> planned) {
+        rewriteContent(doc);
+        for (Media item : planned) {
+            rewriteProperties(item, doc.getDocId(), "mediaLink", "mediaThumbLink", "mediaInfoSk", "mediaInfoCz", "mediaInfoEn", "mediaInfoDe");
+            for (char field = 'A'; field <= 'F'; field++) rewriteProperties(item, doc.getDocId(), "field" + field);
+        }
+    }
+
+    private void rewriteContent(DocBasic doc) {
+        rewriteProperties(doc, doc.getDocId(), "data", "dataAsc", "htmlData", "htmlHead", "perexImage", "perexPlace");
+        for (char field = 'A'; field <= 'T'; field++) rewriteProperties(doc, doc.getDocId(), "field" + field);
     }
 
     private void rejectFields(Object bean, String... fields) {
@@ -204,11 +200,11 @@ public class PlannedChangesService {
         return false;
     }
 
-    private void rewriteProperties(Object bean, PlannedAssetReferences references, boolean transform, String... fields) {
+    private void rewriteProperties(Object bean, int docId, String... fields) {
         BeanWrapper wrapper = new BeanWrapperImpl(bean);
         for (String field : fields) {
-            String value = references.rewrite((String)wrapper.getPropertyValue(field));
-            if (transform) wrapper.setPropertyValue(field, value);
+            String value = PlannedAssetPaths.rewrite((String)wrapper.getPropertyValue(field), docId);
+            wrapper.setPropertyValue(field, value);
         }
     }
 
@@ -276,9 +272,9 @@ public class PlannedChangesService {
             doc.setGroupId(live.getGroupId());
             boolean initialized = live.isPlannedMediaInitialized();
             List<Media> planned = initialized ? plannedMedia(doc.getDocId()).stream().map(item -> copyMedia(item, "documents")).toList() : List.of();
-            PlannedAssetReferences references = references(doc, planned, true);
+            validateReferenceFields(doc, planned);
+            rewriteReferences(doc, planned);
             Map<String, String> files = plannedFiles(doc.getDocId());
-            files.putAll(references.getFiles());
             preflight(files, user);
             checkConflicts(doc.getDocId(), files);
             publishFiles(files, doc.getDocId(), historyId);
@@ -302,7 +298,7 @@ public class PlannedChangesService {
                 documents.setPlannedMediaInitialized(doc.getId(), false);
             }
             deleteMedia(doc.getDocId(), MEDIA_TABLE, CloudToolsForCore.getDomainId());
-            rewriteContent(history, references, true);
+            rewriteContent(history);
             histories.saveAndFlush(history);
             histories.getHisotryIdsByDocIdIn(doc.getDocId()).ifPresent(ids -> histories.updateActual(false, ids));
             histories.updatePublicableAndActual(false, true, history.getAuthorId(), true, history.getHistoryId());

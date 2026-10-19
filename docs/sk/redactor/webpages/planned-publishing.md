@@ -28,7 +28,7 @@ Príklad pre stránku s ID `42`:
 
 Cieľ je uložený v ceste súboru, preto ho neskoršie premenovanie stránky nezmení. **Publikujú sa všetky súbory z priečinkov Obrázky - plánované a Súbory - plánované vrátane podpriečinkov**, aj keď na ne stránka ani médiá neodkazujú. Po úspešnom uložení stránky, médií a histórie sa tieto pracovné priečinky vyčistia. Ďalší plán tak začína s prázdnymi priečinkami.
 
-Podporované sú obsah, anotácia, perexový obrázok, `htmlHead`, voliteľné polia a odkazy, náhľady či popisy médií. Prepis zahŕňa `src`, `href`, `srcset`, `poster`, `data-src`, `data-srcset`, `data-original`, `data-lazy-src`, `data-lazy-srcset`, `/thumb/` a vložené CSS `url(...)`. Absolútne odkazy musia patriť doméne stránky. Pri publikovaní sa odstráni iba prefix `/files/protected/planned-changes/<docId>`. Existujúce parametre vrátane `v` a fragmenty sa zachovajú bez zmeny; nové parametre sa nepridávajú. Rovnaký prepis sa uloží aj do konkrétneho publikovaného záznamu histórie. Ostatné záznamy histórie sa nemenia; ich pôvodné odkazy do vyčistených plánovaných priečinkov môžu prestať fungovať.
+Podporované sú obsah, anotácia, perexový obrázok, `htmlHead`, voliteľné polia a odkazy, náhľady či popisy médií. Pri publikovaní sa každý výskyt prefixu `/files/protected/planned-changes/<docId>/` danej stránky nahradí za `/`. Náhrada funguje aj v absolútnych URL, `/thumb/`, CSS a parametroch `!INCLUDE(...)!` bez rozlišovania domény či HTML atribútov. Existujúce parametre vrátane `v` a fragmenty sa zachovajú bez zmeny; nové parametre sa nepridávajú. Rovnaký prepis sa uloží aj do konkrétneho publikovaného záznamu histórie. Ostatné záznamy histórie sa nemenia; ich pôvodné odkazy do vyčistených plánovaných priečinkov môžu prestať fungovať.
 
 Dialóg **Vlastnosti obrázka** pri výbere obrázka nastavuje parameter `v` podľa času poslednej zmeny súboru. Pri nahradení obrázka ho v dialógu vyberte znova, aby sa nová hodnota dostala do HTML. Pri zapnutom `elfinderUseFastLoading` sa čas zmeny nečíta a hodnota je `0`; vtedy použite nový názov súboru.
 
@@ -53,7 +53,7 @@ Prepísanie existujúceho súboru ovplyvní všetky stránky používajúce rovn
 
 ## Chyby publikovania
 
-Pred prvou výmenou sa kontrolujú všetky odkazy, zdroje, ciele a aktuálne oprávnenia autora. Pri chýbajúcom súbore sa verejný stav nezmení. Jednotlivé súbory sa nahrádzajú atómovo, takže návštevník nedostane čiastočne zapísaný súbor. Pôvodné súbory sa uchovávajú v chránenom podpriečinku `<docId>/backup/<historyId>/`; správca ich môže obnoviť cez súborový systém. Použije sa aj existujúca história súborov, ak je zapnutá.
+Pred prvou výmenou sa kontrolujú súbory nájdené v plánovaných priečinkoch, ich ciele a aktuálne oprávnenia autora. Zoznam na kopírovanie vzniká výhradne z obsahu priečinkov; existencia súborov uvedených v odkazoch sa nekontroluje. Jednotlivé súbory sa nahrádzajú atómovo, takže návštevník nedostane čiastočne zapísaný súbor. Pôvodné súbory sa uchovávajú v chránenom podpriečinku `<docId>/backup/<historyId>/`; správca ich môže obnoviť cez súborový systém. Použije sa aj existujúca história súborov, ak je zapnutá.
 
 Najprv sa publikujú súbory, potom obsah stránky a médiá. Zápisy neprebiehajú v jednej spoločnej transakcii. Pri chybe preto môžu byť súbory alebo obsah už nové a živá sada médií môže byť dočasne prázdna alebo neúplná.
 

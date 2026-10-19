@@ -115,61 +115,61 @@ public class DocPublishService {
                 throw new IllegalStateException("Planned asset publication failed", exception);
             }
         } else {
-		boolean publicable = dhr.getPublicableByDocIdIn(docDetails.getDocId()).contains(Boolean.TRUE) ? true : false;
-		Optional<List<Integer>> historyIdsOpt = dhr.getHisotryIdsByDocIdIn(docDetails.getDocId());
-		String historyIds = historyIdsOpt.isPresent() == true ? historyIdsOpt.get().stream().map(String::valueOf).collect(Collectors.joining(",")) : null;
+			boolean publicable = dhr.getPublicableByDocIdIn(docDetails.getDocId()).contains(Boolean.TRUE) ? true : false;
+			Optional<List<Integer>> historyIdsOpt = dhr.getHisotryIdsByDocIdIn(docDetails.getDocId());
+			String historyIds = historyIdsOpt.isPresent() == true ? historyIdsOpt.get().stream().map(String::valueOf).collect(Collectors.joining(",")) : null;
 
-		if (historyIds == null || publicable == false) {
-			//asi sme cluster a uz to niekto aktualizoval
-			docDB.readPagesToPublic();
-			return;
-		}
-
-		dhr.updateActual(false, Tools.getTokensInt(sk.iway.iwcm.DB.getOnlyNumbersIn(historyIds), ","));
-
-		//updatni zaznam v history, zrus publicable a nastav actual
-		dhr.updatePublicableAndActual(false, true, docDetails.getAuthorId(), true, docDetails.getHistoryId());
-
-		Logger.println(this,"pForm.getPublishStart()=" + docDetails.getPublishStart());
-
-		// Now is available
-		docDetails.setAvailable(true);
-		docDetails.setPerexGroupString( docDetails.getPerexGroupIdsString(true) );
-
-		GroupDetails group = groupsDB.getGroup(docDetails.getGroupId());
-		if (group != null && group.isInternal() == false)
-			docDetails.setFileName( groupsDB.getGroupNamePath(docDetails.getGroupId()) );
-		else docDetails.setFileName(null);
-
-		//Set root groups
-		int[] rootGroups = DocDB.getRootGroupL(docDetails.getGroupId(), null, -1);
-		docDetails.setRootGroupL1(rootGroups[0]);
-		docDetails.setRootGroupL2(rootGroups[1]);
-		docDetails.setRootGroupL3(rootGroups[2]);
-
-		// Set publish after start to false
-		docDetails.setPublishAfterStart(false);
-
-		//Before save add audit param that signalize that webpage was published
-		//Ensure RequestBean exists for current thread (publish may run on any thread via DocDB.getInstance)
-		boolean createdRequestBean = false;
-		if (SetCharacterEncodingFilter.getCurrentRequestBean() == null) {
-			SetCharacterEncodingFilter.setCurrentRequestBean(new RequestBean());
-			createdRequestBean = true;
-		}
-		RequestBean.addAuditValue("publishStatus", "Webpage was published");
-
-		//Perform update
-		try {
-			//Use saveAndFlush to force immediate flush - ensures @PreUpdate fires now
-			//while the audit value is still in RequestBean (not deferred to outer transaction commit)
-			ddr.saveAndFlush(docDetails);
-		} finally {
-			RequestBean.removeAuditValue("publishStatus");
-			if (createdRequestBean) {
-				SetCharacterEncodingFilter.setCurrentRequestBean(null);
+			if (historyIds == null || publicable == false) {
+				//asi sme cluster a uz to niekto aktualizoval
+				docDB.readPagesToPublic();
+				return;
 			}
-		}
+
+			dhr.updateActual(false, Tools.getTokensInt(sk.iway.iwcm.DB.getOnlyNumbersIn(historyIds), ","));
+
+			//updatni zaznam v history, zrus publicable a nastav actual
+			dhr.updatePublicableAndActual(false, true, docDetails.getAuthorId(), true, docDetails.getHistoryId());
+
+			Logger.println(this,"pForm.getPublishStart()=" + docDetails.getPublishStart());
+
+			// Now is available
+			docDetails.setAvailable(true);
+			docDetails.setPerexGroupString( docDetails.getPerexGroupIdsString(true) );
+
+			GroupDetails group = groupsDB.getGroup(docDetails.getGroupId());
+			if (group != null && group.isInternal() == false)
+				docDetails.setFileName( groupsDB.getGroupNamePath(docDetails.getGroupId()) );
+			else docDetails.setFileName(null);
+
+			//Set root groups
+			int[] rootGroups = DocDB.getRootGroupL(docDetails.getGroupId(), null, -1);
+			docDetails.setRootGroupL1(rootGroups[0]);
+			docDetails.setRootGroupL2(rootGroups[1]);
+			docDetails.setRootGroupL3(rootGroups[2]);
+
+			// Set publish after start to false
+			docDetails.setPublishAfterStart(false);
+
+			//Before save add audit param that signalize that webpage was published
+			//Ensure RequestBean exists for current thread (publish may run on any thread via DocDB.getInstance)
+			boolean createdRequestBean = false;
+			if (SetCharacterEncodingFilter.getCurrentRequestBean() == null) {
+				SetCharacterEncodingFilter.setCurrentRequestBean(new RequestBean());
+				createdRequestBean = true;
+			}
+			RequestBean.addAuditValue("publishStatus", "Webpage was published");
+
+			//Perform update
+			try {
+				//Use saveAndFlush to force immediate flush - ensures @PreUpdate fires now
+				//while the audit value is still in RequestBean (not deferred to outer transaction commit)
+				ddr.saveAndFlush(docDetails);
+			} finally {
+				RequestBean.removeAuditValue("publishStatus");
+				if (createdRequestBean) {
+					SetCharacterEncodingFilter.setCurrentRequestBean(null);
+				}
+			}
 
         }
 
