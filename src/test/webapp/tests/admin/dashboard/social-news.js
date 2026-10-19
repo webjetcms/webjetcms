@@ -125,6 +125,14 @@ Scenario('Local highlights and six safe social cards combine with lazy images an
     }), 'The installed release must remain before the external cards.');
     await I.assertEqual(await I.grabAttributeFrom(`${cards}:nth-child(2)`, 'rel'), 'noopener noreferrer');
     await I.seeNumberOfVisibleElements('.md-dashboard-widget__news-channels a', 2);
+    await I.assertTrue(await I.executeScript(() => {
+        const footer = document.querySelector('.md-dashboard-widget__news-actions').getBoundingClientRect();
+        const controls = [...document.querySelectorAll('.md-dashboard-widget__news-toggle, .md-dashboard-widget__news-more, .md-dashboard-widget__news-channel')]
+            .map(element => element.getBoundingClientRect());
+        return Math.abs(controls[0].left - footer.left) < 1 && Math.abs(controls[3].right - footer.right) < 1
+            && controls.every((bounds, index) => Math.abs(bounds.top - controls[0].top) < 1
+                && (index === 0 || bounds.left > controls[index - 1].right));
+    }), 'Expanded controls must share one row, with collapse and changelog on the left and social links on the right.');
     await I.waitForElement(`${badge}[hidden]`, 10);
     await I.waitForElement(`${external}[aria-busy="false"]`, 10);
     await I.assertEqual(fixture.requests.length, 2, 'Expansion must revalidate the feed.');
@@ -138,6 +146,10 @@ Scenario('Local highlights and six safe social cards combine with lazy images an
         await I.assertTrue(await I.executeScript(() => {
             const hero = document.querySelector('.md-dashboard__hero').getBoundingClientRect();
             return document.documentElement.scrollWidth <= window.innerWidth
+                && [...document.querySelectorAll('.md-dashboard-widget__news-actions a, .md-dashboard-widget__news-toggle')].every(link => {
+                    const bounds = link.getBoundingClientRect();
+                    return bounds.left >= hero.left && bounds.right <= hero.right;
+                })
                 && [...document.querySelectorAll('.md-dashboard-widget__news-card')].every(card => {
                     const bounds = card.getBoundingClientRect();
                     return bounds.left >= hero.left && bounds.right <= hero.right;
@@ -157,6 +169,12 @@ Scenario('Local highlights and six safe social cards combine with lazy images an
                 scrollbar.setPosition(0, scrollbar.offset.y + document.querySelector('.md-dashboard-widget__news-cards').getBoundingClientRect().top - 80);
             });
             await I.saveScreenshot('dashboard-social-news-mobile-cards.png', true);
+            await I.executeScript(() => {
+                const scrollbar = window.scrollbarMain;
+                scrollbar.update();
+                scrollbar.setPosition(0, scrollbar.offset.y + document.querySelector('.md-dashboard-widget__news-actions').getBoundingClientRect().top - 100);
+            });
+            await I.saveScreenshot('dashboard-social-news-mobile-footer.png', true);
         }
     }
     await I.wjSetDefaultWindowSize();

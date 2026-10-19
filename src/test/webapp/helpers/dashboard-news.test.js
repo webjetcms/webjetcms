@@ -288,7 +288,10 @@ test('Expanding preserves welcome nodes, shows complete HTML, restores focus and
     const original = welcome.innerHTML;
     render();
     const toggle = container.querySelector('.md-dashboard-widget__news-toggle');
+    const channels = container.querySelector('.md-dashboard-widget__news-channels');
+    assert.equal(channels.hidden, true);
     toggle.click();
+    assert.equal(channels.hidden, false);
     assert.equal(welcome.hidden, true);
     assert.equal(container.querySelector('.md-dashboard-widget__news-highlights').innerHTML, announcement);
     assert.equal(toggle.getAttribute('aria-expanded'), 'true');
@@ -296,6 +299,7 @@ test('Expanding preserves welcome nodes, shows complete HTML, restores focus and
     assert.equal(window.document.activeElement, container.querySelector('.md-dashboard-widget__news-close'));
     container.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     assert.equal(welcome.hidden, false);
+    assert.equal(channels.hidden, true);
     assert.equal(welcome.innerHTML, original);
     assert.equal(window.document.activeElement, toggle);
     toggle.click(); cleanup();

@@ -94,12 +94,13 @@ export function registerNewsWidget() {
             const cards = node('div', 'md-dashboard-widget__news-cards');
             external.append(externalHeading, cards);
             const channels = node('div', 'md-dashboard-widget__news-channels');
+            channels.hidden = true;
             for (const channel of SOCIAL_CHANNELS) {
                 const link = externalLink('', channel.href, 'md-dashboard-widget__news-channel');
                 link.append(icon(channel.icon), node('span', '', text(context, channel.source === 'youtube' ? 'newsYoutubeChannel' : 'newsFacebookPage')), icon('ti-external-link'));
                 channels.append(link);
             }
-            full.append(external, channels);
+            full.append(external);
 
             const navigation = node('div', 'md-dashboard-widget__news-navigation');
             const previous = control(text(context, 'newsPrevious'), 'ti-chevron-left', () => select(index - 1));
@@ -118,7 +119,7 @@ export function registerNewsWidget() {
             details.addEventListener('click', () => setExpanded(!expanded));
             const all = externalLink('', window.WJ.getDocumentationUrl('/CHANGELOG'), 'md-dashboard-widget__news-more');
             all.append(node('span', '', text(context, 'newsChangelog')), icon('ti-git-compare'));
-            actions.append(details, all, playback);
+            actions.append(details, all, playback, channels);
             container.append(header, preview, full, navigation, status, actions);
 
             function updateBadge() {
@@ -141,6 +142,8 @@ export function registerNewsWidget() {
                 details.replaceChildren(node('span', '', label), icon(expanded ? 'ti-arrows-minimize' : 'ti-arrow-right'));
                 navigation.hidden = expanded || items.length < 2;
                 playback.hidden = expanded || items.length < 2;
+                channels.hidden = !expanded;
+                actions.classList.toggle('is-expanded', expanded);
             }
 
             function select(selected, automatic = false) {
