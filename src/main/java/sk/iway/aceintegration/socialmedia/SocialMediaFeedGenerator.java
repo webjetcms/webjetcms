@@ -11,9 +11,12 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
 import java.text.BreakIterator;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -21,6 +24,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -74,6 +78,7 @@ public final class SocialMediaFeedGenerator {
     private static final int MAX_LONG_PEREX_LENGTH = 1000;
     private static final int MAX_DESCRIPTION_CAPTURE_LENGTH = 4000;
     private static final int MAX_FACEBOOK_TITLE_LENGTH = 120;
+    private static final Duration IMAGE_RETENTION = Duration.ofDays(30);
     private static final AtomicBoolean RUNNING = new AtomicBoolean();
     private final Settings settings;
     private final Downloader downloader;
@@ -151,6 +156,41 @@ public final class SocialMediaFeedGenerator {
         }
         files.put(settings.cacheFile(), serialize(new FeedCache(sources, translations)));
         publishFiles(files);
+        cleanupImages(previous, sources);
+    }
+
+    /** Retains current and newly retired previews before removing old, unreferenced generated JPEGs. */
+    private void cleanupImages(FeedCache previous, Map<String, List<Post>> sources) {
+        Path images = settings.outputDirectory().resolve("social-media/images");
+        try {
+            if (!Files.isDirectory(images.getParent(), LinkOption.NOFOLLOW_LINKS)
+                || !Files.isDirectory(images, LinkOption.NOFOLLOW_LINKS)) return;
+            Set<Path> retained = new HashSet<>();
+            for (Map<String, List<Post>> sourcePosts : List.of(previous.sources(), sources)) {
+                for (Post post : sourcePosts.values().stream().flatMap(List::stream).toList()) {
+                    String image = ownImage(post.image());
+                    if (image != null) retained.add(settings.outputDirectory().resolve(image));
+                }
+            }
+            Instant now = Instant.now();
+            for (Path image : retained) {
+                if (Files.isRegularFile(image, LinkOption.NOFOLLOW_LINKS)) {
+                    Files.setAttribute(image, "basic:lastModifiedTime", FileTime.from(now), LinkOption.NOFOLLOW_LINKS);
+                }
+            }
+            try (var entries = Files.newDirectoryStream(images)) {
+                for (Path image : entries) {
+                    if (retained.contains(image) || !image.getFileName().toString().matches("[a-f0-9]{32}\\.jpg")
+                        || !Files.isRegularFile(image, LinkOption.NOFOLLOW_LINKS)) continue;
+                    if (Files.getLastModifiedTime(image, LinkOption.NOFOLLOW_LINKS).toInstant().isBefore(now.minus(IMAGE_RETENTION))) {
+                        Files.delete(image);
+                    }
+                }
+            }
+        } catch (IOException | RuntimeException exception) {
+            Logger.warn(SocialMediaFeedGenerator.class, "Unable to clean up old social media previews ("
+                + SocialMediaFeedException.safeSummary(exception) + "); published feeds remain valid");
+        }
     }
 
     /** Keeps translations for cached posts, including the fourth video temporarily hidden by Facebook posts. */

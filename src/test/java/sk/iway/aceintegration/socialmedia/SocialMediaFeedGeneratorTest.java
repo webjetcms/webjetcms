@@ -14,7 +14,10 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.security.MessageDigest;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -645,6 +648,104 @@ class SocialMediaFeedGeneratorTest {
         assertThrows(IOException.class, () -> SocialMediaFeedGenerator.thumbnail(bytes("<svg onload='x'/>")));
     }
 
+    /** A changed URL retires its old preview for thirty days instead of deleting it at publication. */
+    @Test
+    void retiresChangedPreviewUrlsWithGracePeriod() throws Exception {
+        AtomicReference<byte[]> videos = new AtomicReference<>(youtube(1, "Video", "Text", "https://i.ytimg.com/first.jpg"));
+        SocialMediaFeedGenerator generator = imageGenerator(videos, new AtomicReference<>(bytes("{\"data\":[]}")));
+        generator.generate();
+        Path first = directory.resolve("output").resolve(output("sk").path("news").get(0).path("image").asText());
+        FileTime expired = FileTime.from(Instant.now().minus(Duration.ofDays(31)));
+        Files.setLastModifiedTime(first, expired);
+        videos.set(youtube(1, "Video", "Text", "https://i.ytimg.com/second.jpg"));
+        Instant beforePublication = Instant.now().minusSeconds(1);
+        generator.generate();
+        Path second = directory.resolve("output").resolve(output("sk").path("news").get(0).path("image").asText());
+        assertFalse(first.equals(second));
+        assertTrue(Files.exists(first));
+        assertTrue(Files.getLastModifiedTime(first).toInstant().isAfter(beforePublication));
+        generator.generate();
+        assertTrue(Files.exists(first), "A recently retired image must survive subsequent runs.");
+        Files.setLastModifiedTime(first, expired);
+        Files.setLastModifiedTime(second, expired);
+        generator.generate();
+        assertFalse(Files.exists(first));
+        assertTrue(Files.exists(second), "An old but still referenced image must survive.");
+    }
+
+    /** Cleanup preserves fallback provider images and the fourth video hidden from the current public feed. */
+    @Test
+    void retainsFallbackAndHiddenVideoPreviews() throws Exception {
+        AtomicReference<byte[]> videos = new AtomicReference<>(youtube(4, "Video", "Text", "https://i.ytimg.com/video.jpg"));
+        AtomicReference<byte[]> posts = new AtomicReference<>(facebookRecords(
+            facebookPost("1", "Title\nDescription", "2026-10-05T09:00:00Z").put("full_picture", "https://images.fbcdn.net/post.jpg")));
+        SocialMediaFeedGenerator generator = imageGenerator(videos, posts);
+        generator.generate();
+        List<Path> images;
+        try (var paths = Files.list(directory.resolve("output/social-media/images"))) {
+            images = paths.toList();
+        }
+        assertEquals(5, images.size());
+        assertEquals(4, output("sk").path("news").size());
+        for (Path image : images) Files.setLastModifiedTime(image, FileTime.from(Instant.now().minus(Duration.ofDays(31))));
+        posts.set(null);
+        generator.generate();
+        for (Path image : images) assertTrue(Files.exists(image));
+        assertEquals(4, output("sk").path("news").size());
+    }
+
+    /** Only expired generated regular files are removed; other files, nested directories and symlinks are untouched. */
+    @Test
+    void cleansOnlyExpiredGeneratedRegularImages() throws Exception {
+        Path images = Files.createDirectories(directory.resolve("output/social-media/images"));
+        Path expired = Files.writeString(images.resolve("a".repeat(32) + ".jpg"), "old");
+        Path recent = Files.writeString(images.resolve("b".repeat(32) + ".jpg"), "recent");
+        Path unrelated = Files.writeString(images.resolve("manual.jpg"), "manual");
+        Path nested = Files.createDirectories(images.resolve("c".repeat(32) + ".jpg"));
+        Path nestedImage = Files.writeString(nested.resolve("d".repeat(32) + ".jpg"), "nested");
+        Path outside = Files.writeString(directory.resolve("outside.jpg"), "outside");
+        Path link = Files.createSymbolicLink(images.resolve("e".repeat(32) + ".jpg"), outside);
+        FileTime old = FileTime.from(Instant.now().minus(Duration.ofDays(31)));
+        for (Path file : List.of(expired, unrelated, nested, nestedImage, outside)) Files.setLastModifiedTime(file, old);
+        generator(new AtomicReference<>(youtube(0, "", "", "")), new AtomicReference<>(bytes("{\"data\":[]}")),
+            (text, language) -> text).generate();
+        assertFalse(Files.exists(expired));
+        for (Path file : List.of(recent, unrelated, nested, nestedImage, outside)) assertTrue(Files.exists(file));
+        assertTrue(Files.isSymbolicLink(link));
+        assertEquals(old, Files.getLastModifiedTime(outside));
+    }
+
+    /** A symlink used as the image directory must not expose external files to cleanup. */
+    @Test
+    void doesNotCleanThroughAnImageDirectorySymlink() throws Exception {
+        Path outside = Files.createDirectories(directory.resolve("outside"));
+        Path image = Files.writeString(outside.resolve("a".repeat(32) + ".jpg"), "outside");
+        FileTime old = FileTime.from(Instant.now().minus(Duration.ofDays(31)));
+        Files.setLastModifiedTime(image, old);
+        Files.createDirectories(directory.resolve("output/social-media"));
+        Files.createSymbolicLink(directory.resolve("output/social-media/images"), outside);
+        generator(new AtomicReference<>(youtube(0, "", "", "")), new AtomicReference<>(bytes("{\"data\":[]}")),
+            (text, language) -> text).generate();
+        assertTrue(Files.exists(image));
+        assertEquals(old, Files.getLastModifiedTime(image));
+    }
+
+    /** Failed publication, including a failure after earlier languages were replaced, must not run image cleanup. */
+    @Test
+    void skipsImageCleanupWhenPublicationFails() throws Exception {
+        Path images = Files.createDirectories(directory.resolve("output/social-media/images"));
+        Path image = Files.writeString(images.resolve("a".repeat(32) + ".jpg"), "old");
+        FileTime old = FileTime.from(Instant.now().minus(Duration.ofDays(31)));
+        Files.setLastModifiedTime(image, old);
+        Path blocked = Files.createDirectories(directory.resolve("output/wjnews.en.json"));
+        Files.writeString(blocked.resolve("keep"), "prevent replacement");
+        SocialMediaFeedGenerator generator = generator(new AtomicReference<>(youtube(0, "", "", "")),
+            new AtomicReference<>(bytes("{\"data\":[]}")), (text, language) -> text);
+        assertThrows(IOException.class, generator::generate);
+        assertTrue(Files.exists(image));
+        assertEquals(old, Files.getLastModifiedTime(image));
+    }
+
     /** Existing owned absolute image paths migrate without downloads while traversal and unrelated cached paths are omitted. */
     @Test
     void normalizesOwnedCachedImagesAndRejectsUnrelatedPaths() throws Exception {
@@ -835,6 +936,18 @@ class SocialMediaFeedGeneratorTest {
             if (response == null) throw new IOException("provider unavailable");
             return response;
         }, translator);
+    }
+
+    /** Supplies a small raster for approved image requests while allowing either provider to fail independently. */
+    private SocialMediaFeedGenerator imageGenerator(AtomicReference<byte[]> youtube, AtomicReference<byte[]> facebook) throws IOException {
+        ByteArrayOutputStream png = new ByteArrayOutputStream();
+        ImageIO.write(new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB), "png", png);
+        return new SocialMediaFeedGenerator(settings(), (uri, token, limit) -> {
+            if (SocialMediaHttpClient.isImageUrl(uri)) return png.toByteArray();
+            byte[] response = "www.youtube.com".equals(uri.getHost()) ? youtube.get() : facebook.get();
+            if (response == null) throw new IOException("provider unavailable");
+            return response;
+        }, (text, language) -> text);
     }
 
     private SocialMediaFeedGenerator.Settings settings() {
