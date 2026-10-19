@@ -39,6 +39,7 @@ import sk.iway.spirit.model.Media;
 import sk.iway.spirit.model.MediaEditorFields;
 import sk.iway.spirit.model.MediaGroupBean;
 
+@org.springframework.transaction.annotation.Transactional
 @RestController
 @Datatable
 @RequestMapping(value = "/admin/rest/media")
@@ -99,7 +100,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
             if (getUser().isDisabledItem("editor_edit_media_all")) throw new IllegalArgumentException("Access is denied");
 
             //docId ani groupId ako parameter neboli poslane = sme v zozname vsetkych medii
-            page = new DatatablePageImpl<>(mediaRepository.findAllByDomainId(domainId, pageable));
+            page = new DatatablePageImpl<>(mediaRepository.findAllByDomainIdAndMediaFkTableNameNot(domainId, sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE, pageable));
         } else {
             //dostali sme docId parameter, sme vnorena datatabulka vo web stranke
             page = new DatatablePageImpl<>(mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(getMediaFkId(), getTableName(), domainId, pageable));
@@ -139,8 +140,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
                 int mutigroupDocId = MultigroupMappingDB.getMasterDocId(docId);
                 if (mutigroupDocId > 0) docId = mutigroupDocId;
             }
-            tableName = entity.getMediaFkTableName();
-            if (Tools.isEmpty(tableName)) tableName = getTableName();
+            tableName = getTableName();
 
             checkPerms(docId);
 
@@ -149,6 +149,13 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
                 docId = user.getUserId();
             }
         }
+
+        if (!checkItemPerms(entity, entity.getId())) throw new IllegalArgumentException("Access is denied");
+        if (docId > 0 && !"documents_temp".equals(tableName) && sk.iway.iwcm.doc.PlannedAccess.enabled()) {
+            sk.iway.iwcm.doc.PlannedChangesService.getInstance().lockMedia(docId, isPlanned(), getUser());
+        }
+        if (isPlanned()) sk.iway.iwcm.doc.PlannedChangesService.getInstance().validateMedia(entity, docId, getUser());
+        if (!isPlanned()) sk.iway.iwcm.doc.PlannedChangesService.rejectPrivateReferences(entity);
 
         //IMPORTANT - dont use method getMediaFkId here because we need know if it's docId or userId
         //this difference we need to know to call getLastOrder with right param
@@ -159,8 +166,9 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
         }
 
         //set docId(document creating/editing media) and table name as "documents"
-        if (entity.getMediaFkId()==null) entity.setMediaFkId(docId);
-        if (Tools.isEmpty(entity.getMediaFkTableName())) entity.setMediaFkTableName(tableName);
+        entity.setMediaFkId(docId);
+        entity.setMediaFkTableName(tableName);
+        entity.setDomainId(CloudToolsForCore.getDomainId());
 
         //set new mediaSortOrder
         if (entity.getMediaSortOrder()==null) entity.setMediaSortOrder(mediaSortOrder);
@@ -259,6 +267,11 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
     public String getTableName() {
         int docId = Tools.getIntValue(getRequest().getParameter("docId"), -1);
 
+        if (isPlanned()) {
+            if (docId < 1 || !sk.iway.iwcm.doc.PlannedAccess.enabled()) throw new IllegalArgumentException("Planned page context is required");
+            sk.iway.iwcm.doc.PlannedAccess.requirePage(docId, getUser());
+            return sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE;
+        }
         if(docId  < 1) {
             return "documents_temp";
         } else return DOCUMENTS_TABLE_NAME;
@@ -305,11 +318,51 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
         if (groupId > 0) {
             predicates.add(builder.equal(root.join("groups").get("id"), groupId));
         }
+        if (getRequest().getParameter("docId") != null) {
+            checkPerms(Tools.getIntValue(getRequest().getParameter("docId"), -1));
+            predicates.add(builder.equal(root.get("mediaFkTableName"), getTableName()));
+            predicates.add(builder.equal(root.get("mediaFkId"), getMediaFkId()));
+        } else {
+            predicates.add(builder.notEqual(root.get("mediaFkTableName"), sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE));
+        }
         String docTitle = params.get("searchEditorFields.docDetails");
         if (Tools.isNotEmpty(docTitle)) {
             SpecSearch<Media> specSearch = new SpecSearch<>();
             specSearch.addSpecSearchDocFullPath(docTitle, "mediaFkId", predicates, root, builder);
         }
+    }
+
+
+    private boolean isPlanned() {
+        return "true".equals(getRequest().getParameter("planned"));
+    }
+
+    @Override
+    public boolean checkItemPerms(Media entity, Long id) {
+        if (id != null && id > 0) {
+            Media stored = mediaRepository.findFirstByIdAndDomainId(id, CloudToolsForCore.getDomainId()).orElse(null);
+            if (stored == null) return false;
+            if (getRequest().getParameter("docId") != null) {
+                if (!getTableName().equals(stored.getMediaFkTableName()) || !Integer.valueOf(getMediaFkId()).equals(stored.getMediaFkId())) return false;
+            } else if (sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE.equals(stored.getMediaFkTableName())) return false;
+            if ("documents_temp".equals(stored.getMediaFkTableName())) {
+                if (!Integer.valueOf(getUser().getUserId()).equals(stored.getMediaFkId())) return false;
+            } else checkPerms(stored.getMediaFkId());
+        }
+        if (isPlanned()) sk.iway.iwcm.doc.PlannedAccess.requirePage(getMediaFkId(), getUser());
+        return true;
+    }
+
+    @Override
+    public boolean beforeDelete(Media entity) {
+        if (!checkItemPerms(entity, entity.getId())) throw new IllegalArgumentException("Access is denied");
+        if (sk.iway.iwcm.doc.PlannedAccess.enabled() && entity.getId() != null) {
+            Media stored = mediaRepository.findFirstByIdAndDomainId(entity.getId(), CloudToolsForCore.getDomainId()).orElseThrow();
+            if (!"documents_temp".equals(stored.getMediaFkTableName())) {
+                sk.iway.iwcm.doc.PlannedChangesService.getInstance().lockMedia(stored.getMediaFkId(), isPlanned(), getUser());
+            }
+        }
+        return true;
     }
 
     @Override

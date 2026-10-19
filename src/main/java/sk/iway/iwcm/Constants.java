@@ -365,7 +365,9 @@ public class Constants {
 		setBoolean("currencyTagRound", false, MOD_BASKET,
 				"ak je nastavené na true tak sa pri výpise cien bude zaokrúhlovať na 50 halierov. Štandardne nastavené na false");
 
-		setBoolean("editorAutoFillPublishStart", false, MOD_EDITOR,
+		setBoolean("plannedPublishingEnabled", false, mods(MOD_EDITOR, MOD_WEBPAGES),
+                "Enable one private planned page revision with staged assets and media.");
+        setBoolean("editorAutoFillPublishStart", false, MOD_EDITOR,
 				"ak je nastavene na true tak sa pri vytvoreni stranky automaticky predvyplni datum zaciatku publikovania na aktualny");
 
 		// default log level

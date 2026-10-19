@@ -72,6 +72,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             //in ImageEditor we don't get ID, but we get imagePath and imageName, so load entity by these values
             String imagePath = getRequest().getParameter("dir");
             String imageName = getRequest().getParameter("name");
+            checkPlannedImage(imagePath, imageName);
 
             GalleryEntity entity = new GalleryEntity();
             if(Tools.isNotEmpty(imagePath) && Tools.isNotEmpty(imageName)) {
@@ -150,7 +151,10 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
      */
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, GalleryEntity> target, Identity user, Errors errors, Long id, GalleryEntity entity) {
-        if (!user.isFolderWritable(entity.getImagePath())) {
+        String imageUrl = entity.getImagePath() + "/" + entity.getImageName();
+        boolean writable = sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(imageUrl)
+            ? sk.iway.iwcm.doc.PlannedAccess.canAccess(imageUrl, user) : user.isFolderWritable(entity.getImagePath());
+        if (!writable) {
             errors.rejectValue("errorField.imagePath", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
         }
         if (entity.getImageName().contains("/") || entity.getImageName().contains("\\") || FileBrowserTools.hasForbiddenSymbol(entity.getImageName())) {
@@ -326,6 +330,23 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         setLastModified(entity.getImagePath()+"/"+entity.getImageName(), now);
         setLastModified(entity.getImagePath()+"/o_"+entity.getImageName(), now);
         setLastModified(entity.getImagePath()+"/s_"+entity.getImageName(), now);
+    }
+
+    private void checkPlannedImage(String path, String name) {
+        String url = path + "/" + name;
+        if (sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(url) && !sk.iway.iwcm.doc.PlannedAccess.canAccess(url, getUser())) {
+            throw new IllegalArgumentException("Access is denied");
+        }
+    }
+
+    @Override
+    public boolean checkItemPerms(GalleryEntity entity, Long id) {
+        if (id != null && id > 0) {
+            GalleryEntity stored = repository.findById(id).orElse(null);
+            if (stored != null) checkPlannedImage(stored.getImagePath(), stored.getImageName());
+        }
+        if (entity != null) checkPlannedImage(entity.getImagePath(), entity.getImageName());
+        return super.checkItemPerms(entity, id);
     }
 
     private boolean isImageEditor() {

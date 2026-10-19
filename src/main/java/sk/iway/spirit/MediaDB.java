@@ -72,7 +72,14 @@ public class MediaDB extends JpaDB<Media>
 	 */
 	public static Media getMedia(int mediaId)
 	{
-		return JpaTools.findFirstByMatchingProperty(Media.class, "id", mediaId);
+        Media result = JpaTools.findFirstByMatchingProperty(Media.class, "id", mediaId);
+        if (result != null && sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE.equals(result.getMediaFkTableName())) {
+            RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+            try {
+                sk.iway.iwcm.doc.PlannedAccess.requirePage(result.getMediaFkId(), rb == null || rb.getRequest() == null ? null : UsersDB.getCurrentUser(rb.getRequest()));
+            } catch (RuntimeException denied) { return null; }
+        }
+        return result;
 	}
 
 	/**
@@ -137,8 +144,19 @@ public class MediaDB extends JpaDB<Media>
 	 */
 	public static List<Media> getMediaByMediaGroups(HttpSession session, String tableName, int pkIdParam, List<MediaGroupBean> mediaGroups, long lastUpdate, boolean checkAvailability)
 	{
+        RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
+        jakarta.servlet.http.HttpServletRequest request = rb == null ? null : rb.getRequest();
+        if (request != null && "documents".equals(tableName) && sk.iway.iwcm.doc.PlannedAccess.previewFor(request, pkIdParam)) {
+            tableName = sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE;
+            lastUpdate = 0;
+        }
+        if (sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE.equals(tableName)) {
+            try {
+                sk.iway.iwcm.doc.PlannedAccess.requirePage(pkIdParam, request == null ? null : UsersDB.getCurrentUser(request));
+            } catch (RuntimeException denied) { return new ArrayList<>(); }
+        }
 	    int pkId = pkIdParam;
-        if ("documents".equals(tableName))
+        if ("documents".equals(tableName) || sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE.equals(tableName))
         {
             //podpora pre stranky vo viacerych adresaroch
             int masterId = MultigroupMappingDB.getMasterDocId(pkId);

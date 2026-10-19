@@ -18,6 +18,7 @@ Manages hierarchical website content (documents/pages) and groups (folders), the
 - `TemplateDetails` / `TemplatesDB`: Presentation layer templates & lookup cache.
 - `DocHistory` + `HistoryDB`: Version snapshots for rollback & audit.
 - `DocPublishService`: Orchestrates publish state transitions (draft -> approved -> live) including history entry creation.
+- `PlannedChangesService` / `PlannedAccess`: Optional private scheduled assets and media (`plannedPublishingEnabled`). Keep page/media/history changes in one transaction under page locks; the operational `documents.planned_media_initialized` flag is not part of history. Deployment requires transactional tables and shared filesystem storage; see `docs/sk/redactor/webpages/planned-publishing.md`.
 - `GroupsDB`: In-memory/cache accessor for group structure & domain-specific filtering.
 
 ## Supporting Classes

@@ -20,10 +20,19 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 
 @Entity
+// Detached editor snapshots must not overwrite the cached operational publication flag.
+@jakarta.persistence.Cacheable(false)
 @Table(name = "documents")
 @EntityListeners(AuditEntityListener.class)
 @EntityListenersType(Adminlog.TYPE_SAVEDOC)
 public class DocDetails extends DocBasic {
+
+    @Column(name = "planned_media_initialized", insertable = false, updatable = false)
+    private Boolean plannedMediaInitialized = false;
+
+    /** Operational state, updated only by the planned publication service. */
+    public boolean isPlannedMediaInitialized() { return Boolean.TRUE.equals(plannedMediaInitialized); }
+
 
 	public DocDetails(){}
 
@@ -140,6 +149,7 @@ public class DocDetails extends DocBasic {
 	@Transient
 	private String historySaveDate;
 	@Transient
+	@DataTableColumn(inputType = DataTableColumnType.HIDDEN, hidden = true)
 	private int historyId;
 	@Transient
 	private int historyApprovedBy;

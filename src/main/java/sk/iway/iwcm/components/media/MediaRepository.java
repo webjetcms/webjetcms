@@ -16,11 +16,15 @@ import sk.iway.spirit.model.Media;
 @Repository
 public interface MediaRepository extends DomainIdRepository<Media, Long> {
 
+    Page<Media> findAllByDomainIdAndMediaFkTableNameNot(Integer domainId, String tableName, Pageable pageable);
+
     //add custom repository to find media's with connection to doc
     //finding by mediaFkId(docId) and mediaFkTableName("documents")
     Page<Media> findAllByMediaFkIdAndMediaFkTableNameAndDomainId(Integer mediaFkId, String mediaFkTableName, Integer domainId, Pageable pageable);
 
     List<Media> findAllByMediaFkIdAndMediaFkTableNameAndDomainId(Integer mediaFkId, String mediaFkTableName, Integer domainId);
+
+    List<Media> findAllByMediaFkIdAndMediaFkTableName(Integer mediaFkId, String mediaFkTableName);
 
     //
     @Query(value = "SELECT distinct(media_fk_id) FROM media WHERE media_link = ?1 AND media_fk_table_name = ?2", nativeQuery=true)

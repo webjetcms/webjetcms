@@ -113,6 +113,8 @@ public class EditorFacade {
 		int historyId = editorService.saveEditedDoc(entity);
 		Logger.debug(EditorFacade.class, "Page saved, historyId=" + historyId);
 
+        boolean plannedChange = sk.iway.iwcm.doc.PlannedAccess.enabled() && entity.isPublishAfterStart();
+        if (!plannedChange) {
 		// skipApproving is set for newly created default pages for group, we dont want to create duplicate approve request for such pages (approved will be by group itself)
         multigroupService.setDefaultDocId(entity.getGroupId(), entity.getDocId(), !EditorFacade.isSkipApproving(entity.getGroupId()));
 
@@ -141,10 +143,15 @@ public class EditorFacade {
 			}
 		}
 
+        }
 		//vrat aktualny zaznam z DB
 		DocDetails savedCopy = editorService.getDoc(entity.getDocId(), historyId);
 		DocEditorFields def = new DocEditorFields();
 		def.fromDocDetails(savedCopy, true, true);
+        if (sk.iway.iwcm.doc.PlannedAccess.enabled()) {
+            def.setPlannedMedia(savedCopy.isPublicable());
+            def.setPlannedHistoryId(sk.iway.iwcm.doc.PlannedChangesService.getInstance().activeHistory(savedCopy.getDocId()));
+        }
 		savedCopy.setEditorFields(def);
 		savedCopy.setHistoryId(historyId);
 

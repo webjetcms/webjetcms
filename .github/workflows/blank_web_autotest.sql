@@ -1510,6 +1510,7 @@ CREATE TABLE `document_notes` (
 DROP TABLE IF EXISTS `documents`;
 
 CREATE TABLE `documents` (
+  `planned_media_initialized` tinyint(1) NOT NULL DEFAULT '0',
   `doc_id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(255) NOT NULL DEFAULT '',
   `data` mediumtext NOT NULL,

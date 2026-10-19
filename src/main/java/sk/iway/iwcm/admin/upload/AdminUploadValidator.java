@@ -95,6 +95,11 @@ final class AdminUploadValidator {
         if (isAllowedDestinationFolder(destinationFolder) == false) {
             return ERROR_INVALID_FOLDER;
         }
+        if (sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(destinationFolder)) {
+            String path = destinationFolder.endsWith("/") ? destinationFolder + fileName : destinationFolder + "/" + fileName;
+            if (!sk.iway.iwcm.doc.PlannedAccess.canAccess(path, user)) return ERROR_INVALID_FOLDER;
+            return validateFile(fileName, uploadType, fileSize, user, request);
+        }
         boolean skipFolderPermission = allowProtectedFolderExceptions
             && isFolderPermissionException(destinationFolder);
         if (skipFolderPermission == false && user.isFolderWritable(destinationFolder) == false) {

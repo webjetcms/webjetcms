@@ -31,6 +31,16 @@ public class PreviewController {
             return "forward:/404.jsp";
         }
 
+        sk.iway.iwcm.doc.PlannedAccess.privateHeaders(response);
+        if (doc.getDocId() > 0 && (doc.isPublishAfterStart() || doc.getEditorFields().isPlannedMedia())) {
+            try {
+                DocDetails authorized = sk.iway.iwcm.doc.PlannedAccess.requirePage(doc.getDocId(), UsersDB.getCurrentUser(request));
+                request.setAttribute(sk.iway.iwcm.doc.PlannedAccess.PREVIEW_DOC, authorized.getDocId());
+            } catch (RuntimeException denied) {
+                response.setStatus(404);
+                return null;
+            }
+        }
         //set DocDetails @transient columns
         doc.setPublishStart(doc.getPublishStart());
         doc.setPublishEnd(doc.getPublishEnd());

@@ -44,6 +44,8 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
+- Plánované publikovanie - pri zapnutí `plannedPublishingEnabled` možno pripraviť budúcu verziu stránky s chránenými obrázkami, dokumentmi a samostatnou sadou médií. Živá stránka a pracovná verzia sa dajú upravovať nezávisle. [Postup a podmienky nasadenia](redactor/webpages/planned-publishing.md) (#osk806).
+
 - Kôš webových stránok - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Pridaná možnosť mazania stránok a priečinkov v koši aj v sekcii [Mazanie dát](sysadmin/data-deleting/README.md) podľa zvoleného rozsahu dátumov. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov (#271).
 
 ![](sysadmin/data-deleting/database-delete.png)

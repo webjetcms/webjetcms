@@ -18,6 +18,8 @@ import sk.iway.iwcm.io.IwcmFile;
 public class ImageEditorRestController {
 
     private final GalleryRepository galleryRepository;
+    @Autowired
+    private jakarta.servlet.http.HttpServletRequest request;
 
     @Autowired
     public ImageEditorRestController(GalleryRepository galleryRepository) {
@@ -27,6 +29,10 @@ public class ImageEditorRestController {
     @PostMapping("/save-area-of-interest")
     public ResponseEntity<String> saveImageAreaOfInterest(GalleryEntity entity) {
         try {
+            String path = entity.getImagePath() + "/" + entity.getImageName();
+            if (sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(path) && !sk.iway.iwcm.doc.PlannedAccess.canAccess(path, sk.iway.iwcm.users.UsersDB.getCurrentUser(request))) {
+                return ResponseEntity.notFound().build();
+            }
             GalleryEntity dbEntity = galleryRepository.findByImagePathAndImageNameAndDomainId(entity.getImagePath(), entity.getImageName(), CloudToolsForCore.getDomainId());
             if (dbEntity == null) {
                 dbEntity = new GalleryEntity();

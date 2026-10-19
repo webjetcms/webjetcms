@@ -52,6 +52,10 @@ public class IwcmActualPageFsVolume extends IwcmFsVolume
 			if (path.endsWith("/")==false) path += "/";
 			if (path.equals(virtualPath))
 			{
+                if (sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(virtualPath)) {
+                    String target = sk.iway.iwcm.doc.PlannedAssetPaths.target(virtualPath, sk.iway.iwcm.doc.PlannedAssetPaths.docId(virtualPath));
+                    return Prop.getTxt(target.startsWith("/images/") ? "planned.images" : "planned.files");
+                }
 				if (virtualPath.startsWith("/images"+domainAlias+"/gallery") || virtualPath.startsWith("/images/gallery")) return Prop.getTxt("elfinder.images.gallery");
 				if (virtualPath.startsWith("/images"+domainAlias+"/video") || virtualPath.startsWith("/images/video")) return Prop.getTxt("elfinder.images.video");
 				if (virtualPath.startsWith("/images"+domainAlias) || virtualPath.startsWith("/images")) return Prop.getTxt("elfinder.images");

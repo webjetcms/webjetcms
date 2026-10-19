@@ -77,7 +77,12 @@ public class DocPublishService {
 
 				//execute changes
 				for (DocHistory doc : copyDHtoD) {
-					copyDHistory(doc, docDB);
+					try {
+                        copyDHistory(doc, docDB);
+                    } catch (Exception exception) {
+                        Logger.error(DocPublishService.class, "Could not publish history " + doc.getHistoryId());
+                        Logger.error(DocPublishService.class, exception);
+                    }
 				}
 				for (DocDetails doc : removeAfterEndList) {
 					disableAfterEnd(doc);
@@ -100,12 +105,23 @@ public class DocPublishService {
 
 		Logger.debug(this,"Publishing from historyId: " + docDetails.getHistoryId() + " docId: " + docDetails.getDocId());
 
+        DocDetails currentPage = ddr.findById(docDetails.getDocId());
+        if (!PlannedAccess.enabled() && currentPage != null && currentPage.isPlannedMediaInitialized()) return;
+        if (PlannedAccess.enabled()) {
+            try {
+                docDetails = PlannedChangesService.getInstance().publish(docHistory.getId());
+                if (docDetails == null) { docDB.readPagesToPublic(); return; }
+            } catch (java.io.IOException exception) {
+                throw new IllegalStateException("Planned asset publication failed", exception);
+            }
+        } else {
 		boolean publicable = dhr.getPublicableByDocIdIn(docDetails.getDocId()).contains(Boolean.TRUE) ? true : false;
 		Optional<List<Integer>> historyIdsOpt = dhr.getHisotryIdsByDocIdIn(docDetails.getDocId());
 		String historyIds = historyIdsOpt.isPresent() == true ? historyIdsOpt.get().stream().map(String::valueOf).collect(Collectors.joining(",")) : null;
 
 		if (historyIds == null || publicable == false) {
 			//asi sme cluster a uz to niekto aktualizoval
+			docDB.readPagesToPublic();
 			return;
 		}
 
@@ -154,6 +170,8 @@ public class DocPublishService {
 				SetCharacterEncodingFilter.setCurrentRequestBean(null);
 			}
 		}
+
+        }
 
 		// vypublikovanie slave clankov z historie (multikategorie)
 		DocDetails masterDocDetails = null;

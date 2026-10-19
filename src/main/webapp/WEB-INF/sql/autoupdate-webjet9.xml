@@ -4146,5 +4146,25 @@
             </object>
         </void>
 
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>16.10.2026</string></void>
+                <void property="desc"><string>documents - server managed planned media state and scheduled publication trigger</string></void>
+                <void property="mysql"><string>ALTER TABLE documents ADD COLUMN planned_media_initialized TINYINT(1) NOT NULL DEFAULT 0;
+                    INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Webpages - Publish planned changes', '0', '*', '*', '*', '*', '*', '*', 'sk.iway.iwcm.doc.PlannedPublishCron', NULL, 'false', 'all-admin');
+                </string></void>
+                <void property="mssql"><string>ALTER TABLE documents ADD planned_media_initialized BIT NOT NULL DEFAULT 0;
+                    INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Webpages - Publish planned changes', '0', '*', '*', '*', '*', '*', '*', 'sk.iway.iwcm.doc.PlannedPublishCron', NULL, 'false', 'all-admin');
+                </string></void>
+                <void property="oracle"><string>ALTER TABLE documents ADD (planned_media_initialized NUMBER(1) DEFAULT 0 NOT NULL);
+                    INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Webpages - Publish planned changes', '0', '*', '*', '*', '*', '*', '*', 'sk.iway.iwcm.doc.PlannedPublishCron', NULL, 0, 'all-admin');
+                </string></void>
+                <void property="pgsql"><string>ALTER TABLE documents ADD COLUMN planned_media_initialized BOOLEAN NOT NULL DEFAULT FALSE;
+                    INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Webpages - Publish planned changes', '0', '*', '*', '*', '*', '*', '*', 'sk.iway.iwcm.doc.PlannedPublishCron', NULL, false, 'all-admin');
+                </string></void>
+            </object>
+        </void>
+
     </object>
 </java>

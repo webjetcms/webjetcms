@@ -57,6 +57,14 @@ public class GetProtectedFileServlet extends HttpServlet
       if (ContextFilter.isRunning(request)) url = ContextFilter.removeContextPath(request.getContextPath(), url);
       //Logger.println(this,"RequestServlet: url="+url);
 
+      if (!PlannedAccess.check(url, request, response)) return;
+      if (PlannedAssetPaths.containsPlannedPath(url)) {
+          IwcmFile file = new IwcmFile(Tools.getRealPath(PlannedAssetPaths.localPath(url)));
+          if (!file.isFile()) { response.setStatus(404); return; }
+          PlannedAccess.privateHeaders(response);
+          FilePathTools.writeFileOut(file, request, response);
+          return;
+      }
       request.getSession().setAttribute("afterLogonRedirect", url);
 
       //Logger.println(this,"-->GetProtectedFileServlet: " + url);
