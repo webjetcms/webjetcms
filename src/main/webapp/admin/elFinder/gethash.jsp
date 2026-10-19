@@ -29,7 +29,7 @@
     if (url.indexOf("?")>0) url = url.substring(0, url.indexOf("?"));
     if (url.startsWith("/thumb/")) url = url.substring("/thumb".length());
     boolean plannedAsset = sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(url);
-    if (plannedAsset && !sk.iway.iwcm.doc.PlannedAccess.canAccess(url, user)) {
+    if (plannedAsset && !user.isFolderWritable(url.substring(0, url.lastIndexOf('/') + 1))) {
         response.setStatus(404);
         return;
     }

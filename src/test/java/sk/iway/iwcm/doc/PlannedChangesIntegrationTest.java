@@ -27,6 +27,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.media.MediaRepository;
 import sk.iway.iwcm.database.SimpleQuery;
@@ -45,6 +46,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
     @Test
     void copiesOnceReplacesWholeSetAndDoesNotConsumeAgain() throws Exception {
         try (var audit = mockStatic(Adminlog.class);
+             var tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
              var access = mockStatic(PlannedAccess.class);
              var domains = mockStatic(CloudToolsForCore.class);
              var groups = mockStatic(GroupsDB.class);
@@ -59,6 +61,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
             Identity user = new Identity();
             user.setUserId(1);
             user.setAdmin(true);
+            user.setWritableFolders("*");
             GroupDetails group = new GroupDetails();
             group.setDomainName("planned-autotest.example.com");
             DocDB docsCache = mock(DocDB.class);
@@ -68,7 +71,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
             when(groupDB.getGroup(anyInt())).thenReturn(group);
             groups.when(GroupsDB::getInstance).thenReturn(groupDB);
             access.when(PlannedAccess::enabled).thenReturn(true);
-            access.when(() -> PlannedAccess.checkedFile(anyString())).thenAnswer(call -> assets.resolve(((String)call.getArgument(0)).substring(1)));
+            tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(call -> assets.resolve(((String)call.getArgument(0)).substring(1)).toString());
             access.when(() -> PlannedAccess.canEdit(any(), any())).thenReturn(true);
             domains.when(CloudToolsForCore::getDomainId).thenReturn(1);
             domains.when(CloudToolsForCore::getDomainName).thenReturn(group.getDomainName());
@@ -175,7 +178,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 java.nio.file.Files.writeString(source, "future image");
                 java.nio.file.Files.writeString(source.resolveSibling("unused.webp"), "unreferenced image");
                 java.nio.file.Files.writeString(target, "old image");
-                access.when(() -> PlannedAccess.canAccess(anyString(), any())).thenReturn(true);
+                users.when(() -> UsersDB.isFolderWritable(anyString(), anyString())).thenReturn(true);
                 service.initialize(page.getDocId(), user);
                 Media pdf = item(page.getDocId(), PlannedChangesService.MEDIA_TABLE, "PDF");
                 pdf.setMediaLink(privateRoot + "/files/spec.pdf");
@@ -202,10 +205,10 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                     java.nio.file.Path unreferenced = pdfSource.resolveSibling("nested/unused.pdf");
                     java.nio.file.Files.createDirectories(unreferenced.getParent());
                     java.nio.file.Files.writeString(unreferenced, "unreferenced PDF");
-                    access.when(() -> PlannedAccess.canAccess(privateRoot + "/files/nested/unused.pdf", user)).thenReturn(false);
+                    users.when(() -> UsersDB.isFolderWritable(anyString(), eq("/files/nested/"))).thenReturn(false);
                     assertThrows(IllegalArgumentException.class, () -> service.publish(withFilesId));
                     assertEquals("old image", java.nio.file.Files.readString(target), "Validate unreferenced assets before copying any file");
-                    access.when(() -> PlannedAccess.canAccess(privateRoot + "/files/nested/unused.pdf", user)).thenReturn(true);
+                    users.when(() -> UsersDB.isFolderWritable(anyString(), eq("/files/nested/"))).thenReturn(true);
                     assertThrows(IllegalStateException.class, () -> interrupted.publish(withFilesId));
                     assertEquals(privateRoot + "/files/spec.pdf", media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1).get(0).getMediaLink(),
                         "Rewriting the live copy must preserve private source URLs for a retry");
@@ -276,10 +279,11 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 var executor = java.util.concurrent.Executors.newFixedThreadPool(2);
                 java.util.concurrent.Callable<DocDetails> publish = () -> {
                     try (var workerAccess = mockStatic(PlannedAccess.class); var workerGroups = mockStatic(GroupsDB.class);
+                         var workerTools = mockStatic(Tools.class, CALLS_REAL_METHODS);
                          var workerUsers = mockStatic(UsersDB.class); var workerDomains = mockStatic(CloudToolsForCore.class);
                          var workerDocs = mockStatic(DocDB.class); var workerAudit = mockStatic(Adminlog.class)) {
                         workerAccess.when(() -> PlannedAccess.canEdit(any(), any())).thenReturn(true);
-                        workerAccess.when(() -> PlannedAccess.checkedFile(anyString())).thenAnswer(call -> assets.resolve(((String)call.getArgument(0)).substring(1)));
+                        workerTools.when(() -> Tools.getRealPath(anyString())).thenAnswer(call -> assets.resolve(((String)call.getArgument(0)).substring(1)).toString());
                         workerGroups.when(GroupsDB::getInstance).thenReturn(groupDB);
                         workerUsers.when(() -> UsersDB.getUser(anyInt())).thenReturn(user);
                         workerDomains.when(CloudToolsForCore::getDomainId).thenReturn(1);

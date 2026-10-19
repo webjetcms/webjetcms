@@ -28,8 +28,6 @@ import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.ImageTools;
 import sk.iway.iwcm.doc.DocDB;
-import sk.iway.iwcm.doc.PlannedAccess;
-import sk.iway.iwcm.doc.PlannedAssetPaths;
 import sk.iway.iwcm.gallery.GalleryDB;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
@@ -74,7 +72,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
             //in ImageEditor we don't get ID, but we get imagePath and imageName, so load entity by these values
             String imagePath = getRequest().getParameter("dir");
             String imageName = getRequest().getParameter("name");
-            checkImageAccess(imagePath, imageName);
+            checkImageAccess(imagePath);
 
             GalleryEntity entity = new GalleryEntity();
             if(Tools.isNotEmpty(imagePath) && Tools.isNotEmpty(imageName)) {
@@ -153,7 +151,7 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
      */
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, GalleryEntity> target, Identity user, Errors errors, Long id, GalleryEntity entity) {
-        if (!PlannedAccess.canWrite(entity.getImagePath(), entity.getImageName(), user)) {
+        if (!user.isFolderWritable(entity.getImagePath())) {
             errors.rejectValue("errorField.imagePath", "403", Prop.getInstance().getText("user.rights.no_folder_rights"));
         }
         if (entity.getImageName().contains("/") || entity.getImageName().contains("\\") || FileBrowserTools.hasForbiddenSymbol(entity.getImageName())) {
@@ -331,25 +329,17 @@ public class GalleryRestController extends DatatableRestControllerV2<GalleryEnti
         setLastModified(entity.getImagePath()+"/s_"+entity.getImageName(), now);
     }
 
-    /** Internal reads during a write use folder permissions; viewing planned images still requires page access. */
-    private void checkImageAccess(String path, String name) {
-        String url = path + "/" + name;
-        String method = getRequest().getMethod();
-        boolean writing = !isExporting() && ("POST".equals(method) || "DELETE".equals(method));
-        if (writing) {
-            if (!PlannedAccess.canWrite(path, name, getUser())) throw new IllegalArgumentException("Access is denied");
-        } else if (PlannedAssetPaths.containsPlannedPath(url) && !PlannedAccess.canAccess(url, getUser())) {
-            throw new IllegalArgumentException("Access is denied");
-        }
+    private void checkImageAccess(String path) {
+        if (!getUser().isFolderWritable(path)) throw new IllegalArgumentException("Access is denied");
     }
 
     @Override
     public boolean checkItemPerms(GalleryEntity entity, Long id) {
         if (id != null && id > 0) {
             GalleryEntity stored = repository.findById(id).orElse(null);
-            if (stored != null) checkImageAccess(stored.getImagePath(), stored.getImageName());
+            if (stored != null) checkImageAccess(stored.getImagePath());
         }
-        if (entity != null) checkImageAccess(entity.getImagePath(), entity.getImageName());
+        if (entity != null) checkImageAccess(entity.getImagePath());
         return super.checkItemPerms(entity, id);
     }
 

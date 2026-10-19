@@ -41,8 +41,9 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 	{
         if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(item.getFile().getVirtualPath())) {
             String path = item.getFile().getVirtualPath();
-            if (item.getFile().isDirectory() && !path.endsWith("/")) path += "/";
-            return sk.iway.iwcm.doc.PlannedAccess.canAccess(path, sk.iway.iwcm.system.elfinder.FsService.getCurrentUser());
+            Identity user = sk.iway.iwcm.system.elfinder.FsService.getCurrentUser();
+            String folder = item.getFile().isDirectory() ? path : path.substring(0, path.lastIndexOf('/') + 1);
+            return user != null && user.isAdmin() && user.isFolderWritable(folder);
         }
 		return _readable;
 	}
@@ -56,10 +57,7 @@ public class FsSecurityCheckForAll implements FsSecurityChecker
 	public boolean isWritable(FsService fsService, FsItem fsi)
 	{
         if (fsi instanceof IwcmFsItem item && sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(item.getFile().getVirtualPath())) {
-            String path = item.getFile().getVirtualPath();
-            if (item.getFile().isDirectory() && !path.endsWith("/")) path += "/";
-            int slash = path.lastIndexOf('/');
-            return sk.iway.iwcm.doc.PlannedAccess.canWrite(path.substring(0, slash + 1), path.substring(slash + 1), sk.iway.iwcm.system.elfinder.FsService.getCurrentUser());
+            return isReadable(fsService, fsi);
         }
 		if (isFileArchiveReadOnly(fsService, fsi)) return false;
 

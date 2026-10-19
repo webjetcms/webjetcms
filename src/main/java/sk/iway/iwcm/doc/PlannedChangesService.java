@@ -228,10 +228,10 @@ public class PlannedChangesService {
     private void preflight(Map<String, String> files, Identity user) {
         for (Map.Entry<String, String> entry : files.entrySet()) {
             try {
-                if (!PlannedAccess.canAccess(entry.getKey(), user)) throw new IOException("Asset access denied");
+                if (!user.isFolderWritable(entry.getValue().substring(0, entry.getValue().lastIndexOf('/') + 1))) throw new IOException("Asset access denied");
                 if (IwcmFsDB.useDBStorage(entry.getKey()) || IwcmFsDB.useDBStorage(entry.getValue())) throw new IOException("Planned assets require shared filesystem storage");
-                Path source = PlannedAccess.checkedFile(entry.getKey());
-                Path target = PlannedAccess.checkedFile(entry.getValue());
+                Path source = Path.of(Tools.getRealPath(entry.getKey()));
+                Path target = Path.of(Tools.getRealPath(entry.getValue()));
                 if (!Files.isRegularFile(source) || !Files.isReadable(source) || Files.isDirectory(target)) throw new IOException("Missing or invalid planned asset");
                 Path parent = target.getParent();
                 while (!Files.exists(parent)) parent = parent.getParent();
@@ -351,12 +351,11 @@ public class PlannedChangesService {
         for (String folder : List.of("images", "files")) {
             String prefix = PlannedAssetPaths.ROOT + docId + "/" + folder + "/";
             try {
-                Path root = PlannedAccess.checkedFile(prefix);
+                Path root = Path.of(Tools.getRealPath(prefix));
                 if (!Files.exists(root)) continue;
                 try (var paths = Files.walk(root)) {
                     for (Path path : paths.toList()) {
                         String source = prefix + root.relativize(path).toString().replace('\\', '/');
-                        PlannedAccess.checkedFile(source);
                         if (Files.isRegularFile(path)) files.put(source, PlannedAssetPaths.target(source, docId));
                     }
                 }
@@ -371,7 +370,7 @@ public class PlannedChangesService {
     private void deletePlannedFiles(int docId) {
         for (String folder : List.of("images", "files")) {
             try {
-                Path root = PlannedAccess.checkedFile(PlannedAssetPaths.ROOT + docId + "/" + folder + "/");
+                Path root = Path.of(Tools.getRealPath(PlannedAssetPaths.ROOT + docId + "/" + folder + "/"));
                 if (!Files.exists(root)) continue;
                 try (var paths = Files.walk(root)) {
                     for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(path);
@@ -384,10 +383,10 @@ public class PlannedChangesService {
 
     private void publishFiles(Map<String, String> files, int docId, long historyId) throws IOException {
         for (Map.Entry<String, String> entry : files.entrySet()) {
-            Path source = PlannedAccess.checkedFile(entry.getKey());
-            Path target = PlannedAccess.checkedFile(entry.getValue());
+            Path source = Path.of(Tools.getRealPath(entry.getKey()));
+            Path target = Path.of(Tools.getRealPath(entry.getValue()));
             Files.createDirectories(target.getParent());
-            Path backup = PlannedAccess.checkedFile(PlannedAssetPaths.ROOT + docId + "/backup/" + historyId + entry.getValue());
+            Path backup = Path.of(Tools.getRealPath(PlannedAssetPaths.ROOT + docId + "/backup/" + historyId + entry.getValue()));
             if (Files.exists(target) && !Files.exists(backup)) {
                 Files.createDirectories(backup.getParent());
                 Files.copy(target, backup, StandardCopyOption.COPY_ATTRIBUTES);

@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
-import sk.iway.iwcm.doc.PlannedAccess;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -31,7 +30,7 @@ public class ImageEditorRestController {
     @PostMapping("/save-area-of-interest")
     public ResponseEntity<String> saveImageAreaOfInterest(GalleryEntity entity, HttpServletRequest request) {
         try {
-            if (!PlannedAccess.canWrite(entity.getImagePath(), entity.getImageName(), UsersDB.getCurrentUser(request))) {
+            if (!UsersDB.getCurrentUser(request).isFolderWritable(entity.getImagePath())) {
                 return ResponseEntity.notFound().build();
             }
             GalleryEntity dbEntity = galleryRepository.findByImagePathAndImageNameAndDomainId(entity.getImagePath(), entity.getImageName(), CloudToolsForCore.getDomainId());

@@ -1,9 +1,5 @@
 package sk.iway.iwcm.doc;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sk.iway.iwcm.Constants;
@@ -41,47 +37,6 @@ public final class PlannedAccess {
         return doc;
     }
 
-    /** Checks writes against the public target folder without requiring page edit permission. */
-    public static boolean canWrite(String folder, String fileName, Identity user) {
-        if (user == null || !user.isAdmin()) return false;
-        try {
-            return user.isFolderWritable(PlannedAssetPaths.removePlannedPrefix(folder, fileName));
-        } catch (RuntimeException | IOException exception) {
-            return false;
-        }
-    }
-
-    public static boolean canAccess(String value, Identity user) {
-        try {
-            String path = PlannedAssetPaths.localPath(value);
-            if (path.startsWith("/thumb/")) path = path.substring(6);
-            int docId = PlannedAssetPaths.docId(path);
-            DocDetails doc = requirePage(docId, user);
-            if (doc.getDocId() != docId) return false;
-            String target = PlannedAssetPaths.target(path, docId);
-            String folder = target.endsWith("/") ? target : target.substring(0, target.lastIndexOf('/') + 1);
-            checkedFile(path);
-            checkedFile(target);
-            return UsersDB.isFolderWritable(user.getWritableFolders(), folder);
-        } catch (RuntimeException | IOException exception) {
-            return false;
-        }
-    }
-
-    /** Rejects symlinks in every existing path component, including not-yet-created destinations. */
-    public static Path checkedFile(String virtualPath) throws IOException {
-        Path file = Path.of(Tools.getRealPath(virtualPath)).toAbsolutePath().normalize();
-        Path root = Path.of(Tools.getRealPath("/")).toAbsolutePath().normalize();
-        // External domain storage may have a distinct root; resolve it through the same path mapper.
-        String top = virtualPath.startsWith("/images/") ? "/images/" : "/files/";
-        Path storageRoot = Path.of(Tools.getRealPath(top)).toAbsolutePath().normalize();
-        if (!file.startsWith(root) && !file.startsWith(storageRoot)) throw new IOException("Asset escaped storage root");
-        for (Path current = file; current != null; current = current.getParent()) {
-            if (Files.isSymbolicLink(current)) throw new IOException("Symbolic links are not supported for planned assets");
-        }
-        return file;
-    }
-
     public static void privateHeaders(HttpServletResponse response) {
         response.setHeader("Cache-Control", "private, no-store");
         response.setHeader("Pragma", "no-cache");
@@ -93,7 +48,16 @@ public final class PlannedAccess {
     public static boolean check(String path, HttpServletRequest request, HttpServletResponse response) {
         if (!PlannedAssetPaths.containsPlannedPath(path)) return true;
         privateHeaders(response);
-        if (canAccess(path, UsersDB.getCurrentUser(request))) return true;
+        Identity user = UsersDB.getCurrentUser(request);
+        if (user != null && user.isAdmin()) {
+            try {
+                String localPath = PlannedAssetPaths.localPath(path);
+                if (localPath.startsWith("/thumb/")) localPath = localPath.substring(6);
+                if (user.isFolderWritable(localPath.substring(0, localPath.lastIndexOf('/') + 1))) return true;
+            } catch (IllegalArgumentException exception) {
+                // Invalid URLs receive the same response as inaccessible files.
+            }
+        }
         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         return false;
     }

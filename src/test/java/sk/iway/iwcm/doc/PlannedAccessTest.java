@@ -73,45 +73,25 @@ class PlannedAccessTest {
         }
     }
 
-    /** Checks page, domain and destination ACLs independently of file existence. */
+    /** Private originals and thumbnails use the same public folder permissions. */
     @Test
-    void requiresEditorPageDomainAndTargetFolderPermissions() throws Exception {
-        String path = "/files/protected/planned-changes/42/images/allowed/photo.webp";
+    void checksTargetFolderPermissions() {
         Identity editor = new Identity();
         editor.setAdmin(true);
         editor.setWritableFolders("/images/allowed/");
-        DocDetails doc = new DocDetails();
-        doc.setDocId(42);
-        doc.setGroupId(1);
-        GroupDetails group = new GroupDetails();
-        group.setDomainName("one.example.com");
-        DocDetailsRepository repository = mock(DocDetailsRepository.class);
-        when(repository.findById(42)).thenReturn(doc);
-        GroupsDB groupDB = mock(GroupsDB.class);
-        when(groupDB.getGroup(1)).thenReturn(group);
-        try (var tools = mockStatic(Tools.class); var mappings = mockStatic(MultigroupMappingDB.class);
-             var groups = mockStatic(GroupsDB.class); var domains = mockStatic(sk.iway.iwcm.common.CloudToolsForCore.class);
-             var pages = mockStatic(sk.iway.iwcm.editor.EditorDB.class); var users = mockStatic(UsersDB.class);
-             var access = mockStatic(PlannedAccess.class, CALLS_REAL_METHODS)) {
-            tools.when(() -> Tools.getSpringBean("docDetailsRepository", DocDetailsRepository.class)).thenReturn(repository);
-            tools.when(() -> Tools.isEmpty(anyString())).thenCallRealMethod();
-            groups.when(GroupsDB::getInstance).thenReturn(groupDB);
-            domains.when(sk.iway.iwcm.common.CloudToolsForCore::getDomainName).thenReturn("one.example.com");
-            pages.when(() -> sk.iway.iwcm.editor.EditorDB.isPageEditable(any(Identity.class), any(sk.iway.iwcm.editor.EditorForm.class))).thenReturn(true);
-            access.when(() -> PlannedAccess.checkedFile(anyString())).thenReturn(java.nio.file.Path.of("/private/tmp"));
-            users.when(() -> UsersDB.isFolderWritable(anyString(), anyString())).thenReturn(true);
-            assertTrue(PlannedAccess.canAccess(path, editor));
-            domains.when(sk.iway.iwcm.common.CloudToolsForCore::getDomainName).thenReturn("two.example.com");
-            assertFalse(PlannedAccess.canAccess(path, editor));
-            domains.when(sk.iway.iwcm.common.CloudToolsForCore::getDomainName).thenReturn("one.example.com");
-            users.when(() -> UsersDB.isFolderWritable(anyString(), anyString())).thenReturn(false);
-            assertFalse(PlannedAccess.canAccess(path, editor));
-            users.when(() -> UsersDB.isFolderWritable(anyString(), anyString())).thenReturn(true);
-            editor.setAdmin(false);
-            assertFalse(PlannedAccess.canAccess(path, editor));
-            editor.setAdmin(true);
-            pages.when(() -> sk.iway.iwcm.editor.EditorDB.isPageEditable(any(Identity.class), any(sk.iway.iwcm.editor.EditorForm.class))).thenReturn(false);
-            assertFalse(PlannedAccess.canAccess(path, editor));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        try (var users = mockStatic(UsersDB.class)) {
+            users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(editor);
+            users.when(() -> UsersDB.isFolderWritable(anyString(), anyString())).thenCallRealMethod();
+            for (String prefix : new String[] {"", "/thumb"}) {
+                String path = prefix + "/files/protected/planned-changes/42/images/allowed/photo.webp";
+                editor.setWritableFolders("/images/allowed/");
+                assertTrue(PlannedAccess.check(path, request, new MockHttpServletResponse()));
+                editor.setWritableFolders("/images/other/");
+                MockHttpServletResponse denied = new MockHttpServletResponse();
+                assertFalse(PlannedAccess.check(path, request, denied));
+                assertEquals(404, denied.getStatus());
+            }
         }
     }
 
@@ -142,7 +122,6 @@ class PlannedAccessTest {
     @Test
     void doesNotChangeOrdinaryAssetResponses() throws Exception {
         assertEquals("/images/current.webp", PlannedAssetPaths.removePlannedPrefix("/images/current.webp"));
-        assertFalse(PlannedAccess.canAccess("/images/current.webp", null));
         MockHttpServletResponse response = new MockHttpServletResponse();
         assertTrue(PlannedAccess.check("/images/current.webp", new MockHttpServletRequest(), response));
         assertNull(response.getHeader("Cache-Control"));

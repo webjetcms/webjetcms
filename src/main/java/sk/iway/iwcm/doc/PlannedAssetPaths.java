@@ -1,6 +1,5 @@
 package sk.iway.iwcm.doc;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
@@ -62,25 +61,6 @@ public final class PlannedAssetPaths {
         if (!containsPlannedPath(value)) return value;
         String path = localPath(value);
         return target(path, docId(path));
-    }
-
-    /**
-     * Resolves an upload folder for permission checks and validates the complete planned file paths.
-     * The original folder must still be used for storage; page permissions are not checked here.
-     *
-     * @param folder upload destination folder
-     * @param fileName uploaded file name
-     * @return public target folder, or the unchanged ordinary folder
-     * @throws IllegalArgumentException if the planned path or target is invalid
-     * @throws IOException if the source or target filesystem path is unsafe
-     */
-    public static String removePlannedPrefix(String folder, String fileName) throws IOException {
-        if (!containsPlannedPath(folder)) return folder;
-        String path = (folder.endsWith("/") ? folder : folder + "/") + fileName;
-        String target = removePlannedPrefix(path);
-        PlannedAccess.checkedFile(localPath(path));
-        PlannedAccess.checkedFile(target);
-        return target.substring(0, target.lastIndexOf('/') + 1);
     }
 
     public static void validateTarget(String path) {
