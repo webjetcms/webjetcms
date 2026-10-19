@@ -17,6 +17,31 @@ org.springframework=WARN
 
 V případě potřeby je možné nastavit/implementovat vlastní [Appender](https://logback.qos.ch/manual/appenders.html). Ten může odesílat logy například do externího systému pro analýzu logů. Přímo `Logback` mimo jiné poskytuje `Appender` pro [Syslog](https://logback.qos.ch/manual/appenders.html#SyslogAppender) nebo [SMTP](https://logback.qos.ch/manual/appenders.html#SMTPAppender). V případě potřeby je možné vytvořit [vlastní Appender](https://logback.qos.ch/manual/appenders.html#WriteYourOwnAppender).
 
+## HTTP/HTTPS proxy
+
+Pokud server přistupuje k Internetu prostřednictvím proxy, nastavte konfigurační proměnné `proxyHost` a `proxyPort`, případně `proxyUser` a `proxyPassword`. Pro samostatnou HTTPS proxy slouží `proxyHostHttps` a `proxyPortHttps` ; bez samostatného nastavení se použije HTTP proxy. Změny těchto nastavení i výjimek vyžadují restart aplikačního serveru.
+
+Proměnná `proxyHostsException` určuje hosty, ke kterým se WebJET připojuje přímo. Výjimky platí rovněž pro HTTP i HTTPS. Položky oddělujte čárkou nebo znakem `|`, případně jejich kombinací. Mezery kolem položek se odstraní a prázdné položky se ignorují. Například:
+
+```text
+localhost, *.firma.sk | 127.*
+```
+
+Porovnává se celý host bez rozlišování velikosti písmen; port, cesta a parametry URL shodu neovlivňují. Zástupné vzory odpovídají [Java 17 `http.nonProxyHosts`](https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/doc-files/net-properties.html#http.nonProxyHosts):
+
+| Vzor | Připojení přímo |
+| --- | --- |
+| `api.firma.sk` | Jen host `api.firma.sk`, i při zápisu `API.FIRMA.SK`. |
+| `*.firma.cz` | Subdomény, Např. `api.firma.sk` ; ne `firma.sk` ani `api.firma.sk.evil.sk`. |
+| `127.*` | Hosty začínající na `127.`, například. `127.0.0.1`. |
+| `*firma*` | Hosty obsahující `firma`. |
+| Všechny platné hosty. | `[::1]` |
+| IPv6 loopback adresa; IPv6 adresy zapisujte v hranatých závorkách. | IPv6 loopback adresa; IPv6 adresy zapisujte v hranatých zátvorkách. |
+
+Zástupný význam má jedna hvězdička na začátku a jedna na konci vzoru, případně samostatná `*`. hvězdičky uvnitř jsou doslovné: `api*service.sk` se neshoduje s `api-service.sk`. Nejedná se o obecné regulární výrazy; tečka, hranaté závorky, `+`, `?` a ostatní znaky se vyhodnocují doslovně.
+
+WebJET nepřidává automatické výjimky pro `localhost` ani loopback adresy. Prázdný seznam znamená, že WebJET selector směřuje i tyto požadavky přes nakonfigurovanou proxy. Neprázdný normalizovaný seznam se při inicializaci zapíše i do JVM property `http.nonProxyHosts` s oddělovačem `|`. Prázdný seznam existující JVM hodnotu nepřepíše. Klienti používající výchozí Java selector mohou navíc uplatnit jeho automatické loopback výjimky.
+
 ## Odesílání emailů
 
 Pro odesílání emailů je třeba nastavit korektně SMTP server:
