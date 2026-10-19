@@ -39,7 +39,6 @@ import sk.iway.spirit.model.Media;
 import sk.iway.spirit.model.MediaEditorFields;
 import sk.iway.spirit.model.MediaGroupBean;
 
-@org.springframework.transaction.annotation.Transactional
 @RestController
 @Datatable
 @RequestMapping(value = "/admin/rest/media")
@@ -151,9 +150,6 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
         }
 
         if (!checkItemPerms(entity, entity.getId())) throw new IllegalArgumentException("Access is denied");
-        if (docId > 0 && !"documents_temp".equals(tableName) && sk.iway.iwcm.doc.PlannedAccess.enabled()) {
-            sk.iway.iwcm.doc.PlannedChangesService.getInstance().lockMedia(docId, isPlanned(), getUser());
-        }
         if (isPlanned()) sk.iway.iwcm.doc.PlannedChangesService.getInstance().validateMedia(entity, docId, getUser());
         if (!isPlanned()) sk.iway.iwcm.doc.PlannedChangesService.rejectPrivateReferences(entity);
 
@@ -356,12 +352,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
     @Override
     public boolean beforeDelete(Media entity) {
         if (!checkItemPerms(entity, entity.getId())) throw new IllegalArgumentException("Access is denied");
-        if (sk.iway.iwcm.doc.PlannedAccess.enabled() && entity.getId() != null) {
-            Media stored = mediaRepository.findFirstByIdAndDomainId(entity.getId(), CloudToolsForCore.getDomainId()).orElseThrow();
-            if (!"documents_temp".equals(stored.getMediaFkTableName())) {
-                sk.iway.iwcm.doc.PlannedChangesService.getInstance().lockMedia(stored.getMediaFkId(), isPlanned(), getUser());
-            }
-        }
+        if (isPlanned()) sk.iway.iwcm.doc.PlannedChangesService.getInstance().requirePlannedMedia(getMediaFkId(), getUser());
         return true;
     }
 

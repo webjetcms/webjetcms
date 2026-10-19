@@ -15,16 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public interface DocDetailsRepository extends JpaRepository<DocDetails, Long>, JpaSpecificationExecutor<DocDetails> {
 
-    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT d FROM DocDetails d WHERE d.id = :id")
-    DocDetails lockForPlannedChange(@Param("id") Long id);
-
-    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
-    // A stable existing row serializes conflict checks even when no plan has been initialized yet.
-    @Query("SELECT d FROM DocDetails d WHERE d.id = (SELECT MIN(anchor.id) FROM DocDetails anchor)")
-    List<DocDetails> lockPlannedChanges();
-
-    @Modifying
+    @Transactional
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE DocDetails d SET d.plannedMediaInitialized = :initialized WHERE d.id = :id")
     void setPlannedMediaInitialized(@Param("id") Long id, @Param("initialized") boolean initialized);
 

@@ -14,8 +14,9 @@ public final class PlannedAssetPaths {
     public static boolean containsPlannedPath(String value) {
         if (value == null) return false;
         try {
-            return URLDecoder.decode(value.replace("+", "%2B"), StandardCharsets.UTF_8)
-                .toLowerCase(Locale.ROOT).contains("/files/protected/planned-changes");
+            return URLDecoder.decode(value, StandardCharsets.UTF_8)
+                .toLowerCase(Locale.ROOT)
+                .contains("/files/protected/planned-changes");
         } catch (IllegalArgumentException exception) {
             return value.toLowerCase(Locale.ROOT).contains("planned-changes");
         }

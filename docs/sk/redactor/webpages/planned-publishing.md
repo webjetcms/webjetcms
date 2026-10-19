@@ -6,7 +6,7 @@ Budúcu verziu existujúcej stránky môžete pripraviť aj s obrázkami a dokum
 
 1. Otvorte existujúcu stránku. Úplne novú stránku najskôr uložte ako nezverejnenú.
 2. V karte **Perex** nastavte **Dátum začiatku** a zapnite **Naplánovať zmenu stránky po tomto dátume**. WebJET jednorazovo skopíruje živé médiá do plánovanej sady.
-3. Nové podklady nahrajte vo výbere súborov do **Médiá tejto stránky → Plánované obrázky** alebo **Plánované súbory**. Tieto priečinky sú dostupné aj pri výbere perexového obrázka a odkazov v karte **Médiá**.
+3. Nové podklady nahrajte vo výbere súborov do **Médiá tejto stránky → Obrázky - plánované** alebo **Súbory - plánované**. Tieto priečinky sú dostupné aj pri výbere perexového obrázka a odkazov v karte **Médiá**.
 4. Upravte obsah a plánované médiá. Kliknite na **Naplánovať**.
 5. Pri ďalšej úprave použite **Otvoriť plánovanú verziu** v karte Perex alebo otvorte príslušnú verziu cez Históriu. Opätovné otvorenie už nekopíruje živé médiá.
 
@@ -20,45 +20,44 @@ Príklad pre stránku s ID `42`:
 
 ```text
 /files/protected/planned-changes/42/images/apple/foto.webp
-→ /images/apple/foto.webp?v=<historyId>
+→ /images/apple/foto.webp
 
 /files/protected/planned-changes/42/files/apple/parametre.pdf
-→ /files/apple/parametre.pdf?v=<historyId>
+→ /files/apple/parametre.pdf
 ```
 
 Cieľ je uložený v ceste súboru, preto ho neskoršie premenovanie stránky nezmení. Kopírujú sa iba súbory použité v publikovanej verzii alebo jej médiách. Nepoužité súbory ostanú chránené a čistia sa ručne.
 
-Podporované sú obsah, anotácia, perexový obrázok, `htmlHead`, voliteľné polia a odkazy, náhľady či popisy médií. Prepis zahŕňa `src`, `href`, `srcset`, `poster`, `data-src`, `data-srcset`, `data-original`, `data-lazy-src`, `data-lazy-srcset`, `/thumb/` a vložené CSS `url(...)`. Absolútne odkazy musia patriť doméne stránky. Existujúce parametre a fragmenty sa zachovajú; parameter `v` dostane novú hodnotu.
+Podporované sú obsah, anotácia, perexový obrázok, `htmlHead`, voliteľné polia a odkazy, náhľady či popisy médií. Prepis zahŕňa `src`, `href`, `srcset`, `poster`, `data-src`, `data-srcset`, `data-original`, `data-lazy-src`, `data-lazy-srcset`, `/thumb/` a vložené CSS `url(...)`. Absolútne odkazy musia patriť doméne stránky. Pri publikovaní sa odstráni iba prefix `/files/protected/planned-changes/<docId>`. Existujúce parametre vrátane `v` a fragmenty sa zachovajú bez zmeny; nové parametre sa nepridávajú.
+
+Dialóg **Vlastnosti obrázka** pri výbere obrázka nastavuje parameter `v` podľa času poslednej zmeny súboru. Pri nahradení obrázka ho v dialógu vyberte znova, aby sa nová hodnota dostala do HTML. Pri zapnutom `elfinderUseFastLoading` sa čas zmeny nečíta a hodnota je `0`; vtedy použite nový názov súboru.
+
+Pre perexové obrázky používajte pri výmene **nový názov súboru**. Ich URL bežne neobsahuje parameter `v`, preto pri zachovaní rovnakého názvu môže prehliadač alebo CDN aj po publikovaní zobrazovať starý obrázok z cache. Rovnaké obmedzenie platí pre ostatné odkazy bez zmeneného parametra `v`. WebJET pri prepísaní súboru vyčistí vlastnú cache súboru a miniatúr, cache prehliadača ani CDN tým však nevymaže.
 
 Nerozpoznané použitie chránenej URL sa odmietne pri ukladaní alebo publikovaní. Externé CSS/JS, iframe a ich závislosti sa neprechádzajú. Produktový prehliadač a e-shop potrebujú vlastný publikačný postup.
 
-Prepísanie existujúceho súboru ovplyvní všetky stránky používajúce rovnakú cestu. Súbežné plány s rovnakým cieľovým súborom sa odmietnu. Už verejne nahraný súbor nie je možné týmto postupom spätne utajiť. Ani odverejnenie stránky automaticky neskryje predtým publikované súbory.
+Prepísanie existujúceho súboru ovplyvní všetky stránky používajúce rovnakú cestu. Pri ukladaní a publikovaní sa kontroluje, či už iný plán nepoužíva rovnaký cieľový súbor. Táto kontrola nezamyká databázu, preto nezaručuje odhalenie kolízie pri súčasnom ukladaní dvoch plánov. Už verejne nahraný súbor nie je možné týmto postupom spätne utajiť. Ani odverejnenie stránky automaticky neskryje predtým publikované súbory.
 
 ## Nasadenie a prevádzka
 
-- Databázová aktualizácia pridáva stĺpec `documents.planned_media_initialized` s predvolenou hodnotou `false` a úlohu `sk.iway.iwcm.doc.PlannedPublishCron` raz za minútu pre `all-admin`. Nová tabuľka nevzniká.
-- Pre MariaDB/MySQL musia tabuľky `documents`, `documents_history`, `media` a `media_group_to_media` používať **InnoDB**. Staršie inštalácie môžu mať MyISAM; funkcia ich odmietne. Konverziu existujúcich tabuliek musí správca pripraviť podľa veľkosti databázy a prevádzkového okna. Automatická aktualizácia nemení ich úložisko.
+- Databázová aktualizácia pridáva stĺpec `documents.planned_media_initialized` s predvolenou hodnotou `false`. Nová tabuľka nevzniká.
+- Podporované sú aj tabuľky **MyISAM**. Funkcia nevyžaduje InnoDB ani konverziu existujúcich tabuliek. Publikovanie sa nespolieha na rollback celej operácie; pri chybe môže zostať časť zmien zapísaná a ďalší pokus pokračuje podľa uloženého stavu.
 - Plánované aj verejné súbory musia byť na spoločnom súborovom systéme podporujúcom atómové premenovanie. V klastri musia všetky publikačné a verejné uzly vidieť rovnaké súbory. Databázové úložisko súborov nie je podporované.
 - Proxy/CDN/statický server musia posielať `/files/protected/planned-changes/` a zodpovedajúce `/thumb/files/protected/planned-changes/` požiadavky cez WebJET a nesmú ich ukladať do verejnej cache. Zabezpečte rovnaké pravidlo aj pre alternatívne hosty a URL aliasy. Náhľad a `historyid` sa nesmú verejne cachovať.
 - Originál aj miniatúra overujú oprávnenie redaktora k stránke, doméne a cieľovému priečinku. Neoprávnený používateľ dostane `404`; odpoveď obsahuje `Cache-Control: private, no-store`. Ani už vytvorená miniatúra kontrolu neobchádza.
 - Existujúce vylúčenie `/files/protected/` z indexovania ponechajte zapnuté. Pred sprístupnením funkcie overte priamy originál, PDF, miniatúru a históriu bez prihlásenia aj po ich zobrazení administrátorom.
-- Cron musí bežať na publikačnom/admin uzle. Termín označuje najskorší začiatok publikovania; dokončenie závisí od intervalu kontroly a veľkosti súborov. Otvorený editor ani návštevnosť nie sú potrebné.
-- Projektové šablóny musia zachovať existujúce parametre URL perexového obrázka. Pri skladaní `/thumb/` URL nesmú za odkaz s `?v=...` pripojiť druhý otáznik; použite URL builder. Overte tiež odkazy s fragmentom a HTML kódovanými parametrami.
+- Publikovanie spúšťa existujúca kontrola cez `DocDB.getInstance()`, napríklad pri zobrazení stránky, najviac raz za päť sekúnd. Bez volania tejto kontroly sa publikovanie odloží do ďalšieho volania po nastavenom termíne. Dokončenie závisí aj od veľkosti súborov.
+- V rámci jednej inštancie aplikácie sa prekrývajúce publikačné volanie pre tú istú stránku preskočí. Táto ochrana nekoordinuje viac uzlov klastra ani úpravy či rušenie plánu počas publikovania. Súbežné publikovanie z viacerých uzlov nie je týmto mechanizmom zabezpečené.
 - Pri vypnutí funkcie sa existujúce plány s inicializovanými plánovanými médiami pozastavia. Ich chránené súbory sa nesprístupnia cez pôvodný publikačný postup. Po opätovnom zapnutí možno pokračovať.
-
-Príklad kontroly úložiska pre MariaDB/MySQL:
-
-```sql
-SELECT TABLE_NAME, ENGINE
-FROM information_schema.TABLES
-WHERE TABLE_SCHEMA = DATABASE()
-  AND TABLE_NAME IN ('documents', 'documents_history', 'media', 'media_group_to_media');
-```
 
 ## Chyby publikovania
 
 Pred prvou výmenou sa kontrolujú všetky odkazy, zdroje, ciele a aktuálne oprávnenia autora. Pri chýbajúcom súbore sa verejný stav nezmení. Jednotlivé súbory sa nahrádzajú atómovo, takže návštevník nedostane čiastočne zapísaný súbor. Pôvodné súbory sa uchovávajú v chránenom podpriečinku `<docId>/backup/<historyId>/`; správca ich môže obnoviť cez súborový systém. Použije sa aj existujúca história súborov, ak je zapnutá.
 
-Zápis stránky, výmena médií a dokončenie histórie prebehnú v jednej databázovej transakcii. Súborový systém však nie je súčasťou tejto transakcie. Po chybe počas výmeny môže byť časť súborov už nová. Zdroje a pôvodná záloha zostávajú zachované a ďalšie spustenie môže dokončiť ten istý plán. Chyba sa zaznamená do logu spolu s ID histórie; plán sa nesmie označiť ako dokončený.
+Najprv sa publikujú súbory, potom obsah stránky a médiá. Zápisy neprebiehajú v jednej spoločnej transakcii. Pri chybe preto môžu byť súbory alebo obsah už nové a živá sada médií môže byť dočasne prázdna alebo neúplná.
+
+Plánované médiá vrátane pôvodných chránených odkazov zostávajú zachované, kým sa neuložia všetky živé kópie. Ak výmena zlyhá, ďalší pokus vymaže neúplnú živú sadu a vytvorí ju znovu z kompletného plánu. Po uložení celej sady sa vynuluje `planned_media_initialized`, odstránia sa plánované záznamy médií a až potom sa história označí za publikovanú. Ak zlyhá tento záverečný krok, ďalší pokus ponechá dokončenú živú sadu a dokončí upratanie a históriu. Nahrané súbory a zálohy zostávajú na disku.
+
+Rovnako sa dá zopakovať inicializácia: pokiaľ príznak ešte nie je nastavený, prípadné neúplné plánované kópie sa najprv odstránia a živé médiá sa skopírujú znova. Pri zmene plánu sa pôvodné naplánovanie zruší až po uložení novej verzie do histórie. Chyba publikovania sa zaznamená do logu spolu s ID histórie.
 
 Pred produkčným použitím vykonajte akceptačný test na pripravovanej WebJET stránke Apple vrátane produkčnej proxy/CDN a oprávnení obmedzeného redaktora.

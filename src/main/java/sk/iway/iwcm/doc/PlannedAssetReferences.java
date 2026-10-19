@@ -15,13 +15,11 @@ public final class PlannedAssetReferences {
     private static final Pattern URL = Pattern.compile("(?:https?://[^/\\s\"'<>]+|//[^/\\s\"'<>]+)?/(?:thumb/)?files/protected/planned-changes/[^\\s\"'<>(),]+", Pattern.CASE_INSENSITIVE);
     private final int docId;
     private final String domain;
-    private final String version;
     private final Map<String, String> files = new LinkedHashMap<>();
 
-    public PlannedAssetReferences(int docId, String domain, String version) {
+    public PlannedAssetReferences(int docId, String domain) {
         this.docId = docId;
         this.domain = domain;
-        this.version = version;
     }
 
     public Map<String, String> getFiles() { return Map.copyOf(files); }
@@ -59,7 +57,6 @@ public final class PlannedAssetReferences {
     }
 
     private String rewriteUrl(String value) {
-        boolean escaped = value.contains("&amp;");
         URI uri = URI.create(Parser.unescapeEntities(value, false));
         if (uri.getRawAuthority() != null && (!uri.getRawAuthority().equalsIgnoreCase(domain) || uri.getUserInfo() != null)) {
             throw new IllegalArgumentException("Planned asset URL must belong to the page domain");
@@ -73,12 +70,6 @@ public final class PlannedAssetReferences {
         String target = PlannedAssetPaths.target(source, docId);
         files.put(source, target);
         if (!uri.getRawPath().contains(PlannedAssetPaths.ROOT + docId + "/")) throw new IllegalArgumentException("Use the canonical planned asset URL");
-        String rawPath = uri.getRawPath().replace(PlannedAssetPaths.ROOT + docId + "/", "/");
-        String query = uri.getRawQuery();
-        if (query != null) query = query.replaceAll("(^|&)v=[^&]*", "").replaceAll("^&|&$", "");
-        query = (query == null || query.isEmpty() ? "" : query + "&") + "v=" + version;
-        String result = (uri.getRawAuthority() == null ? "" : (uri.getScheme() == null ? "" : uri.getScheme() + ":") + "//" + uri.getRawAuthority()) + rawPath + "?" + query;
-        if (uri.getRawFragment() != null) result += "#" + uri.getRawFragment();
-        return escaped ? result.replace("&", "&amp;") : result;
+        return value.replaceFirst(Pattern.quote(PlannedAssetPaths.ROOT + docId + "/"), "/");
     }
 }

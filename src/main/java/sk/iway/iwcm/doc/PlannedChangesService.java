@@ -9,15 +9,14 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.RequestBean;
@@ -39,9 +38,7 @@ public class PlannedChangesService {
     private final DocDetailsRepository documents;
     private final DocHistoryRepository histories;
     private final MediaRepository media;
-    private volatile boolean transactionalStorageChecked;
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final Set<Integer> publishing = ConcurrentHashMap.newKeySet();
 
     public PlannedChangesService(DocDetailsRepository documents, DocHistoryRepository histories, MediaRepository media) {
         this.documents = documents;
@@ -53,37 +50,17 @@ public class PlannedChangesService {
         return Tools.getSpringBean("plannedChangesService", PlannedChangesService.class);
     }
 
-    private void requireTransactionalStorage() {
-        if (transactionalStorageChecked) return;
-        if (Constants.DB_TYPE == Constants.DB_MYSQL) {
-            Number count = (Number)entityManager.createNativeQuery("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME IN ('documents','documents_history','media','media_group_to_media') AND ENGINE='InnoDB'").getSingleResult();
-            if (count.intValue() != 4) throw new IllegalStateException("Planned publishing requires InnoDB for documents, documents_history, media and media_group_to_media");
+    public DocDetails requirePlannedMedia(int docId, Identity user) {
+        DocDetails doc = PlannedAccess.requirePage(docId, user);
+        if (!PlannedAccess.enabled() || !doc.isPlannedMediaInitialized()) {
+            throw new IllegalArgumentException("Planned media are no longer active; reopen the editor");
         }
-        transactionalStorageChecked = true;
-    }
-
-    private DocDetails lock(int id) {
-        requireTransactionalStorage();
-        DocDetails doc = documents.lockForPlannedChange(Long.valueOf(id));
-        if (doc == null) throw new IllegalArgumentException("Planned page no longer exists");
-        entityManager.refresh(doc);
         return doc;
     }
 
-    @Transactional
-    public void lockMedia(int docId, boolean planned, Identity user) {
-        if (planned) documents.lockPlannedChanges();
-        DocDetails doc = PlannedAccess.requirePage(docId, user);
-        doc = lock(doc.getDocId());
-        if (planned && (!PlannedAccess.enabled() || !doc.isPlannedMediaInitialized())) {
-            throw new IllegalArgumentException("Planned media are no longer active; reopen the editor");
-        }
-    }
-
-    @Transactional
     public void validateMedia(Media item, int docId, Identity user) {
-        DocDetails doc = PlannedAccess.requirePage(docId, user);
-        PlannedAssetReferences references = new PlannedAssetReferences(doc.getDocId(), GroupsDB.getInstance().getGroup(doc.getGroupId()).getDomainName(), "validation");
+        DocDetails doc = requirePlannedMedia(docId, user);
+        PlannedAssetReferences references = new PlannedAssetReferences(doc.getDocId(), GroupsDB.getInstance().getGroup(doc.getGroupId()).getDomainName());
         rewriteProperties(item, references, false, "mediaLink", "mediaThumbLink", "mediaInfoSk", "mediaInfoCz", "mediaInfoEn", "mediaInfoDe", "fieldA", "fieldB", "fieldC", "fieldD", "fieldE", "fieldF");
         rejectFields(item, "mediaTitleSk", "mediaTitleCz", "mediaTitleEn", "mediaTitleDe", "mediaGroup");
         preflight(references.getFiles(), user);
@@ -95,30 +72,23 @@ public class PlannedChangesService {
         return pending.isEmpty() ? null : pending.get(0).getId();
     }
 
-    /** Copies once, including an intentionally empty set. The flag cannot be changed by entity merges. */
-    @Transactional
+    /** Copies once, clearing any incomplete previous attempt before retrying initialization. */
     public Long initialize(int docId, Identity user) {
         if (!PlannedAccess.enabled()) throw new IllegalArgumentException("Planned publishing is disabled");
         DocDetails doc = PlannedAccess.requirePage(docId, user);
-        doc = lock(doc.getDocId());
         if (!doc.isPlannedMediaInitialized()) {
             int domain = CloudToolsForCore.getDomainId();
+            deleteMedia(doc.getDocId(), MEDIA_TABLE, domain);
             for (Media original : media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(doc.getDocId(), "documents", domain)) {
-                Media copy = new Media();
-                BeanUtils.copyProperties(original, copy, "id", "mediaId", "groups", "editorFields");
-                copy.setGroups(new ArrayList<>(original.getGroups()));
-                copy.setMediaFkTableName(MEDIA_TABLE);
-                media.save(copy);
+                media.saveAndFlush(copyMedia(original, MEDIA_TABLE));
             }
             documents.setPlannedMediaInitialized(doc.getId(), true);
         }
         return activeHistory(doc.getDocId());
     }
 
-    @Transactional
     public void cancel(int docId, Identity user) {
         DocDetails doc = PlannedAccess.requirePage(docId, user);
-        doc = lock(doc.getDocId());
         for (DocHistory pending : histories.findByDocIdAndPublicableTrueOrderByIdDesc(doc.getDocId())) {
             pending.setPublicable(false);
             pending.setAwaitingApprove(null);
@@ -129,13 +99,10 @@ public class PlannedChangesService {
         documents.setPlannedMediaInitialized(doc.getId(), false);
     }
 
-    /** Approves only the currently scheduled revision under the publication lock. */
-    @Transactional
+    /** Approves only the currently scheduled revision. */
     public void approve(long historyId, Identity user) {
         DocHistory history = histories.findById(historyId).orElseThrow();
         PlannedAccess.requirePage(history.getDocId(), user);
-        lock(history.getDocId());
-        entityManager.refresh(history);
         if (!Boolean.TRUE.equals(history.getPublicable()) || !Long.valueOf(historyId).equals(activeHistory(history.getDocId()))) {
             throw new IllegalArgumentException("The planned version is no longer active");
         }
@@ -147,13 +114,11 @@ public class PlannedChangesService {
         histories.saveAndFlush(history);
     }
 
-    /** Runs inside the editor transaction before a new scheduled snapshot is stored. */
-    @Transactional
+    /** Validates a new scheduled snapshot without cancelling the existing plan. */
     public void prepareSave(DocDetails doc, Identity user) {
         if (doc.getDocId() < 1 || Constants.getBoolean("editorDisableHistory")) {
             throw new IllegalArgumentException("Save an unpublished page before preparing a planned change; history must be enabled");
         }
-        documents.lockPlannedChanges();
         Long active = initialize(doc.getDocId(), user);
         if (active != null && active.intValue() != doc.getHistoryId()) {
             throw new IllegalArgumentException("Edit the existing planned version from page history (" + active + ")");
@@ -163,10 +128,15 @@ public class PlannedChangesService {
         doc.setVirtualPath(live.getVirtualPath());
         doc.setGroupId(live.getGroupId());
         List<Media> planned = plannedMedia(doc.getDocId());
-        PlannedAssetReferences references = references(doc, planned, "validation", false);
+        PlannedAssetReferences references = references(doc, planned, false);
         preflight(references.getFiles(), user);
         checkConflicts(doc.getDocId(), references.getFiles());
-        for (DocHistory old : histories.findByDocIdAndPublicableTrueOrderByIdDesc(doc.getDocId())) {
+    }
+
+    /** Replaces the previous plan only after the new history record has been saved. */
+    public void completeSave(DocHistory saved) {
+        for (DocHistory old : histories.findByDocIdAndPublicableTrueOrderByIdDesc(saved.getDocId())) {
+            if (old.getId() >= saved.getId()) continue;
             old.setPublicable(false);
             old.setSyncStatus(2);
             histories.save(old);
@@ -177,9 +147,9 @@ public class PlannedChangesService {
         return media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(id, MEDIA_TABLE, CloudToolsForCore.getDomainId());
     }
 
-    private PlannedAssetReferences references(DocDetails doc, List<Media> planned, String version, boolean transform) {
+    private PlannedAssetReferences references(DocDetails doc, List<Media> planned, boolean transform) {
         String domain = GroupsDB.getInstance().getGroup(doc.getGroupId()).getDomainName();
-        PlannedAssetReferences references = new PlannedAssetReferences(doc.getDocId(), domain, version);
+        PlannedAssetReferences references = new PlannedAssetReferences(doc.getDocId(), domain);
         rewriteProperties(doc, references, transform, "data", "dataAsc", "htmlData", "htmlHead", "perexImage", "perexPlace");
         for (char field = 'A'; field <= 'T'; field++) rewriteProperties(doc, references, transform, "field" + field);
         for (Media item : planned) {
@@ -236,7 +206,7 @@ public class PlannedChangesService {
             String domain = GroupsDB.getInstance().getGroup(pending.getGroupId()).getDomainName();
             if (!domain.equalsIgnoreCase(CloudToolsForCore.getDomainName()) && Constants.getBoolean("enableStaticFilesExternalDir")) continue;
             Map<String, String> other = references(DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(pending),
-                media.findAllByMediaFkIdAndMediaFkTableName(pending.getDocId(), MEDIA_TABLE), "validation", false).getFiles();
+                media.findAllByMediaFkIdAndMediaFkTableName(pending.getDocId(), MEDIA_TABLE), false).getFiles();
             if (other.values().stream().anyMatch(files::containsValue)) {
                 throw new IllegalArgumentException("Another active planned page uses the same public asset: " + pending.getDocId());
             }
@@ -260,15 +230,22 @@ public class PlannedChangesService {
         }
     }
 
-    /** Publishes once under a database lock. File effects are intentionally not rolled back with the DB. */
-    @Transactional(rollbackFor = Exception.class, propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW,
-        isolation = org.springframework.transaction.annotation.Isolation.READ_COMMITTED)
+    /** Prevents overlapping publication of the same page within this application instance. */
     public DocDetails publish(long historyId) throws IOException {
         DocHistory history = histories.findById(historyId).orElse(null);
         if (history == null) return null;
-        documents.lockPlannedChanges();
-        DocDetails live = lock(history.getDocId());
-        entityManager.refresh(history);
+        if (!publishing.add(history.getDocId())) return null;
+        try {
+            return publish(history);
+        } finally {
+            publishing.remove(history.getDocId());
+        }
+    }
+
+    private DocDetails publish(DocHistory history) throws IOException {
+        long historyId = history.getId();
+        DocDetails live = documents.findById(history.getDocId());
+        if (live == null) return null;
         if (!Boolean.TRUE.equals(history.getPublicable()) || history.getPublishStart() <= 0 || history.getPublishStart() > Tools.getNow() ||
             Tools.isNotEmpty(history.getAwaitingApprove()) || (history.getDisapprovedBy() != null && history.getDisapprovedBy() > 0) || Boolean.TRUE.equals(history.getIsDelete()) || GroupsDB.getInstance().isInTrash(live.getGroupId())) return null;
         if (!Long.valueOf(historyId).equals(activeHistory(live.getDocId()))) return null;
@@ -286,8 +263,8 @@ public class PlannedChangesService {
             doc.setVirtualPath(live.getVirtualPath());
             doc.setGroupId(live.getGroupId());
             boolean initialized = live.isPlannedMediaInitialized();
-            List<Media> planned = initialized ? plannedMedia(doc.getDocId()) : List.of();
-            PlannedAssetReferences references = references(doc, planned, Long.toString(historyId), true);
+            List<Media> planned = initialized ? plannedMedia(doc.getDocId()).stream().map(item -> copyMedia(item, "documents")).toList() : List.of();
+            PlannedAssetReferences references = references(doc, planned, true);
             preflight(references.getFiles(), user);
             checkConflicts(doc.getDocId(), references.getFiles());
             publishFiles(references.getFiles(), doc.getDocId(), historyId);
@@ -303,16 +280,16 @@ public class PlannedChangesService {
             if (initialized) {
                 deleteMedia(doc.getDocId(), "documents", CloudToolsForCore.getDomainId());
                 for (Media item : planned) {
-                    item.setMediaFkTableName("documents");
-                    item.setLastUpdate(new Date(doc.getDateCreated()));
-                    media.save(item);
+                    // Page dates can be stored with second precision; media must not appear newer.
+                    item.setLastUpdate(new Date(doc.getDateCreated() / 1000 * 1000));
+                    media.saveAndFlush(item);
                 }
+                // Reset only after every live copy is stored. A retry then keeps this completed set.
                 documents.setPlannedMediaInitialized(doc.getId(), false);
             }
+            deleteMedia(doc.getDocId(), MEDIA_TABLE, CloudToolsForCore.getDomainId());
             histories.getHisotryIdsByDocIdIn(doc.getDocId()).ifPresent(ids -> histories.updateActual(false, ids));
             histories.updatePublicableAndActual(false, true, history.getAuthorId(), true, history.getHistoryId());
-            media.flush();
-            histories.flush();
             return doc;
         } finally {
             SetCharacterEncodingFilter.setCurrentRequestBean(previous);
@@ -321,10 +298,15 @@ public class PlannedChangesService {
 
     private void deleteMedia(int docId, String table, int domain) {
         List<Media> items = media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(docId, table, domain);
-        for (Media item : items) item.getGroups().clear();
-        media.flush();
         media.deleteAll(items);
-        media.flush();
+    }
+
+    private Media copyMedia(Media original, String table) {
+        Media copy = new Media();
+        BeanUtils.copyProperties(original, copy, "id", "mediaId", "groups", "editorFields");
+        copy.setGroups(new ArrayList<>(original.getGroups()));
+        copy.setMediaFkTableName(table);
+        return copy;
     }
 
     private void invalidateAsset(String target) throws IOException {

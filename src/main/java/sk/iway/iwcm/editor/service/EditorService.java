@@ -186,22 +186,6 @@ public class EditorService {
 	 * @return historyId alebo hodnotu &lt; 1 ak nastala chyba
 	 */
     public int saveEditedDoc(DocDetails editedDoc) {
-        if (!sk.iway.iwcm.doc.PlannedAccess.enabled()) return saveEditedDocInternal(editedDoc, null);
-        var manager = Tools.getSpringBean("webjet2022TransactionManager", org.springframework.transaction.PlatformTransactionManager.class);
-        var transaction = new org.springframework.transaction.support.TransactionTemplate(manager);
-        List<Runnable> afterCommit = new ArrayList<>();
-        int historyId = transaction.execute(status -> saveEditedDocInternal(editedDoc, afterCommit));
-        for (Runnable action : afterCommit) action.run();
-        return historyId;
-    }
-
-    /** Keeps JDBC cache refreshes and legacy listeners outside the JPA transaction. */
-    private static void afterSaveCommit(List<Runnable> afterCommit, Runnable action) {
-        if (afterCommit == null) action.run();
-        else afterCommit.add(action);
-    }
-
-    private int saveEditedDocInternal(DocDetails editedDoc, List<Runnable> afterCommit) {
 		DebugTimer dt = new DebugTimer("EditorService.saveEditedDoc");
 
 		//first update savedate and author, check permissions need this
@@ -230,8 +214,6 @@ public class EditorService {
 
         boolean plannedChange = sk.iway.iwcm.doc.PlannedAccess.enabled() && editedDoc.isPublishAfterStart();
         if (sk.iway.iwcm.doc.PlannedAccess.enabled() && editedDoc.getDocId() > 0) {
-            if (plannedChange) docRepo.lockPlannedChanges();
-            docRepo.lockForPlannedChange(editedDoc.getId());
             Long active = sk.iway.iwcm.doc.PlannedChangesService.getInstance().activeHistory(editedDoc.getDocId());
             if (!plannedChange && active != null && active.intValue() == editedDoc.getHistoryId()) {
                 throw new IllegalArgumentException("Keep scheduling enabled or explicitly cancel planned changes");
@@ -412,17 +394,14 @@ public class EditorService {
 			//Publishing
 			if(wasApproved && !plannedChange) deleteHistorySaveRecords(editedDoc, editedHistory, historyId, dt);
             if (plannedChange) {
-                afterSaveCommit(afterCommit, () -> {
-                    docDB.readPagesToPublic();
-                    if (editedDoc.getPublishStart() <= Tools.getNow()) sk.iway.iwcm.doc.PlannedPublishCron.main(new String[0]);
-                });
+                sk.iway.iwcm.doc.PlannedChangesService.getInstance().completeSave(editedHistory);
+                docDB.readPagesToPublic();
             }
 		}
 
 		if(skipApproving == false) {
 			/*Odoslanie schvalovani a notifikacii*/
-            final int savedHistoryId = historyId;
-            afterSaveCommit(afterCommit, () -> approveService.sendEmails(editedDoc, savedHistoryId, docRepo));
+            approveService.sendEmails(editedDoc, historyId, docRepo);
 		}
 
 		dt.diff("after sendApproveNotifyEmail");
@@ -430,14 +409,12 @@ public class EditorService {
 		if(!plannedChange && (isNewPage || wasApproved || disableHistory)) {
 			//In case of insert, actions are needed because page was saved, even when isn't approved
 			// !! without this actions, insert page return 404
-            afterSaveCommit(afterCommit, () -> {
-                renameVirtualPath(editedDoc, dt);
-                refreshCacheObjects(editedDoc, dt);
-                refreshTemplates(editedDoc, dt);
-            });
+            renameVirtualPath(editedDoc, dt);
+            refreshCacheObjects(editedDoc, dt);
+            refreshTemplates(editedDoc, dt);
 		} else if(editedDoc.isPublishAfterStart() || editedDoc.isDisableAfterEnd()) {
 			//reload awaiting pages for DocDB
-            if (!plannedChange) afterSaveCommit(afterCommit, () -> docDB.readPagesToPublic());
+            if (!plannedChange) docDB.readPagesToPublic();
 		}
 
 		/*Ulozenie poznamky*/
@@ -448,7 +425,7 @@ public class EditorService {
 		dt.diff("done");
 
 		//Publikovanie eventov
-        if (!plannedChange) afterSaveCommit(afterCommit, () -> (new WebjetEvent<>(editedDoc, WebjetEventType.AFTER_SAVE)).publishEvent());
+        if (!plannedChange) (new WebjetEvent<>(editedDoc, WebjetEventType.AFTER_SAVE)).publishEvent();
 
 		return(historyId);
  	}
@@ -1444,7 +1421,6 @@ public class EditorService {
             checkPermissions(currentUser, DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(editedHistory), false);
             sk.iway.iwcm.doc.PlannedChangesService.getInstance().approve(editedHistory.getId(), currentUser);
             docDB.readPagesToPublic();
-            sk.iway.iwcm.doc.PlannedPublishCron.main(new String[0]);
             return;
         }
 		//Set actual informations

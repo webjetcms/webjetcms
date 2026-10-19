@@ -46,7 +46,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
-- Plánované publikovanie - pri zapnutí `plannedPublishingEnabled` možno pripraviť budúcu verziu stránky s chránenými obrázkami, dokumentmi a samostatnou sadou médií. Živá stránka a pracovná verzia sa dajú upravovať nezávisle. [Postup a podmienky nasadenia](redactor/webpages/planned-publishing.md) (#362).
+- Plánované publikovanie - pri zapnutí `plannedPublishingEnabled` možno pripraviť budúcu verziu stránky s chránenými obrázkami, dokumentmi a samostatnou sadou médií. Živá stránka a pracovná verzia sa dajú upravovať nezávisle. Pri publikovaní sa odstráni plánovaný prefix URL, existujúce parametre vrátane `v` zostanú zachované. Publikovanie podporuje aj MyISAM; po chybe pri výmene médií sa dá zopakovať z kompletnej plánovanej sady. [Postup a podmienky nasadenia](redactor/webpages/planned-publishing.md) (#362).
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 
 <div class="video-container">

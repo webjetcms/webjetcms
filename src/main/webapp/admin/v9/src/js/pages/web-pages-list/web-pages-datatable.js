@@ -767,9 +767,9 @@ export class WebPagesDatatable {
         modal.find(".planned-change-notice").remove();
         if (!json?.editorFields?.plannedPublishingEnabled) return;
         const selected = $("#DTE_Field_editorFields-publishAfterStart_0").is(":checked");
-        const notice = $('<div class="alert alert-warning planned-change-notice" role="status"></div>');
+        const notice = $('<div class="alert alert-warning planned-change-notice mt-2 mb-0" role="status"></div>');
         const perex = $(editor.node("editorFields.publishAfterStart"));
-        perex.after(notice);
+        perex.find('[data-dte-e="input"]').append(notice);
         notice.append($("<p class='mb-2'></p>").text(WJ.translate("planned.warning.js")));
         const active = json.editorFields.plannedHistoryId;
         if (active > 0 && Number(active) !== Number(json.historyId)) {
