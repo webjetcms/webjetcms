@@ -7,6 +7,8 @@ Pozadí uvítacího panelu a označení prostředí nastavíte přes **Nastaven�
 | Proměnná | Výchozí hodnota | Význam |
 | --- | --- | --- |
 | `dashboardHeroBackgroundImage` | `linear-gradient(111.7deg, #031D46 0%, #073780 76.92%)` | Pozadí uvítacího panelu: CSS gradient nebo cesta k obrázku. Prázdná nebo neplatná hodnota použije výchozí modrý přechod. |
+| `dashboardSocialRefreshHours` | `8` | Počet hodin platnosti uloženého seznamu externích novinek. Hodnota `0` nebo záporná hodnota vypne jeho načítání i zobrazování uložených položek. Rozbalení panelu při zapnuté funkci vždy ověří aktuální seznam. |
+| `overviewJsonUrl` | `https://docs.webjetcms.sk/json/` | Základní URL souborů `wjnews.sk.json`, `wjnews.cs.json` a `wjnews.en.json`. Lze nastavit vlastní HTTP(S) server nebo lokální cestu ke složce s těmito soubory. |
 | `dashboardEnvironmentName` | `{ENVIRONMENT_NAME}` | Text označení. Podporuje makra i vlastní text. Zobrazuje nejvýše 8 znaků velkými písmeny; celý název zůstane v tooltipu. Prázdná hodnota označení skryje iz titulku karty. |
 | `dashboardEnvironmentIcon` | `auto` | Ikona podle prostředí nebo název ikony Tabler. `rocket` nebo `ti-database`. Hodnota `none` nebo prázdná hodnota ikonu skryje. Při neexistujícím názvu se ikona nezobrazí. |
 | `dashboardEnvironmentColor` | `auto` | Barva z palety dle prostředí a stylu. Vlastní barva `#RGB` či `#RRGGBB` automaticky obdrží černý nebo bílý text a ikonu s kontrastem alespoň 4,5:1. |
@@ -25,6 +27,22 @@ Pozadí změníte přímo hodnotou `dashboardHeroBackgroundImage`, například:
 - `https://cdn.example.com/header.jpg` – obrázek z úplné HTTP(S) adresy.
 
 Obrázek nahradí gradient a pokryje celý panel se zachováním poměru stran (`cover`), zarovnaný na střed a spodní okraj. Cestu zadávejte přímo, bez obalu `url(...)`. HTTP(S) adresa nesmí obsahovat přihlašovací údaje. Adresy začínající `//`, adresy se zpětnými lomítky nebo řídicími znaky a jiné protokoly nejsou povoleny. Maximální délka adresy je 1024 znaků.
+
+## Novinky ze sociálních sítí
+
+Panel **Co je nového** spojuje novinky nainstalované verze s příspěvky z YouTube a Facebooku WebJET CMS. Prohlížeč čte společný JSON ze serveru nastaveného v `overviewJsonUrl` ; zákaznický server sociální sítě nekontaktuje. Generování dat na docs serveru popisuje [Centrální seznam novinek](../../../developer/install/social-media-feed.md).
+
+JSON musí být veřejně dostupný bez přihlášení, i při vlastní lokální cestě: požadavek neposílá přihlašovací cookies ani hlavičku `Referer`.
+
+Relativní cesta obrázku v poli `image` se doplní podle složky s JSON. U `overviewJsonUrl=https://docs.webjetcms.sk/json/new/` se například `social-media/images/obrazok.jpg` načte z `https://docs.webjetcms.sk/json/new/social-media/images/obrazok.jpg`. Při přesunu seznamu proto přeneste i podsložku s obrázky. Absolutní HTTPS adresy obrázků ze starších seznamů zůstávají podporovány.
+
+Při otevření úvodní obrazovky se použije seznam uložený v `localStorage`. Pokud chybí nebo dosáhl platnosti nastavené v `dashboardSocialRefreshHours` (výchozí 8 hodin), obnoví se na pozadí. Při každém rozbalení se seznam ověří i před uplynutím této lhůty. Cache je uložena pod klíčem `webjet.externalNews.v1` a obsahuje také URL načteného seznamu. Při změně URL nebo jazyka se načte příslušný seznam a přepíše tuto položku; česká administrace používá soubor `wjnews.cs.json`. Ve sbalené rotaci se načte jen náhled právě zobrazené novinky; ostatní obrázky se předem nenačítají. Obrázky karet se začnou načítat po rozbalení panelu. Náhled v rotaci nemění stav přečtení.
+
+Štítek **Nové** zůstává zobrazen, dokud uživatel nerozbalí nepřečtený obsah. Rozbalení potvrdí lokální novinky i právě zobrazené sociální položky. Úspěšné uložení do nastavení účtu obsahuje datum přečtení `readAt` ; pro sociální příspěvky se uchovávají i otisky jejich ID pod klíčem `dashboard.externalNews.<odtlačok základnej URL>`. Přepnutí jazyka ani úprava překladu téhož příspěvku nevytvoří nové upozornění. Nové ID jej vytvoří bez ohledu na datum publikování. Data přijatá až po sbalení nebo ve skryté kartě prohlížeče se neoznačí za přečtená; pokud je panel stále rozbalen, označí se při návratu do karty.
+
+Při chybě načítání se externí karty, položky rotace a jejich upozornění skryjí i tehdy, když prohlížeč má uložená starší data. Panel nezobrazuje hlášení o načítání ani chybě; zůstanou lokální novinky verze a odkazy na sociální sítě. Uložená cache se chybou nevymaže.
+
+Hodnota `dashboardSocialRefreshHours=0` vypne požadavky na JSON a obrázky, externí karty, jejich rotaci i upozornění na nepřečtené položky. Platí to i pro data, která již prohlížeč uložil. Novinky nainstalované verze a odkazy na oba sociální kanály zůstanou dostupné. Po změně konfigurace obnovte stránku administrace.
 
 ## Automatické označení prostředí
 
@@ -108,4 +126,6 @@ Text `admin.overview.changelog` zapisujte jako Markdown nadpis s verzí a seznam
 - **Testovanie prístupnosti** – Kontroly sú súčasťou automatizovaných testov.
 ```
 
-Počet při odkazu **Co je nového** se odvodí ze seznamu. Starší text v odstavcích zůstává čitelný. V `user_settings_admin` se pro každého uživatele a jazyk uchovává záznam `dashboard.news.<jazyk>` s otiskem textu a datem prvního zobrazení (`firstSeen`). Změna textu obnoví štítek **Nové** na 30 dní. Uložení ani reset rozložení dashboardu tento záznam nemění.
+Počet při odkazu **Co je nového** se odvodí ze seznamu. Starší text v odstavcích zůstává čitelný. V `user_settings_admin` se pro každého uživatele a jazyk uchovává záznam `dashboard.news.<jazyk>` s otiskem přečteného textu (`fingerprint`) a datem přečtení (`readAt`). Ukládá se po rozbalení viditelného panelu. Změna textu obnoví štítek **Nové** i ve stejné verzi; upozornění nevyprší po uplynutí času. Menu Nápověda čte stejný stav lokálních novinek, ale jeho otevření jej nemění. Uložení ani reset rozložení dashboardu tento záznam nemění.
+
+Starší záznam s `firstSeen` znamenal pouze první zobrazení a neměl informaci o přečtení. Po aktualizaci se proto lokální novinky zobrazí jako nepřečtené, dokud je uživatel jednou nerozbalí. Stávající uložené ID přečtených sociálních příspěvků zůstávají platné.

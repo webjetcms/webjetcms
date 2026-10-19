@@ -16,8 +16,6 @@
 
 ### Úvodná obrazovka
 
-- [Čo je nové](redactor/admin/welcome.md#čo-je-nové) spája novinky nainštalovanej verzie s videami z YouTube a príspevkami z Facebooku WebJET CMS. Generátor zoznamu vynecháva Facebook videá, Reels a zdieľané odkazy na YouTube videá; z Facebooku preberá textové a fotografické príspevky. V päte rozbaleného panela sú ovládacie odkazy vľavo a odkazy na sociálne siete vpravo v spoločnom riadku; na mobile sa podľa potreby zalomia. Rozbalený panel zobrazuje karty s obrázkami, najviac päť najnovších sociálnych položiek dopĺňa rotáciu a štítok **Nové** upozorní na neprečítaný obsah. Po rozbalení zhasne a vráti sa pri novom príspevku alebo zmene textu noviniek verzie; pôvodný 30-dňový časový limit sa už nepoužíva. Zbalená sociálna novinka má malý náhľad vedľa textu a namiesto čísla verzie ikonu s názvom siete. [Konfigurácia](admin/setup/configuration/dashboard.md#novinky-zo-sociálnych-sietí) umožňuje premennou `dashboardSocialRefreshHours` nastaviť platnosť cache v hodinách (predvolene 8 hodín) alebo externé načítavanie vypnúť. Zoznam sa v prehliadači ukladá pod kľúčom `webjet.externalNews.v1`. JSON zachováva krátky `perex` do 180 znakov pre staršie verzie; voliteľný `perexLong` do 1 000 znakov poskytuje aktuálnym kartám dlhší text bez zopakovaného názvu. Výňatok sa skracuje podľa dostupnej výšky karty, takže kratší názov alebo chýbajúci obrázok uvoľní miesto ďalšiemu textu. Relatívne cesty obrázkov umožňujú presunúť zoznam aj s náhľadmi do vlastného priečinka nastaveného cez `overviewJsonUrl`.
-
 - [Úvodnú obrazovku](redactor/admin/welcome.md) sme prerobili na widgetový systém, aby ste mali údaje potrebné pri práci na jednom mieste bez prechádzania jednotlivých častí administrácie. Sami si vyberiete widgety a nastavíte zobrazované údaje, veľkosť a poradie podľa svojich potrieb (#58806).
 
 <div class="video-container">
@@ -27,6 +25,8 @@
 - [Rýchle vyhľadávanie](redactor/admin/search/README.md) je dostupné z hlavičky celej administrácie tlačidlom **Hľadať…** alebo skratkou **Ctrl+K / ⌘K**. Ponúka návrhy stránok podľa názvu a URL, výsledky z obsahu stránok, súborov, používateľov, textových kľúčov a položiek menu. Vybraný výraz môžete preniesť do príslušnej sekcie s ďalšími filtrami (#348).
 
 ![](redactor/admin/search/quick-search.png)
+
+- Panel [Čo je nové](redactor/admin/welcome.md#Čo-je-nové) dopĺňa novinky nainštalovanej verzie o videá a príspevky z YouTube a Facebooku WebJET CMS. Štítok **Nové** sa po rozbalení panela skryje a znova upozorní na nový obsah.
 
 ### Prihlasovanie a ochrana účtu
 

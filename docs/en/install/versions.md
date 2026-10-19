@@ -16,6 +16,8 @@ Currently, the following versions of WebJET exist:
 
 - `2026.0-boot-SNAPSHOT` - ​​development version with Spring Boot 4. Transitioning from `jakarta` version requires [customer project modifications](#changes-when-transitioning-to-spring-boot).
 - `2026.18.28-jakarta` - ​​stabilized version 2026.18 with fixes from version 2026.0.28, no daily changes added.
+- `2026.0.40-jakarta` - ​​stabilized version 2026.0.40 with bug fixes compared to version 2026.0 (without adding improvements from the SNAPSHOT version).
+- `2026.0.40` - ​​stabilized version 2026.0.40 with bug fixes compared to version 2026.0 (without adding improvements from the SNAPSHOT version).
 - `2026.0.28-jakarta` - ​​stabilized version 2026.0.28 with bug fixes compared to version 2026.0 (without adding improvements from the SNAPSHOT version).
 - `2026.0.28` - ​​stabilized version 2026.0.28 with bug fixes compared to version 2026.0 (without adding improvements from the SNAPSHOT version).
 - `2026.18.25-jakarta` - ​​stabilized version 2026.18 with fixes from version 2026.0.25, no daily changes added.
