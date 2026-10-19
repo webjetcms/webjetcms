@@ -103,21 +103,6 @@ public class PlannedChangesService {
         deletePlannedFiles(doc.getDocId());
     }
 
-    /** Approves only the currently scheduled revision. */
-    public void approve(long historyId, Identity user) {
-        DocHistory history = histories.findById(historyId).orElseThrow();
-        PlannedAccess.requirePage(history.getDocId(), user);
-        if (!Boolean.TRUE.equals(history.getPublicable()) || !Long.valueOf(historyId).equals(activeHistory(history.getDocId()))) {
-            throw new IllegalArgumentException("The planned version is no longer active");
-        }
-        history.setApprovedBy(user.getUserId());
-        history.setDisapprovedBy(null);
-        history.setAwaitingApprove(null);
-        history.setActual(false);
-        history.setApproveDate(new Date());
-        histories.saveAndFlush(history);
-    }
-
     /** Validates a new scheduled snapshot without cancelling the existing plan. */
     public void prepareSave(DocDetails doc, Identity user) {
         if (doc.getDocId() < 1 || Constants.getBoolean("editorDisableHistory")) {

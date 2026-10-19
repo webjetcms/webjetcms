@@ -1417,21 +1417,28 @@ public class EditorService {
 	 * @param editedHistory
 	 */
 	public void approveDocHistory(DocHistory editedHistory) {
-        if (sk.iway.iwcm.doc.PlannedAccess.enabled() && Boolean.TRUE.equals(editedHistory.getPublicable())) {
-            checkPermissions(currentUser, DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(editedHistory), false);
-            sk.iway.iwcm.doc.PlannedChangesService.getInstance().approve(editedHistory.getId(), currentUser);
-            docDB.readPagesToPublic();
-            return;
-        }
+        boolean plannedChange = sk.iway.iwcm.doc.PlannedAccess.enabled() && Boolean.TRUE.equals(editedHistory.getPublicable());
 		//Set actual informations
 		editedHistory.setApprovedBy(currentUser.getUserId());
+		editedHistory.setDisapprovedBy(null);
 		editedHistory.setAwaitingApprove(null);
-		editedHistory.setActual(true);
+		editedHistory.setActual(!plannedChange);
 		editedHistory.setAvailable(true);
 		editedHistory.setApproveDate(new Date(now));
 
 		//Create new version of DocDetails from DocHistory
 		DocDetails editedDoc = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(editedHistory);
+
+        if (plannedChange) {
+            checkPermissions(currentUser, editedDoc, false);
+            historyRepo.saveAndFlush(editedHistory);
+            docDB.readPagesToPublic();
+            // Approval after the deadline must also publish files, media and rewritten URLs.
+            if (editedHistory.getPublishStart() > 0 && editedHistory.getPublishStart() <= now) {
+                docDB.publishDocHistory(editedHistory);
+            }
+            return;
+        }
 
 		//Inicialize editorFields
 		DocEditorFields def = new DocEditorFields();

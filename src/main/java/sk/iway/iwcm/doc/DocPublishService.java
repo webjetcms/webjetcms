@@ -98,7 +98,8 @@ public class DocPublishService {
 	 * @param docHistory
 	 * @param docDB
 	 */
-	private synchronized void copyDHistory(DocHistory docHistory, DocDB docDB) {
+	synchronized void copyDHistory(DocHistory docHistory, DocDB docDB) {
+        prepareRepositories();
 		GroupsDB groupsDB = GroupsDB.getInstance();
 
 		DocDetails docDetails = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(docHistory);
