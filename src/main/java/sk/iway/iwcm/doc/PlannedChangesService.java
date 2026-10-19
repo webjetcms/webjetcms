@@ -12,8 +12,6 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
@@ -23,16 +21,11 @@ import org.springframework.stereotype.Service;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Logger;
-import sk.iway.iwcm.RequestBean;
-import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.media.MediaRepository;
-import sk.iway.iwcm.editor.rest.DocDetailsToDocHistoryMapper;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
-import sk.iway.iwcm.users.UserDetails;
-import sk.iway.iwcm.users.UsersDB;
 import sk.iway.spirit.model.Media;
 
 /** Coordinates a single planned revision using existing page/history/media tables. */
@@ -42,7 +35,6 @@ public class PlannedChangesService {
     private final DocDetailsRepository documents;
     private final DocHistoryRepository histories;
     private final MediaRepository media;
-    private final Set<Integer> publishing = ConcurrentHashMap.newKeySet();
 
     public PlannedChangesService(DocDetailsRepository documents, DocHistoryRepository histories, MediaRepository media) {
         this.documents = documents;
@@ -142,15 +134,7 @@ public class PlannedChangesService {
         for (Media item : planned) rejectFields(item, "mediaTitleSk", "mediaTitleCz", "mediaTitleEn", "mediaTitleDe", "mediaGroup");
     }
 
-    private void rewriteReferences(DocDetails doc, List<Media> planned) {
-        rewriteContent(doc);
-        for (Media item : planned) {
-            rewriteProperties(item, doc.getDocId(), "mediaLink", "mediaThumbLink", "mediaInfoSk", "mediaInfoCz", "mediaInfoEn", "mediaInfoDe");
-            for (char field = 'A'; field <= 'F'; field++) rewriteProperties(item, doc.getDocId(), "field" + field);
-        }
-    }
-
-    private void rewriteContent(DocBasic doc) {
+    void rewriteContent(DocBasic doc) {
         rewriteProperties(doc, doc.getDocId(), "data", "dataAsc", "htmlData", "htmlHead", "perexImage", "perexPlace");
         for (char field = 'A'; field <= 'T'; field++) rewriteProperties(doc, doc.getDocId(), "field" + field);
     }
@@ -223,80 +207,42 @@ public class PlannedChangesService {
         }
     }
 
-    /** Prevents overlapping publication of the same page within this application instance. */
-    public DocDetails publish(long historyId) throws IOException {
-        DocHistory history = histories.findById(historyId).orElse(null);
-        if (history == null) return null;
-        if (!publishing.add(history.getDocId())) return null;
-        try {
-            return publish(history);
-        } finally {
-            publishing.remove(history.getDocId());
-        }
+    /** Copies staged files and rewrites the page before the regular publisher saves it. */
+    void preparePublication(DocDetails doc, Identity user) throws IOException {
+        validateReferenceFields(doc, plannedMedia(doc.getDocId()));
+        Map<String, String> files = plannedFiles(doc.getDocId());
+        preflight(files, user);
+        checkConflicts(doc.getDocId(), files);
+        publishFiles(files, doc.getDocId(), doc.getHistoryId());
+        rewriteContent(doc);
     }
 
-    private DocDetails publish(DocHistory history) throws IOException {
-        long historyId = history.getId();
-        DocDetails live = documents.findById(history.getDocId());
-        if (live == null) return null;
-        if (!Boolean.TRUE.equals(history.getPublicable()) || history.getPublishStart() <= 0 || history.getPublishStart() > Tools.getNow() ||
-            Tools.isNotEmpty(history.getAwaitingApprove()) || (history.getDisapprovedBy() != null && history.getDisapprovedBy() > 0) || Boolean.TRUE.equals(history.getIsDelete()) || GroupsDB.getInstance().isInTrash(live.getGroupId())) return null;
-        if (!Long.valueOf(historyId).equals(activeHistory(live.getDocId()))) return null;
-        UserDetails author = UsersDB.getUser(history.getAuthorId());
-        Identity user = author == null ? null : new Identity(author);
-        if (!PlannedAccess.canEdit(user, live)) throw new IllegalArgumentException("Planned page author no longer has permission");
+    /** Replaces live media after the page is saved, keeping the source set until all copies succeed. */
+    void publishMedia(DocDetails doc) {
+        if (documents.findById(doc.getDocId()).isPlannedMediaInitialized()) {
+            List<Media> planned = plannedMedia(doc.getDocId()).stream().map(item -> copyMedia(item, "documents")).toList();
+            deleteMedia(doc.getDocId(), "documents", CloudToolsForCore.getDomainId());
+            for (Media item : planned) {
+                rewriteProperties(item, doc.getDocId(), "mediaLink", "mediaThumbLink", "mediaInfoSk", "mediaInfoCz", "mediaInfoEn", "mediaInfoDe");
+                for (char field = 'A'; field <= 'F'; field++) rewriteProperties(item, doc.getDocId(), "field" + field);
+                // Page dates can be stored with second precision; media must not appear newer.
+                item.setLastUpdate(new Date(doc.getDateCreated() / 1000 * 1000));
+                media.saveAndFlush(item);
+            }
+            // A retry after this point must keep the completed live set.
+            documents.setPlannedMediaInitialized(doc.getId(), false);
+        }
+        deleteMedia(doc.getDocId(), MEDIA_TABLE, CloudToolsForCore.getDomainId());
+    }
 
-        RequestBean previous = SetCharacterEncodingFilter.getCurrentRequestBean();
-        RequestBean publication = new RequestBean();
-        publication.setDomain(GroupsDB.getInstance().getGroup(live.getGroupId()).getDomainName());
-        publication.setUser(user);
-        SetCharacterEncodingFilter.setCurrentRequestBean(publication);
+    /** Cleans working files only after the publisher has completed the history record. */
+    void cleanupPublishedFiles(int docId) {
         try {
-            DocDetails doc = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(history);
-            doc.setVirtualPath(live.getVirtualPath());
-            doc.setGroupId(live.getGroupId());
-            boolean initialized = live.isPlannedMediaInitialized();
-            List<Media> planned = initialized ? plannedMedia(doc.getDocId()).stream().map(item -> copyMedia(item, "documents")).toList() : List.of();
-            validateReferenceFields(doc, planned);
-            rewriteReferences(doc, planned);
-            Map<String, String> files = plannedFiles(doc.getDocId());
-            preflight(files, user);
-            checkConflicts(doc.getDocId(), files);
-            publishFiles(files, doc.getDocId(), historyId);
-            doc.setAvailable(true);
-            doc.setPublishAfterStart(false);
-            doc.setPerexGroupString(doc.getPerexGroupIdsString(true));
-            doc.setRootGroupL1(live.getRootGroupL1());
-            doc.setRootGroupL2(live.getRootGroupL2());
-            doc.setRootGroupL3(live.getRootGroupL3());
-            doc.setFileName(live.getFileName());
-            RequestBean.addAuditValue("publishStatus", "Webpage was published");
-            documents.saveAndFlush(doc);
-            if (initialized) {
-                deleteMedia(doc.getDocId(), "documents", CloudToolsForCore.getDomainId());
-                for (Media item : planned) {
-                    // Page dates can be stored with second precision; media must not appear newer.
-                    item.setLastUpdate(new Date(doc.getDateCreated() / 1000 * 1000));
-                    media.saveAndFlush(item);
-                }
-                // Reset only after every live copy is stored. A retry then keeps this completed set.
-                documents.setPlannedMediaInitialized(doc.getId(), false);
-            }
-            deleteMedia(doc.getDocId(), MEDIA_TABLE, CloudToolsForCore.getDomainId());
-            rewriteContent(history);
-            histories.saveAndFlush(history);
-            histories.getHisotryIdsByDocIdIn(doc.getDocId()).ifPresent(ids -> histories.updateActual(false, ids));
-            histories.updatePublicableAndActual(false, true, history.getAuthorId(), true, history.getHistoryId());
-            try {
-                deletePlannedFiles(doc.getDocId());
-            } catch (IllegalStateException exception) {
-                // Publication is complete; cleanup failure must not skip refreshing the live page cache.
-                Logger.error(PlannedChangesService.class, "Could not clean planned files after publishing history " + historyId);
-                Logger.error(PlannedChangesService.class, exception);
-            }
-            return doc;
-        } finally {
-            SetCharacterEncodingFilter.setCurrentRequestBean(previous);
+            deletePlannedFiles(docId);
+        } catch (IllegalStateException exception) {
+            // Cleanup failure must not skip refreshing the live page cache.
+            Logger.error(PlannedChangesService.class, "Could not clean planned files for page " + docId);
+            Logger.error(PlannedChangesService.class, exception);
         }
     }
 

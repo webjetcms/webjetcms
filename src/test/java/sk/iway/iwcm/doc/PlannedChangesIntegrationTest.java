@@ -24,6 +24,9 @@ import org.springframework.orm.jpa.vendor.EclipseLinkJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.test.util.ReflectionTestUtils;
+import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.editor.DocNoteDB;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Identity;
@@ -52,11 +55,17 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
              var groups = mockStatic(GroupsDB.class);
              var docCache = mockStatic(DocDB.class);
              var users = mockStatic(UsersDB.class);
+             var mappings = mockStatic(MultigroupMappingDB.class);
+             var notes = mockStatic(DocNoteDB.class);
+             var constants = mockStatic(Constants.class, CALLS_REAL_METHODS);
              var context = new AnnotationConfigApplicationContext(RepositoryConfiguration.class)) {
             DocDetailsRepository docs = context.getBean(DocDetailsRepository.class);
             DocHistoryRepository history = context.getBean("docHistoryRepository", DocHistoryRepository.class);
             MediaRepository media = context.getBean(MediaRepository.class);
             PlannedChangesService service = context.getBean(PlannedChangesService.class);
+            DocPublishService publisher = new DocPublishService();
+            ReflectionTestUtils.setField(publisher, "ddr", docs);
+            ReflectionTestUtils.setField(publisher, "dhr", context.getBean("publicationHistory", DocHistoryRepository.class));
             TransactionTemplate transaction = new TransactionTemplate(context.getBean(PlatformTransactionManager.class));
             Identity user = new Identity();
             user.setUserId(1);
@@ -67,6 +76,10 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
             DocDB docsCache = mock(DocDB.class);
             when(docsCache.getDocLink(anyInt(), anyString(), isNull())).thenReturn("/autotest-planned");
             docCache.when(DocDB::getInstance).thenReturn(docsCache);
+            docCache.when(() -> DocDB.getRootGroupL(anyInt(), any(), anyInt())).thenReturn(new int[] {1, 0, 0});
+            notes.when(DocNoteDB::getInstance).thenReturn(mock(DocNoteDB.class));
+            constants.when(() -> Constants.getBoolean("webpagesNotifyAutorOnPublish")).thenReturn(false);
+            java.util.function.LongFunction<DocDetails> publish = id -> publish(publisher, service, history, docsCache, id);
             GroupsDB groupDB = mock(GroupsDB.class);
             when(groupDB.getGroup(anyInt())).thenReturn(group);
             groups.when(GroupsDB::getInstance).thenReturn(groupDB);
@@ -106,6 +119,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                     throw new IllegalStateException("Injected failure after a committed media copy");
                 }).when(failingMedia).saveAndFlush(any(Media.class));
                 PlannedChangesService interrupted = new PlannedChangesService(docs, history, failingMedia);
+                java.util.function.LongFunction<DocDetails> interruptedPublish = id -> publish(publisher, interrupted, history, docsCache, id);
                 assertThrows(IllegalStateException.class, () -> interrupted.initialize(savedPage.getDocId(), user));
                 assertFalse(docs.findById(page.getDocId()).isPlannedMediaInitialized());
                 assertEquals(1, media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1).size());
@@ -129,8 +143,16 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 revision = history.saveAndFlush(revision);
                 long revisionId = revision.getId();
 
+                DocDetailsRepository failingDocs = mock(DocDetailsRepository.class, org.mockito.AdditionalAnswers.delegatesTo(docs));
+                doThrow(new IllegalStateException("Injected page save failure")).when(failingDocs).saveAndFlush(any(DocDetails.class));
+                ReflectionTestUtils.setField(publisher, "ddr", failingDocs);
+                assertThrows(IllegalStateException.class, () -> publish.apply(revisionId));
+                assertTrue(history.findById(revisionId).orElseThrow().getPublicable());
+                assertEquals(originalId, media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), "documents", 1).get(0).getId());
+                ReflectionTestUtils.setField(publisher, "ddr", docs);
+
                 // A failed replacement leaves a partial live set but the complete source set survives.
-                assertThrows(IllegalStateException.class, () -> interrupted.publish(revisionId));
+                assertThrows(IllegalStateException.class, () -> interruptedPublish.apply(revisionId));
                 assertEquals(1, media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), "documents", 1).size());
                 assertEquals(2, media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1).size());
                 assertTrue(docs.findById(page.getDocId()).isPlannedMediaInitialized());
@@ -138,14 +160,14 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
 
                 // A later failure in history completion must keep the already completed live set.
                 context.getBean(java.util.concurrent.atomic.AtomicBoolean.class).set(true);
-                assertThrows(IllegalStateException.class, () -> service.publish(revisionId));
+                assertThrows(IllegalStateException.class, () -> publish.apply(revisionId));
                 List<Media> completedMedia = media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), "documents", 1);
                 assertEquals(2, completedMedia.size());
                 assertTrue(history.findById(revisionId).orElseThrow().getPublicable());
                 assertFalse(docs.findById(page.getDocId()).isPlannedMediaInitialized());
 
-                assertNotNull(service.publish(revisionId));
-                assertNull(service.publish(revisionId));
+                assertNotNull(publish.apply(revisionId));
+                assertNull(publish.apply(revisionId));
                 List<Media> live = media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), "documents", 1);
                 assertEquals(2, live.size());
                 assertEquals(completedMedia.stream().map(Media::getId).sorted().toList(), live.stream().map(Media::getId).sorted().toList());
@@ -166,7 +188,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 service.initialize(page.getDocId(), user);
                 assertTrue(media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1).isEmpty());
                 DocHistory empty = history.saveAndFlush(revision(page));
-                assertNotNull(service.publish(empty.getId()));
+                assertNotNull(publish.apply(empty.getId()));
                 assertTrue(media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), "documents", 1).isEmpty());
 
                 // All staged assets are published; preflight failure leaves all public files unchanged.
@@ -203,19 +225,19 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                     java.nio.file.Files.createDirectories(unreferenced.getParent());
                     java.nio.file.Files.writeString(unreferenced, "unreferenced PDF");
                     users.when(() -> UsersDB.isFolderWritable(anyString(), eq("/files/nested/"))).thenReturn(false);
-                    assertThrows(IllegalArgumentException.class, () -> service.publish(withFilesId));
+                    assertThrows(IllegalArgumentException.class, () -> publish.apply(withFilesId));
                     assertEquals("old image", java.nio.file.Files.readString(target), "Validate unreferenced assets before copying any file");
                     users.when(() -> UsersDB.isFolderWritable(anyString(), eq("/files/nested/"))).thenReturn(true);
-                    assertThrows(IllegalStateException.class, () -> interrupted.publish(withFilesId));
+                    assertThrows(IllegalStateException.class, () -> interruptedPublish.apply(withFilesId));
                     assertEquals(privateRoot + "/files/spec.pdf", media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1).get(0).getMediaLink(),
                         "Rewriting the live copy must preserve private source URLs for a retry");
                     assertTrue(java.nio.file.Files.exists(source));
                     assertTrue(java.nio.file.Files.exists(unreferenced));
                     assertEquals(privateRoot + "/images/photo.webp", history.findById(withFilesId).orElseThrow().getPerexImage());
                     context.getBean(java.util.concurrent.atomic.AtomicBoolean.class).set(true);
-                    assertThrows(IllegalStateException.class, () -> service.publish(withFilesId));
+                    assertThrows(IllegalStateException.class, () -> publish.apply(withFilesId));
                     assertTrue(java.nio.file.Files.exists(source), "Keep staged assets until history completion succeeds");
-                    DocDetails published = service.publish(withFilesId);
+                    DocDetails published = publish.apply(withFilesId);
                     assertNotNull(published);
                     assertFalse(published.getData().contains(PlannedAssetPaths.ROOT));
                     assertEquals("<img srcset='/images/photo.webp 1x, /images/photo.webp?v=1634319328 2x'>!INCLUDE(component.jsp, image=/images/missing.webp)!", published.getData());
@@ -232,14 +254,14 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                     assertEquals(published.getData(), publishedHistory.getData());
                     assertEquals("/images/photo.webp", publishedHistory.getPerexImage());
                     assertEquals("<img src='" + privateRoot + "/images/photo.webp'>", history.findById(olderId).orElseThrow().getData());
-                    assertNull(service.publish(withFilesId));
+                    assertNull(publish.apply(withFilesId));
                 }
 
                 service.initialize(page.getDocId(), user);
                 DocHistory future = revision(page);
                 future.setPublishStartDate(new Date(System.currentTimeMillis() + 60000));
                 future = history.saveAndFlush(future);
-                assertNull(service.publish(future.getId()));
+                assertNull(publish.apply(future.getId()));
                 DocDetails replacement = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(future);
                 replacement.setHistoryId(future.getHistoryId());
                 service.prepareSave(replacement, user);
@@ -267,18 +289,24 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 assertEquals(liveData, docs.findById(page.getDocId()).getData());
                 assertEquals(next.getData(), history.findById(next.getId()).orElseThrow().getData());
                 assertEquals("old image", java.nio.file.Files.readString(assets.resolve(privateRoot.substring(1) + "/backup/" + withFilesId + "/images/photo.webp")));
-                assertNull(service.publish(future.getId()));
+                assertNull(publish.apply(future.getId()));
                 assertTrue(media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1).isEmpty());
 
                 service.initialize(page.getDocId(), user);
                 long concurrentId = history.saveAndFlush(revision(page)).getId();
                 var start = new java.util.concurrent.CountDownLatch(1);
                 var executor = java.util.concurrent.Executors.newFixedThreadPool(2);
-                java.util.concurrent.Callable<DocDetails> publish = () -> {
+                java.util.concurrent.Callable<DocDetails> concurrentPublish = () -> {
                     try (var workerAccess = mockStatic(PlannedAccess.class); var workerGroups = mockStatic(GroupsDB.class);
                          var workerTools = mockStatic(Tools.class, CALLS_REAL_METHODS);
                          var workerUsers = mockStatic(UsersDB.class); var workerDomains = mockStatic(CloudToolsForCore.class);
-                         var workerDocs = mockStatic(DocDB.class); var workerAudit = mockStatic(Adminlog.class)) {
+                         var workerDocs = mockStatic(DocDB.class); var workerAudit = mockStatic(Adminlog.class);
+                         var workerMappings = mockStatic(MultigroupMappingDB.class); var workerNotes = mockStatic(DocNoteDB.class);
+                         var workerConstants = mockStatic(Constants.class, CALLS_REAL_METHODS)) {
+                        workerAccess.when(PlannedAccess::enabled).thenReturn(true);
+                        workerNotes.when(DocNoteDB::getInstance).thenReturn(mock(DocNoteDB.class));
+                        workerConstants.when(() -> Constants.getBoolean("webpagesNotifyAutorOnPublish")).thenReturn(false);
+                        workerDocs.when(() -> DocDB.getRootGroupL(anyInt(), any(), anyInt())).thenReturn(new int[] {1, 0, 0});
                         workerAccess.when(() -> PlannedAccess.canEdit(any(), any())).thenReturn(true);
                         workerTools.when(() -> Tools.getRealPath(anyString())).thenAnswer(call -> assets.resolve(((String)call.getArgument(0)).substring(1)).toString());
                         workerGroups.when(GroupsDB::getInstance).thenReturn(groupDB);
@@ -287,12 +315,12 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                         workerDomains.when(CloudToolsForCore::getDomainName).thenReturn(group.getDomainName());
                         workerDocs.when(DocDB::getInstance).thenReturn(docsCache);
                         start.await();
-                        return service.publish(concurrentId);
+                        return publish.apply(concurrentId);
                     }
                 };
                 try {
-                    var first = executor.submit(publish);
-                    var second = executor.submit(publish);
+                    var first = executor.submit(concurrentPublish);
+                    var second = executor.submit(concurrentPublish);
                     start.countDown();
                     int completed = (first.get(20, java.util.concurrent.TimeUnit.SECONDS) == null ? 0 : 1)
                         + (second.get(20, java.util.concurrent.TimeUnit.SECONDS) == null ? 0 : 1);
@@ -306,6 +334,14 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 query.execute("DELETE FROM documents WHERE doc_id=?", savedPage.getDocId());
                 query.execute("DELETE FROM media_groups WHERE media_group_id=?", mediaGroup.getId());
             }
+        }
+    }
+
+    private static DocDetails publish(DocPublishService publisher, PlannedChangesService service,
+            DocHistoryRepository histories, DocDB cache, long historyId) {
+        try (var planned = mockStatic(PlannedChangesService.class)) {
+            planned.when(PlannedChangesService::getInstance).thenReturn(service);
+            return publisher.copyDHistory(histories.findById(historyId).orElseThrow(), cache);
         }
     }
 

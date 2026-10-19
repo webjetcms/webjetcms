@@ -10,24 +10,15 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
-import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocDB;
-import sk.iway.iwcm.doc.DocDetails;
-import sk.iway.iwcm.doc.DocDetailsRepository;
 import sk.iway.iwcm.doc.DocEditorFields;
 import sk.iway.iwcm.doc.DocHistory;
 import sk.iway.iwcm.doc.DocHistoryRepository;
-import sk.iway.iwcm.doc.DocPublishService;
-import sk.iway.iwcm.doc.GroupsDB;
-import sk.iway.iwcm.doc.MultigroupMappingDB;
 import sk.iway.iwcm.doc.PlannedAccess;
-import sk.iway.iwcm.doc.PlannedChangesService;
-import sk.iway.iwcm.editor.DocNoteDB;
 import sk.iway.iwcm.system.spring.events.WebjetEventPublisher;
 
-/** Checks approval timing and reuse of the full scheduled publication flow. */
+/** Checks approval timing and delegation to the scheduled publisher. */
 class EditorPlannedApprovalTest {
     private static final long NOW = 2000000000000L;
 
@@ -37,40 +28,17 @@ class EditorPlannedApprovalTest {
     void approvesAndPublishesOnlyWhenDue(long offset) throws Exception {
         DocDB cache = mock(DocDB.class);
         DocHistoryRepository histories = mock(DocHistoryRepository.class);
-        DocDetailsRepository documents = mock(DocDetailsRepository.class);
-        PlannedChangesService planned = mock(PlannedChangesService.class);
-        DocPublishService publisher = new DocPublishService();
-        ReflectionTestUtils.setField(cache, "docPublishService", publisher);
-        doCallRealMethod().when(cache).publishDocHistory(any());
-
         DocHistory history = history(offset);
-        DocDetails published = new DocDetails();
-        published.setDocId(42);
-        published.setGroupId(1);
-        published.setVirtualPath("/approved.html");
-        when(planned.publish(123L)).thenAnswer(call -> {
+        doAnswer(call -> {
             verify(histories).saveAndFlush(history);
             assertNull(history.getAwaitingApprove());
             assertNull(history.getDisapprovedBy());
             assertEquals(7, history.getApprovedBy());
-            return published;
-        });
+            return null;
+        }).when(cache).publishDocHistory(history);
 
-        try (var access = mockStatic(PlannedAccess.class);
-             var tools = mockStatic(Tools.class, CALLS_REAL_METHODS);
-             var docCache = mockStatic(DocDB.class);
-             var groups = mockStatic(GroupsDB.class);
-             var mappings = mockStatic(MultigroupMappingDB.class);
-             var notes = mockStatic(DocNoteDB.class);
-             var constants = mockStatic(Constants.class, CALLS_REAL_METHODS)) {
+        try (var access = mockStatic(PlannedAccess.class); var docCache = mockStatic(DocDB.class)) {
             access.when(PlannedAccess::enabled).thenReturn(true);
-            tools.when(() -> Tools.getSpringBean("docHistoryRepository", DocHistoryRepository.class)).thenReturn(histories);
-            tools.when(() -> Tools.getSpringBean("docDetailsRepository", DocDetailsRepository.class)).thenReturn(documents);
-            tools.when(() -> Tools.getSpringBean("plannedChangesService", PlannedChangesService.class)).thenReturn(planned);
-            docCache.when(DocDB::getInstance).thenReturn(cache);
-            groups.when(GroupsDB::getInstance).thenReturn(mock(GroupsDB.class));
-            notes.when(DocNoteDB::getInstance).thenReturn(mock(DocNoteDB.class));
-            constants.when(() -> Constants.getBoolean("webpagesNotifyAutorOnPublish")).thenReturn(false);
 
             editor(cache, histories).approveDocHistory(history);
 
@@ -82,13 +50,10 @@ class EditorPlannedApprovalTest {
             verify(histories).saveAndFlush(history);
             verify(cache).readPagesToPublic();
             if (offset <= 0) {
-                verify(planned).publish(123L);
-                verify(cache).updateInternalCaches(42);
+                verify(cache).publishDocHistory(history);
             } else {
-                verifyNoInteractions(planned);
-                verify(cache, never()).updateInternalCaches(anyInt());
+                verify(cache, never()).publishDocHistory(any());
             }
-            verify(documents, never()).save(any());
         }
     }
 

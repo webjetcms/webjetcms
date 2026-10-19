@@ -2,10 +2,12 @@ package sk.iway.iwcm.doc;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
@@ -25,6 +27,7 @@ import sk.iway.iwcm.users.UsersDB;
 public class DocPublishService {
 
 	private long lastPublishCheck = 0;
+    private static final Set<Integer> publishing = ConcurrentHashMap.newKeySet();
 	//holds list of pages that are ready to be published{DocHistory} or disabled/unpublished{DocDetails}
 	private List<DocBasic> publicableDocs;
 
@@ -94,128 +97,128 @@ public class DocPublishService {
 	}
 
 	/**
-	 * copy data from table documents_history to table documents
-	 * @param docHistory
-	 * @param docDB
+	 * Publishes a scheduled history record, including optional planned assets and media.
+	 * @param queuedHistory history record selected for publication
+	 * @param docDB document cache used for publication follow-up operations
+	 * @return the published page, or null when the record is no longer eligible
 	 */
-	synchronized void copyDHistory(DocHistory docHistory, DocDB docDB) {
+    synchronized DocDetails copyDHistory(DocHistory queuedHistory, DocDB docDB) {
         prepareRepositories();
-		GroupsDB groupsDB = GroupsDB.getInstance();
-
-		DocDetails docDetails = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(docHistory);
-
-		Logger.debug(this,"Publishing from historyId: " + docDetails.getHistoryId() + " docId: " + docDetails.getDocId());
-
-        DocDetails currentPage = ddr.findById(docDetails.getDocId());
-        if (!PlannedAccess.enabled() && currentPage != null && currentPage.isPlannedMediaInitialized()) return;
-        if (PlannedAccess.enabled()) {
-            try {
-                docDetails = PlannedChangesService.getInstance().publish(docHistory.getId());
-                if (docDetails == null) { docDB.readPagesToPublic(); return; }
-            } catch (java.io.IOException exception) {
-                throw new IllegalStateException("Planned asset publication failed", exception);
+        int docId = queuedHistory.getDocId();
+        if (!publishing.add(docId)) return null;
+        RequestBean previous = SetCharacterEncodingFilter.getCurrentRequestBean();
+        try {
+            // Reload queued records so a completed or rejected version cannot be published again.
+            DocHistory docHistory = dhr.findById(queuedHistory.getId()).orElse(null);
+            if (docHistory == null || !Boolean.TRUE.equals(docHistory.getPublicable()) ||
+                docHistory.getPublishStart() <= 0 || docHistory.getPublishStart() > Tools.getNow() ||
+                Tools.isNotEmpty(docHistory.getAwaitingApprove()) ||
+                (docHistory.getDisapprovedBy() != null && docHistory.getDisapprovedBy() > 0) || Boolean.TRUE.equals(docHistory.getIsDelete())) {
+                docDB.readPagesToPublic();
+                return null;
             }
-        } else {
-			boolean publicable = dhr.getPublicableByDocIdIn(docDetails.getDocId()).contains(Boolean.TRUE) ? true : false;
-			Optional<List<Integer>> historyIdsOpt = dhr.getHisotryIdsByDocIdIn(docDetails.getDocId());
-			String historyIds = historyIdsOpt.isPresent() == true ? historyIdsOpt.get().stream().map(String::valueOf).collect(Collectors.joining(",")) : null;
+            GroupsDB groupsDB = GroupsDB.getInstance();
+            DocDetails currentPage = ddr.findById(docId);
+            if (currentPage == null || groupsDB.isInTrash(currentPage.getGroupId())) return null;
+            boolean plannedEnabled = PlannedAccess.enabled();
+            if (!plannedEnabled && currentPage.isPlannedMediaInitialized()) return null;
+            PlannedChangesService planned = plannedEnabled ? PlannedChangesService.getInstance() : null;
+            if (planned != null && !docHistory.getId().equals(planned.activeHistory(docId))) return null;
 
-			if (historyIds == null || publicable == false) {
-				//asi sme cluster a uz to niekto aktualizoval
-				docDB.readPagesToPublic();
-				return;
-			}
+            UserDetails author = UsersDB.getUser(docHistory.getAuthorId());
+            Identity user = author == null ? null : new Identity(author);
+            if (planned != null && !PlannedAccess.canEdit(user, currentPage)) {
+                throw new IllegalArgumentException("Planned page author no longer has permission");
+            }
+            RequestBean publication = new RequestBean();
+            GroupDetails group = groupsDB.getGroup(plannedEnabled ? currentPage.getGroupId() : docHistory.getGroupId());
+            if (group != null) publication.setDomain(group.getDomainName());
+            publication.setUser(user);
+            SetCharacterEncodingFilter.setCurrentRequestBean(publication);
 
-			dhr.updateActual(false, Tools.getTokensInt(sk.iway.iwcm.DB.getOnlyNumbersIn(historyIds), ","));
+            DocDetails docDetails = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(docHistory);
+            Logger.debug(this, "Publishing from historyId: " + docDetails.getHistoryId() + " docId: " + docId);
+            if (planned != null) {
+                docDetails.setVirtualPath(currentPage.getVirtualPath());
+                docDetails.setGroupId(currentPage.getGroupId());
+                planned.preparePublication(docDetails, user);
+            }
 
-			//updatni zaznam v history, zrus publicable a nastav actual
-			dhr.updatePublicableAndActual(false, true, docDetails.getAuthorId(), true, docDetails.getHistoryId());
+            docDetails.setAvailable(true);
+            docDetails.setPerexGroupString(docDetails.getPerexGroupIdsString(true));
+            docDetails.setFileName(group != null && !group.isInternal() ? groupsDB.getGroupNamePath(docDetails.getGroupId()) : null);
+            int[] rootGroups = DocDB.getRootGroupL(docDetails.getGroupId(), null, -1);
+            docDetails.setRootGroupL1(rootGroups[0]);
+            docDetails.setRootGroupL2(rootGroups[1]);
+            docDetails.setRootGroupL3(rootGroups[2]);
+            docDetails.setPublishAfterStart(false);
 
-			Logger.println(this,"pForm.getPublishStart()=" + docDetails.getPublishStart());
+            RequestBean.addAuditValue("publishStatus", "Webpage was published");
+            try {
+                ddr.saveAndFlush(docDetails);
+            } finally {
+                RequestBean.removeAuditValue("publishStatus");
+            }
+            if (planned != null) planned.publishMedia(docDetails);
 
-			// Now is available
-			docDetails.setAvailable(true);
-			docDetails.setPerexGroupString( docDetails.getPerexGroupIdsString(true) );
+            // vypublikovanie slave clankov z historie (multikategorie)
+            DocDetails masterDocDetails = null;
+            for(Integer slaveDocId : MultigroupMappingDB.getSlaveDocIds(docDetails.getDocId()))
+            {
+                if (masterDocDetails == null) masterDocDetails = docDB.getDoc(docDetails.getDocId(), -1, false);
+                DocDetails slaveDoc = docDB.getBasicDocDetails(slaveDocId, false);
+                if (slaveDoc != null) {
+                    //teraz zmenme hodnoty pre master doc a ulozme do DB
+                    masterDocDetails.setVirtualPath(slaveDoc.getVirtualPath());
+                    masterDocDetails.setExternalLink(slaveDoc.getExternalLink());
+                    masterDocDetails.setDocId(slaveDocId);
+                    masterDocDetails.setGroupId(slaveDoc.getGroupId());
+                    DocDB.saveDoc(masterDocDetails);
+                }
 
-			GroupDetails group = groupsDB.getGroup(docDetails.getGroupId());
-			if (group != null && group.isInternal() == false)
-				docDetails.setFileName( groupsDB.getGroupNamePath(docDetails.getGroupId()) );
-			else docDetails.setFileName(null);
+            }
 
-			//Set root groups
-			int[] rootGroups = DocDB.getRootGroupL(docDetails.getGroupId(), null, -1);
-			docDetails.setRootGroupL1(rootGroups[0]);
-			docDetails.setRootGroupL2(rootGroups[1]);
-			docDetails.setRootGroupL3(rootGroups[2]);
+            //prekopirovanie poznamky pre redaktorov k stranke
+            DocNoteBean historyNote = DocNoteDB.getInstance().getDocNote(-1, docDetails.getHistoryId());
+            if(historyNote != null) {
+                DocNoteBean publishedNote = DocNoteDB.getInstance().getDocNote(docDetails.getDocId(), -1);
+                if(publishedNote == null)
+                    publishedNote = new DocNoteBean();
 
-			// Set publish after start to false
-			docDetails.setPublishAfterStart(false);
+                publishedNote.setDocId(docDetails.getDocId());
+                publishedNote.setHistoryId(-1);
+                publishedNote.setNote(historyNote.getNote());
+                publishedNote.setUserId(historyNote.getUserId());
+                publishedNote.setCreated(historyNote.getCreated());
+                publishedNote.save();
+            }
 
-			//Before save add audit param that signalize that webpage was published
-			//Ensure RequestBean exists for current thread (publish may run on any thread via DocDB.getInstance)
-			boolean createdRequestBean = false;
-			if (SetCharacterEncodingFilter.getCurrentRequestBean() == null) {
-				SetCharacterEncodingFilter.setCurrentRequestBean(new RequestBean());
-				createdRequestBean = true;
-			}
-			RequestBean.addAuditValue("publishStatus", "Webpage was published");
+            // Keep the revision scheduled until the page, media and related writes have succeeded.
+            if (planned != null) {
+                planned.rewriteContent(docHistory);
+                dhr.saveAndFlush(docHistory);
+            }
+            dhr.getHisotryIdsByDocIdIn(docId).ifPresent(ids -> dhr.updateActual(false, ids));
+            dhr.updatePublicableAndActual(false, true, docDetails.getAuthorId(), true, docDetails.getHistoryId());
+            if (planned != null) planned.cleanupPublishedFiles(docId);
 
-			//Perform update
-			try {
-				//Use saveAndFlush to force immediate flush - ensures @PreUpdate fires now
-				//while the audit value is still in RequestBean (not deferred to outer transaction commit)
-				ddr.saveAndFlush(docDetails);
-			} finally {
-				RequestBean.removeAuditValue("publishStatus");
-				if (createdRequestBean) {
-					SetCharacterEncodingFilter.setCurrentRequestBean(null);
-				}
-			}
+            if( Constants.getBoolean("webpagesNotifyAutorOnPublish") == true ) sendMailToPageAuthor(docHistory, docDB);
 
+            docDB.updateInternalCaches(docDetails.getDocId());
+
+            //refresh sablony sa vykona iba ak je stranka v System adresari
+            if(docDetails.getFullPath().startsWith("/System") || docDetails.getGroupId() == Constants.getInt("tempGroupId") || docDetails.getGroupId() == Constants.getInt("menuGroupId") || docDetails.getGroupId() == Constants.getInt("headerFooterGroupId"))
+            {
+                TemplatesDB.getInstance(true);
+            }
+            return docDetails;
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Planned asset publication failed", exception);
+        } finally {
+            SetCharacterEncodingFilter.setCurrentRequestBean(previous);
+            publishing.remove(docId);
         }
-
-		// vypublikovanie slave clankov z historie (multikategorie)
-		DocDetails masterDocDetails = null;
-		for(Integer docId : MultigroupMappingDB.getSlaveDocIds(docDetails.getDocId()))
-		{
-			if (masterDocDetails == null) masterDocDetails = docDB.getDoc(docDetails.getDocId(), -1, false);
-			DocDetails slaveDoc = docDB.getBasicDocDetails(docId, false);
-			if (slaveDoc != null) {
-				//teraz zmenme hodnoty pre master doc a ulozme do DB
-				masterDocDetails.setVirtualPath(slaveDoc.getVirtualPath());
-				masterDocDetails.setExternalLink(slaveDoc.getExternalLink());
-				masterDocDetails.setDocId(docId);
-				masterDocDetails.setGroupId(slaveDoc.getGroupId());
-				DocDB.saveDoc(masterDocDetails);
-			}
-
-		}
-
-		//prekopirovanie poznamky pre redaktorov k stranke
-		DocNoteBean historyNote = DocNoteDB.getInstance().getDocNote(-1, docDetails.getHistoryId());
-		if(historyNote != null) {
-			DocNoteBean publishedNote = DocNoteDB.getInstance().getDocNote(docDetails.getDocId(), -1);
-			if(publishedNote == null)
-				publishedNote = new DocNoteBean();
-
-			publishedNote.setDocId(docDetails.getDocId());
-			publishedNote.setHistoryId(-1);
-			publishedNote.setNote(historyNote.getNote());
-			publishedNote.setUserId(historyNote.getUserId());
-			publishedNote.setCreated(historyNote.getCreated());
-			publishedNote.save();
-		}
-
-		if( Constants.getBoolean("webpagesNotifyAutorOnPublish") == true ) sendMailToPageAuthor(docHistory, docDB);
-
-		DocDB.getInstance().updateInternalCaches(docDetails.getDocId());
-
-		//refresh sablony sa vykona iba ak je stranka v System adresari
-		if(docDetails.getFullPath().startsWith("/System") || docDetails.getGroupId() == Constants.getInt("tempGroupId") || docDetails.getGroupId() == Constants.getInt("menuGroupId") || docDetails.getGroupId() == Constants.getInt("headerFooterGroupId"))
-		{
-			TemplatesDB.getInstance(true);
-		}
-	}
+    }
 
     /**
 	 * Disable page after unpublish/end time
