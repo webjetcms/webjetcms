@@ -1,5 +1,7 @@
 package sk.iway.iwcm.admin.upload;
 
+import java.io.IOException;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import sk.iway.iwcm.DB;
@@ -9,6 +11,7 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.DocTools;
 import sk.iway.iwcm.common.FileBrowserTools;
 import sk.iway.iwcm.common.UploadFileTools;
+import sk.iway.iwcm.doc.PlannedAssetPaths;
 
 /**
  * Shared security checks for chunk upload and conflict resolution endpoints.
@@ -95,10 +98,10 @@ final class AdminUploadValidator {
         if (isAllowedDestinationFolder(destinationFolder) == false) {
             return ERROR_INVALID_FOLDER;
         }
-        if (sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(destinationFolder)) {
-            String path = destinationFolder.endsWith("/") ? destinationFolder + fileName : destinationFolder + "/" + fileName;
-            if (!sk.iway.iwcm.doc.PlannedAccess.canAccess(path, user)) return ERROR_INVALID_FOLDER;
-            return validateFile(fileName, uploadType, fileSize, user, request);
+        try {
+            destinationFolder = PlannedAssetPaths.removePlannedPrefix(destinationFolder, fileName);
+        } catch (RuntimeException | IOException exception) {
+            return ERROR_INVALID_FOLDER;
         }
         boolean skipFolderPermission = allowProtectedFolderExceptions
             && isFolderPermissionException(destinationFolder);

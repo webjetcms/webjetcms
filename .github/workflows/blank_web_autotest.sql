@@ -1510,7 +1510,6 @@ CREATE TABLE `document_notes` (
 DROP TABLE IF EXISTS `documents`;
 
 CREATE TABLE `documents` (
-  `planned_media_initialized` tinyint(1) NOT NULL DEFAULT '0',
   `doc_id` int(11) NOT NULL AUTO_INCREMENT,
   `title` varchar(255) NOT NULL DEFAULT '',
   `data` mediumtext NOT NULL,
@@ -1586,6 +1585,7 @@ CREATE TABLE `documents` (
   `generate_url_from_title` tinyint(1) DEFAULT 0,
   `editor_virtual_path` varchar(255) DEFAULT NULL,
   `publish_after_start` tinyint(1) DEFAULT 0,
+  `planned_media_initialized` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`doc_id`),
   KEY `i_group_id` (`group_id`),
   KEY `IX_documents_cacheable` (`cacheable`),

@@ -140,7 +140,9 @@ class PlannedAccessTest {
     }
 
     @Test
-    void doesNotChangeOrdinaryAssetResponses() {
+    void doesNotChangeOrdinaryAssetResponses() throws Exception {
+        assertEquals("/images/current.webp", PlannedAssetPaths.removePlannedPrefix("/images/current.webp"));
+        assertFalse(PlannedAccess.canAccess("/images/current.webp", null));
         MockHttpServletResponse response = new MockHttpServletResponse();
         assertTrue(PlannedAccess.check("/images/current.webp", new MockHttpServletRequest(), response));
         assertNull(response.getHeader("Cache-Control"));

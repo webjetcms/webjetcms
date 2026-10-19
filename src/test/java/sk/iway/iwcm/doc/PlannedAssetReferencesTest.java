@@ -62,4 +62,28 @@ class PlannedAssetReferencesTest {
         assertEquals("/images/apple/new phone.webp", PlannedAssetPaths.target(ROOT + "/images/apple/new%20phone.webp", 42));
         assertEquals(ROOT + "/files/apple/", PlannedAssetPaths.source(42, "/files/apple/"));
     }
+
+    /** Prefix removal supports files and folders without changing ordinary paths. */
+    @Test
+    void removesOnlyValidatedPlannedPrefixes() {
+        assertEquals("/images/apple/", PlannedAssetPaths.removePlannedPrefix(ROOT + "/images/apple/"));
+        assertEquals("/images/apple", PlannedAssetPaths.removePlannedPrefix(ROOT + "/images/apple"));
+        assertEquals("/images/apple/new phone.webp", PlannedAssetPaths.removePlannedPrefix(ROOT + "/images/apple/new%20phone.webp"));
+        assertEquals("/files/current.pdf", PlannedAssetPaths.removePlannedPrefix("/files/current.pdf"));
+    }
+
+    /** Removing the prefix must not accept malformed owners or unsafe public destinations. */
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "/files/protected/planned-changes/0/images/photo.jpg",
+        "/files/protected/planned-changes/042/images/photo.jpg",
+        "/files/protected/planned-changes/other/images/photo.jpg",
+        "/files/protected/planned-changes/42/images/%2e%2e/photo.jpg",
+        "/files/protected/planned-changes/42/files/protected/photo.jpg",
+        "/files/protected/planned-changes/42/shared/photo.jpg",
+        "/files/protected/planned-changes/42/files/script.jsp"
+    })
+    void rejectsInvalidPlannedPrefixesAndTargets(String path) {
+        assertThrows(IllegalArgumentException.class, () -> PlannedAssetPaths.removePlannedPrefix(path));
+    }
 }

@@ -4,7 +4,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.when;
+
+import java.io.IOException;
+import java.nio.file.Path;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -15,6 +19,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.doc.PlannedAccess;
 
 class AdminUploadValidatorTest {
 
@@ -74,6 +79,48 @@ class AdminUploadValidatorTest {
         assertEquals(AdminUploadValidator.ERROR_INVALID_FOLDER,
             AdminUploadValidator.validateConflict(
                 "/files/protected/upload/", "photo.jpg", "file", 0, user, request));
+    }
+
+    /** Planned uploads use target folder permissions and still validate the uploaded file. */
+    @Test
+    void validatesPlannedUploadsThroughCommonChecks() throws Exception {
+        String folder = "/files/protected/planned-changes/42/images/gallery/";
+        when(user.isFolderWritable(folder)).thenReturn(false);
+        try (var access = mockStatic(PlannedAccess.class)) {
+            access.when(() -> PlannedAccess.checkedFile(anyString())).thenReturn(Path.of("/private/tmp"));
+
+            assertNull(validate(folder, "photo.jpg"));
+            assertNull(validate(folder.substring(0, folder.length() - 1), "photo.jpg"));
+            assertEquals(AdminUploadValidator.ERROR_INVALID_FILE, validate(folder, "shell.php7"));
+
+            when(user.isFolderWritable("/images/gallery/")).thenReturn(false);
+            assertEquals(AdminUploadValidator.ERROR_INVALID_FOLDER, validate(folder, "photo.jpg"));
+        }
+    }
+
+    /** Upload rights depend on the target folder even when the page cannot be edited. */
+    @Test
+    void allowsPlannedUploadWithoutPagePermission() throws Exception {
+        try (var access = mockStatic(PlannedAccess.class)) {
+            access.when(() -> PlannedAccess.requirePage(42, user)).thenThrow(new IllegalArgumentException("Denied"));
+            access.when(() -> PlannedAccess.checkedFile(anyString())).thenReturn(Path.of("/private/tmp"));
+            assertNull(validate("/files/protected/planned-changes/42/images/gallery/", "photo.jpg"));
+            access.verify(() -> PlannedAccess.requirePage(42, user), org.mockito.Mockito.never());
+        }
+    }
+
+    /** Rejected source or target files remain upload validation errors. */
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "/files/protected/planned-changes/42/images/gallery/photo.jpg", "/images/gallery/photo.jpg"
+    })
+    void rejectsUnsafePlannedUploadPaths(String unsafePath) throws Exception {
+        try (var access = mockStatic(PlannedAccess.class)) {
+            access.when(() -> PlannedAccess.checkedFile(anyString())).thenReturn(Path.of("/private/tmp"));
+            access.when(() -> PlannedAccess.checkedFile(unsafePath)).thenThrow(new IOException("Symlink"));
+            assertEquals(AdminUploadValidator.ERROR_INVALID_FOLDER,
+                validate("/files/protected/planned-changes/42/images/gallery/", "photo.jpg"));
+        }
     }
 
     @Test
