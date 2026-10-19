@@ -1,6 +1,7 @@
 import Scrollbar from 'smooth-scrollbar';
 import Ninja from '../js/global-functions.js';
 import WJ from './webjet.js';
+import { initQuickSearch } from './quick-search';
 import {EditorAi} from '../../npm_packages/webjetdatatables/editor-ai'
 
 window.domReady.add(initClosure, 1, true);
@@ -55,6 +56,9 @@ window.initSubmenuTabsClick = function() {
 }
 
 function initClosure() {
+    initQuickSearch();
+    WJ.initHelpMenu();
+    WJ.initUserMenu();
 
     // =======================
     // In iframe dialog view
@@ -270,24 +274,7 @@ function initClosure() {
     // SELECTPICKER INIT
     // =======================
 
-    $.fn.selectpicker.Constructor.BootstrapVersion = '5';
-
-    $('select').each(function() {
-        let $this = $(this);
-        if ($this.hasClass("no-picker")) return;
-        let options = {
-            container: "body",
-            style: "dropdown bootstrap-select btn-outline-secondary",
-            liveSearch: true,
-            showSubtext: true,
-            noneSelectedText: '\xa0', //nbsp
-            iconBase: 'ti',
-        }
-        let liveSearch = $this.data("live-search");
-        //console.log("liveSearch=", liveSearch);
-        if (typeof liveSearch !== "undefined") options.liveSearch = liveSearch;
-        $this.selectpicker(options);
-    });
+    WJ.initSelectPicker(document);
 
     // =======================
     // JSTREE INIT
@@ -300,6 +287,7 @@ function initClosure() {
     var jsTreeSingleSelect = somStromcek.data("single-select") === true;
     var jsTreeStateBeforeSearch = null;
     var treeInitialJsonFired = false;
+    const searchTextTemplate = document.createElement("template");
 
     function getJstreeUrl() {
         if (typeof window.getJstreeUrl=="function") return window.getJstreeUrl();
@@ -465,8 +453,14 @@ function initClosure() {
         "search": {
             "show_only_matches": true,
             "search_callback": function(word, node) {
+                let text = node.text || "";
+                if (text.includes("&") || text.includes("<")) {
+                    // Decode rendered labels using one reusable, inert template.
+                    searchTextTemplate.innerHTML = text;
+                    text = searchTextTemplate.content.textContent || "";
+                }
                 word = WJ.internationalToEnglish(word).toLowerCase();
-                if (WJ.internationalToEnglish(node.text || "").toLowerCase().indexOf(word) >= 0) {
+                if (WJ.internationalToEnglish(text).toLowerCase().indexOf(word) >= 0) {
                     return true;
                 }
                 return false;
@@ -794,8 +788,8 @@ function initClosure() {
     // =======================
     window.addEventListener('beforeunload', (event) => {
         try {
-            // Nezobraziť varovanie pre image-editor iFrame
-            if (window.location.pathname.indexOf('/apps/image-editor') >= 0) {
+            // Nezobraziť varovanie pre image-editor a app component
+            if (window.location.pathname.indexOf('/apps/image-editor') >= 0 || window.location.pathname.indexOf('/admin/v9/webpages/component/') >= 0) {
                 return;
             }
 

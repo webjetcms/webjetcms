@@ -23,7 +23,17 @@ public class FileBrowserToolsTest extends BaseWebjetTest {
         //loaded from constants
         assertTrue(FileBrowserTools.hasForbiddenSymbol("file#name"));
         assertTrue(FileBrowserTools.hasForbiddenSymbol("file@name"));
-        assertTrue(FileBrowserTools.hasForbiddenSymbol("file(name"));
+        assertFalse(FileBrowserTools.hasForbiddenSymbol("file(name"));
+    }
+
+    /** Allows parentheses in ordinary file names and directory paths. */
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "report (final).png", "file)name.pdf", "Draft B · 08 · System notifications (B11a–c).png",
+        "/files/reports (2026)/report (final).pdf"
+    })
+    void shouldAllowParentheses(String name) {
+        assertFalse(FileBrowserTools.hasForbiddenSymbol(name));
     }
 
     @ParameterizedTest

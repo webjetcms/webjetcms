@@ -26,6 +26,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 
+/**
+ * Defines a field or layout item within a multistep form in a specific domain.
+ * Stores rendering, validation, and statistics settings used by the form editor
+ * and submission services. Radio options can share a logical field identifier.
+ */
 @Entity
 @Table(name = "form_items")
 @Getter

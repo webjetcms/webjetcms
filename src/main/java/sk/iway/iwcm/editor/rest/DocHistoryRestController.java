@@ -2,6 +2,7 @@ package sk.iway.iwcm.editor.rest;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.DBPool;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.doc.DocBasic;
@@ -30,9 +32,7 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 /**
- * #53385 - REST pre zobrazenie stranok v historii
- * Data poskytuje len READ ONLY
- * Vyuziva mapovanie na DTO objekt
+ * Lists page history and deletes authorized versions while preserving the current version and pending approvals.
  */
 @RestController
 @Datatable
@@ -89,14 +89,21 @@ public class DocHistoryRestController extends DatatableRestControllerV2<DocHisto
             docId = masterDocId > 0 ? masterDocId : docId; //ak slave stranka, tak ukazem historiu master stranky
             List<DocDetails> docDetailsList = historyDB.getHistory(docId, false, false);
 
-            page = new DatatablePageImpl<>(DocHistoryDtoMapper.INSTANCE.toHistoryDtos(docDetailsList));
-
-            if (docId != docIdOriginal) {
-                //preserve docId from original request, not from multigroup mapping
-                for (DocHistoryDto dto : page.getContent()) {
+            boolean editable = EditorDB.isPageEditable(getUser(), docId);
+            boolean cleanup = getUser().isEnabledItem("cmp_data_deleting");
+            long now = Tools.getNow();
+            List<DocHistoryDto> historyDtos = new ArrayList<>();
+            for (DocDetails doc : docDetailsList) {
+                DocHistoryDto dto = DocHistoryDtoMapper.INSTANCE.docToHistoryDto(doc);
+                dto.setDeleteAllowed(editable && !doc.isHistoryActual() && !doc.isHistoryAwaitingApprove()
+                    && (cleanup || (doc.isPublicable() && doc.getPublishStart() > now)));
+                if (docId != docIdOriginal) {
+                    // Preserve docId from the original request for multigroup mappings.
                     dto.setDocId(docIdOriginal);
                 }
+                historyDtos.add(dto);
             }
+            page = new DatatablePageImpl<>(historyDtos);
         }
 
         processFromEntity(page, ProcessItemAction.GETALL);
@@ -105,15 +112,17 @@ public class DocHistoryRestController extends DatatableRestControllerV2<DocHisto
 
     @Override
     public boolean deleteItem(DocHistoryDto entity, long id) {
-        //zmazat je mozne len zaznamy v buducnosti
-        DocHistory history = docHistoryRepository.getReferenceById(entity.getId());
-        if (history!=null && Boolean.TRUE.equals(history.getPublicable()) && history.getPublishStartDate().getTime()>Tools.getNow()) {
-            if (EditorDB.isPageEditable(getUser(), history.getDocId())) {
-                docHistoryRepository.deleteByIdPublicable(history.getId(), true);
-                return true;
-            }
+        DocHistory history = docHistoryRepository.findById(id).orElse(null);
+        if (history == null || !EditorDB.isPageEditable(getUser(), history.getDocId())) return false;
+
+        boolean deleted = docHistoryRepository.deleteDeletableById(history.getId(), history.getDocId(),
+            getUser().isEnabledItem("cmp_data_deleting"), new Date(Tools.getNow())) > 0;
+        if (deleted) {
+            Adminlog.add(Adminlog.TYPE_DATA_DELETING, getUser().getUserId(),
+                "Deleted page history: docId=" + history.getDocId() + ", historyId=" + history.getId(),
+                history.getDocId(), history.getHistoryId());
         }
-        return false;
+        return deleted;
     }
 
     @Override

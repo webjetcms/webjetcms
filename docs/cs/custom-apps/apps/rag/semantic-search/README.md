@@ -1,10 +1,13 @@
 # Sémantické vyhledávání (RAG)
 
-Sémantické vyhledávání umožňuje návštěvníkům nalézt relevantní stránky podle **významu otázky**, nejen podle shody klíčových slov. Využívá vektorovou databázi [pgvector](https://github.com/pgvector/pgvector) a embedding vektory generované přes poskytovatele podporované knihovnou `webjet-ai`.
+Pro vyhledávání v samostatných souborech dokumentace viz [Vyhledávání v Markdown dokumentaci](../markdown-search.md).
+
+Sémantické vyhledávání umožňuje návštěvníkům nalézt relevantní stránky podle **významu otázky**, nejen podle shody klíčových slov. Embedding vektory ukládá do PostgreSQL s [pgvector](https://github.com/pgvector/pgvector) nebo do vestavěného úložiště [MariaDB Vector](https://mariadb.com/docs/server/reference/sql-structure/vectors/vector-overview). Vektory generují poskytovatelé podporovaní knihovnou `webjet-ai`.
 
 Nad stejným indexem lze použít také:
 
 - **hybridní vyhledávání** - kombinaci vektorového vyhledávání a fulltextu nad textem chunků,
+- **reranking** - dodatečné seřazení nalezených chunků podle jejich relevance pro otázku,
 - **RAG odpověď** - AI odpověď vygenerovanou pouze z nalezeného kontextu.
 
 ## Jak to funguje
@@ -21,9 +24,20 @@ Proces indexování:
 2. **Rozdělení na části** - text se rozdělí pomocí [SlidingWindowChunker](../../../../../../src/main/java/sk/iway/iwcm/rag/indexing/SlidingWindowChunker.java). Používají se konfigurační proměnné `ragEmbeddingChunkSize` a `ragEmbeddingChunkOverlap`.
 3. **Opětovné použití embeddingů** - pro každý chunk se vypočítá hash. Pokud se text chunku nezměnil a existuje embedding se stejným poskytovatelem, modelem a správnou dimenzí, použije se existující vektor.
 4. **Generování embeddingů** - nové nebo změněné chunky zpracuje [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java) podle poskytovatele a modelu nastaveného v .
-5. **Uložení do databáze** - metadata chunků se ukládají přes JPA repozitář [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkRepository. aktualizuje nativním SQL přes [PgVectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/PgVectorStore.java).
+5. **Uložení do databáze** - metadata chunků se ukládají přes JPA repozitář [EmbeddingChunkRepository](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorjpa/EmbeddingChunkRepository. Zvolená implementace [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java) uloží vektory pomocí nativního SQL pro konkrétní databázi.
 
-Chunking preferuje přirozené hranice textu: odstavec, řádek, větu, mezeru a teprve potom tvrdé rozdělení podle limitu. U desetinných čísel se tečka nepovažuje za konec věty.
+Velikost chunku je přibližná cílová hodnota. Maximální velikost je cílová hodnota zvýšena o 50 %, tedy při výchozím nastavení nejvíce `1500` znaků. Začátek i konec chunku se podle možnosti přizpůsobují nejbližší rozpoznané hranici věty nebo odstavce, a to i při překrytí. Věty včetně zalomení řádků zůstávají celé, pokud se vejdou do maxima. Delší věty nebo odstavce se rozdělí mezi slovy; slovo delší než maximum se rozdělí i uprostřed. Překrytí se může zmenšit, aby každý další chunk přidal nový obsah a dodržel maximální velikost. Hodnota `ragEmbeddingChunkSize` menší nebo rovná nule vypne rozdělování textu. Nové hranice se na stávající obsah použijí po opětovném indexování.
+
+Při Markdown dokumentaci se před text chunku doplní název dokumentu a společná hierarchie nadpisů, například `Používateľská príručka > Registrácia > Schválenie`. Při spojení podsekcí prefix obsahuje jejich společného rodiče; původní nadpisy zůstávají v textu. Název se přebírá z prvního nadpisu první úrovně nebo z relativní cesty k souboru. Podporovány jsou nadpisy ATX (`#`) i Setext (podtrženo), kromě nadpisů v ukázkách kódu. Prefix se nezapočítává do velikosti chunku, ale je součástí embeddingu i uloženého textu pro náhled, fulltext a RAG odpovědi.
+
+Opětovné použití Markdown vektorů vychází z hash hodnoty celého vstupu včetně názvu a nadpisů. Změna nadřazeného nadpisu proto obnoví příslušné embeddingy i tehdy, když se samotný text části nezměnil. Po aktualizaci spusťte Markdown indexování znovu: vektory bez kontextu se vygenerují nově. Pokud již vektor kontext obsahuje, ale uložený text chunku ještě nemá prefix, aktualizuje se pouze uložený text a vektor se použije znovu. Další indexování nezměněných souborů se přeskočí. Index není třeba ručně mazat.
+
+Markdown dokumentaci rozděluje [MarkdownChunker](../../../../../../src/main/java/sk/iway/iwcm/rag/indexing/MarkdownChunker.java) podle sekcí a bloků:
+
+- Sekce včetně podsekcí, odstavce, položky seznamů, tabulky a bloky kódu zůstávají celé, pokud se vejdou do maxima. Nadpisy se podle možnosti ponechají s obsahem.
+- Sousední krátké sekce se mohou spojit. Nadpisy první úrovně (`#`) zůstávají hranicemi.
+- Překrytí používá celé bloky v rámci sekce, proto může přesáhnout nastavenou hodnotu. Mezi nesloučenými sekcemi se nepoužívá. Každý chunk musí dodržet maximum a přidat nový obsah.
+- Bloky větší než maximum se rozdělí podle vět a slov, bez opakování hlaviček tabulek nebo doplňování značek kódu.
 
 ### 2. Vyhledávání
 
@@ -34,32 +48,75 @@ Když návštěvník zadá vyhledávací dotaz:
 3. [SemanticSearchService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/SemanticSearchService.java) vygeneruje embedding dotazu podle asistenta `RAG-EMB-SEARCH` s typem vstupu `QUERY` a vyhledá nejblíže . Při indexování se používá typ `DOCUMENT` ; poskytovatel tak může pro oba typy aplikovat rozdílné prefixy požadované modelem.
 4. Výsledky se omezí podle domény, jazyka, typu entity a podle složek zvolených v aplikaci **Vyhledávání**.
 5. Pokud je povolen hybridní režim, spustí se i fulltext nad `rag_embedding_chunks.chunk_text` a výsledky se spojí přes `RRF` (Reciprocal Rank Fusion).
-6. Výsledné chunky se agregují na dokumenty a dokumenty se zobrazí stejným způsobem jako při standardním vyhledávání.
-7. Pokud je povolena RAG odpověď, z nalezených chunků se ještě připraví kontext pro AI odpověď.
+6. Vyloučí se nedostupné, neprohledatelné a interní stránky i zdroje bez oprávnění uživatele.
+7. Lokální reranker podle textové shody upraví pořadí výsledků i výběr kontextu pro RAG odpověď.
+8. Dokumenty se zobrazí stejným způsobem jako při standardním vyhledávání. Pokud je povolena RAG odpověď, z vybraných chunků se připraví kontext pro AI odpověď.
 
 ### Rozdělení odpovědností mezi WebJET CMS a `webjet-ai`
 
 Jádro embedding logiky bylo vyčleněno z WebJET CMS do samostatné, od frameworku nezávislé knihovny [webjet-ai](https://github.com/webjetcms/webjet-ai). Knihovna obsahuje poskytovatelsky nezávislé typy `EmbeddingRequest`, `EmbeddingOptions`, `EmbeddingResponse` a `EmbeddingVector`, volání `AiClient.embed` a implementace komunikace s jednotlivými poskytovateli. Původní CMS rozhraní `EmbeddingProvider` a implementace `OpenAiEmbeddingProvider` byly odstraněny.
 
-V CMS zůstal tenký adaptér [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java), který provede nastavení systémového AI asistenta a domény na požadavek knihovny, předá konfiguraci. Extrakce obsahu, chunking, opětovné použití vektorů podle hash hodnoty, evidence tokenů, zpracování fronty a ukládání do `pgvector` zůstávají ve správě WebJET CMS.
+V CMS zůstal tenký adaptér [EmbeddingService](../../../../../../src/main/java/sk/iway/iwcm/rag/embedding/EmbeddingService.java), který provede nastavení systémového AI asistenta a domény na požadavek knihovny, předá konfiguraci Extrakce obsahu, chunking, opětovné použití vektorů podle hash hodnoty, evidence tokenů, zpracování fronty a ukládání vektorů zůstávají ve správě WebJET CMS.
 
 Při přidání nového serverového poskytovatele se proto embedding komunikace neimplementuje v RAG modulu CMS. Poskytovatel musí podporovat metodu `AiProvider.embed` v knihovně `webjet-ai` a být zaregistrován v CMS podle postupu v části [Přidání poskytovatele](../../ai/assistants/README.md).
 
 ## Požadavky
 
-- **PostgreSQL** s rozšířením **pgvector** (obraz: `pgvector/pgvector:pg18-trixie` nebo novější).
+- **Vektorová databáze** - PostgreSQL s rozšířením pgvector nebo MariaDB s nativní podporou vektorů podle následujícího přehledu. Stačí jedna z těchto možností.
 - **Konfigurace zvoleného poskytovatele** - pro externí službu se používá stejný API klíč jako pro AI asistenty. `ai_openAiAuthKey` pro OpenAI. Lokální embeddingový model namísto klíče vyžaduje cestu k modelovému balíku.
-- Sémantické vyhledávání funguje pouze nad PostgreSQL/pgvector úložištěm. Pokud primární databáze WebJET CMS není PostgreSQL, nastavte samostatnou PostgreSQL databázi přes datasource `rag_jpa`.
+- **Připojení k databázi** - explicitně nastavený datasource `rag_jpa` má přednost; pokud není nastaven, použije se primární datasource `iwcm`. Pokud primární databáze není podporovaným vektorovým úložištěm, nastavte samostatnou podporovanou databázi přes `rag_jpa`.
+
+### Podporované databáze a verze
+
+| Databáze | Minimální požadavek | Doporučené nasazení | Výhody a omezení |
+| --- | --- | --- | --- |
+| **PostgreSQL + pgvector** | **PostgreSQL 16+** a kompatibilní rozšíření **pgvector s HNSW** (od **0.5.0**). | **PostgreSQL 18** a aktuální opravná verze **pgvector 0.8.x** (při přípravě dokumentace **0.8.6**). Vývojové Docker Compose profily používají obraz `pgvector/pgvector:pg18-trixie`. | WebJET podporuje `cosine`, `l2` i `inner_product`. Rozšíření musí být nainstalováno na serveru a aktivováno v databázi určené pro RAG. |
+| **MariaDB Vector** | **MariaDB 11.8 LTS nebo novější**. | V řadě 11.8 používejte **11.8.9 nebo novější opravnou verzi** ; vývojový Dockerfile používá `mariadb:11.8.9`. Alternativou je aktuální opravná verze **12.3 LTS**. | Nativní typ `VECTOR` a vektorový index bez instalace rozšíření. WebJET podporuje `cosine` a `l2` ; `inner_product` není podporován. |
+
+Minimum PostgreSQL 16 vychází ze [základních požadavků WebJET CMS](../../../../install/setup/README.md#základní-požadavky-na-server). Verze **pgvector 0.5.0** je funkční minimum pro `HNSW` index, který WebJET vytváří; rozšíření musí zároveň podporovat zvolenou verzi PostgreSQL. Pro **PostgreSQL 18** je třeba **pgvector 0.8.1 nebo novější**, doporučujeme však aktuální opravy. Řada pgvector 0.8 přinesla i zlepšení výkonu `HNSW` a plánování dotazů s filtry. Podrobnosti jsou v [přehledu změn pgvector](https://github.com/pgvector/pgvector/blob/master/CHANGELOG.md).
+
+U MariaDB se uvedené verze vztahují na **Community Server** používaný ve vývojovém Docker kontejneru. Nativní vektory přibyly již v 11.7, ale minimum WebJETu je **11.8**, první LTS řada s touto funkcí. Všechny vektorové funkce používané WebJETem jsou dostupné v 11.8; přechod na 12.x není podmínkou sémantického vyhledávání. Viz [přehled MariaDB Vector](https://mariadb.com/docs/server/reference/sql-structure/vectors/vector-overview).
+
+Při výběru verze MariaDB zohledněte:
+
+- **11.8 LTS** - základ pro širší kompatibilitu klientů. Používejte aktuální opravy: verze [11.8.3](https://mariadb.com/docs/release-notes/community-server/11.8/11.8.3) opravila poškození vektorového indexu při rollback příkazu v transakci a [11.8.9](https://mariadb.com/docs/release-notes/community-server/11.8/11.8.9) opravila zhoršení úspěšnosti nalezení nejbližších výsledků při načtení cosine indexu z disku.
+- **12.1 a novější** - obsahují [optimalizaci výpočtu vzdáleností pomocí extrapolace](https://jira.mariadb.org/browse/MDEV-36205). Databáze automaticky využije část vektoru k vyřazení slabých kandidátů, pokud jsou k tomu embeddingy vhodné, například u Matryoshka modelů.
+- **12.3 LTS** - doporučená volba z řady 12.x pro nová nebo výkonově náročnější nasazení. Obsahuje uvedenou optimalizaci bez potřeby měnit SQL, schéma nebo konfiguraci indexu. MariaDB v [benchmark oproti 11.8](https://mariadb.com/resources/blog/mariadb-12-3-faster-vector-search-with-matryoshka-optimization/) uvádí až o 30 % více dotazů za sekundu při stejném recall, tedy stejné úspěšnosti nalezení nejbližších výsledků. Výsledek závisí na datech a embeddingovém modelu; nejde o změřené zrychlení celého vyhledávání ve WebJETu.
+
+Podle [politiky údržby MariaDB](https://mariadb.org/about/#maintenance-policy) má Community řadu 11.8 údržbu do **4. června 2028** a řada 12.3 do **12. června 2029**. U stávající podporované PostgreSQL nebo MariaDB můžete ponechat stejný databázový server i pro RAG; u ostatních databází použijte samostatné vektorové úložiště.
+
+### Příprava rozšíření pgvector
+
+Na PostgreSQL serveru musí správce nejprve nainstalovat balík **pgvector kompatibilní s hlavní verzí serveru**. Samotná instalace PostgreSQL nestačí. Při inicializaci WebJET provede `CREATE EXTENSION IF NOT EXISTS vector` ; pokud aplikační uživatel nemá oprávnění vytvořit rozšíření, správce jej musí předem aktivovat v databázi používané přes `rag_jpa` nebo `iwcm`:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+Verzi serveru a aktivovaného rozšíření ověříte ve stejné databázi:
+
+```sql
+SELECT version();
+SELECT extversion FROM pg_extension WHERE extname = 'vector';
+```
+
+Prázdný výsledek druhého dotazu znamená, že rozšíření není v této databázi aktivováno. Aktualizace balíku na serveru sama neaktualizuje aktivované rozšíření; správce provede také `ALTER EXTENSION vector UPDATE`. Uživatel WebJETu musí mít oprávnění k vytváření a úpravě RAG tabulek a indexů. Postup instalace a aktualizace je v [dokumentaci pgvector](https://github.com/pgvector/pgvector#installation).
 
 ### PostgreSQL jako primární databáze
 
-Pokud WebJET CMS běží přímo na PostgreSQL, vektorová databáze se použije automaticky bez další konfigurace.
+Vývojový profil PostgreSQL definuje samostatný datasource `rag_jpa`, který směřuje do stejné databáze jako primární datasource `iwcm`.
 
-Musí být nastaven datasource jako v případě [poolman-docker-pgsql.xml](../../../../../../src/main/resources/poolman-docker-pgsql.xml). Pokud používáte více schémat, parametr JDBC `currentSchema` musí obsahovat schéma s RAG tabulkami i schéma s funkcemi WebJET CMS, například `currentSchema=public,webjet_cms`.
+Datasource `rag_jpa` musí být nastaven jako v případě [poolman-docker-pgsql.xml](../../../../../../src/main/resources/poolman-docker-pgsql.xml). Pokud používáte více schémat, parametr JDBC `currentSchema` musí obsahovat schéma s RAG tabulkami i schéma s funkcemi WebJET CMS, například `currentSchema=public,webjet_cms`.
+
+### MariaDB jako primární databáze
+
+MariaDB 11.8 nebo novější používá vestavěný typ `VECTOR` bez rozšíření. Stejně jako profil PostgreSQL, i [poolman-docker-mariadb.xml](../../../../../../src/main/resources/poolman-docker-mariadb.xml) definuje samostatný datasource `rag_jpa`, který směřuje do stejné databáze jako @@CODE_ Toto druhé spojení ponechte v obou profilech, aby bylo možné nezávisle změnit jeho ovladač, URL a přihlašovací údaje na jinou vektorovou databázi MariaDB nebo PostgreSQL.
+
+MariaDB podporuje metriky vzdálenosti `cosine` a `l2`. Metriku `inner_product` podporuje pouze PostgreSQL/pgvector; její nastavení na MariaDB vypne vektorové úložiště bez změny stávajícího indexu nebo dat.
 
 ### Samostatná vektorová databáze
 
-Pokud primární databáze není PostgreSQL, vytvořte Docker kontejner s pgvector.
+Pokud primární databáze není podporována, nastavte samostatnou podporovanou PostgreSQL nebo MariaDB databázi jako datasource `rag_jpa`. Explicitní datasource lze použít také k oddělení vektorového úložiště od podporované primární databáze.
 
 Pro lokální vývoj je připraven soubor [.devcontainer/db/docker-compose-rag-pgsql.yml](../../../../../../.devcontainer/db/docker-compose-rag-pgsql.yml):
 
@@ -69,7 +126,6 @@ docker compose -f .devcontainer/db/docker-compose-rag-pgsql.yml up -d
 
 Příklady datasource konfigurace:
 
-- [poolman-docker-mariadb.xml](../../../../../../src/main/resources/poolman-docker-mariadb.xml)
 - [poolman-docker-mssql.xml](../../../../../../src/main/resources/poolman-docker-mssql.xml)
 - [poolman-docker-oracle.xml](../../../../../../src/main/resources/poolman-docker-oracle.xml)
 
@@ -81,7 +137,7 @@ Aktivace a nastavení se provádí v [Konfiguraci](../../../../admin/setup/confi
 
 | Proměnná | Výchozí hodnota | Popis |
 | --- | --- | --- |
-| `ragSemanticSearchEnabled` | `false` | Zapne sémantické vyhledávání nad vektorovou databází pgvector. |
+| `ragSemanticSearchEnabled` | `false` | Zapne sémantické vyhledávání nad úložištěm PostgreSQL/pgvector nebo MariaDB Vector. |
 | `searchType` | `db` | Globální typ vyhledávání: `db`, `lucene`, `semantic`, `hybrid`. |
 | `luceneAsDefaultSearch` | `false` | Pokud je `true`, Lucene má vyšší prioritu než `searchType`. |
 
@@ -95,8 +151,8 @@ Aktivace a nastavení se provádí v [Konfiguraci](../../../../admin/setup/confi
 | `ragEmbeddingModel` | `text-embedding-3-small` | Model použitý pouze při automatickém vytvoření chybějícího embedding asistenta. |
 | `ragEmbeddingDimensions` | `1536` | Globální počet dimenzí vektoru pro celou instalaci. Musí odpovídat použitému modelu a databázové tabulce. |
 | `ai_localEmbeddingModelBundlePath` | prázdná hodnota | Cesta ke globálnímu schválenému ZIP balíku lokálního modelu `intfloat/multilingual-e5-base`: absolutní cesta na serveru nebo cesta začínající `/WEB-INF/` vůči kořenu nasazené aplikace. Po změně je zapotřebí restart. |
-| `ragEmbeddingChunkSize` | `1000` | Maximální velikost jedné části textu ve znacích. |
-| `ragEmbeddingChunkOverlap` | `200` | Počet znaků, o které se sousední chunky překrývají. |
+| `ragEmbeddingChunkSize` | `1000` | Přibližná cílová velikost chunku ve znacích. Maximum je o 50 % výše; při výchozí hodnotě je to `1500` znaků. Hodnota menší nebo rovná nule vypne rozdělování. |
+| `ragEmbeddingChunkOverlap` | `200` | Přibližné překrytí ve znacích, pokud možno přizpůsobené celým větám nebo odstavcům. Může se zmenšit, aby každý další chunk přidal nový obsah a dodržel maximální velikost. |
 
 Systém podle potřeby automaticky vytvoří dva systémové AI asistenty:
 
@@ -107,13 +163,15 @@ Pokud asistent již existuje, jeho `provider` a `model` mají přednost před ko
 
 Indexy jsou odděleny kombinací poskytovatele a modelu. Opětovné indexování nahradí pouze data aktuální kombinace, takže například OpenAI a Gemini index téže stránky mohou existovat současně. Náhled indexování počítá pouze indexy aktuálního asistenta; náhled odstranění a odstranění stránky pracují se všemi kombinacemi.
 
-Fronta `rag_index_queue` ukládá pouze typ entity, ID a akci. Poskytovatel a model se načtou z asistenta `RAG-EMB-INDEX` až při zpracování položky. Pokud potřebujete dokončit indexování původní kombinací, nechte před změnou asistenta fronty zcela zpracovat.
+Fronta `rag_index_queue` neukládá poskytovatele ani model. Poskytovatel a model se načtou z asistenta `RAG-EMB-INDEX` až při zpracování položky. Pokud potřebujete dokončit indexování původní kombinací, nechte před změnou asistenta fronty zcela zpracovat.
 
 !>**Upozornění:** Indexovací a vyhledávací asistent musí používat stejný identifikátor poskytovatele a modelu. Vyhledávání načte pouze indexy, jejichž obě hodnoty se přesně shodují s asistentem `RAG-EMB-SEARCH`.
 
 !>**Upozornění:** Starší názvy `ragChunkSize` a `ragChunkOverlap` se již nepoužívají.
 
-!>**Upozornění:** Při změně `ragEmbeddingDimensions` se vymažou všechna data z `rag_embedding_chunks` pro všechny poskytovatele a modely, upraví se typ sloupce `embedding` na nové `vector(N)` a znovu se vytvoří HNSW index. Následně spusťte úplné indexování obsahu. Samotná změna modelu ostatní kombinace nevymaže, ale novou kombinaci musíte zaindexovat.
+!>**Upozornění:** Při změně `ragEmbeddingDimensions` se vymažou všechna data z `rag_embedding_chunks` pro všechny poskytovatele a modely, upraví se vektorový typ pro zvolenou databázi a znovu se vytvoří `HNSW` index. Následně spusťte úplné indexování obsahu. Samotná změna modelu ostatní kombinace nevymaže, ale novou kombinaci musíte zaindexovat. Změna datasource nebo typu vektorové databáze stávající vektory nemigruje; po změně spusťte úplné indexování.
+
+!>**Společná dimenze:** Všechny domény sdílejí jedno vektorové schéma a musí používat stejnou globální hodnotu `ragEmbeddingDimensions`. Odlišné doménové nastavení zablokuje sémantické vyhledávání a indexování pro danou doménu; stránka **Sémantický index** zobrazí chybu. Automatická inicializace MariaDB při nesouladu dimenzí zachová existující data. Chcete-li změnit společnou dimenzi, uložte globální nastavení v **Konfiguraci** — tím se vymažou embeddingy všech domén — a poté spusťte úplné indexování všech domén.
 
 ### Lokální embeddingový model
 
@@ -131,8 +189,8 @@ Modelový balíček definuje odlišné prefixy pro poptávku a dokument. [Embedd
 
 | Proměnná | Výchozí hodnota | Popis |
 | --- | --- | --- |
-| `ragSearchEfSearch` | `40` | Parametr `HNSW` indexu `ef_search`. Vyšší hodnota zlepšuje recall, ale může zpomalit vyhledávání. |
-| `ragSearchDistanceMetric` | `cosine` | Metrika vzdálenosti: `cosine`, `inner_product`, `l2`. Změna vyžaduje reindex `HNSW` indexu. |
+| `ragSearchEfSearch` | `40` | Parametr `HNSW ef_search`. Vyšší hodnota zlepšuje recall, ale může zpomalit vyhledávání. MariaDB povoluje hodnoty od `1` do `10000` ; při neplatné hodnotě zůstane její databázová výchozí hodnota nezměněna. |
+| `ragSearchDistanceMetric` | `cosine` | Metrika vzdálenosti: `cosine`, `inner_product`, `l2`. MariaDB podporuje pouze `cosine` a `l2` ; `inner_product` podporuje pouze PostgreSQL. Změna znovu vytvoří vektorový index. |
 | `ragSemanticSearchMinSimilarity` | `0.2` | Minimální hodnota similarity pro výsledky. Používá se spolu s adaptivním prahem podle nejlepšího výsledku. |
 | `ragSemanticSearchMinResults` | `3` | Minimální počet výsledků, které se vrátí i při přísnějším prahu similarity. |
 
@@ -151,7 +209,7 @@ Hybridní vyhledávání kombinuje vektorové výsledky a fulltextové výsledky
 | `ragHybridFtsWeight` | `0.3` | Váha fulltextového pořadí při RRF merge. |
 | `ragHybridRrfK` | `60` | Parametr `k` pro Reciprocal Rank Fusion. |
 | `ragHybridChunkFetchMultiplír` | `3` | Násobič počtu chunků načtených oproti požadovanému počtu výsledků. |
-| `ragHybridFtsUseIlikeFallback` | `true` | Pokud PostgreSQL FTS vrátí prázdný výsledek, použije fallback přes `ILIKE`. |
+| `ragHybridFtsUseIlikeFallback` | `true` | Pokud databázový fulltext vrátí prázdný výsledek, použije se databázově specifický fallback přes `ILIKE` nebo `LIKE`. |
 
 V lokálním nastavení aplikace má hodnota `searchType=semantic` význam čistého vektorového vyhledávání bez hybridní větve. Hodnota `searchType=hybrid` použije hybrid, pokud je globálně povolen.
 
@@ -167,9 +225,25 @@ flowchart TD
 	FR --> RRF
 
 	RRF --> S[Zoradenie chunkov podľa výsledného skóre]
-	S --> D[Agregácia na dokumenty]
+	S --> A[Kontrola prístupu k zdrojom]
+	A --> R[Lokálny reranking podľa textu]
+	R --> D[Agregácia na dokumenty]
 	D --> O[Finálny zoznam výsledkov]
 ```
+
+### Reranking výsledků
+
+[RerankerService](../../../../../../src/main/java/sk/iway/iwcm/rag/search/RerankerService.java) upraví pořadí výsledků i výběr kontextu pro RAG podle shody otázky s názvem, Markdown hierarchií a textem. Zohledňuje shodu slov, jejich blízkost a vyšší váhu méně běžných slov. Nevyžaduje další AI volání ani opětovné indexování.
+
+Ve výchozím nastavení kombinuje **85 % původního skóre a 15 % textové shody**:
+
+| Proměnná | Výchozí hodnota | Popis |
+| --- | --- | --- |
+| `ragRerankLexicalWeight` | `0.15` | Váha textové shody v rozsahu `0` -`1`. Hodnota `0` použije pouze původní skóre, `1` pouze textovou shodu. Změna se projeví bez restartu. |
+
+Nadpisový bonus používá pouze název zdroje a uložený prefix Markdown hierarchie. Nadpisy v těle chunku se hodnotí jako běžný text, aby se za nadpisy nepovažovaly komentáře v rozdělených ukázkách kódu.
+
+Prahy similarity a minimální počet výsledků zůstávají zachovány; filtrování používá původní skóre. Při přípravě RAG kontextu se navíc vynechají plně opakované pasáže stejného zdroje.
 
 ## RAG odpověď ve vyhledávání
 
@@ -194,11 +268,11 @@ V aplikaci **Vyhledávání** lze tyto hodnoty přepsat lokálně. Prázdná č�
 
 [RagChunkPostProcessor](../../../../../../src/main/java/sk/iway/iwcm/rag/search/RagChunkPostProcessor.java) připravuje kontext pro model:
 
-1. seřadí chunky podle similarity a vybere top K,
-2. použije adaptivní práh similarity, ale nikdy nevyhodí všechno, pokud existuje alespoň jeden použitelný výsledek,
+1. seřadí chunky podle lokálního rerank skóre, pokud je dostupné, jinak podle similarity, vynechá plně opakované pasáže stejného zdroje a vybere top K,
+2. použije adaptivní práh původní similarity a ponechá alespoň nejlepší výsledek,
 3. seskupí chunky podle entity,
 4. sloučí sousední chunky a odstraní duplicitní text z překrytí,
-5. omezí počet bloků a celkový počet znaků.
+5. seřadí bloky podle nejlepšího rerank skóre nebo similarity a omezí počet bloků a celkový počet znaků.
 
 Výsledkem jsou objekty [MergedContextBlock](../../../../../../src/main/java/sk/iway/iwcm/rag/search/MergedContextBlock.java), které se odesílají modelu jako JSON.
 
@@ -283,7 +357,7 @@ Cron úloha je bezpečná vůči souběžnému spuštění. Při běhu se nastav
 
 ## Databázové schéma
 
-Systém vytváří dvě tabulky:
+Systém vždy vytváří tabulky `rag_index_queue` a `rag_embedding_chunks`. V MariaDB vytvoří také pomocnou tabulku `rag_embedding_vectors`.
 
 ### `rag_index_queue`
 
@@ -291,20 +365,24 @@ Fronta pro asynchronní indexování. Prováděno třídou [IndexQueueEntity](..
 
 ### `rag_embedding_chunks`
 
-Uloženo embedding vektory a metadata chunků. Implementováno třídou [EmbeddingChunkEntity](../../../../../../src/main/java/sk/iway/iwcm/rag/pgvector/EmbeddingChunkEntity.java).
+Uložená metadata chunků a v PostgreSQL také embedding vektory. Implementováno třídou [EmbeddingChunkEntity](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorjpa/EmbeddingChunkEntity.java).
 
 Důležité sloupce:
 
 - `entity_type`, `entity_id`, `chunk_index` - identifikace zdrojové entity a pořadí chunku.
 - `chunk_text` - ​​text použitý pro embedding a fulltext.
 - `content_hash` - ​​hash textu chunku pro opětovné použití embeddingu.
-- `embedding` - ​​nativní pgvector typ `vector(N)`.
+- `embedding` - ​​sloupec typu pgvector `vector(N)`, který se používá pouze v PostgreSQL.
 - `embedding_provider`, `embedding_model`, `dimensions` - poskytovatel, model a dimenze embeddingu.
 - `language`, `domain_id` - jazyk a doména.
 - `group_id`, `root_group_l1`, `root_group_l2`, `root_group_l3` - optimalizované filtrování dokumentů podle složek.
 - `status`, `error_message` - stav zpracování.
 
-!>**Upozornění:** Sloupec `embedding` není mapován přes JPA. Všechny operace s vektory probíhají přes nativní SQL dotazy ve třídě [PgVectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/PgVectorStore.java).
+### `rag_embedding_vectors`
+
+Pomocná tabulka pouze pro MariaDB obsahuje povinnou hodnotu `embedding VECTOR(N) NOT NULL` pro každý úspěšně zaindexovaný chunk. `chunk_id` je primární i cizí klíč na `rag_embedding_chunks.id` s kaskádovým odstraněním. Toto oddělení umožňuje zachovat chybové řádky metadat bez vektoru a zároveň splnit požadavek MariaDB na vektorový index.
+
+!>**Upozornění:** Vektorové sloupce nejsou mapovány přes JPA. Všechny operace s vektory probíhají přes databázově specifické implementace nativního SQL rozhraní [VectorStore](../../../../../../src/main/java/sk/iway/iwcm/rag/vectorstore/VectorStore.java).
 
 Při migraci schématu se doplní chybějící sloupce `group_id`, `root_group_l1..3` a `embedding_provider`. Hodnoty složek se zpětně doplní pro stávající záznamy platných webových stránek. Prázdný `embedding_provider` se nastaví na aktuální hodnotu `ragEmbeddingProvider` a unikátnost chunku se rozšíří o kombinaci poskytovatele a modelu. Jelikož starší záznam neobsahoval poskytovatele, doplněná hodnota nemusí odpovídat poskytovateli, který vektor skutečně vytvořil. Po aktualizaci proto spusťte úplné indexování; obnoví se tím i záznamy, které nebylo možné zpětně přiřadit ke stránce.
 
@@ -330,7 +408,7 @@ Výchozí model `text-embedding-3-small` je vícejazyčný a češtinu/češtinu
 | OpenAI `text-embedding-3-large` zkrácený | `text-embedding-3-large` | `1024` nebo `1536` | Vysoká | Díky MRL lze vektor zkrátit bez výrazné ztráty kvality. |
 | Lokální `intfloat/multilingual-e5-base` | `intfloat/multilingual-e5-base` | `768` | Dobrá | Běží lokálně bez odesílání obsahu externí službě; vyžaduje schválený modelový balíček. |
 
-!>**Upozornění:** Všechny vektory v tabulce `rag_embedding_chunks` musí mít dimenzi odpovídající definici sloupce `embedding`. Různí poskytovatelé a modely mohou existovat současně, ale musí generovat nakonfigurovaný počet dimenzí. Změna dimenze odstraní všechny stávající vektory a vyžaduje úplnou indexaci obsahu.
+!>**Upozornění:** Všechny vektory ve zvoleném vektorovém úložišti musí používat nakonfigurovanou dimenzi. Různí poskytovatelé a modely mohou existovat současně, ale musí generovat stejný počet dimenzí. Změna dimenze odstraní všechny stávající vektory a vyžaduje úplné indexování obsahu.
 
 ### Co je Matryoshka (MRL)
 

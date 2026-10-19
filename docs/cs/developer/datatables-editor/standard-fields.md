@@ -61,6 +61,10 @@ Textové pole ```type="number"```, prohlížeč typicky zobrazí v poli i šipky
 
 Rozdíl mezi ```NUMBER``` a ```TEXT_NUMBER``` je v zobrazení v datatabulce. ```TEXT_NUMBER``` zobrazí zaokrouhlené číslo, při vyšším čísle vypíše v textové podobě. ```10 tis.``` místo ```10000```. V editoru je chování stejné (zobrazí se přesná hodnota).
 
+Při editaci existujícího záznamu lze vymazat hodnotu objektového pole typu `NUMBER`, například `Integer`, `Long` nebo `Double`. Prázdná hodnota se přenese do entity jako `null` ; primitivní typy `int`, `long` a `double` hodnotu `null` nepodporují. Automatické vynulování se nevztahuje na `TEXT_NUMBER` ; v případě potřeby jej povolte atributem `alwaysCopyProperties = { true }`.
+
+Při importu se původní číselná hodnota zachová, pokud sloupec `NUMBER` není v Excel souboru. Pokud je sloupec importován s hodnotou `NULL`, hodnota entity se vynuluje.
+
 ## PASSWORD
 
 Textové pole ```type="password"``` pro zadání hesla.
@@ -110,8 +114,11 @@ Více řádkové textové pole. Dlouhý text se nezalamuje, pokud chcete zalomit
 
 Výběr data, po kliknutí do pole zobrazí okno pro výběr data.
 
+Pokud je datum povinné, označte pole anotací `@NotNull`. Frontend odešle prázdnou hodnotu jako prázdný řetězec, který server při deserializaci převede na `null`. Editor zobrazí chybové hlášení **Povinné pole. Zadejte datum.** Kalendářový výběr se po neúspěšné validaci automaticky neotevře.
+
 ```java
     @Column(name = "date_from")
+	@NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="calendar.begin",
@@ -124,8 +131,11 @@ Výběr data, po kliknutí do pole zobrazí okno pro výběr data.
 
 Podobné pole jako ```DATE``` ale navíc umožňuje i výběr času.
 
+Pro povinnou hodnotu použijte anotaci `@NotNull`. Editor při prázdné hodnotě zobrazí chybové hlášení **Povinné pole. Zadejte datum a čas.**
+
 ```java
     @Column(name = "date_to")
+	@NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.banner.dateTo",
@@ -465,7 +475,11 @@ Zobrazí textové pole, jehož hodnotu nelze měnit. V příkladu si všimněte,
 
 Zobrazí jednoduchý HTML editor, který umožňuje základní formátování textu jako tučné písmo/kurzíva/podtrženo, nadpisy, seznamy a odkaz.
 
-Při otevření nebo potvrzení režimu úpravy HTML kódu editor odstraní nadbytečné prázdné odstavce, například `<p><br></p>`. Pokud by odstraněním zůstal obsah zcela prázdný, původní HTML kód zachová.
+Při validační chybě se červeným okrajem zvýrazní nástrojová lišta i editační plocha, aby byl vadný obsah vizuálně označen stejně jako u ostatních typů polí.
+
+Při úpravě HTML kódu editor zachovává vnořené obalové elementy `div` a prázdné odstavce mezi obsahem, například `<p><br></p>`. Jednoduché `div` bez atributů a vnořených bloků převede na odstavce `p` ; odsazení zdrojového kódu mezi bloky nevytváří další prázdné řádky.
+
+Při získání hodnoty pro uložení se odstraní prázdné odstavce na konci obsahu, i když jsou vnořeny do koncových obalových elementů `div`. Prázdné odstavce mezi neprázdnými bloky zůstávají zachovány.
 
 Všimněte si použití konvertoru ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)```, který povolí odeslat pouze [bezpečný HTML kód](../backend/security.md) (bez vložených JavaScript elementů a podobně).
 
@@ -806,7 +820,7 @@ Frontend implementace je v souborech:
 - [field-type-options.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options.js) — Definice typu pole se dvěma vstupy (jméno a hodnota)
 - [field-type-options-base.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options-base.js) — společná logika pro OPTIONS i OPTIONS_SIMPLE (drag & drop, přidává
 
-Na straně backendu se typ `DataTableColumnType.OPTIONS` automaticky nastaví jako `editor.type = "options"` s formátem renderování `dt-format-text`.
+Na straně backendu se typ `DataTableColumnType.OPTIONS` automaticky nastaví jako `editor.type = "options"` s formátem `dt-format-text`.
 
 ![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
 

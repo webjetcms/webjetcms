@@ -8,11 +8,6 @@ function $setAttr(el, key, value) {
   return el.setAttribute(key, value);
 }
 
-function removeRedundantEmptyParagraphs(html) {
-  const htmlWithoutEmptyParagraphs = html.replace(/<p>\s*(?:<br\s*\/?>)?\s*<\/p>/gi, "");
-  return htmlWithoutEmptyParagraphs.trim() === "" ? html : htmlWithoutEmptyParagraphs;
-}
-
 let debug = false;
 const Logger = {
   prefixString() {
@@ -54,14 +49,42 @@ class htmlEditButton {
   }
 
   registerDivModule() {
-    // To allow divs to be inserted into html editor
-    // obtained from issue: https://github.com/quilljs/quill/issues/2040
-    var Block = Quill.import('blots/block');
-    class Div extends Block {}
-    Div.tagName = "div";
+    const Block = Quill.import('blots/block');
+    const Container = Quill.import('blots/container');
+    const Scroll = Quill.import('blots/scroll');
+    const { Scope } = Quill.import('parchment');
+
+    class Div extends Container {
+      constructor(scroll, domNode) {
+        // Containers hold lines, so wrap direct inline content before building the blots.
+        let paragraph = null;
+        Array.from(domNode.childNodes).forEach(node => {
+          if (node.nodeType === Node.COMMENT_NODE) {
+            node.remove();
+          } else if (scroll.query(node, Scope.BLOCK_BLOT)) {
+            paragraph = null;
+          } else if (paragraph === null && node.nodeType === Node.TEXT_NODE && /^[\t\r\n ]*$/.test(node.textContent)) {
+            node.remove();
+          } else {
+            if (paragraph === null) {
+              paragraph = domNode.ownerDocument.createElement('p');
+              domNode.insertBefore(paragraph, node);
+            }
+            paragraph.appendChild(node);
+          }
+        });
+        super(scroll, domNode);
+      }
+
+      checkMerge() {
+        // Adjacent HTML wrappers may have different layout classes.
+        return false;
+      }
+    }
+    Div.tagName = "DIV";
     Div.blotName = "div";
-    Div.allowedChildren = Block.allowedChildren;
-    Div.allowedChildren.push(Block)
+    Div.defaultChild = Block;
+    Div.allowedChildren = [...Scroll.allowedChildren];
     Quill.register(Div);
   }
 }
@@ -70,7 +93,6 @@ function launchPopupEditor(quill, options) {
   let htmlFromEditor = quill.container.querySelector(".ql-editor").innerHTML;
 
   htmlFromEditor = window.quillToHtmlFormat(htmlFromEditor);
-  htmlFromEditor = removeRedundantEmptyParagraphs(htmlFromEditor);
 
   const popupContainer = $create("div");
   const overlayContainer = $create("div");
@@ -116,8 +138,7 @@ function launchPopupEditor(quill, options) {
   };
   buttonOk.onclick = function() {
     const output = textArea.value.split(/\r?\n/g).map(el => el.trim());
-    const noNewlines = output.join("");
-    const htmlCode = removeRedundantEmptyParagraphs(noNewlines);
+    const htmlCode = output.join("");
     quill.container.querySelector(".ql-editor").innerHTML =  window.quillFromHtmlFormat(htmlCode);
     document.body.removeChild(overlayContainer);
   };

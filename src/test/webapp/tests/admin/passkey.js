@@ -10,8 +10,8 @@ Before(({ I, login }) => {
 Scenario('passkey-zakladne testy', async ({ I, i18n }) => {
 
     I.clickCss("#dropdownMenuUser");
-    I.waitForVisible( locate("a.dropdown-item").withText(i18n.get("PassKey")), 10);
-    I.click( locate("a.dropdown-item").withText(i18n.get("PassKey")));
+    I.waitForVisible( locate("button.dropdown-item").withText(i18n.get("PassKey")), 10);
+    I.click( locate("button.dropdown-item").withText(i18n.get("PassKey")));
     I.waitForElement("#modalIframe", 10);
 
     var baseSelector = "#modalIframe div.modal-body-content div.dt-scroll div.dt-scroll-body table.datatableInit";
@@ -51,8 +51,8 @@ Scenario('passkey-zakladne testy', async ({ I, i18n }) => {
     //test passkeys for different users - check that user can see only their passkeys
     I.relogin("tester2");
     I.clickCss("#dropdownMenuUser");
-    I.waitForVisible( locate("a.dropdown-item").withText(i18n.get("PassKey")), 10);
-    I.click( locate("a.dropdown-item").withText(i18n.get("PassKey")));
+    I.waitForVisible( locate("button.dropdown-item").withText(i18n.get("PassKey")), 10);
+    I.click( locate("button.dropdown-item").withText(i18n.get("PassKey")));
     I.waitForElement("#modalIframe", 10);
 
     I.waitForElement(baseSelector, 10);

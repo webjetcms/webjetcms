@@ -4430,6 +4430,35 @@ VALUES
 UNLOCK TABLES;
 
 
+# Dump of table user_login_devices
+# ------------------------------------------------------------
+
+DROP TABLE IF EXISTS `user_login_devices`;
+
+CREATE TABLE `user_login_devices` (
+  `device_id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `token_hash` char(64) NOT NULL,
+  `create_date` datetime(3) NOT NULL,
+  `last_seen` datetime(3) NOT NULL,
+  `browser_name` varchar(128) DEFAULT NULL,
+  `browser_version` varchar(64) DEFAULT NULL,
+  `operating_system` varchar(128) DEFAULT NULL,
+  `ip_address` varchar(64) DEFAULT NULL,
+  `location` varchar(160) DEFAULT NULL,
+  `confirmed_at` datetime(3) DEFAULT NULL,
+  `reported_at` datetime(3) DEFAULT NULL,
+  `confirmation_hash` char(64) DEFAULT NULL,
+  `confirmation_expires` datetime(3) DEFAULT NULL,
+  `code_hash` char(64) DEFAULT NULL,
+  `code_expires` datetime(3) DEFAULT NULL,
+  `code_attempts` int NOT NULL DEFAULT 0,
+  PRIMARY KEY (`device_id`),
+  UNIQUE KEY `uq_login_devices_user_token` (`user_id`, `token_hash`),
+  KEY `ix_login_devices_seen` (`last_seen`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
 # Dump of table user_perm_groups
 # ------------------------------------------------------------
 
@@ -4715,6 +4744,8 @@ ALTER TABLE `documents_history` ADD COLUMN `follow_links` TINYINT NOT NULL DEFAU
 UPDATE `documents` SET `follow_links` = 0 WHERE `follow_links` IS NULL;
 UPDATE `documents_history` SET `follow_links` = 0 WHERE `follow_links` IS NULL;
 ALTER TABLE templates_group ADD COLUMN seo_image VARCHAR(255) NULL;
+ALTER TABLE documents_history ADD COLUMN is_delete TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE templates ADD COLUMN url_remove_spojky_mode TINYINT NOT NULL DEFAULT 0;
 
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

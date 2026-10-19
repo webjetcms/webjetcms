@@ -8,13 +8,13 @@ Before(({ I, DT, login }) => {
     DT.addContext("formItems", "#formItemsDataTable_wrapper");
 });
 
-Scenario('Base screenshots', ({ I, DT, DTE, Document }) => {
-    I.resizeWindow(1280, 530);
+Scenario('Base screenshots', ({ I, DT, DTE, Document, i18n }) => {
+    I.resizeWindow(1360, 530);
 
     I.amOnPage("/apps/form/admin/");
     Document.screenshot("/redactor/apps/multistep-form/forms-list.png");
 
-    I.resizeWindow(1280, 760);
+    I.resizeWindow(1360, 760);
     I.click(DT.btn.forms_add_button);
     DTE.waitForEditor("formsDataTable");
     DTE.fillField("formSettings-recipients", "");
@@ -37,7 +37,7 @@ Scenario('Base screenshots', ({ I, DT, DTE, Document }) => {
     Document.screenshot("/redactor/apps/multistep-form/form-step-editor.png");
     DTE.cancel();
 
-    I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 2") );
+    I.click( locate("table#formStepsDataTable > tbody > tr > td").withText(i18n.get("Step 2")));
 
     I.waitForElement( locate("table#formItemsDataTable > tbody > tr > td").withText("Ako si sa dozvedel o kurze?"), 10 );
     I.click( locate("table#formItemsDataTable > tbody > tr > td").withText("Ako si sa dozvedel o kurze?") );
@@ -66,7 +66,7 @@ Scenario('Base screenshots', ({ I, DT, DTE, Document }) => {
     I.amOnPage("/apps/form/admin/form-steps/?formName=Multistepform_emailVerification");
     I.waitForVisible("div.stepPreviewWrapper");
     Document.screenshot("/redactor/apps/form/form-step-email-verification-1.png");
-    I.click( locate("table#formStepsDataTable > tbody > tr > td").withText("Krok 2") );
+    I.click( locate("table#formStepsDataTable > tbody > tr > td").withText(i18n.get("Step 2")) );
     Document.screenshot("/redactor/apps/form/form-step-email-verification-2.png");
 });
 

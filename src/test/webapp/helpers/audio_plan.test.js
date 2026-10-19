@@ -39,12 +39,21 @@ test("rejects a single oversized shot without splitting or truncating its text",
 
 test("uses model-specific limits and a conservative fallback for unlisted models", () => {
   const plan = { shots: [shot("first", "a".repeat(3000)), shot("second", "b".repeat(3000))] };
-  for (const [modelId, limit] of [["eleven_multilingual_v2", 10000], ["eleven_flash_v2_5", 40000], ["eleven_flash_v2", 30000]]) {
+  for (const [modelId, limit] of [["eleven_v4", 10000], ["eleven_multilingual_v2", 10000], ["eleven_flash_v2_5", 40000], ["eleven_flash_v2", 30000]]) {
     const result = resolveAudioPlan(plan, { ...options, modelId });
     assert.equal(result.characterLimit, limit);
     assert.equal(result.chunks.length, 1);
   }
   assert.equal(resolveAudioPlan(plan, { ...options, modelId: "custom-model" }).chunks.length, 2);
+});
+
+test("packs v4 shots at its 10000-character boundary and rejects oversized shots", () => {
+  const v4 = { ...options, modelId: "eleven_v4" };
+  const plan = { shots: [shot("first", "a".repeat(6000)), shot("second", "b".repeat(3998)), shot("third", "End.")] };
+  assert.deepEqual(resolveAudioPlan(plan, v4).chunks.map(chunk => chunk.shotIds), [["first", "second"], ["third"]]);
+  assert.equal(resolveAudioPlan("x".repeat(10000), v4).chunks.length, 1);
+  assert.throws(() => resolveAudioPlan({ shots: [shot("oversized", "x".repeat(10001))] }, v4),
+    /Shot oversized has 10001 characters.*10000-character limit.*eleven_v4/);
 });
 
 test("keeps short legacy narration in one part and requires shots for oversized legacy text", () => {

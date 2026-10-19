@@ -77,7 +77,7 @@ Následky přemístění složky:
 V případě potřeby můžete ve stromové struktuře klepnutím na ikonu<i class="ti ti-adjustments-horizontal"></i> Nastavení zobrazit dialogové okno nastavení:
 
 - **Jméno složky na disku** - zobrazí jméno složky na disku, které může být odlišné od Názvu galerie zadané v nastavení galerie.
-- **Poměr šířky sloupců strom:tabulka** - Nastaví poměr šířky sloupců zobrazené stromové struktury a datatabulky pro lepší využití šířky monitoru. Standardní poměr je 4:8. Upozornění: u některých poměrů a nevhodné velikosti monitoru může dojít k nesprávnému zobrazení nástrojové lišty/tlačítek.
+- **Šířka stromu** - Vyberte poměr šířky stromu a tabulky (standardně 4:8) nebo pevnou šířku stromu 120px, 150px, 200px, 250px, 300px, 400px nebo 500px. Při pevné šířce se strom při zvětšení okna nerozšiřuje a tabulka využije zbývající prostor. Upozornění: u některých šířek a nevhodné velikosti monitoru může dojít k nesprávnému zobrazení nástrojové lišty/tlačítek.
 - **Seřadit strom podle** - Výběr parametru adresáře, podle kterého se má strom složek uspořádat. Výběrové pole podporuje následující parametry
   - **Název**
   - **Datum vytvoření**

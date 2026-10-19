@@ -335,7 +335,7 @@ Scenario('Post publish, validation', async ({ I, DT, Document }) => {
         I.clickCss("button.buttons-select-all");
         I.clickCss("button.buttons-remove");
         I.click("Zmazať", "div.DTE_Action_Remove");
-        DT.waiForLoader();
+        DT.waitForLoader();
         I.see("Nenašli sa žiadne vyhovujúce záznamy");
     }
 });

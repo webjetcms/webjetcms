@@ -6,11 +6,29 @@ For more accurate results, the content is divided into smaller parts - **chunks*
 
 You can find vector management in the **Settings → Semantic Index** section.
 
-Currently, **website** indexing is supported. Additional types may be added in the future.
+The index is divided into **Websites** and **Markdown Documents** tabs.
 
 !>**Warning:** Indexing **does not happen immediately**. Each request (add, modify, delete) is placed in a **queue** and processed at regular intervals using a cron job.
 
 To view the list of indexed objects, you must have the Semantic Index right.
+
+## Indexing Markdown documentation
+
+The Markdown documentation and its index are common to all domains. Roots are set globally by the administrator in `ragMarkdownFolders`. Indexing uses the `RAG-EMB-INDEX` helper of the domain that queued the request; consumption is also recorded for that domain. Search uses the helper of the current domain. The provider and search model must match the index.
+
+On the **Markdown Documents** tab, select the configured root or its subfolder in the tree. The **Show also from subfolders** switch sets the scope of both the table and the action dialogs; when disabled, only files directly in the selected folder will be used. The table contains the **Document Path** and **Document Name** data, which are read-only. The selection and switch setting are retained when switching tabs.
+
+The administrator can also use server folders, for example `file:/srv/manuals`. The alias `file:/docs` requires a global mapping in `symlinkTranslate`, for example `/docs/|/srv/documentation/webjetcms/`. Local indexing alone will not make files accessible over the web.
+
+**Documentation must use language folders**, such as `sk`, `en` or `cs`. The language is determined from the closest recognized folder in the entire path including the root: files under `file:/docs/sk/admin/users` will be given language `sk`. The recognized languages ​​are based on the global variable `languages` ; `sk`, `en` and `cs` are always supported. Files without a language folder are skipped during indexing.
+
+The **Add Indexing** and **Remove Indexing** buttons open a dialog where you can change the folder and the inclusion of subfolders. The dialog displays the total number of documents, the number of indexed documents, and the number in the queue for the selected action. Indexing counts files with a recognized language and an index for the current provider, model, and derived language. Deleting includes all indexes in the selected range, including records for files that no longer exist.
+
+Once confirmed, the requests are queued. They are processed by `sk.iway.iwcm.rag.service.RagIndexCronTask` ; errors remain in the queue for another attempt. The deletion also cancels any pending indexing of the same resource from another domain. Requests for other folders are preserved. If no roots are set, information about the required configuration is displayed and the action buttons are disabled.
+
+When migrating from an older version, follow the [technical documentation](../../../custom-apps/apps/rag/markdown-search.md#index-management-in-administration), especially for relative paths and legacy domain indexes. Shared indexes with `domainId = 0` remain valid; the domain in the queue determines the consumption owner.
+
+!>Removing the index does not delete the Markdown files or disable their automatic indexing. The `MarkdownIndexCronTask` task will re-create the index the next time it crawls.
 
 ## Website indexing
 
@@ -48,16 +66,12 @@ The queue item does not contain a provider or model; these values ​​are read
 
 The chunk size is set by configuration variables:
 
-- `ragEmbeddingChunkSize` - ​​maximum size of one part of the text in characters, default `1000`.
-- `ragEmbeddingChunkOverlap` - ​​number of characters of overlap between adjacent parts, default `200`.
+- `ragEmbeddingChunkSize` - ​​approximate target chunk size in characters, defaults to `1000`. The maximum size is 50% higher, defaults to `1500` characters. A value less than or equal to zero disables text splitting.
+- `ragEmbeddingChunkOverlap` - ​​approximate overlap between adjacent chunks in characters, defaults to `200`.
 
-When splitting text, the system tries to preserve the natural context. The end of the chunk is selected in the following order:
+Chunks start and end at the recognized sentence or paragraph boundary closest to the target size, if possible. A sentence that wraps across multiple lines will stay together as long as it fits within the maximum size. Longer sentences or paragraphs will be split across words. If a word itself exceeds the maximum, it will be split in the middle.
 
-1. end of paragraph,
-2. end of line,
-3. end of sentence or similar punctuation,
-4. space between words,
-5. hard division by maximum size.
+The overlay is scaled to fit entire sentences or paragraphs where possible, so its actual size varies and can be zero if necessary to continue the text or meet the maximum size. Each additional chunk adds new content. The new boundaries are applied to existing documents upon reindexing.
 
 Overlay is used to preserve context between adjacent chunks. In a RAG response, adjacent chunks of a single page can be re-merged, removing duplicate text created by the overlay.
 

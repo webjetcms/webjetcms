@@ -2,8 +2,8 @@
     position: fixed;
     z-index: $library-index;
     top: 16px;
-    left: -380px;
-    width: 360px;
+    left: calc(-1 * (var(--#{$prefix}-image-width, 310px) + 70px));
+    width: calc(var(--#{$prefix}-image-width, 310px) + 50px);
     max-width: calc(100vw - 32px);
     height: calc(100% - 32px);
     max-height: calc(100vh - 32px);

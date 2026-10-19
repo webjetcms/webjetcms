@@ -1,0 +1,131 @@
+# Konfigurácia úvodnej obrazovky a označenia prostredia
+
+Pozadie uvítacieho panelu a označenie prostredia nastavíte cez **Nastavenia → Konfigurácia**. Po zmene obnovte stránku. Označenie sa zobrazuje pred názvom stránky v spoločnej hlavičke administrácie v9 a na prihlasovacej stránke. Na mobile je za tlačidlom menu. Postup úpravy hodnôt opisuje [Konfigurácia](README.md).
+
+## Konfiguračné premenné
+
+| Premenná | Predvolená hodnota | Význam |
+| --- | --- | --- |
+| `dashboardHeroBackgroundImage` | `linear-gradient(111.7deg, #031D46 0%, #073780 76.92%)` | Pozadie uvítacieho panela: CSS gradient alebo cesta k obrázku. Prázdna alebo neplatná hodnota použije predvolený modrý prechod. |
+| `dashboardSocialRefreshHours` | `8` | Počet hodín platnosti uloženého zoznamu externých noviniek. Hodnota `0` alebo záporná hodnota vypne jeho načítavanie aj zobrazovanie uložených položiek. Rozbalenie panela pri zapnutej funkcii vždy overí aktuálny zoznam. |
+| `overviewJsonUrl` | `https://docs.webjetcms.sk/json/` | Základná URL súborov `wjnews.sk.json`, `wjnews.cs.json` a `wjnews.en.json`. Možno nastaviť vlastný HTTP(S) server alebo lokálnu cestu k priečinku s týmito súbormi. |
+| `dashboardEnvironmentName` | `{ENVIRONMENT_NAME}` | Text označenia. Podporuje makrá aj vlastný text. Zobrazuje najviac 8 znakov veľkými písmenami; celý názov zostane v tooltipe. Prázdna hodnota označenie skryje aj z titulku karty. |
+| `dashboardEnvironmentIcon` | `auto` | Ikona podľa prostredia alebo názov ikony Tabler, napr. `rocket` alebo `ti-database`. Hodnota `none` alebo prázdna hodnota ikonu skryje. Pri neexistujúcom názve sa ikona nezobrazí. |
+| `dashboardEnvironmentColor` | `auto` | Farba z palety podľa prostredia a štýlu. Vlastná farba `#RGB` či `#RRGGBB` automaticky dostane čierny alebo biely text a ikonu s kontrastom aspoň 4,5 : 1. |
+| `dashboardEnvironmentStyle` | `auto` | `subtle` = jemný, `strong` = výrazný. Hodnota `auto` použije výrazný štýl pre PROD, jemný pre ostatné prostredia. |
+| `dashboardEnvironmentDescription` | prázdna | Doplňujúci popis za celým názvom v tooltipe. Podporuje makrá. Tooltip funguje pri ukázaní myšou aj pri fokuse klávesnicou; Escape ho skryje. |
+| `adminLoginLocationApiKey` | prázdna | Zisťovanie orientačnej polohy prihlásenia podľa IP adresy: prázdna hodnota použije bezplatné API IPWHOIS, `DISABLED` zisťovanie vypne, API kľúč použije platené API. Kľúč je viditeľný návštevníkom prihlasovacej stránky. Podrobnosti opisuje [Orientačná poloha prihlásenia](#orientačná-poloha-prihlásenia). |
+| `adminNewDeviceDetectionEnabled` | `true` | Zapne rozpoznávanie a blokovanie prehliadačov administrátora, upozornenia na prehľade a emaily o novom zariadení. Hodnota `false` vypne aj kontrolu zablokovaných zariadení. Zisťovanie polohy riadi samostatne `adminLoginLocationApiKey`. |
+| `adminNewDeviceMaxAgeDays` | `90` | Počet dní od posledného úspešného prihlásenia, počas ktorých sa prehliadač považuje za známy pre daný účet. Určuje aj platnosť cookie a lehotu čistenia nepoužívaných nezablokovaných zariadení. Neplatná alebo nekladná hodnota použije 90 dní. |
+
+Názov sa pridáva aj do titulku karty prehliadača a prístupného názvu hlavičky, napríklad `[TEST] Webové stránky | WebJET CMS`. Ikona je voliteľná, text zostáva povinný. Na produkcii môžete označenie vypnúť prázdnou hodnotou `dashboardEnvironmentName`.
+
+Pozadie zmeníte priamo hodnotou `dashboardHeroBackgroundImage`, napríklad:
+
+- `linear-gradient(135deg, #102A43 0%, #486581 100%)` – vlastné farby a smer prechodu. Podporované sú aj radiálne, kužeľové a opakované CSS gradienty.
+- `/images/company/header.jpg` – obrázok z webového sídla.
+- `https://cdn.example.com/header.jpg` – obrázok z úplnej HTTP(S) adresy.
+
+Obrázok nahradí gradient a pokryje celý panel so zachovaním pomeru strán (`cover`), zarovnaný na stred a spodný okraj. Cestu zadávajte priamo, bez obalu `url(...)`. HTTP(S) adresa nesmie obsahovať prihlasovacie údaje. Adresy začínajúce `//`, adresy so spätnými lomkami alebo riadiacimi znakmi a iné protokoly nie sú povolené. Maximálna dĺžka adresy je 1024 znakov.
+
+## Novinky zo sociálnych sietí
+
+Panel **Čo je nové** spája novinky nainštalovanej verzie s príspevkami z YouTube a Facebooku WebJET CMS. Prehliadač číta spoločný JSON zo servera nastaveného v `overviewJsonUrl`; zákaznícky server sociálne siete nekontaktuje. Generovanie údajov na docs serveri opisuje [Centrálny zoznam noviniek](../../../developer/install/social-media-feed.md).
+
+JSON musí byť verejne dostupný bez prihlásenia, aj pri vlastnej lokálnej ceste: požiadavka neposiela prihlasovacie cookies ani hlavičku `Referer`.
+
+Relatívna cesta obrázka v poli `image` sa doplní podľa priečinka s JSON. Pri `overviewJsonUrl=https://docs.webjetcms.sk/json/new/` sa napríklad `social-media/images/obrazok.jpg` načíta z `https://docs.webjetcms.sk/json/new/social-media/images/obrazok.jpg`. Pri presune zoznamu preto preneste aj podpriečinok s obrázkami. Absolútne HTTPS adresy obrázkov zo starších zoznamov zostávajú podporované.
+
+Pri otvorení úvodnej obrazovky sa použije zoznam uložený v `localStorage`. Ak chýba alebo dosiahol platnosť nastavenú v `dashboardSocialRefreshHours` (predvolene 8 hodín), obnoví sa na pozadí. Pri každom rozbalení sa zoznam overí aj pred uplynutím tejto lehoty. Cache je uložená pod kľúčom `webjet.externalNews.v1` a obsahuje aj URL načítaného zoznamu. Pri zmene URL alebo jazyka sa načíta príslušný zoznam a prepíše túto položku; česká administrácia používa súbor `wjnews.cs.json`. V zbalenej rotácii sa načíta len náhľad práve zobrazenej novinky; ostatné obrázky sa vopred nenačítavajú. Obrázky kariet sa začnú načítavať po rozbalení panela. Náhľad v rotácii nemení stav prečítania.
+
+Štítok **Nové** zostáva zobrazený, kým používateľ nerozbalí neprečítaný obsah. Rozbalenie potvrdí lokálne novinky aj práve zobrazené sociálne položky. Úspešné uloženie do nastavení účtu obsahuje dátum prečítania `readAt`; pre sociálne príspevky sa uchovávajú aj odtlačky ich ID pod kľúčom `dashboard.externalNews.<odtlačok základnej URL>`. Prepnutie jazyka ani úprava prekladu toho istého príspevku nevytvoria nové upozornenie. Nové ID ho vytvorí bez ohľadu na dátum publikovania. Dáta prijaté až po zbalení alebo v skrytej karte prehliadača sa neoznačia za prečítané; ak je panel stále rozbalený, označia sa pri návrate do karty.
+
+Pri chybe načítania sa externé karty, položky rotácie a ich upozornenie skryjú aj vtedy, keď prehliadač má uložené staršie údaje. Panel nezobrazuje hlásenie o načítavaní ani chybe; zostanú lokálne novinky verzie a odkazy na sociálne siete. Uložená cache sa chybou nevymaže.
+
+Hodnota `dashboardSocialRefreshHours=0` vypne požiadavky na JSON a obrázky, externé karty, ich rotáciu aj upozornenie na neprečítané položky. Platí to aj pre dáta, ktoré už prehliadač uložil. Novinky nainštalovanej verzie a odkazy na oba sociálne kanály zostanú dostupné. Po zmene konfigurácie obnovte stránku administrácie.
+
+## Automatické označenie prostredia
+
+Makro `{ENVIRONMENT_NAME}` určuje prostredie podľa názvu servera, cez ktorý pristupujete do administrácie. Zmena zvolenej obsahovej domény označenie nemení.
+
+Detekcia nerozlišuje veľkosť písmen. Hľadá celé časti názvu oddelené bodkou, pomlčkou alebo podčiarkovníkom, aj s číslom uzla, napríklad `uat01` alebo `web-prod-02`. Pri viacerých zhodách platí poradie **PROD → UAT → CIT → INT → TEST → DEMO → LOCAL → DEV**.
+
+| Prostredie | Rozpoznané časti názvu servera | Automatická ikona | Jemná farba / text | Výrazná farba / text |
+| --- | --- | --- | --- | --- |
+| PROD | `prod`, `prd`, `production`, `live` | `ti-alert-triangle` | `#FFD6D7` / `#790011` | `#C4001F` / `#FFFFFF` |
+| TEST | `test`, `testing`, `qa` | `ti-test-pipe` | `#FFE0CC` / `#7A2E00` | `#C24E00` / `#FFFFFF` |
+| CIT | `cit` | `ti-user-check` | `#EADFFF` / `#5200A3` | `#6E00DC` / `#FFFFFF` |
+| INT | `int`, `integration`, `sit` | `ti-plug-connected` | `#DCE4FF` / `#0037A6` | `#0049BE` / `#FFFFFF` |
+| UAT | `uat`, `aut`, `acc`, `acceptance`, `stage`, `staging`, `preprod`, `preproduction` | bez ikony | `#C8F0F4` / `#004F59` | `#00717F` / `#FFFFFF` |
+| DEMO | `demo` | `ti-eye` | `#FFF0B3` / `#5C4300` | `#F6BE3F` / `#13151B` |
+| LOCAL | `local`, `localhost`, spätná slučka IPv4 `127.*.*.*` alebo IPv6 `::1` | `ti-device-laptop` | `#E6E8EE` / `#353944` | `#353944` / `#FFFFFF` |
+| DEV | Ostatné názvy, napríklad `iwcm.interway.sk` | `ti-code` | `#CFF5E4` / `#00533D` | `#007E69` / `#FFFFFF` |
+
+Predprodukcia zahŕňa aj zápisy `pre-prod`, `pre-production` a ich varianty s bodkou či podčiarkovníkom. Tieto časti názvu sa nepovažujú za PROD. Časť slova, napríklad `int` v `interway`, sa nezhoduje s prostredím INT. TEST je samostatné prostredie; názvy `test`, `testing` a `qa` už neoznačujú UAT.
+
+Automatický vzhľad prednostne použije úvodné označenie prostredia v nakonfigurovanom texte, za ktorým nasleduje lomka, medzera, pomlčka alebo koniec textu. Pri inom vlastnom texte vychádza z detekcie servera. Ručne nastavená ikona alebo farba má prednosť. Pri neplatnej farbe sa použije automatický výber.
+
+## Názov uzla a vlastné označenie
+
+Napríklad `dashboardEnvironmentName={ENVIRONMENT_NAME}/{CLUSTER_NAME}` doplní názov aktuálneho uzla z `clusterMyNodeName`. Celý názov, napríklad `UAT/node-1`, je v tooltipe; štítok zobrazí prvých 8 znakov veľkými písmenami. Pri prázdnom názve uzla sa koncová lomka odstráni.
+
+Pre krátky štítok a dlhší popis nastavte `dashboardEnvironmentName=TEST` a `dashboardEnvironmentDescription=Testovacie prostredie, uzol {CLUSTER_NAME}`. Nastavenie prostredia používa existujúcu konfiguráciu; samostatný dialóg na úvodnej obrazovke nie je k dispozícii.
+
+## Detekcia nových zariadení
+
+Funkcia upozorní administrátora na úspešné prihlásenie z prehliadača, ktorý jeho účet nepoužil v nastavenej lehote. Pri prvom prihlásení po zapnutí funkcie dostane upozornenie aj email. Používateľský postup opisujú [Systémové upozornenia](../../../redactor/admin/welcome.md#systémové-upozornenia).
+
+Cookie `wjdevice` obsahuje náhodný identifikátor; tabuľka `user_login_devices` uchováva jeho hash a čas posledného prihlásenia pre používateľa. Záznam má automaticky generované `device_id`; prehliadač sa vyhľadáva podľa `user_id` a hashu cookie. Samostatné `domain_id` sa nepoužíva, pretože každý používateľ má vlastné `user_id`. Cookie má cestu `/`, atribúty `HttpOnly`, `SameSite=Lax` a pri HTTPS aj `Secure`. Každé dokončené prihlásenie obnoví cookie a zapamätanie účtu na ďalších `adminNewDeviceMaxAgeDays` dní. Bežné požiadavky počas otvorenej relácie ani neúspešné prihlásenie lehotu nepredlžujú. Odhlásenie cookie zachová. Neplatná alebo nekladná konfigurácia použije 90 dní; horná hranica platnosti cookie je 24 855 dní.
+
+Email sa zaradí do existujúcej fronty cez `SendMail.sendLater`. Meno a adresa odosielateľa sa určia rovnako ako pri zabudnutom hesle: najprv `passwordResetDefaultSenderName` a `passwordResetDefaultSenderEmail`, potom `defaultSenderName` a `defaultSenderEmail`, nakoniec náhradné údaje používateľa. Email obsahuje prehliadač, systém, orientačnú polohu, IP adresu, čas posledného prihlásenia, názov servera a označenie z `dashboardEnvironmentName`. Chyba odoslania sa zaznamená bez zrušenia prihlásenia alebo upozornenia na prehľade.
+
+Zariadenie uchováva aj posledné upozornenie: čas `create_date`, prehliadač, systém a stav potvrdenia alebo nahlásenia. Upozornenie zanikne po potvrdení alebo po 7 dňoch od `create_date`. Každé úspešné prihlásenie aktualizuje `last_seen`, IP adresu a orientačnú polohu. Ak nová poloha nie je dostupná, uloží sa `NULL`. Pri prihlásení po exspirácii sa upozornenie v rovnakom nezablokovanom zázname obnoví; samostatná história udalostí sa neukladá. Odkaz **Nebol som to ja** v emaile používa `device_id` a zobrazí aktuálny detail zariadenia. Odkaz **Bol som to ja** navyše obsahuje náhodný 256-bitový token s platnosťou 24 hodín; potvrdenie vykoná prihlásená administrácia cez POST s CSRF ochranou. Samotné otvorenie GET adresy stav nemení. Úloha `sk.iway.iwcm.users.devices.DeviceCleanup`, pridaná databázovou aktualizáciou, každý deň o 03:41 odstráni nezablokované zariadenia nepoužité počas `adminNewDeviceMaxAgeDays` dní spolu s ich upozorneniami. Potom už detail z emailu nie je dostupný. Hodnotu `adminNewDeviceMaxAgeDays` nastavujte rovnako pre všetky domény; čistenie pokračuje aj pri vypnutej detekcii.
+
+Evidenciu zariadení a ich upozornení spravuje `DeviceService` cez entitu `DeviceEntity` a Spring Data repozitár `DeviceRepository`. Služba vracia priamo entitu; anotácia `@JsonIgnore` skrýva interné údaje pri odoslaní na frontend. Časy sa posielajú v milisekundách a `expiresAt` sa vypočíta z `createDate`, bez ďalšieho databázového stĺpca. Táto vrstva nie je viazaná na administrátora. `AdminDeviceService` zabezpečuje zapojenie do administrátorského prihlásenia, cookie a emailové upozornenia; `AdminDeviceRestController` poskytuje akcie dostupné prihlásenému administrátorovi.
+
+Potvrdenie z upozornenia aj zo zoznamu aktívnych prihlásení vyžaduje šesťmiestny kód doručený na email účtu. Platí 10 minút a umožňuje 5 pokusov; opätovné odoslanie je obmedzené na jeden kód za minútu pre zariadenie. Databáza uchováva iba SHA-256 odtlačky kódu a tokenu, oddelené podľa účtu, zariadenia a účelu. Overovacie údaje sa neposielajú vo verejnom JSON. Potvrdenie, nahlásenie aj obnovenie upozornenia zneplatnia oba overovacie údaje. Opätovné odoslanie kódu neobnoví počet pokusov, kým predchádzajúca platnosť neuplynie. Po úspešnom dvojfaktorovom overení vo WebJET CMS sa nezablokované zariadenie potvrdí automaticky. Pri novom zariadení sa odošle informačný email s možnosťou nahlásenia.
+
+Kliknutie na **Zablokovať zariadenie** nastaví existujúce pole `reported_at`, zneplatní overovacie údaje a odhlási známe relácie daného zariadenia cez bežný mechanizmus odhlásenia. Zablokované záznamy sa pri čistení neodstraňujú. Odkaz **Nebol som to ja** v emaile otvorí detail po prihlásení; samotné otvorenie odkazu zariadenie nezablokuje.
+
+Pri ďalšom interaktívnom prihlásení zablokovaného prehliadača sa najprv overia prihlasovacie údaje a prípadné 2FA. Potom stránka `/admin/logon/device/` vyžiada šesťmiestny kód z emailu. Čakajúca identita je v samostatnom session atribúte `adminUser_waitingForDevice`, mimo `USER_KEY` a Spring Security kontextu. Výzva platí 15 minút, kód 10 minút, platí limit 5 pokusov a minútový odstup odosielania. Kód je viazaný aj na túto výzvu a cookie. Správny kód zariadenie odblokuje a potvrdí. Starý potvrdzovací odkaz ho odblokovať nemôže. Pri nedoručení kódu zostáva prístup uzavretý.
+
+Kontrola platí pre administrátorské prihlásenie formulárom, prístupovým kľúčom, OAuth2 a NTLM, vrátane prihlásenia administrátora cez používateľskú zónu. Nevzťahuje sa na API tokeny, HTTP Basic ani bežných návštevníkov. Nastavenie `adminNewDeviceDetectionEnabled=false` vypne aj kontrolu blokovania. Výnimky testovacích prehliadačov neobchádzajú existujúci blok.
+
+Špecifické prihlásenia cez `doFilterLogon=true`, `doFilterLogon=redir` alebo hlavičku `wjlogontoken` kontrolujú existujúce blokovanie ešte pred vytvorením prihlásenej session. Zablokovaný prehliadač dostane HTTP 403 bez emailovej výzvy; pri chybe načítania stavu dostane HTTP 503. Na odblokovanie sa treba v tom istom prehliadači prihlásiť cez bežný formulár `/admin/logon/` a dokončiť emailové overenie. Tieto špecifické prihlásenia nové zariadenia neevidujú ani neobnovujú ich cookie. Chýbajúca, prázdna alebo neplatná cookie preto túto kontrolu neaktivuje. Hlavička `wjlogontoken` vytvára prihlásenú session platnú aj pre ďalšie požiadavky a odlišuje sa od API autentifikácie cez `x-auth-token`.
+
+Blokovanie sa viaže na cookie `wjdevice`, nie na fyzické zariadenie. Po jej vymazaní alebo exspirácii sa prehliadač správa ako nový; blokovanie preto nenahrádza zmenu prezradeného hesla ani 2FA.
+
+### Výnimky pre automatizované testy
+
+E2E testy často začínajú s novým profilom prehliadača bez cookie `wjdevice`. Každé také prihlásenie preto vytvorí nové zariadenie. Výnimky pre testovacie prehliadače sú uložené priamo v `AdminDeviceService` v nemenných množinách `IGNORED_DEVICE_DOMAINS` a `IGNORED_DEVICE_USER_AGENTS`. Nedajú sa meniť cez konfiguráciu ani za behu aplikácie, úprava vyžaduje zmenu kódu a nové nasadenie.
+
+### Orientačná poloha prihlásenia
+
+Premenná `adminLoginLocationApiKey` určuje zisťovanie polohy pomocou [IPWHOIS](https://ipwhois.io/documentation):
+
+- Prázdna hodnota (predvolená): bezplatné API, aktuálne 1 000 požiadaviek denne; pri volaní z prehliadača sa limit zdieľa za doménu.
+- `DISABLED`: vypne externé volania aj prijímanie nových výsledkov. Okolité medzery a veľkosť písmen sa ignorujú. Historické údaje zostanú uložené.
+- API kľúč: platené API. **Kľúč je dostupný návštevníkom prihlasovacej stránky**, pretože požiadavku odosiela ich prehliadač.
+
+Požiadavka sa spustí pri zobrazení prihlasovacej stránky, s časovým limitom 3 sekundy. Prihlásenie na ňu nečaká. Dočasný výsledok v HTTP session platí 10 minút a pri dokončení prihlásenia sa uloží do relácie a zariadenia. Ak chýba, prvá stránka administrácie vykoná jeden náhradný pokus. Email použije údaj dostupný pri odoslaní alebo text **Neznáma**; po doplnení sa znova neposiela.
+
+Tabuľka `user_login_devices` uchováva v stĺpci `location` iba text mesta a krajiny, napríklad `Bratislava, SK`. Neúspešné zisťovanie ani jeho vypnutie nebráni prihláseniu. Poloha je údaj od prehliadača, ktorý možno zmeniť; nepoužíva sa na autentifikáciu, potvrdenie či blokovanie zariadení.
+
+Prehliadač volá API priamo, aby služba videla verejnú IP jeho pripojenia aj pri prístupe do CMS cez LAN. Mesto môže patriť firemnej centrále, proxy alebo VPN bráne. IP zobrazená pod mestom naďalej pochádza z požiadavky prijatej CMS a môže byť interná.
+
+Volanie používa HTTPS, `referrerPolicy: "no-referrer"` a `credentials: "omit"`. Neposiela prihlasovacie údaje, identifikátory používateľa či relácie ani internú IP. Poskytovateľ však vidí verejnú IP, [hlavičku `Origin`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Origin) s doménou a portom CMS a bežné hlavičky prehliadača. Jeho [zásady súkromia](https://ipwhois.io/privacy) pripúšťajú logovanie prevádzkových údajov, využitie Cloudflare a spracovanie v rôznych krajinách; neuvádzajú presnú dobu uchovávania API logov ani záruku spracovania iba v EÚ. Ak to pravidlá organizácie neumožňujú, nastavte `DISABLED`. Pri obmedzenej CSP povoľte v `connect-src` len používaný endpoint `https://ipwho.is` alebo `https://ipwhois.pro`.
+
+### Novinky vydania
+
+Text `admin.overview.changelog` zapisujte ako Markdown nadpis s verziou a zoznam bodov. Každý bod začína tučným názvom, za ktorým nasleduje pomlčka a opis. V súbore `.properties` používajte oddeľovač `\\n`; editor prekladových kľúčov môže obsahovať bežné konce riadkov.
+
+```markdown
+## WebJET CMS 2026.18
+
+- **Schvaľovanie zmien priečinkov** – Zmeny priečinkov môžu prejsť viacúrovňovým schvaľovaním.
+- **Testovanie prístupnosti** – Kontroly sú súčasťou automatizovaných testov.
+```
+
+Počet pri odkaze **Čo je nové** sa odvodí zo zoznamu. Starší text v odsekoch zostáva čitateľný. V `user_settings_admin` sa pre každého používateľa a jazyk uchováva záznam `dashboard.news.<jazyk>` s odtlačkom prečítaného textu (`fingerprint`) a dátumom prečítania (`readAt`). Ukladá sa po rozbalení viditeľného panela. Zmena textu obnoví štítok **Nové** aj v rovnakej verzii; upozornenie nevyprší po uplynutí času. Menu Pomocník číta rovnaký stav lokálnych noviniek, ale jeho otvorenie ho nemení. Uloženie ani reset rozloženia dashboardu tento záznam nemení.
+
+Starší záznam s `firstSeen` znamenal iba prvé zobrazenie a nemal informáciu o prečítaní. Po aktualizácii sa preto lokálne novinky zobrazia ako neprečítané, kým ich používateľ raz nerozbalí. Existujúce uložené ID prečítaných sociálnych príspevkov zostávajú platné.

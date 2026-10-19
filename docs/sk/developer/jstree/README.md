@@ -133,6 +133,8 @@ script.
 
 Adresa volanej REST služby sa konfiguruje pomocou HTML atribútov ```data-rest-url``` a ```data-rest-param-name``` (názov parametru poslaného do REST služby).
 
+Ak strom používa `JstreeSettings`, atribút `data-default-tree-width` na elemente `#SomStromcek` určuje predvolenú šírku pre používateľa bez uloženej vlastnej šírky. Hodnoty 1 až 11 predstavujú pomer v 12-stĺpcovej mriežke, napríklad `4` znamená 4:8. Vyššie hodnoty určujú pevnú šírku v pixeloch, napríklad `data-default-tree-width="200"` nastaví 200px. Uložená používateľova šírka má prednosť. Bez atribútu sa použije pomer 4:8.
+
 V objekte ```window.treeInitialJson``` je možné nastaviť inicializačné JSON dáta pre prvotné zobrazenie stromovej štruktúry. Prvé zobrazenie bude teda rýchlejšie, keďže nie je potrebné volať REST službu. Odovzdanie dát na backende je opísané v sekcii [thymeleaf](../frameworks/thymeleaf.md#vloženie-vlastných-objektov-do-modelu).
 
 ### Vytvorenie nového REST controllera

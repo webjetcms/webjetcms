@@ -32,6 +32,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
     <style>
         :root {
             --<%=Constants.getString("pageBuilderPrefix", "pb")%>-image-width: <%=Constants.getInt("pagebuilderLibraryImageWidth")%>px;
+            --<%=Constants.getString("pageBuilderPrefix", "pb")%>-structure-width: <%=Constants.getInt("pagebuilderStructureWidth", 280)%>px;
         }
         p.text-right { text-align: right; }
         p.text-center { text-align: center; }
@@ -123,6 +124,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
     function initPageBuilderEditors(pageDiv)
     {
+        pageDiv.data('plugin_ninjaPageBuilder').prepare_application_blocks(pageDiv);
         <%--var editableElements = pageDiv.find("* [class*='npb-column__content']");--%>
         //console.log("initPageBuilderEditors, pageDiv=", pageDiv);
         var editableElements = pageDiv.find("*[class*='<%=pbPrefix%>-editable'], *[class*='<%=pbPrefix%>-content']");
@@ -183,6 +185,8 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
                 onReady: function(instance) {
                     //console.log("onReady, instance=", instance, "wjeditor=", wjeditor);
                     //setStylesDef(window.editorStyles, ckEditorInstanceInitialized);
+                    // Structural styles require explicitly selecting their target in the picker.
+                    instance.config.wjstylescombo_scope = function() { return pageDiv[0]; };
                     WJ.dispatchEvent("WJ.PageBuilder.instanceReady", {ckinstance: instance});
                     //setTimeout(()=> {
                         wjeditor.setStyleComboList(window.editorStyles);
@@ -235,28 +239,7 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
             }
 
             var pageBuilderInstance = $(this).data('plugin_ninjaPageBuilder');
-            var node = $(pageBuilderInstance.getClone());
-            //console.log(node);
-
-            //console.log("Node html:", node.html());
-
-            var editableElements = node.find("*[class*='editableElement']");
-            editableElements.each(function()
-            {
-                var editorName =  $(this).attr("data-ckeditor-instance");
-                //console.log("editorName=", editorName);
-                    //console.log($(this));
-                //console.log($(this).html());
-
-                var editorData = CKEDITOR.instances[editorName].getData();
-                $(this).html(editorData);
-            });
-
-            //clear node after CkEditor, because sometimes with invalid PB HTML structure some classes are inside CkEditor editable area
-            node = pageBuilderInstance.getClearNode(node[0]);
-
-            //console.log("Before unwrap HTML:", node.html());
-            pageBuilderInstance.clearEditorAttributes(node);
+            var node = pageBuilderInstance.getSaveNode();
 
             var htmlCode = node.html();
 

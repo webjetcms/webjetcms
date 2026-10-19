@@ -2,9 +2,11 @@
 
 You can create and manage a simple e-commerce store using the E-shop application. Within the application, you define individual products and their attributes (e.g. size, color), delivery methods, or payments. The application records a list of received orders, allows you to set their status with the option of notifying customers of changes in the order via email.
 
+Optional [rounding](rounding.md) will ensure that the price in the cart is calculated from the displayed price per piece including VAT. For example, the price **€1.594** will be rounded to **€1.59** and the customer will pay **€4.77** for three pieces.
+
 ## Application settings
 
-### Settings tab:
+### Settings tab
 
 - **Directory**: Enter the path to the directory.
 - **Sort by**: Select a sorting criterion, such as "Priority".
@@ -20,22 +22,23 @@ You can create and manage a simple e-commerce store using the E-shop application
 - **Product catalog (without shopping cart)**: View the catalog without the option to purchase.
 - **Secret key for the "customer-verified" service (heureka.sk)**: Enter the secret key for the service.
 
-#### Delivery method:
+#### Delivery method
 
 - **Enter delivery method**: Fill in the available delivery methods.
   - When pressing **Add** you can fill in: **Price excluding VAT**, **Currency**, **Tax**, **Price including VAT**, **Old price including VAT**
 
 ![](editor.png)
 
-### Visual Style tab:
+### Visual Style tab
 
 - Option to choose from two display styles.
 
 ![](editor-style.png)
 
-### Order list:
+### Order list
 
 When viewing, you can filter by:
+
 - **Status**
 - **Issued / Sent**
 - **Name**
@@ -44,18 +47,18 @@ When viewing, you can filter by:
 
 ![](editor-list.png)
 
-### Item tab:
+### Item tab
 
 - **Website Name**: Enter the name of the website.
 - **Product Description**: Enter a product description.
 - **Show label**: Enable displaying the product label.
 
-#### Add variant:
+#### Add variant
 
 - **Variant Name**: Enter the name of the product variant.
 - **Variant Values**: Enter the available variant values.
 
-#### Product information:
+#### Product information
 
 - **Price excluding VAT**
 - **Currency**

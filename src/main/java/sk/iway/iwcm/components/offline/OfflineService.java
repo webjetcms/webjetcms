@@ -30,10 +30,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.http.Header;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -1119,8 +1119,6 @@ public class OfflineService {
 
 		String data = null;
 
-		HttpClient client = HttpClientBuilder.create().setSSLContext(Tools.doNotVerifyCertificates(null)).setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();
-
 		Logger.println(OfflineAction.class,basePath);
 		String name;
         String value;
@@ -1162,8 +1160,9 @@ public class OfflineService {
 		//nastav dmail header, aby sa negeneroval inline editor
 		method.setHeader("dmail", "1");
 
-		try {
-			HttpResponse response = client.execute(method);
+		try (CloseableHttpClient client = HttpClientBuilder.create().useSystemProperties()
+				.setSSLContext(Tools.doNotVerifyCertificates(null)).setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).build();
+			 CloseableHttpResponse response = client.execute(method)) {
 
 			// write out the response headers
 			Logger.println(OfflineAction.class,"*** Response ***");

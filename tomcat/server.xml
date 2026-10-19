@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<Server port="8005" shutdown="SHUTDOWN">
+<Server port="-1" shutdown="SHUTDOWN">
 
   <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
   <!-- Prevent memory leaks due to use of particular java/javax APIs-->
@@ -9,7 +9,7 @@
 
   <Service name="Catalina">
 
-    <Connector port="80" protocol="HTTP/1.1"
+    <Connector port="-1" protocol="HTTP/1.1"
                connectionTimeout="20000"
                redirectPort="8443"
                URIEncoding="UTF-8"/>

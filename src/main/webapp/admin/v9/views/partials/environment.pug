@@ -1,0 +1,4 @@
+div(data-th-with="environment=${layout.environmentBadge}" data-th-remove="tag")
+    span.md-environment(data-th-if="${environment.visible}" data-th-style="${environment.cssStyle}" data-th-data-environment-name="${environment.name}" data-th-title="${environment.description}" data-bs-toggle="tooltip" tabindex="0")
+        i.ti(data-th-if="${!environment.icon.isEmpty()}" data-th-classappend="${environment.icon}" aria-hidden="true")
+        span(data-th-text="${environment.name}") DEV

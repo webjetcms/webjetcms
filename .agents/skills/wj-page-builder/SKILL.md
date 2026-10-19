@@ -9,6 +9,8 @@ Produce HTML that editors can safely edit, style, move, and duplicate in
 PageBuilder. PB manages layout; separate CKEditor instances manage leaf content.
 A visually correct block is incomplete if editing its text can destroy its layout.
 
+Resolve template and runtime paths from the target project, and bundled references from this skill's directory. Use `wj-project-context` when available to identify the CMS version. Verify the PageBuilder and CKEditor behavior available in that installation before using current-core patterns; do not upgrade CMS to match these references.
+
 ## Establish the Target
 
 - Infer the target template, source file, and block type from the request and

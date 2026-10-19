@@ -1,11 +1,23 @@
 package sk.iway.iwcm.security;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.file.Path;
+
+import javax.imageio.ImageIO;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import sk.iway.iwcm.form.FormFileRestriction;
+import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.upload.UploadedFile;
 
@@ -15,16 +27,146 @@ import static org.mockito.Mockito.*;
 /**
  * JUnit tests for FormFileRestriction security fix.
  * Verifies that global file type restrictions are checked before
- * per-form allowed extensions.
+ * per-form allowed extensions and that filename errors are reported separately.
  */
 @Execution(ExecutionMode.SAME_THREAD)
 class FormFileRestrictionSecurityTest extends BaseWebjetTest {
 
     private FormFileRestriction restriction;
+    private Prop prop;
+
+    @TempDir
+    Path temporaryDirectory;
 
     @BeforeEach
     void setUp() {
         restriction = new FormFileRestriction();
+        prop = Prop.getInstance("en");
+    }
+
+    /** Accepts an uploaded PNG with spaces, Unicode punctuation and parentheses in its name. */
+    @Test
+    void acceptsParenthesesInUploadedImageName() throws Exception {
+        String fileName = "Draft B · 08 · System notifications (B11a–c).png";
+        ByteArrayOutputStream imageBytes = new ByteArrayOutputStream();
+        ImageIO.write(new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB), "png", imageBytes);
+        UploadedFile file = mock(UploadedFile.class);
+        when(file.getFileName()).thenReturn(fileName);
+        when(file.getFileSize()).thenReturn(imageBytes.size());
+        when(file.getInputStream()).thenReturn(new ByteArrayInputStream(imageBytes.toByteArray()));
+        restriction.setAllowedExtensions("png");
+
+        assertNull(restriction.isSentFileValid(file, prop));
+    }
+
+    /** Validates the recovered original name of an XHR upload rather than its temporary prefix. */
+    @ParameterizedTest
+    @CsvSource({"report (final), ''", "report#1, '#'"})
+    void validatesOriginalTemporaryFileName(String baseName, String forbiddenSymbol) throws Exception {
+        Path path = temporaryDirectory.resolve("final_" + baseName + "__upload__123.png");
+        ImageIO.write(new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB), "png", path.toFile());
+        restriction.setAllowedExtensions("png");
+
+        String error = restriction.isSentFileValid(new IwcmFile(path.toFile()), prop);
+
+        if (forbiddenSymbol.isEmpty()) {
+            assertNull(error);
+        } else {
+            assertEquals("File " + baseName + ".png contains a forbidden character or string in its name: #.", error);
+        }
+    }
+
+    /** Reports the forbidden part of a filename even when the form has no extension whitelist. */
+    @ParameterizedTest
+    @CsvSource({"report#1.pdf, '#'", "report@1.pdf, '@'", "report..pdf, '..'", "report.java.pdf, '.java'"})
+    void reportsForbiddenFilename(String fileName, String forbiddenSymbol) {
+        UploadedFile file = mock(UploadedFile.class);
+        when(file.getFileName()).thenReturn(fileName);
+        restriction.setAllowedExtensions("");
+
+        assertEquals("File " + fileName + " contains a forbidden character or string in its name: "
+            + forbiddenSymbol + ".", restriction.isSentFileValid(file, prop));
+    }
+
+    /** Reports globally forbidden extensions without displaying an empty or misleading allowed list. */
+    @ParameterizedTest
+    @CsvSource({"jsp, ''", "jsp, 'pdf,jsp'", "exe, ''", "exe, exe"})
+    void reportsGloballyForbiddenExtension(String extension, String allowedExtensions) {
+        String fileName = "blocked." + extension;
+        UploadedFile file = mock(UploadedFile.class);
+        when(file.getFileName()).thenReturn(fileName);
+        restriction.setAllowedExtensions(allowedExtensions);
+
+        assertEquals("File " + fileName + " has a forbidden extension: " + extension + ".",
+            restriction.isSentFileValid(file, prop));
+    }
+
+    /** Retains the form's allowed extension list when a safe file fails its specific restriction. */
+    @Test
+    void reportsFormExtensionRestriction() {
+        UploadedFile file = mock(UploadedFile.class);
+        when(file.getFileName()).thenReturn("report.txt");
+        restriction.setAllowedExtensions("pdf");
+
+        assertEquals("File report.txt has a bad extension. Allowed extensions are: pdf.",
+            restriction.isSentFileValid(file, prop));
+    }
+
+    /** Escapes filename markup and the forbidden token before inserting them into HTML errors. */
+    @ParameterizedTest
+    @CsvSource(value = {
+        "report<b>.pdf | report&lt;b&gt;.pdf | &gt;",
+        "report<b.pdf | report&lt;b.pdf | &lt;",
+        "report<img src=\"x\" onerror='alert(1)'> &.pdf | report&lt;img src=&quot;x&quot; onerror=&#39;alert(1)&#39;&gt; &amp;.pdf | &#39;"
+    }, delimiter = '|')
+    void escapesForbiddenFilenameError(String fileName, String escapedFileName, String escapedSymbol) {
+        UploadedFile file = mock(UploadedFile.class);
+        when(file.getFileName()).thenReturn(fileName);
+
+        assertEquals("File " + escapedFileName + " contains a forbidden character or string in its name: "
+            + escapedSymbol + ".", restriction.isSentFileValid(file, prop));
+    }
+
+    /** Escapes original filenames recovered from temporary uploads. */
+    @Test
+    void escapesOriginalTemporaryFileName() throws Exception {
+        Path path = temporaryDirectory.resolve("final_report<b>__upload__123.png");
+        ImageIO.write(new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB), "png", path.toFile());
+
+        assertEquals("File report&lt;b&gt;.png contains a forbidden character or string in its name: &gt;.",
+            restriction.isSentFileValid(new IwcmFile(path.toFile()), prop));
+    }
+
+    /** Escapes filenames even when the size check fails before filename validation. */
+    @Test
+    void escapesFilenameInSizeError() {
+        UploadedFile file = mock(UploadedFile.class);
+        when(file.getFileName()).thenReturn("<b>large.pdf");
+        when(file.getFileSize()).thenReturn(2048);
+        restriction.setMaxSizeInKilobytes(1);
+
+        assertTrue(restriction.isSentFileValid(file, prop).startsWith("File &lt;b&gt;large.pdf is too large."));
+    }
+
+    /** Escapes filenames when globally forbidden extensions take precedence over forbidden symbols. */
+    @Test
+    void escapesFilenameInGlobalExtensionError() {
+        UploadedFile file = mock(UploadedFile.class);
+        when(file.getFileName()).thenReturn("<b>blocked.jsp");
+
+        assertEquals("File &lt;b&gt;blocked.jsp has a forbidden extension: jsp.",
+            restriction.isSentFileValid(file, prop));
+    }
+
+    /** Escapes the configured extension list when including it in an HTML error. */
+    @Test
+    void escapesConfiguredExtensionsInError() {
+        UploadedFile file = mock(UploadedFile.class);
+        when(file.getFileName()).thenReturn("report.txt");
+        restriction.setAllowedExtensions("pdf,<b>");
+
+        assertEquals("File report.txt has a bad extension. Allowed extensions are: pdf,&lt;b&gt;.",
+            restriction.isSentFileValid(file, prop));
     }
 
     // --- Tests for global file type restriction check ---

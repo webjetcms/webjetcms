@@ -186,7 +186,7 @@ public class EditorLockingRestController {
         Cache cache = Cache.getInstance();
         String cacheKey = CACHE_PREFIX+"-"+tableUniqueId;
 
-        //Ak editorlocking cacheBean už existuje, ziskaj lit zaznamov uprav (List<EditorLockingBean>)
+        //Ak editorlocking cacheBean už existuje, ziskaj list zaznamov uprav (List<EditorLockingBean>)
         @SuppressWarnings("unchecked")
         List<EditorLockingBean> editorLockingBeanList = (List<EditorLockingBean>) cache.getObject(cacheKey);
         if (editorLockingBeanList == null) {

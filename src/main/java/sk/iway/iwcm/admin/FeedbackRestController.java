@@ -10,12 +10,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
-import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.SpamProtection;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.admin.layout.SystemInfo;
 import sk.iway.iwcm.admin.upload.AdminUploadServlet;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.helpers.MailHelper;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.system.jpa.AllowSafeHtmlAttributeConverter;
 import sk.iway.iwcm.tags.support.ResponseUtils;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -43,16 +45,20 @@ public class FeedbackRestController {
         //Get params from request
         Map<String, String[]> params =  request.getParameterMap();
 
-        //Handle text
+        // Preserve basic editor formatting while retaining support for plain-text clients.
+        String message = prepareFeedbackText(request.getParameter(textKey));
         StringBuilder feedbackText = new StringBuilder();
-        feedbackText.append("<p>")
-            .append(Tools.replace(ResponseUtils.filter(params.get(textKey)[0]), "\n", "<br/>\n"))
-            .append("</p>\n<p>");
+        feedbackText.append(message).append("\n<p>");
 
-        feedbackText.append("Version: " + ResponseUtils.filter(InitServlet.getActualVersionLong()) + "<br/>");
+        feedbackText.append(ResponseUtils.filter(prepareSystemInfo(request)).replace("\n", "<br/>")).append("<br/>");
+        String type = request.getParameter("data[type]");
+        if ("idea".equals(type) || "problem".equals(type) || "praise".equals(type)) {
+            feedbackText.append("Type: ").append(type).append("<br/>");
+        }
+        feedbackText.append("User-Agent: ").append(ResponseUtils.filter(request.getHeader("User-Agent"))).append("<br/>");
 
         //Handle isAnonymous
-        if(!params.get(isAnonymousKey)[0].equals("true")) {
+        if(!"true".equals(request.getParameter(isAnonymousKey))) {
             Identity user = UsersDB.getCurrentUser(request);
 
             //Use user name and email
@@ -63,7 +69,6 @@ public class FeedbackRestController {
             feedbackText.append("Login: " + ResponseUtils.filter(user.getLogin()) + "<br/>");
             feedbackText.append("Name: " + ResponseUtils.filter(user.getFullName()) + "<br/>");
             feedbackText.append("Email: " + ResponseUtils.filter(user.getEmail()) + "<br/>");
-            feedbackText.append("User-Agent: " + ResponseUtils.filter(request.getHeader("User-Agent")) + "<br/>");
         } else {
             //Set anonymous
             mailHelper.setFromName("Anonymous");
@@ -71,7 +76,6 @@ public class FeedbackRestController {
         }
 
         //Add more info
-        feedbackText.append("Domain: ").append(ResponseUtils.filter(Tools.getServerName(request))).append("<br/>");
         feedbackText.append("IP: ").append(ResponseUtils.filter(Tools.getRemoteIP(request))).append("<br/>");
         feedbackText.append("Date: ").append(ResponseUtils.filter(Tools.formatDateTimeSeconds(Tools.getNow()))).append("<br/>");
 
@@ -108,6 +112,24 @@ public class FeedbackRestController {
         }
 
         return "OK";
+    }
+
+    /** Builds the same diagnostics copied from Help, using the page where the draft was started. */
+    static String prepareSystemInfo(HttpServletRequest request) {
+        String pageUrl = request.getParameter("data[pageUrl]");
+        return new SystemInfo(request, CloudToolsForCore.getDomainName()).getText(pageUrl == null ? "" : pageUrl);
+    }
+
+    /**
+     * Validates the message and sanitizes rich text using the shared HTML policy.
+     *
+     * @param text submitted message
+     * @param isHtml whether the client sends editor HTML instead of plain text
+     * @return safe HTML suitable for the feedback email
+     */
+    static String prepareFeedbackText(String text) {
+        String message =AllowSafeHtmlAttributeConverter.sanitize(text);
+        return message;
     }
 
     /**

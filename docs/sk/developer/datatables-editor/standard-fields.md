@@ -61,6 +61,10 @@ Textové pole ```type="number"```, prehliadač typicky zobrazí v poli aj šípk
 
 Rozdiel medzi ```NUMBER``` a ```TEXT_NUMBER``` je v zobrazení v datatabuľke. ```TEXT_NUMBER``` zobrazí zaokrúhlené číslo, pri vyššom čísle vypíše v textovej podobe, napr. ```10 tis.``` namiesto ```10000```. V editore je správanie rovnaké (zobrazí sa presná hodnota).
 
+Pri editácii existujúceho záznamu je možné vymazať hodnotu objektového poľa typu `NUMBER`, napríklad `Integer`, `Long` alebo `Double`. Prázdna hodnota sa prenesie do entity ako `null`; primitívne typy `int`, `long` a `double` hodnotu `null` nepodporujú. Automatické vynulovanie sa nevzťahuje na `TEXT_NUMBER`; v prípade potreby ho povoľte atribútom `alwaysCopyProperties = { true }`.
+
+Pri importe sa pôvodná číselná hodnota zachová, ak stĺpec `NUMBER` nie je v Excel súbore. Ak je stĺpec importovaný s hodnotou `NULL`, hodnota entity sa vynuluje.
+
 ## PASSWORD
 
 Textové pole ```type="password"``` pre zadanie hesla.
@@ -110,8 +114,11 @@ Viac riadkové textové pole. Dlhý text sa nezalamuje, ak chcete zalomiť dlhý
 
 Výber dátumu, po kliknutí do pola zobrazí okno pre výber dátumu.
 
+Ak je dátum povinný, označte pole anotáciou `@NotNull`. Frontend odošle prázdnu hodnotu ako prázdny reťazec, ktorý server pri deserializácii prevedie na `null`. Editor zobrazí chybové hlásenie **Povinné pole. Zadajte dátum.** Kalendárový výber sa po neúspešnej validácii automaticky neotvorí.
+
 ```java
     @Column(name = "date_from")
+	@NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="calendar.begin",
@@ -124,8 +131,11 @@ Výber dátumu, po kliknutí do pola zobrazí okno pre výber dátumu.
 
 Podobné pole ako ```DATE``` ale naviac umožňuje aj výber času.
 
+Pre povinnú hodnotu použite anotáciu `@NotNull`. Editor pri prázdnej hodnote zobrazí chybové hlásenie **Povinné pole. Zadajte dátum a čas.**
+
 ```java
     @Column(name = "date_to")
+	@NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.banner.dateTo",
@@ -465,7 +475,11 @@ Zobrazí textové pole, ktorého hodnotu nie je možné meniť. V príklade si v
 
 Zobrazí jednoduchý HTML editor, ktorý umožňuje základné formátovanie textu ako tučné písmo/kurzíva/podčiarknuté, nadpisy, zoznamy a odkaz.
 
-Pri otvorení alebo potvrdení režimu úpravy HTML kódu editor odstráni nadbytočné prázdne odseky, napríklad `<p><br></p>`. Ak by odstránením zostal obsah úplne prázdny, pôvodný HTML kód zachová.
+Pri validačnej chybe sa červeným okrajom zvýrazní nástrojová lišta aj editačná plocha, aby bol chybný obsah vizuálne označený rovnako ako pri ostatných typoch polí.
+
+Pri úprave HTML kódu editor zachováva vnorené obalové elementy `div` a prázdne odseky medzi obsahom, napríklad `<p><br></p>`. Jednoduché `div` bez atribútov a vnorených blokov prevedie na odseky `p`; odsadenie zdrojového kódu medzi blokmi nevytvára ďalšie prázdne riadky.
+
+Pri získaní hodnoty na uloženie sa odstránia prázdne odseky na konci obsahu, aj keď sú vnorené do koncových obalových elementov `div`. Prázdne odseky medzi neprázdnymi blokmi zostávajú zachované.
 
 Všimnite si použitie konvertora ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)```, ktorý povolí odoslať len [bezpečný HTML kód](../backend/security.md) (bez vložených JavaScript elementov a podobne).
 
@@ -806,7 +820,7 @@ Frontend implementácia je v súboroch:
 - [field-type-options.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options.js) — definícia typu poľa s dvomi vstupmi (meno a hodnota)
 - [field-type-options-base.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options-base.js) — spoločná logika pre OPTIONS aj OPTIONS_SIMPLE (drag & drop, pridávanie/odoberanie riadkov, allowEmptyOption)
 
-Na strane backendu sa typ `DataTableColumnType.OPTIONS` automaticky nastaví ako `editor.type = "options"` s formátom renderovania `dt-format-text`.
+Na strane backendu sa typ `DataTableColumnType.OPTIONS` automaticky nastaví ako `editor.type = "options"` s formátom `dt-format-text`.
 
 ![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
 

@@ -104,6 +104,7 @@ breadcrumb
 bublajúcou
 build
 Builder
+Buildera
 Builderi
 buildu
 BVSSLA
@@ -210,6 +211,7 @@ Deployment
 deploymentom
 DeppL
 depth
+deserializácii
 deserializovaných
 detegované
 detegovaného
@@ -244,15 +246,18 @@ DTE
 DTED
 DTO
 Duplicate
+duplikovateľné
 duplikovateľnú
 duplikovateľný
 duplikovateľných
 Dvojfaktorová
+dvojfaktorovom
 EclipseLink
 editácie
 editácii
 editáciou
 editáciu
+editačná
 editačné
 editačného
 editačný
@@ -261,6 +266,7 @@ elfinder
 Elfinder
 elfinderom
 embeddingov
+embeddingového
 embeddingový
 embeddingu
 embeddingy
@@ -270,6 +276,7 @@ enkódera
 entitné
 escapingu
 escapovať
+eshopu
 example
 exceli
 Excelu
@@ -308,6 +315,7 @@ fulltextom
 fulltextu
 Fun
 GDPR
+GHSA
 gigabajtov
 Gitlab
 Gitlabu
@@ -326,6 +334,7 @@ handler
 hashov
 hashovania
 hashovanie
+hashu
 Helper
 hide
 HikariCP
@@ -352,6 +361,7 @@ implementujúcej
 implementujúcu
 INCLUDE
 indexovacej
+Indexovací
 indexovacia
 Info
 inicializovanie
@@ -364,6 +374,7 @@ IntelliJ
 interaktivitu
 InterWay
 invalidovaná
+IPWHOIS
 issues
 iway
 iwcm
@@ -387,6 +398,7 @@ JSP
 jstree
 jsTreeDocumentOpener
 JTB
+KAPT
 Keycloak
 klastra
 klastrovom
@@ -399,6 +411,7 @@ komitov
 komponenách
 komponentou
 konf
+konfiguračne
 konfigurovateľnosť
 konštruktor
 konštruktora
@@ -488,6 +501,7 @@ naštýlovaný
 naštýlovať
 neaktivity
 neanotovanú
+neaplikovateľnosť
 nekonzistencii
 nekonzistentnosť
 nepoužívajúce
@@ -508,6 +522,7 @@ NTLM
 OAuth
 obalovať
 Objects
+Obsadenosť
 oddeľovací
 oddeľovač
 odfotením
@@ -569,11 +584,17 @@ podadresár
 podadresáre
 podadresárov
 podčiarkovník
+podčiarkovníkom
 podfarbujúci
 podkategóriu
 podnadpis
 podnadpise
 podnadpisu
+podpoložiek
+Podpoložka
+podpoložku
+Podpoložky
+podreťazec
 podstránkam
 podstránky
 podstránok
@@ -588,7 +609,9 @@ practices
 predpripravené
 Predpripravené
 Predpripravený
+Predprodukcia
 predvolene
+predvolí
 Predvyplnená
 predvyplnené
 Predvyplnenie
@@ -673,6 +696,7 @@ responzívne
 responzívneho
 responzívnosti
 responzívnu
+responzívny
 restové
 Reštartnite
 reštartovania
@@ -681,6 +705,8 @@ reťazcové
 reťazcového
 reťazcových
 roadmap
+Roletka
+roletky
 Rollback
 rolovateľné
 ROW
@@ -788,6 +814,7 @@ tokeny
 Tomcat
 Tools
 Tooltip
+tooltipe
 tooltipu
 transition
 Translate
@@ -847,8 +874,16 @@ webjetdatatables
 webjetjs
 webpack
 webpages
+widgete
+widgetmi
+widgetoch
+widgetov
+widgetový
+widgetu
+Widgety
 Within
 WJ
+worktree
 WSL
 WYSIWYG
 XLS
@@ -873,6 +908,8 @@ zaheslovať
 zaheslujete
 zahlcuje
 zahltení
+zaindexovaný
+zaindexovať
 zakomentovaním
 zakomentovať
 zalomeným
@@ -884,12 +921,14 @@ zip
 Zmigrovaný
 zmigrovať
 zneplatní
+zneplatnia
 zobraziteľná
 zobraziteľný
 zobraziteľných
 zozipovať
 zrkadlené
 zrkadlenej
+zrkadlenú
 zrkadlený
 zrkadlených
 zrkadlenými

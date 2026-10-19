@@ -70,6 +70,7 @@ public class EditorToolsForCore {
                 doc.setNavbar(DB.prepareString(my_form.getNavbar(), 128));
                 doc.setVirtualPath(my_form.getVirtualPath());
                 doc.setGroupId(my_form.getGroupId());
+                doc.setTempId(my_form.getTempId());
                 String virtualPath = DocDB.getURL(doc, groupDiskPath);
                 String koncovka = virtualPath.endsWith("/") ? "/" : ".html";
                 String editorPageExtension = Constants.getString("editorPageExtension");

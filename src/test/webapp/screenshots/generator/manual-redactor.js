@@ -525,6 +525,21 @@ Scenario('layout-menu', async ({ I, DT, Document, i18n }) => {
     Document.screenshot("/redactor/admin/editor-phone.png");
 
     I.wjSetDefaultWindowSize();
+
+    I.amOnPage('/apps/stat/admin/');
+    I.resizeWindow(1360, 850);
+    I.waitForElement('#dropdownMenuUser[data-user-initialized="true"]', 15);
+    Document.screenshotElement('.ly-header', '/redactor/admin/header.png');
+
+    I.clickCss('#dropdownMenuUser');
+    I.waitForVisible('#admin-user-menu.show', 5);
+    I.waitForElement('#admin-user-menu[aria-busy="false"] .md-user-menu__two-factor-badge[data-enabled]', 10);
+    I.moveCursorTo('.md-user-menu__avatar');
+    Document.screenshotElement('#admin-user-menu', '/redactor/admin/user-menu.png');
+
+    I.pressKey('Escape');
+    I.waitForInvisible('#admin-user-menu', 5);
+    I.wjSetDefaultWindowSize();
 });
 
 Scenario('editor-virtualPath', ({ I, DTE, Document }) => {
@@ -578,6 +593,11 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
     }, column);
     I.moveCursorTo('.pb-workbench-path');
     Document.screenshot('/redactor/webpages/pagebuilder.png');
+
+    //show menu
+    I.click('.pb-workbench [data-pb-action=more]');
+    Document.screenshot('/redactor/webpages/pagebuilder-more-actions.png');
+    I.click('.pb-workbench [data-pb-action=more]');
 
     // Show the difference between the selected column and a hover guide.
     I.click('.pb-workbench [data-pb-action=guides]');
@@ -678,79 +698,6 @@ Scenario('pagebuilder', async ({ I, DTE, Document }) => {
     I.switchTo();
     DTE.cancel();
     I.executeScript(() => localStorage.removeItem('webjet.pagebuilder.guides'));
-});
-
-Scenario('welcome', ({ I, Document }) => {
-    I.amOnPage("/admin/v9/");
-
-    Document.screenshotElement("div.overview-logged.feedback", "/redactor/admin/feedback.png", 1360, 900);
-    I.clickCss(".ti.ti-writing");
-    I.waitForElement("#feedback_modal");
-    Document.screenshot("/redactor/admin/feedback-modal.png");
-
-    I.amOnPage("/admin/v9/");
-    I.executeScript(function() {
-        $('div.overview-logged.bookmark').css("padding-top", "40px");
-    });
-    I.moveCursorTo("div.overview-logged.bookmark .overview-logged__head__more");
-    Document.screenshotElement("div.overview-logged.bookmark", "/redactor/admin/bookmarks.png");
-
-    I.amOnPage("/admin/v9/");
-    I.click(".ti.ti-plus");
-    I.waitForElement("#bookmark_modal");
-    I.wait(2);
-    Document.screenshot("/redactor/admin/bookmarks-modal.png", 1280, 580);
-
-});
-
-Scenario ("welcome - logins", ({ I, Document }) => {
-
-    //open multiple sessions
-    session('first user', () => {
-        I.relogin("tester3");
-        I.wait(5);
-    });
-
-    session('second user', () => {
-        I.relogin("tester3");
-        I.wait(9);
-    });
-
-    session('segal user', () => {
-        I.relogin("stevensegal");
-    });
-
-    I.relogin("tester3");
-    I.amOnPage("/admin/v9/");
-    I.waitForElement("div.overview-logged__sessions");
-
-    //since change browser to firefox in session block doestn work, change text in UI to Firefox using executeScript
-    I.executeScript(function() {
-        let el = $('div.overview-logged__sessions > ul > li:nth-child(3) .active-session-entry');
-        let value = el.text();
-        //value is like 11:06:25 (Chrome 142, 127.0.0.1) replace chrome with version to Firefox 144
-        value = value.replace(/(Chrome )\d+/, 'Firefox 144');
-        el.text(value);
-    });
-
-    I.resizeWindow(1920, 1080);
-    Document.screenshotElement("div.overview-logged.users", "/redactor/admin/sessions.png");
-
-    I.moveCursorTo("div.overview-logged__sessions > ul > li:nth-child(2)");
-    Document.screenshotElement(".tooltip.session-tooltip", "/redactor/admin/sessions-tooltip.png");
-
-    session('first user', () => {
-        I.logout();
-    });
-    session('second user', () => {
-        I.logout();
-    });
-    session('segal user', () => {
-        I.logout();
-    });
-
-    I.switchTo();
-    I.logout();
 });
 
 Scenario("logout", ({ I, Document }) => {

@@ -526,8 +526,7 @@ module.exports = function () {
         this.click(locate('div.dropdown-menu.show .dropdown-item').withText(type));
       }
       this.clickCss('#tree-folder-search-button');
-      this.wait(0.3);
-      this.waitForInvisible("div.dt-processing", 40);
+      this.jstreeWaitForLoader();
     },
 
     //vo vlastnostiach adresaru nastavi parent adresar na korenovy
@@ -640,9 +639,9 @@ module.exports = function () {
       this.fillField('#DTE_Field_navbar', auto_webPage);
 
       if (disabled === true) {
-        // vypni zobrazenie web stranky a vyhladanie cez vyhladavace
+        // Disable page availability and search indexing.
         this.click(locate('.custom-control.form-switch').withChild('#DTE_Field_available_0').find('.form-check-label'));
-        this.click(locate('.custom-control.form-switch').withChild('#DTE_Field_searchable_0').find('.form-check-label'));
+        this.checkOption('#DTE_Field_searchable_1');
       }
 
       // Pridanie textu do obsahu

@@ -120,7 +120,7 @@ public class GroupsDB extends DB
 		{
 			if (force_refresh)
 			{
-				GroupsDB groupsDB = new GroupsDB(servletContext, serverName);
+				GroupsDB groupsDB = new GroupsDB(servletContext, serverName, force_refresh);
 				//	remove
 				servletContext.removeAttribute(Constants.A_GROUPS_DB);
 				//save us to server space
@@ -133,7 +133,7 @@ public class GroupsDB extends DB
 				GroupsDB groupsDB = (GroupsDB) servletContext.getAttribute(Constants.A_GROUPS_DB);
 				if (groupsDB == null)
 				{
-					groupsDB = new GroupsDB(servletContext, serverName);
+					groupsDB = new GroupsDB(servletContext, serverName, force_refresh);
 					//	remove
 					servletContext.removeAttribute(Constants.A_GROUPS_DB);
 					//save us to server space
@@ -151,7 +151,7 @@ public class GroupsDB extends DB
 	 *@param  servletContext  Description of the Parameter
 	 *@param  serverName      Description of the Parameter
 	 */
-	private GroupsDB(jakarta.servlet.ServletContext servletContext, String serverName)
+	private GroupsDB(jakarta.servlet.ServletContext servletContext, String serverName, boolean force_refresh)
 	{
 		Logger.println(this,"GroupsDB: constructor [" + Constants.getInstallName()+"]");
 		this.serverName = serverName;
@@ -165,7 +165,7 @@ public class GroupsDB extends DB
 			sk.iway.iwcm.Logger.error(ex);
 		}
 
-		ClusterDB.addRefresh(GroupsDB.class);
+		if (force_refresh) ClusterDB.addRefresh(GroupsDB.class);
 		Cache.getInstance().removeObjectStartsWithName("GroupsDB.");
 	}
 

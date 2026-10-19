@@ -43,16 +43,33 @@ Nástroje vybraného bloku sú v pevnej lište pod CKEditorom. Klikateľná cest
 - Ďalšie akcie (`…`) - otvorí ponuku ďalších operácií s vybraným blokom.
 - Rámiky (ikona oka alebo vrstiev) - prepína rozsah zobrazených rámikov.
 
-V ponuke **Ďalšie akcie** nájdete podľa typu vybraného bloku:
+V ponuke **Ďalšie akcie** nájdete podľa typu vybraného bloku
+
+![](pagebuilder-more-actions.png)
 
 - Štýl - nastavenie obrázka pozadia, farieb, zarovnania, odsadenia a ďalších vlastností.
 - Vložiť blok pred / Vložiť blok za - otvorí knižnicu pre rovnaký typ bloku na zvolenej strane výberu.
 - Posunúť vyššie / Posunúť nižšie - posunie blok o jednu pozíciu v poradí.
 - Presunúť / Duplikovať - zobrazí dostupné cieľové miesta v stránke; kliknutím vyberiete, kam blok presunúť alebo vložiť jeho kópiu. Výber miesta môžete zrušiť klávesom **Escape**.
+- Skopírovať / Vložiť - umožní kopírovať blok medzi stránkami.
 - Pridať do obľúbených - uloží blok medzi vaše obľúbené bloky v knižnici.
 - Zmazať - zmaže označený blok.
 
 Ponuka obsahuje iba operácie podporované vybraným typom. Bežný riadok slúži na orientáciu; duplikovateľný riadok a položka podporujú presun, duplikovanie a zmazanie. Samostatný editovateľný text nemá nástroje na úpravu štruktúry. Presun duplikovateľných prvkov zostáva obmedzený na kompatibilných súrodencov toho istého rodiča.
+
+## Kopírovanie blokov medzi stránkami
+
+Sekciu, kontajner alebo stĺpec môžete preniesť na inú stránku aj s jeho obsahom a vlastnými štýlmi:
+
+1. Označte blok a v ponuke **Ďalšie akcie → Skopírovať** ho uložte do internej schránky Page Builder. Skopírujú sa aj zatiaľ neuložené úpravy textu.
+2. Otvorte cieľovú stránku v tej istej alebo inej karte prehliadača a vyberte **Ďalšie akcie → Vložiť**. Na prázdnej stránke je tlačidlo **Vložiť** priamo v hornej lište.
+3. Kliknite na ponúknuté miesto. PageBuilder zobrazí iba miesta vhodné pre typ skopírovaného bloku. Sekciu nemožno vložiť do stĺpca; aktuálny výber na cieľovej stránke typ vkladaného bloku nemení.
+
+Vložený blok sa označí a môžete ho upravovať. Jeho obsah a vlastné štýly sú nezávislé od pôvodného bloku aj ostatných vložených kópií. Výber miesta zrušíte klávesom **Escape**. Zmeny cieľovej stránky uložíte hlavným tlačidlom **Uložiť**.
+
+Schránka obsahuje jeden blok, ktorý môžete vložiť opakovane. Ďalšie kopírovanie ho nahradí. Schránka sa zdieľa medzi kartami tej istej administrácie v rovnakom profile prehliadača. Blok je dostupný 30 minút od skopírovania, aj po obnovení stránky či zatvorení prehliadača. Opakované vloženie platnosť nepredlžuje. Po vypršaní sa schránka pri najbližšom načítaní Page Builder alebo automaticky v otvorenom editore vyprázdni; nové kopírovanie spustí ďalších 30 minút. Systémová schránka sa nemení. Kým nie je skopírovaný žiadny blok, **Vložiť** je neaktívne.
+
+Samostatné duplikovateľné riadky a položky nemožno kopírovať touto funkciou; prenesú sa ako súčasť sekcie, kontajnera alebo stĺpca. Súbory CSS a JavaScript šablóny sa neprenášajú, preto výsledný vzhľad a správanie závisia aj od šablóny cieľovej stránky.
 
 ## Nastavenie štýlu
 
@@ -88,6 +105,8 @@ Knižnicu môžete otvoriť aj pre označený blok cez **Ďalšie akcie → Vlo�
 
 Knižnica sa otvára ako úzke okno nad stránkou. Hlavička uvádza napríklad **Vložiť sekciu** a pod ňou miesto vloženia. Ťahaním za hlavičku môžete okno presunúť. Zatvoríte ho krížikom vpravo hore alebo klávesom **Escape**.
 
+Pri vkladaní obsahu cez `+` v žltej čiare alebo tlačidlo **Bloky** v lište editora nájdete na karte **Základné** aj možnosti **Obrázok** a **Aplikácia**. Otvoria rovnaké dialógy ako príslušné tlačidlá v lište. Po potvrdení sa obrázok alebo aplikácia vloží na zvolené miesto; pomocný odsek nemusíte vkladať ručne.
+
 V karte **Knižnica** sú bloky zoskupené do kategórií s počtom blokov. Kliknutím kategóriu rozbalíte; otvorená zostáva vždy iba jedna. Karty zobrazujú názov a náhľad v pôvodnom pomere strán. Kliknutím na náhľad alebo názov vložíte blok do stránky.
 
 Pole **Hľadať blok…** filtruje podľa názvu a dá sa kombinovať s jedným štítkom. Pri filtrovaní sa ponechá otvorená vyhovujúca kategória alebo sa otvorí prvá s výsledkom. Počty pri kategóriách zohľadňujú filter, počty pri štítkoch označujú celkový počet blokov s daným štítkom. **Všetky** zruší len štítok a ponechá hľadaný text. Ak sa nič nenájde, tlačidlo **Vyčistiť filtre** zruší text aj štítok. Pri posúvaní výsledkov zostávajú vyhľadávanie a štítky dostupné.
@@ -104,7 +123,7 @@ Pri zapnutí režimu vkladania sa plynulo rozbalia dočasné medzery bez odsunut
 
 Zatvorením knižnice sa vrátite na vybrané plus. Režim vkladania ukončíte tlačidlom **Ukončiť · Esc** v pomocníkovi alebo klávesom **Escape**. Medzery sa plynulo zbalia, obnoví sa bežná lišta a fokus sa vráti na `+`. Kliknutie do obsahu ukončí režim a vyberie daný blok. Ak máte v systéme nastavené obmedzenie animácií, zobrazenie aj skrytie prebehne okamžite. Pomocné pásy sa neukladajú ani nezobrazujú v náhľade.
 
-## Štruktúra stránky a pokojné zobrazenie
+## Štruktúra stránky
 
 Tlačidlo **Štruktúra** otvorí strom blokov s názvami odvodenými z ich obsahu. Bloky môžete vyhľadať podľa názvu alebo typu. Kliknutie na položku označí príslušný blok, posunie stránku na jeho miesto a rozbalí zatvorenú vetvu. Opakované kliknutie na položku nechá vetvu otvorenú; šípkou vedľa názvu ju môžete rozbaliť alebo zbaliť bez zmeny výberu.
 

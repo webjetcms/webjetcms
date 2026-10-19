@@ -214,12 +214,13 @@ public class DocBasic implements DocGroupInterface, Serializable
 	private boolean available = false;
 
 	@Column(name = "searchable")
-	@DataTableColumn(inputType = DataTableColumnType.BOOLEAN, title="editor.searchable_enabled", tab="basic",
+	@DataTableColumn(inputType = DataTableColumnType.RADIO, title="editor.searchable_enabled", tab="basic",
 		visible = false,
 		editor = {
 			@DataTableColumnEditor(
 				options = {
-					@DataTableColumnEditorAttr(key = "editor.searchable_enabled_label", value = "true")
+					@DataTableColumnEditorAttr(key = "editor.searchable_enabled_label", value = "true"),
+					@DataTableColumnEditorAttr(key = "editor.searchable_disabled_label", value = "false")
 				}
 			)
 		}
@@ -2217,8 +2218,7 @@ public class DocBasic implements DocGroupInterface, Serializable
 	}
 
 	public void setPerexImage(String perexImage) {
-		if (isEmpty(perexImage)) return;
-		this.perexImage = perexImage;
+		this.perexImage = isEmpty(perexImage) ? "" : perexImage;
 	}
 
 	public void setAuthorName(String authorName) {

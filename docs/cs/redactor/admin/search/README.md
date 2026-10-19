@@ -1,18 +1,76 @@
 # Vyhledávání
 
-## Přehled
+## Rychlé vyhledávání v hlavičce
 
-Sekce **Vyhledávání** v administraci umožňuje uživatelům vyhledávat obsah ve více oblastech, jako jsou webové stránky, soubory a textové klíče. Vyhledávání poskytuje nástroje na filtrování výsledků a na zúžení rozsahu vyhledávání, což zlepšuje efektivitu práce s obsahem.
+Tlačítko **Hledat…** v hlavičce otevře vyhledávání přes aktuální stránku. Je dostupné v celé administraci. Otevřete jej také klávesami **Ctrl+K** ve Windows nebo **⌘K** na Macu; po otevření můžete hned psát. Zkratka nepřebírá příkazy při psaní v jiném textovém poli nebo editoru.
+
+![Tlačítko Hledat v hlavičce administrace](quick-search-trigger.png)
+
+Před zadáním výrazu uvidíte poslední hledání a odkazy na dostupné sekce. Historii si prohlížeč pamatuje zvlášť pro přihlášeného uživatele a doménu. Jednotlivé záznamy i celou historii můžete odstranit.
+
+Rozsah **Vše** zobrazuje nejvýše tři výsledky z každé oblasti. Klepnutím na rozsah nebo odkaz **Všechny** zobrazíte výsledky pouze z vybrané oblasti. Nabídka se řídí vašimi oprávněními:
+
+- **Web stránky** – návrhy podle názvu nebo URL stránky a hledání v obsahu. Návrh stránky otevře její editor.
+- **Soubory** – hledání v názvech a indexovaném obsahu souborů.
+- **Administrace** – odkazy na dostupné položky menu včetně jejich karet.
+- **Uživatelé** – hledání podle jména, příjmení, celého jména, emailu nebo přihlašovacího jména.
+- **Textové klíče** – hledání klíčů a jejich překladů.
+- **Dokumentace** – sémantické vyhledávání s ukázkami z dokumentace přímo v dialogu. Pokud služba vrátí i AI odpověď, zobrazí se nad výsledky a můžete ji rozbalit. Nadpisy, seznamy a další Markdown formátování zůstanou čitelné. Klepnutím na výsledek otevřete příslušnou stránku dokumentace v nové kartě.
+
+Na úvodní stránce se předvolí **Vše**. Při otevření z podporované sekce se předvolí její rozsah. Změna rozsahu platí do zavření dialogu. V poli jej přepnete také pomocí **Alt+šipka vlevo/vpravo**. **Tab** a **Shift+Tab** přesouvají fokus mezi ovládacími prvky, šipky nahoru/dolů vybírají výsledek a **Enter** jej otevře.
+
+![Výsledky hledání výrazu bannerový systém v rozsahu Vše](quick-search.png)
+
+Odkaz **Otevřít výsledky v sekci…** přenese hledaný výraz do příslušné sekce, kde můžete použít další filtry. Pokud se nic nenašlo, při zúženém rozsahu můžete zvolit **Hledat všude**. Chyba spojení zobrazí zprávu **Vyhledávání je dočasně nedostupné** a tlačítko **Zkusit znovu**.
+
+Dialog zavřete klávesou **Esc**, tlačítkem zavření nebo kliknutím mimo něj. Fokus se vrátí na tlačítko v hlavičce; hledaný výraz se do tlačítka nepřepisuje.
+
+Dokumentace se ve výchozím nastavení neprohledává automaticky. Karta zobrazuje pomlčku, která znamená **zatím nepřehledané**, ne nulový počet výsledků. V rozsahu **Vše** naleznete vysvětlení, na který server se výraz odešle, a odkaz **Načíst výsledky iz externí dokumentace**. Klepnutí na tento odkaz nebo na kartu **Dokumentace** vyhledá již zadaný výraz a zobrazí výsledky v dialogu. Tooltip karty vysvětluje odeslání výrazu na externí server. Klávesová zkratka **Ctrl+Enter** ve Windows/Linux nebo **⌘+Enter** na Macu načte výsledky dokumentace v libovolném rozsahu otevřeného dialogu. Příslušná zkratka se zobrazuje při odkazu.
+
+Po změně výrazu se výsledky dokumentace vymažou a karta znovu zobrazí pomlčku. Nové vyhledávání spustíte kliknutím na kartu nebo odkaz, případně klávesou **Enter** v rozsahu **Dokumentace**. Enter v rozsahu **Vše** ve výchozím nastavení prohledává pouze interní zdroje. Přepínání rozsahů pomocí **Alt+šipka** samo externí dotaz neodešle.
+
+![Výsledky hledání výrazu bannerový systém v dokumentaci s odpovědí AI](quick-search-documentation.png)
+
+### Nastavení vyhledávání v dokumentaci
+
+V **Nastavení → Konfigurace** nastavte proměnnou `adminDocumentationSearchUrl` na platnou celou URL vyhledávací služby včetně cesty. Výchozí hodnota je `https://docs.webjetcms.sk/rest/rag/markdown/search`. Při změně domény nebo cesty stačí upravit tuto proměnnou a obnovit administraci.
+
+Prázdná hodnota `adminDocumentationSearchUrl` vypne vyhledávání v dokumentaci a skryje jeho kartu i tlačítko ve výsledcích.
+
+Proměnná `adminDocumentationAlwaysSearch` má výchozí hodnotu `false`. Nastavení `true` zapne automatické vyhledávání v rozmezí **Vše** a **Dokumentace** po dvou sekundové pauze při alespoň 8 znacích po odstranění okrajových mezer. Enter v těchto rozmezích vyhledá i kratší neprázdný výraz. Zapněte jej pouze v nasazení, kde dokumentační služba může přijímat interní dotazy, například na schváleném vlastním serveru. Prázdná URL vypne dokumentaci i při hodnotě `true`. Po změně konfigurace obnovte administraci.
+
+Proměnná `adminDocumentationSearchUrl` zároveň určuje server pro odkazy v menu **Nápověda**, `WJ.showHelpWindow` a changelog. Z URL se pro tyto odkazy použije pouze protokol, doména a port; cesta vyhledávací služby se ignoruje. Například `https://manual.example:8443/rest/rag/markdown/search` otevře dokumentaci na `https://manual.example:8443/latest/sk/`. Dokumentace je dostupná slovensky, česky a anglicky; pro ostatní jazyky administrace se otevře anglická verze.
+
+Administrace doplní parametr `query` s hledaným výrazem a podle jazyka rozhraní odešle `language` a `directory`:
+
+| Jazyk administrace | `language` | `directory` |
+| --- | --- | --- |
+| Čeština | `cs` | `/cs/` |
+| Český | `cs` | `/cs/` |
+| Anglický | `en` | `/en/` |
+
+Endpoint vrací JSON s polem `results`. Každý výsledek obsahuje `title`, `url` a Markdown ukázku `snippet`. Volitelné AI shrnutí je v elementu `answer` v Markdown formátu. Relativní odkazy ve výsledcích se otevírají na serveru dokumentace.
+
+Na serveru dokumentace povolte službu nastavením `restAllowedIpAddresses-MarkdownSearchRestController` na `*` nebo na povolené IP adresy či jejich prefixy oddělené čárkou. Při výchozí prázdné hodnotě se použije globálně `restAllowedIpAddresses` (výchozí `127.0.0.1`). Neprázdné nastavení controlleru má přednost. Pro veřejné vyhledávání bez přihlášení na server dokumentace nastavte také `ragMarkdownSearchRequireLogin=false`.
+
+Pokud dokumentace běží na jiné doméně, její server musí povolit CORS. Nastavení patří **na server dokumentace**. Pro administraci otevřenou na `http://iwcm.interway.sk` nastavte:
+
+- `accessControlAllowOriginUrls` musí obsahovat `/rest/rag/markdown/search`. Výchozí seznam `/rest/,/private/rest/,/admin/rest/` již tuto cestu pokrývá, zachovejte ostatní potřebné cesty.
+- `accessControlAllowOriginValue` nastavte na potřebnou doménu nebo `*`. Jedná se o adresu administrace, ne dokumentace. Při jiném protokolu nebo portu použijte přesnou hodnotu z hlavičky `Origin` požadavku.
+- `accessControlAllowMethods` musí povolovat `GET`, výchozí hodnota jej obsahuje.
+- Pokud používáte omezení `accessControlAllowedOrigins`, přidejte do něj stejný origin administrace.
+
+Vyhledávání odesílá veřejný požadavek bez cookies a přihlašovacích údajů. Při veřejném dokumentačním API určeném pro libovolné instalace můžete vracet `Access-Control-Allow-Origin: *`. Pokud hlavičku nastavuje reverzní proxy server, zajistěte, aby se neposílala dvakrát. Podrobnosti konfigurace jsou v [HTTP hlavičkách](../../../sysadmin/pentests/README.md#http-hlavičky).
+
+HTTPS endpoint musí mít platný certifikát. Při chybě certifikátu nebo CORS prohlížeč odpověď neposkytne administraci a zobrazí se možnost zopakovat vyhledávání.
+
+## Pokročilé vyhledávání
+
+Sekce **Vyhledávání** poskytuje tabulky pro webové stránky, soubory a textové klíče. Otevřete ji odkazem **Otevřít výsledky v sekci…** z příslušného rozsahu rychlého vyhledávání. Zachová hledaný výraz a zvolí odpovídající kartu.
 
 ![](search.png)
 
-## Přístup do sekce:
-
-Do sekce **Vyhledávání** se dostaneme v administraci pomocí ikony lupy ![](../icon-search.png ":no-zoom") v hlavičce.
-
-Viz také [Hlavička](../README#hlavička) pro další informace.
-
-## Klíčové funkce:
+## Klíčové funkce
 
 1. **Fulltextové vyhledávání**:
    - Vyhledávání probíhá nejen v titulcích stránek, ale také v jejich textovém obsahu.
@@ -29,7 +87,7 @@ Viz také [Hlavička](../README#hlavička) pro další informace.
 
 ## Používání sekce Vyhledávání
 
-### Rozhraní Vyhledávání:
+### Rozhraní Vyhledávání
 
 Sekce je rozdělena do několika karet. Každá karta umožňuje specifické vyhledávání a filtrování:
 
@@ -54,7 +112,7 @@ Sekce je rozdělena do několika karet. Každá karta umožňuje specifické vyh
 - **Fulltextové vyhledávání:** Najděte textové klíče podle obsahu ve všech dostupných jazycích.
 - **Filtrování:** Používejte sloupce, jako `Kľúč` nebo `Jazyk`, pro přesnější vyhledávání.
 
-## Příklady použití:
+## Příklady použití
 
 - **Vyhledávání ve web stránkách:**
   - Hledáte frázi `naštartoval obchodnú stránku`.
@@ -67,4 +125,3 @@ Sekce je rozdělena do několika karet. Každá karta umožňuje specifické vyh
 - **Vyhledávání textových klíčů:**
   - Hledáte `Pridať adresár`.
   - Výsledky obsahují klíče s českým textem `Pridať adresár`. Následně můžete použít filtr `addGroup` ve sloupci `Kľúč` ke zúžení výsledků.
-

@@ -19,6 +19,15 @@
   position: relative;
 }
 
+body.is-edit-mode .pb-temp-wrapper {
+  border-block: 16px solid rgba(100, 134, 255, 0.12);
+  cursor: pointer;
+}
+
+body.is-edit-mode .pb-container .pb-temp-wrapper {
+  border-block-color: rgba(246, 77, 145, 0.12);
+}
+
 .pb-grid-element {
   position: relative;
   transition: opacity 0.3s ease-in-out;
@@ -312,10 +321,12 @@
 }
 .pb-column > .pb-empty-placeholder .pb-empty-placeholder__button {
   background-color: #8a8e93;
-  background-image: url("/admin/webpages/page-builder/images/pencil.png");
 }
 .pb-column > .pb-empty-placeholder .pb-empty-placeholder__button::after {
   border-color: #8a8e93;
+}
+.pb-column > .pb-empty-placeholder .pb-empty-placeholder__button {
+  background-image: url("/admin/webpages/page-builder/images/pencil.png");
 }
 .pb-column > .pb-empty-placeholder .pb-empty-placeholder__button:hover {
   background-color: rgb(100.08, 103.7866666667, 108.42);
@@ -378,10 +389,6 @@
   width: 32px;
   height: 32px;
   z-index: 101000;
-  border-top-left-radius: 6px;
-  border-top-right-radius: 6px;
-  transition: all 0.3s ease-in-out;
-  box-shadow: 0 -2px 25px 2px rgba(50, 50, 50, 0.25);
 }
 .pb-toolbar > span {
   display: block;
@@ -392,6 +399,12 @@
   background-position: center;
   background-size: auto 16px;
   pointer-events: none;
+}
+.pb-toolbar {
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 -2px 25px 2px rgba(50, 50, 50, 0.25);
 }
 .pb-toolbar:hover {
   cursor: pointer;
@@ -1623,8 +1636,8 @@
   position: fixed;
   z-index: 102000;
   top: 16px;
-  left: -380px;
-  width: 360px;
+  left: calc(-1 * (var(--pb-image-width, 310px) + 70px));
+  width: calc(var(--pb-image-width, 310px) + 50px);
   max-width: calc(100vw - 32px);
   height: calc(100% - 32px);
   max-height: calc(100vh - 32px);
@@ -2323,6 +2336,10 @@
   display: none;
 }
 
+.pb-temp-wrapper #pb-wjmagicline {
+  display: none !important;
+}
+
 #pb-wjmagicline {
   border-top: 0px solid #F6BE3F;
   outline-style: solid;
@@ -2889,6 +2906,14 @@ div.exit-inline-editor a[aria-pressed=true] {
   outline-offset: 2px;
   box-shadow: 0 0 0 4px white;
 }
+.pb-workbench button i.ti,
+.pb-structure button i.ti,
+.pb-insert-layer button i.ti {
+  flex: 0 0 18px;
+  pointer-events: none;
+  font-size: 18px;
+  line-height: 1;
+}
 .pb-workbench button svg,
 .pb-structure button svg,
 .pb-insert-layer button svg {
@@ -2955,7 +2980,31 @@ div.exit-inline-editor a[aria-pressed=true] {
   padding: 6px 10px;
   border-top: 0;
 }
-.pb-workbench.is-inserting > :not(.pb-insert-hint), .pb-workbench.is-resizing > :not(.pb-resize-hint), .pb-workbench.is-moving > :not(.pb-move-hint) {
+.pb-workbench.is-inserting, .pb-workbench.is-moving {
+  flex-wrap: nowrap;
+  padding: 6px 10px;
+  gap: 6px;
+}
+.pb-workbench.is-inserting > [data-pb-action=structure], .pb-workbench.is-moving > [data-pb-action=structure] {
+  flex-shrink: 0;
+}
+.pb-workbench.is-inserting > [data-pb-action=structure]:hover, .pb-workbench.is-inserting > [data-pb-action=structure][aria-expanded=true], .pb-workbench.is-moving > [data-pb-action=structure]:hover, .pb-workbench.is-moving > [data-pb-action=structure][aria-expanded=true] {
+  background: rgba(0, 99, 251, 0.08);
+  color: #0063FB;
+}
+.pb-workbench.is-inserting > .pb-mode-hint, .pb-workbench.is-moving > .pb-mode-hint {
+  flex: 1;
+  min-width: 0;
+  padding: 0 0 0 10px;
+  border-left: 1px solid #B2B8C8;
+}
+.pb-workbench.is-inserting > .pb-mode-hint > [role=status], .pb-workbench.is-moving > .pb-mode-hint > [role=status] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pb-workbench.is-inserting > :not(.pb-insert-hint):not([data-pb-action=structure]), .pb-workbench.is-resizing > :not(.pb-resize-hint), .pb-workbench.is-moving > :not(.pb-move-hint):not([data-pb-action=structure]) {
   display: none !important;
 }
 .pb-workbench-standalone {
@@ -3245,6 +3294,10 @@ html.pb-insertion-open {
 .pb-wrapper.pb-is-inserting .pb-empty-placeholder, .pb-wrapper.pb-is-inserting .pb-empty-placeholder-wrapper {
   display: none !important;
 }
+.pb-wrapper.pb-is-inserting .pb-plus-button {
+  visibility: hidden !important;
+  pointer-events: none;
+}
 
 @media (pointer: coarse) {
   .pb-insert-layer .pb-insert-point button {
@@ -3325,7 +3378,7 @@ html.pb-insertion-open {
   position: fixed;
   left: 8px;
   bottom: 8px;
-  width: 280px;
+  width: var(--pb-structure-width, 280px);
   max-width: calc(100vw - 16px);
   z-index: 102001;
   display: flex;
@@ -3368,6 +3421,7 @@ html.pb-insertion-open {
   list-style: none;
   margin: 0;
   padding: 0;
+  font: inherit;
 }
 .pb-structure > ul {
   overflow: auto;
@@ -3429,6 +3483,7 @@ html.pb-insertion-open {
 }
 .pb-structure li > div > span:not(.pb-structure-dot):not(.pb-structure-hidden) small {
   color: #686F83;
+  font: inherit;
   font-size: 11px;
 }
 .pb-structure li [data-pb-expand] {
@@ -3517,6 +3572,15 @@ body.is-view-mode .pb-workbench, body.is-view-mode .pb-structure, body.is-view-m
     margin-inline: -6px;
     padding-inline: 6px;
   }
+  .pb-workbench.is-inserting, .pb-workbench.is-moving {
+    padding: 6px;
+    gap: 3px;
+  }
+  .pb-workbench.is-inserting > .pb-mode-hint, .pb-workbench.is-moving > .pb-mode-hint {
+    flex-basis: 0;
+    margin: 0;
+    padding: 0 0 0 6px;
+  }
   .pb-workbench > [data-pb-action=structure] span, .pb-workbench [data-pb-action=style] span {
     display: none;
   }
@@ -3531,6 +3595,12 @@ body.is-view-mode .pb-workbench, body.is-view-mode .pb-structure, body.is-view-m
   }
   .pb-workbench-path.is-expanded {
     overflow: visible;
+  }
+  .pb-workbench-path.is-expanded > button:not([data-pb-action=ancestors]):not(:last-child) {
+    display: inline-flex;
+    position: relative;
+  }
+  .pb-workbench-path.is-expanded {
     position: absolute;
     top: 100%;
     left: 6px;
@@ -3544,10 +3614,6 @@ body.is-view-mode .pb-workbench, body.is-view-mode .pb-structure, body.is-view-m
     border: 1px solid #DDDFE6;
     border-radius: 6px;
     box-shadow: 0 8px 28px rgba(19, 21, 27, 0.16);
-  }
-  .pb-workbench-path.is-expanded > button:not([data-pb-action=ancestors]):not(:last-child) {
-    display: inline-flex;
-    position: relative;
   }
   .pb-workbench-path.is-expanded > button {
     justify-content: flex-start;

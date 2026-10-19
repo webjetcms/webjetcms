@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 public class DatatableExceptionHandlerV2
 {
 	private static final Pattern DATA_TOO_LONG_PATTERN = Pattern.compile("Data too long for column ['\"`]([^'\"`]+)['\"`]", Pattern.CASE_INSENSITIVE);
+	private static final Pattern COLUMN_CANNOT_BE_NULL_PATTERN = Pattern.compile("Column ['\"`]([^'\"`]+)['\"`] cannot be null", Pattern.CASE_INSENSITIVE);
 
 	@ResponseBody
 	@ExceptionHandler(MethodArgumentNotValidException.class)
@@ -146,7 +147,7 @@ public class DatatableExceptionHandlerV2
 
 			response.setFieldErrors(errorsList);
 		} else {
-			response.setError(getTransactionErrorMessage(ex));
+			response.setError(getDatabaseErrorMessage(ex));
 			Logger.error(DatatableExceptionHandlerV2.class, "TransactionSystemException: " + ex.getMessage());
 		}
 
@@ -158,7 +159,7 @@ public class DatatableExceptionHandlerV2
 		return new ResponseEntity<>(response, HttpStatus.OK);
 	}
 
-	private String getTransactionErrorMessage(TransactionSystemException ex) {
+	private String getDatabaseErrorMessage(Exception ex) {
 		Throwable cause = ex;
 		while (cause != null) {
 			String message = cause.getMessage();
@@ -168,11 +169,17 @@ public class DatatableExceptionHandlerV2
 					return Prop.getInstance().getText("datatable.error.valueTooLong", dataTooLongMatcher.group(1));
 				}
 
-				int start = message.indexOf("Duplicate entry");
-				if (start >= 0) {
-					int end = message.indexOf("Error Code", start);
-					if (end < 0) end = message.length();
-					return message.substring(start, end).trim();
+				Matcher columnCannotBeNullMatcher = COLUMN_CANNOT_BE_NULL_PATTERN.matcher(message);
+				if (columnCannotBeNullMatcher.find()) {
+					return Prop.getInstance().getText("datatable.error.valueRequired", columnCannotBeNullMatcher.group(1));
+				}
+
+				if (message.contains("Duplicate entry")) {
+					return Prop.getInstance().getText("datatable.error.duplicateValue");
+				}
+
+				if (message.contains("Cannot delete or update a parent row")) {
+					return Prop.getInstance().getText("datatable.error.recordInUse");
 				}
 			}
 			cause = cause.getCause();
@@ -202,6 +209,8 @@ public class DatatableExceptionHandlerV2
 		if (ex instanceof ResponseStatusException) {
 			ResponseStatusException ex2 = (ResponseStatusException)ex;
 			message = ex2.getReason();
+		} else {
+			message = getDatabaseErrorMessage(ex);
 		}
 
 		message = prepareMessage(message, ex);

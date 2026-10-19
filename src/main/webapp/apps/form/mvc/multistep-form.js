@@ -15,23 +15,38 @@ let autocompleteAssetsPromise;
  */
 
 /**
+ * A field comparison shared by visibility and requirement rules.
+ *
+ * @typedef {Object} MultistepFormCondition
+ * @property {string} fieldId - Logical identifier of the field whose value is compared.
+ * @property {string} [operator="equals"] - Comparison operator accepted by `_evaluateOperator`.
+ * @property {string} [value=""] - Value to compare against.
+ * @property {boolean} [caseInsensitive=false] - Whether text comparison ignores case.
+ * @property {string} [joinOperator="AND"] - Connects this result to the next condition; `OR` selects disjunction.
+ */
+
+/**
  * Multistep Form application controller.
  *
  * Renders the shell, loads individual steps from server, submits data,
  * and handles success/error UI states. After rendering each step it dispatches
- * `WJ.multistepForm.stepShown` as a non-cancelable `CustomEvent` on `window`.
+ * `WJ.multistepForm.stepShown` as a non-bubbling, non-cancelable `CustomEvent` on `window`,
+ * with a {@link MultistepFormStepShownDetail} object in `detail`.
  */
 export class MultistepForm {
 
     /**
-     * Create a new MultistepForm instance.
-     * @param {Object} [options] - Initialization options.
-     * @param {string} [options.container] - CSS selector of the mount container (preferred).
-     * @param {string} [options.mountSelector] - Alternative mount selector; defaults to Bootstrap container/body.
+     * Initialize form state and append alerts and a step holder to the existing CSRF-specific wrapper.
+     * The page must contain an element with ID `multistep-form-wrapper-` followed by the CSRF token.
+     * @param {Object} [options={}] - Initialization options.
+     * @param {string} [options.container] - Legacy selector stored as `mountSelector`; does not select the wrapper.
+     * @param {string} [options.mountSelector] - Alternative stored selector when `container` is empty.
      * @param {string} [options.formName] - Form identifier used by the backend.
      * @param {string|number} [options.stepId] - Initial step identifier to load.
      * @param {string} [options.csrf] - CSRF token added to POST requests.
      * @param {string} [options.language] - Language code appended to backend requests.
+     * @param {string} [options.successMessage] - Success message; defaults to "Operation completed successfully." when empty.
+     * @param {string} [options.errorMessage] - Error message; defaults to "An error occurred while saving the step." when empty.
      */
     constructor(options = {}) {
         // Preferred container selector; defaults to body > article > div.container
@@ -54,6 +69,8 @@ export class MultistepForm {
 
         this._hasShownStep = false;
         this._isNavigating = false;
+        this._fieldValidationRequests = new Map();
+        this._invalidFields = new Set();
 
         // Centralized map: element -> array of conditions (parsed once from data-visibility-condition attributes)
         this.visibilityConditions = new Map();
@@ -79,6 +96,7 @@ export class MultistepForm {
     async _runNavigation(action) {
         if (this._isNavigating) return;
         this._isNavigating = true;
+        this._cancelFieldValidation();
         const buttons = this.wrapper.querySelectorAll('button[type="submit"]:enabled, input[type="submit"]:enabled, [data-multistep-back-step]:enabled');
         buttons.forEach(button => { button.disabled = true; });
         try {
@@ -90,7 +108,7 @@ export class MultistepForm {
     }
 
     /**
-     * Render the application shell (alerts + content holder) and mount it.
+     * Append alerts and a content holder to the existing CSRF-specific wrapper.
      * Creates `this.wrapper` for subsequent DOM operations.
      */
     _renderShell() {
@@ -135,13 +153,15 @@ export class MultistepForm {
      * @param {string} formName - The form name to query.
      * @param {string|number} stepId - The step identifier to load.
      * @param {boolean} [scrollToForm=false] - Whether to scroll to the newly rendered form.
-     * @returns {Promise<void>} Resolves when the step content is injected and the step-shown event is dispatched.
+     * @returns {Promise<void>} Resolves after rendering and dispatching the step-shown event, reporting a load error,
+     * or skipping a load with a missing form name or step ID. Widget initialization may finish later.
      */
     async loadStep(formName, stepId, scrollToForm = false) {
         if (!formName || !stepId) {
             console.warn('Missing formName or stepId; skipping load.');
             return;
         }
+        this._cancelFieldValidation();
         const url = `/rest/multistep-form/get-step?form-name=${encodeURIComponent(formName)}&step-id=${encodeURIComponent(stepId)}&language=${encodeURIComponent(this.language || '')}`;
         try {
             const r = await fetch(url, { method: 'GET', headers: { 'Accept': 'application/json', "X-CSRF-Token": this.csrf } });
@@ -161,6 +181,8 @@ export class MultistepForm {
             const requirementConditions = json.requirementConditions || {};
             const savedValues = json.savedValues || {};
             const savedFiles = json.savedFiles || {};
+            const draftValues = json.draftValues || {};
+            const draftFiles = json.draftFiles || {};
 
             // hide previous errors
             this.hideErrors();
@@ -181,7 +203,8 @@ export class MultistepForm {
             // attach submit
             const form = this.wrapper.querySelector('.multistepStepContent > form');
             if (form) {
-                this._restoreStepValues(form, savedValues, savedFiles);
+                this._restoreStepValues(form, { ...savedValues, ...draftValues }, { ...savedFiles, ...draftFiles });
+                this._initFieldErrors(form);
                 Object.assign(this.submittedValues, savedValues);
 
                 form.addEventListener('submit', async (event) => {
@@ -193,7 +216,9 @@ export class MultistepForm {
                 if (backButton) {
                     backButton.addEventListener('click', async () => {
                         const previousStepId = backButton.dataset.multistepBackStep;
-                        if (previousStepId) await this._runNavigation(() => this.loadStep(formName, previousStepId, true));
+                        if (previousStepId) await this._runNavigation(async () => {
+                            if (await this._saveStepDraft(form)) await this.loadStep(formName, previousStepId, true);
+                        });
                     });
                 }
             }
@@ -211,6 +236,7 @@ export class MultistepForm {
             this.formName = formName;
             this.stepId = stepId;
             this._hasShownStep = true;
+            if (form && json.validateOnBlur === true) this._initFieldValidation(form);
             if (holder) this._dispatchStepShown(holder, form, isInitialStep);
 
             if (scrollToForm && form) this._focusStep(form);
@@ -227,6 +253,7 @@ export class MultistepForm {
             }, 100);
         } catch (err) {
             console.warn('Failed to load step:', err);
+            await this.showGlobalErr({});
         }
     }
 
@@ -235,6 +262,7 @@ export class MultistepForm {
      * @param {HTMLElement} holder - Container of the step being removed.
      */
     _disposeStep(holder) {
+        this._cancelFieldValidation();
         formTooltip.dispose(holder);
         holder.querySelectorAll('.wjdropzone').forEach(element => {
             const dropzone = element.dropzone;
@@ -271,7 +299,7 @@ export class MultistepForm {
     }
 
     /**
-     * Restore values saved by an earlier successful submission of this step.
+     * Restore confirmed or draft values for this step, including explicit empty selections.
      * @param {HTMLFormElement} form - Currently rendered step form.
      * @param {Object<string,string|string[]>} savedValues - Scalar values or selected options keyed by logical field ID.
      * @param {Object<string,Object>} savedFiles - Dropzone metadata keyed by logical field ID.
@@ -294,7 +322,9 @@ export class MultistepForm {
             }
 
             const value = rawValue == null ? '' : String(rawValue);
-            matchingControls.forEach(control => { control.value = value; });
+            matchingControls.forEach(control => {
+                if (control.type !== 'file') control.value = value;
+            });
         });
 
         Object.entries(savedFiles).forEach(([fieldId, fileMetadata]) => {
@@ -309,7 +339,7 @@ export class MultistepForm {
 
     /**
      * Convert the session representation of a radio/checkbox value back to selected options.
-     * @param {*} rawValue - Saved scalar value.
+     * @param {string|string[]|null|undefined} rawValue - Saved scalar value or exact selected options.
      * @param {HTMLInputElement[]} controls - Controls belonging to the group.
      * @returns {string[]} selected option values.
      */
@@ -346,6 +376,7 @@ export class MultistepForm {
     /**
      * Bind remote autocomplete inputs using the standard data-ac-* attributes.
      * The jQuery UI JavaScript dependency is loaded only when the current step contains such a field.
+     * @returns {Promise<void>} Resolves after initialization, or after skipping absent inputs or a failed dependency load.
      */
     async _initAutocompleteFields() {
         const inputs = Array.from(this.wrapper.querySelectorAll('input.form-control[data-ac-url]'));
@@ -406,7 +437,7 @@ export class MultistepForm {
 
     /**
      * Load jQuery UI autocomplete once per page.
-     * @returns {Promise<void>} resolves when autocomplete is available
+     * @returns {Promise<void>} Resolves when autocomplete is available; rejects when jQuery is missing or loading fails.
      */
     _ensureAutocompleteAssets() {
         if (window.$ && typeof $.fn?.autocomplete === 'function') return Promise.resolve();
@@ -427,29 +458,147 @@ export class MultistepForm {
     }
 
     /**
-     * Validate and submit the current step form via AJAX.
-     * Collects all input/select/textarea values and posts JSON to the server.
-     * @param {SubmitEvent} event - The submit event from the step form.
-     * @returns {Promise<void>} Resolves after handling response actions.
+     * Enable blur validation for text inputs and plain textareas in the current step.
+     * @param {HTMLFormElement} form - Currently rendered step form.
      */
-    async doValidationAndSave(event) {
-        event.preventDefault();
-        const form = event.currentTarget;
+    _initFieldValidation(form) {
+        const cancelFieldValidation = event => {
+            const fieldId = this._toLogicalFieldId(event.target.id || event.target.name);
+            this._fieldValidationRequests.get(fieldId)?.abort();
+            this._fieldValidationRequests.delete(fieldId);
+        };
+        form.addEventListener('input', cancelFieldValidation);
+        form.addEventListener('change', cancelFieldValidation);
+        form.addEventListener('focusout', event => {
+            const input = event.target;
+            if (!input.matches('input, textarea') || input.matches(':disabled') || input.readOnly) return;
+            if (!['text', 'search', 'email', 'url', 'tel', 'password', 'number', 'date', 'datetime-local', 'month', 'week', 'time', 'textarea'].includes(input.type)) return;
+            if (input.matches('.formsimple-wysiwyg, .captcha, [name="wjcaptcha"], [name="g-recaptcha-response"]')) return;
+            if (input.closest('.wjdropzone, .form-group-captcha, .g-recaptcha, .cleditorMain')) return;
+            if (input.getClientRects().length === 0 || this._isFieldHidden(input.closest('.form-group') || input.parentElement)) return;
+            this._validateFieldOnBlur(form, input);
+        });
+    }
 
-        // Generate reCaptcha V3 token if the captcha widget is present
-        const recaptchaInput = form.querySelector('input[name="g-recaptcha-response"][data-type="V3"]');
-        if (recaptchaInput && window.grecaptcha && typeof window.wjFormSubmit === 'function') {
-            await new Promise((resolve) => {
-                window.wjFormSubmit(form, resolve, recaptchaInput);
-            });
-        }
+    /** Cancel requests whose values or step context are no longer current. */
+    _cancelFieldValidation() {
+        this._fieldValidationRequests.forEach(controller => controller.abort());
+        this._fieldValidationRequests.clear();
+    }
 
-        const url = new URL(form.getAttribute('action'), window.location.origin);
+    /**
+     * Validate one field without changing saved values, focus, or navigation.
+     * @param {HTMLFormElement} form - Form containing the field.
+     * @param {HTMLInputElement|HTMLTextAreaElement} input - Control that lost focus.
+     * @returns {Promise<void>} Resolves after displaying a current response or ignoring a stale one.
+     */
+    async _validateFieldOnBlur(form, input) {
+        if (this._isNavigating) return;
+        const fieldId = this._toLogicalFieldId(input.id || input.name);
+        if (!fieldId) return;
+
+        this._fieldValidationRequests.get(fieldId)?.abort();
+        const controller = new AbortController();
+        this._fieldValidationRequests.set(fieldId, controller);
+        const value = input.value;
+        const url = new URL('/rest/multistep-form/validate-field', window.location.origin);
+        url.searchParams.set('form-name', this.formName);
+        url.searchParams.set('step-id', this.stepId);
+        url.searchParams.set('field-id', fieldId);
         url.searchParams.set('language', this.language || '');
 
+        try {
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': this.csrf
+                },
+                body: JSON.stringify({ [fieldId]: value }),
+                signal: controller.signal
+            });
+            const result = await response.json();
+            if (controller.signal.aborted || this._isNavigating || !this.wrapper.contains(form)) return;
+            if (value !== input.value || !form.contains(input)) return;
+            if (response.ok && result.fieldErrors) {
+                this._showFieldError(fieldId, result.fieldErrors[fieldId] || '');
+            } else if (response.status === 400 && result.err_msg) {
+                this._showFieldError(fieldId, result.err_msg);
+            }
+        } catch (error) {
+            if (error.name !== 'AbortError') console.warn('Failed to validate form field:', error);
+        } finally {
+            if (this._fieldValidationRequests.get(fieldId) === controller) this._fieldValidationRequests.delete(fieldId);
+        }
+    }
+
+    /**
+     * Prepare empty live regions before asynchronous validation can update them.
+     * @param {HTMLFormElement} form - Currently rendered step form.
+     */
+    _initFieldErrors(form) {
+        form.querySelectorAll('.cs-error').forEach((container, index) => {
+            if (!container.id) container.id = `${this.wrapper.id}-error-${index}`;
+            container.setAttribute('aria-live', 'polite');
+            container.setAttribute('aria-atomic', 'true');
+        });
+    }
+
+    /**
+     * Render or clear field errors and update the associated controls' accessible state.
+     * @param {string} fieldId - Logical field identifier.
+     * @param {string} errorMessage - Localized messages separated by newlines, or empty to clear.
+     */
+    _showFieldError(fieldId, errorMessage) {
+        const containers = this.wrapper.getElementsByClassName('cs-error-' + this._toDomFieldId(fieldId));
+        const errorId = containers[0]?.id;
+        this._getFieldElements(fieldId).forEach(input => {
+            if (errorId) {
+                const descriptions = new Set((input.getAttribute('aria-describedby') || '').split(/\s+/).filter(Boolean));
+                descriptions.add(errorId);
+                input.setAttribute('aria-describedby', [...descriptions].join(' '));
+            }
+            input.setAttribute('aria-invalid', errorMessage ? 'true' : 'false');
+            if (errorMessage) this._invalidFields.add(input);
+            else this._invalidFields.delete(input);
+        });
+        for (const container of containers) {
+            container.innerHTML = errorMessage
+                ? `<ul class="mf-error-list">${String(errorMessage).split('\n').map(message => `<li>${message}</li>`).join('')}</ul>`
+                : '';
+        }
+    }
+
+    /** Focus and reveal the first visible error in this form's document order after submission. */
+    _focusFirstError() {
+        const firstError = Array.from(this.wrapper.querySelectorAll('.alert-danger, .cs-error'))
+            .find(element => element.textContent.trim() && element.getClientRects().length > 0
+                && window.getComputedStyle(element).visibility !== 'hidden');
+        if (!firstError) return;
+
+        if (!firstError.hasAttribute('tabindex')) firstError.setAttribute('tabindex', '-1');
+        firstError.focus({ preventScroll: true });
+        firstError.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+    }
+
+    /**
+     * Collect step values, synchronizing rich text and retaining empty draft selections.
+     * @param {HTMLFormElement} form - Current step form.
+     * @param {boolean} [includeHidden=false] - Include hidden fields for draft preservation.
+     * @returns {{result: Object<string, string|string[]>, stepFieldIds: Set<string>}} Values and all current-step identifiers.
+     */
+    _collectStepValues(form, includeHidden = false) {
+        form.querySelectorAll('textarea.formsimple-wysiwyg').forEach(area => {
+            const editor = window.$ ? $(area).data('cleditor') : null;
+            if (editor && !editor.sourceMode()) editor.updateTextArea();
+        });
         const result = {};
         const stepFieldIds = new Set();
         form.querySelectorAll('input, textarea, select').forEach(el => {
+            if (el.type === 'file' || el.classList.contains('uploadedObjectsInfo')) return;
+            if (includeHidden && (el.matches('.captcha, [name="wjcaptcha"], [name="wjcaptcha1"], [name="g-recaptcha-response"]') || el.closest('.form-group-captcha, .g-recaptcha'))) return;
 
             // Checkbox/radio options of a group share one name but have unique ids
             // (id="${id}-${value}"), so collect them by name to keep grouped values
@@ -462,8 +611,9 @@ export class MultistepForm {
             const key = this._toLogicalFieldId(domKey);
             stepFieldIds.add(key);
             // Skip fields hidden by visibility conditions
-            if (this._isFieldHidden(el.closest('.form-group') || el.parentElement)) return;
+            if (!includeHidden && this._isFieldHidden(el.closest('.form-group') || el.parentElement)) return;
             if (el.type === 'checkbox' || el.type === 'radio') {
+                if (includeHidden && !Object.hasOwn(result, key)) result[key] = [];
                 if (!el.checked) return;
             }
             const value = el.value;
@@ -477,6 +627,61 @@ export class MultistepForm {
                 result[key] = value;
             }
         });
+        return { result, stepFieldIds };
+    }
+
+    /**
+     * Save all current values before navigating back, without triggering field validation or CAPTCHA.
+     * @param {HTMLFormElement} form - Current step form.
+     * @returns {Promise<boolean>} Whether the draft was saved and navigation may continue.
+     */
+    async _saveStepDraft(form) {
+        const url = new URL('/rest/multistep-form/save-draft', window.location.origin);
+        url.searchParams.set('form-name', this.formName);
+        url.searchParams.set('step-id', this.stepId);
+        url.searchParams.set('language', this.language || '');
+        try {
+            const response = await fetch(url.toString(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-Token': this.csrf
+                },
+                body: JSON.stringify(this._collectStepValues(form, true).result)
+            });
+            const result = await response.json();
+            if (response.ok && result.success === true) return true;
+            await this.showGlobalErr(result);
+        } catch (error) {
+            console.warn('Failed to save step draft:', error);
+            await this.showGlobalErr({});
+        }
+        return false;
+    }
+
+    /**
+     * Validates and submits visible values using the existing form action.
+     * @param {SubmitEvent} event - The submit event from the step form.
+     * @returns {Promise<void>} Resolves after handling submission and any subsequent navigation.
+     */
+    async doValidationAndSave(event) {
+        event.preventDefault();
+        this._cancelFieldValidation();
+        const form = event.currentTarget;
+
+        // Generate reCaptcha V3 token only for an actual submission.
+        const recaptchaInput = form.querySelector('input[name="g-recaptcha-response"][data-type="V3"]');
+        if (recaptchaInput && window.grecaptcha && typeof window.wjFormSubmit === 'function') {
+            await new Promise((resolve) => {
+                window.wjFormSubmit(form, resolve, recaptchaInput);
+            });
+        }
+
+        const url = new URL(form.getAttribute('action'), window.location.origin);
+        url.searchParams.set('language', this.language || '');
+        const { result, stepFieldIds } = this._collectStepValues(form);
 
         try {
             const resp = await fetch(url.toString(), {
@@ -502,6 +707,7 @@ export class MultistepForm {
                 }
                 await this.postSaveAction(parsed);
             } else {
+                if (this._showForwardContent(parsed.errorHtml, 'multistep-error-container')) return;
                 const errRedirect = parsed.err_redirect || null;
                 if (errRedirect) {
                     window.location.href = errRedirect;
@@ -518,12 +724,13 @@ export class MultistepForm {
             }
         } catch (err) {
             console.error('Network/JS error submitting form', err);
+            await this.showGlobalErr({});
         }
     }
 
     /**
      * Show a global success alert with a message.
-     * @param {string} [message] - Message to display; default is a generic text.
+     * @param {string} [message] - Message to display as HTML; defaults to the configured success message when empty.
      * @returns {Promise<void>} Resolves after the UI is updated.
      */
     async showGlobalSuccess(message) {
@@ -550,16 +757,16 @@ export class MultistepForm {
         if (p) p.textContent = this.errorMessage;
         const ul = danger.querySelector('ul');
         if (ul) ul.innerHTML = `<li><span>${errorMsg}</span></li>`;
-        danger.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+        this._focusFirstError();
     }
 
     /**
      * Hide and clear any field/global error messages in the UI.
      */
     hideErrors() {
-        if (window.$) {
-            $(this.wrapper).find('div.cs-error').text('');
-        }
+        this.wrapper.querySelectorAll('div.cs-error').forEach(container => { container.textContent = ''; });
+        this._invalidFields.forEach(input => { input.setAttribute('aria-invalid', 'false'); });
+        this._invalidFields.clear();
         const danger = this.wrapper.querySelector('div.alert.alert-danger');
         if (danger) {
             const ul = danger.querySelector('ul');
@@ -574,7 +781,7 @@ export class MultistepForm {
      * @returns {string} Instance-specific DOM identifier.
      */
     _toDomFieldId(logicalId) {
-        if (!logicalId || !this.domIdPrefix || logicalId.startsWith(this.domIdPrefix)) return logicalId;
+        if (!logicalId || !this.domIdPrefix) return logicalId;
         return this.domIdPrefix + logicalId;
     }
 
@@ -622,8 +829,8 @@ export class MultistepForm {
      * Uses the server-provided visibilityConditions map (itemFormId -> {conditions, hidden})
      * instead of parsing from DOM attributes.
      * Attaches change listeners to referenced fields on the same step.
-     * Conditions are AND logic - all must be met for the field to be visible.
-     * @param {Object} visibilityConditionsMap - Map of itemFormId to {conditions: [{fieldId, operator, value}], hidden: boolean}
+     * Conditions are evaluated in order using the preceding condition's AND/OR join operator.
+     * @param {Object<string, {conditions: MultistepFormCondition[], hidden: boolean}>} visibilityConditionsMap - Conditions and initial hidden state keyed by logical field ID.
      */
     _initConditionalVisibility(visibilityConditionsMap) {
         // Clear conditions from any previous step
@@ -676,8 +883,8 @@ export class MultistepForm {
 
     /**
      * Evaluate all conditions for a conditional field and show/hide it.
-     * @param {HTMLElement} field - The field wrapper element with data-visibility-condition.
-     * @param {Array} conditions - Array of condition objects [{fieldId, operator, value, joinOperator}].
+     * @param {HTMLElement} field - The field wrapper element controlled by the conditions.
+     * @param {MultistepFormCondition[]} conditions - Ordered comparisons joined by the preceding condition's AND/OR operator.
      */
     _evaluateConditions(field, conditions) {
         let combinedResult = null;
@@ -718,7 +925,7 @@ export class MultistepForm {
     /**
      * Initialize conditional requirement for fields in the current step.
      * Uses the server-provided requirementConditions map (itemFormId -> {conditions, required}).
-     * @param {Object} requirementConditionsMap - Map of itemFormId to {conditions: [{fieldId, operator, value}], required: boolean}
+     * @param {Object<string, {conditions: MultistepFormCondition[], required: boolean}>} requirementConditionsMap - Conditions and initial required state keyed by logical field ID.
      */
     _initConditionalRequirement(requirementConditionsMap) {
         // Clear conditions from any previous step
@@ -766,7 +973,7 @@ export class MultistepForm {
     /**
      * Evaluate all requirement conditions for a field and toggle its required state.
      * @param {HTMLElement} field - The field wrapper element.
-     * @param {Array} conditions - Array of condition objects [{fieldId, operator, value, joinOperator}].
+     * @param {MultistepFormCondition[]} conditions - Ordered comparisons joined by the preceding condition's AND/OR operator.
      */
     _evaluateRequirementConditions(field, conditions) {
         let combinedResult = null;
@@ -902,8 +1109,8 @@ export class MultistepForm {
 
     /**
      * Determine whether a field should be treated as hidden.
-     * @param {HTMLElement} field - The field wrapper element.
-     * @returns {boolean} true if hidden or in hide transition.
+     * @param {HTMLElement|null} field - The field wrapper element, if present.
+     * @returns {boolean} true if missing, hidden, or in a collapsed transition state.
      */
     _isFieldHidden(field) {
         if (!field) return true;
@@ -948,7 +1155,7 @@ export class MultistepForm {
 
     /**
      * Evaluate a single condition operator.
-     * @param {string} operator - The operator (equals, not_equals, contains, not_contains, empty, not_empty).
+     * @param {string} operator - The operator (equals, not_equals, contains, not_contains, empty, not_empty, starts_with, ends_with).
      * @param {string} actualValue - The actual field value.
      * @param {string} requiredValue - The expected/required value.
      * @param {boolean} [caseInsensitive=false] - Whether text comparison should ignore case.
@@ -1023,10 +1230,43 @@ export class MultistepForm {
     }
 
     /**
+     * Replace the form with a managed result page and move focus to its content.
+     * Embedded scripts run when jQuery is available.
+     * @param {string|undefined} html - Rendered success or error page body.
+     * @param {string} className - CSS class for the result container.
+     * @returns {boolean} Whether non-blank content was displayed.
+     */
+    _showForwardContent(html, className) {
+        if (typeof html !== 'string' || html.trim() === '') return false;
+        this.hideErrors();
+        const holder = this.wrapper.querySelector('.multistepStepContent');
+        if (holder) {
+            this._disposeStep(holder);
+            holder.remove();
+        }
+        const content = document.createElement('div');
+        content.className = className;
+        content.tabIndex = -1;
+        // jQuery executes embedded scripts only after the container is attached.
+        this.wrapper.appendChild(content);
+        if (window.$) {
+            $(content).html(html);
+        } else {
+            content.innerHTML = html;
+        }
+        content.focus({ preventScroll: true });
+        content.scrollIntoView({ behavior: this._prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
+        return true;
+    }
+
+    /**
      * Handle server response after a successful POST.
-     * Can redirect, render field errors, or load the next step.
+     * Redirects, displays field errors, loads the next step, or replaces the completed form with confirmation content.
+     * Inline confirmation content receives focus and is scrolled into view; embedded scripts run when jQuery is available.
+     * Missing or blank confirmation content uses the configured success message.
      * @param {Object} response - Parsed JSON from the server.
      * @param {string} [response.forward] - URL to redirect to on success.
+     * @param {string} [response.thankYouHtml] - Managed page content to display when the form is complete.
      * @param {Object<string,string>} [response.fieldErrors] - Map of fieldName to error message(s).
      * @param {string} [response['form-name']] - Current form name.
      * @param {string|number} [response['step-id']] - Next step id; -1 means finished.
@@ -1044,16 +1284,9 @@ export class MultistepForm {
         const fieldErrors = response.fieldErrors || {};
         if (fieldErrors && Object.keys(fieldErrors).length > 0) {
             for (const [fieldName, errorMsg] of Object.entries(fieldErrors)) {
-                if (window.$) {
-                    const errDiv = $(this.wrapper).find('div.cs-error-' + this._toDomFieldId(fieldName));
-                    const errorMsgArr = String(errorMsg).split('\n');
-                    errDiv.html('');
-                    let html = "<ul class='mf-error-list'>";
-                    for (const msg of errorMsgArr) html += `<li>${msg}</li>`;
-                    html += '</ul>';
-                    errDiv.html(html);
-                }
+                this._showFieldError(fieldName, errorMsg);
             }
+            this._focusFirstError();
             return;
         }
 
@@ -1061,6 +1294,7 @@ export class MultistepForm {
         const stepId = response['step-id'];
         if (formName && (stepId !== undefined && stepId !== null)) {
             if (stepId === -1 || stepId === '-1') {
+                if (this._showForwardContent(response.thankYouHtml, 'multistep-thankyou-container')) return;
                 const holder = this.wrapper.querySelector('.multistepStepContent');
                 if (holder) {
                     this._disposeStep(holder);
@@ -1092,6 +1326,9 @@ export class FormTooltip {
         delay: { show: 0, hide: 150 }
     };
 
+    /**
+     * Initialize per-trigger tooltip state and bind the instance's Escape-key handler for later registration.
+     */
     constructor() {
         this.adapters = new WeakMap();
         this.tooltipElements = new WeakMap();
@@ -1114,7 +1351,7 @@ export class FormTooltip {
 
     /**
      * Return jQuery when its Bootstrap tooltip plugin is available.
-     * @returns {jQuery|null} jQuery instance or null when the legacy plugin is unavailable.
+     * @returns {Function|null} jQuery factory function, or null when the legacy plugin is unavailable.
      */
     _getLegacyTooltipJQuery() {
         const jQueryInstance = window.jQuery || window.$;

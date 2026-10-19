@@ -1,118 +1,90 @@
-# AGENTS: Design
+# AGENTS: Administration Design
 
-## Design Context
+[Index](AGENTS.md) · [Working guide](CONTRIBUTING.md)
 
-### Users
+## Design Intent
 
-WebJET CMS editors and administrators managing content, configuration, and structured data in a browser-based enterprise administration interface. Their primary goal is to complete frequent editing tasks quickly, reliably, and without requiring technical knowledge.
+WebJET CMS editors and administrators need to complete frequent content and data-management tasks quickly and reliably. Preserve the established compact, light administration interface: clear hierarchy, restrained brand blue, consistent controls and Tabler icons. The intended tone is professional, dependable and calm.
 
-### Brand Personality
+- Reuse the nearest existing component, tokens, spacing and interaction patterns.
+- Keep controls aligned and outcomes clear, including errors, loading and disabled states.
+- Make keyboard focus visible and maintain logical keyboard navigation.
+- Treat WCAG 2.2 accessibility as a design requirement to verify, not a claim that every existing screen already conforms.
+- Improve the requested workflow without introducing a separate visual system.
 
-Professional, dependable, and efficient. The interface should inspire confidence and remain calm and predictable during complex administrative work.
+## Actual Frontend Stack and Sources
 
-### Aesthetic Direction
+The administration uses JavaScript, jQuery, Bootstrap 5, DataTables 2 with Editor, jsTree, Tabler Icons, Quill, Dropzone, Toastr and selected jQuery UI widgets. Rspack builds the administration assets; Pug produces administration templates. CKEditor integration and custom Web Components also exist. Check the relevant package and source rather than assuming a React/Next.js or TypeScript application.
 
-Preserve the established WebJET CMS design system: compact light-mode administration, clear hierarchy, restrained use of brand blue, consistent Bootstrap-based controls, and Tabler icons. Prefer surgical refinements over introducing new visual patterns.
+All paths below are relative to the core repository root; customer projects may consume these assets from their WebJET dependency.
 
-### Design Principles
+| Source | Use |
+| --- | --- |
+| `src/main/webapp/admin/v9/package.json` | Build scripts and direct frontend dependencies |
+| `src/main/webapp/admin/v9/package-lock.json` | Resolved frontend dependency versions |
+| `src/main/webapp/admin/v9/npm_packages/webjetdatatables/package.json` | Bundled DataTables/Editor wrapper dependencies, including Quill |
+| `src/main/webapp/admin/v9/npm_packages/webjetdatatables/index.js` | Shared `WJ.DataTable` implementation |
+| `src/main/webapp/admin/v9/src/js/app.js` | Main imports, shared browser globals and lazy-loaded features |
+| `src/main/webapp/admin/v9/src/js/webjet.js` | Shared `WJ` browser helpers |
+| `src/main/webapp/admin/v9/src/js/web-components/` | Existing custom Web Components |
+| `src/main/webapp/admin/v9/src/scss/ninja.scss` | Main SCSS entry point and Bootstrap/token overrides |
+| `src/main/webapp/admin/v9/views/` | Pug layout, partials and page sources |
+| `src/main/webapp/admin/v9/rspack.config.common.js` | Bundles, loaders and output configuration |
+| `src/main/webapp/admin/v9/pug.render.js` | Pug rendering shared by development/production builds |
+| `src/main/webapp/apps/` | Application views, including Thymeleaf administration HTML |
 
-- Keep controls compact, aligned, and visually consistent with the surrounding administration UI.
-- Make keyboard focus, state, and interaction outcomes unmistakable.
-- Meet WCAG 2.2 accessibility requirements without changing familiar workflows.
-- Reuse existing tokens, spacing, typography, buttons, and icons.
-- Optimize for fast, dependable daily administration rather than decorative novelty.
+Edit source files, then rebuild the owning bundle. Do not hand-edit compiled `src/main/webapp/admin/v9/dist/` output or third-party/minified vendor files. `app.js` imports `ninja.scss`, emitted as `dist/css/main.style.css`; inline editing loads `inline.scss` separately through a dynamic import. Place general administration styles in the main SCSS layers.
 
-## Design System Source of Truth
+## SCSS Structure
 
-- The main administration stylesheet entry point is [`src/main/webapp/admin/v9/src/scss/ninja.scss`](../../src/main/webapp/admin/v9/src/scss/ninja.scss).
-- The JavaScript entry point [`src/main/webapp/admin/v9/src/js/app.js`](../../src/main/webapp/admin/v9/src/js/app.js) imports `ninja.scss`; Rspack emits it as `dist/css/main.style.css`.
-- Never edit compiled files in `dist/` or third-party/minified CSS. Override vendor styles in the appropriate project SCSS layer.
-- `inline.scss` is a separately loaded bundle for the inline editor. `blind-friendly.scss` is a separate simplified presentation. Do not place general administration styles in either file.
-- The UI foundation is Bootstrap 5, extended by DataTables Editor, Tabler Icons, Quill, Dropzone, Toastr, and selected jQuery UI components.
+Paths in this section are under `src/main/webapp/admin/v9/src/scss/`. `ninja.scss` sets Bootstrap variables, imports vendor styles and then imports project layers:
 
-## SCSS Architecture
+| Layer | Purpose |
+| --- | --- |
+| `2-helpers/` | Variables, CSS custom properties, functions, mixins and animation helpers |
+| `3-base/` | Shared typography, forms, tables, modals, trees, Quill and other base components |
+| `4-layout/` | Administration shell, using `ly-` selectors |
+| `5-modules/` | Reusable feature UI, commonly using `md-` selectors |
+| `6-pages/` | Page-specific rules, using `pg-` selectors |
+| `8-views/` | Print, browser/device, high-contrast and editor presentation modes |
+| `_hotfix.scss` | Final overrides; reserve for temporary compatibility fixes |
 
-`ninja.scss` defines Bootstrap overrides before importing Bootstrap and vendor packages, then loads project layers in this order:
+Use the narrowest reusable layer and preserve the surrounding selector conventions. Shared DataTables overrides belong mainly in `3-base/_table.scss` and `3-base/_modal.scss`; forms and button focus behavior belong in `3-base/_form.scss`.
 
-1. `2-helpers/` — shared variables, CSS custom properties, functions, mixins, placeholders, and animations.
-2. `3-base/` — global foundations and shared overrides for typography, forms, tables, modals, alerts, dropdowns, trees, and Quill.
-3. `4-layout/` — administration shell classes prefixed with `ly-`, including header, sidebar, content, and containers.
-4. `5-modules/` — reusable feature modules prefixed with `md-`, including navigation, tabs, breadcrumbs, upload, notifications, and AI UI.
-5. `6-pages/` — page-specific rules prefixed with `pg-`; use only when a rule is genuinely page-specific.
-6. `8-views/` — conditional presentation modes such as print, iframe/editor, browser/device variants, and high contrast.
-7. `_hotfix.scss` — loaded last; reserve it for temporary compatibility fixes, not durable component styling.
+## Tokens, Typography and Layout
 
-Place a change at the narrowest reusable level. Prefer an existing component or module selector over a page override, and scope vendor overrides to the affected WebJET component.
+The primary token definitions are in `ninja.scss`; `2-helpers/_variables.scss` exports runtime `--wj-*` properties. Prefer semantic tokens and existing CSS properties over near-duplicate hard-coded values.
 
-## Core Tokens
+| Purpose | Existing token/value |
+| --- | --- |
+| Primary action / hover | `$primary: #0063FB`, `$primary-hover: #0054D5` |
+| Main foreground | `$secondary: #13151B` |
+| Secondary text | `$gray-text: #686F83` |
+| Light surface | `$nice-gray: #F3F3F6` |
+| Border scale | `$nice-gray-100: #DDDFE6`, `$nice-gray-200: #B2B8C8`, `$nice-gray-300: #868EA5` |
+| Success / warning | `$success: #00BE9F`, `$warning: #FABD00` |
+| Danger semantic / button background | `$danger: #E00028`, `$danger-btn-bg: #FF4B58` |
+| AI accent | `$ai-color: #8A3EFF`, `$ai-color-dark: #4D009F`, `$ai-color-hover: #E3DBFF` |
 
-Tokens are defined at the top of `ninja.scss`. Shared runtime CSS properties are exported from `2-helpers/_variables.scss` as `--wj-*` variables.
+- The font is local **Asap**, weights 400 and 700, with a sans-serif fallback. Body text is 16px; small controls use 14px with line-height 1.5. Definitions are in `3-base/_font-face.scss`, `3-base/_body.scss` and `ninja.scss`.
+- Use Tabler `ti ti-*` icons; the filled font is configured as `tabler-icons-filled`. Give icon-only controls accessible names and hide decorative icons from assistive technology.
+- Shared border radii are 6px; the default grid gutter is 30px. Preserve the established compact control sizing.
+- Desktop sidebar width is 220px and header height is 48px. Below 1200px the sidebar moves off-canvas and the header changes arrangement; inspect `4-layout/` before altering shell dimensions.
+- Breakpoints in `2-helpers/_variables.scss` are 576, 768, 992, 1200 and 1600px (`$bp-dinosaur` through `$bp-desktop`). Reuse these variables and responsive mixins.
+- Shared modal sizes are `$modal-lg: 900px` and `$modal-xl: 1210px`; preserve the responsive DataTables Editor modal behavior.
 
-| Purpose | Token | Value |
-|---|---|---|
-| Primary action | `$primary` / `--wj-primary` | `#0063FB` |
-| Primary hover | `$primary-hover` / `--wj-primary-hover` | `#0054D5` |
-| Main dark/UI foreground | `$secondary` / `--wj-secondary` | `#13151B` |
-| Body text | `$body-color` | `#272727` |
-| Input text | `$input-color` | `#23262E` |
-| Secondary text | `$gray-text` / `--wj-gray-text` | `#686F83` (5.01:1 on white) |
-| Light surface | `$nice-gray` / `--wj-nice-gray` | `#F3F3F6` |
-| Borders/dividers | `$nice-gray-100`, `$nice-gray-200`, `$nice-gray-300` | `#DDDFE6`, `#B2B8C8`, `#868EA5` |
-| Success | `$success` | `#00BE9F` |
-| Warning | `$warning` | `#FABD00` |
-| Danger semantic / button | `$danger`, `$danger-btn-bg` | `#E00028`, `#FF4B58` |
-| AI accent | `$ai-color`, `$ai-color-dark`, `$ai-color-hover` | `#8A3EFF`, `#4D009F`, `#E3DBFF` |
+## Controls and Accessibility
 
-- Use semantic tokens instead of introducing near-duplicate hard-coded colors.
-- Prefer to use `var(--wj-*)` for runtime CSS properties instead of SCSS variables when possible.
-- All standard border radii are `6px` (`$border-radius`, `$border-radius-sm`, and `$border-radius-lg`).
-- Default grid gutter is `30px`.
-- Input borders use `$nice-gray-300`; focused input borders use `#62697C`; disabled inputs use `$nice-gray`.
-- Tooltips use `$secondary` as their background. Their arrows are intentionally transparent.
+- Reuse Bootstrap/WebJET variants such as `btn-primary`, `btn-outline-secondary`, `btn-success`, `btn-warning` and `btn-danger`. Primary blue marks the main action or selected state; secondary actions normally use the outlined variant.
+- The shared success/warning/danger buttons use dark foreground text. `btn-red` provides a solid red action with white text; `btn-white` provides an opaque white action. Both define hover, active and disabled colors through Bootstrap's `button-variant` mixin. Replace the variant class instead of combining conflicting variants.
+- Bootstrap's default button focus width is disabled. The shared `:focus-visible` rules provide a 2px dark outline, 2px offset and white outer ring for buttons and close controls; preserve an equivalent visible indicator.
+- Check default, hover, active, focused, selected and disabled states. Do not communicate state only through color; use native semantics or appropriate ARIA state.
+- Check text and control contrast in the actual rendered context. A token alone does not guarantee accessible contrast on every surface.
+- Modal dialogs need deliberate focus entry, keyboard containment where appropriate and return to the invoking control. Popovers and tooltips need keyboard access and dismissal appropriate to the component.
+- Keep labels, required state and validation feedback consistent with DataTables Editor forms. New motion must respect `prefers-reduced-motion`.
 
-## Typography and Icons
+## Verification
 
-- The administration font is **Asap**, with local font faces for weights 100, 400, and 700 and a `sans-serif` fallback.
-- Body text is `16px`; compact controls commonly use the Bootstrap small size configured as `14px` with line-height `1.5`.
-- Use the existing hierarchy and weights from the nearest component. Do not add a new font family for a feature.
-- Use Tabler Icons through `ti ti-*`; filled icons use the configured `tabler-icons-filled` font.
-- New icon-only controls require an accessible name. Decorative icons inside named controls must be hidden from assistive technology.
+Run commands from `src/main/webapp/admin/v9/`: `npm run dev` builds development assets; `npm run prod` builds production assets; `npm run watch` runs the development watcher with reload support (`watch:plain` omits that wrapper).
 
-## Component Conventions
-
-- Build controls from Bootstrap classes and existing WebJET variants before adding custom styles: `btn-primary`, `btn-outline-secondary`, `btn-success`, `btn-warning`, and `btn-danger`.
-- Primary blue is reserved for the main action or selected state. Secondary actions normally use the outlined dark variant.
-- Success, warning, and danger buttons intentionally use the dark `$secondary` foreground for readable contrast.
-- DataTables and DataTables Editor are shared application infrastructure. Their stable project overrides belong primarily in `3-base/_table.scss` and `3-base/_modal.scss`.
-- Forms and shared focus behavior belong in `3-base/_form.scss`. Keep labels, validation, required-state semantics, input groups, and buttons aligned with existing DataTables Editor forms.
-- Use `ly-` for layout, `md-` for reusable modules, and `pg-` for page-only rules. Preserve existing BEM-like names within those namespaces.
-- Keep compact table toolbars on the established 31px control rhythm. Use the existing spacing increments around toolbar buttons instead of inventing a separate toolbar layout.
-- Standard modal widths are `$modal-lg: 900px` and `$modal-xl: 1210px`. DataTables Editor modal behavior is responsive and shared; avoid fixed page-specific modal dimensions.
-
-## Interaction and Accessibility
-
-- The project replaces Bootstrap's default button focus width, so never assume the vendor focus ring is present.
-- Shared buttons use a `2px` `$secondary` `:focus-visible` outline, a `2px` offset, and a white outer ring. Preserve or improve this pattern; never remove keyboard focus without an equivalent visible replacement.
-- Validate every interactive control in default, hover, active, `:focus-visible`, selected/pressed, and disabled states.
-- Maintain at least 4.5:1 contrast for normal text and 3:1 for UI component boundaries, icons, and focus indicators.
-- Do not communicate state by color alone. Expose toggle and selection state with native semantics or suitable ARIA attributes.
-- Icon-only buttons need accessible names and must remain keyboard focusable. Tooltips must work on hover and keyboard focus and be dismissible with Escape.
-- Modal and popover interactions must move focus into the component, keep keyboard interaction logical, and restore focus to the invoking control when closed.
-- Prefer `:focus-visible` for keyboard indication. Do not make hover the only way to reveal information or actions.
-- New motion must be purposeful and must respect `prefers-reduced-motion`.
-
-## Layout and Responsive Behavior
-
-- The desktop sidebar is `220px` wide and the fixed header is `48px` high.
-- Shared breakpoints are `$bp-dinosaur: 576px`, `$bp-mobile: 768px`, `$bp-tablet: 992px`, `$bp-laptop: 1200px`, and `$bp-desktop: 1600px`.
-- Below the laptop breakpoint the sidebar moves off-canvas and the header changes to a compact mobile/tablet arrangement.
-- Reuse the breakpoint variables and existing responsive mixins. Do not add a nearby one-off media-query breakpoint unless the component has a demonstrated layout requirement.
-- Test dense table and modal layouts at desktop, below 1200px, and below 768px when the change can affect wrapping or keyboard order.
-
-## Implementation and Verification
-
-1. Inspect the nearest existing component and its interaction states before writing CSS.
-2. Reuse an existing SCSS or `--wj-*` token; introduce a new semantic token only when it will be reused.
-3. Put the rule in the correct architecture layer and scope it to avoid unrelated Bootstrap or vendor components.
-4. Build administration assets from `src/main/webapp/admin/v9/` with `npm run dev` for verification; use `npm run prod` for the production build when requested.
-5. Run the relevant E2E scenario from `src/test/webapp/` and add a regression assertion for accessibility or layout behavior when practical.
+Inspect the affected page in the running CMS, including keyboard use and responsive layouts. For table/modal changes, check desktop, below 1200px and below 768px where wrapping or focus order can change. Existing browser tests live under `src/test/webapp/`; follow [Working guide](CONTRIBUTING.md) and the applicable test skill for the target scenario.

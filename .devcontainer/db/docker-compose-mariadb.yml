@@ -1,6 +1,6 @@
 services:
   mariadb:
-    image: mariadb:11.5
+    image: mariadb:11.8.9
     container_name: webjetcms-mariadb
     environment:
       MYSQL_ROOT_PASSWORD: "${WEBJET_DB_PASS}"

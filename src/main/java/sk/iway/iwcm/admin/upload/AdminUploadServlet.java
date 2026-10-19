@@ -185,6 +185,9 @@ public class AdminUploadServlet extends HttpServlet
 
             String filePartName = tempUploadFile.getAbsolutePath();//filePart.get//getName();
             holder.getPartPaths().add(chunk, filePartName);
+            if (!isLast) {
+                session.setAttribute(partialUploadSessionKey, holder); //this update holder also in redis
+            }
             try {
                 output.put("chunk-uploaded", chunk);
                 output.put("size", new File(filePartName).length());

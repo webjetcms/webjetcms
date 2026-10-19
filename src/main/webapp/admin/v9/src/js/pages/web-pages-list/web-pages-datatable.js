@@ -8,6 +8,7 @@ export class WebPagesDatatable {
     options = null;
     webpagesDatatable = null;
     #webpagesDatatableEventsBinded = false;
+    #httpHeadersRequest = null;
 
     constructor(options) {
         var defaultTitleKey = "editor.newDocumentName";
@@ -210,6 +211,10 @@ export class WebPagesDatatable {
                     extend: "remove",
                     text: "<i class='ti ti-trash'></i>",
                     editor: historyTable.EDITOR,
+                    formMessage: function (editor, dt) {
+                        return $.fn.dataTable.ext.buttons.remove.formMessage(editor, dt)
+                            + "<p>" + WJ.translate("editor.history.delete.confirm.js") + "</p>";
+                    },
                     init: function ( dt, node, config ) {
                         var button = this;
                         dt.on('select.dt.DT deselect.dt.DT', function () {
@@ -217,8 +222,7 @@ export class WebPagesDatatable {
                             let count = 0;
                             dt.rows({selected: true}).every( function ( rowIdx, tableLoop, rowLoop ) {
                                 var data = this.data();
-                                if (data.publishStartStringExtra==null) show = false;
-                                if (data.publicable !== true) show = false;
+                                if (data.deleteAllowed !== true) show = false;
                                 count ++;
                             });
                             //console.log("show=", show, "count=", count);
@@ -355,6 +359,11 @@ export class WebPagesDatatable {
                 // this will set ALL input fields from JSON value
                 // it is different function as webpagesDatatable.EDITOR.field("data").setJson(json)
                 self.webpagesDatatable.EDITOR.setJson(json);
+
+                // Clear the visible tooltip and pending hover/focus timers before hiding History.
+                const historyEditButton = $("#pills-dt-datatableInit-history .buttons-history-edit");
+                historyEditButton.tooltip("dispose").removeAttr("aria-describedby");
+                WJ.initTooltip(historyEditButton);
 
                 //show content tab
                 $("#pills-dt-datatableInit-content-tab").trigger("click");
@@ -537,6 +546,55 @@ export class WebPagesDatatable {
         }
     }
 
+    /** Adds the header preview once and loads it only while the Basic tab is visible. */
+    #bindHttpHeaders() {
+        const modal = $("#" + this.webpagesDatatable.DATA.id + "_modal");
+        const basic = modal.find("div[id$='-basic'].tab-pane");
+        if (basic.find(".webpage-http-headers").length === 0) {
+            const section = $(`<div class="DTE_Field form-group row webpage-http-headers">
+                <div class="col-sm-4"></div>
+                <div class="col-sm-7"><h5 class="mb-3"></h5><pre class="mb-0" aria-live="polite"></pre></div>
+                <div class="col-sm-1 form-group-tooltip"><button type="button" class="btn btn-link" data-toggle="tooltip"><i class="ti ti-info-circle" aria-hidden="true"></i></button></div>
+            </div>`);
+            section.find("h5").text(WJ.translate("editor.http_headers.js"));
+            section.find("button").attr({ title: WJ.translate("editor.http_headers.tooltip.js"), "aria-label": WJ.translate("editor.http_headers.js") });
+            $(this.webpagesDatatable.EDITOR.field("cacheable").node()).after(section);
+            WJ.initTooltip(section.find("button"));
+        }
+        basic.find(".webpage-http-headers pre").text(WJ.translate("editor.http_headers.loading.js"));
+        modal.find("[id$='-basic-tab']").off("shown.bs.tab.httpHeaders").on("shown.bs.tab.httpHeaders", () => this.#updateHttpHeaders());
+        basic.off("change.httpHeaders").on("change.httpHeaders", "input, select", () => this.#updateHttpHeaders());
+        this.webpagesDatatable.EDITOR.off("close.httpHeaders").on("close.httpHeaders", () => this.#httpHeadersRequest?.abort());
+        this.#updateHttpHeaders();
+    }
+
+    /** Sends current editor values to the shared backend header calculation. */
+    #updateHttpHeaders() {
+        const output = $("#" + this.webpagesDatatable.DATA.id + "_modal .webpage-http-headers pre");
+        if (!output.is(":visible")) return;
+        this.#httpHeadersRequest?.abort();
+        output.attr("aria-busy", "true");
+        const editor = this.webpagesDatatable.EDITOR;
+        const values = editor.get(["title", "navbar", "tempId", "virtualPath", "editorVirtualPath", "generateUrlFromTitle", "urlInheritGroup", "searchable", "followLinks", "externalLink"]);
+        values.groupId = editor.get("editorFields.groupDetails").groupId;
+        values.docId = editor.currentJson?.docId ?? -1;
+        const json = JSON.stringify(values, (key, value) => {
+            if (Array.isArray(value) && value.length === 1 && [true, false, "true", "false"].includes(value[0])) return value[0] === true || value[0] === "true";
+            return value;
+        });
+        this.#httpHeadersRequest = $.ajax({
+            url: WJ.urlAddPath(this.webpagesDatatable.DATA.url, "/http-headers"), method: "POST", contentType: "application/json", data: json
+        }).done(headers => {
+            const names = ["X-Robots-Tag", "Referrer-Policy"];
+            if (headers.Location != null) names.push("Location");
+            output.text(names.map(name => name + ": " + (headers[name] ?? WJ.translate("editor.http_headers.not_sent.js"))).join("\n"));
+        }).fail((xhr, status) => {
+            if (status !== "abort") output.text(WJ.translate("editor.http_headers.error.js"));
+        }).always(() => {
+            output.removeAttr("aria-busy");
+        });
+    }
+
     #bindOpen() {
         var self = this;
         this.webpagesDatatable.EDITOR.on('opened', function (e, type, action) {
@@ -573,6 +631,7 @@ export class WebPagesDatatable {
 
             self.#showHideUrlAddress();
             self.#publishAfterStartChanged();
+            self.#bindHttpHeaders();
         });
         this.webpagesDatatable.EDITOR.on('open', function (e, mode, action) {
             //console.log("Open, e=", e, "mode=", mode, "action=", action);

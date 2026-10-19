@@ -3,6 +3,7 @@ extends ../../partials/layout
 block content
 
     script.
+        window.helpLink = "/admin/settings/cronjob/README";
         var cronTable;
         window.domReady.add(function () {
             var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.system.cron.CronTask')})];

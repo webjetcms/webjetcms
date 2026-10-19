@@ -78,7 +78,7 @@ function validateGenerateAudioOptions(node, fail) {
     fail("I.generateAudio options must be an object literal.");
   }
 
-  const allowedNames = new Set(["modelId", "voiceId", "language"]);
+  const allowedNames = new Set(["modelId", "voiceId", "language", "languageCode", "voiceSettings"]);
   const configuredNames = new Set();
   for (const property of node.properties) {
     const propertyName = property.key?.type === "Identifier"
@@ -86,12 +86,23 @@ function validateGenerateAudioOptions(node, fail) {
       : getStringLiteral(property.key);
     if (property.type !== "Property" || property.kind !== "init" || property.computed ||
       property.method || !allowedNames.has(propertyName)) {
-      fail("I.generateAudio options may contain only modelId, voiceId and language string literals.");
+      fail("I.generateAudio options may contain only modelId, voiceId, language, languageCode and voiceSettings.");
     }
     if (configuredNames.has(propertyName)) {
       fail(`I.generateAudio option ${propertyName} must not be repeated.`);
     }
     configuredNames.add(propertyName);
+    if (propertyName === "voiceSettings") {
+      if (property.value.type !== "ObjectExpression") {
+        fail("I.generateAudio voiceSettings must be an object literal.");
+      }
+      try {
+        readPlanMetadata(property.value, ["voiceSettings"]);
+      } catch (error) {
+        fail(error.message);
+      }
+      continue;
+    }
     if (getStringLiteral(property.value)?.trim() === "" || getStringLiteral(property.value) == null) {
       fail(`I.generateAudio option ${propertyName} must be a non-empty string literal.`);
     }

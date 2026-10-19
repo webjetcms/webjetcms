@@ -6,10 +6,10 @@ import sk.iway.iwcm.Tools;
 
 /**
  * Supported entity types for RAG indexing.
- * Currently only DOCUMENT is supported.
  */
 public enum RagEntityType {
-    DOCUMENT;
+    DOCUMENT,
+    MARKDOWN;
 
     /**
      * Parse a string value to RagEntityType (case-insensitive).
@@ -27,4 +27,3 @@ public enum RagEntityType {
         }
     }
 }
-

@@ -29,8 +29,9 @@ public class SessionDetails
 	@JsonIgnore
 	private String lastURL = "";
 	private String remoteAddr;
+	/** Unverified city and country reported by the browser at login. */
+	private String location;
 	private long logonTime;
-	@JsonIgnore
 	private long lastActivity;
 	@JsonIgnore
 	private String loggedUserName = null;
@@ -41,6 +42,12 @@ public class SessionDetails
 	private int domainId;
 	private String domainName;
 	private String browserName;
+	private String browserVersion;
+	private String operatingSystem;
+	private String operatingSystemVersion;
+
+	/** Account-owned browser record linked at completed login; older sessions may have no device. */
+	private Long deviceId;
 
 	public long getLastActivity() {
 		return lastActivity;

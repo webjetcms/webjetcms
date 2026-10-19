@@ -22,6 +22,7 @@ public class DocDetailsDto {
     private String createdByUserName;
     private String createdByUserLogin;
     private int groupId;
+    private String perexImage;
 
     public DocDetailsDto()
     {

@@ -70,6 +70,13 @@
   }
 }
 
+.DTE_Field_Type_quill.error {
+  .ql-toolbar.ql-snow,
+  .ql-container.ql-snow {
+    border-color: var(--bs-danger);
+  }
+}
+
 .ql-formats .form-control {
   display: none!important;
 }

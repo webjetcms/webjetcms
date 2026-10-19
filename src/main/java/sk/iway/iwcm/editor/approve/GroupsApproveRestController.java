@@ -22,14 +22,18 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.database.ComplexQuery;
 import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupSchedulerDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.GroupsTreeService;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDto;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDtoMapper;
 import sk.iway.iwcm.editor.rest.GroupSchedulerDtoRepository;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.users.UserDetails;
+import sk.iway.iwcm.users.UsersDB;
 
 /**
  * REST pre vratenie zoznamu stranok na schvalenie aktualne prihlasenym pouzivatelom
@@ -49,12 +53,37 @@ public class GroupsApproveRestController extends DatatableRestControllerV2<Group
     }
 
     @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public Page<GroupDetails> getAllItems(Pageable pageable) {
-        Page<GroupSchedulerDto> historyList = new DatatablePageImpl<>(repository.findAll(getToApproveConditions(getUser().getUserId())));
+        Specification<GroupSchedulerDto> conditions = getToApproveConditions(getUser().getUserId());
+        Page<GroupSchedulerDto> historyList;
+        if (getRequest().getParameter("size") == null) {
+            historyList = new DatatablePageImpl<>(repository.findAll(conditions));
+        } else {
+            historyList = repository.findAll(conditions, pageable);
+        }
 
-        List<GroupDetails> groupDetailsList = GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtosToGroupDetailsList(historyList.getContent());
+        List<GroupSchedulerDetails> groupDetailsList = GroupSchedulerDtoMapper.INSTANCE.groupSchedulerDtosToGroupSchedulerDetailsList(historyList.getContent());
 
-        return new DatatablePageImpl<>(groupDetailsList);
+        //set fullName of user who created the schedule
+        for (GroupSchedulerDetails groupDetails : groupDetailsList) {
+            int userId = groupDetails.getUserId();
+            // Assuming you have a method to get the full name by userId
+            String fullName = getUserFullNameById(userId, getProp());
+            groupDetails.setUserFullName(fullName);
+        }
+
+        return new DatatablePageImpl(groupDetailsList, historyList.getPageable(), historyList.getTotalElements());
+    }
+
+    private String getUserFullNameById(int userId, Prop prop) {
+        UserDetails userDetails = UsersDB.getUserCached(userId);
+        if (userDetails != null)
+        {
+            return userDetails.getFullName();
+        } else {
+            return prop.getText("editor.history.not_existing_user");
+        }
     }
 
     public static int countGroupsToApprove(int userId, GroupSchedulerDtoRepository repository) {

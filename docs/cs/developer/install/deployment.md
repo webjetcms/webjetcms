@@ -9,7 +9,6 @@ Před vytvořením buildu je třeba manuálně provést/zkontrolovat následují
 - připravit popis změn v souboru ```docs/CHANGELOG.md```
 - upravit soubor ```docs/README.md``` - ​​přidat na vrch nejnovější verzi z changelogu
 - upravit překladový klíč ```admin.overview.changelog``` se sumárem změn aktuální verze zobrazený pod uvítacím textem na úvodní obrazovce
-- upravit ```src/main/webapp/admin/v9/json/wjnews.LANG.json``` - ​​doplnit sumář a odkaz na changelog nejnovější verze
 
 Pokud se mění verze, aktualizujte ji v:
 
@@ -60,6 +59,14 @@ ant prepareAllJars createUpdateZipJar
 ## Kompilace Java a AspectJ
 
 Zdrojové kódy Java se během úlohy ```setup``` kompilují přes Gradle. Plugin ```io.freefair.aspectj.post-compile-weaving``` nejprve nechá ```javac``` a anotační procesory jako Lombok a MapStruct vygenerovat třídy a následně je před vytvořením WAR archivu zpracuje pomocí `AspectJ weaving`. Samostatná kompilace přes Ant/AJC již není nutná.
+
+## Seznam novinek na docs serveru
+
+Veřejné soubory `wjnews.sk.json`, `wjnews.cs.json` a `wjnews.en.json` vytváří [centrální generátor](social-media-feed.md) přímo na docs serveru. Cíl `rsyncToLicenseServer` přenáší pouze aktualizační archivy na licenční server; žádné JSON soubory z `admin/v9/json/` na docs server nekopíruje. Nasazení WebJET CMS tak nepřepisuje generované novinky.
+
+Generátor spusťte přes automatizovanou úlohu na docs serveru. Zachovaná veřejná URL je `https://docs.webjetcms.sk/json/wjnews.sk.json`, pro ostatní jazyky se mění pouze jazykový kód na `cs` nebo `en`. Novinky nainstalované verze zůstávají součástí překladového klíče `admin.overview.changelog` a dashboard je kombinuje s tímto seznamem.
+
+Balík `sk.iway.aceintegration.socialmedia` se na docs server nasazuje v archivu `build/updatezip/webjetcms.war` vytvořeném cílem `finalwar`, který doplňuje třídy z balíku `aceintegration`. Zákaznické JAR a aktualizační ZIP archivy tento balíček nezahrnují díky stávajícím filtrům v Ant buildu. Generované JSON soubory, náhledy a soukromá cache jsou vyloučeny z balení; vznikají až při běhu generátoru na serveru.
 
 ## Použití v klientských projektech
 

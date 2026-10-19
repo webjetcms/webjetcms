@@ -428,13 +428,13 @@ Scenario('Overenie vyhladavania podla boolean a password_protected', ({ I, DT })
     //prehladavat
     I.see("Newsletter", container);
     I.see("Testovaci newsletter", container);
-    //prepni prehladavat na ano
-    DT.filterSelect("searchable", "Áno");
+    // Show pages that allow indexing.
+    DT.filterSelect("searchable", "Povoliť vyhľadávanie cez vyhľadávače (index)");
     DT.waitForLoader();
     I.see("Newsletter", container);
     I.dontSee("Testovaci newsletter", container);
-    //prepni na nie
-    DT.filterSelect("searchable", "Nie");
+    // Show pages that disallow indexing.
+    DT.filterSelect("searchable", "Zakázať vyhľadávanie (noindex)");
     DT.waitForLoader();
     I.dontSee("Produktová stránka - B verzia", container);
     I.see("Testovaci newsletter", container);
@@ -1301,7 +1301,7 @@ Scenario('Jstree filtering', async ({ I }) => {
     I.jstreeFilter('sveta');
     I.seeElement(locate('.jstree-anchor').withText('Jet portal 4'));
     I.clickCss('#tree-folder-search-clear-button');
-    I.waitForInvisible("div.dt-processing", 40);
+    I.jstreeWaitForLoader();
     I.dontSeeInField('#tree-folder-search-input', pageName);
     I.seeElement(locate('.jstree-node.jstree-open').withText("Jet portal 4"));
 
@@ -1353,7 +1353,7 @@ Scenario('Jstree filtering', async ({ I }) => {
     I.jstreeFilter('test');
     I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('Kôš'));
     I.dontSeeElement(locate('.jstree-anchor.jstree-search').withText('System'));
-    I.seeElement(locate('.jstree-anchor.jstree-search').withText('subone-autotest'));
+    I.seeElement(locate('.jstree-anchor.jstree-search').withText('subone-autotest').first());
 });
 Scenario('Set default ordering setting before', ({ I }) => {
     I.amOnPage('/admin/v9/webpages/web-pages-list/');

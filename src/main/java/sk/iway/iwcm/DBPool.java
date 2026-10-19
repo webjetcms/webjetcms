@@ -49,6 +49,7 @@ public class DBPool
 {
 	private static DBPool instance = null;
 	private static Hashtable<String, ConfigurableDataSource> dataSourcesTable = null; //NOSONAR
+	private static Set<String> configuredDataSourceNames = Collections.emptySet();
 	private static Map<String, EntityManagerFactory> entityManagerFactories;
 	private static Map<String, DataSource> externalDataSources = null;
 	private static AtomicBoolean hasPrintedStackTrace = new AtomicBoolean(false);
@@ -89,6 +90,7 @@ public class DBPool
 	private synchronized void initialize()
 	{
 		dataSourcesTable = new Hashtable<>();
+		configuredDataSourceNames = new HashSet<>();
 
 		// inicializuj
 		Logger.println(this,"DBPool: init");
@@ -160,6 +162,7 @@ public class DBPool
 								Logger.println(DBPool.class, "Changing dbname from "+dbname+" to iwcm, systemIwcmDBName="+systemIwcmDBName);
 								dbname = "iwcm";
 							}
+							configuredDataSourceNames.add(dbname);
 
 							driver = XmlUtils.getFirstChildValue(n, "driver");
 							url = XmlUtils.getFirstChildValue(n, "url");
@@ -256,6 +259,11 @@ public class DBPool
 							password = decryptPassword(password);
 
 							HikariConfig hc = new HikariConfig();
+							if ("rag_jpa".equals(dbname)) {
+								// Keep the optional RAG pool registered while its database is offline.
+								// Explicit hikariProperties below may override this default.
+								hc.setInitializationFailTimeout(-1);
+							}
 							hc.setLeakDetectionThreshold(removeAbandonedTimeout*1000l);
 							hc.setAutoCommit(autoCommit);
 							hc.setReadOnly(readOnly);
@@ -762,6 +770,19 @@ public class DBPool
 		dataSourceNames.addAll(dataSourcesTable.keySet());
 		if (externalDataSources != null) dataSourceNames.addAll(externalDataSources.keySet());
 		return dataSourceNames;
+	}
+
+	/**
+	 * Checks whether a datasource name was explicitly present in configuration,
+	 * including a datasource whose connection pool failed to initialize.
+	 *
+	 * @param dataSourceName datasource name
+	 * @return {@code true} when the datasource was explicitly configured
+	 */
+	public static boolean isDataSourceConfigured(String dataSourceName)
+	{
+		if (configuredDataSourceNames.contains(dataSourceName)) return true;
+		return externalDataSources != null && externalDataSources.containsKey(dataSourceName);
 	}
 
 	/**

@@ -178,7 +178,7 @@ Scenario('Testovanie dvojfaktorovej autentifikacie', async ({ I, DT, DTE }) =>{
     }
 
     I.dontSee("Zadaný kód nie je správny.");
-    I.waitForElement(locate('h2').withText('Vitajte, Tester Google Authenticate'), 10);
+    I.waitForElement(locate('h1.md-dashboard__greeting').withText('Vitajte späť, Tester Google Authenticate'), 10);
 
     I.logout();
 });

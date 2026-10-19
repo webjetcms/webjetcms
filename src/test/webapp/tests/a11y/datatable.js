@@ -73,7 +73,12 @@ Scenario("export modal", async ({ I, DT, a11y }) => {
 Scenario("import modal", async ({ I, DT, a11y }) => {
     I.amOnPage("/admin/v9/templates/temps-list/");
     I.click(DT.btn.import_button);
-    I.waitForElement("#datatableImportModal", 5);
+    I.waitForVisible("#datatableImportModal.show", 5);
+    // Contrast measurements must use the final colors after the modal's fade transition.
+    I.waitForFunction(() => {
+        const modal = document.querySelector("#datatableImportModal");
+        return getComputedStyle(modal).opacity === "1" && modal.getAnimations({ subtree: true }).length === 0;
+    }, [], 5);
     await a11y.check();
 });
 
@@ -97,13 +102,18 @@ Scenario("p27: input with buttons-top-filter", async ({ I, a11y }) => {
 });
 
 Scenario("p28: select", async ({ I, DTE, a11y }) => {
-    I.amOnPage("/apps/enumeration/admin/enumeration-type/?id=2");
+    I.amOnPage("/apps/enumeration/admin/#2");
+    I.waitForElement("#SomStromcek a[data-type-id='2'].jstree-clicked", 10);
+    I.waitForEnabled(".tree-col .buttons-edit", 10);
+    I.clickCss(".tree-col .buttons-edit");
     DTE.waitForEditor("enumerationTypeDataTable");
     await a11y.check();
 });
 
-Scenario("p28: select-top-filter", async ({ I, DTE, a11y }) => {
+Scenario("News folder tree", async ({ I, DT, a11y }) => {
     I.amOnPage("/apps/news/admin/");
+    I.waitForElement("#SomStromcek .jstree-anchor");
+    DT.waitForLoader("newsDataTable");
     await a11y.check();
 });
 

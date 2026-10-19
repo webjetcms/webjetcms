@@ -340,7 +340,7 @@ Scenario('Verify admin modification of paid order', ({ I, DT, DTE }) => {
 
     DTE.save("datatableFieldDTE_Field_editorFields-items");
     I.waitForText("Suma k zaplateniu: 15,99 eur", 10, ".dt-footer-row > div > p");
-    DT.checkTableRow("datatableFieldDTE_Field_editorFields-items", 1, ["", "", SL.DeliveryMethods.byMailDelivery, "3,00", "2", "6,00", "23%", "7,38", "Opakované doručenie + zdraženie doručenia poštou."]);
+    DT.checkTableRow("datatableFieldDTE_Field_editorFields-items", 1, ["", "", SL.DeliveryMethods.byMailDelivery, "3,00", "3,69", "2", "6,00", "23%", "7,38", "Opakované doručenie + zdraženie doručenia poštou."]);
 
     I.amOnPage(SL.BASKET_ADMIN);
     DT.waitForLoader();
@@ -360,7 +360,7 @@ Scenario('Verify admin modification of paid order', ({ I, DT, DTE }) => {
 
     I.waitForText("Suma k zaplateniu: 28,29 eur", 10, ".dt-footer-row > div > p");
     DT.filterContains("itemTitle", "Tričko");
-    DT.checkTableRow("datatableFieldDTE_Field_editorFields-items", 1, ["", "", "Tričko", "10,00", "1", "10,00", "23%", "12,30"]);
+    DT.checkTableRow("datatableFieldDTE_Field_editorFields-items", 1, ["", "", "Tričko", "10,00", "12,30", "1", "10,00", "23%", "12,30"]);
     DTE.save("basketInvoiceDataTable");
 });
 

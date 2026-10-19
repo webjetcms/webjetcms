@@ -76,14 +76,8 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         EnumerationTypeBean actualSelectedType = getActualSelectedType();
         DatatablePageImpl<EnumerationDataBean> page;
 
-        Integer enumerationTypeId = Tools.getIntValue(getRequest().getParameter(ENUMERATION_TYPE_ID), -1);
-        if(enumerationTypeId == -1) {
-            //In FE, first  enumTypes is selected by default, soo get this default enumTypes and return its values
-            if (actualSelectedType != null) page = new DatatablePageImpl<>(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(actualSelectedType.getEnumerationTypeId(), pageable));
-            else page = new DatatablePageImpl<>(new ArrayList<>());
-        } else {
-            page = new DatatablePageImpl<>(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(enumerationTypeId, pageable));
-        }
+        if (actualSelectedType == null) page = new DatatablePageImpl<>(new ArrayList<>());
+        else page = new DatatablePageImpl<>(enumerationDataRepository.findAllByTypeIdAndHiddenFalse(actualSelectedType.getEnumerationTypeId(), pageable));
 
         processFromEntity(page, ProcessItemAction.GETALL);
 
@@ -94,7 +88,10 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
     public EnumerationDataBean getOneItem(long id) {
         EnumerationDataBean entity;
 
-        if(id == -1) entity = new EnumerationDataBean();
+        if(id == -1) {
+            if (getActualSelectedType() == null) throwError("components.enumerations.noTypes");
+            entity = new EnumerationDataBean();
+        }
         else entity = enumerationDataRepository.getNonHiddenByEnumId(id, false);
 
         processFromEntity(entity, ProcessItemAction.GETONE, 1);
@@ -107,10 +104,8 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         //Only hidden = false records (non soft deleted)
         predicates.add(builder.isFalse(root.get("hidden")));
 
-        int typeId = Tools.getIntValue(params.get(ENUMERATION_TYPE_ID), -1);
-        if(typeId > 0) {
-            predicates.add(builder.equal(root.get("typeId"), Integer.valueOf(typeId)));
-        }
+        EnumerationTypeBean type = getActualSelectedType();
+        predicates.add(builder.equal(root.get("typeId"), type == null ? 0 : type.getEnumerationTypeId()));
 
         //vyhladaj podla searchUserFullName
         super.addSpecSearch(params, predicates, root, builder);
@@ -143,6 +138,7 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
 
     @Override
     public void beforeSave(EnumerationDataBean entity) {
+        if (getActualSelectedType() == null) throwError("components.enumerations.noTypes");
         // trim all string fields before save, so last space in string using copy&paste from some text will not cause problems
         trimStringFields(entity);
 
@@ -154,14 +150,13 @@ public class EnumerationDataRestController extends DatatableRestControllerV2<Enu
         if (entity == null) entity = new EnumerationDataBean();
         EnumerationTypeBean actualSelectedType = getActualSelectedType();
 
+        if (actualSelectedType == null) return entity;
+
         //If action is CREATE - Set sort priority
         if(entity.getId() == null || entity.getId() == -1) {
-            Integer maxSortPriority = enumerationDataRepository.findMaxSortPriorityByTypeId(getActualSelectedType().getEnumerationTypeId()).orElse(0);
+            Integer maxSortPriority = enumerationDataRepository.findMaxSortPriorityByTypeId(actualSelectedType.getEnumerationTypeId()).orElse(0);
             entity.setSortPriority(maxSortPriority + 1);
         }
-
-        //If EnumerationType is not set, we cant set editor fields
-        if(actualSelectedType == null) return entity;
 
         if(entity.getEditorFields() == null) {
             EnumerationDataEditorFields edef = new EnumerationDataEditorFields();

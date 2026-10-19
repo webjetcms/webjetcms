@@ -4,9 +4,10 @@ WebJET nabízí několik „veřejných služeb“ přes REST služby, které m�
 
 Volání těchto služeb musí být povoleno, jinak jsou služby nedostupné. Povolení pro IP adresy se nastavuje přes konfigurační proměnné:
 
-- `restAllowedIpAddresses` - ​​seznam povolených IP adres pro volání všech veřejných služeb
+- `restAllowedIpAddresses` - ​​společný seznam povolených IP adres pro veřejné služby, který se použije při prázdném nastavení konkrétního controlleru
 - `restAllowedIpAddresses-DocRestController` - ​​povoleny IP adresy pro volání služby získání textu web stránky
 - `restAllowedIpAddresses-PropertiesRestController` - ​​povolené IP adresy pro volání služby překladových klíčů
+- `restAllowedIpAddresses-MarkdownSearchRestController` - ​​povolené IP adresy pro [vyhledávání v Markdown dokumentaci](../apps/rag/markdown-search.md)
 
 Zadáním znaku `*` se povolí všechny IP adresy, můžete zadat několik začátků IP adres oddělených čárkou, například: `192.168.,62.65.161.4,10.10.0.`.
 
@@ -26,6 +27,30 @@ Příklady použití:
 - `/rest/documents/50124`
 - `/rest/documents/en/gallery/kitchen`
 - `/rest/documents/en/home-html`
+
+## Vyhledávání v Markdown dokumentaci
+
+Služba sémanticky vyhledává v nakonfigurovaných kořenech Markdown dokumentace. Vrací nalezené dokumenty s ukázkami textu a při zapnutém `ragAnswerAllowed` i odpověď AI sestavenou z přístupného obsahu.
+
+Příklad volání koncového bodu typu `GET`:
+
+```http
+GET /rest/rag/markdown/search?query=How%20to%20edit%20a%20page&language=en
+```
+
+Parametry:
+
+- `query` - ​​povinná otázka nebo hledaný text.
+- `language` - ​​povinný kód jazyka dokumentace, například `sk`, `cs` nebo `en`.
+- `directory` - ​​volitelné omezení na adresář včetně podadresářů, například `/en/redactor/`. Jazyk v cestě musí odpovídat parametru `language`.
+
+Odpověď je JSON s polem `results`. Každý výsledek obsahuje `title`, `url`, `sourcePath`, `snippet` a `score`. Odpověď AI je v poli `answer` ; pokud není dostupná, má hodnotu `null`.
+
+I po povolení IP adresy se ve výchozím nastavení vyžaduje přihlášení; postačuje běžný uživatelský účet. Pro anonymní vyhledávání nastavte navíc `ragMarkdownSearchRequireLogin=false`. Nadále platí přístupová práva k souborům a omezení počtu požadavků.
+
+Po IP kontrole služba ověří dostupnost sémantického vyhledávání. Pokud není dostupné, vrátí HTTP `503` bez dalšího zpracování požadavku, i když existují výsledky v cache.
+
+Nastavení kořenů, indexování a úplný formát odpovědi naleznete v dokumentaci [Vyhledávání v Markdown dokumentaci](../apps/rag/markdown-search.md).
 
 ## Překladové klíče
 

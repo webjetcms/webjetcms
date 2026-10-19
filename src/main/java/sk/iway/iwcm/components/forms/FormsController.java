@@ -97,6 +97,12 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, FormsEntity> target, Identity user, Errors errors, Long id, FormsEntity entity) {
         if("remove".equals(target.getAction()) == false) {
+            FormSettingsEntity formSettings = entity.getFormSettings();
+            if (FormsService.FORM_TYPE.MULTISTEP.value().equals(entity.getFormType()) && formSettings != null
+                    && Tools.isTrue(formSettings.getForwardAsContent()) && Tools.isEmpty(formSettings.getForward())) {
+                errors.rejectValue("errorField.formSettings.forward", null, getProp().getText("media.doc_tree_select.required"));
+            }
+
             // Check if form is trying save as rowView == false but got rowView items
             String formName = entity.getFormName();
             if(Tools.isEmpty(formName)) return;
@@ -144,6 +150,8 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
     @Override
     public void afterSave(FormsEntity entity, FormsEntity saved) {
         if (isDuplicate()) {
+            // The duplication service transaction has committed before this hook runs.
+            MultistepFormsService.clearValidationFieldsCache(saved.getFormName(), saved.getDomainId());
             setRedirect("/apps/form/admin/form-steps/?formName=" + Tools.URLEncode(saved.getFormName()));
             return;
         }
@@ -167,6 +175,7 @@ public class FormsController extends DatatableRestControllerV2<FormsEntity, Long
             fse.setMaxPosition(1);
             fse.setDomainId(CloudToolsForCore.getDomainId());
             formStepsRepository.save(fse);
+            MultistepFormsService.clearValidationFieldsCache(fse.getFormName(), fse.getDomainId());
 
             if (FormsService.FORM_TYPE.MULTISTEP.value().equals(entity.getFormType())) {
                 setRedirect("/apps/form/admin/form-steps/?formName=" + Tools.URLEncode(saved.getFormName()));

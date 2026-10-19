@@ -108,7 +108,7 @@ public class TopRestController extends DatatableRestControllerV2<TopDTO, Long> {
         return items;
     }
 
-    private List<TopDTO> columnsToPageItems(List<Column> columns) {
+    List<TopDTO> columnsToPageItems(List<Column> columns) {
         List<TopDTO> items = new ArrayList<>();
 
         int orderCount = 1;
@@ -116,10 +116,12 @@ public class TopRestController extends DatatableRestControllerV2<TopDTO, Long> {
             TopDTO item = new TopDTO();
             item.setOrder(orderCount);
             item.setName(column.getColumn6());
+            item.setTitle(column.getColumn2());
             item.setVisits(column.getIntColumn3());
             item.setSessions(column.getIntColumn4());
             item.setUniqueUsers(column.getIntColumn5());
             item.setDocId(Integer.parseInt(column.getColumn1()));
+            item.setPerexImage(column.getColumn8());
             orderCount++;
             items.add(item);
         }

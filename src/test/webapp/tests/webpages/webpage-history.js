@@ -123,7 +123,7 @@ Scenario('Historia webstranok', ({ I, DTE }) => {
      // Aktivovat - Zobrazenie web stranky a vyhladanie cez vyhladavace a pridanie poznamky redaktora
      I.say('1.Aktivovat - Zobrazenie web stranky a vyhladanie cez vyhladavace a pridanie poznamky redaktora');
      I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_available_0').find('.form-check-label'));
-     I.click(locate('.custom-control.form-switch').withChild('#DTE_Field_searchable_0').find('.form-check-label'));
+     I.checkOption('#DTE_Field_searchable_0');
      I.fillField('#DTE_Field_editorFields-redactorNote', 'webpages history autotest');
 
      // Pridanie textu do obsahu a ulozenie udajov
@@ -254,6 +254,69 @@ Scenario('Zmaz strukturu', ({ I }) => {
      I.deleteFolderStructure(randomNumber);
 });
 
+Scenario('WYSIWYG content survives saving, reopening and history restoration', async ({ I, DT, DTE, Document }) => {
+     const suffix = randomNumber + '-wysiwyg';
+     const title = 'webPage-autotest-' + suffix;
+     const original = 'Autotest original rich-text content';
+     const updated = 'Autotest updated rich-text content';
+     Document.resetPageBuilderMode();
+     I.amOnPage('/admin/v9/webpages/web-pages-list/?groupid=0');
+     I.createFolderStructure(suffix, false);
+     I.click(DT.btn.add_button);
+     DTE.waitForEditor();
+     I.clickCss('#pills-dt-datatableInit-basic-tab');
+     DTE.fillField('title', title);
+     DTE.fillField('navbar', title);
+     I.clickCss('#pills-dt-datatableInit-content-tab');
+     await DTE.fillCkeditor('<p>' + original + '</p>');
+     DTE.save();
+
+     I.click(title);
+     DTE.waitForEditor();
+     I.clickCss('#pills-dt-datatableInit-content-tab');
+     I.switchTo('.cke_wysiwyg_frame');
+     I.waitForText(original, 10);
+     I.switchTo();
+     await DTE.fillCkeditor('<p>' + updated + '</p>');
+     DTE.save();
+
+     I.click(title);
+     DTE.waitForEditor();
+     I.clickCss('#pills-dt-datatableInit-content-tab');
+     I.switchTo('.cke_wysiwyg_frame');
+     I.waitForText(updated, 10);
+     I.dontSee(original);
+     I.switchTo();
+     I.clickCss('#pills-dt-datatableInit-history-tab');
+     DT.waitForLoader(historyProcessing);
+     I.seeNumberOfElements(historyTable + ' tbody tr', 2);
+     // History is ordered newest first; restore the initial saved version.
+     I.clickCss(historyTable + ' tbody tr:last-child td.dt-select-td');
+     I.clickCss(historyWrapper + ' button.buttons-history-edit');
+     I.waitForElement('#pills-dt-datatableInit-content-tab.active', 10);
+     I.switchTo('.cke_wysiwyg_frame');
+     I.waitForText(original, 10);
+     I.dontSee(updated);
+     I.switchTo();
+     DTE.save();
+
+     I.click(title);
+     DTE.waitForEditor();
+     I.clickCss('#pills-dt-datatableInit-content-tab');
+     I.switchTo('.cke_wysiwyg_frame');
+     I.waitForText(original, 10);
+     I.dontSee(updated);
+     I.switchTo();
+     DTE.cancel();
+});
+
+Scenario('Cleanup WYSIWYG history restoration fixture', ({ I }) => {
+     const suffix = randomNumber + '-wysiwyg';
+     I.amOnPage('/admin/v9/webpages/web-pages-list/');
+     I.jstreeNavigate(['name-autotest-' + suffix]);
+     I.deleteFolderStructure(suffix);
+});
+
 Scenario('history from multigroup mapping', ({ I, DT, DTE }) => {
      //open slave page and load history version
      I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=143');
@@ -291,13 +354,13 @@ Scenario('open webpage history from URL', ({ I, DTE }) => {
      I.dontSeeInCurrentUrl("history=687");
 });
 
-Scenario('not-publicable history row when saving with same future publish date', async ({ I, DT, DTE }) => {
+Scenario('not-publicable history row when saving with same future publish date @singlethread', async ({ I, DT, DTE }) => {
      const docId = 22956;
      const delete_history_button = locate(historyWrapper).find('.btn.buttons-history-remove');
 
-     // Set future publish date for the page
+     // Verify the original scheduling behavior without database cleanup permission.
      I.say('Set future publish date for the page');
-     I.amOnPage(`/admin/v9/webpages/web-pages-list/?docid=${docId}`);
+     I.amOnPage(`/admin/v9/webpages/web-pages-list/?docid=${docId}&removePerm=cmp_data_deleting`);
      DTE.waitForEditor();
 
      const tomorrow = new Date();
@@ -336,9 +399,11 @@ Scenario('not-publicable history row when saving with same future publish date',
      await I.clickIfVisible(".toast-close-button");
 
      I.clickCss("#pills-dt-datatableInit-history-tab");
+     I.waitForVisible(historyTable, 10);
      DT.waitForLoader(historyProcessing);
 
      // Verify not-publicable row has line-through styling (not-publicable CSS class)
+     I.waitForVisible(historyTable + ' tr.not-publicable', 10);
      I.seeElement(locate(historyTable + ' tr.not-publicable'));
 
      // Select the not-publicable row and verify delete button is disabled
@@ -360,4 +425,5 @@ Scenario('not-publicable history row when saving with same future publish date',
      DTE.fillField("publishStartDate", "");
      I.uncheckOption("#DTE_Field_editorFields-publishAfterStart_0");
      DTE.save();
+     I.logout();
 });

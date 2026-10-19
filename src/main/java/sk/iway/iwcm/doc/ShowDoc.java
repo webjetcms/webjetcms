@@ -102,11 +102,13 @@ public class ShowDoc extends HttpServlet {
         while (parameters.hasMoreElements())
         {
            String name = parameters.nextElement();
-           if (testXss(name) || name.indexOf('"')!=-1 || name.indexOf('\'')!=-1)
+           boolean hasControlCharacter = name.chars().anyMatch(Character::isISOControl);
+           if (hasControlCharacter || testXss(name) || name.indexOf('"')!=-1 || name.indexOf('\'')!=-1)
            {
                hasXss = true;
                continue;
            }
+           String encodedName = Tools.URLEncode(name);
            String[] values = request.getParameterValues(name);
             for (String s : values) {
                 String value = s;
@@ -125,7 +127,7 @@ public class ShowDoc extends HttpServlet {
                 if (redirectUrl.isEmpty() == false) redirectUrl.append('&');
                 if (valueHasXss) {
                     //hodnotu parametra vyhodime
-                    redirectUrl.append(name).append('=');
+                    redirectUrl.append(encodedName).append('=');
                 } else {
                     //vyhadzujeme niektore value, napr. password a podobne, musi to byt contains, lebo v regforme to moze byt usr.password a podobne
                     //nechceme, aby to bolo potom vidno v access logoch a podobne
@@ -134,7 +136,7 @@ public class ShowDoc extends HttpServlet {
                     }
 
                     //pridame celu hodnotu parametra
-                    redirectUrl.append(name).append('=').append(Tools.URLEncode(value));
+                    redirectUrl.append(encodedName).append('=').append(Tools.URLEncode(value));
                 }
             }
         }
@@ -1038,11 +1040,9 @@ private static String combineCss(String cssStyle)
         //ak to nie je urcene pre editor a mame nastavene presmerovanie na externu linku
         if (skipExternalLink==false && request.getParameter("approveNoRedirect")==null && request.getParameter("notemp") == null && Tools.isNotEmpty(doc.getExternalLink()))
         {
-            String externalLink = doc.getExternalLink();
-            String qs = (String)request.getAttribute("path_filter_query_string");
-            if (Tools.isNotEmpty(qs) && externalLink.indexOf('?')==-1 && !qs.contains("docid")) externalLink += "?"+qs;
+            String externalLink = getExternalLinkRedirectUrl(doc, request);
 
-            if (externalLink.startsWith("http://") || externalLink.startsWith("https://"))
+            if (doc.getExternalLink().startsWith("http://") || doc.getExternalLink().startsWith("https://"))
             {
                 response.sendRedirect(externalLink);
                 return ;
@@ -1050,7 +1050,6 @@ private static String combineCss(String cssStyle)
             else
             {
                 response.setStatus(301);
-                externalLink = Tools.getBaseHref(request)+externalLink;
                 response.setHeader("Location", externalLink);
                 return ;
             }
@@ -1685,6 +1684,16 @@ private static String combineCss(String cssStyle)
     private IwcmFile getTemplateFile(String template)
     {
         return new IwcmFile(Tools.getRealPath(template));
+    }
+
+    /** Resolves the page redirect target, retaining the public request's query string when applicable. */
+    public static String getExternalLinkRedirectUrl(DocDetails doc, HttpServletRequest request) {
+        String externalLink = doc.getExternalLink();
+        if (Tools.isEmpty(externalLink)) return null;
+        String qs = (String) request.getAttribute("path_filter_query_string");
+        if (Tools.isNotEmpty(qs) && externalLink.indexOf('?') == -1 && !qs.contains("docid")) externalLink += "?" + qs;
+        if (externalLink.startsWith("http://") || externalLink.startsWith("https://")) return externalLink;
+        return Tools.getBaseHref(request) + externalLink;
     }
 
     public static void setActualUserHash(String hash) {

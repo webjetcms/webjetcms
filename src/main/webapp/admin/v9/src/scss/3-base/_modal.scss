@@ -63,6 +63,19 @@ body.modal-open {
             margin-bottom: 0;
         }
 
+        .webpage-http-headers pre {
+            font-size: 13px;
+            min-height: 2lh;
+
+            &[aria-busy="true"] {
+                opacity: 0.65;
+            }
+
+            @media (prefers-reduced-motion: no-preference) {
+                transition: opacity 150ms ease;
+            }
+        }
+
         hr+h5 {
             margin-top: 30px;
         }
@@ -530,7 +543,7 @@ body.modal-open {
                 font-size: 20px;
                 vertical-align: text-bottom;
             }
-            div.DTE_Field_InputControl button.btn-outline-secondary {
+            div.DTE_Field_InputControl button.btn-outline-secondary:not(.close-custom-modal) {
                 i.ti {
                     font-size: 20px;
                     vertical-align: text-bottom;
@@ -1275,6 +1288,9 @@ html.in-iframe-show-table {
             padding-top: 0px !important;
             padding-bottom: 0px !important;
             border: 0px;
+            div.dialog-buttons {
+                top: 0px;
+            }
             button {
                 z-index: 999;
                 position: absolute;

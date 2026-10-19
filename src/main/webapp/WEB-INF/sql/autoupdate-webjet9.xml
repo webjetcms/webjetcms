@@ -3959,6 +3959,196 @@
         <void method="add">
             <object class="sk.iway.iwcm.system.UpdateDBBean">
                 <void property="author"><string>codex</string></void>
+                <void property="date"><string>26.09.2026</string></void>
+                <void property="desc"><string>user_settings_admin - use transactional storage for atomic dashboard preferences</string></void>
+                <void property="mysql"><string>ALTER TABLE user_settings_admin ENGINE=InnoDB</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>28.09.2026</string></void>
+                <void property="desc"><string>rag_index_queue - support Markdown source identifiers and domain context</string></void>
+                <void property="mysql"><string>
+                    ALTER TABLE rag_index_queue MODIFY COLUMN entity_id BIGINT NOT NULL;
+                </string></void>
+                <void property="mssql"><string>
+                    DROP INDEX uq_rag_queue ON rag_index_queue;
+                    ALTER TABLE rag_index_queue ALTER COLUMN entity_id BIGINT NOT NULL;
+                    CREATE UNIQUE INDEX uq_rag_queue ON rag_index_queue (entity_type, entity_id, action, domain_id);
+                </string></void>
+                <!-- Oracle INTEGER already supports 38 decimal digits, including all Java long identifiers. -->
+                <void property="oracle"><string></string></void>
+                <void property="pgsql"><string>
+                    ALTER TABLE rag_index_queue ALTER COLUMN entity_id TYPE BIGINT;
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>sivan</string></void>
+                <void property="date"><string>28.09.2026</string></void>
+                <void property="desc"><string>rag_index_queue - add Markdown source_path columns</string></void>
+                <void property="mysql"><string>
+                    ALTER TABLE rag_index_queue ADD COLUMN source_path TEXT NULL;
+                </string></void>
+                <void property="mssql"><string>
+                    ALTER TABLE rag_index_queue ADD source_path NTEXT NULL;
+                </string></void>
+                <void property="oracle"><string>
+                    ALTER TABLE rag_index_queue ADD (source_path CLOB NULL);
+                </string></void>
+                <void property="pgsql"><string>
+                    ALTER TABLE rag_index_queue ADD COLUMN source_path TEXT;
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>05.10.2026</string></void>
+                <void property="desc"><string>user_login_devices - remember authenticated administration browsers</string></void>
+                <void property="mysql"><string>
+                    CREATE TABLE user_login_devices (
+                        device_id BIGINT NOT NULL AUTO_INCREMENT,
+                        user_id INT NOT NULL,
+                        token_hash CHAR(64) NOT NULL,
+                        create_date DATETIME(3) NOT NULL,
+                        last_seen DATETIME(3) NOT NULL,
+                        browser_name VARCHAR(128),
+                        browser_version VARCHAR(64),
+                        operating_system VARCHAR(128),
+                        ip_address VARCHAR(64),
+                        location VARCHAR(160),
+                        confirmed_at DATETIME(3) NULL,
+                        reported_at DATETIME(3) NULL,
+                        confirmation_hash CHAR(64),
+                        confirmation_expires DATETIME(3),
+                        code_hash CHAR(64),
+                        code_expires DATETIME(3),
+                        code_attempts INT NOT NULL DEFAULT 0,
+                        CONSTRAINT pk_user_login_devices PRIMARY KEY (device_id),
+                        CONSTRAINT uq_login_devices_user_token UNIQUE (user_id, token_hash)
+                    ) ENGINE=InnoDB;
+                    CREATE INDEX ix_login_devices_seen ON user_login_devices (last_seen);
+                </string></void>
+                <void property="mssql"><string>
+                    CREATE TABLE user_login_devices (
+                        device_id BIGINT IDENTITY(1,1) NOT NULL,
+                        user_id INT NOT NULL,
+                        token_hash CHAR(64) NOT NULL,
+                        create_date DATETIME2(3) NOT NULL,
+                        last_seen DATETIME2(3) NOT NULL,
+                        browser_name NVARCHAR(128),
+                        browser_version NVARCHAR(64),
+                        operating_system NVARCHAR(128),
+                        ip_address VARCHAR(64),
+                        location VARCHAR(160),
+                        confirmed_at DATETIME2(3) NULL,
+                        reported_at DATETIME2(3) NULL,
+                        confirmation_hash CHAR(64),
+                        confirmation_expires DATETIME2(3),
+                        code_hash CHAR(64),
+                        code_expires DATETIME2(3),
+                        code_attempts INT NOT NULL DEFAULT 0,
+                        CONSTRAINT pk_user_login_devices PRIMARY KEY (device_id),
+                        CONSTRAINT uq_login_devices_user_token UNIQUE (user_id, token_hash)
+                    );
+                    CREATE INDEX ix_login_devices_seen ON user_login_devices (last_seen);
+                </string></void>
+                <void property="oracle"><string>
+                    CREATE TABLE user_login_devices (
+                        device_id NUMBER(19) GENERATED ALWAYS AS IDENTITY NOT NULL,
+                        user_id INTEGER NOT NULL,
+                        token_hash CHAR(64) NOT NULL,
+                        create_date TIMESTAMP(3) NOT NULL,
+                        last_seen TIMESTAMP(3) NOT NULL,
+                        browser_name NVARCHAR2(128),
+                        browser_version NVARCHAR2(64),
+                        operating_system NVARCHAR2(128),
+                        ip_address VARCHAR2(64),
+                        location VARCHAR2(160),
+                        confirmed_at TIMESTAMP(3) NULL,
+                        reported_at TIMESTAMP(3) NULL,
+                        confirmation_hash CHAR(64),
+                        confirmation_expires TIMESTAMP(3),
+                        code_hash CHAR(64),
+                        code_expires TIMESTAMP(3),
+                        code_attempts INTEGER DEFAULT 0 NOT NULL,
+                        CONSTRAINT pk_user_login_devices PRIMARY KEY (device_id),
+                        CONSTRAINT uq_login_devices_user_token UNIQUE (user_id, token_hash)
+                    );
+                    CREATE INDEX ix_login_devices_seen ON user_login_devices (last_seen);
+                </string></void>
+                <void property="pgsql"><string>
+                    CREATE TABLE user_login_devices (
+                        device_id BIGSERIAL NOT NULL,
+                        user_id INT NOT NULL,
+                        token_hash CHAR(64) NOT NULL,
+                        create_date TIMESTAMP(3) NOT NULL,
+                        last_seen TIMESTAMP(3) NOT NULL,
+                        browser_name VARCHAR(128),
+                        browser_version VARCHAR(64),
+                        operating_system VARCHAR(128),
+                        ip_address VARCHAR(64),
+                        location VARCHAR(160),
+                        confirmed_at TIMESTAMP(3) NULL,
+                        reported_at TIMESTAMP(3) NULL,
+                        confirmation_hash CHAR(64),
+                        confirmation_expires TIMESTAMP(3),
+                        code_hash CHAR(64),
+                        code_expires TIMESTAMP(3),
+                        code_attempts INT NOT NULL DEFAULT 0,
+                        CONSTRAINT pk_user_login_devices PRIMARY KEY (device_id),
+                        CONSTRAINT uq_login_devices_user_token UNIQUE (user_id, token_hash)
+                    );
+                    CREATE INDEX ix_login_devices_seen ON user_login_devices (last_seen);
+                </string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>05.10.2026</string></void>
+                <void property="desc"><string>crontab - clean up expired administration login devices and events daily</string></void>
+                <void property="mysql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Users - Remove expired login device history', '0', '41', '3', '*', '*', '*', '*', 'sk.iway.iwcm.users.devices.DeviceCleanup', NULL, 'false', 'all')</string></void>
+                <void property="mssql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Users - Remove expired login device history', '0', '41', '3', '*', '*', '*', '*', 'sk.iway.iwcm.users.devices.DeviceCleanup', NULL, 'false', 'all')</string></void>
+                <void property="oracle"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Users - Remove expired login device history', '0', '41', '3', '*', '*', '*', '*', 'sk.iway.iwcm.users.devices.DeviceCleanup', NULL, 0, 'all')</string></void>
+                <void property="pgsql"><string>INSERT INTO crontab (task_name, second, minute, hour, dayofmonth, month, dayofweek, year, task, extrainfo, businessDays, cluster_node) VALUES ('Users - Remove expired login device history', '0', '41', '3', '*', '*', '*', '*', 'sk.iway.iwcm.users.devices.DeviceCleanup', NULL, false, 'all')</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>14.10.2026</string></void>
+                <void property="desc"><string>templates - add stop-word removal mode for page URLs</string></void>
+                <void property="mysql"><string>ALTER TABLE templates ADD COLUMN url_remove_spojky_mode TINYINT NOT NULL DEFAULT 0;</string></void>
+                <void property="mssql"><string>ALTER TABLE templates ADD url_remove_spojky_mode TINYINT NOT NULL DEFAULT 0;</string></void>
+                <void property="oracle"><string>ALTER TABLE templates ADD (url_remove_spojky_mode NUMBER(1) DEFAULT 0 NOT NULL);</string></void>
+                <void property="pgsql"><string>ALTER TABLE templates ADD COLUMN url_remove_spojky_mode SMALLINT NOT NULL DEFAULT 0;</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
+                <void property="date"><string>14.10.2026</string></void>
+                <void property="desc"><string>form_settings - add forward_as_content for inline multistep form confirmation</string></void>
+                <void property="mysql"><string>ALTER TABLE form_settings ADD COLUMN forward_as_content TINYINT(1) NOT NULL DEFAULT 0</string></void>
+                <void property="mssql"><string>ALTER TABLE form_settings ADD forward_as_content BIT NOT NULL DEFAULT 0</string></void>
+                <void property="oracle"><string>ALTER TABLE form_settings ADD (forward_as_content NUMBER(1) DEFAULT 0 NOT NULL)</string></void>
+                <void property="pgsql"><string>ALTER TABLE form_settings ADD COLUMN forward_as_content BOOLEAN NOT NULL DEFAULT FALSE</string></void>
+            </object>
+        </void>
+
+        <void method="add">
+            <object class="sk.iway.iwcm.system.UpdateDBBean">
+                <void property="author"><string>codex</string></void>
                 <void property="date"><string>14.09.2026</string></void>
                 <void property="desc"><string>Statistics - inherited page measurement mode for templates and template groups</string></void>
                 <void property="mysql"><string>ALTER TABLE templates ADD COLUMN statistics_mode INT NOT NULL DEFAULT 0; ALTER TABLE templates_group ADD COLUMN statistics_mode INT NOT NULL DEFAULT 0;</string></void>

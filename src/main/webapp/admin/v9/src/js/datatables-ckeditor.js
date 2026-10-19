@@ -607,41 +607,38 @@ export class DatatablesCkEditor {
 
 					// Thumb tab - configure /thumb image parameters
 					var strictThumbSizes = ev.editor.config.thumbServletAllowedSizeMode === 'strict';
-					var allowedThumbSizes = strictThumbSizes ? [...new Set((ev.editor.config.thumbServletAllowedSizes || '').split(/[,\r\n]+/).map(value => value.trim()))]
+					var denyThumbSizes = ev.editor.config.thumbServletAllowedSizeMode === 'deny';
+					var existingThumbQuality = '';
+					var allowedThumbSizes = [...new Set((ev.editor.config.thumbServletAllowedSizes || '').split(/[,\r\n]+/).map(value => value.trim()))]
 						.map(parseAllowedThumbSize).filter(size => size !== null)
-						.sort((a, b) => Number(a.width) - Number(b.width) || Number(a.height) - Number(b.height) || a.value.localeCompare(b.value)) : [];
+						.sort((a, b) => Number(a.width) - Number(b.width) || Number(a.height) - Number(b.height) || a.value.localeCompare(b.value));
+					var selectThumbSizes = strictThumbSizes || allowedThumbSizes.length > 0;
 
-					dialogDefinition.addContents(
+					if (!denyThumbSizes) dialogDefinition.addContents(
 					{
 						id: 'thumb',
 						label: that.translate("thumbTabTitle"),
-						elements: strictThumbSizes ? [{
+						elements: [...(selectThumbSizes ? [{
 							type: 'select',
 							id: 'thumbAllowedSize',
-							label: that.translate("allowedSize"),
+							label: WJ.translate("editor.thumb.size.js"),
 							'default': '',
-							items: [['', ''], ...allowedThumbSizes.map(size => {
-								var modeLabel = that.translate("thumbIp" + size.ipMode) || that.translate("thumbIpMode");
-								var label = size.width + ' x ' + size.height + ' (' + size.ipMode + ' - ' + modeLabel + ')';
-								if (size.bgColor) label += ', ' + that.translate("thumbBackgroundColor") + ': #' + size.bgColor;
+							items: [[WJ.translate("editor.thumb.original.js"), ''], ...allowedThumbSizes.map(size => {
+								var dimensions = size.ipMode === '1' ? size.width : size.ipMode === '2' ? size.height : size.width + ' × ' + size.height;
+								var label = dimensions + ' px – ' + thumbModeLabel(size.ipMode) + ' (ip' + size.ipMode + ')';
+								if (size.bgColor) label += ', #' + size.bgColor;
 								if (size.noIp) label += ', ' + that.translate("thumbNoIp");
 								if (size.quality) label += ', ' + that.translate("thumbQuality") + ': ' + size.quality;
 								return [label, size.value];
-							})],
-							setup: function(type, element) {
-								if (type !== 1) return;
-								this.setValue(findAllowedThumbSize(element.getAttribute('class') || '', element.getAttribute('src') || ''), true);
-							},
+							}), ...(strictThumbSizes ? [] : [[WJ.translate("editor.thumb.custom.js"), 'custom']])],
 							onChange: function() {
-								updateThumbUrl(this.getDialog());
+								updateThumbTabVisibility(this);
 							},
 							validate: function() {
-								if (this.getValue() === '') return true;
-								var url = this.getDialog().getContentElement('info', 'txtUrl').getValue();
-								if (url.trim().startsWith("/thumb/") == false) return true;
-								return allowedThumbSizes.some(size => size.value === this.getValue()) || that.translate("allowedSizeRequired");
+								var value = this.getValue();
+								return value === '' || (!strictThumbSizes && value === 'custom') || allowedThumbSizes.some(size => size.value === value) || that.translate("allowedSizeRequired");
 							}
-						}] : [
+						}] : []), ...(strictThumbSizes ? [] : [
 							{
 								type: 'select',
 								id: 'thumbIpMode',
@@ -654,18 +651,9 @@ export class DatatablesCkEditor {
 									['2 - ' + that.translate("thumbIp2"), '2'],
 									['3 - ' + that.translate("thumbIp3"), '3'],
 									['4 - ' + that.translate("thumbIp4"), '4'],
-									['5 - ' + that.translate("thumbIp5"), '5']
+									['5 - ' + that.translate("thumbIp5"), '5'],
+									['6 - ' + thumbModeLabel('6'), '6']
 								],
-								setup: function( type, element ) {
-									var classNames = element.getClasses ? (element.getClasses().toArray().join(' ') || '') : '';
-									var fixedSizeMatch = /fixedSize-\d+-\d+-(\d+)/.exec(classNames);
-									if (fixedSizeMatch) {
-										this.setValue(fixedSizeMatch[1]);
-									}
-								},
-								commit: function( type, element ) {
-									// Class is updated live by generateThumbClass()
-								},
 								onChange: function() {
 									updateThumbTabVisibility(this);
 								}
@@ -676,6 +664,7 @@ export class DatatablesCkEditor {
 								label: that.translate("thumbWidth"),
 								'default': '',
 								validate: function() {
+									if (!usesCustomThumbSize(this.getDialog())) return true;
 									var ip = this.getDialog().getContentElement('thumb', 'thumbIpMode').getValue();
 									if ((ip == 3 || ip == 4) && !this.getValue()) {
 										return that.translate("thumbWidthRequired");
@@ -689,6 +678,7 @@ export class DatatablesCkEditor {
 								label: that.translate("thumbHeight"),
 								'default': '',
 								validate: function() {
+									if (!usesCustomThumbSize(this.getDialog())) return true;
 									var ip = this.getDialog().getContentElement('thumb', 'thumbIpMode').getValue();
 									if ((ip == 3 || ip == 4) && !this.getValue()) {
 										return that.translate("thumbHeightRequired");
@@ -702,26 +692,23 @@ export class DatatablesCkEditor {
 								label: that.translate("thumbBackgroundColor"),
 								'default': '#ffffff',
 								style: 'width: 100px;',
-								setup: function( type, element ) {
-									//var classNames = element.getClasses ? (element.getClasses().toArray().join(' ') || '') : '';
-									// Background color is stored in URL, not in class - read from element attributes if available
-									//this.setValue('#ffffff');
-								}
 							},
 							{
 								type: 'checkbox',
 								id: 'thumbNoIp',
 								label: that.translate("thumbNoIp"),
 								'default': false,
-								setup: function( type, element ) {
-									this.setValue(false);
-								},
-								commit: function( type, element ) {
-									// Handled in live class generation
-								}
 							}
-						]
+						])]
 					}, 'info');
+
+					function thumbModeLabel(ipMode) {
+						return that.translate("thumbIp" + ipMode) || WJ.translate("editor.thumb.ip6.js");
+					}
+
+					function usesCustomThumbSize(dialog) {
+						return !strictThumbSizes && (!selectThumbSizes || dialog.getContentElement('thumb', 'thumbAllowedSize').getValue() === 'custom');
+					}
 
 					/** Parses the cache-size format used by ThumbServlet, including optional POI, color and quality. */
 					function parseAllowedThumbSize(value) {
@@ -730,12 +717,12 @@ export class DatatablesCkEditor {
 						return { value, width: match[1], height: match[2], ipMode: match[3] || '0', noIp: !!match[4], bgColor: match[5] || '', quality: match[6] || '' };
 					}
 
-					/** Matches existing image settings against the cache key checked by ThumbServlet. */
-					function findAllowedThumbSize(classNames, url) {
+					/** Reads existing thumbnail settings and reconstructs the cache key checked by ThumbServlet. */
+					function readThumbValues(classNames, url) {
 						var match = /(?:^|\s)fixedSize-(\d+)-(\d+)(?:-(\d+))?(?:-([a-fA-F0-9]{6}))?(?:-(true))?(?:-q(\d+))?(?=\s|$)/.exec(classNames);
 						var width = match ? match[1] : WJ.urlGetParam('w', url);
 						var height = match ? match[2] : WJ.urlGetParam('h', url);
-						var ipMode = (match && match[3]) || WJ.urlGetParam('ip', url) || '0';
+						var ipMode = (match && match[3]) || WJ.urlGetParam('ip', url) || (match || url.startsWith('/thumb/') ? '0' : '');
 						var color = WJ.urlGetParam('c', url) || (match && match[4]) || '';
 						var noIp = WJ.urlGetParam('noip', url) === 'true' || !!(match && match[5]);
 						var quality = WJ.urlGetParam('q', url) || (match && match[6]) || '';
@@ -746,11 +733,12 @@ export class DatatablesCkEditor {
 						if (noIp) value += 'n';
 						if (color && color.toLowerCase() !== 'ffffff') value += 'c' + color.toLowerCase();
 						if (Number(quality) > 10 && Number(quality) <= 100) value += 'q' + quality;
-						return allowedThumbSizes.some(size => size.value === value) ? value : '';
+						return { value, width, height, ipMode, bgColor: color, noIp, quality };
 					}
 
 					function getThumbValues(dialog) {
-						if (strictThumbSizes) {
+						if (denyThumbSizes) return null;
+						if (!usesCustomThumbSize(dialog)) {
 							var value = dialog.getContentElement('thumb', 'thumbAllowedSize').getValue();
 							if (value === '') return { ipMode: '' };
 							return allowedThumbSizes.some(size => size.value === value) ? parseAllowedThumbSize(value) : null;
@@ -761,43 +749,30 @@ export class DatatablesCkEditor {
 							ipMode: dialog.getContentElement('thumb', 'thumbIpMode').getValue(),
 							bgColor: dialog.getContentElement('thumb', 'thumbBackgroundColor').getValue().replace(/^#/, ''),
 							noIp: dialog.getContentElement('thumb', 'thumbNoIp').getValue(),
-							quality: WJ.urlGetParam('q', dialog.getContentElement('info', 'txtUrl').getValue()) || ''
+							quality: existingThumbQuality
 						};
 					}
 
-					// Helper function to update thumb tab field visibility
+					// Keep the existing form available only for a custom size.
 					function updateThumbTabVisibility(thumbElement) {
+						if (strictThumbSizes) return;
 						var dialog = thumbElement.getDialog();
-						var ipMode = dialog.getContentElement('thumb', 'thumbIpMode').getValue();
-						var heightField = dialog.getContentElement('thumb', 'thumbHeight');
-						var widthField = dialog.getContentElement('thumb', 'thumbWidth');
-						var colorField = dialog.getContentElement('thumb', 'thumbBackgroundColor');
-
-						// Show/hide height field based on IP mode
-						if (ipMode == '1' || ipMode == '') {
-							heightField.getElement().hide();
-						} else {
-							heightField.getElement().show();
-						}
-
-						// Show/hide width field based on IP mode
-						if (ipMode == '2' || ipMode == '') {
-							widthField.getElement().hide();
-						} else {
-							widthField.getElement().show();
-						}
-
-						// Show/hide background color field based on IP mode
-						if (ipMode == '3' || ipMode == '4') {
-							colorField.getElement().show();
-						} else {
-							colorField.getElement().hide();
-						}
-						if (ipMode == '' || ipMode == '0') {
-							dialog.getContentElement('thumb', 'thumbNoIp').getElement().hide();
-						} else {
-							dialog.getContentElement('thumb', 'thumbNoIp').getElement().show();
-						}
+						var modeField = dialog.getContentElement('thumb', 'thumbIpMode');
+						if (!modeField) return;
+						var custom = usesCustomThumbSize(dialog);
+						var ipMode = modeField.getValue();
+						var visibility = {
+							thumbIpMode: custom,
+							thumbWidth: custom && ipMode !== '' && ipMode !== '2',
+							thumbHeight: custom && ipMode !== '' && ipMode !== '1',
+							thumbBackgroundColor: custom && (ipMode === '3' || ipMode === '4'),
+							thumbNoIp: custom && ipMode !== '' && ipMode !== '0'
+						};
+						Object.entries(visibility).forEach(([id, visible]) => {
+							var element = dialog.getContentElement('thumb', id).getElement();
+							if (visible) element.show();
+							else element.hide();
+						});
 					}
 
 					// Helper function to generate CSS class from thumb tab values
@@ -815,7 +790,7 @@ export class DatatablesCkEditor {
 						if (ipMode && (width || height)) {
 							var newClass = 'fixedSize-' + (width || '0') + '-' + (height || '0') + '-' + ipMode;
 							// Add color if present (strip # prefix, no c prefix)
-							if (bgColor && (strictThumbSizes || ipMode == "3" || ipMode == "4")) {
+							if (bgColor && (!usesCustomThumbSize(dialog) || ipMode == "3" || ipMode == "4")) {
 								var colorValue = bgColor.replace(/^#/, '');
 								newClass += '-' + colorValue;
 							}
@@ -858,7 +833,7 @@ export class DatatablesCkEditor {
 							txtUrl = WJ.urlUpdateParam(txtUrl, 'h', height);
 							txtUrl = WJ.urlUpdateParam(txtUrl, 'ip', ipMode);
 
-							if (color && (strictThumbSizes || ipMode == "3" || ipMode == "4")) txtUrl = WJ.urlUpdateParam(txtUrl, 'c', color);
+							if (color && (!usesCustomThumbSize(dialog) || ipMode == "3" || ipMode == "4")) txtUrl = WJ.urlUpdateParam(txtUrl, 'c', color);
 							else txtUrl = WJ.urlRemoveParam(txtUrl, 'c');
 
 							if (quality) txtUrl = WJ.urlUpdateParam(txtUrl, 'q', quality);
@@ -962,36 +937,29 @@ export class DatatablesCkEditor {
 								//console.log("Error image dialog show, e=", e);
 							}
 
-							// Thumb tab: preload existing values and wire change events
-							if (dialog.getContentElement('thumb', 'thumbWidth')) {
-								var existingClass = dialog.getContentElement("advanced", "txtGenClass").getValue() || '';
-								// Format: fixedSize-w-h-ip[-color][-true] where color is hex without # or c prefix
-								var fixedSizeMatch = /fixedSize-(\d*)-(\d*)(?:-(\d+))?(?:-([a-fA-F0-9]{6}))?(?:-([a-z]{4}))?/.exec(existingClass);
-
-								if (fixedSizeMatch) {
-									// Preload width, height, ip mode, color, noip from existing class
-									if (fixedSizeMatch[1]) dialog.getContentElement('thumb', 'thumbWidth').setValue(fixedSizeMatch[1]);
-									if (fixedSizeMatch[2]) dialog.getContentElement('thumb', 'thumbHeight').setValue(fixedSizeMatch[2]);
-									if (fixedSizeMatch[3]) dialog.getContentElement('thumb', 'thumbIpMode').setValue(fixedSizeMatch[3]);
-									if (fixedSizeMatch[4] && fixedSizeMatch[4].length === 6) dialog.getContentElement('thumb', 'thumbBackgroundColor').setValue("#" + fixedSizeMatch[4]);
-									if (fixedSizeMatch[4] === "true" ||fixedSizeMatch[5] === "true") dialog.getContentElement('thumb', 'thumbNoIp').setValue(true);
+							if (!denyThumbSizes) {
+								var values = readThumbValues(dialog.getContentElement('advanced', 'txtGenClass').getValue() || '', dialog.getContentElement('info', 'txtUrl').getValue());
+								existingThumbQuality = values.quality;
+								if (!strictThumbSizes) {
+									['width', 'height', 'ipMode', 'noIp'].forEach(key => {
+										dialog.getContentElement('thumb', 'thumb' + key.charAt(0).toUpperCase() + key.slice(1)).setValue(values[key], true);
+									});
+									dialog.getContentElement('thumb', 'thumbBackgroundColor').setValue('#' + (values.bgColor || 'ffffff'), true);
 								}
-
-								//get color and noip from URL parameters if available (fallback)
-								var txtUrl = dialog.getContentElement("info", "txtUrl").getValue();
-								var color = WJ.urlGetParam("c", txtUrl);
-								var noIp = WJ.urlGetParam("noip", txtUrl);
-
-								//override from URL
-								if (color) {
-									dialog.getContentElement('thumb', 'thumbBackgroundColor').setValue("#" + color);
+								if (selectThumbSizes) {
+									var select = dialog.getContentElement('thumb', 'thumbAllowedSize');
+									var staleOption = select.getInputElement().$.querySelector('option[value="unavailable"]');
+									if (staleOption) staleOption.remove();
+									var selected = '';
+									if (values.ipMode !== '') {
+										selected = allowedThumbSizes.some(size => size.value === values.value) ? values.value : strictThumbSizes ? 'unavailable' : 'custom';
+										if (selected === 'unavailable') select.add(WJ.translate("editor.thumb.unavailable.js"), 'unavailable', 0);
+									}
+									select.setValue(selected, true);
+									updateThumbTabVisibility(select);
+								} else {
+									updateThumbTabVisibility(dialog.getContentElement('thumb', 'thumbIpMode'));
 								}
-								if (noIp == "true") {
-									dialog.getContentElement('thumb', 'thumbNoIp').setValue(true);
-								}
-
-								// Set initial visibility based on IP mode
-								updateThumbTabVisibility(dialog.getContentElement('thumb', 'thumbIpMode'));
 							}
 						}, 200);
 
@@ -2221,6 +2189,9 @@ export class DatatablesCkEditor {
 
 			allowedContent: true,
 
+			// Dialog fields are updated programmatically, rather prevent confirm
+			dialog_noConfirmCancel: true,
+
 			floatSpacePinnedOffsetY: 50,
 
 			customConfig: configLink,
@@ -2275,10 +2246,12 @@ export class DatatablesCkEditor {
 				{
 					//console.log("getData, e=", e);
 					var data = e.editor.getData(true);
-					data = data.replace(/<article>/gi, '');
-					data = data.replace(/<\/article>/gi, '');
-					data = data.replace(/&lt;article&gt;/gi, '');
-					data = data.replace(/&lt;\/article&gt;/gi, '');
+					if (e.editor.mode !== "source") {
+						data = data.replace(/<article>/gi, '');
+						data = data.replace(/<\/article>/gi, '');
+						data = data.replace(/&lt;article&gt;/gi, '');
+						data = data.replace(/&lt;\/article&gt;/gi, '');
+					}
 					e.data.dataValue = data;
 					//console.log("Vysledne GET data=", data);
 				},
@@ -2292,9 +2265,11 @@ export class DatatablesCkEditor {
 					}
 					var data = e.data.dataValue;
 					if (data == null) data = "";
-					data = data.replace(/(!INCLUDE\((.*?)\)!)/gi, '<article>$1</article>');
-					data = data.replace(/<article><article>/gi, '<article>');
-					data = data.replace(/<\/article><\/article>/gi, '</article>');
+					if (e.editor.mode !== "source") {
+						data = data.replace(/(!INCLUDE\((.*?)\)!)/gi, '<article>$1</article>');
+						data = data.replace(/<article><article>/gi, '<article>');
+						data = data.replace(/<\/article><\/article>/gi, '</article>');
+					}
 					e.data.dataValue = data;
 					//console.log("Vysledne data=", data);
 				},
@@ -2536,18 +2511,13 @@ export class DatatablesCkEditor {
 		return htmlCode;
 	}
 
-	pbInsertContent(html, mode=null, final=false) {
+	pbInsertContent(html, mode=null, final=false, scrollToBottom=true) {
+		if (html == null) return;
+
 		//console.log("html=", html, mode+" to PageBuilder editors", "markPbElements=", markPbElements);
 
 		//if we are appending content we must wait for final version, otherwise we would append content multiple times
 		if ("append" === mode && final===false) return;
-
-		if (html.indexOf("<section")==-1)
-        {
-            //console.log("HTML kod neobsahuje ziadnu section, pridavam, html=", html);
-            if ("<p>&nbsp;</p>"==html) html = "<p>Text</p>";
-            html = "<section><div class=\"container\"><div class=\"row\"><div class=\"col-md-12\">"+html+"</div></div></div></section>";
-        }
 
 		//let options = self.EDITOR.field(aiCol.to).s.opts;
 		let fieldId = this.options.fieldid;
@@ -2555,23 +2525,27 @@ export class DatatablesCkEditor {
 		pbIframe.$("[data-wjapp='pageBuilder']").each(function(index) {
 			if ("doc_data" != $(this).data("wjappfield")) return;
 
-			const $container = $(this);
+			const $container = pbIframe.$(this);
+			const pageBuilder = $container.data('plugin_ninjaPageBuilder');
+			const $content = pbIframe.$('<div>').html(html);
+			if (!$content.find('section, '+pageBuilder.grid.section).length) {
+				if ("<p>&nbsp;</p>" === html) $content.html("<p>Text</p>");
+				$content.wrapInner('<section><div class="container"><div class="row"><div class="col-md-12"></div></div></div></section>');
+			}
 
 			if ("replace" === mode || "edit" === mode) {
-				//remove all section elements, in edit mode we expect to send all data and return whole new HTML code
-				$container.children('section').remove();
-				//remove all custom styles
-				$container.children('style').remove();
+				pageBuilder.disable_after_esc_pressed(true);
+				if (pageBuilder.ui && pageBuilder.ui.inserting) pageBuilder.set_workbench_insertion(false);
+				pageBuilder.select_workbench_element(null);
+				pageBuilder.destroy_ckeditor_instances($container);
 			}
-			const $lastSection = $container.children('section').last();
-			if ($lastSection.length > 0) {
-				$lastSection.after(html);
-			} else {
-				// if there are no sections yet, just prepend to container
-				$container.prepend(html);
-			}
-			//scroll window to bottom
-			pbIframe.scrollTo(0, pbIframe.document.body.scrollHeight+200);
+			const $chrome = $container.children([
+				pageBuilder.tagc.modal, pageBuilder.tagc.library, pageBuilder.tagc.notify, pageBuilder.tagc.empty_placeholder_wrapper
+			].join(', ')).detach();
+			if ("replace" === mode || "edit" === mode) $container.empty();
+			$container.append($content.contents()).append($chrome);
+			// Mode changes start at the top; generated content keeps scrolling to the bottom.
+			pbIframe.scrollTo(0, scrollToBottom ? pbIframe.document.body.scrollHeight+200 : 0);
 		});
 		//reinitialize pb blocks
 		if (final===true) {
@@ -2703,7 +2677,7 @@ export class DatatablesCkEditor {
 			}
 
 			if (data != null) {
-				this.pbInsertContent(data, "replace", true);
+				this.pbInsertContent(data, "replace", true, false);
 			}
 		} else if ("html"===this.editingMode) {
 			ckEditorElement.show();
@@ -2826,6 +2800,8 @@ export class DatatablesCkEditor {
 				result.name = name;
 				result.element = v.tag == "*" ? allElements : v.tag;
 				result.attributes = { 'class': v.class };
+				result.wj = { tag: v.tag, category: v.category, categoryIcon: v.categoryIcon, group: v.group,
+					targets: v.targets, base: v.base, members: v.members, requires: v.requires };
 
 				cssData.push(result);
 			});
@@ -2834,7 +2810,7 @@ export class DatatablesCkEditor {
 			//console.log(cssData);
 
 			if (JSON.stringify(instance.config.stylesSet) != JSON.stringify(cssData)) {
-				instance.ui.get("Styles").reset();
+				if (instance.ui.get("Styles")) instance.ui.get("Styles").reset();
 				instance.config.stylesCombo_stylesSet = cssData;
 				instance.config.stylesSet = cssData;
 				instance._.stylesDefinitions = cssData;

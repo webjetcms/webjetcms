@@ -36,8 +36,8 @@ Scenario('cache-objects', ({ I, DT }) => {
   I.waitForText('Cache objekty', 10, '.nav-link.active');
   DT.filterContains("name", "browser");
   I.see("browserDetector-");
-  DT.filterContains("name", "welcome");
-  I.see("welcomeDataBackTimes-domainId=");
+  DT.filterContains("name", "AdminlogNotifyEmail");
+  I.see("AdminlogNotifyEmails.type230");
 
   I.amOnPage("/admin/v9/settings/persistent-cache-objects/");
   I.waitForText('Persistent cache objekty', 10, '.nav-link.active');

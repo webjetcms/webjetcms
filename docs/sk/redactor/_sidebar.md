@@ -9,6 +9,7 @@
   - [Úvodná obrazovka](/redactor/admin/welcome.md)
   - [Poslať správu](/redactor/admin/send-message.md)
   - [Vyhľadávanie](/redactor/admin/search/README.md)
+  - [Klávesové skratky](/redactor/admin/keyboard-shortcuts.md)
 - Datatabuľky
   - [Základy práce s data tabuľkami](/redactor/datatables/README.md)
   - [Export a import](/redactor/datatables/export-import.md)

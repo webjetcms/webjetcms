@@ -176,31 +176,28 @@ Scenario('Zobrazenie nazvu v hlavicke', ({ I, DT, DTE }) => {
     DT.waitForLoader();
     I.waitForText("page-2021-02-23-134924-937", 10, "#datatableInit_wrapper");
 
-    I.clickCss("#datatableInit tbody tr:nth-child(1) td.dt-row-edit a");
+    const menuPage = locate({ xpath: '//table[@id="datatableInit"]/tbody/tr[td//a[normalize-space(.)="Zobrazený v menu"]]' });
+    const otherPage = locate({ xpath: '//table[@id="datatableInit"]/tbody/tr[td//a[normalize-space(.)="page-2021-02-23-134924-937"]]' });
+    I.click(menuPage.find("td.dt-row-edit a"));
     DTE.waitForEditor();
     I.see("Zobrazený v menu", "#datatableInit_modal div.DTE_Header_Content h5.modal-title");
-    I.wait(3);
     DTE.cancel();
-    I.wait(1);
 
     I.say("Oznac 2 riadky a over zobrazenie nadpisu");
 
-    I.forceClickCss("#datatableInit tbody tr:nth-child(1) td.dt-select-td");
-    I.forceClickCss("#datatableInit tbody tr:nth-child(2) td.dt-select-td");
-
-    I.wait(1);
+    I.forceClick(menuPage.find("td.dt-select-td"));
+    I.forceClick(otherPage.find("td.dt-select-td"));
+    I.seeNumberOfElements("#datatableInit tbody tr.selected", 2);
 
     I.clickCss("#datatableInit_wrapper button.buttons-edit");
     DTE.waitForEditor();
     I.see("Upraviť", "#datatableInit_modal div.DTE_Header_Content h5.modal-title");
-    I.wait(1);
     DTE.cancel();
-
-    I.wait(1);
 
     I.say("Overenie pri mazani");
 
     I.clickCss("#datatableInit_wrapper button.buttons-remove");
+    I.waitForVisible("#datatableInit_modal .DTE_Form_Info", 10);
     I.see("Zobrazený v menu", "#datatableInit_modal div.DTE_Form_Info div.col-sm-7");
     I.see("page-2021-02-23-134924-937", "#datatableInit_modal div.DTE_Form_Info div.col-sm-7");
     DTE.cancel();

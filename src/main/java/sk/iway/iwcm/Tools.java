@@ -4,9 +4,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Form;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import org.json.JSONArray;
@@ -607,7 +610,6 @@ public class Tools
 		Request request;
 
 		basePath = Tools.natUrl(basePath);
-		//WebJETProxySelector.setProxyForHttpClient(client, basePath);
 		Logger.debug(Tools.class, "downloadUrl: basePath="+basePath);
 		String name;
 		String value;
@@ -667,8 +669,9 @@ public class Tools
 		request.setHeader("Content-Type", contentType);
 		Logger.println(Tools.class,"header: Content-Type: " + contentType);
 
-		try {
-			Response response = request.execute();
+		//.createSystem() will use proxy settings from the system properties
+		try (CloseableHttpClient client = HttpClients.createSystem()) {
+			Response response = Executor.newInstance(client).execute(request);
 			HttpResponse httpResponse = response.returnResponse();
 
 			// write out the response headers
@@ -1952,6 +1955,13 @@ public class Tools
 	public static String getBaseHref(HttpServletRequest request)
 	{
 		String httpServerName = Constants.getString("httpServerName");
+		boolean secure = request != null && Tools.isSecure(request);
+		if (Tools.isNotEmpty(httpServerName) && (httpServerName.startsWith("http://") || httpServerName.startsWith("https://")))
+		{
+			secure = httpServerName.startsWith("https://");
+		}
+		int serverPort = Constants.getInt(secure ? "httpsServerPort" : "httpServerPort");
+		int defaultPort = secure ? 443 : 80;
 
 		if (request == null)
 		{
@@ -1966,16 +1976,16 @@ public class Tools
 
 			StringBuilder baseHref = new StringBuilder(httpServerName);
 
-			if (Constants.getInt("httpServerPort") != 80)
+			if (serverPort != defaultPort)
 			{
-				baseHref.append(':').append(Constants.getInt("httpServerPort"));
+				baseHref.append(':').append(serverPort);
 			}
 
 			return baseHref.toString();
 		}
 
 		StringBuilder baseHref = new StringBuilder();
-		if (Tools.isSecure(request)) baseHref.append("https");
+		if (secure) baseHref.append("https");
 		else baseHref.append("http");
 		baseHref.append("://");
 
@@ -1988,17 +1998,13 @@ public class Tools
 			baseHref.append(getServerName(request, false));
 		}
 
-        if (Constants.getInt("httpServerPort") == -1)
-        {
-            //ak je httpServerPort nastavene na -1 pridame do URL priamo jeho hodnotu (pouziva sa, ked server bezi na viacerych portoch a nie je maskovany navonok)
-            if (request.getServerPort()!=80 && request.getServerPort()!=443)
-            {
-                baseHref.append(':').append(request.getServerPort());
-            }
-        }
-		else if (Constants.getInt("httpServerPort") != 80)
+		if (serverPort == -1)
 		{
-			baseHref.append(':').append(Constants.getInt("httpServerPort"));
+			serverPort = request.getServerPort();
+		}
+		if (serverPort != defaultPort)
+		{
+			baseHref.append(':').append(serverPort);
 		}
 
 		if (Tools.isEmpty(httpServerName))

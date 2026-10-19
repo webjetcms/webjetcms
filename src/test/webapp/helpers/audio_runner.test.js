@@ -338,6 +338,13 @@ Scenario("ElevenLabs", ({ I }) => { I.generateAudio(videoPlan, { modelId: "eleve
   const translated = source.replace('modelId: "eleven_v3"', 'modelId: "eleven_v3", language: "en"');
   assert.throws(() => validateAudioScenarioSource(translated), /Shot first has 5001 characters.*5000-character limit/);
   assert.doesNotThrow(() => validateAudioScenarioSource(translated.replace('modelId: "eleven_v3"', 'modelId: "eleven_multilingual_v2"')));
+  const v4 = translated.replace('modelId: "eleven_v3"', 'modelId: "eleven_v4", languageCode: "en", voiceSettings: { stability: 0.3, similarityBoost: 0.5 }');
+  assert.doesNotThrow(() => validateAudioScenarioSource(v4));
+  assert.throws(() => validateAudioScenarioSource(v4.replace("stability: 0.3", "stability: 30")), /voiceSettings.stability/);
+  assert.throws(() => validateAudioScenarioSource(v4.replace('languageCode: "en"', 'languageCode: "English"')), /languageCode/);
+  assert.throws(() => validateAudioScenarioSource(v4.replace("stability: 0.3", "stability: readStability()")), /static literal data/);
+  assert.throws(() => validateAudioScenarioSource(v4.replace("stability: 0.3", "get stability() { return 0.3; }")), /data properties/);
+  assert.throws(() => validateAudioScenarioSource(v4.replace("stability: 0.3", "stability: 0.3, stability: 0.5")), /must not be repeated/);
   const legacy = withFeature(`Scenario("ElevenLabs", ({ I }) => { I.generateAudio(\`${"x".repeat(5001)}\`, { modelId: "eleven_v3" }); }).tag("@audio");`);
   assert.throws(() => validateAudioScenarioSource(legacy), /Legacy narration has 5001 characters/);
 });

@@ -12,13 +12,17 @@ Instructions for setting up a new installation/clean database for a new project 
 ## Basic server requirements
 
 - Server with at least 8 GB of memory (at least 12 GB for applications with a higher load), processor at least `Dual Core 2 GHz` (for servers with a higher load Quad core), disk space at least 40 GB.
-- Database `MySQL/MariaDB verzie 5.0+` (with UTF-8 encoding), or database `Microsoft SQL 2012+` or database `Oracle 11g+` or `PostgreSQL 16+`.
+- Database `MariaDB 10.11+` or `MySQL 8.4+` (with UTF-8 encoding), or database `Microsoft SQL 2012+` or database `Oracle 11g+` or `PostgreSQL 16+`.
 - [Open JDK](https://adoptium.net/temurin/releases/) version 17 and [Tomcat](https://tomcat.apache.org/download-90.cgi) application server 9.
 - Connection to SMTP server for sending emails.
 - A functional DNS server.
 - To speed up the generation of preview images, we recommend installing the [ImageMagick](https://imagemagick.org/script/download.php) library.
 
 !>**Microsoft SQL Server:** Version 2012 or later is supported. Older versions are not supported.
+
+!>**MariaDB and MySQL:** As of WebJET CMS 2026.0, the minimum supported versions are MariaDB 10.11 LTS and MySQL 8.4 LTS. Before upgrading WebJET CMS on an older database server, first upgrade the database according to the database vendor's migration procedure. Use the current patch release of the supported series. Review the database requirements for [semantic search](../../custom-apps/apps/rag/semantic-search/README.md) separately.
+
+Connections via MariaDB Connector/J must use `utf8`, `utf8mb3`, or `utf8mb4` encoding; `utf8mb4` is recommended. The 3.5.10 driver refuses to switch the connection to a different encoding and requires TLS or a local Unix socket for PAM authentication. When configuring your own, also verify TLS certificates and access over a read-only connection.
 
 For installations of products such as `NET, LMS, DSK`, the minimum requirements are suitable for installations up to 50 users (25 working simultaneously). For a higher number of users, it is necessary to increase the RAM and CPU memory appropriately - for every additional 50 users working simultaneously +4GB of memory and 1CPU. For more than 200 users, we recommend a cluster solution.
 

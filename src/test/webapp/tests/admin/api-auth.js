@@ -143,7 +143,7 @@ Scenario("Prihlasenie cez wjlogontoken @singlethread", ({ I }) => {
     I.amOnPage("/admin/v9/");
     I.dontSee(loginText);
     I.dontSee(forgotPassword);
-    I.see("Vitajte, Tester Playwright");
+    I.see("Vitajte späť, Tester Playwright", "h1.md-dashboard__greeting");
 
     I.logout();
 
@@ -162,7 +162,8 @@ Scenario("Prihlasenie cez wjlogontoken @singlethread", ({ I }) => {
     I.amOnPage("/admin/v9/");
     I.see(loginText);
     I.see(forgotPassword);
-    I.dontSee("Vitajte, Tester Playwright");
+    I.dontSeeElement("h1.md-dashboard__greeting");
+    I.dontSee("Vitajte späť, Tester Playwright");
 });
 
 Scenario("wjlogontoken volanie zle heslo-cakanie 10s @singlethread", ({ I }) => {

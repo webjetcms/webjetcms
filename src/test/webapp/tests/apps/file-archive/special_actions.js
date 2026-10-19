@@ -1,4 +1,4 @@
-Feature('apps.file-archive.special_actions');
+Feature('apps.file-archive.special_actions').tag('@singlethread');
 
 const SL = require("./SL.js");
 
@@ -189,6 +189,10 @@ Scenario('Delete archive entity', async ({I}) => {
 });
 
 Scenario('Import', async ({ I, DT, DTE}) => {
+    await SL.importFile("tests/apps/file-archive/docs/special_action_import.zip");
+});
+
+Scenario('Import existing files without replacing them', async () => {
     await SL.importFile("tests/apps/file-archive/docs/special_action_import.zip");
 });
 

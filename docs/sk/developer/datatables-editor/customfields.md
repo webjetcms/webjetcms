@@ -130,7 +130,7 @@ Nastavenia špecifické pre typ poľa sa ukladajú do stĺpca `custom_fields.val
 Používané formáty:
 
 - `text` / `text-120` / `text-120, warningLength-80`
-- `jsoneditor` (priama editácia JSON objektu)
+- `jsoneditor` (priama editácia JSON hodnôt)
 - `label1:value1|label2:value2` (`select`)
 - `multiple:label1:value1|label2:value2` (`multiselect`)
 - `autocomplete:Možnosť 1|Možnosť 2`
@@ -142,7 +142,7 @@ Transformáciu medzi editor poľami a internou hodnotou zabezpečujú metódy `C
 
 ## JSON Editor
 
-Typ `jsoneditor` umožňuje priamo zadávať JSON objekt. V [nastaveniach voliteľných polí](../../frontend/webpages/customfields/custom-fields-settings.md) vyberte typ **Editor JSON**, alebo použite prekladové kľúče:
+Typ `jsoneditor` umožňuje priamo zadávať JSON hodnoty. V [nastaveniach voliteľných polí](../../frontend/webpages/customfields/custom-fields-settings.md) vyberte typ **Editor JSON**, alebo použite prekladové kľúče:
 
 ```properties
 editor.field_a=JSON data
@@ -175,15 +175,15 @@ Príklad platnej hodnoty:
 ### Validácia a uloženie
 
 - Okrem štandardného JSON je podporovaný rozšírený zápis: jednoduché úvodzovky (apostrofy), názvy vlastností bez úvodzoviek a komentáre `//` aj `/* … */`. Názov bez úvodzoviek začína písmenom, `_` alebo `$`, ďalej môže obsahovať aj číslice a pomlčky, napríklad `data-toggle`. Pomlčka bez úvodzoviek je rozšírením tohto editora, nie štandardnou syntaxou JavaScriptu.
-- Povolený je práve jeden JSON objekt v zložených zátvorkách `{}`. Vnorené objekty a polia sú povolené; samotné pole `[]`, reťazec, číslo, `true`, `false` a `null` na koreni sa odmietnu.
-- Kontroluje sa celý vstup. Koncová čiarka, chýbajúce zátvorky alebo druhý objekt za prvým sú neplatné. Funkcie, volania JavaScriptu, `undefined`, `NaN` a `Infinity` nie sú povolené. Parser kód nikdy nespúšťa.
+- Povolená je práve jedna JSON hodnota: objekt `{}`, pole `[]`, reťazec, číslo, `true`, `false` alebo `null`. Pole môže byť priamo na najvyššej úrovni, napríklad `[{"id":12345},{"id":56789}]`; vnorené objekty a polia sú tiež povolené.
+- Kontroluje sa celý vstup. Koncová čiarka, chýbajúce zátvorky alebo ďalšia hodnota za prvou sú neplatné. Funkcie, volania JavaScriptu, `undefined`, `NaN` a `Infinity` nie sú povolené. Parser kód nikdy nespúšťa.
 - Komentár `//` pokračuje až po koniec riadka. Uzatváracie zátvorky objektu preto musia byť na ďalšom riadku; v jednoriadkovom zápise použite komentár `/* … */`.
-- Prázdny vstup vrátane samotných medzier je povolený, ak je vypnuté **Povinné pole**. Pri zapnutej povinnosti sa musí zadať objekt; prázdny objekt `{}` je platná hodnota.
+- Prázdny vstup vrátane samotných medzier je povolený, ak je vypnuté **Povinné pole**. Pri zapnutej povinnosti sa musí zadať JSON hodnota; `{}`, `[]`, `""` aj `null` sú platné vyplnené hodnoty.
 - V prehliadači sa vstup kontroluje pri opustení poľa aj pred uložením. Chyba sa zobrazí pri poli a pri pokuse o uloženie sa otvorí jeho karta. Ak parser poskytne polohu syntaktickej chyby, hlásenie obsahuje riadok a stĺpec.
 - Server vykonáva rovnakú kontrolu nezávisle od JavaScriptu v `DatatableRestControllerV2.validateEditorForCustomFields()` pri ukladaní cez DataTables Editor a pri importe. Konfiguráciu typu a povinnosti načíta zo servera podľa entity a kontextu voliteľných polí; definícia poľa odoslaná klientom nemôže validáciu vypnúť. Pri čiastočnom importe kontroluje iba importované JSON polia.
 - Po úspešnej validácii sa znaky `<` a `>` pred uložením zapíšu ako JSON Unicode escape sekvencie `\u003C` a `\u003E`. Na vrátenie pôvodnej hodnoty môžete na frontende použiť volanie `JsonEditorValidator.unescape(String value)`, pozor ale na `XSS injection`.
 
-Validácia kontroluje syntax a koreňový objekt. Neoveruje prítomnosť ani význam konkrétnych atribútov podľa JSON Schema.
+Validácia kontroluje syntax a prítomnosť práve jednej JSON hodnoty. Neoveruje prítomnosť ani význam konkrétnych atribútov podľa JSON Schema.
 
 Príklad podporovaného rozšíreného zápisu:
 

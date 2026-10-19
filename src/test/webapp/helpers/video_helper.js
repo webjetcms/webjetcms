@@ -371,15 +371,16 @@ class VideoHelper extends Helper {
    * @param {string|object} title Legacy title or a resolved shot; manual/head shots show warnings with full notes or narration
    * @param {number|string} [fontSize] Fixed font size in CSS pixels on the 1280 x 720 layout; omit for automatic fitting, or pass a legacy style
    * @param {string} [style] Thumbnail style: glow (default in title mode), clean or bold
+   * @param {{fitScene?: boolean}} [options] Thumbnail screenshot framing
    * @returns {Promise<void|string>} Thumbnail path, or nothing after the editing slate is removed
    */
-  async videoTitle(title, fontSize, style) {
+  async videoTitle(title, fontSize, style, options) {
     if (typeof fontSize === "string" && style === undefined) {
       style = fontSize;
       fontSize = undefined;
     }
     if (typeof title === "string" && (fontSize !== undefined || style !== undefined || this.config.titleMode === true)) {
-      return this._saveVideoTitle(title, fontSize, style);
+      return this._saveVideoTitle(title, fontSize, style, options);
     }
     const manual = typeof title === "object" && title.type === "manual";
     const head = typeof title === "object" && title.type === "head";
@@ -450,7 +451,7 @@ class VideoHelper extends Helper {
   }
 
   /** Captures the prepared scene and atomically replaces only this scenario's selected thumbnail style. */
-  async _saveVideoTitle(title, fontSize, style) {
+  async _saveVideoTitle(title, fontSize, style, options) {
     const text = process.env.VIDEO_TITLE_TEXT?.trim() || title;
     style = process.env.VIDEO_TITLE_STYLE?.trim() || style || "glow";
     validateVideoTitle(text, style, fontSize);
@@ -475,7 +476,7 @@ class VideoHelper extends Helper {
     }
     const screenshot = await page.screenshot({ type: "png", animations: "disabled",
       style: "#wj-video-cursor-host, #wj-video-title-host { visibility: hidden !important; }" });
-    const jpeg = await renderVideoTitle(page.context().browser(), screenshot, text, style, fontSize);
+    const jpeg = await renderVideoTitle(page.context().browser(), screenshot, text, style, fontSize, options);
     await fs.mkdir(path.dirname(output), { recursive: true });
     try {
       await fs.writeFile(temporary, jpeg, { flag: "wx" });

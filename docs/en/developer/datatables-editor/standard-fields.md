@@ -61,6 +61,10 @@ Text field ```type="number"```, the browser typically displays arrows in the fie
 
 The difference between ```NUMBER``` and ```TEXT_NUMBER``` is in the display in the data table. ```TEXT_NUMBER``` displays a rounded number, for a higher number it is displayed in text form, e.g. ```10 tis.``` instead of ```10000```. In the editor the behavior is the same (the exact value is displayed).
 
+When editing an existing record, it is possible to delete the value of an object field of type `NUMBER`, for example `Integer`, `Long` or `Double`. The empty value is passed to the entity as `null` ; the primitive types `int`, `long` and `double` do not support the value `null`. Automatic zeroing does not apply to `TEXT_NUMBER` ; if necessary, enable it with the `alwaysCopyProperties = { true }` attribute.
+
+When importing, the original numeric value is retained if the `NUMBER` column is not in the Excel file. If the column is imported with the value `NULL`, the entity value is reset to zero.
+
 ## PASSWORD
 
 Text field ```type="password"``` for entering the password.
@@ -110,8 +114,11 @@ Multi-line text field. Long text does not wrap, if you want to wrap long text in
 
 Date selection, clicking in the field will display a date selection window.
 
+If the date is required, mark the field with the annotation `@NotNull`. The frontend sends the empty value as an empty string, which the server converts to `null` when deserialized. The editor displays the error message **Required field. Please enter a date.** The calendar picker will not open automatically after failed validation.
+
 ```java
     @Column(name = "date_from")
+	@NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATE,
         title="calendar.begin",
@@ -124,8 +131,11 @@ Date selection, clicking in the field will display a date selection window.
 
 Similar field to ```DATE``` but also allows time selection.
 
+For a required value, use the annotation `@NotNull`. The editor will display an error message if the value is empty **Required field. Please enter a date and time.**
+
 ```java
     @Column(name = "date_to")
+	@NotNull
 	@DataTableColumn(
         inputType = DataTableColumnType.DATETIME,
         title="components.banner.dateTo",
@@ -465,7 +475,11 @@ Displays a text field whose value cannot be changed. Note in the example that fi
 
 Displays a simple HTML editor that allows basic text formatting such as bold/italic/underline, headings, lists, and links.
 
-When you open or confirm HTML editing mode, the editor removes extra blank paragraphs, such as `<p><br></p>`. If the deletion would leave the content completely blank, the original HTML code is preserved.
+In the event of a validation error, the toolbar and editing area are highlighted with a red border to visually mark the incorrect content, just like with other types of fields.
+
+When editing HTML code, the editor preserves nested wrapper elements `div` and empty paragraphs between content, such as `<p><br></p>`. A simple `div` without attributes and nested blocks will be converted to paragraphs `p` ; indenting the source code between blocks does not create additional empty lines.
+
+When retrieving a value to store, empty paragraphs at the end of the content are removed, even if they are nested in end wrapping `div` elements. Empty paragraphs between non-empty blocks are preserved.
 
 Note the use of the ```@jakarta.persistence.Convert(converter = AllowSafeHtmlAttributeConverter.class)``` converter, which will allow only [secure HTML code](../backend/security.md) to be sent (without embedded JavaScript elements and the like).
 
@@ -806,7 +820,7 @@ The frontend implementation is in the files:
 - [field-type-options.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options.js) — field type definition with two inputs (name and value)
 - [field-type-options-base.js](../../../../src/main/webapp/admin/v9/npm_packages/webjetdatatables/field-type-options-base.js) — common logic for both OPTIONS and OPTIONS_SIMPLE (drag & drop, adding/removing rows, allowEmptyOption)
 
-On the backend side, the type `DataTableColumnType.OPTIONS` is automatically set to `editor.type = "options"` with the rendering format `dt-format-text`.
+On the backend side, the type `DataTableColumnType.OPTIONS` is automatically set to `editor.type = "options"` with the format `dt-format-text`.
 
 ![](../../redactor/apps/multistep-form/form-item-editor-advanced.png)
 

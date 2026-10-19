@@ -44,13 +44,17 @@ Môžete vyplniť **Úvodný text**, ktorý sa zobrazí na začiatku kroku. V te
 
 Od druhého kroku sa zobrazuje tlačidlo **Prejsť na predchádzajúci krok**. Návštevník sa ním môže vrátiť k už vyplneným údajom a opraviť ich. Text tlačidla nastavíte v editore daného kroku v karte **Pokročilé**, v poli **Predchádzajúci krok**, napríklad na **Späť**. Ak pole necháte prázdne, použije sa predvolený text.
 
+Web dizajnér môže upraviť aj [HTML kód tlačidla](../formsimple/README.md#html-kód-tlačidiel), napríklad jeho CSS triedy alebo pridať ikonu.
+
 <div class="video-container">
     <iframe width="790" height="444" src="https://www.youtube.com/embed/5ooxA3JVWc0" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
 </div>
 
-Pri návrate sa obnovia hodnoty uložené pri poslednom úspešnom prechode z daného kroku dopredu, vrátane výberov v zaškrtávacích políčkach a dostupných nahraných súborov. Pri obrázkoch sa obnoví aj náhľad. Po úprave údajov a opätovnom prechode dopredu sa podmienky zobrazenia a povinnosti ďalších polí vyhodnotia podľa aktualizovaných hodnôt.
+Tlačidlo **Späť** zachová rozpracované údaje aj bez vyplnenia všetkých povinných polí. Keď sa do kroku vrátite, obnovia sa texty, výbery aj dokončené nahrávania. Zachová sa tiež vymazanie hodnoty alebo zrušenie výberu. Overenie CAPTCHA je potrebné zopakovať. Ak sa údaje nepodarí uchovať, zostanete v aktuálnom kroku a môžete návrat skúsiť znova.
 
-!>**Upozornenie:** Tlačidlo na návrat neukladá ani nevaliduje práve otvorený krok. Zmeny, ktoré návštevník urobí pred kliknutím na **Späť**, sa nezachovajú, ak ich predtým neuložil úspešným prechodom dopredu. To platí aj pre novo nahrané súbory v tomto kroku.
+Pri pokračovaní dopredu sa údaje skontrolujú. Hodnoty skrytých polí sa uchovajú pre prípad ich opätovného zobrazenia, ale pri odoslaní daného kroku sa nepoužijú.
+
+!>**Upozornenie:** Používajte tlačidlo **Späť** vo formulári. Zachovanie údajov je dočasné a neslúži na pokračovanie po obnovení alebo zatvorení stránky.
 
 ### Duplikovanie
 
@@ -65,6 +69,21 @@ Pri mazaní kroku sa odstránia všetky položky, ktoré sa v danom kroku nachá
 Druhý stĺpec obsahuje položky formuláru (alebo položky kroku formuláru), ktoré sa zobrazia až po zvolení kroku v prvom stĺpci. V tejto tabuľke môžete pridávať, duplikovať, upravovať, mazať a meniť poradie položiek formuláru. Položky sa pridávajú do práve zvoleného kroku (takže jednotlivé kroky formulár sa nebudú navzájom ovplyvňovať).
 
 ![](form-item-editor.png)
+
+### Kopírovanie polí medzi formulármi
+
+Nastavené pole môžete použiť v inom formulári alebo kroku bez opätovného vypĺňania jeho nastavení:
+
+1. V tabuľke **Položky formuláru** označte jedno uložené pole a kliknite na <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-clipboard" aria-hidden="true"></i></span></button> pre skopírovanie.
+2. Otvorte cieľový formulár v rovnakej alebo inej karte prehliadača a vyberte krok.
+3. Kliknite na <button class="btn btn-sm btn-outline-secondary buttons-paste-field" type="button"><span><i class="ti ti-clipboard-plus" aria-hidden="true"></i></span></button> pre vloženie skopírovaného poľa. Otvorí sa editor nového poľa s pôvodnými nastaveniami a vybraným cieľovým krokom. Poradie je predvyplnené na koniec kroku.
+4. Podľa potreby upravte nastavenia a uložte. Zatvorením editora bez uloženia nevznikne nové pole.
+
+Kopíruje sa uložený stav poľa vrátane textov, možností alebo prepojenia na číselník, validácií, nastavenia **Povinné pole** a nastavení štatistiky. **Podmienky zobrazenia a povinnosti sa nekopírujú**, pretože odkazujú na polia pôvodného formulára. Nekopírujú sa ani počítadlá chýb. Pôvodné pole aj jeho podmienky zostanú zachované.
+
+Interná schránka uchováva jedno pole **30 minút** a umožňuje opakované vloženie. Kopírovanie ďalšieho poľa nahradí jej obsah; vloženie platnosť nepredlžuje. Schránka funguje aj po obnovení stránky a medzi kartami rovnakej adresy administrácie v rovnakom profile prehliadača, pre rovnakého používateľa a doménu. Systémová schránka sa nemení. Tlačidlo **Vložiť pole** je dostupné po výbere kroku, ak schránka obsahuje platné pole podporovaného typu. Vkladať môžete aj do prázdneho kroku.
+
+Kópia je samostatná: následné úpravy pôvodného poľa ju nezmenia. CSS šablóny a skripty kroku sa neprenášajú, preto výsledný vzhľad závisí od cieľového formulára.
 
 ### Pridávanie a úprava položiek
 
@@ -100,6 +119,16 @@ Ak chcete definovať vlastné položky formulárov, alebo chcete zmeniť existuj
 !>**Upozornenie:** vo viackrokovom formulári nefungujú vlastné typy položiek, ktoré priamo vykreslia natívny element `<input type="file">`. Súbor je možné nahrať iba pomocou komponentu `Dropzone`.
 
 !>**Upozornenie:** pri úprave položky formuláru neodporúčame meniť typ položky, ale radšej nahradiť pôvodnú položku novou.
+
+### Validácia pri opustení poľa
+
+Kontrola upozorní na chybu v textovom poli hneď po jeho opustení, napríklad klávesom `Tab`. Chybová správa sa zobrazí pri poli. Funkcia je predvolene zapnutá.
+
+Vypnete ju v administrácii v [Konfigurácia](../../../admin/setup/configuration/README.md) nastavením premennej `multistepform_validateOnBlur` na hodnotu `false`.
+
+Kontrola sa riadi nastaveniami **Povinné pole**, **Orezať medzery** a **Povolená hodnota**. Podmienky povinnosti sa zohľadnia až pri odoslaní kroku, keď sa skontrolujú všetky údaje. Samotné opustenie poľa údaje neukladá.
+
+V poli **Povolená hodnota** vyberáte [regulárne výrazy](../form/regexps.md), ktorým musí zadaná hodnota vyhovieť. Kontrolujú sa všetky vybrané pravidlá. Pri prázdnom výbere sa formát hodnoty neoveruje.
 
 ### Automatické dopĺňanie
 
@@ -312,3 +341,4 @@ Dostupné konfiguračné premenné pre viackrokové formuláre:
 - `multistepform_emailFields` - zoznam začiatkov identifikátorov polí, ktoré budú považované za polia pre emailovú adresu. Napríklad hodnota `email` zodpovedá aj položke `emailova-adresa-1`. Na potvrdenie prijatia formulára sa použijú všetky nájdené platné emailové adresy.
 - `multistepform_attachmentDefaultName` - prednastavený názov prílohy v emailoch, ktorý sa použije ak sa nepodarí získať skutočný názov súboru prílohy.
 - `multistepform_subjectDefaultValue` - prednastavený prekladový kľúč pre predmet emailu, ktorý sa použije ak nie je zadaný predmet v nastaveniach/atribútoch formuláru.
+- `multistepform_validateOnBlur` - riadi [validáciu textových polí pri ich opustení](#validácia-pri-opustení-poľa). Predvolená hodnota je `true`. Kontrolu vypnete nastavením hodnoty `false` v **Nastavenia → Konfigurácia**. Nastavenie platí pre všetky viackrokové formuláre a uplatní sa pri načítaní kroku.

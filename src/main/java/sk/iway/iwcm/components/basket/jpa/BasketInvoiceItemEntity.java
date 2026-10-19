@@ -15,6 +15,7 @@ import jakarta.persistence.TableGenerator;
 import jakarta.persistence.Transient;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -75,6 +76,7 @@ public class BasketInvoiceItemEntity {
 		renderFormat = "dt-format-number--decimal",
 		title = "components.basket.price_without_DPH"
 	)
+	@NotNull
 	private BigDecimal itemPrice;
 
 	/** Calculated for the current request; the existing itemPrice column retains the net unit price. */
@@ -91,6 +93,7 @@ public class BasketInvoiceItemEntity {
 		inputType = DataTableColumnType.NUMBER,
 		title = "components.basket.count"
 	)
+	@NotNull
 	@Min(1)
 	private Integer itemQty;
 

@@ -1,13 +1,18 @@
 Feature('apps.image-editor');
 
+const fs = require('node:fs');
+const path = require('node:path');
 var randomNumber;
 var autoName;
+var remasterFileName;
+const imageFolder = '/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy90ZXN0LXN0YXZvdi90ZXN0aW1wb3J0cGl4YWJheQ_E_E';
 
 Before(({ I, login }) => {
     login('admin');
     if (typeof randomNumber == "undefined") {
         randomNumber = I.getRandomTextShort();
         autoName = 'cervene-auto-autotest-' + randomNumber;
+        remasterFileName = 'autotest-remaster-' + randomNumber + '.jpg';
     }
     I.closeOtherTabs();
 });
@@ -31,27 +36,38 @@ Scenario('Pixabay - test custom filename and image source after adding', async (
     var testFileName = autoName + ".jpg";
     var searchTerm = 'letters, alphabet, animals, nature, abcd';
     var expectedSearchFileName = 'letters-alphabet-animals-nature-abcd';
-    var resultSelector = '.pixabayBox .col-xs-3 a:first-child';
+    var resultSelector = locate('.pixabayBox .col-xs-3 a').first();
 
     DTE.waitForEditor();
     I.waitForElement(".cke_wysiwyg_frame.cke_reset");
     I.clickCss('.cke_button__image');
+    // ElFinder's initial folder selection focuses its iframe even after switching to Pixabay.
+    I.waitForFunction(() => {
+        const frame = document.querySelector('#wjImageIframeElement')?.contentWindow;
+        return frame?.elFinderInstance?.cwd()?.virtualPath === '/images/test-stavov/testimportpixabay' && frame.jQuery.active === 0;
+    }, [], 20);
     I.click(locate("a.cke_dialog_tab").withText("Fotobanka"));
     I.switchTo('#wjImagePixabayIframeElement');
     I.waitForElement('#search', 10);
-    I.wait(1);
+    waitForPixabaySearch(I);
     I.fillField('#search', "***");
     I.fillField('#search', searchTerm);
+    I.seeInField('#search', searchTerm);
     I.click('button[type="submit"]');
+    waitForPixabaySearch(I, searchTerm);
     I.waitForElement(resultSelector, 40);
 
     var imageSource = await I.grabAttributeFrom(resultSelector, 'href');
+    const sourceWidth = Number(await I.grabAttributeFrom(resultSelector, 'data-width'));
+    const sourceHeight = Number(await I.grabAttributeFrom(resultSelector, 'data-height'));
+    I.assertTrue(sourceWidth > 0, 'The search result must provide its width');
+    I.assertTrue(sourceHeight > 0, 'The search result must provide its height');
     I.fillField('#search', 'this value was not searched');
     I.click(resultSelector);
     DTE.waitForModal('imageModal');
     I.seeInField('#imageName', expectedSearchFileName);
     I.seeInField("#imageWidth", "1280");
-    I.seeInField("#imageHeight", "904");
+    I.seeInField("#imageHeight", String(Math.ceil(1280 * sourceHeight / sourceWidth)));
 
     var extension = await I.grabAttributeFrom('#imageModal .imageExtension', 'title');
     var extensionIcon = await I.grabAttributeFrom('#imageModal .imageExtension i', 'class');
@@ -92,7 +108,7 @@ Scenario('Pixabay - test custom filename and image source after adding', async (
 
     I.switchTo();
 
-    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy90ZXN0LXN0YXZvdi90ZXN0aW1wb3J0cGl4YWJheQ_E_E');
+    I.amOnPage(imageFolder);
 
     I.waitForElement(`.elfinder-cwd-filename[title="${testFileName}"]`, 20);
     I.rightClick(`.elfinder-cwd-filename[title="${testFileName}"]`);
@@ -112,15 +128,25 @@ Scenario('Pixabay - test custom filename and image source after adding', async (
     I.closeCurrentTab();
     I.switchTo();
 
-    I.say("Use the picture for NEXT test");
 });
 
 Scenario('Image editor - remaster, test of functionality', async ({ I, DTE, Document }) => {
 
-    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy90ZXN0LXN0YXZvdi90ZXN0aW1wb3J0cGl4YWJheQ_E_E');
+    I.amOnPage(imageFolder);
     I.switchTo();
 
-    var testFileName = autoName + ".jpg";
+    // Use a stable fixture independently of the live Pixabay search and its upload test.
+    var testFileName = remasterFileName;
+    const fixturePath = path.join(global.output_dir, testFileName);
+    fs.copyFileSync(path.join(__dirname, 'gallery/puppy-2785074.jpg'), fixturePath);
+    I.waitForVisible('.elfinder-navbar-wrapper span[title$="/testimportpixabay"]', 20);
+    I.clickCss('.elfinder-navbar-wrapper span[title$="/testimportpixabay"]');
+    I.waitForVisible('.elfinder-button:not(.ui-state-disabled) .elfinder-button-icon-upload', 20);
+    I.clickCss('.elfinder-button-icon-upload');
+    I.waitForElement('.elfinder-dialog input[type=file]:not([directory])', 10);
+    I.attachFile('.elfinder-dialog input[type=file]:not([directory])', path.relative(global.codecept_dir, fixturePath));
+    I.waitForElement(`.elfinder-cwd-filename[title="${testFileName}"]`, 60);
+    I.waitForInvisible('.elfinder-notify-upload', 60);
 
     openImageEditor(I, testFileName);
 
@@ -128,53 +154,45 @@ Scenario('Image editor - remaster, test of functionality', async ({ I, DTE, Docu
     I.clickCss('#pills-dt-galleryTable-photoeditor-tab');
     I.waitForVisible("#galleryTable_modal");
 
-    I.waitForElement("#photoEditorContainer");
+    waitForImageCanvas(I, 1280, 853);
     I.clickCss("li.tie-btn-crop.tui-image-editor-item");
     I.waitForVisible("div.tui-image-editor-menu-crop");
 
     I.clickCss("div.tui-image-editor-button.preset-square");
-    I.wait(1);
     I.clickCss("div.tui-image-editor-button.apply");
     I.waitForInvisible("div.tui-image-editor-menu-crop");
+    waitForImageCanvas(I, 853, 853);
 
-    await Document.compareScreenshotElement('div.tui-image-editor-canvas-container', "autotest-croped_image.png", 1280, 904, 20);
+    await Document.compareScreenshotElement('div.tui-image-editor-canvas-container', "autotest-cropped-puppy.png", 1280, 904, 20);
 
     I.say("Save Change");
     I.clickCss('.DTE_Form_Buttons > button.btn-primary');
     DTE.waitForLoader();
-    I.wait(2);
     I.waitForVisible("#toast-container-upload div.toast-message .ti-circle-check", 120);
     I.switchToPreviousTab();
-
-    //
-    I.say("Wait for editor window to close");
-    I.wait(4);
+    I.closeOtherTabs();
     I.switchTo();
 
     I.say("Open and test it");
     openImageEditor(I, testFileName);
 
     I.clickCss('#pills-dt-galleryTable-photoeditor-tab');
-    I.clickCss('#pills-dt-galleryTable-photoeditor-tab');
     I.waitForVisible("#galleryTable_modal");
 
-    I.waitForElement("#photoEditorContainer");
+    waitForImageCanvas(I, 853, 853);
 
-    I.wait(2);
-
-    await Document.compareScreenshotElement('div.tui-image-editor-canvas-container', "autotest-croped_image.png", 1280, 904, 20);
+    await Document.compareScreenshotElement('div.tui-image-editor-canvas-container', "autotest-cropped-puppy.png", 1280, 904, 20);
 
     I.say("Change are of interest");
     I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
-    I.waitForVisible("div.ready");
-    I.fillField("#w", "240");
-    I.wait(2);
-    I.fillField("#h", "180");
-    I.wait(2);
-    I.fillField("#x", "80");
-    I.wait(2);
-    I.fillField("#y", "550");
-    I.wait(5);
+    I.waitForElement("webjet-image-area-selector[data-ready='true']", 20);
+    for (const [input, coordinate, value] of [['w', 'width', 240], ['h', 'height', 180], ['x', 'left', 80], ['y', 'top', 550]]) {
+        I.fillField('#' + input, String(value));
+        I.waitForFunction(([key, expected]) => {
+            const selector = document.querySelector('webjet-image-area-selector');
+            return selector.coordinates[key] === expected && !selector._applyingCoordinates;
+        }, [coordinate, value], 10);
+    }
 
     I.say("Save Change");
     I.clickCss('.DTE_Form_Buttons > button.btn-primary');
@@ -185,7 +203,7 @@ Scenario('Image editor - remaster, test of functionality', async ({ I, DTE, Docu
     openImageEditor(I, testFileName);
 
     I.clickCss("#pills-dt-galleryTable-areaOfInterest-tab");
-    I.waitForVisible("div.ready");
+    I.waitForElement("webjet-image-area-selector[data-ready='true']", 20);
 
     I.seeInField("#w", "240");
     I.seeInField("#h", "180");
@@ -197,6 +215,24 @@ Scenario('Image editor - remaster, test of functionality', async ({ I, DTE, Docu
     I.switchTo();
 });
 
+function waitForPixabaySearch(I, expectedSearch = null) {
+    // CodeceptJS 3.6 cannot waitForFunction on its iframe FrameLocator.
+    I.switchTo();
+    I.waitForFunction(([search]) => {
+        const frame = document.querySelector('#wjImagePixabayIframeElement').contentWindow;
+        const plugin = frame.jQuery?.('.results').data('plugin_pixabay');
+        return plugin && frame.jQuery.active === 0 && (search === null || plugin.settings.search === search);
+    }, [expectedSearch], 40);
+    I.switchTo('#wjImagePixabayIframeElement');
+}
+
+function waitForImageCanvas(I, width, height) {
+    I.waitForFunction(([expectedWidth, expectedHeight]) => {
+        const canvas = document.querySelector('#photoEditorContainer canvas.lower-canvas');
+        return canvas?.width === expectedWidth && canvas?.height === expectedHeight;
+    }, [width, height], 30);
+}
+
 function openImageEditor(I, imageName) {
     I.waitForElement(`.elfinder-cwd-filename[title="${imageName}"]`);
     I.rightClick(`.elfinder-cwd-filename[title="${imageName}"]`);
@@ -207,19 +243,22 @@ function openImageEditor(I, imageName) {
     I.waitForVisible("#galleryTable_modal");
 }
 
-Scenario('Image editor - remaster, test of functionality - cleanup', ({I,DT, DTE}) => {
+Scenario('Image editor - cleanup uploaded images', async ({ I }) => {
     I.switchTo();
     I.closeOtherTabs();
 
-    I.amOnPage('/admin/v9/files/index/#elf_iwcm_2_L2ltYWdlcy90ZXN0LXN0YXZvdi90ZXN0aW1wb3J0cGl4YWJheQ_E_E');
-    var testFileName = autoName + ".jpg";
-
-    I.rightClick(`.elfinder-cwd-filename[title="${testFileName}"]`);
-    I.waitForVisible('.elfinder-contextmenu', 10);
-
-    I.clickCss("span.elfinder-button-icon.elfinder-button-icon-rm");
-    I.waitForVisible( locate("div.ui-dialog-titlebar > span.elfinder-dialog-title").withText("Vymazať") );
-    I.click( locate("button.ui-button > span.ui-button-text").withText("Vymazať") );
-
-    I.waitForInvisible(`.elfinder-cwd-filename[title="${testFileName}"]`);
+    I.amOnPage(imageFolder);
+    I.waitForVisible('.elfinder-cwd', 20);
+    I.waitForInvisible('.elfinder-notify', 30);
+    for (const testFileName of [autoName + '.jpg', remasterFileName]) {
+        const file = `.elfinder-cwd-filename[title="${testFileName}"]`;
+        if (await I.grabNumberOfVisibleElements(file) === 0) continue;
+        I.rightClick(file);
+        I.waitForVisible('.elfinder-contextmenu', 10);
+        I.clickCss('.elfinder-contextmenu .elfinder-button-icon-rm');
+        I.waitForVisible('.elfinder-dialog-confirm', 10);
+        I.clickCss('.elfinder-dialog-confirm .elfinder-confirm-accept');
+        I.waitForInvisible(file);
+    }
+    fs.rmSync(path.join(global.output_dir, remasterFileName), { force: true });
 });

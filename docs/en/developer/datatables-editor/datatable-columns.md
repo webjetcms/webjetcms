@@ -171,7 +171,7 @@ Optional fields:
   - ```{currentDate}``` - ​​will be replaced with the current date
   - ```{currentDateTimeSeconds}``` - ​​will be replaced with the current date and time including seconds
   - ```{currentTime}``` - ​​will be replaced with the current time
-- `alwaysCopyProperties` - ​​when editing a record, empty `null` values ​​are preserved and copied from the existing object in the database. This does not apply to date/time fields, which are automatically overwritten. If you need to use this for another field type and also transfer the `null` value, set the attribute to `true`, or to `false` if you do not want automatic overwriting for date fields.
+- `alwaysCopyProperties` - ​​when editing a record, the value of the existing object in the database is retained by default for the `null` input value. The `null` value is automatically transferred for Java attributes of types `java.util.Date`, `java.sql.Date`, `LocalDate`, `LocalDateTime` and object fields annotated as `NUMBER` that support `null`. When importing, the `NUMBER` is transferred only if the column is in the imported Excel file; an omitted column retains the original value and the `NULL` value resets it. For a date stored in another type, for example `Instant`, `Timestamp` or `Long`, or for `TEXT_NUMBER`, set the attribute to `true` ; the `false` value disables automatic transfer.
 - `ai` - ​​by setting it to the value `false` it is possible to disable the display of the AI ​​icon for general options (translate, correct grammar...). The AI ​​icon will only be displayed if the assistant is set for this specific field.
 - `disabled` - ​​setting it to `false` sets the attribute `disabled="disabled"` to the input field in the editor.
 - `export` - ​​setting to the value `false` will not export the field.
@@ -278,8 +278,11 @@ private String country;
 
 Required fields can be marked with annotations:
 
-- ```@NotEmpty``` - ​​does not empty the field, does not allow entering a space or tab
-- ```@NotBlank``` - ​​does not empty the field, but allows you to enter a space
+- ```@NotNull``` - ​​value must not be `null` ; use especially for object types including fields `DATE` and `DATETIME`
+- ```@NotEmpty``` - ​​string, collection, map or array must not be `null` or empty; annotation is not intended for type `Date`
+- ```@NotBlank``` - ​​text must not be `null`, empty, or contain only spaces or tabs
+
+For date fields, use only `@NotNull`. The frontend will send an empty value as an empty string, which the server will convert to `null` when deserialized, so that standard Bean Validation will evaluate it as a missing required value. The editor will display a type-specific error message for `DATE` and `DATETIME`.
 
 Other validation options are described in the [restcontroller] documentation (../datatables/restcontroller.md#validation--required-fields).
 
