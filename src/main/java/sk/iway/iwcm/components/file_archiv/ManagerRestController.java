@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.file_archiv.BasicManagerBean.ManagerType;
 import sk.iway.iwcm.system.datatable.Datatable;
@@ -49,6 +50,7 @@ public class ManagerRestController extends DatatableRestControllerV2<BasicManage
     @Override
     public BasicManagerBean editItem(BasicManagerBean entity, long id) {
         ManagerType type = ManagerType.fromString( getRequest().getParameter(MANAGER_TYPE) );
+        entity.setNewName(Tools.trim(entity.getNewName()));
 
         if(type == ManagerType.CATEGORY) {
             repository.updateCategory(entity.getName(), entity.getNewName(), CloudToolsForCore.getDomainId());

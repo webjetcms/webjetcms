@@ -202,7 +202,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
-- Manažér dokumentov - strom priečinkov má minimálnu šírku 200 px, aby vyhľadávacie pole s tlačidlami nepresahovalo do tabuľky ani pri nastavení menšieho pomeru alebo šírky v pixeloch.
+- Manažér dokumentov - strom priečinkov má minimálnu šírku 200 px, aby vyhľadávacie pole s tlačidlami nepresahovalo do tabuľky ani pri nastavení menšieho pomeru alebo šírky v pixeloch (#osk800).
+- Manažér dokumentov - polia **Produkt** a **Kategória** pri uložení a premenovaní odstránia medzery na začiatku a konci názvu (#osk800).
 
 ### Galéria
 

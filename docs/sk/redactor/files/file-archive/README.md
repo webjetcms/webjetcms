@@ -75,6 +75,8 @@ Karta obsahuje základné informácie pre vloženie dokumentu.
 - **Poznámka** - poznámka sa zobrazí na stránke pri odkaze na dokument
 - **Uložiť dokument aj keď už existuje** - povolí uloženie súboru s rovnakým obsahom, aký už má iný dokument v manažéri. Podrobnosti nájdete v časti [Kontrola duplicitných dokumentov](#kontrola-duplicitných-dokumentov).
 
+Pri ukladaní polí **Produkt** a **Kategória** sa odstránia medzery na začiatku a konci názvu.
+
 !>**Upozornenie:** polia **Produkt** / **Kategória**  / **Kód produktu** Vám neskôr poslúžia pri filtrovaní zobrazenia súborov na stránke
 
 ### Karta - Voliteľné polia
