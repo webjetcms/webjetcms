@@ -202,6 +202,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
+- Manažér dokumentov - strom priečinkov má minimálnu šírku 200 px, aby vyhľadávacie pole s tlačidlami nepresahovalo do tabuľky ani pri nastavení menšieho pomeru alebo šírky v pixeloch.
+
 ### Galéria
 
 - Pridaná možnosť nastaviť samostatný spôsob [zmeny veľkosti pre veľký obrázok](redactor/apps/gallery/structure.md#karta-rozmery) nezávisle od malého obrázka. Predvolene sa použije spôsob zmeny veľkosti rovnako ako je nastavené pre malý obrázok. Nastavenie je možné voliteľne prekopírovať aj do podpriečinkov (#58633).
