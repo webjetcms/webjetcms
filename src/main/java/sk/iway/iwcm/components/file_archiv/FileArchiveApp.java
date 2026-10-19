@@ -47,6 +47,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
 
     private static final String PRIORITY  = "priority";
     private static final String DATE_INSERT = "dateInsert";
+    private static final String VALID_FROM = "validFrom";
     private static final String VIRTUAL_FILE_NAME = "virtualFileName";
 
     @Getter
@@ -113,6 +114,11 @@ public class FileArchiveApp extends WebjetComponentAbstract {
                         return Tools.isTrue(asc) ? Integer.compare(f1.getPriority(), f2.getPriority()) : Integer.compare(f2.getPriority(), f1.getPriority());
                     } else if (DATE_INSERT.equals(sortColumn)) {
                         return Tools.isTrue(asc) ? f1.getDateInsert().compareTo(f2.getDateInsert()) : f2.getDateInsert().compareTo(f1.getDateInsert());
+                    } else if (VALID_FROM.equals(sortColumn)) {
+                        if (f1.getValidFrom() == null && f2.getValidFrom() == null) return 0;
+                        if (f1.getValidFrom() == null) return Tools.isTrue(asc) ? -1 : 1;
+                        if (f2.getValidFrom() == null) return Tools.isTrue(asc) ? 1 : -1;
+                        return Tools.isTrue(asc) ? f1.getValidFrom().compareTo(f2.getValidFrom()) : f2.getValidFrom().compareTo(f1.getValidFrom());
                     } else if (VIRTUAL_FILE_NAME.equals(sortColumn)) {
                         return Tools.isTrue(asc) ? f1.getVirtualFileName().compareToIgnoreCase(f2.getVirtualFileName()) : f2.getVirtualFileName().compareToIgnoreCase(f1.getVirtualFileName());
                     }
@@ -203,6 +209,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
                     options = {
                         @DataTableColumnEditorAttr(key = "components.news.ORDER_PRIORITY", value = PRIORITY),
                         @DataTableColumnEditorAttr(key = "components.file_archiv.time_order", value = "time"),
+                        @DataTableColumnEditorAttr(key = "inquiry.valid_since", value = VALID_FROM),
                         @DataTableColumnEditorAttr(key = "components.file_archiv.order.virtual_file_name", value = "virtual_file_name")
                     }
             )
@@ -227,6 +234,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
                     options = {
                         @DataTableColumnEditorAttr(key = "components.news.ORDER_PRIORITY", value = PRIORITY),
                         @DataTableColumnEditorAttr(key = "components.file_archiv.time_order", value = "time"),
+                        @DataTableColumnEditorAttr(key = "inquiry.valid_since", value = VALID_FROM),
                         @DataTableColumnEditorAttr(key = "components.file_archiv.order.virtual_file_name", value = "virtual_file_name")
                     }
             )
@@ -248,6 +256,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
                     options = {
                         @DataTableColumnEditorAttr(key = "components.news.ORDER_PRIORITY", value = PRIORITY),
                         @DataTableColumnEditorAttr(key = "components.file_archiv.time_order", value = "time"),
+                        @DataTableColumnEditorAttr(key = "inquiry.valid_since", value = VALID_FROM),
                         @DataTableColumnEditorAttr(key = "components.file_archiv.order.virtual_file_name", value = "virtual_file_name")
                     }
             )
@@ -320,6 +329,7 @@ public class FileArchiveApp extends WebjetComponentAbstract {
 
         if(PRIORITY.equalsIgnoreCase(value)) return PRIORITY;
         if("time".equalsIgnoreCase(value)) return DATE_INSERT;
+        if(VALID_FROM.equalsIgnoreCase(value)) return VALID_FROM;
         if("virtual_file_name".equalsIgnoreCase(value)) return VIRTUAL_FILE_NAME;
 
         return DATE_INSERT;
