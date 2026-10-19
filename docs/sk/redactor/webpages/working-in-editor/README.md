@@ -41,19 +41,59 @@ Vystrihnutie textu je možné označením textu a kliknutím na ikonku ![](cut.p
 
 ## Práca so štýlmi a formátovanie textu
 
-Vo WebJETe máte k dispozícii istý počet preddefinovaných štýlov pre nadpisy a pre písma, ktoré sa používajú na štýlovanie stránky do prijateľnej formy. Správne definovanie nadpisov má zároveň značný význam pre optimalizáciu pre vyhľadávače (```SEO```) a vnútornú štruktúru dokumentu.
+Ponuka **Štýly** obsahuje predvoľby pripravené pre dizajn vašej stránky, napríklad farby textu, odsadenie, pozadia alebo orámovanie. Dostupné štýly a ich názvy závisia od šablóny. Ovládanie je rovnaké v Štandardnom editore aj v Page Builderi.
 
-Preddefinované nadpisy sa aplikujú vždy na celý odsek. Nadpis vytvoríte kliknutím do požadovaného odseku, z ktorého chcete urobiť nadpis a z rozbaľovacej ponuky vyberiete požadovanú úroveň nadpisu.
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/IomtyBHpx64" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
-![](roletka.png)
+Tlačidlo v paneli nástrojov zobrazuje aktuálny element, napríklad **Odsek** alebo **Nadpis 2**. Ak má nastavené štýly, uvedie skrátenú HTML značku a ich názvy, napríklad **H2 + Spodné odsadenie xs**. Dlhý zoznam sa oreže podľa šírky tlačidla; celý text zobrazíte podržaním kurzora nad ním. Pri výbere viacerých typov elementov sa zobrazí **Výber**.
 
-Na každej web stránke by mal byť vždy iba jeden hlavný Nadpis 1, ktorým by sa mal text začínať. Nakoľko tento nadpis je na štandardne stránke automaticky vygenerovaný z názvu stránky (ak to tak šablóna definuje), nie je potrebné ho vkladať do tela stránky. Sekcie v rámci stránky sa oddeľujú Nadpisom 2, ich pod-sekcie Nadpisom 3, atď.
+Kliknite do textu alebo označte jeho časť a otvorte **Štýly** v paneli nástrojov. Vybraný štýl sa použije ihneď a okno zostane otvorené, takže môžete nastaviť viac vlastností za sebou. Na web sa zmeny prenesú až uložením stránky.
 
-V tejto ponuke sú aj ďalšie preddefinované štýly, ich použitie však vychádza z ich pomenovania, napríklad štýly obsahujúce text "tabuľka" sa používajú len na tabuľky a podobne. Kliknutím do ľubovoľného textu stránky v editore sa vám do poľa Štýl automaticky nastaví štýl použitý na danej pozícii kurzora. Aktuálne použitý štýl je zvýraznený podfarbením jeho názvu. Opakovaným zvolením už nastaveného štýlu sa tento štýl odstráni. Viac informácii je v [manuále pre Web Dizajnéra](../../../frontend/examples/template-bare/README.md#zoznam-štýlov-pre-editor).
+![Ponuka Štýly s výberom elementu, aktívnymi štýlmi a náhľadmi](roletka.png)
 
-Pokiaľ chcete zmeniť štýl takéhoto textu v rámci odseku, nesmiete text označovať. Stačí kliknúť do daného textu v stránke, štýl farby sa automaticky pred-nastaví v rozbaľovacej ponuke **Štýl** a následne ho môžete zmeniť na iný štýl.
+Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](../../../frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](../../../frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky.
 
-Pomocou preddefinovaných štýlov môžete text na stránke aj zvýrazňovať. Vo výbere nájdete napr. rôzne typy nadpisov, farebné zvýraznenia. Používanie štýlov zabezpečí jednotný vzhľad stránok.
+### Výber upravovanej časti stránky
+
+V hornej časti okna je cesta k aktuálnemu elementu, napríklad **Sekcia › Kontajner › Stĺpec › Odsek › Text**. Zvýraznená položka určuje, čo práve upravujete. Kliknutím na inú položku môžete nastaviť napríklad pozadie celej sekcie namiesto farby odseku. Farebné štvorčeky označujú rovnaké časti stránky ako v Page Builderi. Podržaním kurzora nad položkou zobrazíte podrobnosti o elemente.
+
+- **Celý odsek:** umiestnite doň kurzor. Štýly odseku sa použijú na celý odsek.
+- **Časť textu:** najprv označte slová, ktoré chcete upraviť. Ponuka sprístupní aj štýly pre vybraný text, napríklad jeho farbu.
+- **Už upravený úsek textu:** kliknite dovnútra úseku. Ak je samostatne označený ako **Text**, ponuka upravuje tento úsek. Na nastavenie celého odseku prepnite v hornej ceste na **Odsek**.
+
+### Vyhľadávanie, náhľady a kombinovanie štýlov
+
+Štýly sú rozdelené do kategórií, ktoré môžete jednotlivo rozbaliť alebo zbaliť. Odkaz **Rozbaliť všetko / Zbaliť všetko** ovláda všetky zobrazené kategórie. Pole na vyhľadávanie hľadá v názvoch, CSS triedach, kategóriách aj skupinách bez rozlišovania veľkých písmen a diakritiky.
+
+Vpravo pri každej položke vidíte náhľad jej vzhľadu: farbu textu, pozadie, rámik alebo podobu písma. Veľké písmo sa prispôsobí priestoru náhľadu; údaj v pixeloch ukazuje skutočnú veľkosť. Pri odsadení náhľad znázorňuje medzeru a jej hodnotu. Výsledok vždy vidíte aj priamo v obsahu stránky.
+
+Vlastnosti môžete kombinovať, napríklad farbu textu s odsadením. Voľby s krúžkom v rovnakej skupine sa nahrádzajú: výber inej farby odoberie predchádzajúcu farbu z tejto skupiny. Samostatné štýly so štvorcovým políčkom sa dajú zapínať nezávisle. **Odstrániť** pri názve skupiny zruší voľbu danej skupiny. Opakovaným kliknutím na aktívny štýl ho odoberiete; rovnako funguje **×** pri jeho názve v hornej časti okna.
+
+Ponuka zobrazuje štýly použiteľné pre aktuálny výber. Po zapnutí **Všetky štýly** uvidíte aj ostatné položky, ale tie, ktoré na vybraný element nemožno použiť, zostanú neaktívne.
+
+Ak okno prekrýva upravovaný obsah, presuňte ho za bodkovanú rukoväť vedľa názvu **Štýly**. Po zatvorení a opätovnom otvorení sa vráti k tlačidlu v paneli nástrojov a zoznam sa posunie na začiatok. Zatvoríte ho krížikom, klávesom **Escape** alebo kliknutím mimo okna. Zmenu štýlu môžete vrátiť príkazom **Späť**.
+
+### Obnovenie základného vzhľadu
+
+Odkaz **Obnoviť základný vzhľad** odoberie z aktuálne vybraného elementu všetky odstrániteľné CSS triedy známe ponuke štýlov. Zachová jeho základné konštrukčné triedy aj ostatné triedy, ktoré ponuka nepozná. Zobrazí sa pri elemente, pre ktorý šablóna definuje základné triedy.
+
+Ak máte vybraný **Kontajner**, obnoví vzhľad kontajnera; vnorené odseky ani textové úseky neupravuje. Ich zobrazenie však môže ovplyvniť napríklad farba zdedená z kontajnera. Obsah aj typ elementu zostanú zachované. Reset zahŕňa aj štýly skryté vyhľadávaním alebo zbalenou kategóriou a možno ho vrátiť jedným krokom **Späť**.
+
+### Formát odseku a nadpisy
+
+Na začiatku ponuky je kategória **Formát odseku** s voľbami **Odsek** a **Nadpis 1–6**. Kliknite do odseku a vyberte požadovanú úroveň nadpisu. Táto voľba mení typ celého odseku a jeho význam v štruktúre dokumentu. Samotný CSS štýl, ktorý zväčší písmo, z odseku nadpis nevytvorí.
+
+![Formát odseku s výberom odseku a úrovní nadpisov](format-odseku.png)
+
+Úrovne nadpisov voľte podľa členenia obsahu: hlavný nadpis, názvy sekcií, potom ich podsekcie. Ak šablóna už zobrazuje hlavný nadpis z názvu stránky, v obsahu ho nemusíte pridávať znova. Výberom **Odsek** zmeníte nadpis späť na bežný odsek; samostatne nastavené CSS štýly zostanú zachované.
+
+Keď upravujete **Text** alebo celý kontajner, pre zmenu formátu najprv vyberte príslušný odsek. V niektorých blokoch Page Buildera určuje typ elementu samotná šablóna; vtedy je zmena formátu nedostupná a ponuka zobrazí vysvetlenie.
+
+Definovanie dostupných štýlov opisuje [manuál pre web dizajnéra](../../../frontend/examples/template-bare/README.md#zoznam-štýlov-pre-editor).
+
+### Ďalšie nástroje formátovania
 
 Ďalší spôsob formátovania textu je pomocou nasledujúcich štandardných nástrojov (aplikujú sa označením textu, ktorý chcete upraviť):
 
@@ -68,7 +108,7 @@ Formátovanie textu pomocou nástroja na zmenu farby textu ![](bcg_color.png ":n
 
 ## Odstraňovanie formátovania
 
-Ak chcete zrušiť štýl nadpisu, kliknite do textu nadpisu a zvoľte z rozbaľovacej ponuky prvú položku **Odsek**. Následne by sa mal štýl nadpisu z textu odstrániť (platí pre všetky štýly z rozbaľovacej ponuky).
+Ak chcete zmeniť nadpis na bežný odsek, kliknite doň a v ponuke **Štýly → Formát odseku** vyberte **Odsek**. CSS štýly odoberajte samostatne kliknutím na aktívnu položku alebo na **×** pri jej názve.
 
 Pokiaľ chcete odstrániť z textu bežné formátovanie napríklad tučný text alebo kurzívu, môžete to spraviť dvomi spôsobmi. Buď po označení daného textu znova kliknete na daný formátovací nástroj, až kým sa formátovanie nezruší, alebo použijete univerzálny nástroj na odstraňovanie formátovania ![](remove_format.png ":no-zoom")
 

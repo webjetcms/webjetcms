@@ -5,6 +5,7 @@
 - Instalace a spuštění
     - [Instalace a spuštění](/developer/install/README.md)
     - [Development Containers](/developer/install/devcontainers/README.md)
+    - [Social Media Feeds](/developer/install/social-media-feed.md)
 - Použité frameworky
     - [Použité frameworky](/developer/frameworks/README.md)
     - [Bootstrap](/developer/frameworks/bootstrap.md)
@@ -88,6 +89,7 @@
 - Řešení problémů
   - [Možné chyby](/developer/troubles/README.md)
 - Požadavky na vývoj
+    - [Použití AI skills](/developer/guidelines/ai-skills.md)
     - [Práce s Git/Gitlab](/developer/guidelines/gitlab.md)
     - [Definice hotového - Definition of Done](/developer/guidelines/definition-of-done.md)
     - [Názvosloví termínů/výrazů](/developer/guidelines/terms.md)

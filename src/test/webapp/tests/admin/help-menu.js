@@ -23,6 +23,10 @@ function menuItemStyle(I, selector) {
 Scenario('Header help shares release news and supplies documentation links', async ({ I }) => {
     I.amOnPage('/admin/v9/');
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
+    await I.executeScript(() => {
+        const dashboard = document.querySelector('webjet-overview-dashboard');
+        dashboard.configure({ data: dashboard.data, labels: dashboard.labels, config: { ...dashboard.config, socialRefreshHours: 0 } });
+    });
     openHelp(I);
     I.assertDeepEqual(await I.executeScript(() => {
         const button = document.querySelector('#admin-help-toggle');

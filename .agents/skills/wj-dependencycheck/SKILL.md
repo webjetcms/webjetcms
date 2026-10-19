@@ -25,7 +25,7 @@ $wj-dependencycheck severity=HIGH and above report=existing
 
 Read the current branch, repository instructions, and working-tree status. Resolve all project paths against the current worktree root, obtained with `git rev-parse --show-toplevel`. If invoked outside a repository, locate or ask for the intended checkout. Never reuse an absolute path or another worktree's report from an earlier conversation or an ambient browser tab.
 
-Exclude findings confined to `src/main/webapp/templates/` in the current worktree: these are internal test design templates and are not included in the shipped product. Do not investigate, remediate, propose suppressions for, or mention these findings in commentary, decision tables, remaining-findings summaries, or reported counts, even if the report contains no matching suppression. This exclusion is path-based; copies of the same library outside this directory remain in scope.
+Only in a verified WebJET **core source checkout**, exclude findings confined to `src/main/webapp/templates/`: those are internal test design templates not included in the shipped core product. Do not investigate, remediate, propose suppressions for, or include those core-only findings in reported counts. Copies outside that directory remain in scope. In basecms and customer projects, templates can be production assets: include them unless the project's actual packaging proves they are not shipped. The presence of installed WebJET skills does not identify a core checkout. Use `wj-project-context` when available to establish the project type.
 
 During initial analysis, leave source files, dependency manifests, lockfiles, suppression XML, and changelogs unchanged. Generating the requested report and normal tool caches is permitted. Do not install or upgrade dependencies merely to inspect them. Preserve unrelated local changes and never create commits.
 
@@ -42,6 +42,8 @@ If the source was not specified and the report exists, show its embedded generat
 If no report exists and no source was specified, explain that generation is needed and generate it once the severity is known. If the user explicitly requested an existing report that is missing or invalid, ask whether to generate it instead.
 
 For `new`, run the wrapper from the worktree root:
+
+First verify that the project actually configures the Dependency Check task. If it does not, report that prerequisite; do not install a scanner or copy core build configuration without a separate request.
 
 ```sh
 ./gradlew --info dependencyCheckAnalyze

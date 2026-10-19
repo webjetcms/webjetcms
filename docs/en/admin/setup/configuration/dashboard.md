@@ -7,6 +7,8 @@ You can set the welcome panel background and environment label via **Settings �
 | Variable | Default value | Meaning |
 | --- | --- | --- |
 | `dashboardHeroBackgroundImage` | `linear-gradient(111.7deg, #031D46 0%, #073780 76.92%)` | Welcome bar background: CSS gradient or image path. Empty or invalid value will use the default blue gradient. |
+| `dashboardSocialRefreshHours` | `8` | Number of hours the saved external news list is valid. A value of `0` or a negative value disables its loading and display of saved items. Expanding the panel with the function enabled always verifies the current list. |
+| `overviewJsonUrl` | `https://docs.webjetcms.sk/json/` | The base URL for the `wjnews.sk.json`, `wjnews.cs.json` and `wjnews.en.json` files. You can set your own HTTP(S) server or a local path to the folder with these files. |
 | `dashboardEnvironmentName` | `{ENVIRONMENT_NAME}` | Label text. Supports macros and custom text. Displays up to 8 characters in uppercase; the full name remains in the tooltip. An empty value will also hide the label from the tab title. |
 | `dashboardEnvironmentIcon` | `car` | Icon by environment or name of the Tabler icon, e.g. `rocket` or `ti-database`. A value of `none` or an empty value hides the icon. If the name does not exist, the icon will not be displayed. |
 | `dashboardEnvironmentColor` | `car` | Color from the palette according to the environment and style. Custom color `#RGB` or `#RRGGBB` automatically gets black or white text and icon with a contrast of at least 4.5:1. |
@@ -25,6 +27,22 @@ You can change the background directly with the value `dashboardHeroBackgroundIm
 - `https://cdn.example.com/header.jpg` – image from full HTTP(S) address.
 
 The image will replace the gradient and cover the entire panel, maintaining the aspect ratio (`cover`), aligned to the center and bottom edge. Enter the path directly, without the `url(...)` wrapper. The HTTP(S) address must not contain login information. Addresses starting with `//`, addresses with backslashes or control characters, and other protocols are not allowed. The maximum length of the address is 1024 characters.
+
+## News from social networks
+
+The **What's New** panel combines the news of the installed version with posts from YouTube and Facebook of WebJET CMS. The browser reads the common JSON from the server configured in `overviewJsonUrl` ; the customer server does not contact the social networks. Data generation on the docs server is described in [Central News List](../../../developer/install/social-media-feed.md).
+
+JSON must be publicly accessible without login, even with a custom local path: the request does not send login cookies or the `Referer` header.
+
+The relative path of the image in the field `image` is filled in according to the JSON folder. For example, with `overviewJsonUrl=https://docs.webjetcms.sk/json/new/`, `social-media/images/obrazok.jpg` is loaded from `https://docs.webjetcms.sk/json/new/social-media/images/obrazok.jpg`. Therefore, when moving the list, also transfer the subfolder with images. Absolute HTTPS addresses of images from older lists remain supported.
+
+When opening the home screen, the list stored in `localStorage` is used. If it is missing or has reached the expiration date set in `dashboardSocialRefreshHours` (default 8 hours), it is refreshed in the background. The list is also verified before this period expires each time it is expanded. The cache is stored under the key `webjet.externalNews.v1` and also contains the URL of the loaded list. When the URL or language is changed, the corresponding list is loaded and this item is overwritten; the Czech administration uses the file `wjnews.cs.json`. In the collapsed rotation, only the preview of the currently displayed news item is loaded; other images are not loaded in advance. Card images start loading after the panel is expanded. The preview in the rotation does not change the reading status.
+
+The **New** label remains displayed until the user expands the unread content. Expanding confirms both local news and the social items currently being viewed. A successful save to account settings includes a read date of `readAt` ; for social posts, their ID fingerprints are also stored under the key `dashboard.externalNews.<odtlačok základnej URL>`. Switching languages ​​or editing the translation of the same post will not create a new notification. The new ID will create one regardless of the publication date. Data received after collapse or in a hidden browser tab will not be marked as read; if the panel is still expanded, it will be marked when returning to the tab.
+
+In the event of a loading error, external tabs, rotation items, and their notification will be hidden even if the browser has older data stored. The panel will not display a loading or error message; local version news and social media links will remain. The stored cache will not be cleared by the error.
+
+The value `dashboardSocialRefreshHours=0` disables JSON and image requests, external tabs, their rotation, and unread item notifications. This also applies to data that the browser has already saved. News from the installed version and links to both social channels will remain available. Refresh the administration page after changing the configuration.
 
 ## Automatic environment labeling
 
@@ -108,4 +126,6 @@ Write the text `admin.overview.changelog` as a Markdown title with a version and
 - **Testovanie prístupnosti** – Kontroly sú súčasťou automatizovaných testov.
 ```
 
-The number in the **What's New** link is derived from the list. Older text in paragraphs remains readable. A record `user_settings_admin` is kept for each user and language in `dashboard.news.<jazyk>` with a text fingerprint and the date of first view (`firstSeen`). Changing the text will reset the **New** label for 30 days. Saving or resetting the dashboard layout does not change this record.
+The number in the **What's New** link is derived from the list. Older text in paragraphs remains readable. In `user_settings_admin`, a record `dashboard.news.<jazyk>` is kept for each user and language with a fingerprint of the text read (`fingerprint`) and the date read (`readAt`). It is saved when the visible panel is expanded. Changing the text will restore the **New** label to the same version; the notification does not expire after a timeout. The Help menu reads the same local news status, but opening it does not change it. Saving or resetting the dashboard layout does not change this record.
+
+The older entry with `firstSeen` only indicated the first view and did not have read information. Therefore, after the update, local news items will appear as unread until the user expands them once. Existing stored read social post IDs remain valid.

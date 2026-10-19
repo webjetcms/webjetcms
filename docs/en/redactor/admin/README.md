@@ -34,7 +34,7 @@ The **Help** menu is available in the header on all administration pages. It off
 - **Help for this page** – instructions for the open part of the administration. Below the link is the name of the current page. If the page does not have instructions associated with it, the item will not be displayed.
 - **WebJET CMS Documentation** – the home page of the documentation in the language of the logged-in user.
 - **Keyboard shortcuts** – [overview of shortcuts](keyboard-shortcuts.md) and where they work.
-- **What's new in version…** – a specific version in the documentation. The number of new features and the **New** label correspond to the tab on the home screen. The label remains for 30 days from the first time the given content is displayed in the menu or on the home screen; editing the content starts a new period.
+- **What's new in version…** – specific version in the documentation. Both the number and the label **New** refer to the news of the installed version, excluding social posts. The label goes out after expanding the news on the home screen and returns when its text is changed. Opening the menu itself does not mark the content as read.
 - **List of all changes** – complete changelog.
 - **Send Feedback** – a dialog for an idea, problem or compliment. It also works outside the home screen. The back arrow will take you back to the menu; closing with the cross will keep the written message while this page is open.
 - **Contact Support** – support page set for the user's language.

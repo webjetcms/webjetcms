@@ -1114,7 +1114,7 @@ public class Constants {
 
 		setString("newsComponentsDirs", "", mods(MOD_EDITOR, MOD_NEWS),
 				"Zoznam URL adries adresarov, v ktorych su custom news komponenty pre ich zobrazenie v dialogu pre vlozenie news komponenty. Automaticky sa hladaju v /components/INSTALL_NAME/news/ ak su aj v inych adresaroch nastavte do tejto premennej ich zoznam oddeleny ciarkou.");
-		setString("proxyHostsException", "", MOD_NETWORK, "Zoznam domen oddelenych ciarkou, pre ktore sa proxy nepouzije");
+		setString("proxyHostsException", "", MOD_NETWORK, "Zoznam hostov oddelenych ciarkou alebo |, pre ktore sa HTTP/HTTPS proxy nepouzije. Podporuje * na zaciatku a konci vzoru (napr. *.firma.sk,127.*), nerozlisuje velkost pismen. Vyzaduje restart.");
 
 		setBoolean("editorImageDialogCopyAltToTitle", false, MOD_EDITOR,
 				"Ak je nastavene na true bude hodnota ALT atributu kopirovana do TITLE atributu obrazku");
@@ -1373,6 +1373,8 @@ public class Constants {
 		// WebJET 8 konfiguracia
 		setString("elfinderLibraryFolders", "/images,/images/gallery,/images/video,/files", MOD_ELFINDER,
 				"Zoznam adresarov, ktore sa zobrazia v suboroch v Kniznici");
+		setBoolean("ckeditor_styleComboEnabled", true, MOD_EDITOR,
+				"Enable the searchable style picker. Disable to use the legacy Styles combo.");
 		setString("ckeditor_toolbar",
 				"{ name: 'clipboard', items: ['Paste', '|', 'Cut', 'Copy', ';' , 'PasteText', 'PasteFromWord']},\n" +
 						"\t\t\t\t{ name: 'fontAndStyle', items: ['Styles', 'RemoveFormat', ';', 'Bold', 'Italic', 'Underline', 'Strike', 'Subscript', 'Superscript', 'TextColor', 'BGColor']},\n"

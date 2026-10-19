@@ -10,6 +10,8 @@ import java.net.SocketAddress;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
+import java.util.regex.Pattern;
 
 //import org.apache.commons.httpclient.HttpClient;
 //import org.apache.commons.httpclient.UsernamePasswordCredentials;
@@ -36,7 +38,7 @@ public class WebJETProxySelector extends ProxySelector
 	private ProxySelector defsel = null;
 	private String proxyHost = null;
 	private int proxyPort = 0;
-	private String proxyHostsException = null;
+	private final Pattern proxyHostsExceptionPattern;
 
 	private String proxyHostHttps = null;
 	private int proxyPortHttps = 0;
@@ -44,14 +46,38 @@ public class WebJETProxySelector extends ProxySelector
 	//private String proxyUsername = null;
 	//private String proxyPassword = null;
 
-	private WebJETProxySelector(ProxySelector def, String proxyHost, int proxyPort, String proxyUsername, String proxyPassword, String proxyHostsException, String proxyHostHttps, int proxyPortHttps)
+	private WebJETProxySelector(ProxySelector def, String proxyHost, int proxyPort, String proxyUsername, String proxyPassword, List<String> proxyHostsException, String proxyHostHttps, int proxyPortHttps)
 	{
 		defsel = def;
 		this.proxyHost = proxyHost;
 		this.proxyPort = proxyPort;
-		this.proxyHostsException = proxyHostsException;
+		this.proxyHostsExceptionPattern = createExceptionPattern(proxyHostsException);
 		if (Tools.isNotEmpty(proxyHostHttps) && proxyHostHttps.length()>3) this.proxyHostHttps = proxyHostHttps;
 		if (proxyPortHttps>1) this.proxyPortHttps = proxyPortHttps;
+	}
+
+	/**
+	 * Compiles Java 17 nonProxyHosts wildcards, quoting all characters except one
+	 * wildcard at each edge. Interior asterisks remain literal.
+	 */
+	private static Pattern createExceptionPattern(List<String> exceptions)
+	{
+		if (exceptions.isEmpty()) return null;
+		StringJoiner patterns = new StringJoiner("|");
+		for (String exception : exceptions)
+		{
+			if ("*".equals(exception))
+			{
+				patterns.add(".*");
+				continue;
+			}
+			boolean startsWithWildcard = exception.startsWith("*");
+			boolean endsWithWildcard = exception.endsWith("*");
+			int start = startsWithWildcard ? 1 : 0;
+			int end = endsWithWildcard ? exception.length() - 1 : exception.length();
+			patterns.add((startsWithWildcard ? ".*" : "") + Pattern.quote(exception.substring(start, end)) + (endsWithWildcard ? ".*" : ""));
+		}
+		return Pattern.compile(patterns.toString(), Pattern.CASE_INSENSITIVE);
 	}
 
 	/**
@@ -88,7 +114,16 @@ public class WebJETProxySelector extends ProxySelector
 
 		//System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "");
 
-		if (Tools.isNotEmpty(hostsException)) System.setProperty("http.nonProxyHosts", Tools.replace(hostsException, ",", "|"));
+		List<String> exceptions = new ArrayList<>();
+		if (hostsException != null)
+		{
+			for (String exception : hostsException.split("[,|]"))
+			{
+				String trimmed = exception.trim();
+				if (trimmed.isEmpty() == false) exceptions.add(trimmed);
+			}
+		}
+		if (exceptions.isEmpty() == false) System.setProperty("http.nonProxyHosts", String.join("|", exceptions));
 
 		String usernameNoDomain = username;
 		/* zda sa, ze toto fakt netreba, ani vo VUB nebolo potrebne takto delit, takze zatial zakomentovane
@@ -102,7 +137,7 @@ public class WebJETProxySelector extends ProxySelector
 		}
 		*/
 
-		WebJETProxySelector selector = new WebJETProxySelector(ProxySelector.getDefault(), host, port, usernameNoDomain, password, hostsException, httpsHost, httpsPort);
+		WebJETProxySelector selector = new WebJETProxySelector(ProxySelector.getDefault(), host, port, usernameNoDomain, password, exceptions, httpsHost, httpsPort);
 		ProxySelector.setDefault(selector);
 
 		System.setProperty("http.proxySet", "true");
@@ -157,14 +192,11 @@ public class WebJETProxySelector extends ProxySelector
 		{
 			List<Proxy> list = new ArrayList<>();
 
-			if (Tools.isNotEmpty(proxyHostsException))
+			if (proxyHostsExceptionPattern != null && uri.getHost() != null && proxyHostsExceptionPattern.matcher(uri.getHost()).matches())
 			{
-				if ( (","+proxyHostsException+",").indexOf(","+uri.getHost()+",")!=-1 )
-				{
-					Logger.debug(WebJETProxySelector.class, "Returning noproxy");
-					list.add(Proxy.NO_PROXY);
-					return list;
-				}
+				Logger.debug(WebJETProxySelector.class, "Returning noproxy");
+				list.add(Proxy.NO_PROXY);
+				return list;
 			}
 
 			Proxy p;

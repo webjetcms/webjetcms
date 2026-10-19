@@ -664,6 +664,8 @@ function initPageBuilderEditors(pageDiv)
 
 			//nastav CSS styly
 			ckEditorInstanceInitialized.on("instanceReady", function() {
+				// Allow explicit ancestor styling within this content wrapper.
+				ckEditorInstanceInitialized.config.wjstylescombo_scope = function() { return pageDiv[0]; };
 				//console.log("instanceReady");
 				setStylesDef(window.editorStyles, ckEditorInstanceInitialized);
 				WJ.fireEvent("WJ.PageBuilder.instanceReady", {ckinstance: ckEditorInstanceInitialized});

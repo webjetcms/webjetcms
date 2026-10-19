@@ -1,83 +1,58 @@
-# AGENTS: doc package (`sk.iway.iwcm.doc`)
+# AGENTS: Pages, folders and templates
 
-<!-- Navigation (edit in AGENTS-NAV.md) -->
-<div align="right">[Root](AGENTS.md) | [System](AGENTS-system.md) | [DataTable](AGENTS-datatable.md) | [Editor](AGENTS-editor.md) | [Users](AGENTS-users.md) | [Components](AGENTS-components.md) | [Common](AGENTS-common.md) | [Utils](AGENTS-utils.md)</div>
+[Index](AGENTS.md) · [Working guide](CONTRIBUTING.md)
 
-Manages hierarchical website content (documents/pages) and groups (folders), their templates, publishing life cycle, history, and navigation trees.
+This area contains website content, folder structure, public rendering and the caches used to resolve pages. The editor save and approval workflow is described in [Editor](AGENTS-editor.md).
 
-## What Belongs Here / Not Here
+Paths below are relative to the WebJET core repository. Customer projects usually consume these classes from their CMS dependency; check that dependency's version before using an API or extending its behavior.
 
-- Put here: document/group/template domain logic, history & publishing orchestration, tree/navigation builders, related caching (*DB classes).
-- Not here: editor WYSIWYG specifics (editor), generic utilities (utils/common), feature widget rendering (components).
-- Extract generic tree utilities if needed elsewhere.
+## Models and persistence
 
-## Core Domain Objects
+| Model / entry point | Actual responsibility |
+|---|---|
+| `src/main/java/sk/iway/iwcm/doc/DocBasic.java` | JPA `@MappedSuperclass` shared by pages and history, including HTML `data`, searchable `dataAsc`, metadata and editor annotations. It is not a lightweight list DTO. |
+| `src/main/java/sk/iway/iwcm/doc/DocDetails.java` | Entity for `documents`; its page ID is distinct from a history record ID. Uses the audit entity listener. |
+| `src/main/java/sk/iway/iwcm/doc/DocHistory.java` | Entity for `documents_history`, with its own `history_id`, page `docId`, approval fields, `actual` and scheduled-publication flag `publicable`. |
+| `src/main/java/sk/iway/iwcm/doc/DocDetailsRepository.java`, `src/main/java/sk/iway/iwcm/doc/DocHistoryRepository.java` | Spring Data access to these two tables. Saving directly does not run the full editor workflow. |
+| `src/main/java/sk/iway/iwcm/doc/GroupDetails.java`, `src/main/java/sk/iway/iwcm/doc/GroupsDB.java` | Folder metadata and cached/JDBC access: parent, domain, default page, template, access settings and URL path. `GroupDetails` is not a JPA entity. |
+| `src/main/java/sk/iway/iwcm/doc/TemplateDetails.java`, `src/main/java/sk/iway/iwcm/doc/TemplatesDB.java` | Template metadata and lookup/cache layer. Templates are not represented by a generic JPA repository here. |
+| `src/main/java/sk/iway/iwcm/doc/TemplatesGroupBean.java`, `src/main/java/sk/iway/iwcm/doc/TemplatesGroupDB.java` | Template groups, shared presentation settings and their persistence. These are separate from website folders. |
 
-- `DocDetails` / `DocBasic`: Rich vs light representation of a page/document.
-- `GroupDetails`: Folder/group metadata (domain, path, permissions).
-- `TemplateDetails` / `TemplatesDB`: Presentation layer templates & lookup cache.
-- `DocHistory` + `HistoryDB`: Version snapshots for rollback & audit.
-- `DocPublishService`: Orchestrates publish state transitions (draft -> approved -> live) including history entry creation.
+`DocDB.getInstance().getDoc(docId)` loads full content. `getBasicDocDetails(docId, false)` reads cached metadata and can return `null`; it still returns `DocDetails`. Do not save a metadata-only object as complete page content. See `src/main/java/sk/iway/iwcm/doc/DocDB.java` and the unloaded-content guard in `src/main/java/sk/iway/iwcm/editor/service/EditorService.java`.
 - `PlannedChangesService` / `PlannedAccess`: Optional private scheduled assets and media (`plannedPublishingEnabled`). Keep page/media/history changes in one transaction under page locks; the operational `documents.planned_media_initialized` flag is not part of history. Deployment requires transactional tables and shared filesystem storage; see `docs/sk/redactor/webpages/planned-publishing.md`.
 - `GroupsDB`: In-memory/cache accessor for group structure & domain-specific filtering.
 
-## Supporting Classes
+## Content lifecycle
 
-- Converters (e.g., `DocDetailsConverter`, `GroupDetailsConverter`): JPA / DTO conversions and null-protection (`DocDetailsNotNullConverter`).
-- Editor field models (`DocEditorFields`, `GroupEditorField`, `TemplateDetailEditorFields`): Bridge raw entity to DataTable/editor UI fields.
-- Tree / UI integration (`GroupsTreeService`, `GroupsTreeRestController`, `DocumentsJsTreeItem`, `GroupsJsTreeItem`): Build hierarchical JSON for jsTree/navigation.
-- `NavbarService`: Builds breadcrumb / navigation structures for current context.
-- Listeners (`ShowDocListener`): Hook points when rendering documents.
+- Normal editor saves use `EditorFacade`, which coordinates `EditorService`, media, attributes and multigroup copies. Direct SQL or repository saves bypass that coordination.
+- `src/main/java/sk/iway/iwcm/doc/DocPublishService.java` handles **timed publication and unpublication**. It publishes eligible history records into `documents` and disables pages after their end date. It is not the general draft/approval service.
+- `DocDB.getInstance()` invokes publication checks; the publisher refreshes its pending records through the document cache lifecycle. Preserve this integration when changing scheduled publication.
+- `src/main/java/sk/iway/iwcm/doc/GroupPublisher.java` handles scheduled folder changes in `groups_scheduler`. The editor also uses this table for pending folder approvals; inspect `src/main/java/sk/iway/iwcm/editor/rest/GroupSchedulerDto.java` and `src/main/java/sk/iway/iwcm/editor/approve/GroupsApproveRestController.java` before changing it.
+- History and audit are different concerns. History carries editable versions and approval/publication metadata; audit records changes. `editorDisableHistory` can disable history writing, so do not assume every save always produces a new version.
 
-## Key Patterns
+## Folders, URLs and permissions
 
-### Caching & Lookup
+- Pages are scoped through their folder hierarchy and domain. Do not apply a generic `domainId` column assumption to `documents` or `groups`.
+- Use `DocDB.getDocLink(...)` and existing folder URL helpers for links; consider domain, external links, default pages and context paths. For URL lookup, inspect `DocDB.getDocIdFromURL(virtualPath, domain)` rather than assuming paths are globally unique.
+- Cached `DocDB`/`GroupsDB` lookups do not replace authorization. Editor permissions are enforced by the editor services; public visibility and password-protected access are handled during rendering.
+- `src/main/java/sk/iway/iwcm/doc/GroupsTreeService.java` builds and filters admin jsTree nodes by permissions, domain and tree mode. `src/main/java/sk/iway/iwcm/doc/GroupsTreeRestController.java` exposes `/admin/rest/groups/tree`. Preserve the distinct System, Trash and selector modes when modifying the tree.
+- `src/main/java/sk/iway/iwcm/doc/NavbarService.java` and the `Navbar*` implementations produce breadcrumbs. Multigroup copies, structure cloning and language mirroring are separate features; start in `src/main/java/sk/iway/iwcm/editor/service/MultigroupService.java`, `src/main/java/sk/iway/iwcm/doc/clone_structure/` or `src/main/java/sk/iway/iwcm/doc/mirroring/` respectively.
 
-- Centralized through *DB classes (`GroupsDB`, `TemplatesDB`) offering singleton-style access; ensure invalidation when underlying data changes (call provided clear/reload methods rather than re-instantiating).
+## Public rendering and templates
 
-### Publishing Life Cycle
+- Start in `src/main/java/sk/iway/iwcm/doc/ShowDoc.java` for page loading, access checks, request attributes and template dispatch. It publishes `WebjetEvent<ShowDocBean>` events. `ShowDocListener` is an unused compatibility shell, not the place to add rendering behavior.
+- JSP and Thymeleaf templates coexist. `src/main/java/sk/iway/iwcm/doc/showdoc/ThymeleafShowdocController.java` renders the template selected by `ShowDoc`, exposing `ninja`, `docDetails`, `docDetailsOriginal`, `groupDetails`, `tempDetails` and `templatesGroupDetails` to the model.
+- Template administration lives in `src/main/java/sk/iway/iwcm/components/templates/` and `src/main/java/sk/iway/iwcm/components/template_groups/`. `TemplatesController` uses `/admin/rest/templates/temps-list` and the `menuTemplates` permission.
+- Website templates are under `src/main/webapp/templates/`. Resolve the target project's actual template group, installation name and template engine before editing a layout.
+- See `docs/en/frontend/templates/README.md`, `docs/en/frontend/templates/templates.md` and `docs/en/frontend/templates/template-groups.md` for authoring guidance; verify details against the target code/version.
 
-- `DocPublishService` handles state changes; avoid manual field toggling to keep history consistent.
-- History entry: create before mutating persistent state to allow rollback.
+## Cache and field changes
 
-### Group & Domain Resolution
+- Use existing save paths so caches are refreshed along with persistence. Relevant APIs include `DocDB.getInstance().updateInternalCaches(docId)`, `GroupsDB.getInstance(true)` and `TemplatesDB.getInstance(true)`; a full refresh is not interchangeable with a page update.
+- Do not mutate cached collections or reuse a cached page as an isolated edit copy. Follow the current service's copy/reload behavior.
+- A page field may affect `DocBasic`, both database tables, editor annotations/`DocEditorFields`, MapStruct mapping in `src/main/java/sk/iway/iwcm/editor/rest/DocDetailsToDocHistoryMapper.java`, history DTOs and rendering. Check which layers actually need the field.
+- Folder/template fields also have JDBC persistence. Inspect `GroupsDB`, `TemplatesDB`, `DataAccessHelper` and the relevant editor service; adding a Java property alone does not persist it.
 
-- Use `GroupsDB.getInstance().getUserRootDomainNames(user)` for domain-scoped group lists.
-- Always supply/derive domain when generating public URLs to avoid cross-domain leakage.
+## Verification starting points
 
-### Tree Building
-
-- Services assemble lightweight tree node DTOs (*JsTreeItem) with id/text/children flags; lazy-load deeper levels on demand.
-- Keep recursion guarded (max depth or cycle detection if mirroring/clone features used).
-
-### Template Binding
-
-- `TemplatesDB` caches templates keyed by id/path; flush when uploading or editing template files to allow immediate reuse.
-
-## Conventions
-
-- Distinguish *Details (full object) vs lighter projections (*Basic) for performance-sensitive list views.
-- Methods prefixed get/prepare/build for retrieval/assembly; avoid side effects in simple getters.
-- Keep converters side-effect free; log & return safe defaults instead of throwing on partial data.
-
-## Pitfalls
-
-- Forgetting to update history before publish -> gaps in version chain.
-- Directly altering cached `GroupsDB` internal collections breaks invariants; use exposed mutation/invalidation methods.
-- Unsynchronized template cache invalidation can cause stale design in user sessions; ensure single point of flush.
-
-## Extending
-
-1. New metadata field: add to entity + converter + editor field model.
-2. Add persistence & include in history snapshot logic (ensure rollback restores it).
-3. Reflect in tree DTOs only if needed by navigation UI.
-
-## Testing Checklist
-
-- Create/edit/publish sequence persists history entries.
-- Tree JSON generation excludes unauthorized groups for limited user.
-- Template cache flush reflects new template on next render.
-
-## Update Process
-
-- When adding new publish states or history attributes, document minimal migration & rollback strategy here.
+Existing browser coverage lives in `src/test/webapp/tests/webpages/`: `publishing.js`, `webpage-history.js`, `approve-logic.js`, `group-approve-logic.js`, `multigroup.js`, `mirroring.js`, `virtual-path.js` and `webpage-perms.js`. Select scenarios matching the change, including scheduled/history behavior and restricted users when relevant. Customer projects must use their own available fixtures and test environment.
