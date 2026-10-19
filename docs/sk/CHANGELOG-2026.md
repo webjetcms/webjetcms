@@ -268,6 +268,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Viackrokové formuláre - doplnené presunutie (`scroll`) na začiatok formuláru po prechode na ďalší krok (#osk573).
 - Prieskumník - pri aktualizácii súboru je výber obmedzený na jeden súbor a hlásenie upozorní na nesprávny typ (#317).
 - Prieskumník - v informáciách o priečinku sa už nezobrazuje nepresná rekurzívna veľkosť (#317).
+- Proxy - [výnimky `proxyHostsException`](install/config/README.md#httphttps-proxy) podporujú zástupné vzory ako `*.firma.sk` a `127.*`, oddeľovače čiarka aj `|` a porovnávanie bez rozlišovania veľkosti písmen. Rovnaký normalizovaný zoznam sa používa pre HTTP/HTTPS aj JVM nastavenie `http.nonProxyHosts`. Zmena konfigurácie vyžaduje reštart.
 
 ### Oprava chýb
 

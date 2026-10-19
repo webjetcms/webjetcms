@@ -122,6 +122,14 @@ class HttpClientProxyTest {
 
     @ParameterizedTest
     @EnumSource(Client.class)
+    void bypassesProxyForWildcardHost(Client client) throws Exception {
+        configureProxy(" localhost, *.firma.sk | 127.* ");
+        assertEquals(DIRECT_BODY, download(client));
+        assertEquals(0, proxyRequests.get());
+    }
+
+    @ParameterizedTest
+    @EnumSource(Client.class)
     void connectsDirectlyWithoutProxy(Client client) throws Exception {
         assertEquals(DIRECT_BODY, download(client));
         assertEquals(0, proxyRequests.get());
