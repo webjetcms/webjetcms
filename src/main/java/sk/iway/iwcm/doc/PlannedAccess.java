@@ -41,6 +41,16 @@ public final class PlannedAccess {
         return doc;
     }
 
+    /** Checks writes against the public target folder without requiring page edit permission. */
+    public static boolean canWrite(String folder, String fileName, Identity user) {
+        if (user == null || !user.isAdmin()) return false;
+        try {
+            return user.isFolderWritable(PlannedAssetPaths.removePlannedPrefix(folder, fileName));
+        } catch (RuntimeException | IOException exception) {
+            return false;
+        }
+    }
+
     public static boolean canAccess(String value, Identity user) {
         try {
             String path = PlannedAssetPaths.localPath(value);

@@ -1,5 +1,7 @@
 package sk.iway.iwcm.components.gallery;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,7 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.doc.PlannedAccess;
 import sk.iway.iwcm.io.IwcmFile;
+import sk.iway.iwcm.users.UsersDB;
 
 @RestController
 @RequestMapping(value = "/admin/rest/image-editor")
@@ -18,8 +22,6 @@ import sk.iway.iwcm.io.IwcmFile;
 public class ImageEditorRestController {
 
     private final GalleryRepository galleryRepository;
-    @Autowired
-    private jakarta.servlet.http.HttpServletRequest request;
 
     @Autowired
     public ImageEditorRestController(GalleryRepository galleryRepository) {
@@ -27,10 +29,9 @@ public class ImageEditorRestController {
     }
 
     @PostMapping("/save-area-of-interest")
-    public ResponseEntity<String> saveImageAreaOfInterest(GalleryEntity entity) {
+    public ResponseEntity<String> saveImageAreaOfInterest(GalleryEntity entity, HttpServletRequest request) {
         try {
-            String path = entity.getImagePath() + "/" + entity.getImageName();
-            if (sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(path) && !sk.iway.iwcm.doc.PlannedAccess.canAccess(path, sk.iway.iwcm.users.UsersDB.getCurrentUser(request))) {
+            if (!PlannedAccess.canWrite(entity.getImagePath(), entity.getImageName(), UsersDB.getCurrentUser(request))) {
                 return ResponseEntity.notFound().build();
             }
             GalleryEntity dbEntity = galleryRepository.findByImagePathAndImageNameAndDomainId(entity.getImagePath(), entity.getImageName(), CloudToolsForCore.getDomainId());
