@@ -111,6 +111,7 @@ Scenario('Local highlights and six safe social cards combine with lazy images an
     await I.see('autotest youtube 3', '.md-dashboard-widget__news-title');
     await I.clickCss(toggle);
     await I.waitForVisible('.md-dashboard__hero.is-news-expanded', 10);
+    await I.dontSeeElement('.md-dashboard-widget__news-version');
     await I.seeNumberOfVisibleElements('.md-dashboard-widget__news-highlights li', 5);
     await I.seeNumberOfVisibleElements(cards, 6);
     await I.dontSee('autotest duplicate installed release', news);
@@ -141,8 +142,18 @@ Scenario('Local highlights and six safe social cards combine with lazy images an
     await a11y.check(news);
     await I.saveScreenshot('dashboard-social-news-desktop.png', true);
 
-    for (const width of [1024, 390]) {
+    for (const width of [1203, 1024, 390]) {
         await I.resizeWindow(width, 1100);
+        await I.assertTrue(await I.executeScript(() => {
+            const content = document.querySelector('.md-dashboard__news .md-dashboard__widget-content').getBoundingClientRect();
+            const heading = document.querySelector('.md-dashboard-widget__news-highlights h2');
+            const close = document.querySelector('.md-dashboard-widget__news-close').getBoundingClientRect();
+            const title = document.createRange();
+            title.selectNodeContents(heading);
+            return Math.abs(heading.getBoundingClientRect().top - content.top) < 1
+                && Math.abs(close.top - content.top) < 1 && Math.abs(close.right - content.right) < 1
+                && title.getBoundingClientRect().right < close.left;
+        }), `The release heading must start at the top without overlapping the collapse control at ${width}px.`);
         await I.assertTrue(await I.executeScript(() => {
             const hero = document.querySelector('.md-dashboard__hero').getBoundingClientRect();
             return document.documentElement.scrollWidth <= window.innerWidth
@@ -240,7 +251,7 @@ Scenario('Collapsed social previews keep the layout, load only the current image
     await I.assertTrue(fixture.imageRequests.every(request => !request.headers.referer && !request.headers.cookie));
     await I.clickCss(preview);
     await I.waitForVisible('.md-dashboard__hero.is-news-expanded', 10);
-    await I.seeElement(version);
+    await I.dontSeeElement(version);
     await I.dontSeeElement(source);
     await I.dontSeeElementInDOM(thumbnail);
     await I.pressKey('Escape');

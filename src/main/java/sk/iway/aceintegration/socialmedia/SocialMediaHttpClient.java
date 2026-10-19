@@ -1,6 +1,5 @@
 package sk.iway.aceintegration.socialmedia;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -132,8 +131,10 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
             JsonNode root = MAPPER.readTree(bytes);
             JsonNode error = root == null ? null : root.get("error");
             if (error != null && error.isObject()) {
-                return new SocialMediaFeedException(facebookReason(error), status,
-                    errorNumber(error.get("code")), errorNumber(error.get("error_subcode")), missingFacebookField(error));
+                Integer code = errorNumber(error.get("code"));
+                String message = Integer.valueOf(100).equals(code) ? error.path("message").asText("") : "";
+                return new SocialMediaFeedException(facebookReason(message), status,
+                    code, errorNumber(error.get("error_subcode")), missingFacebookField(message));
             }
         } catch (IOException exception) {
             // The feed parser reports malformed successful responses without exposing their contents.
@@ -142,26 +143,19 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
     }
 
     /** Maps recognized Graph errors to fixed guidance without including any upstream text. */
-    private static Reason facebookReason(JsonNode error) {
-        JsonNode message = error.get("message");
-        if (!Integer.valueOf(100).equals(errorNumber(error.get("code"))) || message == null || !message.isTextual()) {
-            return Reason.FACEBOOK_API_ERROR;
-        }
-        String value = message.textValue();
-        if (value.contains("Tried accessing nonexisting field")) {
-            if (value.contains("(published_posts)") && value.contains("node type (User)")) {
+    private static Reason facebookReason(String message) {
+        if (message.contains("Tried accessing nonexisting field")) {
+            if (message.contains("(published_posts)") && message.contains("node type (User)")) {
                 return Reason.FACEBOOK_OBJECT_IS_USER;
             }
             return Reason.NONEXISTENT_FACEBOOK_FIELD;
         }
-        if (value.contains("Unsupported get request")) return Reason.FACEBOOK_OBJECT_UNAVAILABLE;
+        if (message.contains("Unsupported get request")) return Reason.FACEBOOK_OBJECT_UNAVAILABLE;
         return Reason.FACEBOOK_API_ERROR;
     }
 
     /** Returns a locally defined field name, never text copied from the response. */
-    private static FacebookField missingFacebookField(JsonNode error) {
-        if (!Integer.valueOf(100).equals(errorNumber(error.get("code")))) return null;
-        String message = error.path("message").asText("");
+    private static FacebookField missingFacebookField(String message) {
         for (FacebookField field : FacebookField.values()) {
             if (message.contains("Tried accessing nonexisting field (" + field.apiName() + ")")) return field;
         }
@@ -178,15 +172,11 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
             throw new SocialMediaFeedException(Reason.INVALID_RESPONSE_SIZE);
         }
         InputStream input = entity.getContent();
-        try (ByteArrayOutputStream bytes = new ByteArrayOutputStream()) {
-            byte[] buffer = new byte[8192];
-            int count;
-            while ((count = input.read(buffer, 0, (int) Math.min(buffer.length, (long) limit - bytes.size() + 1))) != -1) {
-                if (bytes.size() + count > limit) throw new SocialMediaFeedException(Reason.RESPONSE_TOO_LARGE);
-                bytes.write(buffer, 0, count);
-            }
-            return bytes.toByteArray();
+        byte[] bytes = input.readNBytes(limit);
+        if (bytes.length == limit && input.read() != -1) {
+            throw new SocialMediaFeedException(Reason.RESPONSE_TOO_LARGE);
         }
+        return bytes;
     }
 
     static boolean isImageUrl(URI uri) {

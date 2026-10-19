@@ -176,6 +176,8 @@ webjet-overview-dashboard a:focus-visible {
     &__hero.is-news-expanded {
         grid-template-columns: minmax(0, 1fr);
         .md-dashboard__news { padding-left: 24px; }
+        .md-dashboard__news .md-dashboard__widget-content { display: flow-root; }
+        .md-dashboard-widget__news-header { float: right; margin: 0 0 8px 12px; }
     }
     &__widget-content .text-muted { color: var(--wj-dashboard-muted) !important; }
 

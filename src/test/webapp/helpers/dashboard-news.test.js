@@ -379,7 +379,7 @@ test('Collapsed social slides show their source and only their selected thumbnai
     assert.equal(f.requests.filter(request => request.options?.method === 'POST').length, 0);
     f.container.querySelector('.md-dashboard-widget__news-toggle').click(); await tick();
     assert.equal(source.hidden, true);
-    assert.equal(version.hidden, false);
+    assert.equal(version.hidden, true);
     assert.equal(thumbnail(), null);
     f.container.querySelector('.md-dashboard-widget__news-close').click();
     assert.equal(source.hidden, false);

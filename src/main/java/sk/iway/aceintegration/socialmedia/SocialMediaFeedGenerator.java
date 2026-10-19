@@ -13,8 +13,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.text.BreakIterator;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -42,6 +40,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -144,7 +143,7 @@ public final class SocialMediaFeedGenerator {
         for (String language : LANGUAGES) {
             ObjectNode feed = MAPPER.createObjectNode();
             ArrayNode news = MAPPER.createArrayNode();
-            for (Post post : posts) news.add(toNews(post, language, previous.translations(), translations));
+            for (Post post : posts) news.add(toNews(post, language, translations));
             feed.set("news", news);
             byte[] publicFeed = serialize(feed);
             if (publicFeed.length > MAX_PUBLIC_FEED_BYTES) throw new IOException("Public feed exceeds the dashboard response limit");
@@ -347,7 +346,7 @@ public final class SocialMediaFeedGenerator {
         try {
             URI remote = URI.create(post.remoteImage());
             if (!SocialMediaHttpClient.isImageUrl(remote)) return withImage(post, null);
-            String fileName = hash(post.id() + "|" + post.remoteImage()).substring(0, 32) + ".jpg";
+            String fileName = DigestUtils.sha256Hex(post.id() + "|" + post.remoteImage()).substring(0, 32) + ".jpg";
             Path path = settings.outputDirectory().resolve("social-media/images").resolve(fileName);
             if (!Files.isRegularFile(path)) {
                 byte[] jpeg = thumbnail(downloader.download(remote, null, MAX_IMAGE_BYTES));
@@ -368,7 +367,7 @@ public final class SocialMediaFeedGenerator {
             URI uri = URI.create(image);
             String relative = image;
             if (uri.isAbsolute()) {
-                if (!SocialMediaHttpClient.isHttps(uri) || uri.getRawQuery() != null || uri.getRawFragment() != null
+                if (!SocialMediaHttpClient.isHttps(uri) || uri.getRawQuery() != null
                     || !uri.normalize().equals(uri) || uri.getRawPath().contains("%")) return null;
                 int index = uri.getRawPath().lastIndexOf("/social-media/images/");
                 if (index < 0) return null;
@@ -419,11 +418,11 @@ public final class SocialMediaFeedGenerator {
         }
     }
 
-    private ObjectNode toNews(Post post, String language, Map<String, Translation> previous, Map<String, Translation> current) {
+    private ObjectNode toNews(Post post, String language, Map<String, Translation> translations) {
         ObjectNode news = MAPPER.createObjectNode();
-        String title = translate(post, "title", post.title(), language, previous, current);
+        String title = translate(post, "title", post.title(), language, translations);
         String source = longSummary(post.perex(), post.title());
-        String perexLong = longSummary(translate(post, "perexLong", source, language, previous, current), title);
+        String perexLong = longSummary(translate(post, "perexLong", source, language, translations), title);
         news.put("title", title);
         news.put("perex", escapePerex(summarize(perexLong, "")));
         if (!perexLong.isEmpty()) news.put("perexLong", escapePerex(perexLong));
@@ -436,32 +435,26 @@ public final class SocialMediaFeedGenerator {
         return news;
     }
 
-    private String translate(Post post, String field, String text, String language, Map<String, Translation> previous, Map<String, Translation> current) {
+    private String translate(Post post, String field, String text, String language, Map<String, Translation> translations) {
         if ("sk".equals(language) || text.isBlank()) return text;
         if ("title".equals(field) && "facebook".equals(post.source()) && "Nový príspevok na Facebooku".equals(text)) {
             return "cs".equals(language) ? "Nový příspěvek na Facebooku" : "New Facebook post";
         }
         String key = post.id() + ":" + language + ":" + field;
-        String sourceHash = hash(text);
-        Translation old = previous.get(key);
-        if (old != null && sourceHash.equals(old.sourceHash()) && old.text() != null && !old.text().isBlank()) {
-            current.put(key, old);
-            return old.text();
-        }
+        String sourceHash = DigestUtils.sha256Hex(text);
+        Translation old = translations.get(key);
+        if (old != null && (old.text() == null || old.text().isBlank())) old = null;
+        if (old != null && sourceHash.equals(old.sourceHash())) return old.text();
         try {
             String translated = cleanText(translator.translate(text, language), "title".equals(field) ? 180 : MAX_DESCRIPTION_CAPTURE_LENGTH);
             if (!translated.isBlank() && !translated.equals(text)) {
-                current.put(key, new Translation(sourceHash, translated));
+                translations.put(key, new Translation(sourceHash, translated));
                 return translated;
             }
         } catch (Exception exception) {
             Logger.warn(SocialMediaFeedGenerator.class, "Translation unavailable for " + post.id() + " (" + language + ")");
         }
-        if (old != null && old.text() != null && !old.text().isBlank()) {
-            current.put(key, old);
-            return old.text();
-        }
-        return text;
+        return old == null ? text : old.text();
     }
 
     /** Escapes source text before the legacy dashboard's HTML and Markdown processing. */
@@ -555,14 +548,6 @@ public final class SocialMediaFeedGenerator {
             return SocialMediaHttpClient.isHttps(uri) && hosts.contains(uri.getHost().toLowerCase(java.util.Locale.ROOT));
         } catch (IllegalArgumentException exception) {
             return false;
-        }
-    }
-
-    private static String hash(String value) {
-        try {
-            return java.util.HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8)));
-        } catch (NoSuchAlgorithmException exception) {
-            throw new IllegalStateException(exception);
         }
     }
 

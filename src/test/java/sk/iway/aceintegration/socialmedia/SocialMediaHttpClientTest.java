@@ -158,6 +158,53 @@ class SocialMediaHttpClientTest {
         }
     }
 
+    /** Unknown-length responses are accepted up to the exact limit, including an empty response at zero. */
+    @Test
+    void acceptsResponsesWithinTheSizeLimit() throws Exception {
+        for (String body : List.of("", "abc", "abcd")) {
+            for (int limit : new int[] { body.length(), 4 }) {
+                BasicHttpEntity entity = new BasicHttpEntity();
+                entity.setContent(new ByteArrayInputStream(bytes(body)));
+                entity.setContentLength(-1);
+                try (SocialMediaHttpClient client = new SocialMediaHttpClient(transport(200, entity))) {
+                    assertArrayEquals(bytes(body), client.download(URI.create("https://www.youtube.com/feeds/videos.xml"), null, limit));
+                }
+            }
+        }
+    }
+
+    /** Oversized responses with absent or misleading lengths stop after the first byte beyond the limit. */
+    @Test
+    void boundsSuccessfulBodyReads() throws Exception {
+        for (long declaredLength : new long[] { -1, 0 }) {
+            for (int limit : new int[] { 0, 4 }) {
+                ByteArrayInputStream input = new ByteArrayInputStream(bytes("abcdefgh"));
+                BasicHttpEntity entity = new BasicHttpEntity();
+                entity.setContent(input);
+                entity.setContentLength(declaredLength);
+                try (SocialMediaHttpClient client = new SocialMediaHttpClient(transport(200, entity))) {
+                    SocialMediaFeedException error = assertThrows(SocialMediaFeedException.class,
+                        () -> client.download(URI.create("https://www.youtube.com/feeds/videos.xml"), null, limit));
+                    assertEquals(new SocialMediaFeedException(Reason.RESPONSE_TOO_LARGE).getMessage(), error.getMessage());
+                    assertEquals(8 - limit - 1, input.available());
+                }
+            }
+        }
+    }
+
+    /** A response declared larger than the configured limit is rejected before reading its stream. */
+    @Test
+    void rejectsDeclaredOversizedResponsesBeforeReading() throws Exception {
+        HttpEntity entity = mock(HttpEntity.class);
+        when(entity.getContentLength()).thenReturn(5L);
+        try (SocialMediaHttpClient client = new SocialMediaHttpClient(transport(200, entity))) {
+            SocialMediaFeedException error = assertThrows(SocialMediaFeedException.class,
+                () -> client.download(URI.create("https://www.youtube.com/feeds/videos.xml"), null, 4));
+            assertEquals(new SocialMediaFeedException(Reason.INVALID_RESPONSE_SIZE).getMessage(), error.getMessage());
+            verify(entity, org.mockito.Mockito.never()).getContent();
+        }
+    }
+
     /** Unexpected exceptions and causes cannot introduce arbitrary upstream strings into a safe summary. */
     @Test
     void summarizesOnlyTrustedExceptions() {

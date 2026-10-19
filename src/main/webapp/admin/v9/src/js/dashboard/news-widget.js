@@ -162,11 +162,11 @@ export function registerNewsWidget() {
                 schedule();
             }
 
-            /** Loads only the selected collapsed thumbnail and restores release metadata in the expanded panel. */
+            /** Loads only the selected collapsed thumbnail and hides preview metadata in the expanded panel. */
             function updatePreviewMedia() {
                 const item = items[index];
                 const channel = !expanded && SOCIAL_CHANNELS.find(entry => entry.source === item?.source);
-                versionLink.hidden = Boolean(channel);
+                versionLink.hidden = expanded || Boolean(channel);
                 sourceLabel.hidden = !channel;
                 sourceLabel.replaceChildren(...(channel ? [icon(channel.icon), node('span', '', channel.title)] : []));
                 const imageUrl = !expanded ? item?.image : null;
