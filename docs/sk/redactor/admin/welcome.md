@@ -121,23 +121,9 @@ Pri odosielaní sa údaje viditeľnej karty obnovujú každých 30 sekúnd. Poč
 
 ### Čo je nové
 
-Vpravo v modrom uvítacom paneli nájdete novinky nainštalovanej verzie WebJET CMS. Dopĺňa ich najviac päť najnovších príspevkov z YouTube a Facebooku v poradí spoločného zoznamu, aby ste sa dozvedeli aj o nových návodoch a ďalších vydaniach. Pri načítaní stránky sa vyberie náhodná novinka a každých 8 sekúnd sa zobrazí ďalšia. Novinky môžete prepínať aj šípkami alebo bodkami; veľkosť karty sa pritom nemení. Prepínanie pozastavíte tlačidlom pauzy. Pri ukázaní myšou sa dočasne zastaví, pri ovládaní klávesnicou sa zastaví až do opätovného spustenia. Pri obmedzených animáciách v nastavení systému sa automaticky nespúšťa.
+V paneli **Čo je nové** nájdete novinky nainštalovanej verzie WebJET CMS aj videá a príspevky z YouTube a Facebooku WebJET CMS. Na jednom mieste tak môžete sledovať nové funkcie a návody na ich používanie. Kliknutím na novinku alebo tlačidlo **Čo je nové** rozbalíte celý prehľad.
 
-Sociálny príspevok má v zbalenom prehľade malý náhľad vľavo od nadpisu a textu, ak je obrázok dostupný. Vedľa štítku **Nové** ho označuje ikona a názov siete YouTube alebo Facebook. Pri lokálnej novinke aj v rozbalenom paneli zostáva číslo nainštalovanej verzie. Chýbajúci alebo nedostupný obrázok uvoľní celú šírku textu.
-
-Kliknutie na obrázok, nadpis alebo text novinky aj tlačidlo **Čo je nové** rozbalí zoznam cez celú šírku modrého panela. Najprv sa zobrazia všetky novinky nainštalovanej verzie, pod nimi najviac šesť ďalších položiek. Karty obsahujú názov, krátky text, odkaz a podľa dostupnosti obrázok, zdroj a dátum. Kliknutím na odkaz otvoríte video, príspevok alebo článok. Na mobile sa karty zobrazia pod sebou. Dole nájdete aj priame odkazy na YouTube kanál a Facebook stránku WebJET CMS.
-
-Centrálny zoznam preberá videá z YouTube a textové či fotografické príspevky z Facebooku. Facebook videá, Reels a zdieľané odkazy na YouTube videá vynecháva, aby sa videá v prehľade neopakovali.
-
-Text príspevku využije dostupné miesto v karte. Pri kratšom názve, chýbajúcom obrázku alebo chybe jeho načítania sa zobrazí viac textu; odkaz zostane dole. Dlhší text sa ukončí výpustkou. Výňatok neobsahuje vložené URL, hashtagy ani zopakovaný názov na začiatku; ak príspevok obsahuje iba názov, karta nezobrazuje ďalší text. Celý obsah si prečítate po otvorení príspevku.
-
-Privítanie a skratky sa počas rozbalenia skryjú; tlačidlo **Zbaliť novinky**, ikona vpravo hore alebo kláves **Esc** ich znova zobrazia. Odkaz **Zoznam zmien** aj číslo verzie pri štítku **Nové** otvoria úplnú históriu vydaní v dokumentácii.
-
-Štítok **Nové** znamená, že v prehľade máte neprečítaný obsah. Po rozbalení sa zobrazené novinky verzie aj sociálne príspevky označia za prečítané a štítok zhasne. Znova sa objaví, keď pribudne príspevok alebo sa zmení text noviniek nainštalovanej verzie, aj bez zmeny čísla verzie. Časový limit nemá: pri dlhodobo nezmenenej verzii upozorňuje už len na nové príspevky. Samotná rotácia, otvorenie úvodnej obrazovky ani menu Pomocník obsah neoznačujú za prečítaný. Príspevok načítaný až po zbalení zostáva neprečítaný.
-
-Stav a dátum prečítania sa ukladajú do nastavení vášho účtu, takže platia aj na inom zariadení. Sociálne príspevky sa rozpoznávajú podľa ID bez ohľadu na jazyk; novinky verzie majú samostatný záznam pre každý jazyk. Po aktualizácii zo staršieho správania s 30-dňovým štítkom treba lokálne novinky raz rozbaliť, pretože starý dátum prvého zobrazenia nepotvrdzuje ich prečítanie.
-
-Pri otvorení úvodnej obrazovky sa zoznam zo sociálnych sietí obnoví na pozadí, ak od posledného úspešného načítania uplynulo aspoň 8 hodín. Pri každom rozbalení panela sa overí aj pred uplynutím tejto lehoty. Pri výpadku spojenia sa externé položky skryjú bez chybového hlásenia. Správca môže načítavanie [vypnúť v konfigurácii](../../admin/setup/configuration/dashboard.md#novinky-zo-sociálnych-sietí). V oboch prípadoch zostanú novinky nainštalovanej verzie a oba priame odkazy.
+Štítok **Nové** upozorňuje na neprečítaný obsah. Po rozbalení panela sa zobrazené novinky označia za prečítané a štítok sa skryje. Znova sa objaví, keď pribudne príspevok alebo sa aktualizujú novinky nainštalovanej verzie.
 
 ### Systémové upozornenia
 
