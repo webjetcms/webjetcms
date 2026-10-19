@@ -204,6 +204,11 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
+- Manažér dokumentov - priečinky bez práva zápisu sa v stromovej štruktúre zobrazujú s 3pecialnou ikonou (#osk802).
+- Manažér dokumentov - tlačidlo na pridanie priečinka sa aktivuje podľa práva zápisu do zvoleného priečinka (#osk802).
+- Výber priečinka - pri otvorení stromu v poli vyžadujúcom právo zápisu sa zobrazí upozornenie, ak používateľ nemôže zapisovať do priečinka aktuálne zadaného v poli (#osk802).
+- Výber priečinka - strom pri otvorení rozbalí cestu a označí povolený priečinok podľa aktuálnej hodnoty poľa (#osk802).
+
 ### Galéria
 
 - Pridaná možnosť nastaviť samostatný spôsob [zmeny veľkosti pre veľký obrázok](redactor/apps/gallery/structure.md#karta-rozmery) nezávisle od malého obrázka. Predvolene sa použije spôsob zmeny veľkosti rovnako ako je nastavené pre malý obrázok. Nastavenie je možné voliteľne prekopírovať aj do podpriečinkov (#58633).

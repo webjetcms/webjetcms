@@ -50,11 +50,14 @@ export class WebjetJsTree {
 
                             //If its dt-tree-dir-simple, open disabled parent folders in way, that it will not call open event
                             if(url.indexOf("click=dt-tree-dir-simple") > 0) {
+                                const queryString = new URLSearchParams(url.split('?')[1]);
+                                const selectedFolder = this.normalizeFolderPath(data.selectedFolder || queryString.get("selectedFolder"));
+                                if (obj.id === "#" && queryString.get("writableOnly") === "true" && data.selectedFolderWritable === false) {
+                                    WJ.notifyWarning(WJ.translate("text.warning"), WJ.translate("components.jstree.preselected_folder_not_writable.js", WJ.escapeHtml(data.selectedFolder)), 10000);
+                                }
                                 //Prefer the effective root returned by the server after domain alias rewriting.
                                 let rootFolder = data.rootFolder;
                                 if (rootFolder == null) {
-                                    let paramString = url.split('?')[1];
-                                    let queryString = new URLSearchParams(paramString);
                                     rootFolder = queryString.get("rootFolder");
                                 }
                                 let normalizedRootFolder = this.normalizeFolderPath(rootFolder);
@@ -71,6 +74,13 @@ export class WebjetJsTree {
                                     } else if(isRootParent && (item.state['disabled'] == true || item.icon == "ti ti-folder-x")) {
                                         item.children = [];
                                         item.state['opened']  = true;
+                                    }
+
+                                    if (selectedFolder === normalizedItemPath) {
+                                        item.state.selected = item.state.disabled !== true;
+                                    } else if (selectedFolder && (normalizedItemPath === "/" || selectedFolder.startsWith(`${normalizedItemPath}/`))) {
+                                        // Keep lazy children intact so jsTree loads the path to the current field value.
+                                        item.state.opened = true;
                                     }
                                 });
                             }
@@ -141,7 +151,8 @@ export class WebjetJsTree {
             })
         });
 
-        this.jstree.on("select_node.jstree", (e, data) => {
+        const selectionEvent = this.jsTreeUrl.includes("click=dt-tree-dir-simple") ? "activate_node.jstree" : "select_node.jstree";
+        this.jstree.on(selectionEvent, (e, data) => {
             const instance = data.instance;
             const parent = instance.get_parent(data.node);
             data.parentNode = instance.get_node(parent);
