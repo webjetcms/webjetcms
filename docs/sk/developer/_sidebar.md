@@ -5,6 +5,7 @@
 - Inštalácia a spustenie
     - [Inštalácia a spustenie](/developer/install/README.md)
     - [Development Containers](/developer/install/devcontainers/README.md)
+    - [Social Media Feeds](/developer/install/social-media-feed.md)
 - Použité frameworky
     - [Použité frameworky](/developer/frameworks/README.md)
     - [Bootstrap](/developer/frameworks/bootstrap.md)

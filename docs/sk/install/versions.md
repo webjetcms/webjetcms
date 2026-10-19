@@ -16,6 +16,8 @@ Pričom aktuálne existujú nasledovné verzie WebJET:
 
 - `2026.0-boot-SNAPSHOT` - vývojová verzia so Spring Boot 4. Prechod z `jakarta` verzie vyžaduje [úpravy zákazníckeho projektu](#zmeny-pri-prechode-na-spring-boot).
 - `2026.18.28-jakarta` - stabilizovaná verzia 2026.18 s opravami z verzie 2026.0.28, nepribúdajú do nej denné zmeny.
+- `2026.0.40-jakarta` - stabilizovaná verzia 2026.0.40 s opravami chýb voči verzii 2026.0 (bez pridania vylepšení zo SNAPSHOT verzie).
+- `2026.0.40` - stabilizovaná verzia 2026.0.40 s opravami chýb voči verzii 2026.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - `2026.0.28-jakarta` - stabilizovaná verzia 2026.0.28 s opravami chýb voči verzii 2026.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - `2026.0.28` - stabilizovaná verzia 2026.0.28 s opravami chýb voči verzii 2026.0 (bez pridania vylepšení zo SNAPSHOT verzie).
 - `2026.18.25-jakarta` - stabilizovaná verzia 2026.18 s opravami z verzie 2026.0.25, nepribúdajú do nej denné zmeny.
