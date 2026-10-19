@@ -26,7 +26,7 @@
 
 ![](redactor/admin/search/quick-search.png)
 
-- Panel [Co je nového](redactor/admin/welcome.md#Co-je-nové) doplňuje novinky nainstalované verze o videa a příspěvky z YouTube a Facebooku WebJET CMS. Štítek **Nové** se po rozbalení panelu skryje a znovu upozorní na nový obsah.
+- Panel [Co je nového](redactor/admin/welcome.md#Co-je-nové) doplňuje novinky nainstalované verze o videa a příspěvky z YouTube a Facebooku WebJET CMS. Štítek **Nové** se po rozbalení panelu skryje a znovu upozorní na nový obsah (#358).
 
 ### Přihlašování a ochrana účtu
 
@@ -303,7 +303,7 @@ V jednom WebJET CMS můžete mít více (desítky) domén a následně mít men�
 
 ### Pro programátora
 
-- [Centrální generátor novinek](developer/install/social-media-feed.md) zpracuje také YouTube feed s ID kanálu bez prefixu `UC` v hlavičce a pro Facebook používá ověřené Graph API ID stránky `237316516345904`. Při odmítnutí požadavku zapisuje HTTP stav a bezpečné údaje o chybě Facebook API bez tokenu či těla odpovědi. Vygenerované soubory a soukromá cache jsou vyloučeny ze zákaznických archivů. Třídy generátoru se na docs server nasazují přes `finalwar` ; zákaznické JAR a aktualizační ZIP archivy je neobsahují.
+- [Centrální generátor novinek](developer/install/social-media-feed.md) po úspěšném publikování odstraní nepoužívané náhledy s 30denní ochrannou lhůtou. Zachová obrázky aktuálních příspěvků i záložních údajů pro výpadek zdroje (#358).
 - Editor stránek - [nastavení nabídky Styly](frontend/examples/template-bare/README.md#vyhledávání-a-skupiny-stylů) podporuje metadata v komentářích `editor.scss` / `editor.css` pro kategorie a jejich ikony, vzájemně se nahrazující skupiny, povolené elementy a základní třídy zachovány. Nová nabídka je ve výchozím nastavení zapnuta; nastavením `ckeditor_styleComboEnabled=false` se obnoví původní výběr stylů (#OSK764).
 - AI agenti - připravená distribuce WebJET CMS skills přes `npx skills`, včetně společných konvencí a nastavení projektových pokynů pro Codex, GitHub Copilot a Claude Code. [Návod](custom-apps/skills/README.md) popisuje instalaci, aktualizaci a použití ve starších klientských projektech. Pokyny v `AGENTS.md` a tematické reference v `.github/agents/` byly ověřeny podle aktuálního kódu; popisují používané frameworky, postupy vývoje a testování i rozdíly mezi jádrem CMS a klientskými projekty (#357).
 - Dashboard - přidán registr widgetů, responzivní grid a REST rozhraní pro transakční ukládání nastavení do `user_settings_admin`. Stávající tabulka MySQL/MariaDB se při aktualizaci konvertuje na InnoDB. Používání popisuje [dokumentace úvodní obrazovky](redactor/admin/welcome.md), pozadí a označení prostředí její [konfigurace](admin/setup/configuration/dashboard.md). Pravidla vývoje, kontrakt a důvody rozhodnutí udržuje projektový skill `wj-dashboard-widget` v `.agents/skills/wj-dashboard-widget/` (#58806).

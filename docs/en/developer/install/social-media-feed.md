@@ -72,6 +72,8 @@ The old client ignores the new attributes and uses the text and field order. The
 
 If one network fails, its last successful data is preserved and the other can be updated. In the event of a complete failure without any saved social items, existing public files remain unchanged. However, a successful response with an empty list can also produce an empty output. In the event of a preview error, the card can be text. The generator prepares and validates all language outputs before publishing; it replaces individual files atomically. Corrupted input or incomplete write must not replace valid public JSON. Concurrency is prevented by a lock; schedule the task on a single node anyway.
 
+After successfully publishing all languages ​​and the private cache, the generator will remove unused previews older than 30 days. Previews of current and recently discarded posts will receive a new 30-day grace period based on the file's last modification time. Images saved for a resource outage and the fourth YouTube video will also be preserved. The cleanup only affects files with the generated name in `social-media/images/` ; it does not traverse subfolders or symbolic links. It will not run if the publish fails. The cleanup error is logged and will not invalidate the published news. A very old browser cache may display a card without an image after the list refresh period has expired.
+
 ## Verification
 
 - Open public `https://docs.webjetcms.sk/json/wjnews.sk.json`, `wjnews.cs.json` and `wjnews.en.json`. Verify valid JSON, actual number of social items, order and unchanged fields `title`, `perex`, `link`. Verify same IDs and links in all languages ​​and when running without Facebook, four YouTube videos if available.

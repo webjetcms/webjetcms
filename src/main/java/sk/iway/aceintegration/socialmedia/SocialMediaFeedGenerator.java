@@ -58,9 +58,16 @@ import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.translation.TranslationService;
 
 /**
- * Publishes the central WebJET news feeds from public social posts.
- * Register {@link #main(String[])} manually as a WebJET cron task on the documentation server.
- * This integration and its credentials are not part of the customer distribution.
+ * Builds the shared dashboard news feeds from a YouTube channel and a Facebook Page.
+ *
+ * <p>The documentation server downloads posts, caches local JPEG previews, translates Slovak
+ * titles and summaries into Czech and English, and publishes the three {@code wjnews.*.json}
+ * files. Customer dashboards read these public files without social-network credentials.
+ * A private cache retains provider data and translations for later runs and upstream outages.</p>
+ *
+ * <p>Register {@link #main(String[])} manually as a WebJET cron task on one documentation-server
+ * node. The integration and its credentials are excluded from customer JAR and update ZIP
+ * distributions. Download and translation dependencies can be supplied separately for tests.</p>
  */
 public final class SocialMediaFeedGenerator {
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -91,7 +98,11 @@ public final class SocialMediaFeedGenerator {
     }
 
     /**
-     * Runs the generator with server configuration; no cron arguments or automatic registration are needed.
+     * Runs one scheduled refresh using server configuration and the configured translation service.
+     *
+     * <p>Concurrent invocations in the same classloader are skipped. Failures are logged with
+     * safe diagnostics rather than propagated to the cron caller, and the HTTP client is closed
+     * after each run. The lock does not coordinate separate cluster nodes.</p>
      *
      * @param args unused cron arguments; credentials must be stored in server configuration
      */
@@ -116,7 +127,17 @@ public final class SocialMediaFeedGenerator {
         }
     }
 
-    /** Generates all languages, retaining a failed provider's last successful posts. */
+    /**
+     * Refreshes provider caches and publishes localized feeds in newest-first order.
+     *
+     * <p>A failed provider retains its previous posts; a successful empty response clears them.
+     * The public feed contains up to three posts per source, or four YouTube videos when no
+     * Facebook posts remain. All language payloads and the private cache are prepared before
+     * publication. Preview cleanup runs only after every file has been replaced successfully.</p>
+     *
+     * @throws IOException if the private cache is invalid, both providers fail without usable cached
+     *     posts, generated output exceeds its size limit, or serialization or publication fails
+     */
     void generate() throws IOException {
         FeedCache previous = readCache();
         Map<String, List<Post>> sources = new LinkedHashMap<>();
@@ -159,7 +180,18 @@ public final class SocialMediaFeedGenerator {
         cleanupImages(previous, sources);
     }
 
-    /** Retains current and newly retired previews before removing old, unreferenced generated JPEGs. */
+    /**
+     * Removes expired, unreferenced previews after successful feed and cache publication.
+     *
+     * <p>Images referenced by either cache have their modification time refreshed, giving newly
+     * retired images a full thirty-day grace period for browser-cached feeds. All source posts
+     * are protected, including fallback data and the fourth YouTube video hidden from the public
+     * feed. Only generated JPEG filenames in the image directory are eligible for deletion;
+     * subdirectories and symbolic links are skipped. Cleanup failures are logged and suppressed.</p>
+     *
+     * @param previous validated cache loaded before this refresh
+     * @param sources source posts saved by the completed refresh
+     */
     private void cleanupImages(FeedCache previous, Map<String, List<Post>> sources) {
         Path images = settings.outputDirectory().resolve("social-media/images");
         try {
@@ -193,7 +225,13 @@ public final class SocialMediaFeedGenerator {
         }
     }
 
-    /** Keeps translations for cached posts, including the fourth video temporarily hidden by Facebook posts. */
+    /**
+     * Carries forward translation entries for posts still retained in either provider's cache.
+     *
+     * @param sources current provider data, including posts omitted from the public feed
+     * @param previous translations keyed by post ID, target language and field name
+     * @return mutable map containing retained Czech and English title and long-summary translations
+     */
     private static Map<String, Translation> retainTranslations(Map<String, List<Post>> sources, Map<String, Translation> previous) {
         Map<String, Translation> retained = new LinkedHashMap<>();
         for (Post post : sources.values().stream().flatMap(List::stream).toList()) {
@@ -206,6 +244,16 @@ public final class SocialMediaFeedGenerator {
         return retained;
     }
 
+    /**
+     * Loads and validates the private cache before any provider requests or publication.
+     *
+     * <p>Known Facebook video permalinks are removed, image references are normalized to existing
+     * local files, and legacy {@code :perex} translation keys migrate to {@code :perexLong}.
+     * Invalid cache data aborts generation rather than silently replacing the published feeds.</p>
+     *
+     * @return validated cached sources and translations, or empty maps when no cache file exists
+     * @throws IOException if the file cannot be read, exceeds the size limit, or contains invalid data
+     */
     private FeedCache readCache() throws IOException {
         if (!Files.exists(settings.cacheFile())) return new FeedCache(Map.of(), Map.of());
         FeedCache cache = MAPPER.treeToValue(readJson(settings.cacheFile()), FeedCache.class);
@@ -235,11 +283,26 @@ public final class SocialMediaFeedGenerator {
         return new FeedCache(sources, translations);
     }
 
+    /**
+     * Downloads the configured channel's public Atom feed without authentication.
+     *
+     * @return up to four validated videos, newest first
+     * @throws Exception if downloading, secure XML parser setup or feed parsing fails
+     */
     private List<Post> fetchYoutube() throws Exception {
         URI uri = URI.create("https://www.youtube.com/feeds/videos.xml?channel_id=" + settings.youtubeChannelId());
         return parseYoutube(downloader.download(uri, null, MAX_FEED_BYTES), settings.youtubeChannelId());
     }
 
+    /**
+     * Requests twelve published Page posts with the attachment metadata needed to exclude videos.
+     *
+     * <p>The Page token is passed separately to the downloader, never placed in the URL.
+     * Only this response page is considered; pagination links are not followed.</p>
+     *
+     * @return up to three validated non-video posts, newest first
+     * @throws IOException if the token is missing, the request fails or the response is invalid
+     */
     private List<Post> fetchFacebook() throws IOException {
         if (settings.facebookToken().isBlank()) throw new SocialMediaFeedException(SocialMediaFeedException.Reason.MISSING_FACEBOOK_TOKEN);
         String fields = URLEncoder.encode("id,message,created_time,permalink_url,full_picture,"
@@ -249,7 +312,18 @@ public final class SocialMediaFeedGenerator {
         return parseFacebook(downloader.download(uri, settings.facebookToken(), MAX_FEED_BYTES), settings.facebookPageId());
     }
 
-    /** Parses the public Atom feed with external entities and DTDs disabled. */
+    /**
+     * Parses channel videos with DTDs and external XML resources disabled.
+     *
+     * <p>The feed-level channel ID may omit the {@code UC} prefix, but entry IDs must match the
+     * complete channel ID. Invalid entries are skipped; a nonempty feed with no valid entries
+     * is rejected. Descriptions are captured for later summarization and previews remain remote.</p>
+     *
+     * @param bytes downloaded Atom document, limited to the maximum provider response size
+     * @param channelId expected full YouTube channel ID, including its {@code UC} prefix
+     * @return up to four distinct videos, newest first, with no local image assigned yet
+     * @throws Exception if secure parser setup fails or the XML, channel identity or entries are invalid
+     */
     static List<Post> parseYoutube(byte[] bytes, String channelId) throws Exception {
         if (bytes.length > MAX_FEED_BYTES) throw new IOException("Feed exceeds size limit");
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -292,7 +366,19 @@ public final class SocialMediaFeedGenerator {
         return latest(posts, YOUTUBE_FALLBACK_ITEMS);
     }
 
-    /** Parses valid Page-authored posts, excluding videos before selecting the latest announcements. */
+    /**
+     * Selects Page-authored announcements after validating identifiers, links and publication dates.
+     *
+     * <p>Video permalinks and attachments are excluded before applying the three-post limit.
+     * Titles come from the message's first line, an attachment title or a fixed fallback.
+     * A response containing only valid video posts is a successful empty result.</p>
+     *
+     * @param bytes downloaded Graph API JSON, limited to the maximum provider response size
+     * @param pageId numeric Page ID expected as the prefix of each post ID
+     * @return up to three distinct non-video posts, newest first, with no local image assigned yet
+     * @throws IOException if the JSON envelope is invalid, exceeds the size limit, reports an error,
+     *     or contains records but none have valid post identifiers, links and dates
+     */
     static List<Post> parseFacebook(byte[] bytes, String pageId) throws IOException {
         if (bytes.length > MAX_FEED_BYTES) throw new IOException("Feed exceeds size limit");
         JsonNode root = MAPPER.readTree(bytes);
@@ -319,7 +405,12 @@ public final class SocialMediaFeedGenerator {
         return latest(posts, ITEMS_PER_SOURCE);
     }
 
-    /** Uses Graph attachment metadata, including mixed albums, without guessing from titles or thumbnails. */
+    /**
+     * Recursively checks Graph attachments and subattachments for video metadata or destinations.
+     *
+     * @param attachments attachment container with an optional {@code data} array; a missing node is allowed
+     * @return whether any attachment describes a video, Reel or recognized video link
+     */
     private static boolean hasVideoAttachment(JsonNode attachments) {
         for (JsonNode attachment : attachments.path("data")) {
             String type = attachment.path("type").asText("").toLowerCase(Locale.ROOT);
@@ -333,7 +424,15 @@ public final class SocialMediaFeedGenerator {
         return false;
     }
 
-    /** Recognizes known video destinations; URLs are inspected only and never followed. */
+    /**
+     * Recognizes YouTube and Facebook video destinations without making network requests.
+     *
+     * <p>Facebook {@code l.php} links are inspected through their decoded {@code u} parameter.
+     * Unknown or malformed destinations are not classified as videos.</p>
+     *
+     * @param value candidate HTTP(S) link, possibly {@code null} or blank
+     * @return whether the link matches a supported video, live-stream, short or Reel URL
+     */
     private static boolean isVideoLink(String value) {
         if (value == null || value.isBlank()) return false;
         try {
@@ -363,6 +462,14 @@ public final class SocialMediaFeedGenerator {
         }
     }
 
+    /**
+     * Extracts the first query parameter with the requested literal name and decodes its value.
+     *
+     * @param uri URI whose raw query is inspected
+     * @param name case-sensitive, unencoded parameter name
+     * @return UTF-8 decoded value, or an empty string when the parameter is absent
+     * @throws IllegalArgumentException if the selected value contains malformed percent encoding
+     */
     private static String queryParameter(URI uri, String name) {
         if (uri.getRawQuery() == null) return "";
         for (String parameter : uri.getRawQuery().split("&")) {
@@ -374,6 +481,13 @@ public final class SocialMediaFeedGenerator {
         return "";
     }
 
+    /**
+     * Sorts validated posts by publication time and keeps the newest occurrence of each ID.
+     *
+     * @param posts posts with publication timestamps accepted by {@link Instant#parse(CharSequence)}
+     * @param limit maximum number of distinct posts to return; must be nonnegative
+     * @return unmodifiable list of distinct posts, newest first
+     */
     private static List<Post> latest(List<Post> posts, int limit) {
         Map<String, Post> unique = new LinkedHashMap<>();
         posts.stream().sorted(Comparator.comparing((Post post) -> Instant.parse(post.publishedAt())).reversed())
@@ -381,6 +495,17 @@ public final class SocialMediaFeedGenerator {
         return unique.values().stream().limit(limit).toList();
     }
 
+    /**
+     * Reuses or creates a local JPEG preview named from the post ID and complete upstream image URL.
+     *
+     * <p>Approved images are downloaded and re-encoded before publication. A well-formed URL outside
+     * the image allowlist produces a text-only post. Processing exceptions fall back to an existing
+     * previous preview when available. Image errors do not prevent the post from being published.</p>
+     *
+     * @param post newly fetched post with an upstream image reference
+     * @param previous cached version of the same post, or {@code null} for a new post
+     * @return copy of the fetched post with a local relative preview path or {@code null} image
+     */
     private Post cacheImage(Post post, Post previous) {
         String cached = null;
         try {
@@ -400,7 +525,16 @@ public final class SocialMediaFeedGenerator {
         return withImage(post, cached);
     }
 
-    /** Normalizes previous absolute preview URLs to portable paths, accepting only existing local previews. */
+    /**
+     * Resolves a stored preview reference to an existing generated file below the output directory.
+     *
+     * <p>Legacy absolute HTTPS references are interpreted by their {@code /social-media/images/}
+     * suffix; their original host is not contacted. Only the expected hash-based JPEG filename
+     * is accepted, and the corresponding file must exist in the current output directory.</p>
+     *
+     * @param image relative preview path or legacy absolute URL, possibly {@code null}
+     * @return portable {@code social-media/images/...jpg} path, or {@code null} for an invalid or missing file
+     */
     private String ownImage(String image) {
         if (image == null) return null;
         try {
@@ -424,7 +558,18 @@ public final class SocialMediaFeedGenerator {
         return new Post(post.id(), post.source(), post.title(), post.perex(), post.link(), post.publishedAt(), post.remoteImage(), image);
     }
 
-    /** Decodes bounded raster dimensions and re-encodes a small JPEG without upstream metadata. */
+    /**
+     * Converts an upstream raster image into a JPEG preview without upstream metadata.
+     *
+     * <p>Input byte size and dimensions are checked before full decoding. The first image is
+     * scaled proportionally to fit within 640 by 480 pixels without upscaling; transparency
+     * is composited over white. Readers, streams and graphics resources are released locally.</p>
+     *
+     * @param bytes downloaded raster image
+     * @return encoded JPEG bytes
+     * @throws IOException if the input exceeds a size or dimension limit, cannot be decoded,
+     *     or cannot be encoded as JPEG
+     */
     static byte[] thumbnail(byte[] bytes) throws IOException {
         if (bytes.length > MAX_IMAGE_BYTES) throw new IOException("Image exceeds size limit");
         try (ImageInputStream input = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
@@ -458,6 +603,18 @@ public final class SocialMediaFeedGenerator {
         }
     }
 
+    /**
+     * Builds one localized public record while preserving the legacy title, perex and link fields.
+     *
+     * <p>The long summary is cleaned before and after translation; the short summary is derived
+     * from it. Summaries are escaped for the historical HTML/Markdown renderer, while the title
+     * remains plain text. Stable identity and source metadata are shared across languages.</p>
+     *
+     * @param post validated source post with an optional local preview
+     * @param language target feed language: {@code sk}, {@code cs} or {@code en}
+     * @param translations mutable cache updated when new translations are accepted
+     * @return public JSON record, omitting an empty long summary or unavailable preview
+     */
     private ObjectNode toNews(Post post, String language, Map<String, Translation> translations) {
         ObjectNode news = MAPPER.createObjectNode();
         String title = translate(post, "title", post.title(), language, translations);
@@ -475,6 +632,21 @@ public final class SocialMediaFeedGenerator {
         return news;
     }
 
+    /**
+     * Reuses a translation with the same source hash or attempts to translate the current text.
+     *
+     * <p>Slovak and blank text bypass translation. The generic Facebook title has fixed localized
+     * variants. Empty, unchanged or failed translation results are not cached as successes;
+     * an older nonblank translation is used instead, even if its source hash differs, or the
+     * source text is returned. Such failures are retried on subsequent runs.</p>
+     *
+     * @param post source post supplying the stable cache identity and provider
+     * @param field translated field name, {@code title} or {@code perexLong}
+     * @param text non-null source text to translate
+     * @param language target feed language
+     * @param translations mutable cache keyed by post ID, language and field
+     * @return cached, newly translated or fallback text
+     */
     private String translate(Post post, String field, String text, String language, Map<String, Translation> translations) {
         if ("sk".equals(language) || text.isBlank()) return text;
         if ("title".equals(field) && "facebook".equals(post.source()) && "Nový príspevok na Facebooku".equals(text)) {
@@ -497,13 +669,24 @@ public final class SocialMediaFeedGenerator {
         return old == null ? text : old.text();
     }
 
-    /** Escapes source text before the legacy dashboard's HTML and Markdown processing. */
+    /**
+     * Escapes HTML delimiters and Markdown link brackets for legacy dashboard summary rendering.
+     *
+     * @param text non-null plain summary, before any HTML entity encoding
+     * @return encoded summary that preserves literal text without introducing HTML tags or Markdown links
+     */
     static String escapePerex(String text) {
         return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
             .replace("\"", "&quot;").replace("'", "&#39;").replace("[", "&#91;").replace("]", "&#93;");
     }
 
-    /** Produces a short plain-text excerpt without repeating the title or exposing long social links. */
+    /**
+     * Produces a short excerpt from the first sentence of the cleaned description.
+     *
+     * @param text source description, possibly {@code null}
+     * @param title heading to remove when repeated at the start, possibly {@code null}
+     * @return unescaped summary of at most 180 Unicode code points, or an empty string
+     */
     static String summarize(String text, String title) {
         String summary = summaryBody(text, title);
         if (summary.isEmpty()) return "";
@@ -512,12 +695,28 @@ public final class SocialMediaFeedGenerator {
         return boundWords(summary.substring(0, sentences.next()).stripTrailing(), MAX_PEREX_LENGTH);
     }
 
-    /** Preserves multiple sentences for expanded cards while keeping the cleaned description within 1000 code points. */
+    /**
+     * Produces the expanded-card summary without limiting it to the first sentence.
+     *
+     * @param text source or translated description, possibly {@code null}
+     * @param title heading to remove when repeated at the start, possibly {@code null}
+     * @return unescaped summary of at most 1000 Unicode code points, or an empty string
+     */
     static String longSummary(String text, String title) {
         return boundWords(summaryBody(text, title), MAX_LONG_PEREX_LENGTH);
     }
 
-    /** Removes the repeated source heading before applying the shared social-text cleanup. */
+    /**
+     * Removes a repeated leading heading and applies the shared social-text normalization.
+     *
+     * <p>If the title is a truncated Facebook first line, the entire matching source line is
+     * removed before normalization. Otherwise a normalized leading title is removed only when
+     * followed by the end of the text or a non-alphanumeric character.</p>
+     *
+     * @param text description to normalize, possibly {@code null}
+     * @param title original or translated heading, possibly {@code null}
+     * @return normalized body without the detected repeated heading; may be empty
+     */
     private static String summaryBody(String text, String title) {
         if (text != null && title != null && title.endsWith("…")) {
             String body = text.stripLeading();
@@ -533,7 +732,13 @@ public final class SocialMediaFeedGenerator {
         return summary;
     }
 
-    /** Truncates at a complete word where possible, preserving supplementary Unicode characters. */
+    /**
+     * Limits text by Unicode code points, preferring a space boundary when truncation is needed.
+     *
+     * @param summary non-null normalized text
+     * @param limit positive maximum code-point count, including the appended ellipsis
+     * @return unchanged text when it fits, otherwise a shortened value ending in an ellipsis
+     */
     private static String boundWords(String summary, int limit) {
         if (summary.codePointCount(0, summary.length()) <= limit) return summary;
         int end = summary.offsetByCodePoints(0, limit - 1);
@@ -544,6 +749,16 @@ public final class SocialMediaFeedGenerator {
         return summary.substring(0, end).stripTrailing() + "…";
     }
 
+    /**
+     * Removes social links, hashtags and block markers and collapses whitespace into one line.
+     *
+     * <p>Markdown links retain their labels. Literal backslash-n sequences become line breaks
+     * before block-marker processing. This cleanup does not HTML-escape or sanitize the result;
+     * public summaries still require {@link #escapePerex(String)}.</p>
+     *
+     * @param value text to normalize, possibly {@code null}
+     * @return normalized unescaped text, or an empty string for null input
+     */
     private static String summaryText(String value) {
         if (value == null) return "";
         return value.replaceAll("[\\p{Cntrl}&&[^\\r\\n\\t]]", "")
@@ -555,6 +770,13 @@ public final class SocialMediaFeedGenerator {
             .replaceAll("(?U)\\s+", " ").trim();
     }
 
+    /**
+     * Removes unwanted control characters and bounds text without splitting Unicode code points.
+     *
+     * @param value source text, possibly {@code null}; line breaks and tabs are preserved
+     * @param limit positive maximum code-point count, including an ellipsis when truncated
+     * @return trimmed text with normalized CRLF line endings, or an empty string for null input
+     */
     private static String cleanText(String value, int limit) {
         if (value == null) return "";
         String text = value.replaceAll("[\\p{Cntrl}&&[^\\r\\n\\t]]", "").replace("\r\n", "\n").trim();
@@ -567,6 +789,12 @@ public final class SocialMediaFeedGenerator {
         return nodes.getLength() == 0 ? "" : nodes.item(0).getTextContent();
     }
 
+    /**
+     * Normalizes ISO instants and Facebook timestamps with compact numeric offsets to UTC.
+     *
+     * @param value provider timestamp, possibly {@code null} or blank
+     * @return an {@link Instant} string, or {@code null} when neither supported format can be parsed
+     */
     private static String parseDate(String value) {
         if (value == null || value.isBlank()) return null;
         try {
@@ -580,6 +808,16 @@ public final class SocialMediaFeedGenerator {
         }
     }
 
+    /**
+     * Checks that a post link uses an approved provider host and the restricted HTTPS URL form.
+     *
+     * <p>Quotes, angle brackets and backslashes are rejected for legacy link rendering.
+     * This check does not verify the path, post ownership or destination availability.</p>
+     *
+     * @param value candidate permalink, possibly {@code null}
+     * @param source provider name, {@code youtube} or {@code facebook}
+     * @return whether the URL is suitable for publishing as a provider link
+     */
     private static boolean isPostLink(String value, String source) {
         try {
             if (value == null || value.matches(".*[\"'<>\\\\].*")) return false;
@@ -591,18 +829,41 @@ public final class SocialMediaFeedGenerator {
         }
     }
 
+    /**
+     * Reads a local JSON file after checking its size against the provider/cache limit.
+     *
+     * @param path file to read
+     * @return parsed JSON tree; empty input may produce no usable root
+     * @throws IOException if the file is oversized, unreadable or contains malformed JSON
+     */
     private static JsonNode readJson(Path path) throws IOException {
         if (Files.size(path) > MAX_FEED_BYTES) throw new IOException("JSON file exceeds size limit");
         return MAPPER.readTree(Files.readAllBytes(path));
     }
 
+    /**
+     * Serializes a feed or private cache as formatted UTF-8 JSON within the shared size limit.
+     *
+     * @param object JSON tree or cache record to serialize
+     * @return encoded JSON bytes
+     * @throws IOException if serialization fails or the resulting JSON exceeds the shared size limit
+     */
     private static byte[] serialize(Object object) throws IOException {
         byte[] bytes = MAPPER.writerWithDefaultPrettyPrinter().writeValueAsBytes(object);
         if (bytes.length > MAX_FEED_BYTES) throw new IOException("Generated JSON exceeds size limit");
         return bytes;
     }
 
-    /** Stages every file before replacing any target; each replacement is atomic on the local filesystem. */
+    /**
+     * Stages all supplied bytes in sibling temporary files, then atomically replaces each target.
+     *
+     * <p>Parent directories are created as needed. Staging failure leaves all targets unchanged,
+     * but replacement is atomic only per file: a later move failure does not roll back files
+     * already replaced. Remaining temporary files are removed in the cleanup block.</p>
+     *
+     * @param files destination paths and complete contents, processed in map iteration order
+     * @throws IOException if directory creation, staging, atomic replacement or temporary-file cleanup fails
+     */
     static void publishFiles(Map<Path, byte[]> files) throws IOException {
         Map<Path, Path> staged = new LinkedHashMap<>();
         try {
@@ -621,23 +882,90 @@ public final class SocialMediaFeedGenerator {
         }
     }
 
+    /**
+     * Stores a provider post before localization, together with its upstream and cached preview references.
+     *
+     * @param id stable provider-prefixed identity shared by all language feeds
+     * @param source provider name, {@code youtube} or {@code facebook}
+     * @param title unescaped source heading
+     * @param perex captured source description, before public-summary cleanup and truncation
+     * @param link validated provider permalink
+     * @param publishedAt normalized UTC publication timestamp
+     * @param remoteImage upstream image URL, which may be empty or invalid and requires validation before downloading
+     * @param image local preview path, or {@code null} when unavailable; older caches may contain an absolute URL
+     */
     record Post(String id, String source, String title, String perex, String link, String publishedAt, String remoteImage, String image) { }
+
+    /**
+     * Associates an accepted translation with the source content used to produce it.
+     *
+     * @param sourceHash SHA-256 hash of the untranslated field used to detect content changes
+     * @param text translated field value, before final summary cleanup and HTML escaping
+     */
     record Translation(String sourceHash, String text) { }
+
+    /**
+     * Persists provider fallback data and reusable translations outside the public feed directory.
+     *
+     * @param sources post lists by provider, including the fourth YouTube video reserved for fallback
+     * @param translations entries keyed as {@code postId:language:field}
+     */
     record FeedCache(Map<String, List<Post>> sources, Map<String, Translation> translations) { }
 
+    /** Supplies bounded upstream response bytes independently of feed parsing and image conversion. */
     @FunctionalInterface
     interface Downloader {
+        /**
+         * Fetches a resource within the supplied byte budget.
+         *
+         * @param uri requested upstream resource
+         * @param token optional Facebook Page token, or {@code null} for unauthenticated resources
+         * @param limit maximum permitted response size in bytes
+         * @return downloaded response bytes
+         * @throws IOException if downloading fails or the resource or response violates the transport policy
+         */
         byte[] download(URI uri, String token, int limit) throws IOException;
     }
 
+    /** Adapts translation of Slovak source text to a configured service or an isolated test implementation. */
     @FunctionalInterface
     interface Translator {
+        /**
+         * Translates one title or description into the requested target language.
+         *
+         * @param text source text treated as Slovak
+         * @param language target language code, {@code cs} or {@code en}
+         * @return translated text; unchanged, blank or null results are treated as unavailable by the generator
+         */
         String translate(String text, String language);
     }
 
+    /**
+     * Holds filesystem destinations and provider configuration for one generation run.
+     *
+     * <p>Production values come from {@link #fromConfiguration()}; the token is kept only for
+     * upstream authentication and is deliberately redacted from the record's string representation.</p>
+     *
+     * @param outputDirectory filesystem directory for public feeds and the relative image subdirectory
+     * @param cacheFile filesystem location of the private source and translation cache
+     * @param youtubeChannelId full YouTube channel ID including the {@code UC} prefix
+     * @param facebookPageId numeric Graph API Page ID
+     * @param facebookToken runtime Page token, or an empty string when unavailable or not stored encrypted
+     * @param facebookApiVersion Graph API version in {@code vN.N} form
+     */
     record Settings(Path outputDirectory, Path cacheFile,
         String youtubeChannelId, String facebookPageId, String facebookToken, String facebookApiVersion) {
 
+        /**
+         * Resolves WebJET configuration and web-application-relative paths into run settings.
+         *
+         * <p>Missing account settings use the central WebJET defaults. The private cache has a
+         * fixed location under {@code /WEB-INF/social-media/}; only the public output directory
+         * is configurable. Token verification failure disables Facebook fetching without blocking YouTube.</p>
+         *
+         * @return settings with syntactically validated provider IDs and API version
+         * @throws IOException if a provider ID or the API version has an invalid format
+         */
         static Settings fromConfiguration() throws IOException {
             String output = Constants.getString("socialMediaFeedOutputDirectory", "/json/");
             String cache = "/WEB-INF/social-media/feed-cache.json";
@@ -651,6 +979,14 @@ public final class SocialMediaFeedGenerator {
                 youtube, facebook, readFacebookToken(), version);
         }
 
+        /**
+         * Accepts the runtime token only when its persisted configuration value appears encrypted.
+         *
+         * <p>The runtime value must already be decrypted by WebJET configuration loading. The
+         * stored value is checked separately so a plaintext or unverified token is not used.</p>
+         *
+         * @return runtime Page token, or an empty string when absent, unverified or still encrypted
+         */
         private static String readFacebookToken() {
             String token = Constants.getString("socialMediaFacebookAccessToken");
             if (token.isBlank()) return "";
@@ -664,10 +1000,21 @@ public final class SocialMediaFeedGenerator {
             return "";
         }
 
+        /**
+         * Recognizes the expected encrypted-configuration marker and minimum stored-value length.
+         *
+         * @param value persisted configuration value, possibly {@code null}
+         * @return whether the value has the expected envelope shape; this does not decrypt or authenticate it
+         */
         static boolean isEncryptedToken(String value) {
             return value != null && value.startsWith("encrypted:") && value.length() > 32;
         }
 
+        /**
+         * Describes the output destination without exposing the runtime Page token.
+         *
+         * @return diagnostic representation with the token replaced by {@code REDACTED}
+         */
         @Override
         public String toString() {
             return "SocialMediaFeedGenerator.Settings[outputDirectory=" + outputDirectory + ", facebookToken=REDACTED]";

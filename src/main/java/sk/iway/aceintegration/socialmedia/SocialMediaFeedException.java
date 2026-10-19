@@ -3,11 +3,22 @@ package sk.iway.aceintegration.socialmedia;
 import java.io.IOException;
 import java.util.Locale;
 
-/** Carries diagnostic details that are safe to log without upstream text or credentials. */
+/**
+ * Reports expected feed and transport failures using diagnostics safe for application logs.
+ *
+ * <p>Messages are built only from fixed reasons, numeric HTTP/Graph codes and allowlisted
+ * Facebook field names. Upstream response text, request URLs and credentials are never accepted
+ * as message components. The generator uses {@link #safeSummary(Exception)} to distinguish
+ * these controlled messages from unexpected exceptions whose messages may contain sensitive data.</p>
+ */
 final class SocialMediaFeedException extends IOException {
     private static final long serialVersionUID = 1L;
 
-    /** Only field names requested by this integration may appear in diagnostics. */
+    /**
+     * Lists Graph API fields that may be named in missing-field diagnostics.
+     * The HTTP client matches upstream messages against these identifiers instead of copying
+     * arbitrary field names from the response into logs.
+     */
     enum FacebookField {
         ID, MESSAGE, CREATED_TIME, PERMALINK_URL, FULL_PICTURE, ATTACHMENTS, TITLE, DESCRIPTION,
         MEDIA_TYPE, TYPE, URL, UNSHIMMED_URL, SUBATTACHMENTS, PUBLISHED_POSTS;
@@ -17,6 +28,7 @@ final class SocialMediaFeedException extends IOException {
         }
     }
 
+    /** Defines fixed messages for configuration, provider, URL-policy and response-limit failures. */
     enum Reason {
         MISSING_FACEBOOK_TOKEN("Facebook Page token is not configured"),
         NO_AVAILABLE_POSTS("No social provider could be read and no cached posts are available"),
@@ -50,6 +62,15 @@ final class SocialMediaFeedException extends IOException {
         super(message(reason, httpStatus, graphCode, graphSubcode) + (field == null ? "" : "; requested field " + field.apiName()));
     }
 
+    /**
+     * Combines a fixed failure description with the numeric diagnostics available from the response.
+     *
+     * @param reason predefined failure category
+     * @param status HTTP status code, or {@code null} when unavailable
+     * @param code Graph API error code, or {@code null} when unavailable
+     * @param subcode Graph API error subcode, or {@code null} when unavailable
+     * @return diagnostic text containing no upstream message content
+     */
     private static String message(Reason reason, Integer status, Integer code, Integer subcode) {
         StringBuilder message = new StringBuilder(reason.description);
         if (status != null) message.append("; HTTP ").append(status);
@@ -58,7 +79,12 @@ final class SocialMediaFeedException extends IOException {
         return message.toString();
     }
 
-    /** Returns only internally constructed diagnostics or the class of an unexpected exception. */
+    /**
+     * Produces a log summary without exposing messages from unexpected exception types.
+     *
+     * @param exception non-null failure caught during feed processing
+     * @return the controlled message of a feed exception, otherwise only the exception's simple class name
+     */
     static String safeSummary(Exception exception) {
         return exception instanceof SocialMediaFeedException ? exception.getMessage() : exception.getClass().getSimpleName();
     }

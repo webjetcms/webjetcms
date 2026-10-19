@@ -26,7 +26,7 @@
 
 ![](redactor/admin/search/quick-search.png)
 
-- The [What's New] panel (redactor/admin/welcome.md#What-is-new) supplements the news of the installed version with videos and posts from YouTube and Facebook of WebJET CMS. The **New** label is hidden after expanding the panel and again notifies about new content.
+- The [What's New] panel (redactor/admin/welcome.md#What-is-new) supplements the news of the installed version with videos and posts from YouTube and Facebook of WebJET CMS. The **New** label is hidden after expanding the panel and again notifies about new content (#358).
 
 ### Account login and protection
 
@@ -303,7 +303,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### For the programmer
 
-- [Central news generator](developer/install/social-media-feed.md) will also process YouTube feed with channel ID without prefix `UC` in header and for Facebook uses verified Graph API page ID `237316516345904`. When the request is rejected, it writes HTTP status and secure Facebook API error data without token or response body. Generated files and private cache are excluded from customer archives. Generator classes are deployed to the docs server via `finalwar` ; customer JAR and update ZIP archives do not contain them.
+- [Central News Generator](developer/install/social-media-feed.md) will remove unused previews with a 30-day grace period after successful publishing. It will preserve images of current posts as well as backup data for source failure (#358).
 - Page Editor - [Styles menu setting](frontend/examples/template-bare/README.md#search-and-style-groups) supports metadata in `editor.scss` / `editor.css` comments for categories and their icons, mutually exclusive groups, allowed elements, and base classes preserved across skins. The new menu is enabled by default; setting `ckeditor_styleComboEnabled=false` restores the original style selection (#OSK764).
 - AI agents - ready distribution of WebJET CMS skills via `npx skills`, including common conventions and project guidelines for Codex, GitHub Copilot and Claude Code. [Manual](custom-apps/skills/README.md) describes installation, update and use in older client projects. The instructions in `AGENTS.md` and the thematic references in `.github/agents/` have been verified against the current code; they describe the frameworks used, development and testing procedures, and differences between the CMS core and client projects (#357).
 - Dashboard - added widget registry, responsive grid and REST interface for transactional settings storage to `user_settings_admin`. Existing MySQL/MariaDB table is converted to InnoDB during update. Usage is described in [welcome screen documentation](redactor/admin/welcome.md), background and environment labeling of its [configuration](admin/setup/configuration/dashboard.md). Development rules, contract and reasons for decisions are maintained by project skill `wj-dashboard-widget` in `.agents/skills/wj-dashboard-widget/` (#58806).

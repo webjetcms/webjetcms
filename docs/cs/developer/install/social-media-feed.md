@@ -72,6 +72,8 @@ Starý klient nové atributy ignoruje a použije text i pořadí pole. Sociáln�
 
 Při výpadku jedné sítě se zachovají její poslední úspěšné údaje a druhá se může aktualizovat. Při úplném výpadku bez uložených sociálních položek zůstanou stávající veřejné soubory nezměněny. Úspěšná odpověď s prázdným seznamem však může vytvořit i prázdný výstup. Při chybě náhledu může být karta textová. Generátor připraví a ověří všechny jazykové výstupy před publikováním; jednotlivé soubory nahrazuje atomově. Poškozený vstup nebo neúplný zápis nesmí nahradit platný veřejný JSON. Souběžnému běhu brání zámek; přesto plánujte úlohu na jednom uzlu.
 
+Po úspěšném publikování všech jazyků a soukromé cache generátor odstraní nepoužívané náhledy starší 30 dnů. Náhledy aktuálních i právě vyřazených příspěvků obdrží novou 30denní ochrannou lhůtu podle času poslední úpravy souboru. Zachovají se i obrázky uložené pro výpadek zdroje a čtvrté YouTube video. Čištění se týká pouze souborů s generovaným názvem v `social-media/images/` ; neprochází podsložky ani symbolické odkazy. Při selhání publikování se nespustí. Chyba čištění se zapíše do logu a nezneplatní publikované novinky. Velmi stará cache prohlížeče může po uplynutí lhůty do obnovení seznamu zobrazit kartu bez obrázku.
+
 ## Ověření
 
 - Otevřete veřejné `https://docs.webjetcms.sk/json/wjnews.sk.json`, `wjnews.cs.json` a `wjnews.en.json`. Ověřte platný JSON, skutečný počet sociálních položek, pořadí a nezměněná pole `title`, `perex`, `link`. Ověřte stejné ID a odkazy ve všech jazycích a při běhu bez Facebooku čtyři YouTube videa, pokud jsou dostupná.

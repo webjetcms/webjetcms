@@ -31,7 +31,17 @@ import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import sk.iway.aceintegration.socialmedia.SocialMediaFeedException.Reason;
 import sk.iway.aceintegration.socialmedia.SocialMediaFeedException.FacebookField;
 
-/** Downloads bounded public feed data and images without forwarding credentials to other hosts. */
+/**
+ * Provides the HTTP transport used by the central social-media feed generator.
+ *
+ * <p>The default client accepts HTTPS requests to the feed hosts and approved image CDN domains,
+ * limits response bytes after decompression, and follows redirects only for images. Facebook
+ * Page tokens are sent in the authorization header exclusively to the Graph API host.</p>
+ *
+ * <p>Connections use timeouts, address checks and a connection implementation without Apache
+ * header/wire debug logging. Graph API errors are reduced to locally defined diagnostics rather
+ * than exposing response messages or tokens. Create one client per run and close it afterwards.</p>
+ */
 final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader, AutoCloseable {
     private static final Set<String> FEED_HOSTS = Set.of("www.youtube.com", "graph.facebook.com");
     private static final int MAX_ERROR_BYTES = 16 * 1024;
@@ -58,7 +68,13 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
         this.client = client;
     }
 
-    /** Keeps bearer tokens and response bodies out of Apache HTTP header and wire debug logs. */
+    /**
+     * Creates a connection without the header and wire loggers used by Apache's logging wrapper.
+     *
+     * @param route route supplied by the connection manager; not needed to construct this connection
+     * @param config connection settings, or {@code null} to use the default buffer size
+     * @return connection with a unique local identifier and no header/wire debug logging
+     */
     static ManagedHttpClientConnection createConnection(HttpRoute route, ConnectionConfig config) {
         ConnectionConfig settings = config == null ? ConnectionConfig.DEFAULT : config;
         return new DefaultManagedHttpClientConnection("social-media-" + CONNECTION_IDS.incrementAndGet(), settings.getBufferSize());
@@ -67,11 +83,17 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
     /**
      * Downloads an allowed HTTPS resource, limiting redirects and uncompressed response bytes.
      *
-     * @param uri resource URL
-     * @param token optional Facebook Page token, sent only to the Graph API
-     * @param limit maximum response size in bytes
-     * @return downloaded bytes
-     * @throws IOException when the URL, response or size is invalid
+     * <p>Feed requests must complete without redirects. Images may follow at most three redirects,
+     * and each destination must still be an approved image URL. A Graph error object is treated
+     * as a failure even when the HTTP status is 200. Each response is closed before returning,
+     * following a redirect or propagating an error.</p>
+     *
+     * @param uri resource URL on a supported feed or image host
+     * @param token Facebook Page token, or {@code null} for an unauthenticated request
+     * @param limit nonnegative maximum decompressed response size in bytes
+     * @return complete successful response body
+     * @throws IOException if transport fails, a URL or token destination is rejected, the response
+     *     is unsuccessful or oversized, or an image exceeds the redirect limit
      */
     @Override
     public byte[] download(URI uri, String token, int limit) throws IOException {
@@ -109,7 +131,16 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
         throw new SocialMediaFeedException(Reason.TOO_MANY_REDIRECTS);
     }
 
-    /** Reads only a small diagnostic body; the enclosing response closes any unread connection. */
+    /**
+     * Builds a safe exception for a non-200 Graph response using a bounded diagnostic body.
+     *
+     * <p>Missing, oversized, unreadable or malformed bodies fall back to the HTTP status alone.
+     * The enclosing response retains ownership of the entity stream and closes unread content.</p>
+     *
+     * @param entity response entity, possibly {@code null} or of unknown length
+     * @param status upstream HTTP status code
+     * @return Graph-specific diagnostic when recognized, otherwise a generic HTTP failure
+     */
     private static SocialMediaFeedException facebookFailure(HttpEntity entity, int status) {
         if (entity != null && entity.getContentLength() <= MAX_ERROR_BYTES) {
             try {
@@ -125,7 +156,17 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
         return new SocialMediaFeedException(Reason.HTTP_ERROR, status, null, null);
     }
 
-    /** Extracts numeric Graph identifiers without retaining its message, trace ID or other response data. */
+    /**
+     * Detects a Graph error object and extracts only safe diagnostic identifiers.
+     *
+     * <p>For Graph code 100, the upstream message is inspected for known patterns but is never
+     * included verbatim. Numeric codes, a fixed reason and an allowlisted field name are the
+     * only details retained in the exception.</p>
+     *
+     * @param bytes response body already bounded by the caller
+     * @param status upstream HTTP status, including 200 for successful HTTP responses containing an error
+     * @return safe failure, or {@code null} when no error object can be parsed
+     */
     private static SocialMediaFeedException facebookFailure(byte[] bytes, int status) {
         try {
             JsonNode root = MAPPER.readTree(bytes);
@@ -142,7 +183,12 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
         return null;
     }
 
-    /** Maps recognized Graph errors to fixed guidance without including any upstream text. */
+    /**
+     * Maps known Graph message fragments to fixed configuration or field-error guidance.
+     *
+     * @param message non-null upstream message to inspect, or an empty string when inspection is not applicable
+     * @return matching predefined reason, or the generic Graph API error reason
+     */
     private static Reason facebookReason(String message) {
         if (message.contains("Tried accessing nonexisting field")) {
             if (message.contains("(published_posts)") && message.contains("node type (User)")) {
@@ -154,7 +200,12 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
         return Reason.FACEBOOK_API_ERROR;
     }
 
-    /** Returns a locally defined field name, never text copied from the response. */
+    /**
+     * Matches a missing-field diagnostic against the fields requested by this integration.
+     *
+     * @param message non-null upstream error message
+     * @return allowlisted field identifier, or {@code null} for an unknown field or message pattern
+     */
     private static FacebookField missingFacebookField(String message) {
         for (FacebookField field : FacebookField.values()) {
             if (message.contains("Tried accessing nonexisting field (" + field.apiName() + ")")) return field;
@@ -166,7 +217,18 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
         return value != null && value.isIntegralNumber() && value.canConvertToInt() ? value.intValue() : null;
     }
 
-    /** Bounds decompressed content while leaving stream ownership to the enclosing HTTP response. */
+    /**
+     * Reads a complete response within the byte budget, including bodies without a declared length.
+     *
+     * <p>An excessive declared length is rejected before reading. When the budget is filled,
+     * one additional byte is probed to distinguish an exact fit from an oversized response.
+     * The enclosing HTTP response owns and closes the stream.</p>
+     *
+     * @param entity response entity, possibly {@code null}; decompression is handled by the HTTP client
+     * @param limit nonnegative maximum body size in bytes
+     * @return complete response bytes when they fit within the limit
+     * @throws IOException if the entity is missing, the limit is negative, reading fails or the body is oversized
+     */
     private static byte[] readResponse(HttpEntity entity, int limit) throws IOException {
         if (entity == null || limit < 0 || entity.getContentLength() > limit) {
             throw new SocialMediaFeedException(Reason.INVALID_RESPONSE_SIZE);
@@ -179,6 +241,12 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
         return bytes;
     }
 
+    /**
+     * Checks the HTTPS URL form and the YouTube/Facebook image CDN host allowlist.
+     *
+     * @param uri candidate image URI, possibly {@code null}
+     * @return whether the URI uses an approved CDN domain or subdomain; no DNS lookup is performed
+     */
     static boolean isImageUrl(URI uri) {
         if (!isHttps(uri)) return false;
         String host = uri.getHost().toLowerCase(Locale.ROOT);
@@ -187,12 +255,28 @@ final class SocialMediaHttpClient implements SocialMediaFeedGenerator.Downloader
             || host.equals("fbsbx.com") || host.endsWith(".fbsbx.com");
     }
 
+    /**
+     * Checks the common URL restrictions used for upstream resources and public provider links.
+     *
+     * @param uri candidate URI, possibly {@code null}
+     * @return whether it has an HTTPS scheme and host, no user information or fragment, and no nonstandard port
+     */
     static boolean isHttps(URI uri) {
         return uri != null && "https".equalsIgnoreCase(uri.getScheme()) && uri.getHost() != null
             && uri.getRawUserInfo() == null && (uri.getPort() == -1 || uri.getPort() == 443)
             && uri.getRawFragment() == null;
     }
 
+    /**
+     * Resolves a connection host and rejects the entire result if any address is in a blocked range.
+     *
+     * <p>Checks cover local, loopback, link-local, site-local and multicast addresses, IPv6 unique
+     * local addresses, IPv4 shared address space and the explicitly blocked reserved IPv4 ranges.</p>
+     *
+     * @param host hostname supplied by the connection manager
+     * @return resolved addresses when all pass the address checks
+     * @throws UnknownHostException if DNS resolution fails or any resolved address is blocked
+     */
     private static InetAddress[] resolvePublicAddresses(String host) throws UnknownHostException {
         InetAddress[] addresses = InetAddress.getAllByName(host);
         for (InetAddress address : addresses) {
