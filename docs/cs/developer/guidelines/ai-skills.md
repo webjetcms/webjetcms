@@ -16,7 +16,12 @@ Skilly dávají AI asistentovi postup pro konkrétní úlohu. Nejprve dokončete
    ```
 
 3. Odpovídejte na otázky. Pokud něco nevíte, označte to jako otevřenou otázku pro zadavatele. Na závěr si nechte shrnout akceptační kritéria, navrhnout implementační plán a testy a potvrďte dohodnutý rozsah.
-4. Ve stejném chatu vytvořte GitHub issue pomocí projektového skillu:
+
+Po vyjasnění zadání si vyberte jednu z následujících možností.
+
+### Uložit zadání do GitHub issue
+
+1. Ve stejném chatu vytvořte GitHub issue pomocí projektového skillu:
 
    ```text
    Použi skill wj-gh-issue-from-chat. Najprv over, či už v
@@ -24,7 +29,20 @@ Skilly dávají AI asistentovi postup pro konkrétní úlohu. Nejprve dokončete
    z tejto diskusie vrátane akceptačných kritérií, dohodnutého plánu a testov.
    ```
 
-5. Zkontrolujte návrh a potvrďte vytvoření issue. Skill použije anglický název, tělo ponechá v jazyce diskuse a navrhne název větve. Větev nevytváří. Pokračujte částí [Implementace a kontrola](#implementace-a-kontrola).
+2. Zkontrolujte návrh a potvrďte vytvoření issue. Skill použije anglický název, tělo ponechá v jazyce diskuse a navrhne název větve. Větev nevytváří. Pokračujte částí [Implementace a kontrola](#implementace-a-kontrola).
+
+### Implementovat přímo z chatu bez issue
+
+1. Vyberte pracovní větev nebo worktree podle části [Implementace a kontrola](#implementace-a-kontrola). Pokud již pracujete ve správné složce a větvi, pokračujte v nich.
+2. **V tomtéž chatu**, který obsahuje požadavek, přílohy a odsouhlasené závěry z `grill-me`, zadejte:
+
+   ```text
+   Použi skill implement podľa odsúhlaseného zadania, akceptačných kritérií,
+   plánu a testov v tomto chate. Nevytváraj GitHub issue.
+   ```
+
+   Skill `implement` přijímá i zadání přímo z konverzace; číslo issue nepotřebuje. Pokud přecházíte do nového chatu nebo jiné worktree, přeneste do nového chatu odsouhlasené shrnutí a potřebné přílohy.
+3. Po implementaci pokračujte kontrolou kódu a výsledku v krocích 3 a 4 části [Implementace a kontrola](#implementace-a-kontrola). Při kontrole místo odkazu na issue uveďte zadání odsouhlasené v chatu.
 
 ## Požadavek nebo chyba již existuje v GitHub Issues
 
@@ -47,18 +65,36 @@ Skilly dávají AI asistentovi postup pro konkrétní úlohu. Nejprve dokončete
    Pred samotnou opravou počkaj na moje potvrdenie. Nevytváraj nové issue.
    ```
 
-3. Potvrďte vyjasněné zadání nebo navrženou opravu. Pokud přibyla podstatná rozhodnutí, zapište je do stávajícího issue, aby byla dostupná i mimo chatu.
+3. Potvrďte vyjasněné zadání nebo navrženou opravu. Potom **v tomtéž chatě** přeneste dohodnuté závěry do stávajícího issue:
+
+   ```text
+   Použi skill wj-gh-issue-from-grill pre issue [URL].
+   Zapracuj odsúhlasené závery tejto diskusie do jeho popisu.
+   ```
+
+   Skill zachová původní zadání a doplní nebo aktualizuje rozhodnutí, akceptační kritéria, implementační plán, testování a případné otevřené otázky. Nahradí překonané části plánu bez vytvoření nového issue a nezačne implementaci. `wj-gh-issue-from-chat` používejte pouze k vytvoření nového issue.
+4. Otevřete vrácený odkaz a zkontrolujte aktualizovaný popis. Plán je nyní uložen v issue. Při implementaci můžete pokračovat iv novém chatu pouze s jeho odkazem.
 
 ## Implementace a kontrola
 
-1. Vytvořte nebo vyberte pracovní větev podle [pravidel projektu](gitlab.md). Pro novou funkčnost použijte `feature/<číslo-issue>-<popis>`, pro opravu `hotfix/<číslo-issue>-<popis>` ; vycházejte ze správné cílové větve.
-2. V chatu s dohodnutým plánem zadejte:
+1. **Před implementací vyberte větev nebo worktree, ve které budete pracovat.** Můžete pokračovat v aktuální větvi, použít existující worktree nebo vytvořit novou. Několik menší issues můžete řešit v jedné větvi nebo worktree. Chcete-li novou worktree, z kořene repozitáře spusťte v terminálu například:
+
+   ```shell
+   ./worktree-add.sh --new feature/ID-short-description
+   ```
+
+   ID a popis nahraďte podle issue. Skript vytvoří novou větev z `origin/main`, připraví worktree se závislostmi a otevře ji ve VS Code.
+
+   Pro release hotfix nejprve vytvořte větev `hotfix/<číslo-issue>-<popis>` z odpovídající větve `hotfix/YEAR.0-main` podle [pravidel projektu](gitlab.md), poté spusťte `./worktree-add.sh hotfix/<číslo-issue>-<popis>` bez `--new`. Parametr `--new` vždy vychází z `origin/main`, i když název nové větve začíná na `hotfix/`.
+2. V Codexu otevřete zvolenou pracovní složku. Pokud máte GitHub issue, ve stejném nebo novém chatu spusťte skill `implement` s jeho číslem (bez issue použijte [zadání přímo z chatu](#implementovat-přímo-z-chatu-bez-issue)):
 
    ```text
-   Použi skill implement pre issue [URL] podľa dohodnutého plánu.
-   Dodrž AGENTS.md a príslušné wj-* skilly. Spusti relevantné testy
-   a doplň dokumentáciu. Nevytváraj commit ani push; zmeny nechaj na kontrolu.
+   /implement ID
    ```
+
+   `ID` nahraďte číslem svého issue, například `302`. Nastavení tohoto repozitáře v `docs/agents/issue-tracker.md` určuje GitHub projekt `webjetcms/webjetcms` a načtení issue i komentářů. Zadání, akceptační kritéria a plán proto nejprve uložte do issue podle postupu výše.
+
+   Namísto čísla můžete použít `/implement [URL]`. Pokud rozhraní nenabízí zkratku `/implement`, napište `Použi skill implement pre issue [URL].` Skill načte ticket a provede implementaci a testování podle zadání a pravidel projektu.
 
 3. Před commitem si vyžádejte projektovou kontrolu:
 
@@ -67,4 +103,15 @@ Skilly dávají AI asistentovi postup pro konkrétní úlohu. Nejprve dokončete
    Over splnenie akceptačných kritérií aj spätnú kompatibilitu.
    ```
 
-4. Zkontrolujte diff, výsledky testů a chování aplikace podle [Definice hotového](definition-of-done.md). Commit a další Git postup provádí vývojář; zákaz commitů agentem platí i při použití obecného skillu `implement`.
+4. Zkontrolujte diff, výsledky testů a chování aplikace podle [Definice hotového](definition-of-done.md). Commit a další Git postup provádí vývojář. Zákaz vytváření commitů agentem v projektovém `AGENTS.md` má přednost před závěrečným commit krokem obecného skillu `implement`.
+
+## Kdy použít implement a kdy implement-spec
+
+| Skill | Vstup | Postup |
+| --- | --- | --- |
+| `implement` | Jedno issue, zadání nebo vybraná skupina ticketů. | Implementuje zadanou práci, používá TDD tam, kde je vhodné, spouští testy a na konci kontrolu kódu. |
+| `implement-spec` | Celá specifikace rozdělena na související tickety, typicky výsledek `to-spec` a `to-tickets`. | Řídí závislosti mezi tikety a deleguje je subagentem do samostatných větví a worktree. Výsledky slučuje do společné integrační větve a kontroluje celé řešení. |
+
+**Pro náš běžný postup použijte `implement`**, i když issue obsahuje podrobný plán z `grill-me`. Samotná délka plánu ani více menších issues v jedné větvi nevyžadují `implement-spec`.
+
+`implement-spec` je určen ke koordinaci větší práce rozdělené na závislé tickety. Jeho výchozí postup vytváří větve a worktree, slučuje změny a podle způsobu práce s issue trackerem řeší také PR nebo uzavírání ticketů. Ve WebJET CMS je třeba jej předem přizpůsobit pravidlům projektu, zejména zákazu commitů agentům a volbě větve programátorům. Pro jednotlivé issue nebo zadání v chatu použijte postup v části [Implementace a kontrola](#implementace-a-kontrola).
