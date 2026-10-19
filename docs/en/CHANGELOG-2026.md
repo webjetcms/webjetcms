@@ -268,6 +268,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Multi-step forms - added moving (`scroll`) to the beginning of the form after moving to the next step (#osk573).
 - Explorer - when updating a file, the selection is limited to one file and a message warns of the wrong type (#317).
 - Explorer - folder information no longer shows inaccurate recursive size (#317).
+- Proxy - [exceptions `proxyHostsException`](install/config/README.md#httphttps-proxy) supports wildcard patterns like `*.firma.sk` and `127.*`, comma and `|` separators, and case-insensitive comparison. The same normalized list is used for both HTTP/HTTPS and JVM settings `http.nonProxyHosts`. Changing the configuration requires a restart (#361).
 
 ### Bug fixes
 
