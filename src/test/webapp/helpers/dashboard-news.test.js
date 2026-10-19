@@ -320,7 +320,7 @@ const socialFeed = { news: [
     { id: 'youtube:video', source: 'youtube', title: 'New video', perex: 'Video summary', link: 'https://www.youtube.com/watch?v=video', image: 'https://news.example/video.jpg', publishedAt: '2026-10-18T09:00:00Z' },
     { id: 'facebook:post', source: 'facebook', title: 'New post', perex: 'Post summary', link: 'https://www.facebook.com/posts/post', image: 'https://news.example/post.jpg' }
 ] };
-const socialConfig = { overviewJsonUrl: 'https://news.example/json/', socialRefreshDays: 3 };
+const socialConfig = { overviewJsonUrl: 'https://news.example/json/', socialRefreshHours: 8 };
 
 /** Acknowledges the local release so tests exercise only external unread content. */
 function acknowledgeRelease(f) {
@@ -447,8 +447,8 @@ test('A response arriving after collapse remains unread and never creates hidden
 });
 
 test('Disabling social news ignores populated cache and retains channel links even without release content', async t => {
-    const f = fixture(t, { config: { ...socialConfig, socialRefreshDays: 0 }, fetchResponse: async () => ({ ok: true, json: async () => socialFeed }) });
-    await f.scope.createSocialNewsClient({ url: 'https://news.example/json/wjnews.en.json', refreshDays: 3, signal: f.controller.signal }).refresh();
+    const f = fixture(t, { config: { ...socialConfig, socialRefreshHours: 0 }, fetchResponse: async () => ({ ok: true, json: async () => socialFeed }) });
+    await f.scope.createSocialNewsClient({ url: 'https://news.example/json/wjnews.en.json', refreshHours: 8, signal: f.controller.signal }).refresh();
     const count = f.requests.length;
     f.context.labels.changelog = '';
     f.render();

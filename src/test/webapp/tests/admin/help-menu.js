@@ -25,7 +25,7 @@ Scenario('Header help shares release news and supplies documentation links', asy
     I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     await I.executeScript(() => {
         const dashboard = document.querySelector('webjet-overview-dashboard');
-        dashboard.configure({ data: dashboard.data, labels: dashboard.labels, config: { ...dashboard.config, socialRefreshDays: 0 } });
+        dashboard.configure({ data: dashboard.data, labels: dashboard.labels, config: { ...dashboard.config, socialRefreshHours: 0 } });
     });
     openHelp(I);
     I.assertDeepEqual(await I.executeScript(() => {

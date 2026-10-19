@@ -17,7 +17,7 @@ Before(async ({ I, login }) => {
     await I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
     await I.executeScript(() => {
         const dashboard = document.querySelector('webjet-overview-dashboard');
-        dashboard.configure({ data: dashboard.data, labels: dashboard.labels, config: { ...dashboard.config, socialRefreshDays: 0 } });
+        dashboard.configure({ data: dashboard.data, labels: dashboard.labels, config: { ...dashboard.config, socialRefreshHours: 0 } });
     });
     await I.waitForText('Čo je nové (5)', 10, news);
 });

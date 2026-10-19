@@ -1,8 +1,9 @@
 import { newsFingerprint } from '../release-news';
 
-const DAY = 86400000;
+const HOUR = 3600000;
 const REQUEST_TIMEOUT = 8000;
 const CACHE_VERSION = 1;
+const CACHE_KEY = `webjet.externalNews.v${CACHE_VERSION}`;
 const MAX_ITEMS = 100;
 const MAX_FEED_BYTES = 256 * 1024;
 const feedMemory = new Map();
@@ -52,21 +53,21 @@ function safeImageUrl(value, base) {
 
 /**
  * Resolves the established localized feed URL and its refresh interval.
- * @param {Object} config - Dashboard configuration, including overviewJsonUrl and socialRefreshDays.
+ * @param {Object} config - Dashboard configuration, including overviewJsonUrl and socialRefreshHours.
  * @param {string} language - Administration language; Czech uses the historical cs filename.
- * @returns {{enabled:boolean, url:string|null, refreshDays:number}} Effective loading configuration.
+ * @returns {{enabled:boolean, url:string|null, refreshHours:number}} Effective loading configuration.
  */
 export function socialNewsOptions(config = {}, language = 'sk') {
-    const refreshDays = Number(config.socialRefreshDays ?? 3);
+    const refreshHours = Number(config.socialRefreshHours ?? 8);
     const base = safeUrl(config.overviewJsonUrl, window.location.origin);
-    if (!Number.isFinite(refreshDays) || refreshDays <= 0 || !base) return { enabled: false, url: null, refreshDays: 0 };
+    if (!Number.isFinite(refreshHours) || refreshHours <= 0 || !base) return { enabled: false, url: null, refreshHours: 0 };
     const address = new URL(base);
     if (address.search || address.hash) {
-        return { enabled: false, url: null, refreshDays: 0 };
+        return { enabled: false, url: null, refreshHours: 0 };
     }
     const locale = language === 'en' ? 'en' : ['cs', 'cz'].includes(language) ? 'cs' : 'sk';
     address.pathname = `${address.pathname.replace(/\/$/, '')}/wjnews.${locale}.json`;
-    return { enabled: true, url: address.href, refreshDays };
+    return { enabled: true, url: address.href, refreshHours };
 }
 
 /** Converts legacy Markdown to text without parsing remote HTML or creating resource elements. */
@@ -150,10 +151,9 @@ export function filterExternalNews(items, releaseVersion) {
 
 /** Revalidates storage contents before letting cached values reach the widget. */
 function cachedFeed(url) {
-    const key = `webjet.externalNews.v${CACHE_VERSION}.${newsFingerprint(url)}`;
     try {
-        const cache = feedMemory.get(url) || JSON.parse(window.localStorage.getItem(key) || 'null');
-        if (cache?.version !== CACHE_VERSION || !Number.isFinite(cache.fetchedAt) || cache.fetchedAt <= 0 || cache.fetchedAt > Date.now() + 60000 || !Array.isArray(cache.items)) return null;
+        const cache = feedMemory.get(url) || JSON.parse(window.localStorage.getItem(CACHE_KEY) || 'null');
+        if (cache?.version !== CACHE_VERSION || cache.url !== url || !Number.isFinite(cache.fetchedAt) || cache.fetchedAt <= 0 || cache.fetchedAt > Date.now() + 60000 || !Array.isArray(cache.items)) return null;
         const items = normalizeRecords({ news: cache.items.map(item => ({ ...item, perex: item.description, perexLong: item.descriptionLong })) }, url, value => value);
         return { ...cache, items };
     } catch (error) { return null; }
@@ -161,9 +161,9 @@ function cachedFeed(url) {
 
 /** Stores only successfully validated responses; restricted browser storage remains optional. */
 function rememberFeed(url, items) {
-    const cache = { version: CACHE_VERSION, fetchedAt: Date.now(), items };
+    const cache = { version: CACHE_VERSION, url, fetchedAt: Date.now(), items };
     feedMemory.set(url, cache);
-    try { window.localStorage.setItem(`webjet.externalNews.v${CACHE_VERSION}.${newsFingerprint(url)}`, JSON.stringify(cache)); }
+    try { window.localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); }
     catch (error) { /* Private browsing and storage quotas retain the in-memory cache. */ }
 }
 
@@ -255,18 +255,18 @@ function subscribe(job, signal) {
 
 /**
  * Creates a cache-first feed reader bound to a widget's lifetime.
- * @param {{url:string, refreshDays:number, signal:AbortSignal}} options - Public URL, interval and cleanup signal.
+ * @param {{url:string, refreshHours:number, signal:AbortSignal}} options - Public URL, interval and cleanup signal.
  * @returns {{readCache:()=>ExternalNewsItem[]|null, refresh:(options?:{force?:boolean})=>Promise<ExternalNewsItem[]>}} Reader API.
  */
-export function createSocialNewsClient({ url, refreshDays, signal }) {
-    const enabled = Boolean(safeUrl(url, window.location.origin)) && Number.isFinite(refreshDays) && refreshDays > 0;
+export function createSocialNewsClient({ url, refreshHours, signal }) {
+    const enabled = Boolean(safeUrl(url, window.location.origin)) && Number.isFinite(refreshHours) && refreshHours > 0;
     return {
         readCache: () => enabled && !signal?.aborted ? cachedFeed(url)?.items || null : null,
         refresh({ force = false } = {}) {
             if (!enabled) return Promise.resolve([]);
             if (signal?.aborted) return Promise.reject(abortError());
             const cache = cachedFeed(url);
-            if (!force && cache && Date.now() - cache.fetchedAt < refreshDays * DAY) return Promise.resolve(cache.items);
+            if (!force && cache && Date.now() - cache.fetchedAt < refreshHours * HOUR) return Promise.resolve(cache.items);
             const current = feedRequests.get(url);
             return subscribe(current && !current.controller.signal.aborted ? current : requestFeed(url), signal);
         }

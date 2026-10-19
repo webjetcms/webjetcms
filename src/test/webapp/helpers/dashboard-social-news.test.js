@@ -7,7 +7,7 @@ const { JSDOM } = require('jsdom');
 
 const sourceRoot = path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js');
 const feedUrl = 'https://docs.webjetcms.sk/json/wjnews.sk.json';
-const DAY = 86400000;
+const HOUR = 3600000;
 const item = (id = 'youtube:one', overrides = {}) => ({ id, source: 'youtube', title: 'A video', perex: 'A useful description', link: 'https://www.youtube.com/watch?v=one', ...overrides });
 const tick = () => new Promise(resolve => setImmediate(resolve));
 const plain = value => JSON.parse(JSON.stringify(value));
@@ -42,7 +42,7 @@ function fixture(t) {
     const client = (options = {}) => {
         const controller = new window.AbortController();
         controllers.push(controller);
-        return { controller, ...scope.createSocialNewsClient({ url: feedUrl, refreshDays: 3, signal: controller.signal, ...options }) };
+        return { controller, ...scope.createSocialNewsClient({ url: feedUrl, refreshHours: 8, signal: controller.signal, ...options }) };
     };
     t.after(() => { controllers.forEach(controller => controller.abort()); window.close(); });
     return { scope, window, client, requests, timers, notifications,
@@ -54,19 +54,19 @@ test('Feed configuration preserves cs filenames and local installations and disa
     for (const [language, expected] of [['sk', 'sk'], ['en', 'en'], ['cs', 'cs'], ['cz', 'cs'], ['de', 'sk']]) {
         const options = scope.socialNewsOptions({ overviewJsonUrl: 'https://docs.webjetcms.sk/json' }, language);
         assert.equal(options.url, `https://docs.webjetcms.sk/json/wjnews.${expected}.json`);
-        assert.equal(options.refreshDays, 3);
+        assert.equal(options.refreshHours, 8);
     }
-    assert.equal(scope.socialNewsOptions({ overviewJsonUrl: '/admin/v9/json/', socialRefreshDays: '2' }, 'en').url,
+    assert.equal(scope.socialNewsOptions({ overviewJsonUrl: '/admin/v9/json/', socialRefreshHours: '2' }, 'en').url,
         'http://iwcm.interway.sk/admin/v9/json/wjnews.en.json');
-    assert.equal(scope.socialNewsOptions({ overviewJsonUrl: 'http://news.intranet.test:8080/custom-news', socialRefreshDays: 3 }, 'cz').url,
+    assert.equal(scope.socialNewsOptions({ overviewJsonUrl: 'http://news.intranet.test:8080/custom-news', socialRefreshHours: 8 }, 'cz').url,
         'http://news.intranet.test:8080/custom-news/wjnews.cs.json');
     assert.equal(scope.socialNewsOptions({ overviewJsonUrl: 'https://customer.example/news/' }, 'sk').url,
         'https://customer.example/news/wjnews.sk.json');
     for (const overviewJsonUrl of ['javascript:alert(1)', '//evil.test/', 'https://a:b@evil.test/', 'https://evil.test/\\x', 'https://evil.test/?x=1']) {
         assert.equal(scope.socialNewsOptions({ overviewJsonUrl }).enabled, false);
     }
-    for (const socialRefreshDays of [0, -1, '', 'invalid', Infinity]) {
-        assert.equal(scope.socialNewsOptions({ overviewJsonUrl: '/json/', socialRefreshDays }).enabled, false);
+    for (const socialRefreshHours of [0, -1, '', 'invalid', Infinity]) {
+        assert.equal(scope.socialNewsOptions({ overviewJsonUrl: '/json/', socialRefreshHours }).enabled, false);
     }
 });
 
@@ -213,7 +213,7 @@ test('A custom local feed base is used by the request and supports the original 
     assert.equal(requests[0].options.credentials, 'omit');
 });
 
-test('Fresh cache avoids requests, exactly three days expires it, and force refresh bypasses the interval', async t => {
+test('Fresh cache avoids requests, exactly eight hours expires it, and force refresh bypasses the interval', async t => {
     const { client, requests, advance } = fixture(t);
     const reader = client();
     assert.equal(reader.readCache(), null);
@@ -222,7 +222,7 @@ test('Fresh cache avoids requests, exactly three days expires it, and force refr
     assert.equal(requests[0].options.credentials, 'omit');
     assert.equal(requests[0].options.referrerPolicy, 'no-referrer');
     assert.equal(requests[0].options.cache, 'no-cache');
-    advance(3 * DAY - 1);
+    advance(8 * HOUR - 1);
     await reader.refresh();
     assert.equal(requests.length, 1);
     advance(1);
@@ -255,7 +255,7 @@ test('Oversized declared, chunked and text responses cannot replace the last val
 test('Disabled readers ignore populated cache and never issue feed requests', async t => {
     const { client, requests } = fixture(t);
     await client().refresh();
-    const disabled = client({ refreshDays: 0 });
+    const disabled = client({ refreshHours: 0 });
     assert.equal(disabled.readCache(), null);
     assert.deepEqual(plain(await disabled.refresh({ force: true })), []);
     assert.equal(requests.length, 1);
@@ -267,7 +267,7 @@ test('Malformed and failed refreshes keep the successful cache and timestamp', a
     await reader.refresh();
     const key = window.localStorage.key(0);
     const original = window.localStorage.getItem(key);
-    advance(4 * DAY);
+    advance(9 * HOUR);
     respond(async () => ({ ok: true, json: async () => ({ news: [item('x', { link: '//unsafe.test/' })] }) }));
     await assert.rejects(reader.refresh(), /no valid records/);
     assert.equal(reader.readCache()[0].id, 'youtube:one');
@@ -289,14 +289,39 @@ test('Cached text is decoded once and blocked localStorage retains successful da
 });
 
 test('Untrusted storage is revalidated and malformed cache does not prevent a network recovery', async t => {
-    const { scope, client, window } = fixture(t);
-    const key = `webjet.externalNews.v1.${scope.newsFingerprint(feedUrl)}`;
-    window.localStorage.setItem(key, JSON.stringify({ version: 1, fetchedAt: Date.UTC(2026, 9, 18), items: [
+    const { client, window } = fixture(t);
+    const key = 'webjet.externalNews.v1';
+    window.localStorage.setItem(key, JSON.stringify({ version: 1, url: feedUrl, fetchedAt: Date.UTC(2026, 9, 18), items: [
         { ...item(), description: 'Unsafe', link: 'javascript:alert(1)' }
     ] }));
     const reader = client();
     assert.equal(reader.readCache(), null);
     assert.equal((await reader.refresh())[0].link, 'https://www.youtube.com/watch?v=one');
+});
+
+test('One storage key survives reloads and is replaced when the language or feed URL changes', async t => {
+    const key = 'webjet.externalNews.v1';
+    const first = fixture(t);
+    await first.client().refresh();
+    assert.equal(first.window.localStorage.length, 1);
+    assert.equal(first.window.localStorage.key(0), key);
+    const saved = first.window.localStorage.getItem(key);
+    const reloaded = fixture(t);
+    reloaded.window.localStorage.setItem(key, saved);
+    assert.equal((await reloaded.client().refresh())[0].id, 'youtube:one');
+    assert.equal(reloaded.requests.length, 0);
+
+    for (const url of [feedUrl.replace('.sk.', '.en.'), 'https://other.example/json/wjnews.sk.json']) {
+        const changed = fixture(t);
+        changed.window.localStorage.setItem(key, saved);
+        const reader = changed.client({ url });
+        assert.equal(reader.readCache(), null);
+        await reader.refresh();
+        assert.equal(changed.requests.length, 1);
+        assert.equal(changed.requests[0].url, url);
+        assert.equal(changed.window.localStorage.length, 1);
+        assert.equal(JSON.parse(changed.window.localStorage.getItem(key)).url, url);
+    }
 });
 
 test('Overlapping clients share one request while aborting one subscriber leaves the other active', async t => {

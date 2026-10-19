@@ -30,12 +30,12 @@ function socialItem(source, number, options = {}) {
 }
 
 /** Configures only the current browser component; all preference writes are intercepted. */
-async function configureFeed(I, refreshDays = 3) {
-    await I.executeScript(({ baseUrl, refreshDays }) => {
+async function configureFeed(I, refreshHours = 8) {
+    await I.executeScript(({ baseUrl, refreshHours }) => {
         const dashboard = document.querySelector('webjet-overview-dashboard');
         dashboard.configure({ data: dashboard.data, labels: dashboard.labels,
-            config: { ...dashboard.config, overviewJsonUrl: baseUrl, socialRefreshDays: refreshDays } });
-    }, { baseUrl: fixture.baseUrl, refreshDays });
+            config: { ...dashboard.config, overviewJsonUrl: baseUrl, socialRefreshHours: refreshHours } });
+    }, { baseUrl: fixture.baseUrl, refreshHours });
     await I.waitForElement('.md-dashboard[data-loaded="true"]', 20);
 }
 
@@ -339,10 +339,7 @@ Scenario('Fresh cache avoids background requests while expansion refreshes and r
     await openFixture(I, [socialItem('youtube', 1), socialItem('facebook', 1)]);
     await I.seeElement(badge);
     await I.assertEqual(preferenceWrites.filter(write => write.label.startsWith('dashboard.externalNews.')).length, 0);
-    const cache = await I.executeScript(() => Object.keys(localStorage)
-        .filter(key => key.startsWith('webjet.externalNews.'))
-        .map(key => JSON.parse(localStorage.getItem(key)))
-        .find(value => value.items?.some(item => item.title === 'autotest youtube 1')));
+    const cache = await I.executeScript(() => JSON.parse(localStorage.getItem('webjet.externalNews.v1')));
     await I.assertEqual(cache.version, 1);
     await I.assertTrue(cache.fetchedAt > Date.now() - 60000);
     await configureFeed(I);
@@ -362,8 +359,7 @@ Scenario('Fresh cache avoids background requests while expansion refreshes and r
 
     await I.pressKey('Escape');
     await I.waitForVisible('.md-dashboard__welcome', 10);
-    const cacheBeforeFailure = await I.executeScript(() => Object.fromEntries(Object.entries(localStorage)
-        .filter(([key]) => key.startsWith('webjet.externalNews.'))));
+    const cacheBeforeFailure = await I.executeScript(() => localStorage.getItem('webjet.externalNews.v1'));
     fixture.status = 503;
     await I.clickCss(toggle);
     await I.waitForElement(`${external}[aria-busy="false"][hidden]`, 10);
@@ -373,8 +369,7 @@ Scenario('Fresh cache avoids background requests while expansion refreshes and r
     await I.dontSeeElement(badge);
     await I.seeNumberOfVisibleElements('.md-dashboard-widget__news-highlights li', 5);
     await I.seeNumberOfVisibleElements('.md-dashboard-widget__news-channels a', 2);
-    await I.assertDeepEqual(await I.executeScript(() => Object.fromEntries(Object.entries(localStorage)
-        .filter(([key]) => key.startsWith('webjet.externalNews.')))), cacheBeforeFailure,
+    await I.assertEqual(await I.executeScript(() => localStorage.getItem('webjet.externalNews.v1')), cacheBeforeFailure,
     'A failed refresh must preserve cache internally without displaying stale cards.');
     await I.assertEqual(fixture.requests.length, 3);
     await I.saveScreenshot('dashboard-social-news-unavailable.png');

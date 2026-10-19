@@ -349,7 +349,6 @@
         <copy todir="${finalwar}/WEB-INF/classes/sk/iway/" overwrite="true">
             <fileset dir="${root}/../../build/classes/java/main/sk/iway">
                 <include name="aceintegration/**"/>
-                <exclude name="aceintegration/socialmedia/**"/>
                 <include name="basecms/**"/>
                 <include name="demo8/**"/>
             </fileset>

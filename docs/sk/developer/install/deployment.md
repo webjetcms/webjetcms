@@ -66,7 +66,7 @@ Verejné súbory `wjnews.sk.json`, `wjnews.cs.json` a `wjnews.en.json` vytvára 
 
 Generátor spustite cez automatizovanú úlohu na docs serveri. Zachovaná verejná URL je `https://docs.webjetcms.sk/json/wjnews.sk.json`, pre ostatné jazyky sa mení iba jazykový kód na `cs` alebo `en`. Novinky nainštalovanej verzie zostávajú súčasťou prekladového kľúča `admin.overview.changelog` a dashboard ich kombinuje s týmto zoznamom.
 
-Balík `sk.iway.aceintegration.socialmedia` je vylúčený zo štandardného Gradle WAR a JAR aj z dopĺňania ukážkových tried v Ant `finalwar`. Ant JAR a aktualizačné ZIP archívy ho tiež nezahŕňajú. Na docs server ho nasaďte osobitne podľa návodu generátora.
+Balík `sk.iway.aceintegration.socialmedia` sa na docs server nasadzuje v archíve `build/updatezip/webjetcms.war` vytvorenom cieľom `finalwar`, ktorý dopĺňa triedy z balíka `aceintegration`. Zákaznícke JAR a aktualizačné ZIP archívy tento balík nezahŕňajú vďaka existujúcim filtrom v Ant builde. Generované JSON súbory, náhľady a súkromná cache sú vylúčené z balenia; vznikajú až pri behu generátora na serveri.
 
 ## Použitie v klientských projektoch
 

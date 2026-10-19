@@ -4,7 +4,7 @@ Generátor na `docs.webjetcms.sk` vytvára zoznam posledných videí z YouTube a
 
 ## Nasadenie a nastavenie úlohy
 
-1. Skompilujte projekt a nasaďte triedy z `build/classes/java/main/sk/iway/aceintegration/socialmedia/` do rovnakého balíka v `WEB-INF/classes/` na docs serveri. Balík nie je súčasťou zákazníckeho WAR, JAR ani aktualizačných archívov. Pri aktualizácii tried reštartujte aplikáciu.
+1. Vytvorte archív príkazom `ant -f ant/build.xml finalwar` a nasaďte `build/updatezip/webjetcms.war` na docs server. Cieľ `finalwar` zahŕňa aj triedy generátora z balíka `sk.iway.aceintegration.socialmedia`; zákaznícke JAR a aktualizačné ZIP archívy ich neobsahujú. Po nasadení reštartujte aplikáciu.
 2. Procesu aplikačného servera povoľte zápis do `/json/` a `/WEB-INF/social-media/` v koreňovom priečinku webovej aplikácie. Súkromný priečinok nesmie byť prístupný cez webový server. Vstupné JSON súbory netreba pripravovať ani kopírovať pri [deploymente](deployment.md#zoznam-noviniek-na-docs-serveri).
 3. V **Nastavenia → Konfigurácia** vytvorte potrebné premenné z tabuľky nižšie. Predvolené hodnoty sú definované priamo v balíku generátora, preto nemusia byť v zozname konfigurácie pred prvým uložením.
 4. V **Nastavenia → Automatizované úlohy** vytvorte úlohu `sk.iway.aceintegration.socialmedia.SocialMediaFeedGenerator`. **Parametre úlohy** nechajte prázdne, nastavte požadované časy a v poli **Beží na uzle** vyberte jeden konkrétny uzol. Úloha sa pri inštalácii neregistruje automaticky.

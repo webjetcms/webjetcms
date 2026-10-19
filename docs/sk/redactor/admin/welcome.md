@@ -137,7 +137,7 @@ Privítanie a skratky sa počas rozbalenia skryjú; tlačidlo **Zbaliť novinky*
 
 Stav a dátum prečítania sa ukladajú do nastavení vášho účtu, takže platia aj na inom zariadení. Sociálne príspevky sa rozpoznávajú podľa ID bez ohľadu na jazyk; novinky verzie majú samostatný záznam pre každý jazyk. Po aktualizácii zo staršieho správania s 30-dňovým štítkom treba lokálne novinky raz rozbaliť, pretože starý dátum prvého zobrazenia nepotvrdzuje ich prečítanie.
 
-Zoznam zo sociálnych sietí sa predvolene kontroluje na pozadí každé tri dni a pri každom rozbalení panela. Pri výpadku spojenia sa externé položky skryjú bez chybového hlásenia. Správca môže načítavanie [vypnúť v konfigurácii](../../admin/setup/configuration/dashboard.md#novinky-zo-sociálnych-sietí). V oboch prípadoch zostanú novinky nainštalovanej verzie a oba priame odkazy.
+Pri otvorení úvodnej obrazovky sa zoznam zo sociálnych sietí obnoví na pozadí, ak od posledného úspešného načítania uplynulo aspoň 8 hodín. Pri každom rozbalení panela sa overí aj pred uplynutím tejto lehoty. Pri výpadku spojenia sa externé položky skryjú bez chybového hlásenia. Správca môže načítavanie [vypnúť v konfigurácii](../../admin/setup/configuration/dashboard.md#novinky-zo-sociálnych-sietí). V oboch prípadoch zostanú novinky nainštalovanej verzie a oba priame odkazy.
 
 ### Systémové upozornenia
 
