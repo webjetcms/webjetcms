@@ -1,12 +1,15 @@
 package sk.iway.iwcm.doc;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
@@ -63,8 +67,10 @@ public class PlannedChangesService {
         PlannedAssetReferences references = new PlannedAssetReferences(doc.getDocId(), GroupsDB.getInstance().getGroup(doc.getGroupId()).getDomainName());
         rewriteProperties(item, references, false, "mediaLink", "mediaThumbLink", "mediaInfoSk", "mediaInfoCz", "mediaInfoEn", "mediaInfoDe", "fieldA", "fieldB", "fieldC", "fieldD", "fieldE", "fieldF");
         rejectFields(item, "mediaTitleSk", "mediaTitleCz", "mediaTitleEn", "mediaTitleDe", "mediaGroup");
-        preflight(references.getFiles(), user);
-        checkConflicts(doc.getDocId(), references.getFiles());
+        Map<String, String> files = plannedFiles(doc.getDocId());
+        files.putAll(references.getFiles());
+        preflight(files, user);
+        checkConflicts(doc.getDocId(), files);
     }
 
     public Long activeHistory(int docId) {
@@ -97,6 +103,7 @@ public class PlannedChangesService {
         }
         deleteMedia(doc.getDocId(), MEDIA_TABLE, CloudToolsForCore.getDomainId());
         documents.setPlannedMediaInitialized(doc.getId(), false);
+        deletePlannedFiles(doc.getDocId());
     }
 
     /** Approves only the currently scheduled revision. */
@@ -129,8 +136,10 @@ public class PlannedChangesService {
         doc.setGroupId(live.getGroupId());
         List<Media> planned = plannedMedia(doc.getDocId());
         PlannedAssetReferences references = references(doc, planned, false);
-        preflight(references.getFiles(), user);
-        checkConflicts(doc.getDocId(), references.getFiles());
+        Map<String, String> files = plannedFiles(doc.getDocId());
+        files.putAll(references.getFiles());
+        preflight(files, user);
+        checkConflicts(doc.getDocId(), files);
     }
 
     /** Replaces the previous plan only after the new history record has been saved. */
@@ -150,8 +159,7 @@ public class PlannedChangesService {
     private PlannedAssetReferences references(DocDetails doc, List<Media> planned, boolean transform) {
         String domain = GroupsDB.getInstance().getGroup(doc.getGroupId()).getDomainName();
         PlannedAssetReferences references = new PlannedAssetReferences(doc.getDocId(), domain);
-        rewriteProperties(doc, references, transform, "data", "dataAsc", "htmlData", "htmlHead", "perexImage", "perexPlace");
-        for (char field = 'A'; field <= 'T'; field++) rewriteProperties(doc, references, transform, "field" + field);
+        rewriteContent(doc, references, transform);
         for (Media item : planned) {
             rewriteProperties(item, references, transform, "mediaLink", "mediaThumbLink", "mediaInfoSk", "mediaInfoCz", "mediaInfoEn", "mediaInfoDe");
             for (char field = 'A'; field <= 'F'; field++) rewriteProperties(item, references, transform, "field" + field);
@@ -159,6 +167,11 @@ public class PlannedChangesService {
         rejectFields(doc, "title", "navbar", "externalLink", "virtualPath", "editorVirtualPath", "fileName");
         for (Media item : planned) rejectFields(item, "mediaTitleSk", "mediaTitleCz", "mediaTitleEn", "mediaTitleDe", "mediaGroup");
         return references;
+    }
+
+    private void rewriteContent(DocBasic doc, PlannedAssetReferences references, boolean transform) {
+        rewriteProperties(doc, references, transform, "data", "dataAsc", "htmlData", "htmlHead", "perexImage", "perexPlace");
+        for (char field = 'A'; field <= 'T'; field++) rewriteProperties(doc, references, transform, "field" + field);
     }
 
     private void rejectFields(Object bean, String... fields) {
@@ -205,8 +218,7 @@ public class PlannedChangesService {
             if (pending.getDocId() == docId) continue;
             String domain = GroupsDB.getInstance().getGroup(pending.getGroupId()).getDomainName();
             if (!domain.equalsIgnoreCase(CloudToolsForCore.getDomainName()) && Constants.getBoolean("enableStaticFilesExternalDir")) continue;
-            Map<String, String> other = references(DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(pending),
-                media.findAllByMediaFkIdAndMediaFkTableName(pending.getDocId(), MEDIA_TABLE), false).getFiles();
+            Map<String, String> other = plannedFiles(pending.getDocId());
             if (other.values().stream().anyMatch(files::containsValue)) {
                 throw new IllegalArgumentException("Another active planned page uses the same public asset: " + pending.getDocId());
             }
@@ -265,9 +277,11 @@ public class PlannedChangesService {
             boolean initialized = live.isPlannedMediaInitialized();
             List<Media> planned = initialized ? plannedMedia(doc.getDocId()).stream().map(item -> copyMedia(item, "documents")).toList() : List.of();
             PlannedAssetReferences references = references(doc, planned, true);
-            preflight(references.getFiles(), user);
-            checkConflicts(doc.getDocId(), references.getFiles());
-            publishFiles(references.getFiles(), doc.getDocId(), historyId);
+            Map<String, String> files = plannedFiles(doc.getDocId());
+            files.putAll(references.getFiles());
+            preflight(files, user);
+            checkConflicts(doc.getDocId(), files);
+            publishFiles(files, doc.getDocId(), historyId);
             doc.setAvailable(true);
             doc.setPublishAfterStart(false);
             doc.setPerexGroupString(doc.getPerexGroupIdsString(true));
@@ -288,8 +302,17 @@ public class PlannedChangesService {
                 documents.setPlannedMediaInitialized(doc.getId(), false);
             }
             deleteMedia(doc.getDocId(), MEDIA_TABLE, CloudToolsForCore.getDomainId());
+            rewriteContent(history, references, true);
+            histories.saveAndFlush(history);
             histories.getHisotryIdsByDocIdIn(doc.getDocId()).ifPresent(ids -> histories.updateActual(false, ids));
             histories.updatePublicableAndActual(false, true, history.getAuthorId(), true, history.getHistoryId());
+            try {
+                deletePlannedFiles(doc.getDocId());
+            } catch (IllegalStateException exception) {
+                // Publication is complete; cleanup failure must not skip refreshing the live page cache.
+                Logger.error(PlannedChangesService.class, "Could not clean planned files after publishing history " + historyId);
+                Logger.error(PlannedChangesService.class, exception);
+            }
             return doc;
         } finally {
             SetCharacterEncodingFilter.setCurrentRequestBean(previous);
@@ -319,6 +342,43 @@ public class PlannedChangesService {
         String expression = java.util.regex.Pattern.quote(name.substring(0, dot)) + "-\\d+x\\d+[^/]*" + java.util.regex.Pattern.quote(name.substring(dot));
         try (var variants = Files.list(cached.getParent())) {
             for (Path variant : variants.filter(path -> path.getFileName().toString().matches(expression)).toList()) Files.deleteIfExists(variant);
+        }
+    }
+
+    /** Collects every staged image and file, including assets not referenced by the page. */
+    private Map<String, String> plannedFiles(int docId) {
+        Map<String, String> files = new LinkedHashMap<>();
+        for (String folder : List.of("images", "files")) {
+            String prefix = PlannedAssetPaths.ROOT + docId + "/" + folder + "/";
+            try {
+                Path root = PlannedAccess.checkedFile(prefix);
+                if (!Files.exists(root)) continue;
+                try (var paths = Files.walk(root)) {
+                    for (Path path : paths.toList()) {
+                        String source = prefix + root.relativize(path).toString().replace('\\', '/');
+                        PlannedAccess.checkedFile(source);
+                        if (Files.isRegularFile(path)) files.put(source, PlannedAssetPaths.target(source, docId));
+                    }
+                }
+            } catch (IOException | UncheckedIOException exception) {
+                throw new IllegalStateException("Cannot read planned files for page " + docId, exception);
+            }
+        }
+        return files;
+    }
+
+    /** Clears working folders only; publication backups are kept separately. */
+    private void deletePlannedFiles(int docId) {
+        for (String folder : List.of("images", "files")) {
+            try {
+                Path root = PlannedAccess.checkedFile(PlannedAssetPaths.ROOT + docId + "/" + folder + "/");
+                if (!Files.exists(root)) continue;
+                try (var paths = Files.walk(root)) {
+                    for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) Files.deleteIfExists(path);
+                }
+            } catch (IOException | UncheckedIOException exception) {
+                throw new IllegalStateException("Cannot delete planned files for page " + docId, exception);
+            }
         }
     }
 

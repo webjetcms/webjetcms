@@ -358,7 +358,8 @@ public class WriteTag extends BodyTagSupport
 
 		boolean writePerfStat = false;
 		if ("true".equals(request.getParameter("_writePerfStat"))) writePerfStat = true;
-		boolean disableCache = request.getAttribute("isPreview") != null || request.getAttribute(sk.iway.iwcm.doc.PlannedAccess.PREVIEW_DOC) != null;
+		boolean disableCache = false;
+		if (request.getAttribute("isPreview") != null) disableCache = true;
 		if ("true".equals(request.getParameter("_disableCache"))) disableCache = true;
 
 		buff = WriteTagToolsForCore.fixXhtml(buff, request);

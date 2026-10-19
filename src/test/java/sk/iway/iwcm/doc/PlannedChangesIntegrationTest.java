@@ -68,6 +68,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
             when(groupDB.getGroup(anyInt())).thenReturn(group);
             groups.when(GroupsDB::getInstance).thenReturn(groupDB);
             access.when(PlannedAccess::enabled).thenReturn(true);
+            access.when(() -> PlannedAccess.checkedFile(anyString())).thenAnswer(call -> assets.resolve(((String)call.getArgument(0)).substring(1)));
             access.when(() -> PlannedAccess.canEdit(any(), any())).thenReturn(true);
             domains.when(CloudToolsForCore::getDomainId).thenReturn(1);
             domains.when(CloudToolsForCore::getDomainName).thenReturn(group.getDomainName());
@@ -165,21 +166,25 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 assertNotNull(service.publish(empty.getId()));
                 assertTrue(media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), "documents", 1).isEmpty());
 
-                // Only referenced assets are published; preflight failure leaves all public files unchanged.
+                // All staged assets are published; preflight failure leaves all public files unchanged.
                 String privateRoot = PlannedAssetPaths.ROOT + page.getDocId();
                 java.nio.file.Path source = assets.resolve(privateRoot.substring(1) + "/images/photo.webp");
                 java.nio.file.Path target = assets.resolve("images/photo.webp");
                 java.nio.file.Files.createDirectories(source.getParent());
                 java.nio.file.Files.createDirectories(target.getParent());
                 java.nio.file.Files.writeString(source, "future image");
-                java.nio.file.Files.writeString(source.resolveSibling("unused.webp"), "unused secret");
+                java.nio.file.Files.writeString(source.resolveSibling("unused.webp"), "unreferenced image");
                 java.nio.file.Files.writeString(target, "old image");
                 access.when(() -> PlannedAccess.canAccess(anyString(), any())).thenReturn(true);
-                access.when(() -> PlannedAccess.checkedFile(anyString())).thenAnswer(call -> assets.resolve(((String)call.getArgument(0)).substring(1)));
                 service.initialize(page.getDocId(), user);
                 Media pdf = item(page.getDocId(), PlannedChangesService.MEDIA_TABLE, "PDF");
                 pdf.setMediaLink(privateRoot + "/files/spec.pdf");
                 media.saveAndFlush(pdf);
+                DocHistory older = revision(page);
+                older.setPublicable(false);
+                older.setData("<img src='" + privateRoot + "/images/photo.webp'>");
+                older = history.saveAndFlush(older);
+                long olderId = older.getId();
                 DocHistory withFiles = revision(page);
                 withFiles.setPerexImage(privateRoot + "/images/photo.webp");
                 withFiles.setData("<img srcset='" + privateRoot + "/images/photo.webp 1x, " + privateRoot + "/images/photo.webp?v=1634319328 2x'>");
@@ -194,9 +199,22 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                     java.nio.file.Path pdfSource = assets.resolve(privateRoot.substring(1) + "/files/spec.pdf");
                     java.nio.file.Files.createDirectories(pdfSource.getParent());
                     java.nio.file.Files.writeString(pdfSource, "future PDF");
+                    java.nio.file.Path unreferenced = pdfSource.resolveSibling("nested/unused.pdf");
+                    java.nio.file.Files.createDirectories(unreferenced.getParent());
+                    java.nio.file.Files.writeString(unreferenced, "unreferenced PDF");
+                    access.when(() -> PlannedAccess.canAccess(privateRoot + "/files/nested/unused.pdf", user)).thenReturn(false);
+                    assertThrows(IllegalArgumentException.class, () -> service.publish(withFilesId));
+                    assertEquals("old image", java.nio.file.Files.readString(target), "Validate unreferenced assets before copying any file");
+                    access.when(() -> PlannedAccess.canAccess(privateRoot + "/files/nested/unused.pdf", user)).thenReturn(true);
                     assertThrows(IllegalStateException.class, () -> interrupted.publish(withFilesId));
                     assertEquals(privateRoot + "/files/spec.pdf", media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1).get(0).getMediaLink(),
                         "Rewriting the live copy must preserve private source URLs for a retry");
+                    assertTrue(java.nio.file.Files.exists(source));
+                    assertTrue(java.nio.file.Files.exists(unreferenced));
+                    assertEquals(privateRoot + "/images/photo.webp", history.findById(withFilesId).orElseThrow().getPerexImage());
+                    context.getBean(java.util.concurrent.atomic.AtomicBoolean.class).set(true);
+                    assertThrows(IllegalStateException.class, () -> service.publish(withFilesId));
+                    assertTrue(java.nio.file.Files.exists(source), "Keep staged assets until history completion succeeds");
                     DocDetails published = service.publish(withFilesId);
                     assertNotNull(published);
                     assertFalse(published.getData().contains(PlannedAssetPaths.ROOT));
@@ -206,8 +224,14 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                     assertEquals("future image", java.nio.file.Files.readString(target));
                     assertEquals("future PDF", java.nio.file.Files.readString(assets.resolve("files/spec.pdf")));
                     assertEquals("old image", java.nio.file.Files.readString(assets.resolve(privateRoot.substring(1) + "/backup/" + withFilesId + "/images/photo.webp")));
-                    assertFalse(java.nio.file.Files.exists(assets.resolve("images/unused.webp")));
-                    assertTrue(java.nio.file.Files.exists(source));
+                    assertEquals("unreferenced image", java.nio.file.Files.readString(assets.resolve("images/unused.webp")));
+                    assertEquals("unreferenced PDF", java.nio.file.Files.readString(assets.resolve("files/nested/unused.pdf")));
+                    assertFalse(java.nio.file.Files.exists(source.getParent()));
+                    assertFalse(java.nio.file.Files.exists(pdfSource.getParent()));
+                    DocHistory publishedHistory = history.findById(withFilesId).orElseThrow();
+                    assertEquals(published.getData(), publishedHistory.getData());
+                    assertEquals("/images/photo.webp", publishedHistory.getPerexImage());
+                    assertEquals("<img src='" + privateRoot + "/images/photo.webp'>", history.findById(olderId).orElseThrow().getData());
                     assertNull(service.publish(withFilesId));
                 }
 
@@ -222,13 +246,27 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 assertTrue(history.findById(future.getId()).orElseThrow().getPublicable(), "Preparing a replacement must keep the existing plan active");
                 DocHistory next = revision(page);
                 next.setPublishStartDate(future.getPublishStartDate());
+                next.setData("<img src='" + privateRoot + "/images/cancel.webp'>");
                 next = history.saveAndFlush(next);
                 service.completeSave(next);
                 assertFalse(history.findById(future.getId()).orElseThrow().getPublicable());
                 assertTrue(history.findById(next.getId()).orElseThrow().getPublicable());
                 service.completeSave(future);
                 assertTrue(history.findById(next.getId()).orElseThrow().getPublicable(), "An older save must not cancel a newer plan");
+                java.nio.file.Files.createDirectories(source.getParent());
+                java.nio.file.Files.writeString(source.resolveSibling("cancel.webp"), "cancelled image");
+                java.nio.file.Path cancelledFile = assets.resolve(privateRoot.substring(1) + "/files/nested/cancel.pdf");
+                java.nio.file.Files.createDirectories(cancelledFile.getParent());
+                java.nio.file.Files.writeString(cancelledFile, "cancelled file");
+                String liveData = docs.findById(page.getDocId()).getData();
                 service.cancel(page.getDocId(), user);
+                assertFalse(java.nio.file.Files.exists(source.getParent()));
+                assertFalse(java.nio.file.Files.exists(cancelledFile.getParent().getParent()));
+                assertFalse(java.nio.file.Files.exists(assets.resolve("images/cancel.webp")));
+                assertFalse(java.nio.file.Files.exists(assets.resolve("files/nested/cancel.pdf")));
+                assertEquals(liveData, docs.findById(page.getDocId()).getData());
+                assertEquals(next.getData(), history.findById(next.getId()).orElseThrow().getData());
+                assertEquals("old image", java.nio.file.Files.readString(assets.resolve(privateRoot.substring(1) + "/backup/" + withFilesId + "/images/photo.webp")));
                 assertNull(service.publish(future.getId()));
                 assertTrue(media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1).isEmpty());
 
@@ -241,6 +279,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                          var workerUsers = mockStatic(UsersDB.class); var workerDomains = mockStatic(CloudToolsForCore.class);
                          var workerDocs = mockStatic(DocDB.class); var workerAudit = mockStatic(Adminlog.class)) {
                         workerAccess.when(() -> PlannedAccess.canEdit(any(), any())).thenReturn(true);
+                        workerAccess.when(() -> PlannedAccess.checkedFile(anyString())).thenAnswer(call -> assets.resolve(((String)call.getArgument(0)).substring(1)));
                         workerGroups.when(GroupsDB::getInstance).thenReturn(groupDB);
                         workerUsers.when(() -> UsersDB.getUser(anyInt())).thenReturn(user);
                         workerDomains.when(CloudToolsForCore::getDomainId).thenReturn(1);
