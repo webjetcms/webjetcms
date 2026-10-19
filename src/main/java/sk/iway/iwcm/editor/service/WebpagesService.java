@@ -40,6 +40,8 @@ import sk.iway.iwcm.doc.DocBasic;
 import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocEditorFields;
+import sk.iway.iwcm.doc.DocHistory;
+import sk.iway.iwcm.doc.DocHistoryRepository;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupEditorField;
 import sk.iway.iwcm.doc.GroupsDB;
@@ -537,62 +539,73 @@ public class WebpagesService {
     }
 
 	/**
-	 * Pregeneruje URL adresy stranok v zadanom adresari
-	 * @param rootGroupId
-	 * @param user
-	 * @param request
-	 * @param onlyChangeUrlInheritGroup //Default false, ak je true bude vykonane pregenerovanie iba pre tie kt. maju urlInheritGroup = true
+	 * Regenerates URLs in a folder and its descendants without publishing pages or changing approval state.
+	 *
+	 * @param rootGroupId folder to process
+	 * @param user user requesting the change
+	 * @param request current request, used for redirects and link updates
+	 * @param onlyChangeUrlInheritGroup whether to restrict changes to automatically generated or inherited URLs
 	 */
 	public static void regenerateUrl(int rootGroupId, Identity user, HttpServletRequest request, boolean onlyChangeUrlInheritGroup)
 	{
-		//ziskaj zoznam stranok v adresari
-		List<DocDetails> docs = DocDB.getInstance().getDocByGroup(rootGroupId);
-		EditorForm ef;
+		DocDB docDB = DocDB.getInstance();
+		List<DocDetails> docs = docDB.getDocByGroup(rootGroupId, DocDB.ORDER_TITLE, true, -1, -1, true, false);
+		GroupsDB groupsDB = GroupsDB.getInstance();
+		GroupDetails currentGroup = groupsDB.getGroup(rootGroupId);
+		String fileName = currentGroup != null && !currentGroup.isInternal() ? DB.prepareString(groupsDB.getGroupNamePath(rootGroupId), 255) : null;
+		int[] rootGroups = DocDB.getRootGroupL(rootGroupId, null, -1);
 		for (DocDetails doc : docs)
 		{
+			String virtualPath = regenerateVirtualPath(doc, onlyChangeUrlInheritGroup);
+			if (virtualPath == null) continue;
 
-			if(onlyChangeUrlInheritGroup) {
-				//Ak ma doc urlInheritGroup != true preskoc tento doc a nepregeneruj url
-				if(Boolean.TRUE.equals(doc.getUrlInheritGroup())==false && Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())==false) {
-					continue;
-				}
-			}
-
-			ef = EditorDB.getEditorForm(request, doc.getDocId(), -1, rootGroupId);
-			//out.println("<strong>"+ef.getTitle()+"</strong> [docid:"+ef.getDocId()+"] - "+ef.getVirtualPath());
-
-			if (ef.getVirtualPath().contains("*"))
+			// Folder moves also require refreshing the stored folder path and root groups.
+			new SimpleQuery().execute("UPDATE documents SET virtual_path=?, file_name=?, root_group_l1=?, root_group_l2=?, root_group_l3=?, sync_status=1 WHERE doc_id=?",
+				virtualPath, fileName, rootGroups[0], rootGroups[1], rootGroups[2], doc.getDocId());
+			if (Constants.getInt("linkType") == Constants.LINK_TYPE_HTML)
 			{
-				//out.println(" skipping (contains *)<br/>");
-				continue;
+				List<DocDetails> updated = EditorDB.fixRenamedVirtualPath(request, doc.getDocId(), virtualPath);
+				if (!updated.isEmpty()) request.getSession().setAttribute("updatedDocs", updated);
 			}
-
-			ef.setVirtualPath("");
-
-			if (Boolean.TRUE.equals(doc.getUrlInheritGroup())) ef.setVirtualPath(doc.getEditorVirtualPath());
-
-			//nastav aktualneho usera
-			ef.setAuthorId(user.getUserId());
-			ef.setPublish("1");
-
-			EditorDB.saveEditorForm(ef, request);
-
-			//out.println(" -> " + ef.getVirtualPath()+"<br>");
-
-			EditorDB.cleanSessionData(request);
-
-			//out.flush();
+			Adminlog.add(Adminlog.TYPE_SAVEDOC, "Regenerate URL: " + doc.getVirtualPath() + " -> " + virtualPath, doc.getDocId(), -1);
+			docDB.updateInternalCaches(doc.getDocId());
 		}
 
-		//out.flush();
+		DocHistoryRepository historyRepository = Tools.getSpringBean("docHistoryRepository", DocHistoryRepository.class);
+		Set<Integer> changedHistoryDocs = new HashSet<>();
+		for (DocHistory history : historyRepository.findPendingByGroupId(rootGroupId))
+		{
+			String virtualPath = regenerateVirtualPath(history, onlyChangeUrlInheritGroup);
+			if (virtualPath == null || virtualPath.equals(history.getVirtualPath())) continue;
 
-		//rekurzivne sa zavolaj na podadresare
-		List<GroupDetails> subGroups = GroupsDB.getInstance().getGroups(rootGroupId);
-		for (GroupDetails group : subGroups)
+			historyRepository.updateVirtualPath(history.getId(), virtualPath);
+			Adminlog.add(Adminlog.TYPE_SAVEDOC, "Regenerate pending URL: " + history.getVirtualPath() + " -> " + virtualPath, history.getDocId(), history.getHistoryId());
+			changedHistoryDocs.add(history.getDocId());
+		}
+		// Also refresh the scheduled-publication cache and notify other cluster nodes.
+		for (Integer docId : changedHistoryDocs) docDB.updateInternalCaches(docId);
+
+		for (GroupDetails group : GroupsDB.getInstance().getGroups(rootGroupId))
 		{
 			regenerateUrl(group.getGroupId(), user, request, onlyChangeUrlInheritGroup);
 		}
-		//out.flush();
+	}
+
+	/** Returns a regenerated URL, or null when this version must keep its existing URL. */
+	private static String regenerateVirtualPath(DocBasic doc, boolean onlyChangeUrlInheritGroup)
+	{
+		if (doc.getVirtualPath().contains("*")) return null;
+		if (onlyChangeUrlInheritGroup && !Boolean.TRUE.equals(doc.getUrlInheritGroup()) && !Boolean.TRUE.equals(doc.getGenerateUrlFromTitle())) return null;
+
+		EditorForm form = new EditorForm();
+		form.setDocId(doc.getDocId());
+		form.setGroupId(doc.getGroupId());
+		form.setTempId(doc.getTempId());
+		form.setTitle(doc.getTitle());
+		form.setNavbar(doc.getNavbar());
+		form.setVirtualPath(Boolean.TRUE.equals(doc.getUrlInheritGroup()) && Tools.isNotEmpty(doc.getEditorVirtualPath()) ? doc.getEditorVirtualPath() : "");
+		EditorDB.setVirtualPath(form);
+		return form.getVirtualPath();
 	}
 
 	/**

@@ -209,6 +209,91 @@ If the cursor is in a table, the Style selection box also displays the table sty
 
 When using multiple CSS styles at once (e.g. ```btn btn-primary```), all of them are applied to the currently selected element. Styles that apply only to an element will not appear in the selection box unless the element is selected or the cursor is in it.
 
+#### Search and style groups
+
+The **Styles** drop-down remains open after selection. It displays active styles in the header and allows you to remove them. It searches by name, CSS class, category, and group without distinguishing diacritics. The HTML tag of a paragraph or heading is changed by the separate **Paragraph Format** category at the beginning of the drop-down. It is displayed only when at least one of its options can be used. When selecting a container or other element with no available formats, it remains hidden even after turning on **All Styles**.
+
+The **Clear Search** button in the search field will clear the filter and restore the original category expansion. The selected element in the path above the list has a gray background and bold font, just like in the Page Builder bar. The **Delete** option for a group will remove its style; the cross next to an active style will remove only that style.
+
+You set the behavior of items with comments in the source `editor.scss` (after compiling in `editor.css`):
+
+```css
+div.alert.warning {
+    /* editor title: Warning */
+    /* editor category: Alerts */
+    /* editor group: Tone */
+    /* editor base: alert */
+    /* editor members: info success error */
+}
+.hero {
+    /* editor title: Hero heading */
+    /* editor category: Typography */
+    /* editor group: Heading size */
+    /* editor targets: h1 h2 h3 h4 h5 h6 */
+}
+```
+
+| Comment | Meaning |
+| --- | --- |
+| `editor title:` | Item name. HTML is converted to plain text in the controller. |
+| `category editor:` | Category for organizing and searching. |
+| `editor category-icon:` | Optional category icon from Tabler Icons, for example `ti-border-none`. |
+| `editor group:` | Choices of the same property are replaced on the same element. A category does not exclude anything in itself. |
+| `editor targets:` | List of allowed HTML tags; narrows down the type from the selector. For a selector without a tag, allows one entry for multiple types. |
+| `base editor:` | Construction classes that are not removed when the appearance is turned off and restored. By default, they must be on the target element. |
+| `editor requires:` | Optional separate list of required classes if different from `base`. |
+| `editor members:` | Other specific classes from the same group, such as a variant used only in an HTML block. |
+
+Use group names that are unique to the property. Color, size, and padding belong to different groups. A compound preset, such as Perex, can be left without a group. Classes that are not in the options or in `members` will be retained by the dropdown when changing the variant.
+
+The path of elements in the header allows you to select a parent element, such as a section or table. The active styles and available items then correspond to this element. This applies in both the Standard Editor and the Page Builder. The change has one step back; regular CSS selection does not change the HTML tag. When marking up a piece of text, an `span` element may be created.
+
+The driver provides the `wjstylescombo` plugin (`ckeditor_styleComboEnabled=true`) enabled by default. The configuration in `config.jsp` replaces the toolbar item `Styles` with the `WJStyles` item. Items without metadata will remain in the Other category without automatic class exclusion.
+
+The optional comment `editor category-icon:` sets the icon for the entire category. Use the full Tabler Icons class name with the prefix `ti-`, for example `ti-border-none`:
+
+```css
+.border-none {
+    /* editor title: No border */
+    /* editor category: Borders */
+    /* editor category-icon: ti-border-none */
+    border: 0;
+}
+```
+
+For the same category, the first explicitly specified icon in the CSS rule order will be used. Other `editor category-icon:` comments in this category are ignored. Categories without this comment will keep the automatically selected icon.
+
+You can use the `/* editor title: No border */` skill to generate the `editor.scss` or `editor.css` comment and other style metadata in the `wj-stylescombo` files. It is generated based on the complete CSS/SCSS template files. You can install this and other skills for WebJET CMS from the [webjetcms/skills repository](https://github.com/webjetcms/skills).
+
+#### Restoring the basic look
+
+The **Restore Basic Appearance** link appears for a single selected element for which there is a usable style definition with a non-empty `editor base`. It works with the element selected in the header path; when selecting a container, it will only modify that container.
+
+Definitions applicable to the given element are selected from the entire catalog according to the tag, `targets` and the required classes (`requires`, or `base`). Searching, collapsing categories, or enabling **All styles** do not limit this selection. Reset then:
+
+- removes classes from the selectors of these definitions and the classes listed in their `members`,
+- preserves all classes listed in `base` applicable definitions, even if they appear among the deleted classes in another definition,
+- will retain other classes that are not recognized by the list compiled in this way.
+
+For example, in the definitions:
+
+```css
+div.container.border-red {
+    /* editor title: Red border */
+    /* editor base: container */
+}
+div.container.bg-blue {
+    /* editor title: Blue background */
+    /* editor base: container */
+}
+```
+
+`class="container border-red bg-blue custom-layout"` changes to `class="container custom-layout"`. Class `container` is protected by `base` and `custom-layout` is not recognized by the catalog. Classes `members` can be deleted even if they do not have their own menu item.
+
+Reset does not change the HTML tag, content, `style` attribute, or other attributes of the element. It does not modify the classes of its children or parents; however, the appearance of children may be affected by inheritance or CSS selectors dependent on the parent. The result is determined by the CSS templates after removing the variants. The operation can be undone with a single **Undo** step, even when editing the parent outside of the Page Builder editable block.
+
+#### Styles in other template files
+
 Unless you include ```editor.css``` in the template design, its styles are not applied when the web page is displayed. By default, it is only used as a list of style definitions.
 
 If you want, you can define the style displayed in the editor's selection box directly in other files. However, the style defined in this way must contain the first comment ```/* editor */```. An example is in the file ```src/scss/3-base/_link.scss```:

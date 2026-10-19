@@ -70,6 +70,21 @@ The second column contains form items (or form step items) that are only visible
 
 ![](form-item-editor.png)
 
+### Copy fields between forms
+
+You can use a configured field in another form or step without re-filling its settings:
+
+1. In the **Form Items** table, select one saved field and click <button class="btn btn-sm btn-outline-secondary" type="button"><span><i class="ti ti-clipboard" aria-hidden="true"></i></span></button> for copying.
+2. Open the target form in the same or a different browser tab and select a step.
+3. Click on <button class="btn btn-sm btn-outline-secondary buttons-paste-field" type="button"><span><i class="ti ti-clipboard-plus" aria-hidden="true"></i></span></button> to paste the copied field. The new field editor opens with the original settings and the target step selected. The order is pre-populated to the end of the step.
+4. Adjust the settings as needed and save. Closing the editor without saving will not create a new field.
+
+The saved state of the field is copied, including texts, options or a link to a code list, validations, **Required field** settings, and statistics settings. **Display conditions and obligations are not copied** because they refer to fields in the original form. Error counters are not copied either. The original field and its conditions are preserved.
+
+The internal clipboard stores one field for **30 minutes** and allows repeated insertion. Copying another field will replace its contents; insertion does not extend the validity. The clipboard works even after page refresh and between tabs of the same administration address in the same browser profile, for the same user and domain. The system clipboard does not change. The **Insert Field** button is available after selecting a step if the clipboard contains a valid field of a supported type. You can also insert into an empty step.
+
+The copy is self-contained: subsequent edits to the original field will not change it. CSS templates and step scripts are not carried over, so the resulting appearance depends on the target form.
+
 ### Adding and editing items
 
 The editor for adding and editing items is special in that it changes its content according to the selected field type (item). This means that for each item type (e.g. First Name, Last Name, etc.) different settings and configuration options will be displayed. Depending on the selected item type, you can set parameters such as:

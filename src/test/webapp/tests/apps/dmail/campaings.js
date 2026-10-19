@@ -892,10 +892,10 @@ Scenario('BUG recipients for new email', ({I, DT, DTE}) => {
     I.click( locate("#pills-dt-campaingsDataTable-receivers").find("button.buttons-select-all") );
     I.wait(1);
     I.click( locate("#pills-dt-campaingsDataTable-receivers").find("button.buttons-remove") );
-    DTE.waitForEditor("campaingsDataTable");
-    I.click("Zmazať", "div.DTE_Action_Remove");
+    DTE.waitForEditor("datatableFieldDTE_Field_recipientsTab");
+    I.click("Zmazať", "#datatableFieldDTE_Field_recipientsTab_modal div.DTE_Action_Remove");
     DTE.waitForModalClose('datatableFieldDTE_Field_recipientsTab_modal');
-    DT.waitForLoader();
+    DT.waitForLoader('datatableFieldDTE_Field_recipientsTab');
     I.see("Nenašli sa žiadne vyhovujúce záznamy");
     DTE.cancel();
 

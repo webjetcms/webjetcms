@@ -7,6 +7,8 @@ Pozadie uvítacieho panelu a označenie prostredia nastavíte cez **Nastavenia �
 | Premenná | Predvolená hodnota | Význam |
 | --- | --- | --- |
 | `dashboardHeroBackgroundImage` | `linear-gradient(111.7deg, #031D46 0%, #073780 76.92%)` | Pozadie uvítacieho panela: CSS gradient alebo cesta k obrázku. Prázdna alebo neplatná hodnota použije predvolený modrý prechod. |
+| `dashboardSocialRefreshHours` | `8` | Počet hodín platnosti uloženého zoznamu externých noviniek. Hodnota `0` alebo záporná hodnota vypne jeho načítavanie aj zobrazovanie uložených položiek. Rozbalenie panela pri zapnutej funkcii vždy overí aktuálny zoznam. |
+| `overviewJsonUrl` | `https://docs.webjetcms.sk/json/` | Základná URL súborov `wjnews.sk.json`, `wjnews.cs.json` a `wjnews.en.json`. Možno nastaviť vlastný HTTP(S) server alebo lokálnu cestu k priečinku s týmito súbormi. |
 | `dashboardEnvironmentName` | `{ENVIRONMENT_NAME}` | Text označenia. Podporuje makrá aj vlastný text. Zobrazuje najviac 8 znakov veľkými písmenami; celý názov zostane v tooltipe. Prázdna hodnota označenie skryje aj z titulku karty. |
 | `dashboardEnvironmentIcon` | `auto` | Ikona podľa prostredia alebo názov ikony Tabler, napr. `rocket` alebo `ti-database`. Hodnota `none` alebo prázdna hodnota ikonu skryje. Pri neexistujúcom názve sa ikona nezobrazí. |
 | `dashboardEnvironmentColor` | `auto` | Farba z palety podľa prostredia a štýlu. Vlastná farba `#RGB` či `#RRGGBB` automaticky dostane čierny alebo biely text a ikonu s kontrastom aspoň 4,5 : 1. |
@@ -25,6 +27,22 @@ Pozadie zmeníte priamo hodnotou `dashboardHeroBackgroundImage`, napríklad:
 - `https://cdn.example.com/header.jpg` – obrázok z úplnej HTTP(S) adresy.
 
 Obrázok nahradí gradient a pokryje celý panel so zachovaním pomeru strán (`cover`), zarovnaný na stred a spodný okraj. Cestu zadávajte priamo, bez obalu `url(...)`. HTTP(S) adresa nesmie obsahovať prihlasovacie údaje. Adresy začínajúce `//`, adresy so spätnými lomkami alebo riadiacimi znakmi a iné protokoly nie sú povolené. Maximálna dĺžka adresy je 1024 znakov.
+
+## Novinky zo sociálnych sietí
+
+Panel **Čo je nové** spája novinky nainštalovanej verzie s príspevkami z YouTube a Facebooku WebJET CMS. Prehliadač číta spoločný JSON zo servera nastaveného v `overviewJsonUrl`; zákaznícky server sociálne siete nekontaktuje. Generovanie údajov na docs serveri opisuje [Centrálny zoznam noviniek](../../../developer/install/social-media-feed.md).
+
+JSON musí byť verejne dostupný bez prihlásenia, aj pri vlastnej lokálnej ceste: požiadavka neposiela prihlasovacie cookies ani hlavičku `Referer`.
+
+Relatívna cesta obrázka v poli `image` sa doplní podľa priečinka s JSON. Pri `overviewJsonUrl=https://docs.webjetcms.sk/json/new/` sa napríklad `social-media/images/obrazok.jpg` načíta z `https://docs.webjetcms.sk/json/new/social-media/images/obrazok.jpg`. Pri presune zoznamu preto preneste aj podpriečinok s obrázkami. Absolútne HTTPS adresy obrázkov zo starších zoznamov zostávajú podporované.
+
+Pri otvorení úvodnej obrazovky sa použije zoznam uložený v `localStorage`. Ak chýba alebo dosiahol platnosť nastavenú v `dashboardSocialRefreshHours` (predvolene 8 hodín), obnoví sa na pozadí. Pri každom rozbalení sa zoznam overí aj pred uplynutím tejto lehoty. Cache je uložená pod kľúčom `webjet.externalNews.v1` a obsahuje aj URL načítaného zoznamu. Pri zmene URL alebo jazyka sa načíta príslušný zoznam a prepíše túto položku; česká administrácia používa súbor `wjnews.cs.json`. V zbalenej rotácii sa načíta len náhľad práve zobrazenej novinky; ostatné obrázky sa vopred nenačítavajú. Obrázky kariet sa začnú načítavať po rozbalení panela. Náhľad v rotácii nemení stav prečítania.
+
+Štítok **Nové** zostáva zobrazený, kým používateľ nerozbalí neprečítaný obsah. Rozbalenie potvrdí lokálne novinky aj práve zobrazené sociálne položky. Úspešné uloženie do nastavení účtu obsahuje dátum prečítania `readAt`; pre sociálne príspevky sa uchovávajú aj odtlačky ich ID pod kľúčom `dashboard.externalNews.<odtlačok základnej URL>`. Prepnutie jazyka ani úprava prekladu toho istého príspevku nevytvoria nové upozornenie. Nové ID ho vytvorí bez ohľadu na dátum publikovania. Dáta prijaté až po zbalení alebo v skrytej karte prehliadača sa neoznačia za prečítané; ak je panel stále rozbalený, označia sa pri návrate do karty.
+
+Pri chybe načítania sa externé karty, položky rotácie a ich upozornenie skryjú aj vtedy, keď prehliadač má uložené staršie údaje. Panel nezobrazuje hlásenie o načítavaní ani chybe; zostanú lokálne novinky verzie a odkazy na sociálne siete. Uložená cache sa chybou nevymaže.
+
+Hodnota `dashboardSocialRefreshHours=0` vypne požiadavky na JSON a obrázky, externé karty, ich rotáciu aj upozornenie na neprečítané položky. Platí to aj pre dáta, ktoré už prehliadač uložil. Novinky nainštalovanej verzie a odkazy na oba sociálne kanály zostanú dostupné. Po zmene konfigurácie obnovte stránku administrácie.
 
 ## Automatické označenie prostredia
 
@@ -108,4 +126,6 @@ Text `admin.overview.changelog` zapisujte ako Markdown nadpis s verziou a zoznam
 - **Testovanie prístupnosti** – Kontroly sú súčasťou automatizovaných testov.
 ```
 
-Počet pri odkaze **Čo je nové** sa odvodí zo zoznamu. Starší text v odsekoch zostáva čitateľný. V `user_settings_admin` sa pre každého používateľa a jazyk uchováva záznam `dashboard.news.<jazyk>` s odtlačkom textu a dátumom prvého zobrazenia (`firstSeen`). Zmena textu obnoví štítok **Nové** na 30 dní. Uloženie ani reset rozloženia dashboardu tento záznam nemení.
+Počet pri odkaze **Čo je nové** sa odvodí zo zoznamu. Starší text v odsekoch zostáva čitateľný. V `user_settings_admin` sa pre každého používateľa a jazyk uchováva záznam `dashboard.news.<jazyk>` s odtlačkom prečítaného textu (`fingerprint`) a dátumom prečítania (`readAt`). Ukladá sa po rozbalení viditeľného panela. Zmena textu obnoví štítok **Nové** aj v rovnakej verzii; upozornenie nevyprší po uplynutí času. Menu Pomocník číta rovnaký stav lokálnych noviniek, ale jeho otvorenie ho nemení. Uloženie ani reset rozloženia dashboardu tento záznam nemení.
+
+Starší záznam s `firstSeen` znamenal iba prvé zobrazenie a nemal informáciu o prečítaní. Po aktualizácii sa preto lokálne novinky zobrazia ako neprečítané, kým ich používateľ raz nerozbalí. Existujúce uložené ID prečítaných sociálnych príspevkov zostávajú platné.

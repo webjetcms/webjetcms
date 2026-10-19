@@ -19,6 +19,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
+/**
+ * Stores domain-specific form delivery, upload, and presentation settings.
+ * Transient page selections and processor fields support editing these settings in administration.
+ */
 @Entity
 @Table(name = "form_settings")
 @Getter
@@ -106,6 +110,14 @@ public class FormSettingsEntity {
     @Size(max = 255)
     private String forwardFail;
 
+    @Column(name = "forward_as_content")
+    @DataTableColumn(inputType = DataTableColumnType.BOOLEAN_TEXT, title="editor.form.forward_as_content", className="not-formsimple not-form",
+        editor = @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after")
+        })
+    )
+    private Boolean forwardAsContent = false;
+
     /* Old forms used selection of forward types, because they wanted for example add all params to request we do NOT do this */
     @Column(name = "forward_type")
     @DataTableColumn(inputType = DataTableColumnType.SELECT, title= "editor.form.forward_type", className = "not-multistep", editor = {
@@ -176,7 +188,9 @@ public class FormSettingsEntity {
     private String formProcessor;
 
     @Column(name = "encryption_key")
-    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA_WRAP, title= "components.form.encryptionKey")
+    @DataTableColumn(inputType = DataTableColumnType.TEXTAREA_WRAP, title= "components.form.encryptionKey", editor = @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "before"),
+    }))
     @Size(max = 1024)
     private String encryptKey;
 
@@ -197,7 +211,9 @@ public class FormSettingsEntity {
     private String fieldsEmailHeader;
 
     @Transient
-    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, title = "components.form.encryptionKey.tooltip", className = "allow-html")
+    @DataTableColumn(inputType = DataTableColumnType.STATIC_TEXT, title = "components.form.encryptionKey.tooltip", className = "allow-html", editor = @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = "data-dt-field-hr", value = "after"),
+    }))
     private transient String encrypKeyInfo;
 
     @Transient
@@ -260,9 +276,10 @@ public class FormSettingsEntity {
     private Integer domainId;
 
     /**
-     * Converts snake_case to camelCase (pascalCase with lowercase first letter)
-     * @param input
-     * @return
+     * Converts a snake_case name to camelCase, or lowercases the first character of an unsplit name.
+     *
+     * @param input name to convert, which may be {@code null} or blank
+     * @return converted name, or an empty string for {@code null} or blank input
      */
     public static String toPascalCase(String input) {
         if(Tools.isEmpty(input)) return "";
@@ -285,9 +302,10 @@ public class FormSettingsEntity {
     }
 
     /**
-     * Converts camelCase to snake_case
-     * @param input
-     * @return
+     * Converts camelCase to snake_case by separating lowercase-to-uppercase transitions.
+     *
+     * @param input name to convert, which may be {@code null}
+     * @return lowercase name with separators, preserving {@code null} and empty input
      */
     public static String toSnakeCase(String input) {
         if (input == null || input.isEmpty()) return input;

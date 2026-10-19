@@ -2906,6 +2906,14 @@ div.exit-inline-editor a[aria-pressed=true] {
   outline-offset: 2px;
   box-shadow: 0 0 0 4px white;
 }
+.pb-workbench button i.ti,
+.pb-structure button i.ti,
+.pb-insert-layer button i.ti {
+  flex: 0 0 18px;
+  pointer-events: none;
+  font-size: 18px;
+  line-height: 1;
+}
 .pb-workbench button svg,
 .pb-structure button svg,
 .pb-insert-layer button svg {
@@ -2972,7 +2980,31 @@ div.exit-inline-editor a[aria-pressed=true] {
   padding: 6px 10px;
   border-top: 0;
 }
-.pb-workbench.is-inserting > :not(.pb-insert-hint), .pb-workbench.is-resizing > :not(.pb-resize-hint), .pb-workbench.is-moving > :not(.pb-move-hint) {
+.pb-workbench.is-inserting, .pb-workbench.is-moving {
+  flex-wrap: nowrap;
+  padding: 6px 10px;
+  gap: 6px;
+}
+.pb-workbench.is-inserting > [data-pb-action=structure], .pb-workbench.is-moving > [data-pb-action=structure] {
+  flex-shrink: 0;
+}
+.pb-workbench.is-inserting > [data-pb-action=structure]:hover, .pb-workbench.is-inserting > [data-pb-action=structure][aria-expanded=true], .pb-workbench.is-moving > [data-pb-action=structure]:hover, .pb-workbench.is-moving > [data-pb-action=structure][aria-expanded=true] {
+  background: rgba(0, 99, 251, 0.08);
+  color: #0063FB;
+}
+.pb-workbench.is-inserting > .pb-mode-hint, .pb-workbench.is-moving > .pb-mode-hint {
+  flex: 1;
+  min-width: 0;
+  padding: 0 0 0 10px;
+  border-left: 1px solid #B2B8C8;
+}
+.pb-workbench.is-inserting > .pb-mode-hint > [role=status], .pb-workbench.is-moving > .pb-mode-hint > [role=status] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pb-workbench.is-inserting > :not(.pb-insert-hint):not([data-pb-action=structure]), .pb-workbench.is-resizing > :not(.pb-resize-hint), .pb-workbench.is-moving > :not(.pb-move-hint):not([data-pb-action=structure]) {
   display: none !important;
 }
 .pb-workbench-standalone {
@@ -3262,6 +3294,10 @@ html.pb-insertion-open {
 .pb-wrapper.pb-is-inserting .pb-empty-placeholder, .pb-wrapper.pb-is-inserting .pb-empty-placeholder-wrapper {
   display: none !important;
 }
+.pb-wrapper.pb-is-inserting .pb-plus-button {
+  visibility: hidden !important;
+  pointer-events: none;
+}
 
 @media (pointer: coarse) {
   .pb-insert-layer .pb-insert-point button {
@@ -3535,6 +3571,15 @@ body.is-view-mode .pb-workbench, body.is-view-mode .pb-structure, body.is-view-m
     flex-basis: calc(100% + 12px);
     margin-inline: -6px;
     padding-inline: 6px;
+  }
+  .pb-workbench.is-inserting, .pb-workbench.is-moving {
+    padding: 6px;
+    gap: 3px;
+  }
+  .pb-workbench.is-inserting > .pb-mode-hint, .pb-workbench.is-moving > .pb-mode-hint {
+    flex-basis: 0;
+    margin: 0;
+    padding: 0 0 0 6px;
   }
   .pb-workbench > [data-pb-action=structure] span, .pb-workbench [data-pb-action=style] span {
     display: none;

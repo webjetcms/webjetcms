@@ -65,6 +65,16 @@ CKEDITOR.editorConfig = function( config )
 	config.clipboard_handleImages = false;
 	config.thumbServletAllowedSizeMode = <%=JsonTools.objectToJSON(Constants.getString("thumbServletAllowedSizeMode"))%>;
 	config.thumbServletAllowedSizes = <%=JsonTools.objectToJSON(Constants.getString("thumbServletAllowedSizes"))%>;
+	config.wjstylescombo_structure = {
+		section: <%=JsonTools.objectToJSON(Constants.getString("pageBuilderGridSectionSelector"))%>,
+		container: <%=JsonTools.objectToJSON(Constants.getString("pageBuilderGridContainerSelector"))%>,
+		row: <%=JsonTools.objectToJSON(Constants.getString("pageBuilderGridRowSelector"))%>,
+		column: <%=JsonTools.objectToJSON(Constants.getString("pageBuilderGridColumnSelector"))%>
+	};
+
+	<% if (Constants.getBoolean("ckeditor_styleComboEnabled")) { %>
+	config.format_tags = 'p;h1;h2;h3;h4;h5;h6';
+	<% } %>
 
 	config.stylesSet = [
 		{ name: 'Paragraph',		element: 'p' },
@@ -94,6 +104,11 @@ CKEDITOR.editorConfig = function( config )
 	if (Tools.isNotEmpty(Constants.getString("ckeditor_extraPlugins")))
 	{
 		extraPlugins.addAll(java.util.Arrays.asList(Constants.getArray("ckeditor_extraPlugins")));
+	}
+
+	if (Constants.getBoolean("ckeditor_styleComboEnabled")) {
+		extraPlugins.add("wjstylescombo");
+		toolbar = Tools.replace(toolbar, "'Styles'", "'WJStyles'");
 	}
 
 	String editorFontAwesomeCssPath = Constants.getString("editorFontAwesomeCssPath");

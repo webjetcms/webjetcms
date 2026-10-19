@@ -2,6 +2,7 @@
 <%@ page pageEncoding="utf-8" contentType="text/javascript" %>
 <%@ page import="sk.iway.iwcm.i18n.Prop"%>
 <%@ page import="sk.iway.iwcm.PageLng"%>
+<%@ page import="sk.iway.iwcm.Constants,sk.iway.iwcm.JsonTools"%>
 <%
 	sk.iway.iwcm.Encoding.setResponseEnc(request, response, "text/javascript");
 	sk.iway.iwcm.PathFilter.setStaticContentHeaders("/cache/admin/webpages/page-builder/scripts/ninja-page-builder.js", null, request, response);
@@ -95,6 +96,17 @@
                     },
                     more: "<iwcm:text key='pagebuilder.ui.more'/>",
                     duplicate: "<iwcm:text key='pagebuilder.ui.duplicate'/>",
+                    copy: "<iwcm:text key='pagebuilder.ui.copy'/>",
+                    paste: "<iwcm:text key='pagebuilder.ui.paste'/>",
+                    copied: "<iwcm:text key='pagebuilder.ui.clipboard.copied'/>",
+                    clipboardError: "<iwcm:text key='pagebuilder.ui.clipboard.error'/>",
+                    clipboardEmpty: "<iwcm:text key='pagebuilder.ui.clipboard.empty'/>",
+                    pasteUnavailable: "<iwcm:text key='pagebuilder.ui.paste.unavailable'/>",
+                    pasteHints: {
+                        section: "<iwcm:text key='pagebuilder.ui.paste.section'/>",
+                        container: "<iwcm:text key='pagebuilder.ui.paste.container'/>",
+                        column: "<iwcm:text key='pagebuilder.ui.paste.column'/>"
+                    },
                     previous: "<iwcm:text key='pagebuilder.ui.previous'/>",
                     next: "<iwcm:text key='pagebuilder.ui.next'/>",
                     before: "<iwcm:text key='pagebuilder.ui.before'/>",
@@ -128,7 +140,7 @@
             ui.bar.append(me.workbench_button('guides', ui.labels.guides.selected, 'eye'));
             ui.menu = $('<div>', { 'class': prefix+'-workbench-menu', hidden: true }).appendTo(ui.bar);
             ui.insertHint = $('<div>', { 'class': prefix+'-mode-hint '+prefix+'-insert-hint', hidden: true }).append(
-                $('<span>').text(ui.labels.insertHint), me.workbench_button('end-insert', ui.labels.insertEnd, 'close')
+                $('<span>', { role: 'status' }).text(ui.labels.insertHint), me.workbench_button('end-insert', ui.labels.insertEnd, 'close')
             ).appendTo(ui.bar);
             ui.resizeHint = $('<div>', { 'class': prefix+'-mode-hint '+prefix+'-resize-hint', hidden: true }).append(
                 $('<span>', { role: 'status' }).text(ui.labels.resizeHint+' ').append($('<strong>')),
@@ -172,14 +184,11 @@
             ui.search.on('input', function() { ui.treeDirty = true; me.schedule_workbench(); });
             ui.tree.on('click', '[role=treeitem]', function(e) {
                 e.stopPropagation();
-                if (me.workbench_busy()) return;
+                if (!me.workbench_structure_available()) return;
                 if ($(e.target).closest('[data-pb-expand]').length) {
                     me.toggle_workbench_branch(this);
                 } else {
-                    me.toggle_workbench_branch(this, true);
-                    me.select_workbench_element($(this).data('element'), true);
-                    this.focus({ preventScroll: true });
-                    if (window.innerWidth < 768) me.toggle_workbench_structure(false);
+                    me.activate_workbench_tree_item(this);
                 }
             }).on('keydown', function(e) { me.workbench_tree_key(e); });
             ui.bar.on('keydown', function(e) {
@@ -201,11 +210,7 @@
                 }
             }).on('pointermove.workbench', function(e) {
                 ui.quiet = false;
-                if (me.$wrapper.hasClass(me.state.is_moving_child)) {
-                    var target = me.workbench_target(e.target);
-                    // The existing controller visibility already encodes valid drop destinations.
-                    ui.hovered = target && $(target).children(me.tagc.append+', '+me.tagc.prepend).is(':visible') ? target : null;
-                } else ui.hovered = e.originalEvent.pointerType === 'touch' ? null : me.workbench_target(e.target);
+                ui.hovered = ui.inserting || e.originalEvent.pointerType === 'touch' ? null : me.workbench_target(e.target);
                 ui.resizeActive = me.workbench_resize_column(ui.hovered) || me.workbench_resize_column($(document.activeElement).closest(me.tagc.size_changer));
                 me.schedule_workbench();
             }).on('pointerleave.workbench', function() {
@@ -221,6 +226,11 @@
                 ui.resizeActive = me.workbench_resize_column(control.length ? control : ui.hovered);
                 me.schedule_workbench();
             });
+            ui.clipboardHandler = function(e) {
+                if ((e.key !== 'webjet.pagebuilder.clipboard' && e.key !== null) || e.storageArea !== window.localStorage) return;
+                me.refresh_workbench_clipboard();
+            };
+            window.addEventListener('storage', ui.clipboardHandler);
             ui.layoutHandler = function() { me.schedule_workbench(); };
             window.addEventListener('scroll', ui.layoutHandler, true);
             window.addEventListener('resize', ui.layoutHandler);
@@ -246,15 +256,15 @@
                     me.close_modal();
                 } else if (me.$wrapper.hasClass(me.state.is_library_active)) {
                     me.hide_library();
+                } else if (!ui.drawer.prop('hidden')) {
+                    me.toggle_workbench_structure(false);
+                    ui.bar.find('[data-pb-action=structure]')[0].focus({ preventScroll: true });
                 } else if (me.workbench_busy()) {
                     me.disable_after_esc_pressed(true);
                     me.restore_workbench_focus();
                 } else if (ui.inserting) {
                     me.close_workbench_insertion();
-                    if (!ui.insertClosing) ui.bar.find('[data-pb-action=insert]').trigger('focus');
-                } else if (!ui.drawer.prop('hidden')) {
-                    me.toggle_workbench_structure(false);
-                    ui.bar.find('[data-pb-action=structure]').trigger('focus');
+                    if (!ui.insertClosing) me.restore_workbench_insertion_focus();
                 } else if (ui.selected) {
                     me.select_workbench_element(null);
                 } else handled = false;
@@ -285,6 +295,7 @@
             catch (e) { /* Storage may be unavailable in embedded or restricted browsers. */ }
             me.set_workbench_guides(guideMode, false);
             me.refresh_workbench_selection();
+            me.refresh_workbench_clipboard();
             me.schedule_workbench();
         },
 
@@ -301,6 +312,8 @@
                 'resize': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-horizontal" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M7 8l-4 4l4 4" /> <path d="M17 8l4 4l-4 4" /> <path d="M3 12l18 0" /> </svg>',
                 // ti-copy
                 'duplicate': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-copy" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" /> <path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /> </svg>',
+                'copy': '<i class="ti ti-clipboard" aria-hidden="true"></i>',
+                'paste': '<i class="ti ti-clipboard-plus" aria-hidden="true"></i>',
                 // ti-arrows-move
                 'move': '<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-arrows-move" > <path stroke="none" d="M0 0h24v24H0z" fill="none" /> <path d="M18 9l3 3l-3 3" /> <path d="M15 12h6" /> <path d="M6 9l-3 3l3 3" /> <path d="M3 12h6" /> <path d="M9 18l3 3l3 -3" /> <path d="M12 15v6" /> <path d="M15 6l-3 -3l-3 3" /> <path d="M12 3v6" /> </svg>',
                 // ti-chevron-up
@@ -331,6 +344,12 @@
 
         workbench_busy: function() {
             return [this.state.is_moving_child, this.state.is_modal_open, this.state.is_library_active, this.state.is_resize_columns]
+                .some(state => this.$wrapper.hasClass(state) || this.$wrapper.find('.'+state).length > 0);
+        },
+
+        /** Allows destination navigation while retaining modal and column-sizing restrictions. */
+        workbench_structure_available: function() {
+            return ![this.state.is_modal_open, this.state.is_library_active, this.state.is_resize_columns]
                 .some(state => this.$wrapper.hasClass(state) || this.$wrapper.find('.'+state).length > 0);
         },
 
@@ -387,13 +406,17 @@
             if (element) {
                 ui.resizeObserver.observe(element);
                 $(element).parentsUntil(this.$wrapper).each(function() { ui.expanded.add(this); });
-                if (scroll && $(element).is(':visible')) {
-                    var rect = element.getBoundingClientRect(), top = ui.bar[0].getBoundingClientRect().bottom;
-                    window.scrollBy({ top: rect.top - top - 20, behavior: 'instant' });
-                }
+                if (scroll) this.scroll_workbench_element(element);
             }
             this.refresh_workbench_selection();
             this.schedule_workbench();
+        },
+
+        /** Reveals a block below the fixed toolbar without changing the active editing operation. */
+        scroll_workbench_element: function(element) {
+            if (!$(element).is(':visible')) return;
+            var rect = element.getBoundingClientRect(), top = this.ui.bar[0].getBoundingClientRect().bottom;
+            window.scrollBy({ top: rect.top - top - 20, behavior: 'instant' });
         },
 
         /** Mirrors the existing local controller capabilities into the shared toolbar. */
@@ -407,6 +430,8 @@
             ui.actions.append(me.workbench_button('insert', ui.labels.insert, 'plus').attr('aria-pressed', String(ui.inserting)));
             if (!ui.selected) {
                 $('<span>').text(ui.labels.select).appendTo(ui.path);
+                ui.actions.append(me.workbench_button('more', ui.labels.more, 'more').attr('aria-expanded', 'false'));
+                ui.menu.append(me.workbench_paste_button());
                 return;
             }
             var ancestors = node.parentsUntil(me.$wrapper, me.tagc._grid_element).get().reverse().concat(ui.selected);
@@ -422,10 +447,20 @@
             var actions = [
                 ['style', 'style'], ['resize', 'resize'], ['duplicate-adjacent', 'duplicate'],
                 ['before', 'plus'], ['after', 'plus'], ['previous', 'previous'], ['next', 'next'],
-                ['move', 'move'], ['duplicate', 'duplicate'], ['add_to_favorites', 'favorite'], ['remove', 'remove']
+                ['move', 'move'], ['duplicate', 'duplicate'], ['copy', 'copy'], ['paste', 'paste'], ['add_to_favorites', 'favorite'], ['remove', 'remove']
             ];
             actions.forEach(function(entry) {
                 var action = entry[0], source = action;
+                if (action === 'paste') {
+                    ui.menu.append(me.workbench_paste_button());
+                    return;
+                }
+                if (action === 'copy') {
+                    if (['section', 'container', 'column'].includes(me.workbench_type(node))) {
+                        ui.menu.append(me.workbench_button(action, ui.labels.copy, entry[1]));
+                    }
+                    return;
+                }
                 if (['duplicate-adjacent', 'before', 'after'].includes(action)) source = 'duplicate';
                 if (['previous', 'next'].includes(action)) source = 'move';
                 var original = toolbar.find(me.tagc['toolbar_button_'+source]);
@@ -456,6 +491,127 @@
             });
             var index = siblings.index(node) + (direction === 'previous' ? -1 : 1);
             return index >= 0 && index < siblings.length ? siblings[index] : null;
+        },
+
+        /** Reads a versioned block snapshot shared by tabs of the same origin without using the system clipboard. */
+        read_workbench_clipboard: function() {
+            try {
+                var data = JSON.parse(window.localStorage.getItem('webjet.pagebuilder.clipboard'));
+                if (data && (!Number.isFinite(data.expiresAt) || data.expiresAt <= Date.now())) {
+                    window.localStorage.removeItem('webjet.pagebuilder.clipboard');
+                    return null;
+                }
+                if (data && data.version === 1 && data.prefix === this.options.prefix &&
+                    ['section', 'container', 'column'].includes(data.type) && typeof data.html === 'string' &&
+                    Array.isArray(data.styles) && data.styles.every(style => typeof style.id === 'string' && typeof style.css === 'string')) return data;
+            } catch (e) { /* Unavailable storage or an invalid snapshot leaves paste disabled. */ }
+            return null;
+        },
+
+        /** Updates open menus and schedules expiry without replacing a paste already in progress. */
+        refresh_workbench_clipboard: function() {
+            var me = this, ui = me.ui;
+            if (!ui) return;
+            window.clearTimeout(ui.clipboardTimer);
+            var data = me.read_workbench_clipboard();
+            ui.bar.find('[data-pb-action=paste]').prop('disabled', !data || me.workbench_busy() || ui.inserting)
+                .attr('data-title', data ? ui.labels.paste+' — '+ui.labels[data.type] : ui.labels.clipboardEmpty);
+            if (data) ui.clipboardTimer = window.setTimeout(function() { me.refresh_workbench_clipboard(); }, Math.max(0, data.expiresAt - Date.now()));
+        },
+
+        workbench_paste_button: function() {
+            var data = this.read_workbench_clipboard(), labels = this.ui.labels;
+            return this.workbench_button('paste', labels.paste, 'paste').prop('disabled', !data)
+                .attr('data-title', data ? labels.paste+' — '+labels[data.type] : labels.clipboardEmpty);
+        },
+
+        /** Copies current CKEditor data and all referenced PB styles, including the root's style. */
+        copy_workbench_block: function() {
+            var me = this, node = $(me.ui.selected), type = me.workbench_type(node);
+            if (!['section', 'container', 'column'].includes(type) || !me.$wrapper[0].contains(node[0])) return;
+            var clean = me.getSaveNode(node), styles = [], ids = new Set();
+            node.find('['+me.user_style.attr_name+']').addBack('['+me.user_style.attr_name+']').each(function() {
+                var id = $(this).attr(me.user_style.attr_name);
+                if (ids.has(id)) return;
+                ids.add(id);
+                var style = $('style[style-id]').filter(function() { return $(this).attr('style-id') === id; }).first();
+                if (style.length) styles.push({ id: id, css: style.text() });
+            });
+            try {
+                window.localStorage.setItem('webjet.pagebuilder.clipboard', JSON.stringify({
+                    version: 1, prefix: me.options.prefix, type: type, html: clean.html(), styles: styles,
+                    expiresAt: Date.now() + 30 * 60 * 1000
+                }));
+            } catch (e) {
+                WJ.notifyError(me.ui.labels.clipboardError);
+                return;
+            }
+            me.refresh_workbench_clipboard();
+            WJ.notifySuccess(me.ui.labels.copied, '', 5000);
+        },
+
+        /** Remaps colliding authored IDs and local references while keeping generated tabs stable. */
+        prepare_workbench_paste_ids: function(root) {
+            var elements = root.find('*').addBack(), ids = new Map(), suffix = this.user_style.counter();
+            elements.filter('[id]').each(function(index) {
+                var oldId = this.id;
+                if (!oldId) return;
+                if (document.getElementById(oldId)) {
+                    this.id = 'pb-paste-'+suffix+'-'+index;
+                    ids.set(oldId, this.id);
+                }
+                // The tab generator derives IDs from data-title again on every grid change.
+                if ($(this).is('.tab-pane')) $(this).attr('data-title', this.id);
+            });
+            elements.each(function() {
+                var element = this;
+                ['href', 'xlink:href', 'data-target', 'data-bs-target', 'data-parent', 'data-bs-parent'].forEach(function(name) {
+                    var value = element.getAttribute(name);
+                    if (value && value[0] === '#' && ids.has(value.substring(1))) element.setAttribute(name, '#'+ids.get(value.substring(1)));
+                });
+                ['for', 'aria-labelledby', 'aria-describedby', 'aria-controls', 'aria-owns', 'headers'].forEach(function(name) {
+                    var value = element.getAttribute(name);
+                    if (value) element.setAttribute(name, value.split(/\s+/).map(id => ids.get(id) || id).join(' '));
+                });
+            });
+        },
+
+        /** Inserts a fresh snapshot only at a compatible destination generated by the workbench. */
+        paste_workbench_block: function(point) {
+            var me = this, ui = me.ui, data = ui.pasting;
+            if (!data || point.type !== data.type || !ui.insertPoints.includes(point) || !point.parent.isConnected) return;
+            var template = document.createElement('template');
+            template.innerHTML = data.html;
+            var block = $(template.content).children();
+            if (block.length !== 1 || !block.is(me.grid[data.type])) {
+                WJ.notifyError(ui.labels.clipboardError);
+                return;
+            }
+            var elements = block.find('*').addBack(), styles = [];
+            data.styles.forEach(function(style) {
+                var id = me.user_style.unique_selector();
+                elements.filter('['+me.user_style.attr_name+']').each(function() {
+                    if ($(this).attr(me.user_style.attr_name) === style.id) $(this).attr(me.user_style.attr_name, id);
+                });
+                block.find('style[style-id]').filter(function() { return $(this).attr('style-id') === style.id; }).remove();
+                styles.push($('<style>').attr('style-id', id).text(style.css.split(style.id).join(id)));
+            });
+            me.prepare_workbench_paste_ids(block);
+            if (point.next) block.insertBefore(point.next);
+            else if (point.previous) block.insertAfter(point.previous);
+            else {
+                $(point.parent).children(me.tagc.empty_placeholder).remove();
+                block.prependTo(point.parent);
+            }
+            styles.forEach(style => style.appendTo(me.$wrapper));
+            me.set_workbench_insertion(false, block[0]);
+            me.mark_grid_elements();
+            me.newElement = block;
+            me.options.onNewElementAdded();
+            me.changedElement = block;
+            me.options.onGridChanged();
+            me.select_workbench_element(block[0], true);
+            me.focus_ckeditor_element(block);
         },
 
         /** Applies the outline preference without changing content, selection or toolbar actions. */
@@ -489,15 +645,30 @@
                 me.restore_workbench_focus();
                 return;
             }
-            if (action === 'insert' || action === 'end-insert') {
+            if (action === 'insert' || action === 'paste' || action === 'end-insert') {
                 if (me.workbench_busy()) return;
-                if (action === 'insert' && !ui.inserting) {
+                if (action !== 'end-insert' && !ui.inserting) {
+                    ui.pasting = action === 'paste' ? me.read_workbench_clipboard() : null;
+                    if (action === 'paste' && !ui.pasting) return;
+                    ui.insertReturnAction = action;
                     me.set_workbench_insertion(true);
+                    if (ui.pasting && !ui.insertPoints.length) {
+                        me.set_workbench_insertion(false);
+                        WJ.notifyError(ui.labels.pasteUnavailable);
+                        me.restore_workbench_insertion_focus();
+                        return;
+                    }
                     ui.insertHint.find('[data-pb-action=end-insert]')[0].focus({ preventScroll: true });
                 } else {
                     me.close_workbench_insertion();
-                    if (!ui.insertClosing) ui.bar.find('[data-pb-action=insert]').trigger('focus');
+                    if (!ui.insertClosing) me.restore_workbench_insertion_focus();
                 }
+                return;
+            }
+            if (action === 'structure' || action === 'close-structure') {
+                if (!me.workbench_structure_available()) return;
+                me.toggle_workbench_structure(action === 'structure' && ui.drawer.prop('hidden'));
+                if (action === 'close-structure') ui.bar.find('[data-pb-action=structure]')[0].focus({ preventScroll: true });
                 return;
             }
             if (ui.inserting) return;
@@ -506,16 +677,12 @@
                 $(invoker).attr('aria-expanded', String(ui.path.hasClass('is-expanded')));
                 return;
             }
-            if (action === 'structure' || action === 'close-structure') {
-                me.toggle_workbench_structure(action === 'structure' && ui.drawer.prop('hidden'));
-                if (action === 'close-structure') ui.bar.find('[data-pb-action=structure]').trigger('focus');
-                return;
-            }
             if (action === 'guides') {
                 me.set_workbench_guides({selected: 'hidden', hidden: 'all', all: 'selected'}[ui.guideMode], true);
                 return;
             }
             if (action === 'more') {
+                me.refresh_workbench_clipboard();
                 var open = ui.menu.prop('hidden');
                 ui.menu.prop('hidden', !open);
                 $(invoker).attr('aria-expanded', String(open));
@@ -527,7 +694,10 @@
             me.toggle_workbench_structure(false);
             ui.menu.prop('hidden', true);
             ui.actions.find('[data-pb-action=more]').attr('aria-expanded', 'false');
-            if (['before', 'after'].includes(action)) {
+            if (action === 'copy') {
+                me.copy_workbench_block();
+                me.restore_workbench_focus();
+            } else if (['before', 'after'].includes(action)) {
                 node.children(action === 'before' ? me.tagc.prepend : me.tagc.append).trigger('click');
             } else if (['duplicate-adjacent', 'previous', 'next'].includes(action)) {
                 var target = action === 'duplicate-adjacent' ? node[0] : me.workbench_sibling(action);
@@ -560,6 +730,7 @@
         /** Opens a temporary insertion mode without changing authored column widths or saved outline preferences. */
         set_workbench_insertion: function(open, anchor) {
             var me = this, ui = me.ui;
+            var moving = me.$wrapper.hasClass(me.state.is_moving_child);
             if (!anchor) {
                 var viewportTop = ui.bar[0].getBoundingClientRect().bottom;
                 anchor = me.$wrapper.find(me.tagc.column+':visible').get().find(element => element.getBoundingClientRect().bottom > viewportTop) || ui.selected;
@@ -568,7 +739,9 @@
             var scroll = { x: window.scrollX, y: window.scrollY };
             me.clear_workbench_insertion();
             ui.inserting = open;
-            ui.bar.toggleClass('is-inserting', open);
+            if (!open) ui.pasting = null;
+            ui.insertHint.children('[role=status]').text(ui.pasting ? ui.labels.pasteHints[ui.pasting.type] : ui.labels.insertHint);
+            ui.bar.toggleClass('is-inserting', open && !moving);
             if (open) {
                 ui.path.removeClass('is-expanded').find('[data-pb-action=ancestors]').attr('aria-expanded', 'false');
                 ui.menu.prop('hidden', true);
@@ -576,7 +749,7 @@
             }
             document.documentElement.classList.toggle('pb-insertion-open', open);
             me.$wrapper.toggleClass(me.options.prefix+'-is-inserting', open);
-            ui.insertHint.prop('hidden', !open);
+            ui.insertHint.prop('hidden', !open || moving);
             ui.insertLayer.prop('hidden', !open);
             me.toggle_workbench_structure(false);
             me.refresh_workbench_selection();
@@ -627,9 +800,14 @@
             Promise.all(animations.map(animation => animation.finished)).then(function() {
                 if (me.ui === ui && ui.insertAnimations === animations) {
                     me.set_workbench_insertion(false);
-                    ui.bar.find('[data-pb-action=insert]')[0].focus({ preventScroll: true });
+                    me.restore_workbench_insertion_focus();
                 }
             }).catch(function() { /* A content click or editor teardown cancels the pending collapse. */ });
+        },
+
+        restore_workbench_insertion_focus: function() {
+            var ui = this.ui, button = ui.bar.find('[data-pb-action="'+(ui.insertReturnAction || 'insert')+'"]:visible');
+            (button.length ? button : ui.bar.find('[data-pb-action=more]')).first().trigger('focus');
         },
 
         /** Expands visible gaps in place; only gaps above the viewport need scroll compensation. */
@@ -657,33 +835,44 @@
             });
         },
 
-        /** Makes one destination per sibling boundary, backed by the existing library insertion controller. */
+        /** Shares sibling-boundary destinations between library insertion, paste, move and duplication. */
         build_workbench_insertion: function() {
             var me = this, ui = me.ui, prefix = me.options.prefix, groups = [];
+            var moving = me.$wrapper.find(me.tagc._grid_element+me.statec.is_moving).first();
+            var movingType = moving.length ? me.workbench_type(moving[0]) : null;
+            var duplicable = moving.hasClass(me.tag.duplicable);
             function group(parent, type) {
+                if (ui.pasting && ui.pasting.type !== type) return;
+                if (moving.length && (type !== movingType || moving[0] === parent || moving[0].contains(parent))) return;
                 if (groups.some(item => item.parent === parent && item.type === type)) return;
                 groups.push({ parent: parent, type: type });
             }
-            group(me.$wrapper[0], 'section');
-            me.$wrapper.find(me.tagc.section+', '+me.tagc.container+', '+me.tagc.column+', '+me.tagc.row).filter(':visible').each(function() {
-                if ($(this).closest('[data-ckeditor-instance]').length || $(this).hasClass(me.tag.duplicable)) return;
-                var type = me.workbench_type(this);
-                if (type === 'container' || type === 'column') group(this.parentElement, type);
-                if (type === 'section' && !$(this).find(me.tagc.container).length) group(this, 'container');
-                if (type === 'row' && !$(this).children(me.tagc.column).length) group(this, 'column');
-            });
+            if (duplicable) group(moving.parent()[0], movingType);
+            else {
+                group(me.$wrapper[0], 'section');
+                me.$wrapper.find(me.tagc.section+', '+me.tagc.container+', '+me.tagc.column+', '+me.tagc.row).filter(':visible').each(function() {
+                    if ($(this).closest('[data-ckeditor-instance]').length || $(this).hasClass(me.tag.duplicable)) return;
+                    var type = me.workbench_type(this);
+                    if (type === 'container' || type === 'column') group(this.parentElement, type);
+                    if (type === 'section' && !$(this).find(me.tagc.container).length) group(this, 'container');
+                    if (type === 'row' && !$(this).children(me.tagc.column).length) group(this, 'column');
+                });
+            }
             groups.forEach(function(item) {
-                var nodes = $(item.parent).children(me.tagc[item.type]).filter(':visible').get();
+                var nodes = $(item.parent).children(duplicable ? me.tagc.duplicable : me.tagc[item.type]).filter(':visible').filter(function() {
+                    return !duplicable || (this.tagName === moving[0].tagName && me.workbench_type(this) === movingType);
+                }).get();
                 var points = [];
                 for (var i = 0; i <= nodes.length; i++) {
                     var next = nodes[i], previous = nodes[i-1];
+                    if (moving.length && !me.duplicate && (next === moving[0] || previous === moving[0])) continue;
                     var source = next ? $(next).children(me.tagc.prepend) : previous ? $(previous).children(me.tagc.append) :
                         $(item.parent).children(me.tagc.empty_placeholder).find(me.tagc.empty_placeholder_button);
                     if (!nodes.length && item.type === 'section') source = me.$wrapper.find(me.tagc.empty_placeholder_wrapper+' '+me.tagc.empty_placeholder_button);
                     if (!source.length) continue;
                     var position = next ? ui.labels.insertBefore+' “'+me.workbench_name(next)+'”' :
                         previous ? ui.labels.insertAfter+' “'+me.workbench_name(previous)+'”' : ui.labels.insertStart;
-                    var label = ui.labels.insertTypes[item.type]+' '+position.charAt(0).toLocaleLowerCase()+position.slice(1);
+                    var label = (ui.labels.insertTypes[item.type] || ui.labels[item.type])+' '+position.charAt(0).toLocaleLowerCase()+position.slice(1);
                     var point = { type: item.type, parent: item.parent, next: next, previous: previous, source: source.first(), label: label, position: position };
                     point.element = $('<div>', { 'class': prefix+'-insert-point', 'data-type': item.type }).appendTo(ui.insertLayer);
                     point.button = me.workbench_button('insert-here', label, 'plus').appendTo(point.element);
@@ -698,7 +887,9 @@
                     }; }(point));
                     points.push(point);
                     ui.insertPoints.push(point);
-                    if (item.type !== 'column' || !nodes.length) me.create_workbench_insert_space(point);
+                    // Duplicable items can live inside CKEditor; never add layout helpers to their editable content.
+                    if (duplicable) point.element.addClass('is-horizontal');
+                    else if (item.type !== 'column' || !nodes.length) me.create_workbench_insert_space(point);
                 }
                 if (item.type === 'column' && nodes.length) me.prepare_workbench_column_points(points, nodes);
             });
@@ -740,9 +931,10 @@
 
         position_workbench_insertion: function(top) {
             var me = this, ui = me.ui;
-            ui.insertLayer.css('top', top).prop('hidden', !ui.inserting || me.workbench_busy() || document.body.classList.contains('is-view-mode'));
+            var available = me.workbench_structure_available();
+            ui.insertLayer.css('top', top).prop('hidden', !ui.inserting || !available || document.body.classList.contains('is-view-mode'));
             if (!ui.inserting) return;
-            if (ui.insertWidth !== window.innerWidth && !me.workbench_busy() && !ui.insertClosing) {
+            if (ui.insertWidth !== window.innerWidth && available && !ui.insertClosing) {
                 me.clear_workbench_insertion();
                 me.build_workbench_insertion();
             }
@@ -753,6 +945,11 @@
                 if (point.space) {
                     var rect = point.space[0].getBoundingClientRect();
                     point.element.css({ left: Math.max(8, rect.left), top: rect.top-top, width: Math.min(window.innerWidth-8, rect.right)-Math.max(8, rect.left), height: rect.height });
+                } else if (point.element.hasClass('is-horizontal')) {
+                    var rect = anchor.getBoundingClientRect();
+                    var y = point.next ? rect.top : rect.bottom;
+                    if (point.next && point.previous) y = (point.previous.getBoundingClientRect().bottom+rect.top)/2;
+                    point.element.css({ left: Math.max(8, rect.left), top: y-top, width: Math.min(window.innerWidth-8, rect.right)-Math.max(8, rect.left), height: 0 });
                 } else {
                     var rect = anchor.getBoundingClientRect();
                     var x = point.next ? rect.left : rect.right;
@@ -772,7 +969,15 @@
 
         open_workbench_insertion: function(point) {
             var ui = this.ui;
-            if (!ui.inserting || ui.insertClosing || this.workbench_busy() || !point.source[0].isConnected) return;
+            if (!ui.inserting || ui.insertClosing || !this.workbench_structure_available() || !point.source[0].isConnected) return;
+            if (this.$wrapper.hasClass(this.state.is_moving_child)) {
+                this.move_grid_element_here(point.source);
+                return;
+            }
+            if (ui.pasting) {
+                this.paste_workbench_block(point);
+                return;
+            }
             ui.insertPending = point;
             ui.insertScroll = { x: window.scrollX, y: window.scrollY };
             this.show_library_tab(point.source);
@@ -789,6 +994,21 @@
                 this.schedule_workbench();
                 ui.search.trigger('focus');
             }
+        },
+
+        /** Navigates to a destination in operation modes and selects normally outside them. */
+        activate_workbench_tree_item: function(item) {
+            var ui = this.ui, element = $(item).data('element');
+            var navigating = ui.inserting || this.$wrapper.hasClass(this.state.is_moving_child);
+            this.toggle_workbench_branch(item, true);
+            if (navigating) {
+                ui.treeTarget = element;
+                this.scroll_workbench_element(element);
+            } else this.select_workbench_element(element, true);
+            if (navigating || window.innerWidth < 768) {
+                this.toggle_workbench_structure(false);
+                ui.bar.find('[data-pb-action=structure]')[0].focus({ preventScroll: true });
+            } else item.focus({ preventScroll: true });
         },
 
         /** Builds the structure on opening or searching, preserving expansion and manual scrolling. */
@@ -819,7 +1039,7 @@
                     parentItem.find('[data-pb-expand]').first().prop('hidden', false);
                     list = $('<ul>', { role: 'group', hidden: !expanded }).appendTo(parentItem);
                 }
-                var item = $('<li>', { role: 'treeitem', tabindex: -1, 'aria-selected': String(element === ui.selected), 'data-type': type }).data('element', element);
+                var item = $('<li>', { role: 'treeitem', tabindex: -1, 'aria-selected': String(element === (ui.treeTarget || ui.selected)), 'data-type': type }).data('element', element);
                 var row = $('<div>').appendTo(item);
                 $('<button>', { type: 'button', tabindex: -1, 'data-pb-expand': '', hidden: true, 'aria-label': ui.labels[type] }).text('›').appendTo(row);
                 $('<span>', { 'class': me.options.prefix+'-structure-dot', 'aria-hidden': 'true' }).appendTo(row);
@@ -829,7 +1049,7 @@
                 ui.treeNodes.set(element, item);
             });
             ui.noResults.prop('hidden', visible.size > 0);
-            var active = ui.treeNodes.get(focused) || ui.treeNodes.get(ui.selected) || ui.tree.children().first();
+            var active = ui.treeNodes.get(focused) || ui.treeNodes.get(ui.treeTarget || ui.selected) || ui.tree.children().first();
             if (active && !active.is(':visible')) active = ui.tree.find('[role=treeitem]:visible').first();
             if (active && active.length) {
                 active.attr('tabindex', 0);
@@ -844,7 +1064,7 @@
         refresh_workbench_tree_selection: function() {
             var me = this, ui = me.ui, tree = ui.tree[0];
             ui.tree.find('[aria-selected=true]').attr('aria-selected', 'false');
-            var selected = ui.treeNodes.get(ui.selected);
+            var selected = ui.treeNodes.get(ui.treeTarget || ui.selected);
             if (selected) {
                 selected.attr('aria-selected', 'true');
                 selected.parentsUntil(ui.tree, '[role=treeitem]').each(function() { me.toggle_workbench_branch(this, true); });
@@ -870,6 +1090,7 @@
         },
 
         workbench_tree_key: function(e) {
+            if (!this.workbench_structure_available()) return;
             var item = $(e.target).closest('[role=treeitem]'), nodes = this.ui.tree.find('[role=treeitem]:visible');
             if (!item.length) return;
             var index = nodes.index(item), next;
@@ -884,8 +1105,7 @@
                 if (item.attr('aria-expanded') === 'true') this.toggle_workbench_branch(item, false);
                 else next = item.parent().closest('[role=treeitem]')[0];
             } else if (e.key === 'Enter' || e.key === ' ') {
-                this.toggle_workbench_branch(item, true);
-                this.select_workbench_element(item.data('element'), true);
+                this.activate_workbench_tree_item(item[0]);
             } else return;
             e.preventDefault();
             e.stopPropagation();
@@ -960,6 +1180,7 @@
                     ui.resizeHint.find('[data-pb-action=end-resize]')[0].focus({ preventScroll: true });
                 }
                 var moving = me.$wrapper.hasClass(me.state.is_moving_child);
+                if (!moving && !ui.inserting) ui.treeTarget = null;
                 var moveStarted = moving && !ui.bar.hasClass('is-moving');
                 ui.bar.toggleClass('is-moving', moving);
                 ui.moveHint.prop('hidden', !moving);
@@ -1003,12 +1224,14 @@
                 var busy = me.workbench_busy();
                 me.position_workbench_insertion(top);
                 ui.path.find('button').prop('disabled', busy || ui.inserting);
-                if (busy) me.toggle_workbench_structure(false);
+                var structureAvailable = me.workbench_structure_available();
+                if (!structureAvailable) me.toggle_workbench_structure(false);
                 ui.actions.find('button').each(function() {
                     var action = this.getAttribute('data-pb-action');
-                    this.disabled = (busy && !(resizing && action === 'resize')) || (ui.inserting && action !== 'insert') || (['previous', 'next'].includes(action) && !me.workbench_sibling(action));
+                    this.disabled = (busy && !(resizing && action === 'resize')) || (ui.inserting && action !== 'insert') || (['previous', 'next'].includes(action) && !me.workbench_sibling(action)) || (action === 'paste' && !me.read_workbench_clipboard());
                 });
-                ui.bar.find('[data-pb-action=structure], [data-pb-action=guides]').prop('disabled', busy || ui.inserting);
+                ui.bar.find('[data-pb-action=structure]').prop('disabled', !structureAvailable);
+                ui.bar.find('[data-pb-action=guides]').prop('disabled', busy || ui.inserting);
                 ui.bar.find('[data-pb-action=end-insert]').prop('disabled', busy);
                 ui.bar.find('[data-pb-action=resize]').attr('aria-pressed', String(resizing)).find('span').text(ui.selected ? me.get_actual_column_size($(ui.selected))+' / '+me.options.max_col_size : '');
                 var width = window.innerWidth, size = width < 768 ? 'phone' : width < 1200 ? 'tablet' : 'desktop';
@@ -1023,12 +1246,14 @@
             var ui = this.ui;
             if (!ui) return;
             if (ui.frame !== null) window.cancelAnimationFrame(ui.frame);
+            window.clearTimeout(ui.clipboardTimer);
             ui.resizeObserver.disconnect();
             ui.observer.disconnect();
             this.clear_workbench_insertion();
             document.documentElement.classList.remove('pb-insertion-open');
             window.removeEventListener('scroll', ui.layoutHandler, true);
             window.removeEventListener('resize', ui.layoutHandler);
+            window.removeEventListener('storage', ui.clipboardHandler);
             document.removeEventListener('keydown', ui.escapeHandler, true);
             document.removeEventListener('keyup', ui.escapeUpHandler, true);
             document.removeEventListener('pointerdown', ui.outsideHandler);
@@ -1060,8 +1285,8 @@
         },
 
         /** Serializes editor content before removing temporary decorations from a detached clone. */
-        getSaveNode: function() {
-            var me = this, node = me.getClone();
+        getSaveNode: function(element) {
+            var me = this, node = element ? $('<div>').append($(element).clone()) : me.getClone();
             node.find('[data-ckeditor-instance]').each(function() {
                 var editor = CKEDITOR.instances[$(this).attr('data-ckeditor-instance')];
                 var html = $(this).hasClass(me.tag.temp_wrapper) ? me.get_application_editor_data(editor) : editor.getData();
@@ -1353,13 +1578,13 @@
             me.statec = {};
 
             me.grid = me.options.grid || {
-                section:                        'section:not(.pb-not-section), div.pb-section',
+                section:                        <%=JsonTools.objectToJSON(Constants.getString("pageBuilderGridSectionSelector"))%>,
                 section_default_class:          '',
-                container:                      'div[class^="container"]:not(.pb-not-container), div[class*="pb-custom-container"]',
+                container:                      <%=JsonTools.objectToJSON(Constants.getString("pageBuilderGridContainerSelector"))%>,
                 container_default_class:        'container',
-                row:                            'div.row',
+                row:                            <%=JsonTools.objectToJSON(Constants.getString("pageBuilderGridRowSelector"))%>,
                 row_default_class:              'row',
-                column:                         'div[class*="col-"]:not(.pb-not-column), div[class*="pb-col"]',
+                column:                         <%=JsonTools.objectToJSON(Constants.getString("pageBuilderGridColumnSelector"))%>,
                 column_default_class:           'col col-md-12',
                 column_content:                 'div.column-content',
                 duplicable:                     '.'+prefix+'duplicable'
@@ -2706,7 +2931,7 @@
             else if($(grid_element).hasClass(this.tag.section)) {
                 $(this.$wrapper).addClass(this.state.is_moving_type(this.tag.section));
             }
-
+            if (this.ui) this.set_workbench_insertion(true, $(grid_element)[0]);
         },
 
         move_grid_element_here: function (el) {
@@ -2730,6 +2955,7 @@
                 return;
             }
 
+            if (this.ui && this.ui.inserting) this.set_workbench_insertion(false, moving[0]);
             var clone = moving.clone().addClass(this.state.is_special_helper),
                 moving_parent = is_duplicable ? moving.parent() : this.get_parent_grid_element(moving);
 
@@ -2812,11 +3038,13 @@
         },
 
         cancel_move_grid_element: function () {
+            if (this.ui && this.ui.inserting && this.$wrapper.hasClass(this.state.is_moving_child)) this.set_workbench_insertion(false);
             this.removeClassStartingWith($(this.$wrapper),this.state.is_moving);
             $(this.$wrapper).removeClass(this.state.is_duplicating);
             if (this.ui) {
                 this.ui.bar.removeClass('is-moving');
                 this.ui.moveHint.prop('hidden', true);
+                this.toggle_workbench_structure(false);
                 this.schedule_workbench();
             }
 
@@ -3010,6 +3238,9 @@
             } else {
                 oEditor.wjInsertHtml(html);
             }
+
+            // Content insertion keeps the existing editor, so initialize new duplicable items in its column.
+            this.mark_duplicable_elements($(oEditor.element.$).closest(this.tagc.column));
 
             if (html.indexOf("pb-split-column-placeholder")!=-1) {
                 var splitElement = $(oEditor.element.$).find(".pb-split-column-placeholder").first();

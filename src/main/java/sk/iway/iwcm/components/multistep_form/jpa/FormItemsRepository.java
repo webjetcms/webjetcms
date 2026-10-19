@@ -110,6 +110,10 @@ public interface FormItemsRepository extends DomainIdRepository<FormItemEntity, 
 
     Integer countByFormNameAndStepIdAndSortPriorityAndIdNot(String formName, Long stepId, Integer sortPriority, Integer id);
 
+    /** Returns the last item position in a step, including items hidden by administration filters. */
+    @Query("SELECT COALESCE(MAX(fie.sortPriority), 0) FROM FormItemEntity fie WHERE fie.formName = :formName AND fie.stepId = :stepId AND fie.domainId = :domainId")
+    Integer getMaxSortPriority(@Param("formName") String formName, @Param("stepId") Long stepId, @Param("domainId") Integer domainId);
+
     List<FormItemEntity> findAllByFormNameAndStepIdInAndDomainId(String formName, List<Long> stepIds, Integer domainId);
 
     /**

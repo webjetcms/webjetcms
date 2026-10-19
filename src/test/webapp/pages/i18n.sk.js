@@ -89,6 +89,7 @@ module.exports = {
             "Verify blocked device": "Overenie zablokovaného zariadenia",
             "someone is trying to sign in to your account from a browser you blocked:": "niekto sa pokúša prihlásiť do vášho účtu z prehliadača, ktorý ste zablokovali:",
             "The code could not be verified. Check it or request a new one. It expires in 10 minutes and allows up to 5 attempts.": "Kód sa nepodarilo overiť. Skontrolujte ho alebo si vyžiadajte nový. Platí 10 minút a máte najviac 5 pokusov.",
+            "Step 2": "Krok 2",
         }
     }
 }

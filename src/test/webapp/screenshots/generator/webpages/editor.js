@@ -55,9 +55,6 @@ Scenario('working-in-editor', ({ I, Document, DTE, i18n }) => {
     let settingDialogA = ".cke.cke_reset_all.cke_1.cke_panel.cke_panel.cke_menu_panel.cke_ltr";
 
     Document.screenshotElement('.DTE.DTE_Action_Edit.modal-content','/redactor/webpages/working-in-editor/editor_preview.png')
-    I.clickCss('#cke_11');
-    Document.screenshotElement('#cke_118','/redactor/webpages/working-in-editor/roletka.png');
-    I.clickCss('#cke_11');
 
     const selectorsAndPaths = [
         ['#cke_13', '/redactor/webpages/working-in-editor/paste.png'],
@@ -403,7 +400,7 @@ Scenario('webjet-toolbar', ({ I, Document }) => {
     Document.screenshot('/redactor/webpages/webjet-toolbar.png');
 });
 
-function makeDialogScreenshot(imagePath, I, Document, DTE, i18n) {
+function makeDialogScreenshot(imagePath, I, Document, DTE, i18n, custom = false) {
     var elementText = "Etiam orci";
 
     Document.resetPageBuilderMode();
@@ -418,6 +415,8 @@ function makeDialogScreenshot(imagePath, I, Document, DTE, i18n) {
     I.waitForElement(locate("a.cke_dialog_tab").withText(i18n.get("Thumbnail")), 10);
     I.click(locate("a.cke_dialog_tab").withText(i18n.get("Thumbnail")));
 
+    if (custom) I.executeScript(() => CKEDITOR.dialog.getCurrent().getContentElement('thumb', 'thumbAllowedSize')?.setValue('custom'));
+
     Document.screenshotElement( locate('.cke_dialog.cke_browser_webkit.cke_ltr').last(), imagePath);
 
     I.switchTo();
@@ -425,7 +424,7 @@ function makeDialogScreenshot(imagePath, I, Document, DTE, i18n) {
 
 Scenario('thumb-servlet', ({ I, Document, DTE, i18n }) => {
     Document.setConfigValue('thumbServletAllowedSizeMode', 'learn');
-    makeDialogScreenshot('/redactor/webpages/working-in-editor/image_dialog-thumb.png', I, Document, DTE, i18n);
+    makeDialogScreenshot('/redactor/webpages/working-in-editor/image_dialog-thumb.png', I, Document, DTE, i18n, true);
     Document.setConfigValue('thumbServletAllowedSizeMode', 'strict');
     makeDialogScreenshot('/redactor/webpages/working-in-editor/image_dialog-thumb-strict.png', I, Document, DTE, i18n);
     Document.setConfigValue('thumbServletAllowedSizeMode', 'learn');

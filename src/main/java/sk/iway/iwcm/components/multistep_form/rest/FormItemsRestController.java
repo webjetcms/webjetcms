@@ -240,7 +240,10 @@ public class FormItemsRestController extends DatatableRestControllerV2<FormItemE
             entity.setShowOtherCount(true);
 
             long stepId = Tools.getLongValue(getRequest().getParameter("stepId"), -1L);
-            if(stepId != -1L) entity.setStepId(stepId);
+            if(stepId != -1L) {
+                entity.setStepId(stepId);
+                entity.setSortPriority(formItemsRepository.getMaxSortPriority(entity.getFormName(), stepId, CloudToolsForCore.getDomainId()) + 10);
+            }
         } else {
             entity = formItemsRepository.getReferenceById(id);
         }

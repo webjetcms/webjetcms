@@ -8,6 +8,8 @@ argument-hint: 'Specify a Pull Request number (for example: #123 or 123), option
 
 Analyzes code changes from a specified Pull Request, the current branch, or attached files and generates a sales-oriented feature description in Slovak. The output is inserted at the top of the yearly sales documentation file (`docs/sk/sales/{YEAR}/README.md`).
 
+That output layout is the WebJET core default. In a customer project, use an explicitly requested or established sales-documentation destination; if none exists, ask for the destination instead of creating core directories. Resolve paths from the target checkout. Inspect the real PR base and current release conventions rather than assuming core branch names or a fixed year.
+
 ## When to Use
 
 - A new feature or significant improvement has been completed (PR merged or ready to merge)
@@ -42,7 +44,7 @@ if [[ "$CURRENT_BRANCH" == hotfix/* ]]; then BASE_BRANCH=origin/hotfix/2026.0-ma
 git diff --name-status $(git merge-base HEAD $BASE_BRANCH)
 ```
 
-Use this only when the user did not provide a PR number. The base branch is `origin/main`, except for `hotfix/*` branches where it is `origin/hotfix/2026.0-main`.
+Use this only when the user did not provide a PR number. The command illustrates core branch conventions; replace its base with the actual PR base or remote default branch in the target repository. Do not infer a customer project's base from the `hotfix/` prefix.
 
 **Option C — Attached/specified files**
 
@@ -71,18 +73,18 @@ Search for related images and documentation that can be referenced:
 
 ```bash
 # Check CHANGELOG for references to related images
-grep -i "<feature-keyword>" docs/sk/CHANGELOG-2026.md | head -20
+rg -i "<feature-keyword>" docs/sk/CHANGELOG-*.md
 
 # Check if there are images in related doc sections
 find docs/sk/ -name "*.png" -path "*<feature-keyword>*" 2>/dev/null
 find docs/sk/ -name "*.png" -path "*<related-folder>*" 2>/dev/null
 ```
 
-If screenshots exist in the documentation, note their relative path from `docs/sk/sales/2026/` for inclusion in the output.
+Search only documentation directories that exist in the target project. If screenshots exist, calculate their paths relative to the selected output document.
 
 ### 4. Determine the Target File
 
-Default target: `docs/sk/sales/{CURRENT_YEAR}/README.md`
+Core default target: `docs/sk/sales/{CURRENT_YEAR}/README.md`. For customer projects, use the destination established above.
 
 If the file does not exist, create it with the header:
 

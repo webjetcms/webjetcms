@@ -11,6 +11,7 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.DocBasic.FollowLinksMode;
 import sk.iway.iwcm.doc.GroupDetails;
+import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.ShowDoc;
 import sk.iway.iwcm.doc.ninja.Ninja;
 import sk.iway.iwcm.filebrowser.EditForm;
@@ -2403,6 +2404,44 @@ public class PathFilter implements Filter
 				}
 			}
 		}
+	}
+
+	/**
+	 * Previews selected page headers using the same URL, custom-header and document rules.
+	 * The supplied servlet response is not modified.
+	 */
+	public static java.util.Map<String, String> previewPageHeaders(String path, DocDetails doc, HttpServletRequest request, HttpServletResponse response) {
+		java.util.Map<String, String> headers = new java.util.TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+		HttpServletResponse collector = new jakarta.servlet.http.HttpServletResponseWrapper(response) {
+			@Override
+			public void setHeader(String name, String value) {
+				if ("X-Robots-Tag".equalsIgnoreCase(name)) headers.put("X-Robots-Tag", value);
+				else if ("Referrer-Policy".equalsIgnoreCase(name)) headers.put("Referrer-Policy", value);
+				else if ("Location".equalsIgnoreCase(name)) headers.put("Location", value);
+			}
+
+			@Override
+			public void setLocale(java.util.Locale locale) {
+				// Custom Content-Language rules must not change the REST response locale.
+			}
+		};
+		Object languageHeaderSet = request.getAttribute("contentLanguageHeaderSet");
+		try {
+			setHeader(collector, "Referrer-Policy", "refererPolicy");
+			setXRobotsTagValue(path, collector);
+			setResponseHeaders(path, request, collector);
+			String redirect = ShowDoc.getExternalLinkRedirectUrl(doc, request);
+			if (redirect != null && !doc.getExternalLink().startsWith("http://") && !doc.getExternalLink().startsWith("https://")) {
+				String domain = GroupsDB.getInstance().getDomain(doc.getGroupId());
+				if (Tools.isNotEmpty(domain)) redirect = org.springframework.web.util.UriComponentsBuilder.fromUriString(redirect).host(domain).build().toUriString();
+			}
+			if (redirect != null) collector.setHeader("Location", redirect);
+			else setXRobotsTagValue("NOT_SEARCHABLE_PAGE", collector, doc);
+		} finally {
+			if (languageHeaderSet == null) request.removeAttribute("contentLanguageHeaderSet");
+			else request.setAttribute("contentLanguageHeaderSet", languageHeaderSet);
+		}
+		return headers;
 	}
 
 	/**

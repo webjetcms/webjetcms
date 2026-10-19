@@ -1,65 +1,60 @@
-# AGENTS: users package (`sk.iway.iwcm.users`)
+# AGENTS: Users, authentication and permissions
 
-<!-- Navigation (edit in AGENTS-NAV.md) -->
-<div align="right">[Root](AGENTS.md) | [System](AGENTS-system.md) | [DataTable](AGENTS-datatable.md) | [Editor](AGENTS-editor.md) | [Doc](AGENTS-doc.md) | [Components](AGENTS-components.md) | [Common](AGENTS-common.md) | [Utils](AGENTS-utils.md)</div>
+[Index](AGENTS.md) · [Working guide](CONTRIBUTING.md)
 
-Handles user security metadata (password policy, permission groups) and DTO mapping for lightweight identity exposure.
+User functionality spans legacy identity helpers, administration JPA controllers and Spring authentication. These paths describe current core; customer projects may use an older CMS or a custom authentication provider.
 
-## What Belongs Here / Not Here
+## Source map
 
-- Put here: password hashing strategies, permission group entities/mappers, lightweight user DTO mapping.
-- Not here: session management (elsewhere), feature-level permission checks (implemented in those services), generic cryptographic primitives (utils) unless user-specific.
-- Promote shared security infra into system if it broadens beyond users.
+| Concern | Entry points |
+| --- | --- |
+| Session identity and permission flags | `src/main/java/sk/iway/iwcm/Identity.java`, `src/main/java/sk/iway/iwcm/users/UsersDB.java` |
+| Legacy user model and user groups | `src/main/java/sk/iway/iwcm/users/UserDetails.java`, `UserGroupsDB.java`, `UserGroupDetails.java` in that directory |
+| Administration user CRUD and self-edit | `src/main/java/sk/iway/iwcm/components/users/userdetail/` |
+| Administration permission groups | `src/main/java/sk/iway/iwcm/users/PermissionGroupBean.java`, `src/main/java/sk/iway/iwcm/components/users/permgroups/` |
+| Login orchestration and password policy | `src/main/java/sk/iway/iwcm/common/LogonTools.java`, `src/main/java/sk/iway/Password.java` |
+| Password hashes and reset flow | `src/main/java/sk/iway/iwcm/users/PasswordSecurity.java`, `UserChangePasswordService.java` in that directory |
+| Spring authentication and authorization | `src/main/java/sk/iway/iwcm/system/spring/SpringSecurityConf.java`, `WebjetAuthentificationProvider.java`, `services/WebjetSecurityService.java` in that directory |
+| Recognized administrator devices | `src/main/java/sk/iway/iwcm/users/devices/` |
 
-## Core Elements
+## Identity and scope
 
-- `PasswordSecurity` / `PasswordSecurityAlgorithm`: Encapsulate hashing & policy (iterations, salt strategy). Abstract algorithms for future upgrades.
-- `PermissionGroupBean`: Defines a group/role; editing reflected in UI permission toggles.
-- `PermissionGroupEditorFields`: DataTable/editor bridge for permission group entities.
-- `UserBasicDto` + `UserBasicDtoMapper`: Lightweight user projection for contexts where full user entity is unnecessary.
+- Obtain the current `Identity` through `UsersDB.getCurrentUser(request/session)` or the existing controller's `getUser()`. The result may be `null`; WebJET's `Identity` is distinct from Spring Security's authentication object.
+- `UsersDB.getDomainId()` returns the current cloud domain in cloud mode and `1` otherwise. `UsersDB.getDomainIdSqlWhere(...)` similarly omits domain separation outside cloud mode. Do not apply generic website-domain assumptions to user accounts.
+- `UserDetailsController` enforces administrator/public-user editing rights and validates stored target records, submitted state and cloud ownership. Keep that logic when extending account editing; a submitted role/domain value is not proof of permission.
+- `UserDetailsSelfController` at `/admin/rest/user-self` is a restricted administrator self-edit API. It does not grant general user-management rights or provide a public registration API.
 
-## Password & Security Patterns
+## Permissions
 
-- `users.devices`: `DeviceEntity` stores browser recognition and its latest notice in `user_login_devices`, using a generated `device_id` and a unique user/token pair. Scope account-facing lookups by `userId`; user IDs already identify users across domains. `DeviceService` returns entities and uses ordinary repository saves without service-level transactions, explicit locks or retries. Re-detection replaces the notice on the same device and invalidates both email proofs. Confirmation requires an account-owned, single-use 256-bit email token (24 hours) or six-digit email code (10 minutes, five attempts, 60-second resend interval); ID-only confirmation is forbidden. The read-only report link still uses the device ID. JSON exposes `createDate`, `lastSeen` and a computed `expiresAt`; `@JsonIgnore` excludes `userId`, `tokenHash`, verification hashes, deadlines and attempts. `lastSeen` is the latest successful recognized login; browser and OS remain the detection snapshot; IP and nullable `location` describe the latest successful login. Browser-supplied location is advisory only; `adminLoginLocationApiKey` selects Free, a publicly visible paid key or `DISABLED`. The login page stages a ten-minute session hint; the first admin page retries once without delaying authentication or resending email. Disable shared JPA caching. `AdminDeviceService` supplies the administration-specific authentication, cookie and email integration.
-- Device blocking reuses `reportedAt`; cleanup preserves blocked records and ordinary confirmation cannot unblock them. Successful blocking removes its dashboard notice immediately; active-notice queries exclude reported devices. `DeviceService` audits persisted detection, confirmation (email, second factor or unblock code), and blocking under `Adminlog.TYPE_USER_DEVICE`, without logging verification secrets or repeated no-op transitions. `AdminDeviceService.requireVerification` runs after credentials/native 2FA and before successful-login callbacks for interactive admin login paths. It stores `PendingLogin` outside both authentication contexts; `/admin/logon/device/` verifies the session/cookie-bound email code (15-minute challenge, 10-minute code, five attempts, 60-second resend). Successful native 2FA auto-confirms only unblocked devices. Cookie removal is intentionally treated as a new browser. API tokens and Basic auth bypass browser detection.
-- Completed administrator logins bind the owned `deviceId` to the HTTP session and `SessionDetails` for cluster propagation. Dashboard bootstrap adds fresh `deviceConfirmed` values with one account-scoped device query; do not infer device identity from IP address or browser labels. Legacy sessions without a device ID retain ordinary logout. The personal-session tab lists sessions and logout actions only. Its separate devices tab lazily reads `GET /admin/rest/security/login-events?page=N`: 20 retained devices per page, sorted by `lastSeen` and ID descending and scoped to the authenticated administrator, including confirmed and blocked records without active sessions. It confirms unconfirmed devices through the existing email proof action and blocks any unblocked device, signing out all known matching sessions through existing `SessionHolder.invalidateSession`. Blocked rows offer no ordinary confirmation; unblocking requires the login email challenge.
+- User groups (`UserGroupsDB`) and administration permission groups (`PermissionGroupBean`) serve different purposes. Permission groups combine module rights and editable page/folder scopes; adding a new module permission does not normally require a new field on `PermissionGroupBean`.
+- Use existing keys from module/menu definitions and inspect `src/main/java/sk/iway/iwcm/admin/layout/MenuService.java` for the permission tree. `Identity.isEnabledItem(key)` checks WebJET's enabled/disabled permission flags; folder/page ownership still needs the relevant feature checks.
+- Spring endpoints commonly use `@PreAuthorize("@WebjetSecurityService.hasPermission('permission-key')")`. `hasPermission` requires an administrator and the corresponding authority. It accepts `|` for alternatives or `&` for all listed rights; combining both separators is rejected.
+- `WebjetSecurityService.isLogged()`, `isAdmin()` and `isInUserGroup(...)` cover different policies. Choose the policy explicitly, and check individual records where necessary.
+- Menu visibility and `noperms` CSS are presentation only. Secure the endpoint and its list/search/action paths. DataTable subclasses must follow the [DataTable permission rules](AGENTS-datatable.md).
+- Permission/group edits and session authentication are separate operations. Check how the existing save path updates live identities/authorities; do not assume that a UI refresh reloads all permissions in every session.
 
-- Centralize hashing in `PasswordSecurity`; never duplicate hashing logic in controllers/services.
-- When upgrading algorithm: maintain backward compatibility by detecting legacy hash format and rehashing on successful login.
-- Keep iteration counts & algorithm identifiers configurable (via Constants) to adjust strength without redeploying code.
+## Passwords and authentication
 
-## Permission Handling
+- `PasswordSecurity` delegates to `users/crypto/Bcrypt.java` and `Sha512.java` through `PasswordSecurityAlgorithm`. New hash generation follows `passwordHashAlgorithm`; bcrypt cost uses `bcryptSaltRounds`. Verification recognizes the stored bcrypt prefix and retains SHA-512 compatibility.
+- `LogonTools.isPasswordCorrect` additionally supports legacy encrypted credentials. Preserve the established login/password-change path when modifying authentication; do not replace it with a direct comparison or a new controller-local hashing implementation.
+- Password policy lives in `sk.iway.Password` and the user services, rather than solely in the hashing helper. `UserDetailsService.savePassword` handles the unchanged-password marker, hash/salt storage, password history, auditing and invalidation of other sessions.
+- Changing the configured hash algorithm does not itself rewrite existing credentials. Verify a concrete migration path before promising rehashing on login; the hashing strategy interface does not provide a universal migration callback.
+- Use `UserChangePasswordService` for the established reset workflow and `LogonTools` for successful-login checks/callbacks. Current integrations also include native second-factor logic, OAuth2 (`system/spring/oauth2/`), passkeys (`system/spring/passkey/`) and API-token authentication (`system/spring/ApiTokenAuthFilter.java`); availability depends on configuration and version.
 
-- Group membership drives visibility (e.g., noperms CSS in layout). Ensure consistent naming to map permissions -> CSS classes.
-- Editing groups should trigger cache/invalidation of any permission-derived UI fragments.
+## User data exposed to clients
 
-## DTO Mapping
+- `UserDetailsEntity` deliberately separates credential persistence from ordinary entity reads/writes. Preserve its password/salt and API-key handling; do not add credential fields to generic entity serialization.
+- `UserBasicDto` and its MapStruct mapper provide a small user projection with names, email, photo, ID and login. It excludes password material but still contains personal data; choose the fields and access policy for the consuming endpoint.
+- `UsersDB.getUserCached` has explicit invalidation through `removeUserFromCache`. Use the established save service so changes do not leave cached or session identities stale.
 
-- Mapper isolates external representation: add new user fields here first; avoid exposing sensitive hashes/tokens.
+## Administrator devices and sessions
 
-## Conventions
+- `DeviceService` owns account-scoped persistence, confirmation/blocking rules and auditing; `AdminDeviceService` integrates browser cookies, email proofs, login checks and session invalidation. Scope device lookups by authenticated `userId`, not by a browser-supplied ID or IP address.
+- Recognition, confirmation and blocking are separate states. `reportedAt` records a block; ordinary confirmation cannot unblock a device and cleanup preserves blocked records. Device identity comes from the account/browser-token association, not browser labels or location.
+- Email confirmation requires a valid account-owned proof; a completed native second factor can also confirm an unblocked device. Blocked-browser login requires the session/cookie-bound unblock challenge. Preserve proof expiry, attempt accounting and resend checks in the existing services/repository. The code-attempt claim is atomic, but the subsequent entity save is separate; do not describe the entire service as one transaction.
+- `DeviceEntity` disables shared JPA caching and hides token/proof fields with `@JsonIgnore`. Keep secrets out of JSON, logs and audit messages; browser-provided location is advisory.
+- Completed interactive administrator logins bind a device ID to session state. `AdminDeviceRestController` exposes account-scoped history at `/admin/rest/security/login-events`; blocking uses the established session-invalidation path. Do not bypass `AdminDeviceService.requireVerification` when extending an interactive login flow.
 
-- Suffix `*Dto` for transfer objects, `*Mapper` for mapping classes, `*EditorFields` for UI field wrappers.
-- Separate algorithm selection from hashing execution to allow runtime strategy adjustments.
+## Verification
 
-## Pitfalls
-
-- Hardcoding algorithm names makes future migrations painful; rely on constants/config.
-- Leaking full user entity to external API increases attack surface; prefer `UserBasicDto`.
-- Failing to rehash upgraded passwords on login leaves weaker legacy hashes in place.
-
-## Extending
-
-1. Add new permission attribute: extend `PermissionGroupBean`, update editor fields & UI permission mapping.
-2. Introduce new hashing algorithm: implement in `PasswordSecurityAlgorithm`, register, add migration flag.
-3. Add user field for display: add to DTO + mapper; adjust caches/invalidation as needed.
-
-## Testing Checklist
-
-- Password verification passes for legacy + new hashes after upgrade path.
-- Permission group edits reflect immediately in UI restricted elements.
-- DTO mapping never includes credential or sensitive token fields.
-
-## Update Process
-
-- Document algorithm migrations here including fallback & rehash-on-login strategy.
+Use existing tests for the path being changed: `src/test/java/sk/iway/iwcm/components/users/userdetail/` covers user/self-edit controllers; `src/test/java/sk/iway/iwcm/users/devices/` covers device services. Exercise foreign account IDs, unauthorized role changes, password-unchanged behavior and proof rejection where relevant. Database tests use the project's existing database infrastructure.

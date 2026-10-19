@@ -26,6 +26,8 @@
 
 ![](redactor/admin/search/quick-search.png)
 
+- Panel [Čo je nové](redactor/admin/welcome.md#Čo-je-nové) dopĺňa novinky nainštalovanej verzie o videá a príspevky z YouTube a Facebooku WebJET CMS. Štítok **Nové** sa po rozbalení panela skryje a znova upozorní na nový obsah (#358).
+
 ### Prihlasovanie a ochrana účtu
 
 - [Používateľské menu v hlavičke](redactor/admin/README.md#používateľské-menu) zobrazuje údaje účtu, počet aktívnych relácií a stav dvojstupňového overovania. Položka **Aktívne prihlásenia** otvorí správu vlastných prihlásení z ktorejkoľvek stránky administrácie. Dokumentácia obsahuje aktuálny screenshot a opis všetkých položiek menu (#351).
@@ -43,6 +45,12 @@
 Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `adminNewDeviceDetectionEnabled` na false. Pri prihlásení sa aj zisťuje [približná poloha](admin/setup/configuration/dashboard.md#orientačná-poloha-prihlásenia) podľa IP adresy, vypnúť sa dá nastavením `adminLoginLocationApiKey` na hodnotu `DISABLED`.
 
 ### Webové stránky
+
+- Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/IomtyBHpx64" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 - Kôš webových stránok - pridané [automatické mazanie starých stránok a priečinkov](redactor/apps/gdpr/data-deleting.md) z koša podľa nastaveného retenčného obdobia. Pridaná možnosť mazania stránok a priečinkov v koši aj v sekcii [Mazanie dát](sysadmin/data-deleting/README.md) podľa zvoleného rozsahu dátumov. Zjednotená logika výpočtu počtu a mazania, opravené trvalé odstránenie priečinka koša a prázdnych priečinkov (#271).
 
@@ -63,6 +71,7 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 ![](frontend/templates/templates-edit-advanced.png)
 
 - V dialógu vkladania obrázkov pridaná karta **Miniatúra** pre nastavenie parametrov [generovania zmenšených obrázkov](redactor/webpages/working-in-editor/README.md#karta-miniatúra) `thumbnail`. Podporovaný je voľný režim nastavenia rozmerov, ale aj režim [presne definovaných rozmerov](frontend/thumb-servlet/README.md#obmedzenia) výberom z možností (#58317,#58758).
+- Výber rozmeru zobrazuje názov režimu aj číslo `ip`. Režimy `learn/check/allow` ponúkajú aj vlastný rozmer, `strict` vyžaduje povolenú kombináciu a pri `deny` je karta skrytá. Existujúca nepovolená miniatúra sa v režime `strict` označí a vyžaduje výber náhrady (#353).
 
 ![](redactor/webpages/working-in-editor/image_dialog-thumb.png)
 
@@ -88,6 +97,11 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 - Page Builder - zlepšená detekcia zmien v HTML kóde stránky, aby sa nezobrazilo hlásenie "V editore pravdepodobne máte neuložený text" aj keď ste reálne žiaden text v stránke nezmenili (#317).
 - [Page Builder](redactor/webpages/pagebuilder.md) - po kliknutí na + v žltej čiare v okne **Vložiť blok** na karte **Základné** pribudli možnosti **Obrázok** a **Aplikácia**. Otvoria príslušný dialóg editora a umožnia vložiť obsah na zvolené miesto (#339).
+- Page Builder - pridané [kopírovanie blokov medzi stránkami](redactor/webpages/pagebuilder.md#kopírovanie-blokov-medzi-stránkami). Voľby **Skopírovať** a **Vložiť** prenášajú sekcie, kontajnery a stĺpce aj s obsahom a vlastnými štýlmi. Editor ponúkne iba miesta vhodné pre typ bloku. Schránka má platnosť 30 minút od skopírovania (#353).
+- Šablóny - na karte Pokročilé môžete nastaviť [odstraňovanie spojok z URL stránky](frontend/templates/templates.md#karta-pokročilé): podľa `urlRemoveSpojky`, vždy odstrániť alebo ponechať. Blog tak môže ponechať spojky aj pri zapnutom odstraňovaní pre zvyšok webu (#353).
+- Zmena URL priečinka s aplikovaním na podpriečinky a podstránky aktualizuje aj nezobrazované stránky, naplánované verzie, verzie čakajúce na schválenie a poslednú pracovnú verziu. Zachováva ich obsah, stav a termín publikovania; naplánované publikovanie už nevráti pôvodnú URL (#353).
+- SEO - nastavenie **Prehľadávať** ponúka samostatné voľby povoliť (`index`) a zakázať (`noindex`). Sekcia **HTTP hlavičky** na karte Základné zobrazuje aktuálny náhľad `X-Robots-Tag`, `Referrer-Policy` a pri nastavenom presmerovaní aj `Location` podľa neuložených nastavení stránky a konfigurácie servera (#353).
+- História - používatelia s oprávnením **Čistenie databázy** môžu [mazať historické verzie](redactor/webpages/history.md) priamo v editore stránky, aj hromadným výberom. Aktuálne publikovaná verzia a verzie čakajúce na schválenie sú chránené. Bez tohto oprávnenia zostáva dostupné rušenie budúceho naplánovaného publikovania (#353).
 
 ### Headless režim
 
@@ -136,6 +150,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - [Viackrokové formuláre](redactor/apps/multistep-form/README.md) - pridaná možnosť zadať vlastnú chybovú správu a orezať medzery na začiatku a konci textu zadaného návštevníkom (#osk573).
 - Formulár ľahko a viackrokové formuláre - [vlastný HTML kód tooltipu](redactor/apps/formsimple/README.md#vlastný-html-kód-tooltipu) v prekladovom kľúči `components.formsimple.tooltipCode` podporuje značky s identifikátormi poľa, položky a kroku vrátane unikátneho `${tooltipId}`. Ovládací prvok je tak možné pomocou `aria-describedby` jednoznačne prepojiť s obsahom tooltipu aj pri opakovanom vložení formulára na stránku. Viackrokový formulár po každom zobrazení kroku publikuje na objekte `window` [udalosť `WJ.multistepForm.stepShown`](redactor/apps/multistep-form/README.md#javascript-udalosť-po-zobrazení-kroku) s odkazmi na jeho HTML elementy a identifikátormi formulára a kroku (#306).
 - Formulár ľahko a viackrokové formuláre - predvolený tooltip je po novom dostupný myšou aj klávesnicou, poskytuje stabilný kontextový názov a opis, zostáva zobrazený pri presune kurzora na jeho obsah a je možné ho zatvoriť klávesom `Escape` (#306).
+- Viackrokové formuláre - pridané [kopírovanie polí medzi formulármi a krokmi](redactor/apps/multistep-form/README.md#kopírovanie-polí-medzi-formulármi). Vloženie otvorí editor s uloženými nastaveniami poľa; podmienky zobrazenia a povinnosti sa neprenášajú. Interná schránka funguje medzi kartami prehliadača a umožňuje opakované vloženie počas 30 minút (#58826).
+- Viackrokové formuláre - pridaná možnosť [Zobraziť obsah bez presmerovania](redactor/apps/form/README.md#karta---nastavenia). Prepínač  použije webovú stránku z poľa **Presmerovanie po vyplnení** a po úspešnom odoslaní nahradí prednastavenu hlášku jej obsahom bez zmeny URL adresy. Ak návštevník nemá oprávnenie na zobrazenie webovej stránky, zobrazí sa prednastavená hláška o úspešnom odoslaní (#58826).
 
 ### Sémantické vyhľadávanie
 
@@ -252,6 +268,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Viackrokové formuláre - doplnené presunutie (`scroll`) na začiatok formuláru po prechode na ďalší krok (#osk573).
 - Prieskumník - pri aktualizácii súboru je výber obmedzený na jeden súbor a hlásenie upozorní na nesprávny typ (#317).
 - Prieskumník - v informáciách o priečinku sa už nezobrazuje nepresná rekurzívna veľkosť (#317).
+- Proxy - [výnimky `proxyHostsException`](install/config/README.md#httphttps-proxy) podporujú zástupné vzory ako `*.firma.sk` a `127.*`, oddeľovače čiarka aj `|` a porovnávanie bez rozlišovania veľkosti písmen. Rovnaký normalizovaný zoznam sa používa pre HTTP/HTTPS aj JVM nastavenie `http.nonProxyHosts`. Zmena konfigurácie vyžaduje reštart (#361).
 
 ### Oprava chýb
 
@@ -290,6 +307,9 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 - Logovanie - pri prechode na Spring Boot 4 bol súbor `src/main/resources/logback.xml` premenovaný na `src/main/resources/logback-spring.xml` bez zmeny jeho obsahu. Načítanie konfigurácie tak riadi Spring Boot; súbor s pôvodným názvom si Logback môže načítať samostatne už pri prvom použití loggera, ešte pred prípravou Spring prostredia. Spring Boot naďalej podporuje aj názov `logback.xml`, ale odporúča variant `logback-spring.xml`, aby mal inicializáciu logovania pod kontrolou. V zákazníckych projektoch premenujte aj vlastný konfiguračný súbor a zachovajte jeho nastavenia (#58569).
 - Maven artefakt WebJET CMS je určený pre zákaznícky WAR nasadený do externého Tomcatu 11. Embedded Tomcat sa už neprenáša ako runtime/compile závislosť: kontajnerové balíky a Jakarta serverové API sú publikované so scope `provided` a tranzitívne Tomcat vetvy sú vylúčené. Embedded runtime zostáva dostupný iba pre lokálny vývoj a executable WAR v `WEB-INF/lib-provided` (#58569).
+- [Centrálny generátor noviniek](developer/install/social-media-feed.md) po úspešnom publikovaní odstráni nepoužívané náhľady s 30-dňovou ochrannou lehotou. Zachová obrázky aktuálnych príspevkov aj záložných údajov pre výpadok zdroja (#358).
+- Editor stránok - [nastavenie ponuky Štýly](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) podporuje metadáta v komentároch `editor.scss` / `editor.css` pre kategórie a ich ikony, vzájomne sa nahrádzajúce skupiny, povolené elementy a základné triedy zachované pri obnovení vzhľadu. Nová ponuka je predvolene zapnutá; nastavením `ckeditor_styleComboEnabled=false` sa obnoví pôvodný výber štýlov (#OSK764).
+- AI agenti - pripravená distribúcia WebJET CMS skills cez `npx skills`, vrátane spoločných konvencií a nastavenia projektových pokynov pre Codex, GitHub Copilot a Claude Code. [Návod](custom-apps/skills/README.md) opisuje inštaláciu, aktualizáciu a použitie v starších klientskych projektoch. Pokyny v `AGENTS.md` a tematické referencie v `.github/agents/` boli overené podľa aktuálneho kódu; opisujú používané frameworky, postupy vývoja a testovania aj rozdiely medzi jadrom CMS a klientskymi projektmi (#357).
 - Dashboard - pridaný register widgetov, responzívny grid a REST rozhranie na transakčné ukladanie nastavení do `user_settings_admin`. Existujúca tabuľka MySQL/MariaDB sa pri aktualizácii konvertuje na InnoDB. Používanie opisuje [dokumentácia úvodnej obrazovky](redactor/admin/welcome.md), pozadie a označenie prostredia jej [konfigurácia](admin/setup/configuration/dashboard.md). Pravidlá vývoja, kontrakt a dôvody rozhodnutí udržiava projektový skill `wj-dashboard-widget` v `.agents/skills/wj-dashboard-widget/` (#58806).
 - Administrácia - odstránená závislosť od [Vue.js](https://vuejs.org). Stromové polia, úvodná stránka, výber oblasti obrázka a monitorovanie servera používajú natívne [web komponenty](developer/frameworks/web-components.md). Globálny objekt `window.VueTools` ani balíky pre Vue už nie sú súčasťou administrácie. Vlastné rozšírenia ich musia nahradiť web komponentmi alebo si Vue zostaviť samostatne (#58722).
 - AI asistenti - klientska logika nezávislá od poskytovateľa pre OpenAI, Gemini a OpenRouter, spracovanie streamov, typy požiadaviek/odpovedí a ochrana promptov boli vyčlenené do samostatného artefaktu `com.webjetcms:webjet-ai` a externého [repozitára webjet-ai](https://github.com/webjetcms/webjet-ai). WebJET CMS odovzdáva konfiguráciu cez typovaný adaptér a naďalej zabezpečuje auditovanie, perzistenciu a integráciu používateľského rozhrania. Ide o nekompatibilnú zmenu: pôvodné CMS SPI pre vlastných poskytovateľov a jeho transportné a streamovacie podporné triedy boli odstránené. Vlastných poskytovateľov je nutné migrovať na rozhranie `AiProvider` knižnice a CMS adaptér `LibrarySupportLogic`  (#58670).
