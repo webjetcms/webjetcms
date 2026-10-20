@@ -272,9 +272,7 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
 			}
 
             if (sk.iway.iwcm.doc.PlannedAccess.enabled() && docId > 0) {
-                sk.iway.iwcm.doc.DocDetails page = null;
-                try { page = sk.iway.iwcm.doc.PlannedAccess.requirePage(docId, getCurrentUser()); }
-                catch (IllegalArgumentException denied) { /* Ordinary media remain available through their existing ACLs. */ }
+                sk.iway.iwcm.doc.DocDetails page = sk.iway.iwcm.doc.DocDB.getInstance().getBasicDocDetails(sk.iway.iwcm.doc.PlannedAccess.masterId(docId), false);
                 if (page != null) for (String prefix : new String[] {"/images", "/files"}) {
                     String target = UploadFileTools.getPageUploadSubDir(page.getDocId(), page.getGroupId(), page.getTitle(), prefix);
                     String planned = sk.iway.iwcm.doc.PlannedAssetPaths.source(page.getDocId(), target);

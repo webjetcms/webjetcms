@@ -46,20 +46,18 @@ public class PlannedChangesService {
         return Tools.getSpringBean("plannedChangesService", PlannedChangesService.class);
     }
 
-    public DocDetails requirePlannedMedia(int docId, Identity user) {
-        DocDetails doc = PlannedAccess.requirePage(docId, user);
-        if (!PlannedAccess.enabled() || !docDetailsRepository.isPlannedMediaInitialized(doc.getDocId())) {
+    public void requirePlannedMedia(int docId) {
+        if (!PlannedAccess.enabled() || !docDetailsRepository.isPlannedMediaInitialized(docId)) {
             throw new IllegalArgumentException("Planned media are no longer active; reopen the editor");
         }
-        return doc;
     }
 
     public void validateMedia(Media item, int docId, Identity user) {
-        DocDetails doc = requirePlannedMedia(docId, user);
+        requirePlannedMedia(docId);
         rejectFields(item, "mediaTitleSk", "mediaTitleCz", "mediaTitleEn", "mediaTitleDe", "mediaGroup");
-        Map<String, String> files = plannedFiles(doc.getDocId());
+        Map<String, String> files = plannedFiles(docId);
         preflight(files, user);
-        checkConflicts(doc.getDocId(), files);
+        checkConflicts(docId, files);
     }
 
     public Long activeHistory(int docId) {
@@ -68,31 +66,29 @@ public class PlannedChangesService {
     }
 
     /** Copies once, clearing any incomplete previous attempt before retrying initialization. */
-    public Long initialize(int docId, Identity user) {
+    public Long initialize(int docId) {
         if (!PlannedAccess.enabled()) throw new IllegalArgumentException("Planned publishing is disabled");
-        DocDetails doc = PlannedAccess.requirePage(docId, user);
-        if (!docDetailsRepository.isPlannedMediaInitialized(doc.getDocId())) {
+        if (!docDetailsRepository.isPlannedMediaInitialized(docId)) {
             int domain = CloudToolsForCore.getDomainId();
-            deleteMedia(doc.getDocId(), MEDIA_TABLE, domain);
-            for (Media original : mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(doc.getDocId(), "documents", domain)) {
+            deleteMedia(docId, MEDIA_TABLE, domain);
+            for (Media original : mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(docId, "documents", domain)) {
                 mediaRepository.saveAndFlush(copyMedia(original, MEDIA_TABLE));
             }
-            docDetailsRepository.setPlannedMediaInitialized(doc.getId(), true);
+            docDetailsRepository.setPlannedMediaInitialized((long) docId, true);
         }
-        return activeHistory(doc.getDocId());
+        return activeHistory(docId);
     }
 
-    public void cancel(int docId, Identity user) {
-        DocDetails doc = PlannedAccess.requirePage(docId, user);
-        for (DocHistory pending : docHistoryRepository.findByDocIdAndPublicableTrueOrderByIdDesc(doc.getDocId())) {
+    public void cancel(int docId) {
+        for (DocHistory pending : docHistoryRepository.findByDocIdAndPublicableTrueOrderByIdDesc(docId)) {
             pending.setPublicable(false);
             pending.setAwaitingApprove(null);
             pending.setSyncStatus(2);
             docHistoryRepository.save(pending);
         }
-        deleteMedia(doc.getDocId(), MEDIA_TABLE, CloudToolsForCore.getDomainId());
-        docDetailsRepository.setPlannedMediaInitialized(doc.getId(), false);
-        deletePlannedFiles(doc.getDocId());
+        deleteMedia(docId, MEDIA_TABLE, CloudToolsForCore.getDomainId());
+        docDetailsRepository.setPlannedMediaInitialized((long) docId, false);
+        deletePlannedFiles(docId);
     }
 
     /** Validates a new scheduled snapshot without cancelling the existing plan. */
@@ -100,7 +96,7 @@ public class PlannedChangesService {
         if (doc.getDocId() < 1 || Constants.getBoolean("editorDisableHistory")) {
             throw new IllegalArgumentException("Save an unpublished page before preparing a planned change; history must be enabled");
         }
-        Long active = initialize(doc.getDocId(), user);
+        Long active = initialize(doc.getDocId());
         if (active != null && active.intValue() != doc.getHistoryId()) {
             throw new IllegalArgumentException("Edit the existing planned version from page history (" + active + ")");
         }

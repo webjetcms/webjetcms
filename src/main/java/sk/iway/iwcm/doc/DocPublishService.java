@@ -127,9 +127,6 @@ public class DocPublishService {
 
             UserDetails author = UsersDB.getUser(docHistory.getAuthorId());
             Identity user = author == null ? null : new Identity(author);
-            if (planned != null && !PlannedAccess.canEdit(user, currentPage)) {
-                throw new IllegalArgumentException("Planned page author no longer has permission");
-            }
             RequestBean publication = new RequestBean();
             GroupDetails group = groupsDB.getGroup(plannedEnabled ? currentPage.getGroupId() : docHistory.getGroupId());
             if (group != null) publication.setDomain(group.getDomainName());

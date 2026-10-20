@@ -99,7 +99,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
             if (getUser().isDisabledItem("editor_edit_media_all")) throw new IllegalArgumentException("Access is denied");
 
             //docId ani groupId ako parameter neboli poslane = sme v zozname vsetkych medii
-            page = new DatatablePageImpl<>(mediaRepository.findAllByDomainIdAndMediaFkTableName(domainId, DOCUMENTS_TABLE_NAME, pageable));
+            page = new DatatablePageImpl<>(mediaRepository.findAllByMediaFkTableNameAndDomainId(DOCUMENTS_TABLE_NAME, domainId, pageable));
         } else {
             //dostali sme docId parameter, sme vnorena datatabulka vo web stranke
             page = new DatatablePageImpl<>(mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(getMediaFkId(), getTableName(), domainId, pageable));
@@ -265,7 +265,6 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
 
         if (isPlanned()) {
             if (docId < 1 || !sk.iway.iwcm.doc.PlannedAccess.enabled()) throw new IllegalArgumentException("Planned page context is required");
-            sk.iway.iwcm.doc.PlannedAccess.requirePage(docId, getUser());
             return sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE;
         }
         if(docId  < 1) {
@@ -345,14 +344,13 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
                 if (!Integer.valueOf(getUser().getUserId()).equals(stored.getMediaFkId())) return false;
             } else checkPerms(stored.getMediaFkId());
         }
-        if (isPlanned()) sk.iway.iwcm.doc.PlannedAccess.requirePage(getMediaFkId(), getUser());
         return true;
     }
 
     @Override
     public boolean beforeDelete(Media entity) {
         if (!checkItemPerms(entity, entity.getId())) throw new IllegalArgumentException("Access is denied");
-        if (isPlanned()) sk.iway.iwcm.doc.PlannedChangesService.getInstance().requirePlannedMedia(getMediaFkId(), getUser());
+        if (isPlanned()) sk.iway.iwcm.doc.PlannedChangesService.getInstance().requirePlannedMedia(getMediaFkId());
         return true;
     }
 

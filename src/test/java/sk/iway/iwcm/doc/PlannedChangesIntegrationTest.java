@@ -85,7 +85,6 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
             groups.when(GroupsDB::getInstance).thenReturn(groupDB);
             access.when(PlannedAccess::enabled).thenReturn(true);
             tools.when(() -> Tools.getRealPath(anyString())).thenAnswer(call -> assets.resolve(((String)call.getArgument(0)).substring(1)).toString());
-            access.when(() -> PlannedAccess.canEdit(any(), any())).thenReturn(true);
             domains.when(CloudToolsForCore::getDomainId).thenReturn(1);
             domains.when(CloudToolsForCore::getDomainName).thenReturn(group.getDomainName());
             users.when(() -> UsersDB.getUser(anyInt())).thenReturn(user);
@@ -101,7 +100,6 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
             page.setVirtualPath("/autotest-planned");
             page = docs.saveAndFlush(page);
             final DocDetails savedPage = page;
-            access.when(() -> PlannedAccess.requirePage(eq(savedPage.getDocId()), any())).thenAnswer(call -> docs.findById(savedPage.getDocId()));
             SimpleQuery query = new SimpleQuery();
             var em = org.springframework.orm.jpa.SharedEntityManagerCreator.createSharedEntityManager(context.getBean(EntityManagerFactory.class));
             MediaGroupBean mediaGroup = new MediaGroupBean();
@@ -120,13 +118,13 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 }).when(failingMedia).saveAndFlush(any(Media.class));
                 PlannedChangesService interrupted = new PlannedChangesService(docs, history, failingMedia);
                 java.util.function.LongFunction<DocDetails> interruptedPublish = id -> publish(publisher, interrupted, history, docsCache, id);
-                assertThrows(IllegalStateException.class, () -> interrupted.initialize(savedPage.getDocId(), user));
+                assertThrows(IllegalStateException.class, () -> interrupted.initialize(savedPage.getDocId()));
                 assertFalse(docs.isPlannedMediaInitialized(page.getDocId()));
                 assertEquals(1, media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1).size());
 
                 // Retrying initialization must replace the partial copy, not duplicate it.
-                service.initialize(page.getDocId(), user);
-                service.initialize(page.getDocId(), user);
+                service.initialize(page.getDocId());
+                service.initialize(page.getDocId());
                 List<Media> planned = media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1);
                 assertEquals(1, planned.size());
                 assertNotEquals(originalId, planned.get(0).getId());
@@ -178,14 +176,14 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 assertFalse(history.findById(revisionId).orElseThrow().getPublicable());
                 assertTrue(live.get(0).getLastUpdate().getTime() <= docs.findById(page.getDocId()).getDateCreated());
 
-                service.initialize(page.getDocId(), user);
+                service.initialize(page.getDocId());
                 transaction.executeWithoutResult(status -> {
                     List<Media> removed = media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(savedPage.getDocId(), PlannedChangesService.MEDIA_TABLE, 1);
                     removed.forEach(item -> item.getGroups().clear());
                     media.flush();
                     media.deleteAll(removed);
                 });
-                service.initialize(page.getDocId(), user);
+                service.initialize(page.getDocId());
                 assertTrue(media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1).isEmpty());
                 DocHistory empty = history.saveAndFlush(revision(page));
                 assertNotNull(publish.apply(empty.getId()));
@@ -201,7 +199,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 java.nio.file.Files.writeString(source.resolveSibling("unused.webp"), "unreferenced image");
                 java.nio.file.Files.writeString(target, "old image");
                 users.when(() -> UsersDB.isFolderWritable(anyString(), anyString())).thenReturn(true);
-                service.initialize(page.getDocId(), user);
+                service.initialize(page.getDocId());
                 Media pdf = item(page.getDocId(), PlannedChangesService.MEDIA_TABLE, "PDF");
                 pdf.setMediaLink(privateRoot + "/files/spec.pdf");
                 media.saveAndFlush(pdf);
@@ -257,7 +255,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                     assertNull(publish.apply(withFilesId));
                 }
 
-                service.initialize(page.getDocId(), user);
+                service.initialize(page.getDocId());
                 DocHistory future = revision(page);
                 future.setPublishStartDate(new Date(System.currentTimeMillis() + 60000));
                 future = history.saveAndFlush(future);
@@ -281,7 +279,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 java.nio.file.Files.createDirectories(cancelledFile.getParent());
                 java.nio.file.Files.writeString(cancelledFile, "cancelled file");
                 String liveData = docs.findById(page.getDocId()).getData();
-                service.cancel(page.getDocId(), user);
+                service.cancel(page.getDocId());
                 assertFalse(java.nio.file.Files.exists(source.getParent()));
                 assertFalse(java.nio.file.Files.exists(cancelledFile.getParent().getParent()));
                 assertFalse(java.nio.file.Files.exists(assets.resolve("images/cancel.webp")));
@@ -292,7 +290,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 assertNull(publish.apply(future.getId()));
                 assertTrue(media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1).isEmpty());
 
-                service.initialize(page.getDocId(), user);
+                service.initialize(page.getDocId());
                 long concurrentId = history.saveAndFlush(revision(page)).getId();
                 var start = new java.util.concurrent.CountDownLatch(1);
                 var executor = java.util.concurrent.Executors.newFixedThreadPool(2);
@@ -307,7 +305,6 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                         workerNotes.when(DocNoteDB::getInstance).thenReturn(mock(DocNoteDB.class));
                         workerConstants.when(() -> Constants.getBoolean("webpagesNotifyAutorOnPublish")).thenReturn(false);
                         workerDocs.when(() -> DocDB.getRootGroupL(anyInt(), any(), anyInt())).thenReturn(new int[] {1, 0, 0});
-                        workerAccess.when(() -> PlannedAccess.canEdit(any(), any())).thenReturn(true);
                         workerTools.when(() -> Tools.getRealPath(anyString())).thenAnswer(call -> assets.resolve(((String)call.getArgument(0)).substring(1)).toString());
                         workerGroups.when(GroupsDB::getInstance).thenReturn(groupDB);
                         workerUsers.when(() -> UsersDB.getUser(anyInt())).thenReturn(user);

@@ -31,6 +31,7 @@ import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.MultigroupMappingDB;
+import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.filebrowser.EditForm;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.jpa.JpaTools;
@@ -75,9 +76,8 @@ public class MediaDB extends JpaDB<Media>
         Media result = JpaTools.findFirstByMatchingProperty(Media.class, "id", mediaId);
         if (result != null && sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE.equals(result.getMediaFkTableName())) {
             RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
-            try {
-                sk.iway.iwcm.doc.PlannedAccess.requirePage(result.getMediaFkId(), rb == null || rb.getRequest() == null ? null : UsersDB.getCurrentUser(rb.getRequest()));
-            } catch (RuntimeException denied) { return null; }
+            Identity user = rb == null || rb.getRequest() == null ? null : UsersDB.getCurrentUser(rb.getRequest());
+            if (user == null || !user.isAdmin() || (!user.isEnabledItem("editor_edit_media_all") && !EditorDB.isPageEditable(user, result.getMediaFkId()))) return null;
         }
         return result;
 	}
@@ -151,9 +151,8 @@ public class MediaDB extends JpaDB<Media>
             lastUpdate = 0;
         }
         if (sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE.equals(tableName)) {
-            try {
-                sk.iway.iwcm.doc.PlannedAccess.requirePage(pkIdParam, request == null ? null : UsersDB.getCurrentUser(request));
-            } catch (RuntimeException denied) { return new ArrayList<>(); }
+            Identity user = request == null ? null : UsersDB.getCurrentUser(request);
+            if (user == null || !user.isAdmin() || (!user.isEnabledItem("editor_edit_media_all") && !EditorDB.isPageEditable(user, pkIdParam))) return new ArrayList<>();
         }
 	    int pkId = pkIdParam;
         if ("documents".equals(tableName) || sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE.equals(tableName))

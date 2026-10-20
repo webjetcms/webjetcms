@@ -16,7 +16,7 @@ import sk.iway.spirit.model.Media;
 @Repository
 public interface MediaRepository extends DomainIdRepository<Media, Long> {
 
-    Page<Media> findAllByDomainIdAndMediaFkTableName(Integer domainId, String tableName, Pageable pageable);
+    Page<Media> findAllByMediaFkTableNameAndDomainId(String mediaFkTableName, Integer domainId, Pageable pageable);
 
     //add custom repository to find media's with connection to doc
     //finding by mediaFkId(docId) and mediaFkTableName("documents")

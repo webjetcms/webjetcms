@@ -5,9 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.Tools;
-import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.editor.EditorDB;
-import sk.iway.iwcm.editor.EditorForm;
 import sk.iway.iwcm.users.UsersDB;
 
 /** Common authorization for private originals, derivatives, history and editor file operations. */
@@ -21,20 +19,6 @@ public final class PlannedAccess {
     public static int masterId(int docId) {
         int master = MultigroupMappingDB.getMasterDocId(docId);
         return master > 0 ? master : docId;
-    }
-
-    public static boolean canEdit(Identity user, DocDetails doc) {
-        return user != null && user.isAdmin() && user.isEnabledItem("menuWebpages") && user.isEnabledItem("pageSave") &&
-            doc != null && !GroupsDB.getInstance().isInTrash(doc.getGroupId()) && EditorDB.isPageEditable(user, new EditorForm(doc));
-    }
-
-    public static DocDetails requirePage(int docId, Identity user) {
-        DocDetails doc = Tools.getSpringBean("docDetailsRepository", DocDetailsRepository.class).findById(masterId(docId));
-        GroupDetails group = doc == null ? null : GroupsDB.getInstance().getGroup(doc.getGroupId());
-        if (!canEdit(user, doc) || group == null || !group.getDomainName().equalsIgnoreCase(CloudToolsForCore.getDomainName())) {
-            throw new IllegalArgumentException("Access to planned page denied");
-        }
-        return doc;
     }
 
     public static void privateHeaders(HttpServletResponse response) {
@@ -69,9 +53,14 @@ public final class PlannedAccess {
             if (history == null) { response.setStatus(404); return false; }
             if (enabled() || Boolean.TRUE.equals(history.getPublicable()) || Integer.valueOf(2).equals(history.getSyncStatus()) || PlannedChangesService.hasPrivateReferences(history)) {
                 privateHeaders(response);
-                DocDetails page = requirePage(history.getDocId(), UsersDB.getCurrentUser(request));
+                Identity user = UsersDB.getCurrentUser(request);
+                if (user == null || !user.isAdmin() || !EditorDB.isPageEditable(user, history.getDocId())) {
+                    response.setStatus(404);
+                    return false;
+                }
+                int docId = masterId(history.getDocId());
                 request.setAttribute("isPreview", Boolean.TRUE);
-                if (Boolean.TRUE.equals(history.getPublicable()) && Tools.getSpringBean("docDetailsRepository", DocDetailsRepository.class).isPlannedMediaInitialized(page.getDocId())) request.setAttribute(PREVIEW_DOC, page.getDocId());
+                if (Boolean.TRUE.equals(history.getPublicable()) && Tools.getSpringBean("docDetailsRepository", DocDetailsRepository.class).isPlannedMediaInitialized(docId)) request.setAttribute(PREVIEW_DOC, docId);
             }
             return true;
         } catch (RuntimeException exception) {

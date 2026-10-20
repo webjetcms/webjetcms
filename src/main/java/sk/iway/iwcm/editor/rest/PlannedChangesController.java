@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sk.iway.iwcm.doc.DocDB;
+import sk.iway.iwcm.doc.DocDetails;
+import sk.iway.iwcm.doc.PlannedAccess;
+import sk.iway.iwcm.editor.service.EditorService;
 import sk.iway.iwcm.doc.PlannedChangesService;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -18,17 +21,26 @@ import sk.iway.iwcm.users.UsersDB;
 public class PlannedChangesController {
     private final PlannedChangesService service;
 
-    public PlannedChangesController(PlannedChangesService service) { this.service = service; }
+    private final EditorService editorService;
+
+    public PlannedChangesController(PlannedChangesService service, EditorService editorService) {
+        this.service = service;
+        this.editorService = editorService;
+    }
 
     @PostMapping("/{docId}/initialize")
     public Map<String, Long> initialize(@PathVariable int docId, HttpServletRequest request) {
-        Long history = service.initialize(docId, UsersDB.getCurrentUser(request));
+        DocDetails doc = editorService.getDoc(PlannedAccess.masterId(docId), -1);
+        editorService.checkPermissions(UsersDB.getCurrentUser(request), doc, false);
+        Long history = service.initialize(doc.getDocId());
         return Map.of("historyId", history == null ? -1L : history);
     }
 
     @PostMapping("/{docId}/cancel")
     public Map<String, Boolean> cancel(@PathVariable int docId, HttpServletRequest request) {
-        service.cancel(docId, UsersDB.getCurrentUser(request));
+        DocDetails doc = editorService.getDoc(PlannedAccess.masterId(docId), -1);
+        editorService.checkPermissions(UsersDB.getCurrentUser(request), doc, false);
+        service.cancel(doc.getDocId());
         DocDB.getInstance().readPagesToPublic();
         return Map.of("success", true);
     }

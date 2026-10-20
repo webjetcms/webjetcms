@@ -12,6 +12,7 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -33,13 +34,11 @@ public class PreviewController {
 
         sk.iway.iwcm.doc.PlannedAccess.privateHeaders(response);
         if (doc.getDocId() > 0 && (doc.isPublishAfterStart() || doc.getEditorFields().isPlannedMedia())) {
-            try {
-                DocDetails authorized = sk.iway.iwcm.doc.PlannedAccess.requirePage(doc.getDocId(), UsersDB.getCurrentUser(request));
-                request.setAttribute(sk.iway.iwcm.doc.PlannedAccess.PREVIEW_DOC, authorized.getDocId());
-            } catch (RuntimeException denied) {
+            if (!EditorDB.isPageEditable(UsersDB.getCurrentUser(request), doc.getDocId())) {
                 response.setStatus(404);
                 return null;
             }
+            request.setAttribute(sk.iway.iwcm.doc.PlannedAccess.PREVIEW_DOC, sk.iway.iwcm.doc.PlannedAccess.masterId(doc.getDocId()));
         }
         //set DocDetails @transient columns
         doc.setPublishStart(doc.getPublishStart());
