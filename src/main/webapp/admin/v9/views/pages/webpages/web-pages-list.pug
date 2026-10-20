@@ -268,15 +268,7 @@ block content
 
                     var groupColumns = [(${layout.getDataTableColumns('sk.iway.iwcm.doc.GroupDetails')})];
 
-                    var groupsTabs = [
-                        { id: 'basic', title: '[[\#{datatable.tab.basic}]]', selected: true },
-                        { id: 'template', title: '[[\#{editor.tab.template}]]' },
-                        { id: 'menu', title: '[[\#{editor.tab.navigation}]]' },
-                        { id: 'access', title: '[[\#{editor.tab.permissions}]]' },
-                        { id: 'publishing', title: '[[\#{editor.tab.publishing}]]' },
-                        { id: 'fields', title: '[[\#{editor.tab.fields}]]' },
-                        { id: 'history', title: '[[\#{editor.tab.history}]]', content: '<div class="groupHistoryPlaceholder"><div>' }
-                    ];
+                    var groupsTabs = [(${layout.getDataTableTabs('sk.iway.iwcm.doc.GroupDetails')})];
 
                     window.WJ.DataTable.mergeColumns(
                         groupColumns,

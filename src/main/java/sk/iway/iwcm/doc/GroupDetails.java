@@ -10,6 +10,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.tags.JSEscapeTag;
 import sk.iway.iwcm.users.UsersDB;
 import jakarta.persistence.Transient;
@@ -32,6 +34,15 @@ import java.util.StringTokenizer;
  *@modified     $Date: 2004/03/15 21:34:42 $
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@DataTableTabs(tabs = {
+	@DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+	@DataTableTab(id = "template", title = "editor.tab.template"),
+	@DataTableTab(id = "menu", title = "editor.tab.navigation"),
+	@DataTableTab(id = "access", title = "editor.tab.permissions"),
+	@DataTableTab(id = "publishing", title = "editor.tab.publishing"),
+	@DataTableTab(id = "fields", title = "editor.tab.fields"),
+	@DataTableTab(id = "history", title = "editor.tab.history", content = "<div class=\"groupHistoryPlaceholder\"><div>")
+})
 public class GroupDetails implements Cloneable, DocGroupInterface
 {
 	@DataTableColumn(

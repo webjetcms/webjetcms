@@ -211,7 +211,7 @@ public class FieldsSettingsService {
     }
 
     /**
-     * Scans configured application packages for classes annotated with {@link Entity}.
+     * Scans configured application packages for classes annotated with {@link Entity} or {@link DataTableTabs}.
      *
      * @return classes with their annotated fields (including inherited and nested fields) and declared tab IDs
      */
@@ -224,6 +224,7 @@ public class FieldsSettingsService {
             }
         };
         provider.addIncludeFilter(new AnnotationTypeFilter(Entity.class));
+        provider.addIncludeFilter(new AnnotationTypeFilter(DataTableTabs.class));
 
         for (String packageName : AppManager.getPackageNames()) {
             for (BeanDefinition beanDefinition : provider.findCandidateComponents(packageName)) {

@@ -101,19 +101,7 @@ export class WebPagesDatatable {
     }
 
     static getEditorTabs() {
-        var tabs = [
-            { id: 'content', title: WJ.translate('editor.tab.editor'), selected: true, content: '' },
-            { id: 'basic', title: WJ.translate('editor.tab.basic_info') },
-            { id: 'template', title: WJ.translate('editor.tab.template') },
-            { id: 'menu', title: WJ.translate('editor.tab.navigation') },
-            { id: 'access', title: WJ.translate('editor.tab.permissions') },
-            { id: 'perex', title: WJ.translate('editor.tab.public') },
-            { id: 'media', title: WJ.translate('editor.tab.media'), content: '<div class="mediaContentPlaceholder"><div>' },
-            { id: 'fields', title: WJ.translate('editor.tab.fields') },
-            { id: 'attributes', title: WJ.translate('editor.tab.atributes') },
-            { id: 'history', title: WJ.translate('editor.tab.history'), content: '<div class="historyContentPlaceholder"><div>' }
-        ];
-        return tabs;
+        return window.webPagesEditorTabs.map(tab => ({ ...tab }));
     }
 
     #bindAll() {
