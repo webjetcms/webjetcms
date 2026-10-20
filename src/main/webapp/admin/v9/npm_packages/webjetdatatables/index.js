@@ -49,6 +49,7 @@ import * as fieldTypeBase64 from './field-type-base64';
 import * as fieldTypeStaticText from './field-type-static-text';
 import * as fieldTypeWjupload from './field-type-wjupload';
 import * as fieldTypeImageRadio from './field-type-imageradio';
+import * as fieldTypeButtonGroup from './field-type-button-group';
 import * as fieldTypeIcon from './field-type-icon';
 import * as fieldTypeOptions from './field-type-options';
 import * as fieldTypeOptionsSimple from './field-type-options-simple';
@@ -927,7 +928,7 @@ export const dataTableInit = options => {
                     //console.log("checkbox: ", col.editor.options);
                 }
 
-                if ("select" === col.editor.type || "radio" === col.editor.type) {
+                if ("select" === col.editor.type || "radio" === col.editor.type || "buttonGroup" === col.editor.type) {
                     //ak mame true/false select box, aj tomu musime zmenit value na true/false namiesto String hodnot
                     if (col.editor.options) {
                         fixOptionsValueType(col.editor.options);
@@ -1350,6 +1351,7 @@ export const dataTableInit = options => {
         $.fn.dataTable.Editor.fieldTypes.staticText = fieldTypeStaticText.typeStaticText();
         $.fn.dataTable.Editor.fieldTypes.wjupload = fieldTypeWjupload.typeWjupload();
         $.fn.dataTable.Editor.fieldTypes.imageRadio = fieldTypeImageRadio.typeImageRadio();
+        $.fn.dataTable.Editor.fieldTypes.buttonGroup = fieldTypeButtonGroup.typeButtonGroup();
         $.fn.dataTable.Editor.fieldTypes.icon = fieldTypeIcon.typeIcon();
         $.fn.dataTable.Editor.fieldTypes.options = fieldTypeOptions.typeOptions();
         $.fn.dataTable.Editor.fieldTypes.optionsSimple = fieldTypeOptionsSimple.typeOptionsSimple();

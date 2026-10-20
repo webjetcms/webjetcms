@@ -99,6 +99,10 @@ public enum DataTableColumnType {
      */
     RADIO,
     /**
+     * Single-choice options displayed as a Bootstrap button group.
+     */
+    BUTTON_GROUP,
+    /**
      * Password
      */
     PASSWORD,
