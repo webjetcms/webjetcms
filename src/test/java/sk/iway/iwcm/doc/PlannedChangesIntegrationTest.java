@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.test.util.ReflectionTestUtils;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.editor.DocNoteBean;
 import sk.iway.iwcm.editor.DocNoteDB;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.DBPool;
@@ -235,8 +236,45 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                     context.getBean(java.util.concurrent.atomic.AtomicBoolean.class).set(true);
                     assertThrows(IllegalStateException.class, () -> publish.apply(withFilesId));
                     assertTrue(java.nio.file.Files.exists(source), "Keep staged assets until history completion succeeds");
+
+                    // Boolean save failures must also keep history pending and staged files available for retry.
+                    List<Long> completedMediaIds = media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), "documents", 1)
+                        .stream().map(Media::getId).sorted().toList();
+                    DocDetails slave = new DocDetails();
+                    slave.setDocId(910083);
+                    slave.setGroupId(1);
+                    slave.setVirtualPath("/autotest-planned-copy");
+                    mappings.when(() -> MultigroupMappingDB.getSlaveDocIds(savedPage.getDocId())).thenReturn(List.of(slave.getDocId()));
+                    when(docsCache.getBasicDocDetails(slave.getDocId(), false)).thenReturn(slave);
+                    when(docsCache.getDoc(savedPage.getDocId(), -1, false)).thenAnswer(call ->
+                        DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(history.findById(withFilesId).orElseThrow()));
+                    docCache.when(() -> DocDB.saveDoc(any(DocDetails.class))).thenReturn(false, true);
+                    IllegalStateException slaveFailure = assertThrows(IllegalStateException.class, () -> publish.apply(withFilesId));
+                    assertTrue(slaveFailure.getMessage().contains(Integer.toString(slave.getDocId())));
+                    assertTrue(history.findById(withFilesId).orElseThrow().getPublicable());
+                    assertTrue(java.nio.file.Files.exists(source));
+                    assertTrue(java.nio.file.Files.exists(unreferenced));
+
+                    DocNoteDB noteDB = mock(DocNoteDB.class);
+                    DocNoteBean publishedNote = mock(DocNoteBean.class);
+                    when(noteDB.getDocNote(-1, (int) withFilesId)).thenReturn(mock(DocNoteBean.class));
+                    when(noteDB.getDocNote(savedPage.getDocId(), -1)).thenReturn(publishedNote);
+                    when(publishedNote.save()).thenReturn(false, true);
+                    notes.when(DocNoteDB::getInstance).thenReturn(noteDB);
+                    IllegalStateException noteFailure = assertThrows(IllegalStateException.class, () -> publish.apply(withFilesId));
+                    assertTrue(noteFailure.getMessage().contains(Integer.toString(savedPage.getDocId())));
+                    assertTrue(history.findById(withFilesId).orElseThrow().getPublicable());
+                    assertTrue(java.nio.file.Files.exists(source));
+                    assertTrue(java.nio.file.Files.exists(unreferenced));
+
                     DocDetails published = publish.apply(withFilesId);
                     assertNotNull(published);
+                    verify(publishedNote, times(2)).save();
+                    docCache.verify(() -> DocDB.saveDoc(any(DocDetails.class)), times(3));
+                    assertEquals(completedMediaIds, media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), "documents", 1)
+                        .stream().map(Media::getId).sorted().toList(), "Retries must preserve the completed live media set");
+                    mappings.when(() -> MultigroupMappingDB.getSlaveDocIds(savedPage.getDocId())).thenReturn(List.of());
+                    notes.when(DocNoteDB::getInstance).thenReturn(mock(DocNoteDB.class));
                     assertFalse(published.getData().contains(PlannedAssetPaths.ROOT));
                     assertEquals("<img srcset='/images/photo.webp 1x, /images/photo.webp?v=1634319328 2x'>!INCLUDE(component.jsp, image=/images/missing.webp)!", published.getData());
                     assertEquals("/images/photo.webp", published.getPerexImage());

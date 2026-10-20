@@ -140,6 +140,7 @@ public class DocPublishService {
             GroupDetails group = groupsDB.getGroup(plannedEnabled ? currentPage.getGroupId() : docHistory.getGroupId());
             if (group != null) publication.setDomain(group.getDomainName());
             publication.setUser(user);
+            publication.setSpringContext(Tools.getSpringContext());
             SetCharacterEncodingFilter.setCurrentRequestBean(publication);
 
             // Build the page from its history snapshot. Planned publication retains the current
@@ -188,7 +189,9 @@ public class DocPublishService {
                     masterDocDetails.setExternalLink(slaveDoc.getExternalLink());
                     masterDocDetails.setDocId(slaveDocId);
                     masterDocDetails.setGroupId(slaveDoc.getGroupId());
-                    DocDB.saveDoc(masterDocDetails);
+                    if (DocDB.saveDoc(masterDocDetails) == false) {
+                        throw new IllegalStateException("Could not publish multigroup page " + slaveDocId);
+                    }
                 }
 
             }
@@ -205,7 +208,9 @@ public class DocPublishService {
                 publishedNote.setNote(historyNote.getNote());
                 publishedNote.setUserId(historyNote.getUserId());
                 publishedNote.setCreated(historyNote.getCreated());
-                publishedNote.save();
+                if (publishedNote.save() == false) {
+                    throw new IllegalStateException("Could not save published note for page " + docId);
+                }
             }
 
             // Rewrite only the published history snapshot, then mark it as the current version.

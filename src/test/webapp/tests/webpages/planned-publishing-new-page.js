@@ -8,7 +8,7 @@ const modal = '#datatableInit_modal';
 const schedule = '#DTE_Field_editorFields-publishAfterStart_0';
 const mediaTable = '#datatableFieldDTE_Field_editorFields-media';
 const confirm = '#toast-container-webjet .toast[role="dialog"]';
-const saveFirst = 'Uložiť nezverejnenú a pokračovať';
+const saveFirst = 'Uložiť a pokračovať';
 
 Before(({ I, login }) => {
     login('admin');

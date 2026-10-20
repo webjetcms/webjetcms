@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Identity;
+import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -21,10 +22,8 @@ public final class PlannedAccess {
     }
 
     public static void privateHeaders(HttpServletResponse response) {
-        response.setHeader("Cache-Control", "private, no-store");
-        response.setHeader("Pragma", "no-cache");
+        PathFilter.setNoCacheHeaders(response);
         response.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
-        response.setDateHeader("Expires", 0);
     }
 
     /** Must run before existence checks, conditional responses and derivative cache reads. */

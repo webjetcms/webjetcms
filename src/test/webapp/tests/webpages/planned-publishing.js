@@ -78,14 +78,14 @@ Scenario('Keep live content and an ordinary draft while preparing media', async 
         return {status: response.status, cache: response.headers.get('Cache-Control')};
     }, privateImage);
     I.assertEqual(warm.status, 200);
-    I.assertEqual(warm.cache, 'private, no-store');
+    I.assertEqual(warm.cache, 'no-store, no-cache, must-revalidate, max-age=0');
     for (const url of [privateImage, '/thumb' + privateImage + '?w=120&h=120']) {
         const denied = await I.executeScript(async path => {
             const response = await fetch(path, {credentials: 'omit'});
             return {status: response.status, cache: response.headers.get('Cache-Control')};
         }, url);
         I.assertEqual(denied.status, 404);
-        I.assertEqual(denied.cache, 'private, no-store');
+        I.assertEqual(denied.cache, 'no-store, no-cache, must-revalidate, max-age=0');
     }
     I.clickCss('#pills-dt-datatableInit-media-tab');
     I.clickCss(`${mediaTable}_wrapper button.buttons-create`);
@@ -134,7 +134,7 @@ Scenario('Keep live content and an ordinary draft while preparing media', async 
         return {status: response.status, cache: response.headers.get('Cache-Control')};
     }, {id: docId, history: plannedHistoryId});
     I.assertEqual(historyResponse.status, 404);
-    I.assertEqual(historyResponse.cache, 'private, no-store');
+    I.assertEqual(historyResponse.cache, 'no-store, no-cache, must-revalidate, max-age=0');
     I.clickCss('#pills-dt-datatableInit-perex-tab');
     DTE.fillField('publishStartDate', I.formatDateTime(Date.now() + 15000));
     I.pressKey('Tab');
@@ -173,7 +173,7 @@ Scenario('Deny guessed private asset URLs to anonymous visitors', async ({ I }) 
             return {status: result.status, cache: result.headers.get('Cache-Control')};
         }, `${prefix}${privateImage || `/files/protected/planned-changes/${docId}/images/secret.webp`}`);
         I.assertEqual(response.status, 404);
-        I.assertEqual(response.cache, 'private, no-store');
+        I.assertEqual(response.cache, 'no-store, no-cache, must-revalidate, max-age=0');
     }
 });
 

@@ -43,7 +43,7 @@ class PlannedAccessTest {
             PlannedAccess.historyPreview(history, request, response);
             assertEquals(Boolean.TRUE, request.getAttribute("isPreview"));
             assertEquals(42, request.getAttribute(PlannedAccess.PREVIEW_DOC));
-            assertEquals("private, no-store", response.getHeader("Cache-Control"));
+            assertEquals("no-store, no-cache, must-revalidate, max-age=0", response.getHeader("Cache-Control"));
             assertTrue(InlineEditor.isInlineEditingEnabled(request));
 
             request.removeParameter("inlineEditorAdmin");
@@ -70,7 +70,7 @@ class PlannedAccessTest {
                     // No authorized page can be resolved; the response must not depend on file existence.
                     assertFalse(PlannedAccess.isPathAccessible(path, request, response));
                     assertEquals(404, response.getStatus());
-                    assertEquals("private, no-store", response.getHeader("Cache-Control"));
+                    assertEquals("no-store, no-cache, must-revalidate, max-age=0", response.getHeader("Cache-Control"));
                     assertEquals("", response.getContentAsString());
                 } catch (java.io.UnsupportedEncodingException exception) { fail(exception); }
             }
@@ -118,7 +118,7 @@ class PlannedAccessTest {
 
             assertEquals(200, response.getStatus());
             assertEquals(Boolean.TRUE, request.getAttribute("isPreview"));
-            assertEquals("private, no-store", response.getHeader("Cache-Control"));
+            assertEquals("no-store, no-cache, must-revalidate, max-age=0", response.getHeader("Cache-Control"));
             assertEquals(publicable && initialized, PlannedAccess.isPlannedPreview(request, 43));
             assertEquals(publicable && initialized, PlannedAccess.isPlannedPreview(request, 42));
             assertFalse(PlannedAccess.isPlannedPreview(request, 10));
