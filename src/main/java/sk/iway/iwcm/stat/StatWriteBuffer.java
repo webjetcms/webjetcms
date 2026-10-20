@@ -13,6 +13,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import sk.iway.iwcm.DBPool;
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.Logger;
 
 /**
@@ -51,6 +52,23 @@ public class StatWriteBuffer
 		UpdateInsertSqlPair insertOnly = new UpdateInsertSqlPair(null, sql);
 		Logger.debug(StatWriteBuffer.class, String.format("Appending to buffer: %s ", sql));
 		appendToBuffer(insertOnly, table, parameters);
+	}
+
+	/**
+	 * Queues an idempotent event insert into an explicit monthly partition.
+	 * Duplicate event keys are skipped without interrupting later buffered events.
+	 *
+	 * @param sql parameterized insert statement
+	 * @param table base table name used for automatic creation
+	 * @param partitionSuffix validated monthly suffix, for example {@code _2026_9}
+	 * @param parameters insert parameters
+	 */
+	public static void addIdempotent(String sql, String table, String partitionSuffix, Object... parameters)
+	{
+		if (partitionSuffix == null || !partitionSuffix.matches("_[0-9]{4}_(?:[1-9]|1[0-2])")) {
+			throw new IllegalArgumentException("Invalid statistics partition suffix");
+		}
+		appendToBuffer(new UpdateInsertSqlPair(sql, partitionSuffix, true), table, parameters);
 	}
 
 	/**
@@ -185,7 +203,13 @@ public class StatWriteBuffer
 			for (Object[] params : statements)
 			{
 				setParams(params, ps);
-				int rowsTouched = ps.executeUpdate();
+				int rowsTouched;
+				try {
+					rowsTouched = ps.executeUpdate();
+				} catch (SQLException ex) {
+					if (sql.ignoreDuplicateKeys && isDuplicateKey(ex, Constants.DB_TYPE)) continue;
+					throw ex;
+				}
 				if (isPair && rowsTouched == 0)
 				{
 					setParams(params, psFollowing);
@@ -201,7 +225,7 @@ public class StatWriteBuffer
 		}
 		catch (Exception ex)
 		{
-			boolean created = StatNewDB.createStatTablesFromError(ex.getMessage(), null, oldMapping.get(sql));
+			boolean created = StatNewDB.createStatTablesFromError(ex.getMessage(), sql.partitionSuffix, oldMapping.get(sql));
 			if (created==false) {
 				sk.iway.iwcm.Logger.error(ex);
 			}
@@ -214,6 +238,17 @@ public class StatWriteBuffer
 			}
 			catch (Exception ex2){sk.iway.iwcm.Logger.error(ex2);}
 		}
+	}
+
+	static boolean isDuplicateKey(SQLException exception, int databaseType)
+	{
+		for (SQLException current = exception; current != null; current = current.getNextException()) {
+			if (databaseType == Constants.DB_PGSQL && "23505".equals(current.getSQLState())) return true;
+			if (databaseType == Constants.DB_MYSQL && current.getErrorCode() == 1062) return true;
+			if (databaseType == Constants.DB_MSSQL && (current.getErrorCode() == 2601 || current.getErrorCode() == 2627)) return true;
+			if (databaseType == Constants.DB_ORACLE && current.getErrorCode() == 1) return true;
+		}
+		return false;
 	}
 
 	private static void setParams(Object[] params, PreparedStatement ps) throws SQLException

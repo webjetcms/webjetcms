@@ -45,6 +45,7 @@ import sk.iway.iwcm.system.spring.ConfigurableSecurity;
     "sk.iway.iwcm.logon",
     "sk.iway.iwcm.rest",
     "sk.iway.iwcm.stat.rest",
+    "sk.iway.iwcm.stat.heat_map",
     "sk.iway.iwcm.system.audit.rest",
     "sk.iway.iwcm.system.datatable.editorlocking",
     "sk.iway.iwcm.system.datatables",
