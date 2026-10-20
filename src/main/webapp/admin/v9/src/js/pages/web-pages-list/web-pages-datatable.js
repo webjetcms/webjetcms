@@ -767,6 +767,21 @@ export class WebPagesDatatable {
         modal.find(".planned-change-notice").remove();
         if (!json?.editorFields?.plannedPublishingEnabled) return;
         const selected = $("#DTE_Field_editorFields-publishAfterStart_0").is(":checked");
+        if (json.docId < 1) {
+            if (selected) {
+                editor.field("editorFields.publishAfterStart").val(false);
+                this.#publishAfterStartChanged();
+                WJ.confirm({
+                    title: WJ.translate("planned.saveFirst.js"),
+                    message: WJ.translate("planned.saveFirst.message.js"),
+                    btnOkText: WJ.translate("planned.saveFirst.button.js"),
+                    success: () => {
+                        if (editor.currentJson === json && editor.display()) this.#saveNewPageForPlanning();
+                    }
+                });
+            }
+            return;
+        }
         const notice = $('<div class="alert alert-warning planned-change-notice mt-2 mb-0" role="status"></div>');
         const perex = $(editor.node("editorFields.publishAfterStart"));
         perex.find('[data-dte-e="input"]').append(notice);
@@ -785,11 +800,6 @@ export class WebPagesDatatable {
                     .fail(() => WJ.notifyError(WJ.translate("planned.error.js")))
                     .always(() => { this.#plannedRequest = null; });
             });
-        if (selected && json.docId < 1) {
-            editor.field("editorFields.publishAfterStart").val(false);
-            WJ.notifyError(WJ.translate("planned.saveFirst.js"));
-            return;
-        }
         if (selected && initialize) {
             if (this.#plannedRequest !== null) return;
             this.#plannedRequest = $.ajax({url: `/admin/rest/web-pages/planned/${json.docId}/initialize`, method: "POST"})
@@ -812,6 +822,43 @@ export class WebPagesDatatable {
             this.#setPlannedMedia(selected);
         }
         if (!selected && !active) notice.hide();
+    }
+
+    /** Saves a new unpublished page, then reopens the editor with its persistent ID before initializing the plan. */
+    #saveNewPageForPlanning() {
+        const table = this.webpagesDatatable;
+        const editor = table.EDITOR;
+        if (!editor.currentJson?.editorFields?.plannedPublishingEnabled || editor.currentJson.docId > 0 || editor.mode() !== "create") return;
+
+        editor.submit(json => {
+            const saved = json.data[0];
+            const modal = $("#" + table.DATA.id + "_modal");
+            const reopen = () => {
+                // Reload first so the create response's table redraw cannot replace the row being edited.
+                table.ajax.reload(() => {
+                    saved.editorFields.publishAfterStart = true;
+                    let row = table.row("#" + saved.docId);
+                    if (row.any()) row.data(saved);
+                    else row = table.row.add(saved);
+                    modal.one("shown.bs.modal.plannedNewPage", () => {
+                        $("#pills-dt-" + table.DATA.id + "-perex-tab").trigger("click");
+                    });
+                    table.wjEdit(row.index());
+                }, false);
+            };
+            // The submit callback runs after closing has started; wait for both submission and the modal transition.
+            editor.one("submitComplete.plannedReopen", () => {
+                if (modal.attr("data-dte-close-state") === "closed") reopen();
+                else modal.one("hidden.bs.modal.plannedNewPage", reopen);
+            });
+        }, null, data => {
+            // Change only the submitted snapshot so validation failures leave the form intact.
+            for (const page of Object.values(data.data)) {
+                page.available = false;
+                page.editorFields.requestPublish = false;
+                page.editorFields.publishAfterStart = false;
+            }
+        });
     }
 
     #setPlannedMedia(planned) {
