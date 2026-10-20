@@ -34,10 +34,9 @@ import sk.iway.iwcm.system.datatable.DataTableColumnsFactory;
 import sk.iway.iwcm.users.UsersDB;
 
 /**
- * Trieda pre generovanie JSONu pre DataTable {@see https://datatables.net/} z
- * anotacie {@link sk.iway.iwcm.system.datatable.annotations.DataTableColumn}
- * nad poliami objektu. Trieda je priamo mapovatelna pomocou
- * {@link com.fasterxml.jackson.databind.ObjectMapper}
+ * Represents DataTable column and editor metadata derived from an annotated object field.
+ * Supports supplied column annotations containing saved overrides and direct JSON serialization
+ * with {@link com.fasterxml.jackson.databind.ObjectMapper}.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter
@@ -86,6 +85,15 @@ public class DataTableColumn {
         this(controller, field, fieldPrefix, field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class));
     }
 
+    /**
+     * Builds column metadata using the supplied annotation and the field's editor metadata.
+     * Without an active HTTP request, only the prefixed name and data path are initialized.
+     *
+     * @param controller class used to resolve fallback translation keys and AI assistants
+     * @param field source field for type and editor metadata
+     * @param fieldPrefix prefix for the field name and data path, or {@code null} for no prefix
+     * @param annotation declared or synthesized column annotation, or {@code null} to skip column annotation settings
+     */
     @SuppressWarnings("rawtypes")
     public DataTableColumn(Class controller, Field field, String fieldPrefix, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation) {
         String fieldPrefixNotNull = fieldPrefix;
@@ -124,12 +132,13 @@ public class DataTableColumn {
     }
 
     /**
-     * Metoda nastavi JSON podla anotacie
-     * {@link sk.iway.iwcm.system.datatable.annotations.DataTableColumn} na danom
-     * poli. Anotacie maju rovnaky nazov a format ako generovany JSON.
+     * Applies column rendering, visibility and editor defaults from the supplied annotation.
+     * Titles are localized, and field metadata provides defaults for unspecified attributes.
      *
-     * @param field - reflection field, ktore ma nastavenu anotaciu
-     *              {@link sk.iway.iwcm.system.datatable.annotations.DataTableColumn}
+     * @param controller class used to construct fallback title translation keys
+     * @param field source field for fallback names and persistence metadata
+     * @param prop translations for the current request
+     * @param annotation declared or synthesized column annotation, or {@code null} to leave properties unchanged
      */
     @SuppressWarnings("rawtypes")
     private void setPropertiesFromAnnotation(Class controller, Field field, Prop prop, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation) {
@@ -380,11 +389,11 @@ public class DataTableColumn {
     }
 
     /**
-     * Metoda nastavi do JSONu atributy, podla toho, ako je natavena anotacia
-     * inputType {@link DataTableColumnType}
+     * Applies renderer, CSS and editor defaults for a column input type.
      *
-     * @param dataTableColumnType - {@link DataTableColumnType} - nastaveny v
-     *                            anotacii inputType
+     * @param dataTableColumnType input type whose defaults are applied
+     * @param annotation column annotation supplying type-specific attributes
+     * @param prop translations for generated option labels
      */
     private void setPropertiesFromType(DataTableColumnType dataTableColumnType, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation, Prop prop) {
         if (dataTableColumnType == DataTableColumnType.ID) {

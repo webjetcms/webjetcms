@@ -29,6 +29,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Builds DataTable column and editor-tab metadata from annotated classes.
+ * Saved settings for the current domain override column annotations, including nested field paths.
+ */
 public class DataTableColumnsFactory {
 
     Class<?> dto;
@@ -48,10 +52,24 @@ public class DataTableColumnsFactory {
         }
     }
 
+    /**
+     * Builds columns for the configured class and its nested fields using current-domain settings.
+     *
+     * @param fieldPrefix prefix prepended to generated field paths, or {@code null} for no prefix
+     * @return columns in discovery order, or an empty list when the class could not be loaded
+     */
     public List<DataTableColumn> getColumns(String fieldPrefix) {
         return getColumns(fieldPrefix, Map.of());
     }
 
+    /**
+     * Builds columns recursively, giving settings inherited from the parent field path precedence.
+     * Matching parent entries replace this class's saved entries before annotations are overridden.
+     *
+     * @param fieldPrefix prefix prepended to generated field paths, or {@code null} for no prefix
+     * @param parentSettings parent settings keyed by paths relative to this class
+     * @return columns in discovery order, including eligible nested columns
+     */
     private List<DataTableColumn> getColumns(String fieldPrefix, Map<String, FieldsSettingsEntity> parentSettings) {
         List<DataTableColumn> columns = new ArrayList<>();
 
@@ -151,6 +169,11 @@ public class DataTableColumnsFactory {
         return columns;
     }
 
+    /**
+     * Indexes saved settings for the loaded class and current domain by field path.
+     *
+     * @return a mutable settings map, empty when no settings or settings service are available
+     */
     private Map<String, FieldsSettingsEntity> getFieldsSettings() {
         Map<String, FieldsSettingsEntity> settings = new HashMap<>();
         FieldsSettingsService service = Tools.getSpringBean("fieldsSettingsService", FieldsSettingsService.class);
@@ -162,6 +185,14 @@ public class DataTableColumnsFactory {
         return settings;
     }
 
+    /**
+     * Applies saved settings to a synthesized column annotation without changing the declared annotation.
+     * Empty text settings and null Boolean settings retain the declared attribute values.
+     *
+     * @param field field with a declared DataTable column annotation
+     * @param settings saved settings keyed by field name
+     * @return the declared annotation when no settings exist, otherwise a synthesized annotation
+     */
     private sk.iway.iwcm.system.datatable.annotations.DataTableColumn getColumnAnnotation(Field field, Map<String, FieldsSettingsEntity> settings) {
         sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
         FieldsSettingsEntity setting = settings.get(field.getName());

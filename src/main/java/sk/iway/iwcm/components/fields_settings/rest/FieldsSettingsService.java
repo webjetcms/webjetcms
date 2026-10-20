@@ -37,6 +37,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
 import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
+/**
+ * Caches field settings by class and domain and discovers annotated entities for autocomplete.
+ * Autocomplete metadata comes from class annotations; saved overrides are loaded separately.
+ */
 @Service
 public class FieldsSettingsService {
 
@@ -50,6 +54,13 @@ public class FieldsSettingsService {
         this.repository = repository;
     }
 
+    /**
+     * Loads settings for a class and domain, caching the result for 30 minutes.
+     *
+     * @param className fully qualified entity class name
+     * @param domainId domain owning the settings
+     * @return the cached settings array, empty when no overrides exist
+     */
     public FieldsSettingsEntity[] getFieldsSettings(String className, int domainId) {
         Cache cache = Cache.getInstance();
         String cacheKey = getCacheKey(className, domainId);
@@ -61,22 +72,40 @@ public class FieldsSettingsService {
         return settings;
     }
 
+    /**
+     * Builds a fixed-length cache key from the class name and domain ID.
+     *
+     * @param className fully qualified entity class name
+     * @param domainId domain owning the settings
+     * @return the settings prefix followed by the SHA-256 hash of the class/domain pair
+     */
     public String getCacheKey(String className, int domainId) {
         return SETTINGS_CACHE_PREFIX + DigestUtils.sha256Hex((className + "\n" + domainId).getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Removes cached settings locally and requests invalidation on the other cluster nodes.
+     *
+     * @param cacheKey key returned by {@link #getCacheKey(String, int)}
+     */
     public void clearCache(String cacheKey) {
         Cache.getInstance().removeObject(cacheKey, true);
     }
 
+    /**
+     * Holds annotation titles used to build localized autocomplete options.
+     *
+     * @param fieldTitles field paths mapped to title translation keys, excluding ID columns
+     * @param tabTitles explicitly declared tab IDs mapped to title translation keys
+     */
     private record ClassOptions(Map<String, String> fieldTitles, Map<String, String> tabTitles) {
     }
 
     /**
      * Returns sorted entity class names containing the search term and at least one datatable column.
      *
-     * @param term search text
-     * @return case-insensitively sorted matching class names
+     * @param term search text, or {@code %} or {@code *} to return all eligible class names
+     * @return case-insensitively sorted matching class names, or an empty list for an empty term
      */
     public List<String> getClassOptions(String term) {
         if (Tools.isEmpty(term)) return List.of();
@@ -86,10 +115,10 @@ public class FieldsSettingsService {
     /**
      * Returns localized column titles with field paths as labels and raw field paths as values, excluding ID columns.
      *
-     * @param term search text, or {@code %} to return all field names
+     * @param term search text, or {@code %} or {@code *} to return all field names
      * @param className fully qualified selected class name
      * @param prop translations for the current request
-     * @return options matching the title or field name, or an empty list for an unknown class
+     * @return options matching the title or field name, or an empty list for empty input or an unknown class
      */
     public List<LabelValue> getFieldOptions(String term, String className, Prop prop) {
         if (Tools.isEmpty(term) || Tools.isEmpty(className)) return List.of();
@@ -100,10 +129,10 @@ public class FieldsSettingsService {
     /**
      * Returns localized tab titles from the selected class's {@link DataTableTabs} annotation with raw IDs as values.
      *
-     * @param term search text, or {@code %} to return all tab IDs
+     * @param term search text, or {@code %} or {@code *} to return all tab IDs
      * @param className fully qualified selected class name
      * @param prop translations for the current request
-     * @return options matching the title or tab ID, or an empty list when the class has no declared tabs
+     * @return options matching the title or tab ID, or an empty list for empty input, an unknown class or no declared tabs
      */
     public List<LabelValue> getTabOptions(String term, String className, Prop prop) {
         if (Tools.isEmpty(term) || Tools.isEmpty(className)) return List.of();
@@ -111,6 +140,14 @@ public class FieldsSettingsService {
         return options == null ? List.of() : getLabeledOptions(options.tabTitles(), term, prop);
     }
 
+    /**
+     * Builds localized options, filters their labels and sorts them without regard to case.
+     *
+     * @param titles raw values mapped to title translation keys
+     * @param term search text; a trimmed {@code %} or {@code *} includes every option
+     * @param prop translations for the current request
+     * @return matching labels paired with their original values
+     */
     private List<LabelValue> getLabeledOptions(Map<String, String> titles, String term, Prop prop) {
         String normalizedTerm = term.trim().toLowerCase(Locale.ROOT);
         boolean showAll = "%".equals(normalizedTerm) || "*".equals(normalizedTerm);
@@ -121,6 +158,14 @@ public class FieldsSettingsService {
             .toList();
     }
 
+    /**
+     * Formats a translated title with its raw value, falling back to the value for an empty title.
+     *
+     * @param value field path or tab ID
+     * @param titleKey translation key, optionally wrapped in {@code [[#{...}]]} or followed by semicolon-separated parameters
+     * @param prop translations for the current request
+     * @return translated title followed by the value in parentheses, or only the value
+     */
     private String getOptionLabel(String value, String titleKey, Prop prop) {
         if (titleKey.startsWith("[[#{") && titleKey.endsWith("}]]")) {
             titleKey = titleKey.substring(4, titleKey.length() - 3);
@@ -134,6 +179,13 @@ public class FieldsSettingsService {
         return title + " (" + value + ")";
     }
 
+    /**
+     * Filters and sorts string options without regard to case.
+     *
+     * @param options available values
+     * @param term search text; a trimmed {@code %} or {@code *} includes every value
+     * @return sorted values containing the trimmed search text, or all values for a wildcard
+     */
     private List<String> filterOptions(Collection<String> options, String term) {
         String normalizedTerm = term.trim().toLowerCase(Locale.ROOT);
         boolean showAll = "%".equals(normalizedTerm) || "*".equals(normalizedTerm);
@@ -143,6 +195,11 @@ public class FieldsSettingsService {
             .toList();
     }
 
+    /**
+     * Loads discovered entity metadata from the shared cache, scanning application packages on a cache miss.
+     *
+     * @return class names mapped to field and tab titles, cached for 60 minutes
+     */
     @SuppressWarnings("unchecked")
     private Map<String, ClassOptions> getClassOptionsMap() {
         Cache cache = Cache.getInstance();

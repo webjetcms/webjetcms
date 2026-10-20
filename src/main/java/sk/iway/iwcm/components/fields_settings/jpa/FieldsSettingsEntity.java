@@ -17,6 +17,10 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 
+/**
+ * Stores DataTable column and editor overrides for a field path in an entity class and domain.
+ * Null Boolean values and empty text settings preserve the corresponding annotation values.
+ */
 @Entity
 @Table(name = "fields_settings")
 @Getter

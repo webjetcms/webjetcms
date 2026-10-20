@@ -24,6 +24,11 @@ import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
 import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
+/**
+ * Manages field settings through DataTables Editor and supplies class, field and tab autocomplete options.
+ * Saves use the current domain, and successful changes invalidate the affected settings caches.
+ * Access requires the {@code customFields} permission.
+ */
 @RestController
 @RequestMapping("/admin/rest/settings/fields-settings")
 @PreAuthorize("@WebjetSecurityService.hasPermission('customFields')")
@@ -40,15 +45,15 @@ public class FieldsSettingsRestController extends DatatableRestControllerV2<Fiel
         this.fieldsSettingsService = fieldsSettingsService;
     }
 
-    /**
-     * Uses the current domain for every save, including direct REST calls and imports.
-     */
     @Override
     public FieldsSettingsEntity processToEntity(FieldsSettingsEntity entity, ProcessItemAction action) {
         entity.setDomainId(getDomainId());
         return entity;
     }
 
+    /**
+     * Inserts settings and invalidates the cache for the saved class and domain.
+     */
     @Override
     public FieldsSettingsEntity insertItem(FieldsSettingsEntity entity) {
         FieldsSettingsEntity saved = super.insertItem(entity);
@@ -56,6 +61,9 @@ public class FieldsSettingsRestController extends DatatableRestControllerV2<Fiel
         return saved;
     }
 
+    /**
+     * Updates settings and invalidates both the previous and saved cache keys when they differ.
+     */
     @Override
     public FieldsSettingsEntity editItem(FieldsSettingsEntity entity, long id) {
         String oldCacheKey = getStoredCacheKey(id);
@@ -68,6 +76,9 @@ public class FieldsSettingsRestController extends DatatableRestControllerV2<Fiel
         return saved;
     }
 
+    /**
+     * Deletes settings and invalidates their stored cache key when deletion succeeds.
+     */
     @Override
     public boolean deleteItem(FieldsSettingsEntity entity, long id) {
         String cacheKey = getStoredCacheKey(id);
@@ -76,12 +87,19 @@ public class FieldsSettingsRestController extends DatatableRestControllerV2<Fiel
         return deleted;
     }
 
+    /**
+     * Resolves a record's cache key using its persisted class name and current domain.
+     */
     private String getStoredCacheKey(long id) {
         return repository.findFirstByIdAndDomainId(id, getDomainId())
             .map(stored -> fieldsSettingsService.getCacheKey(stored.getClassName(), stored.getDomainId()))
             .orElse(null);
     }
 
+    /**
+     * Merges submitted settings while preserving nullable Boolean fields omitted from an import.
+     * Omitted Boolean values are restored on the submitted entity before the inherited merge
+     */
     @Override
     protected void copyEntityIntoOriginal(FieldsSettingsEntity entity, FieldsSettingsEntity original) {
         if (isImporting()) {
@@ -98,6 +116,10 @@ public class FieldsSettingsRestController extends DatatableRestControllerV2<Fiel
         super.copyEntityIntoOriginal(entity, original);
     }
 
+    /**
+     * Rejects self-referencing sort positions and duplicate class/field settings in the current domain.
+     * Duplicate checks exclude the edited record and are left to the database constraint during imports.
+     */
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, FieldsSettingsEntity> target, Identity user, Errors errors, Long id, FieldsSettingsEntity entity) {
         super.validateEditor(request, target, user, errors, id, entity);
