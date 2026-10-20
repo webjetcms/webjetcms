@@ -275,7 +275,7 @@ public class FsService implements cn.bluejoe.elfinder.service.FsService //NOSONA
                 sk.iway.iwcm.doc.DocDetails page = sk.iway.iwcm.doc.DocDB.getInstance().getBasicDocDetails(sk.iway.iwcm.doc.PlannedAccess.masterId(docId), false);
                 if (page != null) for (String prefix : new String[] {"/images", "/files"}) {
                     String target = UploadFileTools.getPageUploadSubDir(page.getDocId(), page.getGroupId(), page.getTitle(), prefix);
-                    String planned = sk.iway.iwcm.doc.PlannedAssetPaths.source(page.getDocId(), target);
+                    String planned = sk.iway.iwcm.doc.PlannedAssetPaths.rewriteToProtectedFolder(page.getDocId(), target);
                     if (getCurrentUser().isFolderWritable(planned)) {
                         IwcmFile directory = new IwcmFile(Tools.getRealPath(planned));
                         if (directory.exists() || directory.mkdirs()) rootDirs.append(",").append(planned);

@@ -109,7 +109,7 @@ class FileDownloadHeadersTest {
         assertEquals(status, response.getStatus());
         assertEquals(body, response.getContentAsString());
         assertEquals(planned ? "/original-destination/" : FILE_URL, request.getSession().getAttribute("afterLogonRedirect"));
-        assertEquals(planned ? "noindex, nofollow, noarchive" : null, response.getHeader("X-Robots-Tag"));
+        assertNull(response.getHeader("X-Robots-Tag"));
         assertNoCache(response);
     }
 
@@ -134,7 +134,7 @@ class FileDownloadHeadersTest {
         assertEquals("", response.getContentAsString());
         assertNull(response.getForwardedUrl());
         assertEquals("/original-destination/", request.getSession().getAttribute("afterLogonRedirect"));
-        assertEquals("noindex, nofollow, noarchive", response.getHeader("X-Robots-Tag"));
+        assertNull(response.getHeader("X-Robots-Tag"));
         assertNoCache(response);
     }
 
@@ -167,7 +167,7 @@ class FileDownloadHeadersTest {
         assertNull(response.getForwardedUrl());
         assertNull(response.getHeader("ETag"));
         assertNull(request.getSession().getAttribute("afterLogonRedirect"));
-        assertEquals("noindex, nofollow, noarchive", response.getHeader("X-Robots-Tag"));
+        assertNull(response.getHeader("X-Robots-Tag"));
         assertNoCache(response);
     }
 

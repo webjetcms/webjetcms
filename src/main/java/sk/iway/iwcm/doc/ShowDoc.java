@@ -1015,7 +1015,7 @@ private static String combineCss(String cssStyle)
         }
 
         if (request.getAttribute("isPreview") != null) {
-            PlannedAccess.privateHeaders(response);
+            PathFilter.setNoCacheHeaders(response);
         } else if (Constants.getBoolean("nginxProxyMode"))
         {
             //setujeme iba ked sa negeneruje nocache cookie
@@ -1348,7 +1348,11 @@ private static String combineCss(String cssStyle)
             updateCodes(request, null, doc_id);
         }
 
-        PathFilter.setXRobotsTagValue("NOT_SEARCHABLE_PAGE", response, doc);
+        if (historyId > 0) {
+            response.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+        } else {
+            PathFilter.setXRobotsTagValue("NOT_SEARCHABLE_PAGE", response, doc);
+        }
 
         String forward = temp.getForward();
         boolean allowAdminForward = false;

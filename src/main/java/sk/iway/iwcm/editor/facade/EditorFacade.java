@@ -114,35 +114,34 @@ public class EditorFacade {
 		Logger.debug(EditorFacade.class, "Page saved, historyId=" + historyId);
 
         boolean plannedChange = sk.iway.iwcm.doc.PlannedAccess.enabled() && entity.isPublishAfterStart();
-        if (!plannedChange) {
-		// skipApproving is set for newly created default pages for group, we dont want to create duplicate approve request for such pages (approved will be by group itself)
-        multigroupService.setDefaultDocId(entity.getGroupId(), entity.getDocId(), !EditorFacade.isSkipApproving(entity.getGroupId()));
+        if (plannedChange==false) {
+			// skipApproving is set for newly created default pages for group, we dont want to create duplicate approve request for such pages (approved will be by group itself)
+			multigroupService.setDefaultDocId(entity.getGroupId(), entity.getDocId(), !EditorFacade.isSkipApproving(entity.getGroupId()));
 
-		//ak je to stranka zo /System adresara tak refreshni TemplatesDB, v novom totiz mame lokalne System adresare
-		GroupDetails group = entity.getGroup();
-		if (group != null && group.getFullPath().startsWith("/System/"))
-			TemplatesDB.getInstance(true);
+			//ak je to stranka zo /System adresara tak refreshni TemplatesDB, v novom totiz mame lokalne System adresare
+			GroupDetails group = entity.getGroup();
+			if (group != null && group.getFullPath().startsWith("/System/"))
+				TemplatesDB.getInstance(true);
 
-		//ak sa jedna o novu stranku je potrebne zmenit mediam hodnotu -user_id na novo ulozene docId
-		if(docIdOriginal < 1) {
-			mediaService.assignDocIdToMedia(entity.getDocId());
-		}
-
-		//save attrs - MUST BE BEFORE multigroupHandleSlaves
-		if (entity.getEditorFields().getAttrs() != null) {
-			editorService.saveAttrs(entity, entity.getEditorFields().getAttrs(), Constants.getBoolean("attrAlwaysCleanOnSave"));
-		}
-
-		if (isIgnoreMultigroupMapping()==false) {
-			boolean multigroupRedirectSlavesToMaster = Constants.getBoolean("multigroupRedirectSlavesToMaster");
-			//Write multigroup mapping
-			if (entity.getEditorFields().getGroupCopyDetails() != null) {
-				entity.setSortPriority(originalSortPriority);
-				entity.setVirtualPath(originalVirtualPath);
-				multigroupService.multigroupHandleSlaves(entity, docIdOriginal, entity.getEditorFields().getGroupCopyDetails(), multigroupRedirectSlavesToMaster);
+			//ak sa jedna o novu stranku je potrebne zmenit mediam hodnotu -user_id na novo ulozene docId
+			if(docIdOriginal < 1) {
+				mediaService.assignDocIdToMedia(entity.getDocId());
 			}
-		}
 
+			//save attrs - MUST BE BEFORE multigroupHandleSlaves
+			if (entity.getEditorFields().getAttrs() != null) {
+				editorService.saveAttrs(entity, entity.getEditorFields().getAttrs(), Constants.getBoolean("attrAlwaysCleanOnSave"));
+			}
+
+			if (isIgnoreMultigroupMapping()==false) {
+				boolean multigroupRedirectSlavesToMaster = Constants.getBoolean("multigroupRedirectSlavesToMaster");
+				//Write multigroup mapping
+				if (entity.getEditorFields().getGroupCopyDetails() != null) {
+					entity.setSortPriority(originalSortPriority);
+					entity.setVirtualPath(originalVirtualPath);
+					multigroupService.multigroupHandleSlaves(entity, docIdOriginal, entity.getEditorFields().getGroupCopyDetails(), multigroupRedirectSlavesToMaster);
+				}
+			}
         }
 		//vrat aktualny zaznam z DB
 		DocDetails savedCopy = editorService.getDoc(entity.getDocId(), historyId);

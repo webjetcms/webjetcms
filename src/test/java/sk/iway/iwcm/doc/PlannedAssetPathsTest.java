@@ -55,8 +55,8 @@ class PlannedAssetPathsTest {
 
     @Test
     void mapsStagingWithoutUsingPageTitle() {
-        assertEquals("/images/apple/new phone.webp", PlannedAssetPaths.target(ROOT + "/images/apple/new%20phone.webp", 42));
-        assertEquals(ROOT + "/files/apple/", PlannedAssetPaths.source(42, "/files/apple/"));
+        assertEquals("/images/apple/new phone.webp", PlannedAssetPaths.getPublicPath(ROOT + "/images/apple/new%20phone.webp", 42));
+        assertEquals(ROOT + "/files/apple/", PlannedAssetPaths.rewriteToProtectedFolder(42, "/files/apple/"));
     }
 
     /** Prefix removal supports files and folders without changing ordinary paths. */

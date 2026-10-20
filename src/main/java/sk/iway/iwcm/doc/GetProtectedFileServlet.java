@@ -58,6 +58,7 @@ public class GetProtectedFileServlet extends HttpServlet
       //Logger.println(this,"RequestServlet: url="+url);
 
       if (PlannedAccess.isPathAccessible(url, request, response)==false) return;
+
       boolean plannedPath = PlannedAssetPaths.containsPlannedPath(url);
       EditForm ef = null;
       if (plannedPath) {

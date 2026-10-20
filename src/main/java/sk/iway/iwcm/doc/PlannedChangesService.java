@@ -29,7 +29,18 @@ import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.spirit.model.Media;
 
-/** Coordinates a single planned revision using existing page/history/media tables. */
+/**
+ * Prepares, validates, publishes and cancels a page's planned files and media.
+ *
+ * <p>Page revisions remain in the existing history table. Planned media are stored
+ * separately under {@link #PLANNED_MEDIA_TABLE}, while the page's initialization flag
+ * distinguishes an intentionally empty media set from an uninitialized one.</p>
+ *
+ * <p>The editor and {@link DocPublishService} control page saves and history completion.
+ * Callers enforce page-edit permissions; this service checks destination-folder rights
+ * before publishing files. Database writes and file replacements are not one transaction:
+ * retryable steps retain planned source data until their live replacements are saved.</p>
+ */
 @Service
 public class PlannedChangesService {
     public static final String PLANNED_MEDIA_TABLE = "planned_documents";
@@ -47,24 +58,57 @@ public class PlannedChangesService {
         return Tools.getSpringBean("plannedChangesService", PlannedChangesService.class);
     }
 
+    /**
+     * Requires an active planned media set before accepting a media operation.
+     *
+     * @param docId page ID whose initialization flag is checked
+     * @throws IllegalArgumentException if planned publishing is disabled or the media set is uninitialized
+     */
     public void requirePlannedMedia(int docId) {
         if (!PlannedAccess.enabled() || !docDetailsRepository.isPlannedMediaInitialized(docId)) {
             throw new IllegalArgumentException("Planned media are no longer active; reopen the editor");
         }
     }
 
-    /** Validates an individual media edit; asset checks run when saving or publishing the plan. */
+    /**
+     * Validates an individual planned media edit without inspecting its linked files.
+     *
+     * <p>Requires initialized planned media and rejects private asset references in
+     * localized titles and the media group. File checks run when saving or publishing
+     * the page's plan.</p>
+     *
+     * @param item media values submitted for editing
+     * @param docId page ID owning the planned media set
+     * @throws IllegalArgumentException if the media set is inactive or a restricted field contains a planned reference
+     */
     public void validateMedia(Media item, int docId) {
         requirePlannedMedia(docId);
         rejectFields(item, "mediaTitleSk", "mediaTitleCz", "mediaTitleEn", "mediaTitleDe", "mediaGroup");
     }
 
+    /**
+     * Finds the newest history record still marked for publication.
+     *
+     * @param docId page ID whose pending revisions are searched
+     * @return highest pending history ID, or {@code null} when no pending revision exists
+     */
     public Long activeHistory(int docId) {
         List<DocHistory> pending = docHistoryRepository.findByDocIdAndPublicableTrueOrderByIdDesc(docId);
         return pending.isEmpty() ? null : pending.get(0).getId();
     }
 
-    /** Copies once, clearing any incomplete previous attempt before retrying initialization. */
+    /**
+     * Initializes planned media from the page's live media once, then returns its pending history ID.
+     *
+     * <p>Media are scoped to the current domain. Before an uninitialized copy is attempted,
+     * any incomplete planned set is deleted. The initialization flag is written only after
+     * every copy is saved, allowing a failed attempt to restart from the live set.
+     * An already initialized set, including an empty one, is left unchanged.</p>
+     *
+     * @param docId page ID whose planned media should be initialized
+     * @return newest pending history ID, or {@code null} if no revision is scheduled
+     * @throws IllegalArgumentException if planned publishing is disabled
+     */
     public Long initialize(int docId) {
         if (!PlannedAccess.enabled()) throw new IllegalArgumentException("Planned publishing is disabled");
         if (!docDetailsRepository.isPlannedMediaInitialized(docId)) {
@@ -78,6 +122,16 @@ public class PlannedChangesService {
         return activeHistory(docId);
     }
 
+    /**
+     * Cancels pending revisions and removes the page's planned media and working files.
+     *
+     * <p>Clears publication and approval flags on pending history records, deletes planned
+     * media in the current domain and clears the initialization flag. Live content and
+     * publication backups are retained. Earlier writes are not rolled back if cleanup fails.</p>
+     *
+     * @param docId page ID whose planned changes should be cancelled
+     * @throws IllegalStateException if planned working files cannot be deleted
+     */
     public void cancel(int docId) {
         for (DocHistory pending : docHistoryRepository.findByDocIdAndPublicableTrueOrderByIdDesc(docId)) {
             pending.setPublicable(false);
@@ -90,7 +144,22 @@ public class PlannedChangesService {
         deletePlannedFiles(docId);
     }
 
-    /** Validates a new scheduled snapshot without cancelling the existing plan. */
+    /**
+     * Prepares and validates an edited revision before the editor saves its scheduled history.
+     *
+     * <p>Requires a saved page, enabled history, a publication date and, when present,
+     * the active history ID. Initializes planned media and restores the live page's URL
+     * and folder on the supplied object. Checks restricted fields, all staged files,
+     * destination permissions and conflicts with other plans.</p>
+     *
+     * <p>The existing plan is not cancelled here. Initialization and changes to the
+     * supplied object can already have happened when a later validation fails.</p>
+     *
+     * @param doc edited page revision, modified to retain the live URL and folder
+     * @param user editor whose write permissions are checked for public destination folders
+     * @throws IllegalArgumentException if the revision, files, permissions or destination conflicts prevent planning
+     * @throws IllegalStateException if planned working directories cannot be read
+     */
     public void prepareSave(DocDetails doc, Identity user) {
         if (doc.getDocId() < 1 || Constants.getBoolean("editorDisableHistory")) {
             throw new IllegalArgumentException("Save an unpublished page before preparing a planned change; history must be enabled");
@@ -110,7 +179,11 @@ public class PlannedChangesService {
         checkConflicts(doc.getDocId(), files);
     }
 
-    /** Replaces the previous plan only after the new history record has been saved. */
+    /**
+     * Deactivates older pending revisions after the replacement history has been saved.
+     *
+     * @param saved persisted replacement revision; pending records with the same or a higher ID are retained
+     */
     public void completeSave(DocHistory saved) {
         for (DocHistory old : docHistoryRepository.findByDocIdAndPublicableTrueOrderByIdDesc(saved.getDocId())) {
             if (old.getId() >= saved.getId()) continue;
@@ -124,16 +197,38 @@ public class PlannedChangesService {
         return mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(id, PLANNED_MEDIA_TABLE, CloudToolsForCore.getDomainId());
     }
 
+    /**
+     * Rejects planned asset references in page and media fields that are not rewritten on publication.
+     *
+     * @param doc page revision whose routing and title fields are checked
+     * @param planned media whose localized titles and group names are checked
+     * @throws IllegalArgumentException if a restricted field contains a planned reference
+     */
     private void validateReferenceFields(DocDetails doc, List<Media> planned) {
         rejectFields(doc, "title", "navbar", "externalLink", "virtualPath", "editorVirtualPath", "fileName");
         for (Media item : planned) rejectFields(item, "mediaTitleSk", "mediaTitleCz", "mediaTitleEn", "mediaTitleDe", "mediaGroup");
     }
 
+    /**
+     * Replaces this page's planned prefixes in publishable content fields in memory.
+     *
+     * <p>Covers body and head content, perex fields and custom fields A through T.
+     * The caller persists the modified page or history record.</p>
+     *
+     * @param doc page or history object whose content should use public asset paths
+     */
     void rewriteContent(DocBasic doc) {
         rewriteProperties(doc, doc.getDocId(), "data", "dataAsc", "htmlData", "htmlHead", "perexImage", "perexPlace");
         for (char field = 'A'; field <= 'T'; field++) rewriteProperties(doc, doc.getDocId(), "field" + field);
     }
 
+    /**
+     * Checks selected bean properties for planned references after decoding HTML entities.
+     *
+     * @param bean object exposing the named readable properties
+     * @param fields property names that must not contain planned references
+     * @throws IllegalArgumentException if any selected value contains a planned reference
+     */
     private void rejectFields(Object bean, String... fields) {
         BeanWrapper wrapper = new BeanWrapperImpl(bean);
         for (String field : fields) {
@@ -143,12 +238,26 @@ public class PlannedChangesService {
         }
     }
 
-    /** Never permit a staged URL to enter live data through ordinary editing or a legacy restore. */
+    /**
+     * Prevents private planned references from entering live data through ordinary editing or restoration.
+     *
+     * @param bean object whose persisted string properties are inspected
+     * @throws IllegalArgumentException with a localized message if a planned reference is found
+     */
     public static void rejectPrivateReferences(Object bean) {
         if (hasPrivateReferences(bean)) throw new IllegalArgumentException(Prop.getInstance().getText("planned.privateReferencesNotAllowed"));
     }
 
-    /** Includes private references outside the body, such as the perex image and custom fields. */
+    /**
+     * Detects planned references in readable string fields annotated with {@code @Column}.
+     *
+     * <p>Inspects inherited fields as well as fields declared on the supplied class.
+     * HTML entities are decoded before matching. Unmapped computed properties are
+     * skipped to avoid invoking getters that can perform unrelated database work.</p>
+     *
+     * @param bean object whose persisted string properties are inspected
+     * @return {@code true} if any inspected value contains a planned-directory reference
+     */
     public static boolean hasPrivateReferences(Object bean) {
         BeanWrapper wrapper = new BeanWrapperImpl(bean);
         // Inspect only persisted fields; computed bean getters can perform unrelated database work.
@@ -164,6 +273,13 @@ public class PlannedChangesService {
         return false;
     }
 
+    /**
+     * Rewrites one page's planned prefixes in the selected string properties.
+     *
+     * @param bean object whose properties are updated in memory
+     * @param docId page ID identifying the prefix to replace
+     * @param fields readable and writable string properties to rewrite
+     */
     private void rewriteProperties(Object bean, int docId, String... fields) {
         BeanWrapper wrapper = new BeanWrapperImpl(bean);
         for (String field : fields) {
@@ -172,6 +288,17 @@ public class PlannedChangesService {
         }
     }
 
+    /**
+     * Rejects public destinations already used by another pending page's staged files.
+     *
+     * <p>With external static-file storage enabled, only plans in the current domain
+     * are compared. This check does not lock other plans against concurrent changes.</p>
+     *
+     * @param docId page being checked, excluded from the comparison
+     * @param files mapping from planned source paths to public destination paths
+     * @throws IllegalArgumentException if another plan uses the same destination or contains an invalid asset path
+     * @throws IllegalStateException if another plan's working files cannot be read
+     */
     private void checkConflicts(int docId, Map<String, String> files) {
         if (files.isEmpty()) return;
         for (DocHistory pending : docHistoryRepository.findByPublicableTrue()) {
@@ -185,6 +312,17 @@ public class PlannedChangesService {
         }
     }
 
+    /**
+     * Checks file access and storage prerequisites before any staged file is published.
+     *
+     * <p>Requires writable destination folders for the user, readable regular source files
+     * and filesystem storage instead of database storage. The nearest existing destination
+     * ancestor must be writable and on the source file's filesystem for atomic replacement.</p>
+     *
+     * @param files mapping from planned source paths to public destination paths
+     * @param user user whose public-folder write permissions are checked
+     * @throws IllegalArgumentException if a file, permission or storage check fails
+     */
     private void preflight(Map<String, String> files, Identity user) {
         for (Map.Entry<String, String> entry : files.entrySet()) {
             try {
@@ -202,7 +340,19 @@ public class PlannedChangesService {
         }
     }
 
-    /** Copies staged files and rewrites the page before the regular publisher saves it. */
+    /**
+     * Publishes staged files and rewrites content before the regular publisher saves the page.
+     *
+     * <p>Validates restricted fields, destination permissions and conflicts first.
+     * Source files remain available for retry; a failure after some replacements does
+     * not roll back those public files. This method does not save the page or its media.</p>
+     *
+     * @param doc revision to publish, modified in memory to use public asset paths
+     * @param user user whose public-folder write permissions are checked
+     * @throws IllegalArgumentException if reference, file or conflict validation fails
+     * @throws IllegalStateException if planned working files cannot be read
+     * @throws IOException if file publication or cache invalidation fails
+     */
     void preparePublication(DocDetails doc, Identity user) throws IOException {
         validateReferenceFields(doc, plannedMedia(doc.getDocId()));
         Map<String, String> files = plannedFiles(doc.getDocId());
@@ -212,7 +362,18 @@ public class PlannedChangesService {
         rewriteContent(doc);
     }
 
-    /** Replaces live media after the page is saved, keeping the source set until all copies succeed. */
+    /**
+     * Replaces a saved page's live media with its initialized planned set in the current domain.
+     *
+     * <p>Deletes the old live set and saves copies with public asset paths. Planned media
+     * and the initialization flag remain until every live media save succeeds, allowing
+     * a failed replacement to be retried. An initialized empty set removes all live media.</p>
+     *
+     * <p>After successful replacement the flag is cleared before planned media are deleted.
+     * If cleanup is retried with the flag already cleared, the live set is left unchanged.</p>
+     *
+     * @param doc saved page providing the media owner ID and publication timestamp
+     */
     void publishMedia(DocDetails doc) {
         if (docDetailsRepository.isPlannedMediaInitialized(doc.getDocId())) {
             List<Media> planned = plannedMedia(doc.getDocId()).stream().map(item -> copyMedia(item, "documents")).toList();
@@ -230,7 +391,14 @@ public class PlannedChangesService {
         deleteMedia(doc.getDocId(), PLANNED_MEDIA_TABLE, CloudToolsForCore.getDomainId());
     }
 
-    /** Cleans working files only after the publisher has completed the history record. */
+    /**
+     * Removes planned working files after the publisher has completed the history record.
+     *
+     * <p>Publication backups are retained. Cleanup failures are logged instead of propagated
+     * so the publisher can finish its remaining cache updates.</p>
+     *
+     * @param docId page ID whose planned working directories should be removed
+     */
     void cleanupPublishedFiles(int docId) {
         try {
             deletePlannedFiles(docId);
@@ -246,6 +414,13 @@ public class PlannedChangesService {
         mediaRepository.deleteAll(items);
     }
 
+    /**
+     * Creates an unsaved media copy for a different owner table while retaining its page ID.
+     *
+     * @param original source media; its group list is copied into a separate list
+     * @param table destination owner table, such as {@code documents} or {@link #PLANNED_MEDIA_TABLE}
+     * @return copy without the source record ID, media ID or editor fields
+     */
     private Media copyMedia(Media original, String table) {
         Media copy = new Media();
         BeanUtils.copyProperties(original, copy, "id", "mediaId", "groups", "editorFields");
@@ -254,6 +429,12 @@ public class PlannedChangesService {
         return copy;
     }
 
+    /**
+     * Invalidates WebJET's file cache and removes matching cached thumbnail variants.
+     *
+     * @param target root-relative public path of the replaced file
+     * @throws IOException if cached thumbnail files cannot be listed or deleted
+     */
     private void invalidateAsset(String target) throws IOException {
         sk.iway.iwcm.Cache.getInstance().removeObjectStartsWithName(sk.iway.iwcm.io.FileCache.FILE_CACHE_PREFIX + target, true);
         Path cached = Path.of(Tools.getRealPath(Constants.getString("thumbServletCacheDir") + target.substring(1)));
@@ -267,7 +448,17 @@ public class PlannedChangesService {
         }
     }
 
-    /** Collects every staged image and file, including assets not referenced by the page. */
+    /**
+     * Collects every regular file in the page's planned images and files directories.
+     *
+     * <p>Includes files not referenced by page content. Missing working directories are
+     * skipped, and each discovered source is mapped to a validated public destination.</p>
+     *
+     * @param docId page ID identifying the planned working directories
+     * @return mapping from root-relative planned source paths to decoded public destination paths
+     * @throws IllegalArgumentException if a discovered path has an invalid owner or public destination
+     * @throws IllegalStateException if a working directory cannot be traversed
+     */
     private Map<String, String> plannedFiles(int docId) {
         Map<String, String> files = new LinkedHashMap<>();
         for (String folder : List.of("images", "files")) {
@@ -278,7 +469,7 @@ public class PlannedChangesService {
                 try (var paths = Files.walk(root)) {
                     for (Path path : paths.toList()) {
                         String source = prefix + root.relativize(path).toString().replace('\\', '/');
-                        if (Files.isRegularFile(path)) files.put(source, PlannedAssetPaths.target(source, docId));
+                        if (Files.isRegularFile(path)) files.put(source, PlannedAssetPaths.getPublicPath(source, docId));
                     }
                 }
             } catch (IOException | UncheckedIOException exception) {
@@ -288,7 +479,15 @@ public class PlannedChangesService {
         return files;
     }
 
-    /** Clears working folders only; publication backups are kept separately. */
+    /**
+     * Deletes the page's planned images and files directories, including their contents.
+     *
+     * <p>Missing directories are ignored. The separate publication backup directory
+     * is retained, and a failure can leave part of a working directory already deleted.</p>
+     *
+     * @param docId page ID identifying the working directories to remove
+     * @throws IllegalStateException if a directory cannot be traversed or an entry cannot be deleted
+     */
     private void deletePlannedFiles(int docId) {
         for (String folder : List.of("images", "files")) {
             try {
@@ -303,6 +502,19 @@ public class PlannedChangesService {
         }
     }
 
+    /**
+     * Replaces public files from planned sources, backing up existing targets once per history revision.
+     *
+     * <p>Each source is copied to a temporary file and atomically moved to its public
+     * destination, then WebJET caches are invalidated. Planned originals are retained
+     * for retry. Atomicity applies to each file, not the complete set; earlier replacements
+     * remain published if a later operation fails.</p>
+     *
+     * @param files mapping from root-relative planned source paths to public destination paths
+     * @param docId page ID identifying the protected backup directory
+     * @param historyId history revision ID separating backups of successive publications
+     * @throws IOException if backup, replacement, temporary-file cleanup or cache invalidation fails
+     */
     private void publishFiles(Map<String, String> files, int docId, long historyId) throws IOException {
         for (Map.Entry<String, String> entry : files.entrySet()) {
             Path source = Path.of(Tools.getRealPath(entry.getKey()));

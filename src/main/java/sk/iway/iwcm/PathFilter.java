@@ -2072,7 +2072,7 @@ public class PathFilter implements Filter
 	public static boolean setStaticContentHeaders(String path, Identity user, HttpServletRequest request, HttpServletResponse response)
 	{
         if (sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(path)) {
-            sk.iway.iwcm.doc.PlannedAccess.privateHeaders(response);
+            setNoCacheHeaders(response);
             return false;
         }
 		if (path.startsWith("/cache/")==false && request.getParameter("v")!=null)
