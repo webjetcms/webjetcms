@@ -83,6 +83,8 @@ import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsSearchDto;
 import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
 import sk.iway.iwcm.components.customfields.rest.JsonEditorValidator;
+import sk.iway.iwcm.components.fields_settings.jpa.FieldsSettingsEntity;
+import sk.iway.iwcm.components.fields_settings.rest.FieldsSettingsService;
 import sk.iway.iwcm.database.ActiveRecordBase;
 import sk.iway.iwcm.database.SimpleQuery;
 import sk.iway.iwcm.i18n.Prop;
@@ -2399,17 +2401,29 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 			identifierProperties.add(field.getName());
 		}
 
+		// Match DataTableColumnsFactory's current domain, even when the controller uses a shared repository domain.
+		Map<String, Boolean> hiddenEditorOverrides = new HashMap<>();
+		FieldsSettingsService fieldsSettingsService = Tools.getSpringBean("fieldsSettingsService", FieldsSettingsService.class);
+		if (fieldsSettingsService != null) {
+			for (FieldsSettingsEntity setting : fieldsSettingsService.getFieldsSettings(ClassUtils.getUserClass(entity).getName(), CloudToolsForCore.getDomainId())) {
+				if (setting.getHiddenEditor() != null) {
+					hiddenEditorOverrides.put(setting.getFieldName(), setting.getHiddenEditor());
+				}
+			}
+		}
+
 		Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(entity.getClass());
 		for (Field field : declaredFields) {
 			if (field.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {
 				sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
 				boolean[] hiddenEditor = annotation.hiddenEditor();
-				if (hiddenEditor.length > 0) {
-					//ak je hiddenEditor preskoc
-					if (hiddenEditor[0]==true) {
-						ignoreProperties.add(field.getName());
-						continue;
-					}
+				// Settings can expose a field declared hiddenEditor=true, such as FileArchivatorBean.orderId.
+				// Checking only the annotation would show an editable field but silently discard its submitted value.
+				// Absent or null ("Unchanged") overrides preserve the annotation's original behavior.
+				boolean isHiddenEditor = hiddenEditorOverrides.getOrDefault(field.getName(), hiddenEditor.length > 0 && hiddenEditor[0]);
+				if (isHiddenEditor) {
+					ignoreProperties.add(field.getName());
+					continue;
 				}
 
 				//also skip if editor.attr.disabled=disabled

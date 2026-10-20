@@ -21,6 +21,7 @@ import sk.iway.iwcm.components.fields_settings.jpa.FieldsSettingsRepository;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableRestControllerV2;
+import sk.iway.iwcm.system.datatable.ProcessItemAction;
 import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 @RestController
@@ -37,6 +38,15 @@ public class FieldsSettingsRestController extends DatatableRestControllerV2<Fiel
         super(repository, FieldsSettingsEntity.class);
         this.repository = repository;
         this.fieldsSettingsService = fieldsSettingsService;
+    }
+
+    /**
+     * Uses the current domain for every save, including direct REST calls and imports.
+     */
+    @Override
+    public FieldsSettingsEntity processToEntity(FieldsSettingsEntity entity, ProcessItemAction action) {
+        entity.setDomainId(getDomainId());
+        return entity;
     }
 
     @Override
@@ -97,6 +107,10 @@ public class FieldsSettingsRestController extends DatatableRestControllerV2<Fiel
         if (entity.getFieldName().equals(entity.getSortAfter())) {
             errors.rejectValue("errorField.sortAfter", null, getProp().getText("settings.fields-settings.sort_after_self-err"));
         }
+
+        // Import request IDs are row indexes, so this check could flag the updated record itself as a duplicate.
+        // The database unique constraint still rejects actual duplicates during import.
+        if (isImporting()) return;
 
         Long excludedId = target.isUpdate() && id != null ? id : -1L;
         if (repository.existsByClassNameAndFieldNameAndDomainIdAndIdNot(entity.getClassName(), entity.getFieldName(), getDomainId(), excludedId)) {

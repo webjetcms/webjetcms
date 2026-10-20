@@ -49,7 +49,9 @@ export function typeButtonGroup() {
             const value = buttonGroup.get(conf);
             buttonGroup._addOptions(conf, options, append);
             const inputs = conf._input.find("input").toArray();
-            const current = inputs.find(input => input._editor_val === value);
+            // Refreshed options can replace a string value like "2" with numeric 2.
+            // Also match the radio input's string value so this does not reset the selection to the first option.
+            const current = inputs.find(input => input._editor_val === value || input.value === String(value));
             buttonGroup.set.call(this, conf, current ? value : inputs[0]?._editor_val);
         },
 

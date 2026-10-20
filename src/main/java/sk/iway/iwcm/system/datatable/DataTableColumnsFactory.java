@@ -138,7 +138,13 @@ public class DataTableColumnsFactory {
                     if("commonSettings".equals( declaredField.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class).tab()) ) continue;
                 }
 
-                columns.add(new DataTableColumn(dto, declaredField, fieldPrefix, getColumnAnnotation(declaredField, settings)));
+                DataTableColumn column = new DataTableColumn(dto, declaredField, fieldPrefix, getColumnAnnotation(declaredField, settings));
+                FieldsSettingsEntity setting = settings.get(declaredField.getName());
+                if (setting != null && Tools.isNotEmpty(setting.getTab()) && column.getEditor() != null) {
+                    // Apply the saved tab last because editor metadata can restore the tab from the original annotation.
+                    column.getEditor().setTab(setting.getTab());
+                }
+                columns.add(column);
             }
         }
 
