@@ -304,6 +304,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### For the programmer
 
+- SBOM - added [generate a common list of Java and npm dependencies](developer/install/sbom.md) in CycloneDX JSON format with the `ant -f ant/build.xml sbom` command, including transitive dependencies and report validation.
 - [Central News Generator](developer/install/social-media-feed.md) will remove unused previews with a 30-day grace period after successful publishing. It will preserve images of current posts as well as backup data for source failure (#358).
 - Page Editor - [Styles menu setting](frontend/examples/template-bare/README.md#search-and-style-groups) supports metadata in `editor.scss` / `editor.css` comments for categories and their icons, mutually exclusive groups, allowed elements, and base classes preserved across skins. The new menu is enabled by default; setting `ckeditor_styleComboEnabled=false` restores the original style selection (#OSK764).
 - AI agents - ready distribution of WebJET CMS skills via `npx skills`, including common conventions and project guidelines for Codex, GitHub Copilot and Claude Code. [Manual](custom-apps/skills/README.md) describes installation, update and use in older client projects. The instructions in `AGENTS.md` and the thematic references in `.github/agents/` have been verified against the current code; they describe the frameworks used, development and testing procedures, and differences between the CMS core and client projects (#357).
