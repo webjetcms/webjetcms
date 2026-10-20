@@ -123,6 +123,12 @@ public class DirTreeRestController extends JsTreeRestController<DirTreeItem> {
         result.put("result", true);
         result.put("items", items);
         if (item.getRootFolder() != null) result.put("rootFolder", item.getRootFolder());
+        String selectedFolder = getRequest().getParameter("selectedFolder");
+        if (Tools.isNotEmpty(selectedFolder)) {
+            if (selectedFolder.startsWith("/") == false) selectedFolder = "/" + selectedFolder;
+            result.put("selectedFolder", selectedFolder);
+            result.put("selectedFolderWritable", user.isFolderWritable(selectedFolder));
+        }
     }
 
     /**
