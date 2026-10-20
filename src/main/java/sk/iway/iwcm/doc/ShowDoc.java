@@ -540,7 +540,6 @@ private static String combineCss(String cssStyle)
             if (request.getParameter("historyid") != null && request.getParameter("origDocId")==null)
             {
                 historyId = Integer.parseInt(request.getParameter("historyid"));
-                if (!PlannedAccess.historyPreview(historyId, request, response)) return;
                 if (!user.isAdmin() && Constants.getBoolean("docBlockPublicHistory"))
                 {
                     //vynimka pre umoznenia preview. Je potrebne mat ale zadefinovane conf. premenne showDocExceptionIPs a showDocExceptionUserId
@@ -715,6 +714,7 @@ private static String combineCss(String cssStyle)
                 if (historyId > 0)
                 {
                     doc = docDB.getDoc(-1, historyId);
+                    if (doc != null) PlannedAccess.historyPreview(doc, request, response);
                 }
                 else
                 {
@@ -1014,7 +1014,7 @@ private static String combineCss(String cssStyle)
             Logger.error(ShowDoc.class, ex);
         }
 
-        if (request.getAttribute(PlannedAccess.PREVIEW_DOC) != null || request.getAttribute("isPreview") != null) {
+        if (request.getAttribute("isPreview") != null) {
             PlannedAccess.privateHeaders(response);
         } else if (Constants.getBoolean("nginxProxyMode"))
         {

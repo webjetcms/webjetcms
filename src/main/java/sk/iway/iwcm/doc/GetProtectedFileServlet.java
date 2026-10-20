@@ -57,7 +57,7 @@ public class GetProtectedFileServlet extends HttpServlet
       if (ContextFilter.isRunning(request)) url = ContextFilter.removeContextPath(request.getContextPath(), url);
       //Logger.println(this,"RequestServlet: url="+url);
 
-      if (!PlannedAccess.check(url, request, response)) return;
+      if (PlannedAccess.isPathAccessible(url, request, response)==false) return;
       if (PlannedAssetPaths.containsPlannedPath(url)) {
           IwcmFile file = new IwcmFile(Tools.getRealPath(PlannedAssetPaths.localPath(url)));
           if (!file.isFile()) { response.setStatus(404); return; }

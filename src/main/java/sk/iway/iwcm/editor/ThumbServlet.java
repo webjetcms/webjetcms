@@ -129,7 +129,7 @@ public class ThumbServlet extends HttpServlet
 			}
 		}
 
-        if (!sk.iway.iwcm.doc.PlannedAccess.check("/" + imagePath, request, response)) return;
+        if (!sk.iway.iwcm.doc.PlannedAccess.isPathAccessible("/" + imagePath, request, response)) return;
 		String ext = FileTools.getFileExtension(imagePath).toLowerCase();
 		if (ImageTools.isResizableImage(imagePath) == false)
 		{

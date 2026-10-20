@@ -74,7 +74,7 @@ public class MediaDB extends JpaDB<Media>
 	public static Media getMedia(int mediaId)
 	{
         Media result = JpaTools.findFirstByMatchingProperty(Media.class, "id", mediaId);
-        if (result != null && sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE.equals(result.getMediaFkTableName())) {
+        if (result != null && sk.iway.iwcm.doc.PlannedChangesService.PLANNED_MEDIA_TABLE.equals(result.getMediaFkTableName())) {
             RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
             Identity user = rb == null || rb.getRequest() == null ? null : UsersDB.getCurrentUser(rb.getRequest());
             if (user == null || !user.isAdmin() || (!user.isEnabledItem("editor_edit_media_all") && !EditorDB.isPageEditable(user, result.getMediaFkId()))) return null;
@@ -146,16 +146,17 @@ public class MediaDB extends JpaDB<Media>
 	{
         RequestBean rb = SetCharacterEncodingFilter.getCurrentRequestBean();
         jakarta.servlet.http.HttpServletRequest request = rb == null ? null : rb.getRequest();
-        if (request != null && "documents".equals(tableName) && sk.iway.iwcm.doc.PlannedAccess.previewFor(request, pkIdParam)) {
-            tableName = sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE;
+        if (request != null && "documents".equals(tableName) && sk.iway.iwcm.doc.PlannedAccess.isPlannedPreview(request, pkIdParam)) {
+			//change table to planned_documents to show planned media
+            tableName = sk.iway.iwcm.doc.PlannedChangesService.PLANNED_MEDIA_TABLE;
             lastUpdate = 0;
         }
-        if (sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE.equals(tableName)) {
+        if (sk.iway.iwcm.doc.PlannedChangesService.PLANNED_MEDIA_TABLE.equals(tableName)) {
             Identity user = request == null ? null : UsersDB.getCurrentUser(request);
             if (user == null || !user.isAdmin() || (!user.isEnabledItem("editor_edit_media_all") && !EditorDB.isPageEditable(user, pkIdParam))) return new ArrayList<>();
         }
 	    int pkId = pkIdParam;
-        if ("documents".equals(tableName) || sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE.equals(tableName))
+        if ("documents".equals(tableName) || sk.iway.iwcm.doc.PlannedChangesService.PLANNED_MEDIA_TABLE.equals(tableName))
         {
             //podpora pre stranky vo viacerych adresaroch
             int masterId = MultigroupMappingDB.getMasterDocId(pkId);

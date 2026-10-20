@@ -219,7 +219,7 @@ public class PathFilter implements Filter
 			{
 				path = path.substring(req.getContextPath().length());
 			}
-            if (!sk.iway.iwcm.doc.PlannedAccess.check(path, req, res)) return;
+            if (sk.iway.iwcm.doc.PlannedAccess.isPathAccessible(path, req, res)==false) return;
 			if (path.contains("//"))
 			{
 				path = Tools.replace(path, "/////", "/");

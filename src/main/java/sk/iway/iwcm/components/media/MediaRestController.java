@@ -265,7 +265,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
 
         if (isPlanned()) {
             if (docId < 1 || !sk.iway.iwcm.doc.PlannedAccess.enabled()) throw new IllegalArgumentException("Planned page context is required");
-            return sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE;
+            return sk.iway.iwcm.doc.PlannedChangesService.PLANNED_MEDIA_TABLE;
         }
         if(docId  < 1) {
             return "documents_temp";
@@ -318,7 +318,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
             predicates.add(builder.equal(root.get("mediaFkTableName"), getTableName()));
             predicates.add(builder.equal(root.get("mediaFkId"), getMediaFkId()));
         } else {
-            predicates.add(builder.notEqual(root.get("mediaFkTableName"), sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE));
+            predicates.add(builder.notEqual(root.get("mediaFkTableName"), sk.iway.iwcm.doc.PlannedChangesService.PLANNED_MEDIA_TABLE));
         }
         String docTitle = params.get("searchEditorFields.docDetails");
         if (Tools.isNotEmpty(docTitle)) {
@@ -339,7 +339,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
             if (stored == null) return false;
             if (getRequest().getParameter("docId") != null) {
                 if (!getTableName().equals(stored.getMediaFkTableName()) || !Integer.valueOf(getMediaFkId()).equals(stored.getMediaFkId())) return false;
-            } else if (sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE.equals(stored.getMediaFkTableName())) return false;
+            } else if (sk.iway.iwcm.doc.PlannedChangesService.PLANNED_MEDIA_TABLE.equals(stored.getMediaFkTableName())) return false;
             if ("documents_temp".equals(stored.getMediaFkTableName())) {
                 if (!Integer.valueOf(getUser().getUserId()).equals(stored.getMediaFkId())) return false;
             } else checkPerms(stored.getMediaFkId());

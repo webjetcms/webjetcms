@@ -31,7 +31,7 @@ import sk.iway.spirit.model.Media;
 /** Coordinates a single planned revision using existing page/history/media tables. */
 @Service
 public class PlannedChangesService {
-    public static final String MEDIA_TABLE = "planned_documents";
+    public static final String PLANNED_MEDIA_TABLE = "planned_documents";
     private final DocDetailsRepository docDetailsRepository;
     private final DocHistoryRepository docHistoryRepository;
     private final MediaRepository mediaRepository;
@@ -70,9 +70,9 @@ public class PlannedChangesService {
         if (!PlannedAccess.enabled()) throw new IllegalArgumentException("Planned publishing is disabled");
         if (!docDetailsRepository.isPlannedMediaInitialized(docId)) {
             int domain = CloudToolsForCore.getDomainId();
-            deleteMedia(docId, MEDIA_TABLE, domain);
+            deleteMedia(docId, PLANNED_MEDIA_TABLE, domain);
             for (Media original : mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(docId, "documents", domain)) {
-                mediaRepository.saveAndFlush(copyMedia(original, MEDIA_TABLE));
+                mediaRepository.saveAndFlush(copyMedia(original, PLANNED_MEDIA_TABLE));
             }
             docDetailsRepository.setPlannedMediaInitialized((long) docId, true);
         }
@@ -86,7 +86,7 @@ public class PlannedChangesService {
             pending.setSyncStatus(2);
             docHistoryRepository.save(pending);
         }
-        deleteMedia(docId, MEDIA_TABLE, CloudToolsForCore.getDomainId());
+        deleteMedia(docId, PLANNED_MEDIA_TABLE, CloudToolsForCore.getDomainId());
         docDetailsRepository.setPlannedMediaInitialized((long) docId, false);
         deletePlannedFiles(docId);
     }
@@ -122,7 +122,7 @@ public class PlannedChangesService {
     }
 
     private List<Media> plannedMedia(int id) {
-        return mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(id, MEDIA_TABLE, CloudToolsForCore.getDomainId());
+        return mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(id, PLANNED_MEDIA_TABLE, CloudToolsForCore.getDomainId());
     }
 
     private void validateReferenceFields(DocDetails doc, List<Media> planned) {
@@ -228,7 +228,7 @@ public class PlannedChangesService {
             // A retry after this point must keep the completed live set.
             docDetailsRepository.setPlannedMediaInitialized(doc.getId(), false);
         }
-        deleteMedia(doc.getDocId(), MEDIA_TABLE, CloudToolsForCore.getDomainId());
+        deleteMedia(doc.getDocId(), PLANNED_MEDIA_TABLE, CloudToolsForCore.getDomainId());
     }
 
     /** Cleans working files only after the publisher has completed the history record. */
