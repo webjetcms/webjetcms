@@ -213,6 +213,7 @@ public class EditorService {
 		checkPermissions(currentUser, editedDoc, false);
 
         boolean plannedChange = sk.iway.iwcm.doc.PlannedAccess.enabled() && editedDoc.isPublishAfterStart();
+        // Prevent saving the active planned revision with scheduling disabled; cancellation must be explicit.
         if (sk.iway.iwcm.doc.PlannedAccess.enabled() && editedDoc.getDocId() > 0) {
             Long active = sk.iway.iwcm.doc.PlannedChangesService.getInstance().activeHistory(editedDoc.getDocId());
             if (!plannedChange && active != null && active.intValue() == editedDoc.getHistoryId()) {
