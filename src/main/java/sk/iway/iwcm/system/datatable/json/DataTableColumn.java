@@ -83,6 +83,11 @@ public class DataTableColumn {
 
     @SuppressWarnings("rawtypes")
     public DataTableColumn(Class controller, Field field, String fieldPrefix) {
+        this(controller, field, fieldPrefix, field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class));
+    }
+
+    @SuppressWarnings("rawtypes")
+    public DataTableColumn(Class controller, Field field, String fieldPrefix, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation) {
         String fieldPrefixNotNull = fieldPrefix;
         if (fieldPrefixNotNull == null)
             fieldPrefixNotNull = "";
@@ -97,7 +102,7 @@ public class DataTableColumn {
         Prop prop = Prop.getInstance(request);
 
         setPropertiesFromFieldType(field);
-        setPropertiesFromAnnotation(controller, field, prop);
+        setPropertiesFromAnnotation(controller, field, prop, annotation);
         setEditorPropertiesFromField(field);
 
         setFinalProperties(field);
@@ -127,8 +132,7 @@ public class DataTableColumn {
      *              {@link sk.iway.iwcm.system.datatable.annotations.DataTableColumn}
      */
     @SuppressWarnings("rawtypes")
-    private void setPropertiesFromAnnotation(Class controller, Field field, Prop prop) {
-        sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
+    private void setPropertiesFromAnnotation(Class controller, Field field, Prop prop, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation) {
         if (annotation == null) {
             return;
         }
@@ -639,12 +643,12 @@ public class DataTableColumn {
             editor.setType("hidden");
         }
 
-        if (dataTableColumnType == DataTableColumnType.RADIO) {
+        if (dataTableColumnType == DataTableColumnType.RADIO || dataTableColumnType == DataTableColumnType.BUTTON_GROUP) {
             renderFormat = "dt-format-radio";
             if (editor == null) {
                 editor = new DataTableColumnEditor();
             }
-            editor.setType("radio");
+            editor.setType(dataTableColumnType == DataTableColumnType.BUTTON_GROUP ? "buttonGroup" : "radio");
         }
 
         if (dataTableColumnType == DataTableColumnType.PASSWORD) {

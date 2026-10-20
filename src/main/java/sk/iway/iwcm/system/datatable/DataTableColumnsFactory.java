@@ -3,11 +3,15 @@ package sk.iway.iwcm.system.datatable;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.components.fields_settings.jpa.FieldsSettingsEntity;
+import sk.iway.iwcm.components.fields_settings.rest.FieldsSettingsService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
@@ -21,7 +25,9 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DataTableColumnsFactory {
 
@@ -43,10 +49,16 @@ public class DataTableColumnsFactory {
     }
 
     public List<DataTableColumn> getColumns(String fieldPrefix) {
+        return getColumns(fieldPrefix, Map.of());
+    }
+
+    private List<DataTableColumn> getColumns(String fieldPrefix, Map<String, FieldsSettingsEntity> parentSettings) {
         List<DataTableColumn> columns = new ArrayList<>();
 
         if (dto != null) {
             Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(dto);
+            Map<String, FieldsSettingsEntity> settings = getFieldsSettings();
+            settings.putAll(parentSettings);
 
             //Get from WebjetAppStore annotation commonSettings attribute (true - we want commmon settings tab and fields, false - we don't want common settings tab nor fields)
             boolean includeCommonSettings = true;
@@ -86,11 +98,18 @@ public class DataTableColumnsFactory {
                     String nestedFieldPrefix;
                     if ("auto".equals(annotation.prefix())) nestedFieldPrefix = declaredField.getName()+".";
                     else nestedFieldPrefix = annotation.prefix();
+
+                    Map<String, FieldsSettingsEntity> nestedSettings = new HashMap<>();
+                    for (Map.Entry<String, FieldsSettingsEntity> entry : settings.entrySet()) {
+                        if (entry.getKey().startsWith(nestedFieldPrefix)) {
+                            nestedSettings.put(entry.getKey().substring(nestedFieldPrefix.length()), entry.getValue());
+                        }
+                    }
                     if (Tools.isNotEmpty(fieldPrefix)) nestedFieldPrefix = fieldPrefix + nestedFieldPrefix;
 
                     String sortPrefix = annotation.sortPrefix();
 
-                    List<DataTableColumn> columnsNested = dtcf.getColumns(nestedFieldPrefix);
+                    List<DataTableColumn> columnsNested = dtcf.getColumns(nestedFieldPrefix, nestedSettings);
 
                     //If orderable is not set (is null) set to FALSE -> by default nestedColumns do not support ordering
                     columnsNested.forEach(column -> {
@@ -119,11 +138,41 @@ public class DataTableColumnsFactory {
                     if("commonSettings".equals( declaredField.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class).tab()) ) continue;
                 }
 
-                columns.add(new DataTableColumn(dto, declaredField, fieldPrefix));
+                columns.add(new DataTableColumn(dto, declaredField, fieldPrefix, getColumnAnnotation(declaredField, settings)));
             }
         }
 
         return columns;
+    }
+
+    private Map<String, FieldsSettingsEntity> getFieldsSettings() {
+        Map<String, FieldsSettingsEntity> settings = new HashMap<>();
+        FieldsSettingsService service = Tools.getSpringBean("fieldsSettingsService", FieldsSettingsService.class);
+        if (service != null) {
+            for (FieldsSettingsEntity setting : service.getFieldsSettings(dto.getName(), CloudToolsForCore.getDomainId())) {
+                settings.put(setting.getFieldName(), setting);
+            }
+        }
+        return settings;
+    }
+
+    private sk.iway.iwcm.system.datatable.annotations.DataTableColumn getColumnAnnotation(Field field, Map<String, FieldsSettingsEntity> settings) {
+        sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = field.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
+        FieldsSettingsEntity setting = settings.get(field.getName());
+        if (setting == null) return annotation;
+
+        Map<String, Object> attributes = AnnotationUtils.getAnnotationAttributes(field, annotation);
+        if (Tools.isNotEmpty(setting.getTab())) attributes.put("tab", setting.getTab());
+        if (Tools.isNotEmpty(setting.getTitle())) attributes.put("title", setting.getTitle());
+        if (Tools.isNotEmpty(setting.getSortAfter())) attributes.put("sortAfter", setting.getSortAfter());
+        if (setting.getVisible() != null) attributes.put("visible", new boolean[] { setting.getVisible() });
+        if (setting.getHidden() != null) attributes.put("hidden", new boolean[] { setting.getHidden() });
+        if (setting.getHiddenEditor() != null) attributes.put("hiddenEditor", new boolean[] { setting.getHiddenEditor() });
+        if (setting.getFilter() != null) attributes.put("filter", new boolean[] { setting.getFilter() });
+        if (setting.getOrderable() != null) attributes.put("orderable", new boolean[] { setting.getOrderable() });
+        if (setting.getAi() != null) attributes.put("ai", new boolean[] { setting.getAi() });
+        if (setting.getDisabled() != null) attributes.put("disabled", new boolean[] { setting.getDisabled() });
+        return AnnotationUtils.synthesizeAnnotation(attributes, sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class, field);
     }
 
     public String getColumnsJson() throws JsonProcessingException {
@@ -267,6 +316,7 @@ public class DataTableColumnsFactory {
             }
         } else {
             Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(dto);
+            Map<String, FieldsSettingsEntity> settings = getFieldsSettings();
 
             for (Field declaredField : declaredFields) {
                 if (!declaredField.isAnnotationPresent(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class)) {
@@ -274,10 +324,12 @@ public class DataTableColumnsFactory {
                 }
 
                 sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation = declaredField.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class);
-                String tab = annotation.tab();
 
                 //If we dont want common settings, skip all fields with tab commonSettings
-                if(includeCommonSettings==false && "commonSettings".equals(tab)) continue;
+                if(includeCommonSettings==false && "commonSettings".equals(annotation.tab())) continue;
+
+                annotation = getColumnAnnotation(declaredField, settings);
+                String tab = annotation.tab();
 
                 //If tab is not empty and tab is not already in result, add it
                 if (Tools.isNotEmpty(tab) && result.stream().noneMatch(r -> r.getId().equals(tab))) {

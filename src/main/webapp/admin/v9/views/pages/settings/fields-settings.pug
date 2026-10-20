@@ -1,0 +1,21 @@
+extends ../../partials/layout
+
+block content
+
+    script.
+        var fieldsSettingsDataTable;
+
+        window.domReady.add(function () {
+            var columns = [(${layout.getDataTableColumns('sk.iway.iwcm.components.fields_settings.jpa.FieldsSettingsEntity')})];
+
+            fieldsSettingsDataTable = WJ.DataTable({
+                url: "/admin/rest/settings/fields-settings",
+                columns: columns,
+                serverSide: true,
+                id: "fieldsSettingsDataTable",
+                fetchOnCreate: true,
+                fetchOnEdit: true
+            });
+        });
+
+    <table id="fieldsSettingsDataTable" class="datatableInit table"></table>
