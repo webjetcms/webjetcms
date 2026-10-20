@@ -46,7 +46,7 @@ public class FieldsSettingsService {
 
     private static final String CLASS_OPTIONS_KEY = "FieldsSettingsService_classOptions";
     private static final String SETTINGS_CACHE_PREFIX = "FieldSettings_";
-    private static final int SETTINGS_CACHE_SECONDS = 1800;
+    private static final int SETTINGS_CACHE_SECONDS = 3600;
 
     private final FieldsSettingsRepository repository;
 
@@ -55,7 +55,7 @@ public class FieldsSettingsService {
     }
 
     /**
-     * Loads settings for a class and domain, caching the result for 30 minutes.
+     * Loads settings for a class and domain, caching the result for one hour.
      *
      * @param className fully qualified entity class name
      * @param domainId domain owning the settings
@@ -98,8 +98,7 @@ public class FieldsSettingsService {
      * @param fieldTitles field paths mapped to title translation keys, excluding ID columns
      * @param tabTitles explicitly declared tab IDs mapped to title translation keys
      */
-    private record ClassOptions(Map<String, String> fieldTitles, Map<String, String> tabTitles) {
-    }
+    private record ClassOptions(Map<String, String> fieldTitles, Map<String, String> tabTitles) {}
 
     /**
      * Returns sorted entity class names containing the search term and at least one datatable column.
