@@ -391,3 +391,16 @@ Scenario("Delete folders 2", async ({ I }) => {
      I.amOnPage('/admin/v9/apps/gallery/');
      deleteFolder(I, mainFolder);
 });
+
+Scenario('Restore tester3 gallery permissions', async ({ I }) => {
+     await resetGalleryAccess(I);
+
+     // A fresh login must load the restored permissions saved by the cleanup.
+     I.relogin(userLogin);
+     I.amOnPage('/admin/v9/');
+     openUserSettingsDialog(I);
+     I.waitForVisible('#perms_menuGallery a.jstree-clicked', 10);
+     I.dontSeeElement('#editorAppDTE_Field_editorFields-writableFolders input.form-control');
+     I.switchTo();
+     I.logout();
+});

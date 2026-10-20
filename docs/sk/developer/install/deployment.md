@@ -25,12 +25,13 @@ odtiaľ sa prenesie aj do `build.properties` pre zobrazenie verzie v administrá
 - ```define-artifact-properties``` - definuje vlastnosti pre generovanie artifaktov; verzia vygenerovaného artifaktu sa nastavuje vo vlastnosti ```artifact.version```
 - ```makejars``` - pripraví JAR archívy s triedami, zdrojovými súbormi, JavaDoc dokumentáciou a obsahom adresárov ```/admin``` a ```/components```
 - ```makepom``` - vygeneruje ```POM``` súbor Gradle úlohou ```writePom``` na základe závislostí definovaných v ```build.gradle```
+- ```sbom``` - vygeneruje [spoločný CycloneDX SBOM](sbom.md) Java a npm závislostí s verziou z ```artifact.version``` a uloží ho do ```ant/sbom/webjetcms.cdx.json```, bez zostavenia distribúcie
 - ```finalwar``` - vytvorí štruktúru ```build/updatezip/finalwar``` a archív ```build/updatezip/webjetcms.war``` s aplikáciami zabalenými ako JAR súbory
 - ```createUpdateZip``` - vytvorí ```build/updatezip/artifacts/archive.zip``` pre aktualizáciu starej rozbalenej inštalácie bez JAR balenia
 - ```createUpdateZipJar``` - vytvorí ```build/updatezip/artifacts/archive-jar.zip``` pre inštaláciu používajúcu JAR balenie; spúšťa sa po príprave artifaktov
 - ```prepareAllJars``` - pripraví všetky JAR súbory a ```POM``` súbor na publikovanie do repozitárov
-- ```deployGithub``` - pripraví artifakty a publikuje SNAPSHOT verziu do [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502/versions)
-- ```deployMavenCentral``` - po potvrdení verzie pripraví artifakty a podpisy, vytvorí publikačný ZIP súbor a odošle ho do [Maven Central](https://repo1.maven.org/maven2/com/webjetcms/webjetcms/)
+- ```deployGithub``` - pripraví artifakty, vygeneruje SBOM a publikuje SNAPSHOT verziu vrátane SBOM s classifierom ```cyclonedx``` do [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502/versions)
+- ```deployMavenCentral``` - po potvrdení verzie pripraví artifakty, priloží existujúci SBOM z ```ant/sbom/webjetcms.cdx.json``` a vytvorí podpisy. Publikačný ZIP súbor odošle do [Maven Central](https://repo1.maven.org/maven2/com/webjetcms/webjetcms/). SBOM sa znovu negeneruje; použije sa report z predchádzajúceho ```deployGithub``` pre rovnakú verziu.
 
 Postup vygenerovania novej verzie:
 
@@ -44,8 +45,8 @@ ant prepareAllJars
 # publikovanie SNAPSHOT verzie do GitHub Packages
 ant deployGithub
 
-# publikovanie verzie do Maven Central
-ant deployMavenCentral
+# publikovanie rovnakej verzie do Maven Central s existujúcim SBOM
+ant -Dcompress=true deployMavenCentral
 ```
 
 Publikačné ciele ```deployGithub``` a ```deployMavenCentral``` automaticky spustia ```prepareAllJars```. Aktualizačné ZIP archívy je možné vytvoriť samostatne:

@@ -305,6 +305,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Pre programátora
 
+- SBOM - pridané [generovanie spoločného zoznamu Java a npm závislostí](developer/install/sbom.md) vo formáte CycloneDX JSON príkazom `ant -f ant/build.xml sbom`, vrátane tranzitívnych závislostí a validácie reportu.
 - [Centrálny generátor noviniek](developer/install/social-media-feed.md) po úspešnom publikovaní odstráni nepoužívané náhľady s 30-dňovou ochrannou lehotou. Zachová obrázky aktuálnych príspevkov aj záložných údajov pre výpadok zdroja (#358).
 - Editor stránok - [nastavenie ponuky Štýly](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) podporuje metadáta v komentároch `editor.scss` / `editor.css` pre kategórie a ich ikony, vzájomne sa nahrádzajúce skupiny, povolené elementy a základné triedy zachované pri obnovení vzhľadu. Nová ponuka je predvolene zapnutá; nastavením `ckeditor_styleComboEnabled=false` sa obnoví pôvodný výber štýlov (#OSK764).
 - AI agenti - pripravená distribúcia WebJET CMS skills cez `npx skills`, vrátane spoločných konvencií a nastavenia projektových pokynov pre Codex, GitHub Copilot a Claude Code. [Návod](custom-apps/skills/README.md) opisuje inštaláciu, aktualizáciu a použitie v starších klientskych projektoch. Pokyny v `AGENTS.md` a tematické referencie v `.github/agents/` boli overené podľa aktuálneho kódu; opisujú používané frameworky, postupy vývoja a testovania aj rozdiely medzi jadrom CMS a klientskymi projektmi (#357).

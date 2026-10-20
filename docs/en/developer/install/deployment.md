@@ -25,12 +25,13 @@ from there it will also be transferred to `build.properties` to display the vers
 - ```define-artifact-properties``` - ​​defines properties for generating artifacts; the version of the generated artifact is set in the ```artifact.version``` property
 - ```makejars``` - ​​prepares JAR archives with classes, source files, JavaDoc documentation and contents of directories ```/admin``` and ```/components```
 - ```makepom``` - ​​generates ```POM``` Gradle file by task ```writePom``` based on dependencies defined in ```build.gradle```
+- ```sbom``` - ​​generates [common CycloneDX SBOM](sbom.md) Java and npm dependencies with version from ```artifact.version``` and saves it to ```ant/sbom/webjetcms.cdx.json```, without building the distribution
 - ```finalwar``` - ​​creates a structure ```build/updatezip/finalwar``` and an archive ```build/updatezip/webjetcms.war``` with applications packaged as JAR files
 - ```createUpdateZip``` - ​​creates ```build/updatezip/artifacts/archive.zip``` for updating an old unpacked installation without JAR packaging
 - ```createUpdateZipJar``` - ​​creates ```build/updatezip/artifacts/archive-jar.zip``` for installation using JAR packaging; runs after preparing artifacts
 - ```prepareAllJars``` - ​​prepares all JAR files and ```POM``` file for publishing to repositories
-- ```deployGithub``` - ​​prepares artifacts and publishes SNAPSHOT version to [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502/versions)
-- ```deployMavenCentral``` - ​​after confirming the version, prepares artifacts and signatures, creates a publishing ZIP file and sends it to [Maven Central](https://repo1.maven.org/maven2/com/webjetcms/webjetcms/)
+- ```deployGithub``` - ​​prepares artifacts, generates SBOM and publishes SNAPSHOT version including SBOM with classifier ```cyclonedx``` to [GitHub Packages](https://github.com/webjetcms/webjetcms/packages/2426502/versions)
+- ```deployMavenCentral``` - ​​after the version is confirmed, it prepares the artifacts, attaches the existing SBOM from ```ant/sbom/webjetcms.cdx.json``` and creates signatures. It sends the publishing ZIP file to [Maven Central](https://repo1.maven.org/maven2/com/webjetcms/webjetcms/). The SBOM is not regenerated; the report from the previous ```deployGithub``` for the same version is used.
 
 How to generate a new version:
 
@@ -44,8 +45,8 @@ ant prepareAllJars
 # publikovanie SNAPSHOT verzie do GitHub Packages
 ant deployGithub
 
-# publikovanie verzie do Maven Central
-ant deployMavenCentral
+# publikovanie rovnakej verzie do Maven Central s existujúcim SBOM
+ant -Dcompress=true deployMavenCentral
 ```
 
 The ```deployGithub``` and ```deployMavenCentral``` publish targets will automatically launch ```prepareAllJars```. Update ZIP archives can be created separately:
