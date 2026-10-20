@@ -175,25 +175,29 @@ module.exports = {
       * Waits for the CKEditor to initialize
       */
      waitForCkeditor() {
-          //pockaj na inicializaciu CK editora
-          I.waitForElement("span.cke_toolbox");
-          I.wait(2);
-          I.waitForElement('#trEditor', 10);
+          I.waitForVisible('#trEditor', 20);
+          I.waitForFunction(() => {
+               const editor = window.ckEditorInstance;
+               if (editor?.status !== 'ready' || !editor.editable()?.$?.isConnected) return false;
+               const frame = document.getElementById('DTE_Field_data-pageBuilderIframe');
+               if (frame?.getClientRects().length) {
+                    return frame.contentWindow?.pageBuilderReady === true && frame.contentDocument?.body?.inert === false;
+               }
+               return true;
+          }, [], 20);
      },
 
      /**
-      * Fills value into the WYSIWYG editor Quill
+      * Sets CKEditor HTML and waits until its asynchronous dataReady callback completes.
       * @param {String} htmlCode - HTML code to set in the editor
       */
      async fillCkeditor(htmlCode) {
           this.waitForCkeditor();
           I.clickCss('#trEditor');
           I.pressKey('ArrowLeft');
-          await I.executeScript(function (html) {
-               window.ckEditorInstance.setData(html);
-               }, htmlCode
-          );
-          I.wait(1);
+          await I.executeScript(html => new Promise(resolve => {
+               window.ckEditorInstance.setData(html, resolve);
+          }), htmlCode);
      },
 
      /**

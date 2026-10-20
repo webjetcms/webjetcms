@@ -245,7 +245,7 @@
             ui.observer.observe(me.$wrapper[0], { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'style', 'hidden'] });
             ui.escapeHandler = function(e) {
                 if (e.key !== 'Escape' || e.defaultPrevented || !me.$wrapper.is(':visible')) return;
-                if ($(e.target).closest('.cke_dialog, .cke_panel').length) return;
+                if ($(e.target).closest('.cke_dialog, .cke_panel, .wj-styles').length) return;
                 var handled = true;
                 if (ui.path.hasClass('is-expanded')) {
                     ui.path.removeClass('is-expanded').find('[data-pb-action=ancestors]').attr('aria-expanded', 'false').trigger('focus');

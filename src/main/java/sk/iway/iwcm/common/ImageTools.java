@@ -28,6 +28,7 @@ import org.jsoup.parser.Parser;
 
 
 import com.luciad.imageio.webp.CompressionType;
+import com.luciad.imageio.webp.WebPImageWriterSpi;
 import com.luciad.imageio.webp.WebPWriteParam;
 
 import sk.iway.Password;
@@ -120,10 +121,13 @@ public class ImageTools
 
 
 		ImageWriter writer = null;
-		Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName(format);
-		if (iter.hasNext())
-		{
-			writer = iter.next();
+		if ("webp".equals(ext)) {
+			// ImageIO's shared registry may return a provider from another webapp classloader.
+			// This writer and its WebP-specific parameters must come from the same deployment.
+			writer = new WebPImageWriterSpi().createWriterInstance(null);
+		} else {
+			Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName(format);
+			if (iter.hasNext()) writer = iter.next();
 		}
 		if (writer == null)
 		{
@@ -142,6 +146,7 @@ public class ImageTools
 			}
 			writeParam.setUseSharpYUV(true);
 			writeParam.setCompressionQuality(imageQuality / 100.0F);
+			iwparam = writeParam;
 		}
 
 		try (IwcmOutputStream out = new IwcmOutputStream(outputFile);
