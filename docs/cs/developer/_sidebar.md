@@ -5,6 +5,7 @@
 - Instalace a spuštění
     - [Instalace a spuštění](/developer/install/README.md)
     - [Development Containers](/developer/install/devcontainers/README.md)
+    - [Generování SBOM](/developer/install/sbom.md)
     - [Social Media Feeds](/developer/install/social-media-feed.md)
 - Použité frameworky
     - [Použité frameworky](/developer/frameworks/README.md)
