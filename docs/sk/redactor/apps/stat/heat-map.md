@@ -10,6 +10,16 @@ Konfiguračná premenná `statMode=none` vypne celé meranie. Hodnota `statEnabl
 
 Kliknutia sa zaznamenávajú podľa nastavenia súhlasu so štatistickými cookies. Bez povolenia sa mapa kliknutí nezaznamenáva. Bežná štatistika zachováva doterajšie pravidlá anonymizácie.
 
+V existujúcej inštalácii pridajte v správe cookies definíciu pre mapu kliknutí, ak ešte neexistuje:
+
+- **Názov cookie:** `wj_hm_*`
+- **Kategória:** Štatistické
+- **Typ:** `http`
+- **Platnosť:** 24 hodín
+- **Účel:** Dočasne uchováva kliknutia na stránke do ich odoslania na vytvorenie mapy kliknutí.
+
+Definícia zastupuje cookies jednotlivých kliknutí s náhodnou príponou. Cookie lišta ponúka kategórie podľa evidovaných definícií cookies; po pridaní preto otvorte nastavenia súhlasu na webe a povoľte štatistické cookies. Nové inštalácie obsahujú túto definíciu medzi predvolenými záznamami.
+
 ## Výber šírky a náhľad
 
 Nové kliknutia sa evidujú samostatne pre každú presnú šírku okna v CSS pixeloch. Výber šírky uvádza aj počet kliknutí a predvolene zobrazí najpoužívanejšiu šírku. Mobilné a široké zobrazenie sa tak nepremiešajú.
