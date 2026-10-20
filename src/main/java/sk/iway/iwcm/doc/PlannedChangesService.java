@@ -32,14 +32,14 @@ import sk.iway.spirit.model.Media;
 @Service
 public class PlannedChangesService {
     public static final String MEDIA_TABLE = "planned_documents";
-    private final DocDetailsRepository documents;
-    private final DocHistoryRepository histories;
-    private final MediaRepository media;
+    private final DocDetailsRepository docDetailsRepository;
+    private final DocHistoryRepository docHistoryRepository;
+    private final MediaRepository mediaRepository;
 
-    public PlannedChangesService(DocDetailsRepository documents, DocHistoryRepository histories, MediaRepository media) {
-        this.documents = documents;
-        this.histories = histories;
-        this.media = media;
+    public PlannedChangesService(DocDetailsRepository docDetailsRepository, DocHistoryRepository docHistoryRepository, MediaRepository mediaRepository) {
+        this.docDetailsRepository = docDetailsRepository;
+        this.docHistoryRepository = docHistoryRepository;
+        this.mediaRepository = mediaRepository;
     }
 
     public static PlannedChangesService getInstance() {
@@ -48,7 +48,7 @@ public class PlannedChangesService {
 
     public DocDetails requirePlannedMedia(int docId, Identity user) {
         DocDetails doc = PlannedAccess.requirePage(docId, user);
-        if (!PlannedAccess.enabled() || !doc.isPlannedMediaInitialized()) {
+        if (!PlannedAccess.enabled() || !docDetailsRepository.isPlannedMediaInitialized(doc.getDocId())) {
             throw new IllegalArgumentException("Planned media are no longer active; reopen the editor");
         }
         return doc;
@@ -63,7 +63,7 @@ public class PlannedChangesService {
     }
 
     public Long activeHistory(int docId) {
-        List<DocHistory> pending = histories.findByDocIdAndPublicableTrueOrderByIdDesc(docId);
+        List<DocHistory> pending = docHistoryRepository.findByDocIdAndPublicableTrueOrderByIdDesc(docId);
         return pending.isEmpty() ? null : pending.get(0).getId();
     }
 
@@ -71,27 +71,27 @@ public class PlannedChangesService {
     public Long initialize(int docId, Identity user) {
         if (!PlannedAccess.enabled()) throw new IllegalArgumentException("Planned publishing is disabled");
         DocDetails doc = PlannedAccess.requirePage(docId, user);
-        if (!doc.isPlannedMediaInitialized()) {
+        if (!docDetailsRepository.isPlannedMediaInitialized(doc.getDocId())) {
             int domain = CloudToolsForCore.getDomainId();
             deleteMedia(doc.getDocId(), MEDIA_TABLE, domain);
-            for (Media original : media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(doc.getDocId(), "documents", domain)) {
-                media.saveAndFlush(copyMedia(original, MEDIA_TABLE));
+            for (Media original : mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(doc.getDocId(), "documents", domain)) {
+                mediaRepository.saveAndFlush(copyMedia(original, MEDIA_TABLE));
             }
-            documents.setPlannedMediaInitialized(doc.getId(), true);
+            docDetailsRepository.setPlannedMediaInitialized(doc.getId(), true);
         }
         return activeHistory(doc.getDocId());
     }
 
     public void cancel(int docId, Identity user) {
         DocDetails doc = PlannedAccess.requirePage(docId, user);
-        for (DocHistory pending : histories.findByDocIdAndPublicableTrueOrderByIdDesc(doc.getDocId())) {
+        for (DocHistory pending : docHistoryRepository.findByDocIdAndPublicableTrueOrderByIdDesc(doc.getDocId())) {
             pending.setPublicable(false);
             pending.setAwaitingApprove(null);
             pending.setSyncStatus(2);
-            histories.save(pending);
+            docHistoryRepository.save(pending);
         }
         deleteMedia(doc.getDocId(), MEDIA_TABLE, CloudToolsForCore.getDomainId());
-        documents.setPlannedMediaInitialized(doc.getId(), false);
+        docDetailsRepository.setPlannedMediaInitialized(doc.getId(), false);
         deletePlannedFiles(doc.getDocId());
     }
 
@@ -105,7 +105,7 @@ public class PlannedChangesService {
             throw new IllegalArgumentException("Edit the existing planned version from page history (" + active + ")");
         }
         if (doc.getPublishStart() <= 0) throw new IllegalArgumentException("A publication date is required");
-        DocDetails live = documents.findById(doc.getDocId());
+        DocDetails live = docDetailsRepository.findById(doc.getDocId());
         doc.setVirtualPath(live.getVirtualPath());
         doc.setGroupId(live.getGroupId());
         List<Media> planned = plannedMedia(doc.getDocId());
@@ -117,16 +117,16 @@ public class PlannedChangesService {
 
     /** Replaces the previous plan only after the new history record has been saved. */
     public void completeSave(DocHistory saved) {
-        for (DocHistory old : histories.findByDocIdAndPublicableTrueOrderByIdDesc(saved.getDocId())) {
+        for (DocHistory old : docHistoryRepository.findByDocIdAndPublicableTrueOrderByIdDesc(saved.getDocId())) {
             if (old.getId() >= saved.getId()) continue;
             old.setPublicable(false);
             old.setSyncStatus(2);
-            histories.save(old);
+            docHistoryRepository.save(old);
         }
     }
 
     private List<Media> plannedMedia(int id) {
-        return media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(id, MEDIA_TABLE, CloudToolsForCore.getDomainId());
+        return mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(id, MEDIA_TABLE, CloudToolsForCore.getDomainId());
     }
 
     private void validateReferenceFields(DocDetails doc, List<Media> planned) {
@@ -179,7 +179,7 @@ public class PlannedChangesService {
 
     private void checkConflicts(int docId, Map<String, String> files) {
         if (files.isEmpty()) return;
-        for (DocHistory pending : histories.findByPublicableTrue()) {
+        for (DocHistory pending : docHistoryRepository.findByPublicableTrue()) {
             if (pending.getDocId() == docId) continue;
             String domain = GroupsDB.getInstance().getGroup(pending.getGroupId()).getDomainName();
             if (!domain.equalsIgnoreCase(CloudToolsForCore.getDomainName()) && Constants.getBoolean("enableStaticFilesExternalDir")) continue;
@@ -219,7 +219,7 @@ public class PlannedChangesService {
 
     /** Replaces live media after the page is saved, keeping the source set until all copies succeed. */
     void publishMedia(DocDetails doc) {
-        if (documents.findById(doc.getDocId()).isPlannedMediaInitialized()) {
+        if (docDetailsRepository.isPlannedMediaInitialized(doc.getDocId())) {
             List<Media> planned = plannedMedia(doc.getDocId()).stream().map(item -> copyMedia(item, "documents")).toList();
             deleteMedia(doc.getDocId(), "documents", CloudToolsForCore.getDomainId());
             for (Media item : planned) {
@@ -227,10 +227,10 @@ public class PlannedChangesService {
                 for (char field = 'A'; field <= 'F'; field++) rewriteProperties(item, doc.getDocId(), "field" + field);
                 // Page dates can be stored with second precision; media must not appear newer.
                 item.setLastUpdate(new Date(doc.getDateCreated() / 1000 * 1000));
-                media.saveAndFlush(item);
+                mediaRepository.saveAndFlush(item);
             }
             // A retry after this point must keep the completed live set.
-            documents.setPlannedMediaInitialized(doc.getId(), false);
+            docDetailsRepository.setPlannedMediaInitialized(doc.getId(), false);
         }
         deleteMedia(doc.getDocId(), MEDIA_TABLE, CloudToolsForCore.getDomainId());
     }
@@ -247,8 +247,8 @@ public class PlannedChangesService {
     }
 
     private void deleteMedia(int docId, String table, int domain) {
-        List<Media> items = media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(docId, table, domain);
-        media.deleteAll(items);
+        List<Media> items = mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(docId, table, domain);
+        mediaRepository.deleteAll(items);
     }
 
     private Media copyMedia(Media original, String table) {

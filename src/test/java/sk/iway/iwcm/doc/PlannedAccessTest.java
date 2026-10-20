@@ -21,7 +21,8 @@ class PlannedAccessTest {
         history.setPublicable(true);
         DocDetails page = mock(DocDetails.class);
         when(page.getDocId()).thenReturn(42);
-        when(page.isPlannedMediaInitialized()).thenReturn(true);
+        DocDetailsRepository documents = mock(DocDetailsRepository.class);
+        when(documents.isPlannedMediaInitialized(42)).thenReturn(true);
         Identity editor = new Identity();
         editor.setAdmin(true);
         DocHistoryRepository repository = mock(DocHistoryRepository.class);
@@ -32,6 +33,7 @@ class PlannedAccessTest {
         try (var tools = mockStatic(Tools.class); var users = mockStatic(UsersDB.class);
              var access = mockStatic(PlannedAccess.class, CALLS_REAL_METHODS)) {
             tools.when(() -> Tools.getSpringBean("docHistoryRepository", DocHistoryRepository.class)).thenReturn(repository);
+            tools.when(() -> Tools.getSpringBean("docDetailsRepository", DocDetailsRepository.class)).thenReturn(documents);
             users.when(() -> UsersDB.getCurrentUser(request)).thenReturn(editor);
             access.when(PlannedAccess::enabled).thenReturn(true);
             access.when(() -> PlannedAccess.requirePage(42, editor)).thenReturn(page);

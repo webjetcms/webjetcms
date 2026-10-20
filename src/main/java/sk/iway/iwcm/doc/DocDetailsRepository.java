@@ -15,9 +15,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public interface DocDetailsRepository extends JpaRepository<DocDetails, Long>, JpaSpecificationExecutor<DocDetails> {
 
+    /** Reads operational state independently of cached or detached page entities. */
+    default boolean isPlannedMediaInitialized(int docId) {
+        return countByPlannedMediaInitialized(docId, true) > 0;
+    }
+
+    @Query(value = "SELECT COUNT(*) FROM documents WHERE doc_id = ?1 AND planned_media_initialized = ?2", nativeQuery = true)
+    int countByPlannedMediaInitialized(int docId, boolean initialized);
+
     @Transactional
     @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("UPDATE DocDetails d SET d.plannedMediaInitialized = :initialized WHERE d.id = :id")
+    @Query(value = "UPDATE documents SET planned_media_initialized = ?2 WHERE doc_id = ?1", nativeQuery = true)
     void setPlannedMediaInitialized(@Param("id") Long id, @Param("initialized") boolean initialized);
 
     Page<DocDetails> findAll(Pageable pageable);

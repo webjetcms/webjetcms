@@ -121,7 +121,7 @@ public class DocPublishService {
             DocDetails currentPage = ddr.findById(docId);
             if (currentPage == null || groupsDB.isInTrash(currentPage.getGroupId())) return null;
             boolean plannedEnabled = PlannedAccess.enabled();
-            if (!plannedEnabled && currentPage.isPlannedMediaInitialized()) return null;
+            if (!plannedEnabled && ddr.isPlannedMediaInitialized(docId)) return null;
             PlannedChangesService planned = plannedEnabled ? PlannedChangesService.getInstance() : null;
             if (planned != null && !docHistory.getId().equals(planned.activeHistory(docId))) return null;
 

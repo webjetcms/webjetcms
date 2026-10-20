@@ -71,7 +71,7 @@ public final class PlannedAccess {
                 privateHeaders(response);
                 DocDetails page = requirePage(history.getDocId(), UsersDB.getCurrentUser(request));
                 request.setAttribute("isPreview", Boolean.TRUE);
-                if (Boolean.TRUE.equals(history.getPublicable()) && page.isPlannedMediaInitialized()) request.setAttribute(PREVIEW_DOC, page.getDocId());
+                if (Boolean.TRUE.equals(history.getPublicable()) && Tools.getSpringBean("docDetailsRepository", DocDetailsRepository.class).isPlannedMediaInitialized(page.getDocId())) request.setAttribute(PREVIEW_DOC, page.getDocId());
             }
             return true;
         } catch (RuntimeException exception) {

@@ -40,7 +40,7 @@ Prepísanie existujúceho súboru ovplyvní všetky stránky používajúce rovn
 
 ## Nasadenie a prevádzka
 
-- Databázová aktualizácia pridáva stĺpec `documents.planned_media_initialized` s predvolenou hodnotou `false`. Nová tabuľka nevzniká.
+- Databázová aktualizácia pridáva stĺpec `documents.planned_media_initialized` s predvolenou hodnotou `false`. Príznak sa číta a zapisuje priamo v databáze, nie cez entitu `DocDetails`; jej zdieľaná JPA cache zostáva povolená. Nová tabuľka nevzniká.
 - Podporované sú aj tabuľky **MyISAM**. Funkcia nevyžaduje InnoDB ani konverziu existujúcich tabuliek. Publikovanie sa nespolieha na rollback celej operácie; pri chybe môže zostať časť zmien zapísaná a ďalší pokus pokračuje podľa uloženého stavu.
 - Plánované aj verejné súbory musia byť na spoločnom súborovom systéme podporujúcom atómové premenovanie. V klastri musia všetky publikačné a verejné uzly vidieť rovnaké súbory. Databázové úložisko súborov nie je podporované.
 - Proxy/CDN/statický server musia posielať `/files/protected/planned-changes/` a zodpovedajúce `/thumb/files/protected/planned-changes/` požiadavky cez WebJET a nesmú ich ukladať do verejnej cache. Zabezpečte rovnaké pravidlo aj pre alternatívne hosty a URL aliasy. Náhľad a `historyid` sa nesmú verejne cachovať.

@@ -121,7 +121,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 PlannedChangesService interrupted = new PlannedChangesService(docs, history, failingMedia);
                 java.util.function.LongFunction<DocDetails> interruptedPublish = id -> publish(publisher, interrupted, history, docsCache, id);
                 assertThrows(IllegalStateException.class, () -> interrupted.initialize(savedPage.getDocId(), user));
-                assertFalse(docs.findById(page.getDocId()).isPlannedMediaInitialized());
+                assertFalse(docs.isPlannedMediaInitialized(page.getDocId()));
                 assertEquals(1, media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1).size());
 
                 // Retrying initialization must replace the partial copy, not duplicate it.
@@ -131,11 +131,11 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 assertEquals(1, planned.size());
                 assertNotEquals(originalId, planned.get(0).getId());
                 assertEquals(mediaGroup.getId(), planned.get(0).getGroups().get(0).getId());
-                assertTrue(docs.findById(page.getDocId()).isPlannedMediaInitialized());
+                assertTrue(docs.isPlannedMediaInitialized(page.getDocId()));
 
                 // Ordinary saves cannot overwrite operational initialization state.
                 docs.saveAndFlush(savedPage);
-                assertTrue(docs.findById(page.getDocId()).isPlannedMediaInitialized());
+                assertTrue(docs.isPlannedMediaInitialized(page.getDocId()));
                 planned.get(0).setMediaTitleSk("Future");
                 media.saveAndFlush(planned.get(0));
                 media.saveAndFlush(item(page.getDocId(), PlannedChangesService.MEDIA_TABLE, "Second"));
@@ -155,7 +155,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 assertThrows(IllegalStateException.class, () -> interruptedPublish.apply(revisionId));
                 assertEquals(1, media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), "documents", 1).size());
                 assertEquals(2, media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), PlannedChangesService.MEDIA_TABLE, 1).size());
-                assertTrue(docs.findById(page.getDocId()).isPlannedMediaInitialized());
+                assertTrue(docs.isPlannedMediaInitialized(page.getDocId()));
                 assertTrue(history.findById(revisionId).orElseThrow().getPublicable());
 
                 // A later failure in history completion must keep the already completed live set.
@@ -164,7 +164,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 List<Media> completedMedia = media.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(page.getDocId(), "documents", 1);
                 assertEquals(2, completedMedia.size());
                 assertTrue(history.findById(revisionId).orElseThrow().getPublicable());
-                assertFalse(docs.findById(page.getDocId()).isPlannedMediaInitialized());
+                assertFalse(docs.isPlannedMediaInitialized(page.getDocId()));
 
                 assertNotNull(publish.apply(revisionId));
                 assertNull(publish.apply(revisionId));
@@ -174,7 +174,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
                 Media futureMedia = live.stream().filter(item -> "Future".equals(item.getMediaTitleSk())).findFirst().orElseThrow();
                 assertEquals(mediaGroup.getId(), futureMedia.getGroups().get(0).getId());
                 assertNotEquals(planned.get(0).getId(), futureMedia.getId());
-                assertFalse(docs.findById(page.getDocId()).isPlannedMediaInitialized());
+                assertFalse(docs.isPlannedMediaInitialized(page.getDocId()));
                 assertFalse(history.findById(revisionId).orElseThrow().getPublicable());
                 assertTrue(live.get(0).getLastUpdate().getTime() <= docs.findById(page.getDocId()).getDateCreated());
 

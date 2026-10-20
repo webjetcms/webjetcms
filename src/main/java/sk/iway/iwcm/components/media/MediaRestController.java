@@ -99,7 +99,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
             if (getUser().isDisabledItem("editor_edit_media_all")) throw new IllegalArgumentException("Access is denied");
 
             //docId ani groupId ako parameter neboli poslane = sme v zozname vsetkych medii
-            page = new DatatablePageImpl<>(mediaRepository.findAllByDomainIdAndMediaFkTableNameNot(domainId, sk.iway.iwcm.doc.PlannedChangesService.MEDIA_TABLE, pageable));
+            page = new DatatablePageImpl<>(mediaRepository.findAllByDomainIdAndMediaFkTableName(domainId, DOCUMENTS_TABLE_NAME, pageable));
         } else {
             //dostali sme docId parameter, sme vnorena datatabulka vo web stranke
             page = new DatatablePageImpl<>(mediaRepository.findAllByMediaFkIdAndMediaFkTableNameAndDomainId(getMediaFkId(), getTableName(), domainId, pageable));
