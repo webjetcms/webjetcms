@@ -24,6 +24,7 @@ import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.media.MediaRepository;
+import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.spirit.model.Media;
@@ -52,12 +53,10 @@ public class PlannedChangesService {
         }
     }
 
-    public void validateMedia(Media item, int docId, Identity user) {
+    /** Validates an individual media edit; asset checks run when saving or publishing the plan. */
+    public void validateMedia(Media item, int docId) {
         requirePlannedMedia(docId);
         rejectFields(item, "mediaTitleSk", "mediaTitleCz", "mediaTitleEn", "mediaTitleDe", "mediaGroup");
-        Map<String, String> files = plannedFiles(docId);
-        preflight(files, user);
-        checkConflicts(docId, files);
     }
 
     public Long activeHistory(int docId) {
@@ -146,7 +145,7 @@ public class PlannedChangesService {
 
     /** Never permit a staged URL to enter live data through ordinary editing or a legacy restore. */
     public static void rejectPrivateReferences(Object bean) {
-        if (hasPrivateReferences(bean)) throw new IllegalArgumentException("Use planned publication for private assets");
+        if (hasPrivateReferences(bean)) throw new IllegalArgumentException(Prop.getInstance().getText("planned.privateReferencesNotAllowed"));
     }
 
     /** Includes private references outside the body, such as the perex image and custom fields. */

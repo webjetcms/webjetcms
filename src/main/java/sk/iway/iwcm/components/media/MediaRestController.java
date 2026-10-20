@@ -26,6 +26,8 @@ import sk.iway.iwcm.doc.DocDB;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.GroupsDB;
 import sk.iway.iwcm.doc.MultigroupMappingDB;
+import sk.iway.iwcm.doc.PlannedAccess;
+import sk.iway.iwcm.doc.PlannedChangesService;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.system.datatable.Datatable;
 import sk.iway.iwcm.system.datatable.DatatablePageImpl;
@@ -133,8 +135,10 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
 
             checkPerms(docId);
         } else {
-            //docid zober z request.getDocId(pripad editacie vo web stranke) alebo z entity (ak je zadane v editacii) alebo ako -1 ked nie je nic
-            docId = Tools.getIntValue(getRequest().getParameter("docId"), Tools.getIntValue(entity.getMediaFkId(), -1));
+            // Embedded media require the page context; a new page explicitly sends docId=-1.
+            String requestedDocId = getRequest().getParameter("docId");
+            if (Tools.isEmpty(requestedDocId)) throw new IllegalArgumentException(getProp().getText("components.media.pageContextRequired"));
+            docId = Tools.getIntValue(requestedDocId, -1);
             if (docId > 0) {
                 int mutigroupDocId = MultigroupMappingDB.getMasterDocId(docId);
                 if (mutigroupDocId > 0) docId = mutigroupDocId;
@@ -149,9 +153,8 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
             }
         }
 
-        if (!checkItemPerms(entity, entity.getId())) throw new IllegalArgumentException("Access is denied");
-        if (isPlanned()) sk.iway.iwcm.doc.PlannedChangesService.getInstance().validateMedia(entity, docId, getUser());
-        if (!isPlanned()) sk.iway.iwcm.doc.PlannedChangesService.rejectPrivateReferences(entity);
+        if (isPlanned()) PlannedChangesService.getInstance().validateMedia(entity, docId);
+        else PlannedChangesService.rejectPrivateReferences(entity);
 
         //IMPORTANT - dont use method getMediaFkId here because we need know if it's docId or userId
         //this difference we need to know to call getLastOrder with right param
@@ -264,8 +267,8 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
         int docId = Tools.getIntValue(getRequest().getParameter("docId"), -1);
 
         if (isPlanned()) {
-            if (docId < 1 || !sk.iway.iwcm.doc.PlannedAccess.enabled()) throw new IllegalArgumentException("Planned page context is required");
-            return sk.iway.iwcm.doc.PlannedChangesService.PLANNED_MEDIA_TABLE;
+            if (docId < 1 || !PlannedAccess.enabled()) throw new IllegalArgumentException("Planned page context is required");
+            return PlannedChangesService.PLANNED_MEDIA_TABLE;
         }
         if(docId  < 1) {
             return "documents_temp";
@@ -318,7 +321,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
             predicates.add(builder.equal(root.get("mediaFkTableName"), getTableName()));
             predicates.add(builder.equal(root.get("mediaFkId"), getMediaFkId()));
         } else {
-            predicates.add(builder.notEqual(root.get("mediaFkTableName"), sk.iway.iwcm.doc.PlannedChangesService.PLANNED_MEDIA_TABLE));
+            predicates.add(builder.notEqual(root.get("mediaFkTableName"), PlannedChangesService.PLANNED_MEDIA_TABLE));
         }
         String docTitle = params.get("searchEditorFields.docDetails");
         if (Tools.isNotEmpty(docTitle)) {
@@ -339,7 +342,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
             if (stored == null) return false;
             if (getRequest().getParameter("docId") != null) {
                 if (!getTableName().equals(stored.getMediaFkTableName()) || !Integer.valueOf(getMediaFkId()).equals(stored.getMediaFkId())) return false;
-            } else if (sk.iway.iwcm.doc.PlannedChangesService.PLANNED_MEDIA_TABLE.equals(stored.getMediaFkTableName())) return false;
+            } else if (PlannedChangesService.PLANNED_MEDIA_TABLE.equals(stored.getMediaFkTableName())) return false;
             if ("documents_temp".equals(stored.getMediaFkTableName())) {
                 if (!Integer.valueOf(getUser().getUserId()).equals(stored.getMediaFkId())) return false;
             } else checkPerms(stored.getMediaFkId());
@@ -349,8 +352,7 @@ public class MediaRestController extends DatatableRestControllerV2<Media, Long> 
 
     @Override
     public boolean beforeDelete(Media entity) {
-        if (!checkItemPerms(entity, entity.getId())) throw new IllegalArgumentException("Access is denied");
-        if (isPlanned()) sk.iway.iwcm.doc.PlannedChangesService.getInstance().requirePlannedMedia(getMediaFkId());
+        if (isPlanned()) PlannedChangesService.getInstance().requirePlannedMedia(getMediaFkId());
         return true;
     }
 

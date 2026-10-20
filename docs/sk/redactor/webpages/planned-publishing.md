@@ -14,6 +14,8 @@ Na jednu stránku je podporovaný jeden plán. Zmena termínu nahradí pôvodné
 
 Zmeny médií sa ukladajú priebežne. Zatvorenie editora cez **Zrušiť** ich nevracia. Odškrtnutie časovania pripravené údaje neodstráni. Tlačidlo **Zrušiť plánované zmeny** zruší naplánovanie, odstráni plánované médiá a vymaže všetky obrázky a súbory z plánovaných priečinkov vrátane podpriečinkov. HTML živej stránky ani záznamov histórie nemení. Odkazy na vymazané podklady preto v zrušenej histórii už nebudú fungovať.
 
+Pri ukladaní stránky alebo média bez plánovaného publikovania nemožno odkazovať na súbory ani obrázky z plánovaných zmien. Ak sa zobrazí toto upozornenie, zapnite plánované publikovanie stránky alebo vyberte súbor či obrázok z bežného priečinka. Dostupnosť plánovaných súborov, práva na ich cieľové priečinky a konflikty s inými plánmi sa kontrolujú pri uložení plánu a pred publikovaním, nie pri každej úprave média.
+
 ## Súbory a odkazy
 
 Príklad pre stránku s ID `42`:
