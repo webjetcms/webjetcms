@@ -217,7 +217,7 @@ public class EditorService {
         if (sk.iway.iwcm.doc.PlannedAccess.enabled() && editedDoc.getDocId() > 0) {
             Long active = sk.iway.iwcm.doc.PlannedChangesService.getInstance().activeHistory(editedDoc.getDocId());
             if (!plannedChange && active != null && active.intValue() == editedDoc.getHistoryId()) {
-                throw new IllegalArgumentException("Keep scheduling enabled or explicitly cancel planned changes");
+                throw new IllegalArgumentException(prop.getText("planned.schedulingRequired"));
             }
         }
 
@@ -285,13 +285,14 @@ public class EditorService {
 
         if (plannedChange) {
             sk.iway.iwcm.doc.PlannedChangesService.getInstance().prepareSave(editedDoc, currentUser);
+            // Save to history even when already due; DocPublishService must publish files, rewrite URLs and publish media before completing publication.
             editedDoc.getEditorFields().setRequestPublish(false);
         } else if (editedDoc.getEditorFields().isRequestPublish()) {
             sk.iway.iwcm.doc.PlannedChangesService.rejectPrivateReferences(editedDoc);
         }
 
 		DocHistory editedHistory = DocDetailsToDocHistoryMapper.INSTANCE.docDetailsToDocHistory(editedDoc);
-        // The submitted history ID identifies the source revision, never the new snapshot.
+        // The mapper copies the source revision's ID via setHistoryId(); clear it so every save inserts a new history record instead of overwriting the source revision.
         editedHistory.setId(null);
 
 		if (isNewPage) {
@@ -393,9 +394,11 @@ public class EditorService {
 			RequestBean.addAuditValue("historyId", String.valueOf(historyId));
 
 			//Publishing
-			if(wasApproved && !plannedChange) deleteHistorySaveRecords(editedDoc, editedHistory, historyId, dt);
+			if(wasApproved && plannedChange==false) deleteHistorySaveRecords(editedDoc, editedHistory, historyId, dt);
+
             if (plannedChange) {
                 sk.iway.iwcm.doc.PlannedChangesService.getInstance().completeSave(editedHistory);
+				// if planed change is now or in past fire the publishing actions
                 docDB.readPagesToPublic();
             }
 		}
@@ -407,15 +410,17 @@ public class EditorService {
 
 		dt.diff("after sendApproveNotifyEmail");
 
-		if(!plannedChange && (isNewPage || wasApproved || disableHistory)) {
-			//In case of insert, actions are needed because page was saved, even when isn't approved
-			// !! without this actions, insert page return 404
-            renameVirtualPath(editedDoc, dt);
-            refreshCacheObjects(editedDoc, dt);
-            refreshTemplates(editedDoc, dt);
-		} else if(editedDoc.isPublishAfterStart() || editedDoc.isDisableAfterEnd()) {
-			//reload awaiting pages for DocDB
-            if (!plannedChange) docDB.readPagesToPublic();
+		if (plannedChange == false) {
+			if(isNewPage || wasApproved || disableHistory) {
+				//In case of insert, actions are needed because page was saved, even when isn't approved
+				// !! without this actions, insert page return 404
+				renameVirtualPath(editedDoc, dt);
+				refreshCacheObjects(editedDoc, dt);
+				refreshTemplates(editedDoc, dt);
+			} else if(editedDoc.isPublishAfterStart() || editedDoc.isDisableAfterEnd()) {
+				//reload awaiting pages for DocDB
+				docDB.readPagesToPublic();
+			}
 		}
 
 		/*Ulozenie poznamky*/
@@ -426,7 +431,7 @@ public class EditorService {
 		dt.diff("done");
 
 		//Publikovanie eventov
-        if (!plannedChange) (new WebjetEvent<>(editedDoc, WebjetEventType.AFTER_SAVE)).publishEvent();
+        if (plannedChange==false) (new WebjetEvent<>(editedDoc, WebjetEventType.AFTER_SAVE)).publishEvent();
 
 		return(historyId);
  	}
