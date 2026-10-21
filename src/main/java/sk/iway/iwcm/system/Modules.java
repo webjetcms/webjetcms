@@ -854,7 +854,7 @@ public class Modules
 		sub = new ModuleInfo().setMenuOrder(7120);
 		sub.setLeftMenuNameKey("admin.editor.title");
 		sub.setNameKey("settings.custom-fields.title");
-		sub.setPath("/admin/v9/settings/custom-fields/");
+		sub.setPath("/admin/v9/settings/fields-settings/");
 		sub.setWjVersions("BPECDIM");
 		sub.setUserItem(true);
 		sub.setItemKey("customFields");
@@ -862,9 +862,9 @@ public class Modules
 		sub.setShowInLeftMenu(true);
 		sub.setGroup("config");
 		sub.setMenuIcon("table-options");
-		sub.addSubmenu("settings.custom-fields.title", "/admin/v9/settings/custom-fields/");
 		sub.addSubmenu("settings.fields-settings.title", "/admin/v9/settings/fields-settings/");
 		sub.addSubmenu("settings.tabs-settings.title", "/admin/v9/settings/tabs-settings/");
+		sub.addSubmenu("settings.custom-fields.title", "/admin/v9/settings/custom-fields/");
 		loadModule(sub);
 
 		// Restartovat
