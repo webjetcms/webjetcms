@@ -84,6 +84,11 @@
      <mime-type>application/octet-stream</mime-type>
   </mime-mapping>
 
+  <mime-mapping>
+     <extension>properties</extension>
+     <mime-type>text/plain</mime-type>
+  </mime-mapping>
+
   <!-- The Usual Welcome File List -->
   <welcome-file-list>
     <welcome-file>index.jsp</welcome-file>

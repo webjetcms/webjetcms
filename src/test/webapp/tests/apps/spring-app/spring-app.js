@@ -89,8 +89,8 @@ Scenario('mvc aplikacia', async ({I}) => {
     I.click("Nový kontakt");
     I.waitForElement(locate('button').withAttr({"name" : "saveForm"}));
     I.click(locate('button').withAttr({"name" : "saveForm"}));
-    I.see("PSČ - veľkosť musí byť medzi 5 a 8");
-    I.see("Názov - nemôže byť prázdne");
+    I.see("PSČ - Nesprávny počet znakov. Počet znakov musí byť medzi 5 a 8.");
+    I.see("Názov - Povinné pole. Zadajte aspoň jeden znak.");
 
     I.amOnPage("/apps/spring-app/kontakty/");
     I.waitForElement("div.container table.table tr:nth-child(2)", 10);

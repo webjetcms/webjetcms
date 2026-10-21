@@ -15,6 +15,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.jspecify.annotations.NonNull;
 import org.springframework.mock.web.MockServletContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -78,6 +79,7 @@ import jakarta.validation.Validator;
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @ExtendWith(SpringExtension.class)
+@ActiveProfiles("upload-test")
 @ContextConfiguration(classes = {SpringApplication.class, UploadSpringConfig.class})
 @WebAppConfiguration
 class DatatableRestControllerV2Test extends BaseWebjetTest {

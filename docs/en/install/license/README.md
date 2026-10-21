@@ -4,7 +4,7 @@ The license number for WebJET is entered in the Settings/Configuration section i
 
 ## Incorrect license number
 
-If WebJET contains a license number with an expired validity date, an incorrect domain name, or the license number is entered incorrectly, the option to update the license number will appear after logging into the administration, and the server logs will display the following at startup:
+If WebJET contains a license number with an expired validity date or the license number is entered incorrectly, the server logs will display the following at startup:
 
 ```log
 [webjet][s.i.i.InitServlet][INFO][0] 2023-10-02 09:27:30 - -----------------------------------------------
@@ -20,7 +20,9 @@ If WebJET contains a license number with an expired validity date, an incorrect 
   for new license.
 ```
 
-If the option to enter the license number does not appear automatically after opening the administration section, open the address `/wjerrorpages/setup/license`.
+When the license is invalid, WebJET automatically starts in a restricted license recovery mode. The application server remains running, regular visitors see the error page, and the form for entering a new license is available at `/wjerrorpages/setup/license`. Full setup mode is not exposed and neither `WEBJET_SETUP_ENABLED` nor `WEBJET_SETUP_TOKEN` is required.
+
+For remote use, access the form only over HTTPS and restrict access through a reverse proxy or firewall where possible.
 
 ![](license.png)
 
@@ -28,7 +30,7 @@ Enter your login details to verify your administration privileges and a new lice
 
 ![](license-saved.png)
 
-If the application server does not restart automatically, restart the application server. The entered license number will be used when restarting.
+After saving the license, perform a full manual restart of the application server. The new license number will be used at startup and WebJET will start in production mode.
 
 ## Entering the license number directly into the database
 

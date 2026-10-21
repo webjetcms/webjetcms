@@ -6,15 +6,19 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.Vector;
+import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.ui.Model;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -27,6 +31,7 @@ import sk.iway.iwcm.PageLng;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.XmlUtils;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFile;
 import sk.iway.iwcm.system.ConfDB;
 import sk.iway.iwcm.system.UpdateDatabase;
 
@@ -38,14 +43,16 @@ public class SetupActionsService {
 
 	private static final String FORWARD = "/admin/setup/setup";
 	private static final String SAVED = "/admin/setup/setup_saved";
+	private static final String MARIADB_DRIVER = "org.mariadb.jdbc.Driver";
+	private static final String MSSQL_DRIVER = "net.sourceforge.jtds.jdbc.Driver";
+	private static final String ORACLE_DRIVER = "oracle.jdbc.driver.OracleDriver";
+	private static final String ORACLE_DRIVER_NEW = "oracle.jdbc.OracleDriver";
+	private static final String POSTGRESQL_DRIVER = "org.postgresql.Driver";
+	private static final String POOLMAN_PATH = "/WEB-INF/classes/poolman.xml";
+	private static final Pattern POSTGRESQL_SCHEMA_PATTERN = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
 
 	private SetupActionsService() {
 		// Private constructor to hide the implicit public one.
-	}
-
-	private static boolean isHostAllowed(String serverName) {
-		if ("iwcm.interway.sk".equals(serverName) || "localhost".equals(serverName)) return true;
-		return false;
 	}
 
 	private static String readPoolman() {
@@ -67,16 +74,11 @@ public class SetupActionsService {
 
 	public static String setupAction(Model model, HttpServletRequest request, HttpServletResponse response, String lng) throws IOException {
 
-		if (InitServlet.isWebjetInitialized() || isHostAllowed(request.getServerName()) == false) {
+		if (InitServlet.isWebjetInitialized()) {
 			return null;
 		}
 
 		String data = readPoolman();
-
-		if ((data != null && data.length()>30) && isHostAllowed(request.getServerName()) == false) {
-			System.out.println("poolman allready exists");
-			return null;
-		}
 
 		SetupFormBean sForm = new SetupFormBean();
 
@@ -92,7 +94,6 @@ public class SetupActionsService {
 					Node n = XmlUtils.getFirstChild(doc.getDocumentElement(), "datasource");
 					if (n != null) {
 						sForm.setDbUsername(XmlUtils.getFirstChildValue(n, "username"));
-						sForm.setDbPassword(XmlUtils.getFirstChildValue(n, "password"));
 
 						try {
 							String driver = XmlUtils.getFirstChildValue(n, "driver");
@@ -132,7 +133,7 @@ public class SetupActionsService {
 
 										if (i > 0) {
 											sForm.setDbName(schemaName.substring(0, i));
-											sForm.setDbParameters(schemaName.substring(i + 1));
+											sForm.setDbParameters(getSafeDbParameters(driver, schemaName.substring(i + 1)));
 										} else {
 											sForm.setDbName(schemaName);
 										}
@@ -235,20 +236,23 @@ public class SetupActionsService {
 	}
 
 	public static String setupSaveAction(SetupFormBean setupForm, Model model, HttpServletRequest request, HttpServletResponse response) {
-		if (InitServlet.isWebjetInitialized() || isHostAllowed(request.getServerName()) == false){
+		if (InitServlet.isWebjetInitialized()){
 			System.out.println("WebJET is allready initialized");
 			return SAVED;
 		}
 
 		String data = readPoolman();
-		if ((data != null && data.length() > 30) && isHostAllowed(request.getServerName()) == false) {
-			System.out.println("poolman allready exists");
-			return null;
-		}
 
-		//uloz DB konfiguraciu
-		if (data == null || data.length() < 30)
-			savePoolman(setupForm);
+		boolean createPoolman = data == null || data.length() < 30;
+		String postgresqlSchema = null;
+		if (POSTGRESQL_DRIVER.equals(setupForm.getDbDriver())) {
+			try {
+				postgresqlSchema = getPostgresqlSchema(setupForm.getDbParameters());
+			} catch (IllegalArgumentException ex) {
+				setModelWithErr(model, setupForm, false, null, ex.getMessage());
+				return FORWARD;
+			}
+		}
 
 		//vytvor/napln databazu
 		boolean dbConnectOK = false;
@@ -269,6 +273,7 @@ public class SetupActionsService {
 			if (Tools.isEmpty(password)) password = null;
 
 			con = DriverManager.getConnection(getDBURLString(setupForm), userName, password);
+			validateDatabaseCharacterSet(con, setupForm.getDbDriver());
 			con.close();
 			dbConnectOK = true;
 		}
@@ -279,14 +284,14 @@ public class SetupActionsService {
 
 			String msg = ex.getMessage();
 
-			if (msg.contains("Unknown database ") || msg.contains("Cannot open database")) {
+			if (isDatabaseMissing(ex, setupForm.getDbDriver())) {
 				//DB nie je vytvorena, pokus sa vytvorit (ak mas prava)
 
 				String origDBName = setupForm.getDbName();
 				setupForm.setDbName("mysql");
-				if ("net.sourceforge.jtds.jdbc.Driver".equals(setupForm.getDbDriver()))
+				if (MSSQL_DRIVER.equals(setupForm.getDbDriver()))
 					setupForm.setDbName("master");
-				else if ("org.postgresql.Driver".equals(setupForm.getDbDriver()))
+				else if (POSTGRESQL_DRIVER.equals(setupForm.getDbDriver()))
 					setupForm.setDbName("postgres");
 
 				try {
@@ -297,53 +302,29 @@ public class SetupActionsService {
 						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
 					}
 
-					PreparedStatement ps = con.prepareStatement("CREATE DATABASE " + origDBName);
-					ps.execute();
-					ps.close();
+					String createDatabaseSql = getCreateDatabaseSql(setupForm.getDbDriver(), origDBName);
 
-					con.close();
-
-					setupForm.setDbName(origDBName);
-
-					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
-					con.close();
-
-					dbConnectOK = true;
-				} catch (Exception e) {
-					connErrMsg += msg;
-					sk.iway.iwcm.Logger.error(e);
-				}
-				setupForm.setDbName(origDBName);
-			} else if (msg.indexOf("Cannot open database requested") != -1) {
-				//DB nie je vytvorena, pokus sa vytvorit (ak mas prava)
-
-				String origDBName = setupForm.getDbName();
-				setupForm.setDbName("master");
-
-				try {
-					if (setupForm.isDbUseSuperuser()) {
-						if (con != null) con.close();
-						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbSuperuserUsername(), getEnvPassword(setupForm.getDbSuperuserPassword()));
-					} else {
-						if (con != null) con.close();
-						con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
+					try (PreparedStatement ps = con.prepareStatement(createDatabaseSql)) {
+						ps.execute();
 					}
 
-					PreparedStatement ps = con.prepareStatement("CREATE DATABASE " + origDBName);
-					ps.execute();
-					ps.close();
-
 					con.close();
 
 					setupForm.setDbName(origDBName);
 
 					con = DriverManager.getConnection(getDBURLString(setupForm), setupForm.getDbUsername(), getEnvPassword(setupForm.getDbPassword()));
+					validateDatabaseCharacterSet(con, setupForm.getDbDriver());
 					con.close();
 
 					dbConnectOK = true;
 				} catch (Exception e) {
-					connErrMsg += msg;
+					connErrMsg += Tools.isNotEmpty(e.getMessage()) ? e.getMessage() : msg;
 					sk.iway.iwcm.Logger.error(e);
+					try {
+						if (con != null) con.close();
+					} catch (Exception closeException) {
+						sk.iway.iwcm.Logger.error(closeException);
+					}
 				}
 				setupForm.setDbName(origDBName);
 			} else {
@@ -356,82 +337,63 @@ public class SetupActionsService {
 		System.out.println("dbConnectOK="+dbConnectOK+" driver="+setupForm.getDbDriver());
 
 		if (dbConnectOK) {
-			//resetni DBPool
-			DBPool.getInstance(true);
+			// Persist only connection details that have already been validated.
+			boolean generatedPoolman = false;
+			if (createPoolman) {
+				boolean poolmanExisted = IwcmFile.fromVirtualPath(POOLMAN_PATH).exists();
+				if (savePoolman(setupForm) == false) {
+					String error = rollbackGeneratedPoolman(poolmanExisted == false,
+						"Unable to save poolman.xml. Check filesystem permissions and retry setup.");
+					setModelWithErr(model, setupForm, false, null, error);
+					return FORWARD;
+				}
+				generatedPoolman = poolmanExisted == false;
+			}
 
 			String dbCreateErrMsg = null;
-			if ("org.mariadb.jdbc.Driver".equals(setupForm.getDbDriver())) {
-				//napln databazu
-				dbCreateErrMsg = UpdateDatabase.fillEmptyDatabaseMySQL();
-			} else if ("oracle.jdbc.driver.OracleDriver".equals(setupForm.getDbDriver())) {
-				//napln databazu
-				dbCreateErrMsg = UpdateDatabase.fillEmptyDatabaseOracle();
-			} else if ("org.postgresql.Driver".equals(setupForm.getDbDriver())) {
-				//napln databazu
-				String schema = "webjet_cms";
-				if (Tools.isNotEmpty(setupForm.getDbParameters())) {
-					String[] params = Tools.getTokens(setupForm.getDbParameters(), "&");
-					for (String param : params) {
-						if (param.startsWith("currentSchema=")) {
-							schema = param.substring(14);
-							break;
-						}
-					}
+			try {
+				//resetni DBPool
+				DBPool.getInstance(true);
+
+				if (MARIADB_DRIVER.equals(setupForm.getDbDriver())) {
+					//napln databazu
+					dbCreateErrMsg = UpdateDatabase.fillEmptyDatabaseMySQL();
+				} else if (isOracleDriver(setupForm.getDbDriver())) {
+					//napln databazu
+					dbCreateErrMsg = UpdateDatabase.fillEmptyDatabaseOracle();
+				} else if (POSTGRESQL_DRIVER.equals(setupForm.getDbDriver())) {
+					//napln databazu
+					dbCreateErrMsg = UpdateDatabase.fillEmptyDatabasePgSQL(postgresqlSchema);
+				} else {
+					//	napln databazu
+					dbCreateErrMsg = UpdateDatabase.fillEmptyDatabaseMSSQL();
 				}
-				dbCreateErrMsg = UpdateDatabase.fillEmptyDatabasePgSQL(schema);
-			} else {
-				//	napln databazu
-				dbCreateErrMsg = UpdateDatabase.fillEmptyDatabaseMSSQL();
+			} catch (Exception ex) {
+				sk.iway.iwcm.Logger.error(ex);
+				dbCreateErrMsg = "Unable to initialize the database. Check the server log and retry setup.";
 			}
 
 			if (Tools.isNotEmpty(dbCreateErrMsg)) {
+				dbCreateErrMsg = rollbackGeneratedPoolman(generatedPoolman, dbCreateErrMsg);
 				setModelWithErr(model, setupForm, false, null, dbCreateErrMsg);
 				return FORWARD;
 			}
 
-			//uloz konfiguracne hodnoty
-			Connection db_conn = null;
-			try {
-				db_conn = DBPool.getConnection();
-
-				Enumeration<String> e = request.getParameterNames();
-				String name;
-				String value;
-				while (e.hasMoreElements()) {
-					name = e.nextElement();
-					if (name.startsWith("conf_")) {
-						value = request.getParameter(name);
-						name = name.substring(5);
-						if (Tools.isNotEmpty(value))
-							saveConf(name, value, db_conn);
-					}
-				}
-			} catch (Exception ex) {
-				ex.printStackTrace(System.err);
-			} finally {
-				try {
-					if (db_conn != null) db_conn.close();
-				} catch (Exception ex2) {}
+			String configurationError = saveConfigurationValues(request);
+			if (Tools.isNotEmpty(configurationError)) {
+				configurationError = rollbackGeneratedPoolman(generatedPoolman, configurationError);
+				setModelWithErr(model, setupForm, false, null, configurationError);
+				return FORWARD;
 			}
-
-			//nastav character coding vo web.xml a skopiruj to z runtime
-			String webXML = FileTools.readFileContent("/WEB-INF/web-runtime.xml");
-
-			if (webXML != null && webXML.length() > 100 && (data == null || data.length() < 100)) {
-				webXML = Tools.replace(webXML, "<param-value>windows-1250</param-value>", "<param-value>"+setupForm.getEncoding()+"</param-value>");
-				if ("net.sourceforge.jtds.jdbc.Driver".equals(setupForm.getDbDriver()))
-					webXML = Tools.replace(webXML, "<param-value>TOMCAT_MYSQL</param-value>", "<param-value>RESIN_MSSQL</param-value>");
-
-				//	prekopiruj web.xml
-				FileTools.saveFileContent("/WEB-INF/web.xml", webXML);
-			}
-
-			//restartni server
-			InitServlet.restart();
 
 			//setModelForSave(model, setupForm);
 
 			setModel(model, null, true, true);
+			SetupCompletionState.markCompleted(request);
+			HttpSession session = request.getSession(false);
+			if (session != null) {
+				session.invalidate();
+			}
 
 			return SAVED;
 		} else {
@@ -440,24 +402,132 @@ public class SetupActionsService {
 		}
 	}
 
+	private static boolean isDatabaseMissing(Exception exception, String dbDriver) {
+		if (isOracleDriver(dbDriver)) return false;
+		if (exception instanceof SQLException sqlException && "3D000".equals(sqlException.getSQLState())) return true;
+
+		String message = exception.getMessage();
+		if (Tools.isEmpty(message)) return false;
+		if (MARIADB_DRIVER.equals(dbDriver)) return message.contains("Unknown database");
+		if (MSSQL_DRIVER.equals(dbDriver)) return message.contains("Cannot open database");
+		return POSTGRESQL_DRIVER.equals(dbDriver) && message.contains("does not exist");
+	}
+
+	static String getCreateDatabaseSql(String dbDriver, String dbName) {
+		String quotedDbName = quoteDatabaseName(dbDriver, dbName);
+		if (POSTGRESQL_DRIVER.equals(dbDriver)) {
+			return "CREATE DATABASE " + quotedDbName + " WITH TEMPLATE template0 ENCODING 'UTF8'";
+		}
+		if (MARIADB_DRIVER.equals(dbDriver)) {
+			return "CREATE DATABASE " + quotedDbName
+				+ " DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_general_ci";
+		}
+		if (MSSQL_DRIVER.equals(dbDriver)) {
+			// WebJET uses NVARCHAR/NTEXT on MS SQL. The _SC collation adds correct
+			// supplementary-character handling and remains compatible with SQL Server 2012+.
+			return "CREATE DATABASE " + quotedDbName + " COLLATE Latin1_General_100_CI_AI_SC";
+		}
+		throw new IllegalArgumentException("Automatic database creation is not supported for driver: " + dbDriver);
+	}
+
+	private static String quoteDatabaseName(String dbDriver, String dbName) {
+		if (Tools.isEmpty(dbName) || dbName.indexOf('\0') >= 0) {
+			throw new IllegalArgumentException("Invalid database name");
+		}
+		if (MARIADB_DRIVER.equals(dbDriver)) {
+			return "`" + dbName.replace("`", "``") + "`";
+		}
+		if (MSSQL_DRIVER.equals(dbDriver)) {
+			return "[" + dbName.replace("]", "]]") + "]";
+		}
+		return "\"" + dbName.replace("\"", "\"\"") + "\"";
+	}
+
+	static void validateDatabaseCharacterSet(Connection connection, String dbDriver) throws SQLException {
+		if (isOracleDriver(dbDriver) == false) return;
+
+		String characterSet = null;
+		String nationalCharacterSet = null;
+		String sql = "SELECT parameter, value FROM nls_database_parameters "
+			+ "WHERE parameter IN ('NLS_CHARACTERSET', 'NLS_NCHAR_CHARACTERSET')";
+		try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
+			while (rs.next()) {
+				String parameter = rs.getString("parameter");
+				if ("NLS_CHARACTERSET".equals(parameter)) characterSet = rs.getString("value");
+				else if ("NLS_NCHAR_CHARACTERSET".equals(parameter)) nationalCharacterSet = rs.getString("value");
+			}
+		}
+
+		if ("AL32UTF8".equalsIgnoreCase(characterSet) == false) {
+			throw new SQLException("Oracle database must use NLS_CHARACTERSET=AL32UTF8, current value is " + characterSet);
+		}
+		if ("AL16UTF16".equalsIgnoreCase(nationalCharacterSet) == false) {
+			throw new SQLException("Oracle database must use NLS_NCHAR_CHARACTERSET=AL16UTF16, current value is "
+				+ nationalCharacterSet);
+		}
+	}
+
+	private static boolean isOracleDriver(String dbDriver) {
+		return ORACLE_DRIVER.equals(dbDriver) || ORACLE_DRIVER_NEW.equals(dbDriver);
+	}
+
+	static String getSafeDbParameters(String dbDriver, String parameters) {
+		String allowedParameter;
+		if (POSTGRESQL_DRIVER.equals(dbDriver)) allowedParameter = "currentSchema";
+		else if (MSSQL_DRIVER.equals(dbDriver)) allowedParameter = "encoding";
+		else return "";
+
+		if (Tools.isEmpty(parameters)) return "";
+		for (String parameter : parameters.split("[&;]")) {
+			int delimiter = parameter.indexOf('=');
+			if (delimiter < 1) continue;
+			String name = parameter.substring(0, delimiter).trim();
+			String value = parameter.substring(delimiter + 1).trim();
+			if (allowedParameter.equalsIgnoreCase(name) && Tools.isNotEmpty(value)) {
+				return allowedParameter + "=" + value.replace("\r", "").replace("\n", "");
+			}
+		}
+		return "";
+	}
+
+	static String getPostgresqlSchema(String parameters) {
+		String schema = "webjet_cms";
+		if (Tools.isNotEmpty(parameters)) {
+			for (String parameter : parameters.split("[&;]")) {
+				int delimiter = parameter.indexOf('=');
+				if (delimiter < 0 || "currentSchema".equalsIgnoreCase(parameter.substring(0, delimiter).trim()) == false) {
+					continue;
+				}
+				schema = parameter.substring(delimiter + 1).trim();
+				break;
+			}
+		}
+		if (POSTGRESQL_SCHEMA_PATTERN.matcher(schema).matches() == false) {
+			throw new IllegalArgumentException(
+				"PostgreSQL currentSchema must contain only letters, digits, and underscores and must not start with a digit."
+			);
+		}
+		return schema;
+	}
+
 	/**
 	 * Ulozenie suboru poolman.xml
 	 * @param sForm
 	 */
-	private static void savePoolman(SetupFormBean sForm)
+	static boolean savePoolman(SetupFormBean sForm)
 	{
 		StringBuilder poolman = new StringBuilder("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n")
 				.append("\r\n")
 				.append("<poolman>\r\n")
 				.append("  <datasource>\r\n")
 				.append("      <dbname>iwcm</dbname>\r\n")
-				.append("      <driver>").append(sForm.getDbDriver()).append("</driver>\r\n");
+				.append("      <driver>").append(escapeXml(sForm.getDbDriver())).append("</driver>\r\n");
 
-		poolman.append("      <url>").append(getDBURLString(sForm)).append("</url>\r\n");
+		poolman.append("      <url>").append(escapeXml(getDBURLString(sForm))).append("</url>\r\n");
 
 		poolman.append("\r\n")
-				.append("      <username>"+sForm.getDbUsername()+"</username>\r\n")
-				.append("      <password>"+sForm.getDbPassword()+"</password>\r\n")
+				.append("      <username>").append(escapeXml(sForm.getDbUsername())).append("</username>\r\n")
+				.append("      <password>").append(escapeXml(sForm.getDbPassword())).append("</password>\r\n")
 				.append("\r\n")
 				.append("      <initialConnections>2</initialConnections>\r\n")
 				.append("      <minimumSize>0</minimumSize>\r\n")
@@ -470,7 +540,22 @@ public class SetupActionsService {
 				.append("\r\n")
 				.append("</poolman>\r\n");
 
-		FileTools.saveFileContent("/WEB-INF/classes/poolman.xml", poolman.toString());
+		return FileTools.saveFileContent(POOLMAN_PATH, poolman.toString());
+	}
+
+	static String rollbackGeneratedPoolman(boolean generatedPoolman, String errorMessage) {
+		if (generatedPoolman == false) return errorMessage;
+		try {
+			IwcmFile poolmanFile = IwcmFile.fromVirtualPath(POOLMAN_PATH);
+			if (poolmanFile.exists() == false || poolmanFile.delete()) return errorMessage;
+		} catch (Exception ex) {
+			sk.iway.iwcm.Logger.error(ex);
+		}
+		return errorMessage + " The generated poolman.xml could not be removed; remove it manually before retrying.";
+	}
+
+	private static String escapeXml(String value) {
+		return StringEscapeUtils.escapeXml11(value == null ? "" : value);
 	}
 
 	/**
@@ -512,17 +597,67 @@ public class SetupActionsService {
 	 * @param db_conn
 	 * @throws SQLException
 	 */
-	private static void saveConf(String name, String value, Connection db_conn) throws SQLException {
-		PreparedStatement ps = db_conn.prepareStatement("DELETE FROM "+ConfDB.CONF_TABLE_NAME+" WHERE name=?");
-		ps.setString(1, name);
-		ps.execute();
-		ps.close();
+	private static String saveConfigurationValues(HttpServletRequest request) {
+		try (Connection connection = DBPool.getConnection()) {
+			if (connection == null) throw new SQLException("DBPool returned no connection");
+			saveConfigurationValues(request, connection);
+			return null;
+		} catch (Exception ex) {
+			sk.iway.iwcm.Logger.error(ex);
+			return "Unable to save WebJET configuration. Check the server log and retry setup.";
+		}
+	}
 
-		ps = db_conn.prepareStatement("INSERT INTO "+ConfDB.CONF_TABLE_NAME+" (name, value) VALUES (?, ?)");
-		ps.setString(1, name);
-		ps.setString(2, value);
-		ps.execute();
-		ps.close();
+	static void saveConfigurationValues(HttpServletRequest request, Connection connection) throws SQLException {
+		boolean originalAutoCommit = connection.getAutoCommit();
+		Throwable failure = null;
+		try {
+			if (originalAutoCommit) connection.setAutoCommit(false);
+			Enumeration<String> parameterNames = request.getParameterNames();
+			while (parameterNames.hasMoreElements()) {
+				String parameterName = parameterNames.nextElement();
+				if (parameterName.startsWith("conf_")) {
+					String value = request.getParameter(parameterName);
+					if (Tools.isNotEmpty(value)) {
+						saveConf(parameterName.substring(5), value, connection);
+					}
+				}
+			}
+			connection.commit();
+		} catch (SQLException | RuntimeException ex) {
+			failure = ex;
+			try {
+				connection.rollback();
+			} catch (SQLException rollbackException) {
+				ex.addSuppressed(rollbackException);
+			}
+			throw ex;
+		} finally {
+			if (originalAutoCommit) {
+				try {
+					connection.setAutoCommit(true);
+				} catch (SQLException autoCommitException) {
+					if (failure != null) failure.addSuppressed(autoCommitException);
+					else throw autoCommitException;
+				}
+			}
+		}
+	}
+
+	private static void saveConf(String name, String value, Connection db_conn) throws SQLException {
+		try (PreparedStatement ps = db_conn.prepareStatement(
+			"UPDATE "+ConfDB.CONF_TABLE_NAME+" SET value=? WHERE name=?")) {
+			ps.setString(1, value);
+			ps.setString(2, name);
+			if (ps.executeUpdate() > 0) return;
+		}
+
+		try (PreparedStatement ps = db_conn.prepareStatement(
+			"INSERT INTO "+ConfDB.CONF_TABLE_NAME+" (name, value) VALUES (?, ?)")) {
+			ps.setString(1, name);
+			ps.setString(2, value);
+			ps.executeUpdate();
+		}
 	}
 
 	private static void setModel(Model model, SetupFormBean setupForm, Boolean disableLanguageSelect, boolean isSave) {
@@ -543,6 +678,8 @@ public class SetupActionsService {
 	}
 
 	private static void setModelWithErr(Model model, SetupFormBean setupForm, Boolean conErr, String conErrMsg, String createErrMsg) {
+		setupForm.setDbPassword("");
+		setupForm.setDbSuperuserPassword("");
 		setModel(model, setupForm, true, false);
 
 		//Will show con error msg in page

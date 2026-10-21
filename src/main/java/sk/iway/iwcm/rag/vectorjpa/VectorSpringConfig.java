@@ -12,7 +12,7 @@ import org.springframework.transaction.interceptor.TransactionalProxy;
  * Exposes the RAG repository without including its optional database in CMS JPA startup.
  */
 
-@Configuration
+@Configuration("vectorSpringConfig")
 public class VectorSpringConfig {
 
     /** Returns a proxy that initializes RAG persistence on the first repository operation. */
