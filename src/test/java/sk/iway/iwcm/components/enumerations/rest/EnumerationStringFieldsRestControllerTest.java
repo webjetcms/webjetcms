@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.verify;
@@ -36,6 +37,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.validation.Validator;
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsEntity;
 import sk.iway.iwcm.components.customfields.jpa.CustomFieldsRepository;
@@ -43,6 +45,7 @@ import sk.iway.iwcm.components.customfields.rest.CustomFieldsService;
 import sk.iway.iwcm.components.enumerations.model.EnumerationDataBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeBean;
 import sk.iway.iwcm.components.enumerations.model.EnumerationTypeRepository;
+import sk.iway.iwcm.components.fields_settings.rest.FieldsSettingsService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.datatable.DatatableRequest;
 import sk.iway.iwcm.system.datatable.DatatableResponse;
@@ -214,7 +217,7 @@ class EnumerationStringFieldsRestControllerTest {
 
     /**
      * Verifies that the base editor pipeline accepts editing a common-domain record
-     * while the current request belongs to another domain.
+     * while the current request belongs to another domain and no field overrides are configured.
      */
     @Test
     void handleEditorAcceptsCommonDomainEditFromAnotherDomain() {
@@ -247,8 +250,10 @@ class EnumerationStringFieldsRestControllerTest {
 
         ResponseEntity<DatatableResponse<CustomFieldsEntity>> response;
         try (MockedStatic<CloudToolsForCore> cloudTools = mockStatic(CloudToolsForCore.class);
-                MockedStatic<WebjetEventPublisher> eventPublisher = mockStatic(WebjetEventPublisher.class)) {
+                MockedStatic<WebjetEventPublisher> eventPublisher = mockStatic(WebjetEventPublisher.class);
+                MockedStatic<Tools> tools = mockStatic(Tools.class, CALLS_REAL_METHODS)) {
             cloudTools.when(CloudToolsForCore::getDomainId).thenReturn(CURRENT_DOMAIN_ID);
+            tools.when(() -> Tools.getSpringBean("fieldsSettingsService", FieldsSettingsService.class)).thenReturn(null);
 
             response = assertDoesNotThrow(
                 () -> context.controller().handleEditor(context.request(), request),
