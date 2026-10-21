@@ -117,7 +117,7 @@ public class FieldsSettingsRestController extends DatatableRestControllerV2<Fiel
     }
 
     /**
-     * Rejects self-referencing sort positions and duplicate class/field settings in the current domain.
+     * Rejects unsupported fields, self-referencing sort positions and duplicate class/field settings in the current domain.
      * Duplicate checks exclude the edited record and are left to the database constraint during imports.
      */
     @Override
@@ -125,6 +125,11 @@ public class FieldsSettingsRestController extends DatatableRestControllerV2<Fiel
         super.validateEditor(request, target, user, errors, id, entity);
         if (errors.hasErrors() || (target.isInsert() == false && target.isUpdate() == false)) return;
         if (Tools.isEmpty(entity.getClassName()) || Tools.isEmpty(entity.getFieldName())) return;
+
+        if (fieldsSettingsService.getFieldOptions("*", entity.getClassName(), getProp()).stream()
+            .noneMatch(option -> entity.getFieldName().equals(option.getValue()))) {
+            errors.rejectValue("errorField.fieldName", null, getProp().getText("settings.fields-settings.unsupported_field-err"));
+        }
 
         if (entity.getFieldName().equals(entity.getSortAfter())) {
             errors.rejectValue("errorField.sortAfter", null, getProp().getText("settings.fields-settings.sort_after_self-err"));
