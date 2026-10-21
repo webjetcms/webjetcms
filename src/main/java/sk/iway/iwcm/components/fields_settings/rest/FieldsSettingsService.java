@@ -30,10 +30,12 @@ import sk.iway.iwcm.components.fields_settings.jpa.FieldsSettingsEntity;
 import sk.iway.iwcm.components.fields_settings.jpa.FieldsSettingsRepository;
 import sk.iway.iwcm.components.tabs_settings.jpa.TabsSettingsEntity;
 import sk.iway.iwcm.components.tabs_settings.rest.TabsSettingsService;
+import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.annotations.WebjetAppStore;
+import sk.iway.iwcm.system.datatable.BaseEditorFields;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
@@ -43,12 +45,12 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 /**
  * Caches field settings by class and domain and discovers annotated entities for autocomplete.
- * Autocomplete metadata comes from class annotations and domain-scoped tab settings.
+ * Shares class discovery with custom fields; autocomplete metadata comes from annotations and domain-scoped tab settings.
  */
 @Service
 public class FieldsSettingsService {
 
-    private static final String CLASS_OPTIONS_KEY = "FieldsSettingsService_classOptions";
+    private static final String CLASS_DISCOVERY_KEY = "FieldsSettingsService_discoveredClasses";
     private static final String SETTINGS_CACHE_PREFIX = "FieldSettings_";
     private static final int SETTINGS_CACHE_SECONDS = 3600;
 
@@ -108,6 +110,14 @@ public class FieldsSettingsService {
     private record ClassOptions(Map<String, String> fieldTitles, Map<String, String> tabTitles, List<Field> inferredTabFields) {}
 
     /**
+     * Holds both autocomplete class selections from a single classpath scan.
+     *
+     * @param classOptions metadata for classes containing datatable columns
+     * @param customFieldClasses eligible entities with nested editor fields, plus the non-entity {@link TemplateDetails}
+     */
+    private record DiscoveredClasses(Map<String, ClassOptions> classOptions, Set<String> customFieldClasses) {}
+
+    /**
      * Returns sorted entity class names containing the search term and at least one datatable column.
      *
      * @param term search text, or {@code %} or {@code *} to return all eligible class names
@@ -115,7 +125,18 @@ public class FieldsSettingsService {
      */
     public List<String> getClassOptions(String term) {
         if (Tools.isEmpty(term)) return List.of();
-        return filterOptions(getClassOptionsMap().keySet(), term);
+        return filterOptions(getDiscoveredClasses().classOptions().keySet(), term);
+    }
+
+    /**
+     * Returns custom-field class suggestions while retaining literal substring matching.
+     *
+     * @param term substring to match; {@code *} and {@code %} do not expand to all classes
+     * @return case-insensitively sorted matching class names, or an empty list for blank input
+     */
+    public List<String> getCustomFieldClassOptions(String term) {
+        if (Tools.isEmpty(term) || "*".equals(term.trim()) || "%".equals(term.trim())) return List.of();
+        return filterOptions(getDiscoveredClasses().customFieldClasses(), term);
     }
 
     /**
@@ -128,7 +149,7 @@ public class FieldsSettingsService {
      */
     public List<LabelValue> getFieldOptions(String term, String className, Prop prop) {
         if (Tools.isEmpty(term) || Tools.isEmpty(className)) return List.of();
-        ClassOptions options = getClassOptionsMap().get(className);
+        ClassOptions options = getDiscoveredClasses().classOptions().get(className);
         return options == null ? List.of() : getLabeledOptions(options.fieldTitles(), term, prop);
     }
 
@@ -174,7 +195,7 @@ public class FieldsSettingsService {
 
     /** Combines discovered editor tabs with saved tabs and title overrides from one domain. */
     private Map<String, String> getTabTitles(String className, int domainId, Long excludedSettingsId) {
-        ClassOptions options = getClassOptionsMap().get(className);
+        ClassOptions options = getDiscoveredClasses().classOptions().get(className);
         Map<String, String> tabTitles = options == null ? new HashMap<>() : new HashMap<>(options.tabTitles());
         if (options != null && options.inferredTabFields().isEmpty() == false) {
             Map<String, FieldsSettingsEntity> fieldSettings = new HashMap<>();
@@ -252,31 +273,37 @@ public class FieldsSettingsService {
     }
 
     /**
-     * Loads discovered entity metadata from the shared cache, scanning application packages on a cache miss.
+     * Loads shared field-settings and custom-field discovery, scanning application packages on a cache miss.
      *
-     * @return class names mapped to field and tab titles, cached for 60 minutes
+     * @return both class selections and field/tab metadata, cached together for 60 minutes
      */
-    @SuppressWarnings("unchecked")
-    private Map<String, ClassOptions> getClassOptionsMap() {
+    private DiscoveredClasses getDiscoveredClasses() {
         Cache cache = Cache.getInstance();
-        Map<String, ClassOptions> options = cache.getObject(CLASS_OPTIONS_KEY, Map.class);
+        DiscoveredClasses options = cache.getObject(CLASS_DISCOVERY_KEY, DiscoveredClasses.class);
         if (options == null) {
             options = findClassesWithAnnotation();
-            cache.setObject(CLASS_OPTIONS_KEY, options, 60);
+            cache.setObject(CLASS_DISCOVERY_KEY, options, 60);
         }
         return options;
     }
 
     /**
      * Scans configured application packages for classes annotated with {@link Entity} or {@link DataTableTabs}.
+     * Custom-field entities retain Spring's default candidate restrictions and need nested {@link BaseEditorFields},
+     * even when they have no annotated columns. {@link TemplateDetails} remains an unconditional custom-field option.
      *
-     * @return classes with their annotated fields (including inherited and nested fields) and editor tab IDs
+     * @return field/tab metadata and eligible custom-field class names from the same scan
      */
-    private Map<String, ClassOptions> findClassesWithAnnotation() {
+    private DiscoveredClasses findClassesWithAnnotation() {
         Map<String, ClassOptions> foundClasses = new HashMap<>();
+        Set<String> customFieldClasses = new HashSet<>(Set.of(TemplateDetails.class.getName()));
+        Set<String> customFieldCandidates = new HashSet<>();
         ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false) {
             @Override
             protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
+                if (beanDefinition.getMetadata().isAnnotated(Entity.class.getName()) && super.isCandidateComponent(beanDefinition)) {
+                    customFieldCandidates.add(beanDefinition.getBeanClassName());
+                }
                 return true;
             }
         };
@@ -290,6 +317,7 @@ public class FieldsSettingsService {
 
                 try {
                     Class<?> type = Class.forName(className, false, ClassUtils.getDefaultClassLoader());
+                    if (customFieldCandidates.contains(className) && hasCustomFields(type)) customFieldClasses.add(className);
                     Map<String, String> fieldTitles = new HashMap<>();
                     if (collectFieldTitles(type, "", fieldTitles, new HashSet<>()) == false) continue;
                     foundClasses.put(className, new ClassOptions(fieldTitles, collectTabTitles(type), collectInferredTabFields(type)));
@@ -302,7 +330,19 @@ public class FieldsSettingsService {
             }
         }
 
-        return foundClasses;
+        return new DiscoveredClasses(foundClasses, customFieldClasses);
+    }
+
+    /**
+     * Checks the class and its direct parent for a nested editor-fields object supporting custom fields.
+     *
+     * @param type class being inspected
+     * @return whether a nested field is assignable to {@link BaseEditorFields}
+     */
+    private boolean hasCustomFields(Class<?> type) {
+        return Arrays.stream(AuditEntityListener.getDeclaredFieldsTwoLevels(type))
+            .anyMatch(field -> field.isAnnotationPresent(DataTableColumnNested.class)
+                && BaseEditorFields.class.isAssignableFrom(field.getType()));
     }
 
     /**
