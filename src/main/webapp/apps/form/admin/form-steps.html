@@ -12,11 +12,7 @@
 
     let stepColumns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity")})]*/ '';
     let stepUrl = "/admin/rest/form-steps";
-    let stepTabs = [
-        { id: 'main', title: /*[[\#{datatable.tab.basic}]]*/ '', selected: true },
-        { id: 'advanced', title: /*[[\#{datatable.tab.advanced}]]*/ '', selected: false },
-        { id: 'stepBonusHtml', title: /*[[\#{components.insert_script.body}]]*/ '', content: "<div></div>" }
-    ];
+    let stepTabs = /*[(${layout.getDataTableTabs('sk.iway.iwcm.components.multistep_form.jpa.FormStepEntity')})]*/ [];
 
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);

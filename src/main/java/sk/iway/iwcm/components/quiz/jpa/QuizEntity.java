@@ -27,6 +27,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @Entity
 @Table(name = "quiz")
@@ -34,6 +36,11 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 @Setter
 @EntityListeners(sk.iway.iwcm.system.adminlog.AuditEntityListener.class)
 @EntityListenersType(sk.iway.iwcm.Adminlog.TYPE_QUIZ)
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "main", title = "components.quiz.main_tab", selected = true),
+    @DataTableTab(id = "questions", title = "components.quiz.questions_tab"),
+    @DataTableTab(id = "results", title = "components.quiz.results_tab")
+})
 public class QuizEntity implements Serializable {
 
     @Id

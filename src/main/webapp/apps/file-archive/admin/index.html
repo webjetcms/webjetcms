@@ -277,14 +277,7 @@
             });
         }
 
-        var tabs = [
-            { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
-            { id: 'advanced', title: /*[[#{datatable.tab.advanced}]]*/ '', selected: false },
-            { id: 'customFields', title: /*[[#{editor.tab.fields}]]*/ '', selected: false },
-            { id: 'listOfVersions', title: /*[[#{components.file_archiv.list_of_version}]]*/ '', selected: false },
-            { id: 'waitingFiles', title: /*[[#{components.file_archiv.waiting_files}]]*/ '', selected: false },
-            { id: 'listOfPattern', title: /*[[#{components.file_archiv.listOfPattern}]]*/ '', selected: false },
-        ];
+        var tabs = /*[(${layout.getDataTableTabs('sk.iway.iwcm.components.file_archiv.FileArchivatorBean')})]*/ [];
 
         var order = [];
         order.push([1, 'desc']);

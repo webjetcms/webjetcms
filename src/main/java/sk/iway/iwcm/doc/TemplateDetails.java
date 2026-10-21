@@ -19,6 +19,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 /**
  * Drzi zaznam z tabulky templates
@@ -30,6 +32,15 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
  * @Copyright Interway s.r.o. (c) 2001-2002
  * @created $Date: 2003/11/23 13:22:41 $
  */
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "advanced", title = "datatable.tab.advanced"),
+    @DataTableTab(id = "style", title = "templates.temps-list.styleTab"),
+    @DataTableTab(id = "templatesTab", title = "templates.temps-list.templatesTab"),
+    @DataTableTab(id = "accessTab", title = "templates.temps-list.accessTab"),
+    @DataTableTab(id = "folders", title = "user.groups.folders", hideOnCreate = true),
+    @DataTableTab(id = "sites", title = "menu.root.websites", hideOnCreate = true)
+})
 public class TemplateDetails {
 
     @DataTableColumn(

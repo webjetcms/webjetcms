@@ -34,6 +34,8 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 @Entity
 @Table(name="basket_invoice")
@@ -41,6 +43,15 @@ import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
 @EntityListenersType(Adminlog.TYPE_BASKET_UPDATE)
 @Getter
 @Setter
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "basic", title = "datatable.tab.basic", selected = true),
+    @DataTableTab(id = "personal_info", title = "reservation.reservations.personal_info"),
+    @DataTableTab(id = "notify", title = "components.basket.tab.notify"),
+    @DataTableTab(id = "payments", title = "components.basket.invoice.payments.tab"),
+    @DataTableTab(id = "items", title = "components.basket.invoice_items"),
+    @DataTableTab(id = "order_status", title = "components.basket.tab.order", hideOnCreate = true, content = "<div class=\"previewContainer\"><iframe id=\"dataDiv\" src=\"about:blank\" width=\"100%\" height=\"600\"></iframe><div>"),
+    @DataTableTab(id = "fields", title = "editor.tab.fields")
+})
 public class BasketInvoiceEntity extends ActiveRecordRepository implements Serializable {
 
 	@PrePersist

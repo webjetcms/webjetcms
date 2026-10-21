@@ -7,12 +7,7 @@
     const emailSettingColumns = ["ccEmails", "bccEmails", "replyTo", "subject", "forceTextPlain", "formMailEncoding", "addTechInfo", "emailTextBefore", "emailTextAfter", "fieldsEmailHeader"];
     const advancedSettingColumns = ["rowView", "formAddClasses", "formCss", "forwardType", "afterSendInterceptor", "formProcessor", "maxSizeInKilobytes", "maxCombinedSizeInKilobytes", "allowedExtensions", "pictureHeight", "pictureWidth"];
 
-    var tabs = [
-        { id: 'basic', title: /*[[#{datatable.tab.basic}]]*/ '', selected: true },
-        { id: 'settings-basic', title: /*[[#{editor.form_setting.basic_tab}]]*/ '', selected: false },
-        { id: 'settings-email', title: /*[[#{editor.form_setting.email_tab}]]*/ '', selected: false },
-        { id: 'settings-advanced', title: /*[[#{datatable.tab.advanced}]]*/ '', selected: false }
-    ];
+    var tabs = /*[(${layout.getDataTableTabs("sk.iway.iwcm.components.forms.FormsEntity")})]*/ [];
 </script>
 
 <script type="text/javascript">

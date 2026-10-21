@@ -13,6 +13,8 @@ import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditor;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnEditorAttr;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTab;
+import sk.iway.iwcm.system.datatable.annotations.DataTableTabs;
 
 import jakarta.persistence.Id;
 import java.io.Serializable;
@@ -24,6 +26,10 @@ import java.util.stream.Collectors;
  */
 @Getter
 @Setter
+@DataTableTabs(tabs = {
+    @DataTableTab(id = "main", title = "components.in-memory-logging.tab.basic_info", selected = true),
+    @DataTableTab(id = "description", title = "components.in-memory-logging.tab.stack-trace", content = "<div></div>")
+})
 public class InMemoryLoggingEvent implements Serializable {
 
     @Id

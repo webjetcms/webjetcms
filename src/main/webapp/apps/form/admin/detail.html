@@ -11,8 +11,10 @@
 <script data-th-inline="javascript">
     window.helpLink = "/redactor/apps/form/README";
     let columns = /*[(${layout.getDataTableColumns("sk.iway.iwcm.components.forms.FormsEntity")})]*/ '';
+    let tabs = /*[(${layout.getDataTableTabs("sk.iway.iwcm.components.forms.FormsEntityBasic")})]*/ [];
     window.FormDetail.init({
         columns: columns,
+        tabs: tabs,
         isArchived: false,
         archiveButtonTitle: /*[[#{components.form.admin_forms.archivuj_formular}]]*/ 'Archive form'
     });
