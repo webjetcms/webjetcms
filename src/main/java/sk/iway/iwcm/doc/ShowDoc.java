@@ -540,6 +540,7 @@ private static String combineCss(String cssStyle)
             if (request.getParameter("historyid") != null && request.getParameter("origDocId")==null)
             {
                 historyId = Integer.parseInt(request.getParameter("historyid"));
+                PathFilter.setNoCacheHeaders(response);
                 if (!user.isAdmin() && Constants.getBoolean("docBlockPublicHistory"))
                 {
                     //vynimka pre umoznenia preview. Je potrebne mat ale zadefinovane conf. premenne showDocExceptionIPs a showDocExceptionUserId
