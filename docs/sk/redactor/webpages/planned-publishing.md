@@ -14,6 +14,8 @@ Budúcu verziu stránky môžete pripraviť aj s obrázkami a dokumentmi, ktoré
 4. Upravte obsah a plánované médiá. Kliknite na **Naplánovať**.
 5. Pri ďalšej úprave použite **Otvoriť plánovanú verziu** v karte Perex alebo otvorte príslušnú verziu cez Históriu. Opätovné otvorenie už nekopíruje živé médiá.
 
+![](working-in-editor/image_dialog.png)
+
 Prvé uloženie novej stránky ešte nepotvrdzuje termín publikovania. Ak po ňom editor zatvoríte bez kliknutia na **Naplánovať**, stránka zostane uložená ako nezverejnená. Zrušenie úvodného potvrdenia stránku neuloží. Pri vypnutom `plannedPublishingEnabled` zostáva pôvodný postup: novú stránku môžete priamo naplánovať, ale jej súbory a obrázky sa neukladajú do plánovaných priečinkov.
 
 Na jednu stránku je podporovaný jeden plán. Zmena termínu nahradí pôvodné naplánovanie. Plánovaná verzia pri publikovaní nahradí obsah a celú sadu médií vrátane ich poradia a skupín. Novšie opravy živej stránky preto do pripravovanej verzie preneste ručne. Ak odstránite všetky plánované médiá, po publikovaní bude živá sada prázdna.
@@ -54,16 +56,6 @@ Prepísanie existujúceho súboru ovplyvní všetky stránky používajúce rovn
 
 - Pred prvým zapnutím funkcie skontrolujte existujúce časované verzie v histórii stránok. Pre každú stránku ponechajte najviac jednu čakajúcu naplánovanú verziu; ostatné naplánovania zrušte. Samotné zapnutie funkcie staršie naplánovania nezruší. Ak ich zostane viac, staršia verzia sa môže publikovať až po novšej a prepísať jej obsah.
 - Konfiguračnú premennú `plannedPublishingEnabled` nastavte pri zavedení funkcie na `true` a počas jej používania už hodnotu nemeňte. Vypínanie a opätovné zapínanie funkcie s existujúcimi plánmi nie je podporovaný prevádzkový postup.
-- Databázová aktualizácia pridáva stĺpec `documents.planned_media_initialized` s predvolenou hodnotou `false`. Príznak sa číta a zapisuje priamo v databáze, nie cez entitu `DocDetails`; jej zdieľaná JPA cache zostáva povolená. Nová tabuľka nevzniká.
-- Podporované sú aj tabuľky **MyISAM**. Funkcia nevyžaduje InnoDB ani konverziu existujúcich tabuliek. Publikovanie sa nespolieha na rollback celej operácie; pri chybe môže zostať časť zmien zapísaná a ďalší pokus pokračuje podľa uloženého stavu.
-- Plánované aj verejné súbory musia byť na spoločnom súborovom systéme podporujúcom atómové premenovanie. V klastri musia všetky publikačné a verejné uzly vidieť rovnaké súbory. Databázové úložisko súborov nie je podporované.
-- Proxy/CDN/statický server musia posielať `/files/protected/planned-changes/` a zodpovedajúce `/thumb/files/protected/planned-changes/` požiadavky cez WebJET a nesmú ich ukladať do verejnej cache. Zabezpečte rovnaké pravidlo aj pre alternatívne hosty a URL aliasy. Náhľad a `historyid` sa nesmú verejne cachovať.
-- Originál aj miniatúra sú dostupné prihlásenému redaktorovi s právom zápisu do cieľového verejného priečinka. Neoprávnený používateľ dostane `404`; odpoveď obsahuje `Cache-Control: no-store, no-cache, must-revalidate, max-age=0`. Ani už vytvorená miniatúra kontrolu neobchádza.
-- Upload, úpravy obrázkov a kontrola zápisu v prieskumníkovi súborov používajú právo na zápis do cieľového verejného priečinka. Pri presune obrázka sa kontroluje pôvodný aj nový priečinok. Prístup k súborom nevyžaduje právo upravovať príslušnú stránku. Inicializácia a zrušenie plánu používajú bežnú kontrolu práv editora. Médiá používajú existujúce oprávnenia vrátane `editor_edit_media_all`; náhľad stránky nevyžaduje právo na jej uloženie. Prístup k historickému náhľadu sa riadi existujúcim nastavením `docBlockPublicHistory` a jeho výnimkami. Náhľad sa neukladá do cache; pri naplánovanej verzii zobrazuje pripravenú sadu médií iba pre príslušnú stránku.
-- Existujúce vylúčenie `/files/protected/` z indexovania ponechajte zapnuté. Pred sprístupnením funkcie overte priamy originál, PDF, miniatúru a históriu bez prihlásenia aj po ich zobrazení administrátorom.
-- Schvaľovanie používa existujúci postup editora. Schválenie pred termínom ponechá verziu naplánovanú; schválenie po termíne rovno spustí publikovanie vrátane súborov, médií a prepisu ciest.
-- Publikovanie spúšťa existujúca kontrola cez `DocDB.getInstance()`, napríklad pri zobrazení stránky, najviac raz za päť sekúnd. Bez volania tejto kontroly sa publikovanie odloží do ďalšieho volania po nastavenom termíne. Dokončenie závisí aj od veľkosti súborov.
-- V rámci jednej inštancie aplikácie sa prekrývajúce publikačné volanie pre tú istú stránku preskočí. Táto ochrana nekoordinuje viac uzlov klastra ani úpravy či rušenie plánu počas publikovania. Súbežné publikovanie z viacerých uzlov nie je týmto mechanizmom zabezpečené.
 
 ## Chyby publikovania
 
