@@ -33,6 +33,7 @@ import sk.iway.iwcm.components.tabs_settings.rest.TabsSettingsService;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
+import sk.iway.iwcm.system.annotations.WebjetAppStore;
 import sk.iway.iwcm.system.datatable.DataTableColumnType;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumn;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
@@ -101,9 +102,10 @@ public class FieldsSettingsService {
      * Holds annotation titles used to build localized autocomplete options.
      *
      * @param fieldTitles field paths mapped to title translation keys, excluding ID columns
-     * @param tabTitles explicitly declared tab IDs mapped to title translation keys
+     * @param tabTitles declared tab IDs mapped to title translation keys
+     * @param inferredTabFields columns used to infer tabs when no tabs are explicitly declared
      */
-    private record ClassOptions(Map<String, String> fieldTitles, Map<String, String> tabTitles) {}
+    private record ClassOptions(Map<String, String> fieldTitles, Map<String, String> tabTitles, List<Field> inferredTabFields) {}
 
     /**
      * Returns sorted entity class names containing the search term and at least one datatable column.
@@ -140,13 +142,58 @@ public class FieldsSettingsService {
      */
     public List<LabelValue> getTabOptions(String term, String className, Prop prop) {
         if (Tools.isEmpty(term) || Tools.isEmpty(className)) return List.of();
+        return getLabeledOptions(getTabTitles(className, CloudToolsForCore.getDomainId(), null), term, prop);
+    }
+
+    /**
+     * Checks a tab ID against the entity's editor metadata and settings in the supplied domain.
+     *
+     * @param className fully qualified selected class name
+     * @param tabId raw tab ID to validate
+     * @param domainId domain owning the settings
+     * @return whether the tab exists for this entity and domain
+     */
+    public boolean hasTab(String className, String tabId, int domainId) {
+        return hasTab(className, tabId, domainId, null);
+    }
+
+    /**
+     * Checks a tab ID while excluding a persisted setting that is being changed.
+     * Declared or inferred tabs remain available even if their saved override is excluded.
+     *
+     * @param className fully qualified selected class name
+     * @param tabId raw tab ID to validate
+     * @param domainId domain owning the settings
+     * @param excludedSettingsId persisted tab setting being edited, or null to include all settings
+     * @return whether the tab still exists without the excluded setting
+     */
+    public boolean hasTab(String className, String tabId, int domainId, Long excludedSettingsId) {
+        if (Tools.isEmpty(className) || Tools.isEmpty(tabId)) return false;
+        return getTabTitles(className, domainId, excludedSettingsId).containsKey(tabId);
+    }
+
+    /** Combines discovered editor tabs with saved tabs and title overrides from one domain. */
+    private Map<String, String> getTabTitles(String className, int domainId, Long excludedSettingsId) {
         ClassOptions options = getClassOptionsMap().get(className);
         Map<String, String> tabTitles = options == null ? new HashMap<>() : new HashMap<>(options.tabTitles());
-        for (TabsSettingsEntity setting : tabsSettingsService.getTabsSettings(className, CloudToolsForCore.getDomainId())) {
+        if (options != null && options.inferredTabFields().isEmpty() == false) {
+            Map<String, FieldsSettingsEntity> fieldSettings = new HashMap<>();
+            for (FieldsSettingsEntity setting : getFieldsSettings(className, domainId)) {
+                fieldSettings.put(setting.getFieldName(), setting);
+            }
+            for (Field field : options.inferredTabFields()) {
+                String tab = field.getAnnotation(DataTableColumn.class).tab();
+                FieldsSettingsEntity setting = fieldSettings.get(field.getName());
+                if (setting != null && Tools.isNotEmpty(setting.getTab())) tab = setting.getTab();
+                if (Tools.isNotEmpty(tab)) tabTitles.putIfAbsent(tab, tab);
+            }
+        }
+        for (TabsSettingsEntity setting : tabsSettingsService.getTabsSettings(className, domainId)) {
+            if (excludedSettingsId != null && excludedSettingsId.equals(setting.getId())) continue;
             if (Tools.isNotEmpty(setting.getTitle())) tabTitles.put(setting.getTabId(), setting.getTitle());
             else tabTitles.putIfAbsent(setting.getTabId(), "");
         }
-        return getLabeledOptions(tabTitles, term, prop);
+        return tabTitles;
     }
 
     /**
@@ -223,7 +270,7 @@ public class FieldsSettingsService {
     /**
      * Scans configured application packages for classes annotated with {@link Entity} or {@link DataTableTabs}.
      *
-     * @return classes with their annotated fields (including inherited and nested fields) and declared tab IDs
+     * @return classes with their annotated fields (including inherited and nested fields) and editor tab IDs
      */
     private Map<String, ClassOptions> findClassesWithAnnotation() {
         Map<String, ClassOptions> foundClasses = new HashMap<>();
@@ -245,15 +292,7 @@ public class FieldsSettingsService {
                     Class<?> type = Class.forName(className, false, ClassUtils.getDefaultClassLoader());
                     Map<String, String> fieldTitles = new HashMap<>();
                     if (collectFieldTitles(type, "", fieldTitles, new HashSet<>()) == false) continue;
-
-                    Map<String, String> tabTitles = new HashMap<>();
-                    DataTableTabs tabs = type.getAnnotation(DataTableTabs.class);
-                    if (tabs != null) {
-                        for (DataTableTab tab : tabs.tabs()) {
-                            if (Tools.isNotEmpty(tab.id())) tabTitles.putIfAbsent(tab.id(), tab.title());
-                        }
-                    }
-                    foundClasses.put(className, new ClassOptions(fieldTitles, tabTitles));
+                    foundClasses.put(className, new ClassOptions(fieldTitles, collectTabTitles(type), collectInferredTabFields(type)));
                 } catch (Exception e) {
                     Logger.error(FieldsSettingsService.class, "Error while scanning class for field settings: " + className, e);
                 } catch (LinkageError e) {
@@ -294,5 +333,31 @@ public class FieldsSettingsService {
         }
         ancestors.remove(type);
         return hasColumns;
+    }
+
+    /** Discovers explicitly declared tabs, including generated application common settings. */
+    private Map<String, String> collectTabTitles(Class<?> type) {
+        Map<String, String> tabTitles = new HashMap<>();
+        WebjetAppStore appStore = type.getAnnotation(WebjetAppStore.class);
+        boolean includeCommonSettings = appStore != null && appStore.commonSettings();
+        DataTableTabs tabs = type.getAnnotation(DataTableTabs.class);
+        if (tabs != null) {
+            for (DataTableTab tab : tabs.tabs()) {
+                if (Tools.isNotEmpty(tab.id())) tabTitles.putIfAbsent(tab.id(), tab.title());
+            }
+            if (includeCommonSettings) tabTitles.putIfAbsent("commonSettings", "commonSettings");
+        }
+        return tabTitles;
+    }
+
+    /** Keeps columns eligible for tab inference before current-domain field overrides are applied. */
+    private List<Field> collectInferredTabFields(Class<?> type) {
+        if (type.isAnnotationPresent(DataTableTabs.class)) return List.of();
+        WebjetAppStore appStore = type.getAnnotation(WebjetAppStore.class);
+        boolean includeCommonSettings = appStore != null && appStore.commonSettings();
+        return Arrays.stream(AuditEntityListener.getDeclaredFieldsTwoLevels(type))
+            .filter(field -> field.isAnnotationPresent(DataTableColumn.class))
+            .filter(field -> includeCommonSettings || "commonSettings".equals(field.getAnnotation(DataTableColumn.class).tab()) == false)
+            .toList();
     }
 }

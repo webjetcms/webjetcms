@@ -27,8 +27,8 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -334,7 +334,7 @@ public class DataTableColumnsFactory {
 
     /**
      * Builds editor tabs from declarations and saved settings for the current domain.
-     * Tabs with equal priorities retain declaration order. Without DataTableTabs, tabs are inferred from columns.
+     * Saved sort-after references reorder tabs. Without DataTableTabs, tabs are inferred from columns.
      *
      * @return editor tabs with translated titles
      */
@@ -389,13 +389,10 @@ public class DataTableColumnsFactory {
                 result.add(new DataTableTab(getTabAnnotation(null, setting)));
             }
         }
-        result.sort(Comparator.comparingInt(tab -> {
-            TabsSettingsEntity setting = tabsSettings.get(tab.getId());
-            return setting != null && setting.getSortPriority() != null ? setting.getSortPriority() : 0;
-        }));
         if (dto.isAnnotationPresent(DataTableTabs.class) && includeCommonSettings && result.stream().noneMatch(tab -> "commonSettings".equals(tab.getId()))) {
             result.add(new DataTableTab("commonSettings", "commonSettings", false));
         }
+        result = sortTabs(result, tabsSettings);
 
         // The first saved default in final tab order takes precedence over declared or inferred defaults.
         // Without a saved default, retain the first selected tab or fall back to the first tab.
@@ -419,6 +416,48 @@ public class DataTableColumnsFactory {
         }
 
         return result;
+    }
+
+    /**
+     * Orders tabs after their configured anchors, retaining unresolved tabs when references are missing or cyclic.
+     *
+     * @param tabs tabs in declaration order
+     * @param settings saved settings keyed by tab ID
+     * @return reordered tabs, including every supplied tab
+     */
+    private static List<DataTableTab> sortTabs(List<DataTableTab> tabs, Map<String, TabsSettingsEntity> settings) {
+        List<DataTableTab> sorted = new ArrayList<>();
+        List<DataTableTab> pending = new ArrayList<>();
+        for (DataTableTab tab : tabs) {
+            TabsSettingsEntity setting = settings.get(tab.getId());
+            String sortAfter = setting == null ? null : setting.getSortAfter();
+            if ("FIRST".equals(sortAfter)) {
+                sorted.add(0, tab);
+            } else if (Tools.isEmpty(sortAfter)) {
+                sorted.add(tab);
+            } else {
+                pending.add(tab);
+            }
+        }
+
+        boolean changed = true;
+        while (pending.isEmpty() == false && changed) {
+            changed = false;
+            for (Iterator<DataTableTab> iterator = pending.iterator(); iterator.hasNext();) {
+                DataTableTab tab = iterator.next();
+                String sortAfter = settings.get(tab.getId()).getSortAfter();
+                for (int i = 0; i < sorted.size(); i++) {
+                    if (sortAfter.equals(sorted.get(i).getId())) {
+                        sorted.add(i + 1, tab);
+                        iterator.remove();
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+        }
+        sorted.addAll(pending);
+        return sorted;
     }
 
     /** Loads tab settings for this class and domain, keyed by tab ID. */

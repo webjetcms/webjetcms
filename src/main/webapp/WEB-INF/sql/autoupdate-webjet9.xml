@@ -4229,12 +4229,12 @@
                         class_name VARCHAR(255) NOT NULL,
                         tab_id VARCHAR(255) NOT NULL,
                         title VARCHAR(255),
+                        sort_after VARCHAR(255),
                         selected TINYINT(1),
                         hide_on_create TINYINT(1),
                         perms VARCHAR(255),
                         css_class VARCHAR(255),
                         content TEXT,
-                        sort_priority INT DEFAULT 0,
                         domain_id INT NOT NULL DEFAULT 1,
                         CONSTRAINT uk_tabs_settings_target UNIQUE (domain_id, class_name, tab_id)
                     );
@@ -4245,12 +4245,12 @@
                         class_name NVARCHAR(255) NOT NULL,
                         tab_id NVARCHAR(255) NOT NULL,
                         title NVARCHAR(255),
+                        sort_after NVARCHAR(255),
                         selected BIT,
                         hide_on_create BIT,
                         perms NVARCHAR(255),
                         css_class NVARCHAR(255),
                         content NTEXT,
-                        sort_priority INT DEFAULT 0,
                         domain_id INT NOT NULL DEFAULT 1,
                         CONSTRAINT uk_tabs_settings_target UNIQUE (domain_id, class_name, tab_id)
                     );
@@ -4261,12 +4261,12 @@
                         class_name NVARCHAR2(255) NOT NULL,
                         tab_id NVARCHAR2(255) NOT NULL,
                         title NVARCHAR2(255),
+                        sort_after NVARCHAR2(255),
                         selected NUMBER(1),
                         hide_on_create NUMBER(1),
                         perms NVARCHAR2(255),
                         css_class NVARCHAR2(255),
                         content CLOB,
-                        sort_priority INTEGER DEFAULT 0,
                         domain_id INTEGER DEFAULT 1 NOT NULL,
                         CONSTRAINT uk_tabs_settings_target UNIQUE (domain_id, class_name, tab_id)
                     );
@@ -4289,12 +4289,12 @@
                         class_name VARCHAR(255) NOT NULL,
                         tab_id VARCHAR(255) NOT NULL,
                         title VARCHAR(255),
+                        sort_after VARCHAR(255),
                         selected BOOLEAN,
                         hide_on_create BOOLEAN,
                         perms VARCHAR(255),
                         css_class VARCHAR(255),
                         content TEXT,
-                        sort_priority INT DEFAULT 0,
                         domain_id INT NOT NULL DEFAULT 1,
                         CONSTRAINT uk_tabs_settings_target UNIQUE (domain_id, class_name, tab_id)
                     );

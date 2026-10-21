@@ -45,18 +45,9 @@ public class TabsSettingsRestController extends DatatableRestControllerV2<TabsSe
         this.tabsSettingsService = tabsSettingsService;
     }
 
-    /** Supplies the priority default for the editor's fetch-on-create request. */
-    @Override
-    public TabsSettingsEntity getOneItem(long id) {
-        TabsSettingsEntity entity = super.getOneItem(id);
-        if (id == -1) entity.setSortPriority(0);
-        return entity;
-    }
-
     @Override
     public TabsSettingsEntity processToEntity(TabsSettingsEntity entity, ProcessItemAction action) {
         entity.setDomainId(getDomainId());
-        if (action == ProcessItemAction.CREATE && entity.getSortPriority() == null) entity.setSortPriority(0);
         return entity;
     }
 
@@ -115,14 +106,25 @@ public class TabsSettingsRestController extends DatatableRestControllerV2<TabsSe
     }
 
     /**
-     * Rejects duplicate class/tab settings in the current domain, excluding the edited record.
-     * Imports rely on the database constraint because their request IDs represent row indexes.
+     * Validates relative tab ordering and rejects duplicate class/tab settings in the current domain.
+     * Imports validate ordering but rely on the database constraint for duplicates because their IDs are row indexes.
      */
     @Override
     public void validateEditor(HttpServletRequest request, DatatableRequest<Long, TabsSettingsEntity> target, Identity user, Errors errors, Long id, TabsSettingsEntity entity) {
         super.validateEditor(request, target, user, errors, id, entity);
         if (errors.hasErrors() || (target.isInsert() == false && target.isUpdate() == false)) return;
-        if (Tools.isEmpty(entity.getClassName()) || Tools.isEmpty(entity.getTabId()) || isImporting()) return;
+        if (Tools.isEmpty(entity.getClassName()) || Tools.isEmpty(entity.getTabId())) return;
+
+        Long excludedSettingsId = isImporting() == false && target.isUpdate() ? id : null;
+        if (entity.getTabId().equals(entity.getSortAfter())) {
+            errors.rejectValue("errorField.sortAfter", null, getProp().getText("settings.tabs-settings.sort_after_self-err"));
+        } else if (Tools.isNotEmpty(entity.getSortAfter()) && "FIRST".equals(entity.getSortAfter()) == false
+                && fieldsSettingsService.hasTab(entity.getClassName(), entity.getSortAfter(), getDomainId(), excludedSettingsId) == false
+                && hasPendingImportTab(target, entity) == false) {
+            errors.rejectValue("errorField.sortAfter", null, getProp().getText("settings.tabs-settings.unsupported_tab-err"));
+        }
+
+        if (isImporting()) return;
 
         Long excludedId = target.isUpdate() && id != null ? id : -1L;
         if (repository.existsByClassNameAndTabIdAndDomainIdAndIdNot(entity.getClassName(), entity.getTabId(), getDomainId(), excludedId)) {
@@ -130,6 +132,14 @@ public class TabsSettingsRestController extends DatatableRestControllerV2<TabsSe
             errors.rejectValue("errorField.className", null, message);
             errors.rejectValue("errorField.tabId", null, message);
         }
+    }
+
+    /** Allows references within an append batch only when validation failures reject the entire batch. */
+    private boolean hasPendingImportTab(DatatableRequest<Long, TabsSettingsEntity> target, TabsSettingsEntity entity) {
+        if (isImporting() == false || target.isInsert() == false || "append".equals(target.getImportMode()) == false
+                || target.isSkipWrongData() || target.getData() == null) return false;
+        return target.getData().values().stream().anyMatch(candidate -> candidate != null && candidate != entity
+            && entity.getClassName().equals(candidate.getClassName()) && entity.getSortAfter().equals(candidate.getTabId()));
     }
 
     @GetMapping("/autocomplete-class")

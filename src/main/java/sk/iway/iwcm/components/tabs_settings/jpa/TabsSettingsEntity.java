@@ -102,9 +102,17 @@ public class TabsSettingsEntity {
     @DataTableColumn(inputType = DataTableColumnType.TEXTAREA, title = "settings.tabs-settings.content", tab = "basic", className = "ai-off", visible = false, filter = false, orderable = false)
     private String content;
 
-    @Column(name = "sort_priority")
-    @DataTableColumn(inputType = DataTableColumnType.NUMBER, title = "settings.tabs-settings.sort_priority", tab = "basic", defaultValue = "0")
-    private Integer sortPriority;
+    @Column(name = "sort_after")
+    @DataTableColumn(inputType = DataTableColumnType.TEXT, title = "settings.tabs-settings.sort_after", tab = "basic", className = "ai-off",
+        editor = @DataTableColumnEditor(attr = {
+            @DataTableColumnEditorAttr(key = "data-ac-url", value = "/admin/rest/settings/tabs-settings/autocomplete-tab"),
+            @DataTableColumnEditorAttr(key = "data-ac-min-length", value = "1"),
+            @DataTableColumnEditorAttr(key = "data-ac-select", value = "true"),
+            @DataTableColumnEditorAttr(key = "data-ac-params", value = "#DTE_Field_className")
+        })
+    )
+    @Size(max = 255)
+    private String sortAfter;
 
     @Column(name = "domain_id")
     @DataTableColumn(inputType = DataTableColumnType.HIDDEN)
