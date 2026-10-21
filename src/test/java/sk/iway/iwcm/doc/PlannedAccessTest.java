@@ -59,7 +59,7 @@ class PlannedAccessTest {
     }
 
     @Test
-    void deniesBothOriginalAndWarmedThumbnailBeforeExistenceChecks() {
+    void deniesOriginalAndThumbnailPathsToVisitors() {
         for (String path : new String[] {"/files/protected/planned-changes/42/images/photo.webp", "/thumb/files/protected/planned-changes/42/images/photo.webp"}) {
             for (Identity visitor : new Identity[] {null, new Identity()}) {
                 MockHttpServletRequest request = new MockHttpServletRequest();

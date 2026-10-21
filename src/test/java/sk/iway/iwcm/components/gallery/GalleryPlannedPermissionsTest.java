@@ -19,7 +19,7 @@ import sk.iway.iwcm.users.UsersDB;
 class GalleryPlannedPermissionsTest {
     private static final String FOLDER = "/files/protected/planned-changes/42/images/products/";
     private final GalleryRepository repository = mock(GalleryRepository.class);
-    private final Identity user = new Identity();
+    private final Identity user = spy(new Identity());
     private final MockHttpServletRequest request = new MockHttpServletRequest();
     private GalleryRestController controller;
 
@@ -36,6 +36,9 @@ class GalleryPlannedPermissionsTest {
     @ParameterizedTest
     @ValueSource(strings = {"POST", "DELETE"})
     void allowsWritesAndInternalLoadsWithoutPagePermission(String method) {
+        user.setDisabledItemsTable(java.util.Map.of("pageSave", "pageSave"));
+        doReturn("/images/products/").when(user).getWritableFolders();
+        assertFalse(user.isEnabledItem("pageSave"));
         request.setMethod(method);
         request.setParameter("isImageEditor", "true");
         request.setParameter("dir", FOLDER);

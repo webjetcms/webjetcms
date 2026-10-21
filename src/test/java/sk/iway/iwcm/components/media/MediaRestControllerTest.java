@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import sk.iway.iwcm.Identity;
@@ -122,6 +123,30 @@ class MediaRestControllerTest {
 
         assertEquals(43, submitted.getMediaFkId());
         assertEquals("documents", submitted.getMediaFkTableName());
+    }
+
+    /** Ordinary media saves cannot expose private planned URLs, including encoded references. */
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "/files/protected/planned-changes/42/files/future.pdf",
+        "%2Ffiles%2Fprotected%2Fplanned-changes%2F42%2Ffiles%2Ffuture.pdf",
+        "&#47;files&#47;protected&#47;planned-changes&#47;42&#47;files&#47;future.pdf"
+    })
+    void rejectsPrivateReferencesBeforeSavingOrdinaryMedia(String link) {
+        Media submitted = media();
+        submitted.setMediaLink(link);
+        try (var mappings = mockStatic(MultigroupMappingDB.class);
+             var events = mockStatic(WebjetEventPublisher.class);
+             var translations = mockStatic(Prop.class)) {
+            Prop prop = mock(Prop.class);
+            when(prop.getText("planned.privateReferencesNotAllowed")).thenReturn("Private references are not allowed");
+            translations.when(Prop::getInstance).thenReturn(prop);
+            IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> controller.add(submitted));
+            assertEquals("Private references are not allowed", error.getMessage());
+            assertEquals(link, submitted.getMediaLink());
+            verify(repository, never()).save(any());
+            verify(repository, never()).saveAndFlush(any());
+        }
     }
 
     /** Individual media validation still rejects cancelled plans and unsupported private references. */
