@@ -25,8 +25,11 @@ import jakarta.persistence.Entity;
 import sk.iway.iwcm.Cache;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
+import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.fields_settings.jpa.FieldsSettingsEntity;
 import sk.iway.iwcm.components.fields_settings.jpa.FieldsSettingsRepository;
+import sk.iway.iwcm.components.tabs_settings.jpa.TabsSettingsEntity;
+import sk.iway.iwcm.components.tabs_settings.rest.TabsSettingsService;
 import sk.iway.iwcm.editor.appstore.AppManager;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
@@ -39,7 +42,7 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 /**
  * Caches field settings by class and domain and discovers annotated entities for autocomplete.
- * Autocomplete metadata comes from class annotations; saved overrides are loaded separately.
+ * Autocomplete metadata comes from class annotations and domain-scoped tab settings.
  */
 @Service
 public class FieldsSettingsService {
@@ -49,9 +52,11 @@ public class FieldsSettingsService {
     private static final int SETTINGS_CACHE_SECONDS = 3600;
 
     private final FieldsSettingsRepository repository;
+    private final TabsSettingsService tabsSettingsService;
 
-    public FieldsSettingsService(FieldsSettingsRepository repository) {
+    public FieldsSettingsService(FieldsSettingsRepository repository, TabsSettingsService tabsSettingsService) {
         this.repository = repository;
+        this.tabsSettingsService = tabsSettingsService;
     }
 
     /**
@@ -126,17 +131,22 @@ public class FieldsSettingsService {
     }
 
     /**
-     * Returns localized tab titles from the selected class's {@link DataTableTabs} annotation with raw IDs as values.
+     * Returns localized tab titles from the selected class's annotations and current-domain settings with raw IDs as values.
      *
      * @param term search text, or {@code %} or {@code *} to return all tab IDs
      * @param className fully qualified selected class name
      * @param prop translations for the current request
-     * @return options matching the title or tab ID, or an empty list for empty input, an unknown class or no declared tabs
+     * @return options matching the title or tab ID, or an empty list for empty input or no matching tabs
      */
     public List<LabelValue> getTabOptions(String term, String className, Prop prop) {
         if (Tools.isEmpty(term) || Tools.isEmpty(className)) return List.of();
         ClassOptions options = getClassOptionsMap().get(className);
-        return options == null ? List.of() : getLabeledOptions(options.tabTitles(), term, prop);
+        Map<String, String> tabTitles = options == null ? new HashMap<>() : new HashMap<>(options.tabTitles());
+        for (TabsSettingsEntity setting : tabsSettingsService.getTabsSettings(className, CloudToolsForCore.getDomainId())) {
+            if (Tools.isNotEmpty(setting.getTitle())) tabTitles.put(setting.getTabId(), setting.getTitle());
+            else tabTitles.putIfAbsent(setting.getTabId(), "");
+        }
+        return getLabeledOptions(tabTitles, term, prop);
     }
 
     /**

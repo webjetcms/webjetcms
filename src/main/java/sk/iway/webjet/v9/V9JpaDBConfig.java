@@ -86,7 +86,8 @@ import sk.iway.iwcm.system.spring.SpringAppInitializer;
         "sk.iway.iwcm.system.spring.passkey",
         "sk.iway.iwcm.rag.jpa",
         "sk.iway.iwcm.components.customfields.jpa",
-        "sk.iway.iwcm.components.fields_settings.jpa"
+        "sk.iway.iwcm.components.fields_settings.jpa",
+        "sk.iway.iwcm.components.tabs_settings.jpa"
     }
 ) // package s repozitarmi
 public class V9JpaDBConfig {
@@ -161,7 +162,8 @@ public class V9JpaDBConfig {
                             "sk.iway.iwcm.system.spring.passkey",
                             "sk.iway.iwcm.rag.jpa",
                             "sk.iway.iwcm.components.customfields.jpa",
-                            "sk.iway.iwcm.components.fields_settings.jpa"
+                            "sk.iway.iwcm.components.fields_settings.jpa",
+                            "sk.iway.iwcm.components.tabs_settings.jpa"
         );
 
         Properties properties = new Properties();

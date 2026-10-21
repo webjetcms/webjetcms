@@ -12,6 +12,8 @@ import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.common.CloudToolsForCore;
 import sk.iway.iwcm.components.fields_settings.jpa.FieldsSettingsEntity;
 import sk.iway.iwcm.components.fields_settings.rest.FieldsSettingsService;
+import sk.iway.iwcm.components.tabs_settings.jpa.TabsSettingsEntity;
+import sk.iway.iwcm.components.tabs_settings.rest.TabsSettingsService;
 import sk.iway.iwcm.i18n.Prop;
 import sk.iway.iwcm.system.adminlog.AuditEntityListener;
 import sk.iway.iwcm.system.datatable.annotations.DataTableColumnNested;
@@ -25,13 +27,14 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Builds DataTable column and editor-tab metadata from annotated classes.
- * Saved settings for the current domain override column annotations, including nested field paths.
+ * Saved settings for the current domain override column and tab annotations, including nested field paths.
  */
 public class DataTableColumnsFactory {
 
@@ -327,8 +330,10 @@ public class DataTableColumnsFactory {
     }
 
     /**
-     * Metoda pre ziskanie vsetkych moznych tabov z anotacii DataTableColumn pre danu triedu
-     * @return List<DataTableTab>
+     * Builds editor tabs from declarations and saved settings for the current domain.
+     * Tabs with equal priorities retain declaration order. Without DataTableTabs, tabs are inferred from columns.
+     *
+     * @return editor tabs with translated titles
      */
     public List<DataTableTab> getTabs() {
         List<DataTableTab> result = new ArrayList<>();
@@ -343,13 +348,11 @@ public class DataTableColumnsFactory {
             includeCommonSettings = dto.getAnnotation(sk.iway.iwcm.system.annotations.WebjetAppStore.class).commonSettings();
         }
 
+        Map<String, TabsSettingsEntity> tabsSettings = getTabsSettings();
         if (dto.isAnnotationPresent(DataTableTabs.class)) {
             DataTableTabs annotation = dto.getAnnotation(DataTableTabs.class);
             for (sk.iway.iwcm.system.datatable.annotations.DataTableTab tab : annotation.tabs()) {
-                result.add(new DataTableTab(tab));
-            }
-            if (includeCommonSettings) {
-                result.add(new DataTableTab("commonSettings", "commonSettings", false));
+                result.add(new DataTableTab(getTabAnnotation(tab, tabsSettings.get(tab.id()))));
             }
         } else {
             Field[] declaredFields = AuditEntityListener.getDeclaredFieldsTwoLevels(dto);
@@ -375,7 +378,61 @@ public class DataTableColumnsFactory {
             }
         }
 
+        for (TabsSettingsEntity setting : tabsSettings.values()) {
+            if (result.stream().noneMatch(tab -> tab.getId().equals(setting.getTabId()))) {
+                result.add(new DataTableTab(getTabAnnotation(null, setting)));
+            }
+        }
+        result.sort(Comparator.comparingInt(tab -> {
+            TabsSettingsEntity setting = tabsSettings.get(tab.getId());
+            return setting != null && setting.getSortPriority() != null ? setting.getSortPriority() : 0;
+        }));
+        if (dto.isAnnotationPresent(DataTableTabs.class) && includeCommonSettings && result.stream().noneMatch(tab -> "commonSettings".equals(tab.getId()))) {
+            result.add(new DataTableTab("commonSettings", "commonSettings", false));
+        }
+
         return result;
+    }
+
+    /** Loads tab settings for this class and domain, keyed by tab ID. */
+    private Map<String, TabsSettingsEntity> getTabsSettings() {
+        Map<String, TabsSettingsEntity> settings = new HashMap<>();
+        TabsSettingsService service = Tools.getSpringBean("tabsSettingsService", TabsSettingsService.class);
+        if (service != null) {
+            for (TabsSettingsEntity setting : service.getTabsSettings(dto.getName(), CloudToolsForCore.getDomainId())) {
+                settings.put(setting.getTabId(), setting);
+            }
+        }
+        return settings;
+    }
+
+    /**
+     * Applies non-empty text and non-null Boolean overrides without modifying the declared annotation.
+     * The resulting annotation follows the existing title translation and content normalization rules.
+     *
+     * @param annotation declared tab definition, or null for a new tab
+     * @param setting matching settings, or null to retain all declared values
+     * @return the declared annotation or a synthesized annotation containing the overrides
+     */
+    private sk.iway.iwcm.system.datatable.annotations.DataTableTab getTabAnnotation(
+            sk.iway.iwcm.system.datatable.annotations.DataTableTab annotation, TabsSettingsEntity setting) {
+        if (setting == null) return annotation;
+
+        Map<String, Object> attributes;
+        if (annotation == null) {
+            attributes = new HashMap<>();
+            attributes.put("id", setting.getTabId());
+            attributes.put("title", setting.getTabId());
+        } else {
+            attributes = AnnotationUtils.getAnnotationAttributes(annotation);
+        }
+        if (Tools.isNotEmpty(setting.getTitle())) attributes.put("title", setting.getTitle());
+        if (setting.getSelected() != null) attributes.put("selected", setting.getSelected());
+        if (setting.getHideOnCreate() != null) attributes.put("hideOnCreate", setting.getHideOnCreate());
+        if (Tools.isNotEmpty(setting.getPerms())) attributes.put("perms", setting.getPerms());
+        if (Tools.isNotEmpty(setting.getCssClass())) attributes.put("className", setting.getCssClass());
+        if (Tools.isNotEmpty(setting.getContent())) attributes.put("content", setting.getContent());
+        return AnnotationUtils.synthesizeAnnotation(attributes, sk.iway.iwcm.system.datatable.annotations.DataTableTab.class, dto);
     }
 
     /**

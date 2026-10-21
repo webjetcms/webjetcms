@@ -864,6 +864,7 @@ public class Modules
 		sub.setMenuIcon("table-options");
 		sub.addSubmenu("settings.custom-fields.title", "/admin/v9/settings/custom-fields/");
 		sub.addSubmenu("settings.fields-settings.title", "/admin/v9/settings/fields-settings/");
+		sub.addSubmenu("settings.tabs-settings.title", "/admin/v9/settings/tabs-settings/");
 		loadModule(sub);
 
 		// Restartovat
