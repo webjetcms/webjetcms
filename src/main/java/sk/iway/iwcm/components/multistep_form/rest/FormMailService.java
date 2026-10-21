@@ -282,7 +282,7 @@ public class FormMailService {
 						msg.setRecipients(Message.RecipientType.BCC, bccAddrs);
 					}
 
-					msg.setFrom(new InternetAddress(effectiveSenderEmail, effectiveSenderName, emailEncoding));
+					msg.setFrom(new InternetAddress(effectiveSenderEmail, effectiveSenderName, SetCharacterEncodingFilter.getEncoding()));
 
 					msg.setSubject(MimeUtility.encodeText(subject, emailEncoding, null));
 					msg.setSentDate(new java.util.Date());

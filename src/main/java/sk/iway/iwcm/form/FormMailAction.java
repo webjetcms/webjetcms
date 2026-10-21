@@ -1549,7 +1549,7 @@ public class FormMailAction extends HttpServlet
 						}
 
 						String from = email;
-						msg.setFrom(new InternetAddress(getFirstEmail(email), meno, emailEncoding));
+						msg.setFrom(new InternetAddress(getFirstEmail(email), meno, SetCharacterEncodingFilter.getEncoding()));
 
 						//iteruj cez polozky formularu
 						String fieldsEmailHeader = request.getParameter("fieldsEmailHeader");
