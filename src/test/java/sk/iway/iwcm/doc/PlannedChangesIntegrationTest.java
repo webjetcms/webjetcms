@@ -22,6 +22,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -51,6 +52,7 @@ import sk.iway.iwcm.editor.rest.DocDetailsToDocHistoryMapper;
 import sk.iway.iwcm.system.jpa.WebJETPersistenceProvider;
 import sk.iway.iwcm.test.BaseWebjetTest;
 import sk.iway.iwcm.i18n.Prop;
+import sk.iway.iwcm.io.IwcmFsDB;
 import sk.iway.iwcm.users.UsersDB;
 import sk.iway.spirit.model.Media;
 import sk.iway.spirit.model.MediaGroupBean;
@@ -77,6 +79,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
     private MockedStatic<MultigroupMappingDB> mappings;
     private MockedStatic<DocNoteDB> notes;
     private MockedStatic<DocDB> docCache;
+    private MockedStatic<Constants> constants;
 
     @BeforeEach
     void setUp() {
@@ -89,7 +92,7 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
         users = register(mockStatic(UsersDB.class));
         mappings = register(mockStatic(MultigroupMappingDB.class));
         notes = register(mockStatic(DocNoteDB.class));
-        var constants = register(mockStatic(Constants.class, CALLS_REAL_METHODS));
+        constants = register(mockStatic(Constants.class, CALLS_REAL_METHODS));
         context = new AnnotationConfigApplicationContext(RepositoryConfiguration.class);
         docs = context.getBean(DocDetailsRepository.class);
         history = context.getBean("docHistoryRepository", DocHistoryRepository.class);
@@ -250,9 +253,11 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
         assertTrue(liveMedia().isEmpty());
     }
 
-    /** Asset and follow-up failures preserve sources; completion publishes every file and retains backups. */
-    @Test
-    void publishesAssetsOnlyAfterPreflightAndRetainsSourcesUntilCompletion() throws Exception {
+    /** With either JAR packaging setting, failures preserve sources and successful publication retains backups. */
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void publishesAssetsOnlyAfterPreflightAndRetainsSourcesUntilCompletion(boolean jarPackaging) throws Exception {
+        constants.when(() -> Constants.getBoolean("enableJspJarPackaging")).thenReturn(jarPackaging);
         PlannedChangesService interrupted = interruptedService();
         // All staged assets are published; preflight failure leaves all public files unchanged.
         String privateRoot = PlannedAssetPaths.ROOT + page.getDocId();
@@ -278,7 +283,9 @@ class PlannedChangesIntegrationTest extends BaseWebjetTest {
         withFiles.setData("<img srcset='" + privateRoot + "/images/photo.webp 1x, " + privateRoot + "/images/photo.webp?v=1634319328 2x'>!INCLUDE(component.jsp, image=" + privateRoot + "/images/missing.webp)!");
         withFiles = history.saveAndFlush(withFiles);
         long withFilesId = withFiles.getId();
-        try (var filesystem = mockStatic(sk.iway.iwcm.io.IwcmFsDB.class); var cache = mockStatic(sk.iway.iwcm.Cache.class)) {
+        try (var filesystem = mockStatic(IwcmFsDB.class); var cache = mockStatic(sk.iway.iwcm.Cache.class)) {
+            filesystem.when(() -> IwcmFsDB.getVirtualPath(anyString())).thenAnswer(call ->
+                "/" + assets.relativize(Path.of(call.getArgument(0, String.class))).toString().replace('\\', '/'));
             sk.iway.iwcm.Cache cacheInstance = mock(sk.iway.iwcm.Cache.class);
             cache.when(sk.iway.iwcm.Cache::getInstance).thenReturn(cacheInstance);
             Path pdfSource = assets.resolve(privateRoot.substring(1) + "/files/spec.pdf");
