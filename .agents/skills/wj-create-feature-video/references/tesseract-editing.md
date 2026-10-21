@@ -61,6 +61,14 @@ WebJET production decisions and lessons from the PR 332 edit.
   when using time-remap keyframes, or later frames can render black.
 - In CLI 0.3.0, `setFxLayerTimeRemap` actions serialize as the layer's `playback`
   field on checkout. Use the installed schema instead of inventing fields.
+- For linear retiming in CLI 0.4.0, an explicit mapping avoids ambiguous offsets:
+  set `mapping.input` to the clip's range on its parent's clock,
+  `mapping.output` to the selected source range, and `inputOffsetMs: 0`.
+  For example, edit 10–13 seconds playing source 5–11 seconds uses input
+  `{start: 10000, duration: 3000}` and output `{start: 5000, duration: 6000}`.
+  Changing only the visibility window does not rebase this mapping.
+  Verify the first, middle and last frames; a source offset applied before a
+  speed change can otherwise select unrelated footage or produce black frames.
 - For repeated seeking through retimed browser footage, long-GOP video can
   make rendering very slow. A high-quality H.264 all-intra derivative (`-g 1`,
   e.g. CRF 16) resolved this in PR 332. Preserve source duration, frame rate,
