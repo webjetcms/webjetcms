@@ -27,11 +27,11 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 /**
  * Manages field settings through DataTables Editor and supplies class, field and tab autocomplete options.
  * Saves use the current domain, and successful changes invalidate the affected settings caches.
- * Access requires the {@code customFields} permission.
+ * Access requires the {@code dataTablesConfig} permission.
  */
 @RestController
 @RequestMapping("/admin/rest/settings/fields-settings")
-@PreAuthorize("@WebjetSecurityService.hasPermission('customFields')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('dataTablesConfig')")
 @Datatable
 public class FieldsSettingsRestController extends DatatableRestControllerV2<FieldsSettingsEntity, Long> {
 

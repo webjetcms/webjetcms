@@ -850,14 +850,14 @@ public class Modules
 		sub.setMenuIcon("disc");
 		loadModule(sub);
 
-		// Custom fields
+		// DataTable editor configuration
 		sub = new ModuleInfo().setMenuOrder(7120);
 		sub.setLeftMenuNameKey("admin.editor.title");
-		sub.setNameKey("settings.custom-fields.title");
+		sub.setNameKey("admin.editor.title");
 		sub.setPath("/admin/v9/settings/fields-settings/");
 		sub.setWjVersions("BPECDIM");
 		sub.setUserItem(true);
-		sub.setItemKey("customFields");
+		sub.setItemKey("dataTablesConfig");
 		sub.setDefaultDisabled(true);
 		sub.setShowInLeftMenu(true);
 		sub.setGroup("config");

@@ -25,11 +25,11 @@ import sk.iway.iwcm.system.datatable.json.LabelValue;
 
 /**
  * Manages domain-scoped tab settings and supplies class and tab autocomplete options.
- * Access requires the {@code customFields} permission.
+ * Access requires the {@code dataTablesConfig} permission.
  */
 @RestController
 @RequestMapping("/admin/rest/settings/tabs-settings")
-@PreAuthorize("@WebjetSecurityService.hasPermission('customFields')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('dataTablesConfig')")
 @Datatable
 public class TabsSettingsRestController extends DatatableRestControllerV2<TabsSettingsEntity, Long> {
 

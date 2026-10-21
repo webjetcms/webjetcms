@@ -25,7 +25,7 @@ import sk.iway.iwcm.system.datatable.ProcessItemAction;
 
 @RestController
 @RequestMapping("/admin/rest/custom-fields/")
-@PreAuthorize("@WebjetSecurityService.hasPermission('customFields')")
+@PreAuthorize("@WebjetSecurityService.hasPermission('dataTablesConfig')")
 @Datatable
 public class CustomFieldsRestController extends DatatableRestControllerV2<CustomFieldsEntity, Long> {
 
