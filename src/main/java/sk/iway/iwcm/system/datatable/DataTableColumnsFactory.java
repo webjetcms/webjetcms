@@ -373,7 +373,10 @@ public class DataTableColumnsFactory {
 
                 //If tab is not empty and tab is not already in result, add it
                 if (Tools.isNotEmpty(tab) && result.stream().noneMatch(r -> r.getId().equals(tab))) {
-                    result.add(new DataTableTab(annotation, result.isEmpty()));
+                    sk.iway.iwcm.system.datatable.annotations.DataTableTab tabAnnotation = AnnotationUtils.synthesizeAnnotation(
+                        Map.of("id", tab, "title", tab, "selected", result.isEmpty()),
+                        sk.iway.iwcm.system.datatable.annotations.DataTableTab.class, dto);
+                    result.add(new DataTableTab(getTabAnnotation(tabAnnotation, tabsSettings.get(tab))));
                 }
             }
         }
@@ -389,6 +392,27 @@ public class DataTableColumnsFactory {
         }));
         if (dto.isAnnotationPresent(DataTableTabs.class) && includeCommonSettings && result.stream().noneMatch(tab -> "commonSettings".equals(tab.getId()))) {
             result.add(new DataTableTab("commonSettings", "commonSettings", false));
+        }
+
+        // The first saved default in final tab order takes precedence over declared or inferred defaults.
+        // Without a saved default, retain the first selected tab or fall back to the first tab.
+        DataTableTab selectedTab = null;
+        for (DataTableTab tab : result) {
+            TabsSettingsEntity setting = tabsSettings.get(tab.getId());
+            if (setting != null && Boolean.TRUE.equals(setting.getSelected())) {
+                selectedTab = tab;
+                break;
+            }
+            if (selectedTab == null && tab.isSelected()) {
+                selectedTab = tab;
+            }
+        }
+        if (selectedTab == null && result.isEmpty() == false) {
+            selectedTab = result.get(0);
+        }
+        // Normalize only the returned metadata; multiple saved defaults remain unchanged in the database.
+        for (DataTableTab tab : result) {
+            tab.setSelected(tab == selectedTab);
         }
 
         return result;

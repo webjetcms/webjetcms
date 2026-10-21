@@ -1767,28 +1767,28 @@ export const dataTableInit = options => {
                     //console.log("tabsFolders 1", DATA.tabsFolders);
                     editorHasTabs = true;
 
+                    const visibleTabs = DATA.tabsFolders.filter(tab => {
+                        if (typeof tab.perms != "undefined" && true === nopermsJavascript[tab.perms]) return false;
+                        if (true === tab.hideOnCreate && "create" == action) return false;
+                        if (true === tab.hideOnEdit && "edit" == action) return false;
+                        return true;
+                    });
+                    // Fall back when the configured default is hidden for this user or action.
+                    // Keep tab.selected unchanged so the configured default is restored when available.
+                    const selectedTab = visibleTabs.find(tab => tab.selected) || visibleTabs[0];
+
                     //taby
                     let tabsHtml = "";
                     tabsHtml += '<div class="md-tabs">';
                     tabsHtml += '<ul class="nav" id="pills-dt-editor-' + DATA.id + '" role="tablist">';
-                    for (let i = 0; i < DATA.tabsFolders.length; i++) {
-                        var tab = DATA.tabsFolders[i];
-
-                        if (typeof tab.perms != "undefined") {
-                            //skontroluj prava
-                            let tabPerm = nopermsJavascript[tab.perms];
-                            //console.log("tab.perms=", tab.perms, "noperms=", tabPerm);
-                            if (true === tabPerm) continue;
-                        }
-
-                        if (true === tab.hideOnCreate && "create"==action) continue;
-                        if (true === tab.hideOnEdit && "edit"==action) continue;
-
+                    for (let i = 0; i < visibleTabs.length; i++) {
+                        const tab = visibleTabs[i];
+                        const selected = tab === selectedTab;
                         var hasContent = tab.hasOwnProperty("content");
                         var classNameAppend = "";
                         if (typeof tab.className != "undefined") classNameAppend = " "+tab.className;
                         tabsHtml += '<li class="nav-item' + classNameAppend + '" role="presentation">';
-                        tabsHtml += '<a class="nav-link' + (tab.selected ? ' active' : '') + '" data-has-content="' + hasContent + '" data-tab-id="' + DATA.id + '-' + tab.id + '" id="pills-dt-' + DATA.id + '-' + tab.id + '-tab" href="#pills-dt-' + DATA.id + '-' + tab.id + '" aria-selected="' + tab.selected + '" aria-controls="pills-dt-' + DATA.id + '-' + tab.id + '" data-toogle="pill" role="tab">' + tab.title + '</a>';
+                        tabsHtml += '<a class="nav-link' + (selected ? ' active' : '') + '" data-has-content="' + hasContent + '" data-tab-id="' + DATA.id + '-' + tab.id + '" id="pills-dt-' + DATA.id + '-' + tab.id + '-tab" href="#pills-dt-' + DATA.id + '-' + tab.id + '" aria-selected="' + selected + '" aria-controls="pills-dt-' + DATA.id + '-' + tab.id + '" data-toogle="pill" role="tab">' + tab.title + '</a>';
                         tabsHtml += '</li>';
                     }
                     tabsHtml += '</ul>';
@@ -1822,15 +1822,16 @@ export const dataTableInit = options => {
                         })
                     }, 100);
 
-                    //ak je content na prvom tabe musime aj setnut dialogu has-content
-                    if (DATA.tabsFolders[0].hasOwnProperty("content")) $("#" + DATA.id + "_modal div.DTE_Body.modal-body").addClass("has-content");
-                    //pri reopene zobraz prvy tab
+                    if (selectedTab && selectedTab.hasOwnProperty("content")) $("#" + DATA.id + "_modal div.DTE_Body.modal-body").addClass("has-content");
+                    // Reopen the effective default instead of always activating the first configured tab.
                     if (editorWasOpened) {
-                        //console.log("#pills-dt-"+DATA.id+"-"+DATA.tabsFolders[0].id+"-tab");
-                        setTimeout(function () {
-                            //znova klikni na prvy tab
-                            $("#pills-dt-" + DATA.id + "-" + DATA.tabsFolders[0].id + "-tab").trigger("click");
-                        }, 100);
+                        // Clear persistent panes even when no tabs are available.
+                        $('#' + DATA.id + '_modal div.dte-tab-pane').removeClass("active show");
+                        if (selectedTab) {
+                            setTimeout(function () {
+                                $("#pills-dt-" + DATA.id + "-" + selectedTab.id + "-tab").trigger("click");
+                            }, 100);
+                        }
                     }
 
                     //prve otvorenie editora
@@ -1848,7 +1849,7 @@ export const dataTableInit = options => {
                             if (tab.hasOwnProperty("content")) {
                                 content = tab.content;
                             }
-                            tabsHtml = '<div id="pills-dt-' + DATA.id + '-' + tab.id + '" class="dte-tab-pane tab-pane fade' + (tab.selected ? ' show active' : '') + '" role="tabpanel" aria-labelledby="pills-dt-' + DATA.id + '-' + tab.id + '-tab">';
+                            tabsHtml = '<div id="pills-dt-' + DATA.id + '-' + tab.id + '" class="dte-tab-pane tab-pane fade' + (tab === selectedTab ? ' show active' : '') + '" role="tabpanel" aria-labelledby="pills-dt-' + DATA.id + '-' + tab.id + '-tab">';
                             tabsHtml += '<div class="panel-body" id="panel-body-dt-' + DATA.id + '-' + tab.id + '">' + content + '</div>';
                             tabsHtml += '</div>';
 
