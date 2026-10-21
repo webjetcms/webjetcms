@@ -98,6 +98,27 @@ V prípade potreby môžete v stromovej štruktúre kliknutím na ikonu <i class
 
 ![](jstree-settings.png)
 
+### Predvolené nastavenie pre používateľov
+
+Ak používateľ ešte neuložil vlastné nastavenie zobrazenia, strom sa zoradí podľa **Poradia usporiadania vzostupne**, teda od najnižšej hodnoty. ID a poradie sa pri názvoch nezobrazujú.
+
+Správca môže predvolené zobrazenie upraviť v sekcii **Nastavenia → Konfigurácia** premennou `webpagesTreeDefaultSettings`. Jej predvolená hodnota je:
+
+```json
+{
+  "showId": false,
+  "showPriority": false,
+  "showPages": false,
+  "showFoldersDt": false,
+  "treeWidth": 4,
+  "treeSortType": "priority",
+  "treeSortOrderAsc": true,
+  "showRealName": false
+}
+```
+
+Pre predvolené zobrazenie ID a poradia nastavte `showId` a `showPriority` na `true`. Hodnota `treeSortType` môže byť `priority` (poradie usporiadania), `title` (názov) alebo `createDate` (dátum vytvorenia). Hodnota `treeSortOrderAsc: true` znamená vzostupné poradie, `false` zostupné. `treeWidth` určuje počet stĺpcov z dvanástich alebo pevnú šírku v pixeloch podľa možností v dialógovom okne.
+
 ## Vyhľadávanie v stromovej štruktúre
 
 Filter nad stromovou štruktúrou Vám umožní rýchle vyhľadávanie priečinkov podľa ich názvu. Vyhľadávanie funguje v **celej stromovej štruktúre**, čiže nie je potrebné otvárať priečinky pre ich prehľadanie. Vyhľadávanie medzi jednotlivými kartami **Aktívne** / **Systémové** / **Zmazané** je oddelené, čiže v karte **Systémové** vyhľadávaním nenájdete priečinky patriace do karty **Zmazané** atď.

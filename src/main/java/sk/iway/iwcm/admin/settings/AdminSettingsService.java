@@ -3,7 +3,12 @@ package sk.iway.iwcm.admin.settings;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.JsonTools;
+import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.users.SettingsAdminBean;
 import sk.iway.iwcm.users.SettingsAdminDB;
@@ -13,6 +18,8 @@ import sk.iway.iwcm.users.UserDetails;
  * Podporna trieda pre ziskanie udajov ulozenych v admin_settings tabulke ako (JSON) hodnoty
  */
 public class AdminSettingsService {
+
+    public static final String WEBPAGES_TREE_SETTINGS_KEY = "jstreeSettings_web-pages-list";
 
     private UserDetails user;
     private Map<String, SettingsAdminBean> settings;
@@ -32,15 +39,25 @@ public class AdminSettingsService {
     }
 
     /**
-     * Vrati String hodnotu nastaveni pouzivatela so zadanym klucom
-     * @param key
-     * @return
+     * Returns a saved preference, or the configured web page tree defaults when no preference exists.
+     * Defaults are read without changing the user's settings or persisting a database record.
+     *
+     * @param key preference key
+     * @return saved or default value, or {@code null} for an unknown key
      */
     public String getValue(String key) {
         SettingsAdminBean s = settings.get(key);
-        if (s == null) return null;
+        if (s != null) return s.getValue();
 
-        return s.getValue();
+        if (WEBPAGES_TREE_SETTINGS_KEY.equals(key)) {
+            try {
+                return new JSONObject(Constants.getString("webpagesTreeDefaultSettings")).toString();
+            } catch (JSONException e) {
+                Logger.error(AdminSettingsService.class, "Invalid JSON object in webpagesTreeDefaultSettings", e);
+                return "{}";
+            }
+        }
+        return null;
     }
 
     /**

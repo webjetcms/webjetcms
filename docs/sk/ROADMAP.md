@@ -63,7 +63,7 @@ Vysvetlenie použitých piktogramov:
 - [ ] +Filter v aplikácii novinky neumožňuje zadať DOC ID viacerých stránok keby chceli podľa filtra “DOC_ID rovná sa” zvoliť viacero stránok
 filter berie iba prvú hodnotu. Dorobiť teda možnosť `IN` pre možnosť zadania viacerých hodnôt (#JT-2139).
 - [x] +AI - upraviť vytváranie `chunk` tak, aby podľa možnosti začínali a končili na hraniciach viet alebo slov (#58778).
-- [ ] +Webové stránky - upraviť predvolené zobrazenie pre nového používateľa - zobrazovať ID, poradie a usporiadať vzostupne.
+- [x] +Webové stránky - konfigurovateľné predvolené zobrazenie pre používateľa bez vlastného nastavenia (`webpagesTreeDefaultSettings`), predvolene usporiadať vzostupne podľa poradia; zobrazenie ID a poradia možno zapnúť v konfigurácii.
 - [ ] +Webové stránky - pridať možnosť pridať viacerým stránkam naraz perex skupinu, čiže k existujúcim perex skupinám sa pridá zvolená.
 - [ ] +Webové stránky - pri zmazaní priečinka, ktorý má aj zrkadlenú verziu zobraziť notifikáciu, že boli zmazané aj zrkadlené priečinky XXX,YYY.
 - [ ] +Pridať podporu obrázkov typu AVIF.
