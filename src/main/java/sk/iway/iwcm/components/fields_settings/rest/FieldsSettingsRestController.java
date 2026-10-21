@@ -117,7 +117,7 @@ public class FieldsSettingsRestController extends DatatableRestControllerV2<Fiel
     }
 
     /**
-     * Rejects unsupported fields, self-referencing sort positions and duplicate class/field settings in the current domain.
+     * Rejects unsupported fields and tabs, self-referencing sort positions and duplicate class/field settings in the current domain.
      * Duplicate checks exclude the edited record and are left to the database constraint during imports.
      */
     @Override
@@ -126,13 +126,21 @@ public class FieldsSettingsRestController extends DatatableRestControllerV2<Fiel
         if (errors.hasErrors() || (target.isInsert() == false && target.isUpdate() == false)) return;
         if (Tools.isEmpty(entity.getClassName()) || Tools.isEmpty(entity.getFieldName())) return;
 
-        if (fieldsSettingsService.getFieldOptions("*", entity.getClassName(), getProp()).stream()
-            .noneMatch(option -> entity.getFieldName().equals(option.getValue()))) {
+        List<LabelValue> fieldOptions = fieldsSettingsService.getFieldOptions("*", entity.getClassName(), getProp());
+        if (fieldOptions.stream().noneMatch(option -> entity.getFieldName().equals(option.getValue()))) {
             errors.rejectValue("errorField.fieldName", null, getProp().getText("settings.fields-settings.unsupported_field-err"));
+        }
+
+        if (Tools.isNotEmpty(entity.getTab()) && fieldsSettingsService.getTabOptions("*", entity.getClassName(), getProp()).stream()
+            .noneMatch(option -> entity.getTab().equals(option.getValue()))) {
+            errors.rejectValue("errorField.tab", null, getProp().getText("settings.fields-settings.unsupported_tab-err"));
         }
 
         if (entity.getFieldName().equals(entity.getSortAfter())) {
             errors.rejectValue("errorField.sortAfter", null, getProp().getText("settings.fields-settings.sort_after_self-err"));
+        } else if (Tools.isNotEmpty(entity.getSortAfter()) && fieldOptions.stream()
+            .noneMatch(option -> entity.getSortAfter().equals(option.getValue()))) {
+            errors.rejectValue("errorField.sortAfter", null, getProp().getText("settings.fields-settings.unsupported_field-err"));
         }
 
         // Import request IDs are row indexes, so this check could flag the updated record itself as a duplicate.
