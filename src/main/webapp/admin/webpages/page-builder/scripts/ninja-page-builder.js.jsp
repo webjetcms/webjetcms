@@ -1277,6 +1277,23 @@
             return $(this.$wrapper).clone(true);
         },
 
+        /** Removes nested controls before CKEditor formats them into whitespace in the exported HTML. */
+        configure_editor_output: function(editor) {
+            if (editor._.pageBuilderOutputFilter) return;
+            var temporaryClasses = [this.tag.toolbar, this.tag._plus_button, this.tag._highlighter,
+                this.tag.dimmer, this.tag.empty_placeholder, this.tag.connection_button,
+                this.tag.size_changer, this.options.prefix+'-insert-space'];
+            editor.dataProcessor.htmlFilter.addRules({
+                elements: {
+                    aside: function(element) {
+                        var classes = (element.attributes['class'] || '').split(/\s+/);
+                        if (temporaryClasses.some(function(name) { return classes.indexOf(name) !== -1; })) return false;
+                    }
+                }
+            }, { applyToAll: true });
+            editor._.pageBuilderOutputFilter = true;
+        },
+
         /** Removes CKEditor caret paragraphs from application-only content, preserving any additional authored content. */
         get_application_editor_data: function(editor) {
             var html = editor.getData(), pattern = /!INCLUDE\((.*?)\)!/gi;
@@ -1284,11 +1301,39 @@
             return remainder.length ? html : (html.match(pattern) || []).join('');
         },
 
+        /**
+         * Collapses old blank lines in a copy, using the live DOM to respect inherited white-space styles.
+         * Run before changing the clone's structure so both text walkers visit corresponding nodes.
+         * @param {Element} source Live element with the template's computed styles.
+         * @param {Element} clone Unmodified clone whose whitespace may be normalized.
+         */
+        clean_cloned_whitespace: function(source, clone) {
+            var sourceWalker = document.createTreeWalker(source, NodeFilter.SHOW_TEXT);
+            var cloneWalker = document.createTreeWalker(clone, NodeFilter.SHOW_TEXT);
+            var text;
+            while ((text = sourceWalker.nextNode())) {
+                var copy = cloneWalker.nextNode(), value = text.nodeValue;
+                // Only ASCII whitespace is formatting; NBSP and text content must remain untouched.
+                if (!/^[\t\n\f\r ]*$/.test(value) || !/\n[\t\n\f\r ]*\n/.test(value)) continue;
+                var parent = text.parentElement;
+                if (parent.closest('pre, code, textarea, script, style, template, xmp, plaintext, listing')) continue;
+                var whiteSpace = window.getComputedStyle(parent).whiteSpace;
+                if (whiteSpace !== 'normal' && whiteSpace !== 'nowrap') continue;
+                // Keep one newline as a separator between inline elements, including the final indentation.
+                copy.nodeValue = value.replace(/\n(?:[\t \r\f]*\n)+/g, '\n');
+            }
+        },
+
         /** Serializes editor content before removing temporary decorations from a detached clone. */
         getSaveNode: function(element) {
-            var me = this, node = element ? $('<div>').append($(element).clone()) : me.getClone();
+            var me = this, source = element ? $(element) : me.$wrapper;
+            var node = element ? $('<div>').append(source.clone()) : me.getClone();
+            source.each(function(index) {
+                me.clean_cloned_whitespace(this, element ? node.children()[index] : node[index]);
+            });
             node.find('[data-ckeditor-instance]').each(function() {
                 var editor = CKEDITOR.instances[$(this).attr('data-ckeditor-instance')];
+                me.configure_editor_output(editor);
                 var html = $(this).hasClass(me.tag.temp_wrapper) ? me.get_application_editor_data(editor) : editor.getData();
                 $(this).html(html);
             });

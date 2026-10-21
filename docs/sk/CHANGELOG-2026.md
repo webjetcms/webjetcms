@@ -277,6 +277,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Oprava chýb
 
+- Page Builder - opravené hromadenie prázdnych riadkov v HTML vnorených blokov. Pri ukladaní a prepnutí do HTML editora sa odstránia aj staré nadbytočné riadky medzi elementmi. Obsah `pre`, `textarea` a medzery zachovávané cez CSS `white-space` zostávajú nezmenené.
 - Webové stránky - opravené zasekávanie a skákanie pri [porovnávaní verzií](redactor/webpages/history.md), ak šablóna stránky používa plynulé posúvanie (`scroll-behavior: smooth`).
 - Webové stránky - editor JSON prijíma aj polia a jednoduché hodnoty s komentármi. Opravené rozdelenie stĺpcov a posúvanie v Page Builderi a zatváranie tooltipu pri úprave z histórie (#346).
 - Viackrokové formuláre - opravená validácia polí s reťazenými podmienkami viditeľnosti (#58794).
