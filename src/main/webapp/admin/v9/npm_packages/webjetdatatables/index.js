@@ -1819,19 +1819,17 @@ export const dataTableInit = options => {
                             });
 
                             window.dispatchEvent(event);
-                        })
+                        });
+                        // Initialize the effective default tab after its panes and handlers are ready.
+                        if (selectedTab) {
+                            $("#pills-dt-" + DATA.id + "-" + selectedTab.id + "-tab").trigger("click");
+                        }
                     }, 100);
 
                     if (selectedTab && selectedTab.hasOwnProperty("content")) $("#" + DATA.id + "_modal div.DTE_Body.modal-body").addClass("has-content");
-                    // Reopen the effective default instead of always activating the first configured tab.
                     if (editorWasOpened) {
                         // Clear persistent panes even when no tabs are available.
                         $('#' + DATA.id + '_modal div.dte-tab-pane').removeClass("active show");
-                        if (selectedTab) {
-                            setTimeout(function () {
-                                $("#pills-dt-" + DATA.id + "-" + selectedTab.id + "-tab").trigger("click");
-                            }, 100);
-                        }
                     }
 
                     //prve otvorenie editora

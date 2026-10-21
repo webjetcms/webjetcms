@@ -68,6 +68,8 @@ public class DataTableColumnsFactory {
     /**
      * Builds columns recursively, giving settings inherited from the parent field path precedence.
      * Matching parent entries replace this class's saved entries before annotations are overridden.
+     * Saved disabled settings are also passed separately to the column builder so they take precedence
+     * over legacy editor attributes and the {@code DISABLED} input type.
      *
      * @param fieldPrefix prefix prepended to generated field paths, or {@code null} for no prefix
      * @param parentSettings parent settings keyed by paths relative to this class
@@ -159,8 +161,9 @@ public class DataTableColumnsFactory {
                     if("commonSettings".equals( declaredField.getAnnotation(sk.iway.iwcm.system.datatable.annotations.DataTableColumn.class).tab()) ) continue;
                 }
 
-                DataTableColumn column = new DataTableColumn(dto, declaredField, fieldPrefix, getColumnAnnotation(declaredField, settings));
                 FieldsSettingsEntity setting = settings.get(declaredField.getName());
+                DataTableColumn column = new DataTableColumn(dto, declaredField, fieldPrefix, getColumnAnnotation(declaredField, settings),
+                    setting == null ? null : setting.getDisabled());
                 if (setting != null && Tools.isNotEmpty(setting.getTab()) && column.getEditor() != null) {
                     // Apply the saved tab last because editor metadata can restore the tab from the original annotation.
                     column.getEditor().setTab(setting.getTab());

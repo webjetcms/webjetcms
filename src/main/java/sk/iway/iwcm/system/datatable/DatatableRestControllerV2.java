@@ -2387,9 +2387,14 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 	}
 
 	/**
-	 * Copy fields from provided entity into original entity
-	 * @param entity
-	 * @param one
+	 * Merges submitted values into the stored entity using current-domain field settings.
+	 * A saved disabled value of {@code false} permits copying fields disabled by editor attributes;
+	 * {@code true} preserves their stored values. Missing or null settings retain the legacy copy rules.
+	 * Identifiers and fields hidden by the effective hidden-editor setting remain excluded.
+	 * Null values follow the annotation and import-column rules for the affected field.
+	 *
+	 * @param entity submitted entity containing the new field values
+	 * @param one stored entity to update in place
 	 */
 	protected void copyEntityIntoOriginal(T entity, T one) {
 		List<String> alwaysCopyProperties = new ArrayList<>();
@@ -2403,11 +2408,15 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 
 		// Match DataTableColumnsFactory's current domain, even when the controller uses a shared repository domain.
 		Map<String, Boolean> hiddenEditorOverrides = new HashMap<>();
+		Map<String, Boolean> disabledOverrides = new HashMap<>();
 		FieldsSettingsService fieldsSettingsService = Tools.getSpringBean("fieldsSettingsService", FieldsSettingsService.class);
 		if (fieldsSettingsService != null) {
 			for (FieldsSettingsEntity setting : fieldsSettingsService.getFieldsSettings(ClassUtils.getUserClass(entity).getName(), CloudToolsForCore.getDomainId())) {
 				if (setting.getHiddenEditor() != null) {
 					hiddenEditorOverrides.put(setting.getFieldName(), setting.getHiddenEditor());
+				}
+				if (setting.getDisabled() != null) {
+					disabledOverrides.put(setting.getFieldName(), setting.getDisabled());
 				}
 			}
 		}
@@ -2426,9 +2435,15 @@ public abstract class DatatableRestControllerV2<T, ID extends Serializable>
 					continue;
 				}
 
-				//also skip if editor.attr.disabled=disabled
+				Boolean disabledOverride = disabledOverrides.get(field.getName());
+				if (Boolean.TRUE.equals(disabledOverride)) {
+					ignoreProperties.add(field.getName());
+					continue;
+				}
+
+				// An explicit saved false enables copying; unchanged settings retain the legacy rules.
 				DataTableColumnEditor[] editor = annotation.editor();
-				if (editor.length > 0) {
+				if (disabledOverride == null && editor.length > 0) {
 					boolean isDisabled = false;
 					DataTableColumnEditorAttr[] attrs = editor[0].attr();
 					if (attrs.length > 0) {

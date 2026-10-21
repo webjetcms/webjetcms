@@ -96,6 +96,24 @@ public class DataTableColumn {
      */
     @SuppressWarnings("rawtypes")
     public DataTableColumn(Class controller, Field field, String fieldPrefix, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation) {
+        this(controller, field, fieldPrefix, annotation, null);
+    }
+
+    /**
+     * Builds column metadata with a saved disabled override applied after the declared editor attributes.
+     * An explicit {@code true} adds the disabled attribute, while {@code false} removes it even when
+     * it originates from the {@code DISABLED} input type. A null override preserves the computed editor attributes.
+     * Cell-editing restrictions are derived afterward; independent hidden-field and CSS restrictions remain effective.
+     * Without an active HTTP request, only the prefixed name and data path are initialized.
+     *
+     * @param controller class used to resolve fallback translation keys and AI assistants
+     * @param field source field for type and editor metadata
+     * @param fieldPrefix prefix for the field name and data path, or {@code null} for no prefix
+     * @param annotation declared or synthesized column annotation, or {@code null} to skip column annotation settings
+     * @param disabledOverride saved disabled state, or {@code null} to preserve the computed editor attributes
+     */
+    @SuppressWarnings("rawtypes")
+    public DataTableColumn(Class controller, Field field, String fieldPrefix, sk.iway.iwcm.system.datatable.annotations.DataTableColumn annotation, Boolean disabledOverride) {
         String fieldPrefixNotNull = fieldPrefix;
         if (fieldPrefixNotNull == null)
             fieldPrefixNotNull = "";
@@ -114,6 +132,14 @@ public class DataTableColumn {
         setEditorPropertiesFromField(field);
 
         setFinalProperties(field);
+        if (disabledOverride != null) {
+            if (disabledOverride) {
+                if (editor == null) editor = new DataTableColumnEditor();
+                editor.addAttr("disabled", "disabled");
+            } else if (editor != null && editor.getAttr() != null) {
+                editor.getAttr().remove("disabled");
+            }
+        }
         setCellNotEditable(field);
         addEditIcon(field);
 
