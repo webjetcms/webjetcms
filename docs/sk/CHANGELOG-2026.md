@@ -194,6 +194,12 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ![](redactor/apps/gallery/dir-sizes-tab.png)
 
+### Editor
+
+- Sekcia **Nastavenia → Editor** združuje [Nastavenia polí](frontend/editor/fields-settings.md), [Nastavenia kariet](frontend/editor/tabs-settings.md) a [Voliteľné polia](frontend/editor/custom-fields-settings.md). Pre jednotlivé entity a domény možno meniť názvy, poradie a zobrazenie polí, zakázať ich úpravy, upravovať karty editora a vytvárať vlastné karty s voliteľnými poľami (#58830).
+
+- Sekcia **Nastavenia → Editor** používa nové oprávnenie `dataTablesConfig`, ktoré sa v zozname práv zobrazuje ako **Editor** a riadi prístup k nastaveniam polí, kariet aj voliteľných polí (#58830).
+
 ### Voliteľné polia
 
 - Kompletne implementovaná funkčnosť [nastavenia voliteľných polí](frontend/webpages/customfields/custom-fields-settings.md). Umožňuje centrálne nastaviť vlastnosti polí bez editácie prekladových kľúčov. Podporované sú všetky typy polí (text, textarea, select, multiselect, autocomplete, enumeration, obrázok, odkaz, JSON a ďalšie) s typovo špecifickými nastaveniami ako maximálna dĺžka textu, možnosti výberu, prepojenie na číselníky alebo závislosť na iných poliach. Používateľské rozhranie ponúka aj jednoduchý spôsob nastavenia možných hodnôt pre výberové/autocomplete polia (#58529).

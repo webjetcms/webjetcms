@@ -36,7 +36,7 @@ v tabuľke dát daného číselníka sa zobrazia dva stĺpce typu reťazec a jed
 
 ### Karta Typy reťazcových polí
 
-Po prvom uložení typu číselníka sa zobrazí karta **Typy reťazcových polí**. Umožňuje rozšíriť pomenované polia z karty **Reťazce** o nastavenia známe z [voliteľných polí](../../../frontend/webpages/customfields/custom-fields-settings.md), napríklad o výberové pole, výber viacerých možností, automatické dopĺňanie, prepojenie na iný číselník alebo výber obrázka, odkazu, priečinka či webovej stránky.
+Po prvom uložení typu číselníka sa zobrazí karta **Typy reťazcových polí**. Umožňuje rozšíriť pomenované polia z karty **Reťazce** o nastavenia známe z [voliteľných polí](../../../frontend/editor/custom-fields-settings.md), napríklad o výberové pole, výber viacerých možností, automatické dopĺňanie, prepojenie na iný číselník alebo výber obrázka, odkazu, priečinka či webovej stránky.
 
 ![](editor_stringFieldTypes.png)
 
@@ -52,7 +52,7 @@ Pre každé pole je možné nastaviť:
 
 Bez špecifickej konfigurácie sa pomenované reťazcové pole zobrazí ako bežné textové pole s maximálnou dĺžkou 1024 znakov. Nepomenované reťazcové polia sa v dátach číselníka ani v možnostiach konfigurácie nezobrazia.
 
-!> **Upozornenie:** číselníky zatiaľ nie sú rozdelené podľa zvolenej domény, preto sa nastavenia voliteľných polí (typy reťazcových polí) vždy ukladajú do hlavnej domény. V sekcii [Voliteľné polia](../../../frontend/webpages/customfields/custom-fields-settings.md) sa tieto nastavenia zobrazia len v hlavnej doméne. Odporúčame ich nastavovať a upravovať vždy na karte **Typy reťazcových polí**.
+!> **Upozornenie:** číselníky zatiaľ nie sú rozdelené podľa zvolenej domény, preto sa nastavenia voliteľných polí (typy reťazcových polí) vždy ukladajú do hlavnej domény. V sekcii [Voliteľné polia](../../../frontend/editor/custom-fields-settings.md) sa tieto nastavenia zobrazia len v hlavnej doméne. Odporúčame ich nastavovať a upravovať vždy na karte **Typy reťazcových polí**.
 
 !> **Upozornenie na spätnú kompatibilitu:** dátové atribúty reťazcových polí sa zmenili z `string1` až `string12` na `fieldA` až `fieldL`. Vo vlastných alebo starších šablónach programu Excel na import dát číselníka musíte kódové názvy v hlavičke ručne upraviť, napríklad `Mesto|string1` na `Mesto|fieldA`. Rovnaké názvy `fieldA` až `fieldL` používajte aj v integráciách REST API, ktoré spracúvajú dáta číselníkov. Databázové stĺpce `string1` až `string12` zostávajú nezmenené.
 
