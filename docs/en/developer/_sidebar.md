@@ -5,6 +5,7 @@
 - Installation and launch
     - [Installation and launch](/developer/install/README.md)
     - [Development Containers](/developer/install/devcontainers/README.md)
+    - [Generating SBOM](/developer/install/sbom.md)
     - [Social Media Feeds](/developer/install/social-media-feed.md)
 - Frameworks used
     - [Frameworks used](/developer/frameworks/README.md)

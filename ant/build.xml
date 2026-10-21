@@ -68,6 +68,28 @@
         <input message="Skontrolujte verziu artefaktu (${artifact.version}). Stlačte Enter pre pokračovanie alebo Ctrl+C pre ukončenie..." />
     </target>
 
+    <target name="sbom" depends="define-artifact-properties" description="Generate a combined CycloneDX SBOM using the artifact version">
+        <property name="sbom.offline" value="false"/>
+        <condition property="sbom.offline.arg" value="--offline" else="">
+            <istrue value="${sbom.offline}"/>
+        </condition>
+        <condition property="sbom.gradle.executable" value="cmd" else="${basedir}/gradlew">
+            <os family="windows"/>
+        </condition>
+        <condition property="sbom.gradle.prefix" value="/c gradlew.bat" else="">
+            <os family="windows"/>
+        </condition>
+        <exec executable="${sbom.gradle.executable}" dir="${basedir}" failonerror="true">
+            <arg line="${sbom.gradle.prefix}"/>
+            <arg value="--init-script"/>
+            <arg file="ant/sbom.init.gradle"/>
+            <arg value="sbom"/>
+            <arg value="-PsbomVersion=${artifact.version}"/>
+            <arg line="${sbom.offline.arg}"/>
+        </exec>
+        <copy file="build/reports/sbom/webjetcms.cdx.json" tofile="ant/sbom/webjetcms.cdx.json" overwrite="true" failonerror="true"/>
+    </target>
+
     <defaultexcludes add="**/prepros-6.config"/>
     <defaultexcludes add="**/*.md"/>
     <defaultexcludes add="**/node_modules/**"/>
@@ -486,7 +508,8 @@
 
     </target>
 
-    <target name="deployGithub" depends="define-artifact-properties,prepareAllJars" description="deploy (SNAPSHOT) version to GitHub repository">
+    <target name="deployGithub" depends="define-artifact-properties,prepareAllJars,sbom" description="deploy (SNAPSHOT) version and SBOM to GitHub repository">
+        <copy file="ant/sbom/webjetcms.cdx.json" tofile="${artifact.dir}/${artifact.name}-${artifact.version}-cyclonedx.json" overwrite="true" failonerror="true"/>
         <exec executable="mvn" failonerror="true">
             <arg value="-e"/>
             <arg value="-X"/>
@@ -498,9 +521,9 @@
             <arg value="-DrepositoryId=${github-server-id}"/>
             <arg value="-DpomFile=${artifact.pom}"/>
             <arg value="-Dfile=${artifact.dir}/${artifact.name}-${artifact.version}.jar"/>
-            <arg value="-Dfiles=${artifact.dir}/${artifact.name}-${artifact.version}-admin.jar,${artifact.dir}/${artifact.name}-${artifact.version}-components.jar,${artifact.dir}/${artifact.name}-${artifact.version}-javadoc.jar,${artifact.dir}/${artifact.name}-${artifact.version}-sources.jar,${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar"/>
-            <arg value="-Dclassifiers=admin,components,javadoc,sources,libs"/>
-            <arg value="-Dtypes=jar,jar,jar,jar,jar"/>
+            <arg value="-Dfiles=${artifact.dir}/${artifact.name}-${artifact.version}-admin.jar,${artifact.dir}/${artifact.name}-${artifact.version}-components.jar,${artifact.dir}/${artifact.name}-${artifact.version}-javadoc.jar,${artifact.dir}/${artifact.name}-${artifact.version}-sources.jar,${artifact.dir}/${artifact.name}-${artifact.version}-libs.jar,${artifact.dir}/${artifact.name}-${artifact.version}-cyclonedx.json"/>
+            <arg value="-Dclassifiers=admin,components,javadoc,sources,libs,cyclonedx"/>
+            <arg value="-Dtypes=jar,jar,jar,jar,jar,json"/>
             <arg value="-Dusername=${env.GITHUB_USERNAME}"/>
             <arg value="-Dpassword=${env.GITHUB_TOKEN}"/>
         </exec>
@@ -509,7 +532,7 @@
 
     </target>
 
-    <target name="gitPush" description="push changes in src/main/webapp/WEB-INF/build.properties">
+    <target name="gitPush" description="push build.properties and the generated SBOM">
 
         <!-- Load the properties from the file -->
         <property file="${root}/../../src/main/webapp/WEB-INF/build.properties"/>
@@ -525,9 +548,10 @@
             <arg value="${env.GITHUB_EMAIL}"/>
         </exec>
 
-        <exec executable="git">
+        <exec executable="git" failonerror="true">
             <arg value="add"/>
             <arg value="${root}/../../src/main/webapp/WEB-INF/build.properties"/>
+            <arg value="ant/sbom/webjetcms.cdx.json"/>
         </exec>
         <exec executable="git">
             <arg value="commit"/>
@@ -542,6 +566,8 @@
     </target>
 
     <target name="generateSignatures" depends="define-artifact-properties" description="Generate asc, md5 and sha1 files">
+        <copy file="ant/sbom/webjetcms.cdx.json" tofile="${artifact.dir}/${artifact.name}-${artifact.version}-cyclonedx.json" overwrite="true" failonerror="true"/>
+
         <delete includeemptydirs="true">
             <fileset dir="${artifact.dir}">
                 <include name="*.md5"/>
@@ -577,19 +603,23 @@
         <antcall target="generateSignatureImpl">
             <param name="signExt" value="-libs.jar"/>
         </antcall>
+
+        <antcall target="generateSignatureImpl">
+            <param name="signExt" value="-cyclonedx.json"/>
+        </antcall>
     </target>
 
     <target name="generateSignatureImpl" description="Generate asc, md5 and sha1 signatures">
         <echo message="-> Generate signature for: ${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
-        <exec executable="sh" output="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}.sha1">
+        <exec executable="sh" output="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}.sha1" failonerror="true">
             <arg value="-c"/>
             <arg value="shasum -a 1 ${artifact.dir}/${artifact.name}-${artifact.version}${signExt} | awk '{print $1}'"/>
         </exec>
-        <exec executable="sh" output="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}.md5">
+        <exec executable="sh" output="${artifact.dir}/${artifact.name}-${artifact.version}${signExt}.md5" failonerror="true">
             <arg value="-c"/>
             <arg value="md5 -q ${artifact.dir}/${artifact.name}-${artifact.version}${signExt}"/>
         </exec>
-        <exec executable="gpg">
+        <exec executable="gpg" failonerror="true">
             <arg value="-ab"/>
             <arg value="--yes"/>
             <arg value="--local-user"/>
@@ -598,12 +628,13 @@
         </exec>
     </target>
 
-    <target name="deployMavenCentral" depends="define-artifact-properties,waitForConfirm,prepareAllJars,generateSignatures" description="Generate ZIP file uploadable to maven central with all artifacts, POM and signatures">
+    <target name="deployMavenCentral" depends="define-artifact-properties,waitForConfirm,prepareAllJars,generateSignatures" description="Generate ZIP file uploadable to maven central with all artifacts, existing SBOM, POM and signatures">
         <delete file="${artifact.dir}/${artifact.name}-${artifact.version}.zip" />
 
         <zip destfile="${artifact.dir}/${artifact.name}-${artifact.version}.zip">
             <zipfileset dir="${artifact.dir}" prefix="com/webjetcms/${artifact.name}/${artifact.version}">
                 <include name="*.jar"/>
+                <include name="${artifact.name}-${artifact.version}-cyclonedx.json"/>
                 <include name="*.md5"/>
                 <include name="*.sha1"/>
                 <include name="*.asc"/>

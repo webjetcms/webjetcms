@@ -85,7 +85,7 @@ Po úspešnom publikovaní všetkých jazykov a súkromnej cache generátor odst
 
 ## Diagnostika načítania
 
-Záznam auditu o spustení úlohy potvrdzuje iba jej vyvolanie. Výsledok hľadajte v logu triedy `SocialMediaFeedGenerator`. Pri odmietnutí požiadavky log obsahuje HTTP stav a pri chybe Facebook Graph API aj číselné `code` a `error_subcode`, ak ich odpoveď poskytuje. Token, autorizačné hlavičky ani text odpovede sa do diagnostiky nezapisujú. Kódy overte podľa [spracovania chýb Graph API](https://developers.facebook.com/docs/graph-api/guides/error-handling/).
+Záznam auditu o spustení úlohy potvrdzuje iba jej vyvolanie. Každé zlyhanie obnovenia zdroja sa navyše zapíše do auditu typu `CRON` s prefixom `SocialMediaFeedGenerator:`, názvom zdroja a počtom zachovaných príspevkov z cache. Podľa týchto záznamov môžete sledovať frekvenciu výpadkov. Celkový výsledok hľadajte v logu triedy `SocialMediaFeedGenerator`. Pri odmietnutí požiadavky log aj audit zlyhania zdroja obsahujú HTTP stav a pri chybe Facebook Graph API aj číselné `code` a `error_subcode`, ak ich odpoveď poskytuje. Token, autorizačné hlavičky ani text odpovede sa do diagnostiky nezapisujú. Kódy overte podľa [spracovania chýb Graph API](https://developers.facebook.com/docs/graph-api/guides/error-handling/).
 
 Pri chybe neexistujúceho poľa log doplní jeho názov, ak ide o pole požadované generátorom. Ak odmieta už `published_posts`, overte Page token a ID stránky podľa predchádzajúceho postupu. Prípadnú nezhodu opravte v konfigurácii; generátor automaticky neprepína na inú stránku.
 
