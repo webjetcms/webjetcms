@@ -398,6 +398,10 @@ Keep the approved narration as the timing anchor, preserve continuous topic
 flows, and use purposeful zooms on the controls being explained. Omit numbered
 chapter-title overlays unless explicitly requested.
 
+Include the opening AI disclosure in every finished video, following the
+wording, placement, timing and readability checks in the reference's
+[AI Disclosure](references/tesseract-editing.md#ai-disclosure) section.
+
 Always finish the complete WebJET feature video with the supplied animation in
 `src/test/webapp/video/assets/outro.mp4`, unless the user requests a different
 ending. Append it once, at its original speed, after the final narration and

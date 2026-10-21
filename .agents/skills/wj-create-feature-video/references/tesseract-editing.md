@@ -83,6 +83,31 @@ WebJET production decisions and lessons from the PR 332 edit.
   silently replace the Tesseract composition/rendering step. Resolve local
   executable paths; do not copy another worktree's absolute paths or caches.
 
+## AI Disclosure
+
+Add a small, clearly readable notice at the beginning of every finished video
+with the exact text: `Tento obsah bol vytvorený pomocou AI`.
+
+- Show it within the first second and hold it fully readable for at least eight
+  seconds, excluding any fades. Optional entrance/exit fades may last at most
+  250 ms each. Keep it visible across opening cuts.
+- Place it in the bottom-right corner with about 4% of the frame width/height
+  as safe margins. Use a simple sans-serif font, starting at 32 px for 1920×1080
+  and scaling with output resolution. Use fully opaque white text on a dark,
+  near-opaque backing with padding so changing footage cannot obscure it.
+  Keep it understated through size and placement, not faint text. Avoid
+  covering demonstrated controls; adjust the opening framing when needed.
+- Create native editable text and backing layers above the footage, outside
+  camera/zoom groups, so the notice stays fixed on screen. Include it in both
+  the `.tsrct` and rendered MP4. Reuse an existing disclosure when revising an
+  edit. This is an editing overlay; keep approved narration and browser
+  scenarios unchanged.
+- Inspect the encoded opening at normal playback speed and at a reduced player
+  size (for example 640×360). Check the full wording and Slovak diacritics,
+  duration, contrast, margins and visibility through cuts/zooms. Increase the
+  font or backing if needed; a legible full-resolution preview alone is not
+  sufficient. Include a preview frame with the notice in the handoff.
+
 ## Standard Brand Outro
 
 The shared source is `src/test/webapp/video/assets/outro.mp4` relative to the
