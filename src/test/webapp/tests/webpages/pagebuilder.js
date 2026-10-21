@@ -6,6 +6,35 @@ Before(({ I, login }) => {
     login('admin');
 });
 
+Scenario('history version retains the Page Builder content and toolbar', async ({ I, DTE, DT, Document }) => {
+    Document.resetPageBuilderMode();
+    I.amOnPage('/admin/v9/webpages/web-pages-list/?docid=57');
+    DTE.waitForEditor();
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForVisible('#wjInline-docdata.pb-wrapper', 10);
+    I.switchTo();
+
+    I.clickCss('#pills-dt-datatableInit-history-tab');
+    DT.waitForLoader('datatableFieldDTE_Field_editorFields-history');
+    const historyRow = locate('#datatableFieldDTE_Field_editorFields-history tbody tr').at(2);
+    I.waitForVisible(historyRow, 10);
+    const historyId = await I.grabAttributeFrom(historyRow, 'id');
+    I.click(historyRow.find('td').first());
+    I.clickCss('#pills-dt-datatableInit-history .buttons-history-edit');
+
+    // Wait for the history document, so the old iframe cannot satisfy the content assertions.
+    I.waitForFunction(([id]) => {
+        const frame = document.querySelector('#DTE_Field_data-pageBuilderIframe')?.contentWindow;
+        return frame && new URLSearchParams(frame.location.search).get('historyid') === id && frame.document.readyState === 'complete';
+    }, [historyId], 15);
+    I.switchTo('#DTE_Field_data-pageBuilderIframe');
+    I.waitForVisible('#wjInline-docdata.pb-wrapper', 10);
+    I.see('Suspendisse interdum dolor justo', '#wjInline-docdata');
+    I.seeElement('#inlineEditorToolbarTop .cke_inner');
+    I.switchTo();
+    DTE.cancel();
+});
+
 Scenario('overenie zobrazenia podla sablony', async ({I, DTE, Document}) => {
 
     //reset PB settings

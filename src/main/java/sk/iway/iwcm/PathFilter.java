@@ -219,6 +219,7 @@ public class PathFilter implements Filter
 			{
 				path = path.substring(req.getContextPath().length());
 			}
+            if (sk.iway.iwcm.doc.PlannedAccess.isPathAccessible(path, req, res)==false) return;
 			if (path.contains("//"))
 			{
 				path = Tools.replace(path, "/////", "/");
@@ -2070,6 +2071,10 @@ public class PathFilter implements Filter
      */
 	public static boolean setStaticContentHeaders(String path, Identity user, HttpServletRequest request, HttpServletResponse response)
 	{
+        if (sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(path.startsWith("/") ? path : "/" + path)) {
+            setNoCacheHeaders(response);
+            return false;
+        }
 		if (path.startsWith("/cache/")==false && request.getParameter("v")!=null)
 		{
 			//vygeneruj odkaz bez v parametra, negeneruje pre fiktivne /cache/nieco.css linky
@@ -2223,6 +2228,7 @@ public class PathFilter implements Filter
 	 */
 	public static boolean writeAndCacheFile(String url, HttpServletResponse response)
 	{
+        if (sk.iway.iwcm.doc.PlannedAssetPaths.containsPlannedPath(url)) return false;
 		//ak je cache vypnuta, neriesime
 		if (FileCache.useFileCache() == false) return false;
 		//pre DB storage tu cache neriesime, to sa riesi priamo v IwcmFsFilter

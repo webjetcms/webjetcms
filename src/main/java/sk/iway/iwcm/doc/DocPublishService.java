@@ -2,10 +2,12 @@ package sk.iway.iwcm.doc;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import sk.iway.iwcm.Constants;
+import sk.iway.iwcm.Identity;
 import sk.iway.iwcm.InitServlet;
 import sk.iway.iwcm.Logger;
 import sk.iway.iwcm.RequestBean;
@@ -25,6 +27,7 @@ import sk.iway.iwcm.users.UsersDB;
 public class DocPublishService {
 
 	private long lastPublishCheck = 0;
+    private static final Set<Integer> publishing = ConcurrentHashMap.newKeySet();
 	//holds list of pages that are ready to be published{DocHistory} or disabled/unpublished{DocDetails}
 	private List<DocBasic> publicableDocs;
 
@@ -77,7 +80,12 @@ public class DocPublishService {
 
 				//execute changes
 				for (DocHistory doc : copyDHtoD) {
-					copyDHistory(doc, docDB);
+					try {
+                        copyDHistory(doc, docDB);
+                    } catch (Exception exception) {
+                        Logger.error(DocPublishService.class, "Could not publish history " + doc.getHistoryId());
+                        Logger.error(DocPublishService.class, exception);
+                    }
 				}
 				for (DocDetails doc : removeAfterEndList) {
 					disableAfterEnd(doc);
@@ -89,114 +97,154 @@ public class DocPublishService {
 	}
 
 	/**
-	 * copy data from table documents_history to table documents
-	 * @param docHistory
-	 * @param docDB
+	 * Publishes a scheduled history record, including optional planned assets and media.
+	 * @param queuedHistory history record selected for publication
+	 * @param docDB document cache used for publication follow-up operations
+	 * @return the published page, or null when the record is no longer eligible
 	 */
-	private synchronized void copyDHistory(DocHistory docHistory, DocDB docDB) {
-		GroupsDB groupsDB = GroupsDB.getInstance();
+    synchronized DocDetails copyDHistory(DocHistory queuedHistory, DocDB docDB) {
+        prepareRepositories();
 
-		DocDetails docDetails = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(docHistory);
+        // Prevent overlapping or recursive publication of this page within the same JVM.
+        // This guard does not coordinate publication across cluster nodes.
+        int docId = queuedHistory.getDocId();
+        if (!publishing.add(docId)) return null;
+        RequestBean previous = SetCharacterEncodingFilter.getCurrentRequestBean();
+        try {
+            // Recheck the selected history record: the cached queue may contain a version
+            // that was already published, rescheduled, rejected or returned for approval.
+            DocHistory docHistory = dhr.findById(queuedHistory.getId()).orElse(null);
+            if (docHistory == null || !Boolean.TRUE.equals(docHistory.getPublicable()) ||
+                docHistory.getPublishStart() <= 0 || docHistory.getPublishStart() > Tools.getNow() ||
+                Tools.isNotEmpty(docHistory.getAwaitingApprove()) ||
+                (docHistory.getDisapprovedBy() != null && docHistory.getDisapprovedBy() > 0) || Boolean.TRUE.equals(docHistory.getIsDelete())) {
+                docDB.readPagesToPublic();
+                return null;
+            }
 
-		Logger.debug(this,"Publishing from historyId: " + docDetails.getHistoryId() + " docId: " + docDetails.getDocId());
+            // Skip missing/trashed pages and pause initialized plans while the feature is disabled.
+            // With planned publishing enabled, only the newest pending history is eligible.
+            GroupsDB groupsDB = GroupsDB.getInstance();
+            DocDetails currentPage = ddr.findById(docId);
+            if (currentPage == null || groupsDB.isInTrash(currentPage.getGroupId())) return null;
+            boolean plannedEnabled = PlannedAccess.enabled();
+            if (!plannedEnabled && ddr.isPlannedMediaInitialized(docId)) return null;
+            PlannedChangesService planned = plannedEnabled ? PlannedChangesService.getInstance() : null;
+            if (planned != null && !docHistory.getId().equals(planned.activeHistory(docId))) return null;
 
-		boolean publicable = dhr.getPublicableByDocIdIn(docDetails.getDocId()).contains(Boolean.TRUE) ? true : false;
-		Optional<List<Integer>> historyIdsOpt = dhr.getHisotryIdsByDocIdIn(docDetails.getDocId());
-		String historyIds = historyIdsOpt.isPresent() == true ? historyIdsOpt.get().stream().map(String::valueOf).collect(Collectors.joining(",")) : null;
+            // Use the page's domain and author for domain-scoped media, asset permissions and audit,
+            // independently of the visitor or administrator whose request triggered publication.
+            UserDetails author = UsersDB.getUser(docHistory.getAuthorId());
+            Identity user = author == null ? null : new Identity(author);
+            RequestBean publication = new RequestBean();
+            GroupDetails group = groupsDB.getGroup(plannedEnabled ? currentPage.getGroupId() : docHistory.getGroupId());
+            if (group != null) publication.setDomain(group.getDomainName());
+            publication.setUser(user);
+            publication.setSpringContext(Tools.getSpringContext());
+            SetCharacterEncodingFilter.setCurrentRequestBean(publication);
 
-		if (historyIds == null || publicable == false) {
-			//asi sme cluster a uz to niekto aktualizoval
-			return;
-		}
+            // Build the page from its history snapshot. Planned publication retains the current
+            // URL and folder, publishes staged files and rewrites their URLs before saving the page.
+            DocDetails docDetails = DocDetailsToDocHistoryMapper.INSTANCE.docHistoryToDocDetails(docHistory);
+            Logger.debug(this, "Publishing from historyId: " + docDetails.getHistoryId() + " docId: " + docId);
+            if (planned != null) {
+                docDetails.setVirtualPath(currentPage.getVirtualPath());
+                docDetails.setGroupId(currentPage.getGroupId());
+                planned.preparePublication(docDetails, user);
+            }
 
-		dhr.updateActual(false, Tools.getTokensInt(sk.iway.iwcm.DB.getOnlyNumbersIn(historyIds), ","));
+            // Restore the regular publication metadata: visibility, perex groups, folder path
+            // and root groups. The live page must no longer request a future publication.
+            docDetails.setAvailable(true);
+            docDetails.setPerexGroupString(docDetails.getPerexGroupIdsString(true));
+            docDetails.setFileName(group != null && !group.isInternal() ? groupsDB.getGroupNamePath(docDetails.getGroupId()) : null);
+            int[] rootGroups = DocDB.getRootGroupL(docDetails.getGroupId(), null, -1);
+            docDetails.setRootGroupL1(rootGroups[0]);
+            docDetails.setRootGroupL2(rootGroups[1]);
+            docDetails.setRootGroupL3(rootGroups[2]);
+            docDetails.setPublishAfterStart(false);
 
-		//updatni zaznam v history, zrus publicable a nastav actual
-		dhr.updatePublicableAndActual(false, true, docDetails.getAuthorId(), true, docDetails.getHistoryId());
+            // Flush the page while the publication audit marker is present, so the JPA listener
+            // records this as publication. History remains pending if this write fails.
+            RequestBean.addAuditValue("publishStatus", "Webpage was published");
+            try {
+                ddr.saveAndFlush(docDetails);
+            } finally {
+                RequestBean.removeAuditValue("publishStatus");
+            }
 
-		Logger.println(this,"pForm.getPublishStart()=" + docDetails.getPublishStart());
+            // Replace live media after the page write. The service preserves the planned source
+            // set until all live copies are saved, allowing a retry after a partial failure.
+            if (planned != null) planned.publishMedia(docDetails);
 
-		// Now is available
-		docDetails.setAvailable(true);
-		docDetails.setPerexGroupString( docDetails.getPerexGroupIdsString(true) );
+            // Propagate published content to multigroup copies, preserving each copy's URL,
+            // redirect and folder. Read the master from the database after the page flush.
+            DocDetails masterDocDetails = null;
+            for(Integer slaveDocId : MultigroupMappingDB.getSlaveDocIds(docDetails.getDocId()))
+            {
+                if (masterDocDetails == null) masterDocDetails = docDB.getDoc(docDetails.getDocId(), -1, false);
+                DocDetails slaveDoc = docDB.getBasicDocDetails(slaveDocId, false);
+                if (slaveDoc != null) {
+                    masterDocDetails.setVirtualPath(slaveDoc.getVirtualPath());
+                    masterDocDetails.setExternalLink(slaveDoc.getExternalLink());
+                    masterDocDetails.setDocId(slaveDocId);
+                    masterDocDetails.setGroupId(slaveDoc.getGroupId());
+                    if (DocDB.saveDoc(masterDocDetails) == false) {
+                        throw new IllegalStateException("Could not publish multigroup page " + slaveDocId);
+                    }
+                }
 
-		GroupDetails group = groupsDB.getGroup(docDetails.getGroupId());
-		if (group != null && group.isInternal() == false)
-			docDetails.setFileName( groupsDB.getGroupNamePath(docDetails.getGroupId()) );
-		else docDetails.setFileName(null);
+            }
 
-		//Set root groups
-		int[] rootGroups = DocDB.getRootGroupL(docDetails.getGroupId(), null, -1);
-		docDetails.setRootGroupL1(rootGroups[0]);
-		docDetails.setRootGroupL2(rootGroups[1]);
-		docDetails.setRootGroupL3(rootGroups[2]);
+            // Copy the revision's editor note to the live page, retaining its author and timestamp.
+            DocNoteBean historyNote = DocNoteDB.getInstance().getDocNote(-1, docDetails.getHistoryId());
+            if(historyNote != null) {
+                DocNoteBean publishedNote = DocNoteDB.getInstance().getDocNote(docDetails.getDocId(), -1);
+                if(publishedNote == null)
+                    publishedNote = new DocNoteBean();
 
-		// Set publish after start to false
-		docDetails.setPublishAfterStart(false);
+                publishedNote.setDocId(docDetails.getDocId());
+                publishedNote.setHistoryId(-1);
+                publishedNote.setNote(historyNote.getNote());
+                publishedNote.setUserId(historyNote.getUserId());
+                publishedNote.setCreated(historyNote.getCreated());
+                if (publishedNote.save() == false) {
+                    throw new IllegalStateException("Could not save published note for page " + docId);
+                }
+            }
 
-		//Before save add audit param that signalize that webpage was published
-		//Ensure RequestBean exists for current thread (publish may run on any thread via DocDB.getInstance)
-		boolean createdRequestBean = false;
-		if (SetCharacterEncodingFilter.getCurrentRequestBean() == null) {
-			SetCharacterEncodingFilter.setCurrentRequestBean(new RequestBean());
-			createdRequestBean = true;
-		}
-		RequestBean.addAuditValue("publishStatus", "Webpage was published");
+            // Rewrite only the published history snapshot, then mark it as the current version.
+            // These status updates follow the page, media and related save calls so exceptions
+            // in the preceding steps leave the revision scheduled for another attempt.
+            if (planned != null) {
+                planned.rewriteContent(docHistory);
+                dhr.saveAndFlush(docHistory);
+            }
+            dhr.getHisotryIdsByDocIdIn(docId).ifPresent(ids -> dhr.updateActual(false, ids));
+            dhr.updatePublicableAndActual(false, true, docDetails.getAuthorId(), true, docDetails.getHistoryId());
 
-		//Perform update
-		try {
-			//Use saveAndFlush to force immediate flush - ensures @PreUpdate fires now
-			//while the audit value is still in RequestBean (not deferred to outer transaction commit)
-			ddr.saveAndFlush(docDetails);
-		} finally {
-			RequestBean.removeAuditValue("publishStatus");
-			if (createdRequestBean) {
-				SetCharacterEncodingFilter.setCurrentRequestBean(null);
-			}
-		}
+            // Remove staged working files only after history completion; publication backups remain.
+            if (planned != null) planned.cleanupPublishedFiles(docId);
 
-		// vypublikovanie slave clankov z historie (multikategorie)
-		DocDetails masterDocDetails = null;
-		for(Integer docId : MultigroupMappingDB.getSlaveDocIds(docDetails.getDocId()))
-		{
-			if (masterDocDetails == null) masterDocDetails = docDB.getDoc(docDetails.getDocId(), -1, false);
-			DocDetails slaveDoc = docDB.getBasicDocDetails(docId, false);
-			if (slaveDoc != null) {
-				//teraz zmenme hodnoty pre master doc a ulozme do DB
-				masterDocDetails.setVirtualPath(slaveDoc.getVirtualPath());
-				masterDocDetails.setExternalLink(slaveDoc.getExternalLink());
-				masterDocDetails.setDocId(docId);
-				masterDocDetails.setGroupId(slaveDoc.getGroupId());
-				DocDB.saveDoc(masterDocDetails);
-			}
+            // Notify the author when configured, then refresh the page and publication queue caches.
+            if( Constants.getBoolean("webpagesNotifyAutorOnPublish") == true ) sendMailToPageAuthor(docHistory, docDB);
 
-		}
+            docDB.updateInternalCaches(docDetails.getDocId());
 
-		//prekopirovanie poznamky pre redaktorov k stranke
-		DocNoteBean historyNote = DocNoteDB.getInstance().getDocNote(-1, docDetails.getHistoryId());
-		if(historyNote != null) {
-			DocNoteBean publishedNote = DocNoteDB.getInstance().getDocNote(docDetails.getDocId(), -1);
-			if(publishedNote == null)
-				publishedNote = new DocNoteBean();
-
-			publishedNote.setDocId(docDetails.getDocId());
-			publishedNote.setHistoryId(-1);
-			publishedNote.setNote(historyNote.getNote());
-			publishedNote.setUserId(historyNote.getUserId());
-			publishedNote.setCreated(historyNote.getCreated());
-			publishedNote.save();
-		}
-
-		if( Constants.getBoolean("webpagesNotifyAutorOnPublish") == true ) sendMailToPageAuthor(docHistory, docDB);
-
-		DocDB.getInstance().updateInternalCaches(docDetails.getDocId());
-
-		//refresh sablony sa vykona iba ak je stranka v System adresari
-		if(docDetails.getFullPath().startsWith("/System") || docDetails.getGroupId() == Constants.getInt("tempGroupId") || docDetails.getGroupId() == Constants.getInt("menuGroupId") || docDetails.getGroupId() == Constants.getInt("headerFooterGroupId"))
-		{
-			TemplatesDB.getInstance(true);
-		}
-	}
+            // Refresh templates only for pages in System or the configured template-content folders.
+            if(docDetails.getFullPath().startsWith("/System") || docDetails.getGroupId() == Constants.getInt("tempGroupId") || docDetails.getGroupId() == Constants.getInt("menuGroupId") || docDetails.getGroupId() == Constants.getInt("headerFooterGroupId"))
+            {
+                TemplatesDB.getInstance(true);
+            }
+            return docDetails;
+        } catch (java.io.IOException exception) {
+            throw new IllegalStateException("Planned asset publication failed", exception);
+        } finally {
+            // Restore the triggering request and release the per-page guard on success, skip or error.
+            SetCharacterEncodingFilter.setCurrentRequestBean(previous);
+            publishing.remove(docId);
+        }
+    }
 
     /**
 	 * Disable page after unpublish/end time

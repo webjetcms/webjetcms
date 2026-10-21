@@ -145,6 +145,13 @@ class DocHistoryUrlTest extends BaseWebjetTest {
             assertEquals("/autotest-new/page.html", queued.getVirtualPath(), "The refreshed publication queue must contain the new URL");
             // Only publish this test's version; other scheduled pages in the shared test database are untouched.
             ReflectionTestUtils.setField(publisher, "publicableDocs", List.of(queued));
+            DocDetailsRepository failingPages = mock(DocDetailsRepository.class, org.mockito.AdditionalAnswers.delegatesTo(pages));
+            doThrow(new IllegalStateException("Injected page save failure")).when(failingPages).saveAndFlush(any(DocDetails.class));
+            ReflectionTestUtils.setField(publisher, "ddr", failingPages);
+            assertThrows(IllegalStateException.class, () -> publisher.copyDHistory(queued, documents));
+            assertTrue(history.findById(historyId).orElseThrow().getPublicable(), "A failed page save must remain scheduled for retry");
+            ReflectionTestUtils.setField(publisher, "ddr", pages);
+
             publisher.checkWebpagesToPublish(documents);
             verify(documents).updateInternalCaches(queued.getDocId());
         }

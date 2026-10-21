@@ -102,6 +102,11 @@ Sledování zařízení lze vypnout nastavením konfigurační proměnné `admin
 - Změna URL složky s aplikováním na podsložky a podstránky aktualizuje i nezobrazované stránky, naplánované verze, verze čekající na schválení a poslední pracovní verzi. Zachovává jejich obsah, stav a termín publikování; naplánované publikování již nevrátí původní URL (#353).
 - SEO - nastavení **Procházet** nabízí samostatné volby povolit (`index`) a zakázat (`noindex`). Sekce **HTTP hlavičky** na kartě Základní zobrazuje aktuální náhled `X-Robots-Tag`, `Referrer-Policy` a při nastaveném přesměrování i `Location` podle neuložených nastavení stránky a konfigurace serveru (#353).
 - Historie - uživatelé s oprávněním **Čištění databáze** mohou [mazat historické verze](redactor/webpages/history.md) přímo v editoru stránky, i hromadným výběrem. Aktuálně publikovaná verze a verze čekající na schválení jsou chráněny. Bez tohoto oprávnění zůstává dostupné rušení budoucího naplánovaného publikování (#353).
+- Plánované publikování - při zapnutí `plannedPublishingEnabled` lze připravit budoucí verzi stránky s chráněnými obrázky, dokumenty a samostatnou sadou médií [postup a podmínky nasazení](redactor/webpages/planned-publishing.md) (#362).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ### Headless režim
 
