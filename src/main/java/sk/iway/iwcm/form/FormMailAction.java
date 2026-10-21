@@ -1475,7 +1475,7 @@ public class FormMailAction extends HttpServlet
 				else
 				{
 					//vygeneruj mail a posli ho
-					Properties props = System.getProperties();
+					Properties props = new Properties();
 
 					try
 					{
@@ -1549,7 +1549,7 @@ public class FormMailAction extends HttpServlet
 						}
 
 						String from = email;
-						msg.setFrom(new InternetAddress(getFirstEmail(email), meno));
+						msg.setFrom(new InternetAddress(getFirstEmail(email), meno, emailEncoding));
 
 						//iteruj cez polozky formularu
 						String fieldsEmailHeader = request.getParameter("fieldsEmailHeader");

@@ -1,6 +1,7 @@
 package sk.iway.iwcm.components.multistep_form.rest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -15,7 +16,6 @@ import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import jakarta.mail.Message;
-import jakarta.mail.Session;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.SendMail;
@@ -52,7 +52,11 @@ class FormMailServiceDeliveryTest {
 			constants.when(() -> Constants.getString("useSMTPServer")).thenReturn("true");
 			constants.when(() -> Constants.getString("smtpServer")).thenReturn("localhost");
 			props.when(() -> Prop.getInstance("en")).thenReturn(prop);
-			mail.when(() -> SendMail.getSession(any(Properties.class))).thenReturn(Session.getInstance(new Properties()));
+			mail.when(() -> SendMail.getSession(any(Properties.class))).thenAnswer(invocation -> {
+				Properties input = invocation.getArgument(0);
+				assertTrue(input != System.getProperties(), "Form mail must use application-local properties");
+				return invocation.callRealMethod();
+			});
 			mail.when(() -> SendMail.sendMessage(any(Message.class))).thenThrow(new IOException("EML directory is not writable"));
 			forms.when(() -> MultistepFormsService.getFormIdStatic("contact")).thenReturn(1);
 			org.mockito.Mockito.when(prop.getText("checkform.emailNotSend")).thenReturn("Email could not be saved");

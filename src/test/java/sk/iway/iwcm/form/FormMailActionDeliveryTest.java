@@ -15,7 +15,6 @@ import org.mockito.MockedStatic;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import jakarta.mail.Message;
-import jakarta.mail.Session;
 import sk.iway.iwcm.Adminlog;
 import sk.iway.iwcm.Constants;
 import sk.iway.iwcm.SendMail;
@@ -52,7 +51,11 @@ class FormMailActionDeliveryTest {
 			props.when(() -> Prop.getInstance("en")).thenReturn(mock(Prop.class));
 			docs.when(DocDB::getInstance).thenReturn(mock(DocDB.class));
 			templates.when(TemplatesDB::getInstance).thenReturn(mock(TemplatesDB.class));
-			mail.when(() -> SendMail.getSession(any(Properties.class))).thenReturn(Session.getInstance(new Properties()));
+			mail.when(() -> SendMail.getSession(any(Properties.class))).thenAnswer(invocation -> {
+				Properties input = invocation.getArgument(0);
+				assertTrue(input != System.getProperties(), "Form mail must use application-local properties");
+				return invocation.callRealMethod();
+			});
 			mail.when(() -> SendMail.sendMessage(any(Message.class))).thenThrow(new IOException("EML directory is not writable"));
 
 			String forward = FormMailAction.saveForm(request, Map.<String, List<UploadedFile>>of(), List.of(), null);
