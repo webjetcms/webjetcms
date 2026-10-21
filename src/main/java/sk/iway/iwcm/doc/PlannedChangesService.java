@@ -149,8 +149,8 @@ public class PlannedChangesService {
      *
      * <p>Requires a saved page, enabled history, a publication date and, when present,
      * the active history ID. Initializes planned media and restores the live page's URL
-     * and folder on the supplied object. Checks restricted fields, all staged files,
-     * destination permissions and conflicts with other plans.</p>
+     * and folder on the supplied object. Checks restricted fields, references after a simulated
+     * rewrite, all staged files, destination permissions and conflicts with other plans.</p>
      *
      * <p>The existing plan is not cancelled here. Initialization and changes to the
      * supplied object can already have happened when a later validation fails.</p>
@@ -174,6 +174,9 @@ public class PlannedChangesService {
         doc.setGroupId(live.getGroupId());
         List<Media> planned = plannedMedia(doc.getDocId());
         validateReferenceFields(doc, planned);
+        if (hasPrivateReferences(doc, doc.getDocId()) || planned.stream().anyMatch(item -> hasPrivateReferences(item, doc.getDocId()))) {
+            throw new IllegalArgumentException(Prop.getInstance().getText("planned.unrewritableReferences"));
+        }
         Map<String, String> files = plannedFiles(doc.getDocId());
         preflight(files, user);
         checkConflicts(doc.getDocId(), files);
@@ -259,13 +262,26 @@ public class PlannedChangesService {
      * @return {@code true} if any inspected value contains a planned-directory reference
      */
     public static boolean hasPrivateReferences(Object bean) {
+        return hasPrivateReferences(bean, 0);
+    }
+
+    /**
+     * Checks persisted strings after a simulated prefix rewrite without modifying the bean.
+     *
+     * @param bean page or media whose persisted string fields are inspected
+     * @param docId page whose planned prefix may be rewritten; zero checks the original values
+     * @return whether any planned reference remains after the optional rewrite
+     */
+    private static boolean hasPrivateReferences(Object bean, int docId) {
         BeanWrapper wrapper = new BeanWrapperImpl(bean);
         // Inspect only persisted fields; computed bean getters can perform unrelated database work.
         for (Class<?> type = bean.getClass(); type != null; type = type.getSuperclass()) {
             for (java.lang.reflect.Field field : type.getDeclaredFields()) {
-                if (field.getType() == String.class && field.isAnnotationPresent(jakarta.persistence.Column.class) &&
-                    wrapper.isReadableProperty(field.getName()) && PlannedAssetPaths.containsPlannedPath(
-                        org.jsoup.parser.Parser.unescapeEntities(String.valueOf(wrapper.getPropertyValue(field.getName())), false))) {
+                if (field.getType() != String.class || !field.isAnnotationPresent(jakarta.persistence.Column.class) ||
+                    !wrapper.isReadableProperty(field.getName())) continue;
+                String value = (String) wrapper.getPropertyValue(field.getName());
+                if (docId > 0) value = PlannedAssetPaths.rewrite(value, docId);
+                if (PlannedAssetPaths.containsPlannedPath(org.jsoup.parser.Parser.unescapeEntities(String.valueOf(value), false))) {
                     return true;
                 }
             }

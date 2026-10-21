@@ -2,6 +2,10 @@
 
 Budúcu verziu stránky môžete pripraviť aj s obrázkami a dokumentmi, ktoré do termínu zverejnenia nesmú byť dostupné návštevníkom. Živý obsah a bežná pracovná verzia zostávajú samostatné. Funkciu musí správca zapnúť konfiguračnou premennou `plannedPublishingEnabled=true`; predvolene je vypnutá.
 
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
+
 ## Príprava stránky
 
 1. Otvorte existujúcu stránku alebo vytvorte novú a vyplňte jej obsah.
@@ -19,6 +23,8 @@ Atribúty stránky a zmeny jej priradenia do ďalších priečinkov (multikateg�
 Zmeny médií sa ukladajú priebežne. Zatvorenie editora cez **Zrušiť** ich nevracia. Odškrtnutie časovania pripravené údaje neodstráni. Tlačidlo **Zrušiť plánované zmeny** zruší naplánovanie, odstráni plánované médiá a vymaže všetky obrázky a súbory z plánovaných priečinkov vrátane podpriečinkov. HTML živej stránky ani záznamov histórie nemení. Odkazy na vymazané podklady preto v zrušenej histórii už nebudú fungovať.
 
 Pri ukladaní stránky alebo média bez plánovaného publikovania nemožno odkazovať na súbory ani obrázky z plánovaných zmien. Ak sa zobrazí toto upozornenie, zapnite plánované publikovanie stránky alebo vyberte súbor či obrázok z bežného priečinka. Dostupnosť plánovaných súborov, práva na ich cieľové priečinky a konflikty s inými plánmi sa kontrolujú pri uložení plánu a pred publikovaním, nie pri každej úprave média.
+
+Plán nemožno uložiť, ak obsah alebo médiá odkazujú do plánovaného priečinka inej stránky alebo používajú zápis plánovanej cesty, ktorý sa pri publikovaní nedá prepísať. Vyberte súbor alebo obrázok znova z plánovaných priečinkov tejto stránky.
 
 ## Súbory a odkazy
 

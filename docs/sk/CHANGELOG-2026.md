@@ -46,10 +46,6 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 
 ### Webové stránky
 
-- Plánované publikovanie - pri zapnutom `plannedPublishingEnabled` možno novú stránku tlačidlom **Uložiť a pokračovať** uložiť a automaticky znova otvoriť na karte Perex s plánovanými médiami. Obsah a zvolený dátum zostanú zachované; publikovanie sa potvrdí až tlačidlom **Naplánovať**. Pri vypnutej funkcii zostáva pôvodné časové publikovanie novej stránky (#362).
-- Časované publikovanie - pri neúspešnom uložení multikategórie alebo poznámky pre redaktorov zostane história čakajúca na ďalší pokus. Pracovné súbory plánovaných zmien sa zachovajú až do úspešného dokončenia (#362).
-- Plánované publikovanie - pri ukladaní stránky alebo média bez plánovania sa odmietnutie odkazu na plánovaný súbor či obrázok zobrazí v jazyku administrácie s vysvetlením, ako pokračovať. Kontroly súborov a konfliktov sa vykonávajú pri uložení plánu a publikovaní; úprava jednotlivého média ich už neopakuje (#362).
-- Plánované publikovanie - pri zapnutí `plannedPublishingEnabled` možno pripraviť budúcu verziu stránky s chránenými obrázkami, dokumentmi a samostatnou sadou médií. Živá stránka a pracovná verzia sa dajú upravovať nezávisle. Stav inicializácie plánovaných médií sa číta samostatne bez vypnutia JPA cache stránok. Prístup k plánovaným súborom sa riadi rovnakými právami na cieľové priečinky ako pri bežných súboroch. Operácie nad plánom a médiami využívajú existujúce kontroly práv editora a médií. Historický náhľad zachováva pôvodné pravidlá prístupu a pre plánovanú stránku zobrazí pripravené médiá. Publikujú sa všetky súbory z plánovaných priečinkov; po úspechu alebo zrušení plánu sa pracovné priečinky vyčistia. Plánovaný prefix URL sa odstráni jednoduchou náhradou aj v parametroch `!INCLUDE(...)!` a publikovanom zázname histórie, existujúce parametre vrátane `v` zostanú zachované. Schvaľovanie používa existujúci postup editora; po schválení po termíne sa rovno publikujú aj plánované súbory a médiá. Plánované aj bežné verzie používajú spoločný publikačný postup; história sa označí za publikovanú až po úspešnom uložení. Publikovanie podporuje aj MyISAM; po chybe pri výmene médií sa dá zopakovať z kompletnej plánovanej sady. [Postup a podmienky nasadenia](redactor/webpages/planned-publishing.md) (#362).
 - Editor stránok - nová ponuka [Štýly](redactor/webpages/working-in-editor/README.md#práca-so-štýlmi-a-formátovanie-textu). Zobrazuje aktívne štýly s možnosťou ich odobratia a umožňuje vybrať upravovaný odsek, stĺpec či celú sekciu. Pre správnu funkčnosť je potrebné mať správne nastavené [CSS selektory](frontend/page-builder/blocks.md#selektory-štruktúry) a vytvorené [doplnkové komentáre](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) v CSS súbore web stránky. (#356).
 
 <div class="video-container">
@@ -106,6 +102,11 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 - Zmena URL priečinka s aplikovaním na podpriečinky a podstránky aktualizuje aj nezobrazované stránky, naplánované verzie, verzie čakajúce na schválenie a poslednú pracovnú verziu. Zachováva ich obsah, stav a termín publikovania; naplánované publikovanie už nevráti pôvodnú URL (#353).
 - SEO - nastavenie **Prehľadávať** ponúka samostatné voľby povoliť (`index`) a zakázať (`noindex`). Sekcia **HTTP hlavičky** na karte Základné zobrazuje aktuálny náhľad `X-Robots-Tag`, `Referrer-Policy` a pri nastavenom presmerovaní aj `Location` podľa neuložených nastavení stránky a konfigurácie servera (#353).
 - História - používatelia s oprávnením **Čistenie databázy** môžu [mazať historické verzie](redactor/webpages/history.md) priamo v editore stránky, aj hromadným výberom. Aktuálne publikovaná verzia a verzie čakajúce na schválenie sú chránené. Bez tohto oprávnenia zostáva dostupné rušenie budúceho naplánovaného publikovania (#353).
+- Plánované publikovanie - pri zapnutí `plannedPublishingEnabled` možno pripraviť budúcu verziu stránky s chránenými obrázkami, dokumentmi a samostatnou sadou médií [postup a podmienky nasadenia](redactor/webpages/planned-publishing.md) (#362).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ### Headless režim
 
