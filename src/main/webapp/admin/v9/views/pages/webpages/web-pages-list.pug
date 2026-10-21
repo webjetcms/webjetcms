@@ -1021,11 +1021,15 @@ block content
                     }
 
                     if("pills-folders-tab" == currentTab) {
-                        $("button.buttons-linkcheck").show();
-                        $("button.buttons-abtest").show();
+                        webpagesDatatable.showButton("linkcheck");
+                        webpagesDatatable.showButton("abtest");
+                        webpagesDatatable.showButton("addPerexGroup");
+                        webpagesDatatable.showButton("removePerexGroup");
                     } else {
-                        $("button.buttons-linkcheck").hide();
-                        $("button.buttons-abtest").hide();
+                        webpagesDatatable.hideButton("linkcheck");
+                        webpagesDatatable.hideButton("abtest");
+                        webpagesDatatable.hideButton("addPerexGroup");
+                        webpagesDatatable.hideButton("removePerexGroup");
                     }
 
                     //if ("pills-trash-tab"==currentTab)

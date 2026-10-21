@@ -60,6 +60,7 @@ import * as RowReorder from './row-reorder';
 import * as FooterSum from './footer-sum';
 import {initDateTimeAccessibility} from './datetime-accessibility';
 import {DatatableOpener} from "../../src/js/libs/data-tables-extends/";
+import {MoreActions} from './more-actions';
 import {EditorAi} from './editor-ai'
 
 const bootstrap = window.bootstrap = require('bootstrap');
@@ -3910,6 +3911,10 @@ export const dataTableInit = options => {
         }
     };
 
+    const moreActions = new MoreActions(TABLE);
+    TABLE.addMoreAction = config => moreActions.addButton(config);
+    (options.moreActions || []).forEach(config => TABLE.addMoreAction(config));
+
     TABLE.hideButtons = function (names) {
         for (let i = 0; i < names.length; i++) {
             TABLE.hideButton(names[i]);
@@ -3918,10 +3923,14 @@ export const dataTableInit = options => {
 
     TABLE.hideButton = function (name) {
         $('#' + DATA.id + '_wrapper [data-dtbtn=' + name + ']').hide();
+        TABLE.buttons().nodes().filter('[data-dtbtn="' + name + '"]').hide();
+        moreActions.updateVisibility();
     };
 
     TABLE.showButton = function (name) {
         $('#' + DATA.id + '_wrapper [data-dtbtn=' + name + ']').show();
+        TABLE.buttons().nodes().filter('[data-dtbtn="' + name + '"]').show();
+        moreActions.updateVisibility();
     };
 
     //vypne rezim editacie bunky (ak je nahodou zapnuty)

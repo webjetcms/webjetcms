@@ -9,6 +9,23 @@ $f-toast-info: #003289; //blue-80
 $f-toast-warning: #6A4E00;
 $f-toast-error: #790011;
 
+// The perex picker uses the standard body container; keep its menu above the toast (999999).
+.bs-container.perex-group-picker {
+    z-index: 1000000;
+}
+
+.toast .bootstrap-select.perex-group-picker {
+    background-image: none;
+    > button.dropdown-toggle {
+        width: 100%;
+        padding-right: 2.25rem;
+        background-image: escape-svg($form-select-indicator);
+        background-repeat: no-repeat;
+        background-position: right 11px center;
+        background-size: 16px 12px;
+    }
+}
+
 //=== importnute z toasr.scss a zmenene z #toastr-container na .toastr-container pre moznost viacnasobneho kontajnera
 
   .toast-container {

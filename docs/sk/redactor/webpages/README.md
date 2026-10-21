@@ -60,10 +60,21 @@ Zoznam web stránok ponúka taktiež špeciálnu ikonu ![](recover-button.png ":
 Data tabuľka v zozname stránok obsahuje nasledovné špeciálne ikony:
 
 - <i class="ti ti-eye fa-btn" role="presentation"></i> - Zobraz stránku - po označení jedného alebo viacerých riadkov a kliknutí na ikonu sa otvorí v novom okne/karte zvolená web stránka.
-- <i class="ti ti-a-b fa-btn" role="presentation"></i> - Uložiť ako AB test - vytvorí B verziu stránky pre [AB testovanie](../apps/abtesting/README.md).
-- <i class="ti ti-chart-line fa-btn" role="presentation"></i> - Štatistika stránky - zobrazí [návštevnosť](../apps/stat/README.md) označenej web stránky.
-- <i class="ti ti-link-off fa-btn" role="presentation"></i> - Kontrola odkazov a prázdnych stránok - skontroluje [platnosť odkazov](linkcheck.md) v stránkach v aktuálnom priečinku a podpriečinkoch, zobrazí stránky, ktoré nemajú zadaný žiaden text.
 - ![](icon-recursive.png ":no-zoom") - Zobraziť stránky aj z podadresárov - prepnutím prepínača do zapnutej polohy zobrazíte v tabuľke aj web stránky z podadresárov
+
+### Ďalšie akcie a hromadná zmena perex skupín
+
+Tlačidlo <i class="ti ti-dots" role="presentation"></i> **Ďalšie akcie** nájdete v pravej časti nástrojovej lišty pri obnovení údajov a nastaveniach tabuľky. Na karte **Aktívne** obsahuje:
+
+- **Pridať perex skupinu** – pridá zvolenú skupinu k označeným stránkam. Zachová ich ostatné skupiny; už priradenú skupinu nepridá druhýkrát.
+- **Odobrať perex skupinu** – odstráni zvolenú skupinu z označených stránok. Zachová ostatné skupiny a stránky bez zvolenej skupiny nezmení.
+- **Uložiť ako AB test** – vytvorí B verziu označenej stránky pre [AB testovanie](../apps/abtesting/README.md).
+- **Štatistika stránky** – zobrazí [návštevnosť](../apps/stat/README.md) označených stránok. Je dostupná aj v prehľadoch histórie a plánovaného publikovania.
+- **Kontrola odkazov a prázdnych stránok** – skontroluje [platnosť odkazov](linkcheck.md) v aktuálnom priečinku a podpriečinkoch a vyhľadá prázdne stránky. Nevyžaduje označenie stránok.
+
+Ak chcete hromadne zmeniť perex skupinu, označte stránky v prvom stĺpci tabuľky, otvorte **Ďalšie akcie** a vyberte pridanie alebo odobratie. V dialógu zvoľte jednu skupinu a kliknite na **Potvrdiť**. Pri pridávaní sa ponúkajú skupiny dostupné pre všetky označené stránky. Pri odoberaní sa ponúkajú skupiny priradené aspoň jednej z nich.
+
+Zmena vyžaduje právo na editáciu stránok a používa bežné ukladanie vrátane histórie a prípadného schvaľovania. Po uložení sa zoznam obnoví.
 
 ### Ikony a farby v stromovej štruktúre a zozname stránok
 

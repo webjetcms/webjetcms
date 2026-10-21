@@ -6,15 +6,15 @@ div.dt-buttons  {
         position: relative;
         float: left;
 
-        &:has(button.buttons-settings) {
+        &:has(> button.buttons-settings), &:has(> button.buttons-more-actions) {
             float: right;
             margin-right: 8px;
-            > div.dt-button-collection {
-                right: 0px !important;
-                left: auto !important;
-            }
         }
-        button.buttons-settings::after {
+        &:has(> button.buttons-settings) > div.dt-button-collection {
+            right: 0px !important;
+            left: auto !important;
+        }
+        button.buttons-settings::after, button.buttons-more-actions::after {
             display: none;
         }
     }
@@ -33,6 +33,73 @@ div.dt-buttons  {
             &:hover {
                 background-color: $nice-gray !important;
             }
+        }
+    }
+}
+
+div.dt-header-row div.dt-buttons .btn.buttons-more-actions {
+    // The inserted collection is a sibling, so Bootstrap no longer considers the button the last child.
+    border-radius: $border-radius !important;
+    &[aria-expanded=true] {
+        color: $white;
+        background: $secondary;
+        border-color: $secondary;
+    }
+}
+
+div.dt-header-row div.dt-button-collection.dt-more-actions-menu {
+    width: 320px;
+    max-width: calc(100vw - 24px);
+    padding: 6px;
+    border: 1px solid $nice-gray-100;
+    border-radius: $border-radius;
+    background: $white;
+    box-shadow: 0 8px 28px rgba($secondary, .16);
+    > ul.dropdown-menu {
+        position: static;
+        min-width: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+    }
+    .btn.buttons-more-action {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        min-height: 35px;
+        margin: 0;
+        padding: 6px 8px;
+        border: 0;
+        border-radius: $border-radius;
+        font-size: 14px;
+        line-height: 1.4;
+        text-align: left;
+        white-space: normal;
+        &, &:focus, &:active {
+            color: $secondary;
+            background: transparent;
+        }
+        &:hover:not(:disabled):not(.disabled), &:active:not(:disabled):not(.disabled) {
+            background: $nice-gray;
+        }
+        &:focus-visible {
+            outline: 2px solid $primary !important;
+            outline-offset: -2px;
+            box-shadow: none !important;
+        }
+        &:disabled, &.disabled {
+            color: $nice-gray-300;
+            background: transparent;
+            opacity: 1;
+        }
+        i.ti {
+            flex: 0 0 18px;
+            font-size: 18px;
+            line-height: 1;
         }
     }
 }
@@ -1619,7 +1686,8 @@ div.textarea-code-small textarea {
 }
 
 //fix pozicie dropdown menu
-div.dt-header-row div.dt-button-collection {
+// Keep the original specificity so nested settings dialogs retain their own centering.
+div.dt-header-row div.dt-button-collection:where(:not(.dt-more-actions-menu)) {
     left: 0px !important;
     white-space: normal;
 }

@@ -1,4 +1,5 @@
 import { EditorPreview } from './preview'
+import { PerexGroupActions } from './perex-group-actions'
 
 /**
  * Implements various functions for web pages Datatable Editor - bindings, buttons, listeners etc.
@@ -406,8 +407,8 @@ export class WebPagesDatatable {
 
         if (WJ.hasPermission("cmp_abtesting")) {
             //ab test
-            this.webpagesDatatable.button().add(buttonCounter++, {
-                text: '<i class="ti ti-a-b"></i>',
+            this.webpagesDatatable.addMoreAction({
+                text: '<i class="ti ti-a-b" aria-hidden="true"></i>',
                 action: function (e, dt, node) {
                     self.webpagesDatatable.executeAction("saveAsAbTest", true, window.WJ.translate("editor.save_as_abtest.confirm.title"), window.WJ.translate("editor.save_as_abtest.confirm.text"));
                 },
@@ -425,8 +426,8 @@ export class WebPagesDatatable {
 
         if (WJ.hasPermission("cmp_stat")) {
             //show stat
-            this.webpagesDatatable.button().add(buttonCounter++, {
-                text: '<i class="ti ti-chart-line"></i>',
+            this.webpagesDatatable.addMoreAction({
+                text: '<i class="ti ti-chart-line" aria-hidden="true"></i>',
                 action: function (e, dt, node) {
                     let selectedRows = dt.rows({ selected: true }).data();
                     for (let i=0; i<selectedRows.length; i++) {
@@ -453,8 +454,8 @@ export class WebPagesDatatable {
 
         if (typeof window.webpagesDatatableGroupId !== "undefined") {
             //link check button
-            this.webpagesDatatable.button().add(buttonCounter++, {
-                text: '<i class="ti ti-external-link"></i>',
+            this.webpagesDatatable.addMoreAction({
+                text: '<i class="ti ti-external-link" aria-hidden="true"></i>',
                 action: function (e, dt, node) {
                     window.location.href="/admin/v9/webpages/linkcheck/?groupId="+webpagesDatatableGroupId;
                 },
@@ -472,9 +473,14 @@ export class WebPagesDatatable {
                 className: 'btn btn-outline-secondary buttons-linkcheck',
                 attr: {
                     'title': window.WJ.translate('web_pages_list.link_check_button'),
+                    'data-dtbtn': 'linkcheck',
                     'data-toggle': 'tooltip'
                 }
             });
+        }
+
+        if (this.options.url.split('?')[0] === '/admin/rest/web-pages' && WJ.hasPermission('pageSave')) {
+            new PerexGroupActions(this.webpagesDatatable).addButtons();
         }
 
         if (typeof window.recursive !== "undefined") {
