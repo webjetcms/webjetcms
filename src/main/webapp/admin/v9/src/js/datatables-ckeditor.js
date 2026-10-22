@@ -33,7 +33,11 @@ export class DatatablesCkEditor {
 
 		//console.log("ckEditorElementId=", ckEditorElementId);
 
-		this.initializeCkEditorImpl(ckEditorElementId, ckEditorInitFunction, ckEditorConfig, this.options)
+		this.initializeCkEditorImpl(ckEditorElementId, ckEditorInitFunction, ckEditorConfig, this.options);
+		if (this.ckEditorInstance == null) {
+			console.error("CKEditor initialization failed for element:", ckEditorElementId);
+			throw new Error("CKEditor initialization failed.");
+		}
 		this.editorHeightLatest = 0;
 
 		let that = this;

@@ -27,6 +27,10 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
     </script>
     <iwcm:combine type="css" set="adminInlineCss"/>
     <iwcm:combine type="js" set="adminInlineJs"/>
+    <script>
+        // Disable automatic editors before DOM ready, including for persisted contenteditable attributes.
+        CKEDITOR.disableAutoInline = true;
+    </script>
 
     <!-- /NINJA PAGE BUILDER -->
     <style>
@@ -364,7 +368,6 @@ if (editingMode == InlineEditor.EditingMode.pageBuilder) { %>
 
     $(document).ready(()=> {
 
-        CKEDITOR.disableAutoInline = true;
         CKEDITOR.dtd.$editable.span = 1
         CKEDITOR.dtd.$editable.a = 1
         var ckEditorAutofocusInstanceName = null;
