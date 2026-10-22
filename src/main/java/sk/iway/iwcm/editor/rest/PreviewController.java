@@ -7,11 +7,13 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import sk.iway.iwcm.PathFilter;
 import sk.iway.iwcm.RequestBean;
 import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.doc.DocDetails;
 import sk.iway.iwcm.doc.TemplateDetails;
 import sk.iway.iwcm.doc.TemplatesDB;
+import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.users.UserDetails;
 import sk.iway.iwcm.users.UsersDB;
 
@@ -31,6 +33,14 @@ public class PreviewController {
             return "forward:/404.jsp";
         }
 
+        PathFilter.setNoCacheHeaders(response);
+        if (doc.getDocId() > 0 && (doc.isPublishAfterStart() || doc.getEditorFields().isPlannedMedia())) {
+            if (EditorDB.isPageEditable(UsersDB.getCurrentUser(request), doc.getDocId())==false) {
+                response.setStatus(404);
+                return null;
+            }
+            request.setAttribute(sk.iway.iwcm.doc.PlannedAccess.PREVIEW_DOC, sk.iway.iwcm.doc.PlannedAccess.masterId(doc.getDocId()));
+        }
         //set DocDetails @transient columns
         doc.setPublishStart(doc.getPublishStart());
         doc.setPublishEnd(doc.getPublishEnd());

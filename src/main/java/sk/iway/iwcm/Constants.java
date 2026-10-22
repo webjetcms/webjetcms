@@ -365,7 +365,9 @@ public class Constants {
 		setBoolean("currencyTagRound", false, MOD_BASKET,
 				"ak je nastavené na true tak sa pri výpise cien bude zaokrúhlovať na 50 halierov. Štandardne nastavené na false");
 
-		setBoolean("editorAutoFillPublishStart", false, MOD_EDITOR,
+		setBoolean("plannedPublishingEnabled", false, mods(MOD_EDITOR, MOD_WEBPAGES),
+                "Enable one private planned page revision with staged assets and media.");
+        setBoolean("editorAutoFillPublishStart", false, MOD_EDITOR,
 				"ak je nastavene na true tak sa pri vytvoreni stranky automaticky predvyplni datum zaciatku publikovania na aktualny");
 
 		// default log level
@@ -487,7 +489,7 @@ public class Constants {
 
 		setInt("cacheStaticContentSeconds", 300, MOD_PERFORMANCE,
 				"nastavenie casu v sekundach (standardne nastavene na 0), na kory server nastavi exspiraciu statickych suborov nastavenych konfiguracnou premennou cacheStaticContentSuffixes (standardne .gif,.jpg,.png,.swf,.css,.js). Ak je prihlaseny administrator, alebo sa jedna o pristup z IP adries pre ktore sa neeviduje statistika (premenna statNoLogIP) tak sa cache hlavicka nenastavi.");
-		setString("cacheStaticContentSuffixes", ".gif,.jpg,.png,.swf,.css,.js,.woff,.svg,.woff2", MOD_PERFORMANCE,
+		setString("cacheStaticContentSuffixes", ".gif,.jpg,.png,.swf,.css,.js,.woff,.svg,.woff2,.webp", MOD_PERFORMANCE,
 				"pripony suborov, na ktore bude aplikovana cache hlavicka");
 
 		setString("basketCurrencyField", "fieldJ", MOD_BASKET,

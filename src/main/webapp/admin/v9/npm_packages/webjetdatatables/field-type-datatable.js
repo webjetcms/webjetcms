@@ -66,7 +66,7 @@ export function typeDatatable() {
     }
 
     const getUrlWithParams = function(EDITOR, conf) {
-        let url = conf.attr["data-dt-field-dt-url"];
+        let url = conf.attr["data-dt-field-dt-url"]?.replaceAll("&amp;", "&");
         //url += "?docid={docId}&groupId={groupId}";
         //nahrad parametre z json objektu
         if (typeof url != "undefined" && url!=null && url.indexOf("{")!==-1) {

@@ -337,6 +337,11 @@ public class DocDB extends DB
 		docPublishService.refreshPagesToPublish();
 	}
 
+    /** Publishes an approved, due history record through the regular scheduled publication flow. */
+    public void publishDocHistory(DocHistory history) {
+        docPublishService.copyDHistory(history, this);
+    }
+
 	/**
 	 * @deprecated
 	 */
