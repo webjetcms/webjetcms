@@ -26,6 +26,8 @@
 
 ![](redactor/admin/search/quick-search.png)
 
+- Panel [Čo je nové](redactor/admin/welcome.md#Čo-je-nové) dopĺňa novinky nainštalovanej verzie o videá a príspevky z YouTube a Facebooku WebJET CMS. Štítok **Nové** sa po rozbalení panela skryje a znova upozorní na nový obsah (#358).
+
 ### Prihlasovanie a ochrana účtu
 
 - [Používateľské menu v hlavičke](redactor/admin/README.md#používateľské-menu) zobrazuje údaje účtu, počet aktívnych relácií a stav dvojstupňového overovania. Položka **Aktívne prihlásenia** otvorí správu vlastných prihlásení z ktorejkoľvek stránky administrácie. Dokumentácia obsahuje aktuálny screenshot a opis všetkých položiek menu (#351).
@@ -100,6 +102,11 @@ Sledovanie zariadení sa dá vypnúť nastavením konfiguračnej premennej `admi
 - Zmena URL priečinka s aplikovaním na podpriečinky a podstránky aktualizuje aj nezobrazované stránky, naplánované verzie, verzie čakajúce na schválenie a poslednú pracovnú verziu. Zachováva ich obsah, stav a termín publikovania; naplánované publikovanie už nevráti pôvodnú URL (#353).
 - SEO - nastavenie **Prehľadávať** ponúka samostatné voľby povoliť (`index`) a zakázať (`noindex`). Sekcia **HTTP hlavičky** na karte Základné zobrazuje aktuálny náhľad `X-Robots-Tag`, `Referrer-Policy` a pri nastavenom presmerovaní aj `Location` podľa neuložených nastavení stránky a konfigurácie servera (#353).
 - História - používatelia s oprávnením **Čistenie databázy** môžu [mazať historické verzie](redactor/webpages/history.md) priamo v editore stránky, aj hromadným výberom. Aktuálne publikovaná verzia a verzie čakajúce na schválenie sú chránené. Bez tohto oprávnenia zostáva dostupné rušenie budúceho naplánovaného publikovania (#353).
+- Plánované publikovanie - pri zapnutí `plannedPublishingEnabled` možno pripraviť budúcu verziu stránky s chránenými obrázkami, dokumentmi a samostatnou sadou médií [postup a podmienky nasadenia](redactor/webpages/planned-publishing.md) (#362).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ### Headless režim
 
@@ -268,9 +275,13 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 - Viackrokové formuláre - doplnené presunutie (`scroll`) na začiatok formuláru po prechode na ďalší krok (#osk573).
 - Prieskumník - pri aktualizácii súboru je výber obmedzený na jeden súbor a hlásenie upozorní na nesprávny typ (#317).
 - Prieskumník - v informáciách o priečinku sa už nezobrazuje nepresná rekurzívna veľkosť (#317).
+- Proxy - [výnimky `proxyHostsException`](install/config/README.md#httphttps-proxy) podporujú zástupné vzory ako `*.firma.sk` a `127.*`, oddeľovače čiarka aj `|` a porovnávanie bez rozlišovania veľkosti písmen. Rovnaký normalizovaný zoznam sa používa pre HTTP/HTTPS aj JVM nastavenie `http.nonProxyHosts`. Zmena konfigurácie vyžaduje reštart (#361).
 
 ### Oprava chýb
 
+- Email - opravené ovplyvňovanie SMTP nastavení medzi aplikáciami na spoločnom aplikačnom serveri. Každé odoslanie používa vlastné properties a mailovú session, takže sa neprenáša SSL port, autentifikácia ani nastavenia Amazon SES z inej aplikácie (#367).
+- Page Builder - opravené hromadenie prázdnych riadkov v HTML vnorených blokov. Pri ukladaní a prepnutí do HTML editora sa odstránia aj staré nadbytočné riadky medzi elementmi. Obsah `pre`, `textarea` a medzery zachovávané cez CSS `white-space` zostávajú nezmenené (#367).
+- Webové stránky - opravené zasekávanie a skákanie pri [porovnávaní verzií](redactor/webpages/history.md), ak šablóna stránky používa plynulé posúvanie (`scroll-behavior: smooth`) (#367).
 - Webové stránky - editor JSON prijíma aj polia a jednoduché hodnoty s komentármi. Opravené rozdelenie stĺpcov a posúvanie v Page Builderi a zatváranie tooltipu pri úprave z histórie (#346).
 - Viackrokové formuláre - opravená validácia polí s reťazenými podmienkami viditeľnosti (#58794).
 - Formuláre - opravené archivovanie formulárov (#305).
@@ -303,6 +314,8 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Pre programátora
 
+- SBOM - pridané [generovanie spoločného zoznamu Java a npm závislostí](developer/install/sbom.md) vo formáte CycloneDX JSON príkazom `ant -f ant/build.xml sbom`, vrátane tranzitívnych závislostí a validácie reportu.
+- [Centrálny generátor noviniek](developer/install/social-media-feed.md) po úspešnom publikovaní odstráni nepoužívané náhľady s 30-dňovou ochrannou lehotou. Zachová obrázky aktuálnych príspevkov aj záložných údajov pre výpadok zdroja (#358).
 - Editor stránok - [nastavenie ponuky Štýly](frontend/examples/template-bare/README.md#vyhľadávanie-a-skupiny-štýlov) podporuje metadáta v komentároch `editor.scss` / `editor.css` pre kategórie a ich ikony, vzájomne sa nahrádzajúce skupiny, povolené elementy a základné triedy zachované pri obnovení vzhľadu. Nová ponuka je predvolene zapnutá; nastavením `ckeditor_styleComboEnabled=false` sa obnoví pôvodný výber štýlov (#OSK764).
 - AI agenti - pripravená distribúcia WebJET CMS skills cez `npx skills`, vrátane spoločných konvencií a nastavenia projektových pokynov pre Codex, GitHub Copilot a Claude Code. [Návod](custom-apps/skills/README.md) opisuje inštaláciu, aktualizáciu a použitie v starších klientskych projektoch. Pokyny v `AGENTS.md` a tematické referencie v `.github/agents/` boli overené podľa aktuálneho kódu; opisujú používané frameworky, postupy vývoja a testovania aj rozdiely medzi jadrom CMS a klientskymi projektmi (#357).
 - Dashboard - pridaný register widgetov, responzívny grid a REST rozhranie na transakčné ukladanie nastavení do `user_settings_admin`. Existujúca tabuľka MySQL/MariaDB sa pri aktualizácii konvertuje na InnoDB. Používanie opisuje [dokumentácia úvodnej obrazovky](redactor/admin/welcome.md), pozadie a označenie prostredia jej [konfigurácia](admin/setup/configuration/dashboard.md). Pravidlá vývoja, kontrakt a dôvody rozhodnutí udržiava projektový skill `wj-dashboard-widget` v `.agents/skills/wj-dashboard-widget/` (#58806).

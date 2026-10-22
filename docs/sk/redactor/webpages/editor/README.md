@@ -148,6 +148,8 @@ Obrázok môžete zadefinovať cez ikonku, ktorá sa nachádza za políčkom **O
 
 ### Publikovanie web stránky
 
+Pri zapnutej funkcii `plannedPublishingEnabled` môžete pripraviť [plánovanú verziu aj s chránenými obrázkami, súbormi a médiami](../planned-publishing.md), nezávisle od živej stránky a bežnej pracovnej verzie.
+
 Ak ste si načasovali publikovanie web stránky a chcete byť o tomto publikovaní ako **autor stránky** informovaný, stačí nastaviť konfiguračnú premennú ```webpagesNotifyAutorOnPublish```. Prednastavená hodnota je **true**, čiže vždy po publikovaní novej verzie web stránky sa jej autorovi odošle nasledujúci informačný email.
 
 ![](publish-email-notification.png)

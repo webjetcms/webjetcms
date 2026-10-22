@@ -48,3 +48,5 @@ A media group can have a restriction set to display the group only in a certain 
 All Media records are filtered by the currently selected domain.
 
 In the case of records from **All media management**, the table name parameter is set to **documents** automatically in the background. To identify whether the data table is being called from this section, the url parameter ```isCalledFromTable=true``` is provided.
+
+When saving media via the REST API, the page must be specified by the `docId` parameter in the URL (`-1` for a page that has not yet been saved) or by selecting the page in `editorFields.docDetails` with `isCalledFromTable=true`. Just `mediaFkId` in the sent entity is not enough. The media set name is determined by the server based on the context of the request; for scheduled media, `planned=true` is also sent.

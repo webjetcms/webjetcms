@@ -90,6 +90,7 @@ module.exports = {
             "someone is trying to sign in to your account from a browser you blocked:": "někdo se pokouší přihlásit do vašeho účtu z prohlížeče, který jste zablokovali:",
             "The code could not be verified. Check it or request a new one. It expires in 10 minutes and allows up to 5 attempts.": "Kód se nepodařilo ověřit. Zkontrolujte jej nebo si vyžádejte nový. Platí 10 minut a máte nejvýše 5 pokusů.",
             "Step 2": "Krok 2",
+            "Photobank": "Fotobanka"
         }
     }
 }

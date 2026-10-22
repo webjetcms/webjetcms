@@ -148,6 +148,8 @@ You can define an image via the icon located behind the **Image** field.
 
 ### Publishing a website
 
+With the `plannedPublishingEnabled` feature enabled, you can prepare a [planned version including protected images, files, and media](../planned-publishing.md), independently of the live site and the regular working version.
+
 If you have scheduled the publication of a web page and want to be informed about this publication as the **page author**, just set the configuration variable ```webpagesNotifyAutorOnPublish```. The default value is **true**, so every time a new version of the web page is published, the following information email will be sent to its author.
 
 ![](publish-email-notification.png)

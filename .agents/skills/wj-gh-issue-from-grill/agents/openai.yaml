@@ -1,0 +1,4 @@
+interface:
+  display_name: "WJ GitHub Issue from Grill"
+  short_description: "Save agreed discussion and plan to an existing issue"
+  default_prompt: "Use $wj-gh-issue-from-grill to update the existing GitHub issue with the agreed decisions, acceptance criteria, implementation plan and tests from this discussion."

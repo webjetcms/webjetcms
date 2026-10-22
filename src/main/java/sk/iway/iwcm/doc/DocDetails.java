@@ -140,6 +140,7 @@ public class DocDetails extends DocBasic {
 	@Transient
 	private String historySaveDate;
 	@Transient
+	@DataTableColumn(inputType = DataTableColumnType.HIDDEN, hidden = true)
 	private int historyId;
 	@Transient
 	private int historyApprovedBy;

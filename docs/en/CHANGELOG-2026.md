@@ -26,6 +26,8 @@
 
 ![](redactor/admin/search/quick-search.png)
 
+- The [What's New] panel (redactor/admin/welcome.md#What-is-new) supplements the news of the installed version with videos and posts from YouTube and Facebook of WebJET CMS. The **New** label is hidden after expanding the panel and again notifies about new content (#358).
+
 ### Account login and protection
 
 - [User menu in the header](redactor/admin/README.md#user-menu) displays account information, number of active sessions, and two-factor authentication status. The **Active logins** item opens the custom logins management from any administration page. The documentation contains a current screenshot and description of all menu items (#351).
@@ -100,6 +102,11 @@ Device tracking can be disabled by setting the configuration variable `adminNewD
 - Changing the folder URL with application to subfolders and subpages also updates non-displayed pages, scheduled versions, versions awaiting approval, and the last working version. It preserves their content, status, and publish date; scheduled publishing no longer reverts to the original URL (#353).
 - SEO - **Browse** settings offer separate options to enable (`index`) and disable (`noindex`). **HTTP Headers** section on the Basic tab shows the current preview `X-Robots-Tag`, `Referrer-Policy` and, if redirect is set, `Location` according to unsaved page settings and server configuration (#353).
 - History - users with the **Clean database** permission can [delete historical versions](redactor/webpages/history.md) directly in the page editor, also by mass selection. The currently published version and versions awaiting approval are protected. Without this permission, canceling future scheduled publishing remains available (#353).
+- Planned publishing - when enabled `plannedPublishingEnabled`, a future version of the page can be prepared with protected images, documents, and a separate set of media [procedure and conditions of deployment](redactor/webpages/planned-publishing.md) (#362).
+
+<div class="video-container">
+    <iframe width="790" height="444" src="https://www.youtube.com/embed/z3QGUdDG2pk" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+</div>
 
 ### Headless mode
 
@@ -266,6 +273,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Multi-step forms - added moving (`scroll`) to the beginning of the form after moving to the next step (#osk573).
 - Explorer - when updating a file, the selection is limited to one file and a message warns of the wrong type (#317).
 - Explorer - folder information no longer shows inaccurate recursive size (#317).
+- Proxy - [exceptions `proxyHostsException`](install/config/README.md#httphttps-proxy) supports wildcard patterns like `*.firma.sk` and `127.*`, comma and `|` separators, and case-insensitive comparison. The same normalized list is used for both HTTP/HTTPS and JVM settings `http.nonProxyHosts`. Changing the configuration requires a restart (#361).
 
 ### Bug fixes
 
@@ -301,6 +309,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ### For the programmer
 
+- SBOM - added [generate a common list of Java and npm dependencies](developer/install/sbom.md) in CycloneDX JSON format with the `ant -f ant/build.xml sbom` command, including transitive dependencies and report validation.
+- [Central News Generator](developer/install/social-media-feed.md) will remove unused previews with a 30-day grace period after successful publishing. It will preserve images of current posts as well as backup data for source failure (#358).
 - Page Editor - [Styles menu setting](frontend/examples/template-bare/README.md#search-and-style-groups) supports metadata in `editor.scss` / `editor.css` comments for categories and their icons, mutually exclusive groups, allowed elements, and base classes preserved across skins. The new menu is enabled by default; setting `ckeditor_styleComboEnabled=false` restores the original style selection (#OSK764).
 - AI agents - ready distribution of WebJET CMS skills via `npx skills`, including common conventions and project guidelines for Codex, GitHub Copilot and Claude Code. [Manual](custom-apps/skills/README.md) describes installation, update and use in older client projects. The instructions in `AGENTS.md` and the thematic references in `.github/agents/` have been verified against the current code; they describe the frameworks used, development and testing procedures, and differences between the CMS core and client projects (#357).
 - Dashboard - added widget registry, responsive grid and REST interface for transactional settings storage to `user_settings_admin`. Existing MySQL/MariaDB table is converted to InnoDB during update. Usage is described in [welcome screen documentation](redactor/admin/welcome.md), background and environment labeling of its [configuration](admin/setup/configuration/dashboard.md). Development rules, contract and reasons for decisions are maintained by project skill `wj-dashboard-widget` in `.agents/skills/wj-dashboard-widget/` (#58806).
