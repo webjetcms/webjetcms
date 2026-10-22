@@ -1,5 +1,6 @@
 import { JstreeSettings } from '../../libs/js-tree-extends/jstreesettings'
 import { WebPagesDatatable } from './web-pages-datatable'
+import { bindDeleteMirrors } from './delete-mirrors'
 
 //console.log("web-pages-list.js start");
 
@@ -8,6 +9,7 @@ window.jstreeSettings = new JstreeSettings({
 });
 
 window.WebPagesDatatable = WebPagesDatatable;
+window.bindDeleteMirrors = bindDeleteMirrors;
 
 window.domReady.add(function () {
     //inicializujeme na zaciatku aby potom DT vedela pouzit hodnoty
