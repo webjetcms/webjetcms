@@ -56,7 +56,7 @@ public class MirroringService {
     private static final String PARAMETER_SYNCID_ERR = "Value of parameter syncId is not valid : ";
 
     private final List<String> supportedLngs = Arrays.asList( Constants.getArray("languages") );
-    private static Set<String> foundLng = new HashSet<>();
+    private Set<String> foundLng = new HashSet<>();
     private Map<String, Character> lngFieldCombination = new HashMap<>();
     private List<String> errorMessages = new ArrayList<>();
 
@@ -72,6 +72,24 @@ public class MirroringService {
     private Prop prop;
 
     /*********** PUBLIC methods **************/
+
+    /**
+     * Returns folder mirroring problems by sync ID using the same checks and domain
+     * scope as the mirroring table. Each call uses isolated service state.
+     * @param request current administration request
+     * @return only connections with duplicate mappings or uneven nesting
+     */
+    public static Map<Integer, MirroringDTO> getGroupProblems(HttpServletRequest request) {
+        MirroringService service = new MirroringService();
+        service.setSupportValues(request);
+        Map<Integer, MirroringDTO> problems = new HashMap<>();
+        for (MirroringDTO item : service.getGroupData()) {
+            if (Tools.isTrue(item.getMultipleErr()) || Tools.isTrue(item.getNestingWarn())) {
+                problems.put(item.getId().intValue(), item);
+            }
+        }
+        return problems;
+    }
 
     /**
      * Return page with MirroringDTO items. Items are paged and sorted. EditorFields are not set yet.

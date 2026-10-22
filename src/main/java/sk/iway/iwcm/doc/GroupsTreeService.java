@@ -9,7 +9,10 @@ import sk.iway.iwcm.SetCharacterEncodingFilter;
 import sk.iway.iwcm.Tools;
 import sk.iway.iwcm.admin.jstree.JsTreeItem;
 import sk.iway.iwcm.admin.jstree.JsTreeItemState;
+import sk.iway.iwcm.admin.settings.AdminSettingsService;
 import sk.iway.iwcm.common.CloudToolsForCore;
+import sk.iway.iwcm.doc.mirroring.dto.MirroringDTO;
+import sk.iway.iwcm.doc.mirroring.rest.MirroringService;
 import sk.iway.iwcm.editor.EditorDB;
 import sk.iway.iwcm.editor.rest.WebPagesListener;
 import sk.iway.iwcm.editor.service.GroupsService;
@@ -191,7 +194,105 @@ public class GroupsTreeService {
             }
         }
 
+        setMirroringLinks(items, user, click, request);
+        setMirroringIcons(items, user, click, request);
         return items;
+    }
+
+    /** Adds language destinations without exposing folders outside the user's tree permissions. */
+    void setMirroringLinks(List<JsTreeItem> items, Identity user, String click, HttpServletRequest request) {
+        if (items.isEmpty() || user.isDisabledItem("menuWebpages") || user.isDisabledItem("cmp_mirroring")) return;
+        if (Arrays.asList("dt-tree-group-filter-system-trash", "dt-tree-filter-system-trash", "dt-tree-group", "dt-tree").contains(click) == false) return;
+        String uri = request.getRequestURI();
+        if ("true".equals(request.getParameter("showMirrorLinks")) == false
+                && (uri == null || uri.contains("/admin/v9/webpages/web-pages-list") == false)) return;
+
+        String cacheKey = GroupsTreeService.class.getName() + ".mirrorLinks";
+        @SuppressWarnings("unchecked")
+        Map<Integer, List<GroupsJsTreeItem.MirrorLink>> links = (Map<Integer, List<GroupsJsTreeItem.MirrorLink>>) request.getAttribute(cacheKey);
+        if (links == null) {
+            links = new HashMap<>();
+            List<GroupDetails> groups = filterTrash(filterByPerms(filterByDomain(GroupsDB.getInstance().getGroupsAll(), null), user));
+            TemplatesDB templates = TemplatesDB.getInstance();
+            for (GroupDetails group : groups) {
+                if (group.getSyncId() < 1) continue;
+                String language = group.getLng();
+                if (Tools.isEmpty(language)) {
+                    TemplateDetails template = templates.getTemplate(group.getTempId());
+                    if (template != null) language = template.getLng();
+                }
+                if (Tools.isEmpty(language)) continue;
+                language = language.toLowerCase(Locale.ROOT).replace('_', '-');
+                if ("cz".equals(language)) language = "cs";
+                links.computeIfAbsent(group.getSyncId(), key -> new ArrayList<>())
+                    .add(new GroupsJsTreeItem.MirrorLink(group.getGroupId(), language, group.getFullPath()));
+            }
+            for (List<GroupsJsTreeItem.MirrorLink> mirrors : links.values()) {
+                mirrors.sort(Comparator.comparing(GroupsJsTreeItem.MirrorLink::language)
+                    .thenComparingInt(GroupsJsTreeItem.MirrorLink::groupId));
+            }
+            request.setAttribute(cacheKey, links);
+        }
+        for (JsTreeItem item : items) {
+            if (item instanceof GroupsJsTreeItem groupItem) {
+                GroupDetails group = groupItem.getGroup();
+                List<GroupsJsTreeItem.MirrorLink> mirrors = links.get(group.getSyncId());
+                // A filtered source must not regain metadata through a shared sync ID.
+                if (mirrors == null || mirrors.stream().noneMatch(link -> link.groupId() == group.getGroupId())) continue;
+                List<GroupsJsTreeItem.MirrorLink> destinations = mirrors.stream()
+                    .filter(link -> link.groupId() != group.getGroupId()).toList();
+                if (destinations.isEmpty() == false) groupItem.setMirrors(destinations);
+            }
+        }
+    }
+
+    /** Applies mirroring diagnostics only to permitted folders in the main webpage tree. */
+    private void setMirroringIcons(List<JsTreeItem> items, Identity user, String click, HttpServletRequest request) {
+        if (user.isEnabledItem("cmp_mirroring") == false || user.isEnabledItem("menuWebpages") == false) return;
+        if (Arrays.asList("dt-tree-group-filter-system-trash", "dt-tree-filter-system-trash",
+                "dt-tree-group-system", "dt-tree-system", "dt-tree-group-trash", "dt-tree-trash",
+                "dt-tree-group", "dt-tree").contains(click) == false) return;
+
+        String show = request.getParameter("showBadMirrorings");
+        String requestUri = request.getRequestURI();
+        if (show == null && (requestUri == null || requestUri.contains("/admin/v9/webpages/web-pages-list") == false)) return;
+        boolean enabled = show == null
+            ? new AdminSettingsService(user).getJsonBooleanValue("jstreeSettings_web-pages-list", "showBadMirrorings")
+            : "true".equals(show);
+        if (enabled == false || items.isEmpty()) return;
+
+        String cacheKey = GroupsTreeService.class.getName() + ".mirroringProblems";
+        @SuppressWarnings("unchecked")
+        Map<Integer, MirroringDTO> problems = (Map<Integer, MirroringDTO>) request.getAttribute(cacheKey);
+        if (problems == null) {
+            problems = MirroringService.getGroupProblems(request);
+            request.setAttribute(cacheKey, problems);
+        }
+
+        Prop prop = Prop.getInstance(request);
+        for (JsTreeItem item : items) {
+            if (item instanceof GroupsJsTreeItem groupItem) {
+                // The frontend uses this icon to disable editing of restricted folders.
+                if ("ti ti-folder-x".equals(item.getIcon())) continue;
+                GroupDetails group = groupItem.getGroup();
+                if (group.getGroupId() < 1 || group.getSyncId() < 1) continue;
+                if (Constants.getBoolean("multiDomainEnabled") && CloudToolsForCore.getDomainName().equals(group.getDomainName()) == false) continue;
+                MirroringDTO problem = problems.get(group.getSyncId());
+                if (problem == null) continue;
+
+                String title;
+                if (Tools.isTrue(problem.getMultipleErr())) {
+                    item.setIcon("ti ti-exclamation-circle text-danger");
+                    title = prop.getText("components.mirroring.multiple_mapping_err");
+                } else {
+                    item.setIcon("ti ti-alert-triangle text-warning");
+                    title = prop.getText("components.mirroring.uneven_nesting_err");
+                }
+                if (item.getAAttr() == null) item.setAAttr(new HashMap<>());
+                item.getAAttr().put("title", title);
+                item.getAAttr().put("aria-label", group.getGroupName() + ": " + title);
+            }
+        }
     }
 
     public static List<GroupDetails> sortGroupsBasedOnUserSettings(Identity user, List<GroupDetails> groups) {
