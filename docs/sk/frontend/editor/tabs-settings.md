@@ -1,14 +1,14 @@
 # Nastavenia kariet
 
-Karta **Nastavenia → Editor → Nastavenia kariet** umožňuje premenovať a zoradiť karty editora, nastaviť predvolenú kartu alebo pridať vlastnú kartu. Nastavenie platí pre všetky záznamy vybranej entity v aktuálne zvolenej doméne. Na prístup potrebujete právo **Editor** (`dataTablesConfig`).
+Na karte **Nastavenia → Editor → Nastavenia kariet** upravíte členenie editora: premenujete a zoradíte karty, nastavíte predvolenú kartu alebo pridáte vlastnú kartu. Nastavenie platí pre všetky záznamy vybranej entity v aktuálne zvolenej doméne. Na prístup potrebujete oprávnenie **Editor** (`dataTablesConfig`).
 
 ![](tabs-settings-datatable.png)
 
 ## Výber alebo vytvorenie karty
 
-Najprv vyberte **Použiť pre entitu**, napr. `sk.iway.iwcm.doc.DocDetails` pre webové stránky. Do poľa **Použiť pre kartu** vyberte identifikátor existujúcej karty, napr. `basic`, alebo zadajte nový identifikátor, napr. `details`. Existujúca karta sa upraví; nový identifikátor vytvorí novú kartu.
+Najprv v poli **Použiť pre entitu** vyberte triedu entity, napríklad `sk.iway.iwcm.doc.DocDetails` pre webové stránky. V poli **Použiť pre kartu** vyberte identifikátor existujúcej karty, napríklad `basic`, alebo zadajte nový identifikátor, napríklad `details`. Výberom existujúceho identifikátora upravíte danú kartu, zadaním nového vytvoríte vlastnú kartu.
 
-Automatické dopĺňanie ponúka entity a karty po zadaní aspoň jedného znaku. Zadaním `*` alebo `%` zobrazíte všetky dostupné možnosti. Pri karte sa zobrazuje názov aj identifikátor, do nastavenia sa uloží identifikátor.
+Automatické dopĺňanie ponúka entity a karty po zadaní aspoň jedného znaku. Zadaním `*` alebo `%` zobrazíte všetky dostupné možnosti. Pri každej karte sa zobrazuje názov aj identifikátor. Do nastavenia sa uloží identifikátor.
 
 ![](tabs-settings-editor.png)
 
@@ -19,24 +19,24 @@ Automatické dopĺňanie ponúka entity a karty po zadaní aspoň jedného znaku
 | **Názov karty** | Zobrazený názov alebo prekladový kľúč. Pri novej karte bez názvu sa použije jej identifikátor. |
 | **Predvolená karta** | Hodnota **Áno** vyberie kartu pri otvorení editora. |
 | **Skryť pri vytváraní** | Hodnota **Áno** skryje kartu pri vytváraní nového záznamu; pri úprave existujúceho záznamu zostane dostupná. |
-| **Požadované oprávnenie** | Kód práva, ktoré používateľ potrebuje na zobrazenie karty. |
+| **Požadované oprávnenie** | Kód oprávnenia, ktoré používateľ potrebuje na zobrazenie karty. |
 | **CSS triedy** | CSS triedy na úpravu vzhľadu karty. |
 | **HTML obsah** | Doplnkový obsah karty, napr. vysvetľujúci text. Samotné polia sa do karty priraďujú cez [Nastavenia polí](fields-settings.md). |
 | **Zobraziť za kartou** | Identifikátor karty, za ktorú sa táto karta zaradí. Hodnota `FIRST` ju zaradí na začiatok. |
 
-Prepínače **Predvolená karta** a **Skryť pri vytváraní** ponúkajú **Áno**, **Nie** a **Bez zmeny**. Hodnota **Bez zmeny** ponechá pôvodné správanie. Aj prázdne textové nastavenia ponechávajú pôvodné hodnoty existujúcej karty.
+Prepínače **Predvolená karta** a **Skryť pri vytváraní** ponúkajú hodnoty **Áno**, **Nie** a **Bez zmeny**. Hodnota **Bez zmeny** zachová pôvodné správanie. Ak textové pole ponecháte prázdne, zachová sa pôvodná hodnota existujúcej karty.
 
-Ako predvolenú odporúčame označiť jednu kartu. Ak je ich označených viac, vyberie sa prvá z nich vo výslednom poradí. Ak sa predvolená karta pri vytváraní nezobrazuje, editor vyberie dostupnú kartu.
+Ako predvolenú odporúčame označiť iba jednu kartu. Ak ich označíte viac, editor vyberie prvú z nich vo výslednom poradí. Ak sa predvolená karta pri vytváraní záznamu nezobrazuje, editor vyberie dostupnú kartu.
 
 ## Vlastná karta s voliteľnými poľami
 
-1. V **Nastaveniach kariet** vytvorte záznam pre `sk.iway.iwcm.doc.DocDetails` s identifikátorom `details`, názvom `Doplňujúce údaje` a hodnotou **Zobraziť za kartou** `basic`.
-2. Na karte [Voliteľné polia](custom-fields-settings.md) nastavte pre rovnakú entitu polia **A** a **B**: ich typ, popis a prípadnú povinnosť.
-3. V [Nastaveniach polí](fields-settings.md) vytvorte samostatný záznam pre `fieldA` a `fieldB`. V oboch nastavte **Vložiť do karty** na `details`. Pri poli `fieldB` môžete nastaviť **Zobraziť za poľom** na `fieldA`.
-4. Znovu načítajte zoznam webových stránok a otvorte editor. Polia sa zobrazia v karte **Doplňujúce údaje**, pričom si zachovajú typ, možnosti aj povinnosť z nastavení voliteľných polí.
+1. V **Nastaveniach kariet** vytvorte záznam pre `sk.iway.iwcm.doc.DocDetails` s identifikátorom `details` a názvom `Doplňujúce údaje`. Pole **Zobraziť za kartou** nastavte na `basic`.
+2. Na karte [Voliteľné polia](custom-fields-settings.md) nastavte pre rovnakú entitu polia **A** a **B**: ich typ, popis a povinnosť vyplnenia.
+3. V [Nastaveniach polí](fields-settings.md) vytvorte pre každé z polí `fieldA` a `fieldB` samostatný záznam. V oboch nastavte **Vložiť do karty** na `details`. Pri poli `fieldB` môžete nastaviť **Zobraziť za poľom** na `fieldA`.
+4. Znovu načítajte zoznam webových stránok a otvorte editor. Polia sa zobrazia na karte **Doplňujúce údaje**. Zachovajú si typ, možnosti aj povinnosť vyplnenia z nastavení voliteľných polí.
 
 ## Validácia a zrušenie nastavenia
 
-Kombinácia entity a identifikátora karty musí byť v jednej doméne jedinečná. Kartu nemožno zaradiť za seba samú. Hodnota **Zobraziť za kartou** musí odkazovať na existujúcu kartu vybranej entity alebo obsahovať `FIRST`.
+Kombinácia entity a identifikátora karty musí byť v jednej doméne jedinečná. Kartu nemožno zaradiť za seba samú. V poli **Zobraziť za kartou** môžete vybrať existujúcu kartu danej entity alebo zadať `FIRST`.
 
-Odstránením nastavenia pôvodnej karty sa obnoví jej pôvodná definícia. Pri rušení vlastnej karty najprv presuňte jej polia do inej karty alebo odstráňte ich nastavenia presunu, potom odstráňte kartu. Zmenu overte po opätovnom načítaní stránky administrácie.
+Odstránením nastavenia pôvodnej karty sa obnoví jej pôvodná definícia. Pri rušení vlastnej karty najprv presuňte jej polia na inú kartu alebo odstráňte ich nastavenia presunu. Až potom odstráňte kartu. Zmenu overte po opätovnom načítaní stránky administrácie.

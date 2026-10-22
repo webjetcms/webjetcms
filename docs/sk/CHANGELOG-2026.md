@@ -196,9 +196,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ### Editor
 
-- Sekcia **Nastavenia → Editor** združuje [Nastavenia polí](frontend/editor/fields-settings.md), [Nastavenia kariet](frontend/editor/tabs-settings.md) a [Voliteľné polia](frontend/editor/custom-fields-settings.md). Pre jednotlivé entity a domény možno meniť názvy, poradie a zobrazenie polí, zakázať ich úpravy, upravovať karty editora a vytvárať vlastné karty s voliteľnými poľami (#58830).
-
-- Sekcia **Nastavenia → Editor** používa nové oprávnenie `dataTablesConfig`, ktoré sa v zozname práv zobrazuje ako **Editor** a riadi prístup k nastaveniam polí, kariet aj voliteľných polí (#58830).
+- Sekcia **Nastavenia → Editor** združuje [Nastavenia polí](frontend/editor/fields-settings.md), [Nastavenia kariet](frontend/editor/tabs-settings.md) a [Voliteľné polia](frontend/editor/custom-fields-settings.md). Pre jednotlivé entity a domény môžete meniť názvy, poradie a zobrazenie polí či zakázať ich úpravy. Môžete tiež upravovať karty editora a vytvárať vlastné karty s voliteľnými poľami (#58830).
 
 ### Voliteľné polia
 

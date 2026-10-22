@@ -426,9 +426,9 @@ Môžete využiť aj možnosť nastavenia atribútu ```data-dt-field-headline```
 
 ## BUTTON_GROUP
 
-Výber jednej možnosti v skupine tlačidiel Bootstrap. Všetky možnosti sú viditeľné vedľa seba, vybraná možnosť má modré pozadie. Pole je vhodné pre krátke zoznamy, napríklad **Áno / Nie / Bez zmeny**. Pod tlačidlami nezobrazuje doplnkový text.
+Pole umožňuje vybrať jednu možnosť zo skupiny tlačidiel Bootstrap. Je vhodné pre krátke zoznamy, napríklad **Áno / Nie / Bez zmeny**. Všetky možnosti sú viditeľné vedľa seba a vybraná možnosť má modré pozadie.
 
-Možnosti sa definujú rovnako ako pri `RADIO`, cez `editor.options` alebo REST metódu `getOptions()`. V datatabuľke sa zobrazuje text vybranej možnosti.
+Možnosti definujte rovnako ako pri `RADIO`, cez `editor.options` alebo metódu `getOptions()` REST kontroléra. V datatabuľke sa zobrazuje text vybranej možnosti.
 
 ```java
     @DataTableColumn(
@@ -445,9 +445,9 @@ Možnosti sa definujú rovnako ako pri `RADIO`, cez `editor.options` alebo REST 
     private Boolean visible;
 ```
 
-Tretia možnosť je explicitná hodnota `"null"`; pri načítaní hodnoty `null` sa tiež vyberie táto možnosť. Atribút `alwaysCopyProperties` umožňuje uložiť návrat z `true` alebo `false` na `null`.
+V príklade má tretia možnosť hodnotu `"null"`. Vyberie sa aj pri načítaní hodnoty `null`. Atribút `alwaysCopyProperties` umožňuje uložiť zmenu z `true` alebo `false` späť na `null`.
 
-Voľba funguje aj klávesnicou: klávesom Tab prejdete do skupiny, šípkami zmeníte možnosť. JavaScriptový typ editora je `buttonGroup` a podporuje štandardné metódy `val()`, `update()`, `enable()` a `disable()`.
+Pole môžete ovládať aj klávesnicou: klávesom Tab prejdete do skupiny a šípkami zmeníte vybranú možnosť. JavaScriptový typ editora je `buttonGroup` a podporuje štandardné metódy `val()`, `update()`, `enable()` a `disable()`.
 
 ## BOOLEAN
 
