@@ -70,7 +70,7 @@ function fixture(t, editExisting = false) {
         table: table ? table.table().node() : undefined,
         ajax(method, url, data, success) {
             requests.push(data);
-            success({ data: Object.values(data.data).map(row => ({ DT_RowId: 'row_1', ...row })) });
+            success({ data: Object.entries(data.data).map(([id, row]) => ({ DT_RowId: id === '0' ? 'row_1' : id, ...row })) });
         }
     });
     editor.TABLE = {};
@@ -79,6 +79,17 @@ function fixture(t, editExisting = false) {
     t.after(() => window.close());
     return {
         editor, field, conf, writes, errors, requests, window, $,
+        usePreview() {
+            const source = path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/pages/web-pages-list/preview.js');
+            const Preview = vm.runInContext(fs.readFileSync(source, 'utf8')
+                .replace('export class EditorPreview', 'class EditorPreview') + '\nEditorPreview;', context);
+            const preview = new Preview({ datatable: { EDITOR: editor, hasPermission: () => false } });
+            preview.bindEvents();
+            editor.currentJson.docId = -1;
+            const previewRequests = [];
+            $.ajax = options => { previewRequests.push(options); };
+            return { preview, requests: previewRequests };
+        },
         usePageBuilder() {
             const source = path.resolve(__dirname, '../../../main/webapp/admin/v9/src/js/datatables-ckeditor.js');
             const Editor = vm.runInContext(fs.readFileSync(source, 'utf8')
@@ -100,6 +111,13 @@ function fixture(t, editExisting = false) {
             });
             if (editExisting) editor.edit(0, { submit: 'changed' });
             else editor.create();
+            return conf.wjeditorReadyPromise.then(() => new Promise(setImmediate));
+        },
+        openMultiple(submit = 'all') {
+            editor.add({ name: 'title' });
+            table.row.add({ DT_RowId: 'row_2', data: '<p>Second page</p>' }).draw();
+            editor.currentJson = { data: '<p>Original content</p>', editorFields: {} };
+            editor.edit([0, 1], { submit });
             return conf.wjeditorReadyPromise.then(() => new Promise(setImmediate));
         },
         holdNextMode() {
@@ -132,6 +150,75 @@ test('Invalid content also blocks saving an existing row with changed-only submi
     assert.equal(f.field.inError(), true);
     assert.equal(f.editor.s.processing, false);
 });
+
+for (const submit of ['all', 'changed']) {
+    test(`Bulk metadata edits preserve distinct HTML with ${submit} submission`, async t => {
+        const f = fixture(t, true);
+        await f.openMultiple(submit);
+        assert.equal(f.field.isMultiValue(), true);
+        assert.equal(f.field.get(), undefined, 'Distinct values have no common HTML');
+        f.editor.field('title').val('Updated title');
+        f.editor.submit();
+        assert.equal(f.requests.length, 1);
+        const rows = f.requests[0].data;
+        assert.equal(rows.row_1.title, 'Updated title');
+        assert.equal(rows.row_2.title, 'Updated title');
+        if (submit === 'all') {
+            assert.equal(rows.row_1.data, '<p>Original content</p>');
+            assert.equal(rows.row_2.data, '<p>Second page</p>');
+        } else {
+            assert.equal(Object.hasOwn(rows.row_1, 'data'), false);
+            assert.equal(Object.hasOwn(rows.row_2, 'data'), false);
+        }
+    });
+}
+
+test('Bulk edits can replace distinct HTML with a shared valid value', async t => {
+    const f = fixture(t, true);
+    await f.openMultiple();
+    f.field.val('<p>Shared content</p>');
+    await f.conf.wjeditorReadyPromise;
+    assert.equal(f.field.isMultiValue(), false);
+    f.editor.submit();
+    assert.equal(f.requests.length, 1);
+    assert.equal(f.requests[0].data.row_1.data, '<p>Shared content</p>');
+    assert.equal(f.requests[0].data.row_2.data, '<p>Shared content</p>');
+});
+
+for (const value of [undefined, 'undefined']) {
+    test(`Bulk edits reject an invalid individual value (${JSON.stringify(value)})`, async t => {
+        const f = fixture(t, true);
+        await f.openMultiple();
+        f.field.multiSet({ row_1: '<p>Original content</p>', row_2: value });
+        f.editor.field('title').val('Updated title');
+        assert.equal(f.field.isMultiValue(), true);
+        f.editor.submit();
+        assert.equal(f.requests.length, 0);
+        assert.equal(f.field.inError(), true);
+        assert.equal(f.editor.s.processing, false);
+    });
+
+    test(`Bulk edits reject invalid shared HTML (${JSON.stringify(value)}) and recover after restoring individual values`, async t => {
+        const f = fixture(t, true);
+        await f.openMultiple();
+        f.field.val('<p>Shared content</p>');
+        await f.conf.wjeditorReadyPromise;
+        f.conf.wjeditor.value = value;
+        assert.equal(f.field.isMultiValue(), false);
+        f.editor.submit();
+        assert.equal(f.requests.length, 0);
+        assert.equal(f.field.inError(), true);
+        assert.equal(f.editor.s.processing, false);
+
+        f.field.multiRestore();
+        assert.equal(f.field.isMultiValue(), true);
+        f.editor.field('title').val('Updated title');
+        f.editor.submit();
+        assert.equal(f.requests.length, 1, 'The previous read error must not block restored values');
+        assert.equal(f.requests[0].data.row_1.data, '<p>Original content</p>');
+        assert.equal(f.requests[0].data.row_2.data, '<p>Second page</p>');
+    });
+}
 
 const pageBuilderFailures = {
     'initialization unfinished': frame => { frame.contentWindow.pageBuilderReady = false; },
@@ -208,6 +295,79 @@ test('A failure while collecting the payload is stopped before preview or save h
     assert.equal(f.editor.s.processing, false);
     assert.equal(f.field.inError(), true);
 });
+
+for (const failureStage of ['initSubmit', 'preSubmit']) {
+    test(`A preview cancelled at ${failureStage} does not intercept the next save`, async t => {
+        const f = fixture(t);
+        await f.open('<p>Original</p>');
+        const p = f.usePreview();
+        let reads = 0;
+        f.conf.wjeditor.getData = () => {
+            reads++;
+            if (failureStage === 'preSubmit' && reads === 1) return '<p>Original</p>';
+            return undefined;
+        };
+        f.window.previewPage();
+        assert.equal(f.requests.length, 0);
+        assert.equal(p.requests.length, 0);
+        assert.equal(f.field.inError(), true);
+        assert.equal(f.editor.s.processing, false);
+        assert.equal(p.preview.isPreviewClicked, false);
+
+        f.conf.wjeditor.getData = () => '<p>Recovered</p>';
+        f.editor.submit();
+        assert.equal(f.requests.length, 1);
+        assert.equal(f.requests[0].data[0].data, '<p>Recovered</p>');
+        assert.equal(p.requests.length, 0, 'Save must not send a preview request');
+    });
+}
+
+test('Closing an editor clears a pending preview before another page is opened', async t => {
+    const f = fixture(t);
+    await f.open('<p>Original</p>');
+    const p = f.usePreview();
+    let release;
+    f.editor.one('initSubmit', () => new Promise(resolve => { release = resolve; }));
+    f.window.previewPage();
+    assert.equal(p.preview.isPreviewClicked, true);
+    f.editor.close();
+    const pendingAfterClose = p.preview.isPreviewClicked;
+    release(false);
+    await new Promise(setImmediate);
+    assert.equal(pendingAfterClose, false, 'Closing must clear the intent even before processing ends');
+
+    await f.open('<p>Another page</p>');
+    f.editor.currentJson.docId = -1;
+    f.editor.submit();
+    assert.equal(f.requests.length, 1);
+    assert.equal(f.requests[0].data[0].data, '<p>Another page</p>');
+    assert.equal(p.requests.length, 0);
+});
+
+for (const asynchronous of [false, true]) {
+    test(`A valid preview remains a preview with ${asynchronous ? 'asynchronous' : 'synchronous'} submission`, async t => {
+        const f = fixture(t);
+        await f.open('<p>Preview content</p>');
+        const p = f.usePreview();
+        let release;
+        if (asynchronous) {
+            f.editor.one('initSubmit', () => new Promise(resolve => { release = resolve; }));
+        }
+        f.window.previewPage();
+        if (asynchronous) {
+            assert.equal(p.preview.isPreviewClicked, true);
+            assert.equal(p.requests.length, 0);
+            release(true);
+            await new Promise(setImmediate);
+        }
+        assert.equal(f.requests.length, 0, 'Preview must not save the page');
+        assert.equal(p.requests.length, 1);
+        assert.equal(p.requests[0].url, '/admin/rest/web-pages/preview/');
+        assert.equal(JSON.parse(p.requests[0].data).data, '<p>Preview content</p>');
+        assert.equal(p.preview.isPreviewClicked, false);
+        assert.equal(f.editor.s.processing, false);
+    });
+}
 
 for (const throws of [false, true]) {
     test(`A ${throws ? 'throwing' : 'missing return in a'} custom HTML callback blocks saving`, async t => {

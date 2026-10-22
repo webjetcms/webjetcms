@@ -167,9 +167,18 @@ export function typeWysiwyg() {
                 resolveInitialEditorReady = resolve;
             });
             EDITOR.on('initSubmit', function(event, action) {
-                if (action === 'remove' || !getThisField(conf).submittable()) return;
+                const field = getThisField(conf);
+                if (action === 'remove' || !field.submittable()) return;
+                // Multi-value reads bypass the WYSIWYG getter, so clear any previous read failure here.
+                conf.invalidHtml = false;
+                let values;
+                if (field.isMultiValue()) {
+                    values = Object.values(field.multiGet());
+                } else {
+                    values = [field.get()];
+                }
                 // Validate before Editor compares values or falls back to the original row data.
-                if (isInvalidHtml(getThisField(conf).get())) return cancelInvalidSubmit(conf, event);
+                if (values.some(isInvalidHtml)) return cancelInvalidSubmit(conf, event);
             });
             EDITOR.on('preSubmit', function(event, data, action) {
                 // Reading the field again while building the payload can also fail.
