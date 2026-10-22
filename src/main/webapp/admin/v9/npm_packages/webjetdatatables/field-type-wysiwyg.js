@@ -187,24 +187,35 @@ export function typeWysiwyg() {
                 resolveInitialEditorReady = resolve;
             });
             EDITOR.on('initSubmit', function(event, action) {
+                // Start fresh for every save or preview; never reuse HTML from an earlier attempt.
+                conf.submitSnapshot = undefined;
                 const field = getThisField(conf);
                 if (action === 'remove' || !field.submittable()) return;
                 // Multi-value reads bypass the WYSIWYG getter, so clear any previous read failure here.
                 conf.invalidHtml = false;
                 let values;
                 if (field.isMultiValue()) {
+                    // Distinct row values stay in Editor's multi-value storage; there is no shared HTML to snapshot.
                     values = Object.values(field.multiGet());
                 } else {
+                    // An empty snapshot asks the next get() to capture one successful, normalized HTML read.
+                    // The type getter stores it before Editor applies getFormatter, avoiding double formatting.
+                    conf.submitSnapshot = {};
                     values = [field.get()];
                 }
                 // Validate before Editor compares values or falls back to the original row data.
                 if (values.some(isInvalidHtml)) return cancelInvalidSubmit(conf, event);
             });
             EDITOR.on('preSubmit', function(event, data, action) {
-                // Reading the field again while building the payload can also fail.
+                // Editor has finished building the payload; discard the snapshot so later reads see live edits.
+                conf.submitSnapshot = undefined;
                 if (action !== 'remove' && getThisField(conf).submittable() && conf.invalidHtml) {
                     return cancelInvalidSubmit(conf, event);
                 }
+            });
+            EDITOR.on('processing', function(event, processing) {
+                // A cancelled or unchanged submission can skip preSubmit; release its snapshot here too.
+                if (processing === false) conf.submitSnapshot = undefined;
             });
             EDITOR.on( 'open', function ( e, type ) {
                 //console.log("DT WYSIWYG Editor OPEN, e=", e, "type=", type);
@@ -286,6 +297,8 @@ export function typeWysiwyg() {
 
             EDITOR.on( 'close', function ( e, type ) {
                 //console.log("EDITOR.onClose");
+                // Closing during an asynchronous submit must not leave this page's HTML cached for the next page.
+                conf.submitSnapshot = undefined;
                 conf.editorOpen = false;
                 conf.editorSession = null;
                 conf.dirtyResetRequest = null;
@@ -429,12 +442,17 @@ export function typeWysiwyg() {
 
         /**
          * Reads live HTML while open and retains it in conf._input for later reads or confirmed recovery.
+         * Payload collection reuses the HTML already validated by initSubmit.
          * A failed read returns undefined and marks invalidHtml so submission is cancelled; it must not
          * silently save the preserved value, which may be older than the visible Page Builder content.
          * @param {Object} conf DataTables Editor field configuration.
          * @returns {string|undefined} Validated HTML without editor attributes, or undefined on failure.
          */
         get: function ( conf ) {
+            // Editor may call get() once per row. Reuse the validated HTML so later read failures cannot
+            // make it fall back to original row data or treat a changed page as unchanged.
+            // An empty string is valid HTML, so check for undefined rather than truthiness.
+            if (conf.submitSnapshot?.html !== undefined) return conf.submitSnapshot.html;
             conf.invalidHtml = false;
             try {
                 //console.log("WYSIWYG get, conf=", conf, "wjeditor=", conf.wjeditor);
@@ -473,7 +491,11 @@ export function typeWysiwyg() {
                     }
                 }
                 if (isInvalidHtml(html)) throw new Error('Invalid WYSIWYG callback content.');
-                return removeContentEditable(html);
+                html = removeContentEditable(html);
+                // Capture only after the read, callback and cleanup succeed. The snapshot exists only when
+                // initSubmit requested it; ordinary get() calls must not start caching HTML.
+                if (conf.submitSnapshot) conf.submitSnapshot.html = html;
+                return html;
             } catch (error) {
                 conf.invalidHtml = true;
                 console.error('Error reading WYSIWYG content:', error);

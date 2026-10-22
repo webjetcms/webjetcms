@@ -197,13 +197,16 @@ for (const submit of ['all', 'changed']) {
     });
 }
 
-test('Bulk edits can replace distinct HTML with a shared valid value', async t => {
+test('Bulk edits reuse one validated HTML value for every page', async t => {
     const f = fixture(t, true);
     await f.openMultiple();
     f.field.val('<p>Shared content</p>');
     await f.conf.wjeditorReadyPromise;
     assert.equal(f.field.isMultiValue(), false);
+    let reads = 0;
+    f.conf.wjeditor.getData = () => ++reads === 2 ? undefined : '<p>Shared content</p>';
     f.editor.submit();
+    assert.equal(reads, 1);
     assert.equal(f.requests.length, 1);
     assert.equal(f.requests[0].data.row_1.data, '<p>Shared content</p>');
     assert.equal(f.requests[0].data.row_2.data, '<p>Shared content</p>');
@@ -443,31 +446,68 @@ test('A getter exception is reported without sending a request or leaving Save b
     assert.equal(f.field.inError(), true);
 });
 
-test('A failure while collecting the payload is stopped before preview or save handlers', async t => {
+for (const editExisting of [false, true]) {
+    test(`${editExisting ? 'Changed-only edits' : 'New pages'} submit the validated HTML without another live read`, async t => {
+        const f = fixture(t, editExisting);
+        await f.open('<p>Original content</p>');
+        let reads = 0;
+        f.conf.wjeditor.getData = () => ++reads === 1 ? '<p>Updated content</p>' : undefined;
+        f.editor.submit(null, null, null, false);
+        assert.equal(reads, 1);
+        assert.equal(f.requests.length, 1);
+        assert.equal(Object.values(f.requests[0].data)[0].data, '<p>Updated content</p>');
+        assert.equal(f.editor.s.processing, false);
+        assert.equal(f.field.inError(), false);
+        f.conf.wjeditor.getData = () => '<p>Further edits</p>';
+        assert.equal(f.field.get(), '<p>Further edits</p>', 'Live reads resume after submission');
+    });
+}
+
+test('Editor formatting is applied once to the captured HTML', async t => {
+    const f = fixture(t);
+    await f.open('<p>Content</p>');
+    f.conf.getFormatter = html => html + '<!-- formatted -->';
+    f.editor.submit();
+    assert.equal(f.requests[0].data[0].data, '<p>Content</p><!-- formatted -->');
+});
+
+test('An unchanged submission releases the validated HTML without preSubmit', async t => {
+    const f = fixture(t, true);
+    await f.open('<p>Original content</p>');
+    f.editor.submit(null, null, null, false);
+    assert.equal(f.requests.length, 0);
+    f.conf.wjeditor.value = '<p>Further edits</p>';
+    assert.equal(f.field.get(), '<p>Further edits</p>');
+});
+
+test('An asynchronous initSubmit cancellation releases the validated HTML', async t => {
     const f = fixture(t);
     await f.open('<p>Original</p>');
-    let calls = 0;
-    f.conf.wjeditor.getData = () => ++calls === 1 ? '<p>Valid at initSubmit</p>' : undefined;
-    let previewCalled = false;
-    f.editor.on('preSubmit', () => { previewCalled = true; return true; });
+    let release;
+    f.editor.one('initSubmit', () => new Promise(resolve => { release = resolve; }));
     f.editor.submit();
+    f.conf.wjeditor.value = '<p>Further edits</p>';
+    release(false);
+    await new Promise(setImmediate);
     assert.equal(f.requests.length, 0);
-    assert.equal(previewCalled, false);
-    assert.equal(f.editor.s.processing, false);
-    assert.equal(f.field.inError(), true);
+    assert.equal(f.field.get(), '<p>Further edits</p>');
+    f.editor.submit();
+    assert.equal(f.requests[0].data[0].data, '<p>Further edits</p>');
 });
 
 for (const failureStage of ['initSubmit', 'preSubmit']) {
     test(`A preview cancelled at ${failureStage} does not intercept the next save`, async t => {
         const f = fixture(t);
         await f.open('<p>Original</p>');
+        if (failureStage === 'initSubmit') f.conf.wjeditor.getData = () => undefined;
+        else {
+            f.editor.one('preSubmit', event => {
+                f.field.error('Autotest validation failed');
+                event.stopImmediatePropagation();
+                return false;
+            });
+        }
         const p = f.usePreview();
-        let reads = 0;
-        f.conf.wjeditor.getData = () => {
-            reads++;
-            if (failureStage === 'preSubmit' && reads === 1) return '<p>Original</p>';
-            return undefined;
-        };
         f.window.previewPage();
         assert.equal(f.requests.length, 0);
         assert.equal(p.requests.length, 0);
@@ -510,6 +550,8 @@ for (const asynchronous of [false, true]) {
         const f = fixture(t);
         await f.open('<p>Preview content</p>');
         const p = f.usePreview();
+        let reads = 0;
+        f.conf.wjeditor.getData = () => ++reads === 1 ? '<p>Preview content</p>' : undefined;
         let release;
         if (asynchronous) {
             f.editor.one('initSubmit', () => new Promise(resolve => { release = resolve; }));
@@ -522,6 +564,7 @@ for (const asynchronous of [false, true]) {
             await new Promise(setImmediate);
         }
         assert.equal(f.requests.length, 0, 'Preview must not save the page');
+        assert.equal(reads, 1);
         assert.equal(p.requests.length, 1);
         assert.equal(p.requests[0].url, '/admin/rest/web-pages/preview/');
         assert.equal(JSON.parse(p.requests[0].data).data, '<p>Preview content</p>');
