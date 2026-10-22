@@ -209,7 +209,7 @@ V jednom WebJET CMS v môžete mať viacero (desiatky) domén a následne mať m
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
-- Manažér dokumentov - v [aplikácii na webovej stránke](redactor/files/file-archive/file-archive-app.md) pridaná možnosť zoradiť dokumenty podľa začiatku platnosti (#osk791).
+- Manažér dokumentov - v [aplikácii na webovej stránke](redactor/files/file-archive/file-archive-app.md#karta---rozšírené) pridané radenie podľa začiatku a konca platnosti, kódu produktu, produktu, kategórie, mena súboru a veľkosti dokumentu (#359, #osk791).
 
 ### Galéria
 
