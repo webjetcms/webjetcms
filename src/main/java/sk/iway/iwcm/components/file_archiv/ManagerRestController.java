@@ -47,10 +47,18 @@ public class ManagerRestController extends DatatableRestControllerV2<BasicManage
         }
     }
 
+    /**
+     * Normalizes the replacement name before validation so invisible-only names are rejected.
+     * The original name remains unchanged because it identifies the records to rename.
+     */
+    @Override
+    public void beforeSave(BasicManagerBean entity) {
+        entity.setNewName(Tools.removeNbsp(entity.getNewName()));
+    }
+
     @Override
     public BasicManagerBean editItem(BasicManagerBean entity, long id) {
         ManagerType type = ManagerType.fromString( getRequest().getParameter(MANAGER_TYPE) );
-        entity.setNewName(Tools.trim(entity.getNewName()));
 
         if(type == ManagerType.CATEGORY) {
             repository.updateCategory(entity.getName(), entity.getNewName(), CloudToolsForCore.getDomainId());

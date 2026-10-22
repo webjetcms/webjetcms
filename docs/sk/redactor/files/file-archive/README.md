@@ -75,7 +75,7 @@ Karta obsahuje základné informácie pre vloženie dokumentu.
 - **Poznámka** - poznámka sa zobrazí na stránke pri odkaze na dokument
 - **Uložiť dokument aj keď už existuje** - povolí uloženie súboru s rovnakým obsahom, aký už má iný dokument v manažéri. Podrobnosti nájdete v časti [Kontrola duplicitných dokumentov](#kontrola-duplicitných-dokumentov).
 
-Pri ukladaní polí **Produkt** a **Kategória** sa odstránia medzery na začiatku a konci názvu.
+Pri ukladaní a premenovaní polí **Produkt** a **Kategória** sa tvrdé a ostatné Unicode medzery, tabulátory a zalomenia riadkov prevedú na obyčajnú medzeru. Opakované medzery sa zlúčia a medzery na začiatku a konci názvu sa odstránia. Odstránia sa aj zvyšné riadiace znaky a neviditeľné znaky BOM, mäkký spojovník a word joiner; zero-width space sa prevedie na medzeru. Úprava platí aj pri hromadnom nahrávaní dokumentov, takže kopírovanie názvov z iných dokumentov nevytvára odlišné kategórie iba kvôli týmto znakom.
 
 !>**Upozornenie:** polia **Produkt** / **Kategória**  / **Kód produktu** Vám neskôr poslúžia pri filtrovaní zobrazenia súborov na stránke
 

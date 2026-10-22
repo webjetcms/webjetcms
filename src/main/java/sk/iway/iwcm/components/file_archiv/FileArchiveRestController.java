@@ -338,8 +338,8 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
 
     @Override
     public FileArchivatorBean processToEntity(FileArchivatorBean entity, ProcessItemAction action) {
-        entity.setProduct(Tools.trim(entity.getProduct()));
-        entity.setCategory(Tools.trim(entity.getCategory()));
+        entity.setProduct(Tools.removeNbsp(entity.getProduct()));
+        entity.setCategory(Tools.removeNbsp(entity.getCategory()));
 
         if(entity.getEditorFields() == null) {
             entity.setEditorFields( new FileArchivatorEditorFields() );
@@ -393,7 +393,7 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
 
         filePath = FileArchivSupportMethodsService.normalizeToOldPath(filePath);
 
-        List<FileArchivatorBean> entities = repository.findDistinctAllByProductLikeAndFilePathLikeAndDomainId("%" + Tools.trim(term) + "%", filePath + "%", CloudToolsForCore.getDomainId());
+        List<FileArchivatorBean> entities = repository.findDistinctAllByProductLikeAndFilePathLikeAndDomainId("%" + Tools.removeNbsp(term) + "%", filePath + "%", CloudToolsForCore.getDomainId());
 
         //Loop gained entities and add products to autcomplete list "ac"
         for(FileArchivatorBean entity : entities) {
@@ -409,7 +409,7 @@ public class FileArchiveRestController extends DatatableRestControllerV2<FileArc
 
         filePath = FileArchivSupportMethodsService.normalizeToOldPath(filePath);
 
-        List<FileArchivatorBean> entities = repository.findDistinctAllByCategoryLikeAndFilePathLikeAndDomainId("%" + Tools.trim(term) + "%", filePath + "%", CloudToolsForCore.getDomainId());
+        List<FileArchivatorBean> entities = repository.findDistinctAllByCategoryLikeAndFilePathLikeAndDomainId("%" + Tools.removeNbsp(term) + "%", filePath + "%", CloudToolsForCore.getDomainId());
 
         //Loop gained entities and add categories to autcomplete list "ac"
         for(FileArchivatorBean entity : entities) {
