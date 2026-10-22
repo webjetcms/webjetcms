@@ -209,6 +209,8 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 
 ![](redactor/files/file-archive/drag-drop-upload-settings-dialog.png)
 
+- Document Manager - the folder tree has a minimum width of 200 px so that the search field with buttons does not extend into the table even when setting a smaller ratio. Therefore, the width settings in pixels offer values ​​starting from 200 px (#360).
+- Document Manager - **Product** and **Category** fields normalize hard spaces, tabs, and line breaks, merge repeating spaces, and remove trailing spaces and distracting invisible characters from copied text when saving, renaming, and bulk uploading. **Warning:** When resaving an existing document, hard spaces in the title, products, and so on are removed. Filters in the application in websites are not automatically updated. If they use the original name with hard or repeating spaces or invisible characters, the document may not appear in the filtered list after saving. Correct the names in all affected documents and set the filters in the applications to the new values. Saving one document will not correct other documents with the same product or category name (#360).
 - Document Manager - in [website application](redactor/files/file-archive/file-archive-app.md#tab---advanced) added sorting by validity start and end, product code, product, category, file name and document size (#359, #osk791).
 
 ### Gallery
@@ -292,6 +294,7 @@ In one WebJET CMS you can have multiple (dozens) domains and subsequently have s
 - Page Builder - fixed unnecessary scrolling up/down the page if you were editing an application on a page (#343).
 - Page Builder - fixed displaying the toolbar if the page does not contain any sections (#343).
 - Page Builder - added option to set [structure window width](frontend/page-builder/settings.md) (#343)
+- Administration - fixed display of check mark icon when an item is selected in the autocomplete menu (#osk800).
 
 ### Performance
 

@@ -188,6 +188,10 @@
     }
 
     window.domReady.add(function () {
+        // Keep fixed-width options consistent with the archive tree's minimum width.
+        $("#jstree-settings-treeWidth").find('option[value="120"], option[value="150"]').remove();
+        $("#jstree-settings-treeWidth").selectpicker("refresh");
+
         // Create folder button handler
         var createFolderModal = null;
         $("button#btn-create-folder").on("click", function() {

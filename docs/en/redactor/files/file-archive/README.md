@@ -16,6 +16,8 @@ Above the tree there are buttons:
 -<i class="ti ti-refresh"></i> - **Restore** - restores the folder tree structure
 -<i class="ti ti-adjustments-horizontal"></i> - **Settings** - allows you to set the width of the tree structure relative to the table
 
+You can choose the width of the tree in terms of the ratio to the table or in pixels. The tree has a minimum width of `200 px` to accommodate the search field and buttons. A smaller ratio will not reduce this limit.
+
 ![](datatable.png)
 
 When creating a folder, enter its name and confirm the form. The name will be converted to a URL- and file system-safe format when created.
@@ -72,6 +74,8 @@ The card contains basic information for inserting a document.
   - it can't be a pattern
 - **Note** - the note will appear on the page when linking to the document
 - **Save document even if it already exists** - allows saving a file with the same content as another document already in the manager. For details, see [Duplicate document check](#duplicate-document-check).
+
+When saving and renaming the **Product** and **Category** fields, hard and other Unicode spaces, tabs, and line breaks are converted to regular spaces. Repeated spaces are merged, and spaces at the beginning and end of the name are removed. Remaining control characters and invisible BOM characters, soft hyphens, and word joiners are also removed; zero-width spaces are converted to spaces. The adjustment also applies to bulk uploads of documents, so copying names from other documents does not create different categories just because of these characters.
 
 !>**Note:** The **Product** / **Category** / **Product Code** fields will later be used to filter the display of files on the page
 

@@ -16,7 +16,7 @@ Nad stromom sa nachádzajú tlačidlá:
 - <i class="ti ti-refresh"></i> - **Obnoviť** - obnoví stromovú štruktúru priečinkov
 - <i class="ti ti-adjustments-horizontal"></i> - **Nastavenia** - umožňuje nastaviť šírku stromovej štruktúry voči tabuľke
 
-Šírku stromu môžete zvoliť pomerom voči tabuľke alebo v pixeloch. Strom má minimálnu šírku `200 px`, aby sa doň zmestilo vyhľadávacie pole aj s tlačidlami. Menšie nastavenie túto hranicu nezníži.
+Šírku stromu môžete zvoliť pomerom voči tabuľke alebo v pixeloch. Strom má minimálnu šírku `200 px`, aby sa doň zmestilo vyhľadávacie pole aj s tlačidlami. Menší pomer túto hranicu nezníži.
 
 ![](datatable.png)
 
